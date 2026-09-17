@@ -74,6 +74,15 @@ check("it carries the LANGUAGE and no beans — an estate's facts are not the la
       str(os.listdir(G)))
 check("it is a git repository with one commit — a garden that cannot commit has not germinated",
       run('git', 'rev-parse', 'HEAD', cwd=G).returncode == 0)
+# A RELATIVE TARGET IS RELATIVE TO WHERE YOU STAND, not to the release. v0.3.0 planted the language inside the
+# clone when given `garden` instead of `/abs/garden`; every check above used an absolute path, so none saw it.
+_rel_cwd = os.path.join(TMP, 'relative-cwd')
+os.makedirs(_rel_cwd)
+_rr = run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), 'rel-garden', cwd=_rel_cwd)
+check("a RELATIVE target grows the garden where the caller stands, and nothing lands inside the release",
+      _rr.returncode == 0 and os.path.isfile(os.path.join(_rel_cwd, 'rel-garden', 'bin', 'dmcheck.py'))
+      and not os.path.exists(os.path.join(ROOT, 'rel-garden')), (_rr.stdout + _rr.stderr)[-300:])
+
 # THE MODEL, THE PROCEDURE, THE QUEUE AND THE SKILL TRAVEL (2026-09-17). Without them a friend's garden had the
 # law's data and nothing saying what it meant; the first person bean took three attempts.
 check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md and the daftar skill travel",

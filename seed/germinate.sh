@@ -14,6 +14,12 @@ set -e
 TARGET="$1"
 [ -n "$TARGET" ] || { echo "usage: sh seed/germinate.sh <target-directory>" >&2; exit 2; }
 [ -e "$TARGET" ] && { echo "germinate: $TARGET already exists — refusing to plant over it" >&2; exit 2; }
+# ABSOLUTE BEFORE ANYTHING CHANGES DIRECTORY. The copy below runs from inside the release, so a relative
+# target resolved THERE: `sh daftar/seed/germinate.sh garden` planted the language inside the clone and left
+# an empty skeleton where the garden was asked for. v0.3.0 shipped that; found by the first end-to-end run.
+PARENT=$(dirname -- "$TARGET")
+[ -d "$PARENT" ] || { echo "germinate: $PARENT does not exist — create it first" >&2; exit 2; }
+TARGET="$(CDPATH= cd -- "$PARENT" && pwd)/$(basename -- "$TARGET")"
 
 SEED=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT=$(CDPATH= cd -- "$SEED/.." && pwd)
