@@ -150,6 +150,13 @@ check("a vocabulary change whose journal entry never says RULE-CHANGE is refused
 _rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-17 · (fill in who ratified) · [[nas]]\n')
 check("a journal entry with an unfilled '(fill in' field is refused", _rc != 0 and "(fill in" in _o, _o[-300:])
 
+# THE EXECUTABLE BITS TRAVEL. v0.4.0 and v0.4.1 shipped bin/hooks/pre-commit and bin/install.sh WITHOUT them —
+# an edit that wrote a new file and renamed it over the old one dropped the mode — and nothing noticed, because
+# install.sh chmods the hook as it copies it. A release's own files must carry the modes they are used with.
+_modes = run('git', 'ls-files', '-s', 'bin/hooks/pre-commit', 'bin/install.sh', cwd=ROOT).stdout.split('\n')
+check("the release's hook and installer are committed executable (mode 100755)",
+      len([l for l in _modes if l.startswith('100755')]) == 2, _modes)
+
 # THE MERGE CONFIGURATION TRAVELS. Missing this, a germinated garden text-merges its beans and conflicts
 # on its own append-only journal — and nothing says so, because git warns neither when an attribute names
 # a missing driver nor when a configured driver is named by nothing. Found by merging three germinated
