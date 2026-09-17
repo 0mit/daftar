@@ -126,7 +126,10 @@ def main():
         changed, added = [], []
         for f in sorted(want):
             src, dst = os.path.join(rel, f), os.path.join(ROOT, f)
-            if os.path.isfile(dst) and open(src, 'rb').read() == open(dst, 'rb').read():
+            same_bytes = os.path.isfile(dst) and open(src, 'rb').read() == open(dst, 'rb').read()
+            # THE MODE IS PART OF THE FILE. Comparing bytes alone left a hook the release had made executable
+            # non-executable in the garden (found adopting v0.4.2).
+            if same_bytes and (os.stat(src).st_mode & 0o111) == (os.stat(dst).st_mode & 0o111):
                 continue
             (changed if os.path.isfile(dst) else added).append(f)
             os.makedirs(os.path.dirname(dst) or ROOT, exist_ok=True)
@@ -156,7 +159,8 @@ def main():
             if RELEASE.search(gtext):
                 gtext = RELEASE.sub(gline, gtext, count=1)
             else:
-                gtext = PIN.sub(lambda m: m.group(0) + '\n' + gline, gtext, count=1)
+                # after the WHOLE pin line: inserting after the match split the line and moved its comment
+                gtext = re.sub(r'^extends: std-vocab@.*$', lambda m: m.group(0) + '\n' + gline, gtext, count=1, flags=re.M)
             open(gpath + '.tmp', 'w', encoding='utf-8').write(gtext)
             os.replace(gpath + '.tmp', gpath)
             repinned.append('GARDEN.md daftar_release')

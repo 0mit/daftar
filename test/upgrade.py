@@ -116,6 +116,22 @@ check("a release whose upgrade tool differs is applied BY ITS OWN TOOL, not by t
 check("...and the journal records where the release came from, not the temporary clone it was applied from",
       f"from {REL} at" in open(os.path.join(GARDEN, 'log', 'journal.md')).read())
 
+# ---- a garden grown before v0.4.0: no release line, a commented pin, a hook that lost its executable bit
+run('git', 'reset', '-q', '--hard', cwd=GARDEN); run('git', 'clean', '-qfd', cwd=GARDEN)
+_gp = os.path.join(GARDEN, 'GARDEN.md')
+_g = re.sub(r'^daftar_release:.*\n', '', open(_gp).read(), count=1, flags=re.M)
+_g = re.sub(r'^(extends: std-vocab@\S+).*$', r'\1    # an old comment on the pin', _g, count=1, flags=re.M)
+open(_gp, 'w').write(_g)
+os.chmod(os.path.join(GARDEN, 'bin', 'hooks', 'pre-commit'), 0o644)
+run('git', 'add', '-A', cwd=GARDEN); run('git', 'commit', '-qm', 'old garden', '--no-verify', cwd=GARDEN)
+r = up('--allow-downgrade', tag='v0.2.0')
+_g = open(_gp).read()
+check("an old garden gets its release recorded on a line of its own, and the pin keeps its comment",
+      re.search(r'^extends: std-vocab@\S+    # an old comment on the pin$', _g, re.M)
+      and re.search(r'^daftar_release: "v0.2.0"', _g, re.M), _g[:300])
+check("a file whose bytes match but whose executable bit does not is restored",
+      os.access(os.path.join(GARDEN, 'bin', 'hooks', 'pre-commit'), os.X_OK), (r.stdout + r.stderr)[-300:])
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nupgrade: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)
