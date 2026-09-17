@@ -61,7 +61,9 @@ python3 bin/dmupgrade.py <tag>        # e.g. the newest tag listed on the reposi
 
 It updates exactly the files `seed/LANGUAGE` declares, moves the vocabulary pins, records the release in
 `GARDEN.md` (`daftar_release:`), writes the journal entry and runs the gate — and does **not** commit. It
-refuses a tag older than the one the garden records. Read `git diff`, fill in the two marked fields of the
+refuses a tag older than the one the garden records, and it always applies a release with that release's
+own copy of the tool. (A garden grown before v0.4.0 has a tool that cannot hand over: upgrade once,
+commit, and run the same command again to record the release.) Read `git diff`, fill in the two marked fields of the
 journal entry, and commit when you have decided to adopt it.
 
 ## Propose a change to the law

@@ -20,6 +20,11 @@ WHAT IT DOES, and nothing else:
   6. appends a RULE-CHANGE journal entry naming the tag, its commit, the vocabulary move and every file;
   7. runs the gate and reports it.
 
+THE RELEASE'S OWN TOOL DOES THE WORK. When the release carries a different bin/dmupgrade.py, this one hands
+over to it (with --garden and --no-delegate) instead of applying a newer release with older logic: v0.4.0
+added the release record and the downgrade guard, and a v0.3.1 garden running its own v0.3.1 tool received the
+new files and neither of those behaviours.
+
 IT DOES NOT COMMIT. Adopting a release changes the law this garden is judged by, which is a decision the
 garden's own human ratifies: read `git diff`, then `git add -A && git commit`. The journal entry is already
 written, so the gate's provenance duty is met by the commit that adopts it.
@@ -36,8 +41,8 @@ RELEASE = re.compile(r'^daftar_release:.*$', re.M)
 SEMVER = re.compile(r'^v?(\d+)\.(\d+)\.(\d+)$')
 
 
-def run(*args, cwd=ROOT, check=True):
-    r = subprocess.run(args, cwd=cwd, capture_output=True, text=True)
+def run(*args, cwd=None, check=True):
+    r = subprocess.run(args, cwd=cwd or ROOT, capture_output=True, text=True)
     if check and r.returncode:
         detail = '\n'.join(s.strip() for s in (r.stdout, r.stderr) if s.strip())
         sys.exit(f"{' '.join(args)} failed:\n{detail or '(no output)'}")
@@ -78,7 +83,14 @@ def main():
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
     ap.add_argument('--from', dest='src', default=UPSTREAM, help=f'repository URL or path (default {UPSTREAM})')
     ap.add_argument('--allow-downgrade', action='store_true', help='adopt a tag older than the one GARDEN.md records')
+    ap.add_argument('--garden', help='the garden to upgrade (default: the one this tool lives in)')
+    ap.add_argument('--no-delegate', action='store_true', help=argparse.SUPPRESS)
+    ap.add_argument('--recorded-source', help=argparse.SUPPRESS)
     a = ap.parse_args()
+    global ROOT
+    if a.garden:
+        ROOT = os.path.abspath(a.garden)
+    source = a.recorded_source or a.src
 
     dirty = run('git', 'status', '--porcelain', '--untracked-files=no').stdout.strip()   # untracked files are not in the diff
     if dirty:
@@ -96,6 +108,14 @@ def main():
         rel = os.path.join(tmp, 'release')
         run('git', 'clone', '-q', '--depth', '1', '--branch', a.tag, a.src, rel, cwd=tmp)
         sha = run('git', 'rev-parse', 'HEAD', cwd=rel).stdout.strip()
+        tool = os.path.join(rel, 'bin', 'dmupgrade.py')
+        if (not a.no_delegate and os.path.isfile(tool) and '--no-delegate' in open(tool, encoding='utf-8').read()
+                and open(tool, 'rb').read() != open(os.path.abspath(__file__), 'rb').read()):
+            print(f"handing over to {a.tag}'s own bin/dmupgrade.py — a release is applied by its own upgrade logic")
+            args = [sys.executable, tool, a.tag, '--from', rel, '--garden', ROOT, '--no-delegate', '--recorded-source', source]
+            if a.allow_downgrade:
+                args.append('--allow-downgrade')
+            return subprocess.run(args).returncode
 
         if vocab_version(rel) in ('None', ''):
             sys.exit(f"REFUSING: {a.tag} carries no readable `version:` in seed/std-vocab.md — nothing to pin to.")
@@ -148,7 +168,7 @@ def main():
         run('sh', os.path.join(ROOT, 'bin', 'install.sh'), check=False)
         now = datetime.datetime.now().astimezone().strftime('%Y-%m-%d %H:%M %z')
         lines = [f"\n## {now} · (fill in who ratified) · RULE-CHANGE: language upgraded to daftar {a.tag}",
-                 f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {a.src} at {sha}; "
+                 f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; "
                  f"std-vocab {before} -> {after}; release {current or 'unrecorded'} -> {a.tag}.",
                  f"- changed: {', '.join(changed) or 'none'}",
                  f"- added: {', '.join(added) or 'none'}",

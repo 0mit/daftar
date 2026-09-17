@@ -103,6 +103,19 @@ r = up('--allow-downgrade', tag='v0.1.0')
 check("...unless --allow-downgrade says it is meant",
       r.returncode == 0 and os.path.isfile(os.path.join(GARDEN, 'bin', 'dmdigest.py')), (r.stdout + r.stderr)[-300:])
 
+# ---- the release, v0.3.0: its OWN upgrade tool differs, and must be the one that runs
+_tool = os.path.join(REL, 'bin', 'dmupgrade.py')
+_src = open(_tool).read()
+open(_tool, 'w').write(_src.replace('def main():\n', 'def main():\n    print("RELEASE-TOOL-RAN")\n', 1))
+run('git', 'add', '-A', cwd=REL); run('git', 'commit', '-qm', 'v3', cwd=REL); run('git', 'tag', 'v0.3.0', cwd=REL)
+run('git', 'reset', '-q', '--hard', cwd=GARDEN); run('git', 'clean', '-qfd', cwd=GARDEN)
+r = up(tag='v0.3.0')
+check("a release whose upgrade tool differs is applied BY ITS OWN TOOL, not by the garden's older copy",
+      r.returncode == 0 and 'RELEASE-TOOL-RAN' in r.stdout and 'handing over' in r.stdout
+      and 'daftar_release: "v0.3.0"' in open(os.path.join(GARDEN, 'GARDEN.md')).read(), (r.stdout + r.stderr)[-400:])
+check("...and the journal records where the release came from, not the temporary clone it was applied from",
+      f"from {REL} at" in open(os.path.join(GARDEN, 'log', 'journal.md')).read())
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nupgrade: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)
