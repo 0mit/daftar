@@ -18,7 +18,8 @@ WHAT IT DOES, and nothing else:
      --allow-downgrade is given, because an older tag silently removes fixes;
   5. re-runs `bin/install.sh`, because the hooks or the merge driver may have changed;
   6. appends a RULE-CHANGE journal entry naming the tag, its commit, the vocabulary move and every file;
-  7. runs the gate and reports it.
+  7. runs the gate — and if the garden no longer passes under the release (a profile or a value the release
+     does not offer, say), puts every file back as it was and says why, unless --keep-on-failure.
 
 THE RELEASE'S OWN TOOL DOES THE WORK. When the release carries a different bin/dmupgrade.py, this one hands
 over to it (with --garden and --no-delegate) instead of applying a newer release with older logic: v0.4.0
@@ -84,6 +85,7 @@ def main():
     ap.add_argument('--from', dest='src', default=UPSTREAM, help=f'repository URL or path (default {UPSTREAM})')
     ap.add_argument('--allow-downgrade', action='store_true', help='adopt a tag older than the one GARDEN.md records')
     ap.add_argument('--garden', help='the garden to upgrade (default: the one this tool lives in)')
+    ap.add_argument('--keep-on-failure', action='store_true', help='leave the files in place when the gate fails, to repair by hand')
     ap.add_argument('--no-delegate', action='store_true', help=argparse.SUPPRESS)
     ap.add_argument('--recorded-source', help=argparse.SUPPRESS)
     a = ap.parse_args()
@@ -111,10 +113,12 @@ def main():
         tool = os.path.join(rel, 'bin', 'dmupgrade.py')
         if (not a.no_delegate and os.path.isfile(tool) and '--no-delegate' in open(tool, encoding='utf-8').read()
                 and open(tool, 'rb').read() != open(os.path.abspath(__file__), 'rb').read()):
-            print(f"handing over to {a.tag}'s own bin/dmupgrade.py — a release is applied by its own upgrade logic")
+            print(f"handing over to {a.tag}'s own bin/dmupgrade.py — a release is applied by its own upgrade logic", flush=True)
             args = [sys.executable, tool, a.tag, '--from', rel, '--garden', ROOT, '--no-delegate', '--recorded-source', source]
             if a.allow_downgrade:
                 args.append('--allow-downgrade')
+            if a.keep_on_failure:
+                args.append('--keep-on-failure')
             return subprocess.run(args).returncode
 
         if vocab_version(rel) in ('None', ''):
@@ -169,9 +173,12 @@ def main():
             print(f"nothing to do: this garden's language already equals {a.tag} ({sha[:12]}).")
             return 0
 
+        # "applied" when either side is unknown: a garden that records no release cannot be told which way it moved.
+        verb = ('applied' if not (cur_v and new_v) else
+                'downgraded' if tuple(map(int, new_v.groups())) < tuple(map(int, cur_v.groups())) else 'upgraded')
         run('sh', os.path.join(ROOT, 'bin', 'install.sh'), check=False)
         now = datetime.datetime.now().astimezone().strftime('%Y-%m-%d %H:%M %z')
-        lines = [f"\n## {now} · (fill in who ratified) · RULE-CHANGE: language upgraded to daftar {a.tag}",
+        lines = [f"\n## {now} · (fill in who ratified) · RULE-CHANGE: language {verb} to daftar {a.tag}",
                  f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; "
                  f"std-vocab {before} -> {after}; release {current or 'unrecorded'} -> {a.tag}.",
                  f"- changed: {', '.join(changed) or 'none'}",
@@ -184,7 +191,22 @@ def main():
             j.write('\n'.join(lines) + '\n')
 
         gate = run(sys.executable, os.path.join(ROOT, 'bin', 'dmcheck.py'), check=False)
-        print(f"upgraded to {a.tag} ({sha[:12]}): std-vocab {before} -> {after}; "
+        if gate.returncode != 0 and not a.keep_on_failure:
+            # PUT IT ALL BACK. The tree was clean before we started, so git holds every file as it was. A cold-start
+            # drill downgraded a garden that used a profile the older release lacks, and was left half-applied.
+            run('git', 'checkout', '--', '.', check=False)
+            for f in added:
+                try:
+                    os.remove(os.path.join(ROOT, f))
+                except OSError:
+                    pass
+            run('sh', os.path.join(ROOT, 'bin', 'install.sh'), check=False)
+            errs = [l for l in gate.stdout.splitlines() if l.startswith('ERROR')]
+            print(f"NOT {verb.upper()}: under {a.tag} this garden fails its own gate, so every file was put back as it was.\n"
+                  + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') +
+                  "\nFix what these name (or pass --keep-on-failure to repair by hand), then run this again.")
+            return 1
+        print(f"{verb} to {a.tag} ({sha[:12]}): std-vocab {before} -> {after}; "
               f"{len(changed)} changed, {len(added)} added, {len(removed)} removed, {len(repinned)} repinned.")
         print((gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1])
         print("\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n"

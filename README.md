@@ -61,7 +61,8 @@ python3 bin/dmupgrade.py <tag>        # e.g. the newest tag listed on the reposi
 
 It updates exactly the files `seed/LANGUAGE` declares, moves the vocabulary pins, records the release in
 `GARDEN.md` (`daftar_release:`), writes the journal entry and runs the gate — and does **not** commit. It
-refuses a tag older than the one the garden records, and it always applies a release with that release's
+refuses a tag older than the one the garden records (pass `--allow-downgrade` to mean it), puts every
+file back if the garden would fail its gate under the release, and it always applies a release with that release's
 own copy of the tool. (A garden grown before v0.4.0 has a tool that cannot hand over: upgrade once,
 commit, and run the same command again to record the release.) Read `git diff`, fill in the two marked fields of the
 journal entry, and commit when you have decided to adopt it.
@@ -80,6 +81,7 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `bin/dmcheck.py` | the gate |
 | `bin/dm*.py` | the other tools: merge, upgrade, rules, safe edits, cursors, sessions |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
+| `HISTORY.md` | why the rules are what they are: the design steps and incidents behind them |
 | `.claude/skills/daftar/` | a skill that points a coding agent at the garden's own rules |
 | `test/` | `germinate.py`, `converge.py` and `upgrade.py` run in CI; `fast.py` runs in every garden's hook |
 

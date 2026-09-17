@@ -132,6 +132,38 @@ check("an old garden gets its release recorded on a line of its own, and the pin
 check("a file whose bytes match but whose executable bit does not is restored",
       os.access(os.path.join(GARDEN, 'bin', 'hooks', 'pre-commit'), os.X_OK), (r.stdout + r.stderr)[-300:])
 
+# ---- a release the garden cannot live under is NOT applied: every file is put back (v0.5.0)
+run('git', 'reset', '-q', '--hard', cwd=GARDEN); run('git', 'clean', '-qfd', cwd=GARDEN)
+_readme = open(os.path.join(ROOT, 'seed', 'README.md')).read() + open(os.path.join(ROOT, 'seed', 'COOKBOOK.md')).read()
+_ex = dict(re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _readme, re.S))
+os.makedirs(os.path.join(GARDEN, 'beans'), exist_ok=True)   # git clean removed the empty directory
+open(os.path.join(GARDEN, 'beans', 'sam.md'), 'w').write(_ex['beans/sam.md'] + '\n')
+open(os.path.join(GARDEN, 'beans', 'vps-a.md'), 'w').write(_ex['beans/vps-a.md'].replace('provides_habitat: linux-vm\n', 'provides_habitat: linux-vm\nos: debian\n') + '\n')
+_gp = os.path.join(GARDEN, 'GARDEN.md')
+_gtext = open(_gp).read()                       # read FIRST: open(..., 'w') truncates before the read would run
+open(_gp, 'w').write(re.sub(r'^(extends: std-vocab@.*)$', r'\1\ndaftar_release: "v0.2.0"', _gtext, count=1, flags=re.M))
+with open(os.path.join(GARDEN, 'log', 'journal.md'), 'a') as _j:
+    _j.write('\n## 2026-09-17 · human (test) · [[sam]] and [[vps-a]], a debian VPS; RULE-CHANGE: release v0.2.0 recorded\n')
+run('git', 'add', '-A', cwd=GARDEN)
+_c = run('git', 'commit', '-qm', 'a debian vps', cwd=GARDEN)
+check("(setup) a VPS on a standard OS commits", _c.returncode == 0, (_c.stdout + _c.stderr)[-300:])
+_t = open(sv).read()
+open(sv, 'w').write(_t.replace(', debian', '', 1).replace('  - { os: debian,', '  # removed in this test release:', 1))
+run('git', 'add', '-A', cwd=REL); run('git', 'commit', '-qm', 'no debian', cwd=REL); run('git', 'tag', 'v0.0.9', cwd=REL)
+_before = run('git', 'rev-parse', 'HEAD', cwd=GARDEN).stdout
+r = up('--allow-downgrade', tag='v0.0.9')
+check("a release under which the garden FAILS its gate is refused, and says why",
+      r.returncode != 0 and 'NOT DOWNGRADED' in r.stdout and "'debian'" in r.stdout, (r.stdout + r.stderr)[-400:])
+check("...and nothing is left half-applied: the working tree is exactly as it was",
+      not run('git', 'status', '--porcelain', '--untracked-files=all', cwd=GARDEN).stdout.strip()
+      and run('git', 'rev-parse', 'HEAD', cwd=GARDEN).stdout == _before,
+      run('git', 'status', '--porcelain', cwd=GARDEN).stdout[:300])
+r = up('--allow-downgrade', tag='v0.1.0')
+check("a downgrade that succeeds is reported as a DOWNGRADE, in the output and in the journal",
+      r.returncode == 0 and 'downgraded to v0.1.0' in r.stdout
+      and 'language downgraded to daftar v0.1.0' in open(os.path.join(GARDEN, 'log', 'journal.md')).read(),
+      (r.stdout + r.stderr)[-300:])
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nupgrade: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

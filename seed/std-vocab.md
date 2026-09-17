@@ -1,5 +1,5 @@
 ---
-version: "8.2"
+version: "9.0"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -50,6 +50,7 @@ schema_language:
   on_aspect:            "{aspect, attr, default} OR a LIST of them — a term's entries may take positions on SEVERAL aspects at once (e.g. what is allowed AND what is possible) — every entry of this term takes a POSITION on that aspect; an entry may name its own via an attr called after the aspect, else the default applies"
   facet_parity_with:    "<term> — this term and that one must carry the SAME facet keys (two arcs of one loop); one present without the other is a loose end"
   values_add:           "[<value>...] — GARDEN overlay only: APPEND values to a Tier-0 term's enum instead of replacing it, so the garden accounts only for what it added (8.2)"
+  compare_form:         "upper-trim — with governs_anchor: the anchor is compared in this form for uniqueness (whitespace removed, uppercased), and a stored value not already in it warns (9.0)"
   inverse_of:           "<term>, or {term, cardinality: one-to-one | many-to-one} — this relation mirrors another and the gate holds the pair consistent so the convenience edge cannot drift from the fact. A BARE NAME means one-to-one and the mirror is enforced BOTH ways. `many-to-one` enforces only the functional direction: many instances point at one type, and the type cannot point back at all of them through a single mapping. Declare the cardinality; assuming a bijection is how a rule becomes unsatisfiable without anyone noticing."
 # == NATURES: the root axiom layer (added 2026-08-02, P3 / plan D1, human-ratified rule-change) ==
 # `nature` is the ROOT of the type system and `kind` is a REFINEMENT of it, not a parallel taxonomy.
@@ -221,9 +222,9 @@ roles:
   - { role: workstation,        meaning: "a machine a person works AT, rather than one that serves others" }
 
 # == OPERATING SYSTEMS: what a machine runs, and what that IMPLIES about its positions (added 7.0) ==
-# It is a REGISTRY and not prose because it CONSTRAINS. `owns.os` was free text — "AlmaLinux 9.7 (Moss
-# Jungle Cat)" — and the router, the one machine whose OS is genuinely distinctive, could not state it at
-# all: "RouterOS 7.23.2" lived only inside a summary sentence and an `owns.model` string.
+# It is a REGISTRY and not prose because it CONSTRAINS. `owns.os` was free text — a distribution name with its
+# point release — and a router, the one machine whose OS is genuinely distinctive, could not state it at all:
+# its OS lived only inside a summary sentence and an `owns.model` string.
 #
 # `path_grammar` IS THE JOIN, and it is the answer to "where do ntfs and ext4 go". They do not go here.
 # `unix-filesystem` and `windows-filesystem` in `anchor_systems` are PATH GRAMMARS — properties of an
@@ -250,6 +251,17 @@ operating_systems:
       `anchor_systems`, declared there for the `physical` system, so refusing to invent a grammar is a
       shape this law can already express rather than a special case invented for this row.
     meaning: "MikroTik RouterOS. Not a general-purpose OS: no user filesystem worth positioning in."
+  # COMMON SYSTEMS (9.0). Until 9.0 this registry held exactly the four systems of the garden it grew in, so almost
+  # every newcomer's first machine needed a local addition. `linux` is the honest row for a distribution not listed.
+  - { os: linux,   family: unix, path_grammar: unix-filesystem, meaning: "A Linux system whose distribution is not listed here, or not worth distinguishing." }
+  - { os: debian,  family: unix, path_grammar: unix-filesystem, meaning: "Debian GNU/Linux." }
+  - { os: ubuntu,  family: unix, path_grammar: unix-filesystem, meaning: "Ubuntu." }
+  - { os: rhel,    family: unix, path_grammar: unix-filesystem, meaning: "Red Hat Enterprise Linux." }
+  - { os: fedora,  family: unix, path_grammar: unix-filesystem, meaning: "Fedora Linux." }
+  - { os: arch,    family: unix, path_grammar: unix-filesystem, meaning: "Arch Linux." }
+  - { os: alpine,  family: unix, path_grammar: unix-filesystem, meaning: "Alpine Linux." }
+  - { os: freebsd, family: unix, path_grammar: unix-filesystem, meaning: "FreeBSD." }
+  - { os: macos,   family: unix, path_grammar: unix-filesystem, meaning: "Apple macOS." }
 
 # == STORAGE FORMATS: the OTHER filesystem axis, the one ntfs and ext4 actually belong to (added 7.0) ==
 # `layer` mirrors `net_protocols.layer` and for the same reason: storage is a STACK and the stack is what
@@ -364,15 +376,13 @@ net_protocols:
     meaning: "an ethernet link, including an aggregated one. Added while MIGRATING the corpus, not while designing it: `carried_by` had nothing to terminate on until a base link existed, and an aggregated bond is a real measured one. This row is the design's own claim tested on itself — adding a protocol is a registry row, not a rule-change to any term."
   - protocol: pppoe
     layer: link
-    transport: tcp
-    default_ports: [1723]
     rides_on: [ethernet]
     synthesizes_link: true
-    meaning: "PPP over Ethernet: the WAN dial that both of the site's uplinks are. Like wireguard it MANUFACTURES a link, which is what lets the tunnel name it in `carried_by`."
+    meaning: "PPP over Ethernet: a WAN dial that runs directly on ethernet frames, with no IP transport or port of its own (9.0 removed a `transport: tcp` / port 1723 copied from pptp). Like wireguard it MANUFACTURES a link, which is what lets a tunnel name it in `carried_by`."
 
 # == UNITS: the resolution a position is actually held to (added 5.1) ==
-# DECLARED, NEVER INFERRED FROM DIGITS. The journal states 272 entries as `## 2026-08-04` and 34 as
-# `## 2026-08-04 20:04 +0300`, and nothing records which of the 272 were measured to the day and which
+# DECLARED, NEVER INFERRED FROM DIGITS. A journal can state most entries as `## 2026-08-04` and a few as
+# `## 2026-08-04 20:04 +0300`, and nothing records which of the first were measured to the day and which
 # were measured finer and rounded. Two positions whose resolutions OVERLAP ARE NOT ORDERED, and a model
 # that cannot say so invents an order instead — which is the failure this registry exists to make
 # expressible. Keyed by `dimension`, so a length or an angle joins without a rule-change.
@@ -515,7 +525,7 @@ vacancies:
   - at: anchor_system.values
     position: geographic
     reason: prediction
-    why: "Declared because CIVIL TIME RESOLVES THROUGH IT — a UTC offset is a geographic fact — so a registry offering gregorian-civil while hiding what it resolves through would conceal the chain. Unoccupied because no bean states where its machine physically is: `owns.site` holds prose (Istanbul DC, Berlin DC) that has never been read as a position. Expected to fill the first time a time reading has to be reconciled across two sites, which is the shape of the 2026-08-06 +03-versus-UTC defect."
+    why: "Declared because CIVIL TIME RESOLVES THROUGH IT — a UTC offset is a geographic fact — so a registry offering gregorian-civil while hiding what it resolves through would conceal the chain. Unoccupied because no bean states where its machine physically is: `owns.site` holds prose (a data-centre name) that has never been read as a position. Expected to fill the first time a time reading has to be reconciled across two sites — a +03:00 host read against UTC logs is the shape of that defect."
   - at: anchor_system.values
     position: event-anchored
     reason: prediction
@@ -527,7 +537,7 @@ vacancies:
   - at: located_at.openness
     position: unknown
     reason: prediction
-    why: "The position that would have prevented the 2026-08-06 loss: commit f3650ec was recorded as absent when it was merely not looked for on the machine that had it. Unoccupied TODAY because every location in the corpus has been established — which is the state this position exists to distinguish from, and it earns its declaration by being the one an agent must reach for instead of omitting the entry."
+    why: "The position that would have prevented a real loss: a commit was recorded as absent when it was merely not looked for on the machine that had it. Unoccupied TODAY because every location in the corpus has been established — which is the state this position exists to distinguish from, and it earns its declaration by being the one an agent must reach for instead of omitting the entry."
 aspects:
   - aspect: necessity
     # The canonical closed figure for necessity is Aristotle's SQUARE OF OPPOSITION (De Interpretatione;
@@ -681,7 +691,7 @@ profiles:
         Nothing in this estate speaks it and nothing ever should. `impossible` rather than `prediction`,
         which is the whole point of registering it: MS-CHAPv2 and MPPE are broken by published attacks,
         so a pptp tunnel protects nothing while presenting as a VPN in every inventory that lists it.
-        Measured 2026-08-07: zero occurrences across 74 beans and the whole vocabulary. Declaring the
+        Measured: zero occurrences across the estate it was declared in. Declaring the
         position and refusing it is how the estate states a standing decision that would otherwise exist
         only as an absence — and an absence is indistinguishable from nobody having thought about it.
     - at: address_system.values
@@ -1253,7 +1263,12 @@ terms:
   - term: serial
     meaning: "a hardware/chassis serial or asset serial"
     context_keys: ["serial", "identity.anchors[].serial"]
-    enforced_by: none      # this term declares NO canonical form, so there is nothing to check. Serials are vendor-shaped and differ per manufacturer; inventing a pattern would reject valid data to look thorough.
+    schema:
+      # NO PATTERN: serials are vendor-shaped, and inventing one would reject valid data to look thorough. But they
+      # are COMPARED case- and space-insensitively (9.0): no vendor issues two serials differing only by case, and
+      # a drill committed `syn-0042` beside `SYN-0042` as two machines with 0 errors.
+      governs_anchor: serial
+      compare_form: upper-trim
     anchor: { class: hardware, establishing: true }
     merge: { cardinality: single, order: none }
   - term: wg_pubkey
@@ -1597,13 +1612,13 @@ terms:
   - term: os
     # WHAT A MACHINE RUNS, and the reason it is a registry rather than a string: it CONSTRAINS. An OS row
     # declares the `path_grammar` its filesystem positions take, and `roots` is held to it below. Before
-    # 7.0 this was `owns.os` free text — "AlmaLinux 9.7 (Moss Jungle Cat)" — and the router, the one
+    # 7.0 this was `owns.os` free text — a distribution name with its point release — and a router, the one
     # machine whose OS genuinely differs in kind, could not state it at all.
     meaning: "the operating system this machine runs — a row of the `operating_systems` registry"
     context_keys: [os]
     schema:
       shape: scalar
-      values: [slackware, almalinux, windows, routeros]
+      values: [slackware, almalinux, windows, routeros, linux, debian, ubuntu, rhel, fedora, arch, alpine, freebsd, macos]
       values_consistent_with: ["registry:operating_systems[].os"]
     version_note: >
       The RELEASE (15.0, 9.7) is deliberately NOT part of this value. A version moves on every upgrade
@@ -1980,3 +1995,12 @@ The portable, estate-agnostic classification shared by every garden — the abst
   (2) A domain had no standard place for its registrar and expiry: `registration` is promoted from one
   garden's local vocabulary into a new opt-in `domain` profile, required on `kind: domain` for gardens that opt
   in. MINOR: both are additive, and no bean in a garden that does not opt in is re-classified.
+
+- **9.0** (2026-09-17, human-ratified rule-change) — **a second cold-start drill, and what it found.** MAJOR, for
+  one reason: `serial` now declares `compare_form: upper-trim`, so establishing serials that differ only by case
+  or whitespace are ONE object — a garden holding `SYN-0042` and `syn-0042` as two machines, which passed before,
+  is now refused. A stored serial not already in that form warns. Additive in the same release: the
+  `operating_systems` registry and the `os` enum gain `linux`, `debian`, `ubuntu`, `rhel`, `fedora`, `arch`,
+  `alpine`, `freebsd` and `macos` (until now the list held exactly the four systems of the garden it grew in),
+  and the `pppoe` row loses a `transport: tcp` / port 1723 copied from `pptp`. A garden that added one of the new
+  OS values locally with `values_add` is told to remove its copy.

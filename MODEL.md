@@ -1,90 +1,135 @@
-# daftar — data model
+# daftar — the model
 
-The source-of-truth ledger and shared language between human and AI. Git-backed; every change gated + logged. Built to be obvious to an average network admin / developer, and to survive being **printed on paper and rescanned with every detail intact**.
+A ledger that people and AI agents both read and write: plain files in git, every change checked by a gate
+and recorded in a journal. It is meant to read correctly cold — on paper, years later — so legibility and
+provenance come before brevity. Why each rule exists is in `HISTORY.md` in the daftar repository.
 
-## Purpose — a portable human↔AI language
-One shared source of truth both human and AI can read and write; **portable** (plain files + git, no runtime to read the data); **inclusive** (any object/kind); **safe** (no secrets, no silent corruption, no silent generalization). Legibility and provenance outrank brevity.
+## Beans and gardens
+- A **bean** is one managed thing — a machine, a domain, a program, a person, a contract — as one file,
+  `beans/<id>.md`. The YAML front matter holds the facts; the Markdown body is for people. A **mapping**
+  (`mappings/<id>.md`) records a procedure or relationship that is not itself a thing.
+- A **garden** is a git repository of beans: one estate's ledger. `GARDEN.md` names it, pins the vocabulary
+  version (`extends: std-vocab@<version>`) and records the daftar release it runs (`daftar_release`).
+- The **seed** (`seed/`) is the kit a garden is grown from. When gardens are merged, the result for each object
+  is a **canonical bean** — see `MERGE.md`.
 
-## Beans, gardens, seeds
-- **bean** — one file per managed object (`beans/<id>.md`), YAML front-matter (machine truth) + Markdown body (human context). Each garden names its root bean in `GARDEN.md`.
-- **garden** — a collection of beans (this working copy); declared by `GARDEN.md`, pins a `std-vocab` version.
-- **seed** — `seed/`: the germination kit a new garden is grown from (the vocabulary, the templates, `germinate.sh`). Not to be confused with the **canonical bean**, the superset bean a merge produces (MERGE.md): beans from different sessions/agents/models **converge** into one, matched by identity anchors, not filenames.
+## Facts carry their provenance
+A fact knows who said it and how they know.
+- Each bean states a default `provenance: { src, by, as_of }`, where `src` is `observed`, `inferred`,
+  `asserted-by-human` or `generated-by-tool`.
+- A fact whose source differs from the bean's default carries its own record.
+- **An `inferred` value never overrides an `asserted-by-human` one**, whatever precision it claims.
 
-## Facts carry provenance + truth-status (the linchpin)
-An authoritative fact is not a bare value — it knows **who said it and how they know**:
-- Each bean declares a default `provenance: { src, by, as_of }`.
-- `src ∈ observed | inferred | asserted-by-human | generated-by-tool`. A fact that differs from the bean default (e.g. a human-asserted value in an agent-scanned bean) carries its **own** `{value, src, by, as_of, authority}` record.
-- **Guard:** an `inferred` value may **never** auto-override an `asserted-by-human` value, whatever precision it claims. This is what makes a fact trustable **cold, on paper**.
+## Identity: anchors
+Every bean has an `identity:` block of **anchors** — facts that say which object this is, so two gardens can
+recognise the same thing whatever its file is called.
+- Each anchor says `establishing: true` (it identifies the object) or `false` (it only corroborates).
+  Only establishing anchors decide that two beans are one object.
+- Typically hardware anchors (`serial`, `mac`) and logical ones (`fqdn`, a product or service id) establish;
+  network ones (`ip`, `hostname`) corroborate. Where the vocabulary declares a policy for an anchor, it
+  overrules the bean.
+- How many establishing anchors a confirmed bean needs depends on its nature. A bean below that is
+  `identity.status: provisional`, and the gate warns.
+- Two beans with the same establishing anchor are the same object: the gate refuses it. Serials are compared
+  ignoring case and spaces.
 
-## Identity — typed anchors (see MERGE.md §4)
-Every bean carries an `identity:` capsule of **classed** anchors — the merge key, decoupled from the filename:
-- Each anchor states **`establishing: true|false`** — establish identity, or merely corroborate it. That two-way split is load-bearing (P4/D1): only establishing anchors fuse objects on merge. `class` (hardware/logical/network/role) survives as an optional **hint at why**, no longer as the decision. Typically hardware (serial/mac/wg_pubkey) and logical (fqdn/git_remote/emp_id) establish; network (ip/hostname) and role (mail_identity) corroborate. Where a **vocabulary term declares an anchor policy it overrules the bean**, so a role anchor that migrates between objects can never be promoted to establishing.
-- Min-anchor policy hangs off the **nature**, not the kind (P3/D1, 2026-08-02): each entry in VOCAB's `natures:` registry declares its `establishing_anchor_family` and `min_establishing_anchors`, and `identity_policy:` names the axis that selects the row. A bean below policy is `identity: status: provisional` (the gate warns, an `open:` item tracks it). A new kind therefore inherits a coherent identity policy for free.
+## Type: nature, then kind
+Every bean has a `nature` — `physical`, `metaphysical` or `living` — and a `kind` that refines it (`host` is
+physical; `domain`, `product`, `codebase` are metaphysical; `person` and `instance` are living). The gate
+refuses a nature that contradicts the kind. Rules about what sort of being something is — such as identity
+anchors — attach to the nature, so every kind under it inherits them.
 
-## Type — nature is the root axiom, kind refines it (added 2026-08-02, P3 / plan D1, human-ratified)
-`nature ∈ {physical, metaphysical, living}` is the **root of the type system** and is **mandatory on every bean**. `kind` (host, codebase, domain, instance, …) is a **refinement** of a nature, not a parallel taxonomy: each kind declares in VOCAB the `of_nature:` it refines, and the gate rejects any bean whose `nature` contradicts its kind. Policy that is really about *what sort of being this is* — identity anchors, minimum anchors — therefore attaches at the **nature** level and is inherited by every kind beneath it; a kind states only what it means and may override only where it genuinely differs. Natures are declared once in VOCAB's `natures:` registry, which is also the enum the `nature` term validates against, so the two cannot drift.
+## Ownership and responsibility
+Two arcs, over the same **facets** (`legal`, `technical`, …; facets may depend on each other — `technical`
+depends on `legal` — but never overlap):
+- `owned_by` points up: each facet has **exactly one owner**.
+- `responsibility` points down: each facet has **exactly one holder** who answers for the thing.
+- **Every facet with an owner has a holder, and vice versa.** The gate enforces the pairing.
 
-## Ownership — one root, faceted, recursive (the crown; added 2026-08-02, human-ratified)
-Ownership is a single-rooted, recursive relation, **orthogonal** to habitat (`lives_in`) and to type/token (`instance_of`). Every existing being has **exactly one owner per facet**.
-- **The crown (axiom — stated once here, never instantiated as beans):** the one substance **`god`** (*Deus sive Natura*, *natura naturans*) owns everything; every chain terminates there. It branches by the being's `nature:` — **`nature`** (Extension / *res extensa*) owns **physical** beings, **`logos`** (Thought / *res cogitans*) owns **metaphysical** beings, **`love`** (the *conatus*) owns **living instances while alive** (life-bounded; lapses at teardown). A bean's `nature:` field routes it to its branch; the branch resolves up to `god`. **Since P7b the crown is nameable in data** — `owned_by: { <facet>: { crown: <branch> } }` — without ever being instantiated as beans, and the gate holds the branch to the one the bean's nature routes to. A bean names its branch directly only where ownership passes through no other being: in practice, **persons**. `kind: person` is *pinned* to the crown form, so **no bean may hold a person** — only `love`, and only while they live. That is the branch's purpose, and it is now enforced rather than asserted. The crown **owns but never answers**: `responsibility` has no crown form, because a duty must land on a being that can be asked. A person therefore answers for **themselves** (`self: true`), written deliberately as a non-edge — autonomy is reflexive, not a dependency, and as a real edge it would be a self-cycle.
-- **Facets:** ownership is faceted (`legal`, `technical`, …); the one-owner law holds *per facet*. Facets are a **distinguishable** (no ambiguous double-coverage), **dependency-bearing (DAG)**, **recursive** lattice — seed edge `technical depends_on legal`.
-- **Inheritance:** `owned_by` is introduced with explicit facet-owners at a node and **inherited** down the tree (`owned_by: {via: {bean: <parent>}}`) unless overridden.
-- **Responsibility — the closing arc** (P7, 2026-08-02, human-ratified): `owned_by` alone is **one-directional** — a being points *up* to its owner, up to the crown. That is one arc of a loop. **`responsibility:`** is the opposite arc: the holder answering *down* for the being, over the **same facet lattice**. The gate enforces **parity** — every facet with an owner must have a holder and vice versa. An ownership claim nothing answers for is a loose end; a duty nobody owns is orphaned. This is what makes an `external` owner an ordinary position rather than an escape hatch: a rented VPS is **owned by the provider and answered for by the operator**, and third-party software is **owned by its vendor and answered for by whoever runs it**. That is the normal case, not an exception.
-- **Co-ownership** of a single facet is never raw — it requires a **`contract`** bean: a *balanced ongoing* agreement carrying `agreement_ref` (provenance → the prior agreement text) + `conflict_rule` (deterministic, via the MERGE lattice). This is the **Contract of Parts applied to ownership**.
-- **Ownership ≠ habitat:** a running token is **owned** via its product's owner (up to `god`) and *separately* **lives_in** a habitat (host / container / odoo-instance). Migrating hosts changes habitat, never ownership.
+The forms an entry can take:
+- `{ owner: { bean: … } }` — owned by another bean. The chain must end somewhere: the gate refuses one that
+  stops at a bean owning nothing.
+- `{ external: "…" }` — owned outside this ledger: a rented server's provider, software's vendor, a domain's
+  registry. Someone here still answers for it.
+- `{ via: { bean: … } }` — inherits the parent's owners, e.g. an instance through the product it runs.
+- `{ contract: { bean: … } }` — shared ownership of one facet, only through a `contract` bean that records the
+  agreement and a deterministic rule for conflicts.
+- `{ crown: <branch> }` — where every chain ends. In practice only a **person** writes it: a person is owned by
+  no bean, so `owned_by: { legal: { crown: love } }`, and answers for themselves:
+  `responsibility: { legal: { self: true } }`. The branch follows the nature (`nature` for physical, `logos`
+  for metaphysical, `love` for living); the gate checks it.
 
-## Vocabulary — two tiers + governed growth (see VOCAB.md, std-vocab, SKILL.md)
-Type/process rules live in the **vocabulary**, not in code:
-- **Tier-0 Universal Standard Vocab** (`std-vocab`, carried by the skill, versioned) — the estate-agnostic classification (terms + anchor classes + merge lattices). Gardens `extends: std-vocab@<ver>` (pinned → deterministic).
-- **Tier-1 Garden Vocab** (`VOCAB.md`) — local terms + dated exceptions + flagged specializations.
-- **Promotion:** a local term that proves general is uploaded to std-vocab via the SKILL promotion protocol (propose → show neighborhood → **human ratifies** → version bump + provenance). The standard classification thus **standardizes and improves over time**.
+Ownership is separate from **habitat**: a running instance is owned through its product, and separately
+`lives_in` the machine it runs on. Moving machines changes the habitat, never the owner.
+
+## Relations
+A small set of typed edges — `owned_by`, `responsibility`, `lives_in`, `instance_of`, `part_of`,
+`depends_on`, `consumes`, `creator`, `git_host` and a few more (`python3 bin/dmrules.py` lists them) — plus
+one open fallback, `refs`.
+- Every edge is `{ bean|mapping: <id> [, field: <key>] }`, and the gate resolves it: a missing target or field
+  is an error.
+- `owned_by`, `lives_in`, `part_of` and `depends_on` must stay acyclic.
+- Every `refs` entry names its relation with `rel: <kebab-case>`, e.g. `{ bean: example-org, rel: serves }`.
+  `rel` is free text, so a new kind of relation needs no rule change.
+- A relation declared as the mirror of another (`inverse_of`) is held consistent with it.
+- `seed/COOKBOOK.md` shows which to use when.
+
+## The vocabulary
+The rules are data, not code.
+- **`seed/std-vocab.md`** is the standard every garden pins. Opt-in **profiles** add groups of rules for
+  gardens that need them (`code`, `network`, `domain`).
+- **`VOCAB.md`** is the garden's own layer: local terms, profiles it opts into (`extends_profiles`), values it
+  adds to a standard list (`values_add`, `registry_additions`), and dated exceptions.
+- **Every position the vocabulary offers is accounted for:** used by a bean, or declared vacant with a reason.
+  A garden accounts only for what it declares itself.
+- A local term that proves general is **promoted** to the standard by a pull request to the daftar repository.
 
 ## Ground rules
-1. **No duplicate authoritative data.** A fact lives in exactly one bean's `owns:`; elsewhere it is `ref:`'d. (Enforced for identifiers per the vocab.)
-2. **Abstraction, not force-fit.** An uncategorizable unique datum goes in `attributes:`/`details:` (the abstraction layer) — kept intact, categorized later. Never dropped, never mis-bucketed.
-3. **Reference external truth, don't mirror it — or CAPTURE it, dated and knowing it is a copy.** THREE states, not two (2026-08-07, human-ratified rule-change). *Authoritative here*: this ledger owns the fact. *Pointer*: somebody else owns it and we name them ("owned by X, do not hand-edit"). *Capture*: a timestamped, staleness-keyed copy taken so the thing can be **rebuilt** — never authoritative, and never applied back without re-reading the source first. The two-state rule existed to stop a ledger silently becoming a stale second copy of every device's config; that danger is real and unchanged. What it got wrong is that **a pointer to a machine that has died reproduces nothing**, and reproduction is much of why an estate is written down at all. A capture is the honest middle: it states what it copies, who owns the original, when it was taken, which command took it, and how a reader tells whether it still holds. It carries **no secrets, ever** — the `capture` term makes `redactions` a *required* attr precisely so that "nothing was removed" must be an explicit claim rather than an omission nobody notices.
-4. **Human + AI legible.** Plain YAML+Markdown, small greppable files.
-5. **Understandable by an average admin/dev.** No cleverness that needs explaining.
-6. **Capsule clarity — paper-durable.** Self-contained; spelled-out keys; explicit **units**; absolute **dates**; rich detail in namespaced `details:` capsules; each new `kind` gets a small schema so complexity stays organized. Reads correctly cold, years later.
+1. **One owner per fact.** A fact lives in one bean's `owns:`; elsewhere it is referenced.
+2. **Abstraction, not force-fit.** A fact that fits no term goes in `attributes:` or `details:`, intact —
+   never bent into a term that nearly fits, never dropped.
+3. **Reference external truth, or capture it knowingly.** A fact is either *authoritative here*, a *pointer* to
+   whoever owns it, or a *capture*: a dated, staleness-keyed copy taken so something can be rebuilt, never
+   authoritative, never applied back without re-reading the source, and never containing secrets.
+4. **Legible to people and agents.** Plain YAML and Markdown, small files.
+5. **No cleverness that needs explaining.**
+6. **Reads correctly cold.** Spelled-out keys, explicit units, absolute dates, detail in named `details:`
+   blocks.
 
-## Links (functional + efficient)
-**Relations** (P4/D3) are a small set of canonical typed edges — `owned_by`, `lives_in`, `instance_of`, `part_of`, `created_in`, `creator`, `git_host`, `runtime`, `manages`, `depends_on`, `consumes` — plus ONE open residual, `refs`. Each declares its own shape and whether it must stay acyclic; `owned_by`/`lives_in`/`part_of`/`depends_on` are **DAGs**. All use `{ bean|mapping: <id> [, field: <key>] }` and the validator resolves every pointer (dangling target or missing field = error). Keep refs one hop (shallow).
-Every **`refs`** entry must carry **`rel: <name>`** naming its relation type, because the key is only a slot label (`party_acme`, `c_survey`) — `rel` is what makes an edge self-describing when read alone. `rel` is deliberately **open** and kebab-case, never an enum: a new kind of relation must not require a rule-change. A relation declaring **`inverse_of`** is held consistent with its mirror, so a convenience edge cannot drift from the fact.
+## The Contract of Parts: who decides
+This table is the one statement of who may decide what.
 
-## The Contract of Parts — human↔AI authority
-Who decides, and who must be asked. This table is the SINGLE OWNER of the classes; it had five copies
-(here, MERGE.md §9, SKILL.md, `GARDEN.md` `policy.authority`, and the class letters in `log/pending.md`)
-and the other four are pointers now.
-
-| | Decision | Owner |
+| | Decision | Who |
 |---|---|---|
-| **A** | record a newly **observed**, reversible fact | AI-autonomous (tag `src`, `as_of`, log) |
-| **B** | record an **inference** not directly observed | AI-autonomous, constrained (tag `src: inferred`; not settled) |
-| **C** | **overwrite/delete** an authoritative value | own prior *observed* → auto (log both); *asserted* / safety → **ratify** |
-| **D** | set or alter a **human-asserted** fact | **human-only** (AI may only propose) |
-| **E** | flip a **safety-critical** `status:` or flag | **human ratifies** |
-| **F** | choose or settle a bean's **identity anchors** | **human ratifies** (it governs all future merges) |
-| **G** | add or change a **vocabulary term or rule** (the law) | **human ratifies**, logged distinctly as a rule-change |
-| **H** | add a dated **`exceptions:`** entry (case law) | AI proposes / human co-decides |
-| **I** | **auto-merge**, inclusiveness-safe, no conflict | AI-autonomous |
-| **J** | resolve a **merge conflict or uncertain identity** | **human ratifies** (emit a *pending* seed) |
-| **K** | **logging** consequential actions | shared, non-optional |
+| **A** | record a newly **observed**, reversible fact | an agent alone (tag `src`, `as_of`; log it) |
+| **B** | record an **inference** not directly observed | an agent alone, marked `src: inferred`, not settled |
+| **C** | **overwrite or delete** an authoritative value | own earlier *observed* value: an agent (log both); *asserted* or safety-related: **a person ratifies** |
+| **D** | set or change a **human-asserted** fact | **a person only**; an agent may propose |
+| **E** | change a **safety-critical** `status:` or flag | **a person ratifies** |
+| **F** | choose or settle a bean's **identity anchors** | **a person ratifies** — it governs every future merge |
+| **G** | add or change a **vocabulary term or rule** (the law) | **a person ratifies**, logged distinctly as a RULE-CHANGE |
+| **H** | add a dated **`exceptions:`** entry | an agent proposes, a person co-decides |
+| **I** | an **automatic merge** with no conflict | an agent alone |
+| **J** | resolve a **merge conflict or uncertain identity** | **a person ratifies** |
+| **K** | **log** what was done | everyone, always |
 
-**Keystone default:** any decision whose class is unclear ⇒ AI proposes / human ratifies. No-silent-
-generalization, promoted from *rules* to *authority*.
-**Protect the law:** editing `seed/std-vocab.md`, `VOCAB.md` or `MODEL.md` is a **rule-change** — ratified,
-and logged distinctly from an ordinary edit. The gate enforces the logging half: a staged change to the law needs a staged journal entry that says RULE-CHANGE.
-**Enforce the honour system:** a state-changing commit must carry a journal entry (gate-checked), and the
-actor is a distinct git committer per model and session, so "human vs AI" in the log is real rather than
-self-declared.
+When the class is unclear, an agent proposes and a person ratifies. An agent that meets something it may not
+decide parks it in `log/pending.md` as `status: proposed`, does everything safe around it, and carries on.
 
-## Provenance — the dual logging duty (`log/journal.md`)
-- **Agent:** high-detail logs of consequential actions (state-changing shell execs: command + purpose + outcome; decisions + reasoning). Granularity governed by the `shell-log` vocab term.
-- **Human:** decisions, approvals, events — so the "why" survives.
-A state-changing commit must carry a journal entry that NAMES each changed bean or mapping (the gate checks this, and refuses an entry that still contains a `(fill in` template field).
+## The journal and the gate
+- Every change is recorded in `log/journal.md` in the same commit: who, what and why. People record decisions
+  and approvals; agents record what they ran, why, and what happened.
+- `bin/dmcheck.py` runs as a git pre-commit hook. It refuses a commit that breaks a rule, including:
+  - a bean or mapping change whose journal entry does not name it;
+  - a change to the law whose entry does not say RULE-CHANGE. The law is `seed/std-vocab.md`, `VOCAB.md`,
+    `GARDEN.md` and every file the release ships (`seed/LANGUAGE`: this document, the checklist, the tools and
+    the gate itself);
+  - a journal entry that still contains a template's `(fill in` field.
+- These checks confirm that the words are there, not that they are true; honesty is still the writer's.
+- Each person and each agent session commits under its own git identity, so the log's "who" is real.
+- `CHECKLIST.md` is how a write is made.
 
-## The write gate (session/model-agnostic)
-Every write passes **CHECKLIST.md**; its mechanical half is enforced by `bin/dmcheck.py` as a git **pre-commit hook** → a violating write cannot be committed by any model in any session. Run `python3 bin/dmcheck.py`; commit only at `0 error(s)`.
-
-## Distributed & convergent (see MERGE.md)
-Beans from different gardens merge into canonical beans — lossless, order-agnostic, deterministic, no duplicate objects — via a CRDT lattice join over a JCS-canonical projection, with conflicts routed to the exception-ack protocol. Full spec + invariants in **MERGE.md**.
+## Merging
+Gardens merge object by object, matched on establishing anchors: losslessly, in any order, with the same
+result, and never creating two beans for one object. A genuine disagreement is kept, both values, for a person
+to settle. `MERGE.md` has the full algebra.

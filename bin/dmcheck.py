@@ -53,6 +53,7 @@ ISO_DATE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
 # P4: `refs`, `depends_on` and `consumes` used to be hardcoded here. They are declared vocabulary terms
 # now, so the gate no longer names a single relation — every edge it resolves comes from a schema.
 errors, warns = [], []
+LANGUAGE_PATTERNS = []
 
 # ---- THE STATE THE PLIES SHARE, AND THE ONLY STATE THEY SHARE -------------------------------------
 # Each name below is PUBLISHED by exactly one ply and READ by later ones; `PLIES` at the foot of the
@@ -140,7 +141,12 @@ def registry(name):
     for every row it had copied and did not use (found by the v0.3.1 cold-start drill). An addition names
     only what is new, so the garden accounts only for what it declared."""
     base = vocab_fm.get(name) if vocab_fm.get(name) is not None else (std_fm.get(name) or [])
-    return list(base) + list((vocab_fm.get('registry_additions') or {}).get(name) or [])
+    # An added row the base already has is NOT added twice: `check_local_additions` reports it by name, and a
+    # doubled row would otherwise surface as a misleading "exported enum has drifted".
+    def _dup(row):
+        return isinstance(row, dict) and row and any(
+            isinstance(b, dict) and b.get(next(iter(row))) == row[next(iter(row))] for b in base)
+    return list(base) + [r for r in ((vocab_fm.get('registry_additions') or {}).get(name) or []) if not _dup(r)]
 
 # TERMS: every vocabulary term from both tiers, garden-local last so a garden may refine a std term.
 def _overlay(base, over):
@@ -230,6 +236,31 @@ def check_vocab_enum_drift():
         if sorted(want) != sorted(have):
             errors.append(f"VOCAB {_name}: schema.values {sorted(have)} != {' + '.join(_paths)} {sorted(want)} "
                           f"— the exported enum has drifted from its definition")
+
+
+# --- a garden's local ADDITION that the standard now carries itself (v0.5.0) --------------------------------------
+# The contribution path is: prove a value locally with values_add / registry_additions, propose it, and it lands in
+# Tier-0. The garden that proved it then carried a duplicate, and the gate said only "the exported enum has drifted"
+# (found by the second cold-start drill). This names the actual situation and the one-line fix.
+def check_local_additions():
+    _tier0 = {t['term']: (t.get('schema') or {}) for t in (std_fm.get('terms') or []) + PROFILE_TERMS
+              if isinstance(t, dict) and t.get('term')}
+    for _t in (vocab_fm.get('local_terms') or []):
+        if not isinstance(_t, dict):
+            continue
+        for _v in ((_t.get('schema') or {}).get('values_add') or []):
+            if _v in ((_tier0.get(_t.get('term')) or {}).get('values') or []):
+                errors.append(f"VOCAB {_t.get('term')}: '{_v}' is in values_add, but std-vocab@{std_ver} already offers it — "
+                              f"remove it from values_add in VOCAB.md (and its row from registry_additions, if any)")
+    for _name, _rows in ((vocab_fm.get('registry_additions') or {}).items()):
+        _base = std_fm.get(_name) or []
+        for _row in (_rows or []):
+            if not isinstance(_row, dict) or not _row:
+                continue
+            _k = next(iter(_row))
+            if any(isinstance(_b, dict) and _b.get(_k) == _row[_k] for _b in _base):
+                errors.append(f"VOCAB registry_additions.{_name}: the row {_k}={_row[_k]!r} is already in std-vocab@{std_ver} — "
+                              f"remove it from registry_additions in VOCAB.md")
 
 
 # --- a list's merge identity must name fields its entries actually carry (std-vocab@8.0) -----------------
@@ -446,12 +477,14 @@ def check_identity_capsule():
             # role anchor (one that migrates between objects) corroborating-only, whatever a bean claims.
             pol = (TERMS.get(a['key']) or {}).get('anchor')
             if isinstance(pol, dict) and 'establishing' in pol and a.get('establishing') != pol['establishing']:
+                _dir = ("promote a corroborating anchor to establishing" if a.get('establishing')
+                        else "demote an establishing anchor to corroborating")
                 errors.append(f"{base}: anchor '{a['key']}'.establishing is {a.get('establishing')} but the "
                               f"vocabulary declares {pol['establishing']} for that term — a bean may not "
-                              f"promote a corroborating anchor (VOCAB {a['key']}.anchor)")
+                              f"{_dir}; write establishing: {str(pol['establishing']).lower()} (VOCAB {a['key']}.anchor)")
             if a.get('establishing') is True:
                 n_est += 1
-                est_owner.setdefault((a['key'], str(a['value'])), []).append(base)
+                est_owner.setdefault((a['key'], compare_value(a['key'], a['value'])), []).append(base)
         # min-anchor policy attaches to the root axis, not the kind (P3/D1) — read it from the declared registry.
         pol = _row(POLICY, fm.get(_axis)) if _axis else None
         need = (pol or {}).get('min_establishing_anchors')
@@ -459,10 +492,24 @@ def check_identity_capsule():
             warns.append(f"{base}: {_axis} '{fm.get(_axis)}' requires {need} establishing anchor(s) when "
                          f"'{ident.get('status')}' but has {n_est} (VOCAB {_reg}.min_establishing_anchors)")
 
+# HOW AN ANCHOR IS COMPARED (std-vocab 9.0, human-ratified). A term that governs an anchor may declare
+# `compare_form`; uniqueness is then judged on that form, so `SYN-0042` and `syn-0042 ` are one object. A
+# cold-start drill committed exactly that typo duplicate with 0 errors. Read from the vocabulary; names no key.
+COMPARE_FORMS = {'upper-trim': lambda v: re.sub(r'\s+', '', v).upper()}
+
+def compare_value(key, value):
+    for _sch in SCHEMAS.values():
+        if _sch.get('governs_anchor') == key and _sch.get('compare_form') in COMPARE_FORMS:
+            return COMPARE_FORMS[_sch['compare_form']](str(value))
+    return str(value)
+
+
 def check_establishing_anchor_dedup():
     for (k, v), bs in sorted(est_owner.items()):
         if len(bs) > 1:
-            errors.append(f"establishing anchor {k}={v} on {bs} — same object in one garden (merge, don't duplicate)")
+            errors.append(f"establishing anchor {k}={v} on {bs} — same object in one garden. If they ARE one "
+                          f"object, keep one bean and move the other's facts into it (MERGE.md); if they are "
+                          f"two, one of the anchor values is wrong")
 
 
 
@@ -820,6 +867,10 @@ def ctl_governs_anchor(c):
         if _pat and not re.match(_pat, _v):
             errors.append(f"{c.base}: anchor {_ga}='{_v}' is not in canonical form "
                           f"({c.sch.get('canonical_note', _pat)}) (VOCAB {c.term}.schema.value_pattern)")
+        _cf = c.sch.get('compare_form')
+        if _cf in COMPARE_FORMS and COMPARE_FORMS[_cf](_v) != _v:
+            warns.append(f"{c.base}: anchor {_ga}='{_v}' is compared as '{COMPARE_FORMS[_cf](_v)}' — store it in that "
+                         f"form (VOCAB {c.term}.schema.compare_form: {_cf})")
         if c.sch.get('value_form') == 'ip':
             try:
                 ipaddress.ip_address(_v)
@@ -1125,7 +1176,9 @@ def _declared_positions():
         if sch.get('values'):
             if 'values' not in _loc and _loc.get('values_add'):
                 # ONLY the added values are the garden's to account for; the rest stay Tier-0's.
-                _added = set(_loc['values_add'])
+                _t0 = next((t.get('schema') or {} for t in (std_fm.get('terms') or []) + PROFILE_TERMS
+                            if isinstance(t, dict) and t.get('term') == term), {})
+                _added = set(_loc['values_add']) - set(_t0.get('values') or [])   # already Tier-0's: not the garden's
                 _declare(f"{term}.values", [v for v in sch['values'] if v not in _added], False)
                 declared_pos[f"{term}.values"].update(_added)
                 LOCAL_ADDED.update((f"{term}.values", v) for v in _added)
@@ -1494,6 +1547,13 @@ def build_staged_constants():
         for _e in (_fm.get('standing') or []):
             if isinstance(_e, dict) and _e.get('standing') == 'law' and isinstance(_e.get('doc'), str):
                 LAW_DOCS.add(_e['doc'][5:] if _e['doc'].startswith('file:') else _e['doc'])
+    # THE RELEASE'S OWN FILES ARE LAW TOO (v0.5.0, human-ratified). Everything seed/LANGUAGE lists arrived from a
+    # daftar release — the model, the checklist, the tools, the gate itself. A garden may still patch one
+    # locally, but never silently: a cold-start drill committed an edit to bin/dmcheck.py with no journal entry.
+    global LANGUAGE_PATTERNS
+    _lang = os.path.join(ROOT, 'seed', 'LANGUAGE')
+    LANGUAGE_PATTERNS = ([l.strip() for l in open(_lang, encoding='utf-8')
+                          if l.strip() and not l.lstrip().startswith('#')] if os.path.isfile(_lang) else [])
 
     # NOT the same set, and deliberately so. The integrity check below parses front matter and refuses a
     # document that has lost it; MODEL.md and CHECKLIST.md are prose and carry none, so holding them to it
@@ -1550,7 +1610,7 @@ def check_staged_state():
                           f"      ## <YYYY-MM-DD> · <human (name) | agent> · <one line>\n"
                           f"      - action: <what was done to {sc[0]}>")
         # ...and a RULE-CHANGE all the more so: it is human-ratified and must be logged DISTINCTLY.
-        rc = [p for p in staged if p in LAW_DOCS]
+        rc = [p for p in staged if p in LAW_DOCS or any(fnmatch.fnmatch(p, _pat) for _pat in LANGUAGE_PATTERNS)]
         if rc and 'log/journal.md' not in staged:
             errors.append(f"RULE-CHANGE staged ({', '.join(rc)}) but log/journal.md not updated — a change "
                           f"to the vocabulary or the law is human-ratified and must be logged distinctly, "
@@ -1862,6 +1922,8 @@ def check_relation_occupancy():
 # dependency was discovered rather than declared. This is the same order, written down, with the reason
 # each ply cannot move earlier. A new ply is added here, not wedged between two paragraphs.
 PLIES = (
+    (check_local_additions,
+     "a local addition the standard already carries — named as that, before anything else reads the enum"),
     (check_vocab_enum_drift,
      "the vocabulary must agree with itself before anything is judged by it"),
     (check_merge_identity,

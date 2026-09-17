@@ -2,7 +2,7 @@
 # germinate — grow a new garden from this seed.
 #
 # What germinates is the LANGUAGE, never an estate: the Tier-0 vocabulary, the parser, the gate and the
-# tools, plus three empty templates. Beans are NOT carried. They are re-observable facts about machines
+# tools, plus four empty templates. Beans are NOT carried. They are re-observable facts about machines
 # that still exist, and copying them into a new garden would import assertions nobody made there.
 #
 # The pins are INTERPOLATED from the vocabulary's own `version:` key. A version typed into a template is
@@ -78,5 +78,18 @@ The garden is empty and it passes its own gate. To plant the first bean:
 
   python3 bin/dmrules.py   prints every rule in force, derived from the vocabulary.
   seed/README.md           has a first person and a first host that pass the gate as written.
+  seed/COOKBOOK.md         a domain, a service on a machine, a rented server, and adding a missing value.
   MODEL.md, CHECKLIST.md   what the rules mean, and how a write is made.
 EOF
+# WHO COMMITS. germinate commits as "germinate"; every later commit is yours, and git refuses one with no identity.
+# A cold-start drill's first bean failed there, on a fresh machine, with nothing in the docs to say why.
+if [ -z "$(git -C "$TARGET" config user.email)" ] || [ -z "$(git -C "$TARGET" config user.name)" ]; then
+    cat <<EOF
+
+BEFORE YOUR FIRST COMMIT: git has no identity here, and will refuse it. Set one for this garden:
+  git -C $TARGET config user.name  "Your Name"
+  git -C $TARGET config user.email "you@example.org"
+An agent working in the garden should commit under its own name (e.g. "agent (model, session)"), so the journal's
+"who" and git's author agree.
+EOF
+fi

@@ -89,25 +89,25 @@ open(os.path.join(ORIGIN, 'beans', 'relay.md'), 'w', encoding='utf-8').write(REL
 commit(ORIGIN, 'origin', 'recorded the relay every garden observes')
 BASE = git('rev-parse', 'HEAD', cwd=ORIGIN).stdout.strip()
 
-GARDENS = ('ankara', 'istanbul', 'berlin')
+GARDENS = ('site-a', 'site-b', 'site-c')
 for g in GARDENS:
     git('clone', '-q', ORIGIN, os.path.join(TMP, g), cwd=TMP)
     subprocess.run(['sh', 'bin/install.sh'], capture_output=True, cwd=os.path.join(TMP, g))
 
 # Three independent migrations. NO VERSION MOVES — the pin stays put, which is also what keeps them
 # mergeable at all: a merge across two Tier-0 versions is refused by design.
-edit(os.path.join(TMP, 'ankara'), lambda t: t.replace('  os: "AlmaLinux 9"', '  os: "AlmaLinux 9.4"')
+edit(os.path.join(TMP, 'site-a'), lambda t: t.replace('  os: "AlmaLinux 9"', '  os: "AlmaLinux 9.4"')
      .replace('roles: [relay]', 'roles: [relay, submission]'))
-commit(os.path.join(TMP, 'ankara'), 'ankara', 'refined os to 9.4 and added the submission role')
+commit(os.path.join(TMP, 'site-a'), 'site-a', 'refined os to 9.4 and added the submission role')
 
-edit(os.path.join(TMP, 'istanbul'),
-     lambda t: t.replace('roles: [relay]', 'roles: [relay, dkim-signing]\n  site: "Istanbul DC"'))
-commit(os.path.join(TMP, 'istanbul'), 'istanbul', 'added dkim-signing and site Istanbul DC')
+edit(os.path.join(TMP, 'site-b'),
+     lambda t: t.replace('roles: [relay]', 'roles: [relay, dkim-signing]\n  site: "Site B DC"'))
+commit(os.path.join(TMP, 'site-b'), 'site-b', 'added dkim-signing and site Site B DC')
 
-edit(os.path.join(TMP, 'berlin'), lambda t: t.replace('roles: [relay]', 'roles: [relay]\n  site: "Berlin DC"')
+edit(os.path.join(TMP, 'site-c'), lambda t: t.replace('roles: [relay]', 'roles: [relay]\n  site: "Site C DC"')
      .replace('nature: physical', 'nature: physical\ncapabilities:\n  open-relay: { permission: forbidden,'
                                   ' feasibility: possible, why: "must never accept third-party mail" }'))
-commit(os.path.join(TMP, 'berlin'), 'berlin', 'recorded site Berlin DC and forbade open-relay')
+commit(os.path.join(TMP, 'site-c'), 'site-c', 'recorded site Site C DC and forbade open-relay')
 
 gates = {g: subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True,
                            cwd=os.path.join(TMP, g)) for g in GARDENS}
@@ -148,12 +148,12 @@ check("...and the semantic driver, not git's text merge, did the work",
 head, _body = dmparse.read(os.path.join(REMOTE, 'beans', 'relay.md'))
 fm = yaml.safe_load(head)
 owns = fm['owns']
-check("a REFINEMENT subsumes: origin's 'AlmaLinux 9' and ankara's '9.4' resolve to 9.4, not a conflict",
+check("a REFINEMENT subsumes: origin's 'AlmaLinux 9' and site-a's '9.4' resolve to 9.4, not a conflict",
       owns['os'] == 'AlmaLinux 9.4', str(owns['os']))
 check("a SET unions across all three gardens",
       sorted(owns['roles']) == ['dkim-signing', 'relay', 'submission'], str(owns['roles']))
 check("a genuine DISAGREEMENT keeps both values rather than picking one",
-      isinstance(owns.get('site'), dict) and sorted(owns['site']['conflict']) == ['Berlin DC', 'Istanbul DC'],
+      isinstance(owns.get('site'), dict) and sorted(owns['site']['conflict']) == ['Site B DC', 'Site C DC'],
       str(owns.get('site')))
 check("...and the bean is marked unclean, naming the path a human must settle",
       # `status` is deliberately NOT the marker (Phase 5, D22): it is a `single` merged term, so the

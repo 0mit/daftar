@@ -812,7 +812,7 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
 
         THE ONE CASE THE COMMENT GUARANTEE ABOVE DID NOT COVER, and it bit where it costs most. That
         guarantee is about keys the merge does not touch; a key the merge DOES rewrite has its whole
-        span replaced, comment included. So `os: "AlmaLinux 9.7 (Moss Jungle Cat)"   # measured
+        span replaced, comment included. So `os: "Distro 9.7 (Codename)"   # measured
         2026-08-04; this key said 9.8` became a bare `conflict:` block, and the note recording when
         the value was measured — the provenance of one of the two values a human is now being asked
         to choose between — was deleted at exactly that moment. MERGE.md §10 calls the capture

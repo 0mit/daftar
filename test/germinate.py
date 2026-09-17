@@ -149,6 +149,31 @@ check("a vocabulary change whose journal entry never says RULE-CHANGE is refused
       _rc != 0 and "never says RULE-CHANGE" in _o, _o[-300:])
 _rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-17 · (fill in who ratified) · [[nas]]\n')
 check("a journal entry with an unfilled '(fill in' field is refused", _rc != 0 and "(fill in" in _o, _o[-300:])
+# v0.5.0: the release's own files are law in a garden, serials compare case- and space-insensitively, and a local
+# addition the standard already carries is named as that.
+_rc, _o = _try_commit(_append('MODEL.md', '\nA local note.\n'), '\n## 2026-09-17 · human (test) · a note in MODEL.md\n')
+check("an edit to a release file (MODEL.md) whose journal entry never says RULE-CHANGE is refused",
+      _rc != 0 and "never says RULE-CHANGE" in _o and 'MODEL.md' in _o, _o[-300:])
+_rc, _o = _try_commit(_append('bin/dmcheck.py', '\n# a local patch\n'), '\n## 2026-09-17 · human (test) · RULE-CHANGE: a local patch to the gate\n')
+check("...and a local patch to the gate itself goes through once the entry says RULE-CHANGE", _rc == 0, _o[-300:])
+_dup = open(os.path.join(_ex_tmp, 'beans', 'nas.md'), encoding='utf-8').read().replace('bean: nas\n', 'bean: nas-two\n', 1) \
+    .replace('"NAS-0042"', '"nas-0042 "', 1).replace('value: "nas", class: network', 'value: "nas-two", class: network', 1)
+_rc, _o = _try_commit(lambda: open(os.path.join(_ex_tmp, 'beans', 'nas-two.md'), 'w', encoding='utf-8').write(_dup),
+                      '\n## 2026-09-17 · human (test) · [[nas-two]]\n')
+check("a serial differing only by case and whitespace is the SAME establishing anchor — the duplicate is refused",
+      _rc != 0 and 'establishing anchor serial=NAS-0042' in _o, _o[-400:])
+check("...and the stored lowercase form is warned about, naming the form it is compared in",
+      "is compared as 'NAS-0042'" in _o, _o[-400:])
+_vfrag = "\nregistry_additions:\n  operating_systems:\n    - { os: debian, family: unix, path_grammar: unix-filesystem, meaning: x }\n"
+def _add_dup_row():
+    _v = open(_vp, encoding='utf-8').read()
+    _h, _sep, _r = _v.partition('\n---\n')
+    _h = _h.replace('registry_additions:\n  operating_systems:\n', 'registry_additions:\n  operating_systems:\n    - { os: debian, family: unix, path_grammar: unix-filesystem, meaning: x }\n', 1)
+    open(_vp, 'w', encoding='utf-8').write(_h + _sep + _r)
+_rc, _o = _try_commit(_add_dup_row, '\n## 2026-09-17 · human (test) · RULE-CHANGE: debian added locally\n')
+check("a local registry addition the standard already carries is named as that, with the fix",
+      _rc != 0 and "already in std-vocab" in _o and "remove it from registry_additions" in _o
+      and 'drifted' not in _o, _o[-400:])
 
 # THE EXECUTABLE BITS TRAVEL. v0.4.0 and v0.4.1 shipped bin/hooks/pre-commit and bin/install.sh WITHOUT them —
 # an edit that wrote a new file and renamed it over the old one dropped the mode — and nothing noticed, because

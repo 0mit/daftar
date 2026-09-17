@@ -188,6 +188,9 @@ registry_additions:
     - { os: nas-os, family: unix, path_grammar: unix-filesystem, meaning: "A vendor's Linux-based NAS operating system." }
 ```
 
-Then the NAS bean can say `os: nas-os`. (The germinated `VOCAB.md` already has an empty `local_terms: []`
-line; replace it with the block above rather than adding a second `local_terms:` — the gate refuses a key
-written twice.)
+Then the NAS bean can say `os: nas-os`. **Commit the two together:** a value the garden adds must be used
+by a bean, so the vocabulary change on its own is refused ("declared but NO bean occupies it"). The one
+commit is one logical change — adding the thing and the value that describes it. (The germinated `VOCAB.md`
+already has an empty `local_terms: []` line; replace it with the block above rather than adding a second
+`local_terms:` — the gate refuses a key written twice.) If a later daftar release adds the same value to the
+standard, the gate tells you to delete your local copy.

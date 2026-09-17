@@ -34,7 +34,7 @@ repository is a trap, and this one is not repeated.
 sh seed/germinate.sh <target-directory>
 ```
 
-That copies the daftar tools from this clone's `bin/`, the Tier-0 vocabulary, and three empty templates; interpolates the
+That copies the daftar tools from this clone's `bin/`, the Tier-0 vocabulary, and four empty templates; interpolates the
 version pin **from the vocabulary's own `version:` key** rather than typing it; `git init`s; installs the
 hooks; makes the first commit; and runs the gate. A garden that cannot make its first commit has not
 germinated, so the commit is part of the test rather than a step left to the reader.

@@ -1,85 +1,111 @@
-# daftar — the write gate (every write passes this)
+# daftar — how a write is made
 
-Session/model-agnostic. Part A is enforced mechanically by `bin/dmcheck.py`, run as a git **pre-commit hook** — a failing write cannot be committed by any model or session. The hook is **versioned** at `bin/hooks/pre-commit`, because `.git/hooks` is not cloned and a fresh clone would otherwise have no gate at all: after cloning, run **`sh bin/install.sh`** — the one installer. Part B is judgment the writer confirms; Part C is how a write is made.
+Part A is what the gate checks for you. Part B is what only you can judge. Part C is how to edit a document
+without breaking it, Part D how to decide what to read, and Part E how to work beside another session.
+`MODEL.md` says what the rules mean; `HISTORY.md` in the daftar repository says why each one exists.
 
-The gate reads the **staged blobs**, not the working tree, so what is checked is what is committed — they differ under partial staging. Two rules exist only there: a staged document must still **parse**, and a staged edit that **removes a top-level key** must have that key named in the staged journal entry. Replayed over this garden's whole history, that second rule fired **zero** false positives; every real removal was already declared in the journal.
+The gate is `bin/dmcheck.py`, run as the git pre-commit hook `bin/hooks/pre-commit`. A garden grown with
+`seed/germinate.sh` has it installed already. **A fresh clone of an existing garden does not** — `.git/hooks`
+is never cloned — so run `sh bin/install.sh` once in every new clone.
 
-## Part A — mechanical (auto-enforced; commit blocked on any fail)
-- [ ] Valid YAML front-matter; `bean:`/`mapping:` id = filename, kebab-case.
-- [ ] **Every top-level key is declared** by a vocabulary term; a fact that fits no term goes in `details:`/`attributes:`, and a new kind of fact is proposed in `log/pending.md`. **No key is written twice** in one mapping at any depth — YAML would silently keep only the second.
-- [ ] Required fields — beans: `bean, kind, title, status, summary (warn), identity, provenance`; mappings: `mapping, kind, summary`.
-- [ ] Enum-valued fields (`status`, `identity.status`, `provenance.src`, anchor `class`/`authority`) match the VOCABULARY — this checklist deliberately no longer restates the values, because a second copy of a rule is a rule that can disagree with itself. `python3 bin/dmrules.py` prints them all, derived from the law in force.
-- [ ] **Every anchor** has `key, value, establishing`. Since P4 `establishing: true|false` is the load-bearing split and `class` is an optional HINT at *why*; where a vocabulary term declares an anchor policy it OVERRULES the bean.
-- [ ] **Establishing anchors unique** — no hardware/logical anchor value shared by two beans (that's one object → merge).
-- [ ] **Links resolve** — each `{bean|mapping: X[, field]}` points to an existing target + field. Acyclicity is declared PER RELATION via `schema.dag`, not fixed to one list of sections.
-- [ ] **Every rule is passed by the objects too** (the reverse gate): a declared position is occupied, or declared vacant with a reason.
-- [ ] **No duplicate authoritative IP** (one owner; `shared_identifiers:`/`scope:` for legit shared).
-- [ ] `VOCAB.md` pins `extends: std-vocab@<ver>` matching the installed std-vocab.
-- [ ] A list term merged member by member declares an identity its entries carry: every unmarked `by-` field is required on each entry, and a `?` field is declared but optional (MERGE.md, std-vocab@8.0).
+The gate reads the **staged** files, not the working tree: what it checks is what the commit will contain.
 
-## Part B — judgment (writer confirms; the gate cannot)
-Part B is not a leftovers list. It is the set of things a machine **cannot** check, kept separate so that what the gate does check is unambiguous. Items leave this list when they become mechanizable — three have.
+## Part A — what the gate checks (a commit is refused on any failure)
+- [ ] Front matter is valid YAML; `bean:` / `mapping:` equals the filename, in kebab-case.
+- [ ] Every top-level key is declared by the vocabulary. A fact that fits no term goes in `details:` or
+      `attributes:`; a new kind of fact is proposed in `log/pending.md`.
+- [ ] No key is written twice in one mapping, at any depth.
+- [ ] Required fields are present — beans: `bean, kind, title, status, summary, identity, provenance`;
+      mappings: `mapping, kind, summary`.
+- [ ] Every enum value is one the vocabulary offers. `python3 bin/dmrules.py` prints them all.
+- [ ] Every anchor has `key`, `value` and `establishing`; a vocabulary anchor policy overrules the bean.
+- [ ] No establishing anchor is shared by two beans (serials compared ignoring case and spaces).
+- [ ] Every edge resolves to an existing bean or mapping, and field; relations declared acyclic stay acyclic.
+- [ ] Every ownership chain ends — at a bean's owner, outside the ledger, or at the crown — and every facet with
+      an owner has a holder.
+- [ ] Every position the garden declares is used by a bean, or declared vacant with a reason.
+- [ ] One authoritative owner per IP address.
+- [ ] `VOCAB.md` and `GARDEN.md` pin the installed vocabulary version.
+- [ ] A local addition (`values_add`, `registry_additions`) is not already in the standard.
+- [ ] A list term merged entry by entry declares identity fields its entries carry.
+- [ ] **The journal:** a staged bean or mapping is named in the staged journal entry; a staged change to the law
+      (the vocabulary, `GARDEN.md`, or any file `seed/LANGUAGE` lists) has an entry that says RULE-CHANGE; no
+      entry still contains `(fill in`.
+- [ ] **No silent damage:** a staged document still parses and keeps its body; a removed top-level key is named in
+      the journal entry; a key is not emptied out while it stays.
 
-**Unenforceable is not unsupportable.** Run **`python3 bin/dmreview.py`** before a judgment pass: it gathers the evidence each item below needs — relative time words that fix prose to a day the reader cannot identify, dates baked into key *names*, near-duplicate values the verbatim check cannot see, anchors claiming operator authority on beans the operator did not assert, keys used exactly once. **Nothing it prints is a violation**, and it always exits 0 by design: a judgment aid that can fail a build becomes a rule, and a rule encoding a judgment nobody made launders an opinion into an enforcement. If a signal ever earns enforcement, it moves to Part A with evidence.
+These checks confirm that words are present, not that they are true.
 
-- [ ] **Abstraction, not force-fit:** an uncategorizable unique datum goes to `attributes:`/`details:` intact, rather than being bent into a term that nearly fits. *Judgment: the gate can see that a term's shape is satisfied, never that the shape was the right one.*
-- [ ] **Provenance honest:** `src`/`by`/`as_of` reflect who really said it and how they know. *Judgment, and tested: a rule flagging `authority: operator-asserted` on a bean whose `provenance.src` is `observed` was considered and REJECTED — per-anchor authority legitimately differs from a bean's default, which the model explicitly supports. The real failure mode is an agent stamping operator authority on a value it minted itself, and no gate can see that; only a reader comparing the claim to reality can.*
-- [ ] **Identity right:** the anchor genuinely identifies the object. *The mechanical half is enforced (establishing flag, per-nature minimums, a term's anchor policy overruling a bean). What remains is whether the value is TRUE.*
-- [ ] **External truth referenced, not mirrored** ("owned by X, do not hand-edit"). *Verbatim duplication is now caught (Part A); a paraphrase of someone else's truth is not, and paraphrase is the more common way this goes wrong.*
-- [ ] **Capsule / paper-durable (Rule 6):** obvious keys, explicit units, absolute dates, reads correct cold years later. *Dates and shapes are enforced; whether prose actually reads correctly to a stranger is not.*
-- [ ] **No silent generalization:** an uncovered case ran the exception-ack protocol. *The reverse gate now forces a declared position to be occupied or explained, which covers the vocabulary half. The bean half — quietly treating a new case as an old one — remains judgment.*
-- [ ] **One logical change per commit**, message `"<id>: <what> (<why>)"`. *Judgment: a commit's coherence is not countable.*
-- [ ] **The evidence came from the ESTATE, not from a test.** Before recording that something is true of the world — in a bean, in the journal, in a note to a future session — check what actually demonstrated it. *Judgment, and learned the hard way on 2026-08-02: an acceptance fixture used `analysis_cache.policy: skim` for no reason; a scratch garden copied it; the gate correctly warned that a garden had occupied a Tier-0 vacancy; and that warning was written down as "a second garden has genuinely occupied it, withdraw the vacancy". The occupant was a fixture we wrote. The gate was right about what it could see — SOME garden occupies this — and the leap from "a garden" to "the estate" is the part no gate can make for you. Note the distinction: deliberately occupying a vacant position is CORRECT in `test/golden.py`, where the mutation exists to prove the gate refuses it. The question is whether the thing was the subject of the test or an incidental value that wandered in.*
+## Part B — what only you can judge
+Run `python3 bin/dmreview.py` first. It gathers the evidence for these questions and never fails; nothing it
+prints is a violation.
+- [ ] **Abstraction, not force-fit.** A fact that fits no term went into `attributes:` or `details:` intact,
+      rather than into a term that nearly fits.
+- [ ] **Provenance is honest.** `src`, `by` and `as_of` say who really said it and how they know. In particular,
+      an agent never stamps `operator-asserted` on a value it produced itself.
+- [ ] **The identity is true.** The anchor really identifies this object.
+- [ ] **External truth is referenced, not paraphrased** into a second copy.
+- [ ] **It reads correctly cold:** obvious keys, explicit units, absolute dates.
+- [ ] **No silent generalisation.** A case the vocabulary does not cover was proposed, not quietly treated as an
+      old one.
+- [ ] **One logical change per commit.** Adding a local value and the first bean that uses it is one change,
+      and the gate requires them together.
+- [ ] **The evidence came from the estate, not from a test.** A value that exists because a test or fixture put
+      it there proves nothing about the world.
 
-**Moved to Part A this session** — no longer your job to remember:
-- *Single owner of a fact* → the gate warns when one long authoritative value appears verbatim in two beans. It is a REGRESSION GUARD: this rule was violated earlier today, when one framework description was restated in twelve beans, and it is silent now only because that was fixed.
-- *Authority respected* → a staged change to `VOCAB.md` / `GARDEN.md` / `std-vocab.md` now REQUIRES a journal entry. A rule-change was previously the one write not required to be logged, which is exactly backwards: it is the most consequential write in the system.
-- *Provenance logged* → the journal binding (already mechanical), now covering rule-changes too.
+## Part C — editing a document without breaking it
+Beans and the vocabulary are edited as text, because their comments and layout carry meaning a YAML round-trip
+would flatten. Text edits are blind to structure, so use `bin/dmsafe.py`. Its operations PREVENT the common
+mistakes rather than catching them afterwards, because they address a document by key, not by line or pattern:
+- [ ] `dmsafe.insert_after(path, key, block)` — lands after the key's whole block, never inside it.
+- [ ] `dmsafe.replace_block(path, key, block)` — replaces exactly the key's block.
+- [ ] `dmsafe.remove_block(path, key)` — removes a top-level key; calling it is the declaration.
+- [ ] `dmsafe.set_nested(path, 'a.b', block, expect=N)` — a nested key by path (`a[].b` reaches into each
+      list item).
+- [ ] `dmsafe.flow_set(path, 'identity.anchors[key=fqdn].authority', value, expect=N)` — a value inside a
+      one-line `{ a: 1, b: 2 }` mapping; only the value's bytes change.
+- [ ] `dmsafe.flow_insert(path, 'identity.anchors[]', 'establishing', 'false', after='class', expect=N)` — adds
+      a key inside flow mappings.
+- [ ] The nested and flow operations **require `expect=N`**, the number of places you mean to change. Measure
+      first with `dmsafe.count(path, 'a[].b')`. Matching more, fewer or zero places is refused.
+- [ ] The top-level operations need no count: they refuse a key that is missing or written twice.
 
-## Part C — editing (how a write is MADE, not what it says)
-Beans and vocabularies are **structured documents edited with text surgery**, because their comments and layout carry meaning a YAML round-trip would flatten. Text surgery is blind to structure, and in one session it broke documents five times. Part C exists because the *content* being right does not make the *edit* safe.
+When no operation fits, use `dmsafe.edit(path, transform, allow_remove=[...])`. It cannot prevent a mistake,
+but it catches one: it parses before and after, compares every leaf, and rolls back an edit that breaks the
+document, empties it, or loses anything you did not list in `allow_remove`. A change that matched nothing is
+refused too.
+- [ ] Never write a document with a plain `open(path, 'w')`: it truncates the file before anything reads it.
+- [ ] The gate repeats the damage checks on staged files, whether or not you used dmsafe.
 
-**Prefer operations that PREVENT the mistake** — they address a document by **key**, not by offset, pattern or indent depth, so the shapes that caused every incident cannot be expressed:
-- [ ] `dmsafe.insert_after(path, key, block)` — lands after a key's **whole block**, never between the key and its children. *(Incident 1: an insert after the key's LINE broke nine documents at once.)*
-- [ ] `dmsafe.replace_block(path, key, block)` — the span comes from the structure, so it cannot run too far. *(Incident 2: a stop-pattern swallowed four blocks and left valid YAML behind.)*
-- [ ] `dmsafe.remove_block(path, key)` — the removal is declared by **calling it**; there is no flag to forget.
-- [ ] `dmsafe.set_nested(path, 'a.b', block, expect=N)` — a **nested** key addressed by path (`a.b`, or `a[].b` to reach into each list item), anchored to its **ancestry** rather than to an indentation string. **State how many locations you expect**: incident 5 meant one `poles:` and silently changed four, and the count is the safeguard — not the depth.
-- [ ] A missing landmark **fails loudly** instead of silently matching nothing, and so does a path matching **zero** locations. *(Incident 3, and its nested twin.)*
-- [ ] `dmsafe.flow_set(path, 'identity.anchors[key=fqdn].authority', v, expect=N)` — reaches **inside** a one-line flow mapping (`{ a: 1, b: 2 }` — most anchors). A **selector** picks the item by a field of its own, and only the **value bytes** change: quoting, spacing, key order and trailing comments survive, which is the whole reason these documents are edited as text rather than round-tripped.
-- [ ] `dmsafe.flow_insert(path, 'identity.anchors[]', 'establishing', 'false', after='class', expect=N)` — adds a key to flow mappings, optionally right after a named one. *(This is the P4 migration's shape: 59 anchors given an `establishing` flag by blind regex. It worked, and nothing would have told me if it hadn't.)*
+None of this catches an edit that is well-formed and simply wrong. That is Part B.
 
-> **dmsafe is opt-in — it protects only the writes you remember to route through it.** That cost is real: a test fixture reproduced incident 4 an hour after the tool preventing it was built. So the **gate now runs dmsafe's own comparison against the staged blobs**: a destroyed document, a **gutted** key (one that survives while its subtree is emptied — invisible to a top-level check), and a bean left with **no human body** are all refused at commit time, whether or not the edit went through the tool. Use the operations because they are better; rely on the gate because it is not optional.
+## Part D — deciding what to read
+- [ ] **Point a cursor first:** `python3 bin/dmcursor.py <bean or file path>`. A path resolves to the bean that
+      owns it, with what must be kept in mind about it.
+- [ ] **Trust the measurement.** A cached analysis marked `FRESH` still matches its source: use it instead of
+      re-reading the source. A tree marked `DO NOT WALK` is read through its summary.
+- [ ] **Carry the constraints.** The cursor lists what is forbidden, required, impossible or in breach, including
+      what a being inherits from the machine it lives on, what it depends on, and what it is part of.
+- [ ] `python3 bin/dmstale.py` lists caches and registrations that have aged; `python3 bin/dmrules.py` every rule.
 
-**Fall back to `dmsafe.edit(path, transform, allow_remove=[...])`** only when no operation fits. It cannot prevent the mistake, but it CATCHES it: it parses before and after, compares **leaf paths**, and rolls back an edit that breaks a document, empties it, or loses content you did not declare.
-- [ ] **Declare removals.** Removing is fine; removing *by accident* is not, and the only difference is whether you said so.
-- [ ] **A pattern that matched nothing is a bug**, not a no-op — that is how a file you believe you fixed stays broken. Refused.
-- [ ] Never `open(path, 'w')` directly. *(Incident 4: it truncated the file before the read that was supposed to supply its content.)*
+## Part E — working beside another session
+Two sessions in one working copy share one git index, so either can stage the other's unfinished work, and the
+gate cannot tell. Give each session its own copy.
+- [ ] **Look first:** `python3 bin/dmsession.py list` shows every worktree. One line means no other worktree is
+      open — not that nobody else is working in the main copy.
+- [ ] **Take your own copy:** `python3 bin/dmsession.py open <slug> --purpose "…"` (with `--host` and `--owner`,
+      or `git config daftar.host` / `daftar.owner` set once for the clone). It creates a git worktree with its
+      own index and a session bean to describe the work.
+- [ ] **Name the slug for the purpose**, not a date or a host.
+- [ ] **Close from the main copy:** `python3 bin/dmsession.py close <slug>`. It refuses when the session's gate
+      fails, when the worktree or the main copy has uncommitted changes, or when the main copy is mid-merge.
+- [ ] **A conflicting close stops and says so.** It does not abort the merge; settle it in the main copy and run
+      close again.
+- [ ] **On an unexpected conflict in the journal or a bean,** check `git check-attr merge -- log/journal.md
+      beans/<any>.md`: it must print `union` and `daftar`. Git does not warn when either is missing.
 
-**Every operation REQUIRES `expect=N` — there is no default.** The count is the safeguard, not the addressing: across six incidents the cause was never *where* an edit landed but that it landed in more places than intended with nothing saying so. A default would let you skip the one step that makes intent explicit, which is why `allow_remove`, a vacancy's reason and an explicit `enforced_by: none` are all required too.
-- [ ] **Measure, then act:** `dmsafe.count(path, 'a[].b')` → `(n, kind)`. It reports zero rather than raising, so it is always safe to ask. Requiring a count without providing a way to obtain one would only invite a guess.
-- [ ] Over-match, zero-match, `expect=0` and a **duplicated top-level key** are all refused rather than resolved to the first thing found.
-- [ ] Setting a value to what it already is is a **no-op**, and refused — the same rule as a pattern that matched nothing.
-
-**What none of this catches:** an edit that is well-formed, loses nothing, and is simply *wrong*. That is Part B.
-
-## Part D — reading (measure before you look, and carry what you must hold in mind)
-Part C makes a WRITE safe. Part D is the step before it: deciding what to read. The same discipline — **measure, then act** — and the same reason: the expensive mistake is not reading the wrong file, it is reading 1,269 MB to re-derive something already recorded and still true.
-- [ ] **Point a cursor first:** `python3 bin/dmcursor.py <bean | any file path>`. A file path resolves back to the being that owns it, which is the question you actually have — *I am about to touch this file*.
-- [ ] **Believe the measurement, not the instinct.** A cache marked `FRESH` has had its staleness key checked against the live source: **use it, do not re-derive it.** A tree marked `DO NOT WALK` is reference-only, and the summary stands in for it.
-- [ ] **Carry the attention.** A cursor gathers what must be held in mind — capabilities `FORBIDDEN`/`REQUIRED`, edges `IMPOSSIBLE` or in breach, safety notes — and classifies them: a **LIVE RISK** (forbidden yet possible) demands different care from one *already prevented elsewhere*, and an **UNENFORCED** requirement from one that holds itself.
-- [ ] **Attention is inherited along every chain the vocabulary declares acyclic** — habitat, dependency, composition, ownership. A token running on a host is bound by that host's constraints (nothing on a VPS that cannot send mail directly can send it, whatever the token believes), and a being is bound by what it **depends on** and by the whole it is **part of**. The cursor names which chain carried what.
-- [ ] Those directions are **derived, not declared**: a relation that must stay acyclic is exactly one you can walk, which `schema.dag` already says. There is **no direction aspect**, and there should not be — a fact stated twice is a fact that can disagree with itself. Which sub-keys hold a ref is read from `ref_fields`/`entry_ref_fields` for the same reason, so a cursor walks the *same* graph the gate resolves.
-
-Run before committing: `python3 bin/dmcheck.py` → must print `0 error(s)`.
-Also available: `python3 bin/dmrules.py` (the rules in force, derived) · `python3 bin/dmstale.py` (caches and registrations that have aged) · `python3 bin/dmsafe.py` (parse-check every document) · `python3 bin/dmsession.py list` (who else is working here — Part E).
-
-## Part E — working beside another session (measure who else is here, before you write anything)
-Parts A–D assume one writer. **Two sessions in one working copy share one git INDEX**, and the gate reads the *staged* blobs — so `git add -A` from either stages the other's half-finished edits. Session A can be refused for session B's mistake, or commit B's unfinished bean under A's message with A's journal entry attached. **Nothing in Part A catches this: both writes are individually legal.**
-- [ ] **Ask first: `python3 bin/dmsession.py list`.** It names every worktree, its branch and how far ahead it is. One line means you are alone and may work in the main copy.
-- [ ] **If anyone else is here, take your own copy:** `python3 bin/dmsession.py open <slug> --purpose "…"`. A git **worktree** gives each session its own working copy and its **own index**, sharing one object store — so sessions cannot stage over each other and can still see each other's branches with no network round trip. `open` refuses unless the gate is installed in the shared git dir, and refuses a dirty main copy (a worktree branches from HEAD, so the new session would start *without* those changes).
-- [ ] **The slug names the PURPOSE**, not a date and not a host — `split-api-for-multi-version-support`. The session bean it writes is how the next session learns what happened; a skeleton left in place teaches it nothing.
-- [ ] **Close from the MAIN copy, never from inside the worktree** — `close` deletes that directory, and deleting your own cwd leaves every later command failing with "Unable to read current working directory". It refuses if you are standing inside it, if the session's gate does not pass, if the worktree has uncommitted changes, and — since 2026-08-08 — if the **main** copy is dirty or mid-merge, because that copy is shared and a merge lands in it.
-- [ ] **A close that hits a conflict stops and tells you.** It does **not** auto-abort: the merge state is the information, and MERGE.md §10 is lossless capture first, human choice after. Your branch and worktree are untouched; settle the main copy and re-run.
-- [ ] **First thing to suspect on a conflict in `log/journal.md` or a bean:** `git check-attr merge -- log/journal.md beans/<any-bean>.md` → must print `union` and `daftar`. Both attributes were missing between 2026-08-07 and 2026-08-08 — deleted without mention by a commit about something else — and while they were gone, two sessions appending *entirely unrelated* journal entries conflicted every time. Git does not warn when a merge attribute is missing, any more than when it names a driver that is not configured.
-
-**Changing the gate itself** is the one write this checklist cannot check, because Part A *is* the gate: a rule it stops enforcing takes its own test green with it. Before proposing one, run the gate you have AND the gate of the release you started from over the same garden, and compare their output byte for byte: it says only that behaviour did not *move*, never that it is right, and a deliberate change is exactly the differences you then read. A test that asserts a finding merely *contains* a phrase is blind to what a refactor actually moves — the order findings print in, an extra finding beside the expected one, a warning promoted to an error, a traceback beside a correct verdict.
+## Changing the gate itself
+Part A is the gate, so it cannot check a change to itself. Before proposing one, run the gate you have and the
+gate of the release you started from over the same garden and compare their output: it shows what moved, and a
+deliberate change should move exactly that. A test that only checks a message *contains* a phrase misses a
+reordered finding, an extra finding, or a warning turned into an error.

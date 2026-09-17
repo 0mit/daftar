@@ -27,7 +27,7 @@ echo "configured merge driver 'daftar' -> bin/dmmerge.py"
 
 # NO GLOBAL SKILL SYMLINK. This script used to offer one, into $HOME/.claude/skills/. It is not offered
 # any more: the symlink outlives the clone it points at, its `[ ! -e ]` guard meant re-running this could
-# never repair a stale one, and on this machine it resolved to a different clone pinned two vocabulary
+# never repair a stale one, and in practice it resolved to a different clone pinned two vocabulary
 # majors behind. The skill is PROJECT-SCOPED at .claude/skills/ and loads whenever you work in this repo.
 
 echo "installed: pre-commit gate + semantic merge driver in $REPO/.git"

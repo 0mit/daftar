@@ -36,6 +36,8 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
   gardens move their own pins when they adopt a release.
 - `python3 bin/dmrules.py` inside a garden prints every rule as the gate reads it; use it to check that your
   term says what you meant.
+- `HISTORY.md` explains why existing rules are the way they are — read the relevant part before proposing to
+  change one.
 - Some comments mention `test/golden.py` and `test/diffgate.py`. They are the maintainers' corpus tests,
   which need a real garden's beans and so are not published.
 
