@@ -1,12 +1,12 @@
 #!/bin/sh
 # daftar pre-commit gate. VERSIONED here because .git/hooks is not cloned — install with
-#   sh bin/hooks/install.sh
+#   sh bin/install.sh
 # The gate reads the STAGED blobs, not the working tree, so what is checked is what is committed.
 # A failing write cannot be committed by any model or session; that is what makes the gate law rather
 # than advice. To override in a genuine emergency: git commit --no-verify, and say so in the journal.
 root=$(git rev-parse --show-toplevel)
 # The GATE (staged blobs, the law) and the FAST corpus suite. Both are sub-second-to-2s; the full
-# test/golden.py takes ~66s and is deliberately NOT here — a hook that slow invites --no-verify, which
+# a release's slower corpus tests are deliberately NOT here — a hook that slow invites --no-verify, which
 # is the failure mode a hook must avoid, and it let a failing test through on 2026-08-02.
 python3 "$root/bin/dmcheck.py" || exit 1
 exec python3 "$root/test/fast.py"

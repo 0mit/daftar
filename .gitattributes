@@ -7,8 +7,7 @@
 # its own storage format. Found the same hour the term was written, by git printing a warning.
 captures/** -text
 
-# MERGE DISPATCH. These four lines existed from 2026-08-02, were DELETED WITHOUT MENTION by 791fa16 on
-# 2026-08-07 — a commit about capture line endings that rewrote this file whole instead of appending to
+# MERGE DISPATCH. These lines were once DELETED WITHOUT MENTION by a commit about capture line endings that rewrote this file whole instead of appending to
 # it — and are restored here. Nothing noticed for eight days, because git does not warn when a merge
 # attribute is missing any more than when it names a driver that is not configured: it silently
 # text-merges, and a text merge only shows itself the first time two sessions actually disagree.
@@ -26,9 +25,5 @@ log/journal.md merge=union
 # pair conflicted textually while log/journal.md absorbed the same shape losslessly.
 log/pending.md merge=union
 
-# collect-admindows.ps1 is carried to a Windows box and run by PowerShell 5.1,
-# which assumes CP1252 for a .ps1 WITHOUT a BOM. The file is deliberately pure
-# ASCII, UTF-8 with BOM, CRLF — and git's default text handling would rewrite
-# those endings on checkout, the same way it rewrote captures/ and made a
-# staleness key lie. Store the bytes untouched.
-bin/tscan/*.ps1 -text
+# A GARDEN'S OWN ATTRIBUTES go in a .gitattributes inside the directory they concern (git reads one per
+# directory), never here: this file is part of the language, and bin/dmupgrade.py replaces it on every upgrade.

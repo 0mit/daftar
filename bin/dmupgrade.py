@@ -13,7 +13,9 @@ WHAT IT DOES, and nothing else:
   2. fetches the tag into a temporary clone;
   3. copies every file the release's LANGUAGE matches, and removes files the garden's copy of the same
      patterns matched that the release no longer has (a retired tool leaves, rather than lingering);
-  4. moves the `extends: std-vocab@<ver>` pin in VOCAB.md and GARDEN.md to the release's vocabulary;
+  4. moves the `extends: std-vocab@<ver>` pin in VOCAB.md and GARDEN.md to the release's vocabulary, and records
+     the tag as `daftar_release:` in GARDEN.md — refusing a tag OLDER than the one recorded unless
+     --allow-downgrade is given, because an older tag silently removes fixes;
   5. re-runs `bin/install.sh`, because the hooks or the merge driver may have changed;
   6. appends a RULE-CHANGE journal entry naming the tag, its commit, the vocabulary move and every file;
   7. runs the gate and reports it.
@@ -30,6 +32,8 @@ import dmparse
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPSTREAM = 'https://github.com/0mit/daftar.git'
 PIN = re.compile(r'^(extends: std-vocab@)(\S+)', re.M)
+RELEASE = re.compile(r'^daftar_release:.*$', re.M)
+SEMVER = re.compile(r'^v?(\d+)\.(\d+)\.(\d+)$')
 
 
 def run(*args, cwd=ROOT, check=True):
@@ -57,6 +61,13 @@ def expand(root, pats):
     return out
 
 
+def recorded_release():
+    """The tag GARDEN.md records as `daftar_release:`, or None for a garden grown before v0.4.0 recorded one."""
+    path = os.path.join(ROOT, 'GARDEN.md')
+    fm = dmparse.loads(dmparse.read(path)[0] or '') or {} if os.path.isfile(path) else {}
+    return str(fm['daftar_release']) if isinstance(fm, dict) and fm.get('daftar_release') else None
+
+
 def vocab_version(root):
     fm = dmparse.loads(dmparse.read(os.path.join(root, 'seed', 'std-vocab.md'))[0] or '') or {}
     return str(fm.get('version'))
@@ -66,12 +77,19 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
     ap.add_argument('--from', dest='src', default=UPSTREAM, help=f'repository URL or path (default {UPSTREAM})')
+    ap.add_argument('--allow-downgrade', action='store_true', help='adopt a tag older than the one GARDEN.md records')
     a = ap.parse_args()
 
     dirty = run('git', 'status', '--porcelain', '--untracked-files=no').stdout.strip()   # untracked files are not in the diff
     if dirty:
         sys.exit("REFUSING: the working tree has uncommitted changes.\n" + dirty +
                  "\nCommit or stash them first, so that the upgrade is the only thing `git diff` shows.")
+
+    current = recorded_release()
+    cur_v, new_v = SEMVER.match(current or ''), SEMVER.match(a.tag)
+    if cur_v and new_v and tuple(map(int, new_v.groups())) < tuple(map(int, cur_v.groups())) and not a.allow_downgrade:
+        sys.exit(f"REFUSING: {a.tag} is OLDER than the release this garden records ({current}). Adopting it would "
+                 f"remove whatever changed since. Pass --allow-downgrade if that is really what you mean.")
 
     tmp = tempfile.mkdtemp(prefix='dmupgrade-')
     try:
@@ -111,6 +129,18 @@ def main():
                 os.replace(path + '.tmp', path)
                 repinned.append(doc)
 
+        gpath = os.path.join(ROOT, 'GARDEN.md')
+        gtext = open(gpath, encoding='utf-8').read()
+        gline = f'daftar_release: "{a.tag}"  # the daftar release this garden runs; bin/dmupgrade.py moves it'
+        if recorded_release() != a.tag:
+            if RELEASE.search(gtext):
+                gtext = RELEASE.sub(gline, gtext, count=1)
+            else:
+                gtext = PIN.sub(lambda m: m.group(0) + '\n' + gline, gtext, count=1)
+            open(gpath + '.tmp', 'w', encoding='utf-8').write(gtext)
+            os.replace(gpath + '.tmp', gpath)
+            repinned.append('GARDEN.md daftar_release')
+
         if not (changed or added or removed or repinned):
             print(f"nothing to do: this garden's language already equals {a.tag} ({sha[:12]}).")
             return 0
@@ -119,7 +149,7 @@ def main():
         now = datetime.datetime.now().astimezone().strftime('%Y-%m-%d %H:%M %z')
         lines = [f"\n## {now} · (fill in who ratified) · RULE-CHANGE: language upgraded to daftar {a.tag}",
                  f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {a.src} at {sha}; "
-                 f"std-vocab {before} -> {after}.",
+                 f"std-vocab {before} -> {after}; release {current or 'unrecorded'} -> {a.tag}.",
                  f"- changed: {', '.join(changed) or 'none'}",
                  f"- added: {', '.join(added) or 'none'}",
                  f"- removed: {', '.join(removed) or 'none'}",

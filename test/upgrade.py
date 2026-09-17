@@ -38,7 +38,7 @@ for p in pats:
             os.makedirs(os.path.join(REL, os.path.dirname(rel)), exist_ok=True)
             shutil.copy2(f, os.path.join(REL, rel))
 run('git', 'init', '-q', cwd=REL); run('git', 'add', '-A', cwd=REL)
-run('git', 'commit', '-qm', 'v1', cwd=REL); run('git', 'tag', 'v1', cwd=REL)
+run('git', 'commit', '-qm', 'v1', cwd=REL); run('git', 'tag', 'v0.1.0', cwd=REL)
 
 # ---- the garden, germinated from v1
 g = run('sh', os.path.join(REL, 'seed', 'germinate.sh'), GARDEN, cwd=REL)
@@ -53,9 +53,11 @@ _major, _minor = ver1.split('.')
 ver2 = f"{_major}.{int(_minor) + 1}"
 _text = open(sv).read()                 # read BEFORE opening for write: 'w' truncates first
 open(sv, 'w').write(_text.replace(f'version: "{ver1}"', f'version: "{ver2}"', 1))
-run('git', 'add', '-A', cwd=REL); run('git', 'commit', '-qm', 'v2', cwd=REL); run('git', 'tag', 'v2', cwd=REL)
+run('git', 'add', '-A', cwd=REL); run('git', 'commit', '-qm', 'v2', cwd=REL); run('git', 'tag', 'v0.2.0', cwd=REL)
 
-up = lambda *extra: run(sys.executable, os.path.join(GARDEN, 'bin', 'dmupgrade.py'), 'v2', '--from', REL, *extra, cwd=GARDEN)
+up = lambda *extra, tag='v0.2.0': run(sys.executable, os.path.join(GARDEN, 'bin', 'dmupgrade.py'), tag, '--from', REL, *extra, cwd=GARDEN)
+check("germination records the release the garden grew from",
+      'daftar_release: "v0.1.0"' in open(os.path.join(GARDEN, 'GARDEN.md')).read())
 
 # ---- a dirty garden is refused, and nothing is touched
 open(os.path.join(GARDEN, 'VOCAB.md'), 'a').write('\n')
@@ -74,14 +76,32 @@ check("both pins move to the release's vocabulary",
       all(f'extends: std-vocab@{ver2}' in open(os.path.join(GARDEN, d)).read() for d in ('VOCAB.md', 'GARDEN.md')))
 j = open(os.path.join(GARDEN, 'log', 'journal.md')).read()
 check("a RULE-CHANGE journal entry names the tag, the vocabulary move and the files",
-      'RULE-CHANGE' in j and 'daftar v2' in j and f'{ver1} -> {ver2}' in j and 'bin/dmhello.py' in j and 'bin/dmdigest.py' in j)
+      'RULE-CHANGE' in j and 'daftar v0.2.0' in j and f'{ver1} -> {ver2}' in j and 'bin/dmhello.py' in j and 'bin/dmdigest.py' in j)
 check("NOTHING IS COMMITTED — adopting a release is the garden's own decision",
       run('git', 'log', '--oneline', cwd=GARDEN).stdout.count('\n') == 1 and run('git', 'status', '--porcelain', cwd=GARDEN).stdout.strip())
-check("the upgrade commits cleanly through the hook once a human adopts it",
-      run('git', 'add', '-A', cwd=GARDEN).returncode == 0
-      and run('git', 'commit', '-qm', 'adopt v2', cwd=GARDEN).returncode == 0)
+check("...and GARDEN.md now records the adopted release",
+      'daftar_release: "v0.2.0"' in open(os.path.join(GARDEN, 'GARDEN.md')).read())
+run('git', 'add', '-A', cwd=GARDEN)
+_c = run('git', 'commit', '-qm', 'adopt v0.2.0', cwd=GARDEN)
+check("committing with the journal entry's '(fill in' fields left unfilled is REFUSED",
+      _c.returncode != 0 and "(fill in" in (_c.stdout + _c.stderr), (_c.stdout + _c.stderr)[-300:])
+_jp = os.path.join(GARDEN, 'log', 'journal.md')
+_jt = open(_jp).read()
+open(_jp, 'w').write(_jt.replace('(fill in who ratified)', 'human (test)')
+                        .replace('(fill in — what this release brings that this garden adopts)', 'the test release'))
+run('git', 'add', '-A', cwd=GARDEN)
+_c = run('git', 'commit', '-qm', 'adopt v0.2.0', cwd=GARDEN)
+check("once a human fills them in, the adoption commits cleanly through the hook", _c.returncode == 0,
+      (_c.stdout + _c.stderr)[-300:])
 r = up()
 check("a second run finds nothing to do", r.returncode == 0 and 'nothing to do' in r.stdout, (r.stdout + r.stderr)[-300:])
+r = up(tag='v0.1.0')
+check("an OLDER tag is refused — a downgrade would silently remove fixes",
+      r.returncode != 0 and 'OLDER' in (r.stdout + r.stderr) and os.path.isfile(os.path.join(GARDEN, 'bin', 'dmhello.py')),
+      (r.stdout + r.stderr)[-300:])
+r = up('--allow-downgrade', tag='v0.1.0')
+check("...unless --allow-downgrade says it is meant",
+      r.returncode == 0 and os.path.isfile(os.path.join(GARDEN, 'bin', 'dmdigest.py')), (r.stdout + r.stderr)[-300:])
 
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nupgrade: {sum(results)}/{len(results)} checks passed")

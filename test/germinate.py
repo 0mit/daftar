@@ -29,6 +29,7 @@ results = []
 
 
 def check(name, ok, detail=''):
+    ok = bool(ok)
     results.append(ok)
     print(("PASS " if ok else "*** FAIL *** ") + name + (f"  [{detail}]" if detail and not ok else ''))
 
@@ -91,26 +92,70 @@ check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md and the daftar skill tra
       [f for f in ('MODEL.md', 'CHECKLIST.md', 'MERGE.md', 'log/pending.md', '.claude/skills/daftar/SKILL.md')
        if not os.path.isfile(os.path.join(G, f))])
 
-# THE FIRST-BEAN EXAMPLES IN seed/README.md ARE COMMITTED IN A FRESH GARDEN, so the page cannot drift from the law.
+# THE EXAMPLES IN seed/README.md AND seed/COOKBOOK.md ARE COMMITTED IN A FRESH GARDEN, so the pages cannot drift
+# from the law. The cookbook's VOCAB.md fragment is applied too, and the NAS then uses the value it adds.
 _ex_tmp = os.path.join(TMP, 'readme-examples')
 run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _ex_tmp, cwd=ROOT)
-_readme = open(os.path.join(ROOT, 'seed', 'README.md'), encoding='utf-8').read()
-_examples = re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _readme, re.S)
+_examples, _fragments = [], []
+for _doc in ('README.md', 'COOKBOOK.md'):
+    _page = open(os.path.join(ROOT, 'seed', _doc), encoding='utf-8').read()
+    _examples += re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _page, re.S)
+    _fragments += re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', _page, re.S)
 for _path, _text in _examples:
     open(os.path.join(_ex_tmp, _path), 'w', encoding='utf-8').write(_text + '\n')
+_vp = os.path.join(_ex_tmp, 'VOCAB.md')
+for _frag in _fragments:
+    _v = open(_vp, encoding='utf-8').read()
+    for _key in re.findall(r'^([a-z_]+):', _frag, re.M):          # a key the template holds empty is REPLACED
+        _v = re.sub(rf'^{_key}: \[\].*\n', '', _v, count=1, flags=re.M)
+    _head, _sep, _rest = _v.partition('\n---\n')                   # insert before the closing fence
+    open(_vp, 'w', encoding='utf-8').write(_head + '\n' + _frag + _sep + _rest)
+_nas = os.path.join(_ex_tmp, 'beans', 'nas.md')
+if _fragments and os.path.isfile(_nas):
+    _n = open(_nas, encoding='utf-8').read()
+    open(_nas, 'w', encoding='utf-8').write(_n.replace('provides_habitat: linux-baremetal\n', 'provides_habitat: linux-baremetal\nos: nas-os\n', 1))
 with open(os.path.join(_ex_tmp, 'log', 'journal.md'), 'a', encoding='utf-8') as _j:
-    _j.write('\n## 2026-09-17 · human (test) · the README examples\n- action: ' + ', '.join(p for p, _ in _examples) + '\n')
+    _j.write('\n## 2026-09-17 · human (test) · the README and COOKBOOK examples\n- action: RULE-CHANGE (VOCAB.md adds nas-os); '
+             + ', '.join(p for p, _ in _examples) + '\n')
 run('git', 'add', '-A', cwd=_ex_tmp)
-_ex_c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'README examples', cwd=_ex_tmp)
-check(f"the {len(_examples)} first-bean examples in seed/README.md commit in a fresh garden, as written, with 0 errors",
-      len(_examples) >= 2 and _ex_c.returncode == 0, (_ex_c.stdout + _ex_c.stderr)[-400:])
+_ex_c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'examples', cwd=_ex_tmp)
+check(f"the {len(_examples)} bean examples and {len(_fragments)} VOCAB fragments in seed/README.md + seed/COOKBOOK.md "
+      f"commit in a fresh garden, as written, with 0 errors",
+      len(_examples) >= 7 and len(_fragments) == 2 and _ex_c.returncode == 0, (_ex_c.stdout + _ex_c.stderr)[-500:])
+_ex_gate = run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmcheck.py'), cwd=_ex_tmp).stdout
+check("...with ZERO warnings, and the banner names the garden and the release it runs",
+      ' 0 warning(s)' in _ex_gate and re.search(r'^readme-examples \(daftar [^)]+\): ', _ex_gate, re.M),
+      _ex_gate.strip().splitlines()[-1] if _ex_gate.strip() else '')
+
+# THE JOURNAL ENTRY MUST SAY WHAT IT RECORDS (v0.4.0). Each of these was accepted before: any added byte satisfied
+# the provenance duty, and a vocabulary change needed no RULE-CHANGE marker.
+def _try_commit(mutate, journal_line):
+    mutate()
+    with open(os.path.join(_ex_tmp, 'log', 'journal.md'), 'a', encoding='utf-8') as _j:
+        _j.write(journal_line)
+    run('git', 'add', '-A', cwd=_ex_tmp)
+    _r = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'probe', cwd=_ex_tmp)
+    run('git', 'reset', '-q', '--hard', cwd=_ex_tmp)
+    return _r.returncode, _r.stdout + _r.stderr
+def _append(rel, text):
+    return lambda: open(os.path.join(_ex_tmp, rel), 'a', encoding='utf-8').write(text)
+_rc, _o = _try_commit(_append('beans/nas.md', 'More about the NAS.\n'), '\nx\n')
+check("a bean change whose journal entry does not NAME the bean is refused (the `x` bypass)",
+      _rc != 0 and "never names it" in _o, _o[-300:])
+_rc, _o = _try_commit(_append('beans/nas.md', 'More about the NAS.\n'), '\n## 2026-09-17 · human (test) · note\n- action: [[nas]] body\n')
+check("...and naming it lets the commit through", _rc == 0, _o[-300:])
+_rc, _o = _try_commit(_append('VOCAB.md', '\nMore prose.\n'), '\n## 2026-09-17 · human (test) · vocab prose\n- action: VOCAB prose\n')
+check("a vocabulary change whose journal entry never says RULE-CHANGE is refused",
+      _rc != 0 and "never says RULE-CHANGE" in _o, _o[-300:])
+_rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-17 · (fill in who ratified) · [[nas]]\n')
+check("a journal entry with an unfilled '(fill in' field is refused", _rc != 0 and "(fill in" in _o, _o[-300:])
 
 # THE MERGE CONFIGURATION TRAVELS. Missing this, a germinated garden text-merges its beans and conflicts
 # on its own append-only journal — and nothing says so, because git warns neither when an attribute names
 # a missing driver nor when a configured driver is named by nothing. Found by merging three germinated
 # gardens for real: the driver was configured in every one and invoked in none.
-# WHAT TRAVELS UNDER bin/, found by growing a garden for a friend: `cp -R bin/` shipped `bin/tscan/` — this
-# estate's host names, home paths and a LAN address — and, with no .gitignore, 15 .pyc files in the first commit.
+# WHAT TRAVELS UNDER bin/: `cp -R bin/` once shipped a garden's own private tool — its host names, home
+# paths and a LAN address — and, with no .gitignore, 15 .pyc files in the first commit.
 _tracked = run('git', 'ls-files', cwd=G).stdout.split()
 _bin = [f for f in _tracked if f.startswith('bin/')]
 check("only daftar's own tools travel under bin/ — every bin/dm*.py, the hooks and the installer, nothing else",

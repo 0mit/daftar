@@ -4,7 +4,7 @@
 # which `dmcheck` imports without saying so, and a pattern carries a new tool without anyone remembering to.
 #
 # The tools: every `bin/dm*.py`, the one installer and the hooks — and NOTHING ELSE under bin/. Copying the
-# whole of bin/ once shipped an estate's own timesheet tool, host names and a LAN address into a new garden.
+# whole of bin/ once shipped one estate's private tools, host names and a LAN address into a new garden.
 bin/dm*.py
 bin/install.sh
 bin/hooks/*

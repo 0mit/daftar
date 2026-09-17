@@ -29,7 +29,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def _product():
     """`daftar v<tag>` — DERIVED from git, because the version lives in an annotated tag and nowhere else.
     Every version this repo ever typed into prose rotted (four titles reading v1.0 over v2 bodies, two
-    stale pins); the two that stayed correct were derived. A tag has no second copy to disagree with."""
+    stale pins); the two that stayed correct were derived. A tag has no second copy to disagree with.
+
+    IN A GARDEN, the garden's own name and the release it adopted: `GARDEN.md` names both (`garden:` and
+    `daftar_release:`, written by germinate.sh and dmupgrade.py). A garden's git history carries no daftar
+    tags, so describing it printed "daftar (untagged)" on every garden anyone grew."""
+    _g = load(os.path.join(ROOT, 'GARDEN.md'))[0] if os.path.isfile(os.path.join(ROOT, 'GARDEN.md')) else None
+    if isinstance(_g, dict) and _g.get('garden') and _g.get('daftar_release'):
+        return f"{_g['garden']} (daftar {_g['daftar_release']})"
     try:
         v = subprocess.run(['git', '-C', ROOT, 'describe', '--tags', '--always', '--dirty'],
                            capture_output=True, text=True, timeout=5).stdout.strip()
@@ -125,18 +132,31 @@ vocab_fm = load(os.path.join(ROOT, 'VOCAB.md'))[0] or {}
 
 
 def registry(name):
-    """A top-level registry, from the garden if it declares one, else from Tier-0."""
-    return vocab_fm.get(name) if vocab_fm.get(name) is not None else (std_fm.get(name) or [])
+    """A top-level registry, from the garden if it declares one, else from Tier-0 — plus any rows the garden
+    ADDS under `registry_additions: {<name>: [...]}`.
+
+    Replacing a registry wholesale is still possible, and it is the wrong tool for adding one row: a garden
+    that needed one operating system Tier-0 lacks had to copy the whole registry and then declare a vacancy
+    for every row it had copied and did not use (found by the v0.3.1 cold-start drill). An addition names
+    only what is new, so the garden accounts only for what it declared."""
+    base = vocab_fm.get(name) if vocab_fm.get(name) is not None else (std_fm.get(name) or [])
+    return list(base) + list((vocab_fm.get('registry_additions') or {}).get(name) or [])
 
 # TERMS: every vocabulary term from both tiers, garden-local last so a garden may refine a std term.
 def _overlay(base, over):
-    """Garden-local overlay on a Tier-0 term: local keys win, `schema` merges key-by-key."""
+    """Garden-local overlay on a Tier-0 term: local keys win, `schema` merges key-by-key.
+
+    `schema.values_add: [...]` APPENDS to the Tier-0 enum instead of replacing it, so a garden adds one value
+    without restating (and then having to account for) every value Tier-0 already offers."""
     out = dict(base)
     for k, v in over.items():
         if k == 'schema' and isinstance(v, dict) and isinstance(base.get('schema'), dict):
             out['schema'] = {**base['schema'], **v}
         else:
             out[k] = v
+    _s = out.get('schema')
+    if isinstance(_s, dict) and _s.get('values_add'):
+        _s['values'] = list(_s.get('values') or []) + [x for x in _s['values_add'] if x not in (_s.get('values') or [])]
     return out
 
 # PROFILES (2.0/E4): Tier-0 terms a garden must OPT IN to. A garden that manages no code should not
@@ -509,6 +529,11 @@ def ectl_entry_required_attrs(e):
                       f"(VOCAB {e.term}.schema.entry_required_attrs)")
 
 
+UNKNOWN_VALUE_HINT = (" — if the value is real and the vocabulary lacks it, keep it under `attributes:` for now "
+                      "and propose it, or add it for this garden with `schema: {values_add: [...]}` in a VOCAB.md "
+                      "local_terms entry (see seed/COOKBOOK.md)")
+
+
 def ectl_entry_values(e):
     for attr, allowed in (e.sch.get('entry_values') or {}).items():
         if e.entry.get(attr) is not None and e.entry[attr] not in allowed:
@@ -616,7 +641,7 @@ def ectl_entry_form_from_kind_attr(e):
     _reserved = {k[_fk] for k in KINDS.values() if isinstance(k, dict) and k.get(_fk)}
     if _form and _form not in e.entry:
         errors.append(f"{e.base}: {e.ref} must use the '{_form}' form — kind '{_kind}' pins "
-                      f"{e.term}.{_fk} to it (VOCAB kinds.{_kind}.{_fk})")
+                      f"{e.term}.{_fk} to it (VOCAB kinds.{_kind}.{_fk}){_termination_hint(e.term, e.base)}")
     for _used in (_reserved & set(e.entry)):
         if _used != _form:
             _allowed = sorted(k['kind'] for k in KINDS.values()
@@ -778,7 +803,7 @@ def ctl_path(c):
     for val in path_values(c.fm, c.sch['path']):
         if allowed and val not in allowed:
             errors.append(f"{c.base}: {c.sch['path']} '{val}' not in {sorted(allowed)} "
-                          f"(VOCAB {c.term}.schema.values)")
+                          f"(VOCAB {c.term}.schema.values)" + UNKNOWN_VALUE_HINT)
     return STOP
 
 
@@ -872,7 +897,7 @@ def ctl_shape(c):
         allowed = allowed_values(c.sch)
         if allowed and c.node not in allowed:
             errors.append(f"{c.base}: {c.term} '{c.node}' not in {sorted(allowed)} "
-                          f"(VOCAB {c.term}.schema.values)")
+                          f"(VOCAB {c.term}.schema.values)" + UNKNOWN_VALUE_HINT)
         return STOP
     if shape == 'list_of_entries' and not isinstance(c.node, list):
         errors.append(f"{c.base}: {c.term} must be a LIST of entries (VOCAB {c.term}.schema.shape)")
@@ -1072,6 +1097,9 @@ def check_vacancy_reasons_declared():
                       "vacancy's reason against a list of its own invention. Declare them in the "
                       "vocabulary (law_carrier: there is exactly one path to the law).")
 
+LOCAL_ADDED = set()      # (source, position) a garden added with `values_add` — the garden accounts for exactly these
+
+
 def _declared_positions():
     """Every position the VOCABULARY offers: {source: {position}}, and which sources are the garden's.
 
@@ -1079,6 +1107,7 @@ def _declared_positions():
     address a vacancy is declared `at`. The second return is the subset this garden DECLARED itself.
     """
     declared_pos, local_pos = {}, set()
+    LOCAL_ADDED.clear()
     # WHOEVER DECLARES A POSITION ACCOUNTS FOR IT (P6/B2). A garden's occupancy claim covers only the
     # positions IT declared: Tier-0 positions are Tier-0's to account for, in its own vacancies block.
     # Without this a fresh garden fails its first gate run, ordered to justify `nature: physical` before it
@@ -1094,7 +1123,14 @@ def _declared_positions():
     for term, sch in SCHEMAS.items():
         _loc = LOCAL_SCHEMA.get(term, {})
         if sch.get('values'):
-            _declare(f"{term}.values", sch['values'], 'values' in _loc)
+            if 'values' not in _loc and _loc.get('values_add'):
+                # ONLY the added values are the garden's to account for; the rest stay Tier-0's.
+                _added = set(_loc['values_add'])
+                _declare(f"{term}.values", [v for v in sch['values'] if v not in _added], False)
+                declared_pos[f"{term}.values"].update(_added)
+                LOCAL_ADDED.update((f"{term}.values", v) for v in _added)
+            else:
+                _declare(f"{term}.values", sch['values'], 'values' in _loc)
         for attr, vals in (sch.get('entry_values') or {}).items():
             _declare(f"{term}.{attr}", vals, attr in (_loc.get('entry_values') or {}))
         for _asp in _aspects_of(sch):
@@ -1222,7 +1258,9 @@ def check_reverse_gate():
 
     for src, decl in sorted(declared_pos.items()):
         occ = occupied_pos.get(src, set())
-        for pos in sorted(decl - occ, key=str) if src in local_pos else []:
+        for pos in sorted(decl - occ, key=str):
+            if src not in local_pos and (src, pos) not in LOCAL_ADDED:
+                continue
             if (src, pos) not in vac_index:
                 errors.append(f"VOCAB {src}: position '{pos}' is declared but NO bean occupies it — give it "
                               f"an occupant, or declare it in `vacancies:` with a reason")
@@ -1507,7 +1545,10 @@ def check_staged_state():
         # (K) provenance duty — a state-change must be logged
         sc = [p for p in staged if p.startswith(DOCUMENTISH)]
         if sc and 'log/journal.md' not in staged:
-            errors.append(f"state-change staged ({', '.join(sc[:3])}…) but log/journal.md not updated — provenance duty")
+            errors.append(f"state-change staged ({', '.join(sc[:3])}…) but log/journal.md not updated — provenance duty. "
+                          f"Append an entry naming what changed and why, e.g.\n"
+                          f"      ## <YYYY-MM-DD> · <human (name) | agent> · <one line>\n"
+                          f"      - action: <what was done to {sc[0]}>")
         # ...and a RULE-CHANGE all the more so: it is human-ratified and must be logged DISTINCTLY.
         rc = [p for p in staged if p in LAW_DOCS]
         if rc and 'log/journal.md' not in staged:
@@ -1521,6 +1562,24 @@ def check_staged_state():
         _jraw = _git('diff', '--cached', '--unified=0', '--', 'log/journal.md')[0] or ''
         jdiff = '\n'.join(l[1:] for l in _jraw.splitlines()
                            if l.startswith('+') and not l.startswith('+++'))
+
+        # THE ENTRY MUST SAY WHAT IT RECORDS (2026-09-17, human-ratified). Until v0.4.0 these three duties were
+        # satisfied by ANY byte added to the journal: a cold-start drill appended the single line `x` and
+        # committed a bean change, and committed a vocabulary change whose entry never said RULE-CHANGE, while
+        # MODEL.md, the journal template and dmrules all described both as enforced. A garden's FIRST commit —
+        # germination, which has no HEAD to compare against — is exempt: nothing in it was decided by anyone yet.
+        if 'log/journal.md' in staged and _git('rev-parse', '--verify', '-q', 'HEAD')[0]:
+            if rc and 'RULE-CHANGE' not in jdiff:
+                errors.append(f"RULE-CHANGE staged ({', '.join(rc)}) but the staged journal entry never says RULE-CHANGE — "
+                              f"a change to the law is logged DISTINCTLY. Put the word RULE-CHANGE in the entry.")
+            for _p in sc:
+                _id = os.path.basename(_p)[:-3] if _p.endswith('.md') else _p
+                if not re.search(r'(?<![\w-])' + re.escape(_id) + r'(?![\w-])', jdiff):
+                    errors.append(f"{_p}: staged, but the staged journal entry never names it — write '{_id}' "
+                                  f"(or [[{_id}]]) in the entry, so the record says WHICH bean changed")
+            if '(fill in' in jdiff:
+                errors.append("the staged journal entry still contains '(fill in' — a template field was left "
+                              "unfilled; say who ratified the change and why before committing")
         for p in staged:
             if not (p.startswith(DOCUMENTISH) or p.endswith(FRONT_MATTER_DOCS)):
                 continue
@@ -1872,6 +1931,10 @@ def main():
     """
     for _ply, _why in PLIES:
         _ply()
+    # ONE FINDING, ONE LINE. Several plies can reach the same fact by different walks — one broken ownership edge
+    # printed the same cycle four times — and a repeated line reads as four problems.
+    warns[:] = list(dict.fromkeys(warns))
+    errors[:] = list(dict.fromkeys(errors))
     for w in warns:  print("WARN ", w)
     for e in errors: print("ERROR", e)
     print(f"\n{_product()}: {len(docs)} docs, {len(errors)} error(s), {len(warns)} warning(s)")

@@ -28,6 +28,17 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
 
    CI runs the same on every pull request.
 
+## Editing the vocabulary itself
+
+- The vocabulary is `seed/std-vocab.md`: YAML front matter (the law) and a Markdown body ending in a
+  changelog. Edit the front matter; add one changelog entry at the end, naming the change and why.
+- Bump its `version:` in the same change — minor for additive, major for a changed rule — and nothing else:
+  gardens move their own pins when they adopt a release.
+- `python3 bin/dmrules.py` inside a garden prints every rule as the gate reads it; use it to check that your
+  term says what you meant.
+- Some comments mention `test/golden.py` and `test/diffgate.py`. They are the maintainers' corpus tests,
+  which need a real garden's beans and so are not published.
+
 ## What happens next
 
 A maintainer reads the proposal against its neighbours — the sibling terms and records it would affect —

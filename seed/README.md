@@ -11,7 +11,7 @@ source of truth, which is why none travel. The journal is the fossil record, and
 
 Two artifacts do two different jobs and neither can do both:
 
-| | `seed/` | `beans/daftar.md` |
+| | `seed/` | a garden's own product bean (optional) |
 |---|---|---|
 | is | the germination kit — the **language** | this garden's bean **for** the product |
 | contains | the law, templates, and the germination script | only underivable ratified facts and gate-resolved pointers |
@@ -70,7 +70,7 @@ nature: living
 identity:
   status: confirmed
   anchors:
-    - { key: emp_id, value: "sam@example.org", class: logical, establishing: true }
+    - { key: person_id, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
 owned_by: { legal: { crown: love } }
 responsibility: { legal: { self: true } }
@@ -124,8 +124,7 @@ A garden without it text-merges its beans line by line and conflicts on its own 
 time. A vendored copy would be a second toolchain that can drift from the one under test, and hand-listing
 which modules to carry gets it wrong — `dmcheck.py` imports `dmsafe`, which is not obvious from reading it.
 It carries every `bin/dm*.py`, `bin/hooks/` and `bin/install.sh` — by that naming convention, not by a list
-— and nothing else under `bin/`: other tools there belong to this estate (`bin/tscan/` names its hosts and
-home paths). `.gitignore` travels with `.gitattributes`, so no bytecode reaches a new garden's first commit.
+— and nothing else under `bin/`: a garden may keep its own tools there, and they are its own. `.gitignore` travels with `.gitattributes`, so no bytecode reaches a new garden's first commit.
 
 ## What is deliberately not carried
 

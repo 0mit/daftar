@@ -3,7 +3,7 @@
 #
 # Hooks and merge-driver config live in .git/, which is NOT cloned, so every fresh clone runs this once.
 # There is exactly ONE installer. There used to be two — this one wrote a hook running only the gate,
-# while bin/hooks/install.sh installed the versioned hook running the gate AND the fast suite. Neither
+# while a second installer under bin/hooks/ installed the versioned hook running the gate AND the fast suite. Neither
 # was a superset, so following the README after the CHECKLIST silently removed the fast suite from the
 # gate. The versioned hooks in bin/hooks/ are the source of truth and this script only copies them.
 set -e

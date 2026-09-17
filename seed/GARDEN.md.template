@@ -1,6 +1,7 @@
 ---
 garden: @@GARDEN@@
 extends: std-vocab@@@VERSION@@
+daftar_release: "@@RELEASE@@"  # the daftar release this garden runs; bin/dmupgrade.py moves it
 created: "git-metadata"    # NEVER a canonical value; the real timestamp lives in git
 seeds_from: []             # gardens merged in, per MERGE.md
 ---

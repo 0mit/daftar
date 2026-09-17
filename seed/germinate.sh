@@ -35,6 +35,9 @@ print(str(yaml.safe_load(dmparse.read(sys.argv[1])[0])['version']))
 PY
 )
 [ -n "$VER" ] || { echo "germinate: could not read the vocabulary version" >&2; exit 1; }
+# WHICH RELEASE this garden grows from: the tag the release checkout sits on, else "untagged <commit>". Recorded in
+# GARDEN.md so a garden can say what it runs, and bin/dmupgrade.py can refuse to go backwards.
+RELEASE=$(git -C "$ROOT" describe --tags --exact-match 2>/dev/null || echo "untagged $(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)")
 
 mkdir -p "$TARGET/beans" "$TARGET/mappings" "$TARGET/log" "$TARGET/seed"
 # WHAT TRAVELS IS DECLARED ONCE, in seed/LANGUAGE, and bin/dmupgrade.py reads the same file — so a new garden
@@ -50,7 +53,7 @@ find "$TARGET" -name __pycache__ -type d -prune -exec rm -rf {} +
 
 GARDEN=$(basename "$TARGET")
 for f in VOCAB GARDEN; do
-    sed -e "s/@@VERSION@@/$VER/g" -e "s/@@GARDEN@@/$GARDEN/g" \
+    sed -e "s/@@VERSION@@/$VER/g" -e "s/@@GARDEN@@/$GARDEN/g" -e "s/@@RELEASE@@/$RELEASE/g" \
         "$SEED/$f.md.template" > "$TARGET/$f.md"
 done
 sed -e "s/@@GARDEN@@/$GARDEN/g" "$SEED/journal.md.template" > "$TARGET/log/journal.md"

@@ -277,7 +277,7 @@ def cmd_close(a):
                  f"Either way {branch} and its worktree at\n  {path}\nare untouched — re-run "
                  f"`close {a.slug}` once the main copy is clean.\n\n"
                  f"If the conflict is in log/journal.md or a bean, check first that this clone HAS the\n"
-                 f"merge dispatch: `git check-attr merge -- log/journal.md beans/daftar.md` must say\n"
+                 f"merge dispatch: `git check-attr merge -- log/journal.md beans/<any>.md` must say\n"
                  f"union and daftar. Both were missing from 2026-08-07 to 2026-08-08 and every\n"
                  f"additive close conflicted for that reason alone.")
     git('worktree', 'remove', path)

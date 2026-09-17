@@ -25,7 +25,7 @@ cursor reports what survived that check rather than re-deriving it.
 
 Usage:
     python3 bin/dmcursor.py <bean-id>
-    python3 bin/dmcursor.py /home/user/src/addons/timesheet/models/analytic.py
+    python3 bin/dmcursor.py /home/user/src/app/models/invoice.py
 """
 import glob, os, subprocess, sys
 

@@ -1,5 +1,5 @@
 ---
-version: "8.1"
+version: "8.2"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -49,6 +49,7 @@ schema_language:
   poles:                "one axis (a contradictory PAIR), or a LIST of axes — a figure may be 1-dimensional, 2, 3 or more, and the gate derives the count rather than assuming it"
   on_aspect:            "{aspect, attr, default} OR a LIST of them — a term's entries may take positions on SEVERAL aspects at once (e.g. what is allowed AND what is possible) — every entry of this term takes a POSITION on that aspect; an entry may name its own via an attr called after the aspect, else the default applies"
   facet_parity_with:    "<term> — this term and that one must carry the SAME facet keys (two arcs of one loop); one present without the other is a loose end"
+  values_add:           "[<value>...] — GARDEN overlay only: APPEND values to a Tier-0 term's enum instead of replacing it, so the garden accounts only for what it added (8.2)"
   inverse_of:           "<term>, or {term, cardinality: one-to-one | many-to-one} — this relation mirrors another and the gate holds the pair consistent so the convenience edge cannot drift from the fact. A BARE NAME means one-to-one and the mirror is enforced BOTH ways. `many-to-one` enforces only the functional direction: many instances point at one type, and the type cannot point back at all of them through a single mapping. Declare the cardinality; assuming a bijection is how a rule becomes unsatisfiable without anyone noticing."
 # == NATURES: the root axiom layer (added 2026-08-02, P3 / plan D1, human-ratified rule-change) ==
 # `nature` is the ROOT of the type system and `kind` is a REFINEMENT of it, not a parallel taxonomy.
@@ -252,14 +253,14 @@ operating_systems:
 
 # == STORAGE FORMATS: the OTHER filesystem axis, the one ntfs and ext4 actually belong to (added 7.0) ==
 # `layer` mirrors `net_protocols.layer` and for the same reason: storage is a STACK and the stack is what
-# `carried_by` records. MEASURED on both machines 2026-08-07 rather than imagined — the chain
+# `carried_by` records. MEASURED on real machines rather than imagined — the chain
 # `partition -> crypto_LUKS -> LVM2_member -> ext4` is literally what `lsblk` prints on an encrypted laptop, and a
 # RAID server adds `linux_raid_member -> md` beneath it. `luks_root: true`, a bare boolean in an `attributes` block,
 # is that whole chain flattened to one bit.
 storage_formats:
   - { format: ext4,              layer: filesystem,     posix: true,  meaning: "the estate's ordinary Linux filesystem" }
   - { format: ext2,              layer: filesystem,     posix: true,  meaning: "a common /boot filesystem" }
-  - { format: vfat,              layer: filesystem,     posix: false, meaning: "the EFI system partition on both machines. NOT posix: it carries no ownership or permission bits, which is why an EFI partition cannot hold anything whose mode matters." }
+  - { format: vfat,              layer: filesystem,     posix: false, meaning: "the usual EFI system partition. NOT posix: it carries no ownership or permission bits, which is why an EFI partition cannot hold anything whose mode matters." }
   - { format: swap,              layer: swap,                         meaning: "paging space; a formatted volume that holds no filesystem" }
   - { format: crypto_LUKS,       layer: encryption,                   meaning: "a LUKS container. CARRIES another volume rather than holding files itself — the clearest case for `carried_by`." }
   - { format: LVM2_member,       layer: volume-manager,               meaning: "an LVM physical volume; the logical volumes inside it are separate entries that name it in `carried_by`" }
@@ -430,9 +431,8 @@ vacancies:
       unaccounted while four of the other five were in use. It surfaced only because adding `closed` sent
       a reader through the enum counting occupants, which is the reverse gate's own argument arriving by
       hand rather than by tool. Kept because it is the one status that asks for ACTION rather than
-      describing a state: a being still relied upon and known to be failing. This estate keeps a risk
-      register with several open high-severity rows and has never marked a bean with it, which is itself
-      worth noticing.
+      describing a state: a being still relied upon and known to be failing. An estate that keeps a risk
+      register yet never marks a bean at-risk has an inventory nobody consults, which is worth noticing.
   - at: storage_format.values
     position: ntfs
     reason: prediction
@@ -638,7 +638,7 @@ profiles:
         path:        "ABSOLUTE path on the host this garden lives on (Rule 6 paper-durable — spelled out, no ~)"
         role:        "own-source | framework-reference | vendored-dependency | generated-artifact"
         scan_policy: "index (own code — walk fully) | reference-only (do NOT re-scan each session; consult analysis_cache, grep on demand only) | skim (structure only)"
-        stack:       "language/runtime tag, e.g. python-odoo17 | csharp-wpf-revit (optional)"
+        stack:       "language/runtime tag, e.g. python-django | csharp-dotnet (optional)"
         entrypoint:  "manifest / solution / addin that roots the tree (optional)"
       # MOVED OUT 2026-08-02 (P1 / D6, human-ratified): `summary_ref` and `last_indexed` left this term and now
       # live in `analysis_cache`. Rationale (one-owner-of-a-fact): a summary is an ANALYSIS RESULT, not a property
@@ -853,6 +853,33 @@ profiles:
         permission: "the position on the capability aspect. `required` is the one that earns this term: a server's outbound SPF identity can DEPEND on firewall mangle marks, and today that is a prose safety note nothing enforces."
         observed: "ABSOLUTE date the treatment was read off the device"
       merge: { cardinality: multi, order: by-kind+what }
+  domain:
+    meaning: >
+      for a garden that holds delegated names — registered domains. The one class of fact that can lose a name
+      outright is its registration: an unrenewed domain takes its DNS and its mail with it. A garden with no
+      domains should inherit none of it.
+    terms:
+    - term: registration
+      # PROMOTED 2026-09-17 (human-ratified, std-vocab 8.2) from one garden's local vocabulary, where it had been
+      # a candidate "to revisit with a second garden that has domains". A cold-start drill garden modelled a
+      # domain and had nowhere standard to put its registrar or expiry. A PROFILE, not the core: a garden
+      # with no domains inherits neither the term nor its requirement.
+      meaning: "the registration facts of a delegated name: who holds the record, when it lapses, and when that was last observed"
+      context_keys: ["registration"]
+      schema:
+        shape: mapping
+        required_on_kinds: [domain]
+        required_attrs: [registrar, created, expires, auto_renew, observed, source]
+        attr_types: { created: iso_date, expires: iso_date, observed: iso_date }
+      attrs:
+        registrar:  "the registrar of record — who the renewal is actually paid to"
+        registrant: "optional: the party holding the registration, where the registry discloses it"
+        created:    "ABSOLUTE date the registration began"
+        expires:    "ABSOLUTE date it lapses if unrenewed — the fact that can lose the name"
+        auto_renew: "enabled | disabled | unknown. `unknown` is the honest default: it is a registrar-ACCOUNT setting and does not appear in WHOIS, so it cannot be observed the way the dates can."
+        observed:   "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer."
+        source:     "where they were read from"
+      merge: { cardinality: single, order: none }
 
 terms:
   - term: capabilities
@@ -978,7 +1005,7 @@ terms:
       path: provenance.src
       values: [observed, inferred, asserted-by-human, generated-by-tool]
   - term: analysis_cache
-    # D6 of design-daftarmakhsh-v2-plan, executed as P1 (2026-08-02, human-ratified rule-change).
+    # Design step D6, executed as P1 (2026-08-02, human-ratified rule-change).
     # An OPEN, TYPED, bean-level cache of ANALYSIS RESULTS, so an agent READS a recorded result instead of
     # re-deriving it. Adding a NEW <cache_type> requires NO schema change and NO bean restructure — that is the
     # whole point of the term: the garden can start caching a new kind of code/analysis (a new language, a new
@@ -1882,7 +1909,7 @@ kinds:
     meaning: "a durable design/decision document — the recorded reasoning behind a change."
   - kind: session
     of_nature: metaphysical
-    meaning: "a bounded stretch of work with a start, any number of sync points, and a stop. Declared because this estate already HAS sessions — they are handed off in prose (SESSION-*-HANDOFF.md) and their times were nowhere in data — and because they are what makes `timing` earn a resolution: a session is the one object whose position must be held finer than a day."
+    meaning: "a bounded stretch of work with a start, any number of sync points, and a stop. Declared because sessions already exist in practice — handed off in prose, their times nowhere in data — and because they are what makes `timing` earn a resolution: a session is the one object whose position must be held finer than a day."
     required: "timing (>=1 moment) — enforced by the gate via the timing term."
     schema: "timing: start / sync / stop, each a position in a time anchor system at a stated unit. owns: what the session did. Establishing anchor: a logical session_id."
     min_anchors: "1 establishing (logical session_id)"
@@ -1901,7 +1928,7 @@ The portable, estate-agnostic classification shared by every garden — the abst
 **Growth:** a garden-local term that proves general is **promoted** here via the SKILL promotion protocol (propose → show neighborhood → human ratifies → version bump + provenance). This file's version history is its changelog below.
 
 ## Changelog
-- **1.0** (2026-07-31) — initial standard: `ip, hostname, fqdn, mac, serial, wg_pubkey, emp_id, id, ref, shell-log` with anchor/merge facets. Seeded from the daftarmakhsh v0.x design + 3 review rounds.
+- **1.0** (2026-07-31) — initial standard: `ip, hostname, fqdn, mac, serial, wg_pubkey, emp_id, id, ref, shell-log` with anchor/merge facets. Seeded from the project's v0.x design + 3 review rounds.
 - **NOTE ON THE GAP.** This changelog jumps 1.0 → 6.0 and the four releases between them are missing.
   They were never written down here, and this file's own prose claims "this file's version history is its
   changelog below" — so the claim has been false since 2.0. Not backfilled from memory: git holds the real
@@ -1923,7 +1950,7 @@ The portable, estate-agnostic classification shared by every garden — the abst
   `volumes`, and `beanger`. `roots.system` is now held by `entry_must_match` to the grammar its host's
   `os` declares. GATE CHANGE: `required_on_<axis>` reads a MULTI-VALUED axis — scalar, list of scalars, or
   list of entries — which is what let `treatments` move from `required_on_kinds: [router]` to
-  `required_on_roles: [router]` without losing the guarantee. `test/diffgate.py` 48/48 identical.
+  `required_on_roles: [router]` without losing the guarantee. The gate's behaviour on every other corpus was unchanged.
 
 - **8.0** (2026-09-17, human-ratified rule-change) — **a list's members are matched by a declared identity,
   never by accident.** `merge.order` for a `list_of_entries` term is `by-<field>[+<field>...]`, and a field
@@ -1940,10 +1967,16 @@ The portable, estate-agnostic classification shared by every garden — the abst
   merge refuses an entry missing an unmarked identity field instead of keying it by its content.
 
 - **8.1** (2026-09-17, human-ratified rule-change) — **three predictions came true and are withdrawn.**
-  Tier-0 vacancies `os.values = windows` (occupied by a workstation bean the operator ratified on
-  2026-08-08), `code_paths.scan_policy = skim` (occupied by a codebase's per-version project tree) and
-  `unit.values = minute` (occupied by four session beans' `timing`). Checked against the ESTATE, not a
-  fixture, before withdrawing. MINOR: a Tier-0 vacancy is advisory and no bean is re-classified. Deliberately
+  Tier-0 vacancies `os.values = windows` `code_paths.scan_policy = skim` and `unit.values = minute`, each occupied by real beans. Checked
+  against a real estate, not a fixture, before withdrawing. MINOR: a Tier-0 vacancy is advisory and no bean is re-classified. Deliberately
   NOT withdrawn: `analysis_cache.policy = skim` (no analysis reads structure only yet), `storage_format.values
-  = ntfs` (no volume records it), and the garden's own `provides_habitat.values = windows` (nothing lives in
-  the desktop as a habitat).
+  = ntfs` (no volume records it).
+
+- **8.2** (2026-09-17, human-ratified rule-change) — **a garden can add, and the `domain` profile exists.** A
+  cold-start drill found two things a new garden could not do without fighting the law. (1) To allow ONE value
+  Tier-0 lacks, a garden had to copy a whole registry into VOCAB.md and declare a vacancy for every row it
+  copied: now `schema: { values_add: [...] }` in a `local_terms` overlay appends to the enum, and
+  `registry_additions: { <registry>: [rows] }` appends rows, and the garden accounts only for what it added.
+  (2) A domain had no standard place for its registrar and expiry: `registration` is promoted from one
+  garden's local vocabulary into a new opt-in `domain` profile, required on `kind: domain` for gardens that opt
+  in. MINOR: both are additive, and no bean in a garden that does not opt in is re-classified.

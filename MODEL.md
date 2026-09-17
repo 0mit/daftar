@@ -8,7 +8,7 @@ One shared source of truth both human and AI can read and write; **portable** (p
 ## Beans, gardens, seeds
 - **bean** — one file per managed object (`beans/<id>.md`), YAML front-matter (machine truth) + Markdown body (human context). Each garden names its root bean in `GARDEN.md`.
 - **garden** — a collection of beans (this working copy); declared by `GARDEN.md`, pins a `std-vocab` version.
-- **seed** — the canonical superset bean produced by merging gardens (MERGE.md). Beans from different sessions/agents/models **converge** — matched by identity anchors, not filenames.
+- **seed** — `seed/`: the germination kit a new garden is grown from (the vocabulary, the templates, `germinate.sh`). Not to be confused with the **canonical bean**, the superset bean a merge produces (MERGE.md): beans from different sessions/agents/models **converge** into one, matched by identity anchors, not filenames.
 
 ## Facts carry provenance + truth-status (the linchpin)
 An authoritative fact is not a bare value — it knows **who said it and how they know**:
@@ -73,7 +73,7 @@ and the other four are pointers now.
 **Keystone default:** any decision whose class is unclear ⇒ AI proposes / human ratifies. No-silent-
 generalization, promoted from *rules* to *authority*.
 **Protect the law:** editing `seed/std-vocab.md`, `VOCAB.md` or `MODEL.md` is a **rule-change** — ratified,
-and logged distinctly from an ordinary edit. The gate enforces the logging half.
+and logged distinctly from an ordinary edit. The gate enforces the logging half: a staged change to the law needs a staged journal entry that says RULE-CHANGE.
 **Enforce the honour system:** a state-changing commit must carry a journal entry (gate-checked), and the
 actor is a distinct git committer per model and session, so "human vs AI" in the log is real rather than
 self-declared.
@@ -81,10 +81,10 @@ self-declared.
 ## Provenance — the dual logging duty (`log/journal.md`)
 - **Agent:** high-detail logs of consequential actions (state-changing shell execs: command + purpose + outcome; decisions + reasoning). Granularity governed by the `shell-log` vocab term.
 - **Human:** decisions, approvals, events — so the "why" survives.
-A state-changing commit should carry a journal entry that references it (the gate checks this).
+A state-changing commit must carry a journal entry that NAMES each changed bean or mapping (the gate checks this, and refuses an entry that still contains a `(fill in` template field).
 
 ## The write gate (session/model-agnostic)
 Every write passes **CHECKLIST.md**; its mechanical half is enforced by `bin/dmcheck.py` as a git **pre-commit hook** → a violating write cannot be committed by any model in any session. Run `python3 bin/dmcheck.py`; commit only at `0 error(s)`.
 
 ## Distributed & convergent (see MERGE.md)
-Beans from different gardens merge into canonical seeds — lossless, order-agnostic, deterministic, no duplicate objects — via a CRDT lattice join over a JCS-canonical projection, with conflicts routed to the exception-ack protocol. Full spec + invariants in **MERGE.md**.
+Beans from different gardens merge into canonical beans — lossless, order-agnostic, deterministic, no duplicate objects — via a CRDT lattice join over a JCS-canonical projection, with conflicts routed to the exception-ack protocol. Full spec + invariants in **MERGE.md**.
