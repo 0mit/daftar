@@ -1,0 +1,11 @@
+---
+garden: @@GARDEN@@
+extends: std-vocab@@@VERSION@@
+created: "git-metadata"    # NEVER a canonical value; the real timestamp lives in git
+seeds_from: []             # gardens merged in, per MERGE.md
+---
+# @@GARDEN@@
+
+This garden's manifest. It tells a cold agent which garden it is in, which vocabulary version governs,
+and what has been merged in. State the estate this garden records, and name its root bean once there is
+one.

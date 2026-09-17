@@ -1,0 +1,25 @@
+# WHAT A GARDEN RECEIVES FROM A RELEASE — one pattern per line, relative to the release root.
+# Read by seed/germinate.sh (a new garden) and bin/dmupgrade.py (an existing one), so the two can never
+# disagree about what the language is. Patterns, not a file list: a hand-kept list once missed `dmsafe`,
+# which `dmcheck` imports without saying so, and a pattern carries a new tool without anyone remembering to.
+#
+# The tools: every `bin/dm*.py`, the one installer and the hooks — and NOTHING ELSE under bin/. Copying the
+# whole of bin/ once shipped an estate's own timesheet tool, host names and a LAN address into a new garden.
+bin/dm*.py
+bin/install.sh
+bin/hooks/*
+# The law, the seed's templates, this file and the germination procedure.
+seed/*
+# What the law MEANS and how a write is made. A garden grown without these had the law's data and no
+# statement of what it meant; its first person bean took three attempts.
+MODEL.md
+CHECKLIST.md
+MERGE.md
+# The semantic merge and the journal's union merge (.gitattributes), and no bytecode in any commit (.gitignore).
+.gitattributes
+.gitignore
+# The skill a coding agent auto-loads: a mirror pointing into the garden, carrying no rule of its own.
+.claude/skills/daftar/SKILL.md
+# The pre-commit hook runs it, so a garden without it cannot commit. The other tests assert things about the
+# release's own fixtures and stay in the release.
+test/fast.py

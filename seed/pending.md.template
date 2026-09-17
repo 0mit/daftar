@@ -1,0 +1,15 @@
+# @@GARDEN@@ — pending-decisions queue
+
+Async ratification queue (MERGE.md §10). An agent that meets a decision it may **not** enact — the classes are defined once in MODEL.md, section Contract of Parts — **parks it here as `status: proposed`**, does everything safe around it, and continues. The human ratifies the queue; on `acked` the decision applies and its precedent auto-applies to matching cases.
+
+Entry shape:
+```
+## <slug> · <what needs deciding> · proposed <YYYY-MM-DD> by <actor>
+- class: F-identity | E-safety | G-vocab-law | J-merge-conflict
+- neighborhood: <the related + sibling vocab/bean records the agent would show>
+- proposal: <the agent's recommended resolution>
+- status: proposed        # proposed | acked
+- acked_by:
+```
+
+---

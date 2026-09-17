@@ -1,0 +1,10 @@
+---
+vocab: @@GARDEN@@
+extends: std-vocab@@@VERSION@@
+local_terms: []      # terms specific to this estate. One that proves general is PROMOTED to Tier-0.
+local_kinds: []      # kinds are Tier-0. Add one here only if this estate needs a kind nowhere else does.
+---
+# @@GARDEN@@ — local vocabulary
+
+Extends Tier-0 at the version pinned above — the one place it is stated. Read `seed/std-vocab.md` for
+the standard terms; add here only what is specific to this estate or not yet proven universal.

@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+"""germinate — can a stranger grow a working garden from seed/, and does its gate REFUSE?
+
+WHY THIS EXISTS SEPARATELY. `dmcheck.py` exits 0 in three different situations that look identical from
+outside: the law is present and satisfied, the law is present and the garden is empty, or the law is
+MISSING and half the checks silently did nothing. Only a positive-and-negative test in a real git repo can
+tell them apart — and the seven staged-blob rules are wrapped in a bare `except Exception: pass`, so
+outside a git repository they never execute at all. A germination test in a tempdir with no `git init`
+would therefore certify a gate whose commit-time half was never run.
+
+It asserts BOTH directions, because a garden that accepts everything passes a positive-only test:
+  +  germinate -> write a bean -> stage it WITH the journal -> gate 0 -> the commit succeeds
+  -  a bean staged WITHOUT the journal is refused (provenance duty)
+  -  an undeclared kind is refused                      (this is what promoting kinds to Tier-0 bought)
+  -  a nature contradicting its kind is refused
+  -  the law removed is an ERROR, not a warning         (there is no fallback)
+  -  a pin disagreeing with the vocabulary is an ERROR, not a warning
+
+It is NOT in the pre-commit hook, deliberately: it germinates a child garden and commits inside it, so a
+hook that ran it would recurse. It tests machinery, like golden.py — run it by hand before any change to
+seed/ lands.
+
+Run: python3 test/germinate.py   (0 = green).  ~2s.
+"""
+import os, re, shutil, subprocess, sys, tempfile
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+results = []
+
+
+def check(name, ok, detail=''):
+    results.append(ok)
+    print(("PASS " if ok else "*** FAIL *** ") + name + (f"  [{detail}]" if detail and not ok else ''))
+
+
+def run(*a, cwd):
+    return subprocess.run(a, capture_output=True, text=True, cwd=cwd)
+
+
+def gate(cwd):
+    r = run(sys.executable, os.path.join(cwd, 'bin', 'dmcheck.py'), cwd=cwd)
+    return r.returncode, r.stdout + r.stderr
+
+
+BEAN = """---
+bean: ada
+kind: person
+title: "Ada — the first bean of a germinated garden"
+status: active
+summary: "A person written into a garden grown from the seed, proving the language travelled: the kind registry, the nature axis, the identity policy and the journal duty all arrive with it."
+identity:
+  status: confirmed
+  anchors:
+    - {{ key: person_id, value: "person:ada", class: logical, establishing: true, scope: global, observed: 2026-08-02, authority: operator-asserted }}
+provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: 2026-08-02 }}
+nature: {nature}
+---
+A person, written to prove a fresh garden can hold one.
+"""
+
+TMP = tempfile.mkdtemp(prefix='dmgerm-')
+G = os.path.join(TMP, 'newgarden')
+
+r = run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), G, cwd=ROOT)
+check("germinate.sh grows a garden and its first gate run is clean",
+      r.returncode == 0 and '0 error(s)' in r.stdout, (r.stdout + r.stderr)[-400:])
+# A NEW GARDEN STARTS QUIET. It started with 11 warnings about Tier-0 relations it had no reason to draw yet,
+# which teaches a garden on its first day that warnings are noise (fixed 2026-09-17; those are dmreview's now).
+check("...and it starts with ZERO warnings — nothing to learn to ignore on day one",
+      ' 0 warning(s)' in r.stdout, [l for l in r.stdout.splitlines() if 'warning(s)' in l or l.startswith('WARN')][:4])
+check("it carries the LANGUAGE and no beans — an estate's facts are not the language",
+      os.path.isdir(os.path.join(G, 'bin')) and os.path.isfile(os.path.join(G, 'seed', 'std-vocab.md'))
+      and os.listdir(os.path.join(G, 'beans')) == [],
+      str(os.listdir(G)))
+check("it is a git repository with one commit — a garden that cannot commit has not germinated",
+      run('git', 'rev-parse', 'HEAD', cwd=G).returncode == 0)
+# THE MODEL, THE PROCEDURE, THE QUEUE AND THE SKILL TRAVEL (2026-09-17). Without them a friend's garden had the
+# law's data and nothing saying what it meant; the first person bean took three attempts.
+check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md and the daftar skill travel",
+      all(os.path.isfile(os.path.join(G, f)) for f in ('MODEL.md', 'CHECKLIST.md', 'MERGE.md', 'log/pending.md',
+                                                       '.claude/skills/daftar/SKILL.md')),
+      [f for f in ('MODEL.md', 'CHECKLIST.md', 'MERGE.md', 'log/pending.md', '.claude/skills/daftar/SKILL.md')
+       if not os.path.isfile(os.path.join(G, f))])
+
+# THE FIRST-BEAN EXAMPLES IN seed/README.md ARE COMMITTED IN A FRESH GARDEN, so the page cannot drift from the law.
+_ex_tmp = os.path.join(TMP, 'readme-examples')
+run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _ex_tmp, cwd=ROOT)
+_readme = open(os.path.join(ROOT, 'seed', 'README.md'), encoding='utf-8').read()
+_examples = re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _readme, re.S)
+for _path, _text in _examples:
+    open(os.path.join(_ex_tmp, _path), 'w', encoding='utf-8').write(_text + '\n')
+with open(os.path.join(_ex_tmp, 'log', 'journal.md'), 'a', encoding='utf-8') as _j:
+    _j.write('\n## 2026-09-17 · human (test) · the README examples\n- action: ' + ', '.join(p for p, _ in _examples) + '\n')
+run('git', 'add', '-A', cwd=_ex_tmp)
+_ex_c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'README examples', cwd=_ex_tmp)
+check(f"the {len(_examples)} first-bean examples in seed/README.md commit in a fresh garden, as written, with 0 errors",
+      len(_examples) >= 2 and _ex_c.returncode == 0, (_ex_c.stdout + _ex_c.stderr)[-400:])
+
+# THE MERGE CONFIGURATION TRAVELS. Missing this, a germinated garden text-merges its beans and conflicts
+# on its own append-only journal — and nothing says so, because git warns neither when an attribute names
+# a missing driver nor when a configured driver is named by nothing. Found by merging three germinated
+# gardens for real: the driver was configured in every one and invoked in none.
+# WHAT TRAVELS UNDER bin/, found by growing a garden for a friend: `cp -R bin/` shipped `bin/tscan/` — this
+# estate's host names, home paths and a LAN address — and, with no .gitignore, 15 .pyc files in the first commit.
+_tracked = run('git', 'ls-files', cwd=G).stdout.split()
+_bin = [f for f in _tracked if f.startswith('bin/')]
+check("only daftar's own tools travel under bin/ — every bin/dm*.py, the hooks and the installer, nothing else",
+      _bin and all(re.match(r'^bin/(dm[a-z]*\.py|install\.sh|hooks/[^/]+)$', f) for f in _bin)
+      and 'bin/dmcheck.py' in _bin and 'bin/dmsafe.py' in _bin,
+      [f for f in _bin if not re.match(r'^bin/(dm[a-z]*\.py|install\.sh|hooks/[^/]+)$', f)][:10])
+check("no bytecode is committed, and `.gitignore` travelled to keep it that way",
+      not any('__pycache__' in f or f.endswith('.pyc') for f in _tracked) and '.gitignore' in _tracked,
+      [f for f in _tracked if f.endswith('.pyc')][:5])
+
+check("`.gitattributes` travels — beans dispatch to the semantic merge, the journal merges by union",
+      'daftar' in run('git', 'check-attr', 'merge', '--', 'beans/x.md', cwd=G).stdout
+      and 'union' in run('git', 'check-attr', 'merge', '--', 'log/journal.md', cwd=G).stdout,
+      run('git', 'check-attr', 'merge', '--', 'beans/x.md', 'log/journal.md', cwd=G).stdout.strip())
+check("...and the driver it names is actually configured in the new garden",
+      'dmmerge' in run('git', 'config', '--get', 'merge.daftar.driver', cwd=G).stdout)
+
+# the pin is DERIVED from the vocabulary, never typed: the one that was typed sat two majors stale
+import re
+_sv = open(os.path.join(G, 'seed', 'std-vocab.md'), encoding='utf-8').read()
+_ver = re.search(r'(?m)^version:\s*"([^"]+)"', _sv).group(1)
+check(f"the pins are interpolated from the vocabulary itself (@{_ver}), not typed into the template",
+      all(f'extends: std-vocab@{_ver}' in open(os.path.join(G, f), encoding='utf-8').read()
+          for f in ('VOCAB.md', 'GARDEN.md')))
+
+# ---- NEGATIVE: a bean without its journal entry -------------------------------------------------------
+bean_path = os.path.join(G, 'beans', 'ada.md')
+open(bean_path, 'w', encoding='utf-8').write(BEAN.format(nature='living'))
+run('git', 'add', 'beans/ada.md', cwd=G)
+rc, out = gate(G)
+check("a bean staged WITHOUT a journal entry is refused (provenance duty)",
+      rc != 0 and 'journal.md not updated' in out, out.strip()[-300:])
+
+# ---- POSITIVE: the same bean, journalled, commits -----------------------------------------------------
+with open(os.path.join(G, 'log', 'journal.md'), 'a', encoding='utf-8') as fh:
+    fh.write("\n## 2026-08-02 · agent · first bean\n- action: wrote beans/ada.md to prove the garden holds one.\n- refs: beans/ada.md\n")
+run('git', 'add', '-A', cwd=G)
+rc, out = gate(G)
+check("with the journal entry, the gate passes", rc == 0 and '0 error(s)' in out, out.strip()[-300:])
+c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'first bean', cwd=G)
+check("and the commit succeeds — the first bean lands", c.returncode == 0, (c.stdout + c.stderr)[-300:])
+
+# ---- NEGATIVE: an undeclared kind. This is exactly what promoting kinds to Tier-0 bought. --------------
+def mutate(text):
+    open(bean_path, 'w', encoding='utf-8').write(text)
+    run('git', 'add', '-A', cwd=G)
+    rc, out = gate(G)
+    run('git', 'checkout', '-q', '--', '.', cwd=G)
+    run('git', 'reset', '-q', cwd=G)
+    return rc, out
+
+rc, out = mutate(BEAN.format(nature='living').replace('kind: person', 'kind: wizard'))
+check("an UNDECLARED kind is refused — the kind registry travelled with the seed",
+      rc != 0 and 'not declared in the vocabulary' in out, out.strip()[-300:])
+
+rc, out = mutate(BEAN.format(nature='physical'))
+check("a nature contradicting its kind is refused — the D1 axis travelled too",
+      rc != 0 and 'contradicts kind' in out, out.strip()[-300:])
+
+# ---- NEGATIVE: the law itself ------------------------------------------------------------------------
+law = os.path.join(G, 'seed', 'std-vocab.md')
+saved = open(law, encoding='utf-8').read()
+os.remove(law)
+rc, out = gate(G)
+open(law, 'w', encoding='utf-8').write(saved)
+check("the law REMOVED is an ERROR, not a warning — there is no fallback to a second copy",
+      rc != 0 and 'no fallback' in out, out.strip()[-300:])
+
+voc = os.path.join(G, 'VOCAB.md')
+saved_v = open(voc, encoding='utf-8').read()
+open(voc, 'w', encoding='utf-8').write(saved_v.replace(f'std-vocab@{_ver}', 'std-vocab@0.1', 1))
+rc, out = gate(G)
+open(voc, 'w', encoding='utf-8').write(saved_v)
+check("a pin DISAGREEING with the installed vocabulary is an ERROR, not a warning",
+      rc != 0 and 'pins std-vocab@0.1' in out, out.strip()[-300:])
+
+# ---- AND IT MERGES BACK. This is the second half of the 1.0.0 criterion, made executable ------------
+# "passes its own first gate run AND merges cleanly with this one." The first half is above. This is the
+# second, and until the vocabulary reconciliation existed there was no definition of "cleanly" to check:
+# dmmerge converged BEANS while the two gardens' type systems stayed divergent, so a merged corpus could
+# hold a bean of a kind the merged law never declared. Now the law is reconciled first and the merged
+# corpus is checked against it, so a germinated garden either merges or says exactly why not.
+run('git', 'checkout', '-q', '--', '.', cwd=G)
+run('git', 'reset', '-q', cwd=G)
+r = run(sys.executable, os.path.join(ROOT, 'bin', 'dmmerge.py'), ROOT, G, cwd=ROOT)
+out = r.stdout + r.stderr
+check("a germinated garden MERGES BACK with the one it grew from — the 1.0.0 criterion's second half",
+      r.returncode == 0 and 'MERGE REFUSED' not in out, out.strip()[-400:])
+check("...their laws reconcile: the seed interpolated the pin, so both gardens share one Tier-0 version",
+      f'reconciled at std-vocab@{_ver}' in out, [l for l in out.splitlines() if 'VOCABULARY' in l])
+check("...and the merged corpus has no uncovered kind, key or unmet obligation",
+      'UNCOVERED' not in out and 'UNMET' not in out,
+      '; '.join(l.strip() for l in out.splitlines() if 'UNCOVERED' in l or 'UNMET' in l))
+check("the child's bean is IN the merged result, not silently dropped",
+      'person:ada' in out or 'ada' in out)
+
+shutil.rmtree(TMP, ignore_errors=True)
+print(f"\ngerminate: {sum(results)}/{len(results)} checks passed")
+sys.exit(0 if all(results) else 1)

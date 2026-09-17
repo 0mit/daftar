@@ -1,0 +1,25 @@
+name: ci
+on:
+  push:
+    branches: [master]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install PyYAML
+      - run: git config --global user.name ci && git config --global user.email ci@localhost
+      - name: every document parses
+        run: python3 bin/dmsafe.py
+      - name: a garden germinates, passes its gate, refuses bad writes and merges back
+        run: python3 test/germinate.py
+      - name: gardens converge
+        run: python3 test/converge.py
+      - name: a garden adopts a release
+        run: python3 test/upgrade.py

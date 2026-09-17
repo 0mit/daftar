@@ -1,0 +1,34 @@
+# CAPTURES ARE STORED BYTE-FOR-BYTE, and this line is load-bearing rather than tidy-minded.
+# A `capture` carries a `staleness_key` — a sha256 of what its `source` command produced — and a reader
+# checks it by re-running the command and comparing. Git's default text handling rewrote the first
+# capture's CRLF line endings to LF on commit, so the STORED file hashed to 6e09d584... while the live
+# export and the recorded key were 68342991... A reader following the term's own instructions would have
+# found a mismatch and concluded the router had changed when nothing had: a staleness detector firing on
+# its own storage format. Found the same hour the term was written, by git printing a warning.
+captures/** -text
+
+# MERGE DISPATCH. These four lines existed from 2026-08-02, were DELETED WITHOUT MENTION by 791fa16 on
+# 2026-08-07 — a commit about capture line endings that rewrote this file whole instead of appending to
+# it — and are restored here. Nothing noticed for eight days, because git does not warn when a merge
+# attribute is missing any more than when it names a driver that is not configured: it silently
+# text-merges, and a text merge only shows itself the first time two sessions actually disagree.
+#
+# Semantic merge — git dispatches bean/mapping merges to dmmerge (never text-merge). The driver is
+# configured by bin/install.sh (`merge.daftar.driver`); THE ATTRIBUTE AND THAT CONFIG MUST ALWAYS CHANGE
+# TOGETHER, in EITHER direction. Both halves absent is safe; either half alone is a silent text-merge
+# wearing the appearance of a semantic one.
+beans/*.md     merge=daftar
+mappings/*.md  merge=daftar
+# Append-only logs: git's built-in line-union (lossless).
+log/journal.md merge=union
+# The park-and-proceed queue is append-mostly exactly as the journal is: two agents on two clones
+# add two different items and neither has touched the other. Declared 2026-08-03 after a purely additive
+# pair conflicted textually while log/journal.md absorbed the same shape losslessly.
+log/pending.md merge=union
+
+# collect-admindows.ps1 is carried to a Windows box and run by PowerShell 5.1,
+# which assumes CP1252 for a .ps1 WITHOUT a BOM. The file is deliberately pure
+# ASCII, UTF-8 with BOM, CRLF — and git's default text handling would rewrite
+# those endings on checkout, the same way it rewrote captures/ and made a
+# staleness key lie. Store the bytes untouched.
+bin/tscan/*.ps1 -text

@@ -1,0 +1,14 @@
+# @@GARDEN@@ — journal
+
+Append-only. Never rewritten, never summarised: a summary is a second copy that can disagree with the
+first, and this file merges by union. Every state-change to the garden is logged here in the same commit
+that makes it — the gate REFUSES a staged bean whose change is not recorded, and a change to the
+vocabulary or the law must say RULE-CHANGE distinctly.
+
+One entry per change, newest last:
+
+    ## <YYYY-MM-DD> · <human (name) | agent> · <one line: what changed>
+    - action: what was done
+    - detail: what a cold reader needs in order to check it
+    - why: the reason, which is the part that does not survive anywhere else
+    - refs: the files touched
