@@ -495,17 +495,15 @@ def check_identity_capsule():
 # HOW AN ANCHOR IS COMPARED (std-vocab 9.0, human-ratified). A term that governs an anchor may declare
 # `compare_form`; uniqueness is then judged on that form, so `SYN-0042` and `syn-0042 ` are one object. A
 # cold-start drill committed exactly that typo duplicate with 0 errors. Read from the vocabulary; names no key.
-COMPARE_FORMS = {'upper-trim': lambda v: re.sub(r'\s+', '', v).upper()}
+COMPARE_FORMS = dmparse.COMPARE_FORMS      # one definition, shared with bin/dmmerge.py
 
 def compare_value(key, value):
-    for _sch in SCHEMAS.values():
-        if _sch.get('governs_anchor') == key and _sch.get('compare_form') in COMPARE_FORMS:
-            return COMPARE_FORMS[_sch['compare_form']](str(value))
-    return str(value)
+    return dmparse.compare_anchor(TERMS.values(), key, value)
 
 
 def check_establishing_anchor_dedup():
     for (k, v), bs in sorted(est_owner.items()):
+        bs = sorted(set(bs))       # one bean carrying two spellings of one anchor is not a duplicate of itself
         if len(bs) > 1:
             errors.append(f"establishing anchor {k}={v} on {bs} — same object in one garden. If they ARE one "
                           f"object, keep one bean and move the other's facts into it (MERGE.md); if they are "

@@ -81,6 +81,28 @@ def duplicate_keys(text):
     return out
 
 
+# HOW AN ANCHOR IS COMPARED (std-vocab 9.0). A term that governs an anchor may declare `compare_form`; identity is
+# then judged on that form. HERE, because the gate (uniqueness) and the merge (which beans are one object) must
+# compare the same way — v0.5.0 taught only the gate, and two gardens holding `SYN-0042` and `syn-0042` still
+# merged into two objects.
+COMPARE_FORMS = {'upper-trim': lambda v: re.sub(r'\s+', '', v).upper()}
+
+
+def anchor_compare_form(terms, key):
+    """The compare form the vocabulary declares for anchor `key`, or None. `terms`: term dicts with `schema`."""
+    for t in terms:
+        s = (t.get('schema') or {}) if isinstance(t, dict) else {}
+        if s.get('governs_anchor') == key and s.get('compare_form') in COMPARE_FORMS:
+            return s['compare_form']
+    return None
+
+
+def compare_anchor(terms, key, value):
+    """`value` as identity compares it: in the declared compare form, else unchanged (as a string)."""
+    form = anchor_compare_form(terms, key)
+    return COMPARE_FORMS[form](str(value)) if form else str(value)
+
+
 def read(path):
     """(front_matter_text, body) read from a file on disk."""
     with open(path, encoding='utf-8') as fh:

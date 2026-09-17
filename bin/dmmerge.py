@@ -19,7 +19,7 @@ import yaml
 
 # P4 (2026-08-02, human-ratified): identity is established by the `establishing` BOOLEAN on the anchor,
 # not by its `class`. `class` survives only as a hint at WHY. These agreed for as long as they did only
-# because all 74 anchors in this garden happen to carry both keys consistently — a coincidence of the
+# because every anchor in the corpus it was built against happened to carry both keys consistently — a coincidence of the
 # corpus, not a property of the model. Absent flag == not establishing, exactly as the gate reads it.
 def _est(a):
     return isinstance(a, dict) and a.get('establishing') is True
@@ -62,7 +62,7 @@ def est_anchors(fm):
     out = set()
     for a in (fm.get('identity') or {}).get('anchors') or []:
         if _est(a):
-            out.add((a['key'], str(norm(a['value']))))
+            out.add((a['key'], dmparse.compare_anchor(TERMS.values(), a['key'], norm(a['value']))))
     return out
 
 def components(beans):
@@ -133,7 +133,7 @@ def facet(key, val, member=False):
     real conflict rather than a silent pick.
 
     A MEMBER is never governed by a term that merely shares its name. Terms describe top-level keys; the
-    keys inside `owns`/`details` are facts, which Phase 6 (dfaf605) ratified by refusing to declare them.
+    keys inside `owns`/`details` are facts, which Phase 6 of the design ratified by refusing to declare them.
     Looking members up by bare name worked only while no term happened to collide: std-vocab@7.0 added the
     top-level `roles` term (a list of entries, multi/by-key), and every `owns.roles: [mail]` silently
     stopped being a set and merged as one atom — three gardens' roles became a conflict instead of a union."""
@@ -449,8 +449,11 @@ def merge_component(comp):
 
         for a in (fm.get('identity') or {}).get('anchors') or []:
             if isinstance(a, dict):
-                _ak = (a['key'], str(norm(a['value'])))
-                _new = {'key': a['key'], 'value': norm(a['value']),
+                # Compared — and STORED — in the vocabulary's compare form where it declares one, so two gardens
+                # spelling one serial differently fuse into one anchor instead of recording a disagreement.
+                _ak = (a['key'], dmparse.compare_anchor(TERMS.values(), a['key'], norm(a['value'])))
+                _new = {'key': a['key'],
+                        'value': _ak[1] if dmparse.anchor_compare_form(TERMS.values(), a['key']) else norm(a['value']),
                         'establishing': a.get('establishing') is True, 'class': a.get('class')}
                 _old = anchors.get(_ak)
                 if _old is not None and _old != _new:

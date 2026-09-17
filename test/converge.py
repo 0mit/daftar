@@ -176,6 +176,35 @@ check("the converged garden passes its gate", g.returncode == 0, g.stdout.strip(
 check("...and the gate WARNS about the unresolved conflict rather than staying silent (MERGE.md §10)",
       'left UNCLEAN by a semantic merge' in g.stdout, g.stdout.strip()[-200:])
 
+# ---------------------------------------------------------------- one serial, two spellings (v0.5.1)
+# std-vocab 9.0 made the GATE compare serials case- and space-insensitively; v0.5.0 left the MERGE comparing them
+# exactly, so two gardens recording one machine as `SN-0042` and `sn-0042 ` still produced two objects.
+import dmmerge as M
+def _host(garden, bid, serial):
+    return [{'garden': garden, 'id': bid, 'fm': {
+        'bean': bid, 'kind': 'host', 'nature': 'physical', 'title': bid, 'status': 'active', 'summary': bid,
+        'identity': {'status': 'confirmed', 'anchors': [{'key': 'serial', 'value': serial, 'class': 'hardware',
+                                                         'establishing': True}]},
+        'provenance': {'src': 'observed', 'by': garden, 'as_of': '2026-09-17'}}}]
+_seeds = M.merge_gardens([_host('g1', 'box', 'SN-0042'), _host('g2', 'server', 'sn-0042 ')])
+_anchors = [a for sd in _seeds.values() for a in sd['identity']['anchors']]
+check("two gardens spelling one serial differently merge into ONE object",
+      len(_seeds) == 1, sorted(_seeds))
+check("...its anchor is stored once, in the compare form, with no disagreement recorded",
+      [a['value'] for a in _anchors] == ['SN-0042']
+      and not any(sd['identity'].get('anchor_conflicts') for sd in _seeds.values()), str(_anchors))
+_one = os.path.join(TMP, 'two-spellings')
+subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _one], capture_output=True, cwd=ROOT)
+open(os.path.join(_one, 'beans', 'box.md'), 'w').write(
+    '---\nbean: box\nkind: host\ntitle: "box"\nstatus: active\nsummary: "a box"\nnature: physical\n'
+    'identity:\n  status: confirmed\n  anchors:\n'
+    '    - { key: serial, value: "SN-0042", class: hardware, establishing: true }\n'
+    '    - { key: serial, value: "sn-0042", class: hardware, establishing: true }\n'
+    'provenance: { src: observed, by: "test", as_of: 2026-09-17 }\n---\nA box.\n')
+_g = subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True, cwd=_one).stdout
+check("one bean carrying both spellings is not reported as a duplicate of ITSELF (the lowercase one still warns)",
+      'same object in one garden' not in _g and "is compared as 'SN-0042'" in _g, _g.strip()[-300:])
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nconverge: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)
