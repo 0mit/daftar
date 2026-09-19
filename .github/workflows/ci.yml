@@ -25,3 +25,5 @@ jobs:
         run: python3 test/upgrade.py
       - name: knowledge profile
         run: python3 test/knowledge.py
+      - name: "figures: squares and sequences"
+        run: python3 test/figures.py

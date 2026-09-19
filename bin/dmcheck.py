@@ -332,8 +332,64 @@ def check_merge_identity():
 # know its complement, the complements must be mutual, and its poles must be a genuine contradictory pair.
 # A figure with a loose end cannot say what a being is NOT, which is half of what a classification is for.
 ASPECTS = {a['aspect']: a for a in (registry('aspects') or []) if isinstance(a, dict) and a.get('aspect')}
+FIGURES = {f['figure']: f for f in (registry('figures') or []) if isinstance(f, dict) and f.get('figure')}
+
+def walk_keys():
+    """{schema key: aspect} for every SEQUENCE aspect that places terms on itself through a schema key (9.2).
+    `dag: true` is read through this: the key is data in the vocabulary, and whether a cycle is refused is
+    the aspect's `acyclic` restriction, not a rule written here."""
+    return {a['term_key']: a for a in ASPECTS.values() if a.get('term_key')}
+
+def on_walk(sch, acyclic_only=False):
+    """True when a term's schema places its edges on a walk aspect (and, if asked, one declared acyclic)."""
+    return any(sch.get(k) is True and (not acyclic_only or a.get('acyclic') is True) for k, a in walk_keys().items())
+
+def check_sequence_figure(_an, _a, _fig):
+    """A SEQUENCE is declared only by its restrictions (9.2): every one stated, each a value the figure
+    offers. It has no positions and no poles, because it is not a closed set of modalities."""
+    for _k in ('positions', 'poles'):
+        if _a.get(_k):
+            errors.append(f"aspect '{_an}': a sequence declares no `{_k}` — its positions are points in a domain, "
+                          f"not a closed set of modalities")
+    _lines = _a.get('lines')
+    if not (_lines == 'open' or (isinstance(_lines, int) and not isinstance(_lines, bool) and _lines > 0)):
+        errors.append(f"aspect '{_an}': lines '{_lines}' must be a positive integer or `open`")
+    _dims = {u.get('dimension') for u in (registry('units') or []) if isinstance(u, dict)}
+    if _a.get('metered') != 'none' and _a.get('metered') not in _dims:
+        errors.append(f"aspect '{_an}': metered '{_a.get('metered')}' is neither `none` nor a dimension in `units` {sorted(d for d in _dims if d)}")
+    if _a.get('order') not in (_fig.get('order_values') or []):
+        errors.append(f"aspect '{_an}': order '{_a.get('order')}' is not one of {_fig.get('order_values')}")
+    if not isinstance(_a.get('acyclic'), bool):
+        errors.append(f"aspect '{_an}': acyclic must be true or false, stated")
+    if _a.get('ends') not in (_fig.get('ends_values') or []):
+        errors.append(f"aspect '{_an}': ends '{_a.get('ends')}' is not one of {_fig.get('ends_values')}")
+    _sys = (_a.get('domain') or {}).get('systems') if isinstance(_a.get('domain'), dict) else None
+    _sdims = {s.get('dimension') for s in (registry('anchor_systems') or []) if isinstance(s, dict)}
+    if _sys != 'none' and _sys not in _sdims:
+        errors.append(f"aspect '{_an}': domain.systems '{_sys}' is neither `none` nor a dimension of `anchor_systems` {sorted(d for d in _sdims if d)}")
+
 def check_aspect_sanity():
+    _keys = {}
     for _an, _a in ASPECTS.items():
+        _fig = FIGURES.get(_a.get('figure'))
+        if not _fig:
+            errors.append(f"aspect '{_an}': figure '{_a.get('figure')}' is not declared in `figures` {sorted(FIGURES)}")
+            continue
+        for _req in _fig.get('requires') or []:
+            if _a.get(_req) is None:
+                errors.append(f"aspect '{_an}': a {_a['figure']} must state `{_req}` — an unstated restriction "
+                              f"is how a model silently becomes narrower than the world")
+        if _a.get('term_key'):
+            if _a['term_key'] in _keys:
+                errors.append(f"aspect '{_an}': term_key '{_a['term_key']}' is already claimed by aspect '{_keys[_a['term_key']]}'")
+            _keys[_a['term_key']] = _an
+        if _a['figure'] == 'sequence':
+            check_sequence_figure(_an, _a, _fig)
+            continue
+        if _a['figure'] != 'opposition':
+            errors.append(f"aspect '{_an}': the gate has no check for figure '{_a['figure']}' — a new figure is "
+                          f"declared together with its checker, or its aspects would pass unexamined")
+            continue
         _pos = {p['position']: p for p in (_a.get('positions') or []) if isinstance(p, dict) and p.get('position')}
         if not _pos:
             errors.append(f"aspect '{_an}': declares no positions — an aspect with no positions classifies nothing")
@@ -1455,7 +1511,7 @@ def _cycles(graph):
 
 def check_link_integrity():
     global DAG_TERMS, dep_graph
-    DAG_TERMS = {n for n, s in SCHEMAS.items() if s.get('dag')}
+    DAG_TERMS = {n for n, s in SCHEMAS.items() if on_walk(s, acyclic_only=True)}
     dep_graph = {}
     for (is_bean, base), (fm, body) in docs.items():
         for space, tgt, field, sect in schema_edges(fm):
@@ -1892,7 +1948,7 @@ def check_chain_termination():
     write when the bean the chain stops at is of a kind whose form is pinned (a person states the crown).
     """
     for _term, _sch in SCHEMAS.items():
-        if not _sch.get('dag') or not _sch.get('entry_one_of'):
+        if not on_walk(_sch) or not _sch.get('entry_one_of'):
             continue
         _terminal = {f for f in _sch['entry_one_of'] if f in ('external', 'crown', 'self')}
         if not _terminal:

@@ -84,14 +84,18 @@ def dag_relations():
     """{term: schema} for the chains attention travels along — DERIVED, never declared a second time.
 
     A relation that must stay ACYCLIC is exactly a relation you can walk without looping, and the
-    vocabulary already says which those are via `schema.dag`. A direction aspect would restate a fact the
+    vocabulary already says which those are: a term on a WALK aspect (`schema.dag`, 9.2). A direction aspect would restate a fact the
     model already holds, and a fact stated twice is a fact that can disagree with itself."""
     std = dmparse.loads(dmparse.read(os.path.join(ROOT, 'seed', 'std-vocab.md'))[0]) or {}
     loc = dmparse.loads(dmparse.read(os.path.join(ROOT, 'VOCAB.md'))[0]) or {}
     terms = (list(std.get('terms') or [])
              + [t for p in (std.get('profiles') or {}).values() for t in (p.get('terms') or [])]
              + list(loc.get('local_terms') or []))
-    return {t['term']: t['schema'] for t in terms if (t.get('schema') or {}).get('dag')}
+    # 9.2: the key that places a term on a walk is DATA, read from the sequence aspects that declare one
+    # (`term_key`), not a name written here; `dag` is simply the one such key the standard declares today.
+    keys = {a['term_key'] for a in (list(std.get('aspects') or []) + list(loc.get('aspects') or []))
+            if isinstance(a, dict) and a.get('term_key')}
+    return {t['term']: t['schema'] for t in terms if any((t.get('schema') or {}).get(k) is True for k in keys)}
 
 
 def targets(fm, term, sch):

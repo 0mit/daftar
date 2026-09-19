@@ -83,6 +83,12 @@ The rules are data, not code.
 - **Every position the vocabulary offers is accounted for:** used by a bean, or declared vacant with a reason.
   A garden accounts only for what it declares itself.
 - A local term that proves general is **promoted** to the standard by a pull request to the daftar repository.
+- **Aspects have a shape (a figure).** An *opposition* is a closed set of contradictory positions along one or
+  more axes (necessity, capability and feasibility are squares; confidentiality is a single axis). A *sequence* is a domain walked along direction lines
+  and is declared only by its restrictions: how many lines, whether positions are measured, whether they are
+  totally, partially or not ordered, whether a walk can return, and where the domain ends. `time`, `place`
+  and `walk` are sequences; "must stay acyclic" is the `walk` aspect's restriction, and a duration is a
+  bounded region of an ordered sequence.
 
 ## Knowledge: universal anchors
 The `knowledge` profile (vocabulary 9.1) lets a garden say what things ARE in the world's shared terms, with
