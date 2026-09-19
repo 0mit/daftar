@@ -1,5 +1,5 @@
 ---
-version: "9.2"
+version: "9.3"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -434,6 +434,12 @@ leaf_orders:
     exact: [os, version]   # `version` does NOT end in `_version`, so unlike the cidr list this one earns
                            # its place; `os` is the estate's one bare version-shaped fact name.
     why: "a release string is absorbed by a more precise one that starts with it"
+  - order: instant
+    system: gregorian-civil   # 9.3, T2: this order follows what a value IS, not what its key is called. Time
+                              # sits under a dozen names in one corpus (observed, as_of, found, since, created,
+                              # expires, …) and under `at`, which also holds paths; a name list would miss the
+                              # next name and misfire on `at`. A value in this system's ONE form is a time.
+    why: "a calendar reading is absorbed by a finer one it CONTAINS (`2026-09-19` by `2026-09-19 22:50+03:00`), compared by the parts actually written and in the coarser reading's own offset, never as strings. Every other pair is unordered (the `time` aspect's order is partial): two readings that do not nest stay a disagreement for a person. The absorbed reading is kept in provenance, as every subsumed value is."
 vacancies:
   - at: status.values
     position: at-risk
@@ -2201,3 +2207,9 @@ The portable, estate-agnostic classification shared by every garden — the abst
   verdict (proved by running both gates over a real garden and 47 mutations of it); the one new requirement is
   that an aspect's `figure` names a declared figure, which refuses only a GARDEN-LOCAL aspect with an undeclared
   figure, and no garden is known to declare a local aspect.
+
+- **9.3** (2026-09-20, human-ratified rule-change, "T2") — **the merge orders positions in time.** `leaf_orders`
+  gains `instant`, which applies to every value that is a position in `gregorian-civil`'s one form, whatever
+  its key is called (a leaf order may now name a `system` instead of key names). A reading is absorbed by a
+  finer one it contains; readings that do not nest stay a conflict, because `time` declares its order partial.
+  MINOR: two gardens that recorded one moment at different resolutions now converge where they conflicted.

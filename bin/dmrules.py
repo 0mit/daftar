@@ -82,7 +82,7 @@ print(f"  kinds: " + ' , '.join(f"{k['kind']}→{k.get('of_nature')}"
 print(f"         (* pinned to the '{next(k['ownership_form'] for k in kinds if k.get('ownership_form'))}'"
       f" ownership form, which also RESERVES it)")
 
-head("ASPECTS — squares are closed figures (a position names its mutual complement); sequences are walked")
+head("ASPECTS — oppositions are closed figures (a position names its mutual complement); sequences are walked")
 WALK_KEYS = {a['term_key']: a for a in reg('aspects') if a.get('term_key')}
 for a in reg('aspects'):
     if a.get('figure') == 'sequence':
