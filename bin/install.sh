@@ -13,6 +13,14 @@ REPO="$(git rev-parse --show-toplevel)"
 for h in "$REPO"/bin/hooks/*; do
   name=$(basename "$h")
   case "$name" in *.sh) continue ;; esac
+  # THE GATE IS FOR A GARDEN. This repository can also BE the language itself (the daftar repo, or a clone
+  # of it), which has no GARDEN.md and no beans: there the gate has nothing to judge and dies on the
+  # missing vocabulary, taking the commit with it. Measured 2026-09-20: install.sh was run in the language
+  # repo and its next commit was aborted by a traceback. The pre-push leak check belongs in BOTH.
+  if [ "$name" = "pre-commit" ] && [ ! -f "$REPO/GARDEN.md" ]; then
+    echo "skipped .git/hooks/pre-commit — no GARDEN.md here, so this repo is the language, not a garden"
+    continue
+  fi
   cp "$h" "$REPO/.git/hooks/$name"
   chmod +x "$REPO/.git/hooks/$name"
   echo "installed .git/hooks/$name"

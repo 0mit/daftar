@@ -1,0 +1,21 @@
+#!/bin/sh
+# Refuse to push anything that names a garden's estate (bin/dmpublic.py).
+#
+# A public repository carries the LANGUAGE and never a garden, and what leaks is the prose around the
+# code: an example path in a comment, a measurement written with the machines' real names, a commit
+# message. This runs on every push, over the files and over the messages of the commits being pushed.
+#
+# It needs to know which garden to derive the names from:
+#     git config daftar.garden /path/to/your/garden
+# With no such config it says so once and lets the push through: a repository with no garden beside it
+# has nothing to leak, and a hook that blocks work it cannot judge is a hook people disable.
+GARDEN=$(git config --get daftar.garden || true)
+[ -n "$GARDEN" ] || { echo "pre-push: no daftar.garden configured — not checking for estate names"; exit 0; }
+REPO=$(git rev-parse --show-toplevel)
+RANGE="origin/master..HEAD"
+git rev-parse --verify -q origin/master >/dev/null 2>&1 || RANGE=""
+if [ -n "$RANGE" ]; then
+  python3 "$REPO/bin/dmpublic.py" --garden "$GARDEN" --repo "$REPO" --range "$RANGE" || exit 1
+else
+  python3 "$REPO/bin/dmpublic.py" --garden "$GARDEN" --repo "$REPO" || exit 1
+fi

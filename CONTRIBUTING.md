@@ -23,10 +23,31 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
 5. **Run the tests:**
 
    ```sh
-   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py && python3 test/place.py
+   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py && python3 test/place.py && python3 test/public.py
    ```
 
    CI runs the same on every pull request.
+
+## This repository carries the language, never a garden
+
+A garden is private; this is not, and the two are edited in the same sessions. What leaks is never the
+beans — it is the prose around them: an example path in a comment, a measurement written with the machines'
+real names, a commit message, a pull request body. Those are the places nobody greps.
+
+    git config daftar.garden /path/to/your/garden     # once per clone
+    python3 bin/dmpublic.py --garden <path> [--range origin/master..HEAD] [--text pr-body.md]
+
+`bin/install.sh` installs a **pre-push hook** that runs it over the files and over the messages of the
+commits being pushed. It derives the forbidden names from the garden itself — beings, mappings, hostname,
+fqdn and ip anchors, root names — so a bean added tomorrow is covered tomorrow, and nobody maintains a
+denylist. A word the published classifications carry is not a leak; anything else that is genuinely public
+goes in `seed/PUBLIC-ALLOW` with its reason.
+
+**Check the pull request body too.** The hook cannot see it: write it to a file, run `--text` over it, then
+open the pull request. This rule exists because five estate names reached this repository in one night, in
+comments and pull request text, and were found by the operator rather than by a diff.
+
+Say it without the name: "one host", "another machine", `/home/user/tree`, `host-a` and `host-b`.
 
 ## Editing the vocabulary itself
 
