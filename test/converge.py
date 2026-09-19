@@ -43,7 +43,7 @@ def git(*a, cwd):
 
 def commit(cwd, who, msg):
     with open(os.path.join(cwd, 'log', 'journal.md'), 'a', encoding='utf-8') as fh:
-        fh.write(f"\n## 2026-08-02 · agent · {who}\n- action: {msg}\n- refs: beans/relay.md\n")
+        fh.write(f"\n## 2026-08-02 10:00+00:00 · agent · {who}\n- action: {msg}\n- refs: beans/relay.md\n")
     git('add', '-A', cwd=cwd)
     return git('-c', 'user.name=' + who, '-c', f'user.email={who}@g', 'commit', '-q', '-m', msg, cwd=cwd)
 

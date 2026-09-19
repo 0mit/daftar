@@ -30,7 +30,8 @@ The gate reads the **staged** files, not the working tree: what it checks is wha
 - [ ] A list term merged entry by entry declares identity fields its entries carry.
 - [ ] **The journal:** a staged bean or mapping is named in the staged journal entry; a staged change to the law
       (the vocabulary, `GARDEN.md`, or any file `seed/LANGUAGE` lists) has an entry that says RULE-CHANGE; no
-      entry still contains `(fill in`.
+      entry still contains `(fill in`; every heading the commit adds is `## <YYYY-MM-DD HH:MM+HH:MM> · who · what`,
+      read from the clock.
 - [ ] **No silent damage:** a staged document still parses and keeps its body; a removed top-level key is named in
       the journal entry; a key is not emptied out while it stays.
 

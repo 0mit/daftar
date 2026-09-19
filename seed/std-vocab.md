@@ -1,5 +1,5 @@
 ---
-version: "9.3"
+version: "10.0"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -28,7 +28,7 @@ schema_language:
   required_attrs:       "[<attr>...] — shape:mapping, attrs the mapping itself must carry"
   entry_required_attrs: "[<attr>...] — attrs EVERY entry needs (a list item, or an open_map value)"
   entry_values:         "{<attr>: [<enum>...]} — per-entry enums"
-  entry_types:          "{<attr>: iso_date} — per-entry value types the gate can check"
+  entry_types:          "{<attr>: <value type>} — per-entry value types, each a row of `value_types` (10.0): its pattern, and for a time type its system and unit"
   entry_one_of:         "[<attr>...] — each entry must carry at least one of these"
   entry_required_if:    "[{attr, equals, requires: [...]}] — conditional requirement inside an entry"
   entry_expect_if:      "[{attr, starts_with, expects, why}] — a soft expectation; failing it WARNS, never blocks"
@@ -586,6 +586,37 @@ figures:
     ends_values: [open, bounded, open-start, open-end]
     extent: possible
     extent_why: "a sequence with an order has a domain, and a bounded region of it is an extent (a duration on time)"
+# == VALUE TYPES (10.0, T3): the named types `entry_types` / `attr_types` may use ==
+# They were patterns written in the gate's code. A TIME value type is a POSITION: `iso_date` is not "a date
+# format" but the calendar system held at unit DAY, so every `observed: 2026-08-09` in a garden was always a
+# position in gregorian-civil whose second and minute are UNKNOWN, not zero. Saying so needs no data change;
+# it states what those values already were. A type with no system (kebab) is only a form.
+value_types:
+  - type: iso_date
+    system: gregorian-civil
+    unit: day
+    pattern: '^\d{4}-\d{2}-\d{2}$'
+    refusal: "must be an ABSOLUTE date YYYY-MM-DD (Rule 6 paper-durable)"
+    meaning: "a calendar position held to the DAY; its time of day is not known, which is different from midnight"
+  - type: kebab
+    pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
+    refusal: "must be kebab-case (the name is open, but still paper-durable)"
+    meaning: "an open name in lowercase words joined by hyphens"
+# == THE JOURNAL (10.0, T3): where the record of what was done is, and how an entry is headed ==
+# The journal is the garden's time record, and it had no rule for time. One real garden, measured on
+# 2026-09-19: 663 entries, 276 headed with a date only, 387 with a time in `+0300` or `+0330` while the calendar
+# system's one form is `+03:00`; and one entry headed 23:59 that was committed at 23:32, a precision written
+# rather than read. A heading is now a position in gregorian-civil's one form, held to at least the MINUTE,
+# with its offset, because an entry is ordered against every other and a reading with no offset cannot be.
+# Only headings ADDED by a commit are checked: the journal is never rewritten, so its history keeps the forms
+# it was written in, and those stay what they were.
+journal:
+  path: log/journal.md
+  heading_form: "## <YYYY-MM-DD HH:MM[:SS[.sss]]><+HH:MM|Z> · <who> · <what>"
+  heading_pattern: '^## \d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z) · \S.* · \S.*$'
+  system: gregorian-civil
+  unit_at_least: minute
+  checks: added     # entries a commit adds; never the history
 aspects:
   - aspect: necessity
     # The canonical closed figure for necessity is Aristotle's SQUARE OF OPPOSITION (De Interpretatione;
@@ -2213,3 +2244,12 @@ The portable, estate-agnostic classification shared by every garden — the abst
   its key is called (a leaf order may now name a `system` instead of key names). A reading is absorbed by a
   finer one it contains; readings that do not nest stay a conflict, because `time` declares its order partial.
   MINOR: two gardens that recorded one moment at different resolutions now converge where they conflicted.
+
+- **10.0** (2026-09-20, human-ratified rule-change, "T3") — **time in the record itself.** MAJOR, for one
+  reason: a journal entry a commit ADDS must be headed with a position in gregorian-civil's one form, to at least
+  the minute, with its offset (`## 2026-09-20 00:15+03:00 · who · what`), per the new `journal` block. A garden
+  whose writers head entries with a date alone, or with `+0300`, has its next commit refused until they write the
+  form; the entries already written are never checked. Additive in the same release: a `value_types` registry
+  moves the gate's type patterns into the law, and declares `iso_date` as the calendar at unit DAY, so every
+  existing date is a position whose time of day is unknown, with no data changed. `dmupgrade` heads its journal
+  entry in the new form.

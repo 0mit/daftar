@@ -141,7 +141,9 @@ decide parks it in `log/pending.md` as `status: proposed`, does everything safe 
   - a change to the law whose entry does not say RULE-CHANGE. The law is `seed/std-vocab.md`, `VOCAB.md`,
     `GARDEN.md` and every file the release ships (`seed/LANGUAGE`: this document, the checklist, the tools and
     the gate itself);
-  - a journal entry that still contains a template's `(fill in` field.
+  - a journal entry that still contains a template's `(fill in` field;
+  - a journal heading a commit adds that is not a position in time: `## 2026-09-20 00:15+03:00 · who · what`,
+    to at least the minute, with its offset. Entries already written are never checked or rewritten.
 - These checks confirm that the words are there, not that they are true; honesty is still the writer's.
 - Each person and each agent session commits under its own git identity, so the log's "who" is real.
 - `CHECKLIST.md` is how a write is made.
