@@ -8,7 +8,7 @@ question, so the rule is checkable instead of merely written down.
   FRESH    the key still matches the live source  -> USE the cached summary, do NOT re-analyse
   STALE    the source moved past the key          -> re-analyse, then refresh as_of + staleness_key
   NOT-HERE the source is not on THIS machine — a fact about the reader, never about the analysis
-  UNKNOWN  the key is not machine-checkable at all (manual: / digest:)
+  UNKNOWN  the key is not machine-checkable at all (`manual:<why>`)
 
 A verdict is about the ANALYSIS, not about the reader's checkout. Freshness is decided by whether the
 keyed objects are REACHABLE in the repository, not by which branch happens to be checked out beside
@@ -24,7 +24,7 @@ Exit: 0 = nothing stale or expiring, 1 = something needs action, 2 = setup probl
 Usage: python3 bin/dmstale.py [--quiet] [--days N]   (--quiet prints only what needs attention)
 """
 import datetime
-import glob, os, subprocess, sys
+import glob, os, re, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
@@ -72,17 +72,45 @@ def reachable(path, oid):
         return None
 
 
+def _here_names():
+    """What this machine is called: its host bean's id and its hostname/fqdn anchors, lowercased."""
+    try:
+        import dmwhere
+        beans = dmwhere.load()
+        hid, hfm = dmwhere.this_host(beans)
+        names = {str(hid).lower()} if hid else set()
+        for a in ((hfm or {}).get('identity') or {}).get('anchors') or []:
+            if a.get('key') in ('hostname', 'fqdn'):
+                v = str(a.get('value', '')).lower()
+                names |= {v, v.split('.')[0]}
+        return names, hfm
+    except Exception:
+        return set(), None
+
+
 def resolve_here(p):
-    """A covers_paths value -> a path on THIS machine, via the host's own roots map (std-vocab@5.1)."""
-    if isinstance(p, str) and p.startswith('root:'):
+    """A position -> a path on THIS machine, or None when this host does not hold it.
+
+    Two forms carry a host (std-vocab@5.1, and the place migration of 11.0): `root:<name>/…`, resolved
+    through this host's own `roots` map, and `<host>:<path>`, which resolves here only when the host it
+    names IS this machine. Treating the second as a plain path was reporting a tree as absent while the
+    reader stood in it.
+    """
+    if not isinstance(p, str):
+        return p
+    if p.startswith('root:'):
         try:
             import dmwhere
-            beans = dmwhere.load()
-            _hid, hfm = dmwhere.this_host(beans)
+            _names, hfm = _here_names()
             path, _why = dmwhere.resolve(p, dmwhere.roots_of(hfm))
             return path
         except Exception:
             return None
+    m = re.match(r'^([a-z0-9][a-z0-9.-]*):(/.*|[A-Za-z]:\\.*)$', p)
+    if m:
+        names, _hfm = _here_names()
+        host = m.group(1).lower()
+        return m.group(2) if (host in names or host.split('.')[0] in names) else None
     return p
 
 
@@ -90,11 +118,16 @@ def verdict(entry):
     """(state, detail) for one cache entry."""
     key = str(entry.get('staleness_key') or '')
     paths = entry.get('covers_paths') or []
-    if not key.startswith('git-head:'):
+    # 11.0: a key is a POSITION in the git object graph, `<repo>@<sha>`. The repository is part of the key,
+    # so a reader asks THAT repository instead of whatever tree it happens to stand in.
+    m = re.match(r'^([a-z0-9][a-z0-9._-]*)@([0-9a-f]{7,40})$', key)
+    if not m:
         return 'UNKNOWN', f"{key or 'no staleness_key'} — not machine-checkable"
-    want = key.split(':', 1)[1]
+    repo, want = m.group(1), m.group(2)
     if not paths:
-        return 'UNKNOWN', "git-head key but no covers_paths — nowhere to check"
+        # The key names its repository, so an entry that lists no paths is still checkable wherever this
+        # host declares a root of that name.
+        paths = ['root:' + repo]
     for p in paths:
         local = resolve_here(p)
         if local is None:
