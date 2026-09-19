@@ -22,7 +22,7 @@ driver `.gitattributes` names. Roughly 15 seconds.
 
 Run: python3 test/converge.py   (0 = green)
 """
-import os, shutil, subprocess, sys, tempfile
+import json, os, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
@@ -204,6 +204,37 @@ open(os.path.join(_one, 'beans', 'box.md'), 'w').write(
 _g = subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True, cwd=_one).stdout
 check("one bean carrying both spellings is not reported as a duplicate of ITSELF (the lowercase one still warns)",
       'same object in one garden' not in _g and "is compared as 'SN-0042'" in _g, _g.strip()[-300:])
+
+# ---------------------------------------------------------------- positions in time (std-vocab 9.3, T2)
+# The `time` aspect's order is PARTIAL: a reading is absorbed by a finer one it contains, and every other
+# pair stays a disagreement. The order follows the VALUE (a position in gregorian-civil's one form), so it
+# holds under any key name.
+def _timed(garden, owns):
+    g = _host(garden, 'clock', 'SN-CLOCK-1')
+    g[0]['fm']['owns'] = owns
+    return g
+
+def _merged_owns(a, b):
+    sd = list(M.merge_gardens([_timed('g1', a), _timed('g2', b)]).values())[0]
+    return sd['facts']['owns']['members']
+
+_o = _merged_owns({'checked': '2026-09-19'}, {'checked': '2026-09-19 22:50+03:00'})
+check("T2: a day reading is absorbed by a finer reading inside it, under any key name",
+      _o['checked'].get('value') == '2026-09-19 22:50+03:00', json.dumps(_o['checked']))
+check("...and the coarser reading is kept in provenance, not dropped",
+      [x['value'] for x in _o['checked'].get('subsumed') or []] == ['2026-09-19'], json.dumps(_o['checked']))
+_o = _merged_owns({'seen': '2026-09-19'}, {'seen': '2026-09-20 00:10+03:00'})
+check("T2: readings that do not nest stay a disagreement for a person",
+      'conflict' in json.dumps(_o['seen']), json.dumps(_o['seen']))
+_o = _merged_owns({'seen': '2026-09-19 22:00Z'}, {'seen': '2026-09-20 01:00:15+03:00'})
+check("T2: containment is judged in the coarser reading's own offset (22:00Z contains 01:00:15+03:00)",
+      'conflict' not in json.dumps(_o['seen']) and '01:00:15' in json.dumps(_o['seen']), json.dumps(_o['seen']))
+_o = _merged_owns({'seen': '2026-09-19 22:00Z'}, {'seen': '2026-09-19 22:00:15'})
+check("T2: a reading with an offset does not contain one that states none — unordered, not guessed",
+      'conflict' in json.dumps(_o['seen']), json.dumps(_o['seen']))
+_o = _merged_owns({'seen': '2026-09-19 22:00Z'}, {'seen': '2026-09-19 22:00:30Z'})
+check("T2: parts are compared, not characters — 22:00Z contains 22:00:30Z though neither string starts the other",
+      _o['seen'].get('value') == '2026-09-19 22:00:30Z', json.dumps(_o['seen']))
 
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nconverge: {sum(results)}/{len(results)} checks passed")

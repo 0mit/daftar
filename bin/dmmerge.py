@@ -12,7 +12,7 @@ order-agnostic (commutative+associative — everything sorted canonically), and 
 CLI: dmmerge.py <garden_dir> [<garden_dir> ...]   # prints seeds + fingerprint
 Library: merge_gardens(list_of_beanlists) -> {seed_id: seed_dict}, canonical_fingerprint(seeds)
 """
-import sys, os, glob, json, hashlib, unicodedata, ipaddress, datetime
+import sys, os, re, glob, json, hashlib, unicodedata, ipaddress, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
 import yaml
@@ -121,6 +121,20 @@ def load_leaf_orders():
 
 
 LEAF_ORDERS = load_leaf_orders()
+
+
+def load_system_patterns():
+    """{anchor system: its ONE canonical pattern}, read from the law. A leaf order may apply to every value
+    that is a position in a system (9.3), so the order follows what a value IS, not what its key is called."""
+    path = os.path.join(ROOT, 'seed', 'std-vocab.md')
+    if not os.path.exists(path):
+        return {}
+    fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
+    return {r['system']: r.get('pattern') for r in (fm.get('anchor_systems') or [])
+            if isinstance(r, dict) and r.get('system') and r.get('pattern') not in (None, 'none')}
+
+
+SYSTEM_PATTERNS = load_system_patterns()
 UNDECLARED = set()          # keys merged by shape because no term declares a facet — reported, not hidden
 
 
@@ -159,6 +173,9 @@ def leaf_order(key, val):
     for rule in LEAF_ORDERS:
         sfx = rule.get('suffix')
         if (sfx and str(key).endswith(sfx)) or key in (rule.get('exact') or []):
+            return rule.get('order', 'none')
+        pat = SYSTEM_PATTERNS.get(rule.get('system'))
+        if pat and isinstance(val, str) and re.match(pat, val):
             return rule.get('order', 'none')
     return 'none'
 
@@ -202,8 +219,50 @@ def members(key, order, val):
         return out
     return {'': val}
 
+_CIVIL = re.compile(r'^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?'
+                    r'(Z|[+-]\d{2}:\d{2})?)?$')
+
+
+def _civil(s):
+    """A calendar reading as (its components, its offset in minutes or None). The components are the parts
+    actually WRITTEN: `2026-09-19` has three, `2026-09-19 22:50+03:00` five. Fewer parts is a coarser
+    reading, never a reading at midnight."""
+    m = _CIVIL.match(str(s))
+    if not m:
+        return None, None
+    y, mo, d, h, mi, sec, ms, off = m.groups()
+    parts = [int(y), int(mo), int(d)] + [int(x) for x in (h, mi, sec) if x is not None]
+    if ms is not None:
+        parts.append(int(ms.ljust(3, '0')))
+    if off is None:
+        return parts, None
+    return parts, 0 if off == 'Z' else (1 if off[0] == '+' else -1) * (int(off[1:3]) * 60 + int(off[4:6]))
+
+
+def _instant_contains(a, b):
+    """True when calendar reading `a` CONTAINS the finer reading `b`: `2026-09-19` contains
+    `2026-09-19 22:50+03:00`. The `time` aspect's order is PARTIAL, so every other pair is unordered: two
+    readings that do not nest are a disagreement for a person, never silently ordered. A reading with an
+    offset contains only readings that state one, compared in its own offset; a reading with none is a
+    civil date in an unstated frame and is compared with `b` as `b` was written."""
+    pa, oa = _civil(a)
+    pb, ob = _civil(b)
+    if pa is None or pb is None or len(pb) <= len(pa):
+        return False
+    if oa is not None:
+        if ob is None:
+            return False
+        full = (pb + [0, 0, 0, 0])[:7]
+        t = datetime.datetime(full[0], full[1], full[2], full[3], full[4], full[5], full[6] * 1000)
+        t += datetime.timedelta(minutes=oa - ob)
+        pb = [t.year, t.month, t.day, t.hour, t.minute, t.second, t.microsecond // 1000][:len(pb)]
+    return pb[:len(pa)] == pa
+
+
 def subsumes(a, b, order):     # True if a is subsumed by (more-general-or-equal) b, b != a
     if a == b: return False
+    if order == 'instant':
+        return _instant_contains(a, b)
     if order == 'version':
         return str(b).startswith(str(a))                     # "AlmaLinux 9" ⊑ "AlmaLinux 9.8"
     if order == 'cidr':
