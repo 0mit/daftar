@@ -124,7 +124,11 @@ check("no bean restates its own code_path and git_remote as prose", not restatin
 
 # ---- caches are addressable, and anchors are classed -------------------------------------------------
 badcache = [f"{b}/{c}" for b, fm in BEANS.items() for c, e in (fm.get('analysis_cache') or {}).items()
-            if not str(e.get('staleness_key', '')).startswith(('git-head:', 'digest:', 'manual:'))]
+            # 11.0: a key is a POSITION in the git object graph (`<repo>@<sha>`) or `manual:<why>`; the old
+            # `git-head:`/`digest:` spellings were resolved against the READER's tree, so one analysis had one
+            # verdict per machine. The gate refuses them through `analysis_cache.entry_pattern`; this is the
+            # same rule in the hook's fast subset, and it was left behind when the law moved.
+            if not re.match(r'^([a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}|manual:.+)$', str(e.get('staleness_key', '')))]
 check("every cache entry carries a checkable staleness key", not badcache, ', '.join(badcache[:4]))
 noflag = [b for b, fm in ALL.items() for a in ((fm.get('identity') or {}).get('anchors') or [])
           if not isinstance(a.get('establishing'), bool)]
