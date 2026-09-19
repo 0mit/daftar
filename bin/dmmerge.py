@@ -163,12 +163,30 @@ def facet(key, val, member=False):
     return 'single', 'none'
 
 
+# Every order this module can APPLY, named once. `leaf_order` used to whitelist a different set from the one
+# `subsumes` implements: `prefix` and `subsumes` were accepted and do nothing, while `instant` and
+# `containment` (std-vocab 9.3 and 11.0) were implemented and could not be declared on a TERM — a term saying
+# `merge: {order: instant}` was silently unordered. One list, read by both.
+ORDERS = ('cidr', 'version', 'instant', 'containment', 'ranked')
+
+
+def ranked_order(key):
+    """A declared RANK — `merge: {order: "a<b<c"}` — as a list, or None. The vocabulary has carried one since
+    `anchor_authority` was declared (`scanned<operator-asserted<external`) and NOTHING READ IT: measured
+    2026-09-20, `leaf_order('authority', …)` answered `none`. A law the code ignores is worse than a rule in
+    code, because the vocabulary says it is in force."""
+    m = (TERMS.get(key) or {}).get('merge') or {}
+    o = str(m.get('order') or '')
+    return [p.strip() for p in o.split('<')] if '<' in o else None
+
+
 def leaf_order(key, val):
-    """The subsumption order for a LEAF value. Prefer the term's own declaration; the two name-shaped
-    heuristics below are what this module has always used and are kept because acceptance pins them —
-    they are the last hardcoded merge knowledge here, and they belong in the vocabulary."""
+    """The subsumption order for a LEAF value. The term's own declaration wins; otherwise the `leaf_orders`
+    registry decides, by key name or by the anchor system a value is written in."""
+    if ranked_order(key):
+        return 'ranked'
     m = (TERMS.get(key) or {}).get('merge')
-    if isinstance(m, dict) and m.get('order') in ('cidr', 'version', 'prefix', 'subsumes'):
+    if isinstance(m, dict) and m.get('order') in ORDERS:
         return m['order']
     for rule in LEAF_ORDERS:
         sfx = rule.get('suffix')
@@ -274,8 +292,11 @@ def _place_contains(a, b):
     return sb.startswith(sa + sep)
 
 
-def subsumes(a, b, order):     # True if a is subsumed by (more-general-or-equal) b, b != a
+def subsumes(a, b, order, key=None):     # True if a is subsumed by (more-general-or-equal) b, b != a
     if a == b: return False
+    if order == 'ranked':
+        rank = ranked_order(key) or []
+        return a in rank and b in rank and rank.index(a) < rank.index(b)
     if order == 'containment':
         return _place_contains(a, b)
     if order == 'instant':
@@ -349,6 +370,25 @@ def merge_key(key, items):
             'keyed_by': order}
 
 
+_AUTHORITY_RANK = None
+
+
+def _authority_rank(anchor):
+    """Where an anchor's authority sits in the rank the vocabulary declares. An anchor that states none
+    ranks lowest: a value whose weight nobody recorded cannot outweigh one whose weight was."""
+    global _AUTHORITY_RANK
+    if _AUTHORITY_RANK is None:
+        _AUTHORITY_RANK = ranked_order('anchor_authority') or []
+    a = anchor.get('authority')
+    return _AUTHORITY_RANK.index(a) if a in _AUTHORITY_RANK else -1
+
+
+def _rank_only(old, new):
+    """True when two records of one anchor differ ONLY in their authority — the case the declared rank is
+    for. Any other disagreement is still a disagreement, and is recorded rather than ranked away."""
+    return {k: v for k, v in old.items() if k != 'authority'} == {k: v for k, v in new.items() if k != 'authority'}
+
+
 def merge_field(key, items, member=False):
     """items: [{'value','src','garden'}]. Returns a canonical, lossless merged LEAF."""
     # A captured conflict read back off disk is not one value — it is the several it stands for. See
@@ -385,7 +425,7 @@ def merge_field(key, items, member=False):
         dom = None
         for w in vals:
             if w is v: continue
-            if subsumes(v['value'], w['value'], order):
+            if subsumes(v['value'], w['value'], order, key):
                 if not (v['src'] == 'asserted-by-human' and SRC_RANK.get(w['src'], 2) < SRC_RANK['asserted-by-human']):
                     dom = w; break
         if dom is None:
@@ -531,7 +571,19 @@ def merge_component(comp):
                 _new = {'key': a['key'],
                         'value': _ak[1] if dmparse.anchor_compare_form(TERMS.values(), a['key']) else norm(a['value']),
                         'establishing': a.get('establishing') is True, 'class': a.get('class')}
+                # AUTHORITY SURVIVES THE MERGE (2026-09-20). `anchor_authority` means "how much weight an
+                # anchor's value carries on merge" and declares a rank — and the merge dropped the attribute
+                # on the floor, so the rank had nothing to weigh and no reader could tell a SCANNED anchor
+                # from one a person asserted. Two gardens that disagree about it resolve by the DECLARED
+                # rank, which is the vocabulary deciding rather than arrival order.
+                if a.get('authority') is not None:
+                    _new['authority'] = a['authority']
                 _old = anchors.get(_ak)
+                if _old is not None and _old != _new and _rank_only(_old, _new):
+                    _new = max((_old, _new), key=_authority_rank)
+                    _old = None if _new is not _old else _old
+                    anchors[_ak] = _new
+                    continue
                 if _old is not None and _old != _new:
                     # TWO GARDENS DISAGREE ABOUT WHAT THIS ANCHOR IS. Overwriting made the seed id, the
                     # id_basis and auto-merge eligibility depend on ITERATION ORDER, which breaks the
@@ -1017,8 +1069,11 @@ if __name__ == '__main__':
         # tree's pin agrees with the vocabulary actually installed. A mismatch means the beans about to
         # be merged are judged by a law this tree does not have.
         try:
-            _std = std_fm_of(os.path.join(ROOT_DIR, 'seed', 'std-vocab.md'))
-            _loc = std_fm_of(os.path.join(ROOT_DIR, 'VOCAB.md'))
+            # `std_fm_of` APPENDS seed/std-vocab.md to what it is given, so passing it the file's own path
+            # asked for `…/seed/std-vocab.md/seed/std-vocab.md` and always read {} — measured 2026-09-20:
+            # this refusal could never fire, on the only incremental merge path there is.
+            _std = std_fm_of(ROOT_DIR)
+            _loc = dmparse.loads(dmparse.read(os.path.join(ROOT_DIR, 'VOCAB.md'))[0] or '') or {}
             _pin = str((_loc or {}).get('extends') or '')
             _ver = str((_std or {}).get('version') or '')
             if _ver and _pin and _pin != f'std-vocab@{_ver}':

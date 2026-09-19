@@ -236,6 +236,28 @@ _o = _merged_owns({'seen': '2026-09-19 22:00Z'}, {'seen': '2026-09-19 22:00:30Z'
 check("T2: parts are compared, not characters — 22:00Z contains 22:00:30Z though neither string starts the other",
       _o['seen'].get('value') == '2026-09-19 22:00:30Z', json.dumps(_o['seen']))
 
+# ---------------------------------------------------------------- a DECLARED rank is read (2026-09-20)
+# `anchor_authority` has declared `scanned<operator-asserted<external` since it was written, and nothing read
+# it: the merge dropped the attribute entirely, so the rank had nothing to weigh. A law the code ignores is
+# worse than a rule in code, because the vocabulary says it is in force.
+def _anchored(garden, auth):
+    return [{'garden': garden, 'id': 'box', 'fm': {
+        'bean': 'box', 'kind': 'host', 'nature': 'physical', 'title': 'b', 'status': 'active', 'summary': 'b',
+        'identity': {'status': 'confirmed', 'anchors': [{'key': 'serial', 'value': 'SN-A1', 'class': 'hardware',
+                                                         'establishing': True, 'authority': auth}]},
+        'provenance': {'src': 'observed', 'by': garden, 'as_of': '2026-09-17'}}}]
+_sd = list(M.merge_gardens([_anchored('g1', 'scanned'), _anchored('g2', 'operator-asserted')]).values())[0]
+_anc = _sd['identity']['anchors'][0]
+check("an anchor's AUTHORITY survives the merge — a scanned value and an asserted one are not the same fact",
+      'authority' in _anc, json.dumps(_anc))
+check("...and the rank the vocabulary DECLARES decides between them, rather than arrival order",
+      _anc.get('authority') == 'operator-asserted' and not _sd['identity'].get('anchor_conflicts'), json.dumps(_sd['identity']))
+_sd = list(M.merge_gardens([_anchored('g2', 'operator-asserted'), _anchored('g1', 'scanned')]).values())[0]
+check("...in either order, because a rank is not arrival order",
+      _sd['identity']['anchors'][0].get('authority') == 'operator-asserted', json.dumps(_sd['identity']['anchors']))
+check("a term may now declare any order the merge can APPLY — `instant` on a term is no longer a silent no-op",
+      M.leaf_order.__doc__ and 'instant' in M.ORDERS and 'containment' in M.ORDERS, str(M.ORDERS))
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nconverge: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)
