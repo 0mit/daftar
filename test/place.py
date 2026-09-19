@@ -72,6 +72,16 @@ out = codebase("root:tree/src", "tree@a1b2c3d4e5f6", BAD)
 check("...and a segment that names no network is refused — two sites both have a vlan-13",
       "canonical form" in out or "must be in" in out, out[-900:])
 
+# dmstale reads the key as a POSITION: before 11.0 it knew only `git-head:`, so every migrated key read
+# as UNKNOWN — "not machine-checkable" — which is the opposite of what migrating them was for.
+codebase("root:tree/src", "tree@a1b2c3d4e5f6")
+r = run(sys.executable, os.path.join(G, "bin", "dmstale.py"), cwd=G)
+check("dmstale reads `<repo>@<sha>` and says the source is not on this host, not that the key is uncheckable",
+      "NOT-HERE" in r.stdout and "UNKNOWN" not in r.stdout, r.stdout[-700:])
+codebase("root:tree/src", "manual:checked by hand")
+r = run(sys.executable, os.path.join(G, "bin", "dmstale.py"), cwd=G)
+check("...and a `manual:` key is still the one thing it calls uncheckable", "UNKNOWN" in r.stdout, r.stdout[-700:])
+
 import dmmerge as M
 def merged(a, b):
     def g(garden, val):
