@@ -2062,7 +2062,12 @@ def check_chain_termination():
     for _term, _sch in SCHEMAS.items():
         if not on_walk(_sch) or not _sch.get('entry_one_of'):
             continue
-        _terminal = {f for f in _sch['entry_one_of'] if f in ('external', 'crown', 'self')}
+        # THE TERM SAYS WHICH FORMS END A CHAIN: `entry_one_of` offers the forms and `entry_ref_fields`
+        # names the ones that point at another bean, so the difference IS the terminal set. Listed by hand
+        # here (as ('external','crown','self')) and differently in the hook's fast subset (which accepted
+        # `contract`), one rule had two answers, and the vocabulary's — `contract` is a ref, so a chain
+        # through it continues — was neither of them.
+        _terminal = set(_sch['entry_one_of']) - set(_sch.get('entry_ref_fields') or [])
         if not _terminal:
             continue
         _alt = (_sch.get('alt_form') or {}).get('key')
@@ -2084,9 +2089,12 @@ def check_chain_termination():
                          if isinstance(_facet, dict) for f in _facet):
                     break                                        # a facet terminates outside or at the axiom
                 else:
-                    _nxt = next((_f.get('owner', {}).get('bean') or _f.get('holder', {}).get('bean')
-                                 for _f in _node.values()
-                                 if isinstance(_f, dict) and (_f.get('owner') or _f.get('holder'))), None)
+                    # WHICH FIELD CARRIES THE CHAIN ONWARD is the term's `entry_ref_fields`, not two facet
+                    # key names written here — the same declaration the terminal set above is derived from.
+                    _refs = _sch.get('entry_ref_fields') or []
+                    _nxt = next((( _f.get(_r) or {}).get('bean')
+                                 for _f in _node.values() if isinstance(_f, dict)
+                                 for _r in _refs if isinstance(_f.get(_r), dict)), None)
                 if _at in _seen:
                     break                                        # the acyclic ply owns cycles
                 _seen.add(_at)

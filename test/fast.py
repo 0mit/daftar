@@ -67,25 +67,42 @@ check("every term states a rule, a core-enforcement, or an explicit none",
       ', '.join(n for n, t in TERMS.items() if not (t.get('schema') or t.get('enforced_by') or t.get('anchor'))))
 
 # ---- ownership closes, in both arcs and all the way up ---------------------------------------------
+# WHICH FORMS END A CHAIN AND WHICH CONTINUE IT ARE DERIVED, not listed. The term says both: `entry_one_of`
+# offers the forms, `entry_ref_fields` names the ones that point at another bean, and the difference IS the
+# terminal set. Listed by hand, the two halves of one rule drifted: this file accepted `contract` as an
+# ending while the gate did not, and the vocabulary declares `contract` a ref — so the day a facet is owned
+# through a contract, the hook would have passed a chain the gate refuses. Nothing said which was right.
+_OB_SCHEMA = (next((t for t in (sv.get('terms') or []) if t.get('term') == 'owned_by'), {}).get('schema') or {})
+_REFS = set(_OB_SCHEMA.get('entry_ref_fields') or [])
+_ENDS = set(_OB_SCHEMA.get('entry_one_of') or []) - _REFS
+_ALT = (_OB_SCHEMA.get('alt_form') or {})
 half = [b for b, fm in BEANS.items() if (fm.get('owned_by') is None) != (fm.get('responsibility') is None)]
 check("every bean carries BOTH ownership arcs", not half, ', '.join(half[:5]))
-shape = lambda n: 'via' if 'via' in n else frozenset(n)
+# The ARC's partner and the inherited form's key are the term's own declarations (`facet_parity_with`,
+# `alt_form.key`), read here rather than spelled again — the gate stopped keeping its own copy of the second
+# one in 8.x for the same reason.
+_PARTNER = _OB_SCHEMA.get('facet_parity_with') or 'responsibility'
+shape = lambda n: _ALT.get('key') if (_ALT.get('key') and _ALT['key'] in n) else frozenset(n)
 mismatch = [b for b, fm in BEANS.items() if fm.get('owned_by')
-            and shape(fm['owned_by']) != shape(fm['responsibility'])]
+            and shape(fm['owned_by']) != shape(fm.get(_PARTNER) or {})]
 check("the two arcs agree on facets everywhere", not mismatch, ', '.join(mismatch[:5]))
+
+
 
 def terminus(b, seen=()):
     if b in seen or b not in BEANS:
         return 'CYCLE'
     ob = BEANS[b].get('owned_by') or {}
-    if 'via' in ob:
-        return terminus(ob['via']['bean'], seen + (b,))
+    _altkey = _ALT.get('key')
+    if _altkey and _altkey in ob:
+        return terminus(ob[_altkey]['bean'], seen + (b,))
     for spec in ob.values():
-        for k in ('crown', 'external', 'contract'):
+        for k in _ENDS:
             if k in spec:
                 return k
-        if 'owner' in spec:
-            return terminus(spec['owner']['bean'], seen + (b,))
+        for k in _REFS:
+            if k in spec:
+                return terminus(spec[k]['bean'], seen + (b,))
     return 'DANGLING'
 # WHICH kinds owe an owner at all is DERIVED from the term, never listed here. A `kind: person` carries no
 # `owned_by` and is not dangling: the crown owns the living while alive, and the term does not require the
@@ -96,8 +113,8 @@ OWES = set(_ob.get('required_on_kinds') or [])
 ends = {b: terminus(b) for b, fm in BEANS.items()
         if fm.get('owned_by') is not None or fm.get('kind') in OWES}
 check("every ownership chain that is owed terminates at the crown or outside — none dangles or loops",
-      all(e in ('crown', 'external', 'contract') for e in ends.values()),
-      str({b: e for b, e in ends.items() if e not in ('crown', 'external', 'contract')}))
+      all(e in _ENDS for e in ends.values()),
+      str({b: e for b, e in ends.items() if e not in _ENDS}))
 
 # ---- Rule 6: the capsule reads on paper --------------------------------------------------------------
 # A key name that pins the key to a MOMENT — a date or a version — cannot be superseded: the next reader
@@ -123,12 +140,13 @@ for b, fm in BEANS.items():
 check("no bean restates its own code_path and git_remote as prose", not restating, ', '.join(restating))
 
 # ---- caches are addressable, and anchors are classed -------------------------------------------------
+_STALENESS = (((TERMS.get('analysis_cache') or {}).get('schema') or {}).get('entry_pattern') or {}).get(
+    'staleness_key') or r'(?!)'      # no pattern in the law -> nothing matches, and the law's absence shows
 badcache = [f"{b}/{c}" for b, fm in BEANS.items() for c, e in (fm.get('analysis_cache') or {}).items()
-            # 11.0: a key is a POSITION in the git object graph (`<repo>@<sha>`) or `manual:<why>`; the old
-            # `git-head:`/`digest:` spellings were resolved against the READER's tree, so one analysis had one
-            # verdict per machine. The gate refuses them through `analysis_cache.entry_pattern`; this is the
-            # same rule in the hook's fast subset, and it was left behind when the law moved.
-            if not re.match(r'^([a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}|manual:.+)$', str(e.get('staleness_key', '')))]
+            # THE PATTERN IS THE TERM'S, read from it. Kept here as a literal, it was left behind when the
+            # law moved in 11.0 and this file refused a garden for migrating its keys exactly as the new law
+            # required — the gate saying one thing and the hook another, about one rule.
+            if not re.match(_STALENESS, str(e.get('staleness_key', '')))]
 check("every cache entry carries a checkable staleness key", not badcache, ', '.join(badcache[:4]))
 noflag = [b for b, fm in ALL.items() for a in ((fm.get('identity') or {}).get('anchors') or [])
           if not isinstance(a.get('establishing'), bool)]
