@@ -82,6 +82,44 @@ codebase("root:tree/src", "manual:checked by hand")
 r = run(sys.executable, os.path.join(G, "bin", "dmstale.py"), cwd=G)
 check("...and a `manual:` key is still the one thing it calls uncheckable", "UNKNOWN" in r.stdout, r.stdout[-700:])
 
+# WHAT STALE MEANS (human-ratified 2026-09-20): the source MOVED under the analysis. A clone that simply
+# lacks the keyed objects is behind — a fact about the reader — and an analysis whose source moved on must
+# not read FRESH, which is what it did while STALE was produced only by a missing object.
+R = os.path.join(T, "repo")
+os.makedirs(os.path.join(R, "src"))
+def git(*a):
+    return run("git", "-C", R, *a)
+run("git", "init", "-q", R)
+open(os.path.join(R, "src", "a.txt"), "w").write("one\n")
+git("add", "-A"); git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "first")
+KEY = git("rev-parse", "--short=7", "HEAD").stdout.strip()
+open(os.path.join(G, "beans", "trixy-like.md"), "w").write(
+    '---\nbean: trixy-like\nkind: host\ntitle: "this machine"\nstatus: active\nsummary: "h"\nnature: physical\n'
+    'identity: { status: confirmed, anchors: [ { key: hostname, value: "' + __import__("socket").gethostname().lower() + '", class: network, establishing: false }, { key: serial, value: "SN-T1", class: hardware, establishing: true } ] }\n'
+    'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
+    'roots:\n  tree: { system: unix-filesystem, at: "' + __import__("socket").gethostname().lower() + ':' + R + '", observed: 2026-01-01 }\n'
+    '---\nA host.\n')
+def stale_run(key):
+    codebase("root:tree/src", key)
+    return run(sys.executable, os.path.join(G, "bin", "dmstale.py"), cwd=G).stdout
+out = stale_run("tree@" + KEY)
+check("dmstale: the key is here and nothing since it touches the covered paths — FRESH",
+      "FRESH" in out and "STALE" not in out, out[-500:])
+open(os.path.join(R, "src", "a.txt"), "w").write("two\n")
+git("add", "-A"); git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "the source moves")
+out = stale_run("tree@" + KEY)
+check("dmstale: a commit after the key that TOUCHES the covered paths — STALE, which is what the name promises",
+      "STALE" in out and "touch the covered paths" in out, out[-500:])
+open(os.path.join(R, "elsewhere.txt"), "w").write("x\n")
+git("add", "-A"); git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "a change somewhere else")
+NEW = git("rev-parse", "--short=7", "HEAD").stdout.strip()
+out = stale_run("tree@" + NEW)
+check("dmstale: a commit that touches nothing covered leaves the analysis FRESH",
+      "FRESH" in out and "STALE" not in out, out[-500:])
+out = stale_run("tree@0000000")
+check("dmstale: a clone that does not have the keyed objects is BEHIND, not stale",
+      "NOT-HERE" in out and "STALE" not in out and "is behind" in out, out[-500:])
+
 import dmmerge as M
 def merged(a, b):
     def g(garden, val):
