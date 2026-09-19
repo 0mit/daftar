@@ -177,7 +177,7 @@ def main():
         verb = ('applied' if not (cur_v and new_v) else
                 'downgraded' if tuple(map(int, new_v.groups())) < tuple(map(int, cur_v.groups())) else 'upgraded')
         run('sh', os.path.join(ROOT, 'bin', 'install.sh'), check=False)
-        now = datetime.datetime.now().astimezone().strftime('%Y-%m-%d %H:%M %z')
+        now = datetime.datetime.now().astimezone().isoformat(timespec='minutes').replace('T', ' ')   # the journal's heading form (10.0)
         lines = [f"\n## {now} · (fill in who ratified) · RULE-CHANGE: language {verb} to daftar {a.tag}",
                  f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; "
                  f"std-vocab {before} -> {after}; release {current or 'unrecorded'} -> {a.tag}.",

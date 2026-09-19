@@ -44,12 +44,10 @@ def _product():
     except Exception:
         return "daftar (untagged)"
 
-KEBAB = re.compile(r'^[a-z0-9]+(-[a-z0-9]+)*$')
 # The sections a bean states its OWN facts in. Three checks ask this same question — the float scan, the
 # IP collector and the single-owner duplicate scan — and each used to carry its own copy of the answer.
 # `section_keys()` further down deliberately does NOT use this: it asks a different question.
 _AUTHORITATIVE = ('owns', 'attributes', 'details')
-ISO_DATE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
 # P4: `refs`, `depends_on` and `consumes` used to be hardcoded here. They are declared vocabulary terms
 # now, so the gate no longer names a single relation — every edge it resolves comes from a schema.
 errors, warns = [], []
@@ -331,6 +329,32 @@ def check_merge_identity():
 # --- ASPECT SANITY RULES (2.1). An aspect is a CLOSED figure: its positions must exhaust it, each must
 # know its complement, the complements must be mutual, and its poles must be a genuine contradictory pair.
 # A figure with a loose end cannot say what a being is NOT, which is half of what a classification is for.
+# VALUE TYPES (10.0): the patterns `entry_types` / `attr_types` name are rows of the law, not constants here.
+VALUE_TYPES = {t['type']: t for t in (registry('value_types') or []) if isinstance(t, dict) and t.get('type')}
+# No copy of a pattern lives here. Without the row, check_value_types reports the missing law ONCE, and the
+# per-value checks stand down rather than refuse every id in the garden for a cause they cannot name.
+KEBAB = re.compile(VALUE_TYPES['kebab']['pattern']) if 'kebab' in VALUE_TYPES else None
+
+def check_value_types():
+    for _t in ('iso_date', 'kebab'):
+        if _t not in VALUE_TYPES:
+            errors.append(f"VOCAB: no `value_types` row for '{_t}' — the gate reads its type patterns from the law "
+                          f"and has no copy of its own")
+# `journal` is one mapping, not a registry of rows, so it is read as the garden states it, else as the standard does.
+JOURNAL = (vocab_fm.get('journal') if isinstance(vocab_fm.get('journal'), dict) else None) or \
+          (std_fm.get('journal') if isinstance(std_fm.get('journal'), dict) else {})
+
+def check_value_type(where, attr, val, typ):
+    """A value against a declared value type. An undeclared type is itself an error: a schema naming a type
+    the law does not define would otherwise check nothing and look as if it did."""
+    t = VALUE_TYPES.get(typ)
+    if not t and not VALUE_TYPES:
+        return                      # the law itself is missing; check_value_types has said so once
+    if not t:
+        errors.append(f"{where}.{attr}: type '{typ}' is not declared in `value_types` {sorted(VALUE_TYPES)}")
+    elif not re.match(t['pattern'], str(val)):
+        errors.append(f"{where}.{attr}" + ("" if typ != 'kebab' else f" '{val}'") + f" {t.get('refusal') or 'does not match its type ' + typ}")
+
 ASPECTS = {a['aspect']: a for a in (registry('aspects') or []) if isinstance(a, dict) and a.get('aspect')}
 FIGURES = {f['figure']: f for f in (registry('figures') or []) if isinstance(f, dict) and f.get('figure')}
 
@@ -468,7 +492,7 @@ def build_docs():
             continue
         if str(fm.get(idkey)) != base:
             errors.append(f"{base}: {idkey} '{fm.get(idkey)}' must equal filename (quote if numeric/reserved)")
-        if not KEBAB.match(base):
+        if KEBAB and not KEBAB.match(base):
             errors.append(f"{base}: id must be kebab-case")
         req = ['bean', 'kind', 'title', 'status', 'summary'] if is_bean else ['mapping', 'kind', 'summary']
         for k in req:
@@ -677,12 +701,7 @@ def ectl_entry_types(e):
     for attr, typ in (e.sch.get('entry_types') or {}).items():
         if e.entry.get(attr) is None:
             continue
-        if typ == 'iso_date' and not ISO_DATE.match(str(e.entry[attr])):
-            errors.append(f"{e.base}: {e.ref}.{attr} must be an ABSOLUTE date YYYY-MM-DD "
-                          f"(Rule 6 paper-durable)")
-        if typ == 'kebab' and not KEBAB.match(str(e.entry[attr])):
-            errors.append(f"{e.base}: {e.ref}.{attr} '{e.entry[attr]}' must be kebab-case "
-                          f"(the name is open, but still paper-durable)")
+        check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ)
 
 
 def ectl_entry_must_match(e):
@@ -1076,9 +1095,8 @@ def ctl_attr_types(c):
     """`attr_types:` — types for the mapping's OWN attrs."""
     for attr, typ in (c.sch.get('attr_types') or {}).items():
         v = c.node.get(attr) if isinstance(c.node, dict) else None
-        if v is not None and typ == 'iso_date' and not ISO_DATE.match(str(v)):
-            errors.append(f"{c.base}: {c.term}.{attr} must be an ABSOLUTE date YYYY-MM-DD "
-                          f"(Rule 6 paper-durable)")
+        if v is not None:
+            check_value_type(f"{c.base}: {c.term}", attr, v, typ)
     return None
 
 
@@ -1088,7 +1106,7 @@ def ctl_key_form(c):
     if not (kf and isinstance(c.node, dict)):
         return None
     for k in c.node:
-        if kf == 'kebab' and not KEBAB.match(str(k)):
+        if kf == 'kebab' and KEBAB and not KEBAB.match(str(k)):
             errors.append(f"{c.base}: {c.term} key '{k}' must be kebab-case "
                           f"(the key is open, but still paper-durable)")
         elif kf.startswith('values_from:'):
@@ -1737,6 +1755,14 @@ def check_staged_state():
             if '(fill in' in jdiff:
                 errors.append("the staged journal entry still contains '(fill in' — a template field was left "
                               "unfilled; say who ratified the change and why before committing")
+            # THE HEADING IS A POSITION IN TIME (10.0). Only headings this commit ADDS: history is never rewritten.
+            _hp = JOURNAL.get('heading_pattern')
+            if _hp:
+                for _h in (l for l in jdiff.splitlines() if l.startswith('## ')):
+                    if not re.match(_hp, _h):
+                        errors.append(f"journal heading '{_h[:70]}' is not a position in time — write "
+                                      f"{JOURNAL.get('heading_form')}, read from the clock (e.g. "
+                                      f"`date '+%Y-%m-%d %H:%M%:z'`), not typed from memory")
         for p in staged:
             if not (p.startswith(DOCUMENTISH) or p.endswith(FRONT_MATTER_DOCS)):
                 continue
@@ -2025,6 +2051,8 @@ PLIES = (
      "the vocabulary must agree with itself before anything is judged by it"),
     (check_merge_identity,
      "a list term's merge identity must name fields its entries carry — the same self-agreement, for merging"),
+    (check_value_types,
+     "the value types the schemas name are declared in the law"),
     (check_aspect_sanity,
      "an aspect is a closed figure — check the figure before using its positions"),
     (check_extends_pin,

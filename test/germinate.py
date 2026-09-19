@@ -115,7 +115,7 @@ if _fragments and os.path.isfile(_nas):
     _n = open(_nas, encoding='utf-8').read()
     open(_nas, 'w', encoding='utf-8').write(_n.replace('provides_habitat: linux-baremetal\n', 'provides_habitat: linux-baremetal\nos: nas-os\n', 1))
 with open(os.path.join(_ex_tmp, 'log', 'journal.md'), 'a', encoding='utf-8') as _j:
-    _j.write('\n## 2026-09-17 · human (test) · the README and COOKBOOK examples\n- action: RULE-CHANGE (VOCAB.md adds nas-os); '
+    _j.write('\n## 2026-09-17 10:00+00:00 · human (test) · the README and COOKBOOK examples\n- action: RULE-CHANGE (VOCAB.md adds nas-os); '
              + ', '.join(p for p, _ in _examples) + '\n')
 run('git', 'add', '-A', cwd=_ex_tmp)
 _ex_c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'examples', cwd=_ex_tmp)
@@ -142,35 +142,51 @@ def _append(rel, text):
 _rc, _o = _try_commit(_append('beans/nas.md', 'More about the NAS.\n'), '\nx\n')
 check("a bean change whose journal entry does not NAME the bean is refused (the `x` bypass)",
       _rc != 0 and "never names it" in _o, _o[-300:])
-_rc, _o = _try_commit(_append('beans/nas.md', 'More about the NAS.\n'), '\n## 2026-09-17 · human (test) · note\n- action: [[nas]] body\n')
+_rc, _o = _try_commit(_append('beans/nas.md', 'More about the NAS.\n'), '\n## 2026-09-17 10:00+00:00 · human (test) · note\n- action: [[nas]] body\n')
 check("...and naming it lets the commit through", _rc == 0, _o[-300:])
-_rc, _o = _try_commit(_append('VOCAB.md', '\nMore prose.\n'), '\n## 2026-09-17 · human (test) · vocab prose\n- action: VOCAB prose\n')
+_rc, _o = _try_commit(_append('VOCAB.md', '\nMore prose.\n'), '\n## 2026-09-17 10:00+00:00 · human (test) · vocab prose\n- action: VOCAB prose\n')
 check("a vocabulary change whose journal entry never says RULE-CHANGE is refused",
       _rc != 0 and "never says RULE-CHANGE" in _o, _o[-300:])
-_rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-17 · (fill in who ratified) · [[nas]]\n')
+_rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-17 10:00+00:00 · (fill in who ratified) · [[nas]]\n')
 check("a journal entry with an unfilled '(fill in' field is refused", _rc != 0 and "(fill in" in _o, _o[-300:])
 # v0.5.0: the release's own files are law in a garden, serials compare case- and space-insensitively, and a local
 # addition the standard already carries is named as that.
-_rc, _o = _try_commit(_append('MODEL.md', '\nA local note.\n'), '\n## 2026-09-17 · human (test) · a note in MODEL.md\n')
+_rc, _o = _try_commit(_append('MODEL.md', '\nA local note.\n'), '\n## 2026-09-17 10:00+00:00 · human (test) · a note in MODEL.md\n')
 check("an edit to a release file (MODEL.md) whose journal entry never says RULE-CHANGE is refused",
       _rc != 0 and "never says RULE-CHANGE" in _o and 'MODEL.md' in _o, _o[-300:])
-_rc, _o = _try_commit(_append('bin/dmcheck.py', '\n# a local patch\n'), '\n## 2026-09-17 · human (test) · RULE-CHANGE: a local patch to the gate\n')
+_rc, _o = _try_commit(_append('bin/dmcheck.py', '\n# a local patch\n'), '\n## 2026-09-17 10:00+00:00 · human (test) · RULE-CHANGE: a local patch to the gate\n')
 check("...and a local patch to the gate itself goes through once the entry says RULE-CHANGE", _rc == 0, _o[-300:])
 _dup = open(os.path.join(_ex_tmp, 'beans', 'nas.md'), encoding='utf-8').read().replace('bean: nas\n', 'bean: nas-two\n', 1) \
     .replace('"NAS-0042"', '"nas-0042 "', 1).replace('value: "nas", class: network', 'value: "nas-two", class: network', 1)
 _rc, _o = _try_commit(lambda: open(os.path.join(_ex_tmp, 'beans', 'nas-two.md'), 'w', encoding='utf-8').write(_dup),
-                      '\n## 2026-09-17 · human (test) · [[nas-two]]\n')
+                      '\n## 2026-09-17 10:00+00:00 · human (test) · [[nas-two]]\n')
 check("a serial differing only by case and whitespace is the SAME establishing anchor — the duplicate is refused",
       _rc != 0 and 'establishing anchor serial=NAS-0042' in _o, _o[-400:])
 check("...and the stored lowercase form is warned about, naming the form it is compared in",
       "is compared as 'NAS-0042'" in _o, _o[-400:])
+# THE HEADING IS A POSITION IN TIME (std-vocab 10.0, T3). Only headings a commit ADDS are checked.
+_rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-17 · human (test) · [[nas]]\n')
+check("T3: a new journal heading with a date alone is refused", _rc != 0 and "is not a position in time" in _o, _o[-300:])
+_rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-17 10:00 +0300 · human (test) · [[nas]]\n')
+check("T3: ...and so is one with a time in the old `+0300` spelling", _rc != 0 and "is not a position in time" in _o, _o[-300:])
+_rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-17 10:00 · human (test) · [[nas]]\n')
+check("T3: ...and one with no offset", _rc != 0 and "is not a position in time" in _o, _o[-300:])
+_rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-17 10:00:05.250+03:30 · human (test) · [[nas]]\n')
+check("T3: a heading in the calendar form, to any resolution from the minute down, goes through", _rc == 0, _o[-300:])
+_jp = os.path.join(_ex_tmp, 'log', 'journal.md')
+_jt = open(_jp, encoding='utf-8').read()
+open(_jp, 'w', encoding='utf-8').write(_jt + '\n## 2026-01-01 · human (test) · an old entry written before the law\n')
+run('git', 'add', '-A', cwd=_ex_tmp)
+run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'history', '--no-verify', cwd=_ex_tmp)
+_rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-18 09:00+03:00 · human (test) · [[nas]]\n')
+check("T3: a heading already in the history is never checked again — only what a commit adds", _rc == 0, _o[-300:])
 _vfrag = "\nregistry_additions:\n  operating_systems:\n    - { os: debian, family: unix, path_grammar: unix-filesystem, meaning: x }\n"
 def _add_dup_row():
     _v = open(_vp, encoding='utf-8').read()
     _h, _sep, _r = _v.partition('\n---\n')
     _h = _h.replace('registry_additions:\n  operating_systems:\n', 'registry_additions:\n  operating_systems:\n    - { os: debian, family: unix, path_grammar: unix-filesystem, meaning: x }\n', 1)
     open(_vp, 'w', encoding='utf-8').write(_h + _sep + _r)
-_rc, _o = _try_commit(_add_dup_row, '\n## 2026-09-17 · human (test) · RULE-CHANGE: debian added locally\n')
+_rc, _o = _try_commit(_add_dup_row, '\n## 2026-09-17 10:00+00:00 · human (test) · RULE-CHANGE: debian added locally\n')
 check("a local registry addition the standard already carries is named as that, with the fix",
       _rc != 0 and "already in std-vocab" in _o and "remove it from registry_additions" in _o
       and 'drifted' not in _o, _o[-400:])
@@ -223,7 +239,7 @@ check("a bean staged WITHOUT a journal entry is refused (provenance duty)",
 
 # ---- POSITIVE: the same bean, journalled, commits -----------------------------------------------------
 with open(os.path.join(G, 'log', 'journal.md'), 'a', encoding='utf-8') as fh:
-    fh.write("\n## 2026-08-02 · agent · first bean\n- action: wrote beans/ada.md to prove the garden holds one.\n- refs: beans/ada.md\n")
+    fh.write("\n## 2026-08-02 10:00+00:00 · agent · first bean\n- action: wrote beans/ada.md to prove the garden holds one.\n- refs: beans/ada.md\n")
 run('git', 'add', '-A', cwd=G)
 rc, out = gate(G)
 check("with the journal entry, the gate passes", rc == 0 and '0 error(s)' in out, out.strip()[-300:])
