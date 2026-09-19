@@ -1,5 +1,5 @@
 ---
-version: "10.0"
+version: "10.1"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -35,6 +35,7 @@ schema_language:
   ref_fields:           "[self|<attr>...] — sub-nodes that are {bean|mapping} refs; the gate RESOLVES them (dangling = error)"
   entry_ref_fields:     "[<attr>...] — same, but inside each entry"
   pointer_fields:       "{<attr>: bean_field_pointer} — a pointer that is '<section>.<key>' on this bean, {bean,field} on another, or 'file:<path>'"
+  on_sequence:          "<aspect> — the term's value is a walk on that SEQUENCE aspect (10.1): prose lines in list order, or step entries {id, do, next: [{to, when?}]} whose neighbourhoods are CLOSED; the gate refuses a `to` that names no step, a step nothing reaches, a branch with no condition, a routine with no end, and a loop when the aspect declares acyclic"
   dag:                  "true — this term's edges are positions on the `walk` sequence aspect (9.2: `dag` is that aspect's `term_key`), and they join the acyclic check BECAUSE that aspect declares `acyclic: true`"
   required_on_targets_of: "<term> — a bean that is the TARGET of that relation must carry this term (e.g. anything lived in must say what kind of habitat it is)"
   entry_must_match:     "[{attr, registry, keyed_by, take}] — an entry attr must equal a registry row's attr, the row selected by a field on the bean (e.g. the crown branch is fixed by the bean's nature)"
@@ -731,6 +732,21 @@ aspects:
     ends: open
     term_key: dag           # a term carrying `dag: true` places its edges on this aspect
     domain: { systems: none }   # its positions are beans, not positions in an anchor system
+  - aspect: routine
+    # T4 (10.1): a procedure is a SEQUENCE OF STEPS, and the operator's own description of it (2026-08-05) is
+    # the definition: "completely sequential even with branches, for example steps of a routine even with
+    # their conditions". Lines are OPEN because a branch adds one. It is NOT acyclic: a routine may loop (retry
+    # until it passes), which is exactly why acyclicity had to stop being the definition of walkable.
+    # CLOSED NEIGHBOURHOODS, the third ply: a step's `next` is COMPLETE, these branches and no others, so the
+    # gate can refuse a branch that points nowhere, a step nothing reaches, and a routine with no end.
+    meaning: "the steps a procedure takes, the branches between them and the conditions that choose a branch"
+    figure: sequence
+    lines: open
+    metered: none
+    order: partial
+    acyclic: false
+    ends: bounded
+    domain: { systems: none }   # its positions are the routine's own steps
 
 # == PROFILES (added 2026-08-02, std-vocab@2.0 / P6 E4) ==
 # Terms that are general to a KIND of garden rather than to all gardens. A garden opts in with
@@ -1647,7 +1663,11 @@ terms:
   - term: steps
     meaning: "the ordered steps a mapping performs"
     context_keys: [steps]
-    enforced_by: none
+    # 10.1, T4: a list of PROSE lines (read in list order, as before) or a list of STEP ENTRIES
+    # `{id, do, next: [{to, when?}], note?}`, never a mix. `next` absent or empty ends the routine; two or more
+    # `next` entries are a branch and each names its condition in `when`.
+    schema:
+      on_sequence: routine
     # NOT a set: these are a SEQUENCE, and order carries the meaning — validating after installing is a
     # different procedure from validating before. A set-union would reorder them into nonsense, so the
     # whole list merges as one atom and two gardens with different steps conflict.
@@ -2253,3 +2273,10 @@ The portable, estate-agnostic classification shared by every garden — the abst
   moves the gate's type patterns into the law, and declares `iso_date` as the calendar at unit DAY, so every
   existing date is a position whose time of day is unknown, with no data changed. `dmupgrade` heads its journal
   entry in the new form.
+
+- **10.1** (2026-09-20, human-ratified rule-change, "T4") — **routines are sequences.** A `routine` aspect on
+  the sequence figure (open lines, because branches add lines; NOT acyclic, because a routine may loop), and
+  `steps` gains `on_sequence: routine`: its value is either prose lines, read in list order as before, or step
+  entries `{id, do, next: [{to, when?}], note?}`. A step's `next` is a CLOSED neighbourhood, these branches and no
+  others, so the gate refuses a branch that points nowhere, a step nothing reaches, a branch without its
+  condition, and a routine that never ends. MINOR: prose steps stay legal, so no existing mapping changes.

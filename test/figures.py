@@ -45,7 +45,7 @@ mutate("    ends: bounded\n    domain: { systems: place }\n", "    domain: { sys
 out = gate()
 check("a sequence that leaves a restriction unstated is refused", "must state `ends`" in out, out[-900:])
 
-mutate("    lines: open\n", "    lines: 0\n")
+mutate("    lines: open\n    metered: none           # geographic", "    lines: 0\n    metered: none           # geographic")
 out = gate()
 check("a line count that is not one or more is refused", "lines '0' must be a positive integer" in out, out[-900:])
 
@@ -87,6 +87,37 @@ open(VOC, "w").write(ORIG)
 r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
 check("dmrules shows the sequences and what walks them",
       "time         sequence" in r.stdout and "walked by:" in r.stdout and "on the 'walk' sequence" in r.stdout, r.stdout[-1500:] + r.stderr)
+
+# ---- T4 (10.1): routines. `steps` is a walk on the `routine` sequence, with CLOSED neighbourhoods.
+open(VOC, "w").write(ORIG)
+for f in ("part-a", "part-b"):
+    os.remove(os.path.join(G, "beans", f + ".md"))
+def routine(steps_yaml):
+    open(os.path.join(G, "mappings", "rehearse.md"), "w").write(
+        "---\nmapping: rehearse\nkind: procedure\nsummary: \"a rehearsal with a retry\"\nsteps:\n" + steps_yaml + "---\nA routine.\n")
+    return gate()
+os.makedirs(os.path.join(G, "mappings"), exist_ok=True)
+GOOD = ("  - { id: copy, do: \"copy the database\", next: [ { to: verify } ] }\n"
+        "  - { id: verify, do: \"compare row counts\", next: [ { to: done, when: \"counts match\" }, { to: copy, when: \"they differ: copy again\" } ] }\n"
+        "  - { id: done, do: \"report\" }\n")
+out = routine(GOOD)
+check("T4: a routine with a branch and a LOOP passes — `routine` is not acyclic", "0 error" in out, out[-900:])
+out = routine("  - \"copy\"\n  - \"verify\"\n")
+check("T4: prose steps stay legal, read in list order", "0 error" in out, out[-900:])
+out = routine(GOOD.replace("{ to: done, when", "{ to: finished, when"))
+check("T4: a branch to a step that does not exist is refused", "names no step of this routine" in out, out[-900:])
+out = routine(GOOD + "  - { id: orphan, do: \"never reached\" }\n")
+check("T4: a step nothing reaches is refused", "orphan: no step reaches it" in out, out[-900:])
+out = routine(GOOD.replace("{ to: done, when: \"counts match\" }", "{ to: done }"))
+check("T4: a branch that does not say when it is taken is refused", "names no `when`" in out, out[-900:])
+out = routine(GOOD.replace("  - { id: done, do: \"report\" }\n", "  - { id: done, do: \"report\", next: [ { to: copy } ] }\n"))
+check("T4: a routine that never ends is refused", "no step ends the routine" in out, out[-900:])
+out = routine(GOOD + "  - \"a prose line\"\n")
+check("T4: prose and step entries mixed in one routine are refused", "mixes prose lines and step entries" in out, out[-900:])
+open(VOC, "w").write(ORIG.replace("    order: partial\n    acyclic: false\n    ends: bounded\n", "    order: partial\n    acyclic: true\n    ends: bounded\n", 1))
+out = routine(GOOD)
+check("T4: the same loop is refused once `routine` declares acyclic — the restriction is data", "loops, and 'routine' declares acyclic" in out, out[-900:])
+open(VOC, "w").write(ORIG)
 
 shutil.rmtree(T, ignore_errors=True)
 print("\nfigures: %d failed" % len(FAILS))
