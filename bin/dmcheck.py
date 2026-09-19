@@ -1121,6 +1121,67 @@ def ctl_key_form(c):
     return None
 
 
+def ctl_on_sequence(c):
+    """`on_sequence:` (10.1, T4) — the value is a walk on a SEQUENCE aspect: prose lines in list order, or step
+    entries whose `next` lists are CLOSED neighbourhoods (these branches and no others). The aspect's own
+    restrictions decide the rest: whether a loop is allowed is its `acyclic`, whether an end is owed is `ends`."""
+    _asp = c.sch.get('on_sequence')
+    if not _asp or c.node is None:
+        return None
+    _a = ASPECTS.get(_asp) or {}
+    if _a.get('figure') != 'sequence':
+        errors.append(f"VOCAB {c.term}: on_sequence '{_asp}' is not a sequence aspect")
+        return None
+    where = f"{c.base}: {c.term}"
+    if not isinstance(c.node, list):
+        errors.append(f"{where} must be a list — prose lines, or step entries {{id, do, next}}"); return None
+    _prose = [x for x in c.node if isinstance(x, str)]
+    _steps = [x for x in c.node if isinstance(x, dict)]
+    if _prose and _steps or len(_prose) + len(_steps) != len(c.node):
+        errors.append(f"{where} mixes prose lines and step entries — write one form: a routine read half by list "
+                      f"order and half by `next` has no single order"); return None
+    if not _steps:
+        return None                                   # prose: the list order IS the sequence, as before
+    ids, nexts = [], {}
+    for i, st in enumerate(_steps):
+        sid = st.get('id')
+        if not sid or not (KEBAB is None or KEBAB.match(str(sid))):
+            errors.append(f"{where}[{i}] needs a kebab-case `id`"); continue
+        if sid in nexts:
+            errors.append(f"{where}: two steps are '{sid}' — a step is named once"); continue
+        if not isinstance(st.get('do'), str) or not st['do'].strip():
+            errors.append(f"{where}.{sid} needs `do`: what the step does")
+        _n = st.get('next') or []
+        if not isinstance(_n, list) or not all(isinstance(x, dict) and x.get('to') for x in _n):
+            errors.append(f"{where}.{sid}.next must be a list of {{to, when?}}"); _n = []
+        if len(_n) > 1:
+            for x in _n:
+                if not str(x.get('when') or '').strip():
+                    errors.append(f"{where}.{sid}: a branch to '{x.get('to')}' names no `when` — with two or more "
+                                  f"ways on, each must say when it is taken")
+        ids.append(sid); nexts[sid] = [x['to'] for x in _n]
+    for sid, tos in nexts.items():
+        for t in tos:
+            if t not in nexts:
+                errors.append(f"{where}.{sid}: next '{t}' names no step of this routine (a branch to nowhere)")
+    if not ids:
+        return None
+    seen, todo = set(), [ids[0]]
+    while todo:
+        n = todo.pop()
+        if n in seen or n not in nexts:
+            continue
+        seen.add(n); todo.extend(nexts[n])
+    for sid in ids:
+        if sid not in seen:
+            errors.append(f"{where}.{sid}: no step reaches it from '{ids[0]}', where the routine starts")
+    if _a.get('ends') in ('bounded', 'open-start') and not any(not nexts[s] for s in ids):
+        errors.append(f"{where}: no step ends the routine — give at least one step no `next`")
+    if _a.get('acyclic') is True and _cycles({k: v for k, v in nexts.items()}):
+        errors.append(f"{where}: loops, and '{_asp}' declares acyclic")
+    return None
+
+
 def ctl_entries(c):
     """The per-ENTRY rules, for any shape that has entries at all."""
     shape = c.sch.get('shape')
@@ -1144,6 +1205,7 @@ CONTROLLERS = (
     ('attr_types', ctl_attr_types),
     ('key_form', ctl_key_form),
     ('entries', ctl_entries),
+    ('on_sequence', ctl_on_sequence),
 )
 
 
