@@ -77,12 +77,23 @@ one open fallback, `refs`.
 ## The vocabulary
 The rules are data, not code.
 - **`seed/std-vocab.md`** is the standard every garden pins. Opt-in **profiles** add groups of rules for
-  gardens that need them (`code`, `network`, `domain`).
+  gardens that need them (`code`, `network`, `domain`, `knowledge`).
 - **`VOCAB.md`** is the garden's own layer: local terms, profiles it opts into (`extends_profiles`), values it
   adds to a standard list (`values_add`, `registry_additions`), and dated exceptions.
 - **Every position the vocabulary offers is accounted for:** used by a bean, or declared vacant with a reason.
   A garden accounts only for what it declares itself.
 - A local term that proves general is **promoted** to the standard by a pull request to the daftar repository.
+
+## Knowledge: universal anchors
+The `knowledge` profile (vocabulary 9.1) lets a garden say what things ARE in the world's shared terms, with
+codes every garden uses: fields of knowledge (ISCED-F 2013), occupations (ISCO-08), and established
+technologies, each linked to its project's own documentation. They are kept whole as data in `seed/knowledge/`
+(each file under its own licence, see `SOURCES.md`) and read by `bin/dmknowledge.py`.
+- As an **anchor** (`isco_08`, `isced_f_2013`, `technology`) the code IS the object's identity, so two gardens
+  that never met recognise the same occupation, field or technology.
+- As a **relation** (`knowledge:` entries `{scheme, code, rel, topic?}` with `rel` classified_as, draws_on or
+  uses) any bean says what it rests on — an instance uses a technology, a design draws on a field.
+- The gate checks every code against its scheme; an invented code is refused.
 
 ## Ground rules
 1. **One owner per fact.** A fact lives in one bean's `owns:`; elsewhere it is referenced.

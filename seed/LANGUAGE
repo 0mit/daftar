@@ -10,6 +10,9 @@ bin/install.sh
 bin/hooks/*
 # The law, the seed's templates, this file and the germination procedure.
 seed/*
+# The knowledge the vocabulary points at (9.1): published classifications and the technology catalogue, each file
+# under its own terms (seed/knowledge/SOURCES.md). A garden that does not extend the `knowledge` profile never reads them.
+seed/knowledge/*
 # What the law MEANS and how a write is made. A garden grown without these had the law's data and no
 # statement of what it meant; its first person bean took three attempts.
 MODEL.md

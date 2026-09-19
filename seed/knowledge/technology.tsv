@@ -1,0 +1,49 @@
+code	name	category	vendor	docs	homepage	isced_f_2013	isco_08
+samba	Samba	software	The Samba Team	https://www.samba.org/samba/docs/	https://www.samba.org/	0612	2522;2523;3513
+active-directory	Active Directory (directory service model)	protocol	Microsoft (specification)	https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview	https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/	0612	2522;2523
+postfix	Postfix	software	Wietse Venema / the Postfix project	https://www.postfix.org/documentation.html	https://www.postfix.org/	0612	2522;3513
+dovecot	Dovecot	software	Open-Xchange / Dovecot	https://doc.dovecot.org/	https://www.dovecot.org/	0612	2522;3513
+amavis	Amavis (amavisd-new)	software	the Amavis project	https://gitlab.com/amavis/amavis	https://www.amavis.org/	0612	2522;2529
+bind9	BIND 9	software	Internet Systems Consortium	https://bind9.readthedocs.io/en/latest/	https://www.isc.org/bind/	0612	2522;2523
+docker	Docker	software	Docker, Inc.	https://docs.docker.com/	https://www.docker.com/	0612;0613	2522;2512;3511
+prometheus	Prometheus	software	the Prometheus authors (CNCF)	https://prometheus.io/docs/	https://prometheus.io/	0612	2522;3511
+alertmanager	Alertmanager	software	the Prometheus authors (CNCF)	https://prometheus.io/docs/alerting/latest/alertmanager/	https://prometheus.io/	0612	2522;3511
+blackbox-exporter	blackbox_exporter	software	the Prometheus authors (CNCF)	https://github.com/prometheus/blackbox_exporter	https://prometheus.io/	0612	2522;3511
+snmp-exporter	snmp_exporter	software	the Prometheus authors (CNCF)	https://github.com/prometheus/snmp_exporter	https://prometheus.io/	0612	2523;3513
+node-exporter	node_exporter	software	the Prometheus authors (CNCF)	https://prometheus.io/docs/guides/node-exporter/	https://prometheus.io/	0612	2522;3511
+grafana	Grafana	software	Grafana Labs	https://grafana.com/docs/grafana/latest/	https://grafana.com/	0612;0613	2522;3511
+zabbix	Zabbix	software	Zabbix LLC	https://www.zabbix.com/documentation/current/en/manual	https://www.zabbix.com/	0612	2522;3511
+routeros	MikroTik RouterOS	operating-system	MikroTik	https://help.mikrotik.com/docs/spaces/ROS/overview	https://mikrotik.com/software	0612	2523;3513
+wireguard	WireGuard	protocol	Jason A. Donenfeld / the WireGuard project	https://www.wireguard.com/quickstart/	https://www.wireguard.com/	0612	2523;2529
+openssh	OpenSSH	software	the OpenBSD project	https://www.openssh.com/manual.html	https://www.openssh.com/	0612	2522;2529
+postgresql	PostgreSQL	software	The PostgreSQL Global Development Group	https://www.postgresql.org/docs/current/	https://www.postgresql.org/	0612	2521;2522
+odoo	Odoo	software	Odoo S.A.	https://www.odoo.com/documentation/19.0/	https://www.odoo.com/	0613;0413	2512;2514;2511
+python	Python	software	Python Software Foundation	https://docs.python.org/3/	https://www.python.org/	0613	2512;2514
+git	Git	software	the Git project	https://git-scm.com/doc	https://git-scm.com/	0613	2512;2522
+rsync	rsync	software	the rsync project	https://download.samba.org/pub/rsync/rsync.1	https://rsync.samba.org/	0612	2522;3511
+slackware	Slackware Linux	operating-system	Slackware Linux, Inc.	https://docs.slackware.com/	http://www.slackware.com/	0612	2522
+linux	Linux (kernel)	operating-system	the Linux kernel community	https://docs.kernel.org/	https://kernel.org/	0612;0613	2522;2512
+windows-server	Windows Server	operating-system	Microsoft	https://learn.microsoft.com/en-us/windows-server/	https://www.microsoft.com/windows-server	0612	2522;3513
+qnap-qts	QNAP QTS	operating-system	QNAP Systems	https://docs.qnap.com/operating-system/qts/5.2.x/en-us/	https://www.qnap.com/	0612	2522;3513
+hikvision-isapi	Hikvision ISAPI	protocol	Hikvision	https://www.hikvision.com/	https://www.hikvision.com/	0612;0714	3513;7422
+ffmpeg	FFmpeg	software	the FFmpeg project	https://ffmpeg.org/documentation.html	https://ffmpeg.org/	0613;0211	2512;3521
+modbus	Modbus	protocol	Modbus Organization	https://www.modbus.org/specs.php	https://www.modbus.org/	0714	3113;7412
+snmp	SNMP	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc3411	https://www.ietf.org/	0612	2523;3513
+smtp	SMTP	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc5321	https://www.ietf.org/	0612	2522;2523
+imap	IMAP	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc9051	https://www.ietf.org/	0612	2522
+dns	DNS	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc1035	https://www.ietf.org/	0612	2523
+smb	SMB / CIFS	protocol	Microsoft (specification)	https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-smb2/	https://learn.microsoft.com/en-us/openspecs/	0612	2522;2523
+rtsp	RTSP	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc7826	https://www.ietf.org/	0612;0211	3521;3513
+spamassassin	Apache SpamAssassin	software	The Apache Software Foundation	https://spamassassin.apache.org/doc.html	https://spamassassin.apache.org/	0612	2522;2529
+clamav	ClamAV	software	Cisco Talos	https://docs.clamav.net/	https://www.clamav.net/	0612	2522;2529
+opendkim	OpenDKIM	software	The Trusted Domain Project	https://github.com/trusteddomainproject/OpenDKIM	https://github.com/trusteddomainproject/OpenDKIM	0612	2522;2529
+opendmarc	OpenDMARC	software	The Trusted Domain Project	https://github.com/trusteddomainproject/OpenDMARC	https://github.com/trusteddomainproject/OpenDMARC	0612	2522;2529
+roundcube	Roundcube Webmail	software	the Roundcube project	https://github.com/roundcube/roundcubemail/wiki	https://roundcube.net/	0612	2522
+postfixadmin	PostfixAdmin	software	the PostfixAdmin project	https://github.com/postfixadmin/postfixadmin	https://github.com/postfixadmin/postfixadmin	0612	2522
+mariadb	MariaDB Server	software	MariaDB Foundation	https://mariadb.com/kb/en/documentation/	https://mariadb.org/	0612	2521;2522
+nginx	nginx	software	F5 / the nginx project	https://nginx.org/en/docs/	https://nginx.org/	0612	2522;2523
+sieve	Sieve	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc5228	https://www.ietf.org/	0612	2522
+lmtp	LMTP	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc2033	https://www.ietf.org/	0612	2522
+spf	SPF	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc7208	https://www.ietf.org/	0612	2522;2529
+dkim	DKIM	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc6376	https://www.ietf.org/	0612	2522;2529
+dmarc	DMARC	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc7489	https://www.ietf.org/	0612	2522;2529

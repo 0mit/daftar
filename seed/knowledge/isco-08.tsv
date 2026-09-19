@@ -1,0 +1,620 @@
+code	level	parent	name_en
+0	major		Armed Forces Occupations
+01	sub-major	0	Commissioned Armed Forces Officers
+011	minor	01	Commissioned Armed Forces Officers
+0110	unit	011	Commissioned Armed Forces Officers
+02	sub-major	0	Non-commissioned Armed Forces Officers
+021	minor	02	Non-commissioned Armed Forces Officers
+0210	unit	021	Non-commissioned Armed Forces Officers
+03	sub-major	0	Armed Forces Occupations, Other Ranks
+031	minor	03	Armed Forces Occupations, Other Ranks
+0310	unit	031	Armed Forces Occupations, Other Ranks
+1	major		Managers
+11	sub-major	1	Chief Executives, Senior Officials and Legislators
+111	minor	11	Legislators and Senior Officials
+1111	unit	111	Legislators
+1112	unit	111	Senior Government Officials
+1113	unit	111	Traditional Chiefs and Heads of Villages
+1114	unit	111	Senior Officials of Special-interest Organizations
+112	minor	11	Managing Directors and Chief Executives
+1120	unit	112	Managing Directors and Chief Executives
+12	sub-major	1	Administrative and Commercial Managers
+121	minor	12	Business Services and Administration Managers
+1211	unit	121	Finance Managers
+1212	unit	121	Human Resource Managers
+1213	unit	121	Policy and Planning Managers
+1219	unit	121	Business Services and Administration Managers Not Elsewhere Classified
+122	minor	12	Sales, Marketing and Development Managers
+1221	unit	122	Sales and Marketing Managers
+1222	unit	122	Advertising and Public Relations Managers
+1223	unit	122	Research and Development Managers
+13	sub-major	1	Production and Specialized Services Managers
+131	minor	13	Production Managers in Agriculture, Forestry and Fisheries
+1311	unit	131	Agricultural and Forestry Production Managers
+1312	unit	131	Aquaculture and Fisheries Production Managers
+132	minor	13	Manufacturing, Mining, Construction and Distribution Managers
+1321	unit	132	Manufacturing Managers
+1322	unit	132	Mining Managers
+1323	unit	132	Construction Managers
+1324	unit	132	Supply, Distribution and Related Managers
+133	minor	13	Information and Communications Technology Services Managers
+1330	unit	133	Information and Communications Technology Services Managers
+134	minor	13	Professional Services Managers
+1341	unit	134	Child Care Services Managers
+1342	unit	134	Health Services Managers
+1343	unit	134	Aged Care Services Managers
+1344	unit	134	Social Welfare Managers
+1345	unit	134	Education Managers
+1346	unit	134	Financial and Insurance Services Branch Managers
+1349	unit	134	Professional Services Managers Not Elsewhere Classified
+14	sub-major	1	Hospitality, Retail and Other Services Managers
+141	minor	14	Hotel and Restaurant Managers
+1411	unit	141	Hotel Managers
+1412	unit	141	Restaurant Managers
+142	minor	14	Retail and Wholesale Trade Managers
+1420	unit	142	Retail and Wholesale Trade Managers
+143	minor	14	Other Services Managers
+1431	unit	143	Sports, Recreation and Cultural Centre Managers
+1439	unit	143	Services Managers Not Elsewhere Classified
+2	major		Professionals
+21	sub-major	2	Science and Engineering Professionals
+211	minor	21	Physical and Earth Science Professionals
+2111	unit	211	Physicists and Astronomers
+2112	unit	211	Meteorologists
+2113	unit	211	Chemists
+2114	unit	211	Geologists and Geophysicists
+212	minor	21	Mathematicians, Actuaries and Statisticians
+2120	unit	212	Mathematicians, Actuaries and Statisticians
+213	minor	21	Life Science Professionals
+2131	unit	213	Biologists, Botanists, Zoologists and Related Professionals
+2132	unit	213	Farming, Forestry and Fisheries Advisers
+2133	unit	213	Environmental Protection Professionals
+214	minor	21	Engineering Professionals (excluding Electrotechnology)
+2141	unit	214	Industrial and Production Engineers
+2142	unit	214	Civil Engineers
+2143	unit	214	Environmental Engineers
+2144	unit	214	Mechanical Engineers
+2145	unit	214	Chemical Engineers
+2146	unit	214	Mining Engineers, Metallurgists and Related Professionals
+2149	unit	214	Engineering Professionals Not Elsewhere Classified
+215	minor	21	Electrotechnology Engineers
+2151	unit	215	Electrical Engineers
+2152	unit	215	Electronics Engineers
+2153	unit	215	Telecommunications Engineers
+216	minor	21	Architects, Planners, Surveyors and Designers
+2161	unit	216	Building Architects
+2162	unit	216	Landscape Architects
+2163	unit	216	Product and Garment Designers
+2164	unit	216	Town and Traffic Planners
+2165	unit	216	Cartographers and Surveyors
+2166	unit	216	Graphic and Multimedia Designers
+22	sub-major	2	Health Professionals
+221	minor	22	Medical Doctors
+2211	unit	221	Generalist Medical Practitioners
+2212	unit	221	Specialist Medical Practitioners
+222	minor	22	Nursing and Midwifery Professionals
+2221	unit	222	Nursing Professionals
+2222	unit	222	Midwifery Professionals
+223	minor	22	Traditional and Complementary Medicine Professionals
+2230	unit	223	Traditional and Complementary Medicine Professionals
+224	minor	22	Paramedical Practitioners
+2240	unit	224	Paramedical Practitioners
+225	minor	22	Veterinarians
+2250	unit	225	Veterinarians
+226	minor	22	Other Health Professionals
+2261	unit	226	Dentists
+2262	unit	226	Pharmacists
+2263	unit	226	Environmental and Occupational Health and Hygiene Professionals
+2264	unit	226	Physiotherapists
+2265	unit	226	Dieticians and Nutritionists
+2266	unit	226	Audiologists and Speech Therapists
+2267	unit	226	Optometrists and Ophthalmic Opticians
+2269	unit	226	Health Professionals Not Elsewhere Classified
+23	sub-major	2	Teaching Professionals
+231	minor	23	University and Higher Education Teachers
+2310	unit	231	University and Higher Education Teachers
+232	minor	23	Vocational Education Teachers
+2320	unit	232	Vocational Education Teachers
+233	minor	23	Secondary Education Teachers
+2330	unit	233	Secondary Education Teachers
+234	minor	23	Primary School and Early Childhood Teachers
+2341	unit	234	Primary School Teachers
+2342	unit	234	Early Childhood Educators
+235	minor	23	Other Teaching Professionals
+2351	unit	235	Education Methods Specialists
+2352	unit	235	Special Needs Teachers
+2353	unit	235	Other Language Teachers
+2354	unit	235	Other Music Teachers
+2355	unit	235	Other Arts Teachers
+2356	unit	235	Information Technology Trainers
+2359	unit	235	Teaching Professionals Not Elsewhere Classified
+24	sub-major	2	Business and Administration Professionals
+241	minor	24	Finance Professionals
+2411	unit	241	Accountants
+2412	unit	241	Financial and Investment Advisers
+2413	unit	241	Financial Analysts
+242	minor	24	Administration Professionals
+2421	unit	242	Management and Organization Analysts
+2422	unit	242	Policy Administration Professionals
+2423	unit	242	Personnel and Careers Professionals
+2424	unit	242	Training and Staff Development Professionals
+243	minor	24	Sales, Marketing and Public Relations Professionals
+2431	unit	243	Advertising and Marketing Professionals
+2432	unit	243	Public Relations Professionals
+2433	unit	243	Technical and Medical Sales Professionals (excluding ICT)
+2434	unit	243	Information and Communications Technology Sales Professionals
+25	sub-major	2	Information and Communications Technology Professionals
+251	minor	25	Software and Applications Developers and Analysts
+2511	unit	251	Systems Analysts
+2512	unit	251	Software Developers
+2513	unit	251	Web and Multimedia Developers
+2514	unit	251	Applications Programmers
+2519	unit	251	Software and Applications Developers and Analysts Not Elsewhere Classified
+252	minor	25	Database and Network Professionals
+2521	unit	252	Database Designers and Administrators
+2522	unit	252	Systems Administrators
+2523	unit	252	Computer Network Professionals
+2529	unit	252	Database and Network Professionals Not Elsewhere Classified
+26	sub-major	2	Legal, Social and Cultural Professionals
+261	minor	26	Legal Professionals
+2611	unit	261	Lawyers
+2612	unit	261	Judges
+2619	unit	261	Legal Professionals Not Elsewhere Classified
+262	minor	26	Librarians, Archivists and Curators
+2621	unit	262	Archivists and Curators
+2622	unit	262	Librarians and Related Information Professionals
+263	minor	26	Social and Religious Professionals
+2631	unit	263	Economists
+2632	unit	263	Sociologists, Anthropologists and Related Professionals
+2633	unit	263	Philosophers, Historians and Political Scientists
+2634	unit	263	Psychologists
+2635	unit	263	Social Work and Counselling Professionals
+2636	unit	263	Religious Professionals
+264	minor	26	Authors, Journalists and Linguists
+2641	unit	264	Authors and Related Writers
+2642	unit	264	Journalists
+2643	unit	264	Translators, Interpreters and Other Linguists
+265	minor	26	Creative and Performing Artists
+2651	unit	265	Visual Artists
+2652	unit	265	Musicians, Singers and Composers
+2653	unit	265	Dancers and Choreographers
+2654	unit	265	Film, Stage and Related Directors and Producers
+2655	unit	265	Actors
+2656	unit	265	Announcers on Radio, Television and Other Media
+2659	unit	265	Creative and Performing Artists Not Elsewhere Classified
+3	major		Technicians and Associate Professionals
+31	sub-major	3	Science and Engineering Associate Professionals
+311	minor	31	Physical and Engineering Science Technicians
+3111	unit	311	Chemical and Physical Science Technicians
+3112	unit	311	Civil Engineering Technicians
+3113	unit	311	Electrical Engineering Technicians
+3114	unit	311	Electronics Engineering Technicians
+3115	unit	311	Mechanical Engineering Technicians
+3116	unit	311	Chemical Engineering Technicians
+3117	unit	311	Mining and Metallurgical Technicians
+3118	unit	311	Draughtspersons
+3119	unit	311	Physical and Engineering Science Technicians Not Elsewhere Classified
+312	minor	31	Mining, Manufacturing and Construction Supervisors
+3121	unit	312	Mining Supervisors
+3122	unit	312	Manufacturing Supervisors
+3123	unit	312	Construction Supervisors
+313	minor	31	Process Control Technicians
+3131	unit	313	Power Production Plant Operators
+3132	unit	313	Incinerator and Water Treatment Plant Operators
+3133	unit	313	Chemical Processing Plant Controllers
+3134	unit	313	Petroleum and Natural Gas Refining Plant Operators
+3135	unit	313	Metal Production Process Controllers
+3139	unit	313	Process Control Technicians Not Elsewhere Classified
+314	minor	31	Life Science Technicians and Related Associate Professionals
+3141	unit	314	Life Science Technicians (excluding Medical)
+3142	unit	314	Agricultural Technicians
+3143	unit	314	Forestry Technicians
+315	minor	31	Ship and Aircraft Controllers and Technicians
+3151	unit	315	Ships' Engineers
+3152	unit	315	Ships' Deck Officers and Pilots
+3153	unit	315	Aircraft Pilots and Related Associate Professionals
+3154	unit	315	Air Traffic Controllers
+3155	unit	315	Air Traffic Safety Electronics Technicians
+32	sub-major	3	Health Associate Professionals
+321	minor	32	Medical and Pharmaceutical Technicians
+3211	unit	321	Medical Imaging and Therapeutic Equipment Technicians
+3212	unit	321	Medical and Pathology Laboratory Technicians
+3213	unit	321	Pharmaceutical Technicians and Assistants
+3214	unit	321	Medical and Dental Prosthetic Technicians
+322	minor	32	Nursing and Midwifery Associate Professionals
+3221	unit	322	Nursing Associate Professionals
+3222	unit	322	Midwifery Associate Professionals
+323	minor	32	Traditional and Complementary Medicine Associate Professionals
+3230	unit	323	Traditional and Complementary Medicine Associate Professionals
+324	minor	32	Veterinary Technicians and Assistants
+3240	unit	324	Veterinary Technicians and Assistants
+325	minor	32	Other Health Associate Professionals
+3251	unit	325	Dental Assistants and Therapists
+3252	unit	325	Medical Records and Health Information Technicians
+3253	unit	325	Community Health Workers
+3254	unit	325	Dispensing Opticians
+3255	unit	325	Physiotherapy Technicians and Assistants
+3256	unit	325	Medical Assistants
+3257	unit	325	Environmental and Occupational Health Inspectors and Associates
+3258	unit	325	Ambulance Workers
+3259	unit	325	Health Associate Professionals Not Elsewhere Classified
+33	sub-major	3	Business and Administration Associate Professionals
+331	minor	33	Financial and Mathematical Associate Professionals
+3311	unit	331	Securities and Finance Dealers and Brokers
+3312	unit	331	Credit and Loans Officers
+3313	unit	331	Accounting Associate Professionals
+3314	unit	331	Statistical, Mathematical and Related Associate Professionals
+3315	unit	331	Valuers and Loss Assessors
+332	minor	33	Sales and Purchasing Agents and Brokers
+3321	unit	332	Insurance Representatives
+3322	unit	332	Commercial Sales Representatives
+3323	unit	332	Buyers
+3324	unit	332	Trade Brokers
+333	minor	33	Business Services Agents
+3331	unit	333	Clearing and Forwarding Agents
+3332	unit	333	Conference and Event Planners
+3333	unit	333	Employment Agents and Contractors
+3334	unit	333	Real Estate Agents and Property Managers
+3339	unit	333	Business Services Agents Not Elsewhere Classified
+334	minor	33	Administrative and Specialized Secretaries
+3341	unit	334	Office Supervisors
+3342	unit	334	Legal Secretaries
+3343	unit	334	Administrative and Executive Secretaries
+3344	unit	334	Medical Secretaries
+335	minor	33	Government Regulatory Associate Professionals
+3351	unit	335	Customs and Border Inspectors
+3352	unit	335	Government Tax and Excise Officials
+3353	unit	335	Government Social Benefits Officials
+3354	unit	335	Government Licensing Officials
+3355	unit	335	Police Inspectors and Detectives
+3359	unit	335	Government Regulatory Associate Professionals Not Elsewhere Classified
+34	sub-major	3	Legal, Social, Cultural and Related Associate Professionals
+341	minor	34	Legal, Social and Religious Associate Professionals
+3411	unit	341	Legal and Related Associate Professionals
+3412	unit	341	Social Work Associate Professionals
+3413	unit	341	Religious Associate Professionals
+342	minor	34	Sports and Fitness Workers
+3421	unit	342	Athletes and Sports Players
+3422	unit	342	Sports Coaches, Instructors and Officials
+3423	unit	342	Fitness and Recreation Instructors and Programme Leaders
+343	minor	34	Artistic, Cultural and Culinary Associate Professionals
+3431	unit	343	Photographers
+3432	unit	343	Interior Designers and Decorators
+3433	unit	343	Gallery, Museum and Library Technicians
+3434	unit	343	Chefs
+3435	unit	343	Other Artistic and Cultural Associate Professionals
+35	sub-major	3	Information and Communications Technicians
+351	minor	35	Information and Communications Technology Operations and User Support Technicians
+3511	unit	351	Information and Communications Technology Operations Technicians
+3512	unit	351	Information and Communications Technology User Support Technicians
+3513	unit	351	Computer Network and Systems Technicians
+3514	unit	351	Web Technicians
+352	minor	35	Telecommunications and Broadcasting Technicians
+3521	unit	352	Broadcasting and Audiovisual Technicians
+3522	unit	352	Telecommunications Engineering Technicians
+4	major		Clerical Support Workers
+41	sub-major	4	General and Keyboard Clerks
+411	minor	41	General Office Clerks
+4110	unit	411	General Office Clerks
+412	minor	41	Secretaries (general)
+4120	unit	412	Secretaries (general)
+413	minor	41	Keyboard Operators
+4131	unit	413	Typists and Word Processing Operators
+4132	unit	413	Data Entry Clerks
+42	sub-major	4	Customer Services Clerks
+421	minor	42	Tellers, Money Collectors and Related Clerks
+4211	unit	421	Bank Tellers and Related Clerks
+4212	unit	421	Bookmakers, Croupiers and Related Gaming Workers
+4213	unit	421	Pawnbrokers and Money-lenders
+4214	unit	421	Debt Collectors and Related Workers
+422	minor	42	Client Information Workers
+4221	unit	422	Travel Consultants and Clerks
+4222	unit	422	Contact Centre Information Clerks
+4223	unit	422	Telephone Switchboard Operators
+4224	unit	422	Hotel Receptionists
+4225	unit	422	Inquiry Clerks
+4226	unit	422	Receptionists (general)
+4227	unit	422	Survey and Market Research Interviewers
+4229	unit	422	Client Information Workers Not Elsewhere Classified
+43	sub-major	4	Numerical and Material Recording Clerks
+431	minor	43	Numerical Clerks
+4311	unit	431	Accounting and Bookkeeping Clerks
+4312	unit	431	Statistical, Finance and Insurance Clerks
+4313	unit	431	Payroll Clerks
+432	minor	43	Material Recording and Transport Clerks
+4321	unit	432	Stock Clerks
+4322	unit	432	Production Clerks
+4323	unit	432	Transport Clerks
+44	sub-major	4	Other Clerical Support Workers
+441	minor	44	Other Clerical Support Workers
+4411	unit	441	Library Clerks
+4412	unit	441	Mail Carriers and Sorting Clerks
+4413	unit	441	Coding, Proofreading and Related Clerks
+4414	unit	441	Scribes and Related Workers
+4415	unit	441	Filing and Copying Clerks
+4416	unit	441	Personnel Clerks
+4419	unit	441	Clerical Support Workers Not Elsewhere Classified
+5	major		Service and Sales Workers
+51	sub-major	5	Personal Services Workers
+511	minor	51	Travel Attendants, Conductors and Guides
+5111	unit	511	Travel Attendants and Travel Stewards
+5112	unit	511	Transport Conductors
+5113	unit	511	Travel Guides
+512	minor	51	Cooks
+5120	unit	512	Cooks
+513	minor	51	Waiters and Bartenders
+5131	unit	513	Waiters
+5132	unit	513	Bartenders
+514	minor	51	Hairdressers, Beauticians and Related Workers
+5141	unit	514	Hairdressers
+5142	unit	514	Beauticians and Related Workers
+515	minor	51	Building and Housekeeping Supervisors
+5151	unit	515	Cleaning and Housekeeping Supervisors in Offices, Hotels and Other Establishments
+5152	unit	515	Domestic Housekeepers
+5153	unit	515	Building Caretakers
+516	minor	51	Other Personal Services Workers
+5161	unit	516	Astrologers, Fortune-tellers and Related Workers
+5162	unit	516	Companions and Valets
+5163	unit	516	Undertakers and Embalmers
+5164	unit	516	Pet Groomers and Animal Care Workers
+5165	unit	516	Driving Instructors
+5169	unit	516	Personal Services Workers Not Elsewhere Classified
+52	sub-major	5	Sales Workers
+521	minor	52	Street and Market Salespersons
+5211	unit	521	Stall and Market Salespersons
+5212	unit	521	Street Food Salespersons
+522	minor	52	Shop Salespersons
+5221	unit	522	Shopkeepers
+5222	unit	522	Shop Supervisors
+5223	unit	522	Shop Sales Assistants
+523	minor	52	Cashiers and Ticket Clerks
+5230	unit	523	Cashiers and Ticket Clerks
+524	minor	52	Other Sales Workers
+5241	unit	524	Fashion and Other Models
+5242	unit	524	Sales Demonstrators
+5243	unit	524	Door-to-door Salespersons
+5244	unit	524	Contact Centre Salespersons
+5245	unit	524	Service Station Attendants
+5246	unit	524	Food Service Counter Attendants
+5249	unit	524	Sales Workers Not Elsewhere Classified
+53	sub-major	5	Personal Care Workers
+531	minor	53	Child Care Workers and Teachers' Aides
+5311	unit	531	Child Care Workers
+5312	unit	531	Teachers' Aides
+532	minor	53	Personal Care Workers in Health Services
+5321	unit	532	Health Care Assistants
+5322	unit	532	Home-based Personal Care Workers
+5329	unit	532	Personal Care Workers in Health Services Not Elsewhere Classified
+54	sub-major	5	Protective Services Workers
+541	minor	54	Protective Services Workers
+5411	unit	541	Fire Fighters
+5412	unit	541	Police Officers
+5413	unit	541	Prison Guards
+5414	unit	541	Security Guards
+5419	unit	541	Protective Services Workers Not Elsewhere Classified
+6	major		Skilled Agricultural, Forestry and Fishery Workers
+61	sub-major	6	Market-oriented Skilled Agricultural Workers
+611	minor	61	Market Gardeners and Crop Growers
+6111	unit	611	Field Crop and Vegetable Growers
+6112	unit	611	Tree and Shrub Crop Growers
+6113	unit	611	Gardeners; Horticultural and Nursery Growers
+6114	unit	611	Mixed Crop Growers
+612	minor	61	Animal Producers
+6121	unit	612	Livestock and Dairy Producers
+6122	unit	612	Poultry Producers
+6123	unit	612	Apiarists and Sericulturists
+6129	unit	612	Animal Producers Not Elsewhere Classified
+613	minor	61	Mixed Crop and Animal Producers
+6130	unit	613	Mixed Crop and Animal Producers
+62	sub-major	6	Market-oriented Skilled Forestry, Fishery and Hunting Workers
+621	minor	62	Forestry and Related Workers
+6210	unit	621	Forestry and Related Workers
+622	minor	62	Fishery Workers, Hunters and Trappers
+6221	unit	622	Aquaculture Workers
+6222	unit	622	Inland and Coastal Waters Fishery Workers
+6223	unit	622	Deep-sea Fishery Workers
+6224	unit	622	Hunters and Trappers
+63	sub-major	6	Subsistence Farmers, Fishers, Hunters and Gatherers
+631	minor	63	Subsistence Crop Farmers
+6310	unit	631	Subsistence Crop Farmers
+632	minor	63	Subsistence Livestock Farmers
+6320	unit	632	Subsistence Livestock Farmers
+633	minor	63	Subsistence Mixed Crop and Livestock Farmers
+6330	unit	633	Subsistence Mixed Crop and Livestock Farmers
+634	minor	63	Subsistence Fishers, Hunters, Trappers and Gatherers
+6340	unit	634	Subsistence Fishers, Hunters, Trappers and Gatherers
+7	major		Craft and Related Trades Workers
+71	sub-major	7	Building and Related Trades Workers (excluding Electricians)
+711	minor	71	Building Frame and Related Trades Workers
+7111	unit	711	House Builders
+7112	unit	711	Bricklayers and Related Workers
+7113	unit	711	Stonemasons, Stone Cutters, Splitters and Carvers
+7114	unit	711	Concrete Placers, Concrete Finishers and Related Workers
+7115	unit	711	Carpenters and Joiners
+7119	unit	711	Building Frame and Related Trades Workers Not Elsewhere Classified
+712	minor	71	Building Finishers and Related Trades Workers
+7121	unit	712	Roofers
+7122	unit	712	Floor Layers and Tile Setters
+7123	unit	712	Plasterers
+7124	unit	712	Insulation Workers
+7125	unit	712	Glaziers
+7126	unit	712	Plumbers and Pipe Fitters
+7127	unit	712	Air Conditioning and Refrigeration Mechanics
+713	minor	71	Painters, Building Structure Cleaners and Related Trades Workers
+7131	unit	713	Painters and Related Workers
+7132	unit	713	Spray Painters and Varnishers
+7133	unit	713	Building Structure Cleaners
+72	sub-major	7	Metal, Machinery and Related Trades Workers
+721	minor	72	Sheet and Structural Metal Workers, Moulders and Welders, and Related Workers
+7211	unit	721	Metal Moulders and Coremakers
+7212	unit	721	Welders and Flame Cutters
+7213	unit	721	Sheet Metal Workers
+7214	unit	721	Structural Metal Preparers and Erectors
+7215	unit	721	Riggers and Cable Splicers
+722	minor	72	Blacksmiths, Toolmakers and Related Trades Workers
+7221	unit	722	Blacksmiths, Hammersmiths and Forging Press Workers
+7222	unit	722	Toolmakers and Related Workers
+7223	unit	722	Metal Working Machine Tool Setters and Operators
+7224	unit	722	Metal Polishers, Wheel Grinders and Tool Sharpeners
+723	minor	72	Machinery Mechanics and Repairers
+7231	unit	723	Motor Vehicle Mechanics and Repairers
+7232	unit	723	Aircraft Engine Mechanics and Repairers
+7233	unit	723	Agricultural and Industrial Machinery Mechanics and Repairers
+7234	unit	723	Bicycle and Related Repairers
+73	sub-major	7	Handicraft and Printing Workers
+731	minor	73	Handicraft Workers
+7311	unit	731	Precision-instrument Makers and Repairers
+7312	unit	731	Musical Instrument Makers and Tuners
+7313	unit	731	Jewellery and Precious Metal Workers
+7314	unit	731	Potters and Related Workers
+7315	unit	731	Glass Makers, Cutters, Grinders and Finishers
+7316	unit	731	Sign Writers, Decorative Painters, Engravers and Etchers
+7317	unit	731	Handicraft Workers in Wood, Basketry and Related Materials
+7318	unit	731	Handicraft Workers in Textile, Leather and Related Materials
+7319	unit	731	Handicraft Workers Not Elsewhere Classified
+732	minor	73	Printing Trades Workers
+7321	unit	732	Pre-press Technicians
+7322	unit	732	Printers
+7323	unit	732	Print Finishing and Binding Workers
+74	sub-major	7	Electrical and Electronics Trades Workers
+741	minor	74	Electrical Equipment Installers and Repairers
+7411	unit	741	Building and Related Electricians
+7412	unit	741	Electrical Mechanics and Fitters
+7413	unit	741	Electrical Line Installers and Repairers
+742	minor	74	Electronics and Telecommunications Installers and Repairers
+7421	unit	742	Electronics Mechanics and Servicers
+7422	unit	742	Information and Communications Technology Installers and Servicers
+75	sub-major	7	Food Processing, Woodworking, Garment and Other Craft and Related Trades Workers
+751	minor	75	Food Processing and Related Trades Workers
+7511	unit	751	Butchers, Fishmongers and Related Food Preparers
+7512	unit	751	Bakers, Pastry-cooks and Confectionery Makers
+7513	unit	751	Dairy Products Makers
+7514	unit	751	Fruit, Vegetable and Related Preservers
+7515	unit	751	Food and Beverage Tasters and Graders
+7516	unit	751	Tobacco Preparers and Tobacco Products Makers
+752	minor	75	Wood Treaters, Cabinet-makers and Related Trades Workers
+7521	unit	752	Wood Treaters
+7522	unit	752	Cabinet-makers and Related Workers
+7523	unit	752	Woodworking Machine Tool Setters and Operators
+753	minor	75	Garment and Related Trades Workers
+7531	unit	753	Tailors, Dressmakers, Furriers and Hatters
+7532	unit	753	Garment and Related Patternmakers and Cutters
+7533	unit	753	Sewing, Embroidery and Related Workers
+7534	unit	753	Upholsterers and Related Workers
+7535	unit	753	Pelt Dressers, Tanners and Fellmongers
+7536	unit	753	Shoemakers and Related Workers
+754	minor	75	Other Craft and Related Workers
+7541	unit	754	Underwater Divers
+7542	unit	754	Shotfirers and Blasters
+7543	unit	754	Product Graders and Testers (excluding Foods and Beverages)
+7544	unit	754	Fumigators and Other Pest and Weed Controllers
+7549	unit	754	Craft and Related Workers Not Elsewhere Classified
+8	major		Plant and Machine Operators, and Assemblers
+81	sub-major	8	Stationary Plant and Machine Operators
+811	minor	81	Mining and Mineral Processing Plant Operators
+8111	unit	811	Miners and Quarriers
+8112	unit	811	Mineral and Stone Processing Plant Operators
+8113	unit	811	Well Drillers and Borers and Related Workers
+8114	unit	811	Cement, Stone and Other Mineral Products Machine Operators
+812	minor	81	Metal Processing and Finishing Plant Operators
+8121	unit	812	Metal Processing Plant Operators
+8122	unit	812	Metal Finishing, Plating and Coating Machine Operators
+813	minor	81	Chemical and Photographic Products Plant and Machine Operators
+8131	unit	813	Chemical Products Plant and Machine Operators
+8132	unit	813	Photographic Products Machine Operators
+814	minor	81	Rubber, Plastic and Paper Products Machine Operators
+8141	unit	814	Rubber Products Machine Operators
+8142	unit	814	Plastic Products Machine Operators
+8143	unit	814	Paper Products Machine Operators
+815	minor	81	Textile, Fur and Leather Products Machine Operators
+8151	unit	815	Fibre Preparing, Spinning and Winding Machine Operators
+8152	unit	815	Weaving and Knitting Machine Operators
+8153	unit	815	Sewing Machine Operators
+8154	unit	815	Bleaching, Dyeing and Fabric Cleaning Machine Operators
+8155	unit	815	Fur and Leather Preparing Machine Operators
+8156	unit	815	Shoemaking and Related Machine Operators
+8157	unit	815	Laundry Machine Operators
+8159	unit	815	Textile, Fur and Leather Products Machine Operators Not Elsewhere Classified
+816	minor	81	Food and Related Products Machine Operators
+8160	unit	816	Food and Related Products Machine Operators
+817	minor	81	Wood Processing and Papermaking Plant Operators
+8171	unit	817	Pulp and Papermaking Plant Operators
+8172	unit	817	Wood Processing Plant Operators
+818	minor	81	Other Stationary Plant and Machine Operators
+8181	unit	818	Glass and Ceramics Plant Operators
+8182	unit	818	Steam Engine and Boiler Operators
+8183	unit	818	Packing, Bottling and Labelling Machine Operators
+8189	unit	818	Stationary Plant and Machine Operators Not Elsewhere Classified
+82	sub-major	8	Assemblers
+821	minor	82	Assemblers
+8211	unit	821	Mechanical Machinery Assemblers
+8212	unit	821	Electrical and Electronic Equipment Assemblers
+8219	unit	821	Assemblers Not Elsewhere Classified
+83	sub-major	8	Drivers and Mobile Plant Operators
+831	minor	83	Locomotive Engine Drivers and Related Workers
+8311	unit	831	Locomotive Engine Drivers
+8312	unit	831	Railway Brake, Signal and Switch Operators
+832	minor	83	Car, Van and Motorcycle Drivers
+8321	unit	832	Motorcycle Drivers
+8322	unit	832	Car, Taxi and Van Drivers
+833	minor	83	Heavy Truck and Bus Drivers
+8331	unit	833	Bus and Tram Drivers
+8332	unit	833	Heavy Truck and Lorry Drivers
+834	minor	83	Mobile Plant Operators
+8341	unit	834	Mobile Farm and Forestry Plant Operators
+8342	unit	834	Earthmoving and Related Plant Operators
+8343	unit	834	Crane, Hoist and Related Plant Operators
+8344	unit	834	Lifting Truck Operators
+835	minor	83	Ships' Deck Crews and Related Workers
+8350	unit	835	Ships' Deck Crews and Related Workers
+9	major		Elementary Occupations
+91	sub-major	9	Cleaners and Helpers
+911	minor	91	Domestic, Hotel and Office Cleaners and Helpers
+9111	unit	911	Domestic Cleaners and Helpers
+9112	unit	911	Cleaners and Helpers in Offices, Hotels and Other Establishments
+912	minor	91	Vehicle, Window, Laundry and Other Hand Cleaning Workers
+9121	unit	912	Hand Launderers and Pressers
+9122	unit	912	Vehicle Cleaners
+9123	unit	912	Window Cleaners
+9129	unit	912	Other Cleaning Workers
+92	sub-major	9	Agricultural, Forestry and Fishery Labourers
+921	minor	92	Agricultural, Forestry and Fishery Labourers
+9211	unit	921	Crop Farm Labourers
+9212	unit	921	Livestock Farm Labourers
+9213	unit	921	Mixed Crop and Livestock Farm Labourers
+9214	unit	921	Garden and Horticultural Labourers
+9215	unit	921	Forestry Labourers
+9216	unit	921	Fishery and Aquaculture Labourers
+93	sub-major	9	Labourers in Mining, Construction, Manufacturing and Transport
+931	minor	93	Mining and Construction Labourers
+9311	unit	931	Mining and Quarrying Labourers
+9312	unit	931	Civil Engineering Labourers
+9313	unit	931	Building Construction Labourers
+932	minor	93	Manufacturing Labourers
+9321	unit	932	Hand Packers
+9329	unit	932	Manufacturing Labourers Not Elsewhere Classified
+933	minor	93	Transport and Storage Labourers
+9331	unit	933	Hand and Pedal Vehicle Drivers
+9332	unit	933	Drivers of Animal-drawn Vehicles and Machinery
+9333	unit	933	Freight Handlers
+9334	unit	933	Shelf Fillers
+94	sub-major	9	Food Preparation Assistants
+941	minor	94	Food Preparation Assistants
+9411	unit	941	Fast Food Preparers
+9412	unit	941	Kitchen Helpers
+95	sub-major	9	Street and Related Sales and Services Workers
+951	minor	95	Street and Related Services Workers
+9510	unit	951	Street and Related Services Workers
+952	minor	95	Street Vendors (excluding Food)
+9520	unit	952	Street Vendors (excluding Food)
+96	sub-major	9	Refuse Workers and Other Elementary Workers
+961	minor	96	Refuse Workers
+9611	unit	961	Garbage and Recycling Collectors
+9612	unit	961	Refuse Sorters
+9613	unit	961	Sweepers and Related Labourers
+962	minor	96	Other Elementary Workers
+9621	unit	962	Messengers, Package Deliverers and Luggage Porters
+9622	unit	962	Odd-job Persons
+9623	unit	962	Meter Readers and Vending-machine Collectors
+9624	unit	962	Water and Firewood Collectors
+9629	unit	962	Elementary Workers Not Elsewhere Classified
