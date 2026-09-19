@@ -194,8 +194,14 @@ def header(axes, nrows):
     or reordering one renumbers every existing key, and the build refuses rather than quietly producing an
     index that agrees with nothing that was built before it.
     """
+    # THE KEY IS WRITTEN IN THE ONE SPELLING THE LAW DECLARES, `<repo>@<sha>`. It read
+    # `git-head:<sha>` until 2026-09-20 — the form std-vocab 11.0 abolished, whose whole defect was that
+    # a bare sha names no repository and so resolves against whatever tree the reader happens to stand
+    # in. Nothing parses this line (check_manifest reads only `# axis_manifest:`), which is exactly why
+    # it survived the migration: a generated artefact that nobody validates will teach the form it
+    # carries to whoever copies it, and the term's own form_note says "ONE spelling, always".
     return [f"# axis_manifest: {CELL.join(axes)}",
-            f"# staleness_key: git-head:{_head() or 'NO-INDEX'}",
+            f"# staleness_key: {os.path.basename(ROOT)}@{_head() or 'NO-INDEX'}",
             f"# built_by: dmpos {_product()}",
             f"# rows: {nrows}",
             "# DERIVED — rebuild with `python3 bin/dmpos.py --build`; never edit, never commit."]

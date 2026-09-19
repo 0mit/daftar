@@ -27,10 +27,11 @@ Usage:
     python3 bin/dmcursor.py <bean-id>
     python3 bin/dmcursor.py /home/user/src/app/models/invoice.py
 """
-import glob, os, subprocess, sys
+import glob, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmstale                       # the ONE implementation of the staleness verdict
 try:
     import yaml
 except ImportError:
@@ -54,29 +55,38 @@ for _f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + \
         BEANS[_id] = _fm
 
 
-def live_head(path):
-    if not os.path.isdir(path):
-        return None
-    r = subprocess.run(['git', '-C', path, 'rev-parse', '--short=7', 'HEAD'],
-                       capture_output=True, text=True)
-    return r.stdout.strip() or None
-
-
 def resolve(target):
     """A bean id, or a filesystem path resolved back to the bean whose code_paths COVER it.
 
     The reverse lookup is the point: you are about to touch a file, and the question is which being owns
     it and what that being requires you to know. Longest matching path wins, so an own-source tree beats
-    the framework tree it sits beside."""
+    the framework tree it sits beside.
+
+    THE DECLARED PATH IS A POSITION, NOT A LITERAL PATH, since std-vocab 11.0 (place): `code_paths` now
+    carry `root:<name>/<rel>` or `<host>:<path>`, and a bare absolute path names no machine. This lookup
+    compared the argument against the raw string, so after a garden migrated its positions NOTHING
+    resolved: `dmcursor /home/user/tree/models/x.py` answered "no bean points at it — nothing in the
+    garden claims it" about a file a bean plainly claims. CHECKLIST Part D's first instruction is to
+    point a cursor at the file you are about to touch, so this half of the tool was dead alongside the
+    staleness half. `dmstale.resolve_here` already knows both forms and which host this is; ask it.
+    """
     if target in BEANS:
         return target, None
     ap = os.path.abspath(target)
     best, best_len, covering = None, -1, None
     for b, fm in BEANS.items():
         for cp in (fm.get('code_paths') or []):
-            p = str(cp.get('path', ''))
-            if p and (ap == p or ap.startswith(p.rstrip('/') + '/')) and len(p) > best_len:
-                best, best_len, covering = b, len(p), cp
+            pos = str(cp.get('path', ''))
+            if not pos:
+                continue
+            here = dmstale.resolve_here(pos)
+            # A position this host does not hold cannot cover a file on this host. Falling back to the
+            # raw string would re-create the pre-11.0 behaviour of matching another machine's tree by
+            # coincidence of spelling, which is the whole defect `root:` was introduced to end.
+            if not here:
+                continue
+            if (ap == here or ap.startswith(here.rstrip('/') + '/')) and len(here) > best_len:
+                best, best_len, covering = b, len(here), cp
     return best, covering
 
 
@@ -178,24 +188,31 @@ def main(target):
         pol = cp.get('scan_policy')
         verdict = "WALK IT" if pol == 'index' else ("DO NOT WALK — read by summary" if pol == 'reference-only'
                                                     else "structure only")
-        print(f"  path   {cp.get('path')}\n         role {cp.get('role')} · {pol} -> {verdict}")
+        # THE POSITION AND, WHERE IT RESOLVES, THE LITERAL PATH. A `root:` position is what the ledger
+        # declares and what merges; the path is what the reader has to type. Printing only the position
+        # would hand a reader `root:<some-name>` and leave them to look up what it means on this machine,
+        # which is the work this tool exists to save.
+        _here = dmstale.resolve_here(str(cp.get('path') or ''))
+        _where = f"  ->  {_here}" if _here and _here != cp.get('path') else ""
+        print(f"  path   {cp.get('path')}{_where}\n         role {cp.get('role')} · {pol} -> {verdict}")
     cache = fm.get('analysis_cache') or {}
     if not cache:
         print("  cache  none — this being has no recorded analysis; reading is unavoidable")
+    # THE VERDICT IS ASKED OF dmstale, NOT RE-DERIVED HERE. This block used to carry its own, and it
+    # knew only `git-head:<sha>` — the spelling std-vocab 11.0 replaced with `<repo>@<sha>`. After a
+    # garden migrated its keys, every entry fell through to UNKNOWN and this tool answered "unverifiable
+    # here" about analyses dmstale could verify in the same minute. CHECKLIST Part D opens by sending a
+    # reader HERE and then tells them to trust a FRESH measurement, so a cursor that can no longer say
+    # FRESH silently withdraws the offer and every tree gets re-read. One rule, one implementation.
     for ctype, e in sorted(cache.items()):
-        key = str(e.get('staleness_key', ''))
-        state = 'UNKNOWN'
-        if key.startswith('git-head:'):
-            want = key.split(':', 1)[1]
-            live = next((live_head(p) for p in (e.get('covers_paths') or [])), None)
-            if live:
-                state = 'FRESH' if live[:min(len(live), len(want))] == want[:min(len(live), len(want))] else 'STALE'
-        ref = e.get('summary_ref')
-        print(f"  cache  {ctype:22} {state:7} -> " +
+        state, detail = dmstale.verdict(e)
+        print(f"  cache  {ctype:22} {state:8} -> " +
               ("USE IT, do not re-derive" if state == 'FRESH' else
-               "RE-ANALYSE, then refresh the entry" if state == 'STALE' else "unverifiable here"))
-        if state == 'FRESH' and ref:
-            print(f"         reads: {ref}")
+               "RE-ANALYSE, then refresh the entry" if state == 'STALE' else
+               "not on this host — a fact about THIS MACHINE, not about the analysis"
+               if state == 'NOT-HERE' else "unverifiable: " + detail))
+        if state == 'FRESH' and e.get('summary_ref'):
+            print(f"         reads: {e.get('summary_ref')}")
 
     # ---- ATTENTION: what must be held in mind ----------------------------------------------------
     caps, edges, notes = attention_of(bean)
