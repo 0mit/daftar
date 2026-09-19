@@ -1,5 +1,5 @@
 ---
-version: "10.1"
+version: "11.0"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -28,6 +28,8 @@ schema_language:
   required_attrs:       "[<attr>...] — shape:mapping, attrs the mapping itself must carry"
   entry_required_attrs: "[<attr>...] — attrs EVERY entry needs (a list item, or an open_map value)"
   entry_values:         "{<attr>: [<enum>...]} — per-entry enums"
+  entry_pattern:        "{<attr>: <regex>} — an entry attr must match this form (11.0). For a POSITION, prefer `entry_pattern_from_registry`, which lets the system own its one form; this is for a value whose form is the term's own business"
+  entry_soft_pattern:   "{<attr>: {pattern, why}} — the same, as a WARNING (11.0): the form a value SHOULD take while a corpus is being migrated onto it, so a garden is told what to fix without its next commit being refused"
   entry_types:          "{<attr>: <value type>} — per-entry value types, each a row of `value_types` (10.0): its pattern, and for a time type its system and unit"
   entry_one_of:         "[<attr>...] — each entry must carry at least one of these"
   entry_required_if:    "[{attr, equals, requires: [...]}] — conditional requirement inside an entry"
@@ -167,6 +169,13 @@ anchor_systems:
     form_note: "after:<position> or before:<position>; state both as two entries when an interval is meant"
     establishes: false
     why: "an event anchor positions relative to other positions — it fixes an interval, never a point"
+  - system: network-segment
+    dimension: place
+    meaning: "WHERE A BEING IS ATTACHED in a network's topology: a VLAN, a wireless network, an address range with a role. Declared 11.0, operator-ratified: a segment is a PLACE (where you are), which is a different question from an address (where you answer) — those have their own registry, and a being keeps its address while moving between segments."
+    pattern: '^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9.:-]*$'
+    form_note: "<network>/<segment>, e.g. an office network's guest VLAN or its wireless network for laptops. The network is named because two sites both have a `vlan-13` and they are not the same place."
+    establishes: false
+    why: "a being moves between segments — a laptop joins the guest network and then the staff one — so a segment corroborates where it is and never fixes which being it is"
   - system: windows-filesystem
     dimension: place
     meaning: "a position in ONE NAMED HOST's Windows filesystem. A SEPARATE SYSTEM from unix-filesystem, not a dialect of it: C:\\Users\\user\\source\\repos\\addin and /home/user/addin share no canonical form, and one system carrying two patterns is exactly the reinvention this registry forbids."
@@ -435,6 +444,10 @@ leaf_orders:
     exact: [os, version]   # `version` does NOT end in `_version`, so unlike the cidr list this one earns
                            # its place; `os` is the estate's one bare version-shaped fact name.
     why: "a release string is absorbed by a more precise one that starts with it"
+  - order: containment
+    system: unix-filesystem   # 11.0: and the windows one, whose rows carry the same `root:`/`<host>:` forms
+    also_systems: [windows-filesystem]
+    why: "a tree is absorbed by a subtree of it under the SAME host or logical root (`trixy:/home/omid` by `trixy:/home/omid/ikiku`). Positions on two hosts, two roots or two systems are UNORDERED and stay a disagreement: the same path on two machines is two different trees, which is the whole reason a position names its host."
   - order: instant
     system: gregorian-civil   # 9.3, T2: this order follows what a value IS, not what its key is called. Time
                               # sits under a dozen names in one corpus (observed, as_of, found, since, created,
@@ -539,6 +552,10 @@ vacancies:
     position: event-anchored
     reason: prediction
     why: "A position fixed only by its neighbours — 'after the push, before the cutover' — carrying no coordinate at all. Declared because it is what makes this a registry of SYSTEMS rather than a pair of coordinate schemes: sequence is the general structure and a calendar is one restriction of it. Unoccupied because every position recorded so far has had a coordinate available. Expected first in the journal, where an entry's real position is often 'between these two commits' and a date was written because the form demanded one."
+  - at: anchor_system.values
+    position: network-segment
+    reason: prediction
+    why: "WHERE A BEING IS ATTACHED in a network — a VLAN, a wireless network, an address range with a role. Declared 11.0 with the operator's ratification that a segment is a place and not an address. Unoccupied because no bean yet states which segment it is attached to; expected first where one network carries staff, guests and laptops on separate segments and the difference decides what a machine may reach."
   - at: unit.values
     position: second
     reason: prediction
@@ -809,8 +826,11 @@ profiles:
         entry_values:
           role: [own-source, framework-reference, vendored-dependency, generated-artifact]
           scan_policy: [index, reference-only, skim]
+        entry_soft_pattern:
+          path: { pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$',
+                  why: "a bare absolute path names no host: give it `root:<name>/…` (resolved by each host's `roots`) or `<host>:<path>`" }
       entry_attrs:
-        path:        "ABSOLUTE path on the host this garden lives on (Rule 6 paper-durable — spelled out, no ~)"
+        path:        "WHERE THE TREE IS, as a position: `root:<name>[/<relative>]` resolved through each host's own `roots` map, or `<host>:<absolute path>` stated outright. A bare absolute path names no host and WARNS (11.0): this estate holds 13 paths that exist on two machines as two different trees, so a path with no host is a position in a system nobody named."
         role:        "own-source | framework-reference | vendored-dependency | generated-artifact"
         scan_policy: "index (own code — walk fully) | reference-only (do NOT re-scan each session; consult analysis_cache, grep on demand only) | skim (structure only)"
         stack:       "language/runtime tag, e.g. python-django | csharp-dotnet (optional)"
@@ -1260,10 +1280,18 @@ terms:
         policy: [index, reference-only, skim]
         form:   [summary_ref, inline, external]
       entry_types: { as_of: iso_date }              # Rule 6: absolute dates only
+      entry_pattern:
+        # 11.0: a staleness key is a POSITION, and `git-head:<sha>` was resolved against whatever tree the
+        # READER had checked out — one analysis, one verdict per machine. The git-object-graph form names the
+        # repository, so every reader asks the same object graph. `manual:<why>` stays for what no key can track.
+        staleness_key: '^([a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}|manual:.+)$'
+      entry_soft_pattern:
+        covers_paths: { pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$',
+                        why: "a bare absolute path names no host — the same defect `code_paths.path` carries" }
       entry_required_if:
         - { attr: form, equals: summary_ref, requires: [summary_ref] }
       entry_expect_if:
-        - { attr: staleness_key, starts_with: "git-head:", expects: covers_paths,
+        - { attr: staleness_key, starts_with: "manual:", expects: covers_paths,
             why: "an agent cannot tell where to re-check it" }
       pointer_fields: { summary_ref: bean_field_pointer }
     open_keys: true                                 # restated for the human reader; the gate reads schema.key_form
@@ -1694,7 +1722,7 @@ terms:
     context_keys: [anchor_system]
     schema:
       shape: scalar
-      values: [unix-filesystem, windows-filesystem, git-object-graph, physical, gregorian-civil, unix-epoch, geographic, event-anchored]
+      values: [unix-filesystem, windows-filesystem, git-object-graph, physical, gregorian-civil, unix-epoch, geographic, event-anchored, network-segment]
       values_consistent_with: ["registry:anchor_systems[].system"]
     enforced_by: none   # it is never carried on a bean: it exists to OWN the enum that `located_at` and
                         # `timing` select their systems from. Occupancy is counted through their entries.
@@ -2280,3 +2308,13 @@ The portable, estate-agnostic classification shared by every garden — the abst
   entries `{id, do, next: [{to, when?}], note?}`. A step's `next` is a CLOSED neighbourhood, these branches and no
   others, so the gate refuses a branch that points nowhere, a step nothing reaches, a branch without its
   condition, and a routine that never ends. MINOR: prose steps stay legal, so no existing mapping changes.
+
+- **11.0** (2026-09-20, human-ratified rule-change, "place P3") — **place, where time already went.** MAJOR, for
+  one reason: `analysis_cache.staleness_key` must now be a position in the git object graph (`<repo>@<sha>`) or
+  `manual:<why>`. `git-head:<sha>` was resolved against whatever tree the READER had checked out, so one
+  analysis had one verdict per machine; a garden carrying the old spelling has its next commit refused until it
+  restates them. Additive in the same release: a `network-segment` anchor system, because a segment is WHERE A
+  BEING IS ATTACHED (a place) as against where it answers (an address); `entry_pattern` and `entry_soft_pattern`
+  in the schema language; and `code_paths.path` / `covers_paths` WARN while they carry a bare absolute path,
+  which names no host — in the estate this grew in, 13 such paths exist on two machines as two different trees.
+  The error for those follows in a later release, once a corpus has been migrated onto `root:` positions.
