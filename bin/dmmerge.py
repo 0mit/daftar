@@ -174,9 +174,10 @@ def leaf_order(key, val):
         sfx = rule.get('suffix')
         if (sfx and str(key).endswith(sfx)) or key in (rule.get('exact') or []):
             return rule.get('order', 'none')
-        pat = SYSTEM_PATTERNS.get(rule.get('system'))
-        if pat and isinstance(val, str) and re.match(pat, val):
-            return rule.get('order', 'none')
+        for _sys in [rule.get('system')] + list(rule.get('also_systems') or []):
+            pat = SYSTEM_PATTERNS.get(_sys)
+            if pat and isinstance(val, str) and re.match(pat, val):
+                return rule.get('order', 'none')
     return 'none'
 
 
@@ -259,8 +260,24 @@ def _instant_contains(a, b):
     return pb[:len(pa)] == pa
 
 
+def _place_contains(a, b):
+    """True when place position `a` CONTAINS the finer position `b`: a tree contains a subtree, in the SAME
+    system and under the same host or logical root. `trixy:/home/omid` contains `trixy:/home/omid/ikiku` and
+    contains nothing on another host — two trees at the same path on two machines are not the same place, which
+    is the defect this order exists to keep visible (13 such paths in the garden it grew in)."""
+    ha, _, pa = str(a).partition(':')
+    hb, _, pb = str(b).partition(':')
+    if not pa or not pb or ha != hb:
+        return False
+    sa, sb = pa.rstrip('/'), pb.rstrip('/')
+    sep = '\\' if (sa[1:3] == ':\\' or '\\' in sa) else '/'
+    return sb.startswith(sa + sep)
+
+
 def subsumes(a, b, order):     # True if a is subsumed by (more-general-or-equal) b, b != a
     if a == b: return False
+    if order == 'containment':
+        return _place_contains(a, b)
     if order == 'instant':
         return _instant_contains(a, b)
     if order == 'version':

@@ -23,7 +23,7 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
 5. **Run the tests:**
 
    ```sh
-   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py
+   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py && python3 test/place.py
    ```
 
    CI runs the same on every pull request.

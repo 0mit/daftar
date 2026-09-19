@@ -704,6 +704,28 @@ def ectl_entry_types(e):
         check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ)
 
 
+def ectl_entry_pattern(e):
+    """`entry_pattern:` (11.0) — an entry attr must match a form the TERM owns (a position whose system owns
+    its form uses `entry_pattern_from_registry` instead)."""
+    for attr, pat in (e.sch.get('entry_pattern') or {}).items():
+        v = e.entry.get(attr)
+        if v is not None and not re.match(pat, str(v)):
+            errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not in the form this term declares ({pat})")
+    return None
+
+
+def ectl_entry_soft_pattern(e):
+    """`entry_soft_pattern:` (11.0) — the same as a WARNING: the form a value SHOULD take while a corpus is
+    migrated onto it. A warning says what to fix; an error would refuse a garden's next commit for a value it
+    has carried for months."""
+    for attr, rule in (e.sch.get('entry_soft_pattern') or {}).items():
+        vals = e.entry.get(attr)
+        for v in (vals if isinstance(vals, list) else [vals]):
+            if v is not None and not re.match(rule.get('pattern', ''), str(v)):
+                warns.append(f"{e.base}: {e.ref}.{attr} '{v}' — {rule.get('why') or 'not in the form this term expects'}")
+    return None
+
+
 def ectl_entry_must_match(e):
     """An entry attr pinned to a registry row selected by a field on the bean (e.g. crown <- nature)."""
     for rule in (e.sch.get('entry_must_match') or []):
@@ -894,6 +916,8 @@ ENTRY_CONTROLLERS = (
     ('entry_required_attrs', ectl_entry_required_attrs),
     ('entry_values', ectl_entry_values),
     ('entry_types', ectl_entry_types),
+    ('entry_pattern', ectl_entry_pattern),
+    ('entry_soft_pattern', ectl_entry_soft_pattern),
     ('entry_must_match', ectl_entry_must_match),
     ('entry_in_registry', ectl_entry_in_registry),
     ('entry_pattern_from_registry', ectl_entry_pattern_from_registry),
