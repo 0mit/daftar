@@ -262,7 +262,7 @@ def _instant_contains(a, b):
 
 def _place_contains(a, b):
     """True when place position `a` CONTAINS the finer position `b`: a tree contains a subtree, in the SAME
-    system and under the same host or logical root. `trixy:/home/omid` contains `trixy:/home/omid/ikiku` and
+    system and under the same host or logical root. `host-a:/home/user` contains `host-a:/home/user/tree` and
     contains nothing on another host — two trees at the same path on two machines are not the same place, which
     is the defect this order exists to keep visible (13 such paths in the garden it grew in)."""
     ha, _, pa = str(a).partition(':')

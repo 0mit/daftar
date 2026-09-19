@@ -1,0 +1,8 @@
+# Words a garden may also use that are nonetheless PUBLIC, so `bin/dmpublic.py` does not refuse them.
+# One per line, with the reason. Everything the published classifications name (seed/knowledge/*.tsv) is
+# already public and needs no entry here: this file is for the rest, and each line is a decision.
+daftar      # the project itself
+0mit        # the account this repository is published under
+daftar-sessions  # this tool's OWN directory name (bin/dmsession.py); a garden that records a root of
+                 # that name took the name FROM the tool, so refusing it here would be the tail wagging
+                 # the dog — and renaming it, as was tried first, orphans every existing worktree.

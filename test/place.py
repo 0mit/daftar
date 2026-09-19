@@ -131,10 +131,10 @@ def merged(a, b):
     sd = list(M.merge_gardens([g('g1', a), g('g2', b)]).values())[0]
     return sd['facts']['owns']['members']['tree']
 
-m = merged("trixy:/home/omid", "trixy:/home/omid/ikiku")
+m = merged("host-a:/home/user", "host-a:/home/user/tree")
 check("P3c: a tree is absorbed by a subtree of it on the SAME host",
-      m.get('value') == "trixy:/home/omid/ikiku", json.dumps(m))
-m = merged("trixy:/home/omid/ikiku", "mlx:/home/omid/ikiku")
+      m.get('value') == "host-a:/home/user/tree", json.dumps(m))
+m = merged("host-a:/home/user/tree", "host-b:/home/user/tree")
 check("P3c: the same path on two hosts is two places — a disagreement, never absorbed",
       'conflict' in json.dumps(m), json.dumps(m))
 m = merged("root:tree", "root:tree/src")

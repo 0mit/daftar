@@ -168,9 +168,10 @@ def verdict(entry):
             return 'NOT-HERE', f"{local} is not on this host"
         if not got:
             # A CLONE THAT IS BEHIND IS NOT A STALE ANALYSIS (11.1 of this tool, human-ratified 2026-09-20).
-            # Measured on two hosts the same minute: trixy 45 fresh, mlx 10 STALE — every one of the ten a
-            # clone on mlx that simply lacks objects made on trixy and never pushed to it. Calling that
-            # staleness re-created the one-verdict-per-host defect the key form was changed to end.
+            # Measured on two hosts the same minute: one said 45 fresh and 0 stale, the other 10 STALE —
+            # every one of the ten a clone that simply lacked objects made on the first host and never
+            # pushed to it. Calling that staleness re-created the one-verdict-per-host defect the key form
+            # was changed to end.
             return 'NOT-HERE', (f"{local} does not have {want} yet — this CLONE is behind, which is a fact "
                                 f"about it and not about the analysis; `git -C {local} fetch --all` answers it")
         moved = moved_since(local, want, [p for p in paths if resolve_here(p)])

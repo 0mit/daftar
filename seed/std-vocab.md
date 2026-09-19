@@ -447,7 +447,7 @@ leaf_orders:
   - order: containment
     system: unix-filesystem   # 11.0: and the windows one, whose rows carry the same `root:`/`<host>:` forms
     also_systems: [windows-filesystem]
-    why: "a tree is absorbed by a subtree of it under the SAME host or logical root (`trixy:/home/omid` by `trixy:/home/omid/ikiku`). Positions on two hosts, two roots or two systems are UNORDERED and stay a disagreement: the same path on two machines is two different trees, which is the whole reason a position names its host."
+    why: "a tree is absorbed by a subtree of it under the SAME host or logical root (`host-a:/home/user` by `host-a:/home/user/tree`). Positions on two hosts, two roots or two systems are UNORDERED and stay a disagreement: the same path on two machines is two different trees, which is the whole reason a position names its host."
   - order: instant
     system: gregorian-civil   # 9.3, T2: this order follows what a value IS, not what its key is called. Time
                               # sits under a dozen names in one corpus (observed, as_of, found, since, created,
@@ -1548,7 +1548,7 @@ terms:
     anchor: { class: none, establishing: false }
     handling: { format: "kebab-case; quote if numeric/reserved; kind-prefixed for high-cardinality kinds", unique: "per (space,base)" }
     exceptions:
-      - { case: "duplicate legit human names (two 'server7')", decision: "ids disambiguate via kind-prefix+slug; anchor to serial/asset-tag; title may repeat (warn)", why: "labels collide; ids must not", acked: 2026-07-31 }
+      - { case: "duplicate legit human names (two hosts both called 'file-server')", decision: "ids disambiguate via kind-prefix+slug; anchor to serial/asset-tag; title may repeat (warn)", why: "labels collide; ids must not", acked: 2026-07-31 }
       - { case: "device replaced, role kept", decision: "role bean (stable) vs device bean (serial-anchored); retired → deprecated + role re-points via replaces:", why: "not silent id reuse", acked: 2026-07-31 }
   - term: ref
     # NARROWED at 2.0 (P6/E6): this term used to CLAIM refs/consumes/depends_on and state the DAG rule for
