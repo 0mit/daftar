@@ -5,9 +5,10 @@ The VOCAB says an analysis_cache entry stands in for re-running its analysis ONL
 staleness_key still matches the live source at covers_paths. This is the tool that answers that
 question, so the rule is checkable instead of merely written down.
 
-  FRESH    the key still matches the live source  -> USE the cached summary, do NOT re-analyse
-  STALE    the source moved past the key          -> re-analyse, then refresh as_of + staleness_key
-  NOT-HERE the source is not on THIS machine — a fact about the reader, never about the analysis
+  FRESH    the keyed objects are here and nothing since them touches the covered paths -> USE the summary
+  STALE    commits after the key TOUCH the covered paths -> re-analyse, then bump as_of + staleness_key
+  NOT-HERE this machine cannot answer: the tree is absent, no root resolves it, or this clone does not
+           have the keyed objects YET (a clone that is behind is a fact about the reader, not staleness)
   UNKNOWN  the key is not machine-checkable at all (`manual:<why>`)
 
 A verdict is about the ANALYSIS, not about the reader's checkout. Freshness is decided by whether the
@@ -88,6 +89,34 @@ def _here_names():
         return set(), None
 
 
+def moved_since(repo_path, key, positions):
+    """The commits after `key`, reachable from HEAD, that TOUCH the covered paths — or None when the key is
+    not an ancestor of HEAD.
+
+    THIS IS WHAT STALE MEANS (human-ratified 2026-09-20): the source moved under the analysis. Until now
+    STALE was produced only by a MISSING object, so an analysis whose source had genuinely moved on was
+    reported FRESH — the tool could not say the one thing its name promises.
+    """
+    try:
+        anc = subprocess.run(['git', '-C', repo_path, 'merge-base', '--is-ancestor', key, 'HEAD'],
+                             capture_output=True, timeout=10)
+        if anc.returncode != 0:
+            return None
+        top = subprocess.run(['git', '-C', repo_path, 'rev-parse', '--show-toplevel'],
+                             capture_output=True, text=True, timeout=10).stdout.strip()
+        rels = []
+        for pos in positions:
+            local = resolve_here(pos)
+            if local and top and os.path.abspath(local).startswith(os.path.abspath(top)):
+                rel = os.path.relpath(os.path.abspath(local), os.path.abspath(top))
+                rels.append('.' if rel == '.' else rel)
+        r = subprocess.run(['git', '-C', repo_path, 'log', '--oneline', '--no-decorate', f'{key}..HEAD', '--']
+                           + (rels or ['.']), capture_output=True, text=True, timeout=20)
+        return [l.strip() for l in r.stdout.splitlines() if l.strip()]
+    except Exception:
+        return None
+
+
 def resolve_here(p):
     """A position -> a path on THIS machine, or None when this host does not hold it.
 
@@ -138,13 +167,21 @@ def verdict(entry):
             # THIS MACHINE, and calling it UNKNOWN alongside genuinely unreadable keys hid that.
             return 'NOT-HERE', f"{local} is not on this host"
         if not got:
-            return 'STALE', f"{local} does not contain {want} — the analysis read objects this repo lacks"
-        live = live_git_head(local)
-        if live and want[:min(len(want), len(live))] != live[:min(len(want), len(live))]:
-            # Reachable but not at HEAD: the analysis is VALID and the tree has simply moved on or sits
-            # on another branch. Reporting that as staleness is what produced two verdicts for one fact.
-            return 'FRESH', f"{want} (reachable; this tree is checked out at {live})"
-    return 'FRESH', f"{want}"
+            # A CLONE THAT IS BEHIND IS NOT A STALE ANALYSIS (11.1 of this tool, human-ratified 2026-09-20).
+            # Measured on two hosts the same minute: trixy 45 fresh, mlx 10 STALE — every one of the ten a
+            # clone on mlx that simply lacks objects made on trixy and never pushed to it. Calling that
+            # staleness re-created the one-verdict-per-host defect the key form was changed to end.
+            return 'NOT-HERE', (f"{local} does not have {want} yet — this CLONE is behind, which is a fact "
+                                f"about it and not about the analysis; `git -C {local} fetch --all` answers it")
+        moved = moved_since(local, want, [p for p in paths if resolve_here(p)])
+        if moved is None:
+            # The key is reachable but is not an ancestor of HEAD: this tree sits on another branch, so
+            # "what changed since the key" has no answer here. The analysis read objects this repo holds.
+            return 'FRESH', f"{want} (reachable; this tree is checked out at {live_git_head(local) or '?'})"
+        if moved:
+            return 'STALE', (f"{len(moved)} commit(s) after {want} touch the covered paths — "
+                             f"{moved[0]}" + (" …" if len(moved) > 1 else ""))
+    return 'FRESH', f"{want} (nothing since it touches the covered paths)"
 
 
 counts = {'FRESH': 0, 'STALE': 0, 'UNKNOWN': 0, 'NOT-HERE': 0}
@@ -212,6 +249,7 @@ if counts['NOT-HERE']:
     print("NOT-HERE is not staleness: those analyses may be perfectly current on the machine that "
           "holds their source. Give this host a `roots:` entry to resolve them here.")
 if counts['STALE']:
-    print("STALE entries must NOT be trusted — re-run the analysis, then bump as_of + staleness_key "
+    print("STALE means the SOURCE MOVED under the analysis, not that a clone is behind.\n"
+          "STALE entries must NOT be trusted — re-run the analysis, then bump as_of + staleness_key "
           "(VOCAB analysis_cache.staleness_rule).")
 sys.exit(1 if (counts['STALE'] or expiring) else 0)
