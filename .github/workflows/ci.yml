@@ -23,3 +23,5 @@ jobs:
         run: python3 test/converge.py
       - name: a garden adopts a release
         run: python3 test/upgrade.py
+      - name: knowledge profile
+        run: python3 test/knowledge.py

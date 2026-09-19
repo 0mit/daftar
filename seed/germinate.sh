@@ -44,6 +44,7 @@ mkdir -p "$TARGET/beans" "$TARGET/mappings" "$TARGET/log" "$TARGET/seed"
 # and an upgraded one cannot disagree about what the language is. The reasons for each entry live there.
 ( cd "$ROOT" && grep -v '^[[:space:]]*#' "$SEED/LANGUAGE" | grep -v '^[[:space:]]*$' | while read -r pat; do
     for f in $pat; do
+        [ -d "$f" ] && continue      # `seed/*` also matches seed/knowledge/; its files have their own line
         [ -f "$f" ] || { echo "germinate: seed/LANGUAGE names '$pat', which matches no file" >&2; exit 1; }
         mkdir -p "$TARGET/$(dirname "$f")"
         cp -p "$f" "$TARGET/$f"

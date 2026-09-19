@@ -194,3 +194,21 @@ commit is one logical change — adding the thing and the value that describes i
 already has an empty `local_terms: []` line; replace it with the block above rather than adding a second
 `local_terms:` — the gate refuses a key written twice.) If a later daftar release adds the same value to the
 standard, the gate tells you to delete your local copy.
+
+## Say what a thing is, in the world's shared terms (`knowledge` profile)
+
+Opt in with `extends_profiles: [knowledge]` in VOCAB.md. Then:
+
+```yaml
+# a third-party product that IS a technology: anchor it, so every garden's "samba" is one object
+identity: { status: confirmed, anchors: [ { key: technology, value: samba, class: logical, establishing: true } ] }
+# anything may say what it stands on
+knowledge:
+  - { scheme: technology,   code: samba, rel: uses }
+  - { scheme: isced-f-2013, code: "0612", rel: draws_on, topic: "network file sharing" }
+  - { scheme: isco-08,      code: "2522", rel: classified_as }
+```
+
+`python3 bin/dmknowledge.py find <word>` finds a code; `show <scheme> <code>` shows its ancestry and, for a
+technology, its official documentation.
+

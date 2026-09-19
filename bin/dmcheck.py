@@ -132,15 +132,46 @@ else:
 vocab_fm = load(os.path.join(ROOT, 'VOCAB.md'))[0] or {}
 
 
+_FILE_REGISTRIES = {}
+
+def _registry_file(name):
+    """Rows of a registry kept in a DATA FILE rather than in the law's prose (9.1). A classification of four
+    hundred occupations is data the law POINTS at, not text it restates: `registry_files: [{registry, file,
+    key}]` in the vocabulary names a tab-separated file (relative to the garden root), whose header row gives
+    the columns. The file must exist — a registry the law declares and cannot find is an error, never an
+    empty list, for the same reason the vocabulary itself has no fallback."""
+    if name in _FILE_REGISTRIES:
+        return _FILE_REGISTRIES[name]
+    decl = next((r for r in (list(vocab_fm.get('registry_files') or []) + list(std_fm.get('registry_files') or []))
+                 if isinstance(r, dict) and r.get('registry') == name), None)
+    if decl is None:
+        _FILE_REGISTRIES[name] = None
+        return None
+    path = os.path.join(ROOT, decl.get('file', ''))
+    rows = []
+    try:
+        with open(path, encoding='utf-8') as fh:
+            head = fh.readline().rstrip('\n').split('\t')
+            for line in fh:
+                if line.strip():
+                    rows.append(dict(zip(head, line.rstrip('\n').split('\t'))))
+    except OSError:
+        errors.append(f"registry_files: registry '{name}' is declared at {decl.get('file')} and that file is missing "
+                      f"— a declared registry is never read as empty")
+    _FILE_REGISTRIES[name] = rows
+    return rows
+
 def registry(name):
     """A top-level registry, from the garden if it declares one, else from Tier-0 — plus any rows the garden
-    ADDS under `registry_additions: {<name>: [...]}`.
+    ADDS under `registry_additions: {<name>: [...]}`. A registry may also live in a data file (`registry_files`, 9.1).
 
     Replacing a registry wholesale is still possible, and it is the wrong tool for adding one row: a garden
     that needed one operating system Tier-0 lacks had to copy the whole registry and then declare a vacancy
     for every row it had copied and did not use (found by the v0.3.1 cold-start drill). An addition names
     only what is new, so the garden accounts only for what it declared."""
     base = vocab_fm.get(name) if vocab_fm.get(name) is not None else (std_fm.get(name) or [])
+    if not base:
+        base = _registry_file(name) or []
     # An added row the base already has is NOT added twice: `check_local_additions` reports it by name, and a
     # doubled row would otherwise surface as a misleading "exported enum has drifted".
     def _dup(row):
@@ -627,10 +658,15 @@ def ectl_entry_in_registry(e):
         val = e.entry.get(attr)
         if val is None:
             continue
-        rows = registry(rule.get('registry')) or []
+        # `registry_from: <attr>` (9.1): the registry is NAMED by another field of the same entry — a code is
+        # checked against the scheme the entry says it is in, so one term serves every classification
+        rname = str(e.entry.get(rule['registry_from'])) if rule.get('registry_from') else rule.get('registry')
+        rows = registry(rname) or []
         allowed = [r.get(rule.get('take')) for r in rows if isinstance(r, dict)]
-        if val not in allowed:
-            errors.append(f"{e.base}: {e.ref}.{attr} '{val}' is not a declared {rule['registry']} "
+        if str(val) not in [str(a) for a in allowed]:
+            if len(allowed) > 40:
+                allowed = allowed[:12] + ['… %d more' % (len(allowed) - 12)]
+            errors.append(f"{e.base}: {e.ref}.{attr} '{val}' is not a declared {rname} "
                           f"— known: {sorted(v for v in allowed if v)} "
                           f"(VOCAB {e.term}.schema.entry_in_registry)")
 
@@ -869,6 +905,13 @@ def ctl_governs_anchor(c):
         if _cf in COMPARE_FORMS and COMPARE_FORMS[_cf](_v) != _v:
             warns.append(f"{c.base}: anchor {_ga}='{_v}' is compared as '{COMPARE_FORMS[_cf](_v)}' — store it in that "
                          f"form (VOCAB {c.term}.schema.compare_form: {_cf})")
+        _vr = c.sch.get('value_in_registry')
+        if _vr:
+            # (9.1) an anchor that IS a code of a published classification must be one of its codes
+            _known = {str(r.get(_vr.get('take'))) for r in (registry(_vr.get('registry')) or []) if isinstance(r, dict)}
+            if _v not in _known:
+                errors.append(f"{c.base}: anchor {_ga}='{_v}' is not a {_vr.get('registry')} code "
+                              f"(VOCAB {c.term}.schema.value_in_registry)")
         if c.sch.get('value_form') == 'ip':
             try:
                 ipaddress.ip_address(_v)

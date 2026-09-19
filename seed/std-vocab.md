@@ -1,5 +1,5 @@
 ---
-version: "9.0"
+version: "9.1"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -51,6 +51,8 @@ schema_language:
   facet_parity_with:    "<term> — this term and that one must carry the SAME facet keys (two arcs of one loop); one present without the other is a loose end"
   values_add:           "[<value>...] — GARDEN overlay only: APPEND values to a Tier-0 term's enum instead of replacing it, so the garden accounts only for what it added (8.2)"
   compare_form:         "upper-trim — with governs_anchor: the anchor is compared in this form for uniqueness (whitespace removed, uppercased), and a stored value not already in it warns (9.0)"
+  value_in_registry:    "{registry, take} — with governs_anchor: the anchor value must be a ROW of that registry (a code of a published classification, 9.1)"
+  registry_from:        "<attr> — inside entry_in_registry: the registry is NAMED by another field of the same entry, so one term can check a code against whichever scheme the entry says it is in (9.1)"
   inverse_of:           "<term>, or {term, cardinality: one-to-one | many-to-one} — this relation mirrors another and the gate holds the pair consistent so the convenience edge cannot drift from the fact. A BARE NAME means one-to-one and the mirror is enforced BOTH ways. `many-to-one` enforces only the functional direction: many instances point at one type, and the type cannot point back at all of them through a single mapping. Declare the cardinality; assuming a bijection is how a rule becomes unsatisfiable without anyone noticing."
 # == NATURES: the root axiom layer (added 2026-08-02, P3 / plan D1, human-ratified rule-change) ==
 # `nature` is the ROOT of the type system and `kind` is a REFINEMENT of it, not a parallel taxonomy.
@@ -616,6 +618,35 @@ aspects:
 # Terms that are general to a KIND of garden rather than to all gardens. A garden opts in with
 # `extends_profiles: [<name>]`; one that manages no code should not inherit code terms, and without
 # profiles the only options were to force them on everyone or to leave them local forever.
+# == KNOWLEDGE: published classifications as UNIVERSAL ANCHORS (9.1, the `knowledge` profile) ==
+# A garden that records what a thing IS in the world's own terms — which field of knowledge a skill draws on,
+# which occupation a role is, which technology a program is — should use codes every other garden uses too, so
+# two gardens that never met agree that "ISCO-08 2522" and "Samba" are the same objects. The classifications
+# are DATA the law points at, kept whole (every level) in seed/knowledge/, not restated in this prose.
+registry_files:
+  - { registry: isced-f-2013, file: seed/knowledge/isced-f-2013.tsv, key: code }
+  - { registry: isco-08,      file: seed/knowledge/isco-08.tsv,      key: code }
+  - { registry: technology,   file: seed/knowledge/technology.tsv,   key: code }
+  - { registry: crosswalk-isco-08-isced-f-2013, file: seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv, key: isco_08 }
+knowledge_schemes:
+  - scheme: isced-f-2013
+    classifies: fields of knowledge (education and training)
+    publisher: UNESCO Institute for Statistics
+    url: "https://uis.unesco.org/en/topic/international-standard-classification-education-isced"
+    levels: [broad, narrow, detailed]
+    sources: seed/knowledge/SOURCES.md
+  - scheme: isco-08
+    classifies: occupations
+    publisher: International Labour Organization
+    url: "https://ilostat.ilo.org/methods/concepts-and-definitions/classification-occupation/"
+    levels: [major, sub-major, minor, unit]
+    sources: seed/knowledge/SOURCES.md
+  - scheme: technology
+    classifies: established technologies (software, protocols, operating systems), each with its OFFICIAL documentation
+    publisher: daftar (curated; every row names the project's own documentation, never a third party's)
+    url: "seed/knowledge/technology.tsv"
+    levels: [flat]
+    sources: seed/knowledge/SOURCES.md
 profiles:
   code:
     meaning: "for a garden that manages source code: locating trees, and the repo identity of a code bean"
@@ -890,6 +921,67 @@ profiles:
         observed:   "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer."
         source:     "where they were read from"
       merge: { cardinality: single, order: none }
+
+  knowledge:
+    meaning: >
+      for a garden that says what things ARE in the world's shared terms: the field of knowledge a skill or a
+      technology draws on (ISCED-F 2013), the occupation a role or a person's work is (ISCO-08), and the
+      established technology a program, instance or host runs (with its official documentation). The codes are
+      UNIVERSAL ANCHORS: the same in every garden, so knowledge merges across gardens that never met.
+    terms:
+    - term: isced_f_2013
+      meaning: "an ISCED-F 2013 field code (UNESCO) — a being that IS a field of knowledge, e.g. a course or a body of practice"
+      context_keys: ["isced_f_2013", "identity.anchors[].isced_f_2013"]
+      schema:
+        governs_anchor: isced_f_2013
+        value_pattern: '^[0-9]{2,4}$'
+        canonical_note: "the code as published: 2 digits broad, 3 narrow, 4 detailed"
+        value_in_registry: { registry: isced-f-2013, take: code }
+      anchor: { class: logical, establishing: true }
+      merge: { cardinality: single, order: none }
+    - term: isco_08
+      meaning: "an ISCO-08 occupation code (ILO) — a being that IS an occupation or a role classified as one"
+      context_keys: ["isco_08", "identity.anchors[].isco_08"]
+      schema:
+        governs_anchor: isco_08
+        value_pattern: '^[0-9]{1,4}$'
+        canonical_note: "the code as published: 1 digit major, 2 sub-major, 3 minor, 4 unit group"
+        value_in_registry: { registry: isco-08, take: code }
+      anchor: { class: logical, establishing: true }
+      merge: { cardinality: single, order: none }
+    - term: technology
+      meaning: "a technology code from seed/knowledge/technology.tsv — a being that IS that technology (a third-party product bean, typically)"
+      context_keys: ["technology", "identity.anchors[].technology"]
+      schema:
+        governs_anchor: technology
+        value_pattern: '^[a-z0-9][a-z0-9-]*$'
+        canonical_note: "kebab-case, as in seed/knowledge/technology.tsv"
+        value_in_registry: { registry: technology, take: code }
+      anchor: { class: logical, establishing: true }
+      merge: { cardinality: single, order: none }
+    - term: knowledge
+      # THE RELATION TO KNOWLEDGE. A bean that is not itself a field, an occupation or a technology still stands
+      # in relation to them: a Samba instance USES the technology samba; a mail-filtering design DRAWS ON the
+      # field 0612; a person's role is CLASSIFIED AS 2522. One term for every scheme: the entry names its scheme
+      # and the gate checks the code against THAT scheme's registry. `topic` names the concept inside the field
+      # ("fluid pressure and flow" for espresso, inside physics) — the overlap between domains is the point.
+      meaning: "how this being stands to published knowledge: classified as an occupation, drawing on a field, using a technology"
+      context_keys: [knowledge]
+      schema:
+        shape: list_of_entries
+        entry_required_attrs: [scheme, code, rel]
+        entry_values:
+          rel: [classified_as, draws_on, uses]
+        entry_in_registry:
+          scheme: { registry: knowledge_schemes, take: scheme }
+          code:   { registry_from: scheme, take: code }
+      attrs:
+        scheme: "which classification: isced-f-2013, isco-08, technology"
+        code:   "the code in it"
+        rel:    "classified_as (this IS of that kind) | draws_on (this rests on that knowledge) | uses (this runs that technology)"
+        topic:  "optional: the concept inside the field this draws on"
+        note:   "optional"
+      merge: { cardinality: multi, order: by-scheme+code+rel }
 
 terms:
   - term: capabilities
@@ -2004,3 +2096,13 @@ The portable, estate-agnostic classification shared by every garden — the abst
   `alpine`, `freebsd` and `macos` (until now the list held exactly the four systems of the garden it grew in),
   and the `pppoe` row loses a `transport: tcp` / port 1723 copied from `pptp`. A garden that added one of the new
   OS values locally with `values_add` is told to remove its copy.
+
+- **9.1** (2026-09-19, proposed rule-change) — **knowledge as universal anchors: the `knowledge` profile.**
+  Published classifications become shared codes every garden uses: ISCED-F 2013 fields of knowledge (UNESCO) and
+  ISCO-08 occupations (ILO), each kept WHOLE in `seed/knowledge/` with their codes and English titles, plus a curated
+  `technology` catalogue whose every row links the project's own official documentation, and an ISCO→ISCED
+  crosswalk derived from a garden that classified hundreds of roles and skills by hand. Three generic gate
+  additions: `registry_files` (a registry kept in a data file, never read as empty when missing),
+  `value_in_registry` (an anchor must be a code of its scheme), and `registry_from` (an entry's code is checked
+  against the scheme the entry names). An opt-in profile: a garden that does not extend `knowledge` inherits
+  nothing. MINOR: additive; no bean anywhere is re-classified.
