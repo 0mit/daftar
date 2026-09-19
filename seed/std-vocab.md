@@ -1,5 +1,5 @@
 ---
-version: "9.1"
+version: "9.2"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -35,7 +35,7 @@ schema_language:
   ref_fields:           "[self|<attr>...] — sub-nodes that are {bean|mapping} refs; the gate RESOLVES them (dangling = error)"
   entry_ref_fields:     "[<attr>...] — same, but inside each entry"
   pointer_fields:       "{<attr>: bean_field_pointer} — a pointer that is '<section>.<key>' on this bean, {bean,field} on another, or 'file:<path>'"
-  dag:                  "true — edges from this term join the acyclic check"
+  dag:                  "true — this term's edges are positions on the `walk` sequence aspect (9.2: `dag` is that aspect's `term_key`), and they join the acyclic check BECAUSE that aspect declares `acyclic: true`"
   required_on_targets_of: "<term> — a bean that is the TARGET of that relation must carry this term (e.g. anything lived in must say what kind of habitat it is)"
   entry_must_match:     "[{attr, registry, keyed_by, take}] — an entry attr must equal a registry row's attr, the row selected by a field on the bean (e.g. the crown branch is fixed by the bean's nature)"
   entry_in_registry:    "{<attr>: {registry, take}} — an entry attr's value must be a ROW of that registry, so the registry OWNS that enum and no term restates it"
@@ -540,6 +540,46 @@ vacancies:
     position: unknown
     reason: prediction
     why: "The position that would have prevented a real loss: a commit was recorded as absent when it was merely not looked for on the machine that had it. Unoccupied TODAY because every location in the corpus has been established — which is the state this position exists to distinguish from, and it earns its declaration by being the one an agent must reach for instead of omitting the entry."
+# == FIGURES: the shapes an aspect may take (added 9.2, human-ratified rule-change, "T0") ==
+# Until 9.2 every aspect was an OPPOSITION (a square, or a one-axis binary) and `figure:` was free text. Time, place,
+# routine steps and "must stay acyclic" are not oppositions: they are positions related by NEIGHBOURHOOD
+# along direction lines. So a second figure is declared, and `figure` becomes an enum this registry owns.
+#
+# SEQUENCE IS THE GENERAL STRUCTURE; everything ordered is a RESTRICTION of it. The operator's model, from
+# the time conversation of 2026-08-05: an instant is a sequence restricted to one position on one line;
+# "acyclic" is a sequence restricted from returning; a calendar is one anchor system on a metered line,
+# never time itself. A sequence is therefore declared ONLY by its restrictions, each stated, none assumed:
+# an unstated restriction is how a model silently becomes narrower than the world (the `dag` rule once
+# took "acyclic" to be the definition of walkable).
+#
+# EXTENT. A sequence with an order has a DOMAIN, and a bounded region of it (a start and an end, either
+# possibly open) is an extent: a duration on time, an area on place, a stretch of a routine. Duration is
+# therefore not a time concept but an aspect-having-a-domain concept. An opposition has no "between": its
+# positions are modalities without order, so extent on one is declared IMPOSSIBLE rather than skipped.
+figures:
+  - figure: opposition
+    # NAMED FOR WHAT IT IS, NOT FOR ITS DIMENSION. Aristotle's square of opposition is this figure's TWO-axis
+    # case, a plain binary its one-axis case (`confidentiality`) and a cube its three-axis case. Calling the
+    # figure "square" would fix a count the gate is required to derive: "when doing the squares make sure
+    # cubes don't bite" (the operator, 2026-08-02).
+    meaning: "a CLOSED figure of contradictory pairs: finite positions, each naming its mutual complement, oriented by one or more axes (the count is derived from `poles`, never assumed)"
+    requires: [poles, positions]
+    extent: impossible
+    extent_why: "the positions are modalities, not points on a line: nothing lies between `necessary` and `possible`, so there is no region to bound"
+  - figure: sequence
+    meaning: "positions related by NEIGHBOURHOOD along direction lines, walkable, and declared only by its restrictions"
+    requires: [lines, metered, order, acyclic, ends, domain]
+    restrictions:
+      lines:   "a positive integer, or `open`: how many direction lines. Things are one or more; the gate reads the count, it never assumes one"
+      metered: "a dimension from `units` (a position carries a measure at a stated unit), or `none` (neighbourhood only: before, after, next)"
+      order:   "total | partial | none. `partial` means some pairs are NOT ordered, and the model says so instead of inventing an order"
+      acyclic: "true | false: whether walking a line can return to where it began"
+      ends:    "open | bounded | open-start | open-end: the domain's boundaries"
+      domain:  "{ systems: <dimension> | none }: the anchor-system dimension whose positions the aspect holds (systems of dimension `any` sit in every domain), or `none` when its positions are beans"
+    order_values: [total, partial, none]
+    ends_values: [open, bounded, open-start, open-end]
+    extent: possible
+    extent_why: "a sequence with an order has a domain, and a bounded region of it is an extent (a duration on time)"
 aspects:
   - aspect: necessity
     # The canonical closed figure for necessity is Aristotle's SQUARE OF OPPOSITION (De Interpretatione;
@@ -548,7 +588,7 @@ aspects:
     # which is what the operator meant by "consumption is going to be necessity aspect" — consumption is
     # not a standalone edge but one way a being can NEED something.
     meaning: "what a being requires in order to do its work"
-    figure: square-of-opposition
+    figure: opposition
     poles: [[necessary, contingent], [possible, impossible]]   # BOTH axes: a square is 2-dimensional,
                                           # and declaring one would orient it like a line
     positions:
@@ -566,7 +606,7 @@ aspects:
     # Positions relate a being to a CAPABILITY (an open kebab name), not to another being, which is what
     # the necessity aspect could not express.
     meaning: "what a being may or must be able to do"
-    figure: square-of-opposition
+    figure: opposition
     poles: [[required, omissible], [permitted, forbidden]]     # both deontic axes
     positions:
       - { position: required,  complement: omissible,  meaning: "the being MUST have it — remove it and the being stops working correctly" }
@@ -585,7 +625,7 @@ aspects:
     # be switched on, whereas a VPS's mail-egress ban is belt-and-braces over a block that already stops it.
     # Only carrying both modalities distinguishes those two, and they demand very different vigilance.
     meaning: "whether a state of affairs CAN obtain for this being, independent of whether it is allowed"
-    figure: square-of-opposition
+    figure: opposition
     poles: [[necessary, contingent], [possible, impossible]]     # both alethic axes
     positions:
       - { position: necessary,  complement: contingent, meaning: "unavoidably the case — the being cannot not have it" }
@@ -608,11 +648,52 @@ aspects:
     # generalisation the protocol forbids. Peer verification is a real and separate question, and it can
     # be its own aspect the day something needs to take a position on it.
     meaning: "whether a channel protects what crosses it from anything on the path"
-    figure: square-of-opposition
+    figure: opposition
     poles: [encrypted, cleartext]
     positions:
       - { position: encrypted, complement: cleartext, meaning: "the payload is unreadable to anything between the two ends" }
       - { position: cleartext, complement: encrypted, meaning: "the payload is readable by anything on the path. The DEFAULT, deliberately: a channel nobody has said protects anything does not, and a default that assumed otherwise would report an estate safer than it is." }
+
+  # == SEQUENCE ASPECTS (9.2, T0). No positions and no poles: a sequence is not a closed set of modalities
+  # but a domain walked along lines.
+  - aspect: time
+    meaning: "when: a position on the one line everything that happens is ordered along"
+    figure: sequence
+    lines: 1
+    metered: time
+    order: partial          # two positions whose RESOLUTIONS overlap are unordered: `2026-09-19` (unit day) is
+                            # neither before nor after `2026-09-19 22:50` (unit minute); it contains it
+    acyclic: true
+    ends: open
+    domain: { systems: time }
+  - aspect: place
+    # SEMI-DEFINED (the operator's note, 2026-08-05): declared so the figure is proven against a second
+    # aspect, and because civil time RESOLVES THROUGH place: an offset is a geographic fact. No term takes a
+    # position on it yet; its lines are open because a filesystem tree, a site and a coordinate differ in how
+    # many there are.
+    meaning: "where: a position among the places a being can be, whether a coordinate, a site or a path in a tree"
+    figure: sequence
+    lines: open
+    metered: none           # geographic coordinates are metered and containment is not; until a term needs
+                            # the difference, the aspect claims no measure it cannot give every system
+    order: partial          # containment orders a path within its tree and nothing across trees
+    acyclic: true
+    ends: bounded
+    domain: { systems: place }
+  - aspect: walk
+    # THE `dag` RULE, RE-READ. A term whose schema says `dag: true` is a position on this aspect: its edges are
+    # a sequence restricted to `acyclic`, and the gate refuses a cycle BECAUSE this row says acyclic, not
+    # because code names the key. Nothing about the check changed; what changed is that acyclicity is now
+    # one declared restriction of a sequence instead of the definition of walkable.
+    meaning: "a relation a reader can walk from being to being without coming back: ownership, habitat, part-of, dependency"
+    figure: sequence
+    lines: 1
+    metered: none
+    order: partial
+    acyclic: true
+    ends: open
+    term_key: dag           # a term carrying `dag: true` places its edges on this aspect
+    domain: { systems: none }   # its positions are beans, not positions in an anchor system
 
 # == PROFILES (added 2026-08-02, std-vocab@2.0 / P6 E4) ==
 # Terms that are general to a KIND of garden rather than to all gardens. A garden opts in with
@@ -2106,3 +2187,17 @@ The portable, estate-agnostic classification shared by every garden — the abst
   `value_in_registry` (an anchor must be a code of its scheme), and `registry_from` (an entry's code is checked
   against the scheme the entry names). An opt-in profile: a garden that does not extend `knowledge` inherits
   nothing. MINOR: additive; no bean anywhere is re-classified.
+
+- **9.2** (2026-09-19, human-ratified rule-change, "T0") — **sequence: the second figure.** Until now every
+  aspect was an opposition and `figure:` was free text (`square-of-opposition`, even on a one-axis aspect). A
+  `figures` registry now owns that enum: `opposition`, named for what it is rather than for one dimension of it,
+  since a square is its two-axis case and a cube its three-axis case; and a second figure, `sequence`: positions related by neighbourhood along direction lines, declared
+  ONLY by five stated restrictions (`lines`, `metered`, `order`, `acyclic`, `ends`) plus its `domain`. Three
+  aspects take it: `time` (one metered line, order PARTIAL, so positions whose resolutions overlap are
+  unordered), `place` (semi-defined; civil time resolves through it), and `walk`, which re-reads the `dag`
+  rule: a term with `dag: true` is a position on `walk`, and the gate refuses a cycle because `walk` declares
+  `acyclic: true`, not because code names the key. An EXTENT (a duration, on time) is a bounded region of an
+  ordered sequence's domain; an opposition has none, and says so. MINOR by effect: the re-reading of `dag` changes no
+  verdict (proved by running both gates over a real garden and 47 mutations of it); the one new requirement is
+  that an aspect's `figure` names a declared figure, which refuses only a GARDEN-LOCAL aspect with an undeclared
+  figure, and no garden is known to declare a local aspect.

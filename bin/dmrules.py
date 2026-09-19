@@ -82,8 +82,18 @@ print(f"  kinds: " + ' , '.join(f"{k['kind']}→{k.get('of_nature')}"
 print(f"         (* pinned to the '{next(k['ownership_form'] for k in kinds if k.get('ownership_form'))}'"
       f" ownership form, which also RESERVES it)")
 
-head("ASPECTS — closed figures; a position must name its mutual complement")
+head("ASPECTS — squares are closed figures (a position names its mutual complement); sequences are walked")
+WALK_KEYS = {a['term_key']: a for a in reg('aspects') if a.get('term_key')}
 for a in reg('aspects'):
+    if a.get('figure') == 'sequence':
+        on = [n for n, t in TERMS.items() for k in WALK_KEYS
+              if WALK_KEYS[k] is a and (t.get('schema') or {}).get(k) is True]
+        print(f"  {a['aspect']:12} sequence   lines {a.get('lines')} · metered {a.get('metered')} · order "
+              f"{a.get('order')} · acyclic {a.get('acyclic')} · ends {a.get('ends')} · domain "
+              f"{(a.get('domain') or {}).get('systems')}")
+        if on:
+            print(f"               walked by: " + ', '.join(on))
+        continue
     pos = a.get('positions') or []
     _raw = a.get('poles') or []
     _axes = _raw if (_raw and isinstance(_raw[0], list)) else ([_raw] if _raw else [])
@@ -133,7 +143,9 @@ if '--terms' in want:
         for k, v in s.items():
             if k.startswith('required_on_'):
                 bits.append(f"required on {k[len('required_on_'):]} {v}")
-        if s.get('dag'):     bits.append("must stay ACYCLIC")
+        for _k, _a in WALK_KEYS.items():
+            if s.get(_k) is True:
+                bits.append(f"on the '{_a['aspect']}' sequence" + (" · must stay ACYCLIC" if _a.get('acyclic') else ""))
         print(f"  {n:20} [{TIER[n]}]  {' · '.join(bits)}")
         det = []
         if s.get('values'):              det.append(f"values {s['values']}")
