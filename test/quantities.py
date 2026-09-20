@@ -52,6 +52,16 @@ src = open(os.path.join(ROOT, "bin", "dmunits.py")).read() + open(os.path.join(R
 check("neither converter uses a float anywhere: no `float(`, no true division of counts",
       "float(" not in src and "math.ceil(" not in src, [l for l in src.split("\n") if "float(" in l or "math.ceil(" in l][:3])
 
+x = dmunits.convert("1", "minute", "day")
+check("a reader may have a rounded decimal BESIDE the exact value — correctly rounded, to the digits asked",
+      dmunits.approx(x) == "0.000694444" and dmunits.approx(x, 3) == "0.000694" and dmunits.show(x) == "1/1440")
+check("...and none when the exact value is already short", dmunits.approx(dmunits.convert("90", "kilometre-per-hour", "metre-per-second")) is None)
+check("...correct at a size a float would get wrong",
+      dmunits.approx(dmunits.convert("123456789012345678901234567890", "minute", "day"), 12)
+      == str((123456789012345678901234567890 * 2 + 1440 * 10**14) // (2 * 1440 * 10**14)) + "0" * 14)   # rounded in whole numbers
+r = run(sys.executable, os.path.join(ROOT, "bin", "dmunits.py"), "1", "minute", "day")
+check("...the tool prints both, the rounded one marked", r.stdout.strip() == "1/1440 day   (≈ 0.000694444)", r.stdout)
+
 def refuses(f):
     try:
         f(); return False

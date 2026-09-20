@@ -1439,8 +1439,10 @@ Truncation is kept out at each of the four places it could enter. THE LAW: a fac
 terms, checked by the gate, so no rounded constant can be declared. THE RECORD: a count is a whole number or a decimal
 string, so nothing a float has already lost can be written down. THE ARITHMETIC: whole-number ratios only, so every
 conversion between every pair of units comes back exactly, at any number of digits — the suite tries them all. THE
-DISPLAY: a terminating decimal in full, anything else as a fraction; rounding for a reader is the reader's choice and
-is never written back. And a conversion is a reading, never a record: the measured value in its measured unit is the
+DISPLAY: a terminating decimal in full, anything else as a fraction. A fraction is exact and hard to read at a glance,
+so a rounded decimal may stand BESIDE it, marked `≈`: the mark is what keeps it from being written back, because no
+count may contain it. The rule was never that a reader may not see a decimal; it is that a rounded number may not pass
+for the value. And a conversion is a reading, never a record: the measured value in its measured unit is the
 fact, so an error cannot build up through a chain. What stays inexact is what is inexact in the world — a logarithmic
 level turned back into a ratio, a great-circle distance — and those are computed for a reader and never stored as law.
 

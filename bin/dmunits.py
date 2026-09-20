@@ -7,11 +7,12 @@
 
 A unit names the QUANTITY it measures and its FACTOR to that quantity's coherent unit, as a pair of whole numbers, so a
 conversion is exact arithmetic and never a rounded float — and the result is PRINTED exactly too: a terminating decimal in
-full, anything else as a fraction of whole numbers. A CONVERSION IS A READING, NEVER A RECORD: a bean keeps a value in the
+full, anything else as a fraction of whole numbers. Beside a fraction it prints a rounded decimal for the
+reader, marked `≈` (`--digits N`, six by default) — an aid to the eye, which the gate would refuse as a count. A CONVERSION IS A READING, NEVER A RECORD: a bean keeps a value in the
 unit it was measured in, and every conversion starts from that, so errors cannot accumulate through a chain of them. It converts within one quantity and REFUSES across two: a speed
 is not an acceleration however the numbers line up. Everything it knows is read from `seed/std-vocab.md`.
 """
-import os, re, sys
+import decimal, os, re, sys
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import yaml, dmparse
@@ -55,11 +56,27 @@ def show(x):
     return ('-' if n < 0 else '') + digits[:-k] + '.' + digits[-k:].rstrip('0')
 
 
+def approx(x, digits=6):
+    """For a READER, beside the exact value and never instead of it: the value to `digits` significant digits, or None
+    when the exact form is already that short. Computed in decimal arithmetic, so it is correctly rounded at any size.
+    Always shown marked `≈`, which no count may contain — so a rounded number cannot be copied back into a record."""
+    exact = show(x)
+    if '/' not in exact and len(exact.lstrip('-').replace('.', '').strip('0')) <= digits:
+        return None
+    with decimal.localcontext() as c:
+        c.prec = digits
+        return format((decimal.Decimal(x.numerator) / decimal.Decimal(x.denominator)).normalize(), 'f')
+
+
 def main(argv):
+    digits = 6
+    if '--digits' in argv:
+        i = argv.index('--digits'); digits = int(argv[i + 1]); argv = argv[:i] + argv[i + 2:]
     if len(argv) != 3:
         print(__doc__); return 0 if not argv else 2
     try:
-        print(show(convert(argv[0], argv[1], argv[2])), argv[2]); return 0
+        x = convert(argv[0], argv[1], argv[2]); a = approx(x, digits)
+        print(show(x), argv[2] + (f"   (≈ {a})" if a else "")); return 0
     except ValueError as e:
         print(f"dmunits: {e}"); return 1
 
