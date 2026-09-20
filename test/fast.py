@@ -18,6 +18,7 @@ import glob, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 import dmparse
+import dmform           # a term's law is read THROUGH the attribute form, here as everywhere (13.0)
 import yaml
 
 results = []
@@ -68,14 +69,21 @@ check("every term states a rule, a core-enforcement, or an explicit none",
 
 # ---- ownership closes, in both arcs and all the way up ---------------------------------------------
 # WHICH FORMS END A CHAIN AND WHICH CONTINUE IT ARE DERIVED, not listed. The term says both: `entry_one_of`
-# offers the forms, `entry_ref_fields` names the ones that point at another bean, and the difference IS the
+# offers the forms, the attributes that are `in: ref` point at another bean, and the difference IS the
 # terminal set. Listed by hand, the two halves of one rule drifted: this file accepted `contract` as an
 # ending while the gate did not, and the vocabulary declares `contract` a ref — so the day a facet is owned
 # through a contract, the hook would have passed a chain the gate refuses. Nothing said which was right.
 _OB_SCHEMA = (next((t for t in (sv.get('terms') or []) if t.get('term') == 'owned_by'), {}).get('schema') or {})
-_REFS = set(_OB_SCHEMA.get('entry_ref_fields') or [])
-_ENDS = set(_OB_SCHEMA.get('entry_one_of') or []) - _REFS
-_ALT = (_OB_SCHEMA.get('alt_form') or {})
+# READ THROUGH dmform, AND REFUSED WHEN IT COMES BACK EMPTY. v0.22.0 shipped this file still reading
+# `entry_ref_fields`, a construct 13.0 had retired an hour earlier: `_REFS` was silently the empty set, so EVERY
+# form counted as an ending and this check passed while checking less. A derivation that can come back empty
+# without anyone noticing is the defect, so it asserts.
+_OB_FORM = dmform.attribute_form(None, _OB_SCHEMA)
+_REFS = set(dmform.ref_attrs(_OB_FORM, 'entry'))
+_ENDS = set(_OB_FORM['one_of']) - _REFS
+_ALT = {'key': (_OB_FORM['alt'] or {}).get('key')}
+check("the ownership term still says which forms CONTINUE a chain and which END it — neither set is empty",
+      bool(_REFS) and bool(_ENDS), f"refs={sorted(_REFS)} ends={sorted(_ENDS)}")
 half = [b for b, fm in BEANS.items() if (fm.get('owned_by') is None) != (fm.get('responsibility') is None)]
 check("every bean carries BOTH ownership arcs", not half, ', '.join(half[:5]))
 # The ARC's partner and the inherited form's key are the term's own declarations (`facet_parity_with`,
@@ -140,7 +148,9 @@ for b, fm in BEANS.items():
 check("no bean restates its own code_path and git_remote as prose", not restating, ', '.join(restating))
 
 # ---- caches are addressable, and anchors are classed -------------------------------------------------
-_STALENESS = (((TERMS.get('analysis_cache') or {}).get('schema') or {}).get('entry_pattern') or {}).get(
+_STALENESS = dict(dmform.facet(dmform.attribute_form(TERMS.get('analysis_cache'),
+                                                     (TERMS.get('analysis_cache') or {}).get('schema')),
+                               'pattern', 'entry')).get(
     'staleness_key') or r'(?!)'      # no pattern in the law -> nothing matches, and the law's absence shows
 badcache = [f"{b}/{c}" for b, fm in BEANS.items() for c, e in (fm.get('analysis_cache') or {}).items()
             # THE PATTERN IS THE TERM'S, read from it. Kept here as a literal, it was left behind when the

@@ -179,6 +179,63 @@ sys.path.insert(0, os.path.join(ROOT, "bin"))
 import dmreform
 check("the standard uses none of the constructs it retired", dmreform.uses_old_constructs(open(os.path.join(ROOT, "seed", "std-vocab.md")).read()) == [])
 
+# ---------------------------------------------------------------- nothing a release SHIPS still reads the old spelling
+# v0.22.0 shipped test/fast.py reading `entry_pattern` and `entry_ref_fields` an hour after 13.0 retired them: the
+# move of "every reader" onto the form had looked only under bin/. One read made the commit hook refuse every
+# garden with a cached analysis; the other came back EMPTY and silently weakened a check. So the guard covers
+# everything `seed/LANGUAGE` ships, not a directory somebody remembered.
+import fnmatch, io, tokenize
+_pats = [l.strip() for l in open(os.path.join(ROOT, "seed", "LANGUAGE")) if l.strip() and not l.startswith("#")]
+_shipped = [os.path.relpath(os.path.join(d, f), ROOT) for d, _ds, fs in os.walk(ROOT) if ".git" not in d for f in fs]
+_shipped = [f for f in _shipped if f.endswith(".py") and any(fnmatch.fnmatch(f, p) for p in _pats)]
+_KNOWS_THE_OLD_SPELLING = {os.path.join("bin", "dmreform.py")}      # the translator, and only the translator
+_RETIRED = set(dmreform.OLD_SCHEMA_KEYS) | {"entry_attrs"}
+_gate_src = open(os.path.join(ROOT, "bin", "dmcheck.py"), encoding="utf-8").read().split("\n")
+_lo = next(i for i, l in enumerate(_gate_src, 1) if l.startswith("RETIRED_CONSTRUCTS = ("))
+_hi = next(i for i, l in enumerate(_gate_src, 1) if i >= _lo and l.rstrip().endswith(")"))
+_hits = []
+for f in sorted(set(_shipped) - _KNOWS_THE_OLD_SPELLING):
+    for tok in tokenize.generate_tokens(io.StringIO(open(os.path.join(ROOT, f), encoding="utf-8").read()).readline):
+        if tok.type == tokenize.STRING and tok.string.strip("'\"") in _RETIRED:
+            # the gate NAMES the retired constructs, once, in the tuple it refuses them by; that is not a read
+            if f == os.path.join("bin", "dmcheck.py") and _lo <= tok.start[0] <= _hi:
+                continue
+            # ONE LEFTOVER, NAMED RATHER THAN HIDDEN: `alt_form: { key, ref_fields }` kept its sub-key's old name at
+            # 13.0, because `alt_form` itself was not rewritten. It is a sub-key of a living construct, not a
+            # retired one; renaming it is a spelling change of its own.
+            if f == os.path.join("bin", "dmform.py") and tok.string.strip("'\"") == "ref_fields" and "alt.get(" in tok.line:
+                continue
+            _hits.append(f"{f}:{tok.start[0]} {tok.string}")
+check("no shipped program reads a retired construct — only the translator knows the old spelling",
+      len(_shipped) > 10 and not _hits, f"{len(_shipped)} shipped; hits: {_hits[:8]}")
+
+# and the hook's own suite runs green on a garden that HAS what it inspects: a codebase with a cached analysis
+open(VOC, "w").write(VOC0.replace("extends_profiles: []", "extends_profiles: [code]") if "extends_profiles: []" in VOC0
+                     else VOC0.replace("extends_profiles: [", "extends_profiles: [code, ", 1))
+open(os.path.join(G, "beans", "a-tool.md"), "w").write("""---
+bean: a-tool
+kind: codebase
+title: "a tool"
+status: active
+summary: "probe"
+nature: metaphysical
+identity: { status: confirmed, anchors: [ { key: git_remote, value: "host-a:git/a-tool.git", class: logical, establishing: true } ] }
+provenance: { src: observed, by: probe, as_of: 2026-09-20 }
+owned_by: { legal: { external: "someone" } }
+responsibility: { legal: { external: "someone" } }
+code_paths:
+  - { path: "root:a-tool", role: own-source, scan_policy: index }
+analysis_cache:
+  code-structure: { produced_by: probe, as_of: 2026-09-20, staleness_key: "a-tool@abc1234", policy: index, form: inline, covers_paths: ["root:a-tool"] }
+---
+
+probe.
+""")
+r = run(sys.executable, os.path.join(G, "test", "fast.py"), cwd=G)
+check("test/fast.py — which the commit hook runs — reads the staleness pattern from the law as it is now spelled",
+      "every cache entry carries a checkable staleness key" in r.stdout and "*** FAIL ***" not in r.stdout
+      and "neither set is empty" in r.stdout, (r.stdout + r.stderr)[-900:])
+
 shutil.rmtree(T, ignore_errors=True)
 print("\nreform: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)
