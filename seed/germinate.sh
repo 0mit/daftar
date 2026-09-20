@@ -84,9 +84,11 @@ The garden is empty and it passes its own gate. To plant the first bean:
   seed/COOKBOOK.md         a domain, a service on a machine, a rented server, and adding a missing value.
   MODEL.md, CHECKLIST.md   what the rules mean, and how a write is made.
 
-WORKING WITH A CODING AGENT? .claude/skills/daftar/ came with the garden. Open the garden in a tool
-that reads it and the agent loads the law from THIS garden rather than guessing — which is the point
-of the whole thing: one language, both parties writing in it, neither able to corrupt it quietly.
+WORKING WITH AN AGENT? AGENTS.md came with the garden, and .claude/skills/daftar/ holds the same text.
+An agent with a shell reads it and loads the law from THIS garden rather than guessing — which is the
+point of the whole thing: one language, both parties writing in it, neither able to corrupt it quietly.
+An assistant in a chat window, with no shell, cannot run the gate: paste it seed/WELCOME.md, and what
+it gives you back is a proposal for you to check and commit.
 EOF
 
 # AN UNTAGGED CLONE MAKES AN UNPINNABLE GARDEN, and this is said LAST, where it is still on the screen.

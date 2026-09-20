@@ -1,12 +1,3 @@
----
-name: daftar
-description: >
-  Read and write the git-backed ledger that is the shared language between human and AI — "beans"
-  (managed objects: hosts, routers, VPSes, domains, products, deployments, people, …), their typed
-  identity anchors, provenance-stamped facts, and their edges. Use whenever a fact about the estate is
-  discovered, changed, merged, or needed. The garden is the repository this session is working in.
----
-
 # daftar — for an agent arriving in a garden
 
 A **garden** is a git repository of **beans**: one file per managed thing, facts in YAML front matter, each fact

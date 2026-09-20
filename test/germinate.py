@@ -86,18 +86,18 @@ check("a RELATIVE target grows the garden where the caller stands, and nothing l
 
 # THE MODEL, THE PROCEDURE, THE QUEUE AND THE SKILL TRAVEL (2026-09-17). Without them a friend's garden had the
 # law's data and nothing saying what it meant; the first person bean took three attempts.
-check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md and the daftar skill travel",
-      all(os.path.isfile(os.path.join(G, f)) for f in ('MODEL.md', 'CHECKLIST.md', 'MERGE.md', 'log/pending.md',
-                                                       '.claude/skills/daftar/SKILL.md')),
-      [f for f in ('MODEL.md', 'CHECKLIST.md', 'MERGE.md', 'log/pending.md', '.claude/skills/daftar/SKILL.md')
-       if not os.path.isfile(os.path.join(G, f))])
+_TRAVEL = ('MODEL.md', 'CHECKLIST.md', 'MERGE.md', 'log/pending.md', '.claude/skills/daftar/SKILL.md',
+           'AGENTS.md', 'seed/WELCOME.md')
+check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md and every door for an agent travel",
+      all(os.path.isfile(os.path.join(G, f)) for f in _TRAVEL),
+      [f for f in _TRAVEL if not os.path.isfile(os.path.join(G, f))])
 
 # THE EXAMPLES IN seed/README.md AND seed/COOKBOOK.md ARE COMMITTED IN A FRESH GARDEN, so the pages cannot drift
 # from the law. The cookbook's VOCAB.md fragment is applied too, and the NAS then uses the value it adds.
 _ex_tmp = os.path.join(TMP, 'readme-examples')
 run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _ex_tmp, cwd=ROOT)
 _examples, _fragments = [], []
-for _doc in ('README.md', 'COOKBOOK.md'):
+for _doc in ('README.md', 'COOKBOOK.md', 'WELCOME.md'):
     _page = open(os.path.join(ROOT, 'seed', _doc), encoding='utf-8').read()
     _examples += re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _page, re.S)
     _fragments += re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', _page, re.S)
@@ -141,7 +141,7 @@ run('git', 'add', '-A', cwd=_ex_tmp)
 _ex_c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'examples', cwd=_ex_tmp)
 check(f"the {len(_examples)} bean examples and {len(_fragments)} VOCAB fragments in seed/README.md + seed/COOKBOOK.md "
       f"commit in a fresh garden, as written, with 0 errors",
-      len(_examples) >= 7 and len(_fragments) == 2 and _ex_c.returncode == 0, (_ex_c.stdout + _ex_c.stderr)[-500:])
+      len(_examples) >= 8 and len(_fragments) == 2 and _ex_c.returncode == 0, (_ex_c.stdout + _ex_c.stderr)[-500:])
 _ex_gate = run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmcheck.py'), cwd=_ex_tmp).stdout
 check("...with ZERO warnings, and the banner names the garden and the release it runs",
       ' 0 warning(s)' in _ex_gate and re.search(r'^readme-examples \(daftar [^)]+\): ', _ex_gate, re.M),
