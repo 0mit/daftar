@@ -1,5 +1,5 @@
 ---
-version: "11.1"
+version: "11.2"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -34,7 +34,9 @@ schema_language:
   entry_one_of:         "[<attr>...] — each entry must carry at least one of these"
   entry_required_if:    "[{attr, equals, requires: [...]}] — conditional requirement inside an entry"
   entry_expect_if:      "[{attr, starts_with, expects, why}] — a soft expectation; failing it WARNS, never blocks"
-  expiry:               "{attr, horizon_days, why} — ONE of this term's attrs is the date the thing LAPSES if nothing is done, and a reader should be warned before it. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Deliberately NOT derivable from `attr_types: iso_date`: ten terms carry an iso_date and nine of them are `observed` or `as_of` — the date a fact was READ, not the date it runs out. A term that does not declare this is never warned about, which is why a garden's own term can now buy the warning its Tier-0 neighbour has."
+  attr_extents:         "[<attr>...] — these attrs of the mapping hold an EXTENT (`extent_form`): a bounded region of some aspect's domain. The gate checks the region against the aspect it names — that the figure permits a region at all, that a measure appears only on a metered aspect and in that aspect's own dimension, and that a position is in one of the aspect's domain systems' canonical forms."
+  entry_extents:        "[<attr>...] — the same, inside each entry of a list or open map"
+  expiry:               "{attr, notice, why} — ONE of this term's attrs is the position at which the thing LAPSES if nothing is done, and a reader should be warned before it. `notice` is HOW LONG BEFORE, as an EXTENT on `time` (11.2; it was a bare `horizon_days` integer for one release, which was a fifth way of saying a duration in a vocabulary that had just declared the first). `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. Deliberately NOT derivable from `attr_types: iso_date` — ten terms carry an iso_date and nine of them are `observed` or `as_of`, the date a fact was READ rather than the date it runs out. A term that does not declare this is never warned about, which is why a garden's own term can buy the warning its Tier-0 neighbour has."
   ref_fields:           "[self|<attr>...] — sub-nodes that are {bean|mapping} refs; the gate RESOLVES them (dangling = error)"
   entry_ref_fields:     "[<attr>...] — same, but inside each entry"
   pointer_fields:       "{<attr>: bean_field_pointer} — a pointer that is '<section>.<key>' on this bean, {bean,field} on another, or 'file:<path>'"
@@ -605,6 +607,40 @@ figures:
     ends_values: [open, bounded, open-start, open-end]
     extent: possible
     extent_why: "a sequence with an order has a domain, and a bounded region of it is an extent (a duration on time)"
+# == EXTENT (11.2): the bounded region `figures` has declared POSSIBLE since 11.0, carried at last ==
+# The figure block above says it and says why — "a sequence with an order has a domain, and a bounded region
+# of it is an extent (a duration on time)" — and for two versions nothing could write one. A corpus measured
+# on 2026-09-20 held about forty durations as PROSE because of it: thirteen "daily", five "weekly", "every 5
+# minutes", "for 204 days", four retention policies, log rotation, certificate lifetimes. None of them
+# readable by anything. That is the shape of defect this vocabulary exists to refuse — a rule with no
+# position for its own data — and it was in the law's own description of itself.
+#
+# DURATION IS NOT A TIME CONCEPT. It is an aspect-having-a-domain concept: a duration on `time`, an area on
+# `place`, a stretch of a `routine`. So the region names the ASPECT it lies in and the rules follow from
+# that aspect's own restrictions, rather than time getting a construct nothing else can use.
+extent_form:
+  of:      "the ASPECT whose domain this region lies in. Its figure must declare `extent: possible` — an opposition's positions are modalities with nothing between them, so a region on one is refused rather than silently allowed."
+  from:    "optional: the position the region starts at, in the canonical form of one of that aspect's domain systems"
+  to:      "optional: the position it ends at"
+  measure: "optional: { count, unit } — how much of the domain it spans. A METERED aspect only: a stretch of a routine has no length, because `routine` declares `metered: none`, and the unit's dimension must be the one the aspect meters."
+  requires: "at least one of from / to / measure — a region with no bound at either end and no length is not a region"
+  open_ends: >
+    Ends may be open, as `figures` says, and which ones are open is carried by which keys are present:
+    `from` alone is open-ended, `to` alone is open-start, and a `measure` alone is a LENGTH whose ends are
+    not fixed at all. That last is what most of a real corpus's durations turn out to be — "for 204 days"
+    says how long and never says from when.
+  not_a_recurrence: >
+    AN EXTENT IS ONE REGION, NOT A REPEATING ONE. "every 5 minutes" and "bills on the 15th of each month"
+    are RECURRENCE RULES: a rule for generating positions, which is a different kind of thing and is
+    deliberately NOT expressible here. The distinction is not pedantry — a recurrence needs a rule
+    (calendar-anchored, or every N units from a start) and the two have different failure modes. A garden
+    that needs one should propose it rather than writing a measure that lies about being a repetition.
+  not_a_calendar_bucket: >
+    `units` holds millisecond, second, minute and day, and deliberately no month, week or year. A month is
+    not a measure — it is 28, 29, 30 or 31 days — and a year is not either. A term whose real rule is "on
+    this date each month" is recording a recurrence anchored to a calendar, not a length, and `measure`
+    would make it look like arithmetic that it is not.
+
 # == VALUE TYPES (10.0, T3): the named types `entry_types` / `attr_types` may use ==
 # They were patterns written in the gate's code. A TIME value type is a POSITION: `iso_date` is not "a date
 # format" but the calendar system held at unit DAY, so every `observed: 2026-08-09` in a garden was always a
@@ -1072,8 +1108,10 @@ profiles:
         # extended for it the same day, and when it was promoted to Tier-0 nobody went back. A garden
         # that invents a term with an expiry got no warning, however well the gate enforced the date —
         # first-class to the gate, invisible to the tool that would have made it useful.
-        expiry: { attr: expires, horizon_days: 90,
-                  why: "an unrenewed name takes its DNS and its mail with it" }
+        expiry:
+          attr: expires
+          notice: { of: time, measure: { count: 90, unit: day } }
+          why: "an unrenewed name takes its DNS and its mail with it"
       attrs:
         registrar:  "the registrar of record — who the renewal is actually paid to"
         registrant: "optional: the party holding the registration, where the registry discloses it"
