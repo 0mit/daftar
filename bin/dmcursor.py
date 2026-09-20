@@ -31,6 +31,7 @@ import glob, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmform
 import dmstale                       # the ONE implementation of the staleness verdict
 try:
     import yaml
@@ -116,8 +117,9 @@ def targets(fm, term, sch):
     node = fm.get(term)
     if node is None:
         return []
-    fields = list(sch.get('ref_fields') or []) + list((sch.get('alt_form') or {}).get('ref_fields') or [])
-    entry_fields = list(sch.get('entry_ref_fields') or [])
+    _form = dmform.attribute_form(None, sch)
+    fields = dmform.ref_attrs(_form, 'self') + list((_form['alt'] or {}).get('refs') or [])
+    entry_fields = dmform.ref_attrs(_form, 'entry')
     out = []
 
     def refs(n, keys):

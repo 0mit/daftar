@@ -11,6 +11,9 @@ fence #2. Everything after fence #2 is body, verbatim.
 One owner of a fact: dmcheck.py and dmmerge.py both import this — the parsing rule lives here only.
 """
 import re
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dmform
 
 FENCE = re.compile(r'^---[ \t]*\r?$', re.M)
 BOM = '﻿'
@@ -91,9 +94,9 @@ COMPARE_FORMS = {'upper-trim': lambda v: re.sub(r'\s+', '', v).upper()}
 def anchor_compare_form(terms, key):
     """The compare form the vocabulary declares for anchor `key`, or None. `terms`: term dicts with `schema`."""
     for t in terms:
-        s = (t.get('schema') or {}) if isinstance(t, dict) else {}
-        if s.get('governs_anchor') == key and s.get('compare_form') in COMPARE_FORMS:
-            return s['compare_form']
+        v = dmform.attribute_form(t, t.get('schema') if isinstance(t, dict) else None)['value']
+        if v.get('governs_anchor') == key and v.get('compare_form') in COMPARE_FORMS:
+            return v['compare_form']
     return None
 
 

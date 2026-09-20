@@ -29,6 +29,7 @@ import os, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmform
 try:
     import yaml
 except ImportError:
@@ -99,11 +100,7 @@ def axis_order(aspects):
     return list(aspects.keys())
 
 
-def aspects_of(sch):
-    a = sch.get('on_aspect')
-    if isinstance(a, dict):
-        a = [a]
-    return [x for x in (a or []) if isinstance(x, dict) and x.get('aspect')]
+aspects_of = dmform.aspects_of      # it was a second copy of the gate's; the form module is the one owner now
 
 
 def entries_of(shape, node):
