@@ -252,17 +252,12 @@ anchor_systems:
   #
   # NO CALENDAR IS PRIVILEGED. A garden states a moment in the calendar it was KNOWN in — a document dated ۲۲ شهریور
   # ۱۴۰۵ is recorded `persian:1405-06-22`, not silently turned into somebody else's date — and what makes two positions
-  # in two calendars comparable is the DAY they both fall on, reached by rule where the calendar has one. (A product
-  # built on this estate stores Gregorian/UTC and shows Jalali only at its edges. That is a workaround for ITS
-  # database's date type, recorded here so that nobody mistakes it for a principle, as the first draft of this
-  # release did.) Two things from that product ARE kept. Its converter is sixty vendored lines with no dependency,
-  # because "the alternative is a pip dependency fetched over a filtered network — a build that fails at the worst
-  # possible moment"; `bin/dmcal.py` is dependency-free for the same reason and was checked against it: the two agree
-  # on every one of 146,097 days from 1800 to 2200. AND DIGITS: one form means one set of digits. That product refused
-  # a mobile number typed on a Persian keyboard until it normalised digits at every boundary; this gate ACCEPTED
-  # `۲۰۲۶-۰۹-۲۰` as a date until 16.0, because a pattern's `\d` matches every script's digits. Patterns are matched
-  # ASCII-only now: a position is WRITTEN in ASCII digits whatever calendar it is in, and the digits a reader sees
-  # are a matter for whatever shows it to them.
+  # in two calendars comparable is the DAY they both fall on, reached by rule where the calendar has one.
+  # `bin/dmcal.py` is dependency-free on purpose: a conversion that needs a package fetched over a network is a build
+  # that fails at the worst possible moment.
+  # ONE FORM MEANS ONE SET OF DIGITS. A pattern's `\d` matches every script's digits, so the law's patterns are matched
+  # ASCII-ONLY: a position is WRITTEN in ASCII digits whatever calendar it is in, and the digits a reader sees are a
+  # matter for whatever shows it to them.
   # EVERY DATED ATTRIBUTE OF THE STANDARD IS TYPED `date`: a day in ANY calendar, held to that calendar's own form.
   # WHAT STILL READS ONLY THE GREGORIAN CALENDAR, named because 16.0 does not fix it: `leaf_orders.instant` (the merge
   # absorbs a coarser reading into a finer one only within it) and the journal's heading form. Each is a Gregorian-only

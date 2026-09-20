@@ -386,9 +386,7 @@ VALUE_TYPES = {t['type']: t for t in (registry('value_types') or []) if isinstan
 # per-value checks stand down rather than refuse every id in the garden for a cause they cannot name.
 # ONE FORM MEANS ONE SET OF DIGITS (std-vocab 16.0). In Python `\d` matches EVERY Unicode decimal digit, so until 16.0
 # the gate accepted `۲۰۲۶-۰۹-۲۰` as an iso_date — a second spelling of a position, which nothing downstream can read
-# as a date. A product built on this estate met the same thing from the other side: a mobile number typed on a Persian
-# keyboard was refused at signup, and the fix was to normalise digits AT THE BOUNDARY and store one form. The law's
-# patterns are therefore matched ASCII-only, everywhere, through this one function.
+# as a date. The law's patterns are therefore matched ASCII-only, everywhere, through this one function.
 def law_match(pattern, value):
     return re.match(str(pattern), str(value), re.ASCII)
 
