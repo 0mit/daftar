@@ -45,5 +45,25 @@ hits = [l.strip()[:90] for l in fm.split("\n") if re.search(r"^\s*(-\s*)?[\w\"' 
 check(f"narrative inside the law's data has not grown (now {len(hits)}, ceiling {NARRATIVE_IN_DATA})", len(hits) <= NARRATIVE_IN_DATA, hits[:4])
 print(f"      (the ceiling can come down to {len(hits)})")
 
+# ---------------------------------------------------------------- LEAKS BETWEEN THE LAYERS, one direction at a time
+# UP: a layer may point DOWN to the one beneath, never the other way. A law that says "see the rationale" cannot be
+# applied alone, and "clear and brief, for usability" means it can.
+import glob
+data_lines = [l for l in fm.split("\n") if not TITLE.match(l)]
+PROSE = re.compile(r"(meaning|why|note|form_note|refusal|pattern_why|extent_why)\"?\s*:")      # what a reader is TOLD; where the
+up = [l.strip()[:100] for l in data_lines if PROSE.search(l)                                  # journal lives is itself law
+      and re.search(r"RATIONALE|HISTORY\.md|log/journal|the journal entry|pull request|daftar#\d|\bPR ?#?\d", l)]
+check("the law points at no layer beneath it: it can be applied alone", not up, up[:4])
+# THE GATE READS LAW AND NOTHING ELSE. If a verdict ever depended on the reasoning, the reasoning would be law without
+# being ratified as law.
+readers = [os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "dm*.py")) if "RATIONALE" in open(f, encoding="utf-8").read()]
+check("only the reader of reasons opens the reasoning: no verdict can depend on it", readers == ["dmwhy.py"], readers)
+# SIDEWAYS: a reason that speaks of a law name the law no longer has is no longer a reason; it is an account of what
+# used to be, which is a journal's business. A ratchet, because sorting them is editorial work.
+STALE_REASONS = 7
+st = dmwhy.stale()
+check(f"reasons that have become journal have not grown (now {len(st)}, ceiling {STALE_REASONS})", len(st) <= STALE_REASONS, list(st.items())[:3])
+print(f"      (the ceiling can come down to {len(st)})")
+
 print("\nrationale: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

@@ -4,6 +4,7 @@
     python3 bin/dmwhy.py endpoints              # a term, a system, a registry row … found by name
     python3 bin/dmwhy.py aspects[place].metered # or by the exact path
     python3 bin/dmwhy.py --check                # every reason names something the law still says (exit 1 if not)
+    python3 bin/dmwhy.py --stale                # reasons that speak of a law name the law no longer has
 
 daftar keeps its own material in FOUR layers, and each stands on the one beneath it:
 
@@ -77,6 +78,19 @@ def orphans():
     return bad
 
 
+def stale():
+    """Reasons that speak of a law name the law no longer has. A reason that names a RETIRED construct or a removed
+    registry has become journal — an account of what used to be — and is sitting one layer too high. Found by the
+    names written in backticks that look like the law's own (`snake_case`) and appear nowhere in the law's text."""
+    law_text = dmparse.split_front_matter(open(LAW, encoding='utf-8').read())[0]
+    out = {}
+    for k, v in rationale().items():
+        gone = sorted({t for t in re.findall(r'`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`', v) if t not in law_text})
+        if gone:
+            out[k] = gone
+    return out
+
+
 def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         print(__doc__); return 0
@@ -86,6 +100,12 @@ def main(argv):
             print(f"ORPHAN  {k} — the rationale explains something the law no longer says")
         print(f"dmwhy: {len(rationale())} reasons, {len(bad)} orphaned")
         return 1 if bad else 0
+    if argv[0] == '--stale':
+        st = stale()
+        for k, gone in st.items():
+            print(f"STALE   {k} — speaks of {', '.join('`'+g+'`' for g in gone)}, which the law no longer has")
+        print(f"dmwhy: {len(st)} reasons speak of something the law no longer says — they have become journal")
+        return 0
     want, data, why = argv[0], law(), rationale()
     keys = [k for k in why if k == want or re.search(r'(^|[.\[])' + re.escape(want) + r'($|[.\]])', k)]
     if not keys:
