@@ -1,5 +1,5 @@
 ---
-version: "18.2"
+version: "18.3"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -1371,10 +1371,11 @@ profiles:
           plane:            { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR. Stated where it matters: a management surface deserves a different exposure from a data one." }
           port:             { in: { form_of: anchor_systems, keyed_by: transport, take: pattern }, meaning: "the port: a position in the transport's port space, WITHIN the address beside it. One port per entry. Omitted where the protocol rides another (sftp over ssh) and has none of its own, and for a socket path, which has none at all." }
           via_link:         { in: { key_of: links }, meaning: "optional: the `links` key this surface is reachable over, when it is not reachable without it" }
+          admitted_from:    { in: prose, meaning: "WHO may reach this surface, when not everyone who can reach its address may: the named sources the being itself admits, and where that is enforced. A second fact beside `exposure`, which says only WHERE the surface is bound. Absent means nothing restricts it." }
         cells:
           - { when: { permission: forbidden }, verdict: in_breach, why: "a listening surface that MUST NOT exist, recorded as existing. Unlike a capability, an endpoint entry is not a stance about a possibility — it is a statement that the being answers there — so `forbidden` alone is the breach and needs no second aspect to confirm it. A database container published on 0.0.0.0:5432, reachable across the LAN, is this shape." }
           - { when: { permission: required, confidentiality: cleartext, exposure: [lan, link, internet] }, verdict: in_breach, why: "a channel the estate REQUIRES and which protects nothing on the wire, on a path something else can be on. A mail policy that forces cleartext delivery to a partner domain that mail must still reach is exactly this, so the requirement and the exposure are both real and neither can simply be withdrawn." }
-          - { when: { plane: management, exposure: internet }, verdict: in_breach, why: "a MANAGEMENT surface answering on the internet: the way an operator configures this being is reachable by anyone, guarded only by its login. Restrict it to a management network or a named address list; if it must stay, say why on the bean, where a reader meets this warning." }
+          - { when: { plane: management, exposure: internet }, expects: [admitted_from], why: "a MANAGEMENT surface bound to a public address, with nothing said about who may reach it: as recorded, the way an operator configures this being answers anyone, guarded only by its login. Restrict it to named sources and state them in `admitted_from`." }
       merge: { cardinality: multi, order: "by-protocol+system+at+port?" }
     - term: links
       meaning: >
@@ -2522,6 +2523,12 @@ The portable, estate-agnostic classification shared by every garden — the abst
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **18.3** (2026-09-20, proposed rule-change) — **who may reach a surface is a fact of its own.** `endpoints` gains
+  `admitted_from` (prose): the named sources a surface admits, beside `exposure`, which says only where it is bound.
+  The management-on-the-internet cell becomes `expects: [admitted_from]` instead of `verdict: in_breach`: it warns
+  while nothing is said about who may reach the surface and is silent once it is. It can only let a warning stop —
+  no entry that passed is refused, and the cell fires on exactly the entries it fired on before. The gate's
+  conditional cells (`requires` / `expects`) now take a `when` of more than one attribute, as verdict cells did.
 - **18.2** (2026-09-20, proposed rule-change) — **a form a tool already checks is checked by that tool.** A system
   row states its form as a `pattern` or names a check with `checked_by`, never both. `ipv4` and `ipv6` are
   `checked_by: ipaddress-v4 / ipaddress-v6` — the standard library's validator, which the `ip` anchor has always

@@ -89,7 +89,7 @@ check("a required cleartext surface on LOOPBACK no longer warns — the cell can
 out = ep(("203.0.113.10", "exposure: internet"))
 check("...and the same surface on the internet still does", "IN BREACH" in out and "exposure:internet" in out, out[-600:])
 out = ep(("203.0.113.10", "exposure: internet, confidentiality: encrypted, plane: management"))
-check("a MANAGEMENT surface answering on the INTERNET is a finding the law states", "plane:management, exposure:internet" in out, out[-700:])
+check("a MANAGEMENT surface answering on the INTERNET is a finding the law states", "plane:management, exposure:internet but states no admitted_from" in out, out[-700:])
 out = ep(("203.0.113.10", "exposure: lan, confidentiality: encrypted, plane: management"))
 check("...and on a LAN it is not", "IN BREACH" not in out, out[-500:])
 out = ep(("203.0.113.10", "exposure: lan, confidentiality: encrypted, plane: executive"))

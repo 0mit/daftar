@@ -692,9 +692,25 @@ THE TRANSPORT IS USUALLY THE PROTOCOL'S OWN, so an entry states it only when it 
 endpoint says `transport: tcp`. The default is READ FROM THE PROTOCOL'S ROW rather than typed here, so the
 protocol stays the one owner of what usually carries it.
 
+## profiles.network.terms[endpoints].schema.attrs.admitted_from
+
+WHERE A SURFACE IS BOUND AND WHO MAY REACH IT ARE TWO FACTS. `exposure` is the first: `internet` means bound to a
+public address, and it stays true after a filter is put in front of the surface. A fifth `exposure` value —
+"internet, but filtered" — would fold the second fact into the first, and the next kind of admission (a tunnel, a
+port knock, mutual TLS) would want a sixth. So the second fact has its own attribute. It is prose for now: the
+things that admit a source — an address list on a router, a security group, a service's own allow rule — are not
+a term, so there is nothing for it to be a `key_of`. When they become one, this attribute should point at it.
+
 ## profiles.network.terms[endpoints].schema.cells[·]
 
 LOOPBACK is excluded: there is no path there for anything to be on.
+
+THE MANAGEMENT CELL IS AN EXPECTATION, NOT A VERDICT. As a verdict (`in_breach` on management + internet) it
+recommended restricting the surface to named sources — and went on firing after that was done, because the
+surface was still bound to a public address and the law had no way to say who it admitted. A warning that outlives
+its fix teaches a reader to ignore warnings. As `expects: [admitted_from]` it asks the one question that matters
+and is silent once it is answered. What it checks is that the words are there, not that the filter works: that
+stays the writer's honesty, as everywhere.
 
 ## profiles.network.terms[links].meaning
 
