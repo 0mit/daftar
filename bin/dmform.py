@@ -65,6 +65,7 @@ DOMAINS = {
     'form_of':     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern }   a position in the system a SIBLING attr names, in that system's one form",
     'pattern':     "in: { pattern: '<regex>' }                     a form this term owns; with `soft: true` and a `why` it WARNS instead of refusing",
     'extent':      "in: extent                                     a bounded region of an aspect's domain (`extent_form`)",
+    'recurrence':  "in: recurrence                                 a repetition over a sequence: every Nth neighbour, every N units, or the same place in each cell of a level (`recurrence_form`)",
     'ref':         "in: ref                                        a {bean|mapping[, field]} ref, resolved by the gate",
     'pointer':     "in: { pointer: bean_field_pointer }            '<section>.<key>' on this bean, {bean, field} on another, or 'file:<path>'",
     'id':          "in: id                                         the id of a bean or mapping — a key of the ref FORM itself, which the gate resolves",
@@ -77,7 +78,7 @@ def _domain(d):
     """(facet, rule) for one attribute's `in:` — the internal record the interpreter has always read."""
     if isinstance(d, list):
         return 'values', list(d)
-    if d in ('extent', 'ref'):
+    if d in ('extent', 'ref', 'recurrence'):
         return d, True
     if d in ('prose', 'untyped', 'id') or d is None:
         return None, None

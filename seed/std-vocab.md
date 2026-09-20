@@ -1,5 +1,5 @@
 ---
-version: "16.1"
+version: "16.2"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -14,6 +14,7 @@ schema_language:
     form_of:     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form"
     pattern:     "in: { pattern: '<regex>' } — a form the TERM owns. With `soft: true` and a `why` it WARNS instead of refusing: the form a value SHOULD take while a corpus is migrated onto it"
     extent:      "in: extent — a bounded region of an aspect's domain (`extent_form`)"
+    recurrence:  "in: recurrence — a repetition over a sequence: every Nth neighbour, every N units, or the same place in each cell of a level (`recurrence_form`)"
     ref:         "in: ref — a {bean|mapping: <id>[, field: <key>]} ref; the gate RESOLVES it (dangling = error)"
     pointer:     "in: { pointer: bean_field_pointer } — '<section>.<key>' on this bean, {bean, field} on another, or 'file:<path>'"
     id:          "in: id — the id of a bean or mapping: a key of the ref FORM itself, on a term whose value `is_ref`"
@@ -1027,6 +1028,7 @@ figures:
     extent_why: "a sequence with an order has a domain, and a bounded region of it is an extent (a duration on time)"
 # == EXTENT ==
 extent_form:
+  in:      "optional: the positioning SYSTEM the region is stated in. A system may be metered where its aspect is not (`geographic` in metres), and then the region may carry a measure."
   of:      "the ASPECT whose domain this region lies in. Its figure must declare `extent: possible` — an opposition's positions are modalities with nothing between them, so a region on one is refused rather than silently allowed."
   from:    "optional: the position the region starts at, in the canonical form of one of that aspect's domain systems"
   to:      "optional: the position it ends at"
@@ -1049,6 +1051,16 @@ extent_form:
     this date each month" is recording a recurrence anchored to a calendar, not a length, and `measure`
     would make it look like arithmetic that it is not.
 
+# == RECURRENCE ==
+recurrence_form:
+  of:     "the SEQUENCE aspect the repetition runs along. An opposition has no neighbours, so nothing on one repeats."
+  in:     "optional: the positioning SYSTEM it is counted in. Required by `each`, because a level belongs to its system."
+  every:  "{ count } — every Nth NEIGHBOUR: needs only that positions have a next one. Or { count, unit } — every N UNITS: needs the aspect, or the system named, to be metered in that unit's dimension."
+  each:   "<level> — the same place in EACH CELL of that level of the system named: each month, each week, each era."
+  at:     "optional: where in the cell, as the system writes it — `15`, `W-5`. Prose to the gate."
+  from:   "optional: the position it starts at, in the system's form"
+  to:     "optional: the position it ends at"
+  requires: "exactly one of `every` / `each`"
 # == VALUE TYPES ==
 value_types:
   - type: iso_date
@@ -2500,3 +2512,11 @@ The portable, estate-agnostic classification shared by every garden — the abst
   begins at NOON) and the Mayan long count, both reckoned by `bin/dmcal.py`; the Badi and the French Republican
   calendars, declared astronomical and therefore not converted; `guix-store`, a second place system in which a
   position says what it holds; and `openpgp_fingerprint` and `ssh_key_fingerprint` as establishing identity anchors.
+
+- **16.2** (2026-09-20, proposed rule-change) — **recurrence.** MINOR, additive. `in: recurrence` and `recurrence_form`:
+  a repetition is a sequence whose neighbours are given by a rule. It strides by NEIGHBOURS (`every: { count }` — every
+  tenth release), by MEASURE (`every: { count, unit }` — every five minutes, every five metres) or by CELL (`each:
+  <level>` of a named system — the 15th of each Persian month). Which stride a repetition may use is read from the
+  aspect's figure and from the SHAPE the named system declares — neighbours, metering, levels — so a new system gets
+  repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
+  name a system too, and then carries a measure where the system is metered and its aspect is not.

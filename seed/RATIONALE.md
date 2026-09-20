@@ -1405,3 +1405,23 @@ axiom directly, so every other chain must pass through a being.
 
 == kinds that were in USE but undeclared before P3. Under D1 a kind need only name the nature it
 refines and what it means; anchor family + min-anchors come from that nature.
+
+## recurrence_form
+
+A repetition is what an instant and an extent were missing: an instant is a sequence restricted to one position, an
+extent is a bounded region of one, and a recurrence is a sequence whose NEIGHBOUR RELATION IS GIVEN BY A RULE instead of
+by listing — each occurrence is the one before it, shifted. It is the sequence that is unchanged when slid along itself.
+
+There are three kinds of shift because a sequence offers three things to count in. Neighbours are what a sequence IS, so
+a stride by neighbours needs no meter at all: it is how "every tenth release" is said of a line of events that has no
+clock. A measure needs metering, and metering belongs to the system as much as to the aspect: place is not metered, and
+geography is, in metres. A cell needs a level, and a level belongs to its system: a month is a level of ONE calendar,
+which is why `each` refuses to stand without `in`.
+
+A routine is what happens and a recurrence is when. They compose; they were never the same thing, which is why a routine
+that must end could not hold a repetition that does not.
+
+Considered and refused: a calendar bucket as a unit (`every: { count: 1, unit: month }`). A month is not a length — it
+is 28 to 31 days in one calendar, 29 or 30 in another — and writing it as a measure would make arithmetic of something
+that is not arithmetic.
+

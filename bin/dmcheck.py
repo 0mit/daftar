@@ -468,9 +468,10 @@ def check_extent(where, node):
     if not any(node.get(k) is not None for k in ('from', 'to', 'measure')):
         errors.append(f"{where}: an extent needs at least one of from / to / measure — "
                       f"a region with neither bound and no length is not a region (`extent_form.requires`)")
+    _row = _system_of(where, node, asp, an)
     m = node.get('measure')
     if m is not None:
-        metered = asp.get('metered')
+        metered = ((_row or {}).get('restrictions') or {}).get('metered') or asp.get('metered')
         if not metered or metered == 'none':
             errors.append(f"{where}: aspect '{an}' declares `metered: {metered}`, so a region on it has no "
                           f"length — drop `measure`, or bound it with from/to")
@@ -499,6 +500,92 @@ def check_extent(where, node):
             errors.append(f"{where}.{side} '{v}' is not a position in any system of dimension "
                           f"'{dim}' — " + ', '.join(sorted(s['system'] for s in SYSTEMS.values()
                                                            if s.get('dimension') in (dim, 'any'))))
+
+
+def _system_of(where, node, asp, an):
+    """The system a region or a repetition names with `in:`, held to the aspect's own domain — or None when it names none."""
+    sn = node.get('in')
+    if sn is None:
+        return None
+    row = SYSTEMS.get(sn)
+    dim = (asp.get('domain') or {}).get('systems')
+    if not row:
+        errors.append(f"{where}: `in: {sn!r}` names no positioning system")
+    elif row.get('dimension') not in (dim, 'any'):
+        errors.append(f"{where}: system '{sn}' positions in '{row.get('dimension')}', and aspect '{an}' holds '{dim}'")
+    else:
+        return row
+    return False
+
+
+def check_recurrence(where, node):
+    """One RECURRENCE against the aspect — and the SYSTEM — it names. Appends what is wrong.
+
+    A repetition is a sequence whose neighbours are given by a RULE instead of by listing: each occurrence is the one
+    before it, shifted. There are three kinds of shift, and which a repetition may use is read from the law — from the
+    aspect's figure, and from the shape the named system declares — never written down here:
+      by NEIGHBOURS  every Nth position. Needs only that positions HAVE neighbours.
+      by MEASURE     every N units. Needs the aspect, or the system, to be metered in that unit's dimension.
+      by CELL        the same place in each cell of a LEVEL. Needs the system to have that level — and therefore needs a
+                     system, because a level belongs to its system: "each month" is nobody's month until it says whose.
+    """
+    if not isinstance(node, dict):
+        errors.append(f"{where}: a recurrence is a mapping {{of, in?, every | each, at?, from?, to?}} (`recurrence_form`)")
+        return
+    an = node.get('of')
+    asp = ASPECTS.get(an)
+    if not asp:
+        errors.append(f"{where}: recurrence `of: {an!r}` names no aspect — {sorted(ASPECTS)}")
+        return
+    if asp.get('figure') != 'sequence':
+        errors.append(f"{where}: aspect '{an}' is a {asp.get('figure')}: its positions have no neighbours, so nothing "
+                      f"on it repeats")
+        return
+    row = _system_of(where, node, asp, an)
+    if row is False:
+        return
+    every, each = node.get('every'), node.get('each')
+    if (every is None) == (each is None):
+        errors.append(f"{where}: a recurrence strides EITHER `every:` N neighbours or units OR `each:` cell of a level — "
+                      f"exactly one")
+        return
+    if each is not None:
+        if not row:
+            errors.append(f"{where}: `each: {each}` names a LEVEL, and a level belongs to its system — say whose with "
+                          f"`in: <system>`. The 15th of a Persian month and of a Gregorian one are different repetitions")
+        else:
+            lv = row.get('levels')
+            names = [l.get('level') for l in lv] if isinstance(lv, list) else []
+            if each not in names:
+                errors.append(f"{where}: system '{row['system']}' has no level '{each}' — {names or 'it declares no named levels'}")
+        return
+    if not isinstance(every, dict) or not isinstance(every.get('count'), int) or isinstance(every.get('count'), bool) or every['count'] <= 0:
+        errors.append(f"{where}.every: must be {{count}} (every Nth neighbour) or {{count, unit}} (every N units), count a positive whole number")
+        return
+    if every.get('unit') is None:
+        nb = (row or {}).get('neighbours')
+        if row and nb in (None, 'none'):
+            errors.append(f"{where}: system '{row['system']}' declares `neighbours: {nb}` — its positions have no next one, "
+                          f"so there is no Nth")
+        return
+    u = UNITS.get(str(every['unit']))
+    metered = ((row or {}).get('restrictions') or {}).get('metered') or asp.get('metered')
+    if not u:
+        errors.append(f"{where}.every.unit '{every['unit']}' is not in the `units` registry {sorted(UNITS)}")
+    elif not metered or metered == 'none':
+        errors.append(f"{where}: neither aspect '{an}' nor the system it names is metered, so a stride has no length — "
+                      f"stride by neighbours (`every: {{count}}`), or name a metered system with `in:`")
+    elif u.get('dimension') != metered:
+        errors.append(f"{where}.every.unit '{every['unit']}' measures {u.get('dimension')}, and this is metered in {metered}")
+
+
+def ctl_recurrences(c):
+    """An attribute of the mapping itself that holds a recurrence."""
+    for attr, _ in _facet(attribute_form(c.term, c.sch), 'recurrence', 'self'):
+        v = c.node.get(attr) if isinstance(c.node, dict) else None
+        if v is not None:
+            check_recurrence(f"{c.base}: {c.term}.{attr}", v)
+    return None
 
 
 def ctl_extents(c):
@@ -1247,6 +1334,13 @@ def ectl_pointer_fields(e):
 
 # Declaration order IS execution order, and it is the order these rules ran in before. `on_aspect` must
 # precede `cross_aspect`: the second reads what the first computed.
+def ectl_entry_recurrences(c):
+    for attr, _ in _facet(c.form, 'recurrence', 'entry'):
+        v = c.entry.get(attr)
+        if v is not None:
+            check_recurrence(f"{c.base}: {c.term}[{c.label}].{attr}", v)
+
+
 def ectl_entry_extents(c):
     """`entry_extents:` — attrs INSIDE an entry that hold a region (11.2)."""
     for attr, _ in _facet(c.form, 'extent', 'entry'):
@@ -1271,6 +1365,7 @@ ENTRY_CONTROLLERS = (
     ('entry_one_of', ectl_entry_one_of),
     ('cells: requires / expects', ectl_entry_required_if),
     ('in: extent', ectl_entry_extents),
+    ('in: recurrence', ectl_entry_recurrences),
     ('in: pointer', ectl_pointer_fields),
 )
 
@@ -1575,6 +1670,7 @@ CONTROLLERS = (
     ('attr: required (value)', ctl_required_attrs),
     ('in: type (value)', ctl_attr_types),
     ('in: extent (value)', ctl_extents),
+    ('in: recurrence (value)', ctl_recurrences),
     ('key_form', ctl_key_form),
     ('entries', ctl_entries),
     ('on_sequence', ctl_on_sequence),
