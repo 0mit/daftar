@@ -456,7 +456,7 @@ def check_extent(where, node):
 
 def ctl_extents(c):
     """`attr_extents:` — attrs of the mapping that hold a region of some aspect's domain."""
-    for attr in (c.sch.get('attr_extents') or []):
+    for attr, _ in _facet(attribute_form(c.term, c.sch), 'extent') if attribute_form(c.term, c.sch)['scope'] == 'self' else []:
         v = c.node.get(attr) if isinstance(c.node, dict) else None
         if v is not None:
             check_extent(f"{c.base}: {c.term}.{attr}", v)
@@ -769,16 +769,90 @@ def entries_of(shape, node):
 
 # --- the per-ENTRY rules, one controller per declared entry key ---------------------------------------
 # Same split as the term controllers, one level down: named after the schema key, never after a term.
+# ============================== THE ATTRIBUTE FORM (S1 of the figure grammar) ==============================
+# The schema language says one sentence in a dozen spellings: "this attribute is a position in that domain".
+# `entry_values`, `entry_types`, `entry_in_registry`, `on_aspect`, `entry_pattern`… are each a map keyed by
+# ATTRIBUTE, so one attribute's law is scattered across as many constructs as it has properties, and stated a
+# second time, for people, in the term's `entry_attrs:`. This turns the matrix the other way IN MEMORY: one record
+# per attribute, saying what it is a position in, whether it is required, and what it means. The interpreter below
+# reads ONLY this form. The law's text is unchanged — that is step S2, and it may not start until this form has
+# been shown to reproduce the old gate byte for byte (test/diffgate.py in a garden), because a form that cannot
+# carry today's law exactly is not the law's form.
+#
+# FACETS, each the old construct it came from. `order` keeps each construct's own attribute order, so findings
+# print in the order they always did: the normal form is keyed by attribute, the WALK is still facet by facet.
+_ENTRY_FACETS = (('required', 'entry_required_attrs'), ('values', 'entry_values'), ('type', 'entry_types'),
+                 ('pattern', 'entry_pattern'), ('soft', 'entry_soft_pattern'), ('registry', 'entry_in_registry'),
+                 ('extent', 'entry_extents'), ('pointer', 'pointer_fields'), ('ref', 'entry_ref_fields'),
+                 ('one_of', 'entry_one_of'))
+_SELF_FACETS = (('required', 'required_attrs'), ('type', 'attr_types'), ('extent', 'attr_extents'),
+                ('ref', 'ref_fields'))
+_NORM = {}
+
+
+def attribute_form(term, sch):
+    """The term's law, keyed by attribute: {scope, attrs: {name: {facet: rule}}, order: {facet: [names]}, cells}."""
+    if term in _NORM and _NORM[term][0] is sch:
+        return _NORM[term][1]
+    _t = TERMS.get(term) or {}
+    _entry = any(sch.get(k) for _f, k in _ENTRY_FACETS if k != 'pointer_fields') or sch.get('on_aspect') \
+        or sch.get('entry_pattern_from_registry') or sch.get('shape') in ('list_of_entries', 'open_map_of_entries')
+    form = {'scope': 'entry' if _entry else 'self', 'attrs': {}, 'order': {}, 'cells': [], 'self_ref': False}
+
+    def put(facet, name, rule):
+        form['attrs'].setdefault(name, {})[facet] = rule
+        form['order'].setdefault(facet, []).append(name)
+
+    for facet, key in (_ENTRY_FACETS if _entry else _SELF_FACETS + (('pointer', 'pointer_fields'),)):
+        _v = sch.get(key)
+        for name in (_v if isinstance(_v, (list, dict)) else []):
+            if name == 'self' and facet == 'ref':
+                form['self_ref'] = True          # the MARKER "the value is itself a ref" — not an attribute
+            else:
+                put(facet, name, _v[name] if isinstance(_v, dict) else True)
+    if not _entry and sch.get('ref_fields') and 'self' in sch['ref_fields']:
+        form['self_ref'] = True
+    for _a in _aspects_of(sch):
+        put('aspect', _a.get('attr') or _a.get('aspect'), _a)
+    _pfr = sch.get('entry_pattern_from_registry')
+    if isinstance(_pfr, dict) and _pfr.get('attr'):
+        put('system_from', _pfr['attr'], _pfr)
+    for name, meaning in list((_t.get('entry_attrs') or {}).items()) + list((_t.get('attrs') or {}).items()):
+        put('meaning', name, meaning)
+    # CELLS: a combination of what an entry holds that may not stand (error) or should not (warning). Three old
+    # constructs, one idea. `phase` only keeps each where it always ran, either side of `entry_one_of`.
+    for _kind, _sev in (('incoherent', 'error'), ('in_breach', 'warn')):
+        for _c in ((sch.get('cross_aspect') or {}).get(_kind) or []):
+            form['cells'].append({'phase': 'cross', 'origin': _kind, 'severity': _sev, 'why': _c.get('why'),
+                                  'when': {k: ('is', v) for k, v in _c.items() if k != 'why'}, 'lacks': []})
+    for _r in (sch.get('entry_required_if') or []):
+        form['cells'].append({'phase': 'cond', 'origin': 'required_if', 'severity': 'error', 'why': None,
+                              'when': {_r.get('attr'): ('is', _r.get('equals'))},
+                              'lacks': list(_r.get('requires') or [])})
+    for _r in (sch.get('entry_expect_if') or []):
+        form['cells'].append({'phase': 'cond', 'origin': 'expect_if', 'severity': 'warn', 'why': _r.get('why'),
+                              'when': {_r.get('attr'): ('starts', _r.get('starts_with'))},
+                              'lacks': [_r.get('expects')]})
+    _NORM[term] = (sch, form)
+    return form
+
+
+def _facet(form, facet):
+    """(attribute, rule) for every attribute carrying this facet, in the order the law stated them."""
+    return [(n, form['attrs'][n][facet]) for n in form['order'].get(facet, [])]
+
+
 # The cell carries `eff` — each aspect's EFFECTIVE position, stated or defaulted — because `on_aspect`
 # and `cross_aspect` used to compute that separately from the same inputs. Two derivations of one fact
 # can disagree about what a default means, and the one that disagrees silently is the dangerous one.
 class _ECell:
     """One entry under inspection."""
-    __slots__ = ('base', 'term', 'label', 'entry', 'sch', 'ref', 'eff')
+    __slots__ = ('base', 'term', 'label', 'entry', 'sch', 'form', 'ref', 'eff')
 
     def __init__(self, base, term, label, entry, sch):
         self.base, self.term, self.label = base, term, label
         self.entry, self.sch = entry, sch
+        self.form = attribute_form(term, sch)
         self.ref = f"{term}[{label}]"
         self.eff = {}                       # filled by ectl_on_aspect, read by ectl_cross_aspect
 
@@ -792,40 +866,21 @@ class _ECell:
 # in the term's `entry_attrs:` / `attrs:` — or it is refused. Prose is not forbidden; it goes in an attribute the
 # term declares FOR prose (`note`, `why`), where a reader knows to look. A term that declares no attribute at all
 # (`owns`, `details`, `attributes`) is a free container by declaration and is left alone.
-_ATTR_MAPS = ('entry_values', 'entry_types', 'attr_types', 'entry_pattern', 'entry_soft_pattern',
-              'entry_in_registry', 'pointer_fields')
-_ATTR_LISTS = ('entry_required_attrs', 'required_attrs', 'entry_ref_fields', 'ref_fields', 'entry_one_of',
-               'entry_extents', 'attr_extents')
 _REF_FORM = ('bean', 'mapping', 'field')
 
 
 def declared_attrs(term, sch):
-    """Every attribute the term declares, from whichever construct declares it. Derived from the schema and
-    the term's own description — never listed here."""
-    _t = TERMS.get(term) or {}
-    out = set(_t.get('entry_attrs') or {}) | set(_t.get('attrs') or {})
-    for _k in _ATTR_MAPS:
-        out |= set(sch.get(_k) or {})
-    _self = False
-    for _k in _ATTR_LISTS:
-        for _a in (sch.get(_k) or []):
-            if _a == 'self' and _k in ('ref_fields', 'entry_ref_fields'):
-                _self = True                # the MARKER "the value is itself a ref" — not an attribute
-            else:
-                out.add(_a)                 # (`self` under entry_one_of IS one: a person answers for themselves)
-    for _a in _aspects_of(sch):
-        out.add(_a.get('attr') or _a.get('aspect'))
-    _pfr = sch.get('entry_pattern_from_registry')
-    if isinstance(_pfr, dict) and _pfr.get('attr'):
-        out.add(_pfr['attr'])
+    """Every attribute the term declares — which, since S1, is simply every attribute in its attribute form."""
+    _form = attribute_form(term, sch)
+    out = set(_form['attrs'])
     if isinstance(sch.get('alt_form'), dict):
         out.add(sch['alt_form'].get('key'))
-    if _self and out:
+    if _form['self_ref'] and out:
         out |= set(_REF_FORM)               # the value IS a ref, so the link form's own keys belong to it
     if out:
         out.add('provenance')               # MODEL.md: "a fact whose source differs from the bean's default
                                             # carries its own record" — any entry may, so no term restates it
-    return out, _self
+    return out, _form['self_ref']
 
 
 def undeclared_attrs(base, term, where, node, sch):
@@ -845,7 +900,7 @@ def ectl_declared_attrs(e):
 
 
 def ectl_entry_required_attrs(e):
-    missing = [k for k in (e.sch.get('entry_required_attrs') or []) if k not in e.entry]
+    missing = [k for k, _ in _facet(e.form, 'required') if k not in e.entry]
     if missing:
         errors.append(f"{e.base}: {e.ref} missing {missing} "
                       f"(VOCAB {e.term}.schema.entry_required_attrs)")
@@ -857,14 +912,14 @@ UNKNOWN_VALUE_HINT = (" — if the value is real and the vocabulary lacks it, ke
 
 
 def ectl_entry_values(e):
-    for attr, allowed in (e.sch.get('entry_values') or {}).items():
+    for attr, allowed in _facet(e.form, 'values'):
         if e.entry.get(attr) is not None and e.entry[attr] not in allowed:
             errors.append(f"{e.base}: {e.ref}.{attr} '{e.entry[attr]}' not in {allowed} "
                           f"(VOCAB {e.term}.schema.entry_values)")
 
 
 def ectl_entry_types(e):
-    for attr, typ in (e.sch.get('entry_types') or {}).items():
+    for attr, typ in _facet(e.form, 'type'):
         if e.entry.get(attr) is None:
             continue
         check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ)
@@ -873,7 +928,7 @@ def ectl_entry_types(e):
 def ectl_entry_pattern(e):
     """`entry_pattern:` (11.0) — an entry attr must match a form the TERM owns (a position whose system owns
     its form uses `entry_pattern_from_registry` instead)."""
-    for attr, pat in (e.sch.get('entry_pattern') or {}).items():
+    for attr, pat in _facet(e.form, 'pattern'):
         v = e.entry.get(attr)
         if v is not None and not re.match(pat, str(v)):
             errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not in the form this term declares ({pat})")
@@ -884,7 +939,7 @@ def ectl_entry_soft_pattern(e):
     """`entry_soft_pattern:` (11.0) — the same as a WARNING: the form a value SHOULD take while a corpus is
     migrated onto it. A warning says what to fix; an error would refuse a garden's next commit for a value it
     has carried for months."""
-    for attr, rule in (e.sch.get('entry_soft_pattern') or {}).items():
+    for attr, rule in _facet(e.form, 'soft'):
         vals = e.entry.get(attr)
         for v in (vals if isinstance(vals, list) else [vals]):
             if v is not None and not re.match(rule.get('pattern', ''), str(v)):
@@ -917,7 +972,7 @@ def ectl_entry_in_registry(e):
     the registry it was copied from. This is the argument `values_consistent_with` already makes for a
     term's own enum, applied one level down to an entry's.
     """
-    for attr, rule in (e.sch.get('entry_in_registry') or {}).items():
+    for attr, rule in _facet(e.form, 'registry'):
         val = e.entry.get(attr)
         if val is None:
             continue
@@ -949,7 +1004,7 @@ def ectl_entry_pattern_from_registry(e):
     A system with genuinely no canonical form declares `pattern: none`, and that DELIBERATE absence is
     honoured rather than treated as an unstated one — the same distinction `enforced_by: none` draws.
     """
-    rule = e.sch.get('entry_pattern_from_registry')
+    rule = next((r for _n, r in _facet(e.form, 'system_from')), None)
     if not rule:
         return
     val = e.entry.get(rule.get('attr'))
@@ -1001,10 +1056,9 @@ def ectl_on_aspect(e):
     This also RECORDS each aspect's effective position on the cell, because `cross_aspect` needs exactly
     the same derivation and used to repeat it.
     """
-    for _asp in _aspects_of(e.sch):
+    for _aattr, _asp in _facet(e.form, 'aspect'):
         _adef = ASPECTS.get(_asp['aspect']) or {}
         _apos = {p['position'] for p in (_adef.get('positions') or []) if isinstance(p, dict)}
-        _aattr = _asp.get('attr', _asp['aspect'])
         _val = e.entry.get(_aattr, _asp.get('default'))
         e.eff[_aattr] = _val
         if _apos and _val not in _apos:
@@ -1012,22 +1066,46 @@ def ectl_on_aspect(e):
                           f"'{_asp['aspect']}' {sorted(_apos)}")
 
 
-def ectl_cross_aspect(e):
-    """`cross_aspect:` — two aspects on one term span a GRID, and a grid has cells neither square sees.
+def _cell_holds(e, cell):
+    """Does this entry sit IN the cell? A `cross` cell reads each aspect's EFFECTIVE position (stated, else the
+    declared default) and, FOR NOW, nothing else — exactly what `cross_aspect` could see. That blindness is the
+    known over-fire on loopback endpoints (the cell cannot see `exposure`); lifting it changes verdicts, so it is
+    a later, separately ratified step and not part of proving this form equivalent."""
+    for attr, (how, want) in cell['when'].items():
+        have = e.eff.get(attr) if cell['phase'] == 'cross' else e.entry.get(attr)
+        if how == 'is' and have != want:
+            return False
+        if how == 'starts' and not str(have or '').startswith(str(want)):
+            return False
+    return bool(cell['when'])
 
-    Combinations that contradict each other, and combinations that are merely true and bad. Checking
-    each aspect alone silently permits both. INCOHERENT is an error — the two positions cannot both
-    hold, so one is mis-stated. IN BREACH is a WARNING: both CAN hold, the system is simply in a state
-    that needs action, and a gate that refused to record a true bad state would push it back into prose.
-    """
-    _cross = e.sch.get('cross_aspect') or {}
-    for _kind, _sink in (('incoherent', errors), ('in_breach', warns)):
-        for _combo in (_cross.get(_kind) or []):
-            _pairs = {k: v for k, v in _combo.items() if k != 'why'}
-            if _pairs and all(e.eff.get(k) == v for k, v in _pairs.items()):
-                _sink.append(f"{e.base}: {e.ref} is {_kind.upper().replace('_', ' ')} — "
-                             + ', '.join(f'{k}:{v}' for k, v in _pairs.items())
-                             + f" — {_combo.get('why', 'the two positions do not sit together')}")
+
+def _cells(e, phase):
+    """A CELL is a combination of what an entry holds that may not stand (an error) or should not (a warning).
+    `cross_aspect`, `entry_required_if` and `entry_expect_if` were three constructs for this one idea. Two aspects
+    span a GRID, and a grid has cells neither square sees; a form that implies an attribute is the same shape."""
+    for cell in e.form['cells']:
+        if cell['phase'] != phase or not _cell_holds(e, cell):
+            continue
+        lack = [k for k in cell['lacks'] if not e.entry.get(k)]
+        if cell['lacks'] and not lack:
+            continue
+        sink = errors if cell['severity'] == 'error' else warns
+        if phase == 'cross':
+            sink.append(f"{e.base}: {e.ref} is {cell['origin'].upper().replace('_', ' ')} — "
+                        + ', '.join(f'{k}:{v[1]}' for k, v in cell['when'].items())
+                        + f" — {cell['why'] or 'the two positions do not sit together'}")
+            continue
+        (attr, (_how, want)), = cell['when'].items()
+        if cell['origin'] == 'required_if':
+            sink.append(f"{e.base}: {e.ref} declares {attr}:{want} but carries no {', '.join(lack)}")
+        else:
+            sink.append(f"{e.base}: {e.ref} has a {attr} starting '{want}' "
+                        f"but no {lack[0]} — {cell['why'] or 'unverifiable'}")
+
+
+def ectl_cross_aspect(e):
+    _cells(e, 'cross')
 
 
 def ectl_entry_one_of(e):
@@ -1037,25 +1115,12 @@ def ectl_entry_one_of(e):
 
 
 def ectl_entry_required_if(e):
-    for rule in (e.sch.get('entry_required_if') or []):
-        if e.entry.get(rule.get('attr')) == rule.get('equals'):
-            lack = [k for k in (rule.get('requires') or []) if not e.entry.get(k)]
-            if lack:
-                errors.append(f"{e.base}: {e.ref} declares {rule['attr']}:{rule['equals']} "
-                              f"but carries no {', '.join(lack)}")
-
-
-def ectl_entry_expect_if(e):
-    for rule in (e.sch.get('entry_expect_if') or []):
-        val = str(e.entry.get(rule.get('attr')) or '')
-        if val.startswith(str(rule.get('starts_with'))) and not e.entry.get(rule.get('expects')):
-            warns.append(f"{e.base}: {e.ref} has a {rule['attr']} starting '{rule['starts_with']}' "
-                         f"but no {rule['expects']} — {rule.get('why', 'unverifiable')}")
+    _cells(e, 'cond')
 
 
 def ectl_pointer_fields(e):
     """`pointer_fields:` — '<section>.<key>' on this bean | {bean,field} elsewhere | 'file:<path>'."""
-    for attr, ptype in (e.sch.get('pointer_fields') or {}).items():
+    for attr, ptype in _facet(e.form, 'pointer'):
         if ptype != 'bean_field_pointer':
             continue
         val = e.entry.get(attr)
@@ -1080,7 +1145,7 @@ def ectl_pointer_fields(e):
 # precede `cross_aspect`: the second reads what the first computed.
 def ectl_entry_extents(c):
     """`entry_extents:` — attrs INSIDE an entry that hold a region (11.2)."""
-    for attr in (c.sch.get('entry_extents') or []):
+    for attr, _ in _facet(c.form, 'extent'):
         v = c.entry.get(attr)
         if v is not None:
             check_extent(f"{c.base}: {c.term}[{c.label}].{attr}", v)
@@ -1101,7 +1166,6 @@ ENTRY_CONTROLLERS = (
     ('cross_aspect', ectl_cross_aspect),
     ('entry_one_of', ectl_entry_one_of),
     ('entry_required_if', ectl_entry_required_if),
-    ('entry_expect_if', ectl_entry_expect_if),
     ('entry_extents', ectl_entry_extents),
     ('pointer_fields', ectl_pointer_fields),
 )
@@ -1287,7 +1351,7 @@ def ctl_required_attrs(c):
     """`required_attrs:` — attributes the mapping itself must carry. And, since 12.0, ONLY declared ones."""
     if c.sch.get('shape') == 'mapping' and not c.sch.get('key_form') and not c.sch.get('entry_one_of'):
         undeclared_attrs(c.base, c.term, c.term, c.node, c.sch)
-    for attr in (c.sch.get('required_attrs') or []):
+    for attr, _ in _facet(attribute_form(c.term, c.sch), 'required') if attribute_form(c.term, c.sch)['scope'] == 'self' else []:
         if isinstance(c.node, dict) and attr not in c.node:
             errors.append(f"{c.base}: {c.term} requires '{attr}' (VOCAB {c.term}.schema.required_attrs)")
     return None
@@ -1295,7 +1359,7 @@ def ctl_required_attrs(c):
 
 def ctl_attr_types(c):
     """`attr_types:` — types for the mapping's OWN attrs."""
-    for attr, typ in (c.sch.get('attr_types') or {}).items():
+    for attr, typ in _facet(attribute_form(c.term, c.sch), 'type') if attribute_form(c.term, c.sch)['scope'] == 'self' else []:
         v = c.node.get(attr) if isinstance(c.node, dict) else None
         if v is not None:
             check_value_type(f"{c.base}: {c.term}", attr, v, typ)

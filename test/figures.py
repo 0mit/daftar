@@ -166,6 +166,44 @@ out = bean("owns:\n  anything_at_all: \"owns is a free container by declaration\
 check("12.0: a term that declares no attribute stays a free container", "does not declare" not in out, out[-900:])
 os.remove(BEAN)
 
+# ---------------------------------------------------------------- the attribute form (S1)
+# The gate translates every term's schema into ONE record per attribute and interprets only that. These pin the
+# form itself; that it reproduces the old gate byte for byte is proved in a garden, by test/diffgate.py.
+import importlib.util, io, contextlib
+_vp = os.path.join(G, "VOCAB.md"); _vs = open(_vp).read()
+if "extends_profiles:" in _vs:
+    _vs = (_vs.replace("extends_profiles: []", "extends_profiles: [network, domain]") if "extends_profiles: []" in _vs
+           else _vs.replace("extends_profiles: [", "extends_profiles: [network, domain, ", 1))
+else:
+    _vs = _vs.replace("\n---", "\nextends_profiles: [network, domain]\n---", 1)
+open(_vp, "w").write(_vs)
+_cwd = os.getcwd(); os.chdir(G)
+_spec = importlib.util.spec_from_file_location("dmcheck_probe", os.path.join(G, "bin", "dmcheck.py"))
+_gate = importlib.util.module_from_spec(_spec)
+_argv, sys.argv = sys.argv, ["dmcheck.py", "--all"]
+with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+    try:
+        _spec.loader.exec_module(_gate)
+    except SystemExit:
+        pass
+sys.argv = _argv; os.chdir(_cwd)
+_f = _gate.attribute_form("endpoints", _gate.SCHEMAS["endpoints"])
+check("S1: one record per attribute — `at` says it is required and takes its form from the system beside it",
+      _f["attrs"]["at"].get("required") is True and _f["attrs"]["at"]["system_from"]["keyed_by"] == "system"
+      and "meaning" in _f["attrs"]["at"], str(_f["attrs"].get("at"))[:300])
+check("S1: an aspect position is an attribute like any other", _f["attrs"]["permission"]["aspect"]["aspect"] == "capability")
+check("S1: cross_aspect became cells", [c["origin"] for c in _f["cells"]] == ["in_breach", "in_breach"], str(_f["cells"])[:200])
+_f = _gate.attribute_form("analysis_cache", _gate.SCHEMAS["analysis_cache"])
+check("S1: ...and so did entry_required_if and entry_expect_if — three constructs, one idea",
+      sorted(c["origin"] for c in _f["cells"]) == ["expect_if", "required_if"], str(_f["cells"])[:300])
+_f = _gate.attribute_form("registration", _gate.SCHEMAS["registration"])
+check("S1: a mapping's own attributes take the same form, scoped to the value itself",
+      _f["scope"] == "self" and _f["attrs"]["expires"].get("type") == "iso_date" and _f["attrs"]["expires"].get("required") is True)
+_untyped = sorted(n for n, a in _gate.attribute_form("endpoints", _gate.SCHEMAS["endpoints"])["attrs"].items()
+                  if set(a) <= {"meaning"})
+check("S1: the form makes an UNTYPED attribute visible — `port` and `via_link` have a meaning and no rule",
+      _untyped == ["port", "via_link"], str(_untyped))
+
 shutil.rmtree(T, ignore_errors=True)
 print("\nfigures: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)
