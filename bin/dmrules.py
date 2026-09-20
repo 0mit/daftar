@@ -12,6 +12,7 @@ import os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmform          # a term's law keyed by attribute — the one reader of the schema constructs
 try:
     import yaml
 except ImportError:
@@ -108,8 +109,7 @@ for a in reg('aspects'):
         print(f"               {p['position']} ↔ {p['complement']}")
     print(f"               used by: " + ', '.join(
         n for n, t in TERMS.items()
-        for x in ([t['schema']['on_aspect']] if isinstance((t.get('schema') or {}).get('on_aspect'), dict)
-                  else (t.get('schema') or {}).get('on_aspect') or [])
+        for x in dmform.aspects_of(t.get('schema'))
         if x.get('aspect') == a['aspect']))
 
 if '--terms' in want:
@@ -134,10 +134,12 @@ if '--terms' in want:
             else:
                 print(f"  {n:20} [{TIER[n]}]  documentation only — no rule attached")
             continue
+        F = dmform.attribute_form(TERMS.get(n), s)
+        V = F['value']
         bits = []
-        if s.get('governs_anchor'): bits.append("anchor format")
+        if V.get('governs_anchor'): bits.append("anchor format")
         if s.get('shape'):   bits.append(s['shape'])
-        elif s.get('values') and not s.get('path'): bits.append("enum only (not carried on beans)")
+        elif V.get('values') and not s.get('path'): bits.append("enum only (not carried on beans)")
         if s.get('path'):    bits.append(f"at {s['path']}")
         if s.get('required') is True: bits.append("REQUIRED on every bean")
         for k, v in s.items():
@@ -148,26 +150,28 @@ if '--terms' in want:
                 bits.append(f"on the '{_a['aspect']}' sequence" + (" · must stay ACYCLIC" if _a.get('acyclic') else ""))
         print(f"  {n:20} [{TIER[n]}]  {' · '.join(bits)}")
         det = []
-        if s.get('values'):              det.append(f"values {s['values']}")
-        if s.get('values_from'):         det.append(f"values from term '{s['values_from']}'")
-        if s.get('required_attrs'):      det.append(f"needs {s['required_attrs']}")
-        if s.get('entry_required_attrs'):det.append(f"each entry needs {s['entry_required_attrs']}")
-        for a_, v in (s.get('entry_values') or {}).items():
+        _req_self = [a_ for a_, _ in dmform.facet(F, 'required', 'self')]
+        _req_entry = [a_ for a_, _ in dmform.facet(F, 'required', 'entry')]
+        if V.get('values'):              det.append(f"values {V['values']}")
+        if V.get('values_from'):         det.append(f"values from term '{V['values_from']}'")
+        if _req_self:                    det.append(f"needs {_req_self}")
+        if _req_entry:                   det.append(f"each entry needs {_req_entry}")
+        for a_, v in dmform.facet(F, 'values', 'entry'):
             det.append(f"entry.{a_} ∈ {v}")
-        for a_, v in (s.get('entry_types') or {}).items():
+        for a_, v in dmform.facet(F, 'type', 'entry'):
             det.append(f"entry.{a_} is {v}")
-        if s.get('entry_one_of'):        det.append(f"each entry has one of {s['entry_one_of']}")
+        if F['one_of']:                  det.append(f"each entry has one of {F['one_of']}")
         if s.get('key_form'):            det.append(f"keys: {s['key_form']}")
-        if s.get('facet_parity_with'):   det.append(f"same facets as '{s['facet_parity_with']}'")
-        if s.get('inverse_of'):          det.append(f"inverse of '{s['inverse_of']}' — held consistent")
-        if s.get('must_equal_kind_attr'):det.append(f"must equal kind.{s['must_equal_kind_attr']}")
+        if F['mirror']['parity_with']:   det.append(f"same facets as '{F['mirror']['parity_with']}'")
+        if F['mirror']['inverse_of']:    det.append(f"inverse of '{F['mirror']['inverse_of']}' — held consistent")
+        if F['matches']['equal_kind_attr']: det.append(f"must equal kind.{F['matches']['equal_kind_attr']}")
         if s.get('required_on_targets_of'): det.append(f"required on targets of '{s['required_on_targets_of']}'")
-        if s.get('governs_anchor'):
-            det.append(f"anchor '{s['governs_anchor']}' must be in canonical form: "
-                       f"{s.get('canonical_note') or s.get('value_form')}")
-        if s.get('entry_form_from_kind_attr'): det.append(f"form pinned by kind.{s['entry_form_from_kind_attr']}")
-        for x in ([s['on_aspect']] if isinstance(s.get('on_aspect'), dict) else s.get('on_aspect') or []):
-            det.append(f"entry.{x.get('attr', x['aspect'])} is a position on aspect '{x['aspect']}'"
+        if V.get('governs_anchor'):
+            det.append(f"anchor '{V['governs_anchor']}' must be in canonical form: "
+                       f"{V.get('canonical_note') or V.get('form')}")
+        if F['matches']['form_from_kind']: det.append(f"form pinned by kind.{F['matches']['form_from_kind']}")
+        for _an, x in dmform.facet(F, 'aspect', 'entry'):
+            det.append(f"entry.{_an} is a position on aspect '{x['aspect']}'"
                        f" (default {x.get('default')})")
         for d in det:
             print(f"      · {d}")

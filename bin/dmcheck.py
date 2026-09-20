@@ -19,6 +19,7 @@ Run manually and via the git pre-commit hook. 0=clean 1=errors 2=setup.
 import glob, os, re, sys, fnmatch, ipaddress, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmform
 import dmsafe          # the staged-state checks below run dmsafe's OWN comparison, not a copy of it
 try:
     import yaml
@@ -232,13 +233,14 @@ if _axis and _reg:
 
 def term_values(name):
     """The enum a term exports (for values_from / key_form: values_from:<term>)."""
-    return list((SCHEMAS.get(name) or {}).get('values') or [])
+    return list(form_of(name)['value'].get('values') or [])
 
 
 def allowed_values(sch):
-    if sch.get('values_from'):
-        return term_values(sch['values_from'])
-    return list(sch.get('values') or [])
+    _v = dmform.attribute_form(None, sch)['value']
+    if _v.get('values_from'):
+        return term_values(_v['values_from'])
+    return list(_v.get('values') or [])
 
 
 # --- vocab self-consistency: an exported enum must not drift from its own definition -------------
@@ -257,7 +259,7 @@ def collect_path(node, path):
 
 def check_vocab_enum_drift():
     for _name, _term in TERMS.items():
-        _paths = (_term.get('schema') or {}).get('values_consistent_with')
+        _paths = dmform.attribute_form(_term, _term.get('schema') or {})['value'].get('consistent_with')
         if not _paths:
             continue
         want = [v for p in _paths for v in collect_path(_term, p)]
@@ -329,10 +331,11 @@ def check_merge_identity():
             errors.append(f"VOCAB {_name}: a list of entries merged member by member needs `order: by-<field>"
                           f"[+<field>...]`, not '{_m.get('order')}' — without one, members are matched by content")
             continue
-        _required = set(_s.get('entry_required_attrs') or [])
-        _declared = (_required | set(_term.get('entry_attrs') or {})
-                     | {a for r in (_s.get('entry_required_if') or []) for a in (r.get('requires') or [])}
-                     | (REF_ATTRS if 'self' in (_s.get('entry_ref_fields') or []) else set()))
+        _form = dmform.attribute_form(_term, _s)
+        _required = {n for n, _ in _facet(_form, 'required', 'entry')}
+        _declared = (_required | {n for n, _ in _facet(_form, 'meaning')}
+                     | {a for c in _form['cells'] if c['origin'] == 'required_if' for a in c['lacks']}
+                     | (REF_ATTRS if _form['self_ref'] else set()))
         for _f, _may_lack in _ident:
             if _f not in _declared:
                 errors.append(f"VOCAB {_name}: merge identity '{_m['order']}' names '{_f}', which no entry of this "
@@ -456,7 +459,7 @@ def check_extent(where, node):
 
 def ctl_extents(c):
     """`attr_extents:` — attrs of the mapping that hold a region of some aspect's domain."""
-    for attr, _ in _facet(attribute_form(c.term, c.sch), 'extent') if attribute_form(c.term, c.sch)['scope'] == 'self' else []:
+    for attr, _ in _facet(attribute_form(c.term, c.sch), 'extent', 'self'):
         v = c.node.get(attr) if isinstance(c.node, dict) else None
         if v is not None:
             check_extent(f"{c.base}: {c.term}.{attr}", v)
@@ -730,12 +733,7 @@ def check_establishing_anchor_dedup():
 # ============================== THE INTERPRETER ==============================
 # ONE loop, driven entirely by `schema:` blocks in the vocabulary. No term is named in this code.
 
-def _aspects_of(sch):
-    """A term may sit on ONE aspect or SEVERAL: `on_aspect` takes a mapping or a list of them."""
-    a = sch.get('on_aspect')
-    if isinstance(a, dict):
-        a = [a]
-    return [x for x in (a or []) if isinstance(x, dict) and x.get('aspect')]
+_aspects_of = dmform.aspects_of
 
 
 def path_values(fm, path):
@@ -770,76 +768,23 @@ def entries_of(shape, node):
 # --- the per-ENTRY rules, one controller per declared entry key ---------------------------------------
 # Same split as the term controllers, one level down: named after the schema key, never after a term.
 # ============================== THE ATTRIBUTE FORM (S1 of the figure grammar) ==============================
-# The schema language says one sentence in a dozen spellings: "this attribute is a position in that domain".
-# `entry_values`, `entry_types`, `entry_in_registry`, `on_aspect`, `entry_pattern`… are each a map keyed by
-# ATTRIBUTE, so one attribute's law is scattered across as many constructs as it has properties, and stated a
-# second time, for people, in the term's `entry_attrs:`. This turns the matrix the other way IN MEMORY: one record
-# per attribute, saying what it is a position in, whether it is required, and what it means. The interpreter below
-# reads ONLY this form. The law's text is unchanged — that is step S2, and it may not start until this form has
-# been shown to reproduce the old gate byte for byte (test/diffgate.py in a garden), because a form that cannot
-# carry today's law exactly is not the law's form.
-#
-# FACETS, each the old construct it came from. `order` keeps each construct's own attribute order, so findings
-# print in the order they always did: the normal form is keyed by attribute, the WALK is still facet by facet.
-_ENTRY_FACETS = (('required', 'entry_required_attrs'), ('values', 'entry_values'), ('type', 'entry_types'),
-                 ('pattern', 'entry_pattern'), ('soft', 'entry_soft_pattern'), ('registry', 'entry_in_registry'),
-                 ('extent', 'entry_extents'), ('pointer', 'pointer_fields'), ('ref', 'entry_ref_fields'),
-                 ('one_of', 'entry_one_of'))
-_SELF_FACETS = (('required', 'required_attrs'), ('type', 'attr_types'), ('extent', 'attr_extents'),
-                ('ref', 'ref_fields'))
+# `bin/dmform.py` turns a term's schema into ONE record per attribute, and everything below reads only that. The
+# law's text is unchanged — rewriting it into this form is S2, and it may not start until every reader is here.
 _NORM = {}
 
 
 def attribute_form(term, sch):
-    """The term's law, keyed by attribute: {scope, attrs: {name: {facet: rule}}, order: {facet: [names]}, cells}."""
-    if term in _NORM and _NORM[term][0] is sch:
-        return _NORM[term][1]
-    _t = TERMS.get(term) or {}
-    _entry = any(sch.get(k) for _f, k in _ENTRY_FACETS if k != 'pointer_fields') or sch.get('on_aspect') \
-        or sch.get('entry_pattern_from_registry') or sch.get('shape') in ('list_of_entries', 'open_map_of_entries')
-    form = {'scope': 'entry' if _entry else 'self', 'attrs': {}, 'order': {}, 'cells': [], 'self_ref': False}
-
-    def put(facet, name, rule):
-        form['attrs'].setdefault(name, {})[facet] = rule
-        form['order'].setdefault(facet, []).append(name)
-
-    for facet, key in (_ENTRY_FACETS if _entry else _SELF_FACETS + (('pointer', 'pointer_fields'),)):
-        _v = sch.get(key)
-        for name in (_v if isinstance(_v, (list, dict)) else []):
-            if name == 'self' and facet == 'ref':
-                form['self_ref'] = True          # the MARKER "the value is itself a ref" — not an attribute
-            else:
-                put(facet, name, _v[name] if isinstance(_v, dict) else True)
-    if not _entry and sch.get('ref_fields') and 'self' in sch['ref_fields']:
-        form['self_ref'] = True
-    for _a in _aspects_of(sch):
-        put('aspect', _a.get('attr') or _a.get('aspect'), _a)
-    _pfr = sch.get('entry_pattern_from_registry')
-    if isinstance(_pfr, dict) and _pfr.get('attr'):
-        put('system_from', _pfr['attr'], _pfr)
-    for name, meaning in list((_t.get('entry_attrs') or {}).items()) + list((_t.get('attrs') or {}).items()):
-        put('meaning', name, meaning)
-    # CELLS: a combination of what an entry holds that may not stand (error) or should not (warning). Three old
-    # constructs, one idea. `phase` only keeps each where it always ran, either side of `entry_one_of`.
-    for _kind, _sev in (('incoherent', 'error'), ('in_breach', 'warn')):
-        for _c in ((sch.get('cross_aspect') or {}).get(_kind) or []):
-            form['cells'].append({'phase': 'cross', 'origin': _kind, 'severity': _sev, 'why': _c.get('why'),
-                                  'when': {k: ('is', v) for k, v in _c.items() if k != 'why'}, 'lacks': []})
-    for _r in (sch.get('entry_required_if') or []):
-        form['cells'].append({'phase': 'cond', 'origin': 'required_if', 'severity': 'error', 'why': None,
-                              'when': {_r.get('attr'): ('is', _r.get('equals'))},
-                              'lacks': list(_r.get('requires') or [])})
-    for _r in (sch.get('entry_expect_if') or []):
-        form['cells'].append({'phase': 'cond', 'origin': 'expect_if', 'severity': 'warn', 'why': _r.get('why'),
-                              'when': {_r.get('attr'): ('starts', _r.get('starts_with'))},
-                              'lacks': [_r.get('expects')]})
-    _NORM[term] = (sch, form)
-    return form
+    if term not in _NORM or _NORM[term][0] is not sch:
+        _NORM[term] = (sch, dmform.attribute_form(TERMS.get(term), sch))
+    return _NORM[term][1]
 
 
-def _facet(form, facet):
-    """(attribute, rule) for every attribute carrying this facet, in the order the law stated them."""
-    return [(n, form['attrs'][n][facet]) for n in form['order'].get(facet, [])]
+_facet = dmform.facet
+
+
+def form_of(term):
+    """The attribute form of a term in force."""
+    return attribute_form(term, SCHEMAS.get(term) or {})
 
 
 # The cell carries `eff` — each aspect's EFFECTIVE position, stated or defaulted — because `on_aspect`
@@ -873,8 +818,8 @@ def declared_attrs(term, sch):
     """Every attribute the term declares — which, since S1, is simply every attribute in its attribute form."""
     _form = attribute_form(term, sch)
     out = set(_form['attrs'])
-    if isinstance(sch.get('alt_form'), dict):
-        out.add(sch['alt_form'].get('key'))
+    if _form['alt']:
+        out.add(_form['alt']['key'])
     if _form['self_ref'] and out:
         out |= set(_REF_FORM)               # the value IS a ref, so the link form's own keys belong to it
     if out:
@@ -900,7 +845,7 @@ def ectl_declared_attrs(e):
 
 
 def ectl_entry_required_attrs(e):
-    missing = [k for k, _ in _facet(e.form, 'required') if k not in e.entry]
+    missing = [k for k, _ in _facet(e.form, 'required', 'entry') if k not in e.entry]
     if missing:
         errors.append(f"{e.base}: {e.ref} missing {missing} "
                       f"(VOCAB {e.term}.schema.entry_required_attrs)")
@@ -912,14 +857,14 @@ UNKNOWN_VALUE_HINT = (" — if the value is real and the vocabulary lacks it, ke
 
 
 def ectl_entry_values(e):
-    for attr, allowed in _facet(e.form, 'values'):
+    for attr, allowed in _facet(e.form, 'values', 'entry'):
         if e.entry.get(attr) is not None and e.entry[attr] not in allowed:
             errors.append(f"{e.base}: {e.ref}.{attr} '{e.entry[attr]}' not in {allowed} "
                           f"(VOCAB {e.term}.schema.entry_values)")
 
 
 def ectl_entry_types(e):
-    for attr, typ in _facet(e.form, 'type'):
+    for attr, typ in _facet(e.form, 'type', 'entry'):
         if e.entry.get(attr) is None:
             continue
         check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ)
@@ -928,7 +873,7 @@ def ectl_entry_types(e):
 def ectl_entry_pattern(e):
     """`entry_pattern:` (11.0) — an entry attr must match a form the TERM owns (a position whose system owns
     its form uses `entry_pattern_from_registry` instead)."""
-    for attr, pat in _facet(e.form, 'pattern'):
+    for attr, pat in _facet(e.form, 'pattern', 'entry'):
         v = e.entry.get(attr)
         if v is not None and not re.match(pat, str(v)):
             errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not in the form this term declares ({pat})")
@@ -939,7 +884,7 @@ def ectl_entry_soft_pattern(e):
     """`entry_soft_pattern:` (11.0) — the same as a WARNING: the form a value SHOULD take while a corpus is
     migrated onto it. A warning says what to fix; an error would refuse a garden's next commit for a value it
     has carried for months."""
-    for attr, rule in _facet(e.form, 'soft'):
+    for attr, rule in _facet(e.form, 'soft', 'entry'):
         vals = e.entry.get(attr)
         for v in (vals if isinstance(vals, list) else [vals]):
             if v is not None and not re.match(rule.get('pattern', ''), str(v)):
@@ -949,7 +894,7 @@ def ectl_entry_soft_pattern(e):
 
 def ectl_entry_must_match(e):
     """An entry attr pinned to a registry row selected by a field on the bean (e.g. crown <- nature)."""
-    for rule in (e.sch.get('entry_must_match') or []):
+    for rule in e.form['matches']['entry']:
         val = e.entry.get(rule.get('attr'))
         if val is None:
             continue
@@ -972,7 +917,7 @@ def ectl_entry_in_registry(e):
     the registry it was copied from. This is the argument `values_consistent_with` already makes for a
     term's own enum, applied one level down to an entry's.
     """
-    for attr, rule in _facet(e.form, 'registry'):
+    for attr, rule in _facet(e.form, 'registry', 'entry'):
         val = e.entry.get(attr)
         if val is None:
             continue
@@ -1004,7 +949,7 @@ def ectl_entry_pattern_from_registry(e):
     A system with genuinely no canonical form declares `pattern: none`, and that DELIBERATE absence is
     honoured rather than treated as an unstated one — the same distinction `enforced_by: none` draws.
     """
-    rule = next((r for _n, r in _facet(e.form, 'system_from')), None)
+    rule = next((r for _n, r in _facet(e.form, 'system_from', 'entry')), None)
     if not rule:
         return
     val = e.entry.get(rule.get('attr'))
@@ -1032,7 +977,7 @@ def ectl_entry_form_from_kind_attr(e):
     Any form some kind pins is available ONLY to kinds that pin it, so no bean can short-circuit its
     ownership chain straight to the axiom: the crown is reachable through your chain, not instead of it.
     """
-    _fk = e.sch.get('entry_form_from_kind_attr')
+    _fk = e.form['matches']['form_from_kind']
     if not _fk:
         return
     _kind = ALL_FM.get(e.base, {}).get('kind')
@@ -1056,7 +1001,7 @@ def ectl_on_aspect(e):
     This also RECORDS each aspect's effective position on the cell, because `cross_aspect` needs exactly
     the same derivation and used to repeat it.
     """
-    for _aattr, _asp in _facet(e.form, 'aspect'):
+    for _aattr, _asp in _facet(e.form, 'aspect', 'entry'):
         _adef = ASPECTS.get(_asp['aspect']) or {}
         _apos = {p['position'] for p in (_adef.get('positions') or []) if isinstance(p, dict)}
         _val = e.entry.get(_aattr, _asp.get('default'))
@@ -1109,7 +1054,7 @@ def ectl_cross_aspect(e):
 
 
 def ectl_entry_one_of(e):
-    one_of = list(e.sch.get('entry_one_of') or [])
+    one_of = list(e.form['one_of'])
     if one_of and not any(k in e.entry for k in one_of):
         errors.append(f"{e.base}: {e.ref} needs one of {one_of} (VOCAB {e.term}.schema.entry_one_of)")
 
@@ -1145,7 +1090,7 @@ def ectl_pointer_fields(e):
 # precede `cross_aspect`: the second reads what the first computed.
 def ectl_entry_extents(c):
     """`entry_extents:` — attrs INSIDE an entry that hold a region (11.2)."""
-    for attr, _ in _facet(c.form, 'extent'):
+    for attr, _ in _facet(c.form, 'extent', 'entry'):
         v = c.entry.get(attr)
         if v is not None:
             check_extent(f"{c.base}: {c.term}[{c.label}].{attr}", v)
@@ -1174,7 +1119,7 @@ ENTRY_CONTROLLERS = (
 def check_entry(base, term, label, entry, sch):
     """Every per-entry rule the schema language can express."""
     if not isinstance(entry, dict):
-        req = list(sch.get('entry_required_attrs') or [])
+        req = [n for n, _ in _facet(attribute_form(term, sch), 'required', 'entry')]
         errors.append(f"{base}: {term}[{label}] must be a mapping with {req}")
         return
     cell = _ECell(base, term, label, entry, sch)
@@ -1229,29 +1174,29 @@ def ctl_path(c):
 
 def ctl_governs_anchor(c):
     """`governs_anchor:` — a term may govern the FORMAT of the anchor values carrying its name."""
-    _ga = c.sch.get('governs_anchor')
+    _ga = form_of(c.term)['value'].get('governs_anchor')
     if not _ga:
         return None
     for _a in ((c.fm.get('identity') or {}).get('anchors') or []):
         if not isinstance(_a, dict) or _a.get('key') != _ga:
             continue
         _v = str(_a.get('value', ''))
-        _pat = c.sch.get('value_pattern')
+        _pat = form_of(c.term)['value'].get('pattern')
         if _pat and not re.match(_pat, _v):
             errors.append(f"{c.base}: anchor {_ga}='{_v}' is not in canonical form "
-                          f"({c.sch.get('canonical_note', _pat)}) (VOCAB {c.term}.schema.value_pattern)")
-        _cf = c.sch.get('compare_form')
+                          f"({form_of(c.term)['value'].get('canonical_note', _pat)}) (VOCAB {c.term}.schema.value_pattern)")
+        _cf = form_of(c.term)['value'].get('compare_form')
         if _cf in COMPARE_FORMS and COMPARE_FORMS[_cf](_v) != _v:
             warns.append(f"{c.base}: anchor {_ga}='{_v}' is compared as '{COMPARE_FORMS[_cf](_v)}' — store it in that "
                          f"form (VOCAB {c.term}.schema.compare_form: {_cf})")
-        _vr = c.sch.get('value_in_registry')
+        _vr = form_of(c.term)['value'].get('in_registry')
         if _vr:
             # (9.1) an anchor that IS a code of a published classification must be one of its codes
             _known = {str(r.get(_vr.get('take'))) for r in (registry(_vr.get('registry')) or []) if isinstance(r, dict)}
             if _v not in _known:
                 errors.append(f"{c.base}: anchor {_ga}='{_v}' is not a {_vr.get('registry')} code "
                               f"(VOCAB {c.term}.schema.value_in_registry)")
-        if c.sch.get('value_form') == 'ip':
+        if form_of(c.term)['value'].get('form') == 'ip':
             try:
                 ipaddress.ip_address(_v)
             except ValueError:
@@ -1304,7 +1249,7 @@ def ctl_required(c):
 
 def ctl_must_equal_kind_attr(c):
     """`must_equal_kind_attr:` — the value must agree with the registry row for this bean's kind."""
-    mk = c.sch.get('must_equal_kind_attr')
+    mk = form_of(c.term)['matches']['equal_kind_attr']
     if not mk:
         return None
     kreg = _row(KINDS, c.fm.get('kind'))
@@ -1341,7 +1286,7 @@ def ctl_shape(c):
 
 def ctl_alt_form(c):
     """`alt_form:` — an alternative single-key form (e.g. `owned_by: {via: ...}`)."""
-    alt = c.sch.get('alt_form') or {}
+    alt = form_of(c.term)['alt'] or {}
     if alt.get('key') and isinstance(c.node, dict) and alt['key'] in c.node:
         return STOP                 # DECLARED: the inherited form carries no facet keys to check
     return None
@@ -1349,9 +1294,9 @@ def ctl_alt_form(c):
 
 def ctl_required_attrs(c):
     """`required_attrs:` — attributes the mapping itself must carry. And, since 12.0, ONLY declared ones."""
-    if c.sch.get('shape') == 'mapping' and not c.sch.get('key_form') and not c.sch.get('entry_one_of'):
+    if c.sch.get('shape') == 'mapping' and not c.sch.get('key_form') and not form_of(c.term)['one_of']:
         undeclared_attrs(c.base, c.term, c.term, c.node, c.sch)
-    for attr, _ in _facet(attribute_form(c.term, c.sch), 'required') if attribute_form(c.term, c.sch)['scope'] == 'self' else []:
+    for attr, _ in _facet(attribute_form(c.term, c.sch), 'required', 'self'):
         if isinstance(c.node, dict) and attr not in c.node:
             errors.append(f"{c.base}: {c.term} requires '{attr}' (VOCAB {c.term}.schema.required_attrs)")
     return None
@@ -1359,7 +1304,7 @@ def ctl_required_attrs(c):
 
 def ctl_attr_types(c):
     """`attr_types:` — types for the mapping's OWN attrs."""
-    for attr, typ in _facet(attribute_form(c.term, c.sch), 'type') if attribute_form(c.term, c.sch)['scope'] == 'self' else []:
+    for attr, typ in _facet(attribute_form(c.term, c.sch), 'type', 'self'):
         v = c.node.get(attr) if isinstance(c.node, dict) else None
         if v is not None:
             check_value_type(f"{c.base}: {c.term}", attr, v, typ)
@@ -1451,8 +1396,9 @@ def ctl_on_sequence(c):
 def ctl_entries(c):
     """The per-ENTRY rules, for any shape that has entries at all."""
     shape = c.sch.get('shape')
-    if shape in ('list_of_entries', 'open_map_of_entries') or c.sch.get('entry_one_of') \
-            or c.sch.get('entry_required_attrs'):
+    _form = form_of(c.term)
+    if shape in ('list_of_entries', 'open_map_of_entries') or _form['one_of'] \
+            or _facet(_form, 'required', 'entry'):
         for label, entry in entries_of(shape, c.node):
             check_entry(c.base, c.term, label, entry, c.sch)
     return None
@@ -1502,7 +1448,7 @@ def _facet_shape(node, alt):
 
 
 def _alt_key(term):
-    return ((SCHEMAS.get(term) or {}).get('alt_form') or {}).get('key')
+    return (form_of(term)['alt'] or {}).get('key')
 
 
 def _shape_str(shape, alt):
@@ -1510,7 +1456,7 @@ def _shape_str(shape, alt):
 
 def check_facet_parity():
     for _term, _sch in SCHEMAS.items():
-        _par = _sch.get('facet_parity_with')
+        _par = form_of(_term)['mirror']['parity_with'] if _term in SCHEMAS else None
         if not _par:
             continue
         for (_is_bean, _base), (_fm, _b) in docs.items():
@@ -1551,7 +1497,7 @@ def _inverse_of(sch):
     mapping. Declaring the cardinality is the fix; reading it in one place is what stops the two plies
     from disagreeing about what was declared.
     """
-    inv = sch.get('inverse_of')
+    inv = dmform.attribute_form(None, sch)['mirror']['inverse_of']
     if isinstance(inv, dict):
         return inv.get('term'), inv.get('cardinality', 'one-to-one')
     return inv, 'one-to-one'
@@ -1617,20 +1563,21 @@ def _declared_positions():
 
     for term, sch in SCHEMAS.items():
         _loc = LOCAL_SCHEMA.get(term, {})
-        if sch.get('values'):
-            if 'values' not in _loc and _loc.get('values_add'):
+        _form, _lform = form_of(term), dmform.attribute_form(None, _loc)
+        if _form['value'].get('values'):
+            if 'values' not in _lform['value'] and _loc.get('values_add'):
                 # ONLY the added values are the garden's to account for; the rest stay Tier-0's.
                 _t0 = next((t.get('schema') or {} for t in (std_fm.get('terms') or []) + PROFILE_TERMS
                             if isinstance(t, dict) and t.get('term') == term), {})
                 _added = set(_loc['values_add']) - set(_t0.get('values') or [])   # already Tier-0's: not the garden's
-                _declare(f"{term}.values", [v for v in sch['values'] if v not in _added], False)
+                _declare(f"{term}.values", [v for v in _form['value']['values'] if v not in _added], False)
                 declared_pos[f"{term}.values"].update(_added)
                 LOCAL_ADDED.update((f"{term}.values", v) for v in _added)
             else:
-                _declare(f"{term}.values", sch['values'], 'values' in _loc)
-        for attr, vals in (sch.get('entry_values') or {}).items():
-            _declare(f"{term}.{attr}", vals, attr in (_loc.get('entry_values') or {}))
-        for _asp in _aspects_of(sch):
+                _declare(f"{term}.values", _form['value']['values'], 'values' in _lform['value'])
+        for attr, vals in _facet(_form, 'values', 'entry'):
+            _declare(f"{term}.{attr}", vals, 'values' in _lform['attrs'].get(attr, {}))
+        for _aattr, _asp in _facet(_form, 'aspect', 'entry'):
             if _asp['aspect'] in ASPECTS:
                 _declare(f"aspect:{_asp['aspect']}",
                          [p['position'] for p in (ASPECTS[_asp['aspect']].get('positions') or [])
@@ -1639,8 +1586,8 @@ def _declared_positions():
         # `external`, `crown` — and a shape nothing takes is the same blind region as an enum value
         # nobody occupies. Nothing counted them until 2026-08-03, and all three that turned out to be
         # empty are genuinely empty rather than overlooked.
-        if sch.get('entry_one_of'):
-            _declare(f"{term}.entry_one_of", list(sch['entry_one_of']), 'entry_one_of' in _loc)
+        if _form['one_of']:
+            _declare(f"{term}.entry_one_of", list(_form['one_of']), bool(_lform['one_of']))
     return declared_pos, local_pos
 
 
@@ -1651,8 +1598,8 @@ def _enum_owner(reg_name, take):
     relationship the two ends already state, and this garden has paid for that shape before.
     """
     want = f"registry:{reg_name}[].{take}"
-    for _t, _s in SCHEMAS.items():
-        if want in (_s.get('values_consistent_with') or []):
+    for _t in SCHEMAS:
+        if want in (form_of(_t)['value'].get('consistent_with') or []):
             return _t
     return None
 
@@ -1672,23 +1619,24 @@ def _occupied_positions():
             node = fm.get(term)
             if node is None:
                 continue
-            if sch.get('shape') == 'scalar' and sch.get('values'):
+            _form = form_of(term)
+            if sch.get('shape') == 'scalar' and _form['value'].get('values'):
                 _occupy(f"{term}.values", [node])
             kf = str(sch.get('key_form') or '')
             if kf.startswith('values_from:') and isinstance(node, dict):
-                alt = (sch.get('alt_form') or {}).get('key')      # the inherited form is not a position
+                alt = (_form['alt'] or {}).get('key')             # the inherited form is not a position
                 _occupy(f"{kf.split(':', 1)[1]}.values", [k for k in node if k != alt])
-            _asps = _aspects_of(sch)
-            _alt_k = (sch.get('alt_form') or {}).get('key')
-            _forms = list(sch.get('entry_one_of') or [])
+            _asps = _facet(_form, 'aspect', 'entry')
+            _alt_k = (_form['alt'] or {}).get('key')
+            _forms = list(_form['one_of'])
             if _forms and isinstance(node, dict) and not (_alt_k and _alt_k in node):
                 # the INHERITED form carries no facets and therefore takes no position
-                for _facet in node.values():
-                    if isinstance(_facet, dict):
-                        _occupy(f"{term}.entry_one_of", [f for f in _forms if f in _facet])
+                for _fnode in node.values():
+                    if isinstance(_fnode, dict):
+                        _occupy(f"{term}.entry_one_of", [f for f in _forms if f in _fnode])
             for _lbl, entry in entries_of(sch.get('shape'), node):
                 if isinstance(entry, dict):
-                    for attr in (sch.get('entry_values') or {}):
+                    for attr, _vals in _facet(_form, 'values', 'entry'):
                         if entry.get(attr) is not None:
                             _occupy(f"{term}.{attr}", [entry[attr]])
                     # An `entry_in_registry` attr takes a position in the enum the REGISTRY defines, and
@@ -1696,18 +1644,17 @@ def _occupied_positions():
                     # against the owner is what lets a registry-backed enum be declared ONCE: without
                     # this the owner term looks wholly vacant, because it is never carried on a bean —
                     # it exists to own the list, and the list is occupied through other terms' entries.
-                    for attr, _rule in (sch.get('entry_in_registry') or {}).items():
+                    for attr, _rule in _facet(_form, 'registry', 'entry'):
                         _owner = _enum_owner(_rule.get('registry'), _rule.get('take'))
                         if _owner and entry.get(attr) is not None:
                             _occupy(f"{_owner}.values", [entry[attr]])
-                    for _asp in _asps:
+                    for _aattr, _asp in _asps:
                         # A DEFAULT DOES NOT OCCUPY (ratified 2026-08-03). This read `entry.get(attr,
                         # default)`, so a position nothing ever stated looked exercised because the gate's
                         # own default landed on it — the reverse gate believing itself. Occupancy is now
                         # STATEMENT: only a value an entry actually carries takes the position. What that
                         # leaves empty is a vacancy like any other, declared in `vacancies:` with a reason,
                         # and anti-rot then warns the day something really occupies it.
-                        _aattr = _asp.get('attr', _asp['aspect'])
                         if entry.get(_aattr) is not None:
                             _occupy(f"aspect:{_asp['aspect']}", [entry[_aattr]])
     return occupied_pos
@@ -1789,27 +1736,28 @@ def schema_edges(fm):
         node = fm.get(term)
         if node is None:
             continue
-        alt = sch.get('alt_form') or {}
+        _form = form_of(term)
+        alt = _form['alt'] or {}
         if alt.get('key') and isinstance(node, dict) and alt['key'] in node:
-            for attr in (alt.get('ref_fields') or []):
+            for attr in alt['refs']:
                 it = node.get(attr)
                 if isinstance(it, dict) and 'bean' in it:
                     yield 'bean', it.get('bean'), None, term
             continue
-        for attr in (sch.get('ref_fields') or []):
+        for attr in dmform.ref_attrs(_form, 'self'):
             it = node if attr == 'self' else (node.get(attr) if isinstance(node, dict) else None)
             if isinstance(it, dict) and 'bean' in it:
                 yield 'bean', it.get('bean'), it.get('field'), term
         for label, entry in entries_of(sch.get('shape'), node):
             if not isinstance(entry, dict):
                 continue
-            for attr in (sch.get('entry_ref_fields') or []):
+            for attr in dmform.ref_attrs(_form, 'entry'):
                 it = entry if attr == 'self' else entry.get(attr)
                 if isinstance(it, dict):
                     for space in ('bean', 'mapping'):
                         if space in it:
                             yield space, it.get(space), it.get('field'), term
-            for attr, ptype in (sch.get('pointer_fields') or {}).items():
+            for attr, ptype in _facet(_form, 'pointer'):
                 if ptype != 'bean_field_pointer':
                     continue
                 val = entry.get(attr)
@@ -2281,7 +2229,7 @@ def _termination_hint(term, bean):
     fm = ALL_FM.get(bean) or {}
     if (KINDS.get(fm.get('kind')) or {}).get('ownership_form') != 'crown':
         return ''
-    one_of = (SCHEMAS.get(term) or {}).get('entry_one_of') or []
+    one_of = form_of(term)['one_of']
     if 'crown' in one_of:
         branch = next((r.get('crown') for r in (registry('natures') or [])
                        if isinstance(r, dict) and r.get('nature') == fm.get('nature')), None)
@@ -2303,17 +2251,18 @@ def check_chain_termination():
     write when the bean the chain stops at is of a kind whose form is pinned (a person states the crown).
     """
     for _term, _sch in SCHEMAS.items():
-        if not on_walk(_sch) or not _sch.get('entry_one_of'):
+        _form = form_of(_term)
+        if not on_walk(_sch) or not _form['one_of']:
             continue
         # THE TERM SAYS WHICH FORMS END A CHAIN: `entry_one_of` offers the forms and `entry_ref_fields`
         # names the ones that point at another bean, so the difference IS the terminal set. Listed by hand
         # here (as ('external','crown','self')) and differently in the hook's fast subset (which accepted
         # `contract`), one rule had two answers, and the vocabulary's — `contract` is a ref, so a chain
         # through it continues — was neither of them.
-        _terminal = set(_sch['entry_one_of']) - set(_sch.get('entry_ref_fields') or [])
+        _terminal = set(_form['one_of']) - set(dmform.ref_attrs(_form, 'entry'))
         if not _terminal:
             continue
-        _alt = (_sch.get('alt_form') or {}).get('key')
+        _alt = (_form['alt'] or {}).get('key')
         for (_is_bean, _base), (_fm, _b) in docs.items():
             if not _is_bean:
                 continue
@@ -2334,7 +2283,7 @@ def check_chain_termination():
                 else:
                     # WHICH FIELD CARRIES THE CHAIN ONWARD is the term's `entry_ref_fields`, not two facet
                     # key names written here — the same declaration the terminal set above is derived from.
-                    _refs = _sch.get('entry_ref_fields') or []
+                    _refs = dmform.ref_attrs(_form, 'entry')
                     _nxt = next((( _f.get(_r) or {}).get('bean')
                                  for _f in _node.values() if isinstance(_f, dict)
                                  for _r in _refs if isinstance(_f.get(_r), dict)), None)
@@ -2358,7 +2307,8 @@ def check_relation_occupancy():
     """
     _used = set(drawn_edges())        # every space, mappings included: an edge drawn is an edge drawn
     for _term, _sch in SCHEMAS.items():
-        if not (_sch.get('ref_fields') or _sch.get('entry_ref_fields')):
+        _form = form_of(_term)
+        if not (dmform.ref_attrs(_form, 'self') or dmform.ref_attrs(_form, 'entry')):
             continue
         if _term in TIER0_TERMS:
             continue

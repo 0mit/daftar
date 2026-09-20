@@ -110,8 +110,8 @@ head("EXTERNAL TRUTH REFERENCED, NOT MIRRORED",
 # produced by the aid itself. `manual:` keys count too — an entry a person re-checks by hand is
 # tracked, just not machine-checkable, which is a different question and dmstale's to answer.
 import dmcheck as _law
-_STALENESS = (((_law.TERMS.get('analysis_cache') or {}).get('schema') or {}).get('entry_pattern')
-              or {}).get('staleness_key') or r'(?!)'   # no pattern in the law -> nothing matches, and
+_STALENESS = dict(_law.dmform.facet(_law.form_of('analysis_cache'), 'pattern', 'entry')
+                  ).get('staleness_key') or r'(?!)'   # no pattern in the law -> nothing matches, and
                                                        # the law's absence shows rather than passing
 cached = set()
 for _b, (_fm, _) in DOCS.items():
@@ -236,7 +236,8 @@ _gate = _law                         # already imported above, for the staleness
 _gate.build_docs()
 _drawn = set(_gate.drawn_edges())
 _undrawn = sorted(t for t, s in _gate.SCHEMAS.items()
-                  if (s.get('ref_fields') or s.get('entry_ref_fields')) and t in _gate.TIER0_TERMS and t not in _drawn)
+                  if (lambda _f: _gate.dmform.ref_attrs(_f, 'self') or _gate.dmform.ref_attrs(_f, 'entry'))(
+                      _gate.dmform.attribute_form(None, s)) and t in _gate.TIER0_TERMS and t not in _drawn)
 print(f"  {len(_undrawn)} Tier-0 relation(s) drawn by no bean")
 sample(_undrawn, 12)
 
