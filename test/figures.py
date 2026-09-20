@@ -126,10 +126,10 @@ open(VOC, "w").write(ORIG)
 out = gate()
 check("11.3: every construct the standard's terms use is declared in schema_language",
       "is not declared in schema_language" not in out, out[-900:])
-mutate("      entry_required_attrs: [why] ", "      entry_require_attrs: [why] ")
+mutate("    context_keys: [\"capabilities\"]\n    schema:\n      shape: open_map_of_entries\n      key_form: kebab\n", "    context_keys: [\"capabilities\"]\n    schema:\n      shape: open_map_of_entries\n      key_forms: kebab\n")
 out = gate()
 check("11.3: a misspelt construct is named instead of silently enforcing nothing",
-      "capabilities: schema key `entry_require_attrs` is not declared in schema_language" in out, out[-900:])
+      "capabilities: schema key `key_forms` is not declared in schema_language" in out, out[-900:])
 check("12.0: ...as an ERROR — a rule that enforces nothing is refused, not remarked on", "ERROR VOCAB capabilities: schema key" in out, out[-600:])
 mutate('  path:                 "<dotted path>', '  path_:                "<dotted path>')
 out = gate()

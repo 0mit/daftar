@@ -188,6 +188,14 @@ def _overlay(base, over):
     for k, v in over.items():
         if k == 'schema' and isinstance(v, dict) and isinstance(base.get('schema'), dict):
             out['schema'] = {**base['schema'], **v}
+            # `attrs` merges PER ATTRIBUTE (13.0): a garden that adds one attribute to a Tier-0 term, or gives one
+            # a domain, must not thereby restate — and then own — every attribute the standard already declares.
+            if isinstance(v.get('attrs'), dict) and isinstance(base['schema'].get('attrs'), dict):
+                out['schema']['attrs'] = {**base['schema']['attrs'],
+                                          **{a: {**(base['schema']['attrs'].get(a) or {}), **(r or {})}
+                                             for a, r in v['attrs'].items()}}
+            if isinstance(v.get('cells'), list) and isinstance(base['schema'].get('cells'), list):
+                out['schema']['cells'] = list(base['schema']['cells']) + list(v['cells'])
         else:
             out[k] = v
     _s = out.get('schema')
@@ -278,12 +286,32 @@ def check_vocab_enum_drift():
 # AN ERROR since 12.0 (it was a warning for one release, 11.3, so that release could stay minor). The operator's
 # ruling, 2026-09-20: a rule that silently enforces nothing is worse than a refusal, because the vocabulary SAYS it
 # is in force. The same choice he made for an undeclared top-level key on a bean, one level up.
+RETIRED_CONSTRUCTS = ('entry_required_attrs', 'required_attrs', 'entry_values', 'entry_types', 'attr_types',
+                      'entry_pattern', 'entry_soft_pattern', 'entry_in_registry', 'entry_pattern_from_registry',
+                      'on_aspect', 'entry_extents', 'attr_extents', 'entry_ref_fields', 'ref_fields',
+                      'pointer_fields', 'cross_aspect', 'entry_required_if', 'entry_expect_if')
+
+
 def check_schema_language():
     _declared = set(std_fm.get('schema_language') or {})
     if not _declared:
         return                      # the law did not load; the one-path refusal says so, once
+    # THE SAME RULE ONE LEVEL IN: the domains `in:` may name are described in the law and implemented in dmform,
+    # and the two lists are held equal — a domain the law offers and nothing reads is a rule that enforces nothing.
+    _offered, _read = set((std_fm['schema_language'].get('attr_domains') or {})), set(dmform.DOMAINS)
+    if _offered != _read:
+        errors.append(f"VOCAB schema_language.attr_domains offers {sorted(_offered - _read) or 'nothing extra'} that "
+                      f"bin/dmform.py does not read, and omits {sorted(_read - _offered) or 'nothing'} that it does")
     for _name, _sch in sorted(SCHEMAS.items()):
-        for _k in sorted(set(_sch) - _declared):
+        for _a in attribute_form(_name, _sch)['unknown']:
+            errors.append(f"VOCAB {_name}: attribute `{_a}` states no domain the language offers — every attribute "
+                          f"says what it is a position `in:` (a list, a registry, an aspect, a type, a pattern, "
+                          f"`extent`, `ref`, a pointer), or says `prose`, or owns up to `untyped`")
+        for _k in sorted((set(_sch) - _declared) & set(RETIRED_CONSTRUCTS)):
+            errors.append(f"VOCAB {_name}: schema key `{_k}` was RETIRED at std-vocab 13.0 — an attribute's law is "
+                          f"stated once, in `schema.attrs.<name>: {{required, in, meaning}}`. Do not rewrite it by "
+                          f"hand: `python3 bin/dmreform.py VOCAB.md` translates every term and proves it lost nothing")
+        for _k in sorted(set(_sch) - _declared - set(RETIRED_CONSTRUCTS)):
             errors.append(f"VOCAB {_name}: schema key `{_k}` is not declared in schema_language — no controller "
                          f"reads an undeclared construct, so this rule enforces NOTHING. Check the spelling "
                          f"against `schema_language` in seed/std-vocab.md")
@@ -848,7 +876,7 @@ def ectl_entry_required_attrs(e):
     missing = [k for k, _ in _facet(e.form, 'required', 'entry') if k not in e.entry]
     if missing:
         errors.append(f"{e.base}: {e.ref} missing {missing} "
-                      f"(VOCAB {e.term}.schema.entry_required_attrs)")
+                      f"(VOCAB {e.term}.schema.attrs: required)")
 
 
 UNKNOWN_VALUE_HINT = (" — if the value is real and the vocabulary lacks it, keep it under `attributes:` for now "
@@ -860,7 +888,7 @@ def ectl_entry_values(e):
     for attr, allowed in _facet(e.form, 'values', 'entry'):
         if e.entry.get(attr) is not None and e.entry[attr] not in allowed:
             errors.append(f"{e.base}: {e.ref}.{attr} '{e.entry[attr]}' not in {allowed} "
-                          f"(VOCAB {e.term}.schema.entry_values)")
+                          f"(VOCAB {e.term}.schema.attrs.{attr}.in)")
 
 
 def ectl_entry_types(e):
@@ -931,7 +959,7 @@ def ectl_entry_in_registry(e):
                 allowed = allowed[:12] + ['… %d more' % (len(allowed) - 12)]
             errors.append(f"{e.base}: {e.ref}.{attr} '{val}' is not a declared {rname} "
                           f"— known: {sorted(v for v in allowed if v)} "
-                          f"(VOCAB {e.term}.schema.entry_in_registry)")
+                          f"(VOCAB {e.term}.schema.attrs.{attr}.in)")
 
 
 def ectl_entry_pattern_from_registry(e):
@@ -1298,7 +1326,7 @@ def ctl_required_attrs(c):
         undeclared_attrs(c.base, c.term, c.term, c.node, c.sch)
     for attr, _ in _facet(attribute_form(c.term, c.sch), 'required', 'self'):
         if isinstance(c.node, dict) and attr not in c.node:
-            errors.append(f"{c.base}: {c.term} requires '{attr}' (VOCAB {c.term}.schema.required_attrs)")
+            errors.append(f"{c.base}: {c.term} requires '{attr}' (VOCAB {c.term}.schema.attrs.{attr}: required)")
     return None
 
 

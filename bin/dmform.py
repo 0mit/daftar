@@ -1,23 +1,18 @@
 #!/usr/bin/env python3
 """dmform — the ATTRIBUTE FORM: a term's law, keyed by attribute.
 
-The schema language says one sentence in a dozen spellings: "this attribute is a position in that domain".
-`entry_values`, `entry_types`, `entry_in_registry`, `on_aspect`, `entry_pattern`, `pointer_fields`… are each a
-map keyed by ATTRIBUTE, so one attribute's law is scattered across as many constructs as it has properties, and
-is stated a second time, for people, in the term's `entry_attrs:`. This module turns that matrix the other way:
-one record per attribute.
-
-ONE MODULE, because five tools read a term's law — the gate, `dmrules`, `dmcursor`, `dmpos`, `dmreview` — and
-until this existed each knew the old constructs by name (two of them carried their own copy of `aspects_of`).
-When the law's TEXT is rewritten into this form (S2 of the figure grammar), this is the only file that learns
-the new spelling; nothing that imports it changes.
+A term's schema says, for each attribute, ONE thing: what the attribute is a position IN (`attrs.<name>.in`),
+whether it is required, and what it means. This module reads that spelling and hands every tool the same
+record — the gate, `dmrules`, `dmcursor`, `dmpos`, `dmreview`, `dmparse`. It is the ONLY file that knows how
+the law spells an attribute; `bin/dmreform.py` is the only one that knows how it USED to (std-vocab <= 12.0).
 
 It is PURE: it reads a term's definition and returns data. It loads nothing and names no term.
 
 THE FORM
-    scope      'entry' | 'self'  — what the term's attributes mostly describe (its entries, or its own value)
-    attrs      {name: {facet: rule, 'scope': 'entry'|'self'}}
-    order      {(scope, facet): [names]}   each old construct's own attribute order, so findings print as before
+    scope      'entry' | 'self'  — what the term's attributes describe (each entry, or the value itself)
+    attrs      {name: {facet: rule, 'scope': …}}    facets: required, values, registry, aspect, type, system_from,
+               pattern, soft, extent, ref, pointer, one_of, meaning
+    order      {(scope, facet): [names]}   the law's attribute order, per facet
     cells      combinations an entry may not hold (error) or should not (warning)
     value      the rule on the term's OWN value: values, values_from, consistent_with, governs_anchor, pattern,
                form, in_registry, compare_form, canonical_note
@@ -25,14 +20,10 @@ THE FORM
     alt        the alternative whole-value form {key, refs}
     one_of     the forms an entry may take
     matches    values fixed by a registry row another field selects
-    mirror     another term this one must agree with: the same facets (parity_with), or the mirrored edge (inverse_of)
+    mirror     another term this one must agree with: the same facets (parity_with), or the mirrored edge
+    unknown    attributes whose `in:` names no domain the language offers — the gate refuses them
 """
 
-ENTRY_FACETS = (('required', 'entry_required_attrs'), ('values', 'entry_values'), ('type', 'entry_types'),
-                ('pattern', 'entry_pattern'), ('soft', 'entry_soft_pattern'), ('registry', 'entry_in_registry'),
-                ('extent', 'entry_extents'), ('ref', 'entry_ref_fields'), ('one_of', 'entry_one_of'))
-SELF_FACETS = (('required', 'required_attrs'), ('type', 'attr_types'), ('extent', 'attr_extents'),
-               ('ref', 'ref_fields'))
 VALUE_KEYS = (('values', 'values'), ('values_from', 'values_from'), ('consistent_with', 'values_consistent_with'),
               ('governs_anchor', 'governs_anchor'), ('pattern', 'value_pattern'), ('form', 'value_form'),
               ('in_registry', 'value_in_registry'), ('compare_form', 'compare_form'),
@@ -41,62 +32,132 @@ ENTRY_SHAPES = ('list_of_entries', 'open_map_of_entries')
 
 
 def aspects_of(sch):
-    """A term may sit on ONE aspect or SEVERAL: `on_aspect` takes a mapping or a list of them."""
-    a = (sch or {}).get('on_aspect')
-    if isinstance(a, dict):
-        a = [a]
-    return [x for x in (a or []) if isinstance(x, dict) and x.get('aspect')]
+    """The aspects a term's entries take positions on: [{aspect, attr, default}], in the order the law lists the
+    attributes. A term may sit on ONE aspect or SEVERAL."""
+    out = []
+    for name, rec in ((sch or {}).get('attrs') or {}).items():
+        d = (rec or {}).get('in') if isinstance(rec, dict) else None
+        if isinstance(d, dict) and d.get('aspect'):
+            out.append({'aspect': d['aspect'], 'attr': name, 'default': d.get('default')})
+    return out
+
+
+# ============================== THE LAW'S OWN SPELLING (std-vocab 13.0) ==============================
+# schema:
+#   shape: list_of_entries
+#   is_ref: true                      # the value (or each entry) IS itself a {bean|mapping[, field]} ref
+#   attrs:
+#     <name>: { required: true, in: <domain>, meaning: "…" }
+#   cells:
+#     - { when: {<attr>: <value>, …}, verdict: incoherent | in_breach, why: "…" }
+#     - { when: {<attr>: <value>}, requires: [<attr>…] }                       # an error
+#     - { when: {<attr>: {starts_with: "…"}}, expects: [<attr>…], why: "…" }   # a warning
+#
+# EVERY ATTRIBUTE IS A POSITION IN EXACTLY ONE DOMAIN. Measured over every term of std-vocab 12.0 and one garden's
+# overlay before this spelling was chosen: no attribute carried two. `in:` is therefore one thing, and it is never
+# absent — an attribute nobody has given a domain says `untyped`, so an oversight and a decision stop looking alike
+# (the rule `enforced_by: none` and `pattern: none` already apply one level up).
+DOMAINS = {
+    'values':      "in: [a, b, c]                                  one of a closed list written here",
+    'registry':    "in: { registry: <name>, take: <field> }        a row of a registry (or `registry_from: <attr>`: the registry another attr names)",
+    'aspect':      "in: { aspect: <name>, default: <position> }    a position on an opposition; the default applies when the entry is silent",
+    'type':        "in: { type: <value type> }                     a row of `value_types` — its pattern, and for a time type its system and unit",
+    'form_of':     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern }   a position in the system a SIBLING attr names, in that system's one form",
+    'pattern':     "in: { pattern: '<regex>' }                     a form this term owns; with `soft: true` and a `why` it WARNS instead of refusing",
+    'extent':      "in: extent                                     a bounded region of an aspect's domain (`extent_form`)",
+    'ref':         "in: ref                                        a {bean|mapping[, field]} ref, resolved by the gate",
+    'pointer':     "in: { pointer: bean_field_pointer }            '<section>.<key>' on this bean, {bean, field} on another, or 'file:<path>'",
+    'id':          "in: id                                         the id of a bean or mapping — a key of the ref FORM itself, which the gate resolves",
+    'prose':       "in: prose                                      a reason, a description, a remark: deliberately not a position. `why`, `what`, `note`",
+    'untyped':     "in: untyped                                    a position whose domain nobody has declared yet — a standing debt, visible as one",
+}
+
+
+def _domain(d):
+    """(facet, rule) for one attribute's `in:` — the internal record the interpreter has always read."""
+    if isinstance(d, list):
+        return 'values', list(d)
+    if d in ('extent', 'ref'):
+        return d, True
+    if d in ('prose', 'untyped', 'id') or d is None:
+        return None, None
+    if isinstance(d, dict):
+        if 'aspect' in d:
+            return 'aspect', dict(d)
+        if 'type' in d:
+            return 'type', d['type']
+        if 'form_of' in d:
+            return 'system_from', {'registry': d['form_of'], 'keyed_by': d.get('keyed_by'), 'take': d.get('take')}
+        if 'pattern' in d:
+            if d.get('soft'):
+                return 'soft', {k: v for k, v in (('pattern', d['pattern']), ('why', d.get('why'))) if v is not None}
+            return 'pattern', d['pattern']
+        if 'registry' in d or 'registry_from' in d:
+            return 'registry', {k: d[k] for k in ('registry', 'registry_from', 'take') if k in d}
+        if 'pointer' in d:
+            return 'pointer', d['pointer']
+    return 'unknown', d
+
+
+def scope_of(sch):
+    """What a term's `attrs` describe: each ENTRY (a list, an open map, a faceted mapping) or the value ITSELF."""
+    if sch.get('shape') in ENTRY_SHAPES or sch.get('key_form') or sch.get('entry_one_of'):
+        return 'entry'
+    return 'self'
 
 
 def attribute_form(term_def, sch):
-    """The law of one term, keyed by attribute. `term_def` is the term's whole definition (for the meanings it
-    gives its attributes); `sch` is the schema in force for it, overlays applied."""
-    term_def, sch = term_def or {}, sch or {}
-    has_entries = (sch.get('shape') in ENTRY_SHAPES or sch.get('on_aspect') or sch.get('entry_pattern_from_registry')
-                   or any(sch.get(k) for _f, k in ENTRY_FACETS))
-    form = {'scope': 'entry' if has_entries else 'self', 'attrs': {}, 'order': {}, 'cells': [],
-            'self_ref': False, 'value': {}, 'alt': None, 'one_of': list(sch.get('entry_one_of') or []),
+    """The law of one term, keyed by attribute — read from the law's own spelling."""
+    sch = sch or {}
+    scope = scope_of(sch)
+    form = {'scope': scope, 'attrs': {}, 'order': {}, 'cells': [],
+            'self_ref': bool(sch.get('is_ref')), 'value': {}, 'alt': None,
+            'one_of': list(sch.get('entry_one_of') or []),
             'matches': {'entry': list(sch.get('entry_must_match') or []),
                         'form_from_kind': sch.get('entry_form_from_kind_attr'),
                         'equal_kind_attr': sch.get('must_equal_kind_attr')},
-            'mirror': {'parity_with': sch.get('facet_parity_with'), 'inverse_of': sch.get('inverse_of')}}
+            'mirror': {'parity_with': sch.get('facet_parity_with'), 'inverse_of': sch.get('inverse_of')},
+            'unknown': []}
 
-    def put(scope, facet, name, rule):
-        rec = form['attrs'].setdefault(name, {'scope': scope})
-        rec[facet] = rule
+    def put(facet, name, rule):
+        form['attrs'].setdefault(name, {'scope': scope})[facet] = rule
         form['order'].setdefault((scope, facet), []).append(name)
 
-    for scope, table in (('entry', ENTRY_FACETS), ('self', SELF_FACETS)):
-        for facet, key in table:
-            v = sch.get(key)
-            for name in (v if isinstance(v, (list, dict)) else []):
-                if name == 'self' and facet == 'ref':
-                    form['self_ref'] = True      # the MARKER "the value is itself a ref" — not an attribute
-                else:
-                    put(scope, facet, name, v[name] if isinstance(v, dict) else True)
-    for name, ptype in (sch.get('pointer_fields') or {}).items():
-        put(form['scope'], 'pointer', name, ptype)
-    for a in aspects_of(sch):
-        put('entry', 'aspect', a.get('attr') or a.get('aspect'), a)
-    pfr = sch.get('entry_pattern_from_registry')
-    if isinstance(pfr, dict) and pfr.get('attr'):
-        put('entry', 'system_from', pfr['attr'], pfr)
-    for name, meaning in list((term_def.get('entry_attrs') or {}).items()) + list((term_def.get('attrs') or {}).items()):
-        put(form['scope'], 'meaning', name, meaning)
+    for name, rec in (sch.get('attrs') or {}).items():
+        rec = rec if isinstance(rec, dict) else {}
+        form['attrs'].setdefault(name, {'scope': scope})
+        if rec.get('required') is True:
+            put('required', name, True)
+        facet_name, rule = _domain(rec.get('in'))
+        if facet_name == 'unknown' or 'in' not in rec:
+            form['unknown'].append(name)
+        elif facet_name == 'system_from':
+            put('system_from', name, dict(rule, attr=name))
+        elif facet_name:
+            put(facet_name, name, rule)
+        if rec.get('meaning') is not None:
+            put('meaning', name, rec['meaning'])
+    for name in form['one_of']:
+        put('one_of', name, True)
 
-    # CELLS: three old constructs, one idea. `phase` only keeps each where it always ran in the walk.
-    for kind, sev in (('incoherent', 'error'), ('in_breach', 'warn')):
-        for c in ((sch.get('cross_aspect') or {}).get(kind) or []):
-            form['cells'].append({'phase': 'cross', 'origin': kind, 'severity': sev, 'why': c.get('why'),
-                                  'when': {k: ('is', v) for k, v in c.items() if k != 'why'}, 'lacks': []})
-    for r in (sch.get('entry_required_if') or []):
-        form['cells'].append({'phase': 'cond', 'origin': 'required_if', 'severity': 'error', 'why': None,
-                              'when': {r.get('attr'): ('is', r.get('equals'))},
-                              'lacks': list(r.get('requires') or [])})
-    for r in (sch.get('entry_expect_if') or []):
-        form['cells'].append({'phase': 'cond', 'origin': 'expect_if', 'severity': 'warn', 'why': r.get('why'),
-                              'when': {r.get('attr'): ('starts', r.get('starts_with'))},
-                              'lacks': [r.get('expects')]})
+    cross, cond = [], []
+    for c in (sch.get('cells') or []):
+        if not isinstance(c, dict):
+            continue
+        when = {k: (('starts', v['starts_with']) if isinstance(v, dict) and 'starts_with' in v else ('is', v))
+                for k, v in (c.get('when') or {}).items()}
+        if c.get('requires') is not None:
+            cond.append((0, {'phase': 'cond', 'origin': 'required_if', 'severity': 'error', 'why': None,
+                             'when': when, 'lacks': list(c['requires'])}))
+        elif c.get('expects') is not None:
+            cond.append((1, {'phase': 'cond', 'origin': 'expect_if', 'severity': 'warn', 'why': c.get('why'),
+                             'when': when, 'lacks': list(c['expects'])}))
+        else:
+            kind = c.get('verdict')
+            cross.append((0 if kind == 'incoherent' else 1,
+                          {'phase': 'cross', 'origin': kind, 'severity': 'error' if kind == 'incoherent' else 'warn',
+                           'why': c.get('why'), 'when': when, 'lacks': []}))
+    form['cells'] = [c for _o, c in sorted(cross, key=lambda x: x[0])] + [c for _o, c in sorted(cond, key=lambda x: x[0])]
 
     for name, key in VALUE_KEYS:
         if sch.get(key) is not None:

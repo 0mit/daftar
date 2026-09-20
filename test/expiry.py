@@ -65,9 +65,10 @@ RENTAL = """  - term: rental
     context_keys: ["rental"]
     schema:
       shape: mapping
-      required_attrs: [provider, renews]
-      attr_types: { renews: iso_date }
-      attr_extents: [period]
+      attrs:
+        provider: { required: true, in: prose }
+        renews:   { required: true, in: { type: iso_date } }
+        period:   { in: extent }
       expiry:
         attr: renews
         notice: { of: time, measure: { count: 30, unit: day } }
@@ -125,8 +126,8 @@ terms = list(sv["terms"]) + [x for p in sv["profiles"].values() for x in p["term
 dated, declared = [], []
 for t_ in terms:
     s = (t_.get("schema") or {})
-    if [k for k, v in list((s.get("attr_types") or {}).items())
-        + list((s.get("entry_types") or {}).items()) if v == "iso_date"]:
+    if [k for k, v in (s.get("attrs") or {}).items()
+        if isinstance((v or {}).get("in"), dict) and v["in"].get("type") == "iso_date"]:
         dated.append(t_["term"])
     if (s.get("expiry") or {}).get("attr"):
         declared.append(t_["term"])
@@ -151,8 +152,9 @@ def period(block, bean="vps2"):
 # put the declaration back for this half
 _s = open(v, encoding="utf-8").read()
 if "expiry:" not in _s:
-    open(v, "w", encoding="utf-8").write(_s.replace("      attr_extents: [period]\n",
-                                                    "      attr_extents: [period]\n" + _DECL))
+    _anchor = "        period:   { in: extent }\n"
+    assert _s.count(_anchor) == 1, "the anchor this test restores the declaration after has moved"   # a replace that
+    open(v, "w", encoding="utf-8").write(_s.replace(_anchor, _anchor + _DECL))                        # matches nothing is a bug
 
 check("a LENGTH with no fixed ends is a region — 'for N days', which most real durations are",
       "0 error" in period('{ of: time, measure: { count: 204, unit: day } }'),

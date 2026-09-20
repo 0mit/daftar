@@ -31,5 +31,7 @@ jobs:
         run: python3 test/expiry.py
       - name: "place: positions that name their host"
         run: python3 test/place.py
+      - name: "reform: the law keyed by attribute, and the translator that proves itself"
+        run: python3 test/reform.py
       - name: "public: a repository carries the language, never a garden"
         run: python3 test/public.py

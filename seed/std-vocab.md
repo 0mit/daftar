@@ -1,5 +1,5 @@
 ---
-version: "12.0"
+version: "13.0"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -16,6 +16,24 @@ version: "12.0"
 # A term with no `schema:` is documentation only; the gate never enforces it on beans.
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
+  attrs:                "{<attr>: {required?, in, meaning}} — THE ATTRIBUTES (13.0): one record each, saying what the attribute is a position IN, whether it is required, and what it means — once, for the gate and the reader both. They describe each ENTRY of a list, an open map or a faceted mapping, and otherwise the mapping itself. An entry holds only the attributes declared here. See `attr_domains` for what `in:` may say."
+  cells:                "[{when, verdict|requires|expects, why}] — COMBINATIONS of what an entry holds (13.0). `verdict: incoherent` is an ERROR (the positions cannot both hold, so one is mis-stated); `verdict: in_breach` a WARNING (all can hold, and the state needs action). `requires: [...]` is an error when the entry sits in the cell and lacks those attributes; `expects: [...]` the same as a warning. `when` maps an attribute to the value it holds, or to `{starts_with: …}`; an aspect attribute is read at its EFFECTIVE position, stated or defaulted."
+  # WHAT `in:` MAY SAY (13.0). Every attribute is a position in EXACTLY ONE domain — measured over every term of
+  # 12.0 before this spelling was chosen: none carried two — so `in:` is one thing, and it is never absent.
+  attr_domains:
+    values:      "in: [a, b, c] — one of a closed list written here"
+    registry:    "in: { registry: <name>, take: <field> } — a row of a registry, so the registry OWNS the enum and no term restates it. `registry_from: <attr>` instead of `registry`: the registry is NAMED by another attribute of the same entry"
+    aspect:      "in: { aspect: <name>, default: <position> } — a position on an opposition; the default applies when the entry is silent, and a default never counts as occupying the position"
+    type:        "in: { type: <value type> } — a row of `value_types`: its pattern, and for a time type its system and unit"
+    form_of:     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form"
+    pattern:     "in: { pattern: '<regex>' } — a form the TERM owns. With `soft: true` and a `why` it WARNS instead of refusing: the form a value SHOULD take while a corpus is migrated onto it"
+    extent:      "in: extent — a bounded region of an aspect's domain (`extent_form`)"
+    ref:         "in: ref — a {bean|mapping: <id>[, field: <key>]} ref; the gate RESOLVES it (dangling = error)"
+    pointer:     "in: { pointer: bean_field_pointer } — '<section>.<key>' on this bean, {bean, field} on another, or 'file:<path>'"
+    id:          "in: id — the id of a bean or mapping: a key of the ref FORM itself, on a term whose value `is_ref`"
+    prose:       "in: prose — a reason, a description, a remark. DELIBERATELY not a position: `why`, `what`, `note`. The reason IS the fact, and a schema for it would launder an opinion into a field"
+    untyped:     "in: untyped — a position whose domain nobody has declared yet. A standing debt, written down so that an oversight and a decision stop looking alike"
+  is_ref:               "true — the value (or each entry) IS ITSELF a {bean|mapping: <id>[, field: <key>]} ref, which the gate resolves (13.0; it was the marker `self` inside ref_fields / entry_ref_fields)"
   path:                 "<dotted path> — the term governs a NESTED field rather than a top-level key named after it (`identity.status`, `identity.anchors[].class`, `provenance.src`). Added at 2.0 for the five core grammar enums and never declared here until 11.3."
   alt_form:             "{key, ref_fields} — an ALTERNATIVE whole-value form: a mapping carrying `key` takes this form INSTEAD of the faceted one, and the per-key rules stand down for it (the inherited `owned_by: {via: …}`). In use since the first schema language; declared 11.3."
   required:             "true — EVERY bean must carry the term (the root-axiom case; stronger than required_on_<axis>s)"
@@ -27,42 +45,23 @@ schema_language:
   values_from:          "<term> — reuse another term's `values` list instead of restating it (one owner of an enum)"
   values_consistent_with: "[<path>...] — paths whose contents must equal `values` (drift guard). A path is `attr` or `attr[].sub` inside the term, or `registry:<name>[].<sub>` for a top-level VOCAB registry."
   key_form:             "kebab | values | values_from:<term> — the rule the KEYS of a mapping/open_map must satisfy"
-  required_attrs:       "[<attr>...] — shape:mapping, attrs the mapping itself must carry"
-  entry_required_attrs: "[<attr>...] — attrs EVERY entry needs (a list item, or an open_map value)"
-  entry_values:         "{<attr>: [<enum>...]} — per-entry enums"
-  entry_pattern:        "{<attr>: <regex>} — an entry attr must match this form (11.0). For a POSITION, prefer `entry_pattern_from_registry`, which lets the system own its one form; this is for a value whose form is the term's own business"
-  entry_soft_pattern:   "{<attr>: {pattern, why}} — the same, as a WARNING (11.0): the form a value SHOULD take while a corpus is being migrated onto it, so a garden is told what to fix without its next commit being refused"
-  attr_types:           "{<attr>: <value type>} — the same as entry_types, for the attrs of a MAPPING itself, which entry_types cannot reach (`registration.expires`). In use since `registration` was written; a cold-start drill found it undeclared, and it was one of four (11.3)."
-  entry_types:          "{<attr>: <value type>} — per-entry value types, each a row of `value_types` (10.0): its pattern, and for a time type its system and unit"
   entry_one_of:         "[<attr>...] — each entry must carry at least one of these"
-  entry_required_if:    "[{attr, equals, requires: [...]}] — conditional requirement inside an entry"
-  entry_expect_if:      "[{attr, starts_with, expects, why}] — a soft expectation; failing it WARNS, never blocks"
-  attr_extents:         "[<attr>...] — these attrs of the mapping hold an EXTENT (`extent_form`): a bounded region of some aspect's domain. The gate checks the region against the aspect it names — that the figure permits a region at all, that a measure appears only on a metered aspect and in that aspect's own dimension, and that a position is in one of the aspect's domain systems' canonical forms."
-  entry_extents:        "[<attr>...] — the same, inside each entry of a list or open map"
   expiry:               "{attr, notice, why} — ONE of this term's attrs is the position at which the thing LAPSES if nothing is done, and a reader should be warned before it. `notice` is HOW LONG BEFORE, as an EXTENT on `time` (11.2; it was a bare `horizon_days` integer for one release, which was a fifth way of saying a duration in a vocabulary that had just declared the first). `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. Deliberately NOT derivable from `attr_types: iso_date` — ten terms carry an iso_date and nine of them are `observed` or `as_of`, the date a fact was READ rather than the date it runs out. A term that does not declare this is never warned about, which is why a garden's own term can buy the warning its Tier-0 neighbour has."
-  ref_fields:           "[self|<attr>...] — sub-nodes that are {bean|mapping} refs; the gate RESOLVES them (dangling = error)"
-  entry_ref_fields:     "[<attr>...] — same, but inside each entry"
-  pointer_fields:       "{<attr>: bean_field_pointer} — a pointer that is '<section>.<key>' on this bean, {bean,field} on another, or 'file:<path>'"
   on_sequence:          "<aspect> — the term's value is a walk on that SEQUENCE aspect (10.1): prose lines in list order, or step entries {id, do, next: [{to, when?}]} whose neighbourhoods are CLOSED; the gate refuses a `to` that names no step, a step nothing reaches, a branch with no condition, a routine with no end, and a loop when the aspect declares acyclic"
   dag:                  "true — this term's edges are positions on the `walk` sequence aspect (9.2: `dag` is that aspect's `term_key`), and they join the acyclic check BECAUSE that aspect declares `acyclic: true`"
   required_on_targets_of: "<term> — a bean that is the TARGET of that relation must carry this term (e.g. anything lived in must say what kind of habitat it is)"
   entry_must_match:     "[{attr, registry, keyed_by, take}] — an entry attr must equal a registry row's attr, the row selected by a field on the bean (e.g. the crown branch is fixed by the bean's nature)"
-  entry_in_registry:    "{<attr>: {registry, take}} — an entry attr's value must be a ROW of that registry, so the registry OWNS that enum and no term restates it"
-  entry_pattern_from_registry: "{attr, registry, keyed_by, take} — an entry attr must match the PATTERN its own system declares, so a system owns its one format and nothing spells a position a second way. `keyed_by` selects the row by a field of the ENTRY (which system is this position in), where entry_must_match selects by a field of the BEAN. A row declaring `pattern: none` has DELIBERATELY no canonical form and is honoured rather than skipped by accident."
   entry_form_from_kind_attr: "<attr> — if the bean's kind declares this attr, every entry must use the form it names, AND that form is RESERVED to kinds that name it. Pinning both requires and reserves, so no other bean can short-circuit its chain to the axiom (e.g. only kind:person may use `crown`)."
   governs_anchor:       "<key> — this term governs the FORMAT of anchors carrying that key; pairs with value_pattern or value_form"
   value_pattern:        "<regex> — the canonical form an anchor value must match (with canonical_note as the human statement of it)"
   value_form:           "ip — a format needing real parsing rather than a pattern"
   canonical_note:       "<prose> — with value_pattern: the human statement of the canonical form, printed in the refusal and by bin/dmrules.py. Prose for a reader; the gate checks the pattern, never this."
   enforced_by:          "core | none — an explicit statement for a term with NO schema: either CORE already enforces it, or there is genuinely nothing to check and this says why"
-  cross_aspect:         "{incoherent: [...], in_breach: [...]} — combinations over ONE OR MORE of a term's aspects; N-ary, so the same construct constrains a single figure or a grid of any dimension. Incoherent = error (a position must be mis-stated); in_breach = warning (all can hold, and the state needs action)."
   poles:                "one axis (a contradictory PAIR), or a LIST of axes — a figure may be 1-dimensional, 2, 3 or more, and the gate derives the count rather than assuming it"
-  on_aspect:            "{aspect, attr, default} OR a LIST of them — a term's entries may take positions on SEVERAL aspects at once (e.g. what is allowed AND what is possible) — every entry of this term takes a POSITION on that aspect; an entry may name its own via an attr called after the aspect, else the default applies"
   facet_parity_with:    "<term> — this term and that one must carry the SAME facet keys (two arcs of one loop); one present without the other is a loose end"
   values_add:           "[<value>...] — GARDEN overlay only: APPEND values to a Tier-0 term's enum instead of replacing it, so the garden accounts only for what it added (8.2)"
   compare_form:         "upper-trim — with governs_anchor: the anchor is compared in this form for uniqueness (whitespace removed, uppercased), and a stored value not already in it warns (9.0)"
   value_in_registry:    "{registry, take} — with governs_anchor: the anchor value must be a ROW of that registry (a code of a published classification, 9.1)"
-  registry_from:        "<attr> — inside entry_in_registry: the registry is NAMED by another field of the same entry, so one term can check a code against whichever scheme the entry says it is in (9.1)"
   inverse_of:           "<term>, or {term, cardinality: one-to-one | many-to-one} — this relation mirrors another and the gate holds the pair consistent so the convenience edge cannot drift from the fact. A BARE NAME means one-to-one and the mirror is enforced BOTH ways. `many-to-one` enforces only the functional direction: many instances point at one type, and the type cannot point back at all of them through a single mapping. Declare the cardinality; assuming a bijection is how a rule becomes unsatisfiable without anyone noticing."
 # == NATURES: the root axiom layer (added 2026-08-02, P3 / plan D1, human-ratified rule-change) ==
 # `nature` is the ROOT of the type system and `kind` is a REFINEMENT of it, not a parallel taxonomy.
@@ -540,8 +539,8 @@ vacancies:
 # contradictory PAIR, or a LIST of pairs. A figure may be 1-dimensional (a plain binary), 2 (a square),
 # 3 (a cube), or more — what is required is that every declared axis runs between genuine opposites, so a
 # position is addressable along it. The count is DERIVED from the declaration, never assumed, because
-# assuming a count is exactly how a square silently mis-models a cube. Likewise `cross_aspect`
-# combinations are N-ary: they constrain ONE aspect or SEVERAL, and the machinery is the same either way.
+# assuming a count is exactly how a square silently mis-models a cube. Likewise a term's `cells`
+# are N-ary: they constrain ONE aspect or SEVERAL, and the machinery is the same either way.
 # An ASPECT is a CLOSED figure of positions — the operator's requirement that a classification have no
 # loose ends. A line has undefined extremes and forces partial membership; a closed figure does not, so
 # polarity lives in OPPOSED POSITIONS rather than at the ends of a scale. Each position names its
@@ -650,7 +649,7 @@ extent_form:
     this date each month" is recording a recurrence anchored to a calendar, not a length, and `measure`
     would make it look like arithmetic that it is not.
 
-# == VALUE TYPES (10.0, T3): the named types `entry_types` / `attr_types` may use ==
+# == VALUE TYPES (10.0, T3): the named types an attribute may be `in: { type: … }` ==
 # They were patterns written in the gate's code. A TIME value type is a POSITION: `iso_date` is not "a date
 # format" but the calendar system held at unit DAY, so every `observed: 2026-08-09` in a garden was always a
 # position in gregorian-civil whose second and minute are UNKNOWN, not zero. Saying so needs no data change;
@@ -868,20 +867,13 @@ profiles:
       schema:                                          # GATE (P2): enforced generically from here, not from code
         shape: list_of_entries
         required_on_kinds: [codebase]                  # a kind:codebase bean MUST carry a non-empty code_paths
-        entry_required_attrs: [path, role, scan_policy]
-        entry_values:
-          role: [own-source, framework-reference, vendored-dependency, generated-artifact]
-          scan_policy: [index, reference-only, skim]
-        entry_soft_pattern:
-          path: { pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$',
-                  why: "a bare absolute path names no host: give it `root:<name>/…` (resolved by each host's `roots`) or `<host>:<path>`" }
-      entry_attrs:
-        path:        "WHERE THE TREE IS, as a position: `root:<name>[/<relative>]` resolved through each host's own `roots` map, or `<host>:<absolute path>` stated outright. A bare absolute path names no host and WARNS (11.0): this estate holds 13 paths that exist on two machines as two different trees, so a path with no host is a position in a system nobody named."
-        role:        "own-source | framework-reference | vendored-dependency | generated-artifact"
-        scan_policy: "index (own code — walk fully) | reference-only (do NOT re-scan each session; consult analysis_cache, grep on demand only) | skim (structure only)"
-        stack:       "language/runtime tag, e.g. python-django | csharp-dotnet (optional)"
-        entrypoint:  "manifest / solution / addin that roots the tree (optional)"
-        note:        "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
+        attrs:
+          path:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare absolute path names no host: give it `root:<name>/…` (resolved by each host's `roots`) or `<host>:<path>`" }, meaning: "WHERE THE TREE IS, as a position: `root:<name>[/<relative>]` resolved through each host's own `roots` map, or `<host>:<absolute path>` stated outright. A bare absolute path names no host and WARNS (11.0): this estate holds 13 paths that exist on two machines as two different trees, so a path with no host is a position in a system nobody named." }
+          role:         { required: true, in: [own-source, framework-reference, vendored-dependency, generated-artifact], meaning: "own-source | framework-reference | vendored-dependency | generated-artifact" }
+          scan_policy:  { required: true, in: [index, reference-only, skim], meaning: "index (own code — walk fully) | reference-only (do NOT re-scan each session; consult analysis_cache, grep on demand only) | skim (structure only)" }
+          stack:        { in: untyped, meaning: "language/runtime tag, e.g. python-django | csharp-dotnet (optional)" }
+          entrypoint:   { in: untyped, meaning: "manifest / solution / addin that roots the tree (optional)" }
+          note:         { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
       # MOVED OUT 2026-08-02 (P1 / D6, human-ratified): `summary_ref` and `last_indexed` left this term and now
       # live in `analysis_cache`. Rationale (one-owner-of-a-fact): a summary is an ANALYSIS RESULT, not a property
       # of a filesystem path, and a date is a weaker staleness signal than the source's own git sha. code_paths
@@ -907,9 +899,12 @@ profiles:
     - term: git_host
       meaning: "the being hosting the source repository of a code bean (storage habitat, not ownership)"
       context_keys: ["git_host"]
-      schema: { shape: mapping, required_attrs: [bean], ref_fields: [self] }
-      attrs:
-        repo: "the repository AS ITS HOST NAMES IT (`host-a:git/ledger.git`) — what a clone that has forgotten its remote needs"
+      schema:
+        shape: mapping
+        is_ref: true
+        attrs:
+          bean:  { required: true, in: id }
+          repo:  { in: untyped, meaning: "the repository AS ITS HOST NAMES IT (`host-a:git/ledger.git`) — what a clone that has forgotten its remote needs" }
       merge: { cardinality: single, order: none }
 
   network:
@@ -975,34 +970,19 @@ profiles:
       context_keys: [endpoints]
       schema:
         shape: list_of_entries
-        entry_required_attrs: [protocol, system, at]
-        entry_in_registry:
-          protocol: { registry: net_protocols,   take: protocol }
-          system:   { registry: address_systems, take: system }
-        entry_pattern_from_registry:
-          { attr: at, registry: address_systems, keyed_by: system, take: pattern }
-        entry_values:
-          exposure: [loopback, lan, link, internet]
-        entry_types: { observed: iso_date }
-        on_aspect:
-          - { aspect: confidentiality, attr: confidentiality, default: cleartext }
-          - { aspect: capability,      attr: permission,      default: permitted }
-        cross_aspect:
-          in_breach:
-            - { permission: forbidden,
-                why: "a listening surface that MUST NOT exist, recorded as existing. Unlike a capability, an endpoint entry is not a stance about a possibility — it is a statement that the being answers there — so `forbidden` alone is the breach and needs no second aspect to confirm it. A database container published on 0.0.0.0:5432, reachable across the LAN, is this shape." }
-            - { permission: required, confidentiality: cleartext,
-                why: "a channel the estate REQUIRES and which protects nothing on the wire. A mail policy that forces cleartext delivery to a partner domain that mail must still reach is exactly this, so the requirement and the exposure are both real and neither can simply be withdrawn. KNOWN OVER-FIRE, stated rather than silently narrowed: a LOOPBACK endpoint satisfies this cell and is benign, because on loopback there is no path for anything to be on. `cross_aspect` combines aspect positions and cannot see `exposure`, which is an entry_value — so the cell cannot be made exposure-aware without a gate change. A reader meeting this warning on a loopback surface should reconcile it there, the way a DNS server's bean reconciles its recursion prohibition, rather than treat it as a finding." }
-      entry_attrs:
-        protocol:       "which protocol is spoken here — a row of net_protocols, never an implementation name"
-        system:         "ipv4 | ipv6 — it selects the form `at` must take. Named `system` and not `address_system` to match `roots`, `located_at` and `timing`: `keyed_by` resolves a registry row by a field that must exist on BOTH the entry and the row, so the two are one name by construction. Getting it wrong produced 21 identical errors and no ambiguity about the cause."
-        at:             "the address answered at, in that system's ONE canonical form"
-        port:           "the TCP/UDP port. Omitted where the protocol rides another (sftp over ssh) and has none of its own."
-        exposure:       "loopback (this machine only) | lan (the local segment) | link (reachable only over a named link, e.g. the wireguard tunnel) | internet (bound to a public address directly)"
-        via_link:       "optional: the `links` key this surface is reachable over, when it is not reachable without it"
-        confidentiality: "the position on the confidentiality aspect — what the channel protects. Defaults to cleartext, because a channel nobody has said protects anything does not."
-        permission:     "the position on the capability aspect — whether this surface MAY exist at all"
-        observed:       "ABSOLUTE date the surface was checked. Endpoints age faster than almost anything else here."
+        attrs:
+          protocol:         { required: true, in: { registry: net_protocols, take: protocol }, meaning: "which protocol is spoken here — a row of net_protocols, never an implementation name" }
+          system:           { required: true, in: { registry: address_systems, take: system }, meaning: "ipv4 | ipv6 — it selects the form `at` must take. Named `system` and not `address_system` to match `roots`, `located_at` and `timing`: `keyed_by` resolves a registry row by a field that must exist on BOTH the entry and the row, so the two are one name by construction. Getting it wrong produced 21 identical errors and no ambiguity about the cause." }
+          at:               { required: true, in: { form_of: address_systems, keyed_by: system, take: pattern }, meaning: "the address answered at, in that system's ONE canonical form" }
+          exposure:         { in: [loopback, lan, link, internet], meaning: "loopback (this machine only) | lan (the local segment) | link (reachable only over a named link, e.g. the wireguard tunnel) | internet (bound to a public address directly)" }
+          observed:         { in: { type: iso_date }, meaning: "ABSOLUTE date the surface was checked. Endpoints age faster than almost anything else here." }
+          confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "the position on the confidentiality aspect — what the channel protects. Defaults to cleartext, because a channel nobody has said protects anything does not." }
+          permission:       { in: { aspect: capability, default: permitted }, meaning: "the position on the capability aspect — whether this surface MAY exist at all" }
+          port:             { in: untyped, meaning: "the TCP/UDP port. Omitted where the protocol rides another (sftp over ssh) and has none of its own." }
+          via_link:         { in: untyped, meaning: "optional: the `links` key this surface is reachable over, when it is not reachable without it" }
+        cells:
+          - { when: { permission: forbidden }, verdict: in_breach, why: "a listening surface that MUST NOT exist, recorded as existing. Unlike a capability, an endpoint entry is not a stance about a possibility — it is a statement that the being answers there — so `forbidden` alone is the breach and needs no second aspect to confirm it. A database container published on 0.0.0.0:5432, reachable across the LAN, is this shape." }
+          - { when: { permission: required, confidentiality: cleartext }, verdict: in_breach, why: "a channel the estate REQUIRES and which protects nothing on the wire. A mail policy that forces cleartext delivery to a partner domain that mail must still reach is exactly this, so the requirement and the exposure are both real and neither can simply be withdrawn. KNOWN OVER-FIRE, stated rather than silently narrowed: a LOOPBACK endpoint satisfies this cell and is benign, because on loopback there is no path for anything to be on. A cell of this kind still reads only ASPECT positions and does not yet see `exposure` — since 13.0 that is one line in the gate rather than a construct the language lacks, and it is held back only because lifting it changes verdicts, which is its own ratified step. A reader meeting this warning on a loopback surface should reconcile it there, the way a DNS server's bean reconciles its recursion prohibition, rather than treat it as a finding." }
       merge: { cardinality: multi, order: "by-protocol+system+at+port?" }
     - term: links
       # A LINK IS A THING, NOT A SENTENCE. Today the estate's tunnels live as prose in `owns:` on three
@@ -1018,27 +998,20 @@ profiles:
       schema:
         shape: open_map_of_entries
         key_form: kebab
-        entry_required_attrs: [protocol]
-        entry_in_registry:
-          protocol: { registry: net_protocols, take: protocol }
-        entry_ref_fields: [peer]
-        entry_types: { observed: iso_date }
-        on_aspect:
-          - { aspect: confidentiality, attr: confidentiality, default: cleartext }
-      entry_attrs:
-        protocol:   "what makes this link — wireguard for a tunnel, and a physical row where one exists"
-        peer:       "a {bean, field} ref to the far end. A REF, not a retyped address: this is the field whose absence produced the .169/.146 contradiction."
-        carried_by: "optional: the `links` entry this one rides over — a tunnel rides a WAN link rides an interface"
-        confidentiality: "what the link protects, for everything carried over it"
-        observed:   "ABSOLUTE date the link was checked"
+        attrs:
+          protocol:         { required: true, in: { registry: net_protocols, take: protocol }, meaning: "what makes this link — wireguard for a tunnel, and a physical row where one exists" }
+          observed:         { in: { type: iso_date }, meaning: "ABSOLUTE date the link was checked" }
+          peer:             { in: ref, meaning: "a {bean, field} ref to the far end. A REF, not a retyped address: this is the field whose absence produced the .169/.146 contradiction." }
+          confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "what the link protects, for everything carried over it" }
+          carried_by:       { in: untyped, meaning: "optional: the `links` entry this one rides over — a tunnel rides a WAN link rides an interface" }
       dag_note: >
         NOTHING HERE IS ACYCLIC, and the first draft of this term got that wrong twice in one line. It
         carried `dag: true` over `peer` and `carried_by`, and the design review caught both before any bean
         was written. `peer` is MUTUAL — a router peers a VPS and the VPS peers the router — so the acyclic check
         would have refused the very first tunnel recorded honestly: a rule made unsatisfiable by its own
         subject matter. `carried_by` names another entry on THE SAME bean, so it is not a cross-bean edge
-        and there is no graph to walk; it is documented ordering, and `entry_ref_fields` deliberately omits
-        it. PROTOCOL carriage is separately and permanently not acyclic — wireguard is carried by udp over
+        and there is no graph to walk; it is documented ordering, and it is deliberately NOT `in: ref`.
+        PROTOCOL carriage is separately and permanently not acyclic — wireguard is carried by udp over
         ipv4 and then carries ipv4, because that recursion is what encapsulation IS — which is why
         `rides_on` in the registry is descriptive and joins no check. Written at this length because a rule
         that cannot be satisfied is worse than no rule: it is the failure `inverse_of` already carries a
@@ -1055,19 +1028,12 @@ profiles:
       schema:
         shape: open_map_of_entries
         key_form: kebab
-        entry_required_attrs: [protocol]
-        entry_in_registry:
-          protocol: { registry: net_protocols, take: protocol }
-        entry_ref_fields: [target]
-        entry_types: { observed: iso_date }
-        on_aspect:
-          - { aspect: necessity, attr: necessity, default: necessary }
-      entry_attrs:
-        protocol:  "what it speaks to get there"
-        target:    "a {bean[, field]} ref to what it reaches. A ref rather than an address, so the far end stays the one owner of its own address."
-        via_link:  "optional: the link this reach must cross"
-        necessity: "the position on the necessity aspect — `necessary` if the being cannot do its work without it"
-        observed:  "ABSOLUTE date the reach was verified to work"
+        attrs:
+          protocol:   { required: true, in: { registry: net_protocols, take: protocol }, meaning: "what it speaks to get there" }
+          observed:   { in: { type: iso_date }, meaning: "ABSOLUTE date the reach was verified to work" }
+          target:     { in: ref, meaning: "a {bean[, field]} ref to what it reaches. A ref rather than an address, so the far end stays the one owner of its own address." }
+          necessity:  { in: { aspect: necessity, default: necessary }, meaning: "the position on the necessity aspect — `necessary` if the being cannot do its work without it" }
+          via_link:   { in: untyped, meaning: "optional: the link this reach must cross" }
       merge: { cardinality: multi, order: by-key }
     - term: treatments
       # NOT A LAYER, AND KEPT OUT OF THE STACK ON PURPOSE. routes, nat, mangle and acl are not positions
@@ -1082,20 +1048,13 @@ profiles:
       schema:
         shape: list_of_entries
         required_on_roles: [router]   # 7.0: was `required_on_kinds: [router]` until `router` stopped being a kind
-        entry_required_attrs: [kind, what, why]
-        entry_values:
-          kind: [route, nat, mangle, acl, queue]
-        entry_ref_fields: [to]
-        entry_types: { observed: iso_date }
-        on_aspect:
-          - { aspect: capability, attr: permission, default: permitted }
-      entry_attrs:
-        kind:  "route (where traffic goes) | nat (what its addresses become) | mangle (what marks it carries) | acl (whether it is allowed at all) | queue (what bandwidth it gets)"
-        what:  "the treatment itself, briefly. A POINTER to the device's own config, never a copy of it — ground rule 3: the router owns its rules and they are not hand-edited from here."
-        why:   "what breaks if it is removed. This is the load-bearing attr: a treatment with no stated consequence is an inventory row, and inventory is what the device's own export already gives you."
-        to:    "optional: a {bean, field} ref to where the treatment sends traffic"
-        permission: "the position on the capability aspect. `required` is the one that earns this term: a server's outbound SPF identity can DEPEND on firewall mangle marks, and today that is a prose safety note nothing enforces."
-        observed: "ABSOLUTE date the treatment was read off the device"
+        attrs:
+          kind:        { required: true, in: [route, nat, mangle, acl, queue], meaning: "route (where traffic goes) | nat (what its addresses become) | mangle (what marks it carries) | acl (whether it is allowed at all) | queue (what bandwidth it gets)" }
+          what:        { required: true, in: prose, meaning: "the treatment itself, briefly. A POINTER to the device's own config, never a copy of it — ground rule 3: the router owns its rules and they are not hand-edited from here." }
+          why:         { required: true, in: prose, meaning: "what breaks if it is removed. This is the load-bearing attr: a treatment with no stated consequence is an inventory row, and inventory is what the device's own export already gives you." }
+          observed:    { in: { type: iso_date }, meaning: "ABSOLUTE date the treatment was read off the device" }
+          to:          { in: ref, meaning: "optional: a {bean, field} ref to where the treatment sends traffic" }
+          permission:  { in: { aspect: capability, default: permitted }, meaning: "the position on the capability aspect. `required` is the one that earns this term: a server's outbound SPF identity can DEPEND on firewall mangle marks, and today that is a prose safety note nothing enforces." }
       merge: { cardinality: multi, order: by-kind+what }
   domain:
     meaning: >
@@ -1113,8 +1072,6 @@ profiles:
       schema:
         shape: mapping
         required_on_kinds: [domain]
-        required_attrs: [registrar, created, expires, auto_renew, observed, source]
-        attr_types: { created: iso_date, expires: iso_date, observed: iso_date }
         # WHICH DATE AGES, said here rather than in the tool. bin/dmstale.py named `registration` and
         # `expires` in its own source until 2026-09-20: this term was born garden-local with the tool
         # extended for it the same day, and when it was promoted to Tier-0 nobody went back. A garden
@@ -1124,15 +1081,15 @@ profiles:
           attr: expires
           notice: { of: time, measure: { count: 90, unit: day } }
           why: "an unrenewed name takes its DNS and its mail with it"
-      attrs:
-        registrar:  "the registrar of record — who the renewal is actually paid to"
-        registrant: "optional: the party holding the registration, where the registry discloses it"
-        created:    "ABSOLUTE date the registration began"
-        expires:    "ABSOLUTE date it lapses if unrenewed — the fact that can lose the name"
-        auto_renew: "enabled | disabled | unknown. `unknown` is the honest default: it is a registrar-ACCOUNT setting and does not appear in WHOIS, so it cannot be observed the way the dates can."
-        observed:   "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer."
-        source:     "where they were read from"
-        note:       "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
+        attrs:
+          registrar:   { required: true, in: prose, meaning: "the registrar of record — who the renewal is actually paid to" }
+          created:     { required: true, in: { type: iso_date }, meaning: "ABSOLUTE date the registration began" }
+          expires:     { required: true, in: { type: iso_date }, meaning: "ABSOLUTE date it lapses if unrenewed — the fact that can lose the name" }
+          auto_renew:  { required: true, in: untyped, meaning: "enabled | disabled | unknown. `unknown` is the honest default: it is a registrar-ACCOUNT setting and does not appear in WHOIS, so it cannot be observed the way the dates can." }
+          observed:    { required: true, in: { type: iso_date }, meaning: "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer." }
+          source:      { required: true, in: prose, meaning: "where they were read from" }
+          registrant:  { in: prose, meaning: "optional: the party holding the registration, where the registry discloses it" }
+          note:        { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
       merge: { cardinality: single, order: none }
 
   knowledge:
@@ -1182,18 +1139,12 @@ profiles:
       context_keys: [knowledge]
       schema:
         shape: list_of_entries
-        entry_required_attrs: [scheme, code, rel]
-        entry_values:
-          rel: [classified_as, draws_on, uses]
-        entry_in_registry:
-          scheme: { registry: knowledge_schemes, take: scheme }
-          code:   { registry_from: scheme, take: code }
-      attrs:
-        scheme: "which classification: isced-f-2013, isco-08, technology"
-        code:   "the code in it"
-        rel:    "classified_as (this IS of that kind) | draws_on (this rests on that knowledge) | uses (this runs that technology)"
-        topic:  "optional: the concept inside the field this draws on"
-        note:   "optional"
+        attrs:
+          scheme:  { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "which classification: isced-f-2013, isco-08, technology" }
+          code:    { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" }
+          rel:     { required: true, in: [classified_as, draws_on, uses], meaning: "classified_as (this IS of that kind) | draws_on (this rests on that knowledge) | uses (this runs that technology)" }
+          topic:   { in: prose, meaning: "optional: the concept inside the field this draws on" }
+          note:    { in: prose, meaning: optional }
       merge: { cardinality: multi, order: by-scheme+code+rel }
 
 terms:
@@ -1206,30 +1157,24 @@ terms:
     schema:
       shape: open_map_of_entries
       key_form: kebab
-      entry_required_attrs: [why]        # a stance with no reason is folklore; the reason IS the fact
-      on_aspect:                                   # TWO aspects: what is ALLOWED, and what is SO
-        - { aspect: capability,  attr: permission,  default: permitted }
-        - { aspect: feasibility, attr: feasibility, default: possible }
-      cross_aspect:
-        # Two squares span a GRID, and the grid has cells NEITHER square can see. Checking each aspect
-        # alone permits both kinds below. The split matters: one pair cannot both be true, the other pair
-        # can and is simply bad.
-        incoherent:                                # an ERROR: one of the two positions is mis-stated
-          - { permission: required,  feasibility: impossible,
-              why: "an unsatisfiable requirement — it must be had and cannot be. Either the requirement is not real, or the impossibility is not, and until that is resolved the entry asserts a contradiction." }
-          - { permission: forbidden, feasibility: necessary,
-              why: "an unenforceable prohibition — it must not be had and unavoidably is. A rule that cannot be obeyed is not a rule; the being needs a different mitigation, or the necessity is overstated." }
-        in_breach:                                 # a WARNING: both CAN hold; the state needs action
-          - { permission: required,  feasibility: possible,
-              why: "REQUIRED but NOT CURRENTLY THE CASE — the requirement is unmet right now." }
-          - { permission: forbidden, feasibility: contingent,
-              why: "FORBIDDEN but CURRENTLY THE CASE — the prohibition is being violated right now." }
-    entry_attrs:
-      permission: "the position taken on the capability aspect (required | omissible | permitted | forbidden)"
-      feasibility: "the position on the feasibility aspect — whether the being CAN be in that state at all, independent of whether it may. `forbidden` + `possible` is a live risk; `forbidden` + `impossible` is already prevented by something else."
-      why:        "WHY this stance holds — the consequence of violating it, in prose an operator can act on"
-      by:         "optional: who imposes it, when the enforcer is not us (e.g. a hosting provider)"
-      feasibility_why: "optional: WHY the feasibility position holds — a sysctl is reversible, a kernel flag is not. Distinct from `why`, which is the reason for the PERMISSION; carried by beans since the aspect was built and declared at 12.0"
+      attrs:
+        # a stance with no reason is folklore; the reason IS the fact
+        why:              { required: true, in: prose, meaning: "WHY this stance holds — the consequence of violating it, in prose an operator can act on" }
+        # TWO aspects: what is ALLOWED, and what is SO
+        permission:       { in: { aspect: capability, default: permitted }, meaning: "the position taken on the capability aspect (required | omissible | permitted | forbidden)" }
+        feasibility:      { in: { aspect: feasibility, default: possible }, meaning: "the position on the feasibility aspect — whether the being CAN be in that state at all, independent of whether it may. `forbidden` + `possible` is a live risk; `forbidden` + `impossible` is already prevented by something else." }
+        by:               { in: untyped, meaning: "optional: who imposes it, when the enforcer is not us (e.g. a hosting provider)" }
+        feasibility_why:  { in: prose, meaning: "optional: WHY the feasibility position holds — a sysctl is reversible, a kernel flag is not. Distinct from `why`, which is the reason for the PERMISSION; carried by beans since the aspect was built and declared at 12.0" }
+      # Two squares span a GRID, and the grid has cells NEITHER square can see. Checking each aspect
+      # alone permits both kinds below. The split matters: one pair cannot both be true, the other pair
+      # can and is simply bad.
+      cells:
+        # incoherent — an ERROR: one of the two positions is mis-stated
+        - { when: { permission: required, feasibility: impossible }, verdict: incoherent, why: "an unsatisfiable requirement — it must be had and cannot be. Either the requirement is not real, or the impossibility is not, and until that is resolved the entry asserts a contradiction." }
+        - { when: { permission: forbidden, feasibility: necessary }, verdict: incoherent, why: "an unenforceable prohibition — it must not be had and unavoidably is. A rule that cannot be obeyed is not a rule; the being needs a different mitigation, or the necessity is overstated." }
+        # in_breach — a WARNING: both CAN hold; the state needs action
+        - { when: { permission: required, feasibility: possible }, verdict: in_breach, why: "REQUIRED but NOT CURRENTLY THE CASE — the requirement is unmet right now." }
+        - { when: { permission: forbidden, feasibility: contingent }, verdict: in_breach, why: "FORBIDDEN but CURRENTLY THE CASE — the prohibition is being violated right now." }
     merge: { cardinality: multi, order: by-capability }
   - term: consumes
     # SETTLED at 2.1. The v2 plan proposed retiring it as unused; it had a live occupant, and the operator
@@ -1240,8 +1185,10 @@ terms:
     context_keys: ["consumes"]
     schema:
       shape: list_of_entries
-      entry_ref_fields: [self]
-      on_aspect: { aspect: necessity, default: necessary }   # an input is needed unless an edge says otherwise
+      # an input is needed unless an edge says otherwise
+      is_ref: true
+      attrs:
+        necessity:  { in: { aspect: necessity, default: necessary } }
     merge: { cardinality: multi, order: "by-bean?+mapping?+field?" }
   - term: refs
     # THE OPEN RESIDUAL. Any edge that is not one of the canonical relations above lives here, and MUST
@@ -1253,13 +1200,11 @@ terms:
     context_keys: ["refs"]
     schema:
       shape: open_map_of_entries
-      entry_required_attrs: [rel]
-      entry_types: { rel: kebab }
-      entry_ref_fields: [self]
-    entry_attrs:
-      rel:  "the relation TYPE, kebab-case and open"
-      path: "INSTEAD of a bean: a pointer to something that is not a managed object here — an off-garden document. The residual relation's own residual, kept since the relation algebra was declared"
-      note: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
+      is_ref: true
+      attrs:
+        rel:   { required: true, in: { type: kebab }, meaning: "the relation TYPE, kebab-case and open" }
+        path:  { in: untyped, meaning: "INSTEAD of a bean: a pointer to something that is not a managed object here — an off-garden document. The residual relation's own residual, kept since the relation algebra was declared" }
+        note:  { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
 # LOCAL kinds: object types this garden manages that std-vocab doesn't schematize. Each gets a small schema
 # (MODEL Rule 6). A kind that proves general is promoted alongside its terms.
@@ -1268,10 +1213,12 @@ terms:
     context_keys: ["depends_on"]
     schema:
       shape: open_map_of_entries
-      entry_ref_fields: [self]
       dag: true
-      on_aspect: { aspect: necessity, default: necessary }   # the sibling of `consumes`: depends_on needs
-                                                             # a BEING, consumes needs its PRODUCED STATE
+      # the sibling of `consumes`: depends_on needs
+      # a BEING, consumes needs its PRODUCED STATE
+      is_ref: true
+      attrs:
+        necessity:  { in: { aspect: necessity, default: necessary } }
     merge: { cardinality: multi, order: by-bean }
   # == CORE GRAMMAR ENUMS (promoted 2026-08-02, std-vocab@2.0 / P6 E3) ==
   # These were CODE CONSTANTS in bin/dmcheck.py (STATUSES, ID_STATUS, ANCHOR_CLASSES, AUTHORITY, SRC) —
@@ -1357,49 +1304,28 @@ terms:
       shape: open_map_of_entries                    # NB the KEY is open: no `values`/`values_from` is declared for it,
       key_form: kebab                               # so the gate can only ever require kebab-case, never a fixed list.
       required_on_kinds: [codebase]                 # a kind:codebase bean MUST carry a non-empty analysis_cache
-      entry_required_attrs: [produced_by, as_of, staleness_key, policy]
-      entry_values:
-        policy: [index, reference-only, skim]
-        form:   [summary_ref, inline, external]
-      entry_types: { as_of: iso_date }              # Rule 6: absolute dates only
-      entry_pattern:
+      attrs:
+        produced_by:     { required: true, in: untyped, meaning: "the agent/tool id that produced this analysis (provenance — who to ask, who to blame)" }
+        # Rule 6: absolute dates only
+        as_of:           { required: true, in: { type: iso_date }, meaning: "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)" }
         # 11.0: a staleness key is a POSITION, and `git-head:<sha>` was resolved against whatever tree the
         # READER had checked out — one analysis, one verdict per machine. The git-object-graph form names the
         # repository, so every reader asks the same object graph. `manual:<why>` stays for what no key can track.
-        staleness_key: '^([a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}|manual:.+)$'
-      entry_soft_pattern:
-        covers_paths: { pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$',
-                        why: "a bare absolute path names no host — the same defect `code_paths.path` carries" }
-      entry_required_if:
-        - { attr: form, equals: summary_ref, requires: [summary_ref] }
-      entry_expect_if:
-        - { attr: staleness_key, starts_with: "manual:", expects: covers_paths,
-            why: "an agent cannot tell where to re-check it" }
-      pointer_fields: { summary_ref: bean_field_pointer }
+        staleness_key:   { required: true, in: { pattern: "^([a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}|manual:.+)$" }, meaning: "the value that makes this entry VALID; when it MOVES, the entry is STALE. The FORM is the pattern this attribute declares, beside this sentence, and is not restated here: `<repo>@<object-id>`, a position in a named repository's object graph, or `manual:<why>` for what no key can track. Until 2026-09-20 this line listed three spellings — the git-head, the digest and the manual one — two of which the pattern had already refused since 11.0. A person reading the term was taught the form the gate rejects, which is the same defect as a law the code ignores, pointing the other way. (The superseded wording is in git, and is deliberately NOT quoted here: a document that quotes a spelling it is abolishing still contains it, and the check in test/place.py cannot tell a quotation from a lesson. Nor should it have to.)" }
+        policy:          { required: true, in: [index, reference-only, skim], meaning: "index | reference-only | skim — how the analysed source is to be treated" }
+        form:            { in: [summary_ref, inline, external], meaning: "summary_ref | inline | external — where the cached result physically lives" }
+        covers_paths:    { in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare absolute path names no host — the same defect `code_paths.path` carries" }, meaning: "the code_paths path(s) this entry analysed — this is WHERE an agent re-checks staleness_key" }
+        summary_ref:     { in: { pointer: bean_field_pointer }, meaning: "REQUIRED when form: summary_ref. A pointer, or a list of pointers, to the recorded result. Each pointer is either '<section>.<key>' (a field on THIS bean, gate-resolved), or {bean: <id>, field: <key>} (a field on ANOTHER bean, gate-resolved), or 'file:<path>' (an on-disk document)." }
+        relevant_scope:  { in: prose, meaning: "optional: which part of a large covered tree matters to THIS bean (e.g. 'CE module: hr')" }
+        digest:          { in: untyped, meaning: "optional short content hash of the cached result itself" }
+      cells:
+        - { when: { form: summary_ref }, requires: [summary_ref] }
+        - { when: { staleness_key: { starts_with: "manual:" } }, expects: [covers_paths], why: "an agent cannot tell where to re-check it" }
     open_keys: true                                 # restated for the human reader; the gate reads schema.key_form
     key_note: >
       kebab-case <cache_type>. Known types so far (a NON-exhaustive registry, NOT an enum the gate enforces):
       code-structure | framework-surface | api-surface | api-client-contract | security-surface | bcf-domain.
       Anticipated: dep-graph | sql-schema | revit-ui | csharp-api | python-models | test-coverage.
-    entry_attrs:                                    # human documentation; the GATE reads schema: above
-      produced_by:    "the agent/tool id that produced this analysis (provenance — who to ask, who to blame)"
-      as_of:          "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)"
-      staleness_key:  "the value that makes this entry VALID; when it MOVES, the entry is STALE. The FORM is
-                       `entry_pattern.staleness_key` above and is not restated here: `<repo>@<object-id>`,
-                       a position in a named repository's object graph, or `manual:<why>` for what no key
-                       can track. Until 2026-09-20 this line listed three spellings — the git-head, the
-                       digest and the manual one — two of which the pattern eighteen lines above had
-                       already refused since 11.0. A person reading the term was taught the form the gate
-                       rejects, which is the same defect as a law the code ignores, pointing the other
-                       way. (The superseded wording is in git, and is deliberately NOT quoted here: a
-                       document that quotes a spelling it is abolishing still contains it, and the check
-                       in test/place.py cannot tell a quotation from a lesson. Nor should it have to.)"
-      policy:         "index | reference-only | skim — how the analysed source is to be treated"
-      form:           "summary_ref | inline | external — where the cached result physically lives"
-      summary_ref:    "REQUIRED when form: summary_ref. A pointer, or a list of pointers, to the recorded result. Each pointer is either '<section>.<key>' (a field on THIS bean, gate-resolved), or {bean: <id>, field: <key>} (a field on ANOTHER bean, gate-resolved), or 'file:<path>' (an on-disk document)."
-      covers_paths:   "the code_paths path(s) this entry analysed — this is WHERE an agent re-checks staleness_key"
-      relevant_scope: "optional: which part of a large covered tree matters to THIS bean (e.g. 'CE module: hr')"
-      digest:         "optional short content hash of the cached result itself"
     staleness_rule: >
       An entry is VALID only while its staleness_key matches the live source at covers_paths. A STALE entry is
       NEVER silently used: re-run the analysis, then REFRESH the entry (new as_of + new staleness_key). Trusting
@@ -1438,20 +1364,21 @@ terms:
       alt_form: { key: via, ref_fields: [via] }      # the INHERITED form: a single `via` ref, no facets
       key_form: values_from:facets                   # otherwise every key must be a declared facet
       entry_one_of: [owner, contract, external, crown]   # a bean, a contract, outside, or the axiom itself
-      entry_ref_fields: [owner, contract]            # `external` and `crown` resolve to no bean by design
       entry_must_match:                              # the branch is NOT free: nature routes it
         - { attr: crown, registry: natures, keyed_by: nature, take: crown }
       entry_form_from_kind_attr: ownership_form      # a kind may PIN which form it must use (see kind: person)
       dag: true                                      # ownership must stay acyclic
+      attrs:
+        owner:     { in: ref }
+        contract:  { in: ref }                           # `external` and `crown` resolve to no bean by design
+        since:     { in: untyped, meaning: "optional: ABSOLUTE date this owner came to hold the facet" }
+        note:      { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
     forms:
       explicit:  "owned_by: { <facet>: { owner: {bean: <person|org>} }, ... }   # introduce facet-owners here"
       inherited: "owned_by: { via: {bean: <parent>} }                           # inherit parent's facet-owners"
       co_owned:  "owned_by: { <facet>: { contract: {bean: <contract>} } }       # a SINGLE facet co-owned -> a contract resolves it"
       external:  "owned_by: { <facet>: { external: '<who>' } }                  # owned OUTSIDE this garden (third-party software, a vendor); names the owner in prose because they are not a managed object here"
       crown:     "owned_by: { <facet>: { crown: <branch> } }                     # ownership TERMINATES at the axiom; the branch must be the one this bean's nature routes to"
-    entry_attrs:
-      since: "optional: ABSOLUTE date this owner came to hold the facet"
-      note:  "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
     merge: { cardinality: multi, order: by-facet }
     promotion: { status: candidate, note: "universal — review in attrs-to-universal session" }
   - term: responsibility
@@ -1470,18 +1397,19 @@ terms:
       alt_form: { key: via, ref_fields: [via] }      # inherited, exactly as ownership inherits
       key_form: values_from:facets                   # the SAME facet lattice — the two arcs pair per facet
       entry_one_of: [holder, contract, external, self]   # NB no `crown`: the crown owns but never answers
-      entry_ref_fields: [holder, contract]
       facet_parity_with: owned_by                    # the loop must CLOSE: same facets on both arcs
       dag: true
+      attrs:
+        holder:    { in: ref }
+        contract:  { in: ref }
+        since:     { in: untyped, meaning: "optional: ABSOLUTE date this holder came to answer for the facet" }
+        note:      { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
     forms:
       explicit:  "responsibility: { <facet>: { holder: {bean: <person|org>} } }"
       inherited: "responsibility: { via: {bean: <parent>} }"
       shared:    "responsibility: { <facet>: { contract: {bean: <contract>} } }   # shared duty -> a contract, as with co-ownership"
       external:  "responsibility: { <facet>: { external: '<who>' } }              # answered for outside this garden"
       self:      "responsibility: { <facet>: { self: true } }                      # a being answers for ITSELF (persons). Reflexive, so it is deliberately NOT an edge — a self-edge would be a cycle, and autonomy is not a dependency."
-    entry_attrs:
-      since: "optional: ABSOLUTE date this holder came to answer for the facet"
-      note:  "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
     rules:
       parity: "every facet with an OWNER must have a HOLDER and vice versa. An ownership claim nothing answers for is a loose end; a duty nobody owns is orphaned."
       not_the_same_as_ownership: "they are opposite arcs, not synonyms. A rented VPS is owned by the provider and answered for by the operator; that is the normal case, not an exception."
@@ -1516,8 +1444,10 @@ terms:
     schema:                                          # GATE (P2): enforced generically from here, not from code
       shape: mapping
       required_on_kinds: [instance]
-      required_attrs: [bean]
-      ref_fields: [self]                             # the mapping IS the ref
+      # the mapping IS the ref
+      is_ref: true
+      attrs:
+        bean:  { required: true, in: id }
     form: "instance_of: {bean: <product|codebase>}"
     merge: { cardinality: single, order: none }
     promotion: { status: candidate }
@@ -1529,9 +1459,11 @@ terms:
     schema:                                          # GATE (P2): enforced generically from here, not from code
       shape: mapping
       required_on_kinds: [instance]
-      required_attrs: [bean]
-      ref_fields: [self]                             # the mapping IS the ref
       dag: true                                      # habitat containment must stay acyclic
+      # the mapping IS the ref
+      is_ref: true
+      attrs:
+        bean:  { required: true, in: id }
     form: "lives_in: {bean: <habitat>}   # follow the chain for the full stack"
     # habitat_types MOVED to the `provides_habitat` term below (P5): the list had no bean field, so a
     # habitat's TYPE could not be recorded at all — the hole the reverse gate found on its first run.
@@ -1553,7 +1485,12 @@ terms:
   - term: part_of
     meaning: "the whole this being is a component of (composition; a being is part_of at most one whole)"
     context_keys: ["part_of"]
-    schema: { shape: mapping, required_attrs: [bean], ref_fields: [self], dag: true }
+    schema:
+      shape: mapping
+      dag: true
+      is_ref: true
+      attrs:
+        bean:  { required: true, in: id }
     merge: { cardinality: single, order: none }
     promotion: { status: candidate, note: "universal composition — review at P6" }
   - term: creator
@@ -1562,7 +1499,11 @@ terms:
     # survive it. Recording both is therefore not a duplicate authoritative fact.
     meaning: "the being that made this being"
     context_keys: ["creator"]
-    schema: { shape: mapping, required_attrs: [bean], ref_fields: [self] }
+    schema:
+      shape: mapping
+      is_ref: true
+      attrs:
+        bean:  { required: true, in: id }
     merge: { cardinality: single, order: none }
   - term: ip
     meaning: "an Internet Protocol address identifying a network interface/endpoint"
@@ -1847,24 +1788,16 @@ terms:
     context_keys: [located_at]
     schema:
       shape: list_of_entries
-      entry_required_attrs: [system, openness]
-      entry_values:
-        openness: [here, elsewhere, unreachable, unknown]
-      entry_in_registry:
-        system: { registry: anchor_systems, take: system }
-      entry_required_if:
-        - { attr: openness, equals: here,        requires: [at] }
-        - { attr: openness, equals: elsewhere,   requires: [at] }
-        - { attr: openness, equals: unreachable, requires: [at] }
-      entry_pattern_from_registry:
-        { attr: at, registry: anchor_systems, keyed_by: system, take: pattern }
-      entry_types: { observed: iso_date }
-    entry_attrs:
-      system:   "which anchor system this position is stated in — it selects the form the position must take"
-      at:       "the position itself, in that system's ONE canonical form. Required unless openness is `unknown`, which is precisely the case where there is no position to state."
-      openness: "here (reachable from the machine that recorded it) | elsewhere (reachable, and NOT from here) | unreachable (known, and cannot be reached) | unknown (nobody has established where it is)"
-      observed: "ABSOLUTE date this location was checked. A location ages: a tree is moved, a branch is checked out elsewhere, a printout is filed."
-      note:     "optional prose — the only place a `physical` address can live, since that system declares no canonical form"
+      attrs:
+        system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which anchor system this position is stated in — it selects the form the position must take" }
+        openness:  { required: true, in: [here, elsewhere, unreachable, unknown], meaning: "here (reachable from the machine that recorded it) | elsewhere (reachable, and NOT from here) | unreachable (known, and cannot be reached) | unknown (nobody has established where it is)" }
+        observed:  { in: { type: iso_date }, meaning: "ABSOLUTE date this location was checked. A location ages: a tree is moved, a branch is checked out elsewhere, a printout is filed." }
+        at:        { in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position itself, in that system's ONE canonical form. Required unless openness is `unknown`, which is precisely the case where there is no position to state." }
+        note:      { in: prose, meaning: "optional prose — the only place a `physical` address can live, since that system declares no canonical form" }
+      cells:
+        - { when: { openness: here }, requires: [at] }
+        - { when: { openness: elsewhere }, requires: [at] }
+        - { when: { openness: unreachable }, requires: [at] }
     merge: { cardinality: multi, order: "by-system+at?" }
   - term: timing
     # WHEN, AT A DECLARED RESOLUTION. The open key is what makes this serve sessions without a session
@@ -1880,18 +1813,12 @@ terms:
       shape: open_map_of_entries
       key_form: kebab
       required_on_kinds: [session]
-      entry_required_attrs: [system, at, unit]
-      entry_in_registry:
-        system: { registry: anchor_systems, take: system }
-        unit:   { registry: units, take: unit }
-      entry_pattern_from_registry:
-        { attr: at, registry: anchor_systems, keyed_by: system, take: pattern }
-    entry_attrs:
-      system: "the time anchor system — gregorian-civil for a calendar reading, event-anchored for a position fixed only by its neighbours"
-      at:     "the position, in that system's ONE canonical form"
-      unit:   "the resolution ACTUALLY HELD. `2026-08-07T05:21` recorded at unit: minute means the second is not known — not that it was zero."
-      by:     "optional: who or what read the clock, when that is not the bean's default provenance"
-      note:   "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
+      attrs:
+        system:  { required: true, in: { registry: anchor_systems, take: system }, meaning: "the time anchor system — gregorian-civil for a calendar reading, event-anchored for a position fixed only by its neighbours" }
+        at:      { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position, in that system's ONE canonical form" }
+        unit:    { required: true, in: { registry: units, take: unit }, meaning: "the resolution ACTUALLY HELD. `2026-08-07T05:21` recorded at unit: minute means the second is not known — not that it was zero." }
+        by:      { in: untyped, meaning: "optional: who or what read the clock, when that is not the bean's default provenance" }
+        note:    { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
     key_note: >
       kebab-case moment names. Used so far: start | sync | stop. The key is DELIBERATELY OPEN and the gate
       is forbidden from enumerating it — a run with four sync points, or a moment nobody has named yet,
@@ -1912,11 +1839,6 @@ terms:
     schema:
       shape: open_map_of_entries
       key_form: kebab
-      entry_required_attrs: [system, at]
-      entry_in_registry:
-        system: { registry: anchor_systems, take: system }
-      entry_pattern_from_registry:
-        { attr: at, registry: anchor_systems, keyed_by: system, take: pattern }
       entry_must_match:
         # THE JOIN (7.0): a host's roots are stated in the path grammar its OWN OS declares, so the two
         # can no longer disagree. `keyed_by: os` selects the operating_systems row by a field of the BEAN,
@@ -1924,12 +1846,11 @@ terms:
         # NOT on `located_at`, deliberately: roots is the host describing itself and every bean carrying
         # it has an `os`, while `located_at` is carried by codebases, which have none.
         - { attr: system, registry: operating_systems, keyed_by: os, take: path_grammar }
-      entry_types: { observed: iso_date }
-    entry_attrs:
-      system: "which filesystem system this host resolves the root in — pinned since 7.0 to the grammar this host's `os` declares, so it is checked rather than merely stated"
-      at:     "the literal position this root means HERE, host named, in that system's canonical form"
-      observed: "ABSOLUTE date the resolution was checked — a tree gets moved"
-      note:     "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
+      attrs:
+        system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which filesystem system this host resolves the root in — pinned since 7.0 to the grammar this host's `os` declares, so it is checked rather than merely stated" }
+        at:        { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the literal position this root means HERE, host named, in that system's canonical form" }
+        observed:  { in: { type: iso_date }, meaning: "ABSOLUTE date the resolution was checked — a tree gets moved" }
+        note:      { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
     key_note: >
       kebab-case root names, shared across hosts by AGREEMENT rather than by a registry: a root is a name
       two machines both choose to use, and centralising the list would re-introduce the one shared document
@@ -1957,14 +1878,10 @@ terms:
     context_keys: [roles]
     schema:
       shape: list_of_entries
-      entry_required_attrs: [role]
-      entry_in_registry:
-        role: { registry: roles, take: role }
-      entry_types: { observed: iso_date }
-    entry_attrs:
-      role:     "which job — a registry row, so a typo is an error and not a new role"
-      why:      "optional: what this being does in that role that another in the same role would not"
-      observed: "ABSOLUTE date the role was confirmed to be one this being actually performs"
+      attrs:
+        role:      { required: true, in: { registry: roles, take: role }, meaning: "which job — a registry row, so a typo is an error and not a new role" }
+        observed:  { in: { type: iso_date }, meaning: "ABSOLUTE date the role was confirmed to be one this being actually performs" }
+        why:       { in: prose, meaning: "optional: what this being does in that role that another in the same role would not" }
     merge: { cardinality: multi, order: by-role }
   - term: os
     # WHAT A MACHINE RUNS, and the reason it is a registry rather than a string: it CONSTRAINS. An OS row
@@ -2008,16 +1925,12 @@ terms:
     schema:
       shape: open_map_of_entries
       key_form: kebab
-      entry_required_attrs: [format]
-      entry_in_registry:
-        format: { registry: storage_formats, take: format }
-      entry_types: { observed: iso_date }
-    entry_attrs:
-      format:     "a row of storage_formats — ext4, crypto_LUKS, LVM2_member and so on"
-      carried_by: "the `volumes` key beneath this one. A local key and NOT a ref: the stack is intra-bean, which is why it joins no acyclic check."
-      uuid:       "the volume's own identifier, as its format reports it. The datum a rebuild needs and the one that survives a device rename."
-      at:         "where it is mounted, in this machine's path grammar. Absent for a volume that holds no filesystem — a LUKS container or an LVM member is mounted nowhere."
-      observed:   "ABSOLUTE date the layout was read off the machine"
+      attrs:
+        format:      { required: true, in: { registry: storage_formats, take: format }, meaning: "a row of storage_formats — ext4, crypto_LUKS, LVM2_member and so on" }
+        observed:    { in: { type: iso_date }, meaning: "ABSOLUTE date the layout was read off the machine" }
+        carried_by:  { in: untyped, meaning: "the `volumes` key beneath this one. A local key and NOT a ref: the stack is intra-bean, which is why it joins no acyclic check." }
+        uuid:        { in: untyped, meaning: "the volume's own identifier, as its format reports it. The datum a rebuild needs and the one that survives a device rename." }
+        at:          { in: untyped, meaning: "where it is mounted, in this machine's path grammar. Absent for a volume that holds no filesystem — a LUKS container or an LVM member is mounted nowhere." }
     reproduction_note: >
       SCOPE, STATED BECAUSE IT IS ABOUT TO GROW. This term records the LAYOUT — what exists, what carries
       what, and where it is mounted — which is what a rebuild needs to recreate the shape. It does NOT
@@ -2064,18 +1977,16 @@ terms:
     schema:
       shape: open_map_of_entries
       key_form: kebab
-      entry_required_attrs: [defines, tracks, source, records]
-      pointer_fields: { tracks: bean_field_pointer }
-    entry_attrs:
-      defines: "WHAT this datum is, structurally — the part that stays true across every value it will ever hold. Written so a reader who has never seen the machine can tell which reading would refresh it."
-      tracks:  "a pointer to the field holding the CURRENT value — `<section>.<key>` on this bean. The value is NOT copied here: it lives in one place and this names it."
-      source:  "the exact command or file the value is read from, so the next scan reads THE SAME THING. Without it a differing value cannot be told from a differing METHOD — the failure this estate met when /sys/class/net reported a bond's MAC where ethtool -P reported the NIC's."
-      records: "the append-only log, OLDEST FIRST. See `record_attrs`."
+      attrs:
+        defines:  { required: true, in: prose, meaning: "WHAT this datum is, structurally — the part that stays true across every value it will ever hold. Written so a reader who has never seen the machine can tell which reading would refresh it." }
+        tracks:   { required: true, in: { pointer: bean_field_pointer }, meaning: "a pointer to the field holding the CURRENT value — `<section>.<key>` on this bean. The value is NOT copied here: it lives in one place and this names it." }
+        source:   { required: true, in: prose, meaning: "the exact command or file the value is read from, so the next scan reads THE SAME THING. Without it a differing value cannot be told from a differing METHOD — the failure this estate met when /sys/class/net reported a bond's MAC where ethtool -P reported the NIC's." }
+        records:  { required: true, in: untyped, meaning: "the append-only log, OLDEST FIRST. See `record_attrs`." }
     record_attrs:
       # ONE LEVEL DEEPER THAN THE GATE VALIDATES, AND SAID SO RATHER THAN IMPLIED. The interpreter checks
       # the entries of a term, not the entries of a list INSIDE an entry, so everything below is convention
       # the gate does not yet enforce. That is a real gap and it is named here instead of being dressed up:
-      # `entry_required_attrs` reaches `beanger.<datum>`, not `beanger.<datum>.records[]`. Closing it needs
+      # `attrs` reaches `beanger.<datum>`, not `beanger.<datum>.records[]`. Closing it needs
       # a nested-entry mechanism in bin/dmcheck.py — a GATE change, tracked in [[design-network-stack]].
       seq:   "1-based position in this datum's log. The identity `prev` points at."
       at:    "the moment of the RECORD, epoch MILLISECONDS (see the `unix-epoch` anchor system). Milliseconds because two operations in one session can land in the same second and their order is the thing being recorded."
@@ -2105,13 +2016,11 @@ terms:
     schema:
       shape: mapping
       required_on_kinds: [session]
-      required_attrs: [host, at, branch]
-      ref_fields: [host]
-    attrs:
-      host:      "a {bean} ref to the machine the session ran on. A session is not portable: its shell history, its reachability and what it could measure all belong to one machine."
-      at:        "the working copy, as a position in that host's path grammar — `root:` form where a root exists, so it resolves on a second machine rather than reading as a literal path that is not there."
-      branch:    "the git branch it commits to. `session/<slug>` by convention; `master` for a session that worked the main copy directly, which is what every session before 2026-08-07 did."
-      opened_at: "epoch milliseconds, stamped by bin/dmsession.py. A session's own start is the one moment nobody should be estimating."
+      attrs:
+        host:       { required: true, in: ref, meaning: "a {bean} ref to the machine the session ran on. A session is not portable: its shell history, its reachability and what it could measure all belong to one machine." }
+        at:         { required: true, in: untyped, meaning: "the working copy, as a position in that host's path grammar — `root:` form where a root exists, so it resolves on a second machine rather than reading as a literal path that is not there." }
+        branch:     { required: true, in: untyped, meaning: "the git branch it commits to. `session/<slug>` by convention; `master` for a session that worked the main copy directly, which is what every session before 2026-08-07 did." }
+        opened_at:  { in: untyped, meaning: "epoch milliseconds, stamped by bin/dmsession.py. A session's own start is the one moment nobody should be estimating." }
     merge: { cardinality: single, order: none }
 
   - term: capture
@@ -2144,26 +2053,25 @@ terms:
     schema:
       shape: open_map_of_entries
       key_form: kebab
-      entry_required_attrs: [of, owned_by_them, source, taken_at, staleness_key, redactions, holds]
-    entry_attrs:
-      of:            "WHAT was copied — the config, the layout, the ruleset — in enough detail that a reader knows what they are holding."
-      owned_by_them: "WHO owns the original and therefore the truth. A capture that does not name its owner reads as an authoritative fact, which is the failure ground rule 3 exists to prevent."
-      source:        "the EXACT command that produced it, so it can be produced again and compared. The same argument `beanger.source` makes, and it earned it there within the hour: naming the command is what gets it run."
-      taken_at:      "epoch milliseconds — a capture with no moment cannot be told from a guess."
-      # TWO WAYS A STALENESS KEY LIES, both met within an hour of this term being written and both worth
-      # stating here rather than only on the bean that hit them. (1) THE SOURCE STAMPS ITSELF: a RouterOS
-      # export carries its own generation time, so a plain hash of the output changes on every run even
-      # when nothing changed — a key must be computed over the content with such lines excluded, and the
-      # exclusion must be written INTO the key so the check is reproducible. (2) STORAGE REWRITES THE
-      # BYTES: git's default text handling converted CRLF to LF on commit, so the stored copy hashed
-      # differently from what the command produces. Captures need `-text` in `.gitattributes`. Neither is
-      # exotic; both make the key report "changed" forever, which is as useless as never reporting it.
-      staleness_key: "how a reader decides whether this still holds: a config version, a change counter, a hash of the live export. The same job `analysis_cache.staleness_key` does for code, which is where this shape comes from rather than being invented beside it."
-      redactions:    "WHAT WAS REMOVED and why. REQUIRED. Write `none — the source emits no secrets` explicitly if that is true; the point is that it is a claim, not a default."
-      holds:         "the content itself for something small, or a `file:` pointer into this garden for something large. Large captures do not belong inline: a bean must stay legible on paper, and a 900-line router export is not."
-      restores:      "optional: what this capture would let somebody rebuild, and what it would NOT. The honest half is usually the second."
-      supersedes:    "optional: the `capture` key on this bean that this one replaces"
-      note:          "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
+      attrs:
+        of:             { required: true, in: prose, meaning: "WHAT was copied — the config, the layout, the ruleset — in enough detail that a reader knows what they are holding." }
+        owned_by_them:  { required: true, in: prose, meaning: "WHO owns the original and therefore the truth. A capture that does not name its owner reads as an authoritative fact, which is the failure ground rule 3 exists to prevent." }
+        source:         { required: true, in: prose, meaning: "the EXACT command that produced it, so it can be produced again and compared. The same argument `beanger.source` makes, and it earned it there within the hour: naming the command is what gets it run." }
+        taken_at:       { required: true, in: untyped, meaning: "epoch milliseconds — a capture with no moment cannot be told from a guess." }
+        # TWO WAYS A STALENESS KEY LIES, both met within an hour of this term being written and both worth
+        # stating here rather than only on the bean that hit them. (1) THE SOURCE STAMPS ITSELF: a RouterOS
+        # export carries its own generation time, so a plain hash of the output changes on every run even
+        # when nothing changed — a key must be computed over the content with such lines excluded, and the
+        # exclusion must be written INTO the key so the check is reproducible. (2) STORAGE REWRITES THE
+        # BYTES: git's default text handling converted CRLF to LF on commit, so the stored copy hashed
+        # differently from what the command produces. Captures need `-text` in `.gitattributes`. Neither is
+        # exotic; both make the key report "changed" forever, which is as useless as never reporting it.
+        staleness_key:  { required: true, in: untyped, meaning: "how a reader decides whether this still holds: a config version, a change counter, a hash of the live export. The same job `analysis_cache.staleness_key` does for code, which is where this shape comes from rather than being invented beside it." }
+        redactions:     { required: true, in: prose, meaning: "WHAT WAS REMOVED and why. REQUIRED. Write `none — the source emits no secrets` explicitly if that is true; the point is that it is a claim, not a default." }
+        holds:          { required: true, in: untyped, meaning: "the content itself for something small, or a `file:` pointer into this garden for something large. Large captures do not belong inline: a bean must stay legible on paper, and a 900-line router export is not." }
+        restores:       { in: prose, meaning: "optional: what this capture would let somebody rebuild, and what it would NOT. The honest half is usually the second." }
+        supersedes:     { in: untyped, meaning: "optional: the `capture` key on this bean that this one replaces" }
+        note:           { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
 
   - term: risks
@@ -2194,25 +2102,17 @@ terms:
     schema:
       shape: open_map_of_entries
       key_form: kebab
-      entry_required_attrs: [what, consequence, severity, state, evidence]
-      entry_values:
-        severity: [high, medium, low]
-        state: [live, latent, unproven, resolved, superseded]
-      entry_ref_fields: [owned_with]
-    entry_attrs:
-      what:        "the defect, plainly."
-      consequence: "WHAT IT COSTS IF IT BITES. The load-bearing attr, and the one a prose register loses first — severity is an opinion about this, so recording severity without it records the opinion and drops the argument."
-      severity:    "high | medium | low. An opinion, and it should follow from `consequence` rather than lead it."
-      state:       >
-        live (the defect IS the case right now) | latent (it is not, and nothing prevents it — the
-        `forbidden` + `possible` shape) | unproven (nobody has established which, and that is the finding)
-        | resolved | superseded (a different change made it moot; say which).
-      evidence:    "how the state was established, specific enough to re-run. `unproven` states what WOULD establish it — a risk whose test is unnamed cannot be closed by anyone but its author."
-      found:       "ABSOLUTE date the finding was first made."
-      owned_with:  "optional {bean} ref: where the FIX lives, when that is not this bean. A defect on one being is often only fixable on another."
-      resolution:  "on `resolved` / `superseded`: WHAT settled it. A closed risk that does not say how is a risk a reader must re-open to trust."
-      resolved:    "ABSOLUTE date it was settled."
-      note:        "optional: history, partial resolutions, and what a reader would otherwise re-derive."
+      attrs:
+        what:         { required: true, in: prose, meaning: "the defect, plainly." }
+        consequence:  { required: true, in: prose, meaning: "WHAT IT COSTS IF IT BITES. The load-bearing attr, and the one a prose register loses first — severity is an opinion about this, so recording severity without it records the opinion and drops the argument." }
+        severity:     { required: true, in: [high, medium, low], meaning: "high | medium | low. An opinion, and it should follow from `consequence` rather than lead it." }
+        state:        { required: true, in: [live, latent, unproven, resolved, superseded], meaning: "live (the defect IS the case right now) | latent (it is not, and nothing prevents it — the `forbidden` + `possible` shape) | unproven (nobody has established which, and that is the finding) | resolved | superseded (a different change made it moot; say which).\n" }
+        evidence:     { required: true, in: prose, meaning: "how the state was established, specific enough to re-run. `unproven` states what WOULD establish it — a risk whose test is unnamed cannot be closed by anyone but its author." }
+        owned_with:   { in: ref, meaning: "optional {bean} ref: where the FIX lives, when that is not this bean. A defect on one being is often only fixable on another." }
+        found:        { in: untyped, meaning: "ABSOLUTE date the finding was first made." }
+        resolution:   { in: prose, meaning: "on `resolved` / `superseded`: WHAT settled it. A closed risk that does not say how is a risk a reader must re-open to trust." }
+        resolved:     { in: untyped, meaning: "ABSOLUTE date it was settled." }
+        note:         { in: prose, meaning: "optional: history, partial resolutions, and what a reader would otherwise re-derive." }
     capability_note: >
       A `capabilities` entry at `forbidden` + `possible` IS a latent risk, and the two are deliberately
       NOT merged: a capability records the STANCE a being takes, a risk records a FAILURE MODE, and the
@@ -2447,3 +2347,25 @@ The portable, estate-agnostic classification shared by every garden — the abst
   BORROWS its standing — it ranks as the weakest src in its `provenance.from`, and at the bottom only when it
   names none; the label is never rewritten. And a fourth vacancy reason, `universal`, for a position declared
   because the mechanism is general rather than because this garden expects an occupant.
+
+- **13.0** (2026-09-20, proposed rule-change) — **the law keyed by attribute.** MAJOR: the SPELLING of a term's
+  schema changes, and the old spelling is refused. Until now one attribute's law was scattered across as many
+  constructs as it had properties — `entry_required_attrs`, `entry_values`, `entry_types`, `entry_in_registry`,
+  `on_aspect`, `pointer_fields`… each a map keyed by attribute — and stated a second time, for people, in the
+  term's `entry_attrs:`; the two copies are on record as having drifted twice. Now it is stated once:
+  `schema.attrs.<name>: { required, in, meaning }`. EVERY ATTRIBUTE IS A POSITION IN EXACTLY ONE DOMAIN —
+  measured over every term before the spelling was chosen: none carried two — so `in:` is one thing
+  (`schema_language.attr_domains`): a closed list, a registry, an aspect, a value type, the form a sibling's
+  system declares, a pattern, `extent`, `ref`, a pointer, `id`; or `prose`, which is deliberately not a position;
+  or `untyped`, which owns up to a domain nobody has declared yet. An attribute that states no domain is refused.
+  `cross_aspect`, `entry_required_if` and `entry_expect_if` were three constructs for one idea and are `cells`.
+  The marker `self` inside the ref lists is `is_ref: true`. EIGHTEEN constructs and two doc maps are retired; a
+  garden's overlay now merges `attrs` per attribute, so it can add one attribute to a standard term without
+  restating the rest. NO VERDICT MOVES: proved over a real garden with the old law under the old gate against
+  the translated law under the new one, every mutation applied to both, a mutated law compared with its own
+  translation — identical output in every case. What changes is wording: a refusal names
+  `schema.attrs.<name>` where it named a retired construct. A GARDEN DOES NOT REWRITE ITS OWN TERMS BY HAND:
+  `bin/dmreform.py` translates them, keeps every comment, proves per term that the form read is unchanged, and
+  leaves the file alone when it cannot; `bin/dmupgrade.py` runs it inside its rollback. The standard's own text
+  was translated by the same tool, then its comments put back beside what they explain by hand. One comment was
+  deleted, because it had become false: "human documentation; the GATE reads schema: above".

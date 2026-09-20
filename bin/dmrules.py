@@ -160,6 +160,29 @@ if '--terms' in want:
             det.append(f"entry.{a_} ∈ {v}")
         for a_, v in dmform.facet(F, 'type', 'entry'):
             det.append(f"entry.{a_} is {v}")
+        # 13.0: every attribute says what it is a position IN, so the listing can say it for ALL of them. Until
+        # then this printed the enums, the types and the aspects and was silent about registries, forms and refs.
+        _w = 'entry' if F['scope'] == 'entry' else 'value'
+        for a_, r in dmform.facet(F, 'registry'):
+            det.append(f"{_w}.{a_} is a row of " + (f"the registry its `{r['registry_from']}` names" if r.get('registry_from')
+                                                     else f"registry '{r.get('registry')}'"))
+        for a_, r in dmform.facet(F, 'system_from'):
+            det.append(f"{_w}.{a_} is written in the one form its `{r.get('keyed_by')}` declares ({r.get('registry')})")
+        for a_, r in dmform.facet(F, 'pattern'):
+            det.append(f"{_w}.{a_} matches {r}")
+        for a_, r in dmform.facet(F, 'soft'):
+            det.append(f"{_w}.{a_} SHOULD match {r.get('pattern')} (a warning)")
+        for a_, _r in dmform.facet(F, 'ref'):
+            det.append(f"{_w}.{a_} is a ref — resolved")
+        for a_, _r in dmform.facet(F, 'pointer'):
+            det.append(f"{_w}.{a_} is a pointer — resolved")
+        for a_, _r in dmform.facet(F, 'extent'):
+            det.append(f"{_w}.{a_} is an extent")
+        _typed = {'values', 'registry', 'aspect', 'type', 'system_from', 'pattern', 'soft', 'extent', 'ref', 'pointer'}
+        _raw = (s.get('attrs') or {})
+        _untyped = [a_ for a_, r in _raw.items() if isinstance(r, dict) and r.get('in') == 'untyped']
+        if _untyped:                     det.append(f"UNTYPED — no domain declared yet: {_untyped}")
+        if F['cells']:                   det.append(f"{len(F['cells'])} cell(s): combinations an entry may not, or should not, hold")
         if F['one_of']:                  det.append(f"each entry has one of {F['one_of']}")
         if s.get('key_form'):            det.append(f"keys: {s['key_form']}")
         if F['mirror']['parity_with']:   det.append(f"same facets as '{F['mirror']['parity_with']}'")

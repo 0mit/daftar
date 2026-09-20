@@ -156,6 +156,22 @@ def main():
                 os.replace(path + '.tmp', path)
                 repinned.append(doc)
 
+        # THE GARDEN'S OWN TERMS ARE TRANSLATED, NEVER REWRITTEN BY HAND (13.0). When a release changes how the law
+        # is SPELLED, a garden's `local_terms` are in the old spelling and the new gate refuses them. The release
+        # ships the translator; it is a pure function of each term, it proves per term that the form it reads is
+        # unchanged, and it leaves the file alone when it cannot. A refusal surfaces through the gate below, which
+        # then puts everything back.
+        translated, reform = 'none', os.path.join(ROOT, 'bin', 'dmreform.py')
+        if os.path.isfile(reform):
+            _r = run(sys.executable, reform, os.path.join(ROOT, 'VOCAB.md'), check=False)
+            _out = (_r.stdout + _r.stderr).strip()
+            if _r.returncode != 0:
+                translated = 'REFUSED — ' + _out.replace(ROOT + os.sep, '')
+            elif 'term(s) rewritten' in _out and ': 0 term' not in _out and 'rewritten —' in _out:
+                translated = 'VOCAB.md local_terms — ' + _out.split('rewritten —', 1)[1].strip()
+                if 'VOCAB.md' not in changed:
+                    changed.append('VOCAB.md (translated)')
+
         gpath = os.path.join(ROOT, 'GARDEN.md')
         gtext = open(gpath, encoding='utf-8').read()
         gline = f'daftar_release: "{a.tag}"  # the daftar release this garden runs; bin/dmupgrade.py moves it'
@@ -185,6 +201,7 @@ def main():
                  f"- added: {', '.join(added) or 'none'}",
                  f"- removed: {', '.join(removed) or 'none'}",
                  f"- repinned: {', '.join(repinned) or 'none'}",
+                 f"- translated: {translated}",
                  "- why: (fill in — what this release brings that this garden adopts)",
                  "- beans: none"]
         with open(os.path.join(ROOT, 'log', 'journal.md'), 'a', encoding='utf-8') as j:
@@ -202,6 +219,8 @@ def main():
                     pass
             run('sh', os.path.join(ROOT, 'bin', 'install.sh'), check=False)
             errs = [l for l in gate.stdout.splitlines() if l.startswith('ERROR')]
+            if translated.startswith('REFUSED'):
+                errs.insert(0, 'dmreform ' + translated)
             print(f"NOT {verb.upper()}: under {a.tag} this garden fails its own gate, so every file was put back as it was.\n"
                   + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') +
                   "\nFix what these name (or pass --keep-on-failure to repair by hand), then run this again.")

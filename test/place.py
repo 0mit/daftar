@@ -220,13 +220,13 @@ import dmparse as _dp, yaml as _y
 _sv = _y.safe_load(_dp.read(os.path.join(G, "seed", "std-vocab.md"))[0])
 _ac = next(t for t in (list(_sv["terms"]) + [x for pr in _sv["profiles"].values() for x in pr["terms"]])
            if t["term"] == "analysis_cache")
-_PAT = _ac["schema"]["entry_pattern"]["staleness_key"]
+_PAT = _ac["schema"]["attrs"]["staleness_key"]["in"]["pattern"]
 check("the position index writes a staleness key the LAW would accept, in the one declared spelling",
       _keys and all(_re.match(_PAT, k) for k in _keys), f"keys={_keys} pattern={_PAT}")
 
 # And the law does not teach a spelling its own pattern refuses. This is the defect the other way round:
 # v0.14.0 was a law the code ignored; this is prose the code ignores, which a person reads and copies.
-_doc = str(_ac.get("entry_attrs", {}).get("staleness_key", ""))
+_doc = str(_ac["schema"]["attrs"]["staleness_key"].get("meaning", ""))
 _taught = _re.findall(r"`([a-z][a-z0-9-]*:[^`]*)`", _doc) + _re.findall(r"'([a-z][a-z0-9-]*:[^']*)'", _doc)
 _bad = [s for s in _taught if not _re.match(_PAT, s.replace("<repo>@<object-id>", "r@abc1234")
                                                  .replace("<why>", "x"))]
