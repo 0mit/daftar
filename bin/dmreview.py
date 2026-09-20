@@ -103,10 +103,20 @@ head("EXTERNAL TRUTH REFERENCED, NOT MIRRORED",
 # not a mirror: it knows when it goes stale, and bin/dmstale.py checks. That is the legitimate form the
 # Part B item asks for, so those are marked rather than raised — an aid that keeps surfacing a settled
 # case teaches the reader to skim past the ones that matter.
+# THE FORM IS THE TERM'S, READ FROM IT. This test was a literal tuple of prefixes until 2026-09-20 —
+# `('git-head:', 'digest:')` — and std-vocab 11.0 replaced both with `<repo>@<sha>` without anyone
+# coming back here. Every tracked cache then failed the test, so this aid reported 0 CACHES and asked
+# the reader to judge 38 pairs it had already settled: the exact harm the note above warns about,
+# produced by the aid itself. `manual:` keys count too — an entry a person re-checks by hand is
+# tracked, just not machine-checkable, which is a different question and dmstale's to answer.
+import dmcheck as _law
+_STALENESS = (((_law.TERMS.get('analysis_cache') or {}).get('schema') or {}).get('entry_pattern')
+              or {}).get('staleness_key') or r'(?!)'   # no pattern in the law -> nothing matches, and
+                                                       # the law's absence shows rather than passing
 cached = set()
 for _b, (_fm, _) in DOCS.items():
     for _ct, _e in (_fm.get('analysis_cache') or {}).items():
-        if not str(_e.get('staleness_key', '')).startswith(('git-head:', 'digest:')):
+        if not re.match(_STALENESS, str(_e.get('staleness_key', ''))):
             continue
         _r = _e.get('summary_ref') or []
         for _ptr in (_r if isinstance(_r, list) else [_r]):
@@ -222,7 +232,7 @@ head("TIER-0 RELATIONS NOBODY DRAWS",
      "the standard offers these edges and no bean in this garden uses one. A young or small garden may never "
      "need them, which is why the gate no longer warns. Is one of them the right way to say something a "
      "bean currently says in prose?")
-import dmcheck as _gate
+_gate = _law                         # already imported above, for the staleness form
 _gate.build_docs()
 _drawn = set(_gate.drawn_edges())
 _undrawn = sorted(t for t, s in _gate.SCHEMAS.items()

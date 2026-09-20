@@ -1302,7 +1302,16 @@ terms:
     entry_attrs:                                    # human documentation; the GATE reads schema: above
       produced_by:    "the agent/tool id that produced this analysis (provenance — who to ask, who to blame)"
       as_of:          "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)"
-      staleness_key:  "the value that makes this entry VALID; when it MOVES, the entry is STALE. Forms: 'git-head:<short-sha>' | 'digest:<hash>' | 'manual:<absolute date>'"
+      staleness_key:  "the value that makes this entry VALID; when it MOVES, the entry is STALE. The FORM is
+                       `entry_pattern.staleness_key` above and is not restated here: `<repo>@<object-id>`,
+                       a position in a named repository's object graph, or `manual:<why>` for what no key
+                       can track. Until 2026-09-20 this line listed three spellings — the git-head, the
+                       digest and the manual one — two of which the pattern eighteen lines above had
+                       already refused since 11.0. A person reading the term was taught the form the gate
+                       rejects, which is the same defect as a law the code ignores, pointing the other
+                       way. (The superseded wording is in git, and is deliberately NOT quoted here: a
+                       document that quotes a spelling it is abolishing still contains it, and the check
+                       in test/place.py cannot tell a quotation from a lesson. Nor should it have to.)"
       policy:         "index | reference-only | skim — how the analysed source is to be treated"
       form:           "summary_ref | inline | external — where the cached result physically lives"
       summary_ref:    "REQUIRED when form: summary_ref. A pointer, or a list of pointers, to the recorded result. Each pointer is either '<section>.<key>' (a field on THIS bean, gate-resolved), or {bean: <id>, field: <key>} (a field on ANOTHER bean, gate-resolved), or 'file:<path>' (an on-disk document)."

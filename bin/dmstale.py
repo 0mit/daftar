@@ -35,8 +35,6 @@ except ImportError:
     print("ERROR: PyYAML required"); sys.exit(2)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-QUIET = '--quiet' in sys.argv
-HORIZON = int(sys.argv[sys.argv.index('--days') + 1]) if '--days' in sys.argv else 90
 
 
 def live_git_head(path):
@@ -185,72 +183,90 @@ def verdict(entry):
     return 'FRESH', f"{want} (nothing since it touches the covered paths)"
 
 
-counts = {'FRESH': 0, 'STALE': 0, 'UNKNOWN': 0, 'NOT-HERE': 0}
-rows = []
-for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
-    head, _ = dmparse.read(f)
-    if head is None:
-        continue
-    try:
-        fm = dmparse.loads(head) or {}
-    except Exception:
-        continue
-    ac = fm.get('analysis_cache')
-    if not isinstance(ac, dict):
-        continue
-    for ctype, e in sorted(ac.items()):
-        if not isinstance(e, dict):
+# ---------------------------------------------------------------------------------------------------
+# THE REPORT LIVES UNDER `if __name__ == '__main__'`, for the reason bin/dmcheck.py states for itself:
+# importing this file must not run it or kill the process. It is not tidiness. `verdict()` above is the
+# ONE implementation of FRESH / STALE / NOT-HERE / UNKNOWN, and until this guard existed no other tool
+# could reach it — so bin/dmcursor.py grew a second, weaker copy that knew only the `git-head:<sha>`
+# spelling std-vocab 11.0 replaced, and answered `UNKNOWN — unverifiable here` for every analysis in a
+# migrated garden. One datum, two tools, two verdicts. A shared answer needs a shared implementation,
+# and a script that exits on import cannot be one.
+# ---------------------------------------------------------------------------------------------------
+
+
+def report():
+    QUIET = '--quiet' in sys.argv
+    HORIZON = int(sys.argv[sys.argv.index('--days') + 1]) if '--days' in sys.argv else 90
+    counts = {'FRESH': 0, 'STALE': 0, 'UNKNOWN': 0, 'NOT-HERE': 0}
+    rows = []
+    for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
+        head, _ = dmparse.read(f)
+        if head is None:
             continue
-        state, detail = verdict(e)
-        counts[state] += 1
-        rows.append((state, f"{fm.get('bean')}", ctype, detail))
-
-for state, bean, ctype, detail in rows:
-    if QUIET and state == 'FRESH':
-        continue
-    print(f"{state:8} {bean}.analysis_cache[{ctype}]  {detail}")
-
-# ---- registrations: what lapses if nobody acts -------------------------------------------------
-reg_rows, expiring = [], 0
-for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
-    head, _ = dmparse.read(f)
-    if head is None:
-        continue
-    try:
-        fm = dmparse.loads(head) or {}
-    except Exception:
-        continue
-    reg = fm.get('registration')
-    if not isinstance(reg, dict) or not reg.get('expires'):
-        continue
-    exp = datetime.date.fromisoformat(str(reg['expires']))
-    days = (exp - datetime.date.today()).days
-    state = 'EXPIRED' if days < 0 else ('EXPIRING' if days <= HORIZON else 'OK')
-    if state != 'OK':
-        expiring += 1
-    reg_rows.append((state, fm.get('bean'), days, exp, reg))
-
-if reg_rows:
-    print()
-    for state, bean, days, exp, reg in sorted(reg_rows, key=lambda r: r[2]):
-        if QUIET and state == 'OK':
+        try:
+            fm = dmparse.loads(head) or {}
+        except Exception:
             continue
-        auto = reg.get('auto_renew', 'unknown')
-        flag = '  <-- auto-renew UNKNOWN: nothing is known to prevent this' if (
-            state != 'OK' and auto != 'enabled') else ''
-        print(f"{state:8} {bean}.registration  expires {exp} ({days} days)  "
-              f"auto_renew={auto}  registrar={str(reg.get('registrar'))[:40]}{flag}")
-    print(f"\nregistrations: {sum(1 for r in reg_rows if r[0] == 'OK')} ok, "
-          f"{sum(1 for r in reg_rows if r[0] == 'EXPIRING')} expiring within {HORIZON} days, "
-          f"{sum(1 for r in reg_rows if r[0] == 'EXPIRED')} EXPIRED")
+        ac = fm.get('analysis_cache')
+        if not isinstance(ac, dict):
+            continue
+        for ctype, e in sorted(ac.items()):
+            if not isinstance(e, dict):
+                continue
+            state, detail = verdict(e)
+            counts[state] += 1
+            rows.append((state, f"{fm.get('bean')}", ctype, detail))
 
-print(f"\nanalysis_cache: {counts['FRESH']} fresh, {counts['STALE']} stale, "
-      f"{counts['NOT-HERE']} not on this host, {counts['UNKNOWN']} unknown")
-if counts['NOT-HERE']:
-    print("NOT-HERE is not staleness: those analyses may be perfectly current on the machine that "
-          "holds their source. Give this host a `roots:` entry to resolve them here.")
-if counts['STALE']:
-    print("STALE means the SOURCE MOVED under the analysis, not that a clone is behind.\n"
-          "STALE entries must NOT be trusted — re-run the analysis, then bump as_of + staleness_key "
-          "(VOCAB analysis_cache.staleness_rule).")
-sys.exit(1 if (counts['STALE'] or expiring) else 0)
+    for state, bean, ctype, detail in rows:
+        if QUIET and state == 'FRESH':
+            continue
+        print(f"{state:8} {bean}.analysis_cache[{ctype}]  {detail}")
+
+    # ---- registrations: what lapses if nobody acts -------------------------------------------------
+    reg_rows, expiring = [], 0
+    for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
+        head, _ = dmparse.read(f)
+        if head is None:
+            continue
+        try:
+            fm = dmparse.loads(head) or {}
+        except Exception:
+            continue
+        reg = fm.get('registration')
+        if not isinstance(reg, dict) or not reg.get('expires'):
+            continue
+        exp = datetime.date.fromisoformat(str(reg['expires']))
+        days = (exp - datetime.date.today()).days
+        state = 'EXPIRED' if days < 0 else ('EXPIRING' if days <= HORIZON else 'OK')
+        if state != 'OK':
+            expiring += 1
+        reg_rows.append((state, fm.get('bean'), days, exp, reg))
+
+    if reg_rows:
+        print()
+        for state, bean, days, exp, reg in sorted(reg_rows, key=lambda r: r[2]):
+            if QUIET and state == 'OK':
+                continue
+            auto = reg.get('auto_renew', 'unknown')
+            flag = '  <-- auto-renew UNKNOWN: nothing is known to prevent this' if (
+                state != 'OK' and auto != 'enabled') else ''
+            print(f"{state:8} {bean}.registration  expires {exp} ({days} days)  "
+                  f"auto_renew={auto}  registrar={str(reg.get('registrar'))[:40]}{flag}")
+        print(f"\nregistrations: {sum(1 for r in reg_rows if r[0] == 'OK')} ok, "
+              f"{sum(1 for r in reg_rows if r[0] == 'EXPIRING')} expiring within {HORIZON} days, "
+              f"{sum(1 for r in reg_rows if r[0] == 'EXPIRED')} EXPIRED")
+
+    print(f"\nanalysis_cache: {counts['FRESH']} fresh, {counts['STALE']} stale, "
+          f"{counts['NOT-HERE']} not on this host, {counts['UNKNOWN']} unknown")
+    if counts['NOT-HERE']:
+        print("NOT-HERE is not staleness: those analyses may be perfectly current on the machine that "
+              "holds their source. Give this host a `roots:` entry to resolve them here.")
+    if counts['STALE']:
+        print("STALE means the SOURCE MOVED under the analysis, not that a clone is behind.\n"
+              "STALE entries must NOT be trusted — re-run the analysis, then bump as_of + staleness_key "
+              "(VOCAB analysis_cache.staleness_rule).")
+    sys.exit(1 if (counts['STALE'] or expiring) else 0)
+
+
+if __name__ == '__main__':
+    report()

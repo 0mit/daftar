@@ -93,8 +93,11 @@ run("git", "init", "-q", R)
 open(os.path.join(R, "src", "a.txt"), "w").write("one\n")
 git("add", "-A"); git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "first")
 KEY = git("rev-parse", "--short=7", "HEAD").stdout.strip()
-open(os.path.join(G, "beans", "trixy-like.md"), "w").write(
-    '---\nbean: trixy-like\nkind: host\ntitle: "this machine"\nstatus: active\nsummary: "h"\nnature: physical\n'
+# NAMED `this-host` SINCE 2026-09-20. It was `trixy-like` — a real host of the estate this grew in, with
+# a suffix, which is exactly the shape `bin/dmpublic.py` cannot see: the guard matches whole words, so the
+# name went out in a published file while the guard reported nothing. The fixture never needed the name.
+open(os.path.join(G, "beans", "this-host.md"), "w").write(
+    '---\nbean: this-host\nkind: host\ntitle: "this machine"\nstatus: active\nsummary: "h"\nnature: physical\n'
     'identity: { status: confirmed, anchors: [ { key: hostname, value: "' + __import__("socket").gethostname().lower() + '", class: network, establishing: false }, { key: serial, value: "SN-T1", class: hardware, establishing: true } ] }\n'
     'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
     'roots:\n  tree: { system: unix-filesystem, at: "' + __import__("socket").gethostname().lower() + ':' + R + '", observed: 2026-01-01 }\n'
@@ -141,6 +144,111 @@ m = merged("root:tree", "root:tree/src")
 check("P3c: logical roots nest the same way", m.get('value') == "root:tree/src", json.dumps(m))
 m = merged("root:tree/src", "root:other/src")
 check("P3c: two different roots are unordered", 'conflict' in json.dumps(m), json.dumps(m))
+
+# ---------------------------------------------------------------------------------------------------
+# ONE DATUM, ONE VERDICT — every tool that reads a staleness key must agree about it.
+#
+# WHY THIS SECTION EXISTS. 11.0 abolished `git-head:<sha>` and the gate, dmstale and the corpus all moved.
+# Three tools did not, and nothing noticed for three days, because each was tested only against itself:
+#   bin/dmcursor.py  kept its own copy of the verdict and answered "UNKNOWN — unverifiable here" for EVERY
+#                    analysis in a migrated garden. CHECKLIST Part D sends a reader there first and then
+#                    tells them to trust a FRESH measurement, so the read protocol quietly stopped working.
+#   bin/dmreview.py  counted a tracked cache only if its key began `git-head:` or `digest:`, so it reported
+#                    0 caches and asked the reader to judge 38 settled pairs — the harm its own note names.
+#   bin/dmpos.py     WROTE the abolished spelling into the position index header.
+# The lesson is not "grep for the old prefix". It is that a rule with one statement in the law had four
+# implementations, so the check is behavioural: hand the same key to every tool and require one answer.
+_FMT = "tree@a1b2c3d4e5f6"          # the form the law declares
+_OLD = "git-head:a1b2c3d4e5f6"      # the form 11.0 replaced
+
+def tool(name, *args):
+    return run(sys.executable, os.path.join(G, "bin", name), *args, cwd=G).stdout
+
+codebase("root:tree/src", _FMT)
+_c = tool("dmcursor.py", "tree")
+check("every tool reads the declared form: the cursor gives a real verdict rather than UNKNOWN",
+      "UNKNOWN" not in _c and ("NOT-HERE" in _c or "FRESH" in _c or "STALE" in _c), _c[-500:])
+# dmreview's question is a different one from dmstale's: not "can this key be checked here" but "is this
+# transcription TRACKED at all", which `manual:` keys also satisfy. It needs two near-duplicate beans to
+# have a pair to classify, so the fixture builds them: the same long manifest text on two codebases, one
+# of which points a cache at it. With a key the tool cannot read, the pair is raised as a possible mirror.
+_LONG = ("a manifest transcribed from the upstream project: name, version, licence, dependencies, entry "
+         "points and the data files it loads on install, kept here so a reader need not fetch it")
+def twin(name, key, manifest):
+    open(os.path.join(G, "beans", name + ".md"), "w").write(
+        f'---\nbean: {name}\nkind: codebase\ntitle: "t"\nstatus: active\nsummary: "s"\nnature: metaphysical\n'
+        f'identity: {{ status: confirmed, anchors: [ {{ key: git_remote, value: "git@example.org:{name}.git", '
+        'class: logical, establishing: true } ] }\n'
+        'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
+        f'code_paths:\n  - {{ path: "root:{name}/src", role: own-source, scan_policy: index }}\n'
+        'analysis_cache:\n  code-structure:\n    produced_by: t\n    as_of: 2026-01-01\n'
+        f'    staleness_key: "{key}"\n    policy: index\n    form: summary_ref\n'
+        '    summary_ref: [owns.manifest]\n'
+        f'owns:\n  manifest: "{manifest}"\n---\nA tree.\n')
+
+def tracked_count():
+    for line in tool("dmreview.py").splitlines():
+        if "staleness-keyed CACHES" in line:
+            return int(line.strip().split()[0])
+    return -1
+
+twin("alpha", f"alpha@a1b2c3d4e5f6", _LONG + " for alpha")
+twin("beta",  f"beta@a1b2c3d4e5f6",  _LONG + " for beta")
+check("dmreview counts a key in the declared form as a tracked CACHE rather than asking about it",
+      tracked_count() >= 1, f"tracked={tracked_count()}")
+twin("alpha", "git-head:a1b2c3d4e5f6", _LONG + " for alpha")
+twin("beta",  "git-head:a1b2c3d4e5f6", _LONG + " for beta")
+check("...and a key it cannot read is NOT counted as tracked — the aid must not vouch for what it cannot check",
+      tracked_count() == 0, f"tracked={tracked_count()}")
+for _n in ("alpha", "beta"):
+    os.remove(os.path.join(G, "beans", _n + ".md"))
+
+codebase("root:tree/src", _OLD)
+_c = tool("dmcursor.py", "tree")
+check("and the abolished form is unreadable to the cursor too — refused by the gate, never silently FRESH",
+      "FRESH" not in _c, _c[-500:])
+
+# dmpos WRITES a key. What it writes must be a key the law would accept, or the next person to copy the
+# header learns the wrong spelling from a file no tool validates.
+import re as _re
+run(sys.executable, os.path.join(G, "bin", "dmpos.py"), "--build", cwd=G)
+_idx = os.path.join(G, "log", ".position-index", "position.txt")
+_hdr = [l for l in open(_idx, encoding="utf-8")] if os.path.exists(_idx) else []
+_keys = [l.split(":", 1)[1].strip() for l in _hdr if l.startswith("# staleness_key:")]
+sys.path.insert(0, os.path.join(G, "bin"))
+import dmparse as _dp, yaml as _y
+_sv = _y.safe_load(_dp.read(os.path.join(G, "seed", "std-vocab.md"))[0])
+_ac = next(t for t in (list(_sv["terms"]) + [x for pr in _sv["profiles"].values() for x in pr["terms"]])
+           if t["term"] == "analysis_cache")
+_PAT = _ac["schema"]["entry_pattern"]["staleness_key"]
+check("the position index writes a staleness key the LAW would accept, in the one declared spelling",
+      _keys and all(_re.match(_PAT, k) for k in _keys), f"keys={_keys} pattern={_PAT}")
+
+# And the law does not teach a spelling its own pattern refuses. This is the defect the other way round:
+# v0.14.0 was a law the code ignored; this is prose the code ignores, which a person reads and copies.
+_doc = str(_ac.get("entry_attrs", {}).get("staleness_key", ""))
+_taught = _re.findall(r"`([a-z][a-z0-9-]*:[^`]*)`", _doc) + _re.findall(r"'([a-z][a-z0-9-]*:[^']*)'", _doc)
+_bad = [s for s in _taught if not _re.match(_PAT, s.replace("<repo>@<object-id>", "r@abc1234")
+                                                 .replace("<why>", "x"))]
+check("the term's own prose teaches no spelling its pattern would refuse",
+      not _bad, f"taught but refused: {_bad}")
+
+# A POSITION MUST RESOLVE BOTH WAYS. `code_paths` stopped being a literal path in 11.0, and
+# bin/dmcursor.py's REVERSE lookup — "you are about to touch this file; which being owns it, and what
+# does it require you to know" — still compared the argument against the raw declared string. After a
+# garden migrated, `dmcursor <a real file>` answered "nothing in the garden claims it" about a file a
+# bean plainly claims, which is CHECKLIST Part D's very first instruction returning a falsehood.
+codebase("root:tree/src", _FMT)
+_f = os.path.join(R, "src", "a.txt")
+_c = run(sys.executable, os.path.join(G, "bin", "dmcursor.py"), _f, cwd=G).stdout
+check("a file inside a `root:` tree resolves back to the bean that declares it",
+      "cursor -> tree" in _c and "root:tree/src" in _c, _c[:400])
+# ...and a position this host does NOT hold must not match by coincidence of spelling, which is the
+# defect `root:` exists to end: two machines with the same absolute path are two different trees.
+_elsewhere = run(sys.executable, os.path.join(G, "bin", "dmcursor.py"),
+                 "/home/someone/not-declared-here/x.py", cwd=G).stdout
+check("...and a path no declared position covers still resolves to nothing",
+      "no bean points at" in _elsewhere, _elsewhere[:300])
 
 shutil.rmtree(T, ignore_errors=True)
 print("\nplace: %d failed" % len(FAILS))
