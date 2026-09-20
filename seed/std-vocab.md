@@ -1,5 +1,5 @@
 ---
-version: "16.2"
+version: "17.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -13,6 +13,7 @@ schema_language:
     type:        "in: { type: <value type> } — a row of `value_types`: its pattern, and for a time type its system and unit"
     form_of:     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form"
     pattern:     "in: { pattern: '<regex>' } — a form the TERM owns. With `soft: true` and a `why` it WARNS instead of refusing: the form a value SHOULD take while a corpus is migrated onto it"
+    quantity:    "in: { quantity: <name> } — a MEASURED VALUE, written { count, unit }: a speed, an acceleration, an area, a data rate. The unit must measure the quantity named; `count` is a whole number or a decimal written as a string, so that no float reaches a canonical form. `in: { quantity: any }` takes any."
     extent:      "in: extent — a bounded region of an aspect's domain (`extent_form`)"
     recurrence:  "in: recurrence — a repetition over a sequence: every Nth neighbour, every N units, or the same place in each cell of a level (`recurrence_form`)"
     ref:         "in: ref — a {bean|mapping: <id>[, field: <key>]} ref; the gate RESOLVES it (dangling = error)"
@@ -535,7 +536,7 @@ anchor_systems:
   - system: geographic
     dimension: place
     neighbours: metered
-    restrictions: { metered: length }
+    restrictions: { lines: 3, metered: length }
     meaning: "a position BY COORDINATES, in a named coordinate reference system, on the body that system is fixed to. THE ROOT OF PLACE: every other place system resolves through this one. Named here also because CIVIL TIME RESOLVES THROUGH IT — an offset is a geographic fact wearing a time costume."
     pattern: '^[A-Z][A-Z0-9_]*:[0-9]+;-?\d+(\.\d+)?(,-?\d+(\.\d+)?){1,2}(@\d{4}(\.\d+)?)?$'
     form_note: "`<authority>:<code>;<coordinates>[@<epoch>]` — `EPSG:4326;35.6892,51.3890@2026.72`. A COORDINATE IS NEVER BARE: a plain `<lat>,<lon>` names no datum, no axis order and no body, so two readers can disagree by hundreds of metres and neither be wrong. Coordinates in the axis order the system declares; the epoch when the frame is dynamic."
@@ -750,6 +751,7 @@ planes:
 
 # == REGISTRY LINKS: a row of one registry names a row of another, and the gate resolves it ==
 registry_links:
+  - { from: units, field: quantity, to: quantities, take: quantity, why: "a unit measures a quantity, and the quantity says what it is made of" }
   - { from: reference_systems, field: body,  to: bodies,                 take: body,  why: "a reference system is fixed to a body, and a latitude is a latitude ON something" }
   - { from: reference_systems, field: kind,  to: reference_system_kinds, take: kind,  why: "the classes ISO 19111 names" }
   - { from: reference_systems, field: frame, to: reference_frames,       take: frame, why: "static or dynamic: whether a coordinate needs an epoch" }
@@ -879,25 +881,57 @@ net_protocols:
     meaning: "PPP over Ethernet: a WAN dial that runs directly on ethernet frames, with no IP transport or port of its own (9.0 removed a `transport: tcp` / port 1723 copied from pptp). Like wireguard it MANUFACTURES a link, which is what lets a tunnel name it in `carried_by`."
 
 # == UNITS: the resolution a position is actually held to ==
+dimensions:
+  - { dimension: time,        meaning: "how long" }
+  - { dimension: length,      meaning: "how far" }
+  - { dimension: mass,        meaning: "how much matter" }
+  - { dimension: information, meaning: "how much can be stored or carried" }
+quantities:
+  - { quantity: duration,     of: { time: 1 } }
+  - { quantity: frequency,    of: { time: -1 } }
+  - { quantity: length,       of: { length: 1 } }
+  - { quantity: area,         of: { length: 2 } }
+  - { quantity: volume,       of: { length: 3 } }
+  - { quantity: speed,        of: { length: 1, time: -1 } }
+  - { quantity: acceleration, of: { length: 1, time: -2 } }
+  - { quantity: mass,         of: { mass: 1 } }
+  - { quantity: information,  of: { information: 1 } }
+  - { quantity: data-rate,    of: { information: 1, time: -1 } }
+  - { quantity: level,        of: {}, scale: logarithmic }
+  - { quantity: attenuation,  of: { length: -1 }, scale: logarithmic }
 units:
-  - unit: millisecond
-    dimension: time
-    meaning: "the finest resolution this ledger records; sessions and their sync points are held here"
-  - unit: second
-    dimension: time
-    meaning: "a position held to the second"
-  - unit: minute
-    dimension: time
-    meaning: "a position held to the minute — the journal's 34 offset-bearing entries sit here"
-  - unit: day
-    dimension: time
-    meaning: "a position held to the calendar day — what every `iso_date` in this corpus actually holds"
-  - unit: hour
-    dimension: time
-    meaning: "a position held to the hour"
-  - unit: metre
-    dimension: length
-    meaning: "the SI metre — the first unit that is not a time. `units` has been keyed by dimension since 5.1 \"so a length or an angle joins without a rule-change\"; this is that. It is what lets a region or a repetition on `geographic` carry a measure."
+  - { unit: millisecond, quantity: duration, factor: [1, 1000], meaning: "a thousandth of a second: the finest resolution this ledger records" }
+  - { unit: second, quantity: duration, factor: [1, 1], meaning: "the SI second" }
+  - { unit: minute, quantity: duration, factor: [60, 1], meaning: "sixty seconds" }
+  - { unit: hour, quantity: duration, factor: [3600, 1], meaning: "sixty minutes" }
+  - { unit: day, quantity: duration, factor: [86400, 1], meaning: "twenty-four hours: the level every calendar meets the others at" }
+  - { unit: millimetre, quantity: length, factor: [1, 1000], meaning: "a thousandth of a metre" }
+  - { unit: metre, quantity: length, factor: [1, 1], meaning: "the SI metre" }
+  - { unit: kilometre, quantity: length, factor: [1000, 1], meaning: "a thousand metres" }
+  - { unit: square-metre, quantity: area, factor: [1, 1], meaning: "a metre by a metre" }
+  - { unit: hectare, quantity: area, factor: [10000, 1], meaning: "a hundred metres by a hundred" }
+  - { unit: square-kilometre, quantity: area, factor: [1000000, 1], meaning: "a kilometre by a kilometre" }
+  - { unit: cubic-metre, quantity: volume, factor: [1, 1], meaning: "a metre cubed" }
+  - { unit: litre, quantity: volume, factor: [1, 1000], meaning: "a thousandth of a cubic metre" }
+  - { unit: metre-per-second, quantity: speed, factor: [1, 1], meaning: "the coherent unit of speed" }
+  - { unit: kilometre-per-hour, quantity: speed, factor: [5, 18], meaning: "a kilometre in an hour: five eighteenths of a metre per second" }
+  - { unit: metre-per-second-squared, quantity: acceleration, factor: [1, 1], meaning: "a metre per second, gained each second" }
+  - { unit: hertz, quantity: frequency, factor: [1, 1], meaning: "once per second" }
+  - { unit: kilogram, quantity: mass, factor: [1, 1], meaning: "the SI kilogram" }
+  - { unit: gram, quantity: mass, factor: [1, 1000], meaning: "a thousandth of a kilogram" }
+  - { unit: bit, quantity: information, factor: [1, 8], meaning: "an eighth of a byte" }
+  - { unit: byte, quantity: information, factor: [1, 1], meaning: "eight bits: what a storage address line is metered in" }
+  - { unit: kilobyte, quantity: information, factor: [1000, 1], meaning: "a thousand bytes" }
+  - { unit: megabyte, quantity: information, factor: [1000000, 1], meaning: "a million bytes" }
+  - { unit: gigabyte, quantity: information, factor: [1000000000, 1], meaning: "a thousand million bytes" }
+  - { unit: terabyte, quantity: information, factor: [1000000000000, 1], meaning: "a million million bytes" }
+  - { unit: gibibyte, quantity: information, factor: [1073741824, 1], meaning: "two to the thirtieth bytes — NOT a gigabyte, which is seven per cent smaller" }
+  - { unit: byte-per-second, quantity: data-rate, factor: [1, 1], meaning: "a byte each second: the coherent unit of a data rate" }
+  - { unit: bit-per-second, quantity: data-rate, factor: [1, 8], meaning: "a bit each second" }
+  - { unit: megabit-per-second, quantity: data-rate, factor: [125000, 1], meaning: "a million bits each second" }
+  - { unit: decibel, quantity: level, factor: [1, 1], meaning: "a RATIO on a logarithmic scale: ten decibels is a factor of ten in power. Levels ADD where the ratios they stand for multiply" }
+  - { unit: decibel-per-metre, quantity: attenuation, factor: [1, 1], meaning: "level lost per metre travelled" }
+  - { unit: decibel-per-kilometre, quantity: attenuation, factor: [1, 1000], meaning: "level lost per kilometre: what a fibre is rated in" }
 vacancy_reasons: [prediction, impossible, out-of-context, universal]
 
 # == LEAF SUBSUMPTION ORDERS ==
@@ -1032,6 +1066,7 @@ extent_form:
   of:      "the ASPECT whose domain this region lies in. Its figure must declare `extent: possible` — an opposition's positions are modalities with nothing between them, so a region on one is refused rather than silently allowed."
   from:    "optional: the position the region starts at, in the canonical form of one of that aspect's domain systems"
   to:      "optional: the position it ends at"
+  lines:   "a region spans as many LINES as its measure's unit has powers of the metered dimension — one for a length, two for an AREA, three for a VOLUME — and never more than the system it is stated in has."
   measure: "optional: { count, unit } — how much of the domain it spans. A METERED aspect only: a stretch of a routine has no length, because `routine` declares `metered: none`, and the unit's dimension must be the one the aspect meters."
   requires: "at least one of from / to / measure — a region with no bound at either end and no length is not a region"
   open_ends: >
@@ -1977,7 +2012,7 @@ terms:
     context_keys: [unit]
     schema:
       shape: scalar
-      values: [millisecond, second, minute, day, hour, metre]
+      values: [millisecond, second, minute, hour, day, millimetre, metre, kilometre, square-metre, hectare, square-kilometre, cubic-metre, litre, metre-per-second, kilometre-per-hour, metre-per-second-squared, hertz, kilogram, gram, bit, byte, kilobyte, megabyte, gigabyte, terabyte, gibibyte, byte-per-second, bit-per-second, megabit-per-second, decibel, decibel-per-metre, decibel-per-kilometre]
       values_consistent_with: ["registry:units[].unit"]
     enforced_by: none
     merge: { cardinality: single, order: none }
@@ -2520,3 +2555,17 @@ The portable, estate-agnostic classification shared by every garden — the abst
   aspect's figure and from the SHAPE the named system declares — neighbours, metering, levels — so a new system gets
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
+
+- **17.0** (2026-09-20, proposed rule-change) — **quantities.** MAJOR: a `units` row names its `quantity` and its
+  `factor` instead of a `dimension`, so a garden that added a unit restates it. A QUANTITY is a product of powers of
+  base `dimensions`: duration is time, area is length squared, SPEED is length per time, ACCELERATION is length per
+  time squared, a data rate is information per time. `in: { quantity: <name> }` types an attribute as a measured value
+  `{ count, unit }`, and the unit must measure that quantity. An extent's measure may now be an AREA or a VOLUME: it
+  spans as many lines as its unit has powers of the metered dimension, and never more than the system has (`geographic`
+  has three; `time` has one, so there are no square seconds). `level` and `attenuation` are LOGARITHMIC quantities —
+  decibels, and decibels per metre — whose values add where the ratios they stand for multiply. `bin/dmunits.py`
+  converts within a quantity by exact rational factors and refuses across quantities.
+  EXACTNESS IS A RULE, not a habit of the tool: a `factor` is two positive whole numbers in lowest terms and the gate
+  refuses anything else; a `count` is a whole number or a decimal string, never a float; a conversion is printed in full
+  or as a fraction of whole numbers, never rounded; and a conversion is a READING — a bean keeps the value in the unit
+  it was measured in, so no chain of conversions can accumulate an error.

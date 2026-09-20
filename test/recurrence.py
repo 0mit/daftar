@@ -60,7 +60,7 @@ check("every 5 METRES — the same construct on place, because `geographic` is m
 out = gate("{ of: place, every: { count: 5, unit: metre } }")
 check("...and without the system it is refused: `place` itself claims no measure", "neither aspect 'place' nor the system it names is metered" in out, out[-500:])
 out = gate("{ of: place, in: geographic, every: { count: 5, unit: minute } }")
-check("a minute is not a length", "measures time, and this is metered in length" in out, out[-500:])
+check("a minute is not a length", "measures duration, and a stride here is measured in length" in out, out[-500:])
 check("every 10th RELEASE — a stride by NEIGHBOURS, on a sequence with no meter at all",
       ok(gate("{ of: time, in: event-anchored, every: { count: 10 } }")))
 out = gate("{ of: place, in: osm, every: { count: 3 } }")

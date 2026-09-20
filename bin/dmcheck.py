@@ -16,7 +16,7 @@ Session/model-agnostic gate, in two halves (v2 P2 / plan D4):
 
 Run manually and via the git pre-commit hook. 0=clean 1=errors 2=setup.
 """
-import glob, os, re, sys, fnmatch, ipaddress, subprocess
+import glob, math, os, re, sys, fnmatch, ipaddress, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
 import dmform
@@ -440,6 +440,35 @@ ASPECTS = {a['aspect']: a for a in (registry('aspects') or []) if isinstance(a, 
 FIGURES = {f['figure']: f for f in (registry('figures') or []) if isinstance(f, dict) and f.get('figure')}
 
 UNITS = {u['unit']: u for u in (registry('units') or []) if isinstance(u, dict) and u.get('unit')}
+QUANTITIES = {q['quantity']: q for q in (registry('quantities') or []) if isinstance(q, dict) and q.get('quantity')}
+
+
+def unit_powers(u):
+    """What a unit measures, as powers of base dimensions: {length: 1, time: -1} for a speed. Read from the quantity the
+    unit names, so nothing here knows a unit or a quantity by name."""
+    return dict((QUANTITIES.get((u or {}).get('quantity')) or {}).get('of') or {})
+
+
+def power_of(u, dimension):
+    """k when the unit measures dimension**k and nothing else (a length, an area, a volume); else None."""
+    p = unit_powers(u)
+    return p[dimension] if list(p) == [dimension] and p[dimension] > 0 else None
+
+
+def check_quantity(where, node, want):
+    if not isinstance(node, dict) or node.get('unit') is None or node.get('count') is None:
+        errors.append(f"{where}: a quantity is written {{ count, unit }}")
+        return
+    u = UNITS.get(str(node['unit']))
+    c = node['count']
+    if not u:
+        errors.append(f"{where}.unit '{node['unit']}' is not in the `units` registry")
+    elif want not in (None, 'any') and u.get('quantity') != want:
+        errors.append(f"{where}.unit '{node['unit']}' measures {u.get('quantity')}, and this attribute is a {want} — "
+                      f"{sorted(n for n, r in UNITS.items() if r.get('quantity') == want)}")
+    if isinstance(c, bool) or not (isinstance(c, int) or (isinstance(c, str) and law_match(r'^-?\d+(\.\d+)?$', c))):
+        errors.append(f"{where}.count {c!r} must be a whole number, or a decimal written as a string (\"12.5\"): a float "
+                      f"has no canonical form")
 SYSTEMS = {s['system']: s for s in (registry('anchor_systems') or []) if isinstance(s, dict) and s.get('system')}
 
 
@@ -482,9 +511,15 @@ def check_extent(where, node):
             if not u:
                 errors.append(f"{where}.measure.unit '{m['unit']}' is not in the `units` registry "
                               f"{sorted(UNITS)}")
-            elif u.get('dimension') != metered:
-                errors.append(f"{where}.measure.unit '{m['unit']}' measures {u.get('dimension')}, but "
+            elif power_of(u, metered) is None:
+                errors.append(f"{where}.measure.unit '{m['unit']}' measures {u.get('quantity')}, but "
                               f"aspect '{an}' meters {metered}")
+            else:
+                _lines = ((_row or {}).get('restrictions') or {}).get('lines') or asp.get('lines')
+                if isinstance(_lines, int) and power_of(u, metered) > _lines:
+                    errors.append(f"{where}.measure.unit '{m['unit']}' spans {power_of(u, metered)} lines, and "
+                                  f"{'system ' + repr(_row['system']) if _row else 'aspect ' + repr(an)} has {_lines} — "
+                                  f"there is no such region there")
             if not isinstance(m.get('count'), int) or isinstance(m.get('count'), bool) or m['count'] <= 0:
                 errors.append(f"{where}.measure.count must be a positive whole number of "
                               f"{m.get('unit')}s, not {m.get('count')!r}")
@@ -575,8 +610,16 @@ def check_recurrence(where, node):
     elif not metered or metered == 'none':
         errors.append(f"{where}: neither aspect '{an}' nor the system it names is metered, so a stride has no length — "
                       f"stride by neighbours (`every: {{count}}`), or name a metered system with `in:`")
-    elif u.get('dimension') != metered:
-        errors.append(f"{where}.every.unit '{every['unit']}' measures {u.get('dimension')}, and this is metered in {metered}")
+    elif power_of(u, metered) != 1:
+        errors.append(f"{where}.every.unit '{every['unit']}' measures {u.get('quantity')}, and a stride here is measured in {metered}")
+
+
+def ctl_quantities(c):
+    for attr, want in _facet(attribute_form(c.term, c.sch), 'quantity', 'self'):
+        v = c.node.get(attr) if isinstance(c.node, dict) else None
+        if v is not None:
+            check_quantity(f"{c.base}: {c.term}.{attr}", v, want)
+    return None
 
 
 def ctl_recurrences(c):
@@ -617,7 +660,7 @@ def check_sequence_figure(_an, _a, _fig):
     _lines = _a.get('lines')
     if not (_lines == 'open' or (isinstance(_lines, int) and not isinstance(_lines, bool) and _lines > 0)):
         errors.append(f"aspect '{_an}': lines '{_lines}' must be a positive integer or `open`")
-    _dims = {u.get('dimension') for u in (registry('units') or []) if isinstance(u, dict)}
+    _dims = {d.get('dimension') for d in (registry('dimensions') or []) if isinstance(d, dict)}
     if _a.get('metered') != 'none' and _a.get('metered') not in _dims:
         errors.append(f"aspect '{_an}': metered '{_a.get('metered')}' is neither `none` nor a dimension in `units` {sorted(d for d in _dims if d)}")
     if _a.get('order') not in (_fig.get('order_values') or []):
@@ -698,7 +741,7 @@ def check_system_structure():
                 errors.append(f"{_w}: restrictions.order '{_val}' not in {_seq.get('order_values')}")
             elif _k == 'ends' and _val not in (_seq.get('ends_values') or []):
                 errors.append(f"{_w}: restrictions.ends '{_val}' not in {_seq.get('ends_values')}")
-            elif _k == 'metered' and _val != 'none' and _val not in {u.get('dimension') for u in _units.values()}:
+            elif _k == 'metered' and _val != 'none' and _val not in {d.get('dimension') for d in (registry('dimensions') or []) if isinstance(d, dict)}:
                 errors.append(f"{_w}: restrictions.metered '{_val}' is no dimension any unit measures")
             elif _k == 'lines' and not (_val == 'open' or (isinstance(_val, int) and _val > 0)):
                 errors.append(f"{_w}: restrictions.lines is a positive integer or `open` — got {_val!r}")
@@ -729,6 +772,23 @@ def check_registry_links():
             if isinstance(_row, dict) and _row.get(_l.get('field')) is not None and str(_row[_l['field']]) not in _to:
                 errors.append(f"VOCAB {_l['from']}: a row's `{_l['field']}` names '{_row[_l['field']]}', which is no "
                               f"{_l['take']} of `{_l['to']}` — a link between registries is resolved like any other")
+
+
+def check_units():
+    """A unit's factor is a PAIR OF WHOLE NUMBERS, and a quantity's powers are whole numbers of declared dimensions. A
+    factor written 0.277778 would make every conversion through it wrong by an amount nobody chose; [5, 18] is what it is."""
+    _dims = {d.get('dimension') for d in (registry('dimensions') or []) if isinstance(d, dict)}
+    for _n, _q in QUANTITIES.items():
+        for _d, _k in (_q.get('of') or {}).items():
+            if _d not in _dims or isinstance(_k, bool) or not isinstance(_k, int) or _k == 0:
+                errors.append(f"VOCAB quantities '{_n}': `of.{_d}: {_k!r}` must be a non-zero whole power of a declared dimension {sorted(_dims)}")
+    for _n, _u in UNITS.items():
+        _f = _u.get('factor')
+        if not (isinstance(_f, list) and len(_f) == 2 and all(isinstance(x, int) and not isinstance(x, bool) and x > 0 for x in _f)):
+            errors.append(f"VOCAB units '{_n}': `factor: {_f!r}` must be [numerator, denominator], two positive whole numbers — "
+                          f"an exact ratio to the quantity's coherent unit, never a rounded decimal")
+        elif math.gcd(*_f) != 1:
+            errors.append(f"VOCAB units '{_n}': `factor: {_f}` is not in lowest terms — one ratio has one spelling")
 
 
 def check_aspect_sanity():
@@ -1334,6 +1394,12 @@ def ectl_pointer_fields(e):
 
 # Declaration order IS execution order, and it is the order these rules ran in before. `on_aspect` must
 # precede `cross_aspect`: the second reads what the first computed.
+def ectl_entry_quantities(c):
+    for attr, want in _facet(c.form, 'quantity', 'entry'):
+        if c.entry.get(attr) is not None:
+            check_quantity(f"{c.base}: {c.term}[{c.label}].{attr}", c.entry[attr], want)
+
+
 def ectl_entry_recurrences(c):
     for attr, _ in _facet(c.form, 'recurrence', 'entry'):
         v = c.entry.get(attr)
@@ -1366,6 +1432,7 @@ ENTRY_CONTROLLERS = (
     ('cells: requires / expects', ectl_entry_required_if),
     ('in: extent', ectl_entry_extents),
     ('in: recurrence', ectl_entry_recurrences),
+    ('in: quantity', ectl_entry_quantities),
     ('in: pointer', ectl_pointer_fields),
 )
 
@@ -1671,6 +1738,7 @@ CONTROLLERS = (
     ('in: type (value)', ctl_attr_types),
     ('in: extent (value)', ctl_extents),
     ('in: recurrence (value)', ctl_recurrences),
+    ('in: quantity (value)', ctl_quantities),
     ('key_form', ctl_key_form),
     ('entries', ctl_entries),
     ('on_sequence', ctl_on_sequence),
@@ -2603,6 +2671,8 @@ PLIES = (
      "a system's declared shape: what it names exists, nesting ends, a metric level has a unit, restrictions narrow"),
     (check_registry_links,
      "a row that names a row of another registry is resolved, like any other link"),
+    (check_units,
+     "a unit's factor is an exact ratio of whole numbers — a rounded one would bend every conversion through it"),
     (check_aspect_sanity,
      "an aspect is a closed figure — check the figure before using its positions"),
     (check_extends_pin,

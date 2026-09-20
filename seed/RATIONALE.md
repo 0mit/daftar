@@ -1425,3 +1425,31 @@ Considered and refused: a calendar bucket as a unit (`every: { count: 1, unit: m
 is 28 to 31 days in one calendar, 29 or 30 in another — and writing it as a measure would make arithmetic of something
 that is not arithmetic.
 
+## quantities
+
+Area and volume are not new figures: they are an extent on a sequence with two or three lines, and the unit carries the
+power. Speed and acceleration are not extents at all: they are RATES, a quantity per unit of another, which is a
+negative power. One construct — a product of integer powers of a few base dimensions — says all of them, and it is the
+model the SI and Unicode CLDR both publish, so nothing was invented.
+
+A factor is a pair of whole numbers, never a decimal: five eighteenths of a metre per second is exact, 0.2777… is not,
+and a canonical form must not depend on how a float was rounded.
+
+Truncation is kept out at each of the four places it could enter. THE LAW: a factor is a pair of whole numbers in lowest
+terms, checked by the gate, so no rounded constant can be declared. THE RECORD: a count is a whole number or a decimal
+string, so nothing a float has already lost can be written down. THE ARITHMETIC: whole-number ratios only, so every
+conversion between every pair of units comes back exactly, at any number of digits — the suite tries them all. THE
+DISPLAY: a terminating decimal in full, anything else as a fraction. A fraction is exact and hard to read at a glance,
+so a rounded decimal may stand BESIDE it, marked `≈`: the mark is what keeps it from being written back, because no
+count may contain it. The rule was never that a reader may not see a decimal; it is that a rounded number may not pass
+for the value. And a conversion is a reading, never a record: the measured value in its measured unit is the
+fact, so an error cannot build up through a chain. What stays inexact is what is inexact in the world — a logarithmic
+level turned back into a ratio, a great-circle distance — and those are computed for a reader and never stored as law.
+
+A logarithmic quantity is marked because it COMPOSES differently: along a chain of links, attenuations add. That is one
+instance of a wider idea — how a quantity composes along a walk (sum, product, or the weakest link, as a generated
+fact's standing already does) — which is noted here and not yet built.
+
+Considered and refused: temperature in degrees Celsius, which needs an offset as well as a factor; and compact strings
+such as `12.5 m/s`, a second spelling of what `{ count, unit }` already says.
+

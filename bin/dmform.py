@@ -64,6 +64,7 @@ DOMAINS = {
     'type':        "in: { type: <value type> }                     a row of `value_types` — its pattern, and for a time type its system and unit",
     'form_of':     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern }   a position in the system a SIBLING attr names, in that system's one form",
     'pattern':     "in: { pattern: '<regex>' }                     a form this term owns; with `soft: true` and a `why` it WARNS instead of refusing",
+    'quantity':    "in: { quantity: <name> }                       a measured value { count, unit } whose unit measures that quantity",
     'extent':      "in: extent                                     a bounded region of an aspect's domain (`extent_form`)",
     'recurrence':  "in: recurrence                                 a repetition over a sequence: every Nth neighbour, every N units, or the same place in each cell of a level (`recurrence_form`)",
     'ref':         "in: ref                                        a {bean|mapping[, field]} ref, resolved by the gate",
@@ -95,6 +96,8 @@ def _domain(d):
             return 'pattern', d['pattern']
         if 'registry' in d or 'registry_from' in d:
             return 'registry', {k: d[k] for k in ('registry', 'registry_from', 'take', 'where') if k in d}
+        if 'quantity' in d:
+            return 'quantity', d['quantity']
         if 'pointer' in d:
             return 'pointer', d['pointer']
     return 'unknown', d
