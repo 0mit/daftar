@@ -1,5 +1,5 @@
 ---
-version: "11.3"
+version: "12.0"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -427,7 +427,12 @@ units:
 # ABSENCE — why nothing occupies a position the law makes available — and that is a statement about the
 # world, which the vocabulary owns and the interpreter must not carry a copy of. Adding a reason is a
 # rule-change here, not an edit to bin/.
-vacancy_reasons: [prediction, impossible, out-of-context]
+vacancy_reasons: [prediction, impossible, out-of-context, universal]
+# `universal` (12.0): the position is declared because the STRUCTURE is general, not because an occupant is
+# expected here. A figure with a side missing is a worse model than a figure with a side nobody stands on, and a
+# standard that waits for one garden's occupant before completing a mechanism ties every garden to the first
+# one's size. It is a reason and not a licence: the position must belong to a mechanism that IS occupied
+# somewhere on the same figure, and its `why` says which.
 
 # == LEAF SUBSUMPTION ORDERS (declared 2026-08-03, Phase 6) ==
 # `merge_field` absorbs a general value into a more precise one where the two are ORDERED: 192.168.0.0/24
@@ -876,6 +881,7 @@ profiles:
         scan_policy: "index (own code — walk fully) | reference-only (do NOT re-scan each session; consult analysis_cache, grep on demand only) | skim (structure only)"
         stack:       "language/runtime tag, e.g. python-django | csharp-dotnet (optional)"
         entrypoint:  "manifest / solution / addin that roots the tree (optional)"
+        note:        "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
       # MOVED OUT 2026-08-02 (P1 / D6, human-ratified): `summary_ref` and `last_indexed` left this term and now
       # live in `analysis_cache`. Rationale (one-owner-of-a-fact): a summary is an ANALYSIS RESULT, not a property
       # of a filesystem path, and a date is a weaker staleness signal than the source's own git sha. code_paths
@@ -902,6 +908,8 @@ profiles:
       meaning: "the being hosting the source repository of a code bean (storage habitat, not ownership)"
       context_keys: ["git_host"]
       schema: { shape: mapping, required_attrs: [bean], ref_fields: [self] }
+      attrs:
+        repo: "the repository AS ITS HOST NAMES IT (`host-a:git/ledger.git`) — what a clone that has forgotten its remote needs"
       merge: { cardinality: single, order: none }
 
   network:
@@ -1124,6 +1132,7 @@ profiles:
         auto_renew: "enabled | disabled | unknown. `unknown` is the honest default: it is a registrar-ACCOUNT setting and does not appear in WHOIS, so it cannot be observed the way the dates can."
         observed:   "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer."
         source:     "where they were read from"
+        note:       "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
       merge: { cardinality: single, order: none }
 
   knowledge:
@@ -1220,6 +1229,7 @@ terms:
       feasibility: "the position on the feasibility aspect — whether the being CAN be in that state at all, independent of whether it may. `forbidden` + `possible` is a live risk; `forbidden` + `impossible` is already prevented by something else."
       why:        "WHY this stance holds — the consequence of violating it, in prose an operator can act on"
       by:         "optional: who imposes it, when the enforcer is not us (e.g. a hosting provider)"
+      feasibility_why: "optional: WHY the feasibility position holds — a sysctl is reversible, a kernel flag is not. Distinct from `why`, which is the reason for the PERMISSION; carried by beans since the aspect was built and declared at 12.0"
     merge: { cardinality: multi, order: by-capability }
   - term: consumes
     # SETTLED at 2.1. The v2 plan proposed retiring it as unused; it had a live occupant, and the operator
@@ -1246,6 +1256,10 @@ terms:
       entry_required_attrs: [rel]
       entry_types: { rel: kebab }
       entry_ref_fields: [self]
+    entry_attrs:
+      rel:  "the relation TYPE, kebab-case and open"
+      path: "INSTEAD of a bean: a pointer to something that is not a managed object here — an off-garden document. The residual relation's own residual, kept since the relation algebra was declared"
+      note: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
     merge: { cardinality: multi, order: by-key }
 # LOCAL kinds: object types this garden manages that std-vocab doesn't schematize. Each gets a small schema
 # (MODEL Rule 6). A kind that proves general is promoted alongside its terms.
@@ -1316,7 +1330,18 @@ terms:
     # `anchor_authority` uses below. The merge reads it for two things: which src a value several gardens agree
     # on keeps (the highest), and the guard itself — a value at the TOP of this rank is never dropped in favour
     # of one below it, whatever precision the lower one claims. The merge REFUSES to run if this is absent.
-    merge: { order: "generated-by-tool<inferred<observed<asserted-by-human" }
+    merge: { order: "generated-by-tool<inferred<observed<asserted-by-human", borrows: generated-by-tool }
+    # EACH PLACE IN THE RANK, EARNED (12.0). The order was ratified at 11.3 as the one the code had always
+    # held, and the operator's first question on merging it was why `generated-by-tool` sits where it does.
+    # Until now nothing said what ANY of the four means. The rank orders HOW A FACT IS KNOWN:
+    values_meaning:
+      asserted-by-human: "a person said so, and answers for it. The top, because a person can be ASKED, and because the fact may be one only a person can know (who owns this, what was agreed). The guard protects this place and no other."
+      observed:          "read directly off the world by whoever recorded it — a command's output, a file, a registry reply. It can be re-read, which is its whole authority."
+      inferred:          "reasoned from observations rather than read. Someone weighed evidence and may be wrong; the fact is recorded so it can be found, and is not settled."
+      generated-by-tool: "COMPUTED from other recorded facts by a program: a merged bean, a generated config, a count. A tool knows NOTHING of its own — it cannot be wrong about the world, only about its inputs, and it cannot be right about more than they were. So this src has no standing of its own and BORROWS it: a generated fact ranks as the WEAKEST src named in its `provenance.from` (a chain is as strong as its weakest link), and sits at the bottom of the rank only when it names none — because a derivation that will not say what it derives from is worth less than a guess that owns up to being one."
+    # `borrows` IS WHAT THE MERGE READS; `values_meaning` is for the reader. The LABEL is never rewritten — a
+    # merged value still says a tool produced it, which Phase 7 (2026-08-03) showed is exactly what must not be
+    # lost or gained by passing through a tool. Only the weighing borrows.
   - term: analysis_cache
     # Design step D6, executed as P1 (2026-08-02, human-ratified rule-change).
     # An OPEN, TYPED, bean-level cache of ANALYSIS RESULTS, so an agent READS a recorded result instead of
@@ -1424,6 +1449,9 @@ terms:
       co_owned:  "owned_by: { <facet>: { contract: {bean: <contract>} } }       # a SINGLE facet co-owned -> a contract resolves it"
       external:  "owned_by: { <facet>: { external: '<who>' } }                  # owned OUTSIDE this garden (third-party software, a vendor); names the owner in prose because they are not a managed object here"
       crown:     "owned_by: { <facet>: { crown: <branch> } }                     # ownership TERMINATES at the axiom; the branch must be the one this bean's nature routes to"
+    entry_attrs:
+      since: "optional: ABSOLUTE date this owner came to hold the facet"
+      note:  "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
     merge: { cardinality: multi, order: by-facet }
     promotion: { status: candidate, note: "universal — review in attrs-to-universal session" }
   - term: responsibility
@@ -1451,6 +1479,9 @@ terms:
       shared:    "responsibility: { <facet>: { contract: {bean: <contract>} } }   # shared duty -> a contract, as with co-ownership"
       external:  "responsibility: { <facet>: { external: '<who>' } }              # answered for outside this garden"
       self:      "responsibility: { <facet>: { self: true } }                      # a being answers for ITSELF (persons). Reflexive, so it is deliberately NOT an edge — a self-edge would be a cycle, and autonomy is not a dependency."
+    entry_attrs:
+      since: "optional: ABSOLUTE date this holder came to answer for the facet"
+      note:  "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
     rules:
       parity: "every facet with an OWNER must have a HOLDER and vice versa. An ownership claim nothing answers for is a loose end; a duty nobody owns is orphaned."
       not_the_same_as_ownership: "they are opposite arcs, not synonyms. A rented VPS is owned by the provider and answered for by the operator; that is the normal case, not an exception."
@@ -1860,6 +1891,7 @@ terms:
       at:     "the position, in that system's ONE canonical form"
       unit:   "the resolution ACTUALLY HELD. `2026-08-07T05:21` recorded at unit: minute means the second is not known — not that it was zero."
       by:     "optional: who or what read the clock, when that is not the bean's default provenance"
+      note:   "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
     key_note: >
       kebab-case moment names. Used so far: start | sync | stop. The key is DELIBERATELY OPEN and the gate
       is forbidden from enumerating it — a run with four sync points, or a moment nobody has named yet,
@@ -1897,6 +1929,7 @@ terms:
       system: "which filesystem system this host resolves the root in — pinned since 7.0 to the grammar this host's `os` declares, so it is checked rather than merely stated"
       at:     "the literal position this root means HERE, host named, in that system's canonical form"
       observed: "ABSOLUTE date the resolution was checked — a tree gets moved"
+      note:     "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
     key_note: >
       kebab-case root names, shared across hosts by AGREEMENT rather than by a registry: a root is a name
       two machines both choose to use, and centralising the list would re-introduce the one shared document
@@ -2129,6 +2162,8 @@ terms:
       redactions:    "WHAT WAS REMOVED and why. REQUIRED. Write `none — the source emits no secrets` explicitly if that is true; the point is that it is a claim, not a default."
       holds:         "the content itself for something small, or a `file:` pointer into this garden for something large. Large captures do not belong inline: a bean must stay legible on paper, and a 900-line router export is not."
       restores:      "optional: what this capture would let somebody rebuild, and what it would NOT. The honest half is usually the second."
+      supersedes:    "optional: the `capture` key on this bean that this one replaces"
+      note:          "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key"
     merge: { cardinality: multi, order: by-key }
 
   - term: risks
@@ -2175,6 +2210,8 @@ terms:
       evidence:    "how the state was established, specific enough to re-run. `unproven` states what WOULD establish it — a risk whose test is unnamed cannot be closed by anyone but its author."
       found:       "ABSOLUTE date the finding was first made."
       owned_with:  "optional {bean} ref: where the FIX lives, when that is not this bean. A defect on one being is often only fixable on another."
+      resolution:  "on `resolved` / `superseded`: WHAT settled it. A closed risk that does not say how is a risk a reader must re-open to trust."
+      resolved:    "ABSOLUTE date it was settled."
       note:        "optional: history, partial resolutions, and what a reader would otherwise re-derive."
     capability_note: >
       A `capabilities` entry at `forbidden` + `possible` IS a latent risk, and the two are deliberately
@@ -2395,3 +2432,18 @@ The portable, estate-agnostic classification shared by every garden — the abst
   does not declare, because an unknown construct is a rule that silently enforces nothing (a typo in
   `entry_required_attrs` has always passed). A warning and not an error, so this stays MINOR: no bean and no
   vocabulary that passed before is refused.
+
+- **12.0** (2026-09-20, proposed rule-change) — **structure before prose, and a rank that says why.** MAJOR, for
+  two reasons. (1) AN ENTRY HOLDS ONLY THE ATTRIBUTES ITS TERM DECLARES. Top-level keys have been closed since
+  2026-09-17; one level down, one garden of 143 documents held forty attributes no term knew — sentences promoted
+  to field names (`what_this_does_NOT_establish:`) so that prose would look like data. They are refused now, and
+  prose goes in the attribute a term declares for it: `note` is declared on `code_paths`, `registration`, `refs`,
+  `owned_by`, `responsibility`, `timing`, `roots` and `capture`. Declared because beans legitimately carried them:
+  `capabilities.feasibility_why`, `risks.resolution` / `resolved`, `capture.supersedes`, `refs.path`,
+  `git_host.repo`, `since` on the two ownership arcs. `provenance` is allowed on ANY entry, because MODEL.md has
+  always said a fact may carry its own. A term that declares no attribute (`owns`, `details`, `attributes`) stays a
+  free container, by declaration. (2) A SCHEMA KEY THE LANGUAGE DOES NOT DECLARE IS AN ERROR (a warning at 11.3).
+  Also: `provenance_src` states what each src MEANS and why it ranks where it does, and `generated-by-tool`
+  BORROWS its standing — it ranks as the weakest src in its `provenance.from`, and at the bottom only when it
+  names none; the label is never rewritten. And a fourth vacancy reason, `universal`, for a position declared
+  because the mechanism is general rather than because this garden expects an occupant.

@@ -9,11 +9,26 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
 
 ## Before you open a pull request
 
-1. **Prove it locally first.** A new term normally starts as a `local_terms` entry in your garden's
-   `VOCAB.md`, used by real beans. A term that has held real cases is promoted here; one invented for a
-   case not yet met usually generalises wrongly.
-2. **Bring evidence from a real garden, not from a test.** What happened, what the vocabulary could not
-   say, and the beans it affected.
+1. **Say which of two things you are proposing, because they are judged differently.**
+   - **A term for a kind of FACT** — something an estate contains (a registration, a rental, a risk). It
+     starts as a `local_terms` entry in your garden's `VOCAB.md`, used by real beans, and is promoted here
+     once it has held real cases. A term for a fact nobody has yet recorded usually generalises wrongly,
+     because what it gets wrong is the world, and only the world can correct it.
+   - **A MECHANISM** — a figure, a schema construct, a positioning system, a unit, a missing side of a
+     structure the law already uses. A mechanism may be proposed WHOLE, ahead of its occupants. The
+     standard is a language for every estate, and a language shaped only by what its first garden happened
+     to contain is tied to that garden's size: `extent` waited two versions for an occupant while forty
+     durations sat in prose because nothing could say them. The test is not "has our garden met it" but
+     **would a stranger with a different estate expect it to be there** — and is it:
+     *universal* (no estate in it), *general* (the same shape as something the law already has, extended
+     rather than invented beside it), *canonical* (an off-the-shelf concept where the tradition has one),
+     *useful* (you can name who would reach for it), and *simple to read*. Its unoccupied positions are
+     declared vacant with the reason `universal` and a `why` — so the law still accounts for every position
+     it offers, and nobody mistakes design for evidence.
+2. **Bring evidence for what evidence can settle.** For a fact-term: what happened in a real garden, what
+   the vocabulary could not say, and the beans it affected — from the estate, never from a test. For a
+   mechanism: the structure it completes, the neighbours it was modelled on, and what was considered and
+   rejected. Judgment and common sense are evidence here; say whose.
 3. **Leave your estate out of it.** Do not paste host names, addresses, paths, people, or findings from
    your own garden into the proposal or into the law. Use neutral examples — `host-a`, `203.0.113.10`,
    `/home/user/…`. The vocabulary ships to everyone.

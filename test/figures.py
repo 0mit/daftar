@@ -130,12 +130,41 @@ mutate("      entry_required_attrs: [why] ", "      entry_require_attrs: [why] "
 out = gate()
 check("11.3: a misspelt construct is named instead of silently enforcing nothing",
       "capabilities: schema key `entry_require_attrs` is not declared in schema_language" in out, out[-900:])
-check("11.3: ...as a WARNING — a vocabulary that passed before is not refused", "0 error" in out, out[-600:])
+check("12.0: ...as an ERROR — a rule that enforces nothing is refused, not remarked on", "ERROR VOCAB capabilities: schema key" in out, out[-600:])
 mutate('  path:                 "<dotted path>', '  path_:                "<dotted path>')
 out = gate()
 check("11.3: withdrawing a declaration the terms rely on is noticed too",
       "schema key `path` is not declared in schema_language" in out, out[-900:])
 open(VOC, "w").write(ORIG)
+
+# ---------------------------------------------------------------- structure before prose (12.0)
+BEAN = os.path.join(G, "beans", "probe-host.md")
+def bean(extra):
+    open(BEAN, "w").write("""---
+bean: probe-host
+kind: host
+title: "probe"
+status: active
+summary: "probe"
+nature: physical
+identity:
+  status: confirmed
+  anchors:
+    - { key: serial, value: "SN-PROBE-1", class: hardware, establishing: true }
+provenance: { src: observed, by: probe, as_of: 2026-09-20 }
+owned_by: { legal: { external: "a provider" } }
+responsibility: { legal: { external: "a provider" } }
+""" + extra + "---\n\nprobe.\n")
+    return gate()
+out = bean("capabilities:\n  a-thing: { permission: forbidden, why: \"because\", note_to_self_this_matters: \"a sentence as a key\" }\n")
+check("12.0: an attribute the term does not declare is refused — a sentence may not pose as a key",
+      "carries `note_to_self_this_matters`, which the term `capabilities` does not declare" in out, out[-900:])
+out = bean("capabilities:\n  a-thing: { permission: forbidden, why: \"because\", feasibility_why: \"x\", provenance: { src: inferred, by: p, as_of: 2026-09-20 } }\n")
+check("12.0: declared prose attributes pass, and any entry may carry its own provenance",
+      "does not declare" not in out, out[-900:])
+out = bean("owns:\n  anything_at_all: \"owns is a free container by declaration\"\n")
+check("12.0: a term that declares no attribute stays a free container", "does not declare" not in out, out[-900:])
+os.remove(BEAN)
 
 shutil.rmtree(T, ignore_errors=True)
 print("\nfigures: %d failed" % len(FAILS))

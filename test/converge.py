@@ -286,6 +286,29 @@ _o = _owns(_said('g1', 'inferred', {'site': 'IST'}), _said('g2', 'asserted-by-hu
 check("a value two gardens agree on keeps the HIGHEST src the rank declares",
       _o['site'].get('src') == 'asserted-by-human', json.dumps(_o['site']))
 
+# ---------------------------------------------------------------- generated-by-tool BORROWS its standing (12.0)
+# A tool knows nothing of its own, so a generated fact weighs as the weakest src it names in `provenance.from`,
+# and at the bottom of the rank when it names none. The label is never rewritten.
+def _generated(garden, owns, frm=None):
+    g = _said(garden, 'generated-by-tool', owns)
+    if frm is not None:
+        g[0]['fm']['provenance']['from'] = frm
+    return g
+_o = _owns(_generated('g1', {'site': 'IST'}), _said('g2', 'inferred', {'site': 'IST'}))
+check("12.0: a generated fact that names no basis sits at the bottom — an inference outweighs it",
+      _o['site'].get('src') == 'inferred', json.dumps(_o['site']))
+_o = _owns(_generated('g1', {'site': 'IST'}, {'a': {'src': 'observed'}}), _said('g2', 'inferred', {'site': 'IST'}))
+check("12.0: ...and one computed from OBSERVED facts outweighs the inference, keeping its own label",
+      _o['site'].get('src') == 'generated-by-tool' and '_as' not in json.dumps(_o), json.dumps(_o['site']))
+_o = _owns(_generated('g1', {'site': 'IST'}, {'a': {'src': 'observed'}, 'b': {'src': 'inferred'}}),
+           _said('g2', 'observed', {'site': 'IST'}))
+check("12.0: a chain is as strong as its weakest link — observed+inferred inputs weigh as inferred",
+      _o['site'].get('src') == 'observed', json.dumps(_o['site']))
+_o = _owns(_generated('g1', {'os': 'AlmaLinux 9.8'}, {'a': {'src': 'asserted-by-human'}}),
+           _said('g2', 'asserted-by-human', {'os': 'AlmaLinux 9'}))
+check("12.0: borrowing never launders UPWARD past the guard's own protection of a stated assertion",
+      'AlmaLinux 9' in json.dumps(_o['os']), json.dumps(_o['os']))
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nconverge: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

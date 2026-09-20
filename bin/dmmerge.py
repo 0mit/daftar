@@ -334,6 +334,7 @@ def _apply_prov(path, items):
             if rec:
                 if rec.get('src'):
                     e['src'] = rec['src']
+                    e.pop('_as', None)          # the leaf states its own src; it borrows nothing
                 if rec.get('seen_in'):
                     e['_origin'] = list(rec['seen_in'])
             carried.add(canonical(norm(one)))
@@ -370,7 +371,7 @@ def merge_key(key, items):
     for it in items:
         for mk, mv in members(key, order, it['value']).items():
             per.setdefault(mk, []).append({'value': mv, 'src': it['src'], 'garden': it['garden'],
-                                           'fm': it.get('fm')})
+                                           'fm': it.get('fm'), '_as': it.get('_as')})
     return {'members': {mk: merge_field(mk, _apply_prov(f"{key}.{mk}", its), member=True)
                         for mk, its in sorted(per.items())},
             'keyed_by': order}
@@ -390,6 +391,26 @@ def _src_rank(src):
             raise SystemExit("dmmerge: the vocabulary declares no rank for `provenance_src` "
                              "(merge: {order: \"a<b<c\"}) — refusing to merge without the provenance guard")
     return _SRC_RANK.index(src if src in _SRC_RANK else DEFAULT_SRC)
+
+
+def _borrowed_src(prov):
+    """The src a DERIVED fact ranks as (std-vocab 12.0). `provenance_src.merge.borrows` names the src that has no
+    standing of its own — a tool knows nothing; it computes from what others said — so such a fact ranks as the
+    WEAKEST src named in its `provenance.from`, and stays at its declared place (the bottom) when it names none.
+    The LABEL is never rewritten: a merged value still says a tool produced it. Only the weighing borrows."""
+    _b = ((TERMS.get('provenance_src') or {}).get('merge') or {}).get('borrows')
+    if not _b or (prov or {}).get('src') != _b:
+        return None
+    _from = (prov or {}).get('from')
+    _recs = list(_from.values()) if isinstance(_from, dict) else _from if isinstance(_from, list) else []
+    _srcs = [r.get('src') for r in _recs if isinstance(r, dict) and r.get('src') and r.get('src') != _b]
+    if not _srcs or len(_srcs) != len(_recs):
+        return None                          # nothing named, or a link with no standing: the chain has none
+    return min(_srcs, key=_src_rank)
+
+
+def _rank_of(item):
+    return _src_rank(item.get('_as') or item['src'])
 
 
 _AUTHORITY_RANK = None
@@ -437,9 +458,9 @@ def merge_field(key, items, member=False):
     by_val = {}
     for it in items:
         k = json.dumps(norm(it['value']), sort_keys=True, ensure_ascii=False)
-        e = by_val.setdefault(k, {'value': norm(it['value']), 'src': it['src'], 'seen_in': set()})
+        e = by_val.setdefault(k, {'value': norm(it['value']), 'src': it['src'], '_as': it.get('_as'), 'seen_in': set()})
         e['seen_in'].update(it.get('_origin') or [it['garden']])
-        if _src_rank(it['src']) > _src_rank(e['src']): e['src'] = it['src']
+        if _rank_of(it) > _rank_of(e): e['src'], e['_as'] = it['src'], it.get('_as')
     vals = list(by_val.values())
     # antichain: drop v dominated by w, but an asserted-by-human value is never dropped by a lower src
     keep, swallowed = [], {}
@@ -450,7 +471,7 @@ def merge_field(key, items, member=False):
             if subsumes(v['value'], w['value'], order, key):
                 # THE GUARD: a value at the TOP of the declared rank is never dropped by one below it. The top is
                 # `asserted-by-human` because the vocabulary says so, not because this line names it.
-                _rv, _rw = _src_rank(v['src']), _src_rank(w['src'])
+                _rv, _rw = _rank_of(v), _rank_of(w)
                 if not (_rv == len(_SRC_RANK) - 1 and _rw < _rv):
                     dom = w; break
         if dom is None:
@@ -465,7 +486,9 @@ def merge_field(key, items, member=False):
         _sub = swallowed.get(canonical(e['value']))
         if _sub:
             e['subsumed'] = sorted(_sub, key=canonical)
-    for e in keep: e['seen_in'] = sorted(e['seen_in'])
+    for e in keep:
+        e['seen_in'] = sorted(e['seen_in'])
+        e.pop('_as', None)          # the weighing hint is not a fact about the value; it never reaches a seed
     keep.sort(key=lambda e: json.dumps(e['value'], sort_keys=True, ensure_ascii=False))
     if len(keep) == 1:
         return keep[0]
@@ -571,6 +594,7 @@ def merge_component(comp):
         fm = b['fm']
         prov = fm.get('provenance') or {}
         src = prov.get('src', DEFAULT_SRC)
+        _as = _borrowed_src(prov)
         gardens.add(b['garden']); aka.add(b['id'])
         provs[b['garden']] = norm(prov)      # carries an `as_of` date; canonicalise it like any value
 
@@ -584,6 +608,8 @@ def merge_component(comp):
             else:
                 for _one, _prov in _unfold(v):
                     _it = {'value': _one, 'src': (_prov or {}).get('src') or src, 'garden': b['garden'], 'fm': fm}
+                    if _as and not (_prov or {}).get('src'):
+                        _it['_as'] = _as
                     if (_prov or {}).get('seen_in'):
                         _it['_origin'] = list(_prov['seen_in'])
                     fields.setdefault(k, []).append(_it)

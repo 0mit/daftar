@@ -16,7 +16,9 @@ provenance come before brevity. Why each rule exists is in `HISTORY.md` in the d
 ## Facts carry their provenance
 A fact knows who said it and how they know.
 - Each bean states a default `provenance: { src, by, as_of }`, where `src` is `observed`, `inferred`,
-  `asserted-by-human` or `generated-by-tool`.
+  `asserted-by-human` or `generated-by-tool`. The vocabulary ranks them by HOW THE FACT IS KNOWN and says why
+  (`provenance_src`). A `generated-by-tool` fact has no standing of its own: it names what it was computed
+  from in `provenance.from`, and weighs as the weakest of those.
 - A fact whose source differs from the bean's default carries its own record.
 - **An `inferred` value never overrides an `asserted-by-human` one**, whatever precision it claims.
 
@@ -83,6 +85,9 @@ The rules are data, not code.
 - **Every position the vocabulary offers is accounted for:** used by a bean, or declared vacant with a reason.
   A garden accounts only for what it declares itself.
 - A local term that proves general is **promoted** to the standard by a pull request to the daftar repository.
+  A term for a kind of fact earns promotion with real cases; a MECHANISM (a figure, a construct, a system, a
+  unit) may be declared whole, ahead of its occupants, when it is universal and general — its empty positions
+  declared vacant as `universal`. `CONTRIBUTING.md` has the test.
 - **Aspects have a shape (a figure).** An *opposition* is a closed set of contradictory positions along one or
   more axes (necessity, capability and feasibility are squares; confidentiality is a single axis). A *sequence* is a domain walked along direction lines
   and is declared only by its restrictions: how many lines, whether positions are measured, whether they are
@@ -103,8 +108,11 @@ technologies, each linked to its project's own documentation. They are kept whol
 
 ## Ground rules
 1. **One owner per fact.** A fact lives in one bean's `owns:`; elsewhere it is referenced.
-2. **Abstraction, not force-fit.** A fact that fits no term goes in `attributes:` or `details:`, intact —
-   never bent into a term that nearly fits, never dropped.
+2. **Abstraction, not force-fit — and structure before prose.** A fact that fits no term goes in `attributes:`
+   or `details:`, intact — never bent into a term that nearly fits, never dropped. But INSIDE a term, an entry
+   holds only the attributes that term declares: a remark goes in the attribute declared for prose (`note`,
+   `why`), and a new kind of fact is proposed as a new attribute. A sentence written as a key looks like data
+   and is readable by nothing.
 3. **Reference external truth, or capture it knowingly.** A fact is either *authoritative here*, a *pointer* to
    whoever owns it, or a *capture*: a dated, staleness-keyed copy taken so something can be rebuilt, never
    authoritative, never applied back without re-reading the source, and never containing secrets.
