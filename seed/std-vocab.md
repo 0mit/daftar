@@ -1,5 +1,5 @@
 ---
-version: "14.0"
+version: "15.0"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -125,9 +125,35 @@ natures:
 # already applies to terms, because an unstated pattern and a deliberately absent one must not look alike.
 # THE REGISTRY IS OPEN. A new system is a VOCABULARY edit and never a code edit: the gate reads `pattern`
 # generically through `entry_pattern_from_registry` and names no system, exactly as it names no term.
+# == A SYSTEM KNOWS ITS OWN SHAPE (15.0) ==
+# The `place` aspect has always confessed that it cannot describe its systems: "lines: open … metered: none — the
+# aspect claims no measure it cannot give every system". The operator said where the answer lives on 2026-08-05:
+# a position is "a position in a SUBASPECT which here is not always linear". A system row may therefore state —
+#   levels            the resolutions a position may be HELD to, coarse -> fine: a named list, or a counted range
+#                     `{ by, from, to }`. A level is METRIC when it names a `units` row: a day is, A MONTH IS NOT,
+#                     which is why `units` never held month — it was always a level and never a measure. Levels are
+#                     what the imported trees of knowledge arrived with (broad / narrow / detailed), what a calendar
+#                     is (year … millisecond), what a network design is (core / distribution / access; an OSPF area),
+#                     and what a map is (country … neighbourhood). Holding a position at a COARSER level is always
+#                     honest; a finer one is never inferred.
+#   within            a position here is only meaningful INSIDE a position of one of those systems (a port within an
+#                     address; a postal code within a country).
+#   resolves_through  reading a position here needs one there (civil time through geography — prose until 15.0).
+#   neighbours        `counted` | `metered` | `none`: whether positions have a neighbour relation at all. It is what
+#                     a routing protocol computes over, and what makes "every 10th release" sayable with no meter.
+#   restrictions      its own `lines`, `metered`, `order`, `ends` — NARROWING its aspect's, never widening them.
+# THE GATE CHECKS THE SHAPE, not its use: that what a row names exists, that `within` and `resolves_through` never
+# loop, that a metric level names a real unit, that a restriction is one the figure offers and does not widen the
+# aspect's. The consumers are extents and recurrences, which ask the SYSTEM what it permits as they ask the aspect
+# today. `system_registries` names the registries whose rows are systems, so the gate names none.
+system_registries:
+  - { registry: anchor_systems,    key: system }
+  - { registry: knowledge_schemes, key: scheme }
 anchor_systems:
   - system: unix-filesystem
     dimension: place
+    levels: open                      # a tree of any depth; a position is held to whatever depth it is written at
+    neighbours: none
     meaning: "a position in ONE NAMED HOST's UNIX filesystem. The host is part of the position: /home/user/addin on laptop-a and on laptop-b are different positions that print identically."
     pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:/.*)$'
     form_note: "root:<logical root>[/<relative path>] — resolved per host through that host's OWN root map, which is the form that survives a second machine; or <host>:<absolute path> stated outright where there is no root to hang it on"
@@ -136,6 +162,7 @@ anchor_systems:
     scope_note: "UNIX-SHAPED ON PURPOSE, and named so rather than called `host-filesystem`. C:\\Users\\user\\source\\repos\\addin cannot satisfy this pattern, and bending it in would give one system two formats — the exact reinvention the pattern rule exists to stop. `windows-filesystem` is declared beside it as a SEPARATE system for exactly that reason."
   - system: git-object-graph
     dimension: place
+    neighbours: counted               # parent and child commits: a history is walked, never measured
     meaning: "a position in a repository's object graph — REACHABLE-FROM, not CHECKED-OUT-AT. This is the system `staleness_key: git-head:<sha>` was reaching for and missing: it compared against whatever tree the reader happened to have checked out, which is a fact about the reader and not about the analysis."
     pattern: '^[a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}$'
     form_note: "<repo>@<object id> — ONE spelling, always. Not git-head:, not git-commit:, not a bare sha: a sha with no repository named is a position with no system."
@@ -150,6 +177,11 @@ anchor_systems:
     why: "a physical copy can be moved, and two copies can sit in two places — a location corroborates which artefact you are holding, never which being it is a copy of"
   - system: gregorian-civil
     dimension: time
+    levels: [ { level: year }, { level: month }, { level: day, unit: day }, { level: hour, unit: hour },
+              { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    resolves_through: geographic
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
     meaning: "a calendar position with a stated offset. Civil time RESOLVES THROUGH a geographic position, which is why it does not establish on its own."
     pattern: '^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "YYYY-MM-DD[THH:MM[:SS[.sss]][+HH:MM|Z]] — the RESOLUTION actually held is stated separately in `unit` and is never inferred from how many digits were typed"
@@ -157,6 +189,9 @@ anchor_systems:
     why: "a wall-clock reading without its geographic frame is ambiguous. The estate's own case: a cutoff computed on a +03 host was applied to UTC logs, and the watch reported zero hits while a campaign was running."
   - system: unix-epoch
     dimension: time
+    levels: [ { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: total }
     meaning: "a time position as milliseconds since 1970-01-01T00:00:00Z. Declared at 7.0 for `beanger` records, whose ORDER is the thing being recorded — two operations in one session land in the same second, and a position that cannot separate them cannot order them."
     pattern: '^\d{13}$'
     form_note: "exactly 13 digits: epoch MILLISECONDS, never seconds. One length, one meaning — a 10-digit value would be a different unit wearing the same shape, which is the ambiguity `unit` was added to stop."
@@ -164,6 +199,8 @@ anchor_systems:
     why: "a moment corroborates when something was done and never fixes which being did it. It differs from `gregorian-civil` in one useful way: it carries no offset, so it cannot be misread the way a +03 label on a UTC reading was misread in this estate's own journal."
   - system: geographic
     dimension: place
+    neighbours: metered
+    restrictions: { metered: length }      # the one place system with a measure: what "every 5 metres" needs
     meaning: "a position on the earth. Named here because CIVIL TIME RESOLVES THROUGH IT — an offset is a geographic fact wearing a time costume — so a registry carrying gregorian-civil without it would hide the resolution chain."
     pattern: '^(site:[a-z0-9][a-z0-9-]*|-?\d+\.\d+,-?\d+\.\d+)$'
     form_note: "site:<declared site name>, or <lat>,<lon> as signed decimals"
@@ -171,6 +208,7 @@ anchor_systems:
     why: "a site is a label people reassign, and a coordinate corroborates where a machine is without fixing which machine it is"
   - system: event-anchored
     dimension: any
+    neighbours: counted               # positioned ONLY by neighbours — and so countable: "every 10th release"
     meaning: "a position fixed by NEIGHBOURING EVENTS rather than by any coordinate — 'after the branch was pushed, before the cutover'. Fully positioned while carrying no calendar value at all. Declared because it is what makes this a registry rather than a two-item enum: SEQUENCE is the general structure and a coordinate system is one restriction of it."
     pattern: '^(after|before):.+$'
     form_note: "after:<position> or before:<position>; state both as two entries when an interval is meant"
@@ -178,6 +216,8 @@ anchor_systems:
     why: "an event anchor positions relative to other positions — it fixes an interval, never a point"
   - system: network-segment
     dimension: place
+    levels: [ { level: network }, { level: segment } ]
+    neighbours: counted
     meaning: "WHERE A BEING IS ATTACHED in a network's topology: a VLAN, a wireless network, an address range with a role. Declared 11.0, operator-ratified: a segment is a PLACE (where you are), which is a different question from an address (where you answer) — those have their own registry, and a being keeps its address while moving between segments."
     pattern: '^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9.:-]*$'
     form_note: "<network>/<segment>, e.g. an office network's guest VLAN or its wireless network for laptops. The network is named because two sites both have a `vlan-13` and they are not the same place."
@@ -185,6 +225,8 @@ anchor_systems:
     why: "a being moves between segments — a laptop joins the guest network and then the staff one — so a segment corroborates where it is and never fixes which being it is"
   - system: windows-filesystem
     dimension: place
+    levels: open
+    neighbours: none
     meaning: "a position in ONE NAMED HOST's Windows filesystem. A SEPARATE SYSTEM from unix-filesystem, not a dialect of it: C:\\Users\\user\\source\\repos\\addin and /home/user/addin share no canonical form, and one system carrying two patterns is exactly the reinvention this registry forbids."
     pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:[A-Za-z]:\\.*)$'
     form_note: "root:<logical root>[/<relative path>], or <host>:<Drive>:\\<path> stated outright. The two colons are unambiguous — hostname, then drive letter — and the root: form is IDENTICAL to the unix one on purpose: a LOGICAL root is what crosses systems, a literal path is what does not. That is the whole mechanism for resolving one repository on machines that do not agree what a path looks like."
@@ -218,6 +260,9 @@ anchor_systems:
   # because `endpoints.system` is now any place system and `unix-filesystem` has always been one.
   - system: ipv4
     dimension: place
+    levels: { by: prefix-length, from: 0, to: 32 }     # a prefix IS the level a position is held to: /24 is coarser than /32
+    neighbours: counted
+    restrictions: { lines: 1, ends: bounded }
     meaning: "a 32-bit Internet Protocol address, optionally carrying a prefix length."
     pattern: '^(\d{1,3}\.){3}\d{1,3}(/\d{1,2})?$'
     form_note: "dotted quad, optionally /prefix. The bare address and the prefixed form are the SAME system: a prefix narrows a position, it does not change what kind of position it is."
@@ -225,6 +270,9 @@ anchor_systems:
     why: "reassignable by DHCP, NAT, failover and plain reuse — it corroborates which being answers and never fixes which being it IS. The same rule the `ip` anchor has always carried, now stated where the position is."
   - system: ipv6
     dimension: place
+    levels: { by: prefix-length, from: 0, to: 128 }
+    neighbours: counted
+    restrictions: { lines: 1, ends: bounded }
     meaning: "a 128-bit Internet Protocol address, optionally carrying a prefix length."
     pattern: '^([0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}(/\d{1,3})?$'
     form_note: "lowercase hex in RFC 5952 compressed form, optionally /prefix. NOT a dialect of ipv4 — it shares no format with it, and one pattern covering both could not tell a malformed quad from a valid v6 address."
@@ -233,6 +281,9 @@ anchor_systems:
   - system: tcp-port
     dimension: place
     transport: tcp
+    within: [ipv4, ipv6]
+    neighbours: counted
+    restrictions: { lines: 1, order: total, ends: bounded }
     meaning: "a TCP port: a position WITHIN an address, naming which listener there. Meaningless without the address beside it, as a path is without its host."
     pattern: '^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$'
     form_note: "one decimal integer, 0 to 65535. ONE port: `110/143/993/995` is four positions, and four entries."
@@ -241,11 +292,44 @@ anchor_systems:
   - system: udp-port
     dimension: place
     transport: udp
+    within: [ipv4, ipv6]
+    neighbours: counted
+    restrictions: { lines: 1, order: total, ends: bounded }
     meaning: "a UDP port. A SEPARATE SYSTEM from tcp-port and not a dialect of it: 53/udp and 53/tcp are two positions, and a resolver that answers on both has two endpoints."
     pattern: '^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$'
     form_note: "one decimal integer, 0 to 65535"
     establishes: false
     why: "as for tcp-port"
+  # == THREE CANONICAL SYSTEMS FOR A GARDEN THAT KEEPS A MAP (15.0). Off the shelf, none invented. They exist so that
+  # a many-layered place model — an administrative tree, a postal layer over the same ground, a drawn map — is held in
+  # systems every garden shares, and two gardens that never met agree which place they mean.
+  - system: iso-3166
+    dimension: place
+    levels: [ { level: country }, { level: subdivision } ]
+    neighbours: counted
+    meaning: "a country (ISO 3166-1 alpha-2) or one of its principal subdivisions (ISO 3166-2)."
+    pattern: '^[A-Z]{2}(-[A-Z0-9]{1,3})?$'
+    form_note: "`IR`, or `IR-23` — the code as published, upper case"
+    establishes: true
+    why: "a published code names the same territory in every garden; it survives a renaming, which a name does not"
+  - system: osm
+    dimension: place
+    neighbours: none
+    meaning: "an OpenStreetMap element: the one thing about a mapped place that does not move when it is renamed, re-tagged or re-drawn."
+    pattern: '^(node|way|relation)/[1-9][0-9]*$'
+    form_note: "`relation/1234567` — the element type and its id"
+    establishes: true
+    why: "an element id is assigned once. NOTE what it establishes: which MAPPED OBJECT this is — a tag on it may still be wrong, as a school tagged `place=village` is, and then the object is an ALIAS of a place and not one."
+  - system: postal-code
+    dimension: place
+    within: [iso-3166]
+    levels: { by: prefix-length, from: 1, to: 12 }
+    neighbours: none
+    meaning: "a postal code, within the country that issues it. A PREFIX is a coarser level of the same position: a whole code may name one building, which is a reason to hold a person's place at a shorter one."
+    pattern: '^[A-Z]{2}:[A-Z0-9][A-Z0-9 -]{0,11}$'
+    form_note: "`<ISO country>:<code or prefix>`, e.g. `IR:14155`"
+    establishes: false
+    why: "codes are re-drawn by the operator that issues them, and one code covers many places"
 # == ROLES: what a being DOES, as against what it IS (added 7.0) ==
 # THE FIX FOR AN AMBIGUITY THIS VOCABULARY SHIPPED WITH. `router` was a KIND until 7.0, and the proof it
 # was wrong is an asymmetry the corpus already carried: a mail server recorded five roles as free-text data
@@ -326,6 +410,25 @@ storage_formats:
   - { format: linux_raid_member, layer: raid,                         meaning: "an md RAID member. e.g. raid1 for /boot, raid6 for share arrays." }
   - { format: ntfs,              layer: filesystem,     posix: false, meaning: "the Windows filesystem. Declared and unoccupied — see the vacancy. It is named here because the question 'where does ntfs go' is what produced this registry, and the answer is that it is a STORAGE FORMAT and never a path grammar." }
 
+# == PLANES: what a surface, a link or a treatment is FOR (15.0) ==
+# Off the shelf: the three planes every network design is sorted by. DATA is the traffic a device exists to carry;
+# CONTROL is how it decides where traffic goes (a routing adjacency, a spanning tree); MANAGEMENT is how an operator
+# reaches it (ssh, a vendor console, SNMP). The split matters because the three deserve different exposure: a data
+# surface is often public by design, and A MANAGEMENT SURFACE ANSWERING ON THE INTERNET is the oldest finding in any
+# audit. With a plane stated, that is a CELL a term can declare rather than a line in somebody's report.
+planes:
+  - { plane: data,       meaning: "the traffic the being exists to carry or to serve" }
+  - { plane: control,    meaning: "how the being decides where traffic goes: routing adjacencies, discovery, redundancy election" }
+  - { plane: management, meaning: "how an operator reaches the being to configure or observe it" }
+
+# == REGISTRY LINKS (15.0): a row of one registry names a row of another, and the gate resolves it ==
+# A protocol is also a TECHNOLOGY with a specification somebody publishes, and the technology catalogue is rooted in
+# the UNESCO fields of knowledge. Until 15.0 `net_protocols` and `seed/knowledge/technology.tsv` were two lists of
+# some of the same things, related by nothing. A link is declared here ONCE, so the gate names neither registry.
+registry_links:
+  - { from: net_protocols, field: technology, to: technology, take: code,
+      why: "every protocol names its entry in the catalogue of technologies, which carries its specification and the field of knowledge it belongs to — so a routing mechanism ledgered tomorrow hangs from the same tree as a mail server does today" }
+
 # == NET PROTOCOLS: the one owner of what a being may SPEAK (added 6.0) ==
 # A REGISTRY rather than an enum on a term, for the reason `anchor_systems` is one: adding a protocol
 # must never be a rule-change. A row carries what is true of the PROTOCOL — which layer it occupies,
@@ -350,70 +453,84 @@ net_protocols:
   # is why a port had no system to be a position in. A row here is what lets an endpoint NAME its transport when it
   # differs from its protocol's usual one — a DNS server answers on 53/udp AND 53/tcp, and the law could not say so.
   - protocol: tcp
+    technology: tcp
     layer: transport
     positions: tcp-port
     meaning: "the Transmission Control Protocol. Its positions are ports (`anchor_systems.tcp-port`)."
   - protocol: udp
+    technology: udp
     layer: transport
     positions: udp-port
     meaning: "the User Datagram Protocol. Its positions are ports (`anchor_systems.udp-port`)."
   - protocol: ssh
+    technology: ssh
     layer: application
     transport: tcp
     default_ports: [22]
     meaning: "the Secure Shell transport: an authenticated, encrypted channel that other protocols ride."
   - protocol: sftp
+    technology: sftp
     layer: application
     transport: tcp
     rides_on: [ssh]
     meaning: "file transfer carried INSIDE an ssh channel. It has no port of its own, and `rides_on` is what records that rather than a fabricated default."
   - protocol: git
+    technology: git-protocol
     layer: application
     transport: tcp
     rides_on: [ssh, http]
     meaning: "the git wire protocol. It is usually carried — `host-a:git/ledger.git` and `vps-a:addin` are both git over ssh — so its protection is whatever carries it, and the row says so instead of claiming one."
   - protocol: http
+    technology: http
     layer: application
     transport: tcp
     default_ports: [80, 443]
     meaning: "the Hypertext Transfer Protocol. 443 is this same protocol with an endpoint taking the `encrypted` position, NOT a separate protocol called https."
   - protocol: smtp
+    technology: smtp
     layer: application
     transport: tcp
     default_ports: [25, 465, 587]
     meaning: "mail transfer. One protocol on three ports: 25 relay, 465 implicit TLS, 587 submission — the port is a fact about the endpoint and the protection is an aspect position, so none of the three needs its own row."
   - protocol: pop3
+    technology: pop3
     layer: application
     transport: tcp
     default_ports: [110, 995]
     meaning: "mailbox retrieval, download-oriented. 995 is the same protocol wrapped in TLS."
   - protocol: imap
+    technology: imap
     layer: application
     transport: tcp
     default_ports: [143, 993]
     meaning: "mailbox access, server-side-state-oriented. 993 is the same protocol wrapped in TLS."
   - protocol: smb
+    technology: smb
     layer: application
     transport: tcp
     default_ports: [445]
     meaning: "the Server Message Block file-sharing protocol. The PROTOCOL — Samba is one implementation of it and is a bean, not a row."
   - protocol: mysql
+    technology: mysql-protocol
     layer: application
     transport: tcp
     default_ports: [3306]
     meaning: "the MySQL/MariaDB client-server wire protocol. Again the protocol, not the server."
   - protocol: dns
+    technology: dns
     layer: application
     transport: udp
     default_ports: [53]
     meaning: "the Domain Name System query protocol. Added beyond the eighteen names the design was asked for, because this estate runs three BIND beans and omitting it would have forced them to record their listening surface as something they do not speak."
   - protocol: wireguard
+    technology: wireguard
     layer: link
     transport: udp
     default_ports: [51820]
     synthesizes_link: true
     meaning: "a tunnel protocol that MANUFACTURES A LINK: a wireguard peering produces an interface other protocols are then carried over. `synthesizes_link` is what distinguishes it from every application row above, and it is why `links` is a term and not a note."
   - protocol: pptp
+    technology: pptp
     layer: link
     transport: tcp
     default_ports: [1723]
@@ -425,14 +542,41 @@ net_protocols:
       published attacks, so a tunnel built on it protects nothing while LOOKING like a VPN in every
       inventory. A registry that omitted it could not express that judgment at all; the vacancy is where
       the judgment lives, and occupying the position warns.
+  # == THE STACK COMPLETED, AND THE CONTROL PLANE (15.0). `layer` runs link -> network -> transport -> application, and
+  # each layer that ADDRESSES owns a positioning system (`positions:`). A ROUTING PROTOCOL is a control-plane row with
+  # the two facts network design sorts them by: `family` — how it learns (link-state floods a map and each router
+  # computes; distance-vector trusts its neighbours' sums; path-vector carries the whole path, so policy can refuse
+  # one) — and `scope` — interior to one administration, or exterior, between them. What one computes over is what a
+  # system row calls `neighbours`: an adjacency, a metric, AREAS AS LEVELS, and summarisation as containment.
+  - { protocol: ipv4,  technology: ipv4,  layer: network,   positions: ipv4, meaning: "Internet Protocol version 4. Its positions are addresses (`anchor_systems.ipv4`)." }
+  - { protocol: ipv6,  technology: ipv6,  layer: network,   positions: ipv6, meaning: "Internet Protocol version 6." }
+  - { protocol: icmp,  technology: icmp,  layer: network,   plane: control,    meaning: "Internet Control Message Protocol: how the network layer reports that it could not deliver." }
+  - { protocol: arp,   technology: arp,   layer: link,      plane: control,    meaning: "Address Resolution Protocol: finds the link-layer address that holds a network address — the join between two positioning systems." }
+  - { protocol: dot1q, technology: dot1q, layer: link,      synthesizes_link: true, rides_on: [ethernet], meaning: "IEEE 802.1Q VLAN tagging: one physical link carried as several segments. The plainest OVERLAY: a place system drawn over another." }
+  - { protocol: stp,   technology: stp,   layer: link,      plane: control,    meaning: "Spanning Tree (IEEE 802.1D/w/s): elects one loop-free tree out of a meshed link layer — `acyclic`, enforced by a protocol." }
+  - { protocol: lldp,  technology: lldp,  layer: link,      plane: control,    meaning: "Link Layer Discovery Protocol (IEEE 802.1AB): each device tells its NEIGHBOUR who it is. Neighbourhood, measured rather than drawn." }
+  - { protocol: gre,   technology: gre,   layer: link,      synthesizes_link: true, meaning: "Generic Routing Encapsulation: an unencrypted tunnel that manufactures a link." }
+  - { protocol: ipsec, technology: ipsec, layer: link,      synthesizes_link: true, meaning: "IPsec: authenticated, encrypted carriage of the network layer; in tunnel mode it manufactures a link." }
+  - { protocol: vxlan, technology: vxlan, layer: link,      transport: udp, default_ports: [4789], synthesizes_link: true, meaning: "Virtual eXtensible LAN: a link layer carried over a routed network — an overlay with the underlay's reach." }
+  - { protocol: ospf,  technology: ospf,  layer: network,   plane: control, family: link-state,      scope: interior, meaning: "Open Shortest Path First. Floods link states, computes shortest paths by cost, and divides a network into AREAS that summarise at their borders." }
+  - { protocol: is-is, technology: is-is, layer: link,      plane: control, family: link-state,      scope: interior, meaning: "Intermediate System to Intermediate System. Link-state like OSPF, carried directly on the link layer, with two LEVELS." }
+  - { protocol: rip,   technology: rip,   layer: application, transport: udp, default_ports: [520], plane: control, family: distance-vector, scope: interior, meaning: "Routing Information Protocol. Distance-vector by hop COUNT — a metric that counts neighbours and measures nothing." }
+  - { protocol: eigrp, technology: eigrp, layer: network,   plane: control, family: distance-vector, scope: interior, meaning: "Enhanced Interior Gateway Routing Protocol. Advanced distance-vector with a composite metric; one vendor's, published as an informational RFC." }
+  - { protocol: bgp,   technology: bgp,   layer: application, transport: tcp, default_ports: [179], plane: control, family: path-vector, scope: exterior, meaning: "Border Gateway Protocol. Carries the whole path of autonomous systems, so POLICY can refuse one; the protocol between administrations." }
+  - { protocol: vrrp,  technology: vrrp,  layer: network,   plane: control,    meaning: "Virtual Router Redundancy Protocol: several routers answer as one address, one at a time. A shared address made honest." }
+  - { protocol: dhcp,  technology: dhcp,  layer: application, transport: udp, default_ports: [67, 68], plane: control, meaning: "Dynamic Host Configuration Protocol: hands a being its position in the address space — the reason an address corroborates and never establishes." }
+  - { protocol: ntp,   technology: ntp,   layer: application, transport: udp, default_ports: [123], plane: control, meaning: "Network Time Protocol: how beings agree a position in TIME. A ledger of timestamps rests on it." }
+  - { protocol: snmp,  technology: snmp,  layer: application, transport: udp, default_ports: [161, 162], plane: management, meaning: "Simple Network Management Protocol: a being read, and sometimes written, by its operator." }
   # APPENDED AFTER THE APPLICATION ROWS RATHER THAN BESIDE `wireguard`, where they belong by layer.
   # dmsafe compares leaf paths BY INDEX, so inserting a row mid-list reads as deleting the fields of
   # every row after it — the rollback said so and was right about what it could see. Grouping by layer
   # is a legibility preference; a clean, honest diff is not.
   - protocol: ethernet
+    technology: ethernet
     layer: link
     meaning: "an ethernet link, including an aggregated one. Added while MIGRATING the corpus, not while designing it: `carried_by` had nothing to terminate on until a base link existed, and an aggregated bond is a real measured one. This row is the design's own claim tested on itself — adding a protocol is a registry row, not a rule-change to any term."
   - protocol: pppoe
+    technology: pppoe
     layer: link
     rides_on: [ethernet]
     synthesizes_link: true
@@ -457,6 +601,12 @@ units:
   - unit: day
     dimension: time
     meaning: "a position held to the calendar day — what every `iso_date` in this corpus actually holds"
+  - unit: hour
+    dimension: time
+    meaning: "a position held to the hour. Added 15.0 with the calendar's levels: an hour is metric, and a level that is metric names its unit."
+  - unit: metre
+    dimension: length
+    meaning: "the SI metre — the first unit that is not a time (15.0). `units` has been keyed by dimension since 5.1 \"so a length or an angle joins without a rule-change\"; this is that. It is what lets a region or a repetition on `geographic` carry a measure."
 # == VACANCIES (Tier-0). P6/B2: whoever DECLARES a position accounts for it, so the duty to explain
 # these is discharged HERE — an adopting garden must never inherit an obligation to justify a position it
 # never asked for. The gate applies ANTI-ROT only to garden-local vacancies: a garden that OCCUPIES one of
@@ -869,19 +1019,24 @@ knowledge_schemes:
     classifies: fields of knowledge (education and training)
     publisher: UNESCO Institute for Statistics
     url: "https://uis.unesco.org/en/topic/international-standard-classification-education-isced"
-    levels: [broad, narrow, detailed]
+    levels: [ { level: broad }, { level: narrow }, { level: detailed } ]
+    neighbours: none
     sources: seed/knowledge/SOURCES.md
   - scheme: isco-08
     classifies: occupations
     publisher: International Labour Organization
     url: "https://ilostat.ilo.org/methods/concepts-and-definitions/classification-occupation/"
-    levels: [major, sub-major, minor, unit]
+    levels: [ { level: major }, { level: sub-major }, { level: minor }, { level: unit } ]
+    neighbours: none
     sources: seed/knowledge/SOURCES.md
   - scheme: technology
     classifies: established technologies (software, protocols, operating systems), each with its OFFICIAL documentation
     publisher: daftar (curated; every row names the project's own documentation, never a third party's)
     url: "seed/knowledge/technology.tsv"
-    levels: [flat]
+    levels: [ { level: technology } ]
+    within: [isced-f-2013]          # every technology names the UNESCO field(s) it belongs to (its `isced_f_2013` column): the
+                                    # fields of knowledge are the ROOT, and a protocol, a product or a routing mechanism hangs from one
+    neighbours: none
     sources: seed/knowledge/SOURCES.md
 profiles:
   code:
@@ -963,6 +1118,25 @@ profiles:
         Measured: zero occurrences across the estate it was declared in. Declaring the
         position and refusing it is how the estate states a standing decision that would otherwise exist
         only as an absence — and an absence is indistinguishable from nobody having thought about it.
+    - { at: net_protocol.values, position: ipv4, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: ipv6, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: icmp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: arp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: dot1q, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: stp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: lldp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: gre, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: ipsec, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: vxlan, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: ospf, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: is-is, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: rip, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: eigrp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: bgp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: vrrp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: dhcp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: ntp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: net_protocol.values, position: snmp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
     - at: net_protocol.values
       position: tcp
       reason: prediction
@@ -992,7 +1166,7 @@ profiles:
       context_keys: [net_protocol]
       schema:
         shape: scalar
-        values: [tcp, udp, ssh, sftp, git, http, smtp, pop3, imap, smb, mysql, dns, ethernet, pppoe, wireguard, pptp]
+        values: [tcp, udp, ssh, sftp, git, http, smtp, pop3, imap, smb, mysql, dns, ipv4, ipv6, icmp, arp, dot1q, stp, lldp, gre, ipsec, vxlan, ospf, is-is, rip, eigrp, bgp, vrrp, dhcp, ntp, snmp, ethernet, pppoe, wireguard, pptp]
         values_consistent_with: ["registry:net_protocols[].protocol"]
       enforced_by: none
       merge: { cardinality: single, order: none }
@@ -1021,11 +1195,15 @@ profiles:
           # endpoint says `transport: tcp`. The default is READ FROM THE PROTOCOL'S ROW rather than typed here, so the
           # protocol stays the one owner of what usually carries it.
           transport:        { in: { registry: net_protocols, take: protocol, where: { layer: transport } }, default_from: { registry: net_protocols, keyed_by: protocol, take: transport }, meaning: "tcp | udp — which transport's port space `port` is a position in. Defaults to the protocol row's `transport`." }
+          plane:            { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR. Stated where it matters: a management surface deserves a different exposure from a data one." }
           port:             { in: { form_of: anchor_systems, keyed_by: transport, take: pattern }, meaning: "the port: a position in the transport's port space, WITHIN the address beside it. One port per entry. Omitted where the protocol rides another (sftp over ssh) and has none of its own, and for a socket path, which has none at all." }
           via_link:         { in: untyped, meaning: "optional: the `links` key this surface is reachable over, when it is not reachable without it" }
         cells:
           - { when: { permission: forbidden }, verdict: in_breach, why: "a listening surface that MUST NOT exist, recorded as existing. Unlike a capability, an endpoint entry is not a stance about a possibility — it is a statement that the being answers there — so `forbidden` alone is the breach and needs no second aspect to confirm it. A database container published on 0.0.0.0:5432, reachable across the LAN, is this shape." }
-          - { when: { permission: required, confidentiality: cleartext }, verdict: in_breach, why: "a channel the estate REQUIRES and which protects nothing on the wire. A mail policy that forces cleartext delivery to a partner domain that mail must still reach is exactly this, so the requirement and the exposure are both real and neither can simply be withdrawn. KNOWN OVER-FIRE, stated rather than silently narrowed: a LOOPBACK endpoint satisfies this cell and is benign, because on loopback there is no path for anything to be on. A cell of this kind still reads only ASPECT positions and does not yet see `exposure` — since 13.0 that is one line in the gate rather than a construct the language lacks, and it is held back only because lifting it changes verdicts, which is its own ratified step. A reader meeting this warning on a loopback surface should reconcile it there, the way a DNS server's bean reconciles its recursion prohibition, rather than treat it as a finding." }
+          # EXPOSURE-AWARE since 15.0. For six weeks this cell also fired on LOOPBACK surfaces, where there is no path for
+          # anything to be on, and said so at length in its own `why`, because a cell could see only aspect positions.
+          - { when: { permission: required, confidentiality: cleartext, exposure: [lan, link, internet] }, verdict: in_breach, why: "a channel the estate REQUIRES and which protects nothing on the wire, on a path something else can be on. A mail policy that forces cleartext delivery to a partner domain that mail must still reach is exactly this, so the requirement and the exposure are both real and neither can simply be withdrawn." }
+          - { when: { plane: management, exposure: internet }, verdict: in_breach, why: "a MANAGEMENT surface answering on the internet: the way an operator configures this being is reachable by anyone, guarded only by its login. Restrict it to a management network or a named address list; if it must stay, say why on the bean, where a reader meets this warning." }
       merge: { cardinality: multi, order: "by-protocol+system+at+port?" }
     - term: links
       # A LINK IS A THING, NOT A SENTENCE. Today the estate's tunnels live as prose in `owns:` on three
@@ -1046,6 +1224,7 @@ profiles:
           observed:         { in: { type: iso_date }, meaning: "ABSOLUTE date the link was checked" }
           peer:             { in: ref, meaning: "a {bean, field} ref to the far end. A REF, not a retyped address: this is the field whose absence produced the .169/.146 contradiction." }
           confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "what the link protects, for everything carried over it" }
+          plane:            { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR." }
           carried_by:       { in: untyped, meaning: "optional: the `links` entry this one rides over — a tunnel rides a WAN link rides an interface" }
       dag_note: >
         NOTHING HERE IS ACYCLIC, and the first draft of this term got that wrong twice in one line. It
@@ -1093,6 +1272,7 @@ profiles:
         required_on_roles: [router]   # 7.0: was `required_on_kinds: [router]` until `router` stopped being a kind
         attrs:
           kind:        { required: true, in: [route, nat, mangle, acl, queue], meaning: "route (where traffic goes) | nat (what its addresses become) | mangle (what marks it carries) | acl (whether it is allowed at all) | queue (what bandwidth it gets)" }
+          plane:       { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR." }
           what:        { required: true, in: prose, meaning: "the treatment itself, briefly. A POINTER to the device's own config, never a copy of it — ground rule 3: the router owns its rules and they are not hand-edited from here." }
           why:         { required: true, in: prose, meaning: "what breaks if it is removed. This is the load-bearing attr: a treatment with no stated consequence is an inventory row, and inventory is what the device's own export already gives you." }
           observed:    { in: { type: iso_date }, meaning: "ABSOLUTE date the treatment was read off the device" }
@@ -1803,7 +1983,7 @@ terms:
     context_keys: [anchor_system]
     schema:
       shape: scalar
-      values: [unix-filesystem, windows-filesystem, git-object-graph, physical, gregorian-civil, unix-epoch, geographic, event-anchored, network-segment, ipv4, ipv6, tcp-port, udp-port]
+      values: [unix-filesystem, windows-filesystem, git-object-graph, physical, gregorian-civil, unix-epoch, geographic, event-anchored, network-segment, ipv4, ipv6, tcp-port, udp-port, iso-3166, osm, postal-code]
       values_consistent_with: ["registry:anchor_systems[].system"]
     enforced_by: none   # it is never carried on a bean: it exists to OWN the enum that `located_at` and
                         # `timing` select their systems from. Occupancy is counted through their entries.
@@ -1813,7 +1993,7 @@ terms:
     context_keys: [unit]
     schema:
       shape: scalar
-      values: [millisecond, second, minute, day]
+      values: [millisecond, second, minute, day, hour, metre]
       values_consistent_with: ["registry:units[].unit"]
     enforced_by: none   # as with anchor_system: an enum owner, carried through other terms' entries
     merge: { cardinality: single, order: none }
@@ -2430,3 +2610,21 @@ The portable, estate-agnostic classification shared by every garden — the abst
   registry row when the entry is silent — never written back, never an occupant. NOT in this release, on purpose:
   a system row stating its OWN restrictions (a port line is one totally ordered counted line; geographic is
   metered) so that extents and recurrences can ask the system what it permits. That arrives with its consumer.
+
+- **15.0** (2026-09-20, proposed rule-change) — **a system knows its own shape; the network stack completed and rooted
+  in the fields of knowledge.** MAJOR for ONE reason: a verdict cell now sees EVERY attribute of an entry (it saw only
+  aspect positions), and `endpoints`' cleartext-and-required cell names `exposure: [lan, link, internet]` — so the
+  loopback over-fire it had carried since 6.0, and explained at length in its own `why`, ends. Everything else is
+  additive. A SYSTEM ROW MAY STATE ITS SHAPE: `levels` (the resolutions a position may be held to — a named list or a
+  counted range; a level is metric when it names a unit, and a month never does), `within`, `resolves_through`,
+  `neighbours`, and its own `restrictions`, which narrow its aspect's and never widen them. It is the "subaspect" of
+  the 2026-08-05 time conversation and the thing `place` has always said it lacked. Every existing system states it;
+  the trees of knowledge already had. `units` gains `hour` and the first LENGTH, `metre`. Three canonical systems for
+  a garden that keeps a map: `iso-3166`, `osm`, `postal-code`. `planes` (data / control / management) is a registry
+  and an attribute of endpoints, links and treatments, with one new cell: a MANAGEMENT surface answering on the
+  INTERNET. `net_protocols` gains the network layer, the rest of the link layer, and the control plane — OSPF, IS-IS,
+  RIP, EIGRP, BGP, each with its `family` and `scope` — and EVERY protocol row names its entry in the catalogue of
+  technologies (`registry_links`, resolved by the gate), which gains 29 rows and is declared `within` the UNESCO
+  fields: a routing mechanism ledgered tomorrow hangs from the same tree of knowledge as a mail server does today.
+  NOT built: places-in-the-network as a registry of site roles (no garden yet has site beans); extents and
+  recurrences that ASK a system its shape (next).
