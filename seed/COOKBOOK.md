@@ -195,6 +195,34 @@ already has an empty `local_terms: []` line; replace it with the block above rat
 `local_terms:` — the gate refuses a key written twice.) If a later daftar release adds the same value to the
 standard, the gate tells you to delete your local copy.
 
+## A kind of fact the standard has no term for
+
+Keep it in `details:` until it recurs. When it does, give it a term **in this garden** — a term is data, so
+the gate enforces it the moment it is written, with no code anywhere. Each attribute says ONE thing: what it
+is a position `in:`, whether it is `required`, and what it `meaning`s. `python3 bin/dmrules.py` lists what
+`in:` may say (`schema_language.attr_domains`): a closed list, a registry, an aspect, a value type, a pattern,
+`extent`, `ref` — or `prose`, for a reason or a remark, which is deliberately not a position.
+
+<!-- example-term: VOCAB.md -->
+```yaml
+local_terms:
+  - term: rental
+    meaning: "what a rented machine is rented from, and when the rent next falls due"
+    context_keys: [rental]
+    schema:
+      shape: mapping
+      attrs:
+        provider: { required: true, in: prose,              meaning: "who it is rented from" }
+        renews:   { required: true, in: { type: iso_date }, meaning: "ABSOLUTE date the next payment is due" }
+        note:     { in: prose,                              meaning: "optional remark" }
+    merge: { cardinality: single, order: none }
+```
+
+Then a bean can carry `rental: { provider: "a hosting company", renews: 2027-01-15 }`, and a bean that writes
+`rental: { provider: "x", renews: "next January" }` — or adds a key the term does not declare — is refused. An
+attribute whose `in:` is a closed list declares POSITIONS, and the gate will ask that each be used by a bean or
+declared vacant with a reason. If the term proves general, propose it (`CONTRIBUTING.md`).
+
 ## Say what a thing is, in the world's shared terms (`knowledge` profile)
 
 Opt in with `extends_profiles: [knowledge]` in VOCAB.md. Then:
