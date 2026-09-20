@@ -119,6 +119,24 @@ out = routine(GOOD)
 check("T4: the same loop is refused once `routine` declares acyclic — the restriction is data", "loops, and 'routine' declares acyclic" in out, out[-900:])
 open(VOC, "w").write(ORIG)
 
+# ---------------------------------------------------------------- the schema language describes itself (11.3)
+# Four constructs were interpreted by the gate and declared nowhere. The check runs both ways on purpose:
+# the standard as shipped must be silent, and a construct one letter short must be NAMED, because until 11.3
+# it passed while enforcing nothing.
+out = gate()
+check("11.3: every construct the standard's terms use is declared in schema_language",
+      "is not declared in schema_language" not in out, out[-900:])
+mutate("      entry_required_attrs: [why] ", "      entry_require_attrs: [why] ")
+out = gate()
+check("11.3: a misspelt construct is named instead of silently enforcing nothing",
+      "capabilities: schema key `entry_require_attrs` is not declared in schema_language" in out, out[-900:])
+check("11.3: ...as a WARNING — a vocabulary that passed before is not refused", "0 error" in out, out[-600:])
+mutate('  path:                 "<dotted path>', '  path_:                "<dotted path>')
+out = gate()
+check("11.3: withdrawing a declaration the terms rely on is noticed too",
+      "schema key `path` is not declared in schema_language" in out, out[-900:])
+open(VOC, "w").write(ORIG)
+
 shutil.rmtree(T, ignore_errors=True)
 print("\nfigures: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

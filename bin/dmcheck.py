@@ -267,6 +267,24 @@ def check_vocab_enum_drift():
                           f"— the exported enum has drifted from its definition")
 
 
+# --- the schema language must describe itself (std-vocab 11.3) -----------------------------------------------------
+# The reverse gate holds every TERM to its occupants; nothing held the schema language to the gate. Measured
+# 2026-09-20: four constructs were interpreted here and declared nowhere (`path`, `alt_form`, `attr_types`,
+# `canonical_note`) — a cold-start drill found one of them by reading this file, which is not where a stranger
+# should have to look. The other direction is the dangerous one: a key the language does not declare is a key no
+# controller reads, so `entry_require_attrs` (one letter short) has always passed while enforcing nothing.
+# A WARNING, deliberately: it names a rule that is not biting without refusing a vocabulary that passed before.
+def check_schema_language():
+    _declared = set(std_fm.get('schema_language') or {})
+    if not _declared:
+        return                      # the law did not load; the one-path refusal says so, once
+    for _name, _sch in sorted(SCHEMAS.items()):
+        for _k in sorted(set(_sch) - _declared):
+            warns.append(f"VOCAB {_name}: schema key `{_k}` is not declared in schema_language — no controller "
+                         f"reads an undeclared construct, so this rule enforces NOTHING. Check the spelling "
+                         f"against `schema_language` in seed/std-vocab.md")
+
+
 # --- a garden's local ADDITION that the standard now carries itself (v0.5.0) --------------------------------------
 # The contribution path is: prove a value locally with values_add / registry_additions, propose it, and it lands in
 # Tier-0. The garden that proved it then carried a duplicate, and the gate said only "the exported enum has drifted"
@@ -2238,6 +2256,8 @@ PLIES = (
      "a local addition the standard already carries — named as that, before anything else reads the enum"),
     (check_vocab_enum_drift,
      "the vocabulary must agree with itself before anything is judged by it"),
+    (check_schema_language,
+     "a construct the language does not declare is a rule nothing reads — said before any term is interpreted"),
     (check_merge_identity,
      "a list term's merge identity must name fields its entries carry — the same self-agreement, for merging"),
     (check_value_types,
