@@ -43,5 +43,7 @@ jobs:
         run: python3 test/rationale.py
       - name: "recurrence: a repetition strides by neighbours, by measure, or by the cells of a level"
         run: python3 test/recurrence.py
+      - name: "quantities: area, volume, speed, acceleration and attenuation are one construct"
+        run: python3 test/quantities.py
       - name: "public: a repository carries the language, never a garden"
         run: python3 test/public.py

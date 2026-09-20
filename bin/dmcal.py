@@ -147,7 +147,7 @@ def persian_from_day(n):
     if n < persian_to_day(y, 1, 1):
         y -= 1
     doy = n - persian_to_day(y, 1, 1) + 1
-    m = math.ceil(doy / 31) if doy <= 186 else math.ceil((doy - 6) / 30)
+    m = -(-doy // 31) if doy <= 186 else -(-(doy - 6) // 30)      # a ceiling in whole numbers: no float is involved
     return y, m, n - persian_to_day(y, m, 1) + 1
 
 

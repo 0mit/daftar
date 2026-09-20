@@ -81,8 +81,8 @@ held = {a["domain"]["systems"] for a in sv["aspects"] if isinstance(a.get("domai
 check("EVERY dimension a system positions in is held by some aspect — `address` belonged to no figure", dims <= held, f"{sorted(dims)} vs {sorted(held)}")
 # a UNIT's dimension is what it MEASURES, which is a different thing: it must be one something is metered in
 measured = {a.get("metered") for a in sv["aspects"]} | {(r.get("restrictions") or {}).get("metered") for r in sv["anchor_systems"]}
-check("...and every dimension a unit measures is one some aspect or system is metered in",
-      {u.get("dimension") for u in sv["units"]} <= measured, f"{sorted({u.get('dimension') for u in sv['units']})} vs {sorted(x for x in measured if x)}")
+check("...and everything metered is metered in a declared base dimension",
+      {x for x in measured if x and x != "none"} <= {d["dimension"] for d in sv["dimensions"]}, sorted(x for x in measured if x))
 check("the address registry is gone rather than kept beside its replacement", "address_systems" not in sv)
 
 shutil.rmtree(T, ignore_errors=True)
