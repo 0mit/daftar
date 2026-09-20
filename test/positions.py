@@ -89,6 +89,25 @@ check("a TIME system is not where a being answers: `system` is narrowed to place
 out = gate(E % ("smtp", "ipv6", "203.0.113.10", ", port: 25"))
 check("ipv4 and ipv6 are still separate systems with separate forms", "is not in the one canonical form 'ipv6' declares" in out, out[-500:])
 
+# ---------------------------------------------------------------- 18.3: WHERE a surface is bound, and WHO may reach it
+M = '  - { protocol: ssh, system: ipv4, at: "203.0.113.10", port: 22, confidentiality: encrypted, observed: 2026-09-20%s }\n'
+ASKS = "endpoints[0] is at plane:management, exposure:internet but states no admitted_from"
+out = gate(M % ", plane: management, exposure: internet")
+check("a MANAGEMENT surface bound to a public address, with nothing said about who may reach it, warns",
+      ASKS in out and "0 error" in out, out[-700:])
+out = gate(M % ', plane: management, exposure: internet, admitted_from: "two named address lists, on the input chain"')
+check("...and is silent once its sources are stated: a fixed thing stops warning",
+      "admitted_from" not in out and "IN BREACH" not in out and "0 error" in out, out[-700:])
+out = gate(M % ", plane: data, exposure: internet")
+check("a DATA surface on the internet is never asked who it admits", "admitted_from" not in out and "0 error" in out, out[-700:])
+out = gate(M % ", plane: management, exposure: lan")
+check("...nor a management surface that is not bound to a public address", "admitted_from" not in out and "0 error" in out, out[-700:])
+out = gate(M % ", exposure: internet")
+check("`plane` is never defaulted — no protocol row carries one — so an entry that states none is not in the cell",
+      "admitted_from" not in out and "0 error" in out, out[-700:])
+out = gate(M % ', plane: data, exposure: lan, admitted_from: "the monitoring host"')
+check("`admitted_from` may be stated on any surface, asked for or not", "0 error" in out, out[-700:])
+
 import yaml, re
 sv = yaml.safe_load(re.match(r'^---\n(.*?)\n---', open(os.path.join(ROOT, "seed", "std-vocab.md")).read(), re.S).group(1))
 dims = {r.get("dimension") for r in sv["anchor_systems"]}

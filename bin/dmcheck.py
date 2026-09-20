@@ -1369,6 +1369,11 @@ def _cells(e, phase):
                         + ', '.join(f"{k}:{e.eff[k] if k in e.eff else effective(e, k)}" for k in cell['when'])
                         + f" — {cell['why'] or 'the two positions do not sit together'}")
             continue
+        if len(cell['when']) > 1:
+            sink.append(f"{e.base}: {e.ref} is at "
+                        + ', '.join(f"{k}:{e.eff[k] if k in e.eff else effective(e, k)}" for k in cell['when'])
+                        + f" but states no {', '.join(lack)}" + (f" — {cell['why']}" if cell['why'] else ''))
+            continue
         (attr, (_how, want)), = cell['when'].items()
         if cell['origin'] == 'required_if':
             sink.append(f"{e.base}: {e.ref} declares {attr}:{want} but carries no {', '.join(lack)}")

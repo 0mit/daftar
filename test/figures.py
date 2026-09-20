@@ -192,7 +192,7 @@ check("S1: one record per attribute — `at` says it is required and takes its f
       _f["attrs"]["at"].get("required") is True and _f["attrs"]["at"]["system_from"]["keyed_by"] == "system"
       and "meaning" in _f["attrs"]["at"], str(_f["attrs"].get("at"))[:300])
 check("S1: an aspect position is an attribute like any other", _f["attrs"]["permission"]["aspect"]["aspect"] == "capability")
-check("S1: cross_aspect became cells", [c["origin"] for c in _f["cells"]] == ["in_breach"] * 3, str([c["when"] for c in _f["cells"]])[:300])
+check("S1: cross_aspect became cells", [c["origin"] for c in _f["cells"]] == ["in_breach"] * 2 + ["expect_if"], str([c["when"] for c in _f["cells"]])[:300])
 _f = _gate.attribute_form("analysis_cache", _gate.SCHEMAS["analysis_cache"])
 check("S1: ...and so did entry_required_if and entry_expect_if — three constructs, one idea",
       sorted(c["origin"] for c in _f["cells"]) == ["expect_if", "required_if"], str(_f["cells"])[:300])
