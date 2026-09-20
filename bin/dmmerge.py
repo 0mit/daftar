@@ -23,7 +23,13 @@ import yaml
 # corpus, not a property of the model. Absent flag == not establishing, exactly as the gate reads it.
 def _est(a):
     return isinstance(a, dict) and a.get('establishing') is True
-SRC_RANK = {'generated-by-tool': 0, 'inferred': 1, 'observed': 2, 'asserted-by-human': 3}
+# THE SOURCE RANK IS DECLARED, NOT KEPT HERE. Until 2026-09-20 this line was a dict of four numbers — the only
+# place the order `generated-by-tool < inferred < observed < asserted-by-human` was written down. MODEL.md and
+# MERGE.md state the GUARD (an inferred value never overrides an asserted-by-human one); the rank that
+# implements it, and that also decides which src a value agreed on by several gardens keeps, was a constant in
+# a tool. `provenance_src` declares it now, the way `anchor_authority` has always declared its own, and
+# `_src_rank` reads it the way `_authority_rank` does.
+DEFAULT_SRC = 'observed'     # what a bean that states no src is read as; the one owner of that default
 
 # ---------- normalization ----------
 def norm(v):
@@ -370,6 +376,22 @@ def merge_key(key, items):
             'keyed_by': order}
 
 
+_SRC_RANK = None
+
+
+def _src_rank(src):
+    """Where a fact's `src` sits in the rank `provenance_src` declares. A vocabulary that declares none is
+    REFUSED rather than read as "all equal": with no rank the provenance guard silently stops guarding, and a
+    merge that cannot tell an inference from an assertion is worse than one that does not run."""
+    global _SRC_RANK
+    if _SRC_RANK is None:
+        _SRC_RANK = ranked_order('provenance_src')
+        if not _SRC_RANK:
+            raise SystemExit("dmmerge: the vocabulary declares no rank for `provenance_src` "
+                             "(merge: {order: \"a<b<c\"}) — refusing to merge without the provenance guard")
+    return _SRC_RANK.index(src if src in _SRC_RANK else DEFAULT_SRC)
+
+
 _AUTHORITY_RANK = None
 
 
@@ -417,7 +439,7 @@ def merge_field(key, items, member=False):
         k = json.dumps(norm(it['value']), sort_keys=True, ensure_ascii=False)
         e = by_val.setdefault(k, {'value': norm(it['value']), 'src': it['src'], 'seen_in': set()})
         e['seen_in'].update(it.get('_origin') or [it['garden']])
-        if SRC_RANK.get(it['src'], 2) > SRC_RANK.get(e['src'], 2): e['src'] = it['src']
+        if _src_rank(it['src']) > _src_rank(e['src']): e['src'] = it['src']
     vals = list(by_val.values())
     # antichain: drop v dominated by w, but an asserted-by-human value is never dropped by a lower src
     keep, swallowed = [], {}
@@ -426,7 +448,10 @@ def merge_field(key, items, member=False):
         for w in vals:
             if w is v: continue
             if subsumes(v['value'], w['value'], order, key):
-                if not (v['src'] == 'asserted-by-human' and SRC_RANK.get(w['src'], 2) < SRC_RANK['asserted-by-human']):
+                # THE GUARD: a value at the TOP of the declared rank is never dropped by one below it. The top is
+                # `asserted-by-human` because the vocabulary says so, not because this line names it.
+                _rv, _rw = _src_rank(v['src']), _src_rank(w['src'])
+                if not (_rv == len(_SRC_RANK) - 1 and _rw < _rv):
                     dom = w; break
         if dom is None:
             keep.append(v)
@@ -545,7 +570,7 @@ def merge_component(comp):
     for b in comp:
         fm = b['fm']
         prov = fm.get('provenance') or {}
-        src = prov.get('src', 'observed')
+        src = prov.get('src', DEFAULT_SRC)
         gardens.add(b['garden']); aka.add(b['id'])
         provs[b['garden']] = norm(prov)      # carries an `as_of` date; canonicalise it like any value
 
@@ -863,7 +888,7 @@ def render_bean(seed, fmA, fmB, bodyA, bodyB):
     # seen_in} and make the document unreadable, which Rule 6 forbids more strongly than it asks for
     # provenance. Without it, a merged bean read back can only be re-merged as the READER's assertion —
     # every value restamped `generated-by-tool`, which disarms the guard that an `inferred` value may
-    # never override an `asserted-by-human` one, because SRC_RANK is what enforces that.
+    # never override an `asserted-by-human` one, because the declared src rank is what enforces that.
     _pv = {}
     for k, v in sorted(facts.items()):
         _pv.update(provenance_of(v, k))

@@ -1,5 +1,5 @@
 ---
-version: "11.2"
+version: "11.3"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -16,6 +16,8 @@ version: "11.2"
 # A term with no `schema:` is documentation only; the gate never enforces it on beans.
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
+  path:                 "<dotted path> — the term governs a NESTED field rather than a top-level key named after it (`identity.status`, `identity.anchors[].class`, `provenance.src`). Added at 2.0 for the five core grammar enums and never declared here until 11.3."
+  alt_form:             "{key, ref_fields} — an ALTERNATIVE whole-value form: a mapping carrying `key` takes this form INSTEAD of the faceted one, and the per-key rules stand down for it (the inherited `owned_by: {via: …}`). In use since the first schema language; declared 11.3."
   required:             "true — EVERY bean must carry the term (the root-axiom case; stronger than required_on_<axis>s)"
   required_on_kinds:    "[<kind>...] — a bean of this kind MUST carry the term, non-empty"
   must_equal_kind_attr: "<attr> — the term's value must equal the bean's kind's <attr> in the `kinds` registry (e.g. nature == kind.of_nature)"
@@ -30,6 +32,7 @@ schema_language:
   entry_values:         "{<attr>: [<enum>...]} — per-entry enums"
   entry_pattern:        "{<attr>: <regex>} — an entry attr must match this form (11.0). For a POSITION, prefer `entry_pattern_from_registry`, which lets the system own its one form; this is for a value whose form is the term's own business"
   entry_soft_pattern:   "{<attr>: {pattern, why}} — the same, as a WARNING (11.0): the form a value SHOULD take while a corpus is being migrated onto it, so a garden is told what to fix without its next commit being refused"
+  attr_types:           "{<attr>: <value type>} — the same as entry_types, for the attrs of a MAPPING itself, which entry_types cannot reach (`registration.expires`). In use since `registration` was written; a cold-start drill found it undeclared, and it was one of four (11.3)."
   entry_types:          "{<attr>: <value type>} — per-entry value types, each a row of `value_types` (10.0): its pattern, and for a time type its system and unit"
   entry_one_of:         "[<attr>...] — each entry must carry at least one of these"
   entry_required_if:    "[{attr, equals, requires: [...]}] — conditional requirement inside an entry"
@@ -50,6 +53,7 @@ schema_language:
   governs_anchor:       "<key> — this term governs the FORMAT of anchors carrying that key; pairs with value_pattern or value_form"
   value_pattern:        "<regex> — the canonical form an anchor value must match (with canonical_note as the human statement of it)"
   value_form:           "ip — a format needing real parsing rather than a pattern"
+  canonical_note:       "<prose> — with value_pattern: the human statement of the canonical form, printed in the refusal and by bin/dmrules.py. Prose for a reader; the gate checks the pattern, never this."
   enforced_by:          "core | none — an explicit statement for a term with NO schema: either CORE already enforces it, or there is genuinely nothing to check and this says why"
   cross_aspect:         "{incoherent: [...], in_breach: [...]} — combinations over ONE OR MORE of a term's aspects; N-ary, so the same construct constrains a single figure or a grid of any dimension. Incoherent = error (a position must be mis-stated); in_breach = warning (all can hold, and the state needs action)."
   poles:                "one axis (a contradictory PAIR), or a LIST of axes — a figure may be 1-dimensional, 2, 3 or more, and the gate derives the count rather than assuming it"
@@ -1306,6 +1310,13 @@ terms:
     schema:
       path: provenance.src
       values: [observed, inferred, asserted-by-human, generated-by-tool]
+    # THE RANK, DECLARED AT LAST (11.3). MODEL.md and MERGE.md state the guard — an `inferred` value never
+    # overrides an `asserted-by-human` one — and until 11.3 the order that implements it was four numbers in
+    # bin/dmmerge.py, the oldest rule in the system kept as a constant in a tool. It is the same construct
+    # `anchor_authority` uses below. The merge reads it for two things: which src a value several gardens agree
+    # on keeps (the highest), and the guard itself — a value at the TOP of this rank is never dropped in favour
+    # of one below it, whatever precision the lower one claims. The merge REFUSES to run if this is absent.
+    merge: { order: "generated-by-tool<inferred<observed<asserted-by-human" }
   - term: analysis_cache
     # Design step D6, executed as P1 (2026-08-02, human-ratified rule-change).
     # An OPEN, TYPED, bean-level cache of ANALYSIS RESULTS, so an agent READS a recorded result instead of
@@ -2373,3 +2384,14 @@ The portable, estate-agnostic classification shared by every garden — the abst
   in the schema language; and `code_paths.path` / `covers_paths` WARN while they carry a bare absolute path,
   which names no host — in the estate this grew in, 13 such paths exist on two machines as two different trees.
   The error for those follows in a later release, once a corpus has been migrated onto `root:` positions.
+
+- **11.3** (2026-09-20, proposed rule-change) — **the rank the merge kept to itself, and a schema language that
+  describes itself.** `provenance_src` declares `merge.order: "generated-by-tool<inferred<observed<asserted-by-human"`.
+  MODEL.md and MERGE.md have always stated the guard; the order that implements it was a constant in
+  `bin/dmmerge.py`, which now reads the declaration the way it reads `anchor_authority`'s and refuses to merge
+  without one. No merge outcome changes: the declared order is the one the constant held. And `schema_language`
+  declares four constructs the gate has interpreted for months and the language never mentioned — `path`,
+  `alt_form`, `attr_types`, `canonical_note`; the gate now WARNS when a term's `schema:` uses a key the language
+  does not declare, because an unknown construct is a rule that silently enforces nothing (a typo in
+  `entry_required_attrs` has always passed). A warning and not an error, so this stays MINOR: no bean and no
+  vocabulary that passed before is refused.

@@ -258,6 +258,34 @@ check("...in either order, because a rank is not arrival order",
 check("a term may now declare any order the merge can APPLY — `instant` on a term is no longer a silent no-op",
       M.leaf_order.__doc__ and 'instant' in M.ORDERS and 'containment' in M.ORDERS, str(M.ORDERS))
 
+# ---------------------------------------------------------------- the src rank is DECLARED (std-vocab 11.3)
+# MODEL.md and MERGE.md state the guard; the order that implements it was four numbers in bin/dmmerge.py.
+# `provenance_src` declares it now. These pin that the merge READS the declaration, and that reading it
+# moved nothing.
+def _said(garden, src, owns):
+    g = _host(garden, 'witness', 'SN-WIT-1')
+    g[0]['fm']['owns'] = owns
+    g[0]['fm']['provenance'] = {'src': src, 'by': garden, 'as_of': '2026-09-20'}
+    return g
+def _owns(a, b):
+    return list(M.merge_gardens([a, b]).values())[0]['facts']['owns']['members']
+check("the src rank comes from the vocabulary, in the order the constant held",
+      M.ranked_order('provenance_src') == ['generated-by-tool', 'inferred', 'observed', 'asserted-by-human'],
+      str(M.ranked_order('provenance_src')))
+check("...and no copy of it is left in the merge", not hasattr(M, 'SRC_RANK'))
+for _pair in ((('g1', 'asserted-by-human', {'os': 'AlmaLinux 9'}), ('g2', 'inferred', {'os': 'AlmaLinux 9.8'})),
+              (('g2', 'inferred', {'os': 'AlmaLinux 9.8'}), ('g1', 'asserted-by-human', {'os': 'AlmaLinux 9'}))):
+    _o = _owns(_said(*_pair[0]), _said(*_pair[1]))
+    check("THE GUARD: a more precise INFERRED value does not swallow an ASSERTED-BY-HUMAN one (%s first)" % _pair[0][1],
+          'AlmaLinux 9' in [c.get('value') for c in (_o['os'].get('conflict') or [_o['os']])]
+          and _o['os'].get('value') != 'AlmaLinux 9.8', json.dumps(_o['os']))
+_o = _owns(_said('g1', 'observed', {'os': 'AlmaLinux 9'}), _said('g2', 'inferred', {'os': 'AlmaLinux 9.8'}))
+check("...while below the top of the rank a refinement still subsumes, as it always did",
+      _o['os'].get('value') == 'AlmaLinux 9.8', json.dumps(_o['os']))
+_o = _owns(_said('g1', 'inferred', {'site': 'IST'}), _said('g2', 'asserted-by-human', {'site': 'IST'}))
+check("a value two gardens agree on keeps the HIGHEST src the rank declares",
+      _o['site'].get('src') == 'asserted-by-human', json.dumps(_o['site']))
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nconverge: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)
