@@ -2,7 +2,8 @@
 
 A ledger that people and AI agents both read and write: plain files in git, every change checked by a gate
 and recorded in a journal. It is meant to read correctly cold — on paper, years later — so legibility and
-provenance come before brevity. Why each rule exists is in `HISTORY.md` in the daftar repository.
+provenance come before brevity. Why each rule exists is in `seed/RATIONALE.md`, keyed by the rule's own path; the
+design steps before that are in `HISTORY.md` in the daftar repository.
 
 ## Beans and gardens
 - A **bean** is one managed thing — a machine, a domain, a program, a person, a contract — as one file,
@@ -11,7 +12,7 @@ provenance come before brevity. Why each rule exists is in `HISTORY.md` in the d
 - A **garden** is a git repository of beans: one estate's ledger. `GARDEN.md` names it, pins the vocabulary
   version (`extends: std-vocab@<version>`) and records the daftar release it runs (`daftar_release`).
 - The **seed** (`seed/`) is the kit a garden is grown from. When gardens are merged, the result for each object
-  is a **canonical bean** — see `MERGE.md`.
+  is a **canonical bean** — see `MERGE.md`, which calls it a *seed*; that is not `seed/`, the kit.
 
 ## Facts carry their provenance
 A fact knows who said it and how they know.
@@ -81,7 +82,8 @@ The rules are data, not code.
 - **`seed/std-vocab.md`** is the standard every garden pins. Opt-in **profiles** add groups of rules for
   gardens that need them (`code`, `network`, `domain`, `knowledge`).
 - **`VOCAB.md`** is the garden's own layer: local terms, profiles it opts into (`extends_profiles`), values it
-  adds to a standard list (`values_add`, `registry_additions`), and dated exceptions.
+  adds to a term's own closed list (`values_add`), rows it adds to a registry (`registry_additions`), and dated
+  exceptions. A term that reads its values from a registry takes a row; `values_add` on it adds nothing.
 - **Every position the vocabulary offers is accounted for:** used by a bean, or declared vacant with a reason.
   A garden accounts only for what it declares itself.
 - **Four layers, each standing on the one beneath.** LAWS are clear and brief, for usability and efficiency: an item's
@@ -155,7 +157,7 @@ decide parks it in `log/pending.md` as `status: proposed`, does everything safe 
     the gate itself);
   - a journal entry that still contains a template's `(fill in` field;
   - a journal heading a commit adds that is not a position in time: `## 2026-09-20 00:15+03:00 · who · what`,
-    to at least the minute, with its offset. Entries already written are never checked or rewritten.
+    in any declared calendar's own form (`persian:1405-06-29 00:45+03:30`), to the minute, with its offset. Entries already written are never checked or rewritten.
 - These checks confirm that the words are there, not that they are true; honesty is still the writer's.
 - Each person and each agent session commits under its own git identity, so the log's "who" is real.
 - `CHECKLIST.md` is how a write is made.

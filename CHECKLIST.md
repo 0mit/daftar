@@ -2,7 +2,8 @@
 
 Part A is what the gate checks for you. Part B is what only you can judge. Part C is how to edit a document
 without breaking it, Part D how to decide what to read, and Part E how to work beside another session.
-`MODEL.md` says what the rules mean; `HISTORY.md` in the daftar repository says why each one exists.
+`MODEL.md` says what the rules mean; why each one exists is in `seed/RATIONALE.md`, keyed by the rule's own path
+(`python3 bin/dmwhy.py <name>`), and the design steps before that in `HISTORY.md` in the daftar repository.
 
 The gate is `bin/dmcheck.py`, run as the git pre-commit hook `bin/hooks/pre-commit`. A garden grown with
 `seed/germinate.sh` has it installed already. **A fresh clone of an existing garden does not** — `.git/hooks`
@@ -28,16 +29,21 @@ The gate reads the **staged** files, not the working tree: what it checks is wha
 - [ ] Every position the garden declares is used by a bean, or declared vacant with a reason.
 - [ ] One authoritative owner per IP address.
 - [ ] `VOCAB.md` and `GARDEN.md` pin the installed vocabulary version.
-- [ ] A local addition (`values_add`, `registry_additions`) is not already in the standard.
+- [ ] A local addition is not already in the standard — a value added to a term's own closed list (`values_add`), or
+      a row added to a registry (`registry_additions`). They are two things: a term that reads its values from a
+      registry takes the row, and `values_add` on it adds nothing.
+- [ ] Every row a garden adds to a registry is used by a bean, or declared vacant, like any position it declares.
 - [ ] A list term merged entry by entry declares identity fields its entries carry.
 - [ ] **The journal:** a staged bean or mapping is named in the staged journal entry; a staged change to the law
       (the vocabulary, `GARDEN.md`, or any file `seed/LANGUAGE` lists) has an entry that says RULE-CHANGE; no
-      entry still contains `(fill in`; every heading the commit adds is `## <YYYY-MM-DD HH:MM+HH:MM> · who · what`,
-      read from the clock.
+      entry still contains `(fill in`; every heading the commit adds is `## <when> · who · what`, where `<when>` is a
+      position in any declared calendar, in that calendar's own form, to the minute, with its offset
+      (`2026-09-20 15:07+03:00`, `persian:1405-06-29 15:37+03:30`) — read from the clock.
 - [ ] **No silent damage:** a staged document still parses and keeps its body; a removed top-level key is named in
       the journal entry; a key is not emptied out while it stays.
 
-These checks confirm that words are present, not that they are true.
+These are the checks a writer meets, not every rule: `python3 bin/dmrules.py` prints every rule in force, derived
+from the vocabulary. These checks confirm that words are present, not that they are true.
 
 ## Part B — what only you can judge
 Run `python3 bin/dmreview.py` first. It gathers the evidence for these questions and never fails; nothing it

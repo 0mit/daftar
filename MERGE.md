@@ -10,7 +10,7 @@ Extends MODEL.md. Makes daftar **distributed and convergent**: beans authored by
 ## 1. Terms of this layer
 - **Universal object** — the real thing (host, router, employee, incident). One identity across all time and gardens.
 - **Bean** — one *garden's* record of a universal object; may be partial.
-- **Seed** — the most-inclusive bean: the canonical superset of every garden's bean of that object. Merge targets are always seeds.
+- **Seed** — the most-inclusive bean: the canonical superset of every garden's bean of that object — MODEL.md's **canonical bean**. Merge targets are always seeds. In this document and in `bin/dmmerge.py` the word means only this; `seed/`, the kit a garden is grown from, is a different thing with the same name.
 - **Garden** — an environment/collection of beans (a working copy: session/repo/scan), declared by `GARDEN.md`.
 - **Identity anchor** — the *typed* stable identifier(s) that decide sameness (the merge key), decoupled from the garden-local filename `id`.
 
@@ -21,7 +21,7 @@ Extends MODEL.md. Makes daftar **distributed and convergent**: beans authored by
 4a. **Merge-determinism (HARD invariant)** — same input beans ⇒ byte-identical seed, for any model/agent.
 4b. **Scan-convergence (METRIC, not a guarantee)** — two models scanning the *same environment* produce *mergeable* beans. Best-effort; measured by a golden test (§11); never promised.
 5. **No duplicate objects** — identity is a **global partition** (union-find §4), not a pairwise/arrival-order decision.
-6. **Governed conflicts** — contradictions and uncertain matches route to the existing **exception-ack** (SKILL.md); a conflict **never blocks capture** (losslessness) — it marks the seed *pending/unclean*. Determinism holds **given the recorded decision** (§10).
+6. **Governed conflicts** — contradictions and uncertain matches route to the existing **exception-ack** (§10; MODEL.md, the Contract of Parts); a conflict **never blocks capture** (losslessness) — it marks the seed *pending/unclean*. Determinism holds **given the recorded decision** (§10).
 
 ## 3. Provenance — see MODEL.md
 The provenance/truth-status record, and the guard that an `inferred` value may never auto-override an
@@ -151,7 +151,7 @@ precise mistake the profile mechanism exists to prevent.
 
 ## 8. Merge is a semantic operation — git never text-merges
 - **`dmmerge`** (a tool, alongside `dmcheck.py`) computes the CRDT join, renders canonical output, then commits. Git provides durability / blame / rollback / transport **only**.
-- Wire a **custom git merge driver** via `.gitattributes` (`beans/* mappings/* seeds/* log/* merge=daftar`) so even `git merge` dispatches to `dmmerge` instead of the line-based engine.
+- Wire a **custom git merge driver** via `.gitattributes` (`beans/*.md` and `mappings/*.md` `merge=daftar`) so even `git merge` dispatches to `dmmerge` instead of the line-based engine. `log/journal.md` and `log/pending.md` are append-only and take git's own `merge=union`.
 - **The gate covers merge outputs:** the resulting garden must re-pass `dmcheck.py`; a cross-seed single-owner collision is a conflict → exception-ack.
 
 ## 9. The Contract of Parts — see MODEL.md

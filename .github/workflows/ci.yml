@@ -47,3 +47,5 @@ jobs:
         run: python3 test/quantities.py
       - name: "public: a repository carries the language, never a garden"
         run: python3 test/public.py
+      - name: "docs: the prose names nothing retired, nothing absent, and the suites the release runs"
+        run: python3 test/docs.py

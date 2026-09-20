@@ -24,9 +24,9 @@ and the crown form is reserved to `kind: person`, so the bean necessarily carrie
 *this* estate. A prose `SEED.md` cannot be it either: `seed/` sits outside the gate's glob, so nothing
 would check it, and unchecked prose is precisely what rotted everywhere else in this repo.
 
-**`seed` here is not `seed:` the merge output.** MERGE.md's merge product is the **canonical bean** — the
-most-inclusive bean, the superset of every garden's record of one object. Two senses of one word in one
-repository is a trap, and this one is not repeated.
+**`seed/` here is not the *seed* of MERGE.md.** There the word means the merge product — the **canonical bean**,
+the most-inclusive bean, the superset of every garden's record of one object — and `bin/dmmerge.py` uses it the
+same way. Two senses of one word in one repository is a trap; both documents say which they mean.
 
 ## Growing a garden
 
@@ -129,7 +129,7 @@ questions for, which in a year is you. When the gate refuses something, its mess
 | file | what it is |
 |---|---|
 | `std-vocab.md` | the Tier-0 law. The **only** document the gate reads as law directly |
-| `VOCAB.md.template` | the garden's local overlay: six lines, with the pin interpolated |
+| `VOCAB.md.template` | the garden's local overlay, empty, with the pin interpolated |
 | `GARDEN.md.template` | the manifest: which garden this is, which version governs |
 | `journal.md.template` | the header and **zero entries**, so no provenance is falsified |
 | `pending.md.template` | the park-and-proceed queue: its header and **zero entries** |
