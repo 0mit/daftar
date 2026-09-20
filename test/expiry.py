@@ -67,8 +67,11 @@ RENTAL = """  - term: rental
       shape: mapping
       required_attrs: [provider, renews]
       attr_types: { renews: iso_date }
-      expiry: { attr: renews, horizon_days: 30,
-                why: "a rental that lapses takes the machine with it" }
+      attr_extents: [period]
+      expiry:
+        attr: renews
+        notice: { of: time, measure: { count: 30, unit: day } }
+        why: "a rental that lapses takes the machine with it"
     merge: { cardinality: single, order: none }
 """
 vocab(RENTAL)
@@ -102,7 +105,7 @@ check("...and --days overrides every term's horizon at once",
 # between warned-about and silent is exactly the declaration and cannot be anything else.
 v = os.path.join(G, "VOCAB.md")
 _s = open(v, encoding="utf-8").read()
-_DECL = '      expiry: { attr: renews, horizon_days: 30,\n                why: "a rental that lapses takes the machine with it" }\n'
+_DECL = ('      expiry:\n        attr: renews\n        notice: { of: time, measure: { count: 30, unit: day } }\n        why: "a rental that lapses takes the machine with it"\n')
 assert _DECL in _s, "the expiry declaration was not where this test put it"
 open(v, "w", encoding="utf-8").write(_s.replace(_DECL, ""))
 host(f'rental: {{ provider: "someone", renews: "{SOON}" }}\n')
@@ -129,6 +132,74 @@ for t_ in terms:
         declared.append(t_["term"])
 check("the standard carries many dates and declares few expiries — the reason nothing is inferred",
       len(dated) > len(declared) and declared, f"dated={sorted(dated)} declared={sorted(declared)}")
+
+# ---- EXTENT: the region `figures` declared possible, and every rule read from the aspect ---------------
+# Each negative below is refused for a reason the ASPECT gives, not one written into the gate — which is
+# the whole claim. A new aspect gets regions with no code change; an aspect that should not have them
+# refuses them in its own words.
+def period(block, bean="vps2"):
+    open(os.path.join(G, "beans", f"{bean}.md"), "w").write(
+        f'---\nbean: {bean}\nkind: host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
+        'nature: physical\n'
+        'identity: { status: confirmed, anchors: [ { key: fqdn, value: "' + bean + '.example.org", '
+        'class: logical, establishing: true } ] }\n'
+        'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
+        f'rental: {{ provider: "someone", renews: "{FAR}", period: {block} }}\n'
+        '---\nA machine.\n')
+    return run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G).stdout
+
+# put the declaration back for this half
+_s = open(v, encoding="utf-8").read()
+if "expiry:" not in _s:
+    open(v, "w", encoding="utf-8").write(_s.replace("      attr_extents: [period]\n",
+                                                    "      attr_extents: [period]\n" + _DECL))
+
+check("a LENGTH with no fixed ends is a region — 'for N days', which most real durations are",
+      "0 error" in period('{ of: time, measure: { count: 204, unit: day } }'),
+      period('{ of: time, measure: { count: 204, unit: day } }')[-400:])
+check("...and so is a region bounded at both ends",
+      "0 error" in period('{ of: time, from: "2026-01-01", to: "2026-03-31" }'),
+      period('{ of: time, from: "2026-01-01", to: "2026-03-31" }')[-400:])
+check("...and one open at an end",
+      "0 error" in period('{ of: time, from: "2026-01-01" }'),
+      period('{ of: time, from: "2026-01-01" }')[-400:])
+
+out = period('{ of: time }')
+check("a region with neither bound and no length is refused", "at least one of from / to / measure" in out,
+      out[-400:])
+out = period('{ of: necessity, measure: { count: 3, unit: day } }')
+check("a region on an OPPOSITION is refused IN THE FIGURE'S OWN WORDS — modalities have no between",
+      "carries no region" in out and "modalities" in out, out[-400:])
+out = period('{ of: walk, measure: { count: 3, unit: day } }')
+check("a length on an UNMETERED aspect is refused — a stretch of a walk has no duration",
+      "metered: none" in out, out[-400:])
+out = period('{ of: time, measure: { count: 1, unit: month } }')
+check("a unit the registry does not hold is refused — a month is 28 to 31 days and is not a measure",
+      "not in the `units` registry" in out, out[-400:])
+out = period('{ of: time, measure: { count: 0, unit: day } }')
+check("a non-positive count is refused", "positive whole number" in out, out[-400:])
+out = period('{ of: time, from: "early October" }')
+check("a boundary that is no position in the aspect's domain is refused",
+      "is not a position in any system" in out, out[-400:])
+out = period('{ of: teleportation, measure: { count: 1, unit: day } }')
+check("an aspect that does not exist is refused, and the message lists the ones that do",
+      "names no aspect" in out, out[-400:])
+
+# ---- and the LAW's own extents are judged by the same rule -------------------------------------------
+# Put a VALID region back first: the last negative left a broken bean, and an error from it would mask
+# the one this check is about — a test that passes on the wrong error has proved nothing.
+period('{ of: time, measure: { count: 204, unit: day } }')
+# The garden's OWN term is the right target: this garden does not opt into the `domain` profile, so
+# Tier-0's `registration` is not in force here — and a check that fired only on the standard would miss
+# exactly the case this release is for, which is a garden writing its own rule.
+_v = open(v, encoding="utf-8").read()
+open(v, "w", encoding="utf-8").write(
+    _v.replace("notice: { of: time, measure: { count: 30, unit: day } }",
+               "notice: { of: time, measure: { count: 30, unit: fortnight } }", 1))
+out = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G).stdout
+check("an extent the LAW ITSELF writes is checked — a rule the gate cannot see is the defect, not the fix",
+      "VOCAB rental.schema.expiry.notice" in out and "units` registry" in out, out[-500:])
+open(v, "w", encoding="utf-8").write(_v)
 
 shutil.rmtree(T, ignore_errors=True)
 print("\nexpiry: %d failed" % len(FAILS))

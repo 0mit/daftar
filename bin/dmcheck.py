@@ -335,6 +335,20 @@ VALUE_TYPES = {t['type']: t for t in (registry('value_types') or []) if isinstan
 # per-value checks stand down rather than refuse every id in the garden for a cause they cannot name.
 KEBAB = re.compile(VALUE_TYPES['kebab']['pattern']) if 'kebab' in VALUE_TYPES else None
 
+def check_law_extents():
+    """Extents written in the VOCABULARY, not on a bean — today, `expiry.notice`.
+
+    A LAW THE GATE CANNOT SEE IS THE DEFECT THIS REPOSITORY KEEPS FINDING. `notice` is a region like any
+    other, and if nothing checked it a term could declare a notice period in a unit that does not exist
+    and no run would ever say so — the rule would be in force and unenforced, which is exactly what
+    v0.14.0 and v0.15.0 were each spent undoing. It costs one function to judge the law by its own rule.
+    """
+    for _name, _term in (TERMS or {}).items():
+        _n = ((_term or {}).get('schema') or {}).get('expiry') or {}
+        if isinstance(_n, dict) and _n.get('notice') is not None:
+            check_extent(f"VOCAB {_name}.schema.expiry.notice", _n['notice'])
+
+
 def check_value_types():
     for _t in ('iso_date', 'kebab'):
         if _t not in VALUE_TYPES:
@@ -357,6 +371,77 @@ def check_value_type(where, attr, val, typ):
 
 ASPECTS = {a['aspect']: a for a in (registry('aspects') or []) if isinstance(a, dict) and a.get('aspect')}
 FIGURES = {f['figure']: f for f in (registry('figures') or []) if isinstance(f, dict) and f.get('figure')}
+
+UNITS = {u['unit']: u for u in (registry('units') or []) if isinstance(u, dict) and u.get('unit')}
+SYSTEMS = {s['system']: s for s in (registry('anchor_systems') or []) if isinstance(s, dict) and s.get('system')}
+
+
+def check_extent(where, node):
+    """One EXTENT against the aspect it names (11.2). Returns nothing; appends what is wrong.
+
+    Every rule here is read from the aspect and its figure rather than written down: whether a region is
+    possible at all (`figures[].extent`), whether it may carry a length (`aspects[].metered`), which unit
+    that length is in (the metered dimension), and which forms a boundary may take (`aspects[].domain`,
+    then the anchor system's own pattern). So a new aspect gets extents with no change here, and an
+    aspect that should not have them refuses them for its own stated reason.
+    """
+    if not isinstance(node, dict):
+        errors.append(f"{where}: an extent is a mapping {{of, from?, to?, measure?}} (`extent_form`)")
+        return
+    an = node.get('of')
+    asp = ASPECTS.get(an)
+    if not asp:
+        errors.append(f"{where}: extent `of: {an!r}` names no aspect — {sorted(ASPECTS)}")
+        return
+    fig = FIGURES.get(asp.get('figure')) or {}
+    if fig.get('extent') != 'possible':
+        errors.append(f"{where}: aspect '{an}' is a {asp.get('figure')} and carries no region — "
+                      f"{fig.get('extent_why') or 'its figure declares extent: ' + str(fig.get('extent'))}")
+        return
+    if not any(node.get(k) is not None for k in ('from', 'to', 'measure')):
+        errors.append(f"{where}: an extent needs at least one of from / to / measure — "
+                      f"a region with neither bound and no length is not a region (`extent_form.requires`)")
+    m = node.get('measure')
+    if m is not None:
+        metered = asp.get('metered')
+        if not metered or metered == 'none':
+            errors.append(f"{where}: aspect '{an}' declares `metered: {metered}`, so a region on it has no "
+                          f"length — drop `measure`, or bound it with from/to")
+        elif not isinstance(m, dict) or m.get('count') is None or not m.get('unit'):
+            errors.append(f"{where}.measure: must be {{count, unit}}")
+        else:
+            u = UNITS.get(str(m['unit']))
+            if not u:
+                errors.append(f"{where}.measure.unit '{m['unit']}' is not in the `units` registry "
+                              f"{sorted(UNITS)}")
+            elif u.get('dimension') != metered:
+                errors.append(f"{where}.measure.unit '{m['unit']}' measures {u.get('dimension')}, but "
+                              f"aspect '{an}' meters {metered}")
+            if not isinstance(m.get('count'), int) or isinstance(m.get('count'), bool) or m['count'] <= 0:
+                errors.append(f"{where}.measure.count must be a positive whole number of "
+                              f"{m.get('unit')}s, not {m.get('count')!r}")
+    # A BOUNDARY IS A POSITION, and which forms it may take is the aspect's domain, not this function's.
+    dim = ((asp.get('domain') or {}).get('systems'))
+    for side in ('from', 'to'):
+        v = node.get(side)
+        if v is None:
+            continue
+        ok = [s for s in SYSTEMS.values()
+              if s.get('dimension') in (dim, 'any') and re.match(s.get('pattern') or '(?!)', str(v))]
+        if not ok:
+            errors.append(f"{where}.{side} '{v}' is not a position in any system of dimension "
+                          f"'{dim}' — " + ', '.join(sorted(s['system'] for s in SYSTEMS.values()
+                                                           if s.get('dimension') in (dim, 'any'))))
+
+
+def ctl_extents(c):
+    """`attr_extents:` — attrs of the mapping that hold a region of some aspect's domain."""
+    for attr in (c.sch.get('attr_extents') or []):
+        v = c.node.get(attr) if isinstance(c.node, dict) else None
+        if v is not None:
+            check_extent(f"{c.base}: {c.term}.{attr}", v)
+    return None
+
 
 def walk_keys():
     """{schema key: aspect} for every SEQUENCE aspect that places terms on itself through a schema key (9.2).
@@ -912,6 +997,14 @@ def ectl_pointer_fields(e):
 
 # Declaration order IS execution order, and it is the order these rules ran in before. `on_aspect` must
 # precede `cross_aspect`: the second reads what the first computed.
+def ectl_entry_extents(c):
+    """`entry_extents:` — attrs INSIDE an entry that hold a region (11.2)."""
+    for attr in (c.sch.get('entry_extents') or []):
+        v = c.entry.get(attr)
+        if v is not None:
+            check_extent(f"{c.base}: {c.term}[{c.label}].{attr}", v)
+
+
 ENTRY_CONTROLLERS = (
     ('entry_required_attrs', ectl_entry_required_attrs),
     ('entry_values', ectl_entry_values),
@@ -927,6 +1020,7 @@ ENTRY_CONTROLLERS = (
     ('entry_one_of', ectl_entry_one_of),
     ('entry_required_if', ectl_entry_required_if),
     ('entry_expect_if', ectl_entry_expect_if),
+    ('entry_extents', ectl_entry_extents),
     ('pointer_fields', ectl_pointer_fields),
 )
 
@@ -1227,6 +1321,7 @@ CONTROLLERS = (
     ('alt_form', ctl_alt_form),
     ('required_attrs', ctl_required_attrs),
     ('attr_types', ctl_attr_types),
+    ('attr_extents', ctl_extents),
     ('key_form', ctl_key_form),
     ('entries', ctl_entries),
     ('on_sequence', ctl_on_sequence),
@@ -2147,6 +2242,8 @@ PLIES = (
      "a list term's merge identity must name fields its entries carry — the same self-agreement, for merging"),
     (check_value_types,
      "the value types the schemas name are declared in the law"),
+    (check_law_extents,
+     "an extent the LAW itself writes is judged by the same rule as one on a bean"),
     (check_aspect_sanity,
      "an aspect is a closed figure — check the figure before using its positions"),
     (check_extends_pin,

@@ -141,6 +141,26 @@ def resolve_here(p):
     return p
 
 
+DAYS_PER = {'day': 1, 'minute': 1 / 1440, 'second': 1 / 86400, 'millisecond': 1 / 86_400_000}
+
+
+def notice_days(notice, default=90):
+    """An extent on time -> how many days of notice, for comparing against a countdown in days.
+
+    ONLY A LENGTH IS MEANINGFUL HERE. A notice bounded by `from`/`to` is a region of the calendar, not an
+    amount of warning, so it is not converted and the default stands rather than a number being invented
+    from it. The units it can convert are the ones `units` declares, which is why there is no month: a
+    month is 28 to 31 days and `extent_form.not_a_calendar_bucket` says so at length.
+    """
+    m = (notice or {}).get('measure') if isinstance(notice, dict) else None
+    if not isinstance(m, dict) or m.get('unit') not in DAYS_PER:
+        return default
+    try:
+        return max(0, int(round(int(m['count']) * DAYS_PER[m['unit']])))
+    except (TypeError, ValueError):
+        return default
+
+
 def expiry_terms():
     """{term: {attr, horizon_days, why}} for every term whose schema declares an expiry.
 
@@ -297,7 +317,11 @@ def report():
             days = (exp - datetime.date.today()).days
             # The horizon is the TERM's, and --days overrides every one of them: a domain and a rented
             # machine do not need the same notice, and the reader may want a different one from both.
-            horizon = HORIZON if HORIZON_SET else int(decl.get('horizon_days', 90))
+            # It is an EXTENT on time (11.2) — the same construct a rental period is — rather than the
+            # bare integer it was for one release, which was a fifth way of writing a duration in a
+            # vocabulary that had just declared the first. The gate validates the region; this only
+            # converts it, and only a unit it knows how to convert.
+            horizon = HORIZON if HORIZON_SET else notice_days(decl.get('notice'))
             state = 'EXPIRED' if days < 0 else ('EXPIRING' if days <= horizon else 'OK')
             if state != 'OK':
                 expiring += 1
