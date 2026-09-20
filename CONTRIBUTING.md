@@ -38,7 +38,7 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
 5. **Run the tests:**
 
    ```sh
-   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py && python3 test/place.py && python3 test/expiry.py && python3 test/reform.py && python3 test/positions.py && python3 test/shape.py && python3 test/calendars.py && python3 test/rationale.py && python3 test/recurrence.py && python3 test/quantities.py && python3 test/public.py
+   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py && python3 test/place.py && python3 test/expiry.py && python3 test/reform.py && python3 test/positions.py && python3 test/shape.py && python3 test/calendars.py && python3 test/rationale.py && python3 test/recurrence.py && python3 test/quantities.py && python3 test/public.py && python3 test/docs.py
    ```
 
    CI runs the same on every pull request.
@@ -67,7 +67,7 @@ Say it without the name: "one host", "another machine", `/home/user/tree`, `host
 ## Editing the vocabulary itself
 
 - The vocabulary is `seed/std-vocab.md`: YAML front matter (the law) and a Markdown body ending in a
-  changelog. Edit the front matter; add one changelog entry at the end, naming the change and why.
+  changelog. Edit the front matter; add one changelog entry, above its version's neighbours, naming the change and why.
 - **Four layers, each standing on the one beneath.** LAWS are clear and brief, for usability and efficiency: what a
   reader needs in order to APPLY a rule goes in the item's own `meaning:` or `why:`, present tense, no date, no name,
   and the law carries no commentary. REASONING is the backbone for the laws: why it is that way goes in
@@ -78,8 +78,8 @@ Say it without the name: "one host", "another machine", `/home/user/tree`, `host
   gardens move their own pins when they adopt a release.
 - `python3 bin/dmrules.py` inside a garden prints every rule as the gate reads it; use it to check that your
   term says what you meant.
-- `HISTORY.md` explains why existing rules are the way they are — read the relevant part before proposing to
-  change one.
+- `python3 bin/dmwhy.py <name>` shows why an existing rule is the way it is (`seed/RATIONALE.md`); `HISTORY.md` has
+  the design steps before that. Read the relevant part before proposing to change one.
 - Some comments mention `test/golden.py` and `test/diffgate.py`. They are the maintainers' corpus tests,
   which need a real garden's beans and so are not published.
 

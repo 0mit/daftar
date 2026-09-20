@@ -1162,6 +1162,17 @@ UNKNOWN_VALUE_HINT = (" — if the value is real and the vocabulary lacks it, ke
                       "local_terms entry (see seed/COOKBOOK.md)")
 
 
+def unknown_value_hint(sch):
+    """How a garden adds the value it lacks. A term that reads its values from a REGISTRY takes a row of it:
+    `values_add` on such a term adds nothing, because the term holds no list of its own to add to."""
+    src = str((sch or {}).get('values_from') or '')
+    if not src.startswith('registry:'):
+        return UNKNOWN_VALUE_HINT
+    return (" — if the value is real and the vocabulary lacks it, keep it under `attributes:` for now and propose "
+            f"it, or add it for this garden as a row under `registry_additions: {{ {src[9:].split('[')[0]}: [...] }}` "
+            "in VOCAB.md (see seed/COOKBOOK.md)")
+
+
 def ectl_entry_values(e):
     for attr, allowed in _facet(e.form, 'values', e.scope):
         if e.entry.get(attr) is not None and e.entry[attr] not in allowed:
@@ -1577,7 +1588,7 @@ def ctl_path(c):
     for val in path_values(c.fm, c.sch['path']):
         if allowed and val not in allowed:
             errors.append(f"{c.base}: {c.sch['path']} '{val}' not in {sorted(allowed)} "
-                          f"(VOCAB {c.term}.schema.values)" + UNKNOWN_VALUE_HINT)
+                          f"(VOCAB {c.term}.schema.values)" + unknown_value_hint(c.sch))
     return STOP
 
 
@@ -1682,7 +1693,7 @@ def ctl_shape(c):
         allowed = allowed_values(c.sch)
         if allowed and c.node not in allowed:
             errors.append(f"{c.base}: {c.term} '{c.node}' not in {sorted(allowed)} "
-                          f"(VOCAB {c.term}.schema.values)" + UNKNOWN_VALUE_HINT)
+                          f"(VOCAB {c.term}.schema.values)" + unknown_value_hint(c.sch))
         return STOP
     if shape == 'list_of_entries' and not isinstance(c.node, list):
         errors.append(f"{c.base}: {c.term} must be a LIST of entries (VOCAB {c.term}.schema.shape)")
@@ -1993,6 +2004,10 @@ def _declared_positions():
                 _declare(f"{term}.values", _form['value']['values'], 'values' in _lform['value'])
         elif str(_form['value'].get('values_from') or '').startswith('registry:'):
             _declare(f"{term}.values", term_values(term), False)     # the registry's rows; the garden's own are below
+            _reg, _, _fld = str(_form['value']['values_from'])[len('registry:'):].partition('[].')
+            for _r in ((vocab_fm.get('registry_additions') or {}).get(_reg) or []):   # a row this garden ADDED is its own
+                if isinstance(_r, dict) and _r.get(_fld) is not None:
+                    LOCAL_ADDED.add((f"{term}.values", _r[_fld]))
         for attr, vals in _facet(_form, 'values', 'entry'):
             _declare(f"{term}.{attr}", vals, 'values' in _lform['attrs'].get(attr, {}))
         # A REGISTRY IS ITS OWN ENUM OWNER (18.0). An attribute that takes a row of a registry takes a position AT

@@ -173,16 +173,13 @@ The rented server.
 
 The standard list of operating systems has no entry for the NAS's vendor OS. Do not bend the bean to fit:
 add the value **for this garden** in `VOCAB.md`, and propose it upstream if others will need it
-(`CONTRIBUTING.md`). `values_add` appends to the standard list, and `registry_additions` adds the matching
-registry row, so the garden accounts only for what it added.
+(`CONTRIBUTING.md`). Operating systems are a **registry**, and `os` reads its values from it, so the value is
+added as a row — once, with everything a row carries — and the garden accounts only for the row it added.
 
 Add this inside `VOCAB.md`'s front matter:
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
-local_terms:
-  - term: os
-    schema: { values_add: [nas-os] }
 registry_additions:
   operating_systems:
     - { os: nas-os, family: unix, path_grammar: unix-filesystem, meaning: "A vendor's Linux-based NAS operating system." }
@@ -190,10 +187,14 @@ registry_additions:
 
 Then the NAS bean can say `os: nas-os`. **Commit the two together:** a value the garden adds must be used
 by a bean, so the vocabulary change on its own is refused ("declared but NO bean occupies it"). The one
-commit is one logical change — adding the thing and the value that describes it. (The germinated `VOCAB.md`
-already has an empty `local_terms: []` line; replace it with the block above rather than adding a second
-`local_terms:` — the gate refuses a key written twice.) If a later daftar release adds the same value to the
-standard, the gate tells you to delete your local copy.
+commit is one logical change — adding the thing and the value that describes it. If a later daftar release
+adds the same value to the standard, the gate tells you to delete your local copy.
+
+A term that carries its own closed list — `python3 bin/dmrules.py` shows which — takes the value with
+`schema: { values_add: [...] }` in a `local_terms` entry instead; on a term that reads a registry, `values_add`
+adds nothing. The gate's refusal of an unknown value says which of the two the term needs. (A germinated
+`VOCAB.md` already has an empty `local_terms: []` line; replace it rather than adding a second — the gate
+refuses a key written twice.)
 
 ## A kind of fact the standard has no term for
 

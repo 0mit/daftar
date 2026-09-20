@@ -69,6 +69,19 @@ out = gate()
 check("...and a missing required attribute, named as the attribute it is",
       "rental requires 'provider' (VOCAB rental.schema.attrs.provider: required)" in out, out[-600:])
 
+# ---------------------------------------------------------------- a value added to a term that READS A REGISTRY
+ROW = 'registry_additions:\n  operating_systems:\n    - { os: probe-os, family: unix, path_grammar: unix-filesystem, meaning: "a probe" }'
+def vocab_tail(local_terms_yaml, tail=""):
+    vocab(local_terms_yaml + ("\n" + tail if tail else ""))
+vocab_tail("local_terms: []", ROW); bean("os: probe-os\n"); out = gate()
+check("a registry-fed term takes a new value as a ROW of its registry, and nothing else is needed", "0 error" in out, out[-700:])
+bean(""); out = gate()
+check("...and the garden ACCOUNTS for the row it added: unused, it is refused like any position nobody occupies",
+      "os.values: position 'probe-os' is declared but NO bean occupies it" in out, out[-700:])
+vocab_tail("local_terms:\n  - term: os\n    schema: { values_add: [probe-os] }"); bean("os: probe-os\n"); out = gate()
+check("`values_add` on such a term adds nothing — the term holds no list of its own — and the refusal says what it needs instead",
+      "os 'probe-os' not in" in out and "registry_additions: { operating_systems: [...] }" in out and "values_add" not in out, out[-900:])
+
 # ---------------------------------------------------------------- every attribute says what it is a position IN
 bean('rental: { provider: "x", renews: 2027-01-15 }\n')
 vocab(RECIPE.replace("note:     { in: prose,", "note:     {"))

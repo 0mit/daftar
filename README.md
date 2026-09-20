@@ -98,11 +98,12 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `seed/std-vocab.md` | the vocabulary — the law every garden pins |
 | `seed/germinate.sh`, `seed/LANGUAGE` | how a garden is grown, and what it receives |
 | `bin/dmcheck.py` | the gate |
-| `bin/dm*.py` | the other tools: merge, upgrade, rules, safe edits, cursors, sessions |
+| `bin/dm*.py` | the other tools — merge, upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
-| `HISTORY.md` | why the rules are what they are: the design steps and incidents behind them |
+| `seed/RATIONALE.md` | why each rule is as it is, keyed by the rule's own path; `python3 bin/dmwhy.py <name>` reads law and reason together |
+| `HISTORY.md` | the design steps and incidents behind the first releases |
 | `.claude/skills/daftar/` | a skill that points a coding agent at the garden's own rules |
-| `test/` | `germinate.py`, `converge.py` and `upgrade.py` run in CI; `fast.py` runs in every garden's hook |
+| `test/` | the release suites, all run in CI (`CONTRIBUTING.md` has the command); `fast.py` runs in every garden's hook |
 
 ## License
 
