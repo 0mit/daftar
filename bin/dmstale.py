@@ -141,6 +141,45 @@ def resolve_here(p):
     return p
 
 
+def expiry_terms():
+    """{term: {attr, horizon_days, why}} for every term whose schema declares an expiry.
+
+    The LAW is asked, including a garden's own `local_terms` — which is the whole point: a garden that
+    invents a term with a date that runs out gets the same warning Tier-0's `registration` gets, without
+    a release. dmcheck already loads and merges the vocabulary exactly as the gate sees it, so this asks
+    it rather than re-reading std-vocab and drifting from what is actually in force.
+    """
+    try:
+        import dmcheck as _law
+    except Exception:
+        return {}                      # no garden, no terms: report caches and say nothing about dates
+    out = {}
+    for name, term in (getattr(_law, 'TERMS', {}) or {}).items():
+        decl = ((term or {}).get('schema') or {}).get('expiry')
+        if isinstance(decl, dict) and decl.get('attr'):
+            out[name] = decl
+    return out
+
+
+def refine(term, held, state):
+    """A term's own extra sentence, where a general rule cannot carry the judgment.
+
+    KEPT DELIBERATELY SMALL AND KEPT HERE. `registration` says more than "expires in N days": it says
+    whether anything is known to PREVENT the loss, which is a second attribute's value read against the
+    first. That is the single most useful line this tool prints — it joins a reader's ignorance to their
+    exposure — and it is not expressible as `{attr, horizon_days, why}`. Rather than bend the schema
+    language to fit one term on its first day, the general mechanism carries what generalises and the
+    refinement stays beside the term it is about. If a second term wants one, that is the moment to ask
+    what they have in common; one is not a pattern.
+    """
+    if term != 'registration':
+        return ''
+    auto = held.get('auto_renew', 'unknown')
+    flag = '  auto-renew UNKNOWN: nothing on record prevents this' if (
+        state != 'OK' and auto != 'enabled') else ''
+    return f"  auto_renew={auto}  registrar={str(held.get('registrar'))[:40]}{flag}"
+
+
 def verdict(entry):
     """(state, detail) for one cache entry."""
     key = str(entry.get('staleness_key') or '')
@@ -196,7 +235,8 @@ def verdict(entry):
 
 def report():
     QUIET = '--quiet' in sys.argv
-    HORIZON = int(sys.argv[sys.argv.index('--days') + 1]) if '--days' in sys.argv else 90
+    HORIZON_SET = '--days' in sys.argv
+    HORIZON = int(sys.argv[sys.argv.index('--days') + 1]) if HORIZON_SET else 90
     counts = {'FRESH': 0, 'STALE': 0, 'UNKNOWN': 0, 'NOT-HERE': 0}
     rows = []
     for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
@@ -222,8 +262,19 @@ def report():
             continue
         print(f"{state:8} {bean}.analysis_cache[{ctype}]  {detail}")
 
-    # ---- registrations: what lapses if nobody acts -------------------------------------------------
-    reg_rows, expiring = [], 0
+    # ---- what lapses if nobody acts -----------------------------------------------------------------
+    # THE TERMS ARE ASKED OF THE VOCABULARY, NOT NAMED HERE. This block read `registration` and
+    # `expires` out of its own source until 2026-09-20. That was never a decision: the term was born
+    # garden-local and this tool was extended for it the same day, and when it was PROMOTED to Tier-0
+    # nobody came back. The cost fell on the case the promotion was for — a garden that declares its own
+    # term with its own expiry got nothing, however exactly the gate enforced the date. First-class to
+    # the gate, invisible to the tool that would have made it useful.
+    #
+    # A term opts in with `schema.expiry: {attr, horizon_days, why}`. Nothing is inferred: nine of the
+    # ten iso_date attrs in the standard are `observed` or `as_of` — when a fact was READ, not when it
+    # runs out — so a tool that warned about every date would be wrong nine times in ten, and a warning
+    # that is usually wrong is one people stop reading.
+    exp_rows, expiring = [], 0
     for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
         head, _ = dmparse.read(f)
         if head is None:
@@ -232,29 +283,38 @@ def report():
             fm = dmparse.loads(head) or {}
         except Exception:
             continue
-        reg = fm.get('registration')
-        if not isinstance(reg, dict) or not reg.get('expires'):
-            continue
-        exp = datetime.date.fromisoformat(str(reg['expires']))
-        days = (exp - datetime.date.today()).days
-        state = 'EXPIRED' if days < 0 else ('EXPIRING' if days <= HORIZON else 'OK')
-        if state != 'OK':
-            expiring += 1
-        reg_rows.append((state, fm.get('bean'), days, exp, reg))
+        for term, decl in expiry_terms().items():
+            held = fm.get(term)
+            attr = decl.get('attr')
+            if not isinstance(held, dict) or not attr or not held.get(attr):
+                continue
+            try:
+                exp = datetime.date.fromisoformat(str(held[attr]))
+            except ValueError:
+                # The gate owns the form (attr_types: iso_date). A value it would refuse is not this
+                # tool's to complain about twice, and guessing at it would be worse.
+                continue
+            days = (exp - datetime.date.today()).days
+            # The horizon is the TERM's, and --days overrides every one of them: a domain and a rented
+            # machine do not need the same notice, and the reader may want a different one from both.
+            horizon = HORIZON if HORIZON_SET else int(decl.get('horizon_days', 90))
+            state = 'EXPIRED' if days < 0 else ('EXPIRING' if days <= horizon else 'OK')
+            if state != 'OK':
+                expiring += 1
+            exp_rows.append((state, fm.get('bean'), days, exp, term, decl, held, horizon))
 
-    if reg_rows:
+    if exp_rows:
         print()
-        for state, bean, days, exp, reg in sorted(reg_rows, key=lambda r: r[2]):
+        for state, bean, days, exp, term, decl, held, horizon in sorted(exp_rows, key=lambda r: r[2]):
             if QUIET and state == 'OK':
                 continue
-            auto = reg.get('auto_renew', 'unknown')
-            flag = '  <-- auto-renew UNKNOWN: nothing is known to prevent this' if (
-                state != 'OK' and auto != 'enabled') else ''
-            print(f"{state:8} {bean}.registration  expires {exp} ({days} days)  "
-                  f"auto_renew={auto}  registrar={str(reg.get('registrar'))[:40]}{flag}")
-        print(f"\nregistrations: {sum(1 for r in reg_rows if r[0] == 'OK')} ok, "
-              f"{sum(1 for r in reg_rows if r[0] == 'EXPIRING')} expiring within {HORIZON} days, "
-              f"{sum(1 for r in reg_rows if r[0] == 'EXPIRED')} EXPIRED")
+            why = f"  <-- {decl['why']}" if (state != 'OK' and decl.get('why')) else ''
+            print(f"{state:8} {bean}.{term}  {decl['attr']} {exp} ({days} days)"
+                  f"{refine(term, held, state)}{why}")
+        print(f"\nexpiring: {sum(1 for r in exp_rows if r[0] == 'OK')} ok, "
+              f"{sum(1 for r in exp_rows if r[0] == 'EXPIRING')} within their horizon, "
+              f"{sum(1 for r in exp_rows if r[0] == 'EXPIRED')} EXPIRED"
+              + (f"  [--days {HORIZON} overriding every term]" if HORIZON_SET else ''))
 
     print(f"\nanalysis_cache: {counts['FRESH']} fresh, {counts['STALE']} stale, "
           f"{counts['NOT-HERE']} not on this host, {counts['UNKNOWN']} unknown")

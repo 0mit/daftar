@@ -27,6 +27,8 @@ jobs:
         run: python3 test/knowledge.py
       - name: "figures: squares and sequences"
         run: python3 test/figures.py
+      - name: "expiry: a term declares which of its dates runs out"
+        run: python3 test/expiry.py
       - name: "place: positions that name their host"
         run: python3 test/place.py
       - name: "public: a repository carries the language, never a garden"
