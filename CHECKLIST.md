@@ -15,6 +15,8 @@ The gate reads the **staged** files, not the working tree: what it checks is wha
 - [ ] Every top-level key is declared by the vocabulary. A fact that fits no term goes in `details:` or
       `attributes:`; a new kind of fact is proposed in `log/pending.md`.
 - [ ] No key is written twice in one mapping, at any depth.
+- [ ] An entry of a term holds only the attributes that term declares. Prose goes in the attribute declared for
+      it (`note`, `why`); `provenance` is allowed on any entry.
 - [ ] Required fields are present — beans: `bean, kind, title, status, summary, identity, provenance`;
       mappings: `mapping, kind, summary`.
 - [ ] Every enum value is one the vocabulary offers. `python3 bin/dmrules.py` prints them all.

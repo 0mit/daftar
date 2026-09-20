@@ -273,14 +273,16 @@ def check_vocab_enum_drift():
 # `canonical_note`) — a cold-start drill found one of them by reading this file, which is not where a stranger
 # should have to look. The other direction is the dangerous one: a key the language does not declare is a key no
 # controller reads, so `entry_require_attrs` (one letter short) has always passed while enforcing nothing.
-# A WARNING, deliberately: it names a rule that is not biting without refusing a vocabulary that passed before.
+# AN ERROR since 12.0 (it was a warning for one release, 11.3, so that release could stay minor). The operator's
+# ruling, 2026-09-20: a rule that silently enforces nothing is worse than a refusal, because the vocabulary SAYS it
+# is in force. The same choice he made for an undeclared top-level key on a bean, one level up.
 def check_schema_language():
     _declared = set(std_fm.get('schema_language') or {})
     if not _declared:
         return                      # the law did not load; the one-path refusal says so, once
     for _name, _sch in sorted(SCHEMAS.items()):
         for _k in sorted(set(_sch) - _declared):
-            warns.append(f"VOCAB {_name}: schema key `{_k}` is not declared in schema_language — no controller "
+            errors.append(f"VOCAB {_name}: schema key `{_k}` is not declared in schema_language — no controller "
                          f"reads an undeclared construct, so this rule enforces NOTHING. Check the spelling "
                          f"against `schema_language` in seed/std-vocab.md")
 
@@ -781,6 +783,67 @@ class _ECell:
         self.eff = {}                       # filled by ectl_on_aspect, read by ectl_cross_aspect
 
 
+# --- STRUCTURE BEFORE PROSE: an entry carries only the attributes its term declares (std-vocab 12.0) ------------------
+# A bean's top-level keys have been closed since 2026-09-17: a key no term declares is refused. One level down the
+# door was still open, and what came through it was free text wearing a key's clothes — measured in one garden,
+# forty attributes no term knew, among them `what_this_does_NOT_establish:` and `instrument_lesson:`, a sentence
+# promoted to a field name so that it would look like data. Nothing can read such a key, merge it by identity, or
+# ask every bean for it. The rule: an attribute is DECLARED by its term — typed by a schema construct, or described
+# in the term's `entry_attrs:` / `attrs:` — or it is refused. Prose is not forbidden; it goes in an attribute the
+# term declares FOR prose (`note`, `why`), where a reader knows to look. A term that declares no attribute at all
+# (`owns`, `details`, `attributes`) is a free container by declaration and is left alone.
+_ATTR_MAPS = ('entry_values', 'entry_types', 'attr_types', 'entry_pattern', 'entry_soft_pattern',
+              'entry_in_registry', 'pointer_fields')
+_ATTR_LISTS = ('entry_required_attrs', 'required_attrs', 'entry_ref_fields', 'ref_fields', 'entry_one_of',
+               'entry_extents', 'attr_extents')
+_REF_FORM = ('bean', 'mapping', 'field')
+
+
+def declared_attrs(term, sch):
+    """Every attribute the term declares, from whichever construct declares it. Derived from the schema and
+    the term's own description — never listed here."""
+    _t = TERMS.get(term) or {}
+    out = set(_t.get('entry_attrs') or {}) | set(_t.get('attrs') or {})
+    for _k in _ATTR_MAPS:
+        out |= set(sch.get(_k) or {})
+    _self = False
+    for _k in _ATTR_LISTS:
+        for _a in (sch.get(_k) or []):
+            if _a == 'self' and _k in ('ref_fields', 'entry_ref_fields'):
+                _self = True                # the MARKER "the value is itself a ref" — not an attribute
+            else:
+                out.add(_a)                 # (`self` under entry_one_of IS one: a person answers for themselves)
+    for _a in _aspects_of(sch):
+        out.add(_a.get('attr') or _a.get('aspect'))
+    _pfr = sch.get('entry_pattern_from_registry')
+    if isinstance(_pfr, dict) and _pfr.get('attr'):
+        out.add(_pfr['attr'])
+    if isinstance(sch.get('alt_form'), dict):
+        out.add(sch['alt_form'].get('key'))
+    if _self and out:
+        out |= set(_REF_FORM)               # the value IS a ref, so the link form's own keys belong to it
+    if out:
+        out.add('provenance')               # MODEL.md: "a fact whose source differs from the bean's default
+                                            # carries its own record" — any entry may, so no term restates it
+    return out, _self
+
+
+def undeclared_attrs(base, term, where, node, sch):
+    _decl, _self = declared_attrs(term, sch)
+    if not _decl or not isinstance(node, dict):
+        return                              # a free container, or a pure ref: nothing is declared to hold it to
+    for _k in node:
+        if _k not in _decl:
+            errors.append(f"{base}: {where} carries `{_k}`, which the term `{term}` does not declare — an entry "
+                          f"holds only declared attributes {sorted(_decl - set(_REF_FORM) - {'provenance'})}. Prose belongs in "
+                          f"the attribute the term declares for it (`note`, `why`); a new kind of fact is "
+                          f"proposed as a new attribute, not written as a new key")
+
+
+def ectl_declared_attrs(e):
+    undeclared_attrs(e.base, e.term, e.ref, e.entry, e.sch)
+
+
 def ectl_entry_required_attrs(e):
     missing = [k for k in (e.sch.get('entry_required_attrs') or []) if k not in e.entry]
     if missing:
@@ -1024,6 +1087,7 @@ def ectl_entry_extents(c):
 
 
 ENTRY_CONTROLLERS = (
+    ('declared_attrs', ectl_declared_attrs),
     ('entry_required_attrs', ectl_entry_required_attrs),
     ('entry_values', ectl_entry_values),
     ('entry_types', ectl_entry_types),
@@ -1220,7 +1284,9 @@ def ctl_alt_form(c):
 
 
 def ctl_required_attrs(c):
-    """`required_attrs:` — attributes the mapping itself must carry."""
+    """`required_attrs:` — attributes the mapping itself must carry. And, since 12.0, ONLY declared ones."""
+    if c.sch.get('shape') == 'mapping' and not c.sch.get('key_form') and not c.sch.get('entry_one_of'):
+        undeclared_attrs(c.base, c.term, c.term, c.node, c.sch)
     for attr in (c.sch.get('required_attrs') or []):
         if isinstance(c.node, dict) and attr not in c.node:
             errors.append(f"{c.base}: {c.term} requires '{attr}' (VOCAB {c.term}.schema.required_attrs)")
