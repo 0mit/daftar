@@ -42,10 +42,21 @@ When the gate refuses something, its message names the rule and, for the common 
 
 ## If you work with a coding agent
 
-This is what the ledger is *for*. A garden comes with `.claude/skills/daftar/` — open it in a tool that
-reads skills and the agent loads **this garden's** law: the vocabulary in force, what it may decide alone
-and what it must bring to you (`MODEL.md`, the Contract of Parts), and how to make a write that the gate
-will accept (`CHECKLIST.md`).
+This is what the ledger is *for*, and it does not matter who made the agent. What matters is what it can do:
+
+- **It has a shell and git.** A garden comes with `AGENTS.md` at its root — the file most coding agents read
+  unprompted — and the same text as a skill in `.claude/skills/daftar/`. The agent loads **this garden's** law:
+  the vocabulary in force, what it may decide alone and what it must bring to you (`MODEL.md`, the Contract of
+  Parts), and how to make a write the gate will accept (`CHECKLIST.md`). A tool that looks for a file of its own
+  name instead needs only a two-line file pointing at `AGENTS.md`.
+- **It is a chat window with no shell** — an assistant on a phone, a bot in a group. It cannot run the gate, so
+  it cannot write to the ledger and should not believe it has. Paste it `seed/WELCOME.md`: what it gives back is
+  a *proposal* — the bean, the journal entry, and what it could not check — for you, or an agent with the gate,
+  to commit.
+
+As of September 2026 the first kind includes Claude Code, Cursor, Codex CLI, Gemini CLI, GitHub Copilot's agent
+and Aider, and the second ChatGPT, Grok and the like in a browser or on a phone. That sentence will go out of
+date; the two kinds will not.
 
 The point is not that an agent can edit the files. It is that the two of you write in one language that
 neither can quietly corrupt: every fact carries who said it and how they know, every change is journalled
@@ -102,7 +113,8 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
 | `seed/RATIONALE.md` | why each rule is as it is, keyed by the rule's own path; `python3 bin/dmwhy.py <name>` reads law and reason together |
 | `HISTORY.md` | the design steps and incidents behind the first releases |
-| `.claude/skills/daftar/` | a skill that points a coding agent at the garden's own rules |
+| `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules |
+| `seed/WELCOME.md` | the door for an assistant with no shell, written to be pasted into a chat |
 | `test/` | the release suites, all run in CI (`CONTRIBUTING.md` has the command); `fast.py` runs in every garden's hook |
 
 ## License

@@ -19,7 +19,7 @@ def check(name, cond, detail=""):
 
 # HISTORY.md and the vocabulary's changelog are the record of what WAS: a retired name belongs there.
 PROSE = ["README.md", "MODEL.md", "CHECKLIST.md", "MERGE.md", "CONTRIBUTING.md", "seed/README.md", "seed/COOKBOOK.md",
-         ".claude/skills/daftar/SKILL.md", ".github/pull_request_template.md"]
+         ".claude/skills/daftar/SKILL.md", ".github/pull_request_template.md", "AGENTS.md", "seed/WELCOME.md"]
 # Named in a document as NOT shipped here: the maintainers' corpus tests, which need a garden's beans.
 NOT_SHIPPED = {"test/golden.py", "test/diffgate.py"}
 # Shipped, and run by every garden's own hook rather than by the release: it needs a garden around it.
@@ -51,6 +51,18 @@ for d, t in text.items():
     named = sorted(set(re.findall(r"(?<![A-Za-z0-9_/.-])((?:bin|test)/[A-Za-z0-9_./-]+\.(?:py|sh))", t)))
     gone = [n for n in named if n not in NOT_SHIPPED and not os.path.isfile(os.path.join(ROOT, n))]
     check(f"every tool and suite {d} names exists ({len(named)} named)", not gone, gone)
+
+# THE DOORS. An agent with a shell has one text, wherever its tool looks for it; an assistant without one is told so
+# before it is told anything else.
+_skill = re.sub(r"^---\n.*?\n---\n\s*", "", text[".claude/skills/daftar/SKILL.md"], count=1, flags=re.S)
+check("AGENTS.md and the daftar skill are ONE text: the skill is its front matter and then AGENTS.md, byte for byte",
+      _skill == text["AGENTS.md"] and len(_skill) > 500, f"{len(_skill)} vs {len(text['AGENTS.md'])} bytes")
+_top = "\n".join(text["seed/WELCOME.md"].splitlines()[:12])
+check("seed/WELCOME.md says in its first lines that its reader cannot run the gate, and that what it reads is data",
+      "cannot run the gate" in _top and "cannot write to the ledger" in _top and "data" in _top, _top[:300])
+_opens = [p for p in re.findall(r"`([A-Za-z0-9_./-]+\.(?:md|py|sh))`", text["seed/WELCOME.md"])
+          if not os.path.isfile(os.path.join(ROOT, p))]
+check("...and names no file that does not exist", not _opens, _opens)
 
 ci = open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8").read()
 ci_suites = set(re.findall(r"python3 (test/[a-z_]+\.py)", ci))

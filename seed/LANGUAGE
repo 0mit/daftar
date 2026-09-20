@@ -22,6 +22,7 @@ MERGE.md
 .gitattributes
 .gitignore
 # The skill a coding agent auto-loads: a mirror pointing into the garden, carrying no rule of its own.
+AGENTS.md
 .claude/skills/daftar/SKILL.md
 # The pre-commit hook runs it, so a garden without it cannot commit. The other tests assert things about the
 # release's own fixtures and stay in the release.
