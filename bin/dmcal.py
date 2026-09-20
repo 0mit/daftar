@@ -251,7 +251,28 @@ BY_RULE = {
     'hebrew':        (hebrew_to_day, hebrew_from_day),
     'indian':        (indian_to_day, indian_from_day),
 }
+# THE DAY ITSELF, as astronomers count it: the Julian Day Number of the day's noon. Every calendar here meets the others at
+# the day, and this is that meeting point given a name and a form. And the Mayan long count, which is nothing BUT a count
+# of days, written in mixed base 20 and 18 from a zero day (the Goodman-Martinez-Thompson correlation, JDN 584283).
+JDN_OFFSET, MAYAN_EPOCH = 1721425, -1137142      # JDN = day number + 1721425: 2000-01-01 is JDN 2451545
+
+
+def mayan_to_day(parts):
+    b, k, t, u, d = parts
+    return MAYAN_EPOCH + b * 144000 + k * 7200 + t * 360 + u * 20 + d
+
+
+def mayan_from_day(n):
+    r = n - MAYAN_EPOCH
+    out = []
+    for size in (144000, 7200, 360, 20, 1):
+        out.append(r // size); r %= size
+    return tuple(out)
+
+
 NOT_BY_RULE = {
+    'bahai':            "astronomical since 2015: the year begins at the equinox as computed for Tehran, and one month is fixed by a new moon",
+    'french-republican': "astronomical: the year begins at the autumn equinox as observed from Paris",
     'chinese':          "astronomical: months begin at the new moon and the year is fitted to the solstices, as computed for a meridian",
     'dangi':            "astronomical, as the Chinese calendar is, computed for Korea",
     'islamic':          "observational: a month begins when the crescent is sighted",
@@ -260,6 +281,8 @@ NOT_BY_RULE = {
 }
 _TAGGED = re.compile(r'^([a-z][a-z0-9-]*):(-?\d+)-(\d{2})(L?)-(\d{2})$')
 _JAPANESE = re.compile(r'^japanese:([a-z]+)-(\d+)-(\d{2})-(\d{2})$')
+_JDN = re.compile(r'^jdn:(\d+)$')
+_MAYAN = re.compile(r'^mayan:(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d+)$')
 _ISO_WEEK = re.compile(r'^(-?\d{4})-W(\d{2})-([1-7])$')
 _GREGORIAN = re.compile(r'^(\d{4})-(\d{2})-(\d{2})')
 
@@ -267,6 +290,15 @@ _GREGORIAN = re.compile(r'^(\d{4})-(\d{2})-(\d{2})')
 def to_day(position):
     """The day number of a position written in its system's one form (the date part)."""
     position = str(position).strip()
+    m = _JDN.match(position)
+    if m:
+        return int(m.group(1)) - JDN_OFFSET
+    m = _MAYAN.match(position)
+    if m:
+        parts = tuple(int(x) for x in m.groups())
+        if not (parts[1] < 20 and parts[2] < 20 and parts[3] < 18 and parts[4] < 20):
+            raise ValueError(f"{position}: a katun and a tun run 0-19, a uinal 0-17, a kin 0-19")
+        return mayan_to_day(parts)
     m = _ISO_WEEK.match(position)
     if m:
         return datetime.date.fromisocalendar(int(m.group(1)), int(m.group(2)), int(m.group(3))).toordinal()
@@ -310,6 +342,10 @@ def from_day(n, calendar):
     if calendar in ('iso8601', 'iso-week'):
         t = datetime.date.fromordinal(n).isocalendar()
         return '%04d-W%02d-%d' % (t[0], t[1], t[2])
+    if calendar == 'julian-day':
+        return 'jdn:%d' % (n + JDN_OFFSET)
+    if calendar == 'mayan-long-count':
+        return 'mayan:%d.%d.%d.%d.%d' % mayan_from_day(n)
     if calendar == 'japanese':
         return 'japanese:%s-%d-%02d-%02d' % japanese_from_day(n)
     if calendar in NOT_BY_RULE:
@@ -323,7 +359,7 @@ def convert(position, calendar):
 
 
 EVERY = ['gregory', 'iso8601', 'julian', 'persian', 'islamic-civil', 'islamic-tbla', 'hebrew', 'coptic', 'ethiopic',
-         'ethioaa', 'indian', 'buddhist', 'roc', 'japanese']
+         'ethioaa', 'indian', 'buddhist', 'roc', 'japanese', 'julian-day', 'mayan-long-count']
 
 
 def main(argv):

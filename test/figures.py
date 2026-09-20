@@ -45,7 +45,7 @@ mutate("    ends: bounded\n    domain: { systems: place }\n", "    domain: { sys
 out = gate()
 check("a sequence that leaves a restriction unstated is refused", "must state `ends`" in out, out[-900:])
 
-mutate("    lines: open\n    metered: none           # geographic", "    lines: 0\n    metered: none           # geographic")
+mutate("    figure: sequence\n    lines: open\n    metered: none\n    order: partial\n    acyclic: true\n    ends: bounded\n    domain: { systems: place }", "    figure: sequence\n    lines: 0\n    metered: none\n    order: partial\n    acyclic: true\n    ends: bounded\n    domain: { systems: place }")
 out = gate()
 check("a line count that is not one or more is refused", "lines '0' must be a positive integer" in out, out[-900:])
 
