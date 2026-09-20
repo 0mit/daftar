@@ -1247,13 +1247,19 @@ a fact that can disagree with itself, which is the argument this vocabulary alre
 refusing a direction aspect. The chain is walkable both ways from `prev` plus list order, which is
 what "walkable all ways" actually required.
 
-## terms[beanger].record_attrs.seq
+## schema_language.attr_domains.entries
 
-ONE LEVEL DEEPER THAN THE GATE VALIDATES, AND SAID SO RATHER THAN IMPLIED. The interpreter checks
-the entries of a term, not the entries of a list INSIDE an entry, so everything below is convention
-the gate does not yet enforce. That is a real gap and it is named here instead of being dressed up:
-`attrs` reaches `beanger.<datum>`, not `beanger.<datum>.records[]`. Closing it needs
-a nested-entry mechanism in bin/dmcheck.py — a GATE change, tracked in [[design-network-stack]].
+The interpreter judged the entries of a term and not the entries of a list INSIDE an entry, so a datum's records — the
+one place the ledger stamps to the millisecond — were described in a map of sentences that nothing read, and their
+attribute was the last to say `untyped`. Nested entries are entries: the same controllers, the same closed set of
+attributes, so there is no second and weaker kind of rule one level down. A ref inside one is resolved and draws no
+edge, because the graph is made of what a bean states at its own level.
+
+## schema_language.attr_domains.any
+
+`untyped` says nobody has decided. Some attributes have been decided and the decision is "anything": a record's `value`
+is whatever the field it tracks holds, and typing it twice would be the second copy this language keeps removing.
+Saying `any` keeps that apart from a debt, so the count of `untyped` means what it says — and it is now zero.
 
 ## terms[workspace].meaning
 

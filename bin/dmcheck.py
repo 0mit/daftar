@@ -1455,6 +1455,39 @@ def ectl_key_of(e):
                               f"{sorted(x for k in ckeys if isinstance(fm.get(k), dict) for x in fm[k])}")
 
 
+_NESTED = {}           # (term, attr) -> the schema of the entries inside it; held so the form cache sees one object
+
+
+def ectl_nested_entries(e):
+    """`in: { entries }` — entries INSIDE an entry (a datum's records, a cursor). Each is judged as an entry, by every
+    controller here, so nothing about a nested entry is a second, weaker kind of rule. A ref inside one is RESOLVED
+    (dangling = error) and draws no edge: the graph is made of what a bean states at its own level."""
+    for attr, attrs in _facet(e.form, 'entries', e.scope):
+        v = e.entry.get(attr)
+        if v is None:
+            continue
+        sch = _NESTED.setdefault((e.term, attr), {'shape': 'list_of_entries', 'attrs': attrs})
+        if not isinstance(v, (list, dict)):
+            errors.append(f"{e.base}: {e.ref}.{attr} holds entries — a list of mappings, or one mapping")
+            continue
+        for i, item in enumerate(v if isinstance(v, list) else [v]):
+            label = f"{e.label}/{i}" if isinstance(v, list) else e.label
+            check_entry(e.base, f"{e.term}.{attr}", label, item, sch)
+            for rattr in dmform.ref_attrs(attribute_form(f"{e.term}.{attr}", sch), 'entry'):
+                r = item.get(rattr) if isinstance(item, dict) else None
+                if isinstance(r, dict):
+                    tid = r.get('bean') or r.get('mapping')
+                    if tid is not None and tid not in bean_ids and tid not in map_ids:
+                        errors.append(f"{e.base}: {e.term}.{attr}[{label}].{rattr} names '{tid}', which this garden does not hold")
+
+
+def ectl_bean_id(e):
+    for attr, _ in _facet(e.form, 'bean_id', e.scope):
+        v = e.entry.get(attr)
+        if v is not None and v not in bean_ids:
+            errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not the id of a bean this garden holds")
+
+
 ENTRY_CONTROLLERS = (
     ('declared_attrs', ectl_declared_attrs),
     ('attr: required', ectl_entry_required_attrs),
@@ -1467,6 +1500,8 @@ ENTRY_CONTROLLERS = (
     ('in: form_of', ectl_entry_pattern_from_registry),
     ('in: system', ectl_in_system),
     ('in: key_of', ectl_key_of),
+    ('in: bean_id', ectl_bean_id),
+    ('in: entries', ectl_nested_entries),
     ('entry_form_from_kind_attr', ectl_entry_form_from_kind_attr),
     ('in: aspect', ectl_on_aspect),
     ('cells: verdict', ectl_cross_aspect),

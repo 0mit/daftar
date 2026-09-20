@@ -201,9 +201,7 @@ check("S1: a mapping's own attributes take the same form, scoped to the value it
       _f["scope"] == "self" and _f["attrs"]["expires"].get("type") == "date" and _f["attrs"]["expires"].get("required") is True)
 _untyped = sorted((t, n) for t, sc in _gate.SCHEMAS.items() for n, a in ((sc or {}).get("attrs") or {}).items()
                   if isinstance(a, dict) and a.get("in") == "untyped")
-check("S1: the form makes an UNTYPED attribute visible — and since 18.0 the whole law has ONE, `beanger.records`, "
-      "which waits for a domain that can say `a list of entries inside an entry`",
-      _untyped == [("beanger", "records")], str(_untyped))
+check("S1: the form makes an UNTYPED attribute visible — and since 18.1 the law has none", _untyped == [], str(_untyped))
 check("S1: ...`endpoints.via_link` is a key of `links`, resolved", _gate.form_of("endpoints")["attrs"]["via_link"].get("key_of") == "links")
 
 shutil.rmtree(T, ignore_errors=True)
