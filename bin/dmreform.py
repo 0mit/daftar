@@ -321,6 +321,12 @@ def _term_nodes(root):
                     yield t
 
 
+# The five terms that existed only to hold a copy of a registry's column (retired at 18.0), and the registry each stood for.
+RETIRED_OWNERS = {'anchor_system': 'anchor_systems', 'unit': 'units', 'role': 'roles',
+                  'storage_format': 'storage_formats', 'net_protocol': 'net_protocols'}
+_OWNER_AT = re.compile(r'^(\s*(?:-\s+)?)at:\s*["\']?(%s)\.values["\']?\s*$' % '|'.join(RETIRED_OWNERS))
+
+
 def rewrite_text(text):
     """(new_text, [terms rewritten]). Raises CannotTranslate, leaving the caller's file alone."""
     m = re.match(r'^---\n(.*?)\n---[ \t]*$', text, re.S | re.M)
@@ -376,6 +382,13 @@ def rewrite_text(text):
             note = [' ' * col + c for c in harvested]
             block = block[:at] + note + block[at:]
         lines[a:b] = block
+    # 18.0 — a registry is its own enum owner: a vacancy for an unused row is addressed AT the registry.
+    for i, line in enumerate(lines):
+        mm = _OWNER_AT.match(line)
+        if mm:
+            lines[i] = f'{mm.group(1)}at: "registry:{RETIRED_OWNERS[mm.group(2)]}"'
+            if 'vacancies' not in done:
+                done.append('vacancies')
     return '\n'.join(lines), done
 
 
@@ -389,7 +402,8 @@ def uses_old_constructs(text):
     terms = list(data.get('terms') or []) + list(data.get('local_terms') or [])
     for p in (data.get('profiles') or {}).values():
         terms += list((p or {}).get('terms') or [])
-    bad = []
+    bad = [('vacancies', [str(v.get('at'))]) for v in (data.get('vacancies') or [])
+           if isinstance(v, dict) and str(v.get('at') or '').split('.values')[0] in RETIRED_OWNERS and str(v.get('at')).endswith('.values')]
     for t in terms:
         if isinstance(t, dict):
             hit = [k for k in OLD_SCHEMA_KEYS if k in (t.get('schema') or {})] + \

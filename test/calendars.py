@@ -173,5 +173,18 @@ check("a system's own example is held to its own pattern", "its own `example` '2
 open(STD, "w").write(ORIG)
 shutil.rmtree(T, ignore_errors=True)
 
+# ---------------------------------------------------------------- 18.0: an instant is contained in ANY calendar
+import dmmerge as _M
+_p, _h = dmcal.convert("2026-09-19", "persian"), dmcal.convert("2026-09-19", "hebrew")
+_cases = [("2026-09-19", "2026-09-19 22:50+03:00", True), (_p, "2026-09-19 22:50+03:00", True),
+          (_p, _p + " 22:50+03:30", True), ("2026-09-19", _p + " 22:50", True), (_h, _h + " 22:50", True),
+          ("2026-09-19 23:00+00:00", "2026-09-20 02:00:10+03:00", True), ("2026-W38-6", "2026-09-19 10:00", True),
+          ("2026-09-20", "2026-09-19 22:50", False), ("2026-09-19", "2026-09-19", False)]
+_bad = [(a, b) for a, b, w in _cases if bool(_M._instant_contains(a, b)) != w]
+check("a day CONTAINS a finer reading of it, in whatever calendar either is written — they meet at the day", not _bad, _bad)
+check("...but a day that begins at SUNSET does not contain another calendar's clock time by arithmetic: unordered",
+      not _M._instant_contains(_h, "2026-09-19 22:50+03:00"))
+check("the order follows what a value IS: a reading in any calendar is an instant", _M.leaf_order("whenever", _p + " 22:50") == "instant")
+
 print("\ncalendars: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

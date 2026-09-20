@@ -239,16 +239,25 @@ if _axis and _reg:
               if isinstance(r, dict) and r.get(_axis)}
 
 
+def _values_of(v):
+    """A value rule's enum: written here (`values`), another term's (`values_from: <term>`), or a REGISTRY's own
+    column (`values_from: "registry:<name>[].<field>"`) — the registry is then the enum's one owner, and no term
+    keeps a copy of it to drift."""
+    src = v.get('values_from')
+    if src and str(src).startswith('registry:'):
+        return [x for x in collect_path({}, str(src))]
+    if src:
+        return term_values(src)
+    return list(v.get('values') or [])
+
+
 def term_values(name):
     """The enum a term exports (for values_from / key_form: values_from:<term>)."""
-    return list(form_of(name)['value'].get('values') or [])
+    return _values_of(form_of(name)['value'])
 
 
 def allowed_values(sch):
-    _v = dmform.attribute_form(None, sch)['value']
-    if _v.get('values_from'):
-        return term_values(_v['values_from'])
-    return list(_v.get('values') or [])
+    return _values_of(dmform.attribute_form(None, sch)['value'])
 
 
 # --- vocab self-consistency: an exported enum must not drift from its own definition -------------
@@ -614,32 +623,6 @@ def check_recurrence(where, node):
         errors.append(f"{where}.every.unit '{every['unit']}' measures {u.get('quantity')}, and a stride here is measured in {metered}")
 
 
-def ctl_quantities(c):
-    for attr, want in _facet(attribute_form(c.term, c.sch), 'quantity', 'self'):
-        v = c.node.get(attr) if isinstance(c.node, dict) else None
-        if v is not None:
-            check_quantity(f"{c.base}: {c.term}.{attr}", v, want)
-    return None
-
-
-def ctl_recurrences(c):
-    """An attribute of the mapping itself that holds a recurrence."""
-    for attr, _ in _facet(attribute_form(c.term, c.sch), 'recurrence', 'self'):
-        v = c.node.get(attr) if isinstance(c.node, dict) else None
-        if v is not None:
-            check_recurrence(f"{c.base}: {c.term}.{attr}", v)
-    return None
-
-
-def ctl_extents(c):
-    """`attr_extents:` — attrs of the mapping that hold a region of some aspect's domain."""
-    for attr, _ in _facet(attribute_form(c.term, c.sch), 'extent', 'self'):
-        v = c.node.get(attr) if isinstance(c.node, dict) else None
-        if v is not None:
-            check_extent(f"{c.base}: {c.term}.{attr}", v)
-    return None
-
-
 def walk_keys():
     """{schema key: aspect} for every SEQUENCE aspect that places terms on itself through a schema key (9.2).
     `dag: true` is read through this: the key is data in the vocabulary, and whether a cycle is refused is
@@ -774,6 +757,17 @@ def check_registry_links():
                               f"{_l['take']} of `{_l['to']}` — a link between registries is resolved like any other")
 
 
+def check_retired_owners():
+    """A garden that overlaid one of the five retired enum-owner terms did so to restate a row it had added to the
+    registry. The row is enough now; the overlay would otherwise come back as a term that means nothing."""
+    import dmreform
+    for _t in (vocab_fm.get('local_terms') or []):
+        if isinstance(_t, dict) and _t.get('term') in dmreform.RETIRED_OWNERS:
+            errors.append(f"VOCAB local_terms '{_t['term']}': this term was only a copy of the `{dmreform.RETIRED_OWNERS[_t['term']]}` "
+                          f"registry's column and is retired (18.0) — delete the overlay; a row under "
+                          f"`registry_additions.{dmreform.RETIRED_OWNERS[_t['term']]}` is stated once and is enough")
+
+
 def check_units():
     """A unit's factor is a PAIR OF WHOLE NUMBERS, and a quantity's powers are whole numbers of declared dimensions. A
     factor written 0.277778 would make every conversion through it wrong by an amount nobody chose; [5, 18] is what it is."""
@@ -789,6 +783,22 @@ def check_units():
                           f"an exact ratio to the quantity's coherent unit, never a rounded decimal")
         elif math.gcd(*_f) != 1:
             errors.append(f"VOCAB units '{_n}': `factor: {_f}` is not in lowest terms — one ratio has one spelling")
+
+
+_TO_THE_MINUTE = r'^[^ T]+[T ][0-9]{2}:[0-9]{2}(:[0-9]{2}(\.[0-9]{1,3})?)?([+-][0-9]{2}:[0-9]{2}|Z)$'
+
+
+def journal_heading_ok(heading):
+    """`## <when> · <who> · <what>`, where <when> is a position in a CALENDAR the law declares — in that system's own
+    one form, held to the minute, with its offset. The journal owns no copy of any calendar's form: `journal.system`
+    names the one this garden writes in, and when it names none, any declared calendar will do."""
+    parts = str(heading)[3:].split(' · ')
+    if not str(heading).startswith('## ') or len(parts) < 3 or not all(x.strip() for x in parts[:3]):
+        return False
+    when, want = parts[0], JOURNAL.get('system')
+    rows = [r for r in SYSTEMS.values() if r.get('dimension') == 'time' and r.get('calendar')
+            and r.get('pattern') not in (None, 'none') and want in (None, 'any', r.get('system'))]
+    return bool(law_match(_TO_THE_MINUTE, when)) and any(law_match(r['pattern'], when) for r in rows)
 
 
 def check_aspect_sanity():
@@ -1083,13 +1093,14 @@ def form_of(term):
 # can disagree about what a default means, and the one that disagrees silently is the dangerous one.
 class _ECell:
     """One entry under inspection."""
-    __slots__ = ('base', 'term', 'label', 'entry', 'sch', 'form', 'ref', 'eff')
+    __slots__ = ('base', 'term', 'label', 'entry', 'sch', 'form', 'ref', 'eff', 'scope')
 
-    def __init__(self, base, term, label, entry, sch):
+    def __init__(self, base, term, label, entry, sch, scope='entry'):
         self.base, self.term, self.label = base, term, label
         self.entry, self.sch = entry, sch
         self.form = attribute_form(term, sch)
-        self.ref = f"{term}[{label}]"
+        self.scope = scope                  # 'entry', or 'self' when the mapping ITSELF is what is judged
+        self.ref = f"{term}[{label}]" if scope == 'entry' else term
         self.eff = {}                       # filled by ectl_on_aspect, read by ectl_cross_aspect
 
 
@@ -1148,14 +1159,14 @@ UNKNOWN_VALUE_HINT = (" — if the value is real and the vocabulary lacks it, ke
 
 
 def ectl_entry_values(e):
-    for attr, allowed in _facet(e.form, 'values', 'entry'):
+    for attr, allowed in _facet(e.form, 'values', e.scope):
         if e.entry.get(attr) is not None and e.entry[attr] not in allowed:
             errors.append(f"{e.base}: {e.ref}.{attr} '{e.entry[attr]}' not in {allowed} "
                           f"(VOCAB {e.term}.schema.attrs.{attr}.in)")
 
 
 def ectl_entry_types(e):
-    for attr, typ in _facet(e.form, 'type', 'entry'):
+    for attr, typ in _facet(e.form, 'type', e.scope):
         if e.entry.get(attr) is None:
             continue
         check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ)
@@ -1164,7 +1175,7 @@ def ectl_entry_types(e):
 def ectl_entry_pattern(e):
     """`entry_pattern:` (11.0) — an entry attr must match a form the TERM owns (a position whose system owns
     its form uses `entry_pattern_from_registry` instead)."""
-    for attr, pat in _facet(e.form, 'pattern', 'entry'):
+    for attr, pat in _facet(e.form, 'pattern', e.scope):
         v = e.entry.get(attr)
         if v is not None and not law_match(pat, v):
             errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not in the form this term declares ({pat})")
@@ -1175,7 +1186,7 @@ def ectl_entry_soft_pattern(e):
     """`entry_soft_pattern:` (11.0) — the same as a WARNING: the form a value SHOULD take while a corpus is
     migrated onto it. A warning says what to fix; an error would refuse a garden's next commit for a value it
     has carried for months."""
-    for attr, rule in _facet(e.form, 'soft', 'entry'):
+    for attr, rule in _facet(e.form, 'soft', e.scope):
         vals = e.entry.get(attr)
         for v in (vals if isinstance(vals, list) else [vals]):
             if v is not None and not law_match(rule.get('pattern', ''), v):
@@ -1206,7 +1217,7 @@ def effective(e, attr):
     off a registry row another attribute of the same entry selects. Never written back, never an occupant."""
     if e.entry.get(attr) is not None:
         return e.entry[attr]
-    rule = dict(_facet(e.form, 'default_from', 'entry')).get(attr)
+    rule = dict(_facet(e.form, 'default_from', e.scope)).get(attr)
     if not rule:
         return None
     key = e.entry.get(rule.get('keyed_by'))
@@ -1222,7 +1233,7 @@ def ectl_entry_in_registry(e):
     the registry it was copied from. This is the argument `values_consistent_with` already makes for a
     term's own enum, applied one level down to an entry's.
     """
-    for attr, rule in _facet(e.form, 'registry', 'entry'):
+    for attr, rule in _facet(e.form, 'registry', e.scope):
         val = e.entry.get(attr)
         if val is None:
             continue
@@ -1257,7 +1268,7 @@ def ectl_entry_pattern_from_registry(e):
     """
     # EVERY attribute that takes its form from a sibling's system, not just the first: since 14.0 an endpoint has
     # two — `at`, in the system `system` names, and `port`, in the port space its `transport` names.
-    for _name, rule in _facet(e.form, 'system_from', 'entry'):
+    for _name, rule in _facet(e.form, 'system_from', e.scope):
         val = e.entry.get(rule.get('attr'))
         if val is None:
             continue
@@ -1307,7 +1318,7 @@ def ectl_on_aspect(e):
     This also RECORDS each aspect's effective position on the cell, because `cross_aspect` needs exactly
     the same derivation and used to repeat it.
     """
-    for _aattr, _asp in _facet(e.form, 'aspect', 'entry'):
+    for _aattr, _asp in _facet(e.form, 'aspect', e.scope):
         _adef = ASPECTS.get(_asp['aspect']) or {}
         _apos = {p['position'] for p in (_adef.get('positions') or []) if isinstance(p, dict)}
         _val = e.entry.get(_aattr, _asp.get('default'))
@@ -1381,13 +1392,13 @@ def ectl_pointer_fields(e):
             if ptr.startswith('file:'):
                 _fp = ptr[5:]
                 if not os.path.exists(os.path.join(ROOT, _fp)):
-                    errors.append(f"{e.base}: {e.term}[{e.label}].{attr} '{ptr}' does not resolve — no "
+                    errors.append(f"{e.base}: {e.ref}.{attr} '{ptr}' does not resolve — no "
                                   f"such file in this garden")
                 continue
             sect, _, key = ptr.partition('.')
             node = ALL_FM[e.base].get(sect)
             if not key or not isinstance(node, dict) or key not in node:
-                errors.append(f"{e.base}: {e.term}[{e.label}].{attr} '{ptr}' does not resolve — use "
+                errors.append(f"{e.base}: {e.ref}.{attr} '{ptr}' does not resolve — use "
                               f"'<section>.<key>' on this bean, {{bean,field}} for another bean, or "
                               f"'file:<path>'")
 
@@ -1395,24 +1406,53 @@ def ectl_pointer_fields(e):
 # Declaration order IS execution order, and it is the order these rules ran in before. `on_aspect` must
 # precede `cross_aspect`: the second reads what the first computed.
 def ectl_entry_quantities(c):
-    for attr, want in _facet(c.form, 'quantity', 'entry'):
+    for attr, want in _facet(c.form, 'quantity', c.scope):
         if c.entry.get(attr) is not None:
-            check_quantity(f"{c.base}: {c.term}[{c.label}].{attr}", c.entry[attr], want)
+            check_quantity(f"{c.base}: {c.ref}.{attr}", c.entry[attr], want)
 
 
 def ectl_entry_recurrences(c):
-    for attr, _ in _facet(c.form, 'recurrence', 'entry'):
+    for attr, _ in _facet(c.form, 'recurrence', c.scope):
         v = c.entry.get(attr)
         if v is not None:
-            check_recurrence(f"{c.base}: {c.term}[{c.label}].{attr}", v)
+            check_recurrence(f"{c.base}: {c.ref}.{attr}", v)
 
 
 def ectl_entry_extents(c):
     """`entry_extents:` — attrs INSIDE an entry that hold a region (11.2)."""
-    for attr, _ in _facet(c.form, 'extent', 'entry'):
+    for attr, _ in _facet(c.form, 'extent', c.scope):
         v = c.entry.get(attr)
         if v is not None:
-            check_extent(f"{c.base}: {c.term}[{c.label}].{attr}", v)
+            check_extent(f"{c.base}: {c.ref}.{attr}", v)
+
+
+def ectl_in_system(e):
+    """`in: { system }` — a position in ONE named system, in that system's one form. `form_of` asks a sibling which
+    system; this names it, for an attribute that is only ever in one (a moment a tool stamps is always `unix-epoch`)."""
+    for attr, name in _facet(e.form, 'system', e.scope):
+        v, row = e.entry.get(attr), SYSTEMS.get(name)
+        if v is None:
+            continue
+        if row is None:
+            errors.append(f"VOCAB {e.term}.schema.attrs.{attr}.in: system '{name}' is not in `anchor_systems`")
+        elif row.get('pattern') not in (None, 'none') and not law_match(row['pattern'], v):
+            errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not in the one canonical form '{name}' declares "
+                          f"({row['pattern']}){' — ' + row['form_note'] if row.get('form_note') else ''}")
+
+
+def ectl_key_of(e):
+    """`in: { key_of: <term> }` — a key of that term's mapping on THIS bean, or `<bean>:<key>` on another. Not an
+    edge: it names a part of a being, and the being is reached by the refs the bean already states."""
+    for attr, term in _facet(e.form, 'key_of', e.scope):
+        for v in ([e.entry[attr]] if not isinstance(e.entry.get(attr), list) else e.entry[attr]) if e.entry.get(attr) is not None else []:
+            owner, _, key = str(v).rpartition(':')
+            fm = ALL_FM.get(owner or e.base)
+            ckeys = (TERMS.get(term) or {}).get('context_keys') or [term]
+            if fm is None:
+                errors.append(f"{e.base}: {e.ref}.{attr} '{v}' names bean '{owner}', which this garden does not hold")
+            elif not any(isinstance(fm.get(k), dict) and key in fm[k] for k in ckeys):
+                errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is no key of `{term}` on {owner or 'this bean'} — "
+                              f"{sorted(x for k in ckeys if isinstance(fm.get(k), dict) for x in fm[k])}")
 
 
 ENTRY_CONTROLLERS = (
@@ -1425,6 +1465,8 @@ ENTRY_CONTROLLERS = (
     ('entry_must_match', ectl_entry_must_match),
     ('in: registry', ectl_entry_in_registry),
     ('in: form_of', ectl_entry_pattern_from_registry),
+    ('in: system', ectl_in_system),
+    ('in: key_of', ectl_key_of),
     ('entry_form_from_kind_attr', ectl_entry_form_from_kind_attr),
     ('in: aspect', ectl_on_aspect),
     ('cells: verdict', ectl_cross_aspect),
@@ -1623,12 +1665,20 @@ def ctl_required_attrs(c):
     return None
 
 
-def ctl_attr_types(c):
-    """`attr_types:` — types for the mapping's OWN attrs."""
-    for attr, typ in _facet(attribute_form(c.term, c.sch), 'type', 'self'):
-        v = c.node.get(attr) if isinstance(c.node, dict) else None
-        if v is not None:
-            check_value_type(f"{c.base}: {c.term}", attr, v, typ)
+# The entry-only constructs: what they say is about an ENTRY among entries, or is stated for a value in its own words.
+_NOT_FOR_A_VALUE = ('declared_attrs', 'attr: required', 'entry_must_match', 'entry_form_from_kind_attr', 'entry_one_of')
+
+
+def ctl_value_as_entry(c):
+    """A mapping that is not a list of entries is ONE entry, and is judged by the same controllers. Until 18.0 the
+    value scope had its own copies of four of them and none of the rest, so a `pattern` or a closed list declared
+    on a mapping's attribute was a rule nothing read."""
+    if form_of(c.term)['scope'] != 'self' or not isinstance(c.node, dict):
+        return None
+    cell = _ECell(c.base, c.term, None, c.node, c.sch, scope='self')
+    for _key, _controller in ENTRY_CONTROLLERS:
+        if _key not in _NOT_FOR_A_VALUE:
+            _controller(cell)
     return None
 
 
@@ -1735,10 +1785,7 @@ CONTROLLERS = (
     ('shape', ctl_shape),
     ('alt_form', ctl_alt_form),
     ('attr: required (value)', ctl_required_attrs),
-    ('in: type (value)', ctl_attr_types),
-    ('in: extent (value)', ctl_extents),
-    ('in: recurrence (value)', ctl_recurrences),
-    ('in: quantity (value)', ctl_quantities),
+    ('every other domain (value)', ctl_value_as_entry),
     ('key_form', ctl_key_form),
     ('entries', ctl_entries),
     ('on_sequence', ctl_on_sequence),
@@ -1898,8 +1945,21 @@ def _declared_positions():
                 LOCAL_ADDED.update((f"{term}.values", v) for v in _added)
             else:
                 _declare(f"{term}.values", _form['value']['values'], 'values' in _lform['value'])
+        elif str(_form['value'].get('values_from') or '').startswith('registry:'):
+            _declare(f"{term}.values", term_values(term), False)     # the registry's rows; the garden's own are below
         for attr, vals in _facet(_form, 'values', 'entry'):
             _declare(f"{term}.{attr}", vals, 'values' in _lform['attrs'].get(attr, {}))
+        # A REGISTRY IS ITS OWN ENUM OWNER (18.0). An attribute that takes a row of a registry takes a position AT
+        # that registry, addressed `registry:<name>`. Tier-0's rows are Tier-0's to account for; a row this garden
+        # ADDED is the garden's, and it is stated once — no owner term to restate it on.
+        for _scope in ('entry', 'self'):
+            for attr, _rule in _facet(_form, 'registry', _scope):
+                if _rule.get('registry') and _rule.get('take'):
+                    _src = f"registry:{_rule['registry']}"
+                    _declare(_src, [r.get(_rule['take']) for r in (registry(_rule['registry']) or []) if isinstance(r, dict)], False)
+                    for _r in ((vocab_fm.get('registry_additions') or {}).get(_rule['registry']) or []):
+                        if isinstance(_r, dict) and _r.get(_rule['take']) is not None:
+                            LOCAL_ADDED.add((_src, _r[_rule['take']]))
         for _aattr, _asp in _facet(_form, 'aspect', 'entry'):
             if _asp['aspect'] in ASPECTS:
                 _declare(f"aspect:{_asp['aspect']}",
@@ -1912,19 +1972,6 @@ def _declared_positions():
         if _form['one_of']:
             _declare(f"{term}.entry_one_of", list(_form['one_of']), bool(_lform['one_of']))
     return declared_pos, local_pos
-
-
-def _enum_owner(reg_name, take):
-    """The term that OWNS a registry-backed enum: the one holding its `values` equal to that registry.
-
-    DERIVED, never listed. A table mapping registries to owner terms would be a third copy of a
-    relationship the two ends already state, and this garden has paid for that shape before.
-    """
-    want = f"registry:{reg_name}[].{take}"
-    for _t in SCHEMAS:
-        if want in (form_of(_t)['value'].get('consistent_with') or []):
-            return _t
-    return None
 
 
 def _occupied_positions():
@@ -1943,12 +1990,16 @@ def _occupied_positions():
             if node is None:
                 continue
             _form = form_of(term)
-            if sch.get('shape') == 'scalar' and _form['value'].get('values'):
+            if sch.get('shape') == 'scalar' and term_values(term):
                 _occupy(f"{term}.values", [node])
             kf = str(sch.get('key_form') or '')
             if kf.startswith('values_from:') and isinstance(node, dict):
                 alt = (_form['alt'] or {}).get('key')             # the inherited form is not a position
                 _occupy(f"{kf.split(':', 1)[1]}.values", [k for k in node if k != alt])
+            if _form['scope'] == 'self' and isinstance(node, dict):          # a mapping is one entry
+                for attr, _rule in _facet(_form, 'registry', 'self'):
+                    if _rule.get('registry') and node.get(attr) is not None:
+                        _occupy(f"registry:{_rule['registry']}", [node[attr]])
             _asps = _facet(_form, 'aspect', 'entry')
             _alt_k = (_form['alt'] or {}).get('key')
             _forms = list(_form['one_of'])
@@ -1962,15 +2013,10 @@ def _occupied_positions():
                     for attr, _vals in _facet(_form, 'values', 'entry'):
                         if entry.get(attr) is not None:
                             _occupy(f"{term}.{attr}", [entry[attr]])
-                    # An `entry_in_registry` attr takes a position in the enum the REGISTRY defines, and
-                    # that enum is owned by whichever term holds its `values` equal to it. Counting it
-                    # against the owner is what lets a registry-backed enum be declared ONCE: without
-                    # this the owner term looks wholly vacant, because it is never carried on a bean —
-                    # it exists to own the list, and the list is occupied through other terms' entries.
+                    # An attribute that takes a row of a registry occupies a position AT that registry.
                     for attr, _rule in _facet(_form, 'registry', 'entry'):
-                        _owner = _enum_owner(_rule.get('registry'), _rule.get('take'))
-                        if _owner and entry.get(attr) is not None:
-                            _occupy(f"{_owner}.values", [entry[attr]])
+                        if _rule.get('registry') and entry.get(attr) is not None:
+                            _occupy(f"registry:{_rule['registry']}", [entry[attr]])
                     for _aattr, _asp in _asps:
                         # A DEFAULT DOES NOT OCCUPY (ratified 2026-08-03). This read `entry.get(attr,
                         # default)`, so a position nothing ever stated looked exercised because the gate's
@@ -2356,13 +2402,11 @@ def check_staged_state():
                 errors.append("the staged journal entry still contains '(fill in' — a template field was left "
                               "unfilled; say who ratified the change and why before committing")
             # THE HEADING IS A POSITION IN TIME (10.0). Only headings this commit ADDS: history is never rewritten.
-            _hp = JOURNAL.get('heading_pattern')
-            if _hp:
-                for _h in (l for l in jdiff.splitlines() if l.startswith('## ')):
-                    if not law_match(_hp, _h):
-                        errors.append(f"journal heading '{_h[:70]}' is not a position in time — write "
-                                      f"{JOURNAL.get('heading_form')}, read from the clock (e.g. "
-                                      f"`date '+%Y-%m-%d %H:%M%:z'`), not typed from memory")
+            for _h in (l for l in jdiff.splitlines() if l.startswith('## ')):
+                if not journal_heading_ok(_h):
+                    errors.append(f"journal heading '{_h[:70]}' is not a position in time — write "
+                                  f"{JOURNAL.get('heading_form')}, read from the clock (e.g. "
+                                  f"`date '+%Y-%m-%d %H:%M%:z'`), not typed from memory")
         for p in staged:
             if not (p.startswith(DOCUMENTISH) or p.endswith(FRONT_MATTER_DOCS)):
                 continue
@@ -2671,6 +2715,8 @@ PLIES = (
      "a system's declared shape: what it names exists, nesting ends, a metric level has a unit, restrictions narrow"),
     (check_registry_links,
      "a row that names a row of another registry is resolved, like any other link"),
+    (check_retired_owners,
+     "a registry is its own enum owner: an overlay of a retired owner term is named, not silently re-declared"),
     (check_units,
      "a unit's factor is an exact ratio of whole numbers — a rounded one would bend every conversion through it"),
     (check_aspect_sanity,

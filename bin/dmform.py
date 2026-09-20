@@ -63,6 +63,8 @@ DOMAINS = {
     'aspect':      "in: { aspect: <name>, default: <position> }    a position on an opposition; the default applies when the entry is silent",
     'type':        "in: { type: <value type> }                     a row of `value_types` — its pattern, and for a time type its system and unit",
     'form_of':     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern }   a position in the system a SIBLING attr names, in that system's one form",
+    'system':      "in: { system: <anchor system> }                a position in ONE named system, written in that system's one form (`unix-epoch`, `geographic`)",
+    'key_of':      "in: { key_of: <term> }                         a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another — resolved by the gate, and not an edge",
     'pattern':     "in: { pattern: '<regex>' }                     a form this term owns; with `soft: true` and a `why` it WARNS instead of refusing",
     'quantity':    "in: { quantity: <name> }                       a measured value { count, unit } whose unit measures that quantity",
     'extent':      "in: extent                                     a bounded region of an aspect's domain (`extent_form`)",
@@ -88,6 +90,10 @@ def _domain(d):
             return 'aspect', dict(d)
         if 'type' in d:
             return 'type', d['type']
+        if 'system' in d:
+            return 'system', d['system']
+        if 'key_of' in d:
+            return 'key_of', d['key_of']
         if 'form_of' in d:
             return 'system_from', {'registry': d['form_of'], 'keyed_by': d.get('keyed_by'), 'take': d.get('take')}
         if 'pattern' in d:

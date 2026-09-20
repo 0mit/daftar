@@ -240,5 +240,24 @@ check("test/fast.py — which the commit hook runs — reads the staleness patte
       and "neither set is empty" in r.stdout, (r.stdout + r.stderr)[-900:])
 
 shutil.rmtree(T, ignore_errors=True)
+# ---------------------------------------------------------------- 18.0: a vacancy is addressed AT the registry
+import dmreform as _R
+_old = """---
+extends: std-vocab@17.0
+vacancies:
+  - at: unit.values
+    position: hour
+    reason: prediction
+    why: "nothing here is held to the hour yet"
+  - { at: facets.values, position: financial, reason: prediction, why: "x" }
+local_terms: []
+---
+"""
+check("the detector sees a vacancy addressed at a retired owner term", ("vacancies", ["unit.values"]) in _R.uses_old_constructs(_old))
+_new, _done = _R.rewrite_text(_old)
+check("...and the translator re-addresses it at the registry, touching nothing else",
+      'at: "registry:units"' in _new and "at: facets.values" in _new and "unit.values" not in _new and _done == ["vacancies"], _new)
+check("...once: a translated overlay is left alone", _R.rewrite_text(_new)[0] == _new and not _R.uses_old_constructs(_new))
+
 print("\nreform: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

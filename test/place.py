@@ -45,7 +45,7 @@ def codebase(path, key, located=""):
         'identity: { status: confirmed, anchors: [ { key: git_remote, value: "git@example.org:t.git", class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
         f'code_paths:\n  - {{ path: "{path}", role: own-source, scan_policy: index }}\n'
-        'analysis_cache:\n  code-structure:\n    produced_by: t\n    as_of: 2026-01-01\n'
+        'analysis_cache:\n  code-structure:\n    produced_by: "tool:test"\n    as_of: 2026-01-01\n'
         f'    staleness_key: "{key}"\n    policy: index\n' + located + '---\nA tree.\n')
     return gate()
 
@@ -181,7 +181,7 @@ def twin(name, key, manifest):
         'class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
         f'code_paths:\n  - {{ path: "root:{name}/src", role: own-source, scan_policy: index }}\n'
-        'analysis_cache:\n  code-structure:\n    produced_by: t\n    as_of: 2026-01-01\n'
+        'analysis_cache:\n  code-structure:\n    produced_by: "tool:test"\n    as_of: 2026-01-01\n'
         f'    staleness_key: "{key}"\n    policy: index\n    form: summary_ref\n'
         '    summary_ref: [owns.manifest]\n'
         f'owns:\n  manifest: "{manifest}"\n---\nA tree.\n')
