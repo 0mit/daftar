@@ -200,7 +200,7 @@ def leaf_order(key, val):
             return rule.get('order', 'none')
         for _sys in [rule.get('system')] + list(rule.get('also_systems') or []):
             pat = SYSTEM_PATTERNS.get(_sys)
-            if pat and isinstance(val, str) and re.match(pat, val):
+            if pat and isinstance(val, str) and re.match(pat, val, re.ASCII):
                 return rule.get('order', 'none')
     return 'none'
 
@@ -245,7 +245,7 @@ def members(key, order, val):
     return {'': val}
 
 _CIVIL = re.compile(r'^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?'
-                    r'(Z|[+-]\d{2}:\d{2})?)?$')
+                    r'(Z|[+-]\d{2}:\d{2})?)?$', re.ASCII)
 
 
 def _civil(s):

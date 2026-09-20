@@ -384,7 +384,16 @@ def check_merge_identity():
 VALUE_TYPES = {t['type']: t for t in (registry('value_types') or []) if isinstance(t, dict) and t.get('type')}
 # No copy of a pattern lives here. Without the row, check_value_types reports the missing law ONCE, and the
 # per-value checks stand down rather than refuse every id in the garden for a cause they cannot name.
-KEBAB = re.compile(VALUE_TYPES['kebab']['pattern']) if 'kebab' in VALUE_TYPES else None
+# ONE FORM MEANS ONE SET OF DIGITS (std-vocab 16.0). In Python `\d` matches EVERY Unicode decimal digit, so until 16.0
+# the gate accepted `۲۰۲۶-۰۹-۲۰` as an iso_date — a second spelling of a position, which nothing downstream can read
+# as a date. A product built on this estate met the same thing from the other side: a mobile number typed on a Persian
+# keyboard was refused at signup, and the fix was to normalise digits AT THE BOUNDARY and store one form. The law's
+# patterns are therefore matched ASCII-only, everywhere, through this one function.
+def law_match(pattern, value):
+    return re.match(str(pattern), str(value), re.ASCII)
+
+
+KEBAB = re.compile(VALUE_TYPES['kebab']['pattern'], re.ASCII) if 'kebab' in VALUE_TYPES else None
 
 def check_law_extents():
     """Extents written in the VOCABULARY, not on a bean — today, `expiry.notice`.
@@ -417,7 +426,16 @@ def check_value_type(where, attr, val, typ):
         return                      # the law itself is missing; check_value_types has said so once
     if not t:
         errors.append(f"{where}.{attr}: type '{typ}' is not declared in `value_types` {sorted(VALUE_TYPES)}")
-    elif not re.match(t['pattern'], str(val)):
+    elif t.get('any_system'):
+        # A POSITION IN ANY SYSTEM OF THE TYPE'S DIMENSION, held to the type's unit (16.0): no system is the one a date
+        # must be in. It must be in ONE system's own form, that system must HAVE the level, and a reading finer than
+        # the level (a clock time on a date) is not the type.
+        _held = [r for r in (registry('anchor_systems') or []) if isinstance(r, dict) and r.get('dimension') == t.get('dimension')
+                 and isinstance(r.get('levels'), list) and any(l.get('level') == t.get('unit') for l in r['levels'])
+                 and r.get('pattern') not in (None, 'none') and law_match(r['pattern'], val)]
+        if not _held or re.search(r'[T ]\d{2}:\d{2}', str(val), re.ASCII):
+            errors.append(f"{where}.{attr} '{val}' {t.get('refusal') or 'is in no system of dimension ' + str(t.get('dimension'))}")
+    elif not law_match(t['pattern'], val):
         errors.append(f"{where}.{attr}" + ("" if typ != 'kebab' else f" '{val}'") + f" {t.get('refusal') or 'does not match its type ' + typ}")
 
 ASPECTS = {a['aspect']: a for a in (registry('aspects') or []) if isinstance(a, dict) and a.get('aspect')}
@@ -478,7 +496,7 @@ def check_extent(where, node):
         if v is None:
             continue
         ok = [s for s in SYSTEMS.values()
-              if s.get('dimension') in (dim, 'any') and re.match(s.get('pattern') or '(?!)', str(v))]
+              if s.get('dimension') in (dim, 'any') and law_match(s.get('pattern') or '(?!)', v)]
         if not ok:
             errors.append(f"{where}.{side} '{v}' is not a position in any system of dimension "
                           f"'{dim}' — " + ', '.join(sorted(s['system'] for s in SYSTEMS.values()
@@ -574,8 +592,19 @@ def check_system_structure():
                 errors.append(f"{_w}: counted `levels` need {{by, from, to}} with from <= to — got {_lv}")
         elif _lv not in (None, 'open'):
             errors.append(f"{_w}: `levels` is a list of named levels, a counted range {{by, from, to}}, or `open` — got {_lv!r}")
-        if _row.get('neighbours') not in (None, 'none', 'counted', 'metered'):
-            errors.append(f"{_w}: `neighbours` is none | counted | metered — got {_row.get('neighbours')!r}")
+        for _word, _offered in (std_fm.get('system_shape') or {}).items():
+            if _row.get(_word) is not None and _row[_word] not in (_offered or []):
+                errors.append(f"{_w}: `{_word}` is one of {_offered} — got {_row[_word]!r}")
+        for _t in (_row.get('same_ground_as') or []):
+            if _t not in _sys:
+                errors.append(f"{_w}: `same_ground_as` names '{_t}', which is no declared system")
+        if _row.get('same_ground_as') and not _row.get('crosswalk'):
+            errors.append(f"{_w}: it shares its ground with {_row['same_ground_as']} and does not say how a position in "
+                          f"one is found in the other — `crosswalk:` {(std_fm.get('system_shape') or {}).get('crosswalk')}")
+        _ex, _pat = _row.get('example'), _row.get('pattern')
+        if _ex and _pat and _pat != 'none' and not law_match(_pat, _ex):
+            errors.append(f"{_w}: its own `example` '{_ex}' is not in the form its `pattern` declares — a reader would be "
+                          f"shown a spelling the gate refuses")
         _r, _asp = _row.get('restrictions') or {}, _by_dim.get(_row.get('dimension'))
         for _k, _val in _r.items():
             if _k not in ('lines', 'metered', 'order', 'ends'):
@@ -992,7 +1021,7 @@ def ectl_entry_pattern(e):
     its form uses `entry_pattern_from_registry` instead)."""
     for attr, pat in _facet(e.form, 'pattern', 'entry'):
         v = e.entry.get(attr)
-        if v is not None and not re.match(pat, str(v)):
+        if v is not None and not law_match(pat, v):
             errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not in the form this term declares ({pat})")
     return None
 
@@ -1004,7 +1033,7 @@ def ectl_entry_soft_pattern(e):
     for attr, rule in _facet(e.form, 'soft', 'entry'):
         vals = e.entry.get(attr)
         for v in (vals if isinstance(vals, list) else [vals]):
-            if v is not None and not re.match(rule.get('pattern', ''), str(v)):
+            if v is not None and not law_match(rule.get('pattern', ''), v):
                 warns.append(f"{e.base}: {e.ref}.{attr} '{v}' — {rule.get('why') or 'not in the form this term expects'}")
     return None
 
@@ -1097,7 +1126,7 @@ def ectl_entry_pattern_from_registry(e):
         pat = row.get(rule.get('take'))
         if pat is None or pat == 'none':
             continue
-        if not re.match(str(pat), str(val)):
+        if not law_match(pat, val):
             errors.append(f"{e.base}: {e.ref}.{rule['attr']} '{val}' is not in the one canonical form "
                           f"'{key}' declares — {rule['registry']}.{key}.{rule['take']} is {pat!r}. A system "
                           f"owns its format so nothing invents a second spelling of it.")
@@ -1314,7 +1343,7 @@ def ctl_governs_anchor(c):
             continue
         _v = str(_a.get('value', ''))
         _pat = form_of(c.term)['value'].get('pattern')
-        if _pat and not re.match(_pat, _v):
+        if _pat and not law_match(_pat, _v):
             errors.append(f"{c.base}: anchor {_ga}='{_v}' is not in canonical form "
                           f"({form_of(c.term)['value'].get('canonical_note', _pat)}) (VOCAB {c.term}.schema.value_pattern)")
         _cf = form_of(c.term)['value'].get('compare_form')
@@ -2168,7 +2197,7 @@ def check_staged_state():
             _hp = JOURNAL.get('heading_pattern')
             if _hp:
                 for _h in (l for l in jdiff.splitlines() if l.startswith('## ')):
-                    if not re.match(_hp, _h):
+                    if not law_match(_hp, _h):
                         errors.append(f"journal heading '{_h[:70]}' is not a position in time — write "
                                       f"{JOURNAL.get('heading_form')}, read from the clock (e.g. "
                                       f"`date '+%Y-%m-%d %H:%M%:z'`), not typed from memory")

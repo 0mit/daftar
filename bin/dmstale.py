@@ -29,6 +29,7 @@ import glob, os, re, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmcal
 try:
     import yaml
 except ImportError:
@@ -309,8 +310,10 @@ def report():
             if not isinstance(held, dict) or not attr or not held.get(attr):
                 continue
             try:
-                exp = datetime.date.fromisoformat(str(held[attr]))
-            except ValueError:
+                # THROUGH THE DAY, in whatever calendar the date was stated in (16.0). A calendar that is not reckoned
+                # by rule cannot be aged by arithmetic, and is skipped rather than guessed at.
+                exp = datetime.date.fromordinal(dmcal.to_day(str(held[attr])))
+            except (ValueError, dmcal.NotByRule):
                 # The gate owns the form (attr_types: iso_date). A value it would refuse is not this
                 # tool's to complain about twice, and guessing at it would be worse.
                 continue
