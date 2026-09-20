@@ -1,5 +1,5 @@
 ---
-version: "11.0"
+version: "11.1"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -34,6 +34,7 @@ schema_language:
   entry_one_of:         "[<attr>...] — each entry must carry at least one of these"
   entry_required_if:    "[{attr, equals, requires: [...]}] — conditional requirement inside an entry"
   entry_expect_if:      "[{attr, starts_with, expects, why}] — a soft expectation; failing it WARNS, never blocks"
+  expiry:               "{attr, horizon_days, why} — ONE of this term's attrs is the date the thing LAPSES if nothing is done, and a reader should be warned before it. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Deliberately NOT derivable from `attr_types: iso_date`: ten terms carry an iso_date and nine of them are `observed` or `as_of` — the date a fact was READ, not the date it runs out. A term that does not declare this is never warned about, which is why a garden's own term can now buy the warning its Tier-0 neighbour has."
   ref_fields:           "[self|<attr>...] — sub-nodes that are {bean|mapping} refs; the gate RESOLVES them (dangling = error)"
   entry_ref_fields:     "[<attr>...] — same, but inside each entry"
   pointer_fields:       "{<attr>: bean_field_pointer} — a pointer that is '<section>.<key>' on this bean, {bean,field} on another, or 'file:<path>'"
@@ -1066,6 +1067,13 @@ profiles:
         required_on_kinds: [domain]
         required_attrs: [registrar, created, expires, auto_renew, observed, source]
         attr_types: { created: iso_date, expires: iso_date, observed: iso_date }
+        # WHICH DATE AGES, said here rather than in the tool. bin/dmstale.py named `registration` and
+        # `expires` in its own source until 2026-09-20: this term was born garden-local with the tool
+        # extended for it the same day, and when it was promoted to Tier-0 nobody went back. A garden
+        # that invents a term with an expiry got no warning, however well the gate enforced the date —
+        # first-class to the gate, invisible to the tool that would have made it useful.
+        expiry: { attr: expires, horizon_days: 90,
+                  why: "an unrenewed name takes its DNS and its mail with it" }
       attrs:
         registrar:  "the registrar of record — who the renewal is actually paid to"
         registrant: "optional: the party holding the registration, where the registry discloses it"
