@@ -1,5 +1,5 @@
 ---
-version: "18.1"
+version: "18.2"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -121,6 +121,7 @@ system_shape:
   reckoning:  [arithmetic, astronomical, observational, tabulated]
   crosswalk:  [computed, table, observed, none]
   day_begins: [midnight, sunset, noon]
+  checked_by: [ipaddress-v4, ipaddress-v6]
 system_registries:
   - { registry: anchor_systems,    key: system }
   - { registry: knowledge_schemes, key: scheme }
@@ -582,7 +583,7 @@ anchor_systems:
     neighbours: counted
     restrictions: { lines: 1, ends: bounded }
     meaning: "a 32-bit Internet Protocol address, optionally carrying a prefix length."
-    pattern: '^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(/(3[0-2]|[12]?\d))?$'
+    checked_by: ipaddress-v4
     form_note: "dotted quad, optionally /prefix. The bare address and the prefixed form are the SAME system: a prefix narrows a position, it does not change what kind of position it is."
     establishes: false
     why: "reassignable by DHCP, NAT, failover and plain reuse — it corroborates which being answers and never fixes which being it IS. The same rule the `ip` anchor has always carried, now stated where the position is."
@@ -592,7 +593,7 @@ anchor_systems:
     neighbours: counted
     restrictions: { lines: 1, ends: bounded }
     meaning: "a 128-bit Internet Protocol address, optionally carrying a prefix length."
-    pattern: '^([0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}(/(12[0-8]|1[01]\d|[1-9]?\d))?$'
+    checked_by: ipaddress-v6
     form_note: "lowercase hex in RFC 5952 compressed form, optionally /prefix. NOT a dialect of ipv4 — it shares no format with it, and one pattern covering both could not tell a malformed quad from a valid v6 address."
     establishes: false
     why: "everything ipv4's reason says, and one more: v6 addresses are also AUTOCONFIGURED, so a being may answer at an address nobody assigned and nobody recorded."
@@ -2521,6 +2522,11 @@ The portable, estate-agnostic classification shared by every garden — the abst
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **18.2** (2026-09-20, proposed rule-change) — **a form a tool already checks is checked by that tool.** A system
+  row states its form as a `pattern` or names a check with `checked_by`, never both. `ipv4` and `ipv6` are
+  `checked_by: ipaddress-v4 / ipaddress-v6` — the standard library's validator, which the `ip` anchor has always
+  used — and their patterns are gone. The form is the library's own spelling, so an address has one: `2001:db8::1`,
+  not `2001:DB8::1` and not the exploded form. TIGHTER than 18.1 in that one respect.
 - **18.1** (2026-09-20, proposed rule-change) — **nothing is untyped.** `in: { entries: {…} }` — entries INSIDE an
   entry, each judged as an entry by every rule an entry answers to; `in: bean_id`; `in: any`, a decision where `untyped`
   is a debt. `beanger.records` is typed with them and `record_attrs`, a map of sentences nothing read, is gone: a

@@ -56,6 +56,17 @@ check("an address is a position in a PLACE system, and an ordinary endpoint pass
 out = gate(E % ("smtp", "ipv4", "203.0.113.10", ', port: "110/143/993/995"'))
 check("four ports jammed into one string — the defect `endpoints` was written to end — is refused at last",
       "endpoints[0].port '110/143/993/995' is not in the one canonical form 'tcp' declares" in out, out[-700:])
+sys.path.insert(0, os.path.join(ROOT, "bin"))
+import yaml, dmparse as _P
+_rows = {r["system"]: r for r in yaml.safe_load(open(os.path.join(ROOT, "seed", "std-vocab.md")).read().split("\n---")[0].split("---\n", 1)[1])["anchor_systems"]}
+check("an IP address's form is checked by the standard library's validator, not by a pattern written here — and never by both",
+      _rows["ipv4"].get("checked_by") == "ipaddress-v4" and _rows["ipv6"].get("checked_by") == "ipaddress-v6"
+      and "pattern" not in _rows["ipv4"] and "pattern" not in _rows["ipv6"])
+check("...the check names the law offers are exactly the checks the tools carry",
+      sorted(yaml.safe_load(open(os.path.join(ROOT, "seed", "std-vocab.md")).read().split("\n---")[0].split("---\n", 1)[1])["system_shape"]["checked_by"]) == sorted(_P.FORM_CHECKS))
+out = gate(E % ("smtp", "ipv6", "2001:DB8::1", ", port: 25"))
+check("...an address has ONE spelling, the library's own: upper case is refused", "'2001:DB8::1' is not in the one canonical form 'ipv6' declares" in out, out[-400:])
+check("...and that spelling passes", "0 error" in gate(E % ("smtp", "ipv6", "2001:db8::1", ", port: 25")))
 for _bad in ("256.1.1.1", "01.2.3.4", "10.0.0.0/33"):
     out = gate(E % ("smtp", "ipv4", _bad, ", port: 25"))
     check("an ipv4 position has real octets and a real prefix: %s is refused by the system that owns the form" % _bad,

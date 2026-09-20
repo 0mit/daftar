@@ -539,7 +539,7 @@ def check_extent(where, node):
         if v is None:
             continue
         ok = [s for s in SYSTEMS.values()
-              if s.get('dimension') in (dim, 'any') and law_match(s.get('pattern') or '(?!)', v)]
+              if s.get('dimension') in (dim, 'any') and dmparse.in_form(s, v)]
         if not ok:
             errors.append(f"{where}.{side} '{v}' is not a position in any system of dimension "
                           f"'{dim}' — " + ', '.join(sorted(s['system'] for s in SYSTEMS.values()
@@ -712,8 +712,12 @@ def check_system_structure():
         if _row.get('same_ground_as') and not _row.get('crosswalk'):
             errors.append(f"{_w}: it shares its ground with {_row['same_ground_as']} and does not say how a position in "
                           f"one is found in the other — `crosswalk:` {(std_fm.get('system_shape') or {}).get('crosswalk')}")
-        _ex, _pat = _row.get('example'), _row.get('pattern')
-        if _ex and _pat and _pat != 'none' and not law_match(_pat, _ex):
+        _ex = _row.get('example')
+        if _row.get('checked_by') and _row['checked_by'] not in dmparse.FORM_CHECKS:
+            errors.append(f"{_w}: `checked_by: {_row['checked_by']}` names no check the tools carry — {sorted(dmparse.FORM_CHECKS)}")
+        if _row.get('checked_by') and _row.get('pattern') not in (None, 'none'):
+            errors.append(f"{_w}: it states its form twice — `checked_by` AND `pattern`. One of them is a copy, and copies drift")
+        if _ex and dmparse.in_form(_row, _ex) is False:
             errors.append(f"{_w}: its own `example` '{_ex}' is not in the form its `pattern` declares — a reader would be "
                           f"shown a spelling the gate refuses")
         _r, _asp = _row.get('restrictions') or {}, _by_dim.get(_row.get('dimension'))
@@ -1280,6 +1284,13 @@ def ectl_entry_pattern_from_registry(e):
                           f"{rule['registry']} row for {rule['keyed_by']} '{key}'")
             continue
         pat = row.get(rule.get('take'))
+        if rule.get('take') == 'pattern' and row.get('checked_by'):
+            if dmparse.in_form(row, val) is False:          # the row names a tool that checks the form completely
+                errors.append(f"{e.base}: {e.ref}.{rule['attr']} '{val}' is not in the one canonical form "
+                              f"'{key}' declares — {rule['registry']}.{key} is {dmparse.form_said(row)}"
+                              f"{': ' + row['form_note'] if row.get('form_note') else ''}. A system "
+                              f"owns its format so nothing invents a second spelling of it.")
+            continue
         if pat is None or pat == 'none':
             continue
         if not law_match(pat, val):
@@ -1435,9 +1446,9 @@ def ectl_in_system(e):
             continue
         if row is None:
             errors.append(f"VOCAB {e.term}.schema.attrs.{attr}.in: system '{name}' is not in `anchor_systems`")
-        elif row.get('pattern') not in (None, 'none') and not law_match(row['pattern'], v):
+        elif dmparse.in_form(row, v) is False:
             errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not in the one canonical form '{name}' declares "
-                          f"({row['pattern']}){' — ' + row['form_note'] if row.get('form_note') else ''}")
+                          f"({dmparse.form_said(row) if row.get('checked_by') else row['pattern']}){' — ' + row['form_note'] if row.get('form_note') else ''}")
 
 
 def ectl_key_of(e):

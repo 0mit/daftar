@@ -91,6 +91,46 @@ def duplicate_keys(text):
 COMPARE_FORMS = {'upper-trim': lambda v: re.sub(r'\s+', '', v).upper()}
 
 
+# HOW A FORM IS CHECKED WHEN A TOOL ALREADY CHECKS IT COMPLETELY (std-vocab 18.2). A system row states its form as a
+# `pattern`, or names a check here with `checked_by`. A pattern for an IP address is a second, weaker copy of a validator
+# the standard library has carried for years — the one written for 18.1 had to be tightened the day it was compared
+# with it. HERE, beside COMPARE_FORMS and for the same reason: the gate and the merge must judge a form the same way.
+def _ip_form(version):
+    import ipaddress
+
+    def check(v):
+        v = str(v)
+        try:
+            parsed = ipaddress.ip_interface(v) if '/' in v else ipaddress.ip_address(v)
+        except ValueError:
+            return False
+        # ONE spelling: the library's own. `2001:DB8::1` and `2001:0db8:0:0:0:0:0:1` are the address `2001:db8::1`.
+        return parsed.version == version and str(parsed) == v
+    return check
+
+
+FORM_CHECKS = {'ipaddress-v4': _ip_form(4), 'ipaddress-v6': _ip_form(6)}
+
+
+def in_form(row, value):
+    """True when `value` is written in the ONE form the system row declares: by the check it names, else by its
+    pattern. None when the row declares no form at all (`pattern: none`, deliberately)."""
+    if not isinstance(row, dict):
+        return None
+    if row.get('checked_by'):
+        chk = FORM_CHECKS.get(row['checked_by'])
+        return None if chk is None else bool(chk(value))
+    pat = row.get('pattern')
+    if pat in (None, 'none'):
+        return None
+    return bool(re.match(str(pat), str(value), re.ASCII))
+
+
+def form_said(row):
+    """How a row's form is described to a person who got it wrong."""
+    return f"checked by {row['checked_by']}" if row.get('checked_by') else repr(row.get('pattern'))
+
+
 def anchor_compare_form(terms, key):
     """The compare form the vocabulary declares for anchor `key`, or None. `terms`: term dicts with `schema`."""
     for t in terms:
