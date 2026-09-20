@@ -93,7 +93,7 @@ def _domain(d):
                 return 'soft', {k: v for k, v in (('pattern', d['pattern']), ('why', d.get('why'))) if v is not None}
             return 'pattern', d['pattern']
         if 'registry' in d or 'registry_from' in d:
-            return 'registry', {k: d[k] for k in ('registry', 'registry_from', 'take') if k in d}
+            return 'registry', {k: d[k] for k in ('registry', 'registry_from', 'take', 'where') if k in d}
         if 'pointer' in d:
             return 'pointer', d['pointer']
     return 'unknown', d
@@ -135,6 +135,8 @@ def attribute_form(term_def, sch):
             put('system_from', name, dict(rule, attr=name))
         elif facet_name:
             put(facet_name, name, rule)
+        if isinstance(rec.get('default_from'), dict):
+            put('default_from', name, dict(rec['default_from']))
         if rec.get('meaning') is not None:
             put('meaning', name, rec['meaning'])
     for name in form['one_of']:
@@ -166,6 +168,14 @@ def attribute_form(term_def, sch):
     if isinstance(alt, dict):
         form['alt'] = {'key': alt.get('key'), 'refs': list(alt.get('ref_fields') or [])}
     return form
+
+
+def row_matches(row, where):
+    """Does a registry row satisfy a domain's `where:`? Each field must equal the value, or be one of the list."""
+    for k, want in (where or {}).items():
+        if row.get(k) not in (want if isinstance(want, list) else [want]):
+            return False
+    return True
 
 
 def facet(form, name, scope=None):

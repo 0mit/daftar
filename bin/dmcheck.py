@@ -938,6 +938,20 @@ def ectl_entry_must_match(e):
                           f"(VOCAB {e.term}.schema.entry_must_match)")
 
 
+def effective(e, attr):
+    """What an attribute holds for the purpose of a CHECK: what the entry states, else what `default_from` reads
+    off a registry row another attribute of the same entry selects. Never written back, never an occupant."""
+    if e.entry.get(attr) is not None:
+        return e.entry[attr]
+    rule = dict(_facet(e.form, 'default_from', 'entry')).get(attr)
+    if not rule:
+        return None
+    key = e.entry.get(rule.get('keyed_by'))
+    row = next((r for r in (registry(rule.get('registry')) or [])
+                if isinstance(r, dict) and r.get(rule.get('keyed_by')) == key), None)
+    return (row or {}).get(rule.get('take'))
+
+
 def ectl_entry_in_registry(e):
     """An entry attr whose value must be a row of a REGISTRY — so the registry is the enum's one owner.
 
@@ -952,12 +966,13 @@ def ectl_entry_in_registry(e):
         # `registry_from: <attr>` (9.1): the registry is NAMED by another field of the same entry — a code is
         # checked against the scheme the entry says it is in, so one term serves every classification
         rname = str(e.entry.get(rule['registry_from'])) if rule.get('registry_from') else rule.get('registry')
-        rows = registry(rname) or []
-        allowed = [r.get(rule.get('take')) for r in rows if isinstance(r, dict)]
+        rows = [r for r in (registry(rname) or []) if isinstance(r, dict) and dmform.row_matches(r, rule.get('where'))]
+        allowed = [r.get(rule.get('take')) for r in rows]
         if str(val) not in [str(a) for a in allowed]:
             if len(allowed) > 40:
                 allowed = allowed[:12] + ['… %d more' % (len(allowed) - 12)]
-            errors.append(f"{e.base}: {e.ref}.{attr} '{val}' is not a declared {rname} "
+            _narrow = (' where ' + ', '.join(f"{k} is {v}" for k, v in rule['where'].items())) if rule.get('where') else ''
+            errors.append(f"{e.base}: {e.ref}.{attr} '{val}' is not a declared {rname}{_narrow} "
                           f"— known: {sorted(v for v in allowed if v)} "
                           f"(VOCAB {e.term}.schema.attrs.{attr}.in)")
 
@@ -977,26 +992,26 @@ def ectl_entry_pattern_from_registry(e):
     A system with genuinely no canonical form declares `pattern: none`, and that DELIBERATE absence is
     honoured rather than treated as an unstated one — the same distinction `enforced_by: none` draws.
     """
-    rule = next((r for _n, r in _facet(e.form, 'system_from', 'entry')), None)
-    if not rule:
-        return
-    val = e.entry.get(rule.get('attr'))
-    if val is None:
-        return
-    key = e.entry.get(rule.get('keyed_by'))
-    row = next((r for r in (registry(rule.get('registry')) or [])
-                if isinstance(r, dict) and r.get(rule.get('keyed_by')) == key), None)
-    if row is None:
-        errors.append(f"{e.base}: {e.ref}.{rule['attr']} cannot be checked — no "
-                      f"{rule['registry']} row for {rule['keyed_by']} '{key}'")
-        return
-    pat = row.get(rule.get('take'))
-    if pat is None or pat == 'none':
-        return
-    if not re.match(str(pat), str(val)):
-        errors.append(f"{e.base}: {e.ref}.{rule['attr']} '{val}' is not in the one canonical form "
-                      f"'{key}' declares — {rule['registry']}.{key}.{rule['take']} is {pat!r}. A system "
-                      f"owns its format so nothing invents a second spelling of it.")
+    # EVERY attribute that takes its form from a sibling's system, not just the first: since 14.0 an endpoint has
+    # two — `at`, in the system `system` names, and `port`, in the port space its `transport` names.
+    for _name, rule in _facet(e.form, 'system_from', 'entry'):
+        val = e.entry.get(rule.get('attr'))
+        if val is None:
+            continue
+        key = effective(e, rule.get('keyed_by'))
+        row = next((r for r in (registry(rule.get('registry')) or [])
+                    if isinstance(r, dict) and r.get(rule.get('keyed_by')) == key), None)
+        if row is None:
+            errors.append(f"{e.base}: {e.ref}.{rule['attr']} cannot be checked — no "
+                          f"{rule['registry']} row for {rule['keyed_by']} '{key}'")
+            continue
+        pat = row.get(rule.get('take'))
+        if pat is None or pat == 'none':
+            continue
+        if not re.match(str(pat), str(val)):
+            errors.append(f"{e.base}: {e.ref}.{rule['attr']} '{val}' is not in the one canonical form "
+                          f"'{key}' declares — {rule['registry']}.{key}.{rule['take']} is {pat!r}. A system "
+                          f"owns its format so nothing invents a second spelling of it.")
 
 
 def ectl_entry_form_from_kind_attr(e):
