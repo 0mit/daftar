@@ -68,11 +68,12 @@ Say it without the name: "one host", "another machine", `/home/user/tree`, `host
 
 - The vocabulary is `seed/std-vocab.md`: YAML front matter (the law) and a Markdown body ending in a
   changelog. Edit the front matter; add one changelog entry at the end, naming the change and why.
-- **The law carries no commentary.** What a reader needs in order to APPLY a rule goes in the item's own
-  `meaning:` or `why:`, in the present tense, with no date and no name. WHY it is that way — the argument, what
-  was refused, the incident it answers — goes in `seed/RATIONALE.md` under the item's path; `python3 bin/dmwhy.py
-  <name>` reads the two together and `--check` finds a reason whose rule is gone. WHAT HAPPENED goes in the
-  changelog. A thing belongs in exactly one of the three.
+- **Four layers, each standing on the one beneath.** LAWS are clear and brief, for usability and efficiency: what a
+  reader needs in order to APPLY a rule goes in the item's own `meaning:` or `why:`, present tense, no date, no name,
+  and the law carries no commentary. REASONING is the backbone for the laws: why it is that way goes in
+  `seed/RATIONALE.md` under the item's path (`python3 bin/dmwhy.py <name>` reads both; `--check` finds a reason whose
+  law is gone). JOURNALS are the leads for the reasoning: the changelog entry says what changed and why. HISTORY is the
+  exact record the journals are written from: the commits themselves. A thing belongs in exactly one layer.
 - Bump its `version:` in the same change — minor for additive, major for a changed rule — and nothing else:
   gardens move their own pins when they adopt a release.
 - `python3 bin/dmrules.py` inside a garden prints every rule as the gate reads it; use it to check that your

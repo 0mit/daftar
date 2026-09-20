@@ -5,16 +5,23 @@
     python3 bin/dmwhy.py aspects[place].metered # or by the exact path
     python3 bin/dmwhy.py --check                # every reason names something the law still says (exit 1 if not)
 
-daftar keeps its own material in FOUR places, and a thing belongs in exactly one:
+daftar keeps its own material in FOUR layers, and each stands on the one beneath it:
 
-  LAW        seed/std-vocab.md (and a garden's VOCAB.md): what is in force. Present tense. Each item carries, as DATA,
-             the `meaning:` and `why:` a reader needs in order to apply it. No dates, no names, no "until".
-  RATIONALE  seed/RATIONALE.md: why the law is the way it is — the argument, what was considered and refused, the
-             incident a rule answers. Keyed by the PATH of the law item it explains.
-  RECORD     the changelog at the foot of the law, HISTORY.md, and a garden's log/journal.md: what happened, when, by whom.
-  GUIDE      README, seed/COOKBOOK.md: how to do a thing. Nothing reads a guide, so nothing in one is load-bearing.
+  LAWS       clear and brief, there for usability and efficiency: what is in force, in the present tense. An item
+             carries, as DATA, the `meaning:` and `why:` a reader needs in order to APPLY it — and nothing else.
+             (`seed/std-vocab.md`, a garden's `VOCAB.md`, MODEL.md, CHECKLIST.md, MERGE.md)
+  REASONING  the backbone for the laws: why a law is the way it is — the argument, what was considered and refused.
+             Keyed by the PATH of the law item it supports. (`seed/RATIONALE.md`)
+  JOURNALS   the leads for the reasoning: what was done and why, by whom, entry by entry. Reasoning is drawn FROM these
+             and cites them. (the changelog at the foot of the law; a garden's `log/journal.md`)
+  HISTORY    the exact record of events, as accurate as it can be made, which the journals are written from: commits and
+             their diffs, tags, captured outputs, a datum's own append-only record. It is never summarised.
 
-The law and its rationale are RELATED, not merged: neither contains the other, and the key between them is checked.
+A thing belongs in exactly ONE layer, and each layer points DOWN: a law item to its reasoning by path, reasoning to the
+journal entries it was drawn from, a journal entry to the commits and captures it describes. A GUIDE (README, the
+COOKBOOK) is outside the chain: nothing reads one, so nothing in one is load-bearing.
+
+The law and its reasoning are RELATED, not merged: neither contains the other, and the key between them is checked.
 """
 import os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

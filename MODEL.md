@@ -84,9 +84,10 @@ The rules are data, not code.
   adds to a standard list (`values_add`, `registry_additions`), and dated exceptions.
 - **Every position the vocabulary offers is accounted for:** used by a bean, or declared vacant with a reason.
   A garden accounts only for what it declares itself.
-- **The law carries no commentary.** An item's own `meaning:` and `why:` say what a reader needs to apply it; why it
-  is that way lives in `seed/RATIONALE.md`, keyed by the item's path (`python3 bin/dmwhy.py <name>` reads both); what
-  happened lives in the changelog and the journal.
+- **Four layers, each standing on the one beneath.** LAWS are clear and brief, for usability and efficiency: an item's
+  own `meaning:` and `why:` say what a reader needs to apply it, and the law carries no commentary. REASONING is their
+  backbone (`seed/RATIONALE.md`, keyed by the item's path; `python3 bin/dmwhy.py <name>` reads both). JOURNALS are the
+  leads reasoning is drawn from. HISTORY is the exact record of events the journals are written from.
 - A local term that proves general is **promoted** to the standard by a pull request to the daftar repository.
   A term for a kind of fact earns promotion with real cases; a MECHANISM (a figure, a construct, a system, a
   unit) may be declared whole, ahead of its occupants, when it is universal and general — its empty positions

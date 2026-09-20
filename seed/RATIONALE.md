@@ -3,11 +3,17 @@ rationale_for: seed/std-vocab.md
 ---
 # daftar — why the law says what it says
 
-THE LAW (`seed/std-vocab.md`) states what is in force: the rule, and in its own `meaning:` and `why:` fields the reason a reader
-needs in order to apply it. THIS document holds everything else that used to sit beside the rules as comments: the argument
-for a design, what was considered and refused, the incident a rule answers. It is keyed by the PATH of the law item it
-explains, so the two are related without either containing the other. `python3 bin/dmwhy.py <path or name>` reads them
-together. A key that names nothing in the law is an error (`test/rationale.py`): a reason cannot outlive its rule unnoticed.
+LAWS are clear and brief, there for usability and efficiency. REASONING — this document — is their backbone: why a law
+is the way it is, the argument for a design, what was considered and refused. JOURNALS are the leads reasoning is drawn
+from, and HISTORY is the exact record of events the journals are written from. Each layer points down to the next.
+
+Every section here is keyed by the PATH of the law item it supports, so the two are related without either containing the
+other. `python3 bin/dmwhy.py <path or name>` reads them together. A key that names nothing in the law is an error
+(`test/rationale.py`): a reason cannot outlive its law unnoticed.
+
+Much of what follows arrived verbatim from comments that once sat inside the law, and still mixes reasoning with journal
+and history — a date, who found what. Sorting that is editorial work that can now be done here, where it cannot change
+what the gate reads.
 
 ## schema_language
 
