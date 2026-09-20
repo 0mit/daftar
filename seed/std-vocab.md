@@ -1,5 +1,5 @@
 ---
-version: "18.0"
+version: "18.1"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -14,6 +14,9 @@ schema_language:
     form_of:     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form"
     system:      "in: { system: <anchor system> } — a position in ONE named system, in that system's one form. `form_of` asks a sibling WHICH system; this names it, for an attribute that is only ever in one"
     key_of:      "in: { key_of: <term> } — a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another: a PART of a being, resolved by the gate. Not an edge — the being is reached by the refs the bean already states"
+    entries:     "in: { entries: { <attr>: {required?, in, meaning} } } — entries INSIDE an entry: a list of them, or one mapping. Each is judged as an entry, by the attributes written here and by every rule an entry answers to. A ref inside one is resolved and draws no edge"
+    bean_id:     "in: bean_id — the bare id of a bean this garden holds: resolved by the gate, and not an edge (an edge is a `ref`)"
+    any:         "in: any — DELIBERATELY any value, because its type is another attribute's business (a record's `value` is whatever the tracked field holds). A decision, where `untyped` is a debt"
     pattern:     "in: { pattern: '<regex>' } — a form the TERM owns. With `soft: true` and a `why` it WARNS instead of refusing: the form a value SHOULD take while a corpus is migrated onto it"
     quantity:    "in: { quantity: <name> } — a MEASURED VALUE, written { count, unit }: a speed, an acceleration, an area, a data rate. The unit must measure the quantity named; `count` is a whole number or a decimal written as a string, so that no float reaches a canonical form. `in: { quantity: any }` takes any."
     extent:      "in: extent — a bounded region of an aspect's domain (`extent_form`)"
@@ -579,7 +582,7 @@ anchor_systems:
     neighbours: counted
     restrictions: { lines: 1, ends: bounded }
     meaning: "a 32-bit Internet Protocol address, optionally carrying a prefix length."
-    pattern: '^(\d{1,3}\.){3}\d{1,3}(/\d{1,2})?$'
+    pattern: '^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(/(3[0-2]|[12]?\d))?$'
     form_note: "dotted quad, optionally /prefix. The bare address and the prefixed form are the SAME system: a prefix narrows a position, it does not change what kind of position it is."
     establishes: false
     why: "reassignable by DHCP, NAT, failover and plain reuse — it corroborates which being answers and never fixes which being it IS. The same rule the `ip` anchor has always carried, now stated where the position is."
@@ -589,7 +592,7 @@ anchor_systems:
     neighbours: counted
     restrictions: { lines: 1, ends: bounded }
     meaning: "a 128-bit Internet Protocol address, optionally carrying a prefix length."
-    pattern: '^([0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}(/\d{1,3})?$'
+    pattern: '^([0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}(/(12[0-8]|1[01]\d|[1-9]?\d))?$'
     form_note: "lowercase hex in RFC 5952 compressed form, optionally /prefix. NOT a dialect of ipv4 — it shares no format with it, and one pattern covering both could not tell a malformed quad from a valid v6 address."
     establishes: false
     why: "everything ipv4's reason says, and one more: v6 addresses are also AUTOCONFIGURED, so a being may answer at an address nobody assigned and nobody recorded."
@@ -2108,18 +2111,27 @@ terms:
         defines:  { required: true, in: prose, meaning: "WHAT this datum is, structurally — the part that stays true across every value it will ever hold. Written so a reader who has never seen the machine can tell which reading would refresh it." }
         tracks:   { required: true, in: { pointer: bean_field_pointer }, meaning: "a pointer to the field holding the CURRENT value — `<section>.<key>` on this bean. The value is NOT copied here: it lives in one place and this names it." }
         source:   { required: true, in: prose, meaning: "the exact command or file the value is read from, so the next scan reads THE SAME THING. Without it a differing value cannot be told from a differing METHOD — the failure this estate met when /sys/class/net reported a bond's MAC where ethtool -P reported the NIC's." }
-        records:  { required: true, in: untyped, meaning: "the append-only log, OLDEST FIRST. See `record_attrs`." }
-    record_attrs:
-      seq:   "1-based position in this datum's log. The identity `prev` points at."
-      at:    "the moment of the RECORD, epoch MILLISECONDS (see the `unix-epoch` anchor system). Milliseconds because two operations in one session can land in the same second and their order is the thing being recorded."
-      unit:  "the resolution the moment was ACTUALLY held to — a row of `units`. Defaults to millisecond for anything this ledger stamped itself. A record reconstructed from a date carries `unit: day` and an `at` of that day's midnight, so that thirteen digits of apparent precision cannot be mistaken for thirteen digits of knowledge. This is the same rule `timing` already applies, and it exists because this estate has twice written a value that looked measured and was inferred."
-      op:    "add | change | remove | confirm. `confirm` is the only one that does not move the value."
-      value: "the value AS OF this record. Present on add and change; on `confirm` it is omitted, because repeating an unchanged value is the duplication this design removed. On `remove` it is omitted for the same reason — the outgoing value is already on the record before."
-      prev:  "the `seq` of the record before, or null on the first. The BACK link only: forward is list order, and storing both would let them disagree."
-      who:   "who performed it, in `provenance.by` form — `sam (operator)` for a person, `agent:<model>/<garden>` for an agent. One convention for attribution across the ledger, not a second."
-      from_where: "the CURSOR the operation was performed FROM: `{host, session, guide}` — which machine, which working session, and which context the operator had in attention. All three are bean refs where a bean exists."
-      to_where:   "what the operation was performed ON, as a bean ref, where that differs from the bean carrying the beanger. Absent for a plain local read."
-      why:   "optional: what caused the change. Load-bearing on `change` and `remove`, where the value alone does not say what happened."
+        records:
+          required: true
+          meaning: "the append-only log, OLDEST FIRST. Each record is an entry, and is held to these attributes like any other."
+          in:
+            entries:
+              seq: { required: true, in: { pattern: "^[1-9][0-9]*$" }, meaning: "1-based position in this datum's log. The identity `prev` points at." }
+              at: { required: true, in: { system: unix-epoch }, meaning: "the moment of the RECORD, epoch MILLISECONDS (see the `unix-epoch` anchor system). Milliseconds because two operations in one session can land in the same second and their order is the thing being recorded." }
+              unit: { in: { registry: units, take: unit }, meaning: "the resolution the moment was ACTUALLY held to — a row of `units`. Defaults to millisecond for anything this ledger stamped itself. A record reconstructed from a date carries `unit: day` and an `at` of that day's midnight, so that thirteen digits of apparent precision cannot be mistaken for thirteen digits of knowledge. This is the same rule `timing` already applies, and it exists because this estate has twice written a value that looked measured and was inferred." }
+              op: { required: true, in: [add, change, remove, confirm], meaning: "add | change | remove | confirm. `confirm` is the only one that does not move the value." }
+              value: { in: any, meaning: "the value AS OF this record. Present on add and change; on `confirm` it is omitted, because repeating an unchanged value is the duplication this design removed. On `remove` it is omitted for the same reason — the outgoing value is already on the record before." }
+              prev: { in: { pattern: "^([1-9][0-9]*|None)$" }, meaning: "the `seq` of the record before, or null on the first. The BACK link only: forward is list order, and storing both would let them disagree." }
+              who: { required: true, in: { pattern: "^((agent|tool|human):[^ ].*|[^ :][^:]* \\(.+\\))$", soft: true, why: "attribution has one convention across the ledger" }, meaning: "who performed it, in `provenance.by` form — `sam (operator)` for a person, `agent:<model>/<garden>` for an agent. One convention for attribution across the ledger, not a second." }
+              from_where:
+                meaning: "the CURSOR the operation was performed FROM: `{host, session, guide}` — which machine, which working session, and which context the operator had in attention. All three are bean refs where a bean exists."
+                in:
+                  entries:
+                    host: { in: bean_id, meaning: "which machine" }
+                    session: { in: bean_id, meaning: "which working session" }
+                    guide: { in: bean_id, meaning: "which context the operator had in attention" }
+              to_where: { in: ref, meaning: "what the operation was performed ON, as a bean ref, where that differs from the bean carrying the beanger. Absent for a plain local read." }
+              why: { in: prose, meaning: "optional: what caused the change. Load-bearing on `change` and `remove`, where the value alone does not say what happened." }
     merge: { cardinality: multi, order: by-key }
 
   - term: workspace
@@ -2509,6 +2521,13 @@ The portable, estate-agnostic classification shared by every garden — the abst
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **18.1** (2026-09-20, proposed rule-change) — **nothing is untyped.** `in: { entries: {…} }` — entries INSIDE an
+  entry, each judged as an entry by every rule an entry answers to; `in: bean_id`; `in: any`, a decision where `untyped`
+  is a debt. `beanger.records` is typed with them and `record_attrs`, a map of sentences nothing read, is gone: a
+  record's attributes are attributes. The law now has no `untyped` attribute. TIGHTER, and so able to refuse what
+  passed: the `ipv4` row's pattern admitted `256.1.1.1` and `01.2.3.4`, and both rows any prefix length; an octet is
+  now 0-255 without a leading zero and a prefix is 0-32 or 0-128. The `ip` anchor always checked this; a position in
+  the same system did not.
 - **18.0** (2026-09-20, proposed rule-change) — **what was owed.** MAJOR, four things.
   A REGISTRY IS ITS OWN ENUM OWNER: the five terms that only held a copy of a registry's column are gone
   (`anchor_system`, `unit`, `role`, `storage_format`, `net_protocol`) with their drift guards; `nature` and `os` read

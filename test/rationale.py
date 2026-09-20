@@ -65,6 +65,23 @@ st = dmwhy.stale()
 check(f"reasons that have become journal have not grown (now {len(st)}, ceiling {STALE_REASONS})", len(st) <= STALE_REASONS, list(st.items())[:3])
 print(f"      (the ceiling can come down to {len(st)})")
 
+# ---------------------------------------------------------------- 18.1: the PROSE law documents, the same way
+_why = dmwhy.rationale()
+_doc = [k for k in _why if k.startswith("doc:")]
+check("a prose law document's reasons are keyed by its numbered SECTION, and every one names a section that exists",
+      len(_doc) >= 8 and not [k for k in dmwhy.orphans() if k.startswith("doc:")], str(_doc))
+def _gone(k):
+    try:
+        dmwhy.resolve({}, k); return False
+    except KeyError:
+        return True
+check("...and a reason whose section is gone is an orphan, like a reason whose path is gone",
+      _gone("doc:MERGE.md#99") and _gone("doc:NO-SUCH.md#1") and not _gone("doc:MERGE.md#5.1"))
+_story = re.compile(r"\(20[0-9]{2}-[0-9]{2}-[0-9]{2}|added 20[0-9]{2}|[Uu]ntil this date|used to |was found to|— deleted$|— superseded$")
+for _name in ("MODEL.md", "CHECKLIST.md", "MERGE.md"):
+    _hits = [l.strip()[:90] for l in open(os.path.join(ROOT, _name), encoding="utf-8") if _story.search(l)]
+    check("%s states what is in force and tells no story of how it came to be" % _name, not _hits, str(_hits[:3]))
+
 # ---------------------------------------------------------------- 18.0: a GARDEN's overlay has its reasoning too
 import subprocess, tempfile, shutil
 _T = tempfile.mkdtemp(prefix="dmwhy-"); _G = os.path.join(_T, "g")

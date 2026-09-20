@@ -1,6 +1,6 @@
 ---
 spec: merge
-status: reviewed          # v0.3 — synthesized from 3 independent high-level reviews. Spec is final; implementation is phased (§15).
+status: reviewed
 version: "0.3"
 ---
 # Gardens, Seeds & Lossless Merge
@@ -24,15 +24,13 @@ Extends MODEL.md. Makes daftar **distributed and convergent**: beans authored by
 6. **Governed conflicts** — contradictions and uncertain matches route to the existing **exception-ack** (SKILL.md); a conflict **never blocks capture** (losslessness) — it marks the seed *pending/unclean*. Determinism holds **given the recorded decision** (§10).
 
 ## 3. Provenance — see MODEL.md
-The provenance/truth-status record and the guard that an `inferred` value may never auto-override an
-`asserted-by-human` one were **promoted into MODEL.md**, which is their owner. This section restated them.
+The provenance/truth-status record, and the guard that an `inferred` value may never auto-override an
+`asserted-by-human` one, are stated in MODEL.md, which owns them.
 
 ## 4. Identity — typed anchors + deterministic resolution
 ### 4.1 What establishes identity — see MODEL.md and the `anchor_class` term
-Since P4 (2026-08-02, human-ratified) an anchor establishes identity iff it carries `establishing: true`.
-`class` is a hint at why and decides nothing. This section held the pre-P4 table that made `class`
-decisive; it was **deleted rather than annotated**, because a revoked rule left in a spec is read as law
-by whoever finds it first. Git holds it.
+An anchor establishes identity iff it carries `establishing: true`. `class` is a hint at why and decides
+nothing.
 
 ### 4.2 Anchor capsule (mandated, validated, backfilled onto every bean)
 ```yaml
@@ -50,10 +48,8 @@ gate does not accept, and is deleted.
 
 ### 4.4 Resolution algorithm (deterministic)
 1. **Normalize** each anchor via its VOCAB term. 2. **Fuse edges** = equal **hardware/logical** anchors (same key+scope, overlapping validity); **assoc edges** = equal network/role anchors (candidates, never fuse). 3. **Components** = connected components over **fuse edges only** (union-find). 4. **Component-wide contradiction check**: a differing **single-valued** establishing anchor → don't fuse → split + exception-ack (set-valued keys, e.g. dual-NIC MACs, may hold several). 5. **Lifecycle**: a `replaces:` link = same role / different device — do **not** fuse device beans; hardware differences across it are expected, not contradictions. 6. **Assoc promotion**: a network/role edge that is the *only* link between components is surfaced, not auto-merged (operator promotes via ack). 7. **Articulation-point / merge-bomb guard**: if removing one bean splits a component into hardware-distinct sub-clusters, that bean carries two identities → flag → ack. 8. **Canonical seed-id** = kind-prefixed slug of the lexicographically-least **establishing** anchor value; garden-local ids → `aka:`. See §4.6 for the case where a component has no establishing anchor at all. 9. **Post-merge**: run `dmcheck.py` on the result; any cross-seed single-owner collision (e.g. `.160` owned twice) → ack demotes one to a `ref:`.
-### 4.5 Auto vs user-assisted — deleted
-The exact rule that stood here was expressed entirely in terms of "hardware/logical fuse edges", which
-§4.1 above revoked. Rewriting it against `establishing:` is real work and is not attempted in prose that
-nothing checks; `bin/dmmerge.py` is the implementation, and it now reads the flag.
+### 4.5 (nothing in force)
+`bin/dmmerge.py` reads the `establishing:` flag (§4.1). The number is kept so the sections after it keep theirs.
 
 ### 4.6 A component with NO establishing anchor — the id is a name, not an identity
 An anchorless component still needs a key, and §4.4.8's rule cannot supply one. It falls back to the
@@ -61,7 +57,7 @@ component's least garden-local id — and that fallback is **not identity-bearin
 garden-local ids may legitimately collide, because id ≠ identity. Two such components can therefore
 propose the *same* seed id while being genuinely distinct objects that were correctly not fused.
 
-Three rules, added 2026-08-02 (operator-directed, after the collision was found to silently drop a bean):
+Three rules:
 
 1. **One seed per component, always.** A component may never vanish into another's key. Losslessness
    (invariant 1) is not conditional on identity being strong; it is exactly where identity is weakest that
@@ -86,13 +82,8 @@ merge: { cardinality: single|set|multi, order: none|prefix|version|cidr|subsumes
 ```
 Driver: differ + `set` → union (auto); differ + `single` + order-comparable → keep the subsuming value, record the subsumed in provenance (auto); differ + `single` + incomparable → antichain → exception-ack. **`inferred` never subsumes `asserted-by-human`** regardless of `order`.
 
-### 5.1 The merge is GENERIC over top-level keys (2026-08-02, operator-directed)
-`dmmerge` merges **every** top-level key a bean carries, and names none of them. Until this date it
-gathered `owns`/`attributes`/`details` plus seven keys it handled explicitly and **silently dropped the
-other 31** the corpus uses — `nature`, both ownership arcs, `capabilities`, `analysis_cache`,
-`code_paths`, `registration`, the whole §4 relation algebra, even `title` and `summary`. Invariant 1 says
-the merge drops no fact; it dropped most of them, and no test could fail because the fixtures were shaped
-like the implementation rather than like the model.
+### 5.1 The merge is GENERIC over top-level keys
+`dmmerge` merges **every** top-level key a bean carries, and names none of them.
 
 What a key IS comes from its term's `merge:` facet, read from both vocabulary tiers exactly as the gate
 reads them, so the merge and the gate cannot disagree:
@@ -113,8 +104,8 @@ A key no term describes is merged by **shape** — mapping → collection, list 
 its name is reported, never hidden, because a shape guess can still be the wrong guess. Closing that gap
 means declaring a `merge:` facet on the term, not editing the driver.
 
-Three consequences worth stating. `kind` resolves to a **scalar** or a conflict; it used to emit a list,
-which `dmcheck` cannot resolve. `provenance` is kept **per garden** rather than merged, because two
+Three consequences worth stating. `kind` resolves to a **scalar** or a conflict, never a list —
+`dmcheck` cannot resolve one. `provenance` is kept **per garden** rather than merged, because two
 gardens having different provenance is not a disagreement about the world and merging it would
 manufacture a conflict on every fused seed. And the git merge driver verifies its own OUTPUT — every
 top-level key either side had must appear in the rendered bean, measured rather than declared — and
@@ -122,12 +113,7 @@ top-level key either side had must appear in the rendered bean, measured rather 
 a bean stripped of its nature has destroyed the working copy, and the gate that would refuse that bean
 only runs afterwards.
 
-### 5.2 Merging BEANS is only half a merge (2026-08-02, operator-directed)
-`dmmerge` converged two gardens' data while their TYPE SYSTEMS stayed divergent. A merged corpus could
-therefore hold a bean of a kind the merged law never declared, or a bean in breach of an obligation the
-garden that wrote it had never adopted — checked by nobody, because each garden's gate only ever saw its
-own half. Promoting kinds to Tier-0 shrank this; it did not close it.
-
+### 5.2 Merging BEANS is only half a merge
 A garden's law is three things: its **Tier-0 pin**, the **profiles** it opted into, and its **local
 overlay**. All three reconcile before the beans mean anything.
 
@@ -194,11 +180,8 @@ New terms **mac, serial, hostname, fqdn, emp_id, wg_pubkey**; every term gains a
 - **Phase A (hard):** synthetic gardens permuted across **all** merge orders → assert **byte-identical** seeds (proves order-agnosticism + determinism).
 - **Phase B (soft):** real multi-model scans of the **≥3 mail-repeated-delivery sessions** → merge in any order → confirm **every discovery present, deduplicated, lossless**, only genuine conflicts surfaced; **measure** convergence. Do not read Phase-B prose differences as a determinism failure. (The "mail-delivery incident" is an *anchorless* kind → incident dedup is user-assisted by design.)
 
-## 15. Implementation phasing — superseded
-The P1-P4 gates named here were all shipped, and their numbering **collides head-on** with the v2 P0-P7d
-used by `log/journal.md`, `test/golden.py`'s section headers and both design beans. Two numbering schemes
-in one repo is a trap for a cold reader, so this one is deleted rather than renumbered. What actually
-happened is in the journal.
+## 15. (nothing in force)
+The number is kept so that references to the sections after it hold.
 
 ## 16. Resolved by the reviews (settled open questions)
 - Unresolved conflicts **never block capture** — mark pending/unclean; gate warns.

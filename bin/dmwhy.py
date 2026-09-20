@@ -61,6 +61,17 @@ def rationale():
 
 def resolve(data, path):
     """The law item a path names, or raise KeyError. `[x]` picks the list item one of whose fields equals x."""
+    if path.startswith('doc:'):
+        # a PROSE law document has no paths, but it has numbered sections: `doc:MERGE.md#5.1`. The reason is an orphan
+        # the day that section is gone — the same promise a path makes, kept for law that is not data.
+        name, _, sect = path[4:].partition('#')
+        f = os.path.join(ROOT, name)
+        if not os.path.exists(f):
+            raise KeyError(path)
+        want = re.compile(r'^#+ ' + re.escape(sect) + r'(\.|\s|$)') if sect else None
+        if want and not any(want.match(l) for l in open(f, encoding='utf-8')):
+            raise KeyError(path)
+        return name
     node = data
     for name, ident in _SEG.findall(path):
         if name:

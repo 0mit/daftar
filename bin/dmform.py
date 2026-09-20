@@ -65,6 +65,9 @@ DOMAINS = {
     'form_of':     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern }   a position in the system a SIBLING attr names, in that system's one form",
     'system':      "in: { system: <anchor system> }                a position in ONE named system, written in that system's one form (`unix-epoch`, `geographic`)",
     'key_of':      "in: { key_of: <term> }                         a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another — resolved by the gate, and not an edge",
+    'entries':     "in: { entries: { <attr>: {required?, in, meaning} } }   entries INSIDE an entry: a list of them, or one mapping — each judged as an entry, by the attributes written here",
+    'bean_id':     "in: bean_id                                    the bare id of a bean this garden holds: resolved by the gate, and not an edge (an edge is a `ref`)",
+    'any':         "in: any                                        DELIBERATELY any value: its type is some other attribute's business. A decision, where `untyped` is a debt",
     'pattern':     "in: { pattern: '<regex>' }                     a form this term owns; with `soft: true` and a `why` it WARNS instead of refusing",
     'quantity':    "in: { quantity: <name> }                       a measured value { count, unit } whose unit measures that quantity",
     'extent':      "in: extent                                     a bounded region of an aspect's domain (`extent_form`)",
@@ -81,15 +84,17 @@ def _domain(d):
     """(facet, rule) for one attribute's `in:` — the internal record the interpreter has always read."""
     if isinstance(d, list):
         return 'values', list(d)
-    if d in ('extent', 'ref', 'recurrence'):
+    if d in ('extent', 'ref', 'recurrence', 'bean_id'):
         return d, True
-    if d in ('prose', 'untyped', 'id') or d is None:
+    if d in ('prose', 'untyped', 'id', 'any') or d is None:
         return None, None
     if isinstance(d, dict):
         if 'aspect' in d:
             return 'aspect', dict(d)
         if 'type' in d:
             return 'type', d['type']
+        if 'entries' in d:
+            return 'entries', dict(d['entries'] or {})
         if 'system' in d:
             return 'system', d['system']
         if 'key_of' in d:

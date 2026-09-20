@@ -56,6 +56,10 @@ check("an address is a position in a PLACE system, and an ordinary endpoint pass
 out = gate(E % ("smtp", "ipv4", "203.0.113.10", ', port: "110/143/993/995"'))
 check("four ports jammed into one string — the defect `endpoints` was written to end — is refused at last",
       "endpoints[0].port '110/143/993/995' is not in the one canonical form 'tcp' declares" in out, out[-700:])
+for _bad in ("256.1.1.1", "01.2.3.4", "10.0.0.0/33"):
+    out = gate(E % ("smtp", "ipv4", _bad, ", port: 25"))
+    check("an ipv4 position has real octets and a real prefix: %s is refused by the system that owns the form" % _bad,
+          "at '%s' is not in the one canonical form 'ipv4' declares" % _bad in out, out[-400:])
 out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 70000"))
 check("a port outside 0-65535 is refused by the system that owns the form", "port '70000' is not in the one canonical form" in out, out[-500:])
 out = gate(E % ("dns", "ipv4", "203.0.113.10", ", port: 53") + E % ("dns", "ipv4", "203.0.113.10", ", port: 53, transport: tcp"))
@@ -117,8 +121,25 @@ check("`in: { key_of }` — a part of a being is named by its key, and the key m
       "probe_stamp.rides 'no-such-link' is no key of `links`" in out, out[-500:])
 out = stamp("{ rides: nobody:wan0 }")
 check("...on another bean, the bean must be held here", "names bean 'nobody'" in out, out[-500:])
+# ---------------------------------------------------------------- 18.1: entries INSIDE an entry
+def ledger(record, tracks="owns.addr"):
+    return gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "owns: { addr: \"203.0.113.10\" }\nbeanger:\n  lan-ip:\n"
+                "    defines: \"the address\"\n    tracks: \"" + tracks + "\"\n    source: \"ip addr\"\n    records:\n      - " + record + "\n")
+GOOD = '{ seq: 1, at: 1786245253747, op: add, value: "203.0.113.10", prev: null, who: "tool:probe", to_where: { bean: box }, from_where: { host: box } }'
+out = ledger(GOOD)
+check("a datum's records pass when they are what the term says a record is", "0 error" in out, out[-600:])
+for what, bad, want in (
+        ("an operation nobody declared", GOOD.replace("op: add", "op: invent"), "beanger.records[lan-ip/0].op 'invent' not in"),
+        ("an attribute nobody declared", GOOD.replace("op: add", "op: add, mood: cheerful"), "carries `mood`"),
+        ("a date where a moment belongs", GOOD.replace("at: 1786245253747", "at: 2026-09-20"), "is not in the one canonical form 'unix-epoch' declares"),
+        ("a ref to a being nobody holds", GOOD.replace("to_where: { bean: box }", "to_where: { bean: nobody }"), "names 'nobody', which this garden does not hold"),
+        ("a cursor naming a host nobody holds", GOOD.replace("host: box", "host: elsewhere"), "'elsewhere' is not the id of a bean this garden holds"),
+        ("a record with no sequence number", GOOD.replace("seq: 1, ", ""), "missing ['seq']")):
+    out = ledger(bad)
+    check("entries INSIDE an entry are judged as entries: %s is refused" % what, want in out, out[-500:])
 sv_now = open(os.path.join(ROOT, "seed", "std-vocab.md")).read()
-check("the standing debt is ONE attribute, and it says why", sv_now.count("in: untyped,") == 1 and "records:  { required: true, in: untyped" in sv_now)
+check("NOTHING in the law is `untyped` any more — and `any` is a decision, said as one",
+      "in: untyped," not in sv_now and "value: { in: any," in sv_now)
 
 shutil.rmtree(T, ignore_errors=True)
 print("\npositions: %d failed" % len(FAILS))
