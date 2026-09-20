@@ -210,8 +210,11 @@ check("no shipped program reads a retired construct — only the translator know
       len(_shipped) > 10 and not _hits, f"{len(_shipped)} shipped; hits: {_hits[:8]}")
 
 # and the hook's own suite runs green on a garden that HAS what it inspects: a codebase with a cached analysis
-open(VOC, "w").write(VOC0.replace("extends_profiles: []", "extends_profiles: [code]") if "extends_profiles: []" in VOC0
-                     else VOC0.replace("extends_profiles: [", "extends_profiles: [code, ", 1))
+_vc = (VOC0.replace("extends_profiles: []", "extends_profiles: [code]") if "extends_profiles: []" in VOC0
+       else VOC0.replace("extends_profiles: [", "extends_profiles: [code, ", 1) if "extends_profiles: [" in VOC0
+       else VOC0.replace("\n---", "\nextends_profiles: [code]\n---", 1))
+assert "extends_profiles: [code" in _vc, "the garden did not opt into the code profile"      # a no-op edit is a bug
+open(VOC, "w").write(_vc)
 open(os.path.join(G, "beans", "a-tool.md"), "w").write("""---
 bean: a-tool
 kind: codebase

@@ -1,5 +1,5 @@
 ---
-version: "13.0"
+version: "14.0"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -17,12 +17,13 @@ version: "13.0"
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
   attrs:                "{<attr>: {required?, in, meaning}} — THE ATTRIBUTES (13.0): one record each, saying what the attribute is a position IN, whether it is required, and what it means — once, for the gate and the reader both. They describe each ENTRY of a list, an open map or a faceted mapping, and otherwise the mapping itself. An entry holds only the attributes declared here. See `attr_domains` for what `in:` may say."
+  default_from:         "{registry, keyed_by, take} — inside an attribute's record (14.0): when the entry is SILENT, the attribute's value is READ from a registry row, the row selected by another attribute of the same entry. The registry stays the one owner of the usual value (a protocol's transport), and an entry states the attribute only when it differs. Like an aspect's default, a value that came from here never counts as OCCUPYING a position."
   cells:                "[{when, verdict|requires|expects, why}] — COMBINATIONS of what an entry holds (13.0). `verdict: incoherent` is an ERROR (the positions cannot both hold, so one is mis-stated); `verdict: in_breach` a WARNING (all can hold, and the state needs action). `requires: [...]` is an error when the entry sits in the cell and lacks those attributes; `expects: [...]` the same as a warning. `when` maps an attribute to the value it holds, or to `{starts_with: …}`; an aspect attribute is read at its EFFECTIVE position, stated or defaulted."
   # WHAT `in:` MAY SAY (13.0). Every attribute is a position in EXACTLY ONE domain — measured over every term of
   # 12.0 before this spelling was chosen: none carried two — so `in:` is one thing, and it is never absent.
   attr_domains:
     values:      "in: [a, b, c] — one of a closed list written here"
-    registry:    "in: { registry: <name>, take: <field> } — a row of a registry, so the registry OWNS the enum and no term restates it. `registry_from: <attr>` instead of `registry`: the registry is NAMED by another attribute of the same entry"
+    registry:    "in: { registry: <name>, take: <field> } — a row of a registry, so the registry OWNS the enum and no term restates it. `where: { <field>: <value> | [<values>] }` (14.0) narrows it to the rows that say so — a PLACE system, a TRANSPORT-layer protocol — so one registry serves attributes that may name only some of its rows. `registry_from: <attr>` instead of `registry`: the registry is NAMED by another attribute of the same entry"
     aspect:      "in: { aspect: <name>, default: <position> } — a position on an opposition; the default applies when the entry is silent, and a default never counts as occupying the position"
     type:        "in: { type: <value type> } — a row of `value_types`: its pattern, and for a time type its system and unit"
     form_of:     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form"
@@ -189,34 +190,62 @@ anchor_systems:
     form_note: "root:<logical root>[/<relative path>], or <host>:<Drive>:\\<path> stated outright. The two colons are unambiguous — hostname, then drive letter — and the root: form is IDENTICAL to the unix one on purpose: a LOGICAL root is what crosses systems, a literal path is what does not. That is the whole mechanism for resolving one repository on machines that do not agree what a path looks like."
     establishes: false
     why: "a path is reassignable and a tree can be checked out anywhere — it corroborates a location, never fixes it. Identical to the unix case, because the reason has nothing to do with the operating system."
-# == ADDRESS SYSTEMS: where a being ANSWERS, as against where it IS (added 6.0) ==
-# The exact shape of `anchor_systems`, asking the other question. `anchor_systems` answers WHERE A BEING
-# IS — a path, an object id, a shelf. This answers WHERE IT ANSWERS: the address another being sends to.
-# Two registries because they are two questions: a mail server can BE bare metal in a room and ANSWER at
-# 203.0.113.10, a public address it does not even hold locally, and neither position implies the other.
-#
-# WHY TWO SYSTEMS AND NOT ONE `ip`. std-vocab already made this call for filesystems and wrote the reason
-# down: "one system carrying two patterns is exactly the reinvention this registry forbids". The `ip`
-# term IS that reinvention — ONE term with `value_form: ip`, silently accepting both families. v4 and v6
-# share no canonical form and no address arithmetic, and in this estate they do not even share
-# reachability: a host booted with `ipv6.disable=1` has no v6 at all, so an address in one family is unreachable at a host that
-# answers on the other. A checker that cannot tell them apart cannot notice that.
-address_systems:
+  # == ADDRESSES AND PORTS ARE PLACES (14.0) — what 6.0 made a separate registry, and why it came home ==
+  # 6.0 gave ipv4 and ipv6 their own registry, `address_systems`, with `dimension: address`, because "where a being
+  # IS" and "where it ANSWERS" are two questions: a mail server can be bare metal in a room and answer at
+  # 203.0.113.10, an address it does not even hold locally. The questions ARE two. But that is a difference in the
+  # RELATION between a being and a position, and this law carries relations as TERMS — `located_at` (is found at)
+  # and `endpoints` (answers at) — exactly as `observed`, `as_of`, `expires` and `created` are four relations to ONE
+  # dimension of time. Nobody minted a dimension "expiry-time".
+  #
+  # And `address` was a dimension NO ASPECT HELD. Every sequence aspect names the dimension whose systems it holds
+  # (`time`, `place`); none named `address`, so these two systems belonged to no figure — nothing said how they are
+  # ordered or whether a region of one is possible. Meanwhile the law had already described them as a place:
+  # `leaf_orders.cidr` is a CONTAINMENT order ("absorbed by a network that contains it"), partial, acyclic, bounded
+  # by /0 and /32 — `place`'s restrictions one for one — and the ipv4 row says of a prefix that it "narrows a
+  # position". A path and a git object id are both `place` and are independent of each other in just the way an
+  # address and a network segment are. Two independent systems in one dimension is the ordinary case.
+  #
+  # A PORT IS A POSITION NESTED IN AN ADDRESS, the way a path is nested in a host. Every place system here is a
+  # scoped compound — `<host>:<path>`, `<repo>@<sha>`, `<network>/<segment>` — and an endpoint's merge identity,
+  # `protocol+system+at+port?`, already treated the port as part of WHICH position this is. It had no system
+  # because the TRANSPORT LAYER HAD NO ROW: `tcp` and `udp` existed only as the value of a field. Each layer of a
+  # stack owns a position system — the link layer MAC space, the network layer address space, the transport layer
+  # port space — and an endpoint is a stack of positions, one per layer.
+  #
+  # WHAT IT BUYS, measured in the garden this grew in: `port: "110/143/993/995"` — the defect `endpoints` was
+  # written to end — is refused at last; and seven listening surfaces that are unix socket PATHS can be endpoints,
+  # because `endpoints.system` is now any place system and `unix-filesystem` has always been one.
   - system: ipv4
-    dimension: address
+    dimension: place
     meaning: "a 32-bit Internet Protocol address, optionally carrying a prefix length."
     pattern: '^(\d{1,3}\.){3}\d{1,3}(/\d{1,2})?$'
     form_note: "dotted quad, optionally /prefix. The bare address and the prefixed form are the SAME system: a prefix narrows a position, it does not change what kind of position it is."
     establishes: false
     why: "reassignable by DHCP, NAT, failover and plain reuse — it corroborates which being answers and never fixes which being it IS. The same rule the `ip` anchor has always carried, now stated where the position is."
   - system: ipv6
-    dimension: address
+    dimension: place
     meaning: "a 128-bit Internet Protocol address, optionally carrying a prefix length."
     pattern: '^([0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}(/\d{1,3})?$'
     form_note: "lowercase hex in RFC 5952 compressed form, optionally /prefix. NOT a dialect of ipv4 — it shares no format with it, and one pattern covering both could not tell a malformed quad from a valid v6 address."
     establishes: false
     why: "everything ipv4's reason says, and one more: v6 addresses are also AUTOCONFIGURED, so a being may answer at an address nobody assigned and nobody recorded."
-
+  - system: tcp-port
+    dimension: place
+    transport: tcp
+    meaning: "a TCP port: a position WITHIN an address, naming which listener there. Meaningless without the address beside it, as a path is without its host."
+    pattern: '^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$'
+    form_note: "one decimal integer, 0 to 65535. ONE port: `110/143/993/995` is four positions, and four entries."
+    establishes: false
+    why: "a port is reassigned by editing one line of configuration — it corroborates which listener answers and never fixes which being it is"
+  - system: udp-port
+    dimension: place
+    transport: udp
+    meaning: "a UDP port. A SEPARATE SYSTEM from tcp-port and not a dialect of it: 53/udp and 53/tcp are two positions, and a resolver that answers on both has two endpoints."
+    pattern: '^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$'
+    form_note: "one decimal integer, 0 to 65535"
+    establishes: false
+    why: "as for tcp-port"
 # == ROLES: what a being DOES, as against what it IS (added 7.0) ==
 # THE FIX FOR AN AMBIGUITY THIS VOCABULARY SHIPPED WITH. `router` was a KIND until 7.0, and the proof it
 # was wrong is an asymmetry the corpus already carried: a mail server recorded five roles as free-text data
@@ -317,6 +346,17 @@ storage_formats:
 # `layer` is DESCRIPTIVE, like `dimension` on anchor_systems: the gate consumes `protocol` (as the enum)
 # and nothing else in the row. It is here because carriage is what makes this a stack and not a list.
 net_protocols:
+  # THE TRANSPORT LAYER (14.0). Until now `tcp` and `udp` were only the VALUE of the `transport:` field below, which
+  # is why a port had no system to be a position in. A row here is what lets an endpoint NAME its transport when it
+  # differs from its protocol's usual one — a DNS server answers on 53/udp AND 53/tcp, and the law could not say so.
+  - protocol: tcp
+    layer: transport
+    positions: tcp-port
+    meaning: "the Transmission Control Protocol. Its positions are ports (`anchor_systems.tcp-port`)."
+  - protocol: udp
+    layer: transport
+    positions: udp-port
+    meaning: "the User Datagram Protocol. Its positions are ports (`anchor_systems.udp-port`)."
   - protocol: ssh
     layer: application
     transport: tcp
@@ -923,7 +963,18 @@ profiles:
         Measured: zero occurrences across the estate it was declared in. Declaring the
         position and refusing it is how the estate states a standing decision that would otherwise exist
         only as an absence — and an absence is indistinguishable from nobody having thought about it.
-    - at: address_system.values
+    - at: net_protocol.values
+      position: tcp
+      reason: prediction
+      why: >
+        Every endpoint recorded so far takes its transport from its protocol's row, and A DEFAULT DOES NOT OCCUPY:
+        a position is taken by an entry that STATES it. Expected first where a protocol answers on a transport
+        other than its usual one — the DNS server that answers on 53/tcp as well as 53/udp.
+    - at: net_protocol.values
+      position: udp
+      reason: prediction
+      why: "As for tcp: no entry has yet needed to state it, because the protocols that use it say so in their own rows."
+    - at: anchor_system.values
       position: ipv6
       reason: prediction
       why: >
@@ -935,25 +986,13 @@ profiles:
         exists so that the day one endpoint takes it, the gate says the prediction came true instead of
         letting a whole address family appear with nothing noticing.
     terms:
-    - term: address_system
-      # The enum OWNER, exactly as `anchor_system` owns the anchor systems. Nothing else may list them:
-      # this term's `values` are held equal to the registry by the gate's own drift check.
-      meaning: "the address system a network position is stated in — the one owner of that enum"
-      context_keys: [address_system]
-      schema:
-        shape: scalar
-        values: [ipv4, ipv6]
-        values_consistent_with: ["registry:address_systems[].system"]
-      enforced_by: none   # never carried on a bean; it exists to OWN the enum `endpoints` and `links`
-                          # select from, and its occupancy is counted through their entries.
-      merge: { cardinality: single, order: none }
     - term: net_protocol
       # The second enum owner. Same contract, same reason.
       meaning: "a protocol a being may speak — the one owner of that enum"
       context_keys: [net_protocol]
       schema:
         shape: scalar
-        values: [ssh, sftp, git, http, smtp, pop3, imap, smb, mysql, dns, ethernet, pppoe, wireguard, pptp]
+        values: [tcp, udp, ssh, sftp, git, http, smtp, pop3, imap, smb, mysql, dns, ethernet, pppoe, wireguard, pptp]
         values_consistent_with: ["registry:net_protocols[].protocol"]
       enforced_by: none
       merge: { cardinality: single, order: none }
@@ -972,13 +1011,17 @@ profiles:
         shape: list_of_entries
         attrs:
           protocol:         { required: true, in: { registry: net_protocols, take: protocol }, meaning: "which protocol is spoken here — a row of net_protocols, never an implementation name" }
-          system:           { required: true, in: { registry: address_systems, take: system }, meaning: "ipv4 | ipv6 — it selects the form `at` must take. Named `system` and not `address_system` to match `roots`, `located_at` and `timing`: `keyed_by` resolves a registry row by a field that must exist on BOTH the entry and the row, so the two are one name by construction. Getting it wrong produced 21 identical errors and no ambiguity about the cause." }
-          at:               { required: true, in: { form_of: address_systems, keyed_by: system, take: pattern }, meaning: "the address answered at, in that system's ONE canonical form" }
+          system:           { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place, any] } }, meaning: "the PLACE system the surface is stated in — `ipv4` or `ipv6` for a network address, `unix-filesystem` for a socket path. It selects the form `at` must take. Named `system`, as in `roots`, `located_at` and `timing`: `keyed_by` resolves a registry row by a field that exists on BOTH the entry and the row, so the two are one name by construction." }
+          at:               { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the address answered at, in that system's ONE canonical form" }
           exposure:         { in: [loopback, lan, link, internet], meaning: "loopback (this machine only) | lan (the local segment) | link (reachable only over a named link, e.g. the wireguard tunnel) | internet (bound to a public address directly)" }
           observed:         { in: { type: iso_date }, meaning: "ABSOLUTE date the surface was checked. Endpoints age faster than almost anything else here." }
           confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "the position on the confidentiality aspect — what the channel protects. Defaults to cleartext, because a channel nobody has said protects anything does not." }
           permission:       { in: { aspect: capability, default: permitted }, meaning: "the position on the capability aspect — whether this surface MAY exist at all" }
-          port:             { in: untyped, meaning: "the TCP/UDP port. Omitted where the protocol rides another (sftp over ssh) and has none of its own." }
+          # THE TRANSPORT IS USUALLY THE PROTOCOL'S OWN, so an entry states it only when it differs: a DNS server's second
+          # endpoint says `transport: tcp`. The default is READ FROM THE PROTOCOL'S ROW rather than typed here, so the
+          # protocol stays the one owner of what usually carries it.
+          transport:        { in: { registry: net_protocols, take: protocol, where: { layer: transport } }, default_from: { registry: net_protocols, keyed_by: protocol, take: transport }, meaning: "tcp | udp — which transport's port space `port` is a position in. Defaults to the protocol row's `transport`." }
+          port:             { in: { form_of: anchor_systems, keyed_by: transport, take: pattern }, meaning: "the port: a position in the transport's port space, WITHIN the address beside it. One port per entry. Omitted where the protocol rides another (sftp over ssh) and has none of its own, and for a socket path, which has none at all." }
           via_link:         { in: untyped, meaning: "optional: the `links` key this surface is reachable over, when it is not reachable without it" }
         cells:
           - { when: { permission: forbidden }, verdict: in_breach, why: "a listening surface that MUST NOT exist, recorded as existing. Unlike a capability, an endpoint entry is not a stance about a possibility — it is a statement that the being answers there — so `forbidden` alone is the breach and needs no second aspect to confirm it. A database container published on 0.0.0.0:5432, reachable across the LAN, is this shape." }
@@ -1760,7 +1803,7 @@ terms:
     context_keys: [anchor_system]
     schema:
       shape: scalar
-      values: [unix-filesystem, windows-filesystem, git-object-graph, physical, gregorian-civil, unix-epoch, geographic, event-anchored, network-segment]
+      values: [unix-filesystem, windows-filesystem, git-object-graph, physical, gregorian-civil, unix-epoch, geographic, event-anchored, network-segment, ipv4, ipv6, tcp-port, udp-port]
       values_consistent_with: ["registry:anchor_systems[].system"]
     enforced_by: none   # it is never carried on a bean: it exists to OWN the enum that `located_at` and
                         # `timing` select their systems from. Occupancy is counted through their entries.
@@ -2369,3 +2412,21 @@ The portable, estate-agnostic classification shared by every garden — the abst
   leaves the file alone when it cannot; `bin/dmupgrade.py` runs it inside its rollback. The standard's own text
   was translated by the same tool, then its comments put back beside what they explain by hand. One comment was
   deleted, because it had become false: "human documentation; the GATE reads schema: above".
+
+- **14.0** (2026-09-20, proposed rule-change) — **addresses and ports are places.** MAJOR: the `address_systems`
+  registry and the `address_system` term are gone, so a garden that added a row there must move it. 6.0 gave ipv4
+  and ipv6 their own registry and `dimension: address` because where a being IS and where it ANSWERS are two
+  questions. They are — but that is a difference of RELATION, which this law carries as terms (`located_at`,
+  `endpoints`), as `observed` / `expires` / `created` are relations to one dimension of time. And `address` was a
+  dimension NO ASPECT HELD: the two systems belonged to no figure, while `leaf_orders.cidr` had already described
+  them as a containment order, which is `place`'s. They join `anchor_systems` as place systems. A PORT is a
+  position nested in an address the way a path is nested in a host; it had no system because the transport layer
+  had no row. `tcp` and `udp` are `net_protocols` rows now (`layer: transport`), `tcp-port` and `udp-port` are
+  place systems, and `endpoints.port` — `untyped` until now — is a position in the port space its transport
+  names: `port: "110/143/993/995"`, the defect the term was written to end, is refused at last, and so is 70000.
+  `endpoints.system` may be ANY place system, so a unix socket path is an endpoint like any other. An entry may
+  state `transport` when it differs from its protocol's usual one. TWO GENERIC ADDITIONS, neither naming a term:
+  `where:` narrows a registry domain to the rows that say so, and `default_from:` reads an attribute's value off a
+  registry row when the entry is silent — never written back, never an occupant. NOT in this release, on purpose:
+  a system row stating its OWN restrictions (a port line is one totally ordered counted line; geographic is
+  metered) so that extents and recurrences can ask the system what it permits. That arrives with its consumer.

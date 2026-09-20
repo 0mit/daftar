@@ -165,7 +165,11 @@ if '--terms' in want:
         _w = 'entry' if F['scope'] == 'entry' else 'value'
         for a_, r in dmform.facet(F, 'registry'):
             det.append(f"{_w}.{a_} is a row of " + (f"the registry its `{r['registry_from']}` names" if r.get('registry_from')
-                                                     else f"registry '{r.get('registry')}'"))
+                                                     else f"registry '{r.get('registry')}'")
+                       + (' where ' + ', '.join(f"{k} is {v}" for k, v in r['where'].items()) if r.get('where') else ''))
+        for a_, r in dmform.facet(F, 'default_from'):
+            det.append(f"{_w}.{a_}, when the entry is silent, is read from {r.get('registry')}.{r.get('take')} "
+                       f"(the row its `{r.get('keyed_by')}` names)")
         for a_, r in dmform.facet(F, 'system_from'):
             det.append(f"{_w}.{a_} is written in the one form its `{r.get('keyed_by')}` declares ({r.get('registry')})")
         for a_, r in dmform.facet(F, 'pattern'):
