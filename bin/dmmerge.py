@@ -15,6 +15,7 @@ Library: merge_gardens(list_of_beanlists) -> {seed_id: seed_dict}, canonical_fin
 import sys, os, re, glob, json, hashlib, unicodedata, ipaddress, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmcal
 import yaml
 
 # P4 (2026-08-02, human-ratified): identity is established by the `establishing` BOOLEAN on the anchor,
@@ -141,6 +142,21 @@ def load_system_patterns():
 
 
 SYSTEM_PATTERNS = load_system_patterns()
+
+
+def load_time_systems():
+    """The rows of `anchor_systems` that are CALENDARS — a system of the time dimension that names one — most
+    specific form first, so a tagged reading is never taken for an untagged one."""
+    path = os.path.join(ROOT, 'seed', 'std-vocab.md')
+    if not os.path.exists(path):
+        return []
+    fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
+    rows = [r for r in (fm.get('anchor_systems') or []) if isinstance(r, dict) and r.get('dimension') == 'time'
+            and r.get('calendar') and r.get('pattern') not in (None, 'none')]
+    return sorted(rows, key=lambda r: -len(r['pattern']))
+
+
+TIME_SYSTEMS = load_time_systems()
 UNDECLARED = set()          # keys merged by shape because no term declares a facet — reported, not hidden
 
 
@@ -198,6 +214,8 @@ def leaf_order(key, val):
         sfx = rule.get('suffix')
         if (sfx and str(key).endswith(sfx)) or key in (rule.get('exact') or []):
             return rule.get('order', 'none')
+        if rule.get('every_calendar') and isinstance(val, str) and _calendar_of(val):
+            return rule.get('order', 'none')
         for _sys in [rule.get('system')] + list(rule.get('also_systems') or []):
             pat = SYSTEM_PATTERNS.get(_sys)
             if pat and isinstance(val, str) and re.match(pat, val, re.ASCII):
@@ -244,44 +262,65 @@ def members(key, order, val):
         return out
     return {'': val}
 
-_CIVIL = re.compile(r'^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?'
-                    r'(Z|[+-]\d{2}:\d{2})?)?$', re.ASCII)
+_READING = re.compile(r'^(?P<date>[^ T]+)(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?'
+                      r'(Z|[+-]\d{2}:\d{2})?)?$', re.ASCII)
 
 
-def _civil(s):
-    """A calendar reading as (its components, its offset in minutes or None). The components are the parts
-    actually WRITTEN: `2026-09-19` has three, `2026-09-19 22:50+03:00` five. Fewer parts is a coarser
-    reading, never a reading at midnight."""
-    m = _CIVIL.match(str(s))
-    if not m:
-        return None, None
-    y, mo, d, h, mi, sec, ms, off = m.groups()
-    parts = [int(y), int(mo), int(d)] + [int(x) for x in (h, mi, sec) if x is not None]
-    if ms is not None:
-        parts.append(int(ms.ljust(3, '0')))
-    if off is None:
-        return parts, None
-    return parts, 0 if off == 'Z' else (1 if off[0] == '+' else -1) * (int(off[1:3]) * 60 + int(off[4:6]))
+def _calendar_of(s):
+    """The `anchor_systems` row whose one form this reading is written in — the calendar is read off the value."""
+    for row in TIME_SYSTEMS:
+        if re.match(row['pattern'], s, re.ASCII):
+            return row
+    return None
+
+
+def _reading(s):
+    """A calendar reading, in ANY calendar the law declares: (its system row, its DAY, the clock parts actually
+    written, its offset in minutes or None). `2026-09-19` has no clock parts and `persian:1405-06-28 22:50+03:30`
+    has two. Fewer parts is a coarser reading, never a reading at the start of the day. Calendars meet at the day
+    (`dmcal`), so no calendar is the one the others are compared in."""
+    s = str(s)
+    m, row = _READING.match(s), _calendar_of(s)
+    if not m or row is None:
+        return None
+    try:
+        day = dmcal.to_day(m.group('date'))
+    except Exception:
+        return None
+    h, mi, sec, ms, off = m.groups()[1:]
+    clock = [int(x) for x in (h, mi, sec) if x is not None] + ([int(ms.ljust(3, '0'))] if ms is not None else [])
+    minutes = None if off is None else 0 if off == 'Z' else (1 if off[0] == '+' else -1) * (int(off[1:3]) * 60 + int(off[4:6]))
+    return row, day, clock, minutes
 
 
 def _instant_contains(a, b):
-    """True when calendar reading `a` CONTAINS the finer reading `b`: `2026-09-19` contains
-    `2026-09-19 22:50+03:00`. The `time` aspect's order is PARTIAL, so every other pair is unordered: two
-    readings that do not nest are a disagreement for a person, never silently ordered. A reading with an
-    offset contains only readings that state one, compared in its own offset; a reading with none is a
-    civil date in an unstated frame and is compared with `b` as `b` was written."""
-    pa, oa = _civil(a)
-    pb, ob = _civil(b)
-    if pa is None or pb is None or len(pb) <= len(pa):
+    """True when reading `a` CONTAINS the finer reading `b`: `2026-09-19` contains `2026-09-19 22:50+03:00`, and so
+    does `persian:1405-06-28`, which is the same day. The `time` aspect's order is PARTIAL, so every other pair is
+    unordered: two readings that do not nest are a disagreement for a person, never silently ordered. A reading with
+    an offset contains only readings that state one, compared in its own offset; a reading with none is a date in
+    an unstated frame and is compared with `b` as `b` was written.
+
+    ACROSS CALENDARS the two must begin their day at the same moment (`day_begins`). A day that begins at sunset
+    does not contain a clock time by arithmetic — where it falls depends on the place and the season — so that
+    pair stays unordered, and a person decides."""
+    ra, rb = _reading(a), _reading(b)
+    if ra is None or rb is None:
         return False
+    (rowa, da, ca, oa), (rowb, db, cb, ob) = ra, rb
+    if len(cb) <= len(ca):
+        return False
+    if rowa['system'] != rowb['system'] and (rowa.get('day_begins') or 'midnight') != (rowb.get('day_begins') or 'midnight'):
+        return False
+    if (rowa.get('day_begins') or 'midnight') != 'midnight' and oa is not None and oa != ob:
+        return False                       # shifting a clock across a sunset boundary is not arithmetic
     if oa is not None:
         if ob is None:
             return False
-        full = (pb + [0, 0, 0, 0])[:7]
-        t = datetime.datetime(full[0], full[1], full[2], full[3], full[4], full[5], full[6] * 1000)
-        t += datetime.timedelta(minutes=oa - ob)
-        pb = [t.year, t.month, t.day, t.hour, t.minute, t.second, t.microsecond // 1000][:len(pb)]
-    return pb[:len(pa)] == pa
+        full = (cb + [0, 0, 0, 0])[:4]
+        total = ((full[0] * 60 + full[1]) * 60 + full[2]) * 1000 + full[3] + (oa - ob) * 60000
+        db, total = db + total // 86400000, total % 86400000          # whole numbers: a day is carried, never rounded
+        cb = [total // 3600000, total // 60000 % 60, total // 1000 % 60, total % 1000][:len(cb)]
+    return da == db and cb[:len(ca)] == ca
 
 
 def _place_contains(a, b):

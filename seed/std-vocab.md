@@ -1,5 +1,5 @@
 ---
-version: "17.0"
+version: "18.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -12,6 +12,8 @@ schema_language:
     aspect:      "in: { aspect: <name>, default: <position> } — a position on an opposition; the default applies when the entry is silent, and a default never counts as occupying the position"
     type:        "in: { type: <value type> } — a row of `value_types`: its pattern, and for a time type its system and unit"
     form_of:     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form"
+    system:      "in: { system: <anchor system> } — a position in ONE named system, in that system's one form. `form_of` asks a sibling WHICH system; this names it, for an attribute that is only ever in one"
+    key_of:      "in: { key_of: <term> } — a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another: a PART of a being, resolved by the gate. Not an edge — the being is reached by the refs the bean already states"
     pattern:     "in: { pattern: '<regex>' } — a form the TERM owns. With `soft: true` and a `why` it WARNS instead of refusing: the form a value SHOULD take while a corpus is migrated onto it"
     quantity:    "in: { quantity: <name> } — a MEASURED VALUE, written { count, unit }: a speed, an acceleration, an area, a data rate. The unit must measure the quantity named; `count` is a whole number or a decimal written as a string, so that no float reaches a canonical form. `in: { quantity: any }` takes any."
     extent:      "in: extent — a bounded region of an aspect's domain (`extent_form`)"
@@ -30,7 +32,7 @@ schema_language:
   required_on_natures:  "[<nature>...] — same, keyed on nature instead of kind (reserved for P3; the interpreter already honours it)"
   required_on_roles:    "[<role>...] — same, keyed on ROLE. It needed no new interpreter key: the axis has always been read from the vocabulary key rather than named in code. What it DID need (7.0, human-ratified) is that an axis may be MULTI-VALUED — a machine holds one kind and one nature but SEVERAL roles — so the mechanism now reads an axis carried as a scalar, as a list of scalars, or as a list of entries each naming it, and fires if ANY held value matches. That generality is the reason `router` could stop being a kind."
   values:               "[<enum>...] — shape:scalar, the allowed values; also the enum this term EXPORTS to values_from/key_form"
-  values_from:          "<term> — reuse another term's `values` list instead of restating it (one owner of an enum)"
+  values_from:          "<term> | registry:<name>[].<field> — reuse another term's `values`, or a REGISTRY's own column, instead of restating it. A registry is its own enum owner: no term keeps a copy of its rows, and a position in it is addressed `registry:<name>`"
   values_consistent_with: "[<path>...] — paths whose contents must equal `values` (drift guard). A path is `attr` or `attr[].sub` inside the term, or `registry:<name>[].<sub>` for a top-level VOCAB registry."
   key_form:             "kebab | values | values_from:<term> — the rule the KEYS of a mapping/open_map must satisfy"
   entry_one_of:         "[<attr>...] — each entry must carry at least one of these"
@@ -949,7 +951,7 @@ leaf_orders:
     also_systems: [windows-filesystem]
     why: "a tree is absorbed by a subtree of it under the SAME host or logical root (`host-a:/home/user` by `host-a:/home/user/tree`). Positions on two hosts, two roots or two systems are UNORDERED and stay a disagreement: the same path on two machines is two different trees, which is the whole reason a position names its host."
   - order: instant
-    system: gregorian-civil
+    every_calendar: true
     why: "a calendar reading is absorbed by a finer one it CONTAINS (`2026-09-19` by `2026-09-19 22:50+03:00`), compared by the parts actually written and in the coarser reading's own offset, never as strings. Every other pair is unordered (the `time` aspect's order is partial): two readings that do not nest stay a disagreement for a person. The absorbed reading is kept in provenance, as every subsumed value is."
 vacancies:
   - at: status.values
@@ -962,7 +964,7 @@ vacancies:
       hand rather than by tool. Kept because it is the one status that asks for ACTION rather than
       describing a state: a being still relied upon and known to be failing. An estate that keeps a risk
       register yet never marks a bean at-risk has an inventory nobody consults, which is worth noticing.
-  - at: storage_format.values
+  - at: "registry:storage_formats"
     position: ntfs
     reason: prediction
     why: >
@@ -1015,23 +1017,23 @@ vacancies:
 
 # == ASPECTS ==
   # == POSITION SYSTEMS AND RESOLUTIONS NOT YET TAKEN ==
-  - at: anchor_system.values
+  - at: "registry:anchor_systems"
     position: physical
     reason: prediction
     why: "No being in this estate is recorded as a physical copy yet. It is expected and not hypothetical: this ledger's first rule is that it must survive being printed on paper and rescanned, a codebase can exist as a printed listing or a disk in a drawer, and the operator named exactly that case when this term was designed. It is the one system deliberately carrying `pattern: none`, so occupying it also exercises the deliberate-absence path."
-  - at: anchor_system.values
+  - at: "registry:anchor_systems"
     position: geographic
     reason: prediction
     why: "Declared because CIVIL TIME RESOLVES THROUGH IT — a UTC offset is a geographic fact — so a registry offering gregorian-civil while hiding what it resolves through would conceal the chain. Unoccupied because no bean states where its machine physically is: `owns.site` holds prose (a data-centre name) that has never been read as a position. Expected to fill the first time a time reading has to be reconciled across two sites — a +03:00 host read against UTC logs is the shape of that defect."
-  - at: anchor_system.values
+  - at: "registry:anchor_systems"
     position: event-anchored
     reason: prediction
     why: "A position fixed only by its neighbours — 'after the push, before the cutover' — carrying no coordinate at all. Declared because it is what makes this a registry of SYSTEMS rather than a pair of coordinate schemes: sequence is the general structure and a calendar is one restriction of it. Unoccupied because every position recorded so far has had a coordinate available. Expected first in the journal, where an entry's real position is often 'between these two commits' and a date was written because the form demanded one."
-  - at: anchor_system.values
+  - at: "registry:anchor_systems"
     position: network-segment
     reason: prediction
     why: "WHERE A BEING IS ATTACHED in a network — a VLAN, a wireless network, an address range with a role. Declared 11.0 with the operator's ratification that a segment is a place and not an address. Unoccupied because no bean yet states which segment it is attached to; expected first where one network carries staff, guests and laptops on separate segments and the difference decides what a machine may reach."
-  - at: unit.values
+  - at: "registry:units"
     position: second
     reason: prediction
     why: "Nothing in this ledger is currently held to the second: session moments are recorded at millisecond, and everything else at day. Kept because it is the resolution a log line carries, and the digestion of host logs is the obvious first occupant."
@@ -1117,9 +1119,8 @@ value_types:
 # == THE JOURNAL ==
 journal:
   path: log/journal.md
-  heading_form: "## <YYYY-MM-DD HH:MM[:SS[.sss]]><+HH:MM|Z> · <who> · <what>"
-  heading_pattern: '^## \d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z) · \S.* · \S.*$'
-  system: gregorian-civil
+  heading_form: "## <when> · <who> · <what> — <when> in a declared calendar's own form, to the minute, with its offset (`2026-09-20 15:07+03:00`, `persian:1405-06-29 15:37+03:30`)"
+  system: any
   unit_at_least: minute
   checks: added
 aspects:
@@ -1257,8 +1258,8 @@ profiles:
           path:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare absolute path names no host: give it `root:<name>/…` (resolved by each host's `roots`) or `<host>:<path>`" }, meaning: "WHERE THE TREE IS, as a position: `root:<name>[/<relative>]` resolved through each host's own `roots` map, or `<host>:<absolute path>` stated outright. A bare absolute path names no host and WARNS (11.0): this estate holds 13 paths that exist on two machines as two different trees, so a path with no host is a position in a system nobody named." }
           role:         { required: true, in: [own-source, framework-reference, vendored-dependency, generated-artifact], meaning: "own-source | framework-reference | vendored-dependency | generated-artifact" }
           scan_policy:  { required: true, in: [index, reference-only, skim], meaning: "index (own code — walk fully) | reference-only (do NOT re-scan each session; consult analysis_cache, grep on demand only) | skim (structure only)" }
-          stack:        { in: untyped, meaning: "language/runtime tag, e.g. python-django | csharp-dotnet (optional)" }
-          entrypoint:   { in: untyped, meaning: "manifest / solution / addin that roots the tree (optional)" }
+          stack:        { in: { type: kebab }, meaning: "language/runtime tag, e.g. python-django | csharp-dotnet (optional)" }
+          entrypoint:   { in: prose, meaning: "manifest / solution / addin that roots the tree (optional)" }
           note:         { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       agent_directive: >
         LATER AGENTS / OTHER MODELS: before scanning any code for this product, READ the owning bean's code_paths
@@ -1285,7 +1286,7 @@ profiles:
         is_ref: true
         attrs:
           bean:  { required: true, in: id }
-          repo:  { in: untyped, meaning: "the repository AS ITS HOST NAMES IT (`host-a:git/ledger.git`) — what a clone that has forgotten its remote needs" }
+          repo:  { in: { pattern: "^[a-z0-9][a-z0-9.-]*:[^ ]+$" }, meaning: "the repository AS ITS HOST NAMES IT (`host-a:git/ledger.git`) — what a clone that has forgotten its remote needs" }
       merge: { cardinality: single, order: none }
 
   network:
@@ -1294,7 +1295,7 @@ profiles:
       REACHES FOR, the LINKS those ride over, and what a forwarding device DOES to traffic in between.
       A garden with one host and no network should inherit none of it.
     vacancies:
-    - at: net_protocol.values
+    - at: "registry:net_protocols"
       position: pptp
       reason: impossible
       why: >
@@ -1304,37 +1305,37 @@ profiles:
         Measured: zero occurrences across the estate it was declared in. Declaring the
         position and refusing it is how the estate states a standing decision that would otherwise exist
         only as an absence — and an absence is indistinguishable from nobody having thought about it.
-    - { at: net_protocol.values, position: ipv4, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: ipv6, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: icmp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: arp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: dot1q, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: stp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: lldp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: gre, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: ipsec, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: vxlan, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: ospf, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: is-is, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: rip, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: eigrp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: bgp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: vrrp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: dhcp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: ntp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - { at: net_protocol.values, position: snmp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
-    - at: net_protocol.values
+    - { at: "registry:net_protocols", position: ipv4, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: ipv6, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: icmp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: arp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: dot1q, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: stp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: lldp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: gre, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: ipsec, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: vxlan, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: ospf, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: is-is, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: rip, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: eigrp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: bgp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: vrrp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: dhcp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: ntp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - { at: "registry:net_protocols", position: snmp, reason: universal, why: "declared because the structure is general, not because this garden expects an occupant (CONTRIBUTING: a mechanism may precede its occupants)" }
+    - at: "registry:net_protocols"
       position: tcp
       reason: prediction
       why: >
         Every endpoint recorded so far takes its transport from its protocol's row, and A DEFAULT DOES NOT OCCUPY:
         a position is taken by an entry that STATES it. Expected first where a protocol answers on a transport
         other than its usual one — the DNS server that answers on 53/tcp as well as 53/udp.
-    - at: net_protocol.values
+    - at: "registry:net_protocols"
       position: udp
       reason: prediction
       why: "As for tcp: no entry has yet needed to state it, because the protocols that use it say so in their own rows."
-    - at: anchor_system.values
+    - at: "registry:anchor_systems"
       position: ipv6
       reason: prediction
       why: >
@@ -1346,15 +1347,6 @@ profiles:
         exists so that the day one endpoint takes it, the gate says the prediction came true instead of
         letting a whole address family appear with nothing noticing.
     terms:
-    - term: net_protocol
-      meaning: "a protocol a being may speak — the one owner of that enum"
-      context_keys: [net_protocol]
-      schema:
-        shape: scalar
-        values: [tcp, udp, ssh, sftp, git, http, smtp, pop3, imap, smb, mysql, dns, ipv4, ipv6, icmp, arp, dot1q, stp, lldp, gre, ipsec, vxlan, ospf, is-is, rip, eigrp, bgp, vrrp, dhcp, ntp, snmp, ethernet, pppoe, wireguard, pptp]
-        values_consistent_with: ["registry:net_protocols[].protocol"]
-      enforced_by: none
-      merge: { cardinality: single, order: none }
     - term: endpoints
       meaning: >
         The listening surfaces this being offers: for each, the protocol spoken, the address system and
@@ -1374,7 +1366,7 @@ profiles:
           transport:        { in: { registry: net_protocols, take: protocol, where: { layer: transport } }, default_from: { registry: net_protocols, keyed_by: protocol, take: transport }, meaning: "tcp | udp — which transport's port space `port` is a position in. Defaults to the protocol row's `transport`." }
           plane:            { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR. Stated where it matters: a management surface deserves a different exposure from a data one." }
           port:             { in: { form_of: anchor_systems, keyed_by: transport, take: pattern }, meaning: "the port: a position in the transport's port space, WITHIN the address beside it. One port per entry. Omitted where the protocol rides another (sftp over ssh) and has none of its own, and for a socket path, which has none at all." }
-          via_link:         { in: untyped, meaning: "optional: the `links` key this surface is reachable over, when it is not reachable without it" }
+          via_link:         { in: { key_of: links }, meaning: "optional: the `links` key this surface is reachable over, when it is not reachable without it" }
         cells:
           - { when: { permission: forbidden }, verdict: in_breach, why: "a listening surface that MUST NOT exist, recorded as existing. Unlike a capability, an endpoint entry is not a stance about a possibility — it is a statement that the being answers there — so `forbidden` alone is the breach and needs no second aspect to confirm it. A database container published on 0.0.0.0:5432, reachable across the LAN, is this shape." }
           - { when: { permission: required, confidentiality: cleartext, exposure: [lan, link, internet] }, verdict: in_breach, why: "a channel the estate REQUIRES and which protects nothing on the wire, on a path something else can be on. A mail policy that forces cleartext delivery to a partner domain that mail must still reach is exactly this, so the requirement and the exposure are both real and neither can simply be withdrawn." }
@@ -1395,7 +1387,7 @@ profiles:
           peer:             { in: ref, meaning: "a {bean, field} ref to the far end. A REF, not a retyped address: this is the field whose absence produced the .169/.146 contradiction." }
           confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "what the link protects, for everything carried over it" }
           plane:            { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR." }
-          carried_by:       { in: untyped, meaning: "optional: the `links` entry this one rides over — a tunnel rides a WAN link rides an interface" }
+          carried_by:       { in: { key_of: links }, meaning: "optional: the `links` entry this one rides over — a tunnel rides a WAN link rides an interface" }
       dag_note: >
         NOTHING HERE IS ACYCLIC, and the first draft of this term got that wrong twice in one line. It
         carried `dag: true` over `peer` and `carried_by`, and the design review caught both before any bean
@@ -1423,7 +1415,7 @@ profiles:
           observed:   { in: { type: date }, meaning: "ABSOLUTE date the reach was verified to work" }
           target:     { in: ref, meaning: "a {bean[, field]} ref to what it reaches. A ref rather than an address, so the far end stays the one owner of its own address." }
           necessity:  { in: { aspect: necessity, default: necessary }, meaning: "the position on the necessity aspect — `necessary` if the being cannot do its work without it" }
-          via_link:   { in: untyped, meaning: "optional: the link this reach must cross" }
+          via_link:   { in: { key_of: links }, meaning: "optional: the link this reach must cross" }
       merge: { cardinality: multi, order: by-key }
     - term: treatments
       meaning: >
@@ -1463,7 +1455,7 @@ profiles:
           registrar:   { required: true, in: prose, meaning: "the registrar of record — who the renewal is actually paid to" }
           created:     { required: true, in: { type: date }, meaning: "ABSOLUTE date the registration began" }
           expires:     { required: true, in: { type: date }, meaning: "ABSOLUTE date it lapses if unrenewed — the fact that can lose the name" }
-          auto_renew:  { required: true, in: untyped, meaning: "enabled | disabled | unknown. `unknown` is the honest default: it is a registrar-ACCOUNT setting and does not appear in WHOIS, so it cannot be observed the way the dates can." }
+          auto_renew:  { required: true, in: [enabled, disabled, unknown], meaning: "enabled | disabled | unknown. `unknown` is the honest default: it is a registrar-ACCOUNT setting and does not appear in WHOIS, so it cannot be observed the way the dates can." }
           observed:    { required: true, in: { type: date }, meaning: "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer." }
           source:      { required: true, in: prose, meaning: "where they were read from" }
           registrant:  { in: prose, meaning: "optional: the party holding the registration, where the registry discloses it" }
@@ -1531,7 +1523,7 @@ terms:
         why:              { required: true, in: prose, meaning: "WHY this stance holds — the consequence of violating it, in prose an operator can act on" }
         permission:       { in: { aspect: capability, default: permitted }, meaning: "the position taken on the capability aspect (required | omissible | permitted | forbidden)" }
         feasibility:      { in: { aspect: feasibility, default: possible }, meaning: "the position on the feasibility aspect — whether the being CAN be in that state at all, independent of whether it may. `forbidden` + `possible` is a live risk; `forbidden` + `impossible` is already prevented by something else." }
-        by:               { in: untyped, meaning: "optional: who imposes it, when the enforcer is not us (e.g. a hosting provider)" }
+        by:               { in: prose, meaning: "optional: who imposes it, when the enforcer is not us (e.g. a hosting provider)" }
         feasibility_why:  { in: prose, meaning: "optional: WHY the feasibility position holds — a sysctl is reversible, a kernel flag is not. Distinct from `why`, which is the reason for the PERMISSION" }
       cells:
         - { when: { permission: required, feasibility: impossible }, verdict: incoherent, why: "an unsatisfiable requirement — it must be had and cannot be. Either the requirement is not real, or the impossibility is not, and until that is resolved the entry asserts a contradiction." }
@@ -1556,7 +1548,7 @@ terms:
       is_ref: true
       attrs:
         rel:   { required: true, in: { type: kebab }, meaning: "the relation TYPE, kebab-case and open" }
-        path:  { in: untyped, meaning: "INSTEAD of a bean: a pointer to something that is not a managed object here — an off-garden document. The residual relation's own residual, kept since the relation algebra was declared" }
+        path:  { in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare or relative path names no host, and means something else from every other working copy" }, meaning: "INSTEAD of a bean: a pointer to something that is not a managed object here — an off-garden document. The residual relation's own residual, kept since the relation algebra was declared" }
         note:  { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
   - term: depends_on
@@ -1619,7 +1611,7 @@ terms:
       key_form: kebab
       required_on_kinds: [codebase]
       attrs:
-        produced_by:     { required: true, in: untyped, meaning: "the agent/tool id that produced this analysis (provenance — who to ask, who to blame)" }
+        produced_by:     { required: true, in: { pattern: "^((agent|tool|human):[^ ].*|[^ :][^:]* \\(.+\\))$", soft: true, why: "attribution has one convention across the ledger — `agent:<model>/<garden>` for an agent, `tool:<name>` for a tool, `name (role)` for a person — so that `who to ask` can be read by something" }, meaning: "the agent/tool id that produced this analysis (provenance — who to ask, who to blame)" }
         as_of:           { required: true, in: { type: date }, meaning: "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)" }
         staleness_key:   { required: true, in: { pattern: "^([a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}|manual:.+)$" }, meaning: "the value that makes this entry VALID; when it MOVES, the entry is STALE. The FORM is the pattern this attribute declares, beside this sentence, and is not restated here: `<repo>@<object-id>`, a position in a named repository's object graph, or `manual:<why>` for what no key can track. Until 2026-09-20 this line listed three spellings — the git-head, the digest and the manual one — two of which the pattern had already refused since 11.0. A person reading the term was taught the form the gate rejects, which is the same defect as a law the code ignores, pointing the other way. (The superseded wording is in git, and is deliberately NOT quoted here: a document that quotes a spelling it is abolishing still contains it, and the check in test/place.py cannot tell a quotation from a lesson. Nor should it have to.)" }
         policy:          { required: true, in: [index, reference-only, skim], meaning: "index | reference-only | skim — how the analysed source is to be treated" }
@@ -1627,7 +1619,7 @@ terms:
         covers_paths:    { in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare absolute path names no host — the same defect `code_paths.path` carries" }, meaning: "the code_paths path(s) this entry analysed — this is WHERE an agent re-checks staleness_key" }
         summary_ref:     { in: { pointer: bean_field_pointer }, meaning: "REQUIRED when form: summary_ref. A pointer, or a list of pointers, to the recorded result. Each pointer is either '<section>.<key>' (a field on THIS bean, gate-resolved), or {bean: <id>, field: <key>} (a field on ANOTHER bean, gate-resolved), or 'file:<path>' (an on-disk document)." }
         relevant_scope:  { in: prose, meaning: "optional: which part of a large covered tree matters to THIS bean (e.g. 'CE module: hr')" }
-        digest:          { in: untyped, meaning: "optional short content hash of the cached result itself" }
+        digest:          { in: { pattern: "^[a-z0-9]+:[0-9a-f]{7,}$" }, meaning: "optional short content hash of the cached result itself" }
       cells:
         - { when: { form: summary_ref }, requires: [summary_ref] }
         - { when: { staleness_key: { starts_with: "manual:" } }, expects: [covers_paths], why: "an agent cannot tell where to re-check it" }
@@ -1654,8 +1646,7 @@ terms:
     context_keys: ["nature"]
     schema:
       shape: scalar
-      values: [physical, metaphysical, living]
-      values_consistent_with: ["registry:natures[].nature"]
+      values_from: "registry:natures[].nature"
       required: true
       must_equal_kind_attr: of_nature
     merge: { cardinality: single, order: none }
@@ -1676,7 +1667,7 @@ terms:
       attrs:
         owner:     { in: ref }
         contract:  { in: ref }
-        since:     { in: untyped, meaning: "optional: ABSOLUTE date this owner came to hold the facet" }
+        since:     { in: { type: date }, meaning: "optional: ABSOLUTE date this owner came to hold the facet" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     forms:
       explicit:  "owned_by: { <facet>: { owner: {bean: <person|org>} }, ... }   # introduce facet-owners here"
@@ -1699,7 +1690,7 @@ terms:
       attrs:
         holder:    { in: ref }
         contract:  { in: ref }
-        since:     { in: untyped, meaning: "optional: ABSOLUTE date this holder came to answer for the facet" }
+        since:     { in: { type: date }, meaning: "optional: ABSOLUTE date this holder came to answer for the facet" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     forms:
       explicit:  "responsibility: { <facet>: { holder: {bean: <person|org>} } }"
@@ -1998,24 +1989,6 @@ terms:
     enforced_by: none
     merge: { cardinality: single, order: none }
   # == POSITION TERMS ==
-  - term: anchor_system
-    meaning: "the anchor system a position is stated in — the one owner of that enum"
-    context_keys: [anchor_system]
-    schema:
-      shape: scalar
-      values: [unix-filesystem, git-object-graph, guix-store, physical, gregorian-civil, iso-week, julian-calendar, persian-calendar, hebrew-calendar, islamic-civil-calendar, islamic-tbla-calendar, islamic-calendar, islamic-rgsa-calendar, islamic-umalqura-calendar, coptic-calendar, ethiopic-calendar, ethiopic-amete-alem-calendar, indian-calendar, buddhist-calendar, roc-calendar, japanese-calendar, chinese-calendar, dangi-calendar, julian-day, mayan-long-count, bahai-calendar, french-republican-calendar, unix-epoch, geographic, event-anchored, network-segment, windows-filesystem, ipv4, ipv6, tcp-port, udp-port, iso-3166, osm, street-address, local-frame, geohash, plus-code, postal-code]
-      values_consistent_with: ["registry:anchor_systems[].system"]
-    enforced_by: none
-    merge: { cardinality: single, order: none }
-  - term: unit
-    meaning: "the resolution a position is held to — the one owner of that enum"
-    context_keys: [unit]
-    schema:
-      shape: scalar
-      values: [millisecond, second, minute, hour, day, millimetre, metre, kilometre, square-metre, hectare, square-kilometre, cubic-metre, litre, metre-per-second, kilometre-per-hour, metre-per-second-squared, hertz, kilogram, gram, bit, byte, kilobyte, megabyte, gigabyte, terabyte, gibibyte, byte-per-second, bit-per-second, megabit-per-second, decibel, decibel-per-metre, decibel-per-kilometre]
-      values_consistent_with: ["registry:units[].unit"]
-    enforced_by: none
-    merge: { cardinality: single, order: none }
   - term: located_at
     meaning: >
       Where this being is found: a list of positions, each in a named anchor system, each stating how far
@@ -2049,7 +2022,7 @@ terms:
         system:  { required: true, in: { registry: anchor_systems, take: system }, meaning: "the time anchor system — gregorian-civil for a calendar reading, event-anchored for a position fixed only by its neighbours" }
         at:      { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position, in that system's ONE canonical form" }
         unit:    { required: true, in: { registry: units, take: unit }, meaning: "the resolution ACTUALLY HELD. `2026-08-07T05:21` recorded at unit: minute means the second is not known — not that it was zero." }
-        by:      { in: untyped, meaning: "optional: who or what read the clock, when that is not the bean's default provenance" }
+        by:      { in: prose, meaning: "optional: who or what read the clock, when that is not the bean's default provenance" }
         note:    { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     key_note: >
       kebab-case moment names. Used so far: start | sync | stop. The key is DELIBERATELY OPEN and the gate
@@ -2077,16 +2050,6 @@ terms:
       two machines both choose to use, and centralising the list would re-introduce the one shared document
       this term exists to avoid.
     merge: { cardinality: multi, order: by-key }
-  - term: role
-    meaning: "a job a being does — the one owner of that enum"
-    context_keys: [role]
-    schema:
-      shape: scalar
-      values: [router, mail-primary, mail-backup, file-server, dns-resolver, dns-authoritative,
-               monitoring, web, app-host, vpn-gateway, ledger-hub, workstation]
-      values_consistent_with: ["registry:roles[].role"]
-    enforced_by: none
-    merge: { cardinality: single, order: none }
   - term: roles
     meaning: "the jobs this being does, each a row of the `roles` registry"
     context_keys: [roles]
@@ -2102,21 +2065,11 @@ terms:
     context_keys: [os]
     schema:
       shape: scalar
-      values: [slackware, almalinux, windows, routeros, linux, debian, ubuntu, rhel, fedora, arch, alpine, freebsd, macos]
-      values_consistent_with: ["registry:operating_systems[].os"]
+      values_from: "registry:operating_systems[].os"
     version_note: >
       The RELEASE (15.0, 9.7) is deliberately NOT part of this value. A version moves on every upgrade
       while the OS does not, and putting both in one scalar would make the enum unclosable — a new point
       release would be a rule-change. The release belongs in `owns.os_release`, beside the date it was read.
-    merge: { cardinality: single, order: none }
-  - term: storage_format
-    meaning: "a format a volume may carry — the one owner of that enum"
-    context_keys: [storage_format]
-    schema:
-      shape: scalar
-      values: [ext4, ext2, vfat, swap, crypto_LUKS, LVM2_member, linux_raid_member, ntfs]
-      values_consistent_with: ["registry:storage_formats[].format"]
-    enforced_by: none
     merge: { cardinality: single, order: none }
   - term: volumes
     meaning: >
@@ -2129,9 +2082,9 @@ terms:
       attrs:
         format:      { required: true, in: { registry: storage_formats, take: format }, meaning: "a row of storage_formats — ext4, crypto_LUKS, LVM2_member and so on" }
         observed:    { in: { type: date }, meaning: "ABSOLUTE date the layout was read off the machine" }
-        carried_by:  { in: untyped, meaning: "the `volumes` key beneath this one. A local key and NOT a ref: the stack is intra-bean, which is why it joins no acyclic check." }
-        uuid:        { in: untyped, meaning: "the volume's own identifier, as its format reports it. The datum a rebuild needs and the one that survives a device rename." }
-        at:          { in: untyped, meaning: "where it is mounted, in this machine's path grammar. Absent for a volume that holds no filesystem — a LUKS container or an LVM member is mounted nowhere." }
+        carried_by:  { in: { key_of: volumes }, meaning: "the `volumes` key beneath this one. A local key and NOT a ref: the stack is intra-bean, which is why it joins no acyclic check." }
+        uuid:        { in: { pattern: "^[0-9A-Za-z][0-9A-Za-z:-]*$" }, meaning: "the volume's own identifier, as its format reports it. The datum a rebuild needs and the one that survives a device rename." }
+        at:          { in: { pattern: "^(/[^ ]*|[A-Za-z]:[/\\\\].*)$" }, meaning: "where it is mounted, in this machine's path grammar. Absent for a volume that holds no filesystem — a LUKS container or an LVM member is mounted nowhere." }
     reproduction_note: >
       SCOPE, STATED BECAUSE IT IS ABOUT TO GROW. This term records the LAYOUT — what exists, what carries
       what, and where it is mounted — which is what a rebuild needs to recreate the shape. It does NOT
@@ -2177,9 +2130,9 @@ terms:
       required_on_kinds: [session]
       attrs:
         host:       { required: true, in: ref, meaning: "a {bean} ref to the machine the session ran on. A session is not portable: its shell history, its reachability and what it could measure all belong to one machine." }
-        at:         { required: true, in: untyped, meaning: "the working copy, as a position in that host's path grammar — `root:` form where a root exists, so it resolves on a second machine rather than reading as a literal path that is not there." }
-        branch:     { required: true, in: untyped, meaning: "the git branch it commits to. `session/<slug>` by convention; `master` for a session that worked the main copy directly, which is what every session before 2026-08-07 did." }
-        opened_at:  { in: untyped, meaning: "epoch milliseconds, stamped by bin/dmsession.py. A session's own start is the one moment nobody should be estimating." }
+        at:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$" }, meaning: "the working copy, as a position in that host's path grammar — `root:` form where a root exists, so it resolves on a second machine rather than reading as a literal path that is not there." }
+        branch:     { required: true, in: { pattern: "^[A-Za-z0-9][A-Za-z0-9._/-]*$" }, meaning: "the git branch it commits to. `session/<slug>` by convention; `master` for a session that worked the main copy directly, which is what every session before 2026-08-07 did." }
+        opened_at:  { in: { system: unix-epoch }, meaning: "epoch milliseconds, stamped by bin/dmsession.py. A session's own start is the one moment nobody should be estimating." }
     merge: { cardinality: single, order: none }
 
   - term: capture
@@ -2194,12 +2147,12 @@ terms:
         of:             { required: true, in: prose, meaning: "WHAT was copied — the config, the layout, the ruleset — in enough detail that a reader knows what they are holding." }
         owned_by_them:  { required: true, in: prose, meaning: "WHO owns the original and therefore the truth. A capture that does not name its owner reads as an authoritative fact, which is the failure ground rule 3 exists to prevent." }
         source:         { required: true, in: prose, meaning: "the EXACT command that produced it, so it can be produced again and compared. The same argument `beanger.source` makes, and it earned it there within the hour: naming the command is what gets it run." }
-        taken_at:       { required: true, in: untyped, meaning: "epoch milliseconds — a capture with no moment cannot be told from a guess." }
-        staleness_key:  { required: true, in: untyped, meaning: "how a reader decides whether this still holds: a config version, a change counter, a hash of the live export. The same job `analysis_cache.staleness_key` does for code, which is where this shape comes from rather than being invented beside it." }
+        taken_at:       { required: true, in: { system: unix-epoch }, meaning: "epoch milliseconds — a capture with no moment cannot be told from a guess." }
+        staleness_key:  { required: true, in: prose, meaning: "how a reader decides whether this still holds: a config version, a change counter, a hash of the live export. The same job `analysis_cache.staleness_key` does for code, which is where this shape comes from rather than being invented beside it." }
         redactions:     { required: true, in: prose, meaning: "WHAT WAS REMOVED and why. REQUIRED. Write `none — the source emits no secrets` explicitly if that is true; the point is that it is a claim, not a default." }
-        holds:          { required: true, in: untyped, meaning: "the content itself for something small, or a `file:` pointer into this garden for something large. Large captures do not belong inline: a bean must stay legible on paper, and a 900-line router export is not." }
+        holds:          { required: true, in: prose, meaning: "the content itself for something small, or a `file:` pointer into this garden for something large. Large captures do not belong inline: a bean must stay legible on paper, and a 900-line router export is not." }
         restores:       { in: prose, meaning: "optional: what this capture would let somebody rebuild, and what it would NOT. The honest half is usually the second." }
-        supersedes:     { in: untyped, meaning: "optional: the `capture` key on this bean that this one replaces" }
+        supersedes:     { in: { key_of: capture }, meaning: "optional: the `capture` key on this bean that this one replaces" }
         note:           { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
 
@@ -2218,9 +2171,9 @@ terms:
         state:        { required: true, in: [live, latent, unproven, resolved, superseded], meaning: "live (the defect IS the case right now) | latent (it is not, and nothing prevents it — the `forbidden` + `possible` shape) | unproven (nobody has established which, and that is the finding) | resolved | superseded (a different change made it moot; say which).\n" }
         evidence:     { required: true, in: prose, meaning: "how the state was established, specific enough to re-run. `unproven` states what WOULD establish it — a risk whose test is unnamed cannot be closed by anyone but its author." }
         owned_with:   { in: ref, meaning: "optional {bean} ref: where the FIX lives, when that is not this bean. A defect on one being is often only fixable on another." }
-        found:        { in: untyped, meaning: "ABSOLUTE date the finding was first made." }
+        found:        { in: { type: date }, meaning: "ABSOLUTE date the finding was first made." }
         resolution:   { in: prose, meaning: "on `resolved` / `superseded`: WHAT settled it. A closed risk that does not say how is a risk a reader must re-open to trust." }
-        resolved:     { in: untyped, meaning: "ABSOLUTE date it was settled." }
+        resolved:     { in: { type: date }, meaning: "ABSOLUTE date it was settled." }
         note:         { in: prose, meaning: "optional: history, partial resolutions, and what a reader would otherwise re-derive." }
     capability_note: >
       A `capabilities` entry at `forbidden` + `possible` IS a latent risk, and the two are deliberately
@@ -2556,6 +2509,23 @@ The portable, estate-agnostic classification shared by every garden — the abst
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **18.0** (2026-09-20, proposed rule-change) — **what was owed.** MAJOR, four things.
+  A REGISTRY IS ITS OWN ENUM OWNER: the five terms that only held a copy of a registry's column are gone
+  (`anchor_system`, `unit`, `role`, `storage_format`, `net_protocol`) with their drift guards; `nature` and `os` read
+  theirs with `values_from: "registry:<name>[].<field>"`. A position in a registry is addressed `registry:<name>`,
+  which is where a vacancy for an unused row is declared (`dmupgrade` rewrites a garden's). A garden that adds a row
+  states it once, under `registry_additions`.
+  A MAPPING IS ONE ENTRY: a term whose value is a mapping is judged by the same controllers as an entry of a list.
+  Until now the value scope had its own copies of four of them and none of the rest, so a closed list, a pattern or a
+  pointer declared on a mapping's attribute was read by nothing.
+  TWO DOMAINS: `in: { system: <anchor system> }`, a position in one named system; `in: { key_of: <term> }`, a key of
+  that term's mapping on this bean or `<bean>:<key>` on another. With them twenty-six of the twenty-seven `untyped`
+  attributes are typed — dates as dates, stamped moments as `unix-epoch`, a link a surface rides as a key of `links`
+  — and a garden whose values were free text in those positions is told so. One remains, `beanger.records`.
+  NO CALENDAR IS THE ONE TIME IS READ IN: the `instant` order holds between readings in any declared calendar, asked
+  at the day, and across two calendars only when both begin their day at the same moment. A journal heading is a
+  position in any declared calendar, in that calendar's own form, to the minute and with its offset; the journal's
+  copy of one calendar's pattern is gone (`journal.system` names one for a garden that wants one).
 - **17.0** (2026-09-20, proposed rule-change) — **quantities.** MAJOR: a `units` row names its `quantity` and its
   `factor` instead of a `dimension`, so a garden that added a unit restates it. A QUANTITY is a product of powers of
   base `dimensions`: duration is time, area is length squared, SPEED is length per time, ACCELERATION is length per

@@ -420,15 +420,16 @@ its place; `os` is the estate's one bare version-shaped fact name.
 
 11.0: and the windows one, whose rows carry the same `root:`/`<host>:` forms
 
-## leaf_orders[instant].system
+## leaf_orders[instant].every_calendar
 
-9.3, T2: this order follows what a value IS, not what its key is called. Time
+This order follows what a value IS, not what its key is called. Time sits under a dozen names in one corpus
+(observed, as_of, found, since, created, expires, …) and under `at`, which also holds paths; a name list would miss
+the next name and misfire on `at`. A value in a calendar's ONE form is a time.
 
-## leaf_orders[instant].why
-
-sits under a dozen names in one corpus (observed, as_of, found, since, created,
-expires, …) and under `at`, which also holds paths; a name list would miss the
-next name and misfire on `at`. A value in this system's ONE form is a time.
+It named one calendar until 18.0, so a day written in any other contained nothing and two gardens dating the same
+fact in two calendars could only disagree. Calendars meet at the day, so containment is asked there. Across two
+calendars it is asked only when both begin their day at the same moment: where a day begins at sunset, which day a
+clock time falls in depends on the place and the season, and an order computed by arithmetic would be an invention.
 
 ## vacancies[owned_by.entry_one_of]
 
@@ -444,26 +445,6 @@ Until today the reverse gate collected occupancy with `entry.get(attr, default)`
 looked exercised by five edges that never mention it — the gate crediting its own default. Occupancy
 is STATEMENT now, and what that leaves behind is this: a position every requirement in the estate
 effectively sits at, and none has ever taken a stance on.
-
-## vacancies[anchor_system.values]
-
-== ASPECTS (added 2026-08-02, std-vocab@2.1) ==
-DIMENSION-AGNOSTIC. An aspect declares its own axes and the gate does not care how many: `poles` is one
-contradictory PAIR, or a LIST of pairs. A figure may be 1-dimensional (a plain binary), 2 (a square),
-3 (a cube), or more — what is required is that every declared axis runs between genuine opposites, so a
-position is addressable along it. The count is DERIVED from the declaration, never assumed, because
-assuming a count is exactly how a square silently mis-models a cube. Likewise a term's `cells`
-are N-ary: they constrain ONE aspect or SEVERAL, and the machinery is the same either way.
-An ASPECT is a CLOSED figure of positions — the operator's requirement that a classification have no
-loose ends. A line has undefined extremes and forces partial membership; a closed figure does not, so
-polarity lives in OPPOSED POSITIONS rather than at the ends of a scale. Each position names its
-COMPLEMENT, which is what lets a being be addressed by opposition as well as by identity ("the light is
-not where darkness is"). The gate enforces the sanity rules — closure, orientation, complement mutuality
-— and names no aspect, so a new aspect is data, never a code change.
-== POSITION SYSTEMS AND RESOLUTIONS NOT YET TAKEN (declared 5.1, 2026-08-07) ==
-Declared here rather than left silent because the whole argument for naming an anchor system is that
-an UNSTATED domain is what makes a negative result read as strong. A registry that quietly carried
-systems nothing occupies would be committing the same error one level up.
 
 ## figures
 
@@ -697,10 +678,6 @@ binds back to the tree it analysed via its `covers_paths`.
 
 a remote URL is globally unique for the repo → establishes a codebase's identity
 
-## profiles.network.terms[net_protocol].meaning
-
-The second enum owner. Same contract, same reason.
-
 ## profiles.network.terms[endpoints].meaning
 
 WHAT A BEING ANSWERS ON. This is the half `ip` never had: an address with no protocol and no port
@@ -915,14 +892,6 @@ all resolve up to god (Deus sive Natura). The crown is a MODEL axiom, NOT instan
 ## terms[nature].schema
 
 GATE (P2 interpreter; P3 made it the root axiom)
-
-## terms[nature].schema.values
-
-also the enum other terms reuse via values_from: nature
-
-## terms[nature].schema.values_consistent_with
-
-the enum IS the natures registry above
 
 ## terms[nature].schema.required
 
@@ -1188,31 +1157,6 @@ NOT a set: these are a SEQUENCE, and order carries the meaning — validating af
 different procedure from validating before. A set-union would reorder them into nonsense, so the
 whole list merges as one atom and two gardens with different steps conflict.
 
-## terms[anchor_system]
-
-== POSITION TERMS (added 5.1, human-ratified rule-change) ==
-`located_at` and `timing` are the SAME STRUCTURE pointed at two dimensions, which is the whole claim:
-sequence is general, and time and place are restrictions of it with different direction lines. They
-are declared as two terms rather than one because what they are ASKED is different — where a being is
-found, and when something happened — and a single term serving both would have to be read twice.
-
-## terms[anchor_system].meaning
-
-The enum OWNER. Nothing else may list the systems: this term's `values` are held equal to the
-registry by the gate's own drift check, exactly as `nature` is held equal to `natures`.
-
-## terms[anchor_system].enforced_by
-
-it is never carried on a bean: it exists to OWN the enum that `located_at` and
-
-## terms[anchor_system].merge
-
-`timing` select their systems from. Occupancy is counted through their entries.
-
-## terms[unit].enforced_by
-
-as with anchor_system: an enum owner, carried through other terms' entries
-
 ## terms[located_at].meaning
 
 THE BEING'S LOCATIONS. The meaningful object is the being — a codebase — and it may be found as a
@@ -1245,11 +1189,6 @@ can no longer disagree. `keyed_by: os` selects the operating_systems row by a fi
 which is the same machinery that fixes a crown branch from a bean's nature. It is on `roots` and
 NOT on `located_at`, deliberately: roots is the host describing itself and every bean carrying
 it has an `os`, while `located_at` is carried by codebases, which have none.
-
-## terms[role].meaning
-
-The enum OWNER, the shape `anchor_system` and `net_protocol` already use. Never carried on a bean:
-it exists so the `roles` registry is the one place the list lives.
 
 ## terms[roles].meaning
 
@@ -1425,6 +1364,54 @@ Considered and refused: a calendar bucket as a unit (`every: { count: 1, unit: m
 is 28 to 31 days in one calendar, 29 or 30 in another — and writing it as a measure would make arithmetic of something
 that is not arithmetic.
 
+## vacancies[registry:anchor_systems]
+
+== ASPECTS (added 2026-08-02, std-vocab@2.1) ==
+DIMENSION-AGNOSTIC. An aspect declares its own axes and the gate does not care how many: `poles` is one
+contradictory PAIR, or a LIST of pairs. A figure may be 1-dimensional (a plain binary), 2 (a square),
+3 (a cube), or more — what is required is that every declared axis runs between genuine opposites, so a
+position is addressable along it. The count is DERIVED from the declaration, never assumed, because
+assuming a count is exactly how a square silently mis-models a cube. Likewise a term's `cells`
+are N-ary: they constrain ONE aspect or SEVERAL, and the machinery is the same either way.
+An ASPECT is a CLOSED figure of positions — the operator's requirement that a classification have no
+loose ends. A line has undefined extremes and forces partial membership; a closed figure does not, so
+polarity lives in OPPOSED POSITIONS rather than at the ends of a scale. Each position names its
+COMPLEMENT, which is what lets a being be addressed by opposition as well as by identity ("the light is
+not where darkness is"). The gate enforces the sanity rules — closure, orientation, complement mutuality
+— and names no aspect, so a new aspect is data, never a code change.
+== POSITION SYSTEMS AND RESOLUTIONS NOT YET TAKEN (declared 5.1, 2026-08-07) ==
+Declared here rather than left silent because the whole argument for naming an anchor system is that
+an UNSTATED domain is what makes a negative result read as strong. A registry that quietly carried
+systems nothing occupies would be committing the same error one level up.
+
+## schema_language.values_from
+
+A registry is its own enum owner. Five terms existed only to hold a `values` list equal to a registry's column, each
+with a drift guard to keep the copy honest, and none was ever carried on a bean. The copy cost something every time a
+registry grew: a release that added units restated all of them on the `unit` term, and a garden that added one row
+stated it twice — the row, and the value on a term it did not own. `values_from: "registry:<name>[].<field>"` reads
+the column where it lives, so there is no copy and nothing to guard. A position in a registry is addressed
+`registry:<name>`, which is where a vacancy for an unused row is declared.
+
+## journal.system
+
+The journal kept its own copy of one calendar's form, as a pattern beside the system that already owned it: a second
+spelling of a rule, and one that made a journal in any other calendar unwritable. A heading's moment is a position in
+a calendar, so it is judged by that calendar's own form; the journal adds only what a JOURNAL needs — the minute, and
+the offset. `any` is the default because a language has no calendar of its own; a garden that wants one names it.
+
+## schema_language.attr_domains.system
+
+`form_of` asks a sibling attribute which system a position is in. An attribute that is only ever in ONE system (a
+moment a tool stamps is always `unix-epoch`) had no way to say so and stayed `untyped`, its form written in its
+`meaning` for a reader and for nothing else.
+
+## schema_language.attr_domains.key_of
+
+A part of a being — a link, a volume, a capture — is named by its key, not by a ref: it is not a managed object and
+joins no graph. Until 18.0 such a name was `untyped`, so a tunnel could ride a link that did not exist. The gate
+resolves it and draws no edge.
+
 ## quantities
 
 Area and volume are not new figures: they are an extent on a sequence with two or three lines, and the unit carries the
@@ -1452,4 +1439,12 @@ fact's standing already does) — which is noted here and not yet built.
 
 Considered and refused: temperature in degrees Celsius, which needs an offset as well as a factor; and compact strings
 such as `12.5 m/s`, a second spelling of what `{ count, unit }` already says.
+
+## terms[located_at]
+
+== POSITION TERMS (added 5.1, human-ratified rule-change) ==
+`located_at` and `timing` are the SAME STRUCTURE pointed at two dimensions, which is the whole claim:
+sequence is general, and time and place are restrictions of it with different direction lines. They
+are declared as two terms rather than one because what they are ASKED is different — where a being is
+found, and when something happened — and a single term serving both would have to be read twice.
 

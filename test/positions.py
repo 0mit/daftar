@@ -85,6 +85,41 @@ check("...and everything metered is metered in a declared base dimension",
       {x for x in measured if x and x != "none"} <= {d["dimension"] for d in sv["dimensions"]}, sorted(x for x in measured if x))
 check("the address registry is gone rather than kept beside its replacement", "address_systems" not in sv)
 
+
+# ---------------------------------------------------------------- 18.0: A MAPPING IS ONE ENTRY; two more domains
+s = open(v).read(); assert s.count("local_terms: []") == 1
+open(v, "w").write(s.replace("local_terms: []", """local_terms:
+  - term: probe_stamp
+    meaning: "a mapping — not a list of entries — whose attributes carry every kind of domain"
+    context_keys: [probe_stamp]
+    schema:
+      shape: mapping
+      attrs:
+        at:     { in: { system: unix-epoch } }
+        mode:   { in: [fast, slow] }
+        tag:    { in: { pattern: "^[a-z]+$" } }
+        rides:  { in: { key_of: links } }
+    merge: { cardinality: single, order: none }"""))
+LINK = '  - { protocol: smtp, system: ipv4, at: "203.0.113.10", port: 25, exposure: lan, observed: 2026-09-20 }\nlinks:\n  wan0: { kind: ethernet, medium: copper }\n'
+def stamp(text):
+    return gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "probe_stamp: " + text + "\n")
+base = stamp("{ at: 1786245253747, mode: fast, tag: abc }")
+check("a mapping's own attributes pass when they are what they say", "0 error" in base, base[-600:])
+out = stamp("{ at: 2026-09-20 }")
+check("`in: { system }` — a position in ONE named system, in its one form; a date is not a moment",
+      "probe_stamp.at '2026-09-20' is not in the one canonical form 'unix-epoch' declares" in out, out[-500:])
+out = stamp("{ mode: sideways }")
+check("a closed list on a MAPPING's attribute is read — until 18.0 nothing read it", "probe_stamp.mode 'sideways' not in" in out, out[-500:])
+out = stamp("{ tag: ABC }")
+check("...and so is a pattern", "probe_stamp.tag 'ABC' is not in the form this term declares" in out, out[-500:])
+out = stamp("{ rides: no-such-link }")
+check("`in: { key_of }` — a part of a being is named by its key, and the key must exist",
+      "probe_stamp.rides 'no-such-link' is no key of `links`" in out, out[-500:])
+out = stamp("{ rides: nobody:wan0 }")
+check("...on another bean, the bean must be held here", "names bean 'nobody'" in out, out[-500:])
+sv_now = open(os.path.join(ROOT, "seed", "std-vocab.md")).read()
+check("the standing debt is ONE attribute, and it says why", sv_now.count("in: untyped,") == 1 and "records:  { required: true, in: untyped" in sv_now)
+
 shutil.rmtree(T, ignore_errors=True)
 print("\npositions: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

@@ -65,5 +65,26 @@ st = dmwhy.stale()
 check(f"reasons that have become journal have not grown (now {len(st)}, ceiling {STALE_REASONS})", len(st) <= STALE_REASONS, list(st.items())[:3])
 print(f"      (the ceiling can come down to {len(st)})")
 
+# ---------------------------------------------------------------- 18.0: a GARDEN's overlay has its reasoning too
+import subprocess, tempfile, shutil
+_T = tempfile.mkdtemp(prefix="dmwhy-"); _G = os.path.join(_T, "g")
+subprocess.run(["sh", os.path.join(ROOT, "seed", "germinate.sh"), _G], cwd=ROOT, capture_output=True, text=True)
+_v = os.path.join(_G, "VOCAB.md"); _s = open(_v).read(); assert _s.count("local_terms: []") == 1
+open(_v, "w").write(_s.replace("local_terms: []", """local_terms:
+  - term: shelf
+    meaning: "which shelf a thing is kept on"
+    context_keys: [shelf]
+    merge: { cardinality: single, order: none }"""))
+def _why(text):
+    open(os.path.join(_G, "RATIONALE.md"), "w").write(text)
+    r = subprocess.run([sys.executable, os.path.join(_G, "bin", "dmwhy.py"), "--check"], cwd=_G, capture_output=True, text=True)
+    return r.returncode, r.stdout + r.stderr
+_rc, _o = _why("# why this garden's terms are as they are\n\n## local_terms[shelf]\n\nthings were being lost.\n")
+check("a garden keeps the reasoning for ITS OWN terms beside its VOCAB.md, under the same key and the same check",
+      _rc == 0 and "RATIONALE.md: 1 reasons, 0 orphaned" in _o and "seed/RATIONALE.md" in _o, _o[-400:])
+_rc, _o = _why("## local_terms[shelf]\n\nthings were being lost.\n\n## local_terms[drawer].meaning\n\na term that is gone.\n")
+check("...and a reason whose law is gone is refused there as well", _rc == 1 and "ORPHAN  local_terms[drawer].meaning" in _o, _o[-400:])
+shutil.rmtree(_T, ignore_errors=True)
+
 print("\nrationale: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

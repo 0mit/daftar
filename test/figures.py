@@ -199,10 +199,12 @@ check("S1: ...and so did entry_required_if and entry_expect_if — three constru
 _f = _gate.attribute_form("registration", _gate.SCHEMAS["registration"])
 check("S1: a mapping's own attributes take the same form, scoped to the value itself",
       _f["scope"] == "self" and _f["attrs"]["expires"].get("type") == "date" and _f["attrs"]["expires"].get("required") is True)
-_untyped = sorted(n for n, a in _gate.attribute_form("endpoints", _gate.SCHEMAS["endpoints"])["attrs"].items()
-                  if set(a) <= {"meaning", "scope"})
-check("S1: the form makes an UNTYPED attribute visible — `via_link` has a meaning and no rule (`port` had none until 14.0)",
-      _untyped == ["via_link"], str(_untyped))
+_untyped = sorted((t, n) for t, sc in _gate.SCHEMAS.items() for n, a in ((sc or {}).get("attrs") or {}).items()
+                  if isinstance(a, dict) and a.get("in") == "untyped")
+check("S1: the form makes an UNTYPED attribute visible — and since 18.0 the whole law has ONE, `beanger.records`, "
+      "which waits for a domain that can say `a list of entries inside an entry`",
+      _untyped == [("beanger", "records")], str(_untyped))
+check("S1: ...`endpoints.via_link` is a key of `links`, resolved", _gate.form_of("endpoints")["attrs"]["via_link"].get("key_of") == "links")
 
 shutil.rmtree(T, ignore_errors=True)
 print("\nfigures: %d failed" % len(FAILS))

@@ -29,7 +29,19 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import yaml, dmparse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAW, WHY = os.path.join(ROOT, 'seed', 'std-vocab.md'), os.path.join(ROOT, 'seed', 'RATIONALE.md')
+# A law and its reasoning come in PAIRS: the standard's, which every garden receives, and a garden's own overlay, whose
+# reasoning is the garden's to keep (`RATIONALE.md` beside its `VOCAB.md`). The same key, the same check, for both.
+PAIRS = [(os.path.join(ROOT, 'seed', 'std-vocab.md'), os.path.join(ROOT, 'seed', 'RATIONALE.md')),
+         (os.path.join(ROOT, 'VOCAB.md'), os.path.join(ROOT, 'RATIONALE.md'))]
+PAIRS = [p for p in PAIRS if os.path.exists(p[0]) and os.path.exists(p[1])]
+LAW, WHY = PAIRS[0] if PAIRS else (None, None)
+
+
+def each_pair():
+    """Run the rest of this tool once per pair, the pair in force held in LAW and WHY."""
+    global LAW, WHY
+    for LAW, WHY in PAIRS:
+        yield os.path.relpath(LAW, ROOT), os.path.relpath(WHY, ROOT)
 _SEG = re.compile(r'\.?([^.\[\]]+)|\[([^\]]*)\]')
 
 
@@ -95,21 +107,31 @@ def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         print(__doc__); return 0
     if argv[0] == '--check':
-        bad = orphans()
-        for k in bad:
-            print(f"ORPHAN  {k} — the rationale explains something the law no longer says")
-        print(f"dmwhy: {len(rationale())} reasons, {len(bad)} orphaned")
-        return 1 if bad else 0
+        total = 0
+        for _law, _why in each_pair():
+            bad = orphans(); total += len(bad)
+            for k in bad:
+                print(f"ORPHAN  {k} — {_why} explains something {_law} no longer says")
+            print(f"dmwhy: {_why}: {len(rationale())} reasons, {len(bad)} orphaned")
+        return 1 if total else 0
     if argv[0] == '--stale':
-        st = stale()
-        for k, gone in st.items():
-            print(f"STALE   {k} — speaks of {', '.join('`'+g+'`' for g in gone)}, which the law no longer has")
-        print(f"dmwhy: {len(st)} reasons speak of something the law no longer says — they have become journal")
+        for _law, _why in each_pair():
+            st = stale()
+            for k, gone in st.items():
+                print(f"STALE   {k} — speaks of {', '.join('`'+g+'`' for g in gone)}, which {_law} no longer has")
+            print(f"dmwhy: {_why}: {len(st)} reasons speak of something the law no longer says — they have become journal")
         return 0
-    want, data, why = argv[0], law(), rationale()
+    found = 0
+    for _law, _why in each_pair():
+        found += _show(argv[0])
+    if not found:
+        print(f"dmwhy: no rationale names '{argv[0]}'"); return 1
+    return 0
+
+
+def _show(want):
+    data, why = law(), rationale()
     keys = [k for k in why if k == want or re.search(r'(^|[.\[])' + re.escape(want) + r'($|[.\]])', k)]
-    if not keys:
-        print(f"dmwhy: no rationale names '{want}'"); return 1
     for k in keys:
         print(f"== {k}")
         try:
@@ -122,7 +144,7 @@ def main(argv):
         except KeyError:
             print("   (ORPHAN: the law no longer says this)")
         print('   ' + why[k].replace('\n', '\n   ') + '\n')
-    return 0
+    return len(keys)
 
 
 if __name__ == '__main__':
