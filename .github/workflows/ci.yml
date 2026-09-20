@@ -39,5 +39,7 @@ jobs:
         run: python3 test/shape.py
       - name: "calendars: every calendar meets the others at the day; a coordinate is never bare"
         run: python3 test/calendars.py
+      - name: "rationale: the law and its reasons, kept apart and related by key"
+        run: python3 test/rationale.py
       - name: "public: a repository carries the language, never a garden"
         run: python3 test/public.py

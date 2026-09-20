@@ -24,8 +24,9 @@ cals = [r for r in sv["anchor_systems"] if r.get("calendar")]
 # ---------------------------------------------------------------- the list is CLDR's, and the law and the tool agree
 CLDR = {"buddhist", "chinese", "coptic", "dangi", "ethioaa", "ethiopic", "gregory", "hebrew", "indian", "islamic",
         "islamic-umalqura", "islamic-tbla", "islamic-civil", "islamic-rgsa", "iso8601", "japanese", "persian", "roc"}
-check("every calendar Unicode CLDR identifies is declared, and the Julian calendar beside them",
-      {r["calendar"] for r in cals} == CLDR | {"julian"}, sorted({r["calendar"] for r in cals} ^ (CLDR | {"julian"})))
+OTHERS = {"julian", "julian-day", "mayan-long-count", "bahai", "french-republican"}     # the ones GNU Emacs's calendar also knows
+check("every calendar Unicode CLDR identifies is declared, and beside them the Julian, the day number, the Mayan long count, the Badi and the French Republican",
+      {r["calendar"] for r in cals} == CLDR | OTHERS, sorted({r["calendar"] for r in cals} ^ (CLDR | OTHERS)))
 by_rule = {r["calendar"] for r in cals if r.get("reckoning") == "arithmetic"}
 check("the law's `reckoning: arithmetic` is EXACTLY what the tool converts, and the rest is exactly what it refuses",
       by_rule == set(dmcal.EVERY) and {r["calendar"] for r in cals} - by_rule == set(dmcal.NOT_BY_RULE),
@@ -35,8 +36,9 @@ check("every calendar but the interchange one shares the Gregorian ground and sa
 check("a MONTH is never metric, in any calendar — and a day always is",
       all(not l.get("unit") for r in cals for l in r.get("levels", []) if l["level"] in ("month", "year", "era", "week"))
       and all(l.get("unit") == "day" for r in cals for l in r.get("levels", []) if l["level"] == "day"))
-check("the calendars whose day begins at SUNSET say so", {r["calendar"] for r in cals if r.get("day_begins") == "sunset"}
-      == {"hebrew", "islamic", "islamic-civil", "islamic-tbla", "islamic-rgsa", "islamic-umalqura"})
+check("the calendars whose day begins at SUNSET say so — and the astronomers' day begins at NOON",
+      {r["calendar"] for r in cals if r.get("day_begins") == "sunset"} == {"hebrew", "islamic", "islamic-civil", "islamic-tbla", "islamic-rgsa", "islamic-umalqura", "bahai"}
+      and {r["calendar"] for r in cals if r.get("day_begins") == "noon"} == {"julian-day"})
 check("NO CALENDAR IS PRIVILEGED: the law marks none as the one to store in",
       not [r["system"] for r in sv["anchor_systems"] if "interchange" in r])
 
@@ -58,7 +60,8 @@ for pos, cal, want in (("persian:1357-11-22", "gregory", "1979-02-11"), ("persia
                        ("indian:1948-01-01", "gregory", "2026-03-22"), ("2026-09-20", "julian", "julian:2026-09-07"),
                        ("2026-09-20", "iso8601", "2026-W38-7"), ("2026-09-20", "japanese", "japanese:reiwa-8-09-20"),
                        ("2026-09-20", "roc", "roc:115-09-20"), ("2026-09-20", "buddhist", "buddhist:2569-09-20"),
-                       ("2026-09-20", "ethioaa", "ethioaa:7519-01-10")):
+                       ("2026-09-20", "ethioaa", "ethioaa:7519-01-10"), ("2000-01-01", "julian-day", "jdn:2451545"),
+                       ("2012-12-21", "mayan-long-count", "mayan:13.0.0.0.0"), ("mayan:13.0.0.0.0", "julian-day", "jdn:2456283")):
     check(f"{pos} is {want}", dmcal.convert(pos, cal) == want, dmcal.convert(pos, cal))
 n = datetime.date(1996, 2, 25).toordinal()
 check("the published sample day (R.D. 728714) reads the same in six calendars as in Dershowitz & Reingold's table",
@@ -68,7 +71,7 @@ check("the published sample day (R.D. 728714) reads the same in six calendars as
 bad = sum(1 for d in range(datetime.date(1950, 1, 1).toordinal(), datetime.date(2050, 1, 1).toordinal())
           for c in dmcal.EVERY if dmcal.to_day(dmcal.from_day(d, c)) != d)
 check("every day of a century round-trips through every rule-reckoned calendar", bad == 0, bad)
-for pos in ("chinese:4723-01-01", "islamic:1448-04-08", "islamic-umalqura:1448-04-08"):
+for pos in ("chinese:4723-01-01", "islamic:1448-04-08", "islamic-umalqura:1448-04-08", "bahai:183-10-13", "french-republican:234-13-04"):
     try:
         dmcal.to_day(pos); ok = False
     except dmcal.NotByRule:

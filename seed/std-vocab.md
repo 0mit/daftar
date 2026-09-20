@@ -1,26 +1,11 @@
 ---
-version: "16.0"
-# TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
-# Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
-# lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
-# Changes are governed by the PROMOTION PROTOCOL (SKILL.md): human-ratified rule-changes, semver —
-# additive term = MINOR bump; changed handling/merge/anchor rule = MAJOR (can retroactively re-classify).
-# Each term declares: meaning · context_keys · anchor{class,establishing} · merge{cardinality,order,authority}
-# · canonical (normalizer) · escape · exceptions(dated case-law).
-# == THE SCHEMA LANGUAGE (added 2026-08-02, P2 / plan D4, human-ratified rule-change) ==
-# INVARIANT SERVED: "type rules live in the VOCAB, not in code." bin/dmcheck.py is now a fixed CORE
-# (front-matter shape, id==filename, kebab, provenance, anchors + establishing dedup, ip dedup, DAG,
-# link integrity, journal<->commit binding) plus ONE generic loop that enforces every term from the
-# `schema:` block below. There are NO per-term blocks in the gate. To change a type rule, edit the
-# schema here — that is a human-ratified rule-change — and the gate follows without a code edit.
-# A term with no `schema:` is documentation only; the gate never enforces it on beans.
+version: "16.1"
+# == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
   attrs:                "{<attr>: {required?, in, meaning}} — THE ATTRIBUTES: one record each, saying what the attribute is a position IN, whether it is required, and what it means — once, for the gate and the reader both. They describe each ENTRY of a list, an open map or a faceted mapping, and otherwise the mapping itself. An entry holds only the attributes declared here. See `attr_domains` for what `in:` may say."
   default_from:         "{registry, keyed_by, take} — inside an attribute's record: when the entry is SILENT, the attribute's value is READ from a registry row, the row selected by another attribute of the same entry. The registry stays the one owner of the usual value (a protocol's transport), and an entry states the attribute only when it differs. Like an aspect's default, a value that came from here never counts as OCCUPYING a position."
   cells:                "[{when, verdict|requires|expects, why}] — COMBINATIONS of what an entry holds. `verdict: incoherent` is an ERROR (the positions cannot both hold, so one is mis-stated); `verdict: in_breach` a WARNING (all can hold, and the state needs action). `requires: [...]` is an error when the entry sits in the cell and lacks those attributes; `expects: [...]` the same as a warning. `when` maps an attribute to the value it holds, or to `{starts_with: …}`; an aspect attribute is read at its EFFECTIVE position, stated or defaulted."
-  # WHAT `in:` MAY SAY. Every attribute is a position in EXACTLY ONE domain,
-  # so `in:` is one thing, and it is never absent.
   attr_domains:
     values:      "in: [a, b, c] — one of a closed list written here"
     registry:    "in: { registry: <name>, take: <field> } — a row of a registry, so the registry OWNS the enum and no term restates it. `where: { <field>: <value> | [<values>] }` narrows it to the rows that say so — a PLACE system, a TRANSPORT-layer protocol — so one registry serves attributes that may name only some of its rows. `registry_from: <attr>` instead of `registry`: the registry is NAMED by another attribute of the same entry"
@@ -64,18 +49,8 @@ schema_language:
   compare_form:         "upper-trim — with governs_anchor: the anchor is compared in this form for uniqueness (whitespace removed, uppercased), and a stored value not already in it warns (9.0)"
   value_in_registry:    "{registry, take} — with governs_anchor: the anchor value must be a ROW of that registry (a code of a published classification, 9.1)"
   inverse_of:           "<term>, or {term, cardinality: one-to-one | many-to-one} — this relation mirrors another and the gate holds the pair consistent so the convenience edge cannot drift from the fact. A BARE NAME means one-to-one and the mirror is enforced BOTH ways. `many-to-one` enforces only the functional direction: many instances point at one type, and the type cannot point back at all of them through a single mapping. Declare the cardinality; assuming a bijection is how a rule becomes unsatisfiable without anyone noticing."
-# == NATURES: the root axiom layer (added 2026-08-02, P3 / plan D1, human-ratified rule-change) ==
-# `nature` is the ROOT of the type system and `kind` is a REFINEMENT of it, not a parallel taxonomy.
-# Every bean carries a nature; every kind below declares the `of_nature` it refines; the gate holds the
-# two equal. Policy that used to be stated per kind (anchor family, minimum anchors) attaches HERE, so a
-# new kind inherits a coherent identity policy for free and may override only if it truly differs.
-# The crown itself is a MODEL axiom (MODEL.md Ownership), never instantiated as beans.
-# == THE CROWN (added 2026-08-02, P7b, human-ratified) ==
-# MODEL §Ownership states the axiom in prose; this makes it NAMEABLE in data without instantiating it as
-# beans. These are the TERMINI every ownership chain resolves to. A bean names its branch directly only
-# where ownership does not pass through another being — in practice, persons. Everything else chains up
-# through a person or an org and terminates here transitively.
-# The branch a bean may name is fixed by its nature (natures[].crown owns that mapping — not restated here).
+# == NATURES: the root axiom layer ==
+# == THE CROWN ==
 crown:
   - branch: god
     root: true
@@ -86,95 +61,33 @@ crown:
     meaning: "Thought, res cogitans — the terminus for metaphysical beings"
   - branch: love
     meaning: "the conatus — the terminus for LIVING beings, while alive; life-bounded, lapses at death or teardown. This branch is what makes a person UNOWNABLE BY ANOTHER BEING: no bean may hold a person, only love, and only while they live. That is a protection, not a formality — the gate enforces it via person.ownership_form."
-  # NB the crown OWNS but never ANSWERS. Responsibility has no crown form: a duty must land on a being
-  # that can be asked, so responsibility always terminates in a bean (or, for a person, in themselves).
-identity_policy:                                 # P3/D1: identity policy attaches to the ROOT AXIS...
-  keyed_by: nature                               # ...this bean field selects the policy row...
-  registry: natures                              # ...from this registry...
-  applies_at_identity_status: confirmed          # ...and the minimum bites once identity is confirmed.
+identity_policy:
+  keyed_by: nature
+  registry: natures
+  applies_at_identity_status: confirmed
 natures:
   - nature: physical
     meaning: "res extensa — a being with extension in space: machines, hardware, sites"
-    crown: nature                                  # Extension owns physical beings
-    establishing_anchor_family: [hardware]         # serial / mac / wg_pubkey — bound to the matter itself
-    min_establishing_anchors: 1                    # required once identity.status is `confirmed`
+    crown: nature
+    establishing_anchor_family: [hardware]
+    min_establishing_anchors: 1
   - nature: metaphysical
     meaning: "res cogitans — a being constituted by meaning or agreement: code, products, orgs, domains, designs, contracts"
-    crown: logos                                   # Thought owns metaphysical beings
-    establishing_anchor_family: [logical]          # url / fqdn / git remote / manifest or doc id
+    crown: logos
+    establishing_anchor_family: [logical]
     min_establishing_anchors: 1
   - nature: living
     meaning: "conatus — a being that strives to persist as itself: persons, and running instances while alive"
-    crown: love                                    # life-bounded ownership; lapses at teardown
+    crown: love
     establishing_anchor_family: [logical, personal]
     min_establishing_anchors: 1
-# == ANCHOR SYSTEMS: the systems a POSITION may be stated in (added 5.1, human-ratified rule-change) ==
-# A POSITION IS NEVER BARE. `iso_date` hardcodes ONE anchor system — the Gregorian calendar — as though it
-# were time itself; an absolute path hardcodes ONE — a particular host's filesystem — as though it were
-# place. It is the same defect twice, and it cost this estate a session each time: a commit declared to
-# exist on NO branch and NOT on disk (true of the machine searched, false of the estate), and one analysis
-# reported FRESH on one host and STALE on another the same minute.
-# DIMENSION-SPANNING ON PURPOSE. Time and place are the same structure with different direction lines, so
-# they share ONE registry rather than each minting its own. A system declares the dimension it positions
-# in, and whether a position there ESTABLISHES the location or merely CORROBORATES it — the same split
-# identity anchors already use, for the same reason: a value that migrates cannot fix what you are at.
-# EACH SYSTEM OWNS ITS ONE FORM, so no bean, tool or session invents a second spelling. That is not
-# tidiness: `staleness_key` alone already carries four unowned spellings (`git-head:`, `git-commit:`,
-# `digest:`, `manual:`), which is how one analysis acquired two verdicts. A system whose addresses have NO
-# canonical form says so with `pattern: none` and a reason — the same explicit-absence rule `enforced_by`
-# already applies to terms, because an unstated pattern and a deliberately absent one must not look alike.
-# THE REGISTRY IS OPEN. A new system is a VOCABULARY edit and never a code edit: the gate reads `pattern`
-# generically through `entry_pattern_from_registry` and names no system, exactly as it names no term.
+# == ANCHOR SYSTEMS: the systems a POSITION may be stated in ==
 # == A SYSTEM KNOWS ITS OWN SHAPE ==
-# The `place` aspect has always confessed that it cannot describe its systems: "lines: open … metered: none — the
-# aspect claims no measure it cannot give every system". The operator said where the answer lives on 2026-08-05:
-# a position is "a position in a SUBASPECT which here is not always linear". A system row may therefore state —
-#   levels            the resolutions a position may be HELD to, coarse -> fine: a named list, or a counted range
-#                     `{ by, from, to }`. A level is METRIC when it names a `units` row: a day is, A MONTH IS NOT,
-#                     which is why `units` never held month — it was always a level and never a measure. Levels are
-#                     what the imported trees of knowledge arrived with (broad / narrow / detailed), what a calendar
-#                     is (year … millisecond), what a network design is (core / distribution / access; an OSPF area),
-#                     and what a map is (country … neighbourhood). Holding a position at a COARSER level is always
-#                     honest; a finer one is never inferred.
-#   within            a position here is only meaningful INSIDE a position of one of those systems (a port within an
-#                     address; a postal code within a country).
-#   resolves_through  reading a position here needs one there (civil time through geography).
-#   neighbours        `counted` | `metered` | `none`: whether positions have a neighbour relation at all. It is what
-#                     a routing protocol computes over, and what makes "every 10th release" sayable with no meter.
-#   restrictions      its own `lines`, `metered`, `order`, `ends` — NARROWING its aspect's, never widening them.
-#   same_ground_as    this system PARTITIONS THE SAME GROUND as those: two calendars over one line of days, a
-#                     postal layer and an administrative tree over one territory, two classifications of one world of
-#                     work. `crosswalk` says how a position in one is found in another: `computed` (by rule),
-#                     `table` (somebody publishes the correspondence), `observed` (it is looked up in what was seen),
-#                     `none`. Neither system is the other's parent; that is what distinguishes this from `within`.
-#   example           one position in the system's form. The gate holds it to the system's own pattern, so the form
-#                     a reader is shown is one the gate accepts.
-# THE GATE CHECKS THE SHAPE, not its use: that what a row names exists, that `within` and `resolves_through` never
-# loop, that a metric level names a real unit, that a restriction is one the figure offers and does not widen the
-# aspect's. The consumers are extents and recurrences, which ask the SYSTEM what it permits as they ask the aspect
-# today. `system_registries` names the registries whose rows are systems, so the gate names none.
 # == WHERE, BY COORDINATES: bodies and coordinate reference systems ==
-# ISO 19111 and ISO 19112 divide spatial referencing in two, and this law follows them. BY COORDINATES: numbers in a
-# COORDINATE REFERENCE SYSTEM — a datum fixed to a BODY, axes, units. BY IDENTIFIER: a name somebody maintains — a
-# street address, a postal code, an administrative code, a map database's element id, a grid cell's code. The first is
-# THE ROOT: every identifier RESOLVES THROUGH a coordinate position and none of them IS one. A map database is
-# somebody else's truth (ground rule 3) — useful, re-drawn without notice, and never what a place is anchored to.
-# "THE THIRD FLOOR" is neither: it is a position in a frame that TRAVELS WITH ITS BUILDING (an engineering frame), and
-# confusing it with a fixed coordinate is how a room acquires a latitude.
-#
-# A BODY IS PART OF THE POSITION. A latitude is a latitude ON something. `bodies` is open: the Moon and Mars are here
-# because reference systems for them are published (the IAU's), and the machinery is the same on any of them.
 bodies:
   - { body: earth, mean_radius_m: 6371008.8, authority: "IUGG / IERS", meaning: "the Earth" }
   - { body: moon,  mean_radius_m: 1737400.0, authority: "IAU WGCCRE",  meaning: "the Moon" }
   - { body: mars,  mean_radius_m: 3389500.0, authority: "IAU WGCCRE",  meaning: "Mars" }
-# THE REGISTRY IS A SAMPLE, NOT THE LIST. There are several thousand published reference systems, and ANY
-# `<authority>:<code>` is a legal position: the authorities' own registries (EPSG for the Earth, IAU_2015 for other
-# bodies) are the owners of that enum, and copying them here would be a stale second copy within the year. The rows
-# below are the ones whose SHAPE this law states, so a tool can read them, and one of each `kind` ISO 19111 names.
-# `frame` is the distinction that matters most and is met least: a STATIC frame is fixed to a tectonic plate, so a
-# point on the ground keeps its coordinates; a DYNAMIC frame is fixed to the whole Earth, so the ground DRIFTS in it
-# by centimetres a year, and a coordinate is complete only with the EPOCH it was measured at (`@2026.72`).
 reference_system_kinds:
   - { kind: geographic-2d, meaning: "latitude and longitude on a body's ellipsoid or sphere" }
   - { kind: geographic-3d, meaning: "latitude, longitude and height above the ellipsoid" }
@@ -196,19 +109,18 @@ reference_systems:
   - { crs: "EPSG:5773", body: earth, kind: vertical,      frame: static,  axes: [H],           meaning: "EGM96 height: metres above the geoid, which is what `above sea level` means" }
   - { crs: "IAU_2015:30100", body: moon, kind: geographic-2d, frame: static, axes: [lat, lon], meaning: "the Moon (2015), planetocentric latitude and longitude on a sphere" }
   - { crs: "IAU_2015:49900", body: mars, kind: geographic-2d, frame: static, axes: [lat, lon], meaning: "Mars (2015), planetocentric latitude and longitude on a sphere" }
-# THE WORDS A SYSTEM'S SHAPE MAY USE, declared so the gate carries no copy of them.
 system_shape:
   neighbours: [none, counted, metered]
   reckoning:  [arithmetic, astronomical, observational, tabulated]
   crosswalk:  [computed, table, observed, none]
-  day_begins: [midnight, sunset]
+  day_begins: [midnight, sunset, noon]
 system_registries:
   - { registry: anchor_systems,    key: system }
   - { registry: knowledge_schemes, key: scheme }
 anchor_systems:
   - system: unix-filesystem
     dimension: place
-    levels: open                      # a tree of any depth; a position is held to whatever depth it is written at
+    levels: open
     neighbours: none
     meaning: "a position in ONE NAMED HOST's UNIX filesystem. The host is part of the position: /home/user/addin on laptop-a and on laptop-b are different positions that print identically."
     pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:/.*)$'
@@ -218,12 +130,21 @@ anchor_systems:
     scope_note: "UNIX-SHAPED ON PURPOSE, and named so rather than called `host-filesystem`. C:\\Users\\user\\source\\repos\\addin cannot satisfy this pattern, and bending it in would give one system two formats — the exact reinvention the pattern rule exists to stop. `windows-filesystem` is declared beside it as a SEPARATE system for exactly that reason."
   - system: git-object-graph
     dimension: place
-    neighbours: counted               # parent and child commits: a history is walked, never measured
+    neighbours: counted
     meaning: "a position in a repository's object graph — REACHABLE-FROM, not CHECKED-OUT-AT. This is the system `staleness_key: git-head:<sha>` was reaching for and missing: it compared against whatever tree the reader happened to have checked out, which is a fact about the reader and not about the analysis."
     pattern: '^[a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}$'
     form_note: "<repo>@<object id> — ONE spelling, always. Not git-head:, not git-commit:, not a bare sha: a sha with no repository named is a position with no system."
     establishes: true
     why: "an object id is content-addressed — it names the same object in every clone that has it, and no two clones can disagree about what it contains"
+  - system: guix-store
+    dimension: place
+    neighbours: none
+    meaning: "an item in a GNU Guix store: a build output named by a hash of EVERYTHING that went into building it. With git-object-graph, the second place system here in which a position says what it holds — for a BUILT thing, where git's is for a written one."
+    pattern: '^/gnu/store/[0-9a-df-np-sv-z]{32}-[A-Za-z0-9+._?=-]+(/.*)?$'
+    form_note: "`/gnu/store/<32-character hash>-<name>[/<path within it>]`"
+    example: "/gnu/store/abcdfghijklmnpqrsvwxyz0123456789-hello-2.12.1"
+    establishes: true
+    why: "the hash is computed from the inputs, so the same position names the same build on every machine that has it"
   - system: physical
     dimension: place
     meaning: "where a PHYSICAL COPY is: a printed listing on a shelf, a disk in a drawer, a machine in a room. Declared because a codebase is not always a tree on a host — this ledger's own first rule is that it must survive being printed on paper and rescanned, and a printed copy has an address like anything else."
@@ -232,37 +153,6 @@ anchor_systems:
     establishes: false
     why: "a physical copy can be moved, and two copies can sit in two places — a location corroborates which artefact you are holding, never which being it is a copy of"
   # == A CALENDAR IS NOT TIME ==
-  # It is ONE PARTITION of the line of days into named cells — years, months — and there are many. "The 15th of every month" has no
-  # meaning until it says WHOSE month: the 15th of a Solar Hijri month and of a Gregorian month are different
-  # repetitions over the same line, and a lunar Hijri month drifts against both by eleven days a year. So a LEVEL
-  # BELONGS TO ITS SYSTEM, and whatever says "each month" names the calendar.
-  #
-  # EVERY CALENDAR HERE PARTITIONS THE SAME LINE (`same_ground_as`), and they all meet at one level, THE DAY.
-  # Conversion is therefore calendar -> day -> calendar, and `bin/dmcal.py` does it for every calendar that reckons
-  # BY RULE. Not all do, and `reckoning` says which: `arithmetic` (a rule gives every date), `astronomical` (computed
-  # from the sky for a meridian), `observational` (a month begins when the moon is SEEN), `tabulated` (an authority
-  # publishes it). For the last three a position is converted by looking it up, never by arithmetic, and the tool
-  # REFUSES rather than approximates — a date silently wrong by a day is worse than no date.
-  #
-  # `day_begins` is `midnight` or `sunset`: the Hebrew and the Hijri day begins at sunset, so an EVENING position in
-  # one of them falls on the previous civil day. `calendar` is the identifier Unicode CLDR publishes (BCP 47 `ca`),
-  # which is where this list comes from — all eighteen of CLDR's, and the Julian calendar, which CLDR leaves out and
-  # which the Coptic, Ethiopic and Hijri epochs are all stated in.
-  #
-  # NO CALENDAR IS PRIVILEGED. A garden states a moment in the calendar it was KNOWN in — a document dated ۲۲ شهریور
-  # ۱۴۰۵ is recorded `persian:1405-06-22`, not silently turned into somebody else's date — and what makes two positions
-  # in two calendars comparable is the DAY they both fall on, reached by rule where the calendar has one.
-  # `bin/dmcal.py` is dependency-free on purpose: a conversion that needs a package fetched over a network is a build
-  # that fails at the worst possible moment.
-  # ONE FORM MEANS ONE SET OF DIGITS. A pattern's `\d` matches every script's digits, so the law's patterns are matched
-  # ASCII-ONLY: a position is WRITTEN in ASCII digits whatever calendar it is in, and the digits a reader sees are a
-  # matter for whatever shows it to them.
-  # EVERY DATED ATTRIBUTE OF THE STANDARD IS TYPED `date`: a day in ANY calendar, held to that calendar's own form.
-  # WHAT STILL READS ONLY THE GREGORIAN CALENDAR, named because 16.0 does not fix it: `leaf_orders.instant` (the merge
-  # absorbs a coarser reading into a finer one only within it) and the journal's heading form. Each is a Gregorian-only
-  # READER, not a rule that time is Gregorian.
-  # THE FORM IS TAGGED — `persian:1405-06-29` — because `1405-06-29` is ALSO a Gregorian date, in the year 1405.
-  # One form per system; and between calendars, forms that cannot be mistaken for each other.
   - system: gregorian-civil
     dimension: time
     calendar: gregory
@@ -567,6 +457,70 @@ anchor_systems:
     example: "dangi:4359-08-09"
     establishes: false
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: julian-day
+    dimension: time
+    calendar: julian-day
+    reckoning: arithmetic
+    day_begins: noon
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: day, unit: day } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: total }
+    meaning: "the Julian Day Number: a plain count of days, as astronomers keep it. EVERY CALENDAR MEETS THE OTHERS AT THE DAY, and this is that meeting point given a name: a system with one level and no months at all. Its day begins at NOON, so that a night of observation falls on one number."
+    pattern: '^jdn:\d+$'
+    form_note: "`jdn:<integer>` — the number of the day whose noon it is"
+    example: "jdn:2461304"
+    establishes: false
+    why: "a day corroborates when something happened and never fixes which being did it"
+  - system: mayan-long-count
+    dimension: time
+    calendar: mayan-long-count
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: baktun }, { level: katun }, { level: tun }, { level: uinal }, { level: kin, unit: day } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: total }
+    meaning: "the Mayan long count: a count of days written in mixed base — 20 kin to a uinal, 18 uinal to a tun, 20 tun to a katun, 20 katun to a baktun. A calendar with NO MONTHS OF UNEQUAL LENGTH: every level is a fixed number of days. Reckoned from the Goodman-Martinez-Thompson correlation."
+    pattern: '^mayan:\d+\.\d+\.\d+\.\d+\.\d+$'
+    form_note: "`mayan:<baktun>.<katun>.<tun>.<uinal>.<kin>`"
+    example: "mayan:13.0.13.17.1"
+    establishes: false
+    why: "as for julian-day"
+  - system: bahai-calendar
+    dimension: time
+    calendar: bahai
+    reckoning: astronomical
+    day_begins: sunset
+    same_ground_as: [gregorian-civil]
+    crosswalk: observed
+    levels: [ { level: year }, { level: month, count: 19 }, { level: day, unit: day } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Badi calendar: nineteen months of nineteen days and a few days between, the year beginning at the March equinox as computed for Tehran."
+    pattern: '^bahai:\d+-\d{2}-\d{2}$'
+    form_note: "`bahai:<year>-<month>-<day>`; the intercalary days are written as month 00"
+    example: "bahai:183-10-13"
+    establishes: false
+    why: "as for gregorian-civil"
+  - system: french-republican-calendar
+    dimension: time
+    calendar: french-republican
+    reckoning: astronomical
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: observed
+    levels: [ { level: year }, { level: month, count: 12 }, { level: decade }, { level: day, unit: day } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the calendar of the French Republic: twelve months of thirty days in three ten-day decades, and five or six days over, the year beginning at the autumn equinox as observed from Paris. Declared because dated sources exist in it, and because its ten-day decade is a partition no other calendar here has."
+    pattern: '^french-republican:\d+-\d{2}-\d{2}$'
+    form_note: "`french-republican:<year>-<month>-<day>`; the days over are written as month 13"
+    example: "french-republican:234-13-04"
+    establishes: false
+    why: "as for gregorian-civil"
   - system: unix-epoch
     dimension: time
     levels: [ { level: millisecond, unit: millisecond } ]
@@ -580,7 +534,7 @@ anchor_systems:
   - system: geographic
     dimension: place
     neighbours: metered
-    restrictions: { metered: length }      # the one place system with a measure: what "every 5 metres" needs
+    restrictions: { metered: length }
     meaning: "a position BY COORDINATES, in a named coordinate reference system, on the body that system is fixed to. THE ROOT OF PLACE: every other place system resolves through this one. Named here also because CIVIL TIME RESOLVES THROUGH IT — an offset is a geographic fact wearing a time costume."
     pattern: '^[A-Z][A-Z0-9_]*:[0-9]+;-?\d+(\.\d+)?(,-?\d+(\.\d+)?){1,2}(@\d{4}(\.\d+)?)?$'
     form_note: "`<authority>:<code>;<coordinates>[@<epoch>]` — `EPSG:4326;35.6892,51.3890@2026.72`. A COORDINATE IS NEVER BARE: a plain `<lat>,<lon>` names no datum, no axis order and no body, so two readers can disagree by hundreds of metres and neither be wrong. Coordinates in the axis order the system declares; the epoch when the frame is dynamic."
@@ -589,7 +543,7 @@ anchor_systems:
     why: "a coordinate says where something IS and never which thing it is: two beings can stand in one spot, and one being can move"
   - system: event-anchored
     dimension: any
-    neighbours: counted               # positioned ONLY by neighbours — and so countable: "every 10th release"
+    neighbours: counted
     meaning: "a position fixed by NEIGHBOURING EVENTS rather than by any coordinate — 'after the branch was pushed, before the cutover'. Fully positioned while carrying no calendar value at all. Declared because it is what makes this a registry rather than a two-item enum: SEQUENCE is the general structure and a coordinate system is one restriction of it."
     pattern: '^(after|before):.+$'
     form_note: "after:<position> or before:<position>; state both as two entries when an interval is meant"
@@ -614,35 +568,10 @@ anchor_systems:
     form_note: "root:<logical root>[/<relative path>], or <host>:<Drive>:\\<path> stated outright. The two colons are unambiguous — hostname, then drive letter — and the root: form is IDENTICAL to the unix one on purpose: a LOGICAL root is what crosses systems, a literal path is what does not. That is the whole mechanism for resolving one repository on machines that do not agree what a path looks like."
     establishes: false
     why: "a path is reassignable and a tree can be checked out anywhere — it corroborates a location, never fixes it. Identical to the unix case, because the reason has nothing to do with the operating system."
-  # == ADDRESSES AND PORTS ARE PLACES — what 6.0 made a separate registry, and why it came home ==
-  # 6.0 gave ipv4 and ipv6 their own registry, `address_systems`, with `dimension: address`, because "where a being
-  # IS" and "where it ANSWERS" are two questions: a mail server can be bare metal in a room and answer at
-  # 203.0.113.10, an address it does not even hold locally. The questions ARE two. But that is a difference in the
-  # RELATION between a being and a position, and this law carries relations as TERMS — `located_at` (is found at)
-  # and `endpoints` (answers at) — exactly as `observed`, `as_of`, `expires` and `created` are four relations to ONE
-  # dimension of time. Nobody minted a dimension "expiry-time".
-  #
-  # And `address` was a dimension NO ASPECT HELD. Every sequence aspect names the dimension whose systems it holds
-  # (`time`, `place`); none named `address`, so these two systems belonged to no figure — nothing said how they are
-  # ordered or whether a region of one is possible. Meanwhile the law had already described them as a place:
-  # `leaf_orders.cidr` is a CONTAINMENT order ("absorbed by a network that contains it"), partial, acyclic, bounded
-  # by /0 and /32 — `place`'s restrictions one for one — and the ipv4 row says of a prefix that it "narrows a
-  # position". A path and a git object id are both `place` and are independent of each other in just the way an
-  # address and a network segment are. Two independent systems in one dimension is the ordinary case.
-  #
-  # A PORT IS A POSITION NESTED IN AN ADDRESS, the way a path is nested in a host. Every place system here is a
-  # scoped compound — `<host>:<path>`, `<repo>@<sha>`, `<network>/<segment>` — and an endpoint's merge identity,
-  # `protocol+system+at+port?`, already treated the port as part of WHICH position this is. It had no system
-  # because the TRANSPORT LAYER HAD NO ROW: `tcp` and `udp` existed only as the value of a field. Each layer of a
-  # stack owns a position system — the link layer MAC space, the network layer address space, the transport layer
-  # port space — and an endpoint is a stack of positions, one per layer.
-  #
-  # WHAT IT BUYS, measured in the garden this grew in: `port: "110/143/993/995"` — the defect `endpoints` was
-  # written to end — is refused at last; and seven listening surfaces that are unix socket PATHS can be endpoints,
-  # because `endpoints.system` is now any place system and `unix-filesystem` has always been one.
+  # == ADDRESSES AND PORTS ARE PLACES ==
   - system: ipv4
     dimension: place
-    levels: { by: prefix-length, from: 0, to: 32 }     # a prefix IS the level a position is held to: /24 is coarser than /32
+    levels: { by: prefix-length, from: 0, to: 32 }
     neighbours: counted
     restrictions: { lines: 1, ends: bounded }
     meaning: "a 32-bit Internet Protocol address, optionally carrying a prefix length."
@@ -682,9 +611,6 @@ anchor_systems:
     form_note: "one decimal integer, 0 to 65535"
     establishes: false
     why: "as for tcp-port"
-  # == THREE CANONICAL SYSTEMS FOR A GARDEN THAT KEEPS A MAP. Off the shelf, none invented. They exist so that
-  # a many-layered place model — an administrative tree, a postal layer over the same ground, a drawn map — is held in
-  # systems every garden shares, and two gardens that never met agree which place they mean.
   - system: iso-3166
     dimension: place
     resolves_through: geographic
@@ -705,7 +631,7 @@ anchor_systems:
     example: "relation/1234567"
     establishes: false
     why: "An element id names a row in a third party's database: elements are split, merged, deleted and re-created, a tag may simply be wrong (a school tagged `place=village`), and the whole map is a CAPTURE of somebody else's truth under ground rule 3. It corroborates which mapped object was meant. What a place is rooted in is a coordinate on a body."
-  # == MORE WAYS OF SAYING WHERE BY IDENTIFIER — each resolves through a coordinate, none is one ==
+  # == MORE WAYS OF SAYING WHERE BY IDENTIFIER ==
   - system: street-address
     dimension: place
     within: [iso-3166]
@@ -759,14 +685,7 @@ anchor_systems:
     form_note: "`<ISO country>:<code or prefix>`, e.g. `IR:14155`"
     establishes: false
     why: "codes are re-drawn by the operator that issues them, and one code covers many places"
-# == ROLES: what a being DOES, as against what it IS (added 7.0) ==
-# THE FIX FOR AN AMBIGUITY THIS VOCABULARY SHIPPED WITH. `router` was a KIND until 7.0, and the proof it
-# was wrong is an asymmetry the corpus already carried: a mail server recorded five roles as free-text data
-# (`primary-mail, file-server, monitoring, webmail, erp-host`) while a router's single role was a kind.
-# Both are machines. What makes one a router is that it forwards traffic — which since 6.0 IS data, in
-# `treatments`. A kind answers what a being IS; a role answers what it DOES, and a being does several
-# things at once. Encoding one of the things it does as the thing it is made `kind` un-askable for every
-# machine that does two.
+# == ROLES: what a being DOES, as against what it IS ==
 roles:
   - { role: router,             meaning: "forwards traffic between networks and decides what may cross" }
   - { role: mail-primary,       meaning: "the MX of record for the estate's domains" }
@@ -781,17 +700,7 @@ roles:
   - { role: ledger-hub,         meaning: "holds the bare repository every working copy of this ledger pushes to" }
   - { role: workstation,        meaning: "a machine a person works AT, rather than one that serves others" }
 
-# == OPERATING SYSTEMS: what a machine runs, and what that IMPLIES about its positions (added 7.0) ==
-# It is a REGISTRY and not prose because it CONSTRAINS. `owns.os` was free text — a distribution name with its
-# point release — and a router, the one machine whose OS is genuinely distinctive, could not state it at all:
-# its OS lived only inside a summary sentence and an `owns.model` string.
-#
-# `path_grammar` IS THE JOIN, and it is the answer to "where do ntfs and ext4 go". They do not go here.
-# `unix-filesystem` and `windows-filesystem` in `anchor_systems` are PATH GRAMMARS — properties of an
-# OS's API — and NOT filesystems. The two axes are independent: NTFS mounted on Linux through ntfs-3g
-# has unix paths, and one SMB share is `/mnt/share0` on the server and `\\server\share0` from a workstation. So an
-# OS declares which grammar its filesystem positions take, and `roots` is held to it by
-# `entry_must_match`. Storage FORMAT is a different registry entirely — see `storage_formats`.
+# == OPERATING SYSTEMS: what a machine runs, and what that IMPLIES about its positions ==
 operating_systems:
   - { os: slackware, family: unix,    path_grammar: unix-filesystem,
       meaning: "Slackware Linux." }
@@ -811,8 +720,6 @@ operating_systems:
       `anchor_systems`, declared there for the `physical` system, so refusing to invent a grammar is a
       shape this law can already express rather than a special case invented for this row.
     meaning: "MikroTik RouterOS. Not a general-purpose OS: no user filesystem worth positioning in."
-  # COMMON SYSTEMS (9.0). Until 9.0 this registry held exactly the four systems of the garden it grew in, so almost
-  # every newcomer's first machine needed a local addition. `linux` is the honest row for a distribution not listed.
   - { os: linux,   family: unix, path_grammar: unix-filesystem, meaning: "A Linux system whose distribution is not listed here, or not worth distinguishing." }
   - { os: debian,  family: unix, path_grammar: unix-filesystem, meaning: "Debian GNU/Linux." }
   - { os: ubuntu,  family: unix, path_grammar: unix-filesystem, meaning: "Ubuntu." }
@@ -823,12 +730,7 @@ operating_systems:
   - { os: freebsd, family: unix, path_grammar: unix-filesystem, meaning: "FreeBSD." }
   - { os: macos,   family: unix, path_grammar: unix-filesystem, meaning: "Apple macOS." }
 
-# == STORAGE FORMATS: the OTHER filesystem axis, the one ntfs and ext4 actually belong to (added 7.0) ==
-# `layer` mirrors `net_protocols.layer` and for the same reason: storage is a STACK and the stack is what
-# `carried_by` records. MEASURED on real machines rather than imagined — the chain
-# `partition -> crypto_LUKS -> LVM2_member -> ext4` is literally what `lsblk` prints on an encrypted laptop, and a
-# RAID server adds `linux_raid_member -> md` beneath it. `luks_root: true`, a bare boolean in an `attributes` block,
-# is that whole chain flattened to one bit.
+# == STORAGE FORMATS: the OTHER filesystem axis, the one ntfs and ext4 actually belong to ==
 storage_formats:
   - { format: ext4,              layer: filesystem,     posix: true,  meaning: "the estate's ordinary Linux filesystem" }
   - { format: ext2,              layer: filesystem,     posix: true,  meaning: "a common /boot filesystem" }
@@ -840,19 +742,12 @@ storage_formats:
   - { format: ntfs,              layer: filesystem,     posix: false, meaning: "the Windows filesystem. Declared and unoccupied — see the vacancy. It is named here because the question 'where does ntfs go' is what produced this registry, and the answer is that it is a STORAGE FORMAT and never a path grammar." }
 
 # == PLANES: what a surface, a link or a treatment is FOR ==
-# Off the shelf: the three planes every network design is sorted by. DATA is the traffic a device exists to carry;
-# CONTROL is how it decides where traffic goes (a routing adjacency, a spanning tree); MANAGEMENT is how an operator
-# reaches it (ssh, a vendor console, SNMP). The split matters because the three deserve different exposure: a data
-# surface is often public by design, and A MANAGEMENT SURFACE ANSWERING ON THE INTERNET is the oldest finding in any
-# audit. With a plane stated, that is a CELL a term can declare rather than a line in somebody's report.
 planes:
   - { plane: data,       meaning: "the traffic the being exists to carry or to serve" }
   - { plane: control,    meaning: "how the being decides where traffic goes: routing adjacencies, discovery, redundancy election" }
   - { plane: management, meaning: "how an operator reaches the being to configure or observe it" }
 
 # == REGISTRY LINKS: a row of one registry names a row of another, and the gate resolves it ==
-# A protocol is also a TECHNOLOGY with a specification somebody publishes, and the technology catalogue is rooted in
-# the UNESCO fields of knowledge. A link is declared here ONCE, so the gate names neither registry.
 registry_links:
   - { from: reference_systems, field: body,  to: bodies,                 take: body,  why: "a reference system is fixed to a body, and a latitude is a latitude ON something" }
   - { from: reference_systems, field: kind,  to: reference_system_kinds, take: kind,  why: "the classes ISO 19111 names" }
@@ -860,29 +755,8 @@ registry_links:
   - { from: net_protocols, field: technology, to: technology, take: code,
       why: "every protocol names its entry in the catalogue of technologies, which carries its specification and the field of knowledge it belongs to — so a routing mechanism ledgered tomorrow hangs from the same tree as a mail server does today" }
 
-# == NET PROTOCOLS: the one owner of what a being may SPEAK (added 6.0) ==
-# A REGISTRY rather than an enum on a term, for the reason `anchor_systems` is one: adding a protocol
-# must never be a rule-change. A row carries what is true of the PROTOCOL — which layer it occupies,
-# what carries it, and whether it manufactures a link others ride — so that no bean re-states any of it.
-#
-# WHAT IS DELIBERATELY NOT HERE — IMPLEMENTATIONS. Samba OFFERS smb; the MySQL server SPEAKS mysql;
-# Postfix speaks smtp. An implementation is a BEAN (kind instance/product) that carries `endpoints`, and
-# putting `samba` in this list beside `smb` would give one thing two names — the exact duplication
-# `values_from` exists to stop. This was the first correction the design took: two of the names it was
-# asked to model explicitly, `samba` and `mysql`, are implementations, and encoding them as protocols
-# would have built the ambiguity into the law.
-#
-# NOR ARE TLS VARIANTS SEPARATE ROWS. `https` is `http` whose endpoint takes the `encrypted` position;
-# smtps and submission are `smtp` on other ports. A protocol that differs from another only by what
-# wraps it is not another protocol, and giving it a row would put the same fact in two places — once as
-# a name and once as an aspect position — which is how the two come to disagree.
-#
-# `layer` is DESCRIPTIVE, like `dimension` on anchor_systems: the gate consumes `protocol` (as the enum)
-# and nothing else in the row. It is here because carriage is what makes this a stack and not a list.
+# == NET PROTOCOLS: the one owner of what a being may SPEAK ==
 net_protocols:
-  # THE TRANSPORT LAYER. Until now `tcp` and `udp` were only the VALUE of the `transport:` field below, which
-  # is why a port had no system to be a position in. A row here is what lets an endpoint NAME its transport when it
-  # differs from its protocol's usual one — a DNS server answers on 53/udp AND 53/tcp, and the law could not say so.
   - protocol: tcp
     technology: tcp
     layer: transport
@@ -973,12 +847,6 @@ net_protocols:
       published attacks, so a tunnel built on it protects nothing while LOOKING like a VPN in every
       inventory. A registry that omitted it could not express that judgment at all; the vacancy is where
       the judgment lives, and occupying the position warns.
-  # == THE STACK COMPLETED, AND THE CONTROL PLANE. `layer` runs link -> network -> transport -> application, and
-  # each layer that ADDRESSES owns a positioning system (`positions:`). A ROUTING PROTOCOL is a control-plane row with
-  # the two facts network design sorts them by: `family` — how it learns (link-state floods a map and each router
-  # computes; distance-vector trusts its neighbours' sums; path-vector carries the whole path, so policy can refuse
-  # one) — and `scope` — interior to one administration, or exterior, between them. What one computes over is what a
-  # system row calls `neighbours`: an adjacency, a metric, AREAS AS LEVELS, and summarisation as containment.
   - { protocol: ipv4,  technology: ipv4,  layer: network,   positions: ipv4, meaning: "Internet Protocol version 4. Its positions are addresses (`anchor_systems.ipv4`)." }
   - { protocol: ipv6,  technology: ipv6,  layer: network,   positions: ipv6, meaning: "Internet Protocol version 6." }
   - { protocol: icmp,  technology: icmp,  layer: network,   plane: control,    meaning: "Internet Control Message Protocol: how the network layer reports that it could not deliver." }
@@ -998,10 +866,6 @@ net_protocols:
   - { protocol: dhcp,  technology: dhcp,  layer: application, transport: udp, default_ports: [67, 68], plane: control, meaning: "Dynamic Host Configuration Protocol: hands a being its position in the address space — the reason an address corroborates and never establishes." }
   - { protocol: ntp,   technology: ntp,   layer: application, transport: udp, default_ports: [123], plane: control, meaning: "Network Time Protocol: how beings agree a position in TIME. A ledger of timestamps rests on it." }
   - { protocol: snmp,  technology: snmp,  layer: application, transport: udp, default_ports: [161, 162], plane: management, meaning: "Simple Network Management Protocol: a being read, and sometimes written, by its operator." }
-  # APPENDED AFTER THE APPLICATION ROWS RATHER THAN BESIDE `wireguard`, where they belong by layer.
-  # dmsafe compares leaf paths BY INDEX, so inserting a row mid-list reads as deleting the fields of
-  # every row after it — the rollback said so and was right about what it could see. Grouping by layer
-  # is a legibility preference; a clean, honest diff is not.
   - protocol: ethernet
     technology: ethernet
     layer: link
@@ -1013,12 +877,7 @@ net_protocols:
     synthesizes_link: true
     meaning: "PPP over Ethernet: a WAN dial that runs directly on ethernet frames, with no IP transport or port of its own (9.0 removed a `transport: tcp` / port 1723 copied from pptp). Like wireguard it MANUFACTURES a link, which is what lets a tunnel name it in `carried_by`."
 
-# == UNITS: the resolution a position is actually held to (added 5.1) ==
-# DECLARED, NEVER INFERRED FROM DIGITS. A journal can state most entries as `## 2026-08-04` and a few as
-# `## 2026-08-04 20:04 +0300`, and nothing records which of the first were measured to the day and which
-# were measured finer and rounded. Two positions whose resolutions OVERLAP ARE NOT ORDERED, and a model
-# that cannot say so invents an order instead — which is the failure this registry exists to make
-# expressible. Keyed by `dimension`, so a length or an angle joins without a rule-change.
+# == UNITS: the resolution a position is actually held to ==
 units:
   - unit: millisecond
     dimension: time
@@ -1038,53 +897,24 @@ units:
   - unit: metre
     dimension: length
     meaning: "the SI metre — the first unit that is not a time. `units` has been keyed by dimension since 5.1 \"so a length or an angle joins without a rule-change\"; this is that. It is what lets a region or a repetition on `geographic` carry a measure."
-# == VACANCIES (Tier-0). P6/B2: whoever DECLARES a position accounts for it, so the duty to explain
-# these is discharged HERE — an adopting garden must never inherit an obligation to justify a position it
-# never asked for. The gate applies ANTI-ROT only to garden-local vacancies: a garden that OCCUPIES one of
-# these is a prediction coming true, and it cannot edit Tier-0 to withdraw the vacancy, so treating that
-# as an error would be an unfixable failure.
-# The reasons a vacancy may give, declared rather than known by the gate. A reason is a CATEGORY OF
-# ABSENCE — why nothing occupies a position the law makes available — and that is a statement about the
-# world, which the vocabulary owns and the interpreter must not carry a copy of. Adding a reason is a
-# rule-change here, not an edit to bin/.
 vacancy_reasons: [prediction, impossible, out-of-context, universal]
-# `universal`: the position is declared because the STRUCTURE is general, not because an occupant is
-# expected here. A figure with a side missing is a worse model than a figure with a side nobody stands on, and a
-# standard that waits for one garden's occupant before completing a mechanism ties every garden to the first
-# one's size. It is a reason and not a licence: the position must belong to a mechanism that IS occupied
-# somewhere on the same figure, and its `why` says which.
 
-# == LEAF SUBSUMPTION ORDERS (declared 2026-08-03, Phase 6) ==
-# `merge_field` absorbs a general value into a more precise one where the two are ORDERED: 192.168.0.0/24
-# into 192.168.0.0/16, "AlmaLinux 9" into "AlmaLinux 9.8". WHICH keys are ordered that way was decided in
-# code by two hardcoded checks on the key's NAME, whose own comment called them "the last hardcoded merge
-# knowledge here, and they belong in the vocabulary". They are here now.
-#
-# This is the fallback for the facts INSIDE `owns` / `details` / `attributes`. A term's own `merge.order`
-# still wins where a term exists — but those inner keys are FACTS, not terms, and `bin/dmmerge.py` says
-# so outright: "listing them would bury the real gap in three hundred names". A registry of ORDERS is the
-# shape that fits, because the rule is about a family of names and not about any one of them.
+# == LEAF SUBSUMPTION ORDERS ==
 leaf_orders:
   - order: cidr
     suffix: _ip
-    exact: []          # `provides_ip`, `public_ip` and `mgmt_ip` were also listed by name in the code —
-                       # all three end in `_ip`, so every one of them was already covered by the suffix
-                       # and the list was dead weight. Measured before deleting it, not assumed.
+    exact: []
     why: "an address or network is absorbed by a network that contains it (ipaddress.subnet_of)"
   - order: version
     suffix: _version
-    exact: [os, version]   # `version` does NOT end in `_version`, so unlike the cidr list this one earns
-                           # its place; `os` is the estate's one bare version-shaped fact name.
+    exact: [os, version]
     why: "a release string is absorbed by a more precise one that starts with it"
   - order: containment
-    system: unix-filesystem   # 11.0: and the windows one, whose rows carry the same `root:`/`<host>:` forms
+    system: unix-filesystem
     also_systems: [windows-filesystem]
     why: "a tree is absorbed by a subtree of it under the SAME host or logical root (`host-a:/home/user` by `host-a:/home/user/tree`). Positions on two hosts, two roots or two systems are UNORDERED and stay a disagreement: the same path on two machines is two different trees, which is the whole reason a position names its host."
   - order: instant
-    system: gregorian-civil   # 9.3, T2: this order follows what a value IS, not what its key is called. Time
-                              # sits under a dozen names in one corpus (observed, as_of, found, since, created,
-                              # expires, …) and under `at`, which also holds paths; a name list would miss the
-                              # next name and misfire on `at`. A value in this system's ONE form is a time.
+    system: gregorian-civil
     why: "a calendar reading is absorbed by a finer one it CONTAINS (`2026-09-19` by `2026-09-19 22:50+03:00`), compared by the parts actually written and in the coarser reading's own offset, never as strings. Every other pair is unordered (the `time` aspect's order is partial): two readings that do not nest stay a disagreement for a person. The absorbed reading is kept in provenance, as every subsumed value is."
 vacancies:
   - at: status.values
@@ -1105,10 +935,7 @@ vacancies:
       the question that produced this registry, and the answer needs to be visible: it is a STORAGE FORMAT
       and never a path grammar. It arrives with the first Windows machine given a bean — the same one
       `os.values = windows` waits for, which is why the two vacancies rise and fall together.
-  # == THE ENTRY FORMS THE OWNERSHIP TERMS OFFER (declared vacant 2026-08-03) ==
-  # `entry_one_of` positions are positions like any other: the law offers a form and something should
-  # occupy it or say why not. Nothing counted them until the reverse gate learned to, and all three of
-  # these turned out to be genuinely unoccupied rather than overlooked.
+  # == THE ENTRY FORMS THE OWNERSHIP TERMS OFFER ==
   - at: "owned_by.entry_one_of"
     position: contract
     reason: prediction
@@ -1129,11 +956,7 @@ vacancies:
     position: omissible
     reason: prediction
     why: "Recording that a being MAY LACK something is low-information until a capability is contested — expected first where an agent might add a capability believing it required, e.g. marking DNSSEC omissible on an internal-only zone so nobody enables it for form's sake."
-  # == THE DEFAULT POSITION, VACANT BECAUSE A DEFAULT NO LONGER OCCUPIES (declared 2026-08-03) ==
-  # Until today the reverse gate collected occupancy with `entry.get(attr, default)`, so this position
-  # looked exercised by five edges that never mention it — the gate crediting its own default. Occupancy
-  # is STATEMENT now, and what that leaves behind is this: a position every requirement in the estate
-  # effectively sits at, and none has ever taken a stance on.
+  # == THE DEFAULT POSITION, VACANT BECAUSE A DEFAULT NO LONGER OCCUPIES ==
   - at: "aspect:necessity"
     position: contingent
     reason: prediction
@@ -1155,23 +978,8 @@ vacancies:
     reason: prediction
     why: "No cached analysis lives in an off-bean document yet. external is the form for a result too large to sit in a bean at all — a full dependency graph or a coverage report."
 
-# == ASPECTS (added 2026-08-02, std-vocab@2.1) ==
-# DIMENSION-AGNOSTIC. An aspect declares its own axes and the gate does not care how many: `poles` is one
-# contradictory PAIR, or a LIST of pairs. A figure may be 1-dimensional (a plain binary), 2 (a square),
-# 3 (a cube), or more — what is required is that every declared axis runs between genuine opposites, so a
-# position is addressable along it. The count is DERIVED from the declaration, never assumed, because
-# assuming a count is exactly how a square silently mis-models a cube. Likewise a term's `cells`
-# are N-ary: they constrain ONE aspect or SEVERAL, and the machinery is the same either way.
-# An ASPECT is a CLOSED figure of positions — the operator's requirement that a classification have no
-# loose ends. A line has undefined extremes and forces partial membership; a closed figure does not, so
-# polarity lives in OPPOSED POSITIONS rather than at the ends of a scale. Each position names its
-# COMPLEMENT, which is what lets a being be addressed by opposition as well as by identity ("the light is
-# not where darkness is"). The gate enforces the sanity rules — closure, orientation, complement mutuality
-# — and names no aspect, so a new aspect is data, never a code change.
-  # == POSITION SYSTEMS AND RESOLUTIONS NOT YET TAKEN (declared 5.1, 2026-08-07) ==
-  # Declared here rather than left silent because the whole argument for naming an anchor system is that
-  # an UNSTATED domain is what makes a negative result read as strong. A registry that quietly carried
-  # systems nothing occupies would be committing the same error one level up.
+# == ASPECTS ==
+  # == POSITION SYSTEMS AND RESOLUTIONS NOT YET TAKEN ==
   - at: anchor_system.values
     position: physical
     reason: prediction
@@ -1196,28 +1004,9 @@ vacancies:
     position: unknown
     reason: prediction
     why: "The position that would have prevented a real loss: a commit was recorded as absent when it was merely not looked for on the machine that had it. Unoccupied TODAY because every location in the corpus has been established — which is the state this position exists to distinguish from, and it earns its declaration by being the one an agent must reach for instead of omitting the entry."
-# == FIGURES: the shapes an aspect may take (added 9.2, human-ratified rule-change, "T0") ==
-# Until 9.2 every aspect was an OPPOSITION (a square, or a one-axis binary) and `figure:` was free text. Time, place,
-# routine steps and "must stay acyclic" are not oppositions: they are positions related by NEIGHBOURHOOD
-# along direction lines. So a second figure is declared, and `figure` becomes an enum this registry owns.
-#
-# SEQUENCE IS THE GENERAL STRUCTURE; everything ordered is a RESTRICTION of it. The operator's model, from
-# the time conversation of 2026-08-05: an instant is a sequence restricted to one position on one line;
-# "acyclic" is a sequence restricted from returning; a calendar is one anchor system on a metered line,
-# never time itself. A sequence is therefore declared ONLY by its restrictions, each stated, none assumed:
-# an unstated restriction is how a model silently becomes narrower than the world (the `dag` rule once
-# took "acyclic" to be the definition of walkable).
-#
-# EXTENT. A sequence with an order has a DOMAIN, and a bounded region of it (a start and an end, either
-# possibly open) is an extent: a duration on time, an area on place, a stretch of a routine. Duration is
-# therefore not a time concept but an aspect-having-a-domain concept. An opposition has no "between": its
-# positions are modalities without order, so extent on one is declared IMPOSSIBLE rather than skipped.
+# == FIGURES: the shapes an aspect may take ==
 figures:
   - figure: opposition
-    # NAMED FOR WHAT IT IS, NOT FOR ITS DIMENSION. Aristotle's square of opposition is this figure's TWO-axis
-    # case, a plain binary its one-axis case (`confidentiality`) and a cube its three-axis case. Calling the
-    # figure "square" would fix a count the gate is required to derive: "when doing the squares make sure
-    # cubes don't bite" (the operator, 2026-08-02).
     meaning: "a CLOSED figure of contradictory pairs: finite positions, each naming its mutual complement, oriented by one or more axes (the count is derived from `poles`, never assumed)"
     requires: [poles, positions]
     extent: impossible
@@ -1236,17 +1025,7 @@ figures:
     ends_values: [open, bounded, open-start, open-end]
     extent: possible
     extent_why: "a sequence with an order has a domain, and a bounded region of it is an extent (a duration on time)"
-# == EXTENT (11.2): the bounded region `figures` has declared POSSIBLE since 11.0, carried at last ==
-# The figure block above says it and says why — "a sequence with an order has a domain, and a bounded region
-# of it is an extent (a duration on time)" — and for two versions nothing could write one. A corpus measured
-# on 2026-09-20 held about forty durations as PROSE because of it: thirteen "daily", five "weekly", "every 5
-# minutes", "for 204 days", four retention policies, log rotation, certificate lifetimes. None of them
-# readable by anything. That is the shape of defect this vocabulary exists to refuse — a rule with no
-# position for its own data — and it was in the law's own description of itself.
-#
-# DURATION IS NOT A TIME CONCEPT. It is an aspect-having-a-domain concept: a duration on `time`, an area on
-# `place`, a stretch of a `routine`. So the region names the ASPECT it lies in and the rules follow from
-# that aspect's own restrictions, rather than time getting a construct nothing else can use.
+# == EXTENT ==
 extent_form:
   of:      "the ASPECT whose domain this region lies in. Its figure must declare `extent: possible` — an opposition's positions are modalities with nothing between them, so a region on one is refused rather than silently allowed."
   from:    "optional: the position the region starts at, in the canonical form of one of that aspect's domain systems"
@@ -1270,11 +1049,7 @@ extent_form:
     this date each month" is recording a recurrence anchored to a calendar, not a length, and `measure`
     would make it look like arithmetic that it is not.
 
-# == VALUE TYPES (10.0, T3): the named types an attribute may be `in: { type: … }` ==
-# They were patterns written in the gate's code. A TIME value type is a POSITION: `iso_date` is not "a date
-# format" but the calendar system held at unit DAY, so every `observed: 2026-08-09` in a garden was always a
-# position in gregorian-civil whose second and minute are UNKNOWN, not zero. Saying so needs no data change;
-# it states what those values already were. A type with no system (kebab) is only a form.
+# == VALUE TYPES ==
 value_types:
   - type: iso_date
     system: gregorian-civil
@@ -1292,32 +1067,19 @@ value_types:
     pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
     refusal: "must be kebab-case (the name is open, but still paper-durable)"
     meaning: "an open name in lowercase words joined by hyphens"
-# == THE JOURNAL (10.0, T3): where the record of what was done is, and how an entry is headed ==
-# The journal is the garden's time record, and it had no rule for time. One real garden, measured on
-# 2026-09-19: 663 entries, 276 headed with a date only, 387 with a time in `+0300` or `+0330` while the calendar
-# system's one form is `+03:00`; and one entry headed 23:59 that was committed at 23:32, a precision written
-# rather than read. A heading is now a position in gregorian-civil's one form, held to at least the MINUTE,
-# with its offset, because an entry is ordered against every other and a reading with no offset cannot be.
-# Only headings ADDED by a commit are checked: the journal is never rewritten, so its history keeps the forms
-# it was written in, and those stay what they were.
+# == THE JOURNAL ==
 journal:
   path: log/journal.md
   heading_form: "## <YYYY-MM-DD HH:MM[:SS[.sss]]><+HH:MM|Z> · <who> · <what>"
   heading_pattern: '^## \d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z) · \S.* · \S.*$'
   system: gregorian-civil
   unit_at_least: minute
-  checks: added     # entries a commit adds; never the history
+  checks: added
 aspects:
   - aspect: necessity
-    # The canonical closed figure for necessity is Aristotle's SQUARE OF OPPOSITION (De Interpretatione;
-    # the modal square). Nothing invented: the four modalities and their contradictories are off the shelf,
-    # and the diagonals ARE the complement pairs. `consumes` and `depends_on` are positions on this aspect,
-    # which is what the operator meant by "consumption is going to be necessity aspect" — consumption is
-    # not a standalone edge but one way a being can NEED something.
     meaning: "what a being requires in order to do its work"
     figure: opposition
-    poles: [[necessary, contingent], [possible, impossible]]   # BOTH axes: a square is 2-dimensional,
-                                          # and declaring one would orient it like a line
+    poles: [[necessary, contingent], [possible, impossible]]
     positions:
       - { position: necessary,  complement: contingent, meaning: "without it the being cannot do its work at all" }
       - { position: contingent, complement: necessary,  meaning: "the being uses it, but could do its work without it" }
@@ -1325,16 +1087,9 @@ aspects:
       - { position: impossible, complement: possible,   meaning: "the requirement exists but the recorded target CANNOT satisfy it. Distinct from an ABSENT edge: a missing backup is a gap, while a backup that cannot work is worse, because the record makes it look present. First occupied 2026-08-02 by a domain's backup MX record that named its own primary." }
 
   - aspect: capability
-    # The SECOND aspect, and the first evidence that the machinery generalises. It reuses the square of
-    # opposition but NOT the same square: `necessity` is ALETHIC modality (what IS the case — this input is
-    # required), while capability is DEONTIC (what MAY or MUST be the case — this being must not do that).
-    # Conflating them is the same error as one axis doing two jobs: "this VPS cannot send mail directly" and
-    # "recursion must stay off" feel alike and are not — one is a fact about the world, the other a rule.
-    # Positions relate a being to a CAPABILITY (an open kebab name), not to another being, which is what
-    # the necessity aspect could not express.
     meaning: "what a being may or must be able to do"
     figure: opposition
-    poles: [[required, omissible], [permitted, forbidden]]     # both deontic axes
+    poles: [[required, omissible], [permitted, forbidden]]
     positions:
       - { position: required,  complement: omissible,  meaning: "the being MUST have it — remove it and the being stops working correctly" }
       - { position: omissible, complement: required,   meaning: "the being need not have it; its absence breaks nothing" }
@@ -1342,18 +1097,9 @@ aspects:
       - { position: forbidden, complement: permitted,  meaning: "the being MUST NOT have it. The enforcer may be our own policy or an outside party (a provider blocking a port), so an entry may name it in `by`." }
 
   - aspect: feasibility
-    # The THIRD aspect, and the reason a term may sit on more than one. It shares the ALETHIC square with
-    # `necessity` but asks a different question of it: necessity asks whether a REQUIREMENT is binding,
-    # feasibility asks whether a STATE OF AFFAIRS can obtain. Reusing `necessity` for this would have been
-    # equivocation — its positions are documented in requirement terms ("without it the being cannot do its
-    # work"), which is not what "recursion could be switched on" means.
-    # WHY IT EARNS ITS PLACE: a prohibition on something IMPOSSIBLE is harmless; a prohibition on something
-    # POSSIBLE is where the risk lives. a DNS server's recursion ban matters precisely BECAUSE recursion could
-    # be switched on, whereas a VPS's mail-egress ban is belt-and-braces over a block that already stops it.
-    # Only carrying both modalities distinguishes those two, and they demand very different vigilance.
     meaning: "whether a state of affairs CAN obtain for this being, independent of whether it is allowed"
     figure: opposition
-    poles: [[necessary, contingent], [possible, impossible]]     # both alethic axes
+    poles: [[necessary, contingent], [possible, impossible]]
     positions:
       - { position: necessary,  complement: contingent, meaning: "unavoidably the case — the being cannot not have it" }
       - { position: contingent, complement: necessary,  meaning: "it IS the case, but could be otherwise — which is exactly why it is worth recording" }
@@ -1361,19 +1107,6 @@ aspects:
       - { position: impossible, complement: possible,   meaning: "it cannot be the case at all — something outside the rule already prevents it" }
 
   - aspect: confidentiality
-    # The FOURTH aspect, and the first that is ONE-DIMENSIONAL. `poles` already allowed it — "one axis
-    # (a contradictory PAIR), or a LIST of axes — a figure may be 1-dimensional" — and nothing had
-    # exercised it. A one-axis figure is the honest shape here: whether a channel protects its payload
-    # is a single contradictory pair, and there is no second modality of it.
-    #
-    # WHAT WAS CONSIDERED AND REJECTED: a second axis for PEER VERIFICATION (verified/unverified), which
-    # would have made this a square like the other three. It was dropped rather than forced. In the three
-    # existing squares the two axes are related by subalternation — necessary implies possible, required
-    # implies permitted — and verification does not stand in that relation to encryption in any way that
-    # survives contact with opportunistic TLS, where the channel is encrypted and the peer is proven by
-    # nothing. Inventing the implication to make the figure symmetrical would be exactly the silent
-    # generalisation the protocol forbids. Peer verification is a real and separate question, and it can
-    # be its own aspect the day something needs to take a position on it.
     meaning: "whether a channel protects what crosses it from anything on the path"
     figure: opposition
     poles: [encrypted, cleartext]
@@ -1381,37 +1114,25 @@ aspects:
       - { position: encrypted, complement: cleartext, meaning: "the payload is unreadable to anything between the two ends" }
       - { position: cleartext, complement: encrypted, meaning: "the payload is readable by anything on the path. The DEFAULT, deliberately: a channel nobody has said protects anything does not, and a default that assumed otherwise would report an estate safer than it is." }
 
-  # == SEQUENCE ASPECTS (9.2, T0). No positions and no poles: a sequence is not a closed set of modalities
-  # but a domain walked along lines.
   - aspect: time
     meaning: "when: a position on the one line everything that happens is ordered along"
     figure: sequence
     lines: 1
     metered: time
-    order: partial          # two positions whose RESOLUTIONS overlap are unordered: `2026-09-19` (unit day) is
-                            # neither before nor after `2026-09-19 22:50` (unit minute); it contains it
+    order: partial
     acyclic: true
     ends: open
     domain: { systems: time }
   - aspect: place
-    # SEMI-DEFINED (the operator's note, 2026-08-05): declared so the figure is proven against a second
-    # aspect, and because civil time RESOLVES THROUGH place: an offset is a geographic fact. No term takes a
-    # position on it yet; its lines are open because a filesystem tree, a site and a coordinate differ in how
-    # many there are.
     meaning: "where: a position among the places a being can be, whether a coordinate, a site or a path in a tree"
     figure: sequence
     lines: open
-    metered: none           # geographic coordinates are metered and containment is not; until a term needs
-                            # the difference, the aspect claims no measure it cannot give every system
-    order: partial          # containment orders a path within its tree and nothing across trees
+    metered: none
+    order: partial
     acyclic: true
     ends: bounded
     domain: { systems: place }
   - aspect: walk
-    # THE `dag` RULE, RE-READ. A term whose schema says `dag: true` is a position on this aspect: its edges are
-    # a sequence restricted to `acyclic`, and the gate refuses a cycle BECAUSE this row says acyclic, not
-    # because code names the key. Nothing about the check changed; what changed is that acyclicity is now
-    # one declared restriction of a sequence instead of the definition of walkable.
     meaning: "a relation a reader can walk from being to being without coming back: ownership, habitat, part-of, dependency"
     figure: sequence
     lines: 1
@@ -1419,15 +1140,9 @@ aspects:
     order: partial
     acyclic: true
     ends: open
-    term_key: dag           # a term carrying `dag: true` places its edges on this aspect
-    domain: { systems: none }   # its positions are beans, not positions in an anchor system
+    term_key: dag
+    domain: { systems: none }
   - aspect: routine
-    # T4 (10.1): a procedure is a SEQUENCE OF STEPS, and the operator's own description of it (2026-08-05) is
-    # the definition: "completely sequential even with branches, for example steps of a routine even with
-    # their conditions". Lines are OPEN because a branch adds one. It is NOT acyclic: a routine may loop (retry
-    # until it passes), which is exactly why acyclicity had to stop being the definition of walkable.
-    # CLOSED NEIGHBOURHOODS, the third ply: a step's `next` is COMPLETE, these branches and no others, so the
-    # gate can refuse a branch that points nowhere, a step nothing reaches, and a routine with no end.
     meaning: "the steps a procedure takes, the branches between them and the conditions that choose a branch"
     figure: sequence
     lines: open
@@ -1435,17 +1150,10 @@ aspects:
     order: partial
     acyclic: false
     ends: bounded
-    domain: { systems: none }   # its positions are the routine's own steps
+    domain: { systems: none }
 
-# == PROFILES (added 2026-08-02, std-vocab@2.0 / P6 E4) ==
-# Terms that are general to a KIND of garden rather than to all gardens. A garden opts in with
-# `extends_profiles: [<name>]`; one that manages no code should not inherit code terms, and without
-# profiles the only options were to force them on everyone or to leave them local forever.
-# == KNOWLEDGE: published classifications as UNIVERSAL ANCHORS (9.1, the `knowledge` profile) ==
-# A garden that records what a thing IS in the world's own terms — which field of knowledge a skill draws on,
-# which occupation a role is, which technology a program is — should use codes every other garden uses too, so
-# two gardens that never met agree that "ISCO-08 2522" and "Samba" are the same objects. The classifications
-# are DATA the law points at, kept whole (every level) in seed/knowledge/, not restated in this prose.
+# == PROFILES ==
+# == KNOWLEDGE: published classifications as UNIVERSAL ANCHORS ==
 registry_files:
   - { registry: isced-f-2013, file: seed/knowledge/isced-f-2013.tsv, key: code }
   - { registry: isco-08,      file: seed/knowledge/isco-08.tsv,      key: code }
@@ -1465,7 +1173,7 @@ knowledge_schemes:
     url: "https://ilostat.ilo.org/methods/concepts-and-definitions/classification-occupation/"
     levels: [ { level: major }, { level: sub-major }, { level: minor }, { level: unit } ]
     same_ground_as: [isced-f-2013]
-    crosswalk: table                 # seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv
+    crosswalk: table
     neighbours: none
     sources: seed/knowledge/SOURCES.md
   - scheme: technology
@@ -1473,8 +1181,7 @@ knowledge_schemes:
     publisher: daftar (curated; every row names the project's own documentation, never a third party's)
     url: "seed/knowledge/technology.tsv"
     levels: [ { level: technology } ]
-    within: [isced-f-2013]          # every technology names the UNESCO field(s) it belongs to (its `isced_f_2013` column): the
-                                    # fields of knowledge are the ROOT, and a protocol, a product or a routing mechanism hangs from one
+    within: [isced-f-2013]
     neighbours: none
     sources: seed/knowledge/SOURCES.md
 profiles:
@@ -1491,16 +1198,14 @@ profiles:
       why: "No bean records a build-output tree yet. Kept because an artifact tree must never be indexed as own-source: it is derived, so re-analysing it teaches nothing the source did not already say."
     terms:
     - term: code_paths
-      # The 'paths vocab' (added 2026-08-01, human-directed): so an agent LOCATES code without re-walking a tree,
-      # and knows which trees are REFERENCE-ONLY (never re-scanned each session).
       meaning: >
         The on-disk code trees a code bean is built from or references. Each entry is a CLASSED path so any
         agent locates code without re-walking a tree, and knows which trees are reference-only (never re-scanned
         each session — consult summary_ref + grep only for one specific symbol on demand).
       context_keys: ["code_paths"]
-      schema:                                          # GATE (P2): enforced generically from here, not from code
+      schema:
         shape: list_of_entries
-        required_on_kinds: [codebase]                  # a kind:codebase bean MUST carry a non-empty code_paths
+        required_on_kinds: [codebase]
         attrs:
           path:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare absolute path names no host: give it `root:<name>/…` (resolved by each host's `roots`) or `<host>:<path>`" }, meaning: "WHERE THE TREE IS, as a position: `root:<name>[/<relative>]` resolved through each host's own `roots` map, or `<host>:<absolute path>` stated outright. A bare absolute path names no host and WARNS (11.0): this estate holds 13 paths that exist on two machines as two different trees, so a path with no host is a position in a system nobody named." }
           role:         { required: true, in: [own-source, framework-reference, vendored-dependency, generated-artifact], meaning: "own-source | framework-reference | vendored-dependency | generated-artifact" }
@@ -1508,11 +1213,6 @@ profiles:
           stack:        { in: untyped, meaning: "language/runtime tag, e.g. python-django | csharp-dotnet (optional)" }
           entrypoint:   { in: untyped, meaning: "manifest / solution / addin that roots the tree (optional)" }
           note:         { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
-      # MOVED OUT 2026-08-02 (P1 / D6, human-ratified): `summary_ref` and `last_indexed` left this term and now
-      # live in `analysis_cache`. Rationale (one-owner-of-a-fact): a summary is an ANALYSIS RESULT, not a property
-      # of a filesystem path, and a date is a weaker staleness signal than the source's own git sha. code_paths
-      # now does exactly ONE job — LOCATE the tree and say whether it may be walked. An analysis_cache entry
-      # binds back to the tree it analysed via its `covers_paths`.
       agent_directive: >
         LATER AGENTS / OTHER MODELS: before scanning any code for this product, READ the owning bean's code_paths
         to LOCATE the tree, then READ its analysis_cache for a result that stands in for the scan. Treat
@@ -1526,7 +1226,7 @@ profiles:
     - term: git_remote
       meaning: "a source repository's remote URL (the crypto/logical identity of a code tree)"
       context_keys: ["git_remote"]
-      anchor: { class: logical, establishing: true }   # a remote URL is globally unique for the repo → establishes a codebase's identity
+      anchor: { class: logical, establishing: true }
       merge: { cardinality: single, order: none }
       canonical: "verbatim remote string (e.g. host:path or scheme URL); lowercase host only"
       promotion: { status: candidate, note: "general (any code garden has repos) — REVIEW in the attrs-to-universal session" }
@@ -1600,7 +1300,6 @@ profiles:
         letting a whole address family appear with nothing noticing.
     terms:
     - term: net_protocol
-      # The second enum owner. Same contract, same reason.
       meaning: "a protocol a being may speak — the one owner of that enum"
       context_keys: [net_protocol]
       schema:
@@ -1610,11 +1309,6 @@ profiles:
       enforced_by: none
       merge: { cardinality: single, order: none }
     - term: endpoints
-      # WHAT A BEING ANSWERS ON. This is the half `ip` never had: an address with no protocol and no port
-      # is a fact about a network interface, not about anything a being can reach. A mail server's
-      # `details.boot_surface.mail_ports_expected` was straining toward this shape and could not get
-      # there — it carries `{ port: 25, service: postscreen }` beside `port: "110/143/993/995"`, four
-      # ports jammed into one string, and `service` naming IMPLEMENTATIONS where it means protocols.
       meaning: >
         The listening surfaces this being offers: for each, the protocol spoken, the address system and
         address it answers at, the port, and what the channel protects. An endpoint entry is a STATEMENT
@@ -1630,25 +1324,16 @@ profiles:
           observed:         { in: { type: date }, meaning: "ABSOLUTE date the surface was checked. Endpoints age faster than almost anything else here." }
           confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "the position on the confidentiality aspect — what the channel protects. Defaults to cleartext, because a channel nobody has said protects anything does not." }
           permission:       { in: { aspect: capability, default: permitted }, meaning: "the position on the capability aspect — whether this surface MAY exist at all" }
-          # THE TRANSPORT IS USUALLY THE PROTOCOL'S OWN, so an entry states it only when it differs: a DNS server's second
-          # endpoint says `transport: tcp`. The default is READ FROM THE PROTOCOL'S ROW rather than typed here, so the
-          # protocol stays the one owner of what usually carries it.
           transport:        { in: { registry: net_protocols, take: protocol, where: { layer: transport } }, default_from: { registry: net_protocols, keyed_by: protocol, take: transport }, meaning: "tcp | udp — which transport's port space `port` is a position in. Defaults to the protocol row's `transport`." }
           plane:            { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR. Stated where it matters: a management surface deserves a different exposure from a data one." }
           port:             { in: { form_of: anchor_systems, keyed_by: transport, take: pattern }, meaning: "the port: a position in the transport's port space, WITHIN the address beside it. One port per entry. Omitted where the protocol rides another (sftp over ssh) and has none of its own, and for a socket path, which has none at all." }
           via_link:         { in: untyped, meaning: "optional: the `links` key this surface is reachable over, when it is not reachable without it" }
         cells:
           - { when: { permission: forbidden }, verdict: in_breach, why: "a listening surface that MUST NOT exist, recorded as existing. Unlike a capability, an endpoint entry is not a stance about a possibility — it is a statement that the being answers there — so `forbidden` alone is the breach and needs no second aspect to confirm it. A database container published on 0.0.0.0:5432, reachable across the LAN, is this shape." }
-          # LOOPBACK is excluded: there is no path there for anything to be on.
           - { when: { permission: required, confidentiality: cleartext, exposure: [lan, link, internet] }, verdict: in_breach, why: "a channel the estate REQUIRES and which protects nothing on the wire, on a path something else can be on. A mail policy that forces cleartext delivery to a partner domain that mail must still reach is exactly this, so the requirement and the exposure are both real and neither can simply be withdrawn." }
           - { when: { plane: management, exposure: internet }, verdict: in_breach, why: "a MANAGEMENT surface answering on the internet: the way an operator configures this being is reachable by anyone, guarded only by its login. Restrict it to a management network or a named address list; if it must stay, say why on the bean, where a reader meets this warning." }
       merge: { cardinality: multi, order: "by-protocol+system+at+port?" }
     - term: links
-      # A LINK IS A THING, NOT A SENTENCE. Today the estate's tunnels live as prose in `owns:` on three
-      # beans, and the direct cost of that is on record: the router's `owns.wg_tunnel` said it dials
-      # endpoint 203.0.113.19 while the VPS's `owns.wg_identity` said it dials .16 and listed .19 as a freed
-      # spare. Two beans, the same scanning agent, one day apart, and the gate cannot see it because
-      # `owns` has no rule to check. A link whose far end is a RESOLVED REF cannot contradict itself.
       meaning: >
         The links this being terminates: physical interfaces and the tunnels that manufacture one. A
         tunnel is not a special case here — it is a link whose `protocol` row declares
@@ -1678,8 +1363,6 @@ profiles:
         cardinality to avoid, met twice more in a single term.
       merge: { cardinality: multi, order: by-key }
     - term: reaches
-      # WHAT A BEING NEEDS TO TALK TO. Deliberately NOT a dag: a server reaches its router and the router reaches
-      # the server, and that is ordinary rather than a cycle to be refused.
       meaning: >
         The beings this one must be able to reach in order to work, each naming the protocol it reaches
         for and how badly it needs it. It takes positions on the EXISTING `necessity` aspect, because
@@ -1696,10 +1379,6 @@ profiles:
           via_link:   { in: untyped, meaning: "optional: the link this reach must cross" }
       merge: { cardinality: multi, order: by-key }
     - term: treatments
-      # NOT A LAYER, AND KEPT OUT OF THE STACK ON PURPOSE. routes, nat, mangle and acl are not positions
-      # in a protocol stack — they are what a forwarding device DOES to traffic that is passing through
-      # it. Folding them into `endpoints` or `links` would be the force-fit that ground rule 2 forbids:
-      # the shape would be satisfied and it would be the wrong shape.
       meaning: >
         What a forwarding device does to traffic crossing it: the routes, address translations, packet
         marks and access lists that decide where something goes and whether it arrives at all. Required
@@ -1707,7 +1386,7 @@ profiles:
       context_keys: [treatments]
       schema:
         shape: list_of_entries
-        required_on_roles: [router]   # 7.0: was `required_on_kinds: [router]` until `router` stopped being a kind
+        required_on_roles: [router]
         attrs:
           kind:        { required: true, in: [route, nat, mangle, acl, queue], meaning: "route (where traffic goes) | nat (what its addresses become) | mangle (what marks it carries) | acl (whether it is allowed at all) | queue (what bandwidth it gets)" }
           plane:       { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR." }
@@ -1724,20 +1403,11 @@ profiles:
       domains should inherit none of it.
     terms:
     - term: registration
-      # PROMOTED 2026-09-17 (human-ratified, std-vocab 8.2) from one garden's local vocabulary, where it had been
-      # a candidate "to revisit with a second garden that has domains". A cold-start drill garden modelled a
-      # domain and had nowhere standard to put its registrar or expiry. A PROFILE, not the core: a garden
-      # with no domains inherits neither the term nor its requirement.
       meaning: "the registration facts of a delegated name: who holds the record, when it lapses, and when that was last observed"
       context_keys: ["registration"]
       schema:
         shape: mapping
         required_on_kinds: [domain]
-        # WHICH DATE AGES, said here rather than in the tool. bin/dmstale.py named `registration` and
-        # `expires` in its own source until 2026-09-20: this term was born garden-local with the tool
-        # extended for it the same day, and when it was promoted to Tier-0 nobody went back. A garden
-        # that invents a term with an expiry got no warning, however well the gate enforced the date —
-        # first-class to the gate, invisible to the tool that would have made it useful.
         expiry:
           attr: expires
           notice: { of: time, measure: { count: 90, unit: day } }
@@ -1791,11 +1461,6 @@ profiles:
       anchor: { class: logical, establishing: true }
       merge: { cardinality: single, order: none }
     - term: knowledge
-      # THE RELATION TO KNOWLEDGE. A bean that is not itself a field, an occupation or a technology still stands
-      # in relation to them: a Samba instance USES the technology samba; a mail-filtering design DRAWS ON the
-      # field 0612; a person's role is CLASSIFIED AS 2522. One term for every scheme: the entry names its scheme
-      # and the gate checks the code against THAT scheme's registry. `topic` names the concept inside the field
-      # ("fluid pressure and flow" for espresso, inside physics) — the overlap between domains is the point.
       meaning: "how this being stands to published knowledge: classified as an occupation, drawing on a field, using a technology"
       context_keys: [knowledge]
       schema:
@@ -1810,53 +1475,33 @@ profiles:
 
 terms:
   - term: capabilities
-    # Open key, closed figure — the same shape as analysis_cache, which is the proven pattern here: a NEW
-    # capability needs no rule-change, while the STANCE taken on it must sit on the figure. This is where
-    # a prohibition stops being a prose safety note and becomes something the gate carries.
     meaning: "what this being may or must be able to do: an OPEN map of capability name -> the stance taken on it"
     context_keys: ["capabilities"]
     schema:
       shape: open_map_of_entries
       key_form: kebab
       attrs:
-        # a stance with no reason is folklore; the reason IS the fact
         why:              { required: true, in: prose, meaning: "WHY this stance holds — the consequence of violating it, in prose an operator can act on" }
-        # TWO aspects: what is ALLOWED, and what is SO
         permission:       { in: { aspect: capability, default: permitted }, meaning: "the position taken on the capability aspect (required | omissible | permitted | forbidden)" }
         feasibility:      { in: { aspect: feasibility, default: possible }, meaning: "the position on the feasibility aspect — whether the being CAN be in that state at all, independent of whether it may. `forbidden` + `possible` is a live risk; `forbidden` + `impossible` is already prevented by something else." }
         by:               { in: untyped, meaning: "optional: who imposes it, when the enforcer is not us (e.g. a hosting provider)" }
         feasibility_why:  { in: prose, meaning: "optional: WHY the feasibility position holds — a sysctl is reversible, a kernel flag is not. Distinct from `why`, which is the reason for the PERMISSION" }
-      # Two squares span a GRID, and the grid has cells NEITHER square can see. Checking each aspect
-      # alone permits both kinds below. The split matters: one pair cannot both be true, the other pair
-      # can and is simply bad.
       cells:
-        # incoherent — an ERROR: one of the two positions is mis-stated
         - { when: { permission: required, feasibility: impossible }, verdict: incoherent, why: "an unsatisfiable requirement — it must be had and cannot be. Either the requirement is not real, or the impossibility is not, and until that is resolved the entry asserts a contradiction." }
         - { when: { permission: forbidden, feasibility: necessary }, verdict: incoherent, why: "an unenforceable prohibition — it must not be had and unavoidably is. A rule that cannot be obeyed is not a rule; the being needs a different mitigation, or the necessity is overstated." }
-        # in_breach — a WARNING: both CAN hold; the state needs action
         - { when: { permission: required, feasibility: possible }, verdict: in_breach, why: "REQUIRED but NOT CURRENTLY THE CASE — the requirement is unmet right now." }
         - { when: { permission: forbidden, feasibility: contingent }, verdict: in_breach, why: "FORBIDDEN but CURRENTLY THE CASE — the prohibition is being violated right now." }
     merge: { cardinality: multi, order: by-capability }
   - term: consumes
-    # SETTLED at 2.1. The v2 plan proposed retiring it as unused; it had a live occupant, and the operator
-    # assigned it a home: "consumption is going to be necessity aspect". It is now a position-bearing
-    # relation ON that aspect rather than a standalone edge, which is what unblocked its promotion — it was
-    # the one term 2.0 deferred for INSTABILITY rather than scope.
     meaning: "an input this being requires — the produced state of another being that it reads to do its work"
     context_keys: ["consumes"]
     schema:
       shape: list_of_entries
-      # an input is needed unless an edge says otherwise
       is_ref: true
       attrs:
         necessity:  { in: { aspect: necessity, default: necessary } }
     merge: { cardinality: multi, order: "by-bean?+mapping?+field?" }
   - term: refs
-    # THE OPEN RESIDUAL. Any edge that is not one of the canonical relations above lives here, and MUST
-    # name its own relation via `rel:`. The KEY is a slot label (it may be arbitrary, e.g. `party_acme`);
-    # `rel:` is the relation TYPE, so an edge read alone still says what it is. `rel` is OPEN and kebab —
-    # deliberately NOT an enum, for the same reason analysis_cache's cache_type is not one: a new kind of
-    # relation must never require a rule-change. It is therefore outside the reverse gate by design.
     meaning: "the open residual relation: any typed edge outside the canonical set, self-described by `rel`"
     context_keys: ["refs"]
     schema:
@@ -1867,45 +1512,23 @@ terms:
         path:  { in: untyped, meaning: "INSTEAD of a bean: a pointer to something that is not a managed object here — an off-garden document. The residual relation's own residual, kept since the relation algebra was declared" }
         note:  { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
-# LOCAL kinds: object types this garden manages that std-vocab doesn't schematize. Each gets a small schema
-# (MODEL Rule 6). A kind that proves general is promoted alongside its terms.
   - term: depends_on
     meaning: "a being this being requires to function; recovery ordering reads this edge"
     context_keys: ["depends_on"]
     schema:
       shape: open_map_of_entries
       dag: true
-      # the sibling of `consumes`: depends_on needs
-      # a BEING, consumes needs its PRODUCED STATE
       is_ref: true
       attrs:
         necessity:  { in: { aspect: necessity, default: necessary } }
     merge: { cardinality: multi, order: by-bean }
-  # == CORE GRAMMAR ENUMS (promoted 2026-08-02, std-vocab@2.0 / P6 E3) ==
-  # These were CODE CONSTANTS in bin/dmcheck.py (STATUSES, ID_STATUS, ANCHOR_CLASSES, AUTHORITY, SRC) —
-  # the last place in the system where a type rule lived outside the vocabulary. Absorbing them completes
-  # D4 ("type rules live in the VOCAB, not code"). Each is addressed by `path:`, because these are NESTED
-  # fields rather than top-level terms. MAJOR: two of them were WARNINGS in code and are ERRORS now, and a
-  # garden using a value not listed here will be rejected where it previously passed.
+  # == CORE GRAMMAR ENUMS ==
   - term: status
     meaning: "the lifecycle state of a bean"
     context_keys: ["status"]
-    # `closed` ADDED 7.0 (2026-08-07, human-ratified). A bounded piece of work that FINISHED is not
-    # `deprecated` — deprecated means superseded, still present, and not to be relied on, which is a
-    # judgement about something that continues to exist. A session that did its work and stopped has no
-    # such shadow over it. The estate had no word for the difference and both wrong answers were already
-    # in the corpus: one session bean called itself `deprecated`, which reads as though
-    # its work were discredited, and another stayed `active` indefinitely, which
-    # reads as though it were still running. The second is the more dangerous of the two — a reader
-    # scanning for live sessions would find a ghost.
-    # SCOPED BY SENSE, NOT BY RULE: `closed` belongs to kinds that BOUND their work — session, program,
-    # contract. Nothing forbids it elsewhere and nothing should invent a per-kind status mechanism to try;
-    # `draft` has always been equally meaningless on a host and has never needed guarding.
     schema:
       path: status
       values: [active, planned, at-risk, deprecated, draft, closed]
-    # Two gardens disagreeing about a being's lifecycle state is a real disagreement about the world,
-    # so it surfaces as a conflict rather than one of them quietly winning.
     merge: { cardinality: single, order: none }
   - term: identity_status
     meaning: "whether a bean's identity is established or still provisional (MERGE.md §4)"
@@ -1932,44 +1555,25 @@ terms:
     schema:
       path: provenance.src
       values: [observed, inferred, asserted-by-human, generated-by-tool]
-    # THE RANK, DECLARED AT LAST (11.3). MODEL.md and MERGE.md state the guard — an `inferred` value never
-    # overrides an `asserted-by-human` one — and until 11.3 the order that implements it was four numbers in
-    # bin/dmmerge.py, the oldest rule in the system kept as a constant in a tool. It is the same construct
-    # `anchor_authority` uses below. The merge reads it for two things: which src a value several gardens agree
-    # on keeps (the highest), and the guard itself — a value at the TOP of this rank is never dropped in favour
-    # of one below it, whatever precision the lower one claims. The merge REFUSES to run if this is absent.
     merge: { order: "generated-by-tool<inferred<observed<asserted-by-human", borrows: generated-by-tool }
-    # EACH PLACE IN THE RANK, EARNED. The rank orders HOW A FACT IS KNOWN:
     values_meaning:
       asserted-by-human: "a person said so, and answers for it. The top, because a person can be ASKED, and because the fact may be one only a person can know (who owns this, what was agreed). The guard protects this place and no other."
       observed:          "read directly off the world by whoever recorded it — a command's output, a file, a registry reply. It can be re-read, which is its whole authority."
       inferred:          "reasoned from observations rather than read. Someone weighed evidence and may be wrong; the fact is recorded so it can be found, and is not settled."
       generated-by-tool: "COMPUTED from other recorded facts by a program: a merged bean, a generated config, a count. A tool knows NOTHING of its own — it cannot be wrong about the world, only about its inputs, and it cannot be right about more than they were. So this src has no standing of its own and BORROWS it: a generated fact ranks as the WEAKEST src named in its `provenance.from` (a chain is as strong as its weakest link), and sits at the bottom of the rank only when it names none — because a derivation that will not say what it derives from is worth less than a guess that owns up to being one."
-    # `borrows` IS WHAT THE MERGE READS; `values_meaning` is for the reader. The LABEL is never rewritten — a
-    # merged value still says a tool produced it, which Phase 7 (2026-08-03) showed is exactly what must not be
-    # lost or gained by passing through a tool. Only the weighing borrows.
   - term: analysis_cache
-    # Design step D6, executed as P1 (2026-08-02, human-ratified rule-change).
-    # An OPEN, TYPED, bean-level cache of ANALYSIS RESULTS, so an agent READS a recorded result instead of
-    # re-deriving it. Adding a NEW <cache_type> requires NO schema change and NO bean restructure — that is the
-    # whole point of the term: the garden can start caching a new kind of code/analysis (a new language, a new
-    # lens) forever, without a future migration.
     meaning: >
       An OPEN map of typed, provenance-stamped, staleness-keyed analysis results, held on the bean that owns the
       analysed thing. Each entry STANDS IN FOR re-running that analysis for as long as its staleness_key still
       matches the live source; once the key moves, the entry is STALE and must not be trusted.
     context_keys: ["analysis_cache"]
-    schema:                                         # GATE (P2): enforced generically from here, not from code
-      shape: open_map_of_entries                    # NB the KEY is open: no `values`/`values_from` is declared for it,
-      key_form: kebab                               # so the gate can only ever require kebab-case, never a fixed list.
-      required_on_kinds: [codebase]                 # a kind:codebase bean MUST carry a non-empty analysis_cache
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      required_on_kinds: [codebase]
       attrs:
         produced_by:     { required: true, in: untyped, meaning: "the agent/tool id that produced this analysis (provenance — who to ask, who to blame)" }
-        # Rule 6: absolute dates only
         as_of:           { required: true, in: { type: date }, meaning: "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)" }
-        # 11.0: a staleness key is a POSITION, and `git-head:<sha>` was resolved against whatever tree the
-        # READER had checked out — one analysis, one verdict per machine. The git-object-graph form names the
-        # repository, so every reader asks the same object graph. `manual:<why>` stays for what no key can track.
         staleness_key:   { required: true, in: { pattern: "^([a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}|manual:.+)$" }, meaning: "the value that makes this entry VALID; when it MOVES, the entry is STALE. The FORM is the pattern this attribute declares, beside this sentence, and is not restated here: `<repo>@<object-id>`, a position in a named repository's object graph, or `manual:<why>` for what no key can track. Until 2026-09-20 this line listed three spellings — the git-head, the digest and the manual one — two of which the pattern had already refused since 11.0. A person reading the term was taught the form the gate rejects, which is the same defect as a law the code ignores, pointing the other way. (The superseded wording is in git, and is deliberately NOT quoted here: a document that quotes a spelling it is abolishing still contains it, and the check in test/place.py cannot tell a quotation from a lesson. Nor should it have to.)" }
         policy:          { required: true, in: [index, reference-only, skim], meaning: "index | reference-only | skim — how the analysed source is to be treated" }
         form:            { in: [summary_ref, inline, external], meaning: "summary_ref | inline | external — where the cached result physically lives" }
@@ -1980,7 +1584,7 @@ terms:
       cells:
         - { when: { form: summary_ref }, requires: [summary_ref] }
         - { when: { staleness_key: { starts_with: "manual:" } }, expects: [covers_paths], why: "an agent cannot tell where to re-check it" }
-    open_keys: true                                 # restated for the human reader; the gate reads schema.key_form
+    open_keys: true
     key_note: >
       kebab-case <cache_type>. Known types so far (a NON-exhaustive registry, NOT an enum the gate enforces):
       code-structure | framework-surface | api-surface | api-client-contract | security-surface | bcf-domain.
@@ -1999,37 +1603,32 @@ terms:
     exceptions: []
     promotion: { status: candidate, note: "strongly general — every garden with code wants typed, staleness-keyed, re-usable analysis. Propose to std-vocab in the P6 promotion review." }
   - term: nature
-    # Ontological type of a being — the routing key from a bean up to the ownership crown (MODEL §Ownership).
-    # physical -> nature (res extensa), metaphysical -> logos (res cogitans), living -> love (conatus);
-    # all resolve up to god (Deus sive Natura). The crown is a MODEL axiom, NOT instantiated as beans.
     meaning: "the ontological category of a being; routes it to the correct branch of the ownership crown"
     context_keys: ["nature"]
-    schema:                                          # GATE (P2 interpreter; P3 made it the root axiom)
+    schema:
       shape: scalar
-      values: [physical, metaphysical, living]       # also the enum other terms reuse via values_from: nature
-      values_consistent_with: ["registry:natures[].nature"]   # the enum IS the natures registry above
-      required: true                                 # P3/D1: MANDATORY on every bean, whatever its kind
-      must_equal_kind_attr: of_nature                # and it must agree with the kind that refines it
+      values: [physical, metaphysical, living]
+      values_consistent_with: ["registry:natures[].nature"]
+      required: true
+      must_equal_kind_attr: of_nature
     merge: { cardinality: single, order: none }
     promotion: { status: candidate, note: "universal ontology (Spinoza crown) — review in attrs-to-universal session" }
   - term: owned_by
-    # Faceted ownership. ONE owner per facet (the 'one and only one owner' law, held per facet).
-    # Co-ownership of a SINGLE facet is never a raw fact -> a `contract` bean (agreement_ref + conflict_rule).
     meaning: "who owns a being, per facet; introduced (explicit) at a node and inherited down the tree"
     context_keys: ["owned_by"]
-    schema:                                          # GATE (P2): enforced generically from here, not from code
+    schema:
       shape: mapping
       required_on_kinds: [product, codebase, instance, org]
-      alt_form: { key: via, ref_fields: [via] }      # the INHERITED form: a single `via` ref, no facets
-      key_form: values_from:facets                   # otherwise every key must be a declared facet
-      entry_one_of: [owner, contract, external, crown]   # a bean, a contract, outside, or the axiom itself
-      entry_must_match:                              # the branch is NOT free: nature routes it
+      alt_form: { key: via, ref_fields: [via] }
+      key_form: values_from:facets
+      entry_one_of: [owner, contract, external, crown]
+      entry_must_match:
         - { attr: crown, registry: natures, keyed_by: nature, take: crown }
-      entry_form_from_kind_attr: ownership_form      # a kind may PIN which form it must use (see kind: person)
-      dag: true                                      # ownership must stay acyclic
+      entry_form_from_kind_attr: ownership_form
+      dag: true
       attrs:
         owner:     { in: ref }
-        contract:  { in: ref }                           # `external` and `crown` resolve to no bean by design
+        contract:  { in: ref }
         since:     { in: untyped, meaning: "optional: ABSOLUTE date this owner came to hold the facet" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     forms:
@@ -2041,22 +1640,14 @@ terms:
     merge: { cardinality: multi, order: by-facet }
     promotion: { status: candidate, note: "universal — review in attrs-to-universal session" }
   - term: responsibility
-    # P7 (2026-08-02, human-ratified). THE CLOSING ARC. Operator: "the ownership is trapped in the same
-    # paradox isn't it? ... ownership is only meaningful where the responsibility covers on the opposite
-    # aspect." `owned_by` alone is one-directional — a being points UP to its owner, up to the crown. That
-    # is one arc of a loop, and P5's `external` form made the gap visible: BIND terminates in prose at
-    # neither a bean nor the crown. Responsibility is the OPPOSITE arc, the holder answering DOWN for the
-    # being. Together they close. `external` then stops being an escape hatch and becomes an ordinary
-    # position: owned outside, answered for inside — which is the true statement about every third-party
-    # thing this estate runs.
     meaning: "who ANSWERS FOR this being, per facet — the arc that makes an ownership claim actionable"
     context_keys: ["responsibility"]
     schema:
       shape: mapping
-      alt_form: { key: via, ref_fields: [via] }      # inherited, exactly as ownership inherits
-      key_form: values_from:facets                   # the SAME facet lattice — the two arcs pair per facet
-      entry_one_of: [holder, contract, external, self]   # NB no `crown`: the crown owns but never answers
-      facet_parity_with: owned_by                    # the loop must CLOSE: same facets on both arcs
+      alt_form: { key: via, ref_fields: [via] }
+      key_form: values_from:facets
+      entry_one_of: [holder, contract, external, self]
+      facet_parity_with: owned_by
       dag: true
       attrs:
         holder:    { in: ref }
@@ -2075,23 +1666,9 @@ terms:
     merge: { cardinality: multi, order: by-facet }
     promotion: { status: candidate, note: "prerequisite for promoting owned_by (see design-std-vocab-promotion B3) — owned_by cannot go to Tier-0 while its external form dangles" }
   - term: facets
-    # The ownership-facet lattice: DISTINGUISHABLE (crisp boundary; resolve overlap by a depends_on edge or
-    # boundary refinement, NEVER ambiguous double-coverage), DEPENDENCY-bearing (DAG), and RECURSIVE
-    # (a facet may decompose into sub-facets, ownership recursing within).
     meaning: "the typed lattice of ownership facets used by owned_by"
     context_keys: ["facets"]
-    enforced_by: none      # AT TIER-0 there is nothing to check: this term defines the lattice RULES
-                           # (below) but declares no values, because `legal`/`technical` are defensible
-                           # universals while the extensible three are unoccupied predictions. A garden
-                           # supplying values inherits the drift guard through its overlay, and that IS
-                           # enforced there. Left as an empty `schema:` key by the 1.1 promotion until
-                           # golden V5 caught it — a term that states no rule and no reason is exactly
-                           # the silent gap this release exists to remove.
-                                                     # values_from:facets)
-                                                     # definition below, so the two can never drift apart.
-    # NB: 'facilitation of creation/production' is NOT modelled as an ownership facet — a facilitator is a
-    # HABITAT the creation act lived in (lives_in, time-windowed), and any equal-sharing of that facilitator
-    # stake is captured by a `contract` over the creation aspect. Kept lean on purpose.
+    enforced_by: none
     rules:
       distinguishable: "each facet has a crisp boundary; resolve overlap by a depends_on edge or boundary refinement, never double-coverage"
       dependency: "facets form a DAG via depends_on"
@@ -2100,10 +1677,9 @@ terms:
   - term: instance_of
     meaning: "the code product a running instance (token) instantiates"
     context_keys: ["instance_of"]
-    schema:                                          # GATE (P2): enforced generically from here, not from code
+    schema:
       shape: mapping
       required_on_kinds: [instance]
-      # the mapping IS the ref
       is_ref: true
       attrs:
         bean:  { required: true, in: id }
@@ -2111,33 +1687,23 @@ terms:
     merge: { cardinality: single, order: none }
     promotion: { status: candidate }
   - term: lives_in
-    # Habitat / containment stack — RECURSIVE and typed; DISTINCT from ownership (a token is NOT owned by its
-    # host). e.g. addon-token lives_in odoo-instance lives_in host{linux-baremetal|docker|windows|odoo.sh}.
     meaning: "the immediate habitat a token lives in/on; recursive (habitat may itself be a token); a DAG"
     context_keys: ["lives_in"]
-    schema:                                          # GATE (P2): enforced generically from here, not from code
+    schema:
       shape: mapping
       required_on_kinds: [instance]
-      dag: true                                      # habitat containment must stay acyclic
-      # the mapping IS the ref
+      dag: true
       is_ref: true
       attrs:
         bean:  { required: true, in: id }
     form: "lives_in: {bean: <habitat>}   # follow the chain for the full stack"
-    # habitat_types MOVED to the `provides_habitat` term below (P5): the list had no bean field, so a
-    # habitat's TYPE could not be recorded at all — the hole the reverse gate found on its first run.
     merge: { cardinality: single, order: none }
     promotion: { status: candidate, note: "universal containment (vps-on-provider, container-on-host, addon-in-odoo) — review later" }
   - term: provides_habitat
-    # P5/D5. Closes the hole the reverse gate found in P3.5: `lives_in` names WHICH being a token lives in
-    # but never WHAT SORT of habitat that being is. The type belongs to the habitat, not to the lodger —
-    # a VPS is a linux habitat whoever lives on it — so it is declared here and required on any bean that
-    # is actually the target of a lives_in edge. A habitat can no longer be untyped.
     meaning: "the kind of habitat this being offers to the tokens that live in it"
     context_keys: ["provides_habitat"]
     schema:
       shape: scalar
-      # values: GARDEN-LOCAL. Habitat TYPING is universal; `odoo-instance` and `odoo.sh-subscription` are not (P6/B2).
       required_on_targets_of: lives_in
     merge: { cardinality: single, order: none }
     promotion: { status: candidate, note: "universal containment typing — review at P6" }
@@ -2153,9 +1719,6 @@ terms:
     merge: { cardinality: single, order: none }
     promotion: { status: candidate, note: "universal composition — review at P6" }
   - term: creator
-    # DISTINCT from owned_by.legal.owner even though creation CONFERS legal ownership (VOCAB facets.legal):
-    # they coincide across this estate today, but a transfer would separate them and the creation fact must
-    # survive it. Recording both is therefore not a duplicate authoritative fact.
     meaning: "the being that made this being"
     context_keys: ["creator"]
     schema:
@@ -2169,8 +1732,8 @@ terms:
     context_keys: ["*_ip", "*_ips", "provides_ip", "identifiers.ipv4", "identifiers.ipv6"]
     schema:
       governs_anchor: ip
-      value_form: ip        # needs real parsing, not a regex — the `canonical` rule is 'python ipaddress normal form'
-    anchor: { class: network, establishing: false }        # reassignable (DHCP/NAT/reuse) → corroborating only, never sole
+      value_form: ip
+    anchor: { class: network, establishing: false }
     merge: { cardinality: single, order: cidr, authority: "scanned<operator-asserted<external" }
     canonical: "python ipaddress normal form (v4/v6); reject bad octets"
     escape: "bean `shared_identifiers:` (floating/VRRP/anycast) or `scope:`/`network:` (reused private range)"
@@ -2186,7 +1749,7 @@ terms:
       governs_anchor: hostname
       value_pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$'
       canonical_note: "lowercase; one label or dotted"
-    anchor: { class: network, establishing: false }        # reassignable
+    anchor: { class: network, establishing: false }
     merge: { cardinality: single, order: none }
     canonical: "lowercase"
   - term: fqdn
@@ -2196,7 +1759,7 @@ terms:
       governs_anchor: fqdn
       value_pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$'
       canonical_note: "IDNA + lowercase; at least two labels"
-    anchor: { class: logical, establishing: true }         # DNS-unique within its namespace
+    anchor: { class: logical, establishing: true }
     merge: { cardinality: single, order: none }
     canonical: "IDNA + lowercase"
   - term: mac
@@ -2207,7 +1770,7 @@ terms:
       value_pattern: '^([0-9a-f]{2}:){5}[0-9a-f]{2}$'
       canonical_note: "lowercase colon form"
     anchor: { class: hardware, establishing: true }
-    merge: { cardinality: set, order: none }               # a host may have several NICs
+    merge: { cardinality: set, order: none }
     canonical: "lowercase colon form"
     exceptions:
       - { case: "cloned/spoofed or reused MAC (freed lease)", decision: "scope+date the anchor; never sole establisher if transient", why: "MACs can be duplicated", acked: 2026-07-31 }
@@ -2215,9 +1778,6 @@ terms:
     meaning: "a hardware/chassis serial or asset serial"
     context_keys: ["serial", "identity.anchors[].serial"]
     schema:
-      # NO PATTERN: serials are vendor-shaped, and inventing one would reject valid data to look thorough. But they
-      # are COMPARED case- and space-insensitively (9.0): no vendor issues two serials differing only by case, and
-      # a drill committed `syn-0042` beside `SYN-0042` as two machines with 0 errors.
       governs_anchor: serial
       compare_form: upper-trim
     anchor: { class: hardware, establishing: true }
@@ -2229,31 +1789,46 @@ terms:
       governs_anchor: wg_pubkey
       value_pattern: '^[A-Za-z0-9+/]{43}=$'
       canonical_note: "exact base64, 44 characters"
-    anchor: { class: hardware, establishing: true }        # crypto-anchored to the keypair
+    anchor: { class: hardware, establishing: true }
     merge: { cardinality: single, order: none }
     canonical: "exact base64 (44 chars)"
+  - term: openpgp_fingerprint
+    meaning: "the fingerprint of an OpenPGP key (RFC 9580; RFC 4880 before it): what a person or an agent SIGNS with. It establishes WHO, in a way no name or address can — and it is what lets a record of who said something be checked rather than believed."
+    context_keys: ["openpgp_fingerprint", "identity.anchors[].openpgp_fingerprint"]
+    schema:
+      governs_anchor: openpgp_fingerprint
+      value_pattern: '^[0-9A-F]{40}([0-9A-F]{24})?$'
+      canonical_note: "40 upper-case hex digits (a version 4 key) or 64 (version 5 and later), with no spaces"
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: set, order: none }
+  - term: ssh_key_fingerprint
+    meaning: "the SHA-256 fingerprint of an SSH public key, as `ssh-keygen -lf` prints it: what a HOST proves itself with, and what an account is opened by."
+    context_keys: ["ssh_key_fingerprint", "identity.anchors[].ssh_key_fingerprint"]
+    schema:
+      governs_anchor: ssh_key_fingerprint
+      value_pattern: '^SHA256:[A-Za-z0-9+/]{43}$'
+      canonical_note: "`SHA256:` and 43 base64 characters, unpadded"
+    anchor: { class: hardware, establishing: true }
+    merge: { cardinality: set, order: none }
   - term: emp_id
     meaning: "an employer-assigned unique employee identifier"
     context_keys: ["emp_id"]
-    enforced_by: none      # no canonical form declared: an employer-assigned id has whatever shape the employer uses.
-    anchor: { class: logical, establishing: true }         # name is NEVER an anchor
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
     merge: { cardinality: single, order: none }
   - term: id
     meaning: "a bean/mapping identifier = its filename stem (garden-local; NOT identity)"
     context_keys: ["bean", "mapping"]
-    enforced_by: core      # kebab-case, id == filename, and uniqueness per (space,base) are CORE bean-grammar checks — schematising them would duplicate a rule that already bites.
+    enforced_by: core
     anchor: { class: none, establishing: false }
     handling: { format: "kebab-case; quote if numeric/reserved; kind-prefixed for high-cardinality kinds", unique: "per (space,base)" }
     exceptions:
       - { case: "duplicate legit human names (two hosts both called 'file-server')", decision: "ids disambiguate via kind-prefix+slug; anchor to serial/asset-tag; title may repeat (warn)", why: "labels collide; ids must not", acked: 2026-07-31 }
       - { case: "device replaced, role kept", decision: "role bean (stable) vs device bean (serial-anchored); retired → deprecated + role re-points via replaces:", why: "not silent id reuse", acked: 2026-07-31 }
   - term: ref
-    # NARROWED at 2.0 (P6/E6): this term used to CLAIM refs/consumes/depends_on and state the DAG rule for
-    # them. Those are now first-class relations with their own schemas, so `ref` describes only the LINK
-    # FORM they share. This is the MAJOR change of the release: an existing term's handling moved.
     meaning: "the LINK FORM {bean|mapping: <id>[, field: <key>]} — a pointer to the single owner of a value. The relations that USE this form declare themselves (see refs, depends_on, and a garden's own edges)."
     context_keys: []
-    enforced_by: core      # the link FORM and its resolution are CORE checks (target exists, named field present, shallow). Since 2.0 the acyclicity is declared per relation via schema.dag rather than here.
+    enforced_by: core
     anchor: { class: none, establishing: false }
     handling: { resolve: "target exists in right space; field present in target owns/attributes/details; shallow (ref-to-ref=warn)", graph: "acyclicity is declared PER RELATION via schema.dag — not asserted here for a fixed list of sections (narrowed at 2.0)" }
     exceptions:
@@ -2262,16 +1837,12 @@ terms:
   - term: shell-log
     meaning: "PROCESS term — how agent shell executions are logged: format + kept/summarized/discarded"
     context_keys: ["log/journal.md", "log/*"]
-    enforced_by: none      # a PROCESS term: it governs how an agent logs shell work to log/journal.md, not the shape of any bean field. There is no bean data for a gate to check, and that is a property of the term, not a gap.
+    enforced_by: none
     anchor: { class: none, establishing: false }
     handling: { classes: { state-change: "KEEP full (cmd+purpose+outcome)", one-shot-recon: "SUMMARIZE one line", repeated-discardable: "DISCARD per-iteration; keep pattern+final" } }
     exceptions:
       - { case: "repeated/discardable output (monitor ticks, polling, retries)", decision: "log pattern+final once", why: "per-iteration noise buries signal", acked: 2026-07-31 }
-  # == THE BEAN-GRAMMAR AND FACT-SECTION KEYS (added std-vocab@5.0, 2026-08-02, human-ratified) ==
-  # These were never terms. They did not need to be while the gate enforced them in CORE and nothing else
-  # read them — but `bin/dmmerge.py` became generic over top-level keys, and a key with no `merge:` facet
-  # is merged by a SHAPE GUESS. A guess can be the wrong guess, so each of them now declares how it
-  # merges. Most ratify what the guess already did; the three that do not are marked.
+  # == THE BEAN-GRAMMAR AND FACT-SECTION KEYS ==
   - term: kind
     meaning: "which kind of being this bean records; a refinement of its nature, from the `kinds` registry"
     context_keys: [kind]
@@ -2295,7 +1866,7 @@ terms:
   - term: owns
     meaning: "the facts this bean is the ONE owner of (MODEL Ground rule 1). Elsewhere they are pointed at, never copied."
     context_keys: [owns]
-    enforced_by: none          # Rule 1 is a Part B judgment: no gate can tell a duplicate from a reference
+    enforced_by: none
     merge: { cardinality: multi, order: by-key }
   - term: attributes
     meaning: "the abstraction layer: a datum kept intact because it does not yet fit a category (MODEL Ground rule 2). Never dropped, never mis-bucketed."
@@ -2312,13 +1883,7 @@ terms:
     context_keys: [open]
     enforced_by: none
     merge: { cardinality: set, order: none }
-  # == THE MERGE DRIVER'S OWN STATE (declared 2026-08-03, Phase 5 / D22) ==
-  # `bin/dmmerge.py` writes these and `bin/dmcheck.py` reads them, and until now there was NO TERM
-  # BETWEEN THEM — two tools agreeing about a key by coincidence, which is precisely the shape the
-  # law-in-data rule exists to forbid. They are also the reason the unclean marker no longer lives on
-  # `status`: `status` is a `single` merged term, so the driver writing its own flag there collided with
-  # the algebra on one key, and the next merge turned it into a conflict the in-place writer could not
-  # write back.
+  # == THE MERGE DRIVER'S OWN STATE ==
   - term: merge_open
     meaning: "this bean holds an unresolved merge: both values are kept and a human has not yet chosen. Written by the merge driver, read by the gate, cleared by the person who resolves it."
     context_keys: [merge_open]
@@ -2330,30 +1895,19 @@ terms:
     enforced_by: none
     merge: { cardinality: set, order: none }
   - term: provenance_of
-    # PER-LEAF PROVENANCE, BESIDE THE VALUES AND NEVER INSIDE THEM. `owns.os: AlmaLinux 9.8` stays what a
-    # human reads; this says who said it. Written only by the merge driver, on beans it produced. Without
-    # it a merged bean read back can only be re-merged as the READER's own assertion — every value
-    # restamped `generated-by-tool` — which disarms the guard that an `inferred` value may never override
-    # an `asserted-by-human` one, because SRC_RANK is what enforces that guard.
     meaning: "who said each merged value and how they know, keyed by the same dotted path merge_conflicts uses: {path: [{value, src, seen_in, subsumed?}]}. A subsumed value appears here and NOWHERE else, because the document carries only the winner."
     context_keys: [provenance_of]
     enforced_by: none
     merge: { cardinality: single, order: none }
-  # == CONTRACT KEYS. `contract` is a Tier-0 kind and its `schema:` prose already names these five; they
-  # are declared here so the merge reads them from the same place the kind describes them.
   - term: between
     meaning: "the parties to a contract"
     context_keys: [between]
     enforced_by: none
-    # SINGLE, not set — and this CHANGES what the shape guess did. The parties to an agreement are
-    # constitutive of it: unioning two gardens' lists would silently produce a three-party contract
-    # nobody agreed to. Two gardens disagreeing about who signed is a conflict for a human.
     merge: { cardinality: single, order: none }
   - term: over
     meaning: "what a contract is over: the bean, and which facet or aspect of it"
     context_keys: [over]
     enforced_by: none
-    # SINGLE, not a per-key collection — a reference capsule is one thing, exactly like `lives_in`.
     merge: { cardinality: single, order: none }
   - term: agreement_ref
     meaning: "provenance pointer to the agreement text a contract records"
@@ -2370,11 +1924,6 @@ terms:
     context_keys: [balance]
     enforced_by: none
     merge: { cardinality: single, order: none }
-  # == MAPPING KEYS. A `mapping` document records how bean data feeds a command or checklist. These were
-  # missed on the first pass because `dmmerge.load_garden` globs `beans/*.md` only — the corpus merge
-  # never saw them, though `.gitattributes` dispatches `mappings/*.md` to the same driver. Found by the
-  # golden check that scans BOTH, which is the argument for asserting over the corpus rather than over
-  # whatever the tool under test happens to read.
   - term: trigger
     meaning: "what causes a mapping to run: manual, an event, or a schedule"
     context_keys: [trigger]
@@ -2388,14 +1937,8 @@ terms:
   - term: steps
     meaning: "the ordered steps a mapping performs"
     context_keys: [steps]
-    # 10.1, T4: a list of PROSE lines (read in list order, as before) or a list of STEP ENTRIES
-    # `{id, do, next: [{to, when?}], note?}`, never a mix. `next` absent or empty ends the routine; two or more
-    # `next` entries are a branch and each names its condition in `when`.
     schema:
       on_sequence: routine
-    # NOT a set: these are a SEQUENCE, and order carries the meaning — validating after installing is a
-    # different procedure from validating before. A set-union would reorder them into nonsense, so the
-    # whole list merges as one atom and two gardens with different steps conflict.
     merge: { cardinality: single, order: none }
   - term: produces
     meaning: "the artifact a mapping writes, and the reload or restart that publishes it"
@@ -2407,22 +1950,15 @@ terms:
     context_keys: [authority]
     enforced_by: none
     merge: { cardinality: single, order: none }
-  # == POSITION TERMS (added 5.1, human-ratified rule-change) ==
-  # `located_at` and `timing` are the SAME STRUCTURE pointed at two dimensions, which is the whole claim:
-  # sequence is general, and time and place are restrictions of it with different direction lines. They
-  # are declared as two terms rather than one because what they are ASKED is different — where a being is
-  # found, and when something happened — and a single term serving both would have to be read twice.
+  # == POSITION TERMS ==
   - term: anchor_system
-    # The enum OWNER. Nothing else may list the systems: this term's `values` are held equal to the
-    # registry by the gate's own drift check, exactly as `nature` is held equal to `natures`.
     meaning: "the anchor system a position is stated in — the one owner of that enum"
     context_keys: [anchor_system]
     schema:
       shape: scalar
-      values: [unix-filesystem, git-object-graph, physical, gregorian-civil, iso-week, julian-calendar, persian-calendar, hebrew-calendar, islamic-civil-calendar, islamic-tbla-calendar, islamic-calendar, islamic-rgsa-calendar, islamic-umalqura-calendar, coptic-calendar, ethiopic-calendar, ethiopic-amete-alem-calendar, indian-calendar, buddhist-calendar, roc-calendar, japanese-calendar, chinese-calendar, dangi-calendar, unix-epoch, geographic, event-anchored, network-segment, windows-filesystem, ipv4, ipv6, tcp-port, udp-port, iso-3166, osm, street-address, local-frame, geohash, plus-code, postal-code]
+      values: [unix-filesystem, git-object-graph, guix-store, physical, gregorian-civil, iso-week, julian-calendar, persian-calendar, hebrew-calendar, islamic-civil-calendar, islamic-tbla-calendar, islamic-calendar, islamic-rgsa-calendar, islamic-umalqura-calendar, coptic-calendar, ethiopic-calendar, ethiopic-amete-alem-calendar, indian-calendar, buddhist-calendar, roc-calendar, japanese-calendar, chinese-calendar, dangi-calendar, julian-day, mayan-long-count, bahai-calendar, french-republican-calendar, unix-epoch, geographic, event-anchored, network-segment, windows-filesystem, ipv4, ipv6, tcp-port, udp-port, iso-3166, osm, street-address, local-frame, geohash, plus-code, postal-code]
       values_consistent_with: ["registry:anchor_systems[].system"]
-    enforced_by: none   # it is never carried on a bean: it exists to OWN the enum that `located_at` and
-                        # `timing` select their systems from. Occupancy is counted through their entries.
+    enforced_by: none
     merge: { cardinality: single, order: none }
   - term: unit
     meaning: "the resolution a position is held to — the one owner of that enum"
@@ -2431,15 +1967,9 @@ terms:
       shape: scalar
       values: [millisecond, second, minute, day, hour, metre]
       values_consistent_with: ["registry:units[].unit"]
-    enforced_by: none   # as with anchor_system: an enum owner, carried through other terms' entries
+    enforced_by: none
     merge: { cardinality: single, order: none }
   - term: located_at
-    # THE BEING'S LOCATIONS. The meaningful object is the being — a codebase — and it may be found as a
-    # tree on a host, as reachable objects in a repository, or as a PRINTED COPY on a shelf. None of those
-    # is privileged and a being may be at several at once. `openness` is the field that carries what cost
-    # this estate a session: a position that is NOT KNOWN is recorded as unknown rather than omitted,
-    # because an omitted location reads as "there is none" and that is how an exhaustive search over the
-    # wrong domain produced output identical to a real one.
     meaning: >
       Where this being is found: a list of positions, each in a named anchor system, each stating how far
       it is known to reach. A being may be located in several systems at once, and a location that is not
@@ -2459,10 +1989,6 @@ terms:
         - { when: { openness: unreachable }, requires: [at] }
     merge: { cardinality: multi, order: "by-system+at?" }
   - term: timing
-    # WHEN, AT A DECLARED RESOLUTION. The open key is what makes this serve sessions without a session
-    # schema: `start`, `sync`, `stop` are keys, not law, and a run with four sync points needs no
-    # rule-change to record them. The closed part is each entry's shape — the same open-key/closed-figure
-    # pattern `analysis_cache` proved.
     meaning: >
       When something happened, as an OPEN map of moment-name -> a position in a time anchor system at a
       STATED resolution. The resolution is declared, never inferred from how many digits were typed, so
@@ -2484,12 +2010,6 @@ terms:
       must never require a rule-change.
     merge: { cardinality: multi, order: by-key }
   - term: roots
-    # THE RESOLUTION HALF of the `root:` position form. A bean says WHERE a thing is in a portable way
-    # (`root:addin/CloudApi`); a HOST says what that root means on itself. Two hosts therefore
-    # never edit the same text to disagree about a path — each states its own resolution on its own bean,
-    # which is what makes adding a machine a one-line change instead of a corpus migration.
-    # It lives on the HOST because that is whose fact it is. A root map in a shared file would be one
-    # document every machine has to edit, which is the merge conflict this design exists to avoid.
     meaning: >
       This host's resolution of logical roots: the map that turns a portable `root:<name>` position into a
       literal position on THIS machine. Absence is not an error — a host that does not resolve a root
@@ -2499,11 +2019,6 @@ terms:
       shape: open_map_of_entries
       key_form: kebab
       entry_must_match:
-        # THE JOIN (7.0): a host's roots are stated in the path grammar its OWN OS declares, so the two
-        # can no longer disagree. `keyed_by: os` selects the operating_systems row by a field of the BEAN,
-        # which is the same machinery that fixes a crown branch from a bean's nature. It is on `roots` and
-        # NOT on `located_at`, deliberately: roots is the host describing itself and every bean carrying
-        # it has an `os`, while `located_at` is carried by codebases, which have none.
         - { attr: system, registry: operating_systems, keyed_by: os, take: path_grammar }
       attrs:
         system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which filesystem system this host resolves the root in — pinned since 7.0 to the grammar this host's `os` declares, so it is checked rather than merely stated" }
@@ -2516,8 +2031,6 @@ terms:
       this term exists to avoid.
     merge: { cardinality: multi, order: by-key }
   - term: role
-    # The enum OWNER, the shape `anchor_system` and `net_protocol` already use. Never carried on a bean:
-    # it exists so the `roles` registry is the one place the list lives.
     meaning: "a job a being does — the one owner of that enum"
     context_keys: [role]
     schema:
@@ -2528,11 +2041,6 @@ terms:
     enforced_by: none
     merge: { cardinality: single, order: none }
   - term: roles
-    # WHAT A BEING DOES. A LIST, and that is the whole point: a server may do five things and a router one,
-    # and until 7.0 the estate expressed the first as free text in `owns.roles` and the second as a KIND.
-    # Making this a term is what let `kind: router` be retired without losing the requirement that a
-    # router document its treatments — `required_on_roles` reaches a list where `required_on_kinds` could
-    # only ever reach a scalar.
     meaning: "the jobs this being does, each a row of the `roles` registry"
     context_keys: [roles]
     schema:
@@ -2543,10 +2051,6 @@ terms:
         why:       { in: prose, meaning: "optional: what this being does in that role that another in the same role would not" }
     merge: { cardinality: multi, order: by-role }
   - term: os
-    # WHAT A MACHINE RUNS, and the reason it is a registry rather than a string: it CONSTRAINS. An OS row
-    # declares the `path_grammar` its filesystem positions take, and `roots` is held to it below. Before
-    # 7.0 this was `owns.os` free text — a distribution name with its point release — and a router, the one
-    # machine whose OS genuinely differs in kind, could not state it at all.
     meaning: "the operating system this machine runs — a row of the `operating_systems` registry"
     context_keys: [os]
     schema:
@@ -2568,15 +2072,6 @@ terms:
     enforced_by: none
     merge: { cardinality: single, order: none }
   - term: volumes
-    # THE STORAGE STACK, and the deliberate twin of `links`. Both record a layered carriage on one being;
-    # both use `carried_by` to name the entry beneath; and neither is declared acyclic, for the reason
-    # written out at length on `links` — `carried_by` names another entry on the SAME bean, so there is no
-    # cross-bean graph for the gate to walk.
-    #
-    # THIS IS WHERE ext4 AND ntfs LIVE, and it is not where `unix-filesystem` lives. That distinction is
-    # the point of the term: a path grammar is a property of the OS's API and a storage format is a
-    # property of the volume, and NTFS mounted through ntfs-3g has unix paths, so a model that had one
-    # axis for both could not describe an ordinary Windows disk read from Linux.
     meaning: >
       The storage this machine holds, as a layered stack: each entry a formatted volume, naming what
       carries it. Recorded so a machine can be REBUILT from its bean rather than from memory of it.
@@ -2601,33 +2096,6 @@ terms:
     merge: { cardinality: multi, order: by-key }
 
   - term: beanger
-    # THE OPERATOR'S TERM, THEIR DESIGN AND THEIR NAME, 2026-08-07. BEAN + LEDGER: a per-datum ledger,
-    # bean-structured. `log/journal.md` is the ledger of what the ESTATE did; a beanger is the ledger of
-    # what ONE DATUM has been, and since 7.0 it has the same append-only record shape.
-    #
-    # THE SPLIT: the CURRENT value stays on the bean, in `owns`, where a reader already looks and where
-    # every existing ref already points. The beanger carries the DEFINITION, the way to READ it, and the
-    # RECORD LOG. The first draft copied the current value in here, which duplicated the fact and would
-    # have dragged RETIRED values into the single-owner IP scan — an address a being no longer holds must
-    # not still be owned by it: a released address belongs to nobody.
-    #
-    # WHY IT EXISTS, from this corpus: `owns.provides_ip: 203.0.113.10` is a definition and a value fused
-    # into one scalar with NO DATE AT ALL. A re-scan of such a field cannot tell UNCHANGED from NEVER
-    # LOOKED, and the day the value moves, when it moved is gone. Not hypothetical — a router's `owns
-    # .wg_tunnel` carried an endpoint that HAD moved, .19 to .16, with nothing recording either fact.
-    #
-    # THE FOUR OPERATIONS. `add`, `change` and `remove` move the value; `confirm` does not, and that is
-    # precisely why it is the one that had to be invented. Without a record for "checked, and it was as
-    # recorded", a re-scan that finds nothing new leaves no trace, and silence then means both "verified
-    # this morning" and "nobody has looked since July". `confirm` is the operation that makes the ledger
-    # able to say how CONFIDENT it is, separately from what it says.
-    #
-    # WHAT IS DERIVED AND THEREFORE NOT STORED. `since` is the `at` of the newest add-or-change; `last_seen`
-    # is the `at` of the newest record of any kind; `next` is simply the following element of an ORDERED
-    # list. All three were stored fields in the first draft and all three are gone: a fact stated twice is
-    # a fact that can disagree with itself, which is the argument this vocabulary already makes for
-    # refusing a direction aspect. The chain is walkable both ways from `prev` plus list order, which is
-    # what "walkable all ways" actually required.
     meaning: >
       A per-datum ledger: what a datum IS, which field on this bean holds its CURRENT value, how to read
       it, and the append-only log of every operation on it — each stamped to the millisecond, attributed,
@@ -2642,11 +2110,6 @@ terms:
         source:   { required: true, in: prose, meaning: "the exact command or file the value is read from, so the next scan reads THE SAME THING. Without it a differing value cannot be told from a differing METHOD — the failure this estate met when /sys/class/net reported a bond's MAC where ethtool -P reported the NIC's." }
         records:  { required: true, in: untyped, meaning: "the append-only log, OLDEST FIRST. See `record_attrs`." }
     record_attrs:
-      # ONE LEVEL DEEPER THAN THE GATE VALIDATES, AND SAID SO RATHER THAN IMPLIED. The interpreter checks
-      # the entries of a term, not the entries of a list INSIDE an entry, so everything below is convention
-      # the gate does not yet enforce. That is a real gap and it is named here instead of being dressed up:
-      # `attrs` reaches `beanger.<datum>`, not `beanger.<datum>.records[]`. Closing it needs
-      # a nested-entry mechanism in bin/dmcheck.py — a GATE change, tracked in [[design-network-stack]].
       seq:   "1-based position in this datum's log. The identity `prev` points at."
       at:    "the moment of the RECORD, epoch MILLISECONDS (see the `unix-epoch` anchor system). Milliseconds because two operations in one session can land in the same second and their order is the thing being recorded."
       unit:  "the resolution the moment was ACTUALLY held to — a row of `units`. Defaults to millisecond for anything this ledger stamped itself. A record reconstructed from a date carries `unit: day` and an `at` of that day's midnight, so that thirteen digits of apparent precision cannot be mistaken for thirteen digits of knowledge. This is the same rule `timing` already applies, and it exists because this estate has twice written a value that looked measured and was inferred."
@@ -2660,16 +2123,6 @@ terms:
     merge: { cardinality: multi, order: by-key }
 
   - term: workspace
-    # WHERE A SESSION DOES ITS WORK. Added 7.0 with `bin/dmsession.py`, because several sessions on one
-    # host is a thing the estate now wants and one working copy cannot give it: two sessions in one clone
-    # share one git INDEX, so `git add -A` from either stages the other's half-finished edits, and the
-    # gate reads the STAGED blobs. Session A can then be refused for session B's mistake, or commit B's
-    # unfinished bean under A's message with A's journal entry attached. Both writes are individually
-    # legal, so no rule in this ledger catches it.
-    #
-    # A WORKTREE IS THE FIX AND THE BRANCH IS THE HAND-OFF. Each session gets its own working copy and its
-    # own index while sharing one object store, so they cannot stage over each other — and they can still
-    # read and merge one another's branches with no network hop, which is the sync-between-sessions half.
     meaning: "the working copy and branch a session commits from, on a named host"
     context_keys: [workspace]
     schema:
@@ -2683,28 +2136,6 @@ terms:
     merge: { cardinality: single, order: none }
 
   - term: capture
-    # THE THIRD STATE GROUND RULE 3 NOW ALLOWS, ratified 2026-08-07. Until today a fact was either OURS or
-    # SOMEBODY ELSE'S, and somebody else's could only be POINTED at. That rule was written for a good
-    # reason — a ledger that mirrors every device's config silently becomes a stale second copy of it —
-    # and it has one fatal gap: A POINTER TO A MACHINE THAT HAS DIED REPRODUCES NOTHING. The operator
-    # asked for beans complete enough to rebuild the estate, and a pointer cannot do that.
-    #
-    # WHAT MAKES A CAPTURE SAFE IS THAT IT KNOWS WHAT IT IS. It names the thing it copied and who owns it,
-    # the command that produced it, the moment it was taken, and the key by which a reader decides whether
-    # it still holds. A copy carrying all four is useful; a copy carrying none is the stale mirror the old
-    # rule feared, and the difference is entirely in the metadata rather than in the content.
-    #
-    # A CAPTURE IS NEVER AUTHORITATIVE AND IS NEVER APPLIED BACK. It does not live in `owns`, so it is not
-    # scanned as a fact this bean owns — the same reasoning that keeps a `beanger` archive out of the
-    # single-owner IP check, because an address a being no longer holds must not still be owned by it.
-    # Restoring FROM a capture means reading the source first and treating the capture as the thing to
-    # compare against, not the thing to paste.
-    #
-    # `redactions` IS REQUIRED, AND THAT IS THE WHOLE SECRETS DISCIPLINE. `no secrets` is founding here,
-    # and a router export contains wireguard private keys, PPPoE passwords and community strings. Making
-    # the field required means "nothing was removed" has to be WRITTEN DOWN as a claim somebody made,
-    # rather than being the silent default of a field nobody filled in. An omission looks identical to a
-    # clean capture; a required attr does not.
     meaning: >
       A dated, staleness-keyed copy of truth somebody else owns, taken so the thing can be REBUILT. Never
       authoritative, never applied back unread, never carrying a secret.
@@ -2717,14 +2148,6 @@ terms:
         owned_by_them:  { required: true, in: prose, meaning: "WHO owns the original and therefore the truth. A capture that does not name its owner reads as an authoritative fact, which is the failure ground rule 3 exists to prevent." }
         source:         { required: true, in: prose, meaning: "the EXACT command that produced it, so it can be produced again and compared. The same argument `beanger.source` makes, and it earned it there within the hour: naming the command is what gets it run." }
         taken_at:       { required: true, in: untyped, meaning: "epoch milliseconds — a capture with no moment cannot be told from a guess." }
-        # TWO WAYS A STALENESS KEY LIES, both met within an hour of this term being written and both worth
-        # stating here rather than only on the bean that hit them. (1) THE SOURCE STAMPS ITSELF: a RouterOS
-        # export carries its own generation time, so a plain hash of the output changes on every run even
-        # when nothing changed — a key must be computed over the content with such lines excluded, and the
-        # exclusion must be written INTO the key so the check is reproducible. (2) STORAGE REWRITES THE
-        # BYTES: git's default text handling converted CRLF to LF on commit, so the stored copy hashed
-        # differently from what the command produces. Captures need `-text` in `.gitattributes`. Neither is
-        # exotic; both make the key report "changed" forever, which is as useless as never reporting it.
         staleness_key:  { required: true, in: untyped, meaning: "how a reader decides whether this still holds: a config version, a change counter, a hash of the live export. The same job `analysis_cache.staleness_key` does for code, which is where this shape comes from rather than being invented beside it." }
         redactions:     { required: true, in: prose, meaning: "WHAT WAS REMOVED and why. REQUIRED. Write `none — the source emits no secrets` explicitly if that is true; the point is that it is a claim, not a default." }
         holds:          { required: true, in: untyped, meaning: "the content itself for something small, or a `file:` pointer into this garden for something large. Large captures do not belong inline: a bean must stay legible on paper, and a 900-line router export is not." }
@@ -2734,26 +2157,6 @@ terms:
     merge: { cardinality: multi, order: by-key }
 
   - term: risks
-    # ONE INVENTORY. Until 7.0 this estate kept TWO that did not know about each other, plus loose
-    # findings in `details` on individual beans:
-    #   (1) one server's `details.risk_register` — 15 open findings as prose rows, ALL on that server
-    #       regardless of what they were about: a monitoring container, web vhosts on a VPS, a file share. None of
-    #       them is a fact about the server, and the bean that owns the failing thing could not be asked.
-    #   (2) `capabilities` entries sitting at `permission: forbidden` + `feasibility: possible`, which the
-    #       model already CALLS a live risk in the feasibility aspect's own commentary. Two of them exist
-    #       — a public-resolver exposure and a DNS recursion — and NEITHER appeared in the
-    #       register. Two inventories, no overlap, and no way to ask "what is wrong" once.
-    #
-    # WHY NOT JUST FOLD EVERYTHING INTO `capabilities`, which was the first idea and is wrong. Most
-    # findings do fit its grid — R1 and R4 and R6 are all "forbidden, and currently the case", which is
-    # already an in_breach cell. But R13 is "unattended LUKS unlock UNPROVEN" and R14 is "LIKELY a 502",
-    # and neither is a modal claim at all: they are EPISTEMIC, about what nobody has established. The
-    # capability aspects can say a thing is impossible or contingent; they cannot say nobody has looked.
-    # A register is full of exactly that, so forcing it into the grid would have silently converted "we
-    # do not know" into "it is fine", which is the worst possible loss for a risk inventory.
-    #
-    # `state` CARRIES THAT DISTINCTION and is the term's whole point. `live` and `latent` are the two the
-    # capability grid could express; `unproven` is the one it could not and the one a register needs most.
     meaning: >
       The named ways this being can fail: what the defect is, what it costs, whether it is happening now,
       and how that was established. One inventory, on the bean that owns the failing thing.
@@ -2793,7 +2196,7 @@ kinds:
     meaning: "an umbrella bean tying a product's codebases + business context together; not itself code. A THIRD-PARTY product is recorded here for one reason only: so its per-host deployments have a TYPE to be instances of. That rationale belongs to this kind and is stated once — a product bean should describe the product, not re-explain why it exists. A product is a LOGICAL code unit — its mapping to storage (git repos) is many-to-many (sub-git or multi-git); git_remote is a source anchor, NOT product identity."
     schema: "owns: what-it-is, components (refs to codebase beans), business owner, deployment. nature: metaphysical; owned_by (explicit or via parent). Establishing anchor: a logical product_id."
     min_anchors: "1 establishing (logical product_id)"
-  # == being-kinds for the ownership / type-token / habitat model (2026-08-02, human-ratified) ==
+  # == being-kinds for the ownership / type-token / habitat model ==
   - kind: org
     of_nature: metaphysical
     meaning: "an organization / juridical person (company) that owns beings."
@@ -2801,9 +2204,7 @@ kinds:
     min_anchors: "1 establishing (logical org_id or domain)"
   - kind: person
     of_nature: living
-    ownership_form: crown          # a person may be owned ONLY by the crown (love, while alive) — never by a
-                                   # bean. This also RESERVES the crown form: no other kind may name the
-                                   # axiom directly, so every other chain must pass through a being.
+    ownership_form: crown
     meaning: "a human being who can own/steward other beings. nature: living."
     schema: "identity anchor: email or a logical person_id. Persons are owned by love-while-alive via the crown axiom, so owned_by is NOT required on person."
     min_anchors: "1 establishing (logical person_id or email)"
@@ -2813,8 +2214,6 @@ kinds:
     required: "instance_of (the product) + lives_in (the habitat) + owned_by (usually inherited via the product) — gate-enforced. nature: living."
     schema: "owns: runtime facts (db name, config, endpoints, live state). Establishing anchor: a deployment coordinate (host x product x db)."
     min_anchors: "1 establishing (deployment coordinate) -> else identity.status: provisional + open:"
-  # == kinds that were in USE but undeclared before P3. Under D1 a kind need only name the nature it
-  # refines and what it means; anchor family + min-anchors come from that nature.
   - kind: host
     of_nature: physical
     meaning: >
@@ -3087,3 +2486,17 @@ The portable, estate-agnostic classification shared by every garden — the abst
   published parameters. Generic additions to a system's shape: `same_ground_as`, `crosswalk`, `example` (held to the
   system's own pattern by the gate); the words a shape may use are declared in `system_shape`, so the gate carries
   no copy.
+
+- **16.1** (2026-09-20, proposed rule-change) — **the law and its reasons, kept apart and related by key.** MINOR: no
+  rule moves. Every comment left this file's front matter — eight hundred lines of argument, incident and history that
+  had grown beside the rules — for `seed/RATIONALE.md`, VERBATIM, each under the PATH of the law item it explains
+  (`anchor_systems[geographic].restrictions`). The law now says what is in force, and carries as DATA — `meaning:`,
+  `why:` — the reason a reader needs in order to apply it; the rationale says why it is that way; the changelog and a
+  garden's journal say what happened. `bin/dmwhy.py <name>` reads law and rationale together, and `--check` refuses a
+  reason whose law item is gone, so a reason cannot outlive its rule unnoticed. `test/rationale.py` holds the
+  separation: no commentary in the law, section titles that are only titles, no orphaned reason, and a RATCHET on the
+  narrative that still sits inside the law's data strings (14 lines; it may only fall). Additive in the same release,
+  from a look at what GNU publishes: the day itself as a system (`julian-day`, the astronomers' count, whose day
+  begins at NOON) and the Mayan long count, both reckoned by `bin/dmcal.py`; the Badi and the French Republican
+  calendars, declared astronomical and therefore not converted; `guix-store`, a second place system in which a
+  position says what it holds; and `openpgp_fingerprint` and `ssh_key_fingerprint` as establishing identity anchors.
