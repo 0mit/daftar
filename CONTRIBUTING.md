@@ -38,7 +38,7 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
 5. **Run the tests:**
 
    ```sh
-   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py && python3 test/place.py && python3 test/expiry.py && python3 test/reform.py && python3 test/positions.py && python3 test/shape.py && python3 test/calendars.py && python3 test/public.py
+   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py && python3 test/place.py && python3 test/expiry.py && python3 test/reform.py && python3 test/positions.py && python3 test/shape.py && python3 test/calendars.py && python3 test/rationale.py && python3 test/public.py
    ```
 
    CI runs the same on every pull request.
@@ -68,6 +68,11 @@ Say it without the name: "one host", "another machine", `/home/user/tree`, `host
 
 - The vocabulary is `seed/std-vocab.md`: YAML front matter (the law) and a Markdown body ending in a
   changelog. Edit the front matter; add one changelog entry at the end, naming the change and why.
+- **The law carries no commentary.** What a reader needs in order to APPLY a rule goes in the item's own
+  `meaning:` or `why:`, in the present tense, with no date and no name. WHY it is that way — the argument, what
+  was refused, the incident it answers — goes in `seed/RATIONALE.md` under the item's path; `python3 bin/dmwhy.py
+  <name>` reads the two together and `--check` finds a reason whose rule is gone. WHAT HAPPENED goes in the
+  changelog. A thing belongs in exactly one of the three.
 - Bump its `version:` in the same change — minor for additive, major for a changed rule — and nothing else:
   gardens move their own pins when they adopt a release.
 - `python3 bin/dmrules.py` inside a garden prints every rule as the gate reads it; use it to check that your
