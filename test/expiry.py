@@ -67,7 +67,7 @@ RENTAL = """  - term: rental
       shape: mapping
       attrs:
         provider: { required: true, in: prose }
-        renews:   { required: true, in: { type: iso_date } }
+        renews:   { required: true, in: { type: date } }
         period:   { in: extent }
       expiry:
         attr: renews
@@ -92,6 +92,18 @@ check("a GARDEN'S OWN term with an expiry is warned about — no release, no cod
       "EXPIRING" in out and "vps.rental" in out and "renews " + SOON in out, out[-700:])
 check("...and the warning carries the CONSEQUENCE the term declared, not just a date",
       "a rental that lapses takes the machine with it" in out, out[-700:])
+
+# NO CALENDAR IS PRIVILEGED (16.0): the same rent, dated in the calendar its contract is written in, ages the same way.
+sys.path.insert(0, os.path.join(ROOT, "bin"))
+import dmcal as _dmcal
+_soon_fa = _dmcal.convert(SOON, "persian")
+host(f'rental: {{ provider: "someone", renews: "{_soon_fa}" }}\n')
+out = stale()
+check("an expiry stated in the Persian calendar is aged THROUGH THE DAY, exactly as a Gregorian one is",
+      "EXPIRING" in out and "vps.rental" in out and "13 day" in out, out[-700:])
+host(f'rental: {{ provider: "someone", renews: "islamic:1448-05-01" }}\n')
+check("...and one in a calendar that is NOT reckoned by rule is left alone rather than guessed at",
+      "vps.rental" not in stale() and "Traceback" not in stale(), stale()[-500:])
 
 # The term's own horizon governs: 13 days is inside rental's 30 and would be inside a domain's 90 too,
 # so push it out to a date only the term's own horizon could judge.
@@ -127,7 +139,7 @@ dated, declared = [], []
 for t_ in terms:
     s = (t_.get("schema") or {})
     if [k for k, v in (s.get("attrs") or {}).items()
-        if isinstance((v or {}).get("in"), dict) and v["in"].get("type") == "iso_date"]:
+        if isinstance((v or {}).get("in"), dict) and v["in"].get("type") in ("date", "iso_date")]:
         dated.append(t_["term"])
     if (s.get("expiry") or {}).get("attr"):
         declared.append(t_["term"])

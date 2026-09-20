@@ -198,7 +198,7 @@ check("S1: ...and so did entry_required_if and entry_expect_if — three constru
       sorted(c["origin"] for c in _f["cells"]) == ["expect_if", "required_if"], str(_f["cells"])[:300])
 _f = _gate.attribute_form("registration", _gate.SCHEMAS["registration"])
 check("S1: a mapping's own attributes take the same form, scoped to the value itself",
-      _f["scope"] == "self" and _f["attrs"]["expires"].get("type") == "iso_date" and _f["attrs"]["expires"].get("required") is True)
+      _f["scope"] == "self" and _f["attrs"]["expires"].get("type") == "date" and _f["attrs"]["expires"].get("required") is True)
 _untyped = sorted(n for n, a in _gate.attribute_form("endpoints", _gate.SCHEMAS["endpoints"])["attrs"].items()
                   if set(a) <= {"meaning", "scope"})
 check("S1: the form makes an UNTYPED attribute visible — `via_link` has a meaning and no rule (`port` had none until 14.0)",

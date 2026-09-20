@@ -156,7 +156,7 @@ badcache = [f"{b}/{c}" for b, fm in BEANS.items() for c, e in (fm.get('analysis_
             # THE PATTERN IS THE TERM'S, read from it. Kept here as a literal, it was left behind when the
             # law moved in 11.0 and this file refused a garden for migrating its keys exactly as the new law
             # required — the gate saying one thing and the hook another, about one rule.
-            if not re.match(_STALENESS, str(e.get('staleness_key', '')))]
+            if not re.match(_STALENESS, str(e.get('staleness_key', '')), re.ASCII)]
 check("every cache entry carries a checkable staleness key", not badcache, ', '.join(badcache[:4]))
 noflag = [b for b, fm in ALL.items() for a in ((fm.get('identity') or {}).get('anchors') or [])
           if not isinstance(a.get('establishing'), bool)]

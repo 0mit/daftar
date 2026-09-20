@@ -37,5 +37,7 @@ jobs:
         run: python3 test/positions.py
       - name: "shape: a system knows its own shape; planes; the stack rooted in the fields of knowledge"
         run: python3 test/shape.py
+      - name: "calendars: every calendar meets the others at the day; a coordinate is never bare"
+        run: python3 test/calendars.py
       - name: "public: a repository carries the language, never a garden"
         run: python3 test/public.py

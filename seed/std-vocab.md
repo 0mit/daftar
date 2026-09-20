@@ -1,5 +1,5 @@
 ---
-version: "15.0"
+version: "16.0"
 # TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 # Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
 # lines above is the one that governs, and the gate ERRORS if a pin disagrees with it.
@@ -16,14 +16,14 @@ version: "15.0"
 # A term with no `schema:` is documentation only; the gate never enforces it on beans.
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
-  attrs:                "{<attr>: {required?, in, meaning}} — THE ATTRIBUTES (13.0): one record each, saying what the attribute is a position IN, whether it is required, and what it means — once, for the gate and the reader both. They describe each ENTRY of a list, an open map or a faceted mapping, and otherwise the mapping itself. An entry holds only the attributes declared here. See `attr_domains` for what `in:` may say."
-  default_from:         "{registry, keyed_by, take} — inside an attribute's record (14.0): when the entry is SILENT, the attribute's value is READ from a registry row, the row selected by another attribute of the same entry. The registry stays the one owner of the usual value (a protocol's transport), and an entry states the attribute only when it differs. Like an aspect's default, a value that came from here never counts as OCCUPYING a position."
-  cells:                "[{when, verdict|requires|expects, why}] — COMBINATIONS of what an entry holds (13.0). `verdict: incoherent` is an ERROR (the positions cannot both hold, so one is mis-stated); `verdict: in_breach` a WARNING (all can hold, and the state needs action). `requires: [...]` is an error when the entry sits in the cell and lacks those attributes; `expects: [...]` the same as a warning. `when` maps an attribute to the value it holds, or to `{starts_with: …}`; an aspect attribute is read at its EFFECTIVE position, stated or defaulted."
-  # WHAT `in:` MAY SAY (13.0). Every attribute is a position in EXACTLY ONE domain — measured over every term of
-  # 12.0 before this spelling was chosen: none carried two — so `in:` is one thing, and it is never absent.
+  attrs:                "{<attr>: {required?, in, meaning}} — THE ATTRIBUTES: one record each, saying what the attribute is a position IN, whether it is required, and what it means — once, for the gate and the reader both. They describe each ENTRY of a list, an open map or a faceted mapping, and otherwise the mapping itself. An entry holds only the attributes declared here. See `attr_domains` for what `in:` may say."
+  default_from:         "{registry, keyed_by, take} — inside an attribute's record: when the entry is SILENT, the attribute's value is READ from a registry row, the row selected by another attribute of the same entry. The registry stays the one owner of the usual value (a protocol's transport), and an entry states the attribute only when it differs. Like an aspect's default, a value that came from here never counts as OCCUPYING a position."
+  cells:                "[{when, verdict|requires|expects, why}] — COMBINATIONS of what an entry holds. `verdict: incoherent` is an ERROR (the positions cannot both hold, so one is mis-stated); `verdict: in_breach` a WARNING (all can hold, and the state needs action). `requires: [...]` is an error when the entry sits in the cell and lacks those attributes; `expects: [...]` the same as a warning. `when` maps an attribute to the value it holds, or to `{starts_with: …}`; an aspect attribute is read at its EFFECTIVE position, stated or defaulted."
+  # WHAT `in:` MAY SAY. Every attribute is a position in EXACTLY ONE domain,
+  # so `in:` is one thing, and it is never absent.
   attr_domains:
     values:      "in: [a, b, c] — one of a closed list written here"
-    registry:    "in: { registry: <name>, take: <field> } — a row of a registry, so the registry OWNS the enum and no term restates it. `where: { <field>: <value> | [<values>] }` (14.0) narrows it to the rows that say so — a PLACE system, a TRANSPORT-layer protocol — so one registry serves attributes that may name only some of its rows. `registry_from: <attr>` instead of `registry`: the registry is NAMED by another attribute of the same entry"
+    registry:    "in: { registry: <name>, take: <field> } — a row of a registry, so the registry OWNS the enum and no term restates it. `where: { <field>: <value> | [<values>] }` narrows it to the rows that say so — a PLACE system, a TRANSPORT-layer protocol — so one registry serves attributes that may name only some of its rows. `registry_from: <attr>` instead of `registry`: the registry is NAMED by another attribute of the same entry"
     aspect:      "in: { aspect: <name>, default: <position> } — a position on an opposition; the default applies when the entry is silent, and a default never counts as occupying the position"
     type:        "in: { type: <value type> } — a row of `value_types`: its pattern, and for a time type its system and unit"
     form_of:     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form"
@@ -34,7 +34,7 @@ schema_language:
     id:          "in: id — the id of a bean or mapping: a key of the ref FORM itself, on a term whose value `is_ref`"
     prose:       "in: prose — a reason, a description, a remark. DELIBERATELY not a position: `why`, `what`, `note`. The reason IS the fact, and a schema for it would launder an opinion into a field"
     untyped:     "in: untyped — a position whose domain nobody has declared yet. A standing debt, written down so that an oversight and a decision stop looking alike"
-  is_ref:               "true — the value (or each entry) IS ITSELF a {bean|mapping: <id>[, field: <key>]} ref, which the gate resolves (13.0; it was the marker `self` inside ref_fields / entry_ref_fields)"
+  is_ref:               "true — the value (or each entry) IS ITSELF a {bean|mapping: <id>[, field: <key>]} ref, which the gate resolves (13.0)"
   path:                 "<dotted path> — the term governs a NESTED field rather than a top-level key named after it (`identity.status`, `identity.anchors[].class`, `provenance.src`). Added at 2.0 for the five core grammar enums and never declared here until 11.3."
   alt_form:             "{key, ref_fields} — an ALTERNATIVE whole-value form: a mapping carrying `key` takes this form INSTEAD of the faceted one, and the per-key rules stand down for it (the inherited `owned_by: {via: …}`). In use since the first schema language; declared 11.3."
   required:             "true — EVERY bean must carry the term (the root-axiom case; stronger than required_on_<axis>s)"
@@ -125,7 +125,7 @@ natures:
 # already applies to terms, because an unstated pattern and a deliberately absent one must not look alike.
 # THE REGISTRY IS OPEN. A new system is a VOCABULARY edit and never a code edit: the gate reads `pattern`
 # generically through `entry_pattern_from_registry` and names no system, exactly as it names no term.
-# == A SYSTEM KNOWS ITS OWN SHAPE (15.0) ==
+# == A SYSTEM KNOWS ITS OWN SHAPE ==
 # The `place` aspect has always confessed that it cannot describe its systems: "lines: open … metered: none — the
 # aspect claims no measure it cannot give every system". The operator said where the answer lives on 2026-08-05:
 # a position is "a position in a SUBASPECT which here is not always linear". A system row may therefore state —
@@ -138,14 +138,70 @@ natures:
 #                     honest; a finer one is never inferred.
 #   within            a position here is only meaningful INSIDE a position of one of those systems (a port within an
 #                     address; a postal code within a country).
-#   resolves_through  reading a position here needs one there (civil time through geography — prose until 15.0).
+#   resolves_through  reading a position here needs one there (civil time through geography).
 #   neighbours        `counted` | `metered` | `none`: whether positions have a neighbour relation at all. It is what
 #                     a routing protocol computes over, and what makes "every 10th release" sayable with no meter.
 #   restrictions      its own `lines`, `metered`, `order`, `ends` — NARROWING its aspect's, never widening them.
+#   same_ground_as    this system PARTITIONS THE SAME GROUND as those: two calendars over one line of days, a
+#                     postal layer and an administrative tree over one territory, two classifications of one world of
+#                     work. `crosswalk` says how a position in one is found in another: `computed` (by rule),
+#                     `table` (somebody publishes the correspondence), `observed` (it is looked up in what was seen),
+#                     `none`. Neither system is the other's parent; that is what distinguishes this from `within`.
+#   example           one position in the system's form. The gate holds it to the system's own pattern, so the form
+#                     a reader is shown is one the gate accepts.
 # THE GATE CHECKS THE SHAPE, not its use: that what a row names exists, that `within` and `resolves_through` never
 # loop, that a metric level names a real unit, that a restriction is one the figure offers and does not widen the
 # aspect's. The consumers are extents and recurrences, which ask the SYSTEM what it permits as they ask the aspect
 # today. `system_registries` names the registries whose rows are systems, so the gate names none.
+# == WHERE, BY COORDINATES: bodies and coordinate reference systems ==
+# ISO 19111 and ISO 19112 divide spatial referencing in two, and this law follows them. BY COORDINATES: numbers in a
+# COORDINATE REFERENCE SYSTEM — a datum fixed to a BODY, axes, units. BY IDENTIFIER: a name somebody maintains — a
+# street address, a postal code, an administrative code, a map database's element id, a grid cell's code. The first is
+# THE ROOT: every identifier RESOLVES THROUGH a coordinate position and none of them IS one. A map database is
+# somebody else's truth (ground rule 3) — useful, re-drawn without notice, and never what a place is anchored to.
+# "THE THIRD FLOOR" is neither: it is a position in a frame that TRAVELS WITH ITS BUILDING (an engineering frame), and
+# confusing it with a fixed coordinate is how a room acquires a latitude.
+#
+# A BODY IS PART OF THE POSITION. A latitude is a latitude ON something. `bodies` is open: the Moon and Mars are here
+# because reference systems for them are published (the IAU's), and the machinery is the same on any of them.
+bodies:
+  - { body: earth, mean_radius_m: 6371008.8, authority: "IUGG / IERS", meaning: "the Earth" }
+  - { body: moon,  mean_radius_m: 1737400.0, authority: "IAU WGCCRE",  meaning: "the Moon" }
+  - { body: mars,  mean_radius_m: 3389500.0, authority: "IAU WGCCRE",  meaning: "Mars" }
+# THE REGISTRY IS A SAMPLE, NOT THE LIST. There are several thousand published reference systems, and ANY
+# `<authority>:<code>` is a legal position: the authorities' own registries (EPSG for the Earth, IAU_2015 for other
+# bodies) are the owners of that enum, and copying them here would be a stale second copy within the year. The rows
+# below are the ones whose SHAPE this law states, so a tool can read them, and one of each `kind` ISO 19111 names.
+# `frame` is the distinction that matters most and is met least: a STATIC frame is fixed to a tectonic plate, so a
+# point on the ground keeps its coordinates; a DYNAMIC frame is fixed to the whole Earth, so the ground DRIFTS in it
+# by centimetres a year, and a coordinate is complete only with the EPOCH it was measured at (`@2026.72`).
+reference_system_kinds:
+  - { kind: geographic-2d, meaning: "latitude and longitude on a body's ellipsoid or sphere" }
+  - { kind: geographic-3d, meaning: "latitude, longitude and height above the ellipsoid" }
+  - { kind: geocentric,    meaning: "X, Y, Z from the body's centre of mass" }
+  - { kind: projected,     meaning: "a plane: the body's curved surface flattened by a named projection, in metres" }
+  - { kind: vertical,      meaning: "a height or depth alone, against a named surface" }
+  - { kind: engineering,   meaning: "a local frame fixed to a structure or a vehicle, moving with it" }
+  - { kind: compound,      meaning: "a horizontal system and a vertical one together" }
+reference_frames:
+  - { frame: static,  meaning: "fixed to a tectonic plate (or to a body with none): ground keeps its coordinates" }
+  - { frame: dynamic, meaning: "fixed to the whole body: ground drifts in it, and a coordinate needs its epoch" }
+reference_systems:
+  - { crs: "EPSG:4326", body: earth, kind: geographic-2d, frame: dynamic, axes: [lat, lon],    meaning: "WGS 84, latitude and longitude in degrees — what a satellite receiver reports" }
+  - { crs: "EPSG:4979", body: earth, kind: geographic-3d, frame: dynamic, axes: [lat, lon, h], meaning: "WGS 84 with ellipsoidal height in metres. Ellipsoidal height is NOT height above sea level" }
+  - { crs: "EPSG:4978", body: earth, kind: geocentric,    frame: dynamic, axes: [x, y, z],     meaning: "WGS 84 geocentric: metres from the Earth's centre of mass" }
+  - { crs: "EPSG:4258", body: earth, kind: geographic-2d, frame: static,  axes: [lat, lon],    meaning: "ETRS89: fixed to the Eurasian plate, so European ground keeps its coordinates. It and WGS 84 drift apart by about 2.5 cm a year" }
+  - { crs: "EPSG:3857", body: earth, kind: projected,     frame: dynamic, axes: [x, y],        meaning: "Web Mercator: the plane nearly every web map is drawn on. For DRAWING; distances in it are wrong away from the equator" }
+  - { crs: "EPSG:32639", body: earth, kind: projected,    frame: dynamic, axes: [e, n],        meaning: "WGS 84 / UTM zone 39N: metres on a plane, good within its six-degree zone. One of sixty; named because a projected system is where metres are honest" }
+  - { crs: "EPSG:5773", body: earth, kind: vertical,      frame: static,  axes: [H],           meaning: "EGM96 height: metres above the geoid, which is what `above sea level` means" }
+  - { crs: "IAU_2015:30100", body: moon, kind: geographic-2d, frame: static, axes: [lat, lon], meaning: "the Moon (2015), planetocentric latitude and longitude on a sphere" }
+  - { crs: "IAU_2015:49900", body: mars, kind: geographic-2d, frame: static, axes: [lat, lon], meaning: "Mars (2015), planetocentric latitude and longitude on a sphere" }
+# THE WORDS A SYSTEM'S SHAPE MAY USE, declared so the gate carries no copy of them.
+system_shape:
+  neighbours: [none, counted, metered]
+  reckoning:  [arithmetic, astronomical, observational, tabulated]
+  crosswalk:  [computed, table, observed, none]
+  day_begins: [midnight, sunset]
 system_registries:
   - { registry: anchor_systems,    key: system }
   - { registry: knowledge_schemes, key: scheme }
@@ -175,8 +231,44 @@ anchor_systems:
     pattern_why: "a shelf, a room and a building have no canonical form this garden could impose without inventing one. Stating `none` is the honest position: the address is prose, and prose is what a human reads to go and find it."
     establishes: false
     why: "a physical copy can be moved, and two copies can sit in two places — a location corroborates which artefact you are holding, never which being it is a copy of"
+  # == A CALENDAR IS NOT TIME ==
+  # It is ONE PARTITION of the line of days into named cells — years, months — and there are many. "The 15th of every month" has no
+  # meaning until it says WHOSE month: the 15th of a Solar Hijri month and of a Gregorian month are different
+  # repetitions over the same line, and a lunar Hijri month drifts against both by eleven days a year. So a LEVEL
+  # BELONGS TO ITS SYSTEM, and whatever says "each month" names the calendar.
+  #
+  # EVERY CALENDAR HERE PARTITIONS THE SAME LINE (`same_ground_as`), and they all meet at one level, THE DAY.
+  # Conversion is therefore calendar -> day -> calendar, and `bin/dmcal.py` does it for every calendar that reckons
+  # BY RULE. Not all do, and `reckoning` says which: `arithmetic` (a rule gives every date), `astronomical` (computed
+  # from the sky for a meridian), `observational` (a month begins when the moon is SEEN), `tabulated` (an authority
+  # publishes it). For the last three a position is converted by looking it up, never by arithmetic, and the tool
+  # REFUSES rather than approximates — a date silently wrong by a day is worse than no date.
+  #
+  # `day_begins` is `midnight` or `sunset`: the Hebrew and the Hijri day begins at sunset, so an EVENING position in
+  # one of them falls on the previous civil day. `calendar` is the identifier Unicode CLDR publishes (BCP 47 `ca`),
+  # which is where this list comes from — all eighteen of CLDR's, and the Julian calendar, which CLDR leaves out and
+  # which the Coptic, Ethiopic and Hijri epochs are all stated in.
+  #
+  # NO CALENDAR IS PRIVILEGED. A garden states a moment in the calendar it was KNOWN in — a document dated ۲۲ شهریور
+  # ۱۴۰۵ is recorded `persian:1405-06-22`, not silently turned into somebody else's date — and what makes two positions
+  # in two calendars comparable is the DAY they both fall on, reached by rule where the calendar has one.
+  # `bin/dmcal.py` is dependency-free on purpose: a conversion that needs a package fetched over a network is a build
+  # that fails at the worst possible moment.
+  # ONE FORM MEANS ONE SET OF DIGITS. A pattern's `\d` matches every script's digits, so the law's patterns are matched
+  # ASCII-ONLY: a position is WRITTEN in ASCII digits whatever calendar it is in, and the digits a reader sees are a
+  # matter for whatever shows it to them.
+  # EVERY DATED ATTRIBUTE OF THE STANDARD IS TYPED `date`: a day in ANY calendar, held to that calendar's own form.
+  # WHAT STILL READS ONLY THE GREGORIAN CALENDAR, named because 16.0 does not fix it: `leaf_orders.instant` (the merge
+  # absorbs a coarser reading into a finer one only within it) and the journal's heading form. Each is a Gregorian-only
+  # READER, not a rule that time is Gregorian.
+  # THE FORM IS TAGGED — `persian:1405-06-29` — because `1405-06-29` is ALSO a Gregorian date, in the year 1405.
+  # One form per system; and between calendars, forms that cannot be mistaken for each other.
   - system: gregorian-civil
     dimension: time
+    calendar: gregory
+    reckoning: arithmetic
+    day_begins: midnight
+    example: "2026-09-20 14:05+03:30"
     levels: [ { level: year }, { level: month }, { level: day, unit: day }, { level: hour, unit: hour },
               { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     resolves_through: geographic
@@ -187,6 +279,294 @@ anchor_systems:
     form_note: "YYYY-MM-DD[THH:MM[:SS[.sss]][+HH:MM|Z]] — the RESOLUTION actually held is stated separately in `unit` and is never inferred from how many digits were typed"
     establishes: false
     why: "a wall-clock reading without its geographic frame is ambiguous. The estate's own case: a cutoff computed on a +03 host was applied to UTC logs, and the watch reported zero hits while a campaign was running."
+  - system: iso-week
+    dimension: time
+    calendar: iso8601
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: week }, { level: day, unit: day } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the ISO 8601 week calendar: the SAME days as the Gregorian calendar, partitioned into weeks instead of months. A week does not nest in a month, so this is a second partition and not a level of the first — which is why it is its own system."
+    pattern: '^-?\d{4}-W\d{2}-[1-7]$'
+    form_note: "`2026-W38-7`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "2026-W38-7"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: julian-calendar
+    dimension: time
+    calendar: julian
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Julian calendar: a leap year every fourth year, with no century rule. Not among CLDR's identifiers; declared because the Coptic, Ethiopic and Hijri epochs are stated in it, and because a historical date before a country's Gregorian reform IS in it."
+    pattern: '^julian:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`julian:2026-09-07`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "julian:2026-09-07"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: persian-calendar
+    dimension: time
+    calendar: persian
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Solar Hijri calendar, civil in Iran and Afghanistan: the year begins at the March equinox; six months of 31 days, five of 30, and Esfand of 29 or 30. The OFFICIAL calendar is astronomical; it is reckoned here by the published table of 33-year-cycle breaks, which reproduces it over the range the tool states and refuses outside it."
+    pattern: '^persian:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`persian:1405-06-29`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "persian:1405-06-29"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: hebrew-calendar
+    dimension: time
+    calendar: hebrew
+    reckoning: arithmetic
+    day_begins: sunset
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: [12, 13] }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Hebrew calendar: lunisolar, and reckoned WHOLLY BY RULE since the 4th century. A leap year has THIRTEEN months: months are numbered from Tishri as CLDR numbers them, month 6 (Adar I) exists only in a leap year, and two months vary in length to keep the new year off forbidden weekdays."
+    pattern: '^hebrew:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`hebrew:5787-01-09`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "hebrew:5787-01-09"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: islamic-civil-calendar
+    dimension: time
+    calendar: islamic-civil
+    reckoning: arithmetic
+    day_begins: sunset
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the tabular Hijri calendar, civil epoch (Friday 16 July 622 Julian): alternating months of 30 and 29 days and eleven leap days in a thirty-year cycle. An ARITHMETIC approximation of a calendar that is properly observed — good for reckoning, never for saying when a month actually began."
+    pattern: '^islamic-civil:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`islamic-civil:1448-04-07`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "islamic-civil:1448-04-07"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: islamic-tbla-calendar
+    dimension: time
+    calendar: islamic-tbla
+    reckoning: arithmetic
+    day_begins: sunset
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the tabular Hijri calendar, astronomical epoch (Thursday 15 July 622 Julian): the same rule as islamic-civil, one day earlier."
+    pattern: '^islamic-tbla:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`islamic-tbla:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "islamic-tbla:1448-04-08"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: islamic-calendar
+    dimension: time
+    calendar: islamic
+    reckoning: observational
+    day_begins: sunset
+    same_ground_as: [gregorian-civil]
+    crosswalk: observed
+    levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Hijri calendar as OBSERVED: a month begins when the new crescent is sighted, so its length is known only once it has been seen, and two places may begin it on different days."
+    pattern: '^islamic:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`islamic:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "islamic:1448-04-08"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: islamic-rgsa-calendar
+    dimension: time
+    calendar: islamic-rgsa
+    reckoning: observational
+    day_begins: sunset
+    same_ground_as: [gregorian-civil]
+    crosswalk: observed
+    levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Hijri calendar by the sighting announced in Saudi Arabia."
+    pattern: '^islamic-rgsa:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`islamic-rgsa:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "islamic-rgsa:1448-04-08"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: islamic-umalqura-calendar
+    dimension: time
+    calendar: islamic-umalqura
+    reckoning: tabulated
+    day_begins: sunset
+    same_ground_as: [gregorian-civil]
+    crosswalk: table
+    levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Umm al-Qura calendar: the civil Hijri calendar of Saudi Arabia, published as a table computed for Mecca."
+    pattern: '^islamic-umalqura:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`islamic-umalqura:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "islamic-umalqura:1448-04-08"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: coptic-calendar
+    dimension: time
+    calendar: coptic
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: 13 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Coptic calendar: twelve months of thirty days and a thirteenth of five or six; the era of the Martyrs, from 284."
+    pattern: '^coptic:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`coptic:1743-01-10`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "coptic:1743-01-10"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: ethiopic-calendar
+    dimension: time
+    calendar: ethiopic
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: 13 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Ethiopic calendar, Amete Mihret: the Coptic structure with an epoch in the year 8."
+    pattern: '^ethiopic:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`ethiopic:2019-01-10`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "ethiopic:2019-01-10"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: ethiopic-amete-alem-calendar
+    dimension: time
+    calendar: ethioaa
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: 13 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Ethiopic calendar counted from Amete Alem, 5500 years earlier."
+    pattern: '^ethioaa:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`ethioaa:7519-01-10`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "ethioaa:7519-01-10"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: indian-calendar
+    dimension: time
+    calendar: indian
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Indian national calendar (Saka era): tied to the Gregorian leap rule, beginning on 22 March, or 21 March in a leap year."
+    pattern: '^indian:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`indian:1948-06-29`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "indian:1948-06-29"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: buddhist-calendar
+    dimension: time
+    calendar: buddhist
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Thai Buddhist calendar: Gregorian months and days, the year counted from 543 BCE."
+    pattern: '^buddhist:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`buddhist:2569-09-20`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "buddhist:2569-09-20"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: roc-calendar
+    dimension: time
+    calendar: roc
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Republic of China calendar: Gregorian months and days, the year counted from 1912."
+    pattern: '^roc:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`roc:115-09-20`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "roc:115-09-20"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: japanese-calendar
+    dimension: time
+    calendar: japanese
+    reckoning: arithmetic
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: computed
+    levels: [ { level: era }, { level: year }, { level: month }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the Japanese imperial calendar: Gregorian months and days, the year counted within an ERA. The era is a LEVEL above the year — and the one level in this registry whose cells are named rather than numbered. Reckoned from 1873, when Japan adopted the Gregorian calendar."
+    pattern: '^japanese:[a-z]+-\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`japanese:reiwa-8-09-20`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "japanese:reiwa-8-09-20"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: chinese-calendar
+    dimension: time
+    calendar: chinese
+    reckoning: astronomical
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: observed
+    levels: [ { level: year }, { level: month, count: [12, 13] }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the traditional Chinese calendar: lunisolar, months beginning at the new moon computed for the 120th meridian east, with an intercalary month — written `L` — in some years."
+    pattern: '^chinese:-?\d+-\d{2}L?-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`chinese:4723-08-09`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "chinese:4723-08-09"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
+  - system: dangi-calendar
+    dimension: time
+    calendar: dangi
+    reckoning: astronomical
+    day_begins: midnight
+    same_ground_as: [gregorian-civil]
+    crosswalk: observed
+    levels: [ { level: year }, { level: month, count: [12, 13] }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
+    neighbours: metered
+    restrictions: { lines: 1, order: partial }
+    meaning: "the traditional Korean calendar: the Chinese structure computed for Korea's meridian."
+    pattern: '^dangi:-?\d+-\d{2}L?-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
+    form_note: "`dangi:4359-08-09`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
+    example: "dangi:4359-08-09"
+    establishes: false
+    why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: unix-epoch
     dimension: time
     levels: [ { level: millisecond, unit: millisecond } ]
@@ -201,11 +581,12 @@ anchor_systems:
     dimension: place
     neighbours: metered
     restrictions: { metered: length }      # the one place system with a measure: what "every 5 metres" needs
-    meaning: "a position on the earth. Named here because CIVIL TIME RESOLVES THROUGH IT — an offset is a geographic fact wearing a time costume — so a registry carrying gregorian-civil without it would hide the resolution chain."
-    pattern: '^(site:[a-z0-9][a-z0-9-]*|-?\d+\.\d+,-?\d+\.\d+)$'
-    form_note: "site:<declared site name>, or <lat>,<lon> as signed decimals"
+    meaning: "a position BY COORDINATES, in a named coordinate reference system, on the body that system is fixed to. THE ROOT OF PLACE: every other place system resolves through this one. Named here also because CIVIL TIME RESOLVES THROUGH IT — an offset is a geographic fact wearing a time costume."
+    pattern: '^[A-Z][A-Z0-9_]*:[0-9]+;-?\d+(\.\d+)?(,-?\d+(\.\d+)?){1,2}(@\d{4}(\.\d+)?)?$'
+    form_note: "`<authority>:<code>;<coordinates>[@<epoch>]` — `EPSG:4326;35.6892,51.3890@2026.72`. A COORDINATE IS NEVER BARE: a plain `<lat>,<lon>` names no datum, no axis order and no body, so two readers can disagree by hundreds of metres and neither be wrong. Coordinates in the axis order the system declares; the epoch when the frame is dynamic."
+    example: "EPSG:4326;35.6892,51.3890@2026.72"
     establishes: false
-    why: "a site is a label people reassign, and a coordinate corroborates where a machine is without fixing which machine it is"
+    why: "a coordinate says where something IS and never which thing it is: two beings can stand in one spot, and one being can move"
   - system: event-anchored
     dimension: any
     neighbours: counted               # positioned ONLY by neighbours — and so countable: "every 10th release"
@@ -216,6 +597,7 @@ anchor_systems:
     why: "an event anchor positions relative to other positions — it fixes an interval, never a point"
   - system: network-segment
     dimension: place
+    resolves_through: geographic
     levels: [ { level: network }, { level: segment } ]
     neighbours: counted
     meaning: "WHERE A BEING IS ATTACHED in a network's topology: a VLAN, a wireless network, an address range with a role. Declared 11.0, operator-ratified: a segment is a PLACE (where you are), which is a different question from an address (where you answer) — those have their own registry, and a being keeps its address while moving between segments."
@@ -232,7 +614,7 @@ anchor_systems:
     form_note: "root:<logical root>[/<relative path>], or <host>:<Drive>:\\<path> stated outright. The two colons are unambiguous — hostname, then drive letter — and the root: form is IDENTICAL to the unix one on purpose: a LOGICAL root is what crosses systems, a literal path is what does not. That is the whole mechanism for resolving one repository on machines that do not agree what a path looks like."
     establishes: false
     why: "a path is reassignable and a tree can be checked out anywhere — it corroborates a location, never fixes it. Identical to the unix case, because the reason has nothing to do with the operating system."
-  # == ADDRESSES AND PORTS ARE PLACES (14.0) — what 6.0 made a separate registry, and why it came home ==
+  # == ADDRESSES AND PORTS ARE PLACES — what 6.0 made a separate registry, and why it came home ==
   # 6.0 gave ipv4 and ipv6 their own registry, `address_systems`, with `dimension: address`, because "where a being
   # IS" and "where it ANSWERS" are two questions: a mail server can be bare metal in a room and answer at
   # 203.0.113.10, an address it does not even hold locally. The questions ARE two. But that is a difference in the
@@ -300,11 +682,12 @@ anchor_systems:
     form_note: "one decimal integer, 0 to 65535"
     establishes: false
     why: "as for tcp-port"
-  # == THREE CANONICAL SYSTEMS FOR A GARDEN THAT KEEPS A MAP (15.0). Off the shelf, none invented. They exist so that
+  # == THREE CANONICAL SYSTEMS FOR A GARDEN THAT KEEPS A MAP. Off the shelf, none invented. They exist so that
   # a many-layered place model — an administrative tree, a postal layer over the same ground, a drawn map — is held in
   # systems every garden shares, and two gardens that never met agree which place they mean.
   - system: iso-3166
     dimension: place
+    resolves_through: geographic
     levels: [ { level: country }, { level: subdivision } ]
     neighbours: counted
     meaning: "a country (ISO 3166-1 alpha-2) or one of its principal subdivisions (ISO 3166-2)."
@@ -314,14 +697,60 @@ anchor_systems:
     why: "a published code names the same territory in every garden; it survives a renaming, which a name does not"
   - system: osm
     dimension: place
+    resolves_through: geographic
     neighbours: none
-    meaning: "an OpenStreetMap element: the one thing about a mapped place that does not move when it is renamed, re-tagged or re-drawn."
+    meaning: "an OpenStreetMap element. An IDENTIFIER in somebody else's database: convenient, stable across a renaming, and NOT what a place is anchored to."
     pattern: '^(node|way|relation)/[1-9][0-9]*$'
     form_note: "`relation/1234567` — the element type and its id"
-    establishes: true
-    why: "an element id is assigned once. NOTE what it establishes: which MAPPED OBJECT this is — a tag on it may still be wrong, as a school tagged `place=village` is, and then the object is an ALIAS of a place and not one."
+    example: "relation/1234567"
+    establishes: false
+    why: "An element id names a row in a third party's database: elements are split, merged, deleted and re-created, a tag may simply be wrong (a school tagged `place=village`), and the whole map is a CAPTURE of somebody else's truth under ground rule 3. It corroborates which mapped object was meant. What a place is rooted in is a coordinate on a body."
+  # == MORE WAYS OF SAYING WHERE BY IDENTIFIER — each resolves through a coordinate, none is one ==
+  - system: street-address
+    dimension: place
+    within: [iso-3166]
+    resolves_through: geographic
+    neighbours: none
+    meaning: "a postal street address, as its country writes one."
+    pattern: none
+    pattern_why: "no two countries write an address the same way, and inventing a canonical form would reject valid addresses to look thorough. The address is prose; the country it is within is not."
+    establishes: false
+    why: "an address names a DELIVERY POINT that is renumbered, renamed and shared — and one building has many"
+  - system: local-frame
+    dimension: place
+    resolves_through: geographic
+    neighbours: counted
+    meaning: "a position in a frame that TRAVELS WITH ITS HOST: the third floor, room 12, rack 3 slot 7, a deck of a ship. ISO 19111 calls it an engineering system. It is where a thing is WITHIN something, and it keeps its meaning when the something moves — which is exactly what a coordinate does not."
+    pattern: '^[a-z0-9][a-z0-9-]*#[^#]+$'
+    form_note: "`<host or site>#<position within it>` — `head-office#floor-3/room-12`, `rack-a#u17`"
+    example: "head-office#floor-3/room-12"
+    establishes: false
+    why: "rooms are renumbered and racks re-filled; and the frame itself may be moved"
+  - system: geohash
+    dimension: place
+    resolves_through: geographic
+    levels: { by: prefix-length, from: 1, to: 12 }
+    neighbours: counted
+    meaning: "a cell of the geohash grid over WGS 84. A GRID IS LEVELS LAID OVER COORDINATES: a prefix of a code is a coarser cell that contains it, so a position can be held — and PUBLISHED — at the precision somebody chose."
+    pattern: '^[0-9bcdefghjkmnpqrstuvwxyz]{1,12}$'
+    form_note: "base-32, 1 to 12 characters — `tnke13`"
+    example: "tnke13"
+    establishes: false
+    why: "a cell says roughly where and never what"
+  - system: plus-code
+    dimension: place
+    resolves_through: geographic
+    levels: { by: prefix-length, from: 2, to: 15 }
+    neighbours: counted
+    meaning: "an Open Location Code: a grid cell written so that a person can read it aloud, for places with no street address."
+    pattern: '^[23456789CFGHJMPQRVWX]{2,8}0*\+[23456789CFGHJMPQRVWX]{0,7}$'
+    form_note: "the full code as published — `8H7JM9Q5+M2`"
+    example: "8H7JM9Q5+M2"
+    establishes: false
+    why: "as for geohash"
   - system: postal-code
     dimension: place
+    resolves_through: geographic
     within: [iso-3166]
     levels: { by: prefix-length, from: 1, to: 12 }
     neighbours: none
@@ -410,7 +839,7 @@ storage_formats:
   - { format: linux_raid_member, layer: raid,                         meaning: "an md RAID member. e.g. raid1 for /boot, raid6 for share arrays." }
   - { format: ntfs,              layer: filesystem,     posix: false, meaning: "the Windows filesystem. Declared and unoccupied — see the vacancy. It is named here because the question 'where does ntfs go' is what produced this registry, and the answer is that it is a STORAGE FORMAT and never a path grammar." }
 
-# == PLANES: what a surface, a link or a treatment is FOR (15.0) ==
+# == PLANES: what a surface, a link or a treatment is FOR ==
 # Off the shelf: the three planes every network design is sorted by. DATA is the traffic a device exists to carry;
 # CONTROL is how it decides where traffic goes (a routing adjacency, a spanning tree); MANAGEMENT is how an operator
 # reaches it (ssh, a vendor console, SNMP). The split matters because the three deserve different exposure: a data
@@ -421,11 +850,13 @@ planes:
   - { plane: control,    meaning: "how the being decides where traffic goes: routing adjacencies, discovery, redundancy election" }
   - { plane: management, meaning: "how an operator reaches the being to configure or observe it" }
 
-# == REGISTRY LINKS (15.0): a row of one registry names a row of another, and the gate resolves it ==
+# == REGISTRY LINKS: a row of one registry names a row of another, and the gate resolves it ==
 # A protocol is also a TECHNOLOGY with a specification somebody publishes, and the technology catalogue is rooted in
-# the UNESCO fields of knowledge. Until 15.0 `net_protocols` and `seed/knowledge/technology.tsv` were two lists of
-# some of the same things, related by nothing. A link is declared here ONCE, so the gate names neither registry.
+# the UNESCO fields of knowledge. A link is declared here ONCE, so the gate names neither registry.
 registry_links:
+  - { from: reference_systems, field: body,  to: bodies,                 take: body,  why: "a reference system is fixed to a body, and a latitude is a latitude ON something" }
+  - { from: reference_systems, field: kind,  to: reference_system_kinds, take: kind,  why: "the classes ISO 19111 names" }
+  - { from: reference_systems, field: frame, to: reference_frames,       take: frame, why: "static or dynamic: whether a coordinate needs an epoch" }
   - { from: net_protocols, field: technology, to: technology, take: code,
       why: "every protocol names its entry in the catalogue of technologies, which carries its specification and the field of knowledge it belongs to — so a routing mechanism ledgered tomorrow hangs from the same tree as a mail server does today" }
 
@@ -449,7 +880,7 @@ registry_links:
 # `layer` is DESCRIPTIVE, like `dimension` on anchor_systems: the gate consumes `protocol` (as the enum)
 # and nothing else in the row. It is here because carriage is what makes this a stack and not a list.
 net_protocols:
-  # THE TRANSPORT LAYER (14.0). Until now `tcp` and `udp` were only the VALUE of the `transport:` field below, which
+  # THE TRANSPORT LAYER. Until now `tcp` and `udp` were only the VALUE of the `transport:` field below, which
   # is why a port had no system to be a position in. A row here is what lets an endpoint NAME its transport when it
   # differs from its protocol's usual one — a DNS server answers on 53/udp AND 53/tcp, and the law could not say so.
   - protocol: tcp
@@ -542,7 +973,7 @@ net_protocols:
       published attacks, so a tunnel built on it protects nothing while LOOKING like a VPN in every
       inventory. A registry that omitted it could not express that judgment at all; the vacancy is where
       the judgment lives, and occupying the position warns.
-  # == THE STACK COMPLETED, AND THE CONTROL PLANE (15.0). `layer` runs link -> network -> transport -> application, and
+  # == THE STACK COMPLETED, AND THE CONTROL PLANE. `layer` runs link -> network -> transport -> application, and
   # each layer that ADDRESSES owns a positioning system (`positions:`). A ROUTING PROTOCOL is a control-plane row with
   # the two facts network design sorts them by: `family` — how it learns (link-state floods a map and each router
   # computes; distance-vector trusts its neighbours' sums; path-vector carries the whole path, so policy can refuse
@@ -603,10 +1034,10 @@ units:
     meaning: "a position held to the calendar day — what every `iso_date` in this corpus actually holds"
   - unit: hour
     dimension: time
-    meaning: "a position held to the hour. Added 15.0 with the calendar's levels: an hour is metric, and a level that is metric names its unit."
+    meaning: "a position held to the hour"
   - unit: metre
     dimension: length
-    meaning: "the SI metre — the first unit that is not a time (15.0). `units` has been keyed by dimension since 5.1 \"so a length or an angle joins without a rule-change\"; this is that. It is what lets a region or a repetition on `geographic` carry a measure."
+    meaning: "the SI metre — the first unit that is not a time. `units` has been keyed by dimension since 5.1 \"so a length or an angle joins without a rule-change\"; this is that. It is what lets a region or a repetition on `geographic` carry a measure."
 # == VACANCIES (Tier-0). P6/B2: whoever DECLARES a position accounts for it, so the duty to explain
 # these is discharged HERE — an adopting garden must never inherit an obligation to justify a position it
 # never asked for. The gate applies ANTI-ROT only to garden-local vacancies: a garden that OCCUPIES one of
@@ -617,7 +1048,7 @@ units:
 # world, which the vocabulary owns and the interpreter must not carry a copy of. Adding a reason is a
 # rule-change here, not an edit to bin/.
 vacancy_reasons: [prediction, impossible, out-of-context, universal]
-# `universal` (12.0): the position is declared because the STRUCTURE is general, not because an occupant is
+# `universal`: the position is declared because the STRUCTURE is general, not because an occupant is
 # expected here. A figure with a side missing is a worse model than a figure with a side nobody stands on, and a
 # standard that waits for one garden's occupant before completing a mechanism ties every garden to the first
 # one's size. It is a reason and not a licence: the position must belong to a mechanism that IS occupied
@@ -851,6 +1282,12 @@ value_types:
     pattern: '^\d{4}-\d{2}-\d{2}$'
     refusal: "must be an ABSOLUTE date YYYY-MM-DD (Rule 6 paper-durable)"
     meaning: "a calendar position held to the DAY; its time of day is not known, which is different from midnight"
+  - type: date
+    dimension: time
+    unit: day
+    any_system: true
+    refusal: "must be an ABSOLUTE date held to the day, in the one form of the calendar it is stated in — `2026-09-20`, `persian:1405-06-29`, `hebrew:5787-01-09`, `2026-W38-7` (Rule 6 paper-durable)"
+    meaning: "a position held to the DAY, in ANY calendar. What `observed`, `as_of` and `expires` are typed with: a fact is dated in the calendar it was known in, and no calendar is the one a date must be in. `iso_date` stays for a garden's own term that really means the Gregorian calendar."
   - type: kebab
     pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
     refusal: "must be kebab-case (the name is open, but still paper-durable)"
@@ -1027,6 +1464,8 @@ knowledge_schemes:
     publisher: International Labour Organization
     url: "https://ilostat.ilo.org/methods/concepts-and-definitions/classification-occupation/"
     levels: [ { level: major }, { level: sub-major }, { level: minor }, { level: unit } ]
+    same_ground_as: [isced-f-2013]
+    crosswalk: table                 # seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv
     neighbours: none
     sources: seed/knowledge/SOURCES.md
   - scheme: technology
@@ -1068,7 +1507,7 @@ profiles:
           scan_policy:  { required: true, in: [index, reference-only, skim], meaning: "index (own code — walk fully) | reference-only (do NOT re-scan each session; consult analysis_cache, grep on demand only) | skim (structure only)" }
           stack:        { in: untyped, meaning: "language/runtime tag, e.g. python-django | csharp-dotnet (optional)" }
           entrypoint:   { in: untyped, meaning: "manifest / solution / addin that roots the tree (optional)" }
-          note:         { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
+          note:         { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       # MOVED OUT 2026-08-02 (P1 / D6, human-ratified): `summary_ref` and `last_indexed` left this term and now
       # live in `analysis_cache`. Rationale (one-owner-of-a-fact): a summary is an ANALYSIS RESULT, not a property
       # of a filesystem path, and a date is a weaker staleness signal than the source's own git sha. code_paths
@@ -1188,7 +1627,7 @@ profiles:
           system:           { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place, any] } }, meaning: "the PLACE system the surface is stated in — `ipv4` or `ipv6` for a network address, `unix-filesystem` for a socket path. It selects the form `at` must take. Named `system`, as in `roots`, `located_at` and `timing`: `keyed_by` resolves a registry row by a field that exists on BOTH the entry and the row, so the two are one name by construction." }
           at:               { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the address answered at, in that system's ONE canonical form" }
           exposure:         { in: [loopback, lan, link, internet], meaning: "loopback (this machine only) | lan (the local segment) | link (reachable only over a named link, e.g. the wireguard tunnel) | internet (bound to a public address directly)" }
-          observed:         { in: { type: iso_date }, meaning: "ABSOLUTE date the surface was checked. Endpoints age faster than almost anything else here." }
+          observed:         { in: { type: date }, meaning: "ABSOLUTE date the surface was checked. Endpoints age faster than almost anything else here." }
           confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "the position on the confidentiality aspect — what the channel protects. Defaults to cleartext, because a channel nobody has said protects anything does not." }
           permission:       { in: { aspect: capability, default: permitted }, meaning: "the position on the capability aspect — whether this surface MAY exist at all" }
           # THE TRANSPORT IS USUALLY THE PROTOCOL'S OWN, so an entry states it only when it differs: a DNS server's second
@@ -1200,8 +1639,7 @@ profiles:
           via_link:         { in: untyped, meaning: "optional: the `links` key this surface is reachable over, when it is not reachable without it" }
         cells:
           - { when: { permission: forbidden }, verdict: in_breach, why: "a listening surface that MUST NOT exist, recorded as existing. Unlike a capability, an endpoint entry is not a stance about a possibility — it is a statement that the being answers there — so `forbidden` alone is the breach and needs no second aspect to confirm it. A database container published on 0.0.0.0:5432, reachable across the LAN, is this shape." }
-          # EXPOSURE-AWARE since 15.0. For six weeks this cell also fired on LOOPBACK surfaces, where there is no path for
-          # anything to be on, and said so at length in its own `why`, because a cell could see only aspect positions.
+          # LOOPBACK is excluded: there is no path there for anything to be on.
           - { when: { permission: required, confidentiality: cleartext, exposure: [lan, link, internet] }, verdict: in_breach, why: "a channel the estate REQUIRES and which protects nothing on the wire, on a path something else can be on. A mail policy that forces cleartext delivery to a partner domain that mail must still reach is exactly this, so the requirement and the exposure are both real and neither can simply be withdrawn." }
           - { when: { plane: management, exposure: internet }, verdict: in_breach, why: "a MANAGEMENT surface answering on the internet: the way an operator configures this being is reachable by anyone, guarded only by its login. Restrict it to a management network or a named address list; if it must stay, say why on the bean, where a reader meets this warning." }
       merge: { cardinality: multi, order: "by-protocol+system+at+port?" }
@@ -1221,7 +1659,7 @@ profiles:
         key_form: kebab
         attrs:
           protocol:         { required: true, in: { registry: net_protocols, take: protocol }, meaning: "what makes this link — wireguard for a tunnel, and a physical row where one exists" }
-          observed:         { in: { type: iso_date }, meaning: "ABSOLUTE date the link was checked" }
+          observed:         { in: { type: date }, meaning: "ABSOLUTE date the link was checked" }
           peer:             { in: ref, meaning: "a {bean, field} ref to the far end. A REF, not a retyped address: this is the field whose absence produced the .169/.146 contradiction." }
           confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "what the link protects, for everything carried over it" }
           plane:            { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR." }
@@ -1252,7 +1690,7 @@ profiles:
         key_form: kebab
         attrs:
           protocol:   { required: true, in: { registry: net_protocols, take: protocol }, meaning: "what it speaks to get there" }
-          observed:   { in: { type: iso_date }, meaning: "ABSOLUTE date the reach was verified to work" }
+          observed:   { in: { type: date }, meaning: "ABSOLUTE date the reach was verified to work" }
           target:     { in: ref, meaning: "a {bean[, field]} ref to what it reaches. A ref rather than an address, so the far end stays the one owner of its own address." }
           necessity:  { in: { aspect: necessity, default: necessary }, meaning: "the position on the necessity aspect — `necessary` if the being cannot do its work without it" }
           via_link:   { in: untyped, meaning: "optional: the link this reach must cross" }
@@ -1275,7 +1713,7 @@ profiles:
           plane:       { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR." }
           what:        { required: true, in: prose, meaning: "the treatment itself, briefly. A POINTER to the device's own config, never a copy of it — ground rule 3: the router owns its rules and they are not hand-edited from here." }
           why:         { required: true, in: prose, meaning: "what breaks if it is removed. This is the load-bearing attr: a treatment with no stated consequence is an inventory row, and inventory is what the device's own export already gives you." }
-          observed:    { in: { type: iso_date }, meaning: "ABSOLUTE date the treatment was read off the device" }
+          observed:    { in: { type: date }, meaning: "ABSOLUTE date the treatment was read off the device" }
           to:          { in: ref, meaning: "optional: a {bean, field} ref to where the treatment sends traffic" }
           permission:  { in: { aspect: capability, default: permitted }, meaning: "the position on the capability aspect. `required` is the one that earns this term: a server's outbound SPF identity can DEPEND on firewall mangle marks, and today that is a prose safety note nothing enforces." }
       merge: { cardinality: multi, order: by-kind+what }
@@ -1306,13 +1744,13 @@ profiles:
           why: "an unrenewed name takes its DNS and its mail with it"
         attrs:
           registrar:   { required: true, in: prose, meaning: "the registrar of record — who the renewal is actually paid to" }
-          created:     { required: true, in: { type: iso_date }, meaning: "ABSOLUTE date the registration began" }
-          expires:     { required: true, in: { type: iso_date }, meaning: "ABSOLUTE date it lapses if unrenewed — the fact that can lose the name" }
+          created:     { required: true, in: { type: date }, meaning: "ABSOLUTE date the registration began" }
+          expires:     { required: true, in: { type: date }, meaning: "ABSOLUTE date it lapses if unrenewed — the fact that can lose the name" }
           auto_renew:  { required: true, in: untyped, meaning: "enabled | disabled | unknown. `unknown` is the honest default: it is a registrar-ACCOUNT setting and does not appear in WHOIS, so it cannot be observed the way the dates can." }
-          observed:    { required: true, in: { type: iso_date }, meaning: "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer." }
+          observed:    { required: true, in: { type: date }, meaning: "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer." }
           source:      { required: true, in: prose, meaning: "where they were read from" }
           registrant:  { in: prose, meaning: "optional: the party holding the registration, where the registry discloses it" }
-          note:        { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
+          note:        { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       merge: { cardinality: single, order: none }
 
   knowledge:
@@ -1387,7 +1825,7 @@ terms:
         permission:       { in: { aspect: capability, default: permitted }, meaning: "the position taken on the capability aspect (required | omissible | permitted | forbidden)" }
         feasibility:      { in: { aspect: feasibility, default: possible }, meaning: "the position on the feasibility aspect — whether the being CAN be in that state at all, independent of whether it may. `forbidden` + `possible` is a live risk; `forbidden` + `impossible` is already prevented by something else." }
         by:               { in: untyped, meaning: "optional: who imposes it, when the enforcer is not us (e.g. a hosting provider)" }
-        feasibility_why:  { in: prose, meaning: "optional: WHY the feasibility position holds — a sysctl is reversible, a kernel flag is not. Distinct from `why`, which is the reason for the PERMISSION; carried by beans since the aspect was built and declared at 12.0" }
+        feasibility_why:  { in: prose, meaning: "optional: WHY the feasibility position holds — a sysctl is reversible, a kernel flag is not. Distinct from `why`, which is the reason for the PERMISSION" }
       # Two squares span a GRID, and the grid has cells NEITHER square can see. Checking each aspect
       # alone permits both kinds below. The split matters: one pair cannot both be true, the other pair
       # can and is simply bad.
@@ -1427,7 +1865,7 @@ terms:
       attrs:
         rel:   { required: true, in: { type: kebab }, meaning: "the relation TYPE, kebab-case and open" }
         path:  { in: untyped, meaning: "INSTEAD of a bean: a pointer to something that is not a managed object here — an off-garden document. The residual relation's own residual, kept since the relation algebra was declared" }
-        note:  { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
+        note:  { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
 # LOCAL kinds: object types this garden manages that std-vocab doesn't schematize. Each gets a small schema
 # (MODEL Rule 6). A kind that proves general is promoted alongside its terms.
@@ -1501,9 +1939,7 @@ terms:
     # on keeps (the highest), and the guard itself — a value at the TOP of this rank is never dropped in favour
     # of one below it, whatever precision the lower one claims. The merge REFUSES to run if this is absent.
     merge: { order: "generated-by-tool<inferred<observed<asserted-by-human", borrows: generated-by-tool }
-    # EACH PLACE IN THE RANK, EARNED (12.0). The order was ratified at 11.3 as the one the code had always
-    # held, and the operator's first question on merging it was why `generated-by-tool` sits where it does.
-    # Until now nothing said what ANY of the four means. The rank orders HOW A FACT IS KNOWN:
+    # EACH PLACE IN THE RANK, EARNED. The rank orders HOW A FACT IS KNOWN:
     values_meaning:
       asserted-by-human: "a person said so, and answers for it. The top, because a person can be ASKED, and because the fact may be one only a person can know (who owns this, what was agreed). The guard protects this place and no other."
       observed:          "read directly off the world by whoever recorded it — a command's output, a file, a registry reply. It can be re-read, which is its whole authority."
@@ -1530,7 +1966,7 @@ terms:
       attrs:
         produced_by:     { required: true, in: untyped, meaning: "the agent/tool id that produced this analysis (provenance — who to ask, who to blame)" }
         # Rule 6: absolute dates only
-        as_of:           { required: true, in: { type: iso_date }, meaning: "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)" }
+        as_of:           { required: true, in: { type: date }, meaning: "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)" }
         # 11.0: a staleness key is a POSITION, and `git-head:<sha>` was resolved against whatever tree the
         # READER had checked out — one analysis, one verdict per machine. The git-object-graph form names the
         # repository, so every reader asks the same object graph. `manual:<why>` stays for what no key can track.
@@ -1595,7 +2031,7 @@ terms:
         owner:     { in: ref }
         contract:  { in: ref }                           # `external` and `crown` resolve to no bean by design
         since:     { in: untyped, meaning: "optional: ABSOLUTE date this owner came to hold the facet" }
-        note:      { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
+        note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     forms:
       explicit:  "owned_by: { <facet>: { owner: {bean: <person|org>} }, ... }   # introduce facet-owners here"
       inherited: "owned_by: { via: {bean: <parent>} }                           # inherit parent's facet-owners"
@@ -1626,7 +2062,7 @@ terms:
         holder:    { in: ref }
         contract:  { in: ref }
         since:     { in: untyped, meaning: "optional: ABSOLUTE date this holder came to answer for the facet" }
-        note:      { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
+        note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     forms:
       explicit:  "responsibility: { <facet>: { holder: {bean: <person|org>} } }"
       inherited: "responsibility: { via: {bean: <parent>} }"
@@ -1983,7 +2419,7 @@ terms:
     context_keys: [anchor_system]
     schema:
       shape: scalar
-      values: [unix-filesystem, windows-filesystem, git-object-graph, physical, gregorian-civil, unix-epoch, geographic, event-anchored, network-segment, ipv4, ipv6, tcp-port, udp-port, iso-3166, osm, postal-code]
+      values: [unix-filesystem, git-object-graph, physical, gregorian-civil, iso-week, julian-calendar, persian-calendar, hebrew-calendar, islamic-civil-calendar, islamic-tbla-calendar, islamic-calendar, islamic-rgsa-calendar, islamic-umalqura-calendar, coptic-calendar, ethiopic-calendar, ethiopic-amete-alem-calendar, indian-calendar, buddhist-calendar, roc-calendar, japanese-calendar, chinese-calendar, dangi-calendar, unix-epoch, geographic, event-anchored, network-segment, windows-filesystem, ipv4, ipv6, tcp-port, udp-port, iso-3166, osm, street-address, local-frame, geohash, plus-code, postal-code]
       values_consistent_with: ["registry:anchor_systems[].system"]
     enforced_by: none   # it is never carried on a bean: it exists to OWN the enum that `located_at` and
                         # `timing` select their systems from. Occupancy is counted through their entries.
@@ -2014,7 +2450,7 @@ terms:
       attrs:
         system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which anchor system this position is stated in — it selects the form the position must take" }
         openness:  { required: true, in: [here, elsewhere, unreachable, unknown], meaning: "here (reachable from the machine that recorded it) | elsewhere (reachable, and NOT from here) | unreachable (known, and cannot be reached) | unknown (nobody has established where it is)" }
-        observed:  { in: { type: iso_date }, meaning: "ABSOLUTE date this location was checked. A location ages: a tree is moved, a branch is checked out elsewhere, a printout is filed." }
+        observed:  { in: { type: date }, meaning: "ABSOLUTE date this location was checked. A location ages: a tree is moved, a branch is checked out elsewhere, a printout is filed." }
         at:        { in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position itself, in that system's ONE canonical form. Required unless openness is `unknown`, which is precisely the case where there is no position to state." }
         note:      { in: prose, meaning: "optional prose — the only place a `physical` address can live, since that system declares no canonical form" }
       cells:
@@ -2041,7 +2477,7 @@ terms:
         at:      { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position, in that system's ONE canonical form" }
         unit:    { required: true, in: { registry: units, take: unit }, meaning: "the resolution ACTUALLY HELD. `2026-08-07T05:21` recorded at unit: minute means the second is not known — not that it was zero." }
         by:      { in: untyped, meaning: "optional: who or what read the clock, when that is not the bean's default provenance" }
-        note:    { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
+        note:    { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     key_note: >
       kebab-case moment names. Used so far: start | sync | stop. The key is DELIBERATELY OPEN and the gate
       is forbidden from enumerating it — a run with four sync points, or a moment nobody has named yet,
@@ -2072,8 +2508,8 @@ terms:
       attrs:
         system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which filesystem system this host resolves the root in — pinned since 7.0 to the grammar this host's `os` declares, so it is checked rather than merely stated" }
         at:        { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the literal position this root means HERE, host named, in that system's canonical form" }
-        observed:  { in: { type: iso_date }, meaning: "ABSOLUTE date the resolution was checked — a tree gets moved" }
-        note:      { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
+        observed:  { in: { type: date }, meaning: "ABSOLUTE date the resolution was checked — a tree gets moved" }
+        note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     key_note: >
       kebab-case root names, shared across hosts by AGREEMENT rather than by a registry: a root is a name
       two machines both choose to use, and centralising the list would re-introduce the one shared document
@@ -2103,7 +2539,7 @@ terms:
       shape: list_of_entries
       attrs:
         role:      { required: true, in: { registry: roles, take: role }, meaning: "which job — a registry row, so a typo is an error and not a new role" }
-        observed:  { in: { type: iso_date }, meaning: "ABSOLUTE date the role was confirmed to be one this being actually performs" }
+        observed:  { in: { type: date }, meaning: "ABSOLUTE date the role was confirmed to be one this being actually performs" }
         why:       { in: prose, meaning: "optional: what this being does in that role that another in the same role would not" }
     merge: { cardinality: multi, order: by-role }
   - term: os
@@ -2150,7 +2586,7 @@ terms:
       key_form: kebab
       attrs:
         format:      { required: true, in: { registry: storage_formats, take: format }, meaning: "a row of storage_formats — ext4, crypto_LUKS, LVM2_member and so on" }
-        observed:    { in: { type: iso_date }, meaning: "ABSOLUTE date the layout was read off the machine" }
+        observed:    { in: { type: date }, meaning: "ABSOLUTE date the layout was read off the machine" }
         carried_by:  { in: untyped, meaning: "the `volumes` key beneath this one. A local key and NOT a ref: the stack is intra-bean, which is why it joins no acyclic check." }
         uuid:        { in: untyped, meaning: "the volume's own identifier, as its format reports it. The datum a rebuild needs and the one that survives a device rename." }
         at:          { in: untyped, meaning: "where it is mounted, in this machine's path grammar. Absent for a volume that holds no filesystem — a LUKS container or an LVM member is mounted nowhere." }
@@ -2294,7 +2730,7 @@ terms:
         holds:          { required: true, in: untyped, meaning: "the content itself for something small, or a `file:` pointer into this garden for something large. Large captures do not belong inline: a bean must stay legible on paper, and a 900-line router export is not." }
         restores:       { in: prose, meaning: "optional: what this capture would let somebody rebuild, and what it would NOT. The honest half is usually the second." }
         supersedes:     { in: untyped, meaning: "optional: the `capture` key on this bean that this one replaces" }
-        note:           { in: prose, meaning: "optional prose. THE place for it (12.0): an entry holds only declared attributes, so a remark is written here and never as a new key" }
+        note:           { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
 
   - term: risks
@@ -2628,3 +3064,26 @@ The portable, estate-agnostic classification shared by every garden — the abst
   fields: a routing mechanism ledgered tomorrow hangs from the same tree of knowledge as a mail server does today.
   NOT built: places-in-the-network as a registry of site roles (no garden yet has site beans); extents and
   recurrences that ASK a system its shape (next).
+
+- **16.0** (2026-09-20, proposed rule-change) — **a calendar is not time, and a coordinate is never bare.** MAJOR for
+  three reasons: the `geographic` system's form changes from a bare `<lat>,<lon>` to
+  `<authority>:<code>;<coordinates>[@<epoch>]`; `osm`, declared establishing one release ago, no longer establishes;
+  and the law's patterns are matched ASCII-ONLY, so a position written in another script's digits — which the gate
+  accepted as a date until now, because `\d` matches every script — is refused. CALENDARS: all eighteen that Unicode
+  CLDR identifies, and the Julian, are time systems, each with its own `levels` (a month is a level of ITS calendar
+  and never metric; the Hebrew and Chinese year has twelve months or thirteen; the Japanese calendar has an `era`
+  level), its `reckoning` (arithmetic / astronomical / observational / tabulated), when its `day_begins` (the Hebrew
+  and the Hijri day at sunset), and a TAGGED form, because `1405-06-29` is also a Gregorian date. They all partition
+  one line of days (`same_ground_as`, `crosswalk`), so they meet at the DAY: `bin/dmcal.py` converts through it for the
+  fourteen reckoned by rule and REFUSES the five that are not. NO CALENDAR IS PRIVILEGED: a moment is stated in the
+  calendar it was known in. Every dated attribute of the standard is typed `date` — a day in ANY calendar — and `bin/dmstale.py`
+  ages one through the day. (Still Gregorian-only, named: `leaf_orders.instant` and the journal's heading form.) COORDINATES, after ISO 19111 / 19112: `bodies` (a
+  latitude is a latitude ON something — the Earth, the Moon, Mars), `reference_systems` with their `kind` and whether
+  the `frame` is static or DYNAMIC (ground drifts in a dynamic frame, so a coordinate there needs its epoch), and
+  `geographic` as THE ROOT OF PLACE: every way of saying where by IDENTIFIER — an administrative code, a postal code,
+  a street address, a grid cell, a map database's element id, a `local-frame` position such as "third floor" that
+  travels with its building — `resolves_through` it and none of them is one. `bin/dmgeo.py` reads a position, names
+  its grid cells and measures on the body the system names; it does NOT transform between datums, which needs
+  published parameters. Generic additions to a system's shape: `same_ground_as`, `crosswalk`, `example` (held to the
+  system's own pattern by the gate); the words a shape may use are declared in `system_shape`, so the gate carries
+  no copy.
