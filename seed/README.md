@@ -51,9 +51,11 @@ Then:
 
 ## Your first beans
 
-A person and the machine they run, exactly as a new garden accepts them. **These two blocks are not
-illustrations:** `test/germinate.py` writes each one into a freshly grown garden, adds a journal entry, and
-commits — so if the law moves and they stop passing, the test fails rather than this page quietly lying.
+A person, the machine they run, and the journal entry that records both — exactly as a new garden accepts
+them. **These blocks are not illustrations:** `test/germinate.py` writes each one into a freshly grown
+garden and commits, so if the law moves and they stop passing, the test fails rather than this page
+quietly lying. The journal entry is checked the same way, because the first commit is refused far more
+often for the entry than for the bean.
 
 A person is owned by the crown and answers for themselves. Nobody holds a person, so these two lines are
 the only way a person's ownership is written:
@@ -102,8 +104,25 @@ responsibility: { legal: {holder: {bean: sam}}, technical: {holder: {bean: sam}}
 The laptop.
 ```
 
-Then append one entry to `log/journal.md` and commit. When the gate refuses something, its message says
-what to write; `MODEL.md` says why, and `CHECKLIST.md` says how a write is made.
+And the entry that goes with them. **This is the step a first commit fails on**, because a heading is a
+POSITION IN TIME and the gate checks the form — so read it from the clock rather than typing a date:
+
+<!-- example: log/journal.md -->
+```markdown
+## 2026-09-17 09:30+03:00 · sam · the first two beans
+- action: added [[sam]] and [[laptop]].
+- detail: the serial is off the underside of the machine; the person id is a name I chose and can keep.
+- why: starting the ledger with the thing that owns everything else, so nothing dangles.
+```
+
+```sh
+date '+%Y-%m-%d %H:%M%:z'          # what the heading's first field must be
+```
+
+The `[[bean-id]]` is what makes the entry count: the gate refuses a staged bean that the entry does not
+name. `- action:` is the only required line; `detail` and `why` are for the reader you cannot answer
+questions for, which in a year is you. When the gate refuses something, its message says what to write;
+`MODEL.md` says why, and `CHECKLIST.md` says how a write is made.
 
 ## Contents
 

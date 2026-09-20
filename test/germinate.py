@@ -101,6 +101,26 @@ for _doc in ('README.md', 'COOKBOOK.md'):
     _page = open(os.path.join(ROOT, 'seed', _doc), encoding='utf-8').read()
     _examples += re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _page, re.S)
     _fragments += re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', _page, re.S)
+# THE NEWCOMER'S FIRST COMMIT, EXACTLY AS seed/README.md TEACHES IT, AND ON ITS OWN. The two beans of the
+# "Your first beans" section plus the journal entry printed beside them, committed together and nothing
+# else — because that commit is what a stranger's first five minutes actually is, and it is the step they
+# fail on. Not for the bean: for the ENTRY, whose heading is a position in time and whose `[[id]]` is what
+# satisfies the provenance duty. A page that shows two beans and no entry guarantees a refusal, so the
+# entry is now an example too, and this is where it is proved rather than asserted.
+_rm = open(os.path.join(ROOT, 'seed', 'README.md'), encoding='utf-8').read()
+_first = re.findall(r'<!-- example: (beans/(?:sam|laptop)\.md) -->\n```markdown\n(.*?)\n```', _rm, re.S)
+_first_j = re.findall(r'<!-- example: log/journal\.md -->\n```markdown\n(.*?)\n```', _rm, re.S)
+check("seed/README.md still shows a first person, a first host AND the journal entry that commits them",
+      len(_first) == 2 and len(_first_j) == 1, f"beans={len(_first)} entries={len(_first_j)}")
+for _path, _text in _first:
+    open(os.path.join(_ex_tmp, _path), 'w', encoding='utf-8').write(_text + '\n')
+with open(os.path.join(_ex_tmp, 'log', 'journal.md'), 'a', encoding='utf-8') as _j:
+    _j.write('\n' + (_first_j[0] if _first_j else '') + '\n')
+run('git', 'add', '-A', cwd=_ex_tmp)
+_first_c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'first beans', cwd=_ex_tmp)
+check("A STRANGER'S FIRST COMMIT GOES THROUGH: the two beans and the entry, copied from the page as written",
+      _first_c.returncode == 0, (_first_c.stdout + _first_c.stderr)[-600:])
+
 for _path, _text in _examples:
     open(os.path.join(_ex_tmp, _path), 'w', encoding='utf-8').write(_text + '\n')
 _vp = os.path.join(_ex_tmp, 'VOCAB.md')

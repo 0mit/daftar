@@ -18,20 +18,39 @@ Requires Python 3 and PyYAML (`pip install PyYAML`).
 
 ```sh
 git clone https://github.com/0mit/daftar.git
-sh daftar/seed/germinate.sh ~/my-garden
+cd daftar && git checkout "$(git tag -l 'v*' --sort=-v:refname | head -1)"   # pin a release
+sh seed/germinate.sh ~/my-garden
 ```
+
+Checking out a tag is the whole of "pin a release, and upgrade deliberately": your garden records which
+release it runs, and `bin/dmupgrade.py` moves it when you decide to. Grow from an untagged clone and
+`germinate.sh` will say so — it works, it is just not pinned to anything anyone else can fetch.
 
 That gives you an empty garden with its first commit, the gate installed as a pre-commit hook, and zero
 errors and zero warnings. Then:
 
-1. write your first beans — `seed/README.md` has a person and a host, and `seed/COOKBOOK.md` a domain, a
-   service running on a machine, a rented server and how to add a value the vocabulary lacks. All of them
-   pass the gate exactly as written, because a test commits them;
-2. append an entry to `log/journal.md` — the gate refuses a bean change that is not journalled;
+1. write your first beans — `seed/README.md` has a person, a host **and the journal entry that commits
+   them**, and `seed/COOKBOOK.md` a domain, a service running on a machine, a rented server and how to
+   add a value the vocabulary lacks. All of them pass the gate exactly as written, because a test grows a
+   garden and commits them;
+2. append that entry to `log/journal.md` — the gate refuses a bean change that is not journalled, and a
+   heading is a position in time, so read it from the clock (`date '+%Y-%m-%d %H:%M%:z'`);
 3. `git add -A && git commit`.
 
 When the gate refuses something, its message names the rule and, for the common mistakes, the line to write. `MODEL.md` explains the model,
 `CHECKLIST.md` how a write is made, and `python3 bin/dmrules.py` prints every rule in force.
+
+## If you work with a coding agent
+
+This is what the ledger is *for*. A garden comes with `.claude/skills/daftar/` — open it in a tool that
+reads skills and the agent loads **this garden's** law: the vocabulary in force, what it may decide alone
+and what it must bring to you (`MODEL.md`, the Contract of Parts), and how to make a write that the gate
+will accept (`CHECKLIST.md`).
+
+The point is not that an agent can edit the files. It is that the two of you write in one language that
+neither can quietly corrupt: every fact carries who said it and how they know, every change is journalled
+in the same commit, and the rules are data the gate enforces rather than habits either of you remembers.
+An agent that invents a field is refused. So are you.
 
 ## Words you will meet
 
