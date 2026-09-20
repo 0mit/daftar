@@ -47,3 +47,32 @@ lmtp	LMTP	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc2033	https://ww
 spf	SPF	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc7208	https://www.ietf.org/	0612	2522;2529
 dkim	DKIM	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc6376	https://www.ietf.org/	0612	2522;2529
 dmarc	DMARC	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc7489	https://www.ietf.org/	0612	2522;2529
+tcp	Transmission Control Protocol (TCP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc9293	https://www.ietf.org/	0612	2523;3513
+udp	User Datagram Protocol (UDP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc768	https://www.ietf.org/	0612	2523;3513
+ipv4	Internet Protocol version 4 (IPv4)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc791	https://www.ietf.org/	0612	2523;3513
+ipv6	Internet Protocol version 6 (IPv6)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc8200	https://www.ietf.org/	0612	2523;3513
+icmp	Internet Control Message Protocol (ICMP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc792	https://www.ietf.org/	0612	2523;3513
+arp	Address Resolution Protocol (ARP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc826	https://www.ietf.org/	0612	2523;3513
+ssh	Secure Shell protocol (SSH)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc4251	https://www.ietf.org/	0612	2523;3513
+http	Hypertext Transfer Protocol (HTTP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc9110	https://www.ietf.org/	0612	2523;3513
+pop3	Post Office Protocol version 3 (POP3)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc1939	https://www.ietf.org/	0612	2523;3513
+pptp	Point-to-Point Tunneling Protocol (PPTP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc2637	https://www.ietf.org/	0612	2523;3513
+pppoe	PPP over Ethernet (PPPoE)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc2516	https://www.ietf.org/	0612	2523;3513
+gre	Generic Routing Encapsulation (GRE)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc2784	https://www.ietf.org/	0612	2523;3513
+ipsec	Security Architecture for the Internet Protocol (IPsec)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc4301	https://www.ietf.org/	0612	2523;3513
+vxlan	Virtual eXtensible Local Area Network (VXLAN)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc7348	https://www.ietf.org/	0612	2523;3513
+ospf	Open Shortest Path First (OSPF)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc2328	https://www.ietf.org/	0612	2523;3513
+is-is	Intermediate System to Intermediate System (IS-IS), in IP environments	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc1195	https://www.ietf.org/	0612	2523;3513
+rip	Routing Information Protocol version 2 (RIP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc2453	https://www.ietf.org/	0612	2523;3513
+eigrp	Enhanced Interior Gateway Routing Protocol (EIGRP)	protocol	Cisco Systems (published through the IETF as informational)	https://datatracker.ietf.org/doc/html/rfc7868	https://www.ietf.org/	0612	2523;3513
+bgp	Border Gateway Protocol 4 (BGP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc4271	https://www.ietf.org/	0612	2523;3513
+vrrp	Virtual Router Redundancy Protocol (VRRP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc5798	https://www.ietf.org/	0612	2523;3513
+dhcp	Dynamic Host Configuration Protocol (DHCP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc2131	https://www.ietf.org/	0612	2523;3513
+ntp	Network Time Protocol version 4 (NTP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc5905	https://www.ietf.org/	0612	2523;3513
+sftp	SSH File Transfer Protocol (SFTP)	protocol	IETF (secsh working group draft)	https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-13	https://www.ietf.org/	0612	2522;2523
+git-protocol	Git wire protocol	protocol	The Git project	https://git-scm.com/docs/protocol-v2	https://git-scm.com/	0613	2512;2522
+mysql-protocol	MySQL client/server protocol	protocol	Oracle (MySQL)	https://dev.mysql.com/doc/dev/mysql-server/latest/PAGE_PROTOCOL.html	https://dev.mysql.com/	0612	2521;2522
+ethernet	Ethernet (IEEE 802.3)	protocol	IEEE 802	https://www.ieee802.org/3/	https://www.ieee802.org/	0612;0714	2523;3513
+dot1q	VLAN bridging (IEEE 802.1Q)	protocol	IEEE 802	https://1.ieee802.org/	https://www.ieee802.org/	0612;0714	2523;3513
+stp	Spanning Tree protocols (IEEE 802.1D / 802.1Q)	protocol	IEEE 802	https://1.ieee802.org/	https://www.ieee802.org/	0612;0714	2523;3513
+lldp	Link Layer Discovery Protocol (IEEE 802.1AB)	protocol	IEEE 802	https://1.ieee802.org/	https://www.ieee802.org/	0612;0714	2523;3513

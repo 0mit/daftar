@@ -35,5 +35,7 @@ jobs:
         run: python3 test/reform.py
       - name: "positions: addresses and ports are places"
         run: python3 test/positions.py
+      - name: "shape: a system knows its own shape; planes; the stack rooted in the fields of knowledge"
+        run: python3 test/shape.py
       - name: "public: a repository carries the language, never a garden"
         run: python3 test/public.py

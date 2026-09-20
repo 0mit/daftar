@@ -528,6 +528,95 @@ def check_sequence_figure(_an, _a, _fig):
     if _sys != 'none' and _sys not in _sdims:
         errors.append(f"aspect '{_an}': domain.systems '{_sys}' is neither `none` nor a dimension of `anchor_systems` {sorted(d for d in _sdims if d)}")
 
+# --- a system knows its own shape (std-vocab 15.0) -----------------------------------------------------------------
+# The gate checks the SHAPE a system declares, never its use: that what a row names exists, that nesting never loops,
+# that a metric level names a real unit, and that a row's own restrictions are ones its figure offers and only NARROW
+# its aspect's. Which registries hold systems is declared (`system_registries`), so none is named here.
+def _systems():
+    out = {}
+    for _sr in (std_fm.get('system_registries') or []):
+        for _row in (registry(_sr.get('registry')) or []):
+            if isinstance(_row, dict) and _row.get(_sr.get('key')):
+                out[_row[_sr['key']]] = (_sr['registry'], _row)
+    return out
+
+
+def check_system_structure():
+    _sys = _systems()
+    if not _sys:
+        return
+    _units = {u.get('unit'): u for u in (registry('units') or []) if isinstance(u, dict)}
+    _seq = next((f for f in (registry('figures') or []) if isinstance(f, dict) and f.get('figure') == 'sequence'), {})
+    _by_dim = {}
+    for _a in (registry('aspects') or []):
+        if isinstance(_a, dict) and isinstance(_a.get('domain'), dict) and _a['domain'].get('systems') not in (None, 'none'):
+            _by_dim[_a['domain']['systems']] = _a
+    _graph = {}
+    for _name, (_reg, _row) in sorted(_sys.items()):
+        _w = f"VOCAB {_reg}.{_name}"
+        for _key in ('within', 'resolves_through'):
+            _v = _row.get(_key)
+            for _t in (_v if isinstance(_v, list) else [_v] if _v else []):
+                if _t not in _sys:
+                    errors.append(f"{_w}: `{_key}` names '{_t}', which is no declared system {sorted(_sys)[:6]}…")
+                _graph.setdefault(_name, set()).add(_t)
+        _lv = _row.get('levels')
+        if isinstance(_lv, list):
+            _names = [l.get('level') if isinstance(l, dict) else None for l in _lv]
+            if None in _names or len(set(_names)) != len(_names):
+                errors.append(f"{_w}: `levels` must be a list of {{level: <name>}} with no name twice — got {_lv}")
+            for l in _lv:
+                if isinstance(l, dict) and l.get('unit') is not None and l['unit'] not in _units:
+                    errors.append(f"{_w}: level '{l.get('level')}' says it is metric in unit '{l['unit']}', which is no "
+                                  f"row of `units` {sorted(_units)} — a level with no fixed length (a month) names no unit")
+        elif isinstance(_lv, dict):
+            if not (isinstance(_lv.get('from'), int) and isinstance(_lv.get('to'), int) and _lv['from'] <= _lv['to'] and _lv.get('by')):
+                errors.append(f"{_w}: counted `levels` need {{by, from, to}} with from <= to — got {_lv}")
+        elif _lv not in (None, 'open'):
+            errors.append(f"{_w}: `levels` is a list of named levels, a counted range {{by, from, to}}, or `open` — got {_lv!r}")
+        if _row.get('neighbours') not in (None, 'none', 'counted', 'metered'):
+            errors.append(f"{_w}: `neighbours` is none | counted | metered — got {_row.get('neighbours')!r}")
+        _r, _asp = _row.get('restrictions') or {}, _by_dim.get(_row.get('dimension'))
+        for _k, _val in _r.items():
+            if _k not in ('lines', 'metered', 'order', 'ends'):
+                errors.append(f"{_w}: restriction `{_k}` is not one the sequence figure offers (lines, metered, order, ends)")
+            elif _k == 'order' and _val not in (_seq.get('order_values') or []):
+                errors.append(f"{_w}: restrictions.order '{_val}' not in {_seq.get('order_values')}")
+            elif _k == 'ends' and _val not in (_seq.get('ends_values') or []):
+                errors.append(f"{_w}: restrictions.ends '{_val}' not in {_seq.get('ends_values')}")
+            elif _k == 'metered' and _val != 'none' and _val not in {u.get('dimension') for u in _units.values()}:
+                errors.append(f"{_w}: restrictions.metered '{_val}' is no dimension any unit measures")
+            elif _k == 'lines' and not (_val == 'open' or (isinstance(_val, int) and _val > 0)):
+                errors.append(f"{_w}: restrictions.lines is a positive integer or `open` — got {_val!r}")
+        if _asp:
+            # NARROW, NEVER WIDEN. A system may be more definite than its aspect; it may not contradict it.
+            _widens = []
+            if _asp.get('order') == 'total' and _r.get('order') not in (None, 'total'):
+                _widens.append(f"order {_r['order']} under an aspect that is total")
+            if _asp.get('order') == 'partial' and _r.get('order') == 'none':
+                _widens.append("order none under an aspect that is at least partial")
+            if _asp.get('ends') == 'bounded' and _r.get('ends') not in (None, 'bounded'):
+                _widens.append(f"ends {_r['ends']} under an aspect that is bounded")
+            if isinstance(_asp.get('lines'), int) and _r.get('lines') not in (None, _asp['lines']):
+                _widens.append(f"lines {_r['lines']} under an aspect with exactly {_asp['lines']}")
+            if _asp.get('metered') not in (None, 'none') and _r.get('metered') not in (None, _asp['metered']):
+                _widens.append(f"metered {_r['metered']} under an aspect metered in {_asp['metered']}")
+            for _m in _widens:
+                errors.append(f"{_w}: its restrictions WIDEN aspect '{_asp.get('aspect')}' — {_m}. A system narrows its aspect")
+    for _cyc in _cycles({k: sorted(v) for k, v in _graph.items()}):
+        errors.append(f"VOCAB systems: nesting loops — {' -> '.join(_cyc)}. `within` and `resolves_through` are walked, so they end")
+
+
+# --- a row of one registry names a row of another (std-vocab 15.0) ---------------------------------------------------
+def check_registry_links():
+    for _l in (std_fm.get('registry_links') or []) + (vocab_fm.get('registry_links') or []):
+        _to = {str(r.get(_l.get('take'))) for r in (registry(_l.get('to')) or []) if isinstance(r, dict)}
+        for _row in (registry(_l.get('from')) or []):
+            if isinstance(_row, dict) and _row.get(_l.get('field')) is not None and str(_row[_l['field']]) not in _to:
+                errors.append(f"VOCAB {_l['from']}: a row's `{_l['field']}` names '{_row[_l['field']]}', which is no "
+                              f"{_l['take']} of `{_l['to']}` — a link between registries is resolved like any other")
+
+
 def check_aspect_sanity():
     _keys = {}
     for _an, _a in ASPECTS.items():
@@ -1055,13 +1144,13 @@ def ectl_on_aspect(e):
 
 
 def _cell_holds(e, cell):
-    """Does this entry sit IN the cell? A `cross` cell reads each aspect's EFFECTIVE position (stated, else the
-    declared default) and, FOR NOW, nothing else — exactly what `cross_aspect` could see. That blindness is the
-    known over-fire on loopback endpoints (the cell cannot see `exposure`); lifting it changes verdicts, so it is
-    a later, separately ratified step and not part of proving this form equivalent."""
+    """Does this entry sit IN the cell? EVERY attribute is visible (15.0): an aspect attribute at its effective
+    position, any other as stated, else as `default_from` reads it. `when` names a value, a LIST of values, or a
+    `{starts_with}`. Until 15.0 a verdict cell saw only aspect positions, which is why a cleartext-and-required
+    surface on LOOPBACK warned for six weeks: the cell could not see `exposure`."""
     for attr, (how, want) in cell['when'].items():
-        have = e.eff.get(attr) if cell['phase'] == 'cross' else e.entry.get(attr)
-        if how == 'is' and have != want:
+        have = e.eff[attr] if attr in e.eff else effective(e, attr)
+        if how == 'is' and (have not in want if isinstance(want, list) else have != want):
             return False
         if how == 'starts' and not str(have or '').startswith(str(want)):
             return False
@@ -1081,7 +1170,7 @@ def _cells(e, phase):
         sink = errors if cell['severity'] == 'error' else warns
         if phase == 'cross':
             sink.append(f"{e.base}: {e.ref} is {cell['origin'].upper().replace('_', ' ')} — "
-                        + ', '.join(f'{k}:{v[1]}' for k, v in cell['when'].items())
+                        + ', '.join(f"{k}:{e.eff[k] if k in e.eff else effective(e, k)}" for k in cell['when'])
                         + f" — {cell['why'] or 'the two positions do not sit together'}")
             continue
         (attr, (_how, want)), = cell['when'].items()
@@ -2387,6 +2476,10 @@ PLIES = (
      "the value types the schemas name are declared in the law"),
     (check_law_extents,
      "an extent the LAW itself writes is judged by the same rule as one on a bean"),
+    (check_system_structure,
+     "a system's declared shape: what it names exists, nesting ends, a metric level has a unit, restrictions narrow"),
+    (check_registry_links,
+     "a row that names a row of another registry is resolved, like any other link"),
     (check_aspect_sanity,
      "an aspect is a closed figure — check the figure before using its positions"),
     (check_extends_pin,
