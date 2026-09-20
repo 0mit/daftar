@@ -1454,3 +1454,58 @@ sequence is general, and time and place are restrictions of it with different di
 are declared as two terms rather than one because what they are ASKED is different — where a being is
 found, and when something happened — and a single term serving both would have to be read twice.
 
+## doc:MERGE.md
+
+v0.3 — synthesized from 3 independent high-level reviews. Spec is final; implementation is phased (§15).
+
+## doc:MERGE.md#3
+
+The provenance/truth-status record and the guard that an `inferred` value may never auto-override an
+`asserted-by-human` one were **promoted into MODEL.md**, which is their owner. This section restated them.
+
+## doc:MERGE.md#4.1
+
+Since P4 (2026-08-02, human-ratified) an anchor establishes identity iff it carries `establishing: true`.
+`class` is a hint at why and decides nothing. This section held the pre-P4 table that made `class`
+decisive; it was **deleted rather than annotated**, because a revoked rule left in a spec is read as law
+by whoever finds it first. Git holds it.
+
+## doc:MERGE.md#4.5
+
+The exact rule that stood here was expressed entirely in terms of "hardware/logical fuse edges", which
+§4.1 above revoked. Rewriting it against `establishing:` is real work and is not attempted in prose that
+nothing checks; `bin/dmmerge.py` is the implementation, and it now reads the flag.
+
+(The section was headed: Auto vs user-assisted — deleted.)
+
+## doc:MERGE.md#4.6
+
+The three rules were added 2026-08-02 (operator-directed, after the collision was found to silently drop a bean).
+
+## doc:MERGE.md#5.1
+
+(2026-08-02, operator-directed.) Until this date it
+gathered `owns`/`attributes`/`details` plus seven keys it handled explicitly and **silently dropped the
+other 31** the corpus uses — `nature`, both ownership arcs, `capabilities`, `analysis_cache`,
+`code_paths`, `registration`, the whole §4 relation algebra, even `title` and `summary`. Invariant 1 says
+the merge drops no fact; it dropped most of them, and no test could fail because the fixtures were shaped
+like the implementation rather than like the model.
+
+`kind` used to emit a list, which `dmcheck` cannot resolve.
+
+## doc:MERGE.md#5.2
+
+(2026-08-02, operator-directed.) `dmmerge` converged two gardens' data while their TYPE SYSTEMS stayed divergent. A merged corpus could
+therefore hold a bean of a kind the merged law never declared, or a bean in breach of an obligation the
+garden that wrote it had never adopted — checked by nobody, because each garden's gate only ever saw its
+own half. Promoting kinds to Tier-0 shrank this; it did not close it.
+
+## doc:MERGE.md#15
+
+The P1-P4 gates named here were all shipped, and their numbering **collides head-on** with the v2 P0-P7d
+used by `log/journal.md`, `test/golden.py`'s section headers and both design beans. Two numbering schemes
+in one repo is a trap for a cold reader, so this one is deleted rather than renumbered. What actually
+happened is in the journal.
+
+(The section was headed: Implementation phasing — superseded.)
+
