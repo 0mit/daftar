@@ -1247,6 +1247,15 @@ a fact that can disagree with itself, which is the argument this vocabulary alre
 refusing a direction aspect. The chain is walkable both ways from `prev` plus list order, which is
 what "walkable all ways" actually required.
 
+## system_shape.checked_by
+
+A form that a well-used tool already checks completely is checked by that tool. The `ipv4` row carried a pattern that
+admitted `256.1.1.1`; tightened by hand, it was still a copy — of a validator the standard library has shipped for
+years, which the `ip` anchor beside it had always used, and which the software this language describes uses too. A
+hand-written copy of a validator is wrong in ways nobody has found yet. So a row names the check or states a pattern,
+never both, and the names are a closed list the tools must actually carry. The library's OWN spelling is the one form:
+that is what makes two gardens' addresses comparable as text, which is how a ledger compares them.
+
 ## schema_language.attr_domains.entries
 
 The interpreter judged the entries of a term and not the entries of a list INSIDE an entry, so a datum's records — the

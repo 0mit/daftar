@@ -130,18 +130,9 @@ def load_leaf_orders():
 LEAF_ORDERS = load_leaf_orders()
 
 
-def load_system_patterns():
-    """{anchor system: its ONE canonical pattern}, read from the law. A leaf order may apply to every value
-    that is a position in a system (9.3), so the order follows what a value IS, not what its key is called."""
-    path = os.path.join(ROOT, 'seed', 'std-vocab.md')
-    if not os.path.exists(path):
-        return {}
-    fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
-    return {r['system']: r.get('pattern') for r in (fm.get('anchor_systems') or [])
-            if isinstance(r, dict) and r.get('system') and r.get('pattern') not in (None, 'none')}
-
-
-SYSTEM_PATTERNS = load_system_patterns()
+SYSTEM_ROWS = {r['system']: r for r in ((dmparse.loads(dmparse.read(os.path.join(ROOT, 'seed', 'std-vocab.md'))[0] or '') or {})
+                                        .get('anchor_systems') or []) if isinstance(r, dict) and r.get('system')} \
+    if os.path.exists(os.path.join(ROOT, 'seed', 'std-vocab.md')) else {}
 
 
 def load_time_systems():
@@ -217,8 +208,7 @@ def leaf_order(key, val):
         if rule.get('every_calendar') and isinstance(val, str) and _calendar_of(val):
             return rule.get('order', 'none')
         for _sys in [rule.get('system')] + list(rule.get('also_systems') or []):
-            pat = SYSTEM_PATTERNS.get(_sys)
-            if pat and isinstance(val, str) and re.match(pat, val, re.ASCII):
+            if isinstance(val, str) and dmparse.in_form(SYSTEM_ROWS.get(_sys), val):
                 return rule.get('order', 'none')
     return 'none'
 
