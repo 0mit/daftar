@@ -37,7 +37,7 @@ nothing.
 identity:
   status: confirmed              # confirmed | provisional (anchorless/weak → provisional)
   anchors:
-    - { key: wg_pubkey, value: "…", class: hardware, scope: global, observed: 2026-07-30, until: null, authority: operator-asserted }
+    - { key: serial, value: "…", class: hardware, establishing: true, scope: global, observed: 2026-07-30, until: null, authority: operator-asserted }
   replaces: { bean: <old-device> }   # device-swap lifecycle link (optional)
   aka: [host-a, laptop-7]            # garden-local ids seen for this object
 ```
@@ -164,7 +164,7 @@ defined there.
 - Exceptions gain `status: proposed|acked`, `proposed_by`, `acked_by`.
 - **Park-and-proceed:** the AI records a *proposed* resolution **plus the related+sibling neighborhood it would have shown**, does everything safe around it, and the human ratifies a **single pending-decisions queue** later (no blocking for overnight/batch merges).
 - **Precedent auto-applies:** once acked, it generalizes to matching cases without re-prompting; only a genuinely novel neighborhood re-triggers the protocol.
-- **Pending vs clean:** an unresolved conflict **commits** (lossless capture) but the seed is marked **unclean** (`status: at-risk` + `merge_open:`); the gate **warns**, never hard-fails. Determinism: a seed is reproducible **post-ratification**; a pre-ratification seed is legitimately **pending**.
+- **Pending vs clean:** an unresolved conflict **commits** (lossless capture) but the seed is marked **unclean** (`merge_open: true` + `merge_conflicts:`, never `status`, which is a merged term of its own); the gate **warns**, never hard-fails. Determinism: a seed is reproducible **post-ratification**; a pre-ratification seed is legitimately **pending**.
 
 ## 11. Determinism — hard guarantee vs soft metric
 - **Hard (merge-determinism):** delivered by the CRDT join (§5) + JCS canonical form (§6) + purged timestamps + deterministic seed-id (§4.4).

@@ -19,7 +19,7 @@ Two artifacts do two different jobs and neither can do both:
 | checked by | `test/germinate.py`, positively **and** negatively, in a real git repo | `bin/dmcheck.py` on every commit |
 | carries an owner | no | yes — both arcs |
 
-A seed *bean* cannot be what you copy: `owned_by` and `responsibility` are required on `kind: product`,
+A seed *bean* cannot be what you copy: `owned_by` and `responsibility` are required on every bean,
 and the crown form is reserved to `kind: person`, so the bean necessarily carries an edge to a person in
 *this* estate. A prose `SEED.md` cannot be it either: `seed/` sits outside the gate's glob, so nothing
 would check it, and unchecked prose is precisely what rotted everywhere else in this repo.

@@ -88,7 +88,7 @@ natures:
   - nature: living
     meaning: "conatus — a being that strives to persist as itself: persons, and running instances while alive"
     crown: love
-    establishing_anchor_family: [logical, personal]
+    establishing_anchor_family: [logical]
     min_establishing_anchors: 1
 # == ANCHOR SYSTEMS: the systems a POSITION may be stated in ==
 # == A SYSTEM KNOWS ITS OWN SHAPE ==
@@ -960,16 +960,6 @@ leaf_orders:
     every_calendar: true
     why: "a calendar reading is absorbed by a finer one it CONTAINS (`2026-09-19` by `2026-09-19 22:50+03:00`), compared by the parts actually written and in the coarser reading's own offset, never as strings. Every other pair is unordered (the `time` aspect's order is partial): two readings that do not nest stay a disagreement for a person. The absorbed reading is kept in provenance, as every subsumed value is."
 vacancies:
-  - at: status.values
-    position: at-risk
-    reason: prediction
-    why: >
-      No bean is at-risk today, and until 2026-08-08 nothing said so — the position sat unoccupied and
-      unaccounted while four of the other five were in use. It surfaced only because adding `closed` sent
-      a reader through the enum counting occupants, which is the reverse gate's own argument arriving by
-      hand rather than by tool. Kept because it is the one status that asks for ACTION rather than
-      describing a state: a being still relied upon and known to be failing. An estate that keeps a risk
-      register yet never marks a bean at-risk has an inventory nobody consults, which is worth noticing.
   - at: "registry:storage_formats"
     position: ntfs
     reason: prediction
@@ -1574,7 +1564,7 @@ terms:
     context_keys: ["status"]
     schema:
       path: status
-      values: [active, planned, at-risk, deprecated, draft, closed]
+      values: [active, planned, deprecated, draft, closed]
     merge: { cardinality: single, order: none }
   - term: identity_status
     meaning: "whether a bean's identity is established or still provisional (MERGE.md §4)"
@@ -1583,11 +1573,11 @@ terms:
       path: identity.status
       values: [confirmed, provisional]
   - term: anchor_class
-    meaning: "the HINT at why an anchor establishes or corroborates. Since P4 it decides nothing — `establishing` does — but it remains useful provenance about the KIND of evidence."
+    meaning: "the KIND of evidence an anchor is: hardware (matter), logical (an id, a name, a key pair), network (an address), role (a job that moves between beings). The nature's family is stated in these classes, so the class of an establishing anchor is what the family rule reads; a term that governs the key declares it"
     context_keys: ["identity.anchors[].class"]
     schema:
       path: identity.anchors[].class
-      values: [hardware, logical, network, role, none]
+      values: [hardware, logical, network, role]
   - term: anchor_authority
     meaning: "how much weight an anchor's value carries on merge"
     context_keys: ["identity.anchors[].authority"]
@@ -1647,7 +1637,6 @@ terms:
       kebab-case <cache_type> key — no VOCAB change, no gate change, no bean restructure is ever required.
     merge: { cardinality: multi, order: by-cache-type }
     exceptions: []
-    promotion: { status: candidate, note: "strongly general — every garden with code wants typed, staleness-keyed, re-usable analysis. Propose to std-vocab in the P6 promotion review." }
   - term: nature
     meaning: "the ontological category of a being; routes it to the correct branch of the ownership crown"
     context_keys: ["nature"]
@@ -1657,13 +1646,12 @@ terms:
       required: true
       must_equal_kind_attr: of_nature
     merge: { cardinality: single, order: none }
-    promotion: { status: candidate, note: "universal ontology (Spinoza crown) — review in attrs-to-universal session" }
   - term: owned_by
     meaning: "who owns a being, per facet; introduced (explicit) at a node and inherited down the tree"
     context_keys: ["owned_by"]
     schema:
       shape: mapping
-      required_on_kinds: [product, codebase, instance, org]
+      required: true
       alt_form: { key: via, ref_fields: [via] }
       key_form: values_from:facets
       entry_one_of: [owner, contract, external, crown]
@@ -1683,7 +1671,6 @@ terms:
       external:  "owned_by: { <facet>: { external: '<who>' } }                  # owned OUTSIDE this garden (third-party software, a vendor); names the owner in prose because they are not a managed object here"
       crown:     "owned_by: { <facet>: { crown: <branch> } }                     # ownership TERMINATES at the axiom; the branch must be the one this bean's nature routes to"
     merge: { cardinality: multi, order: by-facet }
-    promotion: { status: candidate, note: "universal — review in attrs-to-universal session" }
   - term: responsibility
     meaning: "who ANSWERS FOR this being, per facet — the arc that makes an ownership claim actionable"
     context_keys: ["responsibility"]
@@ -1709,7 +1696,6 @@ terms:
       parity: "every facet with an OWNER must have a HOLDER and vice versa. An ownership claim nothing answers for is a loose end; a duty nobody owns is orphaned."
       not_the_same_as_ownership: "they are opposite arcs, not synonyms. A rented VPS is owned by the provider and answered for by the operator; that is the normal case, not an exception."
     merge: { cardinality: multi, order: by-facet }
-    promotion: { status: candidate, note: "prerequisite for promoting owned_by (see design-std-vocab-promotion B3) — owned_by cannot go to Tier-0 while its external form dangles" }
   - term: facets
     meaning: "the typed lattice of ownership facets used by owned_by"
     context_keys: ["facets"]
@@ -1718,7 +1704,6 @@ terms:
       distinguishable: "each facet has a crisp boundary; resolve overlap by a depends_on edge or boundary refinement, never double-coverage"
       dependency: "facets form a DAG via depends_on"
       recursive: "a facet may decompose into sub-facets (e.g. technical -> {operational, architectural, data})"
-    promotion: { status: candidate }
   - term: instance_of
     meaning: "the code product a running instance (token) instantiates"
     context_keys: ["instance_of"]
@@ -1730,7 +1715,6 @@ terms:
         bean:  { required: true, in: id }
     form: "instance_of: {bean: <product|codebase>}"
     merge: { cardinality: single, order: none }
-    promotion: { status: candidate }
   - term: lives_in
     meaning: "the immediate habitat a token lives in/on; recursive (habitat may itself be a token); a DAG"
     context_keys: ["lives_in"]
@@ -1743,7 +1727,6 @@ terms:
         bean:  { required: true, in: id }
     form: "lives_in: {bean: <habitat>}   # follow the chain for the full stack"
     merge: { cardinality: single, order: none }
-    promotion: { status: candidate, note: "universal containment (vps-on-provider, container-on-host, addon-in-odoo) — review later" }
   - term: provides_habitat
     meaning: "the kind of habitat this being offers to the tokens that live in it"
     context_keys: ["provides_habitat"]
@@ -1751,7 +1734,6 @@ terms:
       shape: scalar
       required_on_targets_of: lives_in
     merge: { cardinality: single, order: none }
-    promotion: { status: candidate, note: "universal containment typing — review at P6" }
   - term: part_of
     meaning: "the whole this being is a component of (composition; a being is part_of at most one whole)"
     context_keys: ["part_of"]
@@ -1762,7 +1744,6 @@ terms:
       attrs:
         bean:  { required: true, in: id }
     merge: { cardinality: single, order: none }
-    promotion: { status: candidate, note: "universal composition — review at P6" }
   - term: creator
     meaning: "the being that made this being"
     context_keys: ["creator"]
@@ -1808,13 +1789,13 @@ terms:
     merge: { cardinality: single, order: none }
     canonical: "IDNA + lowercase"
   - term: mac
-    meaning: "an IEEE MAC address of a NIC"
+    meaning: "an IEEE MAC address of a NIC. Matter when burned into a physical NIC, and then it establishes; a virtual NIC's is assigned by the hypervisor and only corroborates — the nature decides"
     context_keys: ["mac", "*_mac"]
     schema:
       governs_anchor: mac
       value_pattern: '^([0-9a-f]{2}:){5}[0-9a-f]{2}$'
       canonical_note: "lowercase colon form"
-    anchor: { class: hardware, establishing: true }
+    anchor: { class: hardware }
     merge: { cardinality: set, order: none }
     canonical: "lowercase colon form"
     exceptions:
@@ -1828,13 +1809,13 @@ terms:
     anchor: { class: hardware, establishing: true }
     merge: { cardinality: single, order: none }
   - term: wg_pubkey
-    meaning: "a WireGuard public key (crypto identity of an interface/peer)"
+    meaning: "a WireGuard public key: what a peer proves itself with. A credential, not matter — it is copied when a machine is migrated and regenerated on the same one — so it is logical, and the nature decides whether it establishes"
     context_keys: ["wg_pubkey"]
     schema:
       governs_anchor: wg_pubkey
       value_pattern: '^[A-Za-z0-9+/]{43}=$'
       canonical_note: "exact base64, 44 characters"
-    anchor: { class: hardware, establishing: true }
+    anchor: { class: logical }
     merge: { cardinality: single, order: none }
     canonical: "exact base64 (44 chars)"
   - term: openpgp_fingerprint
@@ -1853,7 +1834,7 @@ terms:
       governs_anchor: ssh_key_fingerprint
       value_pattern: '^SHA256:[A-Za-z0-9+/]{43}$'
       canonical_note: "`SHA256:` and 43 base64 characters, unpadded"
-    anchor: { class: hardware, establishing: true }
+    anchor: { class: logical }
     merge: { cardinality: set, order: none }
   - term: emp_id
     meaning: "an employer-assigned unique employee identifier"
@@ -1904,10 +1885,10 @@ terms:
     anchor: { class: logical, establishing: true }
     merge: { cardinality: single, order: none }
   - term: doc_id
-    meaning: "the logical identity of a document: the id its home assigns (a document store, a wiki), or an id the estate mints once"
+    meaning: "the logical identity of a document: the id its home assigns (a document store, a wiki, a design tool's file), or an id the estate mints once. Whether it ESTABLISHES is the bean's to say: it establishes a document bean and corroborates a design the document is one rendering of"
     context_keys: ["doc_id"]
     enforced_by: none
-    anchor: { class: logical, establishing: true }
+    anchor: { class: logical }
     merge: { cardinality: single, order: none }
   - term: manifest_id
     meaning: "the logical identity a manifest or package descriptor declares for the thing it describes (an add-in id, a bundle id, a module's technical name). Whether it ESTABLISHES is the bean's to say: a module's name is unique within its repository and corroborates beside the git_remote that establishes"
@@ -1916,7 +1897,7 @@ terms:
     anchor: { class: logical }
     merge: { cardinality: single, order: none }
   - term: instance_id
-    meaning: "the logical identity a provider or a hypervisor assigns a virtual machine (an OpenStack instance UUID, a cloud instance id). It is the VM's, not the matter's: it lapses with the VM"
+    meaning: "the logical identity of a running instance: for an instance of a program, its deployment coordinate (`<product>@<host>[/<db>]`); for a virtual-host, the id its hypervisor or provider assigns. It is the instance's, not the matter's: it lapses at teardown"
     context_keys: ["instance_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true }
@@ -1937,7 +1918,6 @@ terms:
     meaning: "a bean/mapping identifier = its filename stem (garden-local; NOT identity)"
     context_keys: ["bean", "mapping"]
     enforced_by: core
-    anchor: { class: none, establishing: false }
     handling: { format: "kebab-case; quote if numeric/reserved; kind-prefixed for high-cardinality kinds", unique: "per (space,base)" }
     exceptions:
       - { case: "duplicate legit human names (two hosts both called 'file-server')", decision: "ids disambiguate via kind-prefix+slug; anchor to serial/asset-tag; title may repeat (warn)", why: "labels collide; ids must not", acked: 2026-07-31 }
@@ -1946,19 +1926,10 @@ terms:
     meaning: "the LINK FORM {bean|mapping: <id>[, field: <key>]} — a pointer to the single owner of a value. The relations that USE this form declare themselves (see refs, depends_on, and a garden's own edges)."
     context_keys: []
     enforced_by: core
-    anchor: { class: none, establishing: false }
     handling: { resolve: "target exists in right space; field present in target owns/attributes/details; shallow (ref-to-ref=warn)", graph: "acyclicity is declared PER RELATION via schema.dag — not asserted here for a fixed list of sections (narrowed at 2.0)" }
     exceptions:
       - { case: "'bean' as a plain DATA key", decision: "links only inside refs/consumes/depends_on", why: "reserved word collides with data", acked: 2026-07-31 }
       - { case: "YAML-coerced ref target (bean: no→False)", decision: "non-string target = error; quote the id", why: "coerced targets silently skipped", acked: 2026-07-31 }
-  - term: shell-log
-    meaning: "PROCESS term — how agent shell executions are logged: format + kept/summarized/discarded"
-    context_keys: ["log/journal.md", "log/*"]
-    enforced_by: none
-    anchor: { class: none, establishing: false }
-    handling: { classes: { state-change: "KEEP full (cmd+purpose+outcome)", one-shot-recon: "SUMMARIZE one line", repeated-discardable: "DISCARD per-iteration; keep pattern+final" } }
-    exceptions:
-      - { case: "repeated/discardable output (monitor ticks, polling, retries)", decision: "log pattern+final once", why: "per-iteration noise buries signal", acked: 2026-07-31 }
   # == THE BEAN-GRAMMAR AND FACT-SECTION KEYS ==
   - term: kind
     meaning: "which kind of being this bean records; a refinement of its nature, from the `kinds` registry"
@@ -2276,48 +2247,26 @@ kinds:
   - kind: codebase
     of_nature: metaphysical
     meaning: "a source-code tree managed as one object (a repo / Odoo addon / plugin project)."
-    required: "code_paths (>=1 own-source entry) — enforced by the gate via the code_paths term."
-    schema: "owns: repo/git_remote, stack, entrypoint, build/deploy target, api_surface (routes it exposes OR endpoints it consumes). Establishing anchor: git_remote (preferred) or a logical manifest/code id."
-    min_anchors: "1 establishing (git_remote or a logical *_id) → else identity.status: provisional + open:"
   - kind: product
     of_nature: metaphysical
     meaning: "an umbrella bean tying a product's codebases + business context together; not itself code. A THIRD-PARTY product is recorded here for one reason only: so its per-host deployments have a TYPE to be instances of. That rationale belongs to this kind and is stated once — a product bean should describe the product, not re-explain why it exists. A product is a LOGICAL code unit — its mapping to storage (git repos) is many-to-many (sub-git or multi-git); git_remote is a source anchor, NOT product identity."
-    schema: "owns: what-it-is, components (refs to codebase beans), business owner, deployment. nature: metaphysical; owned_by (explicit or via parent). Establishing anchor: a logical product_id."
-    min_anchors: "1 establishing (logical product_id)"
   # == being-kinds for the ownership / type-token / habitat model ==
   - kind: org
     of_nature: metaphysical
     meaning: "an organization / juridical person (company) that owns beings."
-    schema: "owns: business context. nature: metaphysical; owned_by: explicit facet-owners (legal/technical). Establishing anchor: a logical org_id or primary domain."
-    min_anchors: "1 establishing (logical org_id or domain)"
   - kind: person
     of_nature: living
     ownership_form: crown
-    meaning: "a human being who can own/steward other beings. nature: living."
-    schema: "identity anchor: email or a logical person_id. Persons are owned by love-while-alive via the crown axiom, so owned_by is NOT required on person."
-    min_anchors: "1 establishing (logical person_id or email)"
+    meaning: "a human being who can own/steward other beings."
   - kind: instance
     of_nature: living
-    meaning: "a running token — a deployment of a code product in a habitat; carries the runtime facts (db/config/state). Distinct being from its code product."
-    required: "instance_of (the product) + lives_in (the habitat) + owned_by (usually inherited via the product) — gate-enforced. nature: living."
-    schema: "owns: runtime facts (db name, config, endpoints, live state). Establishing anchor: a deployment coordinate (host x product x db)."
-    min_anchors: "1 establishing (deployment coordinate) -> else identity.status: provisional + open:"
+    meaning: "a running token — a deployment of a code product in a habitat, carrying the runtime facts. Distinct being from its code product; `instance_of` and `lives_in` are required on it."
   - kind: host
     of_nature: physical
     meaning: >
       A MACHINE THE ESTATE RUNS ON — matter of its own: bare metal, general-purpose or appliance. A virtual
-      machine is a `virtual-host` (19.0): it has no matter, and lapses at teardown. Widened at 7.0
-      when `vps` and `router` were retired into it, because both described something other than what the
-      being IS. `vps` described TENANCY, which `owned_by.legal.external` and `provides_habitat: linux-vm`
-      already carried between them — and the kinds registry had flagged this against itself since P3
-      ("D5 will re-read this as an instance living_on a provider"). `router` described a ROLE, which
-      `roles:` now carries and `treatments` now evidences. What survives is the one question a kind
-      should answer: this being is a machine.
-    roles_note: >
-      A host's ROLES are data, not kind. `treatments` is `required_on_roles: [router]`, so a machine
-      declaring the router role must still document what it does to traffic — the mechanical guarantee
-      `required_on_kinds: [router]` used to give is KEPT, and now reaches a machine that routes AMONG
-      OTHER THINGS, which a kind could never express.
+      machine is a `virtual-host`; a router is a host in the `router` role. What a kind answers is the one
+      question: this being is a machine.
   - kind: virtual-host
     of_nature: living
     meaning: >
@@ -2326,8 +2275,6 @@ kinds:
       serial, and it lapses at teardown. That is the living nature, as `instance` is. TENANCY is not what it is:
       a rented VM is owned `external` (the provider) and answered for here; a VM on the estate's own hypervisor
       is owned through it. Its habitat, where that is a bean, is `lives_in`.
-    schema: "owns: what a host owns (os, endpoints, storage, nics as the hypervisor presents them). Establishing anchor: a logical fqdn or a provider instance id. `lives_in` where the hypervisor is a bean of this garden."
-    min_anchors: "1 establishing (logical) -> else identity.status: provisional + open:"
   - kind: domain
     of_nature: metaphysical
     meaning: "a DNS domain — a name held by agreement with a registry, not a thing in space."
@@ -2343,14 +2290,9 @@ kinds:
   - kind: session
     of_nature: metaphysical
     meaning: "a bounded stretch of work with a start, any number of sync points, and a stop. Declared because sessions already exist in practice — handed off in prose, their times nowhere in data — and because they are what makes `timing` earn a resolution: a session is the one object whose position must be held finer than a day."
-    required: "timing (>=1 moment) — enforced by the gate via the timing term."
-    schema: "timing: start / sync / stop, each a position in a time anchor system at a stated unit. owns: what the session did. Establishing anchor: a logical session_id."
-    min_anchors: "1 establishing (logical session_id)"
   - kind: contract
     of_nature: metaphysical
     meaning: "a co-ownership agreement resolving multiple owners of ONE facet of ONE being (STRUCTURE ONLY for now — no instances)."
-    schema: "between: [ownerA, ownerB]; over: {bean, facet}; agreement_ref (provenance -> the prior agreement text); conflict_rule (deterministic, MERGE lattice); balance: ongoing. nature: metaphysical. Establishing anchor: a logical contract_id."
-    min_anchors: "1 establishing (logical contract_id)"
 ---
 # daftar — Tier-0 Universal Standard Vocabulary
 
@@ -2620,6 +2562,13 @@ The portable, estate-agnostic classification shared by every garden — the abst
   recipe had the same shape, because a virtual machine has no matter to anchor: `virtual-host`, `of_nature:
   living`, is a running machine-instance that lapses at teardown, as `instance` is; `host` is matter. This is the
   reading the kinds registry foresaw at P3 ("D5 will re-read this as an instance living_on a provider").
+  With it, the terms classed before there were natures: `wg_pubkey` and `ssh_key_fingerprint` are logical
+  credentials, `mac` establishes only matter, none of the three pins `establishing` — the family decides;
+  `anchor_class` decides again and loses `none`; `id` and `ref` carry no anchor block; `shell-log` is retired;
+  the living family is `[logical]` (`personal` named a class that never existed); `owned_by` is required on
+  every bean; `status` loses `at-risk`, which `risks.state` carries; the kinds rows are their nature and
+  meaning, the prose `schema`/`required`/`min_anchors` copies gone; and the promotion notes on terms that are
+  the standard are gone with them.
 - **18.3** (2026-09-20, proposed rule-change) — **who may reach a surface is a fact of its own.** `endpoints` gains
   `admitted_from` (prose): the named sources a surface admits, beside `exposure`, which says only where it is bound.
   The management-on-the-internet cell becomes `expects: [admitted_from]` instead of `verdict: in_breach`: it warns
