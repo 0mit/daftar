@@ -29,8 +29,10 @@ untagged clone works, but pins the garden to nothing anyone else can fetch; `ger
 ## 2. Grow the garden
 
 ```sh
-sh seed/germinate.sh ~/garden
+python3 seed/germinate.py ~/garden
 ```
+
+(`sh seed/germinate.sh ~/garden` does the same; it hands over to the Python.)
 
 The target must not exist. The script copies what `seed/LANGUAGE` declares — the vocabulary, the tools, the
 gate, the templates, `AGENTS.md` — makes the first commit as `germinate`, installs the gate as the pre-commit
@@ -70,6 +72,26 @@ the person decides something in the session — ratifies an identity anchor, app
 still yours, and the journal entry says who decided and in what words: `human (name) ratified, applied by
 agent (…)` is the shape this garden's own journal uses. Before you leave, write the journal entry the next
 agent will need — it may be of another make, with none of your context.
+
+## On Windows
+
+Everything here is Python and git, so it runs in PowerShell as it runs in a shell — with `python` for
+`python3`, backslashes or forward slashes as you like, and `$HOME` for `~`:
+
+```powershell
+git clone https://github.com/0mit/daftar.git $HOME\daftar
+cd $HOME\daftar
+git checkout (git tag -l 'v*' --sort=-v:refname | Select-Object -First 1)
+python seed\germinate.py $HOME\garden
+cd $HOME\garden
+git config user.name  "agent (<model>, <session>)"
+git config user.email "<the address the person chose>"
+python bin\dmcheck.py --all
+```
+
+The gate runs as a git hook; Git for Windows runs hooks with the shell it ships, and the hook takes
+`python3` or `python`, whichever the machine has. PyYAML: `pip install PyYAML`. A journal entry is written
+the same way: `python bin\dmjournal.py "<who>" "<what>" --body "- action: …"`.
 
 ## If you have no shell
 

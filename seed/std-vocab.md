@@ -2549,7 +2549,8 @@ The portable, estate-agnostic classification shared by every garden — the abst
   is known the way every fact does.** `journal.heading: stamped`: `bin/dmjournal.py` writes every heading from the
   clock and records it in the clone's git directory, and the gate refuses a heading a commit adds that the tool did
   not write. The form was checked since 10.0; the truth of the moment never was, and a writer typed the time before
-  reading it twice in one evening. And the anchor:
+  reading it twice in one evening. With the release: `seed/germinate.py` and `bin/install.py` — a garden grows
+  on Windows, where `sh` is not a given; the shell scripts hand over to them. And the anchor:
   `anchor_authority` (`scanned < operator-asserted < external`) was a second vocabulary for the one question
   `provenance_src` answers, and the two disagreed on twelve anchors of the first garden. It is retired: an anchor
   carries `provenance: { src, by, as_of }` where its source differs from the bean's, and nothing where it does not

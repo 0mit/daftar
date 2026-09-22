@@ -64,7 +64,9 @@ A person, written to prove a fresh garden can hold one.
 TMP = tempfile.mkdtemp(prefix='dmgerm-')
 G = os.path.join(TMP, 'newgarden')
 
-r = run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), G, cwd=ROOT)
+# THE IMPLEMENTATION IS PYTHON (20.0): `sh seed/germinate.sh` hands over to it, so a Windows machine with no
+# `sh` grows the same garden. Both paths are exercised: this garden by the Python, the examples garden by the sh.
+r = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), G, cwd=ROOT)
 check("germinate.sh grows a garden and its first gate run is clean",
       r.returncode == 0 and '0 error(s)' in r.stdout, (r.stdout + r.stderr)[-400:])
 # A NEW GARDEN STARTS QUIET. It started with 11 warnings about Tier-0 relations it had no reason to draw yet,
@@ -244,9 +246,9 @@ check("the release's hook and installer are committed executable (mode 100755)",
 _tracked = run('git', 'ls-files', cwd=G).stdout.split()
 _bin = [f for f in _tracked if f.startswith('bin/')]
 check("only daftar's own tools travel under bin/ — every bin/dm*.py, the hooks and the installer, nothing else",
-      _bin and all(re.match(r'^bin/(dm[a-z]*\.py|install\.sh|hooks/[^/]+)$', f) for f in _bin)
-      and 'bin/dmcheck.py' in _bin and 'bin/dmsafe.py' in _bin,
-      [f for f in _bin if not re.match(r'^bin/(dm[a-z]*\.py|install\.sh|hooks/[^/]+)$', f)][:10])
+      _bin and all(re.match(r'^bin/(dm[a-z]*\.py|install\.(sh|py)|hooks/[^/]+)$', f) for f in _bin)
+      and 'bin/dmcheck.py' in _bin and 'bin/dmsafe.py' in _bin and 'bin/install.py' in _bin,
+      [f for f in _bin if not re.match(r'^bin/(dm[a-z]*\.py|install\.(sh|py)|hooks/[^/]+)$', f)][:10])
 check("no bytecode is committed, and `.gitignore` travelled to keep it that way",
       not any('__pycache__' in f or f.endswith('.pyc') for f in _tracked) and '.gitignore' in _tracked,
       [f for f in _tracked if f.endswith('.pyc')][:5])

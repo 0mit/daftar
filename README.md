@@ -119,7 +119,8 @@ Four layers, each standing on the one beneath, and each read at a different time
 ## Start
 
 You need a coding agent with a shell and git — as of September 2026: Claude Code, Cursor, Codex CLI, Gemini
-CLI, GitHub Copilot's agent, Aider, and the like — and a place for a private git repository. The notebook is
+CLI, GitHub Copilot's agent, Aider, and the like, on Linux, macOS or Windows — and a place for a private git
+repository. The notebook is
 yours; nothing here ever sees it.
 
 Tell the agent:
@@ -182,7 +183,7 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 |---|---|
 | `INSTALL.md` | how a garden is grown, written for the agent that will grow it |
 | `seed/std-vocab.md` | the vocabulary — the law every garden pins |
-| `seed/germinate.sh`, `seed/LANGUAGE` | how a garden is grown, and what it receives |
+| `seed/germinate.py`, `seed/LANGUAGE` | how a garden is grown (Python, so on Windows too; `germinate.sh` hands over to it), and what it receives |
 | `bin/dmcheck.py` | the gate |
 | `bin/dm*.py` | the other tools — merge, upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
