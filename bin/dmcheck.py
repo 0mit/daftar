@@ -2433,8 +2433,9 @@ def check_staged_state():
         sc = [p for p in staged if p.startswith(DOCUMENTISH)]
         if sc and 'log/journal.md' not in staged:
             errors.append(f"state-change staged ({', '.join(sc[:3])}…) but log/journal.md not updated — provenance duty. "
-                          f"Append an entry naming what changed and why, e.g.\n"
-                          f"      ## <YYYY-MM-DD> · <human (name) | agent> · <one line>\n"
+                          f"Append an entry naming what changed and why. Its heading is a position in time, "
+                          f"read from the clock (`date '+%Y-%m-%d %H:%M%:z'`), e.g.\n"
+                          f"      ## <YYYY-MM-DD HH:MM+HH:MM> · <human (name) | agent (make)> · <one line>\n"
                           f"      - action: <what was done to {sc[0]}>")
         # ...and a RULE-CHANGE all the more so: it is human-ratified and must be logged DISTINCTLY.
         rc = [p for p in staged if p in LAW_DOCS or any(fnmatch.fnmatch(p, _pat) for _pat in LANGUAGE_PATTERNS)]
@@ -2470,7 +2471,7 @@ def check_staged_state():
             # THE HEADING IS A POSITION IN TIME (10.0). Only headings this commit ADDS: history is never rewritten.
             for _h in (l for l in jdiff.splitlines() if l.startswith('## ')):
                 if not journal_heading_ok(_h):
-                    errors.append(f"journal heading '{_h[:70]}' is not a position in time — write "
+                    errors.append(f"journal heading '{_h}' is not a position in time — write "
                                   f"{JOURNAL.get('heading_form')}, read from the clock (e.g. "
                                   f"`date '+%Y-%m-%d %H:%M%:z'`), not typed from memory")
         for p in staged:

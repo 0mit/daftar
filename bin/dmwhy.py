@@ -150,6 +150,11 @@ def _show(want):
             for f in ('meaning', 'why'):
                 if isinstance(node, dict) and node.get(f):
                     print(f"   LAW {f}: {str(node[f]).strip()}")
+            if isinstance(node, dict) and not (node.get('meaning') or node.get('why')):
+                # a block of positions (values_meaning, a registry row, an attrs map): the law's own words per key
+                for _k, _v in node.items():
+                    if isinstance(_v, (str, int, float, bool)):
+                        print(f"   LAW {_k}: {str(_v).strip()}")
             if not isinstance(node, (dict, list)):
                 print(f"   LAW: {node}")
         except KeyError:
