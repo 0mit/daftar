@@ -29,8 +29,15 @@ than merely caught, because they address a document by KEY instead of by offset,
 Fall back to the general form only when no operation fits:
     dmsafe.edit(path, lambda text: text.replace(...), allow_remove=['owns.stale_key'])
 
-CLI:
-    python3 bin/dmsafe.py --verify [path ...]     # parse-check documents (default: the whole garden)
+CLI — the same operations for a person at a shell; a block is read from standard input:
+    python3 bin/dmsafe.py count <path> <dotted>                       # measure first: how many places
+    python3 bin/dmsafe.py insert-after  <path> <key>   < block.yaml
+    python3 bin/dmsafe.py replace-block <path> <key>   < block.yaml
+    python3 bin/dmsafe.py remove-block  <path> <key>
+    python3 bin/dmsafe.py set-nested    <path> <dotted> --expect N   < block.yaml
+    python3 bin/dmsafe.py flow-set      <path> <dotted> <value> --expect N
+    python3 bin/dmsafe.py verify [path ...]                           # parse-check (default: the whole garden)
+Each write prints what it removed and what it added, as leaf paths; a refused edit says why and changes nothing.
 """
 import glob, os, re, sys
 
@@ -433,8 +440,50 @@ def verify(paths):
     return bad
 
 
+def _cli(argv):
+    """The operations at a shell. Returns an exit status."""
+    if not argv:
+        return None                       # no arguments: parse-check the garden, as it always did
+    if argv[0] in ('-h', '--help'):
+        print(__doc__); return 0
+    op, rest = argv[0], argv[1:]
+    expect = _MUST_STATE
+    if '--expect' in rest:
+        i = rest.index('--expect'); expect = int(rest[i + 1]); del rest[i:i + 2]
+    def _block():
+        b = sys.stdin.read()
+        if not b.strip():
+            sys.exit("dmsafe: the block comes on standard input, and it is empty")
+        return b
+    def _report(result):
+        removed, added = result
+        print(f"dmsafe: removed {removed or 'nothing'}; added {added or 'nothing'}")
+        return 0
+    try:
+        if op == 'count' and len(rest) == 2:
+            n, kind = count(rest[0], rest[1]); print(f"{n} {kind}"); return 0
+        if op == 'insert-after' and len(rest) == 2:
+            return _report(insert_after(rest[0], rest[1], _block()))
+        if op == 'replace-block' and len(rest) == 2:
+            return _report(replace_block(rest[0], rest[1], _block()))
+        if op == 'remove-block' and len(rest) == 2:
+            return _report(remove_block(rest[0], rest[1]))
+        if op == 'set-nested' and len(rest) == 2:
+            return _report(set_nested(rest[0], rest[1], _block(), expect=expect))
+        if op == 'flow-set' and len(rest) == 3:
+            return _report(flow_set(rest[0], rest[1], rest[2], expect=expect))
+    except UnsafeEdit as e:
+        print(f"dmsafe: REFUSED — {e}"); return 1
+    if op not in ('verify', '--verify'):
+        print(f"dmsafe: unknown operation or wrong arguments: {' '.join(argv)}\n"); print(__doc__); return 2
+    return None
+
+
 if __name__ == '__main__':
-    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    _rc = _cli(sys.argv[1:])
+    if _rc is not None:
+        sys.exit(_rc)
+    args = [a for a in sys.argv[1:] if not a.startswith('--') and a != 'verify']
     targets = args or (sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) +
                        sorted(glob.glob(os.path.join(ROOT, 'mappings', '*.md'))) +
                        [os.path.join(ROOT, f) for f in ('VOCAB.md', 'GARDEN.md')] +
