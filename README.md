@@ -193,6 +193,35 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `seed/README.md`, `seed/COOKBOOK.md` | worked beans that pass the gate as written: a person, a host, a domain, a service, a rented server |
 | `test/` | the release suites, all run in CI (`CONTRIBUTING.md` has the command); `fast.py` runs in every garden's hook |
 
+## A seed, on a notebook
+
+افتاد، بر روی دفتری که بر روی میزی که بر روی زمین قرار گرفته بود، دانه‌ی کاجی که مختصات آغازیدن وجود خود را از حتی
+پایین‌تر از سطح پست زمین گرفته و به بالاتر از اکثر چیزها رسیده بود. به جز خیال خام و خوشِ بستری برای جوانه زدن، در این
+زمانه‌ی پیر، چه چیز ممکن بود دانه‌ی رسیده را قانع کند که از آن بلندا به فرش فرود آید؟ خیال پریدن و سودای شکفتن داشت، در
+دلش شوق جوانه زدن مدت‌ها بود از ترس فنا شدن فزونی گرفته بود، اما چگونه ممکن بود بدون فرود آمدن بتواند سعود کند؟ آیا
+ایمانی از جنس الماس در دلش خیال شکفتن را آسوده می‌کرد؟ آیا ترس از فنا شدن، نرسیدن و یا به جای اشتباهی رسیدن داشت؟ آیا
+درخت کهنه‌سال، بی که دانه بداند، بخواهد، از میوه جدایش کرده بود؟ چه کسی می‌داند؟ به هر ترتیب دانه افتاده بود و دیگر
+خبری از عرش والا نبود، اگرش بستری حاصل‌خیز فراهم می‌بود حتما که می‌شکفت و شاید اگر اقبال ناظرش می‌بود روزی درختی پیر
+می‌شد و میوه‌های دانه‌دار می‌داد، ولی اکنون در حاشیه‌ی دفتری نیم سیاه و نیم سپید در انتظار نوازش دستی بالجبار آرمیده است.
+
+It fell — onto a notebook, that lay on a table, that stood on the ground — a pine seed whose coordinates of
+beginning had been taken from even lower than the low surface of the earth, and which had risen higher than
+most things. What, in this old age of the world, besides the raw and sweet fancy of a bed to sprout in, could
+have persuaded a ripe seed to come down from that height to the floor? It had the fancy of flying and the
+longing to bloom; in its heart the eagerness to sprout had long since outgrown the fear of perishing — but how
+could it rise without first coming down? Was there a faith of diamond in its heart that set the dream of
+blooming at ease? Did it fear perishing, never arriving, or arriving at the wrong place? Had the old tree,
+without the seed knowing it or wanting it, parted it from the fruit? Who knows? In any case the seed had
+fallen, and of the high heavens there was no more word. Had a fertile bed been laid for it, it would surely
+have bloomed — and perhaps, if fortune were watching, one day it would have grown into an old tree and borne
+fruit full of seeds. But now, in the margin of a notebook, half black and half white, it lies, perforce,
+waiting for the touch of a hand.
+
+*The Persian was written by Omid in a notebook, under a tree, some years before any of this; the seed, the
+garden and the bean were named later, and the notebook had the words first. The English is the rendering of
+the agent that worked beside him on 2026-09-22 (Claude, Fable 5.1), and stands as an agreement between the
+two: he takes another person's change to his text where it is more beautiful; the agent's text is its own.*
+
 ## License
 
 [Apache-2.0](LICENSE).
