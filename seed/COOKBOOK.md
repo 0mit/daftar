@@ -30,7 +30,10 @@ software or a deployment on a logical id you choose (`product_id`, `service_id`)
 A domain is registered for a term, not owned outright, so the registry is the `external` owner and the
 person who renews it answers for it. Registration facts belong to the opt-in **`domain` profile**: a garden
 that holds domains adds this inside `VOCAB.md`'s front matter, and `registration` then becomes available and
-required on every `kind: domain` bean.
+required on every `kind: domain` bean. Its dates are read from WHOIS before the bean is written: `created` and
+`expires` take a date and nothing else — there is no `unknown` for a fact that is always there to be read, and
+an invented date would pass the gate and then be reported as sound by `dmstale`. `auto_renew` alone may be
+`unknown`, because it is an account setting WHOIS does not show.
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
@@ -145,18 +148,19 @@ The website.
 
 ## A rented VPS
 
-The provider owns the machine and Sam answers for what runs on it. With no hardware to read, it is
-anchored on its name.
+A virtual machine has no matter of its own: it is a `virtual-host`, a living being that lapses at teardown,
+identified by its name or by the id its provider assigns — never by a serial, which is the hypervisor's. The
+provider owns it and Sam answers for what runs on it.
 
 <!-- example: beans/vps-a.md -->
 ```markdown
 ---
 bean: vps-a
-kind: host
+kind: virtual-host
 title: "vps-a — a rented virtual server"
 status: active
 summary: "A VPS rented from a hosting provider."
-nature: physical
+nature: living
 identity:
   status: confirmed
   anchors:

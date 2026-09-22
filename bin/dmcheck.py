@@ -989,6 +989,7 @@ def check_identity_capsule():
         if not ident.get('status'):
             errors.append(f"{base}: identity.status missing")
         n_est = 0
+        est_classes = []
         for a in (ident.get('anchors') or []):
             # D2/P4: the load-bearing distinction is `establishing` (establish vs corroborate), stated on the
             # anchor. `class` survives only as an optional hint at WHY it establishes — it no longer decides.
@@ -1006,15 +1007,35 @@ def check_identity_capsule():
                 errors.append(f"{base}: anchor '{a['key']}'.establishing is {a.get('establishing')} but the "
                               f"vocabulary declares {pol['establishing']} for that term — a bean may not "
                               f"{_dir}; write establishing: {str(pol['establishing']).lower()} (VOCAB {a['key']}.anchor)")
+            # AN ANCHOR'S KEY IS A TERM (19.0, `identity_policy.anchor_key: term`): identity is matched by
+            # (key, value), so a key no term declares is a merge key nobody agreed on. The term's `anchor:`
+            # policy is what a garden declares; a local key is a local term with one.
+            if IDP.get('anchor_key') == 'term' and not isinstance(pol, dict):
+                errors.append(f"{base}: anchor key '{a['key']}' is not a term that declares `anchor:` — every "
+                              f"anchor's key names one (VOCAB identity_policy.anchor_key); a garden-local key is a "
+                              f"local term with `anchor: {{ class: …, establishing: … }}`")
             if a.get('establishing') is True:
                 n_est += 1
                 est_owner.setdefault((a['key'], compare_value(a['key'], a['value'])), []).append(base)
+                est_classes.append((a['key'], pol.get('class', a.get('class')) if isinstance(pol, dict) else a.get('class')))
         # min-anchor policy attaches to the root axis, not the kind (P3/D1) — read it from the declared registry.
         pol = _row(POLICY, fm.get(_axis)) if _axis else None
         need = (pol or {}).get('min_establishing_anchors')
         if need and ident.get('status') == IDP.get('applies_at_identity_status') and n_est < need:
             warns.append(f"{base}: {_axis} '{fm.get(_axis)}' requires {need} establishing anchor(s) when "
                          f"'{ident.get('status')}' but has {n_est} (VOCAB {_reg}.min_establishing_anchors)")
+        # THE FAMILY IS ENFORCED (19.0, `identity_policy.establishing_family: enforced`): what establishes a
+        # confirmed being is of its nature's family — matter for the physical, a logical id for the rest. The
+        # class the term's policy declares wins over the class the bean wrote.
+        fam = (pol or {}).get('establishing_anchor_family')
+        if (IDP.get('establishing_family') == 'enforced' and fam
+                and ident.get('status') == IDP.get('applies_at_identity_status')):
+            for _k, _c in est_classes:
+                if _c not in fam:
+                    errors.append(f"{base}: establishing anchor '{_k}' is class '{_c}', outside the {_axis} "
+                                  f"'{fm.get(_axis)}' family {fam} (VOCAB {_reg}.establishing_anchor_family) — "
+                                  f"a being without an anchor of its family is `identity.status: provisional`, or "
+                                  f"is of another nature (a virtual machine is a `virtual-host`, not a `host`)")
 
 # HOW AN ANCHOR IS COMPARED (std-vocab 9.0, human-ratified). A term that governs an anchor may declare
 # `compare_form`; uniqueness is then judged on that form, so `SYN-0042` and `syn-0042 ` are one object. A

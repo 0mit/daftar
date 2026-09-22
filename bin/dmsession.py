@@ -113,7 +113,7 @@ def resolve_edge(flag, name, want_kind=None):
     if kind is None:
         sys.exit(f"REFUSING: {name} '{value}' has no bean in beans/ — the session bean would open with a dangling "
                  f"ref. Name an existing bean, or write that one first.")
-    if want_kind and kind != want_kind:
+    if want_kind and kind not in (want_kind if isinstance(want_kind, tuple) else (want_kind,)):
         sys.exit(f"REFUSING: {name} '{value}' is kind '{kind}', not '{want_kind}'.")
     return value
 
@@ -139,7 +139,7 @@ def cmd_open(a):
                  "commit would silently revert nothing while missing everything. Found the hard way: the\n"
                  "first session this tool opened branched past an unstaged vocabulary change and wrote a\n"
                  "bean using a term its own copy of the law did not yet have. Commit or stash, then open.")
-    host = resolve_edge(a.host, 'host', want_kind='host')      # before anything is created
+    host = resolve_edge(a.host, 'host', want_kind=('host', 'virtual-host'))      # before anything is created
     owner = resolve_edge(a.owner, 'owner')
     os.makedirs(SESSIONS_DIR, exist_ok=True)
     git('worktree', 'add', '-b', branch, path)

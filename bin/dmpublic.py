@@ -34,7 +34,7 @@ try:
 except ImportError:
     print("ERROR: PyYAML required"); sys.exit(2)
 
-BEING_KINDS = {'host', 'org', 'person', 'instance', 'service', 'domain', 'codebase'}
+BEING_KINDS = {'host', 'virtual-host', 'org', 'person', 'instance', 'service', 'domain', 'codebase'}
 ANCHOR_KEYS = {'hostname', 'fqdn', 'ip'}
 
 

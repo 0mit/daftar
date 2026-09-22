@@ -21,7 +21,8 @@ The gate reads the **staged** files, not the working tree: what it checks is wha
 - [ ] Required fields are present — beans: `bean, kind, title, status, summary, identity, provenance`;
       mappings: `mapping, kind, summary`.
 - [ ] Every enum value is one the vocabulary offers. `python3 bin/dmrules.py` prints them all.
-- [ ] Every anchor has `key`, `value` and `establishing`; a vocabulary anchor policy overrules the bean.
+- [ ] Every anchor has `key`, `value` and `establishing`; its key is a term that declares `anchor:`, and that policy
+      overrules the bean. An establishing anchor of a confirmed bean is of its nature's family.
 - [ ] No establishing anchor is shared by two beans (serials compared ignoring case and spaces).
 - [ ] Every edge resolves to an existing bean or mapping, and field; relations declared acyclic stay acyclic.
 - [ ] Every ownership chain ends — at a bean's owner, outside the ledger, or at the crown — and every facet with

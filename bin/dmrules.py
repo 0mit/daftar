@@ -75,6 +75,9 @@ head("AXIS — nature routes every bean to the crown")
 for n in reg('natures'):
     print(f"  {n['nature']:14} → crown '{n['crown']}'   anchors {n.get('establishing_anchor_family')}"
           f"   min establishing when confirmed: {n.get('min_establishing_anchors')}")
+idp = loc.get('identity_policy') or std.get('identity_policy') or {}
+print(f"  identity: an anchor's key {'must be a term that declares anchor:' if idp.get('anchor_key') == 'term' else 'is free text'}"
+      f" · the family above is {'ENFORCED — an establishing anchor of a confirmed bean is of it' if idp.get('establishing_family') == 'enforced' else 'guidance; only the count is checked'}")
 cr = reg('crown')
 print(f"  crown: {' , '.join(c['branch'] + (' (root, never nameable)' if c.get('root') else '') for c in cr)}")
 kinds = list(std.get('kinds') or []) + list(loc.get('local_kinds') or [])

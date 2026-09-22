@@ -79,8 +79,8 @@ vocab(RENTAL)
 
 def host(rental_block, bean="vps"):
     open(os.path.join(G, "beans", f"{bean}.md"), "w").write(
-        f'---\nbean: {bean}\nkind: host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
-        'nature: physical\n'
+        f'---\nbean: {bean}\nkind: virtual-host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
+        'nature: living\n'
         'identity: { status: confirmed, anchors: [ { key: fqdn, value: "' + bean + '.example.org", '
         'class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN + rental_block +
@@ -152,8 +152,8 @@ check("the standard carries many dates and declares few expiries — the reason 
 # refuses them in its own words.
 def period(block, bean="vps2"):
     open(os.path.join(G, "beans", f"{bean}.md"), "w").write(
-        f'---\nbean: {bean}\nkind: host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
-        'nature: physical\n'
+        f'---\nbean: {bean}\nkind: virtual-host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
+        'nature: living\n'
         'identity: { status: confirmed, anchors: [ { key: fqdn, value: "' + bean + '.example.org", '
         'class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +

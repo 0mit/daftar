@@ -66,6 +66,8 @@ identity:
     - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, scope: global, observed: 2026-08-02, authority: operator-asserted }}
 provenance: {{ src: observed, by: "agent/origin", as_of: 2026-08-02 }}
 nature: physical
+owned_by: {{ legal: {{ external: "the relay's operator, outside every garden that observes it" }} }}
+responsibility: {{ legal: {{ external: "the relay's operator" }} }}
 owns:
   os: "AlmaLinux 9"
   roles: [relay]
@@ -200,7 +202,8 @@ open(os.path.join(_one, 'beans', 'box.md'), 'w').write(
     'identity:\n  status: confirmed\n  anchors:\n'
     '    - { key: serial, value: "SN-0042", class: hardware, establishing: true }\n'
     '    - { key: serial, value: "sn-0042", class: hardware, establishing: true }\n'
-    'provenance: { src: observed, by: "test", as_of: 2026-09-17 }\n---\nA box.\n')
+    'provenance: { src: observed, by: "test", as_of: 2026-09-17 }\n'
+    'owned_by: { legal: { external: "someone" } }\nresponsibility: { legal: { external: "someone" } }\n---\nA box.\n')
 _g = subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True, cwd=_one).stdout
 check("one bean carrying both spellings is not reported as a duplicate of ITSELF (the lowercase one still warns)",
       'same object in one garden' not in _g and "is compared as 'SN-0042'" in _g, _g.strip()[-300:])

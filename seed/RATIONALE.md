@@ -71,13 +71,43 @@ P3/D1: identity policy attaches to the ROOT AXIS...
 
 ...and the minimum bites once identity is confirmed.
 
+## identity_policy.anchor_key
+
+AN OPEN KEY WAS AN OPEN MERGE KEY (19.0). Identity is matched by (key, value), and until 19.0 the key was any
+string a bean wrote. The fourth cold-start drill invented a key, product_name, and the gate took it; measured, the
+first garden's beans carried seventeen keys no term declared — `product_id`, `session_id`, `service_id`, the
+ids the kinds registry had NAMED IN PROSE since P3 and never declared. Two gardens spelling one anchor model
+and product_name would never recognise the same object, which is the one thing identity anchors exist to do.
+So the key names a term that declares `anchor:`, and the gate refuses any other. A garden-local key is a local
+term with an anchor policy — the same mechanism every other position has used since 18.x — and a local term
+that proves general is promoted, which is how eleven arrived in the standard at once.
+
+## identity_policy.establishing_family
+
+THE REGISTRY SAID IT; THE GATE CHECKED ONLY THE COUNT (19.0). `establishing_anchor_family` has been in every
+nature's row since P3, and `dmrules` printed it under "every rule below is enforced", while `dmcheck` read only
+`min_establishing_anchors`. The drilled stranger found the gap by reading the gate's source, which a user
+should never need to do. The family is now enforced as an error on a confirmed bean: what establishes a
+physical being is its matter, and a name that establishes it would fuse a replaced machine with the one that
+kept its name — exactly the `id` term's oldest exception. What broke under enforcement was instructive: one
+rented VPS anchored on its name, and three physical machines whose `fqdn` was establishing beside a real
+serial. The VPS was of the wrong nature (see `kinds[virtual-host]`); the names were demoted to corroborating,
+which is what they had always been.
+
 ## natures[physical].crown
 
 Extension owns physical beings
 
 ## natures[physical].establishing_anchor_family
 
-serial / mac / wg_pubkey — bound to the matter itself
+serial / mac — bound to the matter itself. (`wg_pubkey` was listed here until 19.0; it never was.)
+
+## natures[living].establishing_anchor_family
+
+Logical: a person's minted id or signing key, an instance's deployment coordinate, a VM's instance id. Until
+19.0 the row also named `personal`, a class `anchor_class` has never offered — a position no anchor could occupy.
+It would have meant a passport number or a biometric, which the ledger never records because they are secrets;
+the name was withdrawn rather than given a class nothing may honestly fill.
 
 ## natures[physical].min_establishing_anchors
 
@@ -814,7 +844,26 @@ LOCAL kinds: object types this garden manages that std-vocab doesn't schematize.
 the sibling of `consumes`: depends_on needs
 a BEING, consumes needs its PRODUCED STATE
 
+## terms[anchor_class]
+
+DECIDES AGAIN (19.0). P4 made `establishing` the load-bearing flag and left `class` as a hint. The family rule
+reads the class of every establishing anchor against the nature's family, so the hint is a rule once more: a
+term that governs the key declares the class, and the bean writes the flag that follows. `none` went with the
+three pseudo-anchors that carried it (`id`, `ref`, `shell-log`): under `anchor_key: term` a term with an
+`anchor:` block is an anchor key, and those three were never anchors. `shell-log` itself, a v0.2 note on how an
+agent logs shell work, was retired: the `journal` registry says it now.
+
+## terms[owned_by].schema.required
+
+Universal since 19.0. `required_on_kinds: [product, codebase, instance, org]` was the list from before the two
+arcs were closed; MODEL.md has said "every bean carries both" since v2, and the corpus check proves it on every
+commit. A list that names four kinds when the rule holds for all is a second copy waiting to disagree.
+
 ## terms[status]
+
+`at-risk` was a value until 19.0, declared vacant since 2026-08-08 as "the one status that asks for action".
+The `risks` term arrived after that note and carries the state (`live`) with the consequence and the evidence
+beside it — a lifecycle enum cannot. A risk state inside a lifecycle was one fact in two positions.
 
 == CORE GRAMMAR ENUMS (promoted 2026-08-02, std-vocab@2.0 / P6 E3) ==
 These were CODE CONSTANTS in bin/dmcheck.py (STATUSES, ID_STATUS, ANCHOR_CLASSES, AUTHORITY, SRC) —
@@ -1066,7 +1115,10 @@ reassignable
 
 ## terms[fqdn].anchor
 
-DNS-unique within its namespace
+DNS-unique within its namespace. Until 19.0 the policy pinned `establishing: true`, which with the family
+enforced would have forbidden a physical machine any `fqdn` anchor at all. The nature decides whether a name
+establishes; the pin was dropped so the bean can write the flag that follows: `true` on a domain, a service or a
+virtual-host; `false` on a machine, and on an org, whose name would otherwise fuse it with its own domain bean.
 
 ## terms[mac].merge
 
@@ -1080,7 +1132,28 @@ a drill committed `syn-0042` beside `SYN-0042` as two machines with 0 errors.
 
 ## terms[wg_pubkey].anchor
 
-crypto-anchored to the keypair
+A CREDENTIAL, NOT MATTER (19.0). Classed `hardware` at v1.0, a day before natures existed, when two machines
+had nothing else to be confirmed by. A key pair is generated on a machine but is not of it: it is copied when a
+VPS is migrated and the peer stays who it was, and regenerated on the same box and the same machine becomes a
+stranger — which is what `ssh_key_fingerprint`'s own meaning says ("what a host proves itself with") and what
+`openpgp_fingerprint` was classed as from the start. So both key terms are `logical`, and unpinned: for a living
+or metaphysical being a key is the strongest logical anchor there is; for a physical one it corroborates.
+
+## terms[mac].anchor
+
+Matter when burned in; assigned when virtual. A physical NIC's MAC establishes the machine; a virtual NIC's is
+written by the hypervisor and moves with the VM's definition, so on a `virtual-host` it can only corroborate.
+The class stays `hardware` — that is what the fact is — and the pin was dropped at 19.0 so the family rule can
+say which.
+
+## terms[product_id]
+
+Declared at 19.0 with `service_id`, `org_id`, `person_id`, `program_id`, `contract_id`, `design_id`, `doc_id`,
+`manifest_id`, `session_id`, `instance_id` and `email`: the ids the kinds registry had named in prose since P3
+("Establishing anchor: a logical product_id") and the first garden had used all along, made terms when
+`identity_policy.anchor_key` required every key to be one. All logical; none declares a form, because each is
+whatever its home assigns or the estate mints once. `manifest_id` and `email` leave `establishing` to the bean
+— a module's name corroborates beside the git remote that establishes, and an address is reassigned.
 
 ## terms[emp_id].enforced_by
 
@@ -1103,10 +1176,6 @@ FORM they share. This is the MAJOR change of the release: an existing term's han
 ## terms[ref].enforced_by
 
 the link FORM and its resolution are CORE checks (target exists, named field present, shallow). Since 2.0 the acyclicity is declared per relation via schema.dag rather than here.
-
-## terms[shell-log].enforced_by
-
-a PROCESS term: it governs how an agent logs shell work to log/journal.md, not the shape of any bean field. There is no bean data for a gate to check, and that is a property of the term, not a gap.
 
 ## terms[kind]
 
@@ -1375,6 +1444,31 @@ axiom directly, so every other chain must pass through a being.
 
 == kinds that were in USE but undeclared before P3. Under D1 a kind need only name the nature it
 refines and what it means; anchor family + min-anchors come from that nature.
+
+Until 19.0 every row also carried prose `schema:`, `required:` and `min_anchors:` — second copies of what the
+natures registry, `required_on_kinds` and the anchor terms decide, and by 19.0 three of them disagreed with the
+law (`org`: "or primary domain"; `person`: "email"; `codebase`: "a logical manifest id" — all corroborating
+now). A row is its nature and its meaning; what a kind typically owns is the cookbook's to show. The 7.0
+story of `vps` and `router` retiring into `host` moved here from the row's meaning: `vps` described tenancy,
+which ownership carries; `router` a role, which `roles` carries; and the registry noted against itself that
+"D5 will re-read this as an instance living_on a provider" — which `virtual-host` is.
+
+Narrowed at 19.0 to matter: 7.0 had widened it to "bare metal or virtual" when `vps` was retired, and a
+virtual machine is a `virtual-host` now — see there.
+
+## kinds[virtual-host]
+
+A VIRTUAL MACHINE IS A LIVING BEING (19.0). At 7.0 `vps` was retired into `host` because it described TENANCY,
+which ownership already carried — and the registry noted, against itself, that "D5 will re-read this as an
+instance living_on a provider". Enforcing the anchor family (see `identity_policy.establishing_family`) forced
+the reading: a VM has no matter, so under `host` (physical, family `hardware`) it could never be confirmed
+honestly — the one rented VPS in the first garden was anchored on its name, and another carried its OpenStack
+instance UUID as a `serial`, `class: hardware`, and sat provisional. What a VM IS is a running machine-instance
+on a hypervisor: created, running, torn down. That is the living nature, whose crown `love` "lapses at death or
+teardown", and whose family is logical — a name or the id its provider assigns (`instance_id`). Tenancy stays
+where it was: a rented VM is owned `external` and answered for here; a VM on the estate's own hypervisor is
+owned through it and `lives_in` it. A rented BARE-METAL server stays a `host`: it has a serial, and ownership
+was always orthogonal to nature.
 
 ## recurrence_form
 
