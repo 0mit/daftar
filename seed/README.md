@@ -116,7 +116,7 @@ POSITION IN TIME and the gate checks the form — so read it from the clock rath
 ```
 
 ```sh
-date '+%Y-%m-%d %H:%M%:z'          # what the heading's first field must be
+python3 bin/dmjournal.py "sam" "the first two beans" < entry.md     # writes the heading from the clock, appends the body
 ```
 
 The `[[bean-id]]` is what makes the entry count: the gate refuses a staged bean that the entry does not

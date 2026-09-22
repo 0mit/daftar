@@ -29,8 +29,10 @@ untagged clone works, but pins the garden to nothing anyone else can fetch; `ger
 ## 2. Grow the garden
 
 ```sh
-sh seed/germinate.sh ~/garden
+python3 seed/germinate.py ~/garden
 ```
+
+(`sh seed/germinate.sh ~/garden` does the same; it hands over to the Python.)
 
 The target must not exist. The script copies what `seed/LANGUAGE` declares — the vocabulary, the tools, the
 gate, the templates, `AGENTS.md` — makes the first commit as `germinate`, installs the gate as the pre-commit
@@ -71,6 +73,26 @@ still yours, and the journal entry says who decided and in what words: `human (n
 agent (…)` is the shape this garden's own journal uses. Before you leave, write the journal entry the next
 agent will need — it may be of another make, with none of your context.
 
+## On Windows
+
+Everything here is Python and git, so it runs in PowerShell as it runs in a shell — with `python` for
+`python3`, backslashes or forward slashes as you like, and `$HOME` for `~`:
+
+```powershell
+git clone https://github.com/0mit/daftar.git $HOME\daftar
+cd $HOME\daftar
+git checkout (git tag -l 'v*' --sort=-v:refname | Select-Object -First 1)
+python seed\germinate.py $HOME\garden
+cd $HOME\garden
+git config user.name  "agent (<model>, <session>)"
+git config user.email "<the address the person chose>"
+python bin\dmcheck.py --all
+```
+
+The gate runs as a git hook; Git for Windows runs hooks with the shell it ships, and the hook takes
+`python3` or `python`, whichever the machine has. PyYAML: `pip install PyYAML`. A journal entry is written
+the same way: `python bin\dmjournal.py "<who>" "<what>" --body "- action: …"`.
+
 ## If you have no shell
 
 You are in a chat window, and cannot run any of the above. Then you cannot run the gate, and cannot write to a
@@ -83,10 +105,11 @@ not check — for a person, or an agent with a shell, to commit.
 The same three steps grow a garden for a person. Then `seed/README.md` shows a person, a host, and the journal
 entry that commits them, and `seed/COOKBOOK.md` a domain, a service on a machine, a rented server, and how to
 add a value the vocabulary lacks. All of them pass the gate exactly as written, because a test grows a garden
-and commits them. A journal heading is a position in time, read from the clock:
+and commits them. A journal heading is a position in time, read from the clock — so a tool writes it, never
+a hand:
 
 ```sh
-date '+%Y-%m-%d %H:%M%:z'
+python3 bin/dmjournal.py "your-name" "what you did" < entry.md     # the entry's body on standard input
 ```
 
 When the gate refuses something, its message names the rule and, for the common mistakes, the line to write.

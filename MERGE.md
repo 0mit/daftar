@@ -37,7 +37,8 @@ nothing.
 identity:
   status: confirmed              # confirmed | provisional (anchorless/weak → provisional)
   anchors:
-    - { key: serial, value: "…", class: hardware, establishing: true, scope: global, observed: 2026-07-30, until: null, authority: operator-asserted }
+    - { key: serial, value: "…", class: hardware, establishing: true, scope: global, observed: 2026-07-30 }
+    - { key: ip, value: "…", class: network, establishing: false, provenance: { src: observed, by: "agent:<model>/<garden>", as_of: 2026-07-30 } }   # its own record, because it differs from the bean's
   replaces: { bean: <old-device> }   # device-swap lifecycle link (optional)
   aka: [host-a, laptop-7]            # garden-local ids seen for this object
 ```
@@ -77,8 +78,8 @@ quietly missing from it is the one outcome a merge must never have.
 ## 5. Fact merge — CRDT lattice join (invariants #1–3 hold by construction)
 Each field's value is the **antichain of maximal elements under a per-term subsumption `⊑`**. Merge = union the value-sets, then **reduce to the antichain** (drop every element subsumed by another) — idempotent + confluent ⇒ a true join-semilattice ⇒ commutative + associative + idempotent. Resolved field = antichain size 1; governed conflict = size ≥ 2 (a canonical, deterministic set — governance never perturbs bytes). `⊑`, cardinality, and tie-break live in the **VOCAB `merge:` facet** so MERGE stays a thin driver and conflict logic is *not* duplicated in code:
 ```yaml
-merge: { cardinality: single|set|multi, order: none|prefix|version|cidr|subsumes|by-<field>,
-         authority: scanned<operator-asserted<external }
+merge: { cardinality: single|set|multi, order: none|prefix|version|cidr|subsumes|by-<field> }
+# and, once, on provenance_src: { order: "generated-by-tool<inferred<observed<asserted-by-human" } — the one rank of how a value is known
 ```
 Driver: differ + `set` → union (auto); differ + `single` + order-comparable → keep the subsuming value, record the subsumed in provenance (auto); differ + `single` + incomparable → antichain → exception-ack. **`inferred` never subsumes `asserted-by-human`** regardless of `order`.
 

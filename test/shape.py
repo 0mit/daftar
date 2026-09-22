@@ -46,7 +46,8 @@ check("a level is metric only in a real unit — A MONTH IS NOT A MEASURE, and t
       "level 'month' says it is metric in unit 'month'" in gate(), gate()[-600:])
 mutate("    transport: tcp\n    within: [ipv4, ipv6]\n    neighbours: counted\n    restrictions: { lines: 1, order: total, ends: bounded }\n",
        "    transport: tcp\n    within: [ipv4, ipv6]\n    neighbours: counted\n    restrictions: { lines: 1, order: none, ends: bounded }\n")
-check("a system NARROWS its aspect and may not widen it", "WIDEN aspect 'place' — order none" in gate(), gate()[-600:])
+_g = gate()
+check("a system NARROWS its aspect and may not widen it", "WIDEN aspect 'place'" in _g and "order none" in _g, _g[-600:])
 mutate("    restrictions: { lines: 3, metered: length }", "    restrictions: { lines: 3, metered: enthusiasm }")
 check("a system is metered only in a dimension some unit measures", "metered 'enthusiasm' is no dimension" in gate(), gate()[-500:])
 mutate("  - { protocol: ospf,  technology: ospf,", "  - { protocol: ospf,  technology: ospff,")

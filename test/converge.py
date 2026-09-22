@@ -42,8 +42,8 @@ def git(*a, cwd):
 
 
 def commit(cwd, who, msg):
-    with open(os.path.join(cwd, 'log', 'journal.md'), 'a', encoding='utf-8') as fh:
-        fh.write(f"\n## 2026-08-02 10:00+00:00 · agent · {who}\n- action: {msg}\n- refs: beans/relay.md\n")
+    subprocess.run([sys.executable, os.path.join(cwd, 'bin', 'dmjournal.py'), 'agent', who,
+                    '--body', f"- action: {msg}\n- refs: beans/relay.md"], cwd=cwd, check=True, capture_output=True)
     git('add', '-A', cwd=cwd)
     return git('-c', 'user.name=' + who, '-c', f'user.email={who}@g', 'commit', '-q', '-m', msg, cwd=cwd)
 
@@ -63,7 +63,7 @@ summary: "A relay recorded in the origin garden, so gardens cloned from it obser
 identity:
   status: confirmed
   anchors:
-    - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, scope: global, observed: 2026-08-02, authority: operator-asserted }}
+    - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, scope: global, observed: 2026-08-02 }}
 provenance: {{ src: observed, by: "agent/origin", as_of: 2026-08-02 }}
 nature: physical
 owned_by: {{ legal: {{ external: "the relay's operator, outside every garden that observes it" }} }}
@@ -239,25 +239,29 @@ _o = _merged_owns({'seen': '2026-09-19 22:00Z'}, {'seen': '2026-09-19 22:00:30Z'
 check("T2: parts are compared, not characters — 22:00Z contains 22:00:30Z though neither string starts the other",
       _o['seen'].get('value') == '2026-09-19 22:00:30Z', json.dumps(_o['seen']))
 
-# ---------------------------------------------------------------- a DECLARED rank is read (2026-09-20)
-# `anchor_authority` has declared `scanned<operator-asserted<external` since it was written, and nothing read
-# it: the merge dropped the attribute entirely, so the rank had nothing to weigh. A law the code ignores is
-# worse than a rule in code, because the vocabulary says it is in force.
-def _anchored(garden, auth):
+# ---------------------------------------------------------------- an anchor's PROVENANCE is ranked (20.0)
+# `anchor_authority` declared `scanned<operator-asserted<external` and was a second vocabulary for the one
+# question `provenance_src` answers. Since 20.0 an anchor carries its own `provenance` where its source differs
+# from its bean's, and two records of one anchor that differ only in that are resolved by the `provenance_src`
+# rank — the vocabulary deciding rather than arrival order.
+def _anchored(garden, prov):
+    anc = {'key': 'serial', 'value': 'SN-A1', 'class': 'hardware', 'establishing': True}
+    if prov:
+        anc['provenance'] = prov
     return [{'garden': garden, 'id': 'box', 'fm': {
         'bean': 'box', 'kind': 'host', 'nature': 'physical', 'title': 'b', 'status': 'active', 'summary': 'b',
-        'identity': {'status': 'confirmed', 'anchors': [{'key': 'serial', 'value': 'SN-A1', 'class': 'hardware',
-                                                         'establishing': True, 'authority': auth}]},
+        'identity': {'status': 'confirmed', 'anchors': [anc]},
         'provenance': {'src': 'observed', 'by': garden, 'as_of': '2026-09-17'}}}]
-_sd = list(M.merge_gardens([_anchored('g1', 'scanned'), _anchored('g2', 'operator-asserted')]).values())[0]
+_asserted = {'src': 'asserted-by-human', 'by': 'sam (operator)', 'as_of': '2026-09-17'}
+_sd = list(M.merge_gardens([_anchored('g1', None), _anchored('g2', _asserted)]).values())[0]
 _anc = _sd['identity']['anchors'][0]
-check("an anchor's AUTHORITY survives the merge — a scanned value and an asserted one are not the same fact",
-      'authority' in _anc, json.dumps(_anc))
-check("...and the rank the vocabulary DECLARES decides between them, rather than arrival order",
-      _anc.get('authority') == 'operator-asserted' and not _sd['identity'].get('anchor_conflicts'), json.dumps(_sd['identity']))
-_sd = list(M.merge_gardens([_anchored('g2', 'operator-asserted'), _anchored('g1', 'scanned')]).values())[0]
+check("an anchor's own PROVENANCE survives the merge — a scanned value and an asserted one are not the same fact",
+      _anc.get('provenance') == _asserted and '_src' not in _anc, json.dumps(_anc))
+check("...and the `provenance_src` rank decides between them, rather than arrival order",
+      not _sd['identity'].get('anchor_conflicts'), json.dumps(_sd['identity']))
+_sd = list(M.merge_gardens([_anchored('g2', _asserted), _anchored('g1', None)]).values())[0]
 check("...in either order, because a rank is not arrival order",
-      _sd['identity']['anchors'][0].get('authority') == 'operator-asserted', json.dumps(_sd['identity']['anchors']))
+      _sd['identity']['anchors'][0].get('provenance') == _asserted, json.dumps(_sd['identity']['anchors']))
 check("a term may now declare any order the merge can APPLY — `instant` on a term is no longer a silent no-op",
       M.leaf_order.__doc__ and 'instant' in M.ORDERS and 'containment' in M.ORDERS, str(M.ORDERS))
 

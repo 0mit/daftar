@@ -167,7 +167,7 @@ nature: metaphysical
 identity:
   status: confirmed
   anchors:
-    - {{ key: session_id, value: "session:{slug}", class: logical, establishing: true, scope: global, observed: {time.strftime('%Y-%m-%d')}, authority: scanned }}
+    - {{ key: session_id, value: "session:{slug}", class: logical, establishing: true, scope: global, observed: {time.strftime('%Y-%m-%d')} }}
 provenance: {{ src: observed, by: "agent (fill in), opened by bin/dmsession.py", as_of: {time.strftime('%Y-%m-%d')} }}
 owned_by: {{ legal: {{owner: {{bean: {owner}}}}}, technical: {{owner: {{bean: {owner}}}}} }}
 responsibility: {{ legal: {{holder: {{bean: {owner}}}}}, technical: {{holder: {{bean: {owner}}}}} }}

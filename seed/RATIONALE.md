@@ -82,6 +82,19 @@ So the key names a term that declares `anchor:`, and the gate refuses any other.
 term with an anchor policy — the same mechanism every other position has used since 18.x — and a local term
 that proves general is promoted, which is how eleven arrived in the standard at once.
 
+## identity_policy.anchor_attrs
+
+WHAT AN ANCHOR MAY CARRY, DECLARED (20.0). Until then an anchor entry took any key: `scope`, `observed`,
+`until`, `authority` all rode along, none declared, and `authority` — `scanned < operator-asserted < external`
+— was a second vocabulary for the one question `provenance_src` answers. Measured on the first garden's 170
+anchors: 136 `scanned` on `observed` beans and 20 `operator-asserted` on `asserted-by-human` beans said
+nothing the bean had not said; 12 disagreed with their bean (`scanned` on `inferred` ×10); 1 said `external`,
+which the other vocabulary has no word for because it is not a source but an authority's say-so — an
+observation of a registry. So an anchor says how it is known the way every entry has since MODEL v2: a
+`provenance: { src, by, as_of }` record where its source differs from the bean's, and nothing where it does
+not; the gate refuses `authority` with that hint, and warns on a record that only repeats the bean's own.
+The merge ranks two records of one anchor by `provenance_src`, as it ranks every other value.
+
 ## identity_policy.establishing_family
 
 THE REGISTRY SAID IT; THE GATE CHECKED ONLY THE COUNT (19.0). `establishing_anchor_family` has been in every
@@ -539,6 +552,20 @@ it was written in, and those stay what they were.
 
 entries a commit adds; never the history
 
+
+## journal.heading
+
+STAMPED, NOT TYPED (20.0). 10.0 made a heading a position in time and the gate checks its form; the truth of
+the moment it never could. The evening this was written, the same writer typed the time before reading the
+clock twice in five hours — 20:06 for 19:52, 22:31 for 22:09 — and both headings were of perfect form. The
+gate cannot tell a measured moment from a remembered one by looking at it. What it can tell is whether the
+clock-reading tool wrote it: `bin/dmjournal.py` records every heading it writes in the clone's own git
+directory, and the gate refuses a heading a commit adds that is not there. The register is never versioned
+and proves only what a pre-commit hook can honestly prove — that this clone's tool stamped it — which is
+enough, because the failure it answers is a hand typing. `dmupgrade` writes its entry through the same tool,
+with git's author as the who and the ratifier as a body line to fill in: a fill-in inside the heading would
+have changed the heading after it was stamped.
+
 ## aspects[necessity].meaning
 
 The canonical closed figure for necessity is Aristotle's SQUARE OF OPPOSITION (De Interpretatione;
@@ -895,8 +922,8 @@ so it surfaces as a conflict rather than one of them quietly winning.
 
 THE RANK, DECLARED AT LAST (11.3). MODEL.md and MERGE.md state the guard — an `inferred` value never
 overrides an `asserted-by-human` one — and until 11.3 the order that implements it was four numbers in
-bin/dmmerge.py, the oldest rule in the system kept as a constant in a tool. It is the same construct
-`anchor_authority` uses below. The merge reads it for two things: which src a value several gardens agree
+bin/dmmerge.py, the oldest rule in the system kept as a constant in a tool. (Until 20.0 a second term declared a
+rank of its own for anchors — anchor authority; it is this one now.) The merge reads it for two things: which src a value several gardens agree
 on keeps (the highest), and the guard itself — a value at the TOP of this rank is never dropped in favour
 of one below it, whatever precision the lower one claims. The merge REFUSES to run if this is absent.
 

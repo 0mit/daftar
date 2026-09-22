@@ -5,8 +5,10 @@
 # A failing write cannot be committed by any model or session; that is what makes the gate law rather
 # than advice. To override in a genuine emergency: git commit --no-verify, and say so in the journal.
 root=$(git rev-parse --show-toplevel)
+# `python3` is not a name every machine has (Windows installs `python`); the hook takes whichever is there.
+PY=$(command -v python3 || command -v python) || { echo "daftar hook: python3 is required" >&2; exit 1; }
 # The GATE (staged blobs, the law) and the FAST corpus suite. Both are sub-second-to-2s; the full
 # a release's slower corpus tests are deliberately NOT here — a hook that slow invites --no-verify, which
 # is the failure mode a hook must avoid, and it let a failing test through on 2026-08-02.
-python3 "$root/bin/dmcheck.py" || exit 1
-exec python3 "$root/test/fast.py"
+"$PY" "$root/bin/dmcheck.py" || exit 1
+exec "$PY" "$root/test/fast.py"

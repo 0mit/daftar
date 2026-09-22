@@ -6,3 +6,4 @@ daftar      # the project itself
 daftar-sessions  # this tool's OWN directory name (bin/dmsession.py); a garden that records a root of
                  # that name took the name FROM the tool, so refusing it here would be the tail wagging
                  # the dog — and renaming it, as was tried first, orphans every existing worktree.
+omid        # the author, named once in README.md on a text of his own — by his word, 2026-09-22 ("the persian part is by me")
