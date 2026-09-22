@@ -28,9 +28,9 @@ Every bean has an `identity:` block of **anchors** — facts that say which obje
 recognise the same thing whatever its file is called.
 - Each anchor says `establishing: true` (it identifies the object) or `false` (it only corroborates).
   Only establishing anchors decide that two beans are one object.
-- Typically hardware anchors (`serial`, `mac`) and logical ones (`fqdn`, a product or service id) establish;
-  network ones (`ip`, `hostname`) corroborate. Where the vocabulary declares a policy for an anchor, it
-  overrules the bean.
+- What establishes follows the nature: matter (`serial`, `mac`) for a physical being; a logical id (`fqdn`, a
+  product or service id) for a metaphysical or living one. Network anchors (`ip`, `hostname`) corroborate. Every
+  anchor's key is a term of the vocabulary, and where that term declares a policy, it overrules the bean.
 - How many establishing anchors a confirmed bean needs depends on its nature. A bean below that is
   `identity.status: provisional`, and the gate warns.
 - Two beans with the same establishing anchor are the same object: the gate refuses it. Serials are compared
@@ -38,7 +38,8 @@ recognise the same thing whatever its file is called.
 
 ## Type: nature, then kind
 Every bean has a `nature` — `physical`, `metaphysical` or `living` — and a `kind` that refines it (`host` is
-physical; `domain`, `product`, `codebase` are metaphysical; `person` and `instance` are living). The gate
+physical; `domain`, `product`, `codebase` are metaphysical; `person`, `instance` and `virtual-host` are living: a
+virtual machine has no matter and lapses at teardown). The gate
 refuses a nature that contradicts the kind. Rules about what sort of being something is — such as identity
 anchors — attach to the nature, so every kind under it inherits them.
 

@@ -39,7 +39,7 @@ def _host_names():
     names = {'localhost'}
     for path in glob.glob(os.path.join(ROOT, 'beans', '*.md')):
         fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
-        if not isinstance(fm, dict) or fm.get('kind') != 'host':
+        if not isinstance(fm, dict) or fm.get('kind') not in ('host', 'virtual-host'):
             continue
         names.add(str(fm.get('bean')))
         for a in ((fm.get('identity') or {}).get('anchors') or []):

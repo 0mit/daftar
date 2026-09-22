@@ -71,6 +71,29 @@ P3/D1: identity policy attaches to the ROOT AXIS...
 
 ...and the minimum bites once identity is confirmed.
 
+## identity_policy.anchor_key
+
+AN OPEN KEY WAS AN OPEN MERGE KEY (19.0). Identity is matched by (key, value), and until 19.0 the key was any
+string a bean wrote. The fourth cold-start drill invented a key, product_name, and the gate took it; measured, the
+first garden's beans carried seventeen keys no term declared — `product_id`, `session_id`, `service_id`, the
+ids the kinds registry had NAMED IN PROSE since P3 and never declared. Two gardens spelling one anchor model
+and product_name would never recognise the same object, which is the one thing identity anchors exist to do.
+So the key names a term that declares `anchor:`, and the gate refuses any other. A garden-local key is a local
+term with an anchor policy — the same mechanism every other position has used since 18.x — and a local term
+that proves general is promoted, which is how eleven arrived in the standard at once.
+
+## identity_policy.establishing_family
+
+THE REGISTRY SAID IT; THE GATE CHECKED ONLY THE COUNT (19.0). `establishing_anchor_family` has been in every
+nature's row since P3, and `dmrules` printed it under "every rule below is enforced", while `dmcheck` read only
+`min_establishing_anchors`. The drilled stranger found the gap by reading the gate's source, which a user
+should never need to do. The family is now enforced as an error on a confirmed bean: what establishes a
+physical being is its matter, and a name that establishes it would fuse a replaced machine with the one that
+kept its name — exactly the `id` term's oldest exception. What broke under enforcement was instructive: one
+rented VPS anchored on its name, and three physical machines whose `fqdn` was establishing beside a real
+serial. The VPS was of the wrong nature (see `kinds[virtual-host]`); the names were demoted to corroborating,
+which is what they had always been.
+
 ## natures[physical].crown
 
 Extension owns physical beings
@@ -1066,7 +1089,10 @@ reassignable
 
 ## terms[fqdn].anchor
 
-DNS-unique within its namespace
+DNS-unique within its namespace. Until 19.0 the policy pinned `establishing: true`, which with the family
+enforced would have forbidden a physical machine any `fqdn` anchor at all. The nature decides whether a name
+establishes; the pin was dropped so the bean can write the flag that follows: `true` on a domain, a service or a
+virtual-host; `false` on a machine, and on an org, whose name would otherwise fuse it with its own domain bean.
 
 ## terms[mac].merge
 
@@ -1081,6 +1107,15 @@ a drill committed `syn-0042` beside `SYN-0042` as two machines with 0 errors.
 ## terms[wg_pubkey].anchor
 
 crypto-anchored to the keypair
+
+## terms[product_id]
+
+Declared at 19.0 with `service_id`, `org_id`, `person_id`, `program_id`, `contract_id`, `design_id`, `doc_id`,
+`manifest_id`, `session_id`, `instance_id` and `email`: the ids the kinds registry had named in prose since P3
+("Establishing anchor: a logical product_id") and the first garden had used all along, made terms when
+`identity_policy.anchor_key` required every key to be one. All logical; none declares a form, because each is
+whatever its home assigns or the estate mints once. `manifest_id` and `email` leave `establishing` to the bean
+— a module's name corroborates beside the git remote that establishes, and an address is reassigned.
 
 ## terms[emp_id].enforced_by
 
@@ -1375,6 +1410,23 @@ axiom directly, so every other chain must pass through a being.
 
 == kinds that were in USE but undeclared before P3. Under D1 a kind need only name the nature it
 refines and what it means; anchor family + min-anchors come from that nature.
+
+Narrowed at 19.0 to matter: 7.0 had widened it to "bare metal or virtual" when `vps` was retired, and a
+virtual machine is a `virtual-host` now — see there.
+
+## kinds[virtual-host]
+
+A VIRTUAL MACHINE IS A LIVING BEING (19.0). At 7.0 `vps` was retired into `host` because it described TENANCY,
+which ownership already carried — and the registry noted, against itself, that "D5 will re-read this as an
+instance living_on a provider". Enforcing the anchor family (see `identity_policy.establishing_family`) forced
+the reading: a VM has no matter, so under `host` (physical, family `hardware`) it could never be confirmed
+honestly — the one rented VPS in the first garden was anchored on its name, and another carried its OpenStack
+instance UUID as a `serial`, `class: hardware`, and sat provisional. What a VM IS is a running machine-instance
+on a hypervisor: created, running, torn down. That is the living nature, whose crown `love` "lapses at death or
+teardown", and whose family is logical — a name or the id its provider assigns (`instance_id`). Tenancy stays
+where it was: a rented VM is owned `external` and answered for here; a VM on the estate's own hypervisor is
+owned through it and `lives_in` it. A rented BARE-METAL server stays a `host`: it has a serial, and ownership
+was always orthogonal to nature.
 
 ## recurrence_form
 

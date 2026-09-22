@@ -1,5 +1,5 @@
 ---
-version: "18.3"
+version: "19.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -72,6 +72,8 @@ identity_policy:
   keyed_by: nature
   registry: natures
   applies_at_identity_status: confirmed
+  anchor_key: term
+  establishing_family: enforced
 natures:
   - nature: physical
     meaning: "res extensa — a being with extension in space: machines, hardware, sites"
@@ -1796,13 +1798,13 @@ terms:
     merge: { cardinality: single, order: none }
     canonical: "lowercase"
   - term: fqdn
-    meaning: "a DNS-unique fully-qualified domain name"
+    meaning: "a DNS-unique fully-qualified domain name. Logical: it ESTABLISHES a being whose family is logical (a domain, a service, a virtual-host) and only CORROBORATES a physical one, whose matter identifies it — a replaced machine keeps its name. The nature's family decides; the bean writes the flag that follows"
     context_keys: ["fqdn"]
     schema:
       governs_anchor: fqdn
       value_pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$'
       canonical_note: "IDNA + lowercase; at least two labels"
-    anchor: { class: logical, establishing: true }
+    anchor: { class: logical }
     merge: { cardinality: single, order: none }
     canonical: "IDNA + lowercase"
   - term: mac
@@ -1858,6 +1860,78 @@ terms:
     context_keys: ["emp_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: product_id
+    meaning: "the logical identity of a product: a stable id the product's own home assigns, or the estate mints once (`product:<name>`)"
+    context_keys: ["product_id"]
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: service_id
+    meaning: "the logical identity of a service: a stable id its provider assigns, or the estate mints once"
+    context_keys: ["service_id"]
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: org_id
+    meaning: "the logical identity of an organisation: a registry number, a tax id, or an id the estate mints once"
+    context_keys: ["org_id"]
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: person_id
+    meaning: "the logical identity of a person as a garden knows them: an id the estate mints once. Never a national or government number, which is a secret"
+    context_keys: ["person_id"]
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: program_id
+    meaning: "the logical identity of a program: its package or executable name in its own ecosystem, or an id the estate mints once"
+    context_keys: ["program_id"]
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: contract_id
+    meaning: "the logical identity of a contract: the agreement's own reference, or an id the estate mints once"
+    context_keys: ["contract_id"]
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: design_id
+    meaning: "the logical identity of a design: the id its design tool assigns, or an id the estate mints once"
+    context_keys: ["design_id"]
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: doc_id
+    meaning: "the logical identity of a document: the id its home assigns (a document store, a wiki), or an id the estate mints once"
+    context_keys: ["doc_id"]
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: manifest_id
+    meaning: "the logical identity a manifest or package descriptor declares for the thing it describes (an add-in id, a bundle id, a module's technical name). Whether it ESTABLISHES is the bean's to say: a module's name is unique within its repository and corroborates beside the git_remote that establishes"
+    context_keys: ["manifest_id"]
+    enforced_by: none
+    anchor: { class: logical }
+    merge: { cardinality: single, order: none }
+  - term: instance_id
+    meaning: "the logical identity a provider or a hypervisor assigns a virtual machine (an OpenStack instance UUID, a cloud instance id). It is the VM's, not the matter's: it lapses with the VM"
+    context_keys: ["instance_id"]
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: session_id
+    meaning: "the logical identity of a session: the id `bin/dmsession.py` mints when a session opens"
+    context_keys: ["session_id"]
+    enforced_by: none
+    anchor: { class: logical, establishing: true }
+    merge: { cardinality: single, order: none }
+  - term: email
+    meaning: "an e-mail address a person or an organisation is reached at. Logical; whether it ESTABLISHES is the bean's to say, because an address is reassigned and a person outlives it"
+    context_keys: ["email"]
+    enforced_by: none
+    anchor: { class: logical }
     merge: { cardinality: single, order: none }
   - term: id
     meaning: "a bean/mapping identifier = its filename stem (garden-local; NOT identity)"
@@ -2231,7 +2305,8 @@ kinds:
   - kind: host
     of_nature: physical
     meaning: >
-      A MACHINE THE ESTATE RUNS ON — bare metal or virtual, general-purpose or appliance. Widened at 7.0
+      A MACHINE THE ESTATE RUNS ON — matter of its own: bare metal, general-purpose or appliance. A virtual
+      machine is a `virtual-host` (19.0): it has no matter, and lapses at teardown. Widened at 7.0
       when `vps` and `router` were retired into it, because both described something other than what the
       being IS. `vps` described TENANCY, which `owned_by.legal.external` and `provides_habitat: linux-vm`
       already carried between them — and the kinds registry had flagged this against itself since P3
@@ -2243,6 +2318,16 @@ kinds:
       declaring the router role must still document what it does to traffic — the mechanical guarantee
       `required_on_kinds: [router]` used to give is KEPT, and now reaches a machine that routes AMONG
       OTHER THINGS, which a kind could never express.
+  - kind: virtual-host
+    of_nature: living
+    meaning: >
+      A VIRTUAL MACHINE — a running machine-instance on a hypervisor, rented from a provider or run on a host of
+      the estate's own. It has no matter: what identifies it is the provider's instance id or its name, never a
+      serial, and it lapses at teardown. That is the living nature, as `instance` is. TENANCY is not what it is:
+      a rented VM is owned `external` (the provider) and answered for here; a VM on the estate's own hypervisor
+      is owned through it. Its habitat, where that is a bean, is `lives_in`.
+    schema: "owns: what a host owns (os, endpoints, storage, nics as the hypervisor presents them). Establishing anchor: a logical fqdn or a provider instance id. `lives_in` where the hypervisor is a bean of this garden."
+    min_anchors: "1 establishing (logical) -> else identity.status: provisional + open:"
   - kind: domain
     of_nature: metaphysical
     meaning: "a DNS domain — a name held by agreement with a registry, not a thing in space."
@@ -2523,6 +2608,18 @@ The portable, estate-agnostic classification shared by every garden — the abst
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **19.0** (2026-09-22, proposed rule-change) — **an anchor's key is a term, and a virtual machine is a living
+  being.** The fourth cold-start drill invented an anchor key and the gate took it; measured, one garden's beans
+  carried seventeen keys no term declared, and identity is matched by (key, value), so an open key was an open
+  merge key. `identity_policy.anchor_key: term`: every anchor's key names a term that declares `anchor:`, and the
+  gate refuses any other. The ids the kinds registry had named in prose since P3 are declared: `product_id`,
+  `service_id`, `org_id`, `person_id`, `program_id`, `contract_id`, `design_id`, `doc_id`, `manifest_id`,
+  `session_id`, and `email`. `identity_policy.establishing_family: enforced`: an establishing anchor of a confirmed
+  bean is of its nature's family, as the registry has said and `dmrules` has printed since P3 — the gate had
+  checked only the count. The one bean that broke it was a rented VPS anchored on its name, and the cookbook's
+  recipe had the same shape, because a virtual machine has no matter to anchor: `virtual-host`, `of_nature:
+  living`, is a running machine-instance that lapses at teardown, as `instance` is; `host` is matter. This is the
+  reading the kinds registry foresaw at P3 ("D5 will re-read this as an instance living_on a provider").
 - **18.3** (2026-09-20, proposed rule-change) — **who may reach a surface is a fact of its own.** `endpoints` gains
   `admitted_from` (prose): the named sources a surface admits, beside `exposure`, which says only where it is bound.
   The management-on-the-internet cell becomes `expects: [admitted_from]` instead of `verdict: in_breach`: it warns
