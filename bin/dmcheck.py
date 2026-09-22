@@ -998,6 +998,29 @@ def check_identity_capsule():
             if not isinstance(a['establishing'], bool):
                 errors.append(f"{base}: anchor '{a['key']}'.establishing must be true or false, not "
                               f"{a['establishing']!r} (VOCAB: establish vs corroborate is the load-bearing split)")
+            # WHAT AN ANCHOR MAY CARRY IS DECLARED (20.0, `identity_policy.anchor_attrs`). Until then any key rode
+            # along, which is how `authority` — a second vocabulary for how a value is known — lived beside
+            # `provenance` for two months. An anchor says how it is known the way every entry does.
+            _allowed = IDP.get('anchor_attrs')
+            if _allowed:
+                for _k in sorted(set(a) - set(_allowed)):
+                    _hint = (" — retired at 20.0: write `provenance: { src, by, as_of }` on the anchor only where its "
+                             "source differs from the bean's (scanned → observed, operator-asserted → asserted-by-human)"
+                             if _k == 'authority' else "")
+                    errors.append(f"{base}: anchor '{a['key']}' carries `{_k}`, which an anchor may not "
+                                  f"(VOCAB identity_policy.anchor_attrs: {', '.join(_allowed)}){_hint}")
+                _ap = a.get('provenance')
+                if _ap is not None:
+                    _srcs = ((TERMS.get('provenance_src') or {}).get('schema') or {}).get('values') or []
+                    if not isinstance(_ap, dict) or not _ap.get('src') or not _ap.get('by') or not _ap.get('as_of'):
+                        errors.append(f"{base}: anchor '{a['key']}'.provenance must be {{ src, by, as_of }} — the "
+                                      f"same record a bean carries")
+                    elif _srcs and _ap.get('src') not in _srcs:
+                        errors.append(f"{base}: anchor '{a['key']}'.provenance.src '{_ap.get('src')}' is not one "
+                                      f"of {_srcs} (VOCAB provenance_src)")
+                    elif _ap.get('src') == (fm.get('provenance') or {}).get('src') and _ap.get('by') == (fm.get('provenance') or {}).get('by'):
+                        warns.append(f"{base}: anchor '{a['key']}'.provenance repeats the bean's own — an anchor "
+                                     f"carries a record only where its source differs")
             # a vocabulary term that declares an anchor policy OVERRULES the bean: this is what keeps a
             # role anchor (one that migrates between objects) corroborating-only, whatever a bean claims.
             pol = (TERMS.get(a['key']) or {}).get('anchor')

@@ -37,7 +37,8 @@ nothing.
 identity:
   status: confirmed              # confirmed | provisional (anchorless/weak → provisional)
   anchors:
-    - { key: serial, value: "…", class: hardware, establishing: true, scope: global, observed: 2026-07-30, until: null, authority: operator-asserted }
+    - { key: serial, value: "…", class: hardware, establishing: true, scope: global, observed: 2026-07-30 }
+    - { key: ip, value: "…", class: network, establishing: false, provenance: { src: observed, by: "agent:<model>/<garden>", as_of: 2026-07-30 } }   # its own record, because it differs from the bean's
   replaces: { bean: <old-device> }   # device-swap lifecycle link (optional)
   aka: [host-a, laptop-7]            # garden-local ids seen for this object
 ```

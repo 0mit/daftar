@@ -28,8 +28,8 @@ def _est(a):
 # place the order `generated-by-tool < inferred < observed < asserted-by-human` was written down. MODEL.md and
 # MERGE.md state the GUARD (an inferred value never overrides an asserted-by-human one); the rank that
 # implements it, and that also decides which src a value agreed on by several gardens keeps, was a constant in
-# a tool. `provenance_src` declares it now, the way `anchor_authority` has always declared its own, and
-# `_src_rank` reads it the way `_authority_rank` does.
+# a tool. `provenance_src` declares it now, and `_src_rank` reads it; since 20.0 an anchor's own record is
+# ranked by the same order, `anchor_authority` having been a second vocabulary for the same question.
 DEFAULT_SRC = 'observed'     # what a bean that states no src is read as; the one owner of that default
 
 # ---------- normalization ----------
@@ -442,23 +442,17 @@ def _rank_of(item):
     return _src_rank(item.get('_as') or item['src'])
 
 
-_AUTHORITY_RANK = None
-
-
-def _authority_rank(anchor):
-    """Where an anchor's authority sits in the rank the vocabulary declares. An anchor that states none
-    ranks lowest: a value whose weight nobody recorded cannot outweigh one whose weight was."""
-    global _AUTHORITY_RANK
-    if _AUTHORITY_RANK is None:
-        _AUTHORITY_RANK = ranked_order('anchor_authority') or []
-    a = anchor.get('authority')
-    return _AUTHORITY_RANK.index(a) if a in _AUTHORITY_RANK else -1
+def _anchor_src_rank(anchor):
+    """Where an anchor's source sits in the `provenance_src` rank: its own record's src, else its bean's.
+    `_src_rank` is the position in the declared order, lowest first, so the stronger record wins under max()."""
+    return _src_rank(anchor.get('_src'))
 
 
 def _rank_only(old, new):
-    """True when two records of one anchor differ ONLY in their authority — the case the declared rank is
+    """True when two records of one anchor differ ONLY in how they are known — the case the declared rank is
     for. Any other disagreement is still a disagreement, and is recorded rather than ranked away."""
-    return {k: v for k, v in old.items() if k != 'authority'} == {k: v for k, v in new.items() if k != 'authority'}
+    _strip = lambda d: {k: v for k, v in d.items() if k not in ('provenance', '_src')}
+    return _strip(old) == _strip(new)
 
 
 def merge_field(key, items, member=False):
@@ -656,11 +650,16 @@ def merge_component(comp):
                 # on the floor, so the rank had nothing to weigh and no reader could tell a SCANNED anchor
                 # from one a person asserted. Two gardens that disagree about it resolve by the DECLARED
                 # rank, which is the vocabulary deciding rather than arrival order.
-                if a.get('authority') is not None:
-                    _new['authority'] = a['authority']
+                # HOW IT IS KNOWN SURVIVES THE MERGE (20.0). An anchor carries its own provenance only where it
+                # differs from its bean's, so the record kept here is the anchor's own where it has one and
+                # the bean's src otherwise; two gardens that disagree about it resolve by the `provenance_src`
+                # rank, which is the vocabulary deciding rather than arrival order.
+                if isinstance(a.get('provenance'), dict):
+                    _new['provenance'] = {k: norm(v) for k, v in a['provenance'].items()}
+                _new['_src'] = (a.get('provenance') or {}).get('src') or (fm.get('provenance') or {}).get('src')
                 _old = anchors.get(_ak)
                 if _old is not None and _old != _new and _rank_only(_old, _new):
-                    _new = max((_old, _new), key=_authority_rank)
+                    _new = max((_old, _new), key=_anchor_src_rank)
                     _old = None if _new is not _old else _old
                     anchors[_ak] = _new
                     continue
@@ -698,7 +697,7 @@ def merge_component(comp):
     return {
         'seed': seed_id,
         'kind': kinds[0] if len(kinds) == 1 else (kinds or None),
-        'identity': dict({'anchors': [anchors[k] for k in sorted(anchors)], 'aka': sorted(aka),
+        'identity': dict({'anchors': [{_k: _v for _k, _v in anchors[k].items() if _k != '_src'} for k in sorted(anchors)], 'aka': sorted(aka),
                           'id_basis': 'anchor' if est else 'garden-local'},
                          # Only present when two gardens genuinely disagreed about what an anchor IS.
                          # The resolution above is deterministic so the merge converges; this is the

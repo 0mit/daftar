@@ -52,7 +52,7 @@ prints is a violation.
 - [ ] **Abstraction, not force-fit.** A fact that fits no term went into `attributes:` or `details:` intact,
       rather than into a term that nearly fits.
 - [ ] **Provenance is honest.** `src`, `by` and `as_of` say who really said it and how they know. In particular,
-      an agent never stamps `operator-asserted` on a value it produced itself.
+      an agent never writes `asserted-by-human` on a value it produced itself.
 - [ ] **The identity is true.** The anchor really identifies this object.
 - [ ] **External truth is referenced, not paraphrased** into a second copy.
 - [ ] **It reads correctly cold:** obvious keys, explicit units, absolute dates.
@@ -72,7 +72,7 @@ mistakes rather than catching them afterwards, because they address a document b
 - [ ] `dmsafe.remove_block(path, key)` — removes a top-level key; calling it is the declaration.
 - [ ] `dmsafe.set_nested(path, 'a.b', block, expect=N)` — a nested key by path (`a[].b` reaches into each
       list item).
-- [ ] `dmsafe.flow_set(path, 'identity.anchors[key=fqdn].authority', value, expect=N)` — a value inside a
+- [ ] `dmsafe.flow_set(path, 'identity.anchors[key=fqdn].establishing', value, expect=N)` — a value inside a
       one-line `{ a: 1, b: 2 }` mapping; only the value's bytes change.
 - [ ] `dmsafe.flow_insert(path, 'identity.anchors[]', 'establishing', 'false', after='class', expect=N)` — adds
       a key inside flow mappings.

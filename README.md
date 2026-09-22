@@ -51,7 +51,7 @@ nature: physical
 identity:
   status: confirmed
   anchors:
-    - { key: serial, value: "4XK9-2217",    class: hardware, establishing: true,  authority: operator-asserted }
+    - { key: serial, value: "4XK9-2217",    class: hardware, establishing: true }
     - { key: ip,     value: "192.168.1.20", class: network,  establishing: false }
 provenance: { src: asserted-by-human, by: "you", as_of: 2026-09-22 }
 ```

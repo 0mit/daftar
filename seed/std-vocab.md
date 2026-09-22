@@ -1,5 +1,5 @@
 ---
-version: "19.0"
+version: "20.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -74,6 +74,7 @@ identity_policy:
   applies_at_identity_status: confirmed
   anchor_key: term
   establishing_family: enforced
+  anchor_attrs: [key, value, class, establishing, scope, observed, provenance]
 natures:
   - nature: physical
     meaning: "res extensa — a being with extension in space: machines, hardware, sites"
@@ -1578,13 +1579,6 @@ terms:
     schema:
       path: identity.anchors[].class
       values: [hardware, logical, network, role]
-  - term: anchor_authority
-    meaning: "how much weight an anchor's value carries on merge"
-    context_keys: ["identity.anchors[].authority"]
-    schema:
-      path: identity.anchors[].authority
-      values: [scanned, operator-asserted, external]
-    merge: { order: "scanned<operator-asserted<external" }
   - term: provenance_src
     meaning: "how a fact came to be known. `inferred` may NEVER auto-override `asserted-by-human` (MODEL Rule: the provenance guard)."
     context_keys: ["provenance.src"]
@@ -2550,6 +2544,13 @@ The portable, estate-agnostic classification shared by every garden — the abst
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **20.0** (2026-09-22, proposed rule-change) — **an anchor says how it is known the way every fact does.**
+  `anchor_authority` (`scanned < operator-asserted < external`) was a second vocabulary for the one question
+  `provenance_src` answers, and the two disagreed on twelve anchors of the first garden. It is retired: an anchor
+  carries `provenance: { src, by, as_of }` where its source differs from the bean's, and nothing where it does not
+  — the rule every entry has had since MODEL v2. `identity_policy.anchor_attrs` declares what an anchor may
+  carry, so a retired or invented attribute is refused with its reason. The merge ranks two records of one
+  anchor by `provenance_src`, as it ranks every other value.
 - **19.0** (2026-09-22, proposed rule-change) — **an anchor's key is a term, and a virtual machine is a living
   being.** The fourth cold-start drill invented an anchor key and the gate took it; measured, one garden's beans
   carried seventeen keys no term declared, and identity is matched by (key, value), so an open key was an open

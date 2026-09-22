@@ -179,16 +179,16 @@ sample([f"{r:.0%}  {a}\n           {b}" for r, a, b in raw])
 
 # ---- provenance honest -----------------------------------------------------------------------------
 head("PROVENANCE HONEST",
-     "an anchor may legitimately carry more authority than its bean's default — the model supports it, "
-     "and the gate deliberately does NOT flag it (a rule to do so was tested and rejected). But it is "
-     "also exactly where an agent can stamp operator authority on a value it minted itself. Did a "
+     "an anchor may carry its own provenance where its source differs from its bean's — the model supports it, "
+     "and the gate deliberately does NOT judge it (a rule to do so was tested and rejected). But it is "
+     "also exactly where an agent can write `asserted-by-human` on a value it minted itself. Did a "
      "person actually assert these?")
-rows = [f"{b}: anchor {a['key']} authority={a['authority']}  (bean provenance src={src}, by={by[:44]})"
+rows = [f"{b}: anchor {a['key']} provenance={a['provenance']}  (bean provenance src={src}, by={by[:44]})"
         for b, (fm, _) in DOCS.items()
         for src, by in [((fm.get('provenance') or {}).get('src'), str((fm.get('provenance') or {}).get('by', '')))]
         for a in ((fm.get('identity') or {}).get('anchors') or [])
-        if a.get('authority') == 'operator-asserted' and src != 'asserted-by-human']
-print(f"  {len(rows)} anchor(s) claiming operator authority on a bean the operator did not assert")
+        if isinstance(a.get('provenance'), dict) and a['provenance'].get('src') == 'asserted-by-human' and src != 'asserted-by-human']
+print(f"  {len(rows)} anchor(s) asserted by a person on a bean a person did not assert")
 sample(rows)
 
 # ---- abstraction, not force-fit ---------------------------------------------------------------------

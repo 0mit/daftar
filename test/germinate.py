@@ -52,7 +52,7 @@ summary: "A person written into a garden grown from the seed, proving the langua
 identity:
   status: confirmed
   anchors:
-    - {{ key: person_id, value: "person:ada", class: logical, establishing: true, scope: global, observed: 2026-08-02, authority: operator-asserted }}
+    - {{ key: person_id, value: "person:ada", class: logical, establishing: true, scope: global, observed: 2026-08-02 }}
 provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: 2026-08-02 }}
 nature: {nature}
 owned_by: {{ legal: {{ crown: love }} }}
