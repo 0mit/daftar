@@ -124,8 +124,10 @@ yours; nothing here ever sees it.
 
 Tell the agent:
 
-> Read https://github.com/0mit/daftar/blob/master/INSTALL.md and follow it. My notebook goes at `~/garden`;
-> my private remote is `git@github.com:me/garden.git`.
+> Read https://raw.githubusercontent.com/0mit/daftar/master/INSTALL.md and follow it. My notebook goes at
+> `~/garden`; my private remote is `git@github.com:me/garden.git`.
+
+([`INSTALL.md`](INSTALL.md) is that page.)
 
 The next time you sit down, tell it to read `AGENTS.md` in the notebook — in Claude Code, *"load daftar"*.
 From then on you talk about your things, and the agent keeps the notebook. You will rarely open the folder.
@@ -150,7 +152,7 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 | **anchor** | a fact that identifies an object (a serial, a domain name), so two gardens recognise the same thing |
 | **nature / kind** | what sort of being it is: `physical`, `metaphysical` or `living`, refined by a kind such as `host` |
 | **facet** | an aspect of ownership, e.g. `legal` or `technical`; each has exactly one owner and one holder |
-| **crown** | where every ownership chain ends; in practice a person writes `owned_by: { legal: { crown: love } }` |
+| **crown** | where every ownership chain ends. Its three branches are named for the natures: `nature` for physical things, `logos` for metaphysical, `love` for living — so a person writes `owned_by: { legal: { crown: love } }` |
 | **profile** | an opt-in group of rules, e.g. `domain`, for gardens that hold that kind of thing |
 | **vacancy** | a value the vocabulary offers that nothing uses yet, stated with a reason |
 | **Contract of Parts** | `MODEL.md`: which decisions an agent may take alone and which a person must ratify |

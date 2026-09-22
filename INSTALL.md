@@ -21,9 +21,10 @@ cd ~/daftar
 git checkout "$(git tag -l 'v*' --sort=-v:refname | head -1)"
 ```
 
-A garden records which release it runs, and `bin/dmupgrade.py` moves it to a newer one when the person
-decides to. Growing from an untagged clone works, but pins the garden to nothing anyone else can fetch;
-`germinate.sh` will say so if you do.
+The release you check out may be older than this page and not carry it: read the page to the end first, or
+keep it open from the web. Everything from step 2 on is in the garden itself. A garden records which
+release it runs, and `bin/dmupgrade.py` moves it to a newer one when the person decides to. Growing from an
+untagged clone works, but pins the garden to nothing anyone else can fetch; `germinate.sh` will say so if you do.
 
 ## 2. Grow the garden
 
@@ -40,15 +41,15 @@ matter.
 
 ```sh
 cd ~/garden
-git config user.name  "agent (<model>, <tool>)"          # e.g. "agent (claude fable-5.1, claude-code)"
+git config user.name  "agent (<model>, <session>)"       # the form germinate.sh prints; e.g. "agent (claude fable-5.1, claude-code 2026-09-22)"
 git config user.email "<the address the person chose>"
 git remote add origin git@github.com:me/garden.git      # if there is a remote
 git push -u origin HEAD                                 # the branch is whatever `git init` named it
 ```
 
-Every commit after the first is yours, and the journal's "who" must agree with git's author — that is how a
-reader later tells a person's decision from an agent's action. A person who commits by hand sets their own
-identity the same way.
+Every commit after the first is yours. Write the journal's "who" as the same name, so a reader later tells a
+person's decision from an agent's action by either record; the gate checks that the entry is there, not that
+the two names agree. A person who commits by hand sets their own identity the same way.
 
 ## 4. Read the garden's own door
 
@@ -64,9 +65,11 @@ Show the person the gate's last line. From here on, everything you need is in th
 ## 5. Every later session
 
 The person will say something like *"load daftar"* or *"read AGENTS.md in ~/garden"*. Do that first: run the
-gate, read the reading order, look at the journal's tail for what the last session left, and then work. Before
-you leave, write the journal entry the next agent will need — it may be of another make, with none of your
-context.
+gate, read the reading order, look at the journal's tail for what the last session left, and then work. When
+the person decides something in the session — ratifies an identity anchor, approves a change — the commit is
+still yours, and the journal entry says who decided and in what words: `human (name) ratified, applied by
+agent (…)` is the shape this garden's own journal uses. Before you leave, write the journal entry the next
+agent will need — it may be of another make, with none of your context.
 
 ## If you have no shell
 
