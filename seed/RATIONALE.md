@@ -552,6 +552,20 @@ it was written in, and those stay what they were.
 
 entries a commit adds; never the history
 
+
+## journal.heading
+
+STAMPED, NOT TYPED (20.0). 10.0 made a heading a position in time and the gate checks its form; the truth of
+the moment it never could. The evening this was written, the same writer typed the time before reading the
+clock twice in five hours — 20:06 for 19:52, 22:31 for 22:09 — and both headings were of perfect form. The
+gate cannot tell a measured moment from a remembered one by looking at it. What it can tell is whether the
+clock-reading tool wrote it: `bin/dmjournal.py` records every heading it writes in the clone's own git
+directory, and the gate refuses a heading a commit adds that is not there. The register is never versioned
+and proves only what a pre-commit hook can honestly prove — that this clone's tool stamped it — which is
+enough, because the failure it answers is a hand typing. `dmupgrade` writes its entry through the same tool,
+with git's author as the who and the ratifier as a body line to fill in: a fill-in inside the heading would
+have changed the heading after it was stamped.
+
 ## aspects[necessity].meaning
 
 The canonical closed figure for necessity is Aristotle's SQUARE OF OPPOSITION (De Interpretatione;

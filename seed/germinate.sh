@@ -75,8 +75,8 @@ germinated: $TARGET  (std-vocab@$VER, daftar $RELEASE)
 The garden is empty and it passes its own gate. To plant the first bean:
   1. write $TARGET/beans/<id>.md   (bean: <id> must equal the filename)
   2. append an entry to $TARGET/log/journal.md  — the gate REFUSES a bean staged without one.
-     Its heading is a POSITION IN TIME and the gate checks the form, so read it from the clock:
-       printf '\n## %s · your-name · what you did\n- action: added [[<id>]].\n' "\$(date '+%Y-%m-%d %H:%M%:z')" >> $TARGET/log/journal.md
+     Its heading is a POSITION IN TIME and the gate checks the form, so a tool reads the clock and writes it:
+       python3 bin/dmjournal.py "your-name" "what you did" --body "- action: added [[<id>]]."
   3. git add -A && git commit
 
   python3 bin/dmrules.py   prints every rule in force, derived from the vocabulary.

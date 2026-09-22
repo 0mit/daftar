@@ -193,8 +193,10 @@ def main():
         verb = ('applied' if not (cur_v and new_v) else
                 'downgraded' if tuple(map(int, new_v.groups())) < tuple(map(int, cur_v.groups())) else 'upgraded')
         run('sh', os.path.join(ROOT, 'bin', 'install.sh'), check=False)
-        now = datetime.datetime.now().astimezone().isoformat(timespec='minutes').replace('T', ' ')   # the journal's heading form (10.0)
-        lines = [f"\n## {now} · (fill in who ratified) · RULE-CHANGE: language {verb} to daftar {a.tag}",
+        sys.path.insert(0, os.path.join(ROOT, 'bin')); import dmjournal          # the release's own tool, just applied
+        _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
+        lines = ['\n' + dmjournal.stamp(_who, f"RULE-CHANGE: language {verb} to daftar {a.tag}", ROOT),
+                 "- ratified_by: (fill in who ratified — merging the release's pull request, or the word given here)",
                  f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; "
                  f"std-vocab {before} -> {after}; release {current or 'unrecorded'} -> {a.tag}.",
                  f"- changed: {', '.join(changed) or 'none'}",

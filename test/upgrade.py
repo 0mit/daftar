@@ -87,7 +87,7 @@ check("committing with the journal entry's '(fill in' fields left unfilled is RE
       _c.returncode != 0 and "(fill in" in (_c.stdout + _c.stderr), (_c.stdout + _c.stderr)[-300:])
 _jp = os.path.join(GARDEN, 'log', 'journal.md')
 _jt = open(_jp).read()
-open(_jp, 'w').write(_jt.replace('(fill in who ratified)', 'human (test)')
+open(_jp, 'w').write(_jt.replace('(fill in who ratified — merging the release\'s pull request, or the word given here)', 'human (test)')
                         .replace('(fill in — what this release brings that this garden adopts)', 'the test release'))
 run('git', 'add', '-A', cwd=GARDEN)
 _c = run('git', 'commit', '-qm', 'adopt v0.2.0', cwd=GARDEN)
@@ -142,8 +142,9 @@ open(os.path.join(GARDEN, 'beans', 'vps-a.md'), 'w').write(_ex['beans/vps-a.md']
 _gp = os.path.join(GARDEN, 'GARDEN.md')
 _gtext = open(_gp).read()                       # read FIRST: open(..., 'w') truncates before the read would run
 open(_gp, 'w').write(re.sub(r'^(extends: std-vocab@.*)$', r'\1\ndaftar_release: "v0.2.0"', _gtext, count=1, flags=re.M))
-with open(os.path.join(GARDEN, 'log', 'journal.md'), 'a') as _j:
-    _j.write('\n## 2026-09-17 10:00+00:00 · human (test) · [[sam]] and [[vps-a]], a debian VPS; RULE-CHANGE: release v0.2.0 recorded\n')
+subprocess.run([sys.executable, os.path.join(GARDEN, 'bin', 'dmjournal.py'), 'human (test)',
+                '[[sam]] and [[vps-a]], a debian VPS; RULE-CHANGE: release v0.2.0 recorded', '--body', '- action: added both.'],
+               cwd=GARDEN, check=True, capture_output=True)
 run('git', 'add', '-A', cwd=GARDEN)
 _c = run('git', 'commit', '-qm', 'a debian vps', cwd=GARDEN)
 check("(setup) a VPS on a standard OS commits", _c.returncode == 0, (_c.stdout + _c.stderr)[-300:])

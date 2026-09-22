@@ -1120,6 +1120,7 @@ journal:
   system: any
   unit_at_least: minute
   checks: added
+  heading: stamped
 aspects:
   - aspect: necessity
     meaning: "what a being requires in order to do its work"
@@ -2544,7 +2545,11 @@ The portable, estate-agnostic classification shared by every garden — the abst
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
-- **20.0** (2026-09-22, proposed rule-change) — **an anchor says how it is known the way every fact does.**
+- **20.0** (2026-09-22, proposed rule-change) — **a heading is stamped by the clock, not typed; an anchor says how it
+  is known the way every fact does.** `journal.heading: stamped`: `bin/dmjournal.py` writes every heading from the
+  clock and records it in the clone's git directory, and the gate refuses a heading a commit adds that the tool did
+  not write. The form was checked since 10.0; the truth of the moment never was, and a writer typed the time before
+  reading it twice in one evening. And the anchor:
   `anchor_authority` (`scanned < operator-asserted < external`) was a second vocabulary for the one question
   `provenance_src` answers, and the two disagreed on twelve anchors of the first garden. It is retired: an anchor
   carries `provenance: { src, by, as_of }` where its source differs from the bean's, and nothing where it does not

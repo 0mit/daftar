@@ -83,10 +83,11 @@ not check — for a person, or an agent with a shell, to commit.
 The same three steps grow a garden for a person. Then `seed/README.md` shows a person, a host, and the journal
 entry that commits them, and `seed/COOKBOOK.md` a domain, a service on a machine, a rented server, and how to
 add a value the vocabulary lacks. All of them pass the gate exactly as written, because a test grows a garden
-and commits them. A journal heading is a position in time, read from the clock:
+and commits them. A journal heading is a position in time, read from the clock — so a tool writes it, never
+a hand:
 
 ```sh
-date '+%Y-%m-%d %H:%M%:z'
+python3 bin/dmjournal.py "your-name" "what you did" < entry.md     # the entry's body on standard input
 ```
 
 When the gate refuses something, its message names the rule and, for the common mistakes, the line to write.

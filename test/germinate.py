@@ -116,8 +116,11 @@ check("seed/README.md still shows a first person, a first host AND the journal e
       len(_first) == 2 and len(_first_j) == 1, f"beans={len(_first)} entries={len(_first_j)}")
 for _path, _text in _first:
     open(os.path.join(_ex_tmp, _path), 'w', encoding='utf-8').write(_text + '\n')
-with open(os.path.join(_ex_tmp, 'log', 'journal.md'), 'a', encoding='utf-8') as _j:
-    _j.write('\n' + (_first_j[0] if _first_j else '') + '\n')
+# THE HEADING IS THE TOOL'S (20.0): the page shows the entry a reader would write and the command that writes it;
+# the body is copied as written, the heading is read from the clock by bin/dmjournal.py, as the page says.
+_j_head, _j_body = (_first_j[0] if _first_j else '## x · sam · x\n').split('\n', 1)
+_j_who, _j_what = _j_head.split(' · ')[1], _j_head.split(' · ')[2]
+run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmjournal.py'), _j_who, _j_what, '--body', _j_body, cwd=_ex_tmp)
 run('git', 'add', '-A', cwd=_ex_tmp)
 _first_c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'first beans', cwd=_ex_tmp)
 check("A STRANGER'S FIRST COMMIT GOES THROUGH: the two beans and the entry, copied from the page as written",
@@ -136,9 +139,8 @@ _nas = os.path.join(_ex_tmp, 'beans', 'nas.md')
 if _fragments and os.path.isfile(_nas):
     _n = open(_nas, encoding='utf-8').read()
     open(_nas, 'w', encoding='utf-8').write(_n.replace('provides_habitat: linux-baremetal\n', 'provides_habitat: linux-baremetal\nos: nas-os\n', 1))
-with open(os.path.join(_ex_tmp, 'log', 'journal.md'), 'a', encoding='utf-8') as _j:
-    _j.write('\n## 2026-09-17 10:00+00:00 · human (test) · the README and COOKBOOK examples\n- action: RULE-CHANGE (VOCAB.md adds nas-os); '
-             + ', '.join(p for p, _ in _examples) + '\n')
+run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmjournal.py'), 'human (test)', 'the README and COOKBOOK examples',
+    '--body', '- action: RULE-CHANGE (VOCAB.md adds nas-os); ' + ', '.join(p for p, _ in _examples), cwd=_ex_tmp)
 run('git', 'add', '-A', cwd=_ex_tmp)
 _ex_c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'examples', cwd=_ex_tmp)
 check(f"the {len(_examples)} bean examples and {len(_fragments)} VOCAB fragments in seed/README.md + seed/COOKBOOK.md "
@@ -151,10 +153,14 @@ check("...with ZERO warnings, and the banner names the garden and the release it
 
 # THE JOURNAL ENTRY MUST SAY WHAT IT RECORDS (v0.4.0). Each of these was accepted before: any added byte satisfied
 # the provenance duty, and a vocabulary change needed no RULE-CHANGE marker.
-def _try_commit(mutate, journal_line):
+def _try_commit(mutate, journal_line, stamped=True):
     mutate()
     with open(os.path.join(_ex_tmp, 'log', 'journal.md'), 'a', encoding='utf-8') as _j:
         _j.write(journal_line)
+    if stamped:                                   # register the heading as the tool would, so the FORM is what is tested
+        for _l in journal_line.splitlines():
+            if _l.startswith('## '):
+                subprocess.run([sys.executable, '-c', f"import sys; sys.path.insert(0, 'bin'); import dmjournal; dmjournal.register({_l!r}, '.')"], cwd=_ex_tmp, check=True)
     run('git', 'add', '-A', cwd=_ex_tmp)
     _r = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'probe', cwd=_ex_tmp)
     run('git', 'reset', '-q', '--hard', cwd=_ex_tmp)
@@ -201,6 +207,9 @@ _rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## persian:1405-06-
 check("T3: ...held to the minute there too", _rc != 0 and "is not a position in time" in _o, _o[-300:])
 _rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## martian:0042-01-01 10:00+00:00 · human (test) · [[nas]]\n')
 check("T3: ...and a calendar nobody declared is not one", _rc != 0 and "is not a position in time" in _o, _o[-300:])
+# THE MOMENT IS STAMPED (20.0). A heading of perfect form that bin/dmjournal.py did not write is refused.
+_rc, _o = _try_commit(_append('beans/nas.md', 'More.\n'), '\n## 2026-09-17 10:00+03:00 · human (test) · [[nas]]\n', stamped=False)
+check("a well-formed heading TYPED rather than stamped by bin/dmjournal.py is refused", _rc != 0 and "not written by bin/dmjournal.py" in _o, _o[-300:])
 _jp = os.path.join(_ex_tmp, 'log', 'journal.md')
 _jt = open(_jp, encoding='utf-8').read()
 open(_jp, 'w', encoding='utf-8').write(_jt + '\n## 2026-01-01 · human (test) · an old entry written before the law\n')
@@ -266,8 +275,8 @@ check("a bean staged WITHOUT a journal entry is refused (provenance duty)",
       rc != 0 and 'journal.md not updated' in out, out.strip()[-300:])
 
 # ---- POSITIVE: the same bean, journalled, commits -----------------------------------------------------
-with open(os.path.join(G, 'log', 'journal.md'), 'a', encoding='utf-8') as fh:
-    fh.write("\n## 2026-08-02 10:00+00:00 · agent · first bean\n- action: wrote beans/ada.md to prove the garden holds one.\n- refs: beans/ada.md\n")
+run(sys.executable, os.path.join(G, 'bin', 'dmjournal.py'), 'agent', 'first bean',
+    '--body', "- action: wrote beans/ada.md to prove the garden holds one.\n- refs: beans/ada.md", cwd=G)
 run('git', 'add', '-A', cwd=G)
 rc, out = gate(G)
 check("with the journal entry, the gate passes", rc == 0 and '0 error(s)' in out, out.strip()[-300:])

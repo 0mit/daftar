@@ -2513,11 +2513,28 @@ def check_staged_state():
                 errors.append("the staged journal entry still contains '(fill in' — a template field was left "
                               "unfilled; say who ratified the change and why before committing")
             # THE HEADING IS A POSITION IN TIME (10.0). Only headings this commit ADDS: history is never rewritten.
+            _stamped = None
             for _h in (l for l in jdiff.splitlines() if l.startswith('## ')):
                 if not journal_heading_ok(_h):
                     errors.append(f"journal heading '{_h}' is not a position in time — write "
-                                  f"{JOURNAL.get('heading_form')}, read from the clock (e.g. "
-                                  f"`date '+%Y-%m-%d %H:%M%:z'`), not typed from memory")
+                                  f"{JOURNAL.get('heading_form')}, read from the clock: "
+                                  f"`python3 bin/dmjournal.py \"<who>\" \"<what>\" < entry.md` writes it")
+                    continue
+                # THE MOMENT IS MEASURED, NOT REMEMBERED (20.0, `journal.heading: stamped`). The gate cannot tell
+                # a clock reading from a typed one by its form; it can tell whether bin/dmjournal.py wrote it,
+                # because the tool registers every heading it writes in this clone's git directory.
+                if JOURNAL.get('heading') == 'stamped':
+                    if _stamped is None:
+                        try:
+                            import dmjournal
+                            _stamped = dmjournal.registered(ROOT)
+                        except Exception:
+                            _stamped = set()
+                    if _h.rstrip() not in _stamped:
+                        errors.append(f"journal heading '{_h[:80]}' was not written by bin/dmjournal.py — a heading "
+                                      f"is read from the clock by the tool, never typed (VOCAB journal.heading: "
+                                      f"stamped): `python3 bin/dmjournal.py \"<who>\" \"<what>\" < entry.md`, "
+                                      f"then remove the typed heading")
         for p in staged:
             if not (p.startswith(DOCUMENTISH) or p.endswith(FRONT_MATTER_DOCS)):
                 continue
@@ -2884,6 +2901,17 @@ PLIES = (
      "PHASE 3 (warn): the reverse gate's rule applied to the relations the GARDEN declares"),
 )
 
+def _shaped(msg, width=110):
+    """THE FINDING ON ITS OWN LINE, THE REASON BENEATH IT. A finding and its reason were one 300-character line,
+    so every narrow view — a terminal, a grep, a quotation in a report — cut it mid-sentence, and the fourth
+    cold-start drill quoted a heading the gate had truncated. The text is unchanged: it is broken only at the
+    ` — ` that already separates what is wrong from why, and only where the line would not fit."""
+    if len(msg) <= width or ' — ' not in msg:
+        return msg
+    head, _, rest = msg.partition(' — ')
+    return head + '\n      — ' + rest
+
+
 def main():
     """Run every ply in the declared order, report, and set the exit status.
 
@@ -2899,8 +2927,8 @@ def main():
     # printed the same cycle four times — and a repeated line reads as four problems.
     warns[:] = list(dict.fromkeys(warns))
     errors[:] = list(dict.fromkeys(errors))
-    for w in warns:  print("WARN ", w)
-    for e in errors: print("ERROR", e)
+    for w in warns:  print("WARN ", _shaped(w))
+    for e in errors: print("ERROR", _shaped(e))
     print(f"\n{_product()}: {len(docs)} docs, {len(errors)} error(s), {len(warns)} warning(s)")
     return 1 if errors else 0
 
