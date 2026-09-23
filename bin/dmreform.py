@@ -194,8 +194,12 @@ def new_schema_parts(term_def):
 
 
 def _comparable(form):
+    """A form as the round trip compares it. `in: prose` is left out: the old spelling had no word for "words", and the
+    translation says it of `what`/`why`/`note` — which adds one refusal, a list or a map where words belong, that the
+    old form never read as words either. Everything else must come back as it went."""
     f = {k: v for k, v in form.items() if k != 'unknown'}
-    f['order'] = {k: v for k, v in form['order'].items() if k[1] != 'meaning'}
+    f['order'] = {k: v for k, v in form['order'].items() if k[1] not in ('meaning', 'prose')}
+    f['attrs'] = {n: {fk: fv for fk, fv in a.items() if fk != 'prose'} for n, a in (form.get('attrs') or {}).items()}
     return f
 
 

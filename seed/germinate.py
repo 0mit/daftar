@@ -123,7 +123,8 @@ def main(argv):
     if '--gardener' in argv:
         i = argv.index('--gardener'); gid = argv[i + 1] if i + 1 < len(argv) else None; argv = argv[:i] + argv[i + 2:]
         if not gid or not re.match(r'^[a-z0-9]+(-[a-z0-9]+)*$', gid):
-            die("--gardener takes the id of the person who keeps the garden: kebab-case, e.g. --gardener sam")
+            die("--gardener takes the id of whoever keeps the garden — a person, or with --gardener-kind org an "
+                "organisation: kebab-case, e.g. --gardener sam")
     if '--gardener-name' in argv:
         i = argv.index('--gardener-name'); gname = argv[i + 1] if i + 1 < len(argv) else None; argv = argv[:i] + argv[i + 2:]
     if '--gardener-kind' in argv:

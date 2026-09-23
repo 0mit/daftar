@@ -276,7 +276,7 @@ for r in std.get('retired') or []:
 head("PROVENANCE RECORD — on a bean, an anchor or an entry")
 _pr = std.get('provenance_record') or {}
 print(f"  a record carries only {_pr.get('attrs')}; each record in `from` only {_pr.get('from_attrs')}, with a `src`")
-print("  `garden` names a garden this one knows (its own, or a `garden` bean's garden_id), never this one")
+print("  `garden` names another garden this one knows (a `garden` bean's garden_id); a record made here carries none (warned)")
 
 head("REVERSE GATE — the rules must be passed by the objects")
 print("  every position a term declares must be OCCUPIED by a bean, or declared vacant with a reason")

@@ -124,6 +124,9 @@ out = manifest(re.sub(r'(?m)^gardener:.*$', 'gardener: tool', MANIFEST))
 check("a gardener of a kind the law does not let keep a garden is refused, the kinds read from the law",
       "manifest.gardener 'tool' is a program, and this attribute names a bean of kind person or org" in out, out[-500:])
 drop("beans/tool.md")
+out = manifest(MANIFEST.replace("\n---\n", "\ntest: [ 1, 2 ]\n---\n", 1) if MANIFEST.startswith("---\n") else MANIFEST)
+check("a manifest's words (`test: [1, 2]`) are one text, not a list (in: prose)",
+      "manifest.test is words, written as one text — not a list" in out, out[-500:])
 out = manifest(re.sub(r'(?m)^garden:.*\n', '', MANIFEST))
 check("a manifest with no `garden:` is refused", "GARDEN.md: `garden:` is missing" in out, out[-500:])
 out = manifest(re.sub(r'(?m)^extends:.*\n', '', MANIFEST))
@@ -186,6 +189,10 @@ put("beans/ben.md", person("ben"))
 put("beans/garden-b.md", garden_bean("0123456789ab", 'test: "a rehearsal of ben\'s household"\n'))
 out = gate()
 check("...and on the `garden` bean for another garden it passes: the receiver's own record that it is a rehearsal", ok(out), out[-500:])
+put("beans/garden-b.md", garden_bean("0123456789ab", "test: [ a, b ]\n"))
+out = gate()
+check("...but as ONE saying: a list where the law asks for one value is refused (shape: scalar)",
+      "test is ONE value, not a list" in out, out[-500:])
 put("beans/garden-b.md", garden_bean(GID))
 out = gate()
 check("a `garden` bean anchored by this garden's own id is refused — a clone is the same garden",
@@ -200,6 +207,44 @@ out = tx(borne="[ { party: ali, share: 1 }, { party: ali, share: 2 } ]")
 check("...and so are two bearers named ali", "borne_by holds two entries for party 'ali'" in out, out[-500:])
 out = tx(borne="[ { party: ali, share: 2 }, { party: sam, share: 1 } ]")
 check("...while bearers in any order pass", ok(out), out[-500:])
+out = tx(borne='[ { party: "deal:ali", share: 1 }, { party: ali, share: 2 } ]')
+check("a party written as `<this bean>:<key>` is refused: a key of this bean has one spelling, the bare one",
+      "names this bean's own key — write it bare: 'ali'" in out, out[-500:])
+out = tx(borne="[ { party: [ ali ], share: 1 }, { party: sam, share: 2 } ]")
+check("...and a party written as a list: one entry names one party", "names one key of `parties`" in out, out[-500:])
+out = deal("clauses:\n  rent: { what: \"rent\", by: ali, to: sam, amount: { count: 100, unit: XTS }, due: 2026-09-01, "
+           "every: { of: time, in: [ gregorian-civil ], each: month } }\n")
+check("a repetition whose `in:` is a list is refused by name, not a traceback",
+      "names ONE positioning system" in out and "Traceback" not in out, out[-500:])
+out = deal("clauses:\n  rent: { what: \"rent\", by: ali, to: sam, due: 2026-09-01, every: { of: [ time ], each: month } }\n")
+check("...and one whose `of:` is a list", "names no aspect" in out and "Traceback" not in out, out[-500:])
+drop("beans/deal.md")
+put("beans/ben.md", person("ben").replace("key: person_id,", "key: [ person_id ],"))
+out = gate()
+check("an anchor whose key is a list is refused by name, not a traceback",
+      "an anchor's key is a term's name" in out and "Traceback" not in out, out[-500:])
+drop("beans/ben.md")
+_vocab = open(os.path.join(G, "VOCAB.md"), encoding="utf-8").read()
+for blk, want in (("local_terms: 5", "`local_terms` is a list"), ("vacancies: 5", "`vacancies` is a list"),
+                  ("registry_additions: 5", "`registry_additions` is a mapping"),
+                  ("registry_additions: { facets: 5 }", "`registry_additions.facets` is a list of rows")):
+    key = blk.split(":")[0]
+    put("VOCAB.md", re.sub(r"(?m)^" + key + r":.*\n(?:[ -].*\n)*", "", _vocab, count=1).replace("---\n", "---\n" + blk + "\n", 1))
+    out = gate()
+    check(f"VOCAB.md with `{blk}` is refused by name, not a traceback", want in out and "Traceback" not in out, out[-500:])
+put("VOCAB.md", _vocab)
+
+# ---------------------------------------------------------------- A DISAGREEMENT BETWEEN GARDENS, CAPTURED
+_two = ('{ conflict: [ { what: "a thing", amount: { count: 900, unit: XTS }, paid_by: [ { party: sam } ] }, '
+        '{ what: "a thing", amount: { count: 960, unit: XTS }, paid_by: [ { party: sam } ] } ] }')
+out = deal(f"merge_open: true\nmerge_conflicts: [\"transactions.t\"]\ntransactions:\n  t: {_two}\n")
+check("a transaction two gardens recorded with two amounts, captured by the merge (`merge_open`), commits with a warning "
+      "— both kept for the gardener, as every captured conflict is",
+      ok(out) and "left UNCLEAN by a semantic merge" in out and "transactions.t" in out, out[-600:])
+out = deal(f"transactions:\n  t: {_two}\n")
+check("...while the same conflict record with nothing declaring it is refused, named at its path",
+      "holds an unresolved merge at transactions.t with no `merge_open: true`" in out, out[-600:])
+drop("beans/deal.md")
 
 # ---------------------------------------------------------------- A NUMBER IS WHAT WAS WRITTEN
 for spelling, what in (("010", "eight, in octal"), ("0x64", "a hundred, in hex"), ("1:30", "ninety, in base sixty"),
@@ -307,9 +352,14 @@ check("...and one that reaches `legal` through another passes", ok(out), out[-50
 put("VOCAB.md", VOCAB)
 
 # ---------------------------------------------------------------- THE JOURNAL, AND WHAT A REFUSAL TELLS A PERSON TO RUN
-def commit_with(bean_text, body):
+def commit_with(bean_text, body, typed=None):
+    """Commit a change to ali with a journal entry written by the tool; `typed` is then appended to the journal by hand,
+    as an editor would, because the tool itself refuses a line boundary it is handed — the gate must refuse it too."""
     put("beans/ali.md", bean_text)
     j = run(sys.executable, os.path.join(G, "bin", "dmjournal.py"), "sam", "ali again", "--body", body, cwd=G)
+    if typed is not None:
+        with open(os.path.join(G, "log", "journal.md"), "a", encoding="utf-8", newline="\n") as fh:
+            fh.write(typed + "\n")
     run("git", "add", "-A", cwd=G)
     c = run("git", "commit", "-q", "-m", "ali again", cwd=G)
     out = c.stdout + c.stderr
@@ -326,7 +376,8 @@ check("(setup) ali is committed through the gate", c.returncode == 0, c.stdout +
 for ch, name in (("\x1c", "a file separator"), ("\u2028", "a Unicode line separator"), ("\x0b", "a vertical tab"),
                  ("\r", "a carriage return in the middle of a line")):
     rc, out, _j = commit_with(person("ali").replace("ali.\n", f"ali, {len(name)}.\n"),
-                              f"- action: changed [[ali]].{ch}## 2026-09-23 07:00+03:00 · sam · a heading nobody wrote{ch}- sam: x")
+                              "- action: changed [[ali]].",
+                              f"- note: a line.{ch}## 2026-09-23 07:00+03:00 · sam · a heading nobody wrote{ch}- sam: x")
     check(f"a journal line holding {name} before a typed heading is refused at commit",
           rc != 0 and "log/journal.md: an added line holds" in out, out[-600:])
 rc, out, _j = commit_with(person("ali").replace("ali.\n", "ali, once more.\n"), "- action: changed [[ali]] once more.")

@@ -1554,11 +1554,18 @@ def analyse(path, as_test=False):
             if cap is not None and owner:
                 hits = [gardener_here] if cap.get(GARDENER_OF) else (resolve('gardener', [(claimed, cap)]).get(claimed)
                                                                      or [])
-            if owner and not hits:
+            if owner and cap is None:
                 L.append(f"  NOTE it names its gardener `{claimed}` — a name its own garden gave, for a being it "
-                         + ("does not carry" if cap is None else "carries and this garden does not hold")
-                         + f", so the name cannot be checked here; this garden records [[{owner}]] as keeping [[{fb}]], "
-                           f"and the journal and the capture name [[{owner}]]")
+                         f"does not carry, so the name cannot be checked here; this garden records [[{owner}]] as "
+                         f"keeping [[{fb}]], and the journal and the capture name [[{owner}]]")
+            elif owner and not hits:
+                # it CARRIES the being it names as its gardener, and that being's anchors are not the keeper's here:
+                # the proposal says someone else keeps that garden, which is a claim about identity, not a name
+                R.append((f"it says its gardener is {claimed} and carries that being, whose establishing anchors are "
+                          f"not those of [[{owner}]] — whom this garden records as the one who keeps [[{fb}]]",
+                          f"a person decides (class J): if {claimed} is [[{owner}]], record the anchor on [[{owner}]] "
+                          f"first; if [[{fb}]] is now kept by someone else, record that on it; otherwise ask the "
+                          f"sending garden why its proposal says so"))
             if hits and owner:
                 if owner not in hits:
                     R.append((f"it says its gardener is {claimed}, who is [[{', '.join(hits)}]] here — and this garden "

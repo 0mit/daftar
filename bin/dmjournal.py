@@ -42,6 +42,7 @@ import datetime
 import os
 import subprocess
 import sys
+import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
@@ -123,7 +124,9 @@ def refuse_breaks(label, text, line_ends_too=False):
                              f"nothing written. Write it as an ordinary line end, or leave it out")
     if line_ends_too and ('\n' in text or '\r' in text):
         raise SystemExit(f"dmjournal: {label} holds a line break — it is one line of the heading; nothing written")
-    bad = next((ch for ch in text if (ch < ' ' and ch not in '\t\n') or ch == '\x7f'), None)
+    # every character Unicode calls a control (Cc: C0, DEL and C1 — U+009B is a terminal's 8-bit CSI), but a tab and
+    # the body's line feed
+    bad = next((ch for ch in text if unicodedata.category(ch) == 'Cc' and ch not in '\t\n'), None)
     if bad == '\x00':
         raise SystemExit(f"dmjournal: {label} holds NUL (\\x00), a control character — it looks like UTF-16 without "
                          f"its byte-order mark, a NUL after every letter; nothing written. Save the entry as UTF-8, "

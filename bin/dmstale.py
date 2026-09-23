@@ -413,9 +413,9 @@ def occurrences(first, rec, systems=None, units=None, skipped=None):
     end = None
     if rec.get('to') is not None:
         try:
-            end = dmcal.to_day(str(rec['to']))
+            end = day_of(rec['to'])
         except (ValueError, dmcal.NotByRule) as e:
-            raise Unreckoned(f"`to: {rec['to']}` — {e}")
+            raise Unreckoned(f"`to: {brief(rec['to'])}` — {e}")
     if end is not None and first > end:
         return
     yield first
@@ -528,7 +528,7 @@ def due_entries(fm, term, decl, today=None, notes=None):
         try:
             # THROUGH THE DAY, in whatever calendar the date was stated in (16.0). A calendar that is not reckoned
             # by rule cannot be aged by arithmetic, and is skipped rather than guessed at.
-            first = dmcal.to_day(str(e[attr]))
+            first = day_of(e[attr])
         except dmcal.NotByRule:
             continue                          # looked up, never computed: left alone rather than guessed at (16.0)
         except ValueError as why:
@@ -586,6 +586,15 @@ def brief(v, width=60, quote=False):
     return f"{q}{t}{q}" if len(t) <= width else f"{q}{t[:width]}…{q} ({len(t)} characters)"
 
 
+def day_of(v):
+    """The day number of a position a bean wrote — text, or a date YAML read — or ValueError saying it is none. A list,
+    a map, a boolean or nothing is no date, and is said to be one in the reader's words, never handed to dmcal as
+    Python spells it (`['a', 'b']`, `True`)."""
+    if isinstance(v, (str, datetime.date)) and not isinstance(v, bool):
+        return dmcal.to_day(str(v))
+    raise ValueError(f"{brief(v, quote=True)} is not a date")
+
+
 def from_words(first, rec, attr, v):
     """A sentence for the reader when a repetition's own `from` names another day than the one it repeats from — or None.
     The walk starts at the entry's `attr` (its first due date): that is the day the entry names, and a `from` that says
@@ -594,7 +603,7 @@ def from_words(first, rec, attr, v):
     if f is None:
         return None
     try:
-        if dmcal.to_day(str(f)) == first:
+        if day_of(f) == first:
             return None                       # the same day, however it is written
         unread = ''
     except (ValueError, dmcal.NotByRule) as e:
@@ -617,7 +626,7 @@ def _due_in_dispute(label, e, sides, attr, rep, decl, today):
         if silenced(x, decl) or not x.get(attr):
             continue
         try:
-            first = dmcal.to_day(str(x[attr]))
+            first = day_of(x[attr])
         except dmcal.NotByRule:
             unwalked.append(f"{attr} {brief(x[attr])} cannot be aged by rule — it is looked up, never computed")
             continue

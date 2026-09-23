@@ -249,6 +249,13 @@ def read_transaction(key, e, rule, units):
         tx['notes'].append(f"{rule['parts']} holds {not_an_entry(odd[0])}, which is not an entry "
                            f"({{{rule['party']}, {rule['part_amount']}}}) — left out until it is one")
         return tx
+    unnamed = [p for p in parts if not isinstance(p.get(rule['party']), str) or not p.get(rule['party'])]
+    if unnamed:
+        # AN ENTRY THAT NAMES NO PARTY OWES AND IS OWED NOTHING: read, its money was booked to a party called `None`
+        # or `['sam']`, which nobody wrote. A party is one key of the agreement's parties, written as text.
+        tx['notes'].append(f"{rule['parts']} holds an entry that names no {rule['party']} as text "
+                           f"({dmstale.brief(unnamed[0], quote=True)}) — left out until it names one")
+        return tx
     stated = [(p.get(rule['party']), p.get(rule['part_amount'])) for p in parts]
     if not stated:
         tx['notes'].append("nobody is recorded as having paid it — left out")
@@ -283,7 +290,11 @@ def read_transaction(key, e, rule, units):
             tx['notes'].append(f"{BEARING} holds {not_an_entry(b)}, which is not an entry "
                                f"({{{rule['bearer']}, {SHARE}}}) — left out until it is one")
             return tx
-        who, s = str(b.get(rule['bearer'])), b.get(SHARE)
+        if not isinstance(b.get(rule['bearer']), str) or not b.get(rule['bearer']):
+            tx['notes'].append(f"{BEARING} holds an entry that names no {rule['bearer']} as text "
+                               f"({dmstale.brief(b, quote=True)}) — left out until it names one")
+            return tx
+        who, s = b[rule['bearer']], b.get(SHARE)
         if s is None:
             tx['notes'].append(f"{who} is named as bearing it and names no {SHARE} — left out until it does")
             return tx
@@ -460,7 +471,7 @@ def clause_lines(term, key, e, sch, units, systems, today):
             if 'quantity' in f or (a == due and e.get(CONDITION) is None):
                 unknown.append(a)
         elif a == CONDITION:
-            facts.append(f"in force when: \"{v}\"")
+            facts.append(f"in force when: \"{v}\"" if isinstance(v, str) else f"in force when: {dmstale.brief(v, 200, quote=True)}")
         elif 'quantity' in f:
             c, why = read_count(v)
             facts.append(f"{a} " + (said(c, v.get('unit'), units) if c is not None else
@@ -487,7 +498,7 @@ def due_words(attr, v, rec, systems, today):
     bin/dmstale.py; the notes name each cell the walk skipped on the way to it (a month without the day named)."""
     shown = dmstale.brief(v)
     try:
-        first = dmcal.to_day(str(v))
+        first = dmstale.day_of(v)
     except (ValueError, dmcal.NotByRule) as why:
         return f"{attr} {shown} ({why})", []
     if not isinstance(rec, dict):

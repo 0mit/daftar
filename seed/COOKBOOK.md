@@ -233,9 +233,9 @@ garden does.
 commit, so two gardens grown with one name in the same second are still two. In each garden,
 `python3 bin/dmpropose.py id` prints its id, its name and its gardener; the gardeners tell each other.
 
-**First contact: the other garden, and the person who keeps it.** A garden deals only with a garden it has recorded:
+**First contact: the other garden, and who keeps it.** A garden deals only with a garden it has recorded:
 a `garden` bean, anchored by the id the other gardener read out, owned by that gardener and answered for by them — so
-that gardener is a person bean here too. Accepting a garden, and a name for the person who keeps it, is the
+that gardener is a person (or organisation) bean here too. Accepting a garden, and a name for whoever keeps it, is the
 gardener's decision (class F): write the two beans, journal them in one entry, and commit them as ONE commit.
 
 <!-- example: beans/garden-ali.md -->

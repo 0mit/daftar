@@ -86,7 +86,9 @@ def _domain(d):
         return 'values', list(d)
     if d in ('extent', 'ref', 'recurrence', 'bean_id'):
         return d, True
-    if d in ('prose', 'untyped', 'id', 'any') or d is None:
+    if d == 'prose':
+        return 'prose', True                 # words: any text, and only text — never a list or a map
+    if d in ('untyped', 'id', 'any') or d is None:
         return None, None
     if isinstance(d, dict):
         if 'aspect' in d:

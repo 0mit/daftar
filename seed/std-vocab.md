@@ -88,7 +88,7 @@ manifest:
   attrs:
     garden:         { required: true, in: { type: kebab }, meaning: "the garden's name, for people. A name, not an identity: two gardens may carry the same one, and a garden's identity is the commit it germinated from (`garden_id`)" }
     extends:        { required: true, in: any, meaning: "the standard it pins, `std-vocab@<version>` — judged by the pin check" }
-    daftar_release: { in: { pattern: '^(v[0-9]+\.[0-9]+\.[0-9]+|untagged ([0-9a-f]{4,40}|unknown))$' }, meaning: "the release it runs: a release tag, or `untagged <commit>` for a garden grown from a checkout that is on no tag; bin/dmupgrade.py moves it" }
+    daftar_release: { in: { pattern: '^(v[0-9]+\.[0-9]+\.[0-9]+|untagged ([0-9a-f]{4,40}|unknown))$' }, meaning: "the release it runs: a release tag, or `untagged <commit>` for a garden grown from a checkout that is on no tag (`untagged unknown` from a copy with no history); bin/dmupgrade.py moves it" }
     gardener:       { in: { bean_id: { kinds: [person, org] } }, meaning: "the person — or organisation — who keeps the garden: a bean of the garden. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
     test:           { in: prose, meaning: "present when the garden is a rehearsal or a test, saying what it rehearses. Its beans are not facts about the world, and a proposal from it says so" }
     origin:         { in: prose, meaning: "where the garden began, for a reader" }
@@ -1022,7 +1022,7 @@ vacancies:
   - at: "owned_by.entry_one_of"
     position: contract
     reason: prediction
-    why: "Co-ownership of a single facet. The machinery is built and unused: the one `contract` bean in the reference garden is NOT an ownership contract — its own summary says it is a standalone co-facilitation contract, and its terms name two organisations as creation-facilitators, 'NOT owners of the code', which is owned outright by the operator. Nothing is co-owned today. Expected to arrive with the first facet two parties genuinely share, which is what the form and its `agreement_ref` + `conflict_rule` requirements exist for."
+    why: "Co-ownership of a single facet: a facet two parties genuinely share is owned by a `contract` bean — its `parties`, the `words` they agreed in, and a clause saying how they decide when they differ. An agreement ABOUT a being (a stake, a facilitation) is not ownership of it and needs no such facet. Expected with the first facet two parties share."
   - at: "responsibility.entry_one_of"
     position: contract
     reason: prediction
@@ -1820,10 +1820,10 @@ terms:
     anchor: { class: network, establishing: false }
     merge: { cardinality: single, order: cidr, authority: "scanned<operator-asserted<external" }
     canonical: "python ipaddress normal form (v4/v6); reject bad octets"
-    escape: "bean `shared_identifiers:` (floating/VRRP/anycast) or `scope:`/`network:` (reused private range)"
+    escape: "bean `shared_identifiers:` (floating/VRRP/anycast), or the network the address is on (reused private range)"
     exceptions:
       - { case: "shared/floating/VRRP/anycast IP", decision: "co-owned; own-bean+ref OR shared_identifiers", why: "many nodes answer for one address", acked: 2026-07-31 }
-      - { case: "reused RFC1918 range on isolated LANs", decision: "qualify with scope/network", why: "private ranges exist independently", acked: 2026-07-31 }
+      - { case: "reused RFC1918 range on isolated LANs", decision: "qualify with the network it is on", why: "private ranges exist independently", acked: 2026-07-31 }
       - { case: "dotted-quad that is NOT an ip (v17.0.0.0, CIDR base)", decision: "only values under context_keys are ips; parse with ipaddress", why: "free-text mis-read as IPs", acked: 2026-07-31 }
       - { case: "IPv6 / abbreviated shorthand (.160)", decision: "canonical full form required; ipv6 deduped", why: "invisible to IPv4-only check", acked: 2026-07-31 }
   - term: hostname
@@ -2726,7 +2726,7 @@ The portable, estate-agnostic classification shared by every garden — the abst
   author, as before. `document` and `event` are kinds, identified by `content_hash` and `event_id`, and a happening
   between people may end at the crown too, answered for by whoever hosted it. `recurrence_form.times` counts
   instalments. BETWEEN GARDENS: the manifest is judged as itself (`manifest`): each attribute in its form, the
-  required ones present, `daftar_release` a release tag or `untagged <commit>`, and its `gardener` a bean the garden
+  required ones present, `daftar_release` a release tag or `untagged <commit | unknown>`, and its `gardener` a bean the garden
   holds, of a kind the manifest admits — a person or an organisation; a garden grown to rehearse says so in `test`; a
   garden is a being (`garden`, anchored by `garden_id`: the commit it germinated from, which no one assigns and every
   clone shares), and the receiving garden marks one it knows to be a rehearsal with `test`, its own record, whatever

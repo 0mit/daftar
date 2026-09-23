@@ -159,6 +159,11 @@ refused("UTF-16 with no byte-order mark (a NUL after every letter) is refused, s
 for _ch, _nm in (('\x00', 'NUL'), ('\x07', 'BEL'), ('\x08', 'a backspace'), ('\x1b', 'ESC'), ('\x7f', 'DEL')):
     refused(f"a body holding {_nm} — a control character, not text — is refused",
             ['sam', 'x'], stdin=f'- action: a{_ch}[2Jb.\n'.encode('utf-8'), says='control character')
+for _ch in ('\x80', '\x9b', '\x9f'):
+    refused(f"a body holding U+{ord(_ch):04X}, a C1 control character, is refused",
+            ['sam', 'c1', '--body', '- action: a' + _ch + 'b'], says='control character')
+refused("<what> holding U+009B, the 8-bit CSI, is refused", ['sam', 'a\x9b2Jb', '--body', '- action: x'],
+        says='control character')
 refused("<what> holding ESC is refused", ['sam', 'a\x1b[2Jb', '--body', '- action: x'], says='control character')
 refused("<who> holding BEL is refused", ['sa\x07m', 'x', '--body', '- action: x'], says='control character')
 before = journal()

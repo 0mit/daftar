@@ -151,6 +151,19 @@ if not isinstance(vocab_fm, dict) or '__err__' in vocab_fm:
                   f"{vocab_fm['__err__'] if isinstance(vocab_fm, dict) else 'not a mapping'}) — this garden's own "
                   f"vocabulary is a mapping of what it adds to the law")
     vocab_fm = {}
+# ...and each block it adds is read in its own shape or not at all: `local_terms: 5` refused by name, never a traceback.
+for _blk, _shape in (('local_terms', list), ('local_kinds', list), ('vacancies', list), ('extends_profiles', list),
+                     ('registry_files', list), ('registry_links', list), ('registry_additions', dict),
+                     ('identity_policy', dict)):
+    if vocab_fm.get(_blk) is not None and not isinstance(vocab_fm[_blk], _shape):
+        errors.append(f"VOCAB.md: `{_blk}` is a {'list' if _shape is list else 'mapping'}, not "
+                      f"{type(vocab_fm[_blk]).__name__} — it is left unread until it is one")
+        vocab_fm[_blk] = _shape()
+for _name in list((vocab_fm.get('registry_additions') or {})):
+    if not isinstance(vocab_fm['registry_additions'][_name], list):
+        errors.append(f"VOCAB.md: `registry_additions.{_name}` is a list of rows, not "
+                      f"{type(vocab_fm['registry_additions'][_name]).__name__} — it is left unread until it is one")
+        vocab_fm['registry_additions'][_name] = []
 
 
 _FILE_REGISTRIES = {}
@@ -236,7 +249,17 @@ for _pname in (vocab_fm.get('extends_profiles') or []):
     PROFILE_TERMS += (_prof.get('terms') or [])
     PROFILE_VAC += (_prof.get('vacancies') or [])
 
-TERMS, TIER0_TERMS = {}, set()
+class _Named(dict):
+    """A table of the law looked up by a name a bean wrote. A name is text: a list or a map where a name belongs names
+    nothing here — the entry's own check refuses it by name — and is never a traceback in a check that only asked."""
+    def get(self, k, d=None):
+        return dict.get(self, k, d) if isinstance(k, (str, int, bool, float, type(None))) else d
+
+    def __contains__(self, k):
+        return isinstance(k, (str, int, bool, float, type(None))) and dict.__contains__(self, k)
+
+
+TERMS, TIER0_TERMS = _Named(), set()
 for t in (std_fm.get('terms') or []) + PROFILE_TERMS:
     if isinstance(t, dict) and t.get('term'):
         TERMS[t['term']] = t
@@ -247,7 +270,7 @@ for t in (vocab_fm.get('local_terms') or []):
 SCHEMAS = {n: t['schema'] for n, t in TERMS.items() if isinstance(t.get('schema'), dict)}
 
 # KINDS registry: what each kind IS, including the nature it refines (P3/D1 `of_nature`).
-KINDS = {}
+KINDS = _Named()
 for k in (std_fm.get('kinds') or []) + (registry('local_kinds') or []):
     if isinstance(k, dict) and k.get('kind'):
         KINDS[k['kind']] = k
@@ -495,7 +518,7 @@ def day_unwritten(val, row):
     except dmcal.NotByRule:
         return None
     except (ValueError, OverflowError) as ex:
-        return f"is no day {row.get('system')} can reckon ({ex})"
+        return f"is no day of {row.get('system')} ({ex})"
     # compared as numbers, so a year written `0999` and read back `999` is one year
     tokens = lambda s: [int(x) if x.isdigit() else x for x in re.findall(r'[0-9]+|[^0-9]', s)]
     if tokens(back) != tokens(date):
@@ -508,11 +531,11 @@ def check_day_exists(where, val, row):
     if _why:
         errors.append(f"{where} '{val}' {_why} — a date is a day its calendar has (VOCAB anchor_systems.{row.get('system')})")
 
-ASPECTS = {a['aspect']: a for a in (registry('aspects') or []) if isinstance(a, dict) and a.get('aspect')}
+ASPECTS = _Named({a['aspect']: a for a in (registry('aspects') or []) if isinstance(a, dict) and a.get('aspect')})
 FIGURES = {f['figure']: f for f in (registry('figures') or []) if isinstance(f, dict) and f.get('figure')}
 
 UNITS = {u['unit']: u for u in (registry('units') or []) if isinstance(u, dict) and u.get('unit')}
-QUANTITIES = {q['quantity']: q for q in (registry('quantities') or []) if isinstance(q, dict) and q.get('quantity')}
+QUANTITIES = _Named({q['quantity']: q for q in (registry('quantities') or []) if isinstance(q, dict) and q.get('quantity')})
 # A QUANTITY WHOSE UNITS ARE A REGISTRY'S ROWS (21.0): a currency is a unit of `money`, and the currencies are a list
 # their publisher keeps, not rows the law restates. Each row becomes a unit with no factor — no factor joins two
 # currencies; the quantity says so (`crosswalk: observed`) — and carries the decimal places its row publishes.
@@ -571,7 +594,7 @@ def check_quantity(where, node, want):
             errors.append(f"{where}.count '{c}' has {_places} decimal places, and {node['unit']} is written with at most "
                           f"{u['digits']} ({u.get('from_registry')}) — a fraction of the smallest unit in use is not an amount "
                           f"anyone paid; if a share does not come out even, say who takes the remainder in a clause")
-SYSTEMS = {s['system']: s for s in (registry('anchor_systems') or []) if isinstance(s, dict) and s.get('system')}
+SYSTEMS = _Named({s['system']: s for s in (registry('anchor_systems') or []) if isinstance(s, dict) and s.get('system')})
 
 
 def check_extent(where, node):
@@ -587,7 +610,7 @@ def check_extent(where, node):
         errors.append(f"{where}: an extent is a mapping {{of, from?, to?, measure?}} (`extent_form`)")
         return
     an = node.get('of')
-    asp = ASPECTS.get(an)
+    asp = ASPECTS.get(an) if isinstance(an, str) else None      # a list or a map names no aspect, and is no dict key
     if not asp:
         errors.append(f"{where}: extent `of: {an!r}` names no aspect — {sorted(ASPECTS)}")
         return
@@ -646,6 +669,9 @@ def _system_of(where, node, asp, an):
     sn = node.get('in')
     if sn is None:
         return None
+    if not isinstance(sn, str):
+        errors.append(f"{where}: `in:` names ONE positioning system, written as text — not {type(sn).__name__}")
+        return False
     row = SYSTEMS.get(sn)
     dim = (asp.get('domain') or {}).get('systems')
     if not row:
@@ -672,7 +698,7 @@ def check_recurrence(where, node):
         errors.append(f"{where}: a recurrence is a mapping {{of, in?, every | each, at?, from?, to?}} (`recurrence_form`)")
         return
     an = node.get('of')
-    asp = ASPECTS.get(an)
+    asp = ASPECTS.get(an) if isinstance(an, str) else None      # a list or a map names no aspect, and is no dict key
     if not asp:
         errors.append(f"{where}: recurrence `of: {an!r}` names no aspect — {sorted(ASPECTS)}")
         return
@@ -1336,6 +1362,8 @@ def check_identity_capsule():
             # anchor. `class` survives only as an optional hint at WHY it establishes — it no longer decides.
             if not isinstance(a, dict) or not all(k in a for k in ('key', 'value', 'establishing')):
                 errors.append(f"{base}: each anchor needs key,value,establishing"); continue
+            if not isinstance(a['key'], str):
+                errors.append(f"{base}: an anchor's key is a term's name, written as text — not {a['key']!r}"); continue
             if not isinstance(a['establishing'], bool):
                 errors.append(f"{base}: anchor '{a['key']}'.establishing must be true or false, not "
                               f"{a['establishing']!r} (VOCAB: establish vs corroborate is the load-bearing split)")
@@ -1538,13 +1566,15 @@ def ectl_declared_attrs(e):
 
 
 def ectl_entry_required_attrs(e):
-    missing = [k for k, _ in _facet(e.form, 'required', 'entry') if k not in e.entry]
+    # REQUIRED is said, not only spelt: `paid_by: []` or `what: ""` names the key and says nothing under it
+    missing = [k for k, _ in _facet(e.form, 'required', 'entry')
+               if k not in e.entry or e.entry[k] is None or e.entry[k] in ('', [], {})]
     if missing:
         errors.append(f"{e.base}: {e.ref} missing {missing} "
-                      f"(VOCAB {e.term}.schema.attrs: required)")
+                      f"(VOCAB {e.term}.schema.attrs: required — present, and not empty)")
 
 
-UNKNOWN_VALUE_HINT = (" — if the value is real and the vocabulary lacks it, keep it under `attributes:` for now "
+UNKNOWN_VALUE_HINT = (" — if the value is real and the vocabulary lacks it, keep it under `details:` for now "
                       "and propose it, or add it for this garden with `schema: {values_add: [...]}` in a VOCAB.md "
                       "local_terms entry (see seed/COOKBOOK.md)")
 
@@ -1555,7 +1585,7 @@ def unknown_value_hint(sch):
     src = str((sch or {}).get('values_from') or '')
     if not src.startswith('registry:'):
         return UNKNOWN_VALUE_HINT
-    return (" — if the value is real and the vocabulary lacks it, keep it under `attributes:` for now and propose "
+    return (" — if the value is real and the vocabulary lacks it, keep it under `details:` for now and propose "
             f"it, or add it for this garden as a row under `registry_additions: {{ {src[9:].split('[')[0]}: [...] }}` "
             "in VOCAB.md (see seed/COOKBOOK.md)")
 
@@ -1572,6 +1602,17 @@ def ectl_entry_types(e):
         if e.entry.get(attr) is None:
             continue
         check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ)
+
+
+def ectl_prose(e):
+    """`in: prose` — words: a reason, a description, a remark. Any text a person writes, and a number or a date YAML read
+    from it; never a list or a map, which say several things where the law asks for one saying."""
+    for attr, _t in _facet(e.form, 'prose', e.scope):
+        v = e.entry.get(attr)
+        if isinstance(v, (list, dict)):
+            errors.append(f"{e.base}: {e.ref}.{attr} is words, written as one text — not a "
+                          f"{'list' if isinstance(v, list) else 'mapping'}")
+    return None
 
 
 def ectl_entry_pattern(e):
@@ -1868,17 +1909,27 @@ def ectl_key_of(e):
     """`in: { key_of: <term> }` — a key of that term's mapping on THIS bean, or `<bean>:<key>` on another. Not an
     edge: it names a part of a being, and the being is reached by the refs the bean already states."""
     for attr, term in _facet(e.form, 'key_of', e.scope):
-        for v in ([e.entry[attr]] if not isinstance(e.entry.get(attr), list) else e.entry[attr]) if e.entry.get(attr) is not None else []:
-            owner, _, key = str(v).rpartition(':')
-            fm = ALL_FM.get(owner or e.base)
-            ckeys = (TERMS.get(term) or {}).get('context_keys') or [term]
-            if fm is None:
-                errors.append(f"{e.base}: {e.ref}.{attr} '{v}' names bean '{owner}', which this garden does not hold")
-            elif not any(isinstance(fm.get(k), dict) and key in fm[k] for k in ckeys):
-                # key=str: a map's keys may mix text with what YAML read as a boolean or a number, and a refusal that
-                # cannot sort its own list is a traceback (the key itself is refused as not text, elsewhere).
-                errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is no key of `{term}` on {owner or 'this bean'} — "
-                              f"{sorted((x for k in ckeys if isinstance(fm.get(k), dict) for x in fm[k]), key=str)}")
+        v = e.entry.get(attr)
+        if v is None:
+            continue
+        # ONE key, in ONE spelling: a list would let one attribute name two parts (and a keyed list count one party
+        # twice), and `<this bean>:<key>` is a second spelling of the bare key that nothing would compare with the first.
+        if not isinstance(v, str):
+            errors.append(f"{e.base}: {e.ref}.{attr} names one key of `{term}` — written as text, not {type(v).__name__}")
+            continue
+        owner, _, key = v.rpartition(':')
+        if owner == e.base:
+            errors.append(f"{e.base}: {e.ref}.{attr} '{v}' names this bean's own key — write it bare: '{key}'")
+            continue
+        fm = ALL_FM.get(owner or e.base)
+        ckeys = (TERMS.get(term) or {}).get('context_keys') or [term]
+        if fm is None:
+            errors.append(f"{e.base}: {e.ref}.{attr} '{v}' names bean '{owner}', which this garden does not hold")
+        elif not any(isinstance(fm.get(k), dict) and key in fm[k] for k in ckeys):
+            # key=str: a map's keys may mix text with what YAML read as a boolean or a number, and a refusal that
+            # cannot sort its own list is a traceback (the key itself is refused as not text, elsewhere).
+            errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is no key of `{term}` on {owner or 'this bean'} — "
+                          f"{sorted((x for k in ckeys if isinstance(fm.get(k), dict) for x in fm[k]), key=str)}")
 
 
 _NESTED = {}           # (term, attr) -> the schema of the entries inside it; held so the form cache sees one object
@@ -2012,6 +2063,7 @@ ENTRY_CONTROLLERS = (
     ('attr: required', ectl_entry_required_attrs),
     ('in: values', ectl_entry_values),
     ('in: type', ectl_entry_types),
+    ('in: prose', ectl_prose),
     ('in: pattern', ectl_entry_pattern),
     ('in: pattern, soft', ectl_entry_soft_pattern),
     ('entry_must_match', ectl_entry_must_match),
@@ -2207,6 +2259,10 @@ def ctl_shape(c):
     """`shape:` — scalar, list_of_entries, mapping, open_map_of_entries."""
     shape = c.sch.get('shape')
     if shape == 'scalar':
+        if isinstance(c.node, (list, dict)):
+            errors.append(f"{c.base}: {c.term} is ONE value, not a {'list' if isinstance(c.node, list) else 'mapping'} "
+                          f"(VOCAB {c.term}.schema.shape: scalar)")
+            return STOP
         allowed = allowed_values(c.sch)
         if allowed and c.node not in allowed:
             errors.append(f"{c.base}: {c.term} '{c.node}' not in {sorted(allowed)} "
@@ -2350,6 +2406,8 @@ def ctl_entries(c):
     if shape in ('list_of_entries', 'open_map_of_entries') or _form['one_of'] \
             or _facet(_form, 'required', 'entry'):
         for label, entry in entries_of(shape, c.node):
+            if c.fm.get('merge_open') and _is_conflict(entry):
+                continue            # an entry two gardens hold two ways, both kept: nobody has chosen yet (MERGE.md §10)
             check_entry(c.base, c.term, label, entry, c.sch)
     return None
 
@@ -2676,7 +2734,10 @@ def check_reverse_gate():
             # A Tier-0 vacancy that this garden OCCUPIES is a prediction coming true. It cannot be an error —
             # the garden may not edit Tier-0 — but silence would let Tier-0 vacancies rot unnoticed, which is
             # the very failure anti-rot exists to prevent. So: warn, addressed to whoever maintains Tier-0.
-            if (src, pos) in vac_index and (src, pos) not in local_vac:
+            # A `universal` one is no prediction: it was declared because the mechanism is whole, for every garden
+            # that does not stand on it, and one garden standing on it withdraws nothing.
+            if (src, pos) in vac_index and (src, pos) not in local_vac \
+                    and (vac_index[(src, pos)] or {}).get('reason') != 'universal':
                 warns.append(f"{src}: position '{pos}' is declared vacant at TIER-0 but is OCCUPIED here — "
                              f"the prediction came true; whoever maintains std-vocab should withdraw it")
             if (src, pos) in local_vac:      # anti-rot: only a vacancy THIS garden declared can be an error
@@ -3116,9 +3177,15 @@ def check_staged_state():
 # merge that captured a real disagreement landed in history with no signal but a `status:` value. That
 # was harmless while the driver was unarmed and is not now. A warning, deliberately — blocking would
 # violate the losslessness rule that lets the conflict be committed in the first place.
-def _conflicted(fm):
-    """Top-level keys whose value is a conflict record the merge driver wrote."""
-    return sorted(k for k, v in fm.items() if _is_conflict(v))
+def _conflicted(fm, prefix=''):
+    """Every path whose value is a conflict record the merge driver wrote — a top-level key, or a key inside a map (an
+    agreement's `transactions.<key>` when two gardens recorded one transaction with two amounts), dotted as the
+    driver writes `merge_conflicts`."""
+    out = []
+    for k, v in (fm.items() if isinstance(fm, dict) else ()):
+        at = f"{prefix}.{k}" if prefix else str(k)
+        out += [at] if _is_conflict(v) else _conflicted(v, at)
+    return sorted(out)
 
 
 def check_unclean_merge():

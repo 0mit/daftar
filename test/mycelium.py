@@ -1108,6 +1108,16 @@ check("WHO KEEPS THE SENDING GARDEN is this garden's record: a proposal whose ga
       "else here than the keeper this garden records, is refused",
       r.returncode == 1 and 'it says its gardener is ben, who is [[ada]] here' in r.out
       and 'records [[neighbour-ben]] as the one who keeps [[garden-b]]' in r.out, r.out)
+_mallory = {'bean': 'mallory', 'kind': 'person', 'identity': {'status': 'confirmed', 'anchors': [
+    {'key': 'person_id', 'value': f'{BID}/person:mallory', 'class': 'logical', 'establishing': True}]}}
+_e = from_b()
+_e['from'] = dict(_e['from'], gardener='mallory')
+r = read_in(A, 'gardener-is-mallory.md', craft(_e, {'a-note': _note.replace('bean: ben }', 'bean: mallory }')},
+                                               {'mallory': _mallory}))
+check("...and so is one whose carried gardener is known here as NO ONE: its anchors are not the keeper's, which is a "
+      "claim about who keeps that garden, never a name that cannot be checked",
+      r.returncode == 1 and 'it says its gardener is mallory and carries that being' in r.out
+      and 'verdict: CLEAN' not in r.out, r.out)
 _e = from_b()
 _e['from'] = dict(_e['from'], gardener='ada')
 r = read_in(A, 'gardener-claimed.md', craft(_e, {'sam-b': sam_b()}))

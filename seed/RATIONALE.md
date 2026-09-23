@@ -577,14 +577,15 @@ The reasons a vacancy may give, declared rather than known by the gate. A reason
 ABSENCE — why nothing occupies a position the law makes available — and that is a statement about the
 world, which the vocabulary owns and the interpreter must not carry a copy of. Adding a reason is a
 rule-change here, not an edit to bin/.
-
-## leaf_orders
-
 `universal`: the position is declared because the STRUCTURE is general, not because an occupant is
 expected here. A figure with a side missing is a worse model than a figure with a side nobody stands on, and a
 standard that waits for one garden's occupant before completing a mechanism ties every garden to the first
 one's size. It is a reason and not a licence: the position must belong to a mechanism that IS occupied
-somewhere on the same figure, and its `why` says which.
+somewhere on the same figure, and its `why` says which. A garden that stands on a `universal` position is not
+warned: one garden's occupant withdraws nothing declared for every garden.
+
+## leaf_orders
+
 == LEAF SUBSUMPTION ORDERS (declared 2026-08-03, Phase 6) ==
 `merge_field` absorbs a general value into a more precise one where the two are ORDERED: 192.168.0.0/24
 into 192.168.0.0/16, "AlmaLinux 9" into "AlmaLinux 9.8". WHICH keys are ordered that way was decided in

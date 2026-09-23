@@ -102,13 +102,13 @@ seen, already has somewhere to stand.
 
 ## Between gardens
 
-A notebook is kept by one person, its gardener, and nothing outside it writes there. But people deal with one
-another — they share a cost, lend and repay, agree on something and keep to it — and the other person may keep a
-notebook of their own. Two gardens meet the way trees in a forest do: not by growing into each other, but beneath,
-through the **mycelium** — the network that joins trees rooted apart, carries between them, and is owned by none of
-them. Ownership rises through each garden to its gardener, and the crown is where it ends, above; the mycelium is
-where gardens meet, beneath, in the earth of the language they share. Two gardens that pin different versions of
-the language cannot exchange until one of them moves.
+A notebook is kept by its gardener — a person, or an organisation — and nothing outside it writes there. But people
+deal with one another — they share a cost, lend and repay, agree on something and keep to it — and the other person
+may keep a notebook of their own. Two gardens meet the way trees in a forest do: not by growing into each other, but
+beneath, through the **mycelium** — the network that joins trees rooted apart, carries between them, and is owned by
+none of them. Ownership rises through each garden to its gardener, and the crown is where it ends, above; the
+mycelium is where gardens meet, beneath, in the earth of the language they share. Two gardens that pin different
+versions of the language cannot exchange until one of them moves.
 
 What passes is only ever a **proposal**. Your agent writes one file — the beans you choose to give, under an
 agreement you and the other gardener have made — and lays it beside your notebook, never inside theirs. Their
@@ -124,7 +124,7 @@ then both answer for it: nobody owns the crown, and nobody owns the mycelium.
 A garden is known by the commit it grew from, so two gardens need no registry and no account anywhere to name each
 other. Growing a garden writes a random seed into that first commit, so two notebooks on one machine are never taken
 for one, even when they carry the same name and were grown in the same second. The first time two gardens meet, each
-gardener records the other's garden and the person who keeps it, in one commit of their own. A rehearsal is a garden
+gardener records the other's garden and whoever keeps it, in one commit of their own. A rehearsal is a garden
 grown for it, never a copy of a real one, and each gardener marks it as a rehearsal in their own records.
 
 ## Who does what
