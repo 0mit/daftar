@@ -21,6 +21,10 @@ jobs:
         run: python3 bin/dmsafe.py
       - name: a garden germinates, passes its gate, refuses bad writes and merges back
         run: python3 test/germinate.py
+      - name: "refusals: what the gate refuses, and that it refuses rather than crashes"
+        run: python3 test/refusals.py
+      - name: "journal: the entry is written as given, in UTF-8 on every platform, one line to a line"
+        run: python3 test/journal.py
       - name: gardens converge
         run: python3 test/converge.py
       - name: a garden adopts a release

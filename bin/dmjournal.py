@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """dmjournal — append a journal entry whose heading is read from the clock, never typed.
 
-    python3 bin/dmjournal.py "<who>" "<what>" < entry.md      # the body on standard input
-    python3 bin/dmjournal.py "<who>" "<what>" --body "- action: …"
+    python3 bin/dmjournal.py "<who>" "<what>" --body "- action: …"    # works in every shell
+    python3 bin/dmjournal.py "<who>" "<what>" < entry.md               # the body on standard input
+
+(`python` on Windows. PowerShell has no `<`: pass the body with `--body`, a line break inside its quotes kept as
+typed.) Give the body only: no `## ` line, because the heading is this tool's to write.
 
 The heading is `## <when> · <who> · <what>`, and <when> is the position in time the gate accepts — to the
 minute, with its offset — read from this machine's clock at the moment of writing. A heading typed by hand
@@ -12,19 +15,41 @@ it. The gate checks the FORM of a heading; only the clock can supply its truth, 
 The body is appended as given. It is not checked here: the gate checks that it names each bean the commit
 changes, that it says RULE-CHANGE where the law moved, and that no `(fill in` is left. Nothing is committed.
 
+UTF-8 ON EVERY PLATFORM. The journal is append-only, so a garbled entry cannot be taken back: the body read from
+standard input is read as BYTES and decoded as UTF-8 (a byte-order mark is dropped; UTF-16 with its mark, which
+Windows PowerShell 5.1 writes with `>`, is read as UTF-16), and bytes that are not UTF-8 are refused before
+anything is written, never guessed at in the machine's code page. The output goes through dmparse's UTF-8
+streams. The heading is printed only AFTER the entry is written, and a failure to print it is not a failure of
+the write: a run that reported an error after writing would be run again, and append the entry twice.
+
+ONE LINE IS ONE LINE. The journal is read line by line, by the gate and by anything else, and a character that
+some readers take for a line break (a vertical tab, a form feed, the separators \\x1c-\\x1e, NEL, U+2028, U+2029)
+would let one line carry a heading nobody stamped. Such a character, and a line break in <who> or <what>, is
+refused before anything is written; line ends arriving as CRLF are read as LF.
+
 HOW THIS IS ENFORCED (std-vocab 20.0, `journal.heading: stamped`). Every heading this tool writes is also
 recorded in the clone's git directory (`.git/daftar/journal-stamps`), and the gate refuses a heading a commit
 adds that is not recorded there. The gate cannot tell a measured moment from a remembered one by looking at
 it; it can tell whether the clock-reading tool wrote it. The register is per clone and never versioned: it
 proves only that THIS clone's tool stamped the heading, which is all a pre-commit hook can honestly check.
 """
+import codecs
 import datetime
 import os
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JOURNAL = os.path.join(ROOT, 'log', 'journal.md')
+
+# Characters that str.splitlines() — and so some reader of the journal — takes for a line break, besides the line
+# end itself. '\r' is not here: a CRLF or a lone CR is read as a line end, as a text-mode read reads it.
+OTHER_BREAKS = {'\x0b': 'a vertical tab', '\x0c': 'a form feed', '\x1c': 'a file separator (\\x1c)',
+                '\x1d': 'a group separator (\\x1d)', '\x1e': 'a record separator (\\x1e)', '\x85': 'NEL (U+0085)',
+                '\u2028': 'a line separator (U+2028)', '\u2029': 'a paragraph separator (U+2029)'}
 
 
 def stamps_path(root=ROOT):
@@ -39,7 +64,7 @@ def stamps_path(root=ROOT):
 def register(h, root=ROOT):
     p = stamps_path(root)
     os.makedirs(os.path.dirname(p), exist_ok=True)
-    with open(p, 'a', encoding='utf-8') as fh:
+    with open(p, 'a', encoding='utf-8', newline='\n') as fh:
         fh.write(h + '\n')
 
 
@@ -63,18 +88,72 @@ def stamp(who, what, root=ROOT):
     return h
 
 
+def decode_body(raw):
+    """Standard input's bytes as text: UTF-8 (its byte-order mark dropped), or UTF-16 where its mark says so.
+    Anything else is refused — a guess in the machine's code page would write mojibake into an append-only file."""
+    if raw.startswith(codecs.BOM_UTF8):
+        raw = raw[len(codecs.BOM_UTF8):]
+    elif raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        try:
+            return raw.decode('utf-16')
+        except UnicodeDecodeError as e:
+            raise SystemExit(f"dmjournal: standard input begins as UTF-16 and is not ({e.reason}); nothing written")
+    try:
+        return raw.decode('utf-8')
+    except UnicodeDecodeError as e:
+        raise SystemExit(f"dmjournal: standard input is not UTF-8 (byte {e.start}: {raw[e.start:e.start + 1]!r}) — "
+                         f"nothing written. Save the entry as UTF-8, or pass it with --body \"…\"")
+
+
+def refuse_breaks(label, text, line_ends_too=False):
+    """Refuse a character that would make one written line read as two to some reader."""
+    for ch, name in OTHER_BREAKS.items():
+        if ch in text:
+            raise SystemExit(f"dmjournal: {label} holds {name}, which some readers take for a line break — "
+                             f"nothing written. Write it as an ordinary line end, or leave it out")
+    if line_ends_too and ('\n' in text or '\r' in text):
+        raise SystemExit(f"dmjournal: {label} holds a line break — it is one line of the heading; nothing written")
+    try:
+        text.encode('utf-8')
+    except UnicodeEncodeError:
+        raise SystemExit(f"dmjournal: {label} holds a character that is not text (an undecodable byte) — "
+                         f"nothing written")
+
+
 def append(who, what, body):
-    body = body.rstrip('\n')
+    # A heading is read back as a line with its ends trimmed; a <who> or <what> ending in a space would be registered
+    # as one heading and read as another, and refused as unstamped.
+    who, what = who.strip(), what.strip()
+    if not who or not what:
+        raise SystemExit("dmjournal: <who> and <what> are both needed — who wrote the entry, and one line saying what")
+    body = body.replace('\r\n', '\n').replace('\r', '\n').rstrip('\n')
     if not body.strip():
         raise SystemExit("dmjournal: the entry has no body — what was done, and why, is the point of it")
     if '\n## ' in '\n' + body:
-        raise SystemExit("dmjournal: the body contains a `## ` heading of its own — one entry per call")
+        raise SystemExit("dmjournal: the body contains a `## ` line — leave the heading out: this tool writes it, "
+                         "from the clock, above the body (one entry per call)")
+    refuse_breaks('<who>', who, line_ends_too=True)
+    refuse_breaks('<what>', what, line_ends_too=True)
+    refuse_breaks('the body', body)
     text = open(JOURNAL, encoding='utf-8').read()
     h = stamp(who, what)
     entry = ('' if text.endswith('\n\n') else ('\n' if text.endswith('\n') else '\n\n')) + h + '\n' + body + '\n'
-    with open(JOURNAL, 'a', encoding='utf-8') as fh:
+    with open(JOURNAL, 'a', encoding='utf-8', newline='\n') as fh:
         fh.write(entry)
     return h
+
+
+def say(line):
+    """Print after the write, and never fail because of it: a closed or broken pipe loses the line, not the entry."""
+    try:
+        print(line)
+        sys.stdout.flush()
+    except (OSError, ValueError, UnicodeError):
+        try:                                   # nothing more can reach that stream; keep the exit from trying again
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(devnull, sys.stdout.fileno())
+        except (OSError, ValueError, AttributeError):
+            pass
 
 
 def main(argv):
@@ -83,12 +162,20 @@ def main(argv):
         return 0 if argv and argv[0] in ('-h', '--help') else 2
     who, what = argv[0], argv[1]
     if '--body' in argv:
-        body = argv[argv.index('--body') + 1]
+        i = argv.index('--body')
+        if i + 1 >= len(argv):
+            print("dmjournal: --body takes the entry's body, in quotes", file=sys.stderr)
+            return 2
+        body = argv[i + 1]
     else:
-        body = sys.stdin.read()
+        stream = getattr(sys.stdin, 'buffer', None)
+        if stream is None:
+            print("dmjournal: there is no standard input to read the body from — pass it with --body", file=sys.stderr)
+            return 2
+        body = decode_body(stream.read())
     if not os.path.exists(JOURNAL):
         raise SystemExit(f"dmjournal: no {os.path.relpath(JOURNAL, ROOT)} — is this a garden?")
-    print(append(who, what, body))
+    say(append(who, what, body))
     return 0
 
 
