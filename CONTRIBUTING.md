@@ -37,10 +37,31 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
 4. **Say which kind of change it is.** Adding a term, a value or a registry row is **minor**: nothing that
    passed before stops passing. Changing a rule, a merge order or a requirement is **major**: it can
    re-classify beans that already passed, in every garden.
-5. **Run the tests:**
+5. **Run the tests** — one command a line, which runs alike in a Unix shell and in PowerShell (`python` on Windows);
+   each ends by saying how many of its checks passed, or how many failed, and every one must be green:
 
    ```sh
-   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/refusals.py && python3 test/journal.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py && python3 test/place.py && python3 test/expiry.py && python3 test/reform.py && python3 test/positions.py && python3 test/shape.py && python3 test/calendars.py && python3 test/rationale.py && python3 test/recurrence.py && python3 test/quantities.py && python3 test/money.py && python3 test/mycelium.py && python3 test/public.py && python3 test/docs.py
+   python3 bin/dmsafe.py
+   python3 test/germinate.py
+   python3 test/refusals.py
+   python3 test/journal.py
+   python3 test/converge.py
+   python3 test/upgrade.py
+   python3 test/knowledge.py
+   python3 test/figures.py
+   python3 test/place.py
+   python3 test/expiry.py
+   python3 test/reform.py
+   python3 test/positions.py
+   python3 test/shape.py
+   python3 test/calendars.py
+   python3 test/rationale.py
+   python3 test/recurrence.py
+   python3 test/quantities.py
+   python3 test/money.py
+   python3 test/mycelium.py
+   python3 test/public.py
+   python3 test/docs.py
    ```
 
    CI runs the same on every pull request.

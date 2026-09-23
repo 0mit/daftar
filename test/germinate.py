@@ -22,7 +22,7 @@ seed/ lands.
 
 Run: python3 test/germinate.py   (0 = green).  ~2s.
 """
-import os, re, shutil, subprocess, sys, tempfile
+import glob, os, re, shlex, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 results = []
@@ -120,6 +120,38 @@ check("germinate's closing message after --gardener says the gardener is planted
       'keeper, is planted' in _msg and 'goes on from the gardener' in _msg, _msg[:400])
 check("...and every command it prints runs in PowerShell 5.1 as printed: no `&&`, no `< entry.md`",
       _msg and '&&' not in _msg and not re.search(r' < \S', _msg), [l for l in _msg.splitlines() if '&&' in l or ' < ' in l])
+# ...AND SO DOES EVERY COMMAND ANY TOOL OR PAGE SHOWS. A tool's text is every string in bin/ and seed/, read as Python reads
+# it; a page's commands are its code blocks. No `&&` in either; a `<` that redirects is shown only beside the words
+# saying PowerShell has none. (dmupgrade ended every upgrade with `git add -A && git commit`, dmsession with `cd … &&`.)
+import ast
+_joined, _redir = [], []
+for _f in sorted(glob.glob(os.path.join(ROOT, 'bin', '*.py')) + glob.glob(os.path.join(ROOT, 'seed', '*.py'))):
+    for _n in ast.walk(ast.parse(open(_f, encoding='utf-8').read())):
+        if isinstance(_n, ast.Constant) and isinstance(_n.value, str):
+            if '&&' in _n.value:
+                _joined.append(f"{os.path.relpath(_f, ROOT)}:{_n.lineno}")
+            if re.search(r'(?:^|\s)<\s+[\w./\\-]+\.(?:md|ya?ml|txt|json)\b', _n.value) and 'PowerShell' not in _n.value:
+                _redir.append(f"{os.path.relpath(_f, ROOT)}:{_n.lineno}")
+for _f in sorted(glob.glob(os.path.join(ROOT, '*.md')) + glob.glob(os.path.join(ROOT, 'seed', '*.md'))
+                 + [os.path.join(ROOT, '.claude', 'skills', 'daftar', 'SKILL.md')]):
+    if os.path.isfile(_f):
+        for _blk in re.findall(r'(?ms)^[ \t]*```[^\n]*\n(.*?)^[ \t]*```', open(_f, encoding='utf-8').read()):
+            if '&&' in _blk or re.search(r'(?:^|\s)<\s+[\w./\\-]+\.(?:md|ya?ml|txt|json)\b', _blk):
+                _joined.append(os.path.relpath(_f, ROOT))
+check("...and so does every command a tool or a page shows: no `&&` in any tool's text or any page's code block, and a "
+      "`<` only beside the words saying PowerShell has none", not _joined and not _redir, (_joined, _redir))
+# dmsession, refusing to close onto a half-finished merge, prints the way out one command a line, `git -C` on the copy
+_sess = os.path.join(TMP, 'session host', 'garden-s')
+os.makedirs(os.path.dirname(_sess))
+run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), _sess, '--gardener', 'sam', cwd=TMP)
+run('git', 'worktree', 'add', '-q', '-b', 'session/probe', os.path.join(TMP, 'session host', 'probe'), cwd=_sess)
+_gd = run('git', 'rev-parse', '--git-dir', cwd=_sess).stdout.strip()
+open(os.path.join(_sess, _gd, 'MERGE_HEAD'), 'w').write(run('git', 'rev-parse', 'HEAD', cwd=_sess).stdout)
+_sr = run(sys.executable, os.path.join(_sess, 'bin', 'dmsession.py'), 'close', 'probe', cwd=_sess)
+_way = [l.strip() for l in (_sr.stdout + _sr.stderr).splitlines() if l.strip().startswith(('git ', 'cd '))]
+check("dmsession's way out of a half-finished merge is one command a line, each naming the copy as one argument",
+      _sr.returncode != 0 and 'MID-MERGE' in _sr.stdout + _sr.stderr and _way and '&&' not in _sr.stdout + _sr.stderr
+      and all(shlex.split(l)[:3] == ['git', '-C', _sess] for l in _way), (_sr.stdout + _sr.stderr)[-500:])
 _jt = open(os.path.join(G, 'log', 'journal.md'), encoding='utf-8').read()
 check("the journal's own header says the heading is written by bin/dmjournal.py, never typed from `date`",
       'bin/dmjournal.py' in _jt.split('\n## ')[0] and "date '+" not in _jt, _jt[:600])
@@ -136,6 +168,52 @@ check("`--gardener-kind org` plants an organisation as the gardener: an `org` be
 _xr = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), os.path.join(TMP, 'garden-x'), '--gardener',
           'ben', '--gardener-kind', 'contract', cwd=ROOT)
 check("...and a kind the law does not let keep a garden is refused", _xr.returncode != 0, (_xr.stdout + _xr.stderr)[-300:])
+# THE NAME IS JUDGED BEFORE ANYTHING IS CREATED (21.0 judges the manifest as itself, `manifest.garden` in kebab-case). It
+# was judged only at the first commit: the directory was left half-grown, and a second try met "already exists".
+_names = os.path.join(TMP, 'names')
+os.makedirs(_names)
+_refused = {}
+for _bad in ('Garden-Sam', 'garden_sam', 'sam garden', 'باغ-نو'):
+    _br = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), os.path.join(_names, _bad), '--gardener', 'sam',
+              cwd=TMP)
+    _refused[_bad] = (_br.returncode, os.path.exists(os.path.join(_names, _bad)), _br.stderr)
+check("a directory whose name is not in the law's form for a garden's name is refused BEFORE anything is created",
+      all(rc == 2 and not made and 'kebab-case' in err and 'Nothing was created' in err and 'Traceback' not in err
+          for rc, made, err in _refused.values()), {k: v[2][-200:] for k, v in _refused.items()})
+check("...saying to name the directory in kebab-case, with the nearest such name, or to give it with --name",
+      'e.g. garden-sam' in _refused['Garden-Sam'][2] and '--name garden-sam' in _refused['Garden-Sam'][2]
+      and '--name sam-garden' in _refused['sam garden'][2] and 'e.g. garden-sam' in _refused['باغ-نو'][2],
+      _refused['Garden-Sam'][2][-300:])
+_nm = os.path.join(_names, 'My Garden')
+_nmr = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), _nm, '--name', 'garden-mine', '--gardener', 'sam',
+           cwd=TMP)
+_nml = (gate(_nm)[1].strip().splitlines() or [''])[-1] if os.path.isdir(_nm) else ''
+check("--name gives the garden a name of its own where the directory's is not one: it grows, named so, with 0 errors",
+      _nmr.returncode == 0 and os.path.isfile(os.path.join(_nm, 'GARDEN.md'))
+      and re.search(r'(?m)^garden: garden-mine\b', open(os.path.join(_nm, 'GARDEN.md'), encoding='utf-8').read())
+      and _nml.startswith('garden-mine (') and ' 0 error(s)' in _nml,
+      (_nml, (_nmr.stdout + _nmr.stderr)[-300:]))
+_nmb = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), os.path.join(_names, 'garden-x'), '--name', 'X_Y',
+           cwd=TMP)
+check("...and a --name out of that form is refused too, before anything is created",
+      _nmb.returncode == 2 and '--name x-y' in _nmb.stderr and not os.path.exists(os.path.join(_names, 'garden-x')),
+      _nmb.stderr[-300:])
+# ANYTHING THAT STOPS GERMINATION ONCE BEGUN REMOVES WHAT IT MADE. A hook that refuses every commit — set in a global
+# configuration of this run's own — stands for whatever else makes git refuse the first commit.
+_hooks = os.path.join(TMP, 'refusing-hooks')
+os.makedirs(_hooks)
+with open(os.path.join(_hooks, 'pre-commit'), 'w', newline='\n') as _fh:
+    _fh.write('#!/bin/sh\necho "refused by a hook" >&2\nexit 1\n')
+os.chmod(os.path.join(_hooks, 'pre-commit'), 0o755)
+_gcfg = os.path.join(TMP, 'refusing-gitconfig')
+with open(_gcfg, 'w', newline='\n') as _fh:
+    _fh.write('[core]\n\thooksPath = %s\n' % _hooks.replace('\\', '/'))
+_ft = os.path.join(TMP, 'garden-fails')
+_fr = subprocess.run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), _ft, '--gardener', 'sam'],
+                     capture_output=True, text=True, cwd=TMP, env=dict(os.environ, GIT_CONFIG_GLOBAL=_gcfg))
+check("a first commit git refuses leaves nothing behind: germinate removes the directory it made, and says so",
+      _fr.returncode != 0 and 'refused by a hook' in _fr.stderr and not os.path.exists(_ft)
+      and 'nothing is left behind' in _fr.stderr, (_fr.returncode, _fr.stderr[-400:]))
 # GROWN FROM A COPY WITH NO GIT HISTORY — what a ZIP download or `git archive` gives. No release can be read from it,
 # and the garden says so, `untagged unknown`, rather than saying nothing: the gate's last line, which an agent shows
 # its person first, still names the garden, its gardener and its id. The way to a release the NOTE prints is one that
@@ -162,6 +240,47 @@ _ir = run(sys.executable, os.path.join(_outer, 'daftar-copy', 'seed', 'germinate
 _igm = open(os.path.join(TMP, 'garden-in', 'GARDEN.md'), encoding='utf-8').read() if _ir.returncode == 0 else ''
 check("...and a copy unpacked inside another repository records `untagged unknown`, never that repository's commit",
       re.search(r'(?m)^daftar_release: "untagged unknown"', _igm), (_ir.stdout + _ir.stderr)[-300:] + _igm[:300])
+# A PATH WITH A SPACE — a Windows user folder often holds one — is printed quoted wherever a command names it, so each
+# command runs as printed: grown from an untagged clone under such a path into another, the NOTE's `git -C` and `cd`
+# each name their path as one argument.
+_spc = os.path.join(TMP, 'a clone', 'daftar')
+shutil.copytree(_nogit, _spc)
+run('git', 'init', '-q', cwd=_spc); run('git', 'add', '-A', cwd=_spc)
+run('git', '-c', 'user.name=ada', '-c', 'user.email=ada@localhost', 'commit', '-qm', 'a clone on no tag', cwd=_spc)
+_spg = os.path.join(TMP, 'My Gardens', 'garden-sp')
+os.makedirs(os.path.dirname(_spg))
+_spr = run(sys.executable, os.path.join(_spc, 'seed', 'germinate.py'), _spg, '--gardener', 'sam', cwd=TMP)
+_cmds = [shlex.split(l.split('#')[0]) for l in _spr.stdout.splitlines() if l.strip().startswith(('cd ', 'git -C '))]
+check("every command germinate prints names a path with a space as ONE argument: `git -C` the clone, `cd` the garden",
+      _spr.returncode == 0 and _cmds and ['git', '-C', _spc, 'tag', '-l'] in _cmds and ['cd', _spg] in _cmds
+      and all((c[:3] == ['git', '-C', _spc] or c[:3] == ['git', '-C', _spg] or c == ['cd', _spg]) for c in _cmds),
+      _cmds)
+# A REHEARSAL GROWN FROM INSIDE A GARDEN — as the COOKBOOK grows one — records the release THAT GARDEN runs, never the
+# garden's own last commit as `untagged <sha>`, and prints no NOTE telling the stranger to check out a tag in the garden.
+_rel = os.path.join(TMP, 'tagged-release')
+os.makedirs(_rel)
+for _pat in [l.strip() for l in open(os.path.join(ROOT, 'seed', 'LANGUAGE'), encoding='utf-8')
+             if l.strip() and not l.lstrip().startswith('#')]:
+    for _f in glob.glob(os.path.join(ROOT, _pat)):
+        if os.path.isfile(_f):
+            os.makedirs(os.path.join(_rel, os.path.dirname(os.path.relpath(_f, ROOT))), exist_ok=True)
+            shutil.copy2(_f, os.path.join(_rel, os.path.relpath(_f, ROOT)))
+run('git', 'init', '-q', cwd=_rel); run('git', 'add', '-A', cwd=_rel)
+run('git', '-c', 'user.name=ada', '-c', 'user.email=ada@localhost', 'commit', '-qm', 'a release', cwd=_rel)
+run('git', 'tag', 'v9.9.9', cwd=_rel)
+_real = os.path.join(TMP, 'garden-real')
+run(sys.executable, os.path.join(_rel, 'seed', 'germinate.py'), _real, '--gardener', 'sam', cwd=TMP)
+_reh = os.path.join(TMP, 'garden-real-rehearsal')
+_rr2 = run(sys.executable, os.path.join('seed', 'germinate.py'), os.path.join('..', 'garden-real-rehearsal'),
+           '--gardener', 'sam', cwd=_real)
+_rgm = open(os.path.join(_reh, 'GARDEN.md'), encoding='utf-8').read() if os.path.isfile(os.path.join(_reh, 'GARDEN.md')) else ''
+check("a rehearsal grown from inside a garden records the release that garden runs, and its gate's last line says so",
+      _rr2.returncode == 0 and re.search(r'(?m)^daftar_release: "v9\.9\.9"', _rgm)
+      and re.search(r'(?m)^garden-real-rehearsal \(daftar v9\.9\.9, gardener sam', _rr2.stdout),
+      (_rgm[:300], (_rr2.stdout + _rr2.stderr)[-400:]))
+check("...and prints no NOTE sending the stranger to check out a tag in the real garden",
+      'NOTE:' not in _rr2.stdout and f'git -C {_real}' not in _rr2.stdout and 'GROWN FROM THE GARDEN garden-real' in _rr2.stdout,
+      _rr2.stdout[-500:])
 
 # THE MODEL, THE PROCEDURE, THE QUEUE AND THE SKILL TRAVEL (2026-09-17). Without them a friend's garden had the
 # law's data and nothing saying what it meant; the first person bean took three attempts.

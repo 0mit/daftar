@@ -9,7 +9,9 @@ Ask the person only for what you cannot know:
 
 1. **where the garden goes** — a directory that does not exist yet, named for this garden (below: `~/garden-sam`).
    Its name is the garden's name: another garden sees it, and so does every proposal this one makes. Give each
-   garden a name of its own — not `~/garden` for every one;
+   garden a name of its own — not `~/garden` for every one — in kebab-case, lowercase words joined by hyphens:
+   germinate refuses any other name before it creates anything, and `--name garden-sam` names a garden whose
+   directory is called something else;
 2. **who keeps it** — the garden's **gardener**: a short id for them (lowercase and hyphens, below: `sam`) and how
    they are called (below: `Sam`), and whether it is a person or an organisation. A garden is someone's, and a
    garden grown this way begins with their bean;
@@ -100,8 +102,12 @@ DAFTAR_GARDENER=sam python3 bin/dmupgrade.py <tag>                              
 DAFTAR_GARDENER=sam DAFTAR_GARDENER_NAME="Sam" python3 bin/dmupgrade.py <tag>    # plants a new person bean for them
 ```
 
-A garden already at 21.0 or later takes the same as flags: `--gardener sam`, with `--gardener-name "Sam"` to plant.
-Whatever is missing, the refusal prints the line that fixes it, in the form this garden's tool accepts.
+`DAFTAR_GARDENER_KIND=org` beside them plants an organisation instead, as `germinate --gardener-kind org` does. A
+garden already at 21.0 or later takes the same as flags: `--gardener sam`, with `--gardener-name "Sam"` to plant and
+`--gardener-kind org` for an organisation. Whatever is missing, the refusal prints the line that fixes it, in the form
+this garden's tool accepts. A garden whose name is not in the form 21.0 gives a garden's name (kebab-case) is refused
+before anything is touched, with the `garden:` line to write in `GARDEN.md` and the RULE-CHANGE entry that goes with
+it.
 
 ## On Windows
 
@@ -133,7 +139,7 @@ The gate runs as a git hook; Git for Windows runs hooks with the shell it ships.
 works they say, for each, why. To choose one yourself: `git config daftar.python C:/path/to/python.exe`.
 
 **UTF-8.** Every bean is UTF-8, and the tools read and write it correctly whatever the machine's language —
-their output through a pipe, and a journal entry's body on standard input, included.
+their output through a pipe, a journal entry's body on standard input, and `bin/dmsafe.py`'s block included.
 Windows PowerShell 5.1 does not: it reads a UTF-8 file without a BOM in the old code page, so a Persian bean —
 or any bean with a character outside ASCII — read with `type` or `Get-Content` arrives garbled, and a bean
 written with `>` or `Out-File` is saved as UTF-16, which the gate cannot read. Read with
@@ -149,17 +155,19 @@ message here uses instead, so that what is printed runs as printed:
 - `<` does not redirect standard input in any PowerShell. A journal entry's body goes in as an argument:
   `python bin\dmjournal.py "<who>" "<what>" --body "- action: …"`. A line break typed inside the quotes is kept;
   so is `` `n `` inside double quotes. Windows PowerShell 5.1 drops a double quote *inside* an argument — write the
-  body without one there (PowerShell 7.3 and later pass it intact).
+  body without one there (PowerShell 7.3 and later pass it intact). A block for `bin/dmsafe.py` goes in as a file:
+  `python bin\dmsafe.py insert-after beans\sam.md responsibility --block block.yaml`.
 - `>` and `Out-File` write UTF-16, which the gate does not read (above): a bean is saved as UTF-8. Only
-  `bin/dmjournal.py` reads a UTF-16 body, with its mark, on standard input where a shell has `<`; without the mark
-  it refuses one (read as UTF-8 it is a NUL after every letter), as it refuses every control character but a tab.
+  `bin/dmjournal.py`'s body and `bin/dmsafe.py`'s block may be UTF-16, with its mark; without the mark each is
+  refused (read as UTF-8 it is a NUL after every letter), and `bin/dmjournal.py` refuses every control character but
+  a tab.
 
 An upgrade that names the gardener through the environment clears it again at the end, because a PowerShell
 session keeps what `$env:` sets, and the next garden upgraded in it would take the same gardener without being
 asked:
 
 ```powershell
-$env:DAFTAR_GARDENER = "sam"; python bin\dmupgrade.py <tag>; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME -ErrorAction SilentlyContinue
+$env:DAFTAR_GARDENER = "sam"; python bin\dmupgrade.py <tag>; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME, Env:DAFTAR_GARDENER_KIND -ErrorAction SilentlyContinue
 ```
 
 **Line ends.** Git for Windows checks text out with CRLF by default, and a git hook with a CR in it does not run.
