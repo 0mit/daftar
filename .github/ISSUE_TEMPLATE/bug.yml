@@ -1,0 +1,56 @@
+name: A bug
+description: A tool did something other than what it says it does.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write the situation in your own words. Do not paste anything from your garden — no host names, addresses,
+        paths, people's names, ids, serials or findings. Use neutral names: sam, ali, host-a, example.org,
+        203.0.113.10, /home/user/….
+
+        A tool's output can name your garden, your gardener, your beans and your paths. Replace each before you paste it.
+  - type: input
+    id: release
+    attributes:
+      label: The last line of `python3 bin/dmcheck.py --all`, with the garden's name, gardener and id replaced
+      description: "`python` on Windows. It names the release your garden runs."
+      placeholder: "garden-sam (daftar v0.33.1, gardener sam, garden 0123456789ab): 12 docs, 0 error(s), 0 warning(s)"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Linux
+        - macOS
+        - Windows, PowerShell 5.1
+        - Windows, PowerShell 7
+        - other
+  - type: textarea
+    id: command
+    attributes:
+      label: The command you ran
+      render: shell
+  - type: textarea
+    id: output
+    attributes:
+      label: What it printed
+      description: Every name from your garden replaced.
+      render: text
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and where that is said
+      description: The tool's own header, a document, or its `--help`.
+    validations:
+      required: true
+  - type: checkboxes
+    id: neutral
+    attributes:
+      label: Neutral names
+      options:
+        - label: Nothing here comes from my garden that I have not replaced with a neutral name.
+          required: true
