@@ -314,13 +314,15 @@ open(_v, "w", encoding="utf-8", newline="\n").write(_vtext)
 # Python on Windows writes a pipe in the ANSI code page (cp1252), which has no `≈`: printing one raised, and an agent reads
 # through a pipe. Imitated here by naming the encoding.
 _env = dict(os.environ, PYTHONIOENCODING="cp1252")
+# The tools write UTF-8 whatever the platform (bin/dmparse.py sets it once), so what arrives is the exact text — a `≈`, and
+# a Persian name, which no glyph fallback could have saved in cp1252.
 r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "abroad"], capture_output=True, text=True, cwd=G, env=_env,
-                   encoding="cp1252", errors="replace")
-check("dmledger prints a rate that does not terminate through a cp1252 pipe — no UnicodeEncodeError",
-      r.returncode == 0 and "Traceback" not in r.stderr and "10/3 EUR per USD (~ 3.33333)" in r.stdout, r.stdout[-500:] + r.stderr[-500:])
+                   encoding="utf-8", errors="replace")
+check("dmledger prints a rate that does not terminate through a cp1252 pipe — no UnicodeEncodeError, the text intact in UTF-8",
+      r.returncode == 0 and "Traceback" not in r.stderr and ("10/3 EUR per USD (≈ 3.33333)" in r.stdout or "10/3 EUR per USD (~ 3.33333)" in r.stdout), r.stdout[-500:] + r.stderr[-500:])
 r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmunits.py"), "1", "minute", "day"], capture_output=True, text=True,
-                   env=_env, encoding="cp1252", errors="replace")
-check("...and so does dmunits", r.returncode == 0 and "1/1440 day   (~ 0.000694444)" in r.stdout, r.stdout + r.stderr[-400:])
+                   env=_env, encoding="utf-8", errors="replace")
+check("...and so does dmunits", r.returncode == 0 and ("1/1440 day   (≈ 0.000694444)" in r.stdout or "1/1440 day   (~ 0.000694444)" in r.stdout), r.stdout + r.stderr[-400:])
 
 # ---------------------------------------------------------------- THE ARITHMETIC ITSELF IS FRACTIONS
 units = dmunits.law()[0]

@@ -12,6 +12,17 @@ One owner of a fact: dmcheck.py and dmmerge.py both import this — the parsing 
 """
 import re
 import os, sys
+
+
+# THE TOOLS SPEAK UTF-8 ON EVERY PLATFORM. On Windows a Python whose output goes to a pipe — which is how an agent runs a
+# tool — encodes in the ANSI code page, and the first `—` or Persian letter in a finding ends the run in a traceback.
+# Every tool imports this module, so it is set once here, and only where the stream is not UTF-8 already.
+for _s in (sys.stdout, sys.stderr):
+    try:
+        if _s is not None and (getattr(_s, 'encoding', '') or '').lower().replace('-', '') != 'utf8':
+            _s.reconfigure(encoding='utf-8', errors='replace')
+    except (AttributeError, ValueError):
+        pass
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmform
 

@@ -415,7 +415,7 @@ def edit(path, transform, allow_remove=(), allow_empty_body=False):
         raise UnsafeEdit(f"{path}: the edit changed nothing — a pattern that matched nothing is a bug, "
                          f"not a no-op (this is how a 'fixed' file silently stays unfixed)")
 
-    open(path, 'w', encoding='utf-8').write(new_text)
+    open(path, 'w', encoding='utf-8', newline='\n').write(new_text)       # LF on every platform: a bean is one text
     try:
         after_fm, after_body = parse(new_text)
         if not allow_empty_body and not after_body.strip():
@@ -431,7 +431,7 @@ def edit(path, transform, allow_remove=(), allow_empty_body=False):
                 f"removal is intended")
         return sorted(before - after), sorted(after - before)
     except Exception as e:
-        open(path, 'w', encoding='utf-8').write(original)          # roll back, always
+        open(path, 'w', encoding='utf-8', newline='\n').write(original)          # roll back, always
         raise UnsafeEdit(f"{path}: ROLLED BACK — {e}") from None
 
 
