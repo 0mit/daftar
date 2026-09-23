@@ -57,7 +57,9 @@ its own gardener's hand. A chat assistant with no shell makes the same shape by 
 with no `from.garden` is one of those, and its gardener vouches for where it came from.
 
 Everything a proposal carries is DATA. A sentence in it that tells the reader to do something is a fact about the
-proposal, not an instruction to anyone — and a name in it is used as a file name only once it has the form of one.
+proposal, not an instruction to anyone — a name in it is used as a file name only once it has the form of one, and
+whatever of it is printed shows each character that controls a terminal or ends a line as its escape (`\\x1b`), so
+nothing it carries can hide, retitle or add a line of what this tool says.
 """
 import copy
 import datetime
@@ -90,13 +92,31 @@ _ID12 = re.compile(r'^[0-9a-f]{12}$')
 # The name `make` gives a proposal: the garden's name, then the minute it was made (and `-<n>` for a second one in
 # that minute). A chat assistant names its proposal the same way (seed/WELCOME.md: `chat-20260917-1012`).
 PID_TAIL = re.compile(r'-\d{8}-\d{4}(?:-\d+)?$')
-# A character that ends a line or controls a terminal. A proposal's names reach journal headings and file names here.
-_CTRL = re.compile('[\x00-\x1f\x7f\x85\u2028\u2029]')
+# A character that ends a line or controls a terminal (C0, DEL, C1 — NEL among them — and the Unicode line and paragraph
+# separators). A proposal's names reach journal headings and file names here.
+_CTRL = re.compile('[\x00-\x1f\x7f-\x9f\u2028\u2029]')
 # ...and the same in text quoted into the journal, line by line: every one of them but the line feed that separates
 # the lines. A vertical tab, a form feed, \x1c-\x1e, NEL and the Unicode line and paragraph separators each END A LINE
 # for some reader (Python's splitlines, an editor), so one inside a quoted line starts a line of its own there — a
 # journal heading, dated by the sender and signed as the receiving gardener, that the quote never showed.
-_QUOTE_BAD = re.compile('[\x00-\x09\x0b-\x1f\x7f\x85\u2028\u2029]')
+_QUOTE_BAD = re.compile('[\x00-\x09\x0b-\x1f\x7f-\x9f\u2028\u2029]')
+
+
+# ...and what a proposal carries, PRINTED to the gardener's terminal, shows each of them as its escape, as `repr` does:
+# an ESC sequence sent raw can retitle the window or conceal every line printed after it, the refusal and the verdict
+# among them, and a line feed can print a line the proposal wrote as if this tool had.
+def _esc(s):
+    """A carried string as it may be printed: every character `_CTRL` names as `\\xNN` or `\\uNNNN`."""
+    return _CTRL.sub(lambda m: (f"\\x{ord(m.group(0)):02x}" if ord(m.group(0)) < 0x100 else
+                                f"\\u{ord(m.group(0)):04x}"), str(s))
+
+
+def _say(line):
+    """A line of this tool's own output: its line feeds kept, every other control character escaped — the guard
+    behind the escaping of each carried value where the line is built."""
+    return '\n'.join(_esc(x) for x in str(line).split('\n'))
+
+
 # A proposal is read before anyone trusts it, so what it may make the reader BUILD is bounded: no YAML alias (an alias
 # bomb of a kilobyte expands to billions of nodes), and no nesting deeper than any bean the law describes.
 MAX_DEPTH = 64
@@ -800,9 +820,9 @@ def bean_shape(fm):
 def refusal_report(verb, refusals):
     print(f"dmpropose {verb}: REFUSED — nothing was written.")
     for why, fix in refusals:
-        print(f"  - {why}")
+        print(_say(f"  - {why}"))
         if fix:
-            print(f"      fix: {fix}")
+            print(_say(f"      fix: {fix}"))
 
 
 def _opt(argv, name):
@@ -1150,10 +1170,11 @@ def _dotted(path):
 
 
 def _show(v):
-    """A value as the gardener reads it in a line of `read`: text quoted, anything else in canonical JSON, whole."""
+    """A value as the gardener reads it in a line of `read`: text quoted, anything else in canonical JSON, whole — and
+    nothing in it that controls a terminal (JSON escapes C0 only)."""
     M = _merge()
     v = M.norm(v)
-    return json.dumps(v, ensure_ascii=False) if isinstance(v, str) else M.canonical(v)
+    return _esc(json.dumps(v, ensure_ascii=False) if isinstance(v, str) else M.canonical(v))
 
 
 def _leaves(v, path):
@@ -1480,22 +1501,23 @@ def analyse(path, as_test=False):
         stamped = [_dotted(p) for p, rec in prov_records(fm) if rec.get('garden') is not None]
         if A['chat'] and (found or stamped):
             R.append((f"{b} carries a garden's records ("
-                      + '; '.join([f'{w}: {g}' for w, g in found]
-                                  + [f"{w}: garden {own}, this one's" for w in stamped
+                      + '; '.join([f'{_esc(w)}: {_esc(g)}' for w, g in found]
+                                  + [f"{_esc(w)}: garden {own}, this one's" for w in stamped
                                      if not any(w == x for x, _g in found)]) + ") — a chat proposal carries none: an "
                       f"assistant stamps no record, and a record made here carries no `garden`, so this is a garden's "
                       f"proposal with its envelope taken away, or a record dressed as this garden's",
                       "take the garden's proposal itself, as it was made; or give the change as a diff"))
         for w, g in (found if not A['chat'] else []):
-            R.append((f"{b}: {w} is {g}'s record — not the sending garden's to pass on", "the garden whose record it "
-                      "is proposes it itself"))
+            R.append((f"{b}: {_esc(w)} is {_esc(g)}'s record — not the sending garden's to pass on",
+                      "the garden whose record it is proposes it itself"))
         if not A['chat']:
             if not isinstance(fm.get('provenance'), dict):
                 R.append((f"{b} carries no provenance record of its own — whose word it is could not be told here",
                           "the sending garden writes the bean's `provenance` and makes the proposal again"))
             bare_recs = [_dotted(p) for p, rec in prov_records(fm) if rec.get('garden') is None]
             if bare_recs:
-                R.append((f"{b}: {', '.join(bare_recs)} carr{'y' if len(bare_recs) > 1 else 'ies'} no `garden` — "
+                R.append((f"{b}: {', '.join(map(_esc, bare_recs))} "
+                          f"carr{'y' if len(bare_recs) > 1 else 'ies'} no `garden` — "
                           f"`make` stamps every record a garden's proposal carries with the garden it was made in, so "
                           f"one without would be written here as this garden's own word",
                           "ask the sending garden to make it again with bin/dmpropose.py"))
@@ -1598,7 +1620,8 @@ def analyse(path, as_test=False):
             hits = fused.get(b) or []
             claims = own_claims(fm, own, local[hits[0]][0] if len(hits) == 1 else None)
             if claims:
-                R.append((f"{b}: {', '.join(claims)} say{'s' if len(claims) == 1 else ''} this garden ({own}) said it, "
+                R.append((f"{b}: {', '.join(map(_esc, claims))} "
+                          f"say{'s' if len(claims) == 1 else ''} this garden ({own}) said it, "
                           + (f"and [[{hits[0]}]] here holds no such record" if len(hits) == 1 else
                              "and the bean is NEW here — this garden holds nothing it could have given")
                           + " — another garden's word is stamped as its own garden's, never as this one's",
@@ -1637,20 +1660,21 @@ def analyse(path, as_test=False):
                 for cp in cps:
                     vals = [c['value'] for c in (M.at(seed, cp) or {}).get('conflict') or []]
                     A['attention'].append(f"{lid}: {cp}")
-                    L.append(f"      CONFLICT {cp} — both kept, for the gardener: "
-                             + ' | '.join(M.canonical(v) for v in vals))
+                    L.append(f"      CONFLICT {_esc(cp)} — both kept, for the gardener: "
+                             + ' | '.join(_esc(M.canonical(v)) for v in vals))
                 old = M.canon_value(k, lfm[k]) if k in lfm else MISSING
                 for where, a, b2 in changes(old, M.resolved(seed['facts'][k], lfm.get(k)), (k,)):
                     if any(where == cp or where.startswith(cp + '.') for cp in cps):
                         continue
-                    L.append(f"      {where}: " + (f"+ {_show(b2)}" if a is MISSING else f"- {_show(a)}"
+                    L.append(f"      {_esc(where)}: " + (f"+ {_show(b2)}" if a is MISSING else f"- {_show(a)}"
                                                    if b2 is MISSING else f"{_show(a)} → {_show(b2)}"))
             for ac in seed['identity'].get('anchor_conflicts') or []:
                 A['attention'].append(f"{lid}: anchor")
-                L.append(f"      ANCHOR CONFLICT — the two records disagree about what an anchor is: {M.canonical(ac)}")
+                L.append(f"      ANCHOR CONFLICT — the two records disagree about what an anchor is: "
+                         f"{_esc(M.canonical(ac))}")
             if isinstance(seed['kind'], list):
                 A['attention'].append(f"{lid}: kind")
-                L.append(f"      KIND CONFLICT — {', '.join(seed['kind'])}")
+                L.append(f"      KIND CONFLICT — {', '.join(map(_esc, seed['kind']))}")
             theirs = (bodies[b] or '').strip()
             if theirs and theirs not in (local[lid][1] or ''):
                 L.append("      BODY differs — take appends it under `<!-- theirs: … -->`, whole, for the gardener: "
@@ -1673,11 +1697,11 @@ def analyse(path, as_test=False):
         # WHOSE WORD a new bean is, record by record: the garden each record was made in, and who it says said it.
         said = sorted({(str(rec.get('garden') or ''), str(rec.get('by') or '(no `by`)')) for _p, rec in prov_records(raw[b])})
         for g, by in said:
-            L.append(f"      said by {by} — " + (f"recorded in [[{fb}]] (garden {g})" if fb and g == fid else
-                                                f"recorded in garden {g}" + (", this garden's own id" if g == own else '')
-                                                if g else
-                                                "carried by a chat proposal, the gardener vouching for it" if A['chat']
-                                                else "stamped with no garden"))
+            L.append(f"      said by {_esc(by)} — " + (f"recorded in [[{fb}]] (garden {g})" if fb and g == fid else
+                                                      f"recorded in garden {_esc(g)}"
+                                                      + (", this garden's own id" if g == own else '') if g else
+                                                      "carried by a chat proposal, the gardener vouching for it"
+                                                      if A['chat'] else "stamped with no garden"))
         A['attention'] += [f"{b}: candidate {c}" for c in cands]
 
     # UNDER: the agreement is held here, or carried in the proposal, and names this garden's gardener.
@@ -1706,7 +1730,7 @@ def analyse(path, as_test=False):
                          f"`parties.{mine_k or '<their party>'}.accepted` in their own commit")
                 said = (((ufm.get('parties') or {}).get(mine_k) or {}) if mine_k else {}).get('accepted')
                 if said is not None:
-                    L.append(f"  NOTE it says {gardener_here} accepted ({said}) — that is {fname}'s record; "
+                    L.append(f"  NOTE it says {gardener_here} accepted ({_esc(said)}) — that is {fname}'s record; "
                              f"{gardener_here}'s own acceptance is written here, by them")
             if gardener_here and gardener_here not in who_parties(ufm):
                 R.append((f"the agreement it is made under does not name this garden's gardener "
@@ -1830,10 +1854,12 @@ def scratch_gate(path):
         t = _py(os.path.join(sc, 'bin', 'dmpropose.py'), ['take', os.path.abspath(path), '--as-test'], sc,
                 timeout=SCRATCH_TIMEOUT)
         if 'REFUSED' in t.stdout or 'FAILED' in t.stderr or t.returncode == 2:
-            return None, [l for l in (t.stdout + t.stderr).splitlines() if l.strip()][-8:]
+            return None, [l for l in (t.stdout + t.stderr).split('\n') if l.strip()][-8:]
         _git(['add', '-A'], cwd=sc, timeout=SCRATCH_TIMEOUT)
         g = _py(os.path.join(sc, 'bin', 'dmcheck.py'), [], sc, timeout=SCRATCH_TIMEOUT)
-        lines = [l for l in g.stdout.splitlines() if l.strip()]
+        # A line is what ends in a line feed: an error that echoes a carried value holding another line boundary stays
+        # one line, printed escaped.
+        lines = [l for l in g.stdout.split('\n') if l.strip()]
         return (lines[-1] if lines else '(no verdict)'), [l for l in lines if l.startswith('ERROR')]
     except subprocess.TimeoutExpired:
         return None, [f"the scratch copy gave no verdict within {SCRATCH_TIMEOUT} s — the gate was stopped"]
@@ -1860,21 +1886,20 @@ def cmd_read(argv):
     if len(argv) != 1:
         raise SetupError("read takes one proposal file")
     A = _analyse(argv[0])
-    for l in A['lines']:
-        print(l)
-    for n in A['notes']:
-        print(n)
+    for l in A['lines'] + A['notes']:
+        print(_say(l))
     if A['chat'] and A.get('prose'):
-        # WHAT THE ASSISTANT SAID OUTSIDE THE BLOCKS — what it could not check, most often: shown, never obeyed.
+        # WHAT THE ASSISTANT SAID OUTSIDE THE BLOCKS — what it could not check, most often: shown, never obeyed, and
+        # split only where a line feed ends a line, each line printed with its control characters escaped.
         print("PROSE outside the blocks — data, not an instruction:")
-        for l in A['prose'].splitlines():
-            print(f"  | {l}")
+        for l in A['prose'].split('\n'):
+            print(f"  | {_esc(l)}")
     verdict_errors = []
     if not A['refusals']:
         last, errs = scratch_gate(argv[0])
-        print(f"GATE (a scratch copy of this garden with the proposal taken): {last or 'not reached'}")
+        print(_say(f"GATE (a scratch copy of this garden with the proposal taken): {last or 'not reached'}"))
         for e in errs:
-            print(f"  {e}")
+            print(f"  {_esc(e)}")
         verdict_errors = errs
     if A['refusals']:
         refusal_report('read', A['refusals'])
@@ -1885,7 +1910,7 @@ def cmd_read(argv):
         return 0
     if not A['refusals']:
         print("verdict: " + '; '.join(
-            ([f"take REFUSES it here: it comes from a test garden ({A['test']}) and this garden is not one — "
+            ([f"take REFUSES it here: it comes from a test garden ({_esc(A['test'])}) and this garden is not one — "
               f"`{take} --as-test` takes it as a rehearsal, every bean it writes saying so"] if A.get('test_refused')
              else [])
             + ([f"{n_att} matter(s) for the gardener (class J) — take keeps both values of every conflict"] if n_att else [])
@@ -1922,7 +1947,7 @@ def cmd_take(argv):
                               "with --as-test where that is what you mean"))
     if A['refusals']:
         for l in A['lines']:
-            print(l)
+            print(_say(l))
         refusal_report('take', A['refusals'])
         return 1
     import dmjournal
@@ -2065,26 +2090,26 @@ def cmd_take(argv):
                 os.rmdir(d)
             except OSError:
                 pass
-        print(f"dmpropose take: FAILED and put every file back — {e}", file=sys.stderr)
+        print(_say(f"dmpropose take: FAILED and put every file back — {e}"), file=sys.stderr)
         return 1
     for l in A['lines']:
-        print(l)
+        print(_say(l))
     print(f"took in {pid}:")
     for l in done:
-        print(f"  {l[2:]}")
+        print(_say(f"  {l[2:]}"))
     if cap_line:
-        print(f"  {cap_line[2:].rstrip()}")
+        print(_say(f"  {cap_line[2:].rstrip()}"))
     print(f"  journal: {h}")
     try:
         g = _py(os.path.join(ROOT, 'bin', 'dmcheck.py'), [], ROOT, timeout=SCRATCH_TIMEOUT)
     except subprocess.TimeoutExpired:
         print(f"GATE: no verdict within {SCRATCH_TIMEOUT} s — run `{PY} bin/dmcheck.py` before committing")
         return 1
-    lines = [l for l in g.stdout.splitlines() if l.strip()]
+    lines = [l for l in g.stdout.split('\n') if l.strip()]
     for l in lines:
         if l.startswith('ERROR'):
-            print(f"  {l}")
-    print(f"GATE: {lines[-1] if lines else '(no verdict)'}")
+            print(f"  {_esc(l)}")
+    print(_say(f"GATE: {lines[-1] if lines else '(no verdict)'}"))
     print("Nothing is committed: the gardener's commit is the ratification —\n  git add -A\n  git commit")
     return 1 if g.returncode else 0
 
@@ -2154,7 +2179,7 @@ def main(argv):
     try:
         return verbs[verb](rest)
     except SetupError as e:
-        print(f"dmpropose {verb}: {e}", file=sys.stderr)
+        print(_say(f"dmpropose {verb}: {e}"), file=sys.stderr)
         return 2
 
 

@@ -1120,6 +1120,52 @@ for label, sep in (('\\x1c', '\x1c'), ('U+2028', ' '), ('\\x0b', '\x0b')):
     check(f"a journal text holding {label} — a line break for some reader, and a heading in disguise — is refused "
           f"before anything is quoted", r.returncode == 1 and 'a control character or a line separator' in r.out
           and 'GATE' not in r.stdout, r.out)
+
+# ---- what a proposal carries reaches the gardener's TERMINAL escaped: an ESC sequence (SGR 8 conceals every line
+# printed after it, the refusal and the verdict among them) is shown as `\x1b`, never sent — from a record's `by`, a
+# carried key, a chat's prose, the day an agreement says the gardener accepted it
+_esc_by = sam_b().replace('by: "ben (gardener)"', 'by: "ben (gardener)\\e[8m\\e]0;t\\a"', 1)
+_nb = read(os.path.join(A, 'beans', 'neighbour-ben.md')).replace('bean: neighbour-ben\n', 'bean: ben\n', 1).replace(
+    'by: "ada (gardener)", as_of: 2026-09-23 }', f'by: "ben (gardener)", as_of: 2026-09-23, garden: "{BID}" }}', 1)
+_esc_key = _nb.replace('\nstatus: active\n', '\nstatus: active\ndetails: { "k\\e[8m": "v" }\n', 1)
+_deal = f"""---
+bean: new-deal
+kind: contract
+title: "A new deal"
+status: active
+summary: "A new deal."
+nature: metaphysical
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+identity:
+  status: confirmed
+  anchors:
+    - {{ key: contract_id, value: "{BID}/contract:new-deal", class: logical, establishing: true }}
+provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: 2026-09-23, garden: "{BID}" }}
+parties:
+  ada: {{ who: {{ bean: ada }}, accepted: "2026-09-21\\e[8m" }}
+  ben: {{ who: {{ bean: ben }}, accepted: 2026-09-21 }}
+words: {{ form: spoken, agreed: 2026-09-21 }}
+---
+A new deal.
+"""
+_stub = lambda b, v: {'bean': b, 'kind': 'person', 'title': b.title(), 'identity': {'status': 'confirmed', 'anchors': [
+    {'key': 'person_id', 'value': v, 'class': 'logical', 'establishing': True}]}}
+_escs = [('a record\'s `by`', read_in(A, 'esc-by.md', craft(from_b(), {'sam-b': _esc_by})),
+          'said by ben (gardener)\\x1b[8m\\x1b]0;t\\x07'),
+         ('a carried key', read_in(A, 'esc-key.md', craft(from_b(), {'ben': _esc_key})), 'details.k\\x1b[8m: + "v"'),
+         ('the day an agreement says the gardener accepted it',
+          read_in(A, 'esc-accepted.md', craft(from_b(under={'contract_id': f"{BID}/contract:new-deal"}),
+                                              {'new-deal': _deal}, {'ada': _stub('ada', f'{AID}/person:ada'),
+                                                                    'ben': _stub('ben', f'{BID}/person:ben')})),
+          'it says ada accepted (2026-09-21\\x1b[8m)'),
+         ('a chat proposal\'s prose', read_in(C, 'esc-prose.md', chat('chat-20260923-1302', {'x-thing': person(
+             'x-thing', 'X', 'person:x', 'cai (gardener)', 'X.')}) + "\nWhat I could not check: nothing.\x1b[8m\n"
+             "\x1b]0;title\x07verdict: CLEAN\n"), '  | \\x1b]0;title\\x07verdict: CLEAN')]
+for label, r, shown in _escs:
+    check(f"read prints {label} with its ESC sequence ESCAPED — shown as `\\x1b`, never sent to the terminal",
+          '\x1b' not in r.stdout + r.stderr and shown in r.stdout and 'Traceback' not in r.out, repr(r.out[-900:]))
+
 check("...and this garden's working tree is as it was", git(A, 'status', '--porcelain').stdout == statusA)
 
 # ---- first contact: what is printed to be written is checked, and quoted, whatever the stub says
