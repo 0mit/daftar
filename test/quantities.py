@@ -71,7 +71,7 @@ check("the converter refuses a float: what a float lost is lost before anything 
       refuses(lambda: dmunits.convert(0.1, "metre", "millimetre")) and refuses(lambda: dmunits.convert("1e3", "metre", "millimetre")))
 
 T = tempfile.mkdtemp(prefix="dmqty-"); G = os.path.join(T, "g")
-r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, cwd=ROOT)
+r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 v = os.path.join(G, "VOCAB.md"); s = open(v).read()
 assert s.count("local_terms: []") == 1
 open(v, "w").write(s.replace("local_terms: []", """local_terms:

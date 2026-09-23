@@ -63,7 +63,7 @@ summary: "A relay recorded in the origin garden, so gardens cloned from it obser
 identity:
   status: confirmed
   anchors:
-    - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, scope: global, observed: 2026-08-02 }}
+    - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, observed: 2026-08-02 }}
 provenance: {{ src: observed, by: "agent/origin", as_of: 2026-08-02 }}
 nature: physical
 owned_by: {{ legal: {{ external: "the relay's operator, outside every garden that observes it" }} }}
@@ -79,7 +79,7 @@ The shared relay.
 TMP = tempfile.mkdtemp(prefix='dmconv-')
 ORIGIN = os.path.join(TMP, 'origin')
 
-r = subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), ORIGIN],
+r = subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), ORIGIN, '--gardener', 'keeper'],
                    capture_output=True, text=True, cwd=ROOT)
 check("an origin garden germinates from the seed", r.returncode == 0, (r.stdout + r.stderr)[-300:])
 check("...and it dispatches bean merges to the semantic driver, journal merges to union",
@@ -196,7 +196,7 @@ check("...its anchor is stored once, in the compare form, with no disagreement r
       [a['value'] for a in _anchors] == ['SN-0042']
       and not any(sd['identity'].get('anchor_conflicts') for sd in _seeds.values()), str(_anchors))
 _one = os.path.join(TMP, 'two-spellings')
-subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _one], capture_output=True, cwd=ROOT)
+subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _one, '--gardener', 'keeper'], capture_output=True, cwd=ROOT)
 open(os.path.join(_one, 'beans', 'box.md'), 'w').write(
     '---\nbean: box\nkind: host\ntitle: "box"\nstatus: active\nsummary: "a box"\nnature: physical\n'
     'identity:\n  status: confirmed\n  anchors:\n'

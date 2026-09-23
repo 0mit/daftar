@@ -31,7 +31,7 @@ def run(*a, cwd=None):
 
 T = tempfile.mkdtemp(prefix="dmexp-")
 G = os.path.join(T, "g")
-run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, cwd=ROOT)
+run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 
 def stale(*args):
     return run(sys.executable, os.path.join(G, "bin", "dmstale.py"), *args, cwd=G).stdout

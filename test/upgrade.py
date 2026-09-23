@@ -41,8 +41,9 @@ run('git', 'init', '-q', cwd=REL); run('git', 'add', '-A', cwd=REL)
 run('git', 'commit', '-qm', 'v1', cwd=REL); run('git', 'tag', 'v0.1.0', cwd=REL)
 
 # ---- the garden, germinated from v1
-g = run('sh', os.path.join(REL, 'seed', 'germinate.sh'), GARDEN, cwd=REL)
+g = run('sh', os.path.join(REL, 'seed', 'germinate.sh'), GARDEN, "--gardener", "keeper", cwd=REL)
 check("a garden germinates from the release", g.returncode == 0 and '0 error(s)' in g.stdout, (g.stdout + g.stderr)[-300:])
+_commits_before = run('git', 'log', '--oneline', cwd=GARDEN).stdout.count('\n')
 ver1 = re.search(r'^version: "([^"]+)"', open(os.path.join(REL, 'seed', 'std-vocab.md')).read(), re.M).group(1)
 
 # ---- the release, v2: a tool added, a tool retired, the vocabulary version moved
@@ -78,7 +79,7 @@ j = open(os.path.join(GARDEN, 'log', 'journal.md')).read()
 check("a RULE-CHANGE journal entry names the tag, the vocabulary move and the files",
       'RULE-CHANGE' in j and 'daftar v0.2.0' in j and f'{ver1} -> {ver2}' in j and 'bin/dmhello.py' in j and 'bin/dmdigest.py' in j)
 check("NOTHING IS COMMITTED — adopting a release is the garden's own decision",
-      run('git', 'log', '--oneline', cwd=GARDEN).stdout.count('\n') == 1 and run('git', 'status', '--porcelain', cwd=GARDEN).stdout.strip())
+      run('git', 'log', '--oneline', cwd=GARDEN).stdout.count('\n') == _commits_before and run('git', 'status', '--porcelain', cwd=GARDEN).stdout.strip())
 check("...and GARDEN.md now records the adopted release",
       'daftar_release: "v0.2.0"' in open(os.path.join(GARDEN, 'GARDEN.md')).read())
 run('git', 'add', '-A', cwd=GARDEN)

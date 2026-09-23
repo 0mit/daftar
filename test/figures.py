@@ -21,7 +21,7 @@ def run(*a, cwd=None):
 
 T = tempfile.mkdtemp(prefix="dmfig-")
 G = os.path.join(T, "g")
-r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, cwd=ROOT)
+r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 check("a garden germinates", r.returncode == 0, r.stdout + r.stderr)
 VOC = os.path.join(G, "seed", "std-vocab.md")
 ORIG = open(VOC).read()

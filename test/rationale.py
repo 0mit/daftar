@@ -85,7 +85,7 @@ for _name in ("MODEL.md", "CHECKLIST.md", "MERGE.md"):
 # ---------------------------------------------------------------- 18.0: a GARDEN's overlay has its reasoning too
 import subprocess, tempfile, shutil
 _T = tempfile.mkdtemp(prefix="dmwhy-"); _G = os.path.join(_T, "g")
-subprocess.run(["sh", os.path.join(ROOT, "seed", "germinate.sh"), _G], cwd=ROOT, capture_output=True, text=True)
+subprocess.run(["sh", os.path.join(ROOT, "seed", "germinate.sh"), _G, "--gardener", "keeper"], cwd=ROOT, capture_output=True, text=True)
 _v = os.path.join(_G, "VOCAB.md"); _s = open(_v).read(); assert _s.count("local_terms: []") == 1
 open(_v, "w").write(_s.replace("local_terms: []", """local_terms:
   - term: shelf

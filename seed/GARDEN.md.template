@@ -2,11 +2,16 @@
 garden: @@GARDEN@@
 extends: std-vocab@@@VERSION@@
 daftar_release: "@@RELEASE@@"  # the daftar release this garden runs; bin/dmupgrade.py moves it
-created: "git-metadata"    # NEVER a canonical value; the real timestamp lives in git
-seeds_from: []             # gardens merged in, per MERGE.md
+gardener:                      # the person who keeps this garden: the id of their person bean, the garden's first
 ---
 # @@GARDEN@@
 
-This garden's manifest. It tells a cold agent which garden it is in, which vocabulary version governs,
-and what has been merged in. State the estate this garden records, and name its root bean once there is
-one.
+This garden's manifest. It tells a cold agent which garden it is in, whose it is, and which vocabulary
+governs it.
+
+A garden is kept by one person — its gardener — and its first bean is them: write their person bean, then
+name it above in `gardener:`. The gate asks for it as soon as the garden holds a bean. An agent tends the
+garden; the gardener keeps it, and ratifies here what an agent may not decide.
+
+A garden's identity is the commit it germinated from. Git holds it, so it is written nowhere here:
+`python3 bin/dmpropose.py id` prints it, and the gate's last line shows it once the first commit is made.

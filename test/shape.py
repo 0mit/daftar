@@ -17,7 +17,7 @@ def run(*a, cwd=None):
 
 T = tempfile.mkdtemp(prefix="dmshape-")
 G = os.path.join(T, "g")
-r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, cwd=ROOT)
+r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 check("a garden germinates", r.returncode == 0, r.stdout + r.stderr)
 v = os.path.join(G, "VOCAB.md"); s = open(v).read()
 s = s.replace("\n---", "\nextends_profiles: [network]\n---", 1) if "extends_profiles:" not in s else s.replace("extends_profiles: [", "extends_profiles: [network, ", 1).replace("[network, ]", "[network]")

@@ -2,12 +2,17 @@
 """germinate — grow a new garden from this seed.
 
     python3 seed/germinate.py <target-directory>        # the directory must not exist yet
+    python3 seed/germinate.py <target-directory> --gardener <id> [--gardener-name "<how they are called>"]
 
 A garden is a git repository that carries the LANGUAGE — the vocabulary, the parser, the gate, the tools,
 the templates — and no beans. WHAT TRAVELS IS DECLARED ONCE, in seed/LANGUAGE, and bin/dmupgrade.py reads
 the same file, so a new garden and an upgraded one receive exactly the same set. The garden is given its
 name, its vocabulary pin and the release it runs, its first commit as `germinate`, the gate as a pre-commit
 hook, and it is checked: it passes its own gate with nothing in it.
+
+A GARDEN IS KEPT BY SOMEONE, and its first bean is them. With `--gardener <id>` the second commit plants that
+person's bean and names it in GARDEN.md, so the garden begins as someone's. Without it the closing message says
+that this is the first thing to write — the gate asks for it as soon as the garden holds a bean.
 
 Python, not shell, because a garden is grown on Windows too. `seed/germinate.sh` remains and hands over here.
 """
@@ -45,7 +50,36 @@ def language_files(root, seed):
     return out
 
 
+def gardener_bean(gid, name, when):
+    """The gardener's person bean — the garden's first. Owned by no being (the crown: love), answering for themself.
+    Its anchor is a name this garden mints; it identifies them beyond this garden once qualified by the garden's id."""
+    return f"""---
+bean: {gid}
+kind: person
+title: {name!r}
+status: active
+summary: "The gardener: the person who keeps this garden."
+nature: living
+owned_by: {{ legal: {{ crown: love }} }}
+responsibility: {{ legal: {{ self: true }} }}
+identity:
+  status: confirmed
+  anchors:
+    - {{ key: person_id, value: "person:{gid}", class: logical, establishing: true }}
+provenance: {{ src: asserted-by-human, by: "{gid} (gardener)", as_of: {when} }}
+---
+{name.strip('"')} keeps this garden.
+"""
+
+
 def main(argv):
+    gid = gname = None
+    if '--gardener' in argv:
+        i = argv.index('--gardener'); gid = argv[i + 1] if i + 1 < len(argv) else None; argv = argv[:i] + argv[i + 2:]
+        if not gid or not re.match(r'^[a-z0-9]+(-[a-z0-9]+)*$', gid):
+            die("--gardener takes the id of the person who keeps the garden: kebab-case, e.g. --gardener sam")
+    if '--gardener-name' in argv:
+        i = argv.index('--gardener-name'); gname = argv[i + 1] if i + 1 < len(argv) else None; argv = argv[:i] + argv[i + 2:]
     if len(argv) != 1 or argv[0] in ('-h', '--help'):
         print(__doc__); return 0 if argv else 2
     target = argv[0]
@@ -109,13 +143,33 @@ def main(argv):
     run('git', '-C', target, 'add', '-A')
     run('git', '-C', target, '-c', 'user.name=germinate', '-c', 'user.email=germinate@localhost',
         'commit', '-q', '-m', f"germinate: {garden} — the language, at std-vocab@{ver}. No beans.")
+    if gid:
+        import datetime
+        today = datetime.date.today().isoformat()
+        with open(os.path.join(target, 'beans', gid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(gardener_bean(gid, gname or gid, today))
+        gpath = os.path.join(target, 'GARDEN.md')
+        gtext = open(gpath, encoding='utf-8').read()
+        gtext = re.sub(r'(?m)^gardener:[^\n]*$', f'gardener: {gid}                      # the person who keeps this garden: its first bean', gtext, count=1)
+        with open(gpath, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(gtext)
+        import importlib.util as _iu
+        _sp = _iu.spec_from_file_location('dmjournal', os.path.join(target, 'bin', 'dmjournal.py'))
+        _dj = _iu.module_from_spec(_sp); _sp.loader.exec_module(_dj)
+        _dj.ROOT = target; _dj.JOURNAL = os.path.join(target, 'log', 'journal.md')
+        _dj.append('germinate', f'the gardener: [[{gid}]]',
+                   f"- action: planted [[{gid}]], the person who keeps this garden, and named them in GARDEN.md `gardener:`"
+                   f" — a RULE-CHANGE, as every change to the manifest is.\n")
+        run('git', '-C', target, 'add', '-A')
+        run('git', '-C', target, '-c', 'user.name=germinate', '-c', 'user.email=germinate@localhost',
+            'commit', '-q', '-m', f"germinate: {gid} keeps this garden")
     gate = subprocess.run([sys.executable, os.path.join(target, 'bin', 'dmcheck.py')], cwd=target)
     py = 'python' if os.name == 'nt' else 'python3'
     print(f"""
 germinated: {target}  (std-vocab@{ver}, daftar {release})
 
-The garden is empty and it passes its own gate. To plant the first bean:
-  1. write {os.path.join(target, 'beans', '<id>.md')}   (bean: <id> must equal the filename)
+The garden passes its own gate. {'Its gardener is ' + gid + '. To plant the next bean:' if gid else 'Its FIRST bean is its gardener — the person who keeps it — named in GARDEN.md `gardener:`.'}
+  1. write {os.path.join(target, 'beans', '<id>.md')}   (bean: <id> must equal the filename; seed/COOKBOOK.md starts with the gardener)
   2. append an entry to {os.path.join(target, 'log', 'journal.md')}  — the gate REFUSES a bean staged without one.
      Its heading is a POSITION IN TIME and the gate checks the form, so a tool reads the clock and writes it:
        {py} bin/dmjournal.py "your-name" "what you did" --body "- action: added [[<id>]]."

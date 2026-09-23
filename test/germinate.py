@@ -52,7 +52,7 @@ summary: "A person written into a garden grown from the seed, proving the langua
 identity:
   status: confirmed
   anchors:
-    - {{ key: person_id, value: "person:ada", class: logical, establishing: true, scope: global, observed: 2026-08-02 }}
+    - {{ key: person_id, value: "person:ada", class: logical, establishing: true, observed: 2026-08-02 }}
 provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: 2026-08-02 }}
 nature: {nature}
 owned_by: {{ legal: {{ crown: love }} }}
@@ -66,24 +66,26 @@ G = os.path.join(TMP, 'newgarden')
 
 # THE IMPLEMENTATION IS PYTHON (20.0): `sh seed/germinate.sh` hands over to it, so a Windows machine with no
 # `sh` grows the same garden. Both paths are exercised: this garden by the Python, the examples garden by the sh.
-r = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), G, cwd=ROOT)
+r = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), G, "--gardener", "keeper", cwd=ROOT)
 check("germinate.sh grows a garden and its first gate run is clean",
       r.returncode == 0 and '0 error(s)' in r.stdout, (r.stdout + r.stderr)[-400:])
 # A NEW GARDEN STARTS QUIET. It started with 11 warnings about Tier-0 relations it had no reason to draw yet,
 # which teaches a garden on its first day that warnings are noise (fixed 2026-09-17; those are dmreview's now).
 check("...and it starts with ZERO warnings — nothing to learn to ignore on day one",
       ' 0 warning(s)' in r.stdout, [l for l in r.stdout.splitlines() if 'warning(s)' in l or l.startswith('WARN')][:4])
-check("it carries the LANGUAGE and no beans — an estate's facts are not the language",
+check("it carries the LANGUAGE and no beans but its gardener's — an estate's facts are not the language",
       os.path.isdir(os.path.join(G, 'bin')) and os.path.isfile(os.path.join(G, 'seed', 'std-vocab.md'))
-      and os.listdir(os.path.join(G, 'beans')) == [],
-      str(os.listdir(G)))
+      and os.listdir(os.path.join(G, 'beans')) == ['keeper.md'],
+      str(os.listdir(os.path.join(G, 'beans'))))
+check("...and its manifest names that gardener — a garden begins as someone's",
+      re.search(r'(?m)^gardener: keeper\b', open(os.path.join(G, 'GARDEN.md'), encoding='utf-8').read()) is not None)
 check("it is a git repository with one commit — a garden that cannot commit has not germinated",
       run('git', 'rev-parse', 'HEAD', cwd=G).returncode == 0)
 # A RELATIVE TARGET IS RELATIVE TO WHERE YOU STAND, not to the release. v0.3.0 planted the language inside the
 # clone when given `garden` instead of `/abs/garden`; every check above used an absolute path, so none saw it.
 _rel_cwd = os.path.join(TMP, 'relative-cwd')
 os.makedirs(_rel_cwd)
-_rr = run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), 'rel-garden', cwd=_rel_cwd)
+_rr = run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), 'rel-garden', "--gardener", "keeper", cwd=_rel_cwd)
 check("a RELATIVE target grows the garden where the caller stands, and nothing lands inside the release",
       _rr.returncode == 0 and os.path.isfile(os.path.join(_rel_cwd, 'rel-garden', 'bin', 'dmcheck.py'))
       and not os.path.exists(os.path.join(ROOT, 'rel-garden')), (_rr.stdout + _rr.stderr)[-300:])
@@ -99,7 +101,7 @@ check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md and every door for an ag
 # THE EXAMPLES IN seed/README.md AND seed/COOKBOOK.md ARE COMMITTED IN A FRESH GARDEN, so the pages cannot drift
 # from the law. The cookbook's VOCAB.md fragment is applied too, and the NAS then uses the value it adds.
 _ex_tmp = os.path.join(TMP, 'readme-examples')
-run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _ex_tmp, cwd=ROOT)
+run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _ex_tmp, "--gardener", "keeper", cwd=ROOT)
 _examples, _fragments = [], []
 for _doc in ('README.md', 'COOKBOOK.md', 'WELCOME.md'):
     _page = open(os.path.join(ROOT, 'seed', _doc), encoding='utf-8').read()

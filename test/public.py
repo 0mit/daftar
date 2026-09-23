@@ -20,7 +20,7 @@ def run(*a, cwd=None):
 
 T = tempfile.mkdtemp(prefix="dmpub-")
 G = os.path.join(T, "g")
-run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, cwd=ROOT)
+run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 open(os.path.join(G, "beans", "someone.md"), "w").write(
     '---\nbean: someone\nkind: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: living\n'
     'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'

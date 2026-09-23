@@ -22,7 +22,7 @@ def run(*a, cwd=None):
 
 T = tempfile.mkdtemp(prefix="dmplace-")
 G = os.path.join(T, "g")
-run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, cwd=ROOT)
+run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 _v = os.path.join(G, "VOCAB.md"); _s = open(_v).read()        # code_paths and analysis_cache are `code` profile terms
 open(_v, "w").write(_s.replace("extends_profiles: [", "extends_profiles: [code, ", 1)
                     .replace("extends_profiles: []", "extends_profiles: [code]")

@@ -41,6 +41,21 @@ or derived from recorded evidence, and each file says which.
   concrete topics. Coverage is that standard's domains only (96 unit groups) and grows as other gardens
   classify roles. Apache-2.0 with daftar.
 
+## currencies.tsv — the currencies, their numbers and the decimal places in use
+
+- **Source:** Unicode CLDR 48.2.2, fetched from `unicode-org/cldr-json`: `cldr-core/supplemental/currencyData.json`
+  (the decimal places in ordinary use, `fractions`, and which currencies are tender where, `region`),
+  `cldr-core/supplemental/codeMappings.json` (the ISO 4217 numeric codes) and
+  `cldr-numbers-full/main/en/currencies.json` (the English names). One row per three-letter code CLDR names.
+- **Derived columns:** `numeric` zero-padded to three digits as ISO 4217 writes it; `status` is `current` when some
+  territory lists the currency as tender with no end date, `special` for an X-code that is not (gold, the testing
+  code XTS, "unknown" XXX), and `historic` otherwise. `digits` is CLDR's, which follows use: it may differ from the
+  minor unit ISO 4217 lists (the Iranian rial is written with none).
+- **Licence:** Unicode License v3 (permissive; its notice travels with the file's copies). ISO 4217's own list was
+  not used: its terms of redistribution are not stated where it is published.
+- **Refreshed** at a release by fetching the same three files again; a redenomination arrives as a new code, and the
+  old one stays, `historic`, so an old amount can still be said.
+
 ## Job descriptions — ESCO (to be added)
 
 ESCO (European Skills, Competences, Qualifications and Occupations), © European Union, reusable under

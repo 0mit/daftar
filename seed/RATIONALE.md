@@ -1057,29 +1057,17 @@ NB no `crown`: the crown owns but never answers
 
 the loop must CLOSE: same facets on both arcs
 
-## terms[facets].meaning
+## facets
 
-The ownership-facet lattice: DISTINGUISHABLE (crisp boundary; resolve overlap by a depends_on edge or
-boundary refinement, NEVER ambiguous double-coverage), DEPENDENCY-bearing (DAG), and RECURSIVE
-(a facet may decompose into sub-facets, ownership recursing within).
-
-## terms[facets].enforced_by
-
-AT TIER-0 there is nothing to check: this term defines the lattice RULES
-
-## terms[facets].rules
-
-(below) but declares no values, because `legal`/`technical` are defensible
-universals while the extensible three are unoccupied predictions. A garden
-supplying values inherits the drift guard through its overlay, and that IS
-enforced there. Left as an empty `schema:` key by the 1.1 promotion until
-golden V5 caught it — a term that states no rule and no reason is exactly
-the silent gap this release exists to remove.
-values_from:facets)
-definition below, so the two can never drift apart.
-NB: 'facilitation of creation/production' is NOT modelled as an ownership facet — a facilitator is a
-HABITAT the creation act lived in (lives_in, time-windowed), and any equal-sharing of that facilitator
-stake is captured by a `contract` over the creation aspect. Kept lean on purpose.
+THE OWNERSHIP-FACET LATTICE, as a registry. A facet is DISTINGUISHABLE (a crisp boundary; overlap is resolved by a
+`depends_on` edge or by refining a boundary, never by double coverage — which stays a judgment for whoever adds a row),
+DEPENDENCY-BEARING (every facet but `legal` depends on another, and the walk never returns — `registry_links` declares it
+`acyclic`, so the gate checks what the old term only stated), and RECURSIVE (a garden decomposes a facet by adding rows that
+depend on it: `operational` under `technical`). It was a term whose three rules nothing checked and which offered no values
+at Tier-0, so in a garden grown from the seed ANY facet key passed: the lattice MODEL.md describes lived only in one garden's
+overlay, stated five times over. As a registry it is stated once, read by `owned_by` and `responsibility` through
+`key_form`, and a garden adds a facet the way it adds any row. `experience` and `financial` are in the standard because a
+stranger's garden expects them: who designs how people meet a thing, and who pays for it.
 
 ## terms[instance_of].schema
 
@@ -1234,20 +1222,26 @@ it a merged bean read back can only be re-merged as the READER's own assertion �
 restamped `generated-by-tool` — which disarms the guard that an `inferred` value may never override
 an `asserted-by-human` one, because SRC_RANK is what enforces that guard.
 
-## terms[between]
+## terms[parties]
 
-== CONTRACT KEYS. `contract` is a Tier-0 kind and its `schema:` prose already names these five; they
-are declared here so the merge reads them from the same place the kind describes them.
+AN AGREEMENT IS STRUCTURE. The five contract keys were declared without a schema, so each checked nothing; the first
+agreements a stranger recorded put every party, sum and condition in free keys under `details`, and the one agreement in
+the reference garden stated its parties twice and its object twice. `parties`, `words`, `clauses` and `transactions` say
+who is bound (each with the day they accepted: an offer is not an acceptance, and one party's report of another's consent
+is not that party's word), where the words are, what each must, may or must not do (the `capability` square, which a
+being's capabilities already take), and what has moved. A balance is not among them: it is read, never stored.
 
-## terms[between].merge
+## terms[parties].merge
 
-SINGLE, not set — and this CHANGES what the shape guess did. The parties to an agreement are
-constitutive of it: unioning two gardens' lists would silently produce a three-party contract
-nobody agreed to. Two gardens disagreeing about who signed is a conflict for a human.
+SINGLE, not a per-key collection. The parties to an agreement are constitutive of it: unioning two gardens' lists would
+silently produce a contract with a party nobody agreed to. Two gardens disagreeing about who is bound — or about who has
+accepted — is a conflict for a person, and that is where a person should look.
 
 ## terms[over].merge
 
-SINGLE, not a per-key collection — a reference capsule is one thing, exactly like `lives_in`.
+A SET of what the agreement concerns. It was a single reference capsule, one thing like `lives_in`; an agreement between
+people is often about several things at once — a watch and bicycle equipment on one card — and two gardens that each name
+one of them both keep theirs. What would be dangerous to union is who is bound, and that is `parties`, which stays single.
 
 ## terms[trigger]
 
