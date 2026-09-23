@@ -825,6 +825,15 @@ def check_registry_links():
                 _visit(n, [])
 
 
+def check_retired_terms():
+    """A garden's local term, or an overlay, named for a term the standard RETIRED (21.0, `retired`, at: term or bean):
+    it would come back as a local term meaning nothing, or overlay a term that is no longer there. Refused, with where
+    the retired term went — the facet lattice is a registry now, and a garden adds a facet as a row."""
+    for _t in (vocab_fm.get('local_terms') or []):
+        if isinstance(_t, dict) and _t.get('term') and (RETIRED.get(('term', str(_t['term']))) or RETIRED.get(('bean', str(_t['term'])))):
+            errors.append(f"VOCAB local_terms '{_t['term']}': the standard retired this term" + (retired_hint('term', _t['term']) or retired_hint('bean', _t['term'])))
+
+
 def check_retired_owners():
     """A garden that overlaid one of the five retired enum-owner terms did so to restate a row it had added to the
     registry. The row is enough now; the overlay would otherwise come back as a term that means nothing."""
@@ -3063,6 +3072,8 @@ PLIES = (
      "a system's declared shape: what it names exists, nesting ends, a metric level has a unit, restrictions narrow"),
     (check_registry_links,
      "a row that names a row of another registry is resolved, like any other link"),
+    (check_retired_terms,
+     "a local term named for a retired one says where the retired one went, before anything reads it"),
     (check_retired_owners,
      "a registry is its own enum owner: an overlay of a retired owner term is named, not silently re-declared"),
     (check_units,
