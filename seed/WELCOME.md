@@ -87,11 +87,47 @@ time rather than guessing it, and leave the name of whoever commits to them:
 
 The `[[printer]]` matters: the gate refuses a bean change that the entry does not name.
 
+## The shape to hand it over in
+
+Give the whole proposal as ONE Markdown file, in the shape one garden uses to propose beans to another, so the
+person's agent can read it with `python3 bin/dmpropose.py read <file>` — which writes nothing — before anyone commits
+it. Front matter first, saying what it is and whom it is from; then the journal entry's lines in a fence opened by
+`daftar-journal` (no heading: the tool that takes it in writes the heading, from the clock); then each bean, whole,
+in a fence of its own opened by `daftar-bean` and the bean's id:
+
+````markdown
+---
+proposal: chat-20260917-1012
+from: { name: "an assistant in a chat, for sam" }
+beans: [printer]
+---
+```daftar-journal
+- action: added [[printer]], proposed by an assistant in chat.
+- detail: serial as read by sam from the label; everything else as sam described it.
+- why: the printer was the one networked device not yet in the ledger.
+```
+
+```daftar-bean printer
+---
+bean: printer
+kind: host
+…the whole bean, exactly as above…
+---
+The office printer. Sam read the serial off the label on the back.
+```
+````
+
+There is no `from.garden`: you are not a garden, and the tool reading it says so — a proposal from a chat, whose
+origin the gardener vouches for by committing it. If the person told you their garden's id (the last line of their
+gate shows it), add `to: { garden: <that id> }`; do not guess one. What you could not check goes after the beans,
+as a list.
+
 ## What only a person decides
 
 You may propose anything. These are never yours to settle, and your proposal should say so when it touches one:
 which anchors identify a thing; any safety-related status; any change to the vocabulary or its rules; overwriting
-something a person asserted; resolving a disagreement between two records.
+something a person asserted; resolving a disagreement between two records. The person who decides them is the
+garden's **gardener**, the one who keeps it; its manifest, GARDEN.md, names them.
 
 ## Other assistants
 

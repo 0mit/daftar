@@ -100,13 +100,22 @@ check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md and every door for an ag
 
 # THE EXAMPLES IN seed/README.md AND seed/COOKBOOK.md ARE COMMITTED IN A FRESH GARDEN, so the pages cannot drift
 # from the law. The cookbook's VOCAB.md fragment is applied too, and the NAS then uses the value it adds.
+# GROWN WITHOUT --gardener (21.0), because seed/README.md teaches the gardener written by hand: the person bean and
+# the one GARDEN.md line. The flag's own path is the garden above.
 _ex_tmp = os.path.join(TMP, 'readme-examples')
-run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _ex_tmp, "--gardener", "keeper", cwd=ROOT)
+run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _ex_tmp, cwd=ROOT)
 _examples, _fragments = [], []
 for _doc in ('README.md', 'COOKBOOK.md', 'WELCOME.md'):
     _page = open(os.path.join(ROOT, 'seed', _doc), encoding='utf-8').read()
     _examples += re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _page, re.S)
     _fragments += re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', _page, re.S)
+# A BEAN SHOWN ON TWO PAGES IS SHOWN THE SAME. The gardener opens both the seed's README and the cookbook; two copies
+# are two chances to disagree, and the later one would silently win when both are written into the garden.
+_by_path = {}
+for _path, _text in _examples:
+    _by_path.setdefault(_path, set()).add(_text)
+check("an example bean shown on more than one page is the same text on each",
+      all(len(v) == 1 for v in _by_path.values()), sorted(p for p, v in _by_path.items() if len(v) > 1))
 # THE NEWCOMER'S FIRST COMMIT, EXACTLY AS seed/README.md TEACHES IT, AND ON ITS OWN. The two beans of the
 # "Your first beans" section plus the journal entry printed beside them, committed together and nothing
 # else — because that commit is what a stranger's first five minutes actually is, and it is the step they
@@ -118,6 +127,9 @@ _first = re.findall(r'<!-- example: (beans/(?:sam|laptop)\.md) -->\n```markdown\
 _first_j = re.findall(r'<!-- example: log/journal\.md -->\n```markdown\n(.*?)\n```', _rm, re.S)
 check("seed/README.md still shows a first person, a first host AND the journal entry that commits them",
       len(_first) == 2 and len(_first_j) == 1, f"beans={len(_first)} entries={len(_first_j)}")
+_first_g = re.findall(r'<!-- example-front-matter: GARDEN\.md -->\n```yaml\n(.*?)\n```', _rm, re.S)
+check("...and the GARDEN.md line that names the first person as the garden's gardener",
+      len(_first_g) == 1 and re.match(r'^gardener: [a-z0-9-]+$', _first_g[0] if _first_g else ''), _first_g)
 for _path, _text in _first:
     open(os.path.join(_ex_tmp, _path), 'w', encoding='utf-8').write(_text + '\n')
 # THE HEADING IS THE TOOL'S (20.0): the page shows the entry a reader would write and the command that writes it;
@@ -125,9 +137,20 @@ for _path, _text in _first:
 _j_head, _j_body = (_first_j[0] if _first_j else '## x · sam · x\n').split('\n', 1)
 _j_who, _j_what = _j_head.split(' · ')[1], _j_head.split(' · ')[2]
 run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmjournal.py'), _j_who, _j_what, '--body', _j_body, cwd=_ex_tmp)
+# A GARDEN IS SOMEONE'S (21.0): the beans without the manifest line naming the gardener are refused, so the line the
+# page shows is load-bearing and not decoration.
+run('git', 'add', '-A', cwd=_ex_tmp)
+_nog = gate(_ex_tmp)
+check("...and without that line the first commit is REFUSED: a garden holding a bean names its gardener",
+      _nog[0] != 0 and 'names no gardener' in _nog[1], _nog[1].strip()[-300:])
+_gp = os.path.join(_ex_tmp, 'GARDEN.md')
+_gt = open(_gp, encoding='utf-8').read()
+for _line in _first_g:
+    _gt = re.sub(r'(?m)^gardener:[^\n]*$', _line.strip(), _gt, count=1)
+open(_gp, 'w', encoding='utf-8', newline='\n').write(_gt)
 run('git', 'add', '-A', cwd=_ex_tmp)
 _first_c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'first beans', cwd=_ex_tmp)
-check("A STRANGER'S FIRST COMMIT GOES THROUGH: the two beans and the entry, copied from the page as written",
+check("A STRANGER'S FIRST COMMIT GOES THROUGH: the gardener, the host, the manifest line and the entry, as written",
       _first_c.returncode == 0, (_first_c.stdout + _first_c.stderr)[-600:])
 
 for _path, _text in _examples:
@@ -149,7 +172,22 @@ run('git', 'add', '-A', cwd=_ex_tmp)
 _ex_c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'examples', cwd=_ex_tmp)
 check(f"the {len(_examples)} bean examples and {len(_fragments)} VOCAB fragments in seed/README.md + seed/COOKBOOK.md "
       f"commit in a fresh garden, as written, with 0 errors",
-      len(_examples) >= 8 and len(_fragments) == 2 and _ex_c.returncode == 0, (_ex_c.stdout + _ex_c.stderr)[-500:])
+      len(_examples) >= 15 and len(_fragments) == 2 and _ex_c.returncode == 0, (_ex_c.stdout + _ex_c.stderr)[-500:])
+# THE COOKBOOK'S RECIPES BETWEEN PERSONS AND GARDENS ARE THERE (21.0): the gardener first; money shared, an agreement
+# paid in instalments, a statement, an event; another person's garden, and a name that garden minted, carried here.
+_kinds = {}
+for _path, _text in _examples:
+    _m = re.search(r'(?m)^kind: ([a-z-]+)$', _text)
+    _kinds.setdefault(_m.group(1) if _m else None, []).append(_path)
+_ck = open(os.path.join(ROOT, 'seed', 'COOKBOOK.md'), encoding='utf-8').read()
+check("the cookbook's examples hold a contract with clauses and one with a transaction, a document, an event and a garden",
+      len(_kinds.get('contract', [])) >= 2 and _kinds.get('document') and _kinds.get('event') and _kinds.get('garden')
+      and re.search(r'(?m)^clauses:$', _ck) and re.search(r'(?m)^transactions:$', _ck), sorted(_kinds))
+check("...and the cookbook begins with the gardener, as germinate's closing message tells a stranger it does",
+      re.search(r'^## (.*)$', _ck, re.M).group(1).lower().startswith('the gardener'))
+check("...and a name another garden minted arrives qualified by that garden, which the examples record as a `garden`",
+      re.search(r'value: "([0-9a-f]{12})/[^"]+"', _ck) and re.search(r'key: garden_id, value: "%s"'
+      % re.search(r'value: "([0-9a-f]{12})/[^"]+"', _ck).group(1), _ck))
 _ex_gate = run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmcheck.py'), cwd=_ex_tmp).stdout
 check("...with ZERO warnings, and the banner names the garden and the release it runs",
       ' 0 warning(s)' in _ex_gate and re.search(r'^readme-examples \(daftar [^)]+\): ', _ex_gate, re.M),

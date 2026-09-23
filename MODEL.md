@@ -9,10 +9,15 @@ design steps before that are in `HISTORY.md` in the daftar repository.
 - A **bean** is one managed thing — a machine, a domain, a program, a person, a contract — as one file,
   `beans/<id>.md`. The YAML front matter holds the facts; the Markdown body is for people. A **mapping**
   (`mappings/<id>.md`) records a procedure or relationship that is not itself a thing.
-- A **garden** is a git repository of beans: one estate's ledger. `GARDEN.md` names it, pins the vocabulary
-  version (`extends: std-vocab@<version>`) and records the daftar release it runs (`daftar_release`).
+- A **garden** is a git repository of beans: one estate's ledger. `GARDEN.md` names it, names its gardener,
+  pins the vocabulary version (`extends: std-vocab@<version>`) and records the daftar release it runs
+  (`daftar_release`); the law's `manifest` says what else it may hold. A garden is known by the commit it
+  germinated from (`garden_id`), read from git and written in none of its own documents.
+- A garden is kept by its **gardener**: the person — or organisation — `GARDEN.md` names in `gardener:`, a bean
+  of the garden and its first. The gardener ratifies what an agent may not decide; an agent tends the garden.
+  Nothing outside a garden writes in it.
 - The **seed** (`seed/`) is the kit a garden is grown from. When gardens are merged, the result for each object
-  is a **canonical bean** — see `MERGE.md`, which calls it a *seed*; that is not `seed/`, the kit.
+  is a **canonical bean** (`MERGE.md`); the merge tool prints it under the key `seed`, which is not `seed/`, the kit.
 
 ## Facts carry their provenance
 A fact knows who said it and how they know.
@@ -20,8 +25,15 @@ A fact knows who said it and how they know.
   `asserted-by-human` or `generated-by-tool`. The vocabulary ranks them by HOW THE FACT IS KNOWN and says why
   (`provenance_src`). A `generated-by-tool` fact has no standing of its own: it names what it was computed
   from in `provenance.from`, and weighs as the weakest of those.
-- A fact whose source differs from the bean's default carries its own record.
+- A fact whose source differs from the bean's default carries its own record. What a record may hold is the
+  law's `provenance_record`: besides `src`, `by` and `as_of`, `from` names the records a fact was taken or computed
+  from, and `garden` names the garden the record was made in, where that is not this one.
 - **An `inferred` value never overrides an `asserted-by-human` one**, whatever precision it claims.
+- **A judgment is its judge's.** That one version is better, clearer or more beautiful than another is recorded
+  as a judgment — by whom (`provenance.by`), with its reason in prose — never as a property of the thing and never
+  computed. A person's is `asserted-by-human`; an agent's is `inferred`, and never overrides a person's. Whose
+  judgment decides for a being is its owner's, for the facet the judgment concerns, and under an agreement
+  whoever its clauses name.
 
 ## Identity: anchors
 Every bean has an `identity:` block of **anchors** — facts that say which object this is, so two gardens can
@@ -38,14 +50,15 @@ recognise the same thing whatever its file is called.
 
 ## Type: nature, then kind
 Every bean has a `nature` — `physical`, `metaphysical` or `living` — and a `kind` that refines it (`host` is
-physical; `domain`, `product`, `codebase` are metaphysical; `person`, `instance` and `virtual-host` are living: a
-virtual machine has no matter and lapses at teardown). The gate
+physical; `domain`, `product`, `codebase`, `contract`, `document`, `event` and `garden` are metaphysical; `person`,
+`instance` and `virtual-host` are living: a virtual machine has no matter and lapses at teardown). The gate
 refuses a nature that contradicts the kind. Rules about what sort of being something is — such as identity
 anchors — attach to the nature, so every kind under it inherits them.
 
 ## Ownership and responsibility
-Two arcs, over the same **facets** (`legal`, `technical`, …; facets may depend on each other — `technical`
-depends on `legal` — but never overlap):
+Two arcs, over the same **facets** — the rows of the law's `facets` registry (`legal`, `technical`,
+`experience`, `financial`) and any a garden adds. A facet may depend on others — every other facet depends on
+`legal` — but never on itself through them, and never overlaps another:
 - `owned_by` points up: each facet has **exactly one owner**.
 - `responsibility` points down: each facet has **exactly one holder** who answers for the thing.
 - **Every facet with an owner has a holder, and vice versa.** The gate enforces the pairing.
@@ -56,15 +69,32 @@ The forms an entry can take:
 - `{ external: "…" }` — owned outside this ledger: a rented server's provider, software's vendor, a domain's
   registry. Someone here still answers for it.
 - `{ via: { bean: … } }` — inherits the parent's owners, e.g. an instance through the product it runs.
-- `{ contract: { bean: … } }` — shared ownership of one facet, only through a `contract` bean that records the
-  agreement and a deterministic rule for conflicts.
-- `{ crown: <branch> }` — where every chain ends. In practice only a **person** writes it: a person is owned by
-  no bean, so `owned_by: { legal: { crown: love } }`, and answers for themselves:
-  `responsibility: { legal: { self: true } }`. The branch follows the nature (`nature` for physical, `logos`
-  for metaphysical, `love` for living); the gate checks it.
+- `{ contract: { bean: … } }` — one facet owned together, through a `contract` bean: the agreement between its
+  owners, whose clauses say how they decide.
+- `{ crown: <branch> }` — where every chain ends. The branch follows the nature (`nature` for physical, `logos`
+  for metaphysical, `love` for living); the gate checks it. A **person** is pinned to it: owned by no bean,
+  `owned_by: { legal: { crown: love } }`, and answering for themselves: `responsibility: { legal: { self: true } }`.
+  An **agreement** between parties may choose it: owned by none of its parties, `owned_by: { legal: { crown:
+  logos } }`, and answered for by them, each for the clauses it is bound by: `responsibility: { legal: { parties:
+  true } }`. The crown owns and never answers; the parties answer and never own. No other kind may write either.
 
 Ownership is separate from **habitat**: a running instance is owned through its product, and separately
 `lives_in` the machine it runs on. Moving machines changes the habitat, never the owner.
+
+## Agreements and money
+- An agreement is a `contract` bean: who it binds (`parties`), where its words are (`words`: written, spoken, or not
+  yet put into words, and the `document` or `event` that holds them), what it asks of each party (`clauses`, each a
+  position on the `capability` square — must, need not, may, must not — with its amount, its day, how it repeats and
+  what brings it into force), and what has moved under it (`transactions`).
+- **An offer is not an acceptance.** A party with `accepted` said yes on that day; a party without it has not. One
+  party's report of another's acceptance is the reporter's word, and its provenance says so.
+- **Money is a quantity.** An amount is `{ count, unit }`: the unit is a currency, the count a whole number or a
+  decimal string with no more places than the currency uses. No factor joins two currencies: a rate is an
+  observation someone made, at a moment, from a source, and is recorded as one.
+- **A balance is read, never written.** What one party owes another is computed from the transactions and the
+  clauses (`bin/dmledger.py`), exactly, in fractions; a stored balance is a second copy, and it drifts. A share that
+  does not come out even in the currency's places is shown as the fraction it is, and who takes the remainder is a
+  clause, never arithmetic.
 
 ## Relations
 A small set of typed edges — `owned_by`, `responsibility`, `lives_in`, `instance_of`, `part_of`,
@@ -115,8 +145,8 @@ technologies, each linked to its project's own documentation. They are kept whol
 
 ## Ground rules
 1. **One owner per fact.** A fact lives in one bean's `owns:`; elsewhere it is referenced.
-2. **Abstraction, not force-fit — and structure before prose.** A fact that fits no term goes in `attributes:`
-   or `details:`, intact — never bent into a term that nearly fits, never dropped. But INSIDE a term, an entry
+2. **Abstraction, not force-fit — and structure before prose.** A fact that fits no term goes in `details:`,
+   intact — never bent into a term that nearly fits, never dropped. But INSIDE a term, an entry
    holds only the attributes that term declares: a remark goes in the attribute declared for prose (`note`,
    `why`), and a new kind of fact is proposed as a new attribute. A sentence written as a key looks like data
    and is readable by nothing.
@@ -138,15 +168,16 @@ This table is the one statement of who may decide what.
 | **C** | **overwrite or delete** an authoritative value | own earlier *observed* value: an agent (log both); *asserted* or safety-related: **a person ratifies** |
 | **D** | set or change a **human-asserted** fact | **a person only**; an agent may propose |
 | **E** | change a **safety-critical** `status:` or flag | **a person ratifies** |
-| **F** | choose or settle a bean's **identity anchors** | **a person ratifies** — it governs every future merge |
+| **F** | choose or settle a bean's **identity anchors**, or take one in from another garden | **a person ratifies** — it governs every future merge |
 | **G** | add or change a **vocabulary term or rule** (the law) | **a person ratifies**, logged distinctly as a RULE-CHANGE |
 | **H** | add a dated **`exceptions:`** entry | an agent proposes, a person co-decides |
 | **I** | an **automatic merge** with no conflict | an agent alone |
 | **J** | resolve a **merge conflict or uncertain identity** | **a person ratifies** |
 | **K** | **log** what was done | everyone, always |
 
-When the class is unclear, an agent proposes and a person ratifies. An agent that meets something it may not
-decide parks it in `log/pending.md` as `status: proposed`, does everything safe around it, and carries on.
+The person who ratifies in a garden is its gardener — for an organisation, a person who answers for it. When the
+class is unclear, an agent proposes and a person ratifies. An agent that meets something it may not decide parks it
+in `log/pending.md` as `status: proposed`, does everything safe around it, and carries on.
 
 ## The journal and the gate
 - Every change is recorded in `log/journal.md` in the same commit: who, what and why. People record decisions
@@ -166,4 +197,37 @@ decide parks it in `log/pending.md` as `status: proposed`, does everything safe 
 ## Merging
 Gardens merge object by object, matched on establishing anchors: losslessly, in any order, with the same
 result, and never creating two beans for one object. A genuine disagreement is kept, both values, for a person
-to settle. `MERGE.md` has the full algebra.
+to settle. A name a garden minted fuses only within that garden unless it is qualified by the garden's id; equal
+bare names from two gardens are shown to a person, never fused. `MERGE.md` has the algebra.
+
+## Between gardens: the mycelium
+A garden is kept by its gardener, and nothing outside it writes there. **Gardens meet only by proposal.**
+- **A garden's identity** is `garden_id`: the first twelve hexadecimal digits of the root of its first-parent
+  history. It is read from git and stated in none of the garden's own documents. A clone is the same garden; a copy
+  given a new history is another. Another garden this one deals with is a `garden` bean, anchored by its
+  `garden_id`, owned by that garden's gardener and answered for by them. Recording a new one is the gardener's
+  decision (class F).
+- **A name is minted once and carried.** The value of an anchor term marked `minted` is a name a garden gave.
+  Bare, it identifies only within that garden; qualified — `<garden_id>/<name>` — it identifies everywhere. A thing
+  two gardens share is named once, by the garden that recorded it first, and qualified when it is to cross; a
+  garden that takes the name in keeps it byte for byte, and a qualified name here is qualified by this garden or
+  by a garden it holds a `garden` bean for.
+- **What passes is a proposal** (`bin/dmpropose.py`), never a write: one file, laid outside every garden, for one
+  garden, made under an agreement whose parties include both gardeners. It carries whole beans as the proposing
+  garden committed them, a stub of each bean they refer to, the journal entry that would take them in, and a
+  fingerprint. It passes on what was said in the proposing garden or by the garden proposed to, and of what a third
+  garden said only the names it gave.
+- **Provenance crosses unchanged.** `src`, `by`, `as_of` and `from` travel as they were written; `garden` is added
+  once, naming the garden the record was made in, and never changed — and it names a garden this one holds a
+  `garden` bean for. A person's assertion arrives as that person's assertion, and the provenance guard holds across
+  the boundary.
+- **Taking in is a write in the receiving garden like any other.** What a proposal brings is another person's
+  assertion (class D), a name another garden gave (F), and every disagreement or uncertain identity (J). Reading a
+  proposal writes nothing; taking it in writes in the working tree and never commits; the gardener's commit is the
+  ratification. A party's acceptance of the agreement is its own word, recorded by its own garden.
+- **An agreement is owned by none of its parties, and its parties answer for it** — the crown and `parties` forms
+  above.
+- **A test garden** says so in `GARDEN.md` (`test:`). Its beans are not facts about the world: a proposal from it
+  is marked as a test, and a garden that is not a test garden takes one in only as a test.
+- **Two gardens exchange only while they pin the same vocabulary.** A different pin blocks a proposal as it blocks
+  a merge (`MERGE.md`).

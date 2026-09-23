@@ -31,13 +31,18 @@ same way. Two senses of one word in one repository is a trap; both documents say
 ## Growing a garden
 
 ```
-sh seed/germinate.sh <target-directory>
+python3 seed/germinate.py <target-directory> --gardener sam --gardener-name "Sam"
 ```
 
-That copies the daftar tools from this clone's `bin/`, the Tier-0 vocabulary, and four empty templates; interpolates the
-version pin **from the vocabulary's own `version:` key** rather than typing it; `git init`s; installs the
-hooks; makes the first commit; and runs the gate. A garden that cannot make its first commit has not
-germinated, so the commit is part of the test rather than a step left to the reader.
+That copies what `seed/LANGUAGE` declares — the daftar tools, the Tier-0 vocabulary, and the empty templates;
+interpolates the version pin **from the vocabulary's own `version:` key** rather than typing it; `git init`s;
+installs the hooks; makes the first commit; and runs the gate. A garden that cannot make its first commit has not
+germinated, so the commit is part of the test rather than a step left to the reader. (`sh seed/germinate.sh` does
+the same; it hands over to the Python.)
+
+A garden is kept by someone. With `--gardener`, a second commit plants that person's bean — the garden's first —
+and names it in `GARDEN.md`, so the garden begins as someone's. Without it, the gardener is the first bean you
+write (below).
 
 **Requires** Python 3 and **PyYAML** — the one third-party dependency. `bin/dmcheck.py` exits 2 without it.
 
@@ -51,14 +56,15 @@ Then:
 
 ## Your first beans
 
-A person, the machine they run, and the journal entry that records both — exactly as a new garden accepts
+The gardener, the machine they run, and the journal entry that records both — exactly as a new garden accepts
 them. **These blocks are not illustrations:** `test/germinate.py` writes each one into a freshly grown
 garden and commits, so if the law moves and they stop passing, the test fails rather than this page
 quietly lying. The journal entry is checked the same way, because the first commit is refused far more
 often for the entry than for the bean.
 
-A person is owned by the crown and answers for themselves. Nobody holds a person, so these two lines are
-the only way a person's ownership is written:
+The first person is the **gardener**: the one who keeps this garden, and ratifies in it what an agent may not
+decide. A person is owned by the crown and answers for themselves. Nobody holds a person, so these two lines are
+the only way a person's ownership is written. (`germinate.py --gardener sam` writes a bean like this one for you.)
 
 <!-- example: beans/sam.md -->
 ```markdown
@@ -67,7 +73,7 @@ bean: sam
 kind: person
 title: "Sam — keeps this garden"
 status: active
-summary: "The person who owns and answers for the machines recorded here."
+summary: "The gardener: the person who keeps this garden, and owns and answers for the machines recorded here."
 nature: living
 identity:
   status: confirmed
@@ -104,13 +110,22 @@ responsibility: { legal: {holder: {bean: sam}}, technical: {holder: {bean: sam}}
 The laptop.
 ```
 
+The gardener is named in `GARDEN.md`, the garden's manifest, and the gate asks for it as soon as the garden
+holds a bean. Set the one line the template leaves empty:
+
+<!-- example-front-matter: GARDEN.md -->
+```yaml
+gardener: sam
+```
+
 And the entry that goes with them. **This is the step a first commit fails on**, because a heading is a
-POSITION IN TIME and the gate checks the form — so read it from the clock rather than typing a date:
+POSITION IN TIME and the gate checks the form — so read it from the clock rather than typing a date. `GARDEN.md`
+is law, so an entry that changes it says RULE-CHANGE:
 
 <!-- example: log/journal.md -->
 ```markdown
 ## 2026-09-17 09:30+03:00 · sam · the first two beans
-- action: added [[sam]] and [[laptop]].
+- action: added [[sam]] and [[laptop]]; RULE-CHANGE: GARDEN.md names sam as the gardener.
 - detail: the serial is off the underside of the machine; the person id is a name I chose and can keep.
 - why: starting the ledger with the thing that owns everything else, so nothing dangles.
 ```
@@ -120,9 +135,11 @@ python3 bin/dmjournal.py "sam" "the first two beans" < entry.md     # writes the
 ```
 
 The `[[bean-id]]` is what makes the entry count: the gate refuses a staged bean that the entry does not
-name. `- action:` is the only required line; `detail` and `why` are for the reader you cannot answer
-questions for, which in a year is you. When the gate refuses something, its message says what to write;
-`MODEL.md` says why, and `CHECKLIST.md` says how a write is made.
+name, and a staged `GARDEN.md` whose entry does not say RULE-CHANGE. `- action:` is the only required line;
+`detail` and `why` are for the reader you cannot answer questions for, which in a year is you. (If `--gardener`
+planted the gardener already, the first commit is the laptop alone, and its entry names only `[[laptop]]`.) When
+the gate refuses something, its message says what to write; `MODEL.md` says why, and `CHECKLIST.md` says how a
+write is made. `COOKBOOK.md` goes on from here.
 
 ## Contents
 
@@ -130,20 +147,23 @@ questions for, which in a year is you. When the gate refuses something, its mess
 |---|---|
 | `std-vocab.md` | the Tier-0 law. The **only** document the gate reads as law directly |
 | `VOCAB.md.template` | the garden's local overlay, empty, with the pin interpolated |
-| `GARDEN.md.template` | the manifest: which garden this is, which version governs |
+| `GARDEN.md.template` | the manifest: which garden this is, whose it is, which version governs |
 | `journal.md.template` | the header and **zero entries**, so no provenance is falsified |
 | `pending.md.template` | the park-and-proceed queue: its header and **zero entries** |
-| `germinate.sh` | the procedure above |
+| `germinate.py` | the procedure above (`germinate.sh` hands over to it) |
+| `COOKBOOK.md` | the common things, written the way the gate accepts them, the gardener first |
+| `WELCOME.md` | the door for an assistant with no shell |
+| `RATIONALE.md` | why each rule of `std-vocab.md` is as it is, keyed by the rule's path |
 
 Germination also copies **`.gitattributes`** from the clone. It is part of the language rather than of any
 estate: it is what dispatches bean merges to `bin/dmmerge.py` and gives `log/journal.md` a union merge.
 A garden without it text-merges its beans line by line and conflicts on its own append-only log.
 
-**There is no copy of `bin/` here.** `germinate.sh` copies the toolchain from the clone at germination
+**There is no copy of `bin/` here.** `germinate.py` copies the toolchain from the clone at germination
 time. A vendored copy would be a second toolchain that can drift from the one under test, and hand-listing
 which modules to carry gets it wrong — `dmcheck.py` imports `dmsafe`, which is not obvious from reading it.
-It carries every `bin/dm*.py`, `bin/hooks/` and `bin/install.sh` — by that naming convention, not by a list
-— and nothing else under `bin/`: a garden may keep its own tools there, and they are its own. `.gitignore` travels with `.gitattributes`, so no bytecode reaches a new garden's first commit.
+It carries every `bin/dm*.py`, `bin/hooks/` and the installers — by the patterns in `seed/LANGUAGE`, not by a
+list of files — and nothing else under `bin/`: a garden may keep its own tools there, and they are its own. `.gitignore` travels with `.gitattributes`, so no bytecode reaches a new garden's first commit.
 
 ## What is deliberately not carried
 

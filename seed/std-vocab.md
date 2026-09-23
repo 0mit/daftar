@@ -2424,9 +2424,9 @@ kinds:
 
 The portable, estate-agnostic classification shared by every garden — the abstract model of *types* (data + process) and *anchors* (identity classes). Gardens pin a version in their own `VOCAB.md` / `GARDEN.md` and add only local terms/exceptions there.
 
-**Anchor classes.** Since P4 (2026-08-02, human-ratified) an anchor establishes identity if and only if it carries `establishing: true`. `class` survives as a *hint at why* — `hardware`, `logical`, `network`, `role`, `none` — and decides nothing. This prose once carried the pre-P4 table that made `class` decisive; it was deleted rather than annotated, because a law file that states revoked law in a region no tool reads is the worst place in the repo to be wrong. See `MODEL.md` and the `anchor_class` term above.
+**Anchor classes.** An anchor establishes identity if and only if it carries `establishing: true`. Which classes may establish for a bean is stated once, in the front matter: the classes are the `anchor_class` term's values, each nature's family is its row in `natures`, and `identity_policy.establishing_family` says the gate holds a confirmed bean to it. This prose restates none of them. See `MODEL.md`.
 
-**Growth:** a garden-local term that proves general is **promoted** here via the SKILL promotion protocol (propose → show neighborhood → human ratifies → version bump + provenance). This file's version history is its changelog below.
+**Growth:** a garden-local term that proves general is **promoted** here by a pull request to the daftar repository (`CONTRIBUTING.md`): propose, show the neighbourhood, a person ratifies, and the version moves. This file's version history is its changelog below.
 
 ## Changelog
 - **1.0** (2026-07-31) — initial standard: `ip, hostname, fqdn, mac, serial, wg_pubkey, emp_id, id, ref, shell-log` with anchor/merge facets. Seeded from the project's v0.x design + 3 review rounds.
@@ -2676,6 +2676,32 @@ The portable, estate-agnostic classification shared by every garden — the abst
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **21.0** (2026-09-23, proposed rule-change) — **what passes between: persons, and gardens.** MAJOR. Until now the
+  language described one gardener's world. The first garden kept by someone who had not written the language needed
+  what it could not say: money, an agreement between two people, the person who keeps the garden, and a thing two
+  gardens share — so its agreements sat in free keys under `details`, the person who keeps it appeared in it only as
+  an outside party in prose, and a merge of it against a copy of itself saw two records as four. BETWEEN PERSONS: a
+  `money` dimension and quantity whose units are the currencies Unicode CLDR publishes (`currencies`, a registry
+  file), with no factor between two of them — a rate is an observation, never a law — and a count held to the
+  currency's decimal places; a `ratio` quantity; an agreement as structure — `parties` (each with the day it
+  accepted: an offer is not an acceptance), `words` (written, spoken or not yet put into words, and where),
+  `clauses` (each a position on the `capability` square, with amount, due day, recurrence and condition, and
+  `expiry` per entry that `unless` silences once met) and `transactions` (what moved, who paid, who bears it in
+  whole shares, their parts summing exactly to the whole through the new schema construct `sums`). A balance is read
+  from them, never stored, so `balance` is retired. `contract` may end at the crown and be answered for by its
+  `parties`: owned by none of them. `document` and `event` are kinds, identified by `content_hash` and `event_id`;
+  `recurrence_form.times` counts instalments. BETWEEN GARDENS: the manifest is judged like an entry (`manifest`) and
+  names its `gardener`, or marks a rehearsal (`test`); a garden is a being (`garden`, anchored by `garden_id`: the
+  commit it germinated from, which no one assigns and every clone shares); the anchor terms whose values a garden
+  mints say `minted: true`, and `identity_policy.minted` qualifies such a name by the garden that gave it, so equal
+  bare names from two gardens are candidates and never fused; `provenance_record` declares the record every fact
+  carries, `from` and `garden` included. AND: the ownership facets are a registry whose `depends_on` walk is checked
+  acyclic, with `experience` and `financial` beside `legal` and `technical`; `entry_form_from_kind_attr` reads a
+  list, which allows a form where one names pins it; and `retired` lists what the law took back, so a refusal says
+  where it went — the anchor attribute `scope` (said by the term and the name's own form now), `between`,
+  `agreement_ref`, `conflict_rule`, `balance`, `attributes` (into `details`), the `facets` term,
+  `values_consistent_with`, and the manifest's `seeds_from`, `created` and `models`. With the release: gardens meet
+  by proposal (`bin/dmpropose.py`), what is owed is read (`bin/dmledger.py`), and MODEL.md says whose a judgment is.
 - **20.0** (2026-09-22, proposed rule-change) — **a heading is stamped by the clock, not typed; an anchor says how it
   is known the way every fact does.** `journal.heading: stamped`: `bin/dmjournal.py` writes every heading from the
   clock and records it in the clone's git directory, and the gate refuses a heading a commit adds that the tool did

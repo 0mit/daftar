@@ -47,6 +47,18 @@ for d, t in text.items():
     hit = [w for w in owners if re.search(r"(?<![A-Za-z_])%s\.values|term:\s*%s\b" % (w, w), t)]
     check(f"{d} addresses no owner term that a registry replaced", not hit, hit)
 
+# A KEY THE LAW RETIRED IS NOT WRITTEN AS A KEY (21.0). The law lists what it took back (`retired:`), and the gate refuses
+# each with where it went; a document that still writes one — `scope: global` in an example anchor, `attributes:` as
+# the bag for a stray fact, a manifest's `seeds_from:` — teaches the refusal. A name at the head of a line, inside a
+# flow mapping, or opening an inline code span is a key; the same word in a sentence is only a word.
+import dmparse, yaml
+_law = yaml.safe_load(dmparse.split_front_matter(open(os.path.join(ROOT, "seed", "std-vocab.md"), encoding="utf-8").read())[0])
+_keys = sorted({str(r["name"]) for r in (_law.get("retired") or []) if isinstance(r, dict) and r.get("at") in ("bean", "anchor", "manifest")})
+assert len(_keys) >= 8, "the law's list of retired keys was not found"
+for d, t in text.items():
+    hit = sorted({w for w in _keys if re.search(r"(?m)^%s:|[{,]\s*%s:|`%s:" % ((re.escape(w),) * 3), t)})
+    check(f"{d} writes no key the law retired", not hit, hit)
+
 for d, t in text.items():
     named = sorted(set(re.findall(r"(?<![A-Za-z0-9_/.-])((?:bin|test)/[A-Za-z0-9_./-]+\.(?:py|sh))", t)))
     gone = [n for n in named if n not in NOT_SHIPPED and not os.path.isfile(os.path.join(ROOT, n))]
