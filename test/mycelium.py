@@ -1571,7 +1571,7 @@ provenance: {{ src: asserted-by-human, by: "ali-household (gardener)", as_of: 20
 parties:
   ali-household: {{ who: {{ bean: ali-household }}, accepted: 2026-09-23 }}
   ada: {{ who: {{ bean: ada }} }}
-words: {{ form: written, at: {{ bean: supply }} }}
+words: {{ form: spoken, agreed: 2026-09-23 }}
 ---
 What Ali's household supplies to ada.
 """)
