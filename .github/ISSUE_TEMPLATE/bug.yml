@@ -14,8 +14,8 @@ body:
   - type: input
     id: release
     attributes:
-      label: The last line of `python3 bin/dmcheck.py --all`, with the garden's name, gardener and id replaced
-      description: "`python` on Windows. It names the release your garden runs."
+      label: The gate's last line, with the garden's name, its gardener and its id replaced
+      description: "What `python3 bin/dmcheck.py --all` prints last (`python` on Windows). It names the release your garden runs."
       placeholder: "garden-sam (daftar v0.33.1, gardener sam, garden 0123456789ab): 12 docs, 0 error(s), 0 warning(s)"
     validations:
       required: true
