@@ -1003,7 +1003,8 @@ def cmd_make(argv):
                          "a proposal is made under an agreement between the two gardeners: record it and commit it"))
     else:
         disputed = []
-        missing = [g for g in (gardener, to_gardener) if g and g not in who_parties(ub[0], disputed)]
+        named = who_parties(ub[0], disputed)            # once: each call adds every dispute it meets to `disputed`
+        missing = [g for g in (gardener, to_gardener) if g and g not in named]
         waits = [(k, w) for k, w in disputed if not w or any(g in w for g in missing)]
         if missing and waits:
             # NOT MISSING — IN DISPUTE: the agreement names the party two ways, and which is so is a person's call
@@ -1301,11 +1302,49 @@ def value_at(fm, dotted):
     return node
 
 
-def own_claims(fm, own, local_fm):
+_HISTORY = {}
+
+
+def history_of(bid):
+    """Every front matter beans/<bid>.md has had in this garden's commits, newest first — what this garden has said of
+    the bean, and so could have given another. Read once per bean per run, in one `git cat-file`."""
+    if bid not in _HISTORY:
+        rc, revs, _ = _git(['log', '--format=%H', '--', f'beans/{bid}.md'])
+        revs = revs.split() if rc == 0 else []
+        fms = []
+        if revs:
+            r = subprocess.run(['git', '--no-optional-locks', '-C', ROOT, 'cat-file', '--batch'], capture_output=True,
+                               input=''.join(f"{h}:beans/{bid}.md\n" for h in revs).encode('utf-8'))
+            data, at = r.stdout, 0
+            while at < len(data):
+                eol = data.index(b'\n', at)
+                head = data[at:eol].split()
+                at = eol + 1
+                if len(head) < 3 or head[1] != b'blob':
+                    continue
+                size = int(head[2])
+                text, at = data[at:at + size].decode('utf-8', 'replace'), at + size + 1
+                try:
+                    fm, _b = parse_text(text)
+                except Exception:          # a revision the reader cannot parse says nothing it could have given
+                    fm = None
+                if fm:
+                    fms.append(fm)
+        _HISTORY[bid] = fms
+    return _HISTORY[bid]
+
+
+def own_claims(fm, own, local_fm, refmap=None, local_id=None):
     """Where a carried bean says THIS garden said something — a record stamped with this garden's id, a value
     `provenance_of` says was seen here — and this garden holds no identical record at the same place. A record made
     here and given back is one the local bean still holds, byte for byte in meaning (a round trip); any other is
-    another garden's word dressed as this one's. Against no local bean (a NEW one) every such claim is one.
+    another garden's word dressed as this one's. Against no local bean (a NEW one) every such claim is one: this
+    garden holds nothing it could have given, so no record of what it said — history or not — can be true.
+
+    WHAT CAME HOME IS READ IN THIS GARDEN'S NAMES. The other garden keeps a value in its own names — a party it calls
+    `neighbour-ben` is `ben` here — and so does every `provenance_of` record it made of that value. Each reference is
+    moved to the bean it resolves to here (`refmap`, the stubs' resolution, as take moves the value itself) before
+    anything is compared, or a value that came home unchanged read as one this garden never held.
 
     WHAT CAME HOME IS COMPARED WITHOUT THE STAMP IT TRAVELLED UNDER, wherever the stamp sits. A value that carries its
     own provenance record — an entry a person here wrote with `provenance: {…}` — went out stamped `garden: <this
@@ -1316,9 +1355,28 @@ def own_claims(fm, own, local_fm):
     compared — the same strip a top-level record gets (MERGE.md §16)."""
     M = _merge()
     out = []
+    fm = rewrite_refs(fm, refmap) if refmap else fm
 
     def bare(v):
         return M.canonical(M.norm(strip_own(v, own)))
+
+    def canon(pth, v):
+        return M.canon_at(pth, strip_own(v, own))
+
+    def held_before(pth, value):
+        """Whether this garden's bean held `value` at `pth`: in a commit of its own, or in a `provenance_of` record
+        that says it was seen here."""
+        want = canon(pth, value)
+        pv_here = (local_fm.get('provenance_of') or {}).get(pth) if isinstance(local_fm.get('provenance_of'), dict) \
+            else None
+        if any(isinstance(h, dict) and own in [str(x) for x in (h.get('seen_in') or [])] and 'value' in h
+               and canon(pth, h['value']) == want for h in (pv_here if isinstance(pv_here, list) else [])):
+            return True
+        for old in (history_of(local_id) if local_id else []):
+            v = value_at(old, pth)
+            if v is not MISSING and canon(pth, v) == want:
+                return True
+        return False
     for path, rec in prov_records(fm):
         if str(rec.get('garden')) != own:
             continue
@@ -1332,17 +1390,18 @@ def own_claims(fm, own, local_fm):
         for r in recs:
             if own not in [str(s) for s in (r.get('seen_in') or [])]:
                 continue
-            if not r.get('subsumed') and (carried is MISSING or M.canon_at(pth, strip_own(carried, own))
-                                          != M.canon_at(pth, strip_own(r.get('value'), own))):
+            if local_fm is not None and not r.get('subsumed') \
+                    and (carried is MISSING or canon(pth, carried) != canon(pth, r.get('value'))) \
+                    and held_before(pth, r.get('value')):
                 # HISTORY, NOT A CLAIM: a record of a value the bean no longer holds and nothing subsumed — the side of
-                # a disagreement a person set aside. The merge never reads it back (dmmerge._apply_prov), so it
-                # credits nothing to this garden; a garden's own earlier word, settled away, is not a forgery.
+                # a disagreement a person set aside — which this garden's bean DID hold once, in a commit of its own or
+                # in its own `provenance_of`. The merge never reads it back (dmmerge._apply_prov); a garden's own
+                # earlier word, settled away, is not a forgery. A value this garden never held is one: refused below.
                 continue
             held = (local_fm.get('provenance_of') or {}).get(pth) if local_fm is not None else None
             same = isinstance(held, list) and any(isinstance(h, dict) and bare(h) == bare(r) for h in held)
             here = value_at(local_fm, pth) if local_fm is not None else MISSING
-            here_too = here is not MISSING and \
-                M.canon_at(pth, strip_own(here, own)) == M.canon_at(pth, strip_own(r.get('value'), own))
+            here_too = here is not MISSING and canon(pth, here) == canon(pth, r.get('value'))
             if not (same or here_too):
                 out.append(f"provenance_of.{pth}")
     return list(dict.fromkeys(out))
@@ -1725,7 +1784,8 @@ def analyse(path, as_test=False):
     if not A['chat']:
         for b, fm in raw.items():
             hits = fused.get(b) or []
-            claims = own_claims(fm, own, local[hits[0]][0] if len(hits) == 1 else None)
+            claims = own_claims(fm, own, local[hits[0]][0] if len(hits) == 1 else None, refmap=A['map'],
+                                local_id=hits[0] if len(hits) == 1 else None)
             if claims:
                 R.append((f"{b}: {', '.join(map(_esc, claims))} "
                           f"say{'s' if len(claims) == 1 else ''} this garden ({own}) said it, "

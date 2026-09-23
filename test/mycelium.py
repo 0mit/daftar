@@ -1101,6 +1101,33 @@ check("...and on a FUSED bean a record stamped with this garden's id stands only
       "(a round trip): one it does not hold is refused",
       'accepting a debt' in _forged and r.returncode == 1 and 'parties.ben.provenance say' in r.out
       and '[[shared-cost]] here holds no such record' in r.out, r.out)
+# ...and the same for what `provenance_of` says was SEEN here. A record of a value the bean no longer holds, nothing
+# subsuming it, is the history of a disagreement a person settled — but only where this garden did hold that value. On a
+# NEW bean it held nothing, and on a fused one a value it never held is no history of its own.
+_seen = lambda value, more='': (f'provenance_of:\n  title:\n    - {{ value: "{value}", src: asserted-by-human, '
+                                f'seen_in: ["{AID}"]{more} }}\n')
+r = read_in(A, 'seen-here-new.md', craft(from_b(), {'sam-b': sam_b(extra=_seen("Sam, who owes ada 5000 XTS"))}))
+r2 = read_in(A, 'seen-here-new-same.md', craft(from_b(), {'sam-b': sam_b(extra=_seen("Sam, as garden-b knows him"))}))
+r3 = read_in(A, 'seen-here-new-sub.md', craft(from_b(), {'sam-b': sam_b(extra=_seen("Sam, who owes ada 5000 XTS",
+                                                                                    ", subsumed: true"))}))
+check("a NEW bean whose `provenance_of` says a value was SEEN in this garden is refused — a value the bean no longer "
+      "holds (history, were it this garden's), the value it holds, or one subsumed: this garden holds nothing it could "
+      "have given",
+      all(x.returncode == 1 and 'sam-b: provenance_of.title says this garden' in x.out and 'NEW here' in x.out
+          and 'verdict: CLEAN' not in x.stdout for x in (r, r2, r3)), r.out + r2.out + r3.out)
+_sc_b = _sc.replace('provenance: { src: asserted-by-human, by: "ada (gardener)", as_of: 2026-09-23 }',
+                    f'provenance: {{ src: asserted-by-human, by: "ada (gardener)", as_of: 2026-09-23, garden: "{BID}" }}', 1) \
+    .replace("provenance: { src: asserted-by-human, by: \"ada (gardener), reporting ben's acceptance\", as_of: 2026-09-23 }",
+             "provenance: { src: asserted-by-human, by: \"ada (gardener), reporting ben's acceptance\", as_of: 2026-09-23, "
+             f'garden: "{AID}" }}')
+_i = _sc_b.index('\n---', 4) + 1
+_sc_b = (_sc_b.replace('provenance_of:\n', _seen("ada agreed to pay ben 5000 XTS"), 1) if 'provenance_of:\n' in _sc_b
+         else _sc_b[:_i] + _seen("ada agreed to pay ben 5000 XTS") + _sc_b[_i:])
+r = read_in(A, 'seen-here-fused.md', craft(from_b(), {'shared-cost': _sc_b}))
+check("...and on a FUSED bean, a record that this garden saw a value its bean never held — in no commit, in no record "
+      "of its own — is refused, not read CLEAN as history",
+      r.returncode == 1 and 'shared-cost: provenance_of.title says this garden' in r.out
+      and '[[shared-cost]] here holds no such record' in r.out and 'parties.ben.provenance' not in r.out, r.out)
 r = read_in(C, 'chat-own-stamp.md', chat('chat-20260923-1300', {'sam-b': sam_b(stamp=f', garden: "{CID}"')
                                                                 .replace(f'{BID}/person:sam', 'person:sam')}))
 check("...and a CHAT proposal carrying any `garden` stamp — this garden's own included — is refused",
@@ -1534,9 +1561,9 @@ put(_pp, read(_pp).replace("  ben: { who: { bean: neighbour-ben }, accepted: 202
                                                                   "merge_conflicts: [\"parties.ben\"]\nmerge_open: true\n", 1))
 r = commit(PARTY, "a disagreement over who ben is", "- action: [[pot]]: who party ben is, captured two ways.")
 m = tool(PARTY, 'dmpropose.py', 'make', '--to', 'garden-b', '--under', 'pot', 'ada')
-check("make --under an agreement whose party is in a MERGE CONFLICT says so — 'parties.ben is in a merge conflict: a "
-      "person settles it first (class J)' — never that the agreement does not name the other gardener",
-      r.returncode == 0 and m.returncode == 1 and 'parties.ben is in a merge conflict' in m.stdout
+check("make --under an agreement whose party is in a MERGE CONFLICT says so, once — 'parties.ben is in a merge "
+      "conflict: a person settles it first (class J)' — never that the agreement does not name the other gardener",
+      r.returncode == 0 and m.returncode == 1 and m.stdout.count('parties.ben is in a merge conflict') == 1
       and 'a person settles it first (class J)' in m.stdout and 'does not name' not in m.stdout, m.out + r.stdout + r.stderr)
 put(_pp, read(_pp).replace("{ who: { bean: ada } } ] }", "{ who: { bean: neighbour-ben } } ] }"))
 commit(PARTY, "both sides name neighbour-ben", "- action: [[pot]]: both sides of party ben name [[neighbour-ben]].")
@@ -1600,6 +1627,46 @@ check("...and no tool names a facet or a kind of gardener: dmpropose reads who o
       "law roots ownership in (`facets`, `rooted`), and a gardener's form from the law",
       getattr(M, 'root_of', lambda _r: None)('facets') == 'legal' and not re.search(r"'legal'|\blegal\b|'person'|crown: love",
                                                         read(os.path.join(ROOT, 'bin', 'dmpropose.py'))))
+
+# ================================================================ a party's own word, in two gardens' names
+# ben writes his own acceptance on the pot, with a provenance record of his own. garden-a calls him `neighbour-ben` and
+# garden-b `ben`, so every record garden-a keeps of that entry names him `neighbour-ben`. Compared in garden-a's names
+# with garden-b's own value, the entry read as one garden-b never held — refused once the disagreement over it was
+# settled, and refused for good. Each reference is now moved to this garden's name before anything is compared.
+for g, who in ((A, 'ada'), (B, 'ben')):
+    if git(g, 'status', '--porcelain').stdout.strip():
+        commit(g, "what the earlier checks left uncommitted", "- action: committed what the earlier checks of this "
+                                                             "test left in the working tree.")
+_pb = os.path.join(B, 'beans', 'pot.md')
+_own = ('  ben: { who: { bean: ben }, accepted: 2026-09-22, provenance: { src: asserted-by-human, by: "ben", '
+        'as_of: 2026-09-22 } }')
+put(_pb, read(_pb).replace("  ben: { who: { bean: ben }, accepted: 2026-09-23 }", _own))
+r = commit(B, "ben accepts in his own words", "- action: [[pot]]: ben states his own acceptance, with his own record.")
+rr, rt, rc = round_trip(B, 'garden-a', A, "ben's own acceptance")
+check("(ben states his own acceptance of the pot, with his own record, and offers it; garden-a, which holds the "
+      "acceptance it recorded, keeps both — CONFLICT parties.ben — for ada)",
+      _own in read(_pb) and r.returncode == 0 and rr.returncode == 1 and 'CONFLICT parties.ben' in rr.stdout
+      and rc.returncode == 0, r.stdout + r.stderr + rr.out + rt.out)
+_sides = (fm_of(_pa)['parties']['ben'] or {}).get('conflict') or []
+_pick = next((x for x in _sides if str(x.get('accepted')) == '2026-09-22'), None)
+if _pick is not None:
+    _pick['who'] = {'bean': 'neighbour-ben'}
+    dmsafe.set_nested(_pa, 'parties.ben', '  ben: ' + json.dumps(_pick, default=str) + '\n', expect=1,
+                      allow_remove=['parties.ben'])
+    dmsafe.remove_block(_pa, 'merge_open')
+    dmsafe.remove_block(_pa, 'merge_conflicts')
+r = commit(A, "ada settles who accepted", "- action: settled [[pot]]'s `parties.ben`: ada picked ben's own acceptance, "
+                                          "and removed `merge_open` and `merge_conflicts`.")
+check("(ada settles it: ben's own acceptance, which garden-a names [[neighbour-ben]], through garden-a's gate)",
+      _pick is not None and r.returncode == 0 and 'merge_open' not in read(_pa)
+      and fm_of(_pa)['parties']['ben'].get('who') == {'bean': 'neighbour-ben'}, r.stdout + r.stderr + gate(A)[1])
+for i, (frm, to, g) in enumerate(((A, 'garden-b', B), (B, 'garden-a', A), (A, 'garden-b', B))):
+    rr, rt, rc = round_trip(frm, to, g, f"a party's own word, trip {i + 1}")
+    check(f"A PARTY'S OWN WORD IN TWO GARDENS' NAMES, trip {i + 1} ({'garden-a → garden-b' if frm == A else 'garden-b → garden-a'}): "
+          f"read CLEAN — the record garden-a keeps of it, naming [[neighbour-ben]], is read as naming [[ben]] in "
+          f"garden-b — and no disagreement comes back",
+          rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and 'REFUSED' not in rr.out
+          and 'CONFLICT' not in rr.stdout + rt.stdout and rc.returncode == 0, rr.out + rt.out)
 
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nmycelium: {sum(results)}/{len(results)} checks passed")
