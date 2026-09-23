@@ -1282,9 +1282,13 @@ if __name__ == '__main__':
     paths = sys.argv[1:]
     # AN INPUT'S LABEL IS ITS DIRECTORY'S NAME — unless two inputs share one. Two gardens on one machine may both be
     # called `daftar`, and a bean is a node by (label, id): under one label the second garden's `ada` silently
-    # replaced the first's. Such inputs are labelled by their paths as given, which depends on nothing but the inputs.
-    _names = [os.path.basename(p.rstrip('/')) for p in paths]
-    labels = [os.path.normpath(p) if _names.count(n) > 1 else n for p, n in zip(paths, _names)]
+    # replaced the first's. Such inputs are labelled `<name>@<garden_id>`, which is the same however the path was
+    # typed; two clones of one garden share even that, and are labelled by their real paths.
+    _names = [os.path.basename(p.rstrip('/').rstrip(os.sep)) for p in paths]
+    _ids = [garden_identity(p) if _names.count(n) > 1 else None for p, n in zip(paths, _names)]
+    labels = [n if _names.count(n) == 1
+              else f"{n}@{i}" if i and sum(1 for m, j in zip(_names, _ids) if (m, j) == (n, i)) == 1
+              else os.path.realpath(p) for p, n, i in zip(paths, _names, _ids)]
     gl = [load_garden(p, lab) for p, lab in zip(paths, labels)]
 
     # LAW FIRST. Merging beans while the type systems diverge converges the data and leaves it
