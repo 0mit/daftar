@@ -30,7 +30,7 @@ which the law does not yet mark in a column a tool could read (see `_ONE_GARDENS
 Usage: python3 bin/dmreview.py [--all]     (--all lists every occurrence rather than a sample)
        python3 bin/dmreview.py --law [--against <git-ref>]     (also --against=<git-ref>)
 """
-import difflib, glob, os, re, subprocess, sys, textwrap
+import difflib, errno, glob, os, re, subprocess, sys, textwrap
 from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -768,9 +768,12 @@ def main(argv):
             part_b()
         sys.stdout.flush()               # a pipe's buffer is written HERE, where a reader that left can be caught
         return 0
-    except BrokenPipeError:
+    except OSError as e:
         # Piped into `head`, the reader leaves first. That is not a failure of this tool, which always exits 0: point
-        # stdout at nothing so the interpreter's own flush at exit has nowhere to fail.
+        # stdout at nothing so the interpreter's own flush at exit has nowhere to fail. Windows says a closed pipe as
+        # EINVAL rather than EPIPE; any other error is a real one, and is raised.
+        if not isinstance(e, BrokenPipeError) and e.errno != errno.EINVAL:
+            raise
         try:
             os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
         except (OSError, ValueError):
