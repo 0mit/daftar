@@ -9,6 +9,13 @@ hooks in bin/hooks/ are the source of truth and this script only copies them —
 so what runs is what is reviewed. A `.sh` file there is no hook but a part the hooks source (python.sh), and
 is copied beside them, so an installed hook never depends on what the working tree happens to hold.
 
+EVERY COPY HAS LF LINE ENDS, whatever the checkout did. Git for Windows checks text out with CRLF by default
+(core.autocrlf=true), and a hook with CR in it does not run: `#!/bin/sh` and a CR names no interpreter, and
+the shell reads the CR as part of each line's last word, so the gate fails closed and nothing commits without
+--no-verify.
+`.gitattributes` asks for LF in bin/hooks/ and in every `.sh`; this is the second guard, for a checkout made
+before that line arrived or with it overridden. Only line ends change: CR LF becomes LF, nothing else.
+
 It is Python and not shell because a garden is grown on Windows too, where `sh` is not a given but the
 Python that runs the gate is. The hooks themselves stay `sh`: git runs them with the shell it ships.
 
@@ -31,14 +38,29 @@ STORE_ALIAS = ("is the Microsoft Store alias (App execution aliases), which runs
 
 
 def git(*args, cwd=None):
-    return subprocess.run(['git', *args], cwd=cwd, capture_output=True, text=True)
+    return subprocess.run(['git', *args], cwd=cwd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+
+
+# A CHILD PYTHON WRITES UTF-8 to us, and we read UTF-8. On Windows a Python writing to a pipe uses the old code page,
+# and a path outside it (a per-user install under a profile named in Persian) cannot be printed: the probe then saw a
+# Python that has PyYAML as one that lacks it. PYTHONIOENCODING overrides UTF-8 mode, so both are set.
+CHILD_ENV = {'PYTHONUTF8': '1', 'PYTHONIOENCODING': 'utf-8'}
 
 
 def _run(cmd, code):
     try:
-        return subprocess.run(cmd + ['-c', code], capture_output=True, text=True, timeout=60)
+        return subprocess.run(cmd + ['-c', code], capture_output=True, text=True, encoding='utf-8', errors='replace',
+                              timeout=60, env={**os.environ, **CHILD_ENV})
     except (OSError, subprocess.SubprocessError):
         return None
+
+
+def copy_lf(src, dst):
+    """`src` to `dst` with every CR LF made LF — a hook runs under `sh`, which reads a CR as part of the word before it."""
+    with open(src, 'rb') as fh:
+        data = fh.read().replace(b'\r\n', b'\n')
+    with open(dst, 'wb') as fh:
+        fh.write(data)
 
 
 def probe(cmd):
@@ -101,7 +123,7 @@ def install(repo=None, quiet=False):
     for name in sorted(os.listdir(os.path.join(repo, 'bin', 'hooks'))):
         src, dst = os.path.join(repo, 'bin', 'hooks', name), os.path.join(hooks_dst, name)
         if name.endswith('.sh'):
-            shutil.copyfile(src, dst)                       # sourced by the hooks, never run by git
+            copy_lf(src, dst)                               # sourced by the hooks, never run by git
             continue
         # THE GATE IS FOR A GARDEN. This repository can also BE the language itself (the daftar repo, or a
         # clone of it), which has no GARDEN.md and no beans: there the gate has nothing to judge and dies on
@@ -109,7 +131,7 @@ def install(repo=None, quiet=False):
         if name == 'pre-commit' and not os.path.isfile(os.path.join(repo, 'GARDEN.md')):
             say(f"skipped {os.path.relpath(hooks_dst, repo)}/pre-commit — no GARDEN.md here, so this repo is the language, not a garden")
             continue
-        shutil.copyfile(src, dst)
+        copy_lf(src, dst)
         os.chmod(dst, os.stat(dst).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         say(f"installed {os.path.relpath(dst, repo)}")
 
@@ -136,4 +158,9 @@ def install(repo=None, quiet=False):
 
 
 if __name__ == '__main__':
+    for _s in (sys.stdout, sys.stderr):              # a path the console's code page lacks is shown escaped, never a crash
+        try:
+            _s.reconfigure(errors='backslashreplace')
+        except (AttributeError, ValueError):
+            pass
     sys.exit(install())

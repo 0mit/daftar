@@ -11,7 +11,9 @@
 # refusal names each candidate and why, because "python3 is required" on a machine that shows a python3 is a
 # message nobody can act on.
 #
-# After `daftar_choose_python` succeeds, `daftar_py <args>` runs the chosen interpreter.
+# After `daftar_choose_python` succeeds, `daftar_py <args>` runs the chosen interpreter. `daftar_choose_python
+# --no-record` chooses the same way and records nothing: seed/germinate.sh runs before there is a garden to record
+# in, and the clone it runs from is not its to configure.
 
 # UTF-8 WHATEVER THE MACHINE'S CODE PAGE. Every bean is UTF-8 and every tool opens files as UTF-8, but a Python on
 # Windows writes to a pipe in the old code page, and a Persian title in a message would stop the gate mid-sentence
@@ -27,6 +29,8 @@ daftar_py() {
 }
 
 daftar_choose_python() {
+  _dp_record=yes
+  [ "$1" = "--no-record" ] && _dp_record=
   _dp_cfg=$(git config --get daftar.python 2>/dev/null)
   _dp_why=
   _dp_tried=
@@ -39,7 +43,9 @@ daftar_choose_python() {
     # a Windows Python ends a printed line with CR LF, and $(...) strips only the LF
     _dp_exe=$(daftar_py -c 'import sys, yaml; sys.stdout.write(sys.executable.replace(chr(92), "/"))' 2>/dev/null)
     if [ $? -eq 0 ] && [ -n "$_dp_exe" ]; then
-      [ -n "$_dp_cfg" ] && [ "$_dp_c" = "$_dp_cfg" ] || git config daftar.python "$_dp_exe" 2>/dev/null
+      if [ -n "$_dp_record" ]; then
+        [ -n "$_dp_cfg" ] && [ "$_dp_c" = "$_dp_cfg" ] || git config daftar.python "$_dp_exe" 2>/dev/null
+      fi
       DAFTAR_PY=$_dp_exe
       return 0
     fi

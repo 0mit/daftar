@@ -203,7 +203,7 @@ _g = re.sub(r'^(extends: std-vocab@)\S+', r'\g<1>20.0', get('GARDEN.md'), count=
 _g = re.sub(r'^gardener:.*\n', '', _g, count=1, flags=re.M)
 _g = re.sub(r'^daftar_release:.*$', 'daftar_release: "v0.32.0"  # the daftar release this garden runs; bin/dmupgrade.py moves it\n'
             'created: "git-metadata"    # NEVER a canonical value; the real timestamp lives in git\n'
-            'seeds_from: []             # gardens merged in, per MERGE.md\n'
+            'seeds_from: [garden-b]     # gardens merged in, per MERGE.md\n'
             'models: [model-a]', _g, count=1, flags=re.M)
 put('GARDEN.md', _g)
 _readme = open(os.path.join(ROOT, 'seed', 'README.md'), encoding='utf-8').read()
@@ -232,13 +232,18 @@ check("(setup) the garden is aged into std-vocab 20.0's shape", _c.returncode ==
 _aged = run('git', 'rev-parse', 'HEAD', cwd=G20).stdout.strip()
 
 
-def up21(*extra, env=None):
+def up21(*extra, env=None, tag='v9.0.0'):
     e = dict(os.environ, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@x', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@x')
-    for k in ('DAFTAR_GARDENER', 'DAFTAR_GARDENER_NAME'):
+    for k in ('DAFTAR_GARDENER', 'DAFTAR_GARDENER_NAME', 'PYTHONIOENCODING', 'PYTHONUTF8'):
         e.pop(k, None)
     e.update(env or {})
-    return subprocess.run([sys.executable, path20('bin/dmupgrade.py'), 'v9.0.0', '--from', R21, *extra],
+    return subprocess.run([sys.executable, path20('bin/dmupgrade.py'), tag, '--from', R21, *extra],
                           capture_output=True, text=True, cwd=G20, env=e)
+
+
+def commit20(msg):
+    run('git', 'add', '-A', cwd=G20); run('git', 'commit', '-qm', msg, '--no-verify', cwd=G20)
+    return run('git', 'rev-parse', 'HEAD', cwd=G20).stdout.strip()
 
 
 def untouched(head):
@@ -307,6 +312,9 @@ _tl = next((l for l in j.splitlines() if l.startswith('- translated:')), '')
 check("the journal's `translated:` line says what the step did, bean by bean",
       'std-vocab 21.0' in _tl and '`scope` removed from 3 anchor(s)' in _tl and '[[sam]]' in _tl and '[[laptop]]' in _tl
       and 'seeds_from' in _tl and 'models' in _tl and '`attributes` moved into `details`' in _tl and 'gardener [[sam]]' in _tl, _tl)
+check("...and quotes what each removed manifest key said, the gardens taken in left for a person to record",
+      '`seeds_from` (was ["garden-b"])' in _tl and '`models` (was ["model-a"])' in _tl
+      and 'as a `garden` bean' in _tl and "a person's to write" in _tl, _tl)
 check("NOTHING IS COMMITTED by the translation either", run('git', 'rev-parse', 'HEAD', cwd=G20).stdout.strip() == _aged)
 _jt = get('log/journal.md')
 put('log/journal.md', _jt.replace("(fill in who ratified — merging the release's pull request, or the word given here)", 'human (test)')
@@ -316,17 +324,66 @@ _c = run('git', 'commit', '-qm', 'adopt 21.0', cwd=G20)
 check("once a human fills it in, the translated garden commits through its hook — every bean and removed key journalled",
       _c.returncode == 0, (_c.stdout + _c.stderr)[-600:])
 
-# ---- a new gardener planted, exactly as seed/germinate.py plants one
+# ---- a CRLF checkout — Git for Windows' default — still installs hooks that run, and commits go through them
+_shf = ['bin/hooks/pre-commit', 'bin/hooks/pre-push', 'bin/hooks/python.sh', 'bin/install.sh', 'seed/germinate.sh']
+for f in _shf:
+    os.remove(path20(f))
+run('git', '-c', 'core.autocrlf=true', 'checkout', '--', *_shf, cwd=G20)
+_cr = [f for f in _shf if b'\r' in open(path20(f), 'rb').read()]
+check("`.gitattributes` keeps the shell LF in a checkout that turns text to CRLF (core.autocrlf=true)", not _cr, _cr)
+for f in _shf:                          # ...and a checkout made before that line, or with it overridden
+    _b = open(path20(f), 'rb').read()
+    with open(path20(f), 'wb') as fh:
+        fh.write(_b.replace(b'\n', b'\r\n'))
+_i = run(sys.executable, path20('bin/install.py'), cwd=G20)
+_gd = run('git', 'rev-parse', '--git-common-dir', cwd=G20).stdout.strip()
+_hd = os.path.join(G20 if not os.path.isabs(_gd) else '', _gd, 'hooks')
+_cr = [n for n in ('pre-commit', 'pre-push', 'python.sh') if b'\r' in open(os.path.join(_hd, n), 'rb').read()]
+check("bin/install.py installs the hooks with LF from a CRLF checkout", _i.returncode == 0 and not _cr,
+      (_cr, _i.stdout + _i.stderr))
+put('beans/sam.md', get('beans/sam.md').replace('shoe_size: 44', 'shoe_size: 45', 1))
+run('git', 'add', 'beans/sam.md', cwd=G20)
+_c = run('git', 'commit', '-qm', 'a change with no journal entry', cwd=G20)
+check("...the hook installed from it RUNS: a bean change with no journal entry is refused",
+      _c.returncode != 0 and 'journal' in (_c.stdout + _c.stderr) and 'cannot exec' not in _c.stderr
+      and "\\r'" not in _c.stderr and '$\'\\r' not in _c.stderr, (_c.stdout + _c.stderr)[-400:])
+subprocess.run([sys.executable, path20('bin/dmjournal.py'), 'human (test)', '[[sam]] shoe size',
+                '--body', '- action: corrected [[sam]].'], cwd=G20, check=True, capture_output=True)
+run('git', 'add', 'beans/sam.md', 'log/journal.md', cwd=G20)
+_c = run('git', 'commit', '-qm', 'a journalled change', cwd=G20)
+check("...and a journalled one commits through it", _c.returncode == 0, (_c.stdout + _c.stderr)[-400:])
+
+# ---- a new gardener planted, exactly as seed/germinate.py plants one — qualified by this garden's id, as at birth
 reset(_aged)
 r = up21('--gardener', 'ada', '--gardener-name', 'Ada')
 out = r.stdout + r.stderr
 import importlib.util
 _spec = importlib.util.spec_from_file_location('germinate_for_test', os.path.join(ROOT, 'seed', 'germinate.py'))
 _germ = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_germ)
+_gid20 = run('git', 'rev-list', '--first-parent', '--max-parents=0', 'HEAD', cwd=G20).stdout.split()[-1][:12]
 check("--gardener-name plants the gardener's person bean exactly as seed/germinate.py --gardener does",
       r.returncode == 0 and os.path.isfile(path20('beans/ada.md'))
-      and get('beans/ada.md') == _germ.gardener_bean('ada', 'Ada', datetime.date.today().isoformat())
+      and get('beans/ada.md') == _germ.gardener_bean('ada', 'Ada', datetime.date.today().isoformat(), _gid20)
+      and f'value: "{_gid20}/person:ada"' in get('beans/ada.md')
       and re.search(r'^gardener: ada\b', get('GARDEN.md'), re.M) and '[[ada]]' in get('log/journal.md').split('\n## ')[-1], out[-600:])
+# a Persian name keeps its zero-width non-joiner, and a name with both kinds of quote is still one YAML string
+for _nm in ('آدا\u200cبانو', 'Ada "the elder" O\'Neil'):
+    reset(_aged)
+    r = up21('--gardener', 'ada', '--gardener-name', _nm)
+    _pfm = dmparse.loads(dmparse.read(path20('beans/ada.md'))[0]) if os.path.isfile(path20('beans/ada.md')) else {}
+    check(f"...the planted title is the name exactly, character for character ({_nm!a})",
+          r.returncode == 0 and _pfm.get('title') == _nm and '0 error(s)' in r.stdout, (r.stdout + r.stderr)[-400:])
+# a release whose germinate spells the name wrongly (Python's repr turns the non-joiner into six characters) is refused
+_gp21 = os.path.join(R21, 'seed', 'germinate.py')
+_gt21 = open(_gp21, encoding='utf-8').read()
+with open(_gp21, 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write(_gt21.replace('title: {json.dumps(name, ensure_ascii=False)}', 'title: {name!r}', 1))
+run('git', 'add', '-A', cwd=R21); run('git', 'commit', '-qm', 'a germinate that writes repr', cwd=R21); run('git', 'tag', 'v9.0.1', cwd=R21)
+reset(_aged)
+r = up21('--gardener', 'ada', '--gardener-name', 'آدا\u200cبانو', tag='v9.0.1')
+check("...and a planted bean that would not say the name asked for is REFUSED before anything is touched",
+      _gt21.count('json.dumps(name') == 1 and r.returncode != 0 and 'does not say what was asked' in r.stdout + r.stderr
+      and '`title`' in r.stdout + r.stderr and untouched(_aged), (r.stdout + r.stderr)[-400:])
 
 # ---- a translated garden that still fails its gate is put back WHOLE: the beans, the manifest, the planted gardener
 reset(_aged)
@@ -352,10 +409,100 @@ r = up21()
 out = r.stdout + r.stderr
 check("an older tool hands over, and the refusal prints the form it can pass on: the environment",
       r.returncode != 0 and 'handing over' in out and 'DAFTAR_GARDENER=<id>' in out and untouched(_oldtool), out[-600:])
+r = up21(env={'DAFTAR_GARDENER': 'sam', 'DAFTAR_GARDENER_NAME': 'Sam'})
+out = r.stdout + r.stderr
+check("...a refusal names the variable a value came from, and every fix it prints is one this garden's tool accepts",
+      r.returncode != 0 and 'DAFTAR_GARDENER_NAME plants a NEW one' in out and 'unset DAFTAR_GARDENER_NAME' in out
+      and 'DAFTAR_GARDENER=sam python3 bin/dmupgrade.py' in out and '--gardener' not in out and untouched(_oldtool), out[-600:])
+# the printed line, for sh and for PowerShell, from what THIS garden's tool knows — quoted, and with no [optional] parts
+import dmupgrade as _du
+_du.ROOT = G20
+_st = _du.Step21(R21, 'v9.0.0', os.path.join(TMP, 'a release'), (None, None, None, None), False)
+_line_sh = _st.fix_line('<id>', '<how they are called>')
+_saved_os = os.name
+try:
+    os.name = 'nt'
+    _line_ps = _st.fix_line('<id>', '<how they are called>')
+finally:
+    os.name = _saved_os
+check("...on PowerShell the line clears the variables it set, which a session would keep for the next garden",
+      _line_ps.startswith('$env:DAFTAR_GARDENER = "<id>"; $env:DAFTAR_GARDENER_NAME = "<how they are called>"; python bin\\dmupgrade.py v9.0.0 --from \'')
+      and _line_ps.endswith('; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME -ErrorAction SilentlyContinue')
+      and _line_sh == f'DAFTAR_GARDENER=<id> DAFTAR_GARDENER_NAME="<how they are called>" python3 bin/dmupgrade.py v9.0.0 --from '
+                      f"'{os.path.join(TMP, 'a release')}'" and '[' not in _line_sh + _line_ps, (_line_sh, _line_ps))
 r = up21(env={'DAFTAR_GARDENER': 'sam'})
-check("...and with DAFTAR_GARDENER set, the release's own tool translates the garden",
-      r.returncode == 0 and re.search(r'^gardener: sam\b', get('GARDEN.md'), re.M) and '0 error(s)' in r.stdout,
-      (r.stdout + r.stderr)[-600:])
+check("...and with DAFTAR_GARDENER set, the release's own tool translates the garden, saying where the gardener came from",
+      r.returncode == 0 and re.search(r'^gardener: sam\b', get('GARDEN.md'), re.M) and '0 error(s)' in r.stdout
+      and "the gardener: 'sam', taken from DAFTAR_GARDENER" in r.stdout, (r.stdout + r.stderr)[-600:])
+
+# ---- a GARDEN.md and a bean saved with a byte-order mark, as PowerShell 5.1 saves UTF-8, are translated and keep it
+reset(_aged)
+_BOM = '\ufeff'
+put('GARDEN.md', _BOM + get('GARDEN.md'))
+put('beans/laptop.md', _BOM + get('beans/laptop.md'))
+_bom = commit20('two files saved with a byte-order mark')
+r = up21('--gardener', 'sam')
+_lfm = dmparse.loads(dmparse.read(path20('beans/laptop.md'))[0])
+check("a manifest and a bean with a byte-order mark are translated, and keep the mark",
+      r.returncode == 0 and '0 error(s)' in r.stdout and get('GARDEN.md').startswith(_BOM) and get('beans/laptop.md').startswith(_BOM)
+      and _lfm.get('details') == {'luks_root': True} and 'attributes' not in _lfm
+      and re.search(r'^gardener: sam\b', get('GARDEN.md'), re.M), (r.stdout + r.stderr)[-600:])
+
+# ---- a gate that quotes Persian, read through a pipe in an old code page (as on Windows), still says why
+reset(_aged)
+put('beans/cai.md', _ex['beans/sam.md'].replace('bean: sam', 'bean: cai').replace('"person:sam"', '"person:cai"')
+    .replace('title: "Sam', 'title: "Cai').replace('status: active', 'status: فعال') + '\n')
+_fa = commit20('a status in Persian')
+r = up21('--gardener', 'sam', env={'PYTHONIOENCODING': 'cp1252'})
+out = r.stdout + r.stderr
+check("read through a pipe in an old code page, a gate that quotes Persian still says why the garden was not upgraded",
+      r.returncode != 0 and 'NOT UPGRADED' in out and re.search(r'ERROR.*cai.*status', out) and 'Traceback' not in out
+      and untouched(_fa), out[-600:])
+
+# ---- anything that stops the upgrade midway — here a folder it cannot write — puts every file back, and says so
+if os.name != 'nt' and os.geteuid() != 0:
+    reset(_aged)
+    os.chmod(path20('beans'), 0o555)
+    try:
+        r = up21('--gardener', 'sam')
+    finally:
+        os.chmod(path20('beans'), 0o755)
+    out = r.stdout + r.stderr
+    check("a write that fails midway puts back the release's files, the pins and every bean, and says so",
+          r.returncode != 0 and 'PermissionError' in out and 'every file was put back' in out and untouched(_aged), out[-600:])
+
+# ---- the text edits, each on the form a garden may hold: refused never, damaged never
+def _fm(t):
+    return dmparse.loads(dmparse.split_front_matter(t)[0])
+_t = '---\nbean: x\nidentity:\n  anchors:\n    - scope: global\n      key: hostname\n      value: "x"\n---\nbody\n'
+check("a block anchor that OPENS with `- scope:` loses it, the next key moving up onto the dash",
+      _fm(_du.drop_anchor_key(_t, 'scope')) == {'bean': 'x', 'identity': {'anchors': [{'key': 'hostname', 'value': 'x'}]}},
+      _du.drop_anchor_key(_t, 'scope'))
+_t = ('---\nbean: x\nidentity:\n  anchors:\n    - { key: path, value: "C:\\\\data\\\\", class: logical, scope: global }\n'
+      '    - { key: p, value: \'it\'\'s, {x}\', scope: global }\n---\n')
+check("a flow anchor whose value ends in a backslash (a Windows path) loses `scope`, and nothing else",
+      _fm(_du.drop_anchor_key(_t, 'scope')) == {'bean': 'x', 'identity': {'anchors': [
+          {'key': 'path', 'value': 'C:\\data\\', 'class': 'logical'}, {'key': 'p', 'value': "it's, {x}"}]}},
+      _du.drop_anchor_key(_t, 'scope'))
+_t = '---\nbean: x\nattributes:\n  "desk": 1\n  b: 2\ndetails:\n  desk: 1\n---\n'
+_n, _why = _du.move_attributes(_t, _fm(_t))
+check("a key both bags hold alike is kept once, whether or not it is quoted",
+      not _why and _fm(_n) == {'bean': 'x', 'details': {'desk': 1, 'b': 2}}
+      and not dmparse.duplicate_keys(dmparse.split_front_matter(_n)[0]), _n)
+_t = '---\nbean: x\nattributes: { a: 1 }  # from the old form\ndetails:\n  b: 2\n---\n'
+_n, _why = _du.move_attributes(_t, _fm(_t))
+check("the comment on a one-line `attributes: {…}` comes with it into `details`",
+      not _why and '# from the old form' in _n and _fm(_n) == {'bean': 'x', 'details': {'b': 2, 'a': 1}}, _n)
+_u = os.path.join(TMP, 'unit')
+os.makedirs(os.path.join(_u, 'beans'))
+with open(os.path.join(_u, 'beans', 'x.md'), 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write('---\nbean: x\nattributes:\n  luks_root: true\nbeanger:\n  luks-root:\n    tracks: "attributes.luks_root"\n---\n'
+             'Moved from: attributes.luks_root\n')
+_du.ROOT = _u
+_n, _form, _facts, _probs = _du.plan_doc(os.path.join(_u, 'beans', 'x.md'))
+check("a pointer is followed in the front matter only; a body line naming the old place is prose, left as written",
+      _n and not _probs and 'tracks: "details.luks_root"' in _n and _n.endswith('Moved from: attributes.luks_root\n'),
+      (_n, _probs))
 
 # ==== WHICH PYTHON runs the hooks and the merge driver: the first that RUNS and IMPORTS yaml =======================
 # A Windows machine's `python3` may be the Store's App execution alias: found on the PATH, running no Python. Faked
@@ -407,6 +554,25 @@ if os.name != 'nt':
     _cfg = run('git', 'config', '--get', 'daftar.python', cwd=G20).stdout.strip()
     check("bin/install.py skips the alias and the Python without PyYAML, takes the one running it, and records it per clone",
           _py and not _why and _cfg == _py and os.path.samefile(_py, sys.executable), (_py, _why, _cfg))
+    # a Python under a folder named outside the old code page (a Windows profile named in Persian), probed through
+    # pipes in that code page: it has PyYAML, and is found to have it
+    _fa_dir = os.path.join(TMP, 'دفتر-py')
+    os.makedirs(_fa_dir)
+    os.symlink(sys.executable, os.path.join(_fa_dir, 'python3'))
+    os.environ['PYTHONIOENCODING'] = 'cp1252'
+    try:
+        _got = _inst.probe([os.path.join(_fa_dir, 'python3')])
+    finally:
+        del os.environ['PYTHONIOENCODING']
+    check("...and a Python whose path the pipe's code page cannot spell is still found to run and import yaml",
+          _got[0] and 'دفتر-py' in _got[0] and not _got[1], _got)
+    # seed/germinate.sh chooses as the hooks do: the alias is named as such, never run as if it were Python
+    _gt = os.path.join(TMP, 'never-grown')
+    r = subprocess.run([SH, os.path.join(ROOT, 'seed', 'germinate.sh'), _gt, '--gardener', 'keeper'],
+                       capture_output=True, text=True, cwd=TMP, env=dict(os.environ, PATH=_path))
+    check("seed/germinate.sh refuses where no Python runs, naming the Store alias, and grows nothing",
+          r.returncode != 0 and 'python3: is the Microsoft Store alias' in r.stderr and not os.path.exists(_gt),
+          r.stdout + r.stderr)
 
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nupgrade: {sum(results)}/{len(results)} checks passed")

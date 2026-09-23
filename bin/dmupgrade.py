@@ -3,7 +3,8 @@
 
     python3 bin/dmupgrade.py <tag>                       # from https://github.com/0mit/daftar
     python3 bin/dmupgrade.py <tag> --from <url-or-path>  # from any clone that carries the tag
-    python3 bin/dmupgrade.py <tag> --gardener <id> [--gardener-name "<how they are called>"]   # into std-vocab 21.0
+    DAFTAR_GARDENER=<id> python3 bin/dmupgrade.py <tag>  # into std-vocab 21.0, from a garden at any release
+    python3 bin/dmupgrade.py <tag> --gardener <id>       # the same, where the garden's own tool knows the flag
 
 A release is a TAG on the public repository. What a garden receives from it is declared once, in the
 release's own `seed/LANGUAGE` — the same file `seed/germinate.py` reads — so a new garden and an upgraded
@@ -22,20 +23,26 @@ WHAT IT DOES, and nothing else:
   6. re-runs `bin/install.py`, because the hooks or the merge driver may have changed;
   7. appends a RULE-CHANGE journal entry naming the tag, its commit, the vocabulary move and every file;
   8. runs the gate — and if the garden no longer passes under the release (a profile or a value the release
-     does not offer, say), puts every file back as it was and says why, unless --keep-on-failure.
+     does not offer, say), puts every file back as it was and says why, unless --keep-on-failure. Anything that
+     stops it between the first copy and the gate's verdict — a file another program holds open — puts every
+     file back too, whatever the flags.
+A file is written back with the line ends and the byte-order mark it was found with.
 
 CROSSING INTO std-vocab 21.0 the law stopped saying five things a garden may still say, and began asking who keeps
 the garden. What can be carried across without a person is carried, and each piece is PROVED before it is written
 — the translated front matter must parse to exactly the old one with that one change, and the body be untouched:
   - `scope` leaves every anchor: nothing read it, so nothing is lost;
-  - `seeds_from`, `created` and `models` leave GARDEN.md: nothing read them either;
+  - `seeds_from`, `created` and `models` leave GARDEN.md: the law reads none of them, and the journal entry quotes
+    what each said — the gardens `seeds_from` named are a person's to record as `garden` beans, where still known;
   - a top-level `attributes:` becomes `details:`, or its keys join an existing `details:` — REFUSED, naming the
     keys, where the two hold one key with different values: which stands is a person's decision;
-  - the GARDENER is named in GARDEN.md: `--gardener <id>` names an existing person or org bean, or with
-    `--gardener-name` plants a new person bean exactly as `seed/germinate.py --gardener` does. Without either the
-    upgrade refuses, touching nothing, with the line that fixes it. A garden whose own tool is older than these
-    flags hands over to the release's tool (below) and cannot pass them: there the environment carries them,
-    DAFTAR_GARDENER and DAFTAR_GARDENER_NAME, and the refusal prints that form.
+  - the GARDENER is named in GARDEN.md: DAFTAR_GARDENER (or `--gardener`) names an existing person or org bean, or
+    with DAFTAR_GARDENER_NAME (or `--gardener-name`) plants a new person bean exactly as `seed/germinate.py
+    --gardener` does, qualified by this garden's id — and the planted text is parsed and refused unless it says
+    that bean, that kind and that name. Without a gardener the upgrade refuses, touching nothing, with the line that
+    fixes it. A garden whose own tool is older than the flags hands over to the release's tool (below) and cannot
+    pass them; the environment passes through any tool, so every message names where each value came from and
+    prints the form this garden's own tool accepts.
   What cannot be carried is REFUSED before anything is touched: a bean still carrying `between`, `agreement_ref`,
   `conflict_rule` or `balance` is an agreement a person re-expresses (seed/COOKBOOK.md shows how). With
   --keep-on-failure the rest is applied and those are left, named, for the person.
@@ -50,7 +57,7 @@ IT DOES NOT COMMIT. Adopting a release changes the law this garden is judged by,
 garden's own human ratifies: read `git diff`, then `git add -A && git commit`. The journal entry is already
 written, so the gate's provenance duty is met by the commit that adopts it.
 """
-import argparse, copy, datetime, glob, importlib.util, os, re, shutil, subprocess, sys, tempfile
+import argparse, copy, datetime, glob, importlib.util, inspect, json, os, re, shlex, shutil, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
@@ -61,27 +68,53 @@ UPSTREAM = 'https://github.com/0mit/daftar.git'
 PIN = re.compile(r'^(extends: std-vocab@)(\S+)', re.M)
 RELEASE = re.compile(r'^daftar_release:.*$', re.M)
 SEMVER = re.compile(r'^v?(\d+)\.(\d+)\.(\d+)$')
-PY = 'python' if os.name == 'nt' else 'python3'
+
+
+# A CHILD WRITES UTF-8, AND IS READ AS UTF-8. On Windows a Python writing to a pipe uses the old code page, so the gate
+# died mid-sentence (UnicodeEncodeError) on the first ERROR line quoting Persian, and the upgrade put everything back
+# showing no reason. PYTHONIOENCODING overrides UTF-8 mode, so both are set; git's own output is UTF-8 already.
+CHILD_ENV = {'PYTHONUTF8': '1', 'PYTHONIOENCODING': 'utf-8'}
 
 
 def run(*args, cwd=None, check=True):
-    r = subprocess.run(args, cwd=cwd or ROOT, capture_output=True, text=True)
+    r = subprocess.run(args, cwd=cwd or ROOT, capture_output=True, text=True, encoding='utf-8', errors='replace',
+                       env={**os.environ, **CHILD_ENV})
     if check and r.returncode:
         detail = '\n'.join(s.strip() for s in (r.stdout, r.stderr) if s.strip())
         sys.exit(f"{' '.join(args)} failed:\n{detail or '(no output)'}")
     return r
 
 
+class Form(tuple):
+    """How a file was written: its line end, and whether it opened with a byte-order mark. PowerShell 5.1 writes UTF-8
+    with a BOM, the gate reads through one (dmparse.BOM), and a file is written back as it was found."""
+    nl = property(lambda self: self[0])
+    bom = property(lambda self: self[1])
+
+
+LF = Form(('\n', ''))
+
+
 def read_text(path):
-    """(text with '\\n' line ends, the file's own line end) — a file is written back with the ends it had."""
+    """(text with '\\n' line ends and no BOM, its Form) — a file is written back with the ends and the mark it had."""
     raw = open(path, encoding='utf-8', newline='').read()
-    return raw.replace('\r\n', '\n'), ('\r\n' if '\r\n' in raw else '\n')
+    bom = dmparse.BOM if raw.startswith(dmparse.BOM) else ''
+    raw = raw[len(bom):]
+    return raw.replace('\r\n', '\n'), Form(('\r\n' if '\r\n' in raw else '\n', bom))
 
 
-def write_text(path, text, nl='\n'):
-    with open(path + '.tmp', 'w', encoding='utf-8', newline=nl) as fh:
-        fh.write(text)
-    os.replace(path + '.tmp', path)
+def write_text(path, text, form=LF):
+    """Written whole beside the file, then swapped in: a failure leaves the file as it was, and no half-written copy."""
+    try:
+        with open(path + '.tmp', 'w', encoding='utf-8', newline=form.nl) as fh:
+            fh.write(form.bom + text)
+        os.replace(path + '.tmp', path)
+    except BaseException:
+        try:
+            os.remove(path + '.tmp')
+        except OSError:
+            pass
+        raise
 
 
 def patterns(root):
@@ -161,9 +194,19 @@ def _flow_maps(s):
     out, stack, q, i = [], [], None, 0
     while i < len(s):
         c = s[i]
-        if q:
-            if c == q and s[i - 1] != '\\':
-                q = None
+        if q == '"':
+            if c == '"':                              # closed unless escaped: an ODD run of backslashes before it
+                n = 0
+                while i - 1 - n >= 0 and s[i - 1 - n] == '\\':
+                    n += 1
+                if n % 2 == 0:
+                    q = None
+        elif q:
+            if c == "'":                              # single-quoted YAML escapes a quote by doubling it, never by `\`
+                if s[i + 1:i + 2] == "'":
+                    i += 1
+                else:
+                    q = None
         elif c in '"\'' and (i == 0 or s[i - 1] in ' \t\n,[{:'):
             q = c
         elif c == '#' and (i == 0 or s[i - 1] in ' \t\n'):
@@ -200,7 +243,12 @@ def drop_anchor_key(text, key):
                 cuts.append((ks[0], vs[1]))
     for a, b in sorted(cuts, reverse=True):
         blk = blk[:a] + blk[b:]
-    blk = re.sub(r'(?m)^[ \t]+' + re.escape(key) + r'[ \t]*:[ \t]*' + _VAL + r'[ \t]*(?:#[^\n]*)?\n', '', blk)
+    one = re.escape(key) + r'[ \t]*:[ \t]*' + _VAL + r'[ \t]*(?:#[^\n]*)?\n'
+    # `- key: value` OPENING a block anchor: the next key moves up onto the dash — only when it sits at the column the
+    # mapping's keys share, so it is this anchor's and not the next item's
+    blk = re.sub(r'(?m)^([ \t]*-[ \t]+)' + one + r'([ \t]*)(?=[^\s#-])',
+                 lambda m: m.group(1) if len(m.group(2)) == len(m.group(1)) else m.group(0), blk)
+    blk = re.sub(r'(?m)^[ \t]+' + one, '', blk)
     return text[:s] + blk + text[e:]
 
 
@@ -232,12 +280,27 @@ def _children(block, mapping):
     return None
 
 
+_KEY = re.compile(r'''^("(?:[^"\\\n]|\\.)*"|'(?:[^'\n]|'')*'|[^\s#'"-][^:#\n]*?)[ \t]*:(?=[ \t]|$)''')
+
+
+def _key_of(line):
+    """The key an entry line opens, AS YAML READS IT (`"desk": 1` and `desk: 1` hold one key), or None."""
+    m = _KEY.match(line.rstrip('\n'))
+    if not m:
+        return None
+    try:
+        return dmparse.loads(m.group(1))
+    except Exception:
+        return m.group(1)
+
+
 def _without(kids, keys):
     """Entry lines with the entries for `keys` left out (an entry runs to the next line at its own indent)."""
     out, skip = [], False
     for l in kids:
         if l.strip() and not l.startswith((' ', '#')):
-            skip = any(re.match(rf'^{re.escape(str(k))}[ \t]*:', l) for k in keys)
+            k = _key_of(l)
+            skip = any(k == x and type(k) is type(x) for x in keys)
         if not skip:
             out.append(l)
     return out
@@ -272,6 +335,9 @@ def move_attributes(text, fm):
         return text, f"`{old}` or `{new}` is written in a form this translation does not rewrite — move it by hand"
     ind = dc[2] or ac[2] or 2
     kids = dc[1] + _without(ac[1], [k for k in a if k in d])       # a key said twice, alike, is kept once
+    note = ac[0].split(':', 1)[1].strip()
+    if note.startswith('#'):                                        # the comment `attributes:` carried comes with it
+        kids = dc[1] + [note + '\n'] + kids[len(dc[1]):]
     block = dc[0] + '\n' + ''.join((' ' * ind + l) if l.strip() else l for l in kids)
     if a_s < d_s:
         return text[:a_s] + text[a_e:d_s] + block + text[d_e:], None
@@ -294,17 +360,17 @@ def _swap_leaves(node, table):
 
 
 def plan_doc(path):
-    """What the 21.0 step would write to one bean or mapping: (new text or None, line end, facts, problems).
+    """What the 21.0 step would write to one bean or mapping: (new text or None, its Form, facts, problems).
     Each change is PROVED before it is kept: the new front matter must parse to exactly the old one with that change,
     and the body be unchanged. A change that cannot be proved is not made; the problem says so."""
-    text, nl = read_text(path)
+    text, form = read_text(path)
     rel = os.path.relpath(path, ROOT).replace(os.sep, '/')
     try:
         fm, body = _parse(text)
     except Exception:
-        return None, nl, {}, []                  # a document that does not parse: the gate names it, not this
+        return None, form, {}, []                  # a document that does not parse: the gate names it, not this
     if fm is None:
-        return None, nl, {}, []
+        return None, form, {}, []
     facts, problems, cur, want = {'scope': 0, 'moved': False}, [], text, copy.deepcopy(fm)
 
     def prove(new_text, expected, what):
@@ -347,16 +413,18 @@ def plan_doc(path):
                 exp = _swap_leaves(copy.deepcopy(want), ptrs)
                 if keys and exp != want:
                     alt = '|'.join(re.escape(str(k)) for k in keys)
-                    new_text = re.sub(r'(?m)([:\[,-][ \t]*)(["\']?)' + re.escape(BEAN_MOVED[0]) + r'\.(' + alt + r')\2'
-                                      r'(?=[ \t]*(?:[,}\]#]|$))', lambda m: f"{m.group(1)}{m.group(2)}{BEAN_MOVED[1]}."
-                                      f"{m.group(3)}{m.group(2)}", cur)
+                    lo, hi = _fm_region(cur)                # the front matter only: the body is prose, and left alone
+                    new_text = cur[:lo] + re.sub(
+                        r'(?m)([:\[,-][ \t]*)(["\']?)' + re.escape(BEAN_MOVED[0]) + r'\.(' + alt + r')\2'
+                        r'(?=[ \t]*(?:[,}\]#]|$))', lambda m: f"{m.group(1)}{m.group(2)}{BEAN_MOVED[1]}."
+                        f"{m.group(3)}{m.group(2)}", cur[lo:hi]) + cur[hi:]
                     if prove(new_text, exp, f"following the pointers to `{BEAN_MOVED[0]}.<key>` into `{BEAN_MOVED[1]}`"):
                         cur, want = new_text, exp
     held = [k for k in BEAN_BY_HAND if k in fm]
     if held:
         problems.append(f"{rel}: carries {', '.join(f'`{k}`' for k in held)} — an agreement between parties is "
                         f"re-expressed by a person, not by a translation: {AGREEMENT_RECIPE}")
-    return (cur if cur != text else None), nl, facts, problems
+    return (cur if cur != text else None), form, facts, problems
 
 
 def kind_of(path):
@@ -399,26 +467,67 @@ def plan_manifest(text, gardener):
     return cur, None
 
 
+def own_garden_id(root):
+    """This garden's id as bin/dmcheck.py's own_garden_id() reads it (std-vocab 21.0 `garden_id`): the first twelve hex
+    digits of the root of its first-parent history; None for a shallow clone, which cannot see its root. Read here as
+    well, because the gate a garden still runs when it crosses into 21.0 is older than that function."""
+    r = run('git', 'rev-list', '--first-parent', '--max-parents=0', 'HEAD', cwd=root, check=False)
+    shallow = run('git', 'rev-parse', '--is-shallow-repository', cwd=root, check=False).stdout.strip()
+    roots = r.stdout.split()
+    return roots[-1][:12] if r.returncode == 0 and roots and shallow != 'true' else None
+
+
+def _ps(s):
+    """A PowerShell argument: as it is when plain, else single-quoted (a quote inside doubled)."""
+    return s if re.fullmatch(r'[\w./\\:+=-]+', s) else "'" + s.replace("'", "''") + "'"
+
+
+# WHERE THE GARDENER CAME FROM is named in everything said about it. A garden whose own tool is older than --gardener
+# hands over to this one and cannot pass the flag, so the environment carries the gardener: told to pass a flag it never
+# passed, the person runs a command their tool rejects.
+ENV_ID, ENV_NAME = 'DAFTAR_GARDENER', 'DAFTAR_GARDENER_NAME'
+# A PowerShell session KEEPS what `$env:` sets, and the next garden upgraded in it would take this gardener unasked.
+PS_CLEAR = f'Remove-Item Env:{ENV_ID}, Env:{ENV_NAME} -ErrorAction SilentlyContinue'
+
+
 class Step21:
     """The translation into std-vocab 21.0: planned, and refused if it must be, before any file is touched."""
 
-    def __init__(self, rel, tag, source, gardener, gardener_name, keep, delegated):
+    def __init__(self, rel, tag, source, gardener, keep):
+        """`gardener`: (the id, where it came from, the name, where that came from) — a flag, the environment, or none."""
         self.rel, self.tag, self.source, self.keep = rel, tag, source, keep
-        self.gardener, self.gardener_name, self.delegated = gardener, gardener_name, delegated
+        self.gardener, self.gsrc, self.gardener_name, self.nsrc = gardener
         self.plans, self.problems, self.plant, self.created = {}, [], None, []
 
-    def fix_line(self):
-        """The one line that names the gardener, in the form the garden's own tool can pass on."""
-        frm = f" --from {self.source}" if self.source != UPSTREAM else ''
+    def fix_line(self, gid='<id>', name=None):
+        """The command that names the gardener, in the form THIS GARDEN'S OWN TOOL can pass on — that tool runs first
+        and hands over, and one older than --gardener rejects the flag, while the environment passes through any tool.
+        A placeholder is shown as one; a value is quoted for the shell it is pasted into."""
+        nt = os.name == 'nt'
+        q = _ps if nt else shlex.quote
+        val = lambda v: v if v.startswith('<') else q(v)
+        txt = lambda v: f'"{v}"' if v.startswith('<') else q(v)
+        cmd = (r'python bin\dmupgrade.py ' if nt else 'python3 bin/dmupgrade.py ') + q(self.tag) + \
+            (f' --from {q(self.source)}' if self.source != UPSTREAM else '')
         own = os.path.join(ROOT, 'bin', 'dmupgrade.py')
-        # this garden's own tool is older than the flags and hands over to this one: the environment carries them
-        old = self.delegated and os.path.isfile(own) and '--gardener' not in open(own, encoding='utf-8').read()
-        if not old:
-            return f'{PY} bin/dmupgrade.py {self.tag}{frm} --gardener <id> [--gardener-name "<how they are called>"]'
+        if os.path.isfile(own) and '--gardener' in open(own, encoding='utf-8').read():
+            return cmd + f' --gardener {val(gid)}' + (f' --gardener-name {txt(name)}' if name else '')
+        if nt:
+            return (f'$env:{ENV_ID} = {txt(gid)}; ' + (f'$env:{ENV_NAME} = {txt(name)}; ' if name else '') + cmd +
+                    f'; {PS_CLEAR}')
+        return f'{ENV_ID}={val(gid)} ' + (f'{ENV_NAME}={txt(name)} ' if name else '') + cmd
+
+    def fixes(self, gid='<id>'):
+        """Both lines: the gardener named alone, and named with how they are called, which plants their bean."""
+        return (f"  {self.fix_line(gid)}\nor, to plant a new person bean for them:\n"
+                f"  {self.fix_line(gid, '<how they are called>')}")
+
+    @staticmethod
+    def clear(*names):
+        """How to clear variables the environment still holds — they may be left from another garden's upgrade."""
         if os.name == 'nt':
-            return (f'$env:DAFTAR_GARDENER = "<id>"; [$env:DAFTAR_GARDENER_NAME = "<how they are called>";] '
-                    f'python bin\\dmupgrade.py {self.tag}{frm}')
-        return f'DAFTAR_GARDENER=<id> [DAFTAR_GARDENER_NAME="<how they are called>"] python3 bin/dmupgrade.py {self.tag}{frm}'
+            return 'Remove-Item ' + ', '.join(f'Env:{n}' for n in names) + ' -ErrorAction SilentlyContinue'
+        return 'unset ' + ' '.join(names)
 
     def plan(self):
         law = {(str(r.get('at')), str(r.get('name'))) for r in (std_fm(self.rel).get('retired') or []) if isinstance(r, dict)}
@@ -428,13 +537,16 @@ class Step21:
             refuse(f"{self.tag}'s law does not retire {', '.join(f'{a} `{n}`' for a, n in said if (a, n) not in law)}, "
                    f"which this tool's 21.0 step translates. The step and the law disagree; neither is guessed at.")
         self.plan_gardener()
+        if self.gsrc == ENV_ID:
+            print(f"the gardener: '{self.gardener}', taken from {ENV_ID}"
+                  + (f", planted with the name {ENV_NAME} gives" if self.plant and self.nsrc == ENV_NAME else ''), flush=True)
         for sub in DOCS:
             for path in sorted(glob.glob(os.path.join(ROOT, sub, '*.md'))):
-                new, nl, facts, problems = plan_doc(path)
+                new, form, facts, problems = plan_doc(path)
                 self.problems += problems
                 if new is not None:
-                    self.plans[path] = (new, nl, facts)
-        gtext, _nl = read_text(os.path.join(ROOT, 'GARDEN.md'))
+                    self.plans[path] = (new, form, facts)
+        gtext, _form = read_text(os.path.join(ROOT, 'GARDEN.md'))
         _g, why = plan_manifest(gtext, self.gardener)
         if why:
             self.problems.append(why)
@@ -449,32 +561,37 @@ class Step21:
         named = (_parse(read_text(gpath)[0])[0] or {}).get('gardener') if os.path.isfile(gpath) else None
         gid, name = self.gardener, self.gardener_name
         if named and gid and str(named) != gid:
-            refuse(f"GARDEN.md already names the gardener '{named}', and --gardener says '{gid}'. Changing who keeps "
-                   f"a garden is the gardener's decision, never an upgrade's.")
-        gid = gid or (str(named) if named else None)
+            refuse(f"GARDEN.md already names the gardener '{named}', and {self.gsrc} says '{gid}'. Changing who keeps "
+                   f"a garden is the gardener's decision, never an upgrade's."
+                   + (f" If {ENV_ID} is left from another garden, clear it ({self.clear(ENV_ID, ENV_NAME)}) and run "
+                      f"this again." if self.gsrc == ENV_ID else ''))
+        if not gid and named:
+            gid, self.gsrc = str(named), "GARDEN.md's `gardener:`"
         keepers = sorted(os.path.basename(p)[:-3] for p in glob.glob(os.path.join(ROOT, 'beans', '*.md'))
                          if kind_of(p) in GARDENER_KINDS)
+        here = (f" (here: {', '.join(keepers[:12])}" + (', …' if len(keepers) > 12 else '') + ")") if keepers else ''
         if not gid:
             refuse(f"std-vocab 21.0 asks who keeps this garden — its GARDENER, a person or an organisation it holds, "
-                   f"named in GARDEN.md — and this garden names none. Ask the person, then:\n  {self.fix_line()}\n"
-                   f"<id> is an existing person or org bean" + (f" (here: {', '.join(keepers[:12])}"
-                   + (', …' if len(keepers) > 12 else '') + ")" if keepers else '') +
-                   "; with a name, a new person bean is planted for them, as seed/germinate.py --gardener plants one.")
+                   f"named in GARDEN.md — and this garden names none. Ask the person, then:\n{self.fixes()}\n"
+                   f"<id> is an existing person or org bean{here}; with a name, a new person bean is planted for them, "
+                   f"as seed/germinate.py --gardener plants one.")
         if not GARDENER_ID.match(gid):
-            refuse(f"--gardener takes a bean id: kebab-case, e.g. --gardener sam (got '{gid}')")
+            refuse(f"{self.gsrc} names the gardener by a bean id — kebab-case, such as sam — and got '{gid}'. "
+                   f"Name them so:\n{self.fixes()}")
         path = os.path.join(ROOT, 'beans', gid + '.md')
         if os.path.isfile(path):
             kind = kind_of(path)
             if kind not in GARDENER_KINDS:
-                refuse(f"'{gid}' is a {kind}; a garden is kept by a person or an organisation"
-                       + (f" (here: {', '.join(keepers[:12])})" if keepers else ''))
+                refuse(f"'{gid}' is a {kind} ({self.gsrc} names it); a garden is kept by a person or an organisation{here}. "
+                       f"Name one:\n{self.fixes()}")
             if name:
-                refuse(f"'{gid}' is already a bean of this garden, and --gardener-name plants a NEW one. "
-                       f"Pass --gardener {gid} alone.")
+                refuse(f"'{gid}' is already a bean of this garden, and {self.nsrc} plants a NEW one. Name them alone"
+                       + (f" — clearing {ENV_NAME} first ({self.clear(ENV_NAME)})" if self.nsrc == ENV_NAME else '')
+                       + f":\n  {self.fix_line(gid)}")
         elif not name:
-            refuse(f"'{gid}' is no bean of this garden. Name an existing person or org bean"
-                   + (f" ({', '.join(keepers[:12])})" if keepers else '') +
-                   f", or add --gardener-name \"<how they are called>\" to plant a new person bean for them.")
+            refuse(f"'{gid}' is no bean of this garden ({self.gsrc} names it). Name an existing person or org bean{here}:\n"
+                   f"  {self.fix_line()}\nor plant a new person bean for them:\n"
+                   f"  {self.fix_line(gid, '<how they are called>')}")
         else:
             gpy = os.path.join(self.rel, 'seed', 'germinate.py')
             spec = importlib.util.spec_from_file_location('daftar_germinate', gpy)
@@ -483,16 +600,34 @@ class Step21:
             spec.loader.exec_module(mod)
             if not hasattr(mod, 'gardener_bean'):
                 refuse(f"{self.tag}'s seed/germinate.py plants no gardener, so there is no bean to plant here the way "
-                       f"a new garden plants one. Write the person bean by hand and pass --gardener alone.")
-            # EXACTLY as germinate plants one: the release's own function, not a second copy of its text.
-            self.plant = (path, mod.gardener_bean(gid, name, datetime.date.today().isoformat()))
+                       f"a new garden plants one. Write the person bean by hand, commit it, and name them alone:\n"
+                       f"  {self.fix_line(gid)}")
+            # EXACTLY as germinate plants one: the release's own function, not a second copy of its text — qualified by
+            # this garden's id, as a new garden's gardener is at birth, where the release's function takes one.
+            kw = ({'garden_id': own_garden_id(ROOT)} if 'garden_id' in inspect.signature(mod.gardener_bean).parameters
+                  else {})
+            text = mod.gardener_bean(gid, name, datetime.date.today().isoformat(), **kw)
+            # PROVED BEFORE IT IS WRITTEN, as every translated bean is: a name the function spelled wrongly (Python's
+            # repr once turned a zero-width non-joiner into six characters of text) is refused, not planted.
+            try:
+                pfm = _parse(text)[0]
+            except Exception:
+                pfm = None
+            wrong = (['it does not parse as a bean'] if not pfm else
+                     [f"`{k}` would read {pfm.get(k)!r}, not {v!r}" for k, v in (('bean', gid), ('kind', 'person'),
+                                                                               ('title', name)) if pfm.get(k) != v])
+            if wrong:
+                refuse(f"{self.tag}'s seed/germinate.py would plant a gardener that does not say what was asked — "
+                       f"{'; '.join(wrong)}. Write the person bean by hand, commit it, and name them alone:\n"
+                       f"  {self.fix_line(gid)}")
+            self.plant = (path, text)
         self.gardener = gid
 
     def apply(self):
         """Writes what was planned; returns the `translated:` text and the ids of the documents it touched."""
         touched, scope, with_scope, moved = [], 0, [], []
-        for path, (new, nl, facts) in self.plans.items():
-            write_text(path, new, nl)
+        for path, (new, form, facts) in self.plans.items():
+            write_text(path, new, form)
             ident = self._id(path)
             touched.append(ident)
             if facts['scope']:
@@ -503,27 +638,36 @@ class Step21:
         if self.plant:
             path, text = self.plant
             os.makedirs(os.path.dirname(path), exist_ok=True)
+            self.created.append(os.path.relpath(path, ROOT).replace(os.sep, '/'))   # before the write: put back if it fails
             write_text(path, text)
-            self.created.append(os.path.relpath(path, ROOT).replace(os.sep, '/'))
         gpath = os.path.join(ROOT, 'GARDEN.md')
-        gtext, gnl = read_text(gpath)
-        gone = [k for k in MANIFEST_DROPPED if k in (_parse(gtext)[0] or {})]
+        gtext, gform = read_text(gpath)
+        gfm = _parse(gtext)[0] or {}
+        gone = [(k, gfm[k]) for k in MANIFEST_DROPPED if k in gfm]
         new, why = plan_manifest(gtext, self.gardener)
         if new is not None:
-            write_text(gpath, new, gnl)
+            write_text(gpath, new, gform)
         elif why not in self.problems:
             self.problems.append(why)
         parts = []
         if scope:
             parts.append(f"`scope` removed from {scope} anchor(s) in {', '.join(with_scope)} (read by nothing, so nothing is lost)")
         if gone and new is not None:
-            parts.append(f"GARDEN.md: {', '.join(f'`{k}`' for k in gone)} removed (read by nothing)")
+            # WHAT WAS SAID IS QUOTED, so the journal holds it: the law reads none of these, and git's history is not a
+            # place anyone looks. The gardens a garden took in are the ones a person may still want to know by name.
+            said = [f"`{k}`" + (f" (was {json.dumps(v, ensure_ascii=False, default=str)})" if v not in (None, '', [], {}) else '')
+                    for k, v in gone]
+            parts.append(f"GARDEN.md: {', '.join(said)} removed (the law reads none of them)")
+            if dict(gone).get('seeds_from'):
+                parts.append("the gardens `seeds_from` named are each recorded, where still known, as a `garden` bean — "
+                             "a person's to write")
         if moved:
             parts.append(f"`{BEAN_MOVED[0]}` moved into `{BEAN_MOVED[1]}` in {', '.join(moved)}")
         if new is not None:
             gid = f"[[{self.gardener}]]"
             parts.append(f"gardener {gid} " + ("planted — a person bean, as seed/germinate.py --gardener plants one — and "
-                                              if self.plant else "") + "named in GARDEN.md")
+                                              if self.plant else "") + "named in GARDEN.md"
+                         + (f" (given as {ENV_ID})" if self.gsrc == ENV_ID else ''))
             if self.plant:
                 touched.append(gid)
         if self.problems:
@@ -554,8 +698,11 @@ def main():
     if a.garden:
         ROOT = os.path.abspath(a.garden)
     source = a.recorded_source or a.src
-    gardener = a.gardener or os.environ.get('DAFTAR_GARDENER') or None
-    gardener_name = a.gardener_name or os.environ.get('DAFTAR_GARDENER_NAME') or None
+    # each value with WHERE IT CAME FROM, which is what every message about it names
+    gardener = ((a.gardener, '--gardener') if a.gardener else
+                (os.environ[ENV_ID], ENV_ID) if os.environ.get(ENV_ID) else (None, None))
+    gardener += ((a.gardener_name, '--gardener-name') if a.gardener_name else
+                 (os.environ[ENV_NAME], ENV_NAME) if os.environ.get(ENV_NAME) else (None, None))
 
     dirty = run('git', 'status', '--porcelain', '--untracked-files=no').stdout.strip()   # untracked files are not in the diff
     if dirty:
@@ -596,126 +743,151 @@ def main():
         # THE 21.0 STEP IS PLANNED FIRST, while every file is still as it was, so a refusal touches nothing.
         step21 = None
         if vtuple(before) < STEP_21 <= vtuple(vocab_version(rel)):
-            step21 = Step21(rel, a.tag, source, gardener, gardener_name, a.keep_on_failure, a.no_delegate)
+            step21 = Step21(rel, a.tag, source, gardener, a.keep_on_failure)
             step21.plan()
         want = expand(rel, patterns(rel))
         have = expand(ROOT, patterns(ROOT)) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
-
-        changed, added = [], []
-        for f in sorted(want):
-            src, dst = os.path.join(rel, f), os.path.join(ROOT, f)
-            same_bytes = os.path.isfile(dst) and open(src, 'rb').read() == open(dst, 'rb').read()
-            # THE MODE IS PART OF THE FILE. Comparing bytes alone left a hook the release had made executable
-            # non-executable in the garden (found adopting v0.4.2).
-            if same_bytes and (os.stat(src).st_mode & 0o111) == (os.stat(dst).st_mode & 0o111):
-                continue
-            (changed if os.path.isfile(dst) else added).append(f)
-            os.makedirs(os.path.dirname(dst) or ROOT, exist_ok=True)
-            shutil.copy2(src, dst)
-        removed = sorted(have - want)
-        for f in removed:
-            os.remove(os.path.join(ROOT, f))
-
-        after = vocab_version(ROOT)
-        repinned = []
-        for doc in ('VOCAB.md', 'GARDEN.md'):
-            path = os.path.join(ROOT, doc)
-            text, nl = read_text(path)
-            pins = PIN.findall(text)
-            if len(pins) != 1:
-                sys.exit(f"REFUSING to guess: {doc} carries {len(pins)} `extends: std-vocab@` pins, expected 1. "
-                         f"The files above are already copied — `git checkout -- .` undoes them.")
-            if pins[0][1] != after:
-                write_text(path, PIN.sub(rf'\g<1>{after}', text, count=1), nl)
-                repinned.append(doc)
-
-        # THE GARDEN'S OWN TERMS ARE TRANSLATED, NEVER REWRITTEN BY HAND (13.0). When a release changes how the law
-        # is SPELLED, a garden's `local_terms` are in the old spelling and the new gate refuses them. The release
-        # ships the translator; it is a pure function of each term, it proves per term that the form it reads is
-        # unchanged, and it leaves the file alone when it cannot. A refusal surfaces through the gate below, which
-        # then puts everything back.
-        translated, reform = [], os.path.join(ROOT, 'bin', 'dmreform.py')
-        if os.path.isfile(reform):
-            _r = run(sys.executable, reform, os.path.join(ROOT, 'VOCAB.md'), check=False)
-            _out = (_r.stdout + _r.stderr).strip()
-            if _r.returncode != 0:
-                translated.append('REFUSED — ' + _out.replace(ROOT + os.sep, ''))
-            elif 'term(s) rewritten' in _out and ': 0 term' not in _out and 'rewritten —' in _out:
-                translated.append('VOCAB.md local_terms — ' + _out.split('rewritten —', 1)[1].strip())
-                if 'VOCAB.md' not in changed:
-                    changed.append('VOCAB.md (translated)')
-
-        gpath = os.path.join(ROOT, 'GARDEN.md')
-        gtext, gnl = read_text(gpath)
-        gline = f'daftar_release: "{a.tag}"  # the daftar release this garden runs; bin/dmupgrade.py moves it'
-        if recorded_release() != a.tag:
-            if RELEASE.search(gtext):
-                gtext = RELEASE.sub(gline, gtext, count=1)
-            else:
-                # after the WHOLE pin line: inserting after the match split the line and moved its comment
-                gtext = re.sub(r'^extends: std-vocab@.*$', lambda m: m.group(0) + '\n' + gline, gtext, count=1, flags=re.M)
-            write_text(gpath, gtext, gnl)
-            repinned.append('GARDEN.md daftar_release')
-
-        beans = []
-        if step21:
-            _t, beans = step21.apply()
-            translated.append(_t)
-            added += step21.created
-
-        if not (changed or added or removed or repinned):
-            print(f"nothing to do: this garden's language already equals {a.tag} ({sha[:12]}).")
-            return 0
-
         # "applied" when either side is unknown: a garden that records no release cannot be told which way it moved.
         verb = ('applied' if not (cur_v and new_v) else
                 'downgraded' if tuple(map(int, new_v.groups())) < tuple(map(int, cur_v.groups())) else 'upgraded')
-        install()
-        sys.path.insert(0, os.path.join(ROOT, 'bin')); import dmjournal          # the release's own tool, just applied
-        _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
-        lines = ['\n' + dmjournal.stamp(_who, f"RULE-CHANGE: language {verb} to daftar {a.tag}", ROOT),
-                 "- ratified_by: (fill in who ratified — merging the release's pull request, or the word given here)",
-                 f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; "
-                 f"std-vocab {before} -> {after}; release {current or 'unrecorded'} -> {a.tag}.",
-                 f"- changed: {', '.join(changed) or 'none'}",
-                 f"- added: {', '.join(added) or 'none'}",
-                 f"- removed: {', '.join(removed) or 'none'}",
-                 f"- repinned: {', '.join(repinned) or 'none'}",
-                 f"- translated: {'; '.join(translated) or 'none'}",
-                 "- why: (fill in — what this release brings that this garden adopts)",
-                 f"- beans: {', '.join(beans) or 'none'}"]
-        jpath = os.path.join(ROOT, 'log', 'journal.md')
-        with open(jpath, 'a', encoding='utf-8', newline=read_text(jpath)[1]) as j:
-            j.write('\n'.join(lines) + '\n')
-
-        gate = run(sys.executable, os.path.join(ROOT, 'bin', 'dmcheck.py'), check=False)
-        if gate.returncode != 0 and not a.keep_on_failure:
-            # PUT IT ALL BACK. The tree was clean before we started, so git holds every file as it was. A cold-start
-            # drill downgraded a garden that used a profile the older release lacks, and was left half-applied.
-            run('git', 'checkout', '--', '.', check=False)
-            for f in added:
-                try:
-                    os.remove(os.path.join(ROOT, f))
-                except OSError:
-                    pass
-            install()
-            errs = [l for l in gate.stdout.splitlines() if l.startswith('ERROR')]
-            errs[:0] = ['dmreform ' + t for t in translated if t.startswith('REFUSED')]
-            print(f"NOT {verb.upper()}: under {a.tag} this garden fails its own gate, so every file was put back as it was.\n"
-                  + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') +
-                  "\nFix what these name (or pass --keep-on-failure to repair by hand), then run this again.")
-            return 1
-        print(f"{verb} to {a.tag} ({sha[:12]}): std-vocab {before} -> {after}; "
-              f"{len(changed)} changed, {len(added)} added, {len(removed)} removed, {len(repinned)} repinned.")
-        if step21:
-            print(f"translated: {translated[-1]}")
-        print((gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1])
-        print("\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n"
-              "  git add -A && git commit\n"
-              "To abandon: git checkout -- ." + (f" && rm {' '.join(added)}" if added else ""))
-        return 0 if gate.returncode == 0 else 1
+        added = []
+        # FROM THE FIRST COPY TO THE GATE'S VERDICT, A FAILURE OF ANY KIND PUTS EVERYTHING BACK — not only the gate's.
+        # An exception midway (a file an editor, the indexer or antivirus holds open on Windows, where os.replace then
+        # fails) once left release files copied, both pins moved, beans half translated and no journal entry.
+        try:
+            return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21)
+        except BaseException as e:
+            put_back(added + (step21.created if step21 else []))
+            print(f"NOT {verb.upper()}: the upgrade stopped midway"
+                  + ('' if isinstance(e, SystemExit) else f" ({type(e).__name__}{': ' + str(e) if str(e) else ''})")
+                  + ", so every file was put back as it was.", file=sys.stderr, flush=True)
+            raise
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def put_back(added):
+    """Every file as it was: the tree was clean when the upgrade began, so git holds each one, and what the upgrade
+    added is removed. Then the garden's own hooks and merge driver again, from the release it still runs."""
+    run('git', 'checkout', '--', '.', check=False)
+    for f in added:
+        for p in (os.path.join(ROOT, f), os.path.join(ROOT, f) + '.tmp'):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
+    install()
+
+
+def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21):
+    """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
+    caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
+    changed = []
+    for f in sorted(want):
+        src, dst = os.path.join(rel, f), os.path.join(ROOT, f)
+        same_bytes = os.path.isfile(dst) and open(src, 'rb').read() == open(dst, 'rb').read()
+        # THE MODE IS PART OF THE FILE. Comparing bytes alone left a hook the release had made executable
+        # non-executable in the garden (found adopting v0.4.2).
+        if same_bytes and (os.stat(src).st_mode & 0o111) == (os.stat(dst).st_mode & 0o111):
+            continue
+        (changed if os.path.isfile(dst) else added).append(f)
+        os.makedirs(os.path.dirname(dst) or ROOT, exist_ok=True)
+        shutil.copy2(src, dst)
+    removed = sorted(have - want)
+    for f in removed:
+        os.remove(os.path.join(ROOT, f))
+
+    after = vocab_version(ROOT)
+    repinned = []
+    for doc in ('VOCAB.md', 'GARDEN.md'):
+        path = os.path.join(ROOT, doc)
+        text, form = read_text(path)
+        pins = PIN.findall(text)
+        if len(pins) != 1:
+            sys.exit(f"REFUSING to guess: {doc} carries {len(pins)} `extends: std-vocab@` pins, expected 1.")
+        if pins[0][1] != after:
+            write_text(path, PIN.sub(rf'\g<1>{after}', text, count=1), form)
+            repinned.append(doc)
+
+    # THE GARDEN'S OWN TERMS ARE TRANSLATED, NEVER REWRITTEN BY HAND (13.0). When a release changes how the law
+    # is SPELLED, a garden's `local_terms` are in the old spelling and the new gate refuses them. The release
+    # ships the translator; it is a pure function of each term, it proves per term that the form it reads is
+    # unchanged, and it leaves the file alone when it cannot. A refusal surfaces through the gate below, which
+    # then puts everything back.
+    translated, reform = [], os.path.join(ROOT, 'bin', 'dmreform.py')
+    if os.path.isfile(reform):
+        _r = run(sys.executable, reform, os.path.join(ROOT, 'VOCAB.md'), check=False)
+        _out = (_r.stdout + _r.stderr).strip()
+        if _r.returncode != 0:
+            translated.append('REFUSED — ' + _out.replace(ROOT + os.sep, ''))
+        elif 'term(s) rewritten' in _out and ': 0 term' not in _out and 'rewritten —' in _out:
+            translated.append('VOCAB.md local_terms — ' + _out.split('rewritten —', 1)[1].strip())
+            if 'VOCAB.md' not in changed:
+                changed.append('VOCAB.md (translated)')
+
+    gpath = os.path.join(ROOT, 'GARDEN.md')
+    gtext, gform = read_text(gpath)
+    gline = f'daftar_release: "{a.tag}"  # the daftar release this garden runs; bin/dmupgrade.py moves it'
+    if recorded_release() != a.tag:
+        if RELEASE.search(gtext):
+            gtext = RELEASE.sub(gline, gtext, count=1)
+        else:
+            # after the WHOLE pin line: inserting after the match split the line and moved its comment
+            gtext = re.sub(r'^extends: std-vocab@.*$', lambda m: m.group(0) + '\n' + gline, gtext, count=1, flags=re.M)
+        write_text(gpath, gtext, gform)
+        repinned.append('GARDEN.md daftar_release')
+
+    beans = []
+    if step21:
+        _t, beans = step21.apply()
+        translated.append(_t)
+        added += step21.created
+
+    if not (changed or added or removed or repinned):
+        print(f"nothing to do: this garden's language already equals {a.tag} ({sha[:12]}).")
+        return 0
+
+    install()
+    sys.path.insert(0, os.path.join(ROOT, 'bin')); import dmjournal          # the release's own tool, just applied
+    _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
+    lines = ['\n' + dmjournal.stamp(_who, f"RULE-CHANGE: language {verb} to daftar {a.tag}", ROOT),
+             "- ratified_by: (fill in who ratified — merging the release's pull request, or the word given here)",
+             f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; "
+             f"std-vocab {before} -> {after}; release {current or 'unrecorded'} -> {a.tag}.",
+             f"- changed: {', '.join(changed) or 'none'}",
+             f"- added: {', '.join(added) or 'none'}",
+             f"- removed: {', '.join(removed) or 'none'}",
+             f"- repinned: {', '.join(repinned) or 'none'}",
+             f"- translated: {'; '.join(translated) or 'none'}",
+             "- why: (fill in — what this release brings that this garden adopts)",
+             f"- beans: {', '.join(beans) or 'none'}"]
+    jpath = os.path.join(ROOT, 'log', 'journal.md')
+    with open(jpath, 'a', encoding='utf-8', newline=read_text(jpath)[1].nl) as j:
+        j.write('\n'.join(lines) + '\n')
+
+    gate = run(sys.executable, os.path.join(ROOT, 'bin', 'dmcheck.py'), check=False)
+    if gate.returncode != 0 and not a.keep_on_failure:
+        # PUT IT ALL BACK. The tree was clean before we started, so git holds every file as it was. A cold-start
+        # drill downgraded a garden that used a profile the older release lacks, and was left half-applied.
+        put_back(added)
+        errs = [l for l in gate.stdout.splitlines() if l.startswith('ERROR')]
+        if not errs:        # the gate stopped without a verdict (a crash): what it said on the way out is the reason
+            errs = ['the gate stopped without naming an error; the last it said:'] + \
+                   ['  ' + l for l in (gate.stderr.strip() or gate.stdout.strip() or '(nothing)').splitlines()[-8:]]
+        errs[:0] = ['dmreform ' + t for t in translated if t.startswith('REFUSED')]
+        print(f"NOT {verb.upper()}: under {a.tag} this garden fails its own gate, so every file was put back as it was.\n"
+              + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') +
+              "\nFix what these name (or pass --keep-on-failure to repair by hand), then run this again.")
+        return 1
+    print(f"{verb} to {a.tag} ({sha[:12]}): std-vocab {before} -> {after}; "
+          f"{len(changed)} changed, {len(added)} added, {len(removed)} removed, {len(repinned)} repinned.")
+    if step21:
+        print(f"translated: {translated[-1]}")
+    print((gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1])
+    print("\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n"
+          "  git add -A && git commit\n"
+          "To abandon: git checkout -- ." + (f" && rm {' '.join(added)}" if added else ""))
+    return 0 if gate.returncode == 0 else 1
 
 
 def install():
@@ -728,4 +900,9 @@ def install():
 
 
 if __name__ == '__main__':
+    for _s in (sys.stdout, sys.stderr):      # what the console's code page lacks is shown escaped, never a crash
+        try:
+            _s.reconfigure(errors='backslashreplace')
+        except (AttributeError, ValueError):
+            pass
     sys.exit(main())
