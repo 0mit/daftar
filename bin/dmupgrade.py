@@ -168,7 +168,6 @@ BEAN_BY_HAND = ('between', 'agreement_ref', 'conflict_rule', 'balance')   # an a
 AGREEMENT_RECIPE = ("seed/COOKBOOK.md, the recipe for an agreement between people (`parties`, `words`, `clauses`, "
                     "`transactions`)")
 GARDENER_ID = re.compile(r'^[a-z0-9]+(-[a-z0-9]+)*$')      # seed/germinate.py's rule for the gardener's id
-GARDENER_KINDS = ('person', 'org')                        # "a garden is kept by a person or an organisation"
 DOCS = ('beans', 'mappings')                              # where a bean or a mapping lives
 
 
@@ -448,7 +447,7 @@ def plan_manifest(text, gardener):
                 return None, f"GARDEN.md: {err}"
             cur = cur[:s] + cur[e:]
             exp.pop(k)
-    line = f"gardener: {gardener}                      # the person who keeps this garden: its first bean"
+    line = f"gardener: {gardener}                      # the person who keeps this garden"
     if not _fm_region(cur):
         return None, "GARDEN.md does not open with its `---` fence — name the gardener by hand"
     lo, hi = _fm_region(cur)
@@ -465,6 +464,17 @@ def plan_manifest(text, gardener):
     if nfm != exp or nbody != body:
         return None, "GARDEN.md could not be rewritten without changing something else — name the gardener by hand"
     return cur, None
+
+
+def gardener_kinds(root):
+    """The kinds of bean that may keep a garden, as the release's law declares them — `manifest.attrs.gardener`,
+    `in: { bean_id: { kinds: [...] } }` — or None when it declares none. Read from the law and never written here: the
+    list lived in this tool and in the gate, and in no law (std-vocab 21.0)."""
+    rec = (((std_fm(root).get('manifest') or {}).get('attrs') or {}).get('gardener')) or {}
+    dom = rec.get('in') if isinstance(rec, dict) else None
+    ids = dom.get('bean_id') if isinstance(dom, dict) else None
+    kinds = ids.get('kinds') if isinstance(ids, dict) else None
+    return tuple(str(k) for k in kinds) if isinstance(kinds, list) and kinds else None
 
 
 def own_garden_id(root):
@@ -567,13 +577,18 @@ class Step21:
                       f"this again." if self.gsrc == ENV_ID else ''))
         if not gid and named:
             gid, self.gsrc = str(named), "GARDEN.md's `gardener:`"
+        kinds = gardener_kinds(self.rel)
+        if not kinds:
+            refuse(f"{self.tag}'s law does not say which kinds of bean may keep a garden (`manifest.attrs.gardener`, "
+                   f"`in: {{ bean_id: {{ kinds }} }}`), and this tool does not guess it.")
+        either = ' or '.join(kinds)
         keepers = sorted(os.path.basename(p)[:-3] for p in glob.glob(os.path.join(ROOT, 'beans', '*.md'))
-                         if kind_of(p) in GARDENER_KINDS)
+                         if kind_of(p) in kinds)
         here = (f" (here: {', '.join(keepers[:12])}" + (', …' if len(keepers) > 12 else '') + ")") if keepers else ''
         if not gid:
             refuse(f"std-vocab 21.0 asks who keeps this garden — its GARDENER, a person or an organisation it holds, "
                    f"named in GARDEN.md — and this garden names none. Ask the person, then:\n{self.fixes()}\n"
-                   f"<id> is an existing person or org bean{here}; with a name, a new person bean is planted for them, "
+                   f"<id> is an existing {either} bean{here}; with a name, a new person bean is planted for them, "
                    f"as seed/germinate.py --gardener plants one.")
         if not GARDENER_ID.match(gid):
             refuse(f"{self.gsrc} names the gardener by a bean id — kebab-case, such as sam — and got '{gid}'. "
@@ -581,15 +596,15 @@ class Step21:
         path = os.path.join(ROOT, 'beans', gid + '.md')
         if os.path.isfile(path):
             kind = kind_of(path)
-            if kind not in GARDENER_KINDS:
-                refuse(f"'{gid}' is a {kind} ({self.gsrc} names it); a garden is kept by a person or an organisation{here}. "
+            if kind not in kinds:
+                refuse(f"'{gid}' is a {kind} ({self.gsrc} names it); a garden is kept by a bean of kind {either}{here}. "
                        f"Name one:\n{self.fixes()}")
             if name:
                 refuse(f"'{gid}' is already a bean of this garden, and {self.nsrc} plants a NEW one. Name them alone"
                        + (f" — clearing {ENV_NAME} first ({self.clear(ENV_NAME)})" if self.nsrc == ENV_NAME else '')
                        + f":\n  {self.fix_line(gid)}")
         elif not name:
-            refuse(f"'{gid}' is no bean of this garden ({self.gsrc} names it). Name an existing person or org bean{here}:\n"
+            refuse(f"'{gid}' is no bean of this garden ({self.gsrc} names it). Name an existing {either} bean{here}:\n"
                    f"  {self.fix_line()}\nor plant a new person bean for them:\n"
                    f"  {self.fix_line(gid, '<how they are called>')}")
         else:

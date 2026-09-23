@@ -123,6 +123,18 @@ def _ip_form(version):
 FORM_CHECKS = {'ipaddress-v4': _ip_form(4), 'ipaddress-v6': _ip_form(6)}
 
 
+def law_match(pattern, value):
+    """A value against a pattern OF THE LAW — the one way every tool matches one. ASCII only (std-vocab 16.0: in Python
+    `\\d` matches every Unicode digit, and `۲۰۲۶-۰۹-۲۰` is not a second spelling of a date). And a pattern that ends in
+    `$` ends at the END OF THE VALUE: Python's `$` also matches before a final newline, so `count: "100\\n"` passed the
+    gate while a reader that matched the whole value refused it — two readers of one pattern, disagreeing."""
+    p, v = str(pattern), str(value)
+    m = re.match(p, v, re.ASCII)
+    if m and p.endswith('$') and not p.endswith('\\$') and m.end() != len(v):
+        return None
+    return m
+
+
 def in_form(row, value):
     """True when `value` is written in the ONE form the system row declares: by the check it names, else by its
     pattern. None when the row declares no form at all (`pattern: none`, deliberately)."""
@@ -134,7 +146,7 @@ def in_form(row, value):
     pat = row.get('pattern')
     if pat in (None, 'none'):
         return None
-    return bool(re.match(str(pat), str(value), re.ASCII))
+    return bool(law_match(pat, value))
 
 
 def form_said(row):
@@ -207,6 +219,34 @@ except (ImportError, AttributeError):        # PyYAML built without libyaml
         _yaml = None
         LOADER = None
     FAST = False
+
+# A NUMBER IS WHAT WAS WRITTEN (std-vocab 21.0). YAML 1.1 reads a plain scalar as an integer in five spellings nobody
+# writes a count in: `010` is eight (octal), `0x64` a hundred, `0b11` three, `1:30` ninety (base sixty) and `1_000` a
+# thousand. So `count: 010` passed the gate as a whole number and every reader agreed on 8 XTS — an amount nobody wrote,
+# and nobody told. The loader resolves a plain scalar to an integer ONLY in plain decimal; every other spelling loads as
+# the text it is, and the law's patterns (`value_types[count]`, a share's) then refuse it by name. Floats, booleans,
+# dates and nulls resolve as before.
+PLAIN_INT = re.compile(r'^[-+]?(0|[1-9][0-9]*)$')
+if LOADER is not None:
+    _INT_TAG = 'tag:yaml.org,2002:int'
+
+    class _Loader(LOADER):
+        pass
+    # a fresh table owned by the subclass, so the library's own loaders keep YAML 1.1 for anyone else in the process
+    _Loader.yaml_implicit_resolvers = {k: [(tag, rx) for tag, rx in v if tag != _INT_TAG]
+                                       for k, v in LOADER.yaml_implicit_resolvers.items()}
+    _Loader.add_implicit_resolver(_INT_TAG, PLAIN_INT, list('-+0123456789'))
+
+    # ...and an EXPLICIT `!!int` asks the same question. The resolver above only decides what an untagged scalar is;
+    # `count: !!int 010` names the tag itself, and the library's constructor then reads the text in YAML 1.1's octal,
+    # hex, base sixty and underscore forms — 8, 100, 90, 1000 — whether the text was quoted or not. So the tag builds an
+    # integer only from plain decimal; any other text stays the text it is, as the same text untagged does, and the
+    # law's patterns refuse it by name. (fullmatch: a quoted `"12\n"` is not twelve.)
+    def _construct_int(loader, node):
+        text = loader.construct_scalar(node)
+        return int(text) if PLAIN_INT.fullmatch(text) else text
+    _Loader.add_constructor(_INT_TAG, _construct_int)
+    LOADER = _Loader
 
 
 def loads(text):

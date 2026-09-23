@@ -388,6 +388,38 @@ check("...and a planted bean that would not say the name asked for is REFUSED be
       _gt21.count('json.dumps(name') == 1 and r.returncode != 0 and 'does not say what was asked' in r.stdout + r.stderr
       and '`title`' in r.stdout + r.stderr and untouched(_aged), (r.stdout + r.stderr)[-400:])
 
+# ---- WHICH BEINGS MAY KEEP A GARDEN IS THE LAW'S TO SAY (`manifest.attrs.gardener`, `in: { bean_id: { kinds } }`)
+_tools = ''.join(open(os.path.join(ROOT, 'bin', f), encoding='utf-8').read() for f in ('dmupgrade.py', 'dmcheck.py'))
+check("no tool keeps its own list of the kinds that may keep a garden",
+      "('person', 'org')" not in _tools and 'GARDENER_KINDS' not in _tools)
+with open(_gp21, 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write(_gt21)                                        # germinate as released, again
+_sv21 = os.path.join(R21, 'seed', 'std-vocab.md')
+_svt21 = open(_sv21, encoding='utf-8').read()
+_kinds_in = 'in: { bean_id: { kinds: [person, org] } }'
+
+
+def release_with_law(text, tag):
+    with open(_sv21, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(text)
+    run('git', 'add', '-A', cwd=R21); run('git', 'commit', '-qm', tag, cwd=R21); run('git', 'tag', tag, cwd=R21)
+
+
+release_with_law(_svt21.replace(_kinds_in, 'in: { bean_id: { kinds: [person, org, host] } }', 1), 'v9.0.2')
+reset(_aged)
+r = up21('--gardener', 'laptop', tag='v9.0.2')
+check("...dmupgrade reads them from the release's law: one whose law lets a host keep a garden takes `laptop`",
+      _svt21.count(_kinds_in) == 1 and "'laptop' is a host" not in r.stdout + r.stderr
+      and re.search(r'^gardener: laptop\b', get('GARDEN.md'), re.M), (r.stdout + r.stderr)[-400:])
+release_with_law(_svt21.replace(_kinds_in, 'in: bean_id', 1), 'v9.0.3')
+reset(_aged)
+r = up21('--gardener', 'sam', tag='v9.0.3')
+check("...and one whose law does not say which kinds may keep a garden is REFUSED — the tool does not guess",
+      r.returncode != 0 and 'does not say which kinds of bean may keep a garden' in r.stdout + r.stderr and untouched(_aged),
+      (r.stdout + r.stderr)[-400:])
+release_with_law(_svt21, 'v9.0.4')
+reset(_aged)
+
 # ---- a translated garden that still fails its gate is put back WHOLE: the beans, the manifest, the planted gardener
 reset(_aged)
 put('VOCAB.md', get('VOCAB.md').replace('local_terms: []', 'local_terms: [ { term: facets, meaning: "the facet lattice, as 20.0 let a garden overlay it" } ]', 1))

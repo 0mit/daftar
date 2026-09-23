@@ -171,6 +171,57 @@ sv_now = open(os.path.join(ROOT, "seed", "std-vocab.md")).read()
 check("NOTHING in the law is `untyped` any more — and `any` is a decision, said as one",
       "in: untyped," not in sv_now and "value: { in: any," in sv_now)
 
+# ---------------------------------------------------------------- 21.0: A KEY THAT IS A REGISTRY'S ROW IS A POSITION AT IT
+# `owned_by` and `responsibility` take their keys from the `facets` registry. The keys were counted at a source nothing
+# declares, so a facet a garden added and used was refused as unoccupied, and a vacancy for one in use never went stale.
+V0 = open(v).read()
+def vocab(extra):
+    open(v, "w").write(V0.replace("\n---", "\n" + extra + "\n---", 1))
+WIDGET = os.path.join(G, "beans", "widget.md")
+open(WIDGET, "w").write("""---
+bean: widget
+kind: product
+title: "a widget"
+status: active
+summary: "probe"
+nature: metaphysical
+identity: { status: confirmed, anchors: [ { key: product_id, value: "product:widget", class: logical, establishing: true } ] }
+provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
+owned_by: { legal: { owner: { bean: keeper } }, moral: { owner: { bean: keeper } } }
+responsibility: { legal: { holder: { bean: keeper } }, moral: { holder: { bean: keeper } } }
+notes_x: [ { a: "one form" }, { b: "the other" } ]
+---
+probe.
+""")
+LISTY = """  - term: notes_x
+    meaning: "a LIST whose entries take one of two forms"
+    context_keys: [notes_x]
+    schema:
+      shape: list_of_entries
+      entry_one_of: [a, b]
+      attrs:
+        a: { in: prose }
+        b: { in: prose }
+    merge: { cardinality: single, order: none }"""
+assert V0.count("local_terms:\n") == 1
+open(v, "w").write(V0.replace("local_terms:\n", "local_terms:\n" + LISTY + "\n", 1)); V0 = open(v).read()
+vocab('registry_additions: { facets: [ { facet: moral, depends_on: [legal], meaning: "who answers for it to the people it touches" } ] }')
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25"))
+check("a facet a garden ADDS and uses occupies its position at `registry:facets` — it is not refused as unoccupied",
+      "0 error" in out and "position 'moral' is declared but NO bean occupies it" not in out, out[-700:])
+check("...and a garden's own LIST term with `entry_one_of` has its forms occupied by its list's entries",
+      "notes_x.entry_one_of" not in out, out[-700:])
+vocab('registry_additions: { facets: [ { facet: moral, depends_on: [legal], meaning: "who answers for it to the people it touches" } ] }\n'
+      'vacancies: [ { at: "registry:facets", position: moral, reason: prediction, why: "expected" } ]')
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25"))
+check("...a vacancy the garden declares for a facet in use is reported STALE — a false vacancy does not stand",
+      "VOCAB vacancies: registry:facets = 'moral' is declared vacant but IS occupied" in out, out[-700:])
+os.remove(WIDGET)
+vocab('registry_additions: { facets: [ { facet: moral, depends_on: [legal], meaning: "who answers for it to the people it touches" } ] }')
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25"))
+check("...and with nothing using it, the added facet is unoccupied again, and says so",
+      "VOCAB registry:facets: position 'moral' is declared but NO bean occupies it" in out, out[-700:])
+
 shutil.rmtree(T, ignore_errors=True)
 print("\npositions: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

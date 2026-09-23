@@ -157,6 +157,30 @@ check("...and piped into a reader that leaves early, it still exits 0", _pp.retu
       f"exit {_pp.returncode}: {_err[-300:]}")
 shutil.rmtree(_B, ignore_errors=True)
 
+# ONE FINDING PER RESTATEMENT, against the list it restates best. Two of the law's lists overlap (a record's attributes,
+# and those of each record it was taken `from`), so a run restating one was counted against both — one line listed
+# twice, and said to add a name that is in the very list it restates.
+class _StubTree:
+    ref = None
+
+    def __init__(self, files):
+        self._f = files
+
+    def files(self):
+        return list(self._f)
+
+    def read(self, p):
+        return self._f.get(p)
+
+
+_law2 = {"provenance_record": {"attrs": ["src", "by", "as_of", "from", "garden"], "from_attrs": ["src", "by", "as_of", "at"]}}
+_found = dmreview._restatements(_law2, _StubTree({"NOTES.md": "A record: `src`, `by`, `as_of` and `from`.\n\n"
+                                                              "Again: `src`, `by`, `as_of`, `from`, `garden`.\n"}))
+check("dmreview counts a restatement once, against the list it restates best — and two in one file as two",
+      [(r["where"], r["path"], r["extra"]) for r in _found] == [("NOTES.md:1", "provenance_record.attrs", []),
+                                                               ("NOTES.md:3", "provenance_record.attrs", [])]
+      and len({r["id"] for r in _found}) == 2, _found)
+
 # ---------------------------------------------------------------- LEAKS BETWEEN THE LAYERS, one direction at a time
 # UP: a layer may point DOWN to the one beneath, never the other way. A law that says "see the rationale" cannot be
 # applied alone, and "clear and brief, for usability" means it can.
@@ -213,6 +237,21 @@ check("a garden keeps the reasoning for ITS OWN terms beside its VOCAB.md, under
       _rc == 0 and "RATIONALE.md: 1 reasons, 0 orphaned" in _o and "seed/RATIONALE.md" in _o, _o[-400:])
 _rc, _o = _why("## local_terms[shelf]\n\nthings were being lost.\n\n## local_terms[drawer].meaning\n\na term that is gone.\n")
 check("...and a reason whose law is gone is refused there as well", _rc == 1 and "ORPHAN  local_terms[drawer].meaning" in _o, _o[-400:])
+# A NAME ONLY THE `retired:` LIST STILL SAYS IS GONE. The list names what the law took back, and a reason that spoke of
+# `agreement_ref` found the name there and was never reported stale; the reason FOR the list speaks of them by design.
+_L, _W = os.path.join(_T, "law.md"), os.path.join(_T, "why.md")
+open(_L, "w", encoding="utf-8").write('---\nretired:\n  - { name: old_key, at: bean, instead: "`new_key`" }\n'
+                                      'terms:\n  - { term: new_key, meaning: "x" }\n---\n')
+open(_W, "w", encoding="utf-8").write("## terms[new_key]\n\nit replaced `old_key`; `new_key` stays.\n\n"
+                                      "## retired\n\n`old_key` went, and why.\n")
+_saved = (dmwhy.LAW, dmwhy.WHY)
+dmwhy.LAW, dmwhy.WHY = _L, _W
+try:
+    _st = dmwhy.stale()
+finally:
+    dmwhy.LAW, dmwhy.WHY = _saved
+check("a name found only in the law's `retired:` list is gone to `dmwhy --stale`, and the list's own reason is not stale",
+      _st == {"terms[new_key]": ["old_key"]}, _st)
 shutil.rmtree(_T, ignore_errors=True)
 
 print("\nrationale: %d failed" % len(FAILS))

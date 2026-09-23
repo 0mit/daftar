@@ -14,11 +14,11 @@ schema_language:
     form_of:     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form"
     system:      "in: { system: <anchor system> } — a position in ONE named system, in that system's one form. `form_of` asks a sibling WHICH system; this names it, for an attribute that is only ever in one"
     key_of:      "in: { key_of: <term> } — a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another: a PART of a being, resolved by the gate. Not an edge — the being is reached by the refs the bean already states"
-    entries:     "in: { entries: { <attr>: {required?, in, meaning} } } — entries INSIDE an entry: a list of them, or one mapping. Each is judged as an entry, by the attributes written here and by every rule an entry answers to. A ref inside one is resolved and draws no edge"
-    bean_id:     "in: bean_id — the bare id of a bean this garden holds: resolved by the gate, and not an edge (an edge is a `ref`)"
+    entries:     "in: { entries: { <attr>: {required?, in, meaning} } } — entries INSIDE an entry: a list of them, or one mapping. Each is judged as an entry, by the attributes written here and by every rule an entry answers to. A ref inside one is resolved and draws no edge. `keyed_by: <attr>` beside `entries` says the list holds ONE entry per value of that attribute, and that the order of its entries carries nothing: two entries for one value are refused, and a merge compares the list in that attribute's order"
+    bean_id:     "in: bean_id — the bare id of a bean this garden holds: resolved by the gate, and not an edge (an edge is a `ref`). `in: { bean_id: { kinds: [<kind>, ...] } }` holds it to a bean of one of those kinds"
     any:         "in: any — DELIBERATELY any value, because its type is another attribute's business (a record's `value` is whatever the tracked field holds). A decision, where `untyped` is a debt"
     pattern:     "in: { pattern: '<regex>' } — a form the TERM owns. With `soft: true` and a `why` it WARNS instead of refusing: the form a value SHOULD take while a corpus is migrated onto it"
-    quantity:    "in: { quantity: <name> } — a MEASURED VALUE, written { count, unit }: a speed, an acceleration, an area, a data rate, an amount of money. The unit must measure the quantity named; `count` is a whole number or a decimal written as a string, so that no float reaches a canonical form. A quantity whose row takes its units from a registry (`units_from`) holds a count with at most the row's `digits` decimal places. `in: { quantity: any }` takes any."
+    quantity:    "in: { quantity: <name> } — a MEASURED VALUE, written { count, unit }: a speed, an acceleration, an area, a data rate, an amount of money. The unit must measure the quantity named; `count` is a whole number or a decimal written as a string, in the form `value_types[count]` declares, so that no float reaches a canonical form and every reader holds it exactly. A quantity whose row takes its units from a registry (`units_from`) holds a count with at most the row's `digits` decimal places. `in: { quantity: any }` takes any."
     extent:      "in: extent — a bounded region of an aspect's domain (`extent_form`)"
     recurrence:  "in: recurrence — a repetition over a sequence: every Nth neighbour, every N units, or the same place in each cell of a level (`recurrence_form`)"
     ref:         "in: ref — a {bean|mapping: <id>[, field: <key>]} ref; the gate RESOLVES it (dangling = error)"
@@ -31,6 +31,7 @@ schema_language:
   alt_form:             "{key, ref_fields} — an ALTERNATIVE whole-value form: a mapping carrying `key` takes this form INSTEAD of the faceted one, and the per-key rules stand down for it (the inherited `owned_by: {via: …}`). In use since the first schema language; declared 11.3."
   required:             "true — EVERY bean must carry the term (the root-axiom case; stronger than required_on_<axis>s)"
   required_on_kinds:    "[<kind>...] — a bean of this kind MUST carry the term, non-empty"
+  only_on_kinds:        "[<kind>...] — ONLY a bean of these kinds may carry the term: a record that is about one kind of being is refused on any other"
   must_equal_kind_attr: "<attr> — the term's value must equal the bean's kind's <attr> in the `kinds` registry (e.g. nature == kind.of_nature)"
   required_on_natures:  "[<nature>...] — same, keyed on nature instead of kind (reserved for P3; the interpreter already honours it)"
   required_on_roles:    "[<role>...] — same, keyed on ROLE. It needed no new interpreter key: the axis has always been read from the vocabulary key rather than named in code. What it DID need (7.0, human-ratified) is that an axis may be MULTI-VALUED — a machine holds one kind and one nature but SEVERAL roles — so the mechanism now reads an axis carried as a scalar, as a list of scalars, or as a list of entries each naming it, and fires if ANY held value matches. That generality is the reason `router` could stop being a kind."
@@ -38,7 +39,7 @@ schema_language:
   values_from:          "<term> | registry:<name>[].<field> — reuse another term's `values`, or a REGISTRY's own column, instead of restating it. A registry is its own enum owner: no term keeps a copy of its rows, and a position in it is addressed `registry:<name>`"
   key_form:             "kebab | values | values_from:<term> | values_from:registry:<name>[].<field> — the rule the KEYS of a mapping/open_map must satisfy"
   entry_one_of:         "[<attr>...] — each entry must carry at least one of these"
-  expiry:               "{attr, notice, why} — ONE of this term's attrs is the position at which the thing LAPSES if nothing is done, and a reader should be warned before it. `notice` is HOW LONG BEFORE, as an EXTENT on `time` (11.2; it was a bare `horizon_days` integer for one release, which was a fifth way of saying a duration in a vocabulary that had just declared the first). `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. Deliberately NOT derivable from `attr_types: iso_date` — ten terms carry an iso_date and nine of them are `observed` or `as_of`, the date a fact was READ rather than the date it runs out. A term that does not declare this is never warned about, which is why a garden's own term can buy the warning its Tier-0 neighbour has. On a term whose value is a list or an open map, the attribute is each ENTRY's, and each entry is warned about by itself. `repeats: <attr>` names a sibling attribute `in: recurrence`: the position falls due again at each occurrence after `attr`, and the reader is warned before the next. `unless: {<attr>: [<values>]}` names the entries that no longer lapse — a debt already met."
+  expiry:               "{attr, notice, why} — ONE of this term's attrs is the position at which the thing LAPSES if nothing is done, and a reader should be warned before it. `notice` is HOW LONG BEFORE, as an EXTENT on `time`. `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. Deliberately NOT derived from an attribute's type: most dates a bean carries are `observed` or `as_of`, the day a fact was READ rather than the day it runs out. A term that does not declare this is never warned about, which is why a garden's own term can buy the warning its Tier-0 neighbour has. On a term whose value is a list or an open map, the attribute is each ENTRY's, and each entry is warned about by itself. `repeats: <attr>` names a sibling attribute `in: recurrence`: the position falls due again at each occurrence after `attr`, and the reader is warned before the next. `unless: {<attr>: [<values>]}` names the entries that no longer lapse — a debt already met."
   sums:                 "{whole: <attr> | [<attr>, ...], parts: <attr>.<attr>} — the PARTS of a quantity add up to its WHOLE: the parts are the named attribute of each entry inside `parts`' first attribute, the whole is the first of `whole` the entry states. Checked exactly, in fractions, whenever every count is known, and the parts must be in the whole's unit. An entry holding one part that states no amount holds the whole."
   on_sequence:          "<aspect> — the term's value is a walk on that SEQUENCE aspect (10.1): prose lines in list order, or step entries {id, do, next: [{to, when?}]} whose neighbourhoods are CLOSED; the gate refuses a `to` that names no step, a step nothing reaches, a branch with no condition, a routine with no end, and a loop when the aspect declares acyclic"
   dag:                  "true — this term's edges are positions on the `walk` sequence aspect (9.2: `dag` is that aspect's `term_key`), and they join the acyclic check BECAUSE that aspect declares `acyclic: true`"
@@ -78,21 +79,23 @@ identity_policy:
   minted:
     qualified_by: garden_id
     pattern: '^[0-9a-f]{12}/.+$'
-    meaning: "A value of a term whose `anchor` says `minted: true` is a NAME a garden gave. BARE (`contract:shared-purchase`) it identifies only within the garden that minted it: two gardens that minted the same bare name are shown to a person as candidates, never fused. QUALIFIED by the garden that minted it (`<garden_id>/contract:shared-purchase`) it identifies everywhere. A name is qualified once, by the garden that recorded the thing first, when the thing is to be known in another garden; a garden that takes it in keeps it byte for byte, and the prefix must be the garden's own id, or the `garden_id` of a `garden` bean it holds."
-# == THE MANIFEST: GARDEN.md, judged like an entry ==
+    form: '^[a-z][a-z0-9-]*:.+$'
+    form_kind: kinds
+    meaning: "A term whose `anchor` says `minted: true` admits names a garden gives. A value of it is such a NAME when it is written in `form`, `<kind>:<name>`, and `<kind>` is a kind the garden knows (`form_kind`: the law's `kinds` and the garden's `local_kinds`). BARE (`contract:shared-purchase`) a name identifies only within the garden that minted it: two gardens that minted the same bare name are shown to a person as candidates, never fused. QUALIFIED by the garden that minted it (`<garden_id>/contract:shared-purchase`) it identifies everywhere. A name is qualified once, by the garden that recorded the thing first, when the thing is to be known in another garden; a garden that takes it in keeps it byte for byte, and the prefix must be the garden's own id, or the `garden_id` of a `garden` bean it holds. A value in ANY OTHER form — a package name, a registry number, the UID an invitation carries, an id a provider assigned — was assigned outside every garden: it identifies wherever it is written, fuses as every anchor does, and is never qualified, because an identifier someone else assigned is not a garden's to put its name on."
+# == THE MANIFEST: GARDEN.md, judged as itself ==
 manifest:
   path: GARDEN.md
   attrs:
     garden:         { required: true, in: { type: kebab }, meaning: "the garden's name, for people. A name, not an identity: two gardens may carry the same one, and a garden's identity is the commit it germinated from (`garden_id`)" }
     extends:        { required: true, in: any, meaning: "the standard it pins, `std-vocab@<version>` — judged by the pin check" }
-    daftar_release: { in: { pattern: '^v[0-9]+\.[0-9]+\.[0-9]+$' }, meaning: "the release it runs; bin/dmupgrade.py moves it" }
-    gardener:       { in: bean_id, meaning: "the person — or organisation — who keeps the garden: a bean of the garden, and its first. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
+    daftar_release: { in: { pattern: '^(v[0-9]+\.[0-9]+\.[0-9]+|untagged ([0-9a-f]{4,40}|unknown))$' }, meaning: "the release it runs: a release tag, or `untagged <commit>` for a garden grown from a checkout that is on no tag; bin/dmupgrade.py moves it" }
+    gardener:       { in: { bean_id: { kinds: [person, org] } }, meaning: "the person — or organisation — who keeps the garden: a bean of the garden. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
     test:           { in: prose, meaning: "present when the garden is a rehearsal or a test, saying what it rehearses. Its beans are not facts about the world, and a proposal from it says so" }
     origin:         { in: prose, meaning: "where the garden began, for a reader" }
     policy:         { in: any, meaning: "standing rules the gardener sets for work in the garden, in prose" }
 # == WHAT THE LAW RETIRED, so a refusal can say where it went ==
 retired:
-  - { name: scope,         at: anchor,   instead: "nothing: whether a value identifies beyond its garden is said by its term (`anchor.minted`) and by its own form (`<garden_id>/<name>`)" }
+  - { name: scope,         at: anchor,   instead: "nothing: whether a value identifies beyond its garden is said by its term (`anchor.minted`) and by its own form (`<kind>:<name>`, qualified `<garden_id>/<kind>:<name>`)" }
   - { name: authority,     at: anchor,   instead: "`provenance: { src, by, as_of }` on the anchor, only where its source differs from the bean's (scanned → observed, operator-asserted → asserted-by-human)" }
   - { name: between,       at: bean,     instead: "`parties`: an open map of the parties, each with the day it accepted" }
   - { name: agreement_ref, at: bean,     instead: "`words`: whether the agreement was written, spoken or not yet put into words, and where its words are" }
@@ -101,7 +104,7 @@ retired:
   - { name: attributes,    at: bean,     instead: "`details:` — the one bag for a datum that fits no term yet" }
   - { name: facets,        at: term,     instead: "the `facets` registry; a garden adds a facet as a row under `registry_additions.facets`" }
   - { name: values_consistent_with, at: schema, instead: "nothing: a list stated once, as a registry, needs no guard against its own copies" }
-  - { name: seeds_from,    at: manifest, instead: "nothing read it; what a garden took in from another is in its journal, and in the captures on that garden's `garden` bean" }
+  - { name: seeds_from,    at: manifest, instead: "nothing: what a garden took in from another is in its journal, and in the captures on that garden's `garden` bean" }
   - { name: created,       at: manifest, instead: "nothing: when a garden began is its first commit" }
   - { name: models,        at: manifest, instead: "nothing: who wrote here is in the journal and in git" }
 # == PROVENANCE: the record every fact carries, declared ==
@@ -795,7 +798,7 @@ planes:
 # == REGISTRY LINKS: a row of one registry names a row of another, and the gate resolves it ==
 registry_links:
   - { from: units, field: quantity, to: quantities, take: quantity, why: "a unit measures a quantity, and the quantity says what it is made of" }
-  - { from: facets, field: depends_on, to: facets, take: facet, acyclic: true, why: "a facet depends only on facets the law declares, and never on itself through others: the walk they form is the lattice ownership is faceted by" }
+  - { from: facets, field: depends_on, to: facets, take: facet, acyclic: true, rooted: true, why: "a facet depends only on facets the law declares, never on itself through others, and every facet but one reaches that one: the walk they form is the lattice ownership is faceted by, and `legal` is its root" }
   - { from: reference_systems, field: body,  to: bodies,                 take: body,  why: "a reference system is fixed to a body, and a latitude is a latitude ON something" }
   - { from: reference_systems, field: kind,  to: reference_system_kinds, take: kind,  why: "the classes ISO 19111 names" }
   - { from: reference_systems, field: frame, to: reference_frames,       take: frame, why: "static or dynamic: whether a coordinate needs an epoch" }
@@ -1080,6 +1083,18 @@ vacancies:
     position: second
     reason: prediction
     why: "Nothing in this ledger is currently held to the second: session moments are recorded at millisecond, and everything else at day. Kept because it is the resolution a log line carries, and the digestion of host logs is the obvious first occupant."
+  # == MECHANISMS AHEAD OF THEIR OCCUPANTS ==
+  - { at: "clauses.state", position: in-force, reason: universal, why: "what became of a clause, declared whole: held, met, released by the party it is owed to, broken, disputed — the states every obligation can reach, which a stranger keeping an agreement expects to find. `clauses` is occupied; a clause's state is written the day something becomes of it" }
+  - { at: "clauses.state", position: met, reason: universal, why: "what became of a clause, declared whole: held, met, released by the party it is owed to, broken, disputed — the states every obligation can reach, which a stranger keeping an agreement expects to find. `clauses` is occupied; a clause's state is written the day something becomes of it" }
+  - { at: "clauses.state", position: waived, reason: universal, why: "what became of a clause, declared whole: held, met, released by the party it is owed to, broken, disputed — the states every obligation can reach, which a stranger keeping an agreement expects to find. `clauses` is occupied; a clause's state is written the day something becomes of it" }
+  - { at: "clauses.state", position: broken, reason: universal, why: "what became of a clause, declared whole: held, met, released by the party it is owed to, broken, disputed — the states every obligation can reach, which a stranger keeping an agreement expects to find. `clauses` is occupied; a clause's state is written the day something becomes of it" }
+  - { at: "clauses.state", position: disputed, reason: universal, why: "what became of a clause, declared whole: held, met, released by the party it is owed to, broken, disputed — the states every obligation can reach, which a stranger keeping an agreement expects to find. `clauses` is occupied; a clause's state is written the day something becomes of it" }
+  - { at: "parties.entry_one_of", position: external, reason: universal, why: "a party the garden holds no bean for — the bank that issued a card, a shop. `parties` is occupied through its other form, `who`; this one is declared because an agreement names parties nobody will write a bean for" }
+  - { at: "registry:units", position: one, reason: universal, why: "a unit of the `ratio` quantity — a share of a cost, a rate of interest — declared as the four ways a ratio is written, because an amount a clause asks for may be one. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: percent, reason: universal, why: "a unit of the `ratio` quantity — a share of a cost, a rate of interest — declared as the four ways a ratio is written, because an amount a clause asks for may be one. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: per-mille, reason: universal, why: "a unit of the `ratio` quantity — a share of a cost, a rate of interest — declared as the four ways a ratio is written, because an amount a clause asks for may be one. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: basis-point, reason: universal, why: "a unit of the `ratio` quantity — a share of a cost, a rate of interest — declared as the four ways a ratio is written, because an amount a clause asks for may be one. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:facets", position: financial, reason: universal, why: "who pays for a being and is paid by it: in the standard because a stranger's garden expects it beside `legal`, `technical` and `experience`, the facets that are occupied" }
 # == FIGURES: the shapes an aspect may take ==
 figures:
   - figure: opposition
@@ -1134,8 +1149,8 @@ recurrence_form:
   every:  "{ count } — every Nth NEIGHBOUR: needs only that positions have a next one. Or { count, unit } — every N UNITS: needs the aspect, or the system named, to be metered in that unit's dimension."
   each:   "<level> — the same place in EACH CELL of that level of the system named: each month, each week, each era."
   at:     "optional: where in the cell, as the system writes it — `15`, `W-5`. Prose to the gate."
-  from:   "optional: the position it starts at, in the system's form"
-  to:     "optional: the position it ends at"
+  from:   "optional: the position it starts at, in the form of the system named (with no `in:`, of a system the aspect holds), and a day its calendar has"
+  to:     "optional: the position it ends at, written as `from` is"
   times:  "optional: how many occurrences in all, the first included — six instalments. With `to`, whichever comes first ends it"
   requires: "exactly one of `every` / `each`"
 # == VALUE TYPES ==
@@ -1156,6 +1171,10 @@ value_types:
     pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
     refusal: "must be kebab-case (the name is open, but still paper-durable)"
     meaning: "an open name in lowercase words joined by hyphens"
+  - type: count
+    pattern: '^-?(0|[1-9][0-9]{0,39})(\.[0-9]{1,40})?$'
+    refusal: "must be a whole number, or a decimal written as a string (\"12.5\"), in plain decimal digits — no leading zero, at most forty digits before the point and forty after: a float has no canonical form, and a longer count is one some reader cannot hold exactly"
+    meaning: "the count of a measured value — how many of its unit — written as a person writes a number, and held exactly by every reader"
 # == THE JOURNAL ==
 journal:
   path: log/journal.md
@@ -1251,7 +1270,7 @@ registry_files:
   - { registry: currencies,   file: seed/knowledge/currencies.tsv,   key: code }
 # == FACETS: the aspects of ownership, one owner and one holder each ==
 facets:
-  - { facet: legal,      depends_on: [],      meaning: "who owns it in law, and answers for it there. Every other facet depends on it" }
+  - { facet: legal,      depends_on: [],      meaning: "who owns it in law, and answers for it there. Every other facet reaches it through `depends_on`" }
   - { facet: technical,  depends_on: [legal], meaning: "who runs and maintains it" }
   - { facet: experience, depends_on: [legal], meaning: "who designs how people meet it — its words, flows and look — and whose judgment of that decides" }
   - { facet: financial,  depends_on: [legal], meaning: "who pays for it and is paid by it" }
@@ -1714,7 +1733,7 @@ terms:
       inherited: "owned_by: { via: {bean: <parent>} }                           # inherit parent's facet-owners"
       co_owned:  "owned_by: { <facet>: { contract: {bean: <contract>} } }       # a SINGLE facet co-owned -> a contract resolves it"
       external:  "owned_by: { <facet>: { external: '<who>' } }                  # owned OUTSIDE this garden (third-party software, a vendor); names the owner in prose because they are not a managed object here"
-      crown:     "owned_by: { <facet>: { crown: <branch> } }                     # ownership TERMINATES at the axiom; the branch must be the one this bean's nature routes to. A person is pinned to it; an agreement between parties may choose it — owned by none of them"
+      crown:     "owned_by: { <facet>: { crown: <branch> } }                     # ownership TERMINATES at the axiom; the branch must be the one this bean's nature routes to. A person is pinned to it; an agreement between parties, or a happening between people, may choose it — owned by none of them"
     merge: { cardinality: multi, order: by-facet }
   - term: responsibility
     meaning: "who ANSWERS FOR this being, per facet — the arc that makes an ownership claim actionable"
@@ -1882,49 +1901,49 @@ terms:
     anchor: { class: logical, establishing: true }
     merge: { cardinality: single, order: none }
   - term: product_id
-    meaning: "the logical identity of a product: a stable id the product's own home assigns, or the estate mints once (`product:<name>`)"
+    meaning: "the logical identity of a product: a stable id the product's own home assigns, which identifies it wherever it is written, or a name the garden mints once (`product:<name>`)"
     context_keys: ["product_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
     merge: { cardinality: single, order: none }
   - term: service_id
-    meaning: "the logical identity of a service: a stable id its provider assigns, or the estate mints once"
+    meaning: "the logical identity of a service: a stable id its provider assigns, or a name the garden mints once (`service:<name>`)"
     context_keys: ["service_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
     merge: { cardinality: single, order: none }
   - term: org_id
-    meaning: "the logical identity of an organisation: a registry number, a tax id, or an id the estate mints once"
+    meaning: "the logical identity of an organisation: a registry number or a tax id, written as its registry writes it, or a name the garden mints once (`org:<name>`)"
     context_keys: ["org_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
     merge: { cardinality: single, order: none }
   - term: person_id
-    meaning: "the logical identity of a person as a garden knows them: an id the estate mints once. Never a national or government number, which is a secret"
+    meaning: "the logical identity of a person as a garden knows them: a name the garden mints once (`person:<name>`). Never a national or government number, which is a secret"
     context_keys: ["person_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
     merge: { cardinality: single, order: none }
   - term: program_id
-    meaning: "the logical identity of a program: its package or executable name in its own ecosystem, or an id the estate mints once"
+    meaning: "the logical identity of a program: its package or executable name in its own ecosystem (`postfix`), or a name the garden mints once (`program:<name>`)"
     context_keys: ["program_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
     merge: { cardinality: single, order: none }
   - term: contract_id
-    meaning: "the logical identity of a contract: the agreement's own reference, or an id the estate mints once"
+    meaning: "the logical identity of a contract: the agreement's own reference, as whoever issued it writes it, or a name the garden mints once (`contract:<name>`)"
     context_keys: ["contract_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
     merge: { cardinality: single, order: none }
   - term: design_id
-    meaning: "the logical identity of a design: the id its design tool assigns, or an id the estate mints once"
+    meaning: "the logical identity of a design: the id its design tool assigns, or a name the garden mints once (`design:<name>`)"
     context_keys: ["design_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
     merge: { cardinality: single, order: none }
   - term: doc_id
-    meaning: "the logical identity of a document: the id its home assigns (a document store, a wiki, a design tool's file), or an id the estate mints once. Whether it ESTABLISHES is the bean's to say: it establishes a document bean and corroborates a design the document is one rendering of"
+    meaning: "the logical identity of a document: the id its home assigns (a document store, a wiki, a design tool's file), or a name the garden mints once (`document:<name>`). Whether it ESTABLISHES is the bean's to say: it establishes a document bean and corroborates a design the document is one rendering of"
     context_keys: ["doc_id"]
     enforced_by: none
     anchor: { class: logical, minted: true }
@@ -1936,13 +1955,13 @@ terms:
     anchor: { class: logical }
     merge: { cardinality: single, order: none }
   - term: instance_id
-    meaning: "the logical identity of a running instance: for an instance of a program, its deployment coordinate (`<product>@<host>[/<db>]`); for a virtual-host, the id its hypervisor or provider assigns. It is the instance's, not the matter's: it lapses at teardown"
+    meaning: "the logical identity of a running instance: for an instance of a program, its deployment coordinate (`<product>@<host>[/<db>]`); for a virtual-host, the id its hypervisor or provider assigns. Neither is a name a garden gives, so either identifies wherever it is written; a name the garden mints is `instance:<name>`. It is the instance's, not the matter's: it lapses at teardown"
     context_keys: ["instance_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
     merge: { cardinality: single, order: none }
   - term: session_id
-    meaning: "the logical identity of a session: the id `bin/dmsession.py` mints when a session opens"
+    meaning: "the logical identity of a session: the name `bin/dmsession.py` mints when a session opens (`session:<slug>`)"
     context_keys: ["session_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
@@ -1972,7 +1991,7 @@ terms:
     anchor: { class: logical, establishing: true }
     merge: { cardinality: single, order: none }
   - term: event_id
-    meaning: "the logical identity of a happening: the UID its invitation carries (RFC 5545), its id where it is kept, or an id the garden mints once"
+    meaning: "the logical identity of a happening: the UID its invitation carries (RFC 5545) or its id where it is kept, either written as its home writes it, or a name the garden mints once (`event:<name>`)"
     context_keys: ["event_id"]
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
@@ -2044,6 +2063,14 @@ terms:
     meaning: "who said each merged value and how they know, keyed by the same dotted path merge_conflicts uses: {path: [{value, src, seen_in, subsumed?}]}. A subsumed value appears here and NOWHERE else, because the document carries only the winner."
     context_keys: [provenance_of]
     enforced_by: none
+    merge: { cardinality: single, order: none }
+  # == BETWEEN GARDENS ==
+  - term: test
+    meaning: "present on a `garden` bean when that garden is a rehearsal or a test, saying what it rehearses: the receiving garden's own record of the other, whatever the other's proposals say. What arrives from it is taken as a rehearsal, never as a person's word"
+    context_keys: [test]
+    schema:
+      shape: scalar
+      only_on_kinds: [garden]
     merge: { cardinality: single, order: none }
   - term: parties
     meaning: "who an agreement binds — an open map, one entry per party, keyed by a short name its clauses and transactions use. A party with `accepted` said yes on that day; one without has no acceptance on record — an offer not yet taken up, or an agreement whose acceptance nobody recorded — and the record says so rather than assuming"
@@ -2119,11 +2146,11 @@ terms:
         day:      { in: { type: date }, meaning: "the day it happened, where known" }
         paid_by:
           required: true
-          meaning: "who paid, and how much each paid. A single payer may leave `amount` out: they paid the whole"
-          in: { entries: { party: { required: true, in: { key_of: parties } }, amount: { in: { quantity: money } } } }
+          meaning: "who paid, and how much each paid — one entry per party. A single payer may leave `amount` out: they paid the whole"
+          in: { entries: { party: { required: true, in: { key_of: parties } }, amount: { in: { quantity: money } } }, keyed_by: party }
         borne_by:
-          meaning: "who bears it, in whole-number shares: two to one is 2 and 1. Absent: whoever paid bears it"
-          in: { entries: { party: { required: true, in: { key_of: parties } }, share: { required: true, in: { pattern: '^[1-9][0-9]*$' } } } }
+          meaning: "who bears it, one entry per party, in whole-number shares: two to one is 2 and 1. Absent: whoever paid bears it"
+          in: { entries: { party: { required: true, in: { key_of: parties } }, share: { required: true, in: { pattern: '^[1-9][0-9]{0,39}$' } } }, keyed_by: party }
         under:    { in: { key_of: clauses }, meaning: "the clause it was made under, or keeps" }
         through:  { in: ref, meaning: "the card, account or agreement it moved through — itself an agreement with whoever issued it" }
         category: { in: prose, meaning: "the person's own word for what kind of spending it was" }
@@ -2418,7 +2445,7 @@ kinds:
   - kind: event
     of_nature: metaphysical
     ownership_form: [crown]
-    meaning: "a happening between people at a time: a meeting, a dinner, a party, a conversation in which something was agreed. When is `timing`; who took part is `refs`, each naming what they were (`rel: present | invited | host | paid`). A happening between people is owned by none of them — it may end at the crown — and whoever hosted it answers for it."
+    meaning: "a happening between people at a time: a meeting, a dinner, a party, a conversation in which something was agreed. When is `timing`; who took part is `refs`, each naming what they were in `rel` — present, invited, host, paid, or any other part a person played. A happening between people is owned by none of them — it may end at the crown — and whoever hosted it answers for it."
 ---
 # daftar — Tier-0 Universal Standard Vocabulary
 
