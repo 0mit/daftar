@@ -21,9 +21,15 @@ A DAY DOES NOT BEGIN AT THE SAME MOMENT IN EVERY CALENDAR. The Hebrew and Islami
 number here is the civil day on which the calendar day's DAYLIGHT falls, which is the universal convention; an
 evening position is the law's business (`day_begins`), not this tool's.
 
-Pure: it reads nothing, writes nothing, imports nothing outside the standard library.
+A DAY THAT DOES NOT EXIST IS REFUSED, NEVER MOVED. `persian:1404-12-30` names a day Esfand 1404 does not have, and
+arithmetic alone would read it as the day after the 29th — a day nobody named. So a position is read only if it comes
+back unchanged from its own day (`from_day(to_day(p)) == p`), and `to_day` raises ValueError for one that does not; so
+it does for a year outside the days reckoned here (FIRST_DAY .. LAST_DAY, below), and `from_day` for a day outside them.
+
+Pure: it reads nothing, writes nothing, imports nothing outside the standard library — except, run as a command, the
+module that makes its output UTF-8 on every platform (bin/dmparse.py).
 """
-import datetime, math, re, sys
+import datetime, math, os, re, sys
 
 
 class NotByRule(Exception):
@@ -40,6 +46,8 @@ def g_to_day(y, m, d):
 
 
 def g_from_day(n):
+    if n < 1:
+        raise ValueError(f"day {n} is before 0001-01-01, the first day the Gregorian reckoning here holds")
     t = datetime.date.fromordinal(n)
     return t.year, t.month, t.day
 
@@ -195,10 +203,20 @@ def hebrew_to_day(y, m, d):
     raise ValueError(f"hebrew year {y} has no month {m} — month 6 (Adar I) exists only in a leap year")
 
 
+# THE YEAR IS ESTIMATED, NOT COUNTED UP TO (Dershowitz & Reingold, `hebrew-from-fixed`). The mean Hebrew year is
+# 35975351/98496 days — 235 months of 29d 12h 793p in 19 years — and a year begins at most a month before its mean
+# start and a few days after it, so the days since the epoch over the mean year, in whole numbers, give the year to
+# within one either way: the latest of the three whose new year has come is the year. Counting up a year at a time from
+# n/366 cost a second for every few hundred million days: a clause due in a year of eleven digits took 22 seconds to
+# read, and one of sixteen never finished — in every reader of every garden it was taken into.
+_H_MEAN_YEAR = (35975351, 98496)
+
+
 def hebrew_from_day(n):
-    y = _q(n - HEBREW_EPOCH, 366) + 1
-    while _h_new_year(y + 1) <= n:
-        y += 1
+    approx = _q((n - HEBREW_EPOCH) * _H_MEAN_YEAR[1], _H_MEAN_YEAR[0]) + 1
+    y = next((c for c in (approx + 1, approx, approx - 1) if _h_new_year(c) <= n), None)
+    if y is None or not n < _h_new_year(y + 1):
+        raise AssertionError(f"day {n}: the mean-year estimate {approx} is more than one year out")   # never: see above
     rest = n - _h_new_year(y)
     for num, length in _h_month_lengths(y):
         if rest < length:
@@ -256,6 +274,22 @@ BY_RULE = {
 # of days, written in mixed base 20 and 18 from a zero day (the Goodman-Martinez-Thompson correlation, JDN 584283).
 JDN_OFFSET, MAYAN_EPOCH = 1721425, -1137142      # JDN = day number + 1721425: 2000-01-01 is JDN 2451545
 
+# THE DAYS RECKONED HERE: from the first the law's plain count of days writes (`jdn:0`, 1 January 4713 BCE in the Julian
+# calendar) to the last its Gregorian form writes (`9999-12-31`: four digits of year). Every calendar is read and written
+# over these days and no others, so each accepts only the years that fall within them — as the Persian reckoning always
+# accepted only the years its table is good for. Within them every rule here is exact and quick. Beyond them a year of
+# sixteen digits was arithmetic nobody finished, and a day no reader can write is a day it can never tell anyone about.
+FIRST_DAY, LAST_DAY = -JDN_OFFSET, datetime.date.max.toordinal()
+
+
+def within(n, what=None):
+    """`n`, when it is a day reckoned here; else ValueError, saying which days are."""
+    if isinstance(n, bool) or not isinstance(n, int):
+        raise ValueError(f"{n!r} is not a day number")
+    if not FIRST_DAY <= n <= LAST_DAY:
+        raise ValueError(f"{what or f'day {n}'} is outside the days reckoned here: jdn:0 (4713 BCE) to 9999-12-31")
+    return n
+
 
 def mayan_to_day(parts):
     b, k, t, u, d = parts
@@ -288,43 +322,84 @@ _GREGORIAN = re.compile(r'^(\d{4})-(\d{2})-(\d{2})')
 
 
 def to_day(position):
-    """The day number of a position written in its system's one form (the date part)."""
+    """The day number of a position written in its system's one form (the date part). ValueError for a day its calendar
+    does not have, and for one outside the days reckoned here; NotByRule for a calendar that is not reckoned by rule."""
     position = str(position).strip()
+    shown = position if len(position) <= 60 else f"{position[:60]}… ({len(position)} characters)"
+    try:
+        return within(_to_day(position, shown), shown)
+    except OverflowError:
+        # A YEAR TOO LARGE FOR THE MACHINE'S DATE is a year outside the days reckoned here, said as the others are — not
+        # a second kind of failure every reader would have to know to catch.
+        raise ValueError(f"{shown} is outside the days reckoned here: jdn:0 (4713 BCE) to 9999-12-31") from None
+
+
+def _to_day(position, shown):
+    # EVERY NUMBER IS READ BY _num: one wider than any count of days or years within the days reckoned here is outside
+    # them, and is refused as that before it is read at all — Python itself refuses to read one of more than 4300 digits,
+    # in words about its own settings that no reader of a calendar should be handed.
+    def _num(text):
+        if len(text.lstrip('-').lstrip('0')) > len(str(LAST_DAY + JDN_OFFSET)):
+            raise ValueError(f"{shown} is outside the days reckoned here: jdn:0 (4713 BCE) to 9999-12-31")
+        return int(text)
+
     m = _JDN.match(position)
     if m:
-        return int(m.group(1)) - JDN_OFFSET
+        return _num(m.group(1)) - JDN_OFFSET
     m = _MAYAN.match(position)
     if m:
-        parts = tuple(int(x) for x in m.groups())
+        parts = tuple(_num(x) for x in m.groups())
         if not (parts[1] < 20 and parts[2] < 20 and parts[3] < 18 and parts[4] < 20):
-            raise ValueError(f"{position}: a katun and a tun run 0-19, a uinal 0-17, a kin 0-19")
+            raise ValueError(f"{shown}: a katun and a tun run 0-19, a uinal 0-17, a kin 0-19")
         return mayan_to_day(parts)
     m = _ISO_WEEK.match(position)
     if m:
-        return datetime.date.fromisocalendar(int(m.group(1)), int(m.group(2)), int(m.group(3))).toordinal()
+        try:
+            return datetime.date.fromisocalendar(_num(m.group(1)), _num(m.group(2)), _num(m.group(3))).toordinal()
+        except ValueError as e:
+            raise ValueError(f"{shown} is not a day of the ISO week calendar ({e})")
     m = _JAPANESE.match(position)
     if m:
-        era, ey, mo, d = m.group(1), int(m.group(2)), int(m.group(3)), int(m.group(4))
+        era, ey, mo, d = m.group(1), _num(m.group(2)), _num(m.group(3)), _num(m.group(4))
         if era not in _ERA_FIRST_YEAR:
             raise ValueError(f"no era '{era}' is reckoned here: {sorted(_ERA_FIRST_YEAR)}")
-        n = g_to_day(_ERA_FIRST_YEAR[era] + ey - 1, mo, d)
+        try:
+            n = g_to_day(_ERA_FIRST_YEAR[era] + ey - 1, mo, d)
+        except ValueError as e:
+            raise ValueError(f"{shown} is not a day of the Japanese calendar ({e})")
         if japanese_from_day(n)[0] != era:
-            raise ValueError(f"{position} does not fall within the {era} era")
+            raise ValueError(f"{shown} does not fall within the {era} era")
         return n
     m = _TAGGED.match(position)
     if m:
-        cal, y, mo, leap, d = m.group(1), int(m.group(2)), int(m.group(3)), m.group(4), int(m.group(5))
+        cal, y, mo, leap, d = m.group(1), _num(m.group(2)), _num(m.group(3)), m.group(4), _num(m.group(5))
         if cal in NOT_BY_RULE:
             raise NotByRule(f"{cal} is not reckoned by rule — {NOT_BY_RULE[cal]}. Convert it by looking it up, and record where")
         if cal not in BY_RULE:
             raise ValueError(f"no calendar '{cal}'")
         if leap:
             raise ValueError(f"{cal} has no leap-month marker: only the astronomical lunisolar calendars write one")
-        return BY_RULE[cal][0](y, mo, d)
+        try:
+            n = BY_RULE[cal][0](y, mo, d)
+        except ValueError as e:
+            raise ValueError(f"{shown} is not a day of the {cal} calendar ({e})")
+        within(n, shown)
+        # THE ROUND TRIP: a position is a day of its calendar only if that day, written back in the calendar, is the
+        # position. Arithmetic takes the 30th of a month of 29 days to be the 1st of the next, and a clause due on it
+        # was then walked on the 1st of every month — a day neither party named.
+        back = BY_RULE[cal][1](n)
+        if back != (y, mo, d):
+            raise ValueError(f"{shown} is not a day of the {cal} calendar: counted by its rule it would fall on "
+                             f"{cal}:{back[0]}-{back[1]:02d}-{back[2]:02d}, and a day nobody named is refused, never read "
+                             f"as another")
+        return n
     m = _GREGORIAN.match(position)
     if m:
-        return g_to_day(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-    raise ValueError(f"'{position}' is in no calendar's form")
+        try:
+            return g_to_day(_num(m.group(1)), _num(m.group(2)), _num(m.group(3)))
+        except ValueError as e:
+            raise ValueError(f"{shown} is not a day of the Gregorian calendar ({e})")
+    raise ValueError(f"'{shown}' is in no calendar's form")
 
 
 def japanese_from_day(n):
@@ -336,20 +411,26 @@ def japanese_from_day(n):
 
 
 def from_day(n, calendar):
-    """The position of day `n` in `calendar`, in that system's one form."""
+    """The position of day `n` in `calendar`, in that system's one form. ValueError for a day outside the days reckoned
+    here, or before the first its calendar holds; NotByRule for a calendar that is not reckoned by rule."""
+    within(n)
     if calendar in ('gregory', 'gregorian-civil'):
         return '%04d-%02d-%02d' % g_from_day(n)
     if calendar in ('iso8601', 'iso-week'):
-        t = datetime.date.fromordinal(n).isocalendar()
+        t = datetime.date(*g_from_day(n)).isocalendar()
         return '%04d-W%02d-%d' % (t[0], t[1], t[2])
     if calendar == 'julian-day':
         return 'jdn:%d' % (n + JDN_OFFSET)
     if calendar == 'mayan-long-count':
+        if n < MAYAN_EPOCH:
+            raise ValueError(f"day {n} is before the long count's zero day, mayan:0.0.0.0.0 (3114 BCE)")
         return 'mayan:%d.%d.%d.%d.%d' % mayan_from_day(n)
     if calendar == 'japanese':
         return 'japanese:%s-%d-%02d-%02d' % japanese_from_day(n)
     if calendar in NOT_BY_RULE:
         raise NotByRule(f"{calendar} is not reckoned by rule — {NOT_BY_RULE[calendar]}")
+    if calendar not in BY_RULE:
+        raise ValueError(f"no calendar '{calendar}'")
     y, m, d = BY_RULE[calendar][1](n)
     return '%s:%d-%02d-%02d' % (calendar, y, m, d)
 
@@ -363,8 +444,16 @@ EVERY = ['gregory', 'iso8601', 'julian', 'persian', 'islamic-civil', 'islamic-tb
 
 
 def main(argv):
+    # RUN AS A COMMAND IT SPEAKS UTF-8 ON EVERY PLATFORM, as every tool here does: bin/dmparse.py sets the streams once, on
+    # import. A pipe on Windows is otherwise written in the ANSI code page, which has no Hebrew, no Persian and no `—`.
+    # Imported here and not above, so that a reader importing this module still imports nothing but the standard library.
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import dmparse  # noqa: F401
     if not argv or argv[0] in ('-h', '--help'):
-        print(__doc__); return 0
+        # the interpreter as it is named where this runs: `python3` may be the Microsoft Store's alias on Windows
+        print(__doc__.replace('python3 bin/', ('python' if os.name == 'nt' else 'python3') + ' bin/')); return 0
+    if argv[0] == '--day' and (len(argv) < 2 or not re.fullmatch(r'-?[0-9]+', argv[1], re.ASCII)):
+        print("dmcal: --day takes a day number, e.g. --day 739880"); return 2
     try:
         n = int(argv[1]) if argv[0] == '--day' else to_day(argv[0])
         wanted = argv[2:] if argv[0] == '--day' else argv[1:]
