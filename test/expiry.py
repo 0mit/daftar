@@ -445,9 +445,10 @@ check("...a year of sixteen digits, and a day count of eleven, are NOTEs: outsid
       [line("far-year"), line("day-count")])
 check("...a stride that lands past 9999-12-31 is a NOTE: no reader could write the day",
       line("stride").startswith("NOTE") and "so no reader could write it" in line("stride"), line("stride"))
-check("...a day the Gregorian calendar cannot write (jdn:0, in 4713 BCE) is warned of by its day number, with a NOTE beside it",
-      line("day-zero").startswith("EXPIRED") and "day -1721425" in line("day-zero")
-      and any(l.startswith("NOTE") and "beyond.clauses[day-zero]" in l and "shown as its day number" in l for l in out.splitlines()),
+check("...a day the Gregorian calendar cannot write (jdn:0, in 4713 BCE) is warned of in the count it was WRITTEN in — "
+      "`jdn:0` — never forced into the Gregorian calendar, where it would be only a day number",
+      line("day-zero").startswith("EXPIRED") and "due jdn:0 (" in line("day-zero") and "day -1721425" not in line("day-zero")
+      and not any(l.startswith("NOTE") and "beyond.clauses[day-zero]" in l for l in out.splitlines()),
       [l for l in out.splitlines() if "day-zero" in l])
 check("...a repetition whose `from` names another day than its `due` is walked from `due`, and the reader is told",
       any(l.startswith("NOTE") and "beyond.clauses[begins]" in l and f"`from: {_BEGIN.isoformat()}`" in l for l in out.splitlines()),
@@ -531,6 +532,111 @@ check("...where the sides give two days, the EARLIER is the one warned of", line
       and IN3 in line("two-days") and "the earliest is shown" in line("two-days"), out[-900:])
 check("...and where every side is met or waived, it is silent, as one would be", line("both-met") == "", out[-900:])
 os.remove(os.path.join(G, "beans", "merged.md"))
+
+# ---- A DAY IS SHOWN IN THE CALENDAR IT WAS WRITTEN IN ----------------------------------------------------------------
+# No calendar is privileged: a clause dated in the Persian calendar that does not repeat, and one that repeats by a
+# stride of days (which names no calendar of its own), are shown in the calendar their day was written in — as a
+# clause that repeats monthly in it already was, and as dmledger shows all three. Only a Gregorian day is shown in the
+# Gregorian calendar.
+def contract(bid, clauses):
+    open(os.path.join(G, "beans", bid + ".md"), "w", encoding="utf-8", newline="\n").write(
+        f'---\nbean: {bid}\nkind: contract\ntitle: "{bid}"\nstatus: active\nsummary: "an agreement"\nnature: metaphysical\n'
+        'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
+        f'identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:{bid}", class: logical, establishing: true }} ] }}\n'
+        'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
+        'parties:\n  keeper: { who: { bean: keeper } }\n  ali: { who: { bean: ali } }\nwords: { form: spoken }\n'
+        f'clauses:\n{clauses}---\nAn agreement.\n')
+_fa4 = _dmcal.from_day(today.toordinal() + 4, "persian")
+_fa1 = _dmcal.from_day(today.toordinal() + 1, "persian")
+IN5 = (today + datetime.timedelta(days=5)).isoformat()
+contract("in-its-calendar",
+         f"  pay:    {{ what: \"ali repays\", by: ali, to: keeper, due: '{_fa4}' }}\n"
+         f"  weekly: {{ what: \"ali waters\", by: ali, to: keeper, due: '{_fa1}', every: {{ of: time, every: {{ count: 7, unit: day }} }} }}\n"
+         f"  greg:   {{ what: \"a fee\", by: ali, to: keeper, due: {IN5} }}\n")
+out = stale()
+line = lambda key, bean="in-its-calendar": next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
+check("a clause dated in the Persian calendar that does not repeat is shown in the Persian calendar — the day its parties "
+      "wrote — and so is one that repeats by a stride of days; a Gregorian day, in the Gregorian calendar",
+      f"due {_fa4} (4 days)" in line("pay") and f"due {_fa1} (1 day" in line("weekly") and f"due {IN5} (5 days)" in line("greg"),
+      [line(k) for k in ("pay", "weekly", "greg")])
+os.remove(os.path.join(G, "beans", "in-its-calendar.md"))
+
+# ---- A KEY THAT WOULD DRIVE THE TERMINAL -----------------------------------------------------------------------------
+# The gate holds a clause's key to a name; the working tree dmstale reads may hold anything, and every value it shows
+# passes its one escaper.
+contract("loud-key", f"  \"soon\\e[8m\": {{ what: \"a fee\", by: ali, to: keeper, due: {IN3} }}\n")
+_b = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py")], capture_output=True, cwd=G).stdout
+check("a clause key holding an ESC sequence is printed by dmstale as `\\x1b`, never sent: its stdout holds no ESC byte",
+      b"\x1b" not in _b and b"loud-key.clauses[soon\\x1b[8m]" in _b, _b[-600:])
+os.remove(os.path.join(G, "beans", "loud-key.md"))
+
+# ---- A WALK FROM THE FIRST YEAR OF A CALENDAR -------------------------------------------------------------------------
+# Twenty clauses, each monthly in the Hebrew calendar from its year 1: some 71,000 months each, which the gate passes in a
+# blink and which cost two minutes of every run of either reader. A walk now counts a thousand cells and goes on from the
+# cell before today's; the day it reaches is the day a full walk reaches.
+contract("long-lease", ''.join(f"  c{i:02d}: {{ what: 'rent', by: ali, to: keeper, amount: {{ count: 1, unit: XTS }}, "
+                               f"due: 'hebrew:0001-07-01', every: {{ of: time, in: hebrew-calendar, each: month }} }}\n"
+                               for i in range(20)))
+_n = today.toordinal()
+while not _dmcal.from_day(_n, "hebrew").endswith("-01"):
+    _n += 1
+_next = _dmcal.from_day(_n, "hebrew")
+import time as _time
+_times = {}
+for _tool, _args in (("dmstale.py", []), ("dmledger.py", ["long-lease"])):
+    _t0 = _time.time()
+    try:
+        _r = subprocess.run([sys.executable, os.path.join(G, "bin", _tool)] + _args, capture_output=True, text=True,
+                            cwd=G, timeout=300)
+        _times[_tool] = (round(_time.time() - _t0, 1), _r.stdout)
+    except subprocess.TimeoutExpired:
+        _times[_tool] = (300, "(killed after 300 s)")
+_st_out, _led_out = _times["dmstale.py"][1], _times["dmledger.py"][1]
+check(f"twenty monthly clauses from `hebrew:0001-07-01` are read in seconds, not minutes (dmstale {_times['dmstale.py'][0]} s, "
+      f"dmledger {_times['dmledger.py'][0]} s) — each at the right next day, {_next}, and each saying its occurrences "
+      f"were not counted one by one",
+      all(t < 30 for t, _o in _times.values())
+      and sum(f"due {_next} (" in l and "occurrence not counted" in l for l in _st_out.splitlines()) == 20
+      and _led_out.count(f"next {_next} (") == 20 and _led_out.count("occurrence not counted") == 20,
+      {k: (t, o[-500:]) for k, (t, o) in _times.items()})
+os.remove(os.path.join(G, "beans", "long-lease.md"))
+
+# ...and a walk that must COUNT (a clause that says `times:`) is bounded by the run: five such clauses from the first
+# centuries of the Gregorian calendar spend what one run may walk one cell at a time, and the clause past it is a NOTE —
+# while every other warning of the run still prints.
+contract("counted", ''.join(f"  t{i}: {{ what: 'rent', by: ali, to: keeper, due: '0001-02-01', every: {{ of: time, "
+                            f"in: gregorian-civil, each: month, times: 100000 }} }}\n" for i in range(5))
+         + f"  zz-soon: {{ what: \"a fee\", by: ali, to: keeper, due: {IN3} }}\n")
+_t0 = _time.time()
+out = stale()
+_took = round(_time.time() - _t0, 1)
+line = lambda key, bean="counted": next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
+check(f"clauses that must be counted from the first century spend the run's budget, and the one past it is a NOTE — "
+      f"'this run's budget is spent' — while the rest of the report still prints ({_took} s)",
+      "occurrence 24309 of 100000" in line("t0") and line("t4").startswith("NOTE")
+      and "this run's budget is spent" in line("t4") and line("zz-soon").startswith("EXPIRING") and _took < 60,
+      [line(k) for k in ("t0", "t3", "t4", "zz-soon")])
+os.remove(os.path.join(G, "beans", "counted.md"))
+
+# ...and a stride, or `each: day`, reckoned rather than walked, is never reckoned past its `times`: three weekly payments
+# and three daily calls from 2020-01-01 ended in January 2020, and are found ended — never falling due today with an
+# occurrence number past the last there is.
+contract("ended-long-ago",
+         "  weekly: { what: 'three weekly payments', by: ali, to: keeper, due: 2020-01-01, "
+         "every: { of: time, every: { count: 7, unit: day }, times: 3 } }\n"
+         "  daily:  { what: 'three daily calls', by: ali, to: keeper, due: 2020-01-01, "
+         "every: { of: time, in: gregorian-civil, each: day, times: 3 } }\n")
+out = stale()
+line = lambda key, bean="ended-long-ago": next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
+_led = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "ended-long-ago"], capture_output=True,
+                      text=True, encoding="utf-8", cwd=G).stdout
+check("a weekly stride and `each: day`, each `times: 3` from 2020-01-01, are EXPIRED at their last — 2020-01-15 and "
+      "2020-01-03, occurrence 3 of 3 — in dmstale and in dmledger, never due today as occurrence 352 of 3",
+      line("weekly").startswith("EXPIRED") and "due 2020-01-15 (" in line("weekly") and "the last: occurrence 3 of 3" in line("weekly")
+      and line("daily").startswith("EXPIRED") and "due 2020-01-03 (" in line("daily") and "the last: occurrence 3 of 3" in line("daily")
+      and "the last was 2020-01-15" in _led and "the last was 2020-01-03" in _led and _led.count("occurrence 3 of 3") == 2,
+      [line("weekly"), line("daily"), _led[-600:]])
+os.remove(os.path.join(G, "beans", "ended-long-ago.md"))
 
 shutil.rmtree(T, ignore_errors=True)
 print("\nexpiry: %d failed" % len(FAILS))

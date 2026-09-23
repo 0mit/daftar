@@ -277,18 +277,123 @@ def candidates(beans):
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+# WHAT A GARDEN'S OWN LAW MAY HOLD, entry by entry — read where the law is read, here as in the gate. A VOCAB.md is text
+# a person or an agent edited, and another garden's is text this garden did not write: an entry that is not a
+# mapping, a `term:` that is a list, a `schema:` that is a number, each once ended the merge in a traceback, or was
+# passed over in silence. Each is named — where it is and what it should be — and the merge does not go on over a law
+# it cannot read.
+_ENTRY_MAPS = ('schema', 'merge', 'anchor', 'attrs')
+
+
+def _odd_key(node):
+    """The first key, at any depth, that YAML read as something other than text (`on:` is read as `true`) — no
+    canonical form can order it beside the others — or None."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if not isinstance(k, str):
+                return k
+            o = _odd_key(v)
+            if o is not None:
+                return o
+    elif isinstance(node, list):
+        for v in node:
+            o = _odd_key(v)
+            if o is not None:
+                return o
+    return None
+
+
+def entry_problems(e, at, name_key):
+    """What in one entry of `local_terms` / `local_kinds` the merge cannot read as law, each as `<where> <what>`."""
+    if not isinstance(e, dict):
+        return [f"{at} is {type(e).__name__ if e is not None else 'empty'}, not an entry (a mapping with `{name_key}:`)"]
+    out = []
+    if not isinstance(e.get(name_key), str) or not e.get(name_key):
+        out.append(f"{at}.{name_key} should be text, the {name_key}'s name")
+    for k in _ENTRY_MAPS:
+        if e.get(k) is not None and not isinstance(e[k], dict):
+            out.append(f"{at}.{k} should be a mapping")
+    sch = e.get('schema') if isinstance(e.get('schema'), dict) else {}
+    for k in ('attrs', 'expiry', 'sums'):
+        if sch.get(k) is not None and not isinstance(sch[k], dict):
+            out.append(f"{at}.schema.{k} should be a mapping")
+    for holder, k in ((e, 'context_keys'), (sch, 'required_on_kinds')):
+        v = holder.get(k)
+        if v is not None and not (isinstance(v, list) and all(isinstance(x, str) for x in v)):
+            out.append(f"{at}.{'schema.' if holder is sch else ''}{k} should be a list of text")
+    odd = _odd_key(e)
+    if odd is not None:
+        out.append(f"{at} has a key YAML read as {type(odd).__name__} ({odd!r}), not as a name (YAML 1.1 reads "
+                   f"on/off/yes/no as true/false) — spell it as a name")
+    return out
+
+
+def vocab_problems(fm):
+    """What in a VOCAB.md's front matter the merge cannot read as law: its local terms and kinds entry by entry, the
+    profiles it opts into, the rows it adds to a registry. [] for a law it can read."""
+    if not isinstance(fm, dict):
+        return [f"its front matter is {type(fm).__name__}, not a mapping"]
+    out = []
+    for block, name_key in (('local_terms', 'term'), ('local_kinds', 'kind')):
+        v = fm.get(block)
+        if v is None:
+            continue
+        if not isinstance(v, list):
+            out.append(f"`{block}` is {type(v).__name__}, not a list of entries")
+            continue
+        for i, e in enumerate(v):
+            out += entry_problems(e, f"{block}[{i}]", name_key)
+    ep = fm.get('extends_profiles')
+    if ep is not None and not (isinstance(ep, list) and all(isinstance(x, str) for x in ep)):
+        out.append("`extends_profiles` should be a list of profile names")
+    ra = fm.get('registry_additions')
+    if ra is not None:
+        if not isinstance(ra, dict):
+            out.append("`registry_additions` should be a mapping of registry names to the rows they add")
+        else:
+            for reg, rows in ra.items():
+                if not isinstance(rows, list) or not all(isinstance(r, dict) and r for r in rows):
+                    out.append(f"registry_additions.{reg} should be a list of rows, each a mapping")
+    return out
+
+
+LAW_PROBLEMS = []            # what this garden's own VOCAB.md holds that the merge could not read (the gate names it)
+
+
+def _head(path):
+    """A law file's front matter, or {} — never a traceback: what does not parse is put in LAW_PROBLEMS."""
+    try:
+        return dmparse.loads(dmparse.read(path)[0] or '') or {}
+    except Exception as e:                            # noqa: BLE001 — a law that does not parse is named, not raised
+        LAW_PROBLEMS.append(f"{os.path.basename(path)} does not parse ({str(e).splitlines()[0] if str(e) else type(e).__name__})")
+        return {}
+
+
 def load_terms():
     """Every vocabulary term from both tiers, by name. Read the same way the gate reads them, so the
-    merge and the gate cannot disagree about what a term is."""
+    merge and the gate cannot disagree about what a term is. An entry of this garden's own VOCAB.md the merge cannot
+    read (`entry_problems`) is left out and named in LAW_PROBLEMS, never a traceback at import."""
     out = {}
     for path in (os.path.join(ROOT, 'seed', 'std-vocab.md'), os.path.join(ROOT, 'VOCAB.md')):
         if not os.path.exists(path):
             continue
-        fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
-        for t in (list(fm.get('terms') or [])
-                  + [t for p in (fm.get('profiles') or {}).values() for t in (p.get('terms') or [])]
-                  + list(fm.get('local_terms') or [])):
-            if isinstance(t, dict) and t.get('term'):
+        fm = _head(path)
+        fm = fm if isinstance(fm, dict) else {}
+        profiles = fm.get('profiles') if isinstance(fm.get('profiles'), dict) else {}
+        local = fm.get('local_terms') if isinstance(fm.get('local_terms'), list) else []
+        if fm.get('local_terms') is not None and not isinstance(fm.get('local_terms'), list):
+            LAW_PROBLEMS.append(f"{os.path.basename(path)}: `local_terms` is not a list of entries")
+        for i, t in enumerate(list(fm.get('terms') if isinstance(fm.get('terms'), list) else [])
+                              + [t for p in profiles.values() if isinstance(p, dict)
+                                 for t in (p.get('terms') if isinstance(p.get('terms'), list) else [])]
+                              + [('local', i, t) for i, t in enumerate(local)]):
+            if isinstance(t, tuple):
+                _l, j, t = t
+                probs = entry_problems(t, f"local_terms[{j}]", 'term')
+                if probs:
+                    LAW_PROBLEMS.extend(f"{os.path.basename(path)}: {p_}" for p_ in probs)
+                    continue
+            if isinstance(t, dict) and isinstance(t.get('term'), str) and t.get('term'):
                 out.setdefault(t['term'], {}).update(t)
     return out
 
@@ -298,23 +403,52 @@ TERMS = load_terms()
 
 
 def _law_heads():
-    """(the standard's front matter, the overlay's) — {} for one that is not here."""
+    """(the standard's front matter, the overlay's) — {} for one that is not here, or not a mapping."""
     out = []
     for path in (os.path.join(ROOT, 'seed', 'std-vocab.md'), os.path.join(ROOT, 'VOCAB.md')):
-        out.append((dmparse.loads(dmparse.read(path)[0] or '') or {}) if os.path.exists(path) else {})
+        h = _head(path) if os.path.exists(path) else {}
+        out.append(h if isinstance(h, dict) else {})
     return out
 
 
-def registry_keys(name):
-    """The names a registry's rows give — each row's first field, as the gate keys a row — from the standard and from
-    this garden's overlay: the garden's own registry where it declares one, its `local_<name>` rows, and the rows it
-    adds under `registry_additions`. `kinds` is the law's kinds and the garden's own, as the gate reads them."""
+def registry_rows(name):
+    """A registry's rows from the standard and from this garden's overlay: the garden's own registry where it declares
+    one, its `local_<name>` rows, and the rows it adds under `registry_additions` — each a mapping, as the gate reads
+    them."""
     std, loc = _law_heads()
-    rows = list(loc.get(name) if loc.get(name) is not None else (std.get(name) or []))
+    rows = loc.get(name) if loc.get(name) is not None else std.get(name)
+    rows = list(rows) if isinstance(rows, list) else []
     adds = loc.get('registry_additions') if isinstance(loc.get('registry_additions'), dict) else {}
     for extra in (loc.get(f'local_{name}'), adds.get(name), adds.get(f'local_{name}')):
-        rows += list(extra or [])
-    return {str(next(iter(r.values()))) for r in rows if isinstance(r, dict) and r}
+        rows += list(extra) if isinstance(extra, list) else []           # a block of another shape is the gate's to name
+    return [r for r in rows if isinstance(r, dict) and r]
+
+
+def registry_keys(name):
+    """The names a registry's rows give — each row's first field, as the gate keys a row (`registry_rows`). `kinds` is
+    the law's kinds and the garden's own, as the gate reads them."""
+    return {str(next(iter(r.values()))) for r in registry_rows(name)}
+
+
+def root_of(registry):
+    """The one row of `registry` every other reaches — where a `registry_links` row from it declares `rooted: true` —
+    by the name that row gives (`facets`: the facet ownership is rooted in); None where the law declares no root, or the
+    rows name more than one. Read, so no facet is named in a tool."""
+    if registry in _ROOTS:
+        return _ROOTS[registry]
+    std, loc = _law_heads()
+    links = [l for h in (std, loc) for l in (h.get('registry_links') if isinstance(h.get('registry_links'), list) else [])
+             if isinstance(l, dict) and l.get('rooted') is True and l.get('from') == registry]
+    if not links:
+        _ROOTS[registry] = None
+        return None
+    field, take = links[0].get('field'), links[0].get('take')
+    roots = sorted({str(r.get(take)) for r in registry_rows(registry) if r.get(take) is not None and not r.get(field)})
+    _ROOTS[registry] = roots[0] if len(roots) == 1 else None
+    return _ROOTS[registry]
+
+
+_ROOTS = {}
 
 
 def load_minted():
@@ -323,7 +457,8 @@ def load_minted():
     overlay's `identity_policy` first as the gate reads it, so the merge and the gate agree on what is bare."""
     std, loc = _law_heads()
     pol = loc.get('identity_policy') if loc.get('identity_policy') is not None else std.get('identity_policy')
-    mint = (pol or {}).get('minted') or {}
+    mint = (pol if isinstance(pol, dict) else {}).get('minted')
+    mint = mint if isinstance(mint, dict) else {}
     pat, form, fk = mint.get('pattern'), mint.get('form'), mint.get('form_kind')
     names = {n for n, t in TERMS.items() if isinstance(t.get('anchor'), dict) and t['anchor'].get('minted') is True}
     return (names, (re.compile(str(pat), re.ASCII) if pat else None), (re.compile(str(form), re.ASCII) if form else None),
@@ -584,8 +719,14 @@ def _apply_prov(path, items):
             out.append(e)
         # A record may name a value the DOCUMENT no longer shows — a subsumed one. Re-contributing it
         # lets the antichain absorb it again and reach the same seed a one-shot merge would.
+        # ONLY a subsumed one. A value the document no longer shows and no other value subsumed is one a PERSON set
+        # aside: the side of a disagreement they did not pick (§10), or a value they corrected. Its record stays —
+        # nothing is lost — but read back as a live value it re-opened, at the very next merge, the disagreement the
+        # person had settled, and a bean that went back to the garden it came from was never clean again (MERGE.md
+        # invariant 6: a canonical bean is final once that person has decided).
         for rec in ((it.get('fm') or {}).get('provenance_of') or {}).get(path) or []:
-            if not isinstance(rec, dict) or canonical(canon_at(path, rec.get('value'))) in carried:
+            if not isinstance(rec, dict) or not rec.get('subsumed') \
+                    or canonical(canon_at(path, rec.get('value'))) in carried:
                 continue
             e = dict(it, value=canon_at(path, rec.get('value')))
             if rec.get('src'):
@@ -965,17 +1106,37 @@ def std_fm_of(path):
 
 
 def load_vocab(path, gid=None):
-    """One garden's declared law."""
+    """One garden's declared law — and, under `problems`, what in it cannot be read as law (`vocab_problems`): another
+    garden's VOCAB.md is text this garden did not write, and what it holds is named, never a traceback."""
+    problems = []
+
     def head(f):
         p = os.path.join(path, f)
-        return (dmparse.loads(dmparse.read(p)[0] or '') or {}) if os.path.exists(p) else {}
+        if not os.path.exists(p):
+            return {}
+        try:
+            h = dmparse.loads(dmparse.read(p)[0] or '') or {}
+        except Exception as e:                        # noqa: BLE001 — named, not raised
+            problems.append(f"{f} does not parse ({str(e).splitlines()[0] if str(e) else type(e).__name__})")
+            return {}
+        if not isinstance(h, dict):
+            problems.append(f"{f}'s front matter is {type(h).__name__}, not a mapping")
+            return {}
+        return h
     v, g = head('VOCAB.md'), head('GARDEN.md')
+    problems += [f"VOCAB.md {p}" for p in vocab_problems(v)]
+
+    def entries(block, name_key):
+        rows = v.get(block) if isinstance(v.get(block), list) else []
+        return {e[name_key]: e for e in rows if isinstance(e, dict) and not entry_problems(e, '', name_key)}
+    ep = v.get('extends_profiles')
     return {
         'garden': gid or g.get('garden') or v.get('vocab') or os.path.basename(path.rstrip('/')),
         'pin': v.get('extends'), 'garden_pin': g.get('extends'),
-        'profiles': sorted(v.get('extends_profiles') or []),
-        'terms': {t['term']: t for t in (v.get('local_terms') or []) if isinstance(t, dict) and t.get('term')},
-        'kinds': {k['kind']: k for k in (v.get('local_kinds') or []) if isinstance(k, dict) and k.get('kind')},
+        'profiles': sorted(x for x in ep if isinstance(x, str)) if isinstance(ep, list) else [],
+        'terms': entries('local_terms', 'term'),
+        'kinds': entries('local_kinds', 'kind'),
+        'problems': problems,
     }
 
 
@@ -1430,6 +1591,10 @@ if __name__ == '__main__':
             # `std_fm_of` APPENDS seed/std-vocab.md to what it is given, so passing it the file's own path
             # asked for `…/seed/std-vocab.md/seed/std-vocab.md` and always read {} — measured 2026-09-20:
             # this refusal could never fire, on the only incremental merge path there is.
+            if LAW_PROBLEMS:
+                print("dmmerge: REFUSING to merge — this tree's vocabulary holds what the merge cannot read as law: "
+                      + '; '.join(LAW_PROBLEMS) + ". The file is untouched.", file=sys.stderr)
+                sys.exit(1)
             _std = std_fm_of(ROOT_DIR)
             _loc = dmparse.loads(dmparse.read(os.path.join(ROOT_DIR, 'VOCAB.md'))[0] or '') or {}
             _pin = str((_loc or {}).get('extends') or '')
@@ -1490,6 +1655,14 @@ if __name__ == '__main__':
     # unchecked — each garden's gate only ever saw its own half. Reconcile the vocabularies, and stop
     # before touching the beans if they cannot be reconciled.
     vocabs = [load_vocab(p, lab) for p, lab in zip(paths, labels)]
+    unread = [f"this garden's own law (the one the merge reads terms by): {p}" for p in LAW_PROBLEMS] \
+        + [f"{v['garden']}: {p}" for v in vocabs for p in v.get('problems') or []]
+    if unread:
+        # A LAW THAT CANNOT BE READ CANNOT BE RECONCILED: the merge stops before it touches a bean, as it does for two
+        # pins, and says what it could not read and where — the gate of the garden that holds it names the same.
+        print("MERGE REFUSED — a garden's law cannot be read:\n  " + "\n  ".join(unread)
+              + "\n  Mend it in that garden (its gate names each one), then merge again.", file=sys.stderr)
+        sys.exit(1)
     mv, blocking, vconflicts = merge_vocabs(vocabs)
     if blocking:
         print("MERGE REFUSED — the gardens do not share a law:\n  " + "\n  ".join(blocking),

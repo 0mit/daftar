@@ -27,7 +27,11 @@ about before its NEXT occurrence, walked through the day in the calendar it is c
 `expiry.unless` names — a debt already met — is silent. A repetition that cannot be walked by arithmetic (a
 calendar that is not reckoned by rule, a place in the cell written in prose) is skipped with a NOTE, never guessed;
 so is a date that is not a day of its calendar, and one beyond the days bin/dmcal.py reckons. Nothing one entry
-holds ends the report: every other warning is still printed.
+holds ends the report: every other warning is still printed. A stride of days is reckoned, not walked; a walk through
+cells counts so far and then goes on from the cell before today's; and what one run walks cell by cell is bounded,
+past which a clause is a NOTE. A day is shown in the calendar it was written in, or the repetition counted in.
+
+Every value a bean holds is printed through one escaper (`esc`): what a bean says reaches the terminal as text.
 
 Exit: 0 = nothing stale or expiring, 1 = something needs action, 2 = setup problem.
 Usage: python3 bin/dmstale.py [--quiet] [--days N]   (--quiet prints only what needs attention)
@@ -222,6 +226,29 @@ class Unreckoned(Exception):
 
 
 _CAP = 100_000       # occurrences walked before giving up: a daily repetition for two and a half centuries
+# WHAT ONE RUN MAY WALK, across every clause it reads. A cell of a calendar costs a few conversions through the day, and a
+# clause may begin in its calendar's first year: a monthly clause from `hebrew:0001-07-01` is some 71,000 months to
+# today — seconds of work, which a proposal from another garden could carry two hundred times, and every run of a reader
+# would then walk all of them again. So a walk COUNTS only so far (_JUMP cells) and then jumps to the cell before today;
+# a stride of days and `each: day` are not walked at all, but reckoned; and whatever a run still walks one cell at a
+# time is bounded in total (_BUDGET): once it is spent, a clause is a NOTE ("not walked: this run's budget is spent"),
+# and every other warning still prints. Counts, not seconds, so the same garden gives the same report on any machine.
+_JUMP = 1_000
+_BUDGET = 100_000
+_RUN = {'spent': 0}
+
+
+def new_run():
+    """A reader's run begins: the cells it may still walk one at a time are the whole _BUDGET again."""
+    _RUN['spent'] = 0
+
+
+def _spend(n=1):
+    _RUN['spent'] += n
+    if _RUN['spent'] > _BUDGET:
+        raise Unreckoned(f"not walked: this run's budget is spent — it has walked {_BUDGET} cells of a calendar one at a "
+                         f"time already, across the clauses before this one; a clause counted from a far past costs one "
+                         f"cell per step since (a clause that says `times:` is counted from its first occurrence)")
 # CELLS IN A ROW WITH NO OCCURRENCE before the walk gives up and says the place does not occur. The rarest place a real
 # calendar has is the 29th of February, missing at most seven years running (1897 to 1903); a place missing a hundred
 # cells running is one the calendar does not have — `at: "31"` in a calendar of thirty-day months, `02-30` anywhere.
@@ -325,10 +352,18 @@ def _place_words(at):
     return '-'.join('%02d' % x for x in at) if len(at) > 1 else str(at[0])
 
 
-def _after_first(first, rec, systems, units, skipped=None):
-    """Every occurrence AFTER `first`, in order, unbounded: the stride the recurrence names, and nothing else. A cell
-    that has no occurrence — a month without the day named — is appended to `skipped` as (start, end, label, place),
-    so the reader can be told it was skipped rather than left to wonder."""
+def _after_first(first, rec, systems, units, skipped=None, near=None, times=None):
+    """Every occurrence AFTER `first`, in order, unbounded, as (index, day) — the first occurrence is index 1: the
+    stride the recurrence names, and nothing else. A cell that has no occurrence — a month without the day named — is
+    appended to `skipped` as (start, end, label, place), so the reader can be told it was skipped rather than left to
+    wonder.
+
+    `near` is the day the reader wants the occurrences around (today, or the day the repetition ends): a stride and
+    `each: day` begin at the occurrence on or before it, reckoned, their index exact — but never past the `times`-th,
+    which is the last there is, so a repetition that ended long ago is found ended rather than falling due today; a
+    walk through cells counts from `first` for _JUMP cells and then — unless `times` is stated, where the index is what
+    ends the repetition — jumps to the cell before the one holding `near`, and its occurrences from there on are
+    yielded with the index None: not counted, never guessed."""
     every, each = rec.get('every'), rec.get('each')
     if isinstance(every, dict):
         unit = units.get(str(every.get('unit'))) if every.get('unit') is not None else None
@@ -345,9 +380,13 @@ def _after_first(first, rec, systems, units, skipped=None):
         if stride.denominator != 1:
             raise Unreckoned(f"a stride of {every['count']} {every['unit']} is not a whole number of days, and this tool "
                              f"reads days")
-        k = 1
+        step = int(stride)
+        k = max(1, (near - first) // step) if near is not None and near > first else 1     # reckoned, not walked
+        if times is not None:
+            k = max(1, min(k, times - 1))           # occurrence k + 1: never past the times-th, the last there is
         while True:
-            yield first + k * int(stride)
+            _spend()
+            yield k + 1, first + k * step
             k += 1
     row = (systems or {}).get(rec.get('in')) or {}
     cal = row.get('calendar')
@@ -368,17 +407,28 @@ def _after_first(first, rec, systems, units, skipped=None):
     if k < 0:
         raise Unreckoned(f"`each: {each}` is finer than the day this tool reads")
     if k == 0:
-        n = first
+        n = max(first, near - 1) if near is not None else first                              # reckoned, not walked
+        if times is not None:
+            n = max(first, min(n, first + times - 2))   # the next yielded, n + 1, is never past the times-th
         while True:
             n += 1
-            yield n
+            _spend()
+            yield n - first + 1, n
     cells = _Cells(row)
     try:
         at = _at(rec, k, None) or cells.place(first, k)
     except ValueError as e:
         raise Unreckoned(str(e))
-    s, misses, longest = cells.start(first, k), 0, 0
+    s, misses, longest, i, walked = cells.start(first, k), 0, 0, 1, 0
     while True:
+        _spend()
+        walked += 1
+        if walked == _JUMP and near is not None and times is None and s < near:
+            # FAR ENOUGH COUNTED: to the cell before the one holding `near`, so the occurrence before it is still seen
+            # (and every cell skipped after that one), and the index is no longer counted.
+            s2 = cells.start(cells.start(near, k) - 1, k)
+            if s2 > s:
+                s, i = s2, None
         e = cells.end(s, k)
         n = cells.find(s, e, k, at)
         if n is None:
@@ -397,7 +447,8 @@ def _after_first(first, rec, systems, units, skipped=None):
         else:
             misses = 0
             if n > first:
-                yield n
+                i = i + 1 if i is not None else None
+                yield i, n
         s = e
 
 
@@ -405,6 +456,13 @@ def occurrences(first, rec, systems=None, units=None, skipped=None):
     """The day numbers on which a position first due on day `first` falls due: `first` itself, then each occurrence
     the recurrence `rec` names after it — ending at `times` (the first included) or at `to`, whichever comes first
     (`recurrence_form`). Unbounded when neither is stated. Raises Unreckoned when it cannot be walked by arithmetic."""
+    for _i, n in _occurrences(first, rec, systems, units, skipped):
+        yield n
+
+
+def _occurrences(first, rec, systems=None, units=None, skipped=None, near=None):
+    """occurrences(), as (index, day): the index None where the walk jumped toward `near` rather than count (see
+    _after_first)."""
     systems = systems if systems is not None else _law('SYSTEMS')
     units = units if units is not None else _law('UNITS')
     _writable(first)
@@ -418,15 +476,17 @@ def occurrences(first, rec, systems=None, units=None, skipped=None):
             raise Unreckoned(f"`to: {brief(rec['to'])}` — {e}")
     if end is not None and first > end:
         return
-    yield first
+    yield 1, first
     if times == 1:
         return
+    # WHERE THE READER LOOKS: today — or, for a repetition that ends before today, its end, so its last is found.
+    near = near if end is None or near is None else min(near, end)
     try:
-        for i, n in enumerate(_after_first(first, rec, systems, units, skipped), 2):
+        for i, n in _after_first(first, rec, systems, units, skipped, near=near, times=times):
             if end is not None and n > end:
                 return
-            yield _writable(n)
-            if times is not None and i >= times:
+            yield i, _writable(n)
+            if times is not None and i is not None and i >= times:
                 return
     except (ValueError, OverflowError, KeyError, dmcal.NotByRule) as e:
         raise Unreckoned(str(e))
@@ -447,18 +507,25 @@ def next_due(first, rec, today, systems=None, units=None, skipped=None):
     before today, its last. Returns (day, index, times, ended); `index` counts from 1, the first included. Where a list
     is given as `skipped`, the cells the walk skipped between the occurrence before that one and it are put in it."""
     last, seen = None, []
-    for i, n in enumerate(occurrences(first, rec, systems, units, seen), 1):
+    for i, n in _occurrences(first, rec, systems, units, seen, near=today):
         if n >= today:
             if skipped is not None:
                 skipped.extend(c for c in seen if c[1] > (last[0] if last else first) and c[0] < n)
             return n, i, rec.get('times'), False
         last = (n, i)
-        if i >= _CAP:
+        if i is not None and i >= _CAP:
             raise Unreckoned(f"more than {_CAP} occurrences fall before today")
         seen.clear()                              # a cell skipped before an occurrence already past is not news
     if last is None:
         raise Unreckoned("the repetition ends before its first occurrence")
     return last[0], last[1], rec.get('times'), True
+
+
+def nth(i, times=None):
+    """Which occurrence, in words: `occurrence 3 of 12` — or, where the walk jumped rather than count, that it did."""
+    if i is None:
+        return f"occurrence not counted (more than {_JUMP} cells after the first: the walk went on from the one before today's)"
+    return f"occurrence {i}" + (f" of {times}" if times is not None else '')
 
 
 def skip_words(cell):
@@ -473,8 +540,8 @@ def describe(rec):
     if not isinstance(rec, dict):
         return brief(rec, 120)
     ev = rec.get('every')
-    head = (f"each {rec['each']}" if rec.get('each') is not None else
-            f"every {brief(ev.get('count'))}{' ' + str(ev['unit']) if ev.get('unit') is not None else ' neighbours'}"
+    head = (f"each {brief(rec['each'])}" if rec.get('each') is not None else
+            f"every {brief(ev.get('count'))}{' ' + brief(ev['unit']) if ev.get('unit') is not None else ' neighbours'}"
             if isinstance(ev, dict) else brief(rec, 120))
     return (head + (f" in {brief(rec['in'])}" if rec.get('in') else '')
             + (f" at {brief(rec['at'])}" if rec.get('at') is not None else '')
@@ -540,7 +607,7 @@ def due_entries(fm, term, decl, today=None, notes=None):
         rec = e.get(rep) if rep else None
         beside = []
         if not isinstance(rec, dict):
-            out.append((label, e, first, show_day(first, notes=beside), ''))
+            out.append((label, e, first, show_day(first, notes=beside, written=e[attr]), ''))
         else:
             skipped = []
             try:
@@ -548,9 +615,8 @@ def due_entries(fm, term, decl, today=None, notes=None):
             except Unreckoned as why:
                 out.append((label, e, None, None, f"{attr} {brief(e[attr])}, then {describe(rec)}: {why}"))
             else:
-                of = f" of {times}" if times is not None else ''
-                out.append((label, e, day, show_day(day, rec, notes=beside),
-                            f"  — {'the last' if ended else 'next'}: occurrence {i}{of}, {describe(rec)}"))
+                out.append((label, e, day, show_day(day, rec, notes=beside, written=e[attr]),
+                            f"  — {'the last' if ended else 'next'}: {nth(i, times)}, {describe(rec)}"))
                 if not ended:
                     beside += [skip_words(c) for c in skipped]
             fw = from_words(first, rec, attr, e[attr])
@@ -560,18 +626,42 @@ def due_entries(fm, term, decl, today=None, notes=None):
     return out
 
 
+# A CHARACTER THAT CONTROLS A TERMINAL OR ENDS A LINE — every Unicode `Cc` (C0, DEL, C1: the 8-bit CSI and NEL among
+# them) and the Unicode line and paragraph separators. What a bean says is DATA, and printed raw such a character is an
+# instruction to the reader's terminal: `\e[2A\e[2K` climbs back over the line above and writes a debt the other way
+# round, `\e[8m` conceals every line after it, `\r` writes over the start of its own line. The gate refuses them in a
+# bean; a working tree, or a garden older than that refusal, may still hold them — so every value a reader here shows
+# passes through ONE escaper, the one bin/dmpropose.py prints a proposal with: each such character as its escape.
+_CTRL = re.compile('[\x00-\x1f\x7f-\x9f\u2028\u2029]')
+
+
+def esc(s):
+    """A string as it may be printed: every character `_CTRL` names as `\\xNN` or `\\uNNNN`, the rest as it is."""
+    return _CTRL.sub(lambda m: (f"\\x{ord(m.group(0)):02x}" if ord(m.group(0)) < 0x100 else
+                                f"\\u{ord(m.group(0)):04x}"), str(s))
+
+
+def say(line):
+    """ONE line of a report as it is printed: every control character escaped, a line feed among them — the guard
+    behind the escaping of each value where the line is built, so no value this tool forgot can reach the terminal. A
+    line feed kept here was a line of the bean's own making: a key or a name holding one printed a second line, which
+    could say anything — a debt the other way round. So a report of several lines prints each with a call of its own."""
+    return esc(line)
+
+
 def written(v):
     """A value as a bean writes it: a list, a mapping, `null`, `true` in YAML's flow form — `[sam]`, `{count: 5}` — and
     anything else as itself. Python's own spelling (`['sam']`, `None`, `True`) is a language the reader did not write in.
-    Raises ValueError for an int too long for Python to write out."""
+    Every character that controls a terminal is shown as its escape (`esc`). Raises ValueError for an int too long for
+    Python to write out."""
     if v is None or isinstance(v, (bool, list, tuple, dict)):
         try:
             t = yaml.safe_dump(list(v) if isinstance(v, tuple) else v, default_flow_style=True, allow_unicode=True,
                                sort_keys=False, width=10 ** 9)
         except yaml.YAMLError:                # a value no bean could hold: said as Python has it rather than not at all
-            return str(v)
-        return (t[:-4] if t.endswith('\n...\n') else t).strip()     # a bare scalar ends its own document
-    return str(v)
+            return esc(str(v))
+        return esc((t[:-4] if t.endswith('\n...\n') else t).strip())     # a bare scalar ends its own document
+    return esc(str(v))
 
 
 def brief(v, width=60, quote=False):
@@ -636,7 +726,7 @@ def _due_in_dispute(label, e, sides, attr, rep, decl, today):
         rec = x.get(rep) if rep else None
         beside = []
         if not isinstance(rec, dict):
-            walked.append((first, show_day(first, notes=beside), '; '.join([''] + beside)))
+            walked.append((first, show_day(first, notes=beside, written=x[attr]), '; '.join([''] + beside)))
             continue
         try:
             day, i, times, ended = next_due(first, rec, today)
@@ -644,8 +734,8 @@ def _due_in_dispute(label, e, sides, attr, rep, decl, today):
             unwalked.append(f"{attr} {brief(x[attr])}, then {describe(rec)}: {why}")
             continue
         fw = from_words(first, rec, attr, x[attr])
-        shown = show_day(day, rec, notes=beside)
-        walked.append((day, shown, f", {'the last' if ended else 'next'}: occurrence {i}, {describe(rec)}"
+        shown = show_day(day, rec, notes=beside, written=x[attr])
+        walked.append((day, shown, f", {'the last' if ended else 'next'}: {nth(i)}, {describe(rec)}"
                                    + '; '.join([''] + beside + ([fw] if fw else []))))
     live = [x for x in sides if not silenced(x, decl)]
     words = f"a merge conflict: {len(sides)} sides disagree, {len(live)} of them not met, waived or broken"
@@ -662,11 +752,31 @@ def _due_in_dispute(label, e, sides, attr, rep, decl, today):
     return []
 
 
-def show_day(n, rec=None, systems=None, notes=None):
-    """Day `n` in the calendar the recurrence is counted in, where it names one; else in the Gregorian calendar; and
-    where neither can write it, as its day number — with the reason put in `notes`, where a list is given, so the reader
-    is told why a day is shown as a number. Never raises: a day nobody can write is still a day to be warned of."""
-    row = (systems if systems is not None else _law('SYSTEMS')).get((rec or {}).get('in')) or {}
+def system_of(value, systems=None):
+    """The positioning system a written position is in — the row of the law's `anchor_systems` whose `pattern` it
+    matches and that names a calendar — or {}. Found as the gate finds it, by the law's pattern: no calendar is named
+    here, so a garden that writes its days in the Persian calendar is shown them in it."""
+    text = str(value) if isinstance(value, (str, datetime.date)) and not isinstance(value, bool) else None
+    for row in (systems if systems is not None else _law('SYSTEMS')).values():
+        pat = row.get('pattern') if isinstance(row, dict) else None
+        if text is not None and row.get('calendar') and isinstance(pat, str) and pat != 'none':
+            try:
+                if re.search(pat, text):
+                    return row
+            except re.error:
+                continue
+    return {}
+
+
+def show_day(n, rec=None, systems=None, notes=None, written=None):
+    """Day `n` in the calendar the recurrence is counted in, where it names one; else in the calendar the position was
+    WRITTEN in (`written`, the value as the bean has it); in the Gregorian calendar only where neither says — and where
+    none can write it, as its day number, with the reason put in `notes`, where a list is given, so the reader is told
+    why a day is shown as a number. Never raises: a day nobody can write is still a day to be warned of."""
+    systems = systems if systems is not None else _law('SYSTEMS')
+    row = systems.get((rec or {}).get('in')) or {}
+    if not row.get('calendar') and written is not None:
+        row = system_of(written, systems)
     why = None
     for cal in ([row['calendar']] if row.get('calendar') else []) + ['gregory']:
         try:
@@ -694,11 +804,17 @@ def refine(term, held, state):
     auto = held.get('auto_renew', 'unknown')
     flag = '  auto-renew UNKNOWN: nothing on record prevents this' if (
         state != 'OK' and auto != 'enabled') else ''
-    return f"  auto_renew={auto}  registrar={str(held.get('registrar'))[:40]}{flag}"
+    return f"  auto_renew={brief(auto)}  registrar={esc(str(held.get('registrar'))[:40])}{flag}"
 
 
 def verdict(entry):
-    """(state, detail) for one cache entry."""
+    """(state, detail) for one cache entry — the detail as it may be printed (`esc`): it quotes the entry's own key and
+    paths, which are what a bean says."""
+    state, detail = _verdict(entry)
+    return state, esc(detail)
+
+
+def _verdict(entry):
     key = str(entry.get('staleness_key') or '')
     paths = entry.get('covers_paths') or []
     # 11.0: a key is a POSITION in the git object graph, `<repo>@<sha>`. The repository is part of the key,
@@ -750,7 +866,13 @@ def verdict(entry):
 # ---------------------------------------------------------------------------------------------------
 
 
+def _out(line=''):
+    """print(), through the guard: what a bean says reaches the terminal as text, never as an instruction to it."""
+    print(say(line))
+
+
 def report():
+    new_run()
     # A PIPE ON WINDOWS IS WRITTEN IN THE ANSI CODE PAGE, and a date in another calendar's script, or a title in
     # Persian, is not in it: a glyph the stream cannot carry is replaced rather than let the report die mid-way.
     try:
@@ -761,7 +883,7 @@ def report():
     HORIZON_SET = '--days' in sys.argv
     _d = sys.argv[sys.argv.index('--days') + 1] if HORIZON_SET and sys.argv.index('--days') + 1 < len(sys.argv) else '90'
     if not (_d.isascii() and _d.isdigit()):
-        print("dmstale: --days takes a whole number of days, e.g. --days 30"); sys.exit(2)
+        _out("dmstale: --days takes a whole number of days, e.g. --days 30"); sys.exit(2)
     HORIZON = int(_d)
     counts = {'FRESH': 0, 'STALE': 0, 'UNKNOWN': 0, 'NOT-HERE': 0}
     rows = []
@@ -783,12 +905,12 @@ def report():
                 continue
             state, detail = verdict(e)
             counts[state] += 1
-            rows.append((state, f"{fm.get('bean')}", ctype, detail))
+            rows.append((state, esc(fm.get('bean')), esc(ctype), detail))
 
     for state, bean, ctype, detail in rows:
         if QUIET and state == 'FRESH':
             continue
-        print(f"{state:8} {bean}.analysis_cache[{ctype}]  {detail}")
+        _out(f"{state:8} {bean}.analysis_cache[{ctype}]  {detail}")
 
     # ---- what lapses if nobody acts -----------------------------------------------------------------
     # THE TERMS ARE ASKED OF THE VOCABULARY, NOT NAMED HERE. This block read `registration` and
@@ -844,31 +966,33 @@ def report():
                                  [t for l, t in asides if l == label]))
 
     if exp_rows or notes:
-        print()
+        _out()
         for state, bean, days, shown, where, decl, held, horizon, detail, term, beside in sorted(exp_rows, key=lambda r: r[2]):
             if QUIET and state == 'OK':
                 continue
             why = f"  <-- {decl['why']}" if (state != 'OK' and decl.get('why')) else ''
-            print(f"{state:8} {bean}.{where}  {decl['attr']} {shown} ({days} days){detail}"
+            _out(f"{state:8} {esc(bean)}.{esc(where)}  {decl['attr']} {shown} ({days} days){detail}"
                   f"{refine(term, held, state)}{why}")
             for text in beside:                     # a month the repetition skipped, said beside the row it explains
-                print(f"{'NOTE':8} {bean}.{where}  {text}")
+                _out(f"{'NOTE':8} {esc(bean)}.{esc(where)}  {text}")
         for bean, where, detail in notes:
-            print(f"{'NOTE':8} {bean}.{where}  {detail}")
-        print(f"\nexpiring: {sum(1 for r in exp_rows if r[0] == 'OK')} ok, "
+            _out(f"{'NOTE':8} {esc(bean)}.{esc(where)}  {detail}")
+        _out()
+        _out(f"expiring: {sum(1 for r in exp_rows if r[0] == 'OK')} ok, "
               f"{sum(1 for r in exp_rows if r[0] == 'EXPIRING')} within their horizon, "
               f"{sum(1 for r in exp_rows if r[0] == 'EXPIRED')} EXPIRED"
               + (f", {len(notes)} that cannot be walked here (NOTE)" if notes else '')
               + (f"  [--days {HORIZON} overriding every term]" if HORIZON_SET else ''))
 
-    print(f"\nanalysis_cache: {counts['FRESH']} fresh, {counts['STALE']} stale, "
+    _out()
+    _out(f"analysis_cache: {counts['FRESH']} fresh, {counts['STALE']} stale, "
           f"{counts['NOT-HERE']} not on this host, {counts['UNKNOWN']} unknown")
     if counts['NOT-HERE']:
-        print("NOT-HERE is not staleness: those analyses may be perfectly current on the machine that "
+        _out("NOT-HERE is not staleness: those analyses may be perfectly current on the machine that "
               "holds their source. Give this host a `roots:` entry to resolve them here.")
     if counts['STALE']:
-        print("STALE means the SOURCE MOVED under the analysis, not that a clone is behind.\n"
-              "STALE entries must NOT be trusted — re-run the analysis, then bump as_of + staleness_key "
+        _out("STALE means the SOURCE MOVED under the analysis, not that a clone is behind.")
+        _out("STALE entries must NOT be trusted — re-run the analysis, then bump as_of + staleness_key "
               "(VOCAB analysis_cache.staleness_rule).")
     sys.exit(1 if (counts['STALE'] or expiring) else 0)
 
