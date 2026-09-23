@@ -42,19 +42,27 @@ check("no reason is blank", not [k for k, v in why.items() if not v.strip()], [k
 #
 # THE PARSED LAW, NOT ITS LINES. This counted lines of the file until 21.0, and a line grep sees only the first line of
 # a folded `>` block: it read fourteen while forty-five sat in the law, and the one spare it was set with was spent
-# unseen. It now reads every string under a key the law TELLS a reader (bin/dmreview.py `story_in`: the one
-# definition, which `dmreview --law` lists for whoever ratifies). Its CEILING is the count in the release this branch
-# started from, read from git — not a number typed here, which is a second copy of a fact git holds, and which drifted.
-# The constant is only for a clone with no tags (a shallow CI checkout): the count at the release it was written in.
+# unseen. It now reads every string of the law but a value's (bin/dmreview.py `story_in`: the one definition, which
+# `dmreview --law` lists for whoever ratifies). Its CEILING is the count at the last RELEASE, read from git with that
+# same definition — not a number typed here, which is a second copy of a fact git holds, and which drifted — and a
+# release is a `v<major>.<minor>.<patch>` tag, never a checkpoint or a candidate, which would move the ceiling to
+# wherever it was set. NARRATIVE_IN_DATA is for a clone with no release tag (a shallow CI checkout): the count this
+# release ships with, moved at each release so a checkout without tags is held to no more than one with them.
 import subprocess
 import dmreview
-NARRATIVE_IN_DATA = 45
+NARRATIVE_IN_DATA = 58
 hits = dmreview.story_in(dmparse.loads(fm))
-_tag = subprocess.run(["git", "-C", ROOT, "describe", "--tags", "--abbrev=0"], capture_output=True, text=True).stdout.strip()
+_tag = subprocess.run(["git", "-C", ROOT, "describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*",
+                       "--exclude", "*-*"], capture_output=True, text=True).stdout.strip()
 _at_tag = dmreview.law_at(_tag) if _tag else None
-ceiling, since = (len(dmreview.story_in(_at_tag)), _tag) if _at_tag else (NARRATIVE_IN_DATA, "no tag here: the constant")
+if _at_tag is not None:
+    ceiling, since, _was = len(dmreview.story_in(_at_tag)), _tag, {p for p, _h, _s in dmreview.story_in(_at_tag)}
+else:
+    ceiling, _was = NARRATIVE_IN_DATA, None
+    since = f"{_tag}'s law could not be read: the constant" if _tag else "no release tag here: the constant"
+_added = [f"{p}: «{h}»" for p, h, _s in hits if _was is None or p not in _was]
 check(f"narrative inside the law's data has not grown (now {len(hits)}, ceiling {ceiling} — {since})",
-      len(hits) <= ceiling, [f"{p}: «{h}»" for p, h, _s in hits][:6])
+      len(hits) <= ceiling, ("not there at " + since + ": " if _was is not None else "every one: ") + "; ".join(_added))
 print(f"      (the next release's ceiling is {len(hits)}; `python3 bin/dmreview.py --law` lists every one by path)")
 _folded = {"terms": [{"term": "t", "meaning": "a first line that tells nothing,\nand a second that says what was found on 2020-01-01"}]}
 check("...read from the parsed law: a date on the second line of a folded block is counted, which a line grep missed",
@@ -63,6 +71,43 @@ _example = {"terms": [{"term": "t", "meaning": "a day in the civil calendar, wri
                        "schema": {"attrs": {"a": {"in": "prose", "canonical_note": "since 7.0 the form is fixed"}}}}]}
 check("...a date inside backticks is an example of a value and is not counted; a suffixed key (`canonical_note`) is read",
       [p for p, _h, _s in dmreview.story_in(_example)] == ["terms[t].schema.attrs.a.canonical_note"], dmreview.story_in(_example))
+# EVERY STRING BUT A VALUE'S. A list of the keys that tell a reader missed story told under `rules`, `handling` and the
+# schema language's own descriptions; the filter is reversed, and only a value — an example, a pattern, a written form —
+# is passed over, because a story regex run over a value finds the value's own digits.
+_anykey = {"schema_language": {"path": "a nested field, never declared here until 11.3"},
+           "terms": [{"term": "t", "rules": {"r": "answered for by the operator"}, "handling": {"graph": "narrowed at 2.0"},
+                      "example": "2020-01-01", "value_pattern": "^2020-01-01$",
+                      "forms": {"external": "owned outside this garden"}}]}
+check("...every string is read, under any key but a value's: `rules`, `handling` and a schema-language description count; "
+      "an `example`, a pattern and a term's `forms` do not",
+      sorted(p for p, _h, _s in dmreview.story_in(_anykey)) ==
+      ["schema_language.path", "terms[t].handling.graph", "terms[t].rules.r"], dmreview.story_in(_anykey))
+_versions = {"a": "Declared at 7.0 for records", "b": "the resolver (13.0)", "c": "(9.0 removed a port)",
+             "d": "narrowed in 2.0", "e": "The RELEASE (15.0, 9.7) is not part of the value", "f": "about 2.5 cm a year"}
+check("...a release is story after a preposition or a verb of change, or alone in parentheses — never a bare number",
+      sorted(p for p, _h, _s in dmreview.story_in(_versions)) == ["a", "b", "c", "d"], dmreview.story_in(_versions))
+# A PATH IS A KEY A REASON CAN BE FILED UNDER. Every story path is printed so that someone moving the sentence into
+# seed/RATIONALE.md keys it by that path; a path bin/dmwhy.py resolves to ANOTHER item files the reason under the wrong
+# law and `dmwhy --check` still passes. So each path must resolve, through dmwhy itself, to the very string listed — or
+# be marked as a position (`[#n]`), which dmwhy refuses rather than misreads.
+_law = dmwhy.law()
+def _resolves(p, s):
+    try:
+        n = dmwhy.resolve(_law, p)
+    except KeyError:
+        return False
+    return isinstance(n, str) and " ".join(n.split()) == s
+_wrong = [p for p, _h, s in hits if "[#" not in p and not _resolves(p, s)]
+check("every story path resolves through bin/dmwhy.py to the very string it lists", not _wrong, _wrong)
+_twins = {"positions": [{"position": "possible", "complement": "impossible", "meaning": "x"},
+                        {"position": "impossible", "complement": "possible", "meaning": "measured on 2020-01-01"}]}
+_p = [p for p, _h, _s in dmreview.story_in(_twins)]
+check("...and an item no value of which an earlier sibling lacks is marked as a position, not named by a value dmwhy "
+      "would resolve to its sibling", _p == ["positions[#1].meaning"], _p)
+_rows = {"vacancies": [{"at": "a", "position": "x", "why": "w"}, {"at": "b", "position": "y", "why": "on 2020-01-01"},
+                       {"at": "b", "position": "z", "why": "in this estate"}]}
+check("...and a name no other sibling carries is preferred, so a row added anywhere does not rename it",
+      [p for p, _h, _s in dmreview.story_in(_rows)] == ["vacancies[y].why", "vacancies[z].why"], dmreview.story_in(_rows))
 _r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmreview.py"), "--law"] + (["--against", _tag] if _tag else []),
                     capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, PYTHONIOENCODING="utf-8"))
 _first = (_r.stdout.split("\n") or [""])[0]
@@ -75,6 +120,42 @@ check("...and the story it lists is the story this ratchet counts: one definitio
 if _tag:
     check("...and with --against, each line says how it moved since that ref", "(was " in _r.stdout or "(unchanged)" in _r.stdout,
           _r.stdout[:600])
+_r2 = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmreview.py"), "--law", "--against=" + (_tag or "HEAD")],
+                     capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, PYTHONIOENCODING="utf-8"))
+check("...spelled `--against=<ref>` too, and not silently ignored",
+      _r2.returncode == 0 and ("(was " in _r2.stdout or "(unchanged)" in _r2.stdout), _r2.stdout[:600])
+_r3 = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmreview.py"), "--law", "--against"],
+                     capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, PYTHONIOENCODING="utf-8"))
+check("...and `--against` with no ref says so, and still exits 0", _r3.returncode == 0 and "needs a git ref" in _r3.stdout,
+      _r3.stdout[:400])
+# IT ALWAYS EXITS 0 — most of all on a law half-way through a change, which is when it is run. A copy of the tools and
+# the law, broken two ways: a term whose `schema` is a word (it parses, and is not law), and front matter that does not
+# parse at all. Each is said, and neither is a traceback.
+import tempfile, shutil
+_B = tempfile.mkdtemp(prefix="dmreview-")
+shutil.copytree(os.path.join(ROOT, "bin"), os.path.join(_B, "bin"))
+os.makedirs(os.path.join(_B, "seed"))
+_lawtext = open(dmwhy.LAW, encoding="utf-8").read()
+def _law_run(text):
+    with open(os.path.join(_B, "seed", "std-vocab.md"), "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(text)
+    return subprocess.run([sys.executable, os.path.join(_B, "bin", "dmreview.py"), "--law"], capture_output=True,
+                          text=True, encoding="utf-8", env=dict(os.environ, PYTHONIOENCODING="utf-8"), cwd=_B)
+assert _lawtext.count("\nterms:\n") == 1
+_r = _law_run(_lawtext.replace("\nterms:\n", "\nterms:\n  - term: broken\n    schema: oops\n", 1))
+check("dmreview --law on a law that parses but is malformed still counts, or says why not — exit 0, no traceback",
+      _r.returncode == 0 and "Traceback" not in _r.stderr and ("strings" in _r.stdout or "could not count" in _r.stdout),
+      (_r.stdout + _r.stderr)[-500:])
+_r = _law_run(_lawtext.replace("\nterms:\n", "\nterms: [\n", 1))
+check("...and on a law that does not parse, it says so rather than \"no law\" — exit 0",
+      _r.returncode == 0 and "does not parse" in _r.stdout and "Traceback" not in _r.stderr, (_r.stdout + _r.stderr)[-500:])
+_pp = subprocess.Popen([sys.executable, os.path.join(ROOT, "bin", "dmreview.py"), "--law"], stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE, env=dict(os.environ, PYTHONIOENCODING="utf-8"))
+_pp.stdout.readline(); _pp.stdout.close()                     # the reader leaves after one line, as `head -1` does
+_err = _pp.stderr.read().decode("utf-8", "replace"); _pp.wait()
+check("...and piped into a reader that leaves early, it still exits 0", _pp.returncode == 0 and "Traceback" not in _err,
+      f"exit {_pp.returncode}: {_err[-300:]}")
+shutil.rmtree(_B, ignore_errors=True)
 
 # ---------------------------------------------------------------- LEAKS BETWEEN THE LAYERS, one direction at a time
 # UP: a layer may point DOWN to the one beneath, never the other way. A law that says "see the rationale" cannot be
