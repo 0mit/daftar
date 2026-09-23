@@ -12,8 +12,8 @@ way the gate does, so it can never read a different file than the law declares.
     python3 bin/dmknowledge.py bean <bean-id>             # a bean's `knowledge:` entries, resolved
     python3 bin/dmknowledge.py crosswalk 2522             # the fields an occupation draws on
 
-As a library (factory reads it): `Knowledge(root)` with `.row(scheme, code)`, `.ancestry(scheme, code)`,
-`.resolve(entry)` and `.for_bean(front_matter)`.
+As a library, for a program built on a garden: `Knowledge(root)` with `.row(scheme, code)`,
+`.ancestry(scheme, code)`, `.resolve(entry)` and `.for_bean(front_matter)`.
 """
 import os, sys, csv
 

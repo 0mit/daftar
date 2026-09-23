@@ -86,10 +86,10 @@ manifest:
     garden:         { required: true, in: { type: kebab }, meaning: "the garden's name, for people. A name, not an identity: two gardens may carry the same one, and a garden's identity is the commit it germinated from (`garden_id`)" }
     extends:        { required: true, in: any, meaning: "the standard it pins, `std-vocab@<version>` — judged by the pin check" }
     daftar_release: { in: { pattern: '^v[0-9]+\.[0-9]+\.[0-9]+$' }, meaning: "the release it runs; bin/dmupgrade.py moves it" }
-    gardener:       { in: bean_id, meaning: "the person — or organisation — who keeps this garden: a bean of this garden, and its first. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
+    gardener:       { in: bean_id, meaning: "the person — or organisation — who keeps the garden: a bean of the garden, and its first. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
     test:           { in: prose, meaning: "present when the garden is a rehearsal or a test, saying what it rehearses. Its beans are not facts about the world, and a proposal from it says so" }
     origin:         { in: prose, meaning: "where the garden began, for a reader" }
-    policy:         { in: any, meaning: "standing rules the gardener sets for work in this garden, in prose" }
+    policy:         { in: any, meaning: "standing rules the gardener sets for work in the garden, in prose" }
 # == WHAT THE LAW RETIRED, so a refusal can say where it went ==
 retired:
   - { name: scope,         at: anchor,   instead: "nothing: whether a value identifies beyond its garden is said by its term (`anchor.minted`) and by its own form (`<garden_id>/<name>`)" }
@@ -2054,8 +2054,8 @@ terms:
       required_on_kinds: [contract]
       entry_one_of: [who, external]
       attrs:
-        who:      { in: ref, meaning: "the party: a person or an organisation this garden holds, {bean: <id>}" }
-        external: { in: prose, meaning: "a party this garden holds no bean for — the bank that issued a card — named as the record can name it" }
+        who:      { in: ref, meaning: "the party: a person or an organisation the garden holds, {bean: <id>}" }
+        external: { in: prose, meaning: "a party the garden holds no bean for — the bank that issued a card — named as the record can name it" }
         role:     { in: { type: kebab }, meaning: "what the party is to the agreement: payer, cardholder, buyer, lender, facilitator. Open, like `rel`" }
         accepted: { in: { type: date }, meaning: "the day this party accepted. Whose word it is, is the entry's provenance: the party's own word, or another person's report of it — never an inference" }
         during:   { in: extent, meaning: "when this party was a party, where that is not the agreement's whole life" }
@@ -2254,13 +2254,9 @@ terms:
         uuid:        { in: { pattern: "^[0-9A-Za-z][0-9A-Za-z:-]*$" }, meaning: "the volume's own identifier, as its format reports it. The datum a rebuild needs and the one that survives a device rename." }
         at:          { in: { pattern: "^(/[^ ]*|[A-Za-z]:[/\\\\].*)$" }, meaning: "where it is mounted, in this machine's path grammar. Absent for a volume that holds no filesystem — a LUKS container or an LVM member is mounted nowhere." }
     reproduction_note: >
-      SCOPE, STATED BECAUSE IT IS ABOUT TO GROW. This term records the LAYOUT — what exists, what carries
-      what, and where it is mounted — which is what a rebuild needs to recreate the shape. It does NOT
-      record contents, keys or passphrases, and it must not: `no secrets` is a founding rule of this
-      ledger. The operator has asked for beans complete enough to reproduce a machine, and the honest
-      remaining gap is CONFIGURATION, which is a separate question from layout because config is
-      SOMEBODY ELSE'S authoritative truth and ground rule 3 forbids mirroring it. See
-      [[design-network-stack]] `open:` for where that is being taken up.
+      The LAYOUT only — what exists, what carries what, and where it is mounted: what a rebuild needs to
+      recreate the shape. Never contents, keys or passphrases. Configuration is not layout: it is somebody
+      else's authoritative truth, referenced and never mirrored.
     merge: { cardinality: multi, order: by-key }
 
   - term: beanger
