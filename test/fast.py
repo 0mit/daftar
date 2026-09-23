@@ -166,11 +166,14 @@ check("every anchor states whether it establishes identity", not noflag, ', '.jo
 # THIS is what makes "the version is a git tag" structural rather than a matter of discipline. Every
 # version this repo ever TYPED rotted — four titles reading v1.0 over v2 bodies, two prose pins two majors
 # stale — while the two that were DERIVED stayed correct. log/journal.md is exempt: it is history, and a
-# dated entry naming the version it was written under is a record, not a second copy.
+# dated entry naming the version it was written under is a record, not a second copy. So is captures/: a capture
+# is a record of the world held whole — a transcript that quotes a gate's last line, a proposal taken in — and what
+# it quotes is what was said, never this garden stating its release.
 VERSION_IN_PROSE = re.compile(r'daftar\s+v?\d+\.\d+')
 stated = []
 for f in glob.glob(os.path.join(ROOT, '**', '*.md'), recursive=True):
-    if os.sep + '.git' + os.sep in f or f.endswith(os.path.join('log', 'journal.md')):
+    if os.sep + '.git' + os.sep in f or f.endswith(os.path.join('log', 'journal.md')) \
+            or os.path.relpath(f, ROOT).split(os.sep)[0] == 'captures':
         continue
     for i, line in enumerate(open(f, encoding='utf-8'), 1):
         if VERSION_IN_PROSE.search(line):

@@ -366,8 +366,10 @@ check("make REFUSES a bean known only by a BARE minted name — with the mint hi
       r.returncode == 1 and 'BARE' in r.out and 'dmpropose.py mint sam' in r.out and not proposals(ONE)
       and read(os.path.join(A, 'log', 'journal.md')) == jA, r.out)
 r = tool(A, 'dmpropose.py', 'make', '--to', 'garden-b', '--under', 'shared-cost', 'ali')
-check("...and an ANCHORLESS bean the same way: it would identify nothing beyond this garden",
-      r.returncode == 1 and 'dmpropose.py mint ali' in r.out and not proposals(ONE), r.out)
+check("...and an ANCHORLESS bean too: it would identify nothing beyond this garden — and, having no name to qualify, it "
+      "is told it has no identity here yet, never pointed at `mint`",
+      r.returncode == 1 and 'has no establishing anchor at all' in r.out and 'has no identity here yet' in r.out
+      and 'mint ali' not in r.out and not proposals(ONE), r.out)
 r = tool(A, 'dmpropose.py', 'make', '--to', 'garden-b', '--under', 'shared-cost', '--out', os.path.join(B, 'inbox'),
          'shared-cost', 'ada')
 check("...and an --out inside a garden: a proposal is laid beside gardens, never in one",

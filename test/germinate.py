@@ -633,6 +633,23 @@ check("...and the merged corpus has no uncovered kind, key or unmet obligation",
 check("the child's bean is IN the merged result, not silently dropped",
       'person:ada' in out or 'ada' in out)
 
+# A CAPTURE IS A RECORD HELD WHOLE: a transcript that quotes a gate's last line ("daftar v0.1.0: 0 errors") is what
+# was said, never the garden stating its release — the fast check reads captures/ as it reads the journal, as history.
+os.makedirs(os.path.join(G, 'captures', 'conversations'), exist_ok=True)
+with open(os.path.join(G, 'captures', 'conversations', 'a-session.md'), 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write("# a session\n\nthe agent said: `garden (daftar v0.1.0): 0 docs, 0 error(s)`\n")
+r = run(sys.executable, os.path.join(G, 'test', 'fast.py'), cwd=G)
+check("a capture that quotes a version as it was said passes the fast check — captures are records, like the journal",
+      r.returncode == 0 and 'no document states the product version' in r.stdout
+      and 'FAIL *** no document states the product version' not in r.stdout, r.stdout[-400:])
+with open(os.path.join(G, 'NOTES.md'), 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write("This garden runs daftar v0.1.0.\n")
+r = run(sys.executable, os.path.join(G, 'test', 'fast.py'), cwd=G)
+check("...while a document of the garden's own that states the release still fails it", r.returncode != 0
+      and 'NOTES.md:1' in r.stdout, r.stdout[-400:])
+os.remove(os.path.join(G, 'NOTES.md'))
+shutil.rmtree(os.path.join(G, 'captures'))
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\ngerminate: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)
