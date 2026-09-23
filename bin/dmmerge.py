@@ -10,11 +10,19 @@ By construction the merge is lossless (every value + its contributing gardens pr
 order-agnostic (commutative+associative — everything sorted canonically), and idempotent.
 
 EACH INPUT CARRIES ITS GARDEN (std-vocab 21.0). A name a garden MINTED — the value of an anchor whose term says
-`minted: true` — is BARE until it is qualified by the garden that minted it (`<garden_id>/<name>`). A bare name
-identifies only inside its garden, so it fuses only with the same bare name from the SAME garden; two gardens that
-minted one bare name are CANDIDATES, reported for a person and never fused. An input's garden is its `garden_id`:
-read from git for a garden directory, from `from.garden` for a proposal, or none — and an input whose garden is not
-known is taken to be a garden of its own. Qualified names and every anchor that is not minted fuse as they always did.
+`minted: true`, written in the form the law gives such a name (`identity_policy.minted.form`: `<kind>:<name>`, its
+kind one this garden knows) — is BARE until it is qualified by the garden that minted it (`<garden_id>/<kind>:<name>`).
+A bare name identifies only inside its garden, so it fuses only with the same bare name from the SAME garden; two
+gardens that minted one bare name are CANDIDATES, reported for a person and never fused. An input's garden is its
+`garden_id`: read from git for a garden directory, from `from.garden` for a proposal, or none — and an input whose
+garden is not known is taken to be a garden of its own. Qualified names, a minted term's value in any other form (a
+package's name, a registry number, an invitation's UID: assigned outside every garden), and every anchor that is not
+minted fuse as they always did.
+
+ONE VALUE, ONE CANONICAL FORM. What the law says is the same value is compared as one: a quantity's `count` in its
+shortest exact decimal (`900`, `"900"` and `"900.00"` are one amount), and a list of entries the law keys by one of
+their attributes (`keyed_by`) in that attribute's order, since the order of such entries carries nothing. A bean
+keeps what was written; only the comparison, the seed and the fingerprint use the canonical form.
 
 CLI: dmmerge.py <garden_dir> [<garden_dir> ...]   # prints seeds + fingerprint, then the CANDIDATES
 Library: merge_gardens(list_of_beanlists) -> {seed_id: seed_dict}, fingerprint(seeds), candidates(beans)
@@ -63,8 +71,83 @@ def norm(v):
         return [norm(x) for x in v]
     return v
 
+
+# ---------- the law's canonical forms: what the law says is ONE value is compared as one ----------
+# `norm` knows a value's type from the value; these know it from the TERM, so they read the term's schema. Two are
+# declared: a QUANTITY (`in: {quantity: …}`) is one amount however its count is spelt — `900`, `"900"`, `"900.00"` —
+# so its count is compared in its shortest exact decimal (bin/dmunits.py's exact printer, never a float); and a list
+# of entries the law KEYS by one of their attributes (`in: {entries: …, keyed_by: <attr>}`) says one entry per value
+# of it, so its order carries nothing and it is compared in that attribute's order. Without them the same amount, or
+# the same bearers listed in another order, was a disagreement a person had to settle that was not one.
+def _canon_count(c):
+    """A count in its shortest exact decimal, as text — or as it was, where it is not a count read exactly (the gate
+    says so; a canonical form never guesses)."""
+    try:
+        import dmunits
+        x = dmunits.exact(c)
+        return dmunits.show(x) if x is not None else c
+    except Exception:
+        return c
+
+
+def _canon_entry(attrs, e):
+    """One entry in the canonical form its attributes declare. A captured disagreement (`{conflict: [a, b]}`) is the
+    values it stands for, each in canonical form."""
+    if isinstance(e, dict) and len(e) == 1 and isinstance(e.get('conflict'), list):
+        return {'conflict': [_canon_entry(attrs, m) for m in e['conflict']]}
+    if not isinstance(e, dict) or not isinstance(attrs, dict):
+        return e
+    out = dict(e)
+    for a, rec in attrs.items():
+        dom = rec.get('in') if isinstance(rec, dict) else None
+        if a not in out or not isinstance(dom, dict):
+            continue
+        v = out[a]
+        if 'quantity' in dom and isinstance(v, dict) and 'count' in v:
+            out[a] = dict(v, count=_canon_count(v['count']))
+        elif isinstance(dom.get('entries'), dict):
+            if isinstance(v, list):
+                v = [_canon_entry(dom['entries'], x) for x in v]
+                kb = dom.get('keyed_by')
+                if kb:
+                    v = sorted(v, key=lambda x: (0, canonical(x.get(kb)), canonical(x)) if isinstance(x, dict)
+                               else (1, '', canonical(x)))
+                out[a] = v
+            elif isinstance(v, dict):
+                out[a] = _canon_entry(dom['entries'], v)
+    return out
+
+
+def canon_value(key, v):
+    """A top-level value of term `key` as the merge compares it: `norm`, then the canonical forms the term's schema
+    declares for each of its entries (the entries of a list, of an open map or of a faceted mapping, as the gate reads
+    them). A value this cannot read is compared as `norm` left it."""
+    v = norm(v)
+    sch = (TERMS.get(key) or {}).get('schema')
+    attrs = sch.get('attrs') if isinstance(sch, dict) else None
+    if not isinstance(attrs, dict):
+        return v
+    shape = sch.get('shape')
+    try:
+        if shape == 'list_of_entries' and isinstance(v, list):
+            return [_canon_entry(attrs, e) for e in v]
+        if shape == 'mapping' and not sch.get('key_form') and isinstance(v, dict):
+            return _canon_entry(attrs, v)                 # the attributes describe the mapping itself
+        if shape in ('open_map_of_entries', 'mapping') and isinstance(v, dict):
+            return {k: _canon_entry(attrs, e) for k, e in v.items()}
+    except TypeError:
+        pass                                  # a key YAML did not read as text: the gate names it; nothing is guessed
+    return v
+
+
+def canon_member(key, mk, v):
+    """One member of term `key`'s mapping (a transaction of `transactions`) in canonical form."""
+    out = canon_value(key, {mk: v})
+    return out.get(mk, norm(v)) if isinstance(out, dict) else norm(v)
+
 # ---------- load ----------
 _UNREAD = object()
+MISSING = object()
 
 
 def garden_identity(path):
@@ -84,14 +167,30 @@ def garden_identity(path):
     return dmparse.garden_id(path)
 
 
+def garden_test(path):
+    """The `test:` a garden's GARDEN.md carries — what it rehearses — or None: its beans are not facts about the world,
+    and a merge that takes them in says so."""
+    p = os.path.join(path, 'GARDEN.md')
+    try:
+        t = (dmparse.loads(dmparse.read(p)[0] or '') or {}).get('test') if os.path.isfile(p) else None
+    except Exception:
+        return None
+    return str(t) if t else None
+
+
 def load_garden(path, gid, garden_id=_UNREAD):
     """One input: every bean of the garden at `path`, labelled `gid`, carrying the garden's identity — read from git
-    unless the caller states it (a proposal states `from.garden`; None says it is not known)."""
+    unless the caller states it (a proposal states `from.garden`; None says it is not known) — and, for a TEST garden,
+    what it rehearses."""
     ident = garden_identity(path) if garden_id is _UNREAD else garden_id
+    test = garden_test(path)
     beans = []
     for f in sorted(glob.glob(os.path.join(path, 'beans', '*.md'))):
         fm = dmparse.loads(dmparse.read(f)[0] or '') or {}
-        beans.append({'garden': gid, 'garden_id': ident, 'id': fm.get('bean', os.path.basename(f)[:-3]), 'fm': fm})
+        b = {'garden': gid, 'garden_id': ident, 'id': fm.get('bean', os.path.basename(f)[:-3]), 'fm': fm}
+        if test:
+            b['test'] = test
+        beans.append(b)
     return beans
 
 # ---------- identity resolution ----------
@@ -103,9 +202,20 @@ def _home(b):
 
 
 def bare(key, value):
-    """True when an anchor's value is a BARE minted name: its term mints names (`anchor.minted`), and the value is not
-    qualified by a garden (`identity_policy.minted.pattern`). A law that declares no minted names makes nothing bare."""
-    return bool(MINT_RE) and key in MINTED and not MINT_RE.match(str(value))
+    """True when an anchor's value is a BARE minted name: its term mints names (`anchor.minted`), the value has the
+    form of a name a garden gave (`identity_policy.minted.form`, its prefix a kind this garden knows — `form_kind`),
+    and it is not qualified by a garden (`identity_policy.minted.pattern`). A minted term's value in any OTHER form was
+    assigned outside every garden — `postfix`, a registry number, an invitation's UID — and identifies wherever it is
+    written, as every anchor always did. A law that declares no minted names makes nothing bare; one that declares no
+    `form` reads every unqualified value of a minted term as a name a garden gave."""
+    if not MINT_RE or key not in MINTED:
+        return False
+    v = str(value)
+    if MINT_RE.match(v):
+        return False
+    if MINT_FORM is None:
+        return True
+    return bool(MINT_FORM.match(v)) and (MINT_KINDS is None or v.split(':', 1)[0] in MINT_KINDS)
 
 
 def est_anchors(fm, home=None):
@@ -187,19 +297,40 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TERMS = load_terms()
 
 
+def _law_heads():
+    """(the standard's front matter, the overlay's) — {} for one that is not here."""
+    out = []
+    for path in (os.path.join(ROOT, 'seed', 'std-vocab.md'), os.path.join(ROOT, 'VOCAB.md')):
+        out.append((dmparse.loads(dmparse.read(path)[0] or '') or {}) if os.path.exists(path) else {})
+    return out
+
+
+def registry_keys(name):
+    """The names a registry's rows give — each row's first field, as the gate keys a row — from the standard and from
+    this garden's overlay: the garden's own registry where it declares one, its `local_<name>` rows, and the rows it
+    adds under `registry_additions`. `kinds` is the law's kinds and the garden's own, as the gate reads them."""
+    std, loc = _law_heads()
+    rows = list(loc.get(name) if loc.get(name) is not None else (std.get(name) or []))
+    adds = loc.get('registry_additions') if isinstance(loc.get('registry_additions'), dict) else {}
+    for extra in (loc.get(f'local_{name}'), adds.get(name), adds.get(f'local_{name}')):
+        rows += list(extra or [])
+    return {str(next(iter(r.values()))) for r in rows if isinstance(r, dict) and r}
+
+
 def load_minted():
-    """(the terms whose anchor MINTS names, the pattern a QUALIFIED minted value matches) — read from the law, the
+    """(the terms whose anchor MINTS names, the pattern a QUALIFIED minted value matches, the FORM a name a garden gave
+    is written in, and the names its prefix may take — None where the law does not say) — read from the law, the
     overlay's `identity_policy` first as the gate reads it, so the merge and the gate agree on what is bare."""
-    pol = None
-    for path in (os.path.join(ROOT, 'VOCAB.md'), os.path.join(ROOT, 'seed', 'std-vocab.md')):
-        if pol is None and os.path.exists(path):
-            pol = (dmparse.loads(dmparse.read(path)[0] or '') or {}).get('identity_policy')
-    pat = ((pol or {}).get('minted') or {}).get('pattern')
+    std, loc = _law_heads()
+    pol = loc.get('identity_policy') if loc.get('identity_policy') is not None else std.get('identity_policy')
+    mint = (pol or {}).get('minted') or {}
+    pat, form, fk = mint.get('pattern'), mint.get('form'), mint.get('form_kind')
     names = {n for n, t in TERMS.items() if isinstance(t.get('anchor'), dict) and t['anchor'].get('minted') is True}
-    return names, (re.compile(str(pat), re.ASCII) if pat else None)
+    return (names, (re.compile(str(pat), re.ASCII) if pat else None), (re.compile(str(form), re.ASCII) if form else None),
+            (registry_keys(str(fk)) if fk else None))
 
 
-MINTED, MINT_RE = load_minted()
+MINTED, MINT_RE, MINT_FORM, MINT_KINDS = load_minted()
 # The subsumption orders, read from the law rather than known by name. No fallback: an empty registry
 # means no key is ordered, which is a visible loss of merging rather than a silent one.
 def load_leaf_orders():
@@ -454,9 +585,9 @@ def _apply_prov(path, items):
         # A record may name a value the DOCUMENT no longer shows — a subsumed one. Re-contributing it
         # lets the antichain absorb it again and reach the same seed a one-shot merge would.
         for rec in ((it.get('fm') or {}).get('provenance_of') or {}).get(path) or []:
-            if not isinstance(rec, dict) or canonical(norm(rec.get('value'))) in carried:
+            if not isinstance(rec, dict) or canonical(canon_at(path, rec.get('value'))) in carried:
                 continue
-            e = dict(it, value=rec.get('value'))
+            e = dict(it, value=canon_at(path, rec.get('value')))
             if rec.get('src'):
                 e['src'] = rec['src']
             if rec.get('seen_in'):
@@ -679,11 +810,22 @@ def _prov_lookup(fm, path, value):
     rec = (fm.get('provenance_of') or {}).get(path)
     if not isinstance(rec, list):
         return None
-    cv = canonical(norm(value))
+    cv = canonical(canon_at(path, value))
     for r in rec:
-        if isinstance(r, dict) and canonical(norm(r.get('value'))) == cv:
+        if isinstance(r, dict) and canonical(canon_at(path, r.get('value'))) == cv:
             return r
     return None
+
+
+def canon_at(path, v):
+    """A value at a dotted path of a bean, in the canonical form the law gives it there: a whole term's value, or one
+    member of it (`transactions.the-cost`); deeper than that, as `norm` leaves it."""
+    parts = str(path).split('.')
+    if len(parts) == 1:
+        return canon_value(parts[0], v)
+    if len(parts) == 2:
+        return canon_member(parts[0], parts[1], v)
+    return norm(v)
 
 
 def merge_component(comp):
@@ -709,9 +851,10 @@ def merge_component(comp):
                 continue
             # a fact may carry its own provenance record {value, src, ...}, which outranks the bean's
             if isinstance(v, dict) and 'value' in v and 'src' in v:
-                fields.setdefault(k, []).append({'value': v['value'], 'src': v['src'], 'garden': b['garden'],
-                                                 'fm': fm})
+                fields.setdefault(k, []).append({'value': canon_value(k, v['value']), 'src': v['src'],
+                                                 'garden': b['garden'], 'fm': fm})
             else:
+                v = canon_value(k, v)             # one value, one form: what the law says is the same compares equal
                 for _one, _prov in _unfold(v):
                     _it = {'value': _one, 'src': (_prov or {}).get('src') or src, 'garden': b['garden'], 'fm': fm}
                     if _as and not (_prov or {}).get('src'):
@@ -791,6 +934,10 @@ def merge_component(comp):
         'provenance': {g: provs[g] for g in sorted(provs)},
         'facts': merged,
         'gardens': sorted(gardens),
+        # A SEED A TEST GARDEN CONTRIBUTED TO SAYS SO: what a rehearsal holds is not a fact about the world, and a
+        # merge of a real garden with one must not read as a merge of two real ones. Present only where it is true.
+        **({'test_inputs': sorted({b['garden'] for b in comp if b.get('test')})}
+           if any(b.get('test') for b in comp) else {}),
     }
 
 # ---------- vocabulary reconciliation: merging BEANS is only half a merge ----------
@@ -847,15 +994,19 @@ def merge_vocabs(vocabs):
     merged = {'pin': next(iter(pins), None),
               'profiles': sorted({p for v in vocabs for p in v['profiles']}),
               'terms': {}, 'kinds': {}}
+    # ORDER-AGNOSTIC, LIKE THE SEEDS. Where two gardens define one local term differently, the definition kept (and
+    # judged by `uncovered`) is the canonically least — never the first to arrive — and the lines are sorted, so the
+    # whole report, not only the fingerprint, is the same in every order of the inputs.
     for space in ('terms', 'kinds'):
+        defs = {}
         for v in vocabs:
             for name, defn in v[space].items():
-                prev = merged[space].get(name)
-                if prev is None:
-                    merged[space][name] = defn
-                elif canonical(norm(prev)) != canonical(norm(defn)):
-                    conflicts.append(f"local {space[:-1]} '{name}' is defined DIFFERENTLY by the gardens "
-                                     f"that declare it — a term is law, so one reading must be ratified")
+                defs.setdefault(name, {})[canonical(norm(defn))] = defn
+        for name, readings in sorted(defs.items()):
+            merged[space][name] = readings[min(readings)]
+            if len(readings) > 1:
+                conflicts.append(f"local {space[:-1]} '{name}' is defined DIFFERENTLY by the gardens "
+                                 f"that declare it — a term is law, so one reading must be ratified")
     # A profile only one garden opted into becomes an obligation for BOTH once merged. That is correct —
     # the beans that need it are now in the corpus — but it is not silent.
     for v in vocabs:
@@ -863,7 +1014,7 @@ def merge_vocabs(vocabs):
         if extra:
             conflicts.append(f"garden '{v['garden']}' had not opted into profile(s) {', '.join(extra)}; "
                              f"the merged garden inherits them, and their obligations, from another")
-    return merged, blocking, conflicts
+    return merged, sorted(blocking), sorted(conflicts)
 
 
 def uncovered(seeds, merged_vocab, std_fm):
@@ -1066,6 +1217,12 @@ def _inline_comment(line):
     return ''
 
 
+class _IndentedDumper(yaml.SafeDumper):
+    """A block sequence indented under its key, as every other block is (see merge_in_place.dump)."""
+    def increase_indent(self, flow=False, indentless=False):
+        return super().increase_indent(flow, False)
+
+
 def merge_in_place(A, fmA, fmB, bodyB, seed):
     """SURGICAL merge into A's own text: rewrite only the keys that actually changed.
 
@@ -1090,16 +1247,16 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
     def dump(name, val, indent=0):
         """One key as YAML, unwrapped. The default 80-column wrap reflows every long string in the file
         into a different shape with identical content — pure churn in a diff a human has to read."""
-        s = yaml.safe_dump({name: val}, sort_keys=True, allow_unicode=True,
-                           default_flow_style=False, width=10 ** 6)
-        lines = s.rstrip('\n').split('\n')
-        # INDENT THE VALUE UNDER ITS KEY. PyYAML emits a block sequence at the SAME column as the key it
-        # belongs to — `roles:` then `- relay` both at indent 2. That is legal YAML and it defeats every
-        # indentation-based span finder, dmsafe's included: the block looks like it ends at its own first
-        # line, so a later edit addressed to a sibling lands inside it and the file stops parsing. Two
-        # extra spaces on the continuation lines removes the ambiguity without changing the value.
-        return ''.join(' ' * indent + ln + '\n' for ln in lines[:1]) + \
-               ''.join(' ' * (indent + 2) + ln + '\n' for ln in lines[1:])
+        # INDENT A BLOCK SEQUENCE UNDER ITS KEY, AND ONLY THAT. PyYAML emits a block sequence at the SAME column
+        # as the key it belongs to — `roles:` then `- relay` both at indent 2. That is legal YAML and it defeats
+        # every indentation-based span finder, dmsafe's included: the block looks like it ends at its own first
+        # line, so a later edit addressed to a sibling lands inside it and the file stops parsing. The dumper
+        # indents the sequence instead. It used to add two spaces to EVERY continuation line, which put the
+        # children of a mapping four columns in — and dmsafe, which finds a child two columns under its parent,
+        # could then not address them: a second take that disagreed with a value the first had added failed.
+        s = yaml.dump({name: val}, Dumper=_IndentedDumper, sort_keys=True, allow_unicode=True,
+                      default_flow_style=False, width=10 ** 6)
+        return ''.join(' ' * indent + ln + '\n' for ln in s.rstrip('\n').split('\n'))
 
     def keep_comments(dotted, block, indent):
         """Carry the comments in `dotted`'s current span onto the `block` about to replace it.
@@ -1137,19 +1294,31 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
             out = f"{first}   {head}\n{rest}"
         return ''.join(' ' * indent + c + '\n' for c in inner) + out
 
-    def rewrite(dotted, name, old, new, indent, log):
+    def spelt(k, mk, want):
+        """What to WRITE for a merged value: ours, or theirs, as it was written, where the merge chose a value equal to
+        it in canonical form — `"900.00"` stays `"900.00"`; only a value neither side wrote is written canonically."""
+        for side in (fmA, fmB):
+            v = side.get(k, MISSING)
+            if mk is not None:
+                v = v.get(mk, MISSING) if isinstance(v, dict) else MISSING
+            if v is not MISSING and (canon_value(k, v) if mk is None else canon_member(k, mk, v)) == want:
+                return norm(v)
+        return want
+
+    def rewrite(dotted, name, old, new, indent, log, write):
         # TWO GATES, and both are needed. The caller already established that THEIRS differs from ours —
         # that is what makes this position worth merging at all. This is the second: the merged RESULT
         # may still equal ours, and then there is nothing to write. It happens whenever ours already
         # subsumes theirs (we hold the union of the roles they are adding one of), and writing anyway
         # hands dmsafe a block identical to the text it replaces, which it refuses — correctly, since a
-        # pattern that matched nothing is how a 'fixed' file silently stays unfixed.
+        # pattern that matched nothing is how a 'fixed' file silently stays unfixed. Both are compared in
+        # canonical form; what is written is `write`, the merged value as one side spelt it where it can be.
         if old == new:
             return
         gone = [p for p in dmsafe.leaf_paths({name: old})
-                if p not in set(dmsafe.leaf_paths({name: new}))]
+                if p not in set(dmsafe.leaf_paths({name: write}))]
         prefix = dotted[:-len(name)] if dotted != name else ''
-        dmsafe.set_nested(A, dotted, keep_comments(dotted, dump(name, new, indent), indent), expect=1,
+        dmsafe.set_nested(A, dotted, keep_comments(dotted, dump(name, write, indent), indent), expect=1,
                           allow_remove=[prefix + p for p in gone])
         log.append(dotted)
 
@@ -1165,8 +1334,8 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
             continue                                     # only ours has it — keep ours, verbatim
         if k not in fmA:
             dmsafe.insert_after(A, sorted(fmA)[-1], dump(k, norm(fmB[k]))); added.append(k); continue
-        if norm(fmA[k]) == norm(fmB[k]):
-            continue                                     # both sides agree — leave ours untouched
+        if canon_value(k, fmA[k]) == canon_value(k, fmB[k]):
+            continue                                     # both sides agree — leave ours untouched, as written
 
         want_k = resolved(seed['facts'][k], fmA[k])
         card, _order = facet(k, fmA[k])
@@ -1176,9 +1345,10 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
         if card == 'multi' and isinstance(fmA[k], dict) and isinstance(want_k, dict) \
                 and set(fmA[k]) <= set(want_k):
             for mk in sorted(set(want_k) & set(fmA[k])):
-                if norm(fmA[k].get(mk)) == norm((fmB.get(k) or {}).get(mk)):
+                ours = canon_member(k, mk, fmA[k].get(mk))
+                if ours == canon_member(k, mk, (fmB.get(k) or {}).get(mk)):
                     continue
-                rewrite(f"{k}.{mk}", mk, norm(fmA[k].get(mk)), want_k[mk], 2, changed)
+                rewrite(f"{k}.{mk}", mk, ours, want_k[mk], 2, changed, spelt(k, mk, want_k[mk]))
             # A member only THEIRS has must be inserted, and `dmsafe.insert_after` addresses top-level
             # keys only. Rewriting the block's LAST member as itself-plus-the-additions appends without
             # touching any sibling, so at most one inline comment is at risk instead of all of them.
@@ -1187,20 +1357,34 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
                 anchor = sorted(fmA[k])[-1]
                 # the anchor's MERGED value, not ours — the member loop above may have just rewritten it,
                 # and re-emitting our original here would quietly undo that.
-                keep = want_k[anchor] if anchor in want_k else norm(fmA[k][anchor])
-                blk = dump(anchor, keep, 2) + ''.join(dump(m, want_k[m], 2) for m in fresh)
+                keep = spelt(k, anchor, want_k[anchor]) if anchor in want_k else norm(fmA[k][anchor])
+                blk = dump(anchor, keep, 2) + ''.join(dump(m, spelt(k, m, want_k[m]), 2) for m in fresh)
                 # the anchor member is REWRITTEN here to append after it, so its comment is at the same
                 # risk as any other rewritten key — the comment above says at most one is at risk, and
                 # this is the one.
                 dmsafe.set_nested(A, f"{k}.{anchor}", keep_comments(f"{k}.{anchor}", blk, 2), expect=1)
                 added += [f"{k}.{m}" for m in fresh]
             continue
-        rewrite(k, k, norm(fmA[k]), want_k, 0, changed)
+        rewrite(k, k, canon_value(k, fmA[k]), want_k, 0, changed, spelt(k, None, want_k))
 
     conflicts = sorted(p for k, v in seed['facts'].items() for p in conflict_paths(v, k))
     if conflicts:
-        # MERGE.md §10: an unresolved conflict COMMITS (lossless capture) and the bean is marked unclean.
-        dmsafe.insert_after(A, 'status', 'merge_conflicts: ' + json.dumps(conflicts) + '\nmerge_open: true\n')
+        # MERGE.md §10: an unresolved conflict COMMITS (lossless capture) and the bean is marked unclean. A bean
+        # that is marked already — a conflict still open from an earlier merge — keeps ONE mark: the paths are the
+        # union of the two, and `merge_open` is set, never written a second time (a key written twice is a bean
+        # the gate refuses, and a second proposal of the same beans would have made one).
+        now = parse_file(A)[0]
+        had = now.get('merge_conflicts')
+        paths = sorted(set(conflicts) | {str(p) for p in (had if isinstance(had, list) else [])})
+        if 'merge_conflicts' not in now:
+            dmsafe.insert_after(A, 'status', 'merge_conflicts: ' + json.dumps(paths) + '\n')
+        elif had != paths:
+            dmsafe.replace_block(A, 'merge_conflicts', 'merge_conflicts: ' + json.dumps(paths) + '\n',
+                                 allow_remove=['merge_conflicts'])
+        if 'merge_open' not in now:
+            dmsafe.insert_after(A, 'merge_conflicts', 'merge_open: true\n')
+        elif now.get('merge_open') is not True:
+            dmsafe.replace_block(A, 'merge_open', 'merge_open: true\n')
 
     # theirs' body, appended rather than merged: prose is explicitly outside the determinism guarantee
     # (MERGE.md §6), so it is kept whole for a human instead of being reconciled by a tool.
@@ -1284,7 +1468,7 @@ if __name__ == '__main__':
     # called `daftar`, and a bean is a node by (label, id): under one label the second garden's `ada` silently
     # replaced the first's. Such inputs are labelled `<name>@<garden_id>`, which is the same however the path was
     # typed; two clones of one garden share even that, and are labelled by their real paths.
-    _names = [os.path.basename(p.rstrip('/').rstrip(os.sep)) for p in paths]
+    _names = [os.path.basename(os.path.abspath(p)) for p in paths]      # `.`, `x/.` and `x/` are named as `x` is
     _ids = [garden_identity(p) if _names.count(n) > 1 else None for p, n in zip(paths, _names)]
     labels = [n if _names.count(n) == 1
               else f"{n}@{i}" if i and sum(1 for m, j in zip(_names, _ids) if (m, j) == (n, i)) == 1
@@ -1320,6 +1504,13 @@ if __name__ == '__main__':
     if tied:
         print(f"\n{len(tied)} seed id(s) collided with another component's and were disambiguated by "
               f"membership (see identity.id_collision for the shared name).")
+    tests = {b['garden']: b['test'] for lst in gl for b in lst if b.get('test')}
+    if tests:
+        held = sorted(s['seed'] for s in seeds.values() if s.get('test_inputs'))
+        print(f"\nTEST GARDENS — {len(tests)} input(s) rehearse; what they hold is not a fact about the world:")
+        for g in sorted(tests):
+            print(f"  {g}: {tests[g]}")
+        print(f"  {len(held)} seed(s) hold what a test garden said (`test_inputs`):\n    " + "\n    ".join(held))
     # THE ASSOC EDGES OF MINTED NAMES (MERGE.md §4.4 step 6): the same bare name minted in two gardens. Never fused —
     # a bare name identifies only inside its garden — and never silent, because they may be one being.
     cands = candidates([b for lst in gl for b in lst])
