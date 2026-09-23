@@ -471,14 +471,16 @@ def skip_words(cell):
 def describe(rec):
     """A recurrence in words, as it is written: `each month in gregorian-civil at 15, 6 times`."""
     if not isinstance(rec, dict):
-        return str(rec)
+        return brief(rec, 120)
     ev = rec.get('every')
     head = (f"each {rec['each']}" if rec.get('each') is not None else
-            f"every {ev.get('count')}{' ' + str(ev['unit']) if ev.get('unit') is not None else ' neighbours'}"
-            if isinstance(ev, dict) else str(rec))
-    return (head + (f" in {rec['in']}" if rec.get('in') else '') + (f" at {rec['at']}" if rec.get('at') is not None else '')
-            + (f", from {rec['from']}" if rec.get('from') is not None else '') + (f", to {rec['to']}" if rec.get('to') is not None else '')
-            + (f", {rec['times']} times" if rec.get('times') is not None else ''))
+            f"every {brief(ev.get('count'))}{' ' + str(ev['unit']) if ev.get('unit') is not None else ' neighbours'}"
+            if isinstance(ev, dict) else brief(rec, 120))
+    return (head + (f" in {brief(rec['in'])}" if rec.get('in') else '')
+            + (f" at {brief(rec['at'])}" if rec.get('at') is not None else '')
+            + (f", from {brief(rec['from'])}" if rec.get('from') is not None else '')
+            + (f", to {brief(rec['to'])}" if rec.get('to') is not None else '')
+            + (f", {brief(rec['times'])} times" if rec.get('times') is not None else ''))
 
 
 def silenced(entry, decl):
@@ -558,14 +560,30 @@ def due_entries(fm, term, decl, today=None, notes=None):
     return out
 
 
-def brief(v, width=60):
-    """A value as a reader is shown it: whole when it is short, else its start and its length. A value of five thousand
-    characters is one the reader is told of, not handed."""
+def written(v):
+    """A value as a bean writes it: a list, a mapping, `null`, `true` in YAML's flow form — `[sam]`, `{count: 5}` — and
+    anything else as itself. Python's own spelling (`['sam']`, `None`, `True`) is a language the reader did not write in.
+    Raises ValueError for an int too long for Python to write out."""
+    if v is None or isinstance(v, (bool, list, tuple, dict)):
+        try:
+            t = yaml.safe_dump(list(v) if isinstance(v, tuple) else v, default_flow_style=True, allow_unicode=True,
+                               sort_keys=False, width=10 ** 9)
+        except yaml.YAMLError:                # a value no bean could hold: said as Python has it rather than not at all
+            return str(v)
+        return (t[:-4] if t.endswith('\n...\n') else t).strip()     # a bare scalar ends its own document
+    return str(v)
+
+
+def brief(v, width=60, quote=False):
+    """A value as a reader is shown it (`written`): whole when it is short, else its start and its length — in backticks
+    when `quote` is set. A value of five thousand characters is one the reader is told of, not handed."""
     try:
-        t = str(v)
+        t = written(v)
     except ValueError:                        # an int too long for Python to write out
-        return f"a number of more than {sys.get_int_max_str_digits()} digits"
-    return t if len(t) <= width else f"{t[:width]}… ({len(t)} characters)"
+        return (f"a {'number' if isinstance(v, int) else 'value holding a number'} of more than "
+                f"{sys.get_int_max_str_digits()} digits")
+    q = '`' if quote else ''
+    return f"{q}{t}{q}" if len(t) <= width else f"{q}{t[:width]}…{q} ({len(t)} characters)"
 
 
 def from_words(first, rec, attr, v):
@@ -588,34 +606,47 @@ def from_words(first, rec, attr, v):
 def _due_in_dispute(label, e, sides, attr, rep, decl, today):
     """A disagreement over one entry: each side that still lapses is walked, and the EARLIEST is what the reader is
     warned of, until a person chooses. Warning of the earlier date is the error that costs a look; warning of the later,
-    or of neither, is the error that costs the debt. Every side met, waived or broken is silence, as one would be."""
+    or of neither, is the error that costs the debt. Every side met, waived or broken is silence, as one would be.
+
+    A SIDE THAT CANNOT BE WALKED IS SAID, NEVER DROPPED: "the earliest is shown" over the sides that could be read, with
+    a side on `2026-02-30` or a stride past the year 9999 left out without a word, was a row that said OK while a side
+    it did not name had already fallen due. Each such side is a row of its own with no day, which the report prints as
+    a NOTE — under --quiet too — and the row that is shown says it is the earliest of the others."""
     walked, unwalked = [], []
     for x in sides:
         if silenced(x, decl) or not x.get(attr):
             continue
         try:
             first = dmcal.to_day(str(x[attr]))
-        except (ValueError, dmcal.NotByRule):
-            unwalked.append(f"{attr} {x[attr]} cannot be aged by rule")
+        except dmcal.NotByRule:
+            unwalked.append(f"{attr} {brief(x[attr])} cannot be aged by rule — it is looked up, never computed")
+            continue
+        except ValueError as why:
+            unwalked.append(f"{attr} {brief(x[attr])} is not a day this can read: {why}")
             continue
         rec = x.get(rep) if rep else None
+        beside = []
         if not isinstance(rec, dict):
-            beside = []
             walked.append((first, show_day(first, notes=beside), '; '.join([''] + beside)))
             continue
         try:
             day, i, times, ended = next_due(first, rec, today)
         except Unreckoned as why:
-            unwalked.append(str(why))
+            unwalked.append(f"{attr} {brief(x[attr])}, then {describe(rec)}: {why}")
             continue
-        beside = []
-        walked.append((day, show_day(day, rec, notes=beside), f", {'the last' if ended else 'next'}: occurrence {i}, "
-                                                              f"{describe(rec)}" + '; '.join([''] + beside)))
+        fw = from_words(first, rec, attr, x[attr])
+        shown = show_day(day, rec, notes=beside)
+        walked.append((day, shown, f", {'the last' if ended else 'next'}: occurrence {i}, {describe(rec)}"
+                                   + '; '.join([''] + beside + ([fw] if fw else []))))
     live = [x for x in sides if not silenced(x, decl)]
     words = f"a merge conflict: {len(sides)} sides disagree, {len(live)} of them not met, waived or broken"
     if walked:
         day, shown, how = min(walked)
-        return [(label, e, day, shown, f"  — {words}; the earliest is shown{how}, until a person chooses")]
+        others = (f"; {len(unwalked)} side{'s' if len(unwalked) != 1 else ''} cannot be walked here (NOTE), and the "
+                  f"earliest of the others is shown" if unwalked else "; the earliest is shown")
+        return ([(label, e, day, shown, f"  — {words}{others}{how}, until a person chooses")]
+                + [(label, e, None, None, f"a side of this merge conflict cannot be walked here, and the date shown for "
+                                          f"it is the earliest of the others: {u}") for u in unwalked])
     if live:
         return [(label, e, None, None, f"{words}, and no due date among them can be walked here"
                                        + (f" ({'; '.join(unwalked)})" if unwalked else '') + " — a person chooses")]

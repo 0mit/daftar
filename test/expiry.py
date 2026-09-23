@@ -396,6 +396,7 @@ os.remove(os.path.join(G, "beans", "odd.md"))
 # Written in the working tree, where these tools read: the gate refuses most of them, and a reader must not die on what the
 # gate would refuse, nor let one entry cost the garden every other warning — `deal`'s clause due in three days among them.
 _BEGIN = (FIRST.replace(day=1) + datetime.timedelta(days=40)).replace(day=FIRST.day)      # a month after FIRST, same day
+_LATER = (today + datetime.timedelta(days=200)).isoformat()                              # past every term's horizon
 open(os.path.join(G, "beans", "beyond.md"), "w").write(f"""---
 bean: beyond
 kind: contract
@@ -419,6 +420,11 @@ clauses:
   day-count: {{ what: "a fee", by: ali, to: keeper, due: 'jdn:99999999999' }}
   day-zero:  {{ what: "a fee", by: ali, to: keeper, due: 'jdn:0' }}
   begins:    {{ what: "rent", by: ali, to: keeper, due: {FIRST.isoformat()}, every: {{ of: time, in: gregorian-civil, each: month, from: {_BEGIN.isoformat()} }} }}
+  disputed:  {{ conflict: [ {{ what: "rent", by: ali, to: keeper, due: '2026-02-30' }},
+                            {{ what: "rent", by: ali, to: keeper, due: 2026-09-01, every: {{ of: time, in: gregorian-civil, every: {{ count: 3000000, unit: day }} }} }},
+                            {{ what: "rent", by: ali, to: keeper, due: {_LATER} }} ] }}
+  unwalkable: {{ conflict: [ {{ what: "a fee", by: ali, to: keeper, due: 'jdn:99999999999' }},
+                             {{ what: "a fee", by: ali, to: keeper, due: '{"9" * 200}' }} ] }}
 ---
 An agreement.
 """)
@@ -448,6 +454,29 @@ check("...a repetition whose `from` names another day than its `due` is walked f
       [l for l in out.splitlines() if "begins" in l])
 check("...and EVERY OTHER WARNING STILL PRINTS: the clause of another agreement due in three days",
       line("soon", bean="deal").startswith("EXPIRING"), out[-900:])
+_disp = [l for l in out.splitlines() if "beyond.clauses[disputed]" in l]
+check("a MERGE CONFLICT with a side on a day that does not exist and a side whose stride lands past 9999 does not drop them in "
+      "silence: the row shown is the earliest of the others, says so, and each side it could not walk is a NOTE of its own",
+      len(_disp) == 3 and _disp[0].startswith("OK") and f"due {_LATER}" in _disp[0]
+      and "2 sides cannot be walked here (NOTE), and the earliest of the others is shown" in _disp[0]
+      and any(l.startswith("NOTE") and "due 2026-02-30 is not a day this can read" in l
+              and "not a day of the Gregorian calendar" in l for l in _disp)
+      and any(l.startswith("NOTE") and "due 2026-09-01, then every 3000000 day" in l and "so no reader could write it" in l
+              for l in _disp), _disp)
+check("...and where NO side can be walked, each reason is its own — a day beyond what is reckoned is not a day this can read, "
+      "not one 'aged by rule' — and a value of two hundred characters is told of by its length, not printed whole",
+      line("unwalkable").startswith("NOTE") and "no due date among them can be walked here" in line("unwalkable")
+      and "due jdn:99999999999 is not a day this can read" in line("unwalkable") and "by rule" not in line("unwalkable")
+      and "(200 characters)" in line("unwalkable") and "9" * 200 not in line("unwalkable"), line("unwalkable"))
+try:
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py"), "--quiet"], capture_output=True, text=True, cwd=G,
+                       timeout=60)
+    qout = r.stdout + r.stderr
+except subprocess.TimeoutExpired:
+    qout = "(killed after 60 s)"
+check("...and under --quiet, where an OK row is not printed, the sides it could not walk still are",
+      "Traceback" not in qout and sum(1 for l in qout.splitlines() if l.startswith("NOTE") and "beyond.clauses[disputed]" in l
+                                      and "a side of this merge conflict cannot be walked here" in l) == 2, qout[-900:])
 try:
     r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "beyond"], capture_output=True, text=True, cwd=G, timeout=60)
     lout, ended = r.stdout + r.stderr, True

@@ -285,6 +285,12 @@ check("a share is read as the law's own pattern for it reads one, and no longer 
       all(t["paid"] is None and any("not a whole number of parts" in n for n in t["notes"]) for t in _bad.values())
       and _bearing(("sam", "2"), ("ali", 1))["borne"] == {"sam": 600, "ali": 300},
       {k: t["notes"] for k, t in _bad.items() if t["paid"] is not None or not t["notes"]})
+check("...and each is said as it is written, in backticks — `true`, `010` — or, too long to write out, by what "
+      "it is; never Python's own spelling of it",
+      any("sam's share `true` is not" in n for n in _bad["True"]["notes"]) and any("sam's share `010` is not" in n for n in _bad["'010'"]["notes"])
+      and any("sam's share a number of more than" in n for n in _bad["an int of 5001 digits"]["notes"])
+      and not any("True" in n or "'" in n.split("share ", 1)[1].split(" is not")[0] for t in _bad.values() for n in t["notes"]),
+      {k: t["notes"] for k, t in _bad.items()})
 _t = _bearing(("sam", ...), ("ali", 1))
 check("...a bearer that names no share is said to name none — not 'a share of None'",
       _t["paid"] is None and any("sam is named as bearing it and names no share" in n for n in _t["notes"])
@@ -292,15 +298,22 @@ check("...a bearer that names no share is said to name none — not 'a share of 
 
 # A PART THAT IS NOT AN ENTRY IS SAID TO BE: `paid_by: [sam, {party: ali, …}]` was read as "paid by ali", sam left out in
 # silence; `paid_by: [sam]` was read as nobody. Each is now left out with a NOTE naming what is not an entry.
-for _label, _paid in (("a bare name beside an entry", '[ sam, { party: ali, amount: { count: 900, unit: XTS } } ]'),
-                      ("a bare name as the only payer", '[ sam ]'), ("a bare name that is not even a list", 'sam')):
+# It is said in the reader's words: `sam`, an empty entry, a list [sam] — never Python's 'sam', None or ['sam'].
+for _label, _paid, _said in (("a bare name beside an entry", '[ sam, { party: ali, amount: { count: 900, unit: XTS } } ]', "`sam`"),
+                             ("a bare name as the only payer", '[ sam ]', "`sam`"),
+                             ("a bare name that is not even a list", 'sam', "`sam`"),
+                             ("an empty entry (`null`)", '[ null ]', "an empty entry"),
+                             ("a list where an entry goes", '[ [ sam ] ]', "a list [sam]")):
     agreement("bare", f'  t: {{ what: "x", amount: {{ count: 900, unit: XTS }}, paid_by: {_paid} }}')
     code, out = ledger("bare")
-    check(f"{_label} in paid_by is LEFT OUT with a NOTE — the payer is not silently dropped",
-          code == 0 and "Traceback" not in out and "paid_by holds 'sam', which is not an entry" in out and "paid by" not in out, out[-500:])
-agreement("bare", '  t: { what: "x", amount: { count: 900, unit: XTS }, paid_by: [ { party: sam } ], borne_by: [ ali ] }')
-code, out = ledger("bare")
-check("...and so in borne_by", "borne_by holds 'ali', which is not an entry" in out and "Traceback" not in out, out[-500:])
+    check(f"{_label} in paid_by is LEFT OUT with a NOTE — the payer is not silently dropped — and said as {_said}",
+          code == 0 and "Traceback" not in out and f"paid_by holds {_said}, which is not an entry" in out and "paid by" not in out
+          and "None" not in out and "['" not in out, out[-500:])
+for _borne, _said in (("[ ali ]", "`ali`"), ("[ null ]", "an empty entry")):
+    agreement("bare", f'  t: {{ what: "x", amount: {{ count: 900, unit: XTS }}, paid_by: [ {{ party: sam }} ], borne_by: {_borne} }}')
+    code, out = ledger("bare")
+    check(f"...and so in borne_by: {_said}", f"borne_by holds {_said}, which is not an entry" in out and "Traceback" not in out
+          and "None" not in out, out[-500:])
 os.remove(os.path.join(G, "beans", "bare.md"))
 
 agreement("nothing", '  t: { what: "a wash", amount: { count: 0, unit: XTS }, paid_by: [ { party: sam, amount: { count: 100, unit: XTS } }, '

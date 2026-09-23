@@ -213,6 +213,15 @@ def _list(v):
     return v if isinstance(v, list) else [] if v is None else [v]
 
 
+def not_an_entry(v):
+    """What a list of entries holds in an entry's place, in the reader's words: `an empty entry` for `- ` or `null`, `a
+    list [sam]` for a list, and anything else as it is written, in backticks (`sam`) — never Python's `None` or
+    `['sam']`, which nobody wrote."""
+    if v is None:
+        return "an empty entry"
+    return f"a list {dmstale.brief(v)}" if isinstance(v, (list, tuple)) else dmstale.brief(v, quote=True)
+
+
 def read_transaction(key, e, rule, units):
     """One transaction, read: {whole, unit, paid, borne, priced, notes}. `paid` and `borne` are None when it cannot be
     read exactly, and `notes` then say why — a figure left out is said to be left out, never guessed at."""
@@ -237,7 +246,7 @@ def read_transaction(key, e, rule, units):
     if odd:
         # A PART THAT IS NOT AN ENTRY IS NOT DROPPED IN SILENCE: `paid_by: [sam, {party: ali, …}]` read as "paid by ali"
         # was a total that left sam out without a word. The gate refuses it; the working tree may still hold it.
-        tx['notes'].append(f"{rule['parts']} holds {dmstale.brief(odd[0])!r}, which is not an entry "
+        tx['notes'].append(f"{rule['parts']} holds {not_an_entry(odd[0])}, which is not an entry "
                            f"({{{rule['party']}, {rule['part_amount']}}}) — left out until it is one")
         return tx
     stated = [(p.get(rule['party']), p.get(rule['part_amount'])) for p in parts]
@@ -271,7 +280,7 @@ def read_transaction(key, e, rule, units):
     shares = {}
     for b in _list(e.get(BEARING)):
         if not isinstance(b, dict):
-            tx['notes'].append(f"{BEARING} holds {dmstale.brief(b)!r}, which is not an entry "
+            tx['notes'].append(f"{BEARING} holds {not_an_entry(b)}, which is not an entry "
                                f"({{{rule['bearer']}, {SHARE}}}) — left out until it is one")
             return tx
         who, s = str(b.get(rule['bearer'])), b.get(SHARE)
@@ -280,8 +289,8 @@ def read_transaction(key, e, rule, units):
             return tx
         n = read_share(s, rule.get('share_pattern'))
         if n is None:
-            tx['notes'].append(f"{who}'s {SHARE} {dmstale.brief(s)!r} is not a whole number of parts as the law writes "
-                               f"one — left out")
+            tx['notes'].append(f"{who}'s {SHARE} {dmstale.brief(s, quote=True)} is not a whole number of parts as the "
+                               f"law writes one — left out")
             return tx
         shares[who] = shares.get(who, 0) + n
     tx['paid'] = paid
@@ -455,8 +464,9 @@ def clause_lines(term, key, e, sch, units, systems, today):
         elif 'quantity' in f:
             c, why = read_count(v)
             facts.append(f"{a} " + (said(c, v.get('unit'), units) if c is not None else
-                                    f"{dmstale.brief(v.get('count') if isinstance(v, dict) else v)!r} "
-                                    f"{v.get('unit') if isinstance(v, dict) else ''} (not a count this reads exactly{why})"))
+                                    f"{dmstale.brief(v.get('count') if isinstance(v, dict) else v, quote=True)}"
+                                    f"{' ' + str(v.get('unit')) if isinstance(v, dict) else ''} "
+                                    f"(not a count this reads exactly{why})"))
         elif a == due:
             text, asides = due_words(a, v, e.get(rep) if rep else None, systems, today)
             facts.append(text)
