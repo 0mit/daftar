@@ -289,8 +289,10 @@ the join of §5, applied in the receiving garden.
   compared; a local term an offered bean relies on is caught by the gate's verdict below. A proposal from a garden
   this garden holds no `garden` bean for is refused, and the refusal prints the two beans a first contact writes
   (MODEL.md, Between gardens); so is one whose `from.gardener` is not the gardener this garden records for the
-  sending garden (the owner of its `garden` bean). A proposal is loaded as data: aliases, and nesting beyond a bound,
-  are refused, and a shape the tool cannot read is a setup error (exit 2), never a traceback. Then it resolves identity over this garden's beans and the offered ones together
+  sending garden (the owner of its `garden` bean) — where the proposal carries the being it names as its gardener,
+  that being must be the one this garden records. A proposal is loaded as data: aliases, and nesting beyond a bound,
+  are refused, and a shape the tool cannot read is a setup error (exit 2), never a traceback. Then it resolves
+  identity over this garden's beans and the offered ones together
   (§4.4): each stub RESOLVES to a local bean or is UNRESOLVED — a stub marked `gardener-of: to`, the receiving
   garden's gardener whom the sender knows only provisionally, resolves to the gardener `GARDEN.md` names — and each
   offered bean FUSES with a local bean, is NEW, or is a CANDIDATE (an equal bare minted name, or a local bean of the
@@ -332,6 +334,10 @@ the join of §5, applied in the receiving garden.
   receiving garden's own id is refused on a new bean, and on a fused bean unless the receiving garden holds the
   identical record at the same path — a round trip, the one way a record comes home. So nothing another garden
   writes arrives as this garden's own assertion, or as its gardener's acceptance.
+- **A merge nobody has settled does not travel.** A value two gardens hold two ways is kept, both sides, until a
+  person picks one (§10), and the gate stands down on it meanwhile. So `make` refuses a bean that still holds
+  `merge_open`, `merge_conflicts` or a conflict record, and `read` refuses a proposal that carries one: taken in, the
+  markers would stand the receiving garden's gate down on the sender's say.
 - **A third garden's word is not passed on.** `make` refuses a bean carrying a record stamped by a garden that is
   neither this one nor the addressee, a `provenance_of` value seen in neither, or a body section under a `theirs`
   line from another garden; `read` refuses the same of what the sending garden passes on. An anchor's record is the
