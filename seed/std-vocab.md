@@ -2050,7 +2050,7 @@ terms:
     enforced_by: none
     merge: { cardinality: single, order: none }
   - term: parties
-    meaning: "who an agreement binds — an open map, one entry per party, keyed by a short name its clauses and transactions use. A party with `accepted` said yes on that day; one without has been offered the agreement and has not said yes, and the record says so rather than assuming"
+    meaning: "who an agreement binds — an open map, one entry per party, keyed by a short name its clauses and transactions use. A party with `accepted` said yes on that day; one without has no acceptance on record — an offer not yet taken up, or an agreement whose acceptance nobody recorded — and the record says so rather than assuming"
     context_keys: [parties]
     schema:
       shape: open_map_of_entries
@@ -2425,7 +2425,8 @@ kinds:
     meaning: "words or figures fixed in a form that can be kept and handed on: a statement, a letter, a scanned sheet, a conversation kept as a transcript. Identified by its home's reference (`doc_id`) or by its content (`content_hash`); where its copies are is `located_at`. What must not be kept whole — a card number — stays out of it, and a redacted copy of its lines is a `capture` on it."
   - kind: event
     of_nature: metaphysical
-    meaning: "a happening between people at a time: a meeting, a dinner, a party, a conversation in which something was agreed. When is `timing`; who took part is `refs`, each naming what they were (`rel: present | invited | host | paid`)."
+    ownership_form: [crown]
+    meaning: "a happening between people at a time: a meeting, a dinner, a party, a conversation in which something was agreed. When is `timing`; who took part is `refs`, each naming what they were (`rel: present | invited | host | paid`). A happening between people is owned by none of them — it may end at the crown — and whoever hosted it answers for it."
 ---
 # daftar — Tier-0 Universal Standard Vocabulary
 
