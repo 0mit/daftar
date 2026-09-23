@@ -24,7 +24,7 @@ schema_language:
     ref:         "in: ref — a {bean|mapping: <id>[, field: <key>]} ref; the gate RESOLVES it (dangling = error)"
     pointer:     "in: { pointer: bean_field_pointer } — '<section>.<key>' on this bean, {bean, field} on another, or 'file:<path>'"
     id:          "in: id — the id of a bean or mapping: a key of the ref FORM itself, on a term whose value `is_ref`"
-    prose:       "in: prose — a reason, a description, a remark. DELIBERATELY not a position: `why`, `what`, `note`. The reason IS the fact, and a schema for it would launder an opinion into a field"
+    prose:       "in: prose — a reason, a description, a remark. DELIBERATELY not a position: `why`, `what`, `note`. The reason IS the fact, and a schema for it would launder an opinion into a field. `in: { prose: named }` — one text, or several under the names of what each says: a map of named sayings, each one text"
     untyped:     "in: untyped — a position whose domain nobody has declared yet. A standing debt, written down so that an oversight and a decision stop looking alike"
   is_ref:               "true — the value (or each entry) IS ITSELF a {bean|mapping: <id>[, field: <key>]} ref, which the gate resolves (13.0)"
   path:                 "<dotted path> — the term governs a NESTED field rather than a top-level key named after it (`identity.status`, `identity.anchors[].class`, `provenance.src`). Added at 2.0 for the five core grammar enums and never declared here until 11.3."
@@ -92,7 +92,7 @@ manifest:
     gardener:       { in: { bean_id: { kinds: [person, org] } }, meaning: "the person — or organisation — who keeps the garden: a bean of the garden. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
     test:           { in: prose, meaning: "present when the garden is a rehearsal or a test, saying what it rehearses. Its beans are not facts about the world, and a proposal from it says so" }
     origin:         { in: prose, meaning: "where the garden began, for a reader" }
-    policy:         { in: any, meaning: "standing rules the gardener sets for work in the garden, in prose" }
+    policy:         { in: { prose: named }, meaning: "standing rules the gardener sets for work in the garden, in prose: one text, or each rule under a name of its own" }
 # == WHAT THE LAW RETIRED, so a refusal can say where it went ==
 retired:
   - { name: scope,         at: anchor,   instead: "nothing: whether a value identifies beyond its garden is said by its term (`anchor.minted`) and by its own form (`<kind>:<name>`, qualified `<garden_id>/<kind>:<name>`)" }
@@ -1095,6 +1095,8 @@ vacancies:
   - { at: "registry:units", position: per-mille, reason: universal, why: "a unit of the `ratio` quantity — a share of a cost, a rate of interest — declared as the four ways a ratio is written, because an amount a clause asks for may be one. The quantity machinery they belong to is occupied by every measured value" }
   - { at: "registry:units", position: basis-point, reason: universal, why: "a unit of the `ratio` quantity — a share of a cost, a rate of interest — declared as the four ways a ratio is written, because an amount a clause asks for may be one. The quantity machinery they belong to is occupied by every measured value" }
   - { at: "registry:facets", position: financial, reason: universal, why: "who pays for a being and is paid by it: in the standard because a stranger's garden expects it beside `legal`, `technical` and `experience`, the facets that are occupied" }
+  - { at: "words.form", position: written, reason: universal, why: "an agreement's words, declared whole: written down, spoken aloud, or not yet put into words — the three ways any agreement stands, which a stranger keeping one expects to find. `words` is occupied through `spoken`; `written` is taken the day an agreement's text is kept in a `document`" }
+  - { at: "words.form", position: unstated, reason: universal, why: "an agreement's words, declared whole: written down, spoken aloud, or not yet put into words — the three ways any agreement stands, which a stranger keeping one expects to find. `words` is occupied through `spoken`; `unstated` is an agreement that is named and whose terms nobody has put into words yet" }
 # == FIGURES: the shapes an aspect may take ==
 figures:
   - figure: opposition
@@ -1165,8 +1167,9 @@ value_types:
     dimension: time
     unit: day
     any_system: true
+    exists: { reckoning: [arithmetic] }
     refusal: "must be an ABSOLUTE date held to the day, in the one form of the calendar it is stated in — `2026-09-20`, `persian:1405-06-29`, `hebrew:5787-01-09`, `2026-W38-7` (Rule 6 paper-durable)"
-    meaning: "a position held to the DAY, in ANY calendar. What `observed`, `as_of` and `expires` are typed with: a fact is dated in the calendar it was known in, and no calendar is the one a date must be in. `iso_date` stays for a garden's own term that really means the Gregorian calendar."
+    meaning: "a position held to the DAY, in ANY calendar. What `observed`, `as_of` and `expires` are typed with: a fact is dated in the calendar it was known in, and no calendar is the one a date must be in. `iso_date` stays for a garden's own term that really means the Gregorian calendar. A day its calendar does not have is no date: where the calendar's row is reckoned in one of the ways `exists.reckoning` names, the day a position names, written back in that calendar, is the position written, and a year the reckoning cannot reach is no year. So it is for every position held to a day — a date, where a repetition starts and ends, a bound of a region in time."
   - type: kebab
     pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
     refusal: "must be kebab-case (the name is open, but still paper-durable)"
@@ -1175,6 +1178,12 @@ value_types:
     pattern: '^-?(0|[1-9][0-9]{0,39})(\.[0-9]{1,40})?$'
     refusal: "must be a whole number, or a decimal written as a string (\"12.5\"), in plain decimal digits — no leading zero, at most forty digits before the point and forty after: a float has no canonical form, and a longer count is one some reader cannot hold exactly"
     meaning: "the count of a measured value — how many of its unit — written as a person writes a number, and held exactly by every reader"
+  - type: text
+    holds_no: Cc
+    but: ["\t"]
+    lines_in: block
+    refusal: "a control character, which text never holds: no one reads it, and printed it moves, erases or hides what a reader's terminal shows. Text holds a tab, and a line feed only in a block scalar (`|` or `>`), whose lines are lines on the page"
+    meaning: "what every key and every string value of a bean, a mapping, GARDEN.md and VOCAB.md is: characters a person reads. It holds no character of the Unicode general category `holds_no` but those in `but`, and a line feed only in a scalar of the style `lines_in` names. Every other value type is text first"
 # == THE JOURNAL ==
 journal:
   path: log/journal.md
@@ -1529,6 +1538,10 @@ profiles:
           registrant:  { in: prose, meaning: "optional: the party holding the registration, where the registry discloses it" }
           note:        { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       merge: { cardinality: single, order: none }
+    vacancies:
+    - { at: "registration.auto_renew", position: enabled, reason: universal, why: "whether the registrar renews the name by itself, declared whole — on, off, or not known — because every registration is in one of the three; a garden holding a few names takes one or two of them" }
+    - { at: "registration.auto_renew", position: disabled, reason: universal, why: "whether the registrar renews the name by itself, declared whole — on, off, or not known — because every registration is in one of the three; a garden holding a few names takes one or two of them" }
+    - { at: "registration.auto_renew", position: unknown, reason: universal, why: "whether the registrar renews the name by itself, declared whole — on, off, or not known — because every registration is in one of the three; a garden holding a few names takes one or two of them" }
 
   knowledge:
     meaning: >
@@ -2050,14 +2063,14 @@ terms:
     merge: { cardinality: set, order: none }
   # == THE MERGE DRIVER'S OWN STATE ==
   - term: merge_open
-    meaning: "this bean holds an unresolved merge: both values are kept and a human has not yet chosen. Written by the merge driver, read by the gate, cleared by the person who resolves it."
+    meaning: "this bean holds an unresolved merge: both values are kept and a human has not yet chosen. Written by the merge driver, read by the gate, cleared by the person who resolves it. `true`, or absent."
     context_keys: [merge_open]
-    enforced_by: none
+    enforced_by: core
     merge: { cardinality: single, order: none }
   - term: merge_conflicts
-    meaning: "the dotted paths inside this bean that hold a captured disagreement. The companion to merge_open: it says WHERE, so a human does not have to search the document for it."
+    meaning: "the dotted paths inside this bean that hold a captured disagreement, each written as text. The companion to merge_open: it says WHERE, so a human does not have to search the document for it. A member of a list a term merges member by member is at `<term>.<its key>`, the key its `merge.order` names. The rules stand down on a conflict record only where the merge driver captured it: `merge_open: true`, its path named here, and the record `{conflict: [...]}` with nothing beside `conflict`, holding two values or more that differ. Any other conflict record is refused, named at its path."
     context_keys: [merge_conflicts]
-    enforced_by: none
+    enforced_by: core
     merge: { cardinality: set, order: none }
   - term: provenance_of
     meaning: "who said each merged value and how they know, keyed by the same dotted path merge_conflicts uses: {path: [{value, src, seen_in, subsumed?}]}. A subsumed value appears here and NOWHERE else, because the document carries only the winner."

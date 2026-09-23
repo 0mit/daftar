@@ -105,20 +105,80 @@ def _is_conflict(v):
     return isinstance(v, dict) and isinstance(v.get('conflict'), list)
 
 
-def _captured(fm, key):
-    """True when `key` holds a conflict the merge driver DECLARED with `merge_open: true`.
+def _uncaptured(fm, path, v):
+    """None when the conflict record `v` at `path` is one the merge driver CAPTURED and declared (`merge_conflicts`'
+    meaning in the law), else what it lacks. MERGE.md §10 makes a captured conflict committable — lossless capture
+    first, human choice after — so the per-term rules stand down on a value nobody has chosen yet, and the single
+    unclean warning speaks for the bean. Only what the driver writes earns that: `merge_open: true`, the path named in
+    `merge_conflicts`, and a record that is `{conflict: [...]}` and nothing else, holding two values or more that
+    differ. A record short of any of them shielded values the gate refuses — a party nobody is, a day no calendar has,
+    parts that do not add up — behind a warning, on nobody's say but the document's own."""
+    if fm.get('merge_open') is not True:
+        return "with no `merge_open: true`"
+    _named = fm.get('merge_conflicts')
+    if not (isinstance(_named, list) and path in [p for p in _named if isinstance(p, str)]):
+        return "at a path `merge_conflicts` does not name"
+    if set(v) != {'conflict'}:
+        return f"that carries {sorted(map(str, set(v) - {'conflict'}))} beside `conflict`"
+    if len({_canon(x) for x in v['conflict']}) < 2:
+        return "with fewer than two different values — a disagreement has two sides"
+    return None
 
-    MERGE.md §10 makes a captured conflict committable — lossless capture first, human choice after —
-    so the per-term rules stand down on a value nobody has chosen yet, and the single unclean warning
-    speaks for the bean. Only a DECLARED capture earns this. A conflict record with no marker is an
-    undeclared merge and is an error, raised where the unclean report is built.
-    """
-    return bool(fm.get('merge_open')) and _is_conflict(fm.get(key))
+
+def _captured(fm, path, v):
+    """True when the value at `path` is a conflict the merge driver captured and declared (see _uncaptured)."""
+    return _is_conflict(v) and _uncaptured(fm, path, v) is None
+
+
+def _canon(x):
+    """One spelling of a value, to tell two sides of a conflict apart — never a traceback on an odd key."""
+    import json
+    try:
+        return json.dumps(x, sort_keys=True, ensure_ascii=False, default=str)
+    except (TypeError, ValueError):
+        return repr(x)
+
+
+def _member_path(term, prefix, i, v):
+    """Where the merge driver says a conflict record in a LIST is. Each member of a list a term merges `multi` is keyed
+    by the fields its `merge.order` names (bin/dmmerge.py `members`), and `merge_conflicts` names it `<term>.<key>`: the
+    one field's value, or the fields' values as one canonical list. A list nobody merges member by member, or whose
+    sides do not agree on their key, has no such path and is addressed by position, `<path>[<i>]`."""
+    import json, unicodedata
+    ident = dmparse.identity_fields((((TERMS.get(term) or {}).get('merge') or {}) if isinstance(term, str) else {}).get('order')) \
+        if prefix == term else None
+    sides = v.get('conflict') if _is_conflict(v) else None
+    if not ident or not sides or not all(isinstance(x, dict) for x in sides):
+        return f"{prefix}[{i}]"
+
+    def norm(x):                            # the canonical form the driver keys by: text trimmed and composed, a date ISO
+        if isinstance(x, str):
+            x = unicodedata.normalize('NFC', x).strip()
+            try:
+                return str(ipaddress.ip_address(x))
+            except ValueError:
+                return x
+        if hasattr(x, 'isoformat'):
+            return x.isoformat()
+        if isinstance(x, dict):
+            return {norm(k): norm(y) for k, y in x.items()}
+        return [norm(y) for y in x] if isinstance(x, (list, tuple)) else x
+    keys = set()
+    for side in sides:
+        vals = [side.get(f) for f, _ in ident]
+        keys.add(str(vals[0]) if len(ident) == 1 and not ident[0][1] else
+                 json.dumps(norm(vals), sort_keys=True, ensure_ascii=False, separators=(',', ':'), default=str))
+    return f"{prefix}.{keys.pop()}" if len(keys) == 1 else f"{prefix}[{i}]"
 
 
 def load(f):
     # line-anchored fences (bin/dmparse.py) — a `---`/`----` inside a value or the body never truncates
-    head, body = dmparse.read(f)
+    try:
+        head, body = dmparse.read(f)
+    except dmparse.NotUTF8 as e:
+        # A FILE THAT IS NOT UTF-8 IS REFUSED BY NAME, never a traceback that names no file: the pre-commit hook runs
+        # this gate, and a person with many beans must be told which one, and what to do with it.
+        return {'__err__': str(e), '__not_utf8__': True}, ''
     if head is None:
         return None, ''
     try:
@@ -143,7 +203,11 @@ if os.path.exists(STD):
 else:
     errors.append(f"std-vocab not found at {STD} — the law has ONE path and there is no fallback")
 
-vocab_fm = load(os.path.join(ROOT, 'VOCAB.md'))[0] or {}
+vocab_fm = load(os.path.join(ROOT, 'VOCAB.md'))[0]
+if vocab_fm is None:
+    # empty fences say nothing, and are read as nothing; NO fences is no vocabulary read at all, and a garden that
+    # meant one would never learn it was ignored
+    vocab_fm = {} if dmparse.read(os.path.join(ROOT, 'VOCAB.md'))[0] is not None else {'__err__': 'no --- fences'}
 if not isinstance(vocab_fm, dict) or '__err__' in vocab_fm:
     # the garden's own vocabulary is read as a mapping or not at all: a list or a word in its fences, or YAML that does
     # not parse, is refused by name — never read as an empty vocabulary, and never a traceback further down
@@ -151,22 +215,15 @@ if not isinstance(vocab_fm, dict) or '__err__' in vocab_fm:
                   f"{vocab_fm['__err__'] if isinstance(vocab_fm, dict) else 'not a mapping'}) — this garden's own "
                   f"vocabulary is a mapping of what it adds to the law")
     vocab_fm = {}
-# ...and each block it adds is read in its own shape or not at all: `local_terms: 5` refused by name, never a traceback.
-for _blk, _shape in (('local_terms', list), ('local_kinds', list), ('vacancies', list), ('extends_profiles', list),
-                     ('registry_files', list), ('registry_links', list), ('registry_additions', dict),
-                     ('identity_policy', dict)):
-    if vocab_fm.get(_blk) is not None and not isinstance(vocab_fm[_blk], _shape):
-        errors.append(f"VOCAB.md: `{_blk}` is a {'list' if _shape is list else 'mapping'}, not "
-                      f"{type(vocab_fm[_blk]).__name__} — it is left unread until it is one")
-        vocab_fm[_blk] = _shape()
-for _name in list((vocab_fm.get('registry_additions') or {})):
-    if not isinstance(vocab_fm['registry_additions'][_name], list):
-        errors.append(f"VOCAB.md: `registry_additions.{_name}` is a list of rows, not "
-                      f"{type(vocab_fm['registry_additions'][_name]).__name__} — it is left unread until it is one")
-        vocab_fm['registry_additions'][_name] = []
+# ...and each block it adds, each ENTRY of a block and each row it adds to a registry, in its own shape or not at all:
+# `local_terms: 5`, `local_terms: [{term: [x]}]`, a cell that says no verdict or a pattern that does not compile are
+# refused by name and left unread, never a traceback and never passed. bin/dmparse.py holds the one reading, which
+# bin/dmrules.py shares — so the rules it lists are the rules this gate reads.
+errors.extend(dmparse.vocab_read(vocab_fm))
 
 
 _FILE_REGISTRIES = {}
+_ROWS_READ = set()            # the garden's own registries whose rows have been read in their shape
 
 def _registry_file(name):
     """Rows of a registry kept in a DATA FILE rather than in the law's prose (9.1). A classification of four
@@ -192,6 +249,17 @@ def _registry_file(name):
     except OSError:
         errors.append(f"registry_files: registry '{name}' is declared at {decl.get('file')} and that file is missing "
                       f"— a declared registry is never read as empty")
+    except UnicodeDecodeError as e:
+        errors.append(f"registry_files: registry '{name}' is declared at {decl.get('file')}, and that file is not UTF-8 "
+                      f"(byte {e.start}) — save it as UTF-8; a declared registry is never read as empty")
+    # a row a data file holds is judged as a row a garden writes is: a `pattern` it declares is one the gate can match
+    # with, or the row is refused by name and left unread
+    for _r in list(rows):
+        if dmparse.pattern_problem(_r):
+            errors.append(f"registry_files: registry '{name}' ({decl.get('file')}): the row "
+                          f"'{_r.get(decl.get('key')) if isinstance(decl.get('key'), str) else ''}' "
+                          f"{dmparse.pattern_problem(_r)} — it is left unread until it is one")
+            rows.remove(_r)
     _FILE_REGISTRIES[name] = rows
     return rows
 
@@ -203,6 +271,14 @@ def registry(name):
     that needed one operating system Tier-0 lacks had to copy the whole registry and then declare a vacancy
     for every row it had copied and did not use (found by the v0.3.1 cold-start drill). An addition names
     only what is new, so the garden accounts only for what it declared."""
+    if not isinstance(name, str):
+        return []                           # a list or a map where a registry's name belongs names none; its rule says so
+    if vocab_fm.get(name) is not None and name not in _ROWS_READ:
+        # a registry the garden restates is a list of rows, each in its shape, or it is not read: refused once, by
+        # name, and the law's own rows stand in its place for the rest of the run
+        _ROWS_READ.add(name)
+        vocab_fm[name], _why = dmparse.restated_rows(vocab_fm, name)
+        errors.extend(_why)
     base = vocab_fm.get(name) if vocab_fm.get(name) is not None else (std_fm.get(name) or [])
     if not base:
         base = _registry_file(name) or []
@@ -440,7 +516,17 @@ VALUE_TYPES = {t['type']: t for t in (registry('value_types') or []) if isinstan
 # the gate accepted `۲۰۲۶-۰۹-۲۰` as an iso_date — a second spelling of a position, which nothing downstream can read
 # as a date. The law's patterns are therefore matched ASCII-only, everywhere, through this one function — and to the end
 # of the value: dmparse holds the one definition, which the merge's reading of a form shares.
-law_match = dmparse.law_match
+def law_match(pattern, value):
+    """dmparse's one matcher, and a form that does not compile is REFUSED BY NAME — once, and no value matches it —
+    never a traceback. Every pattern a garden writes is read before this runs (`dmparse.vocab_read`); this stands
+    behind a form reached some other way, such as the field of a registry row a `take:` names."""
+    try:
+        return dmparse.law_match(pattern, value)
+    except (re.error, ValueError) as e:
+        _m = f"the form '{pattern}' is not a regular expression ({e}) — no value is held to it until it is one"
+        if _m not in errors:
+            errors.append(_m)
+        return None
 
 
 KEBAB = re.compile(VALUE_TYPES['kebab']['pattern'], re.ASCII) if 'kebab' in VALUE_TYPES else None
@@ -460,7 +546,7 @@ def check_law_extents():
 
 
 def check_value_types():
-    for _t in ('iso_date', 'kebab', 'count'):
+    for _t in ('iso_date', 'kebab', 'count', 'text'):
         if _t not in VALUE_TYPES:
             errors.append(f"VOCAB: no `value_types` row for '{_t}' — the gate reads its type patterns from the law "
                           f"and has no copy of its own")
@@ -476,6 +562,8 @@ def check_value_type(where, attr, val, typ):
         return                      # the law itself is missing; check_value_types has said so once
     if not t:
         errors.append(f"{where}.{attr}: type '{typ}' is not declared in `value_types` {sorted(VALUE_TYPES)}")
+    elif t.get('holds_no'):
+        return                      # text: every key and string of the document is held to it, by check_text
     elif t.get('any_system'):
         # A POSITION IN ANY SYSTEM OF THE TYPE'S DIMENSION, held to the type's unit (16.0): no system is the one a date
         # must be in. It must be in ONE system's own form, that system must HAVE the level, and a reading finer than
@@ -495,16 +583,19 @@ def check_value_type(where, attr, val, typ):
 
 def day_unwritten(val, row):
     """None when the DAY a position names exists in its calendar — or when that calendar is not reckoned by rule, so no
-    arithmetic can say — else what is wrong with it (std-vocab 21.0).
+    arithmetic can say — else what is wrong with it (`value_types[date].exists`).
 
     A pattern admits `persian:1404-12-30` and `2026-02-30` alike: two digits are two digits. Only the calendar knows that
     Esfand 1404 has twenty-nine days, and `bin/dmcal.py` carries each calendar that reckons by rule as its two functions,
     to the day and from it. So a position is judged by the ROUND TRIP: the day it names, written back in its own calendar,
     must be the position written. A day that does not exist moved silently to the next (persian:1405-01-01), and a year
-    outside what a calendar can reckon raised in a reader; both are refused here, by name, and never a traceback. The
-    calendar is the row's own `calendar:`; dmcal says which calendars it cannot reckon (NotByRule), so nothing here lists
-    them."""
+    outside what a calendar can reckon raised in a reader; both are refused here, by name, and never a traceback. WHICH
+    calendars are judged is the LAW's to say, not the tool's: the row's own `reckoning`, against the reckonings the date
+    type's `exists` names. A calendar the tool happens to carry and the law says is observed is not judged by it."""
     if not isinstance(row, dict) or not row.get('calendar'):
+        return None
+    _judged = ((VALUE_TYPES.get('date') or {}).get('exists') or {}).get('reckoning') or []
+    if not isinstance(_judged, list) or row.get('reckoning') not in _judged:
         return None
     date = re.split(r'[T ]', str(val), maxsplit=1)[0]
     try:
@@ -1161,6 +1252,9 @@ def build_docs():
         is_bean = os.sep + 'beans' + os.sep in f
         idkey = 'bean' if is_bean else 'mapping'
         fm, body = load(f)
+        if isinstance(fm, dict) and fm.get('__not_utf8__'):
+            errors.append(f"{os.path.relpath(f, ROOT).replace(os.sep, '/')}: {fm['__err__']}")
+            continue
         if not isinstance(fm, dict) or '__err__' in fm:
             _why = fm['__err__'] if isinstance(fm, dict) else ('no --- fences' if fm is None else 'not a mapping')
             errors.append(f"{base}: front-matter invalid ({_why})")
@@ -1226,7 +1320,10 @@ def check_duplicate_keys():
     for _f in _paths:
         if not os.path.exists(_f):
             continue
-        _head = dmparse.read(_f)[0]
+        try:
+            _head = dmparse.read(_f)[0]
+        except dmparse.NotUTF8:
+            continue                          # refused by name where the document is loaded
         if not _head:
             continue
         try:
@@ -1236,6 +1333,40 @@ def check_duplicate_keys():
         for _path, _first, _again in _dups:
             errors.append(f"{os.path.relpath(_f, ROOT)}: key '{_path}' is written twice (lines {_first} and "
                           f"{_again}) — YAML keeps the second and silently discards the first")
+
+
+def check_text():
+    """TEXT HOLDS NO CONTROL CHARACTER (`value_types[text]`). A key or a value is read by a person, and printed by every
+    tool: an escape character in a title moved the cursor up and wrote a debt the other way round on the line a reader
+    trusted, and one in a path the gate itself quotes cleared the screen on every commit. So every key and every string
+    of a bean, a mapping, GARDEN.md and VOCAB.md is held to the law's row: no character of the category it names, but
+    the ones it lets through — and a line feed only in a block scalar, where a value's lines are lines on the page. Read
+    from the NODE GRAPH, because only there is a scalar's style known; the character is named, never echoed."""
+    t = VALUE_TYPES.get('text')
+    if not t or not t.get('holds_no'):
+        return                          # check_value_types has said the row is missing, once
+    _paths = (sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + sorted(glob.glob(os.path.join(ROOT, 'mappings', '*.md')))
+              + [os.path.join(ROOT, 'VOCAB.md'), os.path.join(ROOT, 'GARDEN.md')])
+    for _f in _paths:
+        if not os.path.exists(_f):
+            continue
+        try:
+            _head = dmparse.read(_f)[0]
+            _found = dmparse.control_characters(_head, t['holds_no'], t.get('but') or [], t.get('lines_in')) if _head else []
+        except dmparse.NotUTF8:
+            continue                          # refused by name where the document is loaded
+        except Exception:
+            continue                          # unparseable: build_docs reports it, with the parser's reason
+        _rel = os.path.relpath(_f, ROOT).replace(os.sep, '/')
+        for _path, _ch, _style, _is_key in _found:
+            _how = ''
+            if _ch == '\n':
+                _how = " — a value of several lines is written as a block scalar: `<key>: |`, and its lines beneath"
+            elif _style == '"':
+                _how = (" — in double quotes a backslash begins an escape (`\\0` is U+0000, `\\e` U+001B): a backslash that "
+                        "is part of the value is written in single quotes, where it is a backslash")
+            errors.append(f"{_rel}: {'the key ' if _is_key else ''}{_path} holds U+{ord(_ch):04X} — "
+                          f"{t.get('refusal') or 'a character text does not hold'} (VOCAB value_types[text]){_how}")
 
 
 def check_gardens():
@@ -1609,6 +1740,13 @@ def ectl_prose(e):
     from it; never a list or a map, which say several things where the law asks for one saying."""
     for attr, _t in _facet(e.form, 'prose', e.scope):
         v = e.entry.get(attr)
+        if _t == 'named' and isinstance(v, dict):
+            # `{ prose: named }`: each saying under a name, and each one text
+            _odd = sorted((str(k) for k, x in v.items() if not isinstance(k, str) or isinstance(x, (list, dict))), key=str)
+            if _odd:
+                errors.append(f"{e.base}: {e.ref}.{attr} holds words under names, each one text written under a name "
+                              f"that is text — not {', '.join(_odd)} (VOCAB {_law_path(e.term)}.attrs.{attr}.in)")
+            continue
         if isinstance(v, (list, dict)):
             errors.append(f"{e.base}: {e.ref}.{attr} is words, written as one text — not a "
                           f"{'list' if isinstance(v, list) else 'mapping'}")
@@ -1780,6 +1918,13 @@ def ectl_on_aspect(e):
         _adef = ASPECTS.get(_asp['aspect']) or {}
         _apos = {p['position'] for p in (_adef.get('positions') or []) if isinstance(p, dict)}
         _val = e.entry.get(_aattr, _asp.get('default'))
+        if isinstance(_val, (list, dict)):
+            # ONE POSITION, before any lookup: a list or a map is no position and cannot be looked for among them — it
+            # ended the gate in a traceback, and a clause another garden sent could carry one
+            errors.append(f"{e.base}: {e.ref}.{_aattr} is one position on aspect '{_asp['aspect']}', not a "
+                          f"{'list' if isinstance(_val, list) else 'mapping'} — one of {sorted(_apos)}")
+            e.eff[_aattr] = None
+            continue
         e.eff[_aattr] = _val
         if _apos and _val not in _apos:
             errors.append(f"{e.base}: {e.ref}.{_aattr} '{_val}' is not a position on aspect "
@@ -2105,7 +2250,8 @@ def build_all_fm_and_targets():
     for (_is_bean, _base), (_fm, _b) in docs.items():
         for _t, _s in SCHEMAS.items():
             _n = _fm.get(_t)
-            if isinstance(_n, dict) and _n.get('bean'):
+            if isinstance(_n, dict) and isinstance(_n.get('bean'), str) and _n['bean']:
+                # a target is an id, written as text; one written otherwise is the link pass's to refuse, by name
                 TARGETS_OF.setdefault(_t, set()).add(_n['bean'])
 
 # --- the interpreter, as controllers dispatched by schema key ----------------------------------------
@@ -2207,7 +2353,7 @@ def ctl_required(c):
         return STOP                 # DECLARED: one absence, one finding — not four
     if node is None:
         return STOP                 # not required and not present: nothing to judge
-    if _captured(fm, term):
+    if _captured(fm, term, node):
         return STOP                 # a value nobody has chosen yet is not checkable (MERGE.md §10)
     return None
 
@@ -2242,7 +2388,7 @@ def ctl_must_equal_kind_attr(c):
     if not mk:
         return None
     kreg = _row(KINDS, c.fm.get('kind'))
-    if kreg is None and _captured(c.fm, 'kind'):
+    if kreg is None and _captured(c.fm, 'kind', c.fm.get('kind')):
         return STOP                 # kind is mid-merge; the unclean warning already names it
     if kreg is None:
         errors.append(f"{c.base}: kind '{c.fm.get('kind')}' is not declared in the vocabulary, so its "
@@ -2406,8 +2552,11 @@ def ctl_entries(c):
     if shape in ('list_of_entries', 'open_map_of_entries') or _form['one_of'] \
             or _facet(_form, 'required', 'entry'):
         for label, entry in entries_of(shape, c.node):
-            if c.fm.get('merge_open') and _is_conflict(entry):
+            _at = _member_path(c.term, c.term, label, entry) if isinstance(c.node, list) else f"{c.term}.{label}"
+            if _captured(c.fm, _at, entry):
                 continue            # an entry two gardens hold two ways, both kept: nobody has chosen yet (MERGE.md §10)
+            if _is_conflict(entry):
+                continue            # a conflict record nothing captured: refused by name, at its path, below
             check_entry(c.base, c.term, label, entry, c.sch)
     return None
 
@@ -2522,8 +2671,8 @@ def check_inverse_relations():
             if not _is_bean or not isinstance(_fm.get(_term), dict):
                 continue
             _tgt = _fm[_term].get('bean')
-            if not _tgt or (True, _tgt) not in docs:
-                continue                                  # dangling target is reported by link integrity
+            if not isinstance(_tgt, str) or (True, _tgt) not in docs:
+                continue                                  # a dangling or malformed target is reported by link integrity
             _back = docs[(True, _tgt)][0].get(_inv)
             if not (isinstance(_back, dict) and _back.get('bean') == _base):
                 errors.append(f"{_base}: {_term} -> '{_tgt}', but {_tgt}.{_inv} does not point back to "
@@ -2591,8 +2740,12 @@ def _declared_positions():
             for _r in ((vocab_fm.get('registry_additions') or {}).get(_reg) or []):   # a row this garden ADDED is its own
                 if isinstance(_r, dict) and _r.get(_fld) is not None:
                     LOCAL_ADDED.add((f"{term}.values", _r[_fld]))
-        for attr, vals in _facet(_form, 'values', 'entry'):
-            _declare(f"{term}.{attr}", vals, 'values' in _lform['attrs'].get(attr, {}))
+        # A closed list on an attribute offers its positions whether the attribute is each ENTRY's or the mapping's
+        # ITSELF (a `shape: mapping` term is one entry): `words.form` offered three positions and none was counted, so
+        # nothing asked whether `written` or `unstated` was ever taken, and no vacancy for either could be declared.
+        for _scope in ('entry', 'self'):
+            for attr, vals in _facet(_form, 'values', _scope):
+                _declare(f"{term}.{attr}", vals, 'values' in _lform['attrs'].get(attr, {}))
         # A REGISTRY IS ITS OWN ENUM OWNER (18.0). An attribute that takes a row of a registry takes a position AT
         # that registry, addressed `registry:<name>`. Tier-0's rows are Tier-0's to account for; a row this garden
         # ADDED is the garden's, and it is stated once — no owner term to restate it on.
@@ -2604,7 +2757,7 @@ def _declared_positions():
                     for _r in ((vocab_fm.get('registry_additions') or {}).get(_rule['registry']) or []):
                         if isinstance(_r, dict) and _r.get(_rule['take']) is not None:
                             LOCAL_ADDED.add((_src, _r[_rule['take']]))
-        for _aattr, _asp in _facet(_form, 'aspect', 'entry'):
+        for _aattr, _asp in _facet(_form, 'aspect', 'entry') + _facet(_form, 'aspect', 'self'):
             if _asp['aspect'] in ASPECTS:
                 _declare(f"aspect:{_asp['aspect']}",
                          [p['position'] for p in (ASPECTS[_asp['aspect']].get('positions') or [])
@@ -2651,6 +2804,12 @@ def _occupied_positions():
                 for attr, _rule in _facet(_form, 'registry', 'self'):
                     if _rule.get('registry') and node.get(attr) is not None:
                         _occupy(f"registry:{_rule['registry']}", [node[attr]])
+                for attr, _vals in _facet(_form, 'values', 'self'):
+                    if node.get(attr) is not None:
+                        _occupy(f"{term}.{attr}", [node[attr]])
+                for _aattr, _asp in _facet(_form, 'aspect', 'self'):
+                    if node.get(_aattr) is not None:                         # a default does not occupy
+                        _occupy(f"aspect:{_asp['aspect']}", [node[_aattr]])
             _asps = _facet(_form, 'aspect', 'entry')
             _alt_k = (_form['alt'] or {}).get('key')
             _forms = list(_form['one_of'])
@@ -2844,6 +3003,9 @@ def check_link_integrity():
                 errors.append(f"{base}: {sect} -> {space} '{tgt}' does not exist (dangling) — write "
                               f"{'beans' if space == 'bean' else 'mappings'}/{tgt}.md first, or in the same commit"); continue
             tgt_fm = docs[(space == 'bean', tgt)][0]
+            if field is not None and not isinstance(field, str):
+                errors.append(f"{base}: {sect} -> {tgt}.field names one key, written as text — not {type(field).__name__}")
+                continue
             if field and field not in section_keys(tgt_fm):
                 errors.append(f"{base}: {sect} -> {tgt}.{field} — field not present in '{tgt}'")
             if field and isinstance(tgt_fm.get('refs'), dict) and field in tgt_fm['refs']:
@@ -3177,35 +3339,49 @@ def check_staged_state():
 # merge that captured a real disagreement landed in history with no signal but a `status:` value. That
 # was harmless while the driver was unarmed and is not now. A warning, deliberately — blocking would
 # violate the losslessness rule that lets the conflict be committed in the first place.
-def _conflicted(fm, prefix=''):
-    """Every path whose value is a conflict record the merge driver wrote — a top-level key, or a key inside a map (an
-    agreement's `transactions.<key>` when two gardens recorded one transaction with two amounts), dotted as the
-    driver writes `merge_conflicts`."""
+def _conflicted(node, prefix=''):
+    """[(path, record)] for every conflict record in a document — a top-level key, a key inside a map (an agreement's
+    `transactions.<key>` when two gardens recorded one transaction with two amounts), or a member of a list — dotted as
+    the driver writes `merge_conflicts`. A record's own sides are not searched: they are the values it keeps."""
     out = []
-    for k, v in (fm.items() if isinstance(fm, dict) else ()):
-        at = f"{prefix}.{k}" if prefix else str(k)
-        out += [at] if _is_conflict(v) else _conflicted(v, at)
-    return sorted(out)
+    items = node.items() if isinstance(node, dict) else enumerate(node) if isinstance(node, list) else ()
+    for k, v in items:
+        if isinstance(node, list):
+            at = _member_path(prefix if prefix.count('.') == 0 and '[' not in prefix else None, prefix, k, v)
+        else:
+            at = f"{prefix}.{k}" if prefix else str(k)
+        out += [(at, v)] if _is_conflict(v) else _conflicted(v, at)
+    return sorted(out, key=lambda x: x[0])
 
 
 def check_unclean_merge():
     for _b, _fm in ALL_FM.items():
         _held = _conflicted(_fm)
-        if _fm.get('merge_open'):
-            _paths = _fm.get('merge_conflicts') or []
+        _named = _fm.get('merge_conflicts')
+        if _named is not None and not (isinstance(_named, list) and all(isinstance(p, str) for p in _named)):
+            errors.append(f"{_b}: merge_conflicts is the list of dotted paths that hold a captured disagreement, each "
+                          f"written as text — not {_named!r}")
+        if _fm.get('merge_open') is not None and _fm['merge_open'] is not True:
+            errors.append(f"{_b}: merge_open is `true` while a merge is unsettled, and absent otherwise — not "
+                          f"{_fm['merge_open']!r}")
+        _bad = [(p, _uncaptured(_fm, p, v)) for p, v in _held]
+        _bad = [(p, why) for p, why in _bad if why]
+        if _fm.get('merge_open') is True:
+            _paths = _named if isinstance(_named, list) else []
             _at = ', '.join(map(str, _paths)) or 'an unrecorded path'
+            _still = [p for p, _v in _held if p not in dict(_bad)]
             warns.append(f"{_b}: left UNCLEAN by a semantic merge — {len(_paths)} unresolved conflict(s) at "
                          f"{_at}. Both values are kept; a human picks one, then clears merge_open and "
                          f"merge_conflicts."
-                         + (f" The value is still a conflict record at: {', '.join(_held)}." if _held else ""))
-        elif _held:
-            # No `merge_open`, yet a value is a conflict record. Nothing declared this, so nothing captured
-            # it: either the marker was cleared while the values were left, or the document was mangled.
-            # Undeclared is the whole difference — MERGE.md §10 protects a DECLARED capture, not a silent one.
-            errors.append(f"{_b}: holds an unresolved merge at {', '.join(_held)} with no `merge_open: true` "
-                          f"to declare it. A captured conflict warns and may commit; an undeclared one is a "
-                          f"document nobody is answering for. Restore the marker, or pick a value.")
-
+                         + (f" The value is still a conflict record at: {', '.join(_still)}." if _still else ""))
+        for _p, _why in _bad:
+            # Nothing CAPTURED this record: either the marker was cleared while the values were left, the document was
+            # mangled, or it was written to stand the gate down. MERGE.md §10 protects a capture the driver declared,
+            # and only that.
+            errors.append(f"{_b}: holds an unresolved merge at {_p} {_why}. A captured conflict — "
+                          f"`{{conflict: [<one value>, <another>]}}` at a path `merge_conflicts` names, with `merge_open: "
+                          f"true` — warns and may commit; any other is a document nobody is answering for, and its values "
+                          f"are judged by nothing. Pick a value, or restore what the merge wrote (VOCAB merge_conflicts)")
 
 
 def drawn_edges():
@@ -3275,8 +3451,8 @@ def check_inverse_completeness():
             if not _is_bean or not isinstance(_fm.get(_inv), dict):
                 continue
             _tgt = _fm[_inv].get('bean')
-            if not _tgt or (True, _tgt) not in docs:
-                continue                              # dangling target is reported by link integrity
+            if not isinstance(_tgt, str) or (True, _tgt) not in docs:
+                continue                              # a dangling or malformed target is reported by link integrity
             _fwd = docs[(True, _tgt)][0].get(_term)
             if not (isinstance(_fwd, dict) and _fwd.get('bean') == _base):
                 warns.append(f"{_base}: {_inv} -> '{_tgt}', but {_tgt}.{_term} does not point back to "
@@ -3372,7 +3548,8 @@ def check_chain_termination():
                 if _at in _seen:
                     break                                        # the acyclic ply owns cycles
                 _seen.add(_at)
-                _at, _hops = _nxt, _hops + 1
+                # a next link that is not an id is the link pass's to refuse, by name; the walk ends there
+                _at, _hops = (_nxt if isinstance(_nxt, str) else None), _hops + 1
 
 
 def check_relation_occupancy():
@@ -3442,6 +3619,8 @@ PLIES = (
      "loads every document — `docs`, `bean_ids`, `map_ids`. Every ply below reads them"),
     (check_duplicate_keys,
      "reads the raw node graph, because the parsed `docs` above have already lost the first value"),
+    (check_text,
+     "reads the raw node graph too, where a scalar's style is known: text holds no control character"),
     (check_undeclared_keys,
      "needs `docs`; judged under the terms the pin put in force"),
     (check_id_space_collision,
@@ -3516,9 +3695,11 @@ def main():
     # printed the same cycle four times — and a repeated line reads as four problems.
     warns[:] = list(dict.fromkeys(warns))
     errors[:] = list(dict.fromkeys(errors))
-    for w in warns:  print("WARN ", _shaped(w))
-    for e in errors: print("ERROR", _shaped(e))
-    print(f"\n{_product()}: {len(docs)} docs, {len(errors)} error(s), {len(warns)} warning(s)")
+    # WHAT A DOCUMENT SAID IS PRINTED SPELT OUT. A finding quotes values a bean wrote, and a garden that already holds a
+    # control character — or one this run refuses — must not drive the terminal of the person reading the refusal.
+    for w in warns:  print("WARN ", _shaped(dmparse.said(w)))
+    for e in errors: print("ERROR", _shaped(dmparse.said(e)))
+    print(f"\n{dmparse.said(_product())}: {len(docs)} docs, {len(errors)} error(s), {len(warns)} warning(s)")
     return 1 if errors else 0
 
 

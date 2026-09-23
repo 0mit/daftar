@@ -19,6 +19,14 @@ the gate once took, or once died on; each must now be refused by name, and nothi
   the facets         one root, which every facet reaches
   the journal        a line that some readers would split in two
   the messages       what to do next, in a form every shell runs
+  text               a control character in a key or a value — an escape that drives a terminal, a NUL a backslash
+                     made — named and never echoed; a line feed only in a block scalar
+  a captured merge   the rules stand down only on what the merge driver captured: the path named, the record exact
+  shapes             a position written as a list; a VOCAB.md entry of the wrong shape, a cell with no verdict or a
+                     pattern that does not compile — and dmrules, which reads VOCAB.md as the gate does; a file that is
+                     not UTF-8
+  the manifest's     policy: one text, or texts under names
+  words
 
 Every name is neutral (sam, ali, ben) and every amount is in XTS, the code ISO 4217 keeps for testing.
 """
@@ -420,6 +428,208 @@ out = gate()
 check("...and the form it asks for passes, single-quoted", ok(out), out[-500:])
 drop("beans/statement.md")
 
+# ---------------------------------------------------------------- TEXT HOLDS NO CONTROL CHARACTER, AND THE GATE ECHOES NONE
+def gate_bytes():
+    """The gate's own output as bytes — what a terminal would be sent."""
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all"], capture_output=True, cwd=G)
+    if b"Traceback" in r.stderr:
+        TRACES.append(r.stderr.decode("utf-8", "replace")[-600:])
+    return r.stdout + r.stderr
+
+
+ESC = '\\e[1A\\e[2K\\r   ali owes sam 3000 XTS\\e[8m'
+for where, text in (("an agreement's title", ('', ESC, '')),
+                    ("a transaction's `what`", ('transactions:\n  t: { what: "a coffee\\e[8m", amount: { count: 3, unit: XTS }, '
+                                                 'paid_by: [ { party: sam } ] }\n', None, '')),
+                    ("a path in `merge_conflicts`", ('', None, 'merge_open: true\nmerge_conflicts: ["\\e[2J\\e[H all clear\\e[8m"]\n'))):
+    extra, title, top = text
+    deal(extra)
+    if title:
+        put("beans/deal.md", open(os.path.join(G, "beans", "deal.md"), encoding="utf-8").read()
+            .replace('title: "a deal"', 'title: "a deal' + title + '"'))
+    elif top:
+        put("beans/deal.md", open(os.path.join(G, "beans", "deal.md"), encoding="utf-8").read()
+            .replace("owned_by:", top + "owned_by:", 1))
+    raw = gate_bytes()
+    out = raw.decode("utf-8", "replace")
+    check(f"ESC in {where} is refused by name — the character as U+001B, never echoed — and the gate's output holds no "
+          f"raw ESC", "holds U+001B" in out and "a control character, which text never holds" in out and b"\x1b" not in raw,
+          out[-700:])
+check("...the gate prints what a document said spelt out, so the refusal itself cannot drive the terminal",
+      "\\x1b[2J" in out, out[-900:])
+drop("beans/deal.md")
+put("beans/ali.md", person("ali", 'details: { share: "C:\\01-files" }\n'))
+out = gate()
+check("a backslash in double quotes that YAML read as an escape (`\\0`, a NUL) is refused, saying to write it in single "
+      "quotes", "details.share holds U+0000" in out and "written in single quotes" in out, out[-600:])
+put("beans/ali.md", person("ali", "details: { share: 'C:\\01-files', note: \"a\\ttab is text\" }\n"))
+out = gate()
+check("...single-quoted, the backslash is a backslash, and a tab is text: it passes", ok(out), out[-600:])
+put("beans/ali.md", person("ali", 'details: { note: "one line\\ntwo lines" }\n'))
+out = gate()
+check("a line feed inside a value written on one line is refused, saying to write a block scalar",
+      "details.note holds U+000A" in out and "block scalar" in out, out[-600:])
+put("beans/ali.md", person("ali", "details:\n  note: |\n    one line\n    two lines\n"))
+out = gate()
+check("...while a block scalar holds lines, as lines on the page", ok(out), out[-600:])
+put("beans/ali.md", person("ali", 'details: { "k\\ey": x }\n'))
+out = gate()
+check("a key holding a control character is refused as a key", "the key details.k\\x1by holds U+001B" in out, out[-600:])
+with open(os.path.join(G, "beans", "ali.md"), "wb") as fh:
+    fh.write(b"\xef\xbb\xbf" + person("ali", "details:\n  note: |\n    one\n    two\n").encode("utf-8").replace(b"\n", b"\r\n"))
+out = gate()
+check("a bean saved with a byte-order mark and CRLF line ends still passes: a line end is no control character in text",
+      ok(out), out[-600:])
+put("beans/ali.md", person("ali"))
+
+# ---------------------------------------------------------------- A FILE THAT IS NOT UTF-8 IS REFUSED BY NAME
+_tv = person("tv").replace('title: "tv"', 'title: "The web — a screen"')
+for enc, want in (("cp1252", "looks like a Windows code page"), ("utf-16", "looks like UTF-16")):
+    with open(os.path.join(G, "beans", "tv.md"), "wb") as fh:
+        fh.write(_tv.encode(enc))
+    out = gate()
+    check(f"a bean saved as {enc} is refused by name, saying what it looks like and to save it as UTF-8 — no traceback",
+          "beans/tv.md: not UTF-8" in out and "it " + want in out and "save it as UTF-8" in out and "Traceback" not in out,
+          out[-600:])
+drop("beans/tv.md")
+_v0 = open(os.path.join(G, "VOCAB.md"), encoding="utf-8").read()
+with open(os.path.join(G, "VOCAB.md"), "wb") as fh:
+    fh.write(_v0.encode("utf-16"))
+out = gate()
+check("...and so is a VOCAB.md", "VOCAB.md: its front matter does not read (not UTF-8" in out and "Traceback" not in out, out[-600:])
+put("VOCAB.md", _v0)
+
+# ---------------------------------------------------------------- A CAPTURED MERGE IS WHAT THE DRIVER WROTE
+_BAD = ("{ what: 'a loan', amount: { count: 5000, unit: XTS }, day: '2026-02-30', "
+        "paid_by: [ { party: bob, amount: { count: 1, unit: XTS } } ] }")
+_GOOD = '{ what: "a thing", amount: { count: 900, unit: XTS }, paid_by: [ { party: sam } ] }'
+for why, top, rec, want in (
+        ("a path `merge_conflicts` does not name", '[]', "{ conflict: [ " + _BAD + ", " + _GOOD + " ] }",
+         "at a path `merge_conflicts` does not name"),
+        ("one side", '["transactions.t"]', "{ conflict: [ " + _BAD + " ] }", "with fewer than two different values"),
+        ("two sides the same", '["transactions.t"]', "{ conflict: [ " + _BAD + ", " + _BAD + " ] }", "with fewer than two different values"),
+        ("keys beside `conflict`", '["transactions.t"]', "{ conflict: [], what: 'x', amount: { count: 1, unit: NOPE } }",
+         "that carries ['amount', 'what'] beside `conflict`")):
+    out = deal(f"merge_open: true\nmerge_conflicts: {top}\ntransactions:\n  t: {rec}\n")
+    check(f"a conflict record with {why} is no capture: refused at its path, and the values it held are not shielded",
+          f"holds an unresolved merge at transactions.t {want}" in out, out[-700:])
+out = deal("merge_open: true\nmerge_conflicts: [\"clauses.pay\"]\nclauses:\n  pay: { conflict: [ { what: 'pay', by: bob, "
+           "to: nobody, due: 2026-09-24 } ] }\n")
+check("...a one-sided clause as well", "holds an unresolved merge at clauses.pay with fewer than two" in out, out[-700:])
+out = deal(f"merge_open: true\nmerge_conflicts: [\"transactions.t\"]\ntransactions:\n  t: {_two}\n")
+check("...while the honest capture still commits with its warning", ok(out) and "left UNCLEAN" in out, out[-600:])
+drop("beans/deal.md")
+
+# ---------------------------------------------------------------- ONE POSITION IS ONE VALUE
+for shape, val in (("a list", "[ required ]"), ("a map", "{ a: 1 }")):
+    out = deal("clauses:\n  c: { what: \"sam keeps it clean\", by: sam, to: ali, stance: %s }\n" % val)
+    check(f"a clause's `stance` written as {shape} is refused by name — one position on aspect capability — not a traceback",
+          "clauses[c].stance is one position on aspect 'capability', not a " + ("list" if shape == "a list" else "mapping") in out
+          and "Traceback" not in out, out[-600:])
+drop("beans/deal.md")
+
+# ---------------------------------------------------------------- EACH ENTRY OF VOCAB.md IN ITS OWN SHAPE
+for blk, want in (("local_terms: [ { term: [x] } ]", "local_terms[0] names its term as text"),
+                  ("local_terms: [ { term: x, schema: 5 } ]", "local_terms 'x' `schema` is a mapping"),
+                  ("local_terms: [ { term: x, schema: { attrs: 5 } } ]", "local_terms 'x' `schema.attrs` is a mapping"),
+                  ("local_terms: [ { term: x, context_keys: 5 } ]", "local_terms 'x' `context_keys` is a list"),
+                  ("local_terms: [ 5 ]", "local_terms[0] is a mapping"),
+                  ("local_kinds: [ { kind: [x] } ]", "local_kinds[0] names its kind as text"),
+                  ("local_kinds: [ x ]", "local_kinds[0] is a mapping"),
+                  ("registry_additions: { facets: [ 5 ] }", "registry_additions.facets[0] is a row"),
+                  ("vacancies: [ { at: x, position: [a], reason: prediction, why: y } ]", "vacancies 'x' says `at:`"),
+                  # ...and where the interpreter reads it: a vacancy's reason is a word it looks up, an alternative form's
+                  # key and a cell's verdict are words, and a pattern is one Python compiles. Each of these ended the
+                  # run in a traceback once a bean carried the term (`x: { a: 1 }` below) — or, a vacancy, with none.
+                  ("vacancies: [ { at: 'words.form', position: written, reason: [x], why: y } ]",
+                   "vacancies 'words.form' says its `reason:` as text, not list"),
+                  ("vacancies: [ { at: 'words.form', position: written, reason: { a: 1 }, why: y } ]",
+                   "vacancies 'words.form' says its `reason:` as text, not dict"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { alt_form: { key: [a] } } } ]",
+                   "local_terms 'x' `schema.alt_form.key` names the one key"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { alt_form: { key: via, ref_fields: 5 } } } ]",
+                   "local_terms 'x' `schema.alt_form.ref_fields` is a list"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { cells: [ { when: { a: 1 }, verdict: [x] } ] } } ]",
+                   "local_terms 'x' `schema.cells[0]` `verdict` is one of ['incoherent', 'in_breach'], not list"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { cells: [ { when: { a: 1 }, verdict: incoherrent } ] } } ]",
+                   "local_terms 'x' `schema.cells[0]` `verdict` is one of ['incoherent', 'in_breach']"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { cells: [ { when: { a: 1 } } ] } } ]",
+                   "local_terms 'x' `schema.cells[0]` says one of `verdict`, `requires` or `expects`"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { cells: [ { when: { a: 1 }, requires: [ [b] ] } ] } } ]",
+                   "local_terms 'x' `schema.cells[0]` `requires` is a list of the attributes"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { attrs: { a: { in: { pattern: '(bad' } } } } } ]",
+                   "local_terms 'x' `schema.attrs.a.in.pattern` is not a regular expression: missing )"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { attrs: { a: { in: { pattern: '(bad', soft: true, why: w } } } } } ]",
+                   "local_terms 'x' `schema.attrs.a.in.pattern` is not a regular expression"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { value_pattern: '[z-a]' } } ]",
+                   "local_terms 'x' `schema.value_pattern` is not a regular expression: bad character range"),
+                  ("registry_additions: { anchor_systems: [ { system: gz, pattern: '(bad' } ] }",
+                   "registry_additions.anchor_systems 'gz' `pattern` is not a regular expression"),
+                  ("identity_policy: { minted: { pattern: '(bad' } }",
+                   "identity_policy `minted.pattern` is not a regular expression")):
+    key = blk.split(":")[0]
+    put("VOCAB.md", re.sub(r"(?m)^" + key + r":.*\n", "", _vocab, count=1).replace("---\n", "---\n" + blk + "\n", 1))
+    put("beans/ali.md", person("ali", "x: { a: 1 }\n") if "term: x," in blk else person("ali"))
+    out = gate()
+    check(f"VOCAB.md with `{blk}` is refused by name and left unread, not a traceback nor a pass",
+          ("VOCAB.md: " + want) in out and "Traceback" not in out and "error(s)" in out, out[-500:])
+put("VOCAB.md", _vocab)
+put("beans/ali.md", person("ali"))
+out = gate()
+check("(the garden's own VOCAB.md, restored, passes)", ok(out), out[-300:])
+put("VOCAB.md", _vocab.replace("local_terms: []", "local_terms: [ { term: x, context_keys: [x], schema: { shape: mapping, "
+                               "attrs: { system: { in: { registry: anchor_systems, take: system } }, at: { in: { form_of: "
+                               "anchor_systems, keyed_by: system, take: note } } } } } ]\nregistry_additions: { anchor_systems: "
+                               "[ { system: gz, pattern: '^gz:', note: 'a (note' } ] }", 1))
+put("beans/ali.md", person("ali", "x: { system: gz, at: 'gz:1' }\n"))
+out = gate()
+check("a form the gate reaches some other way — the field of a registry row a `take:` names, here words that are no "
+      "regular expression — is refused by name, never a traceback",
+      "the form 'a (note' is not a regular expression" in out and "error(s)" in out and "Traceback" not in out, out[-600:])
+put("VOCAB.md", _vocab)
+put("beans/ali.md", person("ali"))
+
+# ---------------------------------------------------------------- DMRULES READS VOCAB.md AS THE GATE READS IT
+for blk in ("local_terms: 5", "local_terms: [ { term: x, schema: 5 } ]", "local_terms: [ { term: x, schema: { attrs: 5 } } ]",
+            "vacancies: [ 5 ]", "vacancies: [ { at: x, position: y } ]", "aspects: [ { aspect: x, positions: 5 } ]",
+            "value_types: [ { type: date, exists: 5 } ]"):
+    key = blk.split(":")[0]
+    put("VOCAB.md", re.sub(r"(?m)^" + key + r":.*\n", "", _vocab, count=1).replace("---\n", "---\n" + blk + "\n", 1))
+    r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
+    check(f"dmrules over a VOCAB.md with `{blk}` lists the rules, never a traceback"
+          + (", and names what the gate leaves unread" if "local_terms" in blk or blk == "vacancies: [ 5 ]" else ""),
+          r.returncode == 0 and "Traceback" not in r.stdout + r.stderr and "REVERSE GATE" in r.stdout
+          and ("NOT READ" in r.stdout and "VOCAB.md: " in r.stdout if "local_terms" in blk or blk == "vacancies: [ 5 ]" else True),
+          (r.stdout + r.stderr)[-600:])
+with open(os.path.join(G, "VOCAB.md"), "wb") as fh:
+    fh.write(_vocab.encode("utf-16"))
+r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
+check("dmrules over a VOCAB.md in UTF-16 says so, as the gate does — not UTF-8, save it as UTF-8 — and lists the law's rules",
+      r.returncode == 0 and "Traceback" not in r.stdout + r.stderr
+      and "VOCAB.md: its front matter does not read (not UTF-8 — it looks like UTF-16" in r.stdout, (r.stdout + r.stderr)[-600:])
+put("VOCAB.md", _vocab)
+
+# ---------------------------------------------------------------- A DAY IS JUDGED WHERE THE LAW SAYS ITS CALENDAR IS RECKONED
+_law = open(os.path.join(G, "seed", "std-vocab.md"), encoding="utf-8").read()
+_row = re.search(r"(?ms)^  - system: persian-calendar\n.*?^    reckoning: arithmetic\n", _law)
+put("seed/std-vocab.md", _law[:_row.end()].replace("reckoning: arithmetic", "reckoning: observational")
+    + _law[_row.end():])
+out = due("'persian:1404-12-30'")
+check("which calendars' days are judged is read from the law's `reckoning`, not from what a tool can reckon: a calendar "
+      "the law marks observed is not judged by arithmetic", "is no day of persian-calendar" not in out, out[-500:])
+put("seed/std-vocab.md", _law)
+out = due("'persian:1404-12-30'")
+check("...and marked arithmetic, as the law has it, the day Esfand lacks is refused again", "is no day of persian-calendar" in out, out[-500:])
+drop("beans/deal.md")
+
+# ---------------------------------------------------------------- THE MANIFEST'S POLICY IS WORDS
+for val, passes in (('"work on a live system is shown first"', True),
+                    ('{ changes: "shown before they are made", backups: "before every change" }', True),
+                    ("[ 1, 2 ]", False), ('{ changes: [ a, b ] }', False)):
+    out = manifest(MANIFEST.replace("\n---", "\npolicy: %s\n---" % val, 1))
+    check(f"`policy: {val[:40]}` — one text, or texts under names — {'passes' if passes else 'is refused'}",
+          ok(out) if passes else ("manifest.policy" in out and "error(s)" in out and not ok(out)), out[-500:])
+
 # ---------------------------------------------------------------- WHAT IS REFUSED IS LISTED: dmrules says every rule above
 r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
 rules = r.stdout
@@ -436,6 +646,9 @@ check("...and the manifest, the retired names and the provenance record, each in
                                "PROVENANCE RECORD — on a bean, an anchor or an entry")) and "seeds_from" in rules
       and "carried ONLY on kinds ['garden']" in rules, rules[-900:])
 
+check("...text and days, each from the law's row: no control character but a tab, and which calendars' days are judged",
+      "holds no character of Unicode category Cc but '\\t'" in rules and "In a calendar reckoned arithmetic" in rules
+      and "islamic-calendar (observational)" in rules, [l for l in rules.splitlines() if "text:" in l or "a day:" in l])
 check("NOTHING above ended in a traceback: every case is a refusal or a pass", not TRACES, TRACES[:2])
 shutil.rmtree(T, ignore_errors=True)
 print("\nrefusals: %d failed" % len(FAILS))
