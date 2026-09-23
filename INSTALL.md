@@ -84,15 +84,20 @@ python3 bin/dmupgrade.py <tag>
 ```
 
 It fetches the release, applies it, translates what the law re-spelled, writes the journal entry, runs the gate,
-and commits nothing: read `git diff`, fill in the entry's two `fill in` fields, commit. Moving a garden into
-std-vocab 21.0 also asks who keeps it — add `--gardener <id>` for an existing person or org bean, and
-`--gardener-name "<name>"` as well to plant a new person bean. A garden whose own `bin/dmupgrade.py` is older
-than these flags hands over to the release's tool and cannot pass them on; there the environment carries them,
-and the upgrade's refusal prints that form:
+and commits nothing: read `git diff`, fill in the entry's two `fill in` fields, commit. If anything stops it
+midway, or the garden fails the new gate, every file is put back as it was.
+
+Moving a garden into std-vocab 21.0 also asks who keeps it. Name the gardener in the environment — the one form
+every garden's own tool passes on, whatever release it runs (a tool older than the `--gardener` flag rejects the
+flag, then hands over to the release's tool, which reads the environment):
 
 ```sh
-DAFTAR_GARDENER=sam DAFTAR_GARDENER_NAME="Sam" python3 bin/dmupgrade.py <tag>
+DAFTAR_GARDENER=sam python3 bin/dmupgrade.py <tag>                               # sam: an existing person or org bean
+DAFTAR_GARDENER=sam DAFTAR_GARDENER_NAME="Sam" python3 bin/dmupgrade.py <tag>    # plants a new person bean for them
 ```
+
+A garden already at 21.0 or later takes the same as flags: `--gardener sam`, with `--gardener-name "Sam"` to plant.
+Whatever is missing, the refusal prints the line that fixes it, in the form this garden's tool accepts.
 
 ## On Windows
 
@@ -134,7 +139,16 @@ hooks set `PYTHONUTF8` themselves. PowerShell 7 reads and writes UTF-8 by defaul
 
 A journal entry is written the same way, its body as an argument rather than from standard input, which
 PowerShell does not redirect: `python bin\dmjournal.py "<who>" "<what>" --body "- action: …"`. An upgrade that
-needs the gardener named through the environment: `$env:DAFTAR_GARDENER = "sam"; python bin\dmupgrade.py <tag>`.
+names the gardener through the environment clears it again at the end, because a PowerShell session keeps what
+`$env:` sets, and the next garden upgraded in it would take the same gardener without being asked:
+
+```powershell
+$env:DAFTAR_GARDENER = "sam"; python bin\dmupgrade.py <tag>; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME -ErrorAction SilentlyContinue
+```
+
+**Line ends.** Git for Windows checks text out with CRLF by default, and a git hook with a CR in it does not run.
+The garden's `.gitattributes` keeps its shell files LF, and `bin/install.py` installs the hooks with LF whatever
+the checkout did — so after any checkout, `python bin\install.py` puts working hooks in place.
 
 ## If you have no shell
 
