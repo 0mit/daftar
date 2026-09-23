@@ -362,7 +362,64 @@ check("...a clause in one is neither in force nor met: listed apart, with what t
       "clauses in a merge conflict (1)" in out and "repay  NOTE 2 sides, differing in: due, state" in out
       and "clauses in force" not in out, out)
 check("...and a party in one whose sides name the same bean is still that bean", "party ali holds a merge conflict, differing in: accepted — who it is agrees" in out, out)
+# --between NETS ACROSS AGREEMENTS, and one of them holds a transaction two gardens recorded two ways: left out of the net,
+# said to be, and the net called PARTIAL. Silent, the net was simply wrong — and said it was across every agreement.
+code, out = ledger("--between", "sam", "ali")
+check("--between says what it left out: the transaction in a merge conflict is a NOTE under its agreement, with why and "
+      "where to look, and the net is PARTIAL — while every clean agreement is still netted",
+      code == 0 and "NOTE dated: transaction groceries: holds a merge conflict — 2 sides, differing in: day" in out
+      and "not in this net; `python" in out and "bin/dmledger.py dated` shows it" in out
+      and re.search(r"net, across \d+ agreements — PARTIAL: \d+ agreements? left something out \(NOTE above\), so this is "
+                    r"not the whole of what is owed:", out)
+      and "groceries: ali owes sam 300 XTS" in out and "a-loan: sam owes ali 100 XTS" in out, out)
+agreement("who-is-it", '  t: { what: "a lamp", amount: { count: 60, unit: XTS }, paid_by: [ { party: sam } ], '
+                      'borne_by: [ { party: ali, share: 1 } ] }')
+_w = open(os.path.join(G, "beans", "who-is-it.md"), encoding="utf-8").read()
+with open(os.path.join(G, "beans", "who-is-it.md"), "w", encoding="utf-8", newline="\n") as fh:
+    fh.write(_w.replace("  ali: { who: { bean: ali }, accepted: 2026-09-01 }",
+                        "  ali: { conflict: [ { who: { bean: ali } }, { who: { bean: ben } } ] }"))
+code, out = ledger("--between", "sam", "ali")
+check("...and an agreement where WHO a party is waits for a person (its sides name ali and ben) is not passed over as "
+      "not theirs: it may be between them, is named, and the net is PARTIAL",
+      code == 0 and "NOTE who-is-it: may be between sam and ali — who a party is waits for a person" in out
+      and "PARTIAL: 3 agreements left something out" in out, out)
+os.remove(os.path.join(G, "beans", "who-is-it.md"))
 agreement("dated", DATED)
+
+# ---------------------------------------------------------------- WHAT A BEAN SAYS IS SHOWN, NEVER OBEYED
+# A title that climbs back a line, erases it and writes a debt the other way round, then conceals all that follows; a
+# transaction's `what` and a clause's `what` that do the same, or retitle the window. Written as YAML writes such a
+# character (`\e`), so it is in the VALUE — what another garden's proposal can carry. Printed raw, it was an instruction
+# to the reader's terminal; through the readers' one escaper it is text: `\x1b`.
+with open(os.path.join(G, "beans", "loud.md"), "w", encoding="utf-8", newline="\n") as fh:
+    fh.write('---\nbean: loud\nkind: contract\ntitle: "a note\\e[2A\\e[2K\\r   sam owes ali 3000 XTS\\e[8m"\nstatus: active\n'
+             'summary: "an agreement"\nnature: metaphysical\nowned_by: { legal: { crown: logos } }\n'
+             'responsibility: { legal: { parties: true } }\n'
+             'identity: { status: confirmed, anchors: [ { key: contract_id, value: "contract:loud", class: logical, establishing: true } ] }\n'
+             'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
+             'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n  ali: { who: { bean: ali }, accepted: 2026-09-01 }\n'
+             'words: { form: spoken, agreed: 2026-09-01 }\n'
+             'transactions:\n  t: { what: "a coffee\\e[8m", day: 2026-09-01, amount: { count: 3, unit: XTS }, paid_by: [ { party: sam } ], '
+             'borne_by: [ { party: ali, share: 1 } ] }\n'
+             f'clauses:\n  c: {{ what: "call\\e]0;owned\\a", by: ali, to: sam, due: {(datetime.date.today() + datetime.timedelta(days=3)).isoformat()} }}\n'
+             '---\nAn agreement.\n')
+_raw = {name: subprocess.run([sys.executable, os.path.join(G, "bin", name)] + args, capture_output=True, cwd=G).stdout
+        for name, args in (("dmledger.py", []), ("dmstale.py", []))}
+_between = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "--between", "sam", "ali"], capture_output=True, cwd=G).stdout
+check("a title, a transaction's `what` and a clause's `what` holding ESC sequences reach NEITHER reader's terminal: "
+      "dmledger's and dmstale's stdout hold no ESC byte, and each is shown as its escape, `\\x1b`",
+      all(b"\x1b" not in v and b"\x07" not in v for v in list(_raw.values()) + [_between])
+      and b"a note\\x1b[2A\\x1b[2K\\x0d   sam owes ali 3000 XTS\\x1b[8m" in _raw["dmledger.py"]
+      and b'"a coffee\\x1b[8m"' in _raw["dmledger.py"] and b'"call\\x1b]0;owned\\x07"' in _raw["dmledger.py"]
+      and b"loud.clauses[c]" in _raw["dmstale.py"], {k: v[-600:] for k, v in _raw.items()})
+_t = open(os.path.join(G, "beans", "loud.md"), encoding="utf-8").read()
+with open(os.path.join(G, "beans", "loud.md"), "w", encoding="utf-8", newline="\n") as fh:
+    fh.write(re.sub(r'(?m)^title: .*$', 'title: { conflict: [ "The loud note", "A loud note" ] }', _t, count=1))
+code, out = ledger("loud")
+check("a title two gardens wrote two ways is said to be in a merge conflict — never Python's spelling of the record",
+      code == 0 and "== loud — (its title is in a merge conflict, 2 sides, until a person chooses)" in out
+      and "{'conflict'" not in out, out[:400])
+os.remove(os.path.join(G, "beans", "loud.md"))
 
 # ---------------------------------------------------------------- THE LAW IS READ, NOT NAMED
 _terms = {"parties": {"schema": {"attrs": {"person": {"in": "ref"}, "external": {"in": "prose"}}}}}
