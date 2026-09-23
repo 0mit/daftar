@@ -2006,7 +2006,9 @@ def cmd_take(argv):
                 merged = dict(now.get('provenance_of') or {})
                 merged.update(pv)
                 block = _dump({'provenance_of': merged})
-                if 'provenance_of' in now:
+                if M.canonical(M.norm(merged)) == M.canonical(M.norm(now.get('provenance_of') or {})):
+                    pass                        # the same account stands already: a value re-spelt, not re-witnessed
+                elif 'provenance_of' in now:
                     dmsafe.replace_block(p, 'provenance_of', block)
                 else:
                     dmsafe.insert_after(p, list(now)[-1], block)

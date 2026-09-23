@@ -580,7 +580,7 @@ def _apply_prov(path, items):
                     e.pop('_as', None)          # the leaf states its own src; it borrows nothing
                 if rec.get('seen_in'):
                     e['_origin'] = list(rec['seen_in'])
-            carried.add(canonical(norm(one)))
+            carried.add(canonical(canon_at(path, one)))
             out.append(e)
         # A record may name a value the DOCUMENT no longer shows — a subsumed one. Re-contributing it
         # lets the antichain absorb it again and reach the same seed a one-shot merge would.
@@ -819,13 +819,24 @@ def _prov_lookup(fm, path, value):
 
 def canon_at(path, v):
     """A value at a dotted path of a bean, in the canonical form the law gives it there: a whole term's value, or one
-    member of it (`transactions.the-cost`); deeper than that, as `norm` leaves it."""
+    member of it (`transactions.the-cost`); deeper than that, as `norm` leaves it.
+
+    A SET IS ONE VALUE IN ANY ORDER. Where the merge reads a value as a set (`facet`), `merge_field` folds it into the
+    sorted canonical set of its members, and `provenance_of` records it so — while the bean keeps the order it was
+    written in. Compared in written order, `[tom, rex]` in the bean found no record of `[rex, tom]`, and the next merge
+    read the value as this garden's own: a garden credited as a witness of what only another said, and two takes of
+    one set in two orders reaching different provenance. So a set is compared here as the merge folds it."""
     parts = str(path).split('.')
     if len(parts) == 1:
-        return canon_value(parts[0], v)
-    if len(parts) == 2:
-        return canon_member(parts[0], parts[1], v)
-    return norm(v)
+        key, member, c = parts[0], False, canon_value(parts[0], v)
+    elif len(parts) == 2:
+        key, member, c = parts[1], True, canon_member(parts[0], parts[1], v)
+    else:
+        return norm(v)
+    if facet(key, c, member)[0] != 'set':
+        return c
+    return [json.loads(x) for x in sorted({json.dumps(norm(e), sort_keys=True, ensure_ascii=False)
+                                           for e in (c if isinstance(c, list) else [c])})]
 
 
 def merge_component(comp):

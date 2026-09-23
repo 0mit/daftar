@@ -1166,6 +1166,33 @@ for label, r, shown in _escs:
     check(f"read prints {label} with its ESC sequence ESCAPED — shown as `\\x1b`, never sent to the terminal",
           '\x1b' not in r.stdout + r.stderr and shown in r.stdout and 'Traceback' not in r.out, repr(r.out[-900:]))
 
+# ---- ONE SET IN TWO ORDERS. The merge reads a list no term describes as a set, and records it folded (its members'
+# sorted canonical set) while the bean keeps the order it was written in: the record of who said it must be found by
+# the value the bean holds, or the next merge reads the value as this garden's own — crediting it as a witness of what
+# only garden-b said, and two takes of one set in two orders reach different accounts.
+_pets = lambda order: craft(from_b(), {'ben': _nb.replace('\nstatus: active\n',
+                                                          f'\nstatus: active\ndetails: {{ pets: [{order}] }}\n', 1)})
+PT, PR = os.path.join(TWO, 'pets-tr.md'), os.path.join(TWO, 'pets-rt.md')
+put(PT, _pets('tom, rex'))
+put(PR, _pets('rex, tom'))
+prov, rcs, alone = {}, [], None
+for label, order in (('tr', (PT, PR)), ('rt', (PR, PT))):
+    X = os.path.join(ONE, f'pets-{label}')
+    git(ONE, 'clone', '-q', A, X)
+    git(X, 'config', 'user.name', 'ada')
+    for p in order:
+        rcs.append(tool(X, 'dmpropose.py', 'take', p))
+        if alone is None:
+            alone = M.merge_component([{'garden': AID, 'id': 'neighbour-ben', 'fm': fm_of(
+                os.path.join(X, 'beans', 'neighbour-ben.md'))}])['facts']['details']['members']['pets']
+    prov[label] = (fm_of(os.path.join(X, 'beans', 'neighbour-ben.md')).get('provenance_of') or {}).get('details.pets')
+check("ONE SET IN TWO ORDERS: two proposals whose list differs only in its order, taken in either order, leave the "
+      "same account of who said it — and the receiving garden is never named a witness of what only garden-b said",
+      all(r.returncode == 0 for r in rcs) and prov['tr'] and prov['tr'] == prov['rt']
+      and all(rec.get('seen_in') == [BID] for rec in prov['tr']),
+      ' | '.join(r.out[-300:] for r in rcs if r.returncode) + json.dumps(prov, default=str))
+check("...and after ONE take of `[tom, rex]` — recorded as the set `[rex, tom]` — a merge of this garden alone credits "
+      "the pets to garden-b only", alone and alone.get('seen_in') == [BID], alone)
 check("...and this garden's working tree is as it was", git(A, 'status', '--porcelain').stdout == statusA)
 
 # ---- first contact: what is printed to be written is checked, and quoted, whatever the stub says
