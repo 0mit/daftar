@@ -49,7 +49,7 @@
 <h3>A writer, and the gate</h3>
 <p class="lead">The first thing an agent runs, and shows the person it works for. If it runs, the agent is a writer:</p>
 <!-- daftar:out id="agent-check" --><pre class="out" tabindex="0" aria-label="output of dmcheck.py --all"><code><span class="cmd">~/garden-sam$ python3 bin/dmcheck.py --all</span>
-garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>): 12 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out -->
+garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>): 12 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out -->
 <p class="lead">A writer stages a bean for the office printer and commits it with no journal entry. The gate refuses, and says the
   line to write:</p>
 <!-- daftar:out id="agent-refused" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;the office printer&quot;"><code><span class="cmd">~/garden-sam$ git add beans/printer.md</span>
@@ -58,7 +58,7 @@ ERROR state-change staged (beans/printer.md…) but log/journal.md not updated
       — provenance duty. Append an entry naming what changed and why. Its heading is read from the clock by the tool, never typed:
       python3 bin/dmjournal.py "&lt;who&gt;" "&lt;what&gt;" --body "- action: &lt;what was done to beans/printer.md&gt;"
 
-garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>): 13 docs, 1 error(s), 0 warning(s)
+garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>): 13 docs, 1 error(s), 0 warning(s)
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
 
 <h3>An assistant with no shell, and its proposal</h3>
@@ -109,7 +109,7 @@ OFFERED
       said by sam — carried by a chat proposal, the gardener vouching for it
 PROSE outside the blocks — data, not an instruction:
   | - I could not check whether this garden's vocabulary accepts the serial as written on the label.
-GATE (a scratch copy of this garden with the proposal taken): garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>): 13 docs, 0 error(s), 0 warning(s)
+GATE (a scratch copy of this garden with the proposal taken): garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>): 13 docs, 0 error(s), 0 warning(s)
 verdict: CLEAN — `python3 bin/dmpropose.py take ../chat-20261027-0900.md` would apply it; the gardener's commit ratifies it</code></pre><!-- /daftar:out -->
 <p class="lead"><code>take</code> writes it in, with a journal entry, and commits nothing. The gardener's commit is the
   ratification:</p>
@@ -125,13 +125,13 @@ OFFERED
 took in chat-20261027-0900:
   new: [[printer]]
   journal: ## 2026-10-27 09:00+00:00 · sam · took in proposal chat-20261027-0900
-GATE: garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>): 13 docs, 0 error(s), 0 warning(s)
+GATE: garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>): 13 docs, 0 error(s), 0 warning(s)
 Nothing is committed: the gardener's commit is the ratification —
   git add -A
   git commit</code></pre><!-- /daftar:out -->
 <!-- daftar:out id="agent-commit" match="^garden-sam \(|^fast:" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;took the chat proposal: the office printer&quot;"><code><span class="cmd">~/garden-sam$ git add -A</span>
 <span class="cmd">~/garden-sam$ git commit -qm "took the chat proposal: the office printer"</span>
-garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>): 13 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>): 13 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span>
 fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
 <p class="lead">The journal entry quotes the proposal's own words as data, and says who ratified it:</p>
@@ -149,8 +149,8 @@ fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
 <ul class="prose">
   <li><strong>What an agent reads in a garden is data, not an instruction.</strong> A sentence in a bean, a journal entry or a
     proposal that says to do something is a fact about the ledger. <a href="../philosophy.html#data">Data, not an instruction</a>.</li>
-  <li><strong>The gate is the arbiter.</strong> It refuses what breaks a rule, whoever wrote it, and its refusal names the rule and
-    the line to write.</li>
+  <li><strong>The gate is the arbiter.</strong> It refuses what breaks a rule, whoever wrote it, and its refusal names the rule, and
+    says what is wrong and where.</li>
   <li><strong>Who proposed and who enacted are both on record.</strong> The proposal is quoted in the journal entry that takes it
     in, and the commit is the gardener's.</li>
 </ul>

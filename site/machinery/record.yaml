@@ -163,7 +163,7 @@ drawing:
         operate: { question: "Is any merge waiting for a person?" }
         inspect: { question: "Which lines route a merge, and where?", wiring: { bean: daftar, processes: details.merge_processes, pipes: details.merge_pipes } }
       bindings: []
-      demo: { would_take: null, why_none: "none of the archetypes fits: a merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric" }
+      demo: { would_take: null, why_none: "a merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric" }
     - key: mycelium
       title: "The mycelium"
       include: true
@@ -186,7 +186,7 @@ drawing:
         operate: { question: "What is waiting to be taken?" }
         inspect: { question: "What does a proposal carry, and where is it kept?", wiring: { bean: daftar, processes: details.mycelium_processes, pipes: details.mycelium_pipes } }
       bindings: []
-      demo: { would_take: null, why_none: "none of the archetypes fits: what waits to be taken is a proposal file beside the gardens, not a metric" }
+      demo: { would_take: null, why_none: "what waits to be taken is a proposal file beside the gardens, not a metric" }
     - key: ledger
       title: "The ledger"
       include: true
@@ -208,7 +208,7 @@ drawing:
         operate: { question: "What falls due next?" }
         inspect: { question: "Which transactions make up what is owed?" }
       bindings: []
-      demo: { would_take: null, why_none: "none of the archetypes fits: what falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric" }
+      demo: { would_take: null, why_none: "what falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric" }
   reference:
     - { bean: daftar, address: "github.com/0mit/daftar", role: "the language this garden speaks: the law, the gate, the tools" }
     - { bean: sam, address: "~/garden-sam", role: "the gardener: ratifies what an agent may not decide" }

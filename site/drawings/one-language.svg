@@ -9,7 +9,7 @@
 <g class="flow"><path class="l" d="M200,84 L200,106" marker-end="url(#one-language-ah)"/></g>
 <g class="gate accent"><polygon class="box" points="200,106 284,136 200,166 116,136"/><text class="g" x="200" y="133.5" text-anchor="middle">breaks a rule, or</text><text class="g" x="200" y="146.5" text-anchor="middle">goes unjournalled?</text></g>
 <g class="flow"><path class="l" d="M284,136 L352,136" marker-end="url(#one-language-ah)"/><text class="fl" x="318" y="128" text-anchor="middle">refused</text></g>
-<g class="tag"><rect class="p" x="290" y="144" width="102" height="36" rx="9"/><text class="tl" x="299" y="159">names the rule</text><text class="tl" x="299" y="173">and the line</text></g>
+<g class="tag"><rect class="p" x="290" y="144" width="102" height="36" rx="9"/><text class="tl" x="299" y="159">names the rule</text><text class="tl" x="299" y="173">and where</text></g>
 <g class="flow"><path class="l" d="M200,166 L200,196" marker-end="url(#one-language-ah)"/><text class="fl" x="208" y="189" text-anchor="start">passes: one commit</text></g>
 <g class="boundary"><rect class="b" x="8" y="196" width="384" height="114" rx="12"/><text class="cap" x="20" y="213">YOUR GARDEN — A PRIVATE GIT REPOSITORY</text></g>
 <g class="store meta"><path class="box" d="M24,229 v62 a84,7 0 0 0 168,0 v-62"/><ellipse class="top" cx="108" cy="229" rx="84" ry="7"/><text class="t" x="108" y="252.5" text-anchor="middle">beans/</text><text class="s" x="108" y="268.5" text-anchor="middle">each fact, with</text><text class="s" x="108" y="283.5" text-anchor="middle">its source</text></g>

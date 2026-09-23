@@ -65,7 +65,8 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
    python3 test/docs.py
    ```
 
-   CI runs the same on every pull request.
+   CI runs the same on every pull request. One exception: `test/site.py` rebuilds the pages with `site/build.py`,
+   which runs the commands the pages show (`tail`, among them) as a Unix shell runs them — on Windows, in Git Bash.
 
 ## This repository carries the language, never a garden
 

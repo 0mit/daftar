@@ -47,7 +47,7 @@
 <g class="flow"><path class="l" d="M200,84 L200,106" marker-end="url(#one-language-ah)"/></g>
 <g class="gate accent"><polygon class="box" points="200,106 284,136 200,166 116,136"/><text class="g" x="200" y="133.5" text-anchor="middle">breaks a rule, or</text><text class="g" x="200" y="146.5" text-anchor="middle">goes unjournalled?</text></g>
 <g class="flow"><path class="l" d="M284,136 L352,136" marker-end="url(#one-language-ah)"/><text class="fl" x="318" y="128" text-anchor="middle">refused</text></g>
-<g class="tag"><rect class="p" x="290" y="144" width="102" height="36" rx="9"/><text class="tl" x="299" y="159">names the rule</text><text class="tl" x="299" y="173">and the line</text></g>
+<g class="tag"><rect class="p" x="290" y="144" width="102" height="36" rx="9"/><text class="tl" x="299" y="159">names the rule</text><text class="tl" x="299" y="173">and where</text></g>
 <g class="flow"><path class="l" d="M200,166 L200,196" marker-end="url(#one-language-ah)"/><text class="fl" x="208" y="189" text-anchor="start">passes: one commit</text></g>
 <g class="boundary"><rect class="b" x="8" y="196" width="384" height="114" rx="12"/><text class="cap" x="20" y="213">YOUR GARDEN — A PRIVATE GIT REPOSITORY</text></g>
 <g class="store meta"><path class="box" d="M24,229 v62 a84,7 0 0 0 168,0 v-62"/><ellipse class="top" cx="108" cy="229" rx="84" ry="7"/><text class="t" x="108" y="252.5" text-anchor="middle">beans/</text><text class="s" x="108" y="268.5" text-anchor="middle">each fact, with</text><text class="s" x="108" y="283.5" text-anchor="middle">its source</text></g>
@@ -81,7 +81,7 @@
       <p class="measure">Your own person bean is the first thing in it, and the gate's last line names you. This is the command
         it runs, and the lines that matter in what it prints:</p>
       <!-- daftar:out id="grow-sam" match="^garden-sam \(|^germinated:|Its gardener, sam, is planted" --><pre class="out" tabindex="0" aria-label="output of germinate.py ~/garden-sam --gardener sam --gardener-name &quot;Sam&quot;"><code><span class="cmd">~/daftar$ python3 seed/germinate.py ~/garden-sam --gardener sam --gardener-name "Sam"</span>
-garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>): 1 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>): 1 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span>
 germinated: ~/garden-sam  (std-vocab@21.0, daftar v0.33.1)
 <span class="el" title="lines left out">…</span>
@@ -89,9 +89,9 @@ The garden passes its own gate. Its gardener, sam, is planted: the person who ke
 <span class="el" title="lines left out">…</span></code></pre><!-- /daftar:out -->
     </li>
     <li>
-      <h3>Next time, say “load daftar”</h3>
-      <p class="measure">The agent reads <code>AGENTS.md</code> in the garden — a reading order, not a set of rules — and runs the
-        gate. From then on you talk about your things, and the agent keeps the notebook. An assistant in a chat window, with
+      <h3>Next time, tell it to read AGENTS.md in the garden</h3>
+      <p class="measure">(In Claude Code: “load daftar”.) The agent reads <code>AGENTS.md</code> in the garden — a reading order, not a
+        set of rules — and runs the gate. From then on you talk about your things, and the agent keeps the notebook. An assistant in a chat window, with
         no shell, cannot run the gate: paste it <a href="https://github.com/0mit/daftar/blob/v0.33.1/seed/WELCOME.md">seed/WELCOME.md</a>,
         and what it gives back is a proposal for you, or an agent with a shell, to commit.</p>
     </li>

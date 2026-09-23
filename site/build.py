@@ -901,10 +901,12 @@ class Pages:
             for m in rec.get('mechanisms', []):
                 op = m.get('operate') or {}
                 would = op.get('would_take')
+                why = str(op.get('why_none', '')).strip()
+                why = why[:1].upper() + why[1:] + ('' if not why or why.endswith('.') else '.')
                 items.append('<li><strong>%s</strong>: %s%s</li>'
                              % (esc(m.get('title', m.get('key', ''))),
                                 ('it would take the <em>%s</em> shape with live data. ' % esc(would)) if would else
-                                'no shape of the drawing kit fits it. ', esc(op.get('why_none', ''))))
+                                'no shape of the drawing kit fits it. ', esc(why)))
             return '<ul>%s</ul>' % ''.join(items)
         if cid == 'transcript':
             parts = []
@@ -917,8 +919,8 @@ class Pages:
             return ('<pre class="out" tabindex="0" aria-label="how the report was drawn"><code>%s</code></pre>'
                     % '\n'.join(parts))
         if cid == 'when':
-            return ('<p>Drawn by %s %s on %s, from a clone of garden-sam grown by daftar %s. Its garden ids are not the ids '
-                    'on the use-case pages: that garden was grown for this drawing.</p>'
+            return ('<p>Drawn by %s %s on %s, from a clone of garden-sam grown by daftar %s. Its garden ids are those of the '
+                    'build that drew it: each build of these pages grows the gardens again, with new ids.</p>'
                     % (esc(rec.get('tool', '')), esc(rec.get('tool_release', '')), esc(rec.get('drawn_at', '')),
                        esc(rec.get('daftar_release', ''))))
         raise Refused(f'{page}: drawn:{cid} is not a part of the drawing this build knows')

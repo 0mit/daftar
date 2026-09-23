@@ -39,11 +39,11 @@
 <p class="lead">A garden is known by the commit it grew from. Each gardener runs <code>dmpropose id</code> and tells the other
   what it prints:</p>
 <!-- daftar:out id="gardens-id-sam" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py id"><code><span class="cmd">~/garden-sam$ python3 bin/dmpropose.py id</span>
-garden_id: "<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>"
+garden_id: "<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>"
 garden: garden-sam
 gardener: sam</code></pre><!-- /daftar:out -->
 <!-- daftar:out id="gardens-id-ali" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py id"><code><span class="cmd">~/garden-ali$ python3 bin/dmpropose.py id</span>
-garden_id: "<span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>"
+garden_id: "<span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>"
 garden: garden-ali
 gardener: ali</code></pre><!-- /daftar:out -->
 <p class="lead">First contact, on Sam's side: a <code>garden</code> bean anchored by the id Ali read out, owned by her and
@@ -59,7 +59,7 @@ nature: metaphysical
 identity:
   status: confirmed
   anchors:
-    - { key: garden_id, value: "<span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>", class: logical, establishing: true }
+    - { key: garden_id, value: "<span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-15 }
 owned_by: { legal: { owner: { bean: ali } } }
 responsibility: { legal: { holder: { bean: ali } } }
@@ -75,7 +75,7 @@ nature: living
 identity:
   status: confirmed
   anchors:
-    - { key: person_id, value: "<span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>/person:ali", class: logical, establishing: true }
+    - { key: person_id, value: "<span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>/person:ali", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-15 }
 owned_by: { legal: { crown: love } }
 responsibility: { legal: { self: true } }
@@ -91,20 +91,20 @@ Ali keeps garden-ali. Her name here is the one her own garden gave her.</code></
   commits:</p>
 <!-- daftar:out id="gardens-mint" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py mint shared-camera"><code><span class="cmd">~/garden-sam$ python3 bin/dmpropose.py mint shared-camera</span>
 shared-camera: contract_id "contract:shared-camera" is a BARE name — it identifies shared-camera only inside this garden.
-  qualified: <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:shared-camera
-  python3 bin/dmsafe.py flow-set beans/shared-camera.md "identity.anchors[value=contract:shared-camera].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:shared-camera'" --expect 1
+  qualified: <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:shared-camera
+  python3 bin/dmsafe.py flow-set beans/shared-camera.md "identity.anchors[value=contract:shared-camera].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:shared-camera'" --expect 1
 Nothing was written. An anchor is the gardener's to choose (class F): after the edit, journal it and commit.</code></pre><!-- /daftar:out -->
-<!-- daftar:out id="gardens-mint-apply" --><pre class="out" tabindex="0" aria-label="output of dmsafe.py flow-set beans/shared-camera.md &quot;identity.anchors[v…"><code><span class="cmd">~/garden-sam$ python3 bin/dmsafe.py flow-set beans/shared-camera.md "identity.anchors[value=contract:shared-camera].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:shared-camera'" --expect 1</span>
+<!-- daftar:out id="gardens-mint-apply" --><pre class="out" tabindex="0" aria-label="output of dmsafe.py flow-set beans/shared-camera.md &quot;identity.anchors[v…"><code><span class="cmd">~/garden-sam$ python3 bin/dmsafe.py flow-set beans/shared-camera.md "identity.anchors[value=contract:shared-camera].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:shared-camera'" --expect 1</span>
 dmsafe: removed nothing; added nothing</code></pre><!-- /daftar:out -->
 <p class="lead"><code>make</code> writes one file beside both gardens, never inside either, and appends to this garden's journal
   what left, to which garden, and under which agreement:</p>
 <!-- daftar:out id="gardens-make" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py make --to garden-ali --under shared-camera share…"><code><span class="cmd">~/garden-sam$ python3 bin/dmpropose.py make --to garden-ali --under shared-camera shared-camera</span>
 proposal garden-sam-20261027-0900: ~/PROPOSAL-garden-sam-20261027-0900.md
-  from garden-sam (garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>, gardener sam) to [[garden-ali]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>), under <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:shared-camera
+  from garden-sam (garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>, gardener sam) to [[garden-ali]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>), under <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:shared-camera
   offered: shared-camera; stubs: ali, sam
   ali: carried as a STUB, identity only — garden-ali may not hold it, and then reads it UNRESOLVED; to carry it whole, offer it too (`python3 bin/dmpropose.py make --to garden-ali --under shared-camera … ali`)
   sam: carried as a STUB, identity only — garden-ali may not hold it, and then reads it UNRESOLVED; to carry it whole, offer it too (`python3 bin/dmpropose.py make --to garden-ali --under shared-camera … sam`)
-  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">294af91b79671968f2757d96c0ff28c38a21dddec4e2c52459372d5804ac5ea4</span>
+  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">43b2fbe055c96047293bd4afb9d1069ffa86d50354444a691272be03b6861958</span>
   journal: ## 2026-10-27 09:00+00:00 · sam · proposed shared-camera to garden-ali
 Nothing is committed: journal entry and all, the commit is the gardener's.</code></pre><!-- /daftar:out -->
 
@@ -112,19 +112,19 @@ Nothing is committed: journal entry and all, the commit is the gardener's.</code
 <p class="lead">The first <code>read</code> refuses: this garden has not met Sam's. It writes nothing, and prints the two beans
   to write:</p>
 <!-- daftar:out id="gardens-read-1" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py read ../PROPOSAL-garden-sam-20261027-0900.md"><code><span class="cmd">~/garden-ali$ python3 bin/dmpropose.py read ../PROPOSAL-garden-sam-20261027-0900.md</span>
-proposal garden-sam-20261027-0900 — from garden-sam (garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
-  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">294af91b79671968f2757d96c0ff28c38a21dddec4e2c52459372d5804ac5ea4</span> — verified: the envelope and every line below it
+proposal garden-sam-20261027-0900 — from garden-sam (garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
+  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">43b2fbe055c96047293bd4afb9d1069ffa86d50354444a691272be03b6861958</span> — verified: the envelope and every line below it
   pin: std-vocab@21.0 — the same as this garden's
 STUBS
   ali                      RESOLVES TO ali
   sam                      UNRESOLVED
 OFFERED
   shared-camera            NEW
-      said by sam — recorded in garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>
-UNDER <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:shared-camera: carried in this proposal. Taking it records what garden-sam offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
+      said by sam — recorded in garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>
+UNDER <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:shared-camera: carried in this proposal. Taking it records what garden-sam offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
   NOTE it says ali accepted (2026-09-10) — that is garden-sam's record; ali's own acceptance is written here, by them
 dmpropose read: REFUSED — nothing was written.
-  - this garden holds no `garden` bean for garden-sam (<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>) — a garden not met before
+  - this garden holds no `garden` bean for garden-sam (<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>) — a garden not met before
       fix: accepting a garden not met before is the gardener's (class F). Write beans/garden-sam.md and beans/sam.md, journal them in one entry, and commit them as ONE commit; then read the proposal again.
 ===== beans/garden-sam.md =====
 ---
@@ -139,7 +139,7 @@ responsibility: { legal: { holder: { bean: sam } } }
 identity:
   status: confirmed
   anchors:
-    - { key: garden_id, value: "<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>", class: logical, establishing: true }
+    - { key: garden_id, value: "<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "ali (gardener)", as_of: 2026-10-27 }
 ---
 The garden sam keeps; its id is the one its proposal garden-sam-20261027-0900 carried.
@@ -156,7 +156,7 @@ responsibility: { legal: { self: true } }
 identity:
   status: confirmed
   anchors:
-    - { key: "person_id", value: "<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/person:sam", class: "logical", establishing: true }
+    - { key: "person_id", value: "<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/person:sam", class: "logical", establishing: true }
 provenance: { src: asserted-by-human, by: "ali (gardener)", as_of: 2026-10-27 }
 ---
 The gardener of garden-sam, named here as their own garden names them (its proposal garden-sam-20261027-0900).
@@ -169,14 +169,14 @@ The gardener of garden-sam, named here as their own garden names them (its propo
 ## 2026-10-27 09:00+00:00 · ali · first contact: garden-sam and sam
 <span class="cmd">~/garden-ali$ git add -A</span>
 <span class="cmd">~/garden-ali$ git commit -qm "first contact: garden-sam and sam"</span>
-garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>): 3 docs, 0 error(s), 0 warning(s)
+garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>): 3 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span>
 fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
 <p class="lead">Read again, the proposal is clean. The gate has run on a scratch copy of her garden with the proposal taken, and
   the acceptance it carries is named as Sam's garden's record:</p>
 <!-- daftar:out id="gardens-read-2" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py read ../PROPOSAL-garden-sam-20261027-0900.md"><code><span class="cmd">~/garden-ali$ python3 bin/dmpropose.py read ../PROPOSAL-garden-sam-20261027-0900.md</span>
-proposal garden-sam-20261027-0900 — from garden-sam (garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
-  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">294af91b79671968f2757d96c0ff28c38a21dddec4e2c52459372d5804ac5ea4</span> — verified: the envelope and every line below it
+proposal garden-sam-20261027-0900 — from garden-sam (garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
+  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">43b2fbe055c96047293bd4afb9d1069ffa86d50354444a691272be03b6861958</span> — verified: the envelope and every line below it
   pin: std-vocab@21.0 — the same as this garden's
   from: known here as [[garden-sam]], kept by [[sam]]
 STUBS
@@ -184,18 +184,18 @@ STUBS
   sam                      RESOLVES TO sam
 OFFERED
   shared-camera            NEW
-      said by sam — recorded in [[garden-sam]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>)
-UNDER <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:shared-camera: carried in this proposal. Taking it records what garden-sam offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
+      said by sam — recorded in [[garden-sam]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>)
+UNDER <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:shared-camera: carried in this proposal. Taking it records what garden-sam offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
   NOTE it says ali accepted (2026-09-10) — that is garden-sam's record; ali's own acceptance is written here, by them
-GATE (a scratch copy of this garden with the proposal taken): garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>): 4 docs, 0 error(s), 0 warning(s)
+GATE (a scratch copy of this garden with the proposal taken): garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>): 4 docs, 0 error(s), 0 warning(s)
 verdict: CLEAN — `python3 bin/dmpropose.py take ../PROPOSAL-garden-sam-20261027-0900.md` would apply it; the gardener's commit ratifies it</code></pre><!-- /daftar:out -->
 
 <h3>Take, and commit</h3>
 <p class="lead"><code>take</code> writes in the working tree and commits nothing. The proposal is kept whole, as a capture on
   garden-ali's record of Sam's garden:</p>
 <!-- daftar:out id="gardens-take" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py take ../PROPOSAL-garden-sam-20261027-0900.md"><code><span class="cmd">~/garden-ali$ python3 bin/dmpropose.py take ../PROPOSAL-garden-sam-20261027-0900.md</span>
-proposal garden-sam-20261027-0900 — from garden-sam (garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
-  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">294af91b79671968f2757d96c0ff28c38a21dddec4e2c52459372d5804ac5ea4</span> — verified: the envelope and every line below it
+proposal garden-sam-20261027-0900 — from garden-sam (garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
+  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">43b2fbe055c96047293bd4afb9d1069ffa86d50354444a691272be03b6861958</span> — verified: the envelope and every line below it
   pin: std-vocab@21.0 — the same as this garden's
   from: known here as [[garden-sam]], kept by [[sam]]
 STUBS
@@ -203,14 +203,14 @@ STUBS
   sam                      RESOLVES TO sam
 OFFERED
   shared-camera            NEW
-      said by sam — recorded in [[garden-sam]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>)
-UNDER <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:shared-camera: carried in this proposal. Taking it records what garden-sam offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
+      said by sam — recorded in [[garden-sam]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>)
+UNDER <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:shared-camera: carried in this proposal. Taking it records what garden-sam offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
   NOTE it says ali accepted (2026-09-10) — that is garden-sam's record; ali's own acceptance is written here, by them
 took in garden-sam-20261027-0900:
   new: [[shared-camera]] — its references moved to the beans here: sam → [[sam]], ali → [[ali]]
   capture: [[garden-sam]] `capture.garden-sam-20261027-0900`, the proposal kept whole at captures/proposals/garden-sam/garden-sam-20261027-0900.md
   journal: ## 2026-10-27 09:00+00:00 · ali · took in proposal garden-sam-20261027-0900
-GATE: garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>): 4 docs, 0 error(s), 0 warning(s)
+GATE: garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>): 4 docs, 0 error(s), 0 warning(s)
 Nothing is committed: the gardener's commit is the ratification —
   git add -A
   git commit</code></pre><!-- /daftar:out -->
@@ -231,8 +231,8 @@ nature: metaphysical
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: '<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:shared-camera', class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17, garden: "<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>" }
+    - { key: contract_id, value: '<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:shared-camera', class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17, garden: "<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>" }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
@@ -260,14 +260,14 @@ dmsafe: removed nothing; added ['parties.ali.provenance.as_of', 'parties.ali.pro
 ## 2026-10-27 09:00+00:00 · ali · my own yes to shared-camera
 <span class="cmd">~/garden-ali$ git add -A</span>
 <span class="cmd">~/garden-ali$ git commit -qm "my own yes to shared-camera"</span>
-garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>): 4 docs, 0 error(s), 0 warning(s)
+garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>): 4 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span>
 fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
 <p class="lead">A proposal is taken once. Read again, it is refused, known by its fingerprint; and the two records of Ali's entry
   now differ, which <code>read</code> shows as a disagreement it would keep for the gardener:</p>
 <!-- daftar:out id="gardens-read-3" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py read ../PROPOSAL-garden-sam-20261027-0900.md"><code><span class="cmd">~/garden-ali$ python3 bin/dmpropose.py read ../PROPOSAL-garden-sam-20261027-0900.md</span>
-proposal garden-sam-20261027-0900 — from garden-sam (garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
-  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">294af91b79671968f2757d96c0ff28c38a21dddec4e2c52459372d5804ac5ea4</span> — verified: the envelope and every line below it
+proposal garden-sam-20261027-0900 — from garden-sam (garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
+  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">43b2fbe055c96047293bd4afb9d1069ffa86d50354444a691272be03b6861958</span> — verified: the envelope and every line below it
   pin: std-vocab@21.0 — the same as this garden's
   from: known here as [[garden-sam]], kept by [[sam]]
 STUBS
@@ -276,7 +276,7 @@ STUBS
 OFFERED
   shared-camera            FUSES WITH shared-camera
       CONFLICT parties.ali — both kept, for the gardener: {"accepted":"2026-09-10","provenance":{"as_of":"2026-09-20","by":"ali","src":"asserted-by-human"},"who":{"bean":"ali"}} | {"accepted":"2026-09-10","who":{"bean":"ali"}}
-UNDER <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:shared-camera: held here as [[shared-camera]]
+UNDER <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:shared-camera: held here as [[shared-camera]]
 dmpropose read: REFUSED — nothing was written.
   - it was taken in already: [[garden-sam]] holds it as capture garden-sam-20261027-0900, keyed by its fingerprint
       fix: nothing to take

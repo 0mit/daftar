@@ -5,10 +5,10 @@
  "daftar_release": "v0.33.1",
  "demo_day": "2026-10-27",
  "garden": "garden-sam",
- "drawn_at": "2026-09-23 14:53 UTC",
+ "drawn_at": "2026-09-23 15:35 UTC",
  "report": "machinery/report.html",
- "report_bytes": 252972,
- "report_sha256": "e94f3537039c9fec05ed60b55cbc7ef96b8e9751c055b546347484909fbb68dc",
+ "report_bytes": 253221,
+ "report_sha256": "13f58f6f8640564a5a7e6703ab343bdf9dd1450e717fdfda6d61ffac13d2a277",
  "title": "daftar — its mechanisms, drawn",
  "levels": [
   {
@@ -129,7 +129,7 @@
    "operate": {
     "archetype": null,
     "would_take": null,
-    "why_none": "none of the archetypes fits: a merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric"
+    "why_none": "a merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric"
    }
   },
   {
@@ -162,7 +162,7 @@
    "operate": {
     "archetype": null,
     "would_take": null,
-    "why_none": "none of the archetypes fits: what waits to be taken is a proposal file beside the gardens, not a metric"
+    "why_none": "what waits to be taken is a proposal file beside the gardens, not a metric"
    }
   },
   {
@@ -194,7 +194,7 @@
    "operate": {
     "archetype": null,
     "would_take": null,
-    "why_none": "none of the archetypes fits: what falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric"
+    "why_none": "what falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric"
    }
   }
  ],
@@ -220,7 +220,7 @@
   {
    "cwd": "~/garden-sam",
    "cmd": "git commit -q -m \"daftar's mechanisms recorded, and how they are drawn\"",
-   "out": "garden-sam (daftar v0.33.1, gardener sam, garden 9f318da9a244): 20 docs, 0 error(s), 0 warning(s)\n…\n\nfast: 14/14 corpus checks passed",
+   "out": "garden-sam (daftar v0.33.1, gardener sam, garden 875a6f4d60d5): 21 docs, 0 error(s), 0 warning(s)\n…\n\nfast: 14/14 corpus checks passed",
    "exit": 0
   },
   {
@@ -244,7 +244,7 @@
   {
    "cwd": "~/garden-sam",
    "cmd": "git commit -q -m \"factory v0.6.5 vendored\"",
-   "out": "garden-sam (daftar v0.33.1, gardener sam, garden 9f318da9a244): 20 docs, 0 error(s), 0 warning(s)\n…\n\nfast: 14/14 corpus checks passed",
+   "out": "garden-sam (daftar v0.33.1, gardener sam, garden 875a6f4d60d5): 21 docs, 0 error(s), 0 warning(s)\n…\n\nfast: 14/14 corpus checks passed",
    "exit": 0
   },
   {

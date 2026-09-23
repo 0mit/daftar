@@ -59,7 +59,7 @@ responsibility: { legal: { holder: { bean: sam } } }
 identity:
   status: confirmed
   anchors:
-    - { key: garden_id, value: "<span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>", class: logical, establishing: true }
+    - { key: garden_id, value: "<span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "ali (gardener)", as_of: 2026-10-27 }
 test: "a rehearsal of the washer loan"
 ---
@@ -82,21 +82,21 @@ dmpropose make: REFUSED — nothing was written.
   committed:</p>
 <!-- daftar:out id="reh-mint" --><pre class="out" tabindex="0" aria-label="output of dmsafe.py flow-set beans/dinner-at-sams.md &quot;identity.anchors[…"><code><span class="cmd">~/garden-sam$ python3 bin/dmpropose.py mint washer-loan</span>
 washer-loan: contract_id "contract:washer-loan" is a BARE name — it identifies washer-loan only inside this garden.
-  qualified: <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:washer-loan
-  python3 bin/dmsafe.py flow-set beans/washer-loan.md "identity.anchors[value=contract:washer-loan].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:washer-loan'" --expect 1
+  qualified: <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:washer-loan
+  python3 bin/dmsafe.py flow-set beans/washer-loan.md "identity.anchors[value=contract:washer-loan].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:washer-loan'" --expect 1
 Nothing was written. An anchor is the gardener's to choose (class F): after the edit, journal it and commit.
-<span class="cmd">~/garden-sam$ python3 bin/dmsafe.py flow-set beans/washer-loan.md "identity.anchors[value=contract:washer-loan].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:washer-loan'" --expect 1</span>
+<span class="cmd">~/garden-sam$ python3 bin/dmsafe.py flow-set beans/washer-loan.md "identity.anchors[value=contract:washer-loan].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:washer-loan'" --expect 1</span>
 dmsafe: removed nothing; added nothing
 <span class="cmd">~/garden-sam$ python3 bin/dmpropose.py mint dinner-at-sams</span>
 dinner-at-sams: event_id "event:dinner-at-sams-2026-09-12" is a BARE name — it identifies dinner-at-sams only inside this garden.
-  qualified: <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/event:dinner-at-sams-2026-09-12
-  python3 bin/dmsafe.py flow-set beans/dinner-at-sams.md "identity.anchors[value=event:dinner-at-sams-2026-09-12].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/event:dinner-at-sams-2026-09-12'" --expect 1
+  qualified: <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/event:dinner-at-sams-2026-09-12
+  python3 bin/dmsafe.py flow-set beans/dinner-at-sams.md "identity.anchors[value=event:dinner-at-sams-2026-09-12].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/event:dinner-at-sams-2026-09-12'" --expect 1
 Nothing was written. An anchor is the gardener's to choose (class F): after the edit, journal it and commit.
-<span class="cmd">~/garden-sam$ python3 bin/dmsafe.py flow-set beans/dinner-at-sams.md "identity.anchors[value=event:dinner-at-sams-2026-09-12].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/event:dinner-at-sams-2026-09-12'" --expect 1</span>
+<span class="cmd">~/garden-sam$ python3 bin/dmsafe.py flow-set beans/dinner-at-sams.md "identity.anchors[value=event:dinner-at-sams-2026-09-12].value" "'<span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/event:dinner-at-sams-2026-09-12'" --expect 1</span>
 dmsafe: removed nothing; added nothing</code></pre><!-- /daftar:out -->
 <p class="lead">From inside garden-sam, <code>germinate</code> grows the rehearsal with the release garden-sam runs:</p>
 <!-- daftar:out id="reh-germinate" match="^garden-sam-rehearsal \(|^germinated:|^GROWN FROM" --><pre class="out" tabindex="0" aria-label="output of germinate.py ../garden-sam-rehearsal --gardener sam"><code><span class="cmd">~/garden-sam$ python3 seed/germinate.py ../garden-sam-rehearsal --gardener sam</span>
-garden-sam-rehearsal (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>): 1 docs, 0 error(s), 0 warning(s)
+garden-sam-rehearsal (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>): 1 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span>
 germinated: ~/garden-sam-rehearsal  (std-vocab@21.0, daftar v0.33.1)
 <span class="el" title="lines left out">…</span>
@@ -107,11 +107,11 @@ GROWN FROM THE GARDEN garden-sam: its language, and the release its GARDEN.md re
   loan, into a directory of its own:</p>
 <!-- daftar:out id="reh-make" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py make --to garden-ali --under washer-loan --out .…"><code><span class="cmd">~/garden-sam-rehearsal$ python3 bin/dmpropose.py make --to garden-ali --under washer-loan --out ../rehearsals washer-loan dinner-at-sams</span>
 proposal garden-sam-rehearsal-20261027-0900: ~/rehearsals/PROPOSAL-garden-sam-rehearsal-20261027-0900.md
-  from garden-sam-rehearsal (garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>, gardener sam) to [[garden-ali]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>), under <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:washer-loan
+  from garden-sam-rehearsal (garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>, gardener sam) to [[garden-ali]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>), under <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:washer-loan
   offered: washer-loan, dinner-at-sams; stubs: ali, sam
   ali: carried as a STUB, identity only — garden-ali may not hold it, and then reads it UNRESOLVED; to carry it whole, offer it too (`python3 bin/dmpropose.py make --to garden-ali --under washer-loan … ali`)
   sam: carried as a STUB, identity only — garden-ali may not hold it, and then reads it UNRESOLVED; to carry it whole, offer it too (`python3 bin/dmpropose.py make --to garden-ali --under washer-loan … sam`)
-  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">93665fd6d6329180f0b5769fab8e9ebe883daf2fc0239b7d8126d759692c864e</span>
+  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">56bc00f79fba04c9e158a5b27299ea6ed1899fc16ddb49065a547f0e3e6a825d</span>
   journal: ## 2026-10-27 09:00+00:00 · sam · proposed washer-loan, dinner-at-sams to garden-ali
 Nothing is committed: journal entry and all, the commit is the gardener's.</code></pre><!-- /daftar:out -->
 
@@ -119,8 +119,8 @@ Nothing is committed: journal entry and all, the commit is the gardener's.</code
 <p class="lead">The first read is first contact again: a garden not met before. It prints the garden bean with <code>test:</code>
   on it:</p>
 <!-- daftar:out id="reh-read-1" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py read ../rehearsals/PROPOSAL-garden-sam-rehearsal…"><code><span class="cmd">~/garden-ali$ python3 bin/dmpropose.py read ../rehearsals/PROPOSAL-garden-sam-rehearsal-20261027-0900.md</span>
-proposal garden-sam-rehearsal-20261027-0900 — from garden-sam-rehearsal (garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
-  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">93665fd6d6329180f0b5769fab8e9ebe883daf2fc0239b7d8126d759692c864e</span> — verified: the envelope and every line below it
+proposal garden-sam-rehearsal-20261027-0900 — from garden-sam-rehearsal (garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
+  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">56bc00f79fba04c9e158a5b27299ea6ed1899fc16ddb49065a547f0e3e6a825d</span> — verified: the envelope and every line below it
   pin: std-vocab@21.0 — the same as this garden's
   FROM A TEST GARDEN, it says: a rehearsal of the washer loan — its beans are not facts about the world
   take refuses it into this garden, which is not a test garden, without --as-test
@@ -129,13 +129,13 @@ STUBS
   sam                      RESOLVES TO sam
 OFFERED
   washer-loan              NEW
-      said by sam — recorded in garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>
+      said by sam — recorded in garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>
   dinner-at-sams           NEW
-      said by sam — recorded in garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>
-UNDER <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:washer-loan: carried in this proposal. Taking it records what garden-sam-rehearsal offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
+      said by sam — recorded in garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>
+UNDER <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:washer-loan: carried in this proposal. Taking it records what garden-sam-rehearsal offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
   NOTE it says ali accepted (2026-09-12) — that is garden-sam-rehearsal's record; ali's own acceptance is written here, by them
 dmpropose read: REFUSED — nothing was written.
-  - this garden holds no `garden` bean for garden-sam-rehearsal (<span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>) — a garden not met before
+  - this garden holds no `garden` bean for garden-sam-rehearsal (<span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>) — a garden not met before
       fix: accepting a garden not met before is the gardener's (class F). Write beans/garden-sam-rehearsal.md, journal them in one entry, and commit them as ONE commit; then read the proposal again.
   Their gardener is known here already, as [[sam]].
   It says it is a TEST garden, so the garden bean below carries `test:` — this garden's own mark, which holds its later proposals to it whatever they say.
@@ -152,7 +152,7 @@ responsibility: { legal: { holder: { bean: sam } } }
 identity:
   status: confirmed
   anchors:
-    - { key: garden_id, value: "<span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>", class: logical, establishing: true }
+    - { key: garden_id, value: "<span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "ali (gardener)", as_of: 2026-10-27 }
 test: "a rehearsal of the washer loan"
 ---
@@ -161,8 +161,8 @@ The garden sam keeps; its id is the one its proposal garden-sam-rehearsal-202610
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
 <p class="lead">Once Ali has committed that bean, the read is otherwise clean, and says that <code>take</code> will refuse:</p>
 <!-- daftar:out id="reh-read-2" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py read ../rehearsals/PROPOSAL-garden-sam-rehearsal…"><code><span class="cmd">~/garden-ali$ python3 bin/dmpropose.py read ../rehearsals/PROPOSAL-garden-sam-rehearsal-20261027-0900.md</span>
-proposal garden-sam-rehearsal-20261027-0900 — from garden-sam-rehearsal (garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
-  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">93665fd6d6329180f0b5769fab8e9ebe883daf2fc0239b7d8126d759692c864e</span> — verified: the envelope and every line below it
+proposal garden-sam-rehearsal-20261027-0900 — from garden-sam-rehearsal (garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
+  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">56bc00f79fba04c9e158a5b27299ea6ed1899fc16ddb49065a547f0e3e6a825d</span> — verified: the envelope and every line below it
   pin: std-vocab@21.0 — the same as this garden's
   FROM A TEST GARDEN, it says: a rehearsal of the washer loan — its beans are not facts about the world
   [[garden-sam-rehearsal]] is marked here as a TEST garden: a rehearsal of the washer loan
@@ -173,12 +173,12 @@ STUBS
   sam                      RESOLVES TO sam
 OFFERED
   washer-loan              NEW
-      said by sam — recorded in [[garden-sam-rehearsal]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>)
+      said by sam — recorded in [[garden-sam-rehearsal]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>)
   dinner-at-sams           NEW
-      said by sam — recorded in [[garden-sam-rehearsal]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>)
-UNDER <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:washer-loan: carried in this proposal. Taking it records what garden-sam-rehearsal offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
+      said by sam — recorded in [[garden-sam-rehearsal]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>)
+UNDER <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:washer-loan: carried in this proposal. Taking it records what garden-sam-rehearsal offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
   NOTE it says ali accepted (2026-09-12) — that is garden-sam-rehearsal's record; ali's own acceptance is written here, by them
-GATE (a scratch copy of this garden with the proposal taken): garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>): 7 docs, 0 error(s), 0 warning(s)
+GATE (a scratch copy of this garden with the proposal taken): garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>): 7 docs, 0 error(s), 0 warning(s)
 verdict: take REFUSES it here: it comes from a test garden (a rehearsal of the washer loan) and this garden is not one — `python3 bin/dmpropose.py take ../rehearsals/PROPOSAL-garden-sam-rehearsal-20261027-0900.md --as-test` takes it as a rehearsal, every bean it writes saying so
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
 <!-- daftar:out id="reh-take-refused" match="^dmpropose take|^  - |^      fix" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py take ../rehearsals/PROPOSAL-garden-sam-rehearsal…"><code><span class="cmd">~/garden-ali$ python3 bin/dmpropose.py take ../rehearsals/PROPOSAL-garden-sam-rehearsal-20261027-0900.md</span>
@@ -194,8 +194,8 @@ dmpropose take: REFUSED — nothing was written.
 <!-- daftar:out id="reh-scratch" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py take ../rehearsals/PROPOSAL-garden-sam-rehearsal…"><code><span class="cmd">~$ git clone -q ~/garden-ali ~/garden-ali-scratch</span>
 <span class="cmd">~/garden-ali-scratch$ git config user.name ali</span>
 <span class="cmd">~/garden-ali-scratch$ python3 bin/dmpropose.py take ../rehearsals/PROPOSAL-garden-sam-rehearsal-20261027-0900.md --as-test</span>
-proposal garden-sam-rehearsal-20261027-0900 — from garden-sam-rehearsal (garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
-  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">93665fd6d6329180f0b5769fab8e9ebe883daf2fc0239b7d8126d759692c864e</span> — verified: the envelope and every line below it
+proposal garden-sam-rehearsal-20261027-0900 — from garden-sam-rehearsal (garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>, gardener sam, as it says), made 2026-10-27 09:00+00:00
+  fingerprint: sha256:<span class="v" data-v="fp" title="differs in every build: a fingerprint">56bc00f79fba04c9e158a5b27299ea6ed1899fc16ddb49065a547f0e3e6a825d</span> — verified: the envelope and every line below it
   pin: std-vocab@21.0 — the same as this garden's
   FROM A TEST GARDEN, it says: a rehearsal of the washer loan — its beans are not facts about the world
   [[garden-sam-rehearsal]] is marked here as a TEST garden: a rehearsal of the washer loan
@@ -206,17 +206,17 @@ STUBS
   sam                      RESOLVES TO sam
 OFFERED
   washer-loan              NEW
-      said by sam — recorded in [[garden-sam-rehearsal]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>)
+      said by sam — recorded in [[garden-sam-rehearsal]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>)
   dinner-at-sams           NEW
-      said by sam — recorded in [[garden-sam-rehearsal]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">e0a9699907e6</span>)
-UNDER <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>/contract:washer-loan: carried in this proposal. Taking it records what garden-sam-rehearsal offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
+      said by sam — recorded in [[garden-sam-rehearsal]] (garden <span class="v" data-v="id" title="differs in every build: a garden id">620a427b13b8</span>)
+UNDER <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>/contract:washer-loan: carried in this proposal. Taking it records what garden-sam-rehearsal offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
   NOTE it says ali accepted (2026-09-12) — that is garden-sam-rehearsal's record; ali's own acceptance is written here, by them
 took in garden-sam-rehearsal-20261027-0900:
   new: [[washer-loan]] — its references moved to the beans here: sam → [[sam]], ali → [[ali]]
   new: [[dinner-at-sams]] — its references moved to the beans here: sam → [[sam]], ali → [[ali]]
   capture: [[garden-sam-rehearsal]] `capture.garden-sam-rehearsal-20261027-0900`, the proposal kept whole at captures/proposals/garden-sam-rehearsal/garden-sam-rehearsal-20261027-0900.md
   journal: ## 2026-10-27 09:00+00:00 · ali · took in proposal garden-sam-rehearsal-20261027-0900
-GATE: garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">d76d018d48b0</span>): 7 docs, 0 error(s), 0 warning(s)
+GATE: garden-ali (daftar v0.33.1, gardener ali, garden <span class="v" data-v="id" title="differs in every build: a garden id">fd6d5b0e139d</span>): 7 docs, 0 error(s), 0 warning(s)
 Nothing is committed: the gardener's commit is the ratification —
   git add -A
   git commit</code></pre><!-- /daftar:out -->
