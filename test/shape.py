@@ -53,6 +53,19 @@ check("a system is metered only in a dimension some unit measures", "metered 'en
 mutate("  - { protocol: ospf,  technology: ospf,", "  - { protocol: ospf,  technology: ospff,")
 check("a registry LINK is resolved: a protocol names a real entry of the technology catalogue",
       "`technology` names 'ospff'" in gate(), gate()[-600:])
+# A LINK MAY DECLARE ONE ROOT (21.0, `rooted`): every facet reaches `legal`. It was a sentence nothing checked.
+mutate('  - { facet: technical,  depends_on: [legal],', '  - { facet: technical,  depends_on: [],')
+out = gate()
+check("a `rooted` link has ONE row that names no link: a second root is refused",
+      "VOCAB facets: 2 rows name no `depends_on` (legal, technical)" in out, out[-600:])
+mutate('  - { facet: technical,  depends_on: [legal],', '  - { facet: technical,  depends_on: [experience],')
+out = gate()
+check("...and a row that reaches the root through another passes", "0 error" in out, out[-600:])
+assert ORIG.count('rooted: true, why: "a facet depends only') == 1
+open(STD, "w").write(ORIG.replace('rooted: true, why: "a facet depends only', 'why: "a facet depends only')
+                         .replace('  - { facet: technical,  depends_on: [legal],', '  - { facet: technical,  depends_on: [],'))
+out = gate()
+check("...while a link that declares no root asks nothing of its roots", "rows name no" not in out, out[-600:])
 open(STD, "w").write(ORIG)
 
 sv = yaml.safe_load(re.match(r'^---\n(.*?)\n---', ORIG, re.S).group(1))

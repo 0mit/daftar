@@ -63,6 +63,21 @@ reg = lambda k: loc.get(k) if loc.get(k) is not None else (std.get(k) or [])
 want = set(a for a in sys.argv[1:] if a.startswith('--')) or {'--terms', '--core'}
 
 
+def quantity_rule(qname):
+    """What a count of this quantity is held to: its units, from the law or from a registry with their places."""
+    if qname == 'any':
+        return "any quantity the law declares"
+    q = next((x for x in reg('quantities') if isinstance(x, dict) and x.get('quantity') == qname), None)
+    if not q:
+        return f"'{qname}' is NO quantity the law declares"
+    uf = q.get('units_from') if isinstance(q.get('units_from'), dict) else None
+    if uf:
+        return (f"a unit is a `{uf.get('take')}` of the `{uf.get('registry')}` registry, with at most its `{uf.get('digits')}` "
+                f"decimal places; no factor joins two (crosswalk: {q.get('crosswalk')})")
+    units = [u['unit'] for u in reg('units') if isinstance(u, dict) and u.get('quantity') == qname]
+    return f"units {units}, each an exact ratio to the others"
+
+
 def head(s):
     print(f"\n\033[1m{s}\033[0m" if sys.stdout.isatty() else f"\n{s}")
     print('─' * len(s))
@@ -78,6 +93,13 @@ for n in reg('natures'):
 idp = loc.get('identity_policy') or std.get('identity_policy') or {}
 print(f"  identity: an anchor's key {'must be a term that declares anchor:' if idp.get('anchor_key') == 'term' else 'is free text'}"
       f" · the family above is {'ENFORCED — an establishing anchor of a confirmed bean is of it' if idp.get('establishing_family') == 'enforced' else 'guidance; only the count is checked'}")
+_mint = idp.get('minted') or {}
+if _mint:
+    print(f"  minted: a term whose anchor says `minted: true` admits names a garden gives — a value in the form "
+          f"{_mint.get('form')} whose kind is a row of `{_mint.get('form_kind')}` (the garden's local_{_mint.get('form_kind')} too). "
+          f"BARE it identifies within its garden only; QUALIFIED by a {_mint.get('qualified_by')} ({_mint.get('pattern')}) "
+          f"everywhere, and the prefix is this garden's id or a `garden` bean's. Any other value was assigned outside every "
+          f"garden: it identifies wherever it is written and is never qualified")
 cr = reg('crown')
 print(f"  crown: {' , '.join(c['branch'] + (' (root, never nameable)' if c.get('root') else '') for c in cr)}")
 kinds = list(std.get('kinds') or []) + list(loc.get('local_kinds') or [])
@@ -123,6 +145,11 @@ if '--terms' in want:
             # A term with no `schema:` carries no bean-shape rule — but if it declares an `anchor:`
             # policy, CORE still enforces that, and saying "not enforced" would be false.
             eb = t.get('enforced_by')
+            _anc = t.get('anchor') or {}
+            if _anc.get('minted'):
+                print(f"  {n:20} [{TIER[n]}]  anchor term, MINTED — CORE enforces establishing={_anc.get('establishing', 'the bean’s to say')}; "
+                      f"a qualified value is `<garden_id>/<kind>:<name>`, by a garden this garden knows (see AXIS: minted)")
+                continue
             if eb == 'core':
                 print(f"  {n:20} [{TIER[n]}]  no schema — enforced by CORE (see the CORE section)")
                 continue
@@ -148,6 +175,8 @@ if '--terms' in want:
         for k, v in s.items():
             if k.startswith('required_on_'):
                 bits.append(f"required on {k[len('required_on_'):]} {v}")
+            if k.startswith('only_on_'):
+                bits.append(f"carried ONLY on {k[len('only_on_'):]} {v}")
         for _k, _a in WALK_KEYS.items():
             if s.get(_k) is True:
                 bits.append(f"on the '{_a['aspect']}' sequence" + (" · must stay ACYCLIC" if _a.get('acyclic') else ""))
@@ -161,11 +190,11 @@ if '--terms' in want:
         if _req_entry:                   det.append(f"each entry needs {_req_entry}")
         for a_, v in dmform.facet(F, 'values', 'entry'):
             det.append(f"entry.{a_} ∈ {v}")
-        for a_, v in dmform.facet(F, 'type', 'entry'):
-            det.append(f"entry.{a_} is {v}")
         # 13.0: every attribute says what it is a position IN, so the listing can say it for ALL of them. Until
         # then this printed the enums, the types and the aspects and was silent about registries, forms and refs.
         _w = 'entry' if F['scope'] == 'entry' else 'value'
+        for a_, v in dmform.facet(F, 'type'):
+            det.append(f"{_w}.{a_} is {v}")
         for a_, r in dmform.facet(F, 'registry'):
             det.append(f"{_w}.{a_} is a row of " + (f"the registry its `{r['registry_from']}` names" if r.get('registry_from')
                                                      else f"registry '{r.get('registry')}'")
@@ -185,6 +214,23 @@ if '--terms' in want:
             det.append(f"{_w}.{a_} is a pointer — resolved")
         for a_, _r in dmform.facet(F, 'extent'):
             det.append(f"{_w}.{a_} is an extent")
+        for a_, _r in dmform.facet(F, 'recurrence'):
+            det.append(f"{_w}.{a_} is a recurrence")
+        for a_, q in dmform.facet(F, 'quantity'):
+            det.append(f"{_w}.{a_} is a measured value {{count, unit}} of {q}: " + quantity_rule(q))
+        for a_, r in dmform.facet(F, 'key_of'):
+            det.append(f"{_w}.{a_} is a key of `{r}` on this bean, or `<bean>:<key>` on another — resolved")
+        for a_, r in dmform.facet(F, 'bean_id'):
+            det.append(f"{_w}.{a_} is the id of a bean this garden holds"
+                       + (f", of kind {' or '.join(map(str, r['kinds']))}" if isinstance(r, dict) and r.get('kinds') else ''))
+        _keyed = dict(dmform.facet(F, 'keyed_by'))
+        for a_, r in dmform.facet(F, 'entries'):
+            det.append(f"{_w}.{a_} holds entries, each judged by {sorted(r)}"
+                       + (f"; ONE per `{_keyed[a_]}`, in no order" if a_ in _keyed else ''))
+        if isinstance(s.get('sums'), dict):
+            _wh = s['sums'].get('whole')
+            det.append(f"sums: each entry's {s['sums'].get('parts')} add up EXACTLY to its "
+                       f"{' or '.join(_wh) if isinstance(_wh, list) else _wh} (the first it states), in the whole's unit")
         _typed = {'values', 'registry', 'aspect', 'type', 'system_from', 'pattern', 'soft', 'extent', 'ref', 'pointer'}
         _raw = (s.get('attrs') or {})
         _untyped = [a_ for a_, r in _raw.items() if isinstance(r, dict) and r.get('in') == 'untyped']
@@ -205,6 +251,32 @@ if '--terms' in want:
                        f" (default {x.get('default')})")
         for d in det:
             print(f"      · {d}")
+
+head("QUANTITIES — a measured value is { count, unit }, and the unit measures the quantity")
+_vt = {r.get('type'): r for r in reg('value_types') if isinstance(r, dict)}
+print(f"  count: {(_vt.get('count') or {}).get('pattern', 'NO value_types[count] — the gate refuses every count')} "
+      f"— never a float; a decimal is written as a string")
+for q in reg('quantities'):
+    if isinstance(q, dict) and q.get('quantity'):
+        print(f"  {q['quantity']:14} {quantity_rule(q['quantity'])}")
+
+head("MANIFEST — GARDEN.md, judged as itself")
+_mf = std.get('manifest') or {}
+for a_, r in (_mf.get('attrs') or {}).items():
+    r = r if isinstance(r, dict) else {}
+    print(f"  {a_:15} {'REQUIRED · ' if r.get('required') else ''}in: {r.get('in')}")
+print("  any other key is refused; a retired one says where it went (below). Once the garden holds a bean it names its "
+      "gardener")
+
+head("RETIRED — names the law took back, and where each went")
+for r in std.get('retired') or []:
+    if isinstance(r, dict):
+        print(f"  {str(r.get('name')):24} (on {r.get('at')}) → {r.get('instead')}")
+
+head("PROVENANCE RECORD — on a bean, an anchor or an entry")
+_pr = std.get('provenance_record') or {}
+print(f"  a record carries only {_pr.get('attrs')}; each record in `from` only {_pr.get('from_attrs')}, with a `src`")
+print("  `garden` names a garden this one knows (its own, or a `garden` bean's garden_id), never this one")
 
 head("REVERSE GATE — the rules must be passed by the objects")
 print("  every position a term declares must be OCCUPIED by a bean, or declared vacant with a reason")

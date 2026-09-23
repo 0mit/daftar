@@ -26,7 +26,7 @@ The law and its reasoning are RELATED, not merged: neither contains the other, a
 """
 import os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import yaml, dmparse
+import dmparse          # the one loader, and UTF-8 streams on every platform
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # A law and its reasoning come in PAIRS: the standard's, which every garden receives, and a garden's own overlay, whose
@@ -46,7 +46,7 @@ _SEG = re.compile(r'\.?([^.\[\]]+)|\[([^\]]*)\]')
 
 
 def law():
-    return yaml.safe_load(dmparse.split_front_matter(open(LAW, encoding='utf-8').read())[0]) or {}
+    return dmparse.loads(dmparse.split_front_matter(open(LAW, encoding='utf-8').read())[0]) or {}
 
 
 def rationale():
@@ -104,10 +104,16 @@ def orphans():
 def stale():
     """Reasons that speak of a law name the law no longer has. A reason that names a RETIRED construct or a removed
     registry has become journal — an account of what used to be — and is sitting one layer too high. Found by the
-    names written in backticks that look like the law's own (`snake_case`) and appear nowhere in the law's text."""
-    law_text = dmparse.split_front_matter(open(LAW, encoding='utf-8').read())[0]
+    names written in backticks that look like the law's own (`snake_case`) and appear nowhere in the law's text.
+
+    The law's `retired:` list is not read as the law SAYING a name: it names what the law took back. A reason that
+    still speaks of `agreement_ref` found the name there and passed, which is how a description of the retired
+    contract keys outlived them."""
+    law_text = re.sub(r'(?ms)^retired:[ \t]*\n.*?(?=^[^\s#])', '', dmparse.split_front_matter(open(LAW, encoding='utf-8').read())[0])
     out = {}
     for k, v in rationale().items():
+        if k == 'retired' or k.startswith('retired.') or k.startswith('retired['):
+            continue                        # the reason for the retired list speaks of what it retired, by design
         gone = sorted({t for t in re.findall(r'`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`', v) if t not in law_text})
         if gone:
             out[k] = gone

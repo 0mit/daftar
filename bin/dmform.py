@@ -11,7 +11,7 @@ It is PURE: it reads a term's definition and returns data. It loads nothing and 
 THE FORM
     scope      'entry' | 'self'  — what the term's attributes describe (each entry, or the value itself)
     attrs      {name: {facet: rule, 'scope': …}}    facets: required, values, registry, aspect, type, system_from,
-               pattern, soft, extent, ref, pointer, one_of, meaning
+               pattern, soft, extent, ref, pointer, bean_id, entries, keyed_by, one_of, meaning
     order      {(scope, facet): [names]}   the law's attribute order, per facet
     cells      combinations an entry may not hold (error) or should not (warning)
     value      the rule on the term's OWN value: values, values_from, consistent_with, governs_anchor, pattern,
@@ -65,8 +65,8 @@ DOMAINS = {
     'form_of':     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern }   a position in the system a SIBLING attr names, in that system's one form",
     'system':      "in: { system: <anchor system> }                a position in ONE named system, written in that system's one form (`unix-epoch`, `geographic`)",
     'key_of':      "in: { key_of: <term> }                         a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another — resolved by the gate, and not an edge",
-    'entries':     "in: { entries: { <attr>: {required?, in, meaning} } }   entries INSIDE an entry: a list of them, or one mapping — each judged as an entry, by the attributes written here",
-    'bean_id':     "in: bean_id                                    the bare id of a bean this garden holds: resolved by the gate, and not an edge (an edge is a `ref`)",
+    'entries':     "in: { entries: { <attr>: {required?, in, meaning} }, keyed_by?: <attr> }   entries INSIDE an entry: a list of them, or one mapping — each judged as an entry, by the attributes written here; `keyed_by`: one entry per value of that attribute",
+    'bean_id':     "in: bean_id | { bean_id: { kinds: [...] } }   the bare id of a bean this garden holds (of those kinds): resolved by the gate, and not an edge (an edge is a `ref`)",
     'any':         "in: any                                        DELIBERATELY any value: its type is some other attribute's business. A decision, where `untyped` is a debt",
     'pattern':     "in: { pattern: '<regex>' }                     a form this term owns; with `soft: true` and a `why` it WARNS instead of refusing",
     'quantity':    "in: { quantity: <name> }                       a measured value { count, unit } whose unit measures that quantity",
@@ -95,6 +95,8 @@ def _domain(d):
             return 'type', d['type']
         if 'entries' in d:
             return 'entries', dict(d['entries'] or {})
+        if 'bean_id' in d:
+            return 'bean_id', dict(d['bean_id'] or {})
         if 'system' in d:
             return 'system', d['system']
         if 'key_of' in d:
@@ -150,6 +152,8 @@ def attribute_form(term_def, sch):
             put('system_from', name, dict(rule, attr=name))
         elif facet_name:
             put(facet_name, name, rule)
+        if facet_name == 'entries' and rec['in'].get('keyed_by') is not None:
+            put('keyed_by', name, rec['in']['keyed_by'])
         if isinstance(rec.get('default_from'), dict):
             put('default_from', name, dict(rec['default_from']))
         if rec.get('meaning') is not None:

@@ -315,18 +315,35 @@ def _prose_documents(tree):
 
 
 def _restatements(law, tree):
+    """One finding per run of names: the law's list the run restates BEST — the most names in common, then the fewest
+    the run adds. Two of the law's lists can overlap (`provenance_record.attrs` and its `from_attrs` share three names),
+    and a run that restated one was counted against both: the same line twice, one of them said to add `from`, which is
+    in the very list it restated."""
     enums, found = _enumerations(law), []
     for f, text, start in _prose_documents(tree):
         for m in _RUN.finditer(text, start):
             names = re.findall(r'`([^`]+)`', m.group(0))
+            best = None
             for path, vals in enums.items():
                 have = set(vals)
                 ours = {n for n in names if n in have}
                 if len(ours) < 3 or 2 * len(ours) < len(have):
                     continue
-                found.append({'id': f"{f} {path}", 'where': f"{f}:{text.count(chr(10), 0, m.start()) + 1}",
-                              'path': path, 'of': (len(ours), len(have)),
-                              'extra': [n for n in names if n not in have]})
+                extra = [n for n in names if n not in have]
+                rank = (len(ours), -len(extra), -len(have), path)
+                if best is None or rank > best[0]:
+                    best = (rank, {'id': f"{f} {path}", 'where': f"{f}:{text.count(chr(10), 0, m.start()) + 1}",
+                                   'path': path, 'of': (len(ours), len(have)), 'extra': extra})
+            if best:
+                found.append(best[1])
+    # ONE ID PER FINDING. The id names the file and the list, not the line, so that a line moved by an edit above it is
+    # not counted as a restatement removed and another added; a second restatement of one list in one file is `#2`.
+    # Two ids alike made one detail line stand for both, and the report listed `MODEL.md:229` twice.
+    seen = {}
+    for r in found:
+        seen[r['id']] = seen.get(r['id'], 0) + 1
+        if seen[r['id']] > 1:
+            r['id'] = f"{r['id']} #{seen[r['id']]}"
     return found
 
 
