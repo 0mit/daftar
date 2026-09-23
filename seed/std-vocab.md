@@ -1080,10 +1080,6 @@ vacancies:
     position: second
     reason: prediction
     why: "Nothing in this ledger is currently held to the second: session moments are recorded at millisecond, and everything else at day. Kept because it is the resolution a log line carries, and the digestion of host logs is the obvious first occupant."
-  - at: located_at.openness
-    position: unknown
-    reason: prediction
-    why: "The position that would have prevented a real loss: a commit was recorded as absent when it was merely not looked for on the machine that had it. Unoccupied TODAY because every location in the corpus has been established — which is the state this position exists to distinguish from, and it earns its declaration by being the one an agent must reach for instead of omitting the entry."
 # == FIGURES: the shapes an aspect may take ==
 figures:
   - figure: opposition
