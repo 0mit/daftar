@@ -1,0 +1,50 @@
+# The public pages: what is committed under site/, published as it is. The check regrows the demo gardens to compare
+# every page with what the tools print now; nothing here draws the machinery page's report, which is a committed file
+# of the site and is published as committed.
+name: pages
+on:
+  push:
+    branches: [master]
+    paths: ['site/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # the tags: site/RELEASE names one, and site/build.py clones it
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install PyYAML
+      - run: git config --global user.name ci && git config --global user.email ci@localhost
+      - name: "site: the pages parse, their links resolve, and every example is what the tools print"
+        run: python3 test/site.py
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: "the published files: every page, the report and the assets; never a source, a drawing file or _parts/"
+        run: >-
+          rsync -a --prune-empty-dirs --exclude '_parts/' --include '*/' --include '*.html'
+          --include 'assets/***' --exclude '*' site/ _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

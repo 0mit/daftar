@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Propose a change to the law: a pull request"
+    url: https://github.com/0mit/daftar/blob/master/CONTRIBUTING.md
+    about: A pull request is a proposal, and merging it is the ratification. CONTRIBUTING.md says what to bring.
+  - name: How a need becomes law
+    url: https://0mit.github.io/daftar/contribute.html
+    about: "The site's page on asking: from a need to a proposal, the neighbourhood shown, a person's ratification and a release."

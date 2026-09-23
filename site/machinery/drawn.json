@@ -1,0 +1,263 @@
+{
+ "tool": "factory",
+ "tool_release": "v0.6.5",
+ "tool_contract": 2,
+ "daftar_release": "v0.33.1",
+ "demo_day": "2026-10-27",
+ "garden": "garden-sam",
+ "drawn_at": "2026-09-23 14:53 UTC",
+ "report": "machinery/report.html",
+ "report_bytes": 252972,
+ "report_sha256": "e94f3537039c9fec05ed60b55cbc7ef96b8e9751c055b546347484909fbb68dc",
+ "title": "daftar — its mechanisms, drawn",
+ "levels": [
+  {
+   "id": "orient",
+   "depth": 0,
+   "name": "Orient — what it is",
+   "audience": "a newcomer: a new colleague, a manager seeing it for the first time, anyone who has never touched it",
+   "question": "What does this mechanism do for us, what is it built from, and where do I learn it properly?"
+  },
+  {
+   "id": "understand",
+   "depth": 1,
+   "name": "Understand — how it works",
+   "audience": "a technical manager or engineer who must reason about it",
+   "question": "How do the parts co-operate, where does the mechanism decide, and where is it fragile?"
+  },
+  {
+   "id": "operate",
+   "depth": 2,
+   "name": "Operate — is it working",
+   "audience": "the engineer on call",
+   "question": "What must the person on call know first about this mechanism, right now?"
+  },
+  {
+   "id": "inspect",
+   "depth": 3,
+   "name": "Inspect — what exactly",
+   "audience": "an auditor, or the engineer about to change it",
+   "question": "What exactly are the parts, how do we know, and what is still open?"
+  }
+ ],
+ "mechanisms": [
+  {
+   "key": "gate",
+   "title": "The gate",
+   "claim": "A commit is recorded only if the gate passes it.",
+   "questions": {
+    "orient": "What keeps a wrong fact out of the notebook?",
+    "understand": "Where is a commit refused, and on what?",
+    "operate": "Is the gate refusing what it should, right now?",
+    "inspect": "Which hook runs which program, on what?"
+   },
+   "parts": [
+    "sam",
+    "daftar"
+   ],
+   "patterns": [
+    "accent",
+    "boundary",
+    "flow",
+    "gate",
+    "node",
+    "signal",
+    "store",
+    "tag",
+    "warning"
+   ],
+   "operate": {
+    "archetype": null,
+    "would_take": "funnel",
+    "why_none": "a funnel counts the commits that arrive, those stopped at each check and those recorded; this garden exports no count of its hook's verdicts, and no Prometheus reads it"
+   }
+  },
+  {
+   "key": "journal",
+   "title": "The journal",
+   "claim": "Every change carries who, when and why, and no hand types the when.",
+   "questions": {
+    "orient": "Who changed what, and why?",
+    "understand": "Why can no one type a heading?",
+    "operate": "Is every change journalled as it is made?",
+    "inspect": "Where is each heading recorded, and who reads it?"
+   },
+   "parts": [
+    "sam",
+    "daftar"
+   ],
+   "patterns": [
+    "accent",
+    "external",
+    "flow",
+    "gate",
+    "node",
+    "signal",
+    "store",
+    "tag"
+   ],
+   "operate": {
+    "archetype": null,
+    "would_take": "roster",
+    "why_none": "a roster shows who writes, and how much, from a live series; nothing here measures the journal"
+   }
+  },
+  {
+   "key": "merge",
+   "title": "The merge",
+   "claim": "Two records of one thing become one, and nothing either said is lost.",
+   "questions": {
+    "orient": "What happens when two records of one thing meet?",
+    "understand": "What decides that two beans are one object?",
+    "operate": "Is any merge waiting for a person?",
+    "inspect": "Which lines route a merge, and where?"
+   },
+   "parts": [
+    "daftar",
+    "sam"
+   ],
+   "patterns": [
+    "accent",
+    "external",
+    "flow",
+    "gate",
+    "node",
+    "signal",
+    "store",
+    "tag"
+   ],
+   "operate": {
+    "archetype": null,
+    "would_take": null,
+    "why_none": "none of the archetypes fits: a merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric"
+   }
+  },
+  {
+   "key": "mycelium",
+   "title": "The mycelium",
+   "claim": "What passes between gardens is only ever a proposal, and only its gardener lets it in.",
+   "questions": {
+    "orient": "How do two people's notebooks share one agreement?",
+    "understand": "Where does a proposal stop, and who lets it in?",
+    "operate": "What is waiting to be taken?",
+    "inspect": "What does a proposal carry, and where is it kept?"
+   },
+   "parts": [
+    "shared-camera",
+    "sam",
+    "ali",
+    "garden-ali"
+   ],
+   "patterns": [
+    "accent",
+    "boundary",
+    "flow",
+    "gate",
+    "node",
+    "ribbon",
+    "signal",
+    "store",
+    "warning"
+   ],
+   "operate": {
+    "archetype": null,
+    "would_take": null,
+    "why_none": "none of the archetypes fits: what waits to be taken is a proposal file beside the gardens, not a metric"
+   }
+  },
+  {
+   "key": "ledger",
+   "title": "The ledger",
+   "claim": "What one person owes another is read from what moved, never written.",
+   "questions": {
+    "orient": "Who owes whom, and how do we know?",
+    "understand": "Where is what is owed computed, and why is it never stored?",
+    "operate": "What falls due next?",
+    "inspect": "Which transactions make up what is owed?"
+   },
+   "parts": [
+    "shared-camera",
+    "washer-loan",
+    "daftar",
+    "sam",
+    "ali"
+   ],
+   "patterns": [
+    "accent",
+    "flow",
+    "gate",
+    "node",
+    "store",
+    "tag",
+    "warning"
+   ],
+   "operate": {
+    "archetype": null,
+    "would_take": null,
+    "why_none": "none of the archetypes fits: what falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric"
+   }
+  }
+ ],
+ "cannot": [
+  "Operate reads live data. The demo garden has no probe, no metric and no Prometheus, so no mechanism declares an archetype or a binding, and every part reads “no signal”, with the reason: that is the demo garden's true state.",
+  "Actions: none is placed. A button in the report asks for a tool by name, and only a host's own configuration can make it run anything.",
+  "Author edits a copy of the record in the reader's browser. What it exports is imported into a garden by a command run in that garden; nothing imports it here.",
+  "Grafana and the live page are not part of this site."
+ ],
+ "transcript": [
+  {
+   "cwd": "~/garden-sam",
+   "cmd": "python3 bin/dmjournal.py sam \"daftar's mechanisms recorded, and how they are drawn\" --body \"- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], [[mycelium]] and [[ledger]]; [[factory]] and [[design-factory]], which draw them; bin/mechanisms.py, the drawings (site/machinery/composers.py).\n- why: the machinery page of daftar's site shows these mechanisms, drawn at four levels.\"",
+   "out": "## 2026-10-27 09:00+00:00 · sam · daftar's mechanisms recorded, and how they are drawn",
+   "exit": 0
+  },
+  {
+   "cwd": "~/garden-sam",
+   "cmd": "git add -A",
+   "out": "",
+   "exit": 0
+  },
+  {
+   "cwd": "~/garden-sam",
+   "cmd": "git commit -q -m \"daftar's mechanisms recorded, and how they are drawn\"",
+   "out": "garden-sam (daftar v0.33.1, gardener sam, garden 9f318da9a244): 20 docs, 0 error(s), 0 warning(s)\n…\n\nfast: 14/14 corpus checks passed",
+   "exit": 0
+  },
+  {
+   "cwd": "~/garden-sam",
+   "cmd": "python3 ~/factory/bin/factory upgrade --from ~/factory --garden .",
+   "out": "factory: vendored v0.6.5 (15 files) into factory; the pin in [[factory]] now says v0.6.5. The skill is mirrored at .claude/skills/factory/SKILL.md. Nothing is committed.\nJournal it in the same commit, e.g.:\n- factory v0.6.5 vendored from ~/factory (`factory upgrade`); [[factory]] details.factory_release moved.",
+   "exit": 0
+  },
+  {
+   "cwd": "~/garden-sam",
+   "cmd": "python3 bin/dmjournal.py sam \"factory v0.6.5 vendored\" --body \"- action: factory v0.6.5 vendored into factory/ by factory upgrade, which mirrors its skill at .claude/skills/factory/SKILL.md; [[factory]] already pins v0.6.5.\"",
+   "out": "## 2026-10-27 09:00+00:00 · sam · factory v0.6.5 vendored",
+   "exit": 0
+  },
+  {
+   "cwd": "~/garden-sam",
+   "cmd": "git add -A",
+   "out": "",
+   "exit": 0
+  },
+  {
+   "cwd": "~/garden-sam",
+   "cmd": "git commit -q -m \"factory v0.6.5 vendored\"",
+   "out": "garden-sam (daftar v0.33.1, gardener sam, garden 9f318da9a244): 20 docs, 0 error(s), 0 warning(s)\n…\n\nfast: 14/14 corpus checks passed",
+   "exit": 0
+  },
+  {
+   "cwd": "~/garden-sam",
+   "cmd": "python3 factory/bin/factory check",
+   "out": "factory: the record and the drawings agree",
+   "exit": 0
+  },
+  {
+   "cwd": "~/garden-sam",
+   "cmd": "python3 factory/bin/factory report --out ../report.html",
+   "out": "factory report: 5 mechanisms (5 shown) + reference + author mode -> ../report.html",
+   "exit": 0
+  }
+ ]
+}

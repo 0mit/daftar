@@ -1,0 +1,49 @@
+name: A suggestion
+description: A change to a rule or term of the vocabulary, a tool, a document or the site.
+title: "suggestion: "
+labels: [suggestion]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write the situation in your own words. Do not paste anything from your garden — no host names, addresses,
+        paths, people's names, ids, serials or findings. Use neutral names: sam, ali, host-a, example.org,
+        203.0.113.10, /home/user/….
+
+        A change to the law itself is proposed as a pull request, and merging it is the ratification
+        (CONTRIBUTING.md). An issue is a place to raise it first.
+  - type: textarea
+    id: change
+    attributes:
+      label: The change you suggest
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: The case that showed it
+      description: What happened, what you expected, and what the language or the tool did instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: part
+    attributes:
+      label: What it changes
+      options:
+        - a term or rule of the vocabulary
+        - a tool
+        - a document
+        - this site
+        - other
+  - type: input
+    id: related
+    attributes:
+      label: Related
+      description: The term, tool, document or page, by its name or path in the repository.
+  - type: checkboxes
+    id: neutral
+    attributes:
+      label: Neutral names
+      options:
+        - label: Nothing here comes from my garden that I have not replaced with a neutral name.
+          required: true

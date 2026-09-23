@@ -1,0 +1,48 @@
+name: A need
+description: Something you want to be able to record in a garden, or ask of one, and cannot yet.
+title: "need: "
+labels: [need]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write the situation in your own words. Do not paste anything from your garden — no host names, addresses,
+        paths, people's names, ids, serials or findings. Use neutral names: sam, ali, host-a, example.org,
+        203.0.113.10, /home/user/….
+
+        A need is where a term of the vocabulary can begin. It is read against its neighbours, the terms and rules
+        it would sit beside, and a term for a kind of fact waits for real cases (CONTRIBUTING.md).
+  - type: textarea
+    id: situation
+    attributes:
+      label: The situation, in your own words
+      description: What happens, who and what is involved, and why a record of it matters to you.
+    validations:
+      required: true
+  - type: textarea
+    id: want
+    attributes:
+      label: What you would want to record or ask
+      description: The fact you would write down, or the question you would put to the garden and the answer you would expect.
+  - type: textarea
+    id: now
+    attributes:
+      label: What you do now instead
+      description: A note in `details:`, a spreadsheet, memory, nothing.
+  - type: textarea
+    id: who
+    attributes:
+      label: Who else would reach for it
+      description: The kind of person or estate that meets the same situation.
+  - type: input
+    id: related
+    attributes:
+      label: Related
+      description: A use-case page, an issue, a term or a document section this touches, if you know one.
+  - type: checkboxes
+    id: neutral
+    attributes:
+      label: Neutral names
+      options:
+        - label: Nothing here comes from my garden that I have not replaced with a neutral name.
+          required: true

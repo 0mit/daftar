@@ -60,6 +60,7 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
    python3 test/quantities.py
    python3 test/money.py
    python3 test/mycelium.py
+   python3 test/site.py
    python3 test/public.py
    python3 test/docs.py
    ```
@@ -105,6 +106,23 @@ Say it without the name: "one host", "another machine", `/home/user/tree`, `host
   the design steps before that. Read the relevant part before proposing to change one.
 - Some comments mention `test/golden.py` and `test/diffgate.py`. They are the maintainers' corpus tests,
   which need a real garden's beans and so are not published.
+
+## The site
+
+`site/` holds the project's public pages: what daftar is, its use cases, its philosophy, its mechanisms drawn, and how
+to ask. Every output they show was printed by the tools of the release that `site/RELEASE` names:
+`python3 site/build.py` clones this repository at that tag, grows demo gardens from it with the day held at one date,
+runs the commands the pages show, and writes what they print between the markers the pages carry. A change to a tool
+reaches the pages only through a release: bump `site/RELEASE` to its tag, run `python3 site/build.py`, and commit the
+pages it rewrites. `python3 test/site.py` builds the site again in a temporary directory and fails until every page
+agrees with it. It also checks that every page parses, that every link inside the site resolves, that nothing is
+loaded from outside it, and that every issue form asks for the situation and warns against pasting from a garden; with
+`git config daftar.garden` set, it runs the leak guard over every file of the site. The report on the machinery page,
+`site/machinery/report.html`, is drawn separately and committed, and `site/build.py` keeps it as committed unless it
+is asked to draw it again (`--machinery`).
+
+To ask rather than propose (a need, a use case, a suggestion, a question, a bug), open an issue. Each form asks for
+the situation in your own words, and for nothing from your garden.
 
 ## What happens next
 
