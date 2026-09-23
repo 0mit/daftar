@@ -28,9 +28,14 @@ TWO CURRENCIES ARE NEVER ADDED. No factor joins two currencies (the `money` quan
 every position, debt and net is per currency. A transaction priced in one currency and `charged` in another shows the
 rate it implies — charged over amount, exactly — as a reading of the statement, never as a rate to reuse.
 
+WHAT IS NOT READ IS SAID. A transaction whose figures cannot be read exactly, a bean whose front matter does not parse,
+an entry a merge left as a disagreement for a person (`{conflict: [a, b]}`): each is left out of every total and named
+in a NOTE, so a total is never smaller than it looks without the reader being told why.
+
 The law is read, not named: the transactions are every term whose schema declares `sums`, its whole and its parts come
-from that rule, the parties from the `key_of` its parts name, and the clauses from every term that falls due between
-those parties (`expiry` and a `key_of` the parties). Never writes. Exit 0; 2 when a named bean is not here.
+from that rule, the parties from the `key_of` its parts name and the party's bean from the parties term's `ref`, and the
+clauses from every term that falls due between those parties (`expiry` and a `key_of` the parties). Never writes.
+Exit 0; 2 when this is not a garden, or a bean named is not here or does not parse, or `--between` is not two parties.
 """
 import datetime, glob, os, sys
 from fractions import Fraction
@@ -50,19 +55,36 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # WHO BEARS A TRANSACTION, AND IN WHAT SHARES. The law's `sums` rule says which attribute is the whole and which the
 # parts; it has no construct that says "this attribute bears the cost, in these whole-number shares", so this is the
-# one place the tool names an attribute of the law. If a second term ever bears in shares, the law should say it.
+# one place the tool names attributes of the law — the attribute and its share. Who a bearer IS is read like a payer:
+# the attribute of its entries that is a key of the parties. PROPOSED, NOT RATIFIED (a change to the law, class G, for
+# a person): `sums: {whole: [charged, amount], parts: paid_by.amount, borne: borne_by.share}`, after which these two
+# names leave this file and a garden's own term that bears in shares is read the same way.
 BEARING, SHARE = 'borne_by', 'share'
+
+
+class NotAGarden(Exception):
+    pass
 
 
 def law():
     """The law as the gate loaded it: every term of both tiers, every unit (a currency among them, with its digits),
-    every positioning system. Asked of bin/dmcheck.py, the way bin/dmstale.py asks it, so this reads what is in force."""
+    every positioning system. Asked of bin/dmcheck.py, the way bin/dmstale.py asks it, so this reads what is in force.
+    Only a garden has a law in force: without its VOCAB.md there is nothing here to read."""
+    if not os.path.exists(os.path.join(ROOT, 'VOCAB.md')):
+        raise NotAGarden(f"not in a garden (no VOCAB.md at {ROOT}) — run the copy of this tool in a garden's bin/")
     import dmcheck
     return dmcheck.TERMS, dmcheck.UNITS, dmcheck.SYSTEMS
 
 
 def _in(rec):
     return (rec or {}).get('in') if isinstance(rec, dict) else None
+
+
+def _keyed(sch, attr):
+    """(field, parties-term) — the field of `attr`'s entries that is a key of a parties term: who paid, who bears."""
+    fields = (_in((sch.get('attrs') or {}).get(attr)) or {}).get('entries') or {}
+    return next(((f, _in(r).get('key_of')) for f, r in fields.items()
+                 if isinstance(_in(r), dict) and _in(r).get('key_of')), (None, None))
 
 
 def money_terms(terms):
@@ -75,16 +97,24 @@ def money_terms(terms):
             continue
         wholes = rule.get('whole') if isinstance(rule.get('whole'), list) else [rule.get('whole')]
         pattr, _, pfield = str(rule.get('parts') or '').partition('.')
-        fields = (_in((sch.get('attrs') or {}).get(pattr)) or {}).get('entries') or {}
-        party = next(((f, _in(r).get('key_of')) for f, r in fields.items()
-                      if isinstance(_in(r), dict) and _in(r).get('key_of')), (None, None))
-        # WHEN IT HAPPENED: the attribute the law types as a date — found by its type, not by its name, because the
-        # name the law gives it (`on`) is one YAML 1.1 reads as the boolean true, in the law and in a bean alike.
+        party = _keyed(sch, pattr)
+        # WHEN IT HAPPENED: the attribute the law types as a date — found by its type, so a garden's term that names
+        # its day otherwise is read the same way.
         dates = [a for a, r in (sch.get('attrs') or {}).items()
                  if isinstance(_in(r), dict) and _in(r).get('type') in ('date', 'iso_date')]
         said_as = [a for a, r in (sch.get('attrs') or {}).items() if isinstance(r, dict) and r.get('required') and _in(r) == 'prose']
         out.append((name, {'wholes': [w for w in wholes if w], 'parts': pattr, 'part_amount': pfield,
-                           'party': party[0], 'parties': party[1], 'dates': dates, 'said_as': said_as, 'schema': sch}))
+                           'party': party[0], 'parties': party[1], 'dates': dates, 'said_as': said_as,
+                           'bearer': _keyed(sch, BEARING)[0], 'schema': sch}))
+    return out
+
+
+def party_refs(terms, names):
+    """{parties-term: the attribute of its entries that is a `ref` to the party's bean} — `who`, as the law declares it."""
+    out = {}
+    for name in names:
+        attrs = (((terms.get(name) or {}).get('schema') or {}).get('attrs') or {})
+        out[name] = next((a for a, r in attrs.items() if _in(r) == 'ref'), None)
     return out
 
 
@@ -103,22 +133,9 @@ def clause_terms(terms, parties_terms):
 
 
 def count_of(q):
-    """A count, exactly — or None. Only a whole number or a decimal string is read: anything else (a float above
-    all) has already lost what it lost, and the gate refuses it."""
-    c = q.get('count') if isinstance(q, dict) else None
-    if isinstance(c, bool):
-        return None
-    if isinstance(c, int):
-        return Fraction(c)
-    if isinstance(c, str) and _decimal(c):
-        return Fraction(c)
-    return None
-
-
-def _decimal(s):
-    """`-12.50` — a whole number or a decimal, with no exponent and nothing a float would have made of it."""
-    head, dot, tail = s.lstrip('-').partition('.')
-    return head.isdigit() and head.isascii() and (not dot or (tail.isdigit() and tail.isascii()))
+    """A count, exactly — or None. Only a whole number or a decimal string is read, by the gate's own pattern (one
+    sign, ASCII digits, no exponent): anything else — a float above all — has already lost what it lost."""
+    return dmunits.exact(q.get('count')) if isinstance(q, dict) else None
 
 
 def digits_of(unit, units):
@@ -163,7 +180,7 @@ def read_transaction(key, e, rule, units):
     """One transaction, read: {whole, unit, paid, borne, priced, notes}. `paid` and `borne` are None when it cannot be
     read exactly, and `notes` then say why — a figure left out is said to be left out, never guessed at."""
     tx = {'key': key, 'what': ' — '.join(str(e[a]) for a in rule['said_as'] if e.get(a) is not None),
-          'on': next((e[a] for a in rule['dates'] if e.get(a) is not None), None),
+          'day': next((e[a] for a in rule['dates'] if e.get(a) is not None), None),
           'notes': [], 'paid': None, 'borne': None, 'whole': None, 'unit': None, 'priced': None}
     wattr = next((w for w in rule['wholes'] if e.get(w) is not None), None)
     whole = e.get(wattr) if wattr else None
@@ -201,13 +218,20 @@ def read_transaction(key, e, rule, units):
             tx['notes'].append(f"what was paid adds up to {said(sum(paid.values()), unit, units)} and the whole is "
                                f"{said(W, unit, units)} — left out; the parts of a whole add up to it")
             return tx
+    if W == 0 and any(paid.values()):
+        # A WHOLE OF NOTHING WITH PARTS THAT ARE SOMETHING: each bearer's share of a payer's part is in proportion to
+        # the whole, and there is no proportion to nothing. Read, it would move the positions and owe nobody anything.
+        tx['notes'].append(f"its whole is 0 {unit} and what was paid is not — no share of nothing can be read; left out. "
+                           f"Money that passed from one party to another is a transaction paid by one and borne by the other")
+        return tx
     shares = {}
     for b in _list(e.get(BEARING)):
         s = b.get(SHARE) if isinstance(b, dict) else None
         if isinstance(s, bool) or not str(s).isdigit() or not str(s).isascii() or int(str(s)) < 1:
             tx['notes'].append(f"a share of {s!r} is not a whole number of parts — left out")
             return tx
-        shares[str(b.get('party'))] = shares.get(str(b.get('party')), 0) + int(str(s))
+        who = str(b.get(rule['bearer']))
+        shares[who] = shares.get(who, 0) + int(str(s))
     tx['paid'] = paid
     if not shares:
         tx['borne'] = dict(paid)                           # no bearers: whoever paid it bears it
@@ -246,32 +270,61 @@ def net(pairs):
 
 
 def load_beans():
-    beans = {}
+    """({bean id: front matter}, {file stem: why it was not read}) — a bean that does not parse is not skipped in
+    silence: whatever it records is missing from every total, and the reader is told which file and why."""
+    beans, unread = {}, {}
     for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
+        stem = os.path.splitext(os.path.basename(f))[0]
         head, _ = dmparse.read(f)
         if head is None:
+            unread[stem] = "it has no front matter"
             continue
         try:
             fm = dmparse.loads(head) or {}
-        except Exception:
+        except Exception as e:
+            unread[stem] = f"its front matter does not parse ({str(e).splitlines()[0] if str(e) else type(e).__name__})"
             continue
         if isinstance(fm, dict) and fm.get('bean'):
             beans[str(fm['bean'])] = fm
-    return beans
+    return beans, unread
 
 
 def _conflict(v):
-    return isinstance(v, dict) and isinstance(v.get('conflict'), list)
+    return dmstale.conflicted(v) is not None
 
 
-def read_agreement(bid, fm, mterms, cterms, pterms, units):
+def _differ(sides):
+    """The attributes on which the sides of a disagreement differ, in words."""
+    keys = sorted({str(k) for x in sides if isinstance(x, dict) for k in x})
+    return [k for k in keys if len({repr(x.get(k)) if isinstance(x, dict) else repr(x) for x in sides}) > 1]
+
+
+def _ref_bean(p, ref):
+    r = p.get(ref) if isinstance(p, dict) and ref else None
+    return str(r.get('bean')) if isinstance(r, dict) and r.get('bean') else None      # the law's ref form: {bean: <id>}
+
+
+def read_agreement(bid, fm, mterms, cterms, prefs, units):
     """Everything this tool reads of one agreement: its parties, its transactions per currency, its clauses."""
     ag = {'bean': bid, 'title': fm.get('title'), 'parties': {}, 'txs': [], 'owed': {}, 'position': {}, 'notes': [],
-          'clauses': []}
-    for pt in pterms:
-        for k, p in (fm.get(pt).items() if isinstance(fm.get(pt), dict) and not _conflict(fm.get(pt)) else []):
-            who = p.get('who') if isinstance(p, dict) else None
-            ag['parties'][str(k)] = str(who.get('bean')) if isinstance(who, dict) and who.get('bean') else None
+          'clauses': [], 'disputed': []}
+    for pt, ref in prefs.items():
+        held = fm.get(pt)
+        if _conflict(held):
+            ag['notes'].append(f"`{pt}` holds a merge conflict as a whole — no party is read until a person chooses")
+            continue
+        for k, p in (held.items() if isinstance(held, dict) else []):
+            sides = dmstale.conflicted(p)
+            if sides is None:
+                ag['parties'][str(k)] = _ref_bean(p, ref)
+                continue
+            # ONE PARTY IN DISPUTE (the parties merge member by member): where every side names the same bean, who the
+            # party is stands, and only what the sides differ on waits for a person.
+            who = {_ref_bean(x, ref) for x in sides}
+            ag['parties'][str(k)] = who.pop() if len(who) == 1 else None
+            ag['notes'].append(f"party {k} holds a merge conflict, differing in: {', '.join(_differ(sides)) or 'form'} — "
+                               + ("who it is agrees, so it is read" if ag['parties'][str(k)] else
+                                  "the sides name different beans, so it is read as nobody until a person chooses"))
     for term, rule in mterms:
         held = fm.get(term)
         if _conflict(held):
@@ -280,6 +333,12 @@ def read_agreement(bid, fm, mterms, cterms, pterms, units):
             continue
         items = list(held.items()) if isinstance(held, dict) else list(enumerate(held)) if isinstance(held, list) else []
         for k, e in items:
+            sides = dmstale.conflicted(e)
+            if sides is not None:
+                ag['txs'].append({'key': k, 'whole': None, 'paid': None, 'borne': None, 'notes': [
+                    f"holds a merge conflict — {len(sides)} sides, differing in: {', '.join(_differ(sides)) or 'form'}; "
+                    f"not read until a person chooses"]})
+                continue
             if not isinstance(e, dict):
                 continue
             tx = read_transaction(k, e, rule, units)
@@ -297,10 +356,17 @@ def read_agreement(bid, fm, mterms, cterms, pterms, units):
     for term, sch in cterms:
         held = fm.get(term)
         decl = sch.get('expiry') or {}
-        items = list(held.items()) if isinstance(held, dict) and not _conflict(held) else \
-            list(enumerate(held)) if isinstance(held, list) else []
+        if _conflict(held):
+            ag['notes'].append(f"`{term}` holds a merge conflict as a whole — no clause is read until a person chooses")
+            continue
+        items = list(held.items()) if isinstance(held, dict) else list(enumerate(held)) if isinstance(held, list) else []
         for k, e in items:
-            if isinstance(e, dict) and not dmstale.silenced(e, decl):
+            sides = dmstale.conflicted(e)
+            if sides is not None:
+                # NEITHER IN FORCE NOR MET: one side may say `met` and the other not, and which is so is a person's call.
+                # Listed apart, with what the sides differ on, so it is neither silently dropped nor silently owed.
+                ag['disputed'].append((term, k, sides))
+            elif isinstance(e, dict) and not dmstale.silenced(e, decl):
                 ag['clauses'].append((term, k, e, sch))
     return ag
 
@@ -320,7 +386,7 @@ def clause_lines(term, key, e, sch, units, systems, today):
     heading = [a for a, r in (sch.get('attrs') or {}).items()
                if form['attrs'].get(a, {}).get('required') and _in(r) == 'prose' and e.get(a) is not None]
     head = f"    {key}" + ''.join(f"  \"{e[a]}\"" for a in heading)
-    facts, unknown = [], []
+    facts, unknown, asides = [], [], []
     for a, rec in (sch.get('attrs') or {}).items():
         f = form['attrs'].get(a, {})
         v = e.get(a)
@@ -336,7 +402,8 @@ def clause_lines(term, key, e, sch, units, systems, today):
             facts.append(f"{a} " + (said(c, v.get('unit'), units) if c is not None else f"{v.get('count')!r} {v.get('unit')} "
                                     f"(not a count this reads exactly)"))
         elif a == due:
-            facts.append(due_words(a, v, e.get(rep) if rep else None, systems, today))
+            text, asides = due_words(a, v, e.get(rep) if rep else None, systems, today)
+            facts.append(text)
         elif 'key_of' in f or 'values' in f or 'type' in f:
             facts.append(f"{a} {v}")
         elif 'recurrence' in f:
@@ -346,24 +413,27 @@ def clause_lines(term, key, e, sch, units, systems, today):
     lines = [head, "        " + ' · '.join(facts)]
     if unknown:
         lines.append("        not yet known: " + ', '.join(unknown))
-    return lines
+    return lines + [f"        NOTE {n}" for n in asides]
 
 
 def due_words(attr, v, rec, systems, today):
-    """When a clause falls due — and, for one that repeats, when it falls due NEXT, walked by bin/dmstale.py."""
+    """(text, notes) — when a clause falls due and, for one that repeats, when it falls due NEXT, walked by
+    bin/dmstale.py; the notes name each cell the walk skipped on the way to it (a month without the day named)."""
     try:
         first = dmcal.to_day(str(v))
     except (ValueError, dmcal.NotByRule) as why:
-        return f"{attr} {v} ({why})"
+        return f"{attr} {v} ({why})", []
     if not isinstance(rec, dict):
-        return f"{attr} {v} ({_when(first, today)})"
+        return f"{attr} {v} ({_when(first, today)})", []
+    skipped = []
     try:
-        day, i, times, ended = dmstale.next_due(first, rec, today, systems)
+        day, i, times, ended = dmstale.next_due(first, rec, today, systems, skipped=skipped)
     except dmstale.Unreckoned as why:
-        return f"{attr} {v}, then {dmstale.describe(rec)} — the next occurrence cannot be walked here: {why}"
+        return f"{attr} {v}, then {dmstale.describe(rec)} — the next occurrence cannot be walked here: {why}", []
     of = f" of {times}" if times is not None else ''
     return (f"{attr} {v}, then {dmstale.describe(rec)} — {'the last was' if ended else 'next'} "
-            f"{dmstale.show_day(day, rec, systems)} ({_when(day, today)}), occurrence {i}{of}")
+            f"{dmstale.show_day(day, rec, systems)} ({_when(day, today)}), occurrence {i}{of}",
+            [] if ended else [dmstale.skip_words(c) for c in skipped])
 
 
 def print_agreement(ag, units, systems, today):
@@ -378,7 +448,7 @@ def print_agreement(ag, units, systems, today):
         if tx['whole'] is None:
             print(f"     {tx['key']}  — " + '; '.join(tx['notes']))
             continue
-        line = f"     {tx['key']}" + (f"  {tx['on']}" if tx.get('on') else '') + f"  {said(tx['whole'], tx['unit'], units)}"
+        line = f"     {tx['key']}" + (f"  {tx['day']}" if tx.get('day') else '') + f"  {said(tx['whole'], tx['unit'], units)}"
         if tx['paid'] is not None:
             line += "  paid by " + ', '.join(f"{p}" + ('' if len(tx['paid']) == 1 else f" {said(x, tx['unit'], units)}")
                                              for p, x in sorted(tx['paid'].items()))
@@ -390,8 +460,8 @@ def print_agreement(ag, units, systems, today):
             rate = Fraction(tx['whole'], c)
             text = dmunits.show(rate)
             ap = dmunits.approx(rate) if '/' in text else None
-            print(f"       priced {said(c, u, units)}, charged {said(tx['whole'], tx['unit'], units)}: "
-                  f"{text} {tx['unit']} per {u}" + (f" (≈ {ap})" if ap else '') + " — a reading of the statement, never a stored rate")
+            print(dmunits.speakable(f"       priced {said(c, u, units)}, charged {said(tx['whole'], tx['unit'], units)}: "
+                  f"{text} {tx['unit']} per {u}" + (f" (≈ {ap})" if ap else '') + " — a reading of the statement, never a stored rate"))
         odd = uneven_note(list(tx['borne'].values()), tx['unit'], units) if tx['borne'] else None
         for n in tx['notes'] + ([odd] if odd else []):
             print(f"       NOTE {n}")
@@ -409,12 +479,23 @@ def print_agreement(ag, units, systems, today):
         for term, key, e, sch in ag['clauses']:
             for l in clause_lines(term, key, e, sch, units, systems, today):
                 print(l)
+    if ag['disputed']:
+        print(f"   clauses in a merge conflict ({len(ag['disputed'])}) — neither in force nor met until a person chooses:")
+        for term, key, sides in ag['disputed']:
+            print(f"    {key}  NOTE {len(sides)} sides, differing in: {', '.join(_differ(sides)) or 'form'}")
     print()
 
 
 def main(argv):
+    # A PIPE ON WINDOWS IS WRITTEN IN THE ANSI CODE PAGE: a glyph it cannot carry (a party's name in Persian, a date in
+    # another calendar's script) is replaced rather than let the reading die half-printed — which is when an agent,
+    # reading through a pipe, would see it die.
+    try:
+        sys.stdout.reconfigure(errors='replace')
+    except (AttributeError, ValueError):
+        pass
     if argv and argv[0] in ('-h', '--help'):
-        print(__doc__); return 0
+        print(dmunits.speakable(__doc__)); return 0
     between = None
     if '--between' in argv:
         i = argv.index('--between')
@@ -422,18 +503,26 @@ def main(argv):
         argv = argv[:i] + argv[i + 3:]
         if len(between) != 2 or between[0] == between[1]:
             print("dmledger: --between takes two party beans, e.g. --between sam ali"); return 2
-    terms, units, systems = law()
+    try:
+        terms, units, systems = law()
+    except NotAGarden as e:
+        print(f"dmledger: {e}"); return 2
     mterms = money_terms(terms)
     pterms = sorted({r['parties'] for _t, r in mterms if r['parties']})
+    prefs = party_refs(terms, pterms)
     cterms = clause_terms(terms, pterms)
-    beans = load_beans()
+    beans, unread = load_beans()
     for b in argv + (between or []):
+        if b in unread:
+            print(f"dmledger: the bean '{b}' is here and cannot be read: {unread[b]}"); return 2
         if b not in beans:
             print(f"dmledger: no bean '{b}' in {os.path.join(ROOT, 'beans')}"); return 2
     today = datetime.date.today().toordinal()
     held = [t for t, _r in mterms] + [t for t, _s in cterms]
+    for stem, why in sorted(unread.items()):
+        print(f"NOTE beans/{stem}.md is not read — {why}; whatever it records is missing from every total below")
     chosen = argv or sorted(b for b, fm in beans.items() if any(fm.get(t) is not None for t in held))
-    ags = [read_agreement(b, beans[b], mterms, cterms, pterms, units) for b in chosen]
+    ags = [read_agreement(b, beans[b], mterms, cterms, prefs, units) for b in chosen]
     if between:
         return print_between(between, ags, units)
     if not ags:

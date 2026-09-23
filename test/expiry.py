@@ -272,6 +272,158 @@ check("...where the same date that does not repeat is EXPIRED — the repetition
 check("...and one counted in a calendar that is not reckoned by rule is a NOTE, never a guess",
       line("moon").startswith("NOTE") and "not by rule" in line("moon") and "Traceback" not in out, out[-900:])
 
+# ---- THE WALK ITSELF, on fixed days: the library bin/dmledger.py shares -------------------------------------------------
+# Asked in-process of this garden's own copy, so the systems and units are the law this garden loaded, and `today` is a
+# fixed day rather than the clock's — each answer below is one a person can check on a calendar.
+import time
+import dmstale as _st
+_d = _dmcal.to_day
+def nd(first, rec, today, skipped=None):
+    return _st.next_due(_d(first), dict(rec, of="time"), _d(today), skipped=skipped)
+# A refusal is asked in a process of its own, with a deadline: the defect it guards against was a walk that never ended,
+# and a suite that hangs on the regression it exists to catch reports nothing.
+_PROBE = r"""
+import json, sys, time
+sys.path.insert(0, 'bin')
+import dmcal, dmstale
+first, rec, today = json.loads(sys.argv[1])
+t0 = time.time()
+try:
+    dmstale.next_due(dmcal.to_day(first), rec, dmcal.to_day(today))
+    print(json.dumps(['no refusal', time.time() - t0]))
+except dmstale.Unreckoned as e:
+    print(json.dumps([str(e), time.time() - t0]))
+"""
+def unreckoned(first, rec, today="2026-09-23"):
+    import json
+    try:
+        r = subprocess.run([sys.executable, "-c", _PROBE, json.dumps([first, dict(rec, of="time"), today])],
+                           capture_output=True, text=True, cwd=G, timeout=30)
+    except subprocess.TimeoutExpired:
+        return "did not end in 30 seconds", 30.0
+    return tuple(json.loads(r.stdout)) if r.stdout.strip() else (r.stderr[-300:], 0.0)
+
+YEARLY = {"in": "gregorian-civil", "each": "year", "at": "12-01"}
+check("a YEARLY clause first due 2026-01-10 at 12-01 falls due next on 2026-12-01 — in its own first year, not a year late",
+      nd("2026-01-10", YEARLY, "2026-09-23")[:2] == (_d("2026-12-01"), 2), nd("2026-01-10", YEARLY, "2026-09-23"))
+check("...and with `times: 2`, 2026-12-01 is the second payment and the last",
+      nd("2026-01-10", dict(YEARLY, times=2), "2026-12-02") == (_d("2026-12-01"), 2, 2, True))
+check("...as a month and a week always did: a later place in the first's own cell is the next occurrence",
+      nd("2026-01-10", {"in": "gregorian-civil", "each": "month", "at": "15"}, "2026-01-11")[:2] == (_d("2026-01-15"), 2)
+      and nd("2026-09-01", {"in": "iso-week", "each": "week", "at": "5"}, "2026-09-02")[:2] == (_d("2026-09-04"), 2))
+
+# A PLACE NO CELL HAS. The gate cannot refuse it (`at` is prose to the gate), and the walk once never ended on one.
+_never = [({"in": "coptic-calendar", "each": "month", "at": "31"}, "(the longest runs to 30)"),
+          ({"in": "hebrew-calendar", "each": "month", "at": "31"}, "(the longest runs to 30)"),
+          ({"in": "gregorian-civil", "each": "month", "at": "32"}, "(the longest runs to 31)"),
+          ({"in": "gregorian-civil", "each": "month", "at": "0"}, "place 0"),
+          ({"in": "gregorian-civil", "each": "year", "at": "02-30"}, "place 02-30"),
+          ({"in": "gregorian-civil", "each": "year", "at": "00-00"}, "place 00-00"),
+          ({"in": "iso-week", "each": "week", "at": "8"}, "(the longest runs to 7)")]
+_got = [(r, want) + unreckoned("2026-01-31", r) for r, want in _never]
+check("a place no cell of the calendar has — the 31st of a Coptic or Hebrew month, the 32nd, the 0th, 02-30, day 8 of a week — "
+      "ENDS, in well under a second each, and says why",
+      all(want in why and "a place its calendar does not have" in why and secs < 2 for r, want, why, secs in _got),
+      [(r["in"], r["at"], why[:120], round(secs, 2)) for r, want, why, secs in _got])
+
+# A CELL WITHOUT THE PLACE IS SKIPPED — and the reader is told, rather than left to wonder about November.
+_sk = []
+_nd = nd("2026-01-31", {"in": "gregorian-civil", "each": "month"}, "2026-11-20", _sk)
+check("rent first due 2026-01-31, read on 2026-11-20: next 2026-12-31, and November — which has no 31st — is NAMED as skipped",
+      _nd[0] == _d("2026-12-31") and [c[2] for c in _sk] == ["2026-11"] and "no occurrence in 2026-11 — it has no 31" in _st.skip_words(_sk[0]),
+      (_nd, _sk))
+
+# THE LEVELS ARE THE LAW'S: no calendar is named in the tool, so a Japanese month is walked from its own form, and a week
+# only where the system has one.
+check("a Japanese month is walked from the calendar's own form: the 15th after 2026-09-23 is 2026-10-15",
+      nd("2026-01-01", {"in": "japanese-calendar", "each": "month", "at": "15"}, "2026-09-23")[0] == _d("2026-10-15"))
+check("...a system without the level named is refused in the law's words",
+      "gregorian-civil has no level `week`" in unreckoned("2026-01-01", {"in": "gregorian-civil", "each": "week"})[0])
+_src = open(os.path.join(G, "bin", "dmstale.py"), encoding="utf-8").read()
+check("...and dmstale's source names neither `japanese` nor `iso8601`", "'japanese'" not in _src and "'iso8601'" not in _src)
+check("a stride whose count is a decimal STRING is read (`count: \"2\"`), and one that is not a whole number of days is said "
+      "to be that — not 'finer than the day'",
+      nd("2026-01-01", {"every": {"count": "2", "unit": "day"}}, "2026-01-02")[0] == _d("2026-01-03")
+      and "not a whole number of days" in unreckoned("2026-01-01", {"every": {"count": 2160, "unit": "minute"}})[0])
+
+# ---- AND THE TOOLS, on a garden holding such clauses ------------------------------------------------------------------
+line = lambda key, bean="odd": next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
+open(os.path.join(G, "beans", "odd.md"), "w").write(f"""---
+bean: odd
+kind: contract
+title: "an agreement with places no calendar has"
+status: active
+summary: "clauses the gate accepts and the walk must end on"
+nature: metaphysical
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:odd", class: logical, establishing: true }} ] }}
+provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
+parties:
+  keeper: {{ who: {{ bean: keeper }} }}
+  ali: {{ who: {{ bean: ali }} }}
+words: {{ form: spoken }}
+clauses:
+  coptic:  {{ what: "rent", by: ali, to: keeper, due: 2026-01-31, every: {{ of: time, in: coptic-calendar, each: month, at: "31" }} }}
+  feb-30:  {{ what: "a fee", by: ali, to: keeper, due: 2026-01-31, every: {{ of: time, in: gregorian-civil, each: year, at: "02-30" }} }}
+  leap:    {{ what: "a leap-day fee", by: ali, to: keeper, due: 2024-02-29, every: {{ of: time, in: gregorian-civil, each: year }} }}
+---
+An agreement.
+""")
+out = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G).stdout
+check("the gate accepts clauses whose place no calendar has (`at` is prose to it) — so the tools must end on them",
+      "0 error" in out, out[-600:])
+try:
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py")], capture_output=True, text=True, cwd=G, timeout=60)
+    out, ended = r.stdout, True
+except subprocess.TimeoutExpired:
+    out, ended = "(killed after 60 s)", False
+check("...dmstale ENDS on them, each a NOTE with the reason", ended and "Traceback" not in out
+      and line("coptic").startswith("NOTE") and "a place its calendar does not have" in line("coptic")
+      and line("feb-30").startswith("NOTE"), out[-900:])
+check("...and a leap-day fee names the years it skips beside its row",
+      any(l.startswith("NOTE") and "odd.clauses[leap]" in l and "it has no 02-29" in l for l in out.splitlines()), out[-900:])
+try:
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "odd"], capture_output=True, text=True, cwd=G, timeout=60)
+    lout, ended = r.stdout + r.stderr, True
+except subprocess.TimeoutExpired:
+    lout, ended = "(killed after 60 s)", False
+check("...and so does dmledger, which walks with the same function", ended and "Traceback" not in lout
+      and "cannot be walked here" in lout and "NOTE no occurrence in" in lout, lout[-900:])
+os.remove(os.path.join(G, "beans", "odd.md"))
+
+# ---- A DISAGREEMENT A MERGE LEFT: the earliest date any side still owes is the one warned of --------------------------
+open(os.path.join(G, "beans", "merged.md"), "w").write(f"""---
+bean: merged
+kind: contract
+title: "an agreement two records disagree about"
+status: active
+summary: "two clauses in a merge conflict"
+nature: metaphysical
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:merged", class: logical, establishing: true }} ] }}
+provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
+parties:
+  keeper: {{ who: {{ bean: keeper }} }}
+  ali: {{ who: {{ bean: ali }} }}
+words: {{ form: spoken }}
+clauses:
+  one-says-met: {{ conflict: [ {{ what: "a payment", by: ali, to: keeper, due: {IN3}, state: met }}, {{ what: "a payment", by: ali, to: keeper, due: {IN3} }} ] }}
+  two-days:     {{ conflict: [ {{ what: "a payment", by: ali, to: keeper, due: {IN10} }}, {{ what: "a payment", by: ali, to: keeper, due: {IN3} }} ] }}
+  both-met:     {{ conflict: [ {{ what: "a payment", by: ali, to: keeper, due: {IN3}, state: met }}, {{ what: "a payment", by: ali, to: keeper, due: {IN3}, state: waived }} ] }}
+---
+An agreement.
+""")
+out = stale()
+line = lambda key, bean="merged": next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
+check("a clause in a merge conflict where ONE side says met is still warned of — until a person chooses, it may be owed",
+      line("one-says-met").startswith("EXPIRING") and "merge conflict" in line("one-says-met"), out[-900:])
+check("...where the sides give two days, the EARLIER is the one warned of", line("two-days").startswith("EXPIRING")
+      and IN3 in line("two-days") and "the earliest is shown" in line("two-days"), out[-900:])
+check("...and where every side is met or waived, it is silent, as one would be", line("both-met") == "", out[-900:])
+os.remove(os.path.join(G, "beans", "merged.md"))
+
 shutil.rmtree(T, ignore_errors=True)
 print("\nexpiry: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

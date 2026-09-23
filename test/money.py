@@ -186,9 +186,145 @@ check("...a repeating one with its NEXT occurrence, walked in its own calendar",
       re.search(r"each month in gregorian-civil at 10 — next \d{4}-\d{2}-10", out), out)
 check("...a conditional one with its condition, and what is not yet known", 'when: "a payment is late"' in out and "not yet known: due" in out, out)
 
+# ---------------------------------------------------------------- A DATED TRANSACTION: the gate, the merge, the ledger
+# The day a transaction happened was once named `on`, which YAML 1.1 reads as the boolean true: it crashed the gate on
+# any stray key beside it, and the merge's canonical form on any bean that dated a transaction. It is `day` — and it is
+# exercised here end to end, because a suite that never wrote one could not see either crash.
+DATED = ('  groceries: { what: "the groceries", day: 2026-09-01, amount: { count: 900, unit: XTS }, paid_by: [ { party: sam } ], '
+         'borne_by: [ { party: sam, share: 2 }, { party: ali, share: 1 } ] }')
+agreement("dated", DATED)
+out = gate()
+check("a DATED transaction (`day:`) passes the gate", ok(out) and "Traceback" not in out, out[-800:])
+code, out = ledger("dated")
+check("...and dmledger reads it, with its day", code == 0 and "groceries  2026-09-01  900 XTS" in out
+      and owes_lines(out) == ["ali owes sam 300 XTS"], out)
+sys.path.insert(0, os.path.join(G, "bin"))
+import dmparse as _dmparse, dmmerge as _dmmerge
+_fm = _dmparse.loads(_dmparse.read(os.path.join(G, "beans", "dated.md"))[0])
+try:
+    _canon = _dmmerge.canonical(_dmmerge.norm(_fm))
+except TypeError as _e:
+    _canon = f"TypeError: {_e}"
+check("...and the merge's canonical form of it is made — the date is `\"day\":\"2026-09-01\"`", '"day":"2026-09-01"' in _canon, _canon[:400])
+G2 = os.path.join(T, "g2")
+shutil.copytree(G, G2)                        # the same garden (its history came with it), one fact apart
+_p2 = os.path.join(G2, "beans", "dated.md")
+_t2 = open(_p2, encoding="utf-8").read().replace("day: 2026-09-01", "day: 2026-09-02")
+open(_p2, "w", encoding="utf-8", newline="\n").write(_t2)
+r = run(sys.executable, os.path.join(G, "bin", "dmmerge.py"), G, G2, cwd=G)
+check("...and two copies of the garden that date it differently MERGE, the two days kept as a disagreement",
+      r.returncode == 0 and "Traceback" not in r.stderr and '"day":"2026-09-01"' in r.stdout and '"day":"2026-09-02"' in r.stdout
+      and "fingerprint:" in r.stdout, (r.stdout[-600:] + r.stderr[-600:]))
+shutil.rmtree(G2, ignore_errors=True)
+out = one('{ what: "a meal", on: 2026-09-01, amount: { count: 10, unit: XTS }, paid_by: [ { party: sam } ] }')
+check("the old name `on` is REFUSED, never crashed on: YAML read it as true, and a key that is not text is said to be",
+      "Traceback" not in out and "is not text" in out and not ok(out), out[-600:])
+os.remove(os.path.join(G, "beans", "deal.md"))
+
+# ---------------------------------------------------------------- WHAT IS NOT READ IS SAID, AND NEVER CRASHES
+# dmledger reads the WORKING TREE, where an uncommitted mistake is: it leaves such a thing out and says so.
+agreement("slip", '  t: { what: "a slip", amount: { count: "--5", unit: XTS }, paid_by: [ { party: sam } ] }')
+code, out = ledger("slip")
+check("a count of `--5` (two signs) is left out with a NOTE — the gate's own pattern, not a traceback",
+      code == 0 and "Traceback" not in out and "not a count this can read exactly" in out, out)
+check("...and dmledger's reader refuses exactly what the gate refuses",
+      all(dmledger.count_of({"count": c}) is None for c in ("--5", "-", "1e3", "1.", ".5", "+5", "١٢", 1.5, True))
+      and dmledger.count_of({"count": "-12.50"}) == Fraction(-25, 2) and dmledger.count_of({"count": 7}) == 7)
+os.remove(os.path.join(G, "beans", "slip.md"))
+
+agreement("nothing", '  t: { what: "a wash", amount: { count: 0, unit: XTS }, paid_by: [ { party: sam, amount: { count: 100, unit: XTS } }, '
+                     '{ party: ali, amount: { count: "-100", unit: XTS } } ] }')
+out = gate()
+check("(the gate lets such a transaction through: its parts do add up to its whole)", ok(out), out[-600:])
+code, out = ledger("nothing")
+check("a whole of 0 whose parts are not (+100, -100) is left out, said to be — the positions and the debts cannot disagree",
+      "no share of nothing" in out and not owes_lines(out) and "position" not in out, out)
+os.remove(os.path.join(G, "beans", "nothing.md"))
+
+with open(os.path.join(G, "beans", "broken.md"), "w", encoding="utf-8", newline="\n") as fh:
+    fh.write("---\nbean: broken\nkind: contract\ntransactions: { t: { what: [unclosed }\n---\nbroken.\n")
+code, out = ledger("--between", "sam", "ali")
+check("a bean whose front matter does not parse is NOTED, not skipped in silence: a total without it says so",
+      code == 0 and "NOTE beans/broken.md is not read" in out, out)
+code, out = ledger("broken")
+check("...and naming it is 'cannot be read', not 'no bean'", code == 2 and "cannot be read" in out and "no bean" not in out, out)
+os.remove(os.path.join(G, "beans", "broken.md"))
+
+r = run(sys.executable, os.path.join(ROOT, "bin", "dmledger.py"), cwd=ROOT)
+check("outside a garden (no VOCAB.md) dmledger says so and exits 2 — no traceback",
+      r.returncode == 2 and "not in a garden" in r.stdout and "Traceback" not in r.stderr, r.stdout + r.stderr[-400:])
+
+# ---------------------------------------------------------------- A DISAGREEMENT A MERGE LEFT FOR A PERSON
+# bin/dmmerge.py records a disagreement on ONE member of a keyed collection: `transactions: {t: {conflict: [a, b]}}`,
+# and the same for a clause and a party. Made here by the merge driver itself, so the shape read is the shape written.
+_base = open(os.path.join(G, "beans", "dated.md"), encoding="utf-8").read().replace(
+    "---\nAn agreement.", "clauses:\n  repay: { what: \"ali repays sam\", by: ali, to: sam, due: 2026-10-01 }\n---\nAn agreement.")
+_O, _A, _B = (os.path.join(T, n) for n in ("O.md", "A.md", "B.md"))
+open(_O, "w", encoding="utf-8", newline="\n").write(_base)
+open(_A, "w", encoding="utf-8", newline="\n").write(_base.replace("day: 2026-09-01", "day: 2026-09-02")
+                                                   .replace("due: 2026-10-01 }", "due: 2026-10-01, state: met }")
+                                                   .replace("ali: { who: { bean: ali }, accepted: 2026-09-01 }", "ali: { who: { bean: ali }, accepted: 2026-09-03 }"))
+open(_B, "w", encoding="utf-8", newline="\n").write(_base.replace("day: 2026-09-01", "day: 2026-09-05").replace("due: 2026-10-01 }", "due: 2026-10-02 }")
+                                                   .replace("ali: { who: { bean: ali }, accepted: 2026-09-01 }", "ali: { who: { bean: ali }, accepted: 2026-09-04 }"))
+r = run(sys.executable, os.path.join(G, "bin", "dmmerge.py"), "--file", _O, _A, _B, cwd=G)
+shutil.copyfile(_A, os.path.join(G, "beans", "dated.md"))
+code, out = ledger("dated")
+check("the merge driver records the disagreements member by member", r.returncode == 0 and "conflict" in open(_A, encoding="utf-8").read(),
+      r.stdout + r.stderr)
+check("a transaction in a merge conflict is left out and NAMED as one — not misread as 'not a count'",
+      "groceries  — holds a merge conflict" in out and "differing in: day" in out and "not a count" not in out
+      and not owes_lines(out), out)
+check("...a clause in one is neither in force nor met: listed apart, with what the sides differ on",
+      "clauses in a merge conflict (1)" in out and "repay  NOTE 2 sides, differing in: due, state" in out
+      and "clauses in force" not in out, out)
+check("...and a party in one whose sides name the same bean is still that bean", "party ali holds a merge conflict, differing in: accepted — who it is agrees" in out, out)
+agreement("dated", DATED)
+
+# ---------------------------------------------------------------- THE LAW IS READ, NOT NAMED
+_terms = {"parties": {"schema": {"attrs": {"person": {"in": "ref"}, "external": {"in": "prose"}}}}}
+check("the party's bean is read through whichever attribute the parties term declares a `ref` (here `person`, not `who`)",
+      dmledger.party_refs(_terms, ["parties"]) == {"parties": "person"}
+      and dmledger.read_agreement("x", {"parties": {"s": {"person": {"bean": "sam"}}}}, [], [], {"parties": "person"}, {})["parties"] == {"s": "sam"})
+import yaml
+_std = {t["term"]: t for t in yaml.safe_load(_dmparse.read(os.path.join(ROOT, "seed", "std-vocab.md"))[0])["terms"]}
+_mt = dict(dmledger.money_terms(_std))
+check("...and who bears a transaction is the `key_of: parties` attribute of its bearers' entries, found as a payer's is",
+      _mt.get("transactions", {}).get("bearer") == "party" and _mt["transactions"]["party"] == "party", _mt.get("transactions"))
+
+# ---------------------------------------------------------------- A CURRENCY THE GARDEN ADDED IS ONE CURRENCY TO EVERY READER
+_v = os.path.join(G, "VOCAB.md")
+_vtext = open(_v, encoding="utf-8").read()
+assert "registry_additions" not in _vtext and _vtext.count("\n---") == 1, "the VOCAB.md template has moved: this test adds the row"
+open(_v, "w", encoding="utf-8", newline="\n").write(_vtext.replace("\n---", "\nregistry_additions:\n  currencies:\n    - { code: XQA, "
+                                                     "numeric: '', digits: 3, name: \"a garden's own unit of account\", status: special }\n---", 1))
+agreement("own-unit", '  t: { what: "a token", amount: { count: "9.001", unit: XQA }, paid_by: [ { party: sam } ], borne_by: [ { party: ali, share: 1 } ] }')
+out = gate()
+check("a currency the garden added under `registry_additions` passes the gate", ok(out), out[-700:])
+code, out = ledger("own-unit")
+check("...dmledger reads it with its own three places", "ali owes sam 9.001 XQA" in owes_lines(out), out)
+r = run(sys.executable, os.path.join(G, "bin", "dmunits.py"), "9.001", "XQA", "XQA", cwd=G)
+check("...and dmunits, in the garden, knows it too: the law the gate loaded, not the seed files beside it",
+      r.returncode == 0 and r.stdout.strip() == "9.001 XQA", r.stdout + r.stderr)
+r = run(sys.executable, os.path.join(G, "bin", "dmunits.py"), "9.0001", "XQA", "XQA", cwd=G)
+check("...with its places: a fourth is refused", r.returncode == 1 and "more decimal places than XQA's 3" in r.stdout, r.stdout)
+os.remove(os.path.join(G, "beans", "own-unit.md"))
+open(_v, "w", encoding="utf-8", newline="\n").write(_vtext)
+
+# ---------------------------------------------------------------- A PIPE ON WINDOWS
+# Python on Windows writes a pipe in the ANSI code page (cp1252), which has no `≈`: printing one raised, and an agent reads
+# through a pipe. Imitated here by naming the encoding.
+_env = dict(os.environ, PYTHONIOENCODING="cp1252")
+r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "abroad"], capture_output=True, text=True, cwd=G, env=_env,
+                   encoding="cp1252", errors="replace")
+check("dmledger prints a rate that does not terminate through a cp1252 pipe — no UnicodeEncodeError",
+      r.returncode == 0 and "Traceback" not in r.stderr and "10/3 EUR per USD (~ 3.33333)" in r.stdout, r.stdout[-500:] + r.stderr[-500:])
+r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmunits.py"), "1", "minute", "day"], capture_output=True, text=True,
+                   env=_env, encoding="cp1252", errors="replace")
+check("...and so does dmunits", r.returncode == 0 and "1/1440 day   (~ 0.000694444)" in r.stdout, r.stdout + r.stderr[-400:])
+
 # ---------------------------------------------------------------- THE ARITHMETIC ITSELF IS FRACTIONS
 units = dmunits.law()[0]
-rule = dict(wholes=["charged", "amount"], parts="paid_by", part_amount="amount", party="party", dates=[], said_as=["what"])
+rule = dict(wholes=["charged", "amount"], parts="paid_by", part_amount="amount", party="party", bearer="party", dates=[], said_as=["what"])
 tx = dmledger.read_transaction("t", {"what": "x", "amount": {"count": 100, "unit": "XTS"}, "paid_by": [{"party": "sam"}],
                                      "borne_by": [{"party": "ali", "share": 2}, {"party": "sam", "share": 1}]}, rule, units)
 o = dmledger.owed(tx)
@@ -215,6 +351,16 @@ check("...a rate written as a float, an exponent or a fraction is refused", refu
 check("...and a rate where the law holds a factor is refused: a metre is a thousand millimetres, not what someone saw",
       refused(lambda: dmunits.convert("1", "metre", "millimetre", "2")))
 check("...a currency is still not a length", refused(lambda: dmunits.convert("1", "XTS", "metre", "1")))
+try:
+    dmunits.convert("1", "XTS", "EUR", "-1"); _neg = ""
+except ValueError as _e:
+    _neg = str(_e)
+check("...a negative rate is refused for what it is: a rate between two currencies is positive", "is positive" in _neg, _neg)
+_u = dmunits.law()[0]
+_u["XTS"]["digits"] = "9"; _u["metre"]["factor"].append(7)
+check("law() hands the caller its own copy: changing it changes nothing for the rest of the process",
+      dmunits.law()[0]["XTS"]["digits"] == "2" and dmunits.law()[0]["metre"]["factor"] == [1, 1]
+      and dmunits.convert("1.5", "kilometre", "metre") == 1500)
 
 # ---------------------------------------------------------------- THE SOURCE: NO FLOAT ANYWHERE IN MONEY CODE
 def floats_in(text, strict):

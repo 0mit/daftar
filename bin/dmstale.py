@@ -38,6 +38,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
 import dmcal
 import dmform
+import dmunits
 try:
     import yaml
 except ImportError:
@@ -206,37 +207,126 @@ def _law(name):
 # different day in a Persian month and a Gregorian one, and neither is privileged. What cannot be walked by
 # arithmetic raises `Unreckoned` with the reason, and the reader is told rather than given a guess.
 # bin/dmledger.py asks the same function for a clause's next occurrence, so the two can never disagree.
+#
+# A CELL IS READ FROM THE SYSTEM'S OWN FORM, NOT FROM A LIST OF CALENDARS. The law gives each system its levels
+# (`anchor_systems[].levels`), finest last, and its one written form: `2026-09-20` is year, month, day; `2026-W38-7`
+# year, week, day; `japanese:reiwa-8-09-20` era, year, month, day. So `each: month` is the level one above the day,
+# its cell is every day whose form agrees up to the month, and the place in the cell is the form's last field. No
+# calendar is named here and none is walked by a rule of its own: a week is walkable where the system has a week,
+# Japanese months are the months its form writes, and a calendar dmcal learns tomorrow is walked the same way.
 # ---------------------------------------------------------------------------------------------------
 class Unreckoned(Exception):
     pass
 
 
 _CAP = 100_000       # occurrences walked before giving up: a daily repetition for two and a half centuries
+# CELLS IN A ROW WITH NO OCCURRENCE before the walk gives up and says the place does not occur. The rarest place a real
+# calendar has is the 29th of February, missing at most seven years running (1897 to 1903); a place missing a hundred
+# cells running is one the calendar does not have — `at: "31"` in a calendar of thirty-day months, `02-30` anywhere.
+# Without this bound such a clause, which the gate cannot refuse (`at` is prose to it), walked forever.
+_MISS_CAP = 100
+_FIELD = re.compile(r'^(.*[^-.:])[-.]([^-.:]+)$')
 
 
-def _ymd_of(calendar):
-    """(to_day(y, m, d), from_day(n)) for a calendar whose cells are years, months and days, reckoned by rule."""
-    if calendar in dmcal.NOT_BY_RULE:
-        raise Unreckoned(f"the {calendar} calendar is not reckoned by rule — {dmcal.NOT_BY_RULE[calendar]}")
-    # The Japanese calendar's months and days are the Gregorian ones; only the count of years is by era.
-    fns = dmcal.BY_RULE.get('gregory' if calendar == 'japanese' else calendar)
-    if not fns:
-        raise Unreckoned(f"the {calendar} calendar has no months and days this tool walks")
-    return fns
+def _split(form, k):
+    """(label, [the last k fields]) of a position in its system's form — `2026-09-20`, 1 -> ('2026-09', ['20']) — or None
+    when the form has fewer fields than that."""
+    fields = []
+    for _ in range(k):
+        m = _FIELD.match(form)
+        if not m:
+            return None
+        form, f = m.group(1), m.group(2)
+        fields.insert(0, f)
+    return form, fields
 
 
-def _at(rec, default):
-    """Where in each cell, as a whole number (`at: "15"`); the first occurrence's own place when silent."""
+class _Cells:
+    """The cells of one level of one system, walked through the day: where the cell holding a day begins and ends,
+    and which day of it is at a place. Every answer is read from the system's own written form, via bin/dmcal.py."""
+
+    def __init__(self, row):
+        self.row, self.cal, self._memo = row, row.get('calendar'), {}
+
+    def form(self, n):
+        if n not in self._memo:
+            self._memo[n] = dmcal.from_day(n, self.cal)
+        return self._memo[n]
+
+    def cut(self, n, k):
+        got = _split(self.form(n), k)
+        if got is None:
+            raise Unreckoned(f"`{self.form(n)}` has fewer than {k + 1} fields: the level is not written in its form")
+        return got
+
+    def label(self, n, k):
+        return self.cut(n, k)[0]
+
+    def place(self, n, k):
+        fields = self.cut(n, k)[1]
+        if not all(f.isdigit() and f.isascii() for f in fields):
+            raise Unreckoned(f"`{self.form(n)}` writes its place in the cell as `{'-'.join(fields)}`, and this tool counts "
+                             f"only a place written in numbers")
+        return tuple(int(f) for f in fields)
+
+    def _edge(self, n, k, step):
+        """The day beside the cell holding `n` — the first after it (step +1) or the last before it (step -1). Found by
+        doubling out and halving back, because a cell is a run of days that never comes back once left."""
+        own, near, far, d = self.label(n, k), n, n + step, 1
+        while self.label(far, k) == own:
+            near, d = far, d * 2
+            far = n + step * d
+        while abs(far - near) > 1:
+            mid = (near + far) // 2
+            if self.label(mid, k) == own:
+                near = mid
+            else:
+                far = mid
+        return far
+
+    def start(self, n, k):
+        return self._edge(n, k, -1) + 1
+
+    def end(self, n, k):
+        """The first day of the NEXT cell."""
+        return self._edge(n, k, +1)
+
+    def find(self, s, e, k, at):
+        """The day in the cell [s, e) whose last k fields read `at`, or None when the cell has no such place."""
+        if k == 1:
+            n = s + at[0] - self.place(s, 1)[0]           # places run on by one a day (a cell may begin past 1)
+            return n if s <= n < e and self.place(n, 1) == at else None
+        c = s
+        while c < e:
+            ce = min(self.end(c, k - 1), e)
+            if self.place(c, k)[0] == at[0]:
+                return self.find(c, ce, k - 1, at[1:])
+            c = ce
+        return None
+
+
+def _at(rec, k, default):
+    """Where in each cell: `at` as k whole numbers joined by `-` (`15` in a month, `12-01` in a year); the first
+    occurrence's own place when silent."""
     at = rec.get('at')
     if at is None:
         return default
-    if isinstance(at, bool) or not re.match(r'^[0-9]+$', str(at)):
-        raise Unreckoned(f"`at: {at}` is prose to this tool — it walks a place in the cell written as a whole number")
-    return int(str(at))
+    parts = str(at).split('-')
+    if isinstance(at, bool) or len(parts) != k or not all(p.isdigit() and p.isascii() for p in parts):
+        want = '`15`' if k == 1 else '`' + '-'.join(['MM', 'DD', 'NN'][:k]) + '`' if k <= 3 else f"{k} numbers"
+        raise Unreckoned(f"`at: {at}` is prose to this tool — in a cell {k} level{'s' if k != 1 else ''} above the day it "
+                         f"walks a place written {want}")
+    return tuple(int(p) for p in parts)
 
 
-def _after_first(first, rec, systems, units):
-    """Every occurrence AFTER `first`, in order, unbounded: the stride the recurrence names, and nothing else."""
+def _place_words(at):
+    return '-'.join('%02d' % x for x in at) if len(at) > 1 else str(at[0])
+
+
+def _after_first(first, rec, systems, units, skipped=None):
+    """Every occurrence AFTER `first`, in order, unbounded: the stride the recurrence names, and nothing else. A cell
+    that has no occurrence — a month without the day named — is appended to `skipped` as (start, end, label, place),
+    so the reader can be told it was skipped rather than left to wonder."""
     every, each = rec.get('every'), rec.get('each')
     if isinstance(every, dict):
         unit = units.get(str(every.get('unit'))) if every.get('unit') is not None else None
@@ -244,11 +334,15 @@ def _after_first(first, rec, systems, units):
         if every.get('unit') is None:
             raise Unreckoned("`every: {count}` strides by neighbours, and which position is a day's neighbour is the "
                              "system's to say — stride by a measure (`every: {count, unit: day}`) or by a cell (`each:`)")
-        if not unit or not day or not isinstance(unit.get('factor'), list) or not isinstance(every.get('count'), int):
+        count = dmunits.exact(every.get('count'))
+        if not unit or not day or not isinstance(unit.get('factor'), (list, tuple)) or count is None or count <= 0:
             raise Unreckoned(f"`every: {every}` is not a stride this tool can measure in days")
-        stride = Fraction(every['count']) * Fraction(*unit['factor']) / Fraction(*day['factor'])
-        if stride.denominator != 1 or stride < 1:
+        stride = count * Fraction(*unit['factor']) / Fraction(*day['factor'])
+        if stride < 1:
             raise Unreckoned(f"a stride of {every['count']} {every['unit']} is finer than the day this tool reads")
+        if stride.denominator != 1:
+            raise Unreckoned(f"a stride of {every['count']} {every['unit']} is not a whole number of days, and this tool "
+                             f"reads days")
         k = 1
         while True:
             yield first + k * int(stride)
@@ -260,57 +354,52 @@ def _after_first(first, rec, systems, units):
     if row.get('reckoning') not in (None, 'arithmetic'):
         raise Unreckoned(f"{row.get('system')} is reckoned {row.get('reckoning')}, not by rule — look the next "
                          f"occurrence up in what was published or observed")
-    if each == 'day':
-        k = 1
+    # THE LEVELS ARE THE LAW'S: which the system has, in order, and which of them is the day (the level whose unit is
+    # the day — `day` in most calendars, `kin` in the Mayan count).
+    levels = [l.get('level') for l in row.get('levels') or [] if isinstance(l, dict)]
+    days = [l.get('level') for l in row.get('levels') or [] if isinstance(l, dict) and l.get('unit') == 'day']
+    if each not in levels:
+        raise Unreckoned(f"{row.get('system')} has no level `{each}` — its levels are {', '.join(map(str, levels))}")
+    if not days:
+        raise Unreckoned(f"{row.get('system')} declares no level whose unit is the day, and this tool walks days")
+    k = levels.index(days[0]) - levels.index(each)
+    if k < 0:
+        raise Unreckoned(f"`each: {each}` is finer than the day this tool reads")
+    if k == 0:
+        n = first
         while True:
-            yield first + k
-            k += 1
-    if each == 'week':
-        if cal != 'iso8601':
-            raise Unreckoned(f"a week of the {cal} calendar is not a cell this tool walks")
-        wd = datetime.date.fromordinal(first).isoweekday()
-        at = _at(rec, wd)
-        if not 1 <= at <= 7:
-            raise Unreckoned(f"`at: {at}` is no day of a week (1 to 7)")
-        start = first - (wd - 1)
-        while True:
-            if start + at - 1 > first:
-                yield start + at - 1
-            start += 7
-    to_day, from_day = _ymd_of(cal)
-    if each == 'month':
-        _y, _m, d = from_day(first)
-        at = _at(rec, d)
-        start = first - (d - 1)
-        while True:
-            nxt = start + 1
-            while from_day(nxt)[2] != 1:          # the next month begins on the next day numbered 1, however long
-                nxt += 1                          # this one was: 29 to 31 days, or the Coptic little month of 5
-            # A MONTH WITHOUT THAT DAY HAS NO OCCURRENCE (RFC 5545 §3.3.10: an invalid date is ignored, not moved):
-            # "the 31st of each month" skips a month of 30 rather than inventing a day the parties never named.
-            if at <= nxt - start and start + at - 1 > first:
-                yield start + at - 1
-            start = nxt
-    if each == 'year':
-        y, m, d = from_day(first)
-        if rec.get('at') is not None:
-            mm = re.match(r'^([0-9]{1,2})-([0-9]{1,2})$', str(rec['at']))
-            if not mm:
-                raise Unreckoned(f"`at: {rec['at']}` is prose to this tool — in a year it walks `MM-DD`")
-            m, d = int(mm.group(1)), int(mm.group(2))
-        while True:
-            y += 1
-            try:
-                n = to_day(y, m, d)
-            except ValueError:
-                continue
-            if from_day(n) == (y, m, d) and n > first:          # a year without that day has no occurrence (RFC 5545)
+            n += 1
+            yield n
+    cells = _Cells(row)
+    try:
+        at = _at(rec, k, None) or cells.place(first, k)
+    except ValueError as e:
+        raise Unreckoned(str(e))
+    s, misses, longest = cells.start(first, k), 0, 0
+    while True:
+        e = cells.end(s, k)
+        n = cells.find(s, e, k, at)
+        if n is None:
+            # A CELL WITHOUT THE PLACE HAS NO OCCURRENCE (RFC 5545 §3.3.10: an invalid date is ignored, not moved):
+            # "the 31st of each month" skips a month of 30 rather than inventing a day the parties never named. The
+            # skip is recorded, because a reader who is not told of it cannot tell a rule from a gap.
+            misses += 1
+            if k == 1:
+                longest = max(longest, cells.place(e - 1, 1)[0])
+            if skipped is not None:
+                skipped.append((s, e, cells.label(s, k), _place_words(at)))
+            if misses >= _MISS_CAP:
+                raise Unreckoned(f"no {each} of {row.get('system')} in {misses} running has a place {_place_words(at)}"
+                                 + (f" (the longest runs to {longest})" if k == 1 else '')
+                                 + " — the clause names a place its calendar does not have")
+        else:
+            misses = 0
+            if n > first:
                 yield n
-    raise Unreckoned(f"`each: {each}` is a level this tool does not walk: it reads days, and walks days, weeks, "
-                     f"months and years")
+        s = e
 
 
-def occurrences(first, rec, systems=None, units=None):
+def occurrences(first, rec, systems=None, units=None, skipped=None):
     """The day numbers on which a position first due on day `first` falls due: `first` itself, then each occurrence
     the recurrence `rec` names after it — ending at `times` (the first included) or at `to`, whichever comes first
     (`recurrence_form`). Unbounded when neither is stated. Raises Unreckoned when it cannot be walked by arithmetic."""
@@ -330,29 +419,40 @@ def occurrences(first, rec, systems=None, units=None):
     if times == 1:
         return
     try:
-        for i, n in enumerate(_after_first(first, rec, systems, units), 2):
+        for i, n in enumerate(_after_first(first, rec, systems, units, skipped), 2):
             if end is not None and n > end:
                 return
             yield n
             if times is not None and i >= times:
                 return
-    except (ValueError, dmcal.NotByRule) as e:
+    except (ValueError, KeyError, dmcal.NotByRule) as e:
         raise Unreckoned(str(e))
 
 
-def next_due(first, rec, today, systems=None, units=None):
+def next_due(first, rec, today, systems=None, units=None, skipped=None):
     """The occurrence a reader must be warned about: the first on or after `today` — or, when the repetition ended
-    before today, its last. Returns (day, index, times, ended); `index` counts from 1, the first included."""
-    last = None
-    for i, n in enumerate(occurrences(first, rec, systems, units), 1):
+    before today, its last. Returns (day, index, times, ended); `index` counts from 1, the first included. Where a list
+    is given as `skipped`, the cells the walk skipped between the occurrence before that one and it are put in it."""
+    last, seen = None, []
+    for i, n in enumerate(occurrences(first, rec, systems, units, seen), 1):
         if n >= today:
+            if skipped is not None:
+                skipped.extend(c for c in seen if c[1] > (last[0] if last else first) and c[0] < n)
             return n, i, rec.get('times'), False
         last = (n, i)
         if i >= _CAP:
             raise Unreckoned(f"more than {_CAP} occurrences fall before today")
+        seen.clear()                              # a cell skipped before an occurrence already past is not news
     if last is None:
         raise Unreckoned("the repetition ends before its first occurrence")
     return last[0], last[1], rec.get('times'), True
+
+
+def skip_words(cell):
+    """A skipped cell in words, for a NOTE."""
+    _s, _e, label, place = cell
+    return (f"no occurrence in {label} — it has no {place}, and a cell without the place is skipped (RFC 5545), "
+            f"never moved to a day nobody named; if the parties meant another day, the clause says which")
 
 
 def describe(rec):
@@ -376,15 +476,27 @@ def silenced(entry, decl):
     return False
 
 
-def due_entries(fm, term, decl, today=None):
+def conflicted(v):
+    """The sides of a disagreement bin/dmmerge.py captured and nobody has resolved (`{conflict: [a, b]}`), or None."""
+    return v['conflict'] if isinstance(v, dict) and isinstance(v.get('conflict'), list) else None
+
+
+def due_entries(fm, term, decl, today=None, notes=None):
     """[(label, held, day, shown, detail)] — what falls due in one term of one bean, read as the law declares it.
 
     A term whose value IS the thing (a registration) has one date; a term whose value is a list or an open map has
-    one per ENTRY, labelled `[<key>]`. `day` is None when the entry cannot be walked, and `detail` then says why."""
+    one per ENTRY, labelled `[<key>]`. `day` is None when the entry cannot be walked, and `detail` then says why.
+    Where a list is given as `notes`, a sentence the reader should have beside a row is put in it as (label, text):
+    a month the repetition skipped, a disagreement a merge left for a person."""
     today = today if today is not None else datetime.date.today().toordinal()
     attr, rep = decl.get('attr'), decl.get('repeats')
     sch = ((_law('TERMS').get(term) or {}).get('schema') or {})
     held = fm.get(term)
+    if dmform.scope_of(sch) == 'entry' and conflicted(held):
+        # THE WHOLE TERM IN DISPUTE: nothing in it is one garden's word more than the other's, so no entry is read —
+        # and the reader is told, because silence here would read as "nothing falls due".
+        return [('', held, None, None, f"the whole of `{term}` holds a merge conflict ({len(conflicted(held))} sides) — "
+                                       f"no entry is read until a person chooses")]
     if dmform.scope_of(sch) == 'entry' and isinstance(held, (dict, list)):
         items = (list(held.items()) if isinstance(held, dict) else list(enumerate(held)))
         entries = [(f"[{k}]", e) for k, e in items if isinstance(e, dict)]
@@ -392,6 +504,10 @@ def due_entries(fm, term, decl, today=None):
         entries = [('', held)] if isinstance(held, dict) else []
     out = []
     for label, e in entries:
+        sides = conflicted(e)
+        if sides is not None:
+            out += _due_in_dispute(label, e, [x for x in sides if isinstance(x, dict)], attr, rep, decl, today)
+            continue
         if not e.get(attr) or silenced(e, decl):
             continue
         try:
@@ -406,15 +522,52 @@ def due_entries(fm, term, decl, today=None):
         if not isinstance(rec, dict):
             out.append((label, e, first, datetime.date.fromordinal(first).isoformat(), ''))
             continue
+        skipped = []
         try:
-            day, i, times, ended = next_due(first, rec, today)
+            day, i, times, ended = next_due(first, rec, today, skipped=skipped)
         except Unreckoned as why:
             out.append((label, e, None, None, f"{attr} {e[attr]}, then {describe(rec)}: {why}"))
             continue
         of = f" of {times}" if times is not None else ''
         out.append((label, e, day, show_day(day, rec),
                     f"  — {'the last' if ended else 'next'}: occurrence {i}{of}, {describe(rec)}"))
+        if notes is not None and not ended:
+            notes += [(label, skip_words(c)) for c in skipped]
     return out
+
+
+def _due_in_dispute(label, e, sides, attr, rep, decl, today):
+    """A disagreement over one entry: each side that still lapses is walked, and the EARLIEST is what the reader is
+    warned of, until a person chooses. Warning of the earlier date is the error that costs a look; warning of the later,
+    or of neither, is the error that costs the debt. Every side met, waived or broken is silence, as one would be."""
+    walked, unwalked = [], []
+    for x in sides:
+        if silenced(x, decl) or not x.get(attr):
+            continue
+        try:
+            first = dmcal.to_day(str(x[attr]))
+        except (ValueError, dmcal.NotByRule):
+            unwalked.append(f"{attr} {x[attr]} cannot be aged by rule")
+            continue
+        rec = x.get(rep) if rep else None
+        if not isinstance(rec, dict):
+            walked.append((first, datetime.date.fromordinal(first).isoformat(), ''))
+            continue
+        try:
+            day, i, times, ended = next_due(first, rec, today)
+        except Unreckoned as why:
+            unwalked.append(str(why))
+            continue
+        walked.append((day, show_day(day, rec), f", {'the last' if ended else 'next'}: occurrence {i}, {describe(rec)}"))
+    live = [x for x in sides if not silenced(x, decl)]
+    words = f"a merge conflict: {len(sides)} sides disagree, {len(live)} of them not met, waived or broken"
+    if walked:
+        day, shown, how = min(walked)
+        return [(label, e, day, shown, f"  — {words}; the earliest is shown{how}, until a person chooses")]
+    if live:
+        return [(label, e, None, None, f"{words}, and no due date among them can be walked here"
+                                       + (f" ({'; '.join(unwalked)})" if unwalked else '') + " — a person chooses")]
+    return []
 
 
 def show_day(n, rec=None, systems=None):
@@ -499,6 +652,12 @@ def verdict(entry):
 
 
 def report():
+    # A PIPE ON WINDOWS IS WRITTEN IN THE ANSI CODE PAGE, and a date in another calendar's script, or a title in
+    # Persian, is not in it: a glyph the stream cannot carry is replaced rather than let the report die mid-way.
+    try:
+        sys.stdout.reconfigure(errors='replace')
+    except (AttributeError, ValueError):
+        pass
     QUIET = '--quiet' in sys.argv
     HORIZON_SET = '--days' in sys.argv
     HORIZON = int(sys.argv[sys.argv.index('--days') + 1]) if HORIZON_SET else 90
@@ -549,7 +708,8 @@ def report():
         except Exception:
             continue
         for term, decl in expiry_terms().items():
-            for label, held, day, shown, detail in due_entries(fm, term, decl):
+            asides = []
+            for label, held, day, shown, detail in due_entries(fm, term, decl, notes=asides):
                 if day is None:
                     notes.append((fm.get('bean'), term + label, detail))
                     continue
@@ -564,16 +724,19 @@ def report():
                 state = 'EXPIRED' if days < 0 else ('EXPIRING' if days <= horizon else 'OK')
                 if state != 'OK':
                     expiring += 1
-                exp_rows.append((state, fm.get('bean'), days, shown, term + label, decl, held, horizon, detail, term))
+                exp_rows.append((state, fm.get('bean'), days, shown, term + label, decl, held, horizon, detail, term,
+                                 [t for l, t in asides if l == label]))
 
     if exp_rows or notes:
         print()
-        for state, bean, days, shown, where, decl, held, horizon, detail, term in sorted(exp_rows, key=lambda r: r[2]):
+        for state, bean, days, shown, where, decl, held, horizon, detail, term, beside in sorted(exp_rows, key=lambda r: r[2]):
             if QUIET and state == 'OK':
                 continue
             why = f"  <-- {decl['why']}" if (state != 'OK' and decl.get('why')) else ''
             print(f"{state:8} {bean}.{where}  {decl['attr']} {shown} ({days} days){detail}"
                   f"{refine(term, held, state)}{why}")
+            for text in beside:                     # a month the repetition skipped, said beside the row it explains
+                print(f"{'NOTE':8} {bean}.{where}  {text}")
         for bean, where, detail in notes:
             print(f"{'NOTE':8} {bean}.{where}  {detail}")
         print(f"\nexpiring: {sum(1 for r in exp_rows if r[0] == 'OK')} ok, "

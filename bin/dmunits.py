@@ -19,24 +19,51 @@ says `crosswalk: observed` — so a conversion between two currencies is REFUSED
 observed (`--rate R`: units of the target per one of the source, a decimal string). With it the result is exact, and it
 is a reading at that rate, never a record: the rate is a fact with a source and a day, and belongs in the ledger as one.
 """
-import decimal, functools, os, re, sys
+import copy, decimal, functools, os, re, sys
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import yaml, dmparse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# A COUNT AS THE GATE READS ONE: a whole number, or a decimal written as a string — ASCII digits, one optional sign, no
+# exponent. The one pattern every money reader here shares, so `--5` is refused in one place and not half-read in two.
+COUNT = re.compile(r'-?[0-9]+(\.[0-9]+)?', re.ASCII)
+
+
+def exact(count):
+    """A count EXACTLY, as a Fraction — or None when it is not one: a float (it has already lost what it lost), a bool,
+    an exponent, a second sign. Whatever is not read exactly is not read."""
+    if isinstance(count, bool):
+        return None
+    if isinstance(count, int):
+        return Fraction(count)
+    if isinstance(count, str) and COUNT.fullmatch(count):
+        return Fraction(count)
+    return None
+
 
 def law():
-    """(units, quantities) as the law declares them — a fresh pair of tables over one parse of it."""
+    """(units, quantities) as the law declares them — the caller's own copy, which it may change without changing
+    them for anyone else in the process."""
     units, quantities = _law()
-    return dict(units), dict(quantities)
+    return copy.deepcopy(units), copy.deepcopy(quantities)
 
 
 @functools.lru_cache(maxsize=1)
 def _law():
     # ONE PARSE PER PROCESS. Every conversion asked for the law, and the law was parsed from its YAML each time: the
-    # round trip of every pair of units in test/quantities.py spent two and a half minutes re-reading one file.
+    # round trip of every pair of units in test/quantities.py spent two and a half minutes re-reading one file. Read
+    # only here and by convert(), which changes nothing; law() hands everyone else a copy.
+    #
+    # IN A GARDEN, THE LAW IS WHAT THE GATE LOADED: the standard, the garden's overlays, and every row it added under
+    # `registry_additions` — a currency among them. Reading the seed files instead made a currency the gate accepted
+    # one this tool called undeclared: two readers of one law, disagreeing. Only the standard's own repository, which
+    # has no VOCAB.md, is read from the standard alone — there the standard IS the law. No fallback from the first
+    # to the second: a garden whose law cannot be loaded is an error, not a reason to read another law.
+    if os.path.exists(os.path.join(ROOT, 'VOCAB.md')):
+        import dmcheck
+        return dict(dmcheck.UNITS), dict(dmcheck.QUANTITIES)
     fm = yaml.safe_load(dmparse.split_front_matter(open(os.path.join(ROOT, 'seed', 'std-vocab.md'), encoding='utf-8').read())[0])
     units = {u['unit']: u for u in fm.get('units') or []}
     quantities = {q['quantity']: q for q in fm.get('quantities') or []}
@@ -61,16 +88,16 @@ RATE_REFUSED = "a rate is a fact someone observed: pass the one you observed, an
 
 
 def convert(count, unit, to, rate=None):
-    units, quantities = law()
+    units, quantities = _law()                  # read, never changed: no copy, so a round trip of every pair stays fast
     for n in (unit, to):
         if n not in units:
             raise ValueError(f"'{n}' is not a unit the law declares")
-    if not isinstance(count, Fraction) and (isinstance(count, (float, bool)) or not re.match(r'^-?[0-9]+(\.[0-9]+)?$', str(count))):
+    if not isinstance(count, Fraction) and exact(count) is None:
         raise ValueError(f"{count!r}: a count is a whole number or a decimal written as a string — a float has already lost what it lost")
     a, b = units[unit], units[to]
     if a['quantity'] != b['quantity']:
         raise ValueError(f"{unit} measures {a['quantity']} and {to} measures {b['quantity']}: nothing converts one into the other")
-    x = count if isinstance(count, Fraction) else Fraction(str(count))
+    x = count if isinstance(count, Fraction) else exact(count)
     if not a.get('from_registry'):
         if rate is not None:
             raise ValueError(f"{a['quantity']} has factors in the law, and a rate would override them: drop --rate")
@@ -90,11 +117,11 @@ def convert(count, unit, to, rate=None):
                          f"{q.get('crosswalk')}`) — {RATE_REFUSED}: --rate <units of {to} per 1 {unit}>")
     if isinstance(rate, Fraction):
         r = rate
-    elif isinstance(rate, (float, bool)) or not re.match(r'^[0-9]+(\.[0-9]+)?$', str(rate)):
+    elif exact(rate) is None:
         raise ValueError(f"--rate {rate!r}: a rate is a decimal written as it was observed, `0.9173` — not a float, "
                          f"an exponent or a fraction")
     else:
-        r = Fraction(str(rate))
+        r = exact(rate)                         # a sign is read, so a negative rate is refused below for what it is
     if r <= 0:
         raise ValueError(f"--rate {rate}: a rate between two currencies is positive")
     return x * r
@@ -130,6 +157,18 @@ def approx(x, digits=6):
         return format((decimal.Decimal(x.numerator) / decimal.Decimal(x.denominator)).normalize(), 'f')
 
 
+def speakable(text, stream=None):
+    """`text` as `stream` can print it. A pipe on Windows is written in the ANSI code page, which has no `≈`: printing
+    one there raised, and a tool that dies on a glyph dies exactly when an agent reads it through a pipe. So the mark is
+    an ASCII `~` wherever the stream cannot carry it, and nothing else about the text changes."""
+    enc = getattr(stream or sys.stdout, 'encoding', None) or 'utf-8'
+    try:
+        text.encode(enc)
+        return text
+    except (UnicodeEncodeError, LookupError):
+        return text.replace('≈', '~').encode(enc, 'replace').decode(enc, 'replace')
+
+
 def main(argv):
     digits, rate = 6, None
     if '--digits' in argv:
@@ -137,16 +176,16 @@ def main(argv):
     if '--rate' in argv:
         i = argv.index('--rate'); rate = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
     if len(argv) != 3:
-        print(__doc__); return 0 if not argv else 2
+        print(speakable(__doc__)); return 0 if not argv else 2
     try:
         x = convert(argv[0], argv[1], argv[2], rate); a = approx(x, digits)
-        print(show(x), argv[2] + (f"   (≈ {a})" if a else ""))
-        d = law()[0][argv[2]].get('digits')
+        print(speakable(show(x) + ' ' + argv[2] + (f"   (≈ {a})" if a else "")))
+        d = _law()[0][argv[2]].get('digits')
         if rate is not None and str(d).isdigit() and (x * 10 ** int(d)).denominator != 1:
             print(f"   a reading at the rate given: {argv[2]} is written with {d} places, and who takes the remainder is a clause")
         return 0
     except ValueError as e:
-        print(f"dmunits: {e}"); return 1
+        print(speakable(f"dmunits: {e}")); return 1
 
 
 if __name__ == '__main__':
