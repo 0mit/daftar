@@ -316,6 +316,55 @@ _o = _owns(_generated('g1', {'os': 'AlmaLinux 9.8'}, {'a': {'src': 'asserted-by-
 check("12.0: borrowing never launders UPWARD past the guard's own protection of a stated assertion",
       'AlmaLinux 9' in json.dumps(_o['os']), json.dumps(_o['os']))
 
+# ---------------------------------------------------------------- one value, one form (std-vocab 21.0: G3, G4)
+# What the law says is the same value is compared as one: a quantity's count in its shortest exact decimal, and a list of
+# entries the law keys by one attribute (`keyed_by`) in that attribute's order. Read from the law's schema — the merge
+# names no term — and never written back over what a bean says.
+def _deal(garden, count, borne):
+    return [{'garden': garden, 'id': 'deal', 'fm': {
+        'bean': 'deal', 'kind': 'contract', 'nature': 'metaphysical', 'title': 'a deal', 'status': 'active',
+        'identity': {'status': 'confirmed', 'anchors': [{'key': 'contract_id', 'value': 'abcdefabcdef/contract:deal',
+                                                         'class': 'logical', 'establishing': True}]},
+        'provenance': {'src': 'asserted-by-human', 'by': garden, 'as_of': '2026-09-23'},
+        'transactions': {'t1': {'what': 'x', 'amount': {'count': count, 'unit': 'XTS'},
+                                'paid_by': [{'party': 'sam', 'amount': {'count': count, 'unit': 'XTS'}}],
+                                'borne_by': borne}}}}]
+_sa = [{'party': 'sam', 'share': 1}, {'party': 'ali', 'share': 2}]
+_s = M.merge_gardens([_deal('g1', 900, _sa), _deal('g2', '900.00', list(reversed(_sa)))])
+_c = M.canonical(_s)
+check("G4: `900` and `\"900.00\"` are ONE amount, and G3: bearers keyed by party, listed in another order, ONE list — "
+      "no disagreement", len(_s) == 1 and 'conflict' not in _c, _c[:600])
+check("...the seed holds the count in its shortest exact decimal, the bearers in their key's order",
+      '"count":"900"' in _c and _c.index('"party":"ali"') < _c.index('"party":"sam","share":1'), _c[:600])
+check("...so a fingerprint does not depend on how an amount is spelt (`12.50`, `12.5`) or its bearers ordered",
+      M.fingerprint(M.merge_gardens([_deal('g1', '12.50', _sa)]))[0]
+      == M.fingerprint(M.merge_gardens([_deal('g1', '12.5', list(reversed(_sa)))]))[0])
+check("...while a count that is not read exactly is compared as it was written — a canonical form never guesses",
+      M.canon_value('transactions', {'t': {'amount': {'count': '1e3', 'unit': 'XTS'}}})['t']['amount']['count'] == '1e3'
+      and M.canon_value('transactions', {'t': {'amount': {'count': 1.5, 'unit': 'XTS'}}})['t']['amount']['count'] == 1.5)
+check("...and the law says which: `keyed_by` on the entries, a quantity by its domain — no term is named in the merge",
+      "'transactions'" not in open(M.__file__, encoding='utf-8').read()
+      and "'paid_by'" not in open(M.__file__, encoding='utf-8').read())
+_d = os.path.join(TMP, 'spelt')
+os.makedirs(_d)
+_p = os.path.join(_d, 'deal.md')
+_bean = ('---\nbean: deal\nkind: contract\ntitle: "a deal"\nstatus: active\nsummary: "a deal"\n'
+         'transactions:\n  t1: { what: x, amount: { count: "900.00", unit: XTS }, borne_by: [ { party: sam, share: 1 }, '
+         '{ party: ali, share: 2 } ] }   # as the statement shows it\n---\nA deal.\n')
+open(_p, 'w', encoding='utf-8', newline='\n').write(_bean)
+_fa = dmparse.loads(dmparse.read(_p)[0])
+_fb = dict(_fa, transactions={'t1': {'what': 'x', 'amount': {'count': 900, 'unit': 'XTS'},
+                                     'borne_by': [{'party': 'ali', 'share': 2}, {'party': 'sam', 'share': 1}]},
+                              't2': {'what': 'y', 'amount': {'count': '12.50', 'unit': 'XTS'}}})
+_seed = M.merge_component([{'garden': 'ours', 'id': 'deal', 'fm': _fa}, {'garden': 'theirs', 'id': 'deal', 'fm': _fb}])
+_res = M.merge_in_place(_p, _fa, _fb, '', _seed)
+_after = dmparse.loads(dmparse.read(_p)[0])
+check("the driver writes what each side wrote: ours kept `\"900.00\"` with its bearers' order, and their new entry "
+      "arrives as `\"12.50\"` — never respelt in the canonical form",
+      _res[2] == [] and _after['transactions']['t1']['amount']['count'] == '900.00'
+      and _after['transactions']['t1']['borne_by'][0]['party'] == 'sam'
+      and _after['transactions']['t2']['amount']['count'] == '12.50', open(_p, encoding='utf-8').read())
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nconverge: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)
