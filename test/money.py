@@ -62,6 +62,11 @@ def ledger(*a):
     return r.returncode, r.stdout + r.stderr
 
 ok = lambda out: "0 error" in out
+def refused(f):
+    try:
+        f(); return False
+    except ValueError:
+        return True
 def one(tx):
     """A single transaction, as the only one of an agreement, judged by the gate."""
     agreement("deal", "  t: " + tx)
@@ -184,7 +189,13 @@ check("a clause in force is listed with its due date", "repay" in out and f"due 
 check("...a met one is not listed", "a deposit" not in out, out)
 check("...a repeating one with its NEXT occurrence, walked in its own calendar",
       re.search(r"each month in gregorian-civil at 10 — next \d{4}-\d{2}-10", out), out)
-check("...a conditional one with its condition, and what is not yet known", 'when: "a payment is late"' in out and "not yet known: due" in out, out)
+check("...a conditional one with the condition that brings it into force — and no due date called missing, for it has none",
+      'in force when: "a payment is late"' in out and "not yet known: due" not in out, out)
+agreement("someday", clauses='  repay: { what: "ali repays sam when they agree a day", by: ali, to: sam }')
+code, out = ledger("someday")
+check("...while a clause with neither a due date nor a condition still says what is not yet known",
+      "not yet known: amount, due" in out, out)
+os.remove(os.path.join(G, "beans", "someday.md"))
 
 # ---------------------------------------------------------------- A DATED TRANSACTION: the gate, the merge, the ledger
 # The day a transaction happened was once named `on`, which YAML 1.1 reads as the boolean true: it crashed the gate on
@@ -231,6 +242,66 @@ check("...and dmledger's reader refuses exactly what the gate refuses",
       all(dmledger.count_of({"count": c}) is None for c in ("--5", "-", "1e3", "1.", ".5", "+5", "١٢", 1.5, True))
       and dmledger.count_of({"count": "-12.50"}) == Fraction(-25, 2) and dmledger.count_of({"count": 7}) == 7)
 os.remove(os.path.join(G, "beans", "slip.md"))
+
+# WHATEVER A READER IS HANDED, IT READS OR SAYS IT DID NOT — never a traceback that ends the reading for every agreement. A
+# count or a share of five thousand digits passed the gate once and ended dmledger in Python's own ValueError (its limit
+# is 4300 digits); the law bounds a count at forty digits on each side of the point, and so does every reader here.
+_big = "1" * 5000
+for _label, _tx in (("a count of 5000 digits", f'{{ what: "x", amount: {{ count: "{_big}", unit: XTS }}, paid_by: [ {{ party: sam }} ] }}'),
+                    ("a count of 41", '{ what: "x", amount: { count: "' + "9" * 41 + '", unit: XTS }, paid_by: [ { party: sam } ] }'),
+                    ("a paid part of 5000", f'{{ what: "x", amount: {{ count: 900, unit: XTS }}, paid_by: [ {{ party: sam, amount: {{ count: "{_big}", unit: XTS }} }}, {{ party: ali }} ] }}')):
+    agreement("huge", "  t: " + _tx)
+    code, out = ledger("huge")
+    check(f"{_label} is LEFT OUT with a NOTE saying why — dmledger exits 0, no traceback",
+          code == 0 and "Traceback" not in out and "longer than a count may be" in out and "left out" in out, out[-600:])
+agreement("huge", '  t: { what: "x", amount: { count: 900, unit: XTS }, paid_by: [ { party: sam } ], '
+                  f'borne_by: [ {{ party: sam, share: "{_big}" }}, {{ party: ali, share: 1 }} ] }}')
+code, out = ledger("huge")
+check("...and a SHARE of 5000 digits too — its value shown by its start and its length, not printed whole",
+      code == 0 and "Traceback" not in out and "is not a whole number of parts" in out and "(5000 characters)" in out
+      and len(out) < 2000, out[-600:])
+os.remove(os.path.join(G, "beans", "huge.md"))
+check("the library: dmunits refuses a count longer than a count may be with a ValueError that says so, and dmledger's reader "
+      "turns it into None — at forty digits it reads, at forty-one it does not",
+      refused(lambda: dmunits.exact(_big)) and refused(lambda: dmunits.exact(10 ** 40)) and refused(lambda: dmunits.exact("0." + "1" * 41))
+      and dmunits.exact("9" * 40 + "." + "9" * 40) == Fraction("9" * 40 + "." + "9" * 40)
+      and dmledger.count_of({"count": _big}) is None and dmledger.count_of({"count": 10 ** 5000}) is None)
+check("...and what a YAML 1.1 reader would have read as another number, handed as the text written, is not read as any: "
+      "`0x64`, `1:30`, `0b11`, `1_000` — and `010`, eight to YAML 1.1 and ten to a person, is written without its zero",
+      all(dmunits.exact(c) is None for c in ("0x64", "1:30", "0b11", "1_000", "0o10", "+5", "010", "00.5"))
+      and dmunits.exact("0.50") == Fraction(1, 2) and dmunits.exact("-0") == 0)
+import yaml
+_rule = dict(dmledger.money_terms({t["term"]: t for t in yaml.safe_load(_dmparse.read(os.path.join(ROOT, "seed", "std-vocab.md"))[0])["terms"]}))["transactions"]
+_u = dmunits.law()[0]
+def _bearing(*shares):
+    return dmledger.read_transaction("t", {"what": "x", "amount": {"count": 900, "unit": "XTS"}, "paid_by": [{"party": "sam"}],
+                                           "borne_by": [dict({"party": p}, **({"share": s} if s is not ... else {})) for p, s in shares]}, _rule, _u)
+_bad = {k: _bearing(("sam", s), ("ali", 1)) for k, s in (("an int of 5001 digits", 10 ** 5000), ("'010'", "010"), ("'1.5'", "1.5"),
+                                                          ("41 digits", "1" * 41), ("an int of 41 digits", 10 ** 40),
+                                                          ("1.5", 1.5), ("True", True), ("'yes'", "yes"), ("'٢'", "٢"), ("'0'", "0"), ("-1", -1))}
+check("a share is read as the law's own pattern for it reads one, and no longer than a count may be: five thousand digits, "
+      "forty-one, `010`, 1.5, yes, a digit of another script, 0 and -1 are each left out with a NOTE — never a traceback, "
+      "never read as something nobody wrote",
+      all(t["paid"] is None and any("not a whole number of parts" in n for n in t["notes"]) for t in _bad.values())
+      and _bearing(("sam", "2"), ("ali", 1))["borne"] == {"sam": 600, "ali": 300},
+      {k: t["notes"] for k, t in _bad.items() if t["paid"] is not None or not t["notes"]})
+_t = _bearing(("sam", ...), ("ali", 1))
+check("...a bearer that names no share is said to name none — not 'a share of None'",
+      _t["paid"] is None and any("sam is named as bearing it and names no share" in n for n in _t["notes"])
+      and not any("None" in n for n in _t["notes"]), _t["notes"])
+
+# A PART THAT IS NOT AN ENTRY IS SAID TO BE: `paid_by: [sam, {party: ali, …}]` was read as "paid by ali", sam left out in
+# silence; `paid_by: [sam]` was read as nobody. Each is now left out with a NOTE naming what is not an entry.
+for _label, _paid in (("a bare name beside an entry", '[ sam, { party: ali, amount: { count: 900, unit: XTS } } ]'),
+                      ("a bare name as the only payer", '[ sam ]'), ("a bare name that is not even a list", 'sam')):
+    agreement("bare", f'  t: {{ what: "x", amount: {{ count: 900, unit: XTS }}, paid_by: {_paid} }}')
+    code, out = ledger("bare")
+    check(f"{_label} in paid_by is LEFT OUT with a NOTE — the payer is not silently dropped",
+          code == 0 and "Traceback" not in out and "paid_by holds 'sam', which is not an entry" in out and "paid by" not in out, out[-500:])
+agreement("bare", '  t: { what: "x", amount: { count: 900, unit: XTS }, paid_by: [ { party: sam } ], borne_by: [ ali ] }')
+code, out = ledger("bare")
+check("...and so in borne_by", "borne_by holds 'ali', which is not an entry" in out and "Traceback" not in out, out[-500:])
+os.remove(os.path.join(G, "beans", "bare.md"))
 
 agreement("nothing", '  t: { what: "a wash", amount: { count: 0, unit: XTS }, paid_by: [ { party: sam, amount: { count: 100, unit: XTS } }, '
                      '{ party: ali, amount: { count: "-100", unit: XTS } } ] }')
@@ -343,11 +414,6 @@ check("...and with one the result is exact", r.returncode == 0 and r.stdout.stri
 big = "123456789012345678901234567890.12"
 check("...exact at a size a float would ruin: thirty digits times a rate of thirty places",
       dmunits.convert(big, "XTS", "EUR", "1.000000000000000000000000000001") == Fraction(big) * Fraction("1.000000000000000000000000000001"))
-def refused(f):
-    try:
-        f(); return False
-    except ValueError:
-        return True
 check("...a rate written as a float, an exponent or a fraction is refused", refused(lambda: dmunits.convert("1", "XTS", "EUR", 0.9))
       and refused(lambda: dmunits.convert("1", "XTS", "EUR", "9e-1")) and refused(lambda: dmunits.convert("1", "XTS", "EUR", "1/3")))
 check("...and a rate where the law holds a factor is refused: a metre is a thousand millimetres, not what someone saw",
@@ -358,6 +424,25 @@ try:
 except ValueError as _e:
     _neg = str(_e)
 check("...a negative rate is refused for what it is: a rate between two currencies is positive", "is positive" in _neg, _neg)
+r = run(sys.executable, os.path.join(ROOT, "bin", "dmunits.py"), "1", "XTS", "EUR", "--rate", "1", "--digits", "x")
+check("`--digits x` is refused with the form it takes — no traceback", r.returncode == 2 and "Traceback" not in r.stderr
+      and "--digits 'x'" in r.stdout, r.stdout + r.stderr[-300:])
+
+# A PRINTED COMMAND NAMES THE INTERPRETER AS IT IS NAMED WHERE IT RUNS: `python3` may be the Microsoft Store's alias on
+# Windows. Imitated here by naming the platform, in-process.
+import contextlib
+def _help_on_windows(main):
+    buf, was = io.StringIO(), os.name
+    try:
+        os.name = "nt"
+        with contextlib.redirect_stdout(buf):
+            main(["--help"])
+    finally:
+        os.name = was
+    return buf.getvalue()
+_h = _help_on_windows(dmledger.main) + _help_on_windows(dmunits.main)
+check("dmledger's and dmunits' help print `python bin/…` on Windows", "python bin/dmledger.py" in _h and "python bin/dmunits.py" in _h
+      and "python3 bin/" not in _h, _h[:400])
 _u = dmunits.law()[0]
 _u["XTS"]["digits"] = "9"; _u["metre"]["factor"].append(7)
 check("law() hands the caller its own copy: changing it changes nothing for the rest of the process",
@@ -387,6 +472,23 @@ led = floats_in(open(os.path.join(ROOT, "bin", "dmledger.py"), encoding="utf-8")
 check("bin/dmledger.py holds no float literal, no float, no division operator and no rounding", not led, led)
 uni = floats_in(open(os.path.join(ROOT, "bin", "dmunits.py"), encoding="utf-8").read(), False)
 check("bin/dmunits.py holds no float literal and calls no float()", not uni, uni)
+# EVERY OTHER PLACE A COUNT IS READ OR COMPARED: the gate's quantity check and its sums, the merge's canonical form (where two
+# amounts are found equal or not: `norm`, and every function of bin/dmmerge.py whose name says it canonicalises), and the
+# stride of a repetition. Read, never changed: each function is taken by its name from the file that owns it, so one that
+# is renamed or gone fails here rather than going unscanned.
+import ast
+def functions(rel, wanted):
+    text = open(os.path.join(ROOT, rel), encoding="utf-8").read()
+    return {f"{rel}:{n.name}": ast.get_source_segment(text, n) for n in ast.walk(ast.parse(text))
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and wanted(n.name)}
+_scanned = {**functions("bin/dmcheck.py", lambda n: n in ("check_quantity", "ectl_sums")),
+            **functions("bin/dmmerge.py", lambda n: n == "norm" or "canon" in n),
+            **functions("bin/dmstale.py", lambda n: n == "_after_first")}
+check("the scan finds each function it names", all(k in _scanned for k in ("bin/dmcheck.py:check_quantity", "bin/dmcheck.py:ectl_sums",
+      "bin/dmmerge.py:norm", "bin/dmmerge.py:canonical", "bin/dmstale.py:_after_first")), sorted(_scanned))
+_found = {k: floats_in(v, True) for k, v in _scanned.items()}
+check("...and none of them holds a float literal, a float, a division operator or any rounding: " + ", ".join(sorted(_scanned)),
+      not any(_found.values()), {k: v for k, v in _found.items() if v})
 
 shutil.rmtree(T, ignore_errors=True)
 print("\nmoney: %d failed" % len(FAILS))

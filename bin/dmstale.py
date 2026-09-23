@@ -25,7 +25,9 @@ OBLIGATIONS (std-vocab 21.0): on a term whose value is a list or an open map —
 date is each ENTRY's, and each is warned about by itself. An entry that repeats (`expiry.repeats`) is warned
 about before its NEXT occurrence, walked through the day in the calendar it is counted in; one the law's
 `expiry.unless` names — a debt already met — is silent. A repetition that cannot be walked by arithmetic (a
-calendar that is not reckoned by rule, a place in the cell written in prose) is skipped with a NOTE, never guessed.
+calendar that is not reckoned by rule, a place in the cell written in prose) is skipped with a NOTE, never guessed;
+so is a date that is not a day of its calendar, and one beyond the days bin/dmcal.py reckons. Nothing one entry
+holds ends the report: every other warning is still printed.
 
 Exit: 0 = nothing stale or expiring, 1 = something needs action, 2 = setup problem.
 Usage: python3 bin/dmstale.py [--quiet] [--days N]   (--quiet prints only what needs attention)
@@ -334,10 +336,10 @@ def _after_first(first, rec, systems, units, skipped=None):
         if every.get('unit') is None:
             raise Unreckoned("`every: {count}` strides by neighbours, and which position is a day's neighbour is the "
                              "system's to say — stride by a measure (`every: {count, unit: day}`) or by a cell (`each:`)")
-        count = dmunits.exact(every.get('count'))
+        count = dmunits.exact(every.get('count'))       # a count longer than a count may be raises, and is said below
         if not unit or not day or not isinstance(unit.get('factor'), (list, tuple)) or count is None or count <= 0:
-            raise Unreckoned(f"`every: {every}` is not a stride this tool can measure in days")
-        stride = count * Fraction(*unit['factor']) / Fraction(*day['factor'])
+            raise Unreckoned(f"`every: {brief(every, 120)}` is not a stride this tool can measure in days")
+        stride = Fraction(count * Fraction(*unit['factor']), Fraction(*day['factor']))      # exact: a quotient of fractions
         if stride < 1:
             raise Unreckoned(f"a stride of {every['count']} {every['unit']} is finer than the day this tool reads")
         if stride.denominator != 1:
@@ -405,6 +407,7 @@ def occurrences(first, rec, systems=None, units=None, skipped=None):
     (`recurrence_form`). Unbounded when neither is stated. Raises Unreckoned when it cannot be walked by arithmetic."""
     systems = systems if systems is not None else _law('SYSTEMS')
     units = units if units is not None else _law('UNITS')
+    _writable(first)
     times = rec.get('times')
     times = times if isinstance(times, int) and not isinstance(times, bool) and times >= 1 else None
     end = None
@@ -422,11 +425,21 @@ def occurrences(first, rec, systems=None, units=None, skipped=None):
         for i, n in enumerate(_after_first(first, rec, systems, units, skipped), 2):
             if end is not None and n > end:
                 return
-            yield n
+            yield _writable(n)
             if times is not None and i >= times:
                 return
-    except (ValueError, KeyError, dmcal.NotByRule) as e:
+    except (ValueError, OverflowError, KeyError, dmcal.NotByRule) as e:
         raise Unreckoned(str(e))
+
+
+def _writable(n):
+    """`n`, when it is a day bin/dmcal.py reckons — so every reader can write it; else Unreckoned. A stride of three
+    million days lands past the year 9999, and a day nobody can write was a traceback in every reader, which cost the
+    garden every other warning too."""
+    try:
+        return dmcal.within(n, f"an occurrence on day {n}")
+    except ValueError as e:
+        raise Unreckoned(f"{e}, so no reader could write it") from None
 
 
 def next_due(first, rec, today, systems=None, units=None, skipped=None):
@@ -514,26 +527,62 @@ def due_entries(fm, term, decl, today=None, notes=None):
             # THROUGH THE DAY, in whatever calendar the date was stated in (16.0). A calendar that is not reckoned
             # by rule cannot be aged by arithmetic, and is skipped rather than guessed at.
             first = dmcal.to_day(str(e[attr]))
-        except (ValueError, dmcal.NotByRule):
-            # The gate owns the form. A value it would refuse is not this tool's to complain about twice, and
-            # guessing at it would be worse.
+        except dmcal.NotByRule:
+            continue                          # looked up, never computed: left alone rather than guessed at (16.0)
+        except ValueError as why:
+            # A DAY THAT CANNOT BE READ IS SAID, NEVER DROPPED: `2026-02-30` read as nothing at all was a clause that
+            # silently stopped falling due, while bin/dmledger.py named it. The gate refuses such a day; the working
+            # tree, where this reads, may still hold one.
+            out.append((label, e, None, None, f"{attr} {brief(e[attr])} is not a day this can read: {why}"))
             continue
         rec = e.get(rep) if rep else None
+        beside = []
         if not isinstance(rec, dict):
-            out.append((label, e, first, datetime.date.fromordinal(first).isoformat(), ''))
-            continue
-        skipped = []
-        try:
-            day, i, times, ended = next_due(first, rec, today, skipped=skipped)
-        except Unreckoned as why:
-            out.append((label, e, None, None, f"{attr} {e[attr]}, then {describe(rec)}: {why}"))
-            continue
-        of = f" of {times}" if times is not None else ''
-        out.append((label, e, day, show_day(day, rec),
-                    f"  — {'the last' if ended else 'next'}: occurrence {i}{of}, {describe(rec)}"))
-        if notes is not None and not ended:
-            notes += [(label, skip_words(c)) for c in skipped]
+            out.append((label, e, first, show_day(first, notes=beside), ''))
+        else:
+            skipped = []
+            try:
+                day, i, times, ended = next_due(first, rec, today, skipped=skipped)
+            except Unreckoned as why:
+                out.append((label, e, None, None, f"{attr} {brief(e[attr])}, then {describe(rec)}: {why}"))
+            else:
+                of = f" of {times}" if times is not None else ''
+                out.append((label, e, day, show_day(day, rec, notes=beside),
+                            f"  — {'the last' if ended else 'next'}: occurrence {i}{of}, {describe(rec)}"))
+                if not ended:
+                    beside += [skip_words(c) for c in skipped]
+            fw = from_words(first, rec, attr, e[attr])
+            beside += [fw] if fw else []
+        if notes is not None:
+            notes += [(label, t) for t in beside]
     return out
+
+
+def brief(v, width=60):
+    """A value as a reader is shown it: whole when it is short, else its start and its length. A value of five thousand
+    characters is one the reader is told of, not handed."""
+    try:
+        t = str(v)
+    except ValueError:                        # an int too long for Python to write out
+        return f"a number of more than {sys.get_int_max_str_digits()} digits"
+    return t if len(t) <= width else f"{t[:width]}… ({len(t)} characters)"
+
+
+def from_words(first, rec, attr, v):
+    """A sentence for the reader when a repetition's own `from` names another day than the one it repeats from — or None.
+    The walk starts at the entry's `attr` (its first due date): that is the day the entry names, and a `from` that says
+    another is told, never silently preferred and never silently dropped."""
+    f = rec.get('from') if isinstance(rec, dict) else None
+    if f is None:
+        return None
+    try:
+        if dmcal.to_day(str(f)) == first:
+            return None                       # the same day, however it is written
+        unread = ''
+    except (ValueError, dmcal.NotByRule) as e:
+        unread = f", which is not a day this can read ({e})"
+    return (f"its repetition says `from: {brief(f)}`{unread}, and its `{attr}` is {brief(v)} — it is walked from its "
+            f"`{attr}`, the day the entry names; if it begins on another day, `{attr}` is that day and `from` agrees")
 
 
 def _due_in_dispute(label, e, sides, attr, rep, decl, today):
@@ -551,14 +600,17 @@ def _due_in_dispute(label, e, sides, attr, rep, decl, today):
             continue
         rec = x.get(rep) if rep else None
         if not isinstance(rec, dict):
-            walked.append((first, datetime.date.fromordinal(first).isoformat(), ''))
+            beside = []
+            walked.append((first, show_day(first, notes=beside), '; '.join([''] + beside)))
             continue
         try:
             day, i, times, ended = next_due(first, rec, today)
         except Unreckoned as why:
             unwalked.append(str(why))
             continue
-        walked.append((day, show_day(day, rec), f", {'the last' if ended else 'next'}: occurrence {i}, {describe(rec)}"))
+        beside = []
+        walked.append((day, show_day(day, rec, notes=beside), f", {'the last' if ended else 'next'}: occurrence {i}, "
+                                                              f"{describe(rec)}" + '; '.join([''] + beside)))
     live = [x for x in sides if not silenced(x, decl)]
     words = f"a merge conflict: {len(sides)} sides disagree, {len(live)} of them not met, waived or broken"
     if walked:
@@ -570,13 +622,20 @@ def _due_in_dispute(label, e, sides, attr, rep, decl, today):
     return []
 
 
-def show_day(n, rec=None, systems=None):
-    """Day `n` in the calendar the recurrence is counted in, where it names one; else in the Gregorian calendar."""
+def show_day(n, rec=None, systems=None, notes=None):
+    """Day `n` in the calendar the recurrence is counted in, where it names one; else in the Gregorian calendar; and
+    where neither can write it, as its day number — with the reason put in `notes`, where a list is given, so the reader
+    is told why a day is shown as a number. Never raises: a day nobody can write is still a day to be warned of."""
     row = (systems if systems is not None else _law('SYSTEMS')).get((rec or {}).get('in')) or {}
-    try:
-        return dmcal.from_day(n, row['calendar']) if row.get('calendar') else dmcal.from_day(n, 'gregory')
-    except (KeyError, ValueError, dmcal.NotByRule):
-        return dmcal.from_day(n, 'gregory')
+    why = None
+    for cal in ([row['calendar']] if row.get('calendar') else []) + ['gregory']:
+        try:
+            return dmcal.from_day(n, cal)
+        except (ValueError, OverflowError, dmcal.NotByRule) as e:
+            why = e
+    if notes is not None:
+        notes.append(f"day {n} cannot be written as a date here ({why}) — it is shown as its day number")
+    return f"day {n}"
 
 
 def refine(term, held, state):
@@ -660,7 +719,10 @@ def report():
         pass
     QUIET = '--quiet' in sys.argv
     HORIZON_SET = '--days' in sys.argv
-    HORIZON = int(sys.argv[sys.argv.index('--days') + 1]) if HORIZON_SET else 90
+    _d = sys.argv[sys.argv.index('--days') + 1] if HORIZON_SET and sys.argv.index('--days') + 1 < len(sys.argv) else '90'
+    if not (_d.isascii() and _d.isdigit()):
+        print("dmstale: --days takes a whole number of days, e.g. --days 30"); sys.exit(2)
+    HORIZON = int(_d)
     counts = {'FRESH': 0, 'STALE': 0, 'UNKNOWN': 0, 'NOT-HERE': 0}
     rows = []
     for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
@@ -671,6 +733,8 @@ def report():
             fm = dmparse.loads(head) or {}
         except Exception:
             continue
+        if not isinstance(fm, dict):
+            continue                                # front matter that is not a mapping is the gate's to refuse
         ac = fm.get('analysis_cache')
         if not isinstance(ac, dict):
             continue
@@ -707,11 +771,23 @@ def report():
             fm = dmparse.loads(head) or {}
         except Exception:
             continue
+        if not isinstance(fm, dict):
+            continue
         for term, decl in expiry_terms().items():
             asides = []
-            for label, held, day, shown, detail in due_entries(fm, term, decl, notes=asides):
+            try:
+                due = due_entries(fm, term, decl, notes=asides)
+            except Exception as e:                  # noqa: BLE001 — the report goes on, and says what it could not read
+                # ONE ENTRY THAT CANNOT BE READ MUST NOT COST THE READER EVERY OTHER WARNING — a domain about to lapse
+                # among them. A day beyond the year 9999 once ended this report in a traceback, and every registration
+                # in the garden went unreported with it. Whatever a defect here is, it is said as a NOTE.
+                notes.append((fm.get('bean'), term, f"could not be read ({type(e).__name__}: {brief(e, 200)}) — the rest "
+                                                    f"of this report stands"))
+                continue
+            for label, held, day, shown, detail in due:
                 if day is None:
                     notes.append((fm.get('bean'), term + label, detail))
+                    notes.extend((fm.get('bean'), term + label, t) for l, t in asides if l == label)
                     continue
                 days = day - datetime.date.today().toordinal()
                 # The horizon is the TERM's, and --days overrides every one of them: a domain and a rented

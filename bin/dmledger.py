@@ -17,9 +17,11 @@ paid how much of it, who bears it in what shares — and this tool reads the res
   CLAUSES    each clause still in force — not met, waived or broken, as the law's `expiry.unless` says — with when it
              falls due, when it falls due NEXT if it repeats (walked through the day in its own calendar, by the same
              function bin/dmstale.py warns with), the condition that brings it into force, and what is not yet known.
+             NOT YET READ: the payments recorded `under:` a clause are not matched to its occurrences, so an occurrence
+             paid, paid late or unpaid is not told apart — the next one is the calendar's, whatever was paid.
 
-EVERY FIGURE IS EXACT. A count is a whole number or a decimal written as a string, and it is read as a
-`fractions.Fraction`; every sum, share, balance and rate is one. This file holds no float, calls no rounding and has no
+EVERY FIGURE IS EXACT. A count is a whole number or a decimal written as a string, no longer than a count may be
+(bin/dmunits.py, `DIGITS`), and it is read as a `fractions.Fraction`; every sum, share, balance and rate is one. This file holds no float, calls no rounding and has no
 division operator — a quotient is `Fraction(n, d)` — and test/money.py reads its source to hold it to that. A share
 that does not come out even in the currency's decimal places is printed as the fraction it is, `200/3 XTS`, and said to
 be so: who takes the remainder is a clause the parties agree, never a rounding a tool chooses for them.
@@ -37,7 +39,7 @@ from that rule, the parties from the `key_of` its parts name and the party's bea
 clauses from every term that falls due between those parties (`expiry` and a `key_of` the parties). Never writes.
 Exit 0; 2 when this is not a garden, or a bean named is not here or does not parse, or `--between` is not two parties.
 """
-import datetime, glob, os, sys
+import datetime, glob, os, re, sys
 from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -56,10 +58,16 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # WHO BEARS A TRANSACTION, AND IN WHAT SHARES. The law's `sums` rule says which attribute is the whole and which the
 # parts; it has no construct that says "this attribute bears the cost, in these whole-number shares", so this is the
 # one place the tool names attributes of the law — the attribute and its share. Who a bearer IS is read like a payer:
-# the attribute of its entries that is a key of the parties. PROPOSED, NOT RATIFIED (a change to the law, class G, for
-# a person): `sums: {whole: [charged, amount], parts: paid_by.amount, borne: borne_by.share}`, after which these two
-# names leave this file and a garden's own term that bears in shares is read the same way.
+# the attribute of its entries that is a key of the parties; what a share may be, from the pattern the law gives it.
+# PROPOSED, NOT RATIFIED (a change to the law, class G, for a person): `sums: {whole: [charged, amount],
+# parts: paid_by.amount, borne: borne_by.share}`, after which these two names leave this file and a garden's own term
+# that bears in shares is read the same way.
 BEARING, SHARE = 'borne_by', 'share'
+# THE CONDITION THAT BRINGS A CLAUSE INTO FORCE, where that is not a date. A clause holding one has no due date to be
+# missing, so its `due` is not "not yet known". The law has no construct that says which attribute is the condition —
+# it says so only in the attribute's meaning — so it is named here, beside the bearer. PROPOSED, NOT RATIFIED (class G):
+# `expiry: {attr: due, …, condition: when}`, after which this name leaves this file too.
+CONDITION = 'when'
 
 
 class NotAGarden(Exception):
@@ -103,9 +111,11 @@ def money_terms(terms):
         dates = [a for a, r in (sch.get('attrs') or {}).items()
                  if isinstance(_in(r), dict) and _in(r).get('type') in ('date', 'iso_date')]
         said_as = [a for a, r in (sch.get('attrs') or {}).items() if isinstance(r, dict) and r.get('required') and _in(r) == 'prose']
+        share = ((_in((sch.get('attrs') or {}).get(BEARING)) or {}).get('entries') or {}).get(SHARE)
         out.append((name, {'wholes': [w for w in wholes if w], 'parts': pattr, 'part_amount': pfield,
                            'party': party[0], 'parties': party[1], 'dates': dates, 'said_as': said_as,
-                           'bearer': _keyed(sch, BEARING)[0], 'schema': sch}))
+                           'bearer': _keyed(sch, BEARING)[0], 'schema': sch,
+                           'share_pattern': _in(share).get('pattern') if isinstance(_in(share), dict) else None}))
     return out
 
 
@@ -135,7 +145,33 @@ def clause_terms(terms, parties_terms):
 def count_of(q):
     """A count, exactly — or None. Only a whole number or a decimal string is read, by the gate's own pattern (one
     sign, ASCII digits, no exponent): anything else — a float above all — has already lost what it lost."""
-    return dmunits.exact(q.get('count')) if isinstance(q, dict) else None
+    return read_count(q)[0]
+
+
+def read_count(q):
+    """(the count exactly, or None; why it is not read, or ''). A count longer than a count may be is refused by
+    bin/dmunits.py with the reason, and the reason is kept for the NOTE — never a traceback that ends the reading."""
+    try:
+        return (dmunits.exact(q.get('count')) if isinstance(q, dict) else None), ''
+    except ValueError as e:
+        return None, f" ({e})"
+
+
+def read_share(s, pattern):
+    """A bearer's share as a whole number of parts, or None: what the law's pattern for a share admits (the gate's own
+    reading), a positive whole number, and no longer than a count may be (bin/dmunits.py's DIGITS). `yes` is not a
+    share, nor is `1.5`, nor five thousand digits — each of those once ended the reading in a traceback, or was read as
+    something nobody wrote."""
+    if isinstance(s, bool) or not isinstance(s, (int, str)):
+        return None
+    try:
+        text = str(s)
+        if pattern and not re.fullmatch(pattern, text):
+            return None
+        n = int(text) if text.isascii() and text.isdigit() and len(text) <= dmunits.DIGITS else None
+    except (ValueError, re.error):              # an int too long for Python to write out; a pattern it cannot read
+        return None
+    return n if n is not None and n >= 1 else None
 
 
 def digits_of(unit, units):
@@ -172,8 +208,9 @@ def uneven_note(xs, unit, units):
 
 
 def _list(v):
-    """`in: {entries: …}` holds a list of entries, or one mapping."""
-    return v if isinstance(v, list) else [v] if isinstance(v, dict) else []
+    """`in: {entries: …}` holds a list of entries, or one mapping. Anything else is one entry that is not a mapping —
+    kept, so that the reader is told of it rather than find it gone."""
+    return v if isinstance(v, list) else [] if v is None else [v]
 
 
 def read_transaction(key, e, rule, units):
@@ -184,9 +221,9 @@ def read_transaction(key, e, rule, units):
           'notes': [], 'paid': None, 'borne': None, 'whole': None, 'unit': None, 'priced': None}
     wattr = next((w for w in rule['wholes'] if e.get(w) is not None), None)
     whole = e.get(wattr) if wattr else None
-    W = count_of(whole)
+    W, why = read_count(whole)
     if W is None:
-        tx['notes'].append(f"its {wattr or 'amount'} is not a count this can read exactly — left out")
+        tx['notes'].append(f"its {wattr or 'amount'} is not a count this can read exactly{why} — left out")
         return tx
     unit = str(whole.get('unit'))
     tx['whole'], tx['unit'] = W, unit
@@ -196,7 +233,14 @@ def read_transaction(key, e, rule, units):
         if other != wattr and isinstance(o, dict) and str(o.get('unit')) != unit and count_of(o):   # a zero price implies no rate
             tx['priced'] = (count_of(o), str(o.get('unit')))
     parts = _list(e.get(rule['parts']))
-    stated = [(p.get(rule['party']), p.get(rule['part_amount'])) for p in parts if isinstance(p, dict)]
+    odd = [p for p in parts if not isinstance(p, dict)]
+    if odd:
+        # A PART THAT IS NOT AN ENTRY IS NOT DROPPED IN SILENCE: `paid_by: [sam, {party: ali, …}]` read as "paid by ali"
+        # was a total that left sam out without a word. The gate refuses it; the working tree may still hold it.
+        tx['notes'].append(f"{rule['parts']} holds {dmstale.brief(odd[0])!r}, which is not an entry "
+                           f"({{{rule['party']}, {rule['part_amount']}}}) — left out until it is one")
+        return tx
+    stated = [(p.get(rule['party']), p.get(rule['part_amount'])) for p in parts]
     if not stated:
         tx['notes'].append("nobody is recorded as having paid it — left out")
         return tx
@@ -205,9 +249,9 @@ def read_transaction(key, e, rule, units):
         paid[str(stated[0][0])] = W                       # a single payer who states no amount paid the whole
     else:
         for who, q in stated:
-            c = count_of(q)
+            c, why = read_count(q)
             if q is None or c is None:
-                tx['notes'].append(f"how much {who} paid is not known exactly — left out until it is")
+                tx['notes'].append(f"how much {who} paid is not known exactly{why} — left out until it is")
                 return tx
             if str(q.get('unit')) != unit:
                 tx['notes'].append(f"{who} paid in {q.get('unit')} and the whole is in {unit} — left out; a payment in "
@@ -226,12 +270,20 @@ def read_transaction(key, e, rule, units):
         return tx
     shares = {}
     for b in _list(e.get(BEARING)):
-        s = b.get(SHARE) if isinstance(b, dict) else None
-        if isinstance(s, bool) or not str(s).isdigit() or not str(s).isascii() or int(str(s)) < 1:
-            tx['notes'].append(f"a share of {s!r} is not a whole number of parts — left out")
+        if not isinstance(b, dict):
+            tx['notes'].append(f"{BEARING} holds {dmstale.brief(b)!r}, which is not an entry "
+                               f"({{{rule['bearer']}, {SHARE}}}) — left out until it is one")
             return tx
-        who = str(b.get(rule['bearer']))
-        shares[who] = shares.get(who, 0) + int(str(s))
+        who, s = str(b.get(rule['bearer'])), b.get(SHARE)
+        if s is None:
+            tx['notes'].append(f"{who} is named as bearing it and names no {SHARE} — left out until it does")
+            return tx
+        n = read_share(s, rule.get('share_pattern'))
+        if n is None:
+            tx['notes'].append(f"{who}'s {SHARE} {dmstale.brief(s)!r} is not a whole number of parts as the law writes "
+                               f"one — left out")
+            return tx
+        shares[who] = shares.get(who, 0) + n
     tx['paid'] = paid
     if not shares:
         tx['borne'] = dict(paid)                           # no bearers: whoever paid it bears it
@@ -395,12 +447,16 @@ def clause_lines(term, key, e, sch, units, systems, today):
         if 'aspect' in f:
             facts.append(str(v if v is not None else (f['aspect'] or {}).get('default') or '—'))
         elif v is None:
-            if 'quantity' in f or a == due:
+            # A CLAUSE IN FORCE BY A CONDITION has no due date to be missing: "not yet known: due" read as if it had one.
+            if 'quantity' in f or (a == due and e.get(CONDITION) is None):
                 unknown.append(a)
+        elif a == CONDITION:
+            facts.append(f"in force when: \"{v}\"")
         elif 'quantity' in f:
-            c = count_of(v)
-            facts.append(f"{a} " + (said(c, v.get('unit'), units) if c is not None else f"{v.get('count')!r} {v.get('unit')} "
-                                    f"(not a count this reads exactly)"))
+            c, why = read_count(v)
+            facts.append(f"{a} " + (said(c, v.get('unit'), units) if c is not None else
+                                    f"{dmstale.brief(v.get('count') if isinstance(v, dict) else v)!r} "
+                                    f"{v.get('unit') if isinstance(v, dict) else ''} (not a count this reads exactly{why})"))
         elif a == due:
             text, asides = due_words(a, v, e.get(rep) if rep else None, systems, today)
             facts.append(text)
@@ -419,21 +475,24 @@ def clause_lines(term, key, e, sch, units, systems, today):
 def due_words(attr, v, rec, systems, today):
     """(text, notes) — when a clause falls due and, for one that repeats, when it falls due NEXT, walked by
     bin/dmstale.py; the notes name each cell the walk skipped on the way to it (a month without the day named)."""
+    shown = dmstale.brief(v)
     try:
         first = dmcal.to_day(str(v))
     except (ValueError, dmcal.NotByRule) as why:
-        return f"{attr} {v} ({why})", []
+        return f"{attr} {shown} ({why})", []
     if not isinstance(rec, dict):
-        return f"{attr} {v} ({_when(first, today)})", []
-    skipped = []
+        return f"{attr} {shown} ({_when(first, today)})", []
+    skipped, notes = [], []
+    fw = dmstale.from_words(first, rec, attr, v)
     try:
         day, i, times, ended = dmstale.next_due(first, rec, today, systems, skipped=skipped)
     except dmstale.Unreckoned as why:
-        return f"{attr} {v}, then {dmstale.describe(rec)} — the next occurrence cannot be walked here: {why}", []
+        return (f"{attr} {shown}, then {dmstale.describe(rec)} — the next occurrence cannot be walked here: {why}",
+                [fw] if fw else [])
     of = f" of {times}" if times is not None else ''
-    return (f"{attr} {v}, then {dmstale.describe(rec)} — {'the last was' if ended else 'next'} "
-            f"{dmstale.show_day(day, rec, systems)} ({_when(day, today)}), occurrence {i}{of}",
-            [] if ended else [dmstale.skip_words(c) for c in skipped])
+    return (f"{attr} {shown}, then {dmstale.describe(rec)} — {'the last was' if ended else 'next'} "
+            f"{dmstale.show_day(day, rec, systems, notes=notes)} ({_when(day, today)}), occurrence {i}{of}",
+            notes + ([] if ended else [dmstale.skip_words(c) for c in skipped]) + ([fw] if fw else []))
 
 
 def print_agreement(ag, units, systems, today):
@@ -495,7 +554,9 @@ def main(argv):
     except (AttributeError, ValueError):
         pass
     if argv and argv[0] in ('-h', '--help'):
-        print(dmunits.speakable(__doc__)); return 0
+        # the interpreter as it is named where this runs: `python3` may be the Microsoft Store's alias on Windows
+        print(dmunits.speakable(__doc__.replace('python3 bin/', ('python' if os.name == 'nt' else 'python3') + ' bin/')))
+        return 0
     between = None
     if '--between' in argv:
         i = argv.index('--between')
