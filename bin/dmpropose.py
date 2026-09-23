@@ -266,6 +266,23 @@ def head_bean(bid):
     return (fm, body, text) if fm else None
 
 
+def unsettled(fm, prefix=''):
+    """Where a bean holds a merge nobody has settled: the driver's own markers (`merge_open`, `merge_conflicts`) and
+    every value that is still a conflict record, both sides kept. A garden's gate stands down on such a value until a
+    person picks one (MERGE.md §10) — which is why it never travels: what one garden has not chosen is not a word it
+    can give another, and a receiver that took the markers in would stand its own gate down on the sender's say."""
+    out = []
+    for k, v in (fm.items() if isinstance(fm, dict) else ()):
+        at = f"{prefix}.{k}" if prefix else str(k)
+        if not prefix and k in ('merge_open', 'merge_conflicts'):
+            out.append(at)
+        elif isinstance(v, dict) and isinstance(v.get('conflict'), list):
+            out.append(at)
+        else:
+            out += unsettled(v, at)
+    return out
+
+
 def uncommitted(bid):
     rc, out, _ = _git(['status', '--porcelain', '--', f'beans/{bid}.md'])
     return rc != 0 or bool(out.strip())
@@ -975,6 +992,11 @@ def cmd_make(argv):
         except SetupError as e:
             refusals.append((f"{e}, which the other garden refuses in a proposal",
                              f"write {b}'s values out in full, commit it, and make the proposal again"))
+        held = unsettled(fm)
+        if held:
+            refusals.append((f"{b} holds a merge nobody has settled ({', '.join(held)}) — a value this garden has not "
+                             f"chosen is not a word it can give", f"pick one value at each path, clear merge_open and "
+                             f"merge_conflicts, commit it, and make the proposal again"))
         odd = _odd_keys(fm)
         if odd:
             refusals.append((f"{b}: {', '.join(odd)} — a key YAML read as a boolean or a number, not as a name "
@@ -1437,6 +1459,12 @@ def analyse(path, as_test=False):
         R.append(("it carries no fingerprint", "a proposal made by bin/dmpropose.py always does: ask for it again"))
     else:
         L.append(f"  no fingerprint to verify it against; read here as {mine_fp}, by which a second take is known")
+    for what, sfm in [(b, fm) for b, fm in fms.items()] + [(f"the stub of {s_}", st) for s_, st in stubs.items()]:
+        held = unsettled(sfm)
+        if held:
+            R.append((f"{_esc(what)} holds a merge its garden has not settled ({_esc(', '.join(held))}) — what a garden "
+                      f"has not chosen is not its word, and taken in here it would stand this garden's gate down",
+                      "the sending garden settles it (a person picks one value), commits, and makes the proposal again"))
     odd = {b: _odd_keys(fm) for b, fm in fms.items() if _odd_keys(fm)}
     for b, keys in odd.items():
         R.append((f"{b}: {', '.join(keys)} — a key YAML read as a boolean or a number (on/off/yes/no), which "

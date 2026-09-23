@@ -948,7 +948,28 @@ r = git(A, 'commit', '-q', '-m', 'took back shared-cost from garden-b')
 check("...and ada's commit ratifies it through garden-a's gate", r.returncode == 0 and ' 0 error(s)' in gate(A)[1],
       r.stdout + r.stderr + gate(A)[1])
 r = tool(B, 'dmpropose.py', 'make', '--to', 'garden-a', '--under', 'shared-cost', 'ada')
-check("...and garden-b may give garden-a back what garden-a said, fused into garden-b's ada", r.returncode == 0, r.out)
+check("garden-b may not give ada on while her record holds a merge garden-b has not settled: a value it has not "
+      "chosen is not its word to give", r.returncode == 1 and 'holds a merge nobody has settled' in r.out
+      and 'details.gardening_since' in r.out, r.out)
+_ada = os.path.join(B, 'beans', 'ada.md')
+_head, _body = dmparse.read(_ada)
+_fm = yaml.safe_load(_head)
+_pick = _fm['details']['gardening_since']['conflict'][0]
+_pick = _pick.get('value', _pick) if isinstance(_pick, dict) else _pick
+_lines = [ln for ln in _head.split('\n') if not ln.startswith(('merge_open:', 'merge_conflicts:'))]
+_head = '\n'.join(_lines)
+_i = _head.index('  gardening_since:')
+_j = _i + len('  gardening_since:')
+while _j < len(_head) and (_head[_j:].startswith('\n    ') or _head[_j] != '\n'):
+    _j = _head.index('\n', _j + 1) if '\n' in _head[_j + 1:] else len(_head)
+_head = _head[:_i] + '  gardening_since: ' + json.dumps(str(_pick)) + _head[_j:]
+put(_ada, '---\n' + _head.rstrip('\n') + '\n---\n' + _body)
+r = commit(B, "ada's gardening_since settled", "- action: settled [[ada]]'s `details.gardening_since`: ben picked "
+                                                "garden-a's value, and removed `merge_open` and `merge_conflicts`.")
+check("...ben settles it — one value picked, the merge markers cleared — through garden-b's gate",
+      r.returncode == 0 and 'merge_open' not in read(_ada) and ' 0 error(s)' in gate(B)[1], r.stdout + r.stderr + gate(B)[1])
+r = tool(B, 'dmpropose.py', 'make', '--to', 'garden-a', '--under', 'shared-cost', 'ada')
+check("...and then garden-b may give garden-a back what garden-a said, fused into garden-b's ada", r.returncode == 0, r.out)
 
 # ---- garden-b's own agreement with cai; a name is never given twice, whatever directory it is laid in
 os.makedirs(os.path.join(TWO, 'elsewhere'))
@@ -1108,6 +1129,12 @@ check("WHO KEEPS THE SENDING GARDEN is this garden's record: a proposal whose ga
       "else here than the keeper this garden records, is refused",
       r.returncode == 1 and 'it says its gardener is ben, who is [[ada]] here' in r.out
       and 'records [[neighbour-ben]] as the one who keeps [[garden-b]]' in r.out, r.out)
+_unsettled = _note.replace("---\nA note.", "merge_open: true\nmerge_conflicts: [\"details.owed\"]\n"
+                           "details: { owed: { conflict: [ \"5000 XTS\", \"0 XTS\" ] } }\n---\nA note.")
+r = read_in(A, 'unsettled.md', craft(from_b(), {'a-note': _unsettled}, {'ben': _ben_is_ada}))
+check("a proposal carrying a merge its garden has not settled (`merge_open`, a conflict record) is refused: taken in, "
+      "it would stand this garden's gate down on another garden's say",
+      r.returncode == 1 and 'holds a merge its garden has not settled' in r.out and 'verdict: CLEAN' not in r.out, r.out)
 _mallory = {'bean': 'mallory', 'kind': 'person', 'identity': {'status': 'confirmed', 'anchors': [
     {'key': 'person_id', 'value': f'{BID}/person:mallory', 'class': 'logical', 'establishing': True}]}}
 _e = from_b()
