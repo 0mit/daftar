@@ -2758,10 +2758,39 @@ The portable, estate-agnostic classification shared by every garden — the abst
   never cloned; `bin/dmupgrade.py` carries a garden into 21.0 and names its gardener (`DAFTAR_GARDENER` where the
   garden's own tool is older than `--gardener`); the hooks choose a Python that imports yaml; the tools write UTF-8
   on every platform, `bin/dmjournal.py` included, which reads a body on standard input as UTF-8, refuses every control
-  character but a tab, and prints the heading only once it is written; every command the pages and the tools print runs as printed in Windows
-  PowerShell 5.1; and MODEL.md says whose a judgment is. The suites that hold it: test/money.py (money and
-  agreements), test/mycelium.py (gardens and proposals), test/refusals.py (what the gate refuses, and that it
-  refuses rather than crashes), test/journal.py (the journal's one tool), and test/germinate.py, which commits the
+  character but a tab, and prints the heading only once it is written; no command a tool prints or a page gives joins
+  two with `&&` or removes files with `rm`, a path holding a space is quoted, and a body or a block goes in with
+  `--body` or `--block` — so each runs in Windows PowerShell 5.1 too, with `python` for `python3`, but where a page or
+  a tool's help shows a Unix shell's form (its `<`, its `$(…)`) and gives PowerShell's beside it; and MODEL.md says
+  whose a judgment is. AFTER THE LAST REVIEW: TEXT IS TEXT — the law says a value holds no control character (every
+  one Unicode names but a tab, and a line feed only where a value may hold lines), the gate refuses one in any key or
+  value of a bean, a mapping, GARDEN.md or VOCAB.md, naming where it is and which (`U+001B`), and every message the
+  gate, `bin/dmledger.py` and `bin/dmstale.py` print quotes what a bean wrote escaped, so a garden that already holds
+  such bytes cannot drive its reader's terminal; a disagreement is left standing only as the merge captures one — a
+  record of exactly `{conflict: [<two sides or more>]}`, at a path the bean's `merge_conflicts` names, while
+  `merge_open` is set — and any other conflict record is refused by name; a value where the law asks for one position
+  (a clause's `stance`) that is a list or a map is refused by name, and a proposal whose scratch gate ends without a
+  verdict is not called clean; a bean, a mapping, GARDEN.md or VOCAB.md that is not UTF-8 is refused by name, saying
+  what it looks like; each entry of a VOCAB.md block is read in its shape — by the gate for this garden's, by the
+  merge for another's — and refused by name where it has another; the reverse gate counts the positions of a closed
+  list on an attribute of a mapping-shaped term, and `words.form`'s `written` and `unstated` are declared vacant,
+  `universal`; the law says, where it defines a date, that a day its calendar does not have is no date, the gate
+  judges it in the calendars the law marks as reckoned by rule, and `bin/dmrules.py` prints it; the manifest's
+  `policy` has the shape its meaning says: rules, in prose. Between gardens: `dmledger --between` names each shared
+  agreement it left out of the net and why, and calls the net partial when it left one out; an entry that carries its
+  own provenance goes back to the garden it came from and reads clean, however often it crosses; the recurrences of
+  every clause are walked within one budget per run, a clause beyond it named as not walked; a clause that does not
+  repeat is shown due in the calendar it was written in; `make` says a party in a merge conflict is a person's to
+  settle first; first contact prints each bean once, and an organisation's bean in the law's form for a gardener. The
+  tools: germinate judges a garden's name by the law's form before it creates anything, takes `--name` where the
+  directory is named otherwise, removes what it made when anything stops it, and grown from inside a garden records
+  the release that garden runs; `bin/dmupgrade.py` refuses a garden whose name the release's law refuses before
+  touching anything, printing the `garden:` line to write and its RULE-CHANGE entry, and plants an organisation as the
+  gardener too (`--gardener-kind org`, `DAFTAR_GARDENER_KIND`); `bin/dmsafe.py` reads a block as UTF-8, or UTF-16 with
+  its mark, on every platform, from standard input or from a file with `--block`. The suites that hold it:
+  test/money.py (money and agreements), test/mycelium.py (gardens and proposals), test/refusals.py (what the gate
+  refuses, and that it refuses rather than crashes), test/journal.py (the journal's one tool, and dmsafe's block),
+  test/upgrade.py (a garden into the release, its name and its gardener), and test/germinate.py, which commits the
   cookbook's recipes one at a time, in the order of the page.
 - **20.0** (2026-09-22, proposed rule-change) — **a heading is stamped by the clock, not typed; an anchor says how it
   is known the way every fact does.** `journal.heading: stamped`: `bin/dmjournal.py` writes every heading from the
