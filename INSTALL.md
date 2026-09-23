@@ -8,8 +8,10 @@ not for the person to type.
 Ask the person only for what you cannot know:
 
 1. **where the garden goes** — a directory that does not exist yet (below: `~/garden`);
-2. **the private remote**, or that there is none yet (below: `git@github.com:me/garden.git`);
-3. **the identity you commit under** — a name that says which agent you are, and an address they choose.
+2. **who keeps it** — the garden's **gardener**: a short id for them (lowercase and hyphens, below: `sam`) and how
+   they are called (below: `Sam`). A garden is someone's, and its first bean is them;
+3. **the private remote**, or that there is none yet (below: `git@github.com:me/garden.git`);
+4. **the identity you commit under** — a name that says which agent you are, and an address they choose.
 
 Requires Python 3 and PyYAML (`pip install PyYAML`). Nothing else. Nothing here contacts any service.
 
@@ -29,15 +31,17 @@ untagged clone works, but pins the garden to nothing anyone else can fetch; `ger
 ## 2. Grow the garden
 
 ```sh
-python3 seed/germinate.py ~/garden
+python3 seed/germinate.py ~/garden --gardener sam --gardener-name "Sam"
 ```
 
-(`sh seed/germinate.sh ~/garden` does the same; it hands over to the Python.)
+(`sh seed/germinate.sh ~/garden --gardener sam --gardener-name "Sam"` does the same; it hands over to the Python.)
 
 The target must not exist. The script copies what `seed/LANGUAGE` declares — the vocabulary, the tools, the
 gate, the templates, `AGENTS.md` — makes the first commit as `germinate`, installs the gate as the pre-commit
-hook, runs it, and prints zero errors and zero warnings. Read what it prints: its last lines are the ones that
-matter.
+hook, and then plants the gardener: a person bean, `beans/sam.md`, named in `GARDEN.md` as `gardener: sam`, in a
+second commit with its journal entry. It runs the gate and prints zero errors and zero warnings. Read what it
+prints: its last lines are the ones that matter. Grown without `--gardener`, the garden asks for its gardener as
+its first bean, and the gate refuses every other bean until `GARDEN.md` names one.
 
 ## 3. Give it an identity and a home
 
@@ -73,6 +77,23 @@ still yours, and the journal entry says who decided and in what words: `human (n
 agent (…)` is the shape this garden's own journal uses. Before you leave, write the journal entry the next
 agent will need — it may be of another make, with none of your context.
 
+## Upgrading a garden to a newer release
+
+```sh
+python3 bin/dmupgrade.py <tag>
+```
+
+It fetches the release, applies it, translates what the law re-spelled, writes the journal entry, runs the gate,
+and commits nothing: read `git diff`, fill in the entry's two `fill in` fields, commit. Moving a garden into
+std-vocab 21.0 also asks who keeps it — add `--gardener <id>` for an existing person or org bean, and
+`--gardener-name "<name>"` as well to plant a new person bean. A garden whose own `bin/dmupgrade.py` is older
+than these flags hands over to the release's tool and cannot pass them on; there the environment carries them,
+and the upgrade's refusal prints that form:
+
+```sh
+DAFTAR_GARDENER=sam DAFTAR_GARDENER_NAME="Sam" python3 bin/dmupgrade.py <tag>
+```
+
 ## On Windows
 
 Everything here is Python and git, so it runs in PowerShell as it runs in a shell — with `python` for
@@ -82,16 +103,38 @@ Everything here is Python and git, so it runs in PowerShell as it runs in a shel
 git clone https://github.com/0mit/daftar.git $HOME\daftar
 cd $HOME\daftar
 git checkout (git tag -l 'v*' --sort=-v:refname | Select-Object -First 1)
-python seed\germinate.py $HOME\garden
+python seed\germinate.py $HOME\garden --gardener sam --gardener-name "Sam"
 cd $HOME\garden
 git config user.name  "agent (<model>, <session>)"
 git config user.email "<the address the person chose>"
 python bin\dmcheck.py --all
 ```
 
-The gate runs as a git hook; Git for Windows runs hooks with the shell it ships, and the hook takes
-`python3` or `python`, whichever the machine has. PyYAML: `pip install PyYAML`. A journal entry is written
-the same way: `python bin\dmjournal.py "<who>" "<what>" --body "- action: …"`.
+**Which Python.** On Windows `python` and `python3` may not be Python at all: they can be the Microsoft Store's
+*App execution aliases*, which only offer to install it. `python -c "import sys; print(sys.executable)"` tells
+them apart: a Python prints its own path, the alias answers "Python was not found" or opens the Store
+(`where.exe python` lists it under `WindowsApps`). Install Python from python.org, or turn the aliases off
+(Settings > Apps > Advanced app settings > App execution aliases). The installer from python.org usually brings
+the `py` launcher too: `py -3 seed\germinate.py …` runs the newest Python 3 even where the aliases are in the
+way. PyYAML: `py -3 -m pip install PyYAML` (or `python -m pip install PyYAML`).
+
+The gate runs as a git hook; Git for Windows runs hooks with the shell it ships. The hook, `bin/install.py` and
+`bin/install.sh` choose the first Python that runs AND imports yaml — `git config daftar.python`, then `python3`,
+`python` and `py -3` — skipping the Store alias, and record it per clone as `git config daftar.python`; when none
+works they say, for each, why. To choose one yourself: `git config daftar.python C:/path/to/python.exe`.
+
+**UTF-8.** Every bean is UTF-8, and the tools read and write it correctly whatever the machine's language.
+Windows PowerShell 5.1 does not: it reads a UTF-8 file without a BOM in the old code page, so a Persian bean —
+or any bean with a character outside ASCII — read with `type` or `Get-Content` arrives garbled, and a bean
+written with `>` or `Out-File` is saved as UTF-16, which the gate cannot read. Read with
+`Get-Content -Encoding UTF8 beans\sam.md` (or through Python), and write through the tools or an editor that
+saves UTF-8. When a tool's output is read through a pipe, `$env:PYTHONUTF8 = "1"` and
+`[Console]::OutputEncoding = [Text.Encoding]::UTF8` make Python write UTF-8 and PowerShell read it as UTF-8. The
+hooks set `PYTHONUTF8` themselves. PowerShell 7 reads and writes UTF-8 by default.
+
+A journal entry is written the same way, its body as an argument rather than from standard input, which
+PowerShell does not redirect: `python bin\dmjournal.py "<who>" "<what>" --body "- action: …"`. An upgrade that
+needs the gardener named through the environment: `$env:DAFTAR_GARDENER = "sam"; python bin\dmupgrade.py <tag>`.
 
 ## If you have no shell
 
