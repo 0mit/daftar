@@ -12,12 +12,15 @@
 GARDEN=$(git config --get daftar.garden || true)
 [ -n "$GARDEN" ] || { echo "pre-push: no daftar.garden configured — not checking for estate names"; exit 0; }
 REPO=$(git rev-parse --show-toplevel)
-# `python3` is not a name every machine has (Windows installs `python`); the hook takes whichever is there.
-PY=$(command -v python3 || command -v python) || { echo "daftar hook: python3 is required" >&2; exit 1; }
+# WHICH PYTHON: the first that runs AND imports yaml (python.sh, installed beside this hook, says how).
+_here=$(dirname "$0")
+[ -f "$_here/python.sh" ] || { echo "daftar hook: $_here/python.sh is missing — run: python3 bin/install.py" >&2; exit 1; }
+. "$_here/python.sh"
+daftar_choose_python || exit 1
 RANGE="origin/master..HEAD"
 git rev-parse --verify -q origin/master >/dev/null 2>&1 || RANGE=""
 if [ -n "$RANGE" ]; then
-  "$PY" "$REPO/bin/dmpublic.py" --garden "$GARDEN" --repo "$REPO" --range "$RANGE" || exit 1
+  daftar_py "$REPO/bin/dmpublic.py" --garden "$GARDEN" --repo "$REPO" --range "$RANGE" || exit 1
 else
-  "$PY" "$REPO/bin/dmpublic.py" --garden "$GARDEN" --repo "$REPO" || exit 1
+  daftar_py "$REPO/bin/dmpublic.py" --garden "$GARDEN" --repo "$REPO" || exit 1
 fi
