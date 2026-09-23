@@ -215,6 +215,63 @@ check("an extent the LAW ITSELF writes is checked — a rule the gate cannot see
       "VOCAB rental.schema.expiry.notice" in out and "units` registry" in out, out[-500:])
 open(v, "w", encoding="utf-8").write(_v)
 
+# ---- OBLIGATIONS (21.0): an expiry on a term of ENTRIES is each entry's -----------------------------------
+# An agreement's clauses are an open map, and the law's `clauses` term declares its expiry per entry: `due`, repeating
+# by `every`, silenced by `state: met | waived | broken`, with a notice of seven days. Nothing here names the term.
+open(os.path.join(G, "beans", "ali.md"), "w").write(
+    '---\nbean: ali\nkind: person\ntitle: "ali"\nstatus: active\nsummary: "p"\nnature: living\n'
+    'identity: { status: confirmed, anchors: [ { key: person_id, value: "person:ali", class: logical, establishing: true } ] }\n'
+    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
+    'owned_by: { legal: { crown: love } }\nresponsibility: { legal: { self: true } }\n---\nA person.\n')
+today = datetime.date.today()
+IN3 = (today + datetime.timedelta(days=3)).isoformat()
+IN10 = (today + datetime.timedelta(days=10)).isoformat()
+# a day one to six days ahead that every month has, and the same day of the month before it: a monthly clause first due
+# then falls due next on it — inside the notice, though its first due date is weeks gone
+for _k in range(1, 7):
+    NEXT = today + datetime.timedelta(days=_k)
+    if NEXT.day <= 28:
+        break
+FIRST = (NEXT.replace(day=1) - datetime.timedelta(days=1)).replace(day=NEXT.day)
+open(os.path.join(G, "beans", "deal.md"), "w").write(f"""---
+bean: deal
+kind: contract
+title: "an agreement"
+status: active
+summary: "what ali owes the keeper"
+nature: metaphysical
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:deal", class: logical, establishing: true }} ] }}
+provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
+parties:
+  keeper: {{ who: {{ bean: keeper }} }}
+  ali: {{ who: {{ bean: ali }} }}
+words: {{ form: spoken }}
+clauses:
+  soon:    {{ what: "ali repays the keeper", by: ali, to: keeper, due: {IN3} }}
+  paid:    {{ what: "a deposit", by: ali, to: keeper, due: {IN3}, state: met }}
+  later:   {{ what: "a second payment", by: ali, to: keeper, due: {IN10} }}
+  monthly: {{ what: "ali pays each month", by: ali, to: keeper, due: {FIRST.isoformat()}, every: {{ of: time, in: gregorian-civil, each: month }} }}
+  once:    {{ what: "ali pays once", by: ali, to: keeper, due: {FIRST.isoformat()} }}
+  moon:    {{ what: "ali pays by the moon", by: ali, to: keeper, due: 2026-01-01, every: {{ of: time, in: islamic-calendar, each: month }} }}
+---
+An agreement.
+""")
+out = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G).stdout
+check("an agreement whose clauses fall due passes the gate", "0 error" in out, out[-800:])
+out = stale()
+line = lambda key: next((l for l in out.splitlines() if f"deal.clauses[{key}]" in l), "")
+check("a clause due within its notice warns — each ENTRY by itself, with the consequence the term declares",
+      line("soon").startswith("EXPIRING") and IN3 in line("soon") and "a clause falls due" in line("soon"), out[-900:])
+check("...a `met` one is silent: the law's `unless` names a debt already met", line("paid") == "", out[-900:])
+check("...one beyond the TERM's notice (seven days) is quiet", line("later").startswith("OK"), out[-900:])
+check("a monthly clause warns before its NEXT occurrence, though its first due date is weeks gone",
+      line("monthly").startswith("EXPIRING") and NEXT.isoformat() in line("monthly") and "occurrence 2" in line("monthly"), out[-900:])
+check("...where the same date that does not repeat is EXPIRED — the repetition is what moved it", line("once").startswith("EXPIRED"), out[-900:])
+check("...and one counted in a calendar that is not reckoned by rule is a NOTE, never a guess",
+      line("moon").startswith("NOTE") and "not by rule" in line("moon") and "Traceback" not in out, out[-900:])
+
 shutil.rmtree(T, ignore_errors=True)
 print("\nexpiry: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

@@ -21,15 +21,23 @@ takes its DNS and its mail with it, so this reports days remaining and flags any
 Deliberately NOT a gate rule: a check whose result changes with the calendar would make the gate
 non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable.
 
+OBLIGATIONS (std-vocab 21.0): on a term whose value is a list or an open map — an agreement's clauses — the
+date is each ENTRY's, and each is warned about by itself. An entry that repeats (`expiry.repeats`) is warned
+about before its NEXT occurrence, walked through the day in the calendar it is counted in; one the law's
+`expiry.unless` names — a debt already met — is silent. A repetition that cannot be walked by arithmetic (a
+calendar that is not reckoned by rule, a place in the cell written in prose) is skipped with a NOTE, never guessed.
+
 Exit: 0 = nothing stale or expiring, 1 = something needs action, 2 = setup problem.
 Usage: python3 bin/dmstale.py [--quiet] [--days N]   (--quiet prints only what needs attention)
 """
 import datetime
 import glob, os, re, subprocess, sys
+from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
 import dmcal
+import dmform
 try:
     import yaml
 except ImportError:
@@ -182,6 +190,242 @@ def expiry_terms():
     return out
 
 
+def _law(name):
+    """A table of the law as the gate loaded it (`TERMS`, `SYSTEMS`, `UNITS`), or {} where there is no garden."""
+    try:
+        import dmcheck as _l
+    except Exception:
+        return {}
+    return getattr(_l, name, {}) or {}
+
+
+# ---------------------------------------------------------------------------------------------------
+# WHEN A REPETITION FALLS DUE AGAIN (21.0). `expiry.repeats` names an attribute `in: recurrence`, and the
+# position falls due again at each occurrence after the first. The occurrences are walked THROUGH THE DAY,
+# in the calendar the recurrence is counted in, as bin/dmcal.py converts: "the 15th of each month" is a
+# different day in a Persian month and a Gregorian one, and neither is privileged. What cannot be walked by
+# arithmetic raises `Unreckoned` with the reason, and the reader is told rather than given a guess.
+# bin/dmledger.py asks the same function for a clause's next occurrence, so the two can never disagree.
+# ---------------------------------------------------------------------------------------------------
+class Unreckoned(Exception):
+    pass
+
+
+_CAP = 100_000       # occurrences walked before giving up: a daily repetition for two and a half centuries
+
+
+def _ymd_of(calendar):
+    """(to_day(y, m, d), from_day(n)) for a calendar whose cells are years, months and days, reckoned by rule."""
+    if calendar in dmcal.NOT_BY_RULE:
+        raise Unreckoned(f"the {calendar} calendar is not reckoned by rule — {dmcal.NOT_BY_RULE[calendar]}")
+    # The Japanese calendar's months and days are the Gregorian ones; only the count of years is by era.
+    fns = dmcal.BY_RULE.get('gregory' if calendar == 'japanese' else calendar)
+    if not fns:
+        raise Unreckoned(f"the {calendar} calendar has no months and days this tool walks")
+    return fns
+
+
+def _at(rec, default):
+    """Where in each cell, as a whole number (`at: "15"`); the first occurrence's own place when silent."""
+    at = rec.get('at')
+    if at is None:
+        return default
+    if isinstance(at, bool) or not re.match(r'^[0-9]+$', str(at)):
+        raise Unreckoned(f"`at: {at}` is prose to this tool — it walks a place in the cell written as a whole number")
+    return int(str(at))
+
+
+def _after_first(first, rec, systems, units):
+    """Every occurrence AFTER `first`, in order, unbounded: the stride the recurrence names, and nothing else."""
+    every, each = rec.get('every'), rec.get('each')
+    if isinstance(every, dict):
+        unit = units.get(str(every.get('unit'))) if every.get('unit') is not None else None
+        day = units.get('day')
+        if every.get('unit') is None:
+            raise Unreckoned("`every: {count}` strides by neighbours, and which position is a day's neighbour is the "
+                             "system's to say — stride by a measure (`every: {count, unit: day}`) or by a cell (`each:`)")
+        if not unit or not day or not isinstance(unit.get('factor'), list) or not isinstance(every.get('count'), int):
+            raise Unreckoned(f"`every: {every}` is not a stride this tool can measure in days")
+        stride = Fraction(every['count']) * Fraction(*unit['factor']) / Fraction(*day['factor'])
+        if stride.denominator != 1 or stride < 1:
+            raise Unreckoned(f"a stride of {every['count']} {every['unit']} is finer than the day this tool reads")
+        k = 1
+        while True:
+            yield first + k * int(stride)
+            k += 1
+    row = (systems or {}).get(rec.get('in')) or {}
+    cal = row.get('calendar')
+    if each is None or not cal:
+        raise Unreckoned(f"`each: {each}` needs the system it is counted in (`in:`), and '{rec.get('in')}' names no calendar")
+    if row.get('reckoning') not in (None, 'arithmetic'):
+        raise Unreckoned(f"{row.get('system')} is reckoned {row.get('reckoning')}, not by rule — look the next "
+                         f"occurrence up in what was published or observed")
+    if each == 'day':
+        k = 1
+        while True:
+            yield first + k
+            k += 1
+    if each == 'week':
+        if cal != 'iso8601':
+            raise Unreckoned(f"a week of the {cal} calendar is not a cell this tool walks")
+        wd = datetime.date.fromordinal(first).isoweekday()
+        at = _at(rec, wd)
+        if not 1 <= at <= 7:
+            raise Unreckoned(f"`at: {at}` is no day of a week (1 to 7)")
+        start = first - (wd - 1)
+        while True:
+            if start + at - 1 > first:
+                yield start + at - 1
+            start += 7
+    to_day, from_day = _ymd_of(cal)
+    if each == 'month':
+        _y, _m, d = from_day(first)
+        at = _at(rec, d)
+        start = first - (d - 1)
+        while True:
+            nxt = start + 1
+            while from_day(nxt)[2] != 1:          # the next month begins on the next day numbered 1, however long
+                nxt += 1                          # this one was: 29 to 31 days, or the Coptic little month of 5
+            # A MONTH WITHOUT THAT DAY HAS NO OCCURRENCE (RFC 5545 §3.3.10: an invalid date is ignored, not moved):
+            # "the 31st of each month" skips a month of 30 rather than inventing a day the parties never named.
+            if at <= nxt - start and start + at - 1 > first:
+                yield start + at - 1
+            start = nxt
+    if each == 'year':
+        y, m, d = from_day(first)
+        if rec.get('at') is not None:
+            mm = re.match(r'^([0-9]{1,2})-([0-9]{1,2})$', str(rec['at']))
+            if not mm:
+                raise Unreckoned(f"`at: {rec['at']}` is prose to this tool — in a year it walks `MM-DD`")
+            m, d = int(mm.group(1)), int(mm.group(2))
+        while True:
+            y += 1
+            try:
+                n = to_day(y, m, d)
+            except ValueError:
+                continue
+            if from_day(n) == (y, m, d) and n > first:          # a year without that day has no occurrence (RFC 5545)
+                yield n
+    raise Unreckoned(f"`each: {each}` is a level this tool does not walk: it reads days, and walks days, weeks, "
+                     f"months and years")
+
+
+def occurrences(first, rec, systems=None, units=None):
+    """The day numbers on which a position first due on day `first` falls due: `first` itself, then each occurrence
+    the recurrence `rec` names after it — ending at `times` (the first included) or at `to`, whichever comes first
+    (`recurrence_form`). Unbounded when neither is stated. Raises Unreckoned when it cannot be walked by arithmetic."""
+    systems = systems if systems is not None else _law('SYSTEMS')
+    units = units if units is not None else _law('UNITS')
+    times = rec.get('times')
+    times = times if isinstance(times, int) and not isinstance(times, bool) and times >= 1 else None
+    end = None
+    if rec.get('to') is not None:
+        try:
+            end = dmcal.to_day(str(rec['to']))
+        except (ValueError, dmcal.NotByRule) as e:
+            raise Unreckoned(f"`to: {rec['to']}` — {e}")
+    if end is not None and first > end:
+        return
+    yield first
+    if times == 1:
+        return
+    try:
+        for i, n in enumerate(_after_first(first, rec, systems, units), 2):
+            if end is not None and n > end:
+                return
+            yield n
+            if times is not None and i >= times:
+                return
+    except (ValueError, dmcal.NotByRule) as e:
+        raise Unreckoned(str(e))
+
+
+def next_due(first, rec, today, systems=None, units=None):
+    """The occurrence a reader must be warned about: the first on or after `today` — or, when the repetition ended
+    before today, its last. Returns (day, index, times, ended); `index` counts from 1, the first included."""
+    last = None
+    for i, n in enumerate(occurrences(first, rec, systems, units), 1):
+        if n >= today:
+            return n, i, rec.get('times'), False
+        last = (n, i)
+        if i >= _CAP:
+            raise Unreckoned(f"more than {_CAP} occurrences fall before today")
+    if last is None:
+        raise Unreckoned("the repetition ends before its first occurrence")
+    return last[0], last[1], rec.get('times'), True
+
+
+def describe(rec):
+    """A recurrence in words, as it is written: `each month in gregorian-civil at 15, 6 times`."""
+    if not isinstance(rec, dict):
+        return str(rec)
+    ev = rec.get('every')
+    head = (f"each {rec['each']}" if rec.get('each') is not None else
+            f"every {ev.get('count')}{' ' + str(ev['unit']) if ev.get('unit') is not None else ' neighbours'}"
+            if isinstance(ev, dict) else str(rec))
+    return (head + (f" in {rec['in']}" if rec.get('in') else '') + (f" at {rec['at']}" if rec.get('at') is not None else '')
+            + (f", from {rec['from']}" if rec.get('from') is not None else '') + (f", to {rec['to']}" if rec.get('to') is not None else '')
+            + (f", {rec['times']} times" if rec.get('times') is not None else ''))
+
+
+def silenced(entry, decl):
+    """True when `expiry.unless` names this entry's state: a debt already met no longer lapses."""
+    for attr, values in ((decl or {}).get('unless') or {}).items():
+        if entry.get(attr) is not None and str(entry.get(attr)) in [str(v) for v in (values or [])]:
+            return True
+    return False
+
+
+def due_entries(fm, term, decl, today=None):
+    """[(label, held, day, shown, detail)] — what falls due in one term of one bean, read as the law declares it.
+
+    A term whose value IS the thing (a registration) has one date; a term whose value is a list or an open map has
+    one per ENTRY, labelled `[<key>]`. `day` is None when the entry cannot be walked, and `detail` then says why."""
+    today = today if today is not None else datetime.date.today().toordinal()
+    attr, rep = decl.get('attr'), decl.get('repeats')
+    sch = ((_law('TERMS').get(term) or {}).get('schema') or {})
+    held = fm.get(term)
+    if dmform.scope_of(sch) == 'entry' and isinstance(held, (dict, list)):
+        items = (list(held.items()) if isinstance(held, dict) else list(enumerate(held)))
+        entries = [(f"[{k}]", e) for k, e in items if isinstance(e, dict)]
+    else:
+        entries = [('', held)] if isinstance(held, dict) else []
+    out = []
+    for label, e in entries:
+        if not e.get(attr) or silenced(e, decl):
+            continue
+        try:
+            # THROUGH THE DAY, in whatever calendar the date was stated in (16.0). A calendar that is not reckoned
+            # by rule cannot be aged by arithmetic, and is skipped rather than guessed at.
+            first = dmcal.to_day(str(e[attr]))
+        except (ValueError, dmcal.NotByRule):
+            # The gate owns the form. A value it would refuse is not this tool's to complain about twice, and
+            # guessing at it would be worse.
+            continue
+        rec = e.get(rep) if rep else None
+        if not isinstance(rec, dict):
+            out.append((label, e, first, datetime.date.fromordinal(first).isoformat(), ''))
+            continue
+        try:
+            day, i, times, ended = next_due(first, rec, today)
+        except Unreckoned as why:
+            out.append((label, e, None, None, f"{attr} {e[attr]}, then {describe(rec)}: {why}"))
+            continue
+        of = f" of {times}" if times is not None else ''
+        out.append((label, e, day, show_day(day, rec),
+                    f"  — {'the last' if ended else 'next'}: occurrence {i}{of}, {describe(rec)}"))
+    return out
+
+
+def show_day(n, rec=None, systems=None):
+    """Day `n` in the calendar the recurrence is counted in, where it names one; else in the Gregorian calendar."""
+    row = (systems if systems is not None else _law('SYSTEMS')).get((rec or {}).get('in')) or {}
+    try:
+        return dmcal.from_day(n, row['calendar']) if row.get('calendar') else dmcal.from_day(n, 'gregory')
+    except (KeyError, ValueError, dmcal.NotByRule):
+        return dmcal.from_day(n, 'gregory')
+
+
 def refine(term, held, state):
     """A term's own extra sentence, where a general rule cannot carry the judgment.
 
@@ -295,7 +539,7 @@ def report():
     # ten iso_date attrs in the standard are `observed` or `as_of` — when a fact was READ, not when it
     # runs out — so a tool that warned about every date would be wrong nine times in ten, and a warning
     # that is usually wrong is one people stop reading.
-    exp_rows, expiring = [], 0
+    exp_rows, expiring, notes = [], 0, []
     for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
         head, _ = dmparse.read(f)
         if head is None:
@@ -305,42 +549,37 @@ def report():
         except Exception:
             continue
         for term, decl in expiry_terms().items():
-            held = fm.get(term)
-            attr = decl.get('attr')
-            if not isinstance(held, dict) or not attr or not held.get(attr):
-                continue
-            try:
-                # THROUGH THE DAY, in whatever calendar the date was stated in (16.0). A calendar that is not reckoned
-                # by rule cannot be aged by arithmetic, and is skipped rather than guessed at.
-                exp = datetime.date.fromordinal(dmcal.to_day(str(held[attr])))
-            except (ValueError, dmcal.NotByRule):
-                # The gate owns the form (attr_types: iso_date). A value it would refuse is not this
-                # tool's to complain about twice, and guessing at it would be worse.
-                continue
-            days = (exp - datetime.date.today()).days
-            # The horizon is the TERM's, and --days overrides every one of them: a domain and a rented
-            # machine do not need the same notice, and the reader may want a different one from both.
-            # It is an EXTENT on time (11.2) — the same construct a rental period is — rather than the
-            # bare integer it was for one release, which was a fifth way of writing a duration in a
-            # vocabulary that had just declared the first. The gate validates the region; this only
-            # converts it, and only a unit it knows how to convert.
-            horizon = HORIZON if HORIZON_SET else notice_days(decl.get('notice'))
-            state = 'EXPIRED' if days < 0 else ('EXPIRING' if days <= horizon else 'OK')
-            if state != 'OK':
-                expiring += 1
-            exp_rows.append((state, fm.get('bean'), days, exp, term, decl, held, horizon))
+            for label, held, day, shown, detail in due_entries(fm, term, decl):
+                if day is None:
+                    notes.append((fm.get('bean'), term + label, detail))
+                    continue
+                days = day - datetime.date.today().toordinal()
+                # The horizon is the TERM's, and --days overrides every one of them: a domain and a rented
+                # machine do not need the same notice, and the reader may want a different one from both.
+                # It is an EXTENT on time (11.2) — the same construct a rental period is — rather than the
+                # bare integer it was for one release, which was a fifth way of writing a duration in a
+                # vocabulary that had just declared the first. The gate validates the region; this only
+                # converts it, and only a unit it knows how to convert.
+                horizon = HORIZON if HORIZON_SET else notice_days(decl.get('notice'))
+                state = 'EXPIRED' if days < 0 else ('EXPIRING' if days <= horizon else 'OK')
+                if state != 'OK':
+                    expiring += 1
+                exp_rows.append((state, fm.get('bean'), days, shown, term + label, decl, held, horizon, detail, term))
 
-    if exp_rows:
+    if exp_rows or notes:
         print()
-        for state, bean, days, exp, term, decl, held, horizon in sorted(exp_rows, key=lambda r: r[2]):
+        for state, bean, days, shown, where, decl, held, horizon, detail, term in sorted(exp_rows, key=lambda r: r[2]):
             if QUIET and state == 'OK':
                 continue
             why = f"  <-- {decl['why']}" if (state != 'OK' and decl.get('why')) else ''
-            print(f"{state:8} {bean}.{term}  {decl['attr']} {exp} ({days} days)"
+            print(f"{state:8} {bean}.{where}  {decl['attr']} {shown} ({days} days){detail}"
                   f"{refine(term, held, state)}{why}")
+        for bean, where, detail in notes:
+            print(f"{'NOTE':8} {bean}.{where}  {detail}")
         print(f"\nexpiring: {sum(1 for r in exp_rows if r[0] == 'OK')} ok, "
               f"{sum(1 for r in exp_rows if r[0] == 'EXPIRING')} within their horizon, "
               f"{sum(1 for r in exp_rows if r[0] == 'EXPIRED')} EXPIRED"
+              + (f", {len(notes)} that cannot be walked here (NOTE)" if notes else '')
               + (f"  [--days {HORIZON} overriding every term]" if HORIZON_SET else ''))
 
     print(f"\nanalysis_cache: {counts['FRESH']} fresh, {counts['STALE']} stale, "

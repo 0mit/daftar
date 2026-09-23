@@ -80,6 +80,13 @@ out = gate("{ of: time, every: { count: 5, unit: minute }, each: day }")
 check("a repetition strides ONE way", "exactly one" in out, out[-400:])
 check("an EXTENT may name a system too: a region of 200 metres", ok(gate("{ of: time, every: { count: 1, unit: day } }", ", covers: { of: place, in: geographic, measure: { count: 200, unit: metre } }")))
 
+# HOW MANY TIMES (21.0): six instalments, the first included — a count of occurrences, so a positive whole number.
+check("`times: 6` — six occurrences in all, the first included",
+      ok(gate('{ of: time, in: gregorian-civil, each: month, at: "15", times: 6 }')))
+for bad in ("0", "1.5", "-2", "true", '"six"'):
+    out = gate('{ of: time, in: gregorian-civil, each: month, at: "15", times: %s }' % bad)
+    check(f"`times: {bad}` is refused: a count of occurrences is a positive whole number", "must be a positive whole number" in out, out[-500:])
+
 shutil.rmtree(T, ignore_errors=True)
 print("\nrecurrence: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)
