@@ -25,12 +25,14 @@ log/journal.md merge=union
 # pair conflicted textually while log/journal.md absorbed the same shape losslessly.
 log/pending.md merge=union
 
-# SHELL IS CHECKED OUT WITH LF, on every machine. Git for Windows checks text out with CRLF by default
-# (core.autocrlf=true), and `sh` reads the CR as part of each line: a hook with one fails closed, and nothing
-# commits without --no-verify. bin/install.py also writes the installed hooks with LF, for a checkout made
-# before these lines or with them overridden.
+# THE LANGUAGE'S SHELL IS CHECKED OUT WITH LF, on every machine. Git for Windows checks text out with CRLF by
+# default (core.autocrlf=true), and `sh` reads the CR as part of each line: a hook with one fails closed, and
+# nothing commits without --no-verify. bin/install.py also writes the installed hooks with LF, for a checkout
+# made before these lines or with them overridden. Named by directory, not as `*.sh`: a later line wins, and a
+# bare `*.sh` would take a captured `.sh` out of `captures/** -text` and rewrite the bytes its key hashes.
 bin/hooks/* text eol=lf
-*.sh        text eol=lf
+bin/*.sh    text eol=lf
+seed/*.sh   text eol=lf
 
 # A GARDEN'S OWN ATTRIBUTES go in a .gitattributes inside the directory they concern (git reads one per
 # directory), never here: this file is part of the language, and bin/dmupgrade.py replaces it on every upgrade.

@@ -331,6 +331,9 @@ for f in _shf:
 run('git', '-c', 'core.autocrlf=true', 'checkout', '--', *_shf, cwd=G20)
 _cr = [f for f in _shf if b'\r' in open(path20(f), 'rb').read()]
 check("`.gitattributes` keeps the shell LF in a checkout that turns text to CRLF (core.autocrlf=true)", not _cr, _cr)
+_ca = run('git', 'check-attr', 'text', 'eol', '--', 'captures/probe.sh', cwd=G20).stdout
+check("...and a captured `.sh` stays byte-for-byte: `captures/** -text` is not overridden", 'text: unset' in _ca
+      and 'eol: unspecified' in _ca, _ca)
 for f in _shf:                          # ...and a checkout made before that line, or with it overridden
     _b = open(path20(f), 'rb').read()
     with open(path20(f), 'wb') as fh:
