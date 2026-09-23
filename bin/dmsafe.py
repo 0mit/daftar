@@ -224,8 +224,14 @@ def _flow_pairs(text, lo, hi):
     while i < inner_hi:
         c = text[i]
         if q:
-            if c == q and text[i - 1] != '\\':
-                q = None
+            if c == q:
+                # escaped only by an ODD run of backslashes, and only in double quotes: `"C:\\"` ends a Windows path,
+                # and a single-quoted scalar has no backslash escape at all
+                n = 0
+                while q == '"' and text[i - 1 - n] == '\\':
+                    n += 1
+                if n % 2 == 0:
+                    q = None
         elif c in '"\'':
             q = c
         elif c in '{[':
