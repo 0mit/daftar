@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light dark">
+<title>Your machines, and the domain they answer on — daftar</title>
+<meta name="description" content="A NAS at home serving a website on a registered domain, recorded as beans, with what the gate, dmcursor and dmstale print about them.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<!-- daftar:part id="nav" --><a class="skip" href="#content">Skip to content</a>
+<header class="site">
+  <div class="bar">
+    <a class="mark" href="../index.html"><span class="fa" lang="fa" dir="rtl">دفتر</span> daftar</a>
+    <nav aria-label="site">
+      <ul>
+        <li><a href="../use-cases/index.html" aria-current="true">Use cases</a></li>
+        <li><a href="../philosophy.html">Philosophy</a></li>
+        <li><a href="../machinery.html">Machinery</a></li>
+        <li><a href="../contribute.html">Contribute</a></li>
+        <li><a href="https://github.com/0mit/daftar">GitHub <span aria-hidden="true">↗</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header><!-- /daftar:part -->
+<main id="content">
+
+<nav class="crumbs" aria-label="breadcrumb"><a href="index.html">Use cases</a> › Your machines, and the domain they answer on</nav>
+<h1>Your machines, and the domain they answer on</h1>
+<p class="lede">Sam keeps a NAS at home that serves his website, has registered <code>example.org</code> for it, and rents a
+  virtual server. Each of these is one bean: what it is, what identifies it, who said so, who owns it and who answers for it.
+  The domain's registration runs out on a date, and a tool reads that date before it does.</p>
+<p class="meta">garden-sam · daftar v0.33.1 · the day held at 2026-10-27</p>
+
+<h2>What the notebook records</h2>
+<p class="lead">A domain is registered for a term, not owned outright: the registry is its <em>external</em> owner, and Sam
+  answers for it. Its registration belongs to the <code>domain</code> profile, which the garden opts into in its own
+  <code>VOCAB.md</code> — a change to the garden's law, journalled as a RULE-CHANGE:</p>
+<!-- daftar:doc id="cookbook-domain-profile" --><pre class="doc" tabindex="0" aria-label="seed/COOKBOOK.md: A registered domain"><code>extends_profiles: [domain]</code></pre><!-- /daftar:doc -->
+<!-- daftar:bean id="example-org" --><pre class="file" tabindex="0" aria-label="beans/example-org.md"><span class="path">beans/example-org.md</span><code>---
+bean: example-org
+kind: domain
+title: "example.org — Sam's domain"
+status: active
+summary: "The domain Sam's website answers on."
+nature: metaphysical
+identity:
+  status: confirmed
+  anchors:
+    - { key: fqdn, value: "example.org", class: logical, establishing: true }
+provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+owned_by: { legal: { external: "the .org registry, under a registration agreement" } }
+responsibility: { legal: { holder: { bean: sam } } }
+registration:
+  registrar: "Example Registrar Inc."
+  created: 2020-01-15
+  expires: 2027-01-15
+  auto_renew: enabled
+  observed: 2026-09-17
+  source: "WHOIS for example.org, read 2026-09-17"
+---
+Sam's domain.</code></pre><!-- /daftar:bean -->
+<p class="lead">The NAS is a <code>host</code>, physical, identified by the serial on its sticker; its host name only corroborates.
+  <code>provides_habitat</code> is what lets a running thing live on it:</p>
+<!-- daftar:bean id="nas" --><pre class="file" tabindex="0" aria-label="beans/nas.md"><span class="path">beans/nas.md</span><code>---
+bean: nas
+kind: host
+title: "nas — Sam's home NAS"
+status: active
+summary: "A NAS at home: file storage, and the web server for example.org."
+nature: physical
+identity:
+  status: confirmed
+  anchors:
+    - { key: serial, value: "NAS-0042", class: hardware, establishing: true }
+    - { key: hostname, value: "nas", class: network, establishing: false }
+provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+owned_by: { legal: { owner: { bean: sam } }, technical: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } }, technical: { holder: { bean: sam } } }
+provides_habitat: linux-baremetal
+roles:
+  - { role: file-server }
+  - { role: web }
+---
+The NAS.</code></pre><!-- /daftar:bean -->
+<p class="lead">The website is an <code>instance</code>: a running copy of nginx that lives on the NAS and is Sam's. “Serves this
+  domain” has no relation of its own, so it is a <code>refs</code> entry with a <code>rel</code>:</p>
+<!-- daftar:bean id="website" --><pre class="file" tabindex="0" aria-label="beans/website.md"><span class="path">beans/website.md</span><code>---
+bean: website
+kind: instance
+title: "website — nginx on the NAS, serving example.org"
+status: active
+summary: "The web server instance on the NAS that answers for example.org."
+nature: living
+identity:
+  status: confirmed
+  anchors:
+    - { key: service_id, value: "nginx:example.org@nas", class: logical, establishing: true }
+provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+instance_of: { bean: nginx }
+lives_in: { bean: nas }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+refs:
+  domain: { bean: example-org, rel: serves }
+---
+The website.</code></pre><!-- /daftar:bean -->
+<details>
+  <summary>The software it runs, and the rented server</summary>
+  <p class="lead">nginx is a <code>product</code> owned by its project. The rented server is a <code>virtual-host</code>: it has
+    no matter of its own, so it is identified by its name, and the provider owns it.</p>
+  <!-- daftar:bean id="nginx" --><pre class="file" tabindex="0" aria-label="beans/nginx.md"><span class="path">beans/nginx.md</span><code>---
+bean: nginx
+kind: product
+title: "nginx — the web server software"
+status: active
+summary: "Third-party web server software, run here but owned by its project."
+nature: metaphysical
+identity:
+  status: confirmed
+  anchors:
+    - { key: product_id, value: "product:nginx", class: logical, establishing: true }
+provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+owned_by: { legal: { external: "the nginx project" } }
+responsibility: { legal: { holder: { bean: sam } } }
+---
+The web server software.</code></pre><!-- /daftar:bean -->
+  <!-- daftar:bean id="vps-a" --><pre class="file" tabindex="0" aria-label="beans/vps-a.md"><span class="path">beans/vps-a.md</span><code>---
+bean: vps-a
+kind: virtual-host
+title: "vps-a — a rented virtual server"
+status: active
+summary: "A VPS rented from a hosting provider."
+nature: living
+identity:
+  status: confirmed
+  anchors:
+    - { key: fqdn, value: "vps-a.example.org", class: logical, establishing: true }
+provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+owned_by: { legal: { external: "the hosting provider, which owns and operates the machine" } }
+responsibility: { legal: { holder: { bean: sam } } }
+provides_habitat: linux-vm
+---
+The rented server.</code></pre><!-- /daftar:bean -->
+</details>
+
+<h2>What the tools say</h2>
+<p class="lead">Each recipe is committed with its journal entry. <code>git commit</code> runs the gate as a pre-commit hook, then
+  the corpus checks every garden's hook runs:</p>
+<!-- daftar:out id="machines-commit" match="^## |^garden-sam \(|^PASS every bean carries|^PASS every ownership chain|^fast:" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;nginx, and the website it serves&quot;"><code><span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "nginx, and the website it serves" --body "- action: added [[nginx]] and [[website]], from the cookbook."</span>
+## 2026-10-27 09:00+00:00 · sam · nginx, and the website it serves
+<span class="cmd">~/garden-sam$ git add -A</span>
+<span class="cmd">~/garden-sam$ git commit -qm "nginx, and the website it serves"</span>
+garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>): 5 docs, 0 error(s), 0 warning(s)
+<span class="el" title="lines left out">…</span>
+PASS every bean carries BOTH ownership arcs
+<span class="el" title="lines left out">…</span>
+PASS every ownership chain that is owed terminates at the crown or outside — none dangles or loops
+<span class="el" title="lines left out">…</span>
+fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
+<p class="lead">Before an agent touches the website, <code>dmcursor</code> says what it is and where it lives, and what must be
+  attended to first:</p>
+<!-- daftar:out id="machines-cursor" --><pre class="out" tabindex="0" aria-label="output of dmcursor.py website"><code><span class="cmd">~/garden-sam$ python3 bin/dmcursor.py website</span>
+cursor -&gt; website   instance · living · living in nas
+  website — nginx on the NAS, serving example.org
+
+MEASURED  — what is already known, and whether it still holds
+  cache  none — this being has no recorded analysis; reading is unavoidable
+
+ATTENTION — required before touching it
+  none recorded on this being
+
+INHERITED — along every chain the vocabulary declares acyclic
+  nothing constraining inherited from any chain</code></pre><!-- /daftar:out -->
+<p class="lead"><code>dmstale</code> reads the registration's expiry date and warns inside 90 days. It exits 1 when something
+  needs action:</p>
+<!-- daftar:out id="machines-stale" --><pre class="out" tabindex="0" aria-label="output of dmstale.py"><code><span class="cmd">~/garden-sam$ python3 bin/dmstale.py</span>
+EXPIRING example-org.registration  expires 2027-01-15 (80 days)  auto_renew=enabled  registrar=Example Registrar Inc.  &lt;-- an unrenewed name takes its DNS and its mail with it
+
+expiring: 0 ok, 1 within their horizon, 0 EXPIRED
+
+analysis_cache: 0 fresh, 0 stale, 0 not on this host, 0 unknown
+<span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
+<p class="lead">The gate's last line names the garden, the release it runs, its gardener and its id:</p>
+<!-- daftar:out id="machines-check" --><pre class="out" tabindex="0" aria-label="output of dmcheck.py --all"><code><span class="cmd">~/garden-sam$ python3 bin/dmcheck.py --all</span>
+garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">35018dedea5e</span>): 6 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out -->
+
+<h2>What it shows</h2>
+<ul class="prose">
+  <li><strong>Identity is by anchor, not by file name.</strong> A serial for the NAS, a domain name for the domain and for the
+    rented server: two notebooks that never met recognise the same thing by it.</li>
+  <li><strong>Ownership and habitat are separate.</strong> The website is Sam's, and lives in the NAS; moving it to another
+    machine changes where it lives, never who owns it. <a href="../philosophy.html#ownership">Ownership rises</a>.</li>
+  <li><strong>A date that runs out is read by a tool, not by the gate.</strong> A check whose result changed with the calendar
+    would make the gate refuse on some day for no committed reason; <code>dmstale</code> says so in its header.</li>
+</ul>
+
+<h2>Read more</h2>
+<ul class="prose">
+  <li>The cookbook: <a href="https://github.com/0mit/daftar/blob/v0.33.1/seed/COOKBOOK.md#a-registered-domain">a registered
+    domain</a>, <a href="https://github.com/0mit/daftar/blob/v0.33.1/seed/COOKBOOK.md#a-machine-at-home-that-other-things-run-on">a
+    machine at home</a>, <a href="https://github.com/0mit/daftar/blob/v0.33.1/seed/COOKBOOK.md#third-party-software-and-a-running-copy-of-it-that-serves-the-website">software
+    and a running copy of it</a>, <a href="https://github.com/0mit/daftar/blob/v0.33.1/seed/COOKBOOK.md#a-rented-vps">a rented
+    VPS</a>.</li>
+  <li>The model: <a href="https://github.com/0mit/daftar/blob/v0.33.1/MODEL.md#identity-anchors">identity</a> and
+    <a href="https://github.com/0mit/daftar/blob/v0.33.1/MODEL.md#ownership-and-responsibility">ownership</a>.</li>
+  <li>The tools: <a href="https://github.com/0mit/daftar/blob/v0.33.1/bin/dmstale.py">bin/dmstale.py</a> and
+    <a href="https://github.com/0mit/daftar/blob/v0.33.1/bin/dmcursor.py">bin/dmcursor.py</a>, each explained in its first lines.</li>
+</ul>
+
+<p class="strip">Is your situation like this, but not quite?
+  <a href="https://github.com/0mit/daftar/issues/new?template=use-case.yml&amp;related=machines-and-a-domain">Tell us how it differs</a>.</p>
+<nav class="pager" aria-label="cases"><span></span><a href="a-cost-shared.html">Next: A cost shared between two people →</a></nav>
+
+</main>
+<!-- daftar:part id="foot" --><footer class="site">
+  <div>
+    <p>Every output on these pages was produced by daftar <code>v0.33.1</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
+    <p>Apache-2.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
+  </div>
+</footer><!-- /daftar:part -->
+</body>
+</html>

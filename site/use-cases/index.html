@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light dark">
+<title>Use cases — daftar</title>
+<meta name="description" content="Nine situations a daftar garden records, each with its beans and what the tools print about it, on two demo gardens.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<!-- daftar:part id="nav" --><a class="skip" href="#content">Skip to content</a>
+<header class="site">
+  <div class="bar">
+    <a class="mark" href="../index.html"><span class="fa" lang="fa" dir="rtl">دفتر</span> daftar</a>
+    <nav aria-label="site">
+      <ul>
+        <li><a href="../use-cases/index.html" aria-current="page">Use cases</a></li>
+        <li><a href="../philosophy.html">Philosophy</a></li>
+        <li><a href="../machinery.html">Machinery</a></li>
+        <li><a href="../contribute.html">Contribute</a></li>
+        <li><a href="https://github.com/0mit/daftar">GitHub <span aria-hidden="true">↗</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header><!-- /daftar:part -->
+<main id="content">
+
+<h1>Use cases</h1>
+<p class="lede">Each case is a situation, the beans that record it, and what the tools print about it. They happen in two demo
+  gardens: <strong>garden-sam</strong>, kept by sam, and <strong>garden-ali</strong>, kept by ali, who shares costs with him and
+  keeps a notebook of her own.</p>
+
+<ul class="cards three">
+  <li><div class="card"><h2><a href="machines-and-a-domain.html">Your machines, and the domain they answer on</a></h2>
+    <p>A NAS at home serves a website on a registered domain; a rented server beside it.</p>
+    <p class="tools">dmcheck · dmcursor · dmstale</p></div></li>
+  <li><div class="card"><h2><a href="a-cost-shared.html">A cost shared between two people</a></h2>
+    <p>Ali paid for a camera; sam bears two parts of it. Who owes whom is read, never written.</p>
+    <p class="tools">dmledger · dmsafe</p></div></li>
+  <li><div class="card"><h2><a href="a-loan-in-instalments.html">A loan repaid in instalments</a></h2>
+    <p>Six monthly instalments and a clause for one paid late; the first is paid, the next falls due.</p>
+    <p class="tools">dmledger · dmstale · dmsafe</p></div></li>
+  <li><div class="card"><h2><a href="a-statement-kept.html">A statement kept, its secret left out</a></h2>
+    <p>A bank statement identified by its bytes, and its lines kept as a capture without the card number.</p>
+    <p class="tools">the gate</p></div></li>
+  <li><div class="card"><h2><a href="a-dinner.html">A dinner where something was agreed</a></h2>
+    <p>An evening, the people at it, and the loan agreed there in spoken words.</p>
+    <p class="tools">dmcal</p></div></li>
+  <li><div class="card"><h2><a href="two-gardens-meet.html">Two people's notebooks meet</a></h2>
+    <p>First contact, a proposal made, read and taken, and ali's own yes, written by her.</p>
+    <p class="tools">dmpropose · dmledger · dmsafe</p></div></li>
+  <li><div class="card"><h2><a href="a-rehearsal.html">A rehearsal, before it counts</a></h2>
+    <p>A garden grown to try the loan's crossing, refused as fact and taken into a copy as a rehearsal.</p>
+    <p class="tools">germinate · dmpropose</p></div></li>
+  <li><div class="card"><h2><a href="an-agent-of-any-make.html">An agent of any make, and an assistant with no shell</a></h2>
+    <p>The gate as the arbiter between agents, and a chat assistant's proposal taken in by the gardener.</p>
+    <p class="tools">dmcheck · dmpropose</p></div></li>
+  <li><div class="card"><h2><a href="on-windows.html">On Windows</a></h2>
+    <p>The same tools in PowerShell: which Python, UTF-8, and the three things PowerShell 5.1 does differently.</p>
+    <p class="tools">INSTALL.md</p></div></li>
+</ul>
+
+<section class="box" aria-labelledby="how">
+  <h2 id="how">How these pages are made</h2>
+  <ul>
+    <li><code>site/build.py</code> clones daftar at <code>v0.33.1</code> and grows the two gardens with
+      <code>seed/germinate.py</code>.</li>
+    <li>It commits the recipes of <a href="https://github.com/0mit/daftar/blob/v0.33.1/seed/COOKBOOK.md">seed/COOKBOOK.md</a> one at a
+      time, and runs the commands shown. What each block shows below a command is what that command printed. A line
+      <span class="muted">…</span> marks lines left out; no line is edited.</li>
+    <li>The clock is held at 2026-10-27 09:00 UTC, so a date the tools count to reads the same on every build.</li>
+    <li>A garden's id differs in every build, because germination writes a random seed into the first commit; so does every
+      fingerprint and name that carries one. They are <span class="dotted">marked</span> with a dotted underline.</li>
+    <li>The directory that holds the gardens is shown as <code>~</code>. Inputs the build wrote, such as a block handed to
+      <code>dmsafe</code>, are shown as inputs.</li>
+  </ul>
+</section>
+
+<p class="strip">Your situation is not here? <a href="https://github.com/0mit/daftar/issues/new?template=use-case.yml">Describe it in
+  your own words</a> — the form asks for the situation, never for anything from your garden.</p>
+
+</main>
+<!-- daftar:part id="foot" --><footer class="site">
+  <div>
+    <p>Every output on these pages was produced by daftar <code>v0.33.1</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
+    <p>Apache-2.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
+  </div>
+</footer><!-- /daftar:part -->
+</body>
+</html>
