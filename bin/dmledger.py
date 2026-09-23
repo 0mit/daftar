@@ -62,11 +62,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PY = 'python' if os.name == 'nt' else 'python3'       # the interpreter as it is named where this runs
 # WHAT A BEAN SAYS IS SHOWN, NEVER OBEYED: a title, a transaction's `what`, a key — each is printed through
 # bin/dmstale.py's one escaper, and every line through its guard, so a character that controls a terminal (an ESC
-# sequence that climbs a line and rewrites a debt, or conceals every line after it) is printed as its escape.
+# sequence that climbs a line and rewrites a debt, or conceals every line after it) is printed as its escape — and a
+# line feed too, which in a key or a name printed a line of the bean's own making.
 esc = dmstale.esc
 
 
 def emit(line=''):
+    """ONE line, through the guard: every control character in it escaped, a line feed among them (dmstale.say)."""
     print(dmstale.say(line))
 
 # WHO BEARS A TRANSACTION, AND IN WHAT SHARES. The law's `sums` rule says which attribute is the whole and which the
@@ -281,11 +283,11 @@ def read_transaction(key, e, rule, units):
         for who, q in stated:
             c, why = read_count(q)
             if q is None or c is None:
-                tx['notes'].append(f"how much {who} paid is not known exactly{why} — left out until it is")
+                tx['notes'].append(f"how much {esc(who)} paid is not known exactly{why} — left out until it is")
                 return tx
             if str(q.get('unit')) != unit:
-                tx['notes'].append(f"{who} paid in {q.get('unit')} and the whole is in {unit} — left out; a payment in "
-                                   f"another currency is a transaction of its own, or `charged`")
+                tx['notes'].append(f"{esc(who)} paid in {esc(q.get('unit'))} and the whole is in {esc(unit)} — left out; "
+                                   f"a payment in another currency is a transaction of its own, or `charged`")
                 return tx
             paid[str(who)] = paid.get(str(who), Fraction(0)) + c
         if sum(paid.values()) != W:
@@ -310,11 +312,11 @@ def read_transaction(key, e, rule, units):
             return tx
         who, s = b[rule['bearer']], b.get(SHARE)
         if s is None:
-            tx['notes'].append(f"{who} is named as bearing it and names no {SHARE} — left out until it does")
+            tx['notes'].append(f"{esc(who)} is named as bearing it and names no {SHARE} — left out until it does")
             return tx
         n = read_share(s, rule.get('share_pattern'))
         if n is None:
-            tx['notes'].append(f"{who}'s {SHARE} {dmstale.brief(s, quote=True)} is not a whole number of parts as the "
+            tx['notes'].append(f"{esc(who)}'s {SHARE} {dmstale.brief(s, quote=True)} is not a whole number of parts as the "
                                f"law writes one — left out")
             return tx
         shares[who] = shares.get(who, 0) + n
@@ -414,12 +416,13 @@ def read_agreement(bid, fm, mterms, cterms, prefs, units):
             # party is stands, and only what the sides differ on waits for a person.
             who = {_ref_bean(x, ref) for x in sides}
             ag['parties'][str(k)] = next(iter(who)) if len(who) == 1 else None
-            ag['notes'].append(f"party {k} holds a merge conflict, differing in: {', '.join(_differ(sides)) or 'form'} — "
+            ag['notes'].append(f"party {esc(k)} holds a merge conflict, differing in: "
+                               f"{', '.join(map(esc, _differ(sides))) or 'form'} — "
                                + ("who it is agrees, so it is read" if ag['parties'][str(k)] else
                                   "the sides name different beans, so it is read as nobody until a person chooses"))
             if not ag['parties'][str(k)]:
                 ag['maybe'] |= who - {None}
-                ag['left_out'].append((f"party {k}", "the sides of its merge conflict name different beans, so it is "
+                ag['left_out'].append((f"party {esc(k)}", "the sides of its merge conflict name different beans, so it is "
                                                      "read as nobody"))
     for term, rule in mterms:
         held = fm.get(term)
@@ -433,7 +436,8 @@ def read_agreement(bid, fm, mterms, cterms, prefs, units):
             sides = dmstale.conflicted(e)
             if sides is not None:
                 ag['txs'].append({'key': k, 'whole': None, 'paid': None, 'borne': None, 'notes': [
-                    f"holds a merge conflict — {len(sides)} sides, differing in: {', '.join(_differ(sides)) or 'form'}; "
+                    f"holds a merge conflict — {len(sides)} sides, differing in: "
+                    f"{', '.join(map(esc, _differ(sides))) or 'form'}; "
                     f"not read until a person chooses"]})
             elif not isinstance(e, dict):
                 # AN ENTRY THAT IS NOT ONE is said, as every other thing not read is — never skipped in silence
@@ -616,7 +620,9 @@ def main(argv):
         pass
     if argv and argv[0] in ('-h', '--help'):
         # the interpreter as it is named where this runs: `python3` may be the Microsoft Store's alias on Windows
-        emit(dmunits.speakable(__doc__.replace('python3 bin/', ('python' if os.name == 'nt' else 'python3') + ' bin/')))
+        for l in dmunits.speakable(__doc__.replace('python3 bin/', ('python' if os.name == 'nt' else 'python3')
+                                                   + ' bin/')).split('\n'):
+            emit(l)                             # one line a call: the guard escapes a line feed
         return 0
     between = None
     if '--between' in argv:

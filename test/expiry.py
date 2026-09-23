@@ -618,6 +618,26 @@ check(f"clauses that must be counted from the first century spend the run's budg
       [line(k) for k in ("t0", "t3", "t4", "zz-soon")])
 os.remove(os.path.join(G, "beans", "counted.md"))
 
+# ...and a stride, or `each: day`, reckoned rather than walked, is never reckoned past its `times`: three weekly payments
+# and three daily calls from 2020-01-01 ended in January 2020, and are found ended — never falling due today with an
+# occurrence number past the last there is.
+contract("ended-long-ago",
+         "  weekly: { what: 'three weekly payments', by: ali, to: keeper, due: 2020-01-01, "
+         "every: { of: time, every: { count: 7, unit: day }, times: 3 } }\n"
+         "  daily:  { what: 'three daily calls', by: ali, to: keeper, due: 2020-01-01, "
+         "every: { of: time, in: gregorian-civil, each: day, times: 3 } }\n")
+out = stale()
+line = lambda key, bean="ended-long-ago": next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
+_led = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "ended-long-ago"], capture_output=True,
+                      text=True, encoding="utf-8", cwd=G).stdout
+check("a weekly stride and `each: day`, each `times: 3` from 2020-01-01, are EXPIRED at their last — 2020-01-15 and "
+      "2020-01-03, occurrence 3 of 3 — in dmstale and in dmledger, never due today as occurrence 352 of 3",
+      line("weekly").startswith("EXPIRED") and "due 2020-01-15 (" in line("weekly") and "the last: occurrence 3 of 3" in line("weekly")
+      and line("daily").startswith("EXPIRED") and "due 2020-01-03 (" in line("daily") and "the last: occurrence 3 of 3" in line("daily")
+      and "the last was 2020-01-15" in _led and "the last was 2020-01-03" in _led and _led.count("occurrence 3 of 3") == 2,
+      [line("weekly"), line("daily"), _led[-600:]])
+os.remove(os.path.join(G, "beans", "ended-long-ago.md"))
+
 shutil.rmtree(T, ignore_errors=True)
 print("\nexpiry: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

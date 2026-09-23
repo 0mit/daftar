@@ -352,17 +352,18 @@ def _place_words(at):
     return '-'.join('%02d' % x for x in at) if len(at) > 1 else str(at[0])
 
 
-def _after_first(first, rec, systems, units, skipped=None, near=None, counted=False):
+def _after_first(first, rec, systems, units, skipped=None, near=None, times=None):
     """Every occurrence AFTER `first`, in order, unbounded, as (index, day) — the first occurrence is index 1: the
     stride the recurrence names, and nothing else. A cell that has no occurrence — a month without the day named — is
     appended to `skipped` as (start, end, label, place), so the reader can be told it was skipped rather than left to
     wonder.
 
     `near` is the day the reader wants the occurrences around (today, or the day the repetition ends): a stride and
-    `each: day` begin at the occurrence on or before it, reckoned, their index exact; a walk through cells counts from
-    `first` for _JUMP cells and then — unless `counted`, where the index is what ends the repetition (`times`) — jumps
-    to the cell before the one holding `near`, and its occurrences from there on are yielded with the index None: not
-    counted, never guessed."""
+    `each: day` begin at the occurrence on or before it, reckoned, their index exact — but never past the `times`-th,
+    which is the last there is, so a repetition that ended long ago is found ended rather than falling due today; a
+    walk through cells counts from `first` for _JUMP cells and then — unless `times` is stated, where the index is what
+    ends the repetition — jumps to the cell before the one holding `near`, and its occurrences from there on are
+    yielded with the index None: not counted, never guessed."""
     every, each = rec.get('every'), rec.get('each')
     if isinstance(every, dict):
         unit = units.get(str(every.get('unit'))) if every.get('unit') is not None else None
@@ -381,6 +382,8 @@ def _after_first(first, rec, systems, units, skipped=None, near=None, counted=Fa
                              f"reads days")
         step = int(stride)
         k = max(1, (near - first) // step) if near is not None and near > first else 1     # reckoned, not walked
+        if times is not None:
+            k = max(1, min(k, times - 1))           # occurrence k + 1: never past the times-th, the last there is
         while True:
             _spend()
             yield k + 1, first + k * step
@@ -405,6 +408,8 @@ def _after_first(first, rec, systems, units, skipped=None, near=None, counted=Fa
         raise Unreckoned(f"`each: {each}` is finer than the day this tool reads")
     if k == 0:
         n = max(first, near - 1) if near is not None else first                              # reckoned, not walked
+        if times is not None:
+            n = max(first, min(n, first + times - 2))   # the next yielded, n + 1, is never past the times-th
         while True:
             n += 1
             _spend()
@@ -418,7 +423,7 @@ def _after_first(first, rec, systems, units, skipped=None, near=None, counted=Fa
     while True:
         _spend()
         walked += 1
-        if walked == _JUMP and near is not None and not counted and s < near:
+        if walked == _JUMP and near is not None and times is None and s < near:
             # FAR ENOUGH COUNTED: to the cell before the one holding `near`, so the occurrence before it is still seen
             # (and every cell skipped after that one), and the index is no longer counted.
             s2 = cells.start(cells.start(near, k) - 1, k)
@@ -477,7 +482,7 @@ def _occurrences(first, rec, systems=None, units=None, skipped=None, near=None):
     # WHERE THE READER LOOKS: today — or, for a repetition that ends before today, its end, so its last is found.
     near = near if end is None or near is None else min(near, end)
     try:
-        for i, n in _after_first(first, rec, systems, units, skipped, near=near, counted=times is not None):
+        for i, n in _after_first(first, rec, systems, units, skipped, near=near, times=times):
             if end is not None and n > end:
                 return
             yield i, _writable(n)
@@ -637,9 +642,11 @@ def esc(s):
 
 
 def say(line):
-    """A line of a report as it is printed: its own line feeds kept, every other control character escaped — the guard
-    behind the escaping of each value where the line is built, so no value this tool forgot can reach the terminal."""
-    return '\n'.join(esc(x) for x in str(line).split('\n'))
+    """ONE line of a report as it is printed: every control character escaped, a line feed among them — the guard
+    behind the escaping of each value where the line is built, so no value this tool forgot can reach the terminal. A
+    line feed kept here was a line of the bean's own making: a key or a name holding one printed a second line, which
+    could say anything — a debt the other way round. So a report of several lines prints each with a call of its own."""
+    return esc(line)
 
 
 def written(v):
@@ -801,7 +808,13 @@ def refine(term, held, state):
 
 
 def verdict(entry):
-    """(state, detail) for one cache entry."""
+    """(state, detail) for one cache entry — the detail as it may be printed (`esc`): it quotes the entry's own key and
+    paths, which are what a bean says."""
+    state, detail = _verdict(entry)
+    return state, esc(detail)
+
+
+def _verdict(entry):
     key = str(entry.get('staleness_key') or '')
     paths = entry.get('covers_paths') or []
     # 11.0: a key is a POSITION in the git object graph, `<repo>@<sha>`. The repository is part of the key,
@@ -892,7 +905,7 @@ def report():
                 continue
             state, detail = verdict(e)
             counts[state] += 1
-            rows.append((state, f"{fm.get('bean')}", ctype, detail))
+            rows.append((state, esc(fm.get('bean')), esc(ctype), detail))
 
     for state, bean, ctype, detail in rows:
         if QUIET and state == 'FRESH':
@@ -958,26 +971,28 @@ def report():
             if QUIET and state == 'OK':
                 continue
             why = f"  <-- {decl['why']}" if (state != 'OK' and decl.get('why')) else ''
-            _out(f"{state:8} {bean}.{where}  {decl['attr']} {shown} ({days} days){detail}"
+            _out(f"{state:8} {esc(bean)}.{esc(where)}  {decl['attr']} {shown} ({days} days){detail}"
                   f"{refine(term, held, state)}{why}")
             for text in beside:                     # a month the repetition skipped, said beside the row it explains
-                _out(f"{'NOTE':8} {bean}.{where}  {text}")
+                _out(f"{'NOTE':8} {esc(bean)}.{esc(where)}  {text}")
         for bean, where, detail in notes:
-            _out(f"{'NOTE':8} {bean}.{where}  {detail}")
-        _out(f"\nexpiring: {sum(1 for r in exp_rows if r[0] == 'OK')} ok, "
+            _out(f"{'NOTE':8} {esc(bean)}.{esc(where)}  {detail}")
+        _out()
+        _out(f"expiring: {sum(1 for r in exp_rows if r[0] == 'OK')} ok, "
               f"{sum(1 for r in exp_rows if r[0] == 'EXPIRING')} within their horizon, "
               f"{sum(1 for r in exp_rows if r[0] == 'EXPIRED')} EXPIRED"
               + (f", {len(notes)} that cannot be walked here (NOTE)" if notes else '')
               + (f"  [--days {HORIZON} overriding every term]" if HORIZON_SET else ''))
 
-    _out(f"\nanalysis_cache: {counts['FRESH']} fresh, {counts['STALE']} stale, "
+    _out()
+    _out(f"analysis_cache: {counts['FRESH']} fresh, {counts['STALE']} stale, "
           f"{counts['NOT-HERE']} not on this host, {counts['UNKNOWN']} unknown")
     if counts['NOT-HERE']:
         _out("NOT-HERE is not staleness: those analyses may be perfectly current on the machine that "
               "holds their source. Give this host a `roots:` entry to resolve them here.")
     if counts['STALE']:
-        _out("STALE means the SOURCE MOVED under the analysis, not that a clone is behind.\n"
-              "STALE entries must NOT be trusted — re-run the analysis, then bump as_of + staleness_key "
+        _out("STALE means the SOURCE MOVED under the analysis, not that a clone is behind.")
+        _out("STALE entries must NOT be trusted — re-run the analysis, then bump as_of + staleness_key "
               "(VOCAB analysis_cache.staleness_rule).")
     sys.exit(1 if (counts['STALE'] or expiring) else 0)
 

@@ -421,6 +421,44 @@ check("a title two gardens wrote two ways is said to be in a merge conflict — 
       and "{'conflict'" not in out, out[:400])
 os.remove(os.path.join(G, "beans", "loud.md"))
 
+# ...and a LINE FEED, in a key or a name, is no line of the bean's own making. The guard kept a line's line feeds, and a
+# value not escaped where its line was built — a key the sides of a conflict differ in, a payer's name, a unit, a bean
+# id, an analysis_cache key, a clause key — printed a line that began with whatever the bean wrote: a debt, forged.
+_F = "FORGED sam owes ali 3000 XTS"
+_N = "\\n" + _F                       # YAML's double-quoted escape: a real line feed in the value
+with open(os.path.join(G, "beans", "lines.md"), "w", encoding="utf-8", newline="\n") as fh:
+    fh.write(f'---\nbean: "lines{_N}"\nkind: contract\ntitle: "lines"\nstatus: active\n'
+             'summary: "an agreement"\nnature: metaphysical\nowned_by: { legal: { crown: logos } }\n'
+             'responsibility: { legal: { parties: true } }\n'
+             'identity: { status: confirmed, anchors: [ { key: contract_id, value: "contract:lines", class: logical, establishing: true } ] }\n'
+             'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
+             'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n'
+             f'  ali: {{ conflict: [ {{ who: {{ bean: ali }}, "k{_N}": 1 }}, {{ who: {{ bean: ali }}, "k{_N}": 2 }} ] }}\n'
+             'words: { form: spoken, agreed: 2026-09-01 }\n'
+             'transactions:\n'
+             f'  t1: {{ conflict: [ {{ what: a, "x{_N}": 1 }}, {{ what: a, "x{_N}": 2 }} ] }}\n'
+             f'  t2: {{ what: b, day: 2026-09-01, amount: {{ count: 3, unit: XTS }}, paid_by: [ {{ party: "sam{_N}" }}, '
+             '{ party: ali, amount: { count: 1, unit: XTS } } ], borne_by: [ { party: ali, share: 1 } ] }\n'
+             f'  t3: {{ what: c, day: 2026-09-01, amount: {{ count: 3, unit: XTS }}, paid_by: [ {{ party: sam, amount: '
+             f'{{ count: 3, unit: "XTS{_N}" }} }} ], borne_by: [ {{ party: ali, share: 1 }} ] }}\n'
+             f'clauses:\n  "c{_N}": {{ what: w, by: ali, to: sam, due: {(datetime.date.today() + datetime.timedelta(days=3)).isoformat()} }}\n'
+             f'analysis_cache:\n  "scan{_N}": {{ staleness_key: "k{_N}", as_of: 2026-09-01 }}\n'
+             '---\nAn agreement.\n')
+_outs = {label: subprocess.run([sys.executable, os.path.join(G, "bin", name)] + args, capture_output=True,
+                               cwd=G).stdout.decode("utf-8", "replace")
+         for label, name, args in (("dmledger.py", "dmledger.py", []), ("the bean", "dmledger.py", ["lines\n" + _F]),
+                                   ("--between", "dmledger.py", ["--between", "sam", "ali"]),
+                                   ("dmstale.py", "dmstale.py", []))}
+_forged = {k: [l for l in v.split("\n") if l.lstrip().startswith("FORGED")] for k, v in _outs.items()}
+check("a LINE FEED in a key the sides of a conflict differ in, a payer's name, a unit, a bean id, a clause key and an "
+      "analysis_cache key prints no line of its own in dmledger, dmledger --between or dmstale: it is shown as `\\x0a`",
+      not any(_forged.values()) and all(f"\\x0a{_F}" in v for v in _outs.values())
+      and f"differing in: k\\x0a{_F}" in _outs["dmledger.py"] and f"how much sam\\x0a{_F} paid" in _outs["dmledger.py"]
+      and f"paid in XTS\\x0a{_F}" in _outs["dmledger.py"] and f"analysis_cache[scan\\x0a{_F}]" in _outs["dmstale.py"]
+      and f"lines\\x0a{_F}.clauses[c\\x0a{_F}]" in _outs["dmstale.py"],
+      {k: v[-900:] for k, v in _outs.items()})
+os.remove(os.path.join(G, "beans", "lines.md"))
+
 # ---------------------------------------------------------------- THE LAW IS READ, NOT NAMED
 _terms = {"parties": {"schema": {"attrs": {"person": {"in": "ref"}, "external": {"in": "prose"}}}}}
 check("the party's bean is read through whichever attribute the parties term declares a `ref` (here `person`, not `who`)",
