@@ -8,10 +8,12 @@ request body. Those are the places nobody greps. On 2026-09-20 this repository c
 one written the same night by an agent explaining a real measurement, and the operator found them in a pull
 request rather than in a diff.
 
-WHAT IT KNOWS. Nothing. The forbidden words are DERIVED from a garden, the way `factory manifest --garden`
-already derives them: the ids of beans that are beings (host, org, person, instance, service, domain,
-codebase), the ids of mappings, the values of hostname / fqdn / ip anchors, and the logical root names each
-host declares. Nobody maintains a denylist, so a bean added tomorrow is covered tomorrow.
+WHAT IT KNOWS. Nothing. The forbidden words are DERIVED from a garden: the id of EVERY bean and every
+mapping, the values of hostname / fqdn / ip anchors, and the logical root names each host declares. Nobody
+maintains a denylist, so a bean added tomorrow is covered tomorrow. Every id, not the ids of chosen kinds:
+a hand-kept list of the kinds that are "beings" was a proxy for "what the estate calls its own", and the
+proxy drifted — a design's id sat in the public law while its kind was not on the list. What an estate
+names is estate, whatever its kind; a kind added to the law tomorrow needs no line here.
 
 WHAT IS NOT A LEAK. A word that the PUBLISHED knowledge carries is public knowledge, not an estate fact:
 `seed/knowledge/technology.tsv` names MikroTik, Samba and Docker, and a garden whose router bean is called
@@ -34,7 +36,6 @@ try:
 except ImportError:
     print("ERROR: PyYAML required"); sys.exit(2)
 
-BEING_KINDS = {'host', 'virtual-host', 'org', 'person', 'instance', 'service', 'domain', 'codebase'}
 ANCHOR_KEYS = {'hostname', 'fqdn', 'ip'}
 
 
@@ -47,14 +48,23 @@ def estate_words(garden):
             fm = yaml.safe_load(head) or {}
         except Exception:
             continue
-        if fm.get('kind') in BEING_KINDS and fm.get('bean'):
+        if not isinstance(fm, dict):
+            continue
+        if fm.get('bean'):
             words.add(str(fm['bean']))
         for a in ((fm.get('identity') or {}).get('anchors') or []):
             if a.get('key') in ANCHOR_KEYS:
                 words.add(str(a.get('value', '')))
         for name in (fm.get('roots') or {}):
             words.add(str(name))
-    words |= {os.path.basename(p)[:-3] for p in glob.glob(os.path.join(garden, 'mappings', '*.md'))}
+    for f in glob.glob(os.path.join(garden, 'mappings', '*.md')):
+        words.add(os.path.basename(f)[:-3])
+        try:
+            fm = yaml.safe_load(dmparse.read(f)[0]) or {}
+        except Exception:
+            continue
+        if isinstance(fm, dict) and fm.get('mapping'):
+            words.add(str(fm['mapping']))
     return {w.lower() for w in words if len(w) >= 4}
 
 

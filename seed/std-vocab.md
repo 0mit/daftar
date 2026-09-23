@@ -2254,13 +2254,9 @@ terms:
         uuid:        { in: { pattern: "^[0-9A-Za-z][0-9A-Za-z:-]*$" }, meaning: "the volume's own identifier, as its format reports it. The datum a rebuild needs and the one that survives a device rename." }
         at:          { in: { pattern: "^(/[^ ]*|[A-Za-z]:[/\\\\].*)$" }, meaning: "where it is mounted, in this machine's path grammar. Absent for a volume that holds no filesystem — a LUKS container or an LVM member is mounted nowhere." }
     reproduction_note: >
-      SCOPE, STATED BECAUSE IT IS ABOUT TO GROW. This term records the LAYOUT — what exists, what carries
-      what, and where it is mounted — which is what a rebuild needs to recreate the shape. It does NOT
-      record contents, keys or passphrases, and it must not: `no secrets` is a founding rule of this
-      ledger. The operator has asked for beans complete enough to reproduce a machine, and the honest
-      remaining gap is CONFIGURATION, which is a separate question from layout because config is
-      SOMEBODY ELSE'S authoritative truth and ground rule 3 forbids mirroring it. See
-      [[design-network-stack]] `open:` for where that is being taken up.
+      The LAYOUT only — what exists, what carries what, and where it is mounted: what a rebuild needs to
+      recreate the shape. Never contents, keys or passphrases. Configuration is not layout: it is somebody
+      else's authoritative truth, referenced and never mirrored.
     merge: { cardinality: multi, order: by-key }
 
   - term: beanger

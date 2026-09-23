@@ -2,8 +2,8 @@
 """dmpublic: a public repository carries the LANGUAGE, never a garden.
 
 Grows a garden, builds a throwaway repository beside it, and checks that a file, a commit message and a
-pull-request body are each refused when they name one of the garden's beings — and that a word the
-published classifications carry, or one PUBLIC-ALLOW records, is not refused.
+pull-request body are each refused when they name one of the garden's beans or mappings, of any kind — and
+that a word the published classifications carry, or one PUBLIC-ALLOW records, is not refused.
 """
 import os, sys, subprocess, tempfile, shutil
 
@@ -74,6 +74,39 @@ open(os.path.join(G, "beans", "samba-here.md"), "w").write(
 commit("the vocabulary documents samba, which is public knowledge\n", "neutral")
 r = dmpublic()
 check("a word the published classifications carry is NOT a leak — a garden cannot make `samba` unsayable",
+      r.returncode == 0, r.stdout + r.stderr)
+
+# EVERY ID, NOT THE IDS OF CHOSEN KINDS. The guard once derived its words from a hand list of the kinds that are
+# "beings", and a design's id sat in the public law because `design` was not on the list. A design, an agreement, a
+# session: what a garden names is the garden's, whatever its kind.
+open(os.path.join(G, "beans", "design-lantern-stack.md"), "w").write(
+    '---\nbean: design-lantern-stack\nkind: design\ntitle: "how the lanterns are wired"\nstatus: active\nsummary: "d"\n'
+    'nature: metaphysical\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
+    'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n---\nA design.\n')
+open(os.path.join(G, "beans", "kettle-share.md"), "w").write(
+    '---\nbean: kettle-share\nkind: contract\ntitle: "a kettle bought together"\nstatus: active\nsummary: "c"\n'
+    'nature: metaphysical\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
+    'owned_by: { legal: { crown: logos } }\n---\nAn agreement.\n')
+commit("where that is being taken up, see [[design-lantern-stack]] `open:`\n", "neutral")
+r = dmpublic()
+check("a DESIGN's id in a public file is refused — the kind of leak the hand-kept list of kinds let through",
+      r.returncode == 1 and "design-lantern-stack" in r.stdout and "doc.md" in r.stdout, r.stdout)
+commit("the split follows the terms of kettle-share\n", "neutral")
+r = dmpublic()
+check("...and so is a CONTRACT's: an agreement between two people is theirs, not the language's",
+      r.returncode == 1 and "kettle-share" in r.stdout, r.stdout)
+os.makedirs(os.path.join(G, "mappings"), exist_ok=True)
+open(os.path.join(G, "mappings", "lantern-circuits.md"), "w").write("---\nmapping: lantern-circuits\n---\nA mapping.\n")
+commit("the table in lantern-circuits lists them\n", "neutral")
+r = dmpublic()
+check("...and so is a MAPPING's id", r.returncode == 1 and "lantern-circuits" in r.stdout, r.stdout)
+open(os.path.join(G, "beans", "daftar.md"), "w").write(
+    '---\nbean: daftar\nkind: product\ntitle: "the ledger this garden is kept in"\nstatus: active\nsummary: "p"\n'
+    'nature: metaphysical\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
+    'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n---\nd.\n')
+commit("daftar is a ledger kept in git\n", "neutral")
+r = dmpublic()
+check("...while a word seed/PUBLIC-ALLOW records as public is not refused, though a garden also names a bean by it",
       r.returncode == 0, r.stdout + r.stderr)
 
 shutil.rmtree(T, ignore_errors=True)

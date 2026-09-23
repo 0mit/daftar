@@ -1327,6 +1327,15 @@ the point of the term: a path grammar is a property of the OS's API and a storag
 property of the volume, and NTFS mounted through ntfs-3g has unix paths, so a model that had one
 axis for both could not describe an ordinary Windows disk read from Linux.
 
+## terms[volumes].reproduction_note
+
+SCOPE, STATED BECAUSE IT IS ABOUT TO GROW. This term records the LAYOUT — what exists, what carries
+what, and where it is mounted — which is what a rebuild needs to recreate the shape. It does NOT
+record contents, keys or passphrases, and it must not: `no secrets` is a founding rule of this
+ledger. The operator has asked for beans complete enough to reproduce a machine, and the honest
+remaining gap is CONFIGURATION, which is a separate question from layout because config is
+SOMEBODY ELSE'S authoritative truth and ground rule 3 forbids mirroring it.
+
 ## terms[beanger].meaning
 
 THE OPERATOR'S TERM, THEIR DESIGN AND THEIR NAME, 2026-08-07. BEAN + LEDGER: a per-datum ledger,
