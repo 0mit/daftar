@@ -699,7 +699,9 @@ amount nobody wrote. The one loader now reads a plain scalar as an integer only 
 refuses every other spelling by name — a leading zero among them, since `010` is a spelling of ten nobody writes and
 of eight that YAML reads. Forty digits before the point and forty after hold any amount a person owes and any rate,
 and lie far inside what every reader holds exactly: a count past Python's four-thousand-digit limit passed the gate and
-ended the ledger in a traceback. A share is bounded the same way.
+ended the ledger in a traceback. A share is bounded the same way. An explicit `!!int` asks the loader the same question
+and gets the same answer: the tag builds an integer only from plain decimal, so `!!int 010` is the text `010`, refused
+as the untagged text is — the library's own constructor would have read it, quoted or not, in all four spellings.
 
 The count keeps what was written. A merge compares counts by the exact value they write, so `900`, `"900"` and
 `"900.00"` are one amount and never a conflict — the shortest exact decimal is the one canonical form.
@@ -1833,6 +1835,10 @@ which is why `each` refuses to stand without `in`.
 
 A routine is what happens and a recurrence is when. They compose; they were never the same thing, which is why a routine
 that must end could not hold a repetition that does not.
+
+Where a repetition starts and ends are POSITIONS, and the readers walk to them, so each is held as every other position
+is: to the form of the system the repetition is counted in, and to a day that system's calendar has. Only `due` was
+held once; a monthly clause could end on `2026-02-30`, on a Persian day in a Gregorian count, or on `garbage`, and pass.
 
 Considered and refused: a calendar bucket as a unit (`every: { count: 1, unit: month }`). A month is not a length — it
 is 28 to 31 days in one calendar, 29 or 30 in another — and writing it as a measure would make arithmetic of something

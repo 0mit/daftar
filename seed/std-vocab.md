@@ -1149,8 +1149,8 @@ recurrence_form:
   every:  "{ count } — every Nth NEIGHBOUR: needs only that positions have a next one. Or { count, unit } — every N UNITS: needs the aspect, or the system named, to be metered in that unit's dimension."
   each:   "<level> — the same place in EACH CELL of that level of the system named: each month, each week, each era."
   at:     "optional: where in the cell, as the system writes it — `15`, `W-5`. Prose to the gate."
-  from:   "optional: the position it starts at, in the system's form"
-  to:     "optional: the position it ends at"
+  from:   "optional: the position it starts at, in the form of the system named (with no `in:`, of a system the aspect holds), and a day its calendar has"
+  to:     "optional: the position it ends at, written as `from` is"
   times:  "optional: how many occurrences in all, the first included — six instalments. With `to`, whichever comes first ends it"
   requires: "exactly one of `every` / `each`"
 # == VALUE TYPES ==

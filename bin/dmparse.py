@@ -236,6 +236,16 @@ if LOADER is not None:
     _Loader.yaml_implicit_resolvers = {k: [(tag, rx) for tag, rx in v if tag != _INT_TAG]
                                        for k, v in LOADER.yaml_implicit_resolvers.items()}
     _Loader.add_implicit_resolver(_INT_TAG, PLAIN_INT, list('-+0123456789'))
+
+    # ...and an EXPLICIT `!!int` asks the same question. The resolver above only decides what an untagged scalar is;
+    # `count: !!int 010` names the tag itself, and the library's constructor then reads the text in YAML 1.1's octal,
+    # hex, base sixty and underscore forms — 8, 100, 90, 1000 — whether the text was quoted or not. So the tag builds an
+    # integer only from plain decimal; any other text stays the text it is, as the same text untagged does, and the
+    # law's patterns refuse it by name. (fullmatch: a quoted `"12\n"` is not twelve.)
+    def _construct_int(loader, node):
+        text = loader.construct_scalar(node)
+        return int(text) if PLAIN_INT.fullmatch(text) else text
+    _Loader.add_constructor(_INT_TAG, _construct_int)
     LOADER = _Loader
 
 

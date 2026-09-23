@@ -6,13 +6,16 @@ the commit is blocked with nothing said, and every other finding of the run is l
 the gate once took, or once died on; each must now be refused by name, and nothing may end in a traceback.
 
   the manifest       judged as itself: a gardener naming no bean, or a bean of a kind the law says keeps no garden;
-                     `garden:` or `extends:` missing; a release nobody made — and a fresh untagged garden still passes
+                     `garden:` or `extends:` missing; a release nobody made; front matter that is a list or a word (and
+                     the same for VOCAB.md and a bean) — and a fresh untagged garden still passes
   names              a name a garden gave is `<kind>:<name>`; an identifier someone else assigned is never qualified
   a garden's record  `test` belongs to a `garden` bean; a `garden` bean is never this garden itself
   one per key        two payers named `sam` in one transaction
-  numbers            what YAML 1.1 reads as an integer nobody wrote (`010`, `0x64`, `1:30`, `0b11`, `1_000`), and a count
-                     or a share past the digits every reader holds
-  days               a day its calendar does not have, and a year its reckoning cannot reach
+  numbers            what YAML 1.1 reads as an integer nobody wrote (`010`, `0x64`, `1:30`, `0b11`, `1_000`), untagged or
+                     tagged `!!int`, and a count or a share past the digits every reader holds
+  days               a day its calendar does not have, and a year its reckoning cannot reach — where a recurrence starts
+                     and ends included
+  keys               a key YAML reads as a boolean or a number, beside the names it should have been
   the facets         one root, which every facet reaches
   the journal        a line that some readers would split in two
   the messages       what to do next, in a form every shell runs
@@ -129,6 +132,21 @@ out = manifest(re.sub(r'(?m)^garden:.*$', 'garden: "Not Kebab!"', MANIFEST))
 check("a garden name that is not kebab-case is refused", "manifest.garden 'Not Kebab!' must be kebab-case" in out, out[-500:])
 out = manifest(re.sub(r'(?m)^daftar_release:.*$', 'daftar_release: "bogus"', MANIFEST))
 check("a release nobody made is refused", "manifest.daftar_release 'bogus' is not in the form" in out, out[-500:])
+for shape, text in (("a list", "---\n- a\n- b\n---\nbody\n"), ("a word", "---\njust text\n---\nbody\n")):
+    out = manifest(text)
+    check(f"a manifest whose front matter is {shape} is refused by name, not a traceback",
+          "GARDEN.md: its front matter does not read (not a mapping)" in out and "Traceback" not in out, out[-500:])
+    VOCAB0 = open(os.path.join(G, "VOCAB.md"), encoding="utf-8").read()
+    put("VOCAB.md", text)
+    out = gate()
+    put("VOCAB.md", VOCAB0)
+    check(f"...and so is a VOCAB.md whose front matter is {shape}",
+          "VOCAB.md: its front matter does not read (not a mapping)" in out and "Traceback" not in out, out[-500:])
+    put("beans/odd.md", text)
+    out = gate()
+    drop("beans/odd.md")
+    check(f"...and a bean whose front matter is {shape}", "odd: front-matter invalid (not a mapping)" in out
+          and "Traceback" not in out, out[-500:])
 out = manifest(MANIFEST.replace("\n---", "\nseeds_from: []\n---", 1))
 check("a retired manifest key is refused, saying where it went", "`seeds_from` is no key of the manifest" in out
       and "retired: nothing" in out, out[-500:])
@@ -189,6 +207,18 @@ for spelling, what in (("010", "eight, in octal"), ("0x64", "a hundred, in hex")
     out = tx(amount="{ count: %s, unit: XTS }" % spelling)
     check(f"a count written `{spelling}` — {what} to YAML 1.1 — is refused by name, never read as a number nobody wrote",
           f"amount.count '{spelling}' must be a whole number" in out, out[-500:])
+for spelling, what in (("!!int 010", "eight"), ("!!int 0x64", "a hundred"), ("!!int 1:30", "ninety"),
+                       ('!!int "1_000"', "a thousand, though quoted")):
+    out = tx(amount="{ count: %s, unit: XTS }" % spelling)
+    check(f"a count tagged `{spelling}` — {what} to YAML 1.1's constructor — is refused by name: the tag asks the same "
+          f"question as the untagged text", "amount.count '%s' must be a whole number" % spelling.split()[1].strip('"') in out, out[-500:])
+out = tx(amount="{ count: !!int 900, unit: XTS }")
+check("...while `!!int 900`, plain decimal, is nine hundred and passes", ok(out), out[-500:])
+sys.path.insert(0, os.path.join(ROOT, "bin"))
+import dmparse
+_tagged = 'a: !!int 010\nb: !!int 12\nc: !!int 0x2\nd: !!int "12\\n"\n'
+check("dmparse reads `!!int 010` as the text written, and `!!int 12` as twelve — and a quoted \"12\\n\" is not twelve",
+      dmparse.loads(_tagged) == {"a": "010", "b": 12, "c": "0x2", "d": "12\n"}, dmparse.loads(_tagged))
 out = tx(amount='{ count: "%s", unit: XTS }' % ("9" * 41))
 check("a count of forty-one digits is refused: past what every reader holds exactly", "amount.count '99999" in out
       and "at most forty digits" in out, out[-500:])
@@ -198,7 +228,7 @@ out = tx(amount='{ count: "%s", unit: XTS }' % ("9" * 40))
 check("...and forty digits pass", ok(out), out[-500:])
 out = tx(amount='{ count: "100\\n", unit: XTS }')
 check("a count with a trailing newline is refused — `$` is the end of the value", "must be a whole number" in out, out[-500:])
-for spelling in ("010", "0x10", '"%s"' % ("1" * 41)):
+for spelling in ("010", "0x10", '"%s"' % ("1" * 41), "!!int 0x2", "!!int 010"):
     out = tx(borne="[ { party: sam, share: %s }, { party: ali, share: 1 } ]" % spelling)
     check(f"a share written {spelling[:12]} is refused", "share '" in out and "is not in the form this term declares" in out, out[-500:])
 
@@ -219,6 +249,26 @@ for d in ("'persian:1404-12-29'", "'hebrew:5787-01-09'", "'2026-W53-1'", "2026-0
     out = due(d)
     check(f"due {d} — a day its calendar has — passes", ok(out), out[-500:])
 
+def every(rec):
+    return deal("clauses:\n  rent: { what: \"rent\", by: ali, to: sam, amount: { count: 100, unit: XTS }, due: 2026-09-01, "
+                "every: { of: time, %s } }\n" % rec)
+
+
+for rec, want, why in (("in: gregorian-civil, each: month, to: '2026-02-30'", "every.to '2026-02-30' is no day",
+                        "a monthly clause ending on a thirtieth of February"),
+                       ("in: persian-calendar, each: month, from: 'persian:1404-12-30'",
+                        "every.from 'persian:1404-12-30' is no day of persian-calendar", "a monthly clause starting on a day Esfand 1404 lacks"),
+                       ("in: gregorian-civil, each: month, to: 'persian:1404-12-29'",
+                        "every.to 'persian:1404-12-29' is not a position in the form system 'gregorian-civil' writes",
+                        "a Gregorian repetition ending on a Persian day"),
+                       ("in: gregorian-civil, each: month, to: 'garbage'", "every.to 'garbage' is not a position in the form",
+                        "a repetition ending on no position at all")):
+    out = every(rec)
+    check(f"{why} is refused — where a repetition starts and ends is a position like any other",
+          want in out, out[-500:])
+out = every("in: persian-calendar, each: month, from: 'persian:1404-12-29', to: 'persian:1405-12-29'")
+check("...while one that starts and ends on days its calendar has passes", ok(out), out[-500:])
+
 # ---------------------------------------------------------------- THE PARTS OF A WHOLE, AND WHAT A REFUSAL SAYS
 out = tx(paid="[ sam ]")
 check("a sole payer written as a bare name is refused as an entry, not a traceback",
@@ -232,7 +282,17 @@ out = deal("transactions:\n  t: { what: \"a thing\", amount: { count: 900, unit:
            parties='  sam: { who: { bean: sam } }\n  yes: { external: "Bo" }\n')
 check("a key YAML reads as a boolean beside a party that is missing is refused, not crashed on",
       "is no key of `parties`" in out and "key parties.True is not text" in out and "Traceback" not in out, out[-600:])
+put("beans/deal.md", open(os.path.join(G, "beans", "deal.md"), encoding="utf-8").read()
+    .replace("owned_by: { legal: { crown: logos } }", "owned_by: { legal: { crown: logos }, 1: { crown: logos } }"))
+out = gate()
+check("a facet key YAML reads as a number is refused as a key, not crashed on in sorting the facets",
+      "key owned_by.1 is not text" in out and "Traceback" not in out, out[-600:])
 drop("beans/deal.md")
+put("beans/ali.md", person("ali", 'details: { 2026: "moved to the new flat" }\n'))
+out = gate()
+check("...and a year written as a key of `details` is refused as a key, not crashed on",
+      "key details.2026 is not text" in out and "Traceback" not in out, out[-600:])
+put("beans/ali.md", person("ali"))
 
 # ---------------------------------------------------------------- THE FACETS HAVE ONE ROOT
 VOCAB = open(os.path.join(G, "VOCAB.md"), encoding="utf-8").read()

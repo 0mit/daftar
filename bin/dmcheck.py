@@ -144,6 +144,13 @@ else:
     errors.append(f"std-vocab not found at {STD} — the law has ONE path and there is no fallback")
 
 vocab_fm = load(os.path.join(ROOT, 'VOCAB.md'))[0] or {}
+if not isinstance(vocab_fm, dict) or '__err__' in vocab_fm:
+    # the garden's own vocabulary is read as a mapping or not at all: a list or a word in its fences, or YAML that does
+    # not parse, is refused by name — never read as an empty vocabulary, and never a traceback further down
+    errors.append(f"VOCAB.md: its front matter does not read ("
+                  f"{vocab_fm['__err__'] if isinstance(vocab_fm, dict) else 'not a mapping'}) — this garden's own "
+                  f"vocabulary is a mapping of what it adds to the law")
+    vocab_fm = {}
 
 
 _FILE_REGISTRIES = {}
@@ -676,6 +683,30 @@ def check_recurrence(where, node):
     row = _system_of(where, node, asp, an)
     if row is False:
         return
+    # WHERE IT STARTS AND ENDS ARE POSITIONS (`recurrence_form.from` / `.to`: "in the system's form"), and the readers
+    # walk to them — so each is held as every other position is: to the system the repetition names, else to some
+    # system of the aspect's dimension, and to a day its calendar has. `to: '2026-02-30'` ended a monthly clause on a
+    # day no calendar holds, and `to: 'garbage'` passed as well; both were read by the walkers.
+    dim = (asp.get('domain') or {}).get('systems')
+    for side in ('from', 'to'):
+        v = node.get(side)
+        if v is None:
+            continue
+        if row:
+            if dmparse.in_form(row, v) is False:
+                errors.append(f"{where}.{side} '{v}' is not a position in the form system '{row['system']}' writes "
+                              f"({dmparse.form_said(row) if row.get('checked_by') else row['pattern']})"
+                              f"{' — ' + row['form_note'] if row.get('form_note') else ''} — the repetition is counted "
+                              f"`in: {row['system']}`, and where it starts and ends is written in that system's form")
+            else:
+                check_day_exists(f"{where}.{side}", v, row)
+            continue
+        ok = [s for s in SYSTEMS.values() if s.get('dimension') in (dim, 'any') and dmparse.in_form(s, v)]
+        if not ok:
+            errors.append(f"{where}.{side} '{v}' is not a position in any system of dimension '{dim}' — "
+                          + ', '.join(sorted(s['system'] for s in SYSTEMS.values() if s.get('dimension') in (dim, 'any'))))
+        else:
+            check_day_exists(f"{where}.{side}", v, ok[0])
     every, each = node.get('every'), node.get('each')
     _t = node.get('times')
     if _t is not None and (isinstance(_t, bool) or not isinstance(_t, int) or _t < 1):
@@ -1024,7 +1055,12 @@ def check_extends_pin():
         p = os.path.join(ROOT, f)
         if not os.path.exists(p):
             continue
-        ext = (load(p)[0] or {}).get('extends')
+        # a front matter that parses to a list or a word is no manifest at all: check_gardens refuses GARDEN.md by name
+        # and the vocabulary's load refuses VOCAB.md, so here it simply names no pin — never a traceback that hides both
+        _m = load(p)[0]
+        if not isinstance(_m, dict) or '__err__' in _m:
+            continue
+        ext = _m.get('extends')
         if ext:
             m = re.match(r'std-vocab@(.+)', str(ext))
             if not m:
@@ -1100,7 +1136,8 @@ def build_docs():
         idkey = 'bean' if is_bean else 'mapping'
         fm, body = load(f)
         if not isinstance(fm, dict) or '__err__' in fm:
-            errors.append(f"{base}: front-matter invalid ({(fm or {}).get('__err__', 'no --- fences')})")
+            _why = fm['__err__'] if isinstance(fm, dict) else ('no --- fences' if fm is None else 'not a mapping')
+            errors.append(f"{base}: front-matter invalid ({_why})")
             continue
         if str(fm.get(idkey)) != base:
             errors.append(f"{base}: {idkey} '{fm.get(idkey)}' must equal filename (quote if numeric/reserved)")
@@ -2365,7 +2402,9 @@ def _alt_key(term):
 
 
 def _shape_str(shape, alt):
-    return alt if shape == alt else sorted(shape)
+    # key=str: a key YAML read as a number or a boolean (`1:`, `yes:`) sits beside the facet names, and the shape is
+    # printed, never compared — the refusal of that key by name is the answer, not a traceback in sorting it
+    return alt if shape == alt else sorted(shape, key=str)
 
 def check_facet_parity():
     for _term, _sch in SCHEMAS.items():
@@ -2762,7 +2801,8 @@ def check_acyclic():
 def collect_ips(fm):
     out = []
     def consider(kp, val):
-        if any(fnmatch.fnmatch(kp, p) for p in ip_patterns):
+        # str(kp): a year written as a key (`details: { 2026: ... }`) is read by YAML as a number, and fnmatch takes text
+        if any(fnmatch.fnmatch(str(kp), p) for p in ip_patterns):
             for v in (val if isinstance(val, list) else [val]):
                 if isinstance(v, str):
                     out.append(v)
