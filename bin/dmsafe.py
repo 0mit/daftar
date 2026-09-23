@@ -29,17 +29,26 @@ than merely caught, because they address a document by KEY instead of by offset,
 Fall back to the general form only when no operation fits:
     dmsafe.edit(path, lambda text: text.replace(...), allow_remove=['owns.stale_key'])
 
-CLI — the same operations for a person at a shell; a block is read from standard input:
+CLI — the same operations for a person at a shell; a block is read from a file with --block (in every shell):
     python3 bin/dmsafe.py count <path> <dotted>                       # measure first: how many places
-    python3 bin/dmsafe.py insert-after  <path> <key>   < block.yaml
-    python3 bin/dmsafe.py replace-block <path> <key>   < block.yaml
+    python3 bin/dmsafe.py insert-after  <path> <key>   --block block.yaml
+    python3 bin/dmsafe.py replace-block <path> <key>   --block block.yaml
     python3 bin/dmsafe.py remove-block  <path> <key>
-    python3 bin/dmsafe.py set-nested    <path> <dotted> --expect N   < block.yaml
+    python3 bin/dmsafe.py set-nested    <path> <dotted> --expect N   --block block.yaml
     python3 bin/dmsafe.py flow-set      <path> <dotted> <value> --expect N
     python3 bin/dmsafe.py verify [path ...]                           # parse-check (default: the whole garden)
+(`python` on Windows.) Without --block the block comes on standard input — `< block.yaml` in a Unix shell; PowerShell
+has no `<`, and Windows PowerShell 5.1 pipes text in the old code page, so there it is --block.
 Each write prints what it removed and what it added, as leaf paths; a refused edit says why and changes nothing.
+
+UTF-8 ON EVERY PLATFORM. A block — from --block or from standard input — is read as BYTES and decoded as UTF-8 (a
+byte-order mark dropped; UTF-16 with its mark, which Windows PowerShell 5.1's `>` and Out-File write, read as UTF-16),
+and anything else is refused before the bean is touched, never guessed at in the machine's code page: read in the
+code page, a Persian block went into the bean as mojibake, and the edit, the exit status and the gate all said nothing.
+UTF-16 without its mark (a NUL after every letter) is refused by name, as bin/dmjournal.py refuses it; CRLF is read
+as LF, since a bean is written with LF on every platform.
 """
-import glob, os, re, sys
+import codecs, glob, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
@@ -446,6 +455,28 @@ def verify(paths):
     return bad
 
 
+def decode_block(raw, where):
+    """A block's bytes as text, decoded as bin/dmjournal.py decodes a body: UTF-8 (its byte-order mark dropped), or
+    UTF-16 where its mark says so. Anything else is refused — a guess in the machine's code page writes mojibake into
+    the bean, and nothing downstream can tell."""
+    if raw.startswith(codecs.BOM_UTF8):
+        raw = raw[len(codecs.BOM_UTF8):]
+    elif raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        try:
+            return raw.decode('utf-16')
+        except UnicodeDecodeError as e:
+            raise UnsafeEdit(f"{where} begins as UTF-16 and is not ({e.reason}) — nothing written")
+    if b'\x00' in raw:
+        raise UnsafeEdit(f"{where} holds NUL — it looks like UTF-16 without its byte-order mark, a NUL after every "
+                         f"letter; nothing written. Save the block as UTF-8 and pass it with --block <file>")
+    try:
+        text = raw.decode('utf-8')
+    except UnicodeDecodeError as e:
+        raise UnsafeEdit(f"{where} is not UTF-8 (byte {e.start}: {raw[e.start:e.start + 1]!r}) — nothing written. "
+                         f"Save the block as UTF-8 and pass it with --block <file>")
+    return text
+
+
 def _cli(argv):
     """The operations at a shell. Returns an exit status."""
     if not argv:
@@ -455,11 +486,34 @@ def _cli(argv):
     op, rest = argv[0], argv[1:]
     expect = _MUST_STATE
     if '--expect' in rest:
-        i = rest.index('--expect'); expect = int(rest[i + 1]); del rest[i:i + 2]
+        i = rest.index('--expect')
+        if i + 1 >= len(rest) or not re.fullmatch(r'[0-9]+', rest[i + 1]):
+            print("dmsafe: --expect takes the number of places you measured with `count`"); return 2
+        expect = int(rest[i + 1]); del rest[i:i + 2]
+    block_file = None
+    if '--block' in rest:
+        i = rest.index('--block')
+        if i + 1 >= len(rest):
+            print("dmsafe: --block takes the file that holds the block"); return 2
+        block_file = rest[i + 1]; del rest[i:i + 2]
     def _block():
-        b = sys.stdin.read()
+        # AS BYTES, decoded here: standard input in text mode is decoded in the machine's code page (cp1252 on a
+        # Windows machine without UTF-8 mode), and a UTF-8 block became mojibake in the bean with exit 0.
+        if block_file is not None:
+            try:
+                with open(block_file, 'rb') as fh:
+                    raw = fh.read()
+            except OSError as e:
+                raise UnsafeEdit(f"--block {block_file}: {e.strerror or e}")
+            where = f"--block {block_file}"
+        else:
+            stream = getattr(sys.stdin, 'buffer', None)
+            if stream is None:
+                raise UnsafeEdit("there is no standard input to read the block from — pass it with --block <file>")
+            raw, where = stream.read(), "standard input"
+        b = decode_block(raw, where).replace('\r\n', '\n').replace('\r', '\n')    # a bean is LF on every platform
         if not b.strip():
-            sys.exit("dmsafe: the block comes on standard input, and it is empty")
+            raise UnsafeEdit(f"the block comes from {where}, and it is empty")
         return b
     def _report(result):
         removed, added = result
