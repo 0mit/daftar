@@ -28,7 +28,9 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
 2. **Bring evidence for what evidence can settle.** For a fact-term: what happened in a real garden, what
    the vocabulary could not say, and the beans it affected — from the estate, never from a test. For a
    mechanism: the structure it completes, the neighbours it was modelled on, and what was considered and
-   rejected. Judgment and common sense are evidence here; say whose.
+   rejected. Judgment and common sense are evidence here; say whose. For any change to the law, paste what
+   `python3 bin/dmreview.py --law --against <the tag you started from>` prints: it counts what the change adds,
+   removes, restates and narrates, and judges nothing — the maintainer who merges judges, beauty included.
 3. **Leave your estate out of it.** Do not paste host names, addresses, paths, people, or findings from
    your own garden into the proposal or into the law. Use neutral examples — `host-a`, `203.0.113.10`,
    `/home/user/…`. The vocabulary ships to everyone.
@@ -38,7 +40,7 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
 5. **Run the tests:**
 
    ```sh
-   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py && python3 test/place.py && python3 test/expiry.py && python3 test/reform.py && python3 test/positions.py && python3 test/shape.py && python3 test/calendars.py && python3 test/rationale.py && python3 test/recurrence.py && python3 test/quantities.py && python3 test/public.py && python3 test/docs.py
+   python3 bin/dmsafe.py && python3 test/germinate.py && python3 test/converge.py && python3 test/upgrade.py && python3 test/knowledge.py && python3 test/figures.py && python3 test/place.py && python3 test/expiry.py && python3 test/reform.py && python3 test/positions.py && python3 test/shape.py && python3 test/calendars.py && python3 test/rationale.py && python3 test/recurrence.py && python3 test/quantities.py && python3 test/money.py && python3 test/mycelium.py && python3 test/public.py && python3 test/docs.py
    ```
 
    CI runs the same on every pull request.
@@ -53,9 +55,9 @@ real names, a commit message, a pull request body. Those are the places nobody g
     python3 bin/dmpublic.py --garden <path> [--range origin/master..HEAD] [--text pr-body.md]
 
 `bin/install.sh` installs a **pre-push hook** that runs it over the files and over the messages of the
-commits being pushed. It derives the forbidden names from the garden itself — beings, mappings, hostname,
-fqdn and ip anchors, root names — so a bean added tomorrow is covered tomorrow, and nobody maintains a
-denylist. A word the published classifications carry is not a leak; anything else that is genuinely public
+commits being pushed. It derives the forbidden names from the garden itself — every bean and mapping id,
+the value of every identity anchor, root names — so a bean added tomorrow is covered tomorrow, and nobody
+maintains a denylist. A word the published classifications carry is not a leak; anything else that is genuinely public
 goes in `seed/PUBLIC-ALLOW` with its reason.
 
 **Check the pull request body too.** The hook cannot see it: write it to a file, run `--text` over it, then

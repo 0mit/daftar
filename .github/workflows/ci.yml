@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # the tags: the story ratchet reads its ceiling from the last release
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -45,6 +47,12 @@ jobs:
         run: python3 test/recurrence.py
       - name: "quantities: area, volume, speed, acceleration and attenuation are one construct"
         run: python3 test/quantities.py
+      - name: "money: amounts are exact, parts add up to their whole, what is owed is read, never written"
+        run: python3 test/money.py
+      - name: "mycelium: gardens meet only by proposal; a name minted once is carried, never re-minted"
+        run: python3 test/mycelium.py
+      - name: "the preconditions of beauty in the law, counted against the last release — evidence for whoever merges"
+        run: python3 bin/dmreview.py --law --against "$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*')"
       - name: "public: a repository carries the language, never a garden"
         run: python3 test/public.py
       - name: "docs: the prose names nothing retired, nothing absent, and the suites the release runs"
