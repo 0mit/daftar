@@ -29,8 +29,9 @@ Run this, and show its last line to the person you work for:
 
     python3 bin/dmcheck.py --all
 
-The last line names the garden, its id, and its **gardener**: the person who keeps it, and who ratifies here what
-an agent may not decide (`MODEL.md`, the Contract of Parts).
+(`python` on Windows, here and in every command below.) The last line names the garden, its id, and its
+**gardener**: the person or organisation who keeps it, and who ratifies here what an agent may not decide
+(`MODEL.md`, the Contract of Parts).
 
 - **It ran, and you can `git commit`.** You are a WRITER: you read, write, journal and commit, within the
   Contract of Parts.
@@ -53,8 +54,9 @@ reach — is not yours to write: what you would give it is a proposal (`CHECKLIS
 3. `CHECKLIST.md` — Part A (what the gate checks), Part B (the judgment only you can make), Part C (how a write
    is made), Part D (how a read is made), Part E (how to work beside, and after, another agent), Part F (how to
    work with another garden).
-4. `seed/COOKBOOK.md` — the common things, written the way the gate accepts them: the gardener first, then
-   machines, money between two people, an agreement, a document, an event, another person's garden.
+4. `seed/COOKBOOK.md` — the common things, written the way the gate accepts them, in an order that can be followed:
+   the gardener first, then machines, another person and her garden, an event, money between two people, an
+   agreement, a document, and a proposal to another garden.
 5. `python3 bin/dmrules.py` — every rule in force, derived from the vocabulary rather than restated. Why a rule is
    as it is: `python3 bin/dmwhy.py <name>`.
 
@@ -68,6 +70,7 @@ constraints inherited from a habitat two hops up.
 there is no default. Text surgery that changes more places than intended is the commonest way a bean is damaged.
 
 **Every write:** edit the one bean that owns the fact, append to `log/journal.md` in the same commit, and commit.
+The entry goes through `bin/dmjournal.py`, which writes its heading from the clock; you give it the body.
 The gate reads the **staged** blobs and refuses a bean whose change is not journalled. A change to the vocabulary
 or the law must say RULE-CHANGE distinctly.
 

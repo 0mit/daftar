@@ -7,9 +7,12 @@ not for the person to type.
 
 Ask the person only for what you cannot know:
 
-1. **where the garden goes** — a directory that does not exist yet (below: `~/garden`);
+1. **where the garden goes** — a directory that does not exist yet, named for this garden (below: `~/garden-sam`).
+   Its name is the garden's name: another garden sees it, and so does every proposal this one makes. Give each
+   garden a name of its own — not `~/garden` for every one;
 2. **who keeps it** — the garden's **gardener**: a short id for them (lowercase and hyphens, below: `sam`) and how
-   they are called (below: `Sam`). A garden is someone's, and its first bean is them;
+   they are called (below: `Sam`), and whether it is a person or an organisation. A garden is someone's, and a
+   garden grown this way begins with their bean;
 3. **the private remote**, or that there is none yet (below: `git@github.com:me/garden.git`);
 4. **the identity you commit under** — a name that says which agent you are, and an address they choose.
 
@@ -31,22 +34,23 @@ untagged clone works, but pins the garden to nothing anyone else can fetch; `ger
 ## 2. Grow the garden
 
 ```sh
-python3 seed/germinate.py ~/garden --gardener sam --gardener-name "Sam"
+python3 seed/germinate.py ~/garden-sam --gardener sam --gardener-name "Sam"
 ```
 
-(`sh seed/germinate.sh ~/garden --gardener sam --gardener-name "Sam"` does the same; it hands over to the Python.)
+(`sh seed/germinate.sh ~/garden-sam --gardener sam --gardener-name "Sam"` does the same; it hands over to the
+Python. For an organisation, add `--gardener-kind org`.)
 
 The target must not exist. The script copies what `seed/LANGUAGE` declares — the vocabulary, the tools, the
 gate, the templates, `AGENTS.md` — makes the first commit as `germinate`, installs the gate as the pre-commit
-hook, and then plants the gardener: a person bean, `beans/sam.md`, named in `GARDEN.md` as `gardener: sam`, in a
-second commit with its journal entry. It runs the gate and prints zero errors and zero warnings. Read what it
+hook, and then plants the gardener: a person bean, `beans/sam.md` (an `org` bean with `--gardener-kind org`), named
+in `GARDEN.md` as `gardener: sam`, in a second commit with its journal entry. It runs the gate and prints zero errors and zero warnings. Read what it
 prints: its last lines are the ones that matter. Grown without `--gardener`, the garden asks for its gardener as
 its first bean, and the gate refuses every other bean until `GARDEN.md` names one.
 
 ## 3. Give it an identity and a home
 
 ```sh
-cd ~/garden
+cd ~/garden-sam
 git config user.name  "agent (<model>, <session>)"       # the form germinate.sh prints; e.g. "agent (claude fable-5.1, claude-code 2026-09-22)"
 git config user.email "<the address the person chose>"
 git remote add origin git@github.com:me/garden.git      # if there is a remote
@@ -70,7 +74,7 @@ Show the person the gate's last line. From here on, everything you need is in th
 
 ## 5. Every later session
 
-The person will say something like *"load daftar"* or *"read AGENTS.md in ~/garden"*. Do that first: run the
+The person will say something like *"load daftar"* or *"read AGENTS.md in ~/garden-sam"*. Do that first: run the
 gate, read the reading order, look at the journal's tail for what the last session left, and then work. When
 the person decides something in the session — ratifies an identity anchor, approves a change — the commit is
 still yours, and the journal entry says who decided and in what words: `human (name) ratified, applied by
@@ -101,15 +105,15 @@ Whatever is missing, the refusal prints the line that fixes it, in the form this
 
 ## On Windows
 
-Everything here is Python and git, so it runs in PowerShell as it runs in a shell — with `python` for
-`python3`, backslashes or forward slashes as you like, and `$HOME` for `~`:
+Everything here is Python and git, so it runs in PowerShell — with `python` for `python3`, backslashes or forward
+slashes as you like, and `$HOME` for `~`:
 
 ```powershell
 git clone https://github.com/0mit/daftar.git $HOME\daftar
 cd $HOME\daftar
 git checkout (git tag -l 'v*' --sort=-v:refname | Select-Object -First 1)
-python seed\germinate.py $HOME\garden --gardener sam --gardener-name "Sam"
-cd $HOME\garden
+python seed\germinate.py $HOME\garden-sam --gardener sam --gardener-name "Sam"
+cd $HOME\garden-sam
 git config user.name  "agent (<model>, <session>)"
 git config user.email "<the address the person chose>"
 python bin\dmcheck.py --all
@@ -128,7 +132,8 @@ The gate runs as a git hook; Git for Windows runs hooks with the shell it ships.
 `python` and `py -3` — skipping the Store alias, and record it per clone as `git config daftar.python`; when none
 works they say, for each, why. To choose one yourself: `git config daftar.python C:/path/to/python.exe`.
 
-**UTF-8.** Every bean is UTF-8, and the tools read and write it correctly whatever the machine's language.
+**UTF-8.** Every bean is UTF-8, and the tools read and write it correctly whatever the machine's language —
+their output through a pipe, and a journal entry's body on standard input, included.
 Windows PowerShell 5.1 does not: it reads a UTF-8 file without a BOM in the old code page, so a Persian bean —
 or any bean with a character outside ASCII — read with `type` or `Get-Content` arrives garbled, and a bean
 written with `>` or `Out-File` is saved as UTF-16, which the gate cannot read. Read with
@@ -137,10 +142,20 @@ saves UTF-8. When a tool's output is read through a pipe, `$env:PYTHONUTF8 = "1"
 `[Console]::OutputEncoding = [Text.Encoding]::UTF8` make Python write UTF-8 and PowerShell read it as UTF-8. The
 hooks set `PYTHONUTF8` themselves. PowerShell 7 reads and writes UTF-8 by default.
 
-A journal entry is written the same way, its body as an argument rather than from standard input, which
-PowerShell does not redirect: `python bin\dmjournal.py "<who>" "<what>" --body "- action: …"`. An upgrade that
-names the gardener through the environment clears it again at the end, because a PowerShell session keeps what
-`$env:` sets, and the next garden upgraded in it would take the same gardener without being asked:
+**Three things a Unix shell does that Windows PowerShell 5.1 does not**, and the form every page and every tool's
+message here uses instead, so that what is printed runs as printed:
+
+- `&&` joins two commands only from PowerShell 7. Run `git add -A`, then `git commit`: two commands.
+- `<` does not redirect standard input in any PowerShell. A journal entry's body goes in as an argument:
+  `python bin\dmjournal.py "<who>" "<what>" --body "- action: …"`. A line break typed inside the quotes is kept;
+  so is `` `n `` inside double quotes. Windows PowerShell 5.1 drops a double quote *inside* an argument — write the
+  body without one there (PowerShell 7.3 and later pass it intact).
+- `>` and `Out-File` write UTF-16, which the gate does not read (above): a bean is saved as UTF-8. Only
+  `bin/dmjournal.py` reads a UTF-16 body, with its mark, on standard input where a shell has `<`.
+
+An upgrade that names the gardener through the environment clears it again at the end, because a PowerShell
+session keeps what `$env:` sets, and the next garden upgraded in it would take the same gardener without being
+asked:
 
 ```powershell
 $env:DAFTAR_GARDENER = "sam"; python bin\dmupgrade.py <tag>; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME -ErrorAction SilentlyContinue
@@ -160,13 +175,14 @@ not check — for a person, or an agent with a shell, to commit.
 ## By hand, without an agent
 
 The same three steps grow a garden for a person. Then `seed/README.md` shows a person, a host, and the journal
-entry that commits them, and `seed/COOKBOOK.md` a domain, a service on a machine, a rented server, and how to
-add a value the vocabulary lacks. All of them pass the gate exactly as written, because a test grows a garden
-and commits them. A journal heading is a position in time, read from the clock — so a tool writes it, never
-a hand:
+entry that commits them, and `seed/COOKBOOK.md` goes on from the gardener: machines, a domain, another person and
+the garden she keeps, a dinner, a cost shared and a loan repaid in instalments, a statement, a proposal between two
+gardens, and how to add a value the vocabulary lacks. All of them pass the gate exactly as written, because a test
+grows a garden and commits them one recipe at a time, in the order of the page. A journal heading is a position in
+time, read from the clock — so a tool writes it, never a hand; you give it the body:
 
 ```sh
-python3 bin/dmjournal.py "your-name" "what you did" < entry.md     # the entry's body on standard input
+python3 bin/dmjournal.py "your-name" "what you did" --body "- action: added [[laptop]]."
 ```
 
 When the gate refuses something, its message names the rule and, for the common mistakes, the line to write.
