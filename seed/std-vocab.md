@@ -78,6 +78,8 @@ identity_policy:
   minted:
     qualified_by: garden_id
     pattern: '^[0-9a-f]{12}/.+$'
+    form: '^[a-z][a-z0-9-]*:.+$'
+    form_kind: kinds
     meaning: "A value of a term whose `anchor` says `minted: true` is a NAME a garden gave. BARE (`contract:shared-purchase`) it identifies only within the garden that minted it: two gardens that minted the same bare name are shown to a person as candidates, never fused. QUALIFIED by the garden that minted it (`<garden_id>/contract:shared-purchase`) it identifies everywhere. A name is qualified once, by the garden that recorded the thing first, when the thing is to be known in another garden; a garden that takes it in keeps it byte for byte, and the prefix must be the garden's own id, or the `garden_id` of a `garden` bean it holds."
 # == THE MANIFEST: GARDEN.md, judged like an entry ==
 manifest:
@@ -1962,6 +1964,12 @@ terms:
       canonical_note: "twelve lowercase hexadecimal digits: the germination commit, abbreviated as a cited commit is"
     anchor: { class: logical, establishing: true }
     merge: { cardinality: single, order: none }
+  - term: test
+    meaning: "present on a bean of kind `garden` when that garden is a rehearsal or a test, saying what it rehearses — this garden's own record, whatever the other garden's proposals say"
+    context_keys: [test]
+    schema:
+      shape: scalar
+    merge: { cardinality: single, order: none }
   - term: content_hash
     meaning: "the SHA-256 of a thing's own bytes: one value names one content in every garden that holds it, and a changed byte is a different thing. What identifies a file, a scan, a transcript kept whole"
     context_keys: ["content_hash"]
@@ -2120,10 +2128,10 @@ terms:
         paid_by:
           required: true
           meaning: "who paid, and how much each paid. A single payer may leave `amount` out: they paid the whole"
-          in: { entries: { party: { required: true, in: { key_of: parties } }, amount: { in: { quantity: money } } } }
+          in: { entries: { party: { required: true, in: { key_of: parties } }, amount: { in: { quantity: money } } }, keyed_by: party }
         borne_by:
           meaning: "who bears it, in whole-number shares: two to one is 2 and 1. Absent: whoever paid bears it"
-          in: { entries: { party: { required: true, in: { key_of: parties } }, share: { required: true, in: { pattern: '^[1-9][0-9]*$' } } } }
+          in: { entries: { party: { required: true, in: { key_of: parties } }, share: { required: true, in: { pattern: '^[1-9][0-9]*$' } } }, keyed_by: party }
         under:    { in: { key_of: clauses }, meaning: "the clause it was made under, or keeps" }
         through:  { in: ref, meaning: "the card, account or agreement it moved through — itself an agreement with whoever issued it" }
         category: { in: prose, meaning: "the person's own word for what kind of spending it was" }
