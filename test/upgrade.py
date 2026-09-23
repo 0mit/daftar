@@ -7,7 +7,7 @@ tag. Needs no beans from any estate, so it runs in the public repository's CI as
 
 Run: python3 test/upgrade.py   (0 = green)
 """
-import os, re, shutil, subprocess, sys, tempfile
+import os, re, shlex, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 results = []
@@ -269,6 +269,28 @@ r = up21('--gardener', 'sam', '--gardener-name', 'Sam')
 check("...and --gardener-name for a bean that exists is refused rather than planted over it",
       r.returncode != 0 and 'already a bean' in r.stdout + r.stderr and untouched(_aged), (r.stdout + r.stderr)[-300:])
 
+# ---- A GARDEN'S NAME IN THE FORM THE RELEASE'S LAW GIVES IT (`manifest.garden`). A garden grown when no form was asked of
+# its name (`Garden-Sam` grew under v0.32.0) is refused BEFORE anything is touched, with the GARDEN.md line to write and
+# the entry that goes with it — not put back after the release's gate refused it, with no line to change named.
+put('GARDEN.md', re.sub(r'^garden: .*$', 'garden: Garden_Twenty', get('GARDEN.md'), count=1, flags=re.M))
+_badname = commit20('a name grown when no form was asked of it')
+r = up21('--gardener', 'sam')
+out = r.stdout + r.stderr
+check("a garden whose name the release's law refuses is REFUSED before anything is touched, printing the line to write",
+      r.returncode != 0 and 'REFUSING' in out and '\n  garden: garden-twenty\n' in out and 'RULE-CHANGE' in out
+      and '\n  git add -A\n  git commit\n' in out and 'NOT UPGRADED' not in out and untouched(_badname), out[-700:])
+_jl = next((l.strip() for l in out.splitlines() if 'bin/dmjournal.py' in l), '')
+put('GARDEN.md', re.sub(r'^garden: .*$', 'garden: garden-twenty', get('GARDEN.md'), count=1, flags=re.M))
+_jr = subprocess.run([sys.executable] + shlex.split(_jl.replace('"<who>"', '"human (test)"'))[1:], cwd=G20,
+                     capture_output=True, text=True) if _jl else None
+commit20('the name, as the refusal printed it')
+r = up21('--gardener', 'sam')
+check("...and with the line written and journalled as printed, the same upgrade crosses",
+      _jr is not None and _jr.returncode == 0 and 'RULE-CHANGE' in get('log/journal.md').split('\n## ')[-2]
+      and r.returncode == 0 and '0 error(s)' in r.stdout and re.search(r'(?m)^garden-twenty \(', r.stdout),
+      ((_jr.stderr if _jr else _jl), (r.stdout + r.stderr)[-500:]))
+reset(_aged)
+
 # ---- what a translation may not decide: a key both bags hold differently, and an agreement in the old words
 put('beans/nas.md', _ex['beans/laptop.md'].replace('bean: laptop', 'bean: nas').replace('PF-12345', 'NAS-1')
     .replace('value: "laptop"', 'value: "nas"').replace('responsibility: {', 'attributes: { bays: 4 }\ndetails: { bays: 2 }\nresponsibility: {', 1) + '\n')
@@ -369,6 +391,47 @@ check("--gardener-name plants the gardener's person bean exactly as seed/germina
       and get('beans/ada.md') == _germ.gardener_bean('ada', 'Ada', datetime.date.today().isoformat(), _gid20)
       and f'value: "{_gid20}/person:ada"' in get('beans/ada.md')
       and re.search(r'^gardener: ada\b', get('GARDEN.md'), re.M) and '[[ada]]' in get('log/journal.md').split('\n## ')[-1], out[-600:])
+# WHAT IT PRINTS LAST RUNS AS PRINTED, in Windows PowerShell 5.1 too: `git add -A` and `git commit` as two commands, and
+# the way back as commands git runs alike in every shell — never `&&`, which 5.1 cannot parse, nor `rm a b`, which it
+# reads as one path and a second argument. The way back, run line by line, leaves the garden exactly as it was.
+_tail = out[out.find('NOT COMMITTED'):]
+_back = _tail[_tail.find('To abandon'):].splitlines()[1:]
+check("a successful upgrade ends with `git add -A` and `git commit` on lines of their own, and no `&&` or `rm` anywhere",
+      '\n  git add -A\n  git commit\n' in _tail and '&&' not in out and not re.search(r'(?m)^\s*rm\b|\brm ', out)
+      and _back and _back[0].strip() == 'git checkout -- .', _tail[:600])
+for _l in _back:
+    subprocess.run(shlex.split(_l.strip()), cwd=G20, capture_output=True)
+check("...and the way back it prints, each line run as printed, leaves the garden exactly as it was — the planted bean gone",
+      untouched(_aged) and not os.path.exists(path20('beans/ada.md')) and any('beans/ada.md' in _l for _l in _back),
+      (_back, run('git', 'status', '--porcelain', '--untracked-files=all', cwd=G20).stdout[:300]))
+# AN ORGANISATION MAY KEEP A GARDEN, and an upgrade plants one as germination does (`--gardener-kind org`): the form is the
+# law's for a gardener of that kind, read through the release's own germinate — no kind is named in the tool.
+_law21 = dmparse.loads(dmparse.read(os.path.join(R21, 'seed', 'std-vocab.md'))[0])
+reset(_aged)
+r = up21('--gardener', 'ben-household', '--gardener-name', "Ben's household", '--gardener-kind', 'org')
+check("--gardener-kind org plants an organisation as the gardener, exactly as seed/germinate.py --gardener-kind org does",
+      r.returncode == 0 and '0 error(s)' in r.stdout and os.path.isfile(path20('beans/ben-household.md'))
+      and get('beans/ben-household.md') == _germ.gardener_bean('ben-household', "Ben's household",
+                                                                datetime.date.today().isoformat(), _gid20, 'org',
+                                                                _germ.gardener_form(_law21, 'org'))
+      and re.search(r'^gardener: ben-household\b', get('GARDEN.md'), re.M)
+      and 'a bean of kind org' in get('log/journal.md').split('\n## ')[-1], (r.stdout + r.stderr)[-600:])
+reset(_aged)
+r = up21('--gardener', 'ben-household', '--gardener-name', "Ben's household",
+         env={'DAFTAR_GARDENER_KIND': 'org'})
+check("...and so does DAFTAR_GARDENER_KIND=org, the form every garden's own tool passes on, saying where the kind came from",
+      r.returncode == 0 and re.search(r'(?m)^kind: org$', get('beans/ben-household.md'))
+      and 'DAFTAR_GARDENER_KIND' in r.stdout, (r.stdout + r.stderr)[-600:])
+reset(_aged)
+r = up21('--gardener', 'ben', '--gardener-name', 'Ben', '--gardener-kind', 'host')
+check("...a kind the law does not let keep a garden is refused before anything is touched, naming the kinds it does",
+      r.returncode != 0 and "kind 'host'" in r.stdout + r.stderr and 'person or org' in r.stdout + r.stderr
+      and untouched(_aged), (r.stdout + r.stderr)[-600:])
+r = up21('--gardener', 'sam', '--gardener-kind', 'org')
+check("...and a kind said of a gardener who is already a bean here, of another kind, is refused: a bean's kind is its own",
+      r.returncode != 0 and "'sam' is a person" in r.stdout + r.stderr and untouched(_aged), (r.stdout + r.stderr)[-600:])
+check("dmupgrade holds no kind of its own for a planted gardener: the check reads the kind asked for, as the law allows it",
+      "('kind', 'person')" not in open(os.path.join(ROOT, 'bin', 'dmupgrade.py'), encoding='utf-8').read())
 # a Persian name keeps its zero-width non-joiner, and a name with both kinds of quote is still one YAML string
 for _nm in ('آدا\u200cبانو', 'Ada "the elder" O\'Neil'):
     reset(_aged)
@@ -436,6 +499,7 @@ reset(_aged)
 # (the tool as it was: it knows no `--gardener`, and an argument it does not know is an error, not handed over)
 _old = (get('bin/dmupgrade.py').replace("add_argument('--gardener', ", "add_argument('--gardener', dest='gardener', ")
         .replace("add_argument('--gardener-name', ", "add_argument('--gardener-name', dest='gardener_name', ")
+        .replace("add_argument('--gardener-kind', ", "add_argument('--gardener-kind', dest='gardener_kind', ")
         .replace('--gardener', '--steward').replace('a, unknown = ap.parse_known_args()', 'a, unknown = ap.parse_args(), []'))
 put('bin/dmupgrade.py', _old)
 run('git', 'add', '-A', cwd=G20); run('git', 'commit', '-qm', 'an upgrade tool from before the gardener', '--no-verify', cwd=G20)
@@ -462,7 +526,8 @@ finally:
     os.name = _saved_os
 check("...on PowerShell the line clears the variables it set, which a session would keep for the next garden",
       _line_ps.startswith('$env:DAFTAR_GARDENER = "<id>"; $env:DAFTAR_GARDENER_NAME = "<how they are called>"; python bin\\dmupgrade.py v9.0.0 --from \'')
-      and _line_ps.endswith('; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME -ErrorAction SilentlyContinue')
+      and _line_ps.endswith('; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME, Env:DAFTAR_GARDENER_KIND '
+                            '-ErrorAction SilentlyContinue')
       and _line_sh == f'DAFTAR_GARDENER=<id> DAFTAR_GARDENER_NAME="<how they are called>" python3 bin/dmupgrade.py v9.0.0 --from '
                       f"'{os.path.join(TMP, 'a release')}'" and '[' not in _line_sh + _line_ps, (_line_sh, _line_ps))
 r = up21(env={'DAFTAR_GARDENER': 'sam'})

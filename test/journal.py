@@ -19,7 +19,10 @@ cannot be taken back, only answered by another. So the tool is held here to what
   -  a character some reader takes for a line break (\\x0b, \\x0c, \\x1c-\\x1e, NEL, U+2028, U+2029) is refused, and
      a line break in <who> or <what>: one written line must stay one line to every reader.
 
-And every tool that prints imports dmparse, which is where the UTF-8 streams are set for all of them.
+And every tool that prints imports dmparse, which is where the UTF-8 streams are set for all of them; and
+bin/dmsafe.py, which every front-matter edit goes through, reads its block as this tool reads a body — as bytes, UTF-8
+or UTF-16 with its mark, anything else refused — from standard input or from a file with --block, the form PowerShell
+has.
 
 Run: python3 test/journal.py   (0 = green).  ~2s.
 """
@@ -173,6 +176,51 @@ check("...while a tab is text, and kept as written", r.returncode == 0
 refused("a line break in <what> is refused: it is one line of the heading",
         ['sam', 'x\n## 2026-09-17 09:30+03:00 · ada · typed', '--body', '- action: x'], says='line break')
 refused("--body with nothing after it is a usage error", ['sam', 'x', '--body'], says='--body')
+
+# ---- dmsafe: a block goes into a bean as it was written, too ------------------------------------------------------
+# AGENTS.md sends every front-matter edit through bin/dmsafe.py, and it read its block from standard input in the
+# machine's code page: on a cp1252 machine a Persian block went into the bean as mojibake, exit 0, and the gate took it.
+os.makedirs(os.path.join(G, 'beans'))
+BEAN = os.path.join(G, 'beans', 'sam.md')
+SAM = '---\nbean: sam\nkind: person\ntitle: "Sam"\nresponsibility: { legal: { self: true } }\n---\nSam keeps a garden.\n'
+NOTE = 'برای سام — ok'
+BLOCK = f'details:\n  note: "{NOTE}"\n'
+sys.path.insert(0, os.path.join(G, 'bin'))
+import dmparse
+
+
+def safe(*args, stdin=None, block=None):
+    with open(BEAN, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(SAM)
+    if block is not None:
+        with open(os.path.join(TMP, 'block.yaml'), 'wb') as fh:
+            fh.write(block)
+        args += ('--block', os.path.join(TMP, 'block.yaml'))
+    r = subprocess.run([sys.executable, os.path.join(G, 'bin', 'dmsafe.py'), 'insert-after', BEAN, 'responsibility']
+                       + list(args), input=stdin, capture_output=True, env=ENV, cwd=G)
+    fm = dmparse.loads(dmparse.read(BEAN)[0]) or {}
+    return r, (fm.get('details') or {}).get('note'), open(BEAN, 'rb').read()
+
+
+r, note, raw = safe(stdin=BLOCK.encode('utf-8'))
+check("dmsafe on a cp1252 machine: a Persian block on standard input goes into the bean as written, exit 0",
+      r.returncode == 0 and note == NOTE, (r.stdout.decode('utf-8', 'replace'), note))
+r, note, raw = safe(block=BLOCK.encode('utf-8'))
+check("...and from a file with --block, the form every shell has, PowerShell included", r.returncode == 0 and note == NOTE,
+      (r.stdout.decode('utf-8', 'replace'), note))
+r, note, raw = safe(block=codecs.BOM_UTF8 + BLOCK.replace('\n', '\r\n').encode('utf-8'))
+check("...a file saved with a byte-order mark and CRLF (PowerShell 5.1's UTF-8) goes in, and the bean keeps neither",
+      r.returncode == 0 and note == NOTE and codecs.BOM_UTF8 not in raw and b'\r' not in raw,
+      (r.stdout.decode('utf-8', 'replace'), note))
+r, note, raw = safe(stdin=BLOCK.encode('utf-16'))
+check("...UTF-16 with its mark (PowerShell 5.1's `>` and Out-File) is read as UTF-16", r.returncode == 0 and note == NOTE,
+      (r.stdout.decode('utf-8', 'replace'), note))
+for _name, _kw, _says in (("bytes in a code page (cp1252)", {'block': BLOCK.replace(NOTE, 'ok – x').encode('cp1252')}, 'not UTF-8'),
+                          ("UTF-16 without its mark (a NUL after every letter)", {'stdin': BLOCK.encode('utf-16-le')}, 'UTF-16')):
+    r, note, raw = safe(**_kw)
+    _out = (r.stdout + r.stderr).decode('utf-8', 'replace')
+    check(f"...and {_name} is refused, saying so, and the bean is left as it was",
+          r.returncode == 1 and _says in _out and raw == SAM.encode('utf-8') and 'Traceback' not in _out, _out[-300:])
 
 # ---- every tool that prints speaks UTF-8 ---------------------------------------------------------------------------
 # dmparse sets the streams once, for every tool that imports it; a tool that prints and never imports it writes in

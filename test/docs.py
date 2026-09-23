@@ -123,8 +123,7 @@ check("...and names no file that does not exist", not _opens, _opens)
 ci = open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8").read()
 ci_suites = set(re.findall(r"python3 (test/[a-z_]+\.py)", ci))
 assert ci_suites, "no suite was found in the workflow"
-line = next((l for l in text["CONTRIBUTING.md"].splitlines() if "test/germinate.py" in l and "&&" in l), "")
-told = set(re.findall(r"python3 (test/[a-z_]+\.py)", line))
+told = set(re.findall(r"(?m)^\s*python3 (test/[a-z_]+\.py)\s*$", text["CONTRIBUTING.md"]))  # one command a line
 check("CONTRIBUTING.md tells a contributor to run exactly the suites the release runs",
       told == ci_suites, f"only in CI: {sorted(ci_suites - told)}; only in the document: {sorted(told - ci_suites)}")
 on_disk = {"test/" + f for f in os.listdir(os.path.join(ROOT, "test")) if f.endswith(".py")}

@@ -4,9 +4,16 @@
     python3 seed/germinate.py <target-directory>        # the directory must not exist yet
     python3 seed/germinate.py <target-directory> --gardener <id> [--gardener-name "<how they are called>"]
                                                  [--gardener-kind org]   # an organisation keeps it, not a person
+                                                 [--name <garden-name>]  # a name other than the directory's
 
 (`python` on Windows.) Name the directory for the garden — `garden-sam`, not `garden` — because its name is the
-garden's name, which another garden and every proposal this one makes will show.
+garden's name, which another garden and every proposal this one makes will show. The name is held to the form the
+law's `manifest.garden` gives it (kebab-case), and a name out of that form is refused BEFORE anything is created;
+`--name` gives the garden a name of its own where the directory's is not one. Anything that stops germination once
+it has begun removes the directory it made, so a second try starts from nothing.
+
+GROWN FROM INSIDE A GARDEN — a rehearsal, as seed/COOKBOOK.md grows one — the language is that garden's, and so is
+the release it records: the one that garden's GARDEN.md names, never that garden's own last commit.
 
 A garden is a git repository that carries the LANGUAGE — the vocabulary, the parser, the gate, the tools,
 the templates — and no beans. WHAT TRAVELS IS DECLARED ONCE, in seed/LANGUAGE, and bin/dmupgrade.py reads
@@ -24,7 +31,9 @@ Python, not shell, because a garden is grown on Windows too. `seed/germinate.sh`
 import glob
 import os
 import re
+import shlex
 import shutil
+import stat
 import subprocess
 import sys
 
@@ -32,6 +41,53 @@ import sys
 def die(msg, code=2):
     print(f"germinate: {msg}", file=sys.stderr)
     sys.exit(code)
+
+
+def shown(path):
+    """A path as a command line takes it in a Unix shell, cmd.exe and PowerShell alike: bare where it is plain, else in
+    double quotes, which all three read the same way for a path holding no `"`, `$`, `%` or backquote. A Windows
+    user folder often holds a space, and `cd C:\\Users\\Sam Smith\\garden-sam` is two arguments to every shell."""
+    s = str(path)
+    if re.fullmatch(r'[\w./\\:-]+', s) and not s.startswith('-'):
+        return s
+    if not re.search(r'["$%`]', s):
+        return f'"{s}"'
+    return "'" + s.replace("'", "''") + "'" if os.name == 'nt' else shlex.quote(s)
+
+
+def manifest_form(law, attr):
+    """(pattern, refusal) that the law's `manifest.attrs.<attr>` holds a value to — its `in: { type: <value type> }`
+    read through `value_types`, or its own `in: { pattern }` — or None where the law gives that attribute no form.
+    Read from the law, so the form is never written here (bin/dmupgrade.py asks the same of a garden it upgrades)."""
+    rec = ((law.get('manifest') or {}).get('attrs') or {}).get(attr) if isinstance(law.get('manifest'), dict) else None
+    dom = rec.get('in') if isinstance(rec, dict) else None
+    if not isinstance(dom, dict):
+        return None
+    if isinstance(dom.get('pattern'), str):
+        return dom['pattern'], None
+    row = next((t for t in law.get('value_types') or [] if isinstance(t, dict) and t.get('type') == dom.get('type')),
+               None)
+    return (row['pattern'], row.get('refusal')) if row and isinstance(row.get('pattern'), str) else None
+
+
+def name_like(name, form, fallback='garden-sam'):
+    """The nearest name to `name` in the form — lowercase, every run of other characters one hyphen — to offer in a
+    refusal; `fallback` where nothing of it survives (a name in another script)."""
+    import dmparse
+    guess = re.sub(r'[^a-z0-9]+', '-', str(name).lower()).strip('-')
+    return guess if guess and dmparse.law_match(form, guess) else fallback
+
+
+def remove_tree(path):
+    """A directory germination made, removed whole — on Windows too, where git writes its objects read-only and a plain
+    rmtree stops at the first one."""
+    def again(fn, p, *_):
+        os.chmod(p, stat.S_IWRITE)
+        fn(p)
+    if sys.version_info >= (3, 12):
+        shutil.rmtree(path, onexc=again)
+    else:
+        shutil.rmtree(path, onerror=again)
 
 
 def run(*args, cwd=None, check=True):
@@ -118,8 +174,12 @@ provenance: {{ src: asserted-by-human, by: "{gid} (gardener)", as_of: {when} }}
 
 
 def main(argv):
-    gid = gname = None
+    gid = gname = name = None
     gkind = 'person'
+    if '--name' in argv:
+        i = argv.index('--name'); name = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
+        if not name:
+            die("--name takes the garden's name, in kebab-case: e.g. --name garden-sam")
     if '--gardener' in argv:
         i = argv.index('--gardener'); gid = argv[i + 1] if i + 1 < len(argv) else None; argv = argv[:i] + argv[i + 2:]
         if not gid or not re.match(r'^[a-z0-9]+(-[a-z0-9]+)*$', gid):
@@ -135,10 +195,10 @@ def main(argv):
         print(__doc__); return 0 if argv else 2
     target = argv[0]
     if os.path.exists(target):
-        die(f"{target} already exists — refusing to plant over it")
+        die(f"{shown(target)} already exists — refusing to plant over it")
     parent = os.path.dirname(os.path.abspath(target))
     if not os.path.isdir(parent):
-        die(f"{parent} does not exist — create it first")
+        die(f"{shown(parent)} does not exist — create it first")
     target = os.path.abspath(target)
     seed = os.path.dirname(os.path.abspath(__file__))
     root = os.path.dirname(seed)
@@ -152,6 +212,21 @@ def main(argv):
     ver = str(law['version'])
     if not ver:
         die("could not read the vocabulary version", 1)
+    # THE NAME IS JUDGED BEFORE ANYTHING IS CREATED. The gate judges the manifest as itself, so a name out of the law's
+    # form was refused only at the first commit — after the directory was made, and a second try then met "already
+    # exists". The form is the law's (`manifest.garden`), read, never written here.
+    garden = name if name is not None else os.path.basename(target)
+    form = manifest_form(law, 'garden')
+    if form and not dmparse.law_match(form[0], garden):
+        like = name_like(garden, form[0], f'garden-{gid}' if gid else 'garden-sam')
+        said = f"the law's `manifest.garden` " + (form[1] if form[1] else f"must match {form[0]}")
+        if name is not None:
+            die(f"--name {garden!r} cannot be a garden's name: {said}. Name it in kebab-case, e.g. --name {like}. "
+                f"Nothing was created.")
+        die(f"{garden!r} cannot be this garden's name, which is its directory's: {said}.\n"
+            f"  Name the directory in kebab-case, e.g. {like} — or keep it, and give the garden that name: "
+            f"--name {like}\n"
+            f"Nothing was created.")
     gform = None
     if gid:
         admitted = gardener_kinds(law)
@@ -159,20 +234,56 @@ def main(argv):
         if (admitted is not None and gkind not in admitted) or gform is None:
             die(f"--gardener-kind {gkind!r} is not a kind the law lets keep a garden"
                 + (f" ({', '.join(admitted)})" if admitted else " (it needs a kind with a `<kind>_id` anchor term)"))
-    # NO GIT HISTORY OF ITS OWN (a ZIP download, a `git archive`): no commit can be named, and the garden says so —
-    # `untagged unknown`, which the law's `daftar_release` admits — rather than recording nothing, so the line the gate
-    # ends with still names the garden, its gardener and its id. A copy unpacked inside some OTHER repository has no
-    # history either: git would answer for that repository, so only a checkout whose top is this copy is asked.
-    top = run('git', '-C', root, 'rev-parse', '--show-toplevel', check=False)
-    own = top.returncode == 0 and top.stdout.strip() and \
-        os.path.normcase(os.path.realpath(top.stdout.strip())) == os.path.normcase(os.path.realpath(root))
-    r = run('git', '-C', root, 'describe', '--tags', '--exact-match', check=False) if own else None
-    if r is not None and r.returncode == 0:
-        release = r.stdout.strip()
+    # GROWN FROM INSIDE A GARDEN (a rehearsal, as the COOKBOOK grows one): the language is the garden's, and the release
+    # is the one its GARDEN.md records. The garden's own commit names no daftar release — recorded as one, it put a
+    # false `untagged <sha>` on the rehearsal and told the stranger to check out a tag in the real garden.
+    grown_in = None
+    if os.path.isfile(os.path.join(root, 'GARDEN.md')):
+        try:
+            _gm = dmparse.loads(dmparse.read(os.path.join(root, 'GARDEN.md'))[0] or '') or {}
+        except Exception:
+            _gm = {}
+        _gm = _gm if isinstance(_gm, dict) else {}
+        _rf = manifest_form(law, 'daftar_release')
+        _said = str(_gm.get('daftar_release') or '')
+        grown_in = str(_gm.get('garden') or os.path.basename(root))
+        release = _said if _said and (not _rf or dmparse.law_match(_rf[0], _said)) else 'untagged unknown'
     else:
-        sha = run('git', '-C', root, 'rev-parse', '--short', 'HEAD', check=False) if own else None
-        release = f"untagged {sha.stdout.strip() if sha is not None and sha.returncode == 0 and sha.stdout.strip() else 'unknown'}"
+        # NO GIT HISTORY OF ITS OWN (a ZIP download, a `git archive`): no commit can be named, and the garden says so —
+        # `untagged unknown`, which the law's `daftar_release` admits — rather than recording nothing, so the line the
+        # gate ends with still names the garden, its gardener and its id. A copy unpacked inside some OTHER repository
+        # has no history either: git would answer for that repository, so only a checkout whose top is this copy is
+        # asked.
+        top = run('git', '-C', root, 'rev-parse', '--show-toplevel', check=False)
+        own = top.returncode == 0 and top.stdout.strip() and \
+            os.path.normcase(os.path.realpath(top.stdout.strip())) == os.path.normcase(os.path.realpath(root))
+        r = run('git', '-C', root, 'describe', '--tags', '--exact-match', check=False) if own else None
+        if r is not None and r.returncode == 0:
+            release = r.stdout.strip()
+        else:
+            sha = run('git', '-C', root, 'rev-parse', '--short', 'HEAD', check=False) if own else None
+            release = f"untagged {sha.stdout.strip() if sha is not None and sha.returncode == 0 and sha.stdout.strip() else 'unknown'}"
 
+    # FROM HERE ON THE DIRECTORY IS GERMINATE'S. Whatever stops the growing — a commit git refuses, a file it cannot
+    # copy, an interrupt — removes it whole, so a stranger's second try starts from nothing rather than from "already
+    # exists — refusing to plant over it".
+    try:
+        grow(target, root, seed, ver, garden, release, gid, gname, gkind, gform)
+    except BaseException:
+        if os.path.isdir(target):
+            try:
+                remove_tree(target)
+                print(f"germinate: removed {shown(target)}, which it had begun to grow; nothing is left behind",
+                      file=sys.stderr)
+            except OSError as e:
+                print(f"germinate: could not remove {shown(target)} ({e}); delete it before trying again",
+                      file=sys.stderr)
+        raise
+    return finish(target, root, ver, release, gid, gkind, grown_in)
+
+
+def grow(target, root, seed, ver, garden, release, gid, gname, gkind, gform):
+    """The language copied, the templates filled, the first commit made, and the gardener planted."""
     for d in ('beans', 'mappings', 'log', 'seed'):
         os.makedirs(os.path.join(target, d), exist_ok=True)
     for rel in language_files(root, seed):
@@ -184,7 +295,6 @@ def main(argv):
             if dn == '__pycache__':
                 shutil.rmtree(os.path.join(dp, dn)); dns.remove(dn)
 
-    garden = os.path.basename(target)
     subst = {'@@VERSION@@': ver, '@@GARDEN@@': garden, '@@RELEASE@@': release}
     def fill(src, dst):
         text = open(src, encoding='utf-8').read()
@@ -234,11 +344,16 @@ def main(argv):
         run('git', '-C', target, 'add', '-A')
         run('git', '-C', target, '-c', 'user.name=germinate', '-c', 'user.email=germinate@localhost',
             'commit', '-q', '-m', f"germinate: {gid} keeps this garden")
+
+
+def finish(target, root, ver, release, gid, gkind, grown_in):
+    """The garden's own gate, and what to do next."""
     gate = subprocess.run([sys.executable, os.path.join(target, 'bin', 'dmcheck.py')], cwd=target)
     py = 'python' if os.name == 'nt' else 'python3'
     # EVERY COMMAND PRINTED HERE RUNS AS PRINTED in a Unix shell, cmd.exe and Windows PowerShell 5.1 alike: `python`
     # on Windows, where `python3` may be the Store's alias; no `&&`, which PowerShell 5.1 cannot parse; no `<`, which
-    # no PowerShell redirects — the journal's body goes in `--body`.
+    # no PowerShell redirects — the journal's body goes in `--body`; and every path through shown(), quoted where it
+    # holds a space.
     passes = ('The garden passes its own gate.' if gate.returncode == 0
               else 'The garden does NOT pass its own gate: read the errors above before anything else.')
     if gid:
@@ -251,11 +366,11 @@ def main(argv):
                    f"GARDEN.md `gardener:`.")
         cookbook = "starts with the gardener"
     print(f"""
-germinated: {target}  (std-vocab@{ver}, daftar {release})
+germinated: {shown(target)}  (std-vocab@{ver}, daftar {release})
 
 {opening}
-  1. write {os.path.join(target, 'beans', '<id>.md')}   (bean: <id> must equal the filename; seed/COOKBOOK.md {cookbook})
-  2. append an entry to {os.path.join(target, 'log', 'journal.md')}  — the gate REFUSES a bean staged without one.
+  1. write {shown(os.path.join(target, 'beans', '<id>.md'))}   (bean: <id> must equal the filename; seed/COOKBOOK.md {cookbook})
+  2. append an entry to {shown(os.path.join(target, 'log', 'journal.md'))}  — the gate REFUSES a bean staged without one.
      Its heading is a POSITION IN TIME, read from the clock by a tool, never typed; give it the body only:
        {py} bin/dmjournal.py "your-name" "what you did" --body "- action: added [[<id>]]."
   3. git add -A
@@ -273,8 +388,18 @@ point of the whole thing: one language, both parties writing in it, neither able
 An assistant in a chat window, with no shell, cannot run the gate: paste it seed/WELCOME.md, and what
 it gives you back is a proposal for you to check and commit.""")
     # AN UNTAGGED CLONE MAKES AN UNPINNABLE GARDEN, and this is said LAST, where it is still on the screen. A copy with
-    # no git history is no clone: `git -C` on it fails, so the way to a release is a clone of the repository.
-    if release == 'untagged unknown':
+    # no git history is no clone: `git -C` on it fails, so the way to a release is a clone of the repository. A garden
+    # grown from inside another runs what that garden runs, and neither NOTE is its to follow: that garden is no clone
+    # of the repository, and checking out a tag in it would move a garden, not a release.
+    if grown_in is not None:
+        print(f"""
+GROWN FROM THE GARDEN {grown_in}: its language, and the release its GARDEN.md records — daftar {release}."""
+              + ('' if not release.startswith('untagged') else
+                 f"""
+That names no release anybody else can fetch; adopt one deliberately, in this garden as in that one, with
+  cd {shown(target)}
+  {py} bin/dmupgrade.py <tag>"""))
+    elif release == 'untagged unknown':
         try:
             from dmupgrade import UPSTREAM         # where bin/dmupgrade.py fetches a release from: one copy of the URL
         except Exception:
@@ -289,17 +414,17 @@ the garden from a release tag:
   git -C daftar-release checkout <tag>    # the newest, usually
   {py} daftar-release/seed/germinate.py <a-new-directory> --gardener <id>
 — or, in this garden as it stands, adopt one deliberately (bin/dmupgrade.py fetches the tag itself) with
-  cd {target}
+  cd {shown(target)}
   {py} bin/dmupgrade.py <tag>""")
     elif release.startswith('untagged'):
         print(f"""
 NOTE: this clone is not on a release tag, so the garden records
   daftar_release: "{release}"
 which names no release anybody else can fetch. Fine for a look around. To pin one:
-  git -C {root} tag -l                    # the releases this clone knows
-  git -C {root} checkout <tag>            # the newest, usually
+  git -C {shown(root)} tag -l                    # the releases this clone knows
+  git -C {shown(root)} checkout <tag>            # the newest, usually
 and grow again — or, in this garden as it stands, adopt one deliberately with
-  cd {target}
+  cd {shown(target)}
   {py} bin/dmupgrade.py <tag>""")
     # WHO COMMITS. germinate commits as "germinate"; every later commit is yours, and git refuses one with no identity.
     name = run('git', '-C', target, 'config', 'user.name', check=False).stdout.strip()
@@ -307,8 +432,8 @@ and grow again — or, in this garden as it stands, adopt one deliberately with
     if not name or not email:
         print(f"""
 BEFORE YOUR FIRST COMMIT: git has no identity here, and will refuse it. Set one for this garden:
-  git -C {target} config user.name  "Your Name"
-  git -C {target} config user.email "you@example.org"
+  git -C {shown(target)} config user.name  "Your Name"
+  git -C {shown(target)} config user.email "you@example.org"
 An agent working in the garden should commit under its own name (e.g. "agent (model, session)"), so the journal's
 "who" and git's author agree.""")
     return gate.returncode

@@ -22,6 +22,7 @@ worse than no session, and this tool refuses to create one.
 import argparse
 import os
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -52,6 +53,21 @@ def _main_working_copy():
 ROOT = _main_working_copy()
 SESSIONS_DIR = os.path.abspath(os.path.join(ROOT, os.pardir, 'daftar-sessions'))
 SLUG = re.compile(r'^[a-z0-9]+(-[a-z0-9]+)*$')
+# EVERY COMMAND PRINTED HERE RUNS AS PRINTED in a Unix shell, cmd.exe and Windows PowerShell 5.1 alike: one command a
+# line, never joined by `&&`, which 5.1 cannot parse; `git -C <copy>` rather than `cd` first; `python` on Windows, where
+# `python3` may be the Store's alias; and a path quoted where it holds a space.
+PY = 'python' if os.name == 'nt' else 'python3'
+
+
+def shown(path):
+    """A path as all three shells take it: bare where it is plain, else double-quoted (read alike by each for a path
+    holding no `"`, `$`, `%` or backquote), else in the quoting of the shell this runs under."""
+    s = str(path)
+    if re.fullmatch(r'[\w./\\:-]+', s) and not s.startswith('-'):
+        return s
+    if not re.search(r'["$%`]', s):
+        return f'"{s}"'
+    return "'" + s.replace("'", "''") + "'" if os.name == 'nt' else shlex.quote(s)
 
 
 def git(*args, cwd=ROOT, check=True):
@@ -123,7 +139,7 @@ def cmd_open(a):
         sys.exit(f"'{a.slug}' is not kebab-case. A session is named for its PURPOSE — "
                  "'split-api-for-multi-version-support', not a date and a host.")
     if not gate_is_installed():
-        sys.exit("REFUSING: no pre-commit hook in the shared git dir. Run `sh bin/install.sh` first — "
+        sys.exit(f"REFUSING: no pre-commit hook in the shared git dir. Run `{PY} bin/install.py` first — "
                  "a session that can commit past the gate is worse than no session.")
     branch = f'session/{a.slug}'
     path = os.path.join(SESSIONS_DIR, a.slug)
@@ -145,14 +161,14 @@ def cmd_open(a):
     git('worktree', 'add', '-b', branch, path)
     bean = os.path.join(path, 'beans', f'session-{a.slug}.md')
     if not os.path.exists(bean):
-        with open(bean, 'w', encoding='utf-8') as f:
+        with open(bean, 'w', encoding='utf-8', newline='\n') as f:       # LF on every platform: a bean is one text
             f.write(_bean_template(a.slug, a.purpose, owner, host))
     print(f"opened  {branch}\n"
           f"  at    {path}\n"
           f"  bean  beans/session-{a.slug}.md (skeleton — fill `owns.opened_with` before working)\n"
           f"  gate  shared hook confirmed present\n\n"
-          f"  cd {path}\n"
-          f"  python3 bin/dmcheck.py")
+          f"  cd {shown(path)}\n"
+          f"  {PY} bin/dmcheck.py")
 
 
 def _bean_template(slug, purpose, owner, host):
@@ -233,8 +249,8 @@ def cmd_close(a):
         sys.exit(f"REFUSING: the main copy at {ROOT} is MID-MERGE — a previous close or a hand-merge\n"
                  f"stopped at a conflict and nothing finished it. Merging onto that would stack this\n"
                  f"session's work on an unresolved one. Finish or abandon it first:\n"
-                 f"  cd {ROOT} && git status          # what is unresolved\n"
-                 f"  cd {ROOT} && git merge --abort   # or resolve, git add, git commit\n"
+                 f"  git -C {shown(ROOT)} status          # what is unresolved\n"
+                 f"  git -C {shown(ROOT)} merge --abort   # or resolve, git add, git commit\n"
                  f"Nothing here is lost: {branch} and its worktree are untouched.")
     dirty_main = git('status', '--porcelain')
     if dirty_main:
@@ -247,8 +263,10 @@ def cmd_close(a):
                  f"Even with ROOT resolved correctly, removing the caller's own working directory leaves\n"
                  f"a shell whose cwd no longer exists and every later command failing with 'Unable to\n"
                  f"read current working directory'. Run it from the main copy:\n"
-                 f"  cd {ROOT} && python3 bin/dmsession.py close {a.slug}")
-    r = subprocess.run(['python3', 'bin/dmcheck.py'], cwd=path, capture_output=True, text=True)
+                 f"  cd {shown(ROOT)}\n"
+                 f"  {PY} bin/dmsession.py close {a.slug}")
+    # THIS interpreter runs the session's gate: `python3` may be no Python at all on Windows (the Store's alias)
+    r = subprocess.run([sys.executable, os.path.join('bin', 'dmcheck.py')], cwd=path, capture_output=True, text=True)
     print(r.stdout.strip())
     if r.returncode:
         sys.exit("REFUSING to close: the session's own gate does not pass. Fix it in the worktree first.")
@@ -271,9 +289,12 @@ def cmd_close(a):
                  + (f"unresolved:\n" + '\n'.join('  ' + f for f in conflicted.splitlines()) + "\n\n"
                     if conflicted else "")
                  + f"The main copy at {ROOT} is now mid-merge, and it is shared — every other session\n"
-                 f"on this host is blocked until it is settled. Two ways out, from the MAIN copy:\n"
-                 f"  cd {ROOT} && git merge --abort            # back to before, decide later\n"
-                 f"  cd {ROOT} && <resolve> && git add -A && git commit    # finish it by hand\n"
+                 f"on this host is blocked until it is settled. Two ways out, in the MAIN copy — back to before, to\n"
+                 f"decide later:\n"
+                 f"  git -C {shown(ROOT)} merge --abort\n"
+                 f"or finish it by hand: resolve each file named above, then\n"
+                 f"  git -C {shown(ROOT)} add -A\n"
+                 f"  git -C {shown(ROOT)} commit\n"
                  f"Either way {branch} and its worktree at\n  {path}\nare untouched — re-run "
                  f"`close {a.slug}` once the main copy is clean.\n\n"
                  f"If the conflict is in log/journal.md or a bean, check first that this clone HAS the\n"
