@@ -2808,6 +2808,11 @@ The portable, estate-agnostic classification shared by every garden — the abst
   refuses, and that it refuses rather than crashes), test/journal.py (the journal's one tool, and dmsafe's block),
   test/upgrade.py (a garden into the release, its name and its gardener), and test/germinate.py, which commits the
   cookbook's recipes one at a time, in the order of the page.
+  THE LAW UNCHANGED, the tools corrected by what a first real rehearsal met: the fast check reads `captures/` as it
+  reads the journal — a record held whole, whose quoted versions are what was said, never the garden stating its
+  release; and `dmpropose make` tells a bean with no establishing anchor at all that it has no identity here yet —
+  give it one, or name it in words where it is referred to — instead of pointing at `mint`, which has nothing to
+  qualify.
 - **20.0** (2026-09-22, proposed rule-change) — **a heading is stamped by the clock, not typed; an anchor says how it
   is known the way every fact does.** `journal.heading: stamped`: `bin/dmjournal.py` writes every heading from the
   clock and records it in the clone's git directory, and the gate refuses a heading a commit adds that the tool did

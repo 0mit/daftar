@@ -952,6 +952,18 @@ def cmd_id(argv):
 # ================================================================== make
 MINT_HINT = (f"`{PY} bin/dmpropose.py mint {{b}}` prints the qualified name and the command that writes it; choosing an "
              f"anchor is the gardener's (class F)")
+# ...and for a bean with NO establishing anchor at all, `mint` has nothing to qualify: its identity is provisional here
+NO_ID_HINT = ("{b} has no identity here yet (no establishing anchor at all): give it one when it is known — choosing an "
+              "anchor is the gardener's (class F) — or leave it out of what travels, naming it in words where it is "
+              "referred to")
+
+
+def no_id_why(fm, b):
+    """The refusal's reason and fix for a bean `only_bare` names: minted names to qualify, or no identity at all."""
+    has = [a for a in anchors_of(fm) if a.get('establishing') is True]
+    if has:
+        return "has no establishing anchor but BARE minted names", MINT_HINT.format(b=b)
+    return "has no establishing anchor at all — its identity is provisional here", NO_ID_HINT.format(b=b)
 
 
 def stub_of(fm):
@@ -1058,8 +1070,9 @@ def cmd_make(argv):
                              f"(YAML 1.1 reads on/off/yes/no as true/false), so the bean cannot be merged anywhere",
                              "spell the key as a name, commit it, and make the proposal again"))
         if only_bare(fm):
-            refusals.append((f"{b} has no establishing anchor but BARE minted names — it identifies nothing beyond this "
-                             f"garden, and the other garden would hold a second thing", MINT_HINT.format(b=b)))
+            _why, _fix = no_id_why(fm, b)
+            refusals.append((f"{b} {_why} — it identifies nothing beyond this garden, and the other garden would hold a "
+                             f"second thing", _fix))
         if not isinstance(fm.get('provenance'), dict):
             refusals.append((f"{b} has no provenance record of its own — the other garden could not tell whose word it "
                              f"is, and refuses a bean that does not say", f"write {b}'s `provenance: {{ src, by, as_of }}`,"
@@ -1089,8 +1102,9 @@ def cmd_make(argv):
                     # is named first by their own garden; the receiving garden reads this stub as its own gardener.
                     stubs[r][GARDENER_OF] = 'to'
                 else:
-                    refusals.append((f"{r}, which {b} refers to, has no establishing anchor but BARE minted names — "
-                                     f"the other garden could not tell which being it is", MINT_HINT.format(b=r)))
+                    _why, _fix = no_id_why(sb[0], r)
+                    refusals.append((f"{r}, which {b} refers to, {_why} — the other garden could not tell which being "
+                                     f"it is", _fix))
 
     # WHERE IT IS LAID: beside the garden, inside none — links resolved.
     out_dir = os.path.realpath(out) if out else os.path.dirname(os.path.realpath(ROOT))
