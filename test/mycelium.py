@@ -1372,6 +1372,235 @@ check("the vocabulary report is order-agnostic too: its RATIFY lines sorted, and
       "canonically least kept, whichever garden came first",
       len(_outs) == 1 and M.merge_vocabs([_va, _vb, _vc])[0]['terms']['t']['meaning'] == 'a', _outs)
 
+# ================================================================ a value that carries its own provenance, back and forth
+# An entry a gardener writes with a provenance record of its own went out stamped `garden: <its garden>`, and the other
+# garden's `provenance_of` keeps the value as it arrived, stamp and all. Compared stamped, the round trip read as a
+# forgery ("provenance_of … says this garden said it, and [[pot]] here holds no such record"), and read as a second
+# value, the take recorded a disagreement nobody had. And a disagreement a person SETTLED came back at the next merge:
+# the side they set aside was read back out of `provenance_of`. Here an agreement goes B→A→B→A and around again, through
+# a real disagreement and its settlement, and every read of it is CLEAN.
+for g, who in ((A, 'ada'), (B, 'ben')):
+    if git(g, 'status', '--porcelain').stdout.strip():
+        commit(g, "what the earlier checks left uncommitted", "- action: committed what the earlier checks of this "
+                                                             "test left in the working tree (a proposal's journal entry).")
+
+
+def made(r):
+    m = re.search(r'^proposal \S+: (.*)$', r.stdout, re.M)
+    return m.group(1).strip() if m else ''
+
+
+def offer(frm, to, bean='pot'):
+    r = tool(frm, 'dmpropose.py', 'make', '--to', to, '--under', bean, bean)
+    if r.returncode == 0:
+        commit(frm, f"{bean} offered to {to}", f"- action: [[{bean}]] offered to [[{to}]].")
+    return made(r), r
+
+
+def round_trip(frm, to, g, label):
+    """`frm` offers pot to `to`, garden `g` reads and takes it, and its gardener commits — (read, take, commit)."""
+    p, r = offer(frm, to)
+    rr = tool(g, 'dmpropose.py', 'read', p) if p else r
+    rt = tool(g, 'dmpropose.py', 'take', p) if p and rr.returncode in (0, 1) else rr
+    rc = commit(g, f"took pot ({label})", "- action: took in [[pot]].") if rt.returncode == 0 else rt
+    return rr, rt, rc
+
+
+POT = f"""---
+bean: pot
+kind: contract
+title: "A pot ada and ben share"
+status: active
+summary: "What each of them put in."
+nature: metaphysical
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+identity:
+  status: confirmed
+  anchors:
+    - {{ key: contract_id, value: "{BID}/contract:pot", class: logical, establishing: true }}
+provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: 2026-09-23 }}
+parties:
+  ada: {{ who: {{ bean: ada }} }}
+  ben: {{ who: {{ bean: ben }}, accepted: 2026-09-23 }}
+words: {{ form: spoken, agreed: 2026-09-23 }}
+transactions:
+  first:
+    what: "ada paid"
+    amount: {{ count: "10.00", unit: XTS }}
+    day: 2026-09-20
+    paid_by:
+      - {{ party: ada }}
+    borne_by:
+      - {{ party: ada, share: 1 }}
+      - {{ party: ben, share: 1 }}
+---
+What ada and ben put in.
+"""
+SECOND = """  second:
+    what: "ben paid"
+    amount: { count: "4.00", unit: XTS }
+    day: 2026-09-21
+    paid_by:
+      - { party: ben }
+    borne_by:
+      - { party: ada, share: 1 }
+      - { party: ben, share: 1 }
+    provenance: { src: asserted-by-human, by: "ben", as_of: 2026-09-21 }
+"""
+write(B, 'pot', POT)
+r = commit(B, "pot", "- action: recorded [[pot]], what ada and ben put in.")
+rr, rt, rc = round_trip(B, 'garden-a', A, 'new')
+check("(garden-b records a pot it shares with ada, offers it, and garden-a takes it in NEW — read CLEAN)",
+      r.returncode == 0 and rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and rc.returncode == 0, rr.out + rt.out)
+write(B, 'pot', POT.replace("---\nWhat ada", SECOND + "---\nWhat ada"))
+commit(B, "ben's own payment", "- action: [[pot]]: ben paid 4, and says so in the entry's own provenance record.")
+rr, rt, rc = round_trip(B, 'garden-a', A, 'second')
+check("(ben adds a payment carrying HIS OWN provenance record; garden-a reads it CLEAN and fuses it in)",
+      rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and 'transactions.second' in rr.stdout and rc.returncode == 0
+      and (fm_of(os.path.join(A, 'beans', 'pot.md')).get('provenance_of') or {}).get('transactions.second'), rr.out + rt.out)
+rr, rt, rc = round_trip(A, 'garden-b', B, 'back to b')
+check("THE ROUND TRIP of an entry with its own provenance: garden-a gives pot back, and garden-b reads it CLEAN — its own "
+      "stamp taken off the record inside the value `provenance_of` keeps, as off every other — and the take changes nothing",
+      rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and 'REFUSED' not in rr.out and 'nothing differed' in rt.stdout
+      and 'CONFLICT' not in rt.stdout + rr.stdout and rc.returncode == 0, rr.out + rt.out)
+rr, rt, rc = round_trip(B, 'garden-a', A, 'back to a')
+check("...and back again to garden-a: CLEAN, nothing differed",
+      rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and 'nothing differed' in rt.stdout and rc.returncode == 0,
+      rr.out + rt.out)
+# a real disagreement on that entry, settled by a person
+write(B, 'pot', read(os.path.join(B, 'beans', 'pot.md')).replace('amount: { count: "4.00", unit: XTS }',
+                                                               'amount: { count: "6.00", unit: XTS }'))
+commit(B, "ben corrects his payment", "- action: [[pot]]: ben's payment was 6, not 4.")
+rr, rt, rc = round_trip(B, 'garden-a', A, 'a disagreement')
+check("(ben corrects his payment; garden-a holds the old amount, so the join keeps both, for ada — read says so, not CLEAN)",
+      rr.returncode == 1 and 'CONFLICT transactions.second' in rr.stdout and 'CLEAN' not in rr.stdout
+      and rc.returncode == 0 and fm_of(os.path.join(A, 'beans', 'pot.md')).get('merge_open') is True, rr.out + rt.out)
+import dmsafe
+_pa = os.path.join(A, 'beans', 'pot.md')
+_sides = fm_of(_pa)['transactions']['second']['conflict']
+_pick = next(x for x in _sides if str(x['amount']['count']) in ('6', '6.00'))
+dmsafe.set_nested(_pa, 'transactions.second', '  second: ' + json.dumps(_pick, default=str) + '\n', expect=1,
+                  allow_remove=['transactions.second'])
+dmsafe.remove_block(_pa, 'merge_open')
+dmsafe.remove_block(_pa, 'merge_conflicts')
+r = commit(A, "ada settles ben's payment", "- action: settled [[pot]]'s `transactions.second`: ada picked ben's "
+                                          "corrected 6, and removed `merge_open` and `merge_conflicts`.")
+check("(ada settles it — one side picked, the markers removed — through garden-a's gate)",
+      r.returncode == 0 and 'merge_open' not in read(_pa), r.stdout + r.stderr + gate(A)[1])
+rr, rt, rc = round_trip(A, 'garden-b', B, 'after the settling')
+check("...and after the disagreement is SETTLED, the pot goes back to garden-b CLEAN — the side ada set aside is kept in "
+      "`provenance_of` as history, never read back as a live value, never taken for garden-b's word",
+      rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and 'CONFLICT' not in rr.stdout + rt.stdout
+      and rc.returncode == 0, rr.out + rt.out)
+rr, rt, rc = round_trip(B, 'garden-a', A, 'and around')
+check("...and back to garden-a CLEAN: a settled disagreement stays settled (MERGE.md invariant 6), in both gardens",
+      rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and 'CONFLICT' not in rr.stdout + rt.stdout
+      and 'merge_open' not in read(_pa) and rc.returncode == 0, rr.out + rt.out)
+
+# ---- a gate that gives no verdict has judged nothing
+# A proposal can carry what crashes the receiving garden's gate (a value of a shape the gate did not expect). The crash
+# goes to stderr, and read once took the gate's last stdout line for its verdict: CLEAN, exit 0 — and take wrote the
+# bean, after which every commit of that garden ended in the traceback. Simulated here by a gate that fails with a
+# traceback, and an ESC in it, in a copy of garden-b.
+p, r = offer(A, 'garden-b')
+CRASH = os.path.join(TWO, 'crash-of-b')
+shutil.copytree(B, CRASH, symlinks=True)
+put(os.path.join(CRASH, 'bin', 'dmcheck.py'),
+    "import sys\nsys.stderr.write('Traceback (most recent call last):\\n  File \"bin/dmcheck.py\", line 1784, in "
+    "ectl_on_aspect\\nTypeError: unhashable type: \\'list\\' \\x1b[8m\\n')\nsys.exit(1)\n")
+before = git(CRASH, 'status', '--porcelain').stdout
+rr = tool(CRASH, 'dmpropose.py', 'read', p)
+rt = tool(CRASH, 'dmpropose.py', 'take', p)
+check("a proposal whose scratch gate CRASHES is not CLEAN: read exits 1, saying the gate gave no verdict, with the last "
+      "lines of its stderr escaped (no ESC reaches the terminal)",
+      rr.returncode == 1 and 'CLEAN' not in rr.stdout and 'the gate gave no verdict' in rr.stdout
+      and 'unhashable type' in rr.stdout and '\\x1b[8m' in rr.stdout and '\x1b' not in rr.out, rr.out)
+check("...and take REFUSES it — the gate cannot judge the garden with it taken — and puts back every file it wrote",
+      rt.returncode == 1 and 'REFUSED' in rt.stdout and 'the gate gave no verdict' in rt.stdout and '\x1b' not in rt.out
+      and git(CRASH, 'status', '--porcelain').stdout == before, rt.out + git(CRASH, 'status', '--porcelain').stdout)
+rr = tool(B, 'dmpropose.py', 'read', p)
+check("...while the same proposal, read where the gate answers, is CLEAN", rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout,
+      rr.out)
+
+# ---- an agreement whose party is in dispute is not an agreement that does not name them
+PARTY = os.path.join(ONE, 'party-of-a')
+shutil.copytree(A, PARTY, symlinks=True)
+WHO[PARTY] = 'ada'
+_pp = os.path.join(PARTY, 'beans', 'pot.md')
+put(_pp, read(_pp).replace("  ben: { who: { bean: neighbour-ben }, accepted: 2026-09-23 }",
+                           "  ben: { conflict: [ { who: { bean: neighbour-ben }, accepted: 2026-09-23 }, "
+                           "{ who: { bean: ada } } ] }").replace("status: active\n", "status: active\n"
+                                                                  "merge_conflicts: [\"parties.ben\"]\nmerge_open: true\n", 1))
+r = commit(PARTY, "a disagreement over who ben is", "- action: [[pot]]: who party ben is, captured two ways.")
+m = tool(PARTY, 'dmpropose.py', 'make', '--to', 'garden-b', '--under', 'pot', 'ada')
+check("make --under an agreement whose party is in a MERGE CONFLICT says so — 'parties.ben is in a merge conflict: a "
+      "person settles it first (class J)' — never that the agreement does not name the other gardener",
+      r.returncode == 0 and m.returncode == 1 and 'parties.ben is in a merge conflict' in m.stdout
+      and 'a person settles it first (class J)' in m.stdout and 'does not name' not in m.stdout, m.out + r.stdout + r.stderr)
+put(_pp, read(_pp).replace("{ who: { bean: ada } } ] }", "{ who: { bean: neighbour-ben } } ] }"))
+commit(PARTY, "both sides name neighbour-ben", "- action: [[pot]]: both sides of party ben name [[neighbour-ben]].")
+m = tool(PARTY, 'dmpropose.py', 'make', '--to', 'garden-b', '--under', 'pot', 'ada')
+check("...and where every side names the same bean, it is that party: the proposal is made",
+      m.returncode == 0 and 'merge conflict' not in m.stdout, m.out)
+
+# ---- FIRST CONTACT with a garden an ORGANISATION keeps
+D = os.path.join(TWO, 'garden-d')
+r = run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), D, '--gardener', 'ali-household', '--gardener-kind', 'org',
+         '--gardener-name', "Ali's household"], cwd=ROOT)
+git(D, 'config', 'user.name', 'ali-household')
+git(D, 'config', 'user.email', 'ali-household@example.org')
+WHO[D] = 'ali-household'
+DID = str(yaml.safe_load(tool(D, 'dmpropose.py', 'id').stdout)['garden_id'])
+write(D, 'garden-a', garden_bean('garden-a', AID, 'ada', 'ali-household (gardener)'))
+write(D, 'ada', person('ada', 'Ada', f"{AID}/person:ada", 'ali-household (gardener)', 'Ada keeps garden-a.'))
+write(D, 'supply', f"""---
+bean: supply
+kind: contract
+title: "Ali's household supplies ada"
+status: active
+summary: "Ali's household supplies ada."
+nature: metaphysical
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+identity:
+  status: confirmed
+  anchors:
+    - {{ key: contract_id, value: "{DID}/contract:supply", class: logical, establishing: true }}
+provenance: {{ src: asserted-by-human, by: "ali-household (gardener)", as_of: 2026-09-23 }}
+parties:
+  ali-household: {{ who: {{ bean: ali-household }}, accepted: 2026-09-23 }}
+  ada: {{ who: {{ bean: ada }} }}
+words: {{ form: written, at: {{ bean: supply }} }}
+---
+What Ali's household supplies to ada.
+""")
+r = commit(D, "garden-a, ada, and what ali-household supplies", "- action: recorded [[garden-a]], [[ada]] and [[supply]].")
+p, m = offer(D, 'garden-a', 'supply')
+rr = tool(A, 'dmpropose.py', 'read', p) if p else m
+texts = dict(re.findall(r'^===== beans/(\S+)\.md(?: \(a skeleton\))? =====\n(.*?)(?=^===== )', rr.stdout, re.S | re.M))
+house = fm_of_text(texts.get('ali-household', ''))
+check("FIRST CONTACT with a garden an ORGANISATION keeps: read prints its gardener in the form the law gives an "
+      "organisation gardener (its kind, its nature, owned outside this garden) — never a person's crown",
+      r.returncode == 0 and m.returncode == 0 and rr.returncode == 1 and house.get('kind') == 'org'
+      and 'crown' not in json.dumps(house.get('owned_by'), default=str)
+      and isinstance(house.get('responsibility'), dict) and house['responsibility'].get('legal') == {'self': True}
+      and [a.get('value') for a in (house.get('identity') or {}).get('anchors') or []] == [f"{DID}/org:ali-household"], rr.out)
+check("...and prints ONE text for that file: the UNRESOLVED stub's fix says its bean is written above, with no skeleton "
+      "beside it", rr.stdout.count('===== beans/ali-household.md') == 1 and '(a skeleton)' not in rr.stdout
+      and 'beans/ali-household.md is written above, with the first-contact beans' in rr.stdout, rr.out)
+for b, t in texts.items():
+    put(os.path.join(A, 'beans', b + '.md'), t)
+r = commit(A, "met garden-d, which ali-household keeps", "- action: recorded [[garden-d]] and its gardener [[ali-household]], as garden-d "
+                                                 "names them.")
+rr = tool(A, 'dmpropose.py', 'read', p) if p else m
+check("...written as printed, in one commit, they pass garden-a's gate, and the proposal then reads CLEAN",
+      r.returncode == 0 and rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout, r.stdout + r.stderr + rr.out)
+check("...and no tool names a facet or a kind of gardener: dmpropose reads who owns a `garden` bean in the facet the "
+      "law roots ownership in (`facets`, `rooted`), and a gardener's form from the law",
+      getattr(M, 'root_of', lambda _r: None)('facets') == 'legal' and not re.search(r"'legal'|\blegal\b|'person'|crown: love",
+                                                        read(os.path.join(ROOT, 'bin', 'dmpropose.py'))))
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nmycelium: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

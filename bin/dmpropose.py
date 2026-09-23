@@ -21,7 +21,8 @@ TAKES it into the working tree (nothing is committed), and the receiving gardene
         here; commits nothing.
   read  verifies the proposal and says what taking it would do — NEW, FUSES WITH, CANDIDATE, each stub's local bean,
         the differences a fusion would record, a body that differs — and the gate's verdict on a scratch copy of
-        this garden with the proposal taken. Exit 0 clean, 1 refusals or conflicts, 2 setup error.
+        this garden with the proposal taken. A gate that gives no verdict (it crashed) has judged nothing: the
+        proposal is not clean, and take refuses it. Exit 0 clean, 1 refusals or conflicts, 2 setup error.
   take  applies it in the working tree: NEW beans written, their references moved to the local beans; FUSES beans
         merged by bin/dmmerge.py (a disagreement is kept, both values, for the gardener); the proposal kept as a
         `capture` on the sending garden's `garden` bean; a journal entry; the gate.
@@ -319,19 +320,45 @@ def only_bare(fm):
     return all(M.bare(a.get('key'), str(M.norm(a.get('value')))) for a in est)
 
 
+def root_facet():
+    """The facet ownership is rooted in — the one the `facets` registry's `rooted` link says every other reaches — read
+    from the law (bin/dmmerge.py `root_of`), never named here; None where the law declares none."""
+    return _merge().root_of('facets')
+
+
 def owner_of(fm):
-    """The bean that owns a being's `legal` facet (`owned_by.legal.owner`) — for a `garden` bean, who keeps it."""
+    """The bean that owns a being's root facet (`owned_by.<root facet>.owner`) — for a `garden` bean, who keeps it."""
     node = fm
-    for k in ('owned_by', 'legal', 'owner', 'bean'):
-        node = node.get(k) if isinstance(node, dict) else None
+    for k in ('owned_by', root_facet(), 'owner', 'bean'):
+        node = node.get(k) if isinstance(node, dict) and k is not None else None
     return str(node) if isinstance(node, str) and node else None
 
 
-def who_parties(fm):
-    """The beans an agreement's `parties` name, each by its `who`."""
-    return {str((e.get('who') or {}).get('bean')) for e in ((fm.get('parties') or {}).values()
-                                                          if isinstance(fm.get('parties'), dict) else [])
-            if isinstance(e, dict) and isinstance(e.get('who'), dict) and e['who'].get('bean')}
+def _who(e):
+    return str(e['who']['bean']) if isinstance(e, dict) and isinstance(e.get('who'), dict) and e['who'].get('bean') \
+        else None
+
+
+def who_parties(fm, disputed=None):
+    """The beans an agreement's `parties` name, each by its `who`. A party two gardens recorded two ways (a merge
+    conflict) is that party where every side names the same bean — what the sides differ on is not who it is; where
+    they name different beans, it is none, and `(key, {the beans its sides name})` is put in `disputed` where a list is
+    given, so a refusal can say the party waits for a person rather than that it is missing."""
+    out = set()
+    held = fm.get('parties') if isinstance(fm.get('parties'), dict) else {}
+    if isinstance(held.get('conflict'), list):              # the whole of `parties` in dispute
+        sides = [x for x in held['conflict'] if isinstance(x, dict)]
+        if disputed is not None:
+            disputed.append(('', {w for x in sides for w in map(_who, x.values()) if w}))
+        return out
+    for k, e in held.items():
+        sides = e['conflict'] if isinstance(e, dict) and isinstance(e.get('conflict'), list) else None
+        who = {_who(x) for x in (sides if sides is not None else [e])}
+        if len(who) == 1 and None not in who:
+            out |= who
+        elif sides is not None and disputed is not None:
+            disputed.append((str(k), who - {None}))
+    return out
 
 
 def anchor_value(fm, key):
@@ -449,6 +476,19 @@ def strip_own(fm, gid):
     for _path, rec in prov_records(fm):
         if str(rec.get('garden')) == gid:
             del rec['garden']
+    return fm
+
+
+def come_home(fm, gid):
+    """strip_own, and the same strip inside each value `provenance_of` records — what the merge reads a bean as when
+    it comes back. The other garden's `provenance_of` keeps a value as it arrived there, stamp and all; read stamped, a
+    value that came home unchanged was a SECOND value beside itself, and the merge recorded a disagreement nobody had."""
+    fm = strip_own(fm, gid)
+    pv = fm.get('provenance_of') if isinstance(fm, dict) else None
+    for recs in (pv.values() if isinstance(pv, dict) else []):
+        for r in (recs if isinstance(recs, list) else []):
+            if isinstance(r, dict) and 'value' in r:
+                r['value'] = strip_own(r['value'], gid)
     return fm
 
 
@@ -952,8 +992,8 @@ def cmd_make(argv):
         if to_id == own:
             refusals.append((f"--to {to} is this garden itself ({own})", "a garden does not propose to itself"))
         if not to_gardener:
-            refusals.append((f"--to {to} names no owner (`owned_by.legal.owner`) — the gardener of that garden",
-                             "the person who keeps a garden owns its `garden` bean"))
+            refusals.append((f"--to {to} names no owner (`owned_by.{root_facet() or '<the root facet>'}.owner`) — the "
+                             f"gardener of that garden", "whoever keeps a garden owns its `garden` bean"))
 
     # THE AGREEMENT IT IS MADE UNDER. Consent is the soil: nothing flows without an agreement both gardeners are party to.
     under_id = None
@@ -962,8 +1002,17 @@ def cmd_make(argv):
         refusals.append((f"--under {under} is not a `contract` in this garden's HEAD",
                          "a proposal is made under an agreement between the two gardeners: record it and commit it"))
     else:
-        missing = [g for g in (gardener, to_gardener) if g and g not in who_parties(ub[0])]
-        if missing:
+        disputed = []
+        missing = [g for g in (gardener, to_gardener) if g and g not in who_parties(ub[0], disputed)]
+        waits = [(k, w) for k, w in disputed if not w or any(g in w for g in missing)]
+        if missing and waits:
+            # NOT MISSING — IN DISPUTE: the agreement names the party two ways, and which is so is a person's call
+            refusals.append(('; '.join((f"parties.{k}" if k else "`parties` as a whole") + " is in a merge conflict"
+                                       + (f" (its sides name {', '.join(sorted(w))})" if w else '') for k, w in waits)
+                             + f" — so --under {under} cannot yet be read as naming {' and '.join(missing)}",
+                             "a person settles it first (class J): pick one side, remove `merge_open` and "
+                             "`merge_conflicts`, journal and commit it, and make the proposal again"))
+        elif missing:
             refusals.append((f"--under {under} does not name {' and '.join(missing)} among its `parties`",
                              f"a proposal is made under an agreement whose parties include this garden's gardener "
                              f"({gardener}) and the other garden's ({to_gardener})"))
@@ -1256,26 +1305,44 @@ def own_claims(fm, own, local_fm):
     """Where a carried bean says THIS garden said something — a record stamped with this garden's id, a value
     `provenance_of` says was seen here — and this garden holds no identical record at the same place. A record made
     here and given back is one the local bean still holds, byte for byte in meaning (a round trip); any other is
-    another garden's word dressed as this one's. Against no local bean (a NEW one) every such claim is one."""
+    another garden's word dressed as this one's. Against no local bean (a NEW one) every such claim is one.
+
+    WHAT CAME HOME IS COMPARED WITHOUT THE STAMP IT TRAVELLED UNDER, wherever the stamp sits. A value that carries its
+    own provenance record — an entry a person here wrote with `provenance: {…}` — went out stamped `garden: <this
+    garden>`, and the other garden's `provenance_of` keeps the value as it arrived, stamp and all. Compared stamped
+    against the value here, which a record made here never carries (provenance_record: 'where that is not this one'),
+    the round trip read as a forgery, and the bean could never go back to the garden it came from. So this garden's
+    own stamp is taken off every record INSIDE a value, and inside each `provenance_of` record, before anything is
+    compared — the same strip a top-level record gets (MERGE.md §16)."""
     M = _merge()
     out = []
+
+    def bare(v):
+        return M.canonical(M.norm(strip_own(v, own)))
     for path, rec in prov_records(fm):
         if str(rec.get('garden')) != own:
             continue
         mine = record_at(local_fm, path, fm) if local_fm is not None else None
         theirs = {k: v for k, v in rec.items() if k != 'garden'}
-        if mine is None or M.canonical(M.norm(mine)) != M.canonical(M.norm(theirs)):
+        if mine is None or bare(mine) != bare(theirs):
             out.append(_dotted(path))
     pv = fm.get('provenance_of')
     for pth, recs in (pv.items() if isinstance(pv, dict) else []):
+        carried = value_at(fm, pth)
         for r in recs:
             if own not in [str(s) for s in (r.get('seen_in') or [])]:
                 continue
+            if not r.get('subsumed') and (carried is MISSING or M.canon_at(pth, strip_own(carried, own))
+                                          != M.canon_at(pth, strip_own(r.get('value'), own))):
+                # HISTORY, NOT A CLAIM: a record of a value the bean no longer holds and nothing subsumed — the side of
+                # a disagreement a person set aside. The merge never reads it back (dmmerge._apply_prov), so it
+                # credits nothing to this garden; a garden's own earlier word, settled away, is not a forgery.
+                continue
             held = (local_fm.get('provenance_of') or {}).get(pth) if local_fm is not None else None
-            same = isinstance(held, list) and any(isinstance(h, dict) and M.canonical(M.norm(h)) == M.canonical(M.norm(r))
-                                                  for h in held)
-            here_too = local_fm is not None and value_at(local_fm, pth) is not MISSING and \
-                M.canon_at(pth, value_at(local_fm, pth)) == M.canon_at(pth, r.get('value'))
+            same = isinstance(held, list) and any(isinstance(h, dict) and bare(h) == bare(r) for h in held)
+            here = value_at(local_fm, pth) if local_fm is not None else MISSING
+            here_too = here is not MISSING and \
+                M.canon_at(pth, strip_own(here, own)) == M.canon_at(pth, strip_own(r.get('value'), own))
             if not (same or here_too):
                 out.append(f"provenance_of.{pth}")
     return list(dict.fromkeys(out))
@@ -1551,8 +1618,8 @@ def analyse(path, as_test=False):
                           "ask the sending garden to make it again with bin/dmpropose.py"))
     raw = fms
     # A record made HERE and given back carries no `garden`: taken off before anything is compared or written — once
-    # the checks below have found this garden still holds it.
-    fms = {b: strip_own(fm, own) for b, fm in fms.items()}
+    # the checks below have found this garden still holds it — on a record, and inside what `provenance_of` records.
+    fms = {b: come_home(fm, own) for b, fm in fms.items()}
     A['fms'], A['bodies'] = fms, bodies
 
     home = fid or own                                       # a chat proposal is written in this garden's own names
@@ -1601,8 +1668,8 @@ def analyse(path, as_test=False):
                               f"a person decides (class J): if [[{fb}]] is now kept by someone else, record that on it "
                               f"first; otherwise ask the sending garden why its proposal says so"))
         else:
-            R.append((f"this garden holds no `garden` bean for {fname} ({fid}) — a garden not met before",
-                      first_contact(env, stubs, fms, local, resolve)))
+            fix, A['first_contact'] = first_contact(env, stubs, fms, local, resolve)
+            R.append((f"this garden holds no `garden` bean for {fname} ({fid}) — a garden not met before", fix))
     if mine_fp:
         was = taken_before(mine_fp, str(pid), local, fb)
         if was:
@@ -1639,7 +1706,12 @@ def analyse(path, as_test=False):
                       "a person decides which (class J)"))
             L.append(f"  {s:<24} RESOLVES TO {', '.join(hits)} — AMBIGUOUS")
         else:
-            R.append((f"stub {s} is UNRESOLVED: this garden holds no bean it names", skeleton(s, stubs[s], local, fid)))
+            bid = s if s not in local else f"{s}-{(fid or 'chat')[:6]}"
+            # ONE TEXT PER FILE: a stub whose whole bean the first-contact fix already printed gets no skeleton too — two
+            # texts for one file, written in order, left the skeleton the gate refuses in place of the bean it accepts.
+            R.append((f"stub {s} is UNRESOLVED: this garden holds no bean it names",
+                      f"beans/{bid}.md is written above, with the first-contact beans — once they are committed, read "
+                      f"the proposal again" if bid in A.get('first_contact', ()) else skeleton(s, stubs[s], local, fid)))
             L.append(f"  {s:<24} UNRESOLVED")
 
     fused = resolve('proposal', fms.items())
@@ -1687,16 +1759,21 @@ def analyse(path, as_test=False):
                 continue
             A['fuse'].append((b, lid, rw, seed))
             L.append(f"  {b:<24} FUSES WITH {lid}")
+            # EVERY DISAGREEMENT THE JOIN RECORDS, whatever key it sits under — the one `take` marks the bean with. A
+            # value may be the same on both sides and still meet another in the join: one that a `provenance_of`
+            # record brings back. Read only where the two values differed, that was a CLEAN read of a take that then
+            # marked the bean unclean.
+            for k in sorted(k for k in seed['facts'] if k not in M.STRUCTURAL):
+                for cp in M.conflict_paths(seed['facts'].get(k), k):
+                    vals = [c['value'] for c in (M.at(seed, cp) or {}).get('conflict') or []]
+                    A['attention'].append(f"{lid}: {cp}")
+                    L.append(f"      CONFLICT {_esc(cp)} — both kept, for the gardener: "
+                             + ' | '.join(_esc(M.canonical(v)) for v in vals))
             # WHAT IT WOULD CHANGE, leaf by leaf and whole — the gardener ratifies from this, so nothing is cut short.
             for k in rw:
                 if k in M.STRUCTURAL or M.canon_value(k, lfm.get(k)) == M.canon_value(k, rw[k]):
                     continue
                 cps = M.conflict_paths(seed['facts'].get(k), k)
-                for cp in cps:
-                    vals = [c['value'] for c in (M.at(seed, cp) or {}).get('conflict') or []]
-                    A['attention'].append(f"{lid}: {cp}")
-                    L.append(f"      CONFLICT {_esc(cp)} — both kept, for the gardener: "
-                             + ' | '.join(_esc(M.canonical(v)) for v in vals))
                 old = M.canon_value(k, lfm[k]) if k in lfm else MISSING
                 for where, a, b2 in changes(old, M.resolved(seed['facts'][k], lfm.get(k)), (k,)):
                     if any(where == cp or where.startswith(cp + '.') for cp in cps):
@@ -1774,39 +1851,69 @@ def analyse(path, as_test=False):
     return A
 
 
+def gardener_form(kind):
+    """What the law says a gardener of `kind` is written with — its nature, and the crown it is pinned to where its kind
+    is — read as a new garden's gardener is planted: by this garden's own seed/germinate.py (`gardener_form`), from its
+    seed/std-vocab.md, where the law's `manifest.gardener` admits the kind. None where it does not, or the seed cannot
+    say: then the bean is written by hand. No kind is named here, so an organisation's garden is met as a person's is."""
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('daftar_germinate', os.path.join(ROOT, 'seed', 'germinate.py'))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)             # a function read from the seed, not run: germinate's main is not called
+        law = dmparse.loads(dmparse.read(os.path.join(ROOT, 'seed', 'std-vocab.md'))[0] or '') or {}
+        admitted = mod.gardener_kinds(law) if hasattr(mod, 'gardener_kinds') else None
+        if admitted is not None and kind not in admitted:
+            return None
+        form = mod.gardener_form(law, kind)
+        return form if isinstance(form, dict) and form.get('nature') else None
+    except Exception:                            # noqa: BLE001 — a seed that cannot say is a bean written by hand
+        return None
+
+
 def first_contact(env, stubs, fms, local, resolve):
     """The fix for a proposal from a garden not met before: the two beans its gardener writes here, in ONE commit of
     theirs (class F) — the sending garden, and that garden's gardener under the name their own garden gave them, kept
     byte for byte. Printed, never written: accepting a garden, and a name for its keeper, is the gardener's. Every value
     taken from the proposal is checked against the law first and written with JSON's quoting, so nothing it carries
-    can add a line to the bean it is printed into."""
+    can add a line to the bean it is printed into. The gardener is written in the form the law gives a gardener of
+    their kind (`gardener_form`) — a person or an organisation alike — and ownership in the facet the law roots it in.
+
+    Returns (the text of the fix, the ids of the beans it prints)."""
     frm = env.get('from') or {}
     fid, name, g = str(frm.get('garden')), str(frm.get('name')), str(frm.get('gardener'))
     here = manifest().get('gardener') or 'the gardener'
     today = datetime.date.today().isoformat()
+    facet = root_facet()
     cap = stubs.get(g) or (stub_of(fms[g]) if g in fms else None)
     person, owner, note = None, g, ''
-    if cap is None:
+    if facet is None:
+        note = ("\n  This garden's law declares no facet that ownership is rooted in (a `rooted` link on `facets`), so "
+                "no bean is printed here: write both by hand.")
+    elif cap is None:
         note = (f"\n  The proposal does not carry its gardener ({g}): record that person here first, under the name "
                 f"their garden gave them.")
     else:
         known = resolve('gardener', [(g, cap)]).get(g) or []
         probs = stub_problems(cap)
+        form = gardener_form(str(cap.get('kind'))) if not probs else None
         if len(known) == 1:
             owner, note = known[0], f"\n  Their gardener is known here already, as [[{known[0]}]]."
         elif probs:
             note = (f"\n  The stub of their gardener is not in a bean's form here ({'; '.join(probs)}): write that "
                     f"person by hand from what their garden tells you, in the same commit.")
-        elif cap.get('kind') != 'person':
-            note = (f"\n  Their gardener is a {cap.get('kind')}: write that bean by hand from the stub, its anchors "
-                    f"byte for byte, in the same commit.")
+        elif form is None:
+            note = (f"\n  Their gardener is a {cap.get('kind')}, which this garden's law does not say how to write as a "
+                    f"gardener: write that bean by hand from the stub, its anchors byte for byte, in the same commit.")
         else:
             owner = g if g not in local else f"{g}-{fid[:6]}"
             title = str(cap.get('title') or g)
-            person = (f"---\nbean: {owner}\nkind: person\ntitle: {_q(title)}\nstatus: active\n"
+            owned = (f"crown: {form['crown']}" if form.get('crown')
+                     else 'external: "its members, as its own rules say: outside this garden"')
+            person = (f"---\nbean: {owner}\nkind: {_q(cap.get('kind'))}\ntitle: {_q(title)}\nstatus: active\n"
                       f"summary: {_q(f'The gardener of {name}, a garden this one deals with.')}\n"
-                      f"nature: {_q(cap.get('nature') or 'living')}\nowned_by: {{ legal: {{ crown: love }} }}\n"
-                      f"responsibility: {{ legal: {{ self: true }} }}\n"
+                      f"nature: {_q(cap.get('nature') or form['nature'])}\nowned_by: {{ {facet}: {{ {owned} }} }}\n"
+                      f"responsibility: {{ {facet}: {{ self: true }} }}\n"
                       f"identity:\n  status: confirmed\n  anchors:\n{anchor_lines(cap)}"
                       f"provenance: {{ src: asserted-by-human, by: {_q(here + ' (gardener)')}, as_of: {today} }}\n---\n"
                       f"The gardener of {name}, named here as their own garden names them (its proposal "
@@ -1815,21 +1922,21 @@ def first_contact(env, stubs, fms, local, resolve):
     garden = (f"---\nbean: {gbid}\nkind: garden\n"
               f"title: {_q(f'{name} — the garden {owner} keeps')}\nstatus: active\n"
               f"summary: \"Another garden this one deals with.\"\nnature: metaphysical\n"
-              f"owned_by: {{ legal: {{ owner: {{ bean: {owner} }} }} }}\n"
-              f"responsibility: {{ legal: {{ holder: {{ bean: {owner} }} }} }}\n"
+              f"owned_by: {{ {facet}: {{ owner: {{ bean: {owner} }} }} }}\n"
+              f"responsibility: {{ {facet}: {{ holder: {{ bean: {owner} }} }} }}\n"
               f"identity:\n  status: confirmed\n  anchors:\n"
               f"    - {{ key: garden_id, value: {_q(fid)}, class: logical, establishing: true }}\n"
               f"provenance: {{ src: asserted-by-human, by: {_q(here + ' (gardener)')}, as_of: {today} }}\n"
               + (f"test: {_q(frm['test'])}\n" if frm.get('test') else '')
               + f"---\nThe garden {owner} keeps; its id is the one its proposal {env.get('proposal')} carried.\n")
-    beans = [(gbid, garden)] + ([(owner, person)] if person else [])
+    beans = ([(gbid, garden)] if facet else []) + ([(owner, person)] if person else [])
     return (f"accepting a garden not met before is the gardener's (class F). Write "
-            + (' and '.join(f'beans/{b}.md' for b, _t in beans))
+            + (' and '.join(f'beans/{b}.md' for b, _t in beans) or "the sending garden's `garden` bean")
             + (f" and the bean of its gardener ({owner})" if person is None and owner not in local else '')
             + ", journal them in one entry, and commit them as ONE commit; then read the proposal again." + note
             + (f"\n  It says it is a TEST garden, so the garden bean below carries `test:` — this garden's own mark, which "
                f"holds its later proposals to it whatever they say." if frm.get('test') else '') + '\n'
-            + ''.join(f"===== beans/{b}.md =====\n{t}" for b, t in beans) + "===== end =====")
+            + ''.join(f"===== beans/{b}.md =====\n{t}" for b, t in beans) + "===== end ====="), [b for b, _t in beans]
 
 
 def _rmtree(p):
@@ -1850,11 +1957,34 @@ def _on_signal(signum, _frame):
     raise SystemExit(128 + signum)
 
 
+# THE GATE'S VERDICT is its last line — `<garden> (…): N docs, E error(s), W warning(s)` — and nothing else is one.
+_VERDICT = re.compile(r'\b\d+ error\(s\)')
+NO_VERDICT = "the gate gave no verdict"
+
+
+def gate_verdict(g):
+    """(the verdict line, its ERROR lines, why there is no verdict) of one run of the gate. A gate that ended without
+    printing its verdict line, or that failed (a non-zero exit) without refusing anything by name, has judged nothing:
+    it crashed, and its stderr says where. Read as its stdout's last line, such a run once came out as a verdict of no
+    errors — a proposal that crashed the gate called CLEAN, and taken in, a garden whose every commit ended in the
+    traceback until someone took the bean out by hand."""
+    lines = [l for l in (g.stdout or '').split('\n') if l.strip()]
+    errs = [l for l in lines if l.startswith('ERROR')]
+    last = lines[-1] if lines else ''
+    if _VERDICT.search(last) and not (g.returncode and not errs):
+        return last, errs, None
+    tail = [l for l in (g.stderr or '').split('\n') if l.strip()][-6:] or lines[-6:]
+    return None, errs, (f"{NO_VERDICT} (exit {g.returncode}" + (", its last lines: " + ' / '.join(_esc(l) for l in tail)
+                                                             if tail else ", and it printed nothing") + ")")
+
+
 def scratch_gate(path):
     """The gate's verdict on a scratch copy of this garden with the proposal taken: a clone (the same identity) made
     outside every garden, the working tree laid over it, `take` run there and its result staged — so the verdict is
     the one the gardener's commit would meet. Nothing is written here. Each step has SCRATCH_TIMEOUT seconds, and the
-    copy is removed however the reading ends — a verdict, a timeout, an interrupt or a signal to stop."""
+    copy is removed however the reading ends — a verdict, a timeout, an interrupt or a signal to stop.
+
+    Returns (verdict line or None, ERROR lines or what stopped it, why there is no verdict or None)."""
     tmp = tempfile.mkdtemp(prefix='dmpropose-read-')
     before = {}
     for name in ('SIGTERM', 'SIGHUP'):                  # a signal to stop becomes an exception, so `finally` runs
@@ -1868,7 +1998,7 @@ def scratch_gate(path):
         sc = os.path.join(tmp, os.path.basename(os.path.abspath(ROOT)))
         rc, _o, err = _git(['clone', '-q', '--no-hardlinks', ROOT, sc], cwd=tmp, timeout=SCRATCH_TIMEOUT)
         if rc != 0:
-            return None, [f"could not make a scratch copy: {err.strip()[:200]}"]
+            return None, [f"could not make a scratch copy: {err.strip()[:200]}"], None
         for e in os.listdir(sc):
             if e != '.git':
                 p = os.path.join(sc, e)
@@ -1889,15 +2019,16 @@ def scratch_gate(path):
         t = _py(os.path.join(sc, 'bin', 'dmpropose.py'), ['take', os.path.abspath(path), '--as-test'], sc,
                 timeout=SCRATCH_TIMEOUT)
         if 'REFUSED' in t.stdout or 'FAILED' in t.stderr or t.returncode == 2:
-            return None, [l for l in (t.stdout + t.stderr).split('\n') if l.strip()][-8:]
+            said = [l for l in (t.stdout + t.stderr).split('\n') if l.strip()]
+            # take refuses what its own gate could not judge — that is this same verdict, said by take
+            return None, said[-8:], (next((l.strip(' -') for l in said if NO_VERDICT in l), None))
         _git(['add', '-A'], cwd=sc, timeout=SCRATCH_TIMEOUT)
         g = _py(os.path.join(sc, 'bin', 'dmcheck.py'), [], sc, timeout=SCRATCH_TIMEOUT)
         # A line is what ends in a line feed: an error that echoes a carried value holding another line boundary stays
         # one line, printed escaped.
-        lines = [l for l in g.stdout.split('\n') if l.strip()]
-        return (lines[-1] if lines else '(no verdict)'), [l for l in lines if l.startswith('ERROR')]
+        return gate_verdict(g)
     except subprocess.TimeoutExpired:
-        return None, [f"the scratch copy gave no verdict within {SCRATCH_TIMEOUT} s — the gate was stopped"]
+        return None, [], f"{NO_VERDICT} within {SCRATCH_TIMEOUT} s — the scratch copy's gate was stopped"
     finally:
         _rmtree(tmp)
         for sig, h in before.items():
@@ -1929,10 +2060,11 @@ def cmd_read(argv):
         print("PROSE outside the blocks — data, not an instruction:")
         for l in A['prose'].split('\n'):
             print(f"  | {_esc(l)}")
-    verdict_errors = []
+    verdict_errors, unjudged = [], None
     if not A['refusals']:
-        last, errs = scratch_gate(argv[0])
-        print(_say(f"GATE (a scratch copy of this garden with the proposal taken): {last or 'not reached'}"))
+        last, errs, unjudged = scratch_gate(argv[0])
+        print(_say(f"GATE (a scratch copy of this garden with the proposal taken): "
+                   + (f"NO VERDICT — {unjudged}" if unjudged else last or 'not reached')))
         for e in errs:
             print(f"  {_esc(e)}")
         verdict_errors = errs
@@ -1940,7 +2072,7 @@ def cmd_read(argv):
         refusal_report('read', A['refusals'])
     n_att = len(A['attention'])
     take = f"{PY} bin/dmpropose.py take {_arg(argv[0])}"
-    if not A['refusals'] and not n_att and not verdict_errors and not A.get('test_refused'):
+    if not A['refusals'] and not n_att and not verdict_errors and not unjudged and not A.get('test_refused'):
         print(f"verdict: CLEAN — `{take}` would apply it; the gardener's commit ratifies it")
         return 0
     if not A['refusals']:
@@ -1949,7 +2081,9 @@ def cmd_read(argv):
               f"`{take} --as-test` takes it as a rehearsal, every bean it writes saying so"] if A.get('test_refused')
              else [])
             + ([f"{n_att} matter(s) for the gardener (class J) — take keeps both values of every conflict"] if n_att else [])
-            + ([f"the gate would refuse the result ({len(verdict_errors)} error(s))"] if verdict_errors else [])))
+            + ([f"{NO_VERDICT} on this garden with the proposal taken, so take refuses it: whether it is clean is "
+                f"not known — `{PY} bin/dmcheck.py` here says whether the gate fails without it too"] if unjudged
+               else [f"the gate would refuse the result ({len(verdict_errors)} error(s))"] if verdict_errors else [])))
     return 1
 
 
@@ -2115,19 +2249,24 @@ def cmd_take(argv):
         remember(dmjournal.stamps_path())               # a heading registered for an entry never kept is taken back
         h = journal_append(dmjournal.stamp(who_runs(), f"took in proposal {pid}"), body)
     except Exception as e:
-        for p, data in touched.items():
-            if data is None:
-                if os.path.exists(p):
-                    os.remove(p)
-            else:
-                with open(p, 'wb') as fh:
-                    fh.write(data)
-        for d in made_dirs:
-            try:
-                os.rmdir(d)
-            except OSError:
-                pass
+        put_back(touched, made_dirs)
         print(_say(f"dmpropose take: FAILED and put every file back — {e}"), file=sys.stderr)
+        return 1
+    # THE GATE JUDGES WHAT WAS WRITTEN, and a gate that cannot judge it has refused it: a proposal that crashes the gate,
+    # left in the working tree, is a garden whose every commit ends in that traceback until someone takes it out by hand.
+    try:
+        last, errs, unjudged = gate_verdict(_py(os.path.join(ROOT, 'bin', 'dmcheck.py'), [], ROOT,
+                                                timeout=SCRATCH_TIMEOUT))
+    except subprocess.TimeoutExpired:
+        last, errs, unjudged = None, [], f"{NO_VERDICT} within {SCRATCH_TIMEOUT} s — it was stopped"
+    if unjudged:
+        put_back(touched, made_dirs)
+        for l in A['lines']:
+            print(_say(l))
+        refusal_report('take', [(f"{unjudged} on this garden with the proposal taken, so nothing of it is kept here",
+                                 f"run `{PY} bin/dmcheck.py`: if the gate fails without the proposal too, this garden "
+                                 f"needs mending first; if not, what the proposal carries is what the gate cannot read "
+                                 f"— ask the sending garden about it")])
         return 1
     for l in A['lines']:
         print(_say(l))
@@ -2137,18 +2276,27 @@ def cmd_take(argv):
     if cap_line:
         print(_say(f"  {cap_line[2:].rstrip()}"))
     print(f"  journal: {h}")
-    try:
-        g = _py(os.path.join(ROOT, 'bin', 'dmcheck.py'), [], ROOT, timeout=SCRATCH_TIMEOUT)
-    except subprocess.TimeoutExpired:
-        print(f"GATE: no verdict within {SCRATCH_TIMEOUT} s — run `{PY} bin/dmcheck.py` before committing")
-        return 1
-    lines = [l for l in g.stdout.split('\n') if l.strip()]
-    for l in lines:
-        if l.startswith('ERROR'):
-            print(f"  {_esc(l)}")
-    print(_say(f"GATE: {lines[-1] if lines else '(no verdict)'}"))
+    for l in errs:
+        print(f"  {_esc(l)}")
+    print(_say(f"GATE: {last}"))
     print("Nothing is committed: the gardener's commit is the ratification —\n  git add -A\n  git commit")
-    return 1 if g.returncode else 0
+    return 1 if errs else 0
+
+
+def put_back(touched, made_dirs):
+    """Every file `take` touched back as it was — a file it made removed, with the directories it made for it."""
+    for p, data in touched.items():
+        if data is None:
+            if os.path.exists(p):
+                os.remove(p)
+        else:
+            with open(p, 'wb') as fh:
+                fh.write(data)
+    for d in made_dirs:
+        try:
+            os.rmdir(d)
+        except OSError:
+            pass
 
 
 # ================================================================== mint

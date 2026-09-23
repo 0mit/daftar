@@ -22,7 +22,7 @@ driver `.gitattributes` names. Roughly 15 seconds.
 
 Run: python3 test/converge.py   (0 = green)
 """
-import json, os, shutil, subprocess, sys, tempfile
+import json, os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
@@ -364,6 +364,62 @@ check("the driver writes what each side wrote: ours kept `\"900.00\"` with its b
       _res[2] == [] and _after['transactions']['t1']['amount']['count'] == '900.00'
       and _after['transactions']['t1']['borne_by'][0]['party'] == 'sam'
       and _after['transactions']['t2']['amount']['count'] == '12.50', open(_p, encoding='utf-8').read())
+
+# ---------------------------------------------------------------- ANOTHER GARDEN'S LAW, entry by entry
+# A VOCAB.md is text a person or an agent edited, and another garden's is text this garden never wrote. Each shape below
+# once ended the merge in a traceback, or was passed over in silence; each is now named — which garden, where, and what
+# it should be — and the merge stops before it touches a bean, as it stops for two pins.
+_SHAPES = {
+    'local_terms: 5': "`local_terms` is int, not a list of entries",
+    'local_kinds: 7': "`local_kinds` is int, not a list of entries",
+    'local_terms: [ { term: [x] } ]': "local_terms[0].term should be text",
+    'local_terms: [ { term: { a: b } } ]': "local_terms[0].term should be text",
+    'local_kinds: [ { kind: [x] } ]': "local_kinds[0].kind should be text",
+    'local_terms: [ { term: x, schema: 5 } ]': "local_terms[0].schema should be a mapping",
+    'local_terms: [ { term: x, schema: { attrs: 5 } } ]': "local_terms[0].schema.attrs should be a mapping",
+    'local_terms: [ { term: x, merge: 5 } ]': "local_terms[0].merge should be a mapping",
+    'local_terms: [ { term: x, context_keys: 5 } ]': "local_terms[0].context_keys should be a list of text",
+    'local_terms: [ 5 ]': "local_terms[0] is int, not an entry",
+    'local_kinds: [ x ]': "local_kinds[0] is str, not an entry",
+    'registry_additions: { facets: [ 5 ] }': "registry_additions.facets should be a list of rows",
+}
+
+
+def _with_vocab(src, dst, line):
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns('.git'))
+    v = open(os.path.join(dst, 'VOCAB.md'), encoding='utf-8').read()
+    key = line.split(':')[0]
+    v = re.sub(rf'(?m)^{key}:.*$', line, v, count=1) if re.search(rf'(?m)^{key}:', v) else v.replace('---\n', f'---\n{line}\n', 1)
+    open(os.path.join(dst, 'VOCAB.md'), 'w', encoding='utf-8', newline='\n').write(v)
+    return dst
+
+
+_bad = []
+for _n, (_line, _said) in enumerate(_SHAPES.items()):
+    _other = _with_vocab(_one, os.path.join(TMP, f'law-{_n}'), _line)
+    _r = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '.', _other], capture_output=True,
+                        text=True, cwd=_one)
+    if not (_r.returncode == 1 and 'Traceback' not in _r.stderr and "MERGE REFUSED — a garden's law cannot be read" in _r.stderr
+            and f"law-{_n}: VOCAB.md {_said}" in _r.stderr):
+        _bad.append((_line, _r.returncode, _r.stderr[-400:]))
+check(f"another garden's VOCAB.md in {len(_SHAPES)} shapes the merge cannot read as law — a block that is not a list, an "
+      "entry that is not a mapping, a name that is not text, a schema, attrs or merge that is not a mapping, context_keys "
+      "that are not a list of text, a registry row that is not a mapping — each is NAMED, garden and place, and the merge "
+      "stops before any bean: never a traceback, never passed in silence", not _bad, _bad)
+_own = _with_vocab(_one, os.path.join(TMP, 'law-own'), 'local_terms: [ { term: x, merge: 5 } ]')
+_r = subprocess.run([sys.executable, os.path.join(_own, 'bin', 'dmmerge.py'), '.', _one], capture_output=True, text=True,
+                    cwd=_own)
+_d = subprocess.run([sys.executable, os.path.join(_own, 'bin', 'dmmerge.py'), '--file', *(
+    [os.path.join(_own, 'beans', 'box.md')] * 3)], capture_output=True, text=True, cwd=_own)
+check("...and this garden's OWN law the same, where the merge reads its terms by it: named, never a traceback at import "
+      "— in the report and in the git merge driver alike, which leaves the file untouched",
+      _r.returncode == 1 and "this garden's own law" in _r.stderr and 'local_terms[0].merge should be a mapping' in _r.stderr
+      and _d.returncode == 1 and 'Traceback' not in _r.stderr + _d.stderr and 'cannot read as law' in _d.stderr,
+      _r.stderr[-400:] + _d.stderr[-400:])
+_ok = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '.', _with_vocab(_one, os.path.join(TMP, 'law-ok'), 'local_terms: []')],
+                     capture_output=True, text=True, cwd=_one)
+check("...while a law it can read merges as before", 'cannot be read' not in _ok.stderr and 'Traceback' not in _ok.stderr
+      and 'fingerprint:' in _ok.stdout, _ok.stderr[-400:])
 
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nconverge: {sum(results)}/{len(results)} checks passed")
