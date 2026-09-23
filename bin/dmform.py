@@ -75,7 +75,7 @@ DOMAINS = {
     'ref':         "in: ref                                        a {bean|mapping[, field]} ref, resolved by the gate",
     'pointer':     "in: { pointer: bean_field_pointer }            '<section>.<key>' on this bean, {bean, field} on another, or 'file:<path>'",
     'id':          "in: id                                         the id of a bean or mapping — a key of the ref FORM itself, which the gate resolves",
-    'prose':       "in: prose                                      a reason, a description, a remark: deliberately not a position. `why`, `what`, `note`",
+    'prose':       "in: prose | { prose: named }                   a reason, a description, a remark: deliberately not a position. `why`, `what`, `note`; `named`: one text, or texts under names",
     'untyped':     "in: untyped                                    a position whose domain nobody has declared yet — a standing debt, visible as one",
 }
 
@@ -115,6 +115,8 @@ def _domain(d):
             return 'quantity', d['quantity']
         if 'pointer' in d:
             return 'pointer', d['pointer']
+        if d.get('prose') == 'named':
+            return 'prose', 'named'          # one text, or texts under the names of what they say
     return 'unknown', d
 
 

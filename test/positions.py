@@ -135,6 +135,25 @@ open(v, "w").write(s.replace("local_terms: []", """local_terms:
         rides:  { in: { key_of: links } }
     merge: { cardinality: single, order: none }"""))
 LINK = '  - { protocol: smtp, system: ipv4, at: "203.0.113.10", port: 25, exposure: lan, observed: 2026-09-20 }\nlinks:\n  wan0: { kind: ethernet, medium: copper }\n'
+# A closed list on a mapping's own attribute offers positions like an entry's (21.0), so this garden's `probe_stamp.mode`
+# is accounted for: two small beans hold `fast` and `slow` throughout, whatever the probe bean says.
+def twin(mode):
+    open(os.path.join(G, "beans", "twin-%s.md" % mode), "w").write("""---
+bean: twin-%s
+kind: product
+title: "a twin"
+status: active
+summary: "probe"
+nature: metaphysical
+identity: { status: confirmed, anchors: [ { key: product_id, value: "product:twin-%s", class: logical, establishing: true } ] }
+provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
+owned_by: { legal: { owner: { bean: keeper } } }
+responsibility: { legal: { holder: { bean: keeper } } }
+probe_stamp: { mode: %s }
+---
+probe.
+""" % (mode, mode, mode))
+twin("fast"); twin("slow")
 def stamp(text):
     return gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "probe_stamp: " + text + "\n")
 base = stamp("{ at: 1786245253747, mode: fast, tag: abc }")
@@ -170,6 +189,37 @@ for what, bad, want in (
 sv_now = open(os.path.join(ROOT, "seed", "std-vocab.md")).read()
 check("NOTHING in the law is `untyped` any more — and `any` is a decision, said as one",
       "in: untyped," not in sv_now and "value: { in: any," in sv_now)
+
+# ---------------------------------------------------------------- 21.0: A MAPPING'S OWN CLOSED LIST OFFERS POSITIONS
+# `shape: mapping` is one entry, and its attributes' closed lists are positions like an entry's. They were counted
+# nowhere: `words.form` offered `written` and `unstated`, used by no garden and declarable vacant by none.
+V1 = open(v).read()
+open(v, "w").write(V1.replace("local_terms:\n", """local_terms:
+  - term: mood
+    meaning: "a mapping whose one attribute is a closed list"
+    context_keys: [mood]
+    schema:
+      shape: mapping
+      attrs:
+        level: { in: [calm, stormy], meaning: "how it is" }
+    merge: { cardinality: single, order: none }
+""", 1))
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: calm }\n")
+check("a closed list on a MAPPING's attribute is a set of positions: the one no bean takes is named",
+      "VOCAB mood.level: position 'stormy' is declared but NO bean occupies it" in out
+      and "mood.level: position 'calm'" not in out, out[-700:])
+V2 = open(v).read()
+open(v, "w").write(V2.replace("\n---", '\nvacancies: [ { at: "mood.level", position: stormy, reason: prediction, why: "a storm comes" } ]\n---', 1))
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: calm }\n")
+check("...declared vacant, it is accounted for", "0 error" in out and "mood.level" not in out, out[-700:])
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: stormy }\n")
+check("...and a vacancy for one a bean takes is reported stale",
+      "VOCAB vacancies: mood.level = 'stormy' is declared vacant but IS occupied" in out, out[-700:])
+open(v, "w").write(V2.replace("\n---", '\nvacancies: [ { at: "words.form", position: unstated, reason: prediction, why: "x" } ]\n---', 1))
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: calm }\n")
+check("`words.form` is a declared position a vacancy may be declared at — and the law accounts for its own",
+      "is not a declared position" not in out and "words.form" not in out, out[-700:])
+open(v, "w").write(V1)
 
 # ---------------------------------------------------------------- 21.0: A KEY THAT IS A REGISTRY'S ROW IS A POSITION AT IT
 # `owned_by` and `responsibility` take their keys from the `facets` registry. The keys were counted at a source nothing

@@ -187,10 +187,103 @@ def garden_id(root):
         return None
 
 
+class NotUTF8(UnicodeDecodeError):
+    """A document that is not UTF-8, refused BY NAME. Windows PowerShell 5.1 writes a file in the machine's code page
+    (`Set-Content`) or in UTF-16 (`>`, `Out-File`), and a traceback naming a byte and no file told a person with a
+    hundred beans nothing: not which one, nor what to do. Still a UnicodeDecodeError, so a caller that catches one
+    catches this; its text says what the file looks like and how to save it."""
+
+    def __init__(self, path, raw, err):
+        super().__init__(err.encoding, err.object, err.start, err.end, err.reason)
+        self.path, self.looks = path, _looks_like(raw, err.start)
+
+    def __str__(self):
+        return f"not UTF-8 — it looks like {self.looks}: save it as UTF-8"
+
+
+def _looks_like(raw, at):
+    """What a file that is not UTF-8 most likely is, from its first bytes."""
+    import codecs
+    if raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        return "UTF-16 (what PowerShell's `>` and `Out-File` write)"
+    half = raw[:400]
+    if half and max(half[0::2].count(0), half[1::2].count(0)) * 4 >= len(half):
+        return "UTF-16 with no byte-order mark"
+    return (f"a Windows code page such as 1252 (byte 0x{raw[at]:02x} at {at}; what Windows PowerShell 5.1's "
+            f"`Set-Content` writes)")
+
+
 def read(path):
-    """(front_matter_text, body) read from a file on disk."""
-    with open(path, encoding='utf-8') as fh:
-        return split_front_matter(fh.read())
+    """(front_matter_text, body) read from a file on disk, as UTF-8 — a byte-order mark dropped, line ends read as text
+    mode reads them. A file that is not UTF-8 raises NotUTF8, which says what it looks like."""
+    with open(path, 'rb') as fh:
+        raw = fh.read()
+    try:
+        text = raw.decode('utf-8')
+    except UnicodeDecodeError as e:
+        raise NotUTF8(path, raw, e) from None
+    return split_front_matter(text.replace('\r\n', '\n').replace('\r', '\n'))
+
+
+# ---- TEXT, AS A READER SEES IT ------------------------------------------------------------------------------------
+# A character that ends a line or drives a terminal: C0, DEL, C1 (NEL and the 8-bit CSI among them) and the Unicode
+# line and paragraph separators. Printed raw, one moves the cursor, erases what was written, or hides what follows —
+# so a value a document holds is printed with each of them spelt out, never sent to the terminal.
+_CTRL = re.compile('[\x00-\x1f\x7f-\x9f  ]')
+
+
+def escaped(s):
+    """`s` as it may be printed: every character `_CTRL` names spelt `\\xNN` or `\\uNNNN`."""
+    return _CTRL.sub(lambda m: (f"\\x{ord(m.group(0)):02x}" if ord(m.group(0)) < 0x100 else
+                                f"\\u{ord(m.group(0)):04x}"), str(s))
+
+
+def said(line):
+    """A tool's own line of output: its line feeds kept, every other such character in it spelt out."""
+    return '\n'.join(escaped(x) for x in str(line).split('\n'))
+
+
+def control_characters(text, category='Cc', but=('\t',), lines_in='block'):
+    """[(dotted path, character, scalar style, is_key)] for every character of Unicode general category `category`
+    in a key or a scalar of the YAML `text` — but those in `but`, and a line feed in a scalar whose style `lines_in`
+    names (`block`: `|` or `>`, the scalars whose lines are lines on the page). Read from the NODE GRAPH, because only
+    there is a scalar's style known: `"a\\nb"` and a block of two lines load as the same string."""
+    import unicodedata
+    if _yaml is None:
+        raise RuntimeError("PyYAML required")
+    block = ('|', '>') if lines_in == 'block' else ()
+    out, seen = [], set()
+
+    def scalar(node, path, is_key):
+        if node.value.isprintable() and category[:1] in ('C', 'Z'):
+            return                              # no character of an Other or Separator category: nothing to look up
+        for ch in sorted(set(node.value)):
+            if unicodedata.category(ch) == category and ch not in but and not (ch == '\n' and node.style in block):
+                out.append((path, ch, node.style, is_key))
+
+    def walk(node, path):
+        if id(node) in seen:
+            return                              # an alias names a node already walked
+        seen.add(id(node))
+        if isinstance(node, _yaml.MappingNode):
+            for k, v in node.value:
+                name = escaped(k.value) if isinstance(k, _yaml.ScalarNode) else '?'
+                here = f"{path}.{name}" if path else name
+                if isinstance(k, _yaml.ScalarNode):
+                    scalar(k, here, True)
+                else:
+                    walk(k, here)
+                walk(v, here)
+        elif isinstance(node, _yaml.SequenceNode):
+            for i, v in enumerate(node.value):
+                walk(v, f"{path}[{i}]")
+        elif isinstance(node, _yaml.ScalarNode):
+            scalar(node, path, False)
+
+    root = _yaml.compose(text, Loader=LOADER)
+    if root is not None:
+        walk(root, '')
+    return out
 
 
 # --- the ONE loader ------------------------------------------------------------------------------

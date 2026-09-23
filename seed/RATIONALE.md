@@ -217,6 +217,13 @@ A release, or `untagged <commit>`: a garden grown from a checkout on no tag reco
 a tag would have refused every garden grown to have a look around. The note germinate prints says why such a garden
 should adopt a release.
 
+## manifest.attrs.policy
+
+A GARDENER'S STANDING RULES ARE WORDS. Declared as `any`, the key took a number or a list as readily as a sentence,
+and its meaning said prose. A gardener writes one rule, or several each under a name of its own — how work on a live
+system is done, who decides what — so the key takes exactly that: one text, or texts under names. The schema language
+says it once, as `in: { prose: named }`, beside `in: prose`.
+
 ## retired
 
 A REFUSAL SAYS WHERE IT WENT. A name the law took back was refused as "declared by no term", which tells a writer
@@ -350,7 +357,7 @@ by centimetres a year, and a coordinate is complete only with the EPOCH it was m
 
 THE WORDS A SYSTEM'S SHAPE MAY USE, declared so the gate carries no copy of them.
 
-## system_shape.reckoning
+## value_types[date].exists
 
 A DAY ITS CALENDAR DOES NOT HAVE IS NOT A DATE. A pattern admits `persian:1404-12-30` and `2026-02-30` alike, and
 each reader did something different with them: the Persian date moved silently to the first of Farvardin, so a clause
@@ -359,6 +366,11 @@ refused by another. For a calendar reckoned by rule (`arithmetic`), the arithmet
 the day a position names, written back in its own calendar, must be the position written. A year outside the range a
 calendar's reckoning is good for is refused the same way, by name and never by a traceback. The other reckonings —
 astronomical, observational, tabulated — cannot be judged by arithmetic, and are not.
+
+The rule is stated where a date is defined, and which calendars it judges is read from each calendar's own
+`reckoning`. Stated only in a reason, it was a rule `bin/dmrules.py` could not show; judged by whichever calendars a
+tool happened to carry, the gate and the reader that walks a repetition could disagree about one calendar — a tool
+that learned an observed calendar would have started refusing its days on arithmetic the law says it does not follow.
 
 ## anchor_systems[unix-filesystem].levels
 
@@ -644,6 +656,14 @@ looked exercised by five edges that never mention it — the gate crediting its 
 is STATEMENT now, and what that leaves behind is this: a position every requirement in the estate
 effectively sits at, and none has ever taken a stance on.
 
+## vacancies[words.form]
+
+AN AGREEMENT'S WORDS ARE DECLARED WHOLE. Written, spoken, or not yet put into words: the three ways any agreement
+stands, and a stranger keeping one expects to find each. A closed list on a mapping's own attribute offers positions
+like any entry's, and was not counted until the reverse gate learned to count it; `spoken` is taken, and the other two
+are declared for every garden that does not stand on them. The domain profile's `registration.auto_renew` is declared
+whole for the same reason.
+
 ## figures
 
 == FIGURES: the shapes an aspect may take (added 9.2, human-ratified rule-change, "T0") ==
@@ -706,6 +726,21 @@ as the untagged text is — the library's own constructor would have read it, qu
 
 The count keeps what was written. A merge compares counts by the exact value they write, so `900`, `"900"` and
 `"900.00"` are one amount and never a conflict — the shortest exact decimal is the one canonical form.
+
+## value_types[text]
+
+TEXT IS WHAT A PERSON READS. A key and a string value are read by a person and printed by every tool, and a control
+character is neither: nobody reads it, and a terminal obeys it. An escape sequence in an agreement's title, which
+YAML's double quotes write as `\e`, moved the cursor up, erased the line a reader trusted and wrote the debt the other
+way round; one in a path the gate itself quotes cleared the screen on every commit. The journal refused such
+characters already; a bean, the thing the journal is about, did not. So text holds no character of the Unicode control
+category: a tab, which a person types, is let through, and a line feed is held where a value's lines are lines on the
+page — a block scalar. The same characters escaped inside double quotes (`"a\nb"`) make one line on the page two in
+every reader, and `"C:\01-files"` silently held a NUL where a person wrote a backslash and a zero; both are said plainly
+now, with the way to write what was meant. The rule is a value type, because every other type is text first; the
+gate reads it from the node graph, where a scalar's style is known, and names the character rather than echo it. A
+tool that prints what a garden already holds spells such characters out, so a garden written before the rule cannot
+drive the terminal of the person reading the refusal.
 
 ## journal
 
@@ -1423,6 +1458,16 @@ law-in-data rule exists to forbid. They are also the reason the unclean marker n
 `status`: `status` is a `single` merged term, so the driver writing its own flag there collided with
 the algebra on one key, and the next merge turned it into a conflict the in-place writer could not
 write back.
+
+## terms[merge_conflicts].meaning
+
+A CAPTURE IS WHAT THE DRIVER WROTE, AND NOTHING LOOKS LIKE ONE BY ACCIDENT. The rules stand down on a value two
+gardens hold two ways, so that a disagreement can be committed whole and settled by a person. They stood down on any
+record written `{conflict: …}` under a `merge_open` marker, and so a document could shield values the gate refuses — a
+party nobody is, a day no calendar has, parts that do not add up — behind one warning: with the path left out of
+`merge_conflicts`, with one side, or with other keys beside `conflict`, none of which the merge driver writes. What the
+driver writes is exact: the marker, the path named, and a record holding two values or more that differ. That, and only
+that, is a capture; any other conflict record is refused, named at its path, and a person picks a value.
 
 ## terms[provenance_of].meaning
 

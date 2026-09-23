@@ -49,9 +49,9 @@ TERMS, TIER = {}, {}
 for t, tier in [(t, 'tier0') for t in (std.get('terms') or [])] + \
                [(t, f'profile:{",".join(prof_names)}') for t in prof_terms] + \
                [(t, 'garden') for t in (loc.get('local_terms') or [])]:
-    n = t.get('term')
-    if not n:
-        continue
+    n = t.get('term') if isinstance(t, dict) else None
+    if not isinstance(n, str) or not n:
+        continue                         # an entry the gate refuses by name is no rule in force
     if n in TERMS:                       # a garden overlay merges onto its Tier-0 base
         base = dict(TERMS[n])
         sch = {**(base.get('schema') or {}), **(t.get('schema') or {})}
@@ -260,6 +260,24 @@ for q in reg('quantities'):
     if isinstance(q, dict) and q.get('quantity'):
         print(f"  {q['quantity']:14} {quantity_rule(q['quantity'])}")
 
+head("TEXT AND DAYS — what every key and string is, and which positions are days")
+_tx = _vt.get('text') or {}
+if _tx.get('holds_no'):
+    print(f"  text: every key and string value of a bean, a mapping, GARDEN.md and VOCAB.md holds no character of Unicode "
+          f"category {_tx['holds_no']} but {', '.join(repr(c) for c in (_tx.get('but') or [])) or 'none'}, and a line feed "
+          f"only in a {_tx.get('lines_in')} scalar (`|` or `>`) — the character is named, never echoed")
+else:
+    print("  text: NO value_types[text] — the gate reports the missing row")
+_ex = ((_vt.get('date') or {}).get('exists') or {}).get('reckoning') or []
+_rows = [r for r in reg('anchor_systems') if isinstance(r, dict) and r.get('calendar')]
+print(f"  a day: a position held to a day — a date, where a repetition starts and ends, a bound in time — is a day its "
+      f"calendar has. In a calendar reckoned {' or '.join(map(str, _ex)) or '(none named)'} the day it names, written back, "
+      f"is the position written, and a year the reckoning cannot reach is refused; judged: "
+      f"{', '.join(r['system'] for r in _rows if r.get('reckoning') in _ex) or 'none'}")
+_not = [f"{r['system']} ({r.get('reckoning')})" for r in _rows if r.get('reckoning') not in _ex]
+if _not:
+    print(f"         not judged by arithmetic, as their reckoning says: {', '.join(_not)}")
+
 head("MANIFEST — GARDEN.md, judged as itself")
 _mf = std.get('manifest') or {}
 for a_, r in (_mf.get('attrs') or {}).items():
@@ -279,7 +297,8 @@ print(f"  a record carries only {_pr.get('attrs')}; each record in `from` only {
 print("  `garden` names another garden this one knows (a `garden` bean's garden_id); a record made here carries none (warned)")
 
 head("REVERSE GATE — the rules must be passed by the objects")
-print("  every position a term declares must be OCCUPIED by a bean, or declared vacant with a reason")
+print("  every position a term declares — a closed list on an entry's attribute or on a mapping's own, an aspect, a "
+      "registry's rows, an entry form — must be OCCUPIED by a bean, or declared vacant with a reason")
 print(f"  reasons: {' | '.join(std.get('vacancy_reasons') or ['NONE DECLARED — the gate refuses'])}"
       f" ; a vacancy also needs a `why`")
 print("  a garden accounts only for positions IT declared — Tier-0 accounts for its own")
@@ -307,5 +326,11 @@ if '--core' in want:
                  "a staged document must not lose its human body",
                  "std-vocab must be found at its one path — there is no fallback",
                  "a garden's `extends:` pin must equal the installed vocabulary version",
-                 "a `file:` pointer must resolve to a file that exists in this garden"]:
+                 "a `file:` pointer must resolve to a file that exists in this garden",
+                 "a bean, a mapping, GARDEN.md and VOCAB.md are UTF-8 — any other encoding is refused by name",
+                 "every entry of VOCAB.md is in its own shape: a term's or a kind's name is text, a schema, its attrs and "
+                 "a merge are mappings, context_keys a list of text; one of another shape is refused and left unread",
+                 "a conflict record stands the rules down only as the merge driver captured it: `merge_open: true`, its "
+                 "path in `merge_conflicts`, `{conflict: [...]}` alone with two or more different values — any other "
+                 "is refused at its path"]:
         print(f"  · {line}")
