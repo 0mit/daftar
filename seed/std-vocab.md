@@ -2791,8 +2791,11 @@ The portable, estate-agnostic classification shared by every garden — the abst
   judges it in the calendars the law marks as reckoned by rule, and `bin/dmrules.py` prints it; the manifest's
   `policy` has the shape its meaning says: rules, in prose. Between gardens: `dmledger --between` names each shared
   agreement it left out of the net and why, and calls the net partial when it left one out; an entry that carries its
-  own provenance goes back to the garden it came from and reads clean, however often it crosses; the recurrences of
-  every clause are walked within one budget per run, a clause beyond it named as not walked; a clause that does not
+  own provenance goes back to the garden it came from and reads clean, however often it crosses — and a value both
+  gardens changed at once reads as a disagreement, never a forgery; each recurrence is walked within its own allowance,
+  and every recurrence of a run within one budget, a clause beyond either named as not walked and the run of dmstale
+  then exiting 1, so no clause can hide another's due day; a proposal's records are stamped whichever way their keys
+  are written (JSON's `"provenance":` too); a YAML set is refused as no shape a garden writes; a clause that does not
   repeat is shown due in the calendar it was written in; `make` says a party in a merge conflict is a person's to
   settle first; first contact prints each bean once, and an organisation's bean in the law's form for a gardener. The
   tools: germinate judges a garden's name by the law's form before it creates anything, takes `--name` where the

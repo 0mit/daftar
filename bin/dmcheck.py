@@ -550,6 +550,11 @@ def check_value_types():
         if _t not in VALUE_TYPES:
             errors.append(f"VOCAB: no `value_types` row for '{_t}' — the gate reads its type patterns from the law "
                           f"and has no copy of its own")
+    _ex = (VALUE_TYPES.get('date') or {}).get('exists')
+    if _ex is not None and not (isinstance(_ex, dict) and isinstance(_ex.get('reckoning'), list)
+                                and all(isinstance(r, str) for r in _ex['reckoning'])):
+        errors.append("VOCAB value_types[date].exists is a mapping { reckoning: [<reckoning>, ...] } — as written it "
+                      "judges no day, and no day is judged until it is one")
 # `journal` is one mapping, not a registry of rows, so it is read as the garden states it, else as the standard does.
 JOURNAL = (vocab_fm.get('journal') if isinstance(vocab_fm.get('journal'), dict) else None) or \
           (std_fm.get('journal') if isinstance(std_fm.get('journal'), dict) else {})
@@ -563,7 +568,11 @@ def check_value_type(where, attr, val, typ):
     if not t:
         errors.append(f"{where}.{attr}: type '{typ}' is not declared in `value_types` {sorted(VALUE_TYPES)}")
     elif t.get('holds_no'):
-        return                      # text: every key and string of the document is held to it, by check_text
+        # text: its characters are held by check_text, over every key and string of the document; here, only that it
+        # IS one text — a list or a map is not "characters a person reads"
+        if not isinstance(val, (str, int, float)) or isinstance(val, bool):
+            errors.append(f"{where}.{attr} is text, written as one string — not {type(val).__name__}")
+        return
     elif t.get('any_system'):
         # A POSITION IN ANY SYSTEM OF THE TYPE'S DIMENSION, held to the type's unit (16.0): no system is the one a date
         # must be in. It must be in ONE system's own form, that system must HAVE the level, and a reading finer than
@@ -594,8 +603,9 @@ def day_unwritten(val, row):
     type's `exists` names. A calendar the tool happens to carry and the law says is observed is not judged by it."""
     if not isinstance(row, dict) or not row.get('calendar'):
         return None
-    _judged = ((VALUE_TYPES.get('date') or {}).get('exists') or {}).get('reckoning') or []
-    if not isinstance(_judged, list) or row.get('reckoning') not in _judged:
+    _exists = (VALUE_TYPES.get('date') or {}).get('exists')
+    _judged = (_exists.get('reckoning') if isinstance(_exists, dict) else None) or []
+    if not isinstance(_judged, list) or not isinstance(row.get('reckoning'), str) or row.get('reckoning') not in _judged:
         return None
     date = re.split(r'[T ]', str(val), maxsplit=1)[0]
     try:

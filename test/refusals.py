@@ -30,7 +30,8 @@ the gate once took, or once died on; each must now be refused by name, and nothi
 
 Every name is neutral (sam, ali, ben) and every amount is in XTS, the code ISO 4217 keeps for testing.
 """
-import os, re, sys, subprocess, tempfile, shutil
+import json, os, re, sys, subprocess, tempfile, shutil
+import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FAILS = []
 
@@ -588,6 +589,29 @@ check("a form the gate reaches some other way — the field of a registry row a 
       "the form 'a (note' is not a regular expression" in out and "error(s)" in out and "Traceback" not in out, out[-600:])
 put("VOCAB.md", _vocab)
 put("beans/ali.md", person("ali"))
+
+# ---------------------------------------------------------------- A SET, TEXT, AND A DAY'S RULE RESTATED
+out = deal("clauses:\n  c: { what: \"sam keeps it clean\", by: sam, to: ali, stance: !!set { required } }\n")
+check("a clause's `stance` written as a YAML set is refused by name — no shape a garden writes — never a traceback",
+      "a YAML set (`!!set`) is no shape a garden writes" in out and "Traceback" not in out, out[-600:])
+drop("beans/deal.md")
+put("VOCAB.md", _vocab.replace("local_terms: []", "local_terms: [ { term: mood, context_keys: [mood], schema: { shape: mapping, "
+                               "attrs: { level: { in: { type: text } } } } } ]", 1))
+put("beans/ali.md", person("ali", "mood: { level: [ 1, 2 ] }\n"))
+out = gate()
+check("an attribute typed `text` holds one text: a list is refused", "is text, written as one string — not list" in out,
+      out[-600:])
+put("VOCAB.md", _vocab)
+put("beans/ali.md", person("ali"))
+_law = yaml.safe_load(open(os.path.join(G, "seed", "std-vocab.md"), encoding="utf-8").read().split("\n---\n")[0].split("---\n", 1)[1])
+_vt = [dict(r, exists=5) if r.get("type") == "date" else r for r in _law["value_types"]]
+put("VOCAB.md", _vocab.replace("---\n", "---\nvalue_types: " + json.dumps(_vt) + "\n", 1))
+out = deal("clauses:\n  c: { what: \"rent\", by: ali, to: sam, amount: { count: 100, unit: XTS }, due: 2026-10-01 }\n")
+check("a garden that restates the date type with an `exists` in no shape the law gives is told so once, by name — and a "
+      "bean holding a day is still read, never a traceback",
+      "value_types[date].exists is a mapping" in out and "Traceback" not in out, out[-600:])
+drop("beans/deal.md")
+put("VOCAB.md", _vocab)
 
 # ---------------------------------------------------------------- DMRULES READS VOCAB.md AS THE GATE READS IT
 for blk in ("local_terms: 5", "local_terms: [ { term: x, schema: 5 } ]", "local_terms: [ { term: x, schema: { attrs: 5 } } ]",

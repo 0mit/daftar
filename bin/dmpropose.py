@@ -522,7 +522,7 @@ def _key_offsets(head, name):
                 off += len(ln)
                 continue
             blk = None
-        i, n, code_end = 0, len(s), len(s)
+        i, n, code_end, qs = 0, len(s), len(s), 0
         while i < n:
             c = s[i]
             if q:
@@ -534,10 +534,15 @@ def _key_offsets(head, name):
                         i += 2
                         continue
                     q = None
+                    # a QUOTED key — `"provenance": {…}`, as JSON writes a mapping, which YAML reads alike
+                    rest = s[i + 1:]
+                    if s[qs + 1:i] == name and rest.lstrip(' \t').startswith(':') \
+                            and rest.lstrip(' \t')[1:2] in ('', ' ', '\t', '{'):
+                        out.append(off + i + 1 + (len(rest) - len(rest.lstrip(' \t'))) + 1)
                 i += 1
                 continue
             if c in '"\'' and (i == 0 or s[i - 1] in ' \t{[,'):
-                q = c
+                q, qs = c, i
             elif c == '#' and (i == 0 or s[i - 1] in ' \t'):
                 code_end = i
                 break
@@ -1334,7 +1339,7 @@ def history_of(bid):
     return _HISTORY[bid]
 
 
-def own_claims(fm, own, local_fm, refmap=None, local_id=None):
+def own_claims(fm, own, local_fm, refmap=None, local_id=None, sender=None):
     """Where a carried bean says THIS garden said something — a record stamped with this garden's id, a value
     `provenance_of` says was seen here — and this garden holds no identical record at the same place. A record made
     here and given back is one the local bean still holds, byte for byte in meaning (a round trip); any other is
@@ -1352,16 +1357,24 @@ def own_claims(fm, own, local_fm, refmap=None, local_id=None):
     against the value here, which a record made here never carries (provenance_record: 'where that is not this one'),
     the round trip read as a forgery, and the bean could never go back to the garden it came from. So this garden's
     own stamp is taken off every record INSIDE a value, and inside each `provenance_of` record, before anything is
-    compared — the same strip a top-level record gets (MERGE.md §16)."""
+    compared — the same strip a top-level record gets (MERGE.md §16). And the SENDING garden's stamp as well: a record
+    that crossed twice carries whichever garden's stamp it last travelled under — the sender stamps what it holds
+    unstamped, and strips its own from what came home to it — so the same record reaches here stamped by one garden in
+    the value and by neither in a `provenance_of` record of it. Between the two gardens of one proposal, a stamp says
+    only which way a record last crossed; a third garden's is refused elsewhere, never stripped here."""
     M = _merge()
     out = []
     fm = rewrite_refs(fm, refmap) if refmap else fm
 
+    def unstamped(v):
+        v = strip_own(v, own)
+        return strip_own(v, sender) if sender else v
+
     def bare(v):
-        return M.canonical(M.norm(strip_own(v, own)))
+        return M.canonical(M.norm(unstamped(v)))
 
     def canon(pth, v):
-        return M.canon_at(pth, strip_own(v, own))
+        return M.canon_at(pth, unstamped(v))
 
     def held_before(pth, value):
         """Whether this garden's bean held `value` at `pth`: in a commit of its own, or in a `provenance_of` record
@@ -1386,17 +1399,15 @@ def own_claims(fm, own, local_fm, refmap=None, local_id=None):
             out.append(_dotted(path))
     pv = fm.get('provenance_of')
     for pth, recs in (pv.items() if isinstance(pv, dict) else []):
-        carried = value_at(fm, pth)
         for r in recs:
             if own not in [str(s) for s in (r.get('seen_in') or [])]:
                 continue
-            if local_fm is not None and not r.get('subsumed') \
-                    and (carried is MISSING or canon(pth, carried) != canon(pth, r.get('value'))) \
-                    and held_before(pth, r.get('value')):
-                # HISTORY, NOT A CLAIM: a record of a value the bean no longer holds and nothing subsumed — the side of
-                # a disagreement a person set aside — which this garden's bean DID hold once, in a commit of its own or
-                # in its own `provenance_of`. The merge never reads it back (dmmerge._apply_prov); a garden's own
-                # earlier word, settled away, is not a forgery. A value this garden never held is one: refused below.
+            if local_fm is not None and not r.get('subsumed') and held_before(pth, r.get('value')):
+                # HISTORY, NOT A CLAIM: a value this garden's bean DID hold once, in a commit of its own or in its own
+                # `provenance_of` — the side of a disagreement a person set aside, or a value this garden has since
+                # changed while the other garden still holds it (both edited at once: the join records the honest
+                # disagreement). A garden's own earlier word is not a forgery. A value this garden never held is one:
+                # refused below; and a NEW bean has no history here, so every such claim on it is refused.
                 continue
             held = (local_fm.get('provenance_of') or {}).get(pth) if local_fm is not None else None
             same = isinstance(held, list) and any(isinstance(h, dict) and bare(h) == bare(r) for h in held)
@@ -1785,7 +1796,7 @@ def analyse(path, as_test=False):
         for b, fm in raw.items():
             hits = fused.get(b) or []
             claims = own_claims(fm, own, local[hits[0]][0] if len(hits) == 1 else None, refmap=A['map'],
-                                local_id=hits[0] if len(hits) == 1 else None)
+                                local_id=hits[0] if len(hits) == 1 else None, sender=fid)
             if claims:
                 R.append((f"{b}: {', '.join(map(_esc, claims))} "
                           f"say{'s' if len(claims) == 1 else ''} this garden ({own}) said it, "

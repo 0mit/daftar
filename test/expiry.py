@@ -601,21 +601,45 @@ check(f"twenty monthly clauses from `hebrew:0001-07-01` are read in seconds, not
       {k: (t, o[-500:]) for k, (t, o) in _times.items()})
 os.remove(os.path.join(G, "beans", "long-lease.md"))
 
-# ...and a walk that must COUNT (a clause that says `times:`) is bounded by the run: five such clauses from the first
-# centuries of the Gregorian calendar spend what one run may walk one cell at a time, and the clause past it is a NOTE —
-# while every other warning of the run still prints.
+# ...and a walk that must COUNT (a clause that says `times:`) is bounded twice. EACH repetition may walk so far and no
+# further, so a clause counted from the first year of the Hebrew calendar (some 71,000 months) is a NOTE of its own —
+# and it cannot spend what the garden's own clauses need: a monthly clause due in days is still EXPIRING, and the run
+# exits 1, because a clause not read for its due day is never a clean report.
+NEXT_SOON = (today + datetime.timedelta(days=2))
+contract("a-lease", ''.join(f"  h{i}: {{ what: 'rent', by: ali, to: keeper, due: 'hebrew:0001-07-01', every: {{ of: time, "
+                            f"in: hebrew-calendar, each: month, times: 99999 }} }}\n" for i in range(2)))
+contract("own-rent", f"  rent: {{ what: 'rent', by: ali, to: keeper, due: {(NEXT_SOON - datetime.timedelta(days=62)).isoformat() if NEXT_SOON.day <= 28 else IN3}, "
+                     f"every: {{ of: time, in: gregorian-civil, each: month }} }}\n" if NEXT_SOON.day <= 28 else
+         f"  rent: {{ what: 'rent', by: ali, to: keeper, due: {IN3} }}\n")
+_t0 = _time.time()
+_r = run(sys.executable, os.path.join(G, "bin", "dmstale.py"), cwd=G)
+_took = round(_time.time() - _t0, 1)
+out = _r.stdout
+line = lambda key, bean: next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
+check(f"a repetition counted from the first Hebrew year is a NOTE of its own ('this repetition alone'), and two such "
+      f"clauses from another garden cannot hide the garden's own rent due in days: still EXPIRING, and the run exits 1 "
+      f"({_took} s)",
+      line("h0", "a-lease").startswith("NOTE") and "this repetition alone" in line("h0", "a-lease")
+      and line("h1", "a-lease").startswith("NOTE") and line("rent", "own-rent").startswith("EXPIRING")
+      and _r.returncode == 1 and _took < 60, [line("h0", "a-lease"), line("rent", "own-rent"), _r.returncode])
+os.remove(os.path.join(G, "beans", "a-lease.md"))
+os.remove(os.path.join(G, "beans", "own-rent.md"))
+# ...and the run's own bound is a backstop: seven clauses each counted from the first Gregorian centuries (some 24,300
+# months apiece) walk what one run may, and the clause past it is a NOTE — the run exits 1, and every other warning of
+# the run still prints.
 contract("counted", ''.join(f"  t{i}: {{ what: 'rent', by: ali, to: keeper, due: '0001-02-01', every: {{ of: time, "
-                            f"in: gregorian-civil, each: month, times: 100000 }} }}\n" for i in range(5))
+                            f"in: gregorian-civil, each: month, times: 100000 }} }}\n" for i in range(7))
          + f"  zz-soon: {{ what: \"a fee\", by: ali, to: keeper, due: {IN3} }}\n")
 _t0 = _time.time()
-out = stale()
+_r = run(sys.executable, os.path.join(G, "bin", "dmstale.py"), cwd=G)
 _took = round(_time.time() - _t0, 1)
+out = _r.stdout
 line = lambda key, bean="counted": next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
 check(f"clauses that must be counted from the first century spend the run's budget, and the one past it is a NOTE — "
-      f"'this run's budget is spent' — while the rest of the report still prints ({_took} s)",
-      "occurrence 24309 of 100000" in line("t0") and line("t4").startswith("NOTE")
-      and "this run's budget is spent" in line("t4") and line("zz-soon").startswith("EXPIRING") and _took < 60,
-      [line(k) for k in ("t0", "t3", "t4", "zz-soon")])
+      f"'this run's budget is spent' — while the rest of the report still prints, and the run exits 1 ({_took} s)",
+      "occurrence 24309 of 100000" in line("t0") and line("t6").startswith("NOTE")
+      and "this run's budget is spent" in line("t6") and line("zz-soon").startswith("EXPIRING") and _r.returncode == 1
+      and _took < 90, [line(k) for k in ("t0", "t5", "t6", "zz-soon")])
 os.remove(os.path.join(G, "beans", "counted.md"))
 
 # ...and a stride, or `each: day`, reckoned rather than walked, is never reckoned past its `times`: three weekly payments

@@ -1525,6 +1525,55 @@ check("...and back to garden-a CLEAN: a settled disagreement stays settled (MERG
       rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and 'CONFLICT' not in rr.stdout + rt.stdout
       and 'merge_open' not in read(_pa) and rc.returncode == 0, rr.out + rt.out)
 
+
+
+def settle(g, pick_count, who):
+    """In garden `g`, pick the side of pot's transactions.second whose amount is `pick_count`, clear the markers, commit."""
+    pth = os.path.join(g, 'beans', 'pot.md')
+    sides = fm_of(pth)['transactions']['second']['conflict']
+    pick = next(x for x in sides if str(x['amount']['count']).rstrip('0').rstrip('.') == pick_count)
+    dmsafe.set_nested(pth, 'transactions.second', '  second: ' + json.dumps(pick, default=str) + '\n', expect=1,
+                      allow_remove=['transactions.second'])
+    dmsafe.remove_block(pth, 'merge_open')
+    dmsafe.remove_block(pth, 'merge_conflicts')
+    return commit(g, f"{who} settles the second payment", f"- action: settled [[pot]]'s `transactions.second`: {who} "
+                                                         f"picked {pick_count}, and removed `merge_open` and `merge_conflicts`.")
+
+
+# EDITED IN BOTH GARDENS AT ONCE: ben corrects his own payment while garden-a still holds the one he gave before and
+# offers it back. garden-a's record that the old value was seen in garden-b is garden-b's own EARLIER word — it held that
+# value in a commit of its own — so the read is an honest disagreement, never a forgery.
+write(B, 'pot', read(os.path.join(B, 'beans', 'pot.md')).replace('amount: { count: "6.00", unit: XTS }',
+                                                               'amount: { count: "7.00", unit: XTS }'))
+commit(B, "ben corrects his payment again", "- action: [[pot]]: ben's payment was 7.")
+p, r = offer(A, 'garden-b')
+rr = tool(B, 'dmpropose.py', 'read', p)
+check("EDITED IN BOTH GARDENS AT ONCE: ben changes his own payment while garden-a offers the old one back — garden-b "
+      "reads a disagreement (its own earlier word, 6 against 7), never 'another garden's word stamped as this one's'",
+      rr.returncode == 1 and 'CONFLICT transactions.second' in rr.stdout and 'REFUSED' not in rr.stdout, rr.out)
+# ...and SETTLED BY THE OTHER GARDEN's word: ada edits the payment, keeping ben's own record on it; ben takes the
+# disagreement and settles on ada's side; the pot then goes back and forth CLEAN — the record inside the value compared
+# without whichever of the two gardens' stamps it last crossed under.
+_pa = os.path.join(A, 'beans', 'pot.md')
+_second = fm_of(_pa)['transactions']['second']
+_second['amount'] = {'count': '8.00', 'unit': 'XTS'}
+dmsafe.set_nested(_pa, 'transactions.second', '  second: ' + json.dumps(_second, default=str) + '\n', expect=1,
+                  allow_remove=['transactions.second'])
+r = commit(A, "ada corrects ben's payment", "- action: [[pot]]: ada says ben's payment was 8.")
+rr, rt, rc = round_trip(A, 'garden-b', B, 'ada says 8')
+check("(ada says the payment was 8, keeping ben's own record on it; garden-b keeps both, 7 and 8, for ben)",
+      r.returncode == 0 and rr.returncode == 1 and 'CONFLICT transactions.second' in rr.stdout and rc.returncode == 0
+      and fm_of(os.path.join(B, 'beans', 'pot.md')).get('merge_open') is True, rr.out + rt.out)
+r = settle(B, '8', 'ben')
+rr, rt, rc = round_trip(B, 'garden-a', A, 'ben took 8')
+check("...ben settles on ada's side, and the pot goes back to garden-a CLEAN — the garden that wrote the entry settled "
+      "it, and nothing it gives back reads as a forgery",
+      r.returncode == 0 and rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and 'CONFLICT' not in rr.stdout
+      and rc.returncode == 0, rr.out + rt.out + r.stdout + r.stderr)
+rr, rt, rc = round_trip(A, 'garden-b', B, 'and back')
+check("...and back to garden-b CLEAN", rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and rc.returncode == 0,
+      rr.out + rt.out)
+
 # ---- a gate that gives no verdict has judged nothing
 # A proposal can carry what crashes the receiving garden's gate (a value of a shape the gate did not expect). The crash
 # goes to stderr, and read once took the gate's last stdout line for its verdict: CLEAN, exit 0 — and take wrote the

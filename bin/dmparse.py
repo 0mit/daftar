@@ -339,6 +339,14 @@ if LOADER is not None:
         text = loader.construct_scalar(node)
         return int(text) if PLAIN_INT.fullmatch(text) else text
     _Loader.add_constructor(_INT_TAG, _construct_int)
+
+    # A YAML SET (`!!set { a }`) is no shape a garden writes: the law's values are one text, a list or a mapping, and
+    # a set is none of them — held by nothing, hashable by nothing, and a traceback in every reader that asks "is this
+    # one of the positions". Refused where it is read, by name, so every tool reads the same thing.
+    def _construct_set(loader, node):
+        raise _yaml.constructor.ConstructorError(None, None, "a YAML set (`!!set`) is no shape a garden writes — "
+                                                "write a list", node.start_mark)
+    _Loader.add_constructor('tag:yaml.org,2002:set', _construct_set)
     LOADER = _Loader
 
 

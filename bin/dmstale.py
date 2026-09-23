@@ -231,24 +231,46 @@ _CAP = 100_000       # occurrences walked before giving up: a daily repetition f
 # today — seconds of work, which a proposal from another garden could carry two hundred times, and every run of a reader
 # would then walk all of them again. So a walk COUNTS only so far (_JUMP cells) and then jumps to the cell before today;
 # a stride of days and `each: day` are not walked at all, but reckoned; and whatever a run still walks one cell at a
-# time is bounded in total (_BUDGET): once it is spent, a clause is a NOTE ("not walked: this run's budget is spent"),
-# and every other warning still prints. Counts, not seconds, so the same garden gives the same report on any machine.
+# time is bounded TWICE. Each repetition may walk _CLAUSE cells and no more, so no clause spends another's share: one
+# that would walk further is a NOTE of its own ("not walked: this repetition alone …"). And a run walks _BUDGET cells in
+# all, a backstop against many such clauses: past it, a clause is a NOTE ("not walked: this run's budget is spent").
+# Either NOTE is a clause that was not read for its due day, so the run exits 1 — never a quiet report that looks clean
+# because another garden's clauses spent what the garden's own needed. Counts, not seconds, so the same garden gives
+# the same report on any machine.
 _JUMP = 1_000
-_BUDGET = 100_000
-_RUN = {'spent': 0}
+_CLAUSE = 30_000            # a monthly repetition counted from the first year of the Gregorian calendar: some 24,300
+_BUDGET = 150_000
+_RUN = {'spent': 0, 'unread': False}
+
+
+class BudgetSpent(Unreckoned):
+    """A repetition not walked because a bound on walking was reached — a clause not read for its due day."""
 
 
 def new_run():
     """A reader's run begins: the cells it may still walk one at a time are the whole _BUDGET again."""
-    _RUN['spent'] = 0
+    _RUN['spent'], _RUN['unread'] = 0, False
 
 
-def _spend(n=1):
-    _RUN['spent'] += n
-    if _RUN['spent'] > _BUDGET:
-        raise Unreckoned(f"not walked: this run's budget is spent — it has walked {_BUDGET} cells of a calendar one at a "
-                         f"time already, across the clauses before this one; a clause counted from a far past costs one "
-                         f"cell per step since (a clause that says `times:` is counted from its first occurrence)")
+def _spender():
+    """The spend of ONE repetition's walk: its own allowance, and the run's."""
+    here = [0]
+
+    def spend(n=1):
+        here[0] += n
+        _RUN['spent'] += n
+        if here[0] > _CLAUSE:
+            _RUN['unread'] = True
+            raise BudgetSpent(f"not walked: this repetition alone would walk more than {_CLAUSE} cells of its calendar "
+                              f"one at a time — it is counted from a far past (a clause that says `times:` is counted "
+                              f"from its first occurrence); read its due day by hand, or write its first due day nearer")
+        if _RUN['spent'] > _BUDGET:
+            _RUN['unread'] = True
+            raise BudgetSpent(f"not walked: this run's budget is spent — it has walked {_BUDGET} cells of a calendar one "
+                              f"at a time already, across the clauses before this one; a clause counted from a far past "
+                              f"costs one cell per step since (a clause that says `times:` is counted from its first "
+                              f"occurrence)")
+    return spend
 # CELLS IN A ROW WITH NO OCCURRENCE before the walk gives up and says the place does not occur. The rarest place a real
 # calendar has is the 29th of February, missing at most seven years running (1897 to 1903); a place missing a hundred
 # cells running is one the calendar does not have — `at: "31"` in a calendar of thirty-day months, `02-30` anywhere.
@@ -364,6 +386,7 @@ def _after_first(first, rec, systems, units, skipped=None, near=None, times=None
     walk through cells counts from `first` for _JUMP cells and then — unless `times` is stated, where the index is what
     ends the repetition — jumps to the cell before the one holding `near`, and its occurrences from there on are
     yielded with the index None: not counted, never guessed."""
+    _spend = _spender()          # this repetition's own allowance, and the run's
     every, each = rec.get('every'), rec.get('each')
     if isinstance(every, dict):
         unit = units.get(str(every.get('unit'))) if every.get('unit') is not None else None
@@ -994,7 +1017,7 @@ def report():
         _out("STALE means the SOURCE MOVED under the analysis, not that a clone is behind.")
         _out("STALE entries must NOT be trusted — re-run the analysis, then bump as_of + staleness_key "
               "(VOCAB analysis_cache.staleness_rule).")
-    sys.exit(1 if (counts['STALE'] or expiring) else 0)
+    sys.exit(1 if (counts['STALE'] or expiring or _RUN['unread']) else 0)
 
 
 if __name__ == '__main__':
