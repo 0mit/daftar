@@ -22,7 +22,7 @@ def run(*a, cwd=None):
 
 T = tempfile.mkdtemp(prefix="dmplace-")
 G = os.path.join(T, "g")
-run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, cwd=ROOT)
+run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 _v = os.path.join(G, "VOCAB.md"); _s = open(_v).read()        # code_paths and analysis_cache are `code` profile terms
 open(_v, "w").write(_s.replace("extends_profiles: [", "extends_profiles: [code, ", 1)
                     .replace("extends_profiles: []", "extends_profiles: [code]")
@@ -93,9 +93,9 @@ run("git", "init", "-q", R)
 open(os.path.join(R, "src", "a.txt"), "w").write("one\n")
 git("add", "-A"); git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "first")
 KEY = git("rev-parse", "--short=7", "HEAD").stdout.strip()
-# NAMED `this-host` SINCE 2026-09-20. It was `trixy-like` — a real host of the estate this grew in, with
-# a suffix, which is exactly the shape `bin/dmpublic.py` cannot see: the guard matches whole words, so the
-# name went out in a published file while the guard reported nothing. The fixture never needed the name.
+# NAMED `this-host` SINCE 2026-09-20. It was a real host name with a suffix — a host of the estate this grew in,
+# which is exactly the shape `bin/dmpublic.py` cannot see: the guard matches whole words, so the name went out
+# in a published file while the guard reported nothing. The fixture never needed the name.
 open(os.path.join(G, "beans", "this-host.md"), "w").write(
     '---\nbean: this-host\nkind: host\ntitle: "this machine"\nstatus: active\nsummary: "h"\nnature: physical\n'
     'identity: { status: confirmed, anchors: [ { key: hostname, value: "' + __import__("socket").gethostname().lower() + '", class: network, establishing: false }, { key: serial, value: "SN-T1", class: hardware, establishing: true } ] }\n'

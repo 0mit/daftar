@@ -1,0 +1,308 @@
+code	numeric	digits	name	status
+ADP		0	Andorran Peseta	historic
+AED	784	2	United Arab Emirates Dirham	current
+AFA		2	Afghan Afghani (1927–2002)	historic
+AFN	971	0	Afghan Afghani	current
+ALK		2	Albanian Lek (1946–1965)	historic
+ALL	008	0	Albanian Lek	current
+AMD	051	2	Armenian Dram	current
+ANG	532	2	Netherlands Antillean Guilder	historic
+AOA	973	2	Angolan Kwanza	current
+AOK		2	Angolan Kwanza (1977–1991)	historic
+AON		2	Angolan New Kwanza (1990–2000)	historic
+AOR		2	Angolan Readjusted Kwanza (1995–1999)	historic
+ARA		2	Argentine Austral	historic
+ARL		2	Argentine Peso Ley (1970–1983)	historic
+ARM		2	Argentine Peso (1881–1970)	historic
+ARP		2	Argentine Peso (1983–1985)	historic
+ARS	032	2	Argentine Peso	current
+ATS		2	Austrian Schilling	historic
+AUD	036	2	Australian Dollar	current
+AWG	533	2	Aruban Florin	current
+AZM		2	Azerbaijani Manat (1993–2006)	historic
+AZN	944	2	Azerbaijani Manat	current
+BAD		2	Bosnia-Herzegovina Dinar (1992–1994)	historic
+BAM	977	2	Bosnia-Herzegovina Convertible Mark	current
+BAN		2	Bosnia-Herzegovina New Dinar (1994–1997)	historic
+BBD	052	2	Barbadian Dollar	current
+BDT	050	2	Bangladeshi Taka	current
+BEC		2	Belgian Franc (convertible)	historic
+BEF		2	Belgian Franc	historic
+BEL		2	Belgian Franc (financial)	historic
+BGL		2	Bulgarian Hard Lev	historic
+BGM		2	Bulgarian Socialist Lev	historic
+BGN	975	2	Bulgarian Lev	historic
+BGO		2	Bulgarian Lev (1879–1952)	historic
+BHD	048	3	Bahraini Dinar	current
+BIF	108	0	Burundian Franc	current
+BMD	060	2	Bermudan Dollar	current
+BND	096	2	Brunei Dollar	current
+BOB	068	2	Bolivian Boliviano	current
+BOL		2	Bolivian Boliviano (1863–1963)	historic
+BOP		2	Bolivian Peso	historic
+BOV	984	2	Bolivian Mvdol	historic
+BRB		2	Brazilian New Cruzeiro (1967–1986)	historic
+BRC		2	Brazilian Cruzado (1986–1989)	historic
+BRE		2	Brazilian Cruzeiro (1990–1993)	historic
+BRL	986	2	Brazilian Real	current
+BRN		2	Brazilian New Cruzado (1989–1990)	historic
+BRR		2	Brazilian Cruzeiro (1993–1994)	historic
+BRZ		2	Brazilian Cruzeiro (1942–1967)	historic
+BSD	044	2	Bahamian Dollar	current
+BTN	064	2	Bhutanese Ngultrum	current
+BUK		2	Burmese Kyat	historic
+BWP	072	2	Botswanan Pula	current
+BYB		2	Belarusian Ruble (1994–1999)	historic
+BYN		2	Belarusian Ruble	current
+BYR	974	0	Belarusian Ruble (2000–2016)	historic
+BZD	084	2	Belize Dollar	current
+CAD	124	2	Canadian Dollar	current
+CDF	976	2	Congolese Franc	current
+CHE	947	2	WIR Euro	historic
+CHF	756	2	Swiss Franc	current
+CHW	948	2	WIR Franc	historic
+CLE		2	Chilean Escudo	historic
+CLF	990	4	Chilean Unit of Account (UF)	historic
+CLP	152	0	Chilean Peso	current
+CNH	156	2	Chinese Yuan (offshore)	historic
+CNX		2	Chinese People’s Bank Dollar	historic
+CNY	156	2	Chinese Yuan	current
+COP	170	0	Colombian Peso	current
+COU	970	2	Colombian Real Value Unit	historic
+CRC	188	2	Costa Rican Colón	current
+CSD		2	Serbian Dinar (2002–2006)	historic
+CSK		2	Czechoslovak Hard Koruna	historic
+CUC	931	2	Cuban Convertible Peso	historic
+CUP	192	2	Cuban Peso	current
+CVE	132	2	Cape Verdean Escudo	current
+CYP		2	Cypriot Pound	historic
+CZK	203	2	Czech Koruna	current
+DDM		2	East German Mark	historic
+DEM		2	German Mark	historic
+DJF	262	0	Djiboutian Franc	current
+DKK	208	2	Danish Krone	current
+DOP	214	2	Dominican Peso	current
+DZD	012	2	Algerian Dinar	current
+ECS		2	Ecuadorian Sucre	historic
+ECV		2	Ecuadorian Unit of Constant Value	historic
+EEK		2	Estonian Kroon	historic
+EGP	818	2	Egyptian Pound	current
+ERN	232	2	Eritrean Nakfa	current
+ESA		2	Spanish Peseta (A account)	historic
+ESB		2	Spanish Peseta (convertible account)	historic
+ESP		0	Spanish Peseta	historic
+ETB	230	2	Ethiopian Birr	current
+EUR	978	2	Euro	current
+FIM		2	Finnish Markka	historic
+FJD	242	2	Fijian Dollar	current
+FKP	238	2	Falkland Islands Pound	current
+FRF		2	French Franc	historic
+GBP	826	2	British Pound	current
+GEK		2	Georgian Kupon Larit	historic
+GEL	981	2	Georgian Lari	current
+GHC		2	Ghanaian Cedi (1979–2007)	historic
+GHS	936	2	Ghanaian Cedi	current
+GIP	292	2	Gibraltar Pound	current
+GMD	270	2	Gambian Dalasi	current
+GNF	324	0	Guinean Franc	current
+GNS		2	Guinean Syli	historic
+GQE		2	Equatorial Guinean Ekwele	historic
+GRD		2	Greek Drachma	historic
+GTQ	320	2	Guatemalan Quetzal	current
+GWE		2	Portuguese Guinea Escudo	historic
+GWP		2	Guinea-Bissau Peso	historic
+GYD	328	2	Guyanaese Dollar	current
+HKD	344	2	Hong Kong Dollar	current
+HNL	340	2	Honduran Lempira	current
+HRD		2	Croatian Dinar	historic
+HRK	191	2	Croatian Kuna	historic
+HTG	332	2	Haitian Gourde	current
+HUF	348	0	Hungarian Forint	current
+IDR	360	0	Indonesian Rupiah	current
+IEP		2	Irish Pound	historic
+ILP		2	Israeli Pound	historic
+ILR		2	Israeli Shekel (1980–1985)	historic
+ILS	376	2	Israeli New Shekel	current
+INR	356	2	Indian Rupee	current
+IQD	368	0	Iraqi Dinar	current
+IRR	364	0	Iranian Rial	current
+ISJ		2	Icelandic Króna (1918–1981)	historic
+ISK	352	0	Icelandic Króna	current
+ITL		0	Italian Lira	historic
+JMD	388	2	Jamaican Dollar	current
+JOD	400	3	Jordanian Dinar	current
+JPY	392	0	Japanese Yen	current
+KES	404	2	Kenyan Shilling	current
+KGS	417	2	Kyrgyz Som	current
+KHR	116	2	Cambodian Riel	current
+KMF	174	0	Comorian Franc	current
+KPW	408	0	North Korean Won	current
+KRH		2	South Korean Hwan (1953–1962)	historic
+KRO		2	South Korean Won (1945–1953)	historic
+KRW	410	0	South Korean Won	current
+KWD	414	3	Kuwaiti Dinar	current
+KYD	136	2	Cayman Islands Dollar	current
+KZT	398	2	Kazakhstani Tenge	current
+LAK	418	0	Laotian Kip	current
+LBP	422	0	Lebanese Pound	current
+LKR	144	2	Sri Lankan Rupee	current
+LRD	430	2	Liberian Dollar	current
+LSL	426	2	Lesotho Loti	current
+LTL	440	2	Lithuanian Litas	historic
+LTT		2	Lithuanian Talonas	historic
+LUC		2	Luxembourgian Convertible Franc	historic
+LUF		0	Luxembourgian Franc	historic
+LUL		2	Luxembourg Financial Franc	historic
+LVL		2	Latvian Lats	historic
+LVR		2	Latvian Ruble	historic
+LYD	434	3	Libyan Dinar	current
+MAD	504	2	Moroccan Dirham	current
+MAF		2	Moroccan Franc	historic
+MCF		2	Monegasque Franc	historic
+MDC		2	Moldovan Cupon	historic
+MDL	498	2	Moldovan Leu	current
+MGA	969	0	Malagasy Ariary	current
+MGF		0	Malagasy Franc	historic
+MKD	807	2	Macedonian Denar	current
+MKN		2	Macedonian Denar (1992–1993)	historic
+MLF		2	Malian Franc	historic
+MMK	104	0	Myanmar Kyat	current
+MNT	496	2	Mongolian Tugrik	current
+MOP	446	2	Macanese Pataca	current
+MRO	478	0	Mauritanian Ouguiya (1973–2017)	historic
+MRU	929	2	Mauritanian Ouguiya	current
+MTL		2	Maltese Lira	historic
+MTP		2	Maltese Pound	historic
+MUR	480	2	Mauritian Rupee	current
+MVP		2	Maldivian Rupee (1947–1981)	historic
+MVR	462	2	Maldivian Rufiyaa	current
+MWK	454	2	Malawian Kwacha	current
+MXN	484	2	Mexican Peso	current
+MXP		2	Mexican Silver Peso (1861–1992)	historic
+MXV	979	2	Mexican Investment Unit	historic
+MYR	458	2	Malaysian Ringgit	current
+MZE		2	Mozambican Escudo	historic
+MZM		2	Mozambican Metical (1980–2006)	historic
+MZN	943	2	Mozambican Metical	current
+NAD	516	2	Namibian Dollar	current
+NGN	566	2	Nigerian Naira	current
+NIC		2	Nicaraguan Córdoba (1988–1991)	historic
+NIO	558	2	Nicaraguan Córdoba	current
+NLG		2	Dutch Guilder	historic
+NOK	578	2	Norwegian Krone	current
+NPR	524	2	Nepalese Rupee	current
+NZD	554	2	New Zealand Dollar	current
+OMR	512	3	Omani Rial	current
+PAB	590	2	Panamanian Balboa	current
+PEI		2	Peruvian Inti	historic
+PEN	604	2	Peruvian Sol	current
+PES		2	Peruvian Sol (1863–1965)	historic
+PGK	598	2	Papua New Guinean Kina	current
+PHP	608	2	Philippine Peso	current
+PKR	586	0	Pakistani Rupee	current
+PLN	985	2	Polish Zloty	current
+PLZ		2	Polish Zloty (1950–1995)	historic
+PTE		2	Portuguese Escudo	historic
+PYG	600	0	Paraguayan Guarani	current
+QAR	634	2	Qatari Riyal	current
+RHD		2	Rhodesian Dollar	historic
+ROL		2	Romanian Leu (1952–2006)	historic
+RON	946	2	Romanian Leu	current
+RSD	941	2	Serbian Dinar	current
+RUB	643	2	Russian Ruble	current
+RUR		2	Russian Ruble (1991–1998)	historic
+RWF	646	0	Rwandan Franc	current
+SAR	682	2	Saudi Riyal	current
+SBD	090	2	Solomon Islands Dollar	current
+SCR	690	2	Seychellois Rupee	current
+SDD		2	Sudanese Dinar (1992–2007)	historic
+SDG	938	2	Sudanese Pound	current
+SDP		2	Sudanese Pound (1957–1998)	historic
+SEK	752	2	Swedish Krona	current
+SGD	702	2	Singapore Dollar	current
+SHP	654	2	St. Helena Pound	current
+SIT		2	Slovenian Tolar	historic
+SKK		2	Slovak Koruna	historic
+SLE		2	Sierra Leonean Leone	current
+SLL	694	0	Sierra Leonean Leone (1964—2022)	historic
+SOS	706	0	Somali Shilling	current
+SRD	968	2	Surinamese Dollar	current
+SRG		2	Surinamese Guilder	historic
+SSP	728	2	South Sudanese Pound	current
+STD	678	0	São Tomé & Príncipe Dobra (1977–2017)	historic
+STN	930	2	São Tomé & Príncipe Dobra	current
+SUR		2	Soviet Rouble	historic
+SVC		2	Salvadoran Colón	historic
+SYP	760	0	Syrian Pound	current
+SZL	748	2	Swazi Lilangeni	current
+THB	764	2	Thai Baht	current
+TJR		2	Tajikistani Ruble	historic
+TJS	972	2	Tajikistani Somoni	current
+TMM		0	Turkmenistani Manat (1993–2009)	historic
+TMT	934	2	Turkmenistani Manat	current
+TND	788	3	Tunisian Dinar	current
+TOP	776	2	Tongan Paʻanga	current
+TPE		2	Timorese Escudo	historic
+TRL		0	Turkish Lira (1922–2005)	historic
+TRY	949	2	Turkish Lira	current
+TTD	780	2	Trinidad & Tobago Dollar	current
+TWD	901	2	New Taiwan Dollar	current
+TZS	834	2	Tanzanian Shilling	current
+UAH	980	2	Ukrainian Hryvnia	current
+UAK		2	Ukrainian Karbovanets	historic
+UGS		2	Ugandan Shilling (1966–1987)	historic
+UGX	800	0	Ugandan Shilling	current
+USD	840	2	US Dollar	current
+USN	997	2	US Dollar (Next day)	historic
+USS		2	US Dollar (Same day)	historic
+UYI	940	0	Uruguayan Peso (Indexed Units)	historic
+UYP		2	Uruguayan Peso (1975–1993)	historic
+UYU	858	2	Uruguayan Peso	current
+UYW	927	4	Uruguayan Nominal Wage Index Unit	historic
+UZS	860	2	Uzbekistani Som	current
+VEB		2	Venezuelan Bolívar (1871–2008)	historic
+VED	926	2	Bolívar Soberano	historic
+VEF	937	2	Venezuelan Bolívar (2008–2018)	historic
+VES	928	2	Venezuelan Bolívar	current
+VND	704	0	Vietnamese Dong	current
+VNN		2	Vietnamese Dong (1978–1985)	historic
+VUV	548	0	Vanuatu Vatu	current
+WST	882	2	Samoan Tala	current
+XAF	950	0	Central African CFA Franc	current
+XAG	961	2	Silver	special
+XAU	959	2	Gold	special
+XBA	955	2	European Composite Unit	special
+XBB	956	2	European Monetary Unit	special
+XBC	957	2	European Unit of Account (XBC)	special
+XBD	958	2	European Unit of Account (XBD)	special
+XCD	951	2	East Caribbean Dollar	current
+XCG		2	Caribbean guilder	current
+XDR	960	2	Special Drawing Rights	special
+XEU		2	European Currency Unit	special
+XFO		2	French Gold Franc	special
+XFU		2	French UIC-Franc	special
+XOF	952	0	West African CFA Franc	current
+XPD	964	2	Palladium	special
+XPF	953	0	CFP Franc	current
+XPT	962	2	Platinum	special
+XRE		2	RINET Funds	special
+XSU	994	2	Sucre	special
+XTS	963	2	Testing Currency Code	special
+XUA	965	2	ADB Unit of Account	special
+XXX	999	2	Unknown Currency	special
+YDD		2	Yemeni Dinar	historic
+YER	886	0	Yemeni Rial	current
+YUD		2	Yugoslavian Hard Dinar (1966–1990)	historic
+YUM		2	Yugoslavian New Dinar (1994–2002)	historic
+YUN		2	Yugoslavian Convertible Dinar (1990–1992)	historic
+YUR		2	Yugoslavian Reformed Dinar (1992–1993)	historic
+ZAL		2	South African Rand (financial)	historic
+ZAR	710	2	South African Rand	current
+ZMK		0	Zambian Kwacha (1968–2012)	historic
+ZMW	967	2	Zambian Kwacha	current
+ZRN		2	Zairean New Zaire (1993–1998)	historic
+ZRZ		2	Zairean Zaire (1971–1993)	historic
+ZWD		0	Zimbabwean Dollar (1980–2008)	historic
+ZWG		2	Zimbabwean Gold	current
+ZWL		2	Zimbabwean Dollar (2009–2024)	historic
+ZWR		2	Zimbabwean Dollar (2008)	historic

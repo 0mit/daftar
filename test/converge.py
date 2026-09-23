@@ -22,7 +22,7 @@ driver `.gitattributes` names. Roughly 15 seconds.
 
 Run: python3 test/converge.py   (0 = green)
 """
-import json, os, shutil, subprocess, sys, tempfile
+import json, os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
@@ -63,7 +63,7 @@ summary: "A relay recorded in the origin garden, so gardens cloned from it obser
 identity:
   status: confirmed
   anchors:
-    - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, scope: global, observed: 2026-08-02 }}
+    - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, observed: 2026-08-02 }}
 provenance: {{ src: observed, by: "agent/origin", as_of: 2026-08-02 }}
 nature: physical
 owned_by: {{ legal: {{ external: "the relay's operator, outside every garden that observes it" }} }}
@@ -79,7 +79,7 @@ The shared relay.
 TMP = tempfile.mkdtemp(prefix='dmconv-')
 ORIGIN = os.path.join(TMP, 'origin')
 
-r = subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), ORIGIN],
+r = subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), ORIGIN, '--gardener', 'keeper'],
                    capture_output=True, text=True, cwd=ROOT)
 check("an origin garden germinates from the seed", r.returncode == 0, (r.stdout + r.stderr)[-300:])
 check("...and it dispatches bean merges to the semantic driver, journal merges to union",
@@ -196,7 +196,7 @@ check("...its anchor is stored once, in the compare form, with no disagreement r
       [a['value'] for a in _anchors] == ['SN-0042']
       and not any(sd['identity'].get('anchor_conflicts') for sd in _seeds.values()), str(_anchors))
 _one = os.path.join(TMP, 'two-spellings')
-subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _one], capture_output=True, cwd=ROOT)
+subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _one, '--gardener', 'keeper'], capture_output=True, cwd=ROOT)
 open(os.path.join(_one, 'beans', 'box.md'), 'w').write(
     '---\nbean: box\nkind: host\ntitle: "box"\nstatus: active\nsummary: "a box"\nnature: physical\n'
     'identity:\n  status: confirmed\n  anchors:\n'
@@ -315,6 +315,111 @@ _o = _owns(_generated('g1', {'os': 'AlmaLinux 9.8'}, {'a': {'src': 'asserted-by-
            _said('g2', 'asserted-by-human', {'os': 'AlmaLinux 9'}))
 check("12.0: borrowing never launders UPWARD past the guard's own protection of a stated assertion",
       'AlmaLinux 9' in json.dumps(_o['os']), json.dumps(_o['os']))
+
+# ---------------------------------------------------------------- one value, one form (std-vocab 21.0: G3, G4)
+# What the law says is the same value is compared as one: a quantity's count in its shortest exact decimal, and a list of
+# entries the law keys by one attribute (`keyed_by`) in that attribute's order. Read from the law's schema — the merge
+# names no term — and never written back over what a bean says.
+def _deal(garden, count, borne):
+    return [{'garden': garden, 'id': 'deal', 'fm': {
+        'bean': 'deal', 'kind': 'contract', 'nature': 'metaphysical', 'title': 'a deal', 'status': 'active',
+        'identity': {'status': 'confirmed', 'anchors': [{'key': 'contract_id', 'value': 'abcdefabcdef/contract:deal',
+                                                         'class': 'logical', 'establishing': True}]},
+        'provenance': {'src': 'asserted-by-human', 'by': garden, 'as_of': '2026-09-23'},
+        'transactions': {'t1': {'what': 'x', 'amount': {'count': count, 'unit': 'XTS'},
+                                'paid_by': [{'party': 'sam', 'amount': {'count': count, 'unit': 'XTS'}}],
+                                'borne_by': borne}}}}]
+_sa = [{'party': 'sam', 'share': 1}, {'party': 'ali', 'share': 2}]
+_s = M.merge_gardens([_deal('g1', 900, _sa), _deal('g2', '900.00', list(reversed(_sa)))])
+_c = M.canonical(_s)
+check("G4: `900` and `\"900.00\"` are ONE amount, and G3: bearers keyed by party, listed in another order, ONE list — "
+      "no disagreement", len(_s) == 1 and 'conflict' not in _c, _c[:600])
+check("...the seed holds the count in its shortest exact decimal, the bearers in their key's order",
+      '"count":"900"' in _c and _c.index('"party":"ali"') < _c.index('"party":"sam","share":1'), _c[:600])
+check("...so a fingerprint does not depend on how an amount is spelt (`12.50`, `12.5`) or its bearers ordered",
+      M.fingerprint(M.merge_gardens([_deal('g1', '12.50', _sa)]))[0]
+      == M.fingerprint(M.merge_gardens([_deal('g1', '12.5', list(reversed(_sa)))]))[0])
+check("...while a count that is not read exactly is compared as it was written — a canonical form never guesses",
+      M.canon_value('transactions', {'t': {'amount': {'count': '1e3', 'unit': 'XTS'}}})['t']['amount']['count'] == '1e3'
+      and M.canon_value('transactions', {'t': {'amount': {'count': 1.5, 'unit': 'XTS'}}})['t']['amount']['count'] == 1.5)
+check("...and the law says which: `keyed_by` on the entries, a quantity by its domain — no term is named in the merge",
+      "'transactions'" not in open(M.__file__, encoding='utf-8').read()
+      and "'paid_by'" not in open(M.__file__, encoding='utf-8').read())
+_d = os.path.join(TMP, 'spelt')
+os.makedirs(_d)
+_p = os.path.join(_d, 'deal.md')
+_bean = ('---\nbean: deal\nkind: contract\ntitle: "a deal"\nstatus: active\nsummary: "a deal"\n'
+         'transactions:\n  t1: { what: x, amount: { count: "900.00", unit: XTS }, borne_by: [ { party: sam, share: 1 }, '
+         '{ party: ali, share: 2 } ] }   # as the statement shows it\n---\nA deal.\n')
+open(_p, 'w', encoding='utf-8', newline='\n').write(_bean)
+_fa = dmparse.loads(dmparse.read(_p)[0])
+_fb = dict(_fa, transactions={'t1': {'what': 'x', 'amount': {'count': 900, 'unit': 'XTS'},
+                                     'borne_by': [{'party': 'ali', 'share': 2}, {'party': 'sam', 'share': 1}]},
+                              't2': {'what': 'y', 'amount': {'count': '12.50', 'unit': 'XTS'}}})
+_seed = M.merge_component([{'garden': 'ours', 'id': 'deal', 'fm': _fa}, {'garden': 'theirs', 'id': 'deal', 'fm': _fb}])
+_res = M.merge_in_place(_p, _fa, _fb, '', _seed)
+_after = dmparse.loads(dmparse.read(_p)[0])
+check("the driver writes what each side wrote: ours kept `\"900.00\"` with its bearers' order, and their new entry "
+      "arrives as `\"12.50\"` — never respelt in the canonical form",
+      _res[2] == [] and _after['transactions']['t1']['amount']['count'] == '900.00'
+      and _after['transactions']['t1']['borne_by'][0]['party'] == 'sam'
+      and _after['transactions']['t2']['amount']['count'] == '12.50', open(_p, encoding='utf-8').read())
+
+# ---------------------------------------------------------------- ANOTHER GARDEN'S LAW, entry by entry
+# A VOCAB.md is text a person or an agent edited, and another garden's is text this garden never wrote. Each shape below
+# once ended the merge in a traceback, or was passed over in silence; each is now named — which garden, where, and what
+# it should be — and the merge stops before it touches a bean, as it stops for two pins.
+_SHAPES = {
+    'local_terms: 5': "`local_terms` is int, not a list of entries",
+    'local_kinds: 7': "`local_kinds` is int, not a list of entries",
+    'local_terms: [ { term: [x] } ]': "local_terms[0].term should be text",
+    'local_terms: [ { term: { a: b } } ]': "local_terms[0].term should be text",
+    'local_kinds: [ { kind: [x] } ]': "local_kinds[0].kind should be text",
+    'local_terms: [ { term: x, schema: 5 } ]': "local_terms[0].schema should be a mapping",
+    'local_terms: [ { term: x, schema: { attrs: 5 } } ]': "local_terms[0].schema.attrs should be a mapping",
+    'local_terms: [ { term: x, merge: 5 } ]': "local_terms[0].merge should be a mapping",
+    'local_terms: [ { term: x, context_keys: 5 } ]': "local_terms[0].context_keys should be a list of text",
+    'local_terms: [ 5 ]': "local_terms[0] is int, not an entry",
+    'local_kinds: [ x ]': "local_kinds[0] is str, not an entry",
+    'registry_additions: { facets: [ 5 ] }': "registry_additions.facets should be a list of rows",
+}
+
+
+def _with_vocab(src, dst, line):
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns('.git'))
+    v = open(os.path.join(dst, 'VOCAB.md'), encoding='utf-8').read()
+    key = line.split(':')[0]
+    v = re.sub(rf'(?m)^{key}:.*$', line, v, count=1) if re.search(rf'(?m)^{key}:', v) else v.replace('---\n', f'---\n{line}\n', 1)
+    open(os.path.join(dst, 'VOCAB.md'), 'w', encoding='utf-8', newline='\n').write(v)
+    return dst
+
+
+_bad = []
+for _n, (_line, _said) in enumerate(_SHAPES.items()):
+    _other = _with_vocab(_one, os.path.join(TMP, f'law-{_n}'), _line)
+    _r = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '.', _other], capture_output=True,
+                        text=True, cwd=_one)
+    if not (_r.returncode == 1 and 'Traceback' not in _r.stderr and "MERGE REFUSED — a garden's law cannot be read" in _r.stderr
+            and f"law-{_n}: VOCAB.md {_said}" in _r.stderr):
+        _bad.append((_line, _r.returncode, _r.stderr[-400:]))
+check(f"another garden's VOCAB.md in {len(_SHAPES)} shapes the merge cannot read as law — a block that is not a list, an "
+      "entry that is not a mapping, a name that is not text, a schema, attrs or merge that is not a mapping, context_keys "
+      "that are not a list of text, a registry row that is not a mapping — each is NAMED, garden and place, and the merge "
+      "stops before any bean: never a traceback, never passed in silence", not _bad, _bad)
+_own = _with_vocab(_one, os.path.join(TMP, 'law-own'), 'local_terms: [ { term: x, merge: 5 } ]')
+_r = subprocess.run([sys.executable, os.path.join(_own, 'bin', 'dmmerge.py'), '.', _one], capture_output=True, text=True,
+                    cwd=_own)
+_d = subprocess.run([sys.executable, os.path.join(_own, 'bin', 'dmmerge.py'), '--file', *(
+    [os.path.join(_own, 'beans', 'box.md')] * 3)], capture_output=True, text=True, cwd=_own)
+check("...and this garden's OWN law the same, where the merge reads its terms by it: named, never a traceback at import "
+      "— in the report and in the git merge driver alike, which leaves the file untouched",
+      _r.returncode == 1 and "this garden's own law" in _r.stderr and 'local_terms[0].merge should be a mapping' in _r.stderr
+      and _d.returncode == 1 and 'Traceback' not in _r.stderr + _d.stderr and 'cannot read as law' in _d.stderr,
+      _r.stderr[-400:] + _d.stderr[-400:])
+_ok = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '.', _with_vocab(_one, os.path.join(TMP, 'law-ok'), 'local_terms: []')],
+                     capture_output=True, text=True, cwd=_one)
+check("...while a law it can read merges as before", 'cannot be read' not in _ok.stderr and 'Traceback' not in _ok.stderr
+      and 'fingerprint:' in _ok.stdout, _ok.stderr[-400:])
 
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nconverge: {sum(results)}/{len(results)} checks passed")

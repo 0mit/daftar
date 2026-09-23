@@ -25,9 +25,13 @@ it, and measures a great-circle distance ON THE BODY THE SYSTEM NAMES. It does N
 needs the published transformation parameters (the PROJ project carries them), and an approximate transformation
 presented as a position is the defect this whole design exists to refuse.
 
-Pure: standard library only.
+Pure: standard library only. It imports dmparse, which is too, for the one thing every tool shares: its output is
+UTF-8 on every platform, so a position named in any script prints intact through a pipe on Windows.
 """
-import math, re, sys
+import math, os, re, sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr
 
 # mean radii in metres (IAU). A body is a row of the law's `bodies` registry; this is the copy a tool can compute
 # with, held equal to it by test/calendars_and_coordinates.py.

@@ -88,6 +88,100 @@ except ValueError:
     ok = True
 check("the Persian reckoning REFUSES a year outside the range it is good for", ok)
 
+# ---------------------------------------------------------------- a day that does not exist is REFUSED, never moved
+def refusal(f):
+    """The message of the ValueError `f` raises, or what went otherwise (a traceback of another kind is a failure)."""
+    try:
+        return "no refusal: " + repr(f())
+    except ValueError as e:
+        return "ValueError: " + str(e)
+    except Exception as e:                     # noqa: BLE001 — anything else is the defect being tested for
+        return f"{type(e).__name__}: {e}"
+_none = [("persian:1404-12-30", "persian:1405-01-01"), ("julian:2026-02-29", "julian:2026-03-01"),
+         ("coptic:1742-13-99", "coptic:1743-04-04"), ("islamic-civil:1448-12-30", "islamic-civil:1449-01-01"),
+         ("ethiopic:2018-13-06", "ethiopic:2019-01-01"), ("buddhist:2569-02-29", ""), ("roc:115-02-30", ""),
+         ("indian:1948-12-31", ""), ("coptic:1742-00-10", ""), ("julian:2026-01-00", ""), ("2026-02-30", ""),
+         ("2026-13-01", ""), ("japanese:reiwa-8-02-30", ""), ("2027-W53-1", ""), ("hebrew:5786-02-30", "")]
+_got = [(p, moved, refusal(lambda p=p: dmcal.to_day(p))) for p, moved in _none]
+check("A DAY ITS CALENDAR DOES NOT HAVE IS REFUSED — the 30th of a 29-day Esfand, a Julian 29 February in a common year, "
+      "a Coptic 13th month of 99 days, a month 0, a day 0 — each a ValueError, never read as the day after",
+      all(g.startswith("ValueError") for p, m, g in _got), [(p, g[:90]) for p, m, g in _got if not g.startswith("ValueError")])
+check("...and the refusal says the day arithmetic would have moved it to, so the reader sees what was nearly done",
+      all(m in g for p, m, g in _got if m), [(p, m, g[:160]) for p, m, g in _got if m and m not in g])
+check("...while the day before it, and the leap day a leap year has, still read",
+      dmcal.convert("persian:1404-12-29", "gregory") == "2026-03-20" and dmcal.convert("persian:1403-12-30", "gregory") == "2025-03-20"
+      and dmcal.convert("julian:2028-02-29", "julian") == "julian:2028-02-29" and dmcal.convert("ethiopic:2015-13-06", "ethiopic") == "ethiopic:2015-13-06")
+
+# ---------------------------------------------------------------- every calendar reckons the same days, and no others
+import time
+check("the days reckoned here run from jdn:0 to 9999-12-31, and the ends are written as themselves",
+      dmcal.to_day("jdn:0") == dmcal.FIRST_DAY and dmcal.from_day(dmcal.LAST_DAY, "gregory") == "9999-12-31"
+      and dmcal.from_day(dmcal.FIRST_DAY, "julian-day") == "jdn:0")
+_far = ["hebrew:1000000000000000-01-01", "hebrew:" + "9" * 5000 + "-01-01", "julian:99999999-01-01", "coptic:-99999999-01-01",
+        "jdn:99999999999", "mayan:99999999.0.0.0.0", "japanese:reiwa-99999999999999999999-01-01", "islamic-civil:20000-01-01",
+        "persian:3178-01-01", "0000-01-01"]
+_t0 = time.time()
+_got = [(p[:40], refusal(lambda p=p: dmcal.to_day(p))) for p in _far]
+check("A YEAR BEYOND THE DAYS RECKONED IS REFUSED, in every calendar and at once — a Hebrew year of sixteen digits, one of "
+      "five thousand, a day count of eleven: a ValueError each, never a hang and never an OverflowError",
+      all(g.startswith("ValueError") for p, g in _got) and time.time() - _t0 < 2,
+      ([(p, g[:90]) for p, g in _got if not g.startswith("ValueError")], round(time.time() - _t0, 2)))
+_got = [(c, n, refusal(lambda c=c, n=n: dmcal.from_day(n, c))) for c in dmcal.EVERY
+        for n in (dmcal.LAST_DAY + 1, dmcal.FIRST_DAY - 1, 10 ** 20, -10 ** 20)]
+check("...and a day beyond them is refused by every calendar's writer, as a ValueError — the kind every reader catches",
+      all(g.startswith("ValueError") for c, n, g in _got), [(c, n, g[:90]) for c, n, g in _got if not g.startswith("ValueError")][:4])
+check("...as is a day before the first its own calendar holds: 0001-01-01 for the Gregorian, 0.0.0.0.0 for the long count",
+      refusal(lambda: dmcal.from_day(0, "gregory")).startswith("ValueError")
+      and refusal(lambda: dmcal.from_day(dmcal.MAYAN_EPOCH - 1, "mayan-long-count")).startswith("ValueError")
+      and refusal(lambda: dmcal.from_day(1, "no-such-calendar")).startswith("ValueError"))
+_ends = [d for d in range(dmcal.FIRST_DAY, dmcal.FIRST_DAY + 400)] + [d for d in range(dmcal.LAST_DAY - 400, dmcal.LAST_DAY + 1)]
+_bad = []
+for c in dmcal.EVERY:
+    for d in _ends:
+        try:
+            p = dmcal.from_day(d, c)
+        except ValueError:
+            continue                            # a day this calendar does not write — said, and tested above
+        if dmcal.to_day(p) != d:
+            _bad.append((c, d, p))
+check("...and within them, every day at either end round-trips through every calendar that writes it", not _bad, _bad[:3])
+
+# THE HEBREW YEAR IS ESTIMATED FROM THE MEAN YEAR, never counted up to: every new year of every year reckoned, and the day
+# before it, falls in the year it should — and the whole walk takes well under the time one year of sixteen digits took.
+_t0, _bad = time.time(), []
+_lo, _hi = dmcal.hebrew_from_day(dmcal.FIRST_DAY)[0], dmcal.hebrew_from_day(dmcal.LAST_DAY)[0]
+for _y in range(_lo + 1, _hi + 1):
+    _ny = dmcal._h_new_year(_y)
+    if dmcal.hebrew_from_day(_ny) != (_y, 1, 1) or dmcal.hebrew_from_day(_ny - 1)[0] != _y - 1:
+        _bad.append(_y)
+check(f"every Hebrew new year from {_lo + 1} to {_hi} reads as the first of Tishri of its year, and the day before as the "
+      f"year before — the year estimated from the mean year, in one step either way", not _bad and time.time() - _t0 < 10,
+      (_bad[:5], round(time.time() - _t0, 2)))
+
+# ---------------------------------------------------------------- the command: UTF-8 through any pipe, and its refusals
+def dmcal_cmd(*a, env=None):
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmcal.py")] + list(a), capture_output=True, env=env)
+    return r.returncode, r.stdout.decode("utf-8", "replace") + r.stderr.decode("utf-8", "replace")
+_code, _out = dmcal_cmd("hebrew:5787-01-09", env=dict(os.environ, PYTHONIOENCODING="ascii"))
+check("dmcal writes UTF-8 through a pipe whose encoding has no `—` (as a Windows pipe in the ANSI code page has none)",
+      _code == 0 and "Traceback" not in _out and "islamic-umalqura — not reckoned by rule" in _out, _out[-400:])
+_code, _out = dmcal_cmd("persian:1404-12-30")
+check("...refuses a day that does not exist, saying so", _code == 1 and "is not a day of the persian calendar" in _out, _out)
+_code, _out = dmcal_cmd("--day", "x")
+check("...and a day number that is not one, with the form it takes — no traceback", _code == 2 and "Traceback" not in _out
+      and "--day takes a day number" in _out, _out)
+import io, contextlib
+import dmparse  # noqa: F401 — what dmcal.main imports, imported before the platform is imitated below
+_buf, _os_name = io.StringIO(), os.name
+try:
+    os.name = "nt"
+    with contextlib.redirect_stdout(_buf):
+        dmcal.main(["--help"])
+finally:
+    os.name = _os_name
+check("...and its help names the interpreter as it is named where it runs: `python` on Windows",
+      "    python bin/dmcal.py 2026-09-20" in _buf.getvalue() and "python3 bin/" not in _buf.getvalue(), _buf.getvalue()[:300])
+
 # ---------------------------------------------------------------- where, by coordinates
 check("the tool's bodies are the law's, to the metre", {b["body"]: b["mean_radius_m"] for b in sv["bodies"]} == dmgeo.BODIES)
 check("the tool's reference systems are rows of the law's, with the same body, kind and frame",
@@ -113,7 +207,7 @@ check("every way of saying where BY IDENTIFIER resolves through coordinates, and
 def run(*a, cwd=None):
     return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
 T = tempfile.mkdtemp(prefix="dmcal-"); G = os.path.join(T, "g")
-r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, cwd=ROOT)
+r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 STD = os.path.join(G, "seed", "std-vocab.md"); ORIG = open(STD).read()
 def gate():
     r = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G); return r.stdout + r.stderr

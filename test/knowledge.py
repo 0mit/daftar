@@ -19,7 +19,7 @@ def run(*a, cwd=None):
 
 T = tempfile.mkdtemp(prefix="dmknow-")
 G = os.path.join(T, "g")
-r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, cwd=ROOT)
+r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 check("a garden germinates with seed/knowledge/ in the language", r.returncode == 0 and os.path.exists(os.path.join(G, "seed", "knowledge", "isco-08.tsv")), r.stdout + r.stderr)
 
 v = os.path.join(G, "VOCAB.md"); s = open(v).read()

@@ -37,6 +37,39 @@ A term with no `schema:` is documentation only; the gate never enforces it on be
 WHAT `in:` MAY SAY. Every attribute is a position in EXACTLY ONE domain,
 so `in:` is one thing, and it is never absent.
 
+## schema_language.sums
+
+PARTS ADD UP TO THEIR WHOLE, EXACTLY. A construct, not a rule on one term: whatever holds the parts of a measured
+whole — the payments of a price, the shares of a stake — declares it, and the gate checks it in fractions whenever
+every count is known, the parts in the whole's own unit. An entry holding a single part that states no amount holds
+the whole, because "Ali paid" should not need the price written twice. `whole` may name several attributes and the
+first the entry states is the whole, so a purchase charged in another currency is checked against what was charged.
+Checked exactly or not at all: a sum that is nearly right is a sum that is wrong, and a tolerance would have to be
+somebody's choice of how wrong.
+
+## schema_language.expiry
+
+PER ENTRY, REPEATING, AND SILENT ONCE MET. `expiry` was written for a term with one date — a registration runs
+out. The first obligations recorded were many to one term, each with its own day, some repeating: six instalments
+are one clause that falls due six times. So on a list or an open map the attribute is each entry's; `repeats` names
+the entry's own recurrence, and the reader is warned before the NEXT occurrence rather than the first; and `unless`
+names the states in which an entry no longer lapses — a debt already met, waived or broken is not coming due. The
+tool that reads it stays outside the gate for the reason the construct has always given: an answer that changes
+with the calendar would make the gate fail on a day for no committed reason.
+
+`notice` is an extent because a notice period is a region of time. It was a bare integer of days for one release
+(until 11.2) — a fifth way of saying a duration in a vocabulary that had just declared the first. And
+`expiry` is declared by the term rather than derived from an attribute's type because, measured when it was written,
+ten terms carried an iso_date and nine of them were `observed` or `as_of`: the day a fact was read, not the day it
+runs out.
+
+## schema_language.only_on_kinds
+
+THE MIRROR OF `required_on_kinds`. The language could say that a kind of being must carry a term and not that only
+it may, so a term that is a fact about one kind of being — that another garden is a rehearsal — could sit on a person,
+where nothing reads it. The alternative was the gate naming the term and the kind in its code, which is the one thing
+the interpreter does not do.
+
 ## crown
 
 == NATURES: the root axiom layer (added 2026-08-02, P3 / plan D1, human-ratified rule-change) ==
@@ -106,6 +139,119 @@ kept its name — exactly the `id` term's oldest exception. What broke under enf
 rented VPS anchored on its name, and three physical machines whose `fqdn` was establishing beside a real
 serial. The VPS was of the wrong nature (see `kinds[virtual-host]`); the names were demoted to corroborating,
 which is what they had always been.
+
+## identity_policy.minted
+
+A NAME CARRIES ITS BIRTHPLACE. Every anchor once said `scope: global`, which no tool read and which was false of
+every name a garden had minted: `person:sam` is unique in the garden that chose it and nowhere else. Two failures
+were measured, and they pull opposite ways. A stranger's garden recorded its agreements with no anchor at all, and
+a merge of it against a copy of itself saw two records as four: nothing let two gardens agree on a name. And an
+isolated run made up a person id that happened to equal one another garden already used for someone else, and
+the merge fused two people into one: a name that means nothing beyond its garden was treated as if it identified.
+
+So a value of a term marked `minted` is BARE — it identifies within its garden, and fuses only there — or QUALIFIED
+by the id of the garden that minted it, and then it identifies everywhere. Equal bare names from two gardens are
+candidates for a person, never fused by a tool. The prefix is the garden's id because that id is assigned by no one
+and legible on paper; the bare name is unchanged, so qualifying is prepending, and nothing a garden already wrote is
+rewritten. A name is qualified ONCE, by the garden that recorded the thing first, and every garden that takes it in
+keeps it byte for byte: a name re-minted on arrival is two names again. A gardener planted at germination is
+qualified at birth, because the garden's id exists from its first commit: the one name every agreement the garden
+makes will carry needs no minting later. The gate holds the prefix to a garden this
+one knows, so a foreign name always arrives with the garden that gave it.
+
+Considered and refused: a UUID (canonical, and illegible cold, on paper); a tag URI (it needs a domain or an e-mail
+address, which would put personal data into every anchor); an anchor made of a source and a position in it (two
+people recording one dealing from two sources would still see two); a garden that mints names for the others (a
+privileged sibling, which the language does not have).
+
+## identity_policy.minted.form
+
+A NAME A GARDEN GAVE HAS A FORM. `minted` was first a property of the term alone, and the terms' own meanings admit
+values no garden gave: a program is known by its package name, an organisation by a registry number, a happening by
+the UID its invitation carries, a virtual machine by the id its provider assigned. Read as names a garden gave, the
+same package name in two gardens was two programs and a candidate for a person to join, where it had always fused;
+and the remedy the law prescribed — put the garden's id in front — would have said that one garden gave Postfix its
+name, which is false provenance. The meanings already wrote a minted name one way, `product:<name>`, so that form
+became structure: `<kind>:<name>`, the kind one the garden knows, is a name a garden gave; any other value was
+assigned outside every garden, identifies wherever it is written, fuses as every anchor always did, and is never
+qualified — the gate refuses `<garden_id>/postfix`. The kind must be a kind the garden knows so that a colon inside an
+outside identifier (`urn:…`, `mailto:…`) is not taken for a name a garden gave.
+
+Considered and refused: splitting each term in two, one for identifiers assigned outside and one for names a garden
+mints (eleven more terms, and a stranger choosing between two words for one identity); taking `minted` off the terms
+whose meanings admit an outside assigner (then a garden could not name an organisation that has no registry number —
+most of the people and groups a household deals with).
+
+## manifest
+
+GARDEN.md WAS JUDGED BY NOTHING. The law declared none of its keys, so any key passed; the template carried
+`created: "git-metadata"`, a key whose only content said it had none, and `seeds_from: []`, which no tool read or
+wrote. Now the manifest is judged AS ITSELF, by every rule an entry answers to: each key says what it is a position
+in, a required one must be there, an undeclared one is refused, and a retired one says where it went. It was first
+judged as one entry of a list, where its attributes — declared for the mapping itself — were read by nothing but the
+key check: a gardener naming no bean, a manifest with no `garden:` or no `extends:`, a release nobody made, all passed.
+
+`gardener` is the key a stranger's garden was missing. With no place to say whose garden it was, an agent wrote the
+person who keeps it as an outside owner, in prose, inside that person's own garden. The gardener is a bean of the
+garden — a being that can be anchored, owned and asked, like any other — and is required once the garden holds a
+bean rather than at germination, so an empty garden still passes its first gate and the first thing it asks for is
+the person who keeps it. `test` exists because a rehearsal of someone's garden must never pass for their word; it is
+the sending garden's own statement, and the receiving garden keeps its own (`terms[test]`).
+
+A garden's identity is deliberately not a key. It is read from git, as the product version is, because a copy typed
+into a document is a second copy, and a second copy can disagree.
+
+## manifest.attrs.gardener
+
+WHO MAY KEEP A GARDEN IS THE LAW'S TO SAY: a person, or an organisation — a family business, a club — and never a
+machine or a product, which cannot be asked. The list was written in the gate and in the upgrade tool, two copies in
+code and none in the law, while the hint for a retired name had already moved into the law for the same reason.
+`in: { bean_id: { kinds } }` states it as structure, the one place both tools read. The gardener is not required to
+be the garden's first bean: it is the first of a garden grown with `--gardener`, and a garden upgraded into 21.0 names
+a person it has held for years.
+
+## manifest.attrs.daftar_release
+
+A release, or `untagged <commit>`: a garden grown from a checkout on no tag records the commit it runs, exactly as
+`seed/germinate.py` writes it — `untagged unknown` where even that could not be read — and a pattern that admitted only
+a tag would have refused every garden grown to have a look around. The note germinate prints says why such a garden
+should adopt a release.
+
+## manifest.attrs.policy
+
+A GARDENER'S STANDING RULES ARE WORDS. Declared as `any`, the key took a number or a list as readily as a sentence,
+and its meaning said prose. A gardener writes one rule, or several each under a name of its own — how work on a live
+system is done, who decides what — so the key takes exactly that: one text, or texts under names. The schema language
+says it once, as `in: { prose: named }`, beside `in: prose`.
+
+## retired
+
+A REFUSAL SAYS WHERE IT WENT. A name the law took back was refused as "declared by no term", which tells a writer
+what is wrong and not what to write instead; for one release the hint for the anchor's `authority` lived in the
+gate — a rule stated in a tool, not in the law. `retired` states each name, where it was written (an anchor, a bean,
+a term, a schema, the manifest) and where it went, and the gate keeps no list of its own.
+
+What went, and why. `scope`: read by nothing, and false on every minted name; the term and the name's own form say
+it now. `between`, `agreement_ref`, `conflict_rule`: declared with no schema, so each checked nothing; `parties`,
+`words` and a clause say it with structure. `balance`: a stored copy of what the transactions say, which drifts.
+`attributes`: a second bag for the one purpose `details` serves. The `facets` term: three prose rules that nothing
+checked, now a registry whose walk is checked. `values_consistent_with`: a guard against a list's own copies, whose
+last user became registry rows. `seeds_from`, `created`, `models`: manifest keys that nothing read; what a garden
+took in is in its journal and in the captures on the other garden's `garden` bean, when a garden began is its first
+commit, and who wrote there is in the journal and in git.
+
+## provenance_record
+
+THE RECORD EVERY FACT CARRIES, DECLARED. The merge has read `from` since a generated fact first borrowed the
+weakest standing of what it names, and the law declared nothing about it, so a provenance record took any key. It
+declares five now. `from` also gives a person's words read in a transcript an honest form: the fact is theirs —
+`asserted-by-human`, by them — and `from` names the document it was read from, where the alternative was to call it
+an observation of a file, which says the wrong thing about who said it.
+
+`garden` is the one attribute a crossing adds. It is stamped once, by the garden a record was made in, when a
+proposal carries the fact across, and never changed — so an assertion that arrives from another garden is still that
+person's assertion, and the guard that an inference never overrides it holds across the boundary without a single
+new rule. It must name a garden this one knows: a fact from a garden nobody recorded has no one to ask.
 
 ## natures[physical].crown
 
@@ -210,6 +356,21 @@ by centimetres a year, and a coordinate is complete only with the EPOCH it was m
 ## system_shape
 
 THE WORDS A SYSTEM'S SHAPE MAY USE, declared so the gate carries no copy of them.
+
+## value_types[date].exists
+
+A DAY ITS CALENDAR DOES NOT HAVE IS NOT A DATE. A pattern admits `persian:1404-12-30` and `2026-02-30` alike, and
+each reader did something different with them: the Persian date moved silently to the first of Farvardin, so a clause
+meant for the thirtieth fell due on the first of every month, and the Gregorian one was dropped by one reader and
+refused by another. For a calendar reckoned by rule (`arithmetic`), the arithmetic that converts a date also judges it:
+the day a position names, written back in its own calendar, must be the position written. A year outside the range a
+calendar's reckoning is good for is refused the same way, by name and never by a traceback. The other reckonings —
+astronomical, observational, tabulated — cannot be judged by arithmetic, and are not.
+
+The rule is stated where a date is defined, and which calendars it judges is read from each calendar's own
+`reckoning`. Stated only in a reason, it was a rule `bin/dmrules.py` could not show; judged by whichever calendars a
+tool happened to carry, the gate and the reader that walks a repetition could disagree about one calendar — a tool
+that learned an observed calendar would have started refusing its days on arithmetic the law says it does not follow.
 
 ## anchor_systems[unix-filesystem].levels
 
@@ -359,6 +520,11 @@ audit. With a plane stated, that is a CELL a term can declare rather than a line
 A protocol is also a TECHNOLOGY with a specification somebody publishes, and the technology catalogue is rooted in
 the UNESCO fields of knowledge. A link is declared here ONCE, so the gate names neither registry.
 
+ONE ROOT (`rooted`). `legal` is the facet every other reaches — whoever owns a thing in law answers for it in the
+end — and that was a sentence nothing checked: a garden could add a facet that depends on nothing and so have two
+lattices. `rooted` says that exactly one row names no link and that every other reaches it, and the gate holds the
+facets to it.
+
 ## net_protocols
 
 == NET PROTOCOLS: the one owner of what a being may SPEAK (added 6.0) ==
@@ -423,14 +589,15 @@ The reasons a vacancy may give, declared rather than known by the gate. A reason
 ABSENCE — why nothing occupies a position the law makes available — and that is a statement about the
 world, which the vocabulary owns and the interpreter must not carry a copy of. Adding a reason is a
 rule-change here, not an edit to bin/.
-
-## leaf_orders
-
 `universal`: the position is declared because the STRUCTURE is general, not because an occupant is
 expected here. A figure with a side missing is a worse model than a figure with a side nobody stands on, and a
 standard that waits for one garden's occupant before completing a mechanism ties every garden to the first
 one's size. It is a reason and not a licence: the position must belong to a mechanism that IS occupied
-somewhere on the same figure, and its `why` says which.
+somewhere on the same figure, and its `why` says which. A garden that stands on a `universal` position is not
+warned: one garden's occupant withdraws nothing declared for every garden.
+
+## leaf_orders
+
 == LEAF SUBSUMPTION ORDERS (declared 2026-08-03, Phase 6) ==
 `merge_field` absorbs a general value into a more precise one where the two are ORDERED: 192.168.0.0/24
 into 192.168.0.0/16, "AlmaLinux 9" into "AlmaLinux 9.8". WHICH keys are ordered that way was decided in
@@ -489,6 +656,14 @@ looked exercised by five edges that never mention it — the gate crediting its 
 is STATEMENT now, and what that leaves behind is this: a position every requirement in the estate
 effectively sits at, and none has ever taken a stance on.
 
+## vacancies[words.form]
+
+AN AGREEMENT'S WORDS ARE DECLARED WHOLE. Written, spoken, or not yet put into words: the three ways any agreement
+stands, and a stranger keeping one expects to find each. A closed list on a mapping's own attribute offers positions
+like any entry's, and was not counted until the reverse gate learned to count it; `spoken` is taken, and the other two
+are declared for every garden that does not stand on them. The domain profile's `registration.auto_renew` is declared
+whole for the same reason.
+
 ## figures
 
 == FIGURES: the shapes an aspect may take (added 9.2, human-ratified rule-change, "T0") ==
@@ -536,6 +711,36 @@ They were patterns written in the gate's code. A TIME value type is a POSITION: 
 format" but the calendar system held at unit DAY, so every `observed: 2026-08-09` in a garden was always a
 position in gregorian-civil whose second and minute are UNKNOWN, not zero. Saying so needs no data change;
 it states what those values already were. A type with no system (kebab) is only a form.
+
+## value_types[count]
+
+A NUMBER IS WHAT WAS WRITTEN, AND EVERY READER HOLDS IT. YAML 1.1 reads a plain `010` as eight, `0x64` as a hundred,
+`1:30` as ninety and `1_000` as a thousand; the gate took each for a whole number, and every reader agreed on an
+amount nobody wrote. The one loader now reads a plain scalar as an integer only in plain decimal, and this form
+refuses every other spelling by name — a leading zero among them, since `010` is a spelling of ten nobody writes and
+of eight that YAML reads. Forty digits before the point and forty after hold any amount a person owes and any rate,
+and lie far inside what every reader holds exactly: a count past Python's four-thousand-digit limit passed the gate and
+ended the ledger in a traceback. A share is bounded the same way. An explicit `!!int` asks the loader the same question
+and gets the same answer: the tag builds an integer only from plain decimal, so `!!int 010` is the text `010`, refused
+as the untagged text is — the library's own constructor would have read it, quoted or not, in all four spellings.
+
+The count keeps what was written. A merge compares counts by the exact value they write, so `900`, `"900"` and
+`"900.00"` are one amount and never a conflict — the shortest exact decimal is the one canonical form.
+
+## value_types[text]
+
+TEXT IS WHAT A PERSON READS. A key and a string value are read by a person and printed by every tool, and a control
+character is neither: nobody reads it, and a terminal obeys it. An escape sequence in an agreement's title, which
+YAML's double quotes write as `\e`, moved the cursor up, erased the line a reader trusted and wrote the debt the other
+way round; one in a path the gate itself quotes cleared the screen on every commit. The journal refused such
+characters already; a bean, the thing the journal is about, did not. So text holds no character of the Unicode control
+category: a tab, which a person types, is let through, and a line feed is held where a value's lines are lines on the
+page — a block scalar. The same characters escaped inside double quotes (`"a\nb"`) make one line on the page two in
+every reader, and `"C:\01-files"` silently held a NUL where a person wrote a backslash and a zero; both are said plainly
+now, with the way to write what was meant. The rule is a value type, because every other type is text first; the
+gate reads it from the node graph, where a scalar's style is known, and names the character rather than echo it. A
+tool that prints what a garden already holds spells such characters out, so a garden written before the rule cannot
+drive the terminal of the person reading the refusal.
 
 ## journal
 
@@ -697,6 +902,14 @@ A garden that records what a thing IS in the world's own terms — which field o
 which occupation a role is, which technology a program is — should use codes every other garden uses too, so
 two gardens that never met agree that "ISCO-08 2522" and "Samba" are the same objects. The classifications
 are DATA the law points at, kept whole (every level) in seed/knowledge/, not restated in this prose.
+
+## registry_files[currencies]
+
+FROM UNICODE CLDR, NOT FROM ISO 4217 DIRECTLY. The standard's own list states no terms of redistribution where it is
+published; CLDR carries the same codes and numbers under the Unicode licence, and is already the source the calendars
+were taken from. Its decimal places follow use where they differ from ISO's minor unit, and a count is held to what
+people actually write. A redenomination arrives as a new code and the old one stays, historic, so an old amount can
+still be said.
 
 ## knowledge_schemes[isco-08].crosswalk
 
@@ -996,7 +1209,8 @@ and it must agree with the kind that refines it
 ## terms[owned_by].meaning
 
 Faceted ownership. ONE owner per facet (the 'one and only one owner' law, held per facet).
-Co-ownership of a SINGLE facet is never a raw fact -> a `contract` bean (agreement_ref + conflict_rule).
+Co-ownership of a SINGLE facet is never a raw fact -> a `contract` bean: its `parties`, its `words`, and the clause
+that settles a disagreement between the owners.
 
 ## terms[owned_by].schema
 
@@ -1057,29 +1271,17 @@ NB no `crown`: the crown owns but never answers
 
 the loop must CLOSE: same facets on both arcs
 
-## terms[facets].meaning
+## facets
 
-The ownership-facet lattice: DISTINGUISHABLE (crisp boundary; resolve overlap by a depends_on edge or
-boundary refinement, NEVER ambiguous double-coverage), DEPENDENCY-bearing (DAG), and RECURSIVE
-(a facet may decompose into sub-facets, ownership recursing within).
-
-## terms[facets].enforced_by
-
-AT TIER-0 there is nothing to check: this term defines the lattice RULES
-
-## terms[facets].rules
-
-(below) but declares no values, because `legal`/`technical` are defensible
-universals while the extensible three are unoccupied predictions. A garden
-supplying values inherits the drift guard through its overlay, and that IS
-enforced there. Left as an empty `schema:` key by the 1.1 promotion until
-golden V5 caught it — a term that states no rule and no reason is exactly
-the silent gap this release exists to remove.
-values_from:facets)
-definition below, so the two can never drift apart.
-NB: 'facilitation of creation/production' is NOT modelled as an ownership facet — a facilitator is a
-HABITAT the creation act lived in (lives_in, time-windowed), and any equal-sharing of that facilitator
-stake is captured by a `contract` over the creation aspect. Kept lean on purpose.
+THE OWNERSHIP-FACET LATTICE, as a registry. A facet is DISTINGUISHABLE (a crisp boundary; overlap is resolved by a
+`depends_on` edge or by refining a boundary, never by double coverage — which stays a judgment for whoever adds a row),
+DEPENDENCY-BEARING (every facet but `legal` depends on another, and the walk never returns — `registry_links` declares it
+`acyclic`, so the gate checks what the old term only stated), and RECURSIVE (a garden decomposes a facet by adding rows that
+depend on it: `operational` under `technical`). It was a term whose three rules nothing checked and which offered no values
+at Tier-0, so in a garden grown from the seed ANY facet key passed: the lattice MODEL.md describes lived only in one garden's
+overlay, stated five times over. As a registry it is stated once, read by `owned_by` and `responsibility` through
+`key_form`, and a garden adds a facet the way it adds any row. `experience` and `financial` are in the standard because a
+stranger's garden expects them: who designs how people meet a thing, and who pays for it.
 
 ## terms[instance_of].schema
 
@@ -1182,6 +1384,37 @@ Declared at 19.0 with `service_id`, `org_id`, `person_id`, `program_id`, `contra
 whatever its home assigns or the estate mints once. `manifest_id` and `email` leave `establishing` to the bean
 — a module's name corroborates beside the git remote that establishes, and an address is reassigned.
 
+## terms[garden_id]
+
+A GARDEN IS KNOWN BY THE COMMIT IT GERMINATED FROM. Content-addressed: assigned by no registry and no person, the
+same in every clone, and changed by nothing but a new history — so a clone is the same garden and a copy given a
+fresh `git init` is another, which is exactly the difference between a clone and a rehearsal. The root of the
+FIRST-PARENT history, so a history merged in later never changes it. Twelve hexadecimal digits, the length at which
+a large project cites a commit: one spelling, fixed, for a value compared by equality, and short enough to read on
+paper in front of a name.
+
+A name was refused, because two gardens on one machine may carry the same one: a garden is named after its folder.
+And the commit itself had to be made unique. Germination makes it under a fixed identity with a fixed tree and
+message, so two gardens given one name, grown from one release in the same second, made the same commit and would
+have been taken for one garden. A random seed written into the commit's message makes each germination's commit its
+own, and the id is still assigned by no one.
+A UUID was refused: canonical, and illegible cold. Like the product version, the id is read from git and written in
+no document of the garden itself; it is written only where git cannot be read — on another garden's `garden` bean,
+in a proposal, and before a name the garden minted. A shallow clone cannot see its root, and has no identity to
+offer until it can.
+
+## terms[content_hash]
+
+A document kept whole is identified by its own bytes. The SHA-256 of them names one content in every garden that
+holds it, needs no home and no registry, and a changed byte is another thing — which is right for a statement
+downloaded from a bank or a conversation saved as a transcript, the documents that have no id of their own.
+`doc_id` stays for a document whose home names it.
+
+## terms[event_id]
+
+A happening has an identity where it is kept — the UID an invitation carries — or one a garden mints once. Minted,
+because two gardens recording one dinner will each name it, and the name must be qualified before it crosses.
+
 ## terms[emp_id].enforced_by
 
 no canonical form declared: an employer-assigned id has whatever shape the employer uses.
@@ -1226,6 +1459,16 @@ law-in-data rule exists to forbid. They are also the reason the unclean marker n
 the algebra on one key, and the next merge turned it into a conflict the in-place writer could not
 write back.
 
+## terms[merge_conflicts].meaning
+
+A CAPTURE IS WHAT THE DRIVER WROTE, AND NOTHING LOOKS LIKE ONE BY ACCIDENT. The rules stand down on a value two
+gardens hold two ways, so that a disagreement can be committed whole and settled by a person. They stood down on any
+record written `{conflict: …}` under a `merge_open` marker, and so a document could shield values the gate refuses — a
+party nobody is, a day no calendar has, parts that do not add up — behind one warning: with the path left out of
+`merge_conflicts`, with one side, or with other keys beside `conflict`, none of which the merge driver writes. What the
+driver writes is exact: the marker, the path named, and a record holding two values or more that differ. That, and only
+that, is a capture; any other conflict record is refused, named at its path, and a person picks a value.
+
 ## terms[provenance_of].meaning
 
 PER-LEAF PROVENANCE, BESIDE THE VALUES AND NEVER INSIDE THEM. `owns.os: AlmaLinux 9.8` stays what a
@@ -1234,20 +1477,88 @@ it a merged bean read back can only be re-merged as the READER's own assertion �
 restamped `generated-by-tool` — which disarms the guard that an `inferred` value may never override
 an `asserted-by-human` one, because SRC_RANK is what enforces that guard.
 
-## terms[between]
+## terms[test]
 
-== CONTRACT KEYS. `contract` is a Tier-0 kind and its `schema:` prose already names these five; they
-are declared here so the merge reads them from the same place the kind describes them.
+A REHEARSAL IS MARKED BY THE GARDEN THAT RECEIVES IT. The manifest's `test:` is the sending garden's word that it is
+a rehearsal, and a proposal carries it — a word the sender controls, which cannot be what keeps a rehearsal from
+passing for a person's word: removed, and the fingerprint computed again, the proposal read as the real garden's. So
+the receiving garden records it itself, on its `garden` bean for the other — its own record, which no proposal can
+remove — and taking a proposal treats it as a rehearsal when either says so. Only a `garden` bean may carry it: it is
+a fact about a garden.
 
-## terms[between].merge
+A rehearsal is grown by germination, never by clone. A clone has its original's `garden_id`, so it IS that garden and
+its word is that garden's word; there is nothing a receiving garden could mark it by, and the gate refuses a `garden`
+bean anchored by the garden's own id.
 
-SINGLE, not set — and this CHANGES what the shape guess did. The parties to an agreement are
-constitutive of it: unioning two gardens' lists would silently produce a three-party contract
-nobody agreed to. Two gardens disagreeing about who signed is a conflict for a human.
+## terms[parties]
+
+AN AGREEMENT IS STRUCTURE. The five contract keys were declared without a schema, so each checked nothing; the first
+agreements a stranger recorded put every party, sum and condition in free keys under `details`, and the one agreement in
+the reference garden stated its parties twice and its object twice. `parties`, `words`, `clauses` and `transactions` say
+who is bound (each with the day they accepted: an offer is not an acceptance, and one party's report of another's consent
+is not that party's word), where the words are, what each must, may or must not do (the `capability` square, which a
+being's capabilities already take), and what has moved. A balance is not among them: it is read, never stored.
+
+A party without `accepted` has no acceptance ON RECORD, and the meaning says exactly that. It first said the party
+"has not said yes", which reads silence as refusal: an agreement spoken aloud and kept to, whose yes nobody wrote
+down, would have been recorded as refused by the people keeping it.
+
+## terms[parties].merge
+
+MEMBER BY MEMBER, keyed by the party's short name — the name every clause and transaction uses to say who. The first
+draft merged the parties as one atom, on the argument that they are constitutive: unioning two gardens' lists could add
+a party nobody agreed to. Built, it did worse: any difference in any party — one garden knowing an acceptance the other
+does not yet — turned the whole map into a conflict, and every clause naming a party then named nothing, so the merged
+agreement failed its own gate. Per member, a disagreement about one party stays on that party, and the others keep
+their names. The danger the atom guarded against is met where it belongs: a party only one side names is a difference
+`dmpropose read` shows before anything is taken in, and the gardener decides.
+
+## terms[parties].schema.attrs.accepted
+
+TAKING IS NOT ACCEPTING. Taking another garden's proposal in records what that garden offers; it is not the
+receiving gardener saying yes to an agreement, and a tool that wrote it so would put words in a person's mouth. The
+receiving gardener accepts by writing `parties.<them>.accepted` in a commit of their own — the commit is the
+ratification, and the entry's provenance says whose word it is.
 
 ## terms[over].merge
 
-SINGLE, not a per-key collection — a reference capsule is one thing, exactly like `lives_in`.
+A SET of what the agreement concerns. It was a single reference capsule, one thing like `lives_in`; an agreement between
+people is often about several things at once — two purchases on one receipt — and two gardens that each name one of
+them both keep theirs. What would be dangerous to union is who is bound, and that is `parties`, which stays single.
+
+## terms[words]
+
+WHERE THE WORDS ARE. An agreement is written, spoken, or named before anyone has put its terms into words, and each
+is a real state: a spoken agreement binds its parties as a written one does, and the record must not pretend a text
+exists. `at` names the document that holds the text or the happening at which it was said, so the words can be found
+again, and a written agreement must name its document. `unstated` keeps an agreement both parties refer to, whose
+terms nobody has said, from being either dropped or invented.
+
+## terms[clauses]
+
+WHAT AN AGREEMENT ASKS, ON A SQUARE THE LAW ALREADY HAS. An obligation is a position of deontic logic — must, need
+not, may, must not — and the `capability` aspect already is that square, taken by a being's capabilities. A clause
+takes it too, rather than a fifth word for the same four. `by` and `to` are keys of the parties, so a clause binds
+someone the agreement names; the amount is any quantity, because what is owed is not always money; a recurrence
+makes six monthly instalments one clause and not six; and a condition that is not a date — interest on an
+instalment paid late — is prose in `when`, because the reason IS the fact. `state` records what became of it; the
+balance it implies is read, never stored.
+
+## terms[transactions]
+
+WHAT MOVED, AND NOTHING DERIVED FROM IT. A transaction records the inputs — an amount, who paid how much of it, and
+who bears it in what shares — and what one party owes another is the output, read by a tool. The first agreement a
+stranger recorded stored the output beside its inputs, and a stored balance is a second copy that the next payment
+makes wrong. Shares are whole numbers because a share is a ratio the parties said — two to one — and whole numbers
+keep the arithmetic exact; a split that does not come out even is shown as a fraction and settled by a clause.
+`charged` keeps what a card was charged in another currency beside the price, both as the statement shows them; the
+rate between them is read from the two, never stored. `sums` has the gate check that what was paid adds up exactly
+to the whole.
+
+The day it moved is `day`. It was `on` in the first draft, and YAML 1.1 reads a bare `on` as the boolean true: every
+parser received the attribute as a key that was not a name, the gate crashed on a transaction that carried it beside
+an undeclared attribute, and no bean carrying it could cross to another garden. A key is text, and the gate now
+refuses any key YAML reads as a boolean or a number.
 
 ## terms[trigger]
 
@@ -1329,6 +1640,15 @@ the point of the term: a path grammar is a property of the OS's API and a storag
 property of the volume, and NTFS mounted through ntfs-3g has unix paths, so a model that had one
 axis for both could not describe an ordinary Windows disk read from Linux.
 
+## terms[volumes].reproduction_note
+
+SCOPE, STATED BECAUSE IT IS ABOUT TO GROW. This term records the LAYOUT — what exists, what carries
+what, and where it is mounted — which is what a rebuild needs to recreate the shape. It does NOT
+record contents, keys or passphrases, and it must not: `no secrets` is a founding rule of this
+ledger. The operator has asked for beans complete enough to reproduce a machine, and the honest
+remaining gap is CONFIGURATION, which is a separate question from layout because config is
+SOMEBODY ELSE'S authoritative truth and ground rule 3 forbids mirroring it.
+
 ## terms[beanger].meaning
 
 THE OPERATOR'S TERM, THEIR DESIGN AND THEIR NAME, 2026-08-07. BEAN + LEDGER: a per-datum ledger,
@@ -1375,6 +1695,13 @@ one place the ledger stamps to the millisecond — were described in a map of se
 attribute was the last to say `untyped`. Nested entries are entries: the same controllers, the same closed set of
 attributes, so there is no second and weaker kind of rule one level down. A ref inside one is resolved and draws no
 edge, because the graph is made of what a bean states at its own level.
+
+`keyed_by` says a list of entries is a set keyed by one of their attributes. The payers of a transaction are a
+list, and a list has an order and admits a repeat: `[sam, ali]` and `[ali, sam]` were two values to a merge — a
+disagreement for a person to settle that was none — and two entries for one payer counted that payer's part twice.
+Keyed by `party`, the order carries nothing, a merge compares the list in the key's order, and a second entry for one
+party is refused. A map keyed by the party would say the same by structure; it was refused because every payment
+already recorded is written as a list, and each would have had to be rewritten to say nothing new.
 
 ## schema_language.attr_domains.any
 
@@ -1464,8 +1791,9 @@ a person may be owned ONLY by the crown (love, while alive) — never by a
 
 ## kinds[person].meaning
 
-bean. This also RESERVES the crown form: no other kind may name the
-axiom directly, so every other chain must pass through a being.
+bean. This also RESERVES the crown form: only a kind whose row names it may name the axiom directly — a
+person, and since 21.0 an agreement and a happening between people — so every other chain must pass through a
+being.
 
 ## kinds[host]
 
@@ -1497,6 +1825,48 @@ where it was: a rented VM is owned `external` and answered for here; a VM on the
 owned through it and `lives_in` it. A rented BARE-METAL server stays a `host`: it has a serial, and ownership
 was always orthogonal to nature.
 
+## kinds[contract]
+
+AN AGREEMENT IS OWNED BY NONE OF ITS PARTIES. The kind meant co-ownership of one facet of one being, and had no
+occupant as that; the agreements people record are between them — a cost shared, a loan repaid. Were each garden to
+write its own gardener as the owner, two gardens' records of one agreement would disagree about its owner on every
+fusion. So the chain may end at the crown — `logos`, for a being of meaning — as a person's ends at `love`, and the
+parties, who can be asked, answer for it: `responsibility_form: [parties]`, reflexive like `self`, drawing no edge.
+The crown owns and never answers; the parties answer and never own. The form is a LIST, which ALLOWS the crown beside
+the ordinary forms instead of pinning it: an agreement one person wrote and offers may still be owned by its author.
+Co-owning one facet through a contract stays one use of it.
+
+## kinds[garden]
+
+ANOTHER GARDEN IS A BEING. A garden this one deals with needs an identity to name — in a proposal, before a
+qualified name, in a record's provenance — and an owner who can be asked; so it is a bean, anchored by `garden_id`,
+owned by its gardener and answered for by them. A garden's own identity and its own gardener are never in a bean of
+its own: git holds the one and the manifest names the other, and a garden describing itself would be a second copy
+of both.
+
+So the gate refuses a `garden` bean anchored by the garden's own id: it would be the garden describing itself — or a
+clone recorded as a rehearsal, which is the same garden under another folder name.
+
+## kinds[document]
+
+`doc_id` promised a document since it was declared, and there was no kind to anchor with it. A document is a being:
+it has an owner who is often not its holder — a bank's statement is the bank's — an identity, and copies in places.
+What must not be kept whole stays out of it: a transcription of its lines is a `capture` on it, whose `redactions`
+say what was left out and why, so a card number is never in the ledger and its absence is on the record.
+
+## kinds[event]
+
+A HAPPENING IS WHERE THINGS ARE AGREED. An agreement spoken over dinner or in a call has its words at that
+happening, and a happening must be a being to be pointed at. Its time is `timing`, at the resolution actually known;
+who took part is `refs`, each naming what they were, because `rel` is open and the parts people play at a meeting are
+not a closed list. A work session is a happening too, and keeps its own kind while the two are told apart by use.
+
+A HAPPENING BETWEEN PEOPLE IS OWNED BY NONE OF THEM. Written first with the host as its owner, a dinner recorded in
+the host's garden and in a guest's would disagree about its owner every time the two records met, as two records of
+one agreement would; and nobody owns an evening they shared. So it may end at the crown, `logos`, as an agreement
+may. It is answered for by whoever hosted it — a holder, one being who can be asked — and not by the `parties` form,
+because a happening binds no one to anything.
+
 ## recurrence_form
 
 A repetition is what an instant and an extent were missing: an instant is a sequence restricted to one position, an
@@ -1512,9 +1882,20 @@ which is why `each` refuses to stand without `in`.
 A routine is what happens and a recurrence is when. They compose; they were never the same thing, which is why a routine
 that must end could not hold a repetition that does not.
 
+Where a repetition starts and ends are POSITIONS, and the readers walk to them, so each is held as every other position
+is: to the form of the system the repetition is counted in, and to a day that system's calendar has. Only `due` was
+held once; a monthly clause could end on `2026-02-30`, on a Persian day in a Gregorian count, or on `garbage`, and pass.
+
 Considered and refused: a calendar bucket as a unit (`every: { count: 1, unit: month }`). A month is not a length — it
 is 28 to 31 days in one calendar, 29 or 30 in another — and writing it as a measure would make arithmetic of something
 that is not arithmetic.
+
+## recurrence_form.times
+
+Instalments end by count as often as by date — six payments — and a recurrence that could only end at a position
+would make a writer compute the last day, which is exactly the arithmetic a record should not ask of its writer. With
+both `to` and `times`, whichever comes first ends it, as an agreement that says "six payments, and none after the
+year's end" means.
 
 ## vacancies[registry:anchor_systems]
 
@@ -1592,6 +1973,30 @@ fact's standing already does) — which is noted here and not yet built.
 Considered and refused: temperature in degrees Celsius, which needs an offset as well as a factor; and compact strings
 such as `12.5 m/s`, a second spelling of what `{ count, unit }` already says.
 
+## quantities[money]
+
+MONEY IS MEASURED, AND A RATE IS NOT A LAW. One quantity whose units are the rows of a currency registry, with no
+factor between any two — `crosswalk: observed`, the calendars' word for systems joined only by observation. A factor
+would say that the rate between two currencies is a law of the language; it is a reading someone made at a moment
+from a source. So every amount stays in the currency it was paid or owed in, a conversion needs a rate someone
+recorded, and what it produces is a reading, never a record.
+
+A quantity per currency was considered — each its own dimension, as some quantities are kept apart in ISO 80000 — so
+that adding two currencies would be a type error for free. It costs a row per currency and a special case in the
+unit machinery, and one quantity with no factor gives the same refusal: nothing converts across currencies without
+a rate. Denominations are written in the major unit.
+
+EXACTNESS, CARRIED FROM LENGTHS TO MONEY. A count is a whole number or a decimal string, never a float, with no more
+places than the currency uses; every sum, share and balance is a fraction; and a share that does not come out even
+is printed as the fraction it is and flagged, never rounded. Who takes the odd minor unit is something the parties
+agree, in a clause — arithmetic that decides it has decided something that was theirs.
+
+## quantities[ratio]
+
+A part of a whole, or a rate — a share of a cost, a rate of interest — needs a unit as much as a length does, or
+`1` could mean the whole or one percent. Dimensionless, linear, and four units: the whole, the percent, the per mille
+and the basis point in which rates of interest are quoted.
+
 ## terms[located_at]
 
 == POSITION TERMS (added 5.1, human-ratified rule-change) ==
@@ -1599,6 +2004,80 @@ such as `12.5 m/s`, a second spelling of what `{ count, unit }` already says.
 sequence is general, and time and place are restrictions of it with different direction lines. They
 are declared as two terms rather than one because what they are ASKED is different — where a being is
 found, and when something happened — and a single term serving both would have to be read twice.
+
+## doc:MODEL.md#Facts carry their provenance
+
+A JUDGMENT IS ITS JUDGE'S. Whether the language could carry machinery for beauty was asked seriously, of the
+language itself and of the beings and works it records, and the answer is that it can carry the preconditions and not
+the judgment.
+
+A judgment of taste divides down to the person who made it and no further: "a point is that which you have not
+enough category to divide", and here the category that cannot be divided away is the judge. That one version is more
+beautiful than another is always said comparatively and always said by someone; two people may prefer each other's
+version, so beauty is not a position of a thing, and made a relation on the walk between versions it would refuse
+the merged garden of two people who disagree as a cycle. It is a fact about a judgment — who, when, why — and the
+record already has everything such a fact needs: `provenance.by` names the judge, `asserted-by-human` is the source
+only a person can be, prose holds the reason, and the oldest rule here settles it between a person and an agent: an
+inference never overrides an assertion. Between two persons no rank settles it; the owner of the facet decides, or
+whoever an agreement names.
+
+And every proxy of beauty that became a target in this repository drifted: a count of story lines in the law held its
+number while the stories moved into folded strings; a list of the kinds a leak guard watched let an estate's design id
+into the public law; a length threshold once measured care and was met by padding. A score in the gate would be the
+largest proxy of all, and a size ratchet would push facts back into prose, where they are cheapest to count away. So
+the machinery measures the preconditions — closure, one statement of each thing, no story in the law, no privileged
+sibling, structure before prose — and shows them to the person who ratifies, who judges. It judges nothing.
+
+## doc:MODEL.md#Between gardens: the mycelium
+
+THE MYCELIUM. A garden could merge with its own working copies and with scans of one estate — what the merge layer
+first meant by a garden — and had no way to meet a garden someone else keeps without one swallowing the other. A
+person whose dealings are with someone who keeps a garden too needs that way.
+
+The forest gives the shape, and it is the operator's own image: what passes between gardens "handled by the Mycelium
+on the earth". Trees are rooted apart and owned; the network that joins them beneath carries between them, belongs to
+none of them, and meets each tree at its root instead of entering it. Ownership rises through each garden and ends
+above, at the crown; the mycelium is where gardens meet, beneath; the earth both grow from is the language they pin —
+which is why two gardens on different pins cannot exchange, a reason for the rule the merge already had. The root edge
+is the gate: what comes through the mycelium is taken up by the garden's own agent, through its own journal, under its
+own gardener's hand.
+
+WHY A GARDEN IS KNOWN BY THE COMMIT IT GERMINATED FROM: content-addressed, so it is assigned by no one — no registry,
+no hub, no person — and it is the same in every clone. A name was refused because two gardens on one machine may share
+it; a UUID because it is illegible cold.
+
+WHY A MINTED NAME CARRIES ITS BIRTHPLACE: a name a garden chose means something only there, and the two measured
+failures were a shared thing seen twice for want of a shared name, and two different people fused for having one by
+accident. Qualified by the garden that recorded the thing first, a name means one thing everywhere, and nothing but
+its first writer has to agree to it.
+
+WHY WHAT FLOWS IS A PROPOSAL AND NEVER A WRITE: a garden is its gardener's, and a write from outside — even a correct
+one, even by an agent with a shell that can reach the folder — is a decision taken for them. A proposal is the act the
+chat assistant was always given: someone who cannot write here proposes; a person here enacts; the record says who
+proposed and who enacted. One shape for both, not two. Whole beans travel, as committed, so what crosses is what a
+gate saw; what a third garden said stays with the garden it was said to, because passing it on would make one garden
+the channel of another's words without that garden's consent — only the names it gave travel, with what they name.
+
+WHY AN AGREEMENT IS OWNED BY NONE OF ITS PARTIES: were each party's garden to own its own record, the two records of
+one agreement would disagree about their owner every time they met. The crown ends the chain at `logos`, as it ends a
+person's at `love`, and the parties — who can be asked — answer for it. Nothing owns the crown, and nothing owns the
+mycelium.
+
+WHY CONSENT COMES BEFORE A FLOW: a proposal is made under an agreement both gardeners are parties to, because the
+exchange is itself something agreed. Consent is the soil the hyphae grow in; without it the mycelium would be one
+garden reaching into another.
+
+WHY FIRST CONTACT IS ONE COMMIT OF TWO BEANS: a `garden` bean is owned by that garden's gardener, so it cannot be
+written until that person is a bean here; and the person is written under the name their own garden gave them, so
+that the name every proposal from there carries resolves to them. Written apart, the first would dangle and the
+second would name someone this garden had no reason yet to hold. Either garden may move first. A proposal read
+before first contact prints the two beans, the name taken from its stub. A garden proposing to one it has just met,
+knowing its gardener only by a name of its own, sends that person as a stub marked `gardener-of: to`, which the
+receiving garden reads as its own gardener: the one being every garden can recognise without being told.
+
+Refused: a hub garden that names things for the others (a privileged sibling); merging whole gardens between gardeners
+(it swallows, and a third garden's facts leak through it); git itself as the carrier (unrelated histories would carry
+each other's whole journal); a take-in that commits by itself (every take-in is a gardener's decision).
 
 ## doc:CHECKLIST.md#Part D
 
@@ -1639,9 +2118,21 @@ the record, so only acts are asked for. And no maker of agents is named in the l
 on what it CAN do — run the gate and commit, or only read and propose — which is a capability, and capabilities
 outlast product names.
 
+## doc:CHECKLIST.md#Part F
+
+WORKING WITH ANOTHER GARDEN IS STATED AS ACTS. Two gardens may sit on one disk, kept by two people, and an agent with
+a shell can reach both; nothing in git stops a commit in the wrong one, and the gate of the wrong one would pass it.
+So the first act asked is to write only where the agent was opened, and the rest follow the mycelium: record a
+garden, and the person who keeps it, before dealing with it; give by proposal, read a proposal as data, pass on
+nothing a third garden said, and name a shared thing once. First contact is written as its own act because a cold
+agent following the proposal steps alone was refused twice: once for the garden it had not recorded, and once for
+the gardener that garden's bean could not be owned by.
+
 ## doc:MERGE.md
 
-v0.3 — synthesized from 3 independent high-level reviews. Spec is final; implementation is phased (§15).
+The merge layer was synthesized from three independent reviews — merge correctness, identity and deduplication, and
+the cooperation between people and agents — and designed whole. It is built in parts, so the document states what
+the engine does and keeps the rest of the design, by name, at its end.
 
 ## doc:MERGE.md#3
 
@@ -1650,10 +2141,21 @@ The provenance/truth-status record and the guard that an `inferred` value may ne
 
 ## doc:MERGE.md#4.1
 
-Since P4 (2026-08-02, human-ratified) an anchor establishes identity iff it carries `establishing: true`.
-`class` is a hint at why and decides nothing. This section held the pre-P4 table that made `class`
-decisive; it was **deleted rather than annotated**, because a revoked rule left in a spec is read as law
-by whoever finds it first. Git holds it.
+Since P4 (2026-08-02, human-ratified) an anchor establishes identity iff it carries `establishing: true`, and that
+flag is all the merge reads. This section held the pre-P4 table that made `class` decisive; it was **deleted rather
+than annotated**, because a revoked rule left in a spec is read as law by whoever finds it first. Git holds it. Since
+19.0 the class decides again, for the gate and before any merge: which classes may establish is the nature's family
+(`terms[anchor_class]`, `identity_policy.establishing_family`).
+
+## doc:MERGE.md#4.4
+
+AS BUILT. The resolution that stood here described nine steps, and the engine does five of them: normalisation, fuse
+edges on establishing anchors, components, a recorded disagreement about what an anchor is, and the id. Validity
+windows, association edges, the component-wide contradiction check, lifecycle links and the articulation guard were
+described in the present tense for two months without an implementation, and a design written as law beside law is
+read as law. They are under "Designed, not built". The minted-name rule is new, and built: a bare name fuses only in
+its own garden, and equal bare names across gardens are shown to a person — the one piece of the association idea
+that a measured failure called for.
 
 ## doc:MERGE.md#4.5
 
@@ -1685,6 +2187,37 @@ therefore hold a bean of a kind the merged law never declared, or a bean in brea
 garden that wrote it had never adopted — checked by nobody, because each garden's gate only ever saw its
 own half. Promoting kinds to Tier-0 shrank this; it did not close it.
 
+## doc:MERGE.md#6
+
+"JCS" WAS A CLAIM. The engine writes canonical JSON — sorted keys, no whitespace, normalised strings, dates and
+addresses — and does not re-serialise numbers by RFC 8785's rules, so it is not JCS, and saying it was is the kind of
+statement that makes a reader trust the wrong thing. The section says what is written, and the rest of JCS is under
+"Designed, not built".
+
+## doc:MERGE.md#7
+
+THE LOG MERGE THAT WAS NEVER BUILT. The section described entry ids hashed over a structured record, a global
+grow-only set with subject tags, and a total order across gardens. The journal has always merged by git's union, which
+keeps every entry and rewrites none, and that is what the section says now. Journals never merge across gardens:
+each is its garden's own record, and what crossed is recorded where it was taken in.
+
+## doc:MERGE.md#12
+
+A plan: the vocabulary additions the merge required before its acceptance test. Every one of them shipped long ago or
+was retired since, and a plan kept in a law document after it is carried out reads as a list of things still owed.
+The number is kept so the sections after it keep theirs.
+
+## doc:MERGE.md#13
+
+The manifest's keys were listed here, including three that nothing read. The law declares them now, in `manifest`,
+and a document that repeated the list would be a second copy of it.
+
+## doc:MERGE.md#14
+
+The acceptance test's hard phase — synthetic gardens merged in every order, byte-identical — is what the release
+suites hold (§11); its soft phase, several models' sessions of one estate merged and measured, has not been run, and
+is under "Designed, not built". The number is kept so the sections after it keep theirs.
+
 ## doc:MERGE.md#15
 
 The P1-P4 gates named here were all shipped, and their numbering **collides head-on** with the v2 P0-P7d
@@ -1694,3 +2227,30 @@ happened is in the journal.
 
 (The section was headed: Implementation phasing — superseded.)
 
+## doc:MERGE.md#16
+
+THE MYCELIUM NEEDED NO NEW ALGEBRA. Seen from the merge, a proposal is a garden of a few beans, `read` is the identity
+of §4 and the join of §5 over this garden and it, and `take` is the in-place merge the git driver already does. What
+the join guarantees carries over: the FACTS two proposals reach do not depend on the order they are taken in. The
+bytes do — a bean that arrives new is written as its garden wrote it, and one reached by fusion is rewritten key by
+key with its `provenance_of` — and the section says so, because a claim of byte-identity the tool does not keep is
+the kind of promise this document stopped making.
+
+A take also writes a record of itself, so taking once needed a rule of its own. A proposal taken already is
+REFUSED, known by its name or by its fingerprint: through the capture on the proposing garden's `garden` bean, or,
+for a chat proposal, which has no garden bean to hold one, through the journal entry of its take. Refused rather
+than quietly joined again, because a second take would write a second capture and a second journal entry, and a
+gardener reading the journal would see two acceptances of one proposal.
+
+THE FINGERPRINT IS NOT A SIGNATURE. It covers the whole proposal — envelope and body, so the journal text it carries
+and the prose between the beans cannot change unseen — and it detects damage and a careless edit. Anyone who
+rewrites a proposal can compute it again, so no refusal depends on it: a renamed proposal with a new fingerprint
+counts as new, its beans fuse with what the first take wrote, and the second journal entry shows the gardener that
+it came twice. A signature needs a key someone holds, and is listed among what is not built.
+
+## doc:MERGE.md#Designed, not built
+
+A DESIGN IS NOT A PROMISE, AND NOT A LAW. The merge layer was designed whole, from three reviews, and built in parts.
+While the design stood in the present tense among the rules, a reader could not tell the engine from the plan. So
+MERGE.md states what the engine does, and this section keeps the rest of the design — named, so it is not lost, and
+out of the present tense, so it is not read as in force.

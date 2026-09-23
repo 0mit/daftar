@@ -21,7 +21,7 @@ def run(*a, cwd=None):
 
 T = tempfile.mkdtemp(prefix="dmpos-")
 G = os.path.join(T, "g")
-r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, cwd=ROOT)
+r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 check("a garden germinates", r.returncode == 0, r.stdout + r.stderr)
 v = os.path.join(G, "VOCAB.md"); s = open(v).read()
 if "extends_profiles:" in s:
@@ -135,6 +135,25 @@ open(v, "w").write(s.replace("local_terms: []", """local_terms:
         rides:  { in: { key_of: links } }
     merge: { cardinality: single, order: none }"""))
 LINK = '  - { protocol: smtp, system: ipv4, at: "203.0.113.10", port: 25, exposure: lan, observed: 2026-09-20 }\nlinks:\n  wan0: { kind: ethernet, medium: copper }\n'
+# A closed list on a mapping's own attribute offers positions like an entry's (21.0), so this garden's `probe_stamp.mode`
+# is accounted for: two small beans hold `fast` and `slow` throughout, whatever the probe bean says.
+def twin(mode):
+    open(os.path.join(G, "beans", "twin-%s.md" % mode), "w").write("""---
+bean: twin-%s
+kind: product
+title: "a twin"
+status: active
+summary: "probe"
+nature: metaphysical
+identity: { status: confirmed, anchors: [ { key: product_id, value: "product:twin-%s", class: logical, establishing: true } ] }
+provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
+owned_by: { legal: { owner: { bean: keeper } } }
+responsibility: { legal: { holder: { bean: keeper } } }
+probe_stamp: { mode: %s }
+---
+probe.
+""" % (mode, mode, mode))
+twin("fast"); twin("slow")
 def stamp(text):
     return gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "probe_stamp: " + text + "\n")
 base = stamp("{ at: 1786245253747, mode: fast, tag: abc }")
@@ -170,6 +189,88 @@ for what, bad, want in (
 sv_now = open(os.path.join(ROOT, "seed", "std-vocab.md")).read()
 check("NOTHING in the law is `untyped` any more — and `any` is a decision, said as one",
       "in: untyped," not in sv_now and "value: { in: any," in sv_now)
+
+# ---------------------------------------------------------------- 21.0: A MAPPING'S OWN CLOSED LIST OFFERS POSITIONS
+# `shape: mapping` is one entry, and its attributes' closed lists are positions like an entry's. They were counted
+# nowhere: `words.form` offered `written` and `unstated`, used by no garden and declarable vacant by none.
+V1 = open(v).read()
+open(v, "w").write(V1.replace("local_terms:\n", """local_terms:
+  - term: mood
+    meaning: "a mapping whose one attribute is a closed list"
+    context_keys: [mood]
+    schema:
+      shape: mapping
+      attrs:
+        level: { in: [calm, stormy], meaning: "how it is" }
+    merge: { cardinality: single, order: none }
+""", 1))
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: calm }\n")
+check("a closed list on a MAPPING's attribute is a set of positions: the one no bean takes is named",
+      "VOCAB mood.level: position 'stormy' is declared but NO bean occupies it" in out
+      and "mood.level: position 'calm'" not in out, out[-700:])
+V2 = open(v).read()
+open(v, "w").write(V2.replace("\n---", '\nvacancies: [ { at: "mood.level", position: stormy, reason: prediction, why: "a storm comes" } ]\n---', 1))
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: calm }\n")
+check("...declared vacant, it is accounted for", "0 error" in out and "mood.level" not in out, out[-700:])
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: stormy }\n")
+check("...and a vacancy for one a bean takes is reported stale",
+      "VOCAB vacancies: mood.level = 'stormy' is declared vacant but IS occupied" in out, out[-700:])
+open(v, "w").write(V2.replace("\n---", '\nvacancies: [ { at: "words.form", position: unstated, reason: prediction, why: "x" } ]\n---', 1))
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: calm }\n")
+check("`words.form` is a declared position a vacancy may be declared at — and the law accounts for its own",
+      "is not a declared position" not in out and "words.form" not in out, out[-700:])
+open(v, "w").write(V1)
+
+# ---------------------------------------------------------------- 21.0: A KEY THAT IS A REGISTRY'S ROW IS A POSITION AT IT
+# `owned_by` and `responsibility` take their keys from the `facets` registry. The keys were counted at a source nothing
+# declares, so a facet a garden added and used was refused as unoccupied, and a vacancy for one in use never went stale.
+V0 = open(v).read()
+def vocab(extra):
+    open(v, "w").write(V0.replace("\n---", "\n" + extra + "\n---", 1))
+WIDGET = os.path.join(G, "beans", "widget.md")
+open(WIDGET, "w").write("""---
+bean: widget
+kind: product
+title: "a widget"
+status: active
+summary: "probe"
+nature: metaphysical
+identity: { status: confirmed, anchors: [ { key: product_id, value: "product:widget", class: logical, establishing: true } ] }
+provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
+owned_by: { legal: { owner: { bean: keeper } }, moral: { owner: { bean: keeper } } }
+responsibility: { legal: { holder: { bean: keeper } }, moral: { holder: { bean: keeper } } }
+notes_x: [ { a: "one form" }, { b: "the other" } ]
+---
+probe.
+""")
+LISTY = """  - term: notes_x
+    meaning: "a LIST whose entries take one of two forms"
+    context_keys: [notes_x]
+    schema:
+      shape: list_of_entries
+      entry_one_of: [a, b]
+      attrs:
+        a: { in: prose }
+        b: { in: prose }
+    merge: { cardinality: single, order: none }"""
+assert V0.count("local_terms:\n") == 1
+open(v, "w").write(V0.replace("local_terms:\n", "local_terms:\n" + LISTY + "\n", 1)); V0 = open(v).read()
+vocab('registry_additions: { facets: [ { facet: moral, depends_on: [legal], meaning: "who answers for it to the people it touches" } ] }')
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25"))
+check("a facet a garden ADDS and uses occupies its position at `registry:facets` — it is not refused as unoccupied",
+      "0 error" in out and "position 'moral' is declared but NO bean occupies it" not in out, out[-700:])
+check("...and a garden's own LIST term with `entry_one_of` has its forms occupied by its list's entries",
+      "notes_x.entry_one_of" not in out, out[-700:])
+vocab('registry_additions: { facets: [ { facet: moral, depends_on: [legal], meaning: "who answers for it to the people it touches" } ] }\n'
+      'vacancies: [ { at: "registry:facets", position: moral, reason: prediction, why: "expected" } ]')
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25"))
+check("...a vacancy the garden declares for a facet in use is reported STALE — a false vacancy does not stand",
+      "VOCAB vacancies: registry:facets = 'moral' is declared vacant but IS occupied" in out, out[-700:])
+os.remove(WIDGET)
+vocab('registry_additions: { facets: [ { facet: moral, depends_on: [legal], meaning: "who answers for it to the people it touches" } ] }')
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25"))
+check("...and with nothing using it, the added facet is unoccupied again, and says so",
+      "VOCAB registry:facets: position 'moral' is declared but NO bean occupies it" in out, out[-700:])
 
 shutil.rmtree(T, ignore_errors=True)
 print("\npositions: %d failed" % len(FAILS))

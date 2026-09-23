@@ -39,10 +39,10 @@ cases: a kind of thing it cannot yet name, a rule that is wrong for you. That is
 
 ## One example
 
-You tell your agent, in a chat: *"the NAS in the hallway is at 192.168.1.20, I set it up last April, the serial
-on the sticker is 4XK9-2217."* The agent writes one file and commits it. The file holds the facts, and each
-fact holds its source (abridged — the full file also carries a title, a summary, and who owns and answers for
-the machine):
+The notebook is yours: you are its **gardener**, and the first thing in it is you. You tell your agent, in a
+chat: *"the NAS in the hallway is at 192.168.1.20, I set it up last April, the serial on the sticker is
+4XK9-2217."* The agent writes one file and commits it. The file holds the facts, and each fact holds its source
+(abridged — the full file also carries a title, a summary, and who owns and answers for the machine: you):
 
 ```yaml
 bean: hallway-nas
@@ -83,11 +83,15 @@ sessions, and time:
 
 The example is a machine because machines are where this began. The notebook is not about machines. A thing
 is first a **nature** — physical, metaphysical or living — and then a **kind** that refines it: a host is
-physical; a domain, a product, a codebase, a design, a contract are metaphysical; a person, or a running
-instance of a program, is living. The rules for what a thing may say attach to its nature and every kind
-beneath inherits them, so a new kind arrives with a coherent identity policy for free. The same is true of
-ownership: every thing has exactly one owner and exactly one holder who answers for it, per facet — legal,
-technical — and every chain ends at a person, at someone outside the notebook, or at the crown.
+physical; a domain, a product, a codebase, a design, an agreement between people, a document, a dinner where
+something was agreed are metaphysical; a person, or a running instance of a program, is living. Money is
+measured, like a length: an amount in the currency it was paid in, exact and never rounded, and what one
+person owes another is read from what was paid and what was agreed — never written down beside them, where it
+could drift. The rules for what a thing may say attach to its nature and every kind beneath inherits them, so a
+new kind arrives with a coherent identity policy for free. The same is true of ownership: every thing has exactly
+one owner, and exactly one entry saying who answers for it, per facet — legal, technical, financial — and every chain
+ends at a person, at someone outside the notebook, or at the crown. An agreement between two people may be owned by
+neither of them, and then both answer for it.
 
 The vocabulary that says all this is a document, versioned, read by the gate on every commit; the gate itself
 names no term. A garden adds what it needs — its own terms, its own values, its own profiles — and a local
@@ -96,12 +100,39 @@ can be declared whole, ahead of its first occupant, with its empty positions mar
 designed larger than any one garden's use of it, so that the next kind of thing, from a garden nobody here has
 seen, already has somewhere to stand.
 
+## Between gardens
+
+A notebook is kept by its gardener — a person, or an organisation — and nothing outside it writes there. But people
+deal with one another — they share a cost, lend and repay, agree on something and keep to it — and the other person
+may keep a notebook of their own. Two gardens meet the way trees in a forest do: not by growing into each other, but
+beneath, through the **mycelium** — the network that joins trees rooted apart, carries between them, and is owned by
+none of them. Ownership rises through each garden to its gardener, and the crown is where it ends, above; the
+mycelium is where gardens meet, beneath, in the earth of the language they share. Two gardens that pin different
+versions of the language cannot exchange until one of them moves.
+
+What passes is only ever a **proposal**. Your agent writes one file — the beans you choose to give, under an
+agreement you and the other gardener have made — and lays it beside your notebook, never inside theirs. Their
+agent reads it in their notebook and shows them what it would change; it is taken in only when they commit it:
+their gate, their journal, their hand. Every fact keeps who said it as it crosses, so what you asserted arrives as your
+assertion and nothing on the other side quietly overrules it. Taking an agreement in records what you offered; their
+yes to it is theirs, written in their own notebook, in their own words. A thing you both hold — the agreement, the
+people in it — is named once, by the notebook that recorded it first, and the name travels with it, so the two
+notebooks see one thing where they would otherwise see two; a name someone else gave — a package's, a registry
+number — is the same in every notebook already. An agreement between two people may be owned by neither of them, and
+then both answer for it: nobody owns the crown, and nobody owns the mycelium.
+
+A garden is known by the commit it grew from, so two gardens need no registry and no account anywhere to name each
+other. Growing a garden writes a random seed into that first commit, so two notebooks on one machine are never taken
+for one, even when they carry the same name and were grown in the same second. The first time two gardens meet, each
+gardener records the other's garden and whoever keeps it, in one commit of their own. A rehearsal is a garden
+grown for it, never a copy of a real one, and each gardener marks it as a rehearsal in their own records.
+
 ## Who does what
 
-| | you | your agent | the gate |
+| | you, the gardener | your agent | the gate |
 |---|---|---|---|
 | **write** | say what is true, in a chat | writes the fact and the journal entry, commits | refuses a commit that breaks a rule or is not journalled |
-| **decide** | ratify identity, safety flags, and any change to the rules | records what it observed or inferred; proposes the rest | — |
+| **decide** | ratify identity, safety flags, any change to the rules, and what another garden proposes | records what it observed or inferred; proposes the rest | — |
 | **read** | ask; or open the files yourself, any time | reads the one file that owns the fact, and its source | — |
 
 The line between "records" and "proposes" is the **Contract of Parts** in `MODEL.md`: an agent alone may
@@ -126,9 +157,13 @@ yours; nothing here ever sees it.
 Tell the agent:
 
 > Read https://raw.githubusercontent.com/0mit/daftar/master/INSTALL.md and follow it. My notebook goes at
-> `~/garden`; my private remote is `git@github.com:me/garden.git`.
+> `~/garden-sam`; my private remote is `git@github.com:me/garden.git`.
 
 ([`INSTALL.md`](INSTALL.md) is that page.)
+
+The agent grows the notebook with you as its gardener: your own person bean is the first thing in it, and
+`GARDEN.md` names you, so every agent that comes after knows whose notebook it is working in — the gate's last
+line says it.
 
 The next time you sit down, tell it to read `AGENTS.md` in the notebook — in Claude Code, *"load daftar"*.
 From then on you talk about your things, and the agent keeps the notebook. You will rarely open the folder.
@@ -146,17 +181,20 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 |---|---|
 | **bean** | one managed thing, as one Markdown file in `beans/` — facts in the front matter, prose below |
 | **garden** | a git repository of beans: one notebook. Private to whoever keeps it |
-| **seed** | `seed/`: the kit a new garden is grown from — the vocabulary, the templates, `germinate.sh` |
+| **gardener** | the person — or organisation — who keeps a garden, named in its `GARDEN.md`: the first bean of a garden grown with `--gardener`. Agents tend a garden; its gardener keeps it and ratifies what an agent may not decide |
+| **seed** | `seed/`: the kit a new garden is grown from — the vocabulary, the templates, `germinate.py` |
 | **vocabulary** | the rules, as data: `seed/std-vocab.md` for every garden, plus a garden's own `VOCAB.md` |
 | **gate** | `bin/dmcheck.py`, run as a pre-commit hook: a commit that breaks a rule is refused |
 | **journal** | `log/journal.md`: every change, who made it and why. The gate refuses an unrecorded change |
 | **anchor** | a fact that identifies an object (a serial, a domain name), so two gardens recognise the same thing |
 | **nature / kind** | what sort of being it is: `physical`, `metaphysical` or `living`, refined by a kind such as `host` |
-| **facet** | an aspect of ownership, e.g. `legal` or `technical`; each has exactly one owner and one holder |
+| **facet** | an aspect of ownership, e.g. `legal` or `technical`; each has exactly one owner, and one entry saying who answers for it |
 | **crown** | where every ownership chain ends. Its three branches are named for the natures: `nature` for physical things, `logos` for metaphysical, `love` for living — so a person writes `owned_by: { legal: { crown: love } }` |
 | **profile** | an opt-in group of rules, e.g. `domain`, for gardens that hold that kind of thing |
 | **vacancy** | a value the vocabulary offers that nothing uses yet, stated with a reason |
 | **Contract of Parts** | `MODEL.md`: which decisions an agent may take alone and which a person must ratify |
+| **proposal** | what one garden offers another: one file of beans, laid outside both gardens, which the other garden's gardener takes in by committing it — or does not. Taking it in accepts nothing on the gardener's behalf. `bin/dmpropose.py` |
+| **mycelium** | how gardens meet: beneath, through the agreements between their gardeners and the proposals made under them, in the language they share. Owned by no garden |
 
 ## Adopt a new release
 
@@ -167,10 +205,16 @@ python3 bin/dmupgrade.py <tag>        # the newest tag listed on the repository'
 ```
 
 It updates exactly the files `seed/LANGUAGE` declares, moves the vocabulary pins, records the release in
-`GARDEN.md`, writes the journal entry and runs the gate — and does **not** commit. It refuses a tag older than
-the one the garden records (pass `--allow-downgrade` to mean it), and puts every file back if the garden would
-fail its gate under the release. Read `git diff`, fill in the two marked fields of the journal entry, and commit
-when you have decided to adopt it.
+`GARDEN.md`, translates what the law re-spelled, writes the journal entry and runs the gate — and does **not**
+commit. It refuses a tag older than the one the garden records (pass `--allow-downgrade` to mean it), and puts every
+file back if the garden would fail its gate under the release. Read `git diff`, fill in the two marked fields of the
+journal entry, and commit when you have decided to adopt it.
+
+A garden moving into std-vocab 21.0 must name its gardener. The garden's own copy of the tool may be older than the
+flag for it, so name them in the environment, which every copy passes on:
+`DAFTAR_GARDENER=sam python3 bin/dmupgrade.py <tag>` for an existing person or organisation bean, adding
+`DAFTAR_GARDENER_NAME="Sam"` to plant a new one (`INSTALL.md` has the PowerShell form). A garden already at 21.0 or
+later takes `--gardener sam` and `--gardener-name "Sam"` instead.
 
 ## Propose a change to the law
 
@@ -185,12 +229,12 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `seed/std-vocab.md` | the vocabulary — the law every garden pins |
 | `seed/germinate.py`, `seed/LANGUAGE` | how a garden is grown (Python, so on Windows too; `germinate.sh` hands over to it), and what it receives |
 | `bin/dmcheck.py` | the gate |
-| `bin/dm*.py` | the other tools — merge, upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
+| `bin/dm*.py` | the other tools — merge, proposals between gardens (`dmpropose`), what is owed (`dmledger`), upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
 | `seed/RATIONALE.md` | why each rule is as it is, keyed by the rule's own path; `python3 bin/dmwhy.py <name>` reads law and reason together |
 | `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules |
 | `seed/WELCOME.md` | the door for an assistant with no shell, written to be pasted into a chat |
-| `seed/README.md`, `seed/COOKBOOK.md` | worked beans that pass the gate as written: a person, a host, a domain, a service, a rented server |
+| `seed/README.md`, `seed/COOKBOOK.md` | worked beans that pass the gate as written: the gardener, a host, a domain, a service, a rented server, a cost shared between two people, an agreement paid in instalments, a statement, an event, another person's garden |
 | `test/` | the release suites, all run in CI (`CONTRIBUTING.md` has the command); `fast.py` runs in every garden's hook |
 
 ## A seed, on a notebook

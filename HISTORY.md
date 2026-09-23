@@ -13,6 +13,8 @@ Below: MODEL.md and CHECKLIST.md as they stood at release v0.4.3, verbatim.
 
 ## MODEL.md at v0.4.3
 
+> **SUPERSEDED — kept verbatim; the law in force is MODEL.md.** Nothing below is a rule.
+
 The source-of-truth ledger and shared language between human and AI. Git-backed; every change gated + logged. Built to be obvious to an average network admin / developer, and to survive being **printed on paper and rescanned with every detail intact**.
 
 ### Purpose — a portable human↔AI language
@@ -105,6 +107,8 @@ Beans from different gardens merge into canonical beans — lossless, order-agno
 ---
 
 ## CHECKLIST.md at v0.4.3
+
+> **SUPERSEDED — kept verbatim; the law in force is CHECKLIST.md.** Nothing below is a rule.
 
 Session/model-agnostic. Part A is enforced mechanically by `bin/dmcheck.py`, run as a git **pre-commit hook** — a failing write cannot be committed by any model or session. The hook is **versioned** at `bin/hooks/pre-commit`, because `.git/hooks` is not cloned and a fresh clone would otherwise have no gate at all: after cloning, run **`sh bin/install.sh`** — the one installer. Part B is judgment the writer confirms; Part C is how a write is made.
 

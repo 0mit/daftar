@@ -47,6 +47,62 @@ for d, t in text.items():
     hit = [w for w in owners if re.search(r"(?<![A-Za-z_])%s\.values|term:\s*%s\b" % (w, w), t)]
     check(f"{d} addresses no owner term that a registry replaced", not hit, hit)
 
+# A KEY THE LAW RETIRED IS NOT WRITTEN AS A KEY (21.0). The law lists what it took back (`retired:`), and the gate refuses
+# each with where it went; a document that still writes one — `scope: global` in an example anchor, `attributes:` as
+# the bag for a stray fact, a manifest's `seeds_from:` — teaches the refusal. A name at the head of a line, inside a
+# flow mapping, or opening an inline code span is a key; the same word in a sentence is only a word.
+import dmparse, yaml
+_law = yaml.safe_load(dmparse.split_front_matter(open(os.path.join(ROOT, "seed", "std-vocab.md"), encoding="utf-8").read())[0])
+_retired = {str(r["name"]): r.get("at") for r in (_law.get("retired") or []) if isinstance(r, dict)
+            and r.get("at") in ("bean", "anchor", "manifest")}
+assert len(_retired) >= 8, "the law's list of retired keys was not found"
+# A NAME RETIRED IN ONE PLACE MAY BE LIVE IN ANOTHER: `created` left the manifest and is still a registration's date;
+# `authority` left the anchor and is still a term. Such a name is looked for only where it was retired — at the head
+# of a GARDEN.md block's line, inside an anchor's mapping, at the head of a bean's line — and any other is looked for
+# wherever a key is written.
+_live = set()
+def _collect(node):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k == "attrs" and isinstance(v, (dict, list)):
+                _live.update(str(x) for x in v if isinstance(x, (str, int)))
+            if k in ("term", "kind") and isinstance(v, str):
+                _live.add(v)
+            _collect(v)
+    elif isinstance(node, list):
+        for x in node:
+            _collect(x)
+_collect({k: v for k, v in _law.items() if k != "retired"})
+_live.update(str(k) for k in _law)
+assert "created" in _live and "scope" not in _live, "the law's live names were not read"
+_FENCE = re.compile(r"(?ms)^(`{3,})[^\n]*\n(.*?)^\1[ \t]*$")
+def _manifest_blocks(t):
+    """The fenced blocks of a document that are a GARDEN.md: marked as one, or pinning the standard as it does."""
+    out = []
+    for m in _FENCE.finditer(t):
+        lead = t[:m.start()].rstrip("\n").rsplit("\n", 1)[-1]          # the line just above the fence
+        if "GARDEN.md" in lead or "extends: std-vocab@" in m.group(2):
+            out.append(m.group(2))
+    return out
+def _written(w, at, t):
+    e = re.escape(w)
+    if w not in _live:
+        return re.search(r"(?m)^%s:|[{,]\s*%s:|`%s:" % (e, e, e), t)
+    if at == "anchor":
+        return re.search(r"(?m)^.*\bkey:.*\bvalue:.*[{,]\s*%s:|^.*[{,]\s*%s:.*\bkey:.*\bvalue:" % (e, e), t)
+    if at == "manifest":
+        return any(re.search(r"(?m)^%s:" % e, b) for b in _manifest_blocks(t))
+    return re.search(r"(?m)^%s:" % e, t)
+for d, t in text.items():
+    hit = sorted(w for w, at in _retired.items() if _written(w, at, t))
+    check(f"{d} writes no key the law retired", not hit, hit)
+_probe = "```yaml\nregistration: { created: 2020-01-15 }\n```\n<!-- example-front-matter: GARDEN.md -->\n```yaml\ngardener: sam\n```\n"
+check("...and a name the law retired in one place is not taken for a key where it is still live",
+      not _written("created", "manifest", _probe) and _written("created", "manifest", _probe.replace("gardener: sam", "created: x"))
+      and not _written("authority", "anchor", "authority: { source: x }\n")
+      and _written("authority", "anchor", "  - { key: fqdn, value: x, authority: scanned }\n"),
+      "the context of a retired name that is live elsewhere is not read")
+
 for d, t in text.items():
     named = sorted(set(re.findall(r"(?<![A-Za-z0-9_/.-])((?:bin|test)/[A-Za-z0-9_./-]+\.(?:py|sh))", t)))
     gone = [n for n in named if n not in NOT_SHIPPED and not os.path.isfile(os.path.join(ROOT, n))]
@@ -67,8 +123,7 @@ check("...and names no file that does not exist", not _opens, _opens)
 ci = open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8").read()
 ci_suites = set(re.findall(r"python3 (test/[a-z_]+\.py)", ci))
 assert ci_suites, "no suite was found in the workflow"
-line = next((l for l in text["CONTRIBUTING.md"].splitlines() if "test/germinate.py" in l and "&&" in l), "")
-told = set(re.findall(r"python3 (test/[a-z_]+\.py)", line))
+told = set(re.findall(r"(?m)^\s*python3 (test/[a-z_]+\.py)\s*$", text["CONTRIBUTING.md"]))  # one command a line
 check("CONTRIBUTING.md tells a contributor to run exactly the suites the release runs",
       told == ci_suites, f"only in CI: {sorted(ci_suites - told)}; only in the document: {sorted(told - ci_suites)}")
 on_disk = {"test/" + f for f in os.listdir(os.path.join(ROOT, "test")) if f.endswith(".py")}

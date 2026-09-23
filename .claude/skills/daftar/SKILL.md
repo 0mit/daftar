@@ -2,7 +2,7 @@
 name: daftar
 description: >
   Read and write the git-backed ledger that is the shared language between human and AI — "beans"
-  (managed objects: hosts, routers, VPSes, domains, products, deployments, people, …), their typed
+  (managed objects: hosts, routers, VPSes, domains, products, deployments, people, agreements, …), their typed
   identity anchors, provenance-stamped facts, and their edges. Use whenever a fact about the estate is
   discovered, changed, merged, or needed. The garden is the repository this session is working in.
 ---
@@ -29,6 +29,10 @@ Run this, and show its last line to the person you work for:
 
     python3 bin/dmcheck.py --all
 
+(`python` on Windows, here and in every command below.) The last line names the garden, its id, and its
+**gardener**: the person or organisation who keeps it, and who ratifies here what an agent may not decide
+(`MODEL.md`, the Contract of Parts).
+
 - **It ran, and you can `git commit`.** You are a WRITER: you read, write, journal and commit, within the
   Contract of Parts.
 - **You cannot run it** — you were handed files, or pasted text, and have no shell. You are a PROPOSER. You have
@@ -36,19 +40,24 @@ Run this, and show its last line to the person you work for:
   (or a diff), the journal entry that would go with it, and a list of what you could not check. Someone with the
   gate commits it, and the record says who proposed and who enacted. `seed/WELCOME.md` is written for you.
 
-Do not assume which you are. Find out.
+Do not assume which you are. Find out. And another garden — even one on this machine, even one your shell can
+reach — is not yours to write: what you would give it is a proposal (`CHECKLIST.md` Part F).
 
 ## Read these, in this order, before writing anything
 
 1. `beans/daftar.md`, **if this garden has one** — its `standing:` list says which documents are **law**, which
    are **reasoning**, which are **journal**, and which are a **guide**. A garden grown from `seed/` has none:
-   there `seed/std-vocab.md` and `VOCAB.md` are the law, and `seed/README.md` shows a first person and host.
+   there `seed/std-vocab.md` and `VOCAB.md` are the law, and `seed/README.md` shows the gardener and a first host.
 2. `MODEL.md` — the data model and the **Contract of Parts**: what you may enact and what a person must ratify.
    Identity anchors (F), safety flags (E), and any change to the vocabulary or the law (G) are ratified, never
    enacted.
 3. `CHECKLIST.md` — Part A (what the gate checks), Part B (the judgment only you can make), Part C (how a write
-   is made), Part D (how a read is made), Part E (how to work beside, and after, another agent).
-4. `python3 bin/dmrules.py` — every rule in force, derived from the vocabulary rather than restated. Why a rule is
+   is made), Part D (how a read is made), Part E (how to work beside, and after, another agent), Part F (how to
+   work with another garden).
+4. `seed/COOKBOOK.md` — the common things, written the way the gate accepts them, in an order that can be followed:
+   the gardener first, then machines, another person and her garden, an event, money between two people, an
+   agreement, a document, and a proposal to another garden.
+5. `python3 bin/dmrules.py` — every rule in force, derived from the vocabulary rather than restated. Why a rule is
    as it is: `python3 bin/dmwhy.py <name>`.
 
 ## Working
@@ -61,6 +70,7 @@ constraints inherited from a habitat two hops up.
 there is no default. Text surgery that changes more places than intended is the commonest way a bean is damaged.
 
 **Every write:** edit the one bean that owns the fact, append to `log/journal.md` in the same commit, and commit.
+The entry goes through `bin/dmjournal.py`, which writes its heading from the clock; you give it the body.
 The gate reads the **staged** blobs and refuses a bean whose change is not journalled. A change to the vocabulary
 or the law must say RULE-CHANGE distinctly.
 
