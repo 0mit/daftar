@@ -27,20 +27,34 @@ import yaml, dmparse
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # A COUNT AS THE GATE READS ONE: a whole number, or a decimal written as a string — ASCII digits, one optional sign, no
-# exponent. The one pattern every money reader here shares, so `--5` is refused in one place and not half-read in two.
-COUNT = re.compile(r'-?[0-9]+(\.[0-9]+)?', re.ASCII)
+# exponent, and no leading zero: `010` is ten to a person and eight to a YAML 1.1 reader, and a count is what was
+# written, so it is written without one. The one pattern every money reader here shares, so `--5` is refused in one
+# place and not half-read in two.
+COUNT = re.compile(r'-?(0|[1-9][0-9]*)(\.([0-9]+))?', re.ASCII)
+# AND A COUNT IS BOUNDED, as the law bounds it: at most DIGITS digits before the point and DIGITS after, so that every
+# reader, in any language on any machine, holds it exactly. Python would read further — to its own limit of 4300 digits,
+# past which it refuses with a ValueError nobody expected — and a count one reader holds and another cannot is two
+# readers disagreeing about an amount. What is longer is REFUSED, with the reason, and never half-read.
+DIGITS = 40
 
 
 def exact(count):
     """A count EXACTLY, as a Fraction — or None when it is not one: a float (it has already lost what it lost), a bool,
-    an exponent, a second sign. Whatever is not read exactly is not read."""
+    an exponent, a second sign. Whatever is not read exactly is not read. A count longer than a count may be (DIGITS)
+    raises ValueError, saying so: it is in a count's form, and it is still not read."""
     if isinstance(count, bool):
         return None
     if isinstance(count, int):
+        if abs(count) >= 10 ** DIGITS:                  # compared, never printed: str() of a long int is what raises
+            raise ValueError(f"a whole number of more than {DIGITS} digits is longer than a count may be")
         return Fraction(count)
-    if isinstance(count, str) and COUNT.fullmatch(count):
-        return Fraction(count)
-    return None
+    m = COUNT.fullmatch(count) if isinstance(count, str) else None
+    if not m:
+        return None
+    if len(m.group(1)) > DIGITS or len(m.group(3) or '') > DIGITS:
+        raise ValueError(f"a count of {len(m.group(1))} digits before the point and {len(m.group(3) or '')} after is "
+                         f"longer than a count may be (at most {DIGITS} of each)")
+    return Fraction(count)
 
 
 def law():
@@ -172,11 +186,17 @@ def speakable(text, stream=None):
 def main(argv):
     digits, rate = 6, None
     if '--digits' in argv:
-        i = argv.index('--digits'); digits = int(argv[i + 1]); argv = argv[:i] + argv[i + 2:]
+        i = argv.index('--digits'); d = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
+        if not (d.isascii() and d.isdigit() and 1 <= int(d) <= 1000):
+            print(speakable(f"dmunits: --digits {d!r}: the rounded reading is given to a whole number of significant "
+                            f"digits, 1 to 1000 — e.g. --digits 6")); return 2
+        digits = int(d)
     if '--rate' in argv:
         i = argv.index('--rate'); rate = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
     if len(argv) != 3:
-        print(speakable(__doc__)); return 0 if not argv else 2
+        # the interpreter as it is named where this runs: `python3` may be the Microsoft Store's alias on Windows
+        print(speakable(__doc__.replace('python3 bin/', ('python' if os.name == 'nt' else 'python3') + ' bin/')))
+        return 0 if not argv or argv[0] in ('-h', '--help') else 2
     try:
         x = convert(argv[0], argv[1], argv[2], rate); a = approx(x, digits)
         print(speakable(show(x) + ' ' + argv[2] + (f"   (≈ {a})" if a else "")))

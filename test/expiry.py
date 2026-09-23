@@ -392,6 +392,114 @@ check("...and so does dmledger, which walks with the same function", ended and "
       and "cannot be walked here" in lout and "NOTE no occurrence in" in lout, lout[-900:])
 os.remove(os.path.join(G, "beans", "odd.md"))
 
+# ---- A DAY THAT DOES NOT EXIST, AND A DAY NO READER CAN WRITE: each a NOTE, and every other warning still printed ------
+# Written in the working tree, where these tools read: the gate refuses most of them, and a reader must not die on what the
+# gate would refuse, nor let one entry cost the garden every other warning — `deal`'s clause due in three days among them.
+_BEGIN = (FIRST.replace(day=1) + datetime.timedelta(days=40)).replace(day=FIRST.day)      # a month after FIRST, same day
+_LATER = (today + datetime.timedelta(days=200)).isoformat()                              # past every term's horizon
+open(os.path.join(G, "beans", "beyond.md"), "w").write(f"""---
+bean: beyond
+kind: contract
+title: "an agreement whose days are not all days"
+status: active
+summary: "clauses a reader must end on, and say it could not read"
+nature: metaphysical
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:beyond", class: logical, establishing: true }} ] }}
+provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
+parties:
+  keeper: {{ who: {{ bean: keeper }} }}
+  ali: {{ who: {{ bean: ali }} }}
+words: {{ form: spoken }}
+clauses:
+  feb-30:    {{ what: "a fee", by: ali, to: keeper, due: '2026-02-30' }}
+  esfand-30: {{ what: "rent", by: ali, to: keeper, due: 'persian:1404-12-30', every: {{ of: time, in: persian-calendar, each: month }} }}
+  far-year:  {{ what: "rent", by: ali, to: keeper, due: 'hebrew:1000000000000000-01-01', every: {{ of: time, in: hebrew-calendar, each: month }} }}
+  stride:    {{ what: "rent", by: ali, to: keeper, due: 2026-09-01, every: {{ of: time, in: gregorian-civil, every: {{ count: 3000000, unit: day }} }} }}
+  day-count: {{ what: "a fee", by: ali, to: keeper, due: 'jdn:99999999999' }}
+  day-zero:  {{ what: "a fee", by: ali, to: keeper, due: 'jdn:0' }}
+  begins:    {{ what: "rent", by: ali, to: keeper, due: {FIRST.isoformat()}, every: {{ of: time, in: gregorian-civil, each: month, from: {_BEGIN.isoformat()} }} }}
+  disputed:  {{ conflict: [ {{ what: "rent", by: ali, to: keeper, due: '2026-02-30' }},
+                            {{ what: "rent", by: ali, to: keeper, due: 2026-09-01, every: {{ of: time, in: gregorian-civil, every: {{ count: 3000000, unit: day }} }} }},
+                            {{ what: "rent", by: ali, to: keeper, due: {_LATER} }} ] }}
+  unwalkable: {{ conflict: [ {{ what: "a fee", by: ali, to: keeper, due: 'jdn:99999999999' }},
+                             {{ what: "a fee", by: ali, to: keeper, due: '{"9" * 200}' }} ] }}
+---
+An agreement.
+""")
+try:
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py")], capture_output=True, text=True, cwd=G, timeout=60)
+    out, ended = r.stdout + r.stderr, True
+except subprocess.TimeoutExpired:
+    out, ended = "(killed after 60 s)", False
+line = lambda key, bean="beyond": next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
+check("dmstale ENDS on a day that does not exist and on days beyond 9999 — no traceback, no hang",
+      ended and "Traceback" not in out, out[-900:])
+check("...a day its calendar does not have is a NOTE saying so — never dropped in silence, never moved to the day after",
+      line("feb-30").startswith("NOTE") and "not a day of the Gregorian calendar" in line("feb-30")
+      and line("esfand-30").startswith("NOTE") and "persian:1405-01-01" in line("esfand-30") and "not a day of the persian" in line("esfand-30"),
+      [line("feb-30"), line("esfand-30")])
+check("...a year of sixteen digits, and a day count of eleven, are NOTEs: outside the days reckoned",
+      all(line(k).startswith("NOTE") and "outside the days reckoned here" in line(k) for k in ("far-year", "day-count")),
+      [line("far-year"), line("day-count")])
+check("...a stride that lands past 9999-12-31 is a NOTE: no reader could write the day",
+      line("stride").startswith("NOTE") and "so no reader could write it" in line("stride"), line("stride"))
+check("...a day the Gregorian calendar cannot write (jdn:0, in 4713 BCE) is warned of by its day number, with a NOTE beside it",
+      line("day-zero").startswith("EXPIRED") and "day -1721425" in line("day-zero")
+      and any(l.startswith("NOTE") and "beyond.clauses[day-zero]" in l and "shown as its day number" in l for l in out.splitlines()),
+      [l for l in out.splitlines() if "day-zero" in l])
+check("...a repetition whose `from` names another day than its `due` is walked from `due`, and the reader is told",
+      any(l.startswith("NOTE") and "beyond.clauses[begins]" in l and f"`from: {_BEGIN.isoformat()}`" in l for l in out.splitlines()),
+      [l for l in out.splitlines() if "begins" in l])
+check("...and EVERY OTHER WARNING STILL PRINTS: the clause of another agreement due in three days",
+      line("soon", bean="deal").startswith("EXPIRING"), out[-900:])
+_disp = [l for l in out.splitlines() if "beyond.clauses[disputed]" in l]
+check("a MERGE CONFLICT with a side on a day that does not exist and a side whose stride lands past 9999 does not drop them in "
+      "silence: the row shown is the earliest of the others, says so, and each side it could not walk is a NOTE of its own",
+      len(_disp) == 3 and _disp[0].startswith("OK") and f"due {_LATER}" in _disp[0]
+      and "2 sides cannot be walked here (NOTE), and the earliest of the others is shown" in _disp[0]
+      and any(l.startswith("NOTE") and "due 2026-02-30 is not a day this can read" in l
+              and "not a day of the Gregorian calendar" in l for l in _disp)
+      and any(l.startswith("NOTE") and "due 2026-09-01, then every 3000000 day" in l and "so no reader could write it" in l
+              for l in _disp), _disp)
+check("...and where NO side can be walked, each reason is its own — a day beyond what is reckoned is not a day this can read, "
+      "not one 'aged by rule' — and a value of two hundred characters is told of by its length, not printed whole",
+      line("unwalkable").startswith("NOTE") and "no due date among them can be walked here" in line("unwalkable")
+      and "due jdn:99999999999 is not a day this can read" in line("unwalkable") and "by rule" not in line("unwalkable")
+      and "(200 characters)" in line("unwalkable") and "9" * 200 not in line("unwalkable"), line("unwalkable"))
+try:
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py"), "--quiet"], capture_output=True, text=True, cwd=G,
+                       timeout=60)
+    qout = r.stdout + r.stderr
+except subprocess.TimeoutExpired:
+    qout = "(killed after 60 s)"
+check("...and under --quiet, where an OK row is not printed, the sides it could not walk still are",
+      "Traceback" not in qout and sum(1 for l in qout.splitlines() if l.startswith("NOTE") and "beyond.clauses[disputed]" in l
+                                      and "a side of this merge conflict cannot be walked here" in l) == 2, qout[-900:])
+try:
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "beyond"], capture_output=True, text=True, cwd=G, timeout=60)
+    lout, ended = r.stdout + r.stderr, True
+except subprocess.TimeoutExpired:
+    lout, ended = "(killed after 60 s)", False
+check("dmledger ENDS on the same clauses, and says of each what it could not read", ended and r.returncode == 0
+      and "Traceback" not in lout and "not a day of the persian calendar" in lout and "outside the days reckoned here" in lout
+      and "so no reader could write it" in lout and "not a day of the Gregorian calendar" in lout, lout[-1200:])
+check("...and tells of the `from` that differs, as dmstale does", f"`from: {_BEGIN.isoformat()}`" in lout, lout[-900:])
+os.remove(os.path.join(G, "beans", "beyond.md"))
+_far = unreckoned("2026-09-01", {"in": "gregorian-civil", "every": {"count": 3000000, "unit": "day"}})
+check("the walk itself (the library both readers share) says a stride past 9999-12-31 cannot be walked — Unreckoned, not a "
+      "ValueError", "so no reader could write it" in _far[0], _far)
+check("...a count longer than a count may be is refused by the walk the same way, not read",
+      "longer than a count may be" in unreckoned("2026-09-01", {"every": {"count": "1" * 5000, "unit": "day"}})[0])
+_notes = []
+check("...and a day nobody can write is shown by its number, with the reason for a NOTE — never a traceback",
+      _st.show_day(_dmcal.LAST_DAY + 10, notes=_notes) == f"day {_dmcal.LAST_DAY + 10}" and _notes and "outside the days" in _notes[0],
+      _notes)
+r = run(sys.executable, os.path.join(G, "bin", "dmstale.py"), "--days", "x", cwd=G)
+check("`--days x` is refused with the form it takes — no traceback", r.returncode == 2 and "Traceback" not in r.stderr
+      and "--days takes a whole number" in r.stdout, r.stdout + r.stderr[-300:])
+
 # ---- A DISAGREEMENT A MERGE LEFT: the earliest date any side still owes is the one warned of --------------------------
 open(os.path.join(G, "beans", "merged.md"), "w").write(f"""---
 bean: merged
