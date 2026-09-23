@@ -81,6 +81,28 @@ check("...and its manifest names that gardener — a garden begins as someone's"
       re.search(r'(?m)^gardener: keeper\b', open(os.path.join(G, 'GARDEN.md'), encoding='utf-8').read()) is not None)
 check("it is a git repository with one commit — a garden that cannot commit has not germinated",
       run('git', 'rev-parse', 'HEAD', cwd=G).returncode == 0)
+# THE GARDEN'S IDENTITY IS ITS FIRST COMMIT (21.0, `garden_id`), and the gardener planted beside it is named by it.
+_root = run('git', 'rev-list', '--first-parent', '--max-parents=0', 'HEAD', cwd=G).stdout.split()
+_gid = _root[-1][:12] if _root else ''
+check("...and the gardener it plants is named at birth by the garden's own id: `<garden_id>/person:keeper`",
+      _gid and f'value: "{_gid}/person:keeper"' in open(os.path.join(G, 'beans', 'keeper.md'), encoding='utf-8').read(),
+      open(os.path.join(G, 'beans', 'keeper.md'), encoding='utf-8').read()[:600])
+# TWO GARDENS GROWN ALIKE ARE TWO GARDENS. The first commit is made under a fixed identity with a fixed tree, so two
+# gardens with one name, grown from one release in one second, once made the same commit — and one id. The random
+# seed germination writes into the commit's message is what keeps them apart; both are grown here at once.
+_tw = [os.path.join(TMP, 'twin-a', 'garden'), os.path.join(TMP, 'twin-b', 'garden')]
+for _t in _tw:
+    os.makedirs(os.path.dirname(_t))
+_procs = [subprocess.Popen([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), _t], cwd=ROOT,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) for _t in _tw]
+for _p in _procs:
+    _p.wait()
+_tids = [run('git', 'rev-list', '--max-parents=0', 'HEAD', cwd=_t).stdout.strip() if os.path.isdir(_t) else ''
+         for _t in _tw]
+check("two gardens with one name, grown at once from one release, are two gardens: their first commits differ",
+      all(_tids) and _tids[0] != _tids[1]
+      and all(re.search(r'(?m)^seed [0-9a-f]{32}$', run('git', 'log', '-1', '--format=%B', _i, cwd=_t).stdout)
+              for _i, _t in zip(_tids, _tw)), _tids)
 # A RELATIVE TARGET IS RELATIVE TO WHERE YOU STAND, not to the release. v0.3.0 planted the language inside the
 # clone when given `garden` instead of `/abs/garden`; every check above used an absolute path, so none saw it.
 _rel_cwd = os.path.join(TMP, 'relative-cwd')
@@ -183,6 +205,10 @@ _ck = open(os.path.join(ROOT, 'seed', 'COOKBOOK.md'), encoding='utf-8').read()
 check("the cookbook's examples hold a contract with clauses and one with a transaction, a document, an event and a garden",
       len(_kinds.get('contract', [])) >= 2 and _kinds.get('document') and _kinds.get('event') and _kinds.get('garden')
       and re.search(r'(?m)^clauses:$', _ck) and re.search(r'(?m)^transactions:$', _ck), sorted(_kinds))
+_ev = [_text for _path, _text in _examples if re.search(r'(?m)^kind: event$', _text)]
+check("...its happening is owned by none of those present — the crown — and answered for by its host, as the law says",
+      _ev and all('owned_by: { legal: { crown: logos } }' in _e and re.search(r'(?m)^responsibility: .*holder', _e)
+                  for _e in _ev), _ev[:1])
 check("...and the cookbook begins with the gardener, as germinate's closing message tells a stranger it does",
       re.search(r'^## (.*)$', _ck, re.M).group(1).lower().startswith('the gardener'))
 check("...and a name another garden minted arrives qualified by that garden, which the examples record as a `garden`",

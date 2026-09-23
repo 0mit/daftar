@@ -90,8 +90,8 @@ person owes another is read from what was paid and what was agreed — never wri
 could drift. The rules for what a thing may say attach to its nature and every kind beneath inherits them, so a
 new kind arrives with a coherent identity policy for free. The same is true of ownership: every thing has exactly
 one owner and exactly one holder who answers for it, per facet — legal, technical, financial — and every chain ends
-at a person, at someone outside the notebook, or at the crown. An agreement between two people is owned by neither
-of them, and both answer for it.
+at a person, at someone outside the notebook, or at the crown. An agreement between two people may be owned by
+neither of them, and then both answer for it.
 
 The vocabulary that says all this is a document, versioned, read by the gate on every commit; the gate itself
 names no term. A garden adds what it needs — its own terms, its own values, its own profiles — and a local
@@ -116,11 +116,13 @@ agent reads it in their notebook and shows them what it would change; it is take
 their gate, their journal, their hand. Every fact keeps who said it as it crosses, so what you asserted arrives as your
 assertion and nothing on the other side quietly overrules it. A thing you both hold — the agreement, the people in
 it — is named once, by the notebook that recorded it first, and the name travels with it, so the two notebooks see
-one thing where they would otherwise see two. An agreement between two people is owned by neither of them, and both
-answer for it: nobody owns the crown, and nobody owns the mycelium.
+one thing where they would otherwise see two. An agreement between two people may be owned by neither of them, and
+then both answer for it: nobody owns the crown, and nobody owns the mycelium.
 
 A garden is known by the commit it grew from, so two gardens need no registry and no account anywhere to name each
-other, and two notebooks on one machine are never taken for one, even when they carry the same name.
+other. Growing a garden writes a random seed into that first commit, so two notebooks on one machine are never taken
+for one, even when they carry the same name and were grown in the same second. The first time two gardens meet, each
+gardener records the other's garden and the person who keeps it, in one commit of their own.
 
 ## Who does what
 
@@ -200,10 +202,16 @@ python3 bin/dmupgrade.py <tag>        # the newest tag listed on the repository'
 ```
 
 It updates exactly the files `seed/LANGUAGE` declares, moves the vocabulary pins, records the release in
-`GARDEN.md`, writes the journal entry and runs the gate — and does **not** commit. It refuses a tag older than
-the one the garden records (pass `--allow-downgrade` to mean it), and puts every file back if the garden would
-fail its gate under the release. Read `git diff`, fill in the two marked fields of the journal entry, and commit
-when you have decided to adopt it.
+`GARDEN.md`, translates what the law re-spelled, writes the journal entry and runs the gate — and does **not**
+commit. It refuses a tag older than the one the garden records (pass `--allow-downgrade` to mean it), and puts every
+file back if the garden would fail its gate under the release. Read `git diff`, fill in the two marked fields of the
+journal entry, and commit when you have decided to adopt it.
+
+A garden moving into std-vocab 21.0 must name its gardener. The garden's own copy of the tool may be older than the
+flag for it, so name them in the environment, which every copy passes on:
+`DAFTAR_GARDENER=sam python3 bin/dmupgrade.py <tag>` for an existing person or organisation bean, adding
+`DAFTAR_GARDENER_NAME="Sam"` to plant a new one (`INSTALL.md` has the PowerShell form). A garden already at 21.0 or
+later takes `--gardener sam` and `--gardener-name "Sam"` instead.
 
 ## Propose a change to the law
 

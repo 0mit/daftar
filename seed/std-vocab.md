@@ -2684,12 +2684,14 @@ The portable, estate-agnostic classification shared by every garden — the abst
   `money` dimension and quantity whose units are the currencies Unicode CLDR publishes (`currencies`, a registry
   file), with no factor between two of them — a rate is an observation, never a law — and a count held to the
   currency's decimal places; a `ratio` quantity; an agreement as structure — `parties` (each with the day it
-  accepted: an offer is not an acceptance), `words` (written, spoken or not yet put into words, and where),
-  `clauses` (each a position on the `capability` square, with amount, due day, recurrence and condition, and
-  `expiry` per entry that `unless` silences once met) and `transactions` (what moved, who paid, who bears it in
-  whole shares, their parts summing exactly to the whole through the new schema construct `sums`). A balance is read
-  from them, never stored, so `balance` is retired. `contract` may end at the crown and be answered for by its
-  `parties`: owned by none of them. `document` and `event` are kinds, identified by `content_hash` and `event_id`;
+  accepted, or no acceptance on record: an offer is not an acceptance; merged party by party, so a difference about
+  one party stays on that party), `words` (written, spoken or not yet put into words, and where), `clauses` (each a
+  position on the `capability` square, with amount, due day, recurrence and condition, and `expiry` per entry that
+  `unless` silences once met) and `transactions` (what moved, on which `day`, who paid, who bears it in whole
+  shares, their parts summing exactly to the whole through the new schema construct `sums`). A balance is read from
+  them, never stored, so `balance` is retired. `contract` may end at the crown and be answered for by its
+  `parties`: owned by none of them. `document` and `event` are kinds, identified by `content_hash` and `event_id`,
+  and a happening between people may end at the crown too, answered for by whoever hosted it.
   `recurrence_form.times` counts instalments. BETWEEN GARDENS: the manifest is judged like an entry (`manifest`) and
   names its `gardener`, or marks a rehearsal (`test`); a garden is a being (`garden`, anchored by `garden_id`: the
   commit it germinated from, which no one assigns and every clone shares); the anchor terms whose values a garden
@@ -2697,11 +2699,20 @@ The portable, estate-agnostic classification shared by every garden — the abst
   bare names from two gardens are candidates and never fused; `provenance_record` declares the record every fact
   carries, `from` and `garden` included. AND: the ownership facets are a registry whose `depends_on` walk is checked
   acyclic, with `experience` and `financial` beside `legal` and `technical`; `entry_form_from_kind_attr` reads a
-  list, which allows a form where one names pins it; and `retired` lists what the law took back, so a refusal says
+  list, which allows a form where one names pins it; `retired` lists what the law took back, so a refusal says
   where it went — the anchor attribute `scope` (said by the term and the name's own form now), `between`,
   `agreement_ref`, `conflict_rule`, `balance`, `attributes` (into `details`), the `facets` term,
-  `values_consistent_with`, and the manifest's `seeds_from`, `created` and `models`. With the release: gardens meet
-  by proposal (`bin/dmpropose.py`), what is owed is read (`bin/dmledger.py`), and MODEL.md says whose a judgment is.
+  `values_consistent_with`, and the manifest's `seeds_from`, `created` and `models`; and the Tier-0 vacancy
+  `located_at.openness = unknown` is withdrawn, occupied by a real bean. GATE CHANGES: a key YAML does not read as
+  text — `on`, `off`, `yes`, `no`, a bare number — is refused, never crashed on (the transactions attribute is `day`
+  for that reason); a local term named for a retired one says where it went. With the release: gardens meet by
+  proposal (`bin/dmpropose.py`: a garden's first contact with another, a fingerprint that detects damage and is not
+  a signature, and a proposal taken once); what is owed is read (`bin/dmledger.py`), `bin/dmstale.py` warns before
+  each clause falls due, and `bin/dmunits.py` converts between two currencies only at a rate passed in (`--rate`);
+  germination writes a random seed into the first commit, so two gardens grown alike
+  are two, and plants the gardener qualified at birth; `bin/dmupgrade.py` carries a garden into 21.0 and names its
+  gardener (`DAFTAR_GARDENER` where the garden's own tool is older than `--gardener`); the hooks choose a Python that
+  imports yaml; the tools write UTF-8 on every platform; and MODEL.md says whose a judgment is.
 - **20.0** (2026-09-22, proposed rule-change) — **a heading is stamped by the clock, not typed; an anchor says how it
   is known the way every fact does.** `journal.heading: stamped`: `bin/dmjournal.py` writes every heading from the
   clock and records it in the clone's git directory, and the gate refuses a heading a commit adds that the tool did

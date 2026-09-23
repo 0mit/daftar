@@ -5,10 +5,10 @@ status: in-force
 # Gardens, canonical beans, and lossless merge
 
 Extends MODEL.md. It states what the merge engine, `bin/dmmerge.py`, does: beans recorded in different gardens —
-working copies, sessions, agents of different makes, the gardens of different people — merge into one **canonical
-bean** per object, losslessly, in any order, with the same bytes for the same inputs, and never two beans for one
-object. What was designed and is not built is listed at the end, under its own heading; nothing above that heading
-is a promise.
+working copies, sessions, agents of different makes — merge into one **canonical bean** per object, losslessly, in
+any order, with the same bytes for the same inputs under the same labels, and never two beans for one object. The
+gardens of different people meet by proposal, through the same algebra (§16). What was designed and is not built is
+listed at the end, under its own heading; nothing above that heading is a promise.
 
 ## 1. Terms of this layer
 - **Object** — the real thing a bean records: a host, a person, an agreement. One identity across gardens and time.
@@ -29,7 +29,9 @@ is a promise.
    input at once (§4), and each field is a join (§5).
 3. **Idempotent** — merging a garden with itself changes nothing, and a canonical bean merged again is itself:
    merge = `canon(join(canon(A), canon(B)))`. Idempotence is not how duplicates are found; identity is (§4).
-4. **Deterministic** — the same input beans give byte-identical canonical beans, whoever runs the merge (§6).
+4. **Deterministic** — the same input beans, under the same labels, give byte-identical canonical beans, whoever
+   runs the merge (§6). A label is recorded in what the merge writes (§8), so the same gardens merged from
+   differently named directories give the same facts in other bytes.
 5. **No duplicate objects** — identity is a global partition, never a pairwise decision in arrival order.
 6. **Governed conflicts** — a disagreement never blocks capture: it is kept, both values, and the bean is marked
    unclean for a person to settle (§10; MODEL.md, the Contract of Parts). A canonical bean is final once that
@@ -101,8 +103,9 @@ Three rules:
    object is least likely to be noticed.
 2. **Colliding ids are disambiguated by component membership** — the sorted set of `(garden, bean-id)` members,
    hashed. Components partition the inputs, so two distinct components can never share that value: uniqueness is a
-   property of the partition, not a hope about a hash. It is order-agnostic, so invariant 4 still holds, and an
-   id derived from an anchor that identifies everywhere is never suffixed.
+   property of the partition, not a hope about a hash. It is order-agnostic, so invariant 4 still holds. An id is
+   suffixed only where two components' ids coincide — two gardens' equal bare names, no anchor at all, or two
+   different anchor values that slug to one id (`AB_1` and `AB-1` are both `ab-1`).
 3. **The canonical bean says which it is.** `identity.id_basis` is `anchor` or `garden-local`; a disambiguated one
    also carries `identity.id_collision`, naming the id it shared. A `garden-local` canonical bean is provisional and
    is never merged automatically.
@@ -196,7 +199,7 @@ required term is covered once it fuses with another garden's bean that has it.
   entries are kept, none is lost, and none is rewritten.
 - **Journals never merge across gardens.** Each garden's journal is its own record. What one garden took in from
   another is written in the receiving garden's journal, by the entry that takes it in, and in the capture on the
-  other garden's `garden` bean (§16).
+  other garden's `garden` bean (§16); what it took in from a chat, which is no garden, in the journal alone.
 
 ## 8. Merge is a semantic operation — git never text-merges a bean
 - `.gitattributes` sends `beans/*.md` and `mappings/*.md` to the `daftar` merge driver (`bin/dmmerge.py --file`),
@@ -207,7 +210,9 @@ required term is covered once it fuses with another garden's bean that has it.
 - `python3 bin/dmmerge.py <garden> <garden> …` merges whole gardens: it reconciles the law first (§5.2), prints each
   canonical bean and the fingerprint, and reports the canonical beans with a garden-local id, the candidates (§4.4),
   the keys merged by shape, and whether the merged law covers the merged corpus. It commits nothing. An input is
-  labelled by its directory's name, or by its path where two inputs share a name — two gardens on one machine may.
+  labelled by its directory's name; two inputs that share one — two gardens on one machine may — are labelled
+  `<name>@<garden_id>`, and two clones of one garden, which share even that, by their real paths. The label is what a
+  canonical bean records in `gardens`, `seen_in` and its provenance.
 - **The gate covers what a merge makes:** the merged garden must pass `bin/dmcheck.py` like any other commit.
 
 ## 9. The Contract of Parts — see MODEL.md
@@ -229,6 +234,8 @@ law, J a merge conflict or uncertain identity) are defined there.
 clock values, and the deterministic id (§4.4.7, §4.6). The release suites hold it: `test/converge.py` grows gardens
 from the seed, lets them diverge, and pulls them back into one — refinements subsume, sets union, a disagreement
 keeps both values and marks the bean, every journal entry survives the union, and the result passes its gate.
+`test/mycelium.py` holds them between gardens kept by different people: the same canonical beans and candidates in
+every order of three gardens, a bare name fused only within its garden, and the refusals of §16.
 
 ## 12. (nothing in force)
 The number is kept so the sections after it keep theirs.
@@ -246,32 +253,59 @@ The number is kept so that references to the sections after it hold.
 
 ## 16. Between gardens: proposals
 Two gardens kept by two gardeners never merge whole, and neither writes in the other (MODEL.md, Between gardens: the
-mycelium). What passes is a proposal (`bin/dmpropose.py`), and the algebra above serves it unchanged.
+mycelium). What passes is a proposal (`bin/dmpropose.py`), and the algebra above serves it: the identity of §4 and
+the join of §5, applied in the receiving garden.
 
-- **A proposal is a garden.** Its offered beans, verbatim as committed in the proposing garden, are a merge input
-  like any other, carrying that garden's identity (`from.garden`) and its pin; its stubs carry only the identity of
-  each bean the offered ones refer to — id, kind, nature, title and identity capsule — and no facts. Its fingerprint
-  is the SHA-256 of the canonical JSON (§6) of the offered beans' front matter, so a proposal altered on its way is
-  known.
-- **`read` is the merge of §4 and §5 with the law reconciled first (§5.2).** It checks the fingerprint, that the
-  proposal is addressed to this garden, and that both gardens pin one vocabulary — different pins block, as they
-  block any merge. Then it resolves identity over this garden's beans and the offered ones together (§4.4): each
+- **A proposal is a garden of a few beans.** Its offered beans, verbatim as committed in the proposing garden, are a
+  merge input carrying that garden's identity (`from.garden`) and its pin. Its stubs carry only the identity of each
+  bean the offered ones refer to — id, kind, nature, title and establishing anchors — and no facts. Every name it
+  carries has the form the law gives a name: a bean or stub id is kebab-case and lands in `beans/`, the proposal is
+  `<garden>-<YYYYMMDD>-<HHMM>` (with `-<n>` for a second in one minute; a chat's is `chat-<YYYYMMDD>-<HHMM>`), a
+  garden id is twelve hexadecimal digits, and no string in the envelope holds a line break.
+- **The fingerprint** is the SHA-256 of the canonical JSON (§6) of the envelope without its fingerprint and the
+  body — every byte after the front matter, line ends read as `\n`, blank lines at either end not counted. It shows
+  a proposal damaged or carelessly edited on its way. It is not a signature: whoever rewrites a proposal can compute
+  it again, so every refusal below holds whatever the fingerprint says.
+- **`read` writes nothing.** It checks the names, the fingerprint, that the proposal is addressed to this garden,
+  and that both gardens pin one vocabulary: different pins block, as they block any merge (§5.2). Only the pins are
+  compared; a local term an offered bean relies on is caught by the gate's verdict below. A proposal from a garden
+  this garden holds no `garden` bean for is refused, and the refusal prints the two beans a first contact writes
+  (MODEL.md, Between gardens). Then it resolves identity over this garden's beans and the offered ones together
+  (§4.4): each stub RESOLVES to a local bean or is UNRESOLVED — a stub marked `gardener-of: to`, the receiving
+  garden's gardener whom the sender knows only provisionally, resolves to the gardener `GARDEN.md` names — and each
   offered bean FUSES with a local bean, is NEW, or is a CANDIDATE (an equal bare minted name, or a local bean of the
-  same kind whose identity is provisional), and for a fusing bean it shows the fields that differ as the join would
-  record them; each stub RESOLVES to a local bean or is UNRESOLVED. It writes nothing.
-- **`take` applies the join in the working tree.** NEW beans are written with their references rewritten from stub
-  ids to the local beans their anchors resolve to; a fusing bean is merged in place, as the git driver merges one
-  (§8), a disagreement kept, both values (§10). Nothing is committed: the gardener's commit is the ratification.
-- **`take` is idempotent through its capture's staleness key.** Each take records the proposal as a `capture` on
-  the proposing garden's `garden` bean, keyed by the proposal, with its fingerprint as the `staleness_key` and the
-  proposal itself held under `captures/proposals/`. The same proposal taken twice is the same join taken twice,
-  which changes nothing (invariant 3); the second take finds the capture the first left, and there is nothing to
-  take.
-- **Order-agnostic, because the join is.** Proposals taken in either order reach the same beans (invariant 2); only
-  the journal and the captures record the order, as they record every act.
+  same kind whose identity is provisional). For a fusing bean it shows the fields that differ as the join would
+  record them, and says so where the body differs. Last, it takes the proposal into a scratch copy of this garden
+  and gives that copy's gate verdict.
+- **`take` applies the join in the working tree.** NEW beans are written with their references moved from stub ids to
+  the local beans their anchors resolve to; a fusing bean is merged in place, as the git driver merges one (§8), a
+  disagreement kept, both values (§10), with a `provenance_of` record for each value that moved; a body that differs
+  is appended whole under `<!-- theirs: garden <id>, proposal <name> -->`. The proposal is kept as a `capture` on the
+  proposing garden's `garden` bean — named as the proposal is, its fingerprint the `staleness_key`, the file itself
+  under `captures/proposals/` — and a journal entry quotes its journal text as data. Nothing is committed: the
+  gardener's commit is the ratification. Taken with `--as-test` from a test garden into one that is not, each new
+  bean and each appended body says it came from a test garden.
+- **A proposal is taken once.** `read` and `take` refuse one taken already, known by its name or by its fingerprint:
+  from the capture, or — for a chat proposal, which has no `garden` bean to hold one — from the journal entry of its
+  take, which records the fingerprint. A proposal given a new name and a fingerprint computed again counts as new:
+  its beans fuse with what the first take wrote, the join changes nothing it already holds (invariant 3), and the
+  journal and a second capture record the second take.
+- **Taken in either order, proposals reach the same facts**, because the join is order-agnostic (invariant 2). They
+  do not reach the same bytes: a bean a proposal brings NEW is written as its garden wrote it, while one reached by
+  fusion is rewritten key by key and carries `provenance_of` records. The journal and the captures record the order,
+  as they record every act.
 - **Provenance crosses unchanged.** `provenance.garden` is stamped on each offered record that lacks one, once, by
-  the proposing garden and only in the proposal; nothing else in a record changes. So the rank of §5, and the guard
-  that an `inferred` value never overrides an `asserted-by-human` one, hold across gardens exactly as within one.
+  the proposing garden and only in the proposal; nothing else in a record changes. A record returning to the garden
+  it was made in has that garden's own stamp taken off before anything is compared, so a bean proposed back as it was
+  sent fuses with nothing differing. So the rank of §5, and the guard that an `inferred` value never overrides an
+  `asserted-by-human` one, hold across gardens as within one.
+- **A third garden's word is not passed on.** `make` refuses a bean carrying a record stamped by a garden that is
+  neither this one nor the addressee, a `provenance_of` value seen in neither, or a body section under a `theirs`
+  line from another garden; `read` refuses the same of what the sending garden passes on. An anchor's record is the
+  exception: a name travels with what it names.
+- **A chat proposal** has no `from.garden` (seed/WELCOME.md): its bare names are read as this garden's own, and the
+  gardener vouches for its origin by committing it. One whose beans carry any garden's stamp, or a `provenance_of`
+  from another garden, is refused — it is a garden's proposal with its envelope taken away.
 - **Journals stay apart (§7).** The proposing garden journals what left, to which garden, under which agreement,
   with the fingerprint; the receiving garden journals what it took, quoting the proposal's journal text as data.
 

@@ -119,8 +119,13 @@ The office printer. Sam read the serial off the label on the back.
 
 There is no `from.garden`: you are not a garden, and the tool reading it says so — a proposal from a chat, whose
 origin the gardener vouches for by committing it. If the person told you their garden's id (the last line of their
-gate shows it), add `to: { garden: <that id> }`; do not guess one. What you could not check goes after the beans,
-as a list.
+gate shows it), add `to: { garden: <that id> }`; do not guess one. There is no fingerprint either: the tool
+computes one as it reads the file, and by it refuses the same proposal taken a second time. What you could not
+check goes after the beans, as a list.
+
+A chat proposal carries no garden's records. If a bean you were shown holds one — a `garden:` inside a
+`provenance`, or a `provenance_of` value seen only in another garden — the tool refuses a chat proposal that carries
+it, as a garden's proposal with its envelope taken away. Give that change as a diff, say why, and leave it to the person's agent to apply.
 
 ## What only a person decides
 

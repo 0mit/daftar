@@ -12,7 +12,8 @@ design steps before that are in `HISTORY.md` in the daftar repository.
 - A **garden** is a git repository of beans: one estate's ledger. `GARDEN.md` names it, names its gardener,
   pins the vocabulary version (`extends: std-vocab@<version>`) and records the daftar release it runs
   (`daftar_release`); the law's `manifest` says what else it may hold. A garden is known by the commit it
-  germinated from (`garden_id`), read from git and written in none of its own documents.
+  germinated from (`garden_id`), read from git: `GARDEN.md` carries no id, and in the garden's own beans it appears
+  only as the prefix of a name the garden minted.
 - A garden is kept by its **gardener**: the person — or organisation — `GARDEN.md` names in `gardener:`, a bean
   of the garden and its first. The gardener ratifies what an agent may not decide; an agent tends the garden.
   Nothing outside a garden writes in it.
@@ -76,7 +77,9 @@ The forms an entry can take:
   `owned_by: { legal: { crown: love } }`, and answering for themselves: `responsibility: { legal: { self: true } }`.
   An **agreement** between parties may choose it: owned by none of its parties, `owned_by: { legal: { crown:
   logos } }`, and answered for by them, each for the clauses it is bound by: `responsibility: { legal: { parties:
-  true } }`. The crown owns and never answers; the parties answer and never own. No other kind may write either.
+  true } }`. A **happening** between people (an `event`) may choose it too: owned by none of those who took part,
+  and answered for by whoever hosted it, as its holder. The crown owns and never answers; the parties answer and
+  never own. The crown is written only by these three kinds, and `parties` only by an agreement.
 
 Ownership is separate from **habitat**: a running instance is owned through its product, and separately
 `lives_in` the machine it runs on. Moving machines changes the habitat, never the owner.
@@ -86,8 +89,9 @@ Ownership is separate from **habitat**: a running instance is owned through its 
   yet put into words, and the `document` or `event` that holds them), what it asks of each party (`clauses`, each a
   position on the `capability` square — must, need not, may, must not — with its amount, its day, how it repeats and
   what brings it into force), and what has moved under it (`transactions`).
-- **An offer is not an acceptance.** A party with `accepted` said yes on that day; a party without it has not. One
-  party's report of another's acceptance is the reporter's word, and its provenance says so.
+- **An offer is not an acceptance.** A party with `accepted` said yes on that day; a party without it has no
+  acceptance on record — an offer not yet taken up, or an agreement whose acceptance nobody recorded. One party's
+  report of another's acceptance is the reporter's word, and its provenance says so.
 - **Money is a quantity.** An amount is `{ count, unit }`: the unit is a currency, the count a whole number or a
   decimal string with no more places than the currency uses. No factor joins two currencies: a rate is an
   observation someone made, at a moment, from a source, and is recorded as one.
@@ -203,10 +207,14 @@ bare names from two gardens are shown to a person, never fused. `MERGE.md` has t
 ## Between gardens: the mycelium
 A garden is kept by its gardener, and nothing outside it writes there. **Gardens meet only by proposal.**
 - **A garden's identity** is `garden_id`: the first twelve hexadecimal digits of the root of its first-parent
-  history. It is read from git and stated in none of the garden's own documents. A clone is the same garden; a copy
-  given a new history is another. Another garden this one deals with is a `garden` bean, anchored by its
-  `garden_id`, owned by that garden's gardener and answered for by them. Recording a new one is the gardener's
-  decision (class F).
+  history. It is read from git and never stated as the garden's own: `GARDEN.md` carries no id, and it appears in
+  the garden's beans only as the prefix of names the garden minted. A clone is the same garden; a copy given a new
+  history is another. Germination writes a random seed into the first commit, so two gardens grown alike are never
+  one.
+- **First contact.** Another garden this one deals with is a `garden` bean, anchored by its `garden_id`, owned by
+  that garden's gardener and answered for by them — so that gardener is a person or organisation bean here, named
+  as their own garden names them. Recording a new garden, and its gardener, is the gardener's decision (class F),
+  made in one commit.
 - **A name is minted once and carried.** The value of an anchor term marked `minted` is a name a garden gave.
   Bare, it identifies only within that garden; qualified — `<garden_id>/<name>` — it identifies everywhere. A thing
   two gardens share is named once, by the garden that recorded it first, and qualified when it is to cross; a
@@ -214,19 +222,22 @@ A garden is kept by its gardener, and nothing outside it writes there. **Gardens
   by a garden it holds a `garden` bean for.
 - **What passes is a proposal** (`bin/dmpropose.py`), never a write: one file, laid outside every garden, for one
   garden, made under an agreement whose parties include both gardeners. It carries whole beans as the proposing
-  garden committed them, a stub of each bean they refer to, the journal entry that would take them in, and a
-  fingerprint. It passes on what was said in the proposing garden or by the garden proposed to, and of what a third
-  garden said only the names it gave.
+  garden committed them, a stub of each bean they refer to (its identity and nothing more), the journal entry that
+  would take them in, and a fingerprint — a check that it arrived as it was made, which anyone who rewrites it can
+  compute again, and so never a signature. It passes on what was said in the proposing garden or by the garden
+  proposed to, and of what a third garden said only the names it gave.
 - **Provenance crosses unchanged.** `src`, `by`, `as_of` and `from` travel as they were written; `garden` is added
   once, naming the garden the record was made in, and never changed — and it names a garden this one holds a
-  `garden` bean for. A person's assertion arrives as that person's assertion, and the provenance guard holds across
+  `garden` bean for. A record that comes back to the garden it was made in is that garden's own again, and carries
+  no `garden` there. A person's assertion arrives as that person's assertion, and the provenance guard holds across
   the boundary.
 - **Taking in is a write in the receiving garden like any other.** What a proposal brings is another person's
   assertion (class D), a name another garden gave (F), and every disagreement or uncertain identity (J). Reading a
   proposal writes nothing; taking it in writes in the working tree and never commits; the gardener's commit is the
-  ratification. A party's acceptance of the agreement is its own word, recorded by its own garden.
-- **An agreement is owned by none of its parties, and its parties answer for it** — the crown and `parties` forms
-  above.
+  ratification. A proposal is taken once. A party's acceptance of the agreement is its own word, recorded by its own
+  garden.
+- **An agreement two gardens share may be owned by none of its parties, and then its parties answer for it** — the
+  crown and `parties` forms above — so the two gardens' records of it agree about its owner.
 - **A test garden** says so in `GARDEN.md` (`test:`). Its beans are not facts about the world: a proposal from it
   is marked as a test, and a garden that is not a test garden takes one in only as a test.
 - **Two gardens exchange only while they pin the same vocabulary.** A different pin blocks a proposal as it blocks

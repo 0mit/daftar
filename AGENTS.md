@@ -20,19 +20,18 @@ Run this, and show its last line to the person you work for:
 
     python3 bin/dmcheck.py --all
 
-The last line names the garden, its **gardener** — the person who keeps it — and its id.
+The last line names the garden, its id, and its **gardener**: the person who keeps it, and who ratifies here what
+an agent may not decide (`MODEL.md`, the Contract of Parts).
 
-- **It ran, you can `git commit`, and you work for this garden's gardener.** You are a WRITER: you read, write,
-  journal and commit, within the Contract of Parts.
-- **The person you work for is not the gardener.** You are a PROPOSER here, whatever your shell can do: what you
-  produce is a proposal for the gardener to commit, or a proposal from their own garden (`CHECKLIST.md` Part F).
+- **It ran, and you can `git commit`.** You are a WRITER: you read, write, journal and commit, within the
+  Contract of Parts.
 - **You cannot run it** — you were handed files, or pasted text, and have no shell. You are a PROPOSER. You have
   not written to the ledger and must not say you have. What you produce is a proposal: the full text of the bean
   (or a diff), the journal entry that would go with it, and a list of what you could not check. Someone with the
   gate commits it, and the record says who proposed and who enacted. `seed/WELCOME.md` is written for you.
 
 Do not assume which you are. Find out. And another garden — even one on this machine, even one your shell can
-reach — is not yours to write: what you would give it is a proposal.
+reach — is not yours to write: what you would give it is a proposal (`CHECKLIST.md` Part F).
 
 ## Read these, in this order, before writing anything
 

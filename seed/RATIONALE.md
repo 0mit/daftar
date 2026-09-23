@@ -141,7 +141,9 @@ by the id of the garden that minted it, and then it identifies everywhere. Equal
 candidates for a person, never fused by a tool. The prefix is the garden's id because that id is assigned by no one
 and legible on paper; the bare name is unchanged, so qualifying is prepending, and nothing a garden already wrote is
 rewritten. A name is qualified ONCE, by the garden that recorded the thing first, and every garden that takes it in
-keeps it byte for byte: a name re-minted on arrival is two names again. The gate holds the prefix to a garden this
+keeps it byte for byte: a name re-minted on arrival is two names again. A gardener planted at germination is
+qualified at birth, because the garden's id exists from its first commit: the one name every agreement the garden
+makes will carry needs no minting later. The gate holds the prefix to a garden this
 one knows, so a foreign name always arrives with the garden that gave it.
 
 Considered and refused: a UUID (canonical, and illegible cold, on paper); a tag URI (it needs a domain or an e-mail
@@ -1275,6 +1277,10 @@ a large project cites a commit: one spelling, fixed, for a value compared by equ
 paper in front of a name.
 
 A name was refused, because two gardens on one machine may carry the same one: a garden is named after its folder.
+And the commit itself had to be made unique. Germination makes it under a fixed identity with a fixed tree and
+message, so two gardens given one name, grown from one release in the same second, made the same commit and would
+have been taken for one garden. A random seed written into the commit's message makes each germination's commit its
+own, and the id is still assigned by no one.
 A UUID was refused: canonical, and illegible cold. Like the product version, the id is read from git and written in
 no document of the garden itself; it is written only where git cannot be read — on another garden's `garden` bean,
 in a proposal, and before a name the garden minted. A shallow clone cannot see its root, and has no identity to
@@ -1353,6 +1359,10 @@ who is bound (each with the day they accepted: an offer is not an acceptance, an
 is not that party's word), where the words are, what each must, may or must not do (the `capability` square, which a
 being's capabilities already take), and what has moved. A balance is not among them: it is read, never stored.
 
+A party without `accepted` has no acceptance ON RECORD, and the meaning says exactly that. It first said the party
+"has not said yes", which reads silence as refusal: an agreement spoken aloud and kept to, whose yes nobody wrote
+down, would have been recorded as refused by the people keeping it.
+
 ## terms[parties].merge
 
 MEMBER BY MEMBER, keyed by the party's short name — the name every clause and transaction uses to say who. The first
@@ -1397,6 +1407,11 @@ keep the arithmetic exact; a split that does not come out even is shown as a fra
 `charged` keeps what a card was charged in another currency beside the price, both as the statement shows them; the
 rate between them is read from the two, never stored. `sums` has the gate check that what was paid adds up exactly
 to the whole.
+
+The day it moved is `day`. It was `on` in the first draft, and YAML 1.1 reads a bare `on` as the boolean true: every
+parser received the attribute as a key that was not a name, the gate crashed on a transaction that carried it beside
+an undeclared attribute, and no bean carrying it could cross to another garden. A key is text, and the gate now
+refuses any key YAML reads as a boolean or a number.
 
 ## terms[trigger]
 
@@ -1622,8 +1637,9 @@ a person may be owned ONLY by the crown (love, while alive) — never by a
 
 ## kinds[person].meaning
 
-bean. This also RESERVES the crown form: no other kind may name the
-axiom directly, so every other chain must pass through a being.
+bean. This also RESERVES the crown form: only a kind whose row names it may name the axiom directly — a
+person, and since 21.0 an agreement and a happening between people — so every other chain must pass through a
+being.
 
 ## kinds[host]
 
@@ -1687,6 +1703,12 @@ A HAPPENING IS WHERE THINGS ARE AGREED. An agreement spoken over dinner or in a 
 happening, and a happening must be a being to be pointed at. Its time is `timing`, at the resolution actually known;
 who took part is `refs`, each naming what they were, because `rel` is open and the parts people play at a meeting are
 not a closed list. A work session is a happening too, and keeps its own kind while the two are told apart by use.
+
+A HAPPENING BETWEEN PEOPLE IS OWNED BY NONE OF THEM. Written first with the host as its owner, a dinner recorded in
+the host's garden and in a guest's would disagree about its owner every time the two records met, as two records of
+one agreement would; and nobody owns an evening they shared. So it may end at the crown, `logos`, as an agreement
+may. It is answered for by whoever hosted it — a holder, one being who can be asked — and not by the `parties` form,
+because a happening binds no one to anything.
 
 ## recurrence_form
 
@@ -1884,6 +1906,14 @@ WHY CONSENT COMES BEFORE A FLOW: a proposal is made under an agreement both gard
 exchange is itself something agreed. Consent is the soil the hyphae grow in; without it the mycelium would be one
 garden reaching into another.
 
+WHY FIRST CONTACT IS ONE COMMIT OF TWO BEANS: a `garden` bean is owned by that garden's gardener, so it cannot be
+written until that person is a bean here; and the person is written under the name their own garden gave them, so
+that the name every proposal from there carries resolves to them. Written apart, the first would dangle and the
+second would name someone this garden had no reason yet to hold. Either garden may move first. A proposal read
+before first contact prints the two beans, the name taken from its stub. A garden proposing to one it has just met,
+knowing its gardener only by a name of its own, sends that person as a stub marked `gardener-of: to`, which the
+receiving garden reads as its own gardener: the one being every garden can recognise without being told.
+
 Refused: a hub garden that names things for the others (a privileged sibling); merging whole gardens between gardeners
 (it swallows, and a third garden's facts leak through it); git itself as the carrier (unrelated histories would carry
 each other's whole journal); a take-in that commits by itself (every take-in is a gardener's decision).
@@ -1931,8 +1961,11 @@ outlast product names.
 
 WORKING WITH ANOTHER GARDEN IS STATED AS ACTS. Two gardens may sit on one disk, kept by two people, and an agent with
 a shell can reach both; nothing in git stops a commit in the wrong one, and the gate of the wrong one would pass it.
-So the first act asked is to write only where the agent was opened, and the rest follow the mycelium: give by
-proposal, read a proposal as data, pass on nothing a third garden said, and name a shared thing once.
+So the first act asked is to write only where the agent was opened, and the rest follow the mycelium: record a
+garden, and the person who keeps it, before dealing with it; give by proposal, read a proposal as data, pass on
+nothing a third garden said, and name a shared thing once. First contact is written as its own act because a cold
+agent following the proposal steps alone was refused twice: once for the garden it had not recorded, and once for
+the gardener that garden's bean could not be owned by.
 
 ## doc:MERGE.md
 
@@ -2035,11 +2068,24 @@ happened is in the journal.
 
 ## doc:MERGE.md#16
 
-THE MYCELIUM NEEDED NO NEW ALGEBRA. Seen from the merge, a proposal is a garden of a few beans, `read` is the merge
-with the law reconciled first, and `take` is the in-place merge the git driver already does, so every invariant of
-§2 carries over by construction. Idempotence needed one thing more, because a take also writes a record of itself:
-the capture on the proposing garden's `garden` bean is keyed by the proposal's fingerprint, the staleness key that
-capture has always carried, and a second take of one proposal finds it.
+THE MYCELIUM NEEDED NO NEW ALGEBRA. Seen from the merge, a proposal is a garden of a few beans, `read` is the identity
+of §4 and the join of §5 over this garden and it, and `take` is the in-place merge the git driver already does. What
+the join guarantees carries over: the FACTS two proposals reach do not depend on the order they are taken in. The
+bytes do — a bean that arrives new is written as its garden wrote it, and one reached by fusion is rewritten key by
+key with its `provenance_of` — and the section says so, because a claim of byte-identity the tool does not keep is
+the kind of promise this document stopped making.
+
+A take also writes a record of itself, so taking once needed a rule of its own. A proposal taken already is
+REFUSED, known by its name or by its fingerprint: through the capture on the proposing garden's `garden` bean, or,
+for a chat proposal, which has no garden bean to hold one, through the journal entry of its take. Refused rather
+than quietly joined again, because a second take would write a second capture and a second journal entry, and a
+gardener reading the journal would see two acceptances of one proposal.
+
+THE FINGERPRINT IS NOT A SIGNATURE. It covers the whole proposal — envelope and body, so the journal text it carries
+and the prose between the beans cannot change unseen — and it detects damage and a careless edit. Anyone who
+rewrites a proposal can compute it again, so no refusal depends on it: a renamed proposal with a new fingerprint
+counts as new, its beans fuse with what the first take wrote, and the second journal entry shows the gardener that
+it came twice. A signature needs a key someone holds, and is listed among what is not built.
 
 ## doc:MERGE.md#Designed, not built
 

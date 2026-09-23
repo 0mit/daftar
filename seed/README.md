@@ -20,8 +20,8 @@ Two artifacts do two different jobs and neither can do both:
 | carries an owner | no | yes — both arcs |
 
 A seed *bean* cannot be what you copy: `owned_by` and `responsibility` are required on every bean,
-and the crown form is reserved to `kind: person`, so the bean necessarily carries an edge to a person in
-*this* estate. A prose `SEED.md` cannot be it either: `seed/` sits outside the gate's glob, so nothing
+and the crown form is reserved to persons, agreements and happenings (`person`, `contract`, `event`), so the
+bean necessarily carries an edge to a person in *this* estate. A prose `SEED.md` cannot be it either: `seed/` sits outside the gate's glob, so nothing
 would check it, and unchecked prose is precisely what rotted everywhere else in this repo.
 
 **`seed/` here is not the *seed* of MERGE.md.** There the word means the merge product — the **canonical bean**,
@@ -31,18 +31,21 @@ same way. Two senses of one word in one repository is a trap; both documents say
 ## Growing a garden
 
 ```
-python3 seed/germinate.py <target-directory> --gardener sam --gardener-name "Sam"
+python3 seed/germinate.py <target-directory>
 ```
 
 That copies what `seed/LANGUAGE` declares — the daftar tools, the Tier-0 vocabulary, and the empty templates;
 interpolates the version pin **from the vocabulary's own `version:` key** rather than typing it; `git init`s;
 installs the hooks; makes the first commit; and runs the gate. A garden that cannot make its first commit has not
-germinated, so the commit is part of the test rather than a step left to the reader. (`sh seed/germinate.sh` does
-the same; it hands over to the Python.)
+germinated, so the commit is part of the test rather than a step left to the reader. The first commit is the
+garden's identity (`garden_id`), and a random seed written into it makes it this garden's alone, however many
+gardens are grown with the same name. (`sh seed/germinate.sh` does the same: it chooses a Python as the hooks
+do — the first that runs and imports yaml — and hands over to it.)
 
-A garden is kept by someone. With `--gardener`, a second commit plants that person's bean — the garden's first —
-and names it in `GARDEN.md`, so the garden begins as someone's. Without it, the gardener is the first bean you
-write (below).
+A garden is kept by someone, and the gardener is the first bean you write (below). `--gardener sam
+--gardener-name "Sam"` writes it for you instead: a second commit plants the bean — its name qualified at birth by
+the garden's id, `<garden id>/person:sam` — and names it in `GARDEN.md`, so the garden begins as someone's. Then the
+first commit below is the laptop alone.
 
 **Requires** Python 3 and **PyYAML** — the one third-party dependency. `bin/dmcheck.py` exits 2 without it.
 
@@ -64,7 +67,9 @@ often for the entry than for the bean.
 
 The first person is the **gardener**: the one who keeps this garden, and ratifies in it what an agent may not
 decide. A person is owned by the crown and answers for themselves. Nobody holds a person, so these two lines are
-the only way a person's ownership is written. (`germinate.py --gardener sam` writes a bean like this one for you.)
+the only way a person's ownership is written. (`germinate.py --gardener sam` writes a bean like this one for you,
+its name qualified by the garden's id; written by hand, as here, the name is bare until `bin/dmpropose.py mint`
+qualifies it, which it needs before it crosses to another garden — `COOKBOOK.md` shows how.)
 
 <!-- example: beans/sam.md -->
 ```markdown
