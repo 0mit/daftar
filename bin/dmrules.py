@@ -35,8 +35,39 @@ def _product():
     except Exception:
         return "daftar (untagged)"
 
-std = dmparse.loads(dmparse.read(STD)[0]) or {}
-loc = dmparse.loads(dmparse.read(os.path.join(ROOT, 'VOCAB.md'))[0]) or {}
+def _front(path):
+    """A document's front matter, read as the gate reads it: (mapping or None, why it does not read)."""
+    try:
+        head_ = dmparse.read(path)[0]
+    except dmparse.NotUTF8 as e:
+        return None, str(e)
+    except OSError as e:
+        return None, f"cannot be read ({e.strerror})"
+    if head_ is None:
+        return None, "no --- fences"
+    try:
+        fm = dmparse.loads(head_)
+    except Exception as e:
+        return None, dmparse.escaped(str(e).splitlines()[0] if str(e) else type(e).__name__)
+    return (fm if isinstance(fm, dict) else None), (None if isinstance(fm, dict) or fm is None else "not a mapping")
+
+
+std, _why = _front(STD)
+if std is None:
+    # THE LAW HAS ONE PATH: a law that does not read has no rules to list, and listing none would say there are none
+    sys.exit(f"seed/std-vocab.md: its front matter does not read ({_why or 'empty'}) — the law has one path and no "
+             f"fallback, so no rule is listed until it reads")
+# The garden's own vocabulary, read as the gate reads it (bin/dmparse.py `vocab_read`): a VOCAB.md that does not read is
+# read as nothing, and an entry that is not in its shape is left out — so no rule is listed that the gate does not
+# enforce, and what it refuses is listed, at the end, as refused.
+loc, _why = _front(os.path.join(ROOT, 'VOCAB.md'))
+NOT_READ = []
+if loc is None:
+    if _why:
+        NOT_READ.append(f"VOCAB.md: its front matter does not read ({_why}) — this garden's own vocabulary is a mapping "
+                        f"of what it adds to the law; the rules below are the law's alone")
+    loc = {}
+NOT_READ += dmparse.vocab_read(loc)
 prof_names = loc.get('extends_profiles') or []
 prof_terms = [t for p in prof_names for t in ((std.get('profiles') or {}).get(p, {}).get('terms') or [])]
 # A PROFILE'S VACANCIES ARE PART OF THE LAW IN FORCE and were never listed here. dmcheck has always read
@@ -59,7 +90,30 @@ for t, tier in [(t, 'tier0') for t in (std.get('terms') or [])] + \
         TERMS[n] = base; TIER[n] = TIER[n] + '+overlay'
     else:
         TERMS[n] = t; TIER[n] = tier
-reg = lambda k: loc.get(k) if loc.get(k) is not None else (std.get(k) or [])
+_RESTATED = {}
+
+
+def reg(k):
+    """A registry as the gate reads it: the garden's restatement (its rows in their shape) or the law's, and the rows
+    the garden adds that the base does not already hold."""
+    if k not in _RESTATED:
+        _RESTATED[k], _why = dmparse.restated_rows(loc, k)
+        NOT_READ.extend(_why)
+    base = _RESTATED[k] if _RESTATED[k] is not None else [r for r in (std.get(k) or []) if isinstance(r, dict)]
+    base = [r for r in base if isinstance(r, dict) and r]
+    _add = [r for r in ((loc.get('registry_additions') or {}).get(k) or [])
+            if not any(b.get(next(iter(r))) == r[next(iter(r))] for b in base)]
+    return list(base) + _add
+
+
+def _m(x):
+    """A field a registry row holds as a mapping, or none: a row the gate refuses for its shape is listed as far as it
+    reads, never a traceback."""
+    return x if isinstance(x, dict) else {}
+
+
+def _seq(x):
+    return x if isinstance(x, list) else []
 want = set(a for a in sys.argv[1:] if a.startswith('--')) or {'--terms', '--core'}
 
 
@@ -74,12 +128,21 @@ def quantity_rule(qname):
     if uf:
         return (f"a unit is a `{uf.get('take')}` of the `{uf.get('registry')}` registry, with at most its `{uf.get('digits')}` "
                 f"decimal places; no factor joins two (crosswalk: {q.get('crosswalk')})")
-    units = [u['unit'] for u in reg('units') if isinstance(u, dict) and u.get('quantity') == qname]
+    units = [u.get('unit') for u in reg('units') if u.get('quantity') == qname]
     return f"units {units}, each an exact ratio to the others"
 
 
+# EVERY LINE IS PRINTED SPELT OUT: a name or a meaning a garden wrote reaches this listing, and a control character in it
+# would drive the terminal of the person reading the rules (bin/dmparse.py `said`; the gate refuses such a character).
+_print = print
+
+
+def print(*a, **k):
+    _print(*(dmparse.said(x) for x in a), **k)
+
+
 def head(s):
-    print(f"\n\033[1m{s}\033[0m" if sys.stdout.isatty() else f"\n{s}")
+    _print(f"\n\033[1m{dmparse.said(s)}\033[0m" if sys.stdout.isatty() else f"\n{dmparse.said(s)}")
     print('─' * len(s))
 
 
@@ -88,12 +151,12 @@ print(f"{_product()} rules — {loc.get('extends')} + garden '{loc.get('vocab')}
 
 head("AXIS — nature routes every bean to the crown")
 for n in reg('natures'):
-    print(f"  {n['nature']:14} → crown '{n['crown']}'   anchors {n.get('establishing_anchor_family')}"
+    print(f"  {str(n.get('nature')):14} → crown '{n.get('crown')}'   anchors {n.get('establishing_anchor_family')}"
           f"   min establishing when confirmed: {n.get('min_establishing_anchors')}")
-idp = loc.get('identity_policy') or std.get('identity_policy') or {}
+idp = _m(loc.get('identity_policy') or std.get('identity_policy'))
 print(f"  identity: an anchor's key {'must be a term that declares anchor:' if idp.get('anchor_key') == 'term' else 'is free text'}"
       f" · the family above is {'ENFORCED — an establishing anchor of a confirmed bean is of it' if idp.get('establishing_family') == 'enforced' else 'guidance; only the count is checked'}")
-_mint = idp.get('minted') or {}
+_mint = _m(idp.get('minted'))
 if _mint:
     print(f"  minted: a term whose anchor says `minted: true` admits names a garden gives — a value in the form "
           f"{_mint.get('form')} whose kind is a row of `{_mint.get('form_kind')}` (the garden's local_{_mint.get('form_kind')} too). "
@@ -101,41 +164,42 @@ if _mint:
           f"everywhere, and the prefix is this garden's id or a `garden` bean's. Any other value was assigned outside every "
           f"garden: it identifies wherever it is written and is never qualified")
 cr = reg('crown')
-print(f"  crown: {' , '.join(c['branch'] + (' (root, never nameable)' if c.get('root') else '') for c in cr)}")
-kinds = list(std.get('kinds') or []) + list(loc.get('local_kinds') or [])
-print(f"  kinds: " + ' , '.join(f"{k['kind']}→{k.get('of_nature')}"
+print(f"  crown: {' , '.join(str(c.get('branch')) + (' (root, never nameable)' if c.get('root') else '') for c in cr)}")
+kinds = [k for k in _seq(std.get('kinds')) + list(loc.get('local_kinds') or []) if isinstance(k, dict)]
+print(f"  kinds: " + ' , '.join(f"{k.get('kind')}→{k.get('of_nature')}"
                                 + ('*' if k.get('ownership_form') else '') for k in kinds))
-print(f"         (* pinned to the '{next(k['ownership_form'] for k in kinds if k.get('ownership_form'))}'"
-      f" ownership form, which also RESERVES it)")
+_pinned = next((k['ownership_form'] for k in kinds if k.get('ownership_form')), None)
+if _pinned:
+    print(f"         (* pinned to the '{_pinned}' ownership form, which also RESERVES it)")
 
 head("ASPECTS — oppositions are closed figures (a position names its mutual complement); sequences are walked")
-WALK_KEYS = {a['term_key']: a for a in reg('aspects') if a.get('term_key')}
+WALK_KEYS = {a['term_key']: a for a in reg('aspects') if isinstance(a.get('term_key'), str)}
 for a in reg('aspects'):
     if a.get('figure') == 'sequence':
         on = [n for n, t in TERMS.items() for k in WALK_KEYS
               if WALK_KEYS[k] is a and (t.get('schema') or {}).get(k) is True]
-        print(f"  {a['aspect']:12} sequence   lines {a.get('lines')} · metered {a.get('metered')} · order "
+        print(f"  {str(a.get('aspect')):12} sequence   lines {a.get('lines')} · metered {a.get('metered')} · order "
               f"{a.get('order')} · acyclic {a.get('acyclic')} · ends {a.get('ends')} · domain "
-              f"{(a.get('domain') or {}).get('systems')}")
+              f"{_m(a.get('domain')).get('systems')}")
         if on:
             print(f"               walked by: " + ', '.join(on))
         continue
-    pos = a.get('positions') or []
-    _raw = a.get('poles') or []
+    pos = [p for p in _seq(a.get('positions')) if isinstance(p, dict)]
+    _raw = _seq(a.get('poles'))
     _axes = _raw if (_raw and isinstance(_raw[0], list)) else ([_raw] if _raw else [])
-    print(f"  {a['aspect']:12} {a.get('figure')}   {len(_axes)}-axis   "
-          + ' , '.join(f"{ax[0]} ↔ {ax[1]}" for ax in _axes if len(ax) == 2))
+    print(f"  {str(a.get('aspect')):12} {a.get('figure')}   {len(_axes)}-axis   "
+          + ' , '.join(f"{ax[0]} ↔ {ax[1]}" for ax in _axes if isinstance(ax, list) and len(ax) == 2))
     seen = set()
     for p in pos:
-        pair = tuple(sorted((p['position'], p['complement'])))
+        pair = tuple(sorted((str(p.get('position')), str(p.get('complement')))))
         if pair in seen:
             continue
         seen.add(pair)
-        print(f"               {p['position']} ↔ {p['complement']}")
+        print(f"               {p.get('position')} ↔ {p.get('complement')}")
     print(f"               used by: " + ', '.join(
         n for n, t in TERMS.items()
         for x in dmform.aspects_of(t.get('schema'))
-        if x.get('aspect') == a['aspect']))
+        if x.get('aspect') == a.get('aspect')))
 
 if '--terms' in want:
     head("TERMS — every rule below is enforced by the generic interpreter")
@@ -225,7 +289,7 @@ if '--terms' in want:
                        + (f", of kind {' or '.join(map(str, r['kinds']))}" if isinstance(r, dict) and r.get('kinds') else ''))
         _keyed = dict(dmform.facet(F, 'keyed_by'))
         for a_, r in dmform.facet(F, 'entries'):
-            det.append(f"{_w}.{a_} holds entries, each judged by {sorted(r)}"
+            det.append(f"{_w}.{a_} holds entries, each judged by {sorted(map(str, r))}"
                        + (f"; ONE per `{_keyed[a_]}`, in no order" if a_ in _keyed else ''))
         if isinstance(s.get('sums'), dict):
             _wh = s['sums'].get('whole')
@@ -253,28 +317,28 @@ if '--terms' in want:
             print(f"      · {d}")
 
 head("QUANTITIES — a measured value is { count, unit }, and the unit measures the quantity")
-_vt = {r.get('type'): r for r in reg('value_types') if isinstance(r, dict)}
-print(f"  count: {(_vt.get('count') or {}).get('pattern', 'NO value_types[count] — the gate refuses every count')} "
+_vt = {r.get('type'): r for r in reg('value_types') if isinstance(r.get('type'), str)}
+print(f"  count: {_m(_vt.get('count')).get('pattern', 'NO value_types[count] — the gate refuses every count')} "
       f"— never a float; a decimal is written as a string")
 for q in reg('quantities'):
     if isinstance(q, dict) and q.get('quantity'):
         print(f"  {q['quantity']:14} {quantity_rule(q['quantity'])}")
 
 head("TEXT AND DAYS — what every key and string is, and which positions are days")
-_tx = _vt.get('text') or {}
+_tx = _m(_vt.get('text'))
 if _tx.get('holds_no'):
     print(f"  text: every key and string value of a bean, a mapping, GARDEN.md and VOCAB.md holds no character of Unicode "
-          f"category {_tx['holds_no']} but {', '.join(repr(c) for c in (_tx.get('but') or [])) or 'none'}, and a line feed "
+          f"category {_tx['holds_no']} but {', '.join(repr(c) for c in _seq(_tx.get('but'))) or 'none'}, and a line feed "
           f"only in a {_tx.get('lines_in')} scalar (`|` or `>`) — the character is named, never echoed")
 else:
     print("  text: NO value_types[text] — the gate reports the missing row")
-_ex = ((_vt.get('date') or {}).get('exists') or {}).get('reckoning') or []
-_rows = [r for r in reg('anchor_systems') if isinstance(r, dict) and r.get('calendar')]
+_ex = _seq(_m(_m(_vt.get('date')).get('exists')).get('reckoning'))
+_rows = [r for r in reg('anchor_systems') if r.get('calendar')]
 print(f"  a day: a position held to a day — a date, where a repetition starts and ends, a bound in time — is a day its "
       f"calendar has. In a calendar reckoned {' or '.join(map(str, _ex)) or '(none named)'} the day it names, written back, "
       f"is the position written, and a year the reckoning cannot reach is refused; judged: "
-      f"{', '.join(r['system'] for r in _rows if r.get('reckoning') in _ex) or 'none'}")
-_not = [f"{r['system']} ({r.get('reckoning')})" for r in _rows if r.get('reckoning') not in _ex]
+      f"{', '.join(str(r.get('system')) for r in _rows if r.get('reckoning') in _ex) or 'none'}")
+_not = [f"{r.get('system')} ({r.get('reckoning')})" for r in _rows if r.get('reckoning') not in _ex]
 if _not:
     print(f"         not judged by arithmetic, as their reckoning says: {', '.join(_not)}")
 
@@ -306,7 +370,7 @@ print("  a local vacancy that becomes occupied is an ERROR; a Tier-0 one WARNS")
 for tier, vs in (('tier0', (std.get('vacancies') or []) + prof_vacs),
                  ('garden', loc.get('vacancies') or [])):
     for v in vs:
-        print(f"    [{tier}] {v['at']} = '{v['position']}'  ({v['reason']})")
+        print(f"    [{tier}] {v.get('at')} = '{v.get('position')}'  ({v.get('reason')})")
 
 if '--core' in want:
     head("CORE — bean grammar; the only rules not in the vocabulary")
@@ -329,8 +393,15 @@ if '--core' in want:
                  "a `file:` pointer must resolve to a file that exists in this garden",
                  "a bean, a mapping, GARDEN.md and VOCAB.md are UTF-8 — any other encoding is refused by name",
                  "every entry of VOCAB.md is in its own shape: a term's or a kind's name is text, a schema, its attrs and "
-                 "a merge are mappings, context_keys a list of text; one of another shape is refused and left unread",
+                 "a merge are mappings, context_keys a list of text, a cell says one verdict (incoherent | in_breach), "
+                 "requirement or expectation, a vacancy's reason and why are text, and every pattern it writes is a "
+                 "regular expression; one of another shape is refused and left unread (listed under NOT READ)",
                  "a conflict record stands the rules down only as the merge driver captured it: `merge_open: true`, its "
                  "path in `merge_conflicts`, `{conflict: [...]}` alone with two or more different values — any other "
                  "is refused at its path"]:
+        print(f"  · {line}")
+
+if NOT_READ:
+    head("NOT READ — what the gate refuses in this garden's VOCAB.md, and so enforces no rule of")
+    for line in NOT_READ:
         print(f"  · {line}")

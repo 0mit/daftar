@@ -215,169 +215,11 @@ if not isinstance(vocab_fm, dict) or '__err__' in vocab_fm:
                   f"{vocab_fm['__err__'] if isinstance(vocab_fm, dict) else 'not a mapping'}) — this garden's own "
                   f"vocabulary is a mapping of what it adds to the law")
     vocab_fm = {}
-# ...and each block it adds is read in its own shape or not at all: `local_terms: 5` refused by name, never a traceback.
-for _blk, _shape in (('local_terms', list), ('local_kinds', list), ('vacancies', list), ('extends_profiles', list),
-                     ('registry_files', list), ('registry_links', list), ('registry_additions', dict),
-                     ('identity_policy', dict)):
-    if vocab_fm.get(_blk) is not None and not isinstance(vocab_fm[_blk], _shape):
-        errors.append(f"VOCAB.md: `{_blk}` is a {'list' if _shape is list else 'mapping'}, not "
-                      f"{type(vocab_fm[_blk]).__name__} — it is left unread until it is one")
-        vocab_fm[_blk] = _shape()
-for _name in list((vocab_fm.get('registry_additions') or {})):
-    if not isinstance(vocab_fm['registry_additions'][_name], list):
-        errors.append(f"VOCAB.md: `registry_additions.{_name}` is a list of rows, not "
-                      f"{type(vocab_fm['registry_additions'][_name]).__name__} — it is left unread until it is one")
-        vocab_fm['registry_additions'][_name] = []
-
-
-# ...AND EACH ENTRY OF A BLOCK IN ITS OWN SHAPE, where it is read. A term's name is text, and so is a kind's; a schema,
-# its attributes and a merge are mappings; context keys are a list of text. What the interpreter iterates is a list and
-# what it looks a row up by is a name. An entry of another shape is refused by name and left unread: a list where a name
-# belongs ended the run in a traceback, and `local_terms: [5]` was passed as though it said something.
-_NAME_KEYS = ('shape', 'key_form', 'path', 'values_from', 'must_equal_kind_attr', 'entry_form_from_kind_attr',
-              'facet_parity_with', 'required_on_targets_of', 'governs_anchor', 'value_form', 'value_pattern',
-              'canonical_note', 'compare_form', 'on_sequence')
-_LIST_KEYS = ('cells', 'values', 'values_add', 'entry_one_of', 'entry_must_match')
-_MAP_KEYS = ('attrs', 'alt_form', 'expiry', 'sums', 'value_in_registry')
-_IN_NAMES = ('registry', 'registry_from', 'take', 'type', 'system', 'key_of', 'form_of', 'keyed_by', 'aspect', 'quantity')
-
-
-def _is_text(x):
-    return isinstance(x, str) and bool(x.strip())
-
-
-def _scalar(x):
-    return not isinstance(x, (list, dict))
-
-
-def _attrs_problem(attrs, at):
-    """What is wrong with the shape of a schema's `attrs` (and the entries nested in one), or None."""
-    if not isinstance(attrs, dict):
-        return f"`{at}` is a mapping of attribute to record, not {type(attrs).__name__}"
-    for a, rec in attrs.items():
-        d = rec.get('in') if isinstance(rec, dict) else None
-        if not isinstance(d, dict):
-            continue                        # a record with no domain the language offers is refused by name later
-        for k in _IN_NAMES:
-            if d.get(k) is not None and not _is_text(d[k]):
-                return f"`{at}.{a}.in.{k}` names one {k}, written as text — not {type(d[k]).__name__}"
-        if d.get('bean_id') is not None and not (isinstance(d['bean_id'], dict) and isinstance(d['bean_id'].get('kinds') or [], list)):
-            return f"`{at}.{a}.in.bean_id` is a mapping {{ kinds: [<kind>, ...] }}, its kinds a list"
-        if d.get('where') is not None and not isinstance(d['where'], dict):
-            return f"`{at}.{a}.in.where` is a mapping of a registry's field to the value it holds"
-        if d.get('entries') is not None:
-            _p = _attrs_problem(d['entries'], f"{at}.{a}.in.entries")
-            if _p:
-                return _p
-    return None
-
-
-def _term_problem(t):
-    """What is wrong with the shape of one `local_terms` entry, or None."""
-    if not isinstance(t, dict):
-        return f"is a mapping {{term, meaning, schema?, …}}, not {type(t).__name__}"
-    if not _is_text(t.get('term')):
-        return f"names its term as text (`term: <name>`), not {type(t.get('term')).__name__}"
-    for k in ('schema', 'merge', 'anchor'):
-        if t.get(k) is not None and not isinstance(t[k], dict):
-            return f"`{k}` is a mapping, not {type(t[k]).__name__}"
-    _ck = t.get('context_keys')
-    if _ck is not None and not (isinstance(_ck, list) and all(_is_text(x) for x in _ck)):
-        return "`context_keys` is a list of the keys it is found at, each written as text"
-    s = t.get('schema') or {}
-    for k in _NAME_KEYS:
-        if s.get(k) is not None and not isinstance(s[k], str):
-            return f"`schema.{k}` is one word, written as text — not {type(s[k]).__name__}"
-    for k in _LIST_KEYS + tuple(x for x in s if str(x).startswith(('required_on_', 'only_on_'))):
-        if s.get(k) is not None and not isinstance(s[k], list):
-            return f"`schema.{k}` is a list, not {type(s[k]).__name__}"
-        if k not in ('cells', 'entry_must_match') and not all(_scalar(x) for x in (s.get(k) or [])):
-            return f"`schema.{k}` is a list of values, each one value — not a list or a mapping"
-    for k in _MAP_KEYS:
-        if s.get(k) is not None and not isinstance(s[k], dict):
-            return f"`schema.{k}` is a mapping, not {type(s[k]).__name__}"
-    for i, c in enumerate(s.get('cells') or []):
-        if not isinstance(c, dict) or not isinstance(c.get('when'), dict) \
-                or any(c.get(k) is not None and not isinstance(c[k], list) for k in ('requires', 'expects')):
-            return f"`schema.cells[{i}]` is a mapping {{when: {{<attr>: <value>}}, verdict | requires: [...] | expects: [...], why}}"
-    return _attrs_problem(s['attrs'], 'schema.attrs') if s.get('attrs') is not None else None
-
-
-def _kind_problem(k):
-    if not isinstance(k, dict):
-        return f"is a mapping {{kind, of_nature, meaning, …}}, not {type(k).__name__}"
-    if not _is_text(k.get('kind')):
-        return f"names its kind as text (`kind: <name>`), not {type(k.get('kind')).__name__}"
-    for a, v in k.items():
-        if isinstance(v, dict) or (isinstance(v, list) and not all(_is_text(x) for x in v)):
-            return f"`{a}` is a word or a list of words"
-    return None
-
-
-def _vacancy_problem(v):
-    if not isinstance(v, dict):
-        return f"is a mapping {{at, position, reason, why}}, not {type(v).__name__}"
-    if not _is_text(v.get('at')) or not _scalar(v.get('position')):
-        return "says `at:` where, as text, and `position:` which, as one value"
-    return None
-
-
-def _read_vocab_entries():
-    """Refuse, by name, every entry of the garden's vocabulary that is not in its own shape, and leave it unread."""
-    def _keep(block, problem, label):
-        rows = vocab_fm.get(block)
-        if not isinstance(rows, list):
-            return
-        kept = []
-        for i, row in enumerate(rows):
-            why = problem(row)
-            if why:
-                _name = row.get(label) if isinstance(row, dict) and _is_text(row.get(label)) else None
-                errors.append(f"VOCAB.md: {block}" + (f" '{_name}'" if _name else f"[{i}]") + f" {why} — it is left "
-                              f"unread until it is")
-            else:
-                kept.append(row)
-        vocab_fm[block] = kept
-    _keep('local_terms', _term_problem, 'term')
-    _keep('local_kinds', _kind_problem, 'kind')
-    _keep('vacancies', _vacancy_problem, 'at')
-    _keep('extends_profiles', lambda p: None if _is_text(p) else f"names a profile as text, not {type(p).__name__}", '')
-    _keep('registry_files', lambda r: None if isinstance(r, dict) and all(_is_text(r.get(k)) for k in ('registry', 'file'))
-          else "is a mapping {registry, file, key}, each named as text", 'registry')
-    _keep('registry_links', lambda r: None if isinstance(r, dict) and all(_is_text(r.get(k)) for k in ('from', 'to', 'field', 'take'))
-          else "is a mapping {from, to, field, take}, each named as text", 'from')
-    for _reg, _rows in list((vocab_fm.get('registry_additions') or {}).items()):
-        vocab_fm['registry_additions'][_reg] = _rows_read(f"registry_additions.{_reg}", _rows)
-    # IDENTITY POLICY: a garden that restates it restates it whole, in its own shape — else the law's stands.
-    _idp = vocab_fm.get('identity_policy')
-    if isinstance(_idp, dict):
-        _why = next((f"`{k}` names one {k}, as text" for k in ('keyed_by', 'registry', 'anchor_key',
-                     'applies_at_identity_status', 'establishing_family') if _idp.get(k) is not None and not _is_text(_idp[k])), None)
-        if _why is None and _idp.get('anchor_attrs') is not None and not (
-                isinstance(_idp['anchor_attrs'], list) and all(_is_text(x) for x in _idp['anchor_attrs'])):
-            _why = "`anchor_attrs` is a list of the attributes an anchor may carry, each named as text"
-        if _why is None and _idp.get('minted') is not None and not (isinstance(_idp['minted'], dict) and all(
-                _is_text(v) for k, v in _idp['minted'].items() if k != 'meaning')):
-            _why = "`minted` is a mapping {qualified_by, pattern, form, form_kind, meaning}, each written as text"
-        if _why:
-            errors.append(f"VOCAB.md: identity_policy {_why} — the law's identity policy is read until it is")
-            vocab_fm['identity_policy'] = None
-
-
-def _rows_read(where, rows):
-    """A registry's rows as a garden writes them: each a mapping, named by its first field, as text. A row of any other
-    shape is refused by name and left unread — its name is a key every table of the law is looked up by."""
-    kept = []
-    for i, r in enumerate(rows):
-        if isinstance(r, dict) and r and _is_text(r[next(iter(r))]):
-            kept.append(r)
-        else:
-            errors.append(f"VOCAB.md: {where}[{i}] is a row — a mapping of its fields, named by the first, as text "
-                          f"— not {type(r).__name__} — it is left unread until it is one")
-    return kept
-
-
-_read_vocab_entries()
+# ...and each block it adds, each ENTRY of a block and each row it adds to a registry, in its own shape or not at all:
+# `local_terms: 5`, `local_terms: [{term: [x]}]`, a cell that says no verdict or a pattern that does not compile are
+# refused by name and left unread, never a traceback and never passed. bin/dmparse.py holds the one reading, which
+# bin/dmrules.py shares — so the rules it lists are the rules this gate reads.
+errors.extend(dmparse.vocab_read(vocab_fm))
 
 
 _FILE_REGISTRIES = {}
@@ -410,6 +252,14 @@ def _registry_file(name):
     except UnicodeDecodeError as e:
         errors.append(f"registry_files: registry '{name}' is declared at {decl.get('file')}, and that file is not UTF-8 "
                       f"(byte {e.start}) — save it as UTF-8; a declared registry is never read as empty")
+    # a row a data file holds is judged as a row a garden writes is: a `pattern` it declares is one the gate can match
+    # with, or the row is refused by name and left unread
+    for _r in list(rows):
+        if dmparse.pattern_problem(_r):
+            errors.append(f"registry_files: registry '{name}' ({decl.get('file')}): the row "
+                          f"'{_r.get(decl.get('key')) if isinstance(decl.get('key'), str) else ''}' "
+                          f"{dmparse.pattern_problem(_r)} — it is left unread until it is one")
+            rows.remove(_r)
     _FILE_REGISTRIES[name] = rows
     return rows
 
@@ -423,15 +273,12 @@ def registry(name):
     only what is new, so the garden accounts only for what it declared."""
     if not isinstance(name, str):
         return []                           # a list or a map where a registry's name belongs names none; its rule says so
-    if vocab_fm.get(name) is not None and not isinstance(vocab_fm[name], list):
-        # a registry the garden restates is a list of rows, or it is not read: refused once, by name, and the law's own
-        # rows stand in its place for the rest of the run
-        errors.append(f"VOCAB.md: `{name}` restates a registry as a list of rows, not {type(vocab_fm[name]).__name__} — "
-                      f"it is left unread until it is one")
-        vocab_fm[name] = None
     if vocab_fm.get(name) is not None and name not in _ROWS_READ:
+        # a registry the garden restates is a list of rows, each in its shape, or it is not read: refused once, by
+        # name, and the law's own rows stand in its place for the rest of the run
         _ROWS_READ.add(name)
-        vocab_fm[name] = _rows_read(name, vocab_fm[name])
+        vocab_fm[name], _why = dmparse.restated_rows(vocab_fm, name)
+        errors.extend(_why)
     base = vocab_fm.get(name) if vocab_fm.get(name) is not None else (std_fm.get(name) or [])
     if not base:
         base = _registry_file(name) or []
@@ -669,7 +516,17 @@ VALUE_TYPES = {t['type']: t for t in (registry('value_types') or []) if isinstan
 # the gate accepted `۲۰۲۶-۰۹-۲۰` as an iso_date — a second spelling of a position, which nothing downstream can read
 # as a date. The law's patterns are therefore matched ASCII-only, everywhere, through this one function — and to the end
 # of the value: dmparse holds the one definition, which the merge's reading of a form shares.
-law_match = dmparse.law_match
+def law_match(pattern, value):
+    """dmparse's one matcher, and a form that does not compile is REFUSED BY NAME — once, and no value matches it —
+    never a traceback. Every pattern a garden writes is read before this runs (`dmparse.vocab_read`); this stands
+    behind a form reached some other way, such as the field of a registry row a `take:` names."""
+    try:
+        return dmparse.law_match(pattern, value)
+    except (re.error, ValueError) as e:
+        _m = f"the form '{pattern}' is not a regular expression ({e}) — no value is held to it until it is one"
+        if _m not in errors:
+            errors.append(_m)
+        return None
 
 
 KEBAB = re.compile(VALUE_TYPES['kebab']['pattern'], re.ASCII) if 'kebab' in VALUE_TYPES else None

@@ -22,7 +22,9 @@ the gate once took, or once died on; each must now be refused by name, and nothi
   text               a control character in a key or a value — an escape that drives a terminal, a NUL a backslash
                      made — named and never echoed; a line feed only in a block scalar
   a captured merge   the rules stand down only on what the merge driver captured: the path named, the record exact
-  shapes             a position written as a list; a VOCAB.md entry of the wrong shape; a file that is not UTF-8
+  shapes             a position written as a list; a VOCAB.md entry of the wrong shape, a cell with no verdict or a
+                     pattern that does not compile — and dmrules, which reads VOCAB.md as the gate does; a file that is
+                     not UTF-8
   the manifest's     policy: one text, or texts under names
   words
 
@@ -535,12 +537,76 @@ for blk, want in (("local_terms: [ { term: [x] } ]", "local_terms[0] names its t
                   ("local_kinds: [ { kind: [x] } ]", "local_kinds[0] names its kind as text"),
                   ("local_kinds: [ x ]", "local_kinds[0] is a mapping"),
                   ("registry_additions: { facets: [ 5 ] }", "registry_additions.facets[0] is a row"),
-                  ("vacancies: [ { at: x, position: [a], reason: prediction, why: y } ]", "vacancies 'x' says `at:`")):
+                  ("vacancies: [ { at: x, position: [a], reason: prediction, why: y } ]", "vacancies 'x' says `at:`"),
+                  # ...and where the interpreter reads it: a vacancy's reason is a word it looks up, an alternative form's
+                  # key and a cell's verdict are words, and a pattern is one Python compiles. Each of these ended the
+                  # run in a traceback once a bean carried the term (`x: { a: 1 }` below) — or, a vacancy, with none.
+                  ("vacancies: [ { at: 'words.form', position: written, reason: [x], why: y } ]",
+                   "vacancies 'words.form' says its `reason:` as text, not list"),
+                  ("vacancies: [ { at: 'words.form', position: written, reason: { a: 1 }, why: y } ]",
+                   "vacancies 'words.form' says its `reason:` as text, not dict"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { alt_form: { key: [a] } } } ]",
+                   "local_terms 'x' `schema.alt_form.key` names the one key"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { alt_form: { key: via, ref_fields: 5 } } } ]",
+                   "local_terms 'x' `schema.alt_form.ref_fields` is a list"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { cells: [ { when: { a: 1 }, verdict: [x] } ] } } ]",
+                   "local_terms 'x' `schema.cells[0]` `verdict` is one of ['incoherent', 'in_breach'], not list"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { cells: [ { when: { a: 1 }, verdict: incoherrent } ] } } ]",
+                   "local_terms 'x' `schema.cells[0]` `verdict` is one of ['incoherent', 'in_breach']"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { cells: [ { when: { a: 1 } } ] } } ]",
+                   "local_terms 'x' `schema.cells[0]` says one of `verdict`, `requires` or `expects`"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { cells: [ { when: { a: 1 }, requires: [ [b] ] } ] } } ]",
+                   "local_terms 'x' `schema.cells[0]` `requires` is a list of the attributes"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { attrs: { a: { in: { pattern: '(bad' } } } } } ]",
+                   "local_terms 'x' `schema.attrs.a.in.pattern` is not a regular expression: missing )"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { attrs: { a: { in: { pattern: '(bad', soft: true, why: w } } } } } ]",
+                   "local_terms 'x' `schema.attrs.a.in.pattern` is not a regular expression"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { value_pattern: '[z-a]' } } ]",
+                   "local_terms 'x' `schema.value_pattern` is not a regular expression: bad character range"),
+                  ("registry_additions: { anchor_systems: [ { system: gz, pattern: '(bad' } ] }",
+                   "registry_additions.anchor_systems 'gz' `pattern` is not a regular expression"),
+                  ("identity_policy: { minted: { pattern: '(bad' } }",
+                   "identity_policy `minted.pattern` is not a regular expression")):
     key = blk.split(":")[0]
     put("VOCAB.md", re.sub(r"(?m)^" + key + r":.*\n", "", _vocab, count=1).replace("---\n", "---\n" + blk + "\n", 1))
+    put("beans/ali.md", person("ali", "x: { a: 1 }\n") if "term: x," in blk else person("ali"))
     out = gate()
     check(f"VOCAB.md with `{blk}` is refused by name and left unread, not a traceback nor a pass",
-          ("VOCAB.md: " + want) in out and "Traceback" not in out, out[-500:])
+          ("VOCAB.md: " + want) in out and "Traceback" not in out and "error(s)" in out, out[-500:])
+put("VOCAB.md", _vocab)
+put("beans/ali.md", person("ali"))
+out = gate()
+check("(the garden's own VOCAB.md, restored, passes)", ok(out), out[-300:])
+put("VOCAB.md", _vocab.replace("local_terms: []", "local_terms: [ { term: x, context_keys: [x], schema: { shape: mapping, "
+                               "attrs: { system: { in: { registry: anchor_systems, take: system } }, at: { in: { form_of: "
+                               "anchor_systems, keyed_by: system, take: note } } } } } ]\nregistry_additions: { anchor_systems: "
+                               "[ { system: gz, pattern: '^gz:', note: 'a (note' } ] }", 1))
+put("beans/ali.md", person("ali", "x: { system: gz, at: 'gz:1' }\n"))
+out = gate()
+check("a form the gate reaches some other way — the field of a registry row a `take:` names, here words that are no "
+      "regular expression — is refused by name, never a traceback",
+      "the form 'a (note' is not a regular expression" in out and "error(s)" in out and "Traceback" not in out, out[-600:])
+put("VOCAB.md", _vocab)
+put("beans/ali.md", person("ali"))
+
+# ---------------------------------------------------------------- DMRULES READS VOCAB.md AS THE GATE READS IT
+for blk in ("local_terms: 5", "local_terms: [ { term: x, schema: 5 } ]", "local_terms: [ { term: x, schema: { attrs: 5 } } ]",
+            "vacancies: [ 5 ]", "vacancies: [ { at: x, position: y } ]", "aspects: [ { aspect: x, positions: 5 } ]",
+            "value_types: [ { type: date, exists: 5 } ]"):
+    key = blk.split(":")[0]
+    put("VOCAB.md", re.sub(r"(?m)^" + key + r":.*\n", "", _vocab, count=1).replace("---\n", "---\n" + blk + "\n", 1))
+    r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
+    check(f"dmrules over a VOCAB.md with `{blk}` lists the rules, never a traceback"
+          + (", and names what the gate leaves unread" if "local_terms" in blk or blk == "vacancies: [ 5 ]" else ""),
+          r.returncode == 0 and "Traceback" not in r.stdout + r.stderr and "REVERSE GATE" in r.stdout
+          and ("NOT READ" in r.stdout and "VOCAB.md: " in r.stdout if "local_terms" in blk or blk == "vacancies: [ 5 ]" else True),
+          (r.stdout + r.stderr)[-600:])
+with open(os.path.join(G, "VOCAB.md"), "wb") as fh:
+    fh.write(_vocab.encode("utf-16"))
+r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
+check("dmrules over a VOCAB.md in UTF-16 says so, as the gate does — not UTF-8, save it as UTF-8 — and lists the law's rules",
+      r.returncode == 0 and "Traceback" not in r.stdout + r.stderr
+      and "VOCAB.md: its front matter does not read (not UTF-8 — it looks like UTF-16" in r.stdout, (r.stdout + r.stderr)[-600:])
 put("VOCAB.md", _vocab)
 
 # ---------------------------------------------------------------- A DAY IS JUDGED WHERE THE LAW SAYS ITS CALENDAR IS RECKONED
