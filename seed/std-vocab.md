@@ -2730,8 +2730,8 @@ The portable, estate-agnostic classification shared by every garden — the abst
   gardener — a person, or with `--gardener-kind org` an organisation — qualified at birth, and a rehearsal is grown,
   never cloned; `bin/dmupgrade.py` carries a garden into 21.0 and names its gardener (`DAFTAR_GARDENER` where the
   garden's own tool is older than `--gardener`); the hooks choose a Python that imports yaml; the tools write UTF-8
-  on every platform, `bin/dmjournal.py` included, which reads a body on standard input as UTF-8 and prints the
-  heading only once it is written; every command the pages and the tools print runs as printed in Windows
+  on every platform, `bin/dmjournal.py` included, which reads a body on standard input as UTF-8, refuses every control
+  character but a tab, and prints the heading only once it is written; every command the pages and the tools print runs as printed in Windows
   PowerShell 5.1; and MODEL.md says whose a judgment is. The suites that hold it: test/money.py (money and
   agreements), test/mycelium.py (gardens and proposals), test/refusals.py (what the gate refuses, and that it
   refuses rather than crashes), test/journal.py (the journal's one tool), and test/germinate.py, which commits the

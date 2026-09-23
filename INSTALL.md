@@ -151,7 +151,8 @@ message here uses instead, so that what is printed runs as printed:
   so is `` `n `` inside double quotes. Windows PowerShell 5.1 drops a double quote *inside* an argument — write the
   body without one there (PowerShell 7.3 and later pass it intact).
 - `>` and `Out-File` write UTF-16, which the gate does not read (above): a bean is saved as UTF-8. Only
-  `bin/dmjournal.py` reads a UTF-16 body, with its mark, on standard input where a shell has `<`.
+  `bin/dmjournal.py` reads a UTF-16 body, with its mark, on standard input where a shell has `<`; without the mark
+  it refuses one (read as UTF-8 it is a NUL after every letter), as it refuses every control character but a tab.
 
 An upgrade that names the gardener through the environment clears it again at the end, because a PowerShell
 session keeps what `$env:` sets, and the next garden upgraded in it would take the same gardener without being

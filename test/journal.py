@@ -8,11 +8,13 @@ cannot be taken back, only answered by another. So the tool is held here to what
   +  a Persian <who>, <what> and body arrive in the journal as UTF-8, byte for byte, when the machine's streams
      speak its code page (PYTHONIOENCODING=cp1252 stands in for Windows without UTF-8 mode, where a piped or
      redirected stream is encoded in the ANSI code page) — through standard input and through --body alike;
-  +  the heading is printed after the write, as UTF-8, and a closed pipe does not turn a written entry into a
-     failure that invites a second run and a duplicate entry;
+  +  the heading is printed after the write, as UTF-8, and a closed pipe — or no standard output at all — does not
+     turn a written entry into a failure that invites a second run and a duplicate entry;
   +  a byte-order mark is dropped, CRLF is read as LF, and UTF-16 with its mark (what Windows PowerShell 5.1's `>`
      writes) is read as UTF-16;
   -  bytes that are not UTF-8 are refused, and NOTHING is written or registered — never guessed in a code page;
+  -  UTF-16 without its mark (a NUL after every letter) is refused, and every control character but a tab: ESC,
+     BEL, NUL, DEL — git reads a journal holding a NUL as binary, and an escape acts on a reader's terminal;
   -  a body carrying its own `## ` line is refused with the reason (leave it out: the tool writes it);
   -  a character some reader takes for a line break (\\x0b, \\x0c, \\x1c-\\x1e, NEL, U+2028, U+2029) is refused, and
      a line break in <who> or <what>: one written line must stay one line to every reader.
@@ -108,6 +110,16 @@ added = journal()[len(before):]
 check("the heading's line cannot be printed (a closed pipe): the entry is written once and the exit is 0",
       r.returncode == 0 and len(headings(added)) == 1 and b'Traceback' not in r.stderr,
       (r.returncode, r.stderr.decode('utf-8', 'replace')[-300:]))
+# NO STANDARD OUTPUT AT ALL: Python sets sys.stdout to None when descriptor 1 was closed before it started, and under
+# pythonw on Windows. The entry is written; there is simply nowhere to say so, and that is not a failure either.
+before = journal()
+r = subprocess.run([sys.executable, '-c', "import sys, runpy; sys.stdout = None; sys.argv = [%r, 'sam', 'no stdout', "
+                    "'--body', '- action: written with nowhere to print the heading.']; runpy.run_path(%r, "
+                    "run_name='__main__')" % (TOOL, TOOL)], capture_output=True, env=ENV, cwd=G)
+added = journal()[len(before):]
+check("no standard output at all (sys.stdout is None): the entry is written once, the exit is 0, no traceback",
+      r.returncode == 0 and len(headings(added)) == 1 and b'Traceback' not in r.stderr,
+      (r.returncode, r.stderr.decode('utf-8', 'replace')[-300:]))
 
 # ---- + a byte-order mark, CRLF, UTF-16 ----------------------------------------------------------------------------
 before = journal()
@@ -140,6 +152,19 @@ refused("a body with its own `## ` line is refused, saying to leave the heading 
 for _ch in ('\x0b', '\x0c', '\x1c', '\x1d', '\x1e', '\x85', '\u2028', '\u2029'):
     refused(f"a body holding {_ch!r}, which splitlines() reads as a line break, is refused",
             ['sam', 'x', '--body', f'- action: a note.{_ch}## 2026-09-17 09:30+03:00 · ada · typed'], says='line break')
+# UTF-16 WITHOUT ITS MARK decodes as valid UTF-8 with a NUL after every letter: written, it makes git read the journal
+# as binary, and the gate then charges the entry with never naming the bean it names.
+refused("UTF-16 with no byte-order mark (a NUL after every letter) is refused, saying what it looks like",
+        ['sam', 'a tv'], stdin='- action: added [[tv]].\n'.encode('utf-16-le'), says='UTF-16')
+for _ch, _nm in (('\x00', 'NUL'), ('\x07', 'BEL'), ('\x08', 'a backspace'), ('\x1b', 'ESC'), ('\x7f', 'DEL')):
+    refused(f"a body holding {_nm} — a control character, not text — is refused",
+            ['sam', 'x'], stdin=f'- action: a{_ch}[2Jb.\n'.encode('utf-8'), says='control character')
+refused("<what> holding ESC is refused", ['sam', 'a\x1b[2Jb', '--body', '- action: x'], says='control character')
+refused("<who> holding BEL is refused", ['sa\x07m', 'x', '--body', '- action: x'], says='control character')
+before = journal()
+r = tool('sam', 'a tab', '--body', '- action: a\ttab is kept.')
+check("...while a tab is text, and kept as written", r.returncode == 0
+      and journal()[len(before):].endswith(b'\n- action: a\ttab is kept.\n'), r.stderr.decode('utf-8', 'replace'))
 refused("a line break in <what> is refused: it is one line of the heading",
         ['sam', 'x\n## 2026-09-17 09:30+03:00 · ada · typed', '--body', '- action: x'], says='line break')
 refused("--body with nothing after it is a usage error", ['sam', 'x', '--body'], says='--body')

@@ -18,14 +18,18 @@ changes, that it says RULE-CHANGE where the law moved, and that no `(fill in` is
 UTF-8 ON EVERY PLATFORM. The journal is append-only, so a garbled entry cannot be taken back: the body read from
 standard input is read as BYTES and decoded as UTF-8 (a byte-order mark is dropped; UTF-16 with its mark, which
 Windows PowerShell 5.1 writes with `>`, is read as UTF-16), and bytes that are not UTF-8 are refused before
-anything is written, never guessed at in the machine's code page. The output goes through dmparse's UTF-8
-streams. The heading is printed only AFTER the entry is written, and a failure to print it is not a failure of
-the write: a run that reported an error after writing would be run again, and append the entry twice.
+anything is written, never guessed at in the machine's code page. UTF-16 WITHOUT its mark is valid UTF-8 with a
+NUL after every letter, so it is refused by the NUL (below), saying what it looks like. The output goes through
+dmparse's UTF-8 streams. The heading is printed only AFTER the entry is written, and a failure to print it — a
+closed pipe, or no standard output at all — is not a failure of the write: a run that reported an error after
+writing would be run again, and append the entry twice.
 
-ONE LINE IS ONE LINE. The journal is read line by line, by the gate and by anything else, and a character that
-some readers take for a line break (a vertical tab, a form feed, the separators \\x1c-\\x1e, NEL, U+2028, U+2029)
-would let one line carry a heading nobody stamped. Such a character, and a line break in <who> or <what>, is
-refused before anything is written; line ends arriving as CRLF are read as LF.
+ONE LINE IS ONE LINE, AND TEXT IS TEXT. The journal is read line by line, by the gate and by anything else, and a
+character that some readers take for a line break (a vertical tab, a form feed, the separators \\x1c-\\x1e, NEL,
+U+2028, U+2029) would let one line carry a heading nobody stamped. Such a character, and a line break in <who> or
+<what>, is refused before anything is written; line ends arriving as CRLF are read as LF. So is every other
+control character but a tab, and DEL: an escape clears a terminal's screen for whoever reads the journal there,
+and a NUL makes git read the whole journal as binary.
 
 HOW THIS IS ENFORCED (std-vocab 20.0, `journal.heading: stamped`). Every heading this tool writes is also
 recorded in the clone's git directory (`.git/daftar/journal-stamps`), and the gate refuses a heading a commit
@@ -50,6 +54,11 @@ JOURNAL = os.path.join(ROOT, 'log', 'journal.md')
 OTHER_BREAKS = {'\x0b': 'a vertical tab', '\x0c': 'a form feed', '\x1c': 'a file separator (\\x1c)',
                 '\x1d': 'a group separator (\\x1d)', '\x1e': 'a record separator (\\x1e)', '\x85': 'NEL (U+0085)',
                 '\u2028': 'a line separator (U+2028)', '\u2029': 'a paragraph separator (U+2029)'}
+# Every other C0 control character, and DEL: none is text. An escape moves a terminal's cursor or clears its screen for
+# whoever reads the journal there, and a NUL makes git read the whole journal as binary — it is what UTF-16 without
+# its byte-order mark looks like once read as UTF-8, a NUL after every letter. A tab is text; a line feed separates
+# the body's lines (and a CR has been read as one by then).
+CONTROL_NAMES = {'\x00': 'NUL', '\x07': 'BEL', '\x08': 'a backspace', '\x1b': 'ESC', '\x7f': 'DEL'}
 
 
 def stamps_path(root=ROOT):
@@ -106,13 +115,23 @@ def decode_body(raw):
 
 
 def refuse_breaks(label, text, line_ends_too=False):
-    """Refuse a character that would make one written line read as two to some reader."""
+    """Refuse a character that would make one written line read as two to some reader, and every other control
+    character but a tab (and, in the body, the line feed between its lines)."""
     for ch, name in OTHER_BREAKS.items():
         if ch in text:
             raise SystemExit(f"dmjournal: {label} holds {name}, which some readers take for a line break — "
                              f"nothing written. Write it as an ordinary line end, or leave it out")
     if line_ends_too and ('\n' in text or '\r' in text):
         raise SystemExit(f"dmjournal: {label} holds a line break — it is one line of the heading; nothing written")
+    bad = next((ch for ch in text if (ch < ' ' and ch not in '\t\n') or ch == '\x7f'), None)
+    if bad == '\x00':
+        raise SystemExit(f"dmjournal: {label} holds NUL (\\x00), a control character — it looks like UTF-16 without "
+                         f"its byte-order mark, a NUL after every letter; nothing written. Save the entry as UTF-8, "
+                         f"or pass it with --body \"…\"")
+    if bad is not None:
+        raise SystemExit(f"dmjournal: {label} holds {CONTROL_NAMES.get(bad, 'U+%04X' % ord(bad))}, a control character "
+                         f"and not text — a terminal acts on it (a bell, a cursor moved, a screen cleared) for whoever "
+                         f"reads the journal there; nothing written. Leave it out")
     try:
         text.encode('utf-8')
     except UnicodeEncodeError:
@@ -144,15 +163,20 @@ def append(who, what, body):
 
 
 def say(line):
-    """Print after the write, and never fail because of it: a closed or broken pipe loses the line, not the entry."""
+    """Print after the write, and never fail because of it: a closed or broken pipe loses the line, not the entry.
+    With no standard output at all — descriptor 1 closed before Python started, or pythonw on Windows — sys.stdout is
+    None and there is nowhere to say it. Nothing here may fail: a run that reported an error after writing would be
+    run again, and append the entry twice."""
+    if sys.stdout is None:
+        return
     try:
         print(line)
         sys.stdout.flush()
-    except (OSError, ValueError, UnicodeError):
+    except Exception:
         try:                                   # nothing more can reach that stream; keep the exit from trying again
             devnull = os.open(os.devnull, os.O_WRONLY)
             os.dup2(devnull, sys.stdout.fileno())
-        except (OSError, ValueError, AttributeError):
+        except Exception:
             pass
 
 
