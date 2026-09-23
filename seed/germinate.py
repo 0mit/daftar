@@ -3,6 +3,10 @@
 
     python3 seed/germinate.py <target-directory>        # the directory must not exist yet
     python3 seed/germinate.py <target-directory> --gardener <id> [--gardener-name "<how they are called>"]
+                                                 [--gardener-kind org]   # an organisation keeps it, not a person
+
+(`python` on Windows.) Name the directory for the garden — `garden-sam`, not `garden` — because its name is the
+garden's name, which another garden and every proposal this one makes will show.
 
 A garden is a git repository that carries the LANGUAGE — the vocabulary, the parser, the gate, the tools,
 the templates — and no beans. WHAT TRAVELS IS DECLARED ONCE, in seed/LANGUAGE, and bin/dmupgrade.py reads
@@ -10,9 +14,10 @@ the same file, so a new garden and an upgraded one receive exactly the same set.
 name, its vocabulary pin and the release it runs, its first commit as `germinate`, the gate as a pre-commit
 hook, and it is checked: it passes its own gate with nothing in it.
 
-A GARDEN IS KEPT BY SOMEONE, and its first bean is them. With `--gardener <id>` the second commit plants that
-person's bean and names it in GARDEN.md, so the garden begins as someone's. Without it the closing message says
-that this is the first thing to write — the gate asks for it as soon as the garden holds a bean.
+A GARDEN IS KEPT BY SOMEONE. With `--gardener <id>` the second commit plants the gardener's bean — a person, or
+with `--gardener-kind org` an organisation: a kind the law's `manifest.gardener` admits — and names it in GARDEN.md,
+so the garden begins as someone's and the gardener is its first bean. Without it the closing message says that this
+is the first thing to write — the gate asks for it as soon as the garden holds a bean.
 
 Python, not shell, because a garden is grown on Windows too. `seed/germinate.sh` remains and hands over here.
 """
@@ -50,25 +55,62 @@ def language_files(root, seed):
     return out
 
 
-def gardener_bean(gid, name, when, garden_id=None):
-    """The gardener's person bean — the garden's first. Owned by no being (the crown: love), answering for themself.
-    Its anchor is a name this garden mints, QUALIFIED at birth by the garden's own id when that is known — so the
-    gardener can be named in another garden from the first proposal on, and no other garden's `person:<id>` is them."""
+def gardener_kinds(law):
+    """The kinds the law's `manifest.gardener` admits, wherever its `in:` lists them; None where it lists none."""
+    def walk(node):
+        if isinstance(node, dict):
+            if isinstance(node.get('kinds'), list):
+                return [str(k) for k in node['kinds']]
+            for v in node.values():
+                found = walk(v)
+                if found is not None:
+                    return found
+        return None
+    return walk(((law.get('manifest') or {}).get('attrs') or {}).get('gardener'))
+
+
+def gardener_form(law, kind):
+    """What the law says a gardener of this kind is written with: its nature, its anchor term and class, and whether
+    the kind is pinned to the crown (and to which branch). Read from the law, so no kind is named here."""
+    row = next((k for k in law.get('kinds') or [] if isinstance(k, dict) and k.get('kind') == kind), None)
+    if row is None:
+        return None
+    nature = row.get('of_nature')
+    term = next((t for t in law.get('terms') or [] if isinstance(t, dict) and t.get('term') == f'{kind}_id'
+                 and isinstance(t.get('anchor'), dict)), None)
+    if term is None:
+        return None
+    forms = row.get('ownership_form')
+    crown = next((n.get('crown') for n in law.get('natures') or [] if isinstance(n, dict) and n.get('nature') == nature),
+                 None) if forms == 'crown' or forms == ['crown'] else None
+    return {'nature': nature, 'key': term['term'], 'class': term['anchor'].get('class', 'logical'), 'crown': crown}
+
+
+def gardener_bean(gid, name, when, garden_id=None, kind='person', form=None):
+    """The gardener's bean — the garden's first. A person is owned by no being (the crown: love) and answers for
+    themself; an organisation is owned outside this garden, by whoever its own rules say, and answers for itself.
+    Its anchor is a name this garden mints, `<kind>:<id>`, QUALIFIED at birth by the garden's own id when that is
+    known — so the gardener can be named in another garden from the first proposal on, and no other garden's
+    `<kind>:<id>` is them."""
     import json
-    pid = f"{garden_id}/person:{gid}" if garden_id else f"person:{gid}"
+    form = form or {'nature': 'living', 'key': 'person_id', 'class': 'logical', 'crown': 'love'}
+    pid = f"{garden_id}/{kind}:{gid}" if garden_id else f"{kind}:{gid}"
+    owner = (f"crown: {form['crown']}" if form['crown']
+             else 'external: "its members, as its own rules say: outside this garden"')
+    who = 'person who keeps' if kind == 'person' else 'organisation that keeps'
     return f"""---
 bean: {gid}
-kind: person
+kind: {kind}
 title: {json.dumps(name, ensure_ascii=False)}
 status: active
-summary: "The gardener: the person who keeps this garden."
-nature: living
-owned_by: {{ legal: {{ crown: love }} }}
+summary: "The gardener: the {who} this garden."
+nature: {form['nature']}
+owned_by: {{ legal: {{ {owner} }} }}
 responsibility: {{ legal: {{ self: true }} }}
 identity:
   status: confirmed
   anchors:
-    - {{ key: person_id, value: "{pid}", class: logical, establishing: true }}
+    - {{ key: {form['key']}, value: "{pid}", class: {form['class']}, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "{gid} (gardener)", as_of: {when} }}
 ---
 {name} keeps this garden.
@@ -77,12 +119,17 @@ provenance: {{ src: asserted-by-human, by: "{gid} (gardener)", as_of: {when} }}
 
 def main(argv):
     gid = gname = None
+    gkind = 'person'
     if '--gardener' in argv:
         i = argv.index('--gardener'); gid = argv[i + 1] if i + 1 < len(argv) else None; argv = argv[:i] + argv[i + 2:]
         if not gid or not re.match(r'^[a-z0-9]+(-[a-z0-9]+)*$', gid):
             die("--gardener takes the id of the person who keeps the garden: kebab-case, e.g. --gardener sam")
     if '--gardener-name' in argv:
         i = argv.index('--gardener-name'); gname = argv[i + 1] if i + 1 < len(argv) else None; argv = argv[:i] + argv[i + 2:]
+    if '--gardener-kind' in argv:
+        i = argv.index('--gardener-kind'); gkind = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
+        if not gid:
+            die("--gardener-kind says what the gardener named by --gardener is: give --gardener <id> too")
     if len(argv) != 1 or argv[0] in ('-h', '--help'):
         print(__doc__); return 0 if argv else 2
     target = argv[0]
@@ -100,15 +147,23 @@ def main(argv):
         die("PyYAML is required (pip install PyYAML)")
     sys.path.insert(0, os.path.join(root, 'bin'))
     import dmparse, yaml
-    ver = str(yaml.safe_load(dmparse.read(os.path.join(seed, 'std-vocab.md'))[0])['version'])
+    law = yaml.safe_load(dmparse.read(os.path.join(seed, 'std-vocab.md'))[0])
+    ver = str(law['version'])
     if not ver:
         die("could not read the vocabulary version", 1)
+    gform = None
+    if gid:
+        admitted = gardener_kinds(law)
+        gform = gardener_form(law, gkind)
+        if (admitted is not None and gkind not in admitted) or gform is None:
+            die(f"--gardener-kind {gkind!r} is not a kind the law lets keep a garden"
+                + (f" ({', '.join(admitted)})" if admitted else " (it needs a kind with a `<kind>_id` anchor term)"))
     r = run('git', '-C', root, 'describe', '--tags', '--exact-match', check=False)
     if r.returncode == 0:
         release = r.stdout.strip()
     else:
         sha = run('git', '-C', root, 'rev-parse', '--short', 'HEAD', check=False)
-        release = f"untagged {sha.stdout.strip() or 'unknown'}"
+        release = f"untagged {sha.stdout.strip()}" if sha.returncode == 0 and sha.stdout.strip() else None
 
     for d in ('beans', 'mappings', 'log', 'seed'):
         os.makedirs(os.path.join(target, d), exist_ok=True)
@@ -122,9 +177,11 @@ def main(argv):
                 shutil.rmtree(os.path.join(dp, dn)); dns.remove(dn)
 
     garden = os.path.basename(target)
-    subst = {'@@VERSION@@': ver, '@@GARDEN@@': garden, '@@RELEASE@@': release}
+    subst = {'@@VERSION@@': ver, '@@GARDEN@@': garden, '@@RELEASE@@': release or ''}
     def fill(src, dst):
         text = open(src, encoding='utf-8').read()
+        if release is None:                  # grown from no checkout at all: the garden records no release, not a guess
+            text = re.sub(r'(?m)^daftar_release:[^\n]*\n', '', text)
         for k, v in subst.items():
             text = text.replace(k, v)
         with open(dst, 'w', encoding='utf-8', newline='\n') as fh:
@@ -155,10 +212,10 @@ def main(argv):
         today = datetime.date.today().isoformat()
         with open(os.path.join(target, 'beans', gid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
             _root = run('git', '-C', target, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD', check=False).stdout.split()
-            fh.write(gardener_bean(gid, gname or gid, today, _root[-1][:12] if _root else None))
+            fh.write(gardener_bean(gid, gname or gid, today, _root[-1][:12] if _root else None, gkind, gform))
         gpath = os.path.join(target, 'GARDEN.md')
         gtext = open(gpath, encoding='utf-8').read()
-        gtext = re.sub(r'(?m)^gardener:[^\n]*$', f'gardener: {gid}                      # the person who keeps this garden: its first bean', gtext, count=1)
+        gtext = re.sub(r'(?m)^gardener:[^\n]*$', f'gardener: {gid}                      # who keeps this garden: its first bean', gtext, count=1)
         with open(gpath, 'w', encoding='utf-8', newline='\n') as fh:
             fh.write(gtext)
         import importlib.util as _iu
@@ -166,26 +223,42 @@ def main(argv):
         _dj = _iu.module_from_spec(_sp); _sp.loader.exec_module(_dj)
         _dj.ROOT = target; _dj.JOURNAL = os.path.join(target, 'log', 'journal.md')
         _dj.append('germinate', f'the gardener: [[{gid}]]',
-                   f"- action: planted [[{gid}]], the person who keeps this garden, and named them in GARDEN.md `gardener:`"
-                   f" — a RULE-CHANGE, as every change to the manifest is.\n")
+                   f"- action: planted [[{gid}]], the {'person who keeps' if gkind == 'person' else 'organisation that keeps'} this garden,"
+                   f" and named them in GARDEN.md `gardener:` — a RULE-CHANGE, as every change to the manifest is.\n")
         run('git', '-C', target, 'add', '-A')
         run('git', '-C', target, '-c', 'user.name=germinate', '-c', 'user.email=germinate@localhost',
             'commit', '-q', '-m', f"germinate: {gid} keeps this garden")
     gate = subprocess.run([sys.executable, os.path.join(target, 'bin', 'dmcheck.py')], cwd=target)
     py = 'python' if os.name == 'nt' else 'python3'
+    # EVERY COMMAND PRINTED HERE RUNS AS PRINTED in a Unix shell, cmd.exe and Windows PowerShell 5.1 alike: `python`
+    # on Windows, where `python3` may be the Store's alias; no `&&`, which PowerShell 5.1 cannot parse; no `<`, which
+    # no PowerShell redirects — the journal's body goes in `--body`.
+    passes = ('The garden passes its own gate.' if gate.returncode == 0
+              else 'The garden does NOT pass its own gate: read the errors above before anything else.')
+    if gid:
+        who = 'person who keeps' if gkind == 'person' else 'organisation that keeps'
+        opening = (f"{passes} Its gardener, {gid}, is planted: the {who} it, named in GARDEN.md. "
+                   f"To plant the next bean:")
+        cookbook = "goes on from the gardener to machines, money, agreements and other gardens"
+    else:
+        opening = (f"{passes} Its FIRST bean is its gardener — the person or organisation who keeps it — named in "
+                   f"GARDEN.md `gardener:`.")
+        cookbook = "starts with the gardener"
     print(f"""
-germinated: {target}  (std-vocab@{ver}, daftar {release})
+germinated: {target}  (std-vocab@{ver}, daftar {release or 'release not recorded'})
 
-The garden passes its own gate. {'Its gardener is ' + gid + '. To plant the next bean:' if gid else 'Its FIRST bean is its gardener — the person who keeps it — named in GARDEN.md `gardener:`.'}
-  1. write {os.path.join(target, 'beans', '<id>.md')}   (bean: <id> must equal the filename; seed/COOKBOOK.md starts with the gardener)
+{opening}
+  1. write {os.path.join(target, 'beans', '<id>.md')}   (bean: <id> must equal the filename; seed/COOKBOOK.md {cookbook})
   2. append an entry to {os.path.join(target, 'log', 'journal.md')}  — the gate REFUSES a bean staged without one.
-     Its heading is a POSITION IN TIME and the gate checks the form, so a tool reads the clock and writes it:
+     Its heading is a POSITION IN TIME, read from the clock by a tool, never typed; give it the body only:
        {py} bin/dmjournal.py "your-name" "what you did" --body "- action: added [[<id>]]."
-  3. git add -A && git commit
+  3. git add -A
+     git commit
 
   {py} bin/dmrules.py   prints every rule in force, derived from the vocabulary.
   seed/README.md           a first person, a first host and a first journal entry, passing as written.
-  seed/COOKBOOK.md         a domain, a service on a machine, a rented server, and adding a missing value.
+  seed/COOKBOOK.md         the common things, the gardener first: machines, a domain, another person's garden, an
+                           event, money shared and lent, a statement, a proposal between gardens, a missing value.
   MODEL.md, CHECKLIST.md   what the rules mean, and how a write is made.
 
 WORKING WITH AN AGENT? AGENTS.md came with the garden, and .claude/skills/daftar/ holds the same text.
@@ -194,15 +267,16 @@ point of the whole thing: one language, both parties writing in it, neither able
 An assistant in a chat window, with no shell, cannot run the gate: paste it seed/WELCOME.md, and what
 it gives you back is a proposal for you to check and commit.""")
     # AN UNTAGGED CLONE MAKES AN UNPINNABLE GARDEN, and this is said LAST, where it is still on the screen.
-    if release.startswith('untagged'):
+    if release is None or release.startswith('untagged'):
         print(f"""
-NOTE: this clone is not on a release tag, so the garden records
-  daftar_release: "{release}"
+NOTE: {'this clone is not on a release tag, so the garden records' if release else 'the language was not grown from a git checkout, so the garden records no release;'}
+  {'daftar_release: "' + release + '"' if release else 'GARDEN.md carries no daftar_release'}
 which names no release anybody else can fetch. Fine for a look around. To pin one:
   git -C {root} tag -l                    # the releases this clone knows
   git -C {root} checkout <tag>            # the newest, usually
 and grow again — or, in this garden as it stands, adopt one deliberately with
-  cd {target} && {py} bin/dmupgrade.py <tag>""")
+  cd {target}
+  {py} bin/dmupgrade.py <tag>""")
     # WHO COMMITS. germinate commits as "germinate"; every later commit is yours, and git refuses one with no identity.
     name = run('git', '-C', target, 'config', 'user.name', check=False).stdout.strip()
     email = run('git', '-C', target, 'config', 'user.email', check=False).stdout.strip()
