@@ -17,12 +17,18 @@ def run(*a, cwd=None):
     return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
 
 units, quantities = dmunits.law()
+# A QUANTITY WHOSE UNITS ARE A REGISTRY'S ROWS (21.0: money, whose units are the currencies) has NO factor between two
+# of them, by design — the quantity says `crosswalk: observed`. Every factor check below is about the others.
+BY_REGISTRY = {q for q, r in quantities.items() if r.get("units_from")}
 check("every unit names a quantity the law declares, and an exact factor",
-      all(u.get("quantity") in quantities and isinstance(u.get("factor"), list) and len(u["factor"]) == 2 and all(isinstance(x, int) and x > 0 for x in u["factor"]) for u in units.values()))
+      all(u.get("quantity") in quantities and isinstance(u.get("factor"), list) and len(u["factor"]) == 2 and all(isinstance(x, int) and x > 0 for x in u["factor"]) for u in units.values() if u.get("quantity") not in BY_REGISTRY))
+check("...and a unit that is a registry's row (a currency) carries none: no factor joins two currencies",
+      BY_REGISTRY and all(u.get("factor") is None and u.get("from_registry") for u in units.values() if u.get("quantity") in BY_REGISTRY),
+      sorted(BY_REGISTRY))
 check("speed is length per time, acceleration length per time SQUARED, area length squared, volume length cubed",
       quantities["speed"]["of"] == {"length": 1, "time": -1} and quantities["acceleration"]["of"] == {"length": 1, "time": -2}
       and quantities["area"]["of"] == {"length": 2} and quantities["volume"]["of"] == {"length": 3})
-check("every quantity has a coherent unit (factor 1)", all(any(u["quantity"] == q and u["factor"] == [1, 1] for u in units.values()) for q in quantities))
+check("every quantity has a coherent unit (factor 1)", all(any(u["quantity"] == q and u.get("factor") == [1, 1] for u in units.values()) for q in quantities if q not in BY_REGISTRY))
 for args, want in ((("90", "kilometre-per-hour", "metre-per-second"), 25), (("1.5", "hectare", "square-metre"), 15000),
                    (("2", "cubic-metre", "litre"), 2000), (("1", "day", "minute"), 1440), (("3", "decibel-per-kilometre", "decibel-per-metre"), Fraction(3, 1000)),
                    (("8", "megabit-per-second", "byte"), None)):
@@ -36,6 +42,8 @@ for args, want in ((("90", "kilometre-per-hour", "metre-per-second"), 25), (("1.
 import itertools
 bad = []
 for q in quantities:
+    if q in BY_REGISTRY:
+        continue                     # a currency converts only at a rate someone observed: test/money.py
     names = [n for n, u in units.items() if u["quantity"] == q]
     for a_, b_ in itertools.permutations(names, 2):
         for x in ("1", "0.1", "7", "123456789012345678901234567890.123456789"):
