@@ -86,10 +86,10 @@ manifest:
     garden:         { required: true, in: { type: kebab }, meaning: "the garden's name, for people. A name, not an identity: two gardens may carry the same one, and a garden's identity is the commit it germinated from (`garden_id`)" }
     extends:        { required: true, in: any, meaning: "the standard it pins, `std-vocab@<version>` — judged by the pin check" }
     daftar_release: { in: { pattern: '^v[0-9]+\.[0-9]+\.[0-9]+$' }, meaning: "the release it runs; bin/dmupgrade.py moves it" }
-    gardener:       { in: bean_id, meaning: "the person — or organisation — who keeps this garden: a bean of this garden, and its first. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
+    gardener:       { in: bean_id, meaning: "the person — or organisation — who keeps the garden: a bean of the garden, and its first. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
     test:           { in: prose, meaning: "present when the garden is a rehearsal or a test, saying what it rehearses. Its beans are not facts about the world, and a proposal from it says so" }
     origin:         { in: prose, meaning: "where the garden began, for a reader" }
-    policy:         { in: any, meaning: "standing rules the gardener sets for work in this garden, in prose" }
+    policy:         { in: any, meaning: "standing rules the gardener sets for work in the garden, in prose" }
 # == WHAT THE LAW RETIRED, so a refusal can say where it went ==
 retired:
   - { name: scope,         at: anchor,   instead: "nothing: whether a value identifies beyond its garden is said by its term (`anchor.minted`) and by its own form (`<garden_id>/<name>`)" }
@@ -2054,8 +2054,8 @@ terms:
       required_on_kinds: [contract]
       entry_one_of: [who, external]
       attrs:
-        who:      { in: ref, meaning: "the party: a person or an organisation this garden holds, {bean: <id>}" }
-        external: { in: prose, meaning: "a party this garden holds no bean for — the bank that issued a card — named as the record can name it" }
+        who:      { in: ref, meaning: "the party: a person or an organisation the garden holds, {bean: <id>}" }
+        external: { in: prose, meaning: "a party the garden holds no bean for — the bank that issued a card — named as the record can name it" }
         role:     { in: { type: kebab }, meaning: "what the party is to the agreement: payer, cardholder, buyer, lender, facilitator. Open, like `rel`" }
         accepted: { in: { type: date }, meaning: "the day this party accepted. Whose word it is, is the entry's provenance: the party's own word, or another person's report of it — never an inference" }
         during:   { in: extent, meaning: "when this party was a party, where that is not the agreement's whole life" }

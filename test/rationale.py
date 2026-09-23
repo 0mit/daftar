@@ -38,12 +38,43 @@ check("the rationale is not empty, and every reason names something the law stil
 check("no reason is blank", not [k for k, v in why.items() if not v.strip()], [k for k, v in why.items() if not v.strip()][:5])
 
 # A RATCHET, NOT A VERDICT. Stories also sit inside the law's DATA — a `meaning:` or a `why:` that says when a thing was
-# found and by whom. Moving each is an edit to a sentence, so it is done by hand; this number may only go DOWN.
-NARRATIVE_IN_DATA = 14
-story = re.compile(r"\b20\d\d-\d\d-\d\d\b|\bfirst draft\b|\bthe operator\b|\bthis estate\b|\bthis garden\b|\bwithin the hour\b|\b(until|since) \d+\.\d\b", re.I)
-hits = [l.strip()[:90] for l in fm.split("\n") if re.search(r"^\s*(-\s*)?[\w\"' .-]*(meaning|why|note|form_note|decision|case)\"?\s*:", l) and story.search(l)]
-check(f"narrative inside the law's data has not grown (now {len(hits)}, ceiling {NARRATIVE_IN_DATA})", len(hits) <= NARRATIVE_IN_DATA, hits[:4])
-print(f"      (the ceiling can come down to {len(hits)})")
+# found and by whom. Moving each is an edit to a sentence, so it is done by hand; the count may only go DOWN.
+#
+# THE PARSED LAW, NOT ITS LINES. This counted lines of the file until 21.0, and a line grep sees only the first line of
+# a folded `>` block: it read fourteen while forty-five sat in the law, and the one spare it was set with was spent
+# unseen. It now reads every string under a key the law TELLS a reader (bin/dmreview.py `story_in`: the one
+# definition, which `dmreview --law` lists for whoever ratifies). Its CEILING is the count in the release this branch
+# started from, read from git — not a number typed here, which is a second copy of a fact git holds, and which drifted.
+# The constant is only for a clone with no tags (a shallow CI checkout): the count at the release it was written in.
+import subprocess
+import dmreview
+NARRATIVE_IN_DATA = 45
+hits = dmreview.story_in(dmparse.loads(fm))
+_tag = subprocess.run(["git", "-C", ROOT, "describe", "--tags", "--abbrev=0"], capture_output=True, text=True).stdout.strip()
+_at_tag = dmreview.law_at(_tag) if _tag else None
+ceiling, since = (len(dmreview.story_in(_at_tag)), _tag) if _at_tag else (NARRATIVE_IN_DATA, "no tag here: the constant")
+check(f"narrative inside the law's data has not grown (now {len(hits)}, ceiling {ceiling} — {since})",
+      len(hits) <= ceiling, [f"{p}: «{h}»" for p, h, _s in hits][:6])
+print(f"      (the next release's ceiling is {len(hits)}; `python3 bin/dmreview.py --law` lists every one by path)")
+_folded = {"terms": [{"term": "t", "meaning": "a first line that tells nothing,\nand a second that says what was found on 2020-01-01"}]}
+check("...read from the parsed law: a date on the second line of a folded block is counted, which a line grep missed",
+      len(dmreview.story_in(_folded)) == 1, dmreview.story_in(_folded))
+_example = {"terms": [{"term": "t", "meaning": "a day in the civil calendar, written `2020-01-01`",
+                       "schema": {"attrs": {"a": {"in": "prose", "canonical_note": "since 7.0 the form is fixed"}}}}]}
+check("...a date inside backticks is an example of a value and is not counted; a suffixed key (`canonical_note`) is read",
+      [p for p, _h, _s in dmreview.story_in(_example)] == ["terms[t].schema.attrs.a.canonical_note"], dmreview.story_in(_example))
+_r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmreview.py"), "--law"] + (["--against", _tag] if _tag else []),
+                    capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, PYTHONIOENCODING="utf-8"))
+_first = (_r.stdout.split("\n") or [""])[0]
+check("dmreview --law prints the preconditions as evidence and exits 0, whatever it finds",
+      _r.returncode == 0 and "the preconditions of beauty in the law, counted — the person who merges judges" in _first,
+      (_r.stdout + _r.stderr)[-500:])
+_n = re.search(r"(?m)^STORY IN THE LAW.*\n  strings\s+(\d+)", _r.stdout)
+check("...and the story it lists is the story this ratchet counts: one definition, read by both",
+      _n is not None and int(_n.group(1)) == len(hits), _n.group(0) if _n else _r.stdout[-400:])
+if _tag:
+    check("...and with --against, each line says how it moved since that ref", "(was " in _r.stdout or "(unchanged)" in _r.stdout,
+          _r.stdout[:600])
 
 # ---------------------------------------------------------------- LEAKS BETWEEN THE LAYERS, one direction at a time
 # UP: a layer may point DOWN to the one beneath, never the other way. A law that says "see the rationale" cannot be
