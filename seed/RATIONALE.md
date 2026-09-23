@@ -1233,9 +1233,13 @@ being's capabilities already take), and what has moved. A balance is not among t
 
 ## terms[parties].merge
 
-SINGLE, not a per-key collection. The parties to an agreement are constitutive of it: unioning two gardens' lists would
-silently produce a contract with a party nobody agreed to. Two gardens disagreeing about who is bound — or about who has
-accepted — is a conflict for a person, and that is where a person should look.
+MEMBER BY MEMBER, keyed by the party's short name — the name every clause and transaction uses to say who. The first
+draft merged the parties as one atom, on the argument that they are constitutive: unioning two gardens' lists could add
+a party nobody agreed to. Built, it did worse: any difference in any party — one garden knowing an acceptance the other
+does not yet — turned the whole map into a conflict, and every clause naming a party then named nothing, so the merged
+agreement failed its own gate. Per member, a disagreement about one party stays on that party, and the others keep
+their names. The danger the atom guarded against is met where it belongs: a party only one side names is a difference
+`dmpropose read` shows before anything is taken in, and the gardener decides.
 
 ## terms[over].merge
 

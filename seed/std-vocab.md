@@ -2060,7 +2060,7 @@ terms:
         accepted: { in: { type: date }, meaning: "the day this party accepted. Whose word it is, is the entry's provenance: the party's own word, or another person's report of it — never an inference" }
         during:   { in: extent, meaning: "when this party was a party, where that is not the agreement's whole life" }
         note:     { in: prose, meaning: "optional prose" }
-    merge: { cardinality: single, order: none }
+    merge: { cardinality: multi, order: by-key }
   - term: over
     meaning: "what an agreement concerns: the beings it is about, or in words what it is about"
     context_keys: [over]
@@ -2116,7 +2116,7 @@ terms:
         what:     { required: true, in: prose, meaning: "what was bought, paid, repaid or charged, in the person's own words" }
         amount:   { required: true, in: { quantity: money }, meaning: "the whole, in the currency it was priced in" }
         charged:  { in: { quantity: money }, meaning: "what it came to in the currency it was paid in, where that is another currency — both as the statement shows them. The rate between them is READ (charged ÷ amount, exactly), never stored" }
-        on:       { in: { type: date }, meaning: "the day it happened, where known" }
+        day:      { in: { type: date }, meaning: "the day it happened, where known" }
         paid_by:
           required: true
           meaning: "who paid, and how much each paid. A single payer may leave `amount` out: they paid the whole"

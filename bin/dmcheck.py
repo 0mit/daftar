@@ -505,8 +505,10 @@ def check_quantity(where, node, want):
     if not u:
         errors.append(f"{where}.unit '{node['unit']}' is not in the `units` registry")
     elif want not in (None, 'any') and u.get('quantity') != want:
+        _of = sorted(n for n, r in UNITS.items() if r.get('quantity') == want)
+        _reg = ((QUANTITIES.get(want) or {}).get('units_from') or {}).get('registry')
         errors.append(f"{where}.unit '{node['unit']}' measures {u.get('quantity')}, and this attribute is a {want} — "
-                      f"{sorted(n for n, r in UNITS.items() if r.get('quantity') == want)}")
+                      + (f"a code of the `{_reg}` registry" if _reg else str(_of)))
     if isinstance(c, bool) or not (isinstance(c, int) or (isinstance(c, str) and law_match(r'^-?\d+(\.\d+)?$', c))):
         errors.append(f"{where}.count {c!r} must be a whole number, or a decimal written as a string (\"12.5\"): a float "
                       f"has no canonical form")
@@ -1001,6 +1003,21 @@ def check_provenance_record(where, rec):
             errors.append(f"{where}.garden '{_g}' is not a garden id (twelve lowercase hexadecimal digits)")
         else:
             GARDEN_REFS.append((where, str(_g)))
+def _odd_keys(x, path=''):
+    """Keys YAML did not read as text: `on`, `off`, `yes`, `no` become booleans under YAML 1.1, and a bare number a
+    number. Such a key cannot be compared, sorted or merged beside the others — the gate once crashed on one."""
+    out = []
+    if isinstance(x, dict):
+        for k, v in x.items():
+            if not isinstance(k, str):
+                out.append(f"{path}{k!r}")
+            out += _odd_keys(v, f"{path}{k}.")
+    elif isinstance(x, list):
+        for i, v in enumerate(x):
+            out += _odd_keys(v, f"{path}{i}.")
+    return out
+
+
 def _has_float(x):
     if isinstance(x, float): return True
     if isinstance(x, dict): return any(_has_float(v) for v in x.values())
@@ -1037,6 +1054,9 @@ def build_docs():
             errors.append(f"{base}: provenance.src missing")
         elif isinstance(prov, dict):
             check_provenance_record(f"{base}: provenance", prov)
+        for _ok in _odd_keys(fm):
+            errors.append(f"{base}: key {_ok} is not text — YAML reads `on`, `off`, `yes`, `no` as true/false and a bare "
+                          f"number as a number; quote the key or name it otherwise")
         for sect in _AUTHORITATIVE:
             if _has_float(fm.get(sect)):
                 warns.append(f"{base}: {sect} has a float — breaks canonical determinism; use an integer or {{value,unit}}")
@@ -1365,7 +1385,7 @@ def undeclared_attrs(base, term, where, node, sch):
     for _k in node:
         if _k not in _decl:
             errors.append(f"{base}: {where} carries `{_k}`, which the term `{term}` does not declare — an entry "
-                          f"holds only declared attributes {sorted(_decl - set(_REF_FORM) - {'provenance'})}. Prose belongs in "
+                          f"holds only declared attributes {sorted(map(str, _decl - set(_REF_FORM) - {'provenance'}))}. Prose belongs in "
                           f"the attribute the term declares for it (`note`, `why`); a new kind of fact is "
                           f"proposed as a new attribute, not written as a new key")
 
@@ -1737,6 +1757,24 @@ def ectl_nested_entries(e):
                         errors.append(f"{e.base}: {e.term}.{attr}[{label}].{rattr} names '{tid}', which this garden does not hold")
 
 
+def _exact(x):
+    """A fraction EXACTLY, as a reader writes it: a terminating decimal in full, else n/d. Never through a float."""
+    n, d = x.numerator, x.denominator
+    if d == 1:
+        return str(n)
+    r = d
+    for p in (2, 5):
+        while r % p == 0:
+            r //= p
+    if r != 1:
+        return f"{n}/{d}"
+    k = 0
+    while (10 ** k) % d:
+        k += 1
+    digits = str(abs(n) * (10 ** k) // d).rjust(k + 1, '0')
+    return ('-' if n < 0 else '') + digits[:-k] + '.' + digits[-k:].rstrip('0')
+
+
 def ectl_sums(e):
     """`sums: {whole, parts}` (21.0) — the PARTS of a quantity add up to its WHOLE: what each payer paid adds up to what
     was paid. Checked EXACTLY, in fractions, never floats — the rule that closed truncation for units closes it for money
@@ -1749,6 +1787,8 @@ def ectl_sums(e):
     wattr = next((w for w in wholes if w and e.entry.get(w) is not None), None)
     pattr, _, pfield = str(rule.get('parts') or '').partition('.')
     parts = e.entry.get(pattr)
+    if isinstance(parts, dict):
+        parts = [parts]                     # the entries domain takes one mapping as one entry
     if not wattr or not isinstance(parts, list) or not parts:
         return
     whole = e.entry[wattr]
@@ -1773,8 +1813,8 @@ def ectl_sums(e):
     if w is None or any(x is None for x in total):
         return
     if sum(total) != w:
-        errors.append(f"{e.base}: {e.ref}.{pattr} adds up to {sum(total)} {whole.get('unit')}, and {wattr} is {w} — the parts "
-                      f"of a whole add up to it exactly (VOCAB {e.term}.schema.sums)")
+        errors.append(f"{e.base}: {e.ref}.{pattr} adds up to {_exact(sum(total))} {whole.get('unit')}, and {wattr} is "
+                      f"{_exact(w)} — the parts of a whole add up to it exactly (VOCAB {e.term}.schema.sums)")
 
 
 def ectl_bean_id(e):

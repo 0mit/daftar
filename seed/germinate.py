@@ -50,13 +50,16 @@ def language_files(root, seed):
     return out
 
 
-def gardener_bean(gid, name, when):
+def gardener_bean(gid, name, when, garden_id=None):
     """The gardener's person bean — the garden's first. Owned by no being (the crown: love), answering for themself.
-    Its anchor is a name this garden mints; it identifies them beyond this garden once qualified by the garden's id."""
+    Its anchor is a name this garden mints, QUALIFIED at birth by the garden's own id when that is known — so the
+    gardener can be named in another garden from the first proposal on, and no other garden's `person:<id>` is them."""
+    import json
+    pid = f"{garden_id}/person:{gid}" if garden_id else f"person:{gid}"
     return f"""---
 bean: {gid}
 kind: person
-title: {name!r}
+title: {json.dumps(name, ensure_ascii=False)}
 status: active
 summary: "The gardener: the person who keeps this garden."
 nature: living
@@ -65,10 +68,10 @@ responsibility: {{ legal: {{ self: true }} }}
 identity:
   status: confirmed
   anchors:
-    - {{ key: person_id, value: "person:{gid}", class: logical, establishing: true }}
+    - {{ key: person_id, value: "{pid}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "{gid} (gardener)", as_of: {when} }}
 ---
-{name.strip('"')} keeps this garden.
+{name} keeps this garden.
 """
 
 
@@ -141,13 +144,18 @@ def main(argv):
     except Exception:
         pass
     run('git', '-C', target, 'add', '-A')
+    # THE FIRST COMMIT IS THE GARDEN'S IDENTITY (21.0, `garden_id`), so it must be one no other germination makes:
+    # the same release, the same folder name and the same second would otherwise make the same commit, and two
+    # gardens would be taken for one. A seed drawn at random makes it this garden's — assigned by no one.
+    import uuid
     run('git', '-C', target, '-c', 'user.name=germinate', '-c', 'user.email=germinate@localhost',
-        'commit', '-q', '-m', f"germinate: {garden} — the language, at std-vocab@{ver}. No beans.")
+        'commit', '-q', '-m', f"germinate: {garden} — the language, at std-vocab@{ver}. No beans.\n\nseed {uuid.uuid4().hex}")
     if gid:
         import datetime
         today = datetime.date.today().isoformat()
         with open(os.path.join(target, 'beans', gid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
-            fh.write(gardener_bean(gid, gname or gid, today))
+            _root = run('git', '-C', target, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD', check=False).stdout.split()
+            fh.write(gardener_bean(gid, gname or gid, today, _root[-1][:12] if _root else None))
         gpath = os.path.join(target, 'GARDEN.md')
         gtext = open(gpath, encoding='utf-8').read()
         gtext = re.sub(r'(?m)^gardener:[^\n]*$', f'gardener: {gid}                      # the person who keeps this garden: its first bean', gtext, count=1)
