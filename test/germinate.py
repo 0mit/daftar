@@ -136,6 +136,32 @@ check("`--gardener-kind org` plants an organisation as the gardener: an `org` be
 _xr = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), os.path.join(TMP, 'garden-x'), '--gardener',
           'ben', '--gardener-kind', 'contract', cwd=ROOT)
 check("...and a kind the law does not let keep a garden is refused", _xr.returncode != 0, (_xr.stdout + _xr.stderr)[-300:])
+# GROWN FROM A COPY WITH NO GIT HISTORY — what a ZIP download or `git archive` gives. No release can be read from it,
+# and the garden says so, `untagged unknown`, rather than saying nothing: the gate's last line, which an agent shows
+# its person first, still names the garden, its gardener and its id. The way to a release the NOTE prints is one that
+# runs there — clone the repository — never `git -C` on a copy that is no repository.
+_nogit = os.path.join(TMP, 'copy-no-history')
+shutil.copytree(ROOT, _nogit, ignore=shutil.ignore_patterns('.git', '__pycache__'))
+_ng = os.path.join(TMP, 'garden-nogit')
+_nr = run(sys.executable, os.path.join(_nogit, 'seed', 'germinate.py'), _ng, '--gardener', 'sam', cwd=TMP)
+_nroot = run('git', 'rev-list', '--max-parents=0', 'HEAD', cwd=_ng).stdout.strip()[:12] if os.path.isdir(_ng) else ''
+_nlast = (gate(_ng)[1].strip().splitlines() or [''])[-1] if os.path.isdir(_ng) else ''
+check("a garden grown from a copy with no git history passes its gate, whose last line names it, its gardener and its id",
+      _nr.returncode == 0 and _nroot and re.match(r'^garden-nogit \(daftar untagged unknown, gardener sam, garden %s\): '
+                                                  r'.* 0 error\(s\)' % _nroot, _nlast), (_nlast, (_nr.stdout + _nr.stderr)[-300:]))
+check("...and its NOTE says to clone the repository and grow from a release tag, not `git -C` on the copy",
+      'NOTE:' in _nr.stdout and 'git clone ' in _nr.stdout and f'git -C {_nogit}' not in _nr.stdout,
+      _nr.stdout[_nr.stdout.find('NOTE:'):][:600])
+_outer = os.path.join(TMP, 'outer-repo')
+os.makedirs(_outer)
+run('git', 'init', '-q', cwd=_outer)
+run('git', '-c', 'user.name=ada', '-c', 'user.email=ada@localhost', 'commit', '-q', '--allow-empty', '-m', 'x', cwd=_outer)
+shutil.copytree(_nogit, os.path.join(_outer, 'daftar-copy'))
+_ir = run(sys.executable, os.path.join(_outer, 'daftar-copy', 'seed', 'germinate.py'), os.path.join(TMP, 'garden-in'),
+          cwd=TMP)
+_igm = open(os.path.join(TMP, 'garden-in', 'GARDEN.md'), encoding='utf-8').read() if _ir.returncode == 0 else ''
+check("...and a copy unpacked inside another repository records `untagged unknown`, never that repository's commit",
+      re.search(r'(?m)^daftar_release: "untagged unknown"', _igm), (_ir.stdout + _ir.stderr)[-300:] + _igm[:300])
 
 # THE MODEL, THE PROCEDURE, THE QUEUE AND THE SKILL TRAVEL (2026-09-17). Without them a friend's garden had the
 # law's data and nothing saying what it meant; the first person bean took three attempts.

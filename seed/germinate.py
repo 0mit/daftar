@@ -158,12 +158,19 @@ def main(argv):
         if (admitted is not None and gkind not in admitted) or gform is None:
             die(f"--gardener-kind {gkind!r} is not a kind the law lets keep a garden"
                 + (f" ({', '.join(admitted)})" if admitted else " (it needs a kind with a `<kind>_id` anchor term)"))
-    r = run('git', '-C', root, 'describe', '--tags', '--exact-match', check=False)
-    if r.returncode == 0:
+    # NO GIT HISTORY OF ITS OWN (a ZIP download, a `git archive`): no commit can be named, and the garden says so —
+    # `untagged unknown`, which the law's `daftar_release` admits — rather than recording nothing, so the line the gate
+    # ends with still names the garden, its gardener and its id. A copy unpacked inside some OTHER repository has no
+    # history either: git would answer for that repository, so only a checkout whose top is this copy is asked.
+    top = run('git', '-C', root, 'rev-parse', '--show-toplevel', check=False)
+    own = top.returncode == 0 and top.stdout.strip() and \
+        os.path.normcase(os.path.realpath(top.stdout.strip())) == os.path.normcase(os.path.realpath(root))
+    r = run('git', '-C', root, 'describe', '--tags', '--exact-match', check=False) if own else None
+    if r is not None and r.returncode == 0:
         release = r.stdout.strip()
     else:
-        sha = run('git', '-C', root, 'rev-parse', '--short', 'HEAD', check=False)
-        release = f"untagged {sha.stdout.strip()}" if sha.returncode == 0 and sha.stdout.strip() else None
+        sha = run('git', '-C', root, 'rev-parse', '--short', 'HEAD', check=False) if own else None
+        release = f"untagged {sha.stdout.strip() if sha is not None and sha.returncode == 0 and sha.stdout.strip() else 'unknown'}"
 
     for d in ('beans', 'mappings', 'log', 'seed'):
         os.makedirs(os.path.join(target, d), exist_ok=True)
@@ -177,11 +184,9 @@ def main(argv):
                 shutil.rmtree(os.path.join(dp, dn)); dns.remove(dn)
 
     garden = os.path.basename(target)
-    subst = {'@@VERSION@@': ver, '@@GARDEN@@': garden, '@@RELEASE@@': release or ''}
+    subst = {'@@VERSION@@': ver, '@@GARDEN@@': garden, '@@RELEASE@@': release}
     def fill(src, dst):
         text = open(src, encoding='utf-8').read()
-        if release is None:                  # grown from no checkout at all: the garden records no release, not a guess
-            text = re.sub(r'(?m)^daftar_release:[^\n]*\n', '', text)
         for k, v in subst.items():
             text = text.replace(k, v)
         with open(dst, 'w', encoding='utf-8', newline='\n') as fh:
@@ -245,7 +250,7 @@ def main(argv):
                    f"GARDEN.md `gardener:`.")
         cookbook = "starts with the gardener"
     print(f"""
-germinated: {target}  (std-vocab@{ver}, daftar {release or 'release not recorded'})
+germinated: {target}  (std-vocab@{ver}, daftar {release})
 
 {opening}
   1. write {os.path.join(target, 'beans', '<id>.md')}   (bean: <id> must equal the filename; seed/COOKBOOK.md {cookbook})
@@ -266,11 +271,29 @@ An agent with a shell reads it and loads the law from THIS garden rather than gu
 point of the whole thing: one language, both parties writing in it, neither able to corrupt it quietly.
 An assistant in a chat window, with no shell, cannot run the gate: paste it seed/WELCOME.md, and what
 it gives you back is a proposal for you to check and commit.""")
-    # AN UNTAGGED CLONE MAKES AN UNPINNABLE GARDEN, and this is said LAST, where it is still on the screen.
-    if release is None or release.startswith('untagged'):
+    # AN UNTAGGED CLONE MAKES AN UNPINNABLE GARDEN, and this is said LAST, where it is still on the screen. A copy with
+    # no git history is no clone: `git -C` on it fails, so the way to a release is a clone of the repository.
+    if release == 'untagged unknown':
+        try:
+            from dmupgrade import UPSTREAM         # where bin/dmupgrade.py fetches a release from: one copy of the URL
+        except Exception:
+            UPSTREAM = 'https://github.com/0mit/daftar.git'
         print(f"""
-NOTE: {'this clone is not on a release tag, so the garden records' if release else 'the language was not grown from a git checkout, so the garden records no release;'}
-  {'daftar_release: "' + release + '"' if release else 'GARDEN.md carries no daftar_release'}
+NOTE: the language was copied without its git history (a ZIP download, a `git archive`), so the garden records
+  daftar_release: "{release}"
+which names no release anybody else can fetch. Fine for a look around. To pin one, clone the repository and grow
+the garden from a release tag:
+  git clone {UPSTREAM} daftar-release
+  git -C daftar-release tag -l            # the releases it carries
+  git -C daftar-release checkout <tag>    # the newest, usually
+  {py} daftar-release/seed/germinate.py <a-new-directory> --gardener <id>
+— or, in this garden as it stands, adopt one deliberately (bin/dmupgrade.py fetches the tag itself) with
+  cd {target}
+  {py} bin/dmupgrade.py <tag>""")
+    elif release.startswith('untagged'):
+        print(f"""
+NOTE: this clone is not on a release tag, so the garden records
+  daftar_release: "{release}"
 which names no release anybody else can fetch. Fine for a look around. To pin one:
   git -C {root} tag -l                    # the releases this clone knows
   git -C {root} checkout <tag>            # the newest, usually
