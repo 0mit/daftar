@@ -447,7 +447,7 @@ def plan_manifest(text, gardener):
                 return None, f"GARDEN.md: {err}"
             cur = cur[:s] + cur[e:]
             exp.pop(k)
-    line = f"gardener: {gardener}                      # the person who keeps this garden"
+    line = f"gardener: {gardener}                      # who keeps this garden"
     if not _fm_region(cur):
         return None, "GARDEN.md does not open with its `---` fence — name the gardener by hand"
     lo, hi = _fm_region(cur)
