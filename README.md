@@ -89,8 +89,8 @@ measured, like a length: an amount in the currency it was paid in, exact and nev
 person owes another is read from what was paid and what was agreed — never written down beside them, where it
 could drift. The rules for what a thing may say attach to its nature and every kind beneath inherits them, so a
 new kind arrives with a coherent identity policy for free. The same is true of ownership: every thing has exactly
-one owner and exactly one holder who answers for it, per facet — legal, technical, financial — and every chain ends
-at a person, at someone outside the notebook, or at the crown. An agreement between two people may be owned by
+one owner, and exactly one entry saying who answers for it, per facet — legal, technical, financial — and every chain
+ends at a person, at someone outside the notebook, or at the crown. An agreement between two people may be owned by
 neither of them, and then both answer for it.
 
 The vocabulary that says all this is a document, versioned, read by the gate on every commit; the gate itself
@@ -114,15 +114,18 @@ What passes is only ever a **proposal**. Your agent writes one file — the bean
 agreement you and the other gardener have made — and lays it beside your notebook, never inside theirs. Their
 agent reads it in their notebook and shows them what it would change; it is taken in only when they commit it:
 their gate, their journal, their hand. Every fact keeps who said it as it crosses, so what you asserted arrives as your
-assertion and nothing on the other side quietly overrules it. A thing you both hold — the agreement, the people in
-it — is named once, by the notebook that recorded it first, and the name travels with it, so the two notebooks see
-one thing where they would otherwise see two. An agreement between two people may be owned by neither of them, and
+assertion and nothing on the other side quietly overrules it. Taking an agreement in records what you offered; their
+yes to it is theirs, written in their own notebook, in their own words. A thing you both hold — the agreement, the
+people in it — is named once, by the notebook that recorded it first, and the name travels with it, so the two
+notebooks see one thing where they would otherwise see two; a name someone else gave — a package's, a registry
+number — is the same in every notebook already. An agreement between two people may be owned by neither of them, and
 then both answer for it: nobody owns the crown, and nobody owns the mycelium.
 
 A garden is known by the commit it grew from, so two gardens need no registry and no account anywhere to name each
 other. Growing a garden writes a random seed into that first commit, so two notebooks on one machine are never taken
 for one, even when they carry the same name and were grown in the same second. The first time two gardens meet, each
-gardener records the other's garden and the person who keeps it, in one commit of their own.
+gardener records the other's garden and the person who keeps it, in one commit of their own. A rehearsal is a garden
+grown for it, never a copy of a real one, and each gardener marks it as a rehearsal in their own records.
 
 ## Who does what
 
@@ -154,7 +157,7 @@ yours; nothing here ever sees it.
 Tell the agent:
 
 > Read https://raw.githubusercontent.com/0mit/daftar/master/INSTALL.md and follow it. My notebook goes at
-> `~/garden`; my private remote is `git@github.com:me/garden.git`.
+> `~/garden-sam`; my private remote is `git@github.com:me/garden.git`.
 
 ([`INSTALL.md`](INSTALL.md) is that page.)
 
@@ -178,19 +181,19 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 |---|---|
 | **bean** | one managed thing, as one Markdown file in `beans/` — facts in the front matter, prose below |
 | **garden** | a git repository of beans: one notebook. Private to whoever keeps it |
-| **gardener** | the person — or organisation — who keeps a garden, named in its `GARDEN.md`, and its first bean. Agents tend a garden; its gardener keeps it and ratifies what an agent may not decide |
+| **gardener** | the person — or organisation — who keeps a garden, named in its `GARDEN.md`: the first bean of a garden grown with `--gardener`. Agents tend a garden; its gardener keeps it and ratifies what an agent may not decide |
 | **seed** | `seed/`: the kit a new garden is grown from — the vocabulary, the templates, `germinate.py` |
 | **vocabulary** | the rules, as data: `seed/std-vocab.md` for every garden, plus a garden's own `VOCAB.md` |
 | **gate** | `bin/dmcheck.py`, run as a pre-commit hook: a commit that breaks a rule is refused |
 | **journal** | `log/journal.md`: every change, who made it and why. The gate refuses an unrecorded change |
 | **anchor** | a fact that identifies an object (a serial, a domain name), so two gardens recognise the same thing |
 | **nature / kind** | what sort of being it is: `physical`, `metaphysical` or `living`, refined by a kind such as `host` |
-| **facet** | an aspect of ownership, e.g. `legal` or `technical`; each has exactly one owner and one holder |
+| **facet** | an aspect of ownership, e.g. `legal` or `technical`; each has exactly one owner, and one entry saying who answers for it |
 | **crown** | where every ownership chain ends. Its three branches are named for the natures: `nature` for physical things, `logos` for metaphysical, `love` for living — so a person writes `owned_by: { legal: { crown: love } }` |
 | **profile** | an opt-in group of rules, e.g. `domain`, for gardens that hold that kind of thing |
 | **vacancy** | a value the vocabulary offers that nothing uses yet, stated with a reason |
 | **Contract of Parts** | `MODEL.md`: which decisions an agent may take alone and which a person must ratify |
-| **proposal** | what one garden offers another: one file of beans, laid outside both gardens, which the other garden's gardener takes in by committing it — or does not. `bin/dmpropose.py` |
+| **proposal** | what one garden offers another: one file of beans, laid outside both gardens, which the other garden's gardener takes in by committing it — or does not. Taking it in accepts nothing on the gardener's behalf. `bin/dmpropose.py` |
 | **mycelium** | how gardens meet: beneath, through the agreements between their gardeners and the proposals made under them, in the language they share. Owned by no garden |
 
 ## Adopt a new release

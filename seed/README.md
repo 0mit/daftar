@@ -34,6 +34,9 @@ same way. Two senses of one word in one repository is a trap; both documents say
 python3 seed/germinate.py <target-directory>
 ```
 
+(`python` on Windows, here and in every command below. Name the directory for the garden — `garden-sam` rather
+than `garden` — because its name is the garden's name, which every proposal it makes to another garden shows.)
+
 That copies what `seed/LANGUAGE` declares — the daftar tools, the Tier-0 vocabulary, and the empty templates;
 interpolates the version pin **from the vocabulary's own `version:` key** rather than typing it; `git init`s;
 installs the hooks; makes the first commit; and runs the gate. A garden that cannot make its first commit has not
@@ -45,15 +48,15 @@ do — the first that runs and imports yaml — and hands over to it.)
 A garden is kept by someone, and the gardener is the first bean you write (below). `--gardener sam
 --gardener-name "Sam"` writes it for you instead: a second commit plants the bean — its name qualified at birth by
 the garden's id, `<garden id>/person:sam` — and names it in `GARDEN.md`, so the garden begins as someone's. Then the
-first commit below is the laptop alone.
+first commit below is the laptop alone. An organisation that keeps a garden is planted with `--gardener-kind org`.
 
 **Requires** Python 3 and **PyYAML** — the one third-party dependency. `bin/dmcheck.py` exits 2 without it.
 
 Then:
 
 1. write `beans/<id>.md`, where `bean: <id>` equals the filename
-2. append what you did to `log/journal.md` — the gate **refuses** a bean staged without it
-3. `git add -A && git commit`
+2. append what you did to `log/journal.md` with `bin/dmjournal.py` — the gate **refuses** a bean staged without it
+3. `git add -A`, then `git commit` — two commands, because Windows PowerShell 5.1 cannot run `&&`
 
 `python3 bin/dmrules.py` prints every rule in force, derived from the vocabulary rather than restated.
 
@@ -123,21 +126,22 @@ holds a bean. Set the one line the template leaves empty:
 gardener: sam
 ```
 
-And the entry that goes with them. **This is the step a first commit fails on**, because a heading is a
-POSITION IN TIME and the gate checks the form — so read it from the clock rather than typing a date. `GARDEN.md`
-is law, so an entry that changes it says RULE-CHANGE:
+And the entry that goes with them. **This is the step a first commit fails on**, for its heading: a POSITION IN
+TIME, which the gate refuses unless `bin/dmjournal.py` wrote it, reading the clock. So write only the body — no
+`##` line — and give the tool who you are and one line saying what changed; it writes the heading above the body
+and appends both. `GARDEN.md` is law, so an entry that changes it says RULE-CHANGE:
 
 <!-- example: log/journal.md -->
-```markdown
-## 2026-09-17 09:30+03:00 · sam · the first two beans
-- action: added [[sam]] and [[laptop]]; RULE-CHANGE: GARDEN.md names sam as the gardener.
+```sh
+python3 bin/dmjournal.py "sam" "the first two beans" --body "- action: added [[sam]] and [[laptop]]; RULE-CHANGE: GARDEN.md names sam as the gardener.
 - detail: the serial is off the underside of the machine; the person id is a name I chose and can keep.
-- why: starting the ledger with the thing that owns everything else, so nothing dangles.
+- why: starting the ledger with the thing that owns everything else, so nothing dangles."
 ```
 
-```sh
-python3 bin/dmjournal.py "sam" "the first two beans" < entry.md     # writes the heading from the clock, appends the body
-```
+The line breaks inside the quotes are kept, in a Unix shell and in PowerShell alike, and the journal then holds
+`## 2026-09-17 09:30+03:00 · sam · the first two beans` — the moment it was run — above those three lines. A body
+kept in a file can come on standard input instead (`… "the first two beans" < entry.md`, the file holding the
+three lines and no heading) in a shell that has `<`; PowerShell has not.
 
 The `[[bean-id]]` is what makes the entry count: the gate refuses a staged bean that the entry does not
 name, and a staged `GARDEN.md` whose entry does not say RULE-CHANGE. `- action:` is the only required line;

@@ -5,8 +5,14 @@ first, and this file merges by union. Every state-change to the garden is logged
 that makes it — the gate REFUSES a staged bean whose change is not recorded, and a change to the
 vocabulary or the law must say RULE-CHANGE distinctly.
 
-One entry per change, newest last. The heading is a position in time, to at least the minute and with its
-offset, read from the clock (`date '+%Y-%m-%d %H:%M%:z'`); the gate refuses any other heading a commit adds:
+One entry per change, newest last. Its heading is written by `bin/dmjournal.py`, which reads the moment from
+the clock — never typed: the gate refuses a heading that tool did not write. Give it who you are, one line
+saying what changed, and the body; it writes the heading above the body and appends both:
+
+    python3 bin/dmjournal.py "<human (name) | agent>" "<one line: what changed>" --body "- action: what was done"
+
+(`python` on Windows. A line break inside the quotes is kept, in a Unix shell and in PowerShell alike.)
+An entry reads, once written:
 
     ## <YYYY-MM-DD HH:MM+HH:MM> · <human (name) | agent> · <one line: what changed>
     - action: what was done

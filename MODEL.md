@@ -14,9 +14,11 @@ design steps before that are in `HISTORY.md` in the daftar repository.
   (`daftar_release`); the law's `manifest` says what else it may hold. A garden is known by the commit it
   germinated from (`garden_id`), read from git: `GARDEN.md` carries no id, and in the garden's own beans it appears
   only as the prefix of a name the garden minted.
-- A garden is kept by its **gardener**: the person — or organisation — `GARDEN.md` names in `gardener:`, a bean
-  of the garden and its first. The gardener ratifies what an agent may not decide; an agent tends the garden.
-  Nothing outside a garden writes in it.
+- A garden is kept by its **gardener**: the bean `GARDEN.md` names in `gardener:`, of a kind the law's `manifest`
+  admits — a person or an organisation. A garden grown with `--gardener` begins with it. The gardener ratifies what an
+  agent may not decide; an agent tends the garden. Nothing outside a garden writes in it.
+- `GARDEN.md` is judged as itself, against the law's `manifest`: each attribute's form, the required ones present,
+  and the gardener a bean the garden holds.
 - The **seed** (`seed/`) is the kit a garden is grown from. When gardens are merged, the result for each object
   is a **canonical bean** (`MERGE.md`); the merge tool prints it under the key `seed`, which is not `seed/`, the kit.
 
@@ -26,9 +28,9 @@ A fact knows who said it and how they know.
   `asserted-by-human` or `generated-by-tool`. The vocabulary ranks them by HOW THE FACT IS KNOWN and says why
   (`provenance_src`). A `generated-by-tool` fact has no standing of its own: it names what it was computed
   from in `provenance.from`, and weighs as the weakest of those.
-- A fact whose source differs from the bean's default carries its own record. What a record may hold is the
-  law's `provenance_record`: besides `src`, `by` and `as_of`, `from` names the records a fact was taken or computed
-  from, and `garden` names the garden the record was made in, where that is not this one.
+- A fact whose source differs from the bean's default carries its own record. What a record may hold, and what
+  each of its attributes means, is the law's `provenance_record` — among them the records a fact was taken or
+  computed from, and the garden the record was made in, where that is not this one.
 - **An `inferred` value never overrides an `asserted-by-human` one**, whatever precision it claims.
 - **A judgment is its judge's.** That one version is better, clearer or more beautiful than another is recorded
   as a judgment — by whom (`provenance.by`), with its reason in prose — never as a property of the thing and never
@@ -57,12 +59,13 @@ refuses a nature that contradicts the kind. Rules about what sort of being somet
 anchors — attach to the nature, so every kind under it inherits them.
 
 ## Ownership and responsibility
-Two arcs, over the same **facets** — the rows of the law's `facets` registry (`legal`, `technical`,
-`experience`, `financial`) and any a garden adds. A facet may depend on others — every other facet depends on
-`legal` — but never on itself through them, and never overlaps another:
+Two arcs, over the same **facets** — the rows of the law's `facets` registry, and any a garden adds. A facet may
+depend on others — every other facet reaches `legal` through what it depends on — but never on itself through them,
+and never overlaps another:
 - `owned_by` points up: each facet has **exactly one owner**.
-- `responsibility` points down: each facet has **exactly one holder** who answers for the thing.
-- **Every facet with an owner has a holder, and vice versa.** The gate enforces the pairing.
+- `responsibility` points down: each facet has **exactly one responsibility entry**, saying who answers for the
+  thing — a holder, say, or the parties of an agreement, or a person for themselves.
+- **Every facet with an owner has a responsibility entry, and vice versa.** The gate enforces the pairing.
 
 The forms an entry can take:
 - `{ owner: { bean: … } }` — owned by another bean. The chain must end somewhere: the gate refuses one that
@@ -93,8 +96,12 @@ Ownership is separate from **habitat**: a running instance is owned through its 
   acceptance on record — an offer not yet taken up, or an agreement whose acceptance nobody recorded. One party's
   report of another's acceptance is the reporter's word, and its provenance says so.
 - **Money is a quantity.** An amount is `{ count, unit }`: the unit is a currency, the count a whole number or a
-  decimal string with no more places than the currency uses. No factor joins two currencies: a rate is an
-  observation someone made, at a moment, from a source, and is recorded as one.
+  decimal string with no more places than the currency uses. A count or a share is what was written: plain decimal
+  digits, as many as the law's pattern bounds — a spelling YAML would read as another number (`010`, `0x64`, `1:30`)
+  is refused, never converted. No factor joins two currencies: a rate is an observation someone made, at a moment,
+  from a source, and is recorded as one.
+- **Who paid and who bears it are one entry per party**, and their order says nothing: the law marks each list keyed
+  by its party (`keyed_by`), and the gate refuses a party named twice in one.
 - **A balance is read, never written.** What one party owes another is computed from the transactions and the
   clauses (`bin/dmledger.py`), exactly, in fractions; a stored balance is a second copy, and it drifts. A share that
   does not come out even in the currency's places is shown as the fraction it is, and who takes the remainder is a
@@ -193,7 +200,11 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
     the gate itself);
   - a journal entry that still contains a template's `(fill in` field;
   - a journal heading a commit adds that is not a position in time: `## 2026-09-20 00:15+03:00 · who · what`,
-    in any declared calendar's own form (`persian:1405-06-29 00:45+03:30`), to the minute, with its offset. Entries already written are never checked or rewritten.
+    in any declared calendar's own form (`persian:1405-06-29 00:45+03:30`), to the minute, with its offset — or
+    that `bin/dmjournal.py` did not write, reading the clock. Entries already written are never checked or
+    rewritten;
+  - a journal line a commit adds that holds a character some reader takes for a line break, besides the line end
+    itself: one line of the journal is one line to every reader.
 - These checks confirm that the words are there, not that they are true; honesty is still the writer's.
 - Each person and each agent session commits under its own git identity, so the log's "who" is real.
 - `CHECKLIST.md` is how a write is made.
@@ -202,7 +213,10 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
 Gardens merge object by object, matched on establishing anchors: losslessly, in any order, with the same
 result, and never creating two beans for one object. A genuine disagreement is kept, both values, for a person
 to settle. A name a garden minted fuses only within that garden unless it is qualified by the garden's id; equal
-bare names from two gardens are shown to a person, never fused. `MERGE.md` has the algebra.
+bare names from two gardens are shown to a person, never fused. Values are compared in one canonical form, so that
+one fact written two ways is not a disagreement: an amount by its value (`900`, `"900"` and `"900.00"` are one), a
+list keyed by party by its entries, whatever their order. The bean keeps what was written. `MERGE.md` has the
+algebra.
 
 ## Between gardens: the mycelium
 A garden is kept by its gardener, and nothing outside it writes there. **Gardens meet only by proposal.**
@@ -215,30 +229,42 @@ A garden is kept by its gardener, and nothing outside it writes there. **Gardens
   that garden's gardener and answered for by them — so that gardener is a person or organisation bean here, named
   as their own garden names them. Recording a new garden, and its gardener, is the gardener's decision (class F),
   made in one commit.
-- **A name is minted once and carried.** The value of an anchor term marked `minted` is a name a garden gave.
-  Bare, it identifies only within that garden; qualified — `<garden_id>/<name>` — it identifies everywhere. A thing
-  two gardens share is named once, by the garden that recorded it first, and qualified when it is to cross; a
-  garden that takes the name in keeps it byte for byte, and a qualified name here is qualified by this garden or
-  by a garden it holds a `garden` bean for.
+- **A name is minted once and carried.** A value of an anchor term marked `minted` is a name a garden gave when it
+  has the form the law's `identity_policy.minted` gives one: `<kind>:<name>`, the kind one this garden knows
+  (`person:sam`, `contract:shared-camera`). Bare, it identifies only within that garden; qualified —
+  `<garden_id>/<kind>:<name>` — it identifies everywhere. A thing two gardens share is named once, by the garden that
+  recorded it first, and qualified when it is to cross; a garden that takes the name in keeps it byte for byte, and
+  a qualified name here is qualified by this garden or by a garden it holds a `garden` bean for.
+- **An identifier someone else assigned is nobody's to qualify.** A value of a minted term in any other form — a
+  package's name, a registry or tax number, the UID an invitation carries, a provider's id — was assigned outside
+  every garden: it identifies wherever it is written and fuses as any anchor does, and the gate refuses it
+  prefixed with a garden's id.
 - **What passes is a proposal** (`bin/dmpropose.py`), never a write: one file, laid outside every garden, for one
   garden, made under an agreement whose parties include both gardeners. It carries whole beans as the proposing
   garden committed them, a stub of each bean they refer to (its identity and nothing more), the journal entry that
   would take them in, and a fingerprint — a check that it arrived as it was made, which anyone who rewrites it can
   compute again, and so never a signature. It passes on what was said in the proposing garden or by the garden
   proposed to, and of what a third garden said only the names it gave.
-- **Provenance crosses unchanged.** `src`, `by`, `as_of` and `from` travel as they were written; `garden` is added
-  once, naming the garden the record was made in, and never changed — and it names a garden this one holds a
+- **Provenance crosses unchanged.** A record travels as it was written; `garden` is added once, naming the garden
+  the record was made in, and never changed — and it names a garden this one holds a
   `garden` bean for. A record that comes back to the garden it was made in is that garden's own again, and carries
   no `garden` there. A person's assertion arrives as that person's assertion, and the provenance guard holds across
   the boundary.
 - **Taking in is a write in the receiving garden like any other.** What a proposal brings is another person's
   assertion (class D), a name another garden gave (F), and every disagreement or uncertain identity (J). Reading a
   proposal writes nothing; taking it in writes in the working tree and never commits; the gardener's commit is the
-  ratification. A proposal is taken once. A party's acceptance of the agreement is its own word, recorded by its own
-  garden.
+  ratification. A proposal is taken once. A record in a garden's proposal names the garden it was made in; one that
+  claims to be the receiving garden's own is its own only where the receiving garden holds that same record already.
+- **Taking in an agreement is not accepting it.** Taking records what the other garden offers. A party's acceptance
+  is its own word, recorded by its own garden: the receiving gardener accepts by writing `accepted` on their own
+  entry in `parties`, in a commit of their own.
 - **An agreement two gardens share may be owned by none of its parties, and then its parties answer for it** — the
   crown and `parties` forms above — so the two gardens' records of it agree about its owner.
-- **A test garden** says so in `GARDEN.md` (`test:`). Its beans are not facts about the world: a proposal from it
-  is marked as a test, and a garden that is not a test garden takes one in only as a test.
+- **A test garden** says so in `GARDEN.md` (`test:`). Its beans are not facts about the world. A rehearsal is grown
+  by germination, never by clone: a clone is the same garden, with the same `garden_id`, and its word is that
+  garden's. A garden that deals with a test garden marks its `garden` bean with `test` — its own record, whatever
+  the other garden's proposals say. A proposal is a test when its envelope says so or the sending garden's bean here
+  does; a garden that is not a test garden takes one in only as a test, and then every bean it writes says what the
+  rehearsal changed.
 - **Two gardens exchange only while they pin the same vocabulary.** A different pin blocks a proposal as it blocks
   a merge (`MERGE.md`).
