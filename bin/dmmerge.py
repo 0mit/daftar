@@ -9,8 +9,15 @@ Merges N gardens (each a dir of beans, or a list of bean dicts) into canonical S
 By construction the merge is lossless (every value + its contributing gardens preserved),
 order-agnostic (commutative+associative — everything sorted canonically), and idempotent.
 
-CLI: dmmerge.py <garden_dir> [<garden_dir> ...]   # prints seeds + fingerprint
-Library: merge_gardens(list_of_beanlists) -> {seed_id: seed_dict}, canonical_fingerprint(seeds)
+EACH INPUT CARRIES ITS GARDEN (std-vocab 21.0). A name a garden MINTED — the value of an anchor whose term says
+`minted: true` — is BARE until it is qualified by the garden that minted it (`<garden_id>/<name>`). A bare name
+identifies only inside its garden, so it fuses only with the same bare name from the SAME garden; two gardens that
+minted one bare name are CANDIDATES, reported for a person and never fused. An input's garden is its `garden_id`:
+read from git for a garden directory, from `from.garden` for a proposal, or none — and an input whose garden is not
+known is taken to be a garden of its own. Qualified names and every anchor that is not minted fuse as they always did.
+
+CLI: dmmerge.py <garden_dir> [<garden_dir> ...]   # prints seeds + fingerprint, then the CANDIDATES
+Library: merge_gardens(list_of_beanlists) -> {seed_id: seed_dict}, fingerprint(seeds), candidates(beans)
 """
 import sys, os, re, glob, json, hashlib, unicodedata, ipaddress, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -57,19 +64,58 @@ def norm(v):
     return v
 
 # ---------- load ----------
-def load_garden(path, gid):
+_UNREAD = object()
+
+
+def garden_identity(path):
+    """The `garden_id` of a garden DIRECTORY — one that holds a GARDEN.md at the top of its own git work tree — else
+    None. A directory of beans inside some other repository is not that repository's garden: taking the enclosing
+    history's root as its identity would make every fixture directory in one repository "one garden"."""
+    if not os.path.isfile(os.path.join(path, 'GARDEN.md')):
+        return None
+    try:
+        import subprocess
+        top = subprocess.run(['git', '-C', path, 'rev-parse', '--show-toplevel'],
+                             capture_output=True, text=True, timeout=5).stdout.strip()
+    except Exception:
+        return None
+    if not top or os.path.normcase(os.path.realpath(top)) != os.path.normcase(os.path.realpath(path)):
+        return None
+    return dmparse.garden_id(path)
+
+
+def load_garden(path, gid, garden_id=_UNREAD):
+    """One input: every bean of the garden at `path`, labelled `gid`, carrying the garden's identity — read from git
+    unless the caller states it (a proposal states `from.garden`; None says it is not known)."""
+    ident = garden_identity(path) if garden_id is _UNREAD else garden_id
     beans = []
     for f in sorted(glob.glob(os.path.join(path, 'beans', '*.md'))):
         fm = dmparse.loads(dmparse.read(f)[0] or '') or {}
-        beans.append({'garden': gid, 'id': fm.get('bean', os.path.basename(f)[:-3]), 'fm': fm})
+        beans.append({'garden': gid, 'garden_id': ident, 'id': fm.get('bean', os.path.basename(f)[:-3]), 'fm': fm})
     return beans
 
 # ---------- identity resolution ----------
-def est_anchors(fm):
+def _home(b):
+    """The garden a bean's BARE names belong to: its input's `garden_id`, or — where that is not known — the input
+    itself. An input whose garden nobody can name is not assumed to be any other input's garden: fusing two bare names
+    on a guess is the defect this exists to prevent (a name made up in one garden fusing with a person in another)."""
+    return b.get('garden_id') or f"~{b['garden']}"
+
+
+def bare(key, value):
+    """True when an anchor's value is a BARE minted name: its term mints names (`anchor.minted`), and the value is not
+    qualified by a garden (`identity_policy.minted.pattern`). A law that declares no minted names makes nothing bare."""
+    return bool(MINT_RE) and key in MINTED and not MINT_RE.match(str(value))
+
+
+def est_anchors(fm, home=None):
+    """The fuse keys of a bean's ESTABLISHING anchors: (key, value) in the compare form — and, for a BARE minted name,
+    (key, value, home): it fuses only with the same name from the same garden."""
     out = set()
     for a in (fm.get('identity') or {}).get('anchors') or []:
         if _est(a):
-            out.add((a['key'], dmparse.compare_anchor(TERMS.values(), a['key'], norm(a['value']))))
+            v = dmparse.compare_anchor(TERMS.values(), a['key'], norm(a['value']))
+            out.add((a['key'], v, home) if bare(a['key'], v) else (a['key'], v))
     return out
 
 def components(beans):
@@ -84,13 +130,35 @@ def components(beans):
     for n in nodes: find(n)
     anchor_node = {}
     for n, b in nodes.items():
-        for anc in est_anchors(b['fm']):
+        for anc in est_anchors(b['fm'], _home(b)):
             if anc in anchor_node: union(n, anchor_node[anc])
             else: anchor_node[anc] = n
     comps = {}
     for n, b in nodes.items():
         comps.setdefault(find(n), []).append(b)
     return list(comps.values())
+
+
+def candidates(beans):
+    """EQUAL BARE NAMES MINTED IN DIFFERENT GARDENS — MERGE.md §4.4's assoc edge for minted names: surfaced for a person,
+    never fused (class J). Each is {key, value, held_by: [[garden, bean], ...]}, sorted, so the report is as
+    order-agnostic as the merge. Two beans already fused through another anchor are one being, and not a candidate."""
+    nodes = {(b['garden'], b['id']): b for b in beans}
+    comp_of = {}
+    for i, comp in enumerate(components(list(nodes.values()))):
+        for b in comp:
+            comp_of[(b['garden'], b['id'])] = i
+    groups = {}
+    for n, b in nodes.items():
+        for anc in est_anchors(b['fm'], _home(b)):
+            if len(anc) == 3:
+                groups.setdefault(anc[:2], {}).setdefault(anc[2], set()).add(n)
+    out = []
+    for (key, value), by_home in groups.items():
+        held = sorted(set().union(*by_home.values()))
+        if len(by_home) > 1 and len({comp_of[m] for m in held}) > 1:
+            out.append({'key': key, 'value': value, 'held_by': [list(m) for m in held]})
+    return sorted(out, key=canonical)
 
 # ---------- merge facets: DATA, not code ----------
 # MERGE.md §5: "`⊑`, cardinality, and tie-break live in the VOCAB `merge:` facet so MERGE stays a thin
@@ -117,6 +185,21 @@ def load_terms():
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TERMS = load_terms()
+
+
+def load_minted():
+    """(the terms whose anchor MINTS names, the pattern a QUALIFIED minted value matches) — read from the law, the
+    overlay's `identity_policy` first as the gate reads it, so the merge and the gate agree on what is bare."""
+    pol = None
+    for path in (os.path.join(ROOT, 'VOCAB.md'), os.path.join(ROOT, 'seed', 'std-vocab.md')):
+        if pol is None and os.path.exists(path):
+            pol = (dmparse.loads(dmparse.read(path)[0] or '') or {}).get('identity_policy')
+    pat = ((pol or {}).get('minted') or {}).get('pattern')
+    names = {n for n, t in TERMS.items() if isinstance(t.get('anchor'), dict) and t['anchor'].get('minted') is True}
+    return names, (re.compile(str(pat), re.ASCII) if pat else None)
+
+
+MINTED, MINT_RE = load_minted()
 # The subsumption orders, read from the law rather than known by name. No fallback: an empty registry
 # means no key is ordered, which is a visible loss of merging rather than a silent one.
 def load_leaf_orders():
@@ -852,8 +935,9 @@ def merge_gardens(garden_beanlists):
     nothing was watching, and it is reachable exactly when identity is weakest.
 
     A colliding id is disambiguated by the component's own membership, which is deterministic and
-    order-agnostic, so invariant 4a still holds. Anchor-derived ids never collide and are never suffixed,
-    so this changes nothing for a garden whose beans carry establishing anchors."""
+    order-agnostic, so invariant 4a still holds. An id derived from an anchor that identifies everywhere never
+    collides; one derived from a BARE minted name can (two gardens minted `person:x`, and they are candidates, not
+    one being), and it is disambiguated the same way — `identity.id_collision` names the name they shared."""
     beans = [b for lst in garden_beanlists for b in lst]
     made = [(comp, merge_component(comp)) for comp in components(beans)]
 
@@ -1196,12 +1280,17 @@ if __name__ == '__main__':
               + ". Every untouched key kept its text and its comments.", file=sys.stderr)
         sys.exit(0)                                        # conflicts are captured and marked merge_open
     paths = sys.argv[1:]
-    gl = [load_garden(p, os.path.basename(p.rstrip('/'))) for p in paths]
+    # AN INPUT'S LABEL IS ITS DIRECTORY'S NAME — unless two inputs share one. Two gardens on one machine may both be
+    # called `daftar`, and a bean is a node by (label, id): under one label the second garden's `ada` silently
+    # replaced the first's. Such inputs are labelled by their paths as given, which depends on nothing but the inputs.
+    _names = [os.path.basename(p.rstrip('/')) for p in paths]
+    labels = [os.path.normpath(p) if _names.count(n) > 1 else n for p, n in zip(paths, _names)]
+    gl = [load_garden(p, lab) for p, lab in zip(paths, labels)]
 
     # LAW FIRST. Merging beans while the type systems diverge converges the data and leaves it
     # unchecked — each garden's gate only ever saw its own half. Reconcile the vocabularies, and stop
     # before touching the beans if they cannot be reconciled.
-    vocabs = [load_vocab(p, os.path.basename(p.rstrip('/'))) for p in paths]
+    vocabs = [load_vocab(p, lab) for p, lab in zip(paths, labels)]
     mv, blocking, vconflicts = merge_vocabs(vocabs)
     if blocking:
         print("MERGE REFUSED — the gardens do not share a law:\n  " + "\n  ".join(blocking),
@@ -1225,8 +1314,18 @@ if __name__ == '__main__':
         print("  These are `identity: provisional` by policy and must never be auto-merged; give them an "
               "establishing anchor to identify them.")
     if tied:
-        print(f"\n{len(tied)} of those collided with another component and were disambiguated by "
+        print(f"\n{len(tied)} seed id(s) collided with another component's and were disambiguated by "
               f"membership (see identity.id_collision for the shared name).")
+    # THE ASSOC EDGES OF MINTED NAMES (MERGE.md §4.4 step 6): the same bare name minted in two gardens. Never fused —
+    # a bare name identifies only inside its garden — and never silent, because they may be one being.
+    cands = candidates([b for lst in gl for b in lst])
+    if cands:
+        print(f"\nCANDIDATES — a person decides (class J): {len(cands)} BARE name(s) minted in more than one garden. "
+              f"A bare name identifies only inside the garden that minted it, so these were NOT fused. If two are "
+              f"one being, the garden that recorded it first qualifies its name (`bin/dmpropose.py mint`) and the "
+              f"other takes the name in.")
+        for c in cands:
+            print(f"  {c['key']} {c['value']} — " + ', '.join(f"{g}:{i}" for g, i in c['held_by']))
     # NO SILENT FALLBACK. A key merged by shape rather than by declaration may still be merged WRONGLY —
     # a mapping treated as a collection when it is really one atom, say. Naming them is how the gap gets
     # closed instead of forgotten; each wants a `merge: {cardinality, order}` on its term.

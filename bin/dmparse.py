@@ -146,6 +146,24 @@ def compare_anchor(terms, key, value):
     return COMPARE_FORMS[form](str(value)) if form else str(value)
 
 
+def garden_id(root):
+    """A GARDEN'S IDENTITY (std-vocab 21.0, `garden_id`): the first twelve hex digits of the root of its first-parent
+    history — the commit it germinated from — or None outside a git repository and in a shallow clone, which cannot
+    see its root. HERE, because the gate (`dmcheck.own_garden_id`), the merge (which garden a bare minted name belongs
+    to) and the proposals between gardens (`dmpropose`) must read one identity the same way, and dmcheck cannot be
+    imported outside a garden."""
+    import subprocess
+    try:
+        r = subprocess.run(['git', '-C', root, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD'],
+                           capture_output=True, text=True, timeout=5)
+        roots = r.stdout.split()
+        shallow = subprocess.run(['git', '-C', root, 'rev-parse', '--is-shallow-repository'],
+                                 capture_output=True, text=True, timeout=5).stdout.strip()
+        return roots[-1][:12] if r.returncode == 0 and roots and shallow != 'true' else None
+    except Exception:
+        return None
+
+
 def read(path):
     """(front_matter_text, body) read from a file on disk."""
     with open(path, encoding='utf-8') as fh:

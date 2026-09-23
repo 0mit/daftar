@@ -34,16 +34,8 @@ def own_garden_id(root=None):
     """A GARDEN'S IDENTITY (std-vocab 21.0, `garden_id`): the first twelve hex digits of the root of its first-parent
     history — the commit it germinated from. Read from git, the one place it lives, and written in no document of the
     garden: the product version is read the same way and for the same reason. None outside a git repository, and for a
-    shallow clone, which cannot see its root."""
-    try:
-        r = subprocess.run(['git', '-C', root or ROOT, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD'],
-                           capture_output=True, text=True, timeout=5)
-        roots = r.stdout.split()
-        shallow = subprocess.run(['git', '-C', root or ROOT, 'rev-parse', '--is-shallow-repository'],
-                                 capture_output=True, text=True, timeout=5).stdout.strip()
-        return roots[-1][:12] if r.returncode == 0 and roots and shallow != 'true' else None
-    except Exception:
-        return None
+    shallow clone, which cannot see its root. One reader, in dmparse, shared with the merge and the proposals."""
+    return dmparse.garden_id(root or ROOT)
 
 
 def _product():
