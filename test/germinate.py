@@ -15,7 +15,8 @@ It asserts BOTH directions, because a garden that accepts everything passes a po
   -  a nature contradicting its genos is refused
   -  a bean in the words the law retired at 22.0 is refused, naming where each went
   -  a bean staged broken and fixed only in the working tree is refused again: the hook judges the index, which is
-     what git commits (`commit -a` and `commit <paths>` by the index they build), and a clean commit prints two lines
+     what git commits (`commit -a` and `commit <paths>` by the index they build, an intent to add not at all), and a
+     clean commit's hook prints two lines
   -  a bean named on the command line is judged within the whole garden; a path that names no bean is refused
   -  on a machine that is not UTF-8, a Persian gardener's bean staged broken is still refused, with no traceback:
      the staged blobs are read as UTF-8, never in the machine's code page
@@ -800,6 +801,20 @@ rc, out, err = gate_on('--staged')
 check("`--staged` over an index holding an unmerged path refuses it by path: there is no staged copy to judge",
       rc == 1 and 'unmerged' in out and 'beans/ada.md' in out, out + err)
 run('git', 'reset', '-q', cwd=G)
+# an intent to add (`git add -N`) is in the index and in no commit: git commits nothing of it, and neither is it judged
+_ita = os.path.join(G, 'beans', 'half.md')
+open(_ita, 'w', encoding='utf-8').write('---\nbean: half\n')
+run('git', 'add', '-N', 'beans/half.md', cwd=G)
+open(bean_path, 'a', encoding='utf-8').write('And a lamp.\n')
+journal('- action: a lamp for [[ada]].')
+run('git', 'add', 'beans/ada.md', 'log/journal.md', cwd=G)
+rc9, o9 = commit('-m', 'beside an intent to add')
+check("a bean only intended to be added (`git add -N`) is not judged, as git commits nothing of it: the staged bean "
+      "beside it commits, and the commit holds no half.md",
+      rc9 == 0 and 'a lamp' in at_head('beans/ada.md') and 'half.md' not in run('git', 'ls-tree', '-r', '--name-only',
+                                                                                  'HEAD', cwd=G).stdout, o9[-500:])
+run('git', 'reset', '-q', cwd=G)
+os.remove(_ita)
 
 # ---- ON A MACHINE THAT IS NOT UTF-8, the gate reads the staged blobs as UTF-8 all the same ------------------------
 # git writes UTF-8, and a Python before 3.15 (PEP 686) decodes a child's output in the machine's code page. On Windows

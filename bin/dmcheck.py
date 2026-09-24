@@ -247,6 +247,20 @@ def _staged(args):
             say(f"ERROR the index could not be copied for judging ({_why}) — nothing was checked, so nothing may be "
                 f"committed on this run")
             return 1
+        # AN INTENT TO ADD (`git add -N`) is an entry git commits nothing of, and checkout-index writes it as an empty
+        # file, which the gate would judge a document emptied. It is taken out of the copy, as the commit leaves it out:
+        # git status marks it `A` in the working-tree column over a blank (a new path) or a `D` (one taken out of the
+        # index). Asked strictly, since a copy that cannot be told from the commit is judged as nothing.
+        _st, _why = ask('-C', _top, 'status', '--porcelain', '-z', '--untracked-files=no', '--no-renames')
+        if _why:
+            say(f"ERROR git could not say what the index holds ({_why}) — nothing was checked, so nothing may be "
+                f"committed on this run")
+            return 1
+        for _e in _st.split('\0'):
+            if len(_e) > 3 and _e[1] == 'A' and _e[0] in ' D':
+                _p = os.path.join(snap, *_e[3:].split('/'))
+                if os.path.isfile(_p) or os.path.islink(_p):
+                    os.remove(_p)
         here = os.path.normpath(os.path.join(snap, os.path.relpath(ROOT, _top)))
         env = dict(os.environ, GIT_DIR=_gitdir, GIT_WORK_TREE=snap, GIT_INDEX_FILE=_index, GIT_OPTIONAL_LOCKS='0',
                    PYTHONDONTWRITEBYTECODE='1')

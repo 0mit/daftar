@@ -7,8 +7,9 @@
 # names each file the working tree holds otherwise.
 # A failing write cannot be committed by any model or session; that is what makes the gate law rather
 # than advice. To override in a genuine emergency: git commit --no-verify, and say so in the journal.
-# A CLEAN COMMIT PRINTS TWO LINES, the gate's verdict and the fast suite's count, because whatever a hook prints stays
-# in an agent's context for the rest of its session. DAFTAR_VERBOSE=1 git commit … lists every check the suite passed.
+# ON A CLEAN COMMIT THIS PRINTS TWO LINES, the gate's verdict and the fast suite's count, because whatever a hook
+# prints stays in an agent's context for the rest of its session. DAFTAR_VERBOSE=1 git commit … lists every check the
+# suite passed.
 root=$(git rev-parse --show-toplevel)
 # WHICH PYTHON: the first that runs AND imports yaml, recorded per clone as `git config daftar.python`. python.sh
 # says why and is installed beside this hook, so the hook does not depend on what the working tree holds.
