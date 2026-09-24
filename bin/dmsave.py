@@ -33,6 +33,7 @@ step.
 """
 import collections
 import os
+import re
 import subprocess
 import sys
 
@@ -86,7 +87,7 @@ def who_of(heading):
     return parts[1] if len(parts) == 3 else ''
 
 
-def ready(again):
+def ready(again, body=''):
     """Every refusal that must come before a word is written, in the order a writer can act on them: the garden, what
     there is to save, and then the clone — its gate and its identity. Returns the entries already waiting."""
     if not os.path.exists(dmjournal.JOURNAL):
@@ -104,6 +105,15 @@ def ready(again):
         refuse(f"--again commits a journal entry already written, and every entry in the journal is committed. "
                f"Nothing written. Save a change with: {PY} bin/dmsave.py \"<who>\" \"<what>\" --body \"- action: …\"")
     if not again and not git('status', '--porcelain').stdout.strip():
+        # A SAVE CALLED BEFORE THE WRITE: measured, a small model took the save for the act of recording and ran it with
+        # the bean unwritten. Its own entry names the bean, so the refusal says which file is missing.
+        missing = [b for b in dict.fromkeys(re.findall(r'\[\[([^\]|#\s]+)', body or ''))
+                   if not os.path.exists(os.path.join(ROOT, 'beans', b + '.md'))]
+        if missing:
+            refuse(f"nothing to save — your entry names {', '.join(f'[[{b}]]' for b in missing)}, and "
+                   f"{', '.join(f'beans/{b}.md' for b in missing)} {'is' if len(missing) == 1 else 'are'} not written. A "
+                   f"save records a file already written: write {'it' if len(missing) == 1 else 'them'} first, whole, "
+                   f"then run this same command again; nothing written")
         refuse("nothing to save — no file in the garden differs from its last commit. Write the bean first; nothing "
                "written")
     hook = git('rev-parse', '--git-path', 'hooks/pre-commit').stdout.strip()
@@ -183,7 +193,7 @@ def main(argv):
             body = dmjournal.decode_body(stream.read())
         except SystemExit as e:
             refuse(str(e.code).replace('dmjournal: ', '', 1))
-    pending = ready(again=False)
+    pending = ready(again=False, body=body)
     if pending and who_of(pending[-1]).strip() == who.strip() and what_of(pending[-1]).strip() == what.strip():
         # THE SAME CALL AGAIN: its entry is written already — finish that save, and write the entry no second time
         print(dmparse.said(f"dmsave: this entry is written already, and waiting — committing it, as --again does"),

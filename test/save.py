@@ -122,6 +122,10 @@ _s = state()
 rc, out, err = save('sam', 'nothing', '--body', '- action: nothing.')
 check("nothing in the garden differs from its last commit: refused (exit 2), and nothing is written or registered",
       rc == 2 and 'nothing to save' in err and untouched(_s), (rc, out, err))
+rc, out, err = save('sam', 'added the camera', '--body', '- action: added [[shared-camera]], kept by [[sam]].')
+check("...and a save run before the bean is written names the file its own entry names and lacks — not the gardener's, "
+      "which is written", rc == 2 and 'beans/shared-camera.md is not written' in err and 'beans/sam.md' not in err
+      and os.path.exists(os.path.join(G, 'beans', 'sam.md')) and untouched(_s), (rc, out, err))
 
 # ---- + one bean, saved in one call -----------------------------------------------------------------------------------
 bean('ali')
