@@ -1,0 +1,48 @@
+name: A use case
+description: A situation you keep, or would keep, a record of — to be shown as a use case, or to find what the vocabulary cannot say about it.
+title: "use case: "
+labels: [use-case]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write the situation in your own words. Do not paste anything from your garden — no host names, addresses,
+        paths, people's names, ids, serials or findings. Use neutral names: sam, ali, host-a, example.org,
+        203.0.113.10, /home/user/….
+
+        The use-case pages show a situation, the beans that record it, and what the tools print about it. A case
+        described here can become one of them, or show a gap in the vocabulary.
+  - type: textarea
+    id: situation
+    attributes:
+      label: The situation, in your own words
+      description: What happens, between whom, and over what time.
+    validations:
+      required: true
+  - type: textarea
+    id: things
+    attributes:
+      label: "The things involved: what each one is, with neutral names"
+      description: For example a host `host-a`, a domain `example.org`, an agreement between sam and ali.
+  - type: textarea
+    id: say
+    attributes:
+      label: What you want the notebook to say about it
+      description: The facts, and the questions you would ask of them later.
+  - type: textarea
+    id: gap
+    attributes:
+      label: What the vocabulary could not say, if you tried
+      description: The term you looked for, what the gate refused, or where the fact ended up in `details:`.
+  - type: input
+    id: related
+    attributes:
+      label: The use-case page this is like
+      description: Filled in when you came from a use-case page. Otherwise name one, or leave it empty.
+  - type: checkboxes
+    id: neutral
+    attributes:
+      label: Neutral names
+      options:
+        - label: Nothing here comes from my garden that I have not replaced with a neutral name.
+          required: true

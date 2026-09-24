@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light dark">
+<title>Machinery — daftar</title>
+<meta name="description" content="daftar's own mechanisms — the gate, the journal, the merge, the mycelium, the ledger — recorded in a demo garden and drawn at four levels of detail.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<!-- daftar:part id="nav" --><a class="skip" href="#content">Skip to content</a>
+<header class="site">
+  <div class="bar">
+    <a class="mark" href="index.html"><span class="fa" lang="fa" dir="rtl">دفتر</span> daftar</a>
+    <nav aria-label="site">
+      <ul>
+        <li><a href="use-cases/index.html">Use cases</a></li>
+        <li><a href="metaphysics.html">Metaphysics</a></li>
+        <li><a href="machinery.html" aria-current="page">Machinery</a></li>
+        <li><a href="contribute.html">Contribute</a></li>
+        <li><a href="https://github.com/0mit/daftar">GitHub <span aria-hidden="true">↗</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header><!-- /daftar:part -->
+<main id="content">
+
+<h1>Machinery: daftar's mechanisms, drawn</h1>
+<p class="lede">daftar's own mechanisms are recorded here as a garden records anything: as beans and mappings in a demo garden,
+  each with its source. They are drawn by factory, the application layer that draws a garden's mechanisms at four levels of
+  detail. This site publishes what it drew: the report below, one offline file.</p>
+
+<section class="with-figure" aria-labelledby="map">
+  <h2 id="map">Five mechanisms, and where they meet</h2>
+  <figure class="drawing" id="fig-machinery-map"><!-- daftar:svg id="machinery-map" --><svg class="d" viewBox="0 0 400 580" role="img" aria-labelledby="machinery-map-t machinery-map-d" xmlns="http://www.w3.org/2000/svg">
+<title id="machinery-map-t">The five mechanisms</title><desc id="machinery-map-d">daftar&#x27;s five mechanisms and where they meet. A writer&#x27;s change passes the gate before it enters the garden&#x27;s history, and the journal gives each change its heading from the clock. Another clone or session reaches the same history through the merge. Another garden meets this one only through the mycelium, by proposal. Agreements feed the ledger, which reads what is owed.</desc>
+<defs><marker id="machinery-map-ah" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="machinery-map-ah-accent" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah-accent" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="machinery-map-ah-s" viewBox="0 0 7 6" refX="0.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M7,0 L0,3 L7,6 Z"/></marker><pattern id="machinery-map-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(135)"><rect class="h0" width="8" height="8"/><rect class="h1" width="3" height="8"/></pattern></defs>
+<g class="node empsychon"><rect class="box" x="8" y="12" width="176" height="52" rx="7"/><rect class="bar" x="8" y="12" width="5" height="52" rx="2"/><text class="t" x="22" y="31">a writer</text><text class="s" x="22" y="47">a person or an agent</text></g>
+<g class="node external external"><rect class="box" x="216" y="12" width="176" height="52" rx="7"/><rect class="bar" x="216" y="12" width="5" height="52" rx="2"/><text class="t" x="230" y="31">the clock</text><text class="s" x="230" y="47">the machine&#x27;s time</text></g>
+<g class="flow"><path class="l" d="M83,64 L83,104" marker-end="url(#machinery-map-ah)"/><text class="fl" x="91" y="88" text-anchor="start">a change</text></g>
+<g class="node lekton accent"><rect class="box" x="8" y="104" width="150" height="56" rx="7"/><rect class="bar" x="8" y="104" width="5" height="56" rx="2"/><text class="t" x="22" y="123">The gate</text><text class="s" x="22" y="139">every write passes it</text></g>
+<g class="node lekton"><rect class="box" x="226" y="104" width="166" height="56" rx="7"/><rect class="bar" x="226" y="104" width="5" height="56" rx="2"/><text class="t" x="240" y="123">The journal</text><text class="s" x="240" y="139">stamped by the clock</text></g>
+<g class="flow"><path class="l" d="M304,64 L304,104" marker-end="url(#machinery-map-ah)"/></g>
+<g class="flow"><path class="l" d="M226,144 L158,144" marker-end="url(#machinery-map-ah)"/><text class="fl" x="192" y="122" text-anchor="middle">same</text><text class="fl" x="192" y="135" text-anchor="middle">commit</text></g>
+<g class="flow"><path class="l" d="M83,160 L83,204" marker-end="url(#machinery-map-ah)"/><text class="fl" x="91" y="186" text-anchor="start">passes</text></g>
+<g class="store lekton"><path class="box" d="M8,211 v46 a192,7 0 0 0 384,0 v-46"/><ellipse class="top" cx="200" cy="211" rx="192" ry="7"/><text class="t" x="200" y="234.5" text-anchor="middle">history (git)</text><text class="s" x="200" y="250.5" text-anchor="middle">every commit the gate passed</text></g>
+<g class="node empsychon"><rect class="box" x="8" y="300" width="176" height="52" rx="7"/><rect class="bar" x="8" y="300" width="5" height="52" rx="2"/><text class="t" x="22" y="319">another clone</text><text class="s" x="22" y="335">or another session</text></g>
+<g class="node lekton"><rect class="box" x="216" y="300" width="176" height="52" rx="7"/><rect class="bar" x="216" y="300" width="5" height="52" rx="2"/><text class="t" x="230" y="319">The merge</text><text class="s" x="230" y="335">one bean, one object</text></g>
+<g class="flow"><path class="l" d="M184,326 L216,326" marker-end="url(#machinery-map-ah)"/></g>
+<g class="flow"><path class="l" d="M304,300 L304,264" marker-end="url(#machinery-map-ah)"/><text class="fl" x="312" y="286" text-anchor="start">joins</text></g>
+<g class="node external external"><rect class="box" x="8" y="388" width="108" height="52" rx="7"/><rect class="bar" x="8" y="388" width="5" height="52" rx="2"/><text class="t" x="22" y="407">another</text><text class="s" x="22" y="423">garden</text></g>
+<g class="node lekton"><rect class="box" x="146" y="388" width="108" height="52" rx="7"/><rect class="bar" x="146" y="388" width="5" height="52" rx="2"/><text class="t" x="160" y="407">The mycelium</text><text class="s" x="160" y="423">by proposal</text></g>
+<g class="node empsychon"><rect class="box" x="284" y="388" width="108" height="52" rx="7"/><rect class="bar" x="284" y="388" width="5" height="52" rx="2"/><text class="t" x="298" y="407">this garden</text><text class="s" x="298" y="423">its gardener&#x27;s</text></g>
+<g class="flow"><path class="l" d="M118,414 L144,414" marker-end="url(#machinery-map-ah)" marker-start="url(#machinery-map-ah-s)"/></g>
+<g class="flow"><path class="l" d="M256,414 L282,414" marker-end="url(#machinery-map-ah)" marker-start="url(#machinery-map-ah-s)"/></g>
+<g class="store lekton"><path class="box" d="M8,481 v46 a54,7 0 0 0 108,0 v-46"/><ellipse class="top" cx="62" cy="481" rx="54" ry="7"/><text class="t" x="62" y="504.5" text-anchor="middle">agreements</text><text class="s" x="62" y="520.5" text-anchor="middle">what moved</text></g>
+<g class="node lekton"><rect class="box" x="146" y="478" width="108" height="52" rx="7"/><rect class="bar" x="146" y="478" width="5" height="52" rx="2"/><text class="t" x="160" y="497">The ledger</text><text class="s" x="160" y="513">in fractions</text></g>
+<g class="node lekton"><rect class="box" x="284" y="478" width="108" height="52" rx="7"/><rect class="bar" x="284" y="478" width="5" height="52" rx="2"/><text class="t" x="298" y="497">what is owed</text><text class="s" x="298" y="513">never stored</text></g>
+<g class="flow"><path class="l" d="M116,504 L146,504" marker-end="url(#machinery-map-ah)"/></g>
+<g class="flow"><path class="l" d="M254,504 L284,504" marker-end="url(#machinery-map-ah)"/></g>
+<text class="s" x="200" y="566" text-anchor="middle">each is drawn at four levels on the machinery page</text>
+</svg><!-- /daftar:svg --><figcaption>The gate is
+    the hinge: every write passes it.</figcaption></figure>
+  <p>A writer's change passes <strong>the gate</strong> before it enters the garden's history, and <strong>the journal</strong>
+    gives each change its heading from the clock, in the same commit. Another clone of the garden, or another session's branch,
+    reaches the same history through <strong>the merge</strong>. Another garden meets this one only through <strong>the
+    mycelium</strong>, by proposal. Agreements record what moved, and <strong>the ledger</strong> reads what is owed from it.</p>
+</section>
+
+<section aria-labelledby="levels">
+  <h2 id="levels">Four levels, four questions</h2>
+  <p class="measure">Each mechanism is drawn at four levels of detail, from what it is to what exactly runs. The levels and their
+    questions are the drawing tool's own definitions, recorded in the demo garden:</p>
+  <!-- daftar:drawn id="levels" --><div class="table"><table><thead><tr><th scope="col">level</th><th scope="col">for</th><th scope="col">the question it answers</th></tr></thead><tbody><tr><th scope="row">Orient — what it is</th><td>a newcomer: a new colleague, a manager seeing it for the first time, anyone who has never touched it</td><td>What does this mechanism do for us, what is it built from, and where do I learn it properly?</td></tr><tr><th scope="row">Understand — how it works</th><td>a technical manager or engineer who must reason about it</td><td>How do the parts co-operate, where does the mechanism decide, and where is it fragile?</td></tr><tr><th scope="row">Operate — is it working</th><td>the engineer on call</td><td>What must the person on call know first about this mechanism, right now?</td></tr><tr><th scope="row">Inspect — what exactly</th><td>an auditor, or the engineer about to change it</td><td>What exactly are the parts, how do we know, and what is still open?</td></tr></tbody></table></div><!-- /daftar:drawn -->
+</section>
+
+<section aria-labelledby="report">
+  <h2 id="report">The report</h2>
+  <p class="measure">One tab per mechanism, and one for the beans they involve. The level switch moves between the four levels; a
+    dotted term, or a part of a drawing, carries a definition — hover over it, or tap it.</p>
+  <p><a href="machinery/report.html">Open the report on its own page</a>. It is the drawing tool's own document and runs its own
+    script; the rest of this site runs none. Its drawings are made for a wide screen: on a phone, turn it sideways. The badge
+    beside its title is the drawing tool's reading of the demo garden's own history, which carries no release tag — it says
+    "unversioned"; the language it was drawn with is named below.</p>
+  <iframe class="report" src="machinery/report.html" title="daftar's mechanisms, drawn: the report" loading="lazy"></iframe>
+</section>
+
+<section aria-labelledby="cannot">
+  <h2 id="cannot">What this demo cannot show</h2>
+  <ul class="prose">
+    <li><strong>Operate reads live data.</strong> The demo garden has no probe, no metric and no monitoring behind it, so every
+      part reads “no signal”, with the tool's own reason. That is the demo garden's true state, not a fault. No mechanism
+      declares a live shape, because declaring one without data would be a false claim. For each, the shape it would take:</li>
+  </ul>
+  <!-- daftar:drawn id="cannot" --><ul><li><strong>The gate</strong>: it would take the <em>funnel</em> shape with live data. A funnel counts the commits that arrive, those stopped at each check and those recorded; this garden exports no count of its hook's verdicts, and no Prometheus reads it.</li><li><strong>The journal</strong>: it would take the <em>roster</em> shape with live data. A roster shows who writes, and how much, from a live series; nothing here measures the journal.</li><li><strong>The merge</strong>: no shape of the drawing kit fits it. A merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric.</li><li><strong>The mycelium</strong>: no shape of the drawing kit fits it. What waits to be taken is a proposal file beside the gardens, not a metric.</li><li><strong>The ledger</strong>: no shape of the drawing kit fits it. What falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric.</li></ul><!-- /daftar:drawn -->
+  <ul class="prose">
+    <li><strong>Actions.</strong> None is placed: an action asks for a tool that only a host's own configuration can run.</li>
+    <li><strong>Author.</strong> The report's editor for the drawing's record works on a copy in your browser, and nothing reads
+      what it exports.</li>
+    <li><strong>The live page and the dashboards</strong> the drawing tool can serve for a running garden are not part of this
+      site.</li>
+  </ul>
+</section>
+
+<section aria-labelledby="mechanisms">
+  <h2 id="mechanisms">The five mechanisms</h2>
+  <!-- daftar:drawn id="mechanisms" --><div class="table"><table><thead><tr><th scope="col">mechanism</th><th scope="col">its claim</th><th scope="col">orient asks</th><th scope="col">understand asks</th><th scope="col">the beans it shows</th></tr></thead><tbody><tr><th scope="row">The gate</th><td>A commit is recorded only if the gate passes it.</td><td>What keeps a wrong fact out of the notebook?</td><td>Where is a commit refused, and on what?</td><td>sam, daftar</td></tr><tr><th scope="row">The journal</th><td>Every change carries who, when and why, and no hand types the when.</td><td>Who changed what, and why?</td><td>Why can no one type a heading?</td><td>sam, daftar</td></tr><tr><th scope="row">The merge</th><td>Two records of one thing become one, and nothing either said is lost.</td><td>What happens when two records of one thing meet?</td><td>What decides that two beans are one object?</td><td>daftar, sam</td></tr><tr><th scope="row">The mycelium</th><td>What passes between gardens is only ever a proposal, and only its gardener lets it in.</td><td>How do two people's notebooks share one agreement?</td><td>Where does a proposal stop, and who lets it in?</td><td>shared-camera, sam, ali, garden-ali</td></tr><tr><th scope="row">The ledger</th><td>What one person owes another is read from what moved, never written.</td><td>Who owes whom, and how do we know?</td><td>Where is what is owed computed, and why is it never stored?</td><td>shared-camera, washer-loan, daftar, sam, ali</td></tr></tbody></table></div><!-- /daftar:drawn -->
+</section>
+
+<section aria-labelledby="drawn">
+  <h2 id="drawn">How it was drawn</h2>
+  <p class="measure">A clone of the demo garden-sam records daftar as a product bean, one mapping for each mechanism, and the
+    drawing's record; the drawing tool is vendored into the clone at a tagged release; then it checks the record against the
+    drawings and writes the report. The commands, and what they printed:</p>
+  <!-- daftar:drawn id="transcript" --><pre class="out" tabindex="0" aria-label="how the report was drawn"><code><span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "daftar's mechanisms recorded, and how they are drawn" --body "- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], [[mycelium]] and [[ledger]]; [[factory]] and [[design-factory]], which draw them; bin/mechanisms.py, the drawings (site/machinery/composers.py).
+- why: the machinery page of daftar's site shows these mechanisms, drawn at four levels."</span>
+## 2026-10-27 09:00+00:00 · sam · daftar's mechanisms recorded, and how they are drawn
+<span class="cmd">~/garden-sam$ git add -A</span>
+<span class="cmd">~/garden-sam$ git commit -q -m "daftar's mechanisms recorded, and how they are drawn"</span>
+garden-sam (daftar v0.33.1, gardener sam, garden 875a6f4d60d5): 21 docs, 0 error(s), 0 warning(s)
+…
+
+fast: 14/14 corpus checks passed
+<span class="cmd">~/garden-sam$ python3 ~/factory/bin/factory upgrade --from ~/factory --garden .</span>
+factory: vendored v0.6.5 (15 files) into factory; the pin in [[factory]] now says v0.6.5. The skill is mirrored at .claude/skills/factory/SKILL.md. Nothing is committed.
+Journal it in the same commit, e.g.:
+- factory v0.6.5 vendored from ~/factory (`factory upgrade`); [[factory]] details.factory_release moved.
+<span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "factory v0.6.5 vendored" --body "- action: factory v0.6.5 vendored into factory/ by factory upgrade, which mirrors its skill at .claude/skills/factory/SKILL.md; [[factory]] already pins v0.6.5."</span>
+## 2026-10-27 09:00+00:00 · sam · factory v0.6.5 vendored
+<span class="cmd">~/garden-sam$ git add -A</span>
+<span class="cmd">~/garden-sam$ git commit -q -m "factory v0.6.5 vendored"</span>
+garden-sam (daftar v0.33.1, gardener sam, garden 875a6f4d60d5): 21 docs, 0 error(s), 0 warning(s)
+…
+
+fast: 14/14 corpus checks passed
+<span class="cmd">~/garden-sam$ python3 factory/bin/factory check</span>
+factory: the record and the drawings agree
+<span class="cmd">~/garden-sam$ python3 factory/bin/factory report --out ../report.html</span>
+factory report: 5 mechanisms (5 shown) + reference + author mode -&gt; ../report.html</code></pre><!-- /daftar:drawn -->
+  <!-- daftar:drawn id="when" --><p>Drawn by factory v0.6.5 on 2026-09-23 15:35 UTC, from a clone of garden-sam grown by daftar v0.33.1. Its garden ids are those of the build that drew it: each build of these pages grows the gardens again, with new ids. That is not the release every other output on these pages comes from, daftar v0.34.0: the drawing, its commands and its report say what that garden said, in the words of the law daftar v0.33.1 carried, and a word the law has renamed since is in them as it was. <code>python3 bin/dmwhy.py retired</code> lists what each old word became.</p><!-- /daftar:drawn -->
+  <p class="measure">The drawings and the record are files of this site:
+    <a href="https://github.com/0mit/daftar/blob/master/site/machinery/composers.py">site/machinery/composers.py</a> draws each
+    mechanism with the tool's pattern kit, and <a href="https://github.com/0mit/daftar/blob/master/site/machinery/record.yaml">site/machinery/record.yaml</a>
+    holds what the demo garden records.</p>
+</section>
+
+</main>
+<!-- daftar:part id="foot" --><footer class="site">
+  <div>
+    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.33.1</code>.</p>
+    <p>Apache-2.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
+  </div>
+</footer><!-- /daftar:part -->
+</body>
+</html>

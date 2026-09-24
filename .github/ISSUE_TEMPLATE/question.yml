@@ -1,0 +1,29 @@
+name: A question
+description: Something the documents or the tools did not answer for you.
+title: "question: "
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write the situation in your own words. Do not paste anything from your garden — no host names, addresses,
+        paths, people's names, ids, serials or findings. Use neutral names: sam, ali, host-a, example.org,
+        203.0.113.10, /home/user/….
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+  - type: textarea
+    id: read
+    attributes:
+      label: What you read first
+      description: The documents, sections or tool headers you looked in, and what they left open.
+  - type: checkboxes
+    id: neutral
+    attributes:
+      label: Neutral names
+      options:
+        - label: Nothing here comes from my garden that I have not replaced with a neutral name.
+          required: true

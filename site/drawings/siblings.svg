@@ -1,0 +1,26 @@
+<svg class="d" viewBox="0 0 400 480" role="img" aria-labelledby="siblings-t siblings-d" xmlns="http://www.w3.org/2000/svg">
+<title id="siblings-t">No privileged sibling</title><desc id="siblings-d">Six calendars — gregorian-civil, persian, hebrew, islamic-civil, julian, ethiopic — each joined to one line, the day, and none joined to another: every calendar meets the others at the day, and none is the day. Below, three currencies, XTS, EUR and IRR: an edge that would join two by a factor is refused. A rate between two currencies is an observation someone made.</desc>
+<defs><marker id="siblings-ah" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="siblings-ah-accent" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah-accent" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="siblings-ah-s" viewBox="0 0 7 6" refX="0.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M7,0 L0,3 L7,6 Z"/></marker><pattern id="siblings-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(135)"><rect class="h0" width="8" height="8"/><rect class="h1" width="3" height="8"/></pattern></defs>
+<g class="node lekton"><rect class="box" x="8" y="14" width="132" height="52" rx="7"/><rect class="bar" x="8" y="14" width="5" height="52" rx="2"/><text class="t" x="22" y="33">gregorian-civil</text><text class="s" x="22" y="49">solar months</text></g>
+<g class="flow plain"><path class="l" d="M74,66 L74,108"/></g>
+<g class="node lekton"><rect class="box" x="146" y="14" width="120" height="52" rx="7"/><rect class="bar" x="146" y="14" width="5" height="52" rx="2"/><text class="t" x="160" y="33">persian</text><text class="s" x="160" y="49">solar months</text></g>
+<g class="flow plain"><path class="l" d="M206,66 L206,108"/></g>
+<g class="node lekton"><rect class="box" x="272" y="14" width="120" height="52" rx="7"/><rect class="bar" x="272" y="14" width="5" height="52" rx="2"/><text class="t" x="286" y="33">hebrew</text><text class="s" x="286" y="49">lunisolar</text></g>
+<g class="flow plain"><path class="l" d="M332,66 L332,108"/></g>
+<g class="node lekton"><rect class="box" x="8" y="156" width="132" height="52" rx="7"/><rect class="bar" x="8" y="156" width="5" height="52" rx="2"/><text class="t" x="22" y="175">islamic-civil</text><text class="s" x="22" y="191">lunar months</text></g>
+<g class="flow plain"><path class="l" d="M74,156 L74,114"/></g>
+<g class="node lekton"><rect class="box" x="146" y="156" width="120" height="52" rx="7"/><rect class="bar" x="146" y="156" width="5" height="52" rx="2"/><text class="t" x="160" y="175">julian</text><text class="s" x="160" y="191">solar months</text></g>
+<g class="flow plain"><path class="l" d="M206,156 L206,114"/></g>
+<g class="node lekton"><rect class="box" x="272" y="156" width="120" height="52" rx="7"/><rect class="bar" x="272" y="156" width="5" height="52" rx="2"/><text class="t" x="286" y="175">ethiopic</text><text class="s" x="286" y="191">solar months</text></g>
+<g class="flow plain"><path class="l" d="M332,156 L332,114"/></g>
+<g class="flow accent"><path class="l" d="M8,111 L392,111"/></g>
+<text class="fl b" x="392" y="103" text-anchor="end">the day</text>
+<g class="tag"><rect class="p" x="8" y="222" width="384" height="22" rx="9"/><text class="tl" x="200" y="237" text-anchor="middle">every calendar meets the others at the day, and none is the day</text></g>
+<g class="node lekton"><rect class="box" x="8" y="300" width="110" height="44" rx="7"/><rect class="bar" x="8" y="300" width="5" height="44" rx="2"/><text class="t" x="22" y="326.5">XTS</text></g>
+<g class="node lekton"><rect class="box" x="145" y="300" width="110" height="44" rx="7"/><rect class="bar" x="145" y="300" width="5" height="44" rx="2"/><text class="t" x="159" y="326.5">EUR</text></g>
+<g class="node lekton"><rect class="box" x="282" y="300" width="110" height="44" rx="7"/><rect class="bar" x="282" y="300" width="5" height="44" rx="2"/><text class="t" x="296" y="326.5">IRR</text></g>
+<g class="refused"><path class="l" d="M118,322 L132,322"/><circle class="o" cx="132" cy="322" r="9"/><path class="x" d="M127.8,317.8 L136.2,326.2 M127.8,326.2 L136.2,317.8"/></g>
+<text class="fl" x="132" y="362" text-anchor="middle">a factor?</text>
+<g class="tag warn"><rect class="p" x="8" y="384" width="384" height="38" rx="9"/><text class="tl" x="200" y="399" text-anchor="middle">no factor joins two currencies:</text><text class="tl" x="200" y="413" text-anchor="middle">a rate is an observation, with a source and a moment</text></g>
+<g class="band"><rect class="b" x="8" y="436" width="384" height="32" rx="6"/><text class="cap" x="18" y="456">A CALENDAR, A CURRENCY, A BODY: NONE PRIVILEGED</text></g>
+</svg>

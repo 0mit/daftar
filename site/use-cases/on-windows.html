@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light dark">
+<title>On Windows — daftar</title>
+<meta name="description" content="A daftar garden in PowerShell: the commands, which Python, UTF-8, the three things Windows PowerShell 5.1 does differently, and line ends.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<!-- daftar:part id="nav" --><a class="skip" href="#content">Skip to content</a>
+<header class="site">
+  <div class="bar">
+    <a class="mark" href="../index.html"><span class="fa" lang="fa" dir="rtl">دفتر</span> daftar</a>
+    <nav aria-label="site">
+      <ul>
+        <li><a href="../use-cases/index.html" aria-current="true">Use cases</a></li>
+        <li><a href="../metaphysics.html">Metaphysics</a></li>
+        <li><a href="../machinery.html">Machinery</a></li>
+        <li><a href="../contribute.html">Contribute</a></li>
+        <li><a href="https://github.com/0mit/daftar">GitHub <span aria-hidden="true">↗</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header><!-- /daftar:part -->
+<main id="content">
+
+<nav class="crumbs" aria-label="breadcrumb"><a href="index.html">Use cases</a> › On Windows</nav>
+<h1>On Windows</h1>
+<p class="lede">The same garden, kept in PowerShell. Everything in daftar is Python and git, so it runs there; what differs is the
+  name of the interpreter, how the shell reads and writes text, and how git checks files out.</p>
+<p class="meta">INSTALL.md at daftar v0.34.0</p>
+
+<p class="note measure">Every block on this page is <code>INSTALL.md</code>'s own text, at the release these pages document. The
+  demo gardens behind the other pages were grown on Linux; nothing here was run by the build.</p>
+
+<h2>Grow a garden</h2>
+<div class="prose"><!-- daftar:doc id="install-windows" --><p>Everything here is Python and git, so it runs in PowerShell — with <code>python</code> for <code>python3</code>, backslashes or forward slashes as you like, and <code>$HOME</code> for <code>~</code>:</p>
+<pre class="doc" tabindex="0" aria-label="INSTALL.md: On Windows"><code>git clone https://github.com/0mit/daftar.git $HOME\daftar
+cd $HOME\daftar
+git checkout (git tag -l 'v*' --sort=-v:refname | Select-Object -First 1)
+python seed\germinate.py $HOME\garden-sam --gardener sam --gardener-name "Sam"
+cd $HOME\garden-sam
+git config user.name  "agent (&lt;model&gt;, &lt;session&gt;)"
+git config user.email "&lt;the address the person chose&gt;"
+python bin\dmcheck.py --all</code></pre><!-- /daftar:doc --></div>
+<p class="measure">The cookbook writes every command <code>python3</code>, and says that on Windows it is <code>python</code>. The
+  tools that print a command for you to run print it in the form that runs where they run.</p>
+
+<div class="prose"><!-- daftar:doc id="install-which-python" --><p><strong>Which Python.</strong> On Windows <code>python</code> and <code>python3</code> may not be Python at all: they can be the Microsoft Store's <em>App execution aliases</em>, which only offer to install it. <code>python -c "import sys; print(sys.executable)"</code> tells them apart: a Python prints its own path, the alias answers "Python was not found" or opens the Store (<code>where.exe python</code> lists it under <code>WindowsApps</code>). Install Python from python.org, or turn the aliases off (Settings &gt; Apps &gt; Advanced app settings &gt; App execution aliases). The installer from python.org usually brings the <code>py</code> launcher too: <code>py -3 seed\germinate.py …</code> runs the newest Python 3 even where the aliases are in the way. PyYAML: <code>py -3 -m pip install PyYAML</code> (or <code>python -m pip install PyYAML</code>).</p><!-- /daftar:doc --></div>
+
+<div class="prose"><!-- daftar:doc id="install-utf8" --><p><strong>UTF-8.</strong> Every bean is UTF-8, and the tools read and write it correctly whatever the machine's language — their output through a pipe, a journal entry's body on standard input, and <code>bin/dmsafe.py</code>'s block included. Windows PowerShell 5.1 does not: it reads a UTF-8 file without a BOM in the old code page, so a Persian bean — or any bean with a character outside ASCII — read with <code>type</code> or <code>Get-Content</code> arrives garbled, and a bean written with <code>&gt;</code> or <code>Out-File</code> is saved as UTF-16, which the gate cannot read. Read with <code>Get-Content -Encoding UTF8 beans\sam.md</code> (or through Python), and write through the tools or an editor that saves UTF-8. When a tool's output is read through a pipe, <code>$env:PYTHONUTF8 = "1"</code> and <code>[Console]::OutputEncoding = [Text.Encoding]::UTF8</code> make Python write UTF-8 and PowerShell read it as UTF-8. The hooks set <code>PYTHONUTF8</code> themselves. PowerShell 7 reads and writes UTF-8 by default.</p><!-- /daftar:doc --></div>
+
+<div class="prose"><!-- daftar:doc id="install-three-things" --><p><strong>Three things a Unix shell does that Windows PowerShell 5.1 does not</strong>, and the form every page and every tool's message here uses instead, so that what is printed runs as printed:</p>
+<ul><li><code>&amp;&amp;</code> joins two commands only from PowerShell 7. Run <code>git add -A</code>, then <code>git commit</code>: two commands.</li><li><code>&lt;</code> does not redirect standard input in any PowerShell. A journal entry's body goes in as an argument: <code>python bin\dmjournal.py "&lt;who&gt;" "&lt;what&gt;" --body "- action: …"</code>. A line break typed inside the quotes is kept; so is <code>`n</code> inside double quotes. Windows PowerShell 5.1 drops a double quote <em>inside</em> an argument — write the body without one there (PowerShell 7.3 and later pass it intact). A block for <code>bin/dmsafe.py</code> goes in as a file: <code>python bin\dmsafe.py insert-after beans\sam.md responsibility --block block.yaml</code>.</li><li><code>&gt;</code> and <code>Out-File</code> write UTF-16, which the gate does not read (above): a bean is saved as UTF-8. Only <code>bin/dmjournal.py</code>'s body and <code>bin/dmsafe.py</code>'s block may be UTF-16, with its mark; without the mark each is refused (read as UTF-8 it is a NUL after every letter), and <code>bin/dmjournal.py</code> refuses every control character but a tab.</li></ul><!-- /daftar:doc --></div>
+
+<h2>An upgrade that names the gardener</h2>
+<div class="prose"><!-- daftar:doc id="install-upgrade-ps" --><p>An upgrade that names the gardener through the environment clears it again at the end, because a PowerShell session keeps what <code>$env:</code> sets, and the next garden upgraded in it would take the same gardener without being asked:</p>
+<pre class="doc" tabindex="0" aria-label="INSTALL.md: On Windows"><code>$env:DAFTAR_GARDENER = "sam"; python bin\dmupgrade.py &lt;tag&gt;; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME, Env:DAFTAR_GARDENER_GENOS, Env:DAFTAR_GARDENER_KIND -ErrorAction SilentlyContinue</code></pre><!-- /daftar:doc --></div>
+
+<div class="prose"><!-- daftar:doc id="install-line-ends" --><p><strong>Line ends.</strong> Git for Windows checks text out with CRLF by default, and a git hook with a CR in it does not run. The garden's <code>.gitattributes</code> keeps its shell files LF, and <code>bin/install.py</code> installs the hooks with LF whatever the checkout did — so after any checkout, <code>python bin\install.py</code> puts working hooks in place.</p><!-- /daftar:doc --></div>
+
+<h2>Read more</h2>
+<ul class="prose">
+  <li><a href="https://github.com/0mit/daftar/blob/v0.34.0/INSTALL.md#on-windows">INSTALL.md, On Windows</a>, the source of every
+    block above.</li>
+  <li>The cookbook's statement recipe shows <a href="https://github.com/0mit/daftar/blob/v0.34.0/seed/COOKBOOK.md#a-statement-a-document-and-a-capture-of-its-lines">a
+    Windows path in a bean</a>, in single quotes.</li>
+</ul>
+
+<p class="strip">Is your situation like this, but not quite?
+  <a href="https://github.com/0mit/daftar/issues/new?template=use-case.yml&amp;related=on-windows">Tell us how it differs</a>.</p>
+<nav class="pager" aria-label="cases"><a href="an-agent-of-any-make.html">← Previous: An agent of any make</a><span></span></nav>
+
+</main>
+<!-- daftar:part id="foot" --><footer class="site">
+  <div>
+    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="../machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.33.1</code>.</p>
+    <p>Apache-2.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
+  </div>
+</footer><!-- /daftar:part -->
+</body>
+</html>

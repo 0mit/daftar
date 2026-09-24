@@ -9,3 +9,11 @@ daftar-sessions  # this tool's OWN directory name (bin/dmsession.py); a garden t
                  # that name took the name FROM the tool, so refusing it here would be the tail wagging
                  # the dog — and renaming it, as was tried first, orphans every existing worktree.
 omid README.md  # the author, named once in README.md on a text of his own — by his word, 2026-09-22 ("the persian part is by me")
+factory        site/machinery.html site/machinery/report.html site/machinery/drawn.json site/machinery/build.py
+               # the name of the tool that draws daftar's mechanisms for the site's machinery page: its report names
+               # itself, the page and the record of the drawing say what drew it, and the build that runs it calls
+               # it by name. Every other file, and every commit message, avoids the word.
+               # ratified by: the operator, 2026-09-23 ("You can public factory if needed but make sure not leaking")
+design-factory site/machinery.html site/machinery/report.html site/machinery/drawn.json site/machinery/build.py
+               # the id of the design bean that tool's contract fixes, carried in every report it writes.
+               # ratified by: the operator, 2026-09-23 ("You can public factory if needed but make sure not leaking")

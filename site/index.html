@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light dark">
+<title>daftar — a notebook your agents keep</title>
+<meta name="description" content="daftar is a notebook your AI agents keep, in plain files in git: every fact says who said it, every change is journalled, and a gate refuses what breaks a rule.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<!-- daftar:part id="nav" --><a class="skip" href="#content">Skip to content</a>
+<header class="site">
+  <div class="bar">
+    <a class="mark" href="index.html" aria-current="page"><span class="fa" lang="fa" dir="rtl">دفتر</span> daftar</a>
+    <nav aria-label="site">
+      <ul>
+        <li><a href="use-cases/index.html">Use cases</a></li>
+        <li><a href="metaphysics.html">Metaphysics</a></li>
+        <li><a href="machinery.html">Machinery</a></li>
+        <li><a href="contribute.html">Contribute</a></li>
+        <li><a href="https://github.com/0mit/daftar">GitHub <span aria-hidden="true">↗</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header><!-- /daftar:part -->
+<main id="content">
+
+<section class="hero" aria-labelledby="top">
+  <span class="fa-mark" lang="fa" dir="rtl" aria-hidden="true">دفتر</span>
+  <h1 id="top">A notebook your agents keep, that you can read without them.</h1>
+  <div class="lede prose"><!-- daftar:doc id="readme-lede" --><p><em>Daftar</em> (<span lang="fa" dir="rtl">دفتر</span>) is the Persian word for a notebook. This one is kept for you by your AI agent, about the things you and it work on, and you can read it without the agent.</p><!-- /daftar:doc --></div>
+</section>
+
+<section class="with-figure" aria-labelledby="rules">
+  <h2 id="rules">Three rules</h2>
+  <figure class="drawing" id="fig-one-language"><!-- daftar:svg id="one-language" --><svg class="d" viewBox="0 0 400 318" role="img" aria-labelledby="one-language-t one-language-d" xmlns="http://www.w3.org/2000/svg">
+<title id="one-language-t">One language, one gate</title><desc id="one-language-d">A person, an agent, and an agent of another make each write to the garden. Every write meets the gate, which asks whether it breaks a rule. A write that breaks one is refused; one that passes is committed into the garden, a private git repository holding the beans, each fact with its source, and the journal of every change.</desc>
+<defs><marker id="one-language-ah" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="one-language-ah-accent" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah-accent" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="one-language-ah-s" viewBox="0 0 7 6" refX="0.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M7,0 L0,3 L7,6 Z"/></marker><pattern id="one-language-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(135)"><rect class="h0" width="8" height="8"/><rect class="h1" width="3" height="8"/></pattern></defs>
+<g class="node empsychon"><rect class="box" x="8" y="14" width="124" height="52" rx="7"/><rect class="bar" x="8" y="14" width="5" height="52" rx="2"/><text class="t" x="22" y="33">you</text><text class="s" x="22" y="49">say what is true</text></g>
+<g class="node empsychon"><rect class="box" x="138" y="14" width="124" height="52" rx="7"/><rect class="bar" x="138" y="14" width="5" height="52" rx="2"/><text class="t" x="152" y="33">an agent</text><text class="s" x="152" y="49">writes, commits</text></g>
+<g class="node external external"><rect class="box" x="268" y="14" width="124" height="52" rx="7"/><rect class="bar" x="268" y="14" width="5" height="52" rx="2"/><text class="t" x="282" y="33">another make</text><text class="s" x="282" y="49">the same words</text></g>
+<g class="flow"><path class="l" d="M70,66 L70,84 L330,84 L330,66"/></g>
+<g class="flow"><path class="l" d="M200,66 L200,84"/></g>
+<g class="flow"><path class="l" d="M200,84 L200,106" marker-end="url(#one-language-ah)"/></g>
+<g class="gate accent"><polygon class="box" points="200,106 284,136 200,166 116,136"/><text class="g" x="200" y="133.5" text-anchor="middle">breaks a rule, or</text><text class="g" x="200" y="146.5" text-anchor="middle">goes unjournalled?</text></g>
+<g class="flow"><path class="l" d="M284,136 L352,136" marker-end="url(#one-language-ah)"/><text class="fl" x="318" y="128" text-anchor="middle">refused</text></g>
+<g class="tag"><rect class="p" x="290" y="144" width="102" height="36" rx="9"/><text class="tl" x="299" y="159">names the rule</text><text class="tl" x="299" y="173">and where</text></g>
+<g class="flow"><path class="l" d="M200,166 L200,196" marker-end="url(#one-language-ah)"/><text class="fl" x="208" y="189" text-anchor="start">passes: one commit</text></g>
+<g class="boundary"><rect class="b" x="8" y="196" width="384" height="114" rx="12"/><text class="cap" x="20" y="213">YOUR GARDEN — A PRIVATE GIT REPOSITORY</text></g>
+<g class="store lekton"><path class="box" d="M24,229 v62 a84,7 0 0 0 168,0 v-62"/><ellipse class="top" cx="108" cy="229" rx="84" ry="7"/><text class="t" x="108" y="252.5" text-anchor="middle">beans/</text><text class="s" x="108" y="268.5" text-anchor="middle">each fact, with</text><text class="s" x="108" y="283.5" text-anchor="middle">its source</text></g>
+<g class="store lekton"><path class="box" d="M208,229 v62 a84,7 0 0 0 168,0 v-62"/><ellipse class="top" cx="292" cy="229" rx="84" ry="7"/><text class="t" x="292" y="252.5" text-anchor="middle">log/journal.md</text><text class="s" x="292" y="268.5" text-anchor="middle">every change:</text><text class="s" x="292" y="283.5" text-anchor="middle">who, and why</text></g>
+</svg><!-- /daftar:svg --><figcaption>Whoever writes, the
+    change meets the same gate. What passes is committed with its journal entry; what breaks a rule is refused, and the
+    refusal names the rule.</figcaption></figure>
+  <div class="prose"><!-- daftar:doc id="readme-rules" --><p>daftar is a notebook with three rules:</p>
+<ol><li><strong>Every fact says who said it and how they know</strong> — you, or the agent, and whether it was told, measured, or guessed.</li><li><strong>Every change is written in a journal, in the same commit</strong> — what was done and why.</li><li><strong>A gate refuses any change that breaks a rule</strong> — whether a person or an agent made it.</li></ol><!-- /daftar:doc --></div>
+  <p class="measure">The notebook is plain text in a private git repository: a <strong>garden</strong> of
+    <strong>beans</strong>, one file for each thing it keeps. People and agents of any make write there in one language,
+    and the <strong>gate</strong> reads every commit before it is recorded.</p>
+</section>
+
+<section aria-labelledby="promise">
+  <h2 id="promise">The promise</h2>
+  <p class="promise">Whatever agent wrote it, a fact here says who said it and how they know, the change that put it there
+    says why, and you can read it without the agent.</p>
+</section>
+
+<section aria-labelledby="start">
+  <h2 id="start">Start, in three steps</h2>
+  <ol class="steps">
+    <li>
+      <h3>Tell your agent to read INSTALL.md</h3>
+      <p class="measure">You need a coding agent with a shell and git, and a place for a private repository. Tell the agent:</p>
+      <div class="prose"><!-- daftar:doc id="readme-start" --><blockquote><p>Read https://raw.githubusercontent.com/0mit/daftar/master/INSTALL.md and follow it. My notebook goes at <code>~/garden-sam</code>; my private remote is <code>git@github.com:me/garden.git</code>.</p></blockquote><!-- /daftar:doc --></div>
+    </li>
+    <li>
+      <h3>It grows your garden, with you as its gardener</h3>
+      <p class="measure">Your own person bean is the first thing in it, and the gate's last line names you. This is the command
+        it runs, and the lines that matter in what it prints:</p>
+      <!-- daftar:out id="grow-sam" match="^garden-sam \(|^germinated:|Its gardener, sam, is planted" --><pre class="out" tabindex="0" aria-label="output of germinate.py ~/garden-sam --gardener sam --gardener-name &quot;Sam&quot;"><code><span class="cmd">~/daftar$ python3 seed/germinate.py ~/garden-sam --gardener sam --gardener-name "Sam"</span>
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">e3b0cd6eb9ba</span>): 1 docs, 0 error(s), 0 warning(s)
+<span class="el" title="lines left out">…</span>
+germinated: ~/garden-sam  (std-vocab@22.0, daftar v0.34.0)
+<span class="el" title="lines left out">…</span>
+The garden passes its own gate. Its gardener, sam, is planted: the person who keeps it, named in GARDEN.md. To plant the next bean:
+<span class="el" title="lines left out">…</span></code></pre><!-- /daftar:out -->
+    </li>
+    <li>
+      <h3>Next time, tell it to read AGENTS.md in the garden</h3>
+      <p class="measure">(In Claude Code: “load daftar”.) The agent reads <code>AGENTS.md</code> in the garden — a reading order, not a
+        set of rules — and runs the gate. From then on you talk about your things, and the agent keeps the notebook. An assistant in a chat window, with
+        no shell, cannot run the gate: paste it <a href="https://github.com/0mit/daftar/blob/v0.34.0/seed/WELCOME.md">seed/WELCOME.md</a>,
+        and what it gives back is a proposal for you, or an agent with a shell, to commit.</p>
+    </li>
+  </ol>
+  <p class="measure"><a href="https://github.com/0mit/daftar/blob/v0.34.0/INSTALL.md">INSTALL.md</a> is written for the agent
+    that will grow the garden, and has the by-hand path for a person without one.</p>
+</section>
+
+<section aria-labelledby="next">
+  <h2 id="next">Where next</h2>
+  <ul class="cards">
+    <li><div class="card"><h3><a href="use-cases/index.html">Use cases</a></h3><p>Nine situations — machines and a domain, a cost
+      shared, a loan, two notebooks meeting — with the beans that record them and what the tools print.</p></div></li>
+    <li><div class="card"><h3><a href="metaphysics.html">Metaphysics</a></h3><p>What a being is here, in the Greek words the law uses, and the
+      design drawn: the crown above, the mycelium beneath, four layers, and why a judgment is its judge's.</p></div></li>
+    <li><div class="card"><h3><a href="machinery.html">Machinery</a></h3><p>daftar's own mechanisms — the gate, the journal, the
+      merge, the mycelium, the ledger — drawn at four levels of detail.</p></div></li>
+    <li><div class="card"><h3><a href="contribute.html">Contribute</a></h3><p>How to ask for what you need, bring a use case or
+      suggest a change, and how a need becomes law.</p></div></li>
+  </ul>
+</section>
+
+<section aria-labelledby="not-for-everyone">
+  <h2 id="not-for-everyone">Who it is for</h2>
+  <div class="prose"><!-- daftar:doc id="readme-not-for-everyone" --><p><strong>It is not for everyone.</strong> If one careful person keeps a few notes for one agent, this is more than you need. It is for people who run several agents, of several makes, across many sessions, on one set of real things — and who need what those agents leave behind to be true, attributed, and mergeable; and for anyone who will one day hand that set of things to someone else.</p><!-- /daftar:doc --></div>
+</section>
+
+<section aria-labelledby="words">
+  <h2 id="words">The words you will meet</h2>
+  <details>
+    <summary>Bean, garden, gardener, gate, journal, anchor, crown, proposal, mycelium, and the rest</summary>
+    <!-- daftar:doc id="readme-words" --><div class="table"><table><thead><tr><th scope="col">word</th><th scope="col">meaning</th></tr></thead><tbody><tr><td><strong>bean</strong></td><td>one managed thing, as one Markdown file in <code>beans/</code> — facts in the front matter, prose below</td></tr><tr><td><strong>garden</strong></td><td>a git repository of beans: one notebook. Private to whoever keeps it</td></tr><tr><td><strong>gardener</strong></td><td>the person — or organisation — who keeps a garden, named in its <code>GARDEN.md</code>: the first bean of a garden grown with <code>--gardener</code>. Agents tend a garden; its gardener keeps it and ratifies what an agent may not decide</td></tr><tr><td><strong>seed</strong></td><td><code>seed/</code>: the kit a new garden is grown from — the vocabulary, the templates, <code>germinate.py</code></td></tr><tr><td><strong>vocabulary</strong></td><td>the rules, as data: <code>seed/std-vocab.md</code> for every garden, plus a garden's own <code>VOCAB.md</code></td></tr><tr><td><strong>gate</strong></td><td><code>bin/dmcheck.py</code>, run as a pre-commit hook: a commit that breaks a rule is refused</td></tr><tr><td><strong>journal</strong></td><td><code>log/journal.md</code>: every change, who made it and why. The gate refuses an unrecorded change</td></tr><tr><td><strong>anchor</strong></td><td>a fact that identifies an object (a serial, a domain name), so two gardens recognise the same thing</td></tr><tr><td><strong>nature / genos</strong></td><td>what sort of being it is: <code>soma</code>, a body; <code>lekton</code>, what exists by being said and agreed; or <code>empsychon</code>, what lives, while it lives — refined by a genos, its kind, such as <code>host</code>. The words are Greek, and <code>MODEL.md</code> gives each</td></tr><tr><td><strong>facet</strong></td><td>an aspect of ownership, e.g. <code>legal</code> or <code>technical</code>; each has exactly one owner, and one entry saying who answers for it</td></tr><tr><td><strong>crown</strong></td><td>where every ownership chain ends: at <code>theos</code>, which no bean names, through a branch for each nature — <code>physis</code> for soma, <code>logos</code> for lekton, <code>agape</code>, love that does not possess, for empsychon. A person writes <code>owned_by: { legal: { crown: agape } }</code></td></tr><tr><td><strong>profile</strong></td><td>an opt-in group of rules, e.g. <code>domain</code>, for gardens that hold that kind of thing</td></tr><tr><td><strong>vacancy</strong></td><td>a value the vocabulary offers that nothing uses yet, stated with a reason</td></tr><tr><td><strong>Contract of Parts</strong></td><td><code>MODEL.md</code>: which decisions an agent may take alone and which a person must ratify</td></tr><tr><td><strong>proposal</strong></td><td>what one garden offers another: one file of beans, laid outside both gardens, which the other garden's gardener takes in by committing it — or does not. Taking it in accepts nothing on the gardener's behalf. <code>bin/dmpropose.py</code></td></tr><tr><td><strong>mycelium</strong></td><td>how gardens meet: beneath, through the agreements between their gardeners and the proposals made under them, in the language they share. Owned by no garden</td></tr></tbody></table></div><!-- /daftar:doc -->
+  </details>
+  <p class="note">The table is README.md's, at the release these pages document.</p>
+</section>
+
+</main>
+<!-- daftar:part id="foot" --><footer class="site">
+  <div>
+    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.33.1</code>.</p>
+    <p>Apache-2.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
+  </div>
+</footer><!-- /daftar:part -->
+</body>
+</html>
