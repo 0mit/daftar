@@ -7,8 +7,9 @@ misreadings agents make most, and before the forms for **what nobody said**. Eve
 written: `test/germinate.py` commits each one in a freshly grown garden, and `test/docs.py` holds the examples to the
 cookbook's.
 
-Write what you were told, in these shapes, and copy no value from here: `sam`, `ali`, `XTS`, `123456789abc`, and the
-dates and amounts below are the example's. Beans that name each other are committed together. A bean is saved with its
+Write what you were told, in these shapes, and copy no value from here: `sam`, `ali`, `XTS`, `123456789abc` and the
+amounts below are the example's. The shapes carry no day: a day someone said goes where a field is empty, and
+`as_of: now` stays as it is — the save writes the day in its place. Beans that name each other are committed together. A bean is saved with its
 journal entry in one command, which writes the entry (its heading read from the clock), stages everything and commits:
 
 ```sh
@@ -23,9 +24,9 @@ does not answer, `AGENTS.md` says where the law is. Every command here is writte
 
 What agents writing in gardens got wrong most often, in measured runs — each one a value nobody said, invented:
 
-- **Today is not the day it happened.** `day`, `accepted`, `agreed` and an event's `timing` are written only when
-  someone said that day; the dates below are the example's. Told of something with no date, leave the field out — an
-  event's timing is then `event-anchored` (*What nobody said*, at the end).
+- **Today is not the day it happened.** `day`, `accepted`, `agreed` and `due` are shown empty below, and stay empty
+  unless someone said that day — nor is the day of writing, or a date in another bean, the day it happened. An
+  event's timing nobody said is `event-anchored` (*What nobody said*, at the end).
 - **A transaction's amount is the whole that moved.** Its `borne_by` shares divide it: 90 paid by one and borne two
   parts to one is `amount: { count: "90", … }` with shares 2 and 1 — never the 30 that one of them owes.
 - **A currency is named by its code, looked up, not guessed.** People say "lira", "euro", "rial":
@@ -53,7 +54,7 @@ identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "person:sam", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
@@ -77,7 +78,7 @@ identity:
   status: confirmed
   anchors:
     - { key: garden_id, value: "123456789abc", class: logical, establishing: true }   # replace with what `dmpropose id` printed in Ali's garden
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-15 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: ali } } }
 responsibility: { legal: { holder: { bean: ali } } }
 ---
@@ -97,7 +98,7 @@ identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-15 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
@@ -120,8 +121,8 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: event_id, value: "event:dinner-at-sams-2026-09-12", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+    - { key: event_id, value: "event:dinner-at-sams", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
@@ -150,20 +151,20 @@ identity:
   status: confirmed
   anchors:
     - { key: contract_id, value: "contract:shared-camera", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
-  sam: { who: { bean: sam }, accepted: 2026-09-10 }
-  ali: { who: { bean: ali }, accepted: 2026-09-10 }
+  sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted; empty unless said
+  ali: { who: { bean: ali }, accepted: }   # accepted: the day this party accepted; empty unless said
 over:
   - { what: "a camera the two of them use" }
-words: { form: spoken, agreed: 2026-09-10 }
+words: { form: spoken, agreed: }   # agreed: the day it was agreed, in any calendar; empty unless said
 transactions:
   camera:
     what: "the camera, bought online"
     amount: { count: "90.00", unit: XTS }
-    day: 2026-09-10
+    day:   # day: the day it happened, where known; empty unless said
     paid_by:
       - { party: ali }
     borne_by:
@@ -190,22 +191,22 @@ identity:
   status: confirmed
   anchors:
     - { key: contract_id, value: "contract:washer-loan", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
-  sam: { who: { bean: sam }, role: lender, accepted: 2026-09-12 }
-  ali: { who: { bean: ali }, role: borrower, accepted: 2026-09-12 }
+  sam: { who: { bean: sam }, role: lender, accepted: }   # accepted: the day this party accepted; empty unless said
+  ali: { who: { bean: ali }, role: borrower, accepted: }   # accepted: the day this party accepted; empty unless said
 over:
   - { what: "the price of Ali's washing machine" }
-words: { form: spoken, at: { bean: dinner-at-sams }, agreed: 2026-09-12 }
+words: { form: spoken, at: { bean: dinner-at-sams }, agreed: }   # agreed: the day it was agreed, in any calendar; empty unless said
 clauses:
   instalments:
     what: "Ali repays 20 XTS on the first day of each month, six times"
     by: ali
     to: sam
     amount: { count: "20.00", unit: XTS }
-    due: 2026-10-01
+    due:   # due: the day it falls due — the first day, when it repeats; empty unless said
     every: { of: time, in: gregorian-civil, each: month, times: 6 }
   late-interest:
     what: "an instalment paid after its day carries one percent of itself for each month it is late"
@@ -217,7 +218,7 @@ transactions:
   the-loan:
     what: "Sam paid the shop for Ali's washing machine"
     amount: { count: "120.00", unit: XTS }
-    day: 2026-09-13
+    day:   # day: the day it happened, where known; empty unless said
     paid_by:
       - { party: sam }
     borne_by:
@@ -246,7 +247,7 @@ python3 bin/dmpropose.py take ../PROPOSAL-<garden>-<when>.md    # writes in the 
 
 <!-- example-entry: beans/shared-camera.md parties.ali -->
 ```yaml
-  ali: { who: { bean: ali }, accepted: 2026-09-10, provenance: { src: asserted-by-human, by: "ali", as_of: 2026-09-20 } }
+  ali: { who: { bean: ali }, accepted: , provenance: { src: asserted-by-human, by: "ali", as_of: now } }   # accepted: the day this party accepted; empty unless said
 ```
 
 ## What nobody said
@@ -272,7 +273,7 @@ identity:
   status: confirmed
   anchors:
     - { key: event_id, value: "event:call-with-ali", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
@@ -290,9 +291,9 @@ law. The commit goes through.
 
 ### A day nobody said
 
-A day nobody said — `accepted`, `agreed`, `day`, `due` — is left out: each of them may be absent. A party with no
-`accepted` has no acceptance on record, and the record then says just that. The `as_of` of a provenance is the day the
-fact was written down, which you know.
+A day nobody said — `accepted`, `agreed`, `day`, `due` — stays empty, as the forms show it, or is left out: each of
+them may be absent. A party with no `accepted` has no acceptance on record, and the record then says just that. The
+`as_of` of a provenance is the day the fact was written down: write `now`, and the save writes that day in its place.
 
 ### An amount nobody said
 
@@ -313,7 +314,7 @@ identity:
   status: confirmed
   anchors:
     - { key: contract_id, value: "contract:phone-loan", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
@@ -369,7 +370,7 @@ nature: lekton
 identity:
   status: provisional
   anchors: []
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-15 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: ali } } }
 responsibility: { legal: { holder: { bean: ali } } }
 open: ["its id: what `python3 bin/dmpropose.py id` prints in Ali's garden"]

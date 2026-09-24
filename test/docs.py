@@ -8,6 +8,7 @@ another's text — the skill of AGENTS.md, the forms of the cookbook's recipes �
 paragraph is true, or can be read two ways, is still a reader's work. The examples a document shows are committed
 in a fresh garden by `test/germinate.py`; this does not repeat that.
 """
+import subprocess
 import os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -134,10 +135,16 @@ def _blocks(sec):
     return re.findall(r"(?:^<!-- [^\n]*-->\n)?^```[^\n]*\n.*?^```$", sec, re.S | re.M)
 _ck, _fo = _sections(text["seed/COOKBOOK.md"]), _sections(text["seed/FORMS.md"])
 _recipes = [h for h in _fo if h in _ck]
-_drift = [h for h in _recipes if _blocks(_fo[h]) != _blocks(_ck[h])]
-check("seed/FORMS.md holds the shapes of six recipes of seed/COOKBOOK.md, every example block byte for byte as the "
-      "cookbook has it", len(_recipes) == 6 and not _drift and _recipes[0] == "The gardener, first",
-      f"recipes {_recipes}; blocks differing from the cookbook's (copy them again): {_drift}")
+# THE FORMS CARRY NO FACT (v0.34.1): each block is the cookbook's as the law derives it — a day someone said shown empty
+# with the law's meaning beside it, `as_of: now`, no day inside an anchor — so the check is the derivation, not a copy.
+_derived = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmforms.py"), "--check"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+check("seed/FORMS.md holds the shapes of six recipes of seed/COOKBOOK.md, every example block exactly as bin/dmforms.py "
+      "derives it from the cookbook's by the law", len(_recipes) == 6 and _derived.returncode == 0
+      and _recipes[0] == "The gardener, first", f"recipes {_recipes}; {_derived.stderr.strip()}")
+_days = [l.strip() for l in text["seed/FORMS.md"].split("\n")
+         if re.search(r"\b\d{4}-\d{2}-\d{2}\b", l) and not l.lstrip().startswith("start:")]
+check("...and no calendar day in them but a said time an event cannot be without (its `timing`): a day in a form is "
+      "the day a writer copies", not _days, _days)
 check("...and nothing else but the misreadings, first, and the forms for what nobody said",
       set(_fo) - set(_recipes) == {"What nobody said", "Common misreadings"} and list(_fo)[0] == "Common misreadings",
       sorted(set(_fo) - set(_recipes)))

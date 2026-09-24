@@ -701,7 +701,8 @@ def _held_at(path, genos=None):
                     if isinstance(_e, dict) and _seg in _e:
                         _next.append(_e[_seg])
             _vals = _next
-        out += [(_v, _for) for _v in _vals]
+        # an EMPTY value is how the forms show a day nobody said (v0.34.1): an absence, never a form to quote as a fix
+        out += [(_v, _for) for _v in _vals if _v is not None]
     return out
 
 
@@ -2420,7 +2421,7 @@ def ectl_entry_form_from_genos_attr(e):
             errors.append(f"{e.base}: {e.ref} uses the '{_used}' form, which is RESERVED to the gene "
                           f"{_allowed} — genos '{_genos}' does not name it in `{_fk}`, so its chain goes through "
                           f"a being rather than ending at a form reserved to others"
-                          + (f"; a tested {_genos} writes {_f}" if _f else '') + _rule(f"gene[].{_fk}", _fk, 'gene'))
+                          + (f"; {_TESTED}{_f}" if _f else '') + _rule(f"gene[].{_fk}", _fk, 'gene'))
 
 
 def ectl_on_aspect(e):
