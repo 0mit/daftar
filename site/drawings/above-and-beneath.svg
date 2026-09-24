@@ -1,20 +1,20 @@
 <svg class="d" viewBox="0 0 400 560" role="img" aria-labelledby="above-and-beneath-t above-and-beneath-d" xmlns="http://www.w3.org/2000/svg">
-<title id="above-and-beneath-t">Above and beneath</title><desc id="above-and-beneath-d">Above the ground, ownership rises through each garden to the crown, where every chain ends: in garden-sam the NAS and the website are owned by sam, and sam, a person, by the crown&#x27;s branch love; in garden-ali, ali by love too. Beneath the ground the two gardens meet through the mycelium, dashed threads that carry only a proposal between them. Under everything is the earth: the language both gardens pin.</desc>
+<title id="above-and-beneath-t">Above and beneath</title><desc id="above-and-beneath-d">Above the ground, ownership rises through each garden to the crown, theos, where every chain ends: in garden-sam the NAS and the website are owned by sam, and sam, a person, by the crown&#x27;s branch agape; in garden-ali, ali by agape too. Beneath the ground the two gardens meet through the mycelium, dashed threads that carry only a proposal between them. Under everything is the earth: the language both gardens pin.</desc>
 <defs><marker id="above-and-beneath-ah" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="above-and-beneath-ah-accent" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah-accent" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="above-and-beneath-ah-s" viewBox="0 0 7 6" refX="0.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M7,0 L0,3 L7,6 Z"/></marker><pattern id="above-and-beneath-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(135)"><rect class="h0" width="8" height="8"/><rect class="h1" width="3" height="8"/></pattern></defs>
-<g class="band"><rect class="b" x="8" y="10" width="384" height="84" rx="6"/><text class="cap" x="18" y="26">THE CROWN — WHERE EVERY CHAIN ENDS</text></g>
-<g class="node physical"><rect class="box" x="20" y="38" width="112" height="42" rx="7"/><rect class="bar" x="20" y="38" width="5" height="42" rx="2"/><text class="t" x="34" y="63.5">nature</text></g>
-<g class="node meta"><rect class="box" x="144" y="38" width="112" height="42" rx="7"/><rect class="bar" x="144" y="38" width="5" height="42" rx="2"/><text class="t" x="158" y="63.5">logos</text></g>
-<g class="node living"><rect class="box" x="268" y="38" width="112" height="42" rx="7"/><rect class="bar" x="268" y="38" width="5" height="42" rx="2"/><text class="t" x="282" y="63.5">love</text></g>
+<g class="band"><rect class="b" x="8" y="10" width="384" height="84" rx="6"/><text class="cap" x="18" y="26">THE CROWN, THEOS — WHERE EVERY CHAIN ENDS</text></g>
+<g class="node soma"><rect class="box" x="20" y="38" width="112" height="42" rx="7"/><rect class="bar" x="20" y="38" width="5" height="42" rx="2"/><text class="t" x="34" y="63.5">physis</text></g>
+<g class="node lekton"><rect class="box" x="144" y="38" width="112" height="42" rx="7"/><rect class="bar" x="144" y="38" width="5" height="42" rx="2"/><text class="t" x="158" y="63.5">logos</text></g>
+<g class="node empsychon"><rect class="box" x="268" y="38" width="112" height="42" rx="7"/><rect class="bar" x="268" y="38" width="5" height="42" rx="2"/><text class="t" x="282" y="63.5">agape</text></g>
 <g class="boundary"><rect class="b" x="8" y="120" width="226" height="196" rx="12"/><text class="cap" x="20" y="137">GARDEN-SAM</text></g>
 <g class="boundary"><rect class="b" x="246" y="120" width="146" height="196" rx="12"/><text class="cap" x="258" y="137">GARDEN-ALI</text></g>
-<g class="node living"><rect class="box" x="60" y="150" width="122" height="44" rx="7"/><rect class="bar" x="60" y="150" width="5" height="44" rx="2"/><text class="t" x="74" y="176.5">sam</text></g>
-<g class="node physical"><rect class="box" x="20" y="250" width="96" height="44" rx="7"/><rect class="bar" x="20" y="250" width="5" height="44" rx="2"/><text class="t" x="34" y="276.5">nas</text></g>
-<g class="node living"><rect class="box" x="128" y="250" width="96" height="44" rx="7"/><rect class="bar" x="128" y="250" width="5" height="44" rx="2"/><text class="t" x="142" y="276.5">website</text></g>
+<g class="node empsychon"><rect class="box" x="60" y="150" width="122" height="44" rx="7"/><rect class="bar" x="60" y="150" width="5" height="44" rx="2"/><text class="t" x="74" y="176.5">sam</text></g>
+<g class="node soma"><rect class="box" x="20" y="250" width="96" height="44" rx="7"/><rect class="bar" x="20" y="250" width="5" height="44" rx="2"/><text class="t" x="34" y="276.5">nas</text></g>
+<g class="node empsychon"><rect class="box" x="128" y="250" width="96" height="44" rx="7"/><rect class="bar" x="128" y="250" width="5" height="44" rx="2"/><text class="t" x="142" y="276.5">website</text></g>
 <g class="flow"><path class="l" d="M68,250 L68,222 L100,222 L100,194" marker-end="url(#above-and-beneath-ah)"/></g>
 <g class="flow"><path class="l" d="M176,250 L176,222 L144,222 L144,194" marker-end="url(#above-and-beneath-ah)"/></g>
 <text class="fl" x="122" y="236" text-anchor="middle">owned by</text>
-<g class="flow"><path class="l" d="M121,150 L121,110 L310,110 L310,80" marker-end="url(#above-and-beneath-ah)"/><text class="fl" x="206" y="104" text-anchor="middle">owned by the crown: love</text></g>
-<g class="node living"><rect class="box" x="262" y="250" width="114" height="44" rx="7"/><rect class="bar" x="262" y="250" width="5" height="44" rx="2"/><text class="t" x="276" y="276.5">ali</text></g>
+<g class="flow"><path class="l" d="M121,150 L121,110 L310,110 L310,80" marker-end="url(#above-and-beneath-ah)"/><text class="fl" x="206" y="104" text-anchor="middle">owned by the crown: agape</text></g>
+<g class="node empsychon"><rect class="box" x="262" y="250" width="114" height="44" rx="7"/><rect class="bar" x="262" y="250" width="5" height="44" rx="2"/><text class="t" x="276" y="276.5">ali</text></g>
 <g class="flow"><path class="l" d="M350,250 L350,80" marker-end="url(#above-and-beneath-ah)"/></g>
 <line class="ground" x1="8" y1="342" x2="392" y2="342"/>
 <text class="cap halo" x="200" y="334" text-anchor="middle">ABOVE: OWNERSHIP RISES</text>
@@ -23,8 +23,8 @@
 <path class="hypha" d="M300,316 C300,360 330,390 290,420 S240,440 260,452"/>
 <path class="hypha" d="M70,316 C60,380 30,420 90,470"/>
 <path class="hypha" d="M350,316 C360,380 390,420 320,470"/>
-<g class="store meta accent"><path class="box" d="M130,431 v44 a70,7 0 0 0 140,0 v-44"/><ellipse class="top" cx="200" cy="431" rx="70" ry="7"/><text class="t" x="200" y="453.5" text-anchor="middle">a proposal</text><text class="s" x="200" y="469.5" text-anchor="middle">only this crosses</text></g>
+<g class="store lekton accent"><path class="box" d="M130,431 v44 a70,7 0 0 0 140,0 v-44"/><ellipse class="top" cx="200" cy="431" rx="70" ry="7"/><text class="t" x="200" y="453.5" text-anchor="middle">a proposal</text><text class="s" x="200" y="469.5" text-anchor="middle">only this crosses</text></g>
 <g class="flow sig"><path class="l" d="M122,452 L130,452" marker-end="url(#above-and-beneath-ah)"/></g>
 <g class="flow sig"><path class="l" d="M278,452 L270,452" marker-end="url(#above-and-beneath-ah)"/></g>
-<g class="band earth"><rect class="b" x="8" y="510" width="384" height="40" rx="6"/><text class="cap" x="18" y="534">THE EARTH — THE LANGUAGE BOTH PIN: STD-VOCAB@21.0</text></g>
+<g class="band earth"><rect class="b" x="8" y="510" width="384" height="40" rx="6"/><text class="cap" x="18" y="534">THE EARTH — THE LANGUAGE BOTH PIN: STD-VOCAB@22.0</text></g>
 </svg>

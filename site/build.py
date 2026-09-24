@@ -565,12 +565,12 @@ def scenes(d):
             '- action: [[card-statement-2026-09]] content_hash in capitals.', r'not in canonical form')
     d.write(d.p('owner.yaml'), 'owned_by: { legal: { owner: { bean: sam } } }\n')
     d.file('owner-sam', 'owner.yaml', 'owned_by: { legal: { owner: { bean: sam } } }\n')
-    refused('phil-crown-refused', ('python3 bin/dmsafe.py remove-block beans/ali.md owned_by',
+    refused('metaphysics-crown-refused', ('python3 bin/dmsafe.py remove-block beans/ali.md owned_by',
                                    'python3 bin/dmsafe.py insert-after beans/ali.md provenance --block ../owner.yaml'),
             'ali', 'ali, owned by sam', '- action: [[ali]] owned by [[sam]].', r"must use the 'crown' form")
     d.write(d.p('note.yaml'), 'renewal_note: "renews next January"\n')
     d.file('renewal-note', 'note.yaml', 'renewal_note: "renews next January"\n')
-    refused('phil-structure', 'python3 bin/dmsafe.py insert-after beans/vps-a.md provides_habitat --block ../note.yaml',
+    refused('metaphysics-structure', 'python3 bin/dmsafe.py insert-after beans/vps-a.md provides_habitat --block ../note.yaml',
             'vps-a', 'a renewal note on the VPS', '- action: [[vps-a]] renewal note.', r"top-level key 'renewal_note' is declared by no")
 
     # S8 — an agent of any make --------------------------------------------------------------------------------------
@@ -678,8 +678,8 @@ def scenes(d):
     for b in ('sam', 'ali', 'garden-ali', 'washer-loan', 'dinner-at-sams'):
         shutil.copyfile(os.path.join(SAM, 'beans', b + '.md'), os.path.join(REH, 'beans', b + '.md'))
     d.write(os.path.join(REH, 'beans', 'garden-sam.md'),
-            '---\nbean: garden-sam\nkind: garden\ntitle: "garden-sam — the garden this one rehearses"\nstatus: active\n'
-            'summary: "Sam\'s own garden; this garden rehearses what it will propose."\nnature: metaphysical\n'
+            '---\nbean: garden-sam\ngenos: garden\ntitle: "garden-sam — the garden this one rehearses"\nstatus: active\n'
+            'summary: "Sam\'s own garden; this garden rehearses what it will propose."\nnature: lekton\n'
             'identity:\n  status: confirmed\n  anchors:\n    - { key: garden_id, value: "%s", class: logical, establishing: true }\n'
             'provenance: { src: asserted-by-human, by: "sam", as_of: 2026-10-27 }\n'
             'owned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n---\n'
@@ -722,13 +722,16 @@ def scenes(d):
 
     # S11 — reasons --------------------------------------------------------------------------------------------------
     d.step = 'S11 reasons'
-    lay = d.out('phil-layers', SAM, "python3 bin/dmwhy.py 'terms[parties].schema.attrs.accepted'")
+    lay = d.out('metaphysics-layers', SAM, "python3 bin/dmwhy.py 'terms[parties].schema.attrs.accepted'")
     d.expect('TAKING' in lay.upper(), 'dmwhy on `accepted` did not give the reason')
-    d.out('phil-whole', SAM, 'python3 bin/dmwhy.py vacancy_reasons')
-    d.out('phil-money', SAM, "python3 bin/dmwhy.py 'quantities[money]'")
+    d.out('metaphysics-whole', SAM, 'python3 bin/dmwhy.py vacancy_reasons')
+    d.out('metaphysics-money', SAM, "python3 bin/dmwhy.py 'quantities[money]'")
+    words = d.out('metaphysics-words', SAM, 'python3 bin/dmwhy.py natures')
+    d.expect(all(w in words for w in ('σῶμα', 'λεκτόν', 'ἔμψυχον', 'γένος', 'θεός', 'ἀγάπη')),
+             'dmwhy natures did not give the reason for the Greek words')
     prev = sorted((t for t in git_out('tag', '-l', 'v*')[1].split() if semver(t) and semver(t) < semver(d.release)), key=semver)
     d.expect(prev, 'there is no release before site/RELEASE to count the law against')
-    d.out('phil-judgment', clone, f'python3 bin/dmreview.py --law --against {prev[-1]}')
+    d.out('metaphysics-judgment', clone, f'python3 bin/dmreview.py --law --against {prev[-1]}')
 
     # S12 — documents ------------------------------------------------------------------------------------------------
     d.step = 'S12 documents'

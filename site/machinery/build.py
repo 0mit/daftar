@@ -257,8 +257,8 @@ def record(g, rec, checkout, tag, contract, day, glossary):
     prov = {'src': 'observed', 'by': 'sam', 'as_of': day}
     p = rec['product']
     write_md(os.path.join(g, 'beans', 'daftar.md'), {
-        'bean': 'daftar', 'kind': 'product', 'title': p['title'], 'status': 'active', 'summary': p['summary'],
-        'nature': 'metaphysical',
+        'bean': 'daftar', 'genos': 'product', 'title': p['title'], 'status': 'active', 'summary': p['summary'],
+        'nature': 'lekton',
         'identity': {'status': 'confirmed', 'anchors': [
             {'key': 'product_id', 'value': 'product:daftar', 'class': 'logical', 'establishing': True}]},
         'provenance': prov, 'owned_by': {'legal': {'external': 'the daftar project'}},
@@ -273,12 +273,12 @@ def record(g, rec, checkout, tag, contract, day, glossary):
     if 'boundary' not in lib['drawing']:
         lib['drawing']['boundary'] = {'depth': 1, 'meaning': lv['level_patterns']['understand']['boundary']}
     write_md(os.path.join(g, 'beans', 'design-factory.md'), {
-        'bean': 'design-factory', 'kind': 'design',
+        'bean': 'design-factory', 'genos': 'design',
         'title': 'design-factory — the levels of detail factory draws this garden at',
         'status': 'active',
         'summary': "factory's default levels, archetypes and pattern library, copied from its templates, with the "
                    "boundary its kit draws.",
-        'nature': 'metaphysical',
+        'nature': 'lekton',
         'identity': {'status': 'confirmed', 'anchors': [
             {'key': 'product_id', 'value': 'design:levels-of-detail', 'class': 'logical', 'establishing': True}]},
         'provenance': prov, 'owned_by': {'legal': {'owner': {'bean': 'sam'}}},
@@ -293,10 +293,10 @@ def record(g, rec, checkout, tag, contract, day, glossary):
         m = {k: v for k, v in m.items() if k != 'demo'}
         mechs.append(m)
     write_md(os.path.join(g, 'beans', 'factory.md'), {
-        'bean': 'factory', 'kind': 'product', 'title': "factory — draws daftar's mechanisms at four levels",
+        'bean': 'factory', 'genos': 'product', 'title': "factory — draws daftar's mechanisms at four levels",
         'status': 'active',
         'summary': "Which of daftar's mechanisms this garden draws, in what order, and what each level asks of them.",
-        'nature': 'metaphysical',
+        'nature': 'lekton',
         'identity': {'status': 'confirmed', 'anchors': [
             {'key': 'product_id', 'value': 'product:mechanism-drawings', 'class': 'logical', 'establishing': True}]},
         'provenance': prov, 'owned_by': {'legal': {'external': 'the factory project'}},

@@ -18,7 +18,7 @@
     <nav aria-label="site">
       <ul>
         <li><a href="../use-cases/index.html" aria-current="true">Use cases</a></li>
-        <li><a href="../philosophy.html">Philosophy</a></li>
+        <li><a href="../metaphysics.html">Metaphysics</a></li>
         <li><a href="../machinery.html">Machinery</a></li>
         <li><a href="../contribute.html">Contribute</a></li>
         <li><a href="https://github.com/0mit/daftar">GitHub <span aria-hidden="true">↗</span></a></li>
@@ -33,7 +33,7 @@
 <p class="lede">Sam paid for Ali's washing machine by card, and the bank's statement shows it. The statement is a document: its
   identity is its content, so a changed byte is another document. Its lines are the bank's truth, kept as a dated copy, with
   the card number left out and the reason for leaving it out written down.</p>
-<p class="meta">garden-sam · daftar v0.33.1 · the day held at 2026-10-27</p>
+<p class="meta">garden-sam · daftar v0.34.0 · the day held at 2026-10-27</p>
 
 <h2>What the notebook records</h2>
 <p class="lead">The bank wrote the statement, so the bank owns it; Sam holds the copy, and <code>located_at</code> says where it
@@ -42,11 +42,11 @@
   <code>taken_at</code> is the moment it was taken, in milliseconds.</p>
 <!-- daftar:bean id="card-statement-2026-09" --><pre class="file" tabindex="0" aria-label="beans/card-statement-2026-09.md"><span class="path">beans/card-statement-2026-09.md</span><code>---
 bean: card-statement-2026-09
-kind: document
+genos: document
 title: "card-statement-2026-09 — Sam's card statement for September 2026"
 status: active
 summary: "The statement Sam's bank issued for the card that paid for the washing machine, kept as a PDF."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -87,7 +87,7 @@ dmsafe: removed nothing; added nothing
 <span class="cmd">~/garden-sam-scratch$ git commit -qm "the statement hash, as Get-FileHash prints it"</span>
 ERROR card-statement-2026-09: anchor content_hash='sha256:9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08' is not in canonical form (`sha256:` and sixty-four lowercase hexadecimal digits) (VOCAB content_hash.schema.value_pattern)
 
-garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">875a6f4d60d5</span>): 12 docs, 1 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">8d48e6b4669f</span>): 12 docs, 1 error(s), 0 warning(s)
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
 
 <h2>What it shows</h2>
@@ -103,9 +103,9 @@ garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" tit
 
 <h2>Read more</h2>
 <ul class="prose">
-  <li>The cookbook: <a href="https://github.com/0mit/daftar/blob/v0.33.1/seed/COOKBOOK.md#a-statement-a-document-and-a-capture-of-its-lines">a
+  <li>The cookbook: <a href="https://github.com/0mit/daftar/blob/v0.34.0/seed/COOKBOOK.md#a-statement-a-document-and-a-capture-of-its-lines">a
     statement: a document, and a capture of its lines</a>, with the statement's copy on Windows.</li>
-  <li>The model: <a href="https://github.com/0mit/daftar/blob/v0.33.1/MODEL.md#ground-rules">ground rule 3</a>, reference
+  <li>The model: <a href="https://github.com/0mit/daftar/blob/v0.34.0/MODEL.md#ground-rules">ground rule 3</a>, reference
     external truth or capture it knowingly.</li>
 </ul>
 
@@ -117,7 +117,7 @@ garden-sam (daftar v0.33.1, gardener sam, garden <span class="v" data-v="id" tit
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
   <div>
-    <p>Every output on these pages was produced by daftar <code>v0.33.1</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
+    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
     <p>Apache-2.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
   </div>
 </footer><!-- /daftar:part -->

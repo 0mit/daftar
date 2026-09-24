@@ -15,9 +15,9 @@
   --ink: #9a4700;
   --ok: #1a7f37;
   --refuse: #c9302c;
-  --physical: #2f7fd8;
-  --living: #2b8a4e;
-  --meta: #1b8a8a;
+  --soma: #2f7fd8;
+  --empsychon: #2b8a4e;
+  --lekton: #1b8a8a;
   --external: #8a5cd6;
   --hatch: #dbe3ec;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
@@ -36,9 +36,9 @@
     --ink: #ffb06b;
     --ok: #3fb950;
     --refuse: #f85149;
-    --physical: #4aa3ff;
-    --living: #7ee0a1;
-    --meta: #6fd6d6;
+    --soma: #4aa3ff;
+    --empsychon: #7ee0a1;
+    --lekton: #6fd6d6;
     --external: #c9a3ff;
     --hatch: #2a3644;
   }
@@ -164,6 +164,15 @@ th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom
 thead th { font-size: 13.5px; color: var(--muted); font-weight: 600; border-bottom-width: 2px; }
 tbody th { font-weight: 650; }
 
+dl.words { margin: 0 0 1.2em; }
+dl.words > div { display: grid; grid-template-columns: minmax(12em, 20em) 1fr; gap: 2px 1.2em; padding: 8px 0;
+  border-bottom: 1px solid var(--line); }
+dl.words dt code { font-weight: 650; overflow-wrap: normal; }
+dl.words dt > [lang="grc"] { margin-left: 0.4em; }
+dl.words .gloss { display: block; color: var(--muted); }
+dl.words dd { margin: 0; }
+@media (max-width: 640px) { dl.words > div { grid-template-columns: 1fr; } }
+
 /* ─── figures and the drawing grammar ──────────────────────────────────────────────────────────────────────────── */
 
 figure { margin: 0 0 1.4em; }
@@ -193,16 +202,16 @@ svg.d .cap { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; fill: va
 
 svg.d .node .box { fill: var(--nfill); stroke: var(--line); stroke-width: 1; }
 svg.d .node .bar { fill: var(--muted); }
-svg.d .physical .bar { fill: var(--physical); }
-svg.d .living .bar { fill: var(--living); }
-svg.d .meta .bar { fill: var(--meta); }
+svg.d .soma .bar { fill: var(--soma); }
+svg.d .empsychon .bar { fill: var(--empsychon); }
+svg.d .lekton .bar { fill: var(--lekton); }
 svg.d .external .bar { fill: var(--external); }
 svg.d .node.external .box { stroke-dasharray: 5 3; stroke: var(--external); }
 svg.d .node.accent .box { stroke: var(--accent-stroke); stroke-width: 2.2; }
 svg.d .node.accent .bar { fill: var(--accent-stroke); }
 
-svg.d .store .box, svg.d .store .top { fill: var(--nfill); stroke: var(--meta); stroke-width: 1.2; }
-svg.d .store.physical .box, svg.d .store.physical .top { stroke: var(--physical); }
+svg.d .store .box, svg.d .store .top { fill: var(--nfill); stroke: var(--lekton); stroke-width: 1.2; }
+svg.d .store.soma .box, svg.d .store.soma .top { stroke: var(--soma); }
 svg.d .store.accent .box, svg.d .store.accent .top { stroke: var(--accent-stroke); stroke-width: 2.2; }
 svg.d .store .t { font-size: 13px; }
 

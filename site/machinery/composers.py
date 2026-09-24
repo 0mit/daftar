@@ -9,7 +9,7 @@ site/machinery/build.py copies this file into the demo garden as `bin/mechanisms
 returns (title, svg, caption, claim). A figure is 960 wide and 280 to 340 tall, draws at most 18 elements, carries
 exactly one accent (the point the mechanism turns on) and shows no address.
 
-Node classes carry the natures the site uses: `svc` a person (living), `nas` a record or a program (metaphysical),
+Node classes carry the natures the site uses: `svc` a person (empsychon), `nas` a record or a program (lekton),
 `ext` what is outside this garden's hands.
 """
 from fxdraw import node, store, gate, flow, elbow, tag, boundary, ribbon, figure, esc

@@ -22,7 +22,7 @@ body:
   - type: textarea
     id: things
     attributes:
-      label: "The things involved: their kinds, with neutral names"
+      label: "The things involved: what each one is, with neutral names"
       description: For example a host `host-a`, a domain `example.org`, an agreement between sam and ali.
   - type: textarea
     id: say
