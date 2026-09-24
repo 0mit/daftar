@@ -778,7 +778,7 @@ rc, out, err = gate_on('--all')
 check("...and so does --all", rc == 1 and "status 'pending'" in out, out)
 for _arg, _says in (('beans/nobody.md', 'no such file'), ('GARDEN.md', 'not a bean or a mapping'),
                     ('nobody', 'no bean or mapping of this garden'), ('beans', 'a directory'),
-                    ('--bogus', 'no option of the gate')):
+                    ('--bogus', 'no option of the gate'), ('-v', 'only --staged over the whole garden runs')):
     rc, out, err = gate_on(_arg)
     check(f"`dmcheck.py {_arg}` is refused by name, never passed: exit 2, and no verdict",
           rc == 2 and _says in err and 'error(s)' not in out, out + err)

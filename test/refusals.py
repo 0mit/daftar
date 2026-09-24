@@ -32,7 +32,7 @@ the gate once took, or once died on; each must now be refused by name, and nothi
 
 Every name is neutral (sam, ali, ben) and every amount is in XTS, the code ISO 4217 keeps for testing.
 """
-import json, os, re, sys, subprocess, tempfile, shutil
+import ast, json, os, re, sys, subprocess, tempfile, shutil
 import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FAILS = []
@@ -699,6 +699,9 @@ for val, passes in (('"work on a live system is shown first"', True),
 # example writes (seed/FORMS.md's first, which this garden carries), the values the law allows, and the one command that
 # says why the rule is so. Nothing in them points at a document to read.
 SENDS = re.compile(r"\(VOCAB |see seed/COOKBOOK|std-vocab\.md|MODEL\.md|CHECKLIST\.md|dmrules")
+# ...and the form it quotes says whose its names, dates and amounts are: a writer fixing from the message alone copied an
+# example's amount into a fact nobody said
+TESTED = "the form a tested example writes (its names, dates and amounts are the example's): "
 
 
 def finding(out, needle):
@@ -733,23 +736,23 @@ WHEN = 'timing:\n  start: { system: gregorian-civil, at: "2026-09-01 19:00+03:00
 f = finding(event("call", "refs: { host: { bean: sam, rel: host } }\n"), "requires a non-empty timing")
 check("an event without `timing` is refused with the form a tested example writes — and, beside it, the one for a day "
       "nobody said — and the command that says why, sending nowhere",
-      written(f, "the form a tested example writes: ") == {"timing": {"start": {"system": "gregorian-civil",
+      written(f, TESTED) == {"timing": {"start": {"system": "gregorian-civil",
                                                                               "at": "2026-09-12 19:30+03:00", "unit": "minute"}}}
       and (written(f, "when nobody said it, ") or {}).get("timing", {}).get("start", {}).get("system") == "event-anchored"
       and f"why: {_py} bin/dmwhy.py timing" in f and not SENDS.search(f), f)
 f = finding(event("call", WHEN + "refs:\n  - { bean: sam, rel: host }\n  - { bean: ali, rel: present }\n"),
             "refs must be a MAPPING")
 check("`refs` written as a list is refused: one entry per key, never a list, and the mapping a tested example writes",
-      "one entry per key, never a list" in f and written(f, "the form a tested example writes: ") ==
+      "one entry per key, never a list" in f and written(f, TESTED) ==
       {"refs": {"host": {"bean": "sam", "rel": "host"}, "guest": {"bean": "ali", "rel": "present"}}}
       and not SENDS.search(f), f)
 f = finding(event("call", WHEN + "refs:\n  people: [sam, ali]\n"), "must be a mapping with ['rel']")
 check("...and an entry of `refs` written as a list: one entry, one mapping, as a tested example writes it",
-      written(f, "in the form a tested example writes: ") == {"host": {"bean": "sam", "rel": "host"}}
+      written(f, "in " + TESTED) == {"host": {"bean": "sam", "rel": "host"}}
       and not SENDS.search(f), f)
 f = finding(event("call", WHEN + 'refs: { host: { bean: sam } }\n'), "missing ['rel']")
 check("...and an entry missing `rel`: the attribute as a tested example writes it",
-      written(f, "the form a tested example writes: ") == {"rel": "host"} and not SENDS.search(f), f)
+      written(f, TESTED) == {"rel": "host"} and not SENDS.search(f), f)
 f = finding(event("call", WHEN + 'refs: { host: { bean: sam, rel: host } }\nunknowns: ["which day"]\n'),
             "top-level key 'unknowns'")
 check("a key no term declares is refused with the line that keeps the fact, `details: { unknowns: [...] }`, sending "
@@ -778,9 +781,36 @@ check("a currency written by its name is refused with the codes named like it, a
       "EUR (Euro)" in f and 'grep -i "<its name>" seed/knowledge/currencies.tsv' in f and not SENDS.search(f), f)
 f = finding(deal('transactions:\n  t: { what: "a thing", paid_by: [ { party: sam } ] }\n'), "missing ['amount']")
 check("a transaction with no amount is refused with the amount as a tested example writes it",
-      written(f, "the form a tested example writes: ") == {"amount": {"count": "90.00", "unit": "XTS"}}
+      written(f, TESTED) == {"amount": {"count": "90.00", "unit": "XTS"}}
       and not SENDS.search(f), f)
 drop("beans/deal.md")
+# ...AND NO OTHER REFUSAL POINTS AT A DOCUMENT. Every finding the gate records about a bean ends in the rule's name and,
+# where the reasoning explains it, the command that prints it — never "(VOCAB …)", "(MODEL.md …)" or "(see …)", which an
+# agent follows into the whole document. Read from the gate's source, so a refusal added tomorrow is held to it too. A
+# finding ABOUT the law (one that begins "VOCAB …") names where the law is wrong, and is not a pointer.
+_src = ast.parse(open(os.path.join(G, "bin", "dmcheck.py"), encoding="utf-8").read())
+_pointing = []
+for _n in ast.walk(_src):
+    if (isinstance(_n, ast.Call) and isinstance(_n.func, ast.Attribute) and _n.func.attr == "append"
+            and isinstance(_n.func.value, ast.Name) and _n.func.value.id in ("errors", "warns")):
+        _words = "".join(c.value for c in ast.walk(_n) if isinstance(c, ast.Constant) and isinstance(c.value, str))
+        if re.search(r"\((VOCAB|MODEL\.md|CHECKLIST\.md|see )", _words):
+            _pointing.append(f"line {_n.lineno}: {_words[:80]}")
+check("no finding the gate records points at a document to read — the rule's name and `dmwhy` take its place",
+      not _pointing, _pointing[:5])
+deal("")
+put("beans/deal.md", open(os.path.join(G, "beans", "deal.md"), encoding="utf-8").read()
+    .replace("words: { form: spoken,", "words: { form: shouted,", 1))
+f = finding(gate(), "words.form 'shouted'")
+check("...so a value the law does not list for an attribute says to write one of those, and names its rule and the "
+      "command that says why, sending nowhere", "not in ['written', 'spoken', 'unstated']" in f and "write one of those"
+      in f and f"(rule words.schema.attrs.form.in; why: {_py} bin/dmwhy.py words)" in f and not SENDS.search(f), f)
+put("beans/ben.md", person("ben").replace("{ crown: agape }", "{ owner: { bean: sam } }"))
+f = finding(gate(), "must use the 'crown' form")
+check("...and a person owned by another is refused with the line a person states, and the command that says why",
+      "owned_by: { legal: { crown: agape } }" in f and f"why: {_py} bin/dmwhy.py ownership_form" in f
+      and not SENDS.search(f), f)
+drop("beans/ben.md"); drop("beans/deal.md")
 _moved = [g for g in ("seed/FORMS.md", "seed/COOKBOOK.md", "seed/README.md") if os.path.isfile(os.path.join(G, g))]
 for g in _moved:
     os.replace(os.path.join(G, g), os.path.join(G, g + ".away"))

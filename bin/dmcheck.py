@@ -102,9 +102,12 @@ def _refuse(msg):
 
 def _arguments(argv):
     """{staged, verbose, paths} from the command line. `--all` is the whole garden, as no argument is; beside a path it
-    contradicts it, and is refused."""
+    contradicts it, and is refused. So is `-v` where it would change nothing: it lists the checks test/fast.py passed,
+    and only `--staged` over the whole garden runs that suite — a flag that is accepted and does nothing tells its
+    writer something false."""
     a = {'staged': False, 'paths': [], 'all': False,
          'verbose': os.environ.get('DAFTAR_VERBOSE', '').strip() not in ('', '0')}
+    _v = False
     for x in argv:
         if x in ('-h', '--help'):
             print(_usage())
@@ -114,7 +117,7 @@ def _arguments(argv):
         elif x == '--staged':
             a['staged'] = True
         elif x in ('-v', '--verbose'):
-            a['verbose'] = True
+            a['verbose'] = _v = True
         elif x.startswith('-'):
             _refuse(f"{x!r} is no option of the gate. It takes --all, --staged, -v and the paths of beans "
                     f"(`{_PY} bin/dmcheck.py --help` says what each does)")
@@ -122,6 +125,9 @@ def _arguments(argv):
             a['paths'].append(x)
     if a['all'] and a['paths']:
         _refuse(f"--all judges the whole garden, and {a['paths'][0]!r} names one document: give one or the other")
+    if _v and (not a['staged'] or a['paths']):
+        _refuse("-v lists each check test/fast.py passed, and only --staged over the whole garden runs that suite: "
+                f"`{_PY} bin/dmcheck.py --staged -v`. A run by hand, or of named beans, prints every finding already")
     return a
 
 
@@ -705,6 +711,11 @@ def _example_form(path, entry=False, genos=None):
     return out
 
 
+# A FORM, NOT A FACT. The line a refusal quotes carries the example's own names, dates and amounts, and a writer fixing
+# from the message alone copied them: an amount nobody said became the example's. So every quoted form says whose they are.
+_TESTED = "the form a tested example writes (its names, dates and amounts are the example's): "
+
+
 def _unsaid_form(term):
     """Only the form a guide gives for `term` when nobody said it — '' where none is marked."""
     return next((f"{term}: {_flow(v)}" for v, f in _held_at(term) if term in f), '')
@@ -713,8 +724,11 @@ def _unsaid_form(term):
 def _rule(path, *names):
     """` (rule <path>; why: python3 bin/dmwhy.py <name>)`: the rule a refusal applies, by its name in the law, and the
     command that prints it with its reason — for the first of `names` (else the path, then its head) the reasoning
-    explains. Without a reason to print, the name alone: never a document to read whole."""
+    explains. Without a reason to print, the name alone: never a document to read whole. A name the command would carry
+    is one plain word, so it runs as printed in every shell — zsh refuses `gene[garden]`, a glob that matches nothing."""
     for _n in (names or (path, path.split('.')[0])):
+        if not re.fullmatch(r'[A-Za-z0-9_.-]+', str(_n)):
+            continue
         if ('why', _n) not in _READ_ONCE:
             try:
                 import dmwhy
@@ -1004,7 +1018,8 @@ def day_unwritten(val, row):
 def check_day_exists(where, val, row):
     _why = day_unwritten(val, row)
     if _why:
-        errors.append(f"{where} '{val}' {_why} — a date is a day its calendar has (VOCAB anchor_systems.{row.get('system')})")
+        errors.append(f"{where} '{val}' {_why} — a date is a day its calendar has"
+                      + _rule(f"anchor_systems.{row.get('system')}", str(row.get('system')), 'anchor_systems'))
 
 ASPECTS = _Named({a['aspect']: a for a in (registry('aspects') or []) if isinstance(a, dict) and a.get('aspect')})
 FIGURES = {f['figure']: f for f in (registry('figures') or []) if isinstance(f, dict) and f.get('figure')}
@@ -1649,8 +1664,8 @@ def check_provenance_record(where, rec):
     if not _attrs or not isinstance(rec, dict):
         return
     for _k in sorted(set(rec) - set(_attrs)):
-        errors.append(f"{where} carries `{_k}`, which a provenance record may not (VOCAB provenance_record.attrs: "
-                      f"{', '.join(_attrs)})")
+        errors.append(f"{where} carries `{_k}`, which a provenance record may not — it holds {', '.join(_attrs)}"
+                      + _rule('provenance_record.attrs', 'provenance_record'))
     _from = rec.get('from')
     if _from is not None:
         _recs = list(_from.values()) if isinstance(_from, dict) else _from if isinstance(_from, list) else None
@@ -1826,7 +1841,7 @@ def check_text():
                 _how = (" — in double quotes a backslash begins an escape (`\\0` is U+0000, `\\e` U+001B): a backslash that "
                         "is part of the value is written in single quotes, where it is a backslash")
             errors.append(f"{_rel}: {'the key ' if _is_key else ''}{_path} holds U+{ord(_ch):04X} — "
-                          f"{t.get('refusal') or 'a character text does not hold'} (VOCAB value_types[text]){_how}")
+                          f"{t.get('refusal') or 'a character text does not hold'}{_how}" + _rule('value_types[text]', 'value_types'))
 
 
 def check_gardens():
@@ -1856,8 +1871,8 @@ def check_gardens():
                     if _own and str(_a['value']) == _own:
                         errors.append(f"{_base}: a `garden` bean anchored by this garden's own id ({_own}) — a garden "
                                       f"bean records ANOTHER garden; this one's id is read from its git and its gardener "
-                                      f"is named in GARDEN.md (VOCAB gene[garden]). A rehearsal is grown by germination, "
-                                      f"never by clone, and so has an id of its own")
+                                      f"is named in GARDEN.md. A rehearsal is grown by germination, never by clone, and so has an id "
+                                      f"of its own" + _rule('gene[garden]', 'garden'))
                     KNOWN_GARDENS.add(str(_a['value']))
     if _mf.get('attrs') and os.path.isfile(_p):
         _rel = os.path.relpath(_p, ROOT)
@@ -1868,14 +1883,16 @@ def check_gardens():
                           f"which law governs it")
         else:
             for _k in sorted(set(_g) - set(_mf['attrs']), key=str):
-                errors.append(f"{_rel}: `{_k}` is no key of the manifest (VOCAB manifest.attrs: {', '.join(_mf['attrs'])})"
-                              + (retired_hint('manifest', _k) or " — a standing note for readers belongs in the body"))
+                errors.append(f"{_rel}: `{_k}` is no key of the manifest, whose keys are {', '.join(_mf['attrs'])}"
+                              + (retired_hint('manifest', _k) or " — a standing note for readers belongs in the body")
+                              + _rule('manifest.attrs', 'manifest'))
             _sch = _NESTED.setdefault(('manifest', None), {'attrs': _mf['attrs']})
             _form = attribute_form('manifest', _sch)
             for _attr, _ in _facet(_form, 'required', 'self'):
                 if _g.get(_attr) in (None, ''):
-                    errors.append(f"{_rel}: `{_attr}:` is missing — the manifest requires it (VOCAB manifest.attrs.{_attr}: "
-                                  f"{((_mf['attrs'].get(_attr) or {}).get('meaning') or 'required')})")
+                    errors.append(f"{_rel}: `{_attr}:` is missing — the manifest requires it: "
+                                  f"{((_mf['attrs'].get(_attr) or {}).get('meaning') or 'required')}"
+                                  + _rule(f"manifest.attrs.{_attr}", _attr, 'manifest'))
             _cell = _ECell(_rel, 'manifest', None, {k: v for k, v in _g.items() if k in _mf['attrs'] and v is not None},
                            _sch, scope='self')
             for _key, _controller in ENTRY_CONTROLLERS:
@@ -1958,7 +1975,8 @@ def check_identity_capsule():
                 errors.append(f"{base}: an anchor's key is a term's name, written as text — not {a['key']!r}"); continue
             if not isinstance(a['establishing'], bool):
                 errors.append(f"{base}: anchor '{a['key']}'.establishing must be true or false, not "
-                              f"{a['establishing']!r} (VOCAB: establish vs corroborate is the load-bearing split)")
+                              f"{a['establishing']!r} — establish vs corroborate is the load-bearing split"
+                              + _rule('identity_policy.anchor_attrs'))
             # WHAT AN ANCHOR MAY CARRY IS DECLARED (20.0, `identity_policy.anchor_attrs`). Until then any key rode
             # along, which is how `authority` — a second vocabulary for how a value is known — lived beside
             # `provenance` for two months. An anchor says how it is known the way every entry does.
@@ -1966,8 +1984,8 @@ def check_identity_capsule():
             if _allowed:
                 for _k in sorted(set(a) - set(_allowed)):
                     _hint = retired_hint('anchor', _k)
-                    errors.append(f"{base}: anchor '{a['key']}' carries `{_k}`, which an anchor may not "
-                                  f"(VOCAB identity_policy.anchor_attrs: {', '.join(_allowed)}){_hint}")
+                    errors.append(f"{base}: anchor '{a['key']}' carries `{_k}`, which an anchor may not — it holds "
+                                  f"{', '.join(_allowed)}{_hint}" + _rule('identity_policy.anchor_attrs'))
                 _ap = a.get('provenance')
                 if isinstance(_ap, dict):
                     check_provenance_record(f"{base}: anchor '{a['key']}'.provenance", _ap)
@@ -1978,7 +1996,7 @@ def check_identity_capsule():
                                       f"same record a bean carries")
                     elif _srcs and _ap.get('src') not in _srcs:
                         errors.append(f"{base}: anchor '{a['key']}'.provenance.src '{_ap.get('src')}' is not one "
-                                      f"of {_srcs} (VOCAB provenance_src)")
+                                      f"of {_srcs}" + _rule('provenance_src'))
                     elif _ap.get('src') == (fm.get('provenance') or {}).get('src') and _ap.get('by') == (fm.get('provenance') or {}).get('by'):
                         warns.append(f"{base}: anchor '{a['key']}'.provenance repeats the bean's own — an anchor "
                                      f"carries a record only where its source differs")
@@ -1990,7 +2008,8 @@ def check_identity_capsule():
                         else "demote an establishing anchor to corroborating")
                 errors.append(f"{base}: anchor '{a['key']}'.establishing is {a.get('establishing')} but the "
                               f"vocabulary declares {pol['establishing']} for that term — a bean may not "
-                              f"{_dir}; write establishing: {str(pol['establishing']).lower()} (VOCAB {a['key']}.anchor)")
+                              f"{_dir}; write establishing: {str(pol['establishing']).lower()}"
+                              + _rule(f"{a['key']}.anchor", a['key']))
             # AN ANCHOR'S KEY IS A TERM (19.0, `identity_policy.anchor_key: term`): identity is matched by
             # (key, value), so a key no term declares is a merge key nobody agreed on. The term's `anchor:`
             # policy is what a garden declares; a local key is a local term with one.
@@ -2009,7 +2028,8 @@ def check_identity_capsule():
         need = (pol or {}).get('min_establishing_anchors')
         if need and ident.get('status') == IDP.get('applies_at_identity_status') and n_est < need:
             warns.append(f"{base}: {_axis} '{fm.get(_axis)}' requires {need} establishing anchor(s) when "
-                         f"'{ident.get('status')}' but has {n_est} (VOCAB {_reg}.min_establishing_anchors)")
+                         f"'{ident.get('status')}' but has {n_est}"
+                         + _rule(f"{_reg}.min_establishing_anchors", 'min_establishing_anchors'))
         # THE FAMILY IS ENFORCED (19.0, `identity_policy.establishing_family: enforced`): what establishes a
         # confirmed being is of its nature's family — matter for a body (soma), a logical id for the rest. The
         # class the term's policy declares wins over the class the bean wrote.
@@ -2019,9 +2039,10 @@ def check_identity_capsule():
             for _k, _c in est_classes:
                 if _c not in fam:
                     errors.append(f"{base}: establishing anchor '{_k}' is class '{_c}', outside the {_axis} "
-                                  f"'{fm.get(_axis)}' family {fam} (VOCAB {_reg}.establishing_anchor_family) — "
-                                  f"a being without an anchor of its family is `identity.status: provisional`, or "
-                                  f"is of another nature (a virtual machine is a `virtual-host`, not a `host`)")
+                                  f"'{fm.get(_axis)}' family {fam} — a being without an anchor of its family is "
+                                  f"`identity.status: provisional`, or is of another nature (a virtual machine is a "
+                                  f"`virtual-host`, not a `host`)"
+                                  + _rule(f"{_reg}.establishing_anchor_family", 'establishing_anchor_family'))
 
 # HOW AN ANCHOR IS COMPARED (std-vocab 9.0, human-ratified). A term that governs an anchor may declare
 # `compare_form`; uniqueness is then judged on that form, so `SYN-0042` and `syn-0042 ` are one object. A
@@ -2166,7 +2187,7 @@ def ectl_entry_required_attrs(e):
     if missing:
         _f = [f for f in (_example_form(f"{e.term}.{k}") for k in missing) if f]
         errors.append(f"{e.base}: {e.ref} missing {missing} — present, and not empty"
-                      + (f"; the form a tested example writes: {'; '.join(_f)}" if _f else '')
+                      + (f"; {_TESTED}{'; '.join(_f)}" if _f else '')
                       + _rule(f"{e.term}.schema.attrs", e.term, e.term.split('.')[0]))
 
 
@@ -2186,8 +2207,8 @@ def unknown_value_hint(sch, rule=None, term=None):
 def ectl_entry_values(e):
     for attr, allowed in _facet(e.form, 'values', e.scope):
         if e.entry.get(attr) is not None and e.entry[attr] not in allowed:
-            errors.append(f"{e.base}: {e.ref}.{attr} '{e.entry[attr]}' not in {allowed} "
-                          f"(VOCAB {e.term}.schema.attrs.{attr}.in)")
+            errors.append(f"{e.base}: {e.ref}.{attr} '{e.entry[attr]}' not in {allowed} — write one of those"
+                          + _rule(f"{e.term}.schema.attrs.{attr}.in", e.term))
 
 
 def ectl_entry_types(e):
@@ -2207,7 +2228,7 @@ def ectl_prose(e):
             _odd = sorted((str(k) for k, x in v.items() if not isinstance(k, str) or isinstance(x, (list, dict))), key=str)
             if _odd:
                 errors.append(f"{e.base}: {e.ref}.{attr} holds words under names, each one text written under a name "
-                              f"that is text — not {', '.join(_odd)} (VOCAB {_law_path(e.term)}.attrs.{attr}.in)")
+                              f"that is text — not {', '.join(_odd)}" + _rule(f"{_law_path(e.term)}.attrs.{attr}.in", e.term))
             continue
         if isinstance(v, (list, dict)):
             errors.append(f"{e.base}: {e.ref}.{attr} is words, written as one text — not a "
@@ -2252,7 +2273,7 @@ def ectl_entry_must_match(e):
         elif val != row.get(rule.get('take')):
             errors.append(f"{e.base}: {e.ref}.{rule['attr']} '{val}' does not match {rule['keyed_by']} "
                           f"'{key}', which routes to '{row.get(rule.get('take'))}' "
-                          f"(VOCAB {e.term}.schema.entry_must_match)" + retired_hint(rule.get('attr'), val))
+                          + retired_hint(rule.get('attr'), val) + _rule(f"{e.term}.schema.entry_must_match", e.term))
 
 
 def effective(e, attr):
@@ -2290,8 +2311,7 @@ def ectl_entry_in_registry(e):
                 allowed = allowed[:12] + ['… %d more' % (len(allowed) - 12)]
             _narrow = (' where ' + ', '.join(f"{k} is {v}" for k, v in rule['where'].items())) if rule.get('where') else ''
             errors.append(f"{e.base}: {e.ref}.{attr} '{val}' is not a declared {rname}{_narrow} "
-                          f"— known: {sorted(v for v in allowed if v)} "
-                          f"(VOCAB {e.term}.schema.attrs.{attr}.in)")
+                          f"— known: {sorted(v for v in allowed if v)}" + _rule(f"{e.term}.schema.attrs.{attr}.in", e.term))
 
 
 def ectl_entry_pattern_from_registry(e):
@@ -2362,7 +2382,7 @@ def ectl_entry_form_from_genos_attr(e):
     _reserved = set().union(*(_names(k) for k in GENE.values()))
     if isinstance(_form, str) and _form not in e.entry:
         errors.append(f"{e.base}: {e.ref} must use the '{_form}' form — genos '{_genos}' pins "
-                      f"{e.term}.{_fk} to it (VOCAB gene.{_genos}.{_fk}){_termination_hint(e.term, e.base)}")
+                      f"{e.term}.{_fk} to it{_termination_hint(e.term, e.base)}" + _rule(f"gene.{_genos}.{_fk}", _fk, 'gene'))
     _mine = _names(_row(GENE, _genos) or {})
     for _used in (_reserved & set(e.entry)):
         if _used not in _mine:
@@ -2447,7 +2467,7 @@ def ectl_cross_aspect(e):
 def ectl_entry_one_of(e):
     one_of = list(e.form['one_of'])
     if one_of and not any(k in e.entry for k in one_of):
-        errors.append(f"{e.base}: {e.ref} needs one of {one_of} (VOCAB {e.term}.schema.entry_one_of)")
+        errors.append(f"{e.base}: {e.ref} needs one of {one_of}" + _rule(f"{e.term}.schema.entry_one_of", e.term))
 
 
 def ectl_entry_required_if(e):
@@ -2569,7 +2589,8 @@ def ectl_nested_entries(e):
                     continue
                 if k in _seen:
                     errors.append(f"{e.base}: {e.ref}.{attr} holds two entries for {_key} '{k}' ({_seen[k]} and {i}) — "
-                                  f"one entry per {_key}; put what they say in one (VOCAB {_law_path(e.term)}.attrs.{attr}.in.keyed_by)")
+                                  f"one entry per {_key}; put what they say in one"
+                                  + _rule(f"{_law_path(e.term)}.attrs.{attr}.in.keyed_by", e.term))
                 else:
                     _seen[k] = i
         for i, item in enumerate(v if isinstance(v, list) else [v]):
@@ -2643,7 +2664,8 @@ def ectl_sums(e):
         return
     if sum(total) != w:
         errors.append(f"{e.base}: {e.ref}.{pattr} adds up to {_exact(sum(total))} {whole.get('unit')}, and {wattr} is "
-                      f"{_exact(w)} {whole.get('unit')} — the parts of a whole add up to it exactly (VOCAB {e.term}.schema.sums)")
+                      f"{_exact(w)} {whole.get('unit')} — the parts of a whole add up to it exactly"
+                      + _rule(f"{e.term}.schema.sums", e.term))
 
 
 def _law_path(term):
@@ -2666,7 +2688,7 @@ def ectl_bean_id(e):
         _genos = (docs.get((True, v)) or ({}, ''))[0].get('genos')
         if _gene and _genos not in _gene:
             errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is a {_genos}, and this attribute names a bean of genos "
-                          f"{' or '.join(map(str, _gene))} (VOCAB {_law_path(e.term)}.attrs.{attr}.in)")
+                          f"{' or '.join(map(str, _gene))}" + _rule(f"{_law_path(e.term)}.attrs.{attr}.in", e.term))
 
 
 ENTRY_CONTROLLERS = (
@@ -2703,7 +2725,7 @@ def check_entry(base, term, label, entry, sch):
         req = [n for n, _ in _facet(attribute_form(term, sch), 'required', 'entry')]
         _f = _example_form(term, entry=True)
         errors.append(f"{base}: {term}[{label}] must be a mapping with {req}"
-                      + (f" — one entry, one mapping, in the form a tested example writes: {_f}" if _f else '')
+                      + (f" — one entry, one mapping, in {_TESTED}{_f}" if _f else '')
                       + _rule(f"{term}.schema", term, term.split('.')[0]))
         return
     cell = _ECell(base, term, label, entry, sch)
@@ -2776,20 +2798,20 @@ def ctl_governs_anchor(c):
         _cf = form_of(c.term)['value'].get('compare_form')
         if _cf in COMPARE_FORMS and COMPARE_FORMS[_cf](_v) != _v:
             warns.append(f"{c.base}: anchor {_ga}='{_v}' is compared as '{COMPARE_FORMS[_cf](_v)}' — store it in that "
-                         f"form (VOCAB {c.term}.schema.compare_form: {_cf})")
+                         "form" + _rule(f"{c.term}.schema.compare_form", c.term))
         _vr = form_of(c.term)['value'].get('in_registry')
         if _vr:
             # (9.1) an anchor that IS a code of a published classification must be one of its codes
             _known = {str(r.get(_vr.get('take'))) for r in (registry(_vr.get('registry')) or []) if isinstance(r, dict)}
             if _v not in _known:
-                errors.append(f"{c.base}: anchor {_ga}='{_v}' is not a {_vr.get('registry')} code "
-                              f"(VOCAB {c.term}.schema.value_in_registry)")
+                errors.append(f"{c.base}: anchor {_ga}='{_v}' is not a {_vr.get('registry')} code"
+                              + _rule(f"{c.term}.schema.value_in_registry", c.term))
         if form_of(c.term)['value'].get('form') == 'ip':
             try:
                 ipaddress.ip_address(_v)
             except ValueError:
-                errors.append(f"{c.base}: anchor {_ga}='{_v}' is not a valid IP "
-                              f"(VOCAB {c.term}.schema.value_form)")
+                errors.append(f"{c.base}: anchor {_ga}='{_v}' is not a valid IP"
+                              + _rule(f"{c.term}.schema.value_form", c.term))
     return STOP
 
 
@@ -2823,7 +2845,7 @@ def ctl_required(c):
     if why and (node is None or node == [] or node == {} or node == ''):
         _f = _example_form(term)
         errors.append(f"{base}: {why} requires a non-empty {term}"
-                      + (f" — the form a tested example writes: {_f}" if _f else '') + _rule(term))
+                      + (f" — {_TESTED}{_f}" if _f else '') + _rule(term))
         return STOP                 # DECLARED: one absence, one finding — not four
     if node is None:
         return STOP                 # not required and not present: nothing to judge
@@ -2860,7 +2882,7 @@ def ctl_only_on(c):
             axis, hit = _on_axis(c.fm, key[len('only_on_'):], vals)
             if not hit:
                 errors.append(f"{c.base}: {c.term} is carried only by a bean of {axis} {' or '.join(map(str, vals))}, "
-                              f"and this one is {axis} '{c.fm.get(axis)}' (VOCAB {c.term}.schema.{key})")
+                              f"and this one is {axis} '{c.fm.get(axis)}'" + _rule(f"{c.term}.schema.{key}", c.term))
                 return STOP
     return None
 
@@ -2884,7 +2906,8 @@ def ctl_must_equal_genos_attr(c):
         errors.append(f"VOCAB genos '{_g}': missing '{mk}' (required to check {c.term})")
     elif c.node != kreg[mk]:
         errors.append(f"{c.base}: {c.term} '{c.node}' contradicts genos '{_g}' which refines "
-                      f"{mk} '{kreg[mk]}' (VOCAB {c.term}.schema.must_equal_genos_attr)" + retired_hint(c.term, c.node))
+                      f"{mk} '{kreg[mk]}'" + retired_hint(c.term, c.node)
+                      + _rule(f"{c.term}.schema.must_equal_genos_attr", c.term))
     return None
 
 
@@ -2893,7 +2916,7 @@ def ctl_shape(c):
     shape = c.sch.get('shape')
     def _f():
         _e = _example_form(c.term)
-        return f" — the form a tested example writes: {_e}" if _e else ''
+        return f" — {_TESTED}{_e}" if _e else ''
     if shape == 'scalar':
         if isinstance(c.node, (list, dict)):
             errors.append(f"{c.base}: {c.term} is ONE value, not a {'list' if isinstance(c.node, list) else 'mapping'}"
@@ -2932,7 +2955,7 @@ def ctl_required_attrs(c):
     for attr, _ in _facet(attribute_form(c.term, c.sch), 'required', 'self'):
         if isinstance(c.node, dict) and attr not in c.node:
             _f = _example_form(f"{c.term}.{attr}")
-            errors.append(f"{c.base}: {c.term} requires '{attr}'" + (f" — the form a tested example writes: {_f}"
+            errors.append(f"{c.base}: {c.term} requires '{attr}'" + (f" — {_TESTED}{_f}"
                           if _f else '') + _rule(f"{c.term}.schema.attrs.{attr}", c.term))
     return None
 
@@ -3122,10 +3145,10 @@ def check_facet_parity():
                 continue
             if _a is None:
                 errors.append(f"{_base}: has {_par} but no {_term} — an ownership claim nothing answers for "
-                              f"is a loose end (VOCAB {_term}.rules.parity)")
+                              f"is a loose end" + _rule(f"{_term}.rules.parity", _term))
             elif _o is None:
                 errors.append(f"{_base}: has {_term} but no {_par} — a duty nobody owns is orphaned "
-                              f"(VOCAB {_term}.rules.parity)")
+                              + _rule(f"{_term}.rules.parity", _term))
             else:
                 _ka, _ko = _alt_key(_term), _alt_key(_par)
                 _sa, _so = _facet_shape(_a, _ka), _facet_shape(_o, _ko)
@@ -3138,7 +3161,7 @@ def check_facet_parity():
                 if _sa != _so:
                     errors.append(f"{_base}: {_term} and {_par} disagree on facets "
                                   f"({_shape_str(_sa, _ka)} vs {_shape_str(_so, _ko)}) — "
-                                  f"the two arcs must close (VOCAB {_term}.rules.parity)")
+                                  f"the two arcs must close" + _rule(f"{_term}.rules.parity", _term))
 
 
 
@@ -3172,7 +3195,7 @@ def check_inverse_relations():
             _back = docs[(True, _tgt)][0].get(_inv)
             if not (isinstance(_back, dict) and _back.get('bean') == _base):
                 errors.append(f"{_base}: {_term} -> '{_tgt}', but {_tgt}.{_inv} does not point back to "
-                              f"'{_base}' (VOCAB {_term}.schema.inverse_of: {_inv})")
+                              f"'{_base}'" + _rule(f"{_term}.schema.inverse_of", _term))
 
 
 
@@ -3899,7 +3922,7 @@ def check_unclean_merge():
             errors.append(f"{_b}: holds an unresolved merge at {_p} {_why}. A captured conflict — "
                           f"`{{conflict: [<one value>, <another>]}}` at a path `merge_conflicts` names, with `merge_open: "
                           f"true` — warns and may commit; any other is a document nobody is answering for, and its values "
-                          f"are judged by nothing. Pick a value, or restore what the merge wrote (VOCAB merge_conflicts)")
+                          f"are judged by nothing. Pick a value, or restore what the merge wrote" + _rule('merge_conflicts'))
 
 
 def drawn_edges():
@@ -3948,7 +3971,7 @@ def check_acyclic_per_relation():
                     _g.setdefault(_base, []).append(_tgt)
         for _trail in _cycles(_g):
             warns.append(f"cycle in '{_rel}' alone: {' -> '.join(_trail)} — a relation "
-                         f"declared acyclic (VOCAB {_rel}.schema.dag) contains a cycle by itself")
+                         f"declared acyclic contains a cycle by itself" + _rule(f"{_rel}.schema.dag", _rel))
 
 
 def check_inverse_completeness():
@@ -3996,7 +4019,7 @@ def check_target_obligation_widened():
             if not docs[(True, _tgt)][0].get(_term):
                 warns.append(f"{_tgt}: is the target of a {_rt} edge and carries no {_term} — reached "
                              f"through an entry or pointer field, which the narrow target set never saw "
-                             f"(VOCAB {_term}.schema.required_on_targets_of)")
+                             + _rule(f"{_term}.schema.required_on_targets_of", _term))
 
 
 def _termination_hint(term, bean):
@@ -4049,7 +4072,7 @@ def check_chain_termination():
                     if _at != _base:
                         errors.append(f"{_base}: its {_term} chain reaches '{_at}', which carries no "
                                       f"{_term} at all — the chain neither terminates nor loops "
-                                      f"(MODEL.md: every chain terminates){_termination_hint(_term, _at)}")
+                                      f"{_termination_hint(_term, _at)}" + _rule(_term))
                     break
                 if _alt and _alt in _node:
                     _nxt = (_node[_alt] or {}).get('bean') if isinstance(_node[_alt], dict) else None
