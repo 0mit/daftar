@@ -1050,7 +1050,9 @@ for _qn, _q in list(QUANTITIES.items()):
     for _r in (registry(_uf.get('registry')) or []):
         if isinstance(_r, dict) and _r.get(_uf.get('take')) and str(_r[_uf['take']]) not in UNITS:
             UNITS[str(_r[_uf['take']])] = {'unit': str(_r[_uf['take']]), 'quantity': _qn, 'from_registry': _uf['registry'],
-                                          'digits': _r.get(_uf.get('digits')) if _uf.get('digits') else None}
+                                          'digits': _r.get(_uf.get('digits')) if _uf.get('digits') else None,
+                                          # the row's own word for whether the unit is in use, when its file has one
+                                          'status': _r.get('status'), 'name': _r.get('name')}
 
 
 def unit_powers(u):
@@ -1126,6 +1128,17 @@ def check_quantity(where, node, want):
         _reg = ((QUANTITIES.get(want) or {}).get('units_from') or {}).get('registry')
         errors.append(f"{where}.unit '{node['unit']}' measures {u.get('quantity')}, and this attribute is a {want} — "
                       + (f"a code of the `{_reg}` registry" if _reg else str(_of)))
+    # A UNIT ITS OWN REGISTRY SAYS IS NO LONGER IN USE (v0.34.1): a warning, never a refusal — an old amount may be in an
+    # old currency. Measured: an agent told "lira" searched the currencies, found three, and took the one withdrawn in
+    # 2005. The warning names the rows in use that share its name, so the fix is in the message.
+    if u and u.get('from_registry') and u.get('status') not in (None, '', 'current'):
+        _nm = str(u.get('name') or '')
+        _key = _nm.split(' (')[0].strip().lower()
+        _cur = sorted(f"{n} ({r.get('name')})" for n, r in UNITS.items() if r.get('from_registry') == u['from_registry']
+                      and r.get('status') == 'current' and _key and str(r.get('name') or '').split(' (')[0].strip().lower() == _key)
+        warns.append(f"{where}.unit '{node['unit']}' ({_nm}) is {u['status']} in the `{u['from_registry']}` registry, "
+                        f"no longer in use" + (f" — the one in use by that name: {', '.join(_cur)}" if _cur else '') +
+                        " — keep it only for an amount paid before it was withdrawn")
     if not count_ok(c):
         errors.append(f"{where}.count {c!r} " + ((VALUE_TYPES.get('count') or {}).get('refusal') or
                       "must be a whole number, or a decimal written as a string (\"12.5\"): a float has no canonical form"))
