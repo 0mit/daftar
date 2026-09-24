@@ -38,11 +38,11 @@ BEAN = os.path.join(G, "beans", "rented-box.md")
 def bean(extra):
     open(BEAN, "w").write("""---
 bean: rented-box
-kind: host
+genos: host
 title: "a rented machine"
 status: active
 summary: "probe"
-nature: physical
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -230,11 +230,11 @@ assert "extends_profiles: [code" in _vc, "the garden did not opt into the code p
 open(VOC, "w").write(_vc)
 open(os.path.join(G, "beans", "a-tool.md"), "w").write("""---
 bean: a-tool
-kind: codebase
+genos: codebase
 title: "a tool"
 status: active
 summary: "probe"
-nature: metaphysical
+nature: lekton
 identity: { status: confirmed, anchors: [ { key: git_remote, value: "host-a:git/a-tool.git", class: logical, establishing: true } ] }
 provenance: { src: observed, by: probe, as_of: 2026-09-20 }
 owned_by: { legal: { external: "someone" } }

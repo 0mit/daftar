@@ -10,10 +10,10 @@ request rather than in a diff.
 
 WHAT IT KNOWS. Nothing. The forbidden words are DERIVED from a garden: the id of EVERY bean and every
 mapping, the logical root names each host declares, the garden's own id, and the VALUE of every identity anchor.
-Nobody maintains a denylist, so a bean added tomorrow is covered tomorrow. Every id, not the ids of chosen kinds:
-a hand-kept list of the kinds that are "beings" was a proxy for "what the estate calls its own", and the
-proxy drifted — a design's id sat in the public law while its kind was not on the list. What an estate
-names is estate, whatever its kind; a kind added to the law tomorrow needs no line here. Every anchor's value,
+Nobody maintains a denylist, so a bean added tomorrow is covered tomorrow. Every id, not the ids of chosen gene:
+a hand-kept list of the gene that are "beings" was a proxy for "what the estate calls its own", and the
+proxy drifted — a design's id sat in the public law while its genos was not on the list. What an estate
+names is estate, whatever its genos; a genos added to the law tomorrow needs no line here. Every anchor's value,
 not the values of chosen keys, for the same reason: a list of three keys (hostname, fqdn, ip) let a person's
 email, an agreement's id, a serial number and a session id through, and an anchor key the law adds tomorrow
 names something a garden identifies — which is exactly what must not leave it.

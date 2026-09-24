@@ -66,7 +66,7 @@ DOMAINS = {
     'system':      "in: { system: <anchor system> }                a position in ONE named system, written in that system's one form (`unix-epoch`, `geographic`)",
     'key_of':      "in: { key_of: <term> }                         a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another — resolved by the gate, and not an edge",
     'entries':     "in: { entries: { <attr>: {required?, in, meaning} }, keyed_by?: <attr> }   entries INSIDE an entry: a list of them, or one mapping — each judged as an entry, by the attributes written here; `keyed_by`: one entry per value of that attribute",
-    'bean_id':     "in: bean_id | { bean_id: { kinds: [...] } }   the bare id of a bean this garden holds (of those kinds): resolved by the gate, and not an edge (an edge is a `ref`)",
+    'bean_id':     "in: bean_id | { bean_id: { gene: [...] } }    the bare id of a bean this garden holds (of those gene): resolved by the gate, and not an edge (an edge is a `ref`)",
     'any':         "in: any                                        DELIBERATELY any value: its type is some other attribute's business. A decision, where `untyped` is a debt",
     'pattern':     "in: { pattern: '<regex>' }                     a form this term owns; with `soft: true` and a `why` it WARNS instead of refusing",
     'quantity':    "in: { quantity: <name> }                       a measured value { count, unit } whose unit measures that quantity",
@@ -135,8 +135,8 @@ def attribute_form(term_def, sch):
             'self_ref': bool(sch.get('is_ref')), 'value': {}, 'alt': None,
             'one_of': list(sch.get('entry_one_of') or []),
             'matches': {'entry': list(sch.get('entry_must_match') or []),
-                        'form_from_kind': sch.get('entry_form_from_kind_attr'),
-                        'equal_kind_attr': sch.get('must_equal_kind_attr')},
+                        'form_from_genos': sch.get('entry_form_from_genos_attr'),
+                        'equal_genos_attr': sch.get('must_equal_genos_attr')},
             'mirror': {'parity_with': sch.get('facet_parity_with'), 'inverse_of': sch.get('inverse_of')},
             'unknown': []}
 

@@ -46,8 +46,8 @@ chat: *"the NAS in the hallway is at 192.168.1.20, I set it up last April, the s
 
 ```yaml
 bean: hallway-nas
-kind: host
-nature: physical
+genos: host
+nature: soma
 identity:
   status: confirmed
   anchors:

@@ -11,8 +11,9 @@ would therefore certify a gate whose commit-time half was never run.
 It asserts BOTH directions, because a garden that accepts everything passes a positive-only test:
   +  germinate -> write a bean -> stage it WITH the journal -> gate 0 -> the commit succeeds
   -  a bean staged WITHOUT the journal is refused (provenance duty)
-  -  an undeclared kind is refused                      (this is what promoting kinds to Tier-0 bought)
-  -  a nature contradicting its kind is refused
+  -  an undeclared genos is refused                     (this is what promoting gene to Tier-0 bought)
+  -  a nature contradicting its genos is refused
+  -  a bean in the words the law retired at 22.0 is refused, naming where each went
   -  the law removed is an ERROR, not a warning         (there is no fallback)
   -  a pin disagreeing with the vocabulary is an ERROR, not a warning
 
@@ -45,17 +46,17 @@ def gate(cwd):
 
 BEAN = """---
 bean: ada
-kind: person
+genos: person
 title: "Ada — the first bean of a germinated garden"
 status: active
-summary: "A person written into a garden grown from the seed, proving the language travelled: the kind registry, the nature axis, the identity policy and the journal duty all arrive with it."
+summary: "A person written into a garden grown from the seed, proving the language travelled: the gene registry, the nature axis, the identity policy and the journal duty all arrive with it."
 identity:
   status: confirmed
   anchors:
     - {{ key: person_id, value: "person:ada", class: logical, establishing: true, observed: 2026-08-02 }}
 provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: 2026-08-02 }}
 nature: {nature}
-owned_by: {{ legal: {{ crown: love }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
 ---
 A person, written to prove a fresh garden can hold one.
@@ -158,16 +159,22 @@ check("the journal's own header says the heading is written by bin/dmjournal.py,
 # AN ORGANISATION MAY KEEP A GARDEN (21.0): the law says "person — or organisation", and germination plants either.
 _og = os.path.join(TMP, 'garden-org')
 _or = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), _og, '--gardener', 'ben-household',
-          '--gardener-kind', 'org', '--gardener-name', "Ben's household", cwd=ROOT)
+          '--gardener-genos', 'org', '--gardener-name', "Ben's household", cwd=ROOT)
 _ob = open(os.path.join(_og, 'beans', 'ben-household.md'), encoding='utf-8').read() if os.path.isfile(
     os.path.join(_og, 'beans', 'ben-household.md')) else ''
 _oid = (run('git', 'rev-list', '--max-parents=0', 'HEAD', cwd=_og).stdout.strip() or 'x' * 12)[:12]
-check("`--gardener-kind org` plants an organisation as the gardener: an `org` bean, named by the garden's id, 0 errors",
-      _or.returncode == 0 and ' 0 error(s), 0 warning(s)' in _or.stdout and re.search(r'(?m)^kind: org$', _ob)
+check("`--gardener-genos org` plants an organisation as the gardener: an `org` bean, named by the garden's id, 0 errors",
+      _or.returncode == 0 and ' 0 error(s), 0 warning(s)' in _or.stdout and re.search(r'(?m)^genos: org$', _ob)
       and f'value: "{_oid}/org:ben-household"' in _ob, (_or.stdout + _or.stderr)[-400:] + _ob[:400])
 _xr = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), os.path.join(TMP, 'garden-x'), '--gardener',
-          'ben', '--gardener-kind', 'contract', cwd=ROOT)
-check("...and a kind the law does not let keep a garden is refused", _xr.returncode != 0, (_xr.stdout + _xr.stderr)[-300:])
+          'ben', '--gardener-genos', 'contract', cwd=ROOT)
+check("...and a genos the law does not let keep a garden is refused", _xr.returncode != 0, (_xr.stdout + _xr.stderr)[-300:])
+_kr = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), os.path.join(TMP, 'garden-kind'), '--gardener',
+          'ben-household', '--gardener-kind', 'org', '--gardener-name', "Ben's household", cwd=ROOT)
+check("...and `--gardener-kind`, the flag's name before 22.0, is read as `--gardener-genos`, so a line written then runs",
+      _kr.returncode == 0 and os.path.isfile(os.path.join(TMP, 'garden-kind', 'beans', 'ben-household.md'))
+      and re.search(r'(?m)^genos: org$', open(os.path.join(TMP, 'garden-kind', 'beans', 'ben-household.md'),
+                                               encoding='utf-8').read()), (_kr.stdout + _kr.stderr)[-300:])
 # THE NAME IS JUDGED BEFORE ANYTHING IS CREATED (21.0 judges the manifest as itself, `manifest.garden` in kebab-case). It
 # was judged only at the first commit: the directory was left half-grown, and a second try met "already exists".
 _names = os.path.join(TMP, 'names')
@@ -425,15 +432,15 @@ check("...and the other garden's id in the cookbook is marked as the one to repl
       _gid_ex, re.findall(r'.*key: garden_id.*', _ck_page)[:2])
 # THE COOKBOOK'S RECIPES BETWEEN PERSONS AND GARDENS ARE THERE (21.0): the gardener first; money shared, an agreement
 # paid in instalments, a statement, an event; another person's garden, and a name that garden minted, carried here.
-_kinds = {}
+_gene = {}
 for _path, _text in _examples:
-    _m = re.search(r'(?m)^kind: ([a-z-]+)$', _text)
-    _kinds.setdefault(_m.group(1) if _m else None, []).append(_path)
+    _m = re.search(r'(?m)^genos: ([a-z-]+)$', _text)
+    _gene.setdefault(_m.group(1) if _m else None, []).append(_path)
 _ck = open(os.path.join(ROOT, 'seed', 'COOKBOOK.md'), encoding='utf-8').read()
 check("the cookbook's examples hold a contract with clauses and one with a transaction, a document, an event and a garden",
-      len(_kinds.get('contract', [])) >= 2 and _kinds.get('document') and _kinds.get('event') and _kinds.get('garden')
-      and re.search(r'(?m)^clauses:$', _ck) and re.search(r'(?m)^transactions:$', _ck), sorted(_kinds))
-_ev = [_text for _path, _text in _examples if re.search(r'(?m)^kind: event$', _text)]
+      len(_gene.get('contract', [])) >= 2 and _gene.get('document') and _gene.get('event') and _gene.get('garden')
+      and re.search(r'(?m)^clauses:$', _ck) and re.search(r'(?m)^transactions:$', _ck), sorted(map(str, _gene)))
+_ev = [_text for _path, _text in _examples if re.search(r'(?m)^genos: event$', _text)]
 check("...its happening is owned by none of those present — the crown — and answered for by its host, as the law says",
       _ev and all('owned_by: { legal: { crown: logos } }' in _e and re.search(r'(?m)^responsibility: .*holder', _e)
                   for _e in _ev), _ev[:1])
@@ -564,7 +571,7 @@ check(f"the pins are interpolated from the vocabulary itself (@{_ver}), not type
 
 # ---- NEGATIVE: a bean without its journal entry -------------------------------------------------------
 bean_path = os.path.join(G, 'beans', 'ada.md')
-open(bean_path, 'w', encoding='utf-8').write(BEAN.format(nature='living'))
+open(bean_path, 'w', encoding='utf-8').write(BEAN.format(nature='empsychon'))
 run('git', 'add', 'beans/ada.md', cwd=G)
 rc, out = gate(G)
 check("a bean staged WITHOUT a journal entry is refused (provenance duty)",
@@ -579,7 +586,7 @@ check("with the journal entry, the gate passes", rc == 0 and '0 error(s)' in out
 c = run('git', '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'first bean', cwd=G)
 check("and the commit succeeds — the first bean lands", c.returncode == 0, (c.stdout + c.stderr)[-300:])
 
-# ---- NEGATIVE: an undeclared kind. This is exactly what promoting kinds to Tier-0 bought. --------------
+# ---- NEGATIVE: an undeclared genos. This is exactly what promoting gene to Tier-0 bought. --------------
 def mutate(text):
     open(bean_path, 'w', encoding='utf-8').write(text)
     run('git', 'add', '-A', cwd=G)
@@ -588,13 +595,19 @@ def mutate(text):
     run('git', 'reset', '-q', cwd=G)
     return rc, out
 
-rc, out = mutate(BEAN.format(nature='living').replace('kind: person', 'kind: wizard'))
-check("an UNDECLARED kind is refused — the kind registry travelled with the seed",
-      rc != 0 and 'not declared in the vocabulary' in out, out.strip()[-300:])
+rc, out = mutate(BEAN.format(nature='empsychon').replace('genos: person', 'genos: wizard'))
+check("an UNDECLARED genos is refused — the gene registry travelled with the seed",
+      rc != 0 and "genos 'wizard' is not declared in the vocabulary" in out, out.strip()[-300:])
 
-rc, out = mutate(BEAN.format(nature='physical'))
-check("a nature contradicting its kind is refused — the D1 axis travelled too",
-      rc != 0 and 'contradicts kind' in out, out.strip()[-300:])
+rc, out = mutate(BEAN.format(nature='soma'))
+check("a nature contradicting its genos is refused — the D1 axis travelled too",
+      rc != 0 and 'contradicts genos' in out, out.strip()[-300:])
+
+# ---- NEGATIVE: a bean in the words the law retired at 22.0 is refused, saying where each went, never read ----------
+rc, out = mutate(BEAN.format(nature='living').replace('genos: person', 'kind: person').replace('crown: agape', 'crown: love'))
+check("a bean still in 21.0's words — `kind`, `living`, `love` — is refused, each naming its Greek word, never read",
+      rc != 0 and "missing 'genos'" in out and "'kind' is one the law retired on a bean" in out and 'retired: `genos`' in out
+      and 'retired: `empsychon`' in out, out.strip()[-600:])
 
 # ---- NEGATIVE: the law itself ------------------------------------------------------------------------
 law = os.path.join(G, 'seed', 'std-vocab.md')
@@ -617,7 +630,7 @@ check("a pin DISAGREEING with the installed vocabulary is an ERROR, not a warnin
 # "passes its own first gate run AND merges cleanly with this one." The first half is above. This is the
 # second, and until the vocabulary reconciliation existed there was no definition of "cleanly" to check:
 # dmmerge converged BEANS while the two gardens' type systems stayed divergent, so a merged corpus could
-# hold a bean of a kind the merged law never declared. Now the law is reconciled first and the merged
+# hold a bean of a genos the merged law never declared. Now the law is reconciled first and the merged
 # corpus is checked against it, so a germinated garden either merges or says exactly why not.
 run('git', 'checkout', '-q', '--', '.', cwd=G)
 run('git', 'reset', '-q', cwd=G)
@@ -627,7 +640,7 @@ check("a germinated garden MERGES BACK with the one it grew from — the 1.0.0 c
       r.returncode == 0 and 'MERGE REFUSED' not in out, out.strip()[-400:])
 check("...their laws reconcile: the seed interpolated the pin, so both gardens share one Tier-0 version",
       f'reconciled at std-vocab@{_ver}' in out, [l for l in out.splitlines() if 'VOCABULARY' in l])
-check("...and the merged corpus has no uncovered kind, key or unmet obligation",
+check("...and the merged corpus has no uncovered genos, key or unmet obligation",
       'UNCOVERED' not in out and 'UNMET' not in out,
       '; '.join(l.strip() for l in out.splitlines() if 'UNCOVERED' in l or 'UNMET' in l))
 check("the child's bean is IN the merged result, not silently dropped",

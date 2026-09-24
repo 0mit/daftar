@@ -66,7 +66,7 @@ def _collect(node):
         for k, v in node.items():
             if k == "attrs" and isinstance(v, (dict, list)):
                 _live.update(str(x) for x in v if isinstance(x, (str, int)))
-            if k in ("term", "kind") and isinstance(v, str):
+            if k in ("term", "kind", "genos") and isinstance(v, str):
                 _live.add(v)
             _collect(v)
     elif isinstance(node, list):

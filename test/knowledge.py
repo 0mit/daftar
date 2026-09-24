@@ -36,10 +36,10 @@ def gate():
     return run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G)
 
 OWN = 'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
-bean("someone", 'bean: someone\nkind: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: living\n'
+bean("someone", 'bean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
      'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
-     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: love } }\nresponsibility: { legal: { self: true } }\n')
-bean("file-server", 'bean: file-server\nkind: product\ntitle: "a file server product"\nstatus: active\nsummary: "the SMB server software"\nnature: metaphysical\n'
+     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n')
+bean("file-server", 'bean: file-server\ngenos: product\ntitle: "a file server product"\nstatus: active\nsummary: "the SMB server software"\nnature: lekton\n'
      'identity: { status: confirmed, anchors: [ { key: technology, value: samba, class: logical, establishing: true } ] }\n'
      'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n' + OWN +
      'knowledge:\n  - { scheme: technology, code: samba, rel: classified_as }\n  - { scheme: isced-f-2013, code: "0612", rel: draws_on, topic: "network file sharing" }\n'
@@ -47,14 +47,14 @@ bean("file-server", 'bean: file-server\nkind: product\ntitle: "a file server pro
 r = gate()
 check("real codes pass: a technology anchor and knowledge entries in three schemes", "0 error" in r.stdout + r.stderr, r.stdout[-1500:] + r.stderr[-800:])
 
-bean("bad-anchor", 'bean: bad-anchor\nkind: product\ntitle: "x"\nstatus: active\nsummary: "x"\nnature: metaphysical\n'
+bean("bad-anchor", 'bean: bad-anchor\ngenos: product\ntitle: "x"\nstatus: active\nsummary: "x"\nnature: lekton\n'
      'identity: { status: confirmed, anchors: [ { key: isco_08, value: "9999", class: logical, establishing: true } ] }\n'
      'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n' + OWN)
 r = gate()
 check("an invented ISCO-08 code as an anchor is refused", "anchor isco_08='9999' is not a isco-08 code" in r.stdout + r.stderr, r.stdout[-1200:])
 os.remove(os.path.join(G, "beans", "bad-anchor.md"))
 
-bean("bad-entry", 'bean: bad-entry\nkind: product\ntitle: "x"\nstatus: active\nsummary: "x"\nnature: metaphysical\n'
+bean("bad-entry", 'bean: bad-entry\ngenos: product\ntitle: "x"\nstatus: active\nsummary: "x"\nnature: lekton\n'
      'identity: { status: confirmed, anchors: [ { key: technology, value: postfix, class: logical, establishing: true } ] }\n'
      'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n' + OWN +
      'knowledge:\n  - { scheme: isced-f-2013, code: "0699", rel: draws_on }\n  - { scheme: nonsense, code: "1", rel: uses }\n')

@@ -176,7 +176,7 @@ def main(target):
         print(f"no bean points at {target!r} — nothing in the garden claims it")
         return 2
     fm = BEANS[bean]
-    print(BOLD(f"cursor -> {bean}") + f"   {fm.get('kind')} · {fm.get('nature')}"
+    print(BOLD(f"cursor -> {bean}") + f"   {fm.get('genos')} · {fm.get('nature')}"
           + (f" · living in {(fm.get('lives_in') or {}).get('bean')}" if fm.get('lives_in') else ''))
     print(f"  {fm.get('title', '')}")
     if covering:

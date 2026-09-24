@@ -67,11 +67,11 @@ open(VOC, "w").write(ORIG)
 def bean(name, body):
     open(os.path.join(G, "beans", name + ".md"), "w").write("---\n" + body + "---\n\n" + name + "\n")
 OWN = 'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
-bean("someone", 'bean: someone\nkind: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: living\n'
+bean("someone", 'bean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
      'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
-     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: love } }\nresponsibility: { legal: { self: true } }\n')
+     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n')
 for a, b in (("part-a", "part-b"), ("part-b", "part-a")):
-    bean(a, f'bean: {a}\nkind: product\ntitle: "{a}"\nstatus: active\nsummary: "x"\nnature: metaphysical\n'
+    bean(a, f'bean: {a}\ngenos: product\ntitle: "{a}"\nstatus: active\nsummary: "x"\nnature: lekton\n'
          f'identity: {{ status: confirmed, anchors: [ {{ key: product_id, value: "product:{a}", class: logical, establishing: true }} ] }}\n'
          f'provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}\n' + OWN + f'part_of: {{ bean: {b} }}\n')
 out = gate()
@@ -142,11 +142,11 @@ BEAN = os.path.join(G, "beans", "probe-host.md")
 def bean(extra):
     open(BEAN, "w").write("""---
 bean: probe-host
-kind: host
+genos: host
 title: "probe"
 status: active
 summary: "probe"
-nature: physical
+nature: soma
 identity:
   status: confirmed
   anchors:

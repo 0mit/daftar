@@ -2,7 +2,7 @@
 vocab: @@GARDEN@@
 extends: std-vocab@@@VERSION@@
 local_terms: []      # terms specific to this estate. One that proves general is PROMOTED to Tier-0.
-local_kinds: []      # kinds are Tier-0. Add one here only if this estate needs a kind nowhere else does.
+local_gene: []       # gene are Tier-0. Add one here only if this estate needs a genos nowhere else does.
 ---
 # @@GARDEN@@ — local vocabulary
 

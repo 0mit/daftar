@@ -39,11 +39,11 @@ def stale(*args):
 OWN = ('owned_by: { legal: { owner: { bean: keeper } } }\n'
        'responsibility: { legal: { holder: { bean: keeper } } }\n')
 open(os.path.join(G, "beans", "keeper.md"), "w").write(
-    '---\nbean: keeper\nkind: person\ntitle: "the keeper"\nstatus: active\nsummary: "p"\nnature: living\n'
+    '---\nbean: keeper\ngenos: person\ntitle: "the keeper"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
     'identity: { status: confirmed, anchors: [ { key: person_id, value: "person:keeper", class: logical, '
     'establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { legal: { crown: love } }\nresponsibility: { legal: { self: true } }\n---\nA person.\n')
+    'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n---\nA person.\n')
 
 # ---- a GARDEN'S OWN term, the drill's case, reproduced -------------------------------------------------
 # Declared in local_terms with an expiry, exactly as a stranger would write it after reading
@@ -79,8 +79,8 @@ vocab(RENTAL)
 
 def host(rental_block, bean="vps"):
     open(os.path.join(G, "beans", f"{bean}.md"), "w").write(
-        f'---\nbean: {bean}\nkind: virtual-host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
-        'nature: living\n'
+        f'---\nbean: {bean}\ngenos: virtual-host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
+        'nature: empsychon\n'
         'identity: { status: confirmed, anchors: [ { key: fqdn, value: "' + bean + '.example.org", '
         'class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN + rental_block +
@@ -152,8 +152,8 @@ check("the standard carries many dates and declares few expiries — the reason 
 # refuses them in its own words.
 def period(block, bean="vps2"):
     open(os.path.join(G, "beans", f"{bean}.md"), "w").write(
-        f'---\nbean: {bean}\nkind: virtual-host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
-        'nature: living\n'
+        f'---\nbean: {bean}\ngenos: virtual-host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
+        'nature: empsychon\n'
         'identity: { status: confirmed, anchors: [ { key: fqdn, value: "' + bean + '.example.org", '
         'class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
@@ -219,10 +219,10 @@ open(v, "w", encoding="utf-8").write(_v)
 # An agreement's clauses are an open map, and the law's `clauses` term declares its expiry per entry: `due`, repeating
 # by `every`, silenced by `state: met | waived | broken`, with a notice of seven days. Nothing here names the term.
 open(os.path.join(G, "beans", "ali.md"), "w").write(
-    '---\nbean: ali\nkind: person\ntitle: "ali"\nstatus: active\nsummary: "p"\nnature: living\n'
+    '---\nbean: ali\ngenos: person\ntitle: "ali"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
     'identity: { status: confirmed, anchors: [ { key: person_id, value: "person:ali", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { legal: { crown: love } }\nresponsibility: { legal: { self: true } }\n---\nA person.\n')
+    'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n---\nA person.\n')
 today = datetime.date.today()
 IN3 = (today + datetime.timedelta(days=3)).isoformat()
 IN10 = (today + datetime.timedelta(days=10)).isoformat()
@@ -235,11 +235,11 @@ for _k in range(1, 7):
 FIRST = (NEXT.replace(day=1) - datetime.timedelta(days=1)).replace(day=NEXT.day)
 open(os.path.join(G, "beans", "deal.md"), "w").write(f"""---
 bean: deal
-kind: contract
+genos: contract
 title: "an agreement"
 status: active
 summary: "what ali owes the keeper"
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:deal", class: logical, establishing: true }} ] }}
@@ -350,11 +350,11 @@ check("a stride whose count is a decimal STRING is read (`count: \"2\"`), and on
 line = lambda key, bean="odd": next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
 open(os.path.join(G, "beans", "odd.md"), "w").write(f"""---
 bean: odd
-kind: contract
+genos: contract
 title: "an agreement with places no calendar has"
 status: active
 summary: "clauses the gate accepts and the walk must end on"
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:odd", class: logical, establishing: true }} ] }}
@@ -399,11 +399,11 @@ _BEGIN = (FIRST.replace(day=1) + datetime.timedelta(days=40)).replace(day=FIRST.
 _LATER = (today + datetime.timedelta(days=200)).isoformat()                              # past every term's horizon
 open(os.path.join(G, "beans", "beyond.md"), "w").write(f"""---
 bean: beyond
-kind: contract
+genos: contract
 title: "an agreement whose days are not all days"
 status: active
 summary: "clauses a reader must end on, and say it could not read"
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:beyond", class: logical, establishing: true }} ] }}
@@ -504,11 +504,11 @@ check("`--days x` is refused with the form it takes — no traceback", r.returnc
 # ---- A DISAGREEMENT A MERGE LEFT: the earliest date any side still owes is the one warned of --------------------------
 open(os.path.join(G, "beans", "merged.md"), "w").write(f"""---
 bean: merged
-kind: contract
+genos: contract
 title: "an agreement two records disagree about"
 status: active
 summary: "two clauses in a merge conflict"
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:merged", class: logical, establishing: true }} ] }}
@@ -540,7 +540,7 @@ os.remove(os.path.join(G, "beans", "merged.md"))
 # Gregorian calendar.
 def contract(bid, clauses):
     open(os.path.join(G, "beans", bid + ".md"), "w", encoding="utf-8", newline="\n").write(
-        f'---\nbean: {bid}\nkind: contract\ntitle: "{bid}"\nstatus: active\nsummary: "an agreement"\nnature: metaphysical\n'
+        f'---\nbean: {bid}\ngenos: contract\ntitle: "{bid}"\nstatus: active\nsummary: "an agreement"\nnature: lekton\n'
         'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
         f'identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:{bid}", class: logical, establishing: true }} ] }}\n'
         'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'

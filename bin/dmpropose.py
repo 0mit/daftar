@@ -855,9 +855,9 @@ def envelope_shape(env):
 
 def bean_shape(fm):
     """What in a carried bean or stub does not have a bean's shape — the parts every reader here walks: its name and
-    kind, its identity capsule and anchors, its provenance records and `provenance_of`."""
+    genos, its identity capsule and anchors, its provenance records and `provenance_of`."""
     out = []
-    for k in ('bean', 'kind', 'title', 'nature', GARDENER_OF):
+    for k in ('bean', 'genos', 'title', 'nature', GARDENER_OF):
         if k in fm and fm[k] is not None and not isinstance(fm[k], str):
             out.append(f"`{k}` should be text")
     ident = fm.get('identity')
@@ -967,9 +967,9 @@ def no_id_why(fm, b):
 
 
 def stub_of(fm):
-    """What a stub carries: the bean's name, kind, nature and title, and its ESTABLISHING anchors — what the other
+    """What a stub carries: the bean's name, genos, nature and title, and its ESTABLISHING anchors — what the other
     garden needs to find the being, and nothing more (a contact anchor is not offered by being referred to)."""
-    s = {k: fm[k] for k in ('bean', 'kind', 'nature', 'title') if k in fm}
+    s = {k: fm[k] for k in ('bean', 'genos', 'nature', 'title') if k in fm}
     ident = fm.get('identity') or {}
     s['identity'] = {'status': ident.get('status'), 'anchors': [a for a in anchors_of(fm) if a.get('establishing') is True]}
     if s['identity']['status'] is None:
@@ -999,7 +999,7 @@ def cmd_make(argv):
     # THE GARDEN IT IS FOR, and its gardener: the person who owns that `garden` bean here.
     to_id = to_gardener = None
     tb = head_bean(to) if id_ok(to) else None
-    if not tb or tb[0].get('kind') != 'garden' or not garden_anchor(tb[0]):
+    if not tb or tb[0].get('genos') != 'garden' or not garden_anchor(tb[0]):
         refusals.append((f"--to {to} is not a `garden` bean with a `garden_id` anchor in this garden's HEAD",
                          f"record the other garden as a `garden` bean anchored by its garden_id (its gardener reads "
                          f"it with `{PY} bin/dmpropose.py id`), commit it, and make the proposal again"))
@@ -1015,7 +1015,7 @@ def cmd_make(argv):
     # THE AGREEMENT IT IS MADE UNDER. Consent is the soil: nothing flows without an agreement both gardeners are party to.
     under_id = None
     ub = head_bean(under) if id_ok(under) else None
-    if not ub or ub[0].get('kind') != 'contract':
+    if not ub or ub[0].get('genos') != 'contract':
         refusals.append((f"--under {under} is not a `contract` in this garden's HEAD",
                          "a proposal is made under an agreement between the two gardeners: record it and commit it"))
     else:
@@ -1239,7 +1239,7 @@ def taken_before(fp, pid, local, from_bean=None):
     proposals are kept; or a journal entry of a take that records the fingerprint — the one record a chat proposal
     leaves, having no garden bean to hold a capture."""
     for b, (fm, _body, _p) in sorted(local.items()):
-        cap = fm.get('capture') if fm.get('kind') == 'garden' else None
+        cap = fm.get('capture') if fm.get('genos') == 'garden' else None
         for k, e in (cap.items() if isinstance(cap, dict) else []):
             key = str(e.get('staleness_key')) if isinstance(e, dict) else None
             if key == fp:
@@ -1450,13 +1450,13 @@ def law_values():
 
 def stub_problems(cap):
     """What in a stub is not what the law lets a bean say — checked before any of it is printed as a bean to write:
-    its kind a kind, its nature a nature, each establishing anchor's key a term that anchors, its class a class, its
+    its genos a genos, its nature a nature, each establishing anchor's key a term that anchors, its class a class, its
     value a plain value."""
     M = _merge()
     classes, natures = law_values()
     out = []
-    if cap.get('kind') is not None and str(cap['kind']) not in M.registry_keys('kinds'):
-        out.append(f"kind {cap['kind']!r} is no kind the law or this garden declares")
+    if cap.get('genos') is not None and str(cap['genos']) not in M.registry_keys('gene'):
+        out.append(f"genos {cap['genos']!r} is no genos the law or this garden declares")
     if cap.get('nature') is not None and natures and str(cap['nature']) not in natures:
         out.append(f"nature {cap['nature']!r} is no nature the law declares")
     for a in anchors_of(cap):
@@ -1494,9 +1494,9 @@ def skeleton(s, cap, local, fid):
     here = manifest().get('gardener') or 'the gardener'
     return (f"record it here — the skeleton below, its identity byte for byte and the rest yours to write — {offer}\n"
             f"===== beans/{bid}.md (a skeleton) =====\n---\nbean: {bid}\n"
-            f"kind: {_q(cap.get('kind') or '<kind>')}\ntitle: {_q(cap.get('title') or s)}\nstatus: active\n"
+            f"genos: {_q(cap.get('genos') or '<genos>')}\ntitle: {_q(cap.get('title') or s)}\nstatus: active\n"
             f"summary: \"<what it is, readable cold>\"\nnature: {_q(cap.get('nature') or '<nature>')}\n"
-            f"owned_by: <its owner, in a form its kind allows>\nresponsibility: <who answers for it>\n"
+            f"owned_by: <its owner, in a form its genos allows>\nresponsibility: <who answers for it>\n"
             f"identity:\n  status: confirmed\n  anchors:\n{anchor_lines(cap)}"
             f"provenance: {{ src: asserted-by-human, by: {_q(here + ' (gardener)')}, as_of: {datetime.date.today().isoformat()} }}\n"
             f"---\n<what it is>\n===== end =====")
@@ -1647,7 +1647,7 @@ def analyse(path, as_test=False):
         R.append(("it states no pin", "ask the sending garden to make it again"))
 
     local = local_beans()
-    gardens_here = {garden_anchor(fm): b for b, (fm, _b, _p) in local.items() if fm.get('kind') == 'garden'}
+    gardens_here = {garden_anchor(fm): b for b, (fm, _b, _p) in local.items() if fm.get('genos') == 'garden'}
     fb = A['from_bean'] = gardens_here.get(fid) if not A['chat'] else None
     fb_fm = local[fb][0] if fb else {}
     gardener_here = mf.get('gardener')
@@ -1774,9 +1774,9 @@ def analyse(path, as_test=False):
                           "name the gardener in GARDEN.md `gardener:`"))
                 L.append(f"  {s:<24} UNRESOLVED — this garden names no gardener")
                 continue
-            if stubs[s].get('kind') and stubs[s]['kind'] != local[gardener_here][0].get('kind'):
-                R.append((f"stub {s} is this garden's gardener (`{GARDENER_OF}: to`) but a {stubs[s]['kind']}, and "
-                          f"[[{gardener_here}]] is a {local[gardener_here][0].get('kind')}", "a person decides (class J)"))
+            if stubs[s].get('genos') and stubs[s]['genos'] != local[gardener_here][0].get('genos'):
+                R.append((f"stub {s} is this garden's gardener (`{GARDENER_OF}: to`) but a {stubs[s]['genos']}, and "
+                          f"[[{gardener_here}]] is a {local[gardener_here][0].get('genos')}", "a person decides (class J)"))
                 continue
             hits = sorted(set(hits) | {gardener_here})
         if len(hits) == 1:
@@ -1869,9 +1869,9 @@ def analyse(path, as_test=False):
                 A['attention'].append(f"{lid}: anchor")
                 L.append(f"      ANCHOR CONFLICT — the two records disagree about what an anchor is: "
                          f"{_esc(M.canonical(ac))}")
-            if isinstance(seed['kind'], list):
-                A['attention'].append(f"{lid}: kind")
-                L.append(f"      KIND CONFLICT — {', '.join(map(_esc, seed['kind']))}")
+            if isinstance(seed['genos'], list):
+                A['attention'].append(f"{lid}: genos")
+                L.append(f"      GENOS CONFLICT — {', '.join(map(_esc, seed['genos']))}")
             theirs = (bodies[b] or '').strip()
             if theirs and theirs not in (local[lid][1] or ''):
                 L.append("      BODY differs — take appends it under `<!-- theirs: … -->`, whole, for the gardener: "
@@ -1881,7 +1881,7 @@ def analyse(path, as_test=False):
         for c in M.candidates(here + [{'garden': 'proposal', 'garden_id': home, 'id': b, 'fm': fms[b]}]):
             if ['proposal', b] in c['held_by']:
                 cands += [i for g, i in c['held_by'] if g == 'here']
-        cands += [i for i, (fm, _b, _p) in local.items() if fm.get('kind') == fms[b].get('kind')
+        cands += [i for i, (fm, _b, _p) in local.items() if fm.get('genos') == fms[b].get('genos')
                   and (fm.get('identity') or {}).get('status') == 'provisional']
         cands = sorted(set(cands))
         if os.path.exists(bean_path(b)):
@@ -1936,21 +1936,22 @@ def analyse(path, as_test=False):
     return A
 
 
-def gardener_form(kind):
-    """What the law says a gardener of `kind` is written with — its nature, and the crown it is pinned to where its kind
-    is — read as a new garden's gardener is planted: by this garden's own seed/germinate.py (`gardener_form`), from its
-    seed/std-vocab.md, where the law's `manifest.gardener` admits the kind. None where it does not, or the seed cannot
-    say: then the bean is written by hand. No kind is named here, so an organisation's garden is met as a person's is."""
+def gardener_form(genos):
+    """What the law says a gardener of `genos` is written with — its nature, and the crown it is pinned to where its
+    genos is — read as a new garden's gardener is planted: by this garden's own seed/germinate.py (`gardener_form`), from
+    its seed/std-vocab.md, where the law's `manifest.gardener` admits the genos. None where it does not, or the seed
+    cannot say: then the bean is written by hand. No genos is named here, so an organisation's garden is met as a
+    person's is."""
     try:
         import importlib.util
         spec = importlib.util.spec_from_file_location('daftar_germinate', os.path.join(ROOT, 'seed', 'germinate.py'))
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)             # a function read from the seed, not run: germinate's main is not called
         law = dmparse.loads(dmparse.read(os.path.join(ROOT, 'seed', 'std-vocab.md'))[0] or '') or {}
-        admitted = mod.gardener_kinds(law) if hasattr(mod, 'gardener_kinds') else None
-        if admitted is not None and kind not in admitted:
+        admitted = mod.gardener_gene(law) if hasattr(mod, 'gardener_gene') else None
+        if admitted is not None and genos not in admitted:
             return None
-        form = mod.gardener_form(law, kind)
+        form = mod.gardener_form(law, genos)
         return form if isinstance(form, dict) and form.get('nature') else None
     except Exception:                            # noqa: BLE001 — a seed that cannot say is a bean written by hand
         return None
@@ -1962,7 +1963,7 @@ def first_contact(env, stubs, fms, local, resolve):
     byte for byte. Printed, never written: accepting a garden, and a name for its keeper, is the gardener's. Every value
     taken from the proposal is checked against the law first and written with JSON's quoting, so nothing it carries
     can add a line to the bean it is printed into. The gardener is written in the form the law gives a gardener of
-    their kind (`gardener_form`) — a person or an organisation alike — and ownership in the facet the law roots it in.
+    their genos (`gardener_form`) — a person or an organisation alike — and ownership in the facet the law roots it in.
 
     Returns (the text of the fix, the ids of the beans it prints)."""
     frm = env.get('from') or {}
@@ -1981,21 +1982,21 @@ def first_contact(env, stubs, fms, local, resolve):
     else:
         known = resolve('gardener', [(g, cap)]).get(g) or []
         probs = stub_problems(cap)
-        form = gardener_form(str(cap.get('kind'))) if not probs else None
+        form = gardener_form(str(cap.get('genos'))) if not probs else None
         if len(known) == 1:
             owner, note = known[0], f"\n  Their gardener is known here already, as [[{known[0]}]]."
         elif probs:
             note = (f"\n  The stub of their gardener is not in a bean's form here ({'; '.join(probs)}): write that "
                     f"person by hand from what their garden tells you, in the same commit.")
         elif form is None:
-            note = (f"\n  Their gardener is a {cap.get('kind')}, which this garden's law does not say how to write as a "
+            note = (f"\n  Their gardener is a {cap.get('genos')}, which this garden's law does not say how to write as a "
                     f"gardener: write that bean by hand from the stub, its anchors byte for byte, in the same commit.")
         else:
             owner = g if g not in local else f"{g}-{fid[:6]}"
             title = str(cap.get('title') or g)
             owned = (f"crown: {form['crown']}" if form.get('crown')
                      else 'external: "its members, as its own rules say: outside this garden"')
-            person = (f"---\nbean: {owner}\nkind: {_q(cap.get('kind'))}\ntitle: {_q(title)}\nstatus: active\n"
+            person = (f"---\nbean: {owner}\ngenos: {_q(cap.get('genos'))}\ntitle: {_q(title)}\nstatus: active\n"
                       f"summary: {_q(f'The gardener of {name}, a garden this one deals with.')}\n"
                       f"nature: {_q(cap.get('nature') or form['nature'])}\nowned_by: {{ {facet}: {{ {owned} }} }}\n"
                       f"responsibility: {{ {facet}: {{ self: true }} }}\n"
@@ -2004,9 +2005,9 @@ def first_contact(env, stubs, fms, local, resolve):
                       f"The gardener of {name}, named here as their own garden names them (its proposal "
                       f"{env.get('proposal')}).\n")
     gbid = name if name not in local else f"{name}-{fid[:6]}"
-    garden = (f"---\nbean: {gbid}\nkind: garden\n"
+    garden = (f"---\nbean: {gbid}\ngenos: garden\n"
               f"title: {_q(f'{name} — the garden {owner} keeps')}\nstatus: active\n"
-              f"summary: \"Another garden this one deals with.\"\nnature: metaphysical\n"
+              f"summary: \"Another garden this one deals with.\"\nnature: lekton\n"
               f"owned_by: {{ {facet}: {{ owner: {{ bean: {owner} }} }} }}\n"
               f"responsibility: {{ {facet}: {{ holder: {{ bean: {owner} }} }} }}\n"
               f"identity:\n  status: confirmed\n  anchors:\n"
@@ -2426,8 +2427,8 @@ def cmd_mint(argv):
                   + " — a qualified name, or an identifier assigned outside every garden, which is never qualified")
         else:
             print(f"{b} has no establishing anchor. Choosing one is the gardener's (class F): a term that mints names "
-                  f"({', '.join(sorted(M.MINTED))}), its value a name this garden gives, `<kind>:<name>`, qualified as "
-                  f"{own}/<kind>:<name> — or an identifier its own home assigned, written as that home writes it.")
+                  f"({', '.join(sorted(M.MINTED))}), its value a name this garden gives, `<genos>:<name>`, qualified as "
+                  f"{own}/<genos>:<name> — or an identifier its own home assigned, written as that home writes it.")
     print("Nothing was written. An anchor is the gardener's to choose (class F): after the edit, journal it and commit.")
     return 0
 

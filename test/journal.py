@@ -182,7 +182,7 @@ refused("--body with nothing after it is a usage error", ['sam', 'x', '--body'],
 # machine's code page: on a cp1252 machine a Persian block went into the bean as mojibake, exit 0, and the gate took it.
 os.makedirs(os.path.join(G, 'beans'))
 BEAN = os.path.join(G, 'beans', 'sam.md')
-SAM = '---\nbean: sam\nkind: person\ntitle: "Sam"\nresponsibility: { legal: { self: true } }\n---\nSam keeps a garden.\n'
+SAM = '---\nbean: sam\ngenos: person\ntitle: "Sam"\nresponsibility: { legal: { self: true } }\n---\nSam keeps a garden.\n'
 NOTE = 'برای سام — ok'
 BLOCK = f'details:\n  note: "{NOTE}"\n'
 sys.path.insert(0, os.path.join(G, 'bin'))

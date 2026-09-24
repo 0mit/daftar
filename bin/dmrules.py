@@ -159,16 +159,16 @@ print(f"  identity: an anchor's key {'must be a term that declares anchor:' if i
 _mint = _m(idp.get('minted'))
 if _mint:
     print(f"  minted: a term whose anchor says `minted: true` admits names a garden gives — a value in the form "
-          f"{_mint.get('form')} whose kind is a row of `{_mint.get('form_kind')}` (the garden's local_{_mint.get('form_kind')} too). "
+          f"{_mint.get('form')} whose genos is a row of `{_mint.get('form_genos')}` (the garden's local_{_mint.get('form_genos')} too). "
           f"BARE it identifies within its garden only; QUALIFIED by a {_mint.get('qualified_by')} ({_mint.get('pattern')}) "
           f"everywhere, and the prefix is this garden's id or a `garden` bean's. Any other value was assigned outside every "
           f"garden: it identifies wherever it is written and is never qualified")
 cr = reg('crown')
 print(f"  crown: {' , '.join(str(c.get('branch')) + (' (root, never nameable)' if c.get('root') else '') for c in cr)}")
-kinds = [k for k in _seq(std.get('kinds')) + list(loc.get('local_kinds') or []) if isinstance(k, dict)]
-print(f"  kinds: " + ' , '.join(f"{k.get('kind')}→{k.get('of_nature')}"
-                                + ('*' if k.get('ownership_form') else '') for k in kinds))
-_pinned = next((k['ownership_form'] for k in kinds if k.get('ownership_form')), None)
+gene = [k for k in _seq(std.get('gene')) + list(loc.get('local_gene') or []) if isinstance(k, dict)]
+print(f"  gene: " + ' , '.join(f"{k.get('genos')}→{k.get('of_nature')}"
+                               + ('*' if k.get('ownership_form') else '') for k in gene))
+_pinned = next((k['ownership_form'] for k in gene if k.get('ownership_form')), None)
 if _pinned:
     print(f"         (* pinned to the '{_pinned}' ownership form, which also RESERVES it)")
 
@@ -212,7 +212,7 @@ if '--terms' in want:
             _anc = t.get('anchor') or {}
             if _anc.get('minted'):
                 print(f"  {n:20} [{TIER[n]}]  anchor term, MINTED — CORE enforces establishing={_anc.get('establishing', 'the bean’s to say')}; "
-                      f"a qualified value is `<garden_id>/<kind>:<name>`, by a garden this garden knows (see AXIS: minted)")
+                      f"a qualified value is `<garden_id>/<genos>:<name>`, by a garden this garden knows (see AXIS: minted)")
                 continue
             if eb == 'core':
                 print(f"  {n:20} [{TIER[n]}]  no schema — enforced by CORE (see the CORE section)")
@@ -286,7 +286,7 @@ if '--terms' in want:
             det.append(f"{_w}.{a_} is a key of `{r}` on this bean, or `<bean>:<key>` on another — resolved")
         for a_, r in dmform.facet(F, 'bean_id'):
             det.append(f"{_w}.{a_} is the id of a bean this garden holds"
-                       + (f", of kind {' or '.join(map(str, r['kinds']))}" if isinstance(r, dict) and r.get('kinds') else ''))
+                       + (f", of genos {' or '.join(map(str, r['gene']))}" if isinstance(r, dict) and r.get('gene') else ''))
         _keyed = dict(dmform.facet(F, 'keyed_by'))
         for a_, r in dmform.facet(F, 'entries'):
             det.append(f"{_w}.{a_} holds entries, each judged by {sorted(map(str, r))}"
@@ -304,12 +304,12 @@ if '--terms' in want:
         if s.get('key_form'):            det.append(f"keys: {s['key_form']}")
         if F['mirror']['parity_with']:   det.append(f"same facets as '{F['mirror']['parity_with']}'")
         if F['mirror']['inverse_of']:    det.append(f"inverse of '{F['mirror']['inverse_of']}' — held consistent")
-        if F['matches']['equal_kind_attr']: det.append(f"must equal kind.{F['matches']['equal_kind_attr']}")
+        if F['matches']['equal_genos_attr']: det.append(f"must equal genos.{F['matches']['equal_genos_attr']}")
         if s.get('required_on_targets_of'): det.append(f"required on targets of '{s['required_on_targets_of']}'")
         if V.get('governs_anchor'):
             det.append(f"anchor '{V['governs_anchor']}' must be in canonical form: "
                        f"{V.get('canonical_note') or V.get('form')}")
-        if F['matches']['form_from_kind']: det.append(f"form pinned by kind.{F['matches']['form_from_kind']}")
+        if F['matches']['form_from_genos']: det.append(f"form pinned by genos.{F['matches']['form_from_genos']}")
         for _an, x in dmform.facet(F, 'aspect', 'entry'):
             det.append(f"entry.{_an} is a position on aspect '{x['aspect']}'"
                        f" (default {x.get('default')})")
@@ -392,7 +392,7 @@ if '--core' in want:
                  "a garden's `extends:` pin must equal the installed vocabulary version",
                  "a `file:` pointer must resolve to a file that exists in this garden",
                  "a bean, a mapping, GARDEN.md and VOCAB.md are UTF-8 — any other encoding is refused by name",
-                 "every entry of VOCAB.md is in its own shape: a term's or a kind's name is text, a schema, its attrs and "
+                 "every entry of VOCAB.md is in its own shape: a term's or a genos's name is text, a schema, its attrs and "
                  "a merge are mappings, context_keys a list of text, a cell says one verdict (incoherent | in_breach), "
                  "requirement or expectation, a vacancy's reason and why are text, and every pattern it writes is a "
                  "regular expression; one of another shape is refused and left unread (listed under NOT READ)",

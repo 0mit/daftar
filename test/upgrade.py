@@ -294,7 +294,7 @@ reset(_aged)
 # ---- what a translation may not decide: a key both bags hold differently, and an agreement in the old words
 put('beans/nas.md', _ex['beans/laptop.md'].replace('bean: laptop', 'bean: nas').replace('PF-12345', 'NAS-1')
     .replace('value: "laptop"', 'value: "nas"').replace('responsibility: {', 'attributes: { bays: 4 }\ndetails: { bays: 2 }\nresponsibility: {', 1) + '\n')
-put('beans/deal.md', '---\nbean: deal\nkind: contract\ntitle: "a deal"\nbetween: [sam, nas]\nbalance: 3\n---\nA deal.\n')
+put('beans/deal.md', '---\nbean: deal\ngenos: contract\ntitle: "a deal"\nbetween: [sam, nas]\nbalance: 3\n---\nA deal.\n')
 run('git', 'add', '-A', cwd=G20); run('git', 'commit', '-qm', 'two beans a person must re-express', '--no-verify', cwd=G20)
 _both = run('git', 'rev-parse', 'HEAD', cwd=G20).stdout.strip()
 r = up21('--gardener', 'sam')
@@ -404,34 +404,39 @@ for _l in _back:
 check("...and the way back it prints, each line run as printed, leaves the garden exactly as it was — the planted bean gone",
       untouched(_aged) and not os.path.exists(path20('beans/ada.md')) and any('beans/ada.md' in _l for _l in _back),
       (_back, run('git', 'status', '--porcelain', '--untracked-files=all', cwd=G20).stdout[:300]))
-# AN ORGANISATION MAY KEEP A GARDEN, and an upgrade plants one as germination does (`--gardener-kind org`): the form is the
-# law's for a gardener of that kind, read through the release's own germinate — no kind is named in the tool.
+# AN ORGANISATION MAY KEEP A GARDEN, and an upgrade plants one as germination does (`--gardener-genos org`): the form is
+# the law's for a gardener of that genos, read through the release's own germinate — no genos is named in the tool.
 _law21 = dmparse.loads(dmparse.read(os.path.join(R21, 'seed', 'std-vocab.md'))[0])
 reset(_aged)
-r = up21('--gardener', 'ben-household', '--gardener-name', "Ben's household", '--gardener-kind', 'org')
-check("--gardener-kind org plants an organisation as the gardener, exactly as seed/germinate.py --gardener-kind org does",
+r = up21('--gardener', 'ben-household', '--gardener-name', "Ben's household", '--gardener-genos', 'org')
+check("--gardener-genos org plants an organisation as the gardener, exactly as seed/germinate.py --gardener-genos org does",
       r.returncode == 0 and '0 error(s)' in r.stdout and os.path.isfile(path20('beans/ben-household.md'))
       and get('beans/ben-household.md') == _germ.gardener_bean('ben-household', "Ben's household",
                                                                 datetime.date.today().isoformat(), _gid20, 'org',
                                                                 _germ.gardener_form(_law21, 'org'))
       and re.search(r'^gardener: ben-household\b', get('GARDEN.md'), re.M)
-      and 'a bean of kind org' in get('log/journal.md').split('\n## ')[-1], (r.stdout + r.stderr)[-600:])
+      and 'a bean of genos org' in get('log/journal.md').split('\n## ')[-1], (r.stdout + r.stderr)[-600:])
+for _var in ('DAFTAR_GARDENER_GENOS', 'DAFTAR_GARDENER_KIND'):
+    reset(_aged)
+    r = up21('--gardener', 'ben-household', '--gardener-name', "Ben's household", env={_var: 'org'})
+    check(f"...and so does {_var}=org, the form every garden's own tool passes on, saying where the genos came from"
+          + (" — the variable's name before 22.0, still read" if _var.endswith('KIND') else ''),
+          r.returncode == 0 and re.search(r'(?m)^genos: org$', get('beans/ben-household.md')) and _var in r.stdout,
+          (r.stdout + r.stderr)[-600:])
 reset(_aged)
-r = up21('--gardener', 'ben-household', '--gardener-name', "Ben's household",
-         env={'DAFTAR_GARDENER_KIND': 'org'})
-check("...and so does DAFTAR_GARDENER_KIND=org, the form every garden's own tool passes on, saying where the kind came from",
-      r.returncode == 0 and re.search(r'(?m)^kind: org$', get('beans/ben-household.md'))
-      and 'DAFTAR_GARDENER_KIND' in r.stdout, (r.stdout + r.stderr)[-600:])
+r = up21('--gardener', 'ben-household', '--gardener-name', "Ben's household", '--gardener-kind', 'org')
+check("...and `--gardener-kind`, the flag's name before 22.0 that an older tool hands over, is read as `--gardener-genos`",
+      r.returncode == 0 and re.search(r'(?m)^genos: org$', get('beans/ben-household.md')), (r.stdout + r.stderr)[-600:])
 reset(_aged)
-r = up21('--gardener', 'ben', '--gardener-name', 'Ben', '--gardener-kind', 'host')
-check("...a kind the law does not let keep a garden is refused before anything is touched, naming the kinds it does",
-      r.returncode != 0 and "kind 'host'" in r.stdout + r.stderr and 'person or org' in r.stdout + r.stderr
+r = up21('--gardener', 'ben', '--gardener-name', 'Ben', '--gardener-genos', 'host')
+check("...a genos the law does not let keep a garden is refused before anything is touched, naming the gene it does",
+      r.returncode != 0 and "genos 'host'" in r.stdout + r.stderr and 'person or org' in r.stdout + r.stderr
       and untouched(_aged), (r.stdout + r.stderr)[-600:])
-r = up21('--gardener', 'sam', '--gardener-kind', 'org')
-check("...and a kind said of a gardener who is already a bean here, of another kind, is refused: a bean's kind is its own",
+r = up21('--gardener', 'sam', '--gardener-genos', 'org')
+check("...and a genos said of a gardener who is already a bean here, of another genos, is refused: a bean's genos is its own",
       r.returncode != 0 and "'sam' is a person" in r.stdout + r.stderr and untouched(_aged), (r.stdout + r.stderr)[-600:])
-check("dmupgrade holds no kind of its own for a planted gardener: the check reads the kind asked for, as the law allows it",
-      "('kind', 'person')" not in open(os.path.join(ROOT, 'bin', 'dmupgrade.py'), encoding='utf-8').read())
+check("dmupgrade holds no genos of its own for a planted gardener: the check reads the genos asked for, as the law allows it",
+      "('genos', 'person')" not in open(os.path.join(ROOT, 'bin', 'dmupgrade.py'), encoding='utf-8').read())
 # a Persian name keeps its zero-width non-joiner, and a name with both kinds of quote is still one YAML string
 for _nm in ('آدا\u200cبانو', 'Ada "the elder" O\'Neil'):
     reset(_aged)
@@ -451,15 +456,15 @@ check("...and a planted bean that would not say the name asked for is REFUSED be
       _gt21.count('json.dumps(name') == 1 and r.returncode != 0 and 'does not say what was asked' in r.stdout + r.stderr
       and '`title`' in r.stdout + r.stderr and untouched(_aged), (r.stdout + r.stderr)[-400:])
 
-# ---- WHICH BEINGS MAY KEEP A GARDEN IS THE LAW'S TO SAY (`manifest.attrs.gardener`, `in: { bean_id: { kinds } }`)
+# ---- WHICH BEINGS MAY KEEP A GARDEN IS THE LAW'S TO SAY (`manifest.attrs.gardener`, `in: { bean_id: { gene } }`)
 _tools = ''.join(open(os.path.join(ROOT, 'bin', f), encoding='utf-8').read() for f in ('dmupgrade.py', 'dmcheck.py'))
-check("no tool keeps its own list of the kinds that may keep a garden",
+check("no tool keeps its own list of the gene that may keep a garden",
       "('person', 'org')" not in _tools and 'GARDENER_KINDS' not in _tools)
 with open(_gp21, 'w', encoding='utf-8', newline='\n') as fh:
     fh.write(_gt21)                                        # germinate as released, again
 _sv21 = os.path.join(R21, 'seed', 'std-vocab.md')
 _svt21 = open(_sv21, encoding='utf-8').read()
-_kinds_in = 'in: { bean_id: { kinds: [person, org] } }'
+_gene_in = 'in: { bean_id: { gene: [person, org] } }'
 
 
 def release_with_law(text, tag):
@@ -468,17 +473,17 @@ def release_with_law(text, tag):
     run('git', 'add', '-A', cwd=R21); run('git', 'commit', '-qm', tag, cwd=R21); run('git', 'tag', tag, cwd=R21)
 
 
-release_with_law(_svt21.replace(_kinds_in, 'in: { bean_id: { kinds: [person, org, host] } }', 1), 'v9.0.2')
+release_with_law(_svt21.replace(_gene_in, 'in: { bean_id: { gene: [person, org, host] } }', 1), 'v9.0.2')
 reset(_aged)
 r = up21('--gardener', 'laptop', tag='v9.0.2')
 check("...dmupgrade reads them from the release's law: one whose law lets a host keep a garden takes `laptop`",
-      _svt21.count(_kinds_in) == 1 and "'laptop' is a host" not in r.stdout + r.stderr
+      _svt21.count(_gene_in) == 1 and "'laptop' is a host" not in r.stdout + r.stderr
       and re.search(r'^gardener: laptop\b', get('GARDEN.md'), re.M), (r.stdout + r.stderr)[-400:])
-release_with_law(_svt21.replace(_kinds_in, 'in: bean_id', 1), 'v9.0.3')
+release_with_law(_svt21.replace(_gene_in, 'in: bean_id', 1), 'v9.0.3')
 reset(_aged)
 r = up21('--gardener', 'sam', tag='v9.0.3')
-check("...and one whose law does not say which kinds may keep a garden is REFUSED — the tool does not guess",
-      r.returncode != 0 and 'does not say which kinds of bean may keep a garden' in r.stdout + r.stderr and untouched(_aged),
+check("...and one whose law does not say which gene may keep a garden is REFUSED — the tool does not guess",
+      r.returncode != 0 and 'does not say which gene of bean may keep a garden' in r.stdout + r.stderr and untouched(_aged),
       (r.stdout + r.stderr)[-400:])
 release_with_law(_svt21, 'v9.0.4')
 reset(_aged)
@@ -499,7 +504,6 @@ reset(_aged)
 # (the tool as it was: it knows no `--gardener`, and an argument it does not know is an error, not handed over)
 _old = (get('bin/dmupgrade.py').replace("add_argument('--gardener', ", "add_argument('--gardener', dest='gardener', ")
         .replace("add_argument('--gardener-name', ", "add_argument('--gardener-name', dest='gardener_name', ")
-        .replace("add_argument('--gardener-kind', ", "add_argument('--gardener-kind', dest='gardener_kind', ")
         .replace('--gardener', '--steward').replace('a, unknown = ap.parse_known_args()', 'a, unknown = ap.parse_args(), []'))
 put('bin/dmupgrade.py', _old)
 run('git', 'add', '-A', cwd=G20); run('git', 'commit', '-qm', 'an upgrade tool from before the gardener', '--no-verify', cwd=G20)
@@ -526,8 +530,8 @@ finally:
     os.name = _saved_os
 check("...on PowerShell the line clears the variables it set, which a session would keep for the next garden",
       _line_ps.startswith('$env:DAFTAR_GARDENER = "<id>"; $env:DAFTAR_GARDENER_NAME = "<how they are called>"; python bin\\dmupgrade.py v9.0.0 --from \'')
-      and _line_ps.endswith('; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME, Env:DAFTAR_GARDENER_KIND '
-                            '-ErrorAction SilentlyContinue')
+      and _line_ps.endswith('; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME, Env:DAFTAR_GARDENER_GENOS, '
+                            'Env:DAFTAR_GARDENER_KIND -ErrorAction SilentlyContinue')
       and _line_sh == f'DAFTAR_GARDENER=<id> DAFTAR_GARDENER_NAME="<how they are called>" python3 bin/dmupgrade.py v9.0.0 --from '
                       f"'{os.path.join(TMP, 'a release')}'" and '[' not in _line_sh + _line_ps, (_line_sh, _line_ps))
 r = up21(env={'DAFTAR_GARDENER': 'sam'})
@@ -603,6 +607,181 @@ _n, _form, _facts, _probs = _du.plan_doc(os.path.join(_u, 'beans', 'x.md'))
 check("a pointer is followed in the front matter only; a body line naming the old place is prose, left as written",
       _n and not _probs and 'tracks: "details.luks_root"' in _n and _n.endswith('Moved from: attributes.luks_root\n'),
       (_n, _probs))
+
+# ==== CROSSING INTO std-vocab 22.0: the Greek names ===============================================================
+# A garden grown from this tree and AGED into 21.0's words: `kind:` on every bean, the natures physical, metaphysical and
+# living, `{ crown: love }` on its people, and in VOCAB.md `local_kinds` rows and a local term `required_on_kinds`. The
+# release's gate refuses it as it stands, naming where each word went; the upgrade translates the STRUCTURE — never a
+# comment, a mapping's `kind` or a body's prose — and the result passes its gate and commits through its hook.
+R22, G21 = os.path.join(TMP, 'release22'), os.path.join(TMP, 'garden21')
+release_from_tree(R22, 'v9.1.0')
+g = run(sys.executable, os.path.join(R22, 'seed', 'germinate.py'), G21, '--gardener', 'sam', '--gardener-name', 'Sam', cwd=R22)
+check("(setup) a garden grows from a release at std-vocab 22.0", g.returncode == 0, (g.stdout + g.stderr)[-300:])
+
+
+def p21(rel):
+    return os.path.join(G21, *rel.split('/'))
+
+
+def put21(rel, text):
+    os.makedirs(os.path.dirname(p21(rel)), exist_ok=True)
+    with open(p21(rel), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(text)
+
+
+def get21(rel):
+    return open(p21(rel), encoding='utf-8').read()
+
+
+def up22(*extra, tag='v9.1.0'):
+    e = dict(os.environ, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@x', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@x')
+    return subprocess.run([sys.executable, p21('bin/dmupgrade.py'), tag, '--from', R22, *extra], capture_output=True,
+                          text=True, cwd=G21, env=e)
+
+
+def untouched21(head):
+    return (not run('git', 'status', '--porcelain', '--untracked-files=all', cwd=G21).stdout.strip()
+            and run('git', 'rev-parse', 'HEAD', cwd=G21).stdout.strip() == head)
+
+
+def reset21(to):
+    run('git', 'reset', '-q', '--hard', to, cwd=G21); run('git', 'clean', '-qfdx', '-e', '.git', cwd=G21)
+
+
+OLD_WORDS = (('genos: ', 'kind: '), ('nature: soma', 'nature: physical'), ('nature: lekton', 'nature: metaphysical'),
+             ('nature: empsychon', 'nature: living'), ('crown: agape', 'crown: love'))
+
+
+def in21(text):
+    """A bean in 21.0's words — only its front matter, as 21.0 wrote it."""
+    head, body = text.split('\n---\n', 1)
+    for new, old in OLD_WORDS:
+        head = head.replace(new, old)
+    return head + '\n---\n' + body
+
+
+_sv22 = get21('seed/std-vocab.md')
+put21('seed/std-vocab.md', re.sub(r'^version: "[^"]+"', 'version: "21.0"', _sv22, count=1, flags=re.M))
+for _d in ('VOCAB.md', 'GARDEN.md'):
+    put21(_d, re.sub(r'^(extends: std-vocab@)\S+', r'\g<1>21.0', get21(_d), count=1, flags=re.M))
+put21('VOCAB.md', get21('VOCAB.md')
+      .replace('local_terms: []', 'local_terms:\n  - term: widget_part\n    meaning: "the part a widget is built around"\n'
+               '    context_keys: [widget_part]\n    schema: { shape: scalar, required_on_kinds: [widget] }   # a widget names it\n', 1)
+      .replace('local_gene: []', 'local_kinds:\n  # a genos this estate needs, as 21.0 spelled it\n'
+               '  - { kind: widget, of_nature: "metaphysical", meaning: "a made thing, described and agreed" }', 1))
+put21('beans/sam.md', in21(get21('beans/sam.md')).replace(
+    'owned_by: { legal: { crown: love } }', 'owned_by: { legal: { crown: love } }   # the crown: love owns the living, while alive', 1))
+put21('beans/laptop.md', in21(_ex['beans/laptop.md']) + '\nIts kind: host, of nature physical — prose, the garden\'s own words.\n')
+put21('beans/w1.md', '---\nbean: w1\nkind: widget\ntitle: "a widget"\nstatus: active\nsummary: "a made thing"\n'
+      'nature: "metaphysical"\nowned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+      'identity: { status: confirmed, anchors: [ { key: program_id, value: "widget:w1", class: logical, establishing: true } ] }\n'
+      'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\nwidget_part: gear\n---\nA widget.\n')
+_MAP = '---\nmapping: wind-up\nkind: procedure\nsummary: "how a widget is wound"\n---\nWind it.\n'
+put21('mappings/wind-up.md', _MAP)
+put21('RATIONALE.md', '---\nrationale_for: VOCAB.md\n---\n# why this garden\'s own terms are as they are\n\n'
+      '## local_kinds\n\nThe kinds this estate needs beyond the standard.\n\n## local_kinds[widget].kind\n\n'
+      'A widget is a kind of made thing.\n\n## local_terms[widget_part].schema.required_on_kinds\n\nEvery widget names its part.\n')
+run('git', 'add', '-A', cwd=G21)
+_c = run('git', 'commit', '-qm', 'a garden as std-vocab 21.0 left it', '--no-verify', cwd=G21)
+check("(setup) the garden is aged into std-vocab 21.0's words", _c.returncode == 0, (_c.stdout + _c.stderr)[-300:])
+_aged21 = run('git', 'rev-parse', 'HEAD', cwd=G21).stdout.strip()
+
+# THE 22.0 GATE REFUSES A GARDEN NOT YET UPGRADED, naming where each word went — never reading `kind` as nothing
+_g22 = run(sys.executable, p21('bin/dmcheck.py'), cwd=G21)
+_go = _g22.stdout.replace('\n      — ', ' — ')
+check("the 22.0 gate refuses a bean still carrying `kind:`, naming `genos` from the law's `retired:` list",
+      _g22.returncode != 0 and "laptop: top-level key 'kind' is one the law retired on a bean — retired: `genos`" in _go
+      and "laptop: missing 'genos'" in _go, _go[-900:])
+check("...and a nature, a crown branch, a VOCAB block and a schema key in 21.0's words, each naming its Greek word",
+      "retired: `soma`" in _go and "retired: `local_gene`" in _go and "retired: `required_on_gene`" in _go
+      and "retired: `lekton`" in _go, _go[-900:])
+
+r = up22()
+out = r.stdout + r.stderr
+check("the upgrade crosses into 22.0 and the gate passes on the result", r.returncode == 0 and '0 error(s)' in r.stdout, out[-900:])
+_b = {b: get21(f'beans/{b}.md') for b in ('sam', 'laptop', 'w1')}
+check("every bean's `kind:` is its `genos:`, and no bean says `kind:` any more",
+      all(re.search(r'(?m)^genos: ', t) and not re.search(r'(?m)^kind:', t) for t in _b.values())
+      and re.search(r'(?m)^genos: widget$', _b['w1']), _b)
+check("...its nature is soma, lekton or empsychon — a quoted value keeps its quotes",
+      re.search(r'(?m)^nature: soma$', _b['laptop']) and re.search(r'(?m)^nature: empsychon$', _b['sam'])
+      and re.search(r'(?m)^nature: "lekton"$', _b['w1']), _b)
+check("...a person's crown is agape, and the comment on that line — the garden's own words — is left as it was written",
+      'owned_by: { legal: { crown: agape } }   # the crown: love owns the living, while alive' in _b['sam'], _b['sam'])
+check("...and a body's prose is left as it was written",
+      _b['laptop'].endswith("\nIts kind: host, of nature physical — prose, the garden's own words.\n"), _b['laptop'][-200:])
+check("a MAPPING keeps its `kind`: it records no being, and is not a bean", get21('mappings/wind-up.md') == _MAP,
+      get21('mappings/wind-up.md'))
+_v = get21('VOCAB.md')
+check("VOCAB.md: `local_kinds` is `local_gene`, its row's `kind` is `genos` and its `of_nature` lekton, a local term's "
+      "`required_on_kinds` is `required_on_gene` — its comments kept",
+      re.search(r'(?m)^local_gene:$', _v) and '- { genos: widget, of_nature: "lekton", meaning:' in _v
+      and 'required_on_gene: [widget] }   # a widget names it' in _v and '# a genos this estate needs, as 21.0 spelled it' in _v
+      and 'local_kinds' not in _v and 'required_on_kinds' not in _v, _v[:900])
+_j = get21('log/journal.md').split('\n## ')[-1]
+_tl = next((l for l in _j.splitlines() if l.startswith('- translated:')), '')
+_bl = next((l for l in _j.splitlines() if l.startswith('- beans:')), '')
+check("the journal's `translated:` line says what was renamed, how often and where, and `beans:` names each bean",
+      'std-vocab 22.0' in _tl and '`kind` -> `genos` ×3' in _tl and 'nature physical -> soma ×1' in _tl
+      and 'crown love -> agape ×1' in _tl and '`local_kinds` -> `local_gene`' in _tl and '`required_on_kinds` -> `required_on_gene`' in _tl
+      and all(f'[[{b}]]' in _bl for b in ('sam', 'laptop', 'w1')) and 'wind-up' not in _bl, _j[-1200:])
+check("...and the console says it too", 'translated: std-vocab 22.0' in r.stdout, r.stdout[-600:])
+_rt = get21('RATIONALE.md')
+_why = run(sys.executable, p21('bin/dmwhy.py'), '--check', cwd=G21)
+check("the garden's own reasons follow the paths VOCAB.md renamed — the heading alone; what a reason says is its own",
+      '\n## local_gene\n' in _rt and '\n## local_gene[widget].genos\n' in _rt
+      and '\n## local_terms[widget_part].schema.required_on_gene\n' in _rt and 'A widget is a kind of made thing.' in _rt
+      and 'RATIONALE.md: 3 reasons, 0 orphaned' in _why.stdout and "RATIONALE.md, the garden's own reasons re-keyed" in _tl,
+      (_rt, _why.stdout[-300:], _tl[-300:]))
+_jp21 = p21('log/journal.md')
+put21('log/journal.md', get21('log/journal.md').replace(
+    "(fill in who ratified — merging the release's pull request, or the word given here)", 'human (test)')
+      .replace('(fill in — what this release brings that this garden adopts)', 'the Greek names'))
+run('git', 'add', '-A', cwd=G21)
+_c = run('git', 'commit', '-qm', 'adopt 22.0', cwd=G21)
+check("once a human fills it in, the translated garden commits through its hook", _c.returncode == 0, (_c.stdout + _c.stderr)[-500:])
+r = up22()
+check("...and a second run finds nothing to do", r.returncode == 0 and 'nothing to do' in r.stdout, (r.stdout + r.stderr)[-300:])
+
+# WHAT A TRANSLATION MAY NOT DECIDE: a bean that says `genos` beside `kind` — which stands is a person's decision
+reset21(_aged21)
+put21('beans/w1.md', get21('beans/w1.md').replace('kind: widget\n', 'kind: widget\ngenos: widget\n', 1))
+run('git', 'add', '-A', cwd=G21); run('git', 'commit', '-qm', 'both words', '--no-verify', cwd=G21)
+_both21 = run('git', 'rev-parse', 'HEAD', cwd=G21).stdout.strip()
+r = up22()
+check("a bean carrying both `kind` and `genos` is REFUSED before anything is touched, naming it — a person decides",
+      r.returncode != 0 and 'beans/w1.md' in r.stdout + r.stderr and 'written beside it already' in r.stdout + r.stderr
+      and untouched21(_both21), (r.stdout + r.stderr)[-600:])
+
+# A RELEASE WHOSE LAW SAYS OTHERWISE is refused, never guessed at: its `retired:` list is the step's authority
+reset21(_aged21)
+_svr = os.path.join(R22, 'seed', 'std-vocab.md')
+_svrt = open(_svr, encoding='utf-8').read()
+with open(_svr, 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write(re.sub(r'(?m)^  - \{ name: love, +at: crown,.*\n', '', _svrt, count=1))
+run('git', 'add', '-A', cwd=R22); run('git', 'commit', '-qm', 'a law that forgot love', cwd=R22); run('git', 'tag', 'v9.1.1', cwd=R22)
+r = up22(tag='v9.1.1')
+check("a release whose law does not retire what the 22.0 step translates is REFUSED, touching nothing",
+      r.returncode != 0 and "crown `love` -> `agape`" in r.stdout + r.stderr and 'neither is guessed at' in r.stdout + r.stderr
+      and untouched21(_aged21), (r.stdout + r.stderr)[-600:])
+
+# THE RENAME, on the forms a bean may hold: a key or a value the law owns, by the node that holds it — nothing else
+_t = ('---\nbean: x\n"kind": host   # was a kind\nnature: { conflict: [physical, \'living\'] }\n'
+      'owned_by: { legal: { crown: nature } }\ndetails: { kind: blue, nature: physical }\nmerge_open: true\n'
+      'merge_conflicts: [nature, kind]\n---\nkind: prose\n')
+_n, _done = _du.renamed(_t, _du.bean_rule_22)
+check("a quoted key, a conflict record, a crown `nature` and a `merge_conflicts` path are renamed; a `details` entry "
+      "that happens to be called `kind` is the garden's own, and is not",
+      _n == ('---\nbean: x\n"genos": host   # was a kind\nnature: { conflict: [soma, \'empsychon\'] }\n'
+             'owned_by: { legal: { crown: physis } }\ndetails: { kind: blue, nature: physical }\nmerge_open: true\n'
+             'merge_conflicts: [nature, genos]\n---\nkind: prose\n') and len(_done) == 5, (_n, _done))
+_t = '---\nbean: x\nkind: host\nkind: product\n---\n'
+try:
+    _du.renamed(_t, _du.bean_rule_22)
+    _raised = False
+except _du.CannotRename:
+    _raised = True
+check("...a key written twice cannot be renamed without changing something else, and is refused, not guessed", _raised)
 
 # ==== WHICH PYTHON runs the hooks and the merge driver: the first that RUNS and IMPORTS yaml =======================
 # A Windows machine's `python3` may be the Store's App execution alias: found on the PATH, running no Python. Faked

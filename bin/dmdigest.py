@@ -32,14 +32,14 @@ HEADING = re.compile(r'^\s*#{1,6}\s')
 LISTITEM = re.compile(r'^\s*([-*+]\s|\d+\.\s)')
 QUOTE = re.compile(r'^\s*>')
 def _host_names():
-    """The names a command line can use for a machine THIS garden records: every `kind: host` bean's id and
+    """The names a command line can use for a machine THIS garden records: every `genos: host` bean's id and
     the first label of each of its `hostname` anchors, plus localhost. Read from the beans, because the
     list was once typed here as this estate's six hosts, and in any other garden every command would have
     been reported host-ambiguous — or worse, claimed by a name that means nothing there."""
     names = {'localhost'}
     for path in glob.glob(os.path.join(ROOT, 'beans', '*.md')):
         fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
-        if not isinstance(fm, dict) or fm.get('kind') not in ('host', 'virtual-host'):
+        if not isinstance(fm, dict) or fm.get('genos') not in ('host', 'virtual-host'):
             continue
         names.add(str(fm.get('bean')))
         for a in ((fm.get('identity') or {}).get('anchors') or []):
@@ -104,7 +104,7 @@ def classify(lines):
         elif HTML_COMMENT.match(st):
             out.append(('dropped', 'HTML comment — an authoring note, not content'))
         elif is_prose(st):
-            out.append(('carried', 'prose -> a bean fact, or the body of a kind:design bean'))
+            out.append(('carried', 'prose -> a bean fact, or the body of a genos:design bean'))
         else:
             # NO CATCH-ALL. The first version of this function ended in `else: carried`, which made
             # UNPLACED unreachable and its zero GUARANTEED rather than measured — the exact defect

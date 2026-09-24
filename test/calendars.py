@@ -214,11 +214,11 @@ def gate():
 def bean(as_of):
     open(os.path.join(G, "beans", "box.md"), "w").write(f"""---
 bean: box
-kind: host
+genos: host
 title: "a machine"
 status: active
 summary: "probe"
-nature: physical
+nature: soma
 identity: {{ status: confirmed, anchors: [ {{ key: serial, value: "SN-CAL-1", class: hardware, establishing: true }} ] }}
 provenance: {{ src: observed, by: probe, as_of: 2026-09-20 }}
 owned_by: {{ legal: {{ external: "someone" }} }}
@@ -239,11 +239,11 @@ check("ONE FORM MEANS ONE SET OF DIGITS: Persian digits are not a second spellin
 def dated(observed):
     open(os.path.join(G, "beans", "box.md"), "w").write(f"""---
 bean: box
-kind: host
+genos: host
 title: "a machine"
 status: active
 summary: "probe"
-nature: physical
+nature: soma
 identity: {{ status: confirmed, anchors: [ {{ key: serial, value: "SN-CAL-1", class: hardware, establishing: true }} ] }}
 provenance: {{ src: observed, by: probe, as_of: 2026-09-20 }}
 owned_by: {{ legal: {{ external: "someone" }} }}
