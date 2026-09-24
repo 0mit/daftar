@@ -2759,13 +2759,17 @@ The portable, estate-agnostic classification shared by every garden — the abst
   registry or a nature they name, and a vacancy at a renamed position; in the garden's own RATIONALE.md, a heading
   keyed by a path VOCAB.md renamed — each found by the YAML node that holds it, comments and prose untouched, each
   document proved to parse to exactly the old one renamed, and all of it reported on the journal entry's
-  `translated:` line; a mapping keeps its `kind`. Germinate plants the gardener in the new words and takes
+  `translated:` line; a mapping keeps its `kind`. Run again in a garden that crossed already, it translates what came
+  in since still in 21.0's words — a bean added on a branch or a clone still at 21.0 — and its entry asks nothing; the
+  git merge driver reads each side of a bean (never a mapping) in the words of the law its tree runs; and a garden's
+  own code is never translated — each file of it that says a retired word is named on the `translated:` line.
+  Germinate plants the gardener in the new words and takes
   `--gardener-genos` (`--gardener-kind` still read), as `bin/dmupgrade.py` takes `--gardener-genos` and
   `DAFTAR_GARDENER_GENOS` (the old names still read); every tool reads and writes `genos`, `gene` and the Greek
   natures, and a merge's seed carries its `genos`. The reasons, and every option that was put to the operator — the
   one taken, and why — are in seed/RATIONALE.md under `natures`. The suites that hold it: test/upgrade.py (a 21.0
-  garden translated and passing its gate), test/refusals.py and test/germinate.py (every retired word refused,
-  naming its Greek one).
+  garden translated and passing its gate; a branch still at 21.0 merged into it, and what it brought translated),
+  test/refusals.py and test/germinate.py (every retired word refused, naming its Greek one).
 - **21.0** (2026-09-23, proposed rule-change) — **what passes between: persons, and gardens.** MAJOR. Until now the
   language described one gardener's world. The first garden kept by someone who had not written the language needed
   what it could not say: money, an agreement between two people, the person who keeps the garden, and a thing two

@@ -82,16 +82,17 @@ sessions, and time:
 ## Any thing, and the rules for it, as data
 
 The example is a machine because machines are where this began. The notebook is not about machines. A thing
-is first a **nature** — physical, metaphysical or living — and then a **kind** that refines it: a host is
-physical; a domain, a product, a codebase, a design, an agreement between people, a document, a dinner where
-something was agreed are metaphysical; a person, or a running instance of a program, is living. Money is
-measured, like a length: an amount in the currency it was paid in, exact and never rounded, and what one
-person owes another is read from what was paid and what was agreed — never written down beside them, where it
-could drift. The rules for what a thing may say attach to its nature and every kind beneath inherits them, so a
-new kind arrives with a coherent identity policy for free. The same is true of ownership: every thing has exactly
-one owner, and exactly one entry saying who answers for it, per facet — legal, technical, financial — and every chain
-ends at a person, at someone outside the notebook, or at the crown. An agreement between two people may be owned by
-neither of them, and then both answer for it.
+is first a **nature**, one of three, named in Greek — `soma`, a body; `lekton`, what exists by being said and
+agreed; `empsychon`, what lives, while it lives — and then a **genos**, its kind, that refines it: a host is soma;
+a domain, a product, a codebase, a design, an agreement between people, a document, a dinner where something was
+agreed are lekton; a person, or a running instance of a program, is empsychon. Money is measured, like a length:
+an amount in the currency it was paid in, exact and never rounded, and what one person owes another is read from
+what was paid and what was agreed — never written down beside them, where it could drift. The rules for what a
+thing may say attach to its nature and every genos beneath inherits them, so a new genos arrives with a coherent
+identity policy for free. The same is true of ownership: every thing has exactly one owner, and exactly one entry
+saying who answers for it, per facet — legal, technical, financial — and every chain ends at a person, at someone
+outside the notebook, or at the crown. An agreement between two people may be owned by neither of them, and then
+both answer for it.
 
 The vocabulary that says all this is a document, versioned, read by the gate on every commit; the gate itself
 names no term. A garden adds what it needs — its own terms, its own values, its own profiles — and a local
@@ -187,9 +188,9 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 | **gate** | `bin/dmcheck.py`, run as a pre-commit hook: a commit that breaks a rule is refused |
 | **journal** | `log/journal.md`: every change, who made it and why. The gate refuses an unrecorded change |
 | **anchor** | a fact that identifies an object (a serial, a domain name), so two gardens recognise the same thing |
-| **nature / kind** | what sort of being it is: `physical`, `metaphysical` or `living`, refined by a kind such as `host` |
+| **nature / genos** | what sort of being it is: `soma`, a body; `lekton`, what exists by being said and agreed; or `empsychon`, what lives, while it lives — refined by a genos, its kind, such as `host`. The words are Greek, and `MODEL.md` gives each |
 | **facet** | an aspect of ownership, e.g. `legal` or `technical`; each has exactly one owner, and one entry saying who answers for it |
-| **crown** | where every ownership chain ends. Its three branches are named for the natures: `nature` for physical things, `logos` for metaphysical, `love` for living — so a person writes `owned_by: { legal: { crown: love } }` |
+| **crown** | where every ownership chain ends: at `theos`, which no bean names, through a branch for each nature — `physis` for soma, `logos` for lekton, `agape`, love that does not possess, for empsychon. A person writes `owned_by: { legal: { crown: agape } }` |
 | **profile** | an opt-in group of rules, e.g. `domain`, for gardens that hold that kind of thing |
 | **vacancy** | a value the vocabulary offers that nothing uses yet, stated with a reason |
 | **Contract of Parts** | `MODEL.md`: which decisions an agent may take alone and which a person must ratify |
@@ -214,7 +215,8 @@ A garden moving into std-vocab 21.0 must name its gardener. The garden's own cop
 flag for it, so name them in the environment, which every copy passes on:
 `DAFTAR_GARDENER=sam python3 bin/dmupgrade.py <tag>` for an existing person or organisation bean, adding
 `DAFTAR_GARDENER_NAME="Sam"` to plant a new one (`INSTALL.md` has the PowerShell form). A garden already at 21.0 or
-later takes `--gardener sam` and `--gardener-name "Sam"` instead.
+later takes `--gardener sam` and `--gardener-name "Sam"` instead. Crossing into std-vocab 22.0 changes every bean and
+asks nothing: its words for what a being is are translated into the law's Greek ones.
 
 ## Propose a change to the law
 

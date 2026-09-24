@@ -1611,11 +1611,39 @@ if __name__ == '__main__':
             print(f"dmmerge: REFUSING to merge — cannot read this tree's vocabulary ({_e}). "
                   f"There is one path to the law and no fallback.", file=sys.stderr)
             sys.exit(1)
+        before = open(A, encoding='utf-8').read()
+        # EACH SIDE IN THE WORDS OF THE LAW THIS TREE RUNS (22.0). The crossing into std-vocab 22.0 renamed a key on every
+        # bean, so a bean changed on a branch or a clone still at 21.0 came back through this driver saying `kind` beside
+        # the crossed side's `genos`, and disagreeing over a nature — `physical` against `soma` — that nobody disputed.
+        # Each side is read as bin/dmupgrade.py translates a garden crossing into 22.0, by its own rule and its own proof,
+        # restated nowhere here: what is merged is two records in one language. One that cannot be translated without a
+        # person (both words already on it) is refused, and git records an ordinary conflict. A MAPPING is dispatched here
+        # too (.gitattributes) and records no being: it keeps its `kind`, so only a side that is a bean is read in.
+        import dmupgrade as _du
+        read_in = []
+        if _ver and _du.vtuple(_ver) >= _du.STEP_22:
+            for _side, _p in (('ours', A), ('theirs', B)):
+                _text, _form = _du.read_text(_p)
+                try:
+                    _fm = _du._parse(_text)[0]
+                except Exception:                   # a side that does not parse is merge_in_place's to refuse
+                    _fm = None
+                if not (isinstance(_fm, dict) and 'bean' in _fm and 'mapping' not in _fm):
+                    continue
+                try:
+                    _new, _done = _du.renamed(_text, _du.bean_rule_22)
+                except _du.CannotRename as e:
+                    open(A, 'w', encoding='utf-8').write(before)
+                    print(f"dmmerge: refusing to merge {os.path.basename(A)} — {_side} is in words the law retired and "
+                          f"cannot be read in its own: {e}. The file is untouched.", file=sys.stderr)
+                    sys.exit(1)
+                if _done:
+                    _du.write_text(_p, _new, _form)
+                    read_in.append(f"{_side} ({len(_done)} word(s))")
         fmA, bodyA = parse_file(A); fmB, bodyB = parse_file(B)
         bid = fmA.get('bean') or fmB.get('bean')
         seed = merge_component([{'garden': 'ours', 'id': bid, 'fm': fmA},
                                 {'garden': 'theirs', 'id': bid, 'fm': fmB}])
-        before = open(A, encoding='utf-8').read()
         try:
             changed, added, conflicts = merge_in_place(A, fmA, fmB, bodyB, seed)
             after_fm, after_body = parse_file(A)
@@ -1637,7 +1665,8 @@ if __name__ == '__main__':
             sys.exit(1)
         print(f"dmmerge: {bid} — {len(changed)} key(s) rewritten, {len(added)} added, "
               f"{len(conflicts)} conflict(s)" + (f": {', '.join(conflicts)}" if conflicts else "")
-              + ". Every untouched key kept its text and its comments.", file=sys.stderr)
+              + ". Every untouched key kept its text and its comments."
+              + (f" Read in std-vocab 22.0's words first: {', '.join(read_in)}." if read_in else ""), file=sys.stderr)
         sys.exit(0)                                        # conflicts are captured and marked merge_open
     paths = sys.argv[1:]
     # AN INPUT'S LABEL IS ITS DIRECTORY'S NAME — unless two inputs share one. Two gardens on one machine may both be

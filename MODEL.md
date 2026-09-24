@@ -60,12 +60,12 @@ Every bean has a `nature`, one of three:
 - `empsychon` (ἔμψυχον, the ensouled) — a being that strives to persist as itself, while it is alive: a person, a
   running instance.
 
-and a `genos` (γένος) that refines it, a row of the law's registry of gene (γένη): `host` is soma; `domain`,
-`product`, `codebase`, `contract`, `document`, `event` and `garden` are lekton; `person`, `instance` and
-`virtual-host` are empsychon — a virtual machine has no matter and lapses at teardown. The gate refuses a nature that
-contradicts the genos. Rules about what sort of being something is — such as identity anchors — attach to the nature,
-so every genos under it inherits them. A mapping records no being: it has no nature, and its `kind` says what sort of
-procedure or relationship it records.
+and a `genos` (γένος, kind) that refines it, a row of the law's registry `gene` (γένη, the kinds): `host` is
+soma; `domain`, `product`, `codebase`, `contract`, `document`, `event` and `garden` are lekton; `person`, `instance`
+and `virtual-host` are empsychon — a virtual machine has no matter and lapses at teardown. The gate refuses a nature
+that contradicts the genos. Rules about what sort of being something is — such as identity anchors — attach to the
+nature, so every genos under it inherits them. A mapping records no being: it has no nature and no genos, and its
+`kind` says what sort of procedure or relationship it records.
 
 ## Ownership and responsibility
 Two arcs, over the same **facets** — the rows of the law's `facets` registry, and any a garden adds. A facet may
@@ -84,16 +84,16 @@ The forms an entry can take:
 - `{ via: { bean: … } }` — inherits the parent's owners, e.g. an instance through the product it runs.
 - `{ contract: { bean: … } }` — one facet owned together, through a `contract` bean: the agreement between its
   owners, whose clauses say how they decide.
-- `{ crown: <branch> }` — where every chain ends. The crown's root is `theos` (θεός), which no bean names; a chain
-  reaches it through the branch its nature routes to: `physis` (φύσις) for soma, `logos` (λόγος) for lekton, `agape`
-  (ἀγάπη, love that does not possess) for empsychon, and only while the being lives. The gate checks the branch. A
-  **person** is pinned to it — owned by no bean, `owned_by: { legal: { crown: agape } }` — and answers for
-  themselves: `responsibility: { legal: { self: true } }`.
+- `{ crown: <branch> }` — where every chain ends. The crown's root is `theos` (θεός, god), which no bean names; a
+  chain reaches it through the branch its nature routes to: `physis` (φύσις, nature) for soma, `logos` (λόγος, word)
+  for lekton, `agape` (ἀγάπη, love that does not possess) for empsychon, and only while the being lives. The gate
+  checks the branch. A **person** is pinned to it — owned by no bean, `owned_by: { legal: { crown: agape } }` — and
+  answers for themselves: `responsibility: { legal: { self: true } }`.
   An **agreement** between parties may choose it: owned by none of its parties, `owned_by: { legal: { crown:
   logos } }`, and answered for by them, each for the clauses it is bound by: `responsibility: { legal: { parties:
   true } }`. A **happening** between people (an `event`) may choose it too: owned by none of those who took part,
   and answered for by whoever hosted it, as its holder. The crown owns and never answers; the parties answer and
-  never own. The crown is written only by these three gene, and `parties` only by an agreement.
+  never own. The crown is written only by a bean of these three gene, and `parties` only by an agreement.
 
 Ownership is separate from **habitat**: a running instance is owned through its product, and separately
 `lives_in` the machine it runs on. Moving machines changes the habitat, never the owner.
