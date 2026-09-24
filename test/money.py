@@ -75,6 +75,8 @@ def one(tx):
 # ---------------------------------------------------------------- AN AMOUNT, AT THE GATE
 out = one('{ what: "a test", amount: { count: 900, unit: XTS }, paid_by: [ { party: sam } ] }')
 check("the gate accepts an amount in XTS, the code kept for testing", ok(out), out[-600:])
+check("...with no warning: XTS is `special` in its registry, never withdrawn — the forms' own examples use it",
+      "no longer in use" not in out, out[-600:])
 out = one('{ what: "a meal", amount: { count: "12.50", unit: EUR }, paid_by: [ { party: sam } ] }')
 check("...and in a real currency, as a decimal string within its places", ok(out), out[-600:])
 # A CURRENCY NO LONGER IN USE is a warning, never a refusal — an old amount may be in an old currency — and it names the

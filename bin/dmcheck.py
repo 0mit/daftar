@@ -1130,8 +1130,10 @@ def check_quantity(where, node, want):
                       + (f"a code of the `{_reg}` registry" if _reg else str(_of)))
     # A UNIT ITS OWN REGISTRY SAYS IS NO LONGER IN USE (v0.34.1): a warning, never a refusal — an old amount may be in an
     # old currency. Measured: an agent told "lira" searched the currencies, found three, and took the one withdrawn in
-    # 2005. The warning names the rows in use that share its name, so the fix is in the message.
-    if u and u.get('from_registry') and u.get('status') not in (None, '', 'current'):
+    # 2005. The warning names the rows in use that share its name, so the fix is in the message. `historic` alone is
+    # "no longer in use": `special` is an X-code that was never anyone's tender and is not withdrawn (gold, the testing
+    # code XTS the tested examples use, "unknown" XXX) — warning on it put three false warnings on the forms' own examples.
+    if u and u.get('from_registry') and u.get('status') == 'historic':
         _nm = str(u.get('name') or '')
         _key = _nm.split(' (')[0].strip().lower()
         _cur = sorted(f"{n} ({r.get('name')})" for n, r in UNITS.items() if r.get('from_registry') == u['from_registry']
