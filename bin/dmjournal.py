@@ -36,16 +36,23 @@ recorded in the clone's git directory (`.git/daftar/journal-stamps`), and the ga
 adds that is not recorded there. The gate cannot tell a measured moment from a remembered one by looking at
 it; it can tell whether the clock-reading tool wrote it. The register is per clone and never versioned: it
 proves only that THIS clone's tool stamped the heading, which is all a pre-commit hook can honestly check.
+
+THE SAME READING DATES THE BEANS (v0.34.1). A bean written with `as_of: now` (or `observed: now`), the form
+seed/FORMS.md shows, has the day of this entry's heading written in its place, in every bean the working tree
+changes — so the day of writing is the clock's, read once, and never a day the writer typed or copied. A day the
+writer typed is left as typed. `bin/dmsave.py` calls this tool, and on `--again` stamps with the entry waiting.
 """
 import codecs
 import datetime
 import os
+import re
 import subprocess
 import sys
 import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
+import dmsafe   # noqa: E402 — a stamp written into a bean is written through the edit that loses nothing
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JOURNAL = os.path.join(ROOT, 'log', 'journal.md')
@@ -163,7 +170,39 @@ def append(who, what, body):
     entry = ('' if text.endswith('\n\n') else ('\n' if text.endswith('\n') else '\n\n')) + h + '\n' + body + '\n'
     with open(JOURNAL, 'a', encoding='utf-8', newline='\n') as fh:
         fh.write(entry)
+    for p in stamp_now(h):
+        print(dmparse.said(f"dmjournal: {p}: `now` written as {h[3:13]}, the day of this entry"), file=sys.stderr)
     return h
+
+
+# THE DAY OF WRITING IS THE CLOCK'S (v0.34.1). The forms show `as_of: now`: the writer never types the day of writing,
+# because measured writers typed the nearest date in view instead — the example's, or one read in another bean. This
+# tool reads the clock once, for the heading; the same reading is the day every `now` in a stamp position becomes.
+NOW = re.compile(r'(\b(?:as_of|observed):[ \t]*)now\b(?![-\w])')
+
+
+def stamp_now(h, root=None):
+    """Write the day of heading `h` in place of every `as_of: now` / `observed: now` in the front matter of each bean
+    the working tree changes (added, modified or new). Returns the paths stamped."""
+    root = root or ROOT
+    day = h[3:13]
+    out = subprocess.run(['git', '-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'], capture_output=True)
+    done = []
+    for rec in out.stdout.decode('utf-8', 'replace').split('\0'):
+        p = rec[3:] if len(rec) > 3 else ''
+        f = os.path.join(root, p)
+        if not (p.startswith('beans/') and p.endswith('.md') and os.path.isfile(f)):
+            continue
+        m = re.match(r'---\r?\n(.*?\r?\n)---', open(f, encoding='utf-8').read(), re.S)
+        if not (m and NOW.search(m.group(1))):
+            continue
+
+        def fix(text):
+            fm = re.match(r'---\r?\n(.*?\r?\n)---', text, re.S)
+            return text[:fm.start(1)] + NOW.sub(lambda x: x.group(1) + day, fm.group(1)) + text[fm.end(1):]
+        dmsafe.edit(f, fix)
+        done.append(p)
+    return done
 
 
 def say(line):

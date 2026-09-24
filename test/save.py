@@ -306,6 +306,40 @@ rc, out, err = save('sam', 'added friend-f', '--body', '- action: added [[friend
 check("...and with each put right, the same bean saves", rc == 0 and not git('status', '--porcelain').stdout.strip(),
       (rc, out, err))
 
+# ---- + the day of writing is the clock's: `as_of: now` becomes the day of the entry (v0.34.1) --------------------------
+def now_bean(bid, extra=''):
+    bean(bid)
+    f = os.path.join(G, 'beans', bid + '.md')
+    t = open(f, encoding='utf-8').read().replace('as_of: 2026-09-24', 'as_of: now')
+    open(f, 'w', encoding='utf-8', newline='\n').write(t.replace('\n---\n', '\n' + extra + '---\n', 1) if extra else t)
+
+
+def blob(bid):
+    return git('show', f'HEAD:beans/{bid}.md').stdout
+
+
+def day_of_last_entry():
+    return [l for l in journal().decode('utf-8').split('\n') if l.startswith('## ')][-1][3:13]
+
+
+now_bean('noor')
+rc, out, err = save('sam', 'added noor', '--body', '- action: added [[noor]].')
+check("a bean saved with `as_of: now` is committed with the day of its journal entry, the one clock reading of the "
+      "save — never the word `now`, and never a day the writer typed",
+      rc == 0 and f'as_of: {day_of_last_entry()}' in blob('noor') and 'as_of: now' not in blob('noor'), (rc, err, blob('noor')))
+now_bean('omar', 'refs: { friend: { bean: nobody-here, rel: friend-of } }\n')
+rc, out, err = save('sam', 'added omar', '--body', '- action: added [[omar]].')
+_f = os.path.join(G, 'beans', 'omar.md')
+_t = open(_f, encoding='utf-8').read()          # read, THEN open for writing: opening truncates (dmsafe's incident 4)
+open(_f, 'w', encoding='utf-8', newline='\n').write(
+    _t.replace('refs: { friend: { bean: nobody-here, rel: friend-of } }\n', '').replace(f'as_of: {day_of_last_entry()}', 'as_of: now'))
+rc2, out2, err2 = save('--again')
+check("...and on `--again`, a `now` written again while fixing the refusal takes the day of the entry waiting",
+      rc != 0 and rc2 == 0 and f'as_of: {day_of_last_entry()}' in blob('omar'), (rc, rc2, err2, blob('omar')))
+bean('pari')
+rc, out, err = save('sam', 'added pari', '--body', '- action: added [[pari]].')
+check("...and a day the writer typed is left as typed", rc == 0 and 'as_of: 2026-09-24' in blob('pari'), (rc, blob('pari')))
+
 # ---- - it never passes --no-verify -----------------------------------------------------------------------------------
 _src = ast.parse(open(os.path.join(ROOT, 'bin', 'dmsave.py'), encoding='utf-8').read())
 _doc = _src.body[0].value.value                      # the docstring may say it never does; the code may not do it
