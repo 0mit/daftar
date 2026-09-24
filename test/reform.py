@@ -247,9 +247,9 @@ analysis_cache:
 
 probe.
 """)
-r = run(sys.executable, os.path.join(G, "test", "fast.py"), cwd=G)
+r = run(sys.executable, os.path.join(G, "test", "fast.py"), "-v", cwd=G)       # -v: the line of each check it passed
 check("test/fast.py — which the commit hook runs — reads the staleness pattern from the law as it is now spelled",
-      "every cache entry carries a checkable staleness key" in r.stdout and "*** FAIL ***" not in r.stdout
+      "PASS every cache entry carries a checkable staleness key" in r.stdout and "*** FAIL ***" not in r.stdout
       and "neither set is empty" in r.stdout, (r.stdout + r.stderr)[-900:])
 
 shutil.rmtree(T, ignore_errors=True)

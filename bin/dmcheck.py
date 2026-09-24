@@ -1,5 +1,27 @@
 #!/usr/bin/env python3
-"""daftar write-gate validator.
+"""dmcheck — the gate: judges a garden against the law in force, and refuses what breaks it.
+
+    python3 bin/dmcheck.py                  # the whole garden as the WORKING TREE holds it (`--all` says the same)
+    python3 bin/dmcheck.py beans/<id>.md …  # those beans (a mapping's path, or a bare id, too), within the whole garden
+    python3 bin/dmcheck.py --staged         # what a commit would hold: the INDEX. The pre-commit hook runs this.
+    add -v (or DAFTAR_VERBOSE=1)            # with --staged: test/fast.py lists each check it passed, not only its count
+
+(`python` on Windows.) Exit 0 = clean, 1 = errors, 2 = setup: no PyYAML, or an argument that names no bean here.
+
+WHICH COPY IS JUDGED. By hand, the beans, the vocabulary and the manifest are read from the WORKING TREE, so a bean is
+checked as it is written, before anything is staged; the commit-time rules (the journal duty, RULE-CHANGE, a document
+destroyed, gutted or emptied) read the index, the one place a commit's contents exist. `--staged` reads EVERYTHING from
+the index: it is copied whole into a temporary directory, and the gate and test/fast.py found there judge that copy —
+what is checked is what is committed, the law and the gate included. A fix left unstaged is not in the commit, and a
+refused commit names each file the working tree holds differently.
+
+NAMED BEANS. With paths, every document is still read — a link resolves against the whole garden, an establishing
+anchor is compared with every other — but only the findings about the named documents are printed, with those about
+the law and the garden as a whole; what the others hold is counted in the last line. A path that is not a bean or a
+mapping of this garden is refused, never passed.
+
+A CLEAN RUN PRINTS ONE LINE, the verdict: `<garden> (daftar <release>, gardener <id>, garden <id>): N docs, 0 error(s),
+0 warning(s)`. A finding is printed above it, on its own line, its reason beneath.
 
 Session/model-agnostic gate, in two halves (v2 P2 / plan D4):
 
@@ -13,10 +35,8 @@ Session/model-agnostic gate, in two halves (v2 P2 / plan D4):
               rule-change — never by editing this file. Terms are read from BOTH tiers (the skill's
               std-vocab and the garden's VOCAB); a term with no `schema:` is documentation only.
               The schema language is documented in VOCAB.md under `schema_language:`.
-
-Run manually and via the git pre-commit hook. 0=clean 1=errors 2=setup.
 """
-import glob, math, os, re, sys, fnmatch, ipaddress, subprocess
+import glob, math, os, re, sys, fnmatch, ipaddress, shutil, stat, subprocess, tempfile
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
@@ -59,6 +79,215 @@ def _product():
         return f"daftar {v}" if v else "daftar (untagged)"
     except Exception:
         return "daftar (untagged)"
+
+
+# ============================== THE COMMAND LINE ==============================
+# READ BEFORE THE LAW IS. Until v0.34.1 the gate read no argument at all: `dmcheck.py beans/x.md` judged every bean and
+# failed on another's error, and `dmcheck.py beans/nonexistent.md` passed — a path nobody could have meant, answered
+# with a clean verdict. An argument is now a flag the gate declares or a document it can name, and anything else is
+# refused before a word of the law is read (exit 2).
+_PY = 'python' if os.name == 'nt' else 'python3'
+
+
+def _usage():
+    return __doc__.split('\nSession/model-agnostic')[0].rstrip()
+
+
+def _refuse(msg):
+    print(f"dmcheck: {msg}", file=sys.stderr)
+    sys.exit(2)
+
+
+def _arguments(argv):
+    """{staged, verbose, paths} from the command line. `--all` is the whole garden, as no argument is; beside a path it
+    contradicts it, and is refused."""
+    a = {'staged': False, 'paths': [], 'all': False,
+         'verbose': os.environ.get('DAFTAR_VERBOSE', '').strip() not in ('', '0')}
+    for x in argv:
+        if x in ('-h', '--help'):
+            print(_usage())
+            sys.exit(0)
+        elif x == '--all':
+            a['all'] = True
+        elif x == '--staged':
+            a['staged'] = True
+        elif x in ('-v', '--verbose'):
+            a['verbose'] = True
+        elif x.startswith('-'):
+            _refuse(f"{x!r} is no option of the gate. It takes --all, --staged, -v and the paths of beans "
+                    f"(`{_PY} bin/dmcheck.py --help` says what each does)")
+        else:
+            a['paths'].append(x)
+    if a['all'] and a['paths']:
+        _refuse(f"--all judges the whole garden, and {a['paths'][0]!r} names one document: give one or the other")
+    return a
+
+
+def _named(paths):
+    """{(is_bean, id): its garden path} for each document the command line names, resolved in THIS garden: a path as the
+    shell gives it, else as the gate writes it (from the garden's root), or a bare id as the gate's findings name one.
+    Anything that is not a bean or a mapping here is refused by name, all of them at once."""
+    out, bad = {}, []
+    for p in paths:
+        if not (p.endswith('.md') or '/' in p or os.sep in p or os.path.exists(p)):
+            _hits = [((d == 'beans'), p, f"{d}/{p}.md") for d in ('beans', 'mappings')
+                     if os.path.isfile(os.path.join(ROOT, d, p + '.md'))]
+            if len(_hits) == 1:
+                out[_hits[0][:2]] = _hits[0][2]
+            else:
+                bad.append(f"{p}: names both beans/{p}.md and mappings/{p}.md — give the path" if _hits else
+                           f"{p}: no bean or mapping of this garden is called {p!r} (beans/{p}.md, mappings/{p}.md)")
+            continue
+        _at = next((c for c in [os.path.abspath(p)] + ([] if os.path.isabs(p) else [os.path.join(ROOT, p)])
+                    if os.path.exists(c)), None)
+        if _at is None:
+            bad.append(f"{p}: no such file — a path is read from where you stand, then from the garden's root")
+            continue
+        if os.path.isdir(_at):
+            bad.append(f"{p}: a directory — name the beans in it, or give no argument to judge the whole garden")
+            continue
+        _dir, _file = os.path.split(_at)
+        _in = next((d for d in ('beans', 'mappings') if os.path.isdir(os.path.join(ROOT, d))
+                    and os.path.samefile(_dir, os.path.join(ROOT, d))), None)
+        if _in and _file.endswith('.md'):
+            out[(_in == 'beans', _file[:-3])] = f"{_in}/{_file}"
+        else:
+            bad.append(f"{p}: not a bean or a mapping of this garden — the gate names beans/<id>.md and "
+                       f"mappings/<id>.md one by one; with no argument it judges the whole garden, its law and manifest")
+    if bad:
+        for b in bad:
+            print(f"dmcheck: {b}", file=sys.stderr)
+        sys.exit(2)
+    return out
+
+
+def _rmtree(path):
+    """A temporary copy, removed whole — on Windows too, where a read-only file stops a plain rmtree."""
+    def again(fn, p, *_):
+        os.chmod(p, stat.S_IWRITE)
+        fn(p)
+    try:
+        if sys.version_info >= (3, 12):
+            shutil.rmtree(path, onexc=again)
+        else:
+            shutil.rmtree(path, onerror=again)
+    except OSError:
+        pass                                      # a copy left in the temp directory harms no garden
+
+
+def _staged(args):
+    """THE PRE-COMMIT HOOK'S RUN: the gate and test/fast.py, judging a copy of the INDEX.
+
+    The hook used to run the gate on the working tree while git committed the index. Under partial staging the two
+    differ, and the difference let a refused bean through: staged broken, refused, fixed in the working tree and not
+    staged again, the next `git commit` found nothing wrong — the gate read the fix — and committed the broken copy.
+    So what the hook judges is now what git commits. `git checkout-index` copies every staged file into a temporary
+    directory (git's own export of an index, which honours GIT_INDEX_FILE, so `commit -a` and `commit <path>` are
+    judged by the index they build), and the gate FOUND THERE runs on it: the staged law, the staged manifest, the
+    staged beans — and the staged gate, because a change to the gate is committed like any other. Its questions to git
+    reach this repository through GIT_DIR and GIT_INDEX_FILE, with the copy as the work tree. Nothing here writes to
+    the garden or its index; the copy is removed however the run ends.
+
+    Git is asked here through `ask`, not `_git` below: this runs before the gate's own definitions are read."""
+    def ask(*a):
+        """(git's answer in ROOT, None), or (None, why) when the question went unanswered. Read as bytes and decoded
+        here — as UTF-8 whatever the machine's code page, a path kept byte for byte (surrogateescape)."""
+        try:
+            r = subprocess.run(['git', '-C', ROOT, *a], capture_output=True, timeout=120,
+                               env=dict(os.environ, GIT_OPTIONAL_LOCKS='0'))
+        except Exception as e:                    # git absent, or it hung
+            return None, f"{e.__class__.__name__}: {e}"
+        if r.returncode != 0:
+            _e = r.stderr.decode('utf-8', 'replace').strip().splitlines()
+            return None, _e[0] if _e else f"git exited {r.returncode}"
+        return r.stdout.decode('utf-8', 'surrogateescape'), None
+
+    def say(msg):
+        print(dmparse.said(msg))
+
+    _top, _why = ask('rev-parse', '--show-toplevel')
+    _gitdir, _w2 = ask('rev-parse', '--absolute-git-dir')
+    _index, _w3 = ask('rev-parse', '--git-path', 'index')
+    _why = _why or _w2 or _w3
+    if _why:
+        say(f"ERROR NO INDEX at {ROOT} — this is not a readable git working copy ({_why}), so there is no staged state "
+            f"to judge. This is a refusal, not a pass: run the gate in the garden's working copy.")
+        return 1
+    _top, _gitdir, _index = _top.strip(), _gitdir.strip(), _index.strip()
+    _index = _index if os.path.isabs(_index) else os.path.join(ROOT, _index)
+    _unmerged, _ = ask('ls-files', '--unmerged')
+    if _unmerged:
+        _paths = sorted({l.split('\t', 1)[-1] for l in _unmerged.splitlines() if l})
+        say(f"ERROR the index holds unmerged paths ({', '.join(_paths[:4])}{', …' if len(_paths) > 4 else ''}) — git "
+            f"commits none until each is resolved: settle them, `git add` them, and commit again")
+        return 1
+    # a path the command line names is handed on as a path inside the garden, which is where the copy is read
+    passed = []
+    for p in args['paths']:
+        try:
+            _r = os.path.relpath(os.path.abspath(p), ROOT)
+        except ValueError:                        # another drive, on Windows
+            _r = '..'
+        _outside = _r == '..' or _r.startswith('..' + os.sep)
+        _path_like = p.endswith('.md') or '/' in p or os.sep in p or os.path.exists(p)
+        passed.append(_r.replace(os.sep, '/') if _path_like and not _outside else p)
+    snap = tempfile.mkdtemp(prefix='dmcheck-staged-')
+    rc = 1
+    try:
+        _, _why = ask('-C', _top, 'checkout-index', '--all', '--prefix=' + snap.replace(os.sep, '/').rstrip('/') + '/')
+        if _why:
+            say(f"ERROR the index could not be copied for judging ({_why}) — nothing was checked, so nothing may be "
+                f"committed on this run")
+            return 1
+        here = os.path.normpath(os.path.join(snap, os.path.relpath(ROOT, _top)))
+        env = dict(os.environ, GIT_DIR=_gitdir, GIT_WORK_TREE=snap, GIT_INDEX_FILE=_index, GIT_OPTIONAL_LOCKS='0',
+                   PYTHONDONTWRITEBYTECODE='1')
+        env.pop('GIT_PREFIX', None)
+        missing = [f for f in ('bin/dmcheck.py',) + (() if args['paths'] else ('test/fast.py',))
+                   if not os.path.isfile(os.path.join(here, f))]
+        if missing:
+            say(f"ERROR the index holds no {' and no '.join(missing)} — what is staged is judged by what is staged, "
+                f"and a garden is not committed without {'it' if len(missing) == 1 else 'them'}. "
+                f"Restore: git checkout HEAD -- {' '.join(missing)}")
+            return 1
+        # a document the command line names and the index does not hold is not staged, whatever the working tree has
+        _absent = [p for p, q in zip(args['paths'], passed)
+                   if not (os.path.isfile(os.path.join(here, q)) if ('/' in q or q.endswith('.md')) else
+                           any(os.path.isfile(os.path.join(here, d, q + '.md')) for d in ('beans', 'mappings')))]
+        if _absent:
+            for p in _absent:
+                print(dmparse.said(f"dmcheck: {p}: the index holds no such document — `git add` it to judge it as "
+                                   f"staged, or leave out --staged to judge the working tree"), file=sys.stderr)
+            return 2
+        sys.stdout.flush()
+        rc = subprocess.run([sys.executable, os.path.join(here, 'bin', 'dmcheck.py'), *passed],
+                            cwd=here, env=env).returncode
+        # test/fast.py judges the corpus whole, so it runs when the whole garden is judged, as the hook judges it
+        if rc == 0 and not args['paths']:
+            rc = subprocess.run([sys.executable, os.path.join(here, 'test', 'fast.py')]
+                                + (['--verbose'] if args['verbose'] else []), cwd=here, env=env).returncode
+    finally:
+        _rmtree(snap)
+    if rc == 1:
+        # THE REFUSAL QUOTED THE STAGED COPY. A writer who fixed the file and did not stage it again sees a fix the
+        # commit does not hold, so each file the working tree holds otherwise is named, with what to do.
+        _changed, _ = ask('diff', '--name-only', '-z')
+        _new, _ = ask('ls-files', '--others', '--exclude-standard', '-z', '--', 'beans', 'mappings')
+        _held = [f"{p} (changed)" for p in (_changed or '').split('\0') if p] + \
+                [f"{p} (new)" for p in (_new or '').split('\0') if p]
+        if _held:
+            sys.stdout.flush()
+            say(f"\nThis judged what is STAGED. The working tree holds, unstaged: {', '.join(_held[:6])}"
+                f"{', …' if len(_held) > 6 else ''}. A fix made there is not in the commit until it is staged: "
+                f"git add it (git add -A stages everything), then commit again.")
+    return rc
+
+
+if __name__ == '__main__':
+    # before the law is read: a refused argument costs nothing, and --staged judges the law the INDEX holds, not this one
+    ARGS = _arguments(sys.argv[1:])
+    if ARGS['staged']:
+        sys.exit(_staged(ARGS))
 
 # The sections a bean states its OWN facts in. Three checks ask this same question — the float scan, the
 # IP collector and the single-owner duplicate scan — and each used to carry its own copy of the answer.
@@ -3750,7 +3979,14 @@ def _shaped(msg, width=110):
     return head + '\n      — ' + rest
 
 
-def main():
+def _about(msg, labels):
+    """The documents a finding is reported ON, or an empty set for one about the law or the garden as a whole. Every
+    finding about a document begins with what names it — its id, or its path in the garden — and a colon, which is
+    where the gate puts the fix; only what a finding begins with is read, never an id it merely mentions."""
+    return labels.get(msg.split(':', 1)[0], frozenset()) if ':' in msg else frozenset()
+
+
+def main(args=None):
     """Run every ply in the declared order, report, and set the exit status.
 
     Under `if __name__ == '__main__'` so that IMPORTING this file cannot run the gate or kill the
@@ -3759,19 +3995,45 @@ def main():
     ply directly had no way to do it. (The vocabulary above still loads at import — it is what the
     module IS, and the same refusal-over-fallback rule governs it either way.)
     """
+    args = args or _arguments([])
+    named = _named(args['paths']) if args['paths'] else {}
     for _ply, _why in PLIES:
         _ply()
     # ONE FINDING, ONE LINE. Several plies can reach the same fact by different walks — one broken ownership edge
     # printed the same cycle four times — and a repeated line reads as four problems.
     warns[:] = list(dict.fromkeys(warns))
     errors[:] = list(dict.fromkeys(errors))
+    shown_w, shown_e, tail = warns, errors, ''
+    if named:
+        # EVERY DOCUMENT WAS JUDGED, and the findings about the named ones are shown: what names each document in a
+        # finding is its id and its path, including a document too broken to load, which `docs` does not hold.
+        labels = {}
+        for _d, _is_bean in (('beans', True), ('mappings', False)):
+            for _f in glob.glob(os.path.join(ROOT, _d, '*.md')):
+                _k = (_is_bean, os.path.basename(_f)[:-3])
+                for _l in {_k[1], os.path.relpath(_f, ROOT), os.path.relpath(_f, ROOT).replace(os.sep, '/')}:
+                    labels[_l] = labels.get(_l, frozenset()) | {_k}
+        _mine = lambda m: not _about(m, labels) or bool(_about(m, labels) & set(named))
+        shown_w, shown_e = [w for w in warns if _mine(w)], [e for e in errors if _mine(e)]
+        _ow, _oe = len(warns) - len(shown_w), len(errors) - len(shown_e)
+        _others = len({k for m in warns + errors for k in _about(m, labels)} - set(named))
+        tail = (f" — and {_oe} error(s), {_ow} warning(s) in {_others} other document(s), not shown "
+                f"(`{_PY} bin/dmcheck.py` shows all)" if _oe or _ow else '')
     # WHAT A DOCUMENT SAID IS PRINTED SPELT OUT. A finding quotes values a bean wrote, and a garden that already holds a
     # control character — or one this run refuses — must not drive the terminal of the person reading the refusal.
-    for w in warns:  print("WARN ", _shaped(dmparse.said(w)))
-    for e in errors: print("ERROR", _shaped(dmparse.said(e)))
-    print(f"\n{dmparse.said(_product())}: {len(docs)} docs, {len(errors)} error(s), {len(warns)} warning(s)")
+    for w in shown_w:  print("WARN ", _shaped(dmparse.said(w)))
+    for e in shown_e: print("ERROR", _shaped(dmparse.said(e)))
+    # A CLEAN RUN IS ONE LINE. The verdict is set apart from findings above it, and has nothing to be set apart from
+    # when there are none: every commit's output stays in an agent's context for the rest of its session.
+    _gap = '\n' if shown_w or shown_e else ''
+    if named:
+        _which = ', '.join(sorted(named.values())[:3]) + (', …' if len(named) > 3 else '')
+        print(f"{_gap}{dmparse.said(_product())}: {dmparse.said(_which)} ({len(named)} of {len(docs)} docs), "
+              f"{len(shown_e)} error(s), {len(shown_w)} warning(s){tail}")
+        return 1 if shown_e else 0
+    print(f"{_gap}{dmparse.said(_product())}: {len(docs)} docs, {len(errors)} error(s), {len(warns)} warning(s)")
     return 1 if errors else 0
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main(ARGS))

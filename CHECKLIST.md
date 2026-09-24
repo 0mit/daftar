@@ -11,7 +11,10 @@ The gate is `bin/dmcheck.py`, run as the git pre-commit hook `bin/hooks/pre-comm
 is never cloned — so run `sh bin/install.sh` once in every new clone (`python bin/install.py` where there is no
 `sh`).
 
-The gate reads the **staged** files, not the working tree: what it checks is what the commit will contain.
+The hook judges the **staged** files, not the working tree: what it checks is what the commit will contain, so a
+fix is staged (`git add`) before the commit is tried again. By hand, `python3 bin/dmcheck.py` judges the working
+tree, `python3 bin/dmcheck.py beans/<id>.md` one bean within the whole garden, and `--staged` what a commit would
+hold. A clean commit prints two lines; `DAFTAR_VERBOSE=1` lists every check the hook's fast suite passed.
 
 ## Part A — what the gate checks (a commit is refused on any failure)
 - [ ] Front matter is valid YAML; `bean:` / `mapping:` equals the filename, in kebab-case.
