@@ -67,6 +67,14 @@ holds it, so comments, quoting, layout and a garden's own prose stay byte for by
     heading line alone, re-keyed by bin/dmwhy.py, the one tool that opens the reasoning.
   A document that cannot be renamed without changing something else — a key written twice, `genos:` already beside
   `kind:` — is REFUSED before anything is touched, naming it; with --keep-on-failure it is left, named, for the person.
+  The garden's OWN CODE — a tool, a test or a template it keeps beside the language — is never translated: each file
+  that says a retired word as code reads or writes a bean's key is NAMED on the `translated:` line, with how many lines
+  say one, for a person to read before relying on it.
+  A garden that CROSSED ALREADY is translated by the same step wherever a document still says 21.0's words — a bean
+  added on a branch or a clone still at 21.0 and merged in since, or written from 21.0's documents: run this tool again
+  with the release GARDEN.md records. The law does not move, so its journal entry asks nothing, and says RULE-CHANGE
+  only where VOCAB.md itself was translated. (A bean BOTH sides changed never needs it: bin/dmmerge.py reads each side
+  in the words of the law its tree runs.)
 
 THE RELEASE'S OWN TOOL DOES THE WORK. When the release carries a different bin/dmupgrade.py, this one hands
 over to it (with --garden and --no-delegate) instead of applying a newer release with older logic: v0.4.0
@@ -1012,6 +1020,23 @@ class Step22:
     def __init__(self, rel, tag, keep):
         self.rel, self.tag, self.keep = rel, tag, keep
         self.problems, self.facts, self.reasons = [], {}, None
+        self.leftover = False           # True: the garden had crossed already, and this translates what came in since
+
+    def left(self):
+        """Whether a garden that crossed into 22.0 already still holds a document in 21.0's words — which only something
+        that came in afterwards can be — and so is translated again. A document this step would refuse counts: the
+        refusal is then said, as it is on a crossing."""
+        for path in self.docs():
+            if os.path.isfile(path):
+                text = read_text(path)[0]
+                try:
+                    if renamed(text, vocab_rule_22 if os.path.basename(path) == 'VOCAB.md' else bean_rule_22)[1]:
+                        self.leftover = True
+                except CannotRename:
+                    self.leftover = True
+            if self.leftover:
+                return True
+        return False
 
     def plan(self):
         law = {(str(r.get('at')), str(r.get('name'))): str(r.get('instead') or '')
@@ -1093,9 +1118,49 @@ class Step22:
         else:
             self.reasons = None
 
+    # THE GARDEN'S OWN CODE IS NEVER TRANSLATED, AND IS NAMED. A garden may keep tools, tests and templates of its own
+    # beside the language; one that reads a bean's `kind` reads nothing from a crossed garden, and says nothing about it —
+    # a leak guard that chose its words by `kind` stopped seeing most of them, and a filter by organisation showed every
+    # row. A word in code has other senses (a network entry's `kind`), so this names files for a person to read: it
+    # refuses nothing and changes nothing. Code is a file with a code extension or a `#!` line, and what it says is a
+    # retired word as code reads a key — a quoted literal, `'kind'` — or as a bean writes one, which a test's fixture
+    # does inside a string: `kind: `, `nature: physical`, `crown: love`. A Markdown file outside the beans counts where it
+    # is shaped like a bean (a template, an example) and this step would rename something in it.
+    CODE_WORD = re.compile(r"""(['"])(?:kind|kinds|local_kinds|form_kind|physical|metaphysical|living)\1"""
+                           r"""|\b(?:kind|kinds|local_kinds|form_kind):\s|\bnature:\s*['"]?(?:physical|metaphysical|living)\b"""
+                           r"""|\bcrown:\s*['"]?(?:love|nature|god)\b""")
+    CODE_EXT = ('.py', '.js', '.mjs', '.cjs', '.ts', '.sh', '.ps1', '.psm1', '.rb', '.go', '.pl', '.php', '.lua')
+    RECORDS = ('beans', 'mappings', 'log', 'captures')
+
+    def code_left(self):
+        """[(path, how many lines)] of the garden's own files, outside the language and its records, that say a word
+        22.0 retired — for a person to read before relying on them."""
+        own = {p.replace(os.sep, '/') for p in expand(self.rel, patterns(self.rel))}
+        out = []
+        for f in sorted(x for x in run('git', 'ls-files', '-z', check=False).stdout.split('\0') if x):
+            if f in own or f in ('VOCAB.md', 'GARDEN.md') or f.split('/')[0] in self.RECORDS:
+                continue
+            try:
+                text = read_text(os.path.join(ROOT, *f.split('/')))[0]
+            except (OSError, UnicodeDecodeError):
+                continue
+            n, fm = 0, _parse(text)[0] if f.endswith('.md') else None
+            if f.endswith('.md'):
+                if isinstance(fm, dict) and 'bean' in fm:
+                    try:
+                        n = len(renamed(text, bean_rule_22)[1])
+                    except CannotRename:
+                        n = 1
+            elif f.endswith(self.CODE_EXT) or text.startswith('#!'):
+                n = sum(1 for line in text.split('\n') if self.CODE_WORD.search(line))
+            if n:
+                out.append((f, n))
+        return out
+
     def report(self):
         """What was translated, as the journal's `translated:` line says it: each rename with how often it was made, the
-        beans it was made in, what VOCAB.md became, and what is left for a person."""
+        beans it was made in, what VOCAB.md became, what is left for a person, and — on the crossing — the garden's own
+        code that says a retired word, which is never translated."""
         from collections import Counter
 
         def said(what, old, new):
@@ -1119,6 +1184,11 @@ class Step22:
                 f"`## {o}` -> `## {n}`" for _w, o, n in self.facts[self.reasons]))
         if self.problems:
             parts.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
+        code = [] if self.leftover else self.code_left()
+        if code:
+            parts.append(f"NOT TRANSLATED, for a person to read: {len(code)} file(s) of the garden's own code say a word "
+                         f"22.0 retired, and may read a bean by it — " + ', '.join(f"{f} ({n})" for f, n in code[:20])
+                         + (f" and {len(code) - 20} more" if len(code) > 20 else ''))
         return ('std-vocab 22.0, the Greek names — ' + '; '.join(parts or ['nothing to translate']),
                 [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
 
@@ -1198,9 +1268,13 @@ def main():
         if vtuple(before) < STEP_21 <= vtuple(vocab_version(rel)):
             step21 = Step21(rel, a.tag, source, gardener, a.keep_on_failure, ggenos)
             step21.plan()
-        if vtuple(before) < STEP_22 <= vtuple(vocab_version(rel)):
-            step22 = Step22(rel, a.tag, a.keep_on_failure)
-            step22.plan()
+        # ...and a garden that crossed already is translated again where a document still says 21.0's words: a bean a
+        # branch or a clone still at 21.0 added, merged in afterwards, or a proposal written from 21.0's documents.
+        if STEP_22 <= vtuple(vocab_version(rel)):
+            _s22 = Step22(rel, a.tag, a.keep_on_failure)
+            if vtuple(before) < STEP_22 or _s22.left():
+                step22 = _s22
+                step22.plan()
         want = expand(rel, patterns(rel))
         have = expand(ROOT, patterns(ROOT)) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
         # "applied" when either side is unknown: a garden that records no release cannot be told which way it moved.
@@ -1311,24 +1385,42 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         translated.append(_t); steps.append(_t)
         beans += [b for b in _b if b not in beans]
 
-    if not (changed or added or removed or repinned):
+    if not (changed or added or removed or repinned or beans):
         print(f"nothing to do: this garden's language already equals {a.tag} ({sha[:12]}).")
         return 0
+    # ONLY WORDS MOVED: the garden runs this release already, and what changed is the translation of what came in since it
+    # crossed into 22.0. The law did not move and nothing is a person's to decide — the translation is the one the garden
+    # adopted when it crossed — so the entry asks nothing, and says RULE-CHANGE only where VOCAB.md itself was translated.
+    words_only = bool(step22 and step22.leftover and not (added or removed or repinned)
+                      and all(c.endswith(('(translated)', '(re-keyed)')) for c in changed))
+    if words_only:
+        verb = 'translated'
 
     install()
     sys.path.insert(0, os.path.join(ROOT, 'bin')); import dmjournal          # the release's own tool, just applied
     _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
-    lines = ['\n' + dmjournal.stamp(_who, f"RULE-CHANGE: language {verb} to daftar {a.tag}", ROOT),
-             "- ratified_by: (fill in who ratified — merging the release's pull request, or the word given here)",
-             f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; "
-             f"std-vocab {before} -> {after}; release {current or 'unrecorded'} -> {a.tag}.",
-             f"- changed: {', '.join(changed) or 'none'}",
-             f"- added: {', '.join(added) or 'none'}",
-             f"- removed: {', '.join(removed) or 'none'}",
-             f"- repinned: {', '.join(repinned) or 'none'}",
-             f"- translated: {'; '.join(translated) or 'none'}",
-             "- why: (fill in — what this release brings that this garden adopts)",
-             f"- beans: {', '.join(beans) or 'none'}"]
+    if words_only:
+        lines = ['\n' + dmjournal.stamp(_who, ("RULE-CHANGE: " if changed else '') + f"translated into the words of "
+                                        f"daftar {a.tag}, which this garden runs", ROOT),
+                 f"- action: `bin/dmupgrade.py {a.tag}` from {source} at {sha}; the language is unchanged (std-vocab "
+                 f"{after}, release {a.tag}). What came in after the garden crossed into std-vocab 22.0 still in 21.0's "
+                 f"words — from a branch or a clone merged since, or a proposal — is translated as the crossing "
+                 f"translated the rest.",
+                 f"- changed: {', '.join(changed) or 'none'}",
+                 f"- translated: {'; '.join(translated) or 'none'}",
+                 f"- beans: {', '.join(beans) or 'none'}"]
+    else:
+        lines = ['\n' + dmjournal.stamp(_who, f"RULE-CHANGE: language {verb} to daftar {a.tag}", ROOT),
+                 "- ratified_by: (fill in who ratified — merging the release's pull request, or the word given here)",
+                 f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; "
+                 f"std-vocab {before} -> {after}; release {current or 'unrecorded'} -> {a.tag}.",
+                 f"- changed: {', '.join(changed) or 'none'}",
+                 f"- added: {', '.join(added) or 'none'}",
+                 f"- removed: {', '.join(removed) or 'none'}",
+                 f"- repinned: {', '.join(repinned) or 'none'}",
+                 f"- translated: {'; '.join(translated) or 'none'}",
+                 "- why: (fill in — what this release brings that this garden adopts)",
+                 f"- beans: {', '.join(beans) or 'none'}"]
     jpath = os.path.join(ROOT, 'log', 'journal.md')
     with open(jpath, 'a', encoding='utf-8', newline=read_text(jpath)[1].nl) as j:
         j.write('\n'.join(lines) + '\n')
@@ -1347,14 +1439,15 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
               + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') +
               "\nFix what these name (or pass --keep-on-failure to repair by hand), then run this again.")
         return 1
-    print(f"{verb} to {a.tag} ({sha[:12]}): std-vocab {before} -> {after}; "
+    print(f"translated into the words of {a.tag} ({sha[:12]}), which this garden runs: std-vocab {after}, the language "
+          f"unchanged." if words_only else f"{verb} to {a.tag} ({sha[:12]}): std-vocab {before} -> {after}; "
           f"{len(changed)} changed, {len(added)} added, {len(removed)} removed, {len(repinned)} repinned.")
     for _t in steps:
         print(f"translated: {_t}")
     print((gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1])
     # TWO COMMANDS, NOT ONE JOINED BY `&&`, and no `rm`: Windows PowerShell 5.1 parses neither `&&` nor `rm a b`, and
     # git runs alike in every shell — `git clean` removes exactly the files the upgrade added, which git has never held.
-    print("\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n"
+    print("\nNOT COMMITTED. Read `git diff`" + (", then\n" if words_only else ", complete the journal entry's two `fill in` fields, then\n") +
           "  git add -A\n"
           "  git commit\n"
           "To abandon it instead:\n"

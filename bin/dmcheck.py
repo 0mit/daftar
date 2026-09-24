@@ -362,6 +362,16 @@ RETIRED = {(str(r.get('at')), str(r.get('name'))): r.get('instead') for r in (st
 def retired_hint(at, name):
     _i = RETIRED.get((at, str(name)))
     return f" — retired: {_i}" if _i else ""
+
+
+def translate_hint():
+    """The command that translates a word the law retired, as this garden runs it: bin/dmupgrade.py with the release
+    GARDEN.md records. A garden crossing into that release runs it anyway; one that crossed already runs it again, and
+    it translates whatever came in since — a bean from a branch or a clone still at the older release, or a proposal."""
+    _g = load(os.path.join(ROOT, 'GARDEN.md'))[0] if os.path.isfile(os.path.join(ROOT, 'GARDEN.md')) else None
+    _rel = _g.get('daftar_release') if isinstance(_g, dict) else None
+    return (f"`{'python' if os.name == 'nt' else 'python3'} bin/dmupgrade.py {_rel or '<the release>'}` translates it — "
+            f"in a garden crossing into the release, and in one that crossed already")
 PROV = std_fm.get('provenance_record') or {}
 _axis, _reg = IDP.get('keyed_by'), IDP.get('registry')
 POLICY = {}
@@ -1068,7 +1078,7 @@ def check_retired_vocab():
     for _k in sorted(map(str, vocab_fm)):
         if RETIRED.get(('vocab', _k)) or RETIRED.get(('law', _k)):
             errors.append(f"VOCAB.md: `{_k}` is a name the law retired" + (retired_hint('vocab', _k) or retired_hint('law', _k))
-                          + ". bin/dmupgrade.py translates it when a garden crosses into the release")
+                          + ". " + translate_hint())
     for _k in sorted(map(str, vocab_fm.get('registry_additions') or {})):
         if RETIRED.get(('law', _k)):
             errors.append(f"VOCAB.md: `registry_additions.{_k}` adds to a registry the law retired" + retired_hint('law', _k))
@@ -1344,8 +1354,7 @@ def check_undeclared_keys():
             if _is_bean and _h and _k in _declared:
                 # A NAME RETIRED ON A BEAN IS REFUSED ON A BEAN, whatever else still declares it: `kind` left the bean
                 # for `genos` (22.0) and stays a mapping's. Never read in its new name's place.
-                errors.append(f"{_base}: top-level key '{_k}' is one the law retired on a bean{_h}. A garden that "
-                              f"crosses into the release translates it with bin/dmupgrade.py")
+                errors.append(f"{_base}: top-level key '{_k}' is one the law retired on a bean{_h}. {translate_hint()}")
             elif _k not in _declared:
                 errors.append(f"{_base}: top-level key '{_k}' is declared by no vocabulary term" + (_h or
                               ". A fact that fits no term belongs in details: (ground rule 2); a new KIND of fact "

@@ -95,6 +95,16 @@ midway, or the garden fails the new gate, every file is put back as it was. Cros
 every bean and asks nothing: `kind:` becomes `genos:`, and a nature and a crown branch take their Greek names
 (`MODEL.md` says what each means).
 
+Because that crossing changes every bean, bring in what the garden's other copies hold first — merge every branch,
+and every clone's commits — so that it translates everything at once. A branch or a clone still at 21.0 afterwards is
+merged INTO the garden that crossed, never the other way round. There the merge driver reads each side of a bean in
+22.0's words, so the bean keeps one `genos` and one nature; but the crossing changed that bean too, so each key the
+branch changed on it comes back as a disagreement for a person to settle (`merge_open`), as whenever two sides change
+one bean. A bean only that branch added arrives as it was written; the gate names the command that translates it,
+which is the same one, run again with the release `GARDEN.md` records. The garden's OWN code is never translated: a
+tool, a test or a template of its own that reads a bean's `kind` must be taught `genos` and the Greek natures before
+the crossing is relied on — the upgrade names the files of the garden's own that say a retired word.
+
 Moving a garden into std-vocab 21.0 also asks who keeps it. Name the gardener in the environment — the one form
 every garden's own tool passes on, whatever release it runs (a tool older than the `--gardener` flag rejects the
 flag, then hands over to the release's tool, which reads the environment):

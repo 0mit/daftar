@@ -214,7 +214,10 @@ required term is covered once it fuses with another garden's bean that has it.
   so even `git merge` dispatches to the semantic merge instead of the line-based one. It merges ONE bean in place:
   only the keys that differ are rewritten, each key it does not touch keeps its text and its comments, and it
   **refuses**, leaving the file untouched, when the result would lose a key or the body, or when the tree's pin
-  disagrees with the vocabulary installed there.
+  disagrees with the vocabulary installed there. Each side is first read in the words of the law the tree runs: a
+  bean changed on a branch or a clone still at 21.0 is translated into 22.0's as `bin/dmupgrade.py` translates a
+  garden crossing into it, so the merged bean carries one `genos` and no disagreement over a word; a side that cannot
+  be translated without a person is refused. A mapping keeps its `kind`, and is merged as written.
 - `python3 bin/dmmerge.py <garden> <garden> …` merges whole gardens: it reconciles the law first (§5.2), prints each
   canonical bean and the fingerprint, and reports the canonical beans with a garden-local id, the candidates (§4.4),
   the keys merged by shape, and whether the merged law covers the merged corpus. It commits nothing. An input is

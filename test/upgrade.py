@@ -681,6 +681,13 @@ put21('mappings/wind-up.md', _MAP)
 put21('RATIONALE.md', '---\nrationale_for: VOCAB.md\n---\n# why this garden\'s own terms are as they are\n\n'
       '## local_kinds\n\nThe kinds this estate needs beyond the standard.\n\n## local_kinds[widget].kind\n\n'
       'A widget is a kind of made thing.\n\n## local_terms[widget_part].schema.required_on_kinds\n\nEvery widget names its part.\n')
+# the garden's own code and a template, beside the language: never translated, and named
+_CODE = "import sys\nfor b in sys.argv[1:]:\n    if fm(b).get('kind') == \"host\":   # a tool of this garden's own\n        print(b)\n"
+put21('tools/count.py', _CODE)
+_TPL = in21(_ex['beans/laptop.md']).replace('bean: laptop', 'bean: <id>', 1)
+put21('templates/host.example.md', _TPL)
+_NOTE = '---\ntitle: notes\n---\nkind: prose that a person wrote, of nature physical.\n'
+put21('notes.md', _NOTE)
 run('git', 'add', '-A', cwd=G21)
 _c = run('git', 'commit', '-qm', 'a garden as std-vocab 21.0 left it', '--no-verify', cwd=G21)
 check("(setup) the garden is aged into std-vocab 21.0's words", _c.returncode == 0, (_c.stdout + _c.stderr)[-300:])
@@ -726,6 +733,11 @@ check("the journal's `translated:` line says what was renamed, how often and whe
       and 'crown love -> agape ×1' in _tl and '`local_kinds` -> `local_gene`' in _tl and '`required_on_kinds` -> `required_on_gene`' in _tl
       and all(f'[[{b}]]' in _bl for b in ('sam', 'laptop', 'w1')) and 'wind-up' not in _bl, _j[-1200:])
 check("...and the console says it too", 'translated: std-vocab 22.0' in r.stdout, r.stdout[-600:])
+check("the garden's own code that says a retired word, and a template shaped like a bean, are NAMED for a person and left "
+      "as written; a note in prose is neither",
+      "NOT TRANSLATED, for a person to read: 2 file(s)" in _tl and 'templates/host.example.md (2)' in _tl
+      and 'tools/count.py (1)' in _tl and 'notes.md' not in _tl and get21('tools/count.py') == _CODE
+      and get21('templates/host.example.md') == _TPL and get21('notes.md') == _NOTE, _tl[-700:])
 _rt = get21('RATIONALE.md')
 _why = run(sys.executable, p21('bin/dmwhy.py'), '--check', cwd=G21)
 check("the garden's own reasons follow the paths VOCAB.md renamed — the heading alone; what a reason says is its own",
@@ -742,6 +754,59 @@ _c = run('git', 'commit', '-qm', 'adopt 22.0', cwd=G21)
 check("once a human fills it in, the translated garden commits through its hook", _c.returncode == 0, (_c.stdout + _c.stderr)[-500:])
 r = up22()
 check("...and a second run finds nothing to do", r.returncode == 0 and 'nothing to do' in r.stdout, (r.stdout + r.stderr)[-300:])
+
+# A BRANCH STILL IN 21.0'S WORDS, MERGED INTO THE GARDEN THAT CROSSED. A bean both sides changed goes through the merge
+# driver, which reads each side in the words of the law this tree runs: one `genos`, one nature, and no disagreement that
+# nobody had. A bean only the branch added arrives as the branch wrote it; the gate names the command that translates it,
+# and that command, in a garden that crossed already, translates what is left and journals it.
+_main21 = run('git', 'rev-parse', '--abbrev-ref', 'HEAD', cwd=G21).stdout.strip()
+run('git', 'checkout', '-q', '-b', 'side21', _aged21, cwd=G21)
+put21('beans/laptop.md', get21('beans/laptop.md').replace('summary: "Sam\'s daily laptop."\n',
+                                                          'summary: "Sam\'s daily laptop."\ndetails: { colour: black }\n', 1))
+put21('beans/probe.md', in21(_ex['beans/laptop.md']).replace('bean: laptop', 'bean: probe', 1)
+      .replace('PF-12345', 'PF-67890').replace('value: "laptop"', 'value: "probe"').replace('The laptop.', 'A probe.'))
+run('git', 'add', '-A', cwd=G21)
+run('git', 'commit', '-qm', 'on a branch still at 21.0', '--no-verify', cwd=G21)
+run('git', 'checkout', '-q', _main21, cwd=G21)
+_m = run('git', 'merge', '--no-edit', 'side21', cwd=G21)
+_lap = get21('beans/laptop.md')
+check("a bean both sides changed merges in 22.0's words: `genos` alone, nature soma, the branch's edit kept — and no "
+      "disagreement the two sides never had",
+      _m.returncode == 0 and re.search(r'(?m)^genos: host$', _lap) and not re.search(r'(?m)^kind:', _lap)
+      and re.search(r'(?m)^nature: soma$', _lap) and 'colour: black' in _lap and 'merge_open' not in _lap
+      and 'conflict' not in _lap, (_m.stdout + _m.stderr)[-600:] + '\n' + _lap)
+check("...and the driver says it read the branch's side in the law's words",
+      "Read in std-vocab 22.0's words first: theirs (" in _m.stdout + _m.stderr, (_m.stdout + _m.stderr)[-600:])
+# A MAPPING is dispatched to the same driver (.gitattributes) and records no being: it keeps its `kind` through a merge
+_md = tempfile.mkdtemp(prefix='map-', dir=TMP)
+for _n, _t in (('O', _MAP), ('A', _MAP.replace('Wind it.', 'Wind it. Twice.')), ('B', _MAP)):
+    with open(os.path.join(_md, _n), 'w', encoding='utf-8', newline='\n') as _f:
+        _f.write(_t)
+_mr = run(sys.executable, p21('bin/dmmerge.py'), '--file', *(os.path.join(_md, n) for n in 'OAB'), cwd=G21)
+_ma = open(os.path.join(_md, 'A'), encoding='utf-8').read()
+check("a MAPPING merged by the driver in a garden at 22.0 keeps its `kind` — only a bean is read in the law's words",
+      _mr.returncode == 0 and re.search(r'(?m)^kind: procedure$', _ma) and 'genos' not in _ma and 'Twice' in _ma
+      and "Read in std-vocab 22.0's words" not in _mr.stderr, (_mr.stdout + _mr.stderr)[-500:] + '\n' + _ma)
+_g = run(sys.executable, p21('bin/dmcheck.py'), cwd=G21)
+_go = _g.stdout.replace('\n      — ', ' — ')
+check("a bean only the branch added still says `kind`; the gate refuses it and names the command that translates it "
+      "in a garden that crossed already — the release GARDEN.md records",
+      _g.returncode != 0 and "probe: top-level key 'kind' is one the law retired on a bean" in _go
+      and 'bin/dmupgrade.py v9.1.0' in _go and 'laptop:' not in _go, _go[-900:])
+r = up22()
+_j = get21('log/journal.md').split('\n## ')[-1]
+_pr = get21('beans/probe.md')
+check("that command translates what the merge brought, journals it by name, and the gate passes",
+      r.returncode == 0 and '0 error(s)' in r.stdout and re.search(r'(?m)^genos: host$', _pr)
+      and re.search(r'(?m)^nature: soma$', _pr) and "translated into the words of daftar v9.1.0" in _j
+      and '[[probe]]' in _j and '`kind` -> `genos` ×1' in _j, (r.stdout + r.stderr)[-900:] + '\n' + _j)
+check("...its entry is no RULE-CHANGE and asks nothing: the law did not move, and the translation is the one adopted",
+      'RULE-CHANGE' not in _j and '(fill in' not in _j and 'nothing to do' not in r.stdout, _j)
+run('git', 'add', '-A', cwd=G21)
+_c = run('git', 'commit', '-qm', 'the words a branch brought, translated', cwd=G21)
+check("...and it commits through the hook as written", _c.returncode == 0, (_c.stdout + _c.stderr)[-500:])
+r = up22()
+check("...after which there is nothing to do again", r.returncode == 0 and 'nothing to do' in r.stdout, (r.stdout + r.stderr)[-300:])
 
 # WHAT A TRANSLATION MAY NOT DECIDE: a bean that says `genos` beside `kind` — which stands is a person's decision
 reset21(_aged21)
