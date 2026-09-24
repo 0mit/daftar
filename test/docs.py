@@ -122,19 +122,26 @@ _opens = [p for p in re.findall(r"`([A-Za-z0-9_./-]+\.(?:md|py|sh))`", text["see
           if not os.path.isfile(os.path.join(ROOT, p))]
 check("...and names no file that does not exist", not _opens, _opens)
 
-# THE FORMS ARE THE COOKBOOK'S OWN RECIPES, NOT A SECOND COPY THAT CAN DRIFT (v0.34.1). seed/FORMS.md is what an agent
-# reads before writing: six recipes of the cookbook, cut from it unchanged, and the forms for what nobody said. A recipe
-# changed in one and not the other fails here, by name; the fix is to copy the cookbook's section into the forms again.
+# THE FORMS ARE THE COOKBOOK'S OWN EXAMPLES, NOT A SECOND COPY THAT CAN DRIFT (v0.34.1). seed/FORMS.md is what an agent
+# reads before writing, so it is short: the misreadings agents make most, the shapes of six recipes — each recipe's
+# example beans and commands, the fenced blocks with the marker above them, cut from the cookbook unchanged, under the
+# recipe's heading and its first sentence — and the forms for what nobody said. The recipes' prose stays in the cookbook
+# (it was two thirds of the page, and measured runs read all of it every session). A block changed in one and not the
+# other fails here, by recipe; the fix is to copy the cookbook's blocks into the forms again.
 def _sections(t):
     return {s.split("\n", 1)[0]: s for s in t.split("\n## ")[1:]}
+def _blocks(sec):
+    return re.findall(r"(?:^<!-- [^\n]*-->\n)?^```[^\n]*\n.*?^```$", sec, re.S | re.M)
 _ck, _fo = _sections(text["seed/COOKBOOK.md"]), _sections(text["seed/FORMS.md"])
 _recipes = [h for h in _fo if h in _ck]
-_drift = [h for h in _recipes if _fo[h] != _ck[h]]
-check("seed/FORMS.md holds six recipes of seed/COOKBOOK.md, each byte for byte as the cookbook has it",
-      len(_recipes) == 6 and not _drift and _recipes[0] == "The gardener, first",
-      f"recipes {_recipes}; differing from the cookbook (copy its section again): {_drift}")
-check("...and nothing else but the forms for what nobody said", set(_fo) - set(_recipes) == {"What nobody said"},
+_drift = [h for h in _recipes if _blocks(_fo[h]) != _blocks(_ck[h])]
+check("seed/FORMS.md holds the shapes of six recipes of seed/COOKBOOK.md, every example block byte for byte as the "
+      "cookbook has it", len(_recipes) == 6 and not _drift and _recipes[0] == "The gardener, first",
+      f"recipes {_recipes}; blocks differing from the cookbook's (copy them again): {_drift}")
+check("...and nothing else but the misreadings, first, and the forms for what nobody said",
+      set(_fo) - set(_recipes) == {"What nobody said", "Common misreadings"} and list(_fo)[0] == "Common misreadings",
       sorted(set(_fo) - set(_recipes)))
+check("...and it stays short: under 16,000 characters", len(text["seed/FORMS.md"]) < 16000, len(text["seed/FORMS.md"]))
 _ord = [h for h in _ck if h in _recipes]
 check("...in the cookbook's own order, so they can be followed from the top", _recipes == _ord, (_recipes, _ord))
 _top = "\n".join(text["seed/FORMS.md"].split("\n## ", 1)[0].splitlines())
