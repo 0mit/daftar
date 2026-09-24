@@ -91,7 +91,7 @@ def remove_tree(path):
 
 
 def run(*args, cwd=None, check=True):
-    r = subprocess.run(args, cwd=cwd, capture_output=True, text=True)
+    r = subprocess.run(args, cwd=cwd, capture_output=True, text=True, encoding='utf-8', errors='replace')
     if check and r.returncode != 0:
         die(f"`{' '.join(args)}` failed:\n{r.stdout}{r.stderr}", 1)
     return r

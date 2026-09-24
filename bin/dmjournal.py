@@ -64,7 +64,8 @@ CONTROL_NAMES = {'\x00': 'NUL', '\x07': 'BEL', '\x08': 'a backspace', '\x1b': 'E
 
 def stamps_path(root=ROOT):
     """The register, in the git directory every worktree of this clone shares."""
-    r = subprocess.run(['git', '-C', root, 'rev-parse', '--git-common-dir'], capture_output=True, text=True)
+    r = subprocess.run(['git', '-C', root, 'rev-parse', '--git-common-dir'], capture_output=True, text=True,
+                       encoding='utf-8')
     gd = r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else '.git'
     if not os.path.isabs(gd):
         gd = os.path.join(root, gd)

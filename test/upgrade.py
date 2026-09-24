@@ -21,7 +21,7 @@ def check(name, ok, detail=''):
 
 def run(*a, cwd):
     env = dict(os.environ, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@x', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@x')
-    return subprocess.run(a, capture_output=True, text=True, cwd=cwd, env=env)
+    return subprocess.run(a, capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=cwd, env=env)
 
 
 TMP = tempfile.mkdtemp(prefix='dmupg-')
@@ -238,7 +238,7 @@ def up21(*extra, env=None, tag='v9.0.0'):
         e.pop(k, None)
     e.update(env or {})
     return subprocess.run([sys.executable, path20('bin/dmupgrade.py'), tag, '--from', R21, *extra],
-                          capture_output=True, text=True, cwd=G20, env=e)
+                          capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=G20, env=e)
 
 
 def commit20(msg):
@@ -282,7 +282,7 @@ check("a garden whose name the release's law refuses is REFUSED before anything 
 _jl = next((l.strip() for l in out.splitlines() if 'bin/dmjournal.py' in l), '')
 put('GARDEN.md', re.sub(r'^garden: .*$', 'garden: garden-twenty', get('GARDEN.md'), count=1, flags=re.M))
 _jr = subprocess.run([sys.executable] + shlex.split(_jl.replace('"<who>"', '"human (test)"'))[1:], cwd=G20,
-                     capture_output=True, text=True) if _jl else None
+                     capture_output=True, text=True, encoding='utf-8', errors='replace') if _jl else None
 commit20('the name, as the refusal printed it')
 r = up21('--gardener', 'sam')
 check("...and with the line written and journalled as printed, the same upgrade crosses",
@@ -636,7 +636,7 @@ def get21(rel):
 def up22(*extra, tag='v9.1.0'):
     e = dict(os.environ, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@x', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@x')
     return subprocess.run([sys.executable, p21('bin/dmupgrade.py'), tag, '--from', R22, *extra], capture_output=True,
-                          text=True, cwd=G21, env=e)
+                          text=True, encoding='utf-8', errors='replace', cwd=G21, env=e)
 
 
 def untouched21(head):
@@ -870,7 +870,8 @@ if os.name != 'nt':
         if config:
             run('git', 'config', 'daftar.python', config, cwd=G20)
         r = subprocess.run([SH, '-c', '. "$1"; daftar_choose_python && echo "PY=$DAFTAR_PY"', 'sh', PYSH],
-                           capture_output=True, text=True, cwd=G20, env=dict(os.environ, PATH=_path))
+                           capture_output=True, text=True,
+                           encoding='utf-8', errors='replace', cwd=G20, env=dict(os.environ, PATH=_path))
         return r, run('git', 'config', '--get', 'daftar.python', cwd=G20).stdout.strip()
 
     r, _cfg = choose()
@@ -913,7 +914,8 @@ if os.name != 'nt':
     # seed/germinate.sh chooses as the hooks do: the alias is named as such, never run as if it were Python
     _gt = os.path.join(TMP, 'never-grown')
     r = subprocess.run([SH, os.path.join(ROOT, 'seed', 'germinate.sh'), _gt, '--gardener', 'keeper'],
-                       capture_output=True, text=True, cwd=TMP, env=dict(os.environ, PATH=_path))
+                       capture_output=True, text=True,
+                       encoding='utf-8', errors='replace', cwd=TMP, env=dict(os.environ, PATH=_path))
     check("seed/germinate.sh refuses where no Python runs, naming the Store alias, and grows nothing",
           r.returncode != 0 and 'python3: is the Microsoft Store alias' in r.stderr and not os.path.exists(_gt),
           r.stdout + r.stderr)

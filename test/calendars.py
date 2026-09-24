@@ -205,7 +205,7 @@ check("every way of saying where BY IDENTIFIER resolves through coordinates, and
 
 # ---------------------------------------------------------------- the gate: one set of digits, and an example in its own form
 def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 T = tempfile.mkdtemp(prefix="dmcal-"); G = os.path.join(T, "g")
 r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 STD = os.path.join(G, "seed", "std-vocab.md"); ORIG = open(STD).read()

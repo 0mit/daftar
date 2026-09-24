@@ -55,7 +55,7 @@ def _product():
         return f"{_g['garden']} (daftar {_g['daftar_release']}" + ''.join(', ' + w for w in _who + ([f"garden {_gid}"] if _gid else [])) + ")"
     try:
         v = subprocess.run(['git', '-C', ROOT, 'describe', '--tags', '--always', '--dirty'],
-                           capture_output=True, text=True, timeout=5).stdout.strip()
+                           capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=5).stdout.strip()
         return f"daftar {v}" if v else "daftar (untagged)"
     except Exception:
         return "daftar (untagged)"
@@ -3218,9 +3218,14 @@ def build_staged_constants():
 # A gate that cannot verify must REFUSE. That is not a new rule — it is what `law_carrier` already says
 # about the vocabulary, applied to the transport the other half of the law arrives on.
 def _git(*args):
-    """Run git in ROOT. Returns (stdout, None) on success, (None, why) when the question went unanswered."""
+    """Run git in ROOT. Returns (stdout, None) on success, (None, why) when the question went unanswered.
+
+    Read as UTF-8, a byte that is not replaced rather than fatal. Strict, a staged blob that is not UTF-8 failed inside
+    subprocess's reader thread on Windows — a traceback above the verdict, and the blob read as absent, so unchecked.
+    Replaced, it is still judged: a UTF-16 blob has no fences and is refused as a destroyed document."""
     try:
-        r = subprocess.run(['git', '-C', ROOT, *args], capture_output=True, text=True, timeout=5)
+        r = subprocess.run(['git', '-C', ROOT, *args], capture_output=True, text=True, encoding='utf-8',
+                           errors='replace', timeout=5)
     except Exception as e:                    # git absent, or it hung — still an unanswered question
         return None, f"{e.__class__.__name__}: {e}"
     if r.returncode != 0:

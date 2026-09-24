@@ -17,7 +17,7 @@ def check(name, cond, detail=""):
         FAILS.append(name)
 
 def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 
 T = tempfile.mkdtemp(prefix="dmreform-")
 G = os.path.join(T, "g")

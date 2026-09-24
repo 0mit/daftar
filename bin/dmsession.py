@@ -43,7 +43,7 @@ def _main_working_copy():
     """
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     out = subprocess.run(('git', 'worktree', 'list', '--porcelain'),
-                         cwd=here, capture_output=True, text=True)
+                         cwd=here, capture_output=True, text=True, encoding='utf-8')
     for line in out.stdout.splitlines():
         if line.startswith('worktree '):
             return line[len('worktree '):]
@@ -77,7 +77,7 @@ def git(*args, cwd=ROOT, check=True):
     told a command failed and not one word about what, where, or that their main working copy was now
     sitting mid-merge. Measured 2026-08-08 in a sandbox; the empty line is the whole reason `close`
     was undiagnosable."""
-    r = subprocess.run(('git',) + args, cwd=cwd, capture_output=True, text=True)
+    r = subprocess.run(('git',) + args, cwd=cwd, capture_output=True, text=True, encoding='utf-8')
     if check and r.returncode:
         detail = '\n'.join(s.strip() for s in (r.stdout, r.stderr) if s.strip())
         sys.exit(f"git {' '.join(args)} failed:\n{detail or '(git said nothing on either stream)'}")
@@ -266,7 +266,8 @@ def cmd_close(a):
                  f"  cd {shown(ROOT)}\n"
                  f"  {PY} bin/dmsession.py close {a.slug}")
     # THIS interpreter runs the session's gate: `python3` may be no Python at all on Windows (the Store's alias)
-    r = subprocess.run([sys.executable, os.path.join('bin', 'dmcheck.py')], cwd=path, capture_output=True, text=True)
+    r = subprocess.run([sys.executable, os.path.join('bin', 'dmcheck.py')], cwd=path, capture_output=True, text=True,
+                       encoding='utf-8', errors='replace')
     print(r.stdout.strip())
     if r.returncode:
         sys.exit("REFUSING to close: the session's own gate does not pass. Fix it in the worktree first.")
@@ -274,15 +275,15 @@ def cmd_close(a):
         sys.exit("REFUSING to close: the worktree has uncommitted changes. A session closes on a commit, "
                  "not on a working tree — otherwise what merges back is whatever happened to be saved.")
     m = subprocess.run(('git', 'merge', '--no-ff', branch, '-m', f'close session {a.slug}'),
-                       cwd=ROOT, capture_output=True, text=True)
+                       cwd=ROOT, capture_output=True, text=True, encoding='utf-8', errors='replace')
     if m.returncode:
         # NOT AUTO-ABORTED, deliberately. The merge state IS the information — both sides sit in the
         # index and `git status` names every unresolved file — and MERGE.md §10's principle is lossless
         # capture first, human choice after. Aborting would make that choice for them and hand back a
         # clean tree that says nothing about what disagreed. What was missing was never the abort; it
         # was being TOLD. So: say what happened, name the files, print both ways out, and stop.
-        conflicted = subprocess.run(('git', 'diff', '--name-only', '--diff-filter=U'),
-                                    cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        conflicted = subprocess.run(('git', 'diff', '--name-only', '--diff-filter=U'), cwd=ROOT, capture_output=True,
+                                    text=True, encoding='utf-8', errors='replace').stdout.strip()
         said = '\n'.join(s.strip() for s in (m.stdout, m.stderr) if s.strip())
         sys.exit(f"MERGE DID NOT COMPLETE — {branch} is NOT closed and NOTHING IS LOST.\n"
                  f"{said}\n\n"

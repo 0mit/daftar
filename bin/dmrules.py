@@ -30,7 +30,7 @@ def _product():
     try:
         import subprocess as _sp
         v = _sp.run(['git', '-C', ROOT, 'describe', '--tags', '--always', '--dirty'],
-                    capture_output=True, text=True, timeout=5).stdout.strip()
+                    capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=5).stdout.strip()
         return f"daftar {v}" if v else "daftar (untagged)"
     except Exception:
         return "daftar (untagged)"

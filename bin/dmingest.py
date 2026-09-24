@@ -41,7 +41,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def git(*args, check=True):
-    r = subprocess.run(['git', '-C', ROOT, *args], capture_output=True, text=True)
+    r = subprocess.run(['git', '-C', ROOT, *args], capture_output=True, text=True, encoding='utf-8')
     if check and r.returncode != 0:
         sys.exit(f"dmingest: git {' '.join(args)} failed — {r.stderr.strip()}")
     return r
@@ -141,7 +141,7 @@ def main():
     # THE GATE, UNCHANGED. Not imported, not reimplemented, not passed an event — invoked as a program
     # against a garden, exactly as the pre-commit hook invokes it.
     gate = subprocess.run([sys.executable, os.path.join(ROOT, 'bin', 'dmcheck.py')],
-                          capture_output=True, text=True, cwd=ROOT)
+                          capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=ROOT)
     print(gate.stdout.rstrip())
     if gate.stderr.strip():
         print(gate.stderr.rstrip(), file=sys.stderr)

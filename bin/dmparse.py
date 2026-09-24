@@ -17,6 +17,11 @@ import os, sys
 # THE TOOLS SPEAK UTF-8 ON EVERY PLATFORM. On Windows a Python whose output goes to a pipe — which is how an agent runs a
 # tool — encodes in the ANSI code page, and the first `—` or Persian letter in a finding ends the run in a traceback.
 # Every tool imports this module, so it is set once here, and only where the stream is not UTF-8 already.
+# ...AND READ UTF-8. git, and a tool run as a child, print UTF-8, and a Python before 3.15 (PEP 686) decodes a child's
+# output in that same code page: a Persian gardener's bean read back from git failed in subprocess's reader thread. So
+# every subprocess call that reads text names `encoding='utf-8'` — with `errors='replace'` where the tool shows, scans
+# or judges what it read, strict where it acts on it as a path or writes it back — and test/journal.py holds every
+# call to it.
 for _s in (sys.stdout, sys.stderr):
     try:
         if _s is not None and (getattr(_s, 'encoding', '') or '').lower().replace('-', '') != 'utf8':
@@ -178,10 +183,10 @@ def garden_id(root):
     import subprocess
     try:
         r = subprocess.run(['git', '-C', root, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD'],
-                           capture_output=True, text=True, timeout=5)
+                           capture_output=True, text=True, encoding='utf-8', timeout=5)
         roots = r.stdout.split()
         shallow = subprocess.run(['git', '-C', root, 'rev-parse', '--is-shallow-repository'],
-                                 capture_output=True, text=True, timeout=5).stdout.strip()
+                                 capture_output=True, text=True, encoding='utf-8', timeout=5).stdout.strip()
         return roots[-1][:12] if r.returncode == 0 and roots and shallow != 'true' else None
     except Exception:
         return None

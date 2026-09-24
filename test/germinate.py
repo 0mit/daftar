@@ -14,6 +14,8 @@ It asserts BOTH directions, because a garden that accepts everything passes a po
   -  an undeclared genos is refused                     (this is what promoting gene to Tier-0 bought)
   -  a nature contradicting its genos is refused
   -  a bean in the words the law retired at 22.0 is refused, naming where each went
+  -  on a machine that is not UTF-8, a Persian gardener's bean staged broken is still refused, with no traceback:
+     the staged blobs are read as UTF-8, never in the machine's code page
   -  the law removed is an ERROR, not a warning         (there is no fallback)
   -  a pin disagreeing with the vocabulary is an ERROR, not a warning
 
@@ -36,7 +38,7 @@ def check(name, ok, detail=''):
 
 
 def run(*a, cwd):
-    return subprocess.run(a, capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(a, capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=cwd)
 
 
 def gate(cwd):
@@ -217,7 +219,8 @@ with open(_gcfg, 'w', newline='\n') as _fh:
     _fh.write('[core]\n\thooksPath = %s\n' % _hooks.replace('\\', '/'))
 _ft = os.path.join(TMP, 'garden-fails')
 _fr = subprocess.run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), _ft, '--gardener', 'sam'],
-                     capture_output=True, text=True, cwd=TMP, env=dict(os.environ, GIT_CONFIG_GLOBAL=_gcfg))
+                     capture_output=True, text=True,
+                     encoding='utf-8', errors='replace', cwd=TMP, env=dict(os.environ, GIT_CONFIG_GLOBAL=_gcfg))
 check("a first commit git refuses leaves nothing behind: germinate removes the directory it made, and says so",
       _fr.returncode != 0 and 'refused by a hook' in _fr.stderr and not os.path.exists(_ft)
       and 'nothing is left behind' in _fr.stderr, (_fr.returncode, _fr.stderr[-400:]))
@@ -608,6 +611,55 @@ rc, out = mutate(BEAN.format(nature='living').replace('genos: person', 'kind: pe
 check("a bean still in 21.0's words — `kind`, `living`, `love` — is refused, each naming its Greek word, never read",
       rc != 0 and "missing 'genos'" in out and "'kind' is one the law retired on a bean" in out and 'retired: `genos`' in out
       and 'retired: `empsychon`' in out, out.strip()[-600:])
+
+# ---- ON A MACHINE THAT IS NOT UTF-8, the gate reads the staged blobs as UTF-8 all the same ------------------------
+# git writes UTF-8, and a Python before 3.15 (PEP 686) decodes a child's output in the machine's code page. On Windows
+# a gardener named in Persian made the gate print a reader thread's UnicodeDecodeError above its verdict, and the
+# staged bean it failed to read went unchecked, as a blob absent from the index. LC_ALL=C with UTF-8 mode off stands in
+# for that machine on every platform (its locale is ASCII; on Windows, PYTHONUTF8=0 leaves the ANSI code page). The
+# garden grows as usual; only the gate runs there. Each staged bean below differs from the working tree's, so what is
+# refused was read from the index — nowhere else.
+_fa = os.path.join(TMP, 'garden-fa')
+run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), _fa, '--gardener', 'sam', '--gardener-name', 'سام',
+    cwd=TMP)
+_NU = {k: v for k, v in os.environ.items() if k not in ('PYTHONUTF8', 'PYTHONIOENCODING')}
+_NU.update(LC_ALL='C', LANG='C', PYTHONUTF8='0')
+_enc = subprocess.run([sys.executable, '-c', 'import locale; print(locale.getpreferredencoding(False))'],
+                      capture_output=True, text=True, encoding='utf-8', errors='replace', env=_NU).stdout.strip()
+
+
+def _gate_nu():
+    _g = subprocess.run([sys.executable, os.path.join(_fa, 'bin', 'dmcheck.py')], capture_output=True, text=True,
+                        encoding='utf-8', errors='replace', cwd=_fa, env=_NU)
+    return _g.returncode, _g.stdout + _g.stderr
+
+
+_sb = os.path.join(_fa, 'beans', 'sam.md')
+with open(_sb, 'a', encoding='utf-8', newline='\n') as _fh:
+    _fh.write('سام keeps it in Persian too.\n')
+run(sys.executable, os.path.join(_fa, 'bin', 'dmjournal.py'), 'agent', 'a Persian line',
+    '--body', '- action: added a line in Persian to [[sam]].', cwd=_fa)
+run('git', 'add', '-A', cwd=_fa)
+rc, out = _gate_nu()
+check(f"on a machine whose locale reads a child's output as {_enc}, a staged Persian bean passes the gate: exit 0, "
+      "no traceback", rc == 0 and ' 0 error(s)' in out and 'Traceback' not in out and 'UnicodeDecodeError' not in out,
+      out.strip()[-600:])
+_whole = open(_sb, 'rb').read()
+_fm = re.match(rb'(?s)---\r?\n.*?\n---\r?\n', _whole).group(0)
+for _staged, _says, _what in ((_fm, 'NO human body', 'its body emptied'),
+                              (_whole.decode('utf-8').encode('utf-16'), 'destroyed document',
+                               "in UTF-16 (what Windows PowerShell 5.1's `>` writes)")):
+    open(_sb, 'wb').write(_staged)
+    run('git', 'add', 'beans/sam.md', cwd=_fa)
+    open(_sb, 'wb').write(_whole)                     # the working tree whole again: only the index holds the fault
+    rc, out = _gate_nu()
+    check(f"...and the same bean staged {_what} is refused, read from the index, with no traceback",
+          rc != 0 and _says in out and 'beans/sam.md' in out
+          and 'Traceback' not in out and 'UnicodeDecodeError' not in out,
+          out.strip()[-600:])
+if _enc.lower().replace('-', '') in ('utf8', ''):
+    print(f"NOTE: here even LC_ALL=C and PYTHONUTF8=0 read a child's output as UTF-8 ({_enc or 'nothing'}), so the "
+          f"three checks above could not meet a code page on this machine")
 
 # ---- NEGATIVE: the law itself ------------------------------------------------------------------------
 law = os.path.join(G, 'seed', 'std-vocab.md')

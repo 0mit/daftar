@@ -38,7 +38,7 @@ def check(name, ok, detail=''):
 
 
 def git(*a, cwd):
-    return subprocess.run(('git',) + a, capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(('git',) + a, capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=cwd)
 
 
 def commit(cwd, who, msg):
@@ -80,7 +80,7 @@ TMP = tempfile.mkdtemp(prefix='dmconv-')
 ORIGIN = os.path.join(TMP, 'origin')
 
 r = subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), ORIGIN, '--gardener', 'keeper'],
-                   capture_output=True, text=True, cwd=ROOT)
+                   capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=ROOT)
 check("an origin garden germinates from the seed", r.returncode == 0, (r.stdout + r.stderr)[-300:])
 check("...and it dispatches bean merges to the semantic driver, journal merges to union",
       'daftar' in git('check-attr', 'merge', '--', 'beans/x.md', cwd=ORIGIN).stdout
@@ -112,7 +112,7 @@ edit(os.path.join(TMP, 'site-c'), lambda t: t.replace('roles: [relay]', 'roles: 
 commit(os.path.join(TMP, 'site-c'), 'site-c', 'recorded site Site C DC and forbade open-relay')
 
 gates = {g: subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True,
-                           cwd=os.path.join(TMP, g)) for g in GARDENS}
+                           encoding='utf-8', errors='replace', cwd=os.path.join(TMP, g)) for g in GARDENS}
 check("each garden passes its OWN gate after its own migration",
       all(r.returncode == 0 for r in gates.values()),
       '; '.join(f"{g}: {r.stdout.strip()[-90:]}" for g, r in gates.items() if r.returncode))
@@ -173,7 +173,8 @@ jr = open(os.path.join(REMOTE, 'log', 'journal.md'), encoding='utf-8').read()
 check("every garden's journal entry survives — the log merges by union, losing none",
       all(g in jr for g in GARDENS) and 'origin' in jr)
 
-g = subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True, cwd=REMOTE)
+g = subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True,
+                   encoding='utf-8', errors='replace', cwd=REMOTE)
 check("the converged garden passes its gate", g.returncode == 0, g.stdout.strip()[-200:])
 check("...and the gate WARNS about the unresolved conflict rather than staying silent (MERGE.md §10)",
       'left UNCLEAN by a semantic merge' in g.stdout, g.stdout.strip()[-200:])
@@ -204,7 +205,8 @@ open(os.path.join(_one, 'beans', 'box.md'), 'w').write(
     '    - { key: serial, value: "sn-0042", class: hardware, establishing: true }\n'
     'provenance: { src: observed, by: "test", as_of: 2026-09-17 }\n'
     'owned_by: { legal: { external: "someone" } }\nresponsibility: { legal: { external: "someone" } }\n---\nA box.\n')
-_g = subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True, cwd=_one).stdout
+_g = subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True,
+                    encoding='utf-8', errors='replace', cwd=_one).stdout
 check("one bean carrying both spellings is not reported as a duplicate of ITSELF (the lowercase one still warns)",
       'same object in one garden' not in _g and "is compared as 'SN-0042'" in _g, _g.strip()[-300:])
 
@@ -398,7 +400,7 @@ _bad = []
 for _n, (_line, _said) in enumerate(_SHAPES.items()):
     _other = _with_vocab(_one, os.path.join(TMP, f'law-{_n}'), _line)
     _r = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '.', _other], capture_output=True,
-                        text=True, cwd=_one)
+                        text=True, encoding='utf-8', errors='replace', cwd=_one)
     if not (_r.returncode == 1 and 'Traceback' not in _r.stderr and "MERGE REFUSED — a garden's law cannot be read" in _r.stderr
             and f"law-{_n}: VOCAB.md {_said}" in _r.stderr):
         _bad.append((_line, _r.returncode, _r.stderr[-400:]))
@@ -408,16 +410,17 @@ check(f"another garden's VOCAB.md in {len(_SHAPES)} shapes the merge cannot read
       "stops before any bean: never a traceback, never passed in silence", not _bad, _bad)
 _own = _with_vocab(_one, os.path.join(TMP, 'law-own'), 'local_terms: [ { term: x, merge: 5 } ]')
 _r = subprocess.run([sys.executable, os.path.join(_own, 'bin', 'dmmerge.py'), '.', _one], capture_output=True, text=True,
-                    cwd=_own)
+                    encoding='utf-8', errors='replace', cwd=_own)
 _d = subprocess.run([sys.executable, os.path.join(_own, 'bin', 'dmmerge.py'), '--file', *(
-    [os.path.join(_own, 'beans', 'box.md')] * 3)], capture_output=True, text=True, cwd=_own)
+    [os.path.join(_own, 'beans', 'box.md')] * 3)], capture_output=True, text=True,
+                    encoding='utf-8', errors='replace', cwd=_own)
 check("...and this garden's OWN law the same, where the merge reads its terms by it: named, never a traceback at import "
       "— in the report and in the git merge driver alike, which leaves the file untouched",
       _r.returncode == 1 and "this garden's own law" in _r.stderr and 'local_terms[0].merge should be a mapping' in _r.stderr
       and _d.returncode == 1 and 'Traceback' not in _r.stderr + _d.stderr and 'cannot read as law' in _d.stderr,
       _r.stderr[-400:] + _d.stderr[-400:])
 _ok = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '.', _with_vocab(_one, os.path.join(TMP, 'law-ok'), 'local_terms: []')],
-                     capture_output=True, text=True, cwd=_one)
+                     capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=_one)
 check("...while a law it can read merges as before", 'cannot be read' not in _ok.stderr and 'Traceback' not in _ok.stderr
       and 'fingerprint:' in _ok.stdout, _ok.stderr[-400:])
 
