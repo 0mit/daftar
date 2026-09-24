@@ -59,7 +59,7 @@ python bin\dmcheck.py --all</code></pre><!-- /daftar:doc --></div>
 
 <h2>An upgrade that names the gardener</h2>
 <div class="prose"><!-- daftar:doc id="install-upgrade-ps" --><p>An upgrade that names the gardener through the environment clears it again at the end, because a PowerShell session keeps what <code>$env:</code> sets, and the next garden upgraded in it would take the same gardener without being asked:</p>
-<pre class="doc" tabindex="0" aria-label="INSTALL.md: On Windows"><code>$env:DAFTAR_GARDENER = "sam"; python bin\dmupgrade.py &lt;tag&gt;; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME, Env:DAFTAR_GARDENER_KIND -ErrorAction SilentlyContinue</code></pre><!-- /daftar:doc --></div>
+<pre class="doc" tabindex="0" aria-label="INSTALL.md: On Windows"><code>$env:DAFTAR_GARDENER = "sam"; python bin\dmupgrade.py &lt;tag&gt;; Remove-Item Env:DAFTAR_GARDENER, Env:DAFTAR_GARDENER_NAME, Env:DAFTAR_GARDENER_GENOS, Env:DAFTAR_GARDENER_KIND -ErrorAction SilentlyContinue</code></pre><!-- /daftar:doc --></div>
 
 <div class="prose"><!-- daftar:doc id="install-line-ends" --><p><strong>Line ends.</strong> Git for Windows checks text out with CRLF by default, and a git hook with a CR in it does not run. The garden's <code>.gitattributes</code> keeps its shell files LF, and <code>bin/install.py</code> installs the hooks with LF whatever the checkout did — so after any checkout, <code>python bin\install.py</code> puts working hooks in place.</p><!-- /daftar:doc --></div>
 
@@ -78,7 +78,7 @@ python bin\dmcheck.py --all</code></pre><!-- /daftar:doc --></div>
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
   <div>
-    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
+    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="../machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.33.1</code>.</p>
     <p>Apache-2.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
   </div>
 </footer><!-- /daftar:part -->

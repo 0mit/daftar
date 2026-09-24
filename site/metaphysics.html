@@ -49,7 +49,7 @@
 </nav>
 
 <figure class="drawing frontispiece" id="fig-above-and-beneath"><!-- daftar:svg id="above-and-beneath" --><svg class="d" viewBox="0 0 400 560" role="img" aria-labelledby="above-and-beneath-t above-and-beneath-d" xmlns="http://www.w3.org/2000/svg">
-<title id="above-and-beneath-t">Above and beneath</title><desc id="above-and-beneath-d">Above the ground, ownership rises through each garden to the crown, theos, where every chain ends: in garden-sam the NAS and the website are owned by sam, and sam, a person, by the crown&#x27;s branch agape; in garden-ali, ali by agape too. Beneath the ground the two gardens meet through the mycelium, dashed threads that carry only a proposal between them. Under everything is the earth: the language both gardens pin.</desc>
+<title id="above-and-beneath-t">Above and beneath</title><desc id="above-and-beneath-d">Above the ground, ownership rises through each garden to the crown, theos (Greek for god), where every chain ends, through its three branches: physis (nature) for bodies, logos (the word) for what is said and agreed, and agape (love that does not possess) for the living. In garden-sam the NAS and the website are owned by sam, and sam, a person, by the crown&#x27;s branch agape; in garden-ali, ali by agape too. Beneath the ground the two gardens meet through the mycelium, dashed threads that carry only a proposal between them. Under everything is the earth: the language both gardens pin.</desc>
 <defs><marker id="above-and-beneath-ah" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="above-and-beneath-ah-accent" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah-accent" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="above-and-beneath-ah-s" viewBox="0 0 7 6" refX="0.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M7,0 L0,3 L7,6 Z"/></marker><pattern id="above-and-beneath-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(135)"><rect class="h0" width="8" height="8"/><rect class="h1" width="3" height="8"/></pattern></defs>
 <g class="band"><rect class="b" x="8" y="10" width="384" height="84" rx="6"/><text class="cap" x="18" y="26">THE CROWN, THEOS — WHERE EVERY CHAIN ENDS</text></g>
 <g class="node soma"><rect class="box" x="20" y="38" width="112" height="42" rx="7"/><rect class="bar" x="20" y="38" width="5" height="42" rx="2"/><text class="t" x="34" y="63.5">physis</text></g>
@@ -78,7 +78,8 @@
 <g class="flow sig"><path class="l" d="M278,452 L270,452" marker-end="url(#above-and-beneath-ah)"/></g>
 <g class="band earth"><rect class="b" x="8" y="510" width="384" height="40" rx="6"/><text class="cap" x="18" y="534">THE EARTH — THE LANGUAGE BOTH PIN: STD-VOCAB@22.0</text></g>
 </svg><!-- /daftar:svg --><figcaption>Above
-  the ground, ownership rises through each garden to the crown. Beneath it, gardens meet through the mycelium, in the earth of
+  the ground, ownership rises through each garden to the crown, in the branch each being's nature routes to — the words are
+  given in <a href="#words">section 1</a>. Beneath it, gardens meet through the mycelium, in the earth of
   the language they share; only a proposal crosses.</figcaption></figure>
 
 <section aria-labelledby="words">
@@ -219,7 +220,7 @@ dmsafe: removed nothing; added ['owned_by.legal.owner.bean']
 ERROR ali: owned_by[legal] must use the 'crown' form
       — genos 'person' pins owned_by.ownership_form to it (VOCAB gene.person.ownership_form). A genos:person bean states its own: owned_by: { legal: { crown: agape } }
 
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">8d48e6b4669f</span>): 12 docs, 1 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">e3b0cd6eb9ba</span>): 12 docs, 1 error(s), 0 warning(s)
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
   <p class="note">The reason, in full: <code>python3 bin/dmwhy.py crown</code>.</p>
 </section>
@@ -304,7 +305,7 @@ PASS every ownership chain that is owed terminates at the crown or outside — n
     (<a href="use-cases/two-gardens-meet.html">the whole exchange</a>):</p>
   <!-- daftar:out id="gardens-read-2" match="^UNDER|^  NOTE" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py read ../PROPOSAL-garden-sam-20261027-0900.md"><code><span class="cmd">~/garden-ali$ python3 bin/dmpropose.py read ../PROPOSAL-garden-sam-20261027-0900.md</span>
 <span class="el" title="lines left out">…</span>
-UNDER <span class="v" data-v="id" title="differs in every build: a garden id">8d48e6b4669f</span>/contract:shared-camera: carried in this proposal. Taking it records what garden-sam offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
+UNDER <span class="v" data-v="id" title="differs in every build: a garden id">e3b0cd6eb9ba</span>/contract:shared-camera: carried in this proposal. Taking it records what garden-sam offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
   NOTE it says ali accepted (2026-09-10) — that is garden-sam's record; ali's own acceptance is written here, by them
 <span class="el" title="lines left out">…</span></code></pre><!-- /daftar:out -->
   <p class="note">The reason, in full: <code>python3 bin/dmwhy.py 'doc:MODEL.md#Between gardens: the mycelium'</code>.</p>
@@ -409,7 +410,7 @@ dmsafe: removed nothing; added ['renewal_note']
 ERROR vps-a: top-level key 'renewal_note' is declared by no vocabulary term. A fact that fits no term belongs in details: (ground rule 2); a new KIND of fact is a vocabulary proposal
       — park it in log/pending.md
 
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">8d48e6b4669f</span>): 12 docs, 1 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">e3b0cd6eb9ba</span>): 12 docs, 1 error(s), 0 warning(s)
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
   <p class="note">The rule, in full: <a href="https://github.com/0mit/daftar/blob/v0.34.0/MODEL.md#ground-rules">MODEL.md, ground rule 2</a>; and <code>python3 bin/dmwhy.py retired</code> — what the law took back, and why.</p>
 </section>
@@ -542,7 +543,7 @@ dmreview --law: the preconditions of beauty in the law, counted — the person w
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
   <div>
-    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
+    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.33.1</code>.</p>
     <p>Apache-2.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
   </div>
 </footer><!-- /daftar:part -->

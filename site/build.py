@@ -871,10 +871,24 @@ class Pages:
                     return ' aria-current="true"'
                 return ''
             text = re.sub(r'\{cur:([a-z/-]+)\}', cur, text)
-            return text.replace('{root}', root).replace('{release}', self.release).replace('{day}', DEMO_SHOWN)
+            return (text.replace('{root}', root).replace('{release}', self.release).replace('{day}', DEMO_SHOWN)
+                    .replace('{except}', self.drawn_elsewhere(root)))
         if typ == 'drawn':
             return self.drawn(cid, page)
         raise Refused(f'{page}: marker type {typ!r} is not one this build knows')
+
+    def drawn_release(self):
+        """The daftar release that grew the garden the machinery was drawn from, where it is not this build's: the
+        drawing is kept from an earlier build unless --machinery draws it again."""
+        p = os.path.join(self.dst, 'machinery', 'drawn.json')
+        rel = json.load(open(p, encoding='utf-8')).get('daftar_release') if os.path.isfile(p) else None
+        return rel if rel and rel != self.release else None
+
+    def drawn_elsewhere(self, root):
+        """What the footer's claim does not cover: the machinery's drawing, when it was made under another release."""
+        rel = self.drawn_release()
+        return ('' if not rel else ' — except <a href="%smachinery.html#drawn">the machinery\'s drawing</a>, its commands and its '
+                'report, made from a garden grown by daftar <code>%s</code>' % (root, esc(rel)))
 
     def drawn(self, cid, page):
         self.used.add('drawn:' + cid)
@@ -922,10 +936,16 @@ class Pages:
             return ('<pre class="out" tabindex="0" aria-label="how the report was drawn"><code>%s</code></pre>'
                     % '\n'.join(parts))
         if cid == 'when':
+            other = self.drawn_release()
             return ('<p>Drawn by %s %s on %s, from a clone of garden-sam grown by daftar %s. Its garden ids are those of the '
-                    'build that drew it: each build of these pages grows the gardens again, with new ids.</p>'
+                    'build that drew it: each build of these pages grows the gardens again, with new ids.%s</p>'
                     % (esc(rec.get('tool', '')), esc(rec.get('tool_release', '')), esc(rec.get('drawn_at', '')),
-                       esc(rec.get('daftar_release', ''))))
+                       esc(rec.get('daftar_release', '')),
+                       '' if not other else
+                       (' That is not the release every other output on these pages comes from, daftar %s: the drawing, its '
+                        'commands and its report say what that garden said, in the words of the law daftar %s carried, and '
+                        'a word the law has renamed since is in them as it was. <code>python3 bin/dmwhy.py retired</code> '
+                        'lists what each old word became.' % (esc(self.release), esc(other)))))
         raise Refused(f'{page}: drawn:{cid} is not a part of the drawing this build knows')
 
     def page(self, rel):
