@@ -30,8 +30,38 @@
 
 <section class="hero" aria-labelledby="top">
   <span class="fa-mark" lang="fa" dir="rtl" aria-hidden="true">دفتر</span>
-  <h1 id="top">A notebook your agents keep, that you can read without them.</h1>
+  <h1 id="top">A notebook you and your agents keep — and you can read it without them.</h1>
   <div class="lede prose"><!-- daftar:doc id="readme-lede" --><p><em>Daftar</em> (<span lang="fa" dir="rtl">دفتر</span>) is the Persian word for a notebook. This one is kept for you by your AI agent, about the things you and it work on, and you can read it without the agent.</p><!-- /daftar:doc --></div>
+</section>
+
+<section aria-labelledby="example">
+  <h2 id="example">What it does, in one example</h2>
+  <ol class="talk">
+    <li class="person"><span class="who">You, to your agent</span>
+      <p>Ali and I bought a camera. She paid for it, ninety. I use it more, so we said I'd carry two thirds.</p></li>
+    <li class="agent"><span class="who">Your agent</span>
+      <p>Written down as one agreement: what was paid, by whom, who bears what — and that you said so, and when. The
+        notebook's check passed, and its journal says what I did and why.</p></li>
+    <li class="aside">Weeks later — another agent, of another make, with no memory of the first.</li>
+    <li class="person"><span class="who">You</span>
+      <p>What do I owe Ali, and how do we know?</p></li>
+    <li class="agent"><span class="who">The other agent</span>
+      <p>You owe Ali 60 — read just now from the agreement, not from a stored balance. You said so yourself: the
+        agreement records who said it and when, and the journal who wrote it down.</p></li>
+  </ol>
+  <p class="measure">Nothing was lost between the two sessions, nothing was invented, and you did not have to explain it
+    again. <a href="use-cases/money-between-two-people.html">The whole case</a>, with what the tools printed.</p>
+</section>
+
+<section aria-labelledby="who-writes">
+  <h2 id="who-writes">You talk; your agents keep it</h2>
+  <p class="measure">You never have to open the notebook. Your agents write in it, run its tools, and answer from it —
+    whichever agents you use, one after another or side by side. You can read every page of it yourself, and write in it
+    when you need to, by the same rules: the gate treats a person and an agent alike.</p>
+  <p class="measure">It is like the project files an AI app keeps for you, with three differences: every fact says who said
+    it and how they know; every change is written in a journal; and a gate refuses what breaks the rules. And it is
+    yours — plain text in a private git repository, on your own computer. It works offline, and a small model running
+    on an ordinary computer can keep it too.</p>
 </section>
 
 <section class="with-figure" aria-labelledby="rules">
@@ -81,7 +111,7 @@
       <p class="measure">Your own person bean is the first thing in it, and the gate's last line names you. This is the command
         it runs, and the lines that matter in what it prints:</p>
       <!-- daftar:out id="grow-sam" match="^garden-sam \(|^germinated:|Its gardener, sam, is planted" --><pre class="out" tabindex="0" aria-label="output of germinate.py ~/garden-sam --gardener sam --gardener-name &quot;Sam&quot;"><code><span class="cmd">~/daftar$ python3 seed/germinate.py ~/garden-sam --gardener sam --gardener-name "Sam"</span>
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">e3b0cd6eb9ba</span>): 1 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 1 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span>
 germinated: ~/garden-sam  (std-vocab@22.0, daftar v0.34.0)
 <span class="el" title="lines left out">…</span>
@@ -103,8 +133,9 @@ The garden passes its own gate. Its gardener, sam, is planted: the person who ke
 <section aria-labelledby="next">
   <h2 id="next">Where next</h2>
   <ul class="cards">
-    <li><div class="card"><h3><a href="use-cases/index.html">Use cases</a></h3><p>Nine situations — machines and a domain, a cost
-      shared, a loan, two notebooks meeting — with the beans that record them and what the tools print.</p></div></li>
+    <li><div class="card"><h3><a href="use-cases/index.html">Use cases</a></h3><p>Four situations — your machines, money
+      between two people, two notebooks meeting, several agents in one — each read four ways: what you say, what the
+      agent does underneath, what the tools print, and what is written.</p></div></li>
     <li><div class="card"><h3><a href="metaphysics.html">Metaphysics</a></h3><p>What a being is here, in the Greek words the law uses, and the
       design drawn: the crown above, the mycelium beneath, four layers, and why a judgment is its judge's.</p></div></li>
     <li><div class="card"><h3><a href="machinery.html">Machinery</a></h3><p>daftar's own mechanisms — the gate, the journal, the

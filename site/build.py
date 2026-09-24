@@ -481,7 +481,7 @@ def scenes(d):
     d.step = 'S3 another person'
     d.out('gardens-id-sam', SAM, 'python3 bin/dmpropose.py id')
     d.out('gardens-id-ali', ALI, 'python3 bin/dmpropose.py id')
-    recipe('Another person, and the garden she keeps')
+    recipe('Another person, and the garden she keeps', cid='person-commit')
     d.bean('sam/garden-ali', SAM, 'beans/garden-ali.md')
     d.bean('sam/ali', SAM, 'beans/ali.md')
     d.expect(AID in open(os.path.join(SAM, 'beans', 'garden-ali.md'), encoding='utf-8').read(),
@@ -490,7 +490,7 @@ def scenes(d):
 
     # S4 — a dinner --------------------------------------------------------------------------------------------------
     d.step = 'S4 a dinner'
-    recipe('A happening: an event')
+    recipe('A happening: an event', cid='event-commit')
     d.bean('dinner-at-sams', SAM, 'beans/dinner-at-sams.md')
     cal = d.out('event-cal', SAM, 'python3 bin/dmcal.py 2026-09-12')
     d.expect('persian' in cal, 'dmcal did not show the day in the Persian calendar')
@@ -498,7 +498,7 @@ def scenes(d):
 
     # S5 — a cost shared ---------------------------------------------------------------------------------------------
     d.step = 'S5 a cost shared'
-    recipe('Money between two people')
+    recipe('Money between two people', cid='money-commit')
     d.bean('shared-camera', SAM, 'beans/shared-camera.md')
     led = d.out('money-ledger', SAM, 'python3 bin/dmledger.py shared-camera')
     d.expect('sam owes ali 60 XTS' in led, 'dmledger did not say `sam owes ali 60 XTS`')
@@ -513,7 +513,7 @@ def scenes(d):
 
     # S6 — a loan ----------------------------------------------------------------------------------------------------
     d.step = 'S6 a loan'
-    recipe('An agreement paid in instalments')
+    recipe('An agreement paid in instalments', cid='loan-recipe-commit')
     d.bean('washer-loan', SAM, 'beans/washer-loan.md')
     l1 = d.out('loan-ledger-1', SAM, 'python3 bin/dmledger.py washer-loan')
     d.expect('ali owes sam 120 XTS' in l1 and 'next 2026-11-01 (in 5 days), occurrence 2 of 6' in l1,
@@ -542,7 +542,7 @@ def scenes(d):
 
     # S7 — a statement, and the refusals made in throwaway clones -----------------------------------------------------
     d.step = 'S7 a statement'
-    recipe('A statement: a document, and a capture of its lines')
+    recipe('A statement: a document, and a capture of its lines', cid='statement-commit')
     d.bean('card-statement-2026-09', SAM, 'beans/card-statement-2026-09.md')
     d.doc('cookbook-hash-commands', extract(clone, d.release, 'seed/COOKBOOK.md', 'A statement: a document, and a capture of its lines',
                                             [('para', r'^`content_hash` is')]))

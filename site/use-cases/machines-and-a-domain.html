@@ -35,7 +35,137 @@
   The domain's registration runs out on a date, and a tool reads that date before it does.</p>
 <p class="meta">garden-sam · daftar v0.34.0 · the day held at 2026-10-27</p>
 
-<h2>What the notebook records</h2>
+<div class="lenses">
+<!-- daftar:part id="lensbar" --><span id="all" class="lens-all"></span>
+<nav class="lensbar" aria-label="Read this case as">
+  <span class="lensbar-q">Read it as</span>
+  <a href="#orient" data-lens="orient"><b>The person</b><span>Orient · what you say, and read back</span></a>
+  <a href="#understand" data-lens="understand"><b>The curious</b><span>Understand · what the agent does underneath</span></a>
+  <a href="#operate" data-lens="operate"><b>The keeper</b><span>Operate · what the tools print</span></a>
+  <a href="#inspect" data-lens="inspect"><b>The auditor</b><span>Inspect · exactly what is written</span></a>
+  <a href="#all" data-lens="all" class="all"><b>All four</b></a>
+</nav><!-- /daftar:part -->
+
+<section class="lens" data-lens="orient" id="orient" aria-labelledby="h-orient">
+<h2 id="h-orient">What Sam says, and what he reads</h2>
+<p class="lens-for"><b>Orient — for the person.</b> Sam tells his agent what he runs, and asks to be warned in time.
+  The conversation is written for this page; everything the agent reports in it is what the tools print under
+  <a href="#operate">Operate</a>.</p>
+<ol class="talk">
+  <li class="person"><span class="who">Sam <span class="how">· typed</span></span>
+    <p>My website runs on the NAS at home, on example.org. I also rent a small server somewhere. Keep track of all
+      of it, and tell me before the domain runs out.</p></li>
+  <li class="agent asks"><span class="who">Sam's agent</span>
+    <p>Which web server runs the site on the NAS? And who is the domain registered with — do you know when it
+      expires, and whether it renews itself?</p></li>
+  <li class="person"><span class="who">Sam</span>
+    <p>nginx. Example Registrar; it runs to the middle of January, and auto-renew is on.</p></li>
+  <li class="agent"><span class="who">Sam's agent</span>
+    <p>Five pages, one for each thing: the domain, the NAS, the website that lives on it, nginx — software owned by its
+      own project, not by you — and the rented server. Each says who owns it, who answers for it, and that you are the
+      one who said so. The notebook's check passed each time.</p>
+    <p>One warning already: <strong>example.org's registration expires on 15 January 2027 — in 80 days.</strong>
+      Auto-renew is on, so this is a reminder, not an alarm; I will say it again whenever you ask what needs
+      attention.</p></li>
+  <li class="person"><span class="who">Sam</span>
+    <p>If I ever move the site off the NAS, what breaks?</p></li>
+  <li class="agent"><span class="who">Sam's agent</span>
+    <p>Before touching the website I look it up first: it lives in the NAS, and nothing is recorded that must be
+      attended to before it is touched. The NAS is where I would start.</p></li>
+</ol>
+</section>
+
+<section class="lens" data-lens="understand" id="understand" aria-labelledby="h-understand">
+<h2 id="h-understand">What the agent does underneath</h2>
+<p class="lens-for"><b>Understand — for the curious.</b> The notebook's own tools, called by the agent, one after
+  another. Each step in plain words first, then exactly, with what the tool printed.</p>
+<ol class="under">
+  <li class="writes"><h3><span class="tool">write</span> It writes one page for each thing</h3>
+    <p class="plain">The domain, the NAS, the website, nginx and the rented server are five files, each small enough to
+      read at a glance.</p>
+    <p class="exact"><b>Exactly:</b> <code>beans/example-org.md</code>, <code>nas.md</code>, <code>website.md</code>,
+      <code>nginx.md</code> and <code>vps-a.md</code>, in the shapes of the notebook's recipes, committed in four
+      steps. The website names the NAS it lives in. They are shown whole under <a href="#inspect">Inspect</a>.</p></li>
+  <li><h3><span class="tool">dmjournal</span> It says what it did</h3>
+    <p class="plain">Each change gets a line in the journal, naming the pages it touched.</p>
+<!-- daftar:out id="machines-commit" steps="1" --><pre class="out" tabindex="0" aria-label="output of dmjournal.py sam &quot;nginx, and the website it serves&quot; --body &quot;-…"><code><span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "nginx, and the website it serves" --body "- action: added [[nginx]] and [[website]], from the cookbook."</span>
+## 2026-10-27 09:00+00:00 · sam · nginx, and the website it serves</code></pre><!-- /daftar:out --></li>
+  <li><h3><span class="tool">git commit</span> It saves — and the gate checks first</h3>
+    <p class="plain">Saving runs the gate over the whole notebook. Here it also checks that every page says both who
+      owns it and who answers for it, and that every chain of ownership ends somewhere.</p>
+<!-- daftar:out id="machines-commit" steps="3" match="docs, \d+ error|ownership arcs|terminates at the crown|^fast:" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;nginx, and the website it serves&quot;"><code><span class="cmd">~/garden-sam$ git commit -qm "nginx, and the website it serves"</span>
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 5 docs, 0 error(s), 0 warning(s)
+<span class="el" title="lines left out">…</span>
+PASS every bean carries BOTH ownership arcs
+<span class="el" title="lines left out">…</span>
+PASS every ownership chain that is owed terminates at the crown or outside — none dangles or loops
+<span class="el" title="lines left out">…</span>
+fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out --></li>
+  <li><h3><span class="tool">dmcursor</span> Before touching a page, it asks what it stands on</h3>
+    <p class="plain">The agent looks a thing up before it changes it: what it lives in, what must be attended to.</p>
+<!-- daftar:out id="machines-cursor" head="2" --><pre class="out" tabindex="0" aria-label="output of dmcursor.py website"><code><span class="cmd">~/garden-sam$ python3 bin/dmcursor.py website</span>
+cursor -&gt; website   instance · empsychon · living in nas
+  website — nginx on the NAS, serving example.org
+<span class="el" title="lines left out">…</span></code></pre><!-- /daftar:out --></li>
+  <li><h3><span class="tool">dmstale</span> It reads what is running out</h3>
+    <p class="plain">Dates that matter — a registration, a certificate, a payment due — are read on every check, not
+      remembered.</p>
+<!-- daftar:out id="machines-stale" match="EXPIRING|^expiring:" --><pre class="out" tabindex="0" aria-label="output of dmstale.py"><code><span class="cmd">~/garden-sam$ python3 bin/dmstale.py</span>
+EXPIRING example-org.registration  expires 2027-01-15 (80 days)  auto_renew=enabled  registrar=Example Registrar Inc.  &lt;-- an unrenewed name takes its DNS and its mail with it
+<span class="el" title="lines left out">…</span>
+expiring: 0 ok, 1 within their horizon, 0 EXPIRED
+<span class="el" title="lines left out">…</span>
+<span class="exit">exit 1</span></code></pre><!-- /daftar:out --></li>
+</ol>
+</section>
+
+<section class="lens" data-lens="operate" id="operate" aria-labelledby="h-operate">
+<h2 id="h-operate">What the tools say</h2>
+<p class="lens-for"><b>Operate — for the keeper.</b> The same tools, whole: what anyone who keeps this notebook sees when they run them, and what they do when one refuses.</p>
+<p class="lead">Each recipe is committed with its journal entry. <code>git commit</code> runs the gate as a pre-commit hook, then
+  the corpus checks every garden's hook runs:</p>
+<!-- daftar:out id="machines-commit" match="^## |^garden-sam \(|^PASS every bean carries|^PASS every ownership chain|^fast:" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;nginx, and the website it serves&quot;"><code><span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "nginx, and the website it serves" --body "- action: added [[nginx]] and [[website]], from the cookbook."</span>
+## 2026-10-27 09:00+00:00 · sam · nginx, and the website it serves
+<span class="cmd">~/garden-sam$ git add -A</span>
+<span class="cmd">~/garden-sam$ git commit -qm "nginx, and the website it serves"</span>
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 5 docs, 0 error(s), 0 warning(s)
+<span class="el" title="lines left out">…</span>
+PASS every bean carries BOTH ownership arcs
+<span class="el" title="lines left out">…</span>
+PASS every ownership chain that is owed terminates at the crown or outside — none dangles or loops
+<span class="el" title="lines left out">…</span>
+fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
+<p class="lead">Before an agent touches the website, <code>dmcursor</code> says what it is and where it lives, and what must be
+  attended to first:</p>
+<!-- daftar:out id="machines-cursor" --><pre class="out" tabindex="0" aria-label="output of dmcursor.py website"><code><span class="cmd">~/garden-sam$ python3 bin/dmcursor.py website</span>
+cursor -&gt; website   instance · empsychon · living in nas
+  website — nginx on the NAS, serving example.org
+
+MEASURED  — what is already known, and whether it still holds
+  cache  none — this being has no recorded analysis; reading is unavoidable
+
+ATTENTION — required before touching it
+  none recorded on this being
+
+INHERITED — along every chain the vocabulary declares acyclic
+  nothing constraining inherited from any chain</code></pre><!-- /daftar:out -->
+<p class="lead"><code>dmstale</code> reads the registration's expiry date and warns inside 90 days. It exits 1 when something
+  needs action:</p>
+<!-- daftar:out id="machines-stale" --><pre class="out" tabindex="0" aria-label="output of dmstale.py"><code><span class="cmd">~/garden-sam$ python3 bin/dmstale.py</span>
+EXPIRING example-org.registration  expires 2027-01-15 (80 days)  auto_renew=enabled  registrar=Example Registrar Inc.  &lt;-- an unrenewed name takes its DNS and its mail with it
+
+expiring: 0 ok, 1 within their horizon, 0 EXPIRED
+
+analysis_cache: 0 fresh, 0 stale, 0 not on this host, 0 unknown
+<span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
+<p class="lead">The gate's last line names the garden, the release it runs, its gardener and its id:</p>
+<!-- daftar:out id="machines-check" --><pre class="out" tabindex="0" aria-label="output of dmcheck.py --all"><code><span class="cmd">~/garden-sam$ python3 bin/dmcheck.py --all</span>
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 6 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out -->
+</section>
+
+<section class="lens" data-lens="inspect" id="inspect" aria-labelledby="h-inspect">
+<h2 id="h-inspect">What the notebook records</h2>
+<p class="lens-for"><b>Inspect — for the auditor.</b> Exactly what was written, and why it is shaped so.</p>
 <p class="lead">Every bean says what sort of being it records, in two words the law takes from Greek. Its <code>nature</code>
   is one of three: <code>soma</code>, a body — a being with extension in space, as the NAS is; <code>lekton</code>, the sayable
   — a being that exists by being said and agreed, as a domain is, or a program's code; or <code>empsychon</code>, the ensouled
@@ -154,47 +284,8 @@ provides_habitat: linux-vm
 ---
 The rented server.</code></pre><!-- /daftar:bean -->
 </details>
-
-<h2>What the tools say</h2>
-<p class="lead">Each recipe is committed with its journal entry. <code>git commit</code> runs the gate as a pre-commit hook, then
-  the corpus checks every garden's hook runs:</p>
-<!-- daftar:out id="machines-commit" match="^## |^garden-sam \(|^PASS every bean carries|^PASS every ownership chain|^fast:" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;nginx, and the website it serves&quot;"><code><span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "nginx, and the website it serves" --body "- action: added [[nginx]] and [[website]], from the cookbook."</span>
-## 2026-10-27 09:00+00:00 · sam · nginx, and the website it serves
-<span class="cmd">~/garden-sam$ git add -A</span>
-<span class="cmd">~/garden-sam$ git commit -qm "nginx, and the website it serves"</span>
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">e3b0cd6eb9ba</span>): 5 docs, 0 error(s), 0 warning(s)
-<span class="el" title="lines left out">…</span>
-PASS every bean carries BOTH ownership arcs
-<span class="el" title="lines left out">…</span>
-PASS every ownership chain that is owed terminates at the crown or outside — none dangles or loops
-<span class="el" title="lines left out">…</span>
-fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
-<p class="lead">Before an agent touches the website, <code>dmcursor</code> says what it is and where it lives, and what must be
-  attended to first:</p>
-<!-- daftar:out id="machines-cursor" --><pre class="out" tabindex="0" aria-label="output of dmcursor.py website"><code><span class="cmd">~/garden-sam$ python3 bin/dmcursor.py website</span>
-cursor -&gt; website   instance · empsychon · living in nas
-  website — nginx on the NAS, serving example.org
-
-MEASURED  — what is already known, and whether it still holds
-  cache  none — this being has no recorded analysis; reading is unavoidable
-
-ATTENTION — required before touching it
-  none recorded on this being
-
-INHERITED — along every chain the vocabulary declares acyclic
-  nothing constraining inherited from any chain</code></pre><!-- /daftar:out -->
-<p class="lead"><code>dmstale</code> reads the registration's expiry date and warns inside 90 days. It exits 1 when something
-  needs action:</p>
-<!-- daftar:out id="machines-stale" --><pre class="out" tabindex="0" aria-label="output of dmstale.py"><code><span class="cmd">~/garden-sam$ python3 bin/dmstale.py</span>
-EXPIRING example-org.registration  expires 2027-01-15 (80 days)  auto_renew=enabled  registrar=Example Registrar Inc.  &lt;-- an unrenewed name takes its DNS and its mail with it
-
-expiring: 0 ok, 1 within their horizon, 0 EXPIRED
-
-analysis_cache: 0 fresh, 0 stale, 0 not on this host, 0 unknown
-<span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
-<p class="lead">The gate's last line names the garden, the release it runs, its gardener and its id:</p>
-<!-- daftar:out id="machines-check" --><pre class="out" tabindex="0" aria-label="output of dmcheck.py --all"><code><span class="cmd">~/garden-sam$ python3 bin/dmcheck.py --all</span>
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">e3b0cd6eb9ba</span>): 6 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out -->
+</section>
+</div>
 
 <h2>What it shows</h2>
 <ul class="prose">
@@ -221,7 +312,7 @@ garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" tit
 
 <p class="strip">Is your situation like this, but not quite?
   <a href="https://github.com/0mit/daftar/issues/new?template=use-case.yml&amp;related=machines-and-a-domain">Tell us how it differs</a>.</p>
-<nav class="pager" aria-label="cases"><span></span><a href="a-cost-shared.html">Next: A cost shared between two people →</a></nav>
+<nav class="pager" aria-label="cases"><span></span><a href="money-between-two-people.html">Next: Money between two people →</a></nav>
 
 </main>
 <!-- daftar:part id="foot" --><footer class="site">

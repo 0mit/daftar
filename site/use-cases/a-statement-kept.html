@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light dark">
+<meta http-equiv="refresh" content="0; url=money-between-two-people.html#op-the-statement">
+<link rel="canonical" href="money-between-two-people.html#op-the-statement">
 <title>A statement kept, its secret left out — daftar</title>
-<meta name="description" content="A card statement kept as a document identified by its SHA-256, its lines captured with the card number redacted, and the gate refusing a hash written in capitals.">
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
@@ -30,89 +31,7 @@
 
 <nav class="crumbs" aria-label="breadcrumb"><a href="index.html">Use cases</a> › A statement kept, its secret left out</nav>
 <h1>A statement kept, its secret left out</h1>
-<p class="lede">Sam paid for Ali's washing machine by card, and the bank's statement shows it. The statement is a document: its
-  identity is its content, so a changed byte is another document. Its lines are the bank's truth, kept as a dated copy, with
-  the card number left out and the reason for leaving it out written down.</p>
-<p class="meta">garden-sam · daftar v0.34.0 · the day held at 2026-10-27</p>
-
-<h2>What the notebook records</h2>
-<p class="lead">The bank wrote the statement, so the bank owns it; Sam holds the copy, and <code>located_at</code> says where it
-  is. <code>content_hash</code> is the SHA-256 of the file's bytes. The lines are a <code>capture</code>: never authoritative,
-  keyed by what would make it stale, and carrying no secret — <code>redactions</code> says what was left out, and why.
-  <code>taken_at</code> is the moment it was taken, in milliseconds.</p>
-<!-- daftar:bean id="card-statement-2026-09" --><pre class="file" tabindex="0" aria-label="beans/card-statement-2026-09.md"><span class="path">beans/card-statement-2026-09.md</span><code>---
-bean: card-statement-2026-09
-genos: document
-title: "card-statement-2026-09 — Sam's card statement for September 2026"
-status: active
-summary: "The statement Sam's bank issued for the card that paid for the washing machine, kept as a PDF."
-nature: lekton
-identity:
-  status: confirmed
-  anchors:
-    - { key: content_hash, value: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", class: logical, establishing: true }
-provenance: { src: observed, by: "sam", as_of: 2026-10-02 }
-owned_by: { legal: { external: "the bank that issued the card, which wrote the statement" } }
-responsibility: { legal: { holder: { bean: sam } } }
-located_at:
-  - { system: unix-filesystem, openness: here, at: "laptop:/home/user/documents/card-statement-2026-09.pdf", observed: 2026-10-02 }
-capture:
-  lines:
-    of: "the statement's transaction lines for September 2026"
-    owned_by_them: "the bank that issued the card"
-    source: "read by hand from the PDF, page 1"
-    taken_at: 1790928000000
-    staleness_key: "the statement's content_hash: a changed byte is another statement"
-    redactions: "the card number, all but its last four digits — a card number is a secret"
-    holds: "2026-09-13 · appliance shop · 120.00 XTS · card ending 4242"
----
-The card statement.</code></pre><!-- /daftar:bean -->
-
-<h2>What the tools say</h2>
-<p class="lead">The cookbook gives the command that prints the hash on each system:</p>
-<div class="prose"><!-- daftar:doc id="cookbook-hash-commands" --><p><code>content_hash</code> is <code>sha256:</code> and the file's SHA-256 in lowercase hexadecimal: <code>sha256sum &lt;file&gt;</code> prints it on Linux, <code>shasum -a 256 &lt;file&gt;</code> on macOS, and in PowerShell <code>"sha256:" + (Get-FileHash -Algorithm SHA256 &lt;file&gt;).Hash.ToLower()</code> — <code>Get-FileHash</code> prints capitals, and the gate refuses them.</p><!-- /daftar:doc --></div>
-<p class="lead">In a throwaway clone of the garden, the build writes the hash in capitals, as <code>Get-FileHash</code> prints it,
-  in a block for <code>dmsafe</code>:</p>
-<!-- daftar:file id="anchor-capitals" --><pre class="file" tabindex="0" aria-label="input: anchor.yaml"><span class="path">input: anchor.yaml</span><code>identity:
-  status: confirmed
-  anchors:
-    - { key: content_hash, value: "sha256:9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08", class: logical, establishing: true }</code></pre><!-- /daftar:file -->
-<p class="lead"><code>dmsafe</code> finds nothing lost — the value changed, and no leaf path went — and the gate refuses the
-  commit:</p>
-<!-- daftar:out id="statement-refused" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;the statement hash, as Get-FileHash prints it&quot;"><code><span class="cmd">~/garden-sam-scratch$ python3 bin/dmsafe.py replace-block beans/card-statement-2026-09.md identity --block ../anchor.yaml</span>
-dmsafe: removed nothing; added nothing
-<span class="cmd">~/garden-sam-scratch$ python3 bin/dmjournal.py sam "the statement hash, as Get-FileHash prints it" --body "- action: [[card-statement-2026-09]] content_hash in capitals."</span>
-## 2026-10-27 09:00+00:00 · sam · the statement hash, as Get-FileHash prints it
-<span class="cmd">~/garden-sam-scratch$ git add -A</span>
-<span class="cmd">~/garden-sam-scratch$ git commit -qm "the statement hash, as Get-FileHash prints it"</span>
-ERROR card-statement-2026-09: anchor content_hash='sha256:9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08' is not in canonical form (`sha256:` and sixty-four lowercase hexadecimal digits) (VOCAB content_hash.schema.value_pattern)
-
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">e3b0cd6eb9ba</span>): 12 docs, 1 error(s), 0 warning(s)
-<span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
-
-<h2>What it shows</h2>
-<ul class="prose">
-  <li><strong>A document is identified by its bytes.</strong> A copy anywhere with the same hash is the same statement; one
-    changed byte is another.</li>
-  <li><strong>An anchor has one spelling.</strong> The gate refuses another spelling rather than guess that two spellings are
-    one value, and its refusal says which spelling it takes.</li>
-  <li><strong>A capture is a copy, knowingly taken.</strong> A fact is authoritative here, a pointer to whoever owns it, or a
-    capture: dated, keyed by what would make it stale, never applied back without reading the source again, and never holding a
-    secret.</li>
-</ul>
-
-<h2>Read more</h2>
-<ul class="prose">
-  <li>The cookbook: <a href="https://github.com/0mit/daftar/blob/v0.34.0/seed/COOKBOOK.md#a-statement-a-document-and-a-capture-of-its-lines">a
-    statement: a document, and a capture of its lines</a>, with the statement's copy on Windows.</li>
-  <li>The model: <a href="https://github.com/0mit/daftar/blob/v0.34.0/MODEL.md#ground-rules">ground rule 3</a>, reference
-    external truth or capture it knowingly.</li>
-</ul>
-
-<p class="strip">Is your situation like this, but not quite?
-  <a href="https://github.com/0mit/daftar/issues/new?template=use-case.yml&amp;related=a-statement-kept">Tell us how it differs</a>.</p>
-<nav class="pager" aria-label="cases"><a href="a-loan-in-instalments.html">← Previous: A loan repaid in instalments</a>
-  <a href="a-dinner.html">Next: A dinner where something was agreed →</a></nav>
+<p class="lede">This case is now part of <a href="money-between-two-people.html#op-the-statement">Money between two people</a>.</p>
 
 </main>
 <!-- daftar:part id="foot" --><footer class="site">

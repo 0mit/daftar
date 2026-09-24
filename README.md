@@ -1,7 +1,7 @@
 # daftar
 
-*Daftar* (دفتر) is the Persian word for a notebook. This one is kept for you by your AI agent, about the
-things you and it work on, and you can read it without the agent.
+*Daftar* (دفتر) is the Persian word for a notebook. This one is kept by you and your AI agents, about the
+things you work on together, and you can read it without them.
 
 ## Why it exists
 

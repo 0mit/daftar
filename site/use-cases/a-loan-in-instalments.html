@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light dark">
+<meta http-equiv="refresh" content="0; url=money-between-two-people.html#op-the-loan">
+<link rel="canonical" href="money-between-two-people.html#op-the-loan">
 <title>A loan repaid in instalments — daftar</title>
-<meta name="description" content="A loan repaid in six monthly instalments, with a clause for one paid late: what dmledger and dmstale read from it before and after the first instalment.">
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
@@ -30,165 +31,7 @@
 
 <nav class="crumbs" aria-label="breadcrumb"><a href="index.html">Use cases</a> › A loan repaid in instalments</nav>
 <h1>A loan repaid in instalments</h1>
-<p class="lede">Over dinner, Sam lent Ali the price of a washing machine, to be repaid in six monthly instalments, with interest
-  on one paid late. The clauses say what each owes and when; the transactions say what moved. The tools read what is owed and
-  what falls due next.</p>
-<p class="meta">garden-sam · daftar v0.34.0 · the day held at 2026-10-27</p>
-
-<h2>What the notebook records</h2>
-<p class="lead">Each clause says who it binds, whom it is owed to, how much, from when, and how it repeats; unless it says
-  otherwise (<code>stance</code>), it is required. The late
-  interest is not brought into force by a date, so it says what brings it: <code>when</code>. The words were spoken, at the
-  dinner:</p>
-<!-- daftar:bean id="washer-loan" --><pre class="file" tabindex="0" aria-label="beans/washer-loan.md"><span class="path">beans/washer-loan.md</span><code>---
-bean: washer-loan
-genos: contract
-title: "washer-loan — Sam lent Ali the price of a washing machine, repaid monthly"
-status: active
-summary: "Sam paid for Ali's washing machine; Ali repays it in six monthly instalments, with interest on one paid late."
-nature: lekton
-identity:
-  status: confirmed
-  anchors:
-    - { key: contract_id, value: "contract:washer-loan", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
-owned_by: { legal: { crown: logos } }
-responsibility: { legal: { parties: true } }
-parties:
-  sam: { who: { bean: sam }, role: lender, accepted: 2026-09-12 }
-  ali: { who: { bean: ali }, role: borrower, accepted: 2026-09-12 }
-over:
-  - { what: "the price of Ali's washing machine" }
-words: { form: spoken, at: { bean: dinner-at-sams }, agreed: 2026-09-12 }
-clauses:
-  instalments:
-    what: "Ali repays 20 XTS on the first day of each month, six times"
-    by: ali
-    to: sam
-    amount: { count: "20.00", unit: XTS }
-    due: 2026-10-01
-    every: { of: time, in: gregorian-civil, each: month, times: 6 }
-  late-interest:
-    what: "an instalment paid after its day carries one percent of itself for each month it is late"
-    by: ali
-    to: sam
-    amount: { count: 1, unit: percent }
-    when: "an instalment is paid after the day it was due"
-transactions:
-  the-loan:
-    what: "Sam paid the shop for Ali's washing machine"
-    amount: { count: "120.00", unit: XTS }
-    day: 2026-09-13
-    paid_by:
-      - { party: sam }
-    borne_by:
-      - { party: ali, share: 1 }
----
-Agreed over dinner; nothing was written down.</code></pre><!-- /daftar:bean -->
-
-<h2>What the tools say</h2>
-<p class="lead">On 2026-10-27, the day these pages are held at, Ali owes the whole loan, and the next instalment falls due in 5
-  days:</p>
-<!-- daftar:out id="loan-ledger-1" --><pre class="out" tabindex="0" aria-label="output of dmledger.py washer-loan"><code><span class="cmd">~/garden-sam$ python3 bin/dmledger.py washer-loan</span>
-== washer-loan — washer-loan — Sam lent Ali the price of a washing machine, repaid monthly
-   parties: ali, sam
-   transactions (1):
-     the-loan  2026-09-13  120 XTS  paid by sam  · borne by ali 120 XTS  "Sam paid the shop for Ali's washing machine"
-   XTS  position (paid less borne): ali -120 XTS · sam +120 XTS
-   ali owes sam 120 XTS
-   clauses in force (2):
-    instalments  "Ali repays 20 XTS on the first day of each month, six times"
-        by ali · to sam · required · amount 20 XTS · due 2026-10-01, then each month in gregorian-civil, 6 times — next 2026-11-01 (in 5 days), occurrence 2 of 6
-    late-interest  "an instalment paid after its day carries one percent of itself for each month it is late"
-        by ali · to sam · required · amount 1 percent · in force when: "an instalment is paid after the day it was due"</code></pre><!-- /daftar:out -->
-<p class="lead">Ali pays her first instalment. It is a transaction too — Ali paid it, Sam bears it, <code>under:
-  instalments</code>. The build writes the whole <code>transactions</code> block with the new entry in it:</p>
-<!-- daftar:file id="instalment-block" --><pre class="file" tabindex="0" aria-label="input: instalment.yaml"><span class="path">input: instalment.yaml</span><code>transactions:
-  the-loan:
-    what: "Sam paid the shop for Ali's washing machine"
-    amount: { count: "120.00", unit: XTS }
-    day: 2026-09-13
-    paid_by:
-      - { party: sam }
-    borne_by:
-      - { party: ali, share: 1 }
-  instalment-1:
-    what: "Ali's first instalment"
-    amount: { count: "20.00", unit: XTS }
-    day: 2026-10-01
-    under: instalments
-    paid_by:
-      - { party: ali }
-    borne_by:
-      - { party: sam, share: 1 }</code></pre><!-- /daftar:file -->
-<p class="lead"><code>dmsafe</code> replaces the block by its key, and says which leaf paths it removed and which it added:</p>
-<!-- daftar:out id="loan-dmsafe" --><pre class="out" tabindex="0" aria-label="output of dmsafe.py replace-block beans/washer-loan.md transactions --b…"><code><span class="cmd">~/garden-sam$ python3 bin/dmsafe.py replace-block beans/washer-loan.md transactions --block ../instalment.yaml</span>
-dmsafe: removed nothing; added ['transactions.instalment-1.amount.count', 'transactions.instalment-1.amount.unit', 'transactions.instalment-1.borne_by[0].party', 'transactions.instalment-1.borne_by[0].share', 'transactions.instalment-1.day', 'transactions.instalment-1.paid_by[0].party', 'transactions.instalment-1.under', 'transactions.instalment-1.what']</code></pre><!-- /daftar:out -->
-<p class="lead">Journalled and committed, as every change is:</p>
-<!-- daftar:out id="loan-commit" match="^## |^garden-sam \(|^fast:" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;Ali&#x27;s first instalment&quot;"><code><span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "Ali's first instalment" --body "- action: [[washer-loan]]: the first instalment, 20.00 XTS paid by ali on 2026-10-01."</span>
-## 2026-10-27 09:00+00:00 · sam · Ali's first instalment
-<span class="cmd">~/garden-sam$ git add -A</span>
-<span class="cmd">~/garden-sam$ git commit -qm "Ali's first instalment"</span>
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">e3b0cd6eb9ba</span>): 11 docs, 0 error(s), 0 warning(s)
-<span class="el" title="lines left out">…</span>
-fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
-<!-- daftar:out id="loan-ledger-2" --><pre class="out" tabindex="0" aria-label="output of dmledger.py washer-loan"><code><span class="cmd">~/garden-sam$ python3 bin/dmledger.py washer-loan</span>
-== washer-loan — washer-loan — Sam lent Ali the price of a washing machine, repaid monthly
-   parties: ali, sam
-   transactions (2):
-     the-loan  2026-09-13  120 XTS  paid by sam  · borne by ali 120 XTS  "Sam paid the shop for Ali's washing machine"
-     instalment-1  2026-10-01  20 XTS  paid by ali  · borne by sam 20 XTS  "Ali's first instalment"
-   XTS  position (paid less borne): ali -100 XTS · sam +100 XTS
-   ali owes sam 100 XTS
-   clauses in force (2):
-    instalments  "Ali repays 20 XTS on the first day of each month, six times"
-        by ali · to sam · required · amount 20 XTS · due 2026-10-01, then each month in gregorian-civil, 6 times — next 2026-11-01 (in 5 days), occurrence 2 of 6
-    late-interest  "an instalment paid after its day carries one percent of itself for each month it is late"
-        by ali · to sam · required · amount 1 percent · in force when: "an instalment is paid after the day it was due"</code></pre><!-- /daftar:out -->
-<p class="lead"><code>dmstale</code> warns before each instalment falls due, and still about the domain from the
-  <a href="machines-and-a-domain.html">first case</a>:</p>
-<!-- daftar:out id="loan-stale" --><pre class="out" tabindex="0" aria-label="output of dmstale.py"><code><span class="cmd">~/garden-sam$ python3 bin/dmstale.py</span>
-EXPIRING washer-loan.clauses[instalments]  due 2026-11-01 (5 days)  — next: occurrence 2 of 6, each month in gregorian-civil, 6 times  &lt;-- a clause falls due, and from that day the party it is owed to is owed it
-EXPIRING example-org.registration  expires 2027-01-15 (80 days)  auto_renew=enabled  registrar=Example Registrar Inc.  &lt;-- an unrenewed name takes its DNS and its mail with it
-
-expiring: 0 ok, 2 within their horizon, 0 EXPIRED
-
-analysis_cache: 0 fresh, 0 stale, 0 not on this host, 0 unknown
-<span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
-<p class="lead">Across the two agreements Sam and Ali share, the camera and the loan, netted:</p>
-<!-- daftar:out id="loan-between" --><pre class="out" tabindex="0" aria-label="output of dmledger.py --between sam ali"><code><span class="cmd">~/garden-sam$ python3 bin/dmledger.py --between sam ali</span>
-== between sam and ali
-   shared-camera: sam owes ali 60 XTS
-   washer-loan: ali owes sam 100 XTS
-   net, across 2 agreements:
-   ali owes sam 40 XTS</code></pre><!-- /daftar:out -->
-
-<h2>What it shows</h2>
-<ul class="prose">
-  <li><strong>Payments are not yet matched to occurrences.</strong> <code>dmledger</code> reads what the payments add up to, and
-    takes the next day, and which occurrence it is, from the calendar alone. It does not say that an instalment was missed or
-    paid late, and nothing computes the late interest: that clause is listed as in force when its condition holds, and a person
-    reads the rest from the transactions.</li>
-  <li><strong>A clause says what became of it.</strong> Its <code>state</code> — met, waived, broken, disputed — is written the day
-    something becomes of it, and <code>dmstale</code> stops warning once it says met, waived or broken.
-    <a href="../metaphysics.html#whole">Declared whole</a>.</li>
-  <li><strong>A repetition names its calendar.</strong> “Each month” means nothing until it says whose month: here
-    <code>gregorian-civil</code>. <a href="../metaphysics.html#siblings">No privileged sibling</a>.</li>
-</ul>
-
-<h2>Read more</h2>
-<ul class="prose">
-  <li>The cookbook: <a href="https://github.com/0mit/daftar/blob/v0.34.0/seed/COOKBOOK.md#an-agreement-paid-in-instalments">an agreement paid in instalments</a>.</li>
-  <li>The model: <a href="https://github.com/0mit/daftar/blob/v0.34.0/MODEL.md#agreements-and-money">agreements and money</a>.</li>
-  <li>The tools: <a href="https://github.com/0mit/daftar/blob/v0.34.0/bin/dmledger.py">bin/dmledger.py</a>,
-    <a href="https://github.com/0mit/daftar/blob/v0.34.0/bin/dmstale.py">bin/dmstale.py</a> and
-    <a href="https://github.com/0mit/daftar/blob/v0.34.0/bin/dmsafe.py">bin/dmsafe.py</a>.</li>
-</ul>
-
-<p class="strip">Is your situation like this, but not quite?
-  <a href="https://github.com/0mit/daftar/issues/new?template=use-case.yml&amp;related=a-loan-in-instalments">Tell us how it differs</a>.</p>
-<nav class="pager" aria-label="cases"><a href="a-cost-shared.html">← Previous: A cost shared between two people</a>
-  <a href="a-statement-kept.html">Next: A statement kept, its secret left out →</a></nav>
+<p class="lede">This case is now part of <a href="money-between-two-people.html#op-the-loan">Money between two people</a>.</p>
 
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
