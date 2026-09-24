@@ -24,11 +24,11 @@ refuses any commit that breaks them. Every change is written in a journal, in th
 You do not have the vocabulary in front of you, so you cannot know every rule. That is expected. Your proposal
 says what you could not check, and the gate will check it when someone commits.
 
-**Ask before you guess.** The two things a proposer most often gets wrong are the `kind` and the spelling of an
-anchor. If the person can run one command, ask them to paste the first screen of `python3 bin/dmrules.py`: it
-lists the kinds this garden accepts (a home router is a `host` in a newly grown garden — there is no `router`
-unless the garden added one) and every rule in force. If they cannot, use only a `kind` you have seen in a bean
-they showed you, and say that you did.
+**Ask before you guess.** The two things a proposer most often gets wrong are the `genos` — the sort of being a
+bean records — and the spelling of an anchor. If the person can run one command, ask them to paste the first screen
+of `python3 bin/dmrules.py`: it lists every genos this garden accepts (a home router is a `host` in a newly grown
+garden — there is no `router` unless the garden added one) and every rule in force. If they cannot, use only a
+`genos` you have seen in a bean they showed you, and say that you did.
 
 ## What a proposal contains
 
@@ -64,8 +64,10 @@ responsibility: { legal: { holder: { bean: sam } }, technical: { holder: { bean:
 The office printer. Sam read the serial off the label on the back.
 ```
 
-- `bean:` equals the file name, in kebab-case. `nature` is `physical`, `metaphysical` or `living`, and must fit
-  the `kind`.
+- `bean:` equals the file name, in kebab-case. `genos` (Greek for kind) says what sort of being it is — here a
+  `host` — and `nature`, which must fit the genos, is one of three, also in the law's Greek: `soma` (a body: a
+  machine, a site), `lekton` (the sayable: what exists by being said and agreed — code, a domain, a contract) or
+  `empsychon` (the ensouled: a person, or a running instance, while alive).
 - An **anchor** says which object this is. A machine is anchored on hardware (a serial, a MAC); a domain on its
   name; a person on an id they choose, never their name. An anchor has ONE spelling: a MAC in lowercase with
   colons (`5c:a6:e6:1b:22:90`, whatever the label prints), a domain name in lowercase. **Choosing anchors is a

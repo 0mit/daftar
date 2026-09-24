@@ -118,7 +118,7 @@ P3/D1: identity policy attaches to the ROOT AXIS...
 AN OPEN KEY WAS AN OPEN MERGE KEY (19.0). Identity is matched by (key, value), and until 19.0 the key was any
 string a bean wrote. The fourth cold-start drill invented a key, product_name, and the gate took it; measured, the
 first garden's beans carried seventeen keys no term declared — `product_id`, `session_id`, `service_id`, the
-ids the kinds registry had NAMED IN PROSE since P3 and never declared. Two gardens spelling one anchor model
+ids the registry of gene had NAMED IN PROSE since P3 and never declared. Two gardens spelling one anchor model
 and product_name would never recognise the same object, which is the one thing identity anchors exist to do.
 So the key names a term that declares `anchor:`, and the gate refuses any other. A garden-local key is a local
 term with an anchor policy — the same mechanism every other position has used since 18.x — and a local term
@@ -531,12 +531,12 @@ systems every garden shares, and two gardens that never met agree which place th
 ## roles
 
 == ROLES: what a being DOES, as against what it IS (added 7.0) ==
-THE FIX FOR AN AMBIGUITY THIS VOCABULARY SHIPPED WITH. `router` was a KIND until 7.0, and the proof it
+THE FIX FOR AN AMBIGUITY THIS VOCABULARY SHIPPED WITH. `router` was a GENOS until 7.0, and the proof it
 was wrong is an asymmetry the corpus already carried: a mail server recorded five roles as free-text data
-(`primary-mail, file-server, monitoring, webmail, erp-host`) while a router's single role was a kind.
+(`primary-mail, file-server, monitoring, webmail, erp-host`) while a router's single role was a genos.
 Both are machines. What makes one a router is that it forwards traffic — which since 6.0 IS data, in
-`treatments`. A kind answers what a being IS; a role answers what it DOES, and a being does several
-things at once. Encoding one of the things it does as the thing it is made `kind` un-askable for every
+`treatments`. A genos answers what a being IS; a role answers what it DOES, and a being does several
+things at once. Encoding one of the things it does as the thing it is made the genos un-askable for every
 machine that does two.
 
 ## operating_systems
@@ -1066,7 +1066,7 @@ the shape would be satisfied and it would be the wrong shape.
 
 ## profiles.network.terms[treatments].schema.required_on_roles
 
-7.0: was `required_on_kinds: [router]` until `router` stopped being a kind
+7.0: was `required_on_kinds: [router]` until `router` stopped being a genos
 
 ## profiles.domain.terms[registration].meaning
 
@@ -1138,8 +1138,8 @@ relation must never require a rule-change. It is therefore outside the reverse g
 
 ## terms[depends_on]
 
-LOCAL kinds: object types this garden manages that std-vocab doesn't schematize. Each gets a small schema
-(MODEL Rule 6). A kind that proves general is promoted alongside its terms.
+LOCAL gene (`local_gene`): object types this garden manages that std-vocab doesn't schematize. Each gets a small
+schema (MODEL Rule 6). A genos that proves general is promoted alongside its terms.
 
 ## terms[depends_on].schema.is_ref
 
@@ -1159,7 +1159,7 @@ agent logs shell work, was retired: the `journal` registry says it now.
 
 Universal since 19.0. `required_on_kinds: [product, codebase, instance, org]` was the list from before the two
 arcs were closed; MODEL.md has said "every bean carries both" since v2, and the corpus check proves it on every
-commit. A list that names four kinds when the rule holds for all is a second copy waiting to disagree.
+commit. A list that names four gene when the rule holds for all is a second copy waiting to disagree.
 
 ## terms[status]
 
@@ -1409,7 +1409,7 @@ reassignable
 ## terms[fqdn].anchor
 
 DNS-unique within its namespace. Until 19.0 the policy pinned `establishing: true`, which with the family
-enforced would have forbidden a physical machine any `fqdn` anchor at all. The nature decides whether a name
+enforced would have forbidden a machine of the nature soma any `fqdn` anchor at all. The nature decides whether a name
 establishes; the pin was dropped so the bean can write the flag that follows: `true` on a domain, a service or a
 virtual-host; `false` on a machine, and on an org, whose name would otherwise fuse it with its own domain bean.
 
@@ -1443,7 +1443,7 @@ say which.
 ## terms[product_id]
 
 Declared at 19.0 with `service_id`, `org_id`, `person_id`, `program_id`, `contract_id`, `design_id`, `doc_id`,
-`manifest_id`, `session_id`, `instance_id` and `email`: the ids the kinds registry had named in prose since P3
+`manifest_id`, `session_id`, `instance_id` and `email`: the ids the registry of gene had named in prose since P3
 ("Establishing anchor: a logical product_id") and the first garden had used all along, made terms when
 `identity_policy.anchor_key` required every key to be one. All logical; none declares a form, because each is
 whatever its home assigns or the estate mints once. `manifest_id` and `email` leave `establishing` to the bean
@@ -1692,8 +1692,8 @@ it has an `os`, while `located_at` is carried by codebases, which have none.
 ## terms[roles].meaning
 
 WHAT A BEING DOES. A LIST, and that is the whole point: a server may do five things and a router one,
-and until 7.0 the estate expressed the first as free text in `owns.roles` and the second as a KIND.
-Making this a term is what let `kind: router` be retired without losing the requirement that a
+and until 7.0 the estate expressed the first as free text in `owns.roles` and the second as a GENOS.
+Making this a term is what let the genos `router` be retired without losing the requirement that a
 router document its treatments — `required_on_roles` reaches a list where a requirement keyed on the
 being's type (`required_on_gene`, since 22.0) could only ever reach a scalar.
 
@@ -1859,7 +1859,7 @@ capability grid could express; `unproven` is the one it could not and the one a 
 
 ## gene[org]
 
-== being-kinds (the gene, since 22.0) for the ownership / type-token / habitat model (2026-08-02, human-ratified) ==
+== being-gene for the ownership / type-token / habitat model (2026-08-02, human-ratified) ==
 
 ## gene[person].ownership_form
 
@@ -1873,7 +1873,7 @@ being.
 
 ## gene[host]
 
-== kinds (the gene, since 22.0) that were in USE but undeclared before P3. Under D1 a genos need only name the nature it
+== gene that were in USE but undeclared before P3. Under D1 a genos need only name the nature it
 refines and what it means; anchor family + min-anchors come from that nature.
 
 Until 19.0 every row also carried prose `schema:`, `required:` and `min_anchors:` — second copies of what the
@@ -1889,7 +1889,7 @@ virtual machine is a `virtual-host` now — see there.
 
 ## gene[virtual-host]
 
-A VIRTUAL MACHINE IS A LIVING BEING (19.0). At 7.0 `vps` was retired into `host` because it described TENANCY,
+A VIRTUAL MACHINE IS EMPSYCHON (19.0). At 7.0 `vps` was retired into `host` because it described TENANCY,
 which ownership already carried — and the registry noted, against itself, that "D5 will re-read this as an
 instance living_on a provider". Enforcing the anchor family (see `identity_policy.establishing_family`) forced
 the reading: a VM has no matter, so under `host` (soma, family `hardware`) it could never be confirmed
@@ -1906,8 +1906,9 @@ was always orthogonal to nature.
 AN AGREEMENT IS OWNED BY NONE OF ITS PARTIES. The genos meant co-ownership of one facet of one being, and had no
 occupant as that; the agreements people record are between them — a cost shared, a loan repaid. Were each garden to
 write its own gardener as the owner, two gardens' records of one agreement would disagree about its owner on every
-fusion. So the chain may end at the crown — `logos`, for a being of meaning — as a person's ends at `agape`, and the
-parties, who can be asked, answer for it: `responsibility_form: [parties]`, reflexive like `self`, drawing no edge.
+fusion. So the chain may end at the crown — `logos`, for what is lekton, said and agreed — as a person's ends at
+`agape`, and the parties, who can be asked, answer for it: `responsibility_form: [parties]`, reflexive like `self`,
+drawing no edge.
 The crown owns and never answers; the parties answer and never own. The form is a LIST, which ALLOWS the crown beside
 the ordinary forms instead of pinning it: an agreement one person wrote and offers may still be owned by its author.
 Co-owning one facet through a contract stays one use of it.
@@ -2098,7 +2099,7 @@ inference never overrides an assertion. Between two persons no rank settles it; 
 whoever an agreement names.
 
 And every proxy of beauty that became a target in this repository drifted: a count of story lines in the law held its
-number while the stories moved into folded strings; a list of the kinds a leak guard watched let an estate's design id
+number while the stories moved into folded strings; a list of the gene a leak guard watched let an estate's design id
 into the public law; a length threshold once measured care and was met by padding. A score in the gate would be the
 largest proxy of all, and a size ratchet would push facts back into prose, where they are cheapest to count away. So
 the machinery measures the preconditions — closure, one statement of each thing, no story in the law, no privileged
@@ -2254,14 +2255,14 @@ other 31** the corpus uses — `nature`, both ownership arcs, `capabilities`, `a
 the merge drops no fact; it dropped most of them, and no test could fail because the fixtures were shaped
 like the implementation rather than like the model.
 
-`kind` used to emit a list, which `dmcheck` cannot resolve.
+`genos` — `kind` then — used to emit a list, which `dmcheck` cannot resolve.
 
 ## doc:MERGE.md#5.2
 
 (2026-08-02, operator-directed.) `dmmerge` converged two gardens' data while their TYPE SYSTEMS stayed divergent. A merged corpus could
 therefore hold a bean of a genos the merged law never declared, or a bean in breach of an obligation the
 garden that wrote it had never adopted — checked by nobody, because each garden's gate only ever saw its
-own half. Promoting kinds to Tier-0 shrank this; it did not close it.
+own half. Promoting gene to Tier-0 shrank this; it did not close it.
 
 ## doc:MERGE.md#6
 

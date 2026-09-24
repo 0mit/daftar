@@ -67,8 +67,8 @@ The minimum hangs off the bean's nature, declared once in the `natures` registry
 2. **Fuse edges** join two beans that carry the same establishing anchor: the same key and the same compared value.
    An anchor that does not establish joins nothing.
 3. **A bare minted name fuses only within its own garden.** A value of an anchor term marked `minted` is a name a
-   garden gave when it has the minted form (`identity_policy.minted`: `<kind>:<name>`, the kind one the garden
-   knows). Written so and not qualified — not `<garden_id>/<kind>:<name>` — it identifies within the garden that
+   garden gave when it has the minted form (`identity_policy.minted`: `<genos>:<name>`, the genos one the garden
+   knows). Written so and not qualified — not `<garden_id>/<genos>:<name>` — it identifies within the garden that
    minted it, so its fuse edge is keyed by that garden's identity as well. Each input carries its garden's identity:
    `garden_id` read from git for a directory that is the top of a garden's own repository, `from.garden` for a
    proposal. An input whose garden cannot be named is a garden of its own — never assumed to be another input's. A
@@ -84,7 +84,7 @@ The minimum hangs off the bean's nature, declared once in the `natures` registry
    anchor, are reported — "CANDIDATES — a person decides (class J)" — and never fused. Whether two names are one thing
    is a person's decision; the name then kept is class F: the garden that recorded the thing first qualifies it, and
    the other takes it in.
-7. **The canonical bean's id** is its kind, then a slug of its least establishing anchor value; the gardens' own
+7. **The canonical bean's id** is its genos, then a slug of its least establishing anchor value; the gardens' own
    ids become `aka`. Two components whose ids coincide — two gardens' equal bare names, or no anchor at all — are
    told apart as §4.6 says.
 
@@ -154,7 +154,7 @@ A key no term describes is merged by **shape** — mapping → collection, list 
 its name is reported, never hidden, because a shape guess can still be the wrong guess. Closing that gap
 means declaring a `merge:` facet on the term, not editing the driver.
 
-Three consequences worth stating. `kind` resolves to a **scalar** or a conflict, never a list. `provenance` is kept
+Three consequences worth stating. `genos` resolves to a **scalar** or a conflict, never a list. `provenance` is kept
 **per garden** rather than merged, because two gardens having different provenance is not a disagreement about the
 world and merging it would manufacture a conflict on every fused bean. And the git merge driver verifies its own
 OUTPUT — every top-level key either side had must appear in the rendered bean, measured rather than declared — and
@@ -168,14 +168,14 @@ overlay**. All three reconcile before the beans mean anything.
   the merge should not happen. Two gardens on different versions are not speaking the same language, and
   merging would validate one garden's beans against the other's law. Adopting a version is a
   human-ratified rule-change; a merge tool may not perform one on someone's behalf.
-- **Local terms and kinds union by name.** Identical definitions merge silently. The same name defined
+- **`local_terms` and `local_gene` union by name.** Identical definitions merge silently. The same name defined
   DIFFERENTLY is a conflict for a person: a term is law, two readings cannot both hold, and picking one
   quietly would re-classify beans in the garden that loses.
 - **Profiles union**, and the inheritance is stated out loud. A profile only one garden opted into
   becomes an obligation for the merged garden — correct, because the beans that need it are now in the
   corpus, but never silent.
 
-Then the merged corpus is checked against the merged law, which is what "merges cleanly" MEANS: no kind
+Then the merged corpus is checked against the merged law, which is what "merges cleanly" MEANS: no genos
 it uses is undeclared, no top-level key it uses is undeclared, and no bean owes a required term it lacks.
 A merge whose data converges and whose law does not is reported as such and exits non-zero. The obligation
 set is built from the opted-in profiles only, and a merge can heal a divergence: a bean written without a
@@ -256,7 +256,7 @@ The number is kept so the sections after it keep theirs.
 ## 13. GARDEN.md (the manifest)
 What `GARDEN.md` may hold is declared in the law, as `manifest` in `seed/std-vocab.md`, and the gate judges the
 manifest as itself: every attribute the law declares, in its form, the required ones present, `gardener` a bean the
-garden holds of a kind the manifest admits, and nothing the law does not declare. It tells a cold agent which garden
+garden holds of a genos the manifest admits, and nothing the law does not declare. It tells a cold agent which garden
 it is in, whose it is, and which law governs it; a garden's identity is read from git and is not among its keys. A
 garden that is a rehearsal says so there (`test:`), and a merge labels its input so (§8).
 
@@ -275,7 +275,7 @@ the join of §5, applied in the receiving garden.
   merge input carrying that garden's identity (`from.garden`) and its pin. A rehearsal is a garden grown by
   germination, with its own id; a clone of a real garden is that garden, and what it proposes is that garden's
   word. Its stubs carry only the identity of each
-  bean the offered ones refer to — id, kind, nature, title and establishing anchors — and no facts. Every name it
+  bean the offered ones refer to — id, genos, nature, title and establishing anchors — and no facts. Every name it
   carries has the form the law gives a name: a bean or stub id is kebab-case and lands in `beans/`, the proposal is
   `<garden>-<YYYYMMDD>-<HHMM>` (with `-<n>` for a second in one minute; a chat's is `chat-<YYYYMMDD>-<HHMM>`), a
   garden id is twelve hexadecimal digits, and no string in the envelope holds a line break.
@@ -296,7 +296,7 @@ the join of §5, applied in the receiving garden.
   (§4.4): each stub RESOLVES to a local bean or is UNRESOLVED — a stub marked `gardener-of: to`, the receiving
   garden's gardener whom the sender knows only provisionally, resolves to the gardener `GARDEN.md` names — and each
   offered bean FUSES with a local bean, is NEW, or is a CANDIDATE (an equal bare minted name, or a local bean of the
-  same kind whose identity is provisional). For a fusing bean it shows every leaf that differs as the join would
+  same genos whose identity is provisional). For a fusing bean it shows every leaf that differs as the join would
   record it, in full, and says so where the body differs; for a new bean, who said what in it (each distinct garden
   and `by` among its records). Last, it takes the proposal into a scratch copy of this garden and gives that copy's
   gate verdict. A proposal `take` would refuse is not called clean.
@@ -373,7 +373,7 @@ change to the engine and to this document together.
 - **Acknowledged exceptions for merge**: exceptions carrying `proposed` or `acked` with who proposed and who
   acknowledged, one queue of pending decisions, and a precedent that applies itself to matching cases.
 - **Scan-convergence measured**: several models scan one estate, and a golden test gates on field overlap and
-  conflict rate, with per-kind extraction checklists; and the multi-model merge of one estate's sessions, in every
+  conflict rate, with per-genos extraction checklists; and the multi-model merge of one estate's sessions, in every
   order, checked for every discovery kept, deduplicated and lossless.
 - **Authority among several people**: which person may ratify which kinds, tied to an authenticated identity.
 - **Signed proposals**, and **a proposal across two pins**.
