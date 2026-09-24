@@ -2,6 +2,7 @@
 """dmsave — save one change in one call: its journal entry, everything staged, and the commit the gate judges.
 
     python3 bin/dmsave.py "<who>" "<one line: what changed>" --body "- action: …"    # works in every shell
+    python3 bin/dmsave.py "<who>" "<what>" --body "- action: …" "- detail: …"      # one quoted line each, as well
     python3 bin/dmsave.py "<who>" "<one line: what changed>" < entry.md               # the body on standard input
     python3 bin/dmsave.py --again     # after a refused save is fixed: commit the entry already written
 
@@ -156,10 +157,15 @@ def main(argv):
     rest, body = list(argv), None
     if '--body' in rest:
         i = rest.index('--body')
-        if i + 1 >= len(rest):
+        # EVERY WORD AFTER --body IS A LINE OF THE BODY, up to the next option: an agent passes a list as one quoted
+        # argument per item as often as one string with line breaks (measured), and both mean the same body.
+        j = i + 1
+        while j < len(rest) and not rest[j].startswith('--'):
+            j += 1
+        if j == i + 1:
             refuse("--body takes the entry's body, in quotes")
-        body = rest.pop(i + 1)
-        rest.pop(i)
+        body = '\n'.join(rest[i + 1:j])
+        del rest[i:j]
     flags = [a for a in rest if a.startswith('--')]
     if flags or len(rest) != 2:
         refuse((f"{flags[0]!r} is no option of dmsave. " if flags else "") + f"It takes \"<who>\" \"<what>\" and the "

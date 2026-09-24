@@ -191,10 +191,15 @@ def main(argv):
     who, what = argv[0], argv[1]
     if '--body' in argv:
         i = argv.index('--body')
-        if i + 1 >= len(argv):
+        # EVERY WORD AFTER --body IS A LINE OF THE BODY, up to the next option: only the first was read, and the rest
+        # of a body an agent passed as one quoted line per item was dropped without a word (measured).
+        j = i + 1
+        while j < len(argv) and not argv[j].startswith('--'):
+            j += 1
+        if j == i + 1:
             print("dmjournal: --body takes the entry's body, in quotes", file=sys.stderr)
             return 2
-        body = argv[i + 1]
+        body = '\n'.join(argv[i + 1:j])
     else:
         stream = getattr(sys.stdin, 'buffer', None)
         if stream is None:

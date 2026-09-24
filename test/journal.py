@@ -101,6 +101,11 @@ check("--body on a cp1252 machine, its output read through a pipe: written, exit
       r.returncode == 0 and b'Traceback' not in r.stderr, r.stderr.decode('utf-8', 'replace')[-300:])
 check("...exactly one entry, the body byte for byte", len(headings(added)) == 1
       and added.endswith(('\n' + BODY + '\n').encode('utf-8')), added[-200:])
+before = journal()
+r = tool(WHO, 'a body in parts', '--body', '- action: the first line.', '- detail: the second line.')
+added = journal()[len(before):]
+check("--body given one quoted line per item keeps every line, in order — none is dropped",
+      r.returncode == 0 and added.endswith(b'\n- action: the first line.\n- detail: the second line.\n'), added[-200:])
 
 # ---- + a closed pipe after the write is not a failure --------------------------------------------------------------
 _rd, _wr = os.pipe()

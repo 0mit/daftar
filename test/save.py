@@ -197,6 +197,14 @@ check("a call with another entry while one waits writes its own and commits both
       and len(headings(git('show', 'HEAD:log/journal.md').stdout.encode('utf-8'), ' · sam · added friend-g')) == 1,
       (rc, out, err[-400:]))
 
+# ---- + a body given as one quoted line per item is one body -----------------------------------------------------------
+bean('friend-i')
+bean('friend-j')
+rc, out, err = save('sam', 'added friend-i and friend-j', '--body', '- action: added [[friend-i]].', '- action: added [[friend-j]].')
+_e = git('show', 'HEAD:log/journal.md').stdout
+check("a body given as one quoted line per item is taken as one body, its lines in order, and saved (exit 0)",
+      rc == 0 and '- action: added [[friend-i]].\n- action: added [[friend-j]].' in _e, (rc, out, err[-400:]))
+
 # ---- + an entry the gate asks for goes with the first ----------------------------------------------------------------
 bean('friend-c')
 bean('friend-d')
