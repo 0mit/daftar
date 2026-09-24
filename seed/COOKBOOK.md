@@ -21,7 +21,7 @@ set `gardener: sam` in `GARDEN.md` — a change to the manifest, so its journal 
 (`seed/README.md` shows the whole first commit). The gate asks for a gardener as soon as the garden holds a bean,
 and its last line names them.
 
-A person is owned by no one — the crown, `love` — and answers for themselves. This one was written by hand, so its
+A person is owned by no one — the crown, `agape` — and answers for themselves. This one was written by hand, so its
 name is bare, `person:sam`: it names Sam in this garden only, and is qualified before it crosses to another
 (*Another person's garden*, below):
 
@@ -29,17 +29,17 @@ name is bare, `person:sam`: it names Sam in this garden only, and is qualified b
 ```markdown
 ---
 bean: sam
-kind: person
+genos: person
 title: "Sam — keeps this garden"
 status: active
 summary: "The gardener: the person who keeps this garden, and owns and answers for the machines recorded here."
-nature: living
+nature: empsychon
 identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
-owned_by: { legal: { crown: love } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
 Sam keeps this ledger.
@@ -47,7 +47,7 @@ Sam keeps this ledger.
 
 A garden may be kept by an organisation — a household, a club, a company — and then its gardener is an `org`
 bean, and a person who answers for it ratifies (`MODEL.md`, the Contract of Parts).
-`python3 seed/germinate.py <dir> --gardener ben-household --gardener-kind org --gardener-name "Ben's household"`
+`python3 seed/germinate.py <dir> --gardener ben-household --gardener-genos org --gardener-name "Ben's household"`
 plants one: owned outside the garden, by whoever its own rules say, and answering for itself.
 
 ## How to say that one thing relates to another
@@ -59,7 +59,7 @@ Pick the most specific relation that is true; `refs` is the open fallback.
 | who owns it, and who answers for it | `owned_by` + `responsibility` | always both, facet by facet: `legal`, `technical` and the other rows of the law's `facets` registry |
 | something outside this ledger owns it | `owned_by: { legal: { external: "…" } }` | a rented VPS, third-party software, a registered domain |
 | a running thing sits on a machine | `lives_in: { bean: … }` | the machine must say what habitat it offers (`provides_habitat`) |
-| a running thing is a copy of some software | `instance_of: { bean: … }` | required on `kind: instance`, together with `lives_in` |
+| a running thing is a copy of some software | `instance_of: { bean: … }` | required on `genos: instance`, together with `lives_in` |
 | it cannot work without another thing | `depends_on: { <name>: { bean: … } }` | must stay acyclic |
 | people agreed on something | a `contract` bean: `parties`, `words`, `clauses`, `transactions` | may be owned by none of its parties: `crown: logos`, answered for by `parties: true` |
 | who took part in a happening | `refs` on the `event`, `rel: host`, `present`, `invited`, `paid` | owned by none of them: `crown: logos`, answered for by its host |
@@ -76,7 +76,7 @@ document its `content_hash`, or the reference its home gives it (`doc_id`); anot
 A domain is registered for a term, not owned outright, so the registry is the `external` owner and the
 person who renews it answers for it. Registration facts belong to the opt-in **`domain` profile**: a garden
 that holds domains adds this inside `VOCAB.md`'s front matter, and `registration` then becomes available and
-required on every `kind: domain` bean. Its dates are read from WHOIS before the bean is written: `created` and
+required on every `genos: domain` bean. Its dates are read from WHOIS before the bean is written: `created` and
 `expires` take a date and nothing else — there is no `unknown` for a fact that is always there to be read, and
 an invented date would pass the gate and then be reported as sound by `dmstale`. `auto_renew` alone may be
 `unknown`, because it is an account setting WHOIS does not show.
@@ -90,11 +90,11 @@ extends_profiles: [domain]
 ```markdown
 ---
 bean: example-org
-kind: domain
+genos: domain
 title: "example.org — Sam's domain"
 status: active
 summary: "The domain Sam's website answers on."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -122,11 +122,11 @@ because a machine does several things.
 ```markdown
 ---
 bean: nas
-kind: host
+genos: host
 title: "nas — Sam's home NAS"
 status: active
 summary: "A NAS at home: file storage, and the web server for example.org."
-nature: physical
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -152,11 +152,11 @@ the NAS and is Sam's. "Serves this domain" has no dedicated relation, so it is a
 ```markdown
 ---
 bean: nginx
-kind: product
+genos: product
 title: "nginx — the web server software"
 status: active
 summary: "Third-party web server software, run here but owned by its project."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -172,11 +172,11 @@ The web server software.
 ```markdown
 ---
 bean: website
-kind: instance
+genos: instance
 title: "website — nginx on the NAS, serving example.org"
 status: active
 summary: "The web server instance on the NAS that answers for example.org."
-nature: living
+nature: empsychon
 identity:
   status: confirmed
   anchors:
@@ -194,19 +194,19 @@ The website.
 
 ## A rented VPS
 
-A virtual machine has no matter of its own: it is a `virtual-host`, a living being that lapses at teardown,
-identified by its name or by the id its provider assigns — never by a serial, which is the hypervisor's. The
+A virtual machine has no matter of its own: it is a `virtual-host`, of the nature empsychon, and lapses at teardown.
+It is identified by its name or by the id its provider assigns — never by a serial, which is the hypervisor's. The
 provider owns it and Sam answers for what runs on it.
 
 <!-- example: beans/vps-a.md -->
 ```markdown
 ---
 bean: vps-a
-kind: virtual-host
+genos: virtual-host
 title: "vps-a — a rented virtual server"
 status: active
 summary: "A VPS rented from a hosting provider."
-nature: living
+nature: empsychon
 identity:
   status: confirmed
   anchors:
@@ -242,11 +242,11 @@ gardener's decision (class F): write the two beans, journal them in one entry, a
 ```markdown
 ---
 bean: garden-ali
-kind: garden
+genos: garden
 title: "garden-ali — the garden Ali keeps"
 status: active
 summary: "Ali's own daftar garden. She keeps it; what passes between it and this one is proposed, never written."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -270,17 +270,17 @@ of the bean is Sam's record, in Sam's words:
 ```markdown
 ---
 bean: ali
-kind: person
+genos: person
 title: "Ali"
 status: active
 summary: "Ali, who keeps a garden of her own; Sam shares costs with her."
-nature: living
+nature: empsychon
 identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-15 }
-owned_by: { legal: { crown: love } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
 Ali keeps garden-ali. Her name here is the one her own garden gave her.
@@ -302,11 +302,11 @@ of them: it ends at the crown, `logos`, as an agreement may, and whoever hosted 
 ```markdown
 ---
 bean: dinner-at-sams
-kind: event
+genos: event
 title: "dinner-at-sams — dinner at Sam's, where the washing-machine loan was agreed"
 status: active
 summary: "Ali came to dinner at Sam's; they agreed the loan for her washing machine."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -330,8 +330,9 @@ cost and Ali one. That is an agreement, so it is a `contract` bean, and what mov
 an amount, the `day` it moved where that is known, who paid how much of it (a single payer who states no amount
 paid the whole), and who bears it in whole-number shares — each party once in each list, in any order.
 
-- **An agreement between people may be owned by none of them.** Then it ends at the crown (`logos`, for a being of
-  meaning), and its parties answer for it, each for what binds it: `responsibility: { legal: { parties: true } }`.
+- **An agreement between people may be owned by none of them.** Then it ends at the crown (`logos`, the branch for
+  what is lekton, said and agreed), and its parties answer for it, each for what binds it:
+  `responsibility: { legal: { parties: true } }`.
   One a person wrote and offers may instead be owned by its author.
 - **An offer is not an acceptance.** A party with `accepted` said yes on that day; a party without it has no
   acceptance on record — an offer not yet taken up, or a yes nobody wrote down. Here Sam reports Ali's yes, and the
@@ -356,11 +357,11 @@ Ali is the person bean recorded above, under the name her own garden gave her.
 ```markdown
 ---
 bean: shared-camera
-kind: contract
+genos: contract
 title: "shared-camera — Sam and Ali bought a camera together"
 status: active
 summary: "Sam and Ali share a camera; Ali paid for it, and they bear its cost two to one."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -403,11 +404,11 @@ They agreed it over dinner, and nothing was written down: `words` says it was sp
 ```markdown
 ---
 bean: washer-loan
-kind: contract
+genos: contract
 title: "washer-loan — Sam lent Ali the price of a washing machine, repaid monthly"
 status: active
 summary: "Sam paid for Ali's washing machine; Ali repays it in six monthly instalments, with interest on one paid late."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -477,11 +478,11 @@ number, which is a secret.
 ```markdown
 ---
 bean: card-statement-2026-09
-kind: document
+genos: document
 title: "card-statement-2026-09 — Sam's card statement for September 2026"
 status: active
 summary: "The statement Sam's bank issued for the card that paid for the washing machine, kept as a PDF."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -523,7 +524,7 @@ located_at:
 Ali's garden is recorded here, and hers records Sam's (*Another person, and the garden she keeps*, above). Now the
 camera they share can cross, so that her garden holds the same agreement, named the same way.
 
-**A name is minted once, and carried.** A name a garden gives is written `<kind>:<name>` — `person:sam`,
+**A name is minted once, and carried.** A name a garden gives is written `<genos>:<name>` — `person:sam`,
 `contract:shared-camera`. Bare, it identifies only inside the garden that minted it: two gardens that each minted
 `person:sam` are shown to a person as candidates and never fused by a tool; qualified, `<garden id>/person:sam`
 identifies everywhere. So before a bean crosses, every bare name it and the beans it refers to carry is qualified,
@@ -550,7 +551,7 @@ python3 bin/dmpropose.py make --to garden-ali --under shared-camera shared-camer
 It writes one file, `PROPOSAL-<this garden>-<YYYYMMDD-HHMM>.md`, in the directory that holds this garden — beside
 it, never inside any garden. The file carries each offered bean as committed, with `provenance.garden` stamped on
 the copy's records that lack one (never in this garden's own files); a stub for each bean they refer to, holding
-its id, kind, nature, title and establishing anchors and nothing more; the journal entry that would take them in;
+its id, genos, nature, title and establishing anchors and nothing more; the journal entry that would take them in;
 and a fingerprint. `make` also appends to this garden's journal what left, to which garden, under which agreement,
 and the fingerprint: commit that entry, and hand the file over however you like — it is one Markdown file.
 

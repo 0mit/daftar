@@ -14,7 +14,7 @@ design steps before that are in `HISTORY.md` in the daftar repository.
   (`daftar_release`); the law's `manifest` says what else it may hold. A garden is known by the commit it
   germinated from (`garden_id`), read from git: `GARDEN.md` carries no id, and in the garden's own beans it appears
   only as the prefix of a name the garden minted.
-- A garden is kept by its **gardener**: the bean `GARDEN.md` names in `gardener:`, of a kind the law's `manifest`
+- A garden is kept by its **gardener**: the bean `GARDEN.md` names in `gardener:`, of a genos the law's `manifest`
   admits — a person or an organisation. A garden grown with `--gardener` begins with it. The gardener ratifies what an
   agent may not decide; an agent tends the garden. Nothing outside a garden writes in it.
 - `GARDEN.md` is judged as itself, against the law's `manifest`: each attribute's form, the required ones present,
@@ -43,20 +43,29 @@ Every bean has an `identity:` block of **anchors** — facts that say which obje
 recognise the same thing whatever its file is called.
 - Each anchor says `establishing: true` (it identifies the object) or `false` (it only corroborates).
   Only establishing anchors decide that two beans are one object.
-- What establishes follows the nature: matter (`serial`, `mac`) for a physical being; a logical id (`fqdn`, a
-  product or service id) for a metaphysical or living one. Network anchors (`ip`, `hostname`) corroborate. Every
+- What establishes follows the nature: matter (`serial`, `mac`) for a body, a being of the nature `soma`; a logical
+  id (`fqdn`, a product or service id) for one that is `lekton` or `empsychon`. Network anchors (`ip`, `hostname`)
+  corroborate. Every
   anchor's key is a term of the vocabulary, and where that term declares a policy, it overrules the bean.
 - How many establishing anchors a confirmed bean needs depends on its nature. A bean below that is
   `identity.status: provisional`, and the gate warns.
 - Two beans with the same establishing anchor are the same object: the gate refuses it. Serials are compared
   ignoring case and spaces.
 
-## Type: nature, then kind
-Every bean has a `nature` — `physical`, `metaphysical` or `living` — and a `kind` that refines it (`host` is
-physical; `domain`, `product`, `codebase`, `contract`, `document`, `event` and `garden` are metaphysical; `person`,
-`instance` and `virtual-host` are living: a virtual machine has no matter and lapses at teardown). The gate
-refuses a nature that contradicts the kind. Rules about what sort of being something is — such as identity
-anchors — attach to the nature, so every kind under it inherits them.
+## Type: nature, then genos
+Every bean has a `nature`, one of three:
+- `soma` (σῶμα, a body) — a being with extension in space: a machine, hardware, a site;
+- `lekton` (λεκτόν, the sayable) — a being that exists by being said and agreed: code, a product, an organisation,
+  a domain, a design, a contract;
+- `empsychon` (ἔμψυχον, the ensouled) — a being that strives to persist as itself, while it is alive: a person, a
+  running instance.
+
+and a `genos` (γένος, kind) that refines it, a row of the law's registry `gene` (γένη, the kinds): `host` is
+soma; `domain`, `product`, `codebase`, `contract`, `document`, `event` and `garden` are lekton; `person`, `instance`
+and `virtual-host` are empsychon — a virtual machine has no matter and lapses at teardown. The gate refuses a nature
+that contradicts the genos. Rules about what sort of being something is — such as identity anchors — attach to the
+nature, so every genos under it inherits them. A mapping records no being: it has no nature and no genos, and its
+`kind` says what sort of procedure or relationship it records.
 
 ## Ownership and responsibility
 Two arcs, over the same **facets** — the rows of the law's `facets` registry, and any a garden adds. A facet may
@@ -75,14 +84,16 @@ The forms an entry can take:
 - `{ via: { bean: … } }` — inherits the parent's owners, e.g. an instance through the product it runs.
 - `{ contract: { bean: … } }` — one facet owned together, through a `contract` bean: the agreement between its
   owners, whose clauses say how they decide.
-- `{ crown: <branch> }` — where every chain ends. The branch follows the nature (`nature` for physical, `logos`
-  for metaphysical, `love` for living); the gate checks it. A **person** is pinned to it: owned by no bean,
-  `owned_by: { legal: { crown: love } }`, and answering for themselves: `responsibility: { legal: { self: true } }`.
+- `{ crown: <branch> }` — where every chain ends. The crown's root is `theos` (θεός, god), which no bean names; a
+  chain reaches it through the branch its nature routes to: `physis` (φύσις, nature) for soma, `logos` (λόγος, word)
+  for lekton, `agape` (ἀγάπη, love that does not possess) for empsychon, and only while the being lives. The gate
+  checks the branch. A **person** is pinned to it — owned by no bean, `owned_by: { legal: { crown: agape } }` — and
+  answers for themselves: `responsibility: { legal: { self: true } }`.
   An **agreement** between parties may choose it: owned by none of its parties, `owned_by: { legal: { crown:
   logos } }`, and answered for by them, each for the clauses it is bound by: `responsibility: { legal: { parties:
   true } }`. A **happening** between people (an `event`) may choose it too: owned by none of those who took part,
   and answered for by whoever hosted it, as its holder. The crown owns and never answers; the parties answer and
-  never own. The crown is written only by these three kinds, and `parties` only by an agreement.
+  never own. The crown is written only by a bean of these three gene, and `parties` only by an agreement.
 
 Ownership is separate from **habitat**: a running instance is owned through its product, and separately
 `lives_in` the machine it runs on. Moving machines changes the habitat, never the owner.
@@ -230,9 +241,9 @@ A garden is kept by its gardener, and nothing outside it writes there. **Gardens
   as their own garden names them. Recording a new garden, and its gardener, is the gardener's decision (class F),
   made in one commit.
 - **A name is minted once and carried.** A value of an anchor term marked `minted` is a name a garden gave when it
-  has the form the law's `identity_policy.minted` gives one: `<kind>:<name>`, the kind one this garden knows
+  has the form the law's `identity_policy.minted` gives one: `<genos>:<name>`, the genos one this garden knows
   (`person:sam`, `contract:shared-camera`). Bare, it identifies only within that garden; qualified —
-  `<garden_id>/<kind>:<name>` — it identifies everywhere. A thing two gardens share is named once, by the garden that
+  `<garden_id>/<genos>:<name>` — it identifies everywhere. A thing two gardens share is named once, by the garden that
   recorded it first, and qualified when it is to cross; a garden that takes the name in keeps it byte for byte, and
   a qualified name here is qualified by this garden or by a garden it holds a `garden` bean for.
 - **An identifier someone else assigned is nobody's to qualify.** A value of a minted term in any other form — a

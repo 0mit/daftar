@@ -63,20 +63,28 @@ with the calendar would make the gate fail on a day for no committed reason.
 ten terms carried an iso_date and nine of them were `observed` or `as_of`: the day a fact was read, not the day it
 runs out.
 
-## schema_language.only_on_kinds
+## schema_language.required_on_gene
 
-THE MIRROR OF `required_on_kinds`. The language could say that a kind of being must carry a term and not that only
-it may, so a term that is a fact about one kind of being — that another garden is a rehearsal — could sit on a person,
-where nothing reads it. The alternative was the gate naming the term and the kind in its code, which is the one thing
+THE AXIS IS READ FROM THE REGISTRY (22.0). A `required_on_<registry>` or `only_on_<registry>` key names a registry, and
+the bean attribute it is keyed on is the field that registry's rows are named by: `gene` gives `genos`, `natures` gives
+`nature`, `roles` gives `role`. Until 22.0 the gate took the key's plural and dropped its `s`, which held while every
+registry was an English plural; γένη is not γένος with an `s`. Reading the row's own field keeps the rule the
+interpreter has always kept — the axis comes from the law, never from the gate's code.
+
+## schema_language.only_on_gene
+
+THE MIRROR OF `required_on_gene`. The language could say that a genos of being must carry a term and not that only
+it may, so a term that is a fact about one genos of being — that another garden is a rehearsal — could sit on a person,
+where nothing reads it. The alternative was the gate naming the term and the genos in its code, which is the one thing
 the interpreter does not do.
 
 ## crown
 
 == NATURES: the root axiom layer (added 2026-08-02, P3 / plan D1, human-ratified rule-change) ==
-`nature` is the ROOT of the type system and `kind` is a REFINEMENT of it, not a parallel taxonomy.
-Every bean carries a nature; every kind below declares the `of_nature` it refines; the gate holds the
-two equal. Policy that used to be stated per kind (anchor family, minimum anchors) attaches HERE, so a
-new kind inherits a coherent identity policy for free and may override only if it truly differs.
+`nature` is the ROOT of the type system and `genos` (until 22.0, `kind`) is a REFINEMENT of it, not a parallel
+taxonomy. Every bean carries a nature; every genos declares the `of_nature` it refines; the gate holds the
+two equal. Policy that used to be stated per genos (anchor family, minimum anchors) attaches HERE, so a
+new genos inherits a coherent identity policy for free and may override only if it truly differs.
 The crown itself is a MODEL axiom (MODEL.md Ownership), never instantiated as beans.
 == THE CROWN (added 2026-08-02, P7b, human-ratified) ==
 MODEL §Ownership states the axiom in prose; this makes it NAMEABLE in data without instantiating it as
@@ -84,6 +92,7 @@ beans. These are the TERMINI every ownership chain resolves to. A bean names its
 where ownership does not pass through another being — in practice, persons. Everything else chains up
 through a person or an org and terminates here transitively.
 The branch a bean may name is fixed by its nature (natures[].crown owns that mapping — not restated here).
+The names — θεός, φύσις, λόγος, ἀγάπη since 22.0 — and what else was on the table: `natures`.
 
 ## identity_policy
 
@@ -109,7 +118,7 @@ P3/D1: identity policy attaches to the ROOT AXIS...
 AN OPEN KEY WAS AN OPEN MERGE KEY (19.0). Identity is matched by (key, value), and until 19.0 the key was any
 string a bean wrote. The fourth cold-start drill invented a key, product_name, and the gate took it; measured, the
 first garden's beans carried seventeen keys no term declared — `product_id`, `session_id`, `service_id`, the
-ids the kinds registry had NAMED IN PROSE since P3 and never declared. Two gardens spelling one anchor model
+ids the registry of gene had NAMED IN PROSE since P3 and never declared. Two gardens spelling one anchor model
 and product_name would never recognise the same object, which is the one thing identity anchors exist to do.
 So the key names a term that declares `anchor:`, and the gate refuses any other. A garden-local key is a local
 term with an anchor policy — the same mechanism every other position has used since 18.x — and a local term
@@ -134,10 +143,10 @@ THE REGISTRY SAID IT; THE GATE CHECKED ONLY THE COUNT (19.0). `establishing_anch
 nature's row since P3, and `dmrules` printed it under "every rule below is enforced", while `dmcheck` read only
 `min_establishing_anchors`. The drilled stranger found the gap by reading the gate's source, which a user
 should never need to do. The family is now enforced as an error on a confirmed bean: what establishes a
-physical being is its matter, and a name that establishes it would fuse a replaced machine with the one that
+body — a being of the nature soma — is its matter, and a name that establishes it would fuse a replaced machine with the one that
 kept its name — exactly the `id` term's oldest exception. What broke under enforcement was instructive: one
 rented VPS anchored on its name, and three physical machines whose `fqdn` was establishing beside a real
-serial. The VPS was of the wrong nature (see `kinds[virtual-host]`); the names were demoted to corroborating,
+serial. The VPS was of the wrong nature (see `gene[virtual-host]`); the names were demoted to corroborating,
 which is what they had always been.
 
 ## identity_policy.minted
@@ -172,9 +181,9 @@ the UID its invitation carries, a virtual machine by the id its provider assigne
 same package name in two gardens was two programs and a candidate for a person to join, where it had always fused;
 and the remedy the law prescribed — put the garden's id in front — would have said that one garden gave Postfix its
 name, which is false provenance. The meanings already wrote a minted name one way, `product:<name>`, so that form
-became structure: `<kind>:<name>`, the kind one the garden knows, is a name a garden gave; any other value was
+became structure: `<genos>:<name>`, the genos one the garden knows, is a name a garden gave; any other value was
 assigned outside every garden, identifies wherever it is written, fuses as every anchor always did, and is never
-qualified — the gate refuses `<garden_id>/postfix`. The kind must be a kind the garden knows so that a colon inside an
+qualified — the gate refuses `<garden_id>/postfix`. The genos must be a genos the garden knows so that a colon inside an
 outside identifier (`urn:…`, `mailto:…`) is not taken for a name a garden gave.
 
 Considered and refused: splitting each term in two, one for identifiers assigned outside and one for names a garden
@@ -206,7 +215,7 @@ into a document is a second copy, and a second copy can disagree.
 WHO MAY KEEP A GARDEN IS THE LAW'S TO SAY: a person, or an organisation — a family business, a club — and never a
 machine or a product, which cannot be asked. The list was written in the gate and in the upgrade tool, two copies in
 code and none in the law, while the hint for a retired name had already moved into the law for the same reason.
-`in: { bean_id: { kinds } }` states it as structure, the one place both tools read. The gardener is not required to
+`in: { bean_id: { gene } }` states it as structure, the one place both tools read. The gardener is not required to
 be the garden's first bean: it is the first of a garden grown with `--gardener`, and a garden upgraded into 21.0 names
 a person it has held for years.
 
@@ -240,6 +249,15 @@ last user became registry rows. `seeds_from`, `created`, `models`: manifest keys
 took in is in its journal and in the captures on the other garden's `garden` bean, when a garden began is its first
 commit, and who wrote there is in the journal and in git.
 
+What went at 22.0, and why: the law's words took their Greek roots (`natures` says why, and what else was on the
+table). A bean's `kind` is its `genos`, the registry `kinds` is `gene`, and a garden's `local_kinds` its `local_gene`;
+the schema's `required_on_kinds`, `only_on_kinds`, `must_equal_kind_attr` and `entry_form_from_kind_attr`, `bean_id`'s
+`kinds` and the minted form's `form_kind` follow them; the natures `physical`, `metaphysical` and `living` are `soma`,
+`lekton` and `empsychon`; and the crown's `god`, `nature` and `love` are `theos`, `physis` and `agape`. Each row says
+where its name went, so a garden not yet upgraded is refused with the new word, never read as nothing. `nature` is a
+name retired at the crown and is still a bean's attribute, and `kind` is retired on a bean and is still a mapping's: a
+name retired in one place may be live in another, and a row's `at` says which.
+
 ## provenance_record
 
 THE RECORD EVERY FACT CARRIES, DECLARED. The merge has read `from` since a generated fact first borrowed the
@@ -253,34 +271,78 @@ proposal carries the fact across, and never changed — so an assertion that arr
 person's assertion, and the guard that an inference never overrides it holds across the boundary without a single
 new rule. It must name a garden this one knows: a fact from a garden nobody recorded has no one to ask.
 
-## natures[physical].crown
+## natures
 
-Extension owns physical beings
+THE GREEK NAMES (22.0). The law's words for what a being is came from four traditions at once: the crown's root was
+Spinoza's god (`Deus sive Natura`), its branches Descartes' extension and thought and Spinoza's conatus, said in English
+as `nature`, `logos` and `love`; the natures were `physical`, `metaphysical` and `living`, and a being's type its
+`kind`. One of them was wrong in its own tradition: in Aristotle, metaphysics — τὰ μετὰ τὰ φυσικά — studies being as
+such, every being, and not the ones that are not physical; a service or a contract is not "metaphysical". So each word
+was given its Greek root. Every choice below was put to the operator with the ones beside it, and ratified on
+2026-09-24; what was not taken is kept here, so that a later reader sees what else was on the table.
 
-## natures[physical].establishing_anchor_family
+THE NATURES — `soma` · `lekton` · `empsychon`, from the Stoics: σῶμα, a body, a being with extension in space —
+machines, hardware, sites; λεκτόν, the sayable, what exists by being said and agreed — code, domains, contracts,
+organisations, designs; ἔμψυχον, the ensouled — persons, and running instances while alive. Taken because each is
+exactly what the law already meant. Not taken: `physis` · `nomos` · `psyche` — Aristotle's contrast of what is by
+nature (φύσει) with what is by convention (νόμῳ), with ψυχή for the living: crisp as a pair, but a machine is an
+artefact of τέχνη, which Aristotle would not call physis. Not taken: `somatic` · `asomatic` · `empsychic` — the Stoic
+pair written as English adjectives, closest in shape to the old words, and so the least surprising in a bean.
+
+THE CROWN — `theos` · `physis` · `logos` · `agape`: θεός, the root every chain ends in and no bean names; φύσις for the
+bodies; λόγος, kept, for the sayable; ἀγάπη, love that does not possess, for the ensouled — so "only love holds a
+person, and only while alive" keeps its word. Not taken, for the third branch: `oikeiosis` — οἰκείωσις, the Stoic
+"making one's own", by which a living being belongs to itself from birth: the most exact word for "unownable by
+another", but it loses the word love. Not taken: `psyche` — ψυχή, life itself: plain and familiar, but it says life,
+not love.
+
+THE TYPE OF A BEING — `genos`, and the registry `gene` (γένος, γένη). Not taken, and the one the agent recommended:
+keep `kind`. Kind, γένος and genus share one Indo-European root, *ǵenh₁-, to beget, so the English word is already the
+Greek one, and renaming it touches every bean for no change of meaning. The operator chose the Greek word, so that the
+law says in one tongue what a being is. What `kind` means besides — a network treatment's kind, a mapping's — is not a
+being's type, and was not renamed (`terms[kind]`).
+
+THE PAGE ON BEING — the public page once called "philosophy" is `Metaphysics` (τὰ μετὰ τὰ φυσικά): with the natures
+renamed, the word no longer collides with a value on a bean. Not taken: First philosophy (πρώτη φιλοσοφία, Aristotle's
+own name for the study, and the one the agent recommended); Ontology (ὄν and λόγος, a coinage of the 1600s).
+
+KEPT AS IT WAS — the bean attribute `nature:`, the registry `natures` and a genos's `of_nature`. Its Greek word, φύσις,
+is now the crown's branch for bodies, and `physis: soma` beside a branch called physis would read badly. Recorded, and
+not taken: οὐσία (ousia), being or substance.
+
+A rename every garden carries is a MAJOR version, and nothing in it is a person's to decide, so all of it is
+translated: `bin/dmupgrade.py` renames the structure of every bean and of VOCAB.md when a garden crosses into 22.0, and
+leaves its comments and prose as the garden wrote them. The law's `retired:` list names each old word, so a garden not
+yet upgraded is refused with the word that took its place — never read as though it said nothing.
+
+## natures[soma].crown
+
+φύσις owns the bodies: a being of the nature soma ends there (until 22.0, "extension owns physical beings")
+
+## natures[soma].establishing_anchor_family
 
 serial / mac — bound to the matter itself. (`wg_pubkey` was listed here until 19.0; it never was.)
 
-## natures[living].establishing_anchor_family
+## natures[empsychon].establishing_anchor_family
 
 Logical: a person's minted id or signing key, an instance's deployment coordinate, a VM's instance id. Until
 19.0 the row also named `personal`, a class `anchor_class` has never offered — a position no anchor could occupy.
 It would have meant a passport number or a biometric, which the ledger never records because they are secrets;
 the name was withdrawn rather than given a class nothing may honestly fill.
 
-## natures[physical].min_establishing_anchors
+## natures[soma].min_establishing_anchors
 
 required once identity.status is `confirmed`
 
-## natures[metaphysical].crown
+## natures[lekton].crown
 
-Thought owns metaphysical beings
+λόγος owns what exists by being said and agreed (until 22.0, "thought owns metaphysical beings")
 
-## natures[metaphysical].establishing_anchor_family
+## natures[lekton].establishing_anchor_family
 
 url / fqdn / git remote / manifest or doc id
 
-## natures[living].crown
+## natures[empsychon].crown
 
 life-bounded ownership; lapses at teardown
 
@@ -469,12 +531,12 @@ systems every garden shares, and two gardens that never met agree which place th
 ## roles
 
 == ROLES: what a being DOES, as against what it IS (added 7.0) ==
-THE FIX FOR AN AMBIGUITY THIS VOCABULARY SHIPPED WITH. `router` was a KIND until 7.0, and the proof it
+THE FIX FOR AN AMBIGUITY THIS VOCABULARY SHIPPED WITH. `router` was a GENOS until 7.0, and the proof it
 was wrong is an asymmetry the corpus already carried: a mail server recorded five roles as free-text data
-(`primary-mail, file-server, monitoring, webmail, erp-host`) while a router's single role was a kind.
+(`primary-mail, file-server, monitoring, webmail, erp-host`) while a router's single role was a genos.
 Both are machines. What makes one a router is that it forwards traffic — which since 6.0 IS data, in
-`treatments`. A kind answers what a being IS; a role answers what it DOES, and a being does several
-things at once. Encoding one of the things it does as the thing it is made `kind` un-askable for every
+`treatments`. A genos answers what a being IS; a role answers what it DOES, and a being does several
+things at once. Encoding one of the things it does as the thing it is made the genos un-askable for every
 machine that does two.
 
 ## operating_systems
@@ -533,7 +595,7 @@ must never be a rule-change. A row carries what is true of the PROTOCOL — whic
 what carries it, and whether it manufactures a link others ride — so that no bean re-states any of it.
 
 WHAT IS DELIBERATELY NOT HERE — IMPLEMENTATIONS. Samba OFFERS smb; the MySQL server SPEAKS mysql;
-Postfix speaks smtp. An implementation is a BEAN (kind instance/product) that carries `endpoints`, and
+Postfix speaks smtp. An implementation is a BEAN (genos instance/product) that carries `endpoints`, and
 putting `samba` in this list beside `smb` would give one thing two names — the exact duplication
 `values_from` exists to stop. This was the first correction the design took: two of the names it was
 asked to model explicitly, `samba` and `mysql`, are implementations, and encoding them as protocols
@@ -932,9 +994,9 @@ and knows which trees are REFERENCE-ONLY (never re-scanned each session).
 
 GATE (P2): enforced generically from here, not from code
 
-## profiles.code.terms[code_paths].schema.required_on_kinds
+## profiles.code.terms[code_paths].schema.required_on_gene
 
-a kind:codebase bean MUST carry a non-empty code_paths
+a genos:codebase bean MUST carry a non-empty code_paths
 
 ## profiles.code.terms[code_paths].agent_directive
 
@@ -1004,7 +1066,7 @@ the shape would be satisfied and it would be the wrong shape.
 
 ## profiles.network.terms[treatments].schema.required_on_roles
 
-7.0: was `required_on_kinds: [router]` until `router` stopped being a kind
+7.0: was `required_on_kinds: [router]` until `router` stopped being a genos
 
 ## profiles.domain.terms[registration].meaning
 
@@ -1076,8 +1138,8 @@ relation must never require a rule-change. It is therefore outside the reverse g
 
 ## terms[depends_on]
 
-LOCAL kinds: object types this garden manages that std-vocab doesn't schematize. Each gets a small schema
-(MODEL Rule 6). A kind that proves general is promoted alongside its terms.
+LOCAL gene (`local_gene`): object types this garden manages that std-vocab doesn't schematize. Each gets a small
+schema (MODEL Rule 6). A genos that proves general is promoted alongside its terms.
 
 ## terms[depends_on].schema.is_ref
 
@@ -1097,7 +1159,7 @@ agent logs shell work, was retired: the `journal` registry says it now.
 
 Universal since 19.0. `required_on_kinds: [product, codebase, instance, org]` was the list from before the two
 arcs were closed; MODEL.md has said "every bean carries both" since v2, and the corpus check proves it on every
-commit. A list that names four kinds when the rule holds for all is a second copy waiting to disagree.
+commit. A list that names four gene when the rule holds for all is a second copy waiting to disagree.
 
 ## terms[status]
 
@@ -1122,8 +1184,8 @@ in the corpus: one session bean called itself `deprecated`, which reads as thoug
 its work were discredited, and another stayed `active` indefinitely, which
 reads as though it were still running. The second is the more dangerous of the two — a reader
 scanning for live sessions would find a ghost.
-SCOPED BY SENSE, NOT BY RULE: `closed` belongs to kinds that BOUND their work — session, program,
-contract. Nothing forbids it elsewhere and nothing should invent a per-kind status mechanism to try;
+SCOPED BY SENSE, NOT BY RULE: `closed` belongs to the gene that BOUND their work — session, program,
+contract. Nothing forbids it elsewhere and nothing should invent a per-genos status mechanism to try;
 `draft` has always been equally meaningless on a host and has never needed guarding.
 
 ## terms[status].merge
@@ -1170,9 +1232,9 @@ NB the KEY is open: no `values`/`values_from` is declared for it,
 
 so the gate can only ever require kebab-case, never a fixed list.
 
-## terms[analysis_cache].schema.required_on_kinds
+## terms[analysis_cache].schema.required_on_gene
 
-a kind:codebase bean MUST carry a non-empty analysis_cache
+a genos:codebase bean MUST carry a non-empty analysis_cache
 
 ## terms[analysis_cache].schema.attrs.as_of
 
@@ -1191,8 +1253,10 @@ restated for the human reader; the gate reads schema.key_form
 ## terms[nature].meaning
 
 Ontological type of a being — the routing key from a bean up to the ownership crown (MODEL §Ownership).
-physical -> nature (res extensa), metaphysical -> logos (res cogitans), living -> love (conatus);
-all resolve up to god (Deus sive Natura). The crown is a MODEL axiom, NOT instantiated as beans.
+soma -> physis (φύσις), lekton -> logos (λόγος), empsychon -> agape (ἀγάπη); all resolve up to theos (θεός).
+The crown is a MODEL axiom, NOT instantiated as beans. Until 22.0 the same routing was said in Latin, after
+Descartes and Spinoza: physical -> nature (res extensa), metaphysical -> logos (res cogitans), living -> love
+(conatus), all up to god (Deus sive Natura) — see `natures` for why the words changed.
 
 ## terms[nature].schema
 
@@ -1200,11 +1264,11 @@ GATE (P2 interpreter; P3 made it the root axiom)
 
 ## terms[nature].schema.required
 
-P3/D1: MANDATORY on every bean, whatever its kind
+P3/D1: MANDATORY on every bean, whatever its genos
 
-## terms[nature].schema.must_equal_kind_attr
+## terms[nature].schema.must_equal_genos_attr
 
-and it must agree with the kind that refines it
+and it must agree with the genos that refines it
 
 ## terms[owned_by].meaning
 
@@ -1232,9 +1296,9 @@ a bean, a contract, outside, or the axiom itself
 
 the branch is NOT free: nature routes it
 
-## terms[owned_by].schema.entry_form_from_kind_attr
+## terms[owned_by].schema.entry_form_from_genos_attr
 
-a kind may PIN which form it must use (see kind: person)
+a genos may PIN which form it must use (see genos: person)
 
 ## terms[owned_by].schema.dag
 
@@ -1345,7 +1409,7 @@ reassignable
 ## terms[fqdn].anchor
 
 DNS-unique within its namespace. Until 19.0 the policy pinned `establishing: true`, which with the family
-enforced would have forbidden a physical machine any `fqdn` anchor at all. The nature decides whether a name
+enforced would have forbidden a machine of the nature soma any `fqdn` anchor at all. The nature decides whether a name
 establishes; the pin was dropped so the bean can write the flag that follows: `true` on a domain, a service or a
 virtual-host; `false` on a machine, and on an org, whose name would otherwise fuse it with its own domain bean.
 
@@ -1365,8 +1429,9 @@ A CREDENTIAL, NOT MATTER (19.0). Classed `hardware` at v1.0, a day before nature
 had nothing else to be confirmed by. A key pair is generated on a machine but is not of it: it is copied when a
 VPS is migrated and the peer stays who it was, and regenerated on the same box and the same machine becomes a
 stranger — which is what `ssh_key_fingerprint`'s own meaning says ("what a host proves itself with") and what
-`openpgp_fingerprint` was classed as from the start. So both key terms are `logical`, and unpinned: for a living
-or metaphysical being a key is the strongest logical anchor there is; for a physical one it corroborates.
+`openpgp_fingerprint` was classed as from the start. So both key terms are `logical`, and unpinned: for an
+ensouled or a sayable being (empsychon, lekton) a key is the strongest logical anchor there is; for a body it
+corroborates.
 
 ## terms[mac].anchor
 
@@ -1378,7 +1443,7 @@ say which.
 ## terms[product_id]
 
 Declared at 19.0 with `service_id`, `org_id`, `person_id`, `program_id`, `contract_id`, `design_id`, `doc_id`,
-`manifest_id`, `session_id`, `instance_id` and `email`: the ids the kinds registry had named in prose since P3
+`manifest_id`, `session_id`, `instance_id` and `email`: the ids the registry of gene had named in prose since P3
 ("Establishing anchor: a logical product_id") and the first garden had used all along, made terms when
 `identity_policy.anchor_key` required every key to be one. All logical; none declares a form, because each is
 whatever its home assigns or the estate mints once. `manifest_id` and `email` leave `establishing` to the bean
@@ -1437,13 +1502,24 @@ FORM they share. This is the MAJOR change of the release: an existing term's han
 
 the link FORM and its resolution are CORE checks (target exists, named field present, shallow). Since 2.0 the acyclicity is declared per relation via schema.dag rather than here.
 
-## terms[kind]
+## terms[genos]
 
 == THE BEAN-GRAMMAR AND FACT-SECTION KEYS (added std-vocab@5.0, 2026-08-02, human-ratified) ==
 These were never terms. They did not need to be while the gate enforced them in CORE and nothing else
 read them — but `bin/dmmerge.py` became generic over top-level keys, and a key with no `merge:` facet
 is merged by a SHAPE GUESS. A guess can be the wrong guess, so each of them now declares how it
 merges. Most ratify what the guess already did; the three that do not are marked.
+
+`genos` is the type of a being, and was `kind` until 22.0; why the Greek word, and what else was on the table, is
+under `natures`.
+
+## terms[kind]
+
+A MAPPING KEEPS ITS KIND (22.0). A bean's type is its `genos`: a row of `gene`, refining a nature, deciding its identity
+policy and the forms its ownership may take. A mapping records a procedure or a relationship — a checklist, an
+automation — which is no being: it has no nature, and its `kind` is read from no registry. Renaming it with the bean's
+would have said that a checklist is a genos of being. So the two keys part at 22.0: a bean says `genos`, and the gate
+refuses `kind` on a bean with where it went (`retired`), while a mapping says `kind` as it always has.
 
 ## terms[owns].enforced_by
 
@@ -1616,10 +1692,10 @@ it has an `os`, while `located_at` is carried by codebases, which have none.
 ## terms[roles].meaning
 
 WHAT A BEING DOES. A LIST, and that is the whole point: a server may do five things and a router one,
-and until 7.0 the estate expressed the first as free text in `owns.roles` and the second as a KIND.
-Making this a term is what let `kind: router` be retired without losing the requirement that a
-router document its treatments — `required_on_roles` reaches a list where `required_on_kinds` could
-only ever reach a scalar.
+and until 7.0 the estate expressed the first as free text in `owns.roles` and the second as a GENOS.
+Making this a term is what let the genos `router` be retired without losing the requirement that a
+router document its treatments — `required_on_roles` reaches a list where a requirement keyed on the
+being's type (`required_on_gene`, since 22.0) could only ever reach a scalar.
 
 ## terms[os].meaning
 
@@ -1781,29 +1857,29 @@ do not know" into "it is fine", which is the worst possible loss for a risk inve
 `state` CARRIES THAT DISTINCTION and is the term's whole point. `live` and `latent` are the two the
 capability grid could express; `unproven` is the one it could not and the one a register needs most.
 
-## kinds[org]
+## gene[org]
 
-== being-kinds for the ownership / type-token / habitat model (2026-08-02, human-ratified) ==
+== being-gene for the ownership / type-token / habitat model (2026-08-02, human-ratified) ==
 
-## kinds[person].ownership_form
+## gene[person].ownership_form
 
-a person may be owned ONLY by the crown (love, while alive) — never by a
+a person may be owned ONLY by the crown (agape, while alive) — never by a
 
-## kinds[person].meaning
+## gene[person].meaning
 
-bean. This also RESERVES the crown form: only a kind whose row names it may name the axiom directly — a
+bean. This also RESERVES the crown form: only a genos whose row names it may name the axiom directly — a
 person, and since 21.0 an agreement and a happening between people — so every other chain must pass through a
 being.
 
-## kinds[host]
+## gene[host]
 
-== kinds that were in USE but undeclared before P3. Under D1 a kind need only name the nature it
+== gene that were in USE but undeclared before P3. Under D1 a genos need only name the nature it
 refines and what it means; anchor family + min-anchors come from that nature.
 
 Until 19.0 every row also carried prose `schema:`, `required:` and `min_anchors:` — second copies of what the
-natures registry, `required_on_kinds` and the anchor terms decide, and by 19.0 three of them disagreed with the
+natures registry, `required_on_gene` and the anchor terms decide, and by 19.0 three of them disagreed with the
 law (`org`: "or primary domain"; `person`: "email"; `codebase`: "a logical manifest id" — all corroborating
-now). A row is its nature and its meaning; what a kind typically owns is the cookbook's to show. The 7.0
+now). A row is its nature and its meaning; what a genos typically owns is the cookbook's to show. The 7.0
 story of `vps` and `router` retiring into `host` moved here from the row's meaning: `vps` described tenancy,
 which ownership carries; `router` a role, which `roles` carries; and the registry noted against itself that
 "D5 will re-read this as an instance living_on a provider" — which `virtual-host` is.
@@ -1811,32 +1887,33 @@ which ownership carries; `router` a role, which `roles` carries; and the registr
 Narrowed at 19.0 to matter: 7.0 had widened it to "bare metal or virtual" when `vps` was retired, and a
 virtual machine is a `virtual-host` now — see there.
 
-## kinds[virtual-host]
+## gene[virtual-host]
 
-A VIRTUAL MACHINE IS A LIVING BEING (19.0). At 7.0 `vps` was retired into `host` because it described TENANCY,
+A VIRTUAL MACHINE IS EMPSYCHON (19.0). At 7.0 `vps` was retired into `host` because it described TENANCY,
 which ownership already carried — and the registry noted, against itself, that "D5 will re-read this as an
 instance living_on a provider". Enforcing the anchor family (see `identity_policy.establishing_family`) forced
-the reading: a VM has no matter, so under `host` (physical, family `hardware`) it could never be confirmed
+the reading: a VM has no matter, so under `host` (soma, family `hardware`) it could never be confirmed
 honestly — the one rented VPS in the first garden was anchored on its name, and another carried its OpenStack
 instance UUID as a `serial`, `class: hardware`, and sat provisional. What a VM IS is a running machine-instance
-on a hypervisor: created, running, torn down. That is the living nature, whose crown `love` "lapses at death or
+on a hypervisor: created, running, torn down. That is the nature empsychon, whose crown `agape` "lapses at death or
 teardown", and whose family is logical — a name or the id its provider assigns (`instance_id`). Tenancy stays
 where it was: a rented VM is owned `external` and answered for here; a VM on the estate's own hypervisor is
 owned through it and `lives_in` it. A rented BARE-METAL server stays a `host`: it has a serial, and ownership
 was always orthogonal to nature.
 
-## kinds[contract]
+## gene[contract]
 
-AN AGREEMENT IS OWNED BY NONE OF ITS PARTIES. The kind meant co-ownership of one facet of one being, and had no
+AN AGREEMENT IS OWNED BY NONE OF ITS PARTIES. The genos meant co-ownership of one facet of one being, and had no
 occupant as that; the agreements people record are between them — a cost shared, a loan repaid. Were each garden to
 write its own gardener as the owner, two gardens' records of one agreement would disagree about its owner on every
-fusion. So the chain may end at the crown — `logos`, for a being of meaning — as a person's ends at `love`, and the
-parties, who can be asked, answer for it: `responsibility_form: [parties]`, reflexive like `self`, drawing no edge.
+fusion. So the chain may end at the crown — `logos`, for what is lekton, said and agreed — as a person's ends at
+`agape`, and the parties, who can be asked, answer for it: `responsibility_form: [parties]`, reflexive like `self`,
+drawing no edge.
 The crown owns and never answers; the parties answer and never own. The form is a LIST, which ALLOWS the crown beside
 the ordinary forms instead of pinning it: an agreement one person wrote and offers may still be owned by its author.
 Co-owning one facet through a contract stays one use of it.
 
-## kinds[garden]
+## gene[garden]
 
 ANOTHER GARDEN IS A BEING. A garden this one deals with needs an identity to name — in a proposal, before a
 qualified name, in a record's provenance — and an owner who can be asked; so it is a bean, anchored by `garden_id`,
@@ -1847,19 +1924,19 @@ of both.
 So the gate refuses a `garden` bean anchored by the garden's own id: it would be the garden describing itself — or a
 clone recorded as a rehearsal, which is the same garden under another folder name.
 
-## kinds[document]
+## gene[document]
 
-`doc_id` promised a document since it was declared, and there was no kind to anchor with it. A document is a being:
+`doc_id` promised a document since it was declared, and there was no genos to anchor with it. A document is a being:
 it has an owner who is often not its holder — a bank's statement is the bank's — an identity, and copies in places.
 What must not be kept whole stays out of it: a transcription of its lines is a `capture` on it, whose `redactions`
 say what was left out and why, so a card number is never in the ledger and its absence is on the record.
 
-## kinds[event]
+## gene[event]
 
 A HAPPENING IS WHERE THINGS ARE AGREED. An agreement spoken over dinner or in a call has its words at that
 happening, and a happening must be a being to be pointed at. Its time is `timing`, at the resolution actually known;
 who took part is `refs`, each naming what they were, because `rel` is open and the parts people play at a meeting are
-not a closed list. A work session is a happening too, and keeps its own kind while the two are told apart by use.
+not a closed list. A work session is a happening too, and keeps its own genos while the two are told apart by use.
 
 A HAPPENING BETWEEN PEOPLE IS OWNED BY NONE OF THEM. Written first with the host as its owner, a dinner recorded in
 the host's garden and in a guest's would disagree about its owner every time the two records met, as two records of
@@ -2022,7 +2099,7 @@ inference never overrides an assertion. Between two persons no rank settles it; 
 whoever an agreement names.
 
 And every proxy of beauty that became a target in this repository drifted: a count of story lines in the law held its
-number while the stories moved into folded strings; a list of the kinds a leak guard watched let an estate's design id
+number while the stories moved into folded strings; a list of the gene a leak guard watched let an estate's design id
 into the public law; a length threshold once measured care and was met by padding. A score in the gate would be the
 largest proxy of all, and a size ratchet would push facts back into prose, where they are cheapest to count away. So
 the machinery measures the preconditions — closure, one statement of each thing, no story in the law, no privileged
@@ -2060,7 +2137,7 @@ the channel of another's words without that garden's consent — only the names 
 
 WHY AN AGREEMENT IS OWNED BY NONE OF ITS PARTIES: were each party's garden to own its own record, the two records of
 one agreement would disagree about their owner every time they met. The crown ends the chain at `logos`, as it ends a
-person's at `love`, and the parties — who can be asked — answer for it. Nothing owns the crown, and nothing owns the
+person's at `agape`, and the parties — who can be asked — answer for it. Nothing owns the crown, and nothing owns the
 mycelium.
 
 WHY CONSENT COMES BEFORE A FLOW: a proposal is made under an agreement both gardeners are parties to, because the
@@ -2178,14 +2255,14 @@ other 31** the corpus uses — `nature`, both ownership arcs, `capabilities`, `a
 the merge drops no fact; it dropped most of them, and no test could fail because the fixtures were shaped
 like the implementation rather than like the model.
 
-`kind` used to emit a list, which `dmcheck` cannot resolve.
+`genos` — `kind` then — used to emit a list, which `dmcheck` cannot resolve.
 
 ## doc:MERGE.md#5.2
 
 (2026-08-02, operator-directed.) `dmmerge` converged two gardens' data while their TYPE SYSTEMS stayed divergent. A merged corpus could
-therefore hold a bean of a kind the merged law never declared, or a bean in breach of an obligation the
+therefore hold a bean of a genos the merged law never declared, or a bean in breach of an obligation the
 garden that wrote it had never adopted — checked by nobody, because each garden's gate only ever saw its
-own half. Promoting kinds to Tier-0 shrank this; it did not close it.
+own half. Promoting gene to Tier-0 shrank this; it did not close it.
 
 ## doc:MERGE.md#6
 

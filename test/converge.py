@@ -56,7 +56,7 @@ def edit(cwd, fn):
 
 RELAY = """---
 bean: relay
-kind: host
+genos: host
 title: "relay — the shared mail relay every garden observes"
 status: active
 summary: "A relay recorded in the origin garden, so gardens cloned from it observe the same object independently and their records must converge on one being rather than three."
@@ -65,7 +65,7 @@ identity:
   anchors:
     - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, observed: 2026-08-02 }}
 provenance: {{ src: observed, by: "agent/origin", as_of: 2026-08-02 }}
-nature: physical
+nature: soma
 owned_by: {{ legal: {{ external: "the relay's operator, outside every garden that observes it" }} }}
 responsibility: {{ legal: {{ external: "the relay's operator" }} }}
 owns:
@@ -107,7 +107,7 @@ edit(os.path.join(TMP, 'site-b'),
 commit(os.path.join(TMP, 'site-b'), 'site-b', 'added dkim-signing and site Site B DC')
 
 edit(os.path.join(TMP, 'site-c'), lambda t: t.replace('roles: [relay]', 'roles: [relay]\n  site: "Site C DC"')
-     .replace('nature: physical', 'nature: physical\ncapabilities:\n  open-relay: { permission: forbidden,'
+     .replace('nature: soma', 'nature: soma\ncapabilities:\n  open-relay: { permission: forbidden,'
                                   ' feasibility: possible, why: "must never accept third-party mail" }'))
 commit(os.path.join(TMP, 'site-c'), 'site-c', 'recorded site Site C DC and forbade open-relay')
 
@@ -184,7 +184,7 @@ check("...and the gate WARNS about the unresolved conflict rather than staying s
 import dmmerge as M
 def _host(garden, bid, serial):
     return [{'garden': garden, 'id': bid, 'fm': {
-        'bean': bid, 'kind': 'host', 'nature': 'physical', 'title': bid, 'status': 'active', 'summary': bid,
+        'bean': bid, 'genos': 'host', 'nature': 'soma', 'title': bid, 'status': 'active', 'summary': bid,
         'identity': {'status': 'confirmed', 'anchors': [{'key': 'serial', 'value': serial, 'class': 'hardware',
                                                          'establishing': True}]},
         'provenance': {'src': 'observed', 'by': garden, 'as_of': '2026-09-17'}}}]
@@ -198,7 +198,7 @@ check("...its anchor is stored once, in the compare form, with no disagreement r
 _one = os.path.join(TMP, 'two-spellings')
 subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _one, '--gardener', 'keeper'], capture_output=True, cwd=ROOT)
 open(os.path.join(_one, 'beans', 'box.md'), 'w').write(
-    '---\nbean: box\nkind: host\ntitle: "box"\nstatus: active\nsummary: "a box"\nnature: physical\n'
+    '---\nbean: box\ngenos: host\ntitle: "box"\nstatus: active\nsummary: "a box"\nnature: soma\n'
     'identity:\n  status: confirmed\n  anchors:\n'
     '    - { key: serial, value: "SN-0042", class: hardware, establishing: true }\n'
     '    - { key: serial, value: "sn-0042", class: hardware, establishing: true }\n'
@@ -249,7 +249,7 @@ def _anchored(garden, prov):
     if prov:
         anc['provenance'] = prov
     return [{'garden': garden, 'id': 'box', 'fm': {
-        'bean': 'box', 'kind': 'host', 'nature': 'physical', 'title': 'b', 'status': 'active', 'summary': 'b',
+        'bean': 'box', 'genos': 'host', 'nature': 'soma', 'title': 'b', 'status': 'active', 'summary': 'b',
         'identity': {'status': 'confirmed', 'anchors': [anc]},
         'provenance': {'src': 'observed', 'by': garden, 'as_of': '2026-09-17'}}}]
 _asserted = {'src': 'asserted-by-human', 'by': 'sam (operator)', 'as_of': '2026-09-17'}
@@ -322,7 +322,7 @@ check("12.0: borrowing never launders UPWARD past the guard's own protection of 
 # names no term — and never written back over what a bean says.
 def _deal(garden, count, borne):
     return [{'garden': garden, 'id': 'deal', 'fm': {
-        'bean': 'deal', 'kind': 'contract', 'nature': 'metaphysical', 'title': 'a deal', 'status': 'active',
+        'bean': 'deal', 'genos': 'contract', 'nature': 'lekton', 'title': 'a deal', 'status': 'active',
         'identity': {'status': 'confirmed', 'anchors': [{'key': 'contract_id', 'value': 'abcdefabcdef/contract:deal',
                                                          'class': 'logical', 'establishing': True}]},
         'provenance': {'src': 'asserted-by-human', 'by': garden, 'as_of': '2026-09-23'},
@@ -348,7 +348,7 @@ check("...and the law says which: `keyed_by` on the entries, a quantity by its d
 _d = os.path.join(TMP, 'spelt')
 os.makedirs(_d)
 _p = os.path.join(_d, 'deal.md')
-_bean = ('---\nbean: deal\nkind: contract\ntitle: "a deal"\nstatus: active\nsummary: "a deal"\n'
+_bean = ('---\nbean: deal\ngenos: contract\ntitle: "a deal"\nstatus: active\nsummary: "a deal"\n'
          'transactions:\n  t1: { what: x, amount: { count: "900.00", unit: XTS }, borne_by: [ { party: sam, share: 1 }, '
          '{ party: ali, share: 2 } ] }   # as the statement shows it\n---\nA deal.\n')
 open(_p, 'w', encoding='utf-8', newline='\n').write(_bean)
@@ -371,16 +371,16 @@ check("the driver writes what each side wrote: ours kept `\"900.00\"` with its b
 # it should be — and the merge stops before it touches a bean, as it stops for two pins.
 _SHAPES = {
     'local_terms: 5': "`local_terms` is int, not a list of entries",
-    'local_kinds: 7': "`local_kinds` is int, not a list of entries",
+    'local_gene: 7': "`local_gene` is int, not a list of entries",
     'local_terms: [ { term: [x] } ]': "local_terms[0].term should be text",
     'local_terms: [ { term: { a: b } } ]': "local_terms[0].term should be text",
-    'local_kinds: [ { kind: [x] } ]': "local_kinds[0].kind should be text",
+    'local_gene: [ { genos: [x] } ]': "local_gene[0].genos should be text",
     'local_terms: [ { term: x, schema: 5 } ]': "local_terms[0].schema should be a mapping",
     'local_terms: [ { term: x, schema: { attrs: 5 } } ]': "local_terms[0].schema.attrs should be a mapping",
     'local_terms: [ { term: x, merge: 5 } ]': "local_terms[0].merge should be a mapping",
     'local_terms: [ { term: x, context_keys: 5 } ]': "local_terms[0].context_keys should be a list of text",
     'local_terms: [ 5 ]': "local_terms[0] is int, not an entry",
-    'local_kinds: [ x ]': "local_kinds[0] is str, not an entry",
+    'local_gene: [ x ]': "local_gene[0] is str, not an entry",
     'registry_additions: { facets: [ 5 ] }': "registry_additions.facets should be a list of rows",
 }
 

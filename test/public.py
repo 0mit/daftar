@@ -28,12 +28,12 @@ T = tempfile.mkdtemp(prefix="dmpub-")
 G = os.path.join(T, "g")
 run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 write(os.path.join(G, "beans", "someone.md"),
-    '---\nbean: someone\nkind: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: living\n'
+    '---\nbean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
     'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
-    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: love } }\n'
+    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\n'
     'responsibility: { legal: { self: true } }\n---\nA person.\n')
 write(os.path.join(G, "beans", "quietbox.md"),
-    '---\nbean: quietbox\nkind: host\ntitle: "a machine"\nstatus: active\nsummary: "h"\nnature: physical\n'
+    '---\nbean: quietbox\ngenos: host\ntitle: "a machine"\nstatus: active\nsummary: "h"\nnature: soma\n'
     'identity: { status: confirmed, anchors: [ { key: serial, value: "SN-Q1", class: hardware, establishing: true },'
     ' { key: hostname, value: "quietbox.example.org", class: network, establishing: false } ] }\n'
     'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n'
@@ -72,7 +72,7 @@ r = dmpublic("--no-files", "--text", body)
 check("...and passes once the names are gone", r.returncode == 0, r.stdout + r.stderr)
 
 write(os.path.join(G, "beans", "samba-here.md"),
-    '---\nbean: samba\nkind: product\ntitle: "the file server software"\nstatus: active\nsummary: "s"\nnature: metaphysical\n'
+    '---\nbean: samba\ngenos: product\ntitle: "the file server software"\nstatus: active\nsummary: "s"\nnature: lekton\n'
     'identity: { status: confirmed, anchors: [ { key: product_id, value: "product:samba", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
     'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
@@ -86,12 +86,12 @@ check("a word the published classifications carry is NOT a leak — a garden can
 # "beings", and a design's id sat in the public law because `design` was not on the list. A design, an agreement, a
 # session: what a garden names is the garden's, whatever its kind.
 write(os.path.join(G, "beans", "design-lantern-stack.md"),
-    '---\nbean: design-lantern-stack\nkind: design\ntitle: "how the lanterns are wired"\nstatus: active\nsummary: "d"\n'
-    'nature: metaphysical\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
+    '---\nbean: design-lantern-stack\ngenos: design\ntitle: "how the lanterns are wired"\nstatus: active\nsummary: "d"\n'
+    'nature: lekton\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
     'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n---\nA design.\n')
 write(os.path.join(G, "beans", "kettle-share.md"),
-    '---\nbean: kettle-share\nkind: contract\ntitle: "a kettle bought together"\nstatus: active\nsummary: "c"\n'
-    'nature: metaphysical\n'
+    '---\nbean: kettle-share\ngenos: contract\ntitle: "a kettle bought together"\nstatus: active\nsummary: "c"\n'
+    'nature: lekton\n'
     'identity: { status: confirmed, anchors: [ { key: contract_id, value: "kettle-2026-17", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
     'owned_by: { legal: { crown: logos } }\n---\nAn agreement.\n')
@@ -113,8 +113,8 @@ commit("the table in porch-feeds lists them\n", "neutral")
 r = dmpublic()
 check("...by its `mapping:` id, when the file is named otherwise", r.returncode == 1 and "porch-feeds" in r.stdout, r.stdout)
 write(os.path.join(G, "beans", "daftar.md"),
-    '---\nbean: daftar\nkind: product\ntitle: "the ledger this garden is kept in"\nstatus: active\nsummary: "p"\n'
-    'nature: metaphysical\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
+    '---\nbean: daftar\ngenos: product\ntitle: "the ledger this garden is kept in"\nstatus: active\nsummary: "p"\n'
+    'nature: lekton\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
     'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n---\nd.\n')
 commit("daftar is a ledger kept in git\n", "neutral")
 r = dmpublic()

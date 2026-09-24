@@ -112,14 +112,14 @@ def terminus(b, seen=()):
             if k in spec:
                 return terminus(spec[k]['bean'], seen + (b,))
     return 'DANGLING'
-# WHICH kinds owe an owner at all is DERIVED from the term, never listed here. A `kind: person` carries no
-# `owned_by` and is not dangling: the crown owns the living while alive, and the term does not require the
+# WHICH gene owe an owner at all is DERIVED from the term, never listed here. A `genos: person` carries no
+# `owned_by` and is not dangling: the crown owns the ensouled while alive, and the term does not require the
 # key. Hardcoding a list here would be a second copy of the obligation that can disagree with the first —
 # and this check called a perfectly correct person DANGLING until test/germinate.py wrote one.
 _ob = (next((t for t in (sv.get('terms') or []) if t.get('term') == 'owned_by'), {}).get('schema') or {})
-OWES = set(_ob.get('required_on_kinds') or [])
+OWES = set(_ob.get('required_on_gene') or [])
 ends = {b: terminus(b) for b, fm in BEANS.items()
-        if fm.get('owned_by') is not None or fm.get('kind') in OWES}
+        if fm.get('owned_by') is not None or fm.get('genos') in OWES}
 check("every ownership chain that is owed terminates at the crown or outside — none dangles or loops",
       all(e in _ENDS for e in ends.values()),
       str({b: e for b, e in ends.items() if e not in _ENDS}))

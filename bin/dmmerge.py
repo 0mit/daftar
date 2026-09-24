@@ -10,8 +10,8 @@ By construction the merge is lossless (every value + its contributing gardens pr
 order-agnostic (commutative+associative — everything sorted canonically), and idempotent.
 
 EACH INPUT CARRIES ITS GARDEN (std-vocab 21.0). A name a garden MINTED — the value of an anchor whose term says
-`minted: true`, written in the form the law gives such a name (`identity_policy.minted.form`: `<kind>:<name>`, its
-kind one this garden knows) — is BARE until it is qualified by the garden that minted it (`<garden_id>/<kind>:<name>`).
+`minted: true`, written in the form the law gives such a name (`identity_policy.minted.form`: `<genos>:<name>`, its
+genos one this garden knows) — is BARE until it is qualified by the garden that minted it (`<garden_id>/<genos>:<name>`).
 A bare name identifies only inside its garden, so it fuses only with the same bare name from the SAME garden; two
 gardens that minted one bare name are CANDIDATES, reported for a person and never fused. An input's garden is its
 `garden_id`: read from git for a garden directory, from `from.garden` for a proposal, or none — and an input whose
@@ -203,7 +203,7 @@ def _home(b):
 
 def bare(key, value):
     """True when an anchor's value is a BARE minted name: its term mints names (`anchor.minted`), the value has the
-    form of a name a garden gave (`identity_policy.minted.form`, its prefix a kind this garden knows — `form_kind`),
+    form of a name a garden gave (`identity_policy.minted.form`, its prefix a genos this garden knows — `form_genos`),
     and it is not qualified by a garden (`identity_policy.minted.pattern`). A minted term's value in any OTHER form was
     assigned outside every garden — `postfix`, a registry number, an invitation's UID — and identifies wherever it is
     written, as every anchor always did. A law that declares no minted names makes nothing bare; one that declares no
@@ -215,7 +215,7 @@ def bare(key, value):
         return False
     if MINT_FORM is None:
         return True
-    return bool(MINT_FORM.match(v)) and (MINT_KINDS is None or v.split(':', 1)[0] in MINT_KINDS)
+    return bool(MINT_FORM.match(v)) and (MINT_GENE is None or v.split(':', 1)[0] in MINT_GENE)
 
 
 def est_anchors(fm, home=None):
@@ -304,7 +304,7 @@ def _odd_key(node):
 
 
 def entry_problems(e, at, name_key):
-    """What in one entry of `local_terms` / `local_kinds` the merge cannot read as law, each as `<where> <what>`."""
+    """What in one entry of `local_terms` / `local_gene` the merge cannot read as law, each as `<where> <what>`."""
     if not isinstance(e, dict):
         return [f"{at} is {type(e).__name__ if e is not None else 'empty'}, not an entry (a mapping with `{name_key}:`)"]
     out = []
@@ -317,7 +317,7 @@ def entry_problems(e, at, name_key):
     for k in ('attrs', 'expiry', 'sums'):
         if sch.get(k) is not None and not isinstance(sch[k], dict):
             out.append(f"{at}.schema.{k} should be a mapping")
-    for holder, k in ((e, 'context_keys'), (sch, 'required_on_kinds')):
+    for holder, k in ((e, 'context_keys'), (sch, 'required_on_gene')):
         v = holder.get(k)
         if v is not None and not (isinstance(v, list) and all(isinstance(x, str) for x in v)):
             out.append(f"{at}.{'schema.' if holder is sch else ''}{k} should be a list of text")
@@ -329,12 +329,12 @@ def entry_problems(e, at, name_key):
 
 
 def vocab_problems(fm):
-    """What in a VOCAB.md's front matter the merge cannot read as law: its local terms and kinds entry by entry, the
+    """What in a VOCAB.md's front matter the merge cannot read as law: its local terms and gene entry by entry, the
     profiles it opts into, the rows it adds to a registry. [] for a law it can read."""
     if not isinstance(fm, dict):
         return [f"its front matter is {type(fm).__name__}, not a mapping"]
     out = []
-    for block, name_key in (('local_terms', 'term'), ('local_kinds', 'kind')):
+    for block, name_key in (('local_terms', 'term'), ('local_gene', 'genos')):
         v = fm.get(block)
         if v is None:
             continue
@@ -425,8 +425,8 @@ def registry_rows(name):
 
 
 def registry_keys(name):
-    """The names a registry's rows give — each row's first field, as the gate keys a row (`registry_rows`). `kinds` is
-    the law's kinds and the garden's own, as the gate reads them."""
+    """The names a registry's rows give — each row's first field, as the gate keys a row (`registry_rows`). `gene` is
+    the law's gene and the garden's own, as the gate reads them."""
     return {str(next(iter(r.values()))) for r in registry_rows(name)}
 
 
@@ -459,13 +459,13 @@ def load_minted():
     pol = loc.get('identity_policy') if loc.get('identity_policy') is not None else std.get('identity_policy')
     mint = (pol if isinstance(pol, dict) else {}).get('minted')
     mint = mint if isinstance(mint, dict) else {}
-    pat, form, fk = mint.get('pattern'), mint.get('form'), mint.get('form_kind')
+    pat, form, fk = mint.get('pattern'), mint.get('form'), mint.get('form_genos')
     names = {n for n, t in TERMS.items() if isinstance(t.get('anchor'), dict) and t['anchor'].get('minted') is True}
     return (names, (re.compile(str(pat), re.ASCII) if pat else None), (re.compile(str(form), re.ASCII) if form else None),
             (registry_keys(str(fk)) if fk else None))
 
 
-MINTED, MINT_RE, MINT_FORM, MINT_KINDS = load_minted()
+MINTED, MINT_RE, MINT_FORM, MINT_GENE = load_minted()
 # The subsumption orders, read from the law rather than known by name. No fallback: an empty registry
 # means no key is ordered, which is a visible loss of merging rather than a silent one.
 def load_leaf_orders():
@@ -1059,22 +1059,22 @@ def merge_component(comp):
 
     merged = {k: merge_key(k, its) for k, its in sorted(fields.items())}
 
-    # `kind` selects the seed-id prefix, so it is resolved here as well as carried as a fact. A component
-    # whose members disagree about kind used to emit a LIST, which `dmcheck` cannot resolve; it is a
+    # `genos` selects the seed-id prefix, so it is resolved here as well as carried as a fact. A component
+    # whose members disagree about genos used to emit a LIST, which `dmcheck` cannot resolve; it is a
     # conflict like any other now, and the id takes the lexicographically-least for determinism.
-    kinds = sorted({b['fm'].get('kind') for b in comp if b['fm'].get('kind')})
+    gene = sorted({b['fm'].get('genos') for b in comp if b['fm'].get('genos')})
 
-    # Canonical seed id = kind-slug of the lexicographically-least ESTABLISHING anchor value. Where a
+    # Canonical seed id = genos-slug of the lexicographically-least ESTABLISHING anchor value. Where a
     # component has NO establishing anchor it falls back to the least garden-local id — and that fallback
     # is NOT identity-bearing: MERGE.md is explicit that garden-local ids may legitimately collide, and
     # id != identity. `id_basis` records which of the two produced this id, because the two are
     # indistinguishable by looking at the string and mean entirely different things.
     est = sorted(str(v['value']) for v in anchors.values() if _est(v))
     base = slug(est[0]) if est else slug(sorted(aka)[0])
-    seed_id = f"{kinds[0]}-{base}" if kinds else base
+    seed_id = f"{gene[0]}-{base}" if gene else base
     return {
         'seed': seed_id,
-        'kind': kinds[0] if len(kinds) == 1 else (kinds or None),
+        'genos': gene[0] if len(gene) == 1 else (gene or None),
         'identity': dict({'anchors': [{_k: _v for _k, _v in anchors[k].items() if _k != '_src'} for k in sorted(anchors)], 'aka': sorted(aka),
                           'id_basis': 'anchor' if est else 'garden-local'},
                          # Only present when two gardens genuinely disagreed about what an anchor IS.
@@ -1094,8 +1094,8 @@ def merge_component(comp):
 
 # ---------- vocabulary reconciliation: merging BEANS is only half a merge ----------
 # dmmerge converged two gardens' data while their TYPE SYSTEMS stayed divergent, so a merged corpus could
-# contain a bean whose kind the receiving garden does not declare — checked by nobody, because each
-# garden's gate only ever saw its own half. Promoting kinds to Tier-0 shrank this; it did not close it.
+# contain a bean whose genos the receiving garden does not declare — checked by nobody, because each
+# garden's gate only ever saw its own half. Promoting gene to Tier-0 shrank this; it did not close it.
 # A garden's law is its Tier-0 PIN, the profiles it opted into, and its local overlay. All three must
 # reconcile before the beans mean anything.
 
@@ -1135,7 +1135,7 @@ def load_vocab(path, gid=None):
         'pin': v.get('extends'), 'garden_pin': g.get('extends'),
         'profiles': sorted(x for x in ep if isinstance(x, str)) if isinstance(ep, list) else [],
         'terms': entries('local_terms', 'term'),
-        'kinds': entries('local_kinds', 'kind'),
+        'gene': entries('local_gene', 'genos'),
         'problems': problems,
     }
 
@@ -1165,11 +1165,11 @@ def merge_vocabs(vocabs):
 
     merged = {'pin': next(iter(pins), None),
               'profiles': sorted({p for v in vocabs for p in v['profiles']}),
-              'terms': {}, 'kinds': {}}
+              'terms': {}, 'gene': {}}
     # ORDER-AGNOSTIC, LIKE THE SEEDS. Where two gardens define one local term differently, the definition kept (and
     # judged by `uncovered`) is the canonically least — never the first to arrive — and the lines are sorted, so the
     # whole report, not only the fingerprint, is the same in every order of the inputs.
-    for space in ('terms', 'kinds'):
+    for space in ('terms', 'gene'):
         defs = {}
         for v in vocabs:
             for name, defn in v[space].items():
@@ -1177,7 +1177,7 @@ def merge_vocabs(vocabs):
         for name, readings in sorted(defs.items()):
             merged[space][name] = readings[min(readings)]
             if len(readings) > 1:
-                conflicts.append(f"local {space[:-1]} '{name}' is defined DIFFERENTLY by the gardens "
+                conflicts.append(f"local {'term' if space == 'terms' else 'genos'} '{name}' is defined DIFFERENTLY by the gardens "
                                  f"that declare it — a term is law, so one reading must be ratified")
     # A profile only one garden opted into becomes an obligation for BOTH once merged. That is correct —
     # the beans that need it are now in the corpus — but it is not silent.
@@ -1190,11 +1190,11 @@ def merge_vocabs(vocabs):
 
 
 def uncovered(seeds, merged_vocab, std_fm):
-    """Kinds and top-level keys the merged corpus USES that the merged law does not DECLARE.
+    """Gene and top-level keys the merged corpus USES that the merged law does not DECLARE.
 
     This is the question the divergence actually raises. Reconciling the vocabularies is the mechanism;
     this is the check that says whether it worked, asked of the merged data rather than of the inputs."""
-    kinds = set(k['kind'] for k in (std_fm.get('kinds') or []) if isinstance(k, dict)) | set(merged_vocab['kinds'])
+    gene = set(k['genos'] for k in (std_fm.get('gene') or []) if isinstance(k, dict)) | set(merged_vocab['gene'])
 
     # THE TERM SET THE MERGED LAW WOULD ACTUALLY ENFORCE: Tier-0 core, plus ONLY the profiles the merged
     # garden opted into, plus the local overlay. Not the module-level TERMS — that one loads every
@@ -1208,22 +1208,22 @@ def uncovered(seeds, merged_vocab, std_fm):
     defs.update(merged_vocab['terms'])
     terms = set(defs)
 
-    bad_kinds, bad_keys, unmet = set(), set(), set()
+    bad_gene, bad_keys, unmet = set(), set(), set()
     for s in seeds.values():
-        skinds = [s['kind']] if isinstance(s['kind'], str) else (s['kind'] or [])
-        for k in skinds:
-            if k and k not in kinds:
-                bad_kinds.add(k)
+        sgene = [s['genos']] if isinstance(s['genos'], str) else (s['genos'] or [])
+        for k in sgene:
+            if k and k not in gene:
+                bad_gene.add(k)
         bad_keys |= {k for k in s['facts'] if k not in terms}
         # THE OBLIGATION LEG, and the one the divergence actually bites on. A garden that never declared
         # `registration` writes a `domain` bean without it quite legitimately; merged into a garden that
         # DOES declare it required, that bean is suddenly in breach — of a rule it was never subject to.
         # Neither garden's gate could see this, because each only ever validated its own half.
         for name, t in defs.items():
-            req = (t.get('schema') or {}).get('required_on_kinds') or []
-            if set(skinds) & set(req) and name not in s['facts']:
-                unmet.add(f"{s['seed']} (kind {'/'.join(skinds)}) owes '{name}'")
-    return sorted(bad_kinds), sorted(bad_keys), sorted(unmet)
+            req = (t.get('schema') or {}).get('required_on_gene') or []
+            if set(sgene) & set(req) and name not in s['facts']:
+                unmet.add(f"{s['seed']} (genos {'/'.join(sgene)}) owes '{name}'")
+    return sorted(bad_gene), sorted(bad_keys), sorted(unmet)
 
 
 def at(seed, path):
@@ -1611,11 +1611,39 @@ if __name__ == '__main__':
             print(f"dmmerge: REFUSING to merge — cannot read this tree's vocabulary ({_e}). "
                   f"There is one path to the law and no fallback.", file=sys.stderr)
             sys.exit(1)
+        before = open(A, encoding='utf-8').read()
+        # EACH SIDE IN THE WORDS OF THE LAW THIS TREE RUNS (22.0). The crossing into std-vocab 22.0 renamed a key on every
+        # bean, so a bean changed on a branch or a clone still at 21.0 came back through this driver saying `kind` beside
+        # the crossed side's `genos`, and disagreeing over a nature — `physical` against `soma` — that nobody disputed.
+        # Each side is read as bin/dmupgrade.py translates a garden crossing into 22.0, by its own rule and its own proof,
+        # restated nowhere here: what is merged is two records in one language. One that cannot be translated without a
+        # person (both words already on it) is refused, and git records an ordinary conflict. A MAPPING is dispatched here
+        # too (.gitattributes) and records no being: it keeps its `kind`, so only a side that is a bean is read in.
+        import dmupgrade as _du
+        read_in = []
+        if _ver and _du.vtuple(_ver) >= _du.STEP_22:
+            for _side, _p in (('ours', A), ('theirs', B)):
+                _text, _form = _du.read_text(_p)
+                try:
+                    _fm = _du._parse(_text)[0]
+                except Exception:                   # a side that does not parse is merge_in_place's to refuse
+                    _fm = None
+                if not (isinstance(_fm, dict) and 'bean' in _fm and 'mapping' not in _fm):
+                    continue
+                try:
+                    _new, _done = _du.renamed(_text, _du.bean_rule_22)
+                except _du.CannotRename as e:
+                    open(A, 'w', encoding='utf-8').write(before)
+                    print(f"dmmerge: refusing to merge {os.path.basename(A)} — {_side} is in words the law retired and "
+                          f"cannot be read in its own: {e}. The file is untouched.", file=sys.stderr)
+                    sys.exit(1)
+                if _done:
+                    _du.write_text(_p, _new, _form)
+                    read_in.append(f"{_side} ({len(_done)} word(s))")
         fmA, bodyA = parse_file(A); fmB, bodyB = parse_file(B)
         bid = fmA.get('bean') or fmB.get('bean')
         seed = merge_component([{'garden': 'ours', 'id': bid, 'fm': fmA},
                                 {'garden': 'theirs', 'id': bid, 'fm': fmB}])
-        before = open(A, encoding='utf-8').read()
         try:
             changed, added, conflicts = merge_in_place(A, fmA, fmB, bodyB, seed)
             after_fm, after_body = parse_file(A)
@@ -1637,7 +1665,8 @@ if __name__ == '__main__':
             sys.exit(1)
         print(f"dmmerge: {bid} — {len(changed)} key(s) rewritten, {len(added)} added, "
               f"{len(conflicts)} conflict(s)" + (f": {', '.join(conflicts)}" if conflicts else "")
-              + ". Every untouched key kept its text and its comments.", file=sys.stderr)
+              + ". Every untouched key kept its text and its comments."
+              + (f" Read in std-vocab 22.0's words first: {', '.join(read_in)}." if read_in else ""), file=sys.stderr)
         sys.exit(0)                                        # conflicts are captured and marked merge_open
     paths = sys.argv[1:]
     # AN INPUT'S LABEL IS ITS DIRECTORY'S NAME — unless two inputs share one. Two gardens on one machine may both be
@@ -1670,7 +1699,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     seeds = merge_gardens(gl)
-    bad_kinds, bad_keys, unmet = uncovered(seeds, mv, std_fm_of(paths[0]))
+    bad_gene, bad_keys, unmet = uncovered(seeds, mv, std_fm_of(paths[0]))
     fp, per = fingerprint(seeds)
     for sid in sorted(seeds):
         print(f"\n=== seed {sid} ===")
@@ -1716,20 +1745,20 @@ if __name__ == '__main__':
     # merged law actually covers the merged corpus. A merge that reports only the data is reporting half.
     print(f"\nVOCABULARY — {len(vocabs)} garden(s) reconciled at {mv['pin']}"
           + (f", profiles {', '.join(mv['profiles'])}" if mv['profiles'] else ", no profiles")
-          + f", {len(mv['terms'])} local term(s), {len(mv['kinds'])} local kind(s)")
+          + f", {len(mv['terms'])} local term(s), {len(mv['gene'])} local genos row(s)")
     for c in vconflicts:
         print(f"  RATIFY  {c}")
-    if bad_kinds:
-        print(f"  UNCOVERED KIND(S): {', '.join(bad_kinds)} — the merged corpus contains beans of a "
-              f"kind the merged law does not declare")
+    if bad_gene:
+        print(f"  UNCOVERED GENE: {', '.join(bad_gene)} — the merged corpus contains beans of a "
+              f"genos the merged law does not declare")
     if bad_keys:
         print(f"  UNCOVERED KEY(S): {', '.join(bad_keys)} — used by a bean, declared by no term")
     for u in unmet:
         print(f"  UNMET       {u} — required by the merged law, which the contributing garden had "
               f"not adopted")
-    if bad_kinds or bad_keys or unmet:
+    if bad_gene or bad_keys or unmet:
         print("  The merged garden would NOT pass its own gate. Reconcile before adopting.")
     elif not vconflicts:
-        print("  CLEAN — the laws reconcile, and every kind, key and obligation of the merged corpus "
+        print("  CLEAN — the laws reconcile, and every genos, key and obligation of the merged corpus "
               "is covered by the merged law.")
-    sys.exit(1 if (bad_kinds or bad_keys or unmet) else 0)
+    sys.exit(1 if (bad_gene or bad_keys or unmet) else 0)

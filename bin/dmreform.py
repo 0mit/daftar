@@ -61,8 +61,8 @@ def legacy_form(term_def, sch):
     form = {'scope': 'entry' if has_entries else 'self', 'attrs': {}, 'order': {}, 'cells': [],
             'self_ref': False, 'value': {}, 'alt': None, 'one_of': list(sch.get('entry_one_of') or []),
             'matches': {'entry': list(sch.get('entry_must_match') or []),
-                        'form_from_kind': sch.get('entry_form_from_kind_attr'),
-                        'equal_kind_attr': sch.get('must_equal_kind_attr')},
+                        'form_from_genos': sch.get('entry_form_from_genos_attr'),
+                        'equal_genos_attr': sch.get('must_equal_genos_attr')},
             'mirror': {'parity_with': sch.get('facet_parity_with'), 'inverse_of': sch.get('inverse_of')}}
 
     def put(scope, facet, name, rule):

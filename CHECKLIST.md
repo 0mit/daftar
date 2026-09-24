@@ -21,8 +21,8 @@ The gate reads the **staged** files, not the working tree: what it checks is wha
       number (`on`, `off`, `yes`, `no`, a bare `1`) is refused — quote it or name it otherwise.
 - [ ] An entry of a term holds only the attributes that term declares. Prose goes in the attribute declared for
       it (`note`, `why`); `provenance` is allowed on any entry.
-- [ ] Required fields are present — beans: `bean, kind, title, status, summary, identity, provenance`;
-      mappings: `mapping, kind, summary`.
+- [ ] Required fields are present — beans: `bean, genos, title, status, summary, identity, provenance`;
+      mappings: `mapping, kind, summary` (a mapping records no being, so it has a `kind` and no `genos`).
 - [ ] Every enum value is one the vocabulary offers. `python3 bin/dmrules.py` prints them all.
 - [ ] Every anchor holds only what the law's `identity_policy.anchor_attrs` lists, and says its key, its value and
       whether it establishes; its key is a term that declares `anchor:`, and that policy overrules the bean. An
@@ -37,7 +37,7 @@ The gate reads the **staged** files, not the working tree: what it checks is wha
 - [ ] `VOCAB.md` and `GARDEN.md` pin the installed vocabulary version.
 - [ ] `GARDEN.md` is judged as itself, against the law's `manifest`: only the attributes it declares, each in its
       form, the required ones present; and once the garden holds a bean it names its gardener — a bean the garden
-      holds, of a kind the manifest admits.
+      holds, of a genos the manifest admits.
 - [ ] An amount of money is `{ count, unit }` in a currency the law knows, with no more decimal places than that
       currency uses, and the parts of a transaction add up exactly to its whole. A count or a share is plain decimal
       digits, no more than the law's pattern allows: a spelling YAML reads as another number (`010`, `0x64`, `1:30`)
@@ -46,7 +46,7 @@ The gate reads the **staged** files, not the working tree: what it checks is wha
 - [ ] A day is one its calendar has. A position in a calendar reckoned by rule that names no real day — `2026-02-30`,
       `persian:1404-12-30` in a year whose last month has twenty-nine days — or a year beyond what the calendar can
       reckon, is refused.
-- [ ] A qualified name (`<garden_id>/<kind>:<name>`) and a record's `provenance.garden` name this garden, or a garden
+- [ ] A qualified name (`<garden_id>/<genos>:<name>`) and a record's `provenance.garden` name this garden, or a garden
       it holds a `garden` bean for. Only a name in the minted form is qualified: an identifier someone else assigned
       (a package's name, a registry number) is refused with a garden's id in front of it.
 - [ ] A `garden` bean is another garden: one anchored by this garden's own id is refused. `test`, the mark that the

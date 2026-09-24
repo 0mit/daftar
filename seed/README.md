@@ -48,7 +48,7 @@ do — the first that runs and imports yaml — and hands over to it.)
 A garden is kept by someone, and the gardener is the first bean you write (below). `--gardener sam
 --gardener-name "Sam"` writes it for you instead: a second commit plants the bean — its name qualified at birth by
 the garden's id, `<garden id>/person:sam` — and names it in `GARDEN.md`, so the garden begins as someone's. Then the
-first commit below is the laptop alone. An organisation that keeps a garden is planted with `--gardener-kind org`.
+first commit below is the laptop alone. An organisation that keeps a garden is planted with `--gardener-genos org`.
 
 **Requires** Python 3 and **PyYAML** — the one third-party dependency. `bin/dmcheck.py` exits 2 without it.
 
@@ -78,34 +78,46 @@ qualifies it, which it needs before it crosses to another garden — `COOKBOOK.m
 ```markdown
 ---
 bean: sam
-kind: person
+genos: person
 title: "Sam — keeps this garden"
 status: active
 summary: "The gardener: the person who keeps this garden, and owns and answers for the machines recorded here."
-nature: living
+nature: empsychon
 identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
-owned_by: { legal: { crown: love } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
 Sam keeps this ledger.
 ```
 
-A machine is owned by someone and answered for by someone — here the same person, on both facets. Its
-identity is a HARDWARE anchor (a serial or a MAC), because a hostname moves between machines:
+Three of its words are the law's, in Greek, each with its siblings:
+
+- `genos` (γένος, kind) — the sort of being a bean records, here a `person`: a row of the law's `gene` (γένη, the
+  kinds). It refines the bean's `nature`.
+- `empsychon` (ἔμψυχον, the ensouled) — a nature: a person, or a running instance, while alive. The other two are
+  `soma` (σῶμα, a body — a machine, a site) and `lekton` (λεκτόν, the sayable — what exists by being said and agreed:
+  code, a domain, a contract).
+- `agape` (ἀγάπη, love that does not possess) — the crown's branch for what is empsychon. The crown is where every
+  chain of ownership ends: its root is `theos` (θεός, god), which no bean names, and its other branches are `physis`
+  (φύσις, nature) for soma and `logos` (λόγος, word) for lekton. No being holds a person; only agape does, and only
+  while they live.
+
+A machine is owned by someone and answered for by someone — here the same person, on both facets. It is `soma`,
+and its identity is a HARDWARE anchor (a serial or a MAC), because a hostname moves between machines:
 
 <!-- example: beans/laptop.md -->
 ```markdown
 ---
 bean: laptop
-kind: host
+genos: host
 title: "laptop — Sam's ThinkPad"
 status: active
 summary: "Sam's daily laptop."
-nature: physical
+nature: soma
 identity:
   status: confirmed
   anchors:
