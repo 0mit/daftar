@@ -138,9 +138,14 @@ check("...and nothing else but the forms for what nobody said", set(_fo) - set(_
 _ord = [h for h in _ck if h in _recipes]
 check("...in the cookbook's own order, so they can be followed from the top", _recipes == _ord, (_recipes, _ord))
 _top = "\n".join(text["seed/FORMS.md"].split("\n## ", 1)[0].splitlines())
-check("...and its opening says how a bean is saved, and that the law is read only for what it does not answer",
-      "bin/dmjournal.py" in _top and "git add -A" in _top and "git commit" in _top and "AGENTS.md" in _top
-      and len(_top) < 2000, _top[:400])
+# ONE COMMAND SAVES (v0.34.1): the entry, `git add -A` and the commit were three calls, and a refused one needed two more.
+check("...and its opening says how a bean is saved — one command, and `--again` after a refusal — and that the law is "
+      "read only for what it does not answer",
+      'python3 bin/dmsave.py "<who>" "<what you did>" --body "' in _top and "python3 bin/dmsave.py --again" in _top
+      and "AGENTS.md" in _top and len(_top) < 2000, _top[:400])
+check("AGENTS.md saves a write in one command, and says what to run after a refusal",
+      'python3 bin/dmsave.py "<who>" "<what changed>" --body "' in text["AGENTS.md"]
+      and "python3 bin/dmsave.py --again" in text["AGENTS.md"], "")
 check("AGENTS.md puts the forms first for writing, and the law after them, on demand",
       0 <= text["AGENTS.md"].find("seed/FORMS.md") < text["AGENTS.md"].find("## On demand")
       < text["AGENTS.md"].find("`MODEL.md`", text["AGENTS.md"].find("## On demand")), "")

@@ -123,9 +123,10 @@ check("a RELATIVE target grows the garden where the caller stands, and nothing l
 # Windows PowerShell 5.1 too — no `&&`, which 5.1 cannot parse, and no `<`, which no PowerShell redirects.
 _msg = r.stdout[r.stdout.find('germinated:'):]
 check("germinate's closing message after --gardener says the gardener is planted, and gives an agent ONE next step: "
-      "read seed/FORMS.md, and save with the journal tool, git add and git commit",
-      'keeper, is planted' in _msg and 'AN AGENT reads seed/FORMS.md' in _msg and 'bin/dmjournal.py' in _msg
-      and 'git add -A' in _msg and 'git commit' in _msg, _msg[:600])
+      "read seed/FORMS.md, and save in one command, bin/dmsave.py — journal, git add and git commit were three",
+      'keeper, is planted' in _msg and 'AN AGENT reads seed/FORMS.md' in _msg
+      and re.search(r'(?m)^  python3? bin/dmsave\.py "<who>" "<what you did>" --body "', _msg)
+      and 'bin/dmjournal.py' not in _msg and 'git add -A' not in _msg, _msg[:600])
 # NO READING LIST (v0.34.1). The message named four documents to read, and an agent driving a small open model read them
 # — 85,000 characters and more of the law — before its first bean, and stalled. A person is given one step too.
 check("...and one for a person, and no list of documents to read: the law is read when a question needs it",

@@ -3692,6 +3692,16 @@ def _journal_command(body='- action: <what was done, and why>'):
     return f'{py} bin/dmjournal.py "<who>" "<what>" --body "{body}"'
 
 
+def _save_command(body):
+    """The ONE command that finishes a commit refused for want of any entry: bin/dmsave.py writes the entry as the
+    journal tool writes it, stages everything and commits (v0.34.1). A garden whose tools predate it is given the
+    journal tool's command."""
+    if not os.path.isfile(os.path.join(ROOT, 'bin', 'dmsave.py')):
+        return _journal_command(body)
+    py = 'python' if os.name == 'nt' else 'python3'
+    return f'{py} bin/dmsave.py "<who>" "<what>" --body "{body}"'
+
+
 # Probe with rev-parse rather than with the diff itself: outside a repository `git diff` silently becomes
 # `--no-index` and complains about the FLAG, which names the wrong problem to whoever reads the error.
 def check_staged_state():
@@ -3716,7 +3726,8 @@ def check_staged_state():
         if sc and 'log/journal.md' not in staged:
             errors.append(f"state-change staged ({', '.join(sc[:3])}…) but log/journal.md not updated — provenance duty. "
                           f"Append an entry naming what changed and why. Its heading is read from the clock by the tool, "
-                          f"never typed:\n      {_journal_command(f'- action: <what was done to {sc[0]}>')}")
+                          f"never typed; this writes it, stages everything and commits:"
+                          f"\n      {_save_command(f'- action: <what was done to {sc[0]}>')}")
         # ...and a RULE-CHANGE all the more so: it is human-ratified and must be logged DISTINCTLY.
         rc = [p for p in staged if p in LAW_DOCS or any(fnmatch.fnmatch(p, _pat) for _pat in LANGUAGE_PATTERNS)]
         if rc and 'log/journal.md' not in staged:

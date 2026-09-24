@@ -8,18 +8,15 @@ recipes to the cookbook's text.
 
 Write what you were told, in these shapes, and copy no value from here: `sam`, `ali`, `XTS`, `123456789abc`, and the
 dates and amounts below are the example's. Beans that name each other are committed together. A bean is saved with its
-journal entry, in three commands:
+journal entry in one command, which writes the entry (its heading read from the clock), stages everything and commits:
 
 ```sh
-python3 bin/dmjournal.py "<who>" "<what you did>" --body "- action: added [[<id>]]."
-git add -A
-git commit
+python3 bin/dmsave.py "<who>" "<what you did>" --body "- action: added [[<id>]]."
 ```
 
-`bin/dmjournal.py` writes the entry's heading from the clock; `log/journal.md` is never edited by hand. When the gate
-refuses, its message says what to write, and `python3 bin/dmwhy.py <term>` says why a rule is as it is. For a question
-this page does not answer, `AGENTS.md` says where the law is. Every command here is written `python3`; on Windows it is
-`python`.
+`log/journal.md` is never edited by hand. When the gate refuses, its message says what to write: fix it, then run
+`python3 bin/dmsave.py --again`. `python3 bin/dmwhy.py <term>` says why a rule is as it is. For a question this page
+does not answer, `AGENTS.md` says where the law is. Every command here is written `python3`; on Windows it is `python`.
 
 ## The gardener, first
 
@@ -322,8 +319,8 @@ python3 bin/dmpropose.py mint shared-camera     # prints the qualified name and 
 python3 bin/dmpropose.py mint sam               # the gardener, written by hand here, whom every agreement names
 ```
 
-It writes nothing: choosing an anchor is the gardener's decision (class F), so the gardener runs the printed command,
-journals it and commits — `git add -A`, then `git commit`, two commands. A gardener planted by
+It writes nothing: choosing an anchor is the gardener's decision (class F), so the gardener runs the printed command
+and saves the change with its journal entry, in one command: `bin/dmsave.py`. A gardener planted by
 `germinate.py --gardener` is qualified already, and `mint` says so. A qualified prefix must be this garden's own id
 or the id of a garden it holds a `garden` bean for, and the gate says so.
 

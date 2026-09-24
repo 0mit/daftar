@@ -58,6 +58,9 @@ Then:
 2. append what you did to `log/journal.md` with `bin/dmjournal.py` — the gate **refuses** a bean staged without it
 3. `git add -A`, then `git commit` — two commands, because Windows PowerShell 5.1 cannot run `&&`
 
+`python3 bin/dmsave.py "<who>" "<what you did>" --body "- action: …"` does 2 and 3 in one command, and when the gate
+refuses, says what to run after the fix.
+
 `python3 bin/dmrules.py` prints every rule in force, derived from the vocabulary rather than restated.
 
 ## Your first beans

@@ -537,8 +537,8 @@ python3 bin/dmpropose.py mint shared-camera     # prints the qualified name and 
 python3 bin/dmpropose.py mint sam               # the gardener, written by hand here, whom every agreement names
 ```
 
-It writes nothing: choosing an anchor is the gardener's decision (class F), so the gardener runs the printed command,
-journals it and commits — `git add -A`, then `git commit`, two commands. A gardener planted by
+It writes nothing: choosing an anchor is the gardener's decision (class F), so the gardener runs the printed command
+and saves the change with its journal entry, in one command: `bin/dmsave.py`. A gardener planted by
 `germinate.py --gardener` is qualified already, and `mint` says so. A qualified prefix must be this garden's own id
 or the id of a garden it holds a `garden` bean for, and the gate says so.
 

@@ -376,18 +376,16 @@ def finish(target, root, ver, release, gid, ggenos, grown_in):
     # ONE NEXT STEP FOR EACH READER, and no reading list. The closing text named four documents to read, and a coding
     # agent driving a small open model read them — 85,000 characters and more of the law — before writing a bean, and
     # stalled; told to read one short page of forms, it read that and finished. The law is read when a question needs
-    # it, and AGENTS.md says where it is.
+    # it, and AGENTS.md says where it is. The save is ONE command, bin/dmsave.py: journal, stage and commit were three.
     print(f"""
 germinated: {shown(target)}  (std-vocab@{ver}, daftar {release})
 
 {opening}
 
 AN AGENT reads seed/FORMS.md — {forms} — writes beans/<id>.md,
-and saves it with its journal entry:
+and saves it with its journal entry, in one command:
   cd {shown(target)}
-  {py} bin/dmjournal.py "<who>" "<what you did>" --body "- action: added [[<id>]]."
-  git add -A
-  git commit
+  {py} bin/dmsave.py "<who>" "<what you did>" --body "- action: added [[<id>]]."
 A PERSON tells their agent to read AGENTS.md in the garden. An assistant in a chat window, with no shell, cannot run
 the gate: paste it seed/WELCOME.md, and what it gives back is a proposal to check and commit.""")
     # AN UNTAGGED CLONE MAKES AN UNPINNABLE GARDEN, and this is said LAST, where it is still on the screen. A copy with

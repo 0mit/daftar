@@ -410,6 +410,9 @@ c = run("git", "commit", "-q", "-m", "no entry", cwd=G)
 out = c.stdout + c.stderr
 check("a bean staged with no journal entry is told to run the tool, not to type a date",
       c.returncode != 0 and "--body" in out and "date '+%Y" not in out, out[-600:])
+# ONE COMMAND FINISHES IT (v0.34.1): the entry, `git add -A` and the commit, which were three.
+check("...the one tool that writes the entry, stages everything and commits: bin/dmsave.py",
+      f'{_py} bin/dmsave.py "<who>" "<what>" --body "- action: <what was done to beans/ali.md>"' in out, out[-600:])
 run("git", "reset", "-q", "--hard", cwd=G)
 
 out = deal("", parties="  sam: { who: { bean: sam } }\n  bob: { who: { bean: bob } }\n")

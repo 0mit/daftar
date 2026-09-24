@@ -68,10 +68,11 @@ constraints inherited from a habitat two hops up.
 **Before editing front matter:** use `bin/dmsafe.py`. Measure first (`count`), then state the number you expect;
 there is no default. Text surgery that changes more places than intended is the commonest way a bean is damaged.
 
-**Every write:** edit the one bean that owns the fact, append to `log/journal.md` in the same commit, and commit.
-The entry goes through `bin/dmjournal.py`, which writes its heading from the clock; you give it the body.
-The gate reads the **staged** blobs and refuses a bean whose change is not journalled. A change to the vocabulary
-or the law must say RULE-CHANGE distinctly.
+**Every write:** edit the one bean that owns the fact, and save it with its journal entry in one command:
+`python3 bin/dmsave.py "<who>" "<what changed>" --body "- action: …"`. It writes the entry (its heading read from
+the clock), stages everything and commits; the gate judges what is committed, and refuses a bean whose change is not
+journalled. After a refusal, fix what it names and run `python3 bin/dmsave.py --again`. A change to the vocabulary or
+the law must say RULE-CHANGE distinctly.
 
 **When you meet a case the vocabulary does not cleanly cover:** stop, show the person the relevant term with its
 sibling records, and decide together — or, working alone, park it in `log/pending.md` as `status: proposed` with
