@@ -11,7 +11,7 @@ freshly grown garden to what its first lines say:
   +  the body may come on standard input, read as bin/dmjournal.py reads it: Persian on a cp1252 machine, byte for byte;
   -  a refused save commits nothing: the gate's reason is printed, the entry is written once and the files are staged,
      and the one command to run after the fix is named — `dmsave.py --again`; the same call run again finishes it too;
-  -  the same call run again is refused, and writes no second entry;
+  +  the same call run again finishes the waiting save and writes no second entry; another entry commits with it;
   +  after the fix, `--again` commits what the working tree holds now — the fix, never the refused copy — under the
      entry's <what>, and an entry the gate asked for goes with it; an entry written with bin/dmjournal.py alone is
      committed the same way;
