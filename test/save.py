@@ -10,7 +10,7 @@ freshly grown garden to what its first lines say:
      verdict, the fast suite's count, and the commit saved;
   +  the body may come on standard input, read as bin/dmjournal.py reads it: Persian on a cp1252 machine, byte for byte;
   -  a refused save commits nothing: the gate's reason is printed, the entry is written once and the files are staged,
-     and the one command to run after the fix is named — `dmsave.py --again`, never the same call;
+     and the one command to run after the fix is named — `dmsave.py --again`; the same call run again finishes it too;
   -  the same call run again is refused, and writes no second entry;
   +  after the fix, `--again` commits what the working tree holds now — the fix, never the refused copy — under the
      entry's <what>, and an entry the gate asked for goes with it; an entry written with bin/dmjournal.py alone is
@@ -154,15 +154,13 @@ check("...the entry is written ONCE, and the bean and the journal stay staged, f
       and {'beans/friend-b.md', 'log/journal.md'} <= set(git('diff', '--cached', '--name-only').stdout.split()),
       git('status', '--porcelain').stdout)
 _close = err[err.find('dmsave: NOT SAVED'):]
-check("...and it names the one command to run after the fix, `dmsave.py --again`, and says it is not the same call",
-      f"\n  {_py} bin/dmsave.py --again" in _close and 'not the same call again' in _close
-      and 'git add' not in _close and len(_close) < 300, _close)
+check("...and it names the one command to run after the fix, `dmsave.py --again`, and nothing else to run",
+      f"\n  {_py} bin/dmsave.py --again" in _close and 'git add' not in _close and len(_close) < 300, _close)
 
 _j = journal()
 rc, out, err = save('sam', 'added friend-b', '--body', '- action: added [[friend-b]].')
-check("the same call run again is refused (exit 2) and writes no second entry: it names the entry waiting, and --again",
-      rc == 2 and journal() == _j and head() == _s[2] and ' · sam · added friend-b' in err
-      and f"{_py} bin/dmsave.py --again" in err, (rc, err))
+check("the same call run again before the fix finishes the waiting save: refused by the gate again (exit 1), and no "
+      "second entry written", rc == 1 and journal() == _j and head() == _s[2] and 'written already' in err, (rc, err))
 
 # ---- + after the fix, --again commits what the working tree holds now ------------------------------------------------
 bean('friend-b')                                       # fixed in the working tree, and not staged: --again stages it
@@ -178,6 +176,26 @@ _s = state()
 rc, out, err = save('--again')
 check("`--again` with no entry waiting is refused (exit 2), naming the full call", rc == 2 and untouched(_s)
       and 'every entry in the journal is committed' in err and 'bin/dmsave.py "<who>"' in err, (rc, err))
+
+# ---- + the same call again, after the fix, saves; a call with another entry commits both ---------------------------------
+bean('friend-e', status='bogus')
+_s = state()
+rc, out, err = save('sam', 'added friend-e', '--body', '- action: added [[friend-e]].')
+bean('friend-e')                                       # fixed, and the same call run again
+rc, out, err = save('sam', 'added friend-e', '--body', '- action: added [[friend-e]].')
+check("after the fix, the same call again saves (exit 0), the entry committed once, the fix and not the refused copy",
+      rc == 0 and git('log', '-1', '--format=%B').stdout.strip() == 'added friend-e'
+      and len(headings(git('show', 'HEAD:log/journal.md').stdout.encode('utf-8'), ' · sam · added friend-e')) == 1
+      and 'status: active' in git('show', 'HEAD:beans/friend-e.md').stdout, (rc, out, err[-400:]))
+bean('friend-g', status='bogus')
+rc, out, err = save('sam', 'added friend-g', '--body', '- action: added [[friend-g]].')
+bean('friend-g')
+bean('friend-h')
+rc, out, err = save('sam', 'added friend-h', '--body', '- action: added [[friend-h]].')
+check("a call with another entry while one waits writes its own and commits both, each entry once",
+      rc == 0 and git('log', '-1', '--format=%B').stdout.strip() == 'added friend-g; added friend-h'
+      and len(headings(git('show', 'HEAD:log/journal.md').stdout.encode('utf-8'), ' · sam · added friend-g')) == 1,
+      (rc, out, err[-400:]))
 
 # ---- + an entry the gate asks for goes with the first ----------------------------------------------------------------
 bean('friend-c')

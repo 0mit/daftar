@@ -13,11 +13,13 @@ passes --no-verify. Exit 0 = saved; 1 = the commit was refused, the entry writte
 before anything was written.
 
 A REFUSED SAVE IS LEFT AS IT STANDS. The gate's messages are printed, and the journal entry and the staged files stay as
-they are, for the fix. After the fix the one command is `dmsave.py --again`, which stages everything again and commits
-the entry already written, under the <what> of its heading — never the same call again, which would write the entry a
-second time, and so a full call is refused while the journal holds an entry no commit holds yet. When the gate asks
-for another entry (one that names a bean), `bin/dmjournal.py` writes it, and `--again` commits both. An entry written
-with `bin/dmjournal.py` alone, a decision with no file changed, is committed the same way.
+they are, for the fix. After the fix, `dmsave.py --again` stages everything again and commits the entry already
+written, under the <what> of its heading. THE SAME CALL AGAIN DOES THE SAME: an agent that runs its save a second time
+is finishing it, so when the entry waiting has this call's <who> and <what>, it is committed and never written a second
+time (measured: a small model re-ran the full call after every refusal, and a refusal of that looped it). A call with
+another entry while one waits writes its own and commits both. When the gate asks for another entry (one that names a
+bean), `bin/dmjournal.py` writes it, and `--again` commits both. An entry written with `bin/dmjournal.py` alone, a
+decision with no file changed, is committed the same way.
 
 REFUSED BEFORE ANYTHING IS WRITTEN, because each would leave an entry no commit can carry: nothing in the garden differs
 from its last commit (nothing to save); the index holds unmerged paths (`git add -A` would mark them resolved, markers
@@ -77,6 +79,12 @@ def what_of(heading):
     return parts[2] if len(parts) == 3 else heading[3:]
 
 
+def who_of(heading):
+    """The <who> of `## <when> · <who> · <what>`."""
+    parts = heading[3:].split(' · ', 2)
+    return parts[1] if len(parts) == 3 else ''
+
+
 def ready(again):
     """Every refusal that must come before a word is written, in the order a writer can act on them: the garden, what
     there is to save, and then the clone — its gate and its identity. Returns the entries already waiting."""
@@ -94,10 +102,6 @@ def ready(again):
     if again and not pending:
         refuse(f"--again commits a journal entry already written, and every entry in the journal is committed. "
                f"Nothing written. Save a change with: {PY} bin/dmsave.py \"<who>\" \"<what>\" --body \"- action: …\"")
-    if not again and pending:
-        refuse("the journal holds an entry no commit holds yet:\n  " + '\n  '.join(pending[-3:]) +
-               f"\nA save was refused, or the entry was written with bin/dmjournal.py. Nothing written. Once what the "
-               f"gate named is fixed, commit it with the files as they stand:\n  {AGAIN}")
     if not again and not git('status', '--porcelain').stdout.strip():
         refuse("nothing to save — no file in the garden differs from its last commit. Write the bean first; nothing "
                "written")
@@ -123,8 +127,7 @@ def commit(message, again):
     def not_saved(why):
         # SHORT, because it stays in the reader's context: the entry is theirs already, so it is not shown again.
         print(dmparse.said(f"dmsave: NOT SAVED — {why}. The journal entry is written and the files are staged; leave "
-                           f"both, fix what it names, then run{'' if again else ' this — not the same call again'}:\n"
-                           f"  {AGAIN}"), file=sys.stderr)
+                           f"both, fix what it names, then run:\n  {AGAIN}"), file=sys.stderr)
         return 1
     add = git('add', '-A')
     if add.returncode != 0:
@@ -174,12 +177,17 @@ def main(argv):
             body = dmjournal.decode_body(stream.read())
         except SystemExit as e:
             refuse(str(e.code).replace('dmjournal: ', '', 1))
-    ready(again=False)
+    pending = ready(again=False)
+    if pending and who_of(pending[-1]).strip() == who.strip() and what_of(pending[-1]).strip() == what.strip():
+        # THE SAME CALL AGAIN: its entry is written already — finish that save, and write the entry no second time
+        print(dmparse.said(f"dmsave: this entry is written already, and waiting — committing it, as --again does"),
+              file=sys.stderr)
+        return commit('; '.join(what_of(h) for h in pending), again=True)
     try:
         dmjournal.append(who, what, body)
     except SystemExit as e:                       # the journal tool refused the entry, and wrote nothing
         refuse(str(e.code).replace('dmjournal: ', '', 1))
-    return commit(what.strip(), again=False)
+    return commit('; '.join([what_of(h) for h in pending] + [what.strip()]), again=False)
 
 
 if __name__ == '__main__':
