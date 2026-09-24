@@ -159,8 +159,8 @@ The `[[bean-id]]` is what makes the entry count: the gate refuses a staged bean 
 name, and a staged `GARDEN.md` whose entry does not say RULE-CHANGE. `- action:` is the only required line;
 `detail` and `why` are for the reader you cannot answer questions for, which in a year is you. (If `--gardener`
 planted the gardener already, the first commit is the laptop alone, and its entry names only `[[laptop]]`.) When
-the gate refuses something, its message says what to write; `MODEL.md` says why, and `CHECKLIST.md` says how a
-write is made. `COOKBOOK.md` goes on from here.
+the gate refuses something, its message says what to write, and `python3 bin/dmwhy.py <name>` says why; `MODEL.md`
+is the model, and `CHECKLIST.md` says how a write is made. `COOKBOOK.md` goes on from here.
 
 ## Contents
 
@@ -173,6 +173,7 @@ write is made. `COOKBOOK.md` goes on from here.
 | `pending.md.template` | the park-and-proceed queue: its header and **zero entries** |
 | `germinate.py` | the procedure above (`germinate.sh` hands over to it) |
 | `COOKBOOK.md` | the common things, written the way the gate accepts them, the gardener first |
+| `FORMS.md` | what an agent reads before writing: six of the cookbook's recipes, byte for byte, and what to write when nobody said |
 | `WELCOME.md` | the door for an assistant with no shell |
 | `RATIONALE.md` | why each rule of `std-vocab.md` is as it is, keyed by the rule's path |
 

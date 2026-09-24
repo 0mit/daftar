@@ -348,6 +348,13 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform):
             'commit', '-q', '-m', f"germinate: {gid} keeps this garden")
 
 
+def identity_set(target):
+    """True when git has an identity to commit under in `target` that someone SET — in a git configuration or in the
+    environment — rather than one git would guess from the machine, or refuse to guess."""
+    return all(run('git', '-C', target, '-c', 'user.useConfigOnly=true', 'var', v, check=False).returncode == 0
+               for v in ('GIT_AUTHOR_IDENT', 'GIT_COMMITTER_IDENT'))
+
+
 def finish(target, root, ver, release, gid, ggenos, grown_in):
     """The garden's own gate, and what to do next."""
     gate = subprocess.run([sys.executable, os.path.join(target, 'bin', 'dmcheck.py')], cwd=target)
@@ -360,35 +367,29 @@ def finish(target, root, ver, release, gid, ggenos, grown_in):
               else 'The garden does NOT pass its own gate: read the errors above before anything else.')
     if gid:
         who = 'person who keeps' if ggenos == 'person' else 'organisation that keeps'
-        opening = (f"{passes} Its gardener, {gid}, is planted: the {who} it, named in GARDEN.md. "
-                   f"To plant the next bean:")
-        cookbook = "goes on from the gardener to machines, money, agreements and other gardens"
+        opening = f"{passes} Its gardener, {gid}, is planted: the {who} it, named in GARDEN.md."
+        forms = "the forms the gate accepts, and what to write when nobody said"
     else:
         opening = (f"{passes} Its FIRST bean is its gardener — the person or organisation who keeps it — named in "
                    f"GARDEN.md `gardener:`.")
-        cookbook = "starts with the gardener"
+        forms = "the forms the gate accepts, the gardener's first"
+    # ONE NEXT STEP FOR EACH READER, and no reading list. The closing text named four documents to read, and a coding
+    # agent driving a small open model read them — 85,000 characters and more of the law — before writing a bean, and
+    # stalled; told to read one short page of forms, it read that and finished. The law is read when a question needs
+    # it, and AGENTS.md says where it is.
     print(f"""
 germinated: {shown(target)}  (std-vocab@{ver}, daftar {release})
 
 {opening}
-  1. write {shown(os.path.join(target, 'beans', '<id>.md'))}   (bean: <id> must equal the filename; seed/COOKBOOK.md {cookbook})
-  2. append an entry to {shown(os.path.join(target, 'log', 'journal.md'))}  — the gate REFUSES a bean staged without one.
-     Its heading is a POSITION IN TIME, read from the clock by a tool, never typed; give it the body only:
-       {py} bin/dmjournal.py "your-name" "what you did" --body "- action: added [[<id>]]."
-  3. git add -A
-     git commit
 
-  {py} bin/dmrules.py   prints every rule in force, derived from the vocabulary.
-  seed/README.md           a first person, a first host and a first journal entry, passing as written.
-  seed/COOKBOOK.md         the common things, the gardener first: machines, a domain, another person's garden, an
-                           event, money shared and lent, a statement, a proposal between gardens, a missing value.
-  MODEL.md, CHECKLIST.md   what the rules mean, and how a write is made.
-
-WORKING WITH AN AGENT? AGENTS.md came with the garden, and .claude/skills/daftar/ holds the same text.
-An agent with a shell reads it and loads the law from THIS garden rather than guessing — which is the
-point of the whole thing: one language, both parties writing in it, neither able to corrupt it quietly.
-An assistant in a chat window, with no shell, cannot run the gate: paste it seed/WELCOME.md, and what
-it gives you back is a proposal for you to check and commit.""")
+AN AGENT reads seed/FORMS.md — {forms} — writes beans/<id>.md,
+and saves it with its journal entry:
+  cd {shown(target)}
+  {py} bin/dmjournal.py "<who>" "<what you did>" --body "- action: added [[<id>]]."
+  git add -A
+  git commit
+A PERSON tells their agent to read AGENTS.md in the garden. An assistant in a chat window, with no shell, cannot run
+the gate: paste it seed/WELCOME.md, and what it gives back is a proposal to check and commit.""")
     # AN UNTAGGED CLONE MAKES AN UNPINNABLE GARDEN, and this is said LAST, where it is still on the screen. A copy with
     # no git history is no clone: `git -C` on it fails, so the way to a release is a clone of the repository. A garden
     # grown from inside another runs what that garden runs, and neither NOTE is its to follow: that garden is no clone
@@ -428,16 +429,17 @@ which names no release anybody else can fetch. Fine for a look around. To pin on
 and grow again — or, in this garden as it stands, adopt one deliberately with
   cd {shown(target)}
   {py} bin/dmupgrade.py <tag>""")
-    # WHO COMMITS. germinate commits as "germinate"; every later commit is yours, and git refuses one with no identity.
-    name = run('git', '-C', target, 'config', 'user.name', check=False).stdout.strip()
-    email = run('git', '-C', target, 'config', 'user.email', check=False).stdout.strip()
-    if not name or not email:
+    # WHO COMMITS. germinate commits as "germinate"; every later commit is yours, and git needs an identity to make one.
+    # Said only where none is SET — in a configuration, or in the environment, where a harness running an agent sets
+    # GIT_AUTHOR_NAME and the rest — and asked of git itself, strictly (`git var`, guessing forbidden), so every place
+    # git reads an identity from is read. An agent told to set one where the harness had set it spent its turns on it.
+    if not identity_set(target):
         print(f"""
-BEFORE YOUR FIRST COMMIT: git has no identity here, and will refuse it. Set one for this garden:
+BEFORE THE FIRST COMMIT: no git identity is set here, and git would refuse the commit or guess a name from the machine.
+Set one for this garden:
   git -C {shown(target)} config user.name  "Your Name"
   git -C {shown(target)} config user.email "you@example.org"
-An agent working in the garden should commit under its own name (e.g. "agent (model, session)"), so the journal's
-"who" and git's author agree.""")
+An agent commits under its own name (e.g. "agent (model, session)"), so the journal's "who" and git's author agree.""")
     return gate.returncode
 
 

@@ -3,7 +3,8 @@
 
 The law is held consistent by the other suites; the prose around it was checked by nobody. This one checks what
 can be COMPUTED about a document: that it names no construct the language has retired, that every tool and suite
-it names exists, and that the suites a contributor is told to run are the suites the release runs. Whether a
+it names exists, that the suites a contributor is told to run are the suites the release runs, and that a page made of
+another's text — the skill of AGENTS.md, the forms of the cookbook's recipes — holds it byte for byte. Whether a
 paragraph is true, or can be read two ways, is still a reader's work. The examples a document shows are committed
 in a fresh garden by `test/germinate.py`; this does not repeat that.
 """
@@ -19,7 +20,8 @@ def check(name, cond, detail=""):
 
 # HISTORY.md and the vocabulary's changelog are the record of what WAS: a retired name belongs there.
 PROSE = ["README.md", "MODEL.md", "CHECKLIST.md", "MERGE.md", "CONTRIBUTING.md", "seed/README.md", "seed/COOKBOOK.md",
-         ".claude/skills/daftar/SKILL.md", ".github/pull_request_template.md", "AGENTS.md", "seed/WELCOME.md"]
+         ".claude/skills/daftar/SKILL.md", ".github/pull_request_template.md", "AGENTS.md", "seed/WELCOME.md",
+         "seed/FORMS.md"]
 # Named in a document as NOT shipped here: the maintainers' corpus tests, which need a garden's beans.
 NOT_SHIPPED = {"test/golden.py", "test/diffgate.py"}
 # Shipped, and run by every garden's own hook rather than by the release: it needs a garden around it.
@@ -119,6 +121,29 @@ check("seed/WELCOME.md says in its first lines that its reader cannot run the ga
 _opens = [p for p in re.findall(r"`([A-Za-z0-9_./-]+\.(?:md|py|sh))`", text["seed/WELCOME.md"])
           if not os.path.isfile(os.path.join(ROOT, p))]
 check("...and names no file that does not exist", not _opens, _opens)
+
+# THE FORMS ARE THE COOKBOOK'S OWN RECIPES, NOT A SECOND COPY THAT CAN DRIFT (v0.34.1). seed/FORMS.md is what an agent
+# reads before writing: six recipes of the cookbook, cut from it unchanged, and the forms for what nobody said. A recipe
+# changed in one and not the other fails here, by name; the fix is to copy the cookbook's section into the forms again.
+def _sections(t):
+    return {s.split("\n", 1)[0]: s for s in t.split("\n## ")[1:]}
+_ck, _fo = _sections(text["seed/COOKBOOK.md"]), _sections(text["seed/FORMS.md"])
+_recipes = [h for h in _fo if h in _ck]
+_drift = [h for h in _recipes if _fo[h] != _ck[h]]
+check("seed/FORMS.md holds six recipes of seed/COOKBOOK.md, each byte for byte as the cookbook has it",
+      len(_recipes) == 6 and not _drift and _recipes[0] == "The gardener, first",
+      f"recipes {_recipes}; differing from the cookbook (copy its section again): {_drift}")
+check("...and nothing else but the forms for what nobody said", set(_fo) - set(_recipes) == {"What nobody said"},
+      sorted(set(_fo) - set(_recipes)))
+_ord = [h for h in _ck if h in _recipes]
+check("...in the cookbook's own order, so they can be followed from the top", _recipes == _ord, (_recipes, _ord))
+_top = "\n".join(text["seed/FORMS.md"].split("\n## ", 1)[0].splitlines())
+check("...and its opening says how a bean is saved, and that the law is read only for what it does not answer",
+      "bin/dmjournal.py" in _top and "git add -A" in _top and "git commit" in _top and "AGENTS.md" in _top
+      and len(_top) < 2000, _top[:400])
+check("AGENTS.md puts the forms first for writing, and the law after them, on demand",
+      0 <= text["AGENTS.md"].find("seed/FORMS.md") < text["AGENTS.md"].find("## On demand")
+      < text["AGENTS.md"].find("`MODEL.md`", text["AGENTS.md"].find("## On demand")), "")
 
 ci = open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8").read()
 ci_suites = set(re.findall(r"python3 (test/[a-z_]+\.py)", ci))

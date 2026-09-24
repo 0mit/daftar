@@ -67,7 +67,7 @@ check("...and so is an attribute the term does not declare", "carries `it_is_qui
 bean('rental: { renews: 2027-01-15 }\n')
 out = gate()
 check("...and a missing required attribute, named as the attribute it is",
-      "rental requires 'provider' (VOCAB rental.schema.attrs.provider: required)" in out, out[-600:])
+      "rental requires 'provider' (rule rental.schema.attrs.provider)" in out, out[-600:])
 
 # ---------------------------------------------------------------- a value added to a term that READS A REGISTRY
 ROW = 'registry_additions:\n  operating_systems:\n    - { os: probe-os, family: unix, path_grammar: unix-filesystem, meaning: "a probe" }'

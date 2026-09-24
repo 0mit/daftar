@@ -237,6 +237,7 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules |
 | `seed/WELCOME.md` | the door for an assistant with no shell, written to be pasted into a chat |
 | `seed/README.md`, `seed/COOKBOOK.md` | worked beans that pass the gate as written: the gardener, a host, a domain, a service, a rented server, a cost shared between two people, an agreement paid in instalments, a statement, an event, another person's garden |
+| `seed/FORMS.md` | what an agent reads before writing: six of the cookbook's recipes, byte for byte, and what to write when nobody said |
 | `test/` | the release suites, all run in CI (`CONTRIBUTING.md` has the command); `fast.py` runs in every garden's hook |
 
 ## A seed, on a notebook

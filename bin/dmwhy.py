@@ -176,9 +176,25 @@ def main(argv):
     return 0
 
 
+def names(want, why=None):
+    """The reasons `dmwhy <want>` prints, by key: the one keyed `want`, and each whose path holds it as a segment."""
+    return [k for k in (rationale() if why is None else why)
+            if k == want or re.search(r'(^|[.\[])' + re.escape(want) + r'($|[.\]])', k)]
+
+
+def answers(want):
+    """True when `dmwhy <want>` finds a reason, in either pair — what a refusal asks before it offers the command."""
+    global LAW, WHY
+    _was = LAW, WHY
+    try:
+        return any(names(want) for _pair in each_pair())
+    finally:
+        LAW, WHY = _was
+
+
 def _show(want):
     data, why = law(), rationale()
-    keys = [k for k in why if k == want or re.search(r'(^|[.\[])' + re.escape(want) + r'($|[.\]])', k)]
+    keys = names(want, why)
     for k in keys:
         print(f"== {k}")
         try:

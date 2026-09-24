@@ -21,7 +21,9 @@ the law and the garden as a whole; what the others hold is counted in the last l
 mapping of this garden is refused, never passed.
 
 A CLEAN RUN PRINTS ONE LINE, the verdict: `<garden> (daftar <release>, gardener <id>, garden <id>): N docs, 0 error(s),
-0 warning(s)`. A finding is printed above it, on its own line, its reason beneath.
+0 warning(s)`. A finding is printed above it, on its own line, its reason beneath — and, for the refusals met most,
+its fix: the form a tested example of seed/FORMS.md or the cookbook writes, or the values the law allows, and the
+rule's name with `python3 bin/dmwhy.py <name>`, which says why — not a document to read whole.
 
 Session/model-agnostic gate, in two halves (v2 P2 / plan D4):
 
@@ -36,7 +38,7 @@ Session/model-agnostic gate, in two halves (v2 P2 / plan D4):
               std-vocab and the garden's VOCAB); a term with no `schema:` is documentation only.
               The schema language is documented in VOCAB.md under `schema_language:`.
 """
-import glob, math, os, re, sys, fnmatch, ipaddress, shutil, stat, subprocess, tempfile
+import difflib, glob, json, math, os, re, sys, fnmatch, ipaddress, shutil, stat, subprocess, tempfile
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
@@ -601,6 +603,139 @@ def translate_hint():
     _rel = _g.get('daftar_release') if isinstance(_g, dict) else None
     return (f"`{'python' if os.name == 'nt' else 'python3'} bin/dmupgrade.py {_rel or '<the release>'}` translates it — "
             f"in a garden crossing into the release, and in one that crossed already")
+
+
+# ---- THE FIX IS SAID IN THE REFUSAL (v0.34.1) ------------------------------------------------------------------------
+# A refusal ended "(VOCAB timing term)" or "(see seed/COOKBOOK.md)", and a coding agent keeping a garden did what it
+# said: it opened seed/std-vocab.md — a quarter of a megabyte — and then MODEL.md, CHECKLIST.md and the cookbook.
+# Driving a small open model on a PC, it read 85,000 to 165,000 characters of them and stalled, or never finished; told
+# to read only a short page of forms, it read none and finished. So the refusals an agent meets most carry their fix:
+# the form to write, one line of YAML as a tested example writes it, or the values the law allows — and, for WHY, the
+# command that prints that one rule with its reason, never a document to read whole. The rule keeps its name.
+# THE FORMS ARE THE GUIDES' OWN EXAMPLES — seed/FORMS.md's first, then the cookbook's and seed/README.md's — each
+# committed in a fresh garden by test/germinate.py, so a form shown is a form that passes. They are read for the WORDS
+# of a refusal and nothing else: no verdict depends on them, and a garden without them is judged the same, its
+# refusals only saying less. An example marked `unsaid:` is a guide's form for what nobody said; it is shown, beside
+# the other, for the terms its marker names.
+_GUIDES = ('seed/FORMS.md', 'seed/COOKBOOK.md', 'seed/README.md')
+_EXAMPLE = re.compile(r'<!-- (example|unsaid): beans/[a-z0-9-]+\.md(?:, for ([a-z0-9_, ]+))? -->\n'
+                      r'```markdown\n(.*?)\n```', re.S)
+_READ_ONCE = {}
+
+
+def _examples():
+    """[(front matter, the terms it is the unsaid form of — empty for a recipe's)] of every example bean the guides
+    show, in the order they show them."""
+    if 'examples' not in _READ_ONCE:
+        _READ_ONCE['examples'] = []
+        for _g in _GUIDES:
+            try:
+                _page = open(os.path.join(ROOT, _g), encoding='utf-8').read().replace('\r\n', '\n')
+            except (OSError, UnicodeDecodeError):
+                continue
+            for _m in _EXAMPLE.finditer(_page):
+                try:
+                    _fm = dmparse.loads(dmparse.split_front_matter(_m.group(3) + '\n')[0] or '')
+                except Exception:
+                    continue
+                if isinstance(_fm, dict):
+                    _for = {t.strip() for t in (_m.group(2) or '').split(',') if t.strip()}
+                    _READ_ONCE['examples'].append((_fm, _for if _m.group(1) == 'unsaid' else set()))
+    return _READ_ONCE['examples']
+
+
+def _flow(v):
+    """A value as ONE line of YAML, spelt as the guides spell it — `{ key: value }`, `[a, b]` — a string bare only where
+    YAML reads it back as that same string, so the line parses to exactly the value the example holds."""
+    if isinstance(v, dict):
+        return '{ ' + ', '.join(f"{k}: {_flow(x)}" for k, x in v.items()) + ' }' if v else '{}'
+    if isinstance(v, list):
+        return '[' + ', '.join(_flow(x) for x in v) + ']'
+    if isinstance(v, bool) or v is None:
+        return {True: 'true', False: 'false', None: 'null'}[v]
+    if isinstance(v, int) or type(v).__name__ == 'date':
+        return str(v)
+    s = str(v)
+    try:
+        _bare = re.fullmatch(r'[A-Za-z][A-Za-z0-9_-]*', s) is not None and dmparse.loads(s) == s
+    except Exception:
+        _bare = False
+    return s if _bare else json.dumps(s, ensure_ascii=False)
+
+
+def _held_at(path, genos=None):
+    """[(value, unsaid-for)] the examples hold at `path`: a top-level key (`timing`), or an attribute further in
+    (`transactions.amount`) — of a mapping, or of each entry of an open map or a list. With `genos`, only the examples
+    of that genos."""
+    out = []
+    _head, *_rest = path.split('.')
+    for _fm, _for in _examples():
+        _vals = [_fm[_head]] if _head in _fm and genos in (None, _fm.get('genos')) else []
+        for _seg in _rest:
+            _next = []
+            for _v in _vals:
+                if isinstance(_v, dict) and _seg in _v:
+                    _next.append(_v[_seg])
+                    continue
+                for _e in (_v.values() if isinstance(_v, dict) else _v if isinstance(_v, list) else []):
+                    if isinstance(_e, dict) and _seg in _e:
+                        _next.append(_e[_seg])
+            _vals = _next
+        out += [(_v, _for) for _v in _vals]
+    return out
+
+
+def _example_form(path, entry=False, genos=None):
+    """The fix as the guides write it, in one line: `<key>: <value>` from the first recipe that holds `path` — with
+    `entry`, one ENTRY of it, as it is keyed there; with `genos`, a recipe of that genos — and beside it the form a
+    guide gives for when nobody said it, where one is marked for this term and differs. '' where no example holds it."""
+    def _one(v):
+        if not entry:
+            return f"{path.split('.')[-1]}: {_flow(v)}"
+        if isinstance(v, dict) and v:
+            _k, _e = next(iter(v.items()))
+            return f"{_k}: {_flow(_e)}"
+        return _flow(v[0]) if isinstance(v, list) and v else ''
+    _term = path.split('.')[0]
+    _said = [_one(v) for v, f in _held_at(path, genos) if not f]
+    _unsaid = [_one(v) for v, f in _held_at(path, genos) if _term in f]
+    out = _said[0] if _said else ''
+    if _unsaid and _unsaid[0] and _unsaid[0] != out:
+        out += ('; when nobody said it, ' if out else 'when nobody said it, ') + _unsaid[0]
+    return out
+
+
+def _unsaid_form(term):
+    """Only the form a guide gives for `term` when nobody said it — '' where none is marked."""
+    return next((f"{term}: {_flow(v)}" for v, f in _held_at(term) if term in f), '')
+
+
+def _rule(path, *names):
+    """` (rule <path>; why: python3 bin/dmwhy.py <name>)`: the rule a refusal applies, by its name in the law, and the
+    command that prints it with its reason — for the first of `names` (else the path, then its head) the reasoning
+    explains. Without a reason to print, the name alone: never a document to read whole."""
+    for _n in (names or (path, path.split('.')[0])):
+        if ('why', _n) not in _READ_ONCE:
+            try:
+                import dmwhy
+                _READ_ONCE[('why', _n)] = dmwhy.answers(_n)
+            except Exception:
+                _READ_ONCE[('why', _n)] = False
+        if _READ_ONCE[('why', _n)]:
+            return f" ({'' if _n == path else f'rule {path}; '}why: {_PY} bin/dmwhy.py {_n})"
+    return f" (rule {path})"
+
+
+def _by_nearness(word, among):
+    """Every name in `among`, the nearest to `word` first: the whole list a refusal offers, in the order most useful."""
+    return sorted({str(a) for a in among}, key=lambda t: (-difflib.SequenceMatcher(None, str(word), t).ratio(), t))
+
+
+def _nearest(word, among, n=3, cutoff=0.6):
+    """The names in `among` nearest to `word`, for a refusal to offer — a misspelling is named by what it misspells."""
+    return difflib.get_close_matches(str(word), sorted({str(a) for a in among}), n=n, cutoff=cutoff)
+
+
 PROV = std_fm.get('provenance_record') or {}
 _axis, _reg = IDP.get('keyed_by'), IDP.get('registry')
 POLICY = {}
@@ -912,6 +1047,43 @@ def count_ok(c):
     return bool(law_match(t['pattern'], c))
 
 
+def _units_like(val, want):
+    """For a unit the law does not know, the units it may have meant: the rows of a registry of units (the currencies
+    are one) that hold it in any column — as their code, or in their name — the nearest names among the other units of
+    the quantity, and the command that searches that registry's own file by name. Read from the law: no unit, quantity
+    or registry is named here."""
+    _v = str(val).strip().lower()
+    _qs = [q for q in QUANTITIES if want in (None, 'any') or q == want]
+    _rows, _files, _names = [], [], []
+    for _q in _qs:
+        _uf = (QUANTITIES.get(_q) or {}).get('units_from')
+        if not isinstance(_uf, dict):
+            _names += [n for n, r in UNITS.items() if r.get('quantity') == _q]
+            continue
+        _decl = next((r for r in (list(vocab_fm.get('registry_files') or []) + list(std_fm.get('registry_files') or []))
+                      if isinstance(r, dict) and r.get('registry') == _uf.get('registry')), None)
+        if _decl and _decl.get('file'):
+            _files.append((_q, _uf.get('registry'), _uf.get('take'), _decl['file']))
+        for _r in (registry(_uf.get('registry')) or []) if _v else []:
+            _cols = [str(x) for x in _r.values() if isinstance(x, str) and x]
+            _rank = (0 if any(x.lower() == _v for x in _cols) else 1 if any(w.lower().startswith(_v)
+                     for x in _cols for w in x.split()) else 2 if any(_v in x.lower() for x in _cols) else None)
+            if _rank is not None and _r.get(_uf.get('take')):
+                _named = next((x for x in _cols if _v in x.lower() and x != str(_r[_uf['take']])), '')
+                _rows.append((_rank, f"{_r[_uf['take']]}" + (f" ({_named})" if _named else '')))
+    out = []
+    _like = [x for _, x in sorted(_rows, key=lambda t: t[0])[:6]]
+    if _like:
+        out.append(f"the rows named like it: {', '.join(_like)}")
+    _near = _nearest(val, _names, n=4, cutoff=0.6)
+    if _near:
+        out.append(f"the units nearest to it: {', '.join(_near)}")
+    for _q, _reg, _take, _file in _files:
+        out.append(f"a unit of {_q} is written by the {_take} of its row of `{_reg}` — find it by name with "
+                   f"grep -i \"<its name>\" {_file}")
+    return (' — ' + '; '.join(out) + _rule('units', *[f[1] for f in _files], 'units')) if out else ''
+
+
 def check_quantity(where, node, want):
     if not isinstance(node, dict) or node.get('unit') is None or node.get('count') is None:
         errors.append(f"{where}: a quantity is written {{ count, unit }}")
@@ -919,7 +1091,7 @@ def check_quantity(where, node, want):
     u = UNITS.get(str(node['unit']))
     c = node['count']
     if not u:
-        errors.append(f"{where}.unit '{node['unit']}' is not in the `units` registry")
+        errors.append(f"{where}.unit '{node['unit']}' is not in the `units` registry" + _units_like(node['unit'], want))
     elif want not in (None, 'any') and u.get('quantity') != want:
         _of = sorted(n for n, r in UNITS.items() if r.get('quantity') == want)
         _reg = ((QUANTITIES.get(want) or {}).get('units_from') or {}).get('registry')
@@ -1586,8 +1758,18 @@ def check_undeclared_keys():
                 errors.append(f"{_base}: top-level key '{_k}' is one the law retired on a bean{_h}. {translate_hint()}")
             elif _k not in _declared:
                 errors.append(f"{_base}: top-level key '{_k}' is declared by no vocabulary term" + (_h or
-                              ". A fact that fits no term belongs in details: (ground rule 2); a new KIND of fact "
-                              "is a vocabulary proposal — park it in log/pending.md"))
+                              _undeclared_fix(_k, _fm[_k], _declared)))
+
+
+def _undeclared_fix(key, value, declared):
+    """What to write instead of a key no term declares: the fact kept under `details:` (ground rule 2), in the line that
+    keeps it — or the declared key it misspells. A new KIND of fact is a change to the law, and not an agent's."""
+    _v = _flow(value)
+    _near = _nearest(key, declared, n=2, cutoff=0.75)
+    return (f" — a fact no term names is kept under `details:` (ground rule 2): details: "
+            f"{{ {key}: {_v if len(_v) <= 80 else '<its value>'} }}"
+            + (f"; or it is {' or '.join(f'`{n}`' for n in _near)}, misspelt" if _near else '')
+            + ". A new KIND of fact is a vocabulary proposal, which the gardener ratifies: park it in log/pending.md")
 
 # YAML keeps the LAST of two equal keys and drops the first silently, so the loss happens before any check on
 # the parsed document can see it. Read from the node graph instead — beans, mappings, and the law itself,
@@ -1724,7 +1906,8 @@ def check_gardens():
                         errors.append(f"{_base}: anchor '{_a['key']}' '{_v}' puts a garden's id before '{_rest}', which is "
                                       f"not a name a garden gave — an identifier someone else assigned is not this garden's "
                                       f"to qualify. Write it as it was assigned ('{_rest}'); a name this garden mints is "
-                                      f"`<genos>:<name>`, a genos this garden knows (VOCAB identity_policy.minted.form)")
+                                      f"`<genos>:<name>`, a genos this garden knows"
+                                      + _rule('identity_policy.minted.form', 'identity_policy.minted'))
                     elif _pre not in KNOWN_GARDENS:
                         errors.append(f"{_base}: anchor '{_a['key']}' '{_v}' is a name minted by garden '{_pre}', which this "
                                       f"garden does not know" + (f" (its own id is {_own})" if _own else "") +
@@ -1812,9 +1995,11 @@ def check_identity_capsule():
             # (key, value), so a key no term declares is a merge key nobody agreed on. The term's `anchor:`
             # policy is what a garden declares; a local key is a local term with one.
             if IDP.get('anchor_key') == 'term' and not isinstance(pol, dict):
-                errors.append(f"{base}: anchor key '{a['key']}' is not a term that declares `anchor:` — every "
-                              f"anchor's key names one (VOCAB identity_policy.anchor_key); a garden-local key is a "
-                              f"local term with `anchor: {{ class: …, establishing: … }}`")
+                _keys = _by_nearness(a['key'], [t for t, d in TERMS.items() if isinstance(d.get('anchor'), dict)])
+                errors.append(f"{base}: anchor key '{a['key']}' is not a term that declares `anchor:` — write one "
+                              f"that does, the nearest first: {', '.join(_keys)}. A key of this garden's own is a local "
+                              f"term with `anchor: {{ class: …, establishing: … }}` in VOCAB.md: a RULE-CHANGE, which "
+                              f"the gardener ratifies" + _rule('identity_policy.anchor_key'))
             if a.get('establishing') is True:
                 n_est += 1
                 est_owner.setdefault((a['key'], compare_value(a['key'], a['value'])), []).append(base)
@@ -1979,24 +2164,23 @@ def ectl_entry_required_attrs(e):
     missing = [k for k, _ in _facet(e.form, 'required', 'entry')
                if k not in e.entry or e.entry[k] is None or e.entry[k] in ('', [], {})]
     if missing:
-        errors.append(f"{e.base}: {e.ref} missing {missing} "
-                      f"(VOCAB {e.term}.schema.attrs: required — present, and not empty)")
+        _f = [f for f in (_example_form(f"{e.term}.{k}") for k in missing) if f]
+        errors.append(f"{e.base}: {e.ref} missing {missing} — present, and not empty"
+                      + (f"; the form a tested example writes: {'; '.join(_f)}" if _f else '')
+                      + _rule(f"{e.term}.schema.attrs", e.term, e.term.split('.')[0]))
 
 
-UNKNOWN_VALUE_HINT = (" — if the value is real and the vocabulary lacks it, keep it under `details:` for now "
-                      "and propose it, or add it for this garden with `schema: {values_add: [...]}` in a VOCAB.md "
-                      "local_terms entry (see seed/COOKBOOK.md)")
-
-
-def unknown_value_hint(sch):
-    """How a garden adds the value it lacks. A term that reads its values from a REGISTRY takes a row of it:
-    `values_add` on such a term adds nothing, because the term holds no list of its own to add to."""
+def unknown_value_hint(sch, rule=None, term=None):
+    """The fix for a value the law does not list: one it does. A value that is real and that the law lacks is kept under
+    `details:` meanwhile, and proposed: added for this garden it changes the law, which the gardener ratifies. A term
+    that reads its values from a REGISTRY takes a row of it: `values_add` on such a term adds nothing, because the term
+    holds no list of its own to add to."""
     src = str((sch or {}).get('values_from') or '')
-    if not src.startswith('registry:'):
-        return UNKNOWN_VALUE_HINT
-    return (" — if the value is real and the vocabulary lacks it, keep it under `details:` for now and propose "
-            f"it, or add it for this garden as a row under `registry_additions: {{ {src[9:].split('[')[0]}: [...] }}` "
-            "in VOCAB.md (see seed/COOKBOOK.md)")
+    _how = (f"a row under `registry_additions: {{ {src[9:].split('[')[0]}: [...] }}` in VOCAB.md"
+            if src.startswith('registry:') else "`schema: {values_add: [...]}` in a VOCAB.md local_terms entry")
+    return (" — write one of those. A value that is real and missing from the law is kept under `details:` for now, "
+            f"and proposed: added for this garden, as {_how}, it changes the law — a RULE-CHANGE the gardener "
+            "ratifies" + (_rule(rule, *([term] if term else [])) if rule else ''))
 
 
 def ectl_entry_values(e):
@@ -2183,9 +2367,11 @@ def ectl_entry_form_from_genos_attr(e):
     for _used in (_reserved & set(e.entry)):
         if _used not in _mine:
             _allowed = sorted(k['genos'] for k in GENE.values() if _used in _names(k))
+            _f = _example_form(e.term, genos=_genos)
             errors.append(f"{e.base}: {e.ref} uses the '{_used}' form, which is RESERVED to the gene "
                           f"{_allowed} — genos '{_genos}' does not name it in `{_fk}`, so its chain goes through "
-                          f"a being rather than ending at a form reserved to others (VOCAB gene[].{_fk})")
+                          f"a being rather than ending at a form reserved to others"
+                          + (f"; a tested {_genos} writes {_f}" if _f else '') + _rule(f"gene[].{_fk}", _fk, 'gene'))
 
 
 def ectl_on_aspect(e):
@@ -2515,7 +2701,10 @@ def check_entry(base, term, label, entry, sch):
     """Every per-entry rule the schema language can express."""
     if not isinstance(entry, dict):
         req = [n for n, _ in _facet(attribute_form(term, sch), 'required', 'entry')]
-        errors.append(f"{base}: {term}[{label}] must be a mapping with {req}")
+        _f = _example_form(term, entry=True)
+        errors.append(f"{base}: {term}[{label}] must be a mapping with {req}"
+                      + (f" — one entry, one mapping, in the form a tested example writes: {_f}" if _f else '')
+                      + _rule(f"{term}.schema", term, term.split('.')[0]))
         return
     cell = _ECell(base, term, label, entry, sch)
     for _key, _controller in ENTRY_CONTROLLERS:
@@ -2563,8 +2752,8 @@ def ctl_path(c):
     allowed = allowed_values(c.sch)
     for val in path_values(c.fm, c.sch['path']):
         if allowed and val not in allowed:
-            errors.append(f"{c.base}: {c.sch['path']} '{val}' not in {sorted(allowed)} "
-                          f"(VOCAB {c.term}.schema.values)" + unknown_value_hint(c.sch))
+            errors.append(f"{c.base}: {c.sch['path']} '{val}' not in {sorted(allowed)}"
+                          + unknown_value_hint(c.sch, f"{c.term}.schema.values", c.term))
     return STOP
 
 
@@ -2579,8 +2768,11 @@ def ctl_governs_anchor(c):
         _v = str(_a.get('value', ''))
         _pat = form_of(c.term)['value'].get('pattern')
         if _pat and not law_match(_pat, _v):
+            _left = _unsaid_form('identity')
             errors.append(f"{c.base}: anchor {_ga}='{_v}' is not in canonical form "
-                          f"({form_of(c.term)['value'].get('canonical_note', _pat)}) (VOCAB {c.term}.schema.value_pattern)")
+                          f"({form_of(c.term)['value'].get('canonical_note', _pat)}) — write it as it was given, in "
+                          f"that form. One nobody gave you is left out, never made up"
+                          + (f": {_left}" if _left else '') + _rule(f"{c.term}.schema.value_pattern", c.term))
         _cf = form_of(c.term)['value'].get('compare_form')
         if _cf in COMPARE_FORMS and COMPARE_FORMS[_cf](_v) != _v:
             warns.append(f"{c.base}: anchor {_ga}='{_v}' is compared as '{COMPARE_FORMS[_cf](_v)}' — store it in that "
@@ -2629,7 +2821,9 @@ def ctl_required(c):
             if hit:
                 why = f"{axis} " + " / ".join(f"'{h}'" for h in hit)
     if why and (node is None or node == [] or node == {} or node == ''):
-        errors.append(f"{base}: {why} requires a non-empty {term} (VOCAB {term} term)")
+        _f = _example_form(term)
+        errors.append(f"{base}: {why} requires a non-empty {term}"
+                      + (f" — the form a tested example writes: {_f}" if _f else '') + _rule(term))
         return STOP                 # DECLARED: one absence, one finding — not four
     if node is None:
         return STOP                 # not required and not present: nothing to judge
@@ -2684,7 +2878,8 @@ def ctl_must_equal_genos_attr(c):
         return STOP                 # genos is mid-merge; the unclean warning already names it
     if kreg is None:
         errors.append(f"{c.base}: genos '{_g}' is not declared in the vocabulary, so its "
-                      f"{c.term} cannot be checked (every bean's genos needs a `gene` row with {mk})")
+                      f"{c.term} cannot be checked (every bean's genos needs a `gene` row with {mk}) — write one the "
+                      f"law declares, the nearest first: {', '.join(_by_nearness(_g, GENE))}" + _rule('gene'))
     elif kreg.get(mk) is None:
         errors.append(f"VOCAB genos '{_g}': missing '{mk}' (required to check {c.term})")
     elif c.node != kreg[mk]:
@@ -2696,21 +2891,28 @@ def ctl_must_equal_genos_attr(c):
 def ctl_shape(c):
     """`shape:` — scalar, list_of_entries, mapping, open_map_of_entries."""
     shape = c.sch.get('shape')
+    def _f():
+        _e = _example_form(c.term)
+        return f" — the form a tested example writes: {_e}" if _e else ''
     if shape == 'scalar':
         if isinstance(c.node, (list, dict)):
-            errors.append(f"{c.base}: {c.term} is ONE value, not a {'list' if isinstance(c.node, list) else 'mapping'} "
-                          f"(VOCAB {c.term}.schema.shape: scalar)")
+            errors.append(f"{c.base}: {c.term} is ONE value, not a {'list' if isinstance(c.node, list) else 'mapping'}"
+                          + _f() + _rule(f"{c.term}.schema.shape", c.term))
             return STOP
         allowed = allowed_values(c.sch)
         if allowed and c.node not in allowed:
-            errors.append(f"{c.base}: {c.term} '{c.node}' not in {sorted(allowed)} "
-                          f"(VOCAB {c.term}.schema.values)" + (retired_hint(c.term, c.node) or unknown_value_hint(c.sch)))
+            _r = retired_hint(c.term, c.node)
+            errors.append(f"{c.base}: {c.term} '{c.node}' not in {sorted(allowed)}"
+                          + (_r + _rule(f"{c.term}.schema.values", c.term) if _r else
+                             unknown_value_hint(c.sch, f"{c.term}.schema.values", c.term)))
         return STOP
     if shape == 'list_of_entries' and not isinstance(c.node, list):
-        errors.append(f"{c.base}: {c.term} must be a LIST of entries (VOCAB {c.term}.schema.shape)")
+        errors.append(f"{c.base}: {c.term} must be a LIST of entries" + _f() + _rule(f"{c.term}.schema.shape", c.term))
         return STOP
     if shape in ('mapping', 'open_map_of_entries') and not isinstance(c.node, dict):
-        errors.append(f"{c.base}: {c.term} must be a MAPPING (VOCAB {c.term}.schema.shape)")
+        errors.append(f"{c.base}: {c.term} must be a MAPPING" + (", one entry per key, never a list" if shape ==
+                      'open_map_of_entries' and isinstance(c.node, list) else '') + _f()
+                      + _rule(f"{c.term}.schema.shape", c.term))
         return STOP
     return None
 
@@ -2729,7 +2931,9 @@ def ctl_required_attrs(c):
         undeclared_attrs(c.base, c.term, c.term, c.node, c.sch)
     for attr, _ in _facet(attribute_form(c.term, c.sch), 'required', 'self'):
         if isinstance(c.node, dict) and attr not in c.node:
-            errors.append(f"{c.base}: {c.term} requires '{attr}' (VOCAB {c.term}.schema.attrs.{attr}: required)")
+            _f = _example_form(f"{c.term}.{attr}")
+            errors.append(f"{c.base}: {c.term} requires '{attr}'" + (f" — the form a tested example writes: {_f}"
+                          if _f else '') + _rule(f"{c.term}.schema.attrs.{attr}", c.term))
     return None
 
 
@@ -3292,8 +3496,11 @@ def check_link_integrity():
             if tgt not in pool:
                 # WHAT TO DO NEXT, not only what is wrong: a party or a ref named before its bean is the commonest case,
                 # and the bean may be written in the same commit as what names it.
+                _near = _nearest(tgt, pool, n=3, cutoff=0.7)
                 errors.append(f"{base}: {sect} -> {space} '{tgt}' does not exist (dangling) — write "
-                              f"{'beans' if space == 'bean' else 'mappings'}/{tgt}.md first, or in the same commit"); continue
+                              f"{'beans' if space == 'bean' else 'mappings'}/{tgt}.md first, or in the same commit; a "
+                              f"link that was said is not dropped to pass the gate"
+                              + (f". The {space}s here named like it: {', '.join(_near)}" if _near else '')); continue
             tgt_fm = docs[(space == 'bean', tgt)][0]
             if field is not None and not isinstance(field, str):
                 errors.append(f"{base}: {sect} -> {tgt}.field names one key, written as text — not {type(field).__name__}")
@@ -3549,7 +3756,8 @@ def check_staged_state():
                 _id = os.path.basename(_p)[:-3] if _p.endswith('.md') else _p
                 if not re.search(r'(?<![\w-])' + re.escape(_id) + r'(?![\w-])', jdiff):
                     errors.append(f"{_p}: staged, but the staged journal entry never names it — write '{_id}' "
-                                  f"(or [[{_id}]]) in the entry, so the record says WHICH bean changed")
+                                  f"(or [[{_id}]]) in the entry, so the record says WHICH bean changed; an entry that "
+                                  f"names it: {_journal_command(f'- action: [[{_id}]] <what changed>')}")
             if '(fill in' in jdiff:
                 errors.append("the staged journal entry still contains '(fill in' — a template field was left "
                               "unfilled; say who ratified the change and why before committing")
@@ -3557,9 +3765,11 @@ def check_staged_state():
             _stamped = None
             for _h in (l for l in _added if l.startswith('## ')):
                 if not journal_heading_ok(_h):
-                    errors.append(f"journal heading '{_h}' is not a position in time — write "
-                                  f"{JOURNAL.get('heading_form')}, read from the clock: "
-                                  f"{_journal_command()} writes it")
+                    errors.append(f"journal heading '{_h}' is not a position in time — "
+                                  + ("a heading is the tool's, read from the clock and never typed: remove it and its "
+                                     f"lines, then {_journal_command()}" if JOURNAL.get('heading') == 'stamped' else
+                                     f"write {JOURNAL.get('heading_form')}, read from the clock: {_journal_command()} "
+                                     f"writes it") + _rule('journal.heading_form', 'journal.heading'))
                     continue
                 # THE MOMENT IS MEASURED, NOT REMEMBERED (20.0, `journal.heading: stamped`). The gate cannot tell
                 # a clock reading from a typed one by its form; it can tell whether bin/dmjournal.py wrote it,
@@ -3573,8 +3783,8 @@ def check_staged_state():
                             _stamped = set()
                     if _h.rstrip() not in _stamped:
                         errors.append(f"journal heading '{_h[:80]}' was not written by bin/dmjournal.py — a heading "
-                                      f"is read from the clock by the tool, never typed (VOCAB journal.heading: "
-                                      f"stamped): remove the typed heading and its lines, then {_journal_command()}")
+                                      f"is read from the clock by the tool, never typed: remove the typed heading and "
+                                      f"its lines, then {_journal_command()}" + _rule('journal.heading'))
         for p in staged:
             if not (p.startswith(DOCUMENTISH) or p.endswith(FRONT_MATTER_DOCS)):
                 continue

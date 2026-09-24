@@ -70,8 +70,9 @@ cat AGENTS.md
 python3 bin/dmcheck.py --all
 ```
 
-`AGENTS.md` is a reading order: the model, the checklist, the rules in force. It carries no rules itself,
-because the law is in the garden — this repository's copy may be newer or older than the one the garden pins.
+`AGENTS.md` is a reading order: `seed/FORMS.md` before writing — what an agent writes most, the way the gate
+accepts it — and the model, the checklist and the rules in force when a question needs them. It carries no rules
+itself, because the law is in the garden — this repository's copy may be newer or older than the one the garden pins.
 Show the person the gate's last line. From here on, everything you need is in the garden.
 
 ## 5. Every later session
@@ -207,6 +208,6 @@ time, read from the clock — so a tool writes it, never a hand; you give it the
 python3 bin/dmjournal.py "your-name" "what you did" --body "- action: added [[laptop]]."
 ```
 
-When the gate refuses something, its message names the rule and, for the common mistakes, the line to write.
-`MODEL.md` explains the model, `CHECKLIST.md` how a write is made, and `python3 bin/dmrules.py` prints every
-rule in force.
+When the gate refuses something, its message names the rule and, for the common mistakes, the line to write;
+`python3 bin/dmwhy.py <name>` says why that rule is as it is. `MODEL.md` explains the model, `CHECKLIST.md` how a
+write is made, and `python3 bin/dmrules.py` prints every rule in force.

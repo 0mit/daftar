@@ -19,6 +19,8 @@ the gate once took, or once died on; each must now be refused by name, and nothi
   the facets         one root, which every facet reaches
   the journal        a line that some readers would split in two
   the messages       what to do next, in a form every shell runs
+  the fix            said in the refusal: the form a tested example writes, the values the law allows, and the one
+                     command that says why — never a document to read whole; and the same verdict without the guides
   text               a control character in a key or a value — an escape that drives a terminal, a NUL a backslash
                      made — named and never echoed; a line feed only in a block scalar
   a captured merge   the rules stand down only on what the merge driver captured: the path named, the record exact
@@ -412,7 +414,8 @@ run("git", "reset", "-q", "--hard", cwd=G)
 
 out = deal("", parties="  sam: { who: { bean: sam } }\n  bob: { who: { bean: bob } }\n")
 check("a party naming no bean says what to write: the bean first, or in the same commit",
-      "parties -> bean 'bob' does not exist (dangling) — write beans/bob.md first, or in the same commit" in out, out[-500:])
+      "parties -> bean 'bob' does not exist (dangling)\n      — write beans/bob.md first, or in the same commit" in out,
+      out[-500:])
 drop("beans/deal.md")
 put("beans/statement.md", '---\nbean: statement\ngenos: document\ntitle: "a statement"\nstatus: active\nsummary: "a statement"\n'
     'nature: lekton\nowned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
@@ -686,6 +689,111 @@ for val, passes in (('"work on a live system is shown first"', True),
     out = manifest(MANIFEST.replace("\n---", "\npolicy: %s\n---" % val, 1))
     check(f"`policy: {val[:40]}` — one text, or texts under names — {'passes' if passes else 'is refused'}",
           ok(out) if passes else ("manifest.policy" in out and "error(s)" in out and not ok(out)), out[-500:])
+
+# ---------------------------------------------------------------- THE FIX, SAID IN THE REFUSAL (v0.34.1)
+# A refusal that ended "(VOCAB timing term)" or "(see seed/COOKBOOK.md)" sent a coding agent to read the vocabulary whole
+# — a quarter of a megabyte — and it stalled there. The refusals an agent meets most carry their fix: the form a tested
+# example writes (seed/FORMS.md's first, which this garden carries), the values the law allows, and the one command that
+# says why the rule is so. Nothing in them points at a document to read.
+SENDS = re.compile(r"\(VOCAB |see seed/COOKBOOK|std-vocab\.md|MODEL\.md|CHECKLIST\.md|dmrules")
+
+
+def finding(out, needle):
+    """The whole finding — its line and the reason beneath — that holds `needle`; '' where none does."""
+    return next((f for f in re.split(r"\n(?=ERROR|WARN )", out) if needle in f), "")
+
+
+def written(f, head, stop=("; when nobody said it", " (why:", " (rule ")):
+    """The one line of YAML a finding quotes after `head`, read as YAML — None where it does not parse."""
+    if head not in f:
+        return None
+    line = f.split(head, 1)[1]
+    for s_ in stop:
+        line = line.split(s_, 1)[0]
+    try:
+        return yaml.safe_load(line.replace("\n      ", " "))
+    except yaml.YAMLError:
+        return None
+
+
+def event(bid, extra):
+    put(f"beans/{bid}.md", f'---\nbean: {bid}\ngenos: event\ntitle: "{bid}"\nstatus: active\nsummary: "an event"\n'
+        'nature: lekton\nowned_by: { legal: { crown: logos } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+        f'identity: {{ status: confirmed, anchors: [ {{ key: event_id, value: "event:{bid}", class: logical, establishing: true }} ] }}\n'
+        f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\nAn event.\n')
+    out = gate()
+    drop(f"beans/{bid}.md")
+    return out
+
+
+WHEN = 'timing:\n  start: { system: gregorian-civil, at: "2026-09-01 19:00+03:00", unit: minute }\n'
+f = finding(event("call", "refs: { host: { bean: sam, rel: host } }\n"), "requires a non-empty timing")
+check("an event without `timing` is refused with the form a tested example writes — and, beside it, the one for a day "
+      "nobody said — and the command that says why, sending nowhere",
+      written(f, "the form a tested example writes: ") == {"timing": {"start": {"system": "gregorian-civil",
+                                                                              "at": "2026-09-12 19:30+03:00", "unit": "minute"}}}
+      and (written(f, "when nobody said it, ") or {}).get("timing", {}).get("start", {}).get("system") == "event-anchored"
+      and f"why: {_py} bin/dmwhy.py timing" in f and not SENDS.search(f), f)
+f = finding(event("call", WHEN + "refs:\n  - { bean: sam, rel: host }\n  - { bean: ali, rel: present }\n"),
+            "refs must be a MAPPING")
+check("`refs` written as a list is refused: one entry per key, never a list, and the mapping a tested example writes",
+      "one entry per key, never a list" in f and written(f, "the form a tested example writes: ") ==
+      {"refs": {"host": {"bean": "sam", "rel": "host"}, "guest": {"bean": "ali", "rel": "present"}}}
+      and not SENDS.search(f), f)
+f = finding(event("call", WHEN + "refs:\n  people: [sam, ali]\n"), "must be a mapping with ['rel']")
+check("...and an entry of `refs` written as a list: one entry, one mapping, as a tested example writes it",
+      written(f, "in the form a tested example writes: ") == {"host": {"bean": "sam", "rel": "host"}}
+      and not SENDS.search(f), f)
+f = finding(event("call", WHEN + 'refs: { host: { bean: sam } }\n'), "missing ['rel']")
+check("...and an entry missing `rel`: the attribute as a tested example writes it",
+      written(f, "the form a tested example writes: ") == {"rel": "host"} and not SENDS.search(f), f)
+f = finding(event("call", WHEN + 'refs: { host: { bean: sam, rel: host } }\nunknowns: ["which day"]\n'),
+            "top-level key 'unknowns'")
+check("a key no term declares is refused with the line that keeps the fact, `details: { unknowns: [...] }`, sending "
+      "to no document", 'details: { unknowns: ["which day"] }' in f and "gardener ratifies" in f and not SENDS.search(f), f)
+f = finding(event("call", WHEN + 'refs: { host: { bean: sam, rel: host }, guest: { bean: alli, rel: present } }\n'),
+            "'alli' does not exist")
+check("a link to a bean that does not exist says to write it, not to drop the link, and names the bean it may mean",
+      "write beans/alli.md first, or in the same commit" in f and "not dropped" in f and "named like it: ali" in f, f)
+put("beans/ben.md", person("ben").replace("status: active", "status: pending"))
+f = finding(gate(), "status 'pending' not in")
+check("a status the law does not list: write one of those; adding one is a RULE-CHANGE the gardener ratifies — and the "
+      "command that says why, not the cookbook", "write one of those" in f and "RULE-CHANGE the gardener ratifies" in f
+      and f"why: {_py} bin/dmwhy.py status" in f and "status.schema.values" in f and not SENDS.search(f), f)
+put("beans/ben.md", person("ben").replace("key: person_id,", "key: person_name,"))
+f = finding(gate(), "anchor key 'person_name'")
+check("an anchor key no term declares is refused with the keys that are, the nearest first",
+      "the nearest first: person_id," in f and "gardener ratifies" in f and not SENDS.search(f), f)
+put("beans/garden-b.md", garden_bean("unknown"))
+put("beans/ben.md", person("ben"))
+f = finding(gate(), "garden_id='unknown'")
+check("an anchor not in its form says to write it as it was given — and one nobody gave is left out, in the form a "
+      "guide writes", "never made up: identity: { status: provisional, anchors: [] }" in f and not SENDS.search(f), f)
+drop("beans/garden-b.md"); drop("beans/ben.md")
+f = finding(tx(amount='{ count: "12.50", unit: euro }'), "unit 'euro'")
+check("a currency written by its name is refused with the codes named like it, and the command that finds one",
+      "EUR (Euro)" in f and 'grep -i "<its name>" seed/knowledge/currencies.tsv' in f and not SENDS.search(f), f)
+f = finding(deal('transactions:\n  t: { what: "a thing", paid_by: [ { party: sam } ] }\n'), "missing ['amount']")
+check("a transaction with no amount is refused with the amount as a tested example writes it",
+      written(f, "the form a tested example writes: ") == {"amount": {"count": "90.00", "unit": "XTS"}}
+      and not SENDS.search(f), f)
+drop("beans/deal.md")
+_moved = [g for g in ("seed/FORMS.md", "seed/COOKBOOK.md", "seed/README.md") if os.path.isfile(os.path.join(G, g))]
+for g in _moved:
+    os.replace(os.path.join(G, g), os.path.join(G, g + ".away"))
+out = event("call", "refs: { host: { bean: sam, rel: host } }\n")
+for g in _moved:
+    os.replace(os.path.join(G, g + ".away"), os.path.join(G, g))
+f = finding(out, "requires a non-empty timing")
+check("without the guides the verdict is the same — the refusal only says less: no form, the command that says why",
+      len(_moved) == 3 and f and "tested example" not in f and f"why: {_py} bin/dmwhy.py timing" in f
+      and "1 error(s)" in out, out[-500:])
+r = run(sys.executable, "-c", "import sys, yaml; sys.path.insert(0, 'bin'); import dmcheck\n"
+        "bad = [(k, v) for fm, _ in dmcheck._examples() for k, v in fm.items()\n"
+        "       if yaml.safe_load('k: ' + dmcheck._flow(v))['k'] != v]\n"
+        "print(len(dmcheck._examples()), bad[:3])", cwd=G)
+check("every value of every example the guides show reads back from its one line exactly as the example wrote it",
+      r.returncode == 0 and r.stdout.strip().endswith("[]") and int(r.stdout.split()[0]) >= 15, r.stdout + r.stderr)
 
 # ---------------------------------------------------------------- WHAT IS REFUSED IS LISTED: dmrules says every rule above
 r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)

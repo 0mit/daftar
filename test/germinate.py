@@ -122,8 +122,34 @@ check("a RELATIVE target grows the garden where the caller stands, and nothing l
 # says the gardener is planted, not that the cookbook starts with them, and every command it prints runs as printed in
 # Windows PowerShell 5.1 too — no `&&`, which 5.1 cannot parse, and no `<`, which no PowerShell redirects.
 _msg = r.stdout[r.stdout.find('germinated:'):]
-check("germinate's closing message after --gardener says the gardener is planted, and the cookbook goes on from there",
-      'keeper, is planted' in _msg and 'goes on from the gardener' in _msg, _msg[:400])
+check("germinate's closing message after --gardener says the gardener is planted, and gives an agent ONE next step: "
+      "read seed/FORMS.md, and save with the journal tool, git add and git commit",
+      'keeper, is planted' in _msg and 'AN AGENT reads seed/FORMS.md' in _msg and 'bin/dmjournal.py' in _msg
+      and 'git add -A' in _msg and 'git commit' in _msg, _msg[:600])
+# NO READING LIST (v0.34.1). The message named four documents to read, and an agent driving a small open model read them
+# — 85,000 characters and more of the law — before its first bean, and stalled. A person is given one step too.
+check("...and one for a person, and no list of documents to read: the law is read when a question needs it",
+      'A PERSON tells their agent to read AGENTS.md' in _msg
+      and not re.search(r'MODEL\.md|CHECKLIST\.md|COOKBOOK\.md|dmrules|std-vocab\.md', _msg), _msg[:900])
+# WHO COMMITS: said only where no identity is SET. A harness running an agent sets it in the environment, and an agent
+# told to set one anyway spent its turns on `git config`. Each run below has a global configuration of its own.
+_empty_cfg = os.path.join(TMP, 'no-identity.gitconfig')
+open(_empty_cfg, 'w').close()
+_bare_env = {k: v for k, v in os.environ.items() if not k.startswith(('GIT_AUTHOR_', 'GIT_COMMITTER_')) and k != 'EMAIL'}
+_bare_env.update(GIT_CONFIG_GLOBAL=_empty_cfg, GIT_CONFIG_NOSYSTEM='1')
+_ids = {}
+for _how, _extra in (('none', {}), ('env', {'GIT_AUTHOR_NAME': 'agent', 'GIT_AUTHOR_EMAIL': 'agent@localhost',
+                                          'GIT_COMMITTER_NAME': 'agent', 'GIT_COMMITTER_EMAIL': 'agent@localhost'})):
+    _ir = subprocess.run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), os.path.join(TMP, f'garden-id-{_how}'),
+                          '--gardener', 'sam'], capture_output=True, text=True, encoding='utf-8', errors='replace',
+                         cwd=TMP, env=dict(_bare_env, **_extra))
+    _ids[_how] = (_ir.returncode, _ir.stdout)
+check("germinate tells whoever commits next to set a git identity where none is set...",
+      _ids['none'][0] == 0 and 'BEFORE THE FIRST COMMIT' in _ids['none'][1] and 'config user.name' in _ids['none'][1],
+      _ids['none'][1][-600:])
+check("...and says nothing of it where one is set — in the environment, as a harness running an agent sets it",
+      _ids['env'][0] == 0 and 'BEFORE THE FIRST COMMIT' not in _ids['env'][1] and 'git config' not in _ids['env'][1]
+      and 'config user.name' not in _ids['env'][1], _ids['env'][1][-600:])
 check("...and every command it prints runs in PowerShell 5.1 as printed: no `&&`, no `< entry.md`",
       _msg and '&&' not in _msg and not re.search(r' < \S', _msg), [l for l in _msg.splitlines() if '&&' in l or ' < ' in l])
 # ...AND SO DOES EVERY COMMAND ANY TOOL OR PAGE SHOWS. A tool's text is every string in bin/ and seed/, read as Python reads
@@ -298,8 +324,8 @@ check("...and prints no NOTE sending the stranger to check out a tag in the real
 # THE MODEL, THE PROCEDURE, THE QUEUE AND THE SKILL TRAVEL (2026-09-17). Without them a friend's garden had the
 # law's data and nothing saying what it meant; the first person bean took three attempts.
 _TRAVEL = ('MODEL.md', 'CHECKLIST.md', 'MERGE.md', 'log/pending.md', '.claude/skills/daftar/SKILL.md',
-           'AGENTS.md', 'seed/WELCOME.md')
-check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md and every door for an agent travel",
+           'AGENTS.md', 'seed/WELCOME.md', 'seed/FORMS.md')
+check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md, the forms and every door for an agent travel",
       all(os.path.isfile(os.path.join(G, f)) for f in _TRAVEL),
       [f for f in _TRAVEL if not os.path.isfile(os.path.join(G, f))])
 
@@ -455,6 +481,31 @@ check("...and the cookbook begins with the gardener, as germinate's closing mess
 check("...and a name another garden minted arrives qualified by that garden, which the examples record as a `garden`",
       re.search(r'value: "([0-9a-f]{12})/[^"]+"', _ck) and re.search(r'key: garden_id, value: "%s"'
       % re.search(r'value: "([0-9a-f]{12})/[^"]+"', _ck).group(1), _ck))
+# WHAT NOBODY SAID (v0.34.1): seed/FORMS.md's forms for it pass the gate too, beside the recipes they follow — an event
+# placed by what it came after, a contract with no amount and no day, a garden whose id nobody gave, and the other
+# garden's gardener then named by this garden. Committed as one change, then taken back, so the garden below stays as
+# the recipes left it.
+_fp = open(os.path.join(ROOT, 'seed', 'FORMS.md'), encoding='utf-8').read()
+_unsaid = re.findall(r'<!-- unsaid: (beans/[a-z0-9-]+\.md), for ([a-z0-9_, ]+) -->\n```markdown\n(.*?)\n```', _fp, re.S)
+for _path, _for, _text in _unsaid:
+    open(os.path.join(_ex_tmp, _path), 'w', encoding='utf-8', newline='\n').write(_text + '\n')
+_ap = os.path.join(_ex_tmp, 'beans', 'ali.md')
+_ali = open(_ap, encoding='utf-8').read()
+open(_ap, 'w', encoding='utf-8', newline='\n').write(re.sub(r'value: "[0-9a-f]{12}/person:ali"', 'value: "person:ali"', _ali))
+run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmjournal.py'), 'human (test)', 'what nobody said', '--body',
+    '- action: ' + ', '.join(f"[[{os.path.basename(p)[:-3]}]]" for p, _, _ in _unsaid) + ', and [[ali]] named here.',
+    cwd=_ex_tmp)
+run('git', 'add', '-A', cwd=_ex_tmp)
+_uc = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'what nobody said', cwd=_ex_tmp)
+check(f"seed/FORMS.md's {len(_unsaid)} forms for what nobody said commit with 0 errors, beside the recipes — an event "
+      "placed by what it came after, a contract with no amount and no day, a garden whose id nobody gave",
+      len(_unsaid) >= 3 and _uc.returncode == 0 and ' 0 error(s)' in _uc.stdout + _uc.stderr
+      and {'timing', 'identity'} <= {t.strip() for _, f, _ in _unsaid for t in f.split(',')},
+      (_uc.stdout + _uc.stderr)[-600:])
+if _uc.returncode == 0:
+    run('git', 'reset', '-q', '--hard', 'HEAD~1', cwd=_ex_tmp)
+else:
+    run('git', 'reset', '-q', '--hard', cwd=_ex_tmp)
 _ex_gate = run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmcheck.py'), cwd=_ex_tmp).stdout
 check("...with ZERO warnings, and the banner names the garden and the release it runs",
       ' 0 warning(s)' in _ex_gate and re.search(r'^readme-examples \(daftar [^)]+\): ', _ex_gate, re.M),
