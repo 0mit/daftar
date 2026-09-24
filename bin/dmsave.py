@@ -140,9 +140,12 @@ def commit(message, again):
         print(dmparse.said(f"dmsave: NOT SAVED — {why}. The journal entry is written and the files are staged; leave "
                            f"both, fix what it names, then run:\n  {AGAIN}"), file=sys.stderr)
         return 1
-    if again:                     # a bean fixed after a refusal may carry `now` again: the waiting entry's day
-        pend = waiting()
-        for p in (dmjournal.stamp_now(pend[-1]) if pend else []):
+    if again:                     # a bean fixed after a refusal may carry `now` again: the waiting entry's day, for
+        pend = waiting()          # what the entries waiting name
+        _text = open(dmjournal.JOURNAL, encoding='utf-8').read()
+        _held = git('show', 'HEAD:./log/journal.md').stdout
+        _text = _text[len(_held):] if _held and _text.startswith(_held) else _text
+        for p in (dmjournal.stamp_now(pend[-1], _text) if pend else []):
             print(dmparse.said(f"dmsave: {p}: `now` written as {pend[-1][3:13]}, the day of the entry"), file=sys.stderr)
     add = git('add', '-A')
     if add.returncode != 0:

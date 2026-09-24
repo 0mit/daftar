@@ -326,8 +326,7 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform):
     run('git', '-C', target, '-c', 'user.name=germinate', '-c', 'user.email=germinate@localhost',
         'commit', '-q', '-m', f"germinate: {garden} — the language, at std-vocab@{ver}. No beans.\n\nseed {uuid.uuid4().hex}")
     if gid:
-        import datetime
-        today = datetime.date.today().isoformat()
+        today = 'now'            # the entry below stamps it: one reading of the clock for the heading and the bean (23.0)
         with open(os.path.join(target, 'beans', gid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
             _root = run('git', '-C', target, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD', check=False).stdout.split()
             fh.write(gardener_bean(gid, gname or gid, today, _root[-1][:12] if _root else None, ggenos, gform))

@@ -53,7 +53,7 @@ identity:
   anchors:
     - { key: serial, value: "4XK9-2217",    class: hardware, establishing: true }
     - { key: ip,     value: "192.168.1.20", class: network,  establishing: false }
-provenance: { src: asserted-by-human, by: "you", as_of: 2026-09-22 }
+provenance: { src: asserted-by-human, by: "you", as_of: now }
 ```
 
 Six weeks later, in a new session — perhaps with an agent of another make, with none of the first one's

@@ -906,6 +906,9 @@ def journal_append(heading, body):
     body = body.rstrip('\n')
     if '\n## ' in '\n' + body:
         raise ValueError("a journal body may not carry a `## ` heading of its own")
+    # the day of writing is the heading's (23.0): every `now` in what this entry names, before the entry is written
+    for p in dmjournal.stamp_now(heading, f"{heading}\n{body}"):
+        print(_say(f"dmpropose: {p}: `now` written as {heading[3:13]}, the day of this entry"), file=sys.stderr)
     text = open(dmjournal.JOURNAL, encoding='utf-8').read()
     entry = ('' if text.endswith('\n\n') else ('\n' if text.endswith('\n') else '\n\n')) + heading + '\n' + body + '\n'
     with open(dmjournal.JOURNAL, 'a', encoding='utf-8', newline='\n') as fh:
@@ -1498,7 +1501,7 @@ def skeleton(s, cap, local, fid):
             f"summary: \"<what it is, readable cold>\"\nnature: {_q(cap.get('nature') or '<nature>')}\n"
             f"owned_by: <its owner, in a form its genos allows>\nresponsibility: <who answers for it>\n"
             f"identity:\n  status: confirmed\n  anchors:\n{anchor_lines(cap)}"
-            f"provenance: {{ src: asserted-by-human, by: {_q(here + ' (gardener)')}, as_of: {datetime.date.today().isoformat()} }}\n"
+            f"provenance: {{ src: asserted-by-human, by: {_q(here + ' (gardener)')}, as_of: now }}\n"       # the save stamps it (23.0)
             f"---\n<what it is>\n===== end =====")
 
 
@@ -1969,7 +1972,7 @@ def first_contact(env, stubs, fms, local, resolve):
     frm = env.get('from') or {}
     fid, name, g = str(frm.get('garden')), str(frm.get('name')), str(frm.get('gardener'))
     here = manifest().get('gardener') or 'the gardener'
-    today = datetime.date.today().isoformat()
+    today = 'now'            # the day of writing is stamped by the save that commits these beans, not printed (23.0)
     facet = root_facet()
     cap = stubs.get(g) or (stub_of(fms[g]) if g in fms else None)
     person, owner, note = None, g, ''

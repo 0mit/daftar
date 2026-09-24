@@ -183,8 +183,8 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - {{ key: session_id, value: "session:{slug}", class: logical, establishing: true, observed: {time.strftime('%Y-%m-%d')} }}
-provenance: {{ src: observed, by: "agent (fill in), opened by bin/dmsession.py", as_of: {time.strftime('%Y-%m-%d')} }}
+    - {{ key: session_id, value: "session:{slug}", class: logical, establishing: true, observed: now }}
+provenance: {{ src: observed, by: "agent (fill in), opened by bin/dmsession.py", as_of: now }}
 owned_by: {{ legal: {{owner: {{bean: {owner}}}}}, technical: {{owner: {{bean: {owner}}}}} }}
 responsibility: {{ legal: {{holder: {{bean: {owner}}}}}, technical: {{holder: {{bean: {owner}}}}} }}
 workspace:

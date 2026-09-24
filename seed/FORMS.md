@@ -286,9 +286,6 @@ open: ["which day the call was"]
 Sam called Ali some day after the dinner; nobody said which.
 ```
 
-The gate prints one WARN beside it: the law still declares `event-anchored` vacant, a note for whoever maintains the
-law. The commit goes through.
-
 ### A day nobody said
 
 A day nobody said — `accepted`, `agreed`, `day`, `due` — stays empty, as the forms show it, or is left out: each of

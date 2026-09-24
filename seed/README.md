@@ -90,7 +90,7 @@ identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "person:sam", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
@@ -126,7 +126,7 @@ identity:
   anchors:
     - { key: serial, value: "PF-12345", class: hardware, establishing: true }
     - { key: hostname, value: "laptop", class: network, establishing: false }
-provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+provenance: { src: observed, by: "sam", as_of: now }
 owned_by: { legal: {owner: {bean: sam}}, technical: {owner: {bean: sam}} }
 responsibility: { legal: {holder: {bean: sam}}, technical: {holder: {bean: sam}} }
 ---
@@ -154,9 +154,11 @@ python3 bin/dmjournal.py "sam" "the first two beans" --body "- action: added [[s
 ```
 
 The line breaks inside the quotes are kept, in a Unix shell and in PowerShell alike, and the journal then holds
-`## 2026-09-17 09:30+03:00 · sam · the first two beans` — the moment it was run — above those three lines. A body
-kept in a file can come on standard input instead (`… "the first two beans" < entry.md`, the file holding the
-three lines and no heading) in a shell that has `<`; PowerShell has not.
+`## 2026-09-17 09:30+03:00 · sam · the first two beans` — the moment it was run — above those three lines. The same
+run writes that day in place of each bean's `as_of: now`, so the beans are written before their entry: the day a fact
+was written down is the clock's, and never typed. A body kept in a file can come on standard input instead
+(`… "the first two beans" < entry.md`, the file holding the three lines and no heading) in a shell that has `<`;
+PowerShell has not.
 
 The `[[bean-id]]` is what makes the entry count: the gate refuses a staged bean that the entry does not
 name, and a staged `GARDEN.md` whose entry does not say RULE-CHANGE. `- action:` is the only required line;

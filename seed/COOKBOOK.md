@@ -9,7 +9,10 @@ The scenario: Sam keeps this garden. Sam registers `example.org`, keeps a NAS at
 it, and rents a VPS — and shares costs with a friend, Ali, who keeps a garden of her own.
 
 Each recipe's bean is committed with its journal entry, written through `bin/dmjournal.py` (`seed/README.md` shows
-how). Every command here is written `python3`; on Windows it is `python`.
+how) after the bean is written. A bean's `as_of` is the day it was written down, the clock's and never typed: the
+examples write `now`, and the tool writes the day of its entry in its place. It does the same for `observed: now`,
+where a thing was looked at on the day it was written down. Every command here is written `python3`; on Windows it is
+`python`.
 
 ## The gardener, first
 
@@ -38,7 +41,7 @@ identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "person:sam", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
@@ -79,7 +82,8 @@ that holds domains adds this inside `VOCAB.md`'s front matter, and `registration
 required on every `genos: domain` bean. Its dates are read from WHOIS before the bean is written: `created` and
 `expires` take a date and nothing else — there is no `unknown` for a fact that is always there to be read, and
 an invented date would pass the gate and then be reported as sound by `dmstale`. `auto_renew` alone may be
-`unknown`, because it is an account setting WHOIS does not show.
+`unknown`, because it is an account setting WHOIS does not show. `observed` is the day they were read — here the day
+of writing, so `now`.
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
@@ -99,7 +103,7 @@ identity:
   status: confirmed
   anchors:
     - { key: fqdn, value: "example.org", class: logical, establishing: true }
-provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+provenance: { src: observed, by: "sam", as_of: now }
 owned_by: { legal: { external: "the .org registry, under a registration agreement" } }
 responsibility: { legal: { holder: { bean: sam } } }
 registration:
@@ -107,8 +111,8 @@ registration:
   created: 2020-01-15
   expires: 2027-01-15
   auto_renew: enabled
-  observed: 2026-09-17
-  source: "WHOIS for example.org, read 2026-09-17"
+  observed: now
+  source: "WHOIS for example.org"
 ---
 Sam's domain.
 ```
@@ -132,7 +136,7 @@ identity:
   anchors:
     - { key: serial, value: "NAS-0042", class: hardware, establishing: true }
     - { key: hostname, value: "nas", class: network, establishing: false }
-provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+provenance: { src: observed, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: sam } }, technical: { owner: { bean: sam } } }
 responsibility: { legal: { holder: { bean: sam } }, technical: { holder: { bean: sam } } }
 provides_habitat: linux-baremetal
@@ -161,7 +165,7 @@ identity:
   status: confirmed
   anchors:
     - { key: product_id, value: "product:nginx", class: logical, establishing: true }
-provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+provenance: { src: observed, by: "sam", as_of: now }
 owned_by: { legal: { external: "the nginx project" } }
 responsibility: { legal: { holder: { bean: sam } } }
 ---
@@ -181,7 +185,7 @@ identity:
   status: confirmed
   anchors:
     - { key: service_id, value: "nginx:example.org@nas", class: logical, establishing: true }
-provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+provenance: { src: observed, by: "sam", as_of: now }
 instance_of: { bean: nginx }
 lives_in: { bean: nas }
 owned_by: { legal: { owner: { bean: sam } } }
@@ -211,7 +215,7 @@ identity:
   status: confirmed
   anchors:
     - { key: fqdn, value: "vps-a.example.org", class: logical, establishing: true }
-provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+provenance: { src: observed, by: "sam", as_of: now }
 owned_by: { legal: { external: "the hosting provider, which owns and operates the machine" } }
 responsibility: { legal: { holder: { bean: sam } } }
 provides_habitat: linux-vm
@@ -251,7 +255,7 @@ identity:
   status: confirmed
   anchors:
     - { key: garden_id, value: "123456789abc", class: logical, establishing: true }   # replace with what `dmpropose id` printed in Ali's garden
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-15 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: ali } } }
 responsibility: { legal: { holder: { bean: ali } } }
 ---
@@ -279,7 +283,7 @@ identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-15 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
@@ -311,7 +315,7 @@ identity:
   status: confirmed
   anchors:
     - { key: event_id, value: "event:dinner-at-sams-2026-09-12", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
@@ -366,7 +370,7 @@ identity:
   status: confirmed
   anchors:
     - { key: contract_id, value: "contract:shared-camera", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
@@ -413,7 +417,7 @@ identity:
   status: confirmed
   anchors:
     - { key: contract_id, value: "contract:washer-loan", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
@@ -487,11 +491,11 @@ identity:
   status: confirmed
   anchors:
     - { key: content_hash, value: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", class: logical, establishing: true }
-provenance: { src: observed, by: "sam", as_of: 2026-10-02 }
+provenance: { src: observed, by: "sam", as_of: now }
 owned_by: { legal: { external: "the bank that issued the card, which wrote the statement" } }
 responsibility: { legal: { holder: { bean: sam } } }
 located_at:
-  - { system: unix-filesystem, openness: here, at: "laptop:/home/user/documents/card-statement-2026-09.pdf", observed: 2026-10-02 }
+  - { system: unix-filesystem, openness: here, at: "laptop:/home/user/documents/card-statement-2026-09.pdf", observed: now }
 capture:
   lines:
     of: "the statement's transaction lines for September 2026"
@@ -516,7 +520,7 @@ quotes YAML reads a backslash as the start of an escape, and `"C:\Users…"` is 
 <!-- example-located-at: beans/card-statement-2026-09.md -->
 ```yaml
 located_at:
-  - { system: windows-filesystem, openness: here, at: 'laptop:C:\Users\sam\Documents\card-statement-2026-09.pdf', observed: 2026-10-02 }
+  - { system: windows-filesystem, openness: here, at: 'laptop:C:\Users\sam\Documents\card-statement-2026-09.pdf', observed: now }
 ```
 
 ## Proposing to another garden
@@ -601,11 +605,11 @@ reading it.
 **Taking is not accepting.** `take` records what Sam's garden offers — here its record that both said yes on
 2026-09-10, which is Sam's report of Ali's yes, carried with his garden's name on it. Her own yes is hers to write,
 in her garden: `accepted` on her own entry in `parties`, with her own provenance, journalled and committed on its own
-after the take. In Ali's garden the entry reads:
+after the take. In Ali's garden she writes:
 
 <!-- example-entry: beans/shared-camera.md parties.ali -->
 ```yaml
-  ali: { who: { bean: ali }, accepted: 2026-09-10, provenance: { src: asserted-by-human, by: "ali", as_of: 2026-09-20 } }
+  ali: { who: { bean: ali }, accepted: 2026-09-10, provenance: { src: asserted-by-human, by: "ali", as_of: now } }
 ```
 
 An agreement that arrives with no `accepted` on her entry is an offer; until she writes one, it has no acceptance on

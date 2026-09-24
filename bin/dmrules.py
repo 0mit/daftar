@@ -359,6 +359,19 @@ head("PROVENANCE RECORD — on a bean, an anchor or an entry")
 _pr = std.get('provenance_record') or {}
 print(f"  a record carries only {_pr.get('attrs')}; each record in `from` only {_pr.get('from_attrs')}, with a `src`")
 print("  `garden` names another garden this one knows (a `garden` bean's garden_id); a record made here carries none (warned)")
+if _pr.get('as_of') == 'stamped':
+    print("  `as_of` is STAMPED: a record a commit adds carries the day of a journal heading the same commit adds — written "
+          "`now`, the save writes that day in its place; typed, left `now`, or left out, it is refused. A record from "
+          "another garden keeps its garden's day; the merge's own record says `merged`; a record moved is not added")
+
+head("JOURNAL — every change is an entry, under a heading")
+_jr = std.get('journal') or {}
+print(f"  {_jr.get('path')}: each entry under {_jr.get('heading_form')}")
+print(f"  <when> in {'any declared calendar' if _jr.get('system') in (None, 'any') else _jr.get('system')}, to the "
+      f"{_jr.get('unit_at_least')} at least; only headings a commit adds are judged ({_jr.get('checks')})")
+if _jr.get('heading') == 'stamped':
+    print("  a heading is STAMPED: written from the clock by the journal tool and registered in the clone; a heading a "
+          "commit adds that the tool did not write is refused")
 
 head("REVERSE GATE — the rules must be passed by the objects")
 print("  every position a term declares — a closed list on an entry's attribute or on a mapping's own, an aspect, a "

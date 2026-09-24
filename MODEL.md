@@ -185,7 +185,7 @@ This table is the one statement of who may decide what.
 
 | | Decision | Who |
 |---|---|---|
-| **A** | record a newly **observed**, reversible fact | an agent alone (tag `src`, `as_of`; log it) |
+| **A** | record a newly **observed**, reversible fact | an agent alone (tag `src`, `as_of: now`; log it) |
 | **B** | record an **inference** not directly observed | an agent alone, marked `src: inferred`, not settled |
 | **C** | **overwrite or delete** an authoritative value | own earlier *observed* value: an agent (log both); *asserted* or safety-related: **a person ratifies** |
 | **D** | set or change a **human-asserted** fact | **a person only**; an agent may propose |
@@ -214,6 +214,8 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
     in any declared calendar's own form (`persian:1405-06-29 00:45+03:30`), to the minute, with its offset — or
     that `bin/dmjournal.py` did not write, reading the clock. Entries already written are never checked or
     rewritten;
+  - a provenance record a commit adds whose `as_of` is not the day of a heading the same commit adds: the day of
+    writing is stamped, not typed — written `now`, and the save writes the day in its place;
   - a journal line a commit adds that holds a character some reader takes for a line break, besides the line end
     itself: one line of the journal is one line to every reader.
 - These checks confirm that the words are there, not that they are true; honesty is still the writer's.

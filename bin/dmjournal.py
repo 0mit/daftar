@@ -37,9 +37,9 @@ adds that is not recorded there. The gate cannot tell a measured moment from a r
 it; it can tell whether the clock-reading tool wrote it. The register is per clone and never versioned: it
 proves only that THIS clone's tool stamped the heading, which is all a pre-commit hook can honestly check.
 
-THE SAME READING DATES THE BEANS (v0.34.1). A bean written with `as_of: now` (or `observed: now`), the form
+THE SAME READING DATES THE BEANS (23.0). A bean written with `as_of: now` (or `observed: now`), the form
 seed/FORMS.md shows, has the day of this entry's heading written in its place, in every bean the working tree
-changes — so the day of writing is the clock's, read once, and never a day the writer typed or copied. A day the
+changes and the entry names — so the day of writing is the clock's, read once, never a day typed or copied. A day the
 writer typed is left as typed. `bin/dmsave.py` calls this tool, and on `--again` stamps with the entry waiting.
 """
 import codecs
@@ -167,23 +167,30 @@ def append(who, what, body):
     refuse_breaks('the body', body)
     text = open(JOURNAL, encoding='utf-8').read()
     h = stamp(who, what)
+    # STAMPED BEFORE THE ENTRY IS WRITTEN: a document that cannot be stamped is reported, and the entry is still written
+    # once — a run that failed after appending would be run again, and append it twice
+    for p in stamp_now(h, f"{what}\n{body}"):
+        print(dmparse.said(f"dmjournal: {p}: `now` written as {h[3:13]}, the day of this entry"), file=sys.stderr)
     entry = ('' if text.endswith('\n\n') else ('\n' if text.endswith('\n') else '\n\n')) + h + '\n' + body + '\n'
     with open(JOURNAL, 'a', encoding='utf-8', newline='\n') as fh:
         fh.write(entry)
-    for p in stamp_now(h):
-        print(dmparse.said(f"dmjournal: {p}: `now` written as {h[3:13]}, the day of this entry"), file=sys.stderr)
     return h
 
 
-# THE DAY OF WRITING IS THE CLOCK'S (v0.34.1). The forms show `as_of: now`: the writer never types the day of writing,
-# because measured writers typed the nearest date in view instead — the example's, or one read in another bean. This
-# tool reads the clock once, for the heading; the same reading is the day every `now` in a stamp position becomes.
-NOW = re.compile(r'(\b(?:as_of|observed):[ \t]*)now\b(?![-\w])')
+# THE DAY OF WRITING IS THE CLOCK'S (23.0, `provenance_record.as_of: stamped`). The forms show `as_of: now`: the writer
+# never types the day of writing, because measured writers typed the nearest date in view instead — the example's, or
+# one read in another bean. This tool reads the clock once, for the heading; the same reading is the day every `now`
+# in a stamp position becomes. Only a bare `now` (or a quoted one) that is the whole value of `as_of` or `observed`.
+NOW = re.compile(r'(?<![\w-])((?:as_of|observed):[ \t]*)(["\']?)now\2(?=[ \t]*(?:[,}\]#\r\n]|$))', re.M)
+STAMPED = ('beans/', 'mappings/')
 
 
-def stamp_now(h, root=None):
-    """Write the day of heading `h` in place of every `as_of: now` / `observed: now` in the front matter of each bean
-    the working tree changes (added, modified or new). Returns the paths stamped."""
+def stamp_now(h, text=None, root=None):
+    """Write the day of heading `h` in place of every `now` in a stamp position of the front matter of each document
+    under beans/ or mappings/ that the working tree changes — and, given the entry's `text`, that the entry names (the
+    gate asks an entry to name every bean it commits; one still being written, named by no entry yet, is left for its
+    own). Returns the paths stamped. A document it cannot stamp is reported and left as it is: the entry is not written
+    yet when this runs, so nothing is half done, and the gate names what is still `now`."""
     root = root or ROOT
     day = h[3:13]
     out = subprocess.run(['git', '-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'], capture_output=True)
@@ -191,17 +198,24 @@ def stamp_now(h, root=None):
     for rec in out.stdout.decode('utf-8', 'replace').split('\0'):
         p = rec[3:] if len(rec) > 3 else ''
         f = os.path.join(root, p)
-        if not (p.startswith('beans/') and p.endswith('.md') and os.path.isfile(f)):
+        if not (p.startswith(STAMPED) and p.endswith('.md') and os.path.isfile(f)):
             continue
-        m = re.match(r'---\r?\n(.*?\r?\n)---', open(f, encoding='utf-8').read(), re.S)
-        if not (m and NOW.search(m.group(1))):
+        bid = os.path.basename(p)[:-3]
+        if text is not None and not re.search(r'(?<![\w-])' + re.escape(bid) + r'(?![\w-])', text):
             continue
+        try:
+            fm, _ = dmparse.split_front_matter(open(f, encoding='utf-8').read())
+            if fm is None or not NOW.search(fm):
+                continue
 
-        def fix(text):
-            fm = re.match(r'---\r?\n(.*?\r?\n)---', text, re.S)
-            return text[:fm.start(1)] + NOW.sub(lambda x: x.group(1) + day, fm.group(1)) + text[fm.end(1):]
-        dmsafe.edit(f, fix)
-        done.append(p)
+            def fix(t):
+                front, _b = dmparse.split_front_matter(t)
+                at = t.index(front)
+                return t[:at] + NOW.sub(lambda m: m.group(1) + day, front) + t[at + len(front):]
+            dmsafe.edit(f, fix)
+            done.append(p)
+        except Exception as e:                  # never a traceback after the heading is registered
+            print(dmparse.said(f"dmjournal: {p}: its `now` left as it is — {e}"), file=sys.stderr)
     return done
 
 

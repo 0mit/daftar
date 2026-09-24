@@ -82,10 +82,12 @@ def gate():
 
 
 def person(bid, extra=""):
+    # Written `as_of: now`, as a writer writes it (23.0, `provenance_record.as_of: stamped`): ali is committed below,
+    # and bin/dmjournal.py writes the day of the entry in its place. A typed day would be refused at the commit.
     return (f'---\nbean: {bid}\ngenos: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: empsychon\n'
             f'owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
             f'identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
-            f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\n{bid}.\n')
+            f'provenance: {{ src: asserted-by-human, by: sam, as_of: now }}\n{extra}---\n{bid}.\n')
 
 
 def thing(bid, anchor, extra=""):
@@ -394,7 +396,11 @@ for ch, name in (("\x1c", "a file separator"), ("\u2028", "a Unicode line separa
           rc != 0 and "log/journal.md: an added line holds" in out, out[-600:])
 rc, out, _j = commit_with(person("ali").replace("ali.\n", "ali, once more.\n"), "- action: changed [[ali]] once more.")
 check("...while an ordinary entry commits", rc == 0, out[-600:])
-put("beans/ali.md", person("ali").replace("ali.\n", "ali, typed.\n"))
+# The two cases below are refused for their journal alone, so ali keeps the day its last commit was stamped with: a
+# `now` no tool wrote the day in would be refused too, and its refusal says `--body`, which the second case looks for.
+_m = re.search(r'as_of: ([^ ,}]+)', run("git", "show", "HEAD:beans/ali.md", cwd=G).stdout)
+stamped = lambda text: text.replace("as_of: now", "as_of: " + (_m.group(1) if _m else "now"))
+put("beans/ali.md", stamped(person("ali")).replace("ali.\n", "ali, typed.\n"))
 with open(os.path.join(G, "log", "journal.md"), "a", encoding="utf-8", newline="\n") as fh:
     fh.write("\n## 2026-09-23 07:00+03:00 · sam · typed\n- action: changed [[ali]].\n")
 run("git", "add", "-A", cwd=G)
@@ -405,7 +411,7 @@ check("a typed heading is refused with the command that works in every shell: `-
       c.returncode != 0 and "was not written by bin/dmjournal.py" in out
       and f'{_py} bin/dmjournal.py "<who>" "<what>" --body "' in out and "< entry.md" not in out, out[-600:])
 run("git", "reset", "-q", "--hard", cwd=G)
-put("beans/ali.md", person("ali").replace("ali.\n", "ali, unjournalled.\n"))
+put("beans/ali.md", stamped(person("ali")).replace("ali.\n", "ali, unjournalled.\n"))
 run("git", "add", "-A", cwd=G)
 c = run("git", "commit", "-q", "-m", "no entry", cwd=G)
 out = c.stdout + c.stderr

@@ -69,6 +69,10 @@ garden, and `--staged` what a commit would hold. On a clean commit the hook prin
       `bin/dmjournal.py`: a heading the tool did not register is refused. No line the commit adds to the journal holds
       a character some reader takes for a line break (a vertical tab, a form feed, `\x1c`-`\x1e`, NEL, U+2028,
       U+2029).
+- [ ] **The day of writing:** a provenance record a commit adds carries, as its `as_of`, the day of a journal heading
+      the same commit adds — written `as_of: now`, which the save (or `bin/dmjournal.py`) writes that day in place of.
+      A typed day, a `now` left unstamped, or a record added with no `as_of` is refused. A record moved is not added; a
+      record from another garden keeps the day its garden gave it; the merge's own record says `merged`.
 - [ ] **No silent damage:** a staged document still parses and keeps its body; a removed top-level key is named in
       the journal entry; a key is not emptied out while it stays.
 

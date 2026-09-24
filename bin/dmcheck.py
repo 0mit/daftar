@@ -38,7 +38,7 @@ Session/model-agnostic gate, in two halves (v2 P2 / plan D4):
               std-vocab and the garden's VOCAB); a term with no `schema:` is documentation only.
               The schema language is documented in VOCAB.md under `schema_language:`.
 """
-import difflib, glob, json, math, os, re, sys, fnmatch, ipaddress, shutil, stat, subprocess, tempfile
+import collections, difflib, glob, json, math, os, re, sys, fnmatch, ipaddress, shutil, stat, subprocess, tempfile
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
@@ -976,6 +976,10 @@ def check_value_type(where, attr, val, typ):
         if not isinstance(val, (str, int, float)) or isinstance(val, bool):
             errors.append(f"{where}.{attr} is text, written as one string — not {type(val).__name__}")
         return
+    elif t.get('any_system') and str(val).strip() == 'now' and attr in ('as_of', 'observed'):
+        # `now` IS NOT A DAY BUT THE WORD FOR ONE (23.0): the save writes the day of its entry in its place
+        errors.append(f"{where}.{attr} is `now` — the word the save writes the day of its entry in place of: save with "
+                      f"{_save_command('- action: <what changed>')}")
     elif t.get('any_system'):
         # A POSITION IN ANY SYSTEM OF THE TYPE'S DIMENSION, held to the type's unit (16.0): no system is the one a date
         # must be in. It must be in ONE system's own form, that system must HAVE the level, and a reading finer than
@@ -3666,6 +3670,47 @@ def check_single_owner_of_a_fact():
 # index went through a second, slightly different code path — and the callers here genuinely do not care
 # WHY a blob is absent (a path not staged and a path deleted in the index are both "nothing to read"),
 # which is exactly the distinction `_git` returns and these two discard on purpose.
+def _stamps_of(fm, own=None, path=()):
+    """[(where, record)] of every provenance record in a front matter that is THIS garden's own — a record carrying the
+    `garden` of another garden was made there and keeps that garden's stamp; one naming this garden itself is this
+    garden's, and is judged. `where` is the record's path, for the message only: a record is matched by what it is
+    (src, by, as_of), never by where it sits, so a record moved — into a conflict, out of one, to a renamed bean — is
+    not a record added."""
+    out = []
+    if isinstance(fm, dict):
+        for k, v in fm.items():
+            if k == 'provenance' and isinstance(v, dict) and (v.get('garden') is None or str(v.get('garden')) == own):
+                out.append(('.'.join(path + ('provenance',)), v))
+            out += _stamps_of(v, own, path + (str(k),))
+    elif isinstance(fm, list):
+        for v in fm:
+            out += _stamps_of(v, own, path)
+    return out
+
+
+def _nows_of(fm, path=()):
+    """[where] of every `as_of` or `observed` still holding the word `now`, anywhere in a front matter."""
+    out = []
+    if isinstance(fm, dict):
+        for k, v in fm.items():
+            if k in ('as_of', 'observed') and str(v).strip() == 'now':
+                out.append('.'.join(path + (str(k),)))
+            out += _nows_of(v, path + (str(k),))
+    elif isinstance(fm, list):
+        for v in fm:
+            out += _nows_of(v, path)
+    return out
+
+
+def _day_number(position):
+    """The day a position names, in whichever declared calendar it is written — None where it names no day."""
+    try:
+        import dmcal
+        return dmcal.to_day(str(position))
+    except Exception:
+        return None
+
+
 def _staged_text(p):
     return _git('show', f':{p}')[0]
 
@@ -3860,6 +3905,67 @@ def check_staged_state():
                         errors.append(f"journal heading '{_h[:80]}' was not written by bin/dmjournal.py — a heading "
                                       f"is read from the clock by the tool, never typed: remove the typed heading and "
                                       f"its lines, then {_journal_command()}" + _rule('journal.heading'))
+            # THE DAY OF WRITING IS STAMPED, NOT TYPED (23.0, `provenance_record.as_of: stamped`). A bean's `as_of` is the
+            # day it was written down — the day this commit's journal entry was stamped with, read from the clock by
+            # bin/dmjournal.py. Measured writers typed the nearest date in view instead: an example's, one read in another
+            # bean. So a record this commit ADDS must carry the day of a heading it adds. A record is matched by what it
+            # is — (src, by, as_of) — so one moved (into a conflict, out of it, to a renamed bean) is never judged again;
+            # one made in another garden keeps its garden's stamp; the merge tool's own record says `merged`.
+            if PROV.get('as_of') == 'stamped':
+                _own_id = own_garden_id()
+                _held = set(l.rstrip() for l in (_head_text('log/journal.md') or '').split('\n') if l.startswith('## '))
+                _new_h = [_h for _h in _added if _h.startswith('## ') and _h.rstrip() not in _held]
+                _days = {d for d in (_day_number(_h[3:].split(' · ', 1)[0]) for _h in _new_h) if d}
+                _waiting = bool(_new_h) and all(_h.rstrip() in (_stamped or set()) for _h in _new_h) if _stamped is not None else False
+                _fix = (f"{'python' if os.name == 'nt' else 'python3'} bin/dmsave.py --again" if _waiting and
+                        os.path.isfile(os.path.join(ROOT, 'bin', 'dmsave.py')) else _save_command('- action: <what changed>'))
+                _renamed = {}
+                for _l in _git('diff', '--cached', '-M', '--name-status')[0].split('\n'):
+                    _f = _l.split('\t')
+                    if len(_f) == 3 and _f[0].startswith('R'):
+                        _renamed[_f[2]] = _f[1]
+                for _p in sc:
+                    _cur = _staged_text(_p)
+                    if _cur is None or not _p.endswith('.md'):
+                        continue
+                    try:
+                        _now_fm = dmparse.loads(dmparse.split_front_matter(_cur)[0] or '') or {}
+                        _was = _head_text(_renamed.get(_p, _p))
+                        _was_fm = (dmparse.loads(dmparse.split_front_matter(_was)[0] or '') or {}) if _was else {}
+                    except Exception:
+                        continue                  # a document that does not parse is refused below, by name
+                    _was_nows = collections.Counter(_nows_of(_was_fm))      # only a `now` this commit adds is judged
+                    for _w in _nows_of(_now_fm):
+                        if _was_nows[_w]:
+                            _was_nows[_w] -= 1
+                            continue
+                        errors.append(f"{_p}: {_w} is `now` — the word the save writes the day of its entry in place of; "
+                                      f"this commit was made without it. Save with {_fix}"
+                                      + _rule('provenance_record.as_of', 'provenance_record'))
+                    def _key(r):
+                        return (str(r.get('src')), str(r.get('by')), str(r.get('as_of')))
+                    _before = collections.Counter(_key(r) for _w, r in _stamps_of(_was_fm, _own_id))
+                    for _w, _r in _stamps_of(_now_fm, _own_id):
+                        _k = _key(_r)
+                        if _before[_k]:
+                            _before[_k] -= 1
+                            continue
+                        _v = _r.get('as_of')
+                        if str(_v).strip() == 'now':
+                            continue                  # refused above, with the save that stamps it
+                        if _v is None:
+                            errors.append(f"{_p}: {_w} has no `as_of` — the day it was written down is part of the record: "
+                                          f"write `as_of: now` and save with {_fix}" + _rule('provenance_record.as_of', 'provenance_record'))
+                        elif str(_v) == 'merged' and _r.get('src') == 'generated-by-tool' and _r.get('by') == 'dmmerge':
+                            continue                  # the merge's own record: when a merge happened is git's to say
+                        elif _day_number(_v) not in _days:
+                            errors.append(f"{_p}: {_w}.as_of is {_v}, and the day of writing is stamped, not typed — it is "
+                                          f"the day of this commit's journal entry"
+                                          + (f" ({', '.join(sorted({_h[3:13] for _h in _new_h}))})" if _days else '')
+                                          + f". Write `as_of: now` and save with {_fix}: the save writes the day in its place"
+                                          + (" (a record this garden took from another carries that garden's `garden`, and "
+                                             "keeps its day)" if str(_r.get('garden')) == _own_id else '')
+                                          + _rule('provenance_record.as_of', 'provenance_record'))
         for p in staged:
             if not (p.startswith(DOCUMENTISH) or p.endswith(FRONT_MATTER_DOCS)):
                 continue

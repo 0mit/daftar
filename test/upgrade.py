@@ -140,6 +140,9 @@ check("a file whose bytes match but whose executable bit does not is restored",
 run('git', 'reset', '-q', '--hard', cwd=GARDEN); run('git', 'clean', '-qfd', cwd=GARDEN)
 _readme = open(os.path.join(ROOT, 'seed', 'README.md')).read() + open(os.path.join(ROOT, 'seed', 'COOKBOOK.md')).read()
 _ex = dict(re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _readme, re.S))
+# The day of writing is stamped, not typed (23.0): these beans are committed through the hook, so an example's
+# typed day becomes `now`, and bin/dmjournal.py below writes its own heading's day in its place.
+_ex = {k: re.sub(r'(\bas_of:[ \t]*)\d{4}-\d{2}-\d{2}\b', r'\1now', v) for k, v in _ex.items()}
 os.makedirs(os.path.join(GARDEN, 'beans'), exist_ok=True)   # git clean removed the empty directory
 open(os.path.join(GARDEN, 'beans', 'sam.md'), 'w').write(_ex['beans/sam.md'] + '\n')
 open(os.path.join(GARDEN, 'beans', 'vps-a.md'), 'w').write(_ex['beans/vps-a.md'].replace('provides_habitat: linux-vm\n', 'provides_habitat: linux-vm\nos: debian\n') + '\n')

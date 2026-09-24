@@ -64,7 +64,7 @@ identity:
   status: confirmed
   anchors:
     - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, observed: 2026-08-02 }}
-provenance: {{ src: observed, by: "agent/origin", as_of: 2026-08-02 }}
+provenance: {{ src: observed, by: "agent/origin", as_of: now }}
 nature: soma
 owned_by: {{ legal: {{ external: "the relay's operator, outside every garden that observes it" }} }}
 responsibility: {{ legal: {{ external: "the relay's operator" }} }}
@@ -87,8 +87,14 @@ check("...and it dispatches bean merges to the semantic driver, journal merges t
       and 'union' in git('check-attr', 'merge', '--', 'log/journal.md', cwd=ORIGIN).stdout,
       "`.gitattributes` did not travel — every garden would text-merge its beans")
 
+# THE DAY OF WRITING IS STAMPED (23.0). RELAY says `as_of: now` and is journalled by the tool after it is written, so
+# the entry's day replaces `now`. A refused commit here once surfaced only as a missing file in a clone, three steps on;
+# it is named where it happens.
 open(os.path.join(ORIGIN, 'beans', 'relay.md'), 'w', encoding='utf-8').write(RELAY.format())
-commit(ORIGIN, 'origin', 'recorded the relay every garden observes')
+_c = commit(ORIGIN, 'origin', 'recorded the relay every garden observes')
+check("the origin's first bean is committed through its gate, `as_of: now` stamped with the day of its entry",
+      _c.returncode == 0 and 'as_of: now' not in open(os.path.join(ORIGIN, 'beans', 'relay.md'), encoding='utf-8').read(),
+      (_c.stdout + _c.stderr)[-300:])
 BASE = git('rev-parse', 'HEAD', cwd=ORIGIN).stdout.strip()
 
 GARDENS = ('site-a', 'site-b', 'site-c')
@@ -100,16 +106,20 @@ for g in GARDENS:
 # mergeable at all: a merge across two Tier-0 versions is refused by design.
 edit(os.path.join(TMP, 'site-a'), lambda t: t.replace('  os: "AlmaLinux 9"', '  os: "AlmaLinux 9.4"')
      .replace('roles: [relay]', 'roles: [relay, submission]'))
-commit(os.path.join(TMP, 'site-a'), 'site-a', 'refined os to 9.4 and added the submission role')
+_migrated = {'site-a': commit(os.path.join(TMP, 'site-a'), 'site-a', 'refined os to 9.4 and added the submission role')}
 
 edit(os.path.join(TMP, 'site-b'),
      lambda t: t.replace('roles: [relay]', 'roles: [relay, dkim-signing]\n  site: "Site B DC"'))
-commit(os.path.join(TMP, 'site-b'), 'site-b', 'added dkim-signing and site Site B DC')
+_migrated['site-b'] = commit(os.path.join(TMP, 'site-b'), 'site-b', 'added dkim-signing and site Site B DC')
 
 edit(os.path.join(TMP, 'site-c'), lambda t: t.replace('roles: [relay]', 'roles: [relay]\n  site: "Site C DC"')
      .replace('nature: soma', 'nature: soma\ncapabilities:\n  open-relay: { permission: forbidden,'
                                   ' feasibility: possible, why: "must never accept third-party mail" }'))
-commit(os.path.join(TMP, 'site-c'), 'site-c', 'recorded site Site C DC and forbade open-relay')
+_migrated['site-c'] = commit(os.path.join(TMP, 'site-c'), 'site-c', 'recorded site Site C DC and forbade open-relay')
+# A migration that edits a fact and leaves the relay's stamp as it was adds no stamp, so it is not re-judged (23.0).
+check("each garden's migration is committed through its own gate — an untouched stamp is never judged again",
+      all(r.returncode == 0 for r in _migrated.values()),
+      '; '.join(f"{g}: {(r.stdout + r.stderr).strip()[-150:]}" for g, r in _migrated.items() if r.returncode))
 
 gates = {g: subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True,
                            encoding='utf-8', errors='replace', cwd=os.path.join(TMP, g)) for g in GARDENS}

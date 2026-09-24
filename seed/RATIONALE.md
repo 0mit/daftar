@@ -271,6 +271,22 @@ proposal carries the fact across, and never changed — so an assertion that arr
 person's assertion, and the guard that an inference never overrides it holds across the boundary without a single
 new rule. It must name a garden this one knows: a fact from a garden nobody recorded has no one to ask.
 
+## provenance_record.as_of
+
+STAMPED, NOT TYPED (23.0), for the reason the journal heading is (20.0) and with the same reading of the clock. The
+day of writing is a fact the writer is the one source of, and a writer who types it types a remembered day: measured
+on a local model with no date in its context, every `as_of` it wrote was the nearest date in view — the forms'
+example day, or the gardener's own stamp read in another bean. The gate cannot tell a typed day from a read one by its
+form; it can tell whether it is the day of the heading the same commit adds, which the heading's tool read from the
+clock. So one reading dates both, and there is no second register: a stamp is judged against versioned history that
+any clone can read, and only where a commit adds it — a record left as it was is never re-judged, so no garden
+changes on crossing. A record is matched by what it is — its src, its by and its day — not by where it sits: a
+conflict wraps records, a settlement unwraps them, a bean is renamed, and none of that is a day of writing. Where a
+stamp came from belongs to the value, not to a position: a record taken in from another garden carries that garden's
+`garden` and keeps its stamp; the merge engine's own record says `merged`, because when a merge happened is git's to
+say. Neither is an escape a writer can type: this garden's own id exempts nothing, and `merged` passes only on the
+merge engine's record.
+
 ## natures
 
 THE GREEK NAMES (22.0). The law's words for what a being is came from four traditions at once: the crown's root was
@@ -1993,6 +2009,15 @@ not where darkness is"). The gate enforces the sanity rules — closure, orienta
 Declared here rather than left silent because the whole argument for naming an anchor system is that
 an UNSTATED domain is what makes a negative result read as strong. A registry that quietly carried
 systems nothing occupies would be committing the same error one level up.
+== EVENT-ANCHORED, UNIVERSAL (23.0) ==
+Declared in 5.1 as a prediction — "expected first in the journal" — and occupied instead by every garden that
+recorded a happening whose day nobody said, because the forms show it for exactly that. A prediction that comes
+true warns, addressed to whoever maintains the law; so every garden following the forms was warned on every such
+event. Measured on a local model over one day's runs, five met the warning and all five called it noise ("a law
+issue, not a bean issue"): a warning every writer gets for doing the right thing teaches writers to read past
+warnings, and a new garden is meant to start quiet. The position belongs to a mechanism that is occupied on the
+same figure — `timing.system`, through gregorian-civil and unix-epoch — so it is `universal`: declared because the
+structure is whole, and a garden standing on it withdraws nothing.
 
 ## schema_language.values_from
 

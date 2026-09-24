@@ -50,6 +50,8 @@ def gate(cwd):
     return r.returncode, r.stdout + r.stderr
 
 
+# THE DAY OF WRITING IS STAMPED, NOT TYPED (23.0): the bean says `now`, and bin/dmjournal.py, run after it is written,
+# writes the day of its heading in its place — as a writer's save does.
 BEAN = """---
 bean: ada
 genos: person
@@ -59,8 +61,8 @@ summary: "A person written into a garden grown from the seed, proving the langua
 identity:
   status: confirmed
   anchors:
-    - {{ key: person_id, value: "person:ada", class: logical, establishing: true, observed: 2026-08-02 }}
-provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: 2026-08-02 }}
+    - {{ key: person_id, value: "person:ada", class: logical, establishing: true, observed: now }}
+provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
 nature: {nature}
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
@@ -409,10 +411,14 @@ for _doc in ('COOKBOOK.md', 'WELCOME.md'):
         _frags = re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', _sec, re.S)
         if _beans or _frags:
             _recipes.append((f"{_doc}: {_sec.split(chr(10), 1)[0].lstrip('# ')}", _beans, _frags))
+# A BEAN SAVED IS ITS EXAMPLE WITH THE DAY WRITTEN IN (23.0): the page shows `as_of: now`, and bin/dmjournal.py wrote
+# the day of its entry in its place. So a bean already there is compared as the page shows it, and the gardener shown
+# again is still found unchanged, never committed a second time as a journal entry alone.
+_STAMPED = re.compile(r'(\b(?:as_of|observed):[ \t]*)\d{4}-\d{2}-\d{2}\b')
 _committed, _failed = [], None
 for _name, _beans, _frags in _recipes:
     _changed = [p for p, x in _beans if not os.path.isfile(os.path.join(_ex_tmp, p))
-                or open(os.path.join(_ex_tmp, p), encoding='utf-8').read() != x + '\n']
+                or _STAMPED.sub(r'\1now', open(os.path.join(_ex_tmp, p), encoding='utf-8').read()) != x + '\n']
     if not _changed and not _frags:
         continue                                   # a bean shown again (the gardener) is already there, unchanged
     for _path, _text in _beans:
@@ -499,9 +505,9 @@ run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmjournal.py'), 'human (test)'
     cwd=_ex_tmp)
 run('git', 'add', '-A', cwd=_ex_tmp)
 _uc = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'what nobody said', cwd=_ex_tmp)
-check(f"seed/FORMS.md's {len(_unsaid)} forms for what nobody said commit with 0 errors, beside the recipes — an event "
+check(f"seed/FORMS.md's {len(_unsaid)} forms for what nobody said commit with 0 errors and 0 warnings (23.0: `event-anchored` is universal), beside the recipes — an event "
       "placed by what it came after, a contract with no amount and no day, a garden whose id nobody gave",
-      len(_unsaid) >= 3 and _uc.returncode == 0 and ' 0 error(s)' in _uc.stdout + _uc.stderr
+      len(_unsaid) >= 3 and _uc.returncode == 0 and ' 0 error(s), 0 warning(s)' in _uc.stdout + _uc.stderr
       and {'timing', 'identity'} <= {t.strip() for _, f, _ in _unsaid for t in f.split(',')},
       (_uc.stdout + _uc.stderr)[-600:])
 if _uc.returncode == 0:
