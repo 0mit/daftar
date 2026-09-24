@@ -2752,6 +2752,17 @@ def check_entry(base, term, label, entry, sch):
     """Every per-entry rule the schema language can express."""
     if not isinstance(entry, dict):
         req = [n for n, _ in _facet(attribute_form(term, sch), 'required', 'entry')]
+        if isinstance(entry, list) and entry and all(isinstance(x, dict) for x in entry):
+            # A LIST WHERE ONE MAPPING GOES. Several beans in one slot (`participants: [ {..}, {..} ]`) is the
+            # commonest shape a writer reaches for, and a generic example did not teach the fix: two agents of two
+            # makes wrote the same list again after reading it (2026-09-24). So the message converts the writer's
+            # OWN entries — each its own key, named by the slot and the bean — and there is nothing left to infer.
+            _conv = '\n'.join(f"        {label}_{x.get('bean') if isinstance(x.get('bean'), str) else i + 1}: {_flow(x)}"
+                               for i, x in enumerate(entry))
+            errors.append(f"{base}: {term}[{label}] is a list, and each entry of {term} is ONE mapping with {req} — give "
+                          f"each its own key; yours, converted (the key is a label of your choosing)"
+                          + _rule(f"{term}.schema", term, term.split('.')[0]) + f":\n{_conv}")
+            return
         _f = _example_form(term, entry=True)
         errors.append(f"{base}: {term}[{label}] must be a mapping with {req}"
                       + (f" — one entry, one mapping, in {_TESTED}{_f}" if _f else '')

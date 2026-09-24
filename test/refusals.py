@@ -33,6 +33,7 @@ the gate once took, or once died on; each must now be refused by name, and nothi
 Every name is neutral (sam, ali, ben) and every amount is in XTS, the code ISO 4217 keeps for testing.
 """
 import ast, json, os, re, sys, subprocess, tempfile, shutil
+import textwrap
 import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FAILS = []
@@ -750,6 +751,16 @@ f = finding(event("call", WHEN + "refs:\n  people: [sam, ali]\n"), "must be a ma
 check("...and an entry of `refs` written as a list: one entry, one mapping, as a tested example writes it",
       written(f, "in " + TESTED) == {"host": {"bean": "sam", "rel": "host"}}
       and not SENDS.search(f), f)
+LISTED = "refs:\n  host: { bean: sam, rel: host }\n  participants:\n    - { bean: ali, rel: present }\n    - { bean: sam, rel: present }\n"
+f = finding(event("call", WHEN + LISTED), "refs[participants] is a list")
+_conv = f.split("(the key is a label of your choosing)", 1)[-1].split(":\n", 1)[1] if ":\n" in f else ""
+_conv = "\n".join(__import__("itertools").takewhile(lambda l: l.startswith("        "), _conv.split("\n")))   # its lines alone
+_as = yaml.safe_load(textwrap.dedent(_conv)) if _conv.strip() else None
+_fixed = event("call", WHEN + "refs:\n  host: { bean: sam, rel: host }\n" + textwrap.indent(textwrap.dedent(_conv), "  ") + "\n")
+check("...and several beans listed in ONE entry of `refs` (the shape two agents of two makes wrote twice, 2026-09-24): "
+      "the refusal converts the writer's OWN list, each its own key — and the conversion, pasted, passes",
+      _as == {"participants_ali": {"bean": "ali", "rel": "present"}, "participants_sam": {"bean": "sam", "rel": "present"}}
+      and "ERROR call" not in _fixed and not SENDS.search(f), f + "\n--- pasted:\n" + _fixed[-600:])
 f = finding(event("call", WHEN + 'refs: { host: { bean: sam } }\n'), "missing ['rel']")
 check("...and an entry missing `rel`: the attribute as a tested example writes it",
       written(f, TESTED) == {"rel": "host"} and not SENDS.search(f), f)
