@@ -104,16 +104,16 @@ def gate_is_installed():
     return os.path.exists(os.path.join(common, 'hooks', 'pre-commit'))
 
 
-def _bean_kind(bean):
-    """The `kind` of beans/<bean>.md in the main copy, or None when there is no such bean."""
+def _bean_genos(bean):
+    """The `genos` of beans/<bean>.md in the main copy, or None when there is no such bean."""
     path = os.path.join(ROOT, 'beans', f'{bean}.md')
     if not os.path.isfile(path):
         return None
     fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
-    return fm.get('kind') if isinstance(fm, dict) else None
+    return fm.get('genos') if isinstance(fm, dict) else None
 
 
-def resolve_edge(flag, name, want_kind=None):
+def resolve_edge(flag, name, want_genos=None):
     """Which bean the session bean names as its `host` or its `owner`: the flag, else this clone's
     `git config daftar.<name>`, else a refusal.
 
@@ -125,12 +125,12 @@ def resolve_edge(flag, name, want_kind=None):
     if not value:
         sys.exit(f"REFUSING: the session bean needs a {name} and none is known. Pass --{name} <bean>, or set it\n"
                  f"once for this clone: git config daftar.{name} <bean>")
-    kind = _bean_kind(value)
-    if kind is None:
+    genos = _bean_genos(value)
+    if genos is None:
         sys.exit(f"REFUSING: {name} '{value}' has no bean in beans/ — the session bean would open with a dangling "
                  f"ref. Name an existing bean, or write that one first.")
-    if want_kind and kind not in (want_kind if isinstance(want_kind, tuple) else (want_kind,)):
-        sys.exit(f"REFUSING: {name} '{value}' is kind '{kind}', not '{want_kind}'.")
+    if want_genos and genos not in (want_genos if isinstance(want_genos, tuple) else (want_genos,)):
+        sys.exit(f"REFUSING: {name} '{value}' is genos '{genos}', not '{want_genos}'.")
     return value
 
 
@@ -155,7 +155,7 @@ def cmd_open(a):
                  "commit would silently revert nothing while missing everything. Found the hard way: the\n"
                  "first session this tool opened branched past an unstaged vocabulary change and wrote a\n"
                  "bean using a term its own copy of the law did not yet have. Commit or stash, then open.")
-    host = resolve_edge(a.host, 'host', want_kind=('host', 'virtual-host'))      # before anything is created
+    host = resolve_edge(a.host, 'host', want_genos=('host', 'virtual-host'))      # before anything is created
     owner = resolve_edge(a.owner, 'owner')
     os.makedirs(SESSIONS_DIR, exist_ok=True)
     git('worktree', 'add', '-b', branch, path)
@@ -175,11 +175,11 @@ def _bean_template(slug, purpose, owner, host):
     now = int(time.time() * 1000)
     return f"""---
 bean: session-{slug}
-kind: session
+genos: session
 title: "{purpose or slug}"
 status: active
 summary: "OPENED AND NOT YET DESCRIBED. Replace this line with what the session is actually for — a summary that still says 'opened and not yet described' at close is the session admitting it never knew."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:

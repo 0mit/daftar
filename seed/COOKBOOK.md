@@ -29,17 +29,17 @@ name is bare, `person:sam`: it names Sam in this garden only, and is qualified b
 ```markdown
 ---
 bean: sam
-kind: person
+genos: person
 title: "Sam — keeps this garden"
 status: active
 summary: "The gardener: the person who keeps this garden, and owns and answers for the machines recorded here."
-nature: living
+nature: empsychon
 identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
-owned_by: { legal: { crown: love } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
 Sam keeps this ledger.
@@ -90,11 +90,11 @@ extends_profiles: [domain]
 ```markdown
 ---
 bean: example-org
-kind: domain
+genos: domain
 title: "example.org — Sam's domain"
 status: active
 summary: "The domain Sam's website answers on."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -122,11 +122,11 @@ because a machine does several things.
 ```markdown
 ---
 bean: nas
-kind: host
+genos: host
 title: "nas — Sam's home NAS"
 status: active
 summary: "A NAS at home: file storage, and the web server for example.org."
-nature: physical
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -152,11 +152,11 @@ the NAS and is Sam's. "Serves this domain" has no dedicated relation, so it is a
 ```markdown
 ---
 bean: nginx
-kind: product
+genos: product
 title: "nginx — the web server software"
 status: active
 summary: "Third-party web server software, run here but owned by its project."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -172,11 +172,11 @@ The web server software.
 ```markdown
 ---
 bean: website
-kind: instance
+genos: instance
 title: "website — nginx on the NAS, serving example.org"
 status: active
 summary: "The web server instance on the NAS that answers for example.org."
-nature: living
+nature: empsychon
 identity:
   status: confirmed
   anchors:
@@ -202,11 +202,11 @@ provider owns it and Sam answers for what runs on it.
 ```markdown
 ---
 bean: vps-a
-kind: virtual-host
+genos: virtual-host
 title: "vps-a — a rented virtual server"
 status: active
 summary: "A VPS rented from a hosting provider."
-nature: living
+nature: empsychon
 identity:
   status: confirmed
   anchors:
@@ -242,11 +242,11 @@ gardener's decision (class F): write the two beans, journal them in one entry, a
 ```markdown
 ---
 bean: garden-ali
-kind: garden
+genos: garden
 title: "garden-ali — the garden Ali keeps"
 status: active
 summary: "Ali's own daftar garden. She keeps it; what passes between it and this one is proposed, never written."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -270,17 +270,17 @@ of the bean is Sam's record, in Sam's words:
 ```markdown
 ---
 bean: ali
-kind: person
+genos: person
 title: "Ali"
 status: active
 summary: "Ali, who keeps a garden of her own; Sam shares costs with her."
-nature: living
+nature: empsychon
 identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-15 }
-owned_by: { legal: { crown: love } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
 Ali keeps garden-ali. Her name here is the one her own garden gave her.
@@ -302,11 +302,11 @@ of them: it ends at the crown, `logos`, as an agreement may, and whoever hosted 
 ```markdown
 ---
 bean: dinner-at-sams
-kind: event
+genos: event
 title: "dinner-at-sams — dinner at Sam's, where the washing-machine loan was agreed"
 status: active
 summary: "Ali came to dinner at Sam's; they agreed the loan for her washing machine."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -356,11 +356,11 @@ Ali is the person bean recorded above, under the name her own garden gave her.
 ```markdown
 ---
 bean: shared-camera
-kind: contract
+genos: contract
 title: "shared-camera — Sam and Ali bought a camera together"
 status: active
 summary: "Sam and Ali share a camera; Ali paid for it, and they bear its cost two to one."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -403,11 +403,11 @@ They agreed it over dinner, and nothing was written down: `words` says it was sp
 ```markdown
 ---
 bean: washer-loan
-kind: contract
+genos: contract
 title: "washer-loan — Sam lent Ali the price of a washing machine, repaid monthly"
 status: active
 summary: "Sam paid for Ali's washing machine; Ali repays it in six monthly instalments, with interest on one paid late."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -477,11 +477,11 @@ number, which is a secret.
 ```markdown
 ---
 bean: card-statement-2026-09
-kind: document
+genos: document
 title: "card-statement-2026-09 — Sam's card statement for September 2026"
 status: active
 summary: "The statement Sam's bank issued for the card that paid for the washing machine, kept as a PDF."
-nature: metaphysical
+nature: lekton
 identity:
   status: confirmed
   anchors:

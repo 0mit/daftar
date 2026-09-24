@@ -120,6 +120,36 @@ def stale():
     return out
 
 
+def rekey(root, rules):
+    """A garden's own reasons follow a rename of what they explain (bin/dmupgrade.py, crossing into a release that renamed
+    a path of VOCAB.md): each heading of the reasoning kept beside `root`'s VOCAB.md whose KEY a rule matches is re-keyed —
+    the heading line alone, since what a reason says is its writer's own words. `rules` are (compiled pattern,
+    replacement) pairs applied in order to the key. The file keeps its line ends and byte-order mark, and is written whole
+    beside itself, then swapped in. Returns (the file's name, [(old key, new key)]), or (None, []) where there is none."""
+    name = 'RATIONALE.md'
+    path = os.path.join(root, name)
+    if not (os.path.isfile(path) and os.path.isfile(os.path.join(root, 'VOCAB.md'))):
+        return None, []
+    lines, done = open(path, encoding='utf-8', newline='').read().split('\n'), []
+    for i, line in enumerate(lines):
+        cr = '\r' if line.endswith('\r') else ''
+        body = line[:len(line) - len(cr)]
+        mark = '\ufeff' if i == 0 and body.startswith('\ufeff') else ''
+        if not body[len(mark):].startswith('## '):
+            continue
+        key = new = body[len(mark) + 3:]
+        for rx, to in rules:
+            new = rx.sub(to, new)
+        if new != key:
+            lines[i] = mark + '## ' + new + cr
+            done.append((key, new))
+    if done:
+        with open(path + '.tmp', 'w', encoding='utf-8', newline='') as fh:
+            fh.write('\n'.join(lines))
+        os.replace(path + '.tmp', path)
+    return name, done
+
+
 def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         print(__doc__); return 0

@@ -109,15 +109,15 @@ def gate(g):
 def person(bid, title, anchor, by, body, extra='', more_anchors=''):
     ident = (f"  status: confirmed\n  anchors:\n    - {{ key: person_id, value: \"{anchor}\", class: logical, "
              f"establishing: true }}\n{more_anchors}") if anchor else "  status: provisional\n  anchors: []\n"
-    return (f"---\nbean: {bid}\nkind: person\ntitle: \"{title}\"\nstatus: active\nsummary: \"{title}.\"\n"
-            f"nature: living\nowned_by: {{ legal: {{ crown: love }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
+    return (f"---\nbean: {bid}\ngenos: person\ntitle: \"{title}\"\nstatus: active\nsummary: \"{title}.\"\n"
+            f"nature: empsychon\nowned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
             f"identity:\n{ident}provenance: {{ src: asserted-by-human, by: \"{by}\", as_of: 2026-09-23 }}\n{extra}"
             f"---\n{body}\n")
 
 
 def garden_bean(bid, gid, owner, by):
-    return (f"---\nbean: {bid}\nkind: garden\ntitle: \"{bid} — the garden {owner} keeps\"\nstatus: active\n"
-            f"summary: \"Another garden this one deals with, kept by {owner}.\"\nnature: metaphysical\n"
+    return (f"---\nbean: {bid}\ngenos: garden\ntitle: \"{bid} — the garden {owner} keeps\"\nstatus: active\n"
+            f"summary: \"Another garden this one deals with, kept by {owner}.\"\nnature: lekton\n"
             f"owned_by: {{ legal: {{ owner: {{ bean: {owner} }} }} }}\n"
             f"responsibility: {{ legal: {{ holder: {{ bean: {owner} }} }} }}\n"
             f"identity:\n  status: confirmed\n  anchors:\n"
@@ -246,11 +246,11 @@ write(A, 'sam', person('sam', 'Sam — a neighbour', 'person:sam', 'ada (gardene
 write(A, 'ali', person('ali', 'Ali — a friend', None, 'ada (gardener)', 'Nobody has named Ali yet.'))
 SHARED = """---
 bean: shared-cost
-kind: contract
+genos: contract
 title: "A shared cost of 900 XTS, borne two to one by ada and ben"
 status: active
 summary: "Ada paid all of it; ada bears two parts and ben one. What each owes is read from the transaction, never written."
-nature: metaphysical
+nature: lekton
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 identity:
@@ -320,11 +320,11 @@ write(B, 'cai', person('cai', 'Cai — gardener of garden-c', f"{CID}/person:cai
                        'Cai keeps garden-c, beside this one.'))
 write(B, 'house-costs', f"""---
 bean: house-costs
-kind: contract
+genos: contract
 title: "House costs of 300 XTS, shared equally by ben and cai"
 status: active
 summary: "Ben paid; ben and cai bear it equally. What each owes is read, never written."
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
@@ -597,7 +597,7 @@ except ValueError:
 check("...and under every such check, the path itself is refused unless it lands directly in the garden's beans/",
       guard and dmpropose.bean_path('ali', root=C) == os.path.join(C, 'beans', 'ali.md'))
 p = os.path.join(TWO, 'broken-yaml.md')
-put(p, chat('chat-20260923-1202', {'ali': "---\nbean: ali\nkind: [person\n---\nAli.\n"}))
+put(p, chat('chat-20260923-1202', {'ali': "---\nbean: ali\ngenos: [person\n---\nAli.\n"}))
 r = tool(C, 'dmpropose.py', 'read', p)
 check("a carried bean that is not YAML is a setup error (exit 2) naming the block — not a traceback",
       r.returncode == 2 and 'the block of ali is not YAML' in r.out and 'Traceback' not in r.out, r.out)
@@ -750,7 +750,7 @@ seeds = seeds_of(r.stdout)
 one = anchored(seeds, f"{AID}/contract:shared-cost")
 check("dmmerge of garden-a and garden-b yields ONE canonical agreement — not two, not four",
       len(one) == 1 and one[0]['gardens'] == ['garden-a', 'garden-b']
-      and len([s for s in seeds.values() if s['kind'] == 'contract']) == 2, sorted(seeds))
+      and len([s for s in seeds.values() if s['genos'] == 'contract']) == 2, sorted(seeds))
 ada_seed = anchored(seeds, f"{AID}/person:ada")
 check("...ada is one being in both, and her asserted day survives the merge beside the inferred reading",
       len(ada_seed) == 1 and '2026-09-01"' in json.dumps(ada_seed[0]['facts'].get('details'))
@@ -820,11 +820,11 @@ write(A, 'neighbour-cai', person('neighbour-cai', 'Cai — gardener of garden-c'
                                  'Cai keeps garden-c; ada has not yet been told the name cai goes by there.'))
 write(A, 'lent-tools', f"""---
 bean: lent-tools
-kind: contract
+genos: contract
 title: "Cai lends ada a ladder until the first of October"
 status: active
 summary: "A ladder lent across the road, to be returned."
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
@@ -987,11 +987,11 @@ check("garden-b's own agreement with cai goes to garden-c, beside garden-b and i
 
 # ================================================================ chat proposals
 p = os.path.join(TWO, 'twins.md')
-twin = lambda s: f"bean: {s}\nkind: person\nidentity:\n  anchors:\n  - {{key: person_id, value: '{BID}/person:ben', " \
+twin = lambda s: f"bean: {s}\ngenos: person\nidentity:\n  anchors:\n  - {{key: person_id, value: '{BID}/person:ben', " \
                  f"class: logical, establishing: true}}\n"
 put(p, chat('chat-20260923-1203', {'rota': f"""---
 bean: rota
-kind: contract
+genos: contract
 title: "A rota"
 status: active
 identity:
@@ -1134,15 +1134,15 @@ r = read_in(C, 'chat-own-stamp.md', chat('chat-20260923-1300', {'sam-b': sam_b(s
                                                                 .replace(f'{BID}/person:sam', 'person:sam')}))
 check("...and a CHAT proposal carrying any `garden` stamp — this garden's own included — is refused",
       r.returncode == 1 and f"garden {CID}, this one's" in r.out and 'GATE' not in r.stdout, r.out)
-_ben_is_ada = {'bean': 'ben', 'kind': 'person', 'identity': {'status': 'confirmed', 'anchors': [
+_ben_is_ada = {'bean': 'ben', 'genos': 'person', 'identity': {'status': 'confirmed', 'anchors': [
     {'key': 'person_id', 'value': f'{AID}/person:ada', 'class': 'logical', 'establishing': True}]}}
 _note = f"""---
 bean: a-note
-kind: contract
+genos: contract
 title: "A note"
 status: active
 summary: "A note."
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ owner: {{ bean: ben }} }} }}
 responsibility: {{ legal: {{ holder: {{ bean: ben }} }} }}
 identity:
@@ -1164,7 +1164,7 @@ r = read_in(A, 'unsettled.md', craft(from_b(), {'a-note': _unsettled}, {'ben': _
 check("a proposal carrying a merge its garden has not settled (`merge_open`, a conflict record) is refused: taken in, "
       "it would stand this garden's gate down on another garden's say",
       r.returncode == 1 and 'holds a merge its garden has not settled' in r.out and 'verdict: CLEAN' not in r.out, r.out)
-_mallory = {'bean': 'mallory', 'kind': 'person', 'identity': {'status': 'confirmed', 'anchors': [
+_mallory = {'bean': 'mallory', 'genos': 'person', 'identity': {'status': 'confirmed', 'anchors': [
     {'key': 'person_id', 'value': f'{BID}/person:mallory', 'class': 'logical', 'establishing': True}]}}
 _e = from_b()
 _e['from'] = dict(_e['from'], gardener='mallory')
@@ -1196,11 +1196,11 @@ _nb = read(os.path.join(A, 'beans', 'neighbour-ben.md')).replace('bean: neighbou
 _esc_key = _nb.replace('\nstatus: active\n', '\nstatus: active\ndetails: { "k\\e[8m": "v" }\n', 1)
 _deal = f"""---
 bean: new-deal
-kind: contract
+genos: contract
 title: "A new deal"
 status: active
 summary: "A new deal."
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
@@ -1215,7 +1215,7 @@ words: {{ form: spoken, agreed: 2026-09-21 }}
 ---
 A new deal.
 """
-_stub = lambda b, v: {'bean': b, 'kind': 'person', 'title': b.title(), 'identity': {'status': 'confirmed', 'anchors': [
+_stub = lambda b, v: {'bean': b, 'genos': 'person', 'title': b.title(), 'identity': {'status': 'confirmed', 'anchors': [
     {'key': 'person_id', 'value': v, 'class': 'logical', 'establishing': True}]}}
 _escs = [('a record\'s `by`', read_in(A, 'esc-by.md', craft(from_b(), {'sam-b': _esc_by})),
           'said by ben (gardener)\\x1b[8m\\x1b]0;t\\x07'),
@@ -1262,7 +1262,7 @@ check("...and after ONE take of `[tom, rex]` — recorded as the set `[rex, tom]
 check("...and this garden's working tree is as it was", git(A, 'status', '--porcelain').stdout == statusA)
 
 # ---- first contact: what is printed to be written is checked, and quoted, whatever the stub says
-_inj = {'bean': 'cai', 'kind': 'person', 'title': 'Cai',
+_inj = {'bean': 'cai', 'genos': 'person', 'title': 'Cai',
         'nature': 'living\nstatus: retired\nx_injected: true',
         'identity': {'status': 'confirmed', 'anchors': [
             {'key': 'person_id', 'value': 'dddddddddddd/person:cai',
@@ -1277,9 +1277,9 @@ check("FIRST CONTACT with a crafted stub: no bean is printed from it — its cla
       "nature — and the garden's bean printed parses to exactly the keys it should",
       r.returncode == 1 and list(texts) == ['garden-d'] and 'not in a bean\'s form here' in r.out
       and 'x_injected' not in ''.join(texts.values()) and set(fm_of_text(texts['garden-d'])) == {
-          'bean', 'kind', 'title', 'status', 'summary', 'nature', 'owned_by', 'responsibility', 'identity', 'provenance'},
+          'bean', 'genos', 'title', 'status', 'summary', 'nature', 'owned_by', 'responsibility', 'identity', 'provenance'},
       r.out)
-_ok = dict(_inj, nature='living', title='Cai "of the gate": the keeper')
+_ok = dict(_inj, nature='empsychon', title='Cai "of the gate": the keeper')
 _ok['identity'] = {'status': 'confirmed', 'anchors': [{'key': 'person_id', 'value': 'dddddddddddd/person:cai',
                                                        'class': 'logical', 'establishing': True}]}
 r = read_in(A, 'first-contact.md', craft(_de, {'a-note': _dnote}, {'cai': _ok}))
@@ -1314,15 +1314,15 @@ check("another garden's proposal that happens to carry a name garden-b took from
       'taken in already' not in r.out and r.returncode == 0 and 'verdict: CLEAN' in r.stdout, r.out)
 
 # ---- an UNRESOLVED stub: its fix is the bean to write, identity and all
-_ben_stub = f"bean: ben\nkind: person\ntitle: Ben\nnature: living\nidentity:\n  anchors:\n  - {{key: person_id, value: " \
+_ben_stub = f"bean: ben\ngenos: person\ntitle: Ben\nnature: empsychon\nidentity:\n  anchors:\n  - {{key: person_id, value: " \
        f"'{BID}/person:ben', class: logical, establishing: true}}\n"
 r = read_in(C, 'unresolved.md', chat('chat-20260923-1301', {'ben-rota': f"""---
 bean: ben-rota
-kind: contract
+genos: contract
 title: "A rota with ben"
 status: active
 summary: "A rota."
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
@@ -1364,7 +1364,7 @@ else:
 # ---- G1: MINTED IS A PROPERTY OF THE VALUE'S FORM
 def _prog(g, gid, value):
     return [{'garden': g, 'garden_id': gid, 'id': 'the-program', 'fm': {
-        'bean': 'the-program', 'kind': 'program', 'nature': 'metaphysical', 'title': 'a program', 'status': 'active',
+        'bean': 'the-program', 'genos': 'program', 'nature': 'lekton', 'title': 'a program', 'status': 'active',
         'identity': {'status': 'confirmed', 'anchors': [{'key': 'program_id', 'value': value, 'class': 'logical',
                                                          'establishing': True}]}}}]
 _one = M.merge_gardens([_prog('ga', AID, 'postfix'), _prog('gc', CID, 'postfix')])
@@ -1374,12 +1374,12 @@ check("G1: two gardens that record `program_id: postfix` — a name its own ecos
       len(_one) == 1 and not M.candidates(_prog('ga', AID, 'postfix') + _prog('gc', CID, 'postfix'))
       and len(_two) == 2 and [c['value'] for c in M.candidates(_prog('ga', AID, 'program:x')
                                                               + _prog('gc', CID, 'program:x'))] == ['program:x'])
-check("...a prefix that names no kind is no minted name either (`urn:uuid:…` is an invitation's UID); a qualified "
+check("...a prefix that names no genos is no minted name either (`urn:uuid:…` is an invitation's UID); a qualified "
       "name fuses everywhere",
       not M.bare('event_id', 'urn:uuid:7c9e6679') and not M.bare('program_id', f'{AID}/program:x')
       and M.bare('program_id', 'program:x'))
-write(C, 'the-program', "---\nbean: the-program\nkind: program\ntitle: \"Postfix\"\nstatus: active\n"
-                        "summary: \"A mail server.\"\nnature: metaphysical\nidentity:\n  status: confirmed\n  anchors:\n"
+write(C, 'the-program', "---\nbean: the-program\ngenos: program\ntitle: \"Postfix\"\nstatus: active\n"
+                        "summary: \"A mail server.\"\nnature: lekton\nidentity:\n  status: confirmed\n  anchors:\n"
                         "    - { key: program_id, value: \"postfix\", class: logical, establishing: true }\n---\nPostfix.\n")
 m = tool(C, 'dmpropose.py', 'mint', 'the-program')
 os.remove(os.path.join(C, 'beans', 'the-program.md'))
@@ -1393,7 +1393,7 @@ _abs = run([sys.executable, os.path.join(A, 'bin', 'dmmerge.py'), A + os.sep, C]
 check("an input typed as `.` (or with a trailing separator) is labelled by its directory's name: the same bytes as "
       "the absolute path", _rel and _rel == _abs and 'garden-a' in _rel, (_rel[-300:], _abs[-300:]))
 _va = {'garden': 'one', 'pin': 'std-vocab@x', 'garden_pin': None, 'profiles': [], 'terms': {'t': {'term': 't', 'meaning': 'b'}},
-       'kinds': {}}
+       'gene': {}}
 _vb = dict(_va, garden='two', terms={'t': {'term': 't', 'meaning': 'a'}})
 _vc = dict(_va, garden='three', profiles=['knowledge'], terms={})
 _outs = {json.dumps(M.merge_vocabs(list(p)), sort_keys=True) for p in itertools.permutations([_va, _vb, _vc])}
@@ -1437,11 +1437,11 @@ def round_trip(frm, to, g, label):
 
 POT = f"""---
 bean: pot
-kind: contract
+genos: contract
 title: "A pot ada and ben share"
 status: active
 summary: "What each of them put in."
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
@@ -1624,7 +1624,7 @@ check("...and where every side names the same bean, it is that party: the propos
 
 # ---- FIRST CONTACT with a garden an ORGANISATION keeps
 D = os.path.join(TWO, 'garden-d')
-r = run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), D, '--gardener', 'ali-household', '--gardener-kind', 'org',
+r = run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), D, '--gardener', 'ali-household', '--gardener-genos', 'org',
          '--gardener-name', "Ali's household"], cwd=ROOT)
 git(D, 'config', 'user.name', 'ali-household')
 git(D, 'config', 'user.email', 'ali-household@example.org')
@@ -1634,11 +1634,11 @@ write(D, 'garden-a', garden_bean('garden-a', AID, 'ada', 'ali-household (gardene
 write(D, 'ada', person('ada', 'Ada', f"{AID}/person:ada", 'ali-household (gardener)', 'Ada keeps garden-a.'))
 write(D, 'supply', f"""---
 bean: supply
-kind: contract
+genos: contract
 title: "Ali's household supplies ada"
 status: active
 summary: "Ali's household supplies ada."
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
@@ -1659,8 +1659,8 @@ rr = tool(A, 'dmpropose.py', 'read', p) if p else m
 texts = dict(re.findall(r'^===== beans/(\S+)\.md(?: \(a skeleton\))? =====\n(.*?)(?=^===== )', rr.stdout, re.S | re.M))
 house = fm_of_text(texts.get('ali-household', ''))
 check("FIRST CONTACT with a garden an ORGANISATION keeps: read prints its gardener in the form the law gives an "
-      "organisation gardener (its kind, its nature, owned outside this garden) — never a person's crown",
-      r.returncode == 0 and m.returncode == 0 and rr.returncode == 1 and house.get('kind') == 'org'
+      "organisation gardener (its genos, its nature, owned outside this garden) — never a person's crown",
+      r.returncode == 0 and m.returncode == 0 and rr.returncode == 1 and house.get('genos') == 'org'
       and 'crown' not in json.dumps(house.get('owned_by'), default=str)
       and isinstance(house.get('responsibility'), dict) and house['responsibility'].get('legal') == {'self': True}
       and [a.get('value') for a in (house.get('identity') or {}).get('anchors') or []] == [f"{DID}/org:ali-household"], rr.out)
@@ -1674,9 +1674,9 @@ r = commit(A, "met garden-d, which ali-household keeps", "- action: recorded [[g
 rr = tool(A, 'dmpropose.py', 'read', p) if p else m
 check("...written as printed, in one commit, they pass garden-a's gate, and the proposal then reads CLEAN",
       r.returncode == 0 and rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout, r.stdout + r.stderr + rr.out)
-check("...and no tool names a facet or a kind of gardener: dmpropose reads who owns a `garden` bean in the facet the "
+check("...and no tool names a facet or a genos of gardener: dmpropose reads who owns a `garden` bean in the facet the "
       "law roots ownership in (`facets`, `rooted`), and a gardener's form from the law",
-      getattr(M, 'root_of', lambda _r: None)('facets') == 'legal' and not re.search(r"'legal'|\blegal\b|'person'|crown: love",
+      getattr(M, 'root_of', lambda _r: None)('facets') == 'legal' and not re.search(r"'legal'|\blegal\b|'person'|crown: agape",
                                                         read(os.path.join(ROOT, 'bin', 'dmpropose.py'))))
 
 # ================================================================ a party's own word, in two gardens' names

@@ -19,7 +19,8 @@ WHAT IT DOES, and nothing else:
      the tag as `daftar_release:` in GARDEN.md — refusing a tag OLDER than the one recorded unless
      --allow-downgrade is given, because an older tag silently removes fixes;
   5. TRANSLATES what the law re-spelled, and says so on the journal entry's `translated:` line: a garden's own
-     `local_terms` (bin/dmreform.py), and the beans and the manifest when the vocabulary crosses into 21.0 (below);
+     `local_terms` (bin/dmreform.py), the beans and the manifest when the vocabulary crosses into 21.0, and the beans
+     and VOCAB.md when it crosses into 22.0 (both below);
   6. re-runs `bin/install.py`, because the hooks or the merge driver may have changed;
   7. appends a RULE-CHANGE journal entry naming the tag, its commit, the vocabulary move and every file;
   8. runs the gate — and if the garden no longer passes under the release (a profile or a value the release
@@ -38,15 +39,34 @@ the garden. What can be carried across without a person is carried, and each pie
     keys, where the two hold one key with different values: which stands is a person's decision;
   - the GARDENER is named in GARDEN.md: DAFTAR_GARDENER (or `--gardener`) names an existing person or org bean, or
     with DAFTAR_GARDENER_NAME (or `--gardener-name`) plants a new bean exactly as `seed/germinate.py --gardener`
-    does, qualified by this garden's id — a person, or with DAFTAR_GARDENER_KIND=org (`--gardener-kind org`) an
-    organisation, each in the form the release's law gives a gardener of that kind — and the planted text is parsed
-    and refused unless it says that bean, that kind and that name. Without a gardener the upgrade refuses, touching
+    does, qualified by this garden's id — a person, or with DAFTAR_GARDENER_GENOS=org (`--gardener-genos org`) an
+    organisation, each in the form the release's law gives a gardener of that genos — and the planted text is parsed
+    and refused unless it says that bean, that genos and that name. Without a gardener the upgrade refuses, touching
     nothing, with the line that fixes it. A garden whose own tool is older than the flags hands over to the release's
     tool (below) and cannot pass them; the environment passes through any tool, so every message names where each
     value came from and prints the form this garden's own tool accepts.
   What cannot be carried is REFUSED before anything is touched: a bean still carrying `between`, `agreement_ref`,
   `conflict_rule` or `balance` is an agreement a person re-expresses (seed/COOKBOOK.md shows how). With
   --keep-on-failure the rest is applied and those are left, named, for the person.
+
+CROSSING INTO std-vocab 22.0 the law's words took their Greek roots, and every garden says them: nothing is a
+person's to decide, so all of it is translated, each document PROVED as above and each rename checked first against the
+release's own `retired:` list. What moves is structure — a key, or a value the law owns — found by the YAML node that
+holds it, so comments, quoting, layout and a garden's own prose stay byte for byte:
+  - in every BEAN: `kind:` -> `genos:` (and where the merge driver names it, in `merge_conflicts` and
+    `provenance_of`); `nature:` physical / metaphysical / living -> soma / lekton / empsychon; and the crown its
+    ownership ends in, `{ crown: love }` -> `{ crown: agape }` and `{ crown: nature }` -> `{ crown: physis }` (logos
+    is logos). A MAPPING records no being and keeps its `kind`;
+  - in VOCAB.md: `local_kinds` -> `local_gene`, a restated or added `kinds` -> `gene`, each such row's `kind` ->
+    `genos` and its `of_nature` renamed; a restated or added row of `natures` or `crown`; `identity_policy.minted`'s
+    `form_kind: kinds` -> `form_genos: gene`; in the garden's own terms `required_on_kinds`, `only_on_kinds`,
+    `must_equal_kind_attr`, `entry_form_from_kind_attr` -> their `gene`/`genos` names, `bean_id: { kinds }` -> `{ gene }`,
+    `registry: kinds` and `registry:kinds[].kind` -> `gene`, and natures a term names; a vacancy at `registry:kinds`, or
+    of a renamed nature or crown branch, follows it;
+  - in the garden's own reasoning beside VOCAB.md, a heading keyed by a path VOCAB.md renamed follows it — the
+    heading line alone, re-keyed by bin/dmwhy.py, the one tool that opens the reasoning.
+  A document that cannot be renamed without changing something else — a key written twice, `genos:` already beside
+  `kind:` — is REFUSED before anything is touched, naming it; with --keep-on-failure it is left, named, for the person.
 
 THE RELEASE'S OWN TOOL DOES THE WORK. When the release carries a different bin/dmupgrade.py, this one hands
 over to it (with --garden and --no-delegate) instead of applying a newer release with older logic: v0.4.0
@@ -437,11 +457,14 @@ def path_of(gid):
     return os.path.join(ROOT, 'beans', gid + '.md')
 
 
-def kind_of(path):
+def genos_of(path):
+    """A bean's genos — or, in a garden the 22.0 step has not yet translated, its `kind`, which is the same fact under
+    the name the law gave it before: this tool reads a garden as it is, at whatever release it runs."""
     try:
-        return (_parse(read_text(path)[0])[0] or {}).get('kind')
+        fm = _parse(read_text(path)[0])[0] or {}
     except Exception:
         return None                              # a bean that does not parse: the gate names it
+    return fm.get('genos') if fm.get('genos') is not None else fm.get('kind')
 
 
 def plan_manifest(text, gardener):
@@ -477,15 +500,15 @@ def plan_manifest(text, gardener):
     return cur, None
 
 
-def gardener_kinds(root):
-    """The kinds of bean that may keep a garden, as the release's law declares them — `manifest.attrs.gardener`,
-    `in: { bean_id: { kinds: [...] } }` — or None when it declares none. Read from the law and never written here: the
+def gardener_gene(root):
+    """The gene of bean that may keep a garden, as the release's law declares them — `manifest.attrs.gardener`,
+    `in: { bean_id: { gene: [...] } }` — or None when it declares none. Read from the law and never written here: the
     list lived in this tool and in the gate, and in no law (std-vocab 21.0)."""
     rec = (((std_fm(root).get('manifest') or {}).get('attrs') or {}).get('gardener')) or {}
     dom = rec.get('in') if isinstance(rec, dict) else None
     ids = dom.get('bean_id') if isinstance(dom, dict) else None
-    kinds = ids.get('kinds') if isinstance(ids, dict) else None
-    return tuple(str(k) for k in kinds) if isinstance(kinds, list) and kinds else None
+    gene = ids.get('gene') if isinstance(ids, dict) else None
+    return tuple(str(k) for k in gene) if isinstance(gene, list) and gene else None
 
 
 def own_garden_id(root):
@@ -513,9 +536,11 @@ PY = 'python' if os.name == 'nt' else 'python3'           # what a person types:
 # WHERE THE GARDENER CAME FROM is named in everything said about it. A garden whose own tool is older than --gardener
 # hands over to this one and cannot pass the flag, so the environment carries the gardener: told to pass a flag it never
 # passed, the person runs a command their tool rejects.
-ENV_ID, ENV_NAME, ENV_KIND = 'DAFTAR_GARDENER', 'DAFTAR_GARDENER_NAME', 'DAFTAR_GARDENER_KIND'
+ENV_ID, ENV_NAME, ENV_GENOS = 'DAFTAR_GARDENER', 'DAFTAR_GARDENER_NAME', 'DAFTAR_GARDENER_GENOS'
+# the same variable under the name the law used before 22.0 — a line an older tool printed still sets it, and is read
+ENV_KIND = 'DAFTAR_GARDENER_KIND'
 # A PowerShell session KEEPS what `$env:` sets, and the next garden upgraded in it would take this gardener unasked.
-PS_CLEAR = f'Remove-Item Env:{ENV_ID}, Env:{ENV_NAME}, Env:{ENV_KIND} -ErrorAction SilentlyContinue'
+PS_CLEAR = f'Remove-Item Env:{ENV_ID}, Env:{ENV_NAME}, Env:{ENV_GENOS}, Env:{ENV_KIND} -ErrorAction SilentlyContinue'
 
 
 _GERMINATE = {}
@@ -571,21 +596,21 @@ def check_name(rel, tag, keep):
 class Step21:
     """The translation into std-vocab 21.0: planned, and refused if it must be, before any file is touched."""
 
-    def __init__(self, rel, tag, source, gardener, keep, kind=(None, None)):
+    def __init__(self, rel, tag, source, gardener, keep, genos=(None, None)):
         """`gardener`: (the id, where it came from, the name, where that came from) — a flag, the environment, or none;
-        `kind`: (the kind a planted gardener is, where that came from), or none — then germinate's own default."""
+        `genos`: (the genos a planted gardener is, where that came from), or none — then germinate's own default."""
         self.rel, self.tag, self.source, self.keep = rel, tag, source, keep
         self.gardener, self.gsrc, self.gardener_name, self.nsrc = gardener
-        self.gardener_kind, self.ksrc = kind
-        self.plans, self.problems, self.plant, self.created, self.plant_kind = {}, [], None, [], None
+        self.gardener_genos, self.ksrc = genos
+        self.plans, self.problems, self.plant, self.created, self.plant_genos = {}, [], None, [], None
 
     def _flags(self):
         """Whether THIS GARDEN'S OWN TOOL takes the gardener as flags: one that knows `--gardener` also hands over any
-        flag it does not know (`--gardener-kind`) to the release's tool; an older one rejects a flag it does not know."""
+        flag it does not know (`--gardener-genos`) to the release's tool; an older one rejects a flag it does not know."""
         own = os.path.join(ROOT, 'bin', 'dmupgrade.py')
         return os.path.isfile(own) and '--gardener' in open(own, encoding='utf-8').read()
 
-    def fix_line(self, gid='<id>', name=None, kind=None):
+    def fix_line(self, gid='<id>', name=None, genos=None):
         """The command that names the gardener, in the form THIS GARDEN'S OWN TOOL can pass on — that tool runs first
         and hands over, and one older than --gardener rejects the flag, while the environment passes through any tool.
         A placeholder is shown as one; a value is quoted for the shell it is pasted into."""
@@ -597,35 +622,35 @@ class Step21:
             (f' --from {q(self.source)}' if self.source != UPSTREAM else '')
         if self._flags():
             return (cmd + f' --gardener {val(gid)}' + (f' --gardener-name {txt(name)}' if name else '')
-                    + (f' --gardener-kind {val(kind)}' if kind else ''))
+                    + (f' --gardener-genos {val(genos)}' if genos else ''))
         if nt:
             return (f'$env:{ENV_ID} = {txt(gid)}; ' + (f'$env:{ENV_NAME} = {txt(name)}; ' if name else '')
-                    + (f'$env:{ENV_KIND} = {txt(kind)}; ' if kind else '') + cmd + f'; {PS_CLEAR}')
+                    + (f'$env:{ENV_GENOS} = {txt(genos)}; ' if genos else '') + cmd + f'; {PS_CLEAR}')
         return (f'{ENV_ID}={val(gid)} ' + (f'{ENV_NAME}={txt(name)} ' if name else '')
-                + (f'{ENV_KIND}={val(kind)} ' if kind else '') + cmd)
+                + (f'{ENV_GENOS}={val(genos)} ' if genos else '') + cmd)
 
-    def kind_asked(self):
-        """The kind the gardener was asked to be planted as — where the release's law lets it keep a garden, else none,
-        so a fix line never repeats a kind that was refused."""
-        return self.gardener_kind if self.gardener_kind in (gardener_kinds(self.rel) or ()) else None
+    def genos_asked(self):
+        """The genos the gardener was asked to be planted as — where the release's law lets it keep a garden, else none,
+        so a fix line never repeats a genos that was refused."""
+        return self.gardener_genos if self.gardener_genos in (gardener_gene(self.rel) or ()) else None
 
-    def kind_option(self):
-        """How this garden's tool is told the kind of a gardener it plants: the flag, or the environment."""
+    def genos_option(self):
+        """How this garden's tool is told the genos of a gardener it plants: the flag, or the environment."""
         if self._flags():
-            return '--gardener-kind <kind>'
-        return f'$env:{ENV_KIND} = "<kind>"' if os.name == 'nt' else f'{ENV_KIND}=<kind>'
+            return '--gardener-genos <genos>'
+        return f'$env:{ENV_GENOS} = "<genos>"' if os.name == 'nt' else f'{ENV_GENOS}=<genos>'
 
     def fixes(self, gid='<id>'):
         """Both lines: the gardener named alone, and named with how they are called, which plants their bean."""
         mod = release_germinate(self.rel)
         params = inspect.signature(mod.gardener_bean).parameters if mod is not None and hasattr(mod, 'gardener_bean') else {}
-        default = params['kind'].default if 'kind' in params else None
-        kinds = gardener_kinds(self.rel) or ()
-        other = [k for k in kinds if k != default]
+        default = params['genos'].default if 'genos' in params else None
+        gene = gardener_gene(self.rel) or ()
+        other = [k for k in gene if k != default]
         return (f"  {self.fix_line(gid)}\nor, to plant a new bean for them"
-                + (f" — a {default}, or with {self.kind_option()} a bean of kind {' or '.join(other)}" if default and other
+                + (f" — a {default}, or with {self.genos_option()} a bean of genos {' or '.join(other)}" if default and other
                    else '') + ":\n"
-                f"  {self.fix_line(gid, '<how they are called>', self.kind_asked())}")
+                f"  {self.fix_line(gid, '<how they are called>', self.genos_asked())}")
 
     @staticmethod
     def clear(*names):
@@ -642,10 +667,10 @@ class Step21:
             refuse(f"{self.tag}'s law does not retire {', '.join(f'{a} `{n}`' for a, n in said if (a, n) not in law)}, "
                    f"which this tool's 21.0 step translates. The step and the law disagree; neither is guessed at.")
         self.plan_gardener()
-        if self.gsrc == ENV_ID or self.ksrc == ENV_KIND:
+        if self.gsrc == ENV_ID or self.ksrc in (ENV_GENOS, ENV_KIND):
             print(f"the gardener: '{self.gardener}'" + (f", taken from {ENV_ID}" if self.gsrc == ENV_ID else '')
                   + (f", planted with the name {ENV_NAME} gives" if self.plant and self.nsrc == ENV_NAME else '')
-                  + (f", of the kind {ENV_KIND} gives ({self.gardener_kind})" if self.plant and self.ksrc == ENV_KIND
+                  + (f", of the genos {self.ksrc} gives ({self.gardener_genos})" if self.plant and self.ksrc in (ENV_GENOS, ENV_KIND)
                      else ''), flush=True)
         for sub in DOCS:
             for path in sorted(glob.glob(os.path.join(ROOT, sub, '*.md'))):
@@ -670,17 +695,17 @@ class Step21:
         if named and gid and str(named) != gid:
             refuse(f"GARDEN.md already names the gardener '{named}', and {self.gsrc} says '{gid}'. Changing who keeps "
                    f"a garden is the gardener's decision, never an upgrade's."
-                   + (f" If {ENV_ID} is left from another garden, clear it ({self.clear(ENV_ID, ENV_NAME, ENV_KIND)}) "
+                   + (f" If {ENV_ID} is left from another garden, clear it ({self.clear(ENV_ID, ENV_NAME, ENV_GENOS, ENV_KIND)}) "
                       f"and run this again." if self.gsrc == ENV_ID else ''))
         if not gid and named:
             gid, self.gsrc = str(named), "GARDEN.md's `gardener:`"
-        kinds = gardener_kinds(self.rel)
-        if not kinds:
-            refuse(f"{self.tag}'s law does not say which kinds of bean may keep a garden (`manifest.attrs.gardener`, "
-                   f"`in: {{ bean_id: {{ kinds }} }}`), and this tool does not guess it.")
-        either = ' or '.join(kinds)
+        gene = gardener_gene(self.rel)
+        if not gene:
+            refuse(f"{self.tag}'s law does not say which gene of bean may keep a garden (`manifest.attrs.gardener`, "
+                   f"`in: {{ bean_id: {{ gene }} }}`), and this tool does not guess it.")
+        either = ' or '.join(gene)
         keepers = sorted(os.path.basename(p)[:-3] for p in glob.glob(os.path.join(ROOT, 'beans', '*.md'))
-                         if kind_of(p) in kinds)
+                         if genos_of(p) in gene)
         here = (f" (here: {', '.join(keepers[:12])}" + (', …' if len(keepers) > 12 else '') + ")") if keepers else ''
         if not gid:
             refuse(f"std-vocab 21.0 asks who keeps this garden — its GARDENER, a person or an organisation it holds, "
@@ -692,72 +717,72 @@ class Step21:
                    f"Name them so:\n{self.fixes()}")
         path = os.path.join(ROOT, 'beans', gid + '.md')
         if os.path.isfile(path):
-            kind = kind_of(path)
-            if kind not in kinds:
-                refuse(f"'{gid}' is a {kind} ({self.gsrc} names it); a garden is kept by a bean of kind {either}{here}. "
+            genos = genos_of(path)
+            if genos not in gene:
+                refuse(f"'{gid}' is a {genos} ({self.gsrc} names it); a garden is kept by a bean of genos {either}{here}. "
                        f"Name one:\n{self.fixes()}")
             if name:
                 refuse(f"'{gid}' is already a bean of this garden, and {self.nsrc} plants a NEW one. Name them alone"
                        + (f" — clearing {ENV_NAME} first ({self.clear(ENV_NAME)})" if self.nsrc == ENV_NAME else '')
                        + f":\n  {self.fix_line(gid)}")
-            if self.gardener_kind and self.gardener_kind != kind:
-                refuse(f"'{gid}' is a {kind}, and {self.ksrc} says {self.gardener_kind}: a bean's kind is its own, and "
-                       f"the kind is said only of a gardener planted here. Name them alone"
-                       + (f" — clearing {ENV_KIND} first ({self.clear(ENV_KIND)})" if self.ksrc == ENV_KIND else '')
+            if self.gardener_genos and self.gardener_genos != genos:
+                refuse(f"'{gid}' is a {genos}, and {self.ksrc} says {self.gardener_genos}: a bean's genos is its own, and "
+                       f"the genos is said only of a gardener planted here. Name them alone"
+                       + (f" — clearing {self.ksrc} first ({self.clear(self.ksrc)})" if self.ksrc in (ENV_GENOS, ENV_KIND) else '')
                        + f":\n  {self.fix_line(gid)}")
         elif not name:
             refuse(f"'{gid}' is no bean of this garden ({self.gsrc} names it). Name an existing {either} bean{here}:\n"
                    f"  {self.fix_line()}\nor plant a new bean for them:\n"
-                   f"  {self.fix_line(gid, '<how they are called>', self.kind_asked())}")
+                   f"  {self.fix_line(gid, '<how they are called>', self.genos_asked())}")
         else:
-            self.plan_planting(gid, name, kinds, either)
+            self.plan_planting(gid, name, gene, either)
         self.gardener = gid
 
-    def plan_planting(self, gid, name, kinds, either):
+    def plan_planting(self, gid, name, gene, either):
         """The gardener's bean, EXACTLY as the release's seed/germinate.py --gardener plants one — its own function, not
-        a second copy of its text: of the kind asked for (or germinate's own default), in the form the release's law
-        gives a gardener of that kind, and qualified by this garden's id as a new garden's gardener is at birth."""
+        a second copy of its text: of the genos asked for (or germinate's own default), in the form the release's law
+        gives a gardener of that genos, and qualified by this garden's id as a new garden's gardener is at birth."""
         mod = release_germinate(self.rel)
         if mod is None or not hasattr(mod, 'gardener_bean'):
             refuse(f"{self.tag}'s seed/germinate.py plants no gardener, so there is no bean to plant here the way a new "
                    f"garden plants one. Write the gardener's bean by hand, commit it, and name them alone:\n"
                    f"  {self.fix_line(gid)}")
         params = inspect.signature(mod.gardener_bean).parameters
-        kind = self.gardener_kind or (params['kind'].default if 'kind' in params else None)
-        if self.gardener_kind and 'kind' not in params:
-            refuse(f"{self.tag}'s seed/germinate.py plants a gardener of one kind only, and {self.ksrc} asks for "
-                   f"{self.gardener_kind}. Write the gardener's bean by hand, commit it, and name them alone:\n"
+        genos = self.gardener_genos or (params['genos'].default if 'genos' in params else None)
+        if self.gardener_genos and 'genos' not in params:
+            refuse(f"{self.tag}'s seed/germinate.py plants a gardener of one genos only, and {self.ksrc} asks for "
+                   f"{self.gardener_genos}. Write the gardener's bean by hand, commit it, and name them alone:\n"
                    f"  {self.fix_line(gid)}")
-        if kind is not None and kind not in kinds:
-            refuse(f"{self.ksrc or 'germinate'} would plant a gardener of kind '{kind}', and {self.tag}'s law lets a "
-                   f"bean of kind {either} keep a garden"
-                   + (f" — if {ENV_KIND} is left from another garden, clear it ({self.clear(ENV_KIND)})"
-                      if self.ksrc == ENV_KIND else '') + f". Name one:\n{self.fixes(gid)}")
-        form = mod.gardener_form(std_fm(self.rel), kind) if kind and hasattr(mod, 'gardener_form') else None
-        if kind and hasattr(mod, 'gardener_form') and form is None:
-            refuse(f"{self.tag}'s law gives no form for a gardener of kind '{kind}' (a `<kind>_id` anchor term). Write "
+        if genos is not None and genos not in gene:
+            refuse(f"{self.ksrc or 'germinate'} would plant a gardener of genos '{genos}', and {self.tag}'s law lets a "
+                   f"bean of genos {either} keep a garden"
+                   + (f" — if {self.ksrc} is left from another garden, clear it ({self.clear(self.ksrc)})"
+                      if self.ksrc in (ENV_GENOS, ENV_KIND) else '') + f". Name one:\n{self.fixes(gid)}")
+        form = mod.gardener_form(std_fm(self.rel), genos) if genos and hasattr(mod, 'gardener_form') else None
+        if genos and hasattr(mod, 'gardener_form') and form is None:
+            refuse(f"{self.tag}'s law gives no form for a gardener of genos '{genos}' (a `<genos>_id` anchor term). Write "
                    f"the gardener's bean by hand, commit it, and name them alone:\n  {self.fix_line(gid)}")
-        kw = {k: v for k, v in (('garden_id', own_garden_id(ROOT)), ('kind', kind), ('form', form))
+        kw = {k: v for k, v in (('garden_id', own_garden_id(ROOT)), ('genos', genos), ('form', form))
               if k in params and v is not None}
         text = mod.gardener_bean(gid, name, datetime.date.today().isoformat(), **kw)
         # PROVED BEFORE IT IS WRITTEN, as every translated bean is: a name the function spelled wrongly (Python's repr
         # once turned a zero-width non-joiner into six characters of text) is refused, not planted — and so is a bean of
-        # another kind than the one asked for, or of none the law lets keep a garden.
+        # another genos than the one asked for, or of none the law lets keep a garden.
         try:
             pfm = _parse(text)[0]
         except Exception:
             pfm = None
         wrong = (['it does not parse as a bean'] if not pfm else
-                 [f"`{k}` would read {pfm.get(k)!r}, not {v!r}" for k, v in (('bean', gid), ('kind', kind), ('title', name))
+                 [f"`{k}` would read {pfm.get(k)!r}, not {v!r}" for k, v in (('bean', gid), ('genos', genos), ('title', name))
                   if v is not None and pfm.get(k) != v]
-                 + ([f"`kind` would read {pfm.get('kind')!r}, which may not keep a garden ({either})"]
-                    if pfm.get('kind') not in kinds else []))
+                 + ([f"`genos` would read {pfm.get('genos')!r}, which may not keep a garden ({either})"]
+                    if pfm.get('genos') not in gene else []))
         if wrong:
             refuse(f"{self.tag}'s seed/germinate.py would plant a gardener that does not say what was asked — "
                    f"{'; '.join(wrong)}. Write the gardener's bean by hand, commit it, and name them alone:\n"
                    f"  {self.fix_line(gid)}")
         self.plant = (path_of(gid), text)
-        self.plant_kind = pfm.get('kind')
+        self.plant_genos = pfm.get('genos')
 
     def apply(self):
         """Writes what was planned; returns the `translated:` text and the ids of the documents it touched."""
@@ -801,7 +826,7 @@ class Step21:
             parts.append(f"`{BEAN_MOVED[0]}` moved into `{BEAN_MOVED[1]}` in {', '.join(moved)}")
         if new is not None:
             gid = f"[[{self.gardener}]]"
-            parts.append(f"gardener {gid} " + (f"planted — a bean of kind {self.plant_kind}, as seed/germinate.py "
+            parts.append(f"gardener {gid} " + (f"planted — a bean of genos {self.plant_genos}, as seed/germinate.py "
                                                f"--gardener plants one — and " if self.plant else "") + "named in GARDEN.md"
                          + (f" (given as {ENV_ID})" if self.gsrc == ENV_ID else ''))
             if self.plant:
@@ -816,6 +841,287 @@ class Step21:
         return f"[[{base}]]" if os.path.basename(os.path.dirname(path)) == 'beans' else f"mappings/{base}"
 
 
+# ==== THE 22.0 STEP =============================================================================================
+# The law's words took their Greek roots: a bean's `kind` is its `genos` and the registry `kinds` is `gene`, the natures
+# are soma, lekton and empsychon, and the crown's branches physis, logos and agape under theos. Each pair below is the
+# OLD spelling and the name the release's own `retired:` list must say it went to — checked before anything is touched,
+# so a release whose law says otherwise is refused, never guessed at. What moves is STRUCTURE: a key, or a value the law
+# owns. Comments, prose and every value a garden wrote in its own words are left as they were — they are its own.
+STEP_22 = (22, 0)
+GREEK = {                                               # (where the law retired it, the old name): the new name
+    ('bean', 'kind'): 'genos',
+    ('law', 'kinds'): 'gene',
+    ('vocab', 'local_kinds'): 'local_gene',
+    ('bean_id', 'kinds'): 'gene',
+    ('minted', 'form_kind'): 'form_genos',
+    ('schema', 'required_on_kinds'): 'required_on_gene',
+    ('schema', 'only_on_kinds'): 'only_on_gene',
+    ('schema', 'must_equal_kind_attr'): 'must_equal_genos_attr',
+    ('schema', 'entry_form_from_kind_attr'): 'entry_form_from_genos_attr',
+    ('nature', 'physical'): 'soma', ('nature', 'metaphysical'): 'lekton', ('nature', 'living'): 'empsychon',
+    ('crown', 'god'): 'theos', ('crown', 'nature'): 'physis', ('crown', 'love'): 'agape',
+}
+NATURE_22 = {o: n for (a, o), n in GREEK.items() if a == 'nature'}
+CROWN_22 = {o: n for (a, o), n in GREEK.items() if a == 'crown'}
+SCHEMA_22 = {o: n for (a, o), n in GREEK.items() if a == 'schema'}
+GENE_ROWS = (('local_kinds',), ('kinds',), ('registry_additions', 'kinds'))    # where a garden writes rows of `kinds`
+
+
+class CannotRename(Exception):
+    pass
+
+
+def renamed(text, rule):
+    """(the new text, [(what, old, new)]) — the front matter of `text` with every KEY or VALUE `rule` renames replaced
+    where it is written, found by the YAML node that holds it: its quotes kept, and everything else — comments, layout,
+    every other value — byte for byte. `rule(path, role, name, parent)` answers the new name or None, for a key
+    (`role` 'key', `path` the mapping's) or a text value (`role` 'value', `path` the value's own); `parent` is the mapping
+    or list that holds it, as parsed, so a rule may read a sibling. PROVED before it is returned: the new front matter
+    must parse to exactly the old one with those renames made, and the body is untouched. Raises CannotRename."""
+    region = _fm_region(text)
+    if not region:
+        return text, []
+    lo, hi = region
+    head = text[lo:hi]
+    y = dmparse._yaml
+    try:
+        root, data = y.compose(head, Loader=dmparse.LOADER), dmparse.loads(head)
+    except Exception:
+        return text, []                     # a document that does not parse is the gate's to name, not this step's
+    edits, done = {}, []
+
+    def swap(node, new, what, old):
+        tok = head[node.start_mark.index:node.end_mark.index]
+        q = tok[:1] if tok[:1] in ('"', "'") else ''
+        edits[node.start_mark.index] = (node.end_mark.index, q + new + q)
+        done.append((what, old, new))
+
+    def walk(node, d, path):
+        if isinstance(node, y.MappingNode) and isinstance(d, dict):
+            if len(node.value) != len(d):
+                raise CannotRename("a key is written twice in one mapping, or merged in with `<<`")
+            out = {}
+            for (kn, vn), (k, v) in zip(node.value, d.items()):
+                nk = rule(path, 'key', k, d) if isinstance(k, str) and isinstance(kn, y.ScalarNode) else None
+                if nk:
+                    if nk in d:
+                        raise CannotRename(f"`{'.'.join(map(str, path + (k,)))}` would become `{nk}`, which is "
+                                           f"written beside it already — which of the two stands is a person's decision")
+                    swap(kn, nk, 'key ' + '.'.join(map(str, path + (k,))), k)
+                out[nk or k] = leaf(vn, v, path + (k,), d)
+            return out
+        if isinstance(node, y.SequenceNode) and isinstance(d, list) and len(node.value) == len(d):
+            return [leaf(vn, v, path + (i,), d) for i, (vn, v) in enumerate(zip(node.value, d))]
+        return d
+
+    def leaf(vn, v, path, parent):
+        if isinstance(vn, y.ScalarNode) and isinstance(v, str):
+            nv = rule(path, 'value', v, parent)
+            if nv:
+                swap(vn, nv, 'value ' + '.'.join(map(str, path)), v)
+                return nv
+            return v
+        return walk(vn, v, path)
+
+    want = walk(root, data, ()) if root is not None else data
+    if not edits:
+        return text, []
+    new_head = head
+    for s in sorted(edits, reverse=True):
+        e, new = edits[s]
+        new_head = new_head[:s] + new + new_head[e:]
+    new_text = text[:lo] + new_head + text[hi:]
+    try:
+        nfm, nbody = _parse(new_text)
+    except Exception:
+        nfm, nbody = None, None
+    if nfm != want or nbody != _parse(text)[1]:
+        raise CannotRename("the renames could not be made without changing something else")
+    return new_text, done
+
+
+def bean_rule_22(path, role, name, parent):
+    """A bean in 22.0's words: `kind` -> `genos` (and where the merge driver names it: `merge_conflicts`,
+    `provenance_of`), its `nature`, and the crown branch its ownership ends in. Nothing else of a bean is the law's."""
+    if role == 'key':
+        return 'genos' if name == 'kind' and path in ((), ('provenance_of',)) else None
+    if path == ('nature',) or path[:2] == ('nature', 'conflict'):
+        return NATURE_22.get(name)
+    if len(path) == 3 and path[0] == 'owned_by' and path[2] == 'crown':
+        return CROWN_22.get(name)
+    if len(path) == 2 and path[0] == 'merge_conflicts' and name == 'kind':
+        return 'genos'
+    return None
+
+
+def vocab_rule_22(path, role, name, parent):
+    """A garden's VOCAB.md in 22.0's words: `local_kinds` -> `local_gene` and a restated or added `kinds` -> `gene`, each
+    row's `kind` -> `genos` and its `of_nature` renamed; a restated or added row of `natures` or `crown`; the minted form's
+    `form_kind`; and in its own terms, the schema keys named for kinds, `bean_id`'s `kinds`, and a registry or a nature a
+    term names. A vacancy at a renamed registry, or of a renamed position, follows it."""
+    if role == 'key':
+        if path == ():
+            return {'local_kinds': 'local_gene', 'kinds': 'gene'}.get(name)
+        if path == ('registry_additions',):
+            return 'gene' if name == 'kinds' else None
+        if path == ('identity_policy', 'minted'):
+            return 'form_genos' if name == 'form_kind' else None
+        if len(path) >= 2 and path[:-1] in GENE_ROWS and isinstance(path[-1], int):
+            return 'genos' if name == 'kind' else None
+        if path[:1] == ('local_terms',):
+            if len(path) == 3 and path[2] == 'schema':
+                return SCHEMA_22.get(name)
+            if path[-1] == 'bean_id' and name == 'kinds':
+                return 'gene'
+        return None
+    row, attr = path[:-1], path[-1]
+    if len(row) >= 2 and row[:-1] in GENE_ROWS and isinstance(row[-1], int):
+        return NATURE_22.get(name) if attr == 'of_nature' else None
+    if len(row) >= 2 and row[:-1] in (('natures',), ('registry_additions', 'natures')) and isinstance(row[-1], int):
+        return NATURE_22.get(name) if attr == 'nature' else CROWN_22.get(name) if attr == 'crown' else None
+    if len(row) >= 2 and row[:-1] in (('crown',), ('registry_additions', 'crown')) and isinstance(row[-1], int):
+        return CROWN_22.get(name) if attr == 'branch' else None
+    if path == ('identity_policy', 'minted', 'form_kind'):
+        return 'gene' if name == 'kinds' else None
+    if path[:1] == ('vacancies',) and len(path) == 3:
+        at = parent.get('at') if isinstance(parent, dict) else None
+        if attr == 'at':
+            return 'registry:gene' if name == 'registry:kinds' else None
+        if attr == 'position':
+            return (NATURE_22.get(name) if at in ('registry:natures', 'nature.values') else
+                    CROWN_22.get(name) if at == 'registry:crown' else None)
+        return None
+    if path[:1] == ('local_terms',):
+        if attr in ('values_from', 'key_form') and 'registry:kinds[].kind' in name:
+            return name.replace('registry:kinds[].kind', 'registry:gene[].genos')
+        if isinstance(attr, int) and len(path) >= 2 and path[-2] == 'required_on_natures':
+            return NATURE_22.get(name)
+        if attr == 'registry' and name == 'kinds':
+            return 'gene'
+        if attr == 'take' and name == 'kind' and isinstance(parent, dict) and parent.get('registry') == 'kinds':
+            return 'genos'
+        if attr == 'keyed_by' and name == 'kind' and 'entry_must_match' in path:
+            return 'genos'
+    return None
+
+
+class Step22:
+    """The translation into std-vocab 22.0: planned, and refused if it must be, before any file is touched — and made
+    again at apply time on each file as the steps before it left it, so nothing written before is written over."""
+
+    def __init__(self, rel, tag, keep):
+        self.rel, self.tag, self.keep = rel, tag, keep
+        self.problems, self.facts, self.reasons = [], {}, None
+
+    def plan(self):
+        law = {(str(r.get('at')), str(r.get('name'))): str(r.get('instead') or '')
+               for r in (std_fm(self.rel).get('retired') or []) if isinstance(r, dict)}
+        wrong = [f"{a} `{o}` -> `{n}`" for (a, o), n in GREEK.items() if not law.get((a, o), '').startswith(f"`{n}`")]
+        if wrong:
+            refuse(f"{self.tag}'s law does not retire, as this tool's 22.0 step translates them, "
+                   f"{', '.join(wrong)}. The step and the law disagree; neither is guessed at.")
+        for path in self.docs():
+            self.one(path, dry=True)
+        if self.problems and not self.keep:
+            refuse(f"crossing into std-vocab 22.0, {len(self.problems)} thing(s) are a person's to do, not a "
+                   f"translation's:\n" + '\n'.join('  - ' + p for p in self.problems) +
+                   "\nDo them and commit, then run this again — or pass --keep-on-failure to apply the rest and "
+                   "leave these, named, for the person.")
+
+    @staticmethod
+    def docs():
+        """Every bean, and VOCAB.md. A mapping records no being and keeps its `kind`; GARDEN.md says nothing renamed."""
+        return sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + [os.path.join(ROOT, 'VOCAB.md')]
+
+    def one(self, path, dry=False):
+        """Plan (dry) or make the renames in one document; what was renamed is kept in `facts`, a refusal in `problems`."""
+        if not os.path.isfile(path):
+            return
+        text, form = read_text(path)
+        rel = os.path.relpath(path, ROOT).replace(os.sep, '/')
+        rule = vocab_rule_22 if rel == 'VOCAB.md' else bean_rule_22
+        try:
+            new, done = renamed(text, rule)
+        except CannotRename as e:
+            why = f"{rel}: {e} — translate it by hand"
+            if why not in self.problems:
+                self.problems.append(why)
+            return
+        if not dry and done:
+            write_text(path, new, form)
+            self.facts[rel] = done
+
+    def apply(self, vocab_only=False):
+        """Writes what was planned — VOCAB.md alone, before the garden's own terms are read by bin/dmreform.py, or the
+        beans. Returns the `translated:` text and the ids of the beans it touched."""
+        for path in self.docs():
+            if (os.path.basename(path) == 'VOCAB.md') == vocab_only:
+                self.one(path)
+        if vocab_only:
+            self.rekey_reasons()
+            return None, []
+        return self.report()
+
+    # A garden's own reasons are keyed by the PATH of what they explain in its VOCAB.md, so a key that names a renamed
+    # block, registry, row attribute, schema key, nature or crown branch follows it — the heading alone, re-keyed by
+    # bin/dmwhy.py, the one tool that opens the reasoning; what a reason SAYS is the garden's own words.
+    _SEGMENT = r'(?=$|[.\[])'
+    REKEY_22 = (
+        (re.compile(r'^local_kinds' + _SEGMENT), 'local_gene'),
+        (re.compile(r'^kinds' + _SEGMENT), 'gene'),
+        (re.compile(r'^(registry_additions\.)kinds' + _SEGMENT), lambda m: m.group(1) + 'gene'),
+        (re.compile(r'^((?:local_gene|gene|registry_additions\.gene)\[[^\]]*\]\.)kind' + _SEGMENT),
+         lambda m: m.group(1) + 'genos'),
+        (re.compile(r'^(identity_policy\.minted\.)form_kind$'), lambda m: m.group(1) + 'form_genos'),
+        (re.compile(r'^((?:registry_additions\.)?natures\[)(physical|metaphysical|living)\]'),
+         lambda m: m.group(1) + NATURE_22[m.group(2)] + ']'),
+        (re.compile(r'^((?:registry_additions\.)?crown\[)(god|nature|love)\]'), lambda m: m.group(1) + CROWN_22[m.group(2)] + ']'),
+        (re.compile(r'^(local_terms\[[^\]]*\]\.schema\.)(' + '|'.join(SCHEMA_22) + ')' + _SEGMENT),
+         lambda m: m.group(1) + SCHEMA_22[m.group(2)]),
+    )
+
+    def rekey_reasons(self):
+        """The garden's own reasons, re-keyed where they name what the 22.0 step renamed in VOCAB.md — and only once
+        VOCAB.md says the new names, so a reason is never pointed at a path its law does not yet have."""
+        if any(p.startswith('VOCAB.md:') for p in self.problems):
+            return
+        sys.path.insert(0, os.path.join(ROOT, 'bin'))
+        import dmwhy
+        self.reasons, done = dmwhy.rekey(ROOT, self.REKEY_22)
+        if done:
+            self.facts[self.reasons] = [('heading', o, n) for o, n in done]
+        else:
+            self.reasons = None
+
+    def report(self):
+        """What was translated, as the journal's `translated:` line says it: each rename with how often it was made, the
+        beans it was made in, what VOCAB.md became, and what is left for a person."""
+        from collections import Counter
+
+        def said(what, old, new):
+            place = what.split(' ', 1)[1]
+            if place == 'nature' or place.startswith('nature.'):
+                return f"nature {old} -> {new}"
+            if place.startswith('owned_by.'):
+                return f"crown {old} -> {new}"
+            return f"`{old}` -> `{new}`"
+        beans = sorted(r for r in self.facts if r.startswith('beans/'))
+        parts = []
+        if beans:
+            tally = Counter(said(*x) for r in beans for x in self.facts[r])
+            parts.append(f"{len(beans)} bean(s): " + ', '.join(f"{k} ×{c}" for k, c in sorted(tally.items(), key=lambda x: (
+                not x[0].startswith('`'), x[0]))) + " — " + ', '.join(f"[[{os.path.basename(r)[:-3]}]]" for r in beans))
+        if 'VOCAB.md' in self.facts:
+            vt = Counter(f"`{o}` -> `{n}`" for _w, o, n in self.facts['VOCAB.md'])
+            parts.append("VOCAB.md: " + ', '.join(k + (f" ×{c}" if c > 1 else '') for k, c in sorted(vt.items())))
+        if self.reasons:
+            parts.append(f"{self.reasons}, the garden's own reasons re-keyed: " + ', '.join(
+                f"`## {o}` -> `## {n}`" for _w, o, n in self.facts[self.reasons]))
+        if self.problems:
+            parts.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
+        return ('std-vocab 22.0, the Greek names — ' + '; '.join(parts or ['nothing to translate']),
+                [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
@@ -827,9 +1133,11 @@ def main():
                                        '(or DAFTAR_GARDENER in the environment)')
     ap.add_argument('--gardener-name', help='with --gardener, plants a new bean with this name '
                                             '(or DAFTAR_GARDENER_NAME in the environment)')
-    ap.add_argument('--gardener-kind', help="with --gardener-name, the kind of the bean planted, one the law lets keep a "
-                                            "garden: org for an organisation (or DAFTAR_GARDENER_KIND in the environment; "
-                                            "default: a person, as seed/germinate.py plants one)")
+    ap.add_argument('--gardener-genos', '--gardener-kind', dest='gardener_genos',
+                    help="with --gardener-name, the genos of the bean planted, one the law lets keep a garden: org for an "
+                         "organisation (or DAFTAR_GARDENER_GENOS in the environment; default: a person, as "
+                         "seed/germinate.py plants one). `--gardener-kind` and DAFTAR_GARDENER_KIND, the names before "
+                         "22.0, are read the same")
     ap.add_argument('--no-delegate', action='store_true', help=argparse.SUPPRESS)
     ap.add_argument('--recorded-source', help=argparse.SUPPRESS)
     a, unknown = ap.parse_known_args()
@@ -842,8 +1150,9 @@ def main():
                 (os.environ[ENV_ID], ENV_ID) if os.environ.get(ENV_ID) else (None, None))
     gardener += ((a.gardener_name, '--gardener-name') if a.gardener_name else
                  (os.environ[ENV_NAME], ENV_NAME) if os.environ.get(ENV_NAME) else (None, None))
-    gkind = ((a.gardener_kind, '--gardener-kind') if a.gardener_kind else
-             (os.environ[ENV_KIND], ENV_KIND) if os.environ.get(ENV_KIND) else (None, None))
+    ggenos = ((a.gardener_genos, '--gardener-genos') if a.gardener_genos else
+              (os.environ[ENV_GENOS], ENV_GENOS) if os.environ.get(ENV_GENOS) else
+              (os.environ[ENV_KIND], ENV_KIND) if os.environ.get(ENV_KIND) else (None, None))
 
     dirty = run('git', 'status', '--porcelain', '--untracked-files=no').stdout.strip()   # untracked files are not in the diff
     if dirty:
@@ -874,8 +1183,8 @@ def main():
                 args += ['--gardener', a.gardener]
             if a.gardener_name:
                 args += ['--gardener-name', a.gardener_name]
-            if a.gardener_kind:
-                args += ['--gardener-kind', a.gardener_kind]
+            if a.gardener_genos:
+                args += ['--gardener-genos', a.gardener_genos]
             return subprocess.run(args + unknown).returncode
         if unknown:
             ap.error(f"unrecognized arguments: {' '.join(unknown)}")
@@ -884,11 +1193,14 @@ def main():
             sys.exit(f"REFUSING: {a.tag} carries no readable `version:` in seed/std-vocab.md — nothing to pin to.")
         before = vocab_version(ROOT)
         check_name(rel, a.tag, a.keep_on_failure)
-        # THE 21.0 STEP IS PLANNED FIRST, while every file is still as it was, so a refusal touches nothing.
-        step21 = None
+        # THE 21.0 AND 22.0 STEPS ARE PLANNED FIRST, while every file is still as it was, so a refusal touches nothing.
+        step21 = step22 = None
         if vtuple(before) < STEP_21 <= vtuple(vocab_version(rel)):
-            step21 = Step21(rel, a.tag, source, gardener, a.keep_on_failure, gkind)
+            step21 = Step21(rel, a.tag, source, gardener, a.keep_on_failure, ggenos)
             step21.plan()
+        if vtuple(before) < STEP_22 <= vtuple(vocab_version(rel)):
+            step22 = Step22(rel, a.tag, a.keep_on_failure)
+            step22.plan()
         want = expand(rel, patterns(rel))
         have = expand(ROOT, patterns(ROOT)) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
         # "applied" when either side is unknown: a garden that records no release cannot be told which way it moved.
@@ -899,7 +1211,7 @@ def main():
         # An exception midway (a file an editor, the indexer or antivirus holds open on Windows, where os.replace then
         # fails) once left release files copied, both pins moved, beans half translated and no journal entry.
         try:
-            return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21)
+            return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22)
         except BaseException as e:
             put_back(added + (step21.created if step21 else []))
             print(f"NOT {verb.upper()}: the upgrade stopped midway"
@@ -923,7 +1235,7 @@ def put_back(added):
     install()
 
 
-def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21):
+def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None):
     """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
     caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
     changed = []
@@ -959,6 +1271,13 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     # unchanged, and it leaves the file alone when it cannot. A refusal surfaces through the gate below, which
     # then puts everything back.
     translated, reform = [], os.path.join(ROOT, 'bin', 'dmreform.py')
+    # 22.0's names go into VOCAB.md FIRST: the terms dmreform reads are then in the spelling the release's reader knows.
+    if step22:
+        step22.apply(vocab_only=True)
+        if 'VOCAB.md' in step22.facts and 'VOCAB.md' not in changed:
+            changed.append('VOCAB.md (translated)')
+        if step22.reasons:
+            changed.append(f'{step22.reasons} (re-keyed)')
     if os.path.isfile(reform):
         _r = run(sys.executable, reform, os.path.join(ROOT, 'VOCAB.md'), check=False)
         _out = (_r.stdout + _r.stderr).strip()
@@ -966,7 +1285,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
             translated.append('REFUSED — ' + _out.replace(ROOT + os.sep, ''))
         elif 'term(s) rewritten' in _out and ': 0 term' not in _out and 'rewritten —' in _out:
             translated.append('VOCAB.md local_terms — ' + _out.split('rewritten —', 1)[1].strip())
-            if 'VOCAB.md' not in changed:
+            if 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
                 changed.append('VOCAB.md (translated)')
 
     gpath = os.path.join(ROOT, 'GARDEN.md')
@@ -981,11 +1300,16 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         write_text(gpath, gtext, gform)
         repinned.append('GARDEN.md daftar_release')
 
-    beans = []
+    beans, steps = [], []
     if step21:
         _t, beans = step21.apply()
-        translated.append(_t)
+        translated.append(_t); steps.append(_t)
         added += step21.created
+    if step22:
+        # AFTER the 21.0 step, on each bean as that step left it: a gardener it planted is in 22.0's words already
+        _t, _b = step22.apply()
+        translated.append(_t); steps.append(_t)
+        beans += [b for b in _b if b not in beans]
 
     if not (changed or added or removed or repinned):
         print(f"nothing to do: this garden's language already equals {a.tag} ({sha[:12]}).")
@@ -1025,8 +1349,8 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         return 1
     print(f"{verb} to {a.tag} ({sha[:12]}): std-vocab {before} -> {after}; "
           f"{len(changed)} changed, {len(added)} added, {len(removed)} removed, {len(repinned)} repinned.")
-    if step21:
-        print(f"translated: {translated[-1]}")
+    for _t in steps:
+        print(f"translated: {_t}")
     print((gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1])
     # TWO COMMANDS, NOT ONE JOINED BY `&&`, and no `rm`: Windows PowerShell 5.1 parses neither `&&` nor `rm a b`, and
     # git runs alike in every shell — `git clean` removes exactly the files the upgrade added, which git has never held.

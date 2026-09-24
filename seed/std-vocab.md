@@ -1,5 +1,5 @@
 ---
-version: "21.0"
+version: "22.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -15,7 +15,7 @@ schema_language:
     system:      "in: { system: <anchor system> } — a position in ONE named system, in that system's one form. `form_of` asks a sibling WHICH system; this names it, for an attribute that is only ever in one"
     key_of:      "in: { key_of: <term> } — a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another: a PART of a being, resolved by the gate. Not an edge — the being is reached by the refs the bean already states"
     entries:     "in: { entries: { <attr>: {required?, in, meaning} } } — entries INSIDE an entry: a list of them, or one mapping. Each is judged as an entry, by the attributes written here and by every rule an entry answers to. A ref inside one is resolved and draws no edge. `keyed_by: <attr>` beside `entries` says the list holds ONE entry per value of that attribute, and that the order of its entries carries nothing: two entries for one value are refused, and a merge compares the list in that attribute's order"
-    bean_id:     "in: bean_id — the bare id of a bean this garden holds: resolved by the gate, and not an edge (an edge is a `ref`). `in: { bean_id: { kinds: [<kind>, ...] } }` holds it to a bean of one of those kinds"
+    bean_id:     "in: bean_id — the bare id of a bean this garden holds: resolved by the gate, and not an edge (an edge is a `ref`). `in: { bean_id: { gene: [<genos>, ...] } }` holds it to a bean of one of those gene"
     any:         "in: any — DELIBERATELY any value, because its type is another attribute's business (a record's `value` is whatever the tracked field holds). A decision, where `untyped` is a debt"
     pattern:     "in: { pattern: '<regex>' } — a form the TERM owns. With `soft: true` and a `why` it WARNS instead of refusing: the form a value SHOULD take while a corpus is migrated onto it"
     quantity:    "in: { quantity: <name> } — a MEASURED VALUE, written { count, unit }: a speed, an acceleration, an area, a data rate, an amount of money. The unit must measure the quantity named; `count` is a whole number or a decimal written as a string, in the form `value_types[count]` declares, so that no float reaches a canonical form and every reader holds it exactly. A quantity whose row takes its units from a registry (`units_from`) holds a count with at most the row's `digits` decimal places. `in: { quantity: any }` takes any."
@@ -30,11 +30,11 @@ schema_language:
   path:                 "<dotted path> — the term governs a NESTED field rather than a top-level key named after it (`identity.status`, `identity.anchors[].class`, `provenance.src`). Added at 2.0 for the five core grammar enums and never declared here until 11.3."
   alt_form:             "{key, ref_fields} — an ALTERNATIVE whole-value form: a mapping carrying `key` takes this form INSTEAD of the faceted one, and the per-key rules stand down for it (the inherited `owned_by: {via: …}`). In use since the first schema language; declared 11.3."
   required:             "true — EVERY bean must carry the term (the root-axiom case; stronger than required_on_<axis>s)"
-  required_on_kinds:    "[<kind>...] — a bean of this kind MUST carry the term, non-empty"
-  only_on_kinds:        "[<kind>...] — ONLY a bean of these kinds may carry the term: a record that is about one kind of being is refused on any other"
-  must_equal_kind_attr: "<attr> — the term's value must equal the bean's kind's <attr> in the `kinds` registry (e.g. nature == kind.of_nature)"
-  required_on_natures:  "[<nature>...] — same, keyed on nature instead of kind (reserved for P3; the interpreter already honours it)"
-  required_on_roles:    "[<role>...] — same, keyed on ROLE. It needed no new interpreter key: the axis has always been read from the vocabulary key rather than named in code. What it DID need (7.0, human-ratified) is that an axis may be MULTI-VALUED — a machine holds one kind and one nature but SEVERAL roles — so the mechanism now reads an axis carried as a scalar, as a list of scalars, or as a list of entries each naming it, and fires if ANY held value matches. That generality is the reason `router` could stop being a kind."
+  required_on_gene:     "[<genos>...] — a bean of this genos MUST carry the term, non-empty. Keyed on the registry the key names (`gene`), whose rows name the bean attribute that holds the axis (`genos`)"
+  only_on_gene:         "[<genos>...] — ONLY a bean of these gene may carry the term: a record that is about one genos of being is refused on any other"
+  must_equal_genos_attr: "<attr> — the term's value must equal the bean's genos's <attr> in the `gene` registry (e.g. nature == genos.of_nature)"
+  required_on_natures:  "[<nature>...] — same, keyed on nature instead of genos (reserved for P3; the interpreter already honours it)"
+  required_on_roles:    "[<role>...] — same, keyed on ROLE. It needed no new interpreter key: the axis has always been read from the vocabulary key rather than named in code. What it DID need (7.0, human-ratified) is that an axis may be MULTI-VALUED — a machine holds one genos and one nature but SEVERAL roles — so the mechanism now reads an axis carried as a scalar, as a list of scalars, or as a list of entries each naming it, and fires if ANY held value matches. That generality is the reason `router` could stop being a genos."
   values:               "[<enum>...] — shape:scalar, the allowed values; also the enum this term EXPORTS to values_from/key_form"
   values_from:          "<term> | registry:<name>[].<field> — reuse another term's `values`, or a REGISTRY's own column, instead of restating it. A registry is its own enum owner: no term keeps a copy of its rows, and a position in it is addressed `registry:<name>`"
   key_form:             "kebab | values | values_from:<term> | values_from:registry:<name>[].<field> — the rule the KEYS of a mapping/open_map must satisfy"
@@ -45,7 +45,7 @@ schema_language:
   dag:                  "true — this term's edges are positions on the `walk` sequence aspect (9.2: `dag` is that aspect's `term_key`), and they join the acyclic check BECAUSE that aspect declares `acyclic: true`"
   required_on_targets_of: "<term> — a bean that is the TARGET of that relation must carry this term (e.g. anything lived in must say what kind of habitat it is)"
   entry_must_match:     "[{attr, registry, keyed_by, take}] — an entry attr must equal a registry row's attr, the row selected by a field on the bean (e.g. the crown branch is fixed by the bean's nature)"
-  entry_form_from_kind_attr: "<attr> — a kind that names ONE form in this attr PINS it: every entry must use it. A kind that names a LIST ALLOWS those forms beside the ordinary ones. Either way a form some kind names is RESERVED to the kinds that name it, so no other bean can short-circuit its chain to the axiom (only kind:person may pin `crown`; an agreement may choose it)."
+  entry_form_from_genos_attr: "<attr> — a genos that names ONE form in this attr PINS it: every entry must use it. A genos that names a LIST ALLOWS those forms beside the ordinary ones. Either way a form some genos names is RESERVED to the gene that name it, so no other bean can short-circuit its chain to the axiom (only genos:person may pin `crown`; an agreement may choose it)."
   governs_anchor:       "<key> — this term governs the FORMAT of anchors carrying that key; pairs with value_pattern or value_form"
   value_pattern:        "<regex> — the canonical form an anchor value must match (with canonical_note as the human statement of it)"
   value_form:           "ip — a format needing real parsing rather than a pattern"
@@ -60,15 +60,15 @@ schema_language:
 # == NATURES: the root axiom layer ==
 # == THE CROWN ==
 crown:
-  - branch: god
+  - branch: theos
     root: true
-    meaning: "the one substance, Deus sive Natura — every chain terminates here. NOT nameable on a bean: you reach god only through your branch."
-  - branch: nature
-    meaning: "Extension, res extensa — the terminus for physical beings"
+    meaning: "θεός — the one substance: every chain terminates here. NOT nameable on a bean: a being reaches theos only through its branch."
+  - branch: physis
+    meaning: "φύσις — the terminus for beings of the nature soma, bodies with extension in space"
   - branch: logos
-    meaning: "Thought, res cogitans — the terminus for metaphysical beings"
-  - branch: love
-    meaning: "the conatus — the terminus for LIVING beings, while alive; life-bounded, lapses at death or teardown. This branch is what makes a person UNOWNABLE BY ANOTHER BEING: no bean may hold a person, only love, and only while they live. That is a protection, not a formality — the gate enforces it via person.ownership_form."
+    meaning: "λόγος — the terminus for beings of the nature lekton, what exists by being said and agreed"
+  - branch: agape
+    meaning: "ἀγάπη, love that does not possess — the terminus for beings of the nature empsychon, while alive; life-bounded, lapses at death or teardown. This branch is what makes a person UNOWNABLE BY ANOTHER BEING: no bean may hold a person, only agape, and only while they live. That is a protection, not a formality — the gate enforces it via person.ownership_form."
 identity_policy:
   keyed_by: nature
   registry: natures
@@ -80,8 +80,8 @@ identity_policy:
     qualified_by: garden_id
     pattern: '^[0-9a-f]{12}/.+$'
     form: '^[a-z][a-z0-9-]*:.+$'
-    form_kind: kinds
-    meaning: "A term whose `anchor` says `minted: true` admits names a garden gives. A value of it is such a NAME when it is written in `form`, `<kind>:<name>`, and `<kind>` is a kind the garden knows (`form_kind`: the law's `kinds` and the garden's `local_kinds`). BARE (`contract:shared-purchase`) a name identifies only within the garden that minted it: two gardens that minted the same bare name are shown to a person as candidates, never fused. QUALIFIED by the garden that minted it (`<garden_id>/contract:shared-purchase`) it identifies everywhere. A name is qualified once, by the garden that recorded the thing first, when the thing is to be known in another garden; a garden that takes it in keeps it byte for byte, and the prefix must be the garden's own id, or the `garden_id` of a `garden` bean it holds. A value in ANY OTHER form — a package name, a registry number, the UID an invitation carries, an id a provider assigned — was assigned outside every garden: it identifies wherever it is written, fuses as every anchor does, and is never qualified, because an identifier someone else assigned is not a garden's to put its name on."
+    form_genos: gene
+    meaning: "A term whose `anchor` says `minted: true` admits names a garden gives. A value of it is such a NAME when it is written in `form`, `<genos>:<name>`, and `<genos>` is a genos the garden knows (`form_genos`: the law's `gene` and the garden's `local_gene`). BARE (`contract:shared-purchase`) a name identifies only within the garden that minted it: two gardens that minted the same bare name are shown to a person as candidates, never fused. QUALIFIED by the garden that minted it (`<garden_id>/contract:shared-purchase`) it identifies everywhere. A name is qualified once, by the garden that recorded the thing first, when the thing is to be known in another garden; a garden that takes it in keeps it byte for byte, and the prefix must be the garden's own id, or the `garden_id` of a `garden` bean it holds. A value in ANY OTHER form — a package name, a registry number, the UID an invitation carries, an id a provider assigned — was assigned outside every garden: it identifies wherever it is written, fuses as every anchor does, and is never qualified, because an identifier someone else assigned is not a garden's to put its name on."
 # == THE MANIFEST: GARDEN.md, judged as itself ==
 manifest:
   path: GARDEN.md
@@ -89,13 +89,13 @@ manifest:
     garden:         { required: true, in: { type: kebab }, meaning: "the garden's name, for people. A name, not an identity: two gardens may carry the same one, and a garden's identity is the commit it germinated from (`garden_id`)" }
     extends:        { required: true, in: any, meaning: "the standard it pins, `std-vocab@<version>` — judged by the pin check" }
     daftar_release: { in: { pattern: '^(v[0-9]+\.[0-9]+\.[0-9]+|untagged ([0-9a-f]{4,40}|unknown))$' }, meaning: "the release it runs: a release tag, or `untagged <commit>` for a garden grown from a checkout that is on no tag (`untagged unknown` from a copy with no history); bin/dmupgrade.py moves it" }
-    gardener:       { in: { bean_id: { kinds: [person, org] } }, meaning: "the person — or organisation — who keeps the garden: a bean of the garden. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
+    gardener:       { in: { bean_id: { gene: [person, org] } }, meaning: "the person — or organisation — who keeps the garden: a bean of the garden. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
     test:           { in: prose, meaning: "present when the garden is a rehearsal or a test, saying what it rehearses. Its beans are not facts about the world, and a proposal from it says so" }
     origin:         { in: prose, meaning: "where the garden began, for a reader" }
     policy:         { in: { prose: named }, meaning: "standing rules the gardener sets for work in the garden, in prose: one text, or each rule under a name of its own" }
 # == WHAT THE LAW RETIRED, so a refusal can say where it went ==
 retired:
-  - { name: scope,         at: anchor,   instead: "nothing: whether a value identifies beyond its garden is said by its term (`anchor.minted`) and by its own form (`<kind>:<name>`, qualified `<garden_id>/<kind>:<name>`)" }
+  - { name: scope,         at: anchor,   instead: "nothing: whether a value identifies beyond its garden is said by its term (`anchor.minted`) and by its own form (`<genos>:<name>`, qualified `<garden_id>/<genos>:<name>`)" }
   - { name: authority,     at: anchor,   instead: "`provenance: { src, by, as_of }` on the anchor, only where its source differs from the bean's (scanned → observed, operator-asserted → asserted-by-human)" }
   - { name: between,       at: bean,     instead: "`parties`: an open map of the parties, each with the day it accepted" }
   - { name: agreement_ref, at: bean,     instead: "`words`: whether the agreement was written, spoken or not yet put into words, and where its words are" }
@@ -107,25 +107,40 @@ retired:
   - { name: seeds_from,    at: manifest, instead: "nothing: what a garden took in from another is in its journal, and in the captures on that garden's `garden` bean" }
   - { name: created,       at: manifest, instead: "nothing: when a garden began is its first commit" }
   - { name: models,        at: manifest, instead: "nothing: who wrote here is in the journal and in git" }
+  - { name: kind,          at: bean,     instead: "`genos`: which genos of being the bean records, a row of `gene`. A mapping, which records no being, keeps its `kind`" }
+  - { name: kinds,         at: law,      instead: "`gene`: the registry of the gene a bean may be, one row `- genos: <name>` each, with its `of_nature`" }
+  - { name: local_kinds,   at: vocab,    instead: "`local_gene`: the rows a garden adds to `gene`, each `- genos: <name>` with its `of_nature`" }
+  - { name: kinds,         at: bean_id,  instead: "`gene`: `in: { bean_id: { gene: [<genos>, ...] } }`" }
+  - { name: form_kind,     at: minted,   instead: "`form_genos`: the registry a minted name's `<genos>` is a row of — `gene`" }
+  - { name: required_on_kinds,         at: schema, instead: "`required_on_gene`" }
+  - { name: only_on_kinds,             at: schema, instead: "`only_on_gene`" }
+  - { name: must_equal_kind_attr,      at: schema, instead: "`must_equal_genos_attr`" }
+  - { name: entry_form_from_kind_attr, at: schema, instead: "`entry_form_from_genos_attr`" }
+  - { name: physical,      at: nature,   instead: "`soma`, σῶμα: a body with extension in space" }
+  - { name: metaphysical,  at: nature,   instead: "`lekton`, λεκτόν: what exists by being said and agreed" }
+  - { name: living,        at: nature,   instead: "`empsychon`, ἔμψυχον: the ensouled, while alive" }
+  - { name: god,           at: crown,    instead: "`theos`, θεός: the root, still nameable on no bean" }
+  - { name: nature,        at: crown,    instead: "`physis`, φύσις: the branch for a being of the nature soma" }
+  - { name: love,          at: crown,    instead: "`agape`, ἀγάπη: the branch for a being of the nature empsychon" }
 # == PROVENANCE: the record every fact carries, declared ==
 provenance_record:
   attrs: [src, by, as_of, from, garden]
   from_attrs: [src, by, as_of, at]
   meaning: "who said a fact and how they know — on a bean, an anchor or an entry. `from` names the records the fact was TAKEN or COMPUTED from — a map of name to record, or a list of records, each {src, by, as_of, at?} with `at` pointing at the input (`<section>.<key>`, {bean, field}, or `file:`); a generated fact weighs as the weakest of them. `garden` is the `garden_id` of the garden the record was made in, where that is not this one: stamped once, when a proposal carries the fact across, and never changed."
 natures:
-  - nature: physical
-    meaning: "res extensa — a being with extension in space: machines, hardware, sites"
-    crown: nature
+  - nature: soma
+    meaning: "σῶμα, a body — a being with extension in space: machines, hardware, sites"
+    crown: physis
     establishing_anchor_family: [hardware]
     min_establishing_anchors: 1
-  - nature: metaphysical
-    meaning: "res cogitans — a being constituted by meaning or agreement: code, products, orgs, domains, designs, contracts"
+  - nature: lekton
+    meaning: "λεκτόν, the sayable — a being that exists by being said and agreed, constituted by meaning or agreement: code, products, orgs, domains, designs, contracts"
     crown: logos
     establishing_anchor_family: [logical]
     min_establishing_anchors: 1
-  - nature: living
-    meaning: "conatus — a being that strives to persist as itself: persons, and running instances while alive"
-    crown: love
+  - nature: empsychon
+    meaning: "ἔμψυχον, the ensouled — a being that strives to persist as itself: persons, and running instances while alive"
+    crown: agape
     establishing_anchor_family: [logical]
     min_establishing_anchors: 1
 # == ANCHOR SYSTEMS: the systems a POSITION may be stated in ==
@@ -1329,7 +1344,7 @@ profiles:
       context_keys: ["code_paths"]
       schema:
         shape: list_of_entries
-        required_on_kinds: [codebase]
+        required_on_gene: [codebase]
         attrs:
           path:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare absolute path names no host: give it `root:<name>/…` (resolved by each host's `roots`) or `<host>:<path>`" }, meaning: "WHERE THE TREE IS, as a position: `root:<name>[/<relative>]` resolved through each host's own `roots` map, or `<host>:<absolute path>` stated outright. A bare absolute path names no host and WARNS (11.0): this estate holds 13 paths that exist on two machines as two different trees, so a path with no host is a position in a system nobody named." }
           role:         { required: true, in: [own-source, framework-reference, vendored-dependency, generated-artifact], meaning: "own-source | framework-reference | vendored-dependency | generated-artifact" }
@@ -1523,7 +1538,7 @@ profiles:
       context_keys: ["registration"]
       schema:
         shape: mapping
-        required_on_kinds: [domain]
+        required_on_gene: [domain]
         expiry:
           attr: expires
           notice: { of: time, measure: { count: 90, unit: day } }
@@ -1683,7 +1698,7 @@ terms:
     schema:
       shape: open_map_of_entries
       key_form: kebab
-      required_on_kinds: [codebase]
+      required_on_gene: [codebase]
       attrs:
         produced_by:     { required: true, in: { pattern: "^((agent|tool|human):[^ ].*|[^ :][^:]* \\(.+\\))$", soft: true, why: "attribution has one convention across the ledger — `agent:<model>/<garden>` for an agent, `tool:<name>` for a tool, `name (role)` for a person — so that `who to ask` can be read by something" }, meaning: "the agent/tool id that produced this analysis (provenance — who to ask, who to blame)" }
         as_of:           { required: true, in: { type: date }, meaning: "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)" }
@@ -1721,7 +1736,7 @@ terms:
       shape: scalar
       values_from: "registry:natures[].nature"
       required: true
-      must_equal_kind_attr: of_nature
+      must_equal_genos_attr: of_nature
     merge: { cardinality: single, order: none }
   - term: owned_by
     meaning: "who owns a being, per facet; introduced (explicit) at a node and inherited down the tree"
@@ -1734,7 +1749,7 @@ terms:
       entry_one_of: [owner, contract, external, crown]
       entry_must_match:
         - { attr: crown, registry: natures, keyed_by: nature, take: crown }
-      entry_form_from_kind_attr: ownership_form
+      entry_form_from_genos_attr: ownership_form
       dag: true
       attrs:
         owner:     { in: ref }
@@ -1756,7 +1771,7 @@ terms:
       alt_form: { key: via, ref_fields: [via] }
       key_form: "values_from:registry:facets[].facet"
       entry_one_of: [holder, contract, external, self, parties]
-      entry_form_from_kind_attr: responsibility_form
+      entry_form_from_genos_attr: responsibility_form
       facet_parity_with: owned_by
       dag: true
       attrs:
@@ -1770,7 +1785,7 @@ terms:
       shared:    "responsibility: { <facet>: { contract: {bean: <contract>} } }   # shared duty -> a contract, as with co-ownership"
       external:  "responsibility: { <facet>: { external: '<who>' } }              # answered for outside this garden"
       self:      "responsibility: { <facet>: { self: true } }                      # a being answers for ITSELF (persons). Reflexive, so it is deliberately NOT an edge — a self-edge would be a cycle, and autonomy is not a dependency."
-      parties:   "responsibility: { <facet>: { parties: true } }                   # an agreement is answered for by the parties it binds, each for its own clauses. Reflexive like `self`: the parties are named in `parties`, so this draws no edge. Reserved to the kinds that name it (an agreement)."
+      parties:   "responsibility: { <facet>: { parties: true } }                   # an agreement is answered for by the parties it binds, each for its own clauses. Reflexive like `self`: the parties are named in `parties`, so this draws no edge. Reserved to the gene that name it (an agreement)."
     rules:
       parity: "every facet with an OWNER must have a HOLDER and vice versa. An ownership claim nothing answers for is a loose end; a duty nobody owns is orphaned."
       not_the_same_as_ownership: "they are opposite arcs, not synonyms. A rented VPS is owned by the provider and answered for by the operator; that is the normal case, not an exception."
@@ -1780,7 +1795,7 @@ terms:
     context_keys: ["instance_of"]
     schema:
       shape: mapping
-      required_on_kinds: [instance]
+      required_on_gene: [instance]
       is_ref: true
       attrs:
         bean:  { required: true, in: id }
@@ -1791,7 +1806,7 @@ terms:
     context_keys: ["lives_in"]
     schema:
       shape: mapping
-      required_on_kinds: [instance]
+      required_on_gene: [instance]
       dag: true
       is_ref: true
       attrs:
@@ -1850,7 +1865,7 @@ terms:
     merge: { cardinality: single, order: none }
     canonical: "lowercase"
   - term: fqdn
-    meaning: "a DNS-unique fully-qualified domain name. Logical: it ESTABLISHES a being whose family is logical (a domain, a service, a virtual-host) and only CORROBORATES a physical one, whose matter identifies it — a replaced machine keeps its name. The nature's family decides; the bean writes the flag that follows"
+    meaning: "a DNS-unique fully-qualified domain name. Logical: it ESTABLISHES a being whose family is logical (a domain, a service, a virtual-host) and only CORROBORATES a body (nature soma), whose matter identifies it — a replaced machine keeps its name. The nature's family decides; the bean writes the flag that follows"
     context_keys: ["fqdn"]
     schema:
       governs_anchor: fqdn
@@ -2013,9 +2028,9 @@ terms:
     meaning: "a bean/mapping identifier = its filename stem (garden-local; NOT identity)"
     context_keys: ["bean", "mapping"]
     enforced_by: core
-    handling: { format: "kebab-case; quote if numeric/reserved; kind-prefixed for high-cardinality kinds", unique: "per (space,base)" }
+    handling: { format: "kebab-case; quote if numeric/reserved; genos-prefixed for high-cardinality gene", unique: "per (space,base)" }
     exceptions:
-      - { case: "duplicate legit human names (two hosts both called 'file-server')", decision: "ids disambiguate via kind-prefix+slug; anchor to serial/asset-tag; title may repeat (warn)", why: "labels collide; ids must not", acked: 2026-07-31 }
+      - { case: "duplicate legit human names (two hosts both called 'file-server')", decision: "ids disambiguate via genos-prefix+slug; anchor to serial/asset-tag; title may repeat (warn)", why: "labels collide; ids must not", acked: 2026-07-31 }
       - { case: "device replaced, role kept", decision: "role bean (stable) vs device bean (serial-anchored); retired → deprecated + role re-points via replaces:", why: "not silent id reuse", acked: 2026-07-31 }
   - term: ref
     meaning: "the LINK FORM {bean|mapping: <id>[, field: <key>]} — a pointer to the single owner of a value. The relations that USE this form declare themselves (see refs, depends_on, and a garden's own edges)."
@@ -2026,8 +2041,13 @@ terms:
       - { case: "'bean' as a plain DATA key", decision: "links only inside refs/consumes/depends_on", why: "reserved word collides with data", acked: 2026-07-31 }
       - { case: "YAML-coerced ref target (bean: no→False)", decision: "non-string target = error; quote the id", why: "coerced targets silently skipped", acked: 2026-07-31 }
   # == THE BEAN-GRAMMAR AND FACT-SECTION KEYS ==
+  - term: genos
+    meaning: "which genos of being this bean records; a refinement of its nature, from the `gene` registry"
+    context_keys: [genos]
+    enforced_by: core
+    merge: { cardinality: single, order: none }
   - term: kind
-    meaning: "which kind of being this bean records; a refinement of its nature, from the `kinds` registry"
+    meaning: "which kind of procedure or relationship a MAPPING records — a procedure, a checklist, an automation. A mapping records no being, so it has no genos"
     context_keys: [kind]
     enforced_by: core
     merge: { cardinality: single, order: none }
@@ -2083,7 +2103,7 @@ terms:
     context_keys: [test]
     schema:
       shape: scalar
-      only_on_kinds: [garden]
+      only_on_gene: [garden]
     merge: { cardinality: single, order: none }
   - term: parties
     meaning: "who an agreement binds — an open map, one entry per party, keyed by a short name its clauses and transactions use. A party with `accepted` said yes on that day; one without has no acceptance on record — an offer not yet taken up, or an agreement whose acceptance nobody recorded — and the record says so rather than assuming"
@@ -2091,7 +2111,7 @@ terms:
     schema:
       shape: open_map_of_entries
       key_form: kebab
-      required_on_kinds: [contract]
+      required_on_gene: [contract]
       entry_one_of: [who, external]
       attrs:
         who:      { in: ref, meaning: "the party: a person or an organisation the garden holds, {bean: <id>}" }
@@ -2117,7 +2137,7 @@ terms:
     context_keys: [words]
     schema:
       shape: mapping
-      required_on_kinds: [contract]
+      required_on_gene: [contract]
       attrs:
         form:   { required: true, in: [written, spoken, unstated], meaning: "written — a text exists, and `at` names the document that holds it | spoken — agreed aloud; `at` may name the happening | unstated — the agreement is named, and its terms have not been put into words" }
         at:     { in: ref, meaning: "the `document` that holds its text, or the `event` at which it was said" }
@@ -2204,7 +2224,7 @@ terms:
     context_keys: [located_at]
     schema:
       shape: list_of_entries
-      required_on_kinds: [document]
+      required_on_gene: [document]
       attrs:
         system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which anchor system this position is stated in — it selects the form the position must take" }
         openness:  { required: true, in: [here, elsewhere, unreachable, unknown], meaning: "here (reachable from the machine that recorded it) | elsewhere (reachable, and NOT from here) | unreachable (known, and cannot be reached) | unknown (nobody has established where it is)" }
@@ -2225,7 +2245,7 @@ terms:
     schema:
       shape: open_map_of_entries
       key_form: kebab
-      required_on_kinds: [session, event]
+      required_on_gene: [session, event]
       attrs:
         system:  { required: true, in: { registry: anchor_systems, take: system }, meaning: "the time anchor system — gregorian-civil for a calendar reading, event-anchored for a position fixed only by its neighbours" }
         at:      { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position, in that system's ONE canonical form" }
@@ -2340,7 +2360,7 @@ terms:
     context_keys: [workspace]
     schema:
       shape: mapping
-      required_on_kinds: [session]
+      required_on_gene: [session]
       attrs:
         host:       { required: true, in: ref, meaning: "a {bean} ref to the machine the session ran on. A session is not portable: its shell history, its reachability and what it could measure all belong to one machine." }
         at:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$" }, meaning: "the working copy, as a position in that host's path grammar — `root:` form where a root exists, so it resolves on a second machine rather than reading as a literal path that is not there." }
@@ -2397,66 +2417,66 @@ terms:
       anybody wrote, and the consequence is the part worth having.
     merge: { cardinality: multi, order: by-key }
 
-kinds:
-  - kind: codebase
-    of_nature: metaphysical
+gene:
+  - genos: codebase
+    of_nature: lekton
     meaning: "a source-code tree managed as one object (a repo / Odoo addon / plugin project)."
-  - kind: product
-    of_nature: metaphysical
-    meaning: "an umbrella bean tying a product's codebases + business context together; not itself code. A THIRD-PARTY product is recorded here for one reason only: so its per-host deployments have a TYPE to be instances of. That rationale belongs to this kind and is stated once — a product bean should describe the product, not re-explain why it exists. A product is a LOGICAL code unit — its mapping to storage (git repos) is many-to-many (sub-git or multi-git); git_remote is a source anchor, NOT product identity."
-  # == being-kinds for the ownership / type-token / habitat model ==
-  - kind: org
-    of_nature: metaphysical
+  - genos: product
+    of_nature: lekton
+    meaning: "an umbrella bean tying a product's codebases + business context together; not itself code. A THIRD-PARTY product is recorded here for one reason only: so its per-host deployments have a TYPE to be instances of. That rationale belongs to this genos and is stated once — a product bean should describe the product, not re-explain why it exists. A product is a LOGICAL code unit — its mapping to storage (git repos) is many-to-many (sub-git or multi-git); git_remote is a source anchor, NOT product identity."
+  # == being-gene for the ownership / type-token / habitat model ==
+  - genos: org
+    of_nature: lekton
     meaning: "an organization / juridical person (company) that owns beings."
-  - kind: person
-    of_nature: living
+  - genos: person
+    of_nature: empsychon
     ownership_form: crown
     meaning: "a human being who can own/steward other beings."
-  - kind: instance
-    of_nature: living
+  - genos: instance
+    of_nature: empsychon
     meaning: "a running token — a deployment of a code product in a habitat, carrying the runtime facts. Distinct being from its code product; `instance_of` and `lives_in` are required on it."
-  - kind: host
-    of_nature: physical
+  - genos: host
+    of_nature: soma
     meaning: >
       A MACHINE THE ESTATE RUNS ON — matter of its own: bare metal, general-purpose or appliance. A virtual
-      machine is a `virtual-host`; a router is a host in the `router` role. What a kind answers is the one
+      machine is a `virtual-host`; a router is a host in the `router` role. What a genos answers is the one
       question: this being is a machine.
-  - kind: virtual-host
-    of_nature: living
+  - genos: virtual-host
+    of_nature: empsychon
     meaning: >
       A VIRTUAL MACHINE — a running machine-instance on a hypervisor, rented from a provider or run on a host of
       the estate's own. It has no matter: what identifies it is the provider's instance id or its name, never a
-      serial, and it lapses at teardown. That is the living nature, as `instance` is. TENANCY is not what it is:
+      serial, and it lapses at teardown. That is the nature empsychon, as `instance`'s is. TENANCY is not what it is:
       a rented VM is owned `external` (the provider) and answered for here; a VM on the estate's own hypervisor
       is owned through it. Its habitat, where that is a bean, is `lives_in`.
-  - kind: domain
-    of_nature: metaphysical
+  - genos: domain
+    of_nature: lekton
     meaning: "a DNS domain — a name held by agreement with a registry, not a thing in space."
-  - kind: service
-    of_nature: metaphysical
+  - genos: service
+    of_nature: lekton
     meaning: "a named capability the estate provides or consumes (mail pipeline, monitoring), above any one host."
-  - kind: program
-    of_nature: metaphysical
+  - genos: program
+    of_nature: lekton
     meaning: "a bounded body of work with an aim (a hardening programme), tracked as one object."
-  - kind: design
-    of_nature: metaphysical
+  - genos: design
+    of_nature: lekton
     meaning: "a durable design/decision document — the recorded reasoning behind a change."
-  - kind: session
-    of_nature: metaphysical
+  - genos: session
+    of_nature: lekton
     meaning: "a bounded stretch of work with a start, any number of sync points, and a stop. Declared because sessions already exist in practice — handed off in prose, their times nowhere in data — and because they are what makes `timing` earn a resolution: a session is the one object whose position must be held finer than a day."
-  - kind: contract
-    of_nature: metaphysical
+  - genos: contract
+    of_nature: lekton
     ownership_form: [crown]
     responsibility_form: [parties]
     meaning: "an agreement between parties: who it binds (`parties`), its words (`words`), what it asks (`clauses`) and what has moved under it (`transactions`). An agreement between parties may be owned by none of them — it ends at the crown — and then its parties answer for it; one a person authored may be owned by its author. Co-owning one facet of one being is one use of it."
-  - kind: garden
-    of_nature: metaphysical
+  - genos: garden
+    of_nature: lekton
     meaning: "ANOTHER daftar garden this one deals with: a git repository of beans kept by its gardener, identified by `garden_id`, owned by its gardener and answered for by them. A garden's own identity is read from its git and its gardener is named in its GARDEN.md — never in a bean of its own."
-  - kind: document
-    of_nature: metaphysical
+  - genos: document
+    of_nature: lekton
     meaning: "words or figures fixed in a form that can be kept and handed on: a statement, a letter, a scanned sheet, a conversation kept as a transcript. Identified by its home's reference (`doc_id`) or by its content (`content_hash`); where its copies are is `located_at`. What must not be kept whole — a card number — stays out of it, and a redacted copy of its lines is a `capture` on it."
-  - kind: event
-    of_nature: metaphysical
+  - genos: event
+    of_nature: lekton
     ownership_form: [crown]
     meaning: "a happening between people at a time: a meeting, a dinner, a party, a conversation in which something was agreed. When is `timing`; who took part is `refs`, each naming what they were in `rel` — present, invited, host, paid, or any other part a person played. A happening between people is owned by none of them — it may end at the crown — and whoever hosted it answers for it."
 ---
@@ -2716,6 +2736,36 @@ The portable, estate-agnostic classification shared by every garden — the abst
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **22.0** (2026-09-24, human-ratified rule-change) — **the law says what a being is in one tongue: its Greek.**
+  MAJOR: every bean changes. The words for what a being is came from four traditions, and one misused its own — in
+  Aristotle, metaphysics studies every being, not the ones that are not physical. RENAMED: the crown's root `god` ->
+  `theos` and its branches `nature` -> `physis`, `logos` kept, `love` -> `agape`; the natures `physical` -> `soma`,
+  `metaphysical` -> `lekton`, `living` -> `empsychon`, their meanings said in the Greek words and unchanged in
+  substance; a bean's `kind:` -> `genos:`, the registry `kinds` -> `gene`, each row `- genos: <name>`, and a garden's
+  `local_kinds` -> `local_gene`; the schema constructs `required_on_kinds` -> `required_on_gene`, `only_on_kinds` ->
+  `only_on_gene`, `must_equal_kind_attr` -> `must_equal_genos_attr`, `entry_form_from_kind_attr` ->
+  `entry_form_from_genos_attr`, and `bean_id`'s `kinds` -> `gene`; `identity_policy.minted.form_kind: kinds` ->
+  `form_genos: gene` — a minted name is still written `<genos>:<name>`, and no value a garden minted changes. KEPT:
+  the bean attribute `nature`, the registry `natures` and a genos's `of_nature`; and a mapping's `kind`, which names no
+  being — a `kind` term says so, beside the new `genos` term. `retired` names every old word with the one that took its
+  place, so a refusal says where it went. GATE CHANGES: a key retired on a bean is refused on a bean even where another
+  document still declares it (`kind`, a mapping's); a nature, a crown branch or a genos's `of_nature` in a retired word
+  is refused naming its Greek one; a garden's VOCAB.md still carrying `local_kinds`, a `kinds` registry restated or
+  added to, or `form_kind`, is refused naming where it went, never left unread; `in: { bean_id: … }` takes `gene` and
+  nothing else; `required_on_<registry>` and `only_on_<registry>` read their axis from the field the registry's rows
+  are named by, since γένη is not γένος with an `s`. With the release: `bin/dmupgrade.py` translates a garden crossing
+  into 22.0 — in every bean its `kind`, its `nature` and the crown branch its ownership ends in; in VOCAB.md
+  `local_kinds`, a restated or added `kinds` and their rows, the schema keys and `bean_id` of its own terms, a
+  registry or a nature they name, and a vacancy at a renamed position; in the garden's own RATIONALE.md, a heading
+  keyed by a path VOCAB.md renamed — each found by the YAML node that holds it, comments and prose untouched, each
+  document proved to parse to exactly the old one renamed, and all of it reported on the journal entry's
+  `translated:` line; a mapping keeps its `kind`. Germinate plants the gardener in the new words and takes
+  `--gardener-genos` (`--gardener-kind` still read), as `bin/dmupgrade.py` takes `--gardener-genos` and
+  `DAFTAR_GARDENER_GENOS` (the old names still read); every tool reads and writes `genos`, `gene` and the Greek
+  natures, and a merge's seed carries its `genos`. The reasons, and every option that was put to the operator — the
+  one taken, and why — are in seed/RATIONALE.md under `natures`. The suites that hold it: test/upgrade.py (a 21.0
+  garden translated and passing its gate), test/refusals.py and test/germinate.py (every retired word refused,
+  naming its Greek one).
 - **21.0** (2026-09-23, proposed rule-change) — **what passes between: persons, and gardens.** MAJOR. Until now the
   language described one gardener's world. The first garden kept by someone who had not written the language needed
   what it could not say: money, an agreement between two people, the person who keeps the garden, and a thing two

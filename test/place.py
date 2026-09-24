@@ -34,14 +34,14 @@ def gate():
 
 OWN = 'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
 open(os.path.join(G, "beans", "someone.md"), "w").write(
-    '---\nbean: someone\nkind: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: living\n'
+    '---\nbean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
     'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
-    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: love } }\n'
+    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\n'
     'responsibility: { legal: { self: true } }\n---\nA person.\n')
 
 def codebase(path, key, located=""):
     open(os.path.join(G, "beans", "tree.md"), "w").write(
-        '---\nbean: tree\nkind: codebase\ntitle: "a codebase"\nstatus: active\nsummary: "s"\nnature: metaphysical\n'
+        '---\nbean: tree\ngenos: codebase\ntitle: "a codebase"\nstatus: active\nsummary: "s"\nnature: lekton\n'
         'identity: { status: confirmed, anchors: [ { key: git_remote, value: "git@example.org:t.git", class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
         f'code_paths:\n  - {{ path: "{path}", role: own-source, scan_policy: index }}\n'
@@ -97,7 +97,7 @@ KEY = git("rev-parse", "--short=7", "HEAD").stdout.strip()
 # which is exactly the shape `bin/dmpublic.py` cannot see: the guard matches whole words, so the name went out
 # in a published file while the guard reported nothing. The fixture never needed the name.
 open(os.path.join(G, "beans", "this-host.md"), "w").write(
-    '---\nbean: this-host\nkind: host\ntitle: "this machine"\nstatus: active\nsummary: "h"\nnature: physical\n'
+    '---\nbean: this-host\ngenos: host\ntitle: "this machine"\nstatus: active\nsummary: "h"\nnature: soma\n'
     'identity: { status: confirmed, anchors: [ { key: hostname, value: "' + __import__("socket").gethostname().lower() + '", class: network, establishing: false }, { key: serial, value: "SN-T1", class: hardware, establishing: true } ] }\n'
     'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
     'roots:\n  tree: { system: unix-filesystem, at: "' + __import__("socket").gethostname().lower() + ':' + R + '", observed: 2026-01-01 }\n'
@@ -127,7 +127,7 @@ import dmmerge as M
 def merged(a, b):
     def g(garden, val):
         return [{'garden': garden, 'id': 'box', 'fm': {
-            'bean': 'box', 'kind': 'host', 'nature': 'physical', 'title': 'b', 'status': 'active', 'summary': 'b',
+            'bean': 'box', 'genos': 'host', 'nature': 'soma', 'title': 'b', 'status': 'active', 'summary': 'b',
             'identity': {'status': 'confirmed', 'anchors': [{'key': 'serial', 'value': 'SN-P1', 'class': 'hardware',
                                                             'establishing': True}]},
             'provenance': {'src': 'observed', 'by': garden, 'as_of': '2026-09-17'}, 'owns': {'tree': val}}}]
@@ -176,7 +176,7 @@ _LONG = ("a manifest transcribed from the upstream project: name, version, licen
          "points and the data files it loads on install, kept here so a reader need not fetch it")
 def twin(name, key, manifest):
     open(os.path.join(G, "beans", name + ".md"), "w").write(
-        f'---\nbean: {name}\nkind: codebase\ntitle: "t"\nstatus: active\nsummary: "s"\nnature: metaphysical\n'
+        f'---\nbean: {name}\ngenos: codebase\ntitle: "t"\nstatus: active\nsummary: "s"\nnature: lekton\n'
         f'identity: {{ status: confirmed, anchors: [ {{ key: git_remote, value: "git@example.org:{name}.git", '
         'class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +

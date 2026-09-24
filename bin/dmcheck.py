@@ -345,11 +345,11 @@ for t in (vocab_fm.get('local_terms') or []):
         TERMS[t['term']] = _overlay(TERMS[t['term']], t) if t['term'] in TERMS else t
 SCHEMAS = {n: t['schema'] for n, t in TERMS.items() if isinstance(t.get('schema'), dict)}
 
-# KINDS registry: what each kind IS, including the nature it refines (P3/D1 `of_nature`).
-KINDS = _Named()
-for k in (std_fm.get('kinds') or []) + (registry('local_kinds') or []):
-    if isinstance(k, dict) and k.get('kind'):
-        KINDS[k['kind']] = k
+# GENE registry (22.0; `kinds` until then): what each genos IS, including the nature it refines (P3/D1 `of_nature`).
+GENE = _Named()
+for k in (std_fm.get('gene') or []) + (registry('local_gene') or []):
+    if isinstance(k, dict) and k.get('genos'):
+        GENE[k['genos']] = k
 # IDENTITY POLICY: which bean axis selects an identity/anchor policy row, and from which registry.
 # Declared in VOCAB (`identity_policy`) so the gate names neither the axis nor the registry (P3/D1).
 IDP = vocab_fm.get('identity_policy') or std_fm.get('identity_policy') or {}
@@ -1055,8 +1055,32 @@ def check_retired_terms():
     it would come back as a local term meaning nothing, or overlay a term that is no longer there. Refused, with where
     the retired term went — the facet lattice is a registry now, and a garden adds a facet as a row."""
     for _t in (vocab_fm.get('local_terms') or []):
-        if isinstance(_t, dict) and _t.get('term') and (RETIRED.get(('term', str(_t['term']))) or RETIRED.get(('bean', str(_t['term'])))):
+        if isinstance(_t, dict) and _t.get('term') and _t['term'] not in TIER0_TERMS \
+                and (RETIRED.get(('term', str(_t['term']))) or RETIRED.get(('bean', str(_t['term'])))):
             errors.append(f"VOCAB local_terms '{_t['term']}': the standard retired this term" + (retired_hint('term', _t['term']) or retired_hint('bean', _t['term'])))
+
+
+def check_retired_vocab():
+    """A garden's VOCAB.md that still says a name the law RETIRED (22.0, `retired`: at vocab, law, minted, nature): a
+    block the law no longer reads (`local_kinds`), a registry it no longer has (`kinds`, restated or added to), the
+    minted form's `form_kind`, a genos row refining a nature the law renamed. Each is refused with where it went, never
+    left unread: a block nobody reads would leave every bean of the garden's own gene refused, with nothing saying why."""
+    for _k in sorted(map(str, vocab_fm)):
+        if RETIRED.get(('vocab', _k)) or RETIRED.get(('law', _k)):
+            errors.append(f"VOCAB.md: `{_k}` is a name the law retired" + (retired_hint('vocab', _k) or retired_hint('law', _k))
+                          + ". bin/dmupgrade.py translates it when a garden crosses into the release")
+    for _k in sorted(map(str, vocab_fm.get('registry_additions') or {})):
+        if RETIRED.get(('law', _k)):
+            errors.append(f"VOCAB.md: `registry_additions.{_k}` adds to a registry the law retired" + retired_hint('law', _k))
+    _mint = (vocab_fm.get('identity_policy') or {}).get('minted')
+    for _k in sorted(map(str, _mint if isinstance(_mint, dict) else {})):
+        if RETIRED.get(('minted', _k)):
+            errors.append(f"VOCAB.md: identity_policy.minted.{_k} is a name the law retired" + retired_hint('minted', _k))
+    _natures = {r.get('nature') for r in (registry('natures') or []) if isinstance(r, dict)}
+    for _g in GENE.values():
+        if _g.get('of_nature') is not None and _g['of_nature'] not in _natures:
+            errors.append(f"VOCAB genos '{_g.get('genos')}': of_nature '{_g['of_nature']}' is no nature the law declares "
+                          f"({', '.join(sorted(map(str, _natures)))})" + retired_hint('nature', _g['of_nature']))
 
 
 def check_retired_owners():
@@ -1273,7 +1297,8 @@ def build_docs():
             errors.append(f"{base}: {idkey} '{fm.get(idkey)}' must equal filename (quote if numeric/reserved)")
         if KEBAB and not KEBAB.match(base):
             errors.append(f"{base}: id must be kebab-case")
-        req = ['bean', 'kind', 'title', 'status', 'summary'] if is_bean else ['mapping', 'kind', 'summary']
+        # a BEAN records a being, whose type is its `genos` (22.0); a MAPPING records no being and keeps its `kind`
+        req = ['bean', 'genos', 'title', 'status', 'summary'] if is_bean else ['mapping', 'kind', 'summary']
         for k in req:
             if not fm.get(k):
                 (warns if k == 'summary' else errors).append(f"{base}: missing '{k}'")
@@ -1315,8 +1340,13 @@ def check_undeclared_keys():
     _declared = declared_top_level_keys()
     for (_is_bean, _base), (_fm, _body) in sorted(docs.items()):
         for _k in _fm:
-            if _k not in _declared:
-                _h = retired_hint('bean', _k)
+            _h = retired_hint('bean', _k)
+            if _is_bean and _h and _k in _declared:
+                # A NAME RETIRED ON A BEAN IS REFUSED ON A BEAN, whatever else still declares it: `kind` left the bean
+                # for `genos` (22.0) and stays a mapping's. Never read in its new name's place.
+                errors.append(f"{_base}: top-level key '{_k}' is one the law retired on a bean{_h}. A garden that "
+                              f"crosses into the release translates it with bin/dmupgrade.py")
+            elif _k not in _declared:
                 errors.append(f"{_base}: top-level key '{_k}' is declared by no vocabulary term" + (_h or
                               ". A fact that fits no term belongs in details: (ground rule 2); a new KIND of fact "
                               "is a vocabulary proposal — park it in log/pending.md"))
@@ -1387,7 +1417,7 @@ def check_gardens():
     where it went), a required one must be there, and each value is a position in what its attribute says. Until 21.0's
     fixes it was judged as one entry of a list, where its attributes — declared for the mapping itself — were read by
     nothing but the key check: `gardener:` could name no bean at all. Once the garden holds a bean it names its
-    GARDENER, of a kind the law says may keep a garden. A garden whose keeper is written as an outside party in prose, in
+    GARDENER, of a genos the law says may keep a garden. A garden whose keeper is written as an outside party in prose, in
     her own garden, is the case that asked for this.
     WHICH gardens it knows: its own id (read from git) and the `garden_id` of every `garden` bean — which is never its
     own: a garden's own id is read from its git, and a bean of it describing itself would be a second copy.
@@ -1400,13 +1430,13 @@ def check_gardens():
     if _own:
         KNOWN_GARDENS.add(_own)
     for (_is_bean, _base), (_fm, _b) in sorted(docs.items()):
-        if _is_bean and _fm.get('kind') == 'garden':
+        if _is_bean and _fm.get('genos') == 'garden':
             for _a in ((_fm.get('identity') or {}).get('anchors') or []):
                 if isinstance(_a, dict) and _a.get('key') == 'garden_id' and _a.get('value'):
                     if _own and str(_a['value']) == _own:
                         errors.append(f"{_base}: a `garden` bean anchored by this garden's own id ({_own}) — a garden "
                                       f"bean records ANOTHER garden; this one's id is read from its git and its gardener "
-                                      f"is named in GARDEN.md (VOCAB kinds[garden]). A rehearsal is grown by germination, "
+                                      f"is named in GARDEN.md (VOCAB gene[garden]). A rehearsal is grown by germination, "
                                       f"never by clone, and so has an id of its own")
                     KNOWN_GARDENS.add(str(_a['value']))
     if _mf.get('attrs') and os.path.isfile(_p):
@@ -1456,7 +1486,7 @@ def check_gardens():
                         errors.append(f"{_base}: anchor '{_a['key']}' '{_v}' puts a garden's id before '{_rest}', which is "
                                       f"not a name a garden gave — an identifier someone else assigned is not this garden's "
                                       f"to qualify. Write it as it was assigned ('{_rest}'); a name this garden mints is "
-                                      f"`<kind>:<name>`, a kind this garden knows (VOCAB identity_policy.minted.form)")
+                                      f"`<genos>:<name>`, a genos this garden knows (VOCAB identity_policy.minted.form)")
                     elif _pre not in KNOWN_GARDENS:
                         errors.append(f"{_base}: anchor '{_a['key']}' '{_v}' is a name minted by garden '{_pre}', which this "
                                       f"garden does not know" + (f" (its own id is {_own})" if _own else "") +
@@ -1465,16 +1495,16 @@ def check_gardens():
 
 
 def minted_form(value):
-    """True when `value` is a NAME A GARDEN GAVE (std-vocab 21.0, `identity_policy.minted.form`): `<kind>:<name>`, the
-    kind one this garden knows — a row of the registry `form_kind` names, which for `kinds` is the law's kinds and the
-    garden's `local_kinds`, exactly the kinds a bean here may be. Any other value was assigned outside every garden."""
+    """True when `value` is a NAME A GARDEN GAVE (std-vocab 21.0, `identity_policy.minted.form`): `<genos>:<name>`, the
+    genos one this garden knows — a row of the registry `form_genos` names, which for `gene` is the law's gene and the
+    garden's `local_gene`, exactly the gene a bean here may be. Any other value was assigned outside every garden."""
     _mint = IDP.get('minted') or {}
     if not _mint.get('form') or not law_match(_mint['form'], value):
         return False
-    _reg = _mint.get('form_kind')
+    _reg = _mint.get('form_genos')
     if not _reg:
         return True
-    _known = set(KINDS) if _reg == 'kinds' else {next(iter(r.values())) for r in (registry(_reg) or []) if isinstance(r, dict) and r}
+    _known = set(GENE) if _reg == 'gene' else {next(iter(r.values())) for r in (registry(_reg) or []) if isinstance(r, dict) and r}
     return str(value).split(':', 1)[0] in _known
 
 
@@ -1551,14 +1581,14 @@ def check_identity_capsule():
                 n_est += 1
                 est_owner.setdefault((a['key'], compare_value(a['key'], a['value'])), []).append(base)
                 est_classes.append((a['key'], pol.get('class', a.get('class')) if isinstance(pol, dict) else a.get('class')))
-        # min-anchor policy attaches to the root axis, not the kind (P3/D1) — read it from the declared registry.
+        # min-anchor policy attaches to the root axis, not the genos (P3/D1) — read it from the declared registry.
         pol = _row(POLICY, fm.get(_axis)) if _axis else None
         need = (pol or {}).get('min_establishing_anchors')
         if need and ident.get('status') == IDP.get('applies_at_identity_status') and n_est < need:
             warns.append(f"{base}: {_axis} '{fm.get(_axis)}' requires {need} establishing anchor(s) when "
                          f"'{ident.get('status')}' but has {n_est} (VOCAB {_reg}.min_establishing_anchors)")
         # THE FAMILY IS ENFORCED (19.0, `identity_policy.establishing_family: enforced`): what establishes a
-        # confirmed being is of its nature's family — matter for the physical, a logical id for the rest. The
+        # confirmed being is of its nature's family — matter for a body (soma), a logical id for the rest. The
         # class the term's policy declares wins over the class the bean wrote.
         fam = (pol or {}).get('establishing_anchor_family')
         if (IDP.get('establishing_family') == 'enforced' and fam
@@ -1796,11 +1826,11 @@ def ectl_entry_must_match(e):
                     if isinstance(r, dict) and r.get(rule.get('keyed_by')) == key), None)
         if row is None:
             errors.append(f"{e.base}: {e.ref}.{rule['attr']} cannot be checked — no {rule['registry']} "
-                          f"row for {rule['keyed_by']} '{key}'")
+                          f"row for {rule['keyed_by']} '{key}'" + retired_hint(rule.get('keyed_by'), key))
         elif val != row.get(rule.get('take')):
             errors.append(f"{e.base}: {e.ref}.{rule['attr']} '{val}' does not match {rule['keyed_by']} "
                           f"'{key}', which routes to '{row.get(rule.get('take'))}' "
-                          f"(VOCAB {e.term}.schema.entry_must_match)")
+                          f"(VOCAB {e.term}.schema.entry_must_match)" + retired_hint(rule.get('attr'), val))
 
 
 def effective(e, attr):
@@ -1891,31 +1921,33 @@ def ectl_entry_pattern_from_registry(e):
             check_day_exists(f"{e.base}: {e.ref}.{rule['attr']}", val, row)
 
 
-def ectl_entry_form_from_kind_attr(e):
-    """A kind may PIN which form its entries must use — and pinning also RESERVES that form.
+def ectl_entry_form_from_genos_attr(e):
+    """A genos may PIN which form its entries must use — and pinning also RESERVES that form.
 
-    Any form some kind pins is available ONLY to kinds that pin it, so no bean can short-circuit its
+    Any form some genos pins is available ONLY to the gene that pin it, so no bean can short-circuit its
     ownership chain straight to the axiom: the crown is reachable through your chain, not instead of it.
     """
-    _fk = e.form['matches']['form_from_kind']
+    _fk = e.form['matches']['form_from_genos']
     if not _fk:
         return
-    _kind = ALL_FM.get(e.base, {}).get('kind')
-    _form = (_row(KINDS, _kind) or {}).get(_fk)
+    _genos = ALL_FM.get(e.base, {}).get('genos')
+    if _genos is None:
+        return                      # a bean with no genos: the missing key is refused once, by name, where it is read
+    _form = (_row(GENE, _genos) or {}).get(_fk)
     def _names(k):
         v = k.get(_fk) if isinstance(k, dict) else None
         return set(v) if isinstance(v, list) else ({v} if v else set())
-    _reserved = set().union(*(_names(k) for k in KINDS.values()))
+    _reserved = set().union(*(_names(k) for k in GENE.values()))
     if isinstance(_form, str) and _form not in e.entry:
-        errors.append(f"{e.base}: {e.ref} must use the '{_form}' form — kind '{_kind}' pins "
-                      f"{e.term}.{_fk} to it (VOCAB kinds.{_kind}.{_fk}){_termination_hint(e.term, e.base)}")
-    _mine = _names(_row(KINDS, _kind) or {})
+        errors.append(f"{e.base}: {e.ref} must use the '{_form}' form — genos '{_genos}' pins "
+                      f"{e.term}.{_fk} to it (VOCAB gene.{_genos}.{_fk}){_termination_hint(e.term, e.base)}")
+    _mine = _names(_row(GENE, _genos) or {})
     for _used in (_reserved & set(e.entry)):
         if _used not in _mine:
-            _allowed = sorted(k['kind'] for k in KINDS.values() if _used in _names(k))
-            errors.append(f"{e.base}: {e.ref} uses the '{_used}' form, which is RESERVED to kind(s) "
-                          f"{_allowed} — kind '{_kind}' does not name it in `{_fk}`, so its chain goes through "
-                          f"a being rather than ending at a form reserved to others (VOCAB kinds[].{_fk})")
+            _allowed = sorted(k['genos'] for k in GENE.values() if _used in _names(k))
+            errors.append(f"{e.base}: {e.ref} uses the '{_used}' form, which is RESERVED to the gene "
+                          f"{_allowed} — genos '{_genos}' does not name it in `{_fk}`, so its chain goes through "
+                          f"a being rather than ending at a form reserved to others (VOCAB gene[].{_fk})")
 
 
 def ectl_on_aspect(e):
@@ -2196,7 +2228,7 @@ def _law_path(term):
 
 
 def ectl_bean_id(e):
-    """`in: bean_id` — the id of a bean this garden holds; `in: { bean_id: { kinds } }` — of one of those kinds. The kinds
+    """`in: bean_id` — the id of a bean this garden holds; `in: { bean_id: { gene } }` — of one of those gene. The gene
     are the law's to say: which beings may keep a garden was written in two tools and nowhere in the law."""
     for attr, rule in _facet(e.form, 'bean_id', e.scope):
         v = e.entry.get(attr)
@@ -2206,11 +2238,11 @@ def ectl_bean_id(e):
             errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not the id of a bean this garden holds — write "
                           f"beans/{v}.md first, or in the same commit")
             continue
-        _kinds = rule.get('kinds') if isinstance(rule, dict) else None
-        _kind = (docs.get((True, v)) or ({}, ''))[0].get('kind')
-        if _kinds and _kind not in _kinds:
-            errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is a {_kind}, and this attribute names a bean of kind "
-                          f"{' or '.join(map(str, _kinds))} (VOCAB {_law_path(e.term)}.attrs.{attr}.in)")
+        _gene = rule.get('gene') if isinstance(rule, dict) else None
+        _genos = (docs.get((True, v)) or ({}, ''))[0].get('genos')
+        if _gene and _genos not in _gene:
+            errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is a {_genos}, and this attribute names a bean of genos "
+                          f"{' or '.join(map(str, _gene))} (VOCAB {_law_path(e.term)}.attrs.{attr}.in)")
 
 
 ENTRY_CONTROLLERS = (
@@ -2228,7 +2260,7 @@ ENTRY_CONTROLLERS = (
     ('in: key_of', ectl_key_of),
     ('in: bean_id', ectl_bean_id),
     ('in: entries', ectl_nested_entries),
-    ('entry_form_from_kind_attr', ectl_entry_form_from_kind_attr),
+    ('entry_form_from_genos_attr', ectl_entry_form_from_genos_attr),
     ('in: aspect', ectl_on_aspect),
     ('cells: verdict', ectl_cross_aspect),
     ('entry_one_of', ectl_entry_one_of),
@@ -2334,15 +2366,15 @@ def ctl_governs_anchor(c):
 def ctl_required(c):
     """`required:` / `required_on_<axis>s:` / `required_on_targets_of:` — must this term be here at all?
 
-    The AXIS comes from the vocabulary key, not from this code, so `required_on_kinds` and
+    The AXIS comes from the vocabulary key, not from this code, so `required_on_gene` and
     `required_on_natures` (and any future axis) need no interpreter change.
 
     MULTI-VALUED AXES (2026-08-07, human-ratified, std-vocab@7.0). The loop below read the axis as a
-    SCALAR, which is the whole reason `router` had to be a kind rather than a role: a machine holds one
-    kind and one nature, but it holds SEVERAL roles — a mail server may have five — and `x in vals` cannot express that.
+    SCALAR, which is the whole reason `router` had to be a genos (then a kind) rather than a role: a machine holds one
+    genos and one nature, but it holds SEVERAL roles — a mail server may have five — and `x in vals` cannot express that.
     Rather than add a bespoke `required_on_roles`, the axis mechanism itself is generalised, so an axis may
     now be carried three ways and any future one inherits it:
-      · a scalar          — `kind: host`
+      · a scalar          — `genos: host`
       · a list of scalars — `roles: [router, mail]`
       · a list of entries — `roles: [{role: router, why: ...}]`, each naming the axis
     The requirement fires if ANY held value matches, which is the only reading that makes sense for a
@@ -2368,11 +2400,20 @@ def ctl_required(c):
     return None
 
 
+def _axis_of(plural):
+    """The bean attribute a `required_on_<registry>` / `only_on_<registry>` key is keyed on: the field each row of that
+    registry is named by (`gene` -> genos, `natures` -> nature, `roles` -> role). Read from the law's registry, so a
+    registry whose plural is not its row's name and an `s` (γένη, of γένος) needs no rule here; a name no registry has
+    reads as it always did, the plural less its `s`."""
+    _first = next((r for r in (registry(plural) or []) if isinstance(r, dict) and r), None)
+    return str(next(iter(_first))) if _first else plural[:-1]
+
+
 def _on_axis(fm, plural, vals):
     """(axis, the values of it this document holds that are among `vals`). The axis is named by the schema key —
-    `required_on_kinds` / `only_on_kinds` -> kind — and may be held as a scalar, a list of scalars, or a list of entries
-    each naming it (`roles: [{role: router}]`); the term carrying it may be plural."""
-    axis = plural[:-1]
+    `required_on_gene` / `only_on_gene` -> genos (`_axis_of`) — and may be held as a scalar, a list of scalars, or a list
+    of entries each naming it (`roles: [{role: router}]`); the term carrying it may be plural."""
+    axis = _axis_of(plural)
     held = fm.get(axis) if fm.get(axis) is not None else fm.get(plural)
     held = held if isinstance(held, list) else [held]
     hit = [h.get(axis) if isinstance(h, dict) else h for h in held]
@@ -2392,22 +2433,25 @@ def ctl_only_on(c):
     return None
 
 
-def ctl_must_equal_kind_attr(c):
-    """`must_equal_kind_attr:` — the value must agree with the registry row for this bean's kind."""
-    mk = form_of(c.term)['matches']['equal_kind_attr']
-    if not mk:
+def ctl_must_equal_genos_attr(c):
+    """`must_equal_genos_attr:` — the value must agree with the registry row for this bean's genos."""
+    mk = form_of(c.term)['matches']['equal_genos_attr']
+    if not mk or not c.is_bean:
         return None
-    kreg = _row(KINDS, c.fm.get('kind'))
-    if kreg is None and _captured(c.fm, 'kind', c.fm.get('kind')):
-        return STOP                 # kind is mid-merge; the unclean warning already names it
+    _g = c.fm.get('genos')
+    if _g is None:
+        return None                 # a bean with no genos: the missing key is refused once, by name, where it is read
+    kreg = _row(GENE, _g)
+    if kreg is None and _captured(c.fm, 'genos', _g):
+        return STOP                 # genos is mid-merge; the unclean warning already names it
     if kreg is None:
-        errors.append(f"{c.base}: kind '{c.fm.get('kind')}' is not declared in the vocabulary, so its "
-                      f"{c.term} cannot be checked (every bean kind needs a `kinds` entry with {mk})")
+        errors.append(f"{c.base}: genos '{_g}' is not declared in the vocabulary, so its "
+                      f"{c.term} cannot be checked (every bean's genos needs a `gene` row with {mk})")
     elif kreg.get(mk) is None:
-        errors.append(f"VOCAB kind '{c.fm.get('kind')}': missing '{mk}' (required to check {c.term})")
+        errors.append(f"VOCAB genos '{_g}': missing '{mk}' (required to check {c.term})")
     elif c.node != kreg[mk]:
-        errors.append(f"{c.base}: {c.term} '{c.node}' contradicts kind '{c.fm.get('kind')}' which refines "
-                      f"{mk} '{kreg[mk]}' (VOCAB {c.term}.schema.must_equal_kind_attr)")
+        errors.append(f"{c.base}: {c.term} '{c.node}' contradicts genos '{_g}' which refines "
+                      f"{mk} '{kreg[mk]}' (VOCAB {c.term}.schema.must_equal_genos_attr)" + retired_hint(c.term, c.node))
     return None
 
 
@@ -2422,7 +2466,7 @@ def ctl_shape(c):
         allowed = allowed_values(c.sch)
         if allowed and c.node not in allowed:
             errors.append(f"{c.base}: {c.term} '{c.node}' not in {sorted(allowed)} "
-                          f"(VOCAB {c.term}.schema.values)" + unknown_value_hint(c.sch))
+                          f"(VOCAB {c.term}.schema.values)" + (retired_hint(c.term, c.node) or unknown_value_hint(c.sch)))
         return STOP
     if shape == 'list_of_entries' and not isinstance(c.node, list):
         errors.append(f"{c.base}: {c.term} must be a LIST of entries (VOCAB {c.term}.schema.shape)")
@@ -2452,7 +2496,7 @@ def ctl_required_attrs(c):
 
 
 # The entry-only constructs: what they say is about an ENTRY among entries, or is stated for a value in its own words.
-_NOT_FOR_A_VALUE = ('declared_attrs', 'attr: required', 'entry_must_match', 'entry_form_from_kind_attr', 'entry_one_of')
+_NOT_FOR_A_VALUE = ('declared_attrs', 'attr: required', 'entry_must_match', 'entry_form_from_genos_attr', 'entry_one_of')
 
 
 def ctl_value_as_entry(c):
@@ -2578,7 +2622,7 @@ CONTROLLERS = (
     ('governs_anchor', ctl_governs_anchor),
     ('required', ctl_required),
     ('only_on', ctl_only_on),
-    ('must_equal_kind_attr', ctl_must_equal_kind_attr),
+    ('must_equal_genos_attr', ctl_must_equal_genos_attr),
     ('shape', ctl_shape),
     ('alt_form', ctl_alt_form),
     ('attr: required (value)', ctl_required_attrs),
@@ -2720,7 +2764,7 @@ def _declared_positions():
     LOCAL_ADDED.clear()
     # WHOEVER DECLARES A POSITION ACCOUNTS FOR IT (P6/B2). A garden's occupancy claim covers only the
     # positions IT declared: Tier-0 positions are Tier-0's to account for, in its own vacancies block.
-    # Without this a fresh garden fails its first gate run, ordered to justify `nature: physical` before it
+    # Without this a fresh garden fails its first gate run, ordered to justify `nature: soma` before it
     # has written a bean — which is precisely the debt promotion must not export.
     LOCAL_SCHEMA = {t['term']: (t.get('schema') or {})
                     for t in (vocab_fm.get('local_terms') or []) if isinstance(t, dict) and t.get('term')}
@@ -3493,17 +3537,17 @@ def check_target_obligation_widened():
 
 def _termination_hint(term, bean):
     """The line that would terminate a chain at `bean`, when the vocabulary pins that bean's form — read from
-    the kind's `ownership_form`, the nature's crown branch, and the term's own terminal forms, naming none."""
+    the genos's `ownership_form`, the nature's crown branch, and the term's own terminal forms, naming none."""
     fm = ALL_FM.get(bean) or {}
-    if (KINDS.get(fm.get('kind')) or {}).get('ownership_form') != 'crown':
+    if (GENE.get(fm.get('genos')) or {}).get('ownership_form') != 'crown':
         return ''
     one_of = form_of(term)['one_of']
     if 'crown' in one_of:
         branch = next((r.get('crown') for r in (registry('natures') or [])
                        if isinstance(r, dict) and r.get('nature') == fm.get('nature')), None)
-        return f". A kind:{fm.get('kind')} bean states its own: {term}: {{ legal: {{ crown: {branch} }} }}" if branch else ''
+        return f". A genos:{fm.get('genos')} bean states its own: {term}: {{ legal: {{ crown: {branch} }} }}" if branch else ''
     if 'self' in one_of:
-        return f". A kind:{fm.get('kind')} bean answers for itself: {term}: {{ legal: {{ self: true }} }}"
+        return f". A genos:{fm.get('genos')} bean answers for itself: {term}: {{ legal: {{ self: true }} }}"
     return ''
 
 
@@ -3516,7 +3560,7 @@ def check_chain_termination():
     AN ERROR SINCE 2026-09-17 (human-ratified). It was a warning here while the pre-commit hook's
     test/fast.py refused the same chain, so a new garden was told "0 error(s)" and then had its commit
     refused. One rule, one severity: the gate now says what the hook always enforced, and names the line to
-    write when the bean the chain stops at is of a kind whose form is pinned (a person states the crown).
+    write when the bean the chain stops at is of a genos whose form is pinned (a person states the crown).
     """
     for _term, _sch in SCHEMAS.items():
         _form = form_of(_term)
@@ -3619,6 +3663,8 @@ PLIES = (
      "a local term named for a retired one says where the retired one went, before anything reads it"),
     (check_retired_owners,
      "a registry is its own enum owner: an overlay of a retired owner term is named, not silently re-declared"),
+    (check_retired_vocab,
+     "a block, a registry or a value of VOCAB.md the law retired says where it went, before a bean is judged by it"),
     (check_units,
      "a unit's factor is an exact ratio of whole numbers — a rounded one would bend every conversion through it"),
     (check_aspect_sanity,

@@ -5,10 +5,10 @@ A refusal is the gate's whole answer to a person: what is wrong, and what to wri
 the commit is blocked with nothing said, and every other finding of the run is lost with it. Each case here is a value
 the gate once took, or once died on; each must now be refused by name, and nothing may end in a traceback.
 
-  the manifest       judged as itself: a gardener naming no bean, or a bean of a kind the law says keeps no garden;
+  the manifest       judged as itself: a gardener naming no bean, or a bean of a genos the law says keeps no garden;
                      `garden:` or `extends:` missing; a release nobody made; front matter that is a list or a word (and
                      the same for VOCAB.md and a bean) — and a fresh untagged garden still passes
-  names              a name a garden gave is `<kind>:<name>`; an identifier someone else assigned is never qualified
+  names              a name a garden gave is `<genos>:<name>`; an identifier someone else assigned is never qualified
   a garden's record  `test` belongs to a `garden` bean; a `garden` bean is never this garden itself
   one per key        two payers named `sam` in one transaction
   numbers            what YAML 1.1 reads as an integer nobody wrote (`010`, `0x64`, `1:30`, `0b11`, `1_000`), untagged or
@@ -79,21 +79,21 @@ def gate():
 
 
 def person(bid, extra=""):
-    return (f'---\nbean: {bid}\nkind: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: living\n'
-            f'owned_by: {{ legal: {{ crown: love }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
+    return (f'---\nbean: {bid}\ngenos: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: empsychon\n'
+            f'owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
             f'identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
             f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\n{bid}.\n')
 
 
 def thing(bid, anchor, extra=""):
-    return (f'---\nbean: {bid}\nkind: program\ntitle: "{bid}"\nstatus: active\nsummary: "a program"\nnature: metaphysical\n'
+    return (f'---\nbean: {bid}\ngenos: program\ntitle: "{bid}"\nstatus: active\nsummary: "a program"\nnature: lekton\n'
             f'owned_by: {{ legal: {{ owner: {{ bean: sam }} }} }}\nresponsibility: {{ legal: {{ holder: {{ bean: sam }} }} }}\n'
             f'identity: {{ status: confirmed, anchors: [ {{ key: program_id, value: "{anchor}", class: logical, establishing: true }} ] }}\n'
             f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\nA program.\n')
 
 
 def deal(extra, parties="  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n  ali: { who: { bean: ali }, accepted: 2026-09-01 }\n"):
-    put("beans/deal.md", '---\nbean: deal\nkind: contract\ntitle: "a deal"\nstatus: active\nsummary: "a deal"\nnature: metaphysical\n'
+    put("beans/deal.md", '---\nbean: deal\ngenos: contract\ntitle: "a deal"\nstatus: active\nsummary: "a deal"\nnature: lekton\n'
         'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
         'identity: { status: confirmed, anchors: [ { key: contract_id, value: "contract:deal", class: logical, establishing: true } ] }\n'
         'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
@@ -130,8 +130,8 @@ check("a gardener naming no bean is refused, saying what to write first",
       "GARDEN.md: manifest.gardener 'bob' is not the id of a bean this garden holds" in out and "write beans/bob.md first" in out, out[-500:])
 put("beans/tool.md", thing("tool", "tool"))
 out = manifest(re.sub(r'(?m)^gardener:.*$', 'gardener: tool', MANIFEST))
-check("a gardener of a kind the law does not let keep a garden is refused, the kinds read from the law",
-      "manifest.gardener 'tool' is a program, and this attribute names a bean of kind person or org" in out, out[-500:])
+check("a gardener of a genos the law does not let keep a garden is refused, the gene read from the law",
+      "manifest.gardener 'tool' is a program, and this attribute names a bean of genos person or org" in out, out[-500:])
 drop("beans/tool.md")
 out = manifest(MANIFEST.replace("\n---\n", "\ntest: [ 1, 2 ]\n---\n", 1) if MANIFEST.startswith("---\n") else MANIFEST)
 check("a manifest's words (`test: [1, 2]`) are one text, not a list (in: prose)",
@@ -173,23 +173,23 @@ check("...and is never qualified: a garden's id before it is refused, as not thi
       "is not a name a garden gave" in out and "not this garden's to qualify" in out, out[-500:])
 put("beans/postfix.md", thing("postfix", f"{GID}/nothing-known:postfix"))
 out = gate()
-check("...a remainder whose `<kind>` is no kind the garden knows is not a name a garden gave",
+check("...a remainder whose `<genos>` is no genos the garden knows is not a name a garden gave",
       "is not a name a garden gave" in out, out[-500:])
 put("beans/postfix.md", thing("postfix", f"{GID}/program:postfix"))
 out = gate()
-check("a name this garden minted, `<kind>:<name>`, may be qualified by its id", ok(out), out[-500:])
+check("a name this garden minted, `<genos>:<name>`, may be qualified by its id", ok(out), out[-500:])
 drop("beans/postfix.md")
 
 # ---------------------------------------------------------------- A GARDEN'S OWN RECORD OF ANOTHER
 out = (put("beans/ali.md", person("ali", 'test: "a rehearsal"\n')), gate())[1]
 check("`test` on a person is refused: only a garden bean carries it",
-      "ali: test is carried only by a bean of kind garden" in out, out[-500:])
+      "ali: test is carried only by a bean of genos garden" in out, out[-500:])
 put("beans/ali.md", person("ali"))
 
 
 def garden_bean(gid, extra=""):
-    return (f'---\nbean: garden-b\nkind: garden\ntitle: "the garden ben keeps"\nstatus: active\nsummary: "another garden"\n'
-            f'nature: metaphysical\nowned_by: {{ legal: {{ owner: {{ bean: ben }} }} }}\nresponsibility: {{ legal: {{ holder: {{ bean: ben }} }} }}\n'
+    return (f'---\nbean: garden-b\ngenos: garden\ntitle: "the garden ben keeps"\nstatus: active\nsummary: "another garden"\n'
+            f'nature: lekton\nowned_by: {{ legal: {{ owner: {{ bean: ben }} }} }}\nresponsibility: {{ legal: {{ holder: {{ bean: ben }} }} }}\n'
             f'identity: {{ status: confirmed, anchors: [ {{ key: garden_id, value: "{gid}", class: logical, establishing: true }} ] }}\n'
             f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\nben\'s garden.\n')
 
@@ -350,11 +350,11 @@ put("beans/ali.md", person("ali"))
 
 # ---------------------------------------------------------------- THE FACETS HAVE ONE ROOT
 VOCAB = open(os.path.join(G, "VOCAB.md"), encoding="utf-8").read()
-put("VOCAB.md", VOCAB.replace("local_kinds: []", 'local_kinds: []\nregistry_additions: { facets: [ { facet: rogue, depends_on: [], meaning: "x" } ] }\n'
+put("VOCAB.md", VOCAB.replace("local_gene: []", 'local_gene: []\nregistry_additions: { facets: [ { facet: rogue, depends_on: [], meaning: "x" } ] }\n'
                               'vacancies: [ { at: "registry:facets", position: rogue, reason: prediction, why: "x" } ]', 1))
 out = gate()
 check("a facet that depends on nothing is a second root, and is refused", "2 rows name no `depends_on` (legal, rogue)" in out, out[-500:])
-put("VOCAB.md", VOCAB.replace("local_kinds: []", 'local_kinds: []\nregistry_additions: { facets: [ { facet: moral, depends_on: [technical], meaning: "x" } ] }\n'
+put("VOCAB.md", VOCAB.replace("local_gene: []", 'local_gene: []\nregistry_additions: { facets: [ { facet: moral, depends_on: [technical], meaning: "x" } ] }\n'
                               'vacancies: [ { at: "registry:facets", position: moral, reason: prediction, why: "x" } ]', 1))
 out = gate()
 check("...and one that reaches `legal` through another passes", ok(out), out[-500:])
@@ -414,8 +414,8 @@ out = deal("", parties="  sam: { who: { bean: sam } }\n  bob: { who: { bean: bob
 check("a party naming no bean says what to write: the bean first, or in the same commit",
       "parties -> bean 'bob' does not exist (dangling) — write beans/bob.md first, or in the same commit" in out, out[-500:])
 drop("beans/deal.md")
-put("beans/statement.md", '---\nbean: statement\nkind: document\ntitle: "a statement"\nstatus: active\nsummary: "a statement"\n'
-    'nature: metaphysical\nowned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+put("beans/statement.md", '---\nbean: statement\ngenos: document\ntitle: "a statement"\nstatus: active\nsummary: "a statement"\n'
+    'nature: lekton\nowned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
     'identity: { status: confirmed, anchors: [ { key: doc_id, value: "document:statement", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
     'located_at: [ { system: windows-filesystem, openness: here, at: "laptop:C:/Users/ali/statement.pdf" } ]\n---\nA statement.\n')
@@ -535,8 +535,10 @@ for blk, want in (("local_terms: [ { term: [x] } ]", "local_terms[0] names its t
                   ("local_terms: [ { term: x, schema: { attrs: 5 } } ]", "local_terms 'x' `schema.attrs` is a mapping"),
                   ("local_terms: [ { term: x, context_keys: 5 } ]", "local_terms 'x' `context_keys` is a list"),
                   ("local_terms: [ 5 ]", "local_terms[0] is a mapping"),
-                  ("local_kinds: [ { kind: [x] } ]", "local_kinds[0] names its kind as text"),
-                  ("local_kinds: [ x ]", "local_kinds[0] is a mapping"),
+                  ("local_gene: [ { genos: [x] } ]", "local_gene[0] names its genos as text"),
+                  ("local_gene: [ x ]", "local_gene[0] is a mapping"),
+                  ("local_terms: [ { term: x, context_keys: [x], schema: { attrs: { a: { in: { bean_id: { kinds: [person] } } } } } } ]",
+                   "local_terms 'x' `schema.attrs.a.in.bean_id` is a mapping { gene: [<genos>, ...] }"),
                   ("registry_additions: { facets: [ 5 ] }", "registry_additions.facets[0] is a row"),
                   ("vacancies: [ { at: x, position: [a], reason: prediction, why: y } ]", "vacancies 'x' says `at:`"),
                   # ...and where the interpreter reads it: a vacancy's reason is a word it looks up, an alternative form's
@@ -578,6 +580,37 @@ put("VOCAB.md", _vocab)
 put("beans/ali.md", person("ali"))
 out = gate()
 check("(the garden's own VOCAB.md, restored, passes)", ok(out), out[-300:])
+
+# ---------------------------------------------------------------- A NAME THE LAW RETIRED AT 22.0 SAYS WHERE IT WENT
+# The Greek names: a garden not yet upgraded still says `local_kinds`, `kinds`, `required_on_kinds`, a nature or a crown
+# branch by its old name. Each is refused, naming the word that took its place (the law's `retired:`), and never read
+# as nothing — a block nobody reads would leave the garden's own gene undeclared with nothing saying why.
+for vocab_text, extra, want in (
+        (_vocab.replace("local_gene: []", "local_kinds: []", 1), "", "`local_kinds` is a name the law retired — retired: `local_gene`"),
+        (_vocab.replace("local_gene: []", "local_gene: []\nregistry_additions: { kinds: [ { kind: widget, of_nature: lekton, meaning: w } ] }", 1),
+         "", "`registry_additions.kinds` adds to a registry the law retired — retired: `gene`"),
+        (_vocab.replace("local_gene: []", "local_gene: [ { genos: widget, of_nature: physical, meaning: w } ]", 1),
+         "", "VOCAB genos 'widget': of_nature 'physical' is no nature the law declares"),
+        (_vocab.replace("local_terms: []", "local_terms: [ { term: x, context_keys: [x], schema: { shape: scalar, required_on_kinds: [person] } } ]", 1),
+         "x: y\n", "schema key `required_on_kinds` is not declared in schema_language — retired: `required_on_gene`"),
+        (_vocab, "", None)):
+    put("VOCAB.md", vocab_text)
+    put("beans/ali.md", person("ali", extra))
+    out = gate()
+    if want is None:
+        check("(restored, the garden passes again)", ok(out), out[-300:])
+    else:
+        check(f"VOCAB.md in a name the law retired at 22.0 is refused, saying where it went: {want[:70]}",
+              want in out.replace("\n      — ", " — ") and "Traceback" not in out, out[-600:])
+for bean_text, want in (
+        (person("ali").replace("nature: empsychon", "nature: living"), "nature 'living' not in ['empsychon', 'lekton', 'soma']"),
+        (person("ali").replace("crown: agape", "crown: love"), "owned_by[legal].crown 'love' does not match nature 'empsychon'"),
+        (person("ali").replace("genos: person", "kind: person"), "top-level key 'kind' is one the law retired on a bean")):
+    put("beans/ali.md", bean_text)
+    out = gate().replace("\n      — ", " — ")
+    check(f"a bean in a word the law retired at 22.0 is refused, naming the word that took its place: {want[:60]}",
+          want in out and "— retired: `" in out and "Traceback" not in out, out[-600:])
+put("beans/ali.md", person("ali"))
 put("VOCAB.md", _vocab.replace("local_terms: []", "local_terms: [ { term: x, context_keys: [x], schema: { shape: mapping, "
                                "attrs: { system: { in: { registry: anchor_systems, take: system } }, at: { in: { form_of: "
                                "anchor_systems, keyed_by: system, take: note } } } } } ]\nregistry_additions: { anchor_systems: "
@@ -657,7 +690,7 @@ for val, passes in (('"work on a live system is shown first"', True),
 # ---------------------------------------------------------------- WHAT IS REFUSED IS LISTED: dmrules says every rule above
 r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
 rules = r.stdout
-check("dmrules shows what a minted name is — the form, the kinds, the qualified pattern — not 'no rule to check'",
+check("dmrules shows what a minted name is — the form, the gene, the qualified pattern — not 'no rule to check'",
       r.returncode == 0 and "minted:" in rules and "^[a-z][a-z0-9-]*:.+$" in rules
       and re.search(r"(?m)^  person_id +\[tier0\]  anchor term, MINTED", rules), rules[:600])
 check("...the sums, one entry per party, and a key of the parties",
@@ -668,7 +701,7 @@ check("...a count's form and each quantity's units, and the digits a currency is
 check("...and the manifest, the retired names and the provenance record, each in a section of its own",
       all(h in rules for h in ("MANIFEST — GARDEN.md, judged as itself", "RETIRED — names the law took back",
                                "PROVENANCE RECORD — on a bean, an anchor or an entry")) and "seeds_from" in rules
-      and "carried ONLY on kinds ['garden']" in rules, rules[-900:])
+      and "carried ONLY on gene ['garden']" in rules, rules[-900:])
 
 check("...text and days, each from the law's row: no control character but a tab, and which calendars' days are judged",
       "holds no character of Unicode category Cc but '\\t'" in rules and "In a calendar reckoned arithmetic" in rules

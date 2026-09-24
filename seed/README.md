@@ -78,17 +78,17 @@ qualifies it, which it needs before it crosses to another garden — `COOKBOOK.m
 ```markdown
 ---
 bean: sam
-kind: person
+genos: person
 title: "Sam — keeps this garden"
 status: active
 summary: "The gardener: the person who keeps this garden, and owns and answers for the machines recorded here."
-nature: living
+nature: empsychon
 identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
-owned_by: { legal: { crown: love } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
 Sam keeps this ledger.
@@ -101,11 +101,11 @@ identity is a HARDWARE anchor (a serial or a MAC), because a hostname moves betw
 ```markdown
 ---
 bean: laptop
-kind: host
+genos: host
 title: "laptop — Sam's ThinkPad"
 status: active
 summary: "Sam's daily laptop."
-nature: physical
+nature: soma
 identity:
   status: confirmed
   anchors:

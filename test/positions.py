@@ -36,11 +36,11 @@ BEAN = os.path.join(G, "beans", "box.md")
 def gate(endpoints):
     open(BEAN, "w").write("""---
 bean: box
-kind: host
+genos: host
 title: "a machine"
 status: active
 summary: "probe"
-nature: physical
+nature: soma
 identity: { status: confirmed, anchors: [ { key: serial, value: "SN-POS-1", class: hardware, establishing: true } ] }
 provenance: { src: observed, by: probe, as_of: 2026-09-20 }
 owned_by: { legal: { external: "someone" } }
@@ -140,11 +140,11 @@ LINK = '  - { protocol: smtp, system: ipv4, at: "203.0.113.10", port: 25, exposu
 def twin(mode):
     open(os.path.join(G, "beans", "twin-%s.md" % mode), "w").write("""---
 bean: twin-%s
-kind: product
+genos: product
 title: "a twin"
 status: active
 summary: "probe"
-nature: metaphysical
+nature: lekton
 identity: { status: confirmed, anchors: [ { key: product_id, value: "product:twin-%s", class: logical, establishing: true } ] }
 provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
 owned_by: { legal: { owner: { bean: keeper } } }
@@ -230,11 +230,11 @@ def vocab(extra):
 WIDGET = os.path.join(G, "beans", "widget.md")
 open(WIDGET, "w").write("""---
 bean: widget
-kind: product
+genos: product
 title: "a widget"
 status: active
 summary: "probe"
-nature: metaphysical
+nature: lekton
 identity: { status: confirmed, anchors: [ { key: product_id, value: "product:widget", class: logical, establishing: true } ] }
 provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
 owned_by: { legal: { owner: { bean: keeper } }, moral: { owner: { bean: keeper } } }

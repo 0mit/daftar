@@ -365,8 +365,10 @@ def preconditions(tree):
     sl = _d(law.get('schema_language'))
     domains = list(_d(sl.get('attr_domains')))
     constructs = [k for k in sl if k != 'attr_domains']
-    tables = [k for k, v in law.items() if isinstance(v, list) and k not in ('terms', 'kinds')]
-    kinds = [k.get('kind') for k in _l(law.get('kinds')) if isinstance(k, dict)]
+    tables = [k for k, v in law.items() if isinstance(v, list) and k not in ('terms', 'gene', 'kinds')]
+    # the registry of the beings' types, under the name the law at that ref gives it: `gene` (22.0), `kinds` before it
+    gene = [k.get('genos', k.get('kind')) for k in _l(law.get('gene') if law.get('gene') is not None else law.get('kinds'))
+            if isinstance(k, dict)]
     files = [r.get('registry') for r in _l(law.get('registry_files')) if isinstance(r, dict)]
     gate = tree.read(GATE_FILE) or ''
 
@@ -410,7 +412,7 @@ def preconditions(tree):
             row('terms, in profiles', [f"{p}:{t['term']}" for p, t in pterms], 'delta',
                 note=' · '.join(f'{p} {n}' for p, n in sorted(Counter(p for p, _t in pterms).items()))),
             *local,
-            row('kinds', kinds, 'delta'),
+            row('gene (kinds, before 22.0)', gene, 'delta'),
             row('registries and tables (the top-level lists)', tables, 'delta'),
             row('registry files', files, 'delta'),
             row('schema-language constructs', constructs, 'delta'),

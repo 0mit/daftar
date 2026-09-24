@@ -48,11 +48,11 @@ person bean `sam` like the one in `seed/README.md`:
 ```markdown
 ---
 bean: printer
-kind: host
+genos: host
 title: "printer — the office laser printer"
 status: active
 summary: "The network printer in the office."
-nature: physical
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -111,7 +111,7 @@ beans: [printer]
 ```daftar-bean printer
 ---
 bean: printer
-kind: host
+genos: host
 …the whole bean, exactly as above…
 ---
 The office printer. Sam read the serial off the label on the back.

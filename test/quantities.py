@@ -99,11 +99,11 @@ open(v, "w").write(s.replace("local_terms: []", """local_terms:
 def gate(motion):
     open(os.path.join(G, "beans", "box.md"), "w").write(f"""---
 bean: box
-kind: host
+genos: host
 title: "a machine"
 status: active
 summary: "probe"
-nature: physical
+nature: soma
 identity: {{ status: confirmed, anchors: [ {{ key: serial, value: "SN-QTY-1", class: hardware, establishing: true }} ] }}
 provenance: {{ src: observed, by: probe, as_of: 2026-09-20 }}
 owned_by: {{ legal: {{ external: "someone" }} }}

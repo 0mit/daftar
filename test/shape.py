@@ -82,11 +82,11 @@ BEAN = os.path.join(G, "beans", "box.md")
 def ep(extra):
     open(BEAN, "w").write("""---
 bean: box
-kind: host
+genos: host
 title: "a machine"
 status: active
 summary: "probe"
-nature: physical
+nature: soma
 identity: { status: confirmed, anchors: [ { key: serial, value: "SN-SHAPE-1", class: hardware, establishing: true } ] }
 provenance: { src: observed, by: probe, as_of: 2026-09-20 }
 owned_by: { legal: { external: "someone" } }

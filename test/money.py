@@ -27,8 +27,8 @@ check("a garden germinates, kept by sam", r.returncode == 0 and os.path.isfile(o
 
 def person(bid):
     with open(os.path.join(G, "beans", bid + ".md"), "w", encoding="utf-8", newline="\n") as fh:
-        fh.write(f'---\nbean: {bid}\nkind: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: living\n'
-                 f'owned_by: {{ legal: {{ crown: love }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
+        fh.write(f'---\nbean: {bid}\ngenos: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: empsychon\n'
+                 f'owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
                  f'identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
                  f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n---\n{bid}.\n')
 person("ali"); person("ben")
@@ -39,11 +39,11 @@ def agreement(bid, transactions="", clauses="", parties=("sam", "ali")):
     with open(os.path.join(G, "beans", bid + ".md"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write(f"""---
 bean: {bid}
-kind: contract
+genos: contract
 title: "{bid}"
 status: active
 summary: "an agreement between {' and '.join(parties)}"
-nature: metaphysical
+nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:{bid}", class: logical, establishing: true }} ] }}
@@ -326,7 +326,7 @@ check("a whole of 0 whose parts are not (+100, -100) is left out, said to be —
 os.remove(os.path.join(G, "beans", "nothing.md"))
 
 with open(os.path.join(G, "beans", "broken.md"), "w", encoding="utf-8", newline="\n") as fh:
-    fh.write("---\nbean: broken\nkind: contract\ntransactions: { t: { what: [unclosed }\n---\nbroken.\n")
+    fh.write("---\nbean: broken\ngenos: contract\ntransactions: { t: { what: [unclosed }\n---\nbroken.\n")
 code, out = ledger("--between", "sam", "ali")
 check("a bean whose front matter does not parse is NOTED, not skipped in silence: a total without it says so",
       code == 0 and "NOTE beans/broken.md is not read" in out, out)
@@ -392,8 +392,8 @@ agreement("dated", DATED)
 # character (`\e`), so it is in the VALUE — what another garden's proposal can carry. Printed raw, it was an instruction
 # to the reader's terminal; through the readers' one escaper it is text: `\x1b`.
 with open(os.path.join(G, "beans", "loud.md"), "w", encoding="utf-8", newline="\n") as fh:
-    fh.write('---\nbean: loud\nkind: contract\ntitle: "a note\\e[2A\\e[2K\\r   sam owes ali 3000 XTS\\e[8m"\nstatus: active\n'
-             'summary: "an agreement"\nnature: metaphysical\nowned_by: { legal: { crown: logos } }\n'
+    fh.write('---\nbean: loud\ngenos: contract\ntitle: "a note\\e[2A\\e[2K\\r   sam owes ali 3000 XTS\\e[8m"\nstatus: active\n'
+             'summary: "an agreement"\nnature: lekton\nowned_by: { legal: { crown: logos } }\n'
              'responsibility: { legal: { parties: true } }\n'
              'identity: { status: confirmed, anchors: [ { key: contract_id, value: "contract:loud", class: logical, establishing: true } ] }\n'
              'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
@@ -427,8 +427,8 @@ os.remove(os.path.join(G, "beans", "loud.md"))
 _F = "FORGED sam owes ali 3000 XTS"
 _N = "\\n" + _F                       # YAML's double-quoted escape: a real line feed in the value
 with open(os.path.join(G, "beans", "lines.md"), "w", encoding="utf-8", newline="\n") as fh:
-    fh.write(f'---\nbean: "lines{_N}"\nkind: contract\ntitle: "lines"\nstatus: active\n'
-             'summary: "an agreement"\nnature: metaphysical\nowned_by: { legal: { crown: logos } }\n'
+    fh.write(f'---\nbean: "lines{_N}"\ngenos: contract\ntitle: "lines"\nstatus: active\n'
+             'summary: "an agreement"\nnature: lekton\nowned_by: { legal: { crown: logos } }\n'
              'responsibility: { legal: { parties: true } }\n'
              'identity: { status: confirmed, anchors: [ { key: contract_id, value: "contract:lines", class: logical, establishing: true } ] }\n'
              'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'

@@ -364,10 +364,10 @@ def loads(text):
 # ended the gate in a traceback, `local_terms: [5]` passed as though it said something, and a pattern that does not
 # compile ended the run at the first value matched against it. ONE definition, read by the gate (which refuses what this
 # leaves out) and by dmrules (which lists no rule of it), so the two never disagree about what a garden's vocabulary says.
-VOCAB_BLOCKS = (('local_terms', list), ('local_kinds', list), ('vacancies', list), ('extends_profiles', list),
+VOCAB_BLOCKS = (('local_terms', list), ('local_gene', list), ('vacancies', list), ('extends_profiles', list),
                 ('registry_files', list), ('registry_links', list), ('registry_additions', dict),
                 ('identity_policy', dict))
-_NAME_KEYS = ('shape', 'key_form', 'path', 'values_from', 'must_equal_kind_attr', 'entry_form_from_kind_attr',
+_NAME_KEYS = ('shape', 'key_form', 'path', 'values_from', 'must_equal_genos_attr', 'entry_form_from_genos_attr',
               'facet_parity_with', 'required_on_targets_of', 'governs_anchor', 'value_form', 'value_pattern',
               'canonical_note', 'compare_form', 'on_sequence')
 _LIST_KEYS = ('cells', 'values', 'values_add', 'entry_one_of', 'entry_must_match')
@@ -411,8 +411,11 @@ def _attrs_problem(attrs, at):
                 return f"`{at}.{a}.in.{k}` names one {k}, written as text — not {type(d[k]).__name__}"
         if 'pattern' in d and regex_problem(d['pattern']):
             return f"`{at}.{a}.in.pattern` {regex_problem(d['pattern'])}"
-        if d.get('bean_id') is not None and not (isinstance(d['bean_id'], dict) and isinstance(d['bean_id'].get('kinds') or [], list)):
-            return f"`{at}.{a}.in.bean_id` is a mapping {{ kinds: [<kind>, ...] }}, its kinds a list"
+        # `{ gene: [...] }` and nothing else (22.0: `kinds` until then) — a key it does not read would hold the id to no
+        # genos at all, and say nothing
+        if d.get('bean_id') is not None and not (isinstance(d['bean_id'], dict) and set(d['bean_id']) <= {'gene'}
+                                                  and isinstance(d['bean_id'].get('gene') or [], list)):
+            return f"`{at}.{a}.in.bean_id` is a mapping {{ gene: [<genos>, ...] }}, its gene a list"
         if d.get('where') is not None and not isinstance(d['where'], dict):
             return f"`{at}.{a}.in.where` is a mapping of a registry's field to the value it holds"
         if d.get('entries') is not None:
@@ -487,12 +490,12 @@ def term_problem(t):
     return _attrs_problem(s['attrs'], 'schema.attrs') if s.get('attrs') is not None else None
 
 
-def kind_problem(k):
-    """What is wrong with the shape of one `local_kinds` entry, or None."""
+def genos_problem(k):
+    """What is wrong with the shape of one `local_gene` entry, or None."""
     if not isinstance(k, dict):
-        return f"is a mapping {{kind, of_nature, meaning, …}}, not {type(k).__name__}"
-    if not _is_text(k.get('kind')):
-        return f"names its kind as text (`kind: <name>`), not {type(k.get('kind')).__name__}"
+        return f"is a mapping {{genos, of_nature, meaning, …}}, not {type(k).__name__}"
+    if not _is_text(k.get('genos')):
+        return f"names its genos as text (`genos: <name>`), not {type(k.get('genos')).__name__}"
     for a, v in k.items():
         if isinstance(v, dict) or (isinstance(v, list) and not all(_is_text(x) for x in v)):
             return f"`{a}` is a word or a list of words"
@@ -567,7 +570,7 @@ def vocab_read(vocab):
         if vocab.get(block) is not None:
             vocab[block] = kept
     keep('local_terms', term_problem, 'term')
-    keep('local_kinds', kind_problem, 'kind')
+    keep('local_gene', genos_problem, 'genos')
     keep('vacancies', vacancy_problem, 'at')
     keep('extends_profiles', lambda p: None if _is_text(p) else f"names a profile as text, not {type(p).__name__}", '')
     keep('registry_files', lambda r: None if isinstance(r, dict) and all(_is_text(r.get(k)) for k in ('registry', 'file'))
@@ -592,7 +595,7 @@ def vocab_read(vocab):
             _why = "`anchor_attrs` is a list of the attributes an anchor may carry, each named as text"
         if _why is None and _idp.get('minted') is not None and not (isinstance(_idp['minted'], dict) and all(
                 _is_text(v) for k, v in _idp['minted'].items() if k != 'meaning')):
-            _why = "`minted` is a mapping {qualified_by, pattern, form, form_kind, meaning}, each written as text"
+            _why = "`minted` is a mapping {qualified_by, pattern, form, form_genos, meaning}, each written as text"
         if _why is None and isinstance(_idp.get('minted'), dict):
             _why = next((f"`minted.{k}` {regex_problem(_idp['minted'][k])}" for k in ('pattern', 'form')
                          if _idp['minted'].get(k) is not None and regex_problem(_idp['minted'][k])), None)
