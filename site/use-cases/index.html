@@ -29,39 +29,51 @@
 <main id="content">
 
 <h1>Use cases</h1>
-<p class="lede">Each case is a situation, the beans that record it, and what the tools print about it. They happen in two demo
-  gardens: <strong>garden-sam</strong>, kept by sam, and <strong>garden-ali</strong>, kept by ali, who shares costs with him and
-  keeps a notebook of her own.</p>
+<p class="lede">You do not work in the notebook: you talk to your agents, in your own words, and they keep it. Each case
+  below starts there — what a person says and what they read back — and then shows what happens underneath, for anyone
+  who wants to know. They happen in two demo gardens: <strong>garden-sam</strong>, kept by Sam, and
+  <strong>garden-ali</strong>, kept by Ali, who shares costs with him and keeps a notebook of her own.</p>
 
-<ul class="cards three">
+<ul class="cards">
   <li><div class="card"><h2><a href="machines-and-a-domain.html">Your machines, and the domain they answer on</a></h2>
-    <p>A NAS at home serves a website on a registered domain; a rented server beside it.</p>
-    <p class="tools">dmcheck · dmcursor · dmstale</p></div></li>
-  <li><div class="card"><h2><a href="a-cost-shared.html">A cost shared between two people</a></h2>
-    <p>Ali paid for a camera; sam bears two parts of it. Who owes whom is read, never written.</p>
-    <p class="tools">dmledger · dmsafe</p></div></li>
-  <li><div class="card"><h2><a href="a-loan-in-instalments.html">A loan repaid in instalments</a></h2>
-    <p>Six monthly instalments and a clause for one paid late; the first is paid, the next falls due.</p>
-    <p class="tools">dmledger · dmstale · dmsafe</p></div></li>
-  <li><div class="card"><h2><a href="a-statement-kept.html">A statement kept, its secret left out</a></h2>
-    <p>A bank statement identified by its bytes, and its lines kept as a capture without the card number.</p>
-    <p class="tools">the gate</p></div></li>
-  <li><div class="card"><h2><a href="a-dinner.html">A dinner where something was agreed</a></h2>
-    <p>An evening, the people at it, and the loan agreed there in spoken words.</p>
-    <p class="tools">dmcal</p></div></li>
+    <p>A NAS at home serves a website on a registered domain; a server is rented beside it. You say what you run, and
+      are told in time what is running out.</p>
+    <p class="tools">dmcursor · dmstale</p></div></li>
+  <li><div class="card"><h2><a href="money-between-two-people.html">Money between two people</a></h2>
+    <p>A camera shared, a loan agreed over dinner and repaid monthly, and the bank statement that proves it. Who owes
+      whom is read, never written.</p>
+    <p class="tools">dmledger · dmstale · dmcal · dmsafe</p></div></li>
   <li><div class="card"><h2><a href="two-gardens-meet.html">Two people's notebooks meet</a></h2>
-    <p>First contact, a proposal made, read and taken, and ali's own yes, written by her.</p>
-    <p class="tools">dmpropose · dmledger · dmsafe</p></div></li>
-  <li><div class="card"><h2><a href="a-rehearsal.html">A rehearsal, before it counts</a></h2>
-    <p>A garden grown to try the loan's crossing, refused as fact and taken into a copy as a rehearsal.</p>
-    <p class="tools">germinate · dmpropose</p></div></li>
-  <li><div class="card"><h2><a href="an-agent-of-any-make.html">An agent of any make, and an assistant with no shell</a></h2>
-    <p>The gate as the arbiter between agents, and a chat assistant's proposal taken in by the gardener.</p>
+    <p>Neither agent writes in the other's notebook: a proposal crosses, is read and taken, and Ali writes her own yes.
+      And first, a rehearsal that is never taken for fact.</p>
+    <p class="tools">dmpropose</p></div></li>
+  <li><div class="card"><h2><a href="an-agent-of-any-make.html">Several agents, one notebook</a></h2>
+    <p>A coding agent, an assistant in a chat window, a small model on your own computer: none remembers the others,
+      and the gate judges them all alike.</p>
     <p class="tools">dmcheck · dmpropose</p></div></li>
-  <li><div class="card"><h2><a href="on-windows.html">On Windows</a></h2>
-    <p>The same tools in PowerShell: which Python, UTF-8, and the three things PowerShell 5.1 does differently.</p>
-    <p class="tools">INSTALL.md</p></div></li>
 </ul>
+
+<section class="box" aria-labelledby="lenses">
+  <h2 id="lenses">Four ways to read a case</h2>
+  <p class="measure">Each case can be read by four people, the way <a href="../machinery.html">the machinery</a> is
+    drawn at four levels — each for someone with a different question.</p>
+  <ul>
+    <li><strong>The person</strong> (Orient) — what do I say, and what do I get back? The conversation, in plain words.</li>
+    <li><strong>The curious</strong> (Understand) — what does the agent do with my words? Each tool it calls, why, and
+      what the tool answered.</li>
+    <li><strong>The keeper</strong> (Operate) — is it working? The tools' own output, whole, and what a refusal says.</li>
+    <li><strong>The auditor</strong> (Inspect) — what exactly was written? Every file, as it stands.</li>
+  </ul>
+  <p class="measure">The conversations are written for these pages. Everything the agents report in them — every
+    figure, date and refusal — is what the tools print, and that output is real.</p>
+</section>
+
+<section aria-labelledby="start">
+  <h2 id="start">Starting</h2>
+  <p class="measure">Tell your agent to read <a href="https://github.com/0mit/daftar/blob/v0.34.0/INSTALL.md">INSTALL.md</a>
+    and follow it: it grows your notebook, with you as its gardener. On a Windows computer the same holds, with three
+    differences the agent has to know — <a href="on-windows.html">Starting on Windows</a>.</p>
+</section>
 
 <section class="box" aria-labelledby="how">
   <h2 id="how">How these pages are made</h2>
