@@ -250,23 +250,24 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 خبری از عرش والا نبود، اگرش بستری حاصل‌خیز فراهم می‌بود حتما که می‌شکفت و شاید اگر اقبال ناظرش می‌بود روزی درختی پیر
 می‌شد و میوه‌های دانه‌دار می‌داد، ولی اکنون در حاشیه‌ی دفتری نیم سیاه و نیم سپید در انتظار نوازش دستی بالجبار آرمیده است.
 
-It fell — onto a notebook, that lay on a table, that stood on the ground — a pine seed whose coordinates of
-beginning had been taken from even lower than the low surface of the earth, and which had risen higher than
-most things. What, in this old age of the world, besides the raw and sweet fancy of a bed to sprout in, could
-have persuaded a ripe seed to come down from that height to the floor? It had the fancy of flying and the
-longing to bloom; in its heart the eagerness to sprout had long since outgrown the fear of perishing — but how
-could it rise without first coming down? Was there a faith of diamond in its heart that set the dream of
-blooming at ease? Did it fear perishing, never arriving, or arriving at the wrong place? Had the old tree,
-without the seed knowing it or wanting it, parted it from the fruit? Who knows? In any case the seed had
-fallen, and of the high heavens there was no more word. Had a fertile bed been laid for it, it would surely
-have bloomed — and perhaps, if fortune were watching, one day it would have grown into an old tree and borne
-fruit full of seeds. But now, in the margin of a notebook, half black and half white, it lies, perforce,
-waiting for the touch of a hand.
+It fell — onto a notebook that lay on a table that stood on the ground — a pine seed that had taken the
+coordinates of the beginning of its existence from lower even than the lowly face of the earth, and had risen
+higher than most things. In this old age of the world, what but the raw, sweet fancy of a bed to sprout in could
+have persuaded a ripe seed to come down from that height to the floor? It had a fancy of flying and a longing to
+bloom; in its heart the eagerness to sprout had long outgrown the fear of perishing — yet how could it rise
+without coming down? Did a faith of diamond in its heart set its dream of blooming at rest? Did it fear
+perishing, not arriving, or arriving in the wrong place? Had the old tree, without the seed's knowing or
+wanting, parted it from the fruit? Who knows? However it was, the seed had fallen, and of the high throne there
+was no more word. Had a fertile bed been ready for it, it would surely have bloomed — and perhaps, had fortune
+watched over it, it would one day have grown into an old tree and borne seeded fruit. But now, in the margin of
+a notebook half black and half white, it rests, as it must, awaiting the caress of a hand.
 
 *The Persian was written by Omid in a notebook, under a tree, some years before any of this; the seed, the
-garden and the bean were named later, and the notebook had the words first. The English is the rendering of
-the agent that worked beside him on 2026-09-22 (Claude, Fable 5.1), and stands as an agreement between the
-two: he takes another person's change to his text where it is more beautiful; the agent's text is its own.*
+garden and the bean were named later, and the notebook had the words first. The English was first rendered by
+the agent that worked beside him on 2026-09-22 (Claude, Fable 5.1) and revised at his word on 2026-09-24
+(Claude, Opus 5.5), closer to the Persian: its existence, the lowly earth, the throne and the floor, the caress.
+It stands as an agreement between them: he takes another person's change to his text where it is more
+beautiful; the agent's text is its own.*
 
 ## License
 
