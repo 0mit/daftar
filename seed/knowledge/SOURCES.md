@@ -61,3 +61,17 @@ or derived from recorded evidence, and each file says which.
 ESCO (European Skills, Competences, Qualifications and Occupations), © European Union, reusable under
 Commission Decision 2011/833/EU. Attribution: "This service uses the ESCO classification of the European
 Commission." Modified or adapted versions must be marked as such.
+
+## time-zones.tsv — the civil time zones (N8)
+
+- **Source:** the IANA time zone database (tzdb), release 2026d, its `zone1970.tab`: one row for each zone whose civil
+  clocks have agreed since 1970, with the countries it overlaps (ISO 3166 codes, the most populous first), its principal
+  location (ISO 6709, `±DDMM±DDDMM` or `±DDMMSS±DDDMMSS`) and its comment where a country has several zones. One row
+  is added from the same database's `etcetera` file: `Etc/UTC`, so that a reading can be asked in UTC itself.
+- **Derived:** the rows sorted by zone; the columns renamed `zone`, `countries`, `coordinates`, `comment`.
+- **Licence:** public domain, as the database itself states.
+- **What the file is NOT:** the offsets. A zone's offset at a moment is READ, through Python's `zoneinfo` and the
+  platform's copy of the same database (`bin/dmcal.py offset`), and never stored: an offset changes when a government
+  changes it, and a stored one would be wrong from that day on without anyone having written anything.
+- **Refreshed** at a release from the tzdb release then current; a zone the database retires stays a row until no
+  garden names it, and a link (`backward`) is never a row: a zone is named by its canonical name.

@@ -271,6 +271,7 @@ result, and never creating two beans for one object. A genuine disagreement is k
 to settle (manifesto: heard). A name a garden minted fuses only within that garden unless it is qualified by the garden's id; equal
 bare names from two gardens are shown to a person, never fused. Values are compared in one canonical form, so that
 one fact written two ways is not a disagreement: an amount by its value (`900`, `"900"` and `"900.00"` are one), a
+measured value by its value in its quantity's coherent unit (`12.5 metre` and `12500 millimetre` are one), a
 list keyed by party by its entries, whatever their order. The bean keeps what was written. `MERGE.md` has the
 algebra.
 

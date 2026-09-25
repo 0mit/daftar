@@ -191,7 +191,10 @@ required term is covered once it fuses with another garden's bean that has it.
   quantity's count is never a float (MODEL.md, Agreements and money), and the gate warns about a float in `owns` or
   `details`.
 - **One fact written two ways is one value.** A quantity's count is compared in one form, the shortest exact decimal,
-  as a string: `900`, `"900"` and `"900.00"` are one amount, and so are `"12.50"` and `"12.5"`. A list of entries the
+  as a string: `900`, `"900"` and `"900.00"` are one amount, and so are `"12.50"` and `"12.5"`. And a measured value
+  is compared by its value in the coherent unit of its quantity (`dmunits.canonical`), its `u` or `accuracy` with it:
+  `12.5 metre` and `12500 millimetre` are one value, and the bean keeps what was written. No factor joins two
+  currencies, so an amount is compared in its own currency. A list of entries the
   law keys by an attribute (`keyed_by`, as `paid_by` and `borne_by` are keyed by `party`) is ordered by that key, so
   the same parties in another order are one list. The engine writes the canonical form; a bean keeps what was
   written.

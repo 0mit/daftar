@@ -79,6 +79,10 @@ jobs:
         run: python3 test/base.py
       - name: "view: a page of drawings checked as law, drawn by its asset, and closed to a viewer by default"
         run: python3 test/view.py
+      - name: "uncertainty: positions in one to three axes, temperature as a position, u and accuracy, counts, one value however written"
+        run: python3 test/uncertainty.py
+      - name: "zones: a position names its IANA zone, and an offset is read for a moment, never stored or guessed"
+        run: python3 test/zones.py
       - name: "licences: every file says whose it is and under which terms (REUSE)"
         run: reuse lint
       - name: "sign-off: every commit of a pull request is signed off by a person (CONTRIBUTING.md)"

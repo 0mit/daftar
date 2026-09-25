@@ -169,13 +169,14 @@ reference_frames:
   - { frame: static,  meaning: "fixed to a tectonic plate (or to a body with none): ground keeps its coordinates" }
   - { frame: dynamic, meaning: "fixed to the whole body: ground drifts in it, and a coordinate needs its epoch" }
 reference_systems:
-  - { crs: "EPSG:4326", body: earth, kind: geographic-2d, frame: dynamic, axes: [lat, lon],    meaning: "WGS 84, latitude and longitude in degrees — what a satellite receiver reports" }
+  - { crs: "EPSG:4326", body: earth, kind: geographic-2d, frame: dynamic, axes: [lat, lon],    ensemble_accuracy: { count: "2", unit: metre }, meaning: "WGS 84, latitude and longitude in degrees — what a satellite receiver reports — an ENSEMBLE of realisations, accurate to 2 m as EPSG states: no motion finer than that is read from it" }
   - { crs: "EPSG:4979", body: earth, kind: geographic-3d, frame: dynamic, axes: [lat, lon, h], meaning: "WGS 84 with ellipsoidal height in metres. Ellipsoidal height is NOT height above sea level" }
   - { crs: "EPSG:4978", body: earth, kind: geocentric,    frame: dynamic, axes: [x, y, z],     meaning: "WGS 84 geocentric: metres from the Earth's centre of mass" }
   - { crs: "EPSG:4258", body: earth, kind: geographic-2d, frame: static,  axes: [lat, lon],    meaning: "ETRS89: fixed to the Eurasian plate, so European ground keeps its coordinates. It and WGS 84 drift apart by about 2.5 cm a year" }
   - { crs: "EPSG:3857", body: earth, kind: projected,     frame: dynamic, axes: [x, y],        meaning: "Web Mercator: the plane nearly every web map is drawn on. For DRAWING; distances in it are wrong away from the equator" }
   - { crs: "EPSG:32639", body: earth, kind: projected,    frame: dynamic, axes: [e, n],        meaning: "WGS 84 / UTM zone 39N: metres on a plane, good within its six-degree zone. One of sixty; named because a projected system is where metres are honest" }
   - { crs: "EPSG:5773", body: earth, kind: vertical,      frame: static,  axes: [H],           meaning: "EGM96 height: metres above the geoid, which is what `above sea level` means" }
+  - { crs: "EPSG:9990", body: earth, kind: geographic-2d, frame: dynamic, axes: [lat, lon], frame_epoch: "2015.0", meaning: "ITRF2020: the realisation plate motion is published in" }
   - { crs: "IAU_2015:30100", body: moon, kind: geographic-2d, frame: static, axes: [lat, lon], meaning: "the Moon (2015), planetocentric latitude and longitude on a sphere" }
   - { crs: "IAU_2015:49900", body: mars, kind: geographic-2d, frame: static, axes: [lat, lon], meaning: "Mars (2015), planetocentric latitude and longitude on a sphere" }
 system_shape:
@@ -601,13 +602,47 @@ anchor_systems:
     form_note: "exactly 13 digits: epoch MILLISECONDS, never seconds. One length, one meaning — a 10-digit value would be a different unit wearing the same shape, which is the ambiguity `unit` was added to stop."
     establishes: false
     why: "a moment corroborates when something was done and never fixes which being did it. It differs from `gregorian-civil` in one useful way: it carries no offset, so it cannot be misread the way a +03 label on a UTC reading was misread in this estate's own journal."
+  - system: kelvin-scale
+    dimension: temperature
+    neighbours: metered
+    restrictions: { lines: 1, metered: temperature }
+    meaning: "a temperature in kelvins, counted from absolute zero"
+    pattern: '^K:\d+(\.\d+)?$'
+    form_note: "`K:<kelvins>`"
+    example: "K:309.55"
+    establishes: false
+    why: "a temperature says how hot, never what"
+  - system: celsius-scale
+    dimension: temperature
+    same_ground_as: [kelvin-scale]
+    crosswalk: computed
+    neighbours: metered
+    restrictions: { lines: 1, metered: temperature }
+    meaning: "a temperature in degrees Celsius: K = C + 273.15, exactly"
+    pattern: '^C:-?\d+(\.\d+)?$'
+    form_note: "`C:<degrees>`"
+    example: "C:36.4"
+    establishes: false
+    why: "as for kelvin-scale"
+  - system: fahrenheit-scale
+    dimension: temperature
+    same_ground_as: [celsius-scale]
+    crosswalk: computed
+    neighbours: metered
+    restrictions: { lines: 1, metered: temperature }
+    meaning: "a temperature in degrees Fahrenheit: F = C × 9/5 + 32, exactly"
+    pattern: '^F:-?\d+(\.\d+)?$'
+    form_note: "`F:<degrees>`"
+    example: "F:97.5"
+    establishes: false
+    why: "as for kelvin-scale"
   - system: geographic
     dimension: place
     neighbours: metered
     restrictions: { lines: 3, metered: length }
     meaning: "a position BY COORDINATES, in a named coordinate reference system, on the body that system is fixed to. THE ROOT OF PLACE: every other place system resolves through this one. Named here also because CIVIL TIME RESOLVES THROUGH IT — an offset is a geographic fact wearing a time costume."
-    pattern: '^[A-Z][A-Z0-9_]*:[0-9]+;-?\d+(\.\d+)?(,-?\d+(\.\d+)?){1,2}(@\d{4}(\.\d+)?)?$'
-    form_note: "`<authority>:<code>;<coordinates>[@<epoch>]` — `EPSG:4326;35.6892,51.3890@2026.72`. A COORDINATE IS NEVER BARE: a plain `<lat>,<lon>` names no datum, no axis order and no body, so two readers can disagree by hundreds of metres and neither be wrong. Coordinates in the axis order the system declares; the epoch when the frame is dynamic."
+    pattern: '^[A-Z][A-Z0-9_]*:[0-9]+(\+[0-9]+)?;-?\d+(\.\d+)?(,-?\d+(\.\d+)?){0,2}(@\d{4}(\.\d+)?)?$'
+    form_note: "`<authority>:<code>;<coordinates>[@<epoch>]` — `EPSG:4326;35.6892,51.3890@2026.72`. A COORDINATE IS NEVER BARE: a plain `<lat>,<lon>` names no datum, no axis order and no body, so two readers can disagree by hundreds of metres and neither be wrong. Coordinates in the axis order the system declares; the epoch when the frame is dynamic. A VERTICAL system takes one coordinate (`EPSG:5773;-12.5`), and a COMPOUND one, `<horizontal>+<vertical code>`, three (`EPSG:4326+5773;10.1,20.2,-3.5`)."
     example: "EPSG:4326;35.6892,51.3890@2026.72"
     establishes: false
     why: "a coordinate says where something IS and never which thing it is: two beings can stand in one spot, and one being can move"
@@ -968,6 +1003,7 @@ dimensions:
   - { dimension: mass,        meaning: "how much matter" }
   - { dimension: information, meaning: "how much can be stored or carried" }
   - { dimension: money,       meaning: "how much value, in a currency" }
+  - { dimension: temperature, meaning: "how hot: thermodynamic temperature, an SI base quantity" }
 quantities:
   - { quantity: duration,     of: { time: 1 } }
   - { quantity: frequency,    of: { time: -1 } }
@@ -982,6 +1018,12 @@ quantities:
   - { quantity: level,        of: {}, scale: logarithmic }
   - { quantity: attenuation,  of: { length: -1 }, scale: logarithmic }
   - { quantity: ratio,        of: {}, meaning: "a part of a whole, or a rate: dimensionless and linear — a share, a rate of interest" }
+  - { quantity: density,      of: { mass: 1, length: -3 } }
+  - { quantity: pressure,     of: { mass: 1, length: -1, time: -2 }, meaning: "a force on an area. A gauge pressure — above the air's — says so in its property, never in its unit" }
+  - { quantity: volume-flow,  of: { length: 3, time: -1 } }
+  - { quantity: plane-angle,  of: {}, meaning: "an angle in a plane: dimensionless and its own kind, as `ratio` and `level` are" }
+  - { quantity: temperature-difference, of: { temperature: 1 }, meaning: "how much hotter: the measure of a region of the `temperature` aspect, as a duration is of `time`. A temperature READING is a position on that aspect, never this" }
+  - { quantity: number,       of: {}, meaning: "how many things, counted: seats, stems, units of stock. Dimensionless and its own kind, apart from `ratio`, which is a share" }
   - quantity: money
     of: { money: 1 }
     units_from: { registry: currencies, take: code, digits: digits }
@@ -1024,6 +1066,25 @@ units:
   - { unit: decibel, quantity: level, factor: [1, 1], meaning: "a RATIO on a logarithmic scale: ten decibels is a factor of ten in power. Levels ADD where the ratios they stand for multiply" }
   - { unit: decibel-per-metre, quantity: attenuation, factor: [1, 1], meaning: "level lost per metre travelled" }
   - { unit: decibel-per-kilometre, quantity: attenuation, factor: [1, 1000], meaning: "level lost per kilometre: what a fibre is rated in" }
+  - { unit: centimetre, quantity: length, factor: [1, 100], meaning: "a hundredth of a metre" }
+  - { unit: millilitre, quantity: volume, factor: [1, 1000000], meaning: "a thousandth of a litre" }
+  - { unit: kilogram-per-cubic-metre, quantity: density, factor: [1, 1], meaning: "the coherent unit of density" }
+  - { unit: gram-per-cubic-centimetre, quantity: density, factor: [1000, 1], meaning: "a gram in a cubic centimetre" }
+  - { unit: pascal, quantity: pressure, factor: [1, 1], meaning: "a newton on a square metre" }
+  - { unit: kilopascal, quantity: pressure, factor: [1000, 1], meaning: "a thousand pascals" }
+  - { unit: millimetre-of-mercury, quantity: pressure, factor: [26664477483, 200000000], meaning: "the conventional millimetre of mercury, 133.322387415 Pa: mercury of density 13.5951 g/cm3 under standard gravity 9.80665 m/s2 (a definition, not one vendor's rounding)" }
+  - { unit: cubic-metre-per-second, quantity: volume-flow, factor: [1, 1], meaning: "the coherent unit of a volume flow" }
+  - { unit: litre-per-minute, quantity: volume-flow, factor: [1, 60000], meaning: "a litre each minute" }
+  - { unit: degree, quantity: plane-angle, factor: [1, 1], meaning: "the coherent unit of plane-angle HERE: a radian is 180/π degrees, and π is no ratio of whole numbers" }
+  - { unit: arcsecond, quantity: plane-angle, factor: [1, 3600], meaning: "a 3600th of a degree" }
+  - { unit: kelvin, quantity: temperature-difference, factor: [1, 1], meaning: "a step of one kelvin, which is a step of one degree Celsius" }
+  - { unit: julian-year, quantity: duration, factor: [31557600, 1], meaning: "365.25 days of 86400 seconds (IAU): a measure of fixed length, never a calendar year" }
+  - { unit: annus, quantity: duration, factor: [6311385089, 200], meaning: "31556925.445 seconds (IUPAC-IUGS 2011): the year an age before the present is counted in; a measure of fixed length" }
+  - { unit: kilo-annus, quantity: duration, factor: [31556925445, 1], meaning: "a thousand anni" }
+  - { unit: mega-annus, quantity: duration, factor: [31556925445000, 1], meaning: "a million anni" }
+  - { unit: giga-annus, quantity: duration, factor: [31556925445000000, 1], meaning: "a thousand million anni" }
+  - { unit: millimetre-per-julian-year, quantity: speed, factor: [1, 31557600000], meaning: "what a plate or a plateau moves at" }
+  - { unit: item, quantity: number, factor: [1, 1], meaning: "one counted thing" }
 vacancy_reasons: [prediction, impossible, out-of-context, universal]
 
 # == LEAF SUBSUMPTION ORDERS ==
@@ -1124,6 +1185,28 @@ vacancies:
   - { at: "registry:units", position: percent, reason: universal, why: "a unit of the `ratio` quantity — a share of a cost, a rate of interest — declared as the four ways a ratio is written, because an amount a clause asks for may be one. The quantity machinery they belong to is occupied by every measured value" }
   - { at: "registry:units", position: per-mille, reason: universal, why: "a unit of the `ratio` quantity — a share of a cost, a rate of interest — declared as the four ways a ratio is written, because an amount a clause asks for may be one. The quantity machinery they belong to is occupied by every measured value" }
   - { at: "registry:units", position: basis-point, reason: universal, why: "a unit of the `ratio` quantity — a share of a cost, a rate of interest — declared as the four ways a ratio is written, because an amount a clause asks for may be one. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: centimetre, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: millilitre, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: kilogram-per-cubic-metre, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: gram-per-cubic-centimetre, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: pascal, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: kilopascal, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: millimetre-of-mercury, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: cubic-metre-per-second, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: litre-per-minute, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: degree, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: arcsecond, reason: universal, why: "the measures a body, a sample or a machine is read in — a length, a volume, a density, a pressure, a flow, an angle — declared whole with their exact factors (24.0, step 3) so that no reading waits for its unit, and none is converted to a unit one vendor chose. The quantity machinery they belong to is occupied by every measured value" }
+  - { at: "registry:units", position: kelvin, reason: universal, why: "a step on the temperature line: the measure of a region of the `temperature` aspect, never a reading of it (24.0, step 3). Declared whole with the three scales a reading is written on" }
+  - { at: "registry:units", position: julian-year, reason: universal, why: "the fixed-length years deep time and plate motion are counted in — never a calendar year, which varies (24.0, step 3). Declared whole so that an age before the present and a drift of millimetres a year are written in the units their sciences publish in" }
+  - { at: "registry:units", position: annus, reason: universal, why: "the fixed-length years deep time and plate motion are counted in — never a calendar year, which varies (24.0, step 3). Declared whole so that an age before the present and a drift of millimetres a year are written in the units their sciences publish in" }
+  - { at: "registry:units", position: kilo-annus, reason: universal, why: "the fixed-length years deep time and plate motion are counted in — never a calendar year, which varies (24.0, step 3). Declared whole so that an age before the present and a drift of millimetres a year are written in the units their sciences publish in" }
+  - { at: "registry:units", position: mega-annus, reason: universal, why: "the fixed-length years deep time and plate motion are counted in — never a calendar year, which varies (24.0, step 3). Declared whole so that an age before the present and a drift of millimetres a year are written in the units their sciences publish in" }
+  - { at: "registry:units", position: giga-annus, reason: universal, why: "the fixed-length years deep time and plate motion are counted in — never a calendar year, which varies (24.0, step 3). Declared whole so that an age before the present and a drift of millimetres a year are written in the units their sciences publish in" }
+  - { at: "registry:units", position: millimetre-per-julian-year, reason: universal, why: "the fixed-length years deep time and plate motion are counted in — never a calendar year, which varies (24.0, step 3). Declared whole so that an age before the present and a drift of millimetres a year are written in the units their sciences publish in" }
+  - { at: "registry:units", position: item, reason: universal, why: "one counted thing — seats, stems, units of stock — the unit of the `number` quantity (24.0, N22), apart from `ratio`, which is a share. Occupied wherever an amount counts things" }
+  - { at: "registry:anchor_systems", position: kelvin-scale, reason: universal, why: "a scale a temperature is READ on (24.0, step 3): the three are declared beside each other so that no scale is the one a reading must be converted to, each crossing to the others by exact arithmetic" }
+  - { at: "registry:anchor_systems", position: celsius-scale, reason: universal, why: "a scale a temperature is READ on (24.0, step 3): the three are declared beside each other so that no scale is the one a reading must be converted to, each crossing to the others by exact arithmetic" }
+  - { at: "registry:anchor_systems", position: fahrenheit-scale, reason: universal, why: "a scale a temperature is READ on (24.0, step 3): the three are declared beside each other so that no scale is the one a reading must be converted to, each crossing to the others by exact arithmetic" }
   - { at: "registry:facets", position: financial, reason: universal, why: "who pays for a being and is paid by it: in the standard because a stranger's garden expects it beside `legal`, `technical` and `experience`, the facets that are occupied" }
   - { at: "words.form", position: written, reason: universal, why: "an agreement's words, declared whole: written down, spoken aloud, or not yet put into words — the three ways any agreement stands, which a stranger keeping one expects to find. `words` is occupied through `spoken`; `written` is taken the day an agreement's text is kept in a `document`" }
   - { at: "words.form", position: unstated, reason: universal, why: "an agreement's words, declared whole: written down, spoken aloud, or not yet put into words — the three ways any agreement stands, which a stranger keeping one expects to find. `words` is occupied through `spoken`; `unstated` is an agreement that is named and whose terms nobody has put into words yet" }
@@ -1207,7 +1290,7 @@ recurrence_form:
 uncertainty_form:
   u:        "{ count, unit } — the STANDARD uncertainty of the value (JCGM 100:2008, 2.3.1), in a unit of the value's own quantity, or of `ratio` for a relative one. A positive count: a value known exactly states none"
   accuracy: "{ count, unit, kind } — an accuracy AS ITS MAKER STATED IT, with its kind (`accuracy_kinds`), in place of `u`. A reader turns it into u and says that it did; a writer never does"
-  where:    "INSIDE a quantity — `{count, unit, u}` or `{count, unit, accuracy}`; BESIDE a value that is not a quantity — a position, a series channel — as that entry's attributes `u` and `accuracy`, in the same two forms"
+  where:    "INSIDE a quantity — `{count, unit, u}` or `{count, unit, accuracy}`; BESIDE a value that is not a quantity — a position, a series channel — as that entry's attributes `u` and `accuracy`, in the same two forms, and `u_<axis>` for one axis of a position where its axes are known apart (`u_vertical`)"
   absent:   "a value stating neither is exact as written. A reader combining it prints `u not stated` and invents none"
   requires: "at most one of `u` and `accuracy`"
 accuracy_kinds:
@@ -1487,6 +1570,15 @@ aspects:
     acyclic: false
     ends: bounded
     domain: { systems: none }
+  - aspect: temperature
+    meaning: "how hot: a position on the one line of thermodynamic temperature, bounded below by absolute zero"
+    figure: sequence
+    lines: 1
+    metered: temperature
+    order: total
+    acyclic: true
+    ends: open-end
+    domain: { systems: temperature }
 
 # == PROFILES ==
 # == KNOWLEDGE: published classifications as UNIVERSAL ANCHORS ==
@@ -1956,7 +2048,7 @@ profiles:
           list:      { in: { key_of: view_bindings }, meaning: "scoreboard: the live-series of what is firing" }
           funnels:   { in: { entries: { label: { required: true, in: prose }, stages: { required: true, in: { entries: { label: { required: true, in: prose }, tally: { required: true, in: { key_of: view_bindings } }, counts: { in: prose }, what: { in: prose }, stops: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } }, marks: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } } } } } } }, meaning: "funnel: each stream, its stages in order with how many reached each and what each counts, and where the rest stopped or were marked" }
           window:    { in: prose, meaning: "funnel: the span its counts cover, in words" }
-          rollcall:  { in: { entries: { label: { required: true, in: prose }, per_item: { required: true, in: { key_of: view_bindings } }, idle: { in: { entries: { item: { required: true, in: any } } } }, notes: { in: { prose: named } } } }, meaning: "funnel: the parts called by name, each up or down, and the items known to carry nothing" }
+          rollcall:  { in: { entries: { label: { required: true, in: prose }, per_item: { required: true, in: { key_of: view_bindings } }, idle: { in: { entries: { member: { required: true, in: any } } } }, notes: { in: { prose: named } } } }, meaning: "funnel: the parts called by name, each up or down, and the items known to carry nothing" }
           step_at:   { in: { key_of: view_bindings }, meaning: "race: the value that says which step of the procedure the run is at — 0 before the first, n at the n-th of its `steps`" }
           elapsed:   { in: { key_of: view_bindings }, meaning: "race: how long it has run" }
           deadline:  { in: extent, meaning: "race: how long after its start it must be done — a length on `time`" }
@@ -2688,10 +2780,15 @@ terms:
     schema:
       shape: list_of_entries
       required_on_gene: [document]
+      at_most_one_of: [[u, accuracy]]
       attrs:
         system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which anchor system this position is stated in — it selects the form the position must take" }
         openness:  { required: true, in: [here, elsewhere, unreachable, unknown], meaning: "here (reachable from the machine that recorded it) | elsewhere (reachable, and NOT from here) | unreachable (known, and cannot be reached) | unknown (nobody has established where it is)" }
         observed:  { in: { type: date }, meaning: "ABSOLUTE date this location was checked. A location ages: a tree is moved, a branch is checked out elsewhere, a printout is filed." }
+        u:          { in: { quantity: length }, meaning: "the position's HORIZONTAL standard uncertainty (`uncertainty_form`); for a position on one vertical axis, its only one" }
+        u_vertical: { in: { quantity: length }, meaning: "the standard uncertainty of its height, where it states one: where most local ground motion is, and where a receiver is worst" }
+        accuracy:   { in: { entries: { count: { required: true, in: { type: count } }, unit: { required: true, in: { registry: units, take: unit } }, kind: { required: true, in: { registry: accuracy_kinds, take: kind } } } }, meaning: "instead of `u`: the horizontal accuracy as the receiver stated it, with its kind" }
+        zone:       { in: { registry: time-zones, take: zone }, meaning: "the civil time zone in force at this position, a zone of the IANA time zone database: an offset is READ from it for a moment, never stored (N8)" }
         at:        { in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position itself, in that system's ONE canonical form. Required unless openness is `unknown`, which is precisely the case where there is no position to state." }
         note:      { in: prose, meaning: "optional prose — the only place a `physical` address can live, since that system declares no canonical form" }
       cells:

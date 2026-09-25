@@ -780,6 +780,87 @@ were measured finer and rounded. Two positions whose resolutions OVERLAP ARE NOT
 that cannot say so invents an order instead — which is the failure this registry exists to make
 expressible. Keyed by `dimension`, so a length or an angle joins without a rule-change.
 
+## aspects[temperature]
+
+A TEMPERATURE IS WHERE SOMETHING IS ON A LINE, NOT HOW MUCH OF SOMETHING IT HAS. 36.4 °C is not 36.4 of anything: twice
+it is not "twice as hot", and adding two readings means nothing. What is additive is a DIFFERENCE — a rise of 2.5
+kelvin — exactly as a moment is a position on time and only a duration is a quantity. So the law says it the way it
+already says time: an aspect of one metered line (`temperature`), scales that are position systems on it
+(`kelvin-scale`, `celsius-scale`, `fahrenheit-scale`), and a quantity for the length of a region of it,
+`temperature-difference`, whose unit is the kelvin. That keeps the rule that a unit's factor is a pair of whole numbers
+with no offset (`## quantities`): the offset between Celsius and kelvin is the crossing between two SYSTEMS, computed
+exactly (`crosswalk: computed`, as the calendars cross), and never a property of a unit.
+
+The three scales are declared beside each other and none is the one a reading must be converted to: a thermometer that
+reads Fahrenheit is recorded in Fahrenheit, as a date is recorded in the calendar it was written in (manifesto:
+sibling).
+
+## anchor_systems[celsius-scale]
+
+`K = C + 273.15` and `F = C × 9/5 + 32` are definitions, so the crossing is exact arithmetic on decimals; nothing about
+it is observed. `same_ground_as` says the three scales position the one line, which is what lets a reading in one be
+compared with a reading in another at all.
+
+## quantities[number]
+
+HOW MANY THINGS, COUNTED, IS NOT A SHARE. Two seats at a recital, forty stems in a crate, three units of stock: each is
+dimensionless, and each would have fitted `ratio` by its dimensions alone. It is kept apart for the reason `level` is:
+it composes differently. Counts add; a share of a whole does not add to another share of another whole. So `number`
+is its own kind, and its one unit is `item`. Not `each`, which the law already uses for "the same place in each cell"
+(`recurrence_form.each`) and for one occurrence for each member of a selection: a unit named `each` would be a second
+sense of one name.
+
+## quantities[pressure]
+
+A gauge pressure — how far above the air around it — and an absolute one are the same quantity measured from two
+zeros. The zero is a property of what was measured (a tyre's gauge pressure, an atmosphere's absolute one), so it is
+said in the property, and the unit stays one: `kilopascal` does not come in a gauge and an absolute kind. The
+millimetre of mercury is the conventional one, a definition, so its factor is exact.
+
+## units[annus]
+
+AN AGE BEFORE THE PRESENT IS COUNTED IN A YEAR OF FIXED LENGTH. A calendar year varies — 365 or 366 days, and further
+back a different calendar altogether — so an age of 12 million years cannot be counted in calendar years without
+choosing whose. The geological sciences fixed the annus (IUPAC-IUGS, 2011) at 31556925.445 seconds, and astronomy the
+julian year at exactly 365.25 days; both are declared, each as what its science publishes in, and neither is a
+calendar year. A plate's drift is written in millimetres per julian year because that is how its velocities are
+published.
+
+## reference_systems
+
+A REALISATION IS NOT ITS ENSEMBLE. WGS 84 as a receiver reports it is an ensemble of several realisations, and EPSG
+states it accurate to about 2 m: two positions in it that differ by less than that may be one place. So the row says
+so (`ensemble_accuracy`), and a reader prints it beside a position, so that nobody reads a plateau's motion of
+millimetres a year out of it. Motion that fine is published in a single realisation, ITRF2020 (`EPSG:9990`), whose
+frame epoch is given in its row.
+
+A position may also be VERTICAL — one height, on one axis — or COMPOUND, a horizontal system and a vertical one written
+together (`EPSG:4326+5773`), as EPSG writes compound systems: a borehole's collar has a place and a height, and neither
+system alone says both.
+
+## terms[located_at].schema.attrs.u
+
+HOW WELL A POSITION IS KNOWN IS PART OF THE POSITION. A phone's fix and a surveyor's differ by three orders of
+magnitude, and a position that does not say which cannot be compared with another honestly. Horizontal and vertical are
+stated apart (`u`, `u_vertical`) because they are known apart: a satellite receiver is worst in height, which is also
+where most local ground motion is. `accuracy` keeps what a receiver stated, with its kind, because the four meanings a
+device's "accuracy" can have (a bound, one standard deviation, 95 in 100, or nothing said) turn into four different
+standard uncertainties, and only a reader that knows which may turn it into one (`uncertainty_form`).
+
+## terms[located_at].schema.attrs.zone
+
+AN OFFSET IS READ FROM A ZONE, NEVER STORED. A civil clock's offset is the rule a government set for a zone, at a
+moment, and governments change the rule: a stored offset is right until the day it silently is not. So a position says
+which zone of the IANA database is in force there, and a reader asks the database for the offset at the moment it
+needs (`dmcal.py --offset`). The zones are the database's canonical ones (`registry_files[time-zones]`), so a name is
+checked against it and not guessed.
+
+## registry_files[time-zones]
+
+One row per zone whose clocks have agreed since 1970, as the IANA database's `zone1970.tab` lists them, and `Etc/UTC`
+for a reading in UTC itself. The file holds names and places, never offsets: those are read from the platform's copy of
+the same database at the moment asked, so the file never has to change when a government moves its clocks.
+
 ## vacancy_reasons
 
 == VACANCIES (Tier-0). P6/B2: whoever DECLARES a position accounts for it, so the duty to explain
@@ -2411,8 +2492,9 @@ A logarithmic quantity is marked because it COMPOSES differently: along a chain 
 instance of a wider idea — how a quantity composes along a walk (sum, product, or the weakest link, as a generated
 fact's standing already does) — which is noted here and not yet built.
 
-Considered and refused: temperature in degrees Celsius, which needs an offset as well as a factor; and compact strings
-such as `12.5 m/s`, a second spelling of what `{ count, unit }` already says.
+Considered and refused: temperature in degrees Celsius as a UNIT, which needs an offset as well as a factor; and compact
+strings such as `12.5 m/s`, a second spelling of what `{ count, unit }` already says. Temperature arrived at 24.0 by the
+other door (`aspects[temperature]`): a reading is a position on a line, and only a difference is a quantity.
 
 ## quantities[money]
 

@@ -650,7 +650,7 @@ def operate(key, v):
             for s in (f.get("stages") or []) if isinstance(s, dict)]} for f in v["funnels"] if isinstance(f, dict)]
     if v.get("rollcall"):
         op["rollcall"] = [{"label": r.get("label", ""), "per_item": r.get("per_item"),
-                           "idle": [str(x.get("item")) for x in (r.get("idle") or []) if isinstance(x, dict)],
+                           "idle": [str(x.get("member")) for x in (r.get("idle") or []) if isinstance(x, dict)],
                            "notes": r.get("notes") if isinstance(r.get("notes"), dict) else {}}
                           for r in v["rollcall"] if isinstance(r, dict)]
     steps = steps_of(v)

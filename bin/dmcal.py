@@ -4,6 +4,7 @@
     python3 bin/dmcal.py 2026-09-20                      # a position, read in every calendar that reckons by rule
     python3 bin/dmcal.py persian:1405-06-29 hebrew       # one position, in one other calendar
     python3 bin/dmcal.py --day 739880                    # a day number, in every calendar
+    python3 bin/dmcal.py --offset Pacific/Auckland 2026-04-04T13:30Z    # a zone's civil offset at a moment, read
 
 A CALENDAR IS NOT TIME. It is one PARTITION of the line of days into named cells — years, months — and the law
 declares each as a positioning system with its own levels (`seed/std-vocab.md`, `anchor_systems`, dimension
@@ -26,8 +27,12 @@ arithmetic alone would read it as the day after the 29th — a day nobody named.
 back unchanged from its own day (`from_day(to_day(p)) == p`), and `to_day` raises ValueError for one that does not; so
 it does for a year outside the days reckoned here (FIRST_DAY .. LAST_DAY, below), and `from_day` for a day outside them.
 
-Pure: it reads nothing, writes nothing, imports nothing outside the standard library — except, run as a command, the
-module that makes its output UTF-8 on every platform (bin/dmparse.py).
+A CIVIL OFFSET IS READ, NEVER STORED (24.0, N8). `offset(zone, moment)` asks the platform's copy of the IANA time zone
+database, through the standard library's `zoneinfo`, what offset a zone kept at that moment; where the machine has no
+copy it raises NoZoneData naming the fix, and guesses none.
+
+Pure: it writes nothing and imports nothing outside the standard library, and reads nothing but the zone database for
+an offset — except, run as a command, the module that makes its output UTF-8 on every platform (bin/dmparse.py).
 """
 import datetime, math, os, re, sys
 
@@ -533,6 +538,32 @@ def write_moment(ms, calendar, offset, resolution='minute'):
     return f"{from_day(day, calendar)} {clock}{offset}"
 
 
+class NoZoneData(Exception):
+    """This machine holds no copy of the IANA time zone database, so no civil offset can be read here."""
+
+
+def offset(zone, instant):
+    """The civil offset in force in `zone` (a row of `time-zones`, `Pacific/Auckland`) at `instant` (a moment, as
+    `moment` reads one), in minutes east of UTC — READ from the platform's copy of the IANA database through `zoneinfo`,
+    never stored and never guessed: an offset is the zone's rule at that moment, and a government can change the rule.
+    NoZoneData where this machine holds no zone database; ValueError for a zone the database does not name."""
+    import zoneinfo
+    try:
+        tz = zoneinfo.ZoneInfo(str(zone))
+    except zoneinfo.ZoneInfoNotFoundError:
+        if not zoneinfo.available_timezones():
+            raise NoZoneData(f"this machine holds no time zone database, so the offset of {zone} cannot be read here — "
+                             f"install one (`pip install tzdata`), and no offset is guessed meanwhile") from None
+        raise ValueError(f"'{zone}' is not a zone of the time zone database — a row of seed/knowledge/time-zones.tsv, "
+                         f"`Region/City`") from None
+    except ValueError as e:
+        raise ValueError(f"'{zone}' is not a zone name: {e}") from None
+    ms = moment(instant).ms - UNIX_DAY * DAY_MS
+    at = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc) + datetime.timedelta(milliseconds=ms)
+    td = at.astimezone(tz).utcoffset()
+    return (td.days * 86400 + td.seconds) // 60                   # whole numbers throughout: no float reaches an offset
+
+
 EVERY = ['gregory', 'iso8601', 'julian', 'persian', 'islamic-civil', 'islamic-tbla', 'hebrew', 'coptic', 'ethiopic',
          'ethioaa', 'indian', 'buddhist', 'roc', 'japanese', 'julian-day', 'mayan-long-count']
 
@@ -546,6 +577,16 @@ def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         # the interpreter as it is named where this runs: `python3` may be the Microsoft Store's alias on Windows
         print(__doc__.replace('python3 bin/', ('python' if os.name == 'nt' else 'python3') + ' bin/')); return 0
+    if argv[0] == '--offset':
+        # `--offset <zone> <moment>`: the civil offset read for that moment, never stored
+        if len(argv) != 3:
+            print("dmcal: --offset takes a zone and a moment, e.g. --offset Pacific/Auckland 2026-04-05T13:30Z"); return 2
+        try:
+            m = offset(argv[1], argv[2])
+        except (NoZoneData, ValueError) as e:
+            print(f"dmcal: {e}"); return 1
+        print(f"{argv[1]} at {argv[2]}: {'+' if m >= 0 else '-'}{abs(m) // 60:02d}:{abs(m) % 60:02d}")
+        return 0
     if argv[0] == '--day' and (len(argv) < 2 or not re.fullmatch(r'-?[0-9]+', argv[1], re.ASCII)):
         print("dmcal: --day takes a day number, e.g. --day 739880"); return 2
     try:

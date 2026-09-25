@@ -4,6 +4,7 @@
     python3 bin/dmgeo.py "EPSG:4326;35.6892,51.3890"                  # read it: body, kind, axes, its cells
     python3 bin/dmgeo.py "EPSG:4326;35.6892,51.3890" "EPSG:4326;41.0082,28.9784"    # and how far apart
     python3 bin/dmgeo.py "IAU_2015:49900;-4.5895,137.4417"            # the same machinery, on Mars
+    python3 bin/dmgeo.py "EPSG:4326+5773;10.1,20.2,-3.5"              # a compound position: horizontal + vertical
 
 ISO 19111 and ISO 19112 divide spatial referencing in two, and the law follows them:
 
@@ -28,41 +29,78 @@ presented as a position is the defect this whole design exists to refuse.
 Pure: standard library only. It imports dmparse, which is too, for the one thing every tool shares: its output is
 UTF-8 on every platform, so a position named in any script prints intact through a pipe on Windows.
 """
-import math, os, re, sys
+import functools, math, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr
 
-# mean radii in metres (IAU). A body is a row of the law's `bodies` registry; this is the copy a tool can compute
-# with, held equal to it by test/calendars_and_coordinates.py.
-BODIES = {'earth': 6371008.8, 'moon': 1737400.0, 'mars': 3389500.0}
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# the reference systems this tool can READ. Any `<authority>:<code>` is a legal position in the law; a system not
-# listed here is simply one this tool does not know the axes of, and it says so.
-SYSTEMS = {
-    'EPSG:4326':      {'body': 'earth', 'kind': 'geographic-2d', 'axes': ('lat', 'lon'),      'frame': 'dynamic'},
-    'EPSG:4979':      {'body': 'earth', 'kind': 'geographic-3d', 'axes': ('lat', 'lon', 'h'), 'frame': 'dynamic'},
-    'EPSG:4258':      {'body': 'earth', 'kind': 'geographic-2d', 'axes': ('lat', 'lon'),      'frame': 'static'},
-    'EPSG:3857':      {'body': 'earth', 'kind': 'projected',     'axes': ('x', 'y'),          'frame': 'dynamic'},
-    'IAU_2015:30100': {'body': 'moon',  'kind': 'geographic-2d', 'axes': ('lat', 'lon'),      'frame': 'static'},
-    'IAU_2015:49900': {'body': 'mars',  'kind': 'geographic-2d', 'axes': ('lat', 'lon'),      'frame': 'static'},
-}
-FORM = re.compile(r'^([A-Z][A-Z0-9_]*:[0-9]+);(-?\d+(?:\.\d+)?(?:,-?\d+(?:\.\d+)?){1,2})(?:@(\d{4}(?:\.\d+)?))?$')
+
+@functools.lru_cache(maxsize=None)
+def _rows(root):
+    """(bodies, reference_systems) as the law in `root` declares them. In a garden, the law is what the gate loaded —
+    the standard and the garden's own additions; in the standard's own repository, the standard alone. No copy is held
+    here: a tool that kept its own list of systems and radii was a second law, held equal to the first by a test."""
+    if os.path.exists(os.path.join(root, 'VOCAB.md')):
+        import dmcheck
+        return list(dmcheck.registry('bodies') or []), list(dmcheck.registry('reference_systems') or [])
+    import yaml
+    with open(os.path.join(root, 'seed', 'std-vocab.md'), encoding='utf-8') as fh:
+        fm = yaml.safe_load(dmparse.split_front_matter(fh.read())[0])
+    return list(fm.get('bodies') or []), list(fm.get('reference_systems') or [])
+
+
+def bodies(root=ROOT):
+    """{body: mean radius in metres}, the law's `bodies` rows."""
+    return {b['body']: float(b['mean_radius_m']) for b in _rows(root)[0] if isinstance(b, dict) and b.get('body')}
+
+
+def systems(root=ROOT):
+    """{crs: {body, kind, axes, frame, ensemble_accuracy?, frame_epoch?}}, the law's `reference_systems` rows — the
+    systems this tool can READ. Any `<authority>:<code>` is a legal position in the law; a system with no row is one
+    this tool does not know the axes of, and it says so."""
+    out = {}
+    for r in _rows(root)[1]:
+        if isinstance(r, dict) and r.get('crs'):
+            out[r['crs']] = {k: (tuple(v) if k == 'axes' else v) for k, v in r.items() if k not in ('crs', 'meaning')}
+    return out
+
+
+# `<authority>:<code>[+<vertical code>];<one to three coordinates>[@<epoch>]` — the law's `geographic` pattern
+FORM = re.compile(r'^([A-Z][A-Z0-9_]*:[0-9]+)(?:\+([0-9]+))?;(-?\d+(?:\.\d+)?(?:,-?\d+(?:\.\d+)?){0,2})(?:@(\d{4}(?:\.\d+)?))?$')
 _B32 = '0123456789bcdefghjkmnpqrstuvwxyz'
 
 
-def parse(position):
+def parse(position, root=ROOT):
     m = FORM.match(str(position).strip())
     if not m:
-        raise ValueError(f"'{position}' is not `<authority>:<code>;<coordinates>[@<epoch>]` — a coordinate is never bare")
-    crs, coords, epoch = m.group(1), [float(x) for x in m.group(2).split(',')], m.group(3)
-    info = SYSTEMS.get(crs)
+        raise ValueError(f"'{position}' is not `<authority>:<code>[+<vertical code>];<one to three coordinates>[@<epoch>]` — "
+                         f"a coordinate is never bare")
+    crs, vcode, coords, epoch = m.group(1), m.group(2), [float(x) for x in m.group(3).split(',')], m.group(4)
+    known = systems(root)
+    info = dict(known[crs]) if crs in known else None
+    if vcode is not None:
+        # A COMPOUND SYSTEM: a horizontal one and a vertical one of the same authority, their axes in that order
+        vcrs = crs.split(':')[0] + ':' + vcode
+        vinfo = known.get(vcrs)
+        if info and vinfo:
+            if vinfo.get('kind') != 'vertical' or not info.get('kind', '').startswith('geographic-2d') \
+                    and info.get('kind') != 'projected':
+                raise ValueError(f"{crs}+{vcode}: a compound position is a horizontal system and a vertical one — "
+                                 f"{crs} is {info.get('kind')} and {vcrs} is {vinfo.get('kind')}")
+            if info.get('body') != vinfo.get('body'):
+                raise ValueError(f"{crs} is on {info.get('body')} and {vcrs} on {vinfo.get('body')}: one position is on one body")
+            info = dict(info, kind='compound', axes=tuple(info['axes']) + tuple(vinfo['axes']), vertical=vcrs)
+        else:
+            info = None
+        crs = f"{crs}+{vcode}"
     out = {'crs': crs, 'coordinates': coords, 'epoch': float(epoch) if epoch else None, 'known': info is not None}
     if info:
         out.update(info)
         if len(coords) != len(info['axes']):
             raise ValueError(f"{crs} has axes {info['axes']} and {len(coords)} coordinates were given")
-        if info['kind'].startswith('geographic'):
+        if info['kind'].startswith('geographic') or info['kind'] == 'compound' and info['axes'][:2] == ('lat', 'lon'):
             if not -90 <= coords[0] <= 90 or not -180 <= coords[1] <= 360:
                 raise ValueError(f"{crs} is latitude then longitude: {coords[0]}, {coords[1]} is out of range")
     return out
@@ -86,9 +124,9 @@ def geohash(lat, lon, length=9):
     return ''.join(out)
 
 
-def distance(a, b):
+def distance(a, b, root=ROOT):
     """Great-circle metres between two positions in the SAME geographic system, on the body that system names."""
-    pa, pb = parse(a), parse(b)
+    pa, pb = parse(a, root), parse(b, root)
     if pa['crs'] != pb['crs']:
         raise ValueError(f"{pa['crs']} and {pb['crs']} are different reference systems: this measures within one and "
                          f"does not transform between them")
@@ -96,7 +134,7 @@ def distance(a, b):
         raise ValueError(f"{pa['crs']} is not a geographic system this tool knows the axes of")
     (la1, lo1), (la2, lo2) = [map(math.radians, p['coordinates'][:2]) for p in (pa, pb)]
     h = math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2
-    return 2 * BODIES[pa['body']] * math.asin(math.sqrt(h))
+    return 2 * bodies(root)[pa['body']] * math.asin(math.sqrt(h))
 
 
 def main(argv):
@@ -109,6 +147,10 @@ def main(argv):
             print("  a legal position; this tool does not know that system's axes, so it reads no further")
             return 0
         print(f"  body {p['body']} · {p['kind']} · axes {', '.join(p['axes'])} · {p['frame']} frame")
+        _acc = p.get('ensemble_accuracy')
+        if isinstance(_acc, dict):
+            print(f"  accurate to {_acc.get('count')} {_acc.get('unit')}: {p['crs'].split('+')[0]} is an ensemble of "
+                  f"realisations, and no motion finer than that is read from a position in it")
         if p['frame'] == 'dynamic' and p['epoch'] is None:
             print("  NOTE a dynamic frame and no epoch: the ground moves in this frame; say when this was measured")
         if p['kind'].startswith('geographic') and p['body'] == 'earth':

@@ -131,14 +131,26 @@ def _converted(c, f):
 
 
 def canon_quantity(v):
-    """A measured value `{count, unit}` as the merge compares it: in its quantity's coherent unit where its unit has a
-    factor, else in its own unit, the count in its shortest exact decimal. Anything else, as it is."""
-    if not (isinstance(v, dict) and set(v) == {'count', 'unit'} and isinstance(v.get('unit'), str)):
+    """A measured value `{count, unit}` as the merge compares it: its value in its quantity's coherent unit where its
+    unit has a factor, else in its own unit, the count in its shortest exact decimal — read by the one converter,
+    `dmunits.canonical`, over the law this garden runs. How well it is known, `u` or `accuracy`, is compared the same
+    way inside it (24.0). Anything else, as it is."""
+    if not (isinstance(v, dict) and {'count', 'unit'} <= set(v) <= {'count', 'unit', 'u', 'accuracy'}
+            and isinstance(v.get('unit'), str)):
         return v
-    fc = _factor_of(v['unit'])
-    if fc:
-        return {'count': _converted(v['count'], fc[0]), 'unit': fc[1]}
-    return {'count': _canon_count(v['count']), 'unit': v['unit']}
+    try:
+        import dmunits
+        _q, x, unit = dmunits.canonical(v, law=_units())
+    except Exception:
+        return v                                         # the gate says what is wrong; a canonical form never guesses
+    out = {'count': dmunits.show(x), 'unit': unit}
+    for k in ('u', 'accuracy'):
+        if isinstance(v.get(k), dict):
+            inner = canon_quantity({a: b for a, b in v[k].items() if a in ('count', 'unit')})
+            out[k] = dict(inner, **({'kind': v[k].get('kind')} if k == 'accuracy' else {}))
+        elif k in v:
+            out[k] = v[k]
+    return out
 
 
 def _canon_quantities(v):
@@ -214,7 +226,8 @@ def _canon_entry(attrs, e):
             continue
         v = out[a]
         if 'quantity' in dom and isinstance(v, dict) and 'count' in v:
-            out[a] = canon_quantity(v) if set(v) == {'count', 'unit'} else dict(v, count=_canon_count(v['count']))
+            _cq = canon_quantity(v)
+            out[a] = _cq if _cq is not v else dict(v, count=_canon_count(v['count']))
         elif isinstance(dom.get('entries'), dict):
             if isinstance(v, list):
                 v = [_canon_entry(dom['entries'], x) for x in v]

@@ -1218,6 +1218,10 @@ def check_quantity(where, node, want):
     if not isinstance(node, dict) or node.get('unit') is None or node.get('count') is None:
         errors.append(f"{where}: a quantity is written {{ count, unit }}")
         return
+    # A QUANTITY IS CLOSED (24.0): its count, its unit, and how well it is known — `u` or `accuracy`
+    # (`uncertainty_form`). A key beside them was read by nothing and passed; it is refused, by name.
+    for _k in sorted(set(node) - {'count', 'unit', 'u', 'accuracy'}, key=str):
+        errors.append(f"{where} carries {_k}, and a quantity holds count, unit and one of u / accuracy")
     u = UNITS.get(str(node['unit']))
     c = node['count']
     if not u:
@@ -1240,6 +1244,9 @@ def check_quantity(where, node, want):
         warns.append(f"{where}.unit '{node['unit']}' ({_nm}) is {u['status']} in the `{u['from_registry']}` registry, "
                         f"no longer in use" + (f" — the one in use by that name: {', '.join(_cur)}" if _cur else '') +
                         " — keep it only for an amount paid before it was withdrawn")
+    if node.get('u') is not None or node.get('accuracy') is not None:
+        check_uncertainty(where, u=node.get('u'), accuracy=node.get('accuracy'),
+                          quantity=u.get('quantity') if u else None)
     if not count_ok(c):
         errors.append(f"{where}.count {c!r} " + ((VALUE_TYPES.get('count') or {}).get('refusal') or
                       "must be a whole number, or a decimal written as a string (\"12.5\"): a float has no canonical form"))
@@ -1351,9 +1358,11 @@ def check_extent(where, node):
                     errors.append(f"{where}.measure.unit '{m['unit']}' spans {power_of(u, metered)} lines, and "
                                   f"{'system ' + repr(_row['system']) if _row else 'aspect ' + repr(an)} has {_lines} — "
                                   f"there is no such region there")
-            if not isinstance(m.get('count'), int) or isinstance(m.get('count'), bool) or m['count'] <= 0:
-                errors.append(f"{where}.measure.count must be a positive whole number of "
-                              f"{m.get('unit')}s, not {m.get('count')!r}")
+            # A POSITIVE COUNT (24.0), as `value_types[count]` writes one: a rise of 2.5 kelvin is a length on the
+            # temperature line as two days is on time's. It was a whole number, which no measured rise need be.
+            if not count_ok(m.get('count')) or not (Fraction(str(m['count'])) > 0):
+                errors.append(f"{where}.measure.count must be a positive count of {m.get('unit')}s — a whole number, "
+                              f"or a decimal written as a string (\"2.5\") — not {m.get('count')!r}")
     # A BOUNDARY IS A POSITION, and which forms it may take is the aspect's domain, not this function's.
     dim = ((asp.get('domain') or {}).get('systems'))
     for side in ('from', 'to'):
@@ -3029,7 +3038,37 @@ def ctl_moves_along(c):
 # ---- VIEW
 VIEW_ENTRY, VIEW_PLIES = (), ()
 # ---- QTY
-QTY_ENTRY, QTY_PLIES = (), ()
+
+
+def check_reference_accuracy():
+    """A reference system's `ensemble_accuracy` is a length: how far apart its realisations may lie (24.0)."""
+    for r in registry('reference_systems') or []:
+        if isinstance(r, dict) and r.get('ensemble_accuracy') is not None:
+            check_quantity(f"VOCAB reference_systems '{r.get('crs')}'.ensemble_accuracy", r['ensemble_accuracy'], 'length')
+
+
+def _uncertainty_attrs(c):
+    """The attributes of an entry that say how well it is known: the keys `uncertainty_form` names for them (`u`,
+    `accuracy`), and `u_<axis>`, the uncertainty of one axis of a position — each one its term declares."""
+    _names = {k for k in (std_fm.get('uncertainty_form') or {}) if k in ('u', 'accuracy')}
+    _decl, _ = declared_attrs(c.term, c.sch)
+    return [k for k in c.entry if isinstance(k, str) and (k in _names or k.startswith('u_')) and k in _decl]
+
+
+def ectl_uncertainty(c):
+    """`uncertainty_form` on an entry's own attributes (24.0): a positive count, in the unit its term declares, or an
+    accuracy with its kind. Its form — a quantity, entries — is judged by the constructs its term declares it with; this
+    adds what only an uncertainty says, and stands down where those constructs already refused it."""
+    for k in _uncertainty_attrs(c):
+        v = c.entry.get(k)
+        if not isinstance(v, dict) or str(v.get('unit')) not in UNITS or not count_ok(v.get('count')):
+            continue
+        check_uncertainty(f"{c.base}: {c.ref}" + ('' if k in ('u', 'accuracy') else f" ({k})"),
+                          **({'accuracy': v} if k == 'accuracy' else {'u': v}))
+
+
+QTY_ENTRY = (('uncertainty', ectl_uncertainty),)
+QTY_PLIES = ((check_reference_accuracy, "a reference system's stated accuracy is a length — the law's own rows"),)
 # ---- PRIV
 PRIV_ENTRY, PRIV_PLIES = (), ()
 # ---- OBS
