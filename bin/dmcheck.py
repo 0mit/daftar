@@ -1951,8 +1951,34 @@ def check_undeclared_keys():
                 # for `genos` (22.0) and stays a mapping's. Never read in its new name's place.
                 errors.append(f"{_base}: top-level key '{_k}' is one the law retired on a bean{_h}. {translate_hint()}")
             elif _k not in _declared:
-                errors.append(f"{_base}: top-level key '{_k}' is declared by no vocabulary term" + (_h or
-                              _undeclared_fix(_k, _fm[_k], _declared)))
+                _p = _offering_profile(_k)
+                errors.append(f"{_base}: top-level key '{_k}' is declared by no vocabulary term" + (_h or (
+                              f" this garden extends — the profile `{_p}` declares it. {_extend_hint(_p)}" if _p else
+                              _undeclared_fix(_k, _fm[_k], _declared))))
+
+
+def _offering_profile(key):
+    """The profile the law offers, and this garden does not extend, whose terms declare a top-level key — or None. A key
+    a profile declares is the profile's, and the fix is to extend it, never to hide the fact in `details:`."""
+    for _pname, _prof in sorted((std_fm.get('profiles') or {}).items()):
+        if _pname in (vocab_fm.get('extends_profiles') or []) or not isinstance(_prof, dict):
+            continue
+        for _t in _prof.get('terms') or []:
+            if isinstance(_t, dict) and (key == _t.get('term') or key in {
+                    str(c).split('.')[0].split('[')[0] for c in (_t.get('context_keys') or [])
+                    if isinstance(c, str) and '*' not in c and '/' not in c}):
+                return _pname
+    return None
+
+
+def _extend_hint(profile):
+    """The one act that opts a garden into a profile, as this garden runs it: bin/dmupgrade.py at the release GARDEN.md
+    records, with --extend, which writes `extends_profiles` in VOCAB.md, brings what the profile brings, journals it as a
+    RULE-CHANGE and runs this gate."""
+    _g = load(os.path.join(ROOT, 'GARDEN.md'))[0] if os.path.isfile(os.path.join(ROOT, 'GARDEN.md')) else None
+    _rel = _g.get('daftar_release') if isinstance(_g, dict) else None
+    return (f"Extending it is a RULE-CHANGE, the gardener's to ratify: `{_PY} bin/dmupgrade.py "
+            f"{_rel or '<the release>'} --extend {profile}` writes it in VOCAB.md and brings what the profile brings")
 
 
 def _undeclared_fix(key, value, declared):

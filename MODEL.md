@@ -134,7 +134,7 @@ one open fallback, `refs`.
 ## The vocabulary
 The rules are data, not code.
 - **`seed/std-vocab.md`** is the standard every garden pins. Opt-in **profiles** add groups of rules for
-  gardens that need them (`code`, `network`, `domain`, `knowledge`).
+  gardens that need them (`code`, `network`, `domain`, `knowledge`, `view`).
 - **`VOCAB.md`** is the garden's own layer: local terms, profiles it opts into (`extends_profiles`), values it
   adds to a term's own closed list (`values_add`), rows it adds to a registry (`registry_additions`), and dated
   exceptions. A term that reads its values from a registry takes a row; `values_add` on it adds nothing.

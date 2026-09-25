@@ -1169,6 +1169,27 @@ every technology names the UNESCO field(s) it belongs to (its `isced_f_2013` col
 
 fields of knowledge are the ROOT, and a protocol, a product or a routing mechanism hangs from one
 
+## view_lenses
+
+FOUR READINGS OF ONE DRAWING, EACH FOR ITS READER. A page drawn once for everybody is drawn for nobody: a newcomer needs
+the promise and the path, a manager the causes, the person on call the one vital sign, an auditor the evidence. So a
+drawing is read at four lenses, each a row: its `depth` orders them, its `form` says how it is drawn, and `max` bounds
+what it may hold, so a lens that grows past its reader's attention is refused by the asset rather than tolerated. A
+REGISTRY and not a term, as `roles` and `planes` are: the rows are the one owner of the lenses, and
+`views.questions.lens` and `view.fields.shown_from` take a row by name, so a lens nobody declared is a refusal, not a
+new lens. What each lens leaves out (an address, a live value) is said in its `meaning`, because a drawing that shows
+an address at a lens whose reader should not see one shows it to every reader of the page.
+
+## view_archetypes
+
+THE SHAPE A VITAL SIGN IS DRAWN IN. What the person on call must know first differs by what is drawn: a store fills
+toward a limit, redundant paths must each get through, a stream narrows. Each shape is a row, and what it needs is
+stated once, as a `cells` requirement on `views` (a reservoir requires `fill` and `thresholds`), so the gate refuses a
+shape that cannot be drawn; the asset holds the drawing code, and no second list of what a shape needs is kept in it.
+The `race` row reads the steps of the procedure a view `draws` — its `steps`, a walk on the `routine` sequence — in
+place of a table of phases, which would restate them. `health-chain` is the fallback, named so that falling back is a
+choice written down.
+
 ## profiles.code.terms[code_paths].meaning
 
 The 'paths vocab' (added 2026-08-01, human-directed): so an agent LOCATES code without re-walking a tree,
@@ -1274,6 +1295,67 @@ in relation to them: a Samba instance USES the technology samba; a mail-filterin
 field 0612; a person's role is CLASSIFIED AS 2522. One term for every scheme: the entry names its scheme
 and the gate checks the code against THAT scheme's registry. `topic` names the concept inside the field
 ("fluid pressure and flow" for espresso, inside physics) — the overlap between domains is the point.
+
+## profiles.view
+
+A PAGE THAT DRAWS WHAT THE GARDEN KEEPS, AS AN OPT-IN PROFILE. Documentation and live values that live apart drift
+apart; the profile puts both on one page, drawn from the garden's own records. It is a profile, not the core: a garden
+that draws nothing inherits none of it. Its contract is law the gate checks — four terms on one page bean, two
+registries — and opting into the profile is what brings its asset, `assets/view/`, read through `bin/dmpass.py`, the
+one reader of what a release ships: there is no second list of files and no second upgrade.
+
+NO ASSET OPENS A CONCEPT OF ITS OWN. Everything the page says is a construct the law already has: what it draws is a
+`ref` to a mapping or a bean; a length of time is an `extent` on `time`, a repetition a `recurrence`, a share a
+`quantity` of `ratio`; a technology is a row of the `technology` registry; a value named in a drawing is a `key_of`
+`view_bindings`; a being is a `bean_id`; an address is the being's own `located_at`, never restated on the page. Every
+name the profile adds is held against the law's own names, so none is given a second sense (test/assets.py).
+
+## profiles.view.terms[view]
+
+THE PAGE IS ONE BEAN. Every fact the page states sits on the bean that carries `view`, and nothing about the beings it
+draws is written on them: a binding says what the page shows at one drawn element, which is presentation, not a fact
+about the being. The page names the garden's own drawing module by a `file:` `pointer`, which the gate resolves, and
+the module stays the garden's code. `reference` chooses, per being, the place system whose position stands for it, and
+the position is the being's own (`located_at`, its anchors, its `endpoints`): an address kept on the page would be a
+second statement of it, and it drifts. `fields` says per genos, as `registry` rows of `gene` and `view_lenses`, which of
+a being's own facts its card shows, from which lens on. `opens_on` is a `bean_id` held to the genos `org`.
+
+## profiles.view.terms[view_monitors]
+
+WHERE LIVE VALUES COME FROM IS A BEING THE GARDEN HOLDS. A monitor is a `bean_id`: what it watches is its own `reaches`
+and the targets' own `endpoints`, and which technology it runs is its own `knowledge`, so the asset picks the adapter
+for that technology by the monitor's record and never by a name written in code. No technology is privileged: a
+monitor of another technology is read by that technology's adapter, beside the first. What only one technology needs —
+its alert rules, the credentials it reads by name — is pointed at by `settings`, a `pointer` into the monitor's own
+record, stated and not checked until a term the law declares carries it, when a second technology or a second garden
+shows what is general.
+
+## profiles.view.terms[views]
+
+ONE ENTRY PER DRAWING, CHECKED AS DATA. Each entry `draws` a `ref` — a mapping of `kind: procedure` or a bean — and
+never restates what it draws. The operate lens's settings are typed attributes of the entry, and each archetype's
+needs are `cells` requirements, so the gate refuses a reservoir with no thresholds and a race with no step. Time is
+written in the law's own forms: a deadline or a span is an `extent` on `time`, a sampling interval a `recurrence`, and
+a threshold a `quantity` of `ratio`; a length is never written as a bare number whose unit a reader must guess. The
+values a shape reads are `key_of` `view_bindings` on the same page. The inspect lens's processes and pipes are
+`pointer`s at the entry's top level, where the gate resolves a `{bean, field}` pointer, to the field of the being that
+states them. A race reads the steps of the procedure it draws, 0 before the first and n at the n-th, so its phases are
+the procedure's own.
+
+## profiles.view.terms[view_bindings]
+
+A LIVE VALUE IS READ WHEN THE PAGE IS DRAWN, AND NEVER STORED. A binding says which drawing and which element it sits
+on, which of three kinds of live value it is (a `values` list, declared whole), its unit as a row of `units` and its
+limits as counts in that unit. How it is computed is one entry per technology (`entries` `keyed_by` technology), each
+in that technology's own language, so a second technology sits beside the first on the same binding rather than
+replacing it; the adapter refuses what it cannot read. A unit the law does not have is a row a garden adds to `units` in
+its VOCAB.md, and a temperature waits for the law's own temperature position rather than a unit that is not one.
+
+## profiles.view.vacancies
+
+DECLARED WHOLE. The nine shapes and the three kinds of live value are offered to every garden that extends the
+profile, which takes the ones its drawings need; the rest stand vacant with the reason `universal`, so a stranger's
+garden finds each where it expects it, and nobody mistakes the design for evidence.
 
 ## terms[capabilities].meaning
 

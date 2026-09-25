@@ -1113,10 +1113,6 @@ vacancies:
     position: network-segment
     reason: prediction
     why: "WHERE A BEING IS ATTACHED in a network — a VLAN, a wireless network, an address range with a role. Declared 11.0 with the operator's ratification that a segment is a place and not an address. Unoccupied because no bean yet states which segment it is attached to; expected first where one network carries staff, guests and laptops on separate segments and the difference decides what a machine may reach."
-  - at: "registry:units"
-    position: second
-    reason: prediction
-    why: "Nothing in this ledger is currently held to the second: session moments are recorded at millisecond, and everything else at day. Kept because it is the resolution a log line carries, and the digestion of host logs is the obvious first occupant."
   # == MECHANISMS AHEAD OF THEIR OCCUPANTS ==
   - { at: "clauses.state", position: in-force, reason: universal, why: "what became of a clause, declared whole: held, met, released by the party it is owed to, broken, disputed — the states every obligation can reach, which a stranger keeping an agreement expects to find. `clauses` is occupied; a clause's state is written the day something becomes of it" }
   - { at: "clauses.state", position: met, reason: universal, why: "what became of a clause, declared whole: held, met, released by the party it is owed to, broken, disputed — the states every obligation can reach, which a stranger keeping an agreement expects to find. `clauses` is occupied; a clause's state is written the day something becomes of it" }
@@ -1543,6 +1539,26 @@ knowledge_schemes:
     within: [isced-f-2013]
     neighbours: none
     sources: seed/knowledge/SOURCES.md
+# == VIEW: the registries only the `view` profile reads ==
+view_lenses:
+  - { lens: orient,     depth: 0, form: story,        max: { stages: 5, words_per_stage: 14 },
+      meaning: "what the drawn thing does and what it is built from, for someone who has never touched it: its purpose, three to five stages in the order work flows, its outcome, and each technology's own documentation. No address, port or live value" }
+  - { lens: understand, depth: 1, form: schematic,    max: { elements: 18 },
+      meaning: "how the parts co-operate, where the work is decided and where it is fragile: parts by what they do, flows as verbs, decisions as gates, boundaries where ownership or network changes. No address or live value" }
+  - { lens: operate,    depth: 2, form: health-chain, max: { tiles: 12 },
+      meaning: "what the person on call must know first, now: the drawn thing's own vital sign in a shape native to it (a row of `view_archetypes`), the evidence beneath it, what the page cannot see, and where a person may act" }
+  - { lens: inspect,    depth: 3, form: anatomy,      max: { cards: 12 },
+      meaning: "what exactly the parts are and how that is known: a card of each part's own facts with their provenance, the steps, the wiring, and what is still open" }
+view_archetypes:
+  - { archetype: reservoir,    meaning: "a store filling toward its thresholds: how full, each threshold and what it does, the time to the next, what else fills it", when: "the risk is something filling up: a disk, a queue, a quota" }
+  - { archetype: lanes,        meaning: "parallel paths, each a lane of hops coloured by state, with a verdict per lane", when: "the work goes through redundant paths that must each get through" }
+  - { archetype: roster,       meaning: "the items it serves: how many are active, and a bar each for how much", when: "the question is who uses it and how much" }
+  - { archetype: gauges,       meaning: "one dial per value against its warning and critical limits", when: "the work keeps values inside limits" }
+  - { archetype: board,        meaning: "a fixed set of parts, each with its state and one fact, and the headline numbers", when: "a known set of parts must each be doing its job" }
+  - { archetype: scoreboard,   meaning: "the watcher's own vital numbers and what is firing, or a calm 'nothing is firing'", when: "what is drawn is the watching itself" }
+  - { archetype: funnel,       meaning: "a stream narrowing through its stages: how many reached each, where the rest stopped and why, then a roll call of the parts", when: "work enters, is judged at a series of stages, and leaves" }
+  - { archetype: race,         meaning: "a run of a procedure against its deadline: the step it is at (a step of the procedure the view `draws`, in the order its `steps` list them), how long it has run, how long it still needs, and the verdict", when: "what is drawn is a bounded run that must end before a moment" }
+  - { archetype: health-chain, meaning: "tiles in flow order with value, limit and trend, and the blind spots", when: "no shape native to what is drawn is designed yet" }
 profiles:
   code:
     meaning: "for a garden that manages source code: locating trees, and the repo identity of a code bean"
@@ -1827,6 +1843,176 @@ profiles:
           topic:   { in: prose, meaning: "optional: the concept inside the field this draws on" }
           note:    { in: prose, meaning: optional }
       merge: { cardinality: multi, order: by-scheme+code+rel }
+
+  view:
+    meaning: >
+      for a garden that draws what it keeps: a page of drawings, each of a mapping or a bean the garden holds, read at
+      four lenses, with live values beside the drawing and actions a host may run. Its asset is `assets/view/`, which a
+      garden receives only while it extends this profile. A garden that draws nothing should inherit none of it.
+    vacancies:
+    - { at: "registry:view_archetypes", position: reservoir,    reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
+    - { at: "registry:view_archetypes", position: lanes,        reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
+    - { at: "registry:view_archetypes", position: roster,       reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
+    - { at: "registry:view_archetypes", position: gauges,       reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
+    - { at: "registry:view_archetypes", position: board,        reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
+    - { at: "registry:view_archetypes", position: scoreboard,   reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
+    - { at: "registry:view_archetypes", position: funnel,       reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
+    - { at: "registry:view_archetypes", position: race,         reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
+    - { at: "registry:view_archetypes", position: health-chain, reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
+    - { at: "view_bindings.live", position: live-state,  reason: universal, why: "the three kinds of live value, declared whole" }
+    - { at: "view_bindings.live", position: live-value,  reason: universal, why: "the three kinds of live value, declared whole" }
+    - { at: "view_bindings.live", position: live-series, reason: universal, why: "the three kinds of live value, declared whole" }
+    terms:
+    - term: view
+      meaning: "this bean is a page of drawings: the garden's own drawing module, the organisation it opens on, the parts a reader looks up, which of a being's own facts a card shows, and the words a reader may hover. What it is called is its `title`; what it draws is its `views`; where its live values come from is its `view_monitors`"
+      context_keys: [view]
+      schema:
+        shape: mapping
+        attrs:
+          drawings:  { required: true, in: { pointer: bean_field_pointer }, meaning: "`file:<path>` of the garden's own drawing module: the garden's code, never the law's" }
+          opens_on:  { in: { bean_id: { gene: [org] } }, meaning: "the organisation the page opens on; absent, every organisation the reader may see" }
+          glossary:  { in: { prose: named }, meaning: "what a word on the page means, under the word" }
+          reference:
+            meaning: "the parts a reader looks up, one entry per being, in the order listed. The address that stands for a being is one the being itself states, and is chosen here, never stated here"
+            in:
+              entries:
+                being:  { required: true, in: bean_id, meaning: "the part" }
+                system: { in: { registry: anchor_systems, take: system, where: { dimension: [place, any] } }, meaning: "the place system whose position stands for it: the first the being states in that system, in `located_at`, its anchors or its `endpoints`, in that order" }
+                what:   { in: prose, meaning: "one line: what the part is for, in this page's words" }
+              keyed_by: being
+          fields:
+            meaning: "which of a being's own top-level facts a card shows, for a being of which genos, from which lens on"
+            in:
+              entries:
+                genos: { required: true, in: { registry: gene, take: genos }, meaning: "the genos of the beings whose cards show it" }
+                term:  { required: true, in: { pattern: '^[a-z][a-z0-9_]*$' }, meaning: "the name of a term the law declares" }
+                shown_from: { required: true, in: { registry: view_lenses, take: lens }, meaning: "the first lens that shows it; every deeper lens shows it too" }
+      merge: { cardinality: single, order: none }
+    - term: view_monitors
+      meaning: "the monitors a page's live values come from, one entry each. What a monitor watches is its own `reaches` and each target's own `endpoints`; which technology it runs is its own `knowledge` (`uses`), and the asset reads it through its adapter for that technology"
+      context_keys: [view_monitors]
+      schema:
+        shape: list_of_entries
+        attrs:
+          monitor:  { required: true, in: bean_id, meaning: "the being that collects the values" }
+          settings: { in: { pointer: bean_field_pointer }, meaning: "where that monitor states what only its technology needs, read by the adapter in the technology's own form: stated, not checked, until a term the law declares carries it" }
+      merge: { cardinality: multi, order: by-monitor }
+    - term: views
+      meaning: "what the page draws, one entry per drawing under the key its drawing module draws it by: the mapping or bean it draws, the story of it in plain words, the question each lens asks, the operate lens's shape and what the shape reads, where its processes and pipes are stated, and where a person may act. A value named in it is a key of `view_bindings` on the same page"
+      context_keys: [views]
+      schema:
+        shape: open_map_of_entries
+        key_form: kebab
+        attrs:
+          draws:     { required: true, in: ref, meaning: "the mapping or bean this draws. What it is, and its steps, are its own: the page never restates them" }
+          label:     { in: prose, meaning: "its name on the page; absent, the title of what it draws" }
+          purpose:   { required: true, in: prose, meaning: "what it guarantees, in one sentence" }
+          outcome:   { required: true, in: prose, meaning: "what is true when it works" }
+          stages:
+            required: true
+            meaning: "three to five stages in the order work flows, each in plain words, with the beings that do it and the technologies it uses"
+            in:
+              entries:
+                label:  { required: true, in: prose, meaning: "the stage, in a few words" }
+                doer:   { required: true, in: prose, meaning: "who or what does it" }
+                beings: { in: { entries: { being: { required: true, in: bean_id } } }, meaning: "the beings that do it" }
+                uses:   { in: { entries: { technology: { required: true, in: { registry: technology, take: code } } } }, meaning: "the technologies it uses, each opening its own documentation" }
+          questions:
+            required: true
+            meaning: "the question this drawing asks at each lens, in its own words; a lens it names none for asks the lens's own"
+            in:
+              entries:
+                lens: { required: true, in: { registry: view_lenses, take: lens } }
+                ask:  { required: true, in: prose }
+              keyed_by: lens
+          processes: { in: { pointer: bean_field_pointer }, meaning: "inspect: where the processes of what it draws are stated — a field of a being, read as the being states it" }
+          pipes:     { in: { pointer: bean_field_pointer }, meaning: "inspect: where the pipes between those processes are stated, likewise" }
+          actions:
+            meaning: "where a person may act: the drawn element a button sits on and the tool it asks the host for. What a tool runs is the host's, never the ledger's"
+            in:
+              entries:
+                element: { required: true, in: { type: kebab }, meaning: "the drawn element the button sits on, by the id its drawing gives it" }
+                tool:    { required: true, in: { type: kebab }, meaning: "the tool, by the name the host's own configuration gives it" }
+                confirm: { in: prose, meaning: "what the button asks before it runs" }
+                acts_on: { in: bean_id, meaning: "the being it acts on, where that is not the element's" }
+          archetype: { required: true, in: { registry: view_archetypes, take: archetype }, meaning: "operate: the shape its vital sign is drawn in" }
+          blind:     { required: true, meaning: "what the page cannot see of it, and why: never omitted", in: { entries: { what: { required: true, in: prose }, why: { in: prose } } } }
+          notes:     { in: { entries: { note: { required: true, in: prose } } }, meaning: "operate: a line the person on call reads under the shape" }
+          fill:      { in: { key_of: view_bindings }, meaning: "reservoir: how full it is" }
+          thresholds: { in: { entries: { fullness: { required: true, in: { quantity: ratio } }, label: { required: true, in: prose } } }, meaning: "reservoir: the marks on its scale, as a share of the whole, and what each does" }
+          forecast:  { in: { key_of: view_bindings }, meaning: "reservoir: how long until the next threshold" }
+          also:      { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "reservoir: what else fills it" }
+          parts:     { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "the values of the parts beneath the shape: the evidence" }
+          lanes:     { in: { entries: { name: { required: true, in: prose }, hops: { required: true, in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } } } } } } }, meaning: "lanes: each path, and the hops it must get through in order" }
+          per_item:  { in: { key_of: view_bindings }, meaning: "roster, gauges: the live-series that gives one value per item" }
+          active_over: { in: { type: count }, meaning: "roster: in that value's unit, the value from which an item counts as active" }
+          top:       { in: { type: count }, meaning: "roster: how many items are shown" }
+          min:       { in: { type: count }, meaning: "gauges: in that value's unit, the low end of each dial" }
+          max:       { in: { type: count }, meaning: "gauges: in that value's unit, the high end of each dial" }
+          facts:     { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "board: the headline numbers" }
+          items:     { in: { entries: { label: { required: true, in: prose }, binds: { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } } }, fact: { in: { key_of: view_bindings } }, why: { in: prose }, being: { in: bean_id } } }, meaning: "board: its parts, each with the values that say its state, one fact, and why an unmeasured part is not measured" }
+          numbers:   { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "scoreboard, funnel, race: the headline numbers" }
+          list:      { in: { key_of: view_bindings }, meaning: "scoreboard: the live-series of what is firing" }
+          funnels:   { in: { entries: { name: { required: true, in: prose }, stages: { required: true, in: { entries: { label: { required: true, in: prose }, count: { required: true, in: { key_of: view_bindings } }, counts: { in: prose }, what: { in: prose }, stops: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } }, marks: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } } } } } } }, meaning: "funnel: each stream, its stages in order with how many reached each and what each counts, and where the rest stopped or were marked" }
+          window:    { in: prose, meaning: "funnel: the span its counts cover, in words" }
+          rollcall:  { in: { entries: { label: { required: true, in: prose }, per_item: { required: true, in: { key_of: view_bindings } }, idle: { in: { entries: { item: { required: true, in: any } } } }, notes: { in: { prose: named } } } }, meaning: "funnel: the parts called by name, each up or down, and the items known to carry nothing" }
+          step_at:   { in: { key_of: view_bindings }, meaning: "race: the value that says which step of the procedure the run is at — 0 before the first, n at the n-th of its `steps`" }
+          elapsed:   { in: { key_of: view_bindings }, meaning: "race: how long it has run" }
+          deadline:  { in: extent, meaning: "race: how long after its start it must be done — a length on `time`" }
+          deadline_from: { in: { key_of: view_bindings }, meaning: "race: the value that says when it must be done, where that moves" }
+          eta:       { in: { key_of: view_bindings }, meaning: "race: how long it still needs" }
+          progress:  { in: { key_of: view_bindings }, meaning: "race: how much of it is done, as a share of the whole" }
+          checkpoints: { in: { entries: { after: { required: true, in: extent }, label: { required: true, in: prose } } }, meaning: "race: marks on its time bar, each a length after its start" }
+          correlate:
+            meaning: "any shape: values drawn on one time axis, so what moves together is seen together"
+            in:
+              entries:
+                title: { in: prose }
+                rows:  { required: true, in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "the values drawn, one row each" }
+                span:  { in: extent, meaning: "how far back the axis reaches — a length on `time`" }
+                every: { in: recurrence, meaning: "how often a point is taken — every N units along `time`" }
+                band:  { in: { key_of: view_bindings }, meaning: "a step value (as `step_at`) that shades every row" }
+                relate: { in: { entries: { across: { required: true, in: { key_of: view_bindings } }, measure: { required: true, in: { key_of: view_bindings } }, bins: { in: { type: count } }, at_step: { in: { type: count } }, keep: { in: [all, positive] } } }, meaning: "one value's mean across the bins of another, over the time drawn: only while the band is at `at_step` where it names one, and `positive` keeps the moments it is above zero" }
+        cells:
+          - { when: { archetype: reservoir },  requires: [fill, thresholds], why: "a reservoir answers with how full it is against its thresholds" }
+          - { when: { archetype: lanes },      requires: [lanes],       why: "lanes answer with each path" }
+          - { when: { archetype: roster },     requires: [per_item],    why: "a roster answers with the value of its items" }
+          - { when: { archetype: gauges },     requires: [per_item],    why: "gauges answer with the value of their items" }
+          - { when: { archetype: board },      requires: [items],       why: "a board answers with its parts" }
+          - { when: { archetype: scoreboard }, requires: [numbers],     why: "a scoreboard answers with its numbers" }
+          - { when: { archetype: funnel },     requires: [funnels],     why: "a funnel answers with its streams" }
+          - { when: { archetype: race },       requires: [step_at],     why: "a race answers with the step the run is at" }
+          - { when: { archetype: race },       expects: [elapsed],      why: "without how long it has run, the bar against the deadline cannot be drawn" }
+      merge: { cardinality: multi, order: by-key }
+    - term: view_bindings
+      meaning: "the live values the page draws, each under a key the views name it by: which drawing and which of its elements it sits on, what kind of value it is, its unit and limits, and how each technology computes it. A value is read when the page is drawn, and never stored"
+      context_keys: [view_bindings]
+      schema:
+        shape: open_map_of_entries
+        key_form: kebab
+        attrs:
+          view:    { required: true, in: { key_of: views }, meaning: "the drawing it sits on" }
+          element: { required: true, in: { type: kebab }, meaning: "the drawn element it sits on, by the id its drawing gives it" }
+          live:    { required: true, in: [live-state, live-value, live-series], meaning: "live-state — whether the being answers, as its monitor reaches it | live-value — one number | live-series — many, each an item" }
+          being:   { in: bean_id, meaning: "the being a live-state reads; absent, the being the element depicts" }
+          label:   { in: prose, meaning: "its name on the page; absent, the element's" }
+          short:   { in: prose, meaning: "its name where room is short" }
+          unit:    { in: { registry: units, take: unit }, meaning: "absent, a bare number" }
+          warn:    { in: { type: count }, meaning: "in its unit, the value from which it warns" }
+          crit:    { in: { type: count }, meaning: "in its unit, the value from which it is critical" }
+          item_names: { in: { prose: named }, meaning: "live-series: the page's name for an item, under the item" }
+          query:
+            meaning: "how each technology computes it, in that technology's own language, one entry per technology; its adapter refuses what it cannot read"
+            in:
+              entries:
+                technology: { required: true, in: { registry: technology, take: code } }
+                says:       { required: true, in: any, meaning: "the query, in the technology's own language" }
+                items_by:   { in: any, meaning: "live-series: what tells its items apart, in the technology's own terms" }
+              keyed_by: technology
+        cells:
+          - { when: { live: live-value },  requires: [query], why: "a number is computed by a monitor" }
+          - { when: { live: live-series }, requires: [query], why: "a series is computed by a monitor" }
+      merge: { cardinality: multi, order: by-key }
 
 terms:
   - term: capabilities

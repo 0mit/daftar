@@ -165,6 +165,15 @@ check("AGENTS.md puts the forms first for writing, and the law after them, on de
       0 <= text["AGENTS.md"].find("seed/FORMS.md") < text["AGENTS.md"].find("## On demand")
       < text["AGENTS.md"].find("`MODEL.md`", text["AGENTS.md"].find("## On demand")), "")
 
+# THE PROFILES MODEL.md NAMES ARE THE LAW'S. MODEL.md lists them for a reader who has not opened the law; a list kept by
+# hand is a second statement, so it is held equal to what the law offers — a profile added to the law and not named
+# here, or one named here the law no longer offers, fails by name.
+_offered = sorted(str(k) for k in (_law.get("profiles") or {}))
+_listed = re.search(r"Opt-in \*\*profiles\*\* add groups of rules for\s+gardens that need them \(([^)]*)\)", text["MODEL.md"])
+_named = sorted(re.findall(r"`([a-z][a-z0-9-]*)`", _listed.group(1))) if _listed else None
+check("MODEL.md names exactly the profiles the law offers", _named == _offered and len(_offered) >= 5,
+      f"MODEL.md: {_named}; the law: {_offered}")
+
 ci = open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8").read()
 ci_suites = set(re.findall(r"python3 (test/[a-z_]+\.py)", ci))
 assert ci_suites, "no suite was found in the workflow"
