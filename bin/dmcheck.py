@@ -2595,6 +2595,9 @@ def effective(e, attr):
     return (row or {}).get(rule.get('take'))
 
 
+_AT_AUTHORITY_SAID = set()
+
+
 def ectl_entry_in_registry(e):
     """An entry attr whose value must be a row of a REGISTRY — so the registry is the enum's one owner.
 
@@ -2609,6 +2612,23 @@ def ectl_entry_in_registry(e):
         # `registry_from: <attr>` (9.1): the registry is NAMED by another field of the same entry — a code is
         # checked against the scheme the entry says it is in, so one term serves every classification
         rname = str(e.entry.get(rule['registry_from'])) if rule.get('registry_from') else rule.get('registry')
+        # A SCHEME HELD AT ITS AUTHORITY (24.0, O-3) is not copied here: a code is held to the form its row declares, and
+        # the run says once that such codes are not looked up — never read as an empty registry that refuses them all
+        _auth = next((r for r in registry('knowledge_schemes') if isinstance(r, dict) and r.get('scheme') == rname
+                      and r.get('holding') == 'at-authority'), None) if rule.get('registry_from') else None
+        if _auth is not None:
+            try:
+                _ok = re.fullmatch(str(_auth.get('code_pattern')), str(val)) is not None
+            except re.error:
+                continue                    # the row's own refusal (check_scheme_rows) names the pattern
+            if not _ok:
+                errors.append(f"{e.base}: {e.ref}.{attr} '{val}' is not in the form of a {rname} code "
+                              f"({_auth.get('code_pattern')}) — the scheme is held at its authority, and checked here by form")
+            elif rname not in _AT_AUTHORITY_SAID:
+                _AT_AUTHORITY_SAID.add(rname)
+                warns.append(f"{rname}: held at its authority — its codes are checked here by their form alone, and not "
+                             f"looked up (`knowledge_scheme_form.holding`)")
+            continue
         rows = [r for r in (registry(rname) or []) if isinstance(r, dict) and dmform.row_matches(r, rule.get('where'))]
         allowed = [r.get(rule.get('take')) for r in rows]
         if str(val) not in [str(a) for a in allowed]:
@@ -3371,7 +3391,134 @@ PRIV_PLIES = ((check_sealed, "a sealed entry holds a pointer, and says nothing e
               (check_persons, "another person is kept by name only on their consent"),
               (check_held_journalled, "sealing and erasing are journalled, in one line"))
 # ---- OBS
-OBS_ENTRY, OBS_PLIES = (), ()
+def _obs_entry_at(path):
+    """The entry a `<bean>:<term>.<key>` names, as (bean, entry) — or None where the garden holds no such entry."""
+    m = re.match(r'^([a-z0-9][a-z0-9-]*):([a-z_][a-z0-9_]*)\.([^.\s]+)$', str(path))
+    if not m or (True, m.group(1)) not in docs:
+        return None
+    _node = ALL_FM.get(m.group(1), {}).get(m.group(2))
+    _e = _node.get(m.group(3)) if isinstance(_node, dict) else None
+    return (m.group(1), _e) if isinstance(_e, dict) else None
+
+
+def check_observations():
+    """Observations (24.0, step 5, N19, N20): a reading states what it is of; an absent one states no result; a verdict
+    ANSWERS an observation the garden holds, with its answer, and one observer gives one verdict on one entry, wherever
+    it is written; a retraction is its observer's own word, stated by a person."""
+    _result = ('value', 'code', 'position', 'extent')
+    verdicts = {}
+    for (_ib, _base), (_fm, _b) in sorted(docs.items()):
+        for _k, _e in _agree_entries(_fm, 'observations'):
+            _w = f"{_base}: observations[{_k}]"
+            if _e.get('answers') is None and _e.get('property') is None:
+                errors.append(f"{_w}: a reading states its `property`, a code of a published scheme — only a verdict, "
+                              f"which `answers` another entry, takes it from the entry it answers")
+            if _e.get('presence') == 'absent' and any(_e.get(a) is not None for a in _result):
+                errors.append(f"{_w}: `presence: absent` beside a result ({', '.join(a for a in _result if _e.get(a) is not None)}) "
+                              f"— an absent entry was looked for and not found, and has no result; drop the result, or "
+                              f"the absence")
+            if _e.get('answers') is not None:
+                if _obs_entry_at(_e['answers']) is None or not str(_e['answers']).split(':', 1)[-1].startswith('observations.'):
+                    errors.append(f"{_w}.answers: {_e['answers']}, which names no observation — a verdict answers "
+                                  f"`<bean>:observations.<key>`, an entry this garden holds")
+                if _e.get('answer') is None:
+                    errors.append(f"{_w}: answers {_e['answers']} and gives no `answer` — confirms, disputes, or abstains")
+                if _e.get('by') is not None:
+                    _key = (str(_e['by']), str(_e['answers']))
+                    if _key in verdicts:
+                        errors.append(f"{_w} and {verdicts[_key]}: two verdicts by {_e['by']} on {_e['answers']} — one "
+                                      f"observer gives one verdict on one entry; put what they say in one")
+                    else:
+                        verdicts[_key] = _w
+            if _e.get('retracted') is not None:
+                _p = _e.get('provenance')
+                if not (isinstance(_p, dict) and _p.get('src') == 'asserted-by-human'):
+                    errors.append(f"{_w}: retracted, and the entry carries no provenance of its own stated by a person — "
+                                  f"a retraction is its observer's own word: `provenance: {{src: asserted-by-human, by: "
+                                  f"<the observer>, as_of: now}}` on the entry")
+
+
+def check_hearings():
+    """N21: a ruling on a disagreement is refused until every speaker of the entries it is over — each entry's `by` — has
+    been heard (manifesto: heard); every entry it is over is one the garden holds."""
+    for (_ib, _base), (_fm, _b) in sorted(docs.items()):
+        for _k, _h in _agree_entries(_fm, 'hearings'):
+            _w = f"{_base}: hearings[{_k}]"
+            _over = _h.get('over') if isinstance(_h.get('over'), list) else [_h.get('over')] if isinstance(_h.get('over'), dict) else []
+            speakers = []
+            for _o in _over:
+                if not isinstance(_o, dict):
+                    continue
+                _at = _obs_entry_at(_o.get('path'))
+                if _at is None:
+                    errors.append(f"{_w}.over: {_o.get('path')}, which names no entry this garden holds — a hearing is "
+                                  f"over entries that disagree, each `<bean>:<term>.<key>`")
+                elif _at[1].get('by') is not None and str(_at[1]['by']) not in speakers:
+                    speakers.append(str(_at[1]['by']))
+            _heard = {str(x.get('speaker')) for x in (_h.get('heard') if isinstance(_h.get('heard'), list) else
+                                                       [_h.get('heard')] if isinstance(_h.get('heard'), dict) else [])
+                      if isinstance(x, dict)}
+            if _h.get('ruling') is not None:
+                for _s in speakers:
+                    if _s not in _heard:
+                        errors.append(f"{_w}: rules before {_s} is heard — a disagreement is ruled on only once each "
+                                      f"speaker of the entries it is over has a `heard` entry, in their own words")
+
+
+def check_scheme_rows():
+    """A published scheme says how its codes are held (`knowledge_scheme_form`): shipped, a garden's extract, or at its
+    authority with the form a code takes; `sensitive` is special-category or absent; its labels are in a language BCP 47
+    writes, from a registry the garden declares; its relations are between its own codes, part-of, requires or adjacent."""
+    _lang = next((r.get('pattern') for r in registry('value_types') or [] if isinstance(r, dict) and r.get('type') == 'language_tag'), None)
+    for _r in registry('knowledge_schemes') or []:
+        if not isinstance(_r, dict):
+            continue
+        _w = f"knowledge_schemes '{_r.get('scheme')}'"
+        _hold = _r.get('holding')
+        if _hold is not None and _hold not in ('shipped', 'extract', 'at-authority'):
+            errors.append(f"{_w}.holding: {_hold!r} — shipped, extract or at-authority (`knowledge_scheme_form.holding`)")
+        if _hold == 'at-authority':
+            try:
+                re.compile(str(_r.get('code_pattern')))
+                if _r.get('code_pattern') is None:
+                    raise re.error('none')
+            except re.error:
+                errors.append(f"{_w}: held at its authority, and states no `code_pattern` a code can be matched with — "
+                              f"a code held elsewhere is checked here by its form alone")
+        if _r.get('sensitive') is not None and _r.get('sensitive') != 'special-category':
+            errors.append(f"{_w}.sensitive: {_r['sensitive']!r} — special-category, or absent (`knowledge_scheme_form.sensitive`)")
+        _codes = None
+        for _l in _r.get('labels') or [] if isinstance(_r.get('labels'), list) else []:
+            if not isinstance(_l, dict) or not _l.get('language') or not _l.get('registry'):
+                errors.append(f"{_w}.labels: each is {{language, registry, attribution?}}")
+                continue
+            if _lang and not re.match(_lang, str(_l['language'])):
+                errors.append(f"{_w}.labels: {_l['language']!r} is no language as BCP 47 writes one")
+            if registry(_l['registry']) is None or not any(isinstance(x, dict) and x.get('registry') == _l['registry'] for x in
+                                                          list(vocab_fm.get('registry_files') or []) + list(std_fm.get('registry_files') or [])):
+                errors.append(f"{_w}.labels: registry '{_l['registry']}' is declared by no `registry_files` row")
+        if _r.get('relations') is not None:
+            _rows = registry(str(_r['relations']))
+            if not _rows and not any(isinstance(x, dict) and x.get('registry') == _r['relations'] for x in
+                                     list(vocab_fm.get('registry_files') or []) + list(std_fm.get('registry_files') or [])):
+                errors.append(f"{_w}.relations: registry '{_r['relations']}' is declared by no `registry_files` row")
+            _codes = {str(x.get('code')) for x in registry(str(_r.get('scheme'))) or [] if isinstance(x, dict)}
+            for _x in _rows or []:
+                if not isinstance(_x, dict):
+                    continue
+                if _x.get('rel') not in ('part-of', 'requires', 'adjacent'):
+                    errors.append(f"{_w}.relations: the row {_x.get('from')} → {_x.get('to')} says rel {_x.get('rel')!r} — "
+                                  f"part-of, requires or adjacent (N23)")
+                for _end in ('from', 'to'):
+                    if _codes and str(_x.get(_end)) not in _codes:
+                        errors.append(f"{_w}.relations: {_end} '{_x.get(_end)}' is no code of {_r.get('scheme')} — a "
+                                      f"scheme's relations are between its own codes")
+
+
+OBS_ENTRY = ()
+OBS_PLIES = ((check_observations, "a reading states what it is of; a verdict answers an observation the garden holds, once per observer"),
+             (check_hearings, "N21: a ruling waits until every speaker of the entries it is over is heard"),
+             (check_scheme_rows, "a published scheme says how its codes are held, and its labels and relations are its own"))
 # ---- PLACE
 PLACE_ENTRY, PLACE_PLIES = (), ()
 # ---- RECKON
@@ -4900,6 +5047,7 @@ def _save_command(body):
 # journal's added lines, and the days of the headings they add — each empty where there is no index. Read from the index
 # once, here, and by no part again.
 STAGED, STAGED_ADDED, JOURNAL_ADDED, STAMPED_DAYS = [], [], [], []
+EXTRACTS_DIR = 'extracts'        # a garden's own extracts of schemes, in the estate layer (`layers`, 24.0)
 
 
 def _publish_staged(staged):
@@ -4934,7 +5082,8 @@ def check_staged_state():
 
     if staged:
         # (K) provenance duty — a state-change must be logged
-        sc = [p for p in staged if p.startswith(DOCUMENTISH) or p.startswith(dmseq.SERIES_DIR + '/')]
+        sc = [p for p in staged if p.startswith(DOCUMENTISH) or p.startswith(dmseq.SERIES_DIR + '/')
+              or p.startswith(EXTRACTS_DIR + '/')]
         if sc and 'log/journal.md' not in staged:
             errors.append(f"state-change staged ({', '.join(sc[:3])}…) but log/journal.md not updated — provenance duty. "
                           f"Append an entry naming what changed and why. Its heading is read from the clock by the tool, "
@@ -5008,7 +5157,9 @@ def check_staged_state():
                               f"a change to the law is logged DISTINCTLY. Put the word RULE-CHANGE in the entry.")
             for _p in sc:
                 # a series' part is a change to the bean whose series it is: `series/<bean>/<key>/<part>.tsv`
+                # a garden's extract of a scheme is named by its file, `extracts/<scheme>.tsv` (24.0, O-3: F9)
                 _id = (_p.split('/')[1] if _p.startswith(dmseq.SERIES_DIR + '/') and _p.count('/') >= 2 else
+                       os.path.splitext(os.path.basename(_p))[0] if _p.startswith(EXTRACTS_DIR + '/') else
                        os.path.basename(_p)[:-3] if _p.endswith('.md') else _p)
                 if not re.search(r'(?<![\w-])' + re.escape(_id) + r'(?![\w-])', jdiff):
                     errors.append(f"{_p}: staged, but the staged journal entry never names it — write '{_id}' "

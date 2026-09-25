@@ -1702,9 +1702,20 @@ facets:
   - { facet: technical,  depends_on: [legal], meaning: "who runs and maintains it" }
   - { facet: experience, depends_on: [legal], meaning: "who designs how people meet it — its words, flows and look — and whose judgment of that decides" }
   - { facet: financial,  depends_on: [legal], meaning: "who pays for it and is paid by it" }
+knowledge_scheme_form:
+  holding:      "shipped | extract | at-authority — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); or held at the publisher and looked up there, checked here only by `code_pattern`"
+  licence:      "the SPDX identifier of the terms its rows are under — `LicenseRef-<name>` where the publisher's terms have none"
+  release:      "the publisher's release the rows are from"
+  sensitive:    "special-category — every code of it is special-category material wherever it is written (a diagnosis, a procedure; F3); absent, not"
+  code_pattern: "with `at-authority`: the form a code must take, a regular expression"
+  relations:    "a registry of relations between its own codes, rows {from, to, rel}, `rel` one of part-of, requires, adjacent (N23); resolved by the `registry_links` rows the garden declares for it"
+  labels:       "[{language, registry, attribution?}] — its labels in another language: a registry of {code, name} rows, and the words its publisher asks to be printed with them, verbatim (N25)"
 knowledge_schemes:
   - scheme: isced-f-2013
     classifies: fields of knowledge (education and training)
+    holding: shipped
+    licence: CC-BY-SA-3.0-IGO
+    release: "ISCED-F 2013 (field descriptions 2015)"
     publisher: UNESCO Institute for Statistics
     url: "https://uis.unesco.org/en/topic/international-standard-classification-education-isced"
     levels: [ { level: broad }, { level: narrow }, { level: detailed } ]
@@ -1712,6 +1723,9 @@ knowledge_schemes:
     sources: seed/knowledge/SOURCES.md
   - scheme: isco-08
     classifies: occupations
+    holding: shipped
+    licence: LicenseRef-ILO-source-indicated
+    release: "ISCO-08 (structure, 2012)"
     publisher: International Labour Organization
     url: "https://ilostat.ilo.org/methods/concepts-and-definitions/classification-occupation/"
     levels: [ { level: major }, { level: sub-major }, { level: minor }, { level: unit } ]
@@ -1721,6 +1735,8 @@ knowledge_schemes:
     sources: seed/knowledge/SOURCES.md
   - scheme: substances
     classifies: substances by their chemical formula, for walks whose steps take and give them
+    holding: shipped
+    licence: CC0-1.0
     publisher: daftar (curated; each row a formula in Hill notation, a fact)
     url: "seed/knowledge/substances.tsv"
     levels: [ { level: substance } ]
@@ -1728,6 +1744,8 @@ knowledge_schemes:
     sources: seed/knowledge/SOURCES.md
   - scheme: technology
     classifies: established technologies (software, protocols, operating systems), each with its OFFICIAL documentation
+    holding: shipped
+    licence: CC0-1.0
     publisher: daftar (curated; every row names the project's own documentation, never a third party's)
     url: "seed/knowledge/technology.tsv"
     levels: [ { level: technology } ]
@@ -3152,6 +3170,49 @@ terms:
         restores:       { in: prose, meaning: "optional: what this capture would let somebody rebuild, and what it would NOT. The honest half is usually the second." }
         supersedes:     { in: { key_of: capture }, meaning: "optional: the `capture` key on this bean that this one replaces" }
         note:           { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
+    merge: { cardinality: multi, order: by-key }
+
+  - term: observations
+    meaning: "what was found of a being, one entry per reading, modelled on ISO 19156: a PROPERTY coded in a published scheme, OF this being or a coded part of it, PRESENT or absent, AT a moment or DURING a stretch, with its RESULT — a value with its u, a code, a position, an extent — how it was read, and BY whom. A reading made again is another entry: growth, drift and recovery are read, never stored. The world at the moment it held; `beanger` is one field's own change log at the moment it was written. An entry that ANSWERS another is a verdict on it, and one observer gives one verdict on one entry"
+    context_keys: [observations]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      entry_one_of: [at, during, answers]
+      at_most_one_of: [[value, code, position, extent], [at, during]]
+      attrs:
+        property:  { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "what was observed: a code of a published scheme — never a garden's own word — so that two gardens' readings meet. Every reading states one; a verdict takes it from the entry it answers" }
+        of:        { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "the part of this being the reading is of, as a code; absent, the whole being" }
+        presence:  { in: [present, absent], meaning: "present — found (the reading when silent); absent — looked for and not found: a list that does not name it, a sign not seen. An absent entry states no result" }
+        at:        { in: { type: date_or_moment }, meaning: "when it held: the moment of the phenomenon, at the unit its form is written in — not when it was written down, which is provenance" }
+        during:    { in: extent, meaning: "when it held, where that is a stretch: a day's intake, a season's growth" }
+        value:     { in: { quantity: any }, meaning: "a measured result, with its `u` or `accuracy` inside it" }
+        code:      { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "a classified result" }
+        position:  { in: { entries: { system: { required: true, in: { registry: anchor_systems, take: system }, meaning: "the system the position is in" }, at: { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position, in that system's one form" }, u: { in: { quantity: any }, meaning: "its standard uncertainty" } } }, meaning: "a result that is a position: a temperature on a scale, an age before the present" }
+        extent:    { in: extent, meaning: "a result that is a region" }
+        method:    { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "how it was read, as a code" }
+        by:        { in: bean_id, meaning: "who or what observed it — a person, an instrument — as a bean, so that its standing can be read (N19)" }
+        answers:   { in: { type: field_path }, meaning: "the entry this one is a verdict on, `<bean>:observations.<key>` (N20)" }
+        answer:    { in: [confirms, disputes, abstains], meaning: "with `answers`: confirms | disputes | abstains — asked, and would not say" }
+        retracted: { in: { type: date }, meaning: "the day its own observer withdrew it: kept, and read by no reading after that day. A retraction is its observer's own word, so the entry carries a provenance of its own, stated by a person" }
+        sample:    { in: bean_id, meaning: "a specimen taken from this being that it was read on" }
+        pin:       { in: { entries: { commit: { required: true, in: { pattern: '^[0-9a-f]{7,40}$' } }, at: { required: true, stamped: true, in: { type: moment } }, garden: { in: { bean_id: { gene: [garden] } } } } }, meaning: "the commit and the moment the readings it rests on were read at (`pin_form`, N2)" }
+        note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes" }
+      cells:
+        - { when: { answer: [confirms, disputes, abstains] }, requires: [answers], why: "a verdict names the entry it is a verdict on" }
+    merge: { cardinality: multi, order: by-key }
+
+  - term: hearings
+    meaning: "a disagreement heard before it is ruled on: the entries that disagree, each speaker's own statement, and the ruling — which the gate refuses until every speaker of the entries has been heard"
+    context_keys: [hearings]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      attrs:
+        over:   { required: true, in: { entries: { path: { required: true, in: { type: field_path }, meaning: "`<bean>:<term>.<key>`" } } }, meaning: "the entries that disagree, each `<bean>:<term>.<key>`" }
+        heard:  { in: { entries: { speaker: { required: true, in: bean_id, meaning: "who spoke" }, said: { required: true, in: prose, meaning: "what they said, in their own words" }, at: { in: { type: date_or_moment }, meaning: "when" } }, keyed_by: speaker }, meaning: "each side's statement, in their own words" }
+        ruling: { in: { entries: { by: { required: true, in: { bean_id: { gene: [person, org] } }, meaning: "who ruled" }, what: { required: true, in: prose, meaning: "the decision" }, at: { in: { type: date_or_moment }, meaning: "when" } } }, meaning: "the decision, by whom" }
+        note:   { in: prose, meaning: "optional prose" }
     merge: { cardinality: multi, order: by-key }
 
   - term: risks

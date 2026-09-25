@@ -1271,6 +1271,73 @@ The `race` row reads the steps of the procedure a view `draws` — its `steps`, 
 place of a table of phases, which would restate them. `health-chain` is the fallback, named so that falling back is a
 choice written down.
 
+## terms[observations]
+
+A READING IS KEPT AS IT WAS MADE, AND WHAT FOLLOWS FROM READINGS IS READ (24.0, step 5). The shape is ISO 19156's: a
+property, a feature of interest, a phenomenon time and a result, with the procedure and the observer. The property is
+a code of a published scheme and never a garden's own word, so two gardens' readings of one thing meet by code. A
+reading made again is a new entry: growth, drift and recovery are read from the entries, never stored beside them,
+where they would go stale. `beanger` keeps one field's own history at the moments it was written; an observation keeps
+the world at the moment it held.
+
+## terms[observations].schema.attrs.by
+
+WHO READ IT IS A BEING THE GARDEN HOLDS (24.0, N19). A reading's weight depends on the standing of whoever made it — a
+person, an instrument — and standing can only be read from a bean. An observer written as a name alone could not be
+weighed, nor asked again.
+
+## terms[observations].schema.attrs.answers
+
+A VERDICT IS AN ENTRY OF ITS OWN (24.0, N20). A second observer who confirms, disputes or will not say writes that as
+an entry which answers the first, so the first is never edited by someone who did not make it, and the disagreement
+stays visible with both speakers. One observer gives one verdict on one entry, wherever it is written: two would be one
+voice counted twice. The answer `abstains` records that someone was asked and would not say, which is different from
+never having been asked.
+
+## terms[observations].schema.attrs.presence
+
+AN ABSENCE IS A FINDING (24.0, step 5). A sign looked for and not seen, a list that does not name something, is
+evidence, and a reading that simply is not there says nothing. An absent entry states no result, because a result
+beside an absence would contradict it.
+
+## terms[observations].schema.attrs.retracted
+
+A READING IS WITHDRAWN, NEVER ERASED (24.0, step 5). Its observer's withdrawal is kept with the day it was made, and a
+reading after that day does not read the entry. Only the observer can withdraw it, so the entry carries its own
+provenance stated by a person.
+
+## terms[hearings]
+
+A DISAGREEMENT IS HEARD BEFORE IT IS RULED ON (24.0, N21; manifesto: heard). The entries in dispute, each speaker's own
+words and the ruling are kept together, and the gate refuses a ruling while a speaker of the entries it is over has not
+been heard. A ruling that skipped a side would be the record of a decision nobody could check was fair.
+
+## knowledge_scheme_form
+
+A SCHEME SAYS HOW ITS CODES ARE HELD (24.0, step 6). Some are small and free and ship with the release; some are a
+garden's own, kept as an extract it edits as ordinary journalled writes, so configuration such as kinds of leave or a
+questionnaire's questions is data, not law (F9, N28); some are too large, or not ours to copy, and are held at their
+publisher and checked here by form alone — and the gate says once that they are not looked up, so a pass is not read as
+more than it is. Licence and release say under which terms and from which edition the rows are, which is what anyone
+passing them on needs.
+
+## knowledge_scheme_form.sensitive
+
+SENSITIVITY FOLLOWS THE CODE, NOT THE FIELD IT SITS IN (24.0, F3). A diagnosis is special-category material wherever it
+is written, so the mark sits on the scheme once and every code of it carries it; nothing is left to a writer's memory.
+
+## knowledge_scheme_form.relations
+
+RELATIONS BETWEEN A SCHEME'S OWN CODES ARE ITS OWN ROWS (24.0, N23). Part of, requires, adjacent to: a scheme's
+structure beyond its tree is kept as a table of its codes, resolved like any other link, so the finder and a reading can
+follow it and a code that is not the scheme's is refused.
+
+## knowledge_scheme_form.labels
+
+A LABEL IN ANOTHER LANGUAGE KEEPS ITS PUBLISHER'S WORDS (24.0, N25). Translations are often published on condition
+that an attribution is printed with them. The attribution is kept verbatim beside the labels it covers, and every reader
+that prints a label prints it.
+
 ## profiles.code.terms[code_paths].meaning
 
 The 'paths vocab' (added 2026-08-01, human-directed): so an agent LOCATES code without re-walking a tree,

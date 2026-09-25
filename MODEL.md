@@ -221,6 +221,21 @@ technologies, each linked to its project's own documentation. They are kept whol
 - As a **relation** (`knowledge:` entries `{scheme, code, rel, topic?}` with `rel` classified_as, draws_on or
   uses) any bean says what it rests on — an instance uses a technology, a design draws on a field.
 - The gate checks every code against its scheme; an invented code is refused.
+- A scheme says how its codes are **held** (`knowledge_scheme_form`, 24.0): shipped with the release; a garden's own
+  **extract** in `extracts/<scheme>.tsv`, declared once in VOCAB.md (a RULE-CHANGE) and then edited row by row as an
+  ordinary journalled write, which is how configuration — kinds of leave, a questionnaire — stays data; or held **at its
+  authority**, where a code is checked by its form alone and the gate says so once. A scheme marked `sensitive` makes
+  every code of it special-category wherever it is written.
+- `bin/dmknowledge.py` is the one finder over all of them: `find` ranks candidates with their ancestry, `label` gives a
+  code in another language with its publisher's attribution, `at` computes anchors for a position, and `gold` measures
+  the finder against codes a person chose. It writes nothing; a person picks the code.
+
+**Observations** (24.0, step 5) are what was found of a being, one entry per reading, in ISO 19156's shape: a
+`property` coded in a published scheme, `of` a coded part, `presence` (an absence is a finding), `at` a moment or
+`during` a stretch, a result (`value` with its u, `code`, `position` or `extent`), a `method` and the observer `by`, a
+bean the garden holds. A reading made again is a new entry; change is read, never stored. A second observer's verdict is
+an entry that `answers` the first — confirms, disputes or abstains — one per observer per entry. A disagreement is
+kept as a `hearing`, and its ruling is refused until every speaker of the entries it is over has been heard.
 
 ## Ground rules
 1. **One owner per fact.** A fact lives in one bean's `owns:`; elsewhere it is referenced (manifesto: once).

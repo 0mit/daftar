@@ -1,0 +1,29 @@
+# The finder's gold set (24.0, OBS, O-5): invented queries, and the code a person would pick for each.
+# The codes were picked by the agent that built part 8 from the schemes' own titles, on 2026-09-26; a person has not
+# reviewed them yet. test/observations.py prints recall@5 of `dmknowledge.py find` against them and holds it at or
+# above the floor it measured on the first run. A row is query<TAB>scheme<TAB>code.
+query	scheme	code
+tile setter	isco-08	7122
+nurse	isco-08	2221
+family doctor	isco-08	2211
+software developer	isco-08	2512
+help desk technician	isco-08	3512
+cook	isco-08	5120
+electrician	isco-08	7411
+university lecturer	isco-08	2310
+office cleaner	isco-08	9112
+vegetable grower	isco-08	6111
+taxi driver	isco-08	8322
+dentist	isco-08	2261
+plumber	isco-08	7126
+hairdresser	isco-08	5141
+graphic designer	isco-08	2166
+chef	isco-08	3434
+pastry cook	isco-08	7512
+midwifery	isced-f-2013	0913
+network administration	isced-f-2013	0612
+food processing	isced-f-2013	0721
+earth sciences	isced-f-2013	0532
+language acquisition	isced-f-2013	0231
+catering	isced-f-2013	1013
+livestock	isced-f-2013	0811

@@ -79,6 +79,7 @@ parts, changes).
    python3 test/held.py
    python3 test/hub.py
    python3 test/agreements.py
+   python3 test/observations.py
    reuse lint
    ```
 
