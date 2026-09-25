@@ -24,9 +24,11 @@ of the manifesto stated again outside it);
 STORY IN THE LAW (when, who or where, told inside the law's data); STATED, NOT CHECKED (`enforced_by: none`);
 and ONE ESTATE IN THE STANDARD (a standard vacancy whose reason is one garden's expectation). With
 `--against <ref>` each line says how it moved since that ref. It reads seed/std-vocab.md (and, in a garden, its
-VOCAB.md overlay) and the tools, as the working tree holds them and as git holds them at the ref. It names the law's
-structure and not its terms — with one exception, `prediction`, the vacancy reason that is a garden's own expectation,
-which the law does not yet mark in a column a tool could read (see `_ONE_GARDENS_REASON`).
+VOCAB.md overlay) and the tools, as the working tree holds them and as git holds them at the ref, and which prose is
+read for a second statement — not the record of what was, nor an agent's notes — from the law's layer map through
+bin/dmpass.py. It names the law's structure and not its terms — with one exception, `prediction`, the vacancy reason
+that is a garden's own expectation, which the law does not yet mark in a column a tool could read (see
+`_ONE_GARDENS_REASON`).
 
 Usage: python3 bin/dmreview.py [--all]     (--all lists every occurrence rather than a sample)
        python3 bin/dmreview.py --law [--against <git-ref>]     (also --against=<git-ref>)
@@ -35,7 +37,7 @@ import difflib, errno, glob, os, re, subprocess, sys, textwrap
 from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse
+import dmparse, dmpass
 try:
     import yaml
 except ImportError:
@@ -135,38 +137,138 @@ def _git(*args):
     return r.stdout.decode('utf-8', 'replace') if r.returncode == 0 else None
 
 
+def _cat(blobs):
+    """{blob id: text} for many blobs, read through one `git cat-file --batch`; {} where git cannot give them."""
+    if not blobs:
+        return {}
+    try:
+        r = subprocess.run(['git', '-C', ROOT, 'cat-file', '--batch'], input=''.join(b + '\n' for b in blobs).encode(),
+                           capture_output=True, timeout=60)
+    except Exception:
+        return {}
+    if r.returncode != 0:
+        return {}
+    out, at, got = r.stdout, 0, {}
+    try:
+        while at < len(out):
+            nl = out.index(b'\n', at)
+            head, at = out[at:nl].split(), nl + 1
+            if len(head) == 3 and head[2].isdigit():            # `<id> blob <size>`, then the bytes; `<id> missing`
+                n = int(head[2])
+                got[head[0].decode('ascii', 'replace')] = out[at:at + n].decode('utf-8', 'replace')
+                at += n + 1
+    except ValueError:
+        pass
+    return got
+
+
 class Tree:
     """The repository as the working tree holds it (ref None), or as git holds it at a ref. Paths are written with
-    `/`, as git spells them, on every platform."""
+    `/`, as git spells them, on every platform, and listed with `-z`, so a name git would quote is the name itself.
+
+    AT A REF, A FEW GIT CALLS, NOT ONE PER FILE. The listing is read once, with each file's blob id, and the files a
+    reader needs are read together through one `git cat-file --batch` (`read_all`); a file not yet read is read alone.
+    A `git show` per file made the layer map at a ref cost one process per bean: 165 of them in a garden of 148 beans,
+    growing with the garden. What a ref holds does not change while this runs, so each file is read once."""
 
     def __init__(self, ref=None):
         self.ref = ref
+        self._files = None
+        self._blobs = {}               # at a ref: {path: blob id}, from the one listing
+        self._texts = {}               # at a ref: {path: text, or None where the ref holds no such file}
 
     def read(self, path):
         if self.ref is not None:
-            return _git('show', f'{self.ref}:{path}')
+            if path not in self._texts:
+                self.read_all([path])
+            return self._texts[path]
         try:
             with open(os.path.join(ROOT, *path.split('/')), encoding='utf-8') as fh:
                 return fh.read()
         except OSError:
             return None
 
+    def read_all(self, paths):
+        """{path: text or None} for many files: at a ref, every one not yet read through one `git cat-file --batch`."""
+        if self.ref is None:
+            return {p: self.read(p) for p in paths}
+        self.files()
+        want = [p for p in dict.fromkeys(paths) if p not in self._texts]
+        got = _cat([self._blobs[p] for p in want if p in self._blobs])
+        for p in want:
+            self._texts[p] = got.get(self._blobs.get(p))
+        return {p: self._texts[p] for p in paths}
+
     def files(self):
-        out = _git('ls-files') if self.ref is None else _git('ls-tree', '-r', '--name-only', self.ref)
-        if out is not None:
-            return out.splitlines()
-        if self.ref is not None:
-            return []
-        return sorted(os.path.relpath(os.path.join(d, f), ROOT).replace(os.sep, '/')
-                      for d, _s, fs in os.walk(ROOT) if '.git' not in d.split(os.sep) for f in fs)
+        if self._files is None:
+            self._files = self._list()
+        return list(self._files)
+
+    def _list(self):
+        if self.ref is None:
+            out = _git('ls-files', '-z')
+            if out is not None:
+                return [p for p in out.split('\0') if p]
+            return sorted(os.path.relpath(os.path.join(d, f), ROOT).replace(os.sep, '/')
+                          for d, _s, fs in os.walk(ROOT) if '.git' not in d.split(os.sep) for f in fs)
+        for rec in (_git('ls-tree', '-r', '-z', self.ref) or '').split('\0'):
+            meta, tab, path = rec.partition('\t')            # `<mode> <type> <id>\t<path>`
+            kind = meta.split()
+            if tab and len(kind) == 3 and kind[1] == 'blob':
+                self._blobs[path] = kind[2]
+        return list(self._blobs)
 
 
-def law_state(ref=None, path=LAW_FILE):
+def _read_all(tree, paths):
+    """{path: text or None}: through a tree's one batched read where it has one, else file by file."""
+    many = getattr(tree, 'read_all', None)
+    return many(paths) if many else {p: tree.read(p) for p in paths}
+
+
+# THE RECORD OF WHAT WAS: the layers whose files say what happened — a journal's entries, the history's exact copies. A
+# second statement there is the record doing its job, not a copy that can drift: the changelog keeps a wording a clause
+# retired, in the entry that retired it. Which files those are is read from the law's layer map through bin/dmpass.py
+# (the one reader of it). The directory names the two readers below still skip are the estate, the queue beside the
+# journal, and where a journal and a history lived in a tree whose law has no map (a ref from before it).
+WAS = ('journal', 'history')
+
+
+def _layer_map(tree):
+    """The tree's layer map, read once per tree — a Tree at a ref as well as the working tree; None where the tree
+    holds no law to read one from, and then no file is placed. `--law` asks it twice of the same tree. The files the
+    map reads (the law, the release's list, every bean and mapping for its `standing`) are read together first, so at
+    a ref they cost one git call and not one each; the map still reads what it reads, and any other file alone."""
+    if getattr(tree, '_layers', False) is False:
+        files = tree.files()
+        if getattr(tree, 'ref', None) is not None:
+            _read_all(tree, [dmpass.LAW, dmpass.LANGUAGE] +
+                      [f for f in files if f.startswith(dmpass.DOCUMENTS) and f.endswith('.md')])
+
+        def read(p):
+            # A DOCUMENT THAT NEVER SAYS `standing` PLACES NOTHING, and the map need not parse it: a key is written with
+            # its name, so this changes no placement, and spares the parse of every bean that places nothing.
+            text = tree.read(p)
+            return None if text is not None and p.startswith(dmpass.DOCUMENTS) and 'standing' not in text else text
+        try:
+            tree._layers = dmpass.Map(read, files)
+        except ValueError:
+            tree._layers = None
+    return tree._layers
+
+
+def _was(m, path):
+    """Whether the map places the file in the record of what was."""
+    return m is not None and m.layer_of(path)[0] in WAS
+
+
+def law_state(ref=None, path=LAW_FILE, tree=None):
     """(law, None) — or (None, why not): the file is absent, or it does not parse, or it is not a mapping. The two are
-    told apart, because "nothing to count" and "the law you are editing does not parse" ask different things of you."""
-    text = Tree(ref).read(path)
+    told apart, because "nothing to count" and "the law you are editing does not parse" ask different things of you.
+    Read from `tree` when one is given (and then at its ref), so a tree read several times is listed once."""
+    tree = tree if tree is not None else Tree(ref)
+    text = tree.read(path)
     if text is None:
-        return None, f"no {path}" + (f" at {ref}" if ref else '')
+        return None, f"no {path}" + (f" at {tree.ref}" if tree.ref else '')
     fm = dmparse.split_front_matter(text)[0]
     if fm is None:
         return None, f"{path} has no front matter"
@@ -177,9 +279,9 @@ def law_state(ref=None, path=LAW_FILE):
     return (law, None) if isinstance(law, dict) else (None, f"{path}'s front matter is not a mapping")
 
 
-def law_at(ref=None, path=LAW_FILE):
+def law_at(ref=None, path=LAW_FILE, tree=None):
     """The law's front matter, parsed — at a git ref, or in the working tree. None when it is not there or not law."""
-    return law_state(ref, path)[0]
+    return law_state(ref, path, tree)[0]
 
 
 def _d(x):
@@ -228,7 +330,8 @@ def _domains_used(attrs, domains, into):
 def _tools_text(tree):
     tools = [f for f in tree.files() if f.startswith('bin/') and f != 'bin/dmreview.py'
              and (f.endswith(('.py', '.sh')) or f.startswith('bin/hooks/'))]
-    return '\n'.join(tree.read(f) or '' for f in tools)
+    texts = _read_all(tree, tools)
+    return '\n'.join(texts[f] or '' for f in tools)
 
 
 def _unread(keys, tools):
@@ -265,53 +368,56 @@ def _enumerations(law):
 _SEP = r'(?:\s*(?:,|\||/|;|·)\s*(?:(?:or|and)\s+)?|\s+(?:or|and)\s+)'
 _RUN = re.compile(r'`[^`\n]+`(?:' + _SEP + r'`[^`\n]+`){2,}')
 _CHANGELOG = re.compile(r'(?im)^#+ .*changelog')
-# A garden says what each of its documents is FOR in a `standing:` list (the gate derives the law it journals from the
-# same list). Where one is declared, the prose documents read here are the ones it marks as law, reasoning or guide —
-# not a handover or a journal, whose job is to tell what happened. Where none is (this repository, a garden fresh from
-# the seed), every tracked prose document is read.
+# WHICH PROSE IS READ, AND WHO SAYS. Where the tree's law has a layer map, the map decides, file by file: a document it
+# places in the manifesto, the law, the reasoning or a guide is read; one it places in any other layer — the record of
+# what was, the queue, an agent's work, a person's words — is not, whether the law placed it or a garden did; and one in
+# no layer is read, because nothing says it is something else. A garden's other entries change none of it: the law
+# places the documents every garden has, so an entry that repeats the law's placement says nothing new, and must not
+# decide whether an agent's notes are read as law. Where the law has no map (a ref from before it), a garden's entries
+# are all there is: where one marks any document as law, reasoning or guide, only the ones marked are read, and where
+# none does, every prose document is.
 _READ_STANDINGS = ('law', 'reasoning', 'guide')
+_READ_LAYERS = ('manifesto',) + _READ_STANDINGS
 
 
-def _standing_docs(tree):
-    """{path} of the documents a `standing:` list marks as law, reasoning or guide; None where no bean declares one."""
-    beans = [f for f in tree.files() if f.startswith('beans/') and f.endswith('.md')]
-    if tree.ref is not None:
-        hit = _git('grep', '-l', '-E', '^standing:', tree.ref, '--', 'beans/') or ''
-        beans = [ln.split(':', 1)[1] for ln in hit.splitlines() if ':' in ln]
-    docs = None
-    for f in beans:
-        text = tree.read(f) or ''
-        if '\nstanding:' not in text:
-            continue
-        try:
-            fm = dmparse.loads(dmparse.split_front_matter(text)[0] or '')
-        except Exception:
-            continue
-        for e in _l(_d(fm).get('standing')):
-            if isinstance(e, dict) and e.get('standing') in _READ_STANDINGS and isinstance(e.get('doc'), str):
-                docs = (docs or set()) | {e['doc'][5:] if e['doc'].startswith('file:') else e['doc']}
-    return docs
+def _standing_docs(m):
+    """For a law with no map: {path} of the documents a garden's entries place in law, reasoning or guide; None where
+    no entry marks one. READ THROUGH THE MAP'S READER, NOT FROM THE ENTRIES' STRINGS: an entry's doc may be a pattern."""
+    if m is None or not any(e.get('standing') in _READ_STANDINGS for _f, _i, e in m.standing):
+        return None
+    return {f for f in m.files if m.layer_of(f)[0] in _READ_STANDINGS}
+
+
+def _not_read(m):
+    """A test of the prose documents that are not read as stating or explaining law, from the tree's map (m None where
+    the tree holds no law to read one from, and then every one is read)."""
+    if m is not None and m.rows:
+        return lambda f: m.layer_of(f)[0] not in (None,) + _READ_LAYERS
+    marked = _standing_docs(m)
+    return lambda f: _was(m, f) or (marked is not None and f not in marked)
 
 
 def _prose_documents(tree):
-    """(path, text, offset) for every tracked prose document that states or explains law: not the history (whose
-    job is to say what the law WAS), not a garden's beans, mappings or journal, not a document its `standing:` says is
-    something else, and of the law's own file only the body above its changelog."""
-    marked = _standing_docs(tree)
-    for f in tree.files():
-        if not f.endswith('.md') or f == 'HISTORY.md' or f.split('/')[0] in ('beans', 'mappings', 'log'):
-            continue
-        if marked is not None and f not in marked and f not in (LAW_FILE, OVERLAY_FILE):
-            continue
-        text = tree.read(f)
+    """(path, text, offset) for every tracked prose document that states or explains law: not one the map places
+    outside the manifesto, the law, the reasoning and a guide (`_not_read`), not HISTORY.md, the release's own history,
+    which the law does not place, not a garden's beans, mappings or log (the log holds the queue beside the journal, and
+    held the journal before the law had a map), and of the law's own file only the body."""
+    skip = _not_read(_layer_map(tree))
+    docs = [f for f in tree.files() if f.endswith('.md') and f != 'HISTORY.md'
+            and f.split('/')[0] not in ('beans', 'mappings', 'log') and (f in (LAW_FILE, OVERLAY_FILE) or not skip(f))]
+    texts = _read_all(tree, docs)
+    for f in docs:
+        text = texts[f]
         if text is None:
             continue
         start = 0
         if f == LAW_FILE:
             fm = dmparse.split_front_matter(text)[0]
             start = text.find(fm) + len(fm) if fm else 0
-            m = _CHANGELOG.search(text, start)
-            text = text[:m.start()] if m else text
+            # A LAW READ AT A REF FROM BEFORE ITS CHANGELOG MOVED carried the changelog below its body; the cut keeps
+            # that story out of the count. The law now keeps none, and the moved file is the journal's.
+            cut = _CHANGELOG.search(text, start)
+            text = text[:cut.start()] if cut else text
         yield f, text, start
 
 
@@ -364,8 +470,9 @@ MANIFESTO_MUST_CARRY = {
     ('seed/WELCOME.md', 'never-obeys'): "pasted into a chat, with no repository to point into",
     ('MODEL.md', 'whole'): "the law's own condition for declaring a mechanism whole",
 }
-# The manifesto itself; the history, whose job is to say what was; and the two readers that must hold the words to
-# compare them. The reasoning, keyed to the clauses, is known by what it says of itself (`rationale_for:`), not by name.
+# The manifesto itself; the release's history, whose job is to say what was; and the two readers that must hold the
+# words to compare them. The reasoning, keyed to the clauses, is known by what it says of itself (`rationale_for:`), not
+# by name; the journal and the history a tree keeps, by the layer the map places them in (`WAS`).
 MANIFESTO_EXEMPT = (MANIFESTO_FILE, 'HISTORY.md', 'test/manifesto.py', 'bin/dmreview.py')
 _REASONING = re.compile(r'---\s*\nrationale_for:')
 # A WORDING A CLAUSE RETIRED, and the files that keep it as law: the law's `retired:` table, for prose.
@@ -393,7 +500,8 @@ def _words(s):
 def manifesto_restatements(tree):
     """[(path, key)] — every file outside the manifesto that states a clause again, by six of its words in order or by
     a wording the clause retired; a marked quote (`<!-- manifesto: key -->`) is not counted, and is held equal to the
-    clause by test/manifesto.py. None when this tree has no manifesto."""
+    clause by test/manifesto.py. Not the record of what was: a journal entry that quotes a wording it retired is the
+    journal doing its job. None when this tree has no manifesto."""
     clauses = manifesto_clauses(tree.read(MANIFESTO_FILE))
     if not clauses:
         return None
@@ -402,12 +510,13 @@ def manifesto_restatements(tree):
         w = _words(v)
         for i in range(len(w) - _SHINGLE + 1):
             shingles.setdefault(' '.join(w[i:i + _SHINGLE]), k)
-    hits = set()
-    for f in tree.files():
-        if (f.startswith(MANIFESTO_EXEMPT) or f.split('/')[0] in ('beans', 'mappings', 'log', 'captures')
-                or not (f.endswith(_MANIFESTO_READ) or f in ('LICENSE', 'NOTICE', 'seed/LANGUAGE'))):
-            continue
-        body = tree.read(f) or ''
+    hits, m = set(), _layer_map(tree)
+    read = [f for f in tree.files()
+            if not (f.startswith(MANIFESTO_EXEMPT) or f.split('/')[0] in ('beans', 'mappings', 'log', 'captures')
+                    or not (f.endswith(_MANIFESTO_READ) or f in ('LICENSE', 'NOTICE', 'seed/LANGUAGE')) or _was(m, f))]
+    texts = _read_all(tree, read)
+    for f in read:
+        body = texts[f] or ''
         if _REASONING.match(body):
             continue
         body = MANIFESTO_QUOTE.sub(' ', body)
@@ -430,10 +539,10 @@ _ONE_GARDENS_REASON = 'prediction'
 
 def preconditions(tree):
     """The measures, as [(section, [row])]; a row is {label, n, items, show, detail?, note?}. None with no law."""
-    law = law_at(tree.ref)
+    law = law_at(tree=tree)
     if law is None:
         return None
-    overlay = law_at(tree.ref, OVERLAY_FILE)          # a garden's own law, read beside the standard's
+    overlay = law_at(path=OVERLAY_FILE, tree=tree)    # a garden's own law, read beside the standard's
     terms, pterms = _terms(law), _profile_terms(law)
     every = terms + [t for _p, t in pterms]
     sl = _d(law.get('schema_language'))
@@ -569,14 +678,15 @@ def law_report(against=None):
     if now is None:
         _say(f"  {LAW_FILE}: {failed}")
         return 0
-    old = None
+    old = old_law = None
     if against:
-        old_law, old_why = law_state(against)
-        old, old_failed = _measure(Tree(against)) if old_law is not None else (None, None)
+        then = Tree(against)                         # one tree at the ref, listed once, for every count read from it
+        old_law, old_why = law_state(tree=then)
+        old, old_failed = _measure(then) if old_law is not None else (None, None)
         if old is None:
             _say(f"  --against {against}: {old_why or old_failed} — so the counts stand alone")
     _say(f"  {LAW_FILE}, std-vocab {law.get('version')}, as the working tree holds it"
-         + (f" · against {against}, std-vocab {(law_at(against) or {}).get('version')}" if old else ''))
+         + (f" · against {against}, std-vocab {(old_law or {}).get('version')}" if old else ''))
     _say(_wrap("Nothing here passes or fails, and no count has a direction: a mechanism may make the law larger and "
                "better, and the cheapest way to lower a count is to fold a structured fact into prose. Each line is "
                "a question for whoever ratifies; the merge is the judgment.".split(), '  '))
@@ -836,6 +946,19 @@ def part_b():
                           _gate.dmform.attribute_form(None, s)) and t in _gate.TIER0_TERMS and t not in _drawn)
     print(f"  {len(_undrawn)} Tier-0 relation(s) drawn by no bean")
     sample(_undrawn, 12)
+
+    # ---- files in no layer ---------------------------------------------------------------------------------
+    # COUNTED HERE AND NEVER BY THE GATE. The law cannot name every file a garden keeps, and a file nobody has placed
+    # has broken nothing; it is only the one place a flow cannot be judged from. So the count is evidence, and the
+    # files themselves are the map's to list, from its one reader.
+    head("FILES IN NO LAYER",
+         "the law's layer map places what every garden has, and a garden places the rest with `standing`. Is each "
+         "of these law, reasoning, journal, a person's words or an agent's work — and does an entry say which?")
+    try:
+        _unplaced = dmpass.Map.here(ROOT).placed()[1]
+        print(f"  files in no layer: {len(_unplaced)} — `python3 bin/dmpass.py --layers` lists them")
+    except ValueError as e:
+        print(f"  files in no layer: not counted — {e}")
 
     print("\n— nothing above is a finding. If any of it becomes checkable with evidence, it belongs in the "
           "gate and leaves this file.")

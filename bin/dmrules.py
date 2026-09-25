@@ -398,13 +398,32 @@ if '--core' in want:
                  "acyclicity across all dag-declared relations",
                  "no duplicate authoritative IP (vocab-driven from the std-vocab `ip` term)",
                  "a staged bean change requires a journal entry — provenance duty",
-                 "a staged change to the vocabulary or the law must say RULE-CHANGE distinctly",
+                 "a staged change to the vocabulary or the law must say RULE-CHANGE distinctly: VOCAB.md, GARDEN.md, the "
+                 "law's own file, a file the release ships (seed/LANGUAGE), and a file the layer map places in `law` or "
+                 "`manifesto` — by the law's rows or a garden's `standing`, a pattern included, a deletion too",
                  "no staged file holds a private-key block: a secret is never in the ledger (MODEL.md, Ground rule 7)",
                  "a staged top-level key REMOVAL must be declared (allow_remove), never silent",
                  "a staged document must not lose its human body",
                  "std-vocab must be found at its one path — there is no fallback",
                  "a garden's `extends:` pin must equal the installed vocabulary version",
                  "a `file:` pointer must resolve to a file that exists in this garden",
+                 "the layer map is the law's: VOCAB.md restates no `layers`, and adds no row to it under "
+                 "registry_additions",
+                 "the law's `layers` are read whole or not at all: a layer is named by one row, `holds` is a list of "
+                 "paths or patterns each in the one form a path is written in, only a layer of files holds one, every "
+                 "`beneath` names a row, and where rows stand on others one layer is on top and the links do not loop",
+                 "no file of the garden is held by two rows of the law's `layers` — a file sits in one layer",
+                 "the journal the law names (`journal.path`) is held by the law's `journal` row; a `journal.path` in "
+                 "VOCAB.md is read by no tool, and WARNS where it differs from the law's",
+                 "a `standing` entry never places a file the law's `layers` place elsewhere, and no two entries place "
+                 "one file in two layers; a file in no layer is shown by bin/dmpass.py, never refused",
+                 "a `standing` doc is a path in its one form — relative, names separated by `/` and never a backslash, "
+                 "no empty, `.` or `..` segment, no trailing `/` (a directory is `dir/*`) — and one with no `*`, `?` or "
+                 "`[` names a file the garden holds; a doc that copies a file's name holding `[`, `*` or `?` must match "
+                 "that file (`[[]` for a `[`)",
+                 "a `local_terms` entry named for a term the standard has WARNS for each key it states again, since the "
+                 "garden's copy replaces the standard's there (what it adds — an attribute or a field of one the "
+                 "standard leaves unsaid, a cell — merges); for a term whose values are the law's layers it is an ERROR",
                  "a bean, a mapping, GARDEN.md and VOCAB.md are UTF-8 — any other encoding is refused by name",
                  "every entry of VOCAB.md is in its own shape: a term's or a genos's name is text, a schema, its attrs and "
                  "a merge are mappings, context_keys a list of text, a cell says one verdict (incoherent | in_breach), "

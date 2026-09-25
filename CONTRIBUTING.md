@@ -67,6 +67,7 @@ parts, changes).
    python3 test/public.py
    python3 test/docs.py
    python3 test/manifesto.py
+   python3 test/layers.py
    reuse lint
    ```
 
@@ -106,14 +107,15 @@ section 11. You keep your copyright: nothing is assigned.
 (https://developercertificate.org), and the licence it names is the one `REUSE.toml` gives the file. It is added by a
 person, never by an agent on its own: that person has read the change, has the right to give it (an employer's right
 included), and answers for it. The agent is named in its own trailer (`Co-Authored-By:` or `Assisted-by:`). A sign-off
-may use the name the contributor is known by. Commits made before this section was added carry none; they are the
+may use the name the contributor is known by, and an address the leak guard does not refuse: an account's
+no-reply address is one. Commits made before this section was added carry none; they are the
 steward's own. CI refuses a pull request with a commit that carries no sign-off.
 
 ## Editing the vocabulary itself
 
-- The vocabulary is `seed/std-vocab.md`: YAML front matter (the law) and a Markdown body ending in a
-  changelog. Edit the front matter; add one changelog entry, above its version's neighbours, naming the change and why.
-- **The layers** (manifesto: layers; what each holds is `MODEL.md`'s). What a reader needs in order to APPLY a rule
+- The vocabulary is `seed/std-vocab.md`: YAML front matter (the law) and a short Markdown body. Edit the front
+  matter, and add one entry to `seed/CHANGELOG.md`, the law's journal, above the newest, naming the change and why.
+- **The layers** (manifesto: layers; which file sits in which is the law's `layers`, and `MODEL.md` says what each holds). What a reader needs in order to APPLY a rule
   goes in the item's own `meaning:` or `why:`, present tense, no date, no name, with no commentary; why it is that way
   goes in `seed/RATIONALE.md` under the item's path (`python3 bin/dmwhy.py <name>` reads both; `--check` finds a
   reason whose law is gone); the changelog entry says what changed and why; the commits are the record.
@@ -152,4 +154,4 @@ next release tag, which each garden adopts with `bin/dmupgrade.py` when its own 
 ## Releases
 
 Maintainers tag releases `vMAJOR.MINOR.PATCH` on `master`. The vocabulary's own version lives in
-`seed/std-vocab.md` (`version:`) with a changelog at the end of that file; a release names both.
+`seed/std-vocab.md` (`version:`), and its changelog is `seed/CHANGELOG.md`; a release names both.

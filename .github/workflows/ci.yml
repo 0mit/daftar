@@ -69,6 +69,8 @@ jobs:
         run: python3 test/docs.py
       - name: "manifesto: stated once, above the law; every clause carried or said to be only stated; no copy grows"
         run: python3 test/manifesto.py
+      - name: "layers: each file sits in one layer, placed by the law or by its garden; no tool's path in the law; the changelog is journal"
+        run: python3 test/layers.py
       - name: "licences: every file says whose it is and under which terms (REUSE)"
         run: reuse lint
       - name: "sign-off: every commit of a pull request is signed off by a person (CONTRIBUTING.md)"

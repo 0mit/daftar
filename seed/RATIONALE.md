@@ -2356,6 +2356,44 @@ While the design stood in the present tense among the rules, a reader could not 
 MERGE.md states what the engine does, and this section keeps the rest of the design — named, so it is not lost, and
 out of the present tense, so it is not read as in force.
 
+## layers
+
+THE LAYER MAP IS LAW DATA (23.1). Which file is law, which is reasoning, which is journal, was stated in five places
+that disagreed: a garden's own list, the gate's derivation of the law documents from it, the tool that reads the
+reasons, the README, and the door for agents. A map that decides what may flow where has to be one statement a tool
+can read, or every guard built on it guards a different map. So the law places what every garden has, by the same
+patterns a release uses to say what it ships, and a garden places the rest.
+
+FIVE OF THEM ARE A CHAIN, AND THE REST STAND BESIDE IT. The manifesto, the law, the reasoning, the journal and the
+record are daftar's own words, each standing on the one beneath, and `beneath` says so as a link the gate resolves
+and holds acyclic. The estate is not one of them: a bean is a fact about the world, not daftar speaking. Nor is the
+guide, whose values are an example's; nor the gate, which applies the law and is not it; nor the queue.
+
+THE QUEUE IS NOT THE JOURNAL. The list of what waits for a person is edited in place as each item moves: measured in
+one real garden, eighty lines of it removed over thirty-four commits. A journal is appended and never rewritten.
+One file cannot be both, so it stands in a place of its own.
+
+PLACES THAT ARE NO FILE are declared with the rest, ahead of their occupants: what a person asked, the world outside,
+the clock, a model's own output, a request, a remote party, a public repository, another garden. A flow is judged
+from one place to another, and a flow law with no name for where material came from could only guess.
+
+THE KEEPER IS ANOTHER AXIS. Whether a file came from a release is read from the release's own list of what it ships.
+A tool is law in the sense that a change to it is a RULE-CHANGE, and it sits in the gate, not the law, in the sense
+of what it is for. Two questions, two statements. The duty to journal a change distinctly follows both: what a
+release keeps, and what sits in the law or the manifesto, a garden's own law included; and an entry that moves a
+file into or out of those carries it too, or a file could leave the law in the commit that changed it.
+
+NO HARNESS IS NAMED. A path that one agent's harness reads from is a privilege written into universal law; the
+mirror of the door for agents that a release ships is left out of the map, counted where the map is shown.
+
+## terms[standing]
+
+A GARDEN PLACES WHAT THE LAW DOES NOT. It was a term one garden kept for itself, read by the gate under that name.
+Promoted, its values are the rows of the map that hold files, so a new place needs no second list. An entry that
+places a file where the law places it says nothing new; one that places it elsewhere would give a file two
+places, and is refused. A pattern may stand for many files, because a garden's handovers or a person's letters
+are many files of one kind.
+
 ## doc:MANIFESTO.md#serve
 
 THE FIRST OF THE NINE LIVES. In the *Phaedrus* (248d–e) the soul that has seen most is born into the first of nine
