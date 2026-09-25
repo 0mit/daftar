@@ -1,0 +1,14 @@
+{
+ "listen": "127.0.0.1:8780",
+ "monitors": {"<the monitor's bean id>": {"url": "http://127.0.0.1:9090"}},
+ "history": "",
+ "session_key": "<dmview serve-init writes a random key here>",
+ "audit_log": "/home/user/.config/view/actions.log",
+ "users": {
+  "you": {"password": "<a pbkdf2 hash, written by dmview serve-init>", "orgs": ["*"], "shared": false, "beans": [], "actions": true},
+  "a-member": {"password": "<a pbkdf2 hash>", "orgs": ["org-a"], "shared": false, "beans": ["host-b"], "actions": false}
+ },
+ "tools": {
+  "preheat": {"argv": ["sudo", "-n", "/usr/local/sbin/preheat"], "enabled": false, "timeout": 120}
+ }
+}

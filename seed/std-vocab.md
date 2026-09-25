@@ -1370,16 +1370,17 @@ layers:
     meaning: "what waits for a person: proposed, parked and settled in place, and edited as it moves"
   - layer: guide
     files: true
-    holds: [README.md, AGENTS.md, seed/README.md, seed/WELCOME.md, seed/COOKBOOK.md, seed/FORMS.md, "seed/*.template"]
-    meaning: "a way in for a reader: a reading order, a recipe, a form; a value in one is an example's, never a fact"
+    holds: [README.md, AGENTS.md, seed/README.md, seed/WELCOME.md, seed/COOKBOOK.md, seed/FORMS.md, "seed/*.template",
+            "assets/*/README.md", "assets/*/templates/*"]
+    meaning: "a way in for a reader: a reading order, a recipe, a form, an asset's guide and its templates; a value in one is an example's, never a fact"
   - layer: estate
     files: true
     holds: ["beans/*", "mappings/*", "series/*", "extracts/*"]
     meaning: "a garden's facts about what it keeps, each saying who said it and how they know, and the rows of its series and of the schemes it holds as extracts"
   - layer: gate
     files: true
-    holds: ["bin/*", "test/*", "seed/germinate.*", .gitattributes, .gitignore]
-    meaning: "the law applied: the gate, the tools that read the law, the tests that hold them, and the repository's own settings"
+    holds: ["bin/*", "test/*", "seed/germinate.*", .gitattributes, .gitignore, "assets/*/bin/*", "assets/*/lib/*"]
+    meaning: "the law applied: the gate, the tools that read the law, an asset's code, the tests that hold them, and the repository's own settings"
   - layer: words
     files: true
     meaning: "a person's own words, or a document they gave; a garden places them"

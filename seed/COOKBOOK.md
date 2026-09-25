@@ -821,6 +821,88 @@ Then a bean can carry `rental: { provider: "a hosting company", renews: 2027-01-
 attribute whose `in:` is a closed list declares POSITIONS, and the gate will ask that each be used by a bean or
 declared vacant with a reason. If the term proves general, propose it (`CONTRIBUTING.md`).
 
+## A page of drawings (`view` profile)
+
+A page draws what the garden keeps — a procedure, a machine — at four lenses: a story for a newcomer, the drawing
+itself, its vital sign for whoever is on call, and a card of each part's own facts. It is the opt-in **`view`
+profile**, and its asset, `assets/view/`, arrives with it. Opting in is a RULE-CHANGE, made by one command that writes
+the profile in VOCAB.md, brings the asset, journals it and runs the gate (a new garden takes `--profile view` from
+`seed/germinate.py` instead):
+
+    python3 bin/dmupgrade.py <the release GARDEN.md records> --extend view
+
+The drawings are the garden's own code: copy `assets/view/templates/drawings.py` to `drawings/bakery.py` and draw with
+the kit it imports. The page is one bean; what it draws is its `views`, one entry per drawing under the key the
+drawing module draws it by — a machine, or a procedure (a mapping with `steps`). A machine the page draws:
+
+<!-- view-example: beans/oven-a.md -->
+```markdown
+---
+bean: oven-a
+genos: host
+title: "The bakery's first oven"
+status: active
+summary: "The oven that bakes the morning's orders."
+nature: soma
+identity:
+  status: confirmed
+  anchors:
+    - { key: serial, value: "SN-OVEN-0042", class: hardware, establishing: true }
+provenance: { src: observed, by: "sam", as_of: now }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+---
+The first oven.
+```
+
+And the page. A drawing with no monitor behind it draws the health chain, each part it cannot see said so; a
+monitor's values, and the other shapes, are in `assets/view/README.md`:
+
+<!-- view-example: beans/bakery-page.md -->
+```markdown
+---
+bean: bakery-page
+genos: service
+title: "The bakery, drawn"
+status: active
+summary: "The page of drawings of the bakery's orders."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: service_id, value: "service:bakery-page", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+view:
+  drawings: file:drawings/bakery.py
+  reference:
+    - { being: oven-a, what: "bakes the orders" }
+views:
+  orders:
+    draws: { bean: oven-a }
+    purpose: "Every order in stock is baked the same morning."
+    outcome: "The morning's orders leave the oven by nine."
+    stages:
+      - { label: "Check the stock", doer: "whoever takes the order" }
+      - { label: "Bake", doer: "oven-a", beings: [ { being: oven-a } ] }
+      - { label: "Hand it over", doer: "the counter" }
+    questions:
+      - { lens: orient, ask: "How does an order become bread?" }
+      - { lens: operate, ask: "Is the oven baking?" }
+    actions:
+      - { element: preheat, tool: preheat, confirm: "Preheat oven-a now?" }
+    archetype: health-chain
+    blind:
+      - { what: "the oven's temperature", why: "no monitor reads it yet" }
+---
+The bakery's page of drawings.
+```
+
+Then `python3 assets/view/bin/dmview.py check`, and `python3 assets/view/bin/dmview.py report --out map/bakery.html`
+for the page itself. A button (`actions`) asks the host for a tool by name; only the host's own configuration makes a
+tool run anything.
+
 ## Say what a thing is, in the world's shared terms (`knowledge` profile)
 
 Opt in with `extends_profiles: [knowledge]` in VOCAB.md. Then:

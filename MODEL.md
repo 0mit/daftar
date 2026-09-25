@@ -135,6 +135,11 @@ one open fallback, `refs`.
 The rules are data, not code.
 - **`seed/std-vocab.md`** is the standard every garden pins. Opt-in **profiles** add groups of rules for
   gardens that need them (`code`, `network`, `domain`, `knowledge`, `view`).
+- A profile may bring an **asset**: `assets/<profile>/`, the code, templates and guide that put the profile's facts to
+  use. A garden receives it while it extends the profile — at birth (`seed/germinate.py --profile <profile>`), or by
+  the one act that opts in and out (`bin/dmupgrade.py <release> --extend <profile>`, `--retract <profile>`) — and its
+  files are the release's. An asset reads the law only through the garden's own tools, and **opens no concept of its
+  own**: what it needs is a construct the law already has, or arrives as any term does, proved and then proposed.
 - **`VOCAB.md`** is the garden's own layer: local terms, profiles it opts into (`extends_profiles`), values it
   adds to a term's own closed list (`values_add`), rows it adds to a registry (`registry_additions`), and dated
   exceptions. A term that reads its values from a registry takes a row; `values_add` on it adds nothing.

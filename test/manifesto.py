@@ -113,6 +113,19 @@ net = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "d
              if _NET.search(open(f, encoding="utf-8").read()))
 check("no tool but the one that fetches a release opens a network path (manifesto: never-sells)",
       set(net) <= {"dmupgrade.py"}, net)
+# AN ASSET'S CODE IS HELD THE SAME WAY, and more closely: a network module imported anywhere in an import line is found,
+# and the modules that open a network path are exactly the ones declared here, each with why — a module added that
+# opens one, or one declared that no longer does, fails by name.
+_NET_ANY = re.compile(r"^\s*(?:import\s+[^\n#]*\b(?:urllib|http|socket|requests|ftplib|smtplib)\b"
+                      r"|from\s+(?:urllib|http|socket|requests|ftplib|smtplib)\b)", re.M)
+ASSET_NET = {
+    "assets/view/lib/view_serve.py": "the served page listens for its signed-in viewers, on the address the host gives",
+    "assets/view/lib/sources/prometheus.py": "the adapter asks the monitor the host's configuration names for values",
+}
+asset_net = sorted({os.path.relpath(f, ROOT).replace(os.sep, "/") for pat in ("assets/*/bin/*.py", "assets/*/lib/**/*.py")
+                    for f in glob.glob(os.path.join(ROOT, pat), recursive=True) if _NET_ANY.search(open(f, encoding="utf-8").read())})
+check("an asset opens a network path only in the modules declared to, each with why (manifesto: never-sells)",
+      asset_net == sorted(ASSET_NET), f"found {asset_net}; declared {sorted(ASSET_NET)}")
 import dmpass                            # the one reader of seed/LANGUAGE
 lang = dmpass.language(open(os.path.join(ROOT, "seed", "LANGUAGE"), encoding="utf-8").read())
 check("every garden receives the manifesto, so every cite resolves where it is read", "MANIFESTO.md" in lang, lang)

@@ -19,7 +19,11 @@ leaving the profile takes it away. This holds:
                       each name used in the law's own sense said so, with why;
                    5. the profile adds no schema-language key and no domain the language does not offer;
                    6. every term and every registry of the profile has its reason in seed/RATIONALE.md, keyed by its
-                      path, naming the constructs of the law it is built from.
+                      path, naming the constructs of the law it is built from;
+                   7. the asset's files sit in no hidden directory and name none a harness keeps, name nothing a garden
+                      holds (the leak guard's own words, from a garden grown here and from the fixtures of test/view.py),
+                      and write no word the law retired as a key (the upgrade's own finder of them). Which of its
+                      modules open a network path is test/manifesto.py's, held there with the release's tools.
                    Whether a term states a new kind of fact about the world is not mechanical: that is the ratifier's
                    judgment, made where every change to the law is made. These checks hand the ratifier each new name
                    and the construct it stands on.
@@ -106,7 +110,8 @@ def terms_of(p):
 _bad1 = [d for d in ASSETS if d not in OFFERED or d not in {t["term"] for t in terms_of(d)}]
 check(f"1. every assets/<d>/ is a profile the law offers, whose head term is named <d> ({', '.join(ASSETS) or 'none yet'})",
       not _bad1, _bad1)
-check("...and the profiles that bring an asset are found: at least one names it", len(ASSETED) >= 1, ASSETED)
+check("...and every profile whose meaning names its asset has it, and at least one does",
+      len(ASSETS) >= 1 and set(NAMING) <= set(ASSETS), f"named: {NAMING}; present: {ASSETS}")
 
 
 def keys_of(t):
@@ -193,6 +198,22 @@ _gate = run(sys.executable, os.path.join(_G, "bin", "dmcheck.py"), "--all", cwd=
 _off = [x for p in ASSETED for x in off_head(documents(_G), p)]
 check("...and a term moved onto a being passes the gate, and is found here, named", _gate.returncode == 0
       and ("beans/sam.md", "views") in _off, (_gate.stdout + _gate.stderr)[-300:] + str(_off))
+# 7. NO HARNESS, NO ESTATE, NO RETIRED WORD in an asset's files — asked of the garden grown for check 2 while it stands.
+import dmpublic, dmupgrade
+_AFILES = [f for f in FILES if f.startswith("assets/")]
+_hidden = sorted({s for f in FILES for s in f.split("/")[:-1] if s.startswith(".")})
+_harness = [(f, d) for f in _AFILES for d in _hidden if re.search(r"(?<![\w.])%s/" % re.escape(d), read(f))] + \
+           [(f, "a hidden directory") for f in _AFILES if any(s.startswith(".") for s in f.split("/")[:-1])]
+_fixture_ids = set(re.findall(r'(?m)^    "([a-z0-9][a-z0-9-]*)": \'\'\'(?:bean|mapping): ', read("test/view.py")))
+_words = (dmpublic.estate_words(_G, dmpublic.public_words(_G)) | {w for w in _fixture_ids if len(w) >= 4}) \
+         - dmpublic.public_words(_G)
+_leak = [(f, w) for f in _AFILES for w in dmpublic.hits(read(f), _words)]
+_retired = [(f, n) for f in _AFILES if f.endswith(dmupgrade.Step22.CODE_EXT)
+            for n, line in enumerate(read(f).split("\n"), 1) if dmupgrade.Step22.CODE_WORD.search(line)]
+check(f"7. an asset's {len(_AFILES)} files name no harness directory and sit in no hidden one, name nothing a garden "
+      f"holds ({len(_words)} words: the grown garden's and the fixtures'), and write no retired word as a key",
+      _AFILES and len(_fixture_ids) >= 5 and not _harness and not _leak and not _retired,
+      {"harness": _harness, "estate": _leak, "retired": _retired, "fixture ids": sorted(_fixture_ids)})
 shutil.rmtree(_T, ignore_errors=True)
 
 

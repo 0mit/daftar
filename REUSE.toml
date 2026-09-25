@@ -11,7 +11,7 @@ path = ["*.md", "NOTICE", "seed/*.md", "seed/LANGUAGE", "seed/PUBLIC-ALLOW",
         "seed/knowledge/mechanisms.yaml", "seed/knowledge/crosswalk-fhir-r5-observation.tsv", "seed/knowledge/crosswalk-dwc.tsv",
         "site/**/*.html", "site/*.html", "site/assets/**", "site/drawings/**", "site/machinery/drawn.json",
         "site/machinery/record.yaml", "site/RELEASE", ".github/ISSUE_TEMPLATE/**", ".github/pull_request_template.md",
-        ".claude/skills/daftar/SKILL.md"]
+        ".claude/skills/daftar/SKILL.md", "assets/*/README.md"]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
 SPDX-License-Identifier = "CC-BY-4.0"
@@ -19,7 +19,7 @@ SPDX-License-Identifier = "CC-BY-4.0"
 # THE CODE — AGPL-3.0-or-later with the garden exception, and the additional terms in LICENSE
 [[annotations]]
 path = ["bin/**", "test/**", "seed/germinate.py", "seed/germinate.sh", "site/build.py", "site/machinery/*.py",
-        "site/demo/**", ".github/workflows/**"]
+        "site/demo/**", ".github/workflows/**", "assets/*/bin/**", "assets/*/lib/**"]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
 SPDX-License-Identifier = "AGPL-3.0-or-later WITH LicenseRef-daftar-garden-exception"
@@ -33,7 +33,7 @@ SPDX-License-Identifier = "CC-BY-4.0 AND AGPL-3.0-or-later WITH LicenseRef-dafta
 
 # THE SEEDS OF A GARDEN'S OWN FILES — CC0 1.0: what grows from them is the gardener's
 [[annotations]]
-path = ["seed/*.template", "seed/FORMS.md", ".gitignore", ".gitattributes"]
+path = ["seed/*.template", "seed/FORMS.md", ".gitignore", ".gitattributes", "assets/*/templates/**"]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
 SPDX-License-Identifier = "CC0-1.0"
