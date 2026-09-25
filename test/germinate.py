@@ -302,12 +302,14 @@ check("every command germinate prints names a path with a space as ONE argument:
 # garden's own last commit as `untagged <sha>`, and prints no NOTE telling the stranger to check out a tag in the garden.
 _rel = os.path.join(TMP, 'tagged-release')
 os.makedirs(_rel)
-for _pat in [l.strip() for l in open(os.path.join(ROOT, 'seed', 'LANGUAGE'), encoding='utf-8')
-             if l.strip() and not l.lstrip().startswith('#')]:
-    for _f in glob.glob(os.path.join(ROOT, _pat)):
-        if os.path.isfile(_f):
-            os.makedirs(os.path.join(_rel, os.path.dirname(os.path.relpath(_f, ROOT))), exist_ok=True)
-            shutil.copy2(_f, os.path.join(_rel, os.path.relpath(_f, ROOT)))
+sys.path.insert(0, os.path.join(ROOT, 'bin'))
+import dmparse as _dmparse, dmpass as _dmpass            # the one reader of seed/LANGUAGE: what the release keeps
+_law0 = _dmparse.loads(_dmparse.split_front_matter(open(os.path.join(ROOT, 'seed', 'std-vocab.md'), encoding='utf-8').read())[0])
+for _f in _dmpass.kept([f for f in _dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
+                       _dmpass.language(open(os.path.join(ROOT, 'seed', 'LANGUAGE'), encoding='utf-8').read()),
+                       _dmpass.offered(_law0)):
+    os.makedirs(os.path.join(_rel, os.path.dirname(_f)), exist_ok=True)
+    shutil.copy2(os.path.join(ROOT, _f), os.path.join(_rel, _f))
 run('git', 'init', '-q', cwd=_rel); run('git', 'add', '-A', cwd=_rel)
 run('git', '-c', 'user.name=ada', '-c', 'user.email=ada@localhost', 'commit', '-qm', 'a release', cwd=_rel)
 run('git', 'tag', 'v9.9.9', cwd=_rel)

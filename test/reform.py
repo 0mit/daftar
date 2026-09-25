@@ -197,10 +197,13 @@ check("the standard uses none of the constructs it retired", dmreform.uses_old_c
 # move of "every reader" onto the form had looked only under bin/. One read made the commit hook refuse every
 # garden with a cached analysis; the other came back EMPTY and silently weakened a check. So the guard covers
 # everything `seed/LANGUAGE` ships, not a directory somebody remembered.
-import fnmatch, io, tokenize
-_pats = [l.strip() for l in open(os.path.join(ROOT, "seed", "LANGUAGE")) if l.strip() and not l.startswith("#")]
-_shipped = [os.path.relpath(os.path.join(d, f), ROOT) for d, _ds, fs in os.walk(ROOT) if ".git" not in d for f in fs]
-_shipped = [f for f in _shipped if f.endswith(".py") and any(fnmatch.fnmatch(f, p) for p in _pats)]
+import io, tokenize
+import dmparse, dmpass                    # bin/dmpass.py, the one reader of seed/LANGUAGE: what the release keeps
+_law = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, "seed", "std-vocab.md"), encoding="utf-8").read())[0])
+_shipped = [f.replace("/", os.sep) for f in dmpass.kept(
+    [f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
+    dmpass.language(open(os.path.join(ROOT, "seed", "LANGUAGE"), encoding="utf-8").read()), dmpass.offered(_law))
+    if f.endswith(".py")]
 _KNOWS_THE_OLD_SPELLING = {os.path.join("bin", "dmreform.py")}      # the translator, and only the translator
 _RETIRED = set(dmreform.OLD_SCHEMA_KEYS) | {"entry_attrs"}
 _gate_src = open(os.path.join(ROOT, "bin", "dmcheck.py"), encoding="utf-8").read().split("\n")

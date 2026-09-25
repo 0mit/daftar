@@ -113,8 +113,8 @@ net = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "d
              if _NET.search(open(f, encoding="utf-8").read()))
 check("no tool but the one that fetches a release opens a network path (manifesto: never-sells)",
       set(net) <= {"dmupgrade.py"}, net)
-lang = [l.strip() for l in open(os.path.join(ROOT, "seed", "LANGUAGE"), encoding="utf-8")
-        if l.strip() and not l.lstrip().startswith("#")]
+import dmpass                            # the one reader of seed/LANGUAGE
+lang = dmpass.language(open(os.path.join(ROOT, "seed", "LANGUAGE"), encoding="utf-8").read())
 check("every garden receives the manifesto, so every cite resolves where it is read", "MANIFESTO.md" in lang, lang)
 # THE LAW NAMES A CLAUSE ONLY BY STRUCTURE. The vocabulary's front matter carries no `(manifesto: …)` in its prose: a
 # meaning that cites a clause is a second statement waiting to happen. When the law points up, it will be by a

@@ -28,7 +28,6 @@ is the first thing to write — the gate asks for it as soon as the garden holds
 
 Python, not shell, because a garden is grown on Windows too. `seed/germinate.sh` remains and hands over here.
 """
-import glob
 import os
 import re
 import shlex
@@ -97,18 +96,18 @@ def run(*args, cwd=None, check=True):
     return r
 
 
-def language_files(root, seed):
-    """Every file seed/LANGUAGE names, in order; a pattern that matches nothing is an error."""
-    out = []
-    for line in open(os.path.join(seed, 'LANGUAGE'), encoding='utf-8'):
-        pat = line.strip()
-        if not pat or pat.startswith('#'):
-            continue
-        hits = [f for f in sorted(glob.glob(os.path.join(root, pat))) if os.path.isfile(f)]
-        if not hits and not any(os.path.isdir(f) for f in glob.glob(os.path.join(root, pat))):
+def language_files(root, seed, law, profiles=()):
+    """Every file seed/LANGUAGE names that a garden extending `profiles` receives, read by bin/dmpass.py — the one reader
+    of seed/LANGUAGE, which bin/dmupgrade.py and the gate ask too. A line that names no profile and matches no file is an
+    error; a line that names a profile matches what that profile brings, which may be nothing."""
+    import dmpass
+    lines = dmpass.language(open(os.path.join(seed, 'LANGUAGE'), encoding='utf-8').read())
+    files = [f for f in dmpass.tracked(root) if '__pycache__' not in f.split('/')
+             and os.path.isfile(os.path.join(root, *f.split('/')))]
+    for pat in lines:
+        if dmpass.PLACE not in pat and not dmpass.received(files, [pat], (), ()):
             die(f"seed/LANGUAGE names '{pat}', which matches no file", 1)
-        out += [os.path.relpath(f, root) for f in hits]
-    return out
+    return dmpass.received(files, lines, profiles, dmpass.offered(law))
 
 
 def gardener_gene(law):
@@ -270,7 +269,7 @@ def main(argv):
     # copy, an interrupt — removes it whole, so a stranger's second try starts from nothing rather than from "already
     # exists — refusing to plant over it".
     try:
-        grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform)
+        grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, law)
     except BaseException:
         if os.path.isdir(target):
             try:
@@ -284,11 +283,11 @@ def main(argv):
     return finish(target, root, ver, release, gid, ggenos, grown_in)
 
 
-def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform):
+def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, law):
     """The language copied, the templates filled, the first commit made, and the gardener planted."""
     for d in ('beans', 'mappings', 'log', 'seed'):
         os.makedirs(os.path.join(target, d), exist_ok=True)
-    for rel in language_files(root, seed):
+    for rel in language_files(root, seed, law):
         dst = os.path.join(target, rel)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copy2(os.path.join(root, rel), dst)

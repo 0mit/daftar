@@ -43,6 +43,7 @@ parts, changes).
 
    ```sh
    python3 bin/dmsafe.py
+   python3 test/assets.py
    python3 test/germinate.py
    python3 test/refusals.py
    python3 test/journal.py

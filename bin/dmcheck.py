@@ -4310,10 +4310,13 @@ def build_staged_constants():
     # THE RELEASE'S OWN FILES ARE LAW TOO (v0.5.0, human-ratified). Everything seed/LANGUAGE lists arrived from a
     # daftar release — the model, the checklist, the tools, the gate itself. A garden may still patch one
     # locally, but never silently: a cold-start drill committed an edit to bin/dmcheck.py with no journal entry.
+    # What the release KEEPS (bin/dmpass.py `kept`, the one reader of seed/LANGUAGE): a line naming an asset's directory
+    # stands for every profile the law offers, so an edit to an asset is a RULE-CHANGE whether or not this garden extends
+    # the profile that brings it.
     global LANGUAGE_PATTERNS
     _lang = os.path.join(ROOT, 'seed', 'LANGUAGE')
-    LANGUAGE_PATTERNS = ([l.strip() for l in open(_lang, encoding='utf-8')
-                          if l.strip() and not l.lstrip().startswith('#')] if os.path.isfile(_lang) else [])
+    LANGUAGE_PATTERNS = (dmpass.expand(dmpass.language(open(_lang, encoding='utf-8').read()), dmpass.offered(std_fm))
+                         if os.path.isfile(_lang) else [])
 
     # NOT the same set, and deliberately so. The integrity check below parses front matter and refuses a
     # document that has lost it; MODEL.md and CHECKLIST.md are prose and carry none, so holding them to it
@@ -4429,7 +4432,7 @@ def check_staged_state():
         # ...and a RULE-CHANGE all the more so: it is human-ratified and must be logged DISTINCTLY.
         # ONE VERDICT ON EVERY MACHINE: `fnmatch.fnmatch` folds case where the platform does, so a path the release ships
         # was a RULE-CHANGE on one machine and not on another; case by case, as dmpass names the keeper.
-        rc = [p for p in staged if p in LAW_DOCS or any(fnmatch.fnmatchcase(p, _pat) for _pat in LANGUAGE_PATTERNS)]
+        rc = [p for p in staged if p in LAW_DOCS or any(dmpass.matches(_pat, p) for _pat in LANGUAGE_PATTERNS)]
         # WHAT IS LAW DOES NOT MOVE UNSAID (23.1). A `standing` entry that places files in a ruled layer says what this
         # garden's law is: adding one, taking one out, or moving one to another layer moves the RULE-CHANGE duty itself.
         # And a commit that moved an entry out of `law` and edited the file in the same breath was judged by the map it

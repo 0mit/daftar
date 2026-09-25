@@ -16,6 +16,14 @@ THE KEEPER IS ANOTHER AXIS. Whether a file came from a release is read from `see
 keeps, and a change to it is a RULE-CHANGE whatever its layer. Every other file is kept here, by the tree that holds it.
 A file in the law's `law` or `manifesto` layer carries the same duty, wherever it came from (`ruled`).
 
+ONE READER OF seed/LANGUAGE, TWO QUESTIONS. A line holding `<profile>` stands for one line per profile, and is read
+here and nowhere else: `received` answers what a garden receives — the placeholder read as each profile the garden
+extends that the law offers — and `kept` what the release keeps — read as every profile the law offers. Germination
+copies what a garden receives; an upgrade copies it (`want`) and takes away what the garden held that it no longer
+receives, out of what the release keeps (`have`); the keeper and the RULE-CHANGE duty read `kept`. So leaving a profile
+takes its files away, an edit to one of them is a RULE-CHANGE, and a file of the garden's own beside them is never the
+release's.
+
 A FILE IN NO LAYER IS COUNTED AND SHOWN, never refused: the law cannot name every file a garden keeps, and a garden
 that has not placed a file has not broken anything. It is the one place a flow cannot be judged from, so it is shown.
 
@@ -67,6 +75,51 @@ def matches(pattern, path):
     return pattern == path if not (_WILD & set(pattern)) else fnmatch.fnmatchcase(path, pattern)
 
 
+# -- what a release ships: seed/LANGUAGE, read here and nowhere else
+PLACE = '<profile>'           # in a line of seed/LANGUAGE: each profile a garden extends, and no other
+
+
+def language(text):
+    """The lines of a release's seed/LANGUAGE: one pattern a line, with comments and blank lines left out."""
+    return _patterns(text)
+
+
+def offered(law):
+    """The profiles a law offers: the names under its `profiles`."""
+    p = law.get('profiles') if isinstance(law, dict) else None
+    return sorted(str(k) for k in p) if isinstance(p, dict) else []
+
+
+def extended(vocab):
+    """The profiles a garden's VOCAB.md extends (`extends_profiles`), as it states them."""
+    p = vocab.get('extends_profiles') if isinstance(vocab, dict) else None
+    return [str(x) for x in p] if isinstance(p, list) else []
+
+
+def expand(lines, profiles):
+    """The patterns the lines stand for: a line holding the placeholder once for each profile given, in order of name,
+    and every other line as it is."""
+    out = []
+    for line in lines:
+        out += [line.replace(PLACE, p) for p in sorted(set(profiles))] if PLACE in line else [line]
+    return out
+
+
+def _shipped(files, patterns):
+    return sorted(f for f in files if any(matches(p, f) for p in patterns))
+
+
+def received(files, lines, extends, offers):
+    """The files, out of `files`, a garden receives from a release: the placeholder read as each profile it extends
+    that the law offers."""
+    return _shipped(files, expand(lines, set(extends) & set(offers)))
+
+
+def kept(files, lines, offers):
+    """The files, out of `files`, a release keeps: the placeholder read as every profile the law offers."""
+    return _shipped(files, expand(lines, offers))
+
+
 def unwritten(doc):
     """Why a path or pattern is not in the one form a path is written in here, or '' when it is: relative, `/` between
     names, no `.` or `..` segment, no empty segment, no trailing `/` (a directory is `dir/*`)."""
@@ -100,7 +153,7 @@ class Map:
         self.rows = [r for r in (law.get('layers') or []) if isinstance(r, dict) and isinstance(r.get('layer'), str)]
         self.layers = {r['layer']: r for r in self.rows}
         self.journal_path = law['journal'].get('path') if isinstance(law.get('journal'), dict) else None
-        self.language = _patterns(read(LANGUAGE))
+        self.language = expand(language(read(LANGUAGE)), offered(law))       # what the release keeps
         if standing is not None:
             self.standing = [(f, i, e) for f, i, e in standing if _one(e)]
         else:
@@ -150,9 +203,9 @@ class Map:
         return None, None
 
     def keeper_of(self, path):
-        """'release' when a release ships the file (its `seed/LANGUAGE` matches it), else 'here': kept by this tree.
+        """'release' when a release keeps the file (`kept`: its `seed/LANGUAGE` matches it), else 'here': kept by this tree.
         Case by case on every platform, as the gate matches it: the keeper whose duty the gate applies is the one named here."""
-        return 'release' if any(fnmatch.fnmatchcase(path, p) for p in self.language) else 'here'
+        return 'release' if any(matches(p, path) for p in self.language) else 'here'
 
     def ruled(self):
         """The files a change to which is a RULE-CHANGE by their layer: those the law or a garden places in `law` or

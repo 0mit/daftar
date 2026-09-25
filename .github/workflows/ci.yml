@@ -19,6 +19,8 @@ jobs:
       - run: git config --global user.name ci && git config --global user.email ci@localhost
       - name: every document parses
         run: python3 bin/dmsafe.py
+      - name: "assets: one reader of what a release ships; an asset is a profile's, and opens no concept of its own"
+        run: python3 test/assets.py
       - name: a garden germinates, passes its gate, refuses bad writes and merges back
         run: python3 test/germinate.py
       - name: "refusals: what the gate refuses, and that it refuses rather than crashes"

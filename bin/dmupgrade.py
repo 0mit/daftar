@@ -189,16 +189,24 @@ def patterns(root):
     if not os.path.isfile(path):
         sys.exit(f"REFUSING: {path} does not exist — a release without seed/LANGUAGE does not say what it "
                  f"contains, and guessing would be a second, silent list.")
-    return [l.strip() for l in open(path, encoding='utf-8') if l.strip() and not l.lstrip().startswith('#')]
+    return dmpass.language(open(path, encoding='utf-8').read())
 
 
-def expand(root, pats):
-    out = set()
-    for p in pats:
-        for f in glob.glob(os.path.join(root, p)):
-            if os.path.isfile(f):
-                out.add(os.path.relpath(f, root))
-    return out
+def shipped(root, extends=None):
+    """What the tree at `root` ships, read by bin/dmpass.py, the one reader of seed/LANGUAGE: with `extends` None, every
+    file its release KEEPS (a line naming a profile's asset read for every profile its law offers); with a list of
+    profiles, what a garden extending them RECEIVES. Paths are `/`-separated, as git and seed/LANGUAGE write them."""
+    lines = patterns(root)
+    offers = dmpass.offered(std_fm(root))
+    files = [f for f in dmpass.tracked(root) if os.path.isfile(os.path.join(root, *f.split('/')))]
+    return set(dmpass.kept(files, lines, offers) if extends is None else dmpass.received(files, lines, extends, offers))
+
+
+def garden_profiles(root=None):
+    """The profiles the garden's VOCAB.md extends, as it states them."""
+    path = os.path.join(root or ROOT, 'VOCAB.md')
+    fm = dmparse.loads(dmparse.read(path)[0] or '') or {} if os.path.isfile(path) else {}
+    return dmpass.extended(fm)
 
 
 def recorded_release():
@@ -1168,7 +1176,7 @@ class Step22:
     def code_left(self):
         """[(path, how many lines)] of the garden's own files, outside the language and its records, that say a word
         22.0 retired — for a person to read before relying on them."""
-        own = {p.replace(os.sep, '/') for p in expand(self.rel, patterns(self.rel))}
+        own = shipped(self.rel)
         out = []
         for f in sorted(x for x in run('git', 'ls-files', '-z', check=False).stdout.split('\0') if x):
             if f in own or f in ('VOCAB.md', 'GARDEN.md') or f.split('/')[0] in self.RECORDS:
@@ -1832,8 +1840,12 @@ def main():
             if vtuple(before) < STEP_23_1 or _s23.left():
                 step23 = _s23
                 step23.plan()
-        want = expand(rel, patterns(rel))
-        have = expand(ROOT, patterns(ROOT)) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
+        # WHAT THE GARDEN RECEIVES, AND WHAT IT HELD, read by the one reader (bin/dmpass.py): `want` is what a garden
+        # extending its profiles receives from the release; `have` is every file of the garden its own release keeps, so
+        # a file it no longer receives — a retired tool, the asset of a profile it left — leaves, and a file of its own
+        # beside them is never the release's to remove.
+        want = shipped(rel, garden_profiles())
+        have = shipped(ROOT) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
         # "applied" when either side is unknown: a garden that records no release cannot be told which way it moved.
         verb = ('applied' if not (cur_v and new_v) else
                 'downgraded' if tuple(map(int, new_v.groups())) < tuple(map(int, cur_v.groups())) else 'upgraded')

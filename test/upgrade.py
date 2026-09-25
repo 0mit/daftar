@@ -27,17 +27,19 @@ def run(*a, cwd):
 TMP = tempfile.mkdtemp(prefix='dmupg-')
 REL, GARDEN = os.path.join(TMP, 'release'), os.path.join(TMP, 'garden')
 
-# ---- the release, v1: this tree's language exactly as seed/LANGUAGE declares it
+# ---- the release, v1: this tree's language exactly as seed/LANGUAGE declares it — every file the release keeps, read by
+# bin/dmpass.py, the one reader of seed/LANGUAGE (an asset of every profile the law offers among them)
 import glob
+sys.path.insert(0, os.path.join(ROOT, 'bin'))
+import dmparse, dmpass
 def release_from_tree(dst, tag):
     os.makedirs(dst)
-    pats = [l.strip() for l in open(os.path.join(ROOT, 'seed', 'LANGUAGE')) if l.strip() and not l.lstrip().startswith('#')]
-    for p in pats:
-        for f in glob.glob(os.path.join(ROOT, p)):
-            if os.path.isfile(f):
-                rel = os.path.relpath(f, ROOT)
-                os.makedirs(os.path.join(dst, os.path.dirname(rel)), exist_ok=True)
-                shutil.copy2(f, os.path.join(dst, rel))
+    _law = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, 'seed', 'std-vocab.md'), encoding='utf-8').read())[0])
+    for rel in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
+                           dmpass.language(open(os.path.join(ROOT, 'seed', 'LANGUAGE'), encoding='utf-8').read()),
+                           dmpass.offered(_law)):
+        os.makedirs(os.path.join(dst, os.path.dirname(rel)), exist_ok=True)
+        shutil.copy2(os.path.join(ROOT, rel), os.path.join(dst, rel))
     run('git', 'init', '-q', cwd=dst); run('git', 'add', '-A', cwd=dst)
     run('git', 'commit', '-qm', tag, cwd=dst); run('git', 'tag', tag, cwd=dst)
 release_from_tree(REL, 'v0.1.0')
