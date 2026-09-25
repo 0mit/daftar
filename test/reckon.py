@@ -324,7 +324,7 @@ rc2, then = reckon("chandlery:worn-a", "--exact", "--at", C1, "--moment", "2026-
 check("a reading pinned to the commit it was read at is unchanged by a later edit: 1/4 then, 3/10 now",
       rc == 0 and rc2 == 0 and "= 0.25" in then and "= 0.3" in now and f"read at {C1}" in then, then + now)
 write("beans/chandlery.md", open(os.path.join(G, "beans", "chandlery.md"), encoding="utf-8").read().replace('  first: { at: "2026-04-04T10:00Z" }',
-                                                     f'  first: {{ at: "2026-04-04T10:00Z", pin: {{ commit: {C1}, at: "2026-01-02 09:00+00:00" }} }}'))
+                                                     f'  first: {{ at: "2026-04-04T10:00Z", pin: {{ commit: \"{C1}\", at: "2026-01-02 09:00+00:00" }} }}'))
 out = gate()
 check("a pin naming a commit the garden has passes", ok(out), out[-900:])
 restore()
