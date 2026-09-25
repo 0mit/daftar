@@ -147,6 +147,13 @@ The rules are data, not code.
   carries no commentary. REASONING is their backbone (`seed/RATIONALE.md`, keyed by the item's path; `python3
   bin/dmwhy.py <name>` reads both). JOURNALS are the leads reasoning is drawn from. HISTORY is the exact record of
   events the journals are written from.
+- **Where each file sits is the law's `layers`:** the five above, each naming the one it stands on (`beneath`), and
+  beside them the queue, the guide, the estate, the gate, and the places a garden fills itself — a person's words, an
+  agent's work. A garden places the rest with `standing`, never a file the law places elsewhere and never one file in
+  two layers; a file two of the law's rows would hold is refused, and a garden adds no row to the map. `python3
+  bin/dmpass.py --layers` shows where every file sits and which sit nowhere. A change is a RULE-CHANGE when the file
+  came from a release (read from `seed/LANGUAGE`), when it sits in the `law` or `manifesto` layer (the law's own
+  placement or a garden's), or when it moves a garden's entry into or out of one of those two.
 - A local term that proves general is **promoted** to the standard by a pull request to the daftar repository
   (manifesto: learn-once).
   A term for a kind of fact earns promotion with real cases; a MECHANISM (a figure, a construct, a system, a

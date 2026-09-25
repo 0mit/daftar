@@ -38,12 +38,13 @@ Session/model-agnostic gate, in two halves (v2 P2 / plan D4):
               std-vocab and the garden's VOCAB); a term with no `schema:` is documentation only.
               The schema language is documented in VOCAB.md under `schema_language:`.
 """
-import collections, difflib, glob, json, math, os, re, sys, fnmatch, ipaddress, shutil, stat, subprocess, tempfile
+import collections, difflib, glob, json, math, os, posixpath, re, sys, fnmatch, ipaddress, shutil, stat, subprocess, tempfile
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
 import dmform
 import dmsafe          # the staged-state checks below run dmsafe's OWN comparison, not a copy of it
+import dmpass          # where each file sits: the law's layer map, read by its one reader and by no copy of it here
 try:
     import yaml
 except ImportError:
@@ -327,6 +328,7 @@ LANGUAGE_PATTERNS = []
 #   docs, bean_ids, map_ids           <- build_docs
 #   est_owner                         <- check_identity_capsule
 #   ALL_FM, TARGETS_OF                <- build_all_fm_and_targets
+#   LAYER_MAP                         <- check_layers
 #   VACANCY_REASONS                   <- check_vacancy_reasons_declared
 #   DAG_TERMS, dep_graph              <- check_link_integrity
 #   DOCUMENTISH, LAW_DOCS, FRONT_MATTER_DOCS
@@ -848,13 +850,44 @@ def check_schema_language():
                          "spelling against `schema_language` in seed/std-vocab.md"))
 
 
+def _restated(local, std):
+    """The keys of a garden's overlay that REPLACE what the standard's own term states, dotted — read branch by branch
+    from `_overlay`, so the two cannot disagree about what merges. Two things merge: an attribute's fields (`attrs`, where
+    both are mappings: a field the standard leaves unsaid is added, one it states is replaced), and `cells` (where both
+    are lists: appended). Everything else the standard states, the overlay replaces — a `schema` that is not a mapping,
+    `~` included, replaces the standard's whole schema, and `attrs: ~` or `cells: ~` its attributes or its cells."""
+    out = [str(k) for k in local if k not in ('term', 'schema') and k in std]
+    if 'schema' not in local or std.get('schema') is None:
+        return out
+    _ls, _ss = local['schema'], std['schema']
+    if not isinstance(_ls, dict) or not isinstance(_ss, dict):
+        return out + ['schema']
+    for _k, _v in _ls.items():
+        if _k not in _ss:
+            continue
+        if _k == 'attrs' and isinstance(_v, dict) and isinstance(_ss[_k], dict):
+            out += [f"schema.attrs.{_a}.{_f}" for _a, _r in _v.items()
+                    if isinstance(_r, dict) and isinstance(_ss[_k].get(_a), dict) for _f in _r if _f in _ss[_k][_a]]
+        elif not (_k == 'cells' and isinstance(_v, list) and isinstance(_ss[_k], list)):
+            out.append(f"schema.{_k}")
+    return out
+
+
+def _reads_the_map(term):
+    """True for a term an attribute of which takes its values from the law's `layers`: its entries place files, and
+    bin/dmpass.py reads them under the law's definition, whatever a garden's copy says."""
+    _a = (term.get('schema') or {}).get('attrs') if isinstance(term.get('schema'), dict) else None
+    return isinstance(_a, dict) and any(isinstance(r, dict) and isinstance(r.get('in'), dict)
+                                        and r['in'].get('registry') == 'layers' for r in _a.values())
+
+
 # --- a garden's local ADDITION that the standard now carries itself (v0.5.0) --------------------------------------
 # The contribution path is: prove a value locally with values_add / registry_additions, propose it, and it lands in
 # Tier-0. The garden that proved it then carried a duplicate, and the gate said only "the exported enum has drifted"
 # (found by the second cold-start drill). This names the actual situation and the one-line fix.
 def check_local_additions():
-    _tier0 = {t['term']: (t.get('schema') or {}) for t in (std_fm.get('terms') or []) + PROFILE_TERMS
-              if isinstance(t, dict) and t.get('term')}
+    _std = {t['term']: t for t in (std_fm.get('terms') or []) + PROFILE_TERMS if isinstance(t, dict) and t.get('term')}
+    _tier0 = {n: (t.get('schema') or {}) for n, t in _std.items()}
     for _t in (vocab_fm.get('local_terms') or []):
         if not isinstance(_t, dict):
             continue
@@ -871,6 +904,36 @@ def check_local_additions():
             if any(isinstance(_b, dict) and _b.get(_k) == _row[_k] for _b in _base):
                 errors.append(f"VOCAB registry_additions.{_name}: the row {_k}={_row[_k]!r} is already in std-vocab@{std_ver} — "
                               f"remove it from registry_additions in VOCAB.md")
+    # A TERM THE STANDARD HAS, DEFINED AGAIN BY THE GARDEN (23.1). The same situation one level up: a term a garden kept
+    # for itself is promoted, and the garden's own definition stays in VOCAB.md. An overlay merges what it ADDS onto the
+    # standard's term, and what it states again it REPLACES — so the garden's definition went on standing where the
+    # standard's did, key by key, with nothing said, and a correction the standard made to the term never reached it.
+    # A WARNING, NOT A REFUSAL: an overlay that passed before this was said still passes, so the release that says it
+    # stays minor, and whether it is refused is a person's to decide, as a major change. ONE EXCEPTION, AN ERROR: a term
+    # whose values are the law's layers places files, and the map is the law's — bin/dmpass.py reads every entry under the
+    # law's definition, so a garden's copy would make the gate judge a map no reader reads.
+    for _t in (vocab_fm.get('local_terms') or []):
+        _n = _t.get('term') if isinstance(_t, dict) else None
+        if not isinstance(_n, str):
+            continue
+        if _n in _std:
+            _again = _restated(_t, _std[_n])
+            if not _again:
+                continue
+            _said = (f"VOCAB local_terms '{_n}': states again what std-vocab@{std_ver}'s own `{_n}` states "
+                     f"({', '.join(_again[:6])}{', …' if len(_again) > 6 else ''})")
+            if _reads_the_map(_std[_n]):
+                errors.append(f"{_said} — `{_n}` places files by the law's layers, and the map is the law's: every "
+                              f"reader reads the entries by the law's term, so a copy here would have the gate judge "
+                              f"them by another. Remove the entry from local_terms, or keep in it only what it adds: "
+                              f"an attribute the standard's term lacks, a cell" + _rule(_n))
+            else:
+                warns.append(f"{_said} — the garden's copy replaces the standard's there, silently, wherever the two "
+                             f"differ now or come to. Remove the entry, or keep in it only what it adds: an attribute "
+                             f"the standard's term lacks, `values_add`, a cell. Where the standard promoted the garden's "
+                             f"own term, bin/dmupgrade.py drops the copy as the garden crosses, if the standard's term "
+                             f"allows every value the copy did; if not, which stands is a person's decision. A warning: "
+                             f"whether it becomes a refusal is a person's decision too, made as a major change")
 
 
 # --- a list's merge identity must name fields its entries actually carry (std-vocab@8.0) -----------------
@@ -3153,6 +3216,138 @@ def check_terms():
                     break
 
 
+# ---- WHERE EACH FILE SITS (std-vocab 23.1, `layers`) ---------------------------------------------------------------
+# THE MAP HAS ONE READER, bin/dmpass.py, and the gate asks it rather than keep a map of its own: a guard that read its
+# own copy would guard a different map. It is built from the tree this run judges — the working tree by hand, the copy
+# of the index under --staged, so a commit is judged by the map it stages — and from the `standing` of every document
+# the gate loaded, handed over as the gate parsed it: a bean not yet added is judged as it is written, and no bean is
+# read twice. It is published as LAYER_MAP, which the RULE-CHANGE duty asks too.
+# THE MAP IS THE LAW'S. A garden restates none of it and adds no row to it: dmpass reads the law's rows alone, so a row
+# of a garden's would be a place the gate accepted a file into and no reader showed, with holds and a `beneath` nothing
+# judged. Refused besides: a map the law writes malformed, before any file is judged by it; a file two of the law's rows
+# hold; a journal the law names that its `journal` row does not hold; and a garden's `standing` that places a file the
+# law places elsewhere, places one file in two layers, is not written in the one form a path is written in, or names as
+# one file a file the garden does not hold. A FILE IN NO LAYER IS NO FINDING: the law cannot name every file a garden
+# keeps, and dmpass shows them where the map is shown.
+def check_layers():
+    global LAYER_MAP
+    LAYER_MAP = None
+    _files = set(dmpass.tracked(ROOT)) | {f"{'beans' if _b else 'mappings'}/{_id}.md" for _b, _id in docs}
+    _here = [p for p in _files if os.path.lexists(os.path.join(ROOT, *p.split('/')))]
+    # an entry whose layer is not one name (a conflict record a merge left, a list) is the term's to refuse, by name;
+    # the map is handed the entries that name one
+    _standing = [(f"{'beans' if _b else 'mappings'}/{_id}.md", _i, _e) for (_b, _id), (_fm, _body) in docs.items()
+                 for _i, _e in enumerate(_fm.get('standing') if isinstance(_fm.get('standing'), list) else [])
+                 if isinstance(_e, dict) and isinstance(_e.get('standing'), str)]
+
+    def _read(p):
+        try:
+            with open(os.path.join(ROOT, *p.split('/')), encoding='utf-8') as fh:
+                return fh.read()
+        except (OSError, UnicodeDecodeError):
+            return None
+    try:
+        _map = dmpass.Map(_read, _here, _standing)
+    except ValueError:
+        _map = None             # no law to read a map from: the one-path refusal says so, once
+    LAYER_MAP = _map
+    _open = ', '.join(f"`{r['layer']}`" for r in (_map.rows if _map else []) if r.get('files') and not r.get('holds'))
+    _place = (f"place the garden's own files with `standing` on a bean, in a layer of files the law's rows name"
+              + (f" ({_open} are left for a garden to fill)" if _open else ''))
+    if vocab_fm.get('layers') is not None:
+        errors.append(f"VOCAB layers: VOCAB.md states a layer map of its own — the map is the law's, and every reader "
+                      f"reads the law's alone: remove `layers:` from VOCAB.md, and {_place}" + _rule('layers'))
+    _adds = vocab_fm.get('registry_additions')
+    if isinstance(_adds, dict) and _adds.get('layers') is not None:
+        errors.append(f"VOCAB registry_additions.layers: a garden adds no row to the law's layer map — every reader "
+                      f"reads the law's rows alone, so a row added here would be a place no reader shows: remove "
+                      f"`layers` from registry_additions in VOCAB.md, and {_place}; a place the law lacks is proposed "
+                      f"to the law (a RULE-CHANGE)" + _rule('layers'))
+    if _map is None:
+        return
+    if not _map.rows:
+        errors.append("VOCAB: no `layers` — the gate reads where each file sits from the law and has no map of its own"
+                      + _rule('layers'))
+        return
+    _bad = _map.law_problems()
+    for _why in _bad:
+        errors.append(f"VOCAB layers: {_why} — no file is judged by a map no reader can read: write each row as "
+                      f"{{ layer: <a name no other row has>, files: true, holds: [<path or pattern>, ...], beneath: "
+                      f"<the layer it stands on>, meaning: \"...\" }}, `holds` only on a layer of files, one layer on "
+                      f"top of the chain (a RULE-CHANGE)" + _rule('layers'))
+    if _bad:
+        return
+    for _p, _in in _map.law_overlaps():
+        errors.append(f"VOCAB layers: {_p} is held by {len(_in)} of the law's rows ({', '.join(f'`{l}`' for l in _in)}) — "
+                      f"a file sits in one layer, and which one this is cannot be told: name the file so that one row "
+                      f"holds it, or make the rows' `holds` disjoint (a RULE-CHANGE)" + _rule('layers'))
+    # THE JOURNAL THE LAW NAMES is the one held to the map: no tool reads a journal's path from a garden's VOCAB.md, so a
+    # path there is said to be unread rather than judged as if it were in force.
+    _jp = _map.journal_path
+    _jin = _map.law_layers_of(_jp) if isinstance(_jp, str) else []
+    if not isinstance(_jp, str) or not _jp:
+        errors.append("VOCAB journal.path: the law names no journal — write `path: log/journal.md` under the law's "
+                      "`journal:`, the file its `journal` row holds (a RULE-CHANGE)" + _rule('layers'))
+    elif dmpass.unwritten(_jp):
+        errors.append(f"VOCAB journal.path: {_jp!r} is not a path in its one form ({dmpass.unwritten(_jp)}) — write "
+                      f"{posixpath.normpath(_jp)!r} under the law's `journal:` (a RULE-CHANGE)" + _rule('layers'))
+    elif 'journal' not in _jin:
+        _jrow = (_map.layers.get('journal') or {}).get('holds')
+        _jheld = ', '.join(f"`{h}`" for h in _jrow if isinstance(h, str)) if isinstance(_jrow, list) else ''
+        errors.append(f"VOCAB journal.path: the law names {_jp!r} as the journal, and its `journal` row does not hold it "
+                      f"({'the map places it in ' + ', '.join(f'`{l}`' for l in _jin) if _jin else 'no row holds it'}) — "
+                      f"the file the law calls the journal is the file its map calls the journal: "
+                      + (f"write `path:` under the law's `journal:` as a file that row holds ({_jheld}), or add "
+                         f"{_jp!r} to that row's `holds`" if _jheld else
+                         f"give the law's map a `journal` row that holds {_jp!r}") + " (a RULE-CHANGE)" + _rule('layers'))
+    _vj = vocab_fm.get('journal')
+    if isinstance(_vj, dict) and 'path' in _vj and _vj.get('path') != _jp:
+        warns.append(f"VOCAB journal.path is {_vj.get('path')!r}, and no tool reads a journal's path from VOCAB.md — "
+                     f"remove `path` under `journal:` in VOCAB.md, so what the garden says of its journal is what its "
+                     f"tools do" + _rule('layers'))
+    _entry = {(_f, _i): _e for _f, _i, _e in _standing}
+    for _f, _i, _doc, _mine, _law, _p in _map.standing_conflicts():
+        _one = _doc[5:] == _p
+        errors.append(f"{_f}: standing[{_i}] places {_doc} in `{_mine}`, and the law places "
+                      f"{'that file' if _one else _p} in `{_law}` — "
+                      + ("remove the entry: a garden places only what the law does not" if _one else
+                         "narrow the pattern so that it matches no file the law places, or remove the entry")
+                      + _rule('standing'))
+    # ONE FILE, TWO PLACES, BY THE GARDEN'S OWN ENTRIES. Which layer it sat in would turn on the order the entries are
+    # read in, and a merge of two clones (`standing` merges as a set) gives exactly this. Asked only where the entries
+    # name two layers at all: a garden of one layer, or of none, cannot place a file twice.
+    _twice = {}
+    if len({_e['standing'] for _f, _i, _e in _standing}) > 1:
+        for _p, _hit in _map.garden_overlaps():
+            _twice.setdefault(tuple(_hit), []).append(_p)
+    for _hit, _ps in _twice.items():
+        _by = '; '.join(f"{_f} standing[{_i}] ({_entry[(_f, _i)].get('doc')}) in `{_l}`" for _l, _f, _i in _hit)
+        errors.append(f"{_hit[0][1]}: {_ps[0]}{f' and {len(_ps) - 1} other file(s)' if len(_ps) > 1 else ''} placed "
+                      f"in {len({_l for _l, _f, _i in _hit})} layers by the garden's `standing` — {_by}. A file sits in "
+                      f"one layer, and which one would turn on the order the entries are read in: remove the entry "
+                      f"for the layer it does not sit in, or narrow a pattern so that it no longer matches"
+                      + _rule('standing'))
+    for _f, _i, _doc, _why in _map.doc_problems():
+        # written in its form, and naming no file: the fix is a name, and the nearest the garden holds is offered
+        _absent = not dmpass.unwritten(_doc[5:])
+        _near = _nearest(_doc[5:], _map.files, n=1, cutoff=0.8) if _absent else []
+        errors.append(f"{_f}: standing[{_i}].doc {_doc!r} places nothing as it is written — {_why}"
+                      + ((f": write the path of a file the garden holds" + (f" (the nearest: 'file:{_near[0]}')" if _near
+                          else '') + ", add the file and stage it, or remove the entry") if _absent else '')
+                      + _rule('standing'))
+    # A NAME THAT READS AS A PATTERN. A file may be named with `[`, `*` or `?`, and a doc that copies the name is read as
+    # a pattern: `[1]` is a set of one character, so the file of that name is not placed and another may be.
+    for _f, _i, _e in _standing:
+        _d = _e.get('doc')
+        _d = _d[5:] if isinstance(_d, str) and _d.startswith('file:') else None
+        if _d is not None and _d in _map.files and not dmpass.matches(_d, _d):
+            _got = [p for p in _map.files if dmpass.matches(_d, p)]
+            errors.append(f"{_f}: standing[{_i}].doc 'file:{_d}' is read as a pattern — `[`, `*` and `?` match "
+                          f"characters — so it does not place {_d}, the file of that name"
+                          + (f", and places {', '.join(_got[:3])}{', …' if len(_got) > 3 else ''}" if _got else '')
+                          + f": write 'file:{glob.escape(_d)}' to name that one file" + _rule('standing'))
+
+
 # --- facet parity: two arcs of one loop must carry the same facets (schema `facet_parity_with`; P7) ---
 # Ownership is meaningful only where responsibility covers it on the opposite aspect. A facet owned but
 # unanswered-for is a loose end; a facet answered for but unowned is orphaned.
@@ -3719,6 +3914,32 @@ def _head_text(p):
     return _git('show', f'HEAD:{p}')[0]
 
 
+def _ruled_entries(text):
+    """The (doc, layer) of every `standing` entry a document's front matter carries that places files in a ruled layer."""
+    fm = dmparse.split_front_matter(text or '')[0]
+    try:
+        d = dmparse.loads(fm) if fm else None
+    except Exception:
+        return None                         # unparseable: never equal to what it was, so a change to it is not missed
+    return {(e.get('doc'), e.get('standing')) for e in ((d or {}).get('standing') or []) if isinstance(d, dict)
+            and isinstance(e, dict) and e.get('standing') in dmpass.RULED}
+
+
+class _RuledPaths(set):
+    """The paths a change to which is a RULE-CHANGE by where they sit: the structural three it is built with, and every
+    path the one reader of the map places in a ruled layer (`Map.ruled()`'s answer for that path) — by the law's rows or
+    by a garden's `standing`, a pattern entry included. Asked of the map path by path, as `p in LAW_DOCS` asks: a file
+    staged for deletion is judged by where the staged map places it, and a tree of many thousand files is not walked for
+    the few a commit stages. A commit that moves the entry itself is caught by `_ruled_entries`, beside this."""
+    def __init__(self, fixed, layer_map):
+        super().__init__(fixed)
+        self.map = layer_map
+
+    def __contains__(self, p):
+        return set.__contains__(self, p) or (self.map is not None and isinstance(p, str)
+                                             and self.map.layer_of(p)[0] in dmpass.RULED)
+
+
 def build_staged_constants():
     global DOCUMENTISH, LAW_DOCS, FRONT_MATTER_DOCS
     DOCUMENTISH = ('beans/', 'mappings/')
@@ -3729,15 +3950,14 @@ def build_staged_constants():
     # only ones exempt from logging. Two lists that can disagree did disagree, in both directions.
     # The gate names no document now, exactly as it names no term: a garden says what its law is, and the
     # duty follows automatically when a document's standing changes.
+    # READ FROM THE MAP (23.1), not from the entries' strings: a `standing` doc may be a pattern, and a set of the
+    # entries' own strings held `policy/*.md` and never the file an edit staged — dmpass called the file law and the
+    # duty passed it by. The law's own `law` and `manifesto` rows carry the duty the same way.
     _STRUCTURAL_LAW = {os.path.relpath(STD, ROOT), 'VOCAB.md', 'GARDEN.md'}
     # Structural because the gate reads all three as law on EVERY run, in every garden, including one with no
     # beans at all to declare anything. GARDEN.md earns it for a different reason than the other two: it
     # carries the `extends:` pin, and moving a pin adopts a different law wholesale.
-    LAW_DOCS = set(_STRUCTURAL_LAW)
-    for _fm in ALL_FM.values():
-        for _e in (_fm.get('standing') or []):
-            if isinstance(_e, dict) and _e.get('standing') == 'law' and isinstance(_e.get('doc'), str):
-                LAW_DOCS.add(_e['doc'][5:] if _e['doc'].startswith('file:') else _e['doc'])
+    LAW_DOCS = _RuledPaths(_STRUCTURAL_LAW, LAYER_MAP)
     # THE RELEASE'S OWN FILES ARE LAW TOO (v0.5.0, human-ratified). Everything seed/LANGUAGE lists arrived from a
     # daftar release — the model, the checklist, the tools, the gate itself. A garden may still patch one
     # locally, but never silently: a cold-start drill committed an edit to bin/dmcheck.py with no journal entry.
@@ -3838,7 +4058,15 @@ def check_staged_state():
                           f"never typed; this writes it, stages everything and commits:"
                           f"\n      {_save_command(f'- action: <what was done to {sc[0]}>')}")
         # ...and a RULE-CHANGE all the more so: it is human-ratified and must be logged DISTINCTLY.
-        rc = [p for p in staged if p in LAW_DOCS or any(fnmatch.fnmatch(p, _pat) for _pat in LANGUAGE_PATTERNS)]
+        # ONE VERDICT ON EVERY MACHINE: `fnmatch.fnmatch` folds case where the platform does, so a path the release ships
+        # was a RULE-CHANGE on one machine and not on another; case by case, as dmpass names the keeper.
+        rc = [p for p in staged if p in LAW_DOCS or any(fnmatch.fnmatchcase(p, _pat) for _pat in LANGUAGE_PATTERNS)]
+        # WHAT IS LAW DOES NOT MOVE UNSAID (23.1). A `standing` entry that places files in a ruled layer says what this
+        # garden's law is: adding one, taking one out, or moving one to another layer moves the RULE-CHANGE duty itself.
+        # And a commit that moved an entry out of `law` and edited the file in the same breath was judged by the map it
+        # staged, where the file was law no longer — so the entry's own change carries the duty.
+        rc += [p for p in staged if p.startswith(DOCUMENTISH) and p not in rc
+               and _ruled_entries(_head_text(p)) != _ruled_entries(_staged_text(p))]
         if rc and 'log/journal.md' not in staged:
             errors.append(f"RULE-CHANGE staged ({', '.join(rc)}) but log/journal.md not updated — a change "
                           f"to the vocabulary or the law is human-ratified and must be logged distinctly, "
@@ -4335,6 +4563,9 @@ PLIES = (
      "`ALL_FM` and `TARGETS_OF` — read by check_entry and by the term loop"),
     (check_terms,
      "the interpreter: every schema rule, per document"),
+    (check_layers,
+     "the law's layer map, and each garden's `standing` against it — needs `docs`, whose entries the interpreter "
+     "judged; builds `LAYER_MAP`"),
     (check_gardens,
      "whose garden, which gardens it knows, what names cross — needs every bean, and the provenance records the terms read"),
     (check_facet_parity,
@@ -4354,7 +4585,7 @@ PLIES = (
     (check_single_owner_of_a_fact,
      "the same long value stated authoritatively in two beans"),
     (build_staged_constants,
-     "`DOCUMENTISH`, `LAW_DOCS`, `FRONT_MATTER_DOCS` — LAW_DOCS is derived from `standing`, so it needs ALL_FM"),
+     "`DOCUMENTISH`, `LAW_DOCS`, `FRONT_MATTER_DOCS` — LAW_DOCS asks the `LAYER_MAP` check_layers built"),
     (check_staged_state,
      "the commit-time half: it reads the index, and refuses if it cannot"),
     (check_unclean_merge,

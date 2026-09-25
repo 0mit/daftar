@@ -851,6 +851,327 @@ except _du.CannotRename:
     _raised = True
 check("...a key written twice cannot be renamed without changing something else, and is refused, not guessed", _raised)
 
+# ==== CROSSING INTO std-vocab 23.1: the law's layer map, and a term the law took into itself from a garden ==========
+# A garden grown from this tree and AGED into 23.0's shape: its law without the `standing` term, and its own VOCAB.md
+# declaring one as a garden did before the law — a closed list of layers, a pointer for the document — with a vacancy on
+# it, beside an overlay on a term 23.0 had already (`status`, a value added); its gardener's bean placing MODEL.md in law,
+# as the law does, log/pending.md in journal, where the law places it in queue, and AGENTS.md in law, where the law places
+# it in guide and the release keeps it; and its own reasons keyed to the term and the vacancy. The upgrade takes out what
+# the law now says itself and names the reasons it leaves behind; the result passes its gate and commits through its hook.
+R23, G23 = os.path.join(TMP, 'release23'), os.path.join(TMP, 'garden23')
+release_from_tree(R23, 'v9.2.0')
+g = run(sys.executable, os.path.join(R23, 'seed', 'germinate.py'), G23, '--gardener', 'sam', '--gardener-name', 'Sam', cwd=R23)
+check("(setup) a garden grows from a release at std-vocab 23.1", g.returncode == 0, (g.stdout + g.stderr)[-300:])
+
+
+def p23(rel):
+    return os.path.join(G23, *rel.split('/'))
+
+
+def put23(rel, text):
+    os.makedirs(os.path.dirname(p23(rel)), exist_ok=True)
+    with open(p23(rel), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(text)
+
+
+def get23(rel):
+    return open(p23(rel), encoding='utf-8').read()
+
+
+def up23(*extra, tag='v9.2.0'):
+    e = dict(os.environ, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@x', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@x')
+    return subprocess.run([sys.executable, p23('bin/dmupgrade.py'), tag, '--from', R23, *extra], capture_output=True,
+                          text=True, encoding='utf-8', errors='replace', cwd=G23, env=e)
+
+
+def commit23(msg):
+    run('git', 'add', '-A', cwd=G23); run('git', 'commit', '-qm', msg, '--no-verify', cwd=G23)
+    return run('git', 'rev-parse', 'HEAD', cwd=G23).stdout.strip()
+
+
+def untouched23(head):
+    return (not run('git', 'status', '--porcelain', '--untracked-files=all', cwd=G23).stdout.strip()
+            and run('git', 'rev-parse', 'HEAD', cwd=G23).stdout.strip() == head)
+
+
+def reset23(to):
+    run('git', 'reset', '-q', '--hard', to, cwd=G23); run('git', 'clean', '-qfdx', '-e', '.git', cwd=G23)
+
+
+def adopt23(msg):
+    """The two `fill in` fields filled as a person would, and the commit made THROUGH THE HOOK: what the tool printed runs."""
+    put23('log/journal.md', get23('log/journal.md').replace(
+        "(fill in who ratified — merging the release's pull request, or the word given here)", 'human (test)')
+          .replace('(fill in — what this release brings that this garden adopts)', 'the layer map'))
+    run('git', 'add', '-A', cwd=G23)
+    return run('git', 'commit', '-qm', msg, cwd=G23)
+
+
+def tline23():
+    _e = get23('log/journal.md').split('\n## ')[-1]
+    return next((l for l in _e.splitlines() if l.startswith('- translated:')), ''), _e
+
+
+import dmpass
+
+
+def ruled23():
+    """The files a change to which is a RULE-CHANGE: by their layer, or because the release keeps them."""
+    _m = dmpass.Map.here(G23)
+    return sorted(f for f in _m.files if _m.layer_of(f)[0] in dmpass.RULED or _m.keeper_of(f) == 'release')
+
+
+_sv23 = get23('seed/std-vocab.md')
+_law230 = re.sub(r'(?ms)^  - term: standing\n.*?(?=^  - term: |^\S)', '',
+                 re.sub(r'^version: "[^"]+"', 'version: "23.0"', _sv23, count=1, flags=re.M), count=1)
+put23('seed/std-vocab.md', _law230)
+for _d in ('VOCAB.md', 'GARDEN.md'):
+    put23(_d, re.sub(r'^(extends: std-vocab@)\S+', r'\g<1>23.0', get23(_d), count=1, flags=re.M))
+put23('GARDEN.md', re.sub(r'^daftar_release:.*$', 'daftar_release: "v9.1.9"  # the daftar release this garden runs; '
+                          'bin/dmupgrade.py moves it', get23('GARDEN.md'), count=1, flags=re.M))
+_bare23 = commit23('a garden as std-vocab 23.0 left it, with nothing of its own yet')
+_SHELF23 = ('  # == the garden\'s own ==\n  - term: shelf\n    meaning: "the shelf a thing is kept on"\n'
+            '    context_keys: [shelf]\n    schema: { shape: scalar }\n')
+_OVERLAY23 = '  - term: status\n    schema: { values_add: [retired] }   # a value of its own on a term 23.0 had\n'
+_TERM23 = ('  # == what a document is for ==\n  - term: standing\n    meaning: "what a document of this system is FOR"\n'
+           '    context_keys: [standing]\n    schema:\n      shape: list_of_entries\n      attrs:\n'
+           '        doc:       { required: true, in: { pointer: bean_field_pointer } }\n'
+           '        standing:  { required: true, in: [law, reasoning, journal, history, guide] }\n'
+           '        why:       { required: true, in: prose }\n        since:     { in: { type: iso_date } }\n'
+           '    merge: { cardinality: set, order: none }\n')
+_TERM23_BODY = _TERM23.split('\n', 1)[1]                  # the term's own lines: the comment above it is not its own
+_VAC23 = ('vacancies:\n  - at: standing.standing\n    position: history\n    reason: universal\n'
+          '    why: "a layer is there whether or not a document sits in it"\n')
+put23('VOCAB.md', re.sub(r'(?m)^local_terms: \[\].*\n', lambda m: (
+    'local_terms:\n' + _SHELF23 + _OVERLAY23 + _TERM23 + _VAC23), get23('VOCAB.md'), count=1))
+_MODEL23 = '  - { doc: "file:MODEL.md",       standing: law,     since: 2026-08-02, why: "the data model in force" }\n'
+_PENDING23 = ('  - { doc: "file:log/pending.md", standing: journal, since: 2026-07-31, why: "the park-and-proceed queue" }'
+              '   # parked here\n')
+_AGENTS23 = '  - { doc: "file:AGENTS.md",      standing: law,     why: "the door an agent comes in by" }\n'
+_sam23 = re.sub(r'(?m)^status: active$', 'status: retired', get23('beans/sam.md'), count=1).replace(
+    '\n---\n', '\nstanding:\n' + _MODEL23 + _PENDING23 + _AGENTS23 + '---\n', 1)
+put23('beans/sam.md', _sam23)
+_WHY23 = ('---\nrationale_for: VOCAB.md\n---\n# why this garden\'s own terms are as they are\n\n'
+          '## local_terms[standing].meaning\n\nWhat a document is for.\n\n## vacancies[standing.standing]\n\n'
+          'The history layer is there whether or not a document sits in it.\n\n## local_terms[shelf]\n\nShelves.\n')
+put23('RATIONALE.md', _WHY23)
+_vocab230 = get23('VOCAB.md')
+_aged23 = commit23('a garden as std-vocab 23.0 left it')
+check("(setup) the garden is aged into std-vocab 23.0's shape: a law without the term, and the garden's own",
+      '\n  - term: standing\n' in _sv23 and '\n  - term: standing\n' not in _law230 and _TERM23 in _vocab230
+      and _PENDING23 in _sam23 and 'status: retired' in _sam23, _vocab230[:600])
+
+_ruled_before = ruled23()
+r = up23()
+out = r.stdout + r.stderr
+check("the upgrade crosses into 23.1 and the gate passes on the result", r.returncode == 0 and '0 error(s)' in r.stdout, out[-900:])
+_v23 = get23('VOCAB.md')
+check("VOCAB.md loses the garden's own term the law now declares, and the vacancy on it; every other byte stays, the "
+      "comment between the terms with it",
+      _v23 == _vocab230.replace(_TERM23_BODY, '', 1).replace(_VAC23, 'vacancies: []\n', 1).replace('std-vocab@23.0', 'std-vocab@23.1', 1),
+      _v23[:900])
+check("...and an overlay on a term the law it ran already had is the garden's on purpose: it stays, byte for byte",
+      _OVERLAY23 in _v23 and 'status: retired' in get23('beans/sam.md'), _v23[:900])
+check("the entries that placed log/pending.md in journal and AGENTS.md in law are taken out, a comment with its own; the "
+      "one placing MODEL.md in law stays, and nothing else of the bean moves",
+      get23('beans/sam.md') == _sam23.replace(_PENDING23, '', 1).replace(_AGENTS23, '', 1), get23('beans/sam.md')[-500:])
+check("...and the files a change to which is a RULE-CHANGE are the same after the crossing as before: the entry that put "
+      "AGENTS.md in law leaves, and the release still keeps the file",
+      _ruled_before == ruled23() and 'AGENTS.md' in _ruled_before and 'MODEL.md' in _ruled_before,
+      (_ruled_before, ruled23()))
+check("the garden's own reasons are left as written", get23('RATIONALE.md') == _WHY23, get23('RATIONALE.md'))
+_tl, _j = tline23()
+_bl = next((l for l in _j.splitlines() if l.startswith('- beans:')), '')
+check("the `translated:` line names the term, the vacancy, the reasons left behind and the entries — and nothing that stayed",
+      'std-vocab 23.1' in _tl and "the garden's own term `standing` taken out" in _tl and 'standing.standing = history' in _tl
+      and '`## local_terms[standing].meaning`' in _tl and '`## vacancies[standing.standing]`' in _tl
+      and 'local_terms[shelf]' not in _tl and '`status`' not in _tl
+      and '[[sam]] `standing`: the entry file:log/pending.md (journal) taken out' in _tl and 'in queue' in _tl
+      and 'the entry file:AGENTS.md (law) taken out — the law places AGENTS.md in guide' in _tl
+      and 'file:MODEL.md' not in _tl and '[[sam]]' in _bl, _j[-1500:])
+check("...each part naming the key it took entries from, as the hook reads the entry: VOCAB.md's `local_terms` and "
+      "`vacancies`, the bean's `standing`",
+      'VOCAB.md `local_terms`:' in _tl and 'VOCAB.md `vacancies`:' in _tl and '[[sam]] `standing`:' in _tl, _tl)
+check("...and says of the open domains that they were NOT compared — the law's own now, which the gate held every bean to "
+      "— never that the law's allows every value the garden's did",
+      "`standing`: `doc`, `since` not compared, the law's own domain holding them now" in _tl
+      and "allows every value the garden's allowed" not in _tl, _tl)
+_why = run(sys.executable, p23('bin/dmwhy.py'), '--check', cwd=G23)
+check("...the reasons it names are exactly the ones bin/dmwhy.py finds orphaned",
+      sorted(re.findall(r'(?m)^ORPHAN  (\S+) — RATIONALE\.md', _why.stdout))
+      == ['local_terms[standing].meaning', 'vacancies[standing.standing]'], _why.stdout[-400:])
+_c = adopt23('adopt 23.1')
+check("once a human fills it in, the translated garden commits through its hook", _c.returncode == 0, (_c.stdout + _c.stderr)[-500:])
+_crossed23 = run('git', 'rev-parse', 'HEAD', cwd=G23).stdout.strip()
+r = up23()
+check("...and a second run finds nothing to do", r.returncode == 0 and 'nothing to do' in r.stdout, (r.stdout + r.stderr)[-300:])
+
+# A GARDEN THAT CROSSED ALREADY: an entry a branch still at 23.0 wrote, merged in since, is translated by the same command
+put23('beans/sam.md', get23('beans/sam.md').replace('\n---\n', '\n' + _PENDING23 + '---\n', 1))
+_merged23 = commit23('an entry a branch still at 23.0 wrote')
+r = up23()
+_j = get23('log/journal.md').split('\n## ')[-1]
+check("in a garden that crossed already, an entry merged in since is taken out, journalled as a translation that asks nothing",
+      r.returncode == 0 and '0 error(s)' in r.stdout and _PENDING23 not in get23('beans/sam.md')
+      and 'translated into the words of daftar v9.2.0' in _j and 'crossed into std-vocab 23.1' in _j
+      and '[[sam]]' in _j and 'RULE-CHANGE' not in _j and '(fill in' not in _j, (r.stdout + r.stderr)[-600:] + '\n' + _j)
+run('git', 'add', '-A', cwd=G23)
+_c = run('git', 'commit', '-qm', 'the entry a branch brought, translated', cwd=G23)
+check("...and it commits through the hook as written", _c.returncode == 0, (_c.stdout + _c.stderr)[-500:])
+# ...where the entry is a bean's ONLY one, its key leaves with it, and the entry names the key, so the hook lets it through
+_bob23 = re.sub(r'(?ms)^standing:\n.*?(?=^---)', 'standing:\n' + _PENDING23, get23('beans/sam.md'), count=1)
+put23('beans/bob.md', _bob23.replace('bean: sam', 'bean: bob').replace('person:sam', 'person:bob').replace('Sam', 'Bob'))
+commit23("a bean a branch still at 23.0 wrote, whose one entry the law now places otherwise")
+r = up23()
+_tl, _j = tline23()
+check("a bean whose ONLY entry the law places otherwise loses the key with it, and the entry names the key it took it from",
+      r.returncode == 0 and '0 error(s)' in r.stdout and 'standing' not in _fm(get23('beans/bob.md'))
+      and '[[bob]] `standing`: the entry file:log/pending.md (journal) taken out' in _tl, (r.stdout + r.stderr)[-600:] + '\n' + _j)
+run('git', 'add', '-A', cwd=G23)
+_c = run('git', 'commit', '-qm', 'the bean a branch brought, translated', cwd=G23)
+check("...and the commit the tool printed goes through the hook", _c.returncode == 0, (_c.stdout + _c.stderr)[-500:])
+# ...and where what came in is a person's, --keep-on-failure names it and fails: nothing translated is not nothing to do
+put23('beans/sam.md', get23('beans/sam.md').replace('\n---\n', '\n  - { doc: "file:log/*", standing: journal, '
+                                                          'why: "the logs" }\n---\n', 1))
+put23('log/notes.md', 'notes a person keeps\n')
+_keep23 = commit23('a pattern that places more than the law does, merged in since')
+r = up23('--keep-on-failure')
+out = r.stdout + r.stderr
+check("in a garden that crossed already, --keep-on-failure with only a person's decision left names it and exits non-zero, "
+      "never 'nothing to do'; nothing is touched",
+      r.returncode != 0 and 'NOTHING TRANSLATED' in out and 'file:log/*' in out and 'log/notes.md' in out
+      and 'nothing to do' not in out and untouched23(_keep23), out[-900:])
+
+# WHAT THE HOOK READS: a garden whose ONLY term of its own is the one the law took, with a vacancy on it and NO reasoning
+# file to name either key — VOCAB.md's `local_terms` and `vacancies` are emptied, and the entry the tool writes names both,
+# so the commit it prints goes through the hook as printed
+reset23(_bare23)
+put23('VOCAB.md', re.sub(r'(?m)^local_terms: \[\].*\n', lambda m: 'local_terms:\n' + _TERM23 + _VAC23,
+                         get23('VOCAB.md'), count=1))
+put23('beans/sam.md', get23('beans/sam.md').replace('\n---\n', '\nstanding:\n' + _MODEL23 + _PENDING23 + '---\n', 1))
+commit23("a garden whose one term of its own the law took, with no reasoning file")
+r = up23()
+_tl, _j = tline23()
+check("a garden whose one term of its own the law took, with no reasoning file, crosses, its entry naming `local_terms` "
+      "and `vacancies`",
+      r.returncode == 0 and '0 error(s)' in r.stdout and not os.path.exists(p23('RATIONALE.md'))
+      and _fm(get23('VOCAB.md'))['local_terms'] == [] and _fm(get23('VOCAB.md'))['vacancies'] == []
+      and 'VOCAB.md `local_terms`:' in _tl and 'VOCAB.md `vacancies`:' in _tl, (r.stdout + r.stderr)[-600:] + '\n' + _j)
+_c = adopt23('adopt 23.1')
+check("...and once a human fills it in, it commits through the hook", _c.returncode == 0, (_c.stdout + _c.stderr)[-500:])
+
+# WHAT A TRANSLATION MAY NOT DECIDE: a garden's term the law's does not hold whole — allowing a value the law's does not,
+# or stating a rule the law's does not state alike — and a placement whose removal would lose something
+_TERM23_OFF = [
+    ("allows a value the law's list does not", lambda t: t.replace('guide] }', 'guide, scratch] }', 1),
+     ['`standing` may be scratch', "a row of `layers` whose files is true"]),
+    ('is of another shape', lambda t: t.replace('shape: list_of_entries', 'shape: scalar', 1),
+     ["it is a scalar, and the law's a list_of_entries"]),
+    ('is read at another key', lambda t: t.replace('context_keys: [standing]', 'context_keys: [standing, placed]', 1),
+     ["it is read at `placed`, where the law's is not"]),
+    ('anchors identity', lambda t: t.replace('    merge:', '    anchor: { class: logical }\n    merge:', 1),
+     ["it anchors identity as the law's does not"]),
+    ('has an attribute the law\'s has not', lambda t: t.replace('        since:', '        owner:     { in: prose }\n        since:', 1),
+     ["it has `owner`, which the law's does not"]),
+    ('holds an attribute to no list', lambda t: t.replace('in: { pointer: bean_field_pointer }', 'in: { bean_id: { gene: [person] } }', 1),
+     ['`doc` is bean_id', 'no list this step can hold one to the other']),
+    ('requires the term of a genos, and allows it only there',
+     lambda t: t.replace('      shape: list_of_entries\n', '      shape: list_of_entries\n      required_on_gene: [person]\n'
+                         '      only_on_gene: [person]\n', 1),
+     ['it says `required_on_gene: ["person"]`, which the law\'s does not', 'it says `only_on_gene: ["person"]`']),
+    ("requires an attribute the law's does not", lambda t: t.replace('since:     { in:', 'since:     { required: true, in:', 1),
+     ["`since` is required, and the law's is not"]),
+    ('merges its entries otherwise', lambda t: t.replace('order: none }', 'order: by-doc }', 1),
+     ['its entries merge as']),
+]
+for _what, _edit, _names in _TERM23_OFF:
+    reset23(_aged23)
+    put23('VOCAB.md', get23('VOCAB.md').replace(_TERM23, _edit(_TERM23), 1))
+    _off23 = commit23(f"the garden's term {_what}")
+    r = up23()
+    out = r.stdout + r.stderr
+    check(f"a garden's term the law now declares, which {_what}, is REFUSED, naming it; nothing is touched",
+          r.returncode != 0 and 'REFUSING' in out and '`local_terms` `standing`' in out and all(n in out for n in _names)
+          and get23('VOCAB.md') != _vocab230 and untouched23(_off23), out[-900:])
+# ...and one whose OWN value may be one the law's list lacks: a law aged without `status` too, the garden keeping its own
+reset23(_aged23)
+put23('seed/std-vocab.md', re.sub(r'(?ms)^  - term: status\n.*?(?=^  - term: |^\S)', '', get23('seed/std-vocab.md'), count=1))
+put23('VOCAB.md', get23('VOCAB.md').replace(_OVERLAY23, '  - term: status\n    meaning: "the lifecycle state of a bean"\n'
+                                            '    context_keys: ["status"]\n    schema:\n      path: status\n'
+                                            '      values: [active, planned, deprecated, draft, closed, retired]\n'
+                                            '    merge: { cardinality: single, order: none }\n', 1))
+_own23 = commit23("the garden's own `status`, a value beyond the law's")
+r = up23()
+out = r.stdout + r.stderr
+check("...and one whose own value may be one the law's list lacks is REFUSED, naming the value; nothing is touched",
+      r.returncode != 0 and 'REFUSING' in out and '`local_terms` `status`' in out and 'its value may be retired' in out
+      and untouched23(_own23), out[-900:])
+reset23(_aged23)
+put23('beans/sam.md', get23('beans/sam.md').replace('"file:log/pending.md"', '"file:log/*"', 1))
+put23('log/notes.md', 'notes a person keeps\n')
+_pat23 = commit23('a pattern that places more than the law does')
+r = up23()
+out = r.stdout + r.stderr
+check("...and an entry whose pattern places files the law does not place, beside one it places otherwise, is REFUSED, "
+      "naming them; nothing is touched",
+      r.returncode != 0 and 'REFUSING' in out and 'file:log/*' in out and 'log/notes.md' in out and 'queue' in out
+      and untouched23(_pat23), out[-900:])
+reset23(_aged23)
+put23('README.md', 'the way in to this garden\n')
+put23('beans/sam.md', get23('beans/sam.md').replace(_AGENTS23, _AGENTS23 + '  - { doc: "file:README.md", standing: law, '
+                                                    'why: "ruled here" }\n', 1))
+_ruled23 = commit23('a file of its own the garden rules, the law placing it in guide')
+r = up23()
+out = r.stdout + r.stderr
+check("...and an entry that placed a file of the garden's own in `law`, where the law places it in guide, is REFUSED: taking "
+      "it out would take the file off the RULE-CHANGE duty; nothing is touched",
+      r.returncode != 0 and 'REFUSING' in out and 'file:README.md' in out and 'RULE-CHANGE duty' in out
+      and 'in guide' in out and untouched23(_ruled23), out[-900:])
+
+# THE CUT, on the forms a list may take: by the node that holds each entry, a comment between entries left in place
+_t = ('---\nbean: x\nstanding:\n  - { doc: "file:a", standing: law }   # a\n  # between\n  - doc: "file:b"\n'
+      '    standing: journal\n  # after\nnext: [ {doc: a}, {doc: b}, {doc: c} ]\n---\nbody\n')
+_n = _du.without_entries(_t, {'standing': {1}, 'next': {0, 2}})
+check("an entry is taken out of a block list and of a flow list, every other byte kept",
+      _n == ('---\nbean: x\nstanding:\n  - { doc: "file:a", standing: law }   # a\n  # between\n  # after\n'
+             'next: [ {doc: b} ]\n---\nbody\n'), _n)
+_n = _du.without_entries(_t, {'standing': {0, 1}})
+check("...a list left with no entry leaves with its key, or is written empty where the document keeps the block",
+      'standing' not in _fm(_n) and _fm(_du.without_entries(_t, {'standing': {0, 1}}, 'keep'))['standing'] == [], _n)
+_cuts = [
+    ('---\nstanding: [ {doc: a},   # about a, kept\n  {doc: b} ]\n---\nbody\n', {'standing': {1}},
+     '---\nstanding: [ {doc: a}   # about a, kept\n   ]\n---\nbody\n'),
+    ('---\nstanding: [\n  {doc: a},\n  {doc: b},\n  # about c, must stay\n  {doc: c}\n]\n---\nbody\n', {'standing': {1}},
+     '---\nstanding: [\n  {doc: a},\n  # about c, must stay\n  {doc: c}\n]\n---\nbody\n'),
+    ('---\nx: [ a, # about a\n  b, # about b\n  c # about c\n  ]\n---\nbody\n', {'x': {2}},
+     '---\nx: [ a, # about a\n  b # about b\n  ]\n---\nbody\n'),
+]
+
+
+def _cut(t, c, empty='drop'):
+    """The cut's text, or what it refused: a refusal where a cut is owed is a failed check, never a crash of the suite."""
+    try:
+        return _du.without_entries(t, c, empty)
+    except _du.CannotRename as e:
+        return f"CannotRename: {e}"
+
+
+check("in a flow list, a comment on a line the entry shares, or between entries, stays; one on the entry's own line goes "
+      "with it, and no comment moves to another entry",
+      all(_cut(t, c) == w for t, c, w in _cuts), [_cut(t, c) for t, c, _w in _cuts])
+_t = ('---\nstanding:\n  - doc: a\n    why: |\n      kept\n      # a line of a\n  - doc: b\n    why: |\n      line\n'
+      '      # a line of b, not a comment\n  # about c\n  - doc: c\n---\nbody\n')
+_n = _cut(_t, {'standing': {1}})
+check("an entry's block scalar goes whole with it, a line of it that opens with `#` too; the comment after it stays",
+      _n == ('---\nstanding:\n  - doc: a\n    why: |\n      kept\n      # a line of a\n  # about c\n  - doc: c\n---\nbody\n'), _n)
+_t = '---\nstanding:   # the list\n  - {doc: a}\n# in column 0\n  - {doc: b}\nnext: 1\n---\nbody\n'
+_n, _k = _cut(_t, {'standing': {0, 1}}), _cut(_t, {'standing': {0, 1}}, 'keep')
+check("a whole list with a column-0 comment between its entries is taken out whole, or written empty with the comment its "
+      "key's line carried", _n == '---\nnext: 1\n---\nbody\n' and _k == '---\nstanding: []   # the list\nnext: 1\n---\nbody\n',
+      (_n, _k))
+check("dmupgrade names no term of its own: the terms it translates are read from the two laws",
+      not re.search(r'''['"]standing['"]''', open(os.path.join(ROOT, 'bin', 'dmupgrade.py'), encoding='utf-8').read()))
+
 # ==== WHICH PYTHON runs the hooks and the merge driver: the first that RUNS and IMPORTS yaml =======================
 # A Windows machine's `python3` may be the Store's App execution alias: found on the PATH, running no Python. Faked
 # here as a script under a `WindowsApps` directory that answers as the alias does, beside a `python` without PyYAML.

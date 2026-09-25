@@ -19,8 +19,9 @@ WHAT IT DOES, and nothing else:
      the tag as `daftar_release:` in GARDEN.md — refusing a tag OLDER than the one recorded unless
      --allow-downgrade is given, because an older tag silently removes fixes;
   5. TRANSLATES what the law re-spelled, and says so on the journal entry's `translated:` line: a garden's own
-     `local_terms` (bin/dmreform.py), the beans and the manifest when the vocabulary crosses into 21.0, and the beans
-     and VOCAB.md when it crosses into 22.0 (both below);
+     `local_terms` (bin/dmreform.py), the beans and the manifest when the vocabulary crosses into 21.0, the beans
+     and VOCAB.md when it crosses into 22.0, and VOCAB.md and what a bean or a mapping places when it crosses into
+     23.1 (all below);
   6. re-runs `bin/install.py`, because the hooks or the merge driver may have changed;
   7. appends a RULE-CHANGE journal entry naming the tag, its commit, the vocabulary move and every file;
   8. runs the gate — and if the garden no longer passes under the release (a profile or a value the release
@@ -76,6 +77,35 @@ holds it, so comments, quoting, layout and a garden's own prose stay byte for by
   only where VOCAB.md itself was translated. (A bean BOTH sides changed never needs it: bin/dmmerge.py reads each side
   in the words of the law its tree runs.)
 
+CROSSING INTO std-vocab 23.1 the law began to say where every file sits (`layers`), and took into itself a term a garden
+had kept of its own. What the law now says itself leaves the garden's words, each document PROVED as above — the
+entries it takes out gone, and every other byte where it was. The step names no term: the terms are the ones the
+release's law declares that the law the garden ran did not, and what the law places is read through bin/dmpass.py, the
+one reader of the map.
+  - a `local_terms` entry of VOCAB.md for a term the law now declares leaves it, where taking it out loses nothing:
+    every value the garden's term allows the law's allows too — a closed list held value by value to the law's domain,
+    its list or the rows of its registry that pass its `where:` (the garden's `registry_additions` among them) — and
+    every other rule it states the law's states alike. An open domain, a pattern or a type, is not compared: the gate
+    reads every bean against the law's term once the garden's is gone and puts everything back if one fails, and the
+    journal says which were not compared, never that the law's allows every value. A term of another shape, read at a
+    key the law's is not, anchoring identity where the law's does not, allowing a value the law's does not, or stating
+    a rule the law's does not state alike — a schema key such as `required_on_gene`, an attribute it requires, how its
+    entries merge — is REFUSED before anything is touched, naming it: which stands is a person's decision;
+  - a vacancy VOCAB.md declares at a position of that term leaves with it; a heading of the garden's own reasoning
+    that explained what left is NAMED, never edited — what a reason says is its writer's own words — as bin/dmwhy.py,
+    the one tool that opens the reasoning, reads it;
+  - an entry of a bean or a mapping that places a file where the law places it otherwise is taken out, where every
+    file it places the law places: the law's placement then stands alone and nothing is left unplaced. A pattern
+    that places other files too is REFUSED, naming them: narrowing it is a person's decision. So is an entry that put
+    a file of the garden's own in `law` or `manifesto` where the law places it in a layer that carries no RULE-CHANGE
+    duty: taking it out would let the next change to that file through unjournalled.
+  Each part of the `translated:` line names the key it took entries from — VOCAB.md's `local_terms` and `vacancies`, a
+  bean's own — so the hook, which refuses a key removed or emptied with nothing said of it, lets the commit through.
+  A garden that CROSSED ALREADY is translated by the same step wherever a bean or a mapping merged in since still
+  places a file where the law places it otherwise, and wherever the law moves on and declares another term the
+  garden kept of its own; its journal entry is written as the 22.0 step's is. Where all it finds is a person's to do,
+  it names that and exits non-zero, --keep-on-failure or not: nothing translated is not nothing to do.
+
 THE RELEASE'S OWN TOOL DOES THE WORK. When the release carries a different bin/dmupgrade.py, this one hands
 over to it (with --garden and --no-delegate) instead of applying a newer release with older logic: v0.4.0
 added the release record and the downgrade guard, and a v0.3.1 garden running its own v0.3.1 tool received the
@@ -94,7 +124,10 @@ provenance duty is met by the commit that adopts it.
 import argparse, copy, datetime, glob, importlib.util, inspect, json, os, re, shlex, shutil, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dmform
 import dmparse
+import dmpass
+import dmreform
 import dmsafe
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -1192,6 +1225,522 @@ class Step22:
         return ('std-vocab 22.0, the Greek names — ' + '; '.join(parts or ['nothing to translate']),
                 [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
 
+
+# ==== THE 23.1 STEP =============================================================================================
+# The law says where every file sits (`layers`), and took into itself the term a garden had placed its files with. What a
+# garden said in its own words that the law now says itself leaves the garden's words — WHERE NOTHING IS LOST: its term
+# only where the law's allows every value the garden's did and states alike every rule the garden's stated, a placement
+# only where the law's places every file the garden's did and none leaves the RULE-CHANGE duty by it. The rest is a
+# person's. No term is named here; which terms moved is read from the two laws, and what the law places from
+# bin/dmpass.py.
+STEP_23_1 = (23, 1)
+NOT_A_DOMAIN = ('scope', 'required', 'meaning', 'keyed_by', 'default_from', 'one_of')   # what else an attribute's form says
+VALUE_DOMAIN = ('values', 'values_from', 'pattern', 'form', 'in_registry')         # a term's own value, as dmform reads it
+# A SCHEMA KEY IS A RULE, and one the garden's term states that the law's does not state alike is lost with the garden's
+# term. These are held by the VALUES they allow instead — the shape, each attribute's domain, the term's own value — so a
+# law that allows more than the garden's did is taken for what it is; every other key is held to the law's as written.
+BY_VALUE = ('shape', 'attrs', 'values', 'values_add', 'values_from', 'value_pattern', 'value_form', 'value_in_registry')
+
+
+def without_entries(text, cuts, empty='drop'):
+    """The front matter of `text` with entries taken out of the lists its top-level keys hold — `cuts` {key: {index}} —
+    each found by the YAML node that holds it: the entry's own lines go, with a comment on its last line, and everything
+    else — comments between entries, layout, every other entry — stays byte for byte. A list left with no entry leaves
+    with its key, the comments between its entries with it, or with `empty='keep'` is written `key: []`, as a garden's
+    VOCAB.md holds an empty block. PROVED before it is returned: the new front matter must parse to exactly the old one
+    without those entries, and the body is untouched. Raises CannotRename."""
+    y = dmparse._yaml
+    try:
+        data, body = _parse(text)
+    except Exception:
+        data, body = None, None
+    if data is None:
+        raise CannotRename("its front matter does not parse")
+    want = copy.deepcopy(data)
+    for key, idx in cuts.items():
+        items = want.get(key)
+        if not isinstance(items, list) or not idx or max(idx) >= len(items):
+            raise CannotRename(f"`{key}` is not the list it was read as")
+        rest = [x for i, x in enumerate(items) if i not in idx]
+        if rest or empty == 'keep':
+            want[key] = rest
+        else:
+            del want[key]
+    cur = text
+    for key, idx in cuts.items():
+        whole = len(set(idx)) == len(data[key])             # the whole list: its key goes, or says it is empty
+        for i in ((None,) if whole else sorted(set(idx), reverse=True)):   # the last first: an index before it still names its entry
+            lo, hi = _fm_region(cur)
+            head = cur[lo:hi]
+            try:
+                root = y.compose(head, Loader=dmparse.LOADER)
+            except Exception:
+                raise CannotRename("its front matter does not parse")
+            kn, seq = next(((k, v) for k, v in root.value if isinstance(k, y.ScalarNode) and k.value == key), (None, None))
+            if not isinstance(seq, y.SequenceNode) or (i is not None and i >= len(seq.value)):
+                raise CannotRename(f"`{key}` is not written as the list it was read as")
+            spans = [_list_span(head, kn, seq, empty)] if whole else _entry_span(head, seq.value, i, seq.flow_style)
+            for a, b, new in sorted(spans, reverse=True):
+                cur = cur[:lo + a] + new + cur[lo + b:]
+    try:
+        nfm, nbody = _parse(cur)
+    except Exception:
+        nfm, nbody = None, None
+    if nfm != want or nbody != body:
+        raise CannotRename("the entries could not be taken out without changing something else")
+    return cur
+
+
+def _content_end(node):
+    """Where a node's own text ends: after its last scalar, or after the bracket that closes a flow collection. A block
+    collection's end runs on over the comments and blank lines after it, which are not its own; a block scalar's line that
+    opens with `#` is the scalar's, and is inside it."""
+    y = dmparse._yaml
+    if isinstance(node, y.ScalarNode) or getattr(node, 'flow_style', False):
+        return node.end_mark.index
+    kids = [n for kv in node.value for n in kv] if isinstance(node, y.MappingNode) else list(node.value)
+    return max((_content_end(n) for n in kids), default=node.start_mark.index)
+
+
+def _line_end(head, i):
+    """Just past the line that `head[:i]` ends on — the rest of that line, a comment on it included."""
+    if i > 0 and head[i - 1] == '\n':
+        return i
+    nl = head.find('\n', i)
+    return nl + 1 if nl >= 0 else len(head)
+
+
+def _list_span(head, key_node, seq, empty):
+    """(start, end, what is written there) for a whole list and its key: from the key's line to the end of the line the
+    list's last entry ends on, found by the nodes as an entry is — a comment between its entries, in column 0 too, is
+    inside it — and the indented comments after it, written inside its block; a blank line before what follows stays.
+    With `empty='keep'` the key stays, written as it was, with `[]` and the comment its line carried."""
+    ls = head.rfind('\n', 0, key_node.start_mark.index) + 1
+    end = _line_end(head, _content_end(seq))
+    tail = re.match(r'(?:[ \t]*\n|[ \t]+#[^\n]*\n)*', head[end:]).group(0).splitlines(keepends=True)
+    while tail and not tail[-1].strip():
+        tail.pop()
+    end += sum(map(len, tail))
+    if empty != 'keep':
+        return ls, end, ''
+    note = (re.match(r'([ \t]+#[^\n]*)?', head[seq.end_mark.index:]) if seq.flow_style else
+            re.match(r'[ \t]*:([ \t]+#[^\n]*)?', head[key_node.end_mark.index:]))
+    note = (note.group(1) if note else None) or ''
+    return ls, end, f"{head[ls:key_node.end_mark.index]}: []{note}\n"
+
+
+def _entry_span(head, items, i, flow):
+    """[(start, end, '')] to cut for the i-th entry of a list in `head`. A block entry is its own lines, from its dash to
+    the end of the line its last value ends on, a comment there with it; the comments and blank lines after that line
+    belong to what follows, and a node's end runs over them, so they are left where they are."""
+    if flow:
+        return _flow_span(head, items, i)
+    node = items[i]
+    start = node.start_mark.index
+    ls = head.rfind('\n', 0, start) + 1
+    if not re.fullmatch(r'[ \t]*-[ \t]+', head[ls:start]):
+        raise CannotRename("an entry that does not open its own line after its dash")
+    return [(ls, _line_end(head, _content_end(node)), '')]
+
+
+def _flow_span(head, items, i):
+    """[(start, end, '')] to cut for the i-th entry of a flow list `[a, b]`: the entry and the comma that parts it from a
+    neighbour — its whole line where it stands alone on one, a comment after it there its own — and never a comment on a
+    line it shares with another, nor one between entries."""
+    def comma_after(k):
+        j = items[k].end_mark.index
+        while j < len(head) and head[j] in ' \t\n':
+            j += 1
+        if head[j:j + 1] != ',':
+            raise CannotRename("a flow list with a comment before a comma, which this step does not cut")
+        return j
+
+    def alone(a, b):
+        ls = head.rfind('\n', 0, a) + 1
+        m = re.match(r'[ \t]*(?:#[^\n]*)?(?:\n|$)', head[b:])
+        return (ls, b + m.end(), '') if m and not head[ls:a].strip() else None
+
+    s, e = items[i].start_mark.index, items[i].end_mark.index
+    if i < len(items) - 1:
+        c = comma_after(i) + 1
+        gap = re.match(r'[ \t]*', head[c:]).end()
+        return [alone(s, c) or (s, c + gap if head[c + gap:c + gap + 1] not in ('#', '\n', '') else c, '')]
+    c = comma_after(i - 1)
+    if not head[c + 1:s].strip(' \t'):                     # the comma and the entry on one line: cut together
+        return [(c, e, '')]
+    return [(c, c + 1, ''), alone(s, e) or (s, e, '')]
+
+
+def declared_terms(law, profiles):
+    """{name: term} a law declares for a garden extending `profiles` — its own terms, and those profiles' — read as the
+    gate reads them, a profile's term standing over the law's own."""
+    out = {}
+    own = list(law.get('terms') or [])
+    for p in (profiles if isinstance(profiles, list) else []):
+        prof = (law.get('profiles') or {}).get(p) if isinstance(p, str) else None
+        own += list((prof or {}).get('terms') or []) if isinstance(prof, dict) else []
+    for t in own:
+        if isinstance(t, dict) and isinstance(t.get('term'), str):
+            out[t['term']] = t
+    return out
+
+
+def _attr_form(t):
+    """A term's law keyed by attribute, through bin/dmform.py — or, for a term still spelled as before 13.0, through
+    bin/dmreform.py's reader of that spelling, the only one there is."""
+    sch = t.get('schema') if isinstance(t.get('schema'), dict) else {}
+    return dmreform.legacy_form(t, sch) if dmreform.uses_old_term(t) else dmform.attribute_form(t, sch)
+
+
+def _said(v):
+    return json.dumps(v, ensure_ascii=False, default=str)
+
+
+class Step23_1:
+    """The translation into std-vocab 23.1: planned, and refused if it must be, before any file is touched — and made
+    again at apply time on each file as the steps before it left it."""
+
+    def __init__(self, rel, tag, keep, moves):
+        """`moves`: the law the garden runs is older than the release's, so a term may have come into it since."""
+        self.rel, self.tag, self.keep, self.moves = rel, tag, keep, moves
+        self.law, self.problems = std_fm(rel), []
+        self.leftover = False           # True: the garden crossed already, and this translates what came in since
+        self.terms, self.open = [], {}  # the garden's own terms the law now declares, and what of each was not compared
+        self.said = []                  # the `translated:` line's parts, as apply() makes them
+
+    # -- what the garden holds that the law now says
+    @staticmethod
+    def vocab():
+        """VOCAB.md's front matter as it is now — empty where it does not parse, which the gate names, not this step."""
+        path = os.path.join(ROOT, 'VOCAB.md')
+        try:
+            return (_parse(read_text(path)[0])[0] if os.path.isfile(path) else None) or {}
+        except Exception:
+            return {}
+
+    def candidates(self, vocab):
+        """[(the garden's entry, the law's term)] — each `local_terms` entry for a term the release's law declares
+        and the law the garden runs did not. None where the garden's own law cannot be read: every term would then look
+        new, and an overlay a garden keeps on purpose would be taken for one."""
+        if not self.moves:
+            return []
+        before = std_fm(ROOT)
+        if not before.get('terms'):
+            return []
+        profiles = vocab.get('extends_profiles')
+        now, then = declared_terms(self.law, profiles), declared_terms(before, profiles)
+        return [(t, now[t['term']]) for t in (vocab.get('local_terms') or [])
+                if isinstance(t, dict) and isinstance(t.get('term'), str) and t['term'] in now and t['term'] not in then]
+
+    def closed(self, dom, vocab):
+        """The values a CLOSED domain allows — its list, or the column its registry takes from the rows that pass its
+        `where:`, the garden's own rows among them — or None for a domain that is no list of values."""
+        if 'values' in dom:
+            return list(dom['values'] or [])
+        r = dom.get('registry')
+        if len(dom) == 1 and isinstance(r, dict) and r.get('registry') and r.get('take') and not r.get('registry_from'):
+            rows = list(self.law.get(r['registry']) or []) + list(
+                ((vocab.get('registry_additions') or {}).get(r['registry']) or []) if isinstance(vocab.get('registry_additions'), dict) else [])
+            return [row.get(r['take']) for row in rows if isinstance(row, dict) and dmform.row_matches(row, r.get('where'))]
+        return None
+
+    def allows(self, dom, value, vocab):
+        """Whether the law's domain `dom` allows `value`, as far as the law alone can say: a closed domain by its values, a
+        pattern by the law's own match; anything else is not shown to, and so is not taken to."""
+        if not dom:
+            return True                                     # untyped, or any: the law's leaves it open
+        vals = self.closed(dom, vocab)
+        if vals is not None:
+            return value in vals
+        if set(dom) == {'pattern'}:
+            return isinstance(value, str) and bool(dmparse.law_match(dom['pattern'], value))
+        return False
+
+    @staticmethod
+    def said_of(dom):
+        """A domain, as a person reads it in a refusal."""
+        if 'values' in dom:
+            return 'one of ' + ', '.join(map(str, dom['values'] or []))
+        r = dom.get('registry')
+        if isinstance(r, dict) and r.get('registry'):
+            where = ' and '.join(f"{k} is {json.dumps(v, default=str)}" for k, v in (r.get('where') or {}).items())
+            return f"a row of `{r['registry']}`" + (f" whose {where}" if where else '')
+        return ', '.join(f"{k}: {_said(v)}" for k, v in dom.items()) or 'any value'
+
+    def beyond(self, mine, law_term, vocab):
+        """What taking the garden's term out would lose — [why], none where the law's allows every value the garden's did
+        and states alike every rule it stated. A closed list is held value by value; an open domain (a pattern, a type, a
+        pointer) is noted in `open`, and held by the gate, which reads every bean against the law's term once the garden's
+        is gone; every other rule, as written (stricter())."""
+        out, name = [], mine['term']
+        try:
+            mine = dmreform.translate_term(mine) or mine    # a term still spelled as before 13.0, read in today's spelling
+        except Exception as e:
+            return [f"it could not be read ({type(e).__name__}: {e})"]
+        ms = mine.get('schema') if isinstance(mine.get('schema'), dict) else {}
+        ls = law_term.get('schema') if isinstance(law_term.get('schema'), dict) else {}
+        if ms.get('shape') and ms.get('shape') != ls.get('shape'):
+            out.append(f"it is a {ms['shape']}, and the law's a {ls.get('shape') or 'term of no shape'}")
+        keys = [str(k) for k in (mine.get('context_keys') or []) if k not in (law_term.get('context_keys') or [])]
+        if keys:
+            out.append(f"it is read at {', '.join(f'`{k}`' for k in keys)}, where the law's is not")
+        if mine.get('anchor') is not None and mine.get('anchor') != law_term.get('anchor'):
+            out.append("it anchors identity as the law's does not — an anchor is ratified, never translated")
+        try:
+            mf, lf = _attr_form(mine), _attr_form(law_term)
+        except Exception as e:
+            return out + [f"it could not be read ({type(e).__name__}: {e})"]
+        # THE TERM'S OWN VALUE: a closed list, its `values_add` with it as the gate reads a garden's term, value by value
+        mv = {k: v for k, v in mf['value'].items() if k in VALUE_DOMAIN}
+        if ms.get('values_add'):
+            mv['values'] = list(mv.get('values') or []) + [v for v in ms['values_add'] if v not in (mv.get('values') or [])]
+        lv = {k: v for k, v in lf['value'].items() if k in VALUE_DOMAIN}
+        if mv != lv:
+            if set(mv) == {'values'}:
+                bad = [v for v in mv['values'] if not self.allows(lv, v, vocab)]
+                if bad:
+                    out.append(f"its value may be {', '.join(map(str, bad))}, which is not {self.said_of(lv)}")
+            else:
+                self.open.setdefault(name, []).append(None)
+        # EACH ATTRIBUTE, by its domain
+        for a, rec in mf['attrs'].items():
+            lrec = lf['attrs'].get(a)
+            if lrec is None:
+                out.append(f"it has `{a}`, which the law's does not")
+                continue
+            md = {k: v for k, v in rec.items() if k not in NOT_A_DOMAIN}
+            ld = {k: v for k, v in lrec.items() if k not in NOT_A_DOMAIN}
+            if md == ld:
+                continue
+            mine_vals = self.closed(md, vocab)
+            if mine_vals is not None:
+                bad = [v for v in mine_vals if not self.allows(ld, v, vocab)]
+                if bad:
+                    out.append(f"`{a}` may be {', '.join(map(str, bad))}, which is not {self.said_of(ld)}")
+                continue
+            if set(md) & {'aspect', 'entries', 'bean_id'} or set(ld) & {'aspect', 'entries', 'bean_id'}:
+                out.append(f"`{a}` is {self.said_of(md)}, and the law's {self.said_of(ld)}: which of them a value may be "
+                           f"is no list this step can hold one to the other")
+                continue
+            self.open.setdefault(name, []).append(a)
+        return out + self.stricter(mine, law_term)
+
+    @staticmethod
+    def stricter(mine, law_term):
+        """[why] — each rule the garden's term states that the law's does not state alike, which taking the garden's out
+        would lose: a schema key no value holds (`required_on_gene`, `only_on_gene`, a cell), a field of an attribute
+        besides its domain (`required`, where the law's attribute is not), and how its entries merge."""
+        out = []
+        ms = mine.get('schema') if isinstance(mine.get('schema'), dict) else {}
+        ls = law_term.get('schema') if isinstance(law_term.get('schema'), dict) else {}
+        for k, v in ms.items():
+            if k not in BY_VALUE and ls.get(k) != v:
+                out.append(f"it says `{k}: {_said(v)}`, " + (f"and the law's `{k}: {_said(ls[k])}`" if k in ls else
+                                                             "which the law's does not"))
+        la = ls.get('attrs') if isinstance(ls.get('attrs'), dict) else {}
+        for a, rec in (ms.get('attrs') if isinstance(ms.get('attrs'), dict) else {}).items():
+            lrec = la.get(a)
+            if not isinstance(rec, dict) or not isinstance(lrec, dict):
+                continue                                    # an attribute the law's lacks is named with the domains
+            for f, v in rec.items():
+                if f in ('in', 'meaning') or lrec.get(f) == v or (f == 'required' and v is not True):
+                    continue
+                out.append(f"`{a}` is required, and the law's is not" if f == 'required' else
+                           f"`{a}` says `{f}: {_said(v)}`, " + (f"and the law's `{f}: {_said(lrec[f])}`" if f in lrec else
+                                                                "which the law's does not"))
+        if mine.get('merge') is not None and mine.get('merge') != law_term.get('merge'):
+            out.append(f"its entries merge as `{_said(mine['merge'])}`, and the law's as `{_said(law_term.get('merge'))}`")
+        return out
+
+    # -- where the law places a file the garden placed otherwise
+    def map(self):
+        """The layer map of the release's law over this garden's files and the entries its beans and mappings carry."""
+        def read(p):
+            base = self.rel if p in (dmpass.LAW, dmpass.LANGUAGE) else ROOT
+            path = os.path.join(base, *p.split('/'))
+            try:
+                return read_text(path)[0]
+            except (OSError, UnicodeDecodeError):
+                return None
+        try:
+            return dmpass.Map(read, dmpass.tracked(ROOT))
+        except ValueError as e:
+            refuse(f"{self.tag}'s law gives no layer map to place this garden's files by: {e}")
+
+    def placements(self):
+        """({document: [(index, key, doc, the garden's layer, the law's layer, path)]}, [problem]) — each entry of a bean or
+        a mapping that places a file where the law places it otherwise: to take out where the law places every file it
+        places and none of them leaves the RULE-CHANGE duty by it, and a person's where it does, or where it places files
+        the law does not. The key that holds the entry is read from the document, as the entry bin/dmpass.py read there:
+        the step names no term."""
+        m, cuts, problems = self.map(), {}, []
+        held = {(f, i): e for f, i, e in m.standing}
+        for f, i, doc, mine, law, path in m.standing_conflicts():
+            places = [p for p in m.files if (f, i) in [(g, j) for _l, g, j in m.garden_layers_of(p)]] or [path]
+            unplaced = [p for p in places if not m.law_layer_of(p)]
+            if unplaced:
+                problems.append(f"{f}: the entry {doc} places {path} in {mine}, where the law places it in {law}, and "
+                                f"also places {len(unplaced)} file(s) the law does not ({', '.join(unplaced[:5])}"
+                                f"{', …' if len(unplaced) > 5 else ''}) — narrowing it is a person's decision")
+                continue
+            # A FILE THE GARDEN RULED STAYS RULED, or a person decides it: a change to a file in `law` or `manifesto` is a
+            # RULE-CHANGE, so an entry that put one there, taken out where the law places the file in no such layer and
+            # the release does not keep it, would let the next change to it through unjournalled.
+            freed = [p for p in places if mine in dmpass.RULED and m.law_layer_of(p) not in dmpass.RULED
+                     and m.keeper_of(p) != 'release']
+            if freed:
+                problems.append(f"{f}: the entry {doc} places {', '.join(freed[:5])}{', …' if len(freed) > 5 else ''} in "
+                                f"{mine}, where the law places {'it' if len(freed) == 1 else 'them'} in "
+                                f"{', '.join(sorted({m.law_layer_of(p) for p in freed}))} — taking it out would take "
+                                f"{'that file' if len(freed) == 1 else 'those files'} off the RULE-CHANGE duty a file in "
+                                f"{mine} carries, which is a person's decision: take the entry out, or keep the file "
+                                f"ruled by proposing its place to the law")
+                continue
+            fm = _parse(read_text(os.path.join(ROOT, *f.split('/')))[0])[0] or {}
+            keys = [k for k, v in fm.items() if isinstance(v, list) and i < len(v) and v[i] == held[(f, i)]]
+            if len(keys) != 1:
+                problems.append(f"{f}: the entry {doc} could not be found where it was read — take it out by hand")
+                continue
+            cuts.setdefault(f, []).append((i, keys[0], doc, mine, law, path))
+        return cuts, problems
+
+    def left(self):
+        """Whether there is anything for this step where the garden does not cross into 23.1: an entry merged in after it
+        crossed that places a file where the law places it otherwise, or — where the law moves on — another term of the
+        garden's own it now declares."""
+        cuts, problems = self.placements()
+        self.leftover = bool(cuts or problems or self.candidates(self.vocab()))
+        return self.leftover
+
+    def plan(self):
+        vocab = self.vocab()
+        for mine, law_term in self.candidates(vocab):
+            why = self.beyond(mine, law_term, vocab)
+            if why:
+                self.problems.append(f"VOCAB.md: `local_terms` `{mine['term']}` is a term {self.tag}'s law now declares, "
+                                     f"and taking the garden's out would lose what the law's does not say — "
+                                     f"{'; '.join(why)}. Which stands is a person's decision: take the garden's out and "
+                                     f"keep the law's; or keep only what it adds, as an overlay on the law's term once "
+                                     f"the garden has crossed (--keep-on-failure crosses and leaves it for that); or "
+                                     f"propose what it adds to the law")
+            else:
+                self.terms.append(mine['term'])
+        cuts, problems = self.placements()
+        self.problems += problems
+        # EACH DOCUMENT IS PROVED NOW, while nothing is touched: a list this step cannot take an entry out of is refused
+        for path, cut, empty in self.edits(vocab, cuts):
+            try:
+                without_entries(read_text(path)[0], cut, empty)
+            except CannotRename as e:
+                self.problems.append(f"{os.path.relpath(path, ROOT).replace(os.sep, '/')}: {e} — take them out by hand")
+        if self.problems and not self.keep:
+            refuse(f"{'at' if self.leftover else 'crossing into'} std-vocab {vocab_version(self.rel)}, "
+                   f"{len(self.problems)} thing(s) are a person's to do, not a translation's:\n"
+                   + '\n'.join('  - ' + p for p in self.problems) +
+                   "\nDo them and commit, then run this again — or pass --keep-on-failure to apply the rest and "
+                   "leave these, named, for the person.")
+
+    def gone_vacancies(self, vocab):
+        """The indexes of the vacancies VOCAB.md declares at a position of a term this step takes out: `at` the term, or
+        a path under it."""
+        return [i for i, v in enumerate(vocab.get('vacancies') or []) if isinstance(v, dict)
+                and any(str(v.get('at')) == t or str(v.get('at')).startswith(t + '.') for t in self.terms)]
+
+    def edits(self, vocab, cuts):
+        """[(path, {key: {index}}, what an emptied list becomes)] — VOCAB.md's, and each bean's or mapping's."""
+        out = []
+        idx = {i for i, t in enumerate(vocab.get('local_terms') or []) if isinstance(t, dict) and t.get('term') in self.terms}
+        if idx:
+            vcut = {'local_terms': idx}
+            if self.gone_vacancies(vocab):
+                vcut['vacancies'] = set(self.gone_vacancies(vocab))
+            out.append((os.path.join(ROOT, 'VOCAB.md'), vcut, 'keep'))
+        for f, entries in sorted(cuts.items()):
+            by = {}
+            for i, key, *_rest in entries:
+                by.setdefault(key, set()).add(i)
+            out.append((os.path.join(ROOT, *f.split('/')), by, 'drop'))
+        return out
+
+    def compared(self, t):
+        """What the `translated:` line says of what the law's term allows: everything, where every domain was compared,
+        and otherwise which of them were not — held by the gate, never claimed."""
+        gone = self.open.get(t)
+        if not gone:
+            return f"`{t}`: the law's allows every value the garden's allowed"
+        names = ', '.join('its own value' if a is None else f"`{a}`" for a in gone)
+        return (f"`{t}`: {names} not compared, the law's own domain holding {'it' if len(gone) == 1 else 'them'} now, "
+                f"which the gate held every bean to; every other value the garden's allowed, the law's allows")
+
+    def apply(self):
+        """Writes what was planned, on each file as the steps before it left it. Returns the `translated:` text, the ids of
+        the beans and mappings it touched, and whether VOCAB.md was written. Each part names the KEY it took entries from,
+        as a person reading the journal — and the hook, which refuses a key emptied with nothing said of it — reads it."""
+        vocab, touched, wrote = self.vocab(), [], False
+        vac = [vocab['vacancies'][i] for i in self.gone_vacancies(vocab)]
+        cuts, _problems = self.placements()
+        for path, cut, empty in self.edits(vocab, cuts):
+            rel = os.path.relpath(path, ROOT).replace(os.sep, '/')
+            text, form = read_text(path)
+            try:
+                new = without_entries(text, cut, empty)
+            except CannotRename as e:
+                why = f"{rel}: {e} — take them out by hand"
+                if why not in self.problems:
+                    self.problems.append(why)
+                continue
+            if rel == 'VOCAB.md':
+                orphans = self.orphaned(_parse(text)[0], _parse(new)[0])
+                write_text(path, new, form)
+                wrote, it = True, 'them' if len(self.terms) > 1 else 'it'
+                self.said.append(
+                    f"VOCAB.md `local_terms`: the garden's own {'terms' if len(self.terms) > 1 else 'term'} "
+                    + ', '.join(f"`{t}`" for t in self.terms) + f" taken out — {self.tag}'s law declares {it} now; "
+                    + '; '.join(self.compared(t) for t in self.terms))
+                if vac:
+                    self.said.append(f"VOCAB.md `vacancies`: the {'vacancies' if len(vac) > 1 else 'vacancy'} declared on "
+                                     f"{it} taken out with {it}: " + ', '.join(f"{v.get('at')} = {v.get('position')}" for v in vac))
+                if orphans[1]:
+                    self.said.append(f"{orphans[0]}, the garden's own reasons, NOT EDITED: "
+                                     + ', '.join(f"`## {k}`" for k in orphans[1])
+                                     + f" {'explain' if len(orphans[1]) > 1 else 'explains'} what VOCAB.md no longer "
+                                     "holds — for a person to move to the journal, or remove")
+                continue
+            write_text(path, new, form)
+            ident = Step21._id(path)
+            touched.append(ident)
+            for key in sorted(cut):
+                self.said.append(f"{ident} `{key}`: " + '; '.join(
+                    f"the entry {doc} ({mine}) taken out — the law places {placed} in {law}"
+                    for _i, k, doc, mine, law, placed in sorted(cuts[rel]) if k == key))
+        if self.problems:
+            self.said.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
+        return (f"std-vocab {vocab_version(self.rel)}, what the law now says itself — "
+                + '; '.join(self.said or ['nothing to translate'])), touched, wrote
+
+    @staticmethod
+    def orphaned(before, after):
+        """(the garden's reasoning file, [the keys of its headings that named something VOCAB.md held before this step and
+        no longer does]) — read by bin/dmwhy.py, the one tool that opens the reasoning; (None, []) where there is none."""
+        sys.path.insert(0, os.path.join(ROOT, 'bin'))
+        import dmwhy
+        for law, why in dmwhy.each_pair():
+            if law != 'VOCAB.md':
+                continue
+            out = []
+            for key in dmwhy.rationale():
+                try:
+                    dmwhy.resolve(before or {}, key)
+                except KeyError:
+                    continue
+                try:
+                    dmwhy.resolve(after or {}, key)
+                except KeyError:
+                    out.append(key)
+            return why.replace(os.sep, '/'), out
+        return None, []
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
@@ -1275,6 +1824,14 @@ def main():
             if vtuple(before) < STEP_22 or _s22.left():
                 step22 = _s22
                 step22.plan()
+        # ...and so is one where a bean still places a file the law places otherwise, or the law declares a term the garden
+        # kept of its own: the terms are read from the two laws, so the step is planned while the garden's own is here.
+        step23 = None
+        if STEP_23_1 <= vtuple(vocab_version(rel)):
+            _s23 = Step23_1(rel, a.tag, a.keep_on_failure, vtuple(before) < vtuple(vocab_version(rel)))
+            if vtuple(before) < STEP_23_1 or _s23.left():
+                step23 = _s23
+                step23.plan()
         want = expand(rel, patterns(rel))
         have = expand(ROOT, patterns(ROOT)) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
         # "applied" when either side is unknown: a garden that records no release cannot be told which way it moved.
@@ -1285,7 +1842,7 @@ def main():
         # An exception midway (a file an editor, the indexer or antivirus holds open on Windows, where os.replace then
         # fails) once left release files copied, both pins moved, beans half translated and no journal entry.
         try:
-            return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22)
+            return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22, step23)
         except BaseException as e:
             put_back(added + (step21.created if step21 else []))
             print(f"NOT {verb.upper()}: the upgrade stopped midway"
@@ -1309,7 +1866,7 @@ def put_back(added):
     install()
 
 
-def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None):
+def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None):
     """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
     caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
     changed = []
@@ -1384,15 +1941,34 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         _t, _b = step22.apply()
         translated.append(_t); steps.append(_t)
         beans += [b for b in _b if b not in beans]
+    if step23:
+        # LAST, on each file as every step before it left it, and on VOCAB.md after bin/dmreform.py read the garden's terms
+        _t, _b, _vocab = step23.apply()
+        translated.append(_t); steps.append(_t)
+        beans += [b for b in _b if b not in beans]
+        if _vocab and 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
+            changed.append('VOCAB.md (translated)')
 
     if not (changed or added or removed or repinned or beans):
+        # NOTHING MOVED IS NOT NOTHING TO DO. With --keep-on-failure a step that could translate nothing still names what
+        # it left for a person, and the gate still refuses the garden for it: saying "nothing to do" hid both.
+        left = [p for s in (step22, step23) if s for p in s.problems]
+        if left:
+            print(f"NOTHING TRANSLATED: this garden runs {a.tag} ({sha[:12]}) already, and {len(left)} thing(s) are a "
+                  f"person's to do, not a translation's:\n" + '\n'.join('  - ' + p for p in left) +
+                  "\nDo them and commit, then run this again. Nothing was touched.")
+            return 1
         print(f"nothing to do: this garden's language already equals {a.tag} ({sha[:12]}).")
         return 0
     # ONLY WORDS MOVED: the garden runs this release already, and what changed is the translation of what came in since it
-    # crossed into 22.0. The law did not move and nothing is a person's to decide — the translation is the one the garden
-    # adopted when it crossed — so the entry asks nothing, and says RULE-CHANGE only where VOCAB.md itself was translated.
-    words_only = bool(step22 and step22.leftover and not (added or removed or repinned)
+    # crossed. The law did not move and nothing is a person's to decide — the translation is the one the garden adopted
+    # when it crossed — so the entry asks nothing, and says RULE-CHANGE only where VOCAB.md itself was translated.
+    ran = [s for s in (step22, step23) if s]
+    words_only = bool(ran and all(s.leftover for s in ran) and not (added or removed or repinned)
                       and all(c.endswith(('(translated)', '(re-keyed)')) for c in changed))
+    since = ' and '.join(w for s, w in ((step22, "into std-vocab 22.0 still in 21.0's words"),
+                                        (step23, "into std-vocab 23.1 still placing a file where the law places it "
+                                                 "otherwise")) if s)
     if words_only:
         verb = 'translated'
 
@@ -1403,9 +1979,8 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         lines = ['\n' + dmjournal.stamp(_who, ("RULE-CHANGE: " if changed else '') + f"translated into the words of "
                                         f"daftar {a.tag}, which this garden runs", ROOT),
                  f"- action: `bin/dmupgrade.py {a.tag}` from {source} at {sha}; the language is unchanged (std-vocab "
-                 f"{after}, release {a.tag}). What came in after the garden crossed into std-vocab 22.0 still in 21.0's "
-                 f"words — from a branch or a clone merged since, or a proposal — is translated as the crossing "
-                 f"translated the rest.",
+                 f"{after}, release {a.tag}). What came in after the garden crossed {since} — from a branch or a clone "
+                 f"merged since, or a proposal — is translated as the crossing translated the rest.",
                  f"- changed: {', '.join(changed) or 'none'}",
                  f"- translated: {'; '.join(translated) or 'none'}",
                  f"- beans: {', '.join(beans) or 'none'}"]
