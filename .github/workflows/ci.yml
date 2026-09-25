@@ -85,6 +85,12 @@ jobs:
         run: python3 test/zones.py
       - name: "reckon: one reckoner for every reading — a series read through it, a pinned reading, an allowance, a weighing"
         run: python3 test/reckon.py
+      - name: "privacy: sensitivity derived, another person kept by name only on consent, grants closed by default, issued anchors, E.164"
+        run: python3 test/privacy.py
+      - name: "held: material sealed off git in a store this host resolves, journalled in one line, erased per subject"
+        run: python3 test/held.py
+      - name: "hub: every push judged again — signed by a writer's key, within the writer's grants, and by the gate"
+        run: python3 test/hub.py
       - name: "licences: every file says whose it is and under which terms (REUSE)"
         run: reuse lint
       - name: "sign-off: every commit of a pull request is signed off by a person (CONTRIBUTING.md)"

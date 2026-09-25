@@ -81,7 +81,8 @@ identity_policy:
   applies_at_identity_status: confirmed
   anchor_key: term
   establishing_family: enforced
-  anchor_attrs: [key, value, class, establishing, observed, provenance]
+  issued: "an anchor whose term's `anchor` says `issued: true` identifies only together with the organisation that issued it, `issuer: {bean: <org>}` — an employee number, a file number, a membership number. The same value from two issuers is two identities; an issued anchor with no issuer is warned, because an upgrade can invent none"
+  anchor_attrs: [key, value, class, establishing, observed, provenance, issuer]
   minted:
     qualified_by: garden_id
     pattern: '^[0-9a-f]{12}/.+$'
@@ -1507,6 +1508,14 @@ journal:
   unit_at_least: minute
   checks: added
   heading: stamped
+# == HELD: what a garden keeps off git ==
+held_form:
+  entry:   "an ENTRY of any term whose value is a list or an open map may be SEALED: `{held: <held_pointer>, basis?, until?}` and nothing else, in place of its attributes. The whole entry, its declaration included, is in the held layer; git keeps only this"
+  key:     "in an open map, a sealed entry's key is `h-` and the first eight digits of its pointer's key: a key says nothing either"
+  basis:   "a ref to what it is held on: the subject's own consent, an agreement. Required on a bean `about` any person but the gardener"
+  until:   "optional: the day by which it is to be erased (a date); bin/dmheld.py warns before it"
+  journal: "a commit that seals or erases an entry records it in one line, `- held: <bean> <key> added` or `erased`, which bin/dmheld.py writes, and says no more of it"
+  never:   "the gate never reads a store: a store is checked where it is, by bin/dmheld.py and by the save — a gate that fails on one machine and passes on another is a gate people disable (sv:42)"
 # == LAYERS: where material sits, and what stands on what ==
 layers:
   - layer: manifesto
@@ -1581,6 +1590,9 @@ layers:
   - layer: other-garden
     files: false
     meaning: "another garden, written only by its own gardener"
+  - layer: held
+    files: false
+    meaning: "material a garden keeps OFF git — a document's bytes, a sealed entry, a series — in a store a host resolves through its `roots`, pointed at from a bean by a `held_pointer`; erasable per subject, and backed up on its own"
 aspects:
   - aspect: necessity
     meaning: "what a being requires in order to do its work"
@@ -2523,10 +2535,10 @@ terms:
     anchor: { class: logical }
     merge: { cardinality: set, order: none }
   - term: emp_id
-    meaning: "an employer-assigned unique employee identifier"
+    meaning: "an employer-assigned unique employee identifier — identifying only with its issuer"
     context_keys: ["emp_id"]
     enforced_by: none
-    anchor: { class: logical, establishing: true }
+    anchor: { class: logical, establishing: true, issued: true }
     merge: { cardinality: single, order: none }
   - term: product_id
     meaning: "the logical identity of a product: a stable id the product's own home assigns, which identifies it wherever it is written, or a name the garden mints once (`product:<name>`)"
@@ -2598,6 +2610,15 @@ terms:
     meaning: "an e-mail address a person or an organisation is reached at. Logical; whether it ESTABLISHES is the bean's to say, because an address is reassigned and a person outlives it"
     context_keys: ["email"]
     enforced_by: none
+    anchor: { class: logical }
+    merge: { cardinality: single, order: none }
+  - term: phone
+    meaning: "a telephone number a person or an organisation is reached at, in E.164: `+` and at most fifteen digits, the country code first. Logical; whether it establishes is the bean's to say, as for `email`. A third party's is held off git unless their own consent puts it in (F2); a digest of one is kept only on a host, never in the ledger"
+    context_keys: ["phone", "identity.anchors[].phone"]
+    schema:
+      governs_anchor: phone
+      value_pattern: '^\+[1-9][0-9]{1,14}$'
+      canonical_note: "`+` and the digits, country code first, nothing between them"
     anchor: { class: logical }
     merge: { cardinality: single, order: none }
   - term: garden_id
@@ -2992,6 +3013,13 @@ terms:
         at:        { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the literal position this root means HERE, host named, in that system's canonical form" }
         observed:  { in: { type: date }, meaning: "ABSOLUTE date the resolution was checked — a tree gets moved" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
+        keeps:           { in: [none, personal, special-category], meaning: "the most sensitive material this root may hold as a store of the held layer — `none` for material that is neither; absent, the root is no store" }
+        controller:      { in: { bean_id: { gene: [person, org] } }, meaning: "who controls the store: the subject, for special-category material (D4)" }
+        confidentiality: { in: { aspect: confidentiality, default: cleartext }, meaning: "whether the store protects what is in it at rest" }
+        readable_from:   { in: [this-host, lan, remote], meaning: "where what is in it can be read from: this host only, its network, or a party outside the garden (a synced folder)" }
+        backup:          { in: prose, meaning: "how the store is backed up, now that git no longer is its backup" }
+      cells:
+        - { when: { keeps: special-category, confidentiality: cleartext, readable_from: remote }, verdict: in_breach, why: "special-category material stored in cleartext where a party outside the garden reads it" }
     key_note: >
       kebab-case root names, shared across hosts by AGREEMENT rather than by a registry: a root is a name
       two machines both choose to use, and centralising the list would re-introduce the one shared document
@@ -3171,6 +3199,50 @@ terms:
         why:      { required: true, in: prose }
         since:    { in: { type: date }, meaning: "the day the file took this place" }
     merge: { cardinality: set, order: none }
+  - term: sensitivity
+    meaning: "how much harm this bean can do a person if it leaves the garden, where a person RAISES it above what the law derives. What is derived is never stored (bin/dmpass.py `sensitivity`): SPECIAL-CATEGORY — a code of a scheme marked `sensitive`, or a capture or series such a bean points at; PERSONAL — a record `about` a person who is not the gardener, or an observation of one. A mark below the derived one is a safety change (Contract E): only a person's own word lowers it"
+    context_keys: [sensitivity]
+    schema:
+      shape: mapping
+      attrs:
+        is:  { required: true, in: [none, personal, special-category], meaning: "none | personal | special-category" }
+        why: { required: true, in: prose }
+    merge: { cardinality: single, order: none }
+  - term: consent
+    meaning: "the agreement in which this person consented to be kept by name in the git of the garden that holds it: a `contract` whose `parties` hold this person with `accepted`, their own word. Without it, a person who is not the gardener is kept in git only under an opaque id, and what names or reaches them is held off git (`held_form`); their future whereabouts are held off git whatever they consented to"
+    context_keys: [consent]
+    schema:
+      shape: mapping
+      is_ref: true
+      only_on_gene: [person]
+      attrs:
+        bean: { required: true, in: id }
+    merge: { cardinality: single, order: none }
+  - term: about
+    meaning: "the persons this record concerns — its data subjects — whoever owns the record or its copies: a certificate about a client, a note about a colleague. Whom it is personal to, what a person may ask to be shown, and what an erasure for them takes are read from it"
+    context_keys: [about]
+    schema:
+      shape: list_of_entries
+      attrs:
+        who:  { required: true, in: { bean_id: { gene: [person] } }, meaning: "the person it concerns" }
+        note: { in: prose }
+    merge: { cardinality: multi, order: by-who }
+  - term: grants
+    meaning: "who, besides the gardener, may read, write, act on or ratify what: one grant each. CLOSED BY DEFAULT: nobody but the gardener may do what no grant opens. A grant is the decision of whoever holds it — the gardener's on the gardener's own bean, a person's on her own bean for her own record, an agreement's on its bean for what it shares. A `forbidden` grant is a refusal no `permitted` one passes: held by the gardener, a ceiling; held by a person on her own bean, her own no. Read by bin/dmpass.py (`may`) and by no copy"
+    context_keys: [grants]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      attrs:
+        act:       { required: true, in: { pattern: '^(read|write|act:[a-z0-9][a-z0-9-]*|ratify:[A-K])$' }, meaning: "read | write — change it through a save | act:<tool> — run that tool, by the name the host's configuration gives it | ratify:<class> — decide that class of the Contract of Parts (MODEL.md) for what it is over, as the gardener's own act" }
+        over:      { in: { key_of: selections }, meaning: "the beans it is over, a selection; absent, the bean that holds the grant" }
+        positions: { in: { entries: { path: { required: true, in: { type: field_path } } } }, meaning: "which positions of them: `title`, `located_at`, `observations.*`; absent, every position — `title`, `summary`, the body and every term" }
+        audience:  { required: true, in: { entries: { who: { in: { bean_id: { gene: [person, org] } } }, selection: { in: { key_of: selections } } }, one_of: [who, selection], at_most_one_of: [[who, selection]] }, meaning: "to whom: a person or an organisation the garden holds, or every member of a selection" }
+        stance:    { in: { aspect: capability, default: permitted }, meaning: "permitted — it opens; forbidden — nothing opens what it covers" }
+        during:    { in: extent, meaning: "when it holds, on `time`; absent, from now on" }
+        reason:    { in: [asked], meaning: "asked — each use states a reason, which the guard records" }
+        why:       { required: true, in: prose }
+    merge: { cardinality: multi, order: by-key }
 
 gene:
   - genos: codebase

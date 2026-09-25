@@ -60,22 +60,24 @@ TOOL = os.path.join(G, 'bin', 'dmsave.py')
 JP = os.path.join(G, 'log', 'journal.md')
 _py = 'python' if os.name == 'nt' else 'python3'
 
+# A bean the gardener keeps that is not a person: what is saved here is how a save works, and a person who is not the
+# gardener is kept by name only on their consent (24.0, F2) — which is test/privacy.py's to show, not this suite's.
 PERSON = """---
 bean: {id}
-genos: person
+genos: program
 title: "{title}"
 status: {status}
-summary: "A friend of the gardener."
-nature: empsychon
+summary: "A program the gardener keeps."
+nature: lekton
 identity:
   status: confirmed
   anchors:
-    - {{ key: person_id, value: "person:{id}", class: logical, establishing: true }}
+    - {{ key: program_id, value: "program:{id}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "sam", as_of: now }}
-owned_by: {{ legal: {{ crown: agape }} }}
-responsibility: {{ legal: {{ self: true }} }}
+owned_by: {{ legal: {{ owner: {{ bean: sam }} }} }}
+responsibility: {{ legal: {{ holder: {{ bean: sam }} }} }}
 ---
-A friend.
+A program.
 """
 
 

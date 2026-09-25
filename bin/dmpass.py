@@ -27,6 +27,10 @@ release's.
 A FILE IN NO LAYER IS COUNTED AND SHOWN, never refused: the law cannot name every file a garden keeps, and a garden
 that has not placed a file has not broken anything. It is the one place a flow cannot be judged from, so it is shown.
 
+TWO MORE QUESTIONS OF A BEAN (24.0), answered here and by no copy: `sensitivity(fm, law)` — how much harm it can do a
+person, derived from what it holds and never stored — and `may(actor, act, bean)` — whether a grant opens it, closed
+by default.
+
 It reads the law at the one path it has, and refuses rather than guess when the law does not parse. It opens no
 network path and writes nothing.
 """
@@ -336,6 +340,206 @@ def tracked(root=ROOT):
         pass
     return sorted(os.path.relpath(os.path.join(d, f), root).replace(os.sep, '/')
                   for d, _s, fs in os.walk(root) if '.git' not in d.split(os.sep) for f in fs)
+
+
+# ============================== WHO MAY SEE WHAT, AND HOW MUCH HARM IT CAN DO (24.0; step 1, N31) ==============================
+# Two questions every reader asks of a bean, answered here and by no copy: how sensitive it is — DERIVED from what it
+# holds, never stored — and whether an actor may read, write, act on or ratify it, read from the garden's `grants`.
+LEVELS = ('none', 'personal', 'special-category')
+POSITIONS_ALWAYS = ('title', 'summary', 'body')     # positions every bean has that no term declares
+
+
+def _rank(level):
+    return LEVELS.index(level) if level in LEVELS else 0
+
+
+def gardener_of(root=ROOT):
+    """The gardener GARDEN.md names, or None."""
+    try:
+        with open(os.path.join(root, 'GARDEN.md'), encoding='utf-8') as fh:
+            g = _front(fh.read())
+    except OSError:
+        return None
+    return g.get('gardener') if isinstance(g, dict) and isinstance(g.get('gardener'), str) else None
+
+
+def _registry(law, name):
+    r = law.registry(name) if hasattr(law, 'registry') else (law.get(name) if isinstance(law, dict) else None)
+    return r if isinstance(r, list) else []
+
+
+def _codes(node, path=''):
+    """(path, scheme) of every code a front matter holds: a mapping that names a `scheme`, wherever it is."""
+    if isinstance(node, dict):
+        if isinstance(node.get('scheme'), str):
+            yield path, node['scheme']
+        for k, v in node.items():
+            if path == '' and k == 'sensitivity':
+                continue
+            yield from _codes(v, f"{path}.{k}" if path else str(k))
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            yield from _codes(v, f"{path}[{i}]")
+
+
+def derived_sensitivity(fm, law, gardener=None):
+    """(level, why) as the law derives it from what the bean holds: SPECIAL-CATEGORY — a code of a scheme marked
+    `sensitive: special-category`; PERSONAL — a record `about` a person who is not the gardener, or such a person's own
+    bean. The whys name paths, never values."""
+    gardener = gardener if gardener is not None else getattr(law, 'gardener', None)
+    marked = {r.get('scheme') for r in _registry(law, 'knowledge_schemes')
+              if isinstance(r, dict) and r.get('sensitive') == 'special-category'}
+    special = [f"a code of {s} at {p}" for p, s in _codes(fm) if s in marked]
+    if special:
+        return 'special-category', special
+    personal = [f"about {e['who']}, who is not the gardener" for e in (fm.get('about') or [] if isinstance(fm.get('about'), list) else [])
+                if isinstance(e, dict) and isinstance(e.get('who'), str) and e['who'] != gardener]
+    if fm.get('genos') == 'person' and fm.get('bean') != gardener:
+        personal.append("the bean of a person who is not the gardener")
+    return ('personal', personal) if personal else ('none', [])
+
+
+def by_a_person(fm):
+    """Whether the bean's own provenance says a person stated it (`asserted-by-human`)."""
+    p = fm.get('provenance')
+    return isinstance(p, dict) and p.get('src') == 'asserted-by-human'
+
+
+def sensitivity(fm, law, gardener=None):
+    """(level, why): the derived level, which a stated `sensitivity` raises — or lowers, on a person's own word only."""
+    level, why = derived_sensitivity(fm, law, gardener)
+    s = fm.get('sensitivity')
+    if isinstance(s, dict) and s.get('is') in LEVELS:
+        if _rank(s['is']) > _rank(level):
+            return s['is'], why + [f"raised by a person: {s.get('why')}"]
+        if _rank(s['is']) < _rank(level) and by_a_person(fm):
+            return s['is'], [f"lowered on a person's own word: {s.get('why')}"] + why
+    return level, why
+
+
+class Answer(tuple):
+    """(granted, why, grants, reason_asked) — `grants` the (holder, key) of every grant the answer read."""
+    __slots__ = ()
+
+    def __new__(cls, granted, why, grants=(), reason_asked=False):
+        return tuple.__new__(cls, (bool(granted), why, list(grants), bool(reason_asked)))
+
+    granted, why, grants, reason_asked = (property(lambda s, i=i: s[i]) for i in range(4))
+
+
+def beans_here(root=ROOT):
+    """{id: front matter} of every bean in the working tree."""
+    out, d = {}, os.path.join(root, 'beans')
+    for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+        if f.endswith('.md'):
+            try:
+                with open(os.path.join(d, f), encoding='utf-8') as fh:
+                    fm = _front(fh.read())
+            except (OSError, UnicodeDecodeError):
+                fm = None
+            if fm:
+                out[str(fm.get('bean') or f[:-3])] = fm
+    return out
+
+
+def _covers(granted, asked):
+    """Whether a grant's `positions` cover the positions asked: absent, every one; `x.*` every path under `x`."""
+    if granted is None:
+        return True
+    paths = [e.get('path') for e in (granted if isinstance(granted, list) else [granted]) if isinstance(e, dict)]
+    if asked is None:
+        return False                      # the whole bean asked, and the grant opens part of it
+    return all(any(a == p or a.startswith(p[:-1] if p.endswith('.*') else p + '.') for p in paths if isinstance(p, str))
+               for a in asked)
+
+
+def _day(x):
+    import dmcal
+    s = str(x).strip()
+    try:
+        return dmcal.moment(s).ms // dmcal.DAY_MS
+    except Exception:
+        return dmcal.to_day(s)
+
+
+def _during(d, at):
+    """Whether a grant's `during` holds on the day of `at` (today when absent). None where a bound is not read."""
+    if not isinstance(d, dict):
+        return True
+    import time
+    try:
+        now = _day(at) if at else int(time.time() // 86400)
+        lo = _day(d['from']) if d.get('from') is not None else None
+        hi = _day(d['to']) if d.get('to') is not None else None
+    except Exception:
+        return None
+    return (lo is None or lo <= now) and (hi is None or now <= hi)
+
+
+def _select(holder, key, root):
+    import dmreckon
+    ref = key if ':' in str(key) else f"{holder}:{key}"
+    try:
+        return set(dmreckon.select(ref, root=root))
+    except Exception:
+        return None
+
+
+def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None):
+    """Whether `actor` may `act` (read, write, act:<tool>, ratify:<class>) on `bean` — at `positions`, or the whole bean.
+    CLOSED BY DEFAULT: the gardener is granted; nobody is granted what no grant opens. A grant counts when its holder may
+    decide it — the gardener, the person the bean is of or `about`, an agreement — and it matches the act, holds the
+    bean (`over`, or the bean holding it), covers the positions, names the actor and holds at `at`. A `forbidden` one
+    refuses whatever a `permitted` one opens."""
+    gardener = gardener if gardener is not None else gardener_of(root)
+    if actor is None:
+        return Answer(False, "nobody named: an actor no one can name is granted nothing")
+    if actor == gardener:
+        return Answer(True, f"{actor} is the gardener, who keeps the garden")
+    beans = beans if beans is not None else beans_here(root)
+    fm = beans.get(bean) or {}
+    subjects = {e.get('who') for e in fm.get('about') or [] if isinstance(e, dict)} if isinstance(fm.get('about'), list) else set()
+    if fm.get('genos') == 'person':
+        subjects.add(bean)
+    read, forbid, permit, notes = [], [], [], []
+    for holder, hfm in sorted(beans.items()):
+        gs = hfm.get('grants')
+        if not isinstance(gs, dict):
+            continue
+        may_decide = holder == gardener or holder in subjects or hfm.get('genos') == 'contract'
+        for key, g in sorted(gs.items()):
+            if not isinstance(g, dict) or g.get('act') != act or not may_decide:
+                continue
+            over = {holder} if g.get('over') is None else _select(holder, g['over'], root)
+            if over is None:
+                notes.append(f"{holder}:grants[{key}] — its `over` could not be read, so it opens nothing")
+                continue
+            if bean not in over or not _covers(g.get('positions'), positions):
+                continue
+            aud = g.get('audience')
+            aud = aud if isinstance(aud, list) else [aud] if isinstance(aud, dict) else []
+            if not any(a.get('who') == actor or (a.get('selection') is not None and actor in (_select(holder, a['selection'], root) or ()))
+                       for a in aud if isinstance(a, dict)):
+                continue
+            held = _during(g.get('during'), at)
+            if held is None:
+                notes.append(f"{holder}:grants[{key}] — its `during` is not read here, so it opens nothing")
+            if not held:
+                continue
+            read.append((holder, key))
+            (forbid if g.get('stance') == 'forbidden' else permit).append((holder, key, g))
+    tail = ('; ' + '; '.join(notes)) if notes else ''
+    if forbid:
+        h, k, _g = forbid[0]
+        return Answer(False, f"forbidden by {h}:grants[{k}], which no permitted grant passes" + tail, read)
+    if permit:
+        h, k, g = permit[0]
+        asked = g.get('reason') == 'asked'
+        if asked and not reason:
+            return Answer(False, f"{h}:grants[{k}] opens it with a reason stated, and none was" + tail, read, True)
+        return Answer(True, f"granted by {h}:grants[{k}]" + tail, read, asked)
+    return Answer(False, f"no grant opens {act} on {bean}" + (f" at {', '.join(positions)}" if positions else '')
+                  + " to " + actor + " — closed by default" + tail, read)
 
 
 def _kept(m, p):

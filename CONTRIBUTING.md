@@ -75,6 +75,9 @@ parts, changes).
    python3 test/uncertainty.py
    python3 test/zones.py
    python3 test/reckon.py
+   python3 test/privacy.py
+   python3 test/held.py
+   python3 test/hub.py
    reuse lint
    ```
 

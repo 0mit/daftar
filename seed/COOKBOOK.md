@@ -240,7 +240,7 @@ commit, so two gardens grown with one name in the same second are still two. In 
 **First contact: the other garden, and who keeps it.** A garden deals only with a garden it has recorded:
 a `garden` bean, anchored by the id the other gardener read out, owned by that gardener and answered for by them — so
 that gardener is a person (or organisation) bean here too. Accepting a garden, and a name for whoever keeps it, is the
-gardener's decision (class F): write the two beans, journal them in one entry, and commit them as ONE commit.
+gardener's decision (class F): write the beans, journal them in one entry, and commit them as ONE commit.
 
 <!-- example: beans/garden-ali.md -->
 ```markdown
@@ -266,6 +266,35 @@ Ali's garden. Its id is what `python3 bin/dmpropose.py id` printed there.
 here and in her name below. An id copied from this page passes the gate, and the first proposal then goes to a
 garden that does not exist.
 
+**Another person is kept by name only on their own word.** A garden's git is copied whole to every clone, so a person
+who is not the gardener is written by name only with their `consent`: an agreement in which they accepted being kept
+here. Without it, write them as `python3 bin/dmheld.py person name=…` mints them — an opaque id, the name held off
+git — and the gate refuses a named one. Ali said yes over the phone:
+
+<!-- example: beans/ali-consent.md -->
+```markdown
+---
+bean: ali-consent
+genos: contract
+title: "Ali's consent"
+status: active
+summary: "Ali agreed to be kept here by name."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:ali-consent", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  sam: { who: { bean: sam }, accepted: 2026-09-01 }
+  ali: { who: { bean: ali }, accepted: 2026-09-01 }
+words: { form: spoken, agreed: 2026-09-01 }
+---
+Agreed on the phone. Where she will be is never written here.
+```
+
 A person is best named by their own garden, so Ali is written under the name hers gave her, byte for byte. Her
 garden was grown with `--gardener ali`, which names her by its id and hers: `<her garden's id>/person:ali`. The rest
 of the bean is Sam's record, in Sam's words:
@@ -284,6 +313,7 @@ identity:
   anchors:
     - { key: person_id, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
+consent: { bean: ali-consent }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---

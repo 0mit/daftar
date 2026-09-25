@@ -63,12 +63,27 @@ def run(*a, root=G):
     return r.returncode, r.stdout.decode('utf-8', 'replace'), r.stderr.decode('utf-8', 'replace')
 
 
+def _consents(root):
+    """The consent agreements written since the last commit: a save journals them beside the person they are for."""
+    st = subprocess.run(['git', 'status', '--porcelain', '--', 'beans'], capture_output=True, text=True, encoding='utf-8',
+                        errors='replace', cwd=root).stdout
+    return [l[3:].strip()[6:-3] for l in st.split('\n') if l[3:].strip().startswith('beans/consent-')]
+
+
+def _with_consents(a, root):
+    a = list(a)
+    if '--body' in a and _consents(root):
+        a.append('- action: ' + ', '.join(f'[[{c}]]' for c in _consents(root)) + ', the consent of whom it names.')
+    return a
+
+
 def save(*a, root=G):
-    return run(os.path.join(root, 'bin', 'dmsave.py'), *a, root=root)
+    return run(os.path.join(root, 'bin', 'dmsave.py'), *_with_consents(a, root), root=root)
 
 
 def journal_tool(who, what, body, root=G):
-    return run(os.path.join(root, 'bin', 'dmjournal.py'), who, what, '--body', body, root=root)
+    extra = _with_consents(['--body'], root)[1:]
+    return run(os.path.join(root, 'bin', 'dmjournal.py'), who, what, '--body', body, *extra, root=root)
 
 
 def commit(msg, root=G):
@@ -117,8 +132,33 @@ responsibility: {{ legal: {{ self: true }} }}
 
 
 def person(bid, as_of, by='sam', extra='', pid=None, summary="A friend of the gardener.", root=G):
-    write(bid, PERSON.format(id=bid, title=bid.capitalize(), summary=summary, pid=pid or f'person:{bid}', by=by,
-                             as_of=as_of, extra=extra), root=root)
+    text = PERSON.format(id=bid, title=bid.capitalize(), summary=summary, pid=pid or f'person:{bid}', by=by,
+                         as_of=as_of, extra=extra)
+    if bid != 'sam':
+        # ANOTHER PERSON IS KEPT BY NAME ON THEIR OWN CONSENT (24.0, F2): an agreement they accepted, written with them.
+        text = text.replace('owned_by:', f'consent: {{ bean: consent-{bid} }}\nowned_by:', 1)
+        write(f'consent-{bid}', CONSENT.format(id=bid, as_of='now' if as_of == 'merged' or 'garden:' in extra else as_of), root=root)
+    write(bid, text, root=root)
+
+
+CONSENT = """---
+bean: consent-{id}
+genos: contract
+title: "consent-{id}"
+status: active
+summary: "{id} agrees to be kept in this garden by name"
+nature: lekton
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:consent-{id}", class: logical, establishing: true }} ] }}
+provenance: {{ src: asserted-by-human, by: sam, as_of: {as_of} }}
+parties:
+  keeper: {{ who: {{ bean: sam }}, accepted: 2026-09-01 }}
+  kept: {{ who: {{ bean: {id} }}, accepted: 2026-09-01 }}
+words: {{ form: spoken, agreed: 2026-09-01 }}
+---
+The consent of {id}.
+"""
 
 
 _g = subprocess.run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), G, '--gardener', 'sam',
@@ -152,7 +192,7 @@ check("...and with `now` written, `--again` commits the bean with the day of the
 _h = head()
 # THE ENTRY FIRST, AND THE BEAN AFTER IT: the journal tool stamps what the working tree holds when it writes the entry,
 # so a bean written later reaches the commit with the word, and a plain `git commit` stamps nothing.
-journal_tool('sam', 'added cyrus', '- action: added [[cyrus]].')
+journal_tool('sam', 'added cyrus', '- action: added [[cyrus]], and [[consent-cyrus]], his consent.')
 person('cyrus', 'now')
 rc, said = commit('added cyrus')
 check("`as_of: now` in a bean written after its entry, committed by a plain `git commit`: refused — nothing wrote the "
@@ -258,7 +298,8 @@ check("...and the merge's own record — `src: generated-by-tool, by: dmmerge` �
 
 # ---- + a day is a day, in whichever calendar it is written -----------------------------------------------------------
 _h = head()
-journal_tool('sam', 'added golnar', '- action: added [[golnar]], the day she was written down in the Persian calendar.')
+journal_tool('sam', 'added golnar', '- action: added [[golnar]], the day she was written down in the Persian calendar, '
+             'and [[consent-golnar]], her consent.')
 _n = dmcal.to_day(last_day())
 _fa, _fa_before = dmcal.from_day(_n, 'persian'), dmcal.from_day(_n - 1, 'persian')
 # THE BEAN AFTER THE ENTRY, AND ITS DAY TYPED: the journal tool writes `now` in the Gregorian form, so a day in another

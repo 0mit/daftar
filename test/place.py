@@ -32,12 +32,9 @@ def gate():
     r = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G)
     return r.stdout + r.stderr
 
-OWN = 'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
-open(os.path.join(G, "beans", "someone.md"), "w").write(
-    '---\nbean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
-    'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
-    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\n'
-    'responsibility: { legal: { self: true } }\n---\nA person.\n')
+# The owner is the gardener: a person who is not the gardener is kept by name only on their consent (24.0, F2), and
+# nothing here is about a second person.
+OWN = 'owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n'
 
 def codebase(path, key, located=""):
     open(os.path.join(G, "beans", "tree.md"), "w").write(

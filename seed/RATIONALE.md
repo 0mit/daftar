@@ -2864,6 +2864,52 @@ mirror of the door for agents that a release ships is left out of the map, count
 A SERIES' PARTS ARE ESTATE (F12). They are a garden's own facts, in rows too many for a bean, and they belong to the bean
 whose series they are: a staged part is journalled as a change to that bean.
 
+## terms[sensitivity]
+
+HARM IS READ FROM WHAT A BEAN HOLDS, NOT FROM WHAT SOMEBODY REMEMBERED TO WRITE. A diagnosis code is special-category
+material whether or not anyone marked the bean, so the level is derived each time and never stored: a stored level is
+a second copy that goes stale the day a code is added. What a person may add is what no rule can see — a note that
+names a condition in its own words — so a mark raises the level. Lowering it is a safety change (Contract E): a tool
+that lowered it would be deciding, alone, that a person's record may travel.
+
+## terms[consent]
+
+ANOTHER PERSON IS NOT THE GARDENER'S TO PUBLISH. A garden's git is copied whole to every clone, and a clone outlives
+every promise made about it, so a person who has not agreed to be kept there by name is kept under an opaque id and
+their name is held off git. Consent is an agreement they accepted — their own word, the same act the law already
+records for a party — and not a flag somebody set on their behalf. Where a person will be is dearer than who they
+are, so their future whereabouts are held off git whatever they consented to. What is already in a garden is warned,
+never moved: its gardener decides at the crossing.
+
+## terms[about]
+
+WHOM A RECORD CONCERNS IS NOT WHO OWNS IT. A certificate about a client is the practice's record and the client's
+data. Erasure, a person's request to be shown what is kept, and the derived sensitivity all ask the same question,
+so it is asked of one term.
+
+## terms[grants]
+
+CLOSED BY DEFAULT, AND DECIDED BY WHOEVER HOLDS THE GRANT. A garden served to more than its gardener needs one answer
+to "may this person see this", and an answer each host kept in its own configuration is an answer nobody can read in
+the ledger. A grant is held where the decision belongs — the gardener's bean, a person's own bean for her own record,
+an agreement's bean for what it shares — and a `forbidden` one is a no that no `permitted` one passes, so a person's
+refusal about herself is not undone by a wider grant. Delegating a ratification is the gardener's own act, or the
+Contract of Parts would be rewritable by anyone who can write a grant.
+
+## held_form
+
+GIT KEEPS ONLY WHAT MAY TRAVEL. An entry that cannot is sealed: the bean keeps an opaque pointer, and the entry is kept
+in a store that a host names in its `roots`. No hash is kept in git, because a hash of a phone number is the phone
+number to anyone who can count to fifteen digits. The gate never reads a store — a gate that passes on one machine
+and fails on another is a gate people turn off — so a store is checked where it is, by the save. A sealed entry is
+journalled in one line that says only that it was sealed.
+
+## identity_policy.issued
+
+AN EMPLOYEE NUMBER BELONGS TO ITS EMPLOYER. Two employers who each issued 0042 issued two identities, and a garden that
+merged them on the number would merge two people. An issued anchor names its issuer; one that does not is warned
+rather than refused, because an upgrade cannot invent who issued a number.
+
 ## terms[standing]
 
 A GARDEN PLACES WHAT THE LAW DOES NOT. It was a term one garden kept for itself, read by the gate under that name.

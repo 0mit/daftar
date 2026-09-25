@@ -150,6 +150,9 @@ open(os.path.join(GARDEN, 'beans', 'sam.md'), 'w').write(_ex['beans/sam.md'] + '
 open(os.path.join(GARDEN, 'beans', 'vps-a.md'), 'w').write(_ex['beans/vps-a.md'].replace('provides_habitat: linux-vm\n', 'provides_habitat: linux-vm\nos: debian\n') + '\n')
 _gp = os.path.join(GARDEN, 'GARDEN.md')
 _gtext = open(_gp).read()                       # read FIRST: open(..., 'w') truncates before the read would run
+# sam, the README's person, keeps this garden here: a person who is not the gardener is kept by name only on their
+# consent (24.0, F2), and what this setup needs is a garden that passes, not a second person.
+_gtext = re.sub(r'^gardener:.*$', 'gardener: sam', _gtext, count=1, flags=re.M)
 open(_gp, 'w').write(re.sub(r'^(extends: std-vocab@.*)$', r'\1\ndaftar_release: "v0.2.0"', _gtext, count=1, flags=re.M))
 subprocess.run([sys.executable, os.path.join(GARDEN, 'bin', 'dmjournal.py'), 'human (test)',
                 '[[sam]] and [[vps-a]], a debian VPS; RULE-CHANGE: release v0.2.0 recorded', '--body', '- action: added both.'],

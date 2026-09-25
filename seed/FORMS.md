@@ -1,11 +1,8 @@
 # Forms — what an agent writes most, the way the gate accepts it
 
-Read this page before writing in a garden. It holds the shapes of six recipes of `COOKBOOK.md` — the gardener,
-another person and the garden she keeps, an event, money between two people, an agreement paid in instalments, and a
-proposal to another garden: their example beans, copied from it byte for byte (the cookbook explains each) — after the
-misreadings agents make most, and before the forms for **what nobody said**. Every bean on this page passes the gate as
-written: `test/germinate.py` commits each one in a freshly grown garden, and `test/docs.py` holds the examples to the
-cookbook's.
+Read this page before writing in a garden. It holds six recipes of `COOKBOOK.md`, their beans copied byte for byte
+(the cookbook explains each), after the misreadings agents make most and before the forms for **what nobody said**.
+Every bean here passes the gate as written (`test/germinate.py`, `test/docs.py`).
 
 Write what you were told, in these shapes, and copy no value from here: `sam`, `ali`, `XTS`, `123456789abc` and the
 amounts below are the example's. The shapes carry no day: a day someone said goes where a field is empty, and
@@ -32,7 +29,8 @@ What agents writing in gardens got wrong most often, in measured runs — each o
 - **A currency is named by its code, looked up, not guessed.** People say "lira", "euro", "rial":
   `grep -i "<the name>" seed/knowledge/currencies.tsv`, the row whose status is `current`. When no row or more than
   one fits, ask — or leave the transaction out and put the question in `open:`.
-- **Everyone named is a person bean** — also someone only spoken about; and a conversation or a meeting in which
+- **Everyone named is a person bean** — also someone only spoken about — kept by name only on their `consent` (else
+  `python3 bin/dmheld.py person`). A conversation or a meeting in which
   something was agreed is itself an event, named by what was agreed there.
 - **How something was paid is written only as said** — a card, cash, a transfer, and whose.
 - **`open:` belongs to the front matter**, between the two `---` lines. Below them it is prose the gate cannot see.
@@ -63,7 +61,7 @@ Sam keeps this ledger.
 
 ## Another person, and the garden she keeps
 
-Ali keeps a garden of her own, and nothing outside a garden writes in it — not Sam, and not Sam's agent, even on one machine.
+Ali keeps a garden of her own.
 
 <!-- example: beans/garden-ali.md -->
 ```markdown
@@ -85,6 +83,30 @@ responsibility: { legal: { holder: { bean: ali } } }
 Ali's garden. Its id is what `python3 bin/dmpropose.py id` printed there.
 ```
 
+<!-- example: beans/ali-consent.md -->
+```markdown
+---
+bean: ali-consent
+genos: contract
+title: "Ali's consent"
+status: active
+summary: "Ali agreed to be kept here by name."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:ali-consent", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted; empty unless said
+  ali: { who: { bean: ali }, accepted: }   # accepted: the day this party accepted; empty unless said
+words: { form: spoken, agreed: }   # agreed: the day it was agreed, in any calendar; empty unless said
+---
+Agreed on the phone. Where she will be is never written here.
+```
+
 <!-- example: beans/ali.md -->
 ```markdown
 ---
@@ -99,6 +121,7 @@ identity:
   anchors:
     - { key: person_id, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
+consent: { bean: ali-consent }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
@@ -252,8 +275,7 @@ python3 bin/dmpropose.py take ../PROPOSAL-<garden>-<when>.md    # writes in the 
 
 ## What nobody said
 
-A fact nobody said is never made up — not to fill a form, and not to get past the gate. Each form below passes the gate
-as written, in a garden that holds the recipes above.
+A fact nobody said is never made up. Each form below passes the gate as written, beside the recipes above.
 
 ### An event whose day nobody said
 
@@ -289,8 +311,7 @@ Sam called Ali some day after the dinner; nobody said which.
 ### A day nobody said
 
 A day nobody said — `accepted`, `agreed`, `day`, `due` — stays empty, as the forms show it, or is left out: each of
-them may be absent. A party with no `accepted` has no acceptance on record, and the record then says just that. The
-`as_of` of a provenance is the day the fact was written down: write `now`, and the save writes that day in its place.
+them may be absent. A party with no `accepted` has no acceptance on record, and the record then says just that.
 
 ### An amount nobody said
 
@@ -346,8 +367,7 @@ grep -i "<its name in English>" seed/knowledge/currencies.tsv
 
 (In PowerShell: `Select-String "<its name in English>" seed\knowledge\currencies.tsv`.) Take the row whose `status` is
 `current`: its `code` is the unit, and its `digits` how many decimal places an amount in it may have — `"12.50"` in a
-currency of two, `1250` in one of none. `XTS`, in the recipes above, is the code ISO keeps for testing, never a real
-amount's.
+currency of two, `1250` in one of none.
 
 ### An id nobody told you
 

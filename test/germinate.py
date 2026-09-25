@@ -66,9 +66,38 @@ provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
 nature: {nature}
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
+consent: {{ bean: consent-ada }}
 ---
 A person, written to prove a fresh garden can hold one.
 """
+
+# ANOTHER PERSON IS KEPT BY NAME ON THEIR OWN CONSENT (24.0, F2): an agreement they accepted, written beside them.
+CONSENT = """---
+bean: {id}
+genos: contract
+title: "{id}"
+status: active
+summary: "consent to be kept in this garden by name"
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - {{ key: contract_id, value: "contract:{id}", class: logical, establishing: true }}
+provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+parties:
+{parties}words: {{ form: spoken, agreed: 2026-09-01 }}
+---
+Their consent.
+"""
+
+
+def consent(cid, people):
+    with open(os.path.join(G, 'beans', cid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(CONSENT.format(id=cid, parties=''.join(f"  {p}: {{ who: {{ bean: {p} }}, accepted: 2026-09-01 }}\n"
+                                                         for p in people)))
+
 
 TMP = tempfile.mkdtemp(prefix='dmgerm-')
 G = os.path.join(TMP, 'newgarden')
@@ -640,6 +669,7 @@ check(f"the pins are interpolated from the vocabulary itself (@{_ver}), not type
 # ---- NEGATIVE: a bean without its journal entry -------------------------------------------------------
 bean_path = os.path.join(G, 'beans', 'ada.md')
 open(bean_path, 'w', encoding='utf-8').write(BEAN.format(nature='empsychon'))
+consent('consent-ada', ('keeper', 'ada'))
 run('git', 'add', 'beans/ada.md', cwd=G)
 rc, out = gate(G)
 check("a bean staged WITHOUT a journal entry is refused (provenance duty)",
@@ -647,7 +677,8 @@ check("a bean staged WITHOUT a journal entry is refused (provenance duty)",
 
 # ---- POSITIVE: the same bean, journalled, commits -----------------------------------------------------
 run(sys.executable, os.path.join(G, 'bin', 'dmjournal.py'), 'agent', 'first bean',
-    '--body', "- action: wrote beans/ada.md to prove the garden holds one.\n- refs: beans/ada.md", cwd=G)
+    '--body', "- action: wrote beans/ada.md to prove the garden holds one, and beans/consent-ada.md, her consent.\n"
+              "- refs: beans/ada.md", cwd=G)
 run('git', 'add', '-A', cwd=G)
 rc, out = gate(G)
 check("with the journal entry, the gate passes", rc == 0 and '0 error(s)' in out, out.strip()[-300:])
@@ -767,10 +798,11 @@ def gate_on(*a, cwd=None):
 
 
 open(os.path.join(G, 'beans', 'ali.md'), 'w', encoding='utf-8').write(
-    BEAN.format(nature='empsychon').replace('ada', 'ali').replace('Ada', 'Ali')
+    BEAN.format(nature='empsychon').replace('ada', 'ali').replace('Ada', 'Ali').replace('consent-ali', 'consent-friends')
     .replace('responsibility:', 'refs: { friend: { bean: ada, rel: friend } }\nresponsibility:', 1))
+consent('consent-friends', ('keeper', 'ali', 'sam'))
 open(os.path.join(G, 'beans', 'sam.md'), 'w', encoding='utf-8').write(
-    BEAN.format(nature='empsychon').replace('ada', 'sam').replace('Ada', 'Sam')
+    BEAN.format(nature='empsychon').replace('ada', 'sam').replace('Ada', 'Sam').replace('consent-sam', 'consent-friends')
     .replace('status: active', 'status: pending'))
 rc, out, err = gate_on('beans/ali.md')
 check("`dmcheck.py beans/ali.md` judges ali: her link to ada resolves against the whole garden, sam's error is counted "

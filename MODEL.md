@@ -245,8 +245,9 @@ This table is the one statement of who may decide what (manifesto: parts).
 | **J** | resolve a **merge conflict or uncertain identity** | **a person ratifies** |
 | **K** | **log** what was done | everyone, always |
 
-The person who ratifies in a garden is its gardener — for an organisation, a person who answers for it. When the
-class is unclear, an agent proposes and a person ratifies. An agent that meets something it may not decide parks it
+The person who ratifies in a garden is its gardener — for an organisation, a person who answers for it — or, for a
+class the gardener delegates for named beans, the person a grant names (`grants`, act `ratify:<class>`), recorded as
+the gardener's own act. Nothing is delegated by default. When the class is unclear, an agent proposes and a person ratifies. An agent that meets something it may not decide parks it
 in `log/pending.md` as `status: proposed`, does everything safe around it, and carries on.
 
 ## The journal and the gate
@@ -270,13 +271,35 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
     itself: one line of the journal is one line to every reader.
   - a value the law marks `stamped` that a commit adds and that is not the moment of a journal heading the same commit
     adds: a moment read from the clock is written `now`, and the save writes it;
-  - a series' part a commit already holds, changed: a part is written once, and what is new is a part of its own.
+  - a series' part a commit already holds, changed: a part is written once, and what is new is a part of its own;
+  - a person who is not the gardener, added by name with no consent of theirs recorded, and a future whereabouts of
+    one in git (see below);
+  - an entry sealed or unsealed with no `- held: <bean> <key> added|erased` line in the journal.
 - The gate reads the law its garden pins, at the one path `seed/std-vocab.md`. A gate that cannot load it, or
   that loads another version than the pin, refuses: it never falls back to another copy.
 - These checks confirm that the words are there, not that they are true; honesty is still the writer's (manifesto:
   checked).
 - Each person and each agent session commits under its own git identity, so the log's "who" is real.
 - `CHECKLIST.md` is how a write is made.
+- A garden with more than one writer has a hub that judges every push again: each commit signed by a key a writer's
+  bean carries as an anchor (`ssh_key_fingerprint`, `openpgp_fingerprint`), what it changes within that writer's
+  grants, and the whole garden by the gate (`bin/dmhub.py`).
+
+## Who may see, and what is held off git
+- **Sensitivity is derived, never stored** (`bin/dmpass.py sensitivity`): a code of a scheme marked `sensitive` makes
+  a bean special-category; a record `about` a person who is not the gardener, or such a person's own bean, makes it
+  personal. A person may raise it with `sensitivity:`; only a person's own word lowers it (Contract E).
+- **What harm can come of, git does not keep.** An entry of a list or an open map may be SEALED — `{held: <pointer>,
+  basis?, until?}` in place of its attributes — and what it held is kept in a store a host resolves through its
+  `roots` (`bin/dmheld.py`). Git keeps only the pointer; the gate never reads a store; a store is checked where it is,
+  and by every save. Erasure for a person deletes what the stores here hold of them, and the pointers stay, saying so.
+- **Another person is kept by name only on their own consent**: a `consent` naming an agreement they accepted.
+  Otherwise they are an opaque id (`p-<8 hex>`), their name and the ways to reach them held off git; and their future
+  whereabouts are held off git whatever they consented to.
+- **Who may do what is closed by default** (`grants`, read by `bin/dmpass.py may`): the gardener may; anyone else may
+  what a grant opens — held by the gardener, by the person the record is of or about, or by an agreement — and a
+  `forbidden` grant refuses what any `permitted` one would open.
+- An anchor an organisation issues (an employee number) identifies only with its `issuer`.
 
 ## Merging
 Gardens merge object by object, matched on establishing anchors: losslessly, in any order, with the same

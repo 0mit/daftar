@@ -179,6 +179,15 @@ def main(target):
     print(BOLD(f"cursor -> {bean}") + f"   {fm.get('genos')} · {fm.get('nature')}"
           + (f" · living in {(fm.get('lives_in') or {}).get('bean')}" if fm.get('lives_in') else ''))
     print(f"  {fm.get('title', '')}")
+    # HOW MUCH HARM IT CAN DO (24.0, step 1): derived by bin/dmpass.py, never stored; special material is named by its
+    # path and shown `[special]`, never by its value.
+    try:
+        import dmpass, dmheld
+        _lv, _why = dmpass.sensitivity(fm, dmheld.types_law(dmpass.ROOT))
+    except Exception:
+        _lv, _why = None, []
+    if _lv and _lv != 'none':
+        print(f"  sensitivity {_lv}" + (" [special]" if _lv == 'special-category' else '') + (f" — {'; '.join(_why)}" if _why else ''))
     if covering:
         print(f"\n  resolved from a FILE: covered by code_paths {covering.get('path')} "
               f"(role {covering.get('role')}, scan_policy {covering.get('scan_policy')})")

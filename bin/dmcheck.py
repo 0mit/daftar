@@ -2244,9 +2244,27 @@ def check_identity_capsule():
                               f"that does, the nearest first: {', '.join(_keys)}. A key of this garden's own is a local "
                               f"term with `anchor: {{ class: …, establishing: … }}` in VOCAB.md: a RULE-CHANGE, which "
                               f"the gardener ratifies" + _rule('identity_policy.anchor_key'))
+            # AN ISSUED ANCHOR IDENTIFIES WITH ITS ISSUER (24.0, N17): an employee number is one employer's, and the
+            # same number from two employers is two identities. One with no issuer is warned: an upgrade invents none.
+            _issuer = None
+            if isinstance(pol, dict) and pol.get('issued') is True:
+                _iss = a.get('issuer')
+                if _iss is None:
+                    warns.append(f"{base}: anchor '{a['key']}' is issued by an organisation, and names none — write "
+                                 f"`issuer: {{ bean: <org> }}`: the same value from two issuers is two identities"
+                                 + _rule('identity_policy.issued'))
+                elif not (isinstance(_iss, dict) and isinstance(_iss.get('bean'), str) and _iss['bean'] in bean_ids):
+                    errors.append(f"{base}: anchor '{a['key']}'.issuer must be {{ bean: <org> }}, an organisation this "
+                                  f"garden holds — not {_iss!r}" + _rule('identity_policy.issued'))
+                else:
+                    _issuer = _iss['bean']
+            elif a.get('issuer') is not None:
+                errors.append(f"{base}: anchor '{a['key']}' carries an `issuer`, and its term does not say it is issued "
+                              f"(`anchor: {{ issued: true }}`)" + _rule('identity_policy.issued'))
             if a.get('establishing') is True:
                 n_est += 1
-                est_owner.setdefault((a['key'], compare_value(a['key'], a['value'])), []).append(base)
+                est_owner.setdefault((a['key'], compare_value(a['key'], a['value']))
+                                     + ((_issuer,) if _issuer else ()), []).append(base)
                 est_classes.append((a['key'], pol.get('class', a.get('class')) if isinstance(pol, dict) else a.get('class')))
         # min-anchor policy attaches to the root axis, not the genos (P3/D1) — read it from the declared registry.
         pol = _row(POLICY, fm.get(_axis)) if _axis else None
@@ -2279,10 +2297,10 @@ def compare_value(key, value):
 
 
 def check_establishing_anchor_dedup():
-    for (k, v), bs in sorted(est_owner.items()):
+    for (k, v, *iss), bs in sorted(est_owner.items(), key=lambda kv: tuple(map(str, kv[0]))):
         bs = sorted(set(bs))       # one bean carrying two spellings of one anchor is not a duplicate of itself
         if len(bs) > 1:
-            errors.append(f"establishing anchor {k}={v} on {bs} — same object in one garden. If they ARE one "
+            errors.append(f"establishing anchor {k}={v}{' issued by ' + iss[0] if iss else ''} on {bs} — same object in one garden. If they ARE one "
                           f"object, keep one bean and move the other's facts into it (MERGE.md); if they are "
                           f"two, one of the anchor values is wrong")
 
@@ -3081,7 +3099,199 @@ def ectl_uncertainty(c):
 QTY_ENTRY = (('uncertainty', ectl_uncertainty),)
 QTY_PLIES = ((check_reference_accuracy, "a reference system's stated accuracy is a length — the law's own rows"),)
 # ---- PRIV
-PRIV_ENTRY, PRIV_PLIES = (), ()
+# Who may see what, and what is held off git (24.0: step 1, F2, F13, N16, N29–N31). The readers are bin/dmpass.py's
+# `sensitivity` and `may` and bin/dmheld.py; these plies judge only what git holds — the gate never reads a store.
+_SEALED_ATTRS = ('held', 'basis', 'until')
+_OPAQUE_PERSON = re.compile(r'^p-[0-9a-f]{8,32}$')
+
+
+def _sealed(term, sch, entry):
+    """An entry held off git: `{held: …}` in place of its attributes, in a term that does not itself declare `held`."""
+    return isinstance(entry, dict) and 'held' in entry and 'held' not in declared_attrs(term, sch)[0]
+
+
+def _sealed_entries(fm):
+    """(term, label, entry, keyed) of every sealed entry a front matter holds."""
+    for t, sch in SCHEMAS.items():
+        node = fm.get(t) if isinstance(fm, dict) else None
+        if sch.get('shape') in ('list_of_entries', 'open_map_of_entries') and isinstance(node, (list, dict)):
+            for label, entry in entries_of(sch.get('shape'), node):
+                if _sealed(t, sch, entry):
+                    yield t, label, entry, isinstance(node, dict)
+
+
+def _priv_found(level, text, why=''):
+    (errors if level == 'error' else warns).append(text + (_rule(why) if why and level == 'error' else ''))
+
+
+def _others(fm):
+    """The persons, not the gardener, a front matter names: `about`, a ref, a party."""
+    g, out = LAWVIEW.gardener, set()
+    for e in fm.get('about') or [] if isinstance(fm.get('about'), list) else []:
+        if isinstance(e, dict) and isinstance(e.get('who'), str):
+            out.add(e['who'])
+    for t in ('refs', 'parties'):
+        for e in (fm.get(t) or {}).values() if isinstance(fm.get(t), dict) else []:
+            r = e.get('who') if t == 'parties' and isinstance(e, dict) else e
+            if isinstance(r, dict) and isinstance(r.get('bean'), str):
+                out.add(r['bean'])
+    return {b for b in out if b != g and (ALL_FM.get(b) or {}).get('genos') == 'person'}
+
+
+def _consented(pid, fm):
+    """Whether a person's `consent` names a contract in whose `parties` this person stands with `accepted`."""
+    c = fm.get('consent')
+    k = ALL_FM.get(c.get('bean')) if isinstance(c, dict) and isinstance(c.get('bean'), str) else None
+    if not isinstance(k, dict) or k.get('genos') != 'contract':
+        return False
+    return any(isinstance(e, dict) and isinstance(e.get('who'), dict) and e['who'].get('bean') == pid and e.get('accepted')
+               for e in (k.get('parties') or {}).values()) if isinstance(k.get('parties'), dict) else False
+
+
+def _opaque(pid, fm):
+    """A person written as bin/dmheld.py mints one: an opaque id, its title the id, one anchor `person:<id>`."""
+    anchors = ((fm.get('identity') or {}).get('anchors') or []) if isinstance(fm.get('identity'), dict) else []
+    return bool(_OPAQUE_PERSON.match(pid)) and fm.get('title') == pid and \
+        all(isinstance(a, dict) and a.get('key') == 'person_id' and a.get('value') == f"person:{pid}" for a in anchors)
+
+
+def _day_of(x):
+    import dmcal
+    try:
+        return dmcal.moment(str(x)).ms // dmcal.DAY_MS
+    except Exception:
+        try:
+            return dmcal.to_day(str(x))
+        except Exception:
+            return None
+
+
+def check_sealed():
+    """A sealed entry (`held_form`) holds a held pointer and nothing but `basis` and `until`; in an open map its key is
+    `h-` and the pointer's first eight digits; its basis resolves, and is there where the bean concerns another person."""
+    _pat = re.compile((VALUE_TYPES.get('held_pointer') or {}).get('pattern') or r'^$')
+    for (_ib, base), (fm, _b) in docs.items():
+        _personal = dmpass.derived_sensitivity(fm, LAWVIEW)[0] != 'none'
+        for t, label, e, keyed in _sealed_entries(fm):
+            at = f"{base}: {t}[{label}]"
+            extra = sorted(k for k in e if k not in _SEALED_ATTRS)
+            if extra:
+                _priv_found('error', f"{at} is sealed, and holds {extra} beside it: a sealed entry holds only `held`, "
+                                     f"`basis` and `until` — the rest is in the held layer", 'held_form.entry')
+            h = e.get('held')
+            if not (isinstance(h, str) and _pat.match(h)):
+                _priv_found('error', f"{at}.held {(VALUE_TYPES.get('held_pointer') or {}).get('refusal', 'is no held pointer')}",
+                            'held_form.entry')
+                continue
+            if keyed and label != 'h-' + h.rsplit('/', 1)[1][:8]:
+                _priv_found('error', f"{at}: a sealed entry's key is `h-{h.rsplit('/', 1)[1][:8]}`, the first eight "
+                                     f"digits of its pointer — a key says nothing either", 'held_form.key')
+            bs = e.get('basis')
+            if bs is not None and not (isinstance(bs, dict) and isinstance(bs.get('bean'), str) and bs['bean'] in bean_ids):
+                _priv_found('error', f"{at}.basis must be {{ bean: <id> }}, a bean this garden holds — the consent or "
+                                     f"agreement it is held on", 'held_form.basis')
+            elif bs is None and _personal:
+                _priv_found('error', f"{at} is held on nothing: the bean concerns a person who is not the gardener — "
+                                     f"write `basis: {{ bean: <their consent, or the agreement> }}`", 'held_form.basis')
+            if e.get('until') is not None and _day_of(e['until']) is None:
+                _priv_found('error', f"{at}.until must be a date — the day by which it is to be erased", 'held_form.until')
+
+
+def check_sensitivity():
+    """Step 1: a bean's sensitivity is DERIVED (bin/dmpass.py); a mark below it stands only on a person's word, and
+    special-category material unsealed in git is warned — by its path, never its value."""
+    for (_ib, base), (fm, _b) in docs.items():
+        level, why = dmpass.derived_sensitivity(fm, LAWVIEW)
+        s = fm.get('sensitivity')
+        if isinstance(s, dict) and s.get('is') in dmpass.LEVELS and \
+                dmpass.LEVELS.index(s['is']) < dmpass.LEVELS.index(level) and not dmpass.by_a_person(fm):
+            _priv_found('error', f"{base}: is marked {s['is']}, below the {level} its content derives "
+                                 f"({'; '.join(why)}): lowering is a person's own word — Contract E", 'sensitivity')
+        if level == 'special-category':
+            for w in why:
+                warns.append(f"{base}: holds special-category material at {w.rsplit(' at ', 1)[-1]}: hold it off git "
+                             f"— bin/dmheld.py put")
+
+
+def check_grants():
+    """N31, N16: a `ratify:` grant is the gardener's own act, on the gardener's bean; a position names a term, or
+    `title`, `summary`, `body`."""
+    for (_ib, base), (fm, _b) in docs.items():
+        gs = fm.get('grants')
+        for key, g in (gs.items() if isinstance(gs, dict) else []):
+            if not isinstance(g, dict):
+                continue
+            at = f"{base}: grants[{key}]"
+            if str(g.get('act', '')).startswith('ratify:') and not (base == LAWVIEW.gardener and dmpass.by_a_person(fm)):
+                _priv_found('error', f"{at} delegates {g['act']}: a ratification is delegated only by the gardener's "
+                                     f"own act (N16) — on the gardener's bean, `provenance.src: asserted-by-human`", 'grants')
+            for p in g.get('positions') or [] if isinstance(g.get('positions'), list) else []:
+                path = p.get('path') if isinstance(p, dict) else None
+                head = re.split(r'[.\[]', path, 1)[0] if isinstance(path, str) else None
+                if head and head not in SCHEMAS and head not in TERMS and head not in dmpass.POSITIONS_ALWAYS:
+                    _priv_found('error', f"{at}.positions '{path}' names no term — a position is `title`, `summary`, "
+                                         f"`body` or a term's path", 'grants')
+
+
+def check_persons():
+    """F2: a person who is not the gardener is kept in git by name only on their own consent. ADDED without it, and
+    not opaque, the commit is refused; one already here is warned, the audit a garden reads at its crossing. And a
+    future whereabouts of such a person is held off git, consent or not."""
+    g, added = LAWVIEW.gardener, set(STAGED_ADDED)
+    for (_ib, base), (fm, _b) in docs.items():
+        if not _ib or fm.get('genos') != 'person' or base == g or _opaque(base, fm) or _consented(base, fm):
+            continue
+        _t = (f"{base}: names a person who is not the gardener, and no consent of theirs is recorded: write them as "
+              f"bin/dmheld.py person mints — an opaque id, the name held off git — or record their consent (F2)")
+        if f"beans/{base}.md" in added:
+            _priv_found('error', _t, 'consent')
+        else:
+            warns.append(_t)
+    today = _day_of(STAMPED_DAYS[0]) if STAMPED_DAYS else None
+    for (_ib, base), (fm, _b) in docs.items():
+        if today is None or not _ib or f"beans/{base}.md" not in STAGED or fm.get('genos') != 'event':
+            continue
+        days = [_day_of(e.get('at')) for e in (fm.get('timing') or {}).values() if isinstance(e, dict)] \
+            if isinstance(fm.get('timing'), dict) else []
+        who = _others(fm)
+        open_at = [e for e in fm.get('located_at') or [] if isinstance(e, dict) and 'held' not in e] \
+            if isinstance(fm.get('located_at'), list) else []
+        if days and all(d is not None and d > today for d in days) and who and open_at:
+            _priv_found('error', f"{base}: places {', '.join(sorted(who))} somewhere in the future, in git: a future "
+                                 f"whereabouts of a person who is not the gardener is held off git whatever they "
+                                 f"consented to — seal its `located_at` (bin/dmheld.py put)", 'consent')
+
+
+def check_held_journalled():
+    """F13: a commit that seals or erases an entry records it in one line, `- held: <bean> <key> added|erased`."""
+    if not STAGED:
+        return
+    for p in STAGED:
+        if not (p.startswith('beans/') and p.endswith('.md')):
+            continue
+        now = (docs.get((True, p[6:-3])) or ({}, ''))[0]
+        _was = dmparse.split_front_matter(_head_text(p) or '')[0]
+        try:
+            was = dmparse.loads(_was) if _was else {}
+        except Exception:
+            was = {}
+        keys = lambda fm: {f"{t}.{l}" if k else f"{t}[{e.get('held')}]" for t, l, e, k in _sealed_entries(fm or {})}
+        base = p[6:-3]
+        for k, how in [(k, 'added') for k in sorted(keys(now) - keys(was))] + \
+                      [(k, 'erased') for k in sorted(keys(was) - keys(now))]:
+            label = k.split('[', 1)[0] if '[' in k else k
+            if not any(l.strip() == f"- held: {base} {label} {how}" for l in JOURNAL_ADDED):
+                _priv_found('error', f"{base}: {k} is {'sealed' if how == 'added' else 'unsealed or erased'} in this "
+                                     f"commit, and the journal does not say so — add the line `- held: {base} {label} "
+                                     f"{how}` (bin/dmheld.py prints it), and no more of it", 'held_form.journal')
+
+
+PRIV_ENTRY = ()
+PRIV_PLIES = ((check_sealed, "a sealed entry holds a pointer, and says nothing else"),
+              (check_sensitivity, "sensitivity is derived; lowering it is a person's word"),
+              (check_grants, "a ratification is delegated only by the gardener's own act"),
+              (check_persons, "another person is kept by name only on their consent"),
+              (check_held_journalled, "sealing and erasing are journalled, in one line"))
 # ---- OBS
 OBS_ENTRY, OBS_PLIES = (), ()
 # ---- PLACE
@@ -3568,6 +3778,8 @@ def ctl_entries(c):
                 continue            # an entry two gardens hold two ways, both kept: nobody has chosen yet (MERGE.md §10)
             if _is_conflict(entry):
                 continue            # a conflict record nothing captured: refused by name, at its path, below
+            if _sealed(c.term, c.sch, entry):
+                continue            # an entry held off git (`held_form`): judged by PRIV's ply, as a sealed entry
             check_entry(c.base, c.term, label, entry, c.sch)
     return None
 

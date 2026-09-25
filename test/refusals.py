@@ -383,25 +383,35 @@ def commit_with(bean_text, body, typed=None):
     return c.returncode, out, j
 
 
+# ali is another person, kept by name on her own consent (24.0, F2): the agreement she accepted is committed with her.
+put("beans/kept-by-name.md", '---\nbean: kept-by-name\ngenos: contract\ntitle: "kept by name"\nstatus: active\n'
+    'summary: "ali agrees to be kept in this garden by name"\nnature: lekton\n'
+    'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
+    'identity: { status: confirmed, anchors: [ { key: contract_id, value: "contract:kept-by-name", class: logical, establishing: true } ] }\n'
+    'provenance: { src: asserted-by-human, by: sam, as_of: now }\n'
+    'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n  ali: { who: { bean: ali }, accepted: 2026-09-01 }\n'
+    'words: { form: spoken, agreed: 2026-09-01 }\n---\nali\'s consent.\n')
+put("beans/ali.md", person("ali", "consent: { bean: kept-by-name }\n"))
 run("git", "add", "-A", cwd=G)
-run(sys.executable, os.path.join(G, "bin", "dmjournal.py"), "sam", "ali", "--body", "- action: added [[ali]].", cwd=G)
+run(sys.executable, os.path.join(G, "bin", "dmjournal.py"), "sam", "ali", "--body",
+    "- action: added [[ali]] and [[kept-by-name]], her consent.", cwd=G)
 run("git", "add", "-A", cwd=G)
 c = run("git", "commit", "-q", "-m", "ali", cwd=G)
 check("(setup) ali is committed through the gate", c.returncode == 0, c.stdout + c.stderr)
 for ch, name in (("\x1c", "a file separator"), ("\u2028", "a Unicode line separator"), ("\x0b", "a vertical tab"),
                  ("\r", "a carriage return in the middle of a line")):
-    rc, out, _j = commit_with(person("ali").replace("ali.\n", f"ali, {len(name)}.\n"),
+    rc, out, _j = commit_with(person("ali", "consent: { bean: kept-by-name }\n").replace("ali.\n", f"ali, {len(name)}.\n"),
                               "- action: changed [[ali]].",
                               f"- note: a line.{ch}## 2026-09-23 07:00+03:00 · sam · a heading nobody wrote{ch}- sam: x")
     check(f"a journal line holding {name} before a typed heading is refused at commit",
           rc != 0 and "log/journal.md: an added line holds" in out, out[-600:])
-rc, out, _j = commit_with(person("ali").replace("ali.\n", "ali, once more.\n"), "- action: changed [[ali]] once more.")
+rc, out, _j = commit_with(person("ali", "consent: { bean: kept-by-name }\n").replace("ali.\n", "ali, once more.\n"), "- action: changed [[ali]] once more.")
 check("...while an ordinary entry commits", rc == 0, out[-600:])
 # The two cases below are refused for their journal alone, so ali keeps the day its last commit was stamped with: a
 # `now` no tool wrote the day in would be refused too, and its refusal says `--body`, which the second case looks for.
 _m = re.search(r'as_of: ([^ ,}]+)', run("git", "show", "HEAD:beans/ali.md", cwd=G).stdout)
 stamped = lambda text: text.replace("as_of: now", "as_of: " + (_m.group(1) if _m else "now"))
-put("beans/ali.md", stamped(person("ali")).replace("ali.\n", "ali, typed.\n"))
+put("beans/ali.md", stamped(person("ali", "consent: { bean: kept-by-name }\n")).replace("ali.\n", "ali, typed.\n"))
 with open(os.path.join(G, "log", "journal.md"), "a", encoding="utf-8", newline="\n") as fh:
     fh.write("\n## 2026-09-23 07:00+03:00 · sam · typed\n- action: changed [[ali]].\n")
 run("git", "add", "-A", cwd=G)
@@ -412,7 +422,7 @@ check("a typed heading is refused with the command that works in every shell: `-
       c.returncode != 0 and "was not written by bin/dmjournal.py" in out
       and f'{_py} bin/dmjournal.py "<who>" "<what>" --body "' in out and "< entry.md" not in out, out[-600:])
 run("git", "reset", "-q", "--hard", cwd=G)
-put("beans/ali.md", stamped(person("ali")).replace("ali.\n", "ali, unjournalled.\n"))
+put("beans/ali.md", stamped(person("ali", "consent: { bean: kept-by-name }\n")).replace("ali.\n", "ali, unjournalled.\n"))
 run("git", "add", "-A", cwd=G)
 c = run("git", "commit", "-q", "-m", "no entry", cwd=G)
 out = c.stdout + c.stderr
