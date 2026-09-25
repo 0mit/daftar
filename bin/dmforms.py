@@ -48,7 +48,7 @@ def said_dates():
         if not isinstance(sch, dict):
             continue
         for attr, rec in (dmform.attribute_form(t.get('term'), sch).get('attrs') or {}).items():
-            if rec.get('type') == 'date' and not rec.get('required') and attr not in STAMPS:
+            if rec.get('type') in ('date', 'date_or_moment') and not rec.get('required') and attr not in STAMPS:
                 meaning = re.split(r'(?<=[a-z])\. ', str(rec.get('meaning') or '').replace('optional: ', ''))[0].rstrip('.')
                 out[(t.get('term'), attr)] = meaning
     return out

@@ -118,6 +118,21 @@ Ownership is separate from **habitat**: a running instance is owned through its 
   clauses (`bin/dmledger.py`), exactly, in fractions; a stored balance is a second copy, and it drifts. A share that
   does not come out even in the currency's places is shown as the fraction it is, and who takes the remainder is a
   clause, never arithmetic.
+- **A clause may occur once for each member of a reading** (`each`): each sale, each tuning, from the moment it
+  entered. An occurrence never leaves — a refund is its own clause, occurring for each refund — so the reading uses
+  only conditions nothing can lose. Its amount may be a share `of` a value read from each occurrence; a transaction
+  `settles` named occurrences, each its own amount, and what is outstanding is read.
+- **When it falls due may be relative** (`falls_due`): after or before another position — its occurrence, a moment of
+  `timing`, another clause's due — by an extent, then at a place in the cell reached; read each time, never stored.
+  A clause may hold only within a window (`during`), and its stance chooses the words a reader is warned with: an
+  obligation falls due, a permission lapses. A permission is never owed.
+- **What brings a clause into force** (`when`) is a reading that holds, or the condition in words where no reading
+  says it yet. A clause whose reading does not hold is not yet in force, and nothing of it is due.
+- **A party may act for another** (`acting_for`: what it does binds that one), may have `declined`, and a clause may
+  bind every party of a role (`by_role`). Where a garden needs one being held once at a time — a room, a person
+  booked — it marks the term `exclusive` in its VOCAB.md, and the gate refuses an overlap across beans.
+- **A value another garden holds is read there, never copied** (`bin/dmacross.py`): at a commit that garden
+  published, and only when that garden grants its reading to this garden's gardener as it knows them.
 
 ## Relations
 A small set of typed edges — `owned_by`, `responsibility`, `lives_in`, `instance_of`, `part_of`,

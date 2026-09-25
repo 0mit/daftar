@@ -633,6 +633,7 @@ class Reckoner:
         self.given = dict(inputs or {})
         self.now = now
         self.env, self.lines, self.notes = {}, [], []
+        self.entered = {}          # member id -> the moment it entered, where a `reached` condition read one (AGREE)
         self.reg = law().registry
         self.ops = op_rows(self.reg)
         self.k = k_factor(self.reg)
@@ -648,8 +649,20 @@ class Reckoner:
                 self.env[n] = V(at)
                 self.lines.append(f"input {n}: the clock, {at}")
             elif o == 'garden':
-                raise Refused(f"input {n} is read from another garden (`origin: garden`), and reading across gardens is "
-                              f"AGREE's bin/dmacross.py (N35), not here yet")
+                # ACROSS GARDENS (N35): read at a commit the other garden published and granted, never copied here; a
+                # pin naming that garden reads it again at the pinned commit.
+                import dmacross
+                commit = self.pin.commit if self.pin and getattr(self.pin, 'garden', None) == d.get('garden') else None
+                try:
+                    got = dmacross.read(d.get('garden'), commit, d.get('path'), root=self.g.root)
+                except (dmacross.NotHere, dmacross.NotPublished, dmacross.NotGranted) as e:
+                    raise Refused(f"input {n} from the garden '{d.get('garden')}': {e}")
+                if len(got) != 1:
+                    raise Refused(f"input {n}: `{d.get('path')}` holds {len(got)} values in '{d.get('garden')}', where one is read")
+                self.env[n] = value_of(got[0], f"{d.get('garden')}@{got.commit[:12]}:{d.get('path')}", self.notes)
+                self.lines.append(f"input {n}: read in the garden {d.get('garden')} at {got.commit[:12]}, published and "
+                                  f"granted — {show(self.env[n])}")
+                self.across = getattr(self, 'across', []) + [(d.get('garden'), got.commit)]
             elif n in self.given:
                 self.env[n] = self._given(n, self.given[n], d)
                 self.lines.append(f"input {n} ({o}): {show(self.env[n])}")
@@ -818,7 +831,7 @@ class Reckoner:
             return False
         if comp == 'at_step':
             return moves[-1].get('step') == step
-        ref = course.get('walk') or {}
+        ref = (course.get('walk') or {}) if isinstance(course.get('walk'), dict) else {'bean': course.get('walk')}
         wfm = self.g.fm.get(ref.get('mapping') or ref.get('bean')) or {}
         nxt = {x.get('id'): [n.get('to') for n in x.get('next') or [] if isinstance(n, dict)]
                for x in wfm.get('steps') or [] if isinstance(x, dict)}
@@ -828,7 +841,13 @@ class Reckoner:
                 if t not in reach:
                     reach.add(t)
                     todo.append(t)
-        return any(x.get('step') in reach for x in moves)
+        hit = [x for x in moves if x.get('step') in reach]
+        if hit and hit[0].get('at') is not None:
+            # WHEN IT ENTERED: the first move into the reach — the latest such moment across the conditions it meets
+            at = str(hit[0]['at'])
+            prev = self.entered.get(m.id)
+            self.entered[m.id] = at if prev is None or pos_cmp(prev, at, self.zone) < 0 else prev
+        return bool(hit)
 
     def op_intersect(self, s):
         b = {m.id for m in self.arg(s, 'with', 'set')}
@@ -1696,19 +1715,42 @@ def holds(ref, **kw):
     return r.value if r.value in (True, False, None) else bool(r.value)
 
 
-def occurrences(bean, clause, *, root=ROOT, pin=None):
-    """[(member, at)] of an `each` clause: each member its selection holds, with the moment it entered where one is read."""
+def occurrences(bean, clause, *, root=ROOT, pin=None, now=None):
+    """[(member, at)] of an `each` clause: each member its selection holds, with the moment it entered — the first move
+    of its course into the step `reached` names, or the member's own `at` — or None where nothing says when."""
     g = Garden(root, pin)
     c = (g.bean(bean).get('clauses') or {}).get(clause)
     if not isinstance(c, dict) or not c.get('each'):
         raise Refused(f"{bean} has no clause '{clause}' that occurs for each member of a selection")
     ref = c['each'] if ':' in c['each'] else f"{bean}:{c['each']}"
-    r = evaluate(ref, root=root, pin=pin)
+    sb, entry = _find(g, ref)
+    rk = Reckoner(g, sb, None, pin, now=now)
+    _op, v = rk.run(entry)
+    if not isinstance(v, list):
+        raise Refused(f"{ref} gives a value, not a set: an `each` clause occurs for the members of a set")
     out = []
-    for m in r.value or []:
-        at = m.node.get('at') if isinstance(m.node, dict) else None
+    for m in v:
+        at = rk.entered.get(m.id)
+        if at is None and isinstance(m.node, dict) and m.node.get('at') is not None:
+            at = str(m.node['at'])
         out.append((m.id, at))
     return out
+
+
+def used(bean, clause, attr, *, at, root=ROOT, pin=None, zone=None):
+    """(V, lines) — how much of a clause's allowance the members of its `used_by` selection use inside the window of
+    its `within` ending at `at`, read from each member's `attr` (N9, read for AGREE's ledger)."""
+    g = Garden(root, pin)
+    c = (g.bean(bean).get('clauses') or {}).get(clause) or {}
+    ref = c['used_by'] if ':' in c['used_by'] else f"{bean}:{c['used_by']}"
+    sb, entry = _find(g, ref)
+    rk = Reckoner(g, sb, None, pin, zone=zone)
+    _op, v = rk.run(entry)
+    if not isinstance(v, list):
+        raise Refused(f"{ref} gives a value, not a set: `used_by` names the entries that use the allowance")
+    rk.env['@used'] = v
+    x = rk.op_used_within({'id': 'used', 'of': '@used', 'path': attr, 'within': c.get('within'), 'at': at})
+    return x, rk.lines
 
 
 # ============================================================================ the command line

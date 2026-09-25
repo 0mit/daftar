@@ -229,14 +229,14 @@ clauses:
     by: ali
     to: sam
     amount: { count: "20.00", unit: XTS }
-    due:   # due: the day it falls due — the first day, when it repeats; empty unless said
+    due:   # due: the day, or the moment, it falls due — the first, when it repeats; empty unless said
     every: { of: time, in: gregorian-civil, each: month, times: 6 }
   late-interest:
     what: "an instalment paid after its day carries one percent of itself for each month it is late"
     by: ali
     to: sam
     amount: { count: 1, unit: percent }
-    when: "an instalment is paid after the day it was due"
+    when: { said: "an instalment is paid late" }
 transactions:
   the-loan:
     what: "Sam paid the shop for Ali's washing machine"

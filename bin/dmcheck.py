@@ -1459,6 +1459,32 @@ def check_recurrence(where, node):
                           + ', '.join(sorted(s['system'] for s in SYSTEMS.values() if s.get('dimension') in (dim, 'any'))))
         else:
             check_day_exists(f"{where}.{side}", v, ok[0])
+    # WHERE IN THE CELL, HOW LONG, AND WHEN NOT (24.0, N7): `at` a place or a list of places, each text; `lasts` an extent;
+    # each closure a position of the system named, or an extent on the aspect.
+    _at = node.get('at')
+    if isinstance(_at, list):
+        if not _at or not all(isinstance(x, (str, int)) and not isinstance(x, bool) for x in _at):
+            errors.append(f"{where}.at: a list of places is a non-empty list of places as the system writes them — "
+                          f"`[\"2\", \"4\"]`")
+        elif len({str(x) for x in _at}) != len(_at):
+            errors.append(f"{where}.at names one place twice: each place is one occurrence")
+    elif _at is not None and (isinstance(_at, (bool, dict))):
+        errors.append(f"{where}.at: a place in the cell as the system writes it (`15`, `W-5`), or a list of them")
+    if node.get('lasts') is not None:
+        check_extent(f"{where}.lasts", node['lasts'])
+    _cl = node.get('closures')
+    if _cl is not None:
+        if not isinstance(_cl, list):
+            errors.append(f"{where}.closures: a list of positions or extents on which no occurrence falls")
+        else:
+            for _i, _c in enumerate(_cl):
+                if isinstance(_c, dict):
+                    check_extent(f"{where}.closures[{_i}]", _c)
+                elif row and dmparse.in_form(row, _c) is False:
+                    errors.append(f"{where}.closures[{_i}] '{_c}' is not a position in the form system '{row['system']}' "
+                                  f"writes — a closure is written as the repetition's own positions are")
+                elif row:
+                    check_day_exists(f"{where}.closures[{_i}]", _c, row)
     every, each = node.get('every'), node.get('each')
     _t = node.get('times')
     if _t is not None and (isinstance(_t, bool) or not isinstance(_t, int) or _t < 1):
@@ -3365,7 +3391,109 @@ RECKON_ENTRY = (('selections, weighings', ectl_reckon),)
 RECKON_PLIES = ((check_reckon_law, "the law's own readings, in the one grammar"),
                 (check_pins, "a pinned reading names a commit this garden has, and a moment it had reached"))
 # ---- AGREE
-AGREE_ENTRY, AGREE_PLIES = (), ()
+def _agree_entries(fm, term):
+    node = fm.get(term) if isinstance(fm, dict) else None
+    if isinstance(node, dict):
+        return [(k, e) for k, e in node.items() if isinstance(e, dict)]
+    if isinstance(node, list):
+        return [(i, e) for i, e in enumerate(node) if isinstance(e, dict)]
+    return []
+
+
+def check_agreements():
+    """An agreement's occurrences, relative dues, settlements and agents (24.0, N3, N4, N13): a clause that occurs `each`
+    time a reading holds a member reads one whose conditions an occurrence cannot lose; `of`, and a due relative to
+    `@occurrence`, belong to such a clause alone; a transaction `settles` occurrences of such a clause; a party never
+    acts for itself."""
+    for (_ib, _base), (_fm, _b) in docs.items():
+        if not isinstance(_fm, dict):
+            continue
+        _sels = _fm.get('selections') if isinstance(_fm.get('selections'), dict) else {}
+        _clauses = dict(_agree_entries(_fm, 'clauses'))
+        for _k, _c in _clauses.items():
+            _w = f"{_base}: clauses[{_k}]"
+            if _c.get('each') is not None:
+                _s = _sels.get(_c['each'])
+                if isinstance(_s, dict):
+                    _reckon_found(dmreckon.check_each(_w, _s, LAWVIEW))
+            else:
+                if _c.get('of') is not None:
+                    errors.append(f"{_w}.of: `of` is read FROM each occurrence, and this clause occurs for none — "
+                                  f"give it `each: <selection>`, or state its amount whole")
+                _fd = _c.get('falls_due')
+                if isinstance(_fd, dict) and _fd.get('from') == '@occurrence':
+                    errors.append(f"{_w}.falls_due: `from: \"@occurrence\"` falls due relative to each occurrence, and "
+                                  f"this clause occurs for none — give it `each: <selection>`")
+        for _k, _t in _agree_entries(_fm, 'transactions'):
+            for _x in _t.get('settles') or [] if isinstance(_t.get('settles'), list) else []:
+                if isinstance(_x, dict) and _x.get('clause') in _clauses and _clauses[_x['clause']].get('each') is None:
+                    errors.append(f"{_base}: transactions[{_k}].settles names clause '{_x['clause']}', which occurs for "
+                                  f"nothing — `settles` pays occurrences of a clause with `each`; a single debt is paid "
+                                  f"`under` its clause")
+        for _k, _p in _agree_entries(_fm, 'parties'):
+            if _p.get('acting_for') is not None and str(_p['acting_for']) == str(_k):
+                errors.append(f"{_base}: parties[{_k}].acting_for names the party itself — a party acts for ANOTHER, "
+                              f"whom what it does then binds")
+
+
+def _span(x):
+    """(first, last) day of an extent, open ends as None; None when a bound cannot be read as a day."""
+    try:
+        a = _extent_day(x.get('from')) if x.get('from') is not None else None
+        b = _extent_day(x.get('to')) if x.get('to') is not None else None
+    except ValueError:
+        return None
+    return (a, b)
+
+
+def _extent_day(v):
+    """The day a bound names — a date, or a moment read to the day it is written in."""
+    import datetime
+    m = re.match(r'^(\d{4}-\d{2}-\d{2})', str(v))
+    if not m:
+        raise ValueError(v)
+    return datetime.date.fromisoformat(m.group(1)).toordinal()
+
+
+def check_exclusive():
+    """N27: where a term's schema declares `exclusive: {extent, being, role?}`, the extents its entries hold for ONE being
+    in ONE role, across every bean, overlap nowhere; an entry declined, or silenced by the term's `expiry.unless`, is
+    not counted."""
+    for _t, _s in SCHEMAS.items():
+        _x = _s.get('exclusive')
+        if not isinstance(_x, dict):
+            continue
+        _unless = ((_s.get('expiry') or {}).get('unless') or {}) if isinstance(_s.get('expiry'), dict) else {}
+        held = {}
+        for (_ib, _base), (_fm, _b) in docs.items():
+            for _k, _e in _agree_entries(_fm, _t):
+                if _e.get('declined') is not None or any(str(_e.get(a)) in [str(v) for v in (vs or [])]
+                                                         for a, vs in _unless.items() if _e.get(a) is not None):
+                    continue
+                _ext, _who = _e.get(_x.get('extent')), _e.get(_x.get('being'))
+                _who = _who.get('bean') if isinstance(_who, dict) else _who
+                if not isinstance(_ext, dict) or not _who:
+                    continue
+                _sp = _span(_ext)
+                if _sp is None:
+                    continue
+                _role = _e.get(_x['role']) if _x.get('role') else None
+                held.setdefault((str(_who), str(_role)), []).append((_sp, f"{_base}: {_t}[{_k}]"))
+        for (_who, _role), _xs in sorted(held.items()):
+            _xs.sort(key=lambda r: (r[0][0] is not None, r[0][0] or 0))
+            for _i in range(len(_xs)):
+                for _j in range(_i + 1, len(_xs)):
+                    (a1, b1), w1 = _xs[_i]
+                    (a2, b2), w2 = _xs[_j]
+                    if (b1 is None or a2 is None or a2 <= b1) and (b2 is None or a1 is None or a1 <= b2):
+                        errors.append(f"{w2} and {w1}: {_who}" + (f" as {_role}" if _role != 'None' else '') +
+                                      f" is held twice over overlapping {_x.get('extent')} — `{_t}` is exclusive "
+                                      f"(N27): one being, in one role, at one time")
+
+
+AGREE_ENTRY = ()
+AGREE_PLIES = ((check_agreements, "an agreement's occurrences, settlements and agents read the selections and clauses built before"),
+               (check_exclusive, "N27: an exclusive term's extents, across every bean"))
 # ---- VIEWCAP
 VIEWCAP_ENTRY, VIEWCAP_PLIES = (), ()
 

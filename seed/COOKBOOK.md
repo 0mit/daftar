@@ -469,7 +469,7 @@ clauses:
     by: ali
     to: sam
     amount: { count: 1, unit: percent }
-    when: "an instalment is paid after the day it was due"
+    when: { said: "an instalment is paid late" }
 transactions:
   the-loan:
     what: "Sam paid the shop for Ali's washing machine"

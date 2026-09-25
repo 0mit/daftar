@@ -2034,6 +2034,46 @@ parser received the attribute as a key that was not a name, the gate crashed on 
 an undeclared attribute, and no bean carrying it could cross to another garden. A key is text, and the gate now
 refuses any key YAML reads as a boolean or a number.
 
+## terms[clauses].schema.attrs.each
+
+AN OCCURRENCE NEVER LEAVES (24.0, N3). A share of each sale is one clause, not one per sale: the clause occurs once for
+each member a reading holds. Were an occurrence allowed to leave the reading — a sale later refunded dropping out of
+"the sales" — what was owed for it, and perhaps paid, would silently stop existing, and a refund would be owed twice
+or never. So the reading uses only conditions that cannot be lost (`comparators[].monotone`: a step reached stays
+reached), and a refund is its own clause, the reverse, occurring once for each refund. `settles` names the
+occurrences a payment is for, each its own amount, so one payment across two rates is read exactly.
+
+## terms[clauses].schema.attrs.falls_due
+
+A DUE RELATIVE TO ANOTHER POSITION IS READ, NEVER STORED (24.0, N4). "The tenth of the month after each tuning" is a
+rule; the day it gives is derived each time, as a balance is. Its place in the cell reached is `at`, as a
+recurrence's is — not `on`, which YAML 1.1 reads as the boolean true, the defect `transactions.day` was renamed for.
+
+## terms[clauses].schema.attrs.when
+
+A CONDITION IS A READING WHERE ONE CAN SAY IT (24.0, N6). Written in prose, "once the parts arrive" is true or false
+only to a person reading it. Written as a reading, the reader knows whether the clause is in force, and a clause not
+yet in force is silent rather than a due date called missing. Prose stays, as `said`, for a condition no reading can
+say yet; a bare string is refused so that the two are never confused.
+
+## terms[clauses].schema.expiry
+
+THE WORDS FOLLOW THE STANCE (24.0, N5). "Falls due, and from that day the party is owed it" is wrong for a permission,
+which is never owed: it opens, and it lapses. The words are chosen by the clause's position on the capability square,
+so a reader is warned of a permission's window closing in a permission's words.
+
+## terms[parties].schema.attrs.acting_for
+
+WHO ACTS IS NOT ALWAYS WHO IS BOUND (24.0, N13). An employee, a lawyer, a parent: their act binds another party. The
+agent is a party of its own, with its own acceptance, and says whom it binds; a party acting for itself is refused,
+because it says nothing. `declined` (N14) records a refusal as `accepted` records a yes, with the same provenance.
+
+## recurrence_form.closures
+
+AN OCCURRENCE THAT DOES NOT FALL IS SAID (24.0, N7). A lesson each Tuesday and Thursday, an hour long, not on a
+holiday: RFC 5545's DTSTART with DURATION and EXDATE, in the recurrence's own system. A closure still counts toward
+`times`, as an EXDATE does, and the reader is told of it rather than left to find a lesson missing.
+
 ## terms[trigger]
 
 == MAPPING KEYS. A `mapping` document records how bean data feeds a command or checklist. These were
