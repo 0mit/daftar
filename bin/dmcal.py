@@ -439,6 +439,100 @@ def convert(position, calendar):
     return from_day(to_day(position), calendar)
 
 
+# ------------------------------------------------------------------ BELOW THE DAY: a moment, and a stride through moments
+# A MOMENT is a day and a clock reading at a stated offset: `2026-03-02 09:00+01:00`, `persian:1404-12-11 11:30+03:30`.
+# Every calendar meets the others at the day, so a moment is counted as the milliseconds from the start of day 0 of the
+# day numbers here, at offset zero — whichever calendar wrote it — and written back in the calendar, the offset and the
+# resolution it was read in. A DAY IS 86400 SECONDS HERE: no leap second is counted, as POSIX time counts none, so a
+# stride of a second across a leap second reads the second after it; a reader that needs a leap second says so.
+DAY_MS = 86400000
+UNIX_DAY = 719163                       # the day number of 1970-01-01, where `unix-epoch` counts from
+_MOMENT = re.compile(r'^(?P<date>[^ T]+)(?P<sep>[T ])(?P<h>\d{2}):(?P<m>\d{2})(?::(?P<s>\d{2})(?:\.(?P<ms>\d{1,3}))?)?'
+                     r'(?P<off>Z|[+-]\d{2}:\d{2})$', re.ASCII)
+_EPOCH = re.compile(r'^\d{13}$', re.ASCII)
+RESOLUTIONS = ('minute', 'second', 'millisecond')
+
+
+def calendar_of(date):
+    """The calendar a date is written in, by the name `from_day` writes it in — or ValueError."""
+    date = str(date)
+    if _JAPANESE.match(date):
+        return 'japanese'
+    m = _TAGGED.match(date)
+    if m:
+        return m.group(1)
+    if _JDN.match(date):
+        return 'julian-day'
+    if _MAYAN.match(date):
+        return 'mayan-long-count'
+    if _ISO_WEEK.match(date):
+        return 'iso8601'
+    if re.fullmatch(r'\d{4}-\d{2}-\d{2}', date, re.ASCII):
+        return 'gregory'
+    raise ValueError(f"'{date}' is in no calendar's form")
+
+
+class Moment(tuple):
+    """(milliseconds from the start of day 0 at offset zero, the calendar it was written in, its offset as written or
+    None for an epoch count, the resolution written: minute, second or millisecond)."""
+    __slots__ = ()
+
+    def __new__(cls, ms, calendar, offset, resolution):
+        return tuple.__new__(cls, (ms, calendar, offset, resolution))
+
+    ms = property(lambda self: self[0])
+    calendar = property(lambda self: self[1])
+    offset = property(lambda self: self[2])
+    resolution = property(lambda self: self[3])
+
+
+def moment(position):
+    """The Moment a position names: a calendar's day with a clock reading and its offset, or a `unix-epoch` count of
+    milliseconds. ValueError for one that names no moment — a date alone, a clock with no offset (whose moment depends
+    on where it was read), a day its calendar does not have — and NotByRule for a calendar not reckoned by rule."""
+    position = str(position).strip()
+    if _EPOCH.match(position):
+        return Moment(UNIX_DAY * DAY_MS + int(position), 'unix-epoch', None, 'millisecond')
+    m = _MOMENT.match(position)
+    if not m:
+        raise ValueError(f"'{position[:60]}' is no moment: a moment is a day, a clock reading to the minute or finer, "
+                         f"and the offset it was read at — `2026-03-02 09:00+01:00`")
+    day = to_day(m.group('date'))
+    h, mi = int(m.group('h')), int(m.group('m'))
+    sec = int(m.group('s') or 0)
+    ms = int((m.group('ms') or '0').ljust(3, '0'))
+    if h > 23 or mi > 59 or sec > 59:
+        raise ValueError(f"'{position[:60]}' names no clock reading: hours run 00-23, minutes and seconds 00-59")
+    off = m.group('off')
+    om = 0 if off == 'Z' else (1 if off[0] == '+' else -1) * (int(off[1:3]) * 60 + int(off[4:6]))
+    res = 'millisecond' if m.group('ms') is not None else 'second' if m.group('s') is not None else 'minute'
+    return Moment(day * DAY_MS + ((h * 60 + mi) * 60 + sec) * 1000 + ms - om * 60000, calendar_of(m.group('date')),
+                  off, res)
+
+
+def write_moment(ms, calendar, offset, resolution='minute'):
+    """The moment `ms` (as `moment` counts it) written in `calendar` at `offset` (`Z`, `+03:30`; None for a `unix-epoch`
+    count), to `resolution` — a clock reading finer than the resolution is refused, never rounded away."""
+    if calendar == 'unix-epoch' or offset is None:
+        n = ms - UNIX_DAY * DAY_MS
+        if not 0 <= n < 10 ** 13:
+            raise ValueError(f"{n} milliseconds since 1970 is not thirteen digits: `unix-epoch` writes exactly thirteen")
+        return '%013d' % n
+    om = 0 if offset == 'Z' else (1 if offset[0] == '+' else -1) * (int(offset[1:3]) * 60 + int(offset[4:6]))
+    local = ms + om * 60000
+    day, rest = local // DAY_MS, local % DAY_MS
+    h, rest = rest // 3600000, rest % 3600000
+    mi, rest = rest // 60000, rest % 60000
+    sec, milli = rest // 1000, rest % 1000
+    if resolution not in RESOLUTIONS:
+        raise ValueError(f"a moment is written to one of {RESOLUTIONS}, not {resolution!r}")
+    if (resolution == 'minute' and (sec or milli)) or (resolution == 'second' and milli):
+        raise ValueError(f"the moment falls between two {resolution}s, and is not written as either")
+    clock = '%02d:%02d' % (h, mi) + (':%02d' % sec if resolution != 'minute' else '') \
+        + ('.%03d' % milli if resolution == 'millisecond' else '')
+    return f"{from_day(day, calendar)} {clock}{offset}"
+
+
 EVERY = ['gregory', 'iso8601', 'julian', 'persian', 'islamic-civil', 'islamic-tbla', 'hebrew', 'coptic', 'ethiopic',
          'ethioaa', 'indian', 'buddhist', 'roc', 'japanese', 'julian-day', 'mayan-long-count']
 
