@@ -405,6 +405,116 @@ def loads(text):
     return _yaml.load(text, Loader=LOADER)
 
 
+# ---- A TABLE: ROWS OF CELLS, READ AND WRITTEN HERE AND NOWHERE ELSE (std-vocab `value_types[rows]`) ------------------
+# A series holds its rows as a table — a header line, then one line per row, the cells separated by one tab — inline in
+# a bean as a block scalar (`rows: |`), or in a file of its own. ONE READER AND ONE WRITER, both here (D46): the gate,
+# bin/dmseq.py, the merge and the proposals read a table only through `table_read`, and whatever re-emits a bean writes
+# one only through `table_dumper`. PyYAML will not write a tab inside a block scalar, even asked to: it double-quotes the
+# string, and a merged chart became one escaped line — the same value, and a page nobody can read. So the dumper chooses
+# the block itself for a value that IS a table, and writes it back byte for byte.
+#
+# THE FORM IS FIXED SO THAT NOTHING CHANGES IT: every line ends in a line feed alone; no line is empty; no cell is empty
+# and none begins or ends in a space — a value nobody read is written as a gap token, never left blank — so no line
+# ends in whitespace, and an editor that trims trailing whitespace changes nothing. What a cell MEANS (a count, a
+# position, a code, a gap) is the channel's, read by bin/dmseq.py against the law; this reads only the form.
+class TableError(ValueError):
+    """A table not in its one form, refused by name: the line and what is wrong with it."""
+
+
+def table_problems(text):
+    """[what is wrong] with `text` as a table, or [] — the form only, never what a cell means."""
+    if not isinstance(text, str):
+        return [f"a table is text — a header line and one line per row, written as a block (`|`) — not {type(text).__name__}"]
+    out = []
+    if '\r' in text:
+        out.append("a line ends in a carriage return: every line of a table ends in a line feed alone")
+    lines = text.split('\n')
+    if lines and lines[-1] == '':
+        lines = lines[:-1]
+    if not lines:
+        return out + ["it is empty: a table has a header line, naming its columns"]
+    head = lines[0].split('\t')
+    for j, h in enumerate(head):
+        if not h or h != h.strip():
+            out.append(f"the header's column {j + 1} is {'empty' if not h else repr(h) + ', with a space at an end'}: "
+                       f"a column is named, and its name is one word")
+    _seen = set()
+    for h in head:
+        if h in _seen:
+            out.append(f"the header names the column {h!r} twice: a table is read by its header's names")
+        _seen.add(h)
+    for i, line in enumerate(lines[1:], start=2):
+        if line == '':
+            out.append(f"line {i} is empty: a row that holds nothing is not a row — a value nobody read is a gap token")
+            continue
+        cells = line.split('\t')
+        if len(cells) != len(head):
+            out.append(f"line {i} holds {len(cells)} cell(s) and the header names {len(head)} column(s): a row has "
+                       f"one cell per column, a tab between two")
+            continue
+        for j, c in enumerate(cells):
+            if c == '':
+                out.append(f"line {i}, column {head[j]!r} is an empty cell: a value nobody read is written as a gap "
+                           f"token, never left blank")
+            elif c != c.strip():
+                out.append(f"line {i}, column {head[j]!r} begins or ends in a space: {c!r}")
+        if len(out) > 20:
+            out.append("… and more")
+            break
+    return out
+
+
+def table_read(text):
+    """(header, rows) of a table in its one form: the column names, and each row as a list of its cells, as text. Raises
+    TableError naming what is wrong — the first thing — when it is not in its form."""
+    bad = table_problems(text)
+    if bad:
+        raise TableError(bad[0])
+    lines = text.split('\n')
+    if lines[-1] == '':
+        lines = lines[:-1]
+    return lines[0].split('\t'), [line.split('\t') for line in lines[1:]]
+
+
+def table_write(header, rows):
+    """A table in its one form, from its column names and its rows of cells: what `table_read` reads back, byte for byte.
+    Raises TableError for a cell that has no form here — empty, holding a tab or a line break, or spaced at an end."""
+    out = []
+    for n, row in enumerate([list(header)] + [list(r) for r in rows]):
+        cells = [str(c) for c in row]
+        for c in cells:
+            if c == '' or c != c.strip() or '\t' in c or '\n' in c or '\r' in c:
+                raise TableError(f"{'the header' if n == 0 else f'row {n}'} holds {c!r}: a cell is one word or value, "
+                                 f"never empty, holding no tab or line break")
+        out.append('\t'.join(cells))
+    text = '\n'.join(out) + '\n'
+    bad = table_problems(text)
+    if bad:
+        raise TableError(bad[0])
+    return text
+
+
+def is_table(value):
+    """True when `value` is a table in its one form, of two lines or more — a header and a row, however many columns:
+    the text `table_dumper` writes back as a block, whatever its style was when it was read."""
+    return isinstance(value, str) and '\n' in value.rstrip('\n') and not table_problems(value)
+
+
+def table_dumper(base):
+    """A YAML dumper, from `base`, that writes every value that is a table (`is_table`) as a block scalar, byte for
+    byte — the only change it makes. Where a table is a key, or inside a flow collection, it is left to the base, which
+    quotes it: a table is written as a value in block style."""
+    class _TableDumper(base):
+        def choose_scalar_style(self):
+            v = self.event.value
+            if not self.flow_level and not self.simple_key_context and is_table(v):
+                if self.analysis is None:
+                    self.analysis = self.analyze_scalar(v)
+                return '|'
+            return super().choose_scalar_style()
+    return _TableDumper
+
+
 # ---- A GARDEN'S VOCABULARY, READ IN ITS OWN SHAPE -----------------------------------------------------------------
 # VOCAB.md is written by hand, and what the interpreter iterates must be a list, what it looks a row up by a name, what it
 # prints a word, and a pattern it matches one Python compiles. So each block of it, and each ENTRY of a block, is read in
@@ -484,9 +594,11 @@ def _attrs_problem(attrs, at):
             return f"`{at}.{a}.in.pattern` {regex_problem(d['pattern'])}"
         # `{ gene: [...] }` and nothing else (22.0: `kinds` until then) — a key it does not read would hold the id to no
         # genos at all, and say nothing
-        if d.get('bean_id') is not None and not (isinstance(d['bean_id'], dict) and set(d['bean_id']) <= {'gene'}
-                                                  and isinstance(d['bean_id'].get('gene') or [], list)):
-            return f"`{at}.{a}.in.bean_id` is a mapping {{ gene: [<genos>, ...] }}, its gene a list"
+        if d.get('bean_id') is not None and not (isinstance(d['bean_id'], dict) and set(d['bean_id']) <= {'gene', 'keyed'}
+                                                  and isinstance(d['bean_id'].get('gene') or [], list)
+                                                  and d['bean_id'].get('keyed') in (None, True)):
+            return (f"`{at}.{a}.in.bean_id` is a mapping {{ gene: [<genos>, ...] }}, its gene a list, or "
+                    f"{{ keyed: true }} for `<bean id>#<key>`")
         if d.get('where') is not None and not isinstance(d['where'], dict):
             return f"`{at}.{a}.in.where` is a mapping of a registry's field to the value it holds"
         if d.get('entries') is not None:

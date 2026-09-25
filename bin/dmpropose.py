@@ -1172,7 +1172,7 @@ def cmd_make(argv):
     if stubs:
         parts.append("## Stubs — beans the offered ones refer to and do not carry: identity only\n\n")
         for s in sorted(stubs):
-            t = yaml.safe_dump(stubs[s], sort_keys=False, allow_unicode=True, width=10 ** 6)
+            t = yaml.dump(stubs[s], Dumper=dmparse.table_dumper(yaml.SafeDumper), sort_keys=False, allow_unicode=True, width=10 ** 6)
             f = fence_for(t)
             parts += [f"{f}daftar-stub {s}\n", t, f"{f}\n\n"]
     body = '\n' + ''.join(parts).rstrip('\n') + '\n'
@@ -2181,7 +2181,8 @@ def _dump(obj):
     class _Indented(yaml.SafeDumper):
         def increase_indent(self, flow=False, indentless=False):
             return super().increase_indent(flow, False)
-    return yaml.dump(obj, Dumper=_Indented, sort_keys=False, allow_unicode=True, default_flow_style=False,
+    # a series' rows are written back as the table they are, by the one writer of a table (bin/dmparse.py)
+    return yaml.dump(obj, Dumper=dmparse.table_dumper(_Indented), sort_keys=False, allow_unicode=True, default_flow_style=False,
                      width=10 ** 6)
 
 
