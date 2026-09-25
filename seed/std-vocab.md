@@ -3209,14 +3209,13 @@ terms:
         why: { required: true, in: prose }
     merge: { cardinality: single, order: none }
   - term: consent
-    meaning: "the agreement in which this person consented to be kept by name in the git of the garden that holds it: a `contract` whose `parties` hold this person with `accepted`, their own word. Without it, a person who is not the gardener is kept in git only under an opaque id, and what names or reaches them is held off git (`held_form`); their future whereabouts are held off git whatever they consented to"
+    meaning: "the agreement in which this person consented to be kept by name in the git of the garden that holds it: a `contract` whose `parties` hold them with `accepted`, their own word. None is needed from a person who keeps a garden this one has met — the owner of a `garden` bean here, who gave their name in the exchange of ids that peered the two, trusted there by the gardener who recorded it (class F) — nor from a party who accepted an agreement held here. A person's name crosses to another garden only as far as their word reaches: `bin/dmpropose.py make` refuses the rest, and the other garden's gate asks again. Without either, a person who is not the gardener is kept in git only under an opaque id, and what names or reaches them is held off git (`held_form`); their future whereabouts are held off git whatever they consented to"
     context_keys: [consent]
     schema:
       shape: mapping
-      is_ref: true
       only_on_gene: [person]
       attrs:
-        bean: { required: true, in: id }
+        bean: { required: true, in: { bean_id: { gene: [contract] } }, meaning: "the agreement in which they accepted" }
     merge: { cardinality: single, order: none }
   - term: about
     meaning: "the persons this record concerns — its data subjects — whoever owns the record or its copies: a certificate about a client, a note about a colleague. Whom it is personal to, what a person may ask to be shown, and what an erasure for them takes are read from it"

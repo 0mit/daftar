@@ -2881,6 +2881,12 @@ records for a party — and not a flag somebody set on their behalf. Where a per
 are, so their future whereabouts are held off git whatever they consented to. What is already in a garden is warned,
 never moved: its gardener decides at the crossing.
 
+BETWEEN GARDENS, THE MEETING IS THE WORD. Gardens meet as equals: either may ask and either may offer, so consent cannot
+depend on who moved first, nor on a document only the sender makes. Two gardeners read their ids out to each other,
+and each records the other's garden and its keeper. That exchange is each one giving their name, and the gardener who
+records it decides, as their own act (class F), whether it was really them. Trust sits with whoever receives, so
+authenticity is checked there. A certifier above both would be a privilege the network of equals does not have.
+
 ## terms[about]
 
 WHOM A RECORD CONCERNS IS NOT WHO OWNS IT. A certificate about a client is the practice's record and the client's

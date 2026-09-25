@@ -293,7 +293,11 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
   basis?, until?}` in place of its attributes — and what it held is kept in a store a host resolves through its
   `roots` (`bin/dmheld.py`). Git keeps only the pointer; the gate never reads a store; a store is checked where it is,
   and by every save. Erasure for a person deletes what the stores here hold of them, and the pointers stay, saying so.
-- **Another person is kept by name only on their own consent**: a `consent` naming an agreement they accepted.
+- **Another person is kept by name only on their own word**: an agreement held here that they accepted (named by
+  `consent`, or in whose `parties` they stand with `accepted`), or, for the gardener of a garden this one has met, the
+  meeting itself. Between gardens this is export policy: `make` sends a person by name only where their word reaches
+  — either gardener, a party who accepted the agreement it is made under, or someone whose consent crosses with them
+  — and the receiving gate judges it again.
   Otherwise they are an opaque id (`p-<8 hex>`), their name and the ways to reach them held off git; and their future
   whereabouts are held off git whatever they consented to.
 - **Who may do what is closed by default** (`grants`, read by `bin/dmpass.py may`): the gardener may; anyone else may
@@ -321,7 +325,9 @@ algebra.
 - **First contact.** Another garden this one deals with is a `garden` bean, anchored by its `garden_id`, owned by
   that garden's gardener and answered for by them — so that gardener is a person or organisation bean here, named
   as their own garden names them. Recording a new garden, and its gardener, is the gardener's decision (class F),
-  made in one commit.
+  made in one commit. Gardens are equals: either may ask or offer first. The exchange of ids is how the other gardener
+  gives their name, so they are kept here by name with no other consent, and whether it was really them is the
+  receiving gardener's to judge, where their trust is.
 - **A name is minted once and carried.** A value of an anchor term marked `minted` is a name a garden gave when it
   has the form the law's `identity_policy.minted` gives one: `<genos>:<name>`, the genos one this garden knows
   (`person:sam`, `contract:shared-camera`). Bare, it identifies only within that garden; qualified —

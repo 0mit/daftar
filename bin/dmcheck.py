@@ -3138,8 +3138,28 @@ def _others(fm):
     return {b for b in out if b != g and (ALL_FM.get(b) or {}).get('genos') == 'person'}
 
 
+def _kept_gardens(pid):
+    """The `garden` beans here that this person keeps: owned by them, in any facet."""
+    out = []
+    for b, g in ALL_FM.items():
+        if isinstance(g, dict) and g.get('genos') == 'garden' and isinstance(g.get('owned_by'), dict):
+            if any(isinstance(f, dict) and isinstance(f.get('owner'), dict) and f['owner'].get('bean') == pid
+                   for f in g['owned_by'].values()):
+                out.append(b)
+    return out
+
+
 def _consented(pid, fm):
-    """Whether a person's `consent` names a contract in whose `parties` this person stands with `accepted`."""
+    """Whether a person is kept here by name on their own word: they keep a garden this one has met (peering: the
+    exchange of ids is their word, and the gardener who recorded it trusted them there), they accepted an agreement held
+    here, or their `consent` names one they accepted."""
+    if _kept_gardens(pid):
+        return True
+    for k in ALL_FM.values():                     # a party who accepted an agreement held here gave their word in it
+        ps = k.get('parties') if isinstance(k, dict) and k.get('genos') == 'contract' else None
+        if isinstance(ps, dict) and any(isinstance(e, dict) and isinstance(e.get('who'), dict)
+                                        and e['who'].get('bean') == pid and e.get('accepted') for e in ps.values()):
+            return True
     c = fm.get('consent')
     k = ALL_FM.get(c.get('bean')) if isinstance(c, dict) and isinstance(c.get('bean'), str) else None
     if not isinstance(k, dict) or k.get('genos') != 'contract':
@@ -3239,10 +3259,13 @@ def check_persons():
     future whereabouts of such a person is held off git, consent or not."""
     g, added = LAWVIEW.gardener, set(STAGED_ADDED)
     for (_ib, base), (fm, _b) in docs.items():
-        if not _ib or fm.get('genos') != 'person' or base == g or _opaque(base, fm) or _consented(base, fm):
+        if not _ib or fm.get('genos') != 'person' or base == g or _opaque(base, fm):
+            continue
+        if _consented(base, fm):
             continue
         _t = (f"{base}: names a person who is not the gardener, and no consent of theirs is recorded: write them as "
-              f"bin/dmheld.py person mints — an opaque id, the name held off git — or record their consent (F2)")
+              f"bin/dmheld.py person mints — an opaque id, the name held off git — or record their consent: an "
+              f"agreement they accepted, or the garden they keep, met here (F2)")
         if f"beans/{base}.md" in added:
             _priv_found('error', _t, 'consent')
         else:

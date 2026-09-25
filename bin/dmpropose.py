@@ -1108,6 +1108,31 @@ def cmd_make(argv):
                     refusals.append((f"{r}, which {b} refers to, {_why} — the other garden could not tell which being "
                                      f"it is", _fix))
 
+    # EXPORT POLICY ON A PERSON'S ROOT (24.0, F2). A being that answers for itself (`self` in the facet ownership is
+    # rooted in) has a word of its own; its name crosses — whole, or as a stub's title and anchors —
+    # only as far as their own word reaches: the gardener of this garden (who sends it) or of the other (who is peered
+    # with it), a party who accepted the agreement it is made under, or someone whose consent agreement crosses with
+    # them. Anyone else crosses opaque, or not at all. The other garden's gate asks the same again at take.
+    _accepted = set()
+    if ub and isinstance(ub[0].get('parties'), dict):
+        _accepted = {e['who'].get('bean') for e in ub[0]['parties'].values()
+                     if isinstance(e, dict) and isinstance(e.get('who'), dict) and e.get('accepted')}
+    _people = [(b, fms.get(b) or {}) for b in offered] + [(r, (head_bean(r) or [{}])[0]) for r in sorted(stubs)]
+    for p, pfm in _people:
+        _resp = pfm.get('responsibility') if isinstance(pfm.get('responsibility'), dict) else {}
+        _self = isinstance(_resp.get(root_facet()), dict) and _resp[root_facet()].get('self') is True
+        if not _self or p in (gardener, to_gardener) or p in _accepted:   # only a being that answers for itself has a word
+            continue
+        if re.match(r'^p-[0-9a-f]{8,32}$', p) and pfm.get('title') == p:
+            continue                                  # opaque: nothing of them crosses but an id
+        c = pfm.get('consent')
+        if isinstance(c, dict) and c.get('bean') in offered:
+            continue
+        refusals.append((f"{p} is a person whose own word does not reach {to}: they are neither gardener, nor a party "
+                         f"who accepted --under {under}, and no consent of theirs crosses with them",
+                         f"offer their consent agreement too ({(c or {}).get('bean') if isinstance(c, dict) else 'the one they accepted'}), "
+                         f"or leave them out; a person who has not consented crosses only opaque (bin/dmheld.py person)"))
+
     # WHERE IT IS LAID: beside the garden, inside none — links resolved.
     out_dir = os.path.realpath(out) if out else os.path.dirname(os.path.realpath(ROOT))
     g_in = inside_a_garden(out_dir)
