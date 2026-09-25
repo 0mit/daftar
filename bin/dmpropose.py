@@ -907,8 +907,7 @@ def journal_append(heading, body):
     if '\n## ' in '\n' + body:
         raise ValueError("a journal body may not carry a `## ` heading of its own")
     # the day of writing is the heading's (23.0): every `now` in what this entry names, before the entry is written
-    for p in dmjournal.stamp_now(heading, f"{heading}\n{body}"):
-        print(_say(f"dmpropose: {p}: `now` written as {heading[3:13]}, the day of this entry"), file=sys.stderr)
+    dmjournal.stamp_now(heading, f"{heading}\n{body}")
     text = open(dmjournal.JOURNAL, encoding='utf-8').read()
     entry = ('' if text.endswith('\n\n') else ('\n' if text.endswith('\n') else '\n\n')) + heading + '\n' + body + '\n'
     with open(dmjournal.JOURNAL, 'a', encoding='utf-8', newline='\n') as fh:

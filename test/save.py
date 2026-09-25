@@ -22,6 +22,7 @@ freshly grown garden to what its first lines say:
 
 Run: python3 test/save.py   (0 = green).  ~10s.
 """
+import datetime
 import ast, os, shutil, stat, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -70,7 +71,7 @@ identity:
   status: confirmed
   anchors:
     - {{ key: person_id, value: "person:{id}", class: logical, establishing: true }}
-provenance: {{ src: asserted-by-human, by: "sam", as_of: 2026-09-24 }}
+provenance: {{ src: asserted-by-human, by: "sam", as_of: now }}
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
 ---
@@ -310,7 +311,7 @@ check("...and with each put right, the same bean saves", rc == 0 and not git('st
 def now_bean(bid, extra=''):
     bean(bid)
     f = os.path.join(G, 'beans', bid + '.md')
-    t = open(f, encoding='utf-8').read().replace('as_of: 2026-09-24', 'as_of: now')
+    t = open(f, encoding='utf-8').read()          # PERSON writes `as_of: now` already: the save stamps it (23.0)
     open(f, 'w', encoding='utf-8', newline='\n').write(t.replace('\n---\n', '\n' + extra + '---\n', 1) if extra else t)
 
 
@@ -336,9 +337,24 @@ open(_f, 'w', encoding='utf-8', newline='\n').write(
 rc2, out2, err2 = save('--again')
 check("...and on `--again`, a `now` written again while fixing the refusal takes the day of the entry waiting",
       rc != 0 and rc2 == 0 and f'as_of: {day_of_last_entry()}' in blob('omar'), (rc, rc2, err2, blob('omar')))
-bean('pari')
+# A DAY THE WRITER TYPED IS NEVER REWRITTEN BY THE TOOL — judged by the gate instead (23.0): today's passes as written,
+# being the entry's day; another is refused, and stays as the writer typed it. Neither check names a calendar date, so
+# the suite passes on any day it runs (it once named one, and failed the next morning).
+_today = datetime.date.today().isoformat()
+def typed_bean(bid, day):
+    bean(bid)
+    f = os.path.join(G, 'beans', bid + '.md')
+    t = open(f, encoding='utf-8').read()          # read, THEN open for writing: opening truncates
+    open(f, 'w', encoding='utf-8', newline='\n').write(t.replace('as_of: now', f'as_of: {day}'))
+typed_bean('pari', _today)
 rc, out, err = save('sam', 'added pari', '--body', '- action: added [[pari]].')
-check("...and a day the writer typed is left as typed", rc == 0 and 'as_of: 2026-09-24' in blob('pari'), (rc, blob('pari')))
+check("...and a day the writer typed is left as typed: today's, the entry's own day, passes as written",
+      rc == 0 and f'as_of: {_today}' in blob('pari'), (rc, err[-400:], blob('pari')))
+typed_bean('pia', '2001-01-02')
+rc, out, err = save('sam', 'added pia', '--body', '- action: added [[pia]].')
+check("...and another typed day is refused by the gate, and the tool leaves it as the writer typed it",
+      rc != 0 and 'stamped, not typed' in err
+      and 'as_of: 2001-01-02' in open(os.path.join(G, 'beans', 'pia.md'), encoding='utf-8').read(), (rc, err[-400:]))
 
 # ---- - it never passes --no-verify -----------------------------------------------------------------------------------
 _src = ast.parse(open(os.path.join(ROOT, 'bin', 'dmsave.py'), encoding='utf-8').read())

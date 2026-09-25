@@ -169,8 +169,7 @@ def append(who, what, body):
     h = stamp(who, what)
     # STAMPED BEFORE THE ENTRY IS WRITTEN: a document that cannot be stamped is reported, and the entry is still written
     # once — a run that failed after appending would be run again, and append it twice
-    for p in stamp_now(h, f"{what}\n{body}"):
-        print(dmparse.said(f"dmjournal: {p}: `now` written as {h[3:13]}, the day of this entry"), file=sys.stderr)
+    stamp_now(h, f"{what}\n{body}")          # silent when it succeeds: a clean save prints only its verdict
     entry = ('' if text.endswith('\n\n') else ('\n' if text.endswith('\n') else '\n\n')) + h + '\n' + body + '\n'
     with open(JOURNAL, 'a', encoding='utf-8', newline='\n') as fh:
         fh.write(entry)
