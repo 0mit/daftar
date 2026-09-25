@@ -5,6 +5,7 @@ schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
   attrs:                "{<attr>: {required?, in, meaning}} — THE ATTRIBUTES: one record each, saying what the attribute is a position IN, whether it is required, and what it means — once, for the gate and the reader both. They describe each ENTRY of a list, an open map or a faceted mapping, and otherwise the mapping itself. An entry holds only the attributes declared here. See `attr_domains` for what `in:` may say."
   default_from:         "{registry, keyed_by, take} — inside an attribute's record: when the entry is SILENT, the attribute's value is READ from a registry row, the row selected by another attribute of the same entry. The registry stays the one owner of the usual value (a protocol's transport), and an entry states the attribute only when it differs. Like an aspect's default, a value that came from here never counts as OCCUPYING a position."
+  stamped:              "true — inside an attribute's record: the value is READ FROM THE CLOCK by the save, never typed. It is written `now`, and the save writes in its place the moment of the journal heading it writes; a value a commit adds that is not the moment of a heading the same commit adds is refused"
   cells:                "[{when, verdict|requires|expects, why}] — COMBINATIONS of what an entry holds. `verdict: incoherent` is an ERROR (the positions cannot both hold, so one is mis-stated); `verdict: in_breach` a WARNING (all can hold, and the state needs action). `requires: [...]` is an error when the entry sits in the cell and lacks those attributes; `expects: [...]` the same as a warning. `when` maps an attribute to the value it holds, or to `{starts_with: …}`; an aspect attribute is read at its EFFECTIVE position, stated or defaulted."
   attr_domains:
     values:      "in: [a, b, c] — one of a closed list written here"
@@ -44,7 +45,9 @@ schema_language:
   exclusive:            "{extent: <attr>, being: <attr>, role?: <attr>} — the extents that entries of this term hold for ONE being, in ONE role, across every bean of the garden, do not overlap: one person booked twice over the same days, one room lent twice. The gate refuses an overlap and names both entries; an entry its term's `expiry.unless` silences, or that says it was declined, is not counted. The law puts this on no term: a garden that needs it adds it to a term in its VOCAB.md, a RULE-CHANGE"
   expiry:               "{attr, notice, why} — ONE of this term's attrs is the position at which the thing LAPSES if nothing is done, and a reader should be warned before it. `notice` is HOW LONG BEFORE, as an EXTENT on `time`. `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. Deliberately NOT derived from an attribute's type: most dates a bean carries are `observed` or `as_of`, the day a fact was READ rather than the day it runs out. A term that does not declare this is never warned about, which is why a garden's own term can buy the warning its Tier-0 neighbour has. On a term whose value is a list or an open map, the attribute is each ENTRY's, and each entry is warned about by itself. `repeats: <attr>` names a sibling attribute `in: recurrence`: the position falls due again at each occurrence after `attr`, and the reader is warned before the next. `unless: {<attr>: [<values>]}` names the entries that no longer lapse — a debt already met. `relative: <attr>` names a sibling attribute holding the position RELATIVE to another (`from`, then `after` or `before` by an extent, then `on` a place in the cell reached), read in the place of `attr` where an entry states it. `lapses: <attr>` names a sibling attribute `in: extent`: the entry LAPSES at that extent's end, and a reader warns before it with `lapses_why`. `stance: <attr>` names the attribute whose EFFECTIVE position on its aspect chooses the words: `why` and `lapses_why` are each one text, or a map from that aspect's positions to the words — an obligation falls due, a permission lapses. `condition: <attr>` names the attribute holding what brings an entry into force where that is not a day: an entry holding one has no due to be missing."
   sums:                 "{whole: <attr> | [<attr>, ...], parts: <attr>.<attr>} — the PARTS of a quantity add up to its WHOLE: the parts are the named attribute of each entry inside `parts`' first attribute, the whole is the first of `whole` the entry states. Checked exactly, in fractions, whenever every count is known, and the parts must be in the whole's unit. An entry holding one part that states no amount holds the whole."
-  on_sequence:          "<aspect> — the term's value is a walk on that SEQUENCE aspect (10.1): prose lines in list order, or step entries {id, do, next: [{to, when?}]} whose neighbourhoods are CLOSED; the gate refuses a `to` that names no step, a step nothing reaches, a branch with no condition, a routine with no end, and a loop when the aspect declares acyclic"
+  on_sequence:          "<aspect> — the term's value is a walk on that SEQUENCE aspect: prose lines in list order, or step entries {id, do, next: [{to, when?}]} whose neighbourhoods are CLOSED; each step entry is judged by the term's `attrs`, and a key they do not declare is refused; the gate refuses a `to` that names no step, a step nothing reaches, a branch with no condition, a routine with no end, and a loop when the aspect declares acyclic"
+  series:               "true — each ENTRY of this term is a SERIES: a line whose positions HOLD values (the figure's `holds`). Its positions are its `grid`, a recurrence whose occurrences are its rows in order, or listed in its `span`, an extent from whose `from` each row writes its offset; `unit` is what an offset counts and the resolution held; `holds` names the channels, one column each; its rows are one table (`value_types[rows]`) inline in `rows`, or the parts `series/<bean>/<key>/<part>.tsv` in the estate, each added whole and never rewritten; `excluded` sets a cell aside, naming its judge. The gate reads every row against its channels, and nothing read from a series is stored"
+  moves_along:          "<attr> — each entry of this term is a MOVE along the track its <attr> names, a key of a term whose entries each name a `walk`: its `step` is a step of that walk, and the moves of one track, in the order of their moments, are held to it — a move follows a `next`, reaches an `exit`, or returns to the step a pause (`resumes`) was entered from; a move `next` does not offer passes only with a `why`, and warns; nothing follows a `final` step; a moment never goes back. Where a track stands is read, never stored"
   dag:                  "true — this term's edges are positions on the `walk` sequence aspect (9.2: `dag` is that aspect's `term_key`), and they join the acyclic check BECAUSE that aspect declares `acyclic: true`"
   required_on_targets_of: "<term> — a bean that is the TARGET of that relation must carry this term (e.g. anything lived in must say what kind of habitat it is)"
   entry_must_match:     "[{attr, registry, keyed_by, take}] — an entry attr must equal a registry row's attr, the row selected by a field on the bean (e.g. the crown branch is fixed by the bean's nature)"
@@ -719,6 +722,17 @@ anchor_systems:
     example: "head-office#floor-3/room-12"
     establishes: false
     why: "rooms are renumbered and racks re-filled; and the frame itself may be moved"
+  - system: along
+    dimension: place
+    resolves_through: local-frame
+    neighbours: metered
+    restrictions: { lines: 1, metered: length }
+    meaning: "a distance ALONG ONE LINE A BEING LENDS (`lines`): down a core from its top, out along a radius from the pith, along a transect from its first mark. It keeps its meaning when the being moves, as a local frame does, and unlike a position within a frame it has a length"
+    pattern: '^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*\+(0|[1-9][0-9]{0,39})(\.[0-9]{1,40})?$'
+    form_note: "`<being>/<line>+<metres>` — `core-b/depth+1.2`, and its zero `core-b/depth+0`: metres always, whatever the resolution held, which is said beside it"
+    example: "core-b/depth+0"
+    establishes: false
+    why: "a distance along a being says where on it, never which being"
   - system: geohash
     dimension: place
     resolves_through: geographic
@@ -1117,6 +1131,17 @@ vacancies:
   - { at: "registry:facets", position: financial, reason: universal, why: "who pays for a being and is paid by it: in the standard because a stranger's garden expects it beside `legal`, `technical` and `experience`, the facets that are occupied" }
   - { at: "words.form", position: written, reason: universal, why: "an agreement's words, declared whole: written down, spoken aloud, or not yet put into words — the three ways any agreement stands, which a stranger keeping one expects to find. `words` is occupied through `spoken`; `written` is taken the day an agreement's text is kept in a `document`" }
   - { at: "words.form", position: unstated, reason: universal, why: "an agreement's words, declared whole: written down, spoken aloud, or not yet put into words — the three ways any agreement stands, which a stranger keeping one expects to find. `words` is occupied through `spoken`; `unstated` is an agreement that is named and whose terms nobody has put into words yet" }
+  - { at: "series.cells", position: point, reason: universal, why: "where a series' row sits, declared whole: at a position, over a region, or at a position and over the stretch back to the row before or on to the next — the four ways an instrument or a hand places what it read" }
+  - { at: "series.cells", position: bounds, reason: universal, why: "where a series' row sits, declared whole: at a position, over a region, or at a position and over the stretch back to the row before or on to the next — the four ways an instrument or a hand places what it read" }
+  - { at: "series.cells", position: preceding, reason: universal, why: "where a series' row sits, declared whole: at a position, over a region, or at a position and over the stretch back to the row before or on to the next — the four ways an instrument or a hand places what it read" }
+  - { at: "series.cells", position: following, reason: universal, why: "where a series' row sits, declared whole: at a position, over a region, or at a position and over the stretch back to the row before or on to the next — the four ways an instrument or a hand places what it read" }
+  - { at: "series.entry_one_of", position: grid, reason: universal, why: "the forms a series takes, declared whole: positions by a rule, positions listed, or the whole series kept off git in the held layer — every recorded line is one of the three" }
+  - { at: "series.entry_one_of", position: span, reason: universal, why: "the forms a series takes, declared whole: positions by a rule, positions listed, or the whole series kept off git in the held layer — every recorded line is one of the three" }
+  - { at: "series.entry_one_of", position: held, reason: universal, why: "the forms a series takes, declared whole: positions by a rule, positions listed, or the whole series kept off git in the held layer — every recorded line is one of the three" }
+  - { at: "steps.exit", position: true, reason: universal, why: "a walk's steps, declared whole: a way out, a pause that returns to where it was, and an end nothing follows — the three every case on a walk can meet" }
+  - { at: "steps.resumes", position: true, reason: universal, why: "a walk's steps, declared whole: a way out, a pause that returns to where it was, and an end nothing follows — the three every case on a walk can meet" }
+  - { at: "steps.final", position: true, reason: universal, why: "a walk's steps, declared whole: a way out, a pause that returns to where it was, and an end nothing follows — the three every case on a walk can meet" }
+  - { at: "registry:anchor_systems", position: along, reason: universal, why: "a distance along a line a being lends — down a core, out along a radius, along a transect — the one place position that has a length and travels with its being" }
 # == FIGURES: the shapes an aspect may take ==
 figures:
   - figure: opposition
@@ -1124,6 +1149,8 @@ figures:
     requires: [poles, positions]
     extent: impossible
     extent_why: "the positions are modalities, not points on a line: nothing lies between `necessary` and `possible`, so there is no region to bound"
+    holds: impossible
+    holds_why: "a position of an opposition is a stance a being takes, and taking it is the whole of the fact: nothing further is held there"
   - figure: sequence
     meaning: "positions related by NEIGHBOURHOOD along direction lines, walkable, and declared only by its restrictions"
     requires: [lines, metered, order, acyclic, ends, domain]
@@ -1138,6 +1165,8 @@ figures:
     ends_values: [open, bounded, open-start, open-end]
     extent: possible
     extent_why: "a sequence with an order has a domain, and a bounded region of it is an extent (a duration on time)"
+    holds: possible
+    holds_why: "a position of a sequence may HOLD what was found there — a flow at a moment, a porosity over a stretch of a core, a step a case has reached: a sequence whose positions hold is a series"
 # == EXTENT ==
 extent_form:
   in:      "optional: the positioning SYSTEM the region is stated in. A system may be metered where its aspect is not (`geographic` in metres), and then the region may carry a measure."
@@ -1290,6 +1319,20 @@ value_types:
     pattern: '^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$'
     refusal: "must be a language as BCP 47 writes one: `fa`, `pt-BR`, `sr-Latn-RS`, `es-419`"
     meaning: "a language, as BCP 47 (RFC 5646) writes it: its language subtag, then its script and its region where they are needed"
+  - type: rows
+    separator: "\t"
+    inline_most: 100
+    gaps: gap_tokens
+    refusal: "is not a table in its one form: a header line naming each column once, then one line per row, as many cells as the header, one tab between two, each line ending in a line feed alone — no empty line, no empty cell, no cell beginning or ending in a space. A value nobody read is a gap token (`gap_tokens`), never a blank"
+    meaning: "a TABLE of rows, written in a bean as a block (`rows: |`): text, with one tab between two cells. What a cell means is its column's; a cell that holds no value says why, with a gap token. It is read and written by one reader and one writer, byte for byte, and a table of more than `inline_most` rows is warned about: its rows belong in the parts of a file"
+# == GAP TOKENS: a cell that holds no value says why ==
+gap_tokens:
+  - { token: "-", gap: not-read,   meaning: "no reading was made here" }
+  - { token: "?", gap: unreadable, meaning: "a reading was made, and it cannot be read here" }
+  - { token: "<", gap: below,      takes: count, meaning: "below a limit: `<` and the limit's count, or a bare `<` for the channel's `limits.below`" }
+  - { token: ">", gap: above,      takes: count, meaning: "above a limit, as `<` is below one" }
+  - { token: "_", gap: absent,     meaning: "there is nothing here to read: a core not recovered, a ring never formed" }
+  - { token: "#", gap: withheld,   meaning: "a value exists, and this copy does not carry it" }
 # == THE JOURNAL ==
 journal:
   path: log/journal.md
@@ -2377,11 +2420,67 @@ terms:
     enforced_by: none
     merge: { cardinality: single, order: none }
   - term: steps
-    meaning: "the ordered steps a mapping performs"
+    meaning: "the ordered steps a mapping performs: a WALK, whose steps say who acts at each, how long each usually takes, which are ways out, pauses and ends, and why a case may move into each"
     context_keys: [steps]
     schema:
       on_sequence: routine
+      attrs:
+        id:      { required: true, in: { type: kebab }, meaning: "the step's name, once in its walk" }
+        do:      { required: true, in: prose, meaning: "what is done at the step, in words" }
+        next:    { in: { entries: { to: { required: true, in: { type: kebab }, meaning: "the step it leads to" }, when: { in: prose, meaning: "when this way on is taken: said by each of two or more" } } }, meaning: "the ways on from the step: a CLOSED neighbourhood, these and no others" }
+        by:      { in: { type: kebab }, meaning: "who acts at the step: a key of the `parties` of the being whose track reaches it" }
+        usually: { in: any, meaning: "how long the step usually takes: an extent on `time` with a `measure`, or `{ in: <calendar system>, level: <level>, count: <n> }`, that many cells of a level of that calendar. Its form is the walk's to judge" }
+        exit:    { in: [true], meaning: "a way out, reached from any step with no `next` naming it: withdrawn, cancelled, lost" }
+        resumes: { in: [true], meaning: "a PAUSE, reached from any step with no `next` naming it: the move after it returns to the step it was entered from, or takes a way out" }
+        final:   { in: [true], meaning: "an end nothing follows: a move after it is refused. An end that is not final may be left, and the case taken up again" }
+        reasons: { in: any, meaning: "the reasons a move into this step may cite, as a list of kebab words, each once. Its form is the walk's to judge" }
+        is:      { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "the published process the step is, where a scheme names one" }
+        takes:   { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" }, amount: { in: { quantity: any }, meaning: "how much, where it is measured" } }, keyed_by: code }, meaning: "what one run of the step takes in, each once" }
+        gives:   { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" }, amount: { in: { quantity: any }, meaning: "how much, where it is measured" } }, keyed_by: code }, meaning: "what one run of the step gives out, each once" }
     merge: { cardinality: single, order: none }
+  - term: tracks
+    meaning: >
+      Where this being stands on a WALK over time: each entry is a TRACK, a series along `time` whose positions are the
+      moments of its `moves` and whose value at each is a step of the walk it names. Where the being stands now, how
+      long it has stood there and who acts next are read from the moves, never stored.
+    context_keys: [tracks]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      attrs:
+        walk: { required: true, in: ref, meaning: "the document whose `steps` the track moves along: `{ mapping: <id> }`" }
+        note: { in: prose, meaning: "optional prose" }
+    merge: { cardinality: multi, order: by-key }
+  - term: moves
+    meaning: >
+      Each move of this being along one of its `tracks`: the step it reached, at what moment, who moved it, and why.
+      A move is kept and never rewritten; where the being went next is the next move.
+    context_keys: [moves]
+    schema:
+      shape: list_of_entries
+      moves_along: track
+      attrs:
+        track:  { required: true, in: { key_of: tracks }, meaning: "the track moved along: a key of `tracks` on this bean" }
+        at:     { required: true, stamped: true, in: { type: moment }, meaning: "the moment of the move, read from the clock: written `now`, and the save writes the moment of its journal heading" }
+        step:   { required: true, in: { type: kebab }, meaning: "the step reached: a step of the track's walk" }
+        by:     { required: true, in: bean_id, meaning: "who moved it" }
+        reason: { in: { type: kebab }, meaning: "why, as one of the reasons the step reached lists in its `reasons`" }
+        why:    { in: prose, meaning: "why, in words: owed where the walk's `next` does not offer the move" }
+    merge: { cardinality: multi, order: by-track+at+step }
+  - term: items
+    meaning: "what a CHECKLIST asks for, one item each (a mapping of `kind: checklist`): what it is, who provides it, when it is needed, and what meets it. A checklist is a set and not a walk: its items have no order, and items of which any one will do share a `one_of`"
+    context_keys: [items]
+    schema:
+      shape: list_of_entries
+      attrs:
+        id:          { required: true, in: { type: kebab }, meaning: "the item's name, once in its checklist" }
+        do:          { required: true, in: prose, meaning: "what is asked for, in words" }
+        by:          { in: { type: kebab }, meaning: "who provides it: a key of the `parties` of the being it is asked of" }
+        needed_when: { in: { entries: { selection: { required: true, in: { bean_id: { keyed: true } }, meaning: "`<bean>#<key>`: a selection declared on that bean" } } }, meaning: "when the item is needed: while the selection holds. Absent, it always is" }
+        met_by:      { in: { entries: { selection: { required: true, in: { bean_id: { keyed: true } }, meaning: "`<bean>#<key>`: a selection declared on that bean" } } }, meaning: "what meets the item: the beans the selection holds for" }
+        one_of:      { in: { type: kebab }, meaning: "a group of alternatives: the items that share this name are met when any one of them is" }
+        note:        { in: prose, meaning: "optional prose" }
+    merge: { cardinality: multi, order: by-id }
   - term: produces
     meaning: "the artifact a mapping writes, and the reload or restart that publishes it"
     context_keys: [produces]
@@ -2413,6 +2512,17 @@ terms:
         - { when: { openness: elsewhere }, requires: [at] }
         - { when: { openness: unreachable }, requires: [at] }
     merge: { cardinality: multi, order: "by-system+at?" }
+  - term: lines
+    meaning: "the LINES this being lends to positions along it (`along`): each with the point it starts from and the way it runs, once"
+    context_keys: [lines]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      attrs:
+        zero:   { required: true, in: prose, meaning: "the point of the being the line starts from: the top of a core as it was taken, the pith of a stem" }
+        toward: { required: true, in: prose, meaning: "which way it runs" }
+        note:   { in: prose, meaning: "optional prose" }
+    merge: { cardinality: multi, order: by-key }
   - term: timing
     meaning: >
       When something happened, as an OPEN map of moment-name -> a position in a time anchor system at a
@@ -2433,6 +2543,50 @@ terms:
       kebab-case moment names. Used so far: start | sync | stop. The key is DELIBERATELY OPEN and the gate
       is forbidden from enumerating it — a run with four sync points, or a moment nobody has named yet,
       must never require a rule-change.
+    merge: { cardinality: multi, order: by-key }
+  - term: series
+    meaning: >
+      What this being holds ALONG A SEQUENCE: each entry is a series, a line whose positions hold values. Its positions
+      are given by a rule (`grid`, a recurrence) or listed (`span`, an extent, from whose `from` each row writes its
+      offset in `unit`s); `holds` names what each position holds, one channel per column; the rows are one table. A
+      series is the world along a line, at the position where it held.
+    context_keys: [series]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      series: true
+      entry_one_of: [grid, span, held]
+      attrs:
+        grid:     { in: recurrence, meaning: "the positions BY RULE: a recurrence with a `from` and no `to` or `times`, striding by a measure or by a level with a length; row n is at occurrence n, the first at `from`, and the last row is its end" }
+        span:     { in: extent, meaning: "the positions LISTED: the region the rows lie in, whose `from` is offset 0; each row writes its offset" }
+        unit:     { in: { registry: units, take: unit }, meaning: "the resolution held, and what an offset counts: a row's offset and a grid's stride are whole numbers of it" }
+        cells:    { in: [point, bounds, preceding, following], meaning: "where a row sits on the line: point — at its position, the reading when silent | bounds — over a region, a listed row writing its `from` and `to`, a grid's row n over [n, n+1) strides | preceding — at its position, over the region back to the row before | following — at its position, over the region on to the next" }
+        holds:
+          meaning: "the CHANNELS: what a position holds, one column each — a measured value, a position, or a code"
+          in:
+            keyed_by: name
+            entries:
+              name:       { required: true, in: { type: kebab }, meaning: "the column's heading, once in its series" }
+              quantity:   { in: { registry: quantities, take: quantity }, meaning: "a MEASURED value: the quantity every cell is of, counted in `unit`" }
+              unit:       { in: { registry: units, take: unit }, meaning: "with `quantity`, the one unit every cell is counted in; with `system` and `from`, what an offset from `from` counts" }
+              system:     { in: { registry: anchor_systems, take: system }, meaning: "a POSITION: every cell is a position in this system, in its one form less the channel's `prefix` and `suffix` — or, with `from` and `unit`, a whole offset from `from`" }
+              from:       { in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "with `system` and `unit`: the position an offset of 0 is" }
+              prefix:     { in: { type: text }, meaning: "with `system`: what every cell's position begins with, written once here" }
+              suffix:     { in: { type: text }, meaning: "with `system`: what every cell's position ends with, written once here" }
+              scheme:     { in: { registry: knowledge_schemes, take: scheme }, meaning: "a CODE: every cell is a code of this published scheme" }
+              stands_for: { required: true, in: [point, mean, sum, min, max, state, instant], meaning: "what a cell stands for over its row's place: point — the value at the row's position | mean, sum, min, max — over the row's region | state — the value holds from the row until the next, or over the row's region | instant — something happened at the row's position, and nothing is held between rows" }
+              between:    { in: [none, linear], meaning: "what is read between two rows: none, the reading when silent | linear — on a straight line between two neighbouring readings of a point, only where the line and the channel are both metered" }
+              u:          { in: { quantity: any }, meaning: "the standard uncertainty of every cell, in a unit of what the cell measures: a value read with it is printed to its digits" }
+              accuracy:   { in: { entries: { count: { in: { type: count }, meaning: "the accuracy stated" }, unit: { required: true, in: { registry: units, take: unit }, meaning: "its unit" }, kind: { required: true, in: [bound, radius-68, radius-95, unstated], meaning: "bound — no error exceeds it | radius-68, radius-95 — the radius holding that share of errors | unstated — its maker did not say" } } }, meaning: "an accuracy as its maker stated it, with its kind, never beside `u`: the reader turns it into an uncertainty, a writer never does" }
+              persists:   { in: [none, offset, scale, unknown], meaning: "whether one cell's error repeats in the next: none | offset — a common offset, which cancels in a difference | scale — a common relative error, which scales a difference | unknown, read both ways" }
+              monotone:   { in: [increasing, decreasing], meaning: "the channel never goes back along the line: a row that does is refused, unless its cell is excluded" }
+              limits:     { in: { entries: { below: { in: { type: count }, meaning: "what a bare `<` is below" }, above: { in: { type: count }, meaning: "what a bare `>` is above" } } }, meaning: "the limits a bare `<` or `>` in a cell stands for" }
+              property:   { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "WHAT the channel is of, as a code of a published scheme, so that two gardens' channels meet by code and never by name" }
+              note:       { in: prose, meaning: "optional prose" }
+        rows:     { in: { type: rows }, meaning: "the table, inline: its header names the position columns (`at`, or `from` and `to` under `bounds`; none on a grid) and each channel once, then one line per row. Absent, the rows are the parts `series/<bean>/<key>/<part>.tsv`: a grid's part named by the number of its first row, a listed series' by any kebab name" }
+        excluded: { in: { entries: { at: { required: true, in: { type: count }, meaning: "the row: its offset on a listed series (its `from` under `bounds`), its number on a grid, the first 0" }, channel: { in: { type: kebab }, meaning: "the cell's channel; absent, every cell of the row" }, by: { required: true, in: bean_id, meaning: "the judge who set it aside" }, why: { required: true, in: prose, meaning: "why" } } }, meaning: "a cell SET ASIDE by a judge: kept and shown, and read by no operation" }
+        held:     { in: { pattern: '^root:[a-z0-9][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._-]*$' }, meaning: "the whole series is kept OFF GIT, in the held layer, under this opaque pointer, and the entry says nothing else" }
+        note:     { in: prose, meaning: "optional prose" }
     merge: { cardinality: multi, order: by-key }
   - term: roots
     meaning: >
@@ -2500,7 +2654,8 @@ terms:
     meaning: >
       A per-datum ledger: what a datum IS, which field on this bean holds its CURRENT value, how to read
       it, and the append-only log of every operation on it — each stamped to the millisecond, attributed,
-      and linked to the one before.
+      and linked to the one before. It is one field's own log, at the moment it was recorded: what the
+      world held along a line — a reading at each moment, a porosity at each depth — is a `series`.
     context_keys: [beanger]
     schema:
       shape: open_map_of_entries

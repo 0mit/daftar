@@ -244,25 +244,33 @@ if '--terms' in want:
         for _k, _a in WALK_KEYS.items():
             if s.get(_k) is True:
                 bits.append(f"on the '{_a['aspect']}' sequence" + (" · must stay ACYCLIC" if _a.get('acyclic') else ""))
+        if s.get('on_sequence'):
+            bits.append(f"a WALK on the '{s['on_sequence']}' sequence — each step judged by the attributes below")
+        if s.get('series') is True:
+            bits.append("each entry a SERIES — its rows read against its channels")
+        if s.get('moves_along'):
+            bits.append(f"each entry a MOVE along the track its `{s['moves_along']}` names — held to that track's walk")
         print(f"  {n:20} [{TIER[n]}]  {' · '.join(bits)}")
         det = []
         _req_self = [a_ for a_, _ in dmform.facet(F, 'required', 'self')]
         _req_entry = [a_ for a_, _ in dmform.facet(F, 'required', 'entry')]
         if V.get('values'):              det.append(f"values {V['values']}")
         if V.get('values_from'):         det.append(f"values from term '{V['values_from']}'")
-        if _req_self:                    det.append(f"needs {_req_self}")
+        if _req_self:                    det.append(f"{'each step ' if s.get('on_sequence') else ''}needs {_req_self}")
         if _req_entry:                   det.append(f"each entry needs {_req_entry}")
         for a_, v in dmform.facet(F, 'values', 'entry'):
             det.append(f"entry.{a_} ∈ {v}")
         # 13.0: every attribute says what it is a position IN, so the listing can say it for ALL of them. Until
         # then this printed the enums, the types and the aspects and was silent about registries, forms and refs.
-        _w = 'entry' if F['scope'] == 'entry' else 'value'
+        _w = 'entry' if F['scope'] == 'entry' else 'step' if s.get('on_sequence') else 'value'
         for a_, v in dmform.facet(F, 'type'):
             det.append(f"{_w}.{a_} is {v}")
         for a_, r in dmform.facet(F, 'registry'):
             det.append(f"{_w}.{a_} is a row of " + (f"the registry its `{r['registry_from']}` names" if r.get('registry_from')
                                                      else f"registry '{r.get('registry')}'")
                        + (' where ' + ', '.join(f"{k} is {v}" for k, v in r['where'].items()) if r.get('where') else ''))
+        for a_, _r in dmform.facet(F, 'stamped'):
+            det.append(f"{_w}.{a_} is STAMPED: written `now`, and the save writes the moment of its journal heading")
         for a_, r in dmform.facet(F, 'default_from'):
             det.append(f"{_w}.{a_}, when the entry is silent, is read from {r.get('registry')}.{r.get('take')} "
                        f"(the row its `{r.get('keyed_by')}` names)")

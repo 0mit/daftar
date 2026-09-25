@@ -523,6 +523,145 @@ located_at:
   - { system: windows-filesystem, openness: here, at: 'laptop:C:\Users\sam\Documents\card-statement-2026-09.pdf', observed: now }
 ```
 
+## What a line held at each position: a series
+
+Sam's balcony has a rain gauge that logs, each hour, how much rain fell in the hour after the reading and how full
+its battery is. What varies along a line — a reading at each moment, a porosity at each depth down a core — is a
+**series**: an entry of `series` on the being that holds it. It says where its positions are, what each position
+holds, and then the rows, as one table.
+
+- **Where the positions are.** By a rule — a `grid`, a repetition with a `from`, row 0 at `from` and each next row at
+  the next occurrence — or listed, in a `span`, an extent from whose `from` each row writes its offset in the first
+  column (`at`; `from` and `to` when a row is a region). `unit` is what an offset counts and the resolution held: a
+  grid's stride is a whole number of it.
+- **Where a row sits.** `cells`: at its position (`point`, when silent), over a region (`bounds`), or at its position
+  and over the stretch back to the row before (`preceding`) or on to the next (`following`) — as here, an hour's rain.
+- **What each position holds** is `holds`, one channel per column: a measured value (`quantity` and its one `unit`), a
+  position (`system`), or a code of a published scheme (`scheme`). `stands_for` says what a cell is over its row's
+  place — a `point`, a `mean`, `sum`, `min` or `max` over its region, a `state` held until the next row, an `instant`.
+  `between: linear` reads a point on a straight line between two rows, only where the line and the channel are both
+  metered. `u` is the channel's standard uncertainty: a value read between rows is printed to its digits.
+- **The rows** are a table: a header naming each column once, then one line per row, one TAB between two cells. No
+  cell is ever empty: a value nobody read is a gap token — `-` nothing was read, `?` read and unreadable, `<` and `>`
+  beyond a limit, `_` nothing there, `#` withheld. A table longer than a hundred rows goes in files instead, the parts
+  `series/<bean>/<key>/<part>.tsv`, each added whole and never rewritten.
+
+<!-- example: beans/rain-gauge.md -->
+```markdown
+---
+bean: rain-gauge
+genos: host
+title: "rain-gauge — the rain gauge on Sam's balcony"
+status: active
+summary: "A small logging rain gauge on the balcony; it reads the rain of each hour, and its battery."
+nature: soma
+identity:
+  status: confirmed
+  anchors:
+    - { key: serial, value: "RG-0042", class: hardware, establishing: true }
+provenance: { src: observed, by: "sam", as_of: now }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+series:
+  september:
+    grid: { of: time, in: gregorian-civil, every: { count: 1, unit: hour }, from: "2026-09-14 06:00+02:00" }
+    unit: hour
+    cells: following
+    holds:
+      - { name: rain, quantity: length, unit: millimetre, stands_for: sum, u: { count: "0.2", unit: millimetre } }
+      - { name: battery, quantity: ratio, unit: percent, stands_for: point, between: linear }
+    rows: |
+      rain	battery
+      0	84
+      1.4	84
+      3.2	83
+      -	-
+      0.6	81
+---
+The balcony's rain gauge. Its fourth hour was not read: the logger was off while its battery was changed.
+```
+
+`python3 bin/dmseq.py show rain-gauge september` prints each row at its moment — `2026-09-14 06:00+02:00`, then
+each next hour — with the table's line it came from. `python3 bin/dmseq.py at rain-gauge september "2026-09-14
+07:30+02:00"` reads what each channel holds there: the battery on the line between its two readings, and the rain as
+what it is — the sum over the hour that began at 07:00, never a share of it. Nothing is read before the first row or
+after the last, and nothing read is stored. A cell someone sets aside — a reading they judge wrong — stays in the
+table, and `excluded` names the row, the channel, who judged it and why.
+
+## Where a case stands on a walk: a track
+
+Ali mends bicycles, and Sam brought her his. A repair goes through the same steps each time — handed over, looked at,
+mended, collected — and a **walk** says so once: the `steps` of a mapping. Each step may say who acts at it (`by`, a
+key of the case's `parties`), how long it usually takes (`usually`), and whether it is a way out reached from any step
+(`exit`), a pause the case comes back from (`resumes`), or an end nothing follows (`final`); `reasons` lists what a
+move into it may cite. A step holds nothing else: a key the walk does not declare is refused.
+
+<!-- example: mappings/walk-bike-repair.md -->
+```markdown
+---
+mapping: walk-bike-repair
+kind: procedure
+summary: "How a bicycle repair goes, each time: handed over, looked at, mended, collected."
+steps:
+  - { id: handed-over, do: "the owner brings the bicycle", by: owner, next: [ { to: looked-at } ] }
+  - { id: looked-at, do: "what is wrong is found", by: repairer, usually: { of: time, measure: { count: 2, unit: day } }, next: [ { to: mended } ] }
+  - { id: waiting-for-part, do: "a part is ordered, and the repair waits for it", resumes: true, reasons: [part-ordered] }
+  - { id: mended, do: "it is mended and ridden round the block", by: repairer, next: [ { to: collected } ] }
+  - { id: collected, do: "the owner takes it home", by: owner, final: true }
+  - { id: given-up, do: "the repair is abandoned", exit: true, reasons: [not-worth-it, owner-changed-mind] }
+---
+The steps of a bicycle repair.
+```
+
+Where one repair stands is a **track** on the case: `tracks` names the walk, and each **move** along it is an entry of
+`moves` — the step reached, who moved it, a `reason` from that step's list and `why` in words. Its moment is
+`at: now`: the save writes the moment of its journal entry in its place, read from the clock and never typed. A move
+follows a `next` of the step before it, or reaches a way out or a pause; after a pause the case returns to where it
+was; a move the walk does not offer is refused unless its `why` says why, and then it warns; nothing follows a final
+step.
+
+<!-- example: beans/bike-repair.md -->
+```markdown
+---
+bean: bike-repair
+genos: contract
+title: "bike-repair — Ali mends Sam's bicycle"
+status: active
+summary: "Ali repairs Sam's bicycle for the cost of the parts."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:bike-repair", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  owner: { who: { bean: sam } }
+  repairer: { who: { bean: ali } }
+over:
+  - { what: "Sam's bicycle" }
+words: { form: spoken }
+tracks:
+  repair: { walk: { mapping: walk-bike-repair } }
+moves:
+  - { track: repair, at: now, step: handed-over, by: sam }
+  - { track: repair, at: now, step: looked-at, by: ali, why: "the rear hub grinds" }
+  - { track: repair, at: now, step: waiting-for-part, by: ali, reason: part-ordered }
+---
+Ali mends Sam's bicycle; the parts are Sam's to pay for.
+```
+
+`python3 bin/dmseq.py track bike-repair` reads where it stands: at `waiting-for-part`, since the moment of that move,
+and how long ago. When the part comes, the next move returns to `looked-at`; after `mended`, who acts next is the
+`owner`, read as Sam from the case's `parties`. Where a case stands is read from its moves, and never written down: a
+stored stage is a second copy, and it drifts.
+
+**A checklist is a set, not a walk.** What a case asks for — the documents a form needs, the parts a publisher wants
+to see — is the `items` of a mapping of `kind: checklist`, each with an `id`, what it asks for (`do`), who provides it
+(`by`), and, of items any one of which will do, the same `one_of`. When an item is needed and what meets it are
+selections, named `{ selection: <bean>#<key> }`.
+
 ## Proposing to another garden
 
 Ali's garden is recorded here, and hers records Sam's (*Another person, and the garden she keeps*, above). Now the

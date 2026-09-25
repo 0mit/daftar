@@ -11,7 +11,7 @@ It is PURE: it reads a term's definition and returns data. It loads nothing and 
 THE FORM
     scope      'entry' | 'self'  — what the term's attributes describe (each entry, or the value itself)
     attrs      {name: {facet: rule, 'scope': …}}    facets: required, values, registry, aspect, type, system_from,
-               pattern, soft, extent, ref, pointer, bean_id, entries, keyed_by, one_of, meaning
+               pattern, soft, extent, ref, pointer, bean_id, entries, keyed_by, one_of, stamped, meaning
     order      {(scope, facet): [names]}   the law's attribute order, per facet
     cells      combinations an entry may not hold (error) or should not (warning)
     value      the rule on the term's OWN value: values, values_from, consistent_with, governs_anchor, pattern,
@@ -167,6 +167,8 @@ def attribute_form(term_def, sch):
             put('nested_at_most', name, [list(g) for g in rec['in']['at_most_one_of']])   # 24.0: and at most one of each group
         if isinstance(rec.get('default_from'), dict):
             put('default_from', name, dict(rec['default_from']))
+        if rec.get('stamped') is True:
+            put('stamped', name, True)          # read from the clock by the save, never typed (`schema_language.stamped`)
         if rec.get('meaning') is not None:
             put('meaning', name, rec['meaning'])
     for name in form['one_of']:

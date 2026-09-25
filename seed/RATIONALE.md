@@ -183,6 +183,14 @@ A READING IS DECLARED WHERE IT IS ABOUT (24.0). A selection is a key of a bean's
 `key_of: selections` — the one spelling the law already had for "a key of a term on a bean" — rather than by a new
 wrapper. It is read each time and never stored, so it cannot go stale.
 
+## schema_language.series
+
+ONE CONTROLLER FOR WHAT ONLY THE WHOLE ENTRY SAYS. Each attribute of a series is judged by the rule its domain already
+has — the recurrence, the extent, each channel's registry and type. What none of them can say alone — that the unit
+measures the line, that the stride is whole, that the header names the channels, that each cell is one its channel
+holds, that a monotone channel never goes back, that an exclusion names a row — is read by the one reader of a series,
+which the gate asks, as it asks the one reader of the layer map.
+
 ## crown
 
 == NATURES: the root axiom layer (added 2026-08-02, P3 / plan D1, human-ratified rule-change) ==
@@ -391,6 +399,17 @@ stamp came from belongs to the value, not to a position: a record taken in from 
 `garden` and keeps its stamp; the merge engine's own record says `merged`, because when a merge happened is git's to
 say. Neither is an escape a writer can type: this garden's own id exempts nothing, and `merged` passes only on the
 merge engine's record.
+
+## schema_language.stamped
+
+A VALUE THE CLOCK SAYS, NOT A WRITER (the release of 2026-09-25, F8, with a platform case's finding that a typed move's moment is invented). A move along a walk records the
+moment it was made, and a typed moment is exactly where invented days came from: a writer types the nearest time in
+view. The provenance record's `as_of` was the first such value, a day; a move's `at` is the second, a moment. Rather
+than a second rule for a second name, an attribute's record says `stamped: true`, and the one mechanism serves both
+shapes: the save writes `now` away — the day of its heading for a day, the heading's whole moment for a moment — and the
+gate holds a value a commit adds to the moment of a heading the same commit adds. Matched by value, as the day is, so a
+value moved or merged is never judged again. The day of `as_of` keeps its own statement (`provenance_record.as_of`)
+because it lives on every record, not on a term.
 
 ## natures
 
@@ -873,6 +892,16 @@ case, a plain binary its one-axis case (`confidentiality`) and a cube its three-
 figure "square" would fix a count the gate is required to derive: "when doing the squares make sure
 cubes don't bite" (the operator, 2026-08-02).
 
+## figures[sequence].holds
+
+A POSITION MAY HOLD WHAT WAS FOUND THERE (D47, "develop the sequence machinery to fit the need"). A perfusion chart, a
+moth's night, a dendrometer's record, a core's strata and a case's stages are one shape: a line, positions on it, and at
+each what was read. The operator ruled out a separate series form, so the sequence figure gains the capability beside
+the one it had — `extent: possible`, a region of the line — and nothing is restated: a series' positions are the
+recurrence's occurrences or an extent's offsets, both forms the law already owns. An opposition's positions are stances
+a being takes; there is nothing further at one to hold, so it says `holds: impossible`, and the reason is printed where
+a series is refused for lying on one.
+
 ## extent_form
 
 == EXTENT (11.2): the bounded region `figures` has declared POSSIBLE since 11.0, carried at last ==
@@ -924,6 +953,38 @@ now, with the way to write what was meant. The rule is a value type, because eve
 gate reads it from the node graph, where a scalar's style is known, and names the character rather than echo it. A
 tool that prints what a garden already holds spells such characters out, so a garden written before the rule cannot
 drive the terminal of the person reading the refusal.
+
+## value_types[moment]
+
+A MOMENT IS A JOURNAL HEADING'S POSITION, and nothing new. The heading has always been held to the minute, with its
+offset, in any declared calendar; a value the save stamps from the clock takes the same form, so it is the form the
+tool writes and the gate reads. Without the offset a wall-clock reading is ambiguous — the law's own `gregorian-civil`
+row says why — so a moment always carries one. A day its calendar lacks is no moment, as it is no date.
+
+## value_types[rows]
+
+ONE TABLE, WRITTEN BY ONE WRITER (sequence critic §5.1, F11). The three sequence designs all kept a short series inline
+as a tab-separated block, and none noticed that the merge re-emits a changed member through PyYAML, which will not
+write a tab in a block even when asked: a merged chart came back as one escaped line, the same value and a page nobody
+can read (measured, Y1). So the table has one reader and one writer, both in the parser, and the merge and the
+proposals write a table through it, byte for byte. Tab-separated rather than space-separated because a cell may hold a
+space; a file only, never inline, would put a five-row stratum table outside the bean it describes.
+
+NO CELL IS EVER EMPTY (settled row 4). An empty cell leaves a trailing tab on a row, and an editor that trims trailing
+whitespace changes the number of cells — measured in a design's own example, eleven of twelve rows. A value nobody read
+is a gap token, which also says why.
+
+A HUNDRED ROWS inline, then a warning: a bean stays legible on paper, and the pure-Python YAML reader a machine
+without libyaml falls back to reads a large block sixty-five times slower (Y2). The rows belong in the parts of a file
+then, and a warning says so without refusing a bean that passed.
+
+## gap_tokens
+
+A GAP IS STATED, WITH WHY. A blank and a zero both lie about a missing reading: one says nothing and the other says
+something false. The six tokens are the reasons a value is absent that the designs' cases met — nothing read, read and
+unreadable, beyond an instrument's limit (with the limit, or the channel's own), nothing there to read (a core not
+recovered, a ring never formed), and withheld from this copy, which a partial export of a held series needs. Nothing is
+absorbed at a merge: a gap against a value is a disagreement a person sees, never the value winning.
 
 ## journal
 
@@ -1777,6 +1838,46 @@ NOT a set: these are a SEQUENCE, and order carries the meaning — validating af
 different procedure from validating before. A set-union would reorder them into nonsense, so the
 whole list merges as one atom and two gardens with different steps conflict.
 
+## terms[steps].schema.attrs
+
+A STEP SAYS WHAT A CASE ON IT NEEDS, AND NOTHING ELSE (N11, F8; S2, major). A client-work case's walks needed who acts at a step,
+how long it usually takes, the ways out, a pause that comes back to where it was, an end that is final and one that is
+not (a client given up returns), and the reasons a move may cite; the machinery's tree needed what a step takes in and
+gives out, stated once on the step. The gate read only `id`, `do` and `next`, and every other key passed unexamined —
+a walk with `by`, `usually`, `exit` and `reasons` in shapes of a writer's own choosing passed with no comment. So the
+term declares its attributes, each step is judged as an entry, and a key it does not declare is refused: a garden whose
+steps carry another key stops passing, which is what makes this major. Prose steps stay legal: the term declares no
+shape. A pause and a way out are reached from any step, with no `next` naming them, because a case can be put on hold
+or withdrawn at any stage; a pause is no end.
+
+## schema_language.moves_along
+
+WHERE A CASE STANDS IS READ, NOT STORED (N10, F8; the client-work and platform cases). A stage written on a case is a
+second copy of its last move, and it drifts. A track is a series along time whose value at each move is a step of a
+named walk: the moves are the facts — the step reached, who moved it, a reason from the step's own list, why in words,
+and the moment, stamped. The gate holds one track's moves to its walk: a move follows a `next`, reaches a way out or a
+pause, returns from a pause to where it was, and nothing follows a final step; a move the walk does not offer passes
+only with its `why`, and warns, because the world does not always follow a procedure and the record must say so
+rather than refuse it. The moves merge by track, moment and step, so a step visited twice never collides with itself.
+
+## terms[tracks]
+
+A TRACK NAMES ITS WALK ONCE; its moves name the track. The moves are a list of their own term, not nested in the track,
+so two gardens' moves of one case unite by their key at a merge instead of one track entry conflicting with another.
+
+## terms[moves]
+
+A MOVE IS KEPT, NEVER REWRITTEN. Each is who moved the case, to which step, when and why; where the case went next is the
+next move, so the list is the case's history and its present is read from its end. The moment is stamped by the save.
+
+## terms[items]
+
+A CHECKLIST IS A SET, NOT A WALK (the client-work case). A sequence is positions related by neighbourhood; a checklist's
+items have none, so they are a plain list, and items of which any one will do share a `one_of` name. What makes an
+item needed, and what meets it, is a selection over the beans of the case — so the law names no garden's own term (a
+document's kind) inside an item. The selection's own form is declared with the reckoner; an item names one by the bean
+that declares it and its key.
+
 ## terms[located_at].meaning
 
 THE BEING'S LOCATIONS. The meaningful object is the being — a codebase — and it may be found as a
@@ -1786,12 +1887,53 @@ this estate a session: a position that is NOT KNOWN is recorded as unknown rathe
 because an omitted location reads as "there is none" and that is how an exhaustive search over the
 wrong domain produced output identical to a real one.
 
+## terms[lines]
+
+A BEING LENDS A LINE (sequence critic S4). A depth down a core could not be written: in coordinates it is refused, and
+in a local frame it has no length. The being says once where its line starts and which way it runs, and a position on
+it is a distance in metres, in the `along` system.
+
+## anchor_systems[along]
+
+METRES, WRITTEN IN THE POSITION (settled row 14). A counted position within a being already has a system (`local-frame`,
+a ring counted from the pith); a distance along one did not. The form names the being and its line and carries metres
+always, so it describes itself: a unit kept on the bean would silently re-read every position the day it changed. The
+`+` is required, since `<being>/<line>` alone is a network segment's form.
+
 ## terms[timing].meaning
 
 WHEN, AT A DECLARED RESOLUTION. The open key is what makes this serve sessions without a session
 schema: `start`, `sync`, `stop` are keys, not law, and a run with four sync points needs no
 rule-change to record them. The closed part is each entry's shape — the same open-key/closed-figure
 pattern `analysis_cache` proved.
+
+## terms[series]
+
+THE WORLD ALONG A LINE (D47; sequence critic §6, S0–S5). One entry is one recording: its positions by rule or listed,
+the unit an offset counts, where a row sits, the channels and the rows. Everything else a reader needs is read and
+never stored — a value between rows, a window's mean, a trend — and printed with the rows it came from.
+
+NOTHING IS COPIED FROM ANOTHER FORM (settled row 1). A grid is a recurrence whose occurrences hold rows, and a listed
+series is an extent whose offsets do; the stride stays a whole number of the unit held (settled row 5), because a
+decimal stride is a unit not yet chosen.
+
+A CHANNEL HOLDS ONE KIND OF THING: a measured value in one unit, a position in a system (temperature is a position, D8),
+or a code of a scheme. What a cell stands for over its row's place is said, so a mean is never read at a point and a
+point never summed over a region. Between two rows only a point on a metered line and a metered channel is read, on a
+straight line (settled row 6): anything else would invent a measure the law denies. An uncertainty is the channel's,
+and a value read with it is printed to its digits (GUM 7.2.6, settled row 16).
+
+A JUDGMENT NAMES ITS JUDGE (settled row 7). A cell set aside is kept and shown, with who set it aside and why, and read
+by nothing — never a flag on the row.
+
+WHERE THE ROWS SIT (F12). A short table stays in the bean; a long one is the parts `series/<bean>/<key>/<part>.tsv`, in
+the estate, because a garden's own readings are its facts and not a capture of someone else's. A part is written once
+and never rewritten: a new download is a new part, so two gardens' parts meet as a set of files with no merge driver,
+and git's own object id pins each one, so no hash is stored. Git neither turns a part's line ends nor merges it as
+text.
+
+KEPT OFF GIT (F13, F14). A special series is sealed whole in the held layer, and the entry says nothing but where; it
+waits for that layer, so the position is declared and vacant.
 
 ## terms[roots].meaning
 
@@ -2152,6 +2294,12 @@ A part of a being — a link, a volume, a capture — is named by its key, not b
 joins no graph. Until 18.0 such a name was `untyped`, so a tunnel could ride a link that did not exist. The gate
 resolves it and draws no edge.
 
+## schema_language.attr_domains.bean_id
+
+A KEY ON A BEAN, NAMED WHERE IT IS DECLARED. A checklist item names the selection that makes it needed as the bean that
+declares it and its key, `<bean>#<key>`. The bean is a bean this garden holds, so the gate resolves it; the key belongs
+to whatever the bean declares it in, and is resolved by what reads it.
+
 ## quantities
 
 Area and volume are not new figures: they are an extent on a sequence with two or three lines, and the unit carries the
@@ -2491,6 +2639,11 @@ file into or out of those carries it too, or a file could leave the law in the c
 
 NO HARNESS IS NAMED. A path that one agent's harness reads from is a privilege written into universal law; the
 mirror of the door for agents that a release ships is left out of the map, counted where the map is shown.
+
+## layers[estate].holds
+
+A SERIES' PARTS ARE ESTATE (F12). They are a garden's own facts, in rows too many for a bean, and they belong to the bean
+whose series they are: a staged part is journalled as a change to that bean.
 
 ## terms[standing]
 

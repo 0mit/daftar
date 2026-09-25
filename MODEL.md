@@ -165,6 +165,18 @@ The rules are data, not code.
   totally, partially or not ordered, whether a walk can return, and where the domain ends. `time`, `place`
   and `walk` are sequences; "must stay acyclic" is the `walk` aspect's restriction, and a duration is a
   bounded region of an ordered sequence.
+- **A sequence's positions may hold what was found there: a series.** An entry of `series` is one recording along a
+  line — its positions by a rule (a recurrence: row n at occurrence n) or listed (an extent, each row writing its
+  offset from its `from`), the unit an offset counts, the channels it holds (a measured value, a position, or a code),
+  and one table of rows: inline in the bean, or the parts `series/<bean>/<key>/<part>.tsv` in the estate, each added
+  whole and never rewritten. A cell that holds no value says why, with a gap token; a cell set aside names its judge.
+  What is read from a series — a value between two rows, where a moment falls — is read (`bin/dmseq.py`), never
+  stored. A series is the world along a line, where it held; a `beanger` is one field's own log, when it was recorded.
+- **Where a case stands: a walk and a track.** A walk is the `steps` of a mapping, each saying who acts at it, how long
+  it usually takes, and whether it is a way out, a pause, or a final end; a step holds only what the term declares. A
+  track (`tracks`) names a walk, and each move along it is an entry of `moves`: the step reached, who moved it, a reason
+  from that step's list, why, and its moment, stamped by the save. The gate holds the moves to the walk; where the
+  case stands, since when and who acts next are read. What a case asks for is a checklist's `items`: a set, not a walk.
 
 ## Knowledge: universal anchors
 The `knowledge` profile (vocabulary 9.1) lets a garden say what things ARE in the world's shared terms, with
@@ -238,6 +250,9 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
     never-invents);
   - a journal line a commit adds that holds a character some reader takes for a line break, besides the line end
     itself: one line of the journal is one line to every reader.
+  - a value the law marks `stamped` that a commit adds and that is not the moment of a journal heading the same commit
+    adds: a moment read from the clock is written `now`, and the save writes it;
+  - a series' part a commit already holds, changed: a part is written once, and what is new is a part of its own.
 - The gate reads the law its garden pins, at the one path `seed/std-vocab.md`. A gate that cannot load it, or
   that loads another version than the pin, refuses: it never falls back to another copy.
 - These checks confirm that the words are there, not that they are true; honesty is still the writer's (manifesto:

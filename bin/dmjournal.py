@@ -184,6 +184,37 @@ NOW = re.compile(r'(?<![\w-])((?:as_of|observed):[ \t]*)(["\']?)now\2(?=[ \t]*(?
 STAMPED = ('beans/', 'mappings/')
 
 
+def stamped_names(root=None):
+    """The names of the attributes the law marks `stamped` (`schema_language.stamped`), at any depth of any term — the
+    standard's, its profiles', and this garden's own: each is written `now`, and the save writes in its place the moment
+    of the heading it writes. Read from the law, so a tool names none of them."""
+    root = root or ROOT
+    out = set()
+
+    def walk(attrs):
+        for name, rec in (attrs.items() if isinstance(attrs, dict) else []):
+            if not isinstance(rec, dict):
+                continue
+            if rec.get('stamped') is True:
+                out.add(str(name))
+            d = rec.get('in')
+            if isinstance(d, dict) and isinstance(d.get('entries'), dict):
+                walk(d['entries'])
+    for path, key in ((os.path.join(root, 'seed', 'std-vocab.md'), 'terms'), (os.path.join(root, 'VOCAB.md'), 'local_terms')):
+        try:
+            fm = dmparse.loads(dmparse.read(path)[0] or '') if os.path.exists(path) else None
+        except Exception:
+            continue
+        if not isinstance(fm, dict):
+            continue
+        terms = list(fm.get(key) or []) + [t for p in ((fm.get('profiles') or {}).values() if isinstance(fm.get('profiles'), dict)
+                                                       else []) if isinstance(p, dict) for t in (p.get('terms') or [])]
+        for t in terms:
+            if isinstance(t, dict) and isinstance(t.get('schema'), dict):
+                walk(t['schema'].get('attrs'))
+    return out - {'as_of', 'observed'}
+
+
 def stamp_now(h, text=None, root=None):
     """Write the day of heading `h` in place of every `now` in a stamp position of the front matter of each document
     under beans/ or mappings/ that the working tree changes — and, given the entry's `text`, that the entry names (the
@@ -192,6 +223,12 @@ def stamp_now(h, text=None, root=None):
     yet when this runs, so nothing is half done, and the gate names what is still `now`."""
     root = root or ROOT
     day = h[3:13]
+    # A MOMENT READ FROM THE CLOCK (`schema_language.stamped`): an attribute the law marks stamped is written `now`, and
+    # gets the heading's own moment — day, clock and offset — quoted, so no reader takes it for a number or a date
+    when = h[3:].split(' · ', 1)[0].strip()
+    names = sorted(stamped_names(root))
+    moment = re.compile(r'(?<![\w-])((?:%s):[ \t]*)(["\']?)now\2(?=[ \t]*(?:[,}\]#\r\n]|$))' % '|'.join(map(re.escape, names)),
+                        re.M) if names else None
     out = subprocess.run(['git', '-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'], capture_output=True)
     done = []
     for rec in out.stdout.decode('utf-8', 'replace').split('\0'):
@@ -204,13 +241,16 @@ def stamp_now(h, text=None, root=None):
             continue
         try:
             fm, _ = dmparse.split_front_matter(open(f, encoding='utf-8').read())
-            if fm is None or not NOW.search(fm):
+            if fm is None or not (NOW.search(fm) or (moment and moment.search(fm))):
                 continue
 
             def fix(t):
                 front, _b = dmparse.split_front_matter(t)
                 at = t.index(front)
-                return t[:at] + NOW.sub(lambda m: m.group(1) + day, front) + t[at + len(front):]
+                new = NOW.sub(lambda m: m.group(1) + day, front)
+                if moment:
+                    new = moment.sub(lambda m: m.group(1) + '"' + when + '"', new)
+                return t[:at] + new + t[at + len(front):]
             dmsafe.edit(f, fix)
             done.append(p)
         except Exception as e:                  # never a traceback after the heading is registered

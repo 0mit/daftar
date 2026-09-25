@@ -45,6 +45,7 @@ import dmparse
 import dmform
 import dmsafe          # the staged-state checks below run dmsafe's OWN comparison, not a copy of it
 import dmpass          # where each file sits: the law's layer map, read by its one reader and by no copy of it here
+import dmseq           # a series and a track, read by their one reader: the gate asks it, and keeps no copy
 try:
     import yaml
 except ImportError:
@@ -1074,6 +1075,16 @@ def check_value_type(where, attr, val, typ):
             errors.append(f"{where}.{attr} '{val}' {t.get('refusal') or 'is in no system of dimension ' + str(t.get('dimension'))}")
         else:
             check_day_exists(f"{where}.{attr}", val, _held[0])
+    elif t.get('separator') is not None:
+        # A TABLE OF ROWS (`value_types[rows]`): its form is read by the one reader of a table (bin/dmparse.py). What each
+        # cell means is its column's, judged where the columns are declared (a series' channels).
+        _bad = dmparse.table_problems(val)
+        if _bad:
+            errors.append(f"{where}.{attr} {t.get('refusal') or 'is not a table'} — {_bad[0]}" + _rule(f'value_types[{typ}]', 'value_types'))
+        elif isinstance(t.get('inline_most'), int) and str(val).count('\n') - 1 > t['inline_most']:
+            warns.append(f"{where}.{attr} holds {str(val).count(chr(10)) - 1} rows, more than {t['inline_most']}: a table "
+                         f"that long is kept in the parts of a file, where a bean stays legible on paper — the series' "
+                         f"`rows` moved to {dmseq.SERIES_DIR}/<bean>/<key>/<part>.tsv" + _rule(f'value_types[{typ}]', 'value_types'))
     elif not law_match(t['pattern'], val):
         errors.append(f"{where}.{attr}" + ("" if typ != 'kebab' else f" '{val}'") + f" {t.get('refusal') or 'does not match its type ' + typ}")
     elif t.get('system'):
@@ -1271,6 +1282,8 @@ def check_uncertainty(where, *, u=None, accuracy=None, quantity=None):
             if _v.get('kind') not in _kinds:
                 errors.append(f"{where}.accuracy.kind {_v.get('kind')!r} is not a row of `accuracy_kinds` {_kinds}")
 SYSTEMS = _Named({s['system']: s for s in (registry('anchor_systems') or []) if isinstance(s, dict) and s.get('system')})
+# THE LAW A SERIES IS READ BY: the gate's own tables, handed to the one reader of a series, so it reads no second copy
+SEQ_LAW = dmseq.Law(UNITS, QUANTITIES, SYSTEMS, ASPECTS, FIGURES, registry)
 
 
 def check_extent(where, node):
@@ -2378,8 +2391,15 @@ def ectl_entry_values(e):
 
 
 def ectl_entry_types(e):
+    _stamped = {a for a, _ in _facet(e.form, 'stamped', e.scope)}
     for attr, typ in _facet(e.form, 'type', e.scope):
         if e.entry.get(attr) is None:
+            continue
+        if attr in _stamped and str(e.entry[attr]).strip() == 'now':
+            # READ FROM THE CLOCK BY THE SAVE (`schema_language.stamped`): `now` is the word the save writes the moment of
+            # its journal heading in place of — never a value to judge, and never one a commit may keep
+            errors.append(f"{e.base}: {e.ref}.{attr} is `now` — the word the save writes the moment of its entry in place "
+                          f"of: save with {_save_command('- action: <what changed>')}" + _rule(f"{_law_path(e.term)}.attrs.{attr}", e.term))
             continue
         check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ)
 
@@ -2894,6 +2914,14 @@ def ectl_bean_id(e):
         v = e.entry.get(attr)
         if v is None:
             continue
+        if isinstance(rule, dict) and rule.get('keyed') is True:
+            # `<bean id>#<key>` (`attr_domains.bean_id`): the bean is resolved here, the key by what reads it
+            _b, _sep, _k = str(v).partition('#')
+            if not _sep or not KEBAB or not KEBAB.match(_k):
+                errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is `<bean id>#<key>`: a bean, `#`, and a kebab-case key on "
+                              f"it" + _rule(f"{_law_path(e.term)}.attrs.{attr}.in", e.term))
+                continue
+            v = _b
         if not isinstance(v, str) or v not in bean_ids:
             errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not the id of a bean this garden holds — write "
                           f"beans/{v}.md first, or in the same commit")
@@ -3293,6 +3321,15 @@ def ctl_on_sequence(c):
                       f"order and half by `next` has no single order"); return None
     if not _steps:
         return None                                   # prose: the list order IS the sequence, as before
+    # A STEP HOLDS ONLY WHAT THE TERM DECLARES (S2). Each step entry is judged as an entry, by the term's `attrs`: a key
+    # they do not declare is refused, and each declared one is held to its domain. A term that declares no attributes
+    # keeps its steps to `id`, `do` and `next`, read below.
+    if isinstance(c.sch.get('attrs'), dict):
+        _ssch = _NESTED.setdefault((c.term, 'on_sequence'), {'shape': 'list_of_entries', 'attrs': c.sch['attrs']})
+        for i, st in enumerate(_steps):
+            check_entry(c.base, c.term, str(st.get('id') if isinstance(st.get('id'), str) else i), st, _ssch)
+        for _sid, _why in dmseq.walk_problems(_steps, SYSTEMS):
+            errors.append(f"{where}.{_sid}: {_why}" + _rule(f"{c.term}.schema.attrs", c.term))
     ids, nexts = [], {}
     for i, st in enumerate(_steps):
         sid = st.get('id')
@@ -3300,11 +3337,14 @@ def ctl_on_sequence(c):
             errors.append(f"{where}[{i}] needs a kebab-case `id`"); continue
         if sid in nexts:
             errors.append(f"{where}: two steps are '{sid}' — a step is named once"); continue
-        if not isinstance(st.get('do'), str) or not st['do'].strip():
+        _judged = isinstance(c.sch.get('attrs'), dict)        # the entry rules above said it already, by name
+        if not _judged and (not isinstance(st.get('do'), str) or not st['do'].strip()):
             errors.append(f"{where}.{sid} needs `do`: what the step does")
         _n = st.get('next') or []
         if not isinstance(_n, list) or not all(isinstance(x, dict) and x.get('to') for x in _n):
-            errors.append(f"{where}.{sid}.next must be a list of {{to, when?}}"); _n = []
+            if not _judged:
+                errors.append(f"{where}.{sid}.next must be a list of {{to, when?}}")
+            _n = [x for x in (_n if isinstance(_n, list) else []) if isinstance(x, dict) and isinstance(x.get('to'), str)]
         if len(_n) > 1:
             for x in _n:
                 if not str(x.get('when') or '').strip():
@@ -3317,7 +3357,10 @@ def ctl_on_sequence(c):
                 errors.append(f"{where}.{sid}: next '{t}' names no step of this routine (a branch to nowhere)")
     if not ids:
         return None
-    seen, todo = set(), [ids[0]]
+    # A WAY OUT (`exit`) AND A PAUSE (`resumes`) ARE REACHED FROM ANY STEP, with no `next` naming them: each is walked
+    # from as if it were reached, and a pause is no end.
+    _anywhere = [st['id'] for st in _steps if dmseq.reached_without_next(st) and st.get('id') in nexts]
+    seen, todo = set(), [ids[0]] + _anywhere
     while todo:
         n = todo.pop()
         if n in seen or n not in nexts:
@@ -3326,10 +3369,69 @@ def ctl_on_sequence(c):
     for sid in ids:
         if sid not in seen:
             errors.append(f"{where}.{sid}: no step reaches it from '{ids[0]}', where the routine starts")
-    if _a.get('ends') in ('bounded', 'open-start') and not any(not nexts[s] for s in ids):
-        errors.append(f"{where}: no step ends the routine — give at least one step no `next`")
+    _ends = set(dmseq.walk_ends(_steps))
+    if _a.get('ends') in ('bounded', 'open-start') and not any(not nexts[s] and s in _ends for s in ids):
+        errors.append(f"{where}: no step ends the routine — give at least one step no `next`" +
+                      (" (a pause is returned from, and ends nothing)" if any(not nexts[s] for s in ids) else ''))
     if _a.get('acyclic') is True and _cycles({k: v for k, v in nexts.items()}):
         errors.append(f"{where}: loops, and '{_asp}' declares acyclic")
+    return None
+
+
+def _series_parts(bean, key):
+    """{part name: text} of a series' parts in this tree — the working tree by hand, the index's copy under --staged."""
+    return dmseq.parts_of(ROOT, str(bean), str(key))
+
+
+def ctl_series(c):
+    """`series: true` — each ENTRY is a SERIES (`schema_language.series`): its line, its channels and every row, judged by
+    the one reader of a series (bin/dmseq.py). The entry's own attributes — the recurrence, the extent, each channel's
+    domains — were judged as an entry already; this judges what only the whole entry can say."""
+    if c.sch.get('series') is not True or not isinstance(c.node, dict):
+        return None
+    for key, entry in c.node.items():
+        if not isinstance(entry, dict) or _captured(c.fm, f"{c.term}.{key}", entry) or _is_conflict(entry):
+            continue
+        for level, _w, what in dmseq.check_series(SEQ_LAW, c.base, key, entry, _series_parts(c.base, key), form=False):
+            (errors if level == 'error' else warns).append(f"{c.base}: {c.term}[{key}]{_w} — {what}"
+                                                           + (_rule(f"{c.term}.schema.series", c.term) if level == 'error' else ''))
+    return None
+
+
+def ctl_moves_along(c):
+    """`moves_along: <attr>` — each entry is a MOVE along the track its <attr> names (`schema_language.moves_along`).
+    The moves of one track, in the order written, are held to the steps of its walk by the one reader of a track."""
+    _attr = c.sch.get('moves_along')
+    if not _attr or not isinstance(c.node, list):
+        return None
+    _tterm = dict(_facet(form_of(c.term), 'key_of', 'entry')).get(_attr)
+    if not _tterm:
+        errors.append(f"VOCAB {c.term}: moves_along '{_attr}' names no attribute `in: {{ key_of: <tracks term> }}`")
+        return None
+    groups = {}
+    for i, mv in enumerate(c.node):
+        if isinstance(mv, dict) and isinstance(mv.get(_attr), str) and not _is_conflict(mv):
+            groups.setdefault(mv[_attr], []).append((i, mv))
+    for tk, moves in sorted(groups.items()):
+        owner, _, key = tk.rpartition(':')
+        tr = ((ALL_FM.get(owner or c.base) or {}).get(_tterm) or {})
+        tr = tr.get(key) if isinstance(tr, dict) else None
+        ref = tr.get('walk') if isinstance(tr, dict) else None
+        if not isinstance(ref, dict):
+            continue                                  # the track's own entry, or the key, is refused by name elsewhere
+        wid = ref.get('mapping') or ref.get('bean')
+        wdoc = docs.get(('mapping' not in ref, wid)) if isinstance(wid, str) else None
+        if wdoc is None:
+            continue                                  # a walk that is not here is a dangling ref, refused as one
+        _walks = [t for t, sch in SCHEMAS.items() if sch.get('on_sequence') and isinstance(wdoc[0].get(t), list)]
+        steps = [st for st in (wdoc[0].get(_walks[0]) if _walks else []) if isinstance(st, dict)]
+        if not steps:
+            errors.append(f"{c.base}: {c.term} along '{tk}' — its walk {wid} holds no step entries: a track moves along "
+                          f"steps with ids, `{{ id, do, next }}`" + _rule(f"{c.term}.schema.moves_along", c.term))
+            continue
+        for i, level, what in dmseq.check_moves(moves, steps, wid):
+            (errors if level == 'error' else warns).append(f"{c.base}: {c.term}[{i}] {what}"
+                                                           + (_rule(f"{c.term}.schema.moves_along", c.term) if level == 'error' else ''))
     return None
 
 
@@ -3365,6 +3467,8 @@ CONTROLLERS = (
     ('entries', ctl_entries),
     ('keyed_by', ctl_keyed_by),
     ('on_sequence', ctl_on_sequence),
+    ('series', ctl_series),
+    ('moves_along', ctl_moves_along),
 )
 
 
@@ -3376,6 +3480,35 @@ def check_terms():
             for _key, _controller in CONTROLLERS:
                 if _controller(cell) is STOP:
                     break
+
+
+# ---- A SERIES' PARTS: every file under series/ is a part of a series a bean holds ----------------------------------
+# `series/<bean>/<key>/<part>.tsv` (`schema_language.series`): a table of rows kept beside the bean, in the estate. A file
+# there that no bean's series claims is a table nothing reads — refused by name, never passed over. The part itself is
+# read with its series (`ctl_series`), and a commit that rewrites one is refused where commits are judged.
+def check_series_parts():
+    _base = os.path.join(ROOT, dmseq.SERIES_DIR)
+    if not os.path.isdir(_base):
+        return
+    _terms = [t for t, sch in SCHEMAS.items() if sch.get('series') is True]
+    for _dir, _subs, _files in os.walk(_base):
+        for _f in sorted(_files):
+            _rel = os.path.relpath(os.path.join(_dir, _f), ROOT).replace(os.sep, '/')
+            _seg = _rel.split('/')
+            if len(_seg) != 4 or not _f.endswith('.tsv'):
+                errors.append(f"{_rel}: a series' part is `{dmseq.SERIES_DIR}/<bean>/<key>/<part>.tsv` — this file is "
+                              f"no part of a series, and nothing reads it" + _rule('schema_language.series'))
+                continue
+            _b, _k = _seg[1], _seg[2]
+            _fm = ALL_FM.get(_b) if (True, _b) in docs else None
+            _e = next((_fm[t][_k] for t in _terms if isinstance((_fm or {}).get(t), dict) and _k in _fm[t]), None)
+            if _fm is None or _e is None:
+                errors.append(f"{_rel}: a part of the series '{_k}' of the bean '{_b}', which "
+                              + ("this garden does not hold" if _fm is None else "holds no series by that name")
+                              + " — a part is read with its series, and this one with none" + _rule('schema_language.series'))
+            elif isinstance(_e, dict) and 'held' in _e:
+                errors.append(f"{_rel}: a part of '{_b}''s series '{_k}', which is kept off git (`held`): a held series' "
+                              f"rows are kept with it, never in git" + _rule('schema_language.series'))
 
 
 # ---- WHERE EACH FILE SITS (std-vocab 23.1, `layers`) ---------------------------------------------------------------
@@ -3742,6 +3875,13 @@ def _occupied_positions():
                     if isinstance(_fnode, dict):
                         _occupy(f"{term}.entry_one_of", [f for f in _forms if f in _fnode])
             for _lbl, entry in entries_of(sch.get('shape'), node):
+                # A ROW OF A REGISTRY AN ENTRY NESTED IN AN ENTRY NAMES IS TAKEN TOO: a series' channel counted in a unit
+                # the garden added, or positioned in a system it added, uses that row as surely as a top-level attribute
+                # does — and so does each side of an entry a merge left as a captured disagreement.
+                for _e in (entry['conflict'] if _is_conflict(entry) else [entry]):
+                    if isinstance(_e, dict):
+                        for _src, _v in _nested_registry_rows(_form, _e):
+                            _occupy(_src, [_v])
                 if isinstance(entry, dict):
                     for attr, _vals in _facet(_form, 'values', 'entry'):
                         if entry.get(attr) is not None:
@@ -3760,6 +3900,24 @@ def _occupied_positions():
                         if entry.get(_aattr) is not None:
                             _occupy(f"aspect:{_asp['aspect']}", [entry[_aattr]])
     return occupied_pos
+
+
+def _nested_registry_rows(form, entry, depth=0):
+    """[(`registry:<name>`, value)] for every registry row an entry nested in `entry` names, at any depth."""
+    out = []
+    if depth > 8:
+        return out
+    for attr, attrs in _facet(form, 'entries', form['scope']):
+        v = entry.get(attr)
+        for item in (v if isinstance(v, list) else [v] if isinstance(v, dict) else []):
+            if not isinstance(item, dict):
+                continue
+            _nf = dmform.attribute_form(None, {'shape': 'list_of_entries', 'attrs': attrs})
+            for a, rule in _facet(_nf, 'registry', 'entry'):
+                if rule.get('registry') and rule.get('take') and item.get(a) is not None and not isinstance(item[a], (dict, list)):
+                    out.append((f"registry:{rule['registry']}", item[a]))
+            out += _nested_registry_rows(_nf, item, depth + 1)
+    return out
 
 
 def _vacancy_index():
@@ -4045,6 +4203,33 @@ def _stamps_of(fm, own=None, path=()):
     return out
 
 
+def _stamped_values(fm):
+    """[(where, value)] of every value a document holds at an attribute the law marks `stamped` — read from the clock
+    by the save — in an entry of a term, or in an entry nested in one, wherever the term's attributes put it."""
+    out = []
+
+    def walk(where, node, sch, name):
+        _form = dmform.attribute_form(None, sch)
+        _st = [a for a, _ in _facet(_form, 'stamped', _form['scope'])]
+        _nest = _facet(_form, 'entries', _form['scope'])
+        if not _st and not _nest:
+            return
+        pairs = entries_of(sch.get('shape'), node) if _form['scope'] == 'entry' else [(None, node)]
+        for label, e in pairs:
+            if not isinstance(e, dict):
+                continue
+            here = f"{where}[{label}]" if label is not None else where
+            out.extend((f"{here}.{a}", e[a]) for a in _st if e.get(a) is not None)
+            for a, attrs in _nest:
+                v = e.get(a)
+                if isinstance(v, (list, dict)):
+                    walk(f"{here}.{a}", v if isinstance(v, list) else [v], {'shape': 'list_of_entries', 'attrs': attrs}, a)
+    for term, sch in SCHEMAS.items():
+        if fm.get(term) is not None:
+            walk(term, fm[term], sch, term)
+    return out
+
+
 def _nows_of(fm, path=()):
     """[where] of every `as_of` or `observed` still holding the word `now`, anywhere in a front matter."""
     out = []
@@ -4233,7 +4418,7 @@ def check_staged_state():
 
     if staged:
         # (K) provenance duty — a state-change must be logged
-        sc = [p for p in staged if p.startswith(DOCUMENTISH)]
+        sc = [p for p in staged if p.startswith(DOCUMENTISH) or p.startswith(dmseq.SERIES_DIR + '/')]
         if sc and 'log/journal.md' not in staged:
             errors.append(f"state-change staged ({', '.join(sc[:3])}…) but log/journal.md not updated — provenance duty. "
                           f"Append an entry naming what changed and why. Its heading is read from the clock by the tool, "
@@ -4253,6 +4438,17 @@ def check_staged_state():
             errors.append(f"RULE-CHANGE staged ({', '.join(rc)}) but log/journal.md not updated — a change "
                           f"to the vocabulary or the law is human-ratified and must be logged distinctly, "
                           f"more than an ordinary state-change, not less")
+
+        # A SERIES' PART IS WRITTEN ONCE (`schema_language.series`). A download is a new part and never a rewritten one,
+        # so two gardens' parts meet as a set of files; a part a commit already holds, changed, is refused. Read from the
+        # staged tree alone: no hash is stored for it, since git's own object id already pins what a commit holds.
+        _ns, _ = _git('diff', '--cached', '--name-status', '--no-renames')
+        for _l in (_ns or '').split('\n'):
+            _st, _, _pp = _l.partition('\t')
+            if _st[:1] in ('M', 'T') and _pp.startswith(dmseq.SERIES_DIR + '/'):
+                errors.append(f"{_pp}: a series' part a commit already holds is changed — a part is written once and never "
+                              f"rewritten: restore it (`git checkout HEAD -- {_pp}`), and add what is new as a part of its "
+                              f"own, or set a cell aside with `excluded`" + _rule('schema_language.series'))
 
         # NO SECRET IN THE LEDGER (MODEL.md, Ground rule 7). Most secrets have no form a gate can know, and those are the
         # writer's to keep out; a private key has one, so the gate refuses it wherever a commit stages it — in a bean, a
@@ -4295,7 +4491,9 @@ def check_staged_state():
                 errors.append(f"RULE-CHANGE staged ({', '.join(rc)}) but the staged journal entry never says RULE-CHANGE — "
                               f"a change to the law is logged DISTINCTLY. Put the word RULE-CHANGE in the entry.")
             for _p in sc:
-                _id = os.path.basename(_p)[:-3] if _p.endswith('.md') else _p
+                # a series' part is a change to the bean whose series it is: `series/<bean>/<key>/<part>.tsv`
+                _id = (_p.split('/')[1] if _p.startswith(dmseq.SERIES_DIR + '/') and _p.count('/') >= 2 else
+                       os.path.basename(_p)[:-3] if _p.endswith('.md') else _p)
                 if not re.search(r'(?<![\w-])' + re.escape(_id) + r'(?![\w-])', jdiff):
                     errors.append(f"{_p}: staged, but the staged journal entry never names it — write '{_id}' "
                                   f"(or [[{_id}]]) in the entry, so the record says WHICH bean changed; an entry that "
@@ -4333,6 +4531,34 @@ def check_staged_state():
             # bean. So a record this commit ADDS must carry the day of a heading it adds. A record is matched by what it
             # is — (src, by, as_of) — so one moved (into a conflict, out of it, to a renamed bean) is never judged again;
             # one made in another garden keeps its garden's stamp; the merge tool's own record says `merged`.
+            # A VALUE READ FROM THE CLOCK (`schema_language.stamped`): each one a commit adds is the moment of a journal
+            # heading the same commit adds — the save wrote it there in place of `now`. Matched by value, so a value moved
+            # is not a value added.
+            _whens = {_h[3:].split(' · ', 1)[0].strip() for _h in _added if _h.startswith('## ')}
+            for _p in sc:
+                if not _p.endswith('.md'):
+                    continue
+                try:
+                    _now_fm = dmparse.loads(dmparse.split_front_matter(_staged_text(_p) or '')[0] or '') or {}
+                    _was = _head_text(_p)
+                    _was_fm = (dmparse.loads(dmparse.split_front_matter(_was)[0] or '') or {}) if _was else {}
+                except Exception:
+                    continue
+                if not isinstance(_now_fm, dict) or not isinstance(_was_fm, dict):
+                    continue
+                _before = collections.Counter(str(v) for _w, v in _stamped_values(_was_fm))
+                for _w, _v in _stamped_values(_now_fm):
+                    if _before[str(_v)]:
+                        _before[str(_v)] -= 1
+                        continue
+                    if str(_v).strip() == 'now':
+                        continue                          # refused where the entry is judged, with the save that stamps it
+                    if str(_v).strip() not in _whens:
+                        errors.append(f"{_p}: {_w} is {_v}, and it is read from the clock, never typed — it is the moment "
+                                      f"of this commit's journal entry"
+                                      + (f" ({', '.join(sorted(_whens))})" if _whens else '')
+                                      + f". Write `now` and save with {_save_command('- action: <what changed>')}: the save "
+                                        f"writes the moment in its place" + _rule('schema_language.stamped'))
             if PROV.get('as_of') == 'stamped':
                 _own_id = own_garden_id()
                 _held = set(l.rstrip() for l in (_head_text('log/journal.md') or '').split('\n') if l.startswith('## '))
@@ -4747,6 +4973,8 @@ PLIES = (
      "`LAWVIEW` — the law as every part of 24.0 receives it, once ALL_FM is built"),
     (check_terms,
      "the interpreter: every schema rule, per document"),
+    (check_series_parts,
+     "every file under series/ is a part of a series a bean holds — needs `docs` and `ALL_FM`"),
     (check_layers,
      "the law's layer map, and each garden's `standing` against it — needs `docs`, whose entries the interpreter "
      "judged; builds `LAYER_MAP`"),
