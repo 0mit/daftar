@@ -314,7 +314,14 @@ MOVES = ['{ track: lark, at: now, step: submitted, by: rhea, why: "sent with the
          '{ track: lark, at: now, step: on-hold, by: rhea, reason: author-revising }',
          '{ track: lark, at: now, step: submitted, by: rhea, why: "the revised chapters went back" }',
          '{ track: lark, at: now, step: read, by: lark-press }']
-_res = [move(m) for m in MOVES]
+_res = [move(m) for m in MOVES[:2]]
+# A STEP VISITED AGAIN IS VISITED AT A LATER MOMENT: a move is stamped to the minute, and the return to `submitted` is
+# made once the clock has left the minute the first was made in, as a person's second visit is
+import time
+_first = re.findall(r'at: "([^"]+)"', read("beans/harbour-tale.md").split("moves:", 1)[-1])[0]
+while time.strftime("%H:%M") == _first[11:16]:
+    time.sleep(1)
+_res += [move(m) for m in MOVES[2:]]
 check("four moves along the walk commit one save at a time: submitted, a pause, back to where it was, read",
       all(rc == 0 for rc, _ in _res), [o[-600:] for rc, o in _res if rc])
 _moves = re.findall(r'at: "([^"]+)"', read("beans/harbour-tale.md").split("moves:", 1)[-1])
@@ -398,6 +405,34 @@ check("dmseq rows prints the rows as one table, a region's two ends as two colum
 _off = run(PY, "bin/dmseq.py", "show", "core-b", "strata", cwd=G).stdout
 check("...and an offset channel is shown as the position it is: 35 minutes from its `from`",
       "drilled: 35 minute(s) from 1767225600000 = 1767227700000" in _off, _off[:600])
+
+# two recordings of one line, compared row by row: agree, compatible within k·u (labelled, never merged), differ
+_hr = read("beans/heater-rig.md")
+write("beans/heater-rig.md", _hr.replace("  run-3:\n", '''  run-3-check:
+    grid: { of: time, in: gregorian-civil, every: { count: 1, unit: minute }, from: "2026-03-02 09:00+01:00" }
+    unit: minute
+    holds:
+      - { name: flow, quantity: volume-flow, unit: litre-per-minute, stands_for: point, u: { count: "0.05", unit: litre-per-minute } }
+    rows: |
+''' + table(("flow",), ("0",), ("4.25",), ("6.3",)) + "  run-3:\n", 1))
+_cmp = run(PY, "bin/dmseq.py", "compare", "heater-rig", "run-3", "heater-rig", "run-3-check", cwd=G).stdout
+check("dmseq compare labels two recordings row by row: agree, compatible within k·u at k = 2 — labelled, never merged — "
+      "or differ, and a row one of them holds alone",
+      "09:00+01:00 flow: agree" in _cmp and "09:01+01:00 flow: compatible within k·u (k = 2)" in _cmp
+      and "09:02+01:00 flow: differ" in _cmp and "held by the first only" in _cmp, _cmp)
+_long = "".join(f"      {i}\n" for i in range(101))
+write("beans/heater-rig.md", _hr.replace("  run-3:\n", '''  run-3-long:
+    grid: { of: time, in: gregorian-civil, every: { count: 1, unit: minute }, from: "2026-03-03 09:00+01:00" }
+    unit: minute
+    holds:
+      - { name: drawn, quantity: volume, unit: litre, stands_for: point }
+    rows: |
+      drawn
+''' + _long + "  run-3:\n", 1))
+rc, out = gate()
+check("an inline table of more than a hundred rows passes, and warns that its rows belong in the parts of a file",
+      rc == 0 and "holds 101 rows, more than 100" in out, out[-700:])
+write("beans/heater-rig.md", _hr)
 
 # ============================================================================ refused by name
 BASE = {p: read(p) for p in list(DOCS) + ["beans/harbour-tale.md"]}
@@ -514,29 +549,42 @@ def move_probe(line):
 
 
 LAST = _moves[-1]
-rc, out = move_probe(f'{{ track: lark, at: "{LAST}", step: printed, by: rhea }}')
+sys.path.insert(0, os.path.join(ROOT, "bin"))
+import dmcal
+
+
+def later(k):
+    """LAST and k minutes: a moment typed for a probe the gate judges uncommitted, after every move written."""
+    m = dmcal.moment(LAST)
+    return dmcal.write_moment(m.ms + k * 60000, m.calendar, m.offset, "minute")
+
+
+rc, out = move_probe(f'{{ track: lark, at: "{LAST}", step: read, by: rhea }}')
+check("one move written twice — one track, one step, one moment — is refused by name: a merge keys a move by them",
+      rc != 0 and "reaches 'read' at " in out and "as move 3 does" in out, out[-600:])
+rc, out = move_probe(f'{{ track: lark, at: "{later(1)}", step: printed, by: rhea }}')
 check("a move to a step the walk does not have is refused by name", rc != 0
       and "reaches 'printed', which is no step of the walk walk-placing" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{LAST}", step: contracted, by: rhea }}')
+rc, out = move_probe(f'{{ track: lark, at: "{later(2)}", step: contracted, by: rhea }}')
 check("a move the walk does not offer, with no `why`, is refused", rc != 0
       and "reaches 'contracted', a move the walk does not offer ('read' leads on to 'offered', 'declined' only)" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{LAST}", step: contracted, by: rhea, why: "signed at the fair, unread" }}')
+rc, out = move_probe(f'{{ track: lark, at: "{later(3)}", step: contracted, by: rhea, why: "signed at the fair, unread" }}')
 check("...and with its `why` it passes, and warns", rc == 0 and "a move the walk does not offer" in out
       and "its `why` says why" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{LAST}", step: withdrawn, by: rhea, reason: sold-elsewhere }}')
+rc, out = move_probe(f'{{ track: lark, at: "{later(4)}", step: withdrawn, by: rhea, reason: sold-elsewhere }}')
 check("a way out is reached from any step, with a reason from its own list", rc == 0, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{LAST}", step: withdrawn, by: rhea, reason: lost-interest }}')
+rc, out = move_probe(f'{{ track: lark, at: "{later(5)}", step: withdrawn, by: rhea, reason: lost-interest }}')
 check("...and a reason the step does not list is refused by name", rc != 0
       and "cites the reason 'lost-interest', which is not one of the step 'withdrawn''s" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{LAST}", step: declined, by: lark-press, reason: list-full }}\n'
-                     f'  - {{ track: lark, at: "{LAST}", step: submitted, by: rhea, why: "sent again the next season" }}')
+rc, out = move_probe(f'{{ track: lark, at: "{later(6)}", step: declined, by: lark-press, reason: list-full }}\n'
+                     f'  - {{ track: lark, at: "{later(7)}", step: submitted, by: rhea, why: "sent again the next season" }}')
 check("an end that is not final may be left: a declined manuscript is sent again", rc == 0, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{LAST}", step: offered, by: lark-press }}\n'
-                     f'  - {{ track: lark, at: "{LAST}", step: contracted, by: rhea }}\n'
-                     f'  - {{ track: lark, at: "{LAST}", step: read, by: rhea, why: "again" }}')
+rc, out = move_probe(f'{{ track: lark, at: "{later(8)}", step: offered, by: lark-press }}\n'
+                     f'  - {{ track: lark, at: "{later(9)}", step: contracted, by: rhea }}\n'
+                     f'  - {{ track: lark, at: "{later(10)}", step: read, by: rhea, why: "again" }}')
 check("nothing follows a final end, `why` or no `why`", rc != 0 and "follows 'contracted', a final step" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{LAST}", step: on-hold, by: rhea, reason: house-reorganising }}\n'
-                     f'  - {{ track: lark, at: "{LAST}", step: offered, by: lark-press }}')
+rc, out = move_probe(f'{{ track: lark, at: "{later(11)}", step: on-hold, by: rhea, reason: house-reorganising }}\n'
+                     f'  - {{ track: lark, at: "{later(12)}", step: offered, by: lark-press }}')
 check("after a pause the case returns to where it was, or takes a way out", rc != 0
       and "'on-hold' is a pause, and the move after it returns to 'read'" in out, out[-600:])
 rc, out = move_probe('{ track: lark, at: "2020-01-01 10:00+00:00", step: offered, by: lark-press }')
@@ -549,10 +597,10 @@ check("...and a day with no clock reading is no moment", rc != 0 and "must be a 
 rc, out = move_probe('{ track: lark, at: now, step: offered, by: lark-press }')
 check("`now` left unstamped is refused, with the save that stamps it", rc != 0 and ".at is `now`" in out
       and "the word the save writes the moment" in out and "bin/dmsave.py" in out, out[-600:])
-rc, out = move_probe('{ track: lark, at: "' + LAST + '", step: offered, by: nobody }')
+rc, out = move_probe('{ track: lark, at: "' + later(1) + '", step: offered, by: nobody }')
 check("a move by a bean that is not here is refused by name", rc != 0 and ".by 'nobody' is not the id of a bean" in out,
       out[-600:])
-rc, out = move_probe('{ track: ghost, at: "' + LAST + '", step: offered, by: rhea }')
+rc, out = move_probe('{ track: ghost, at: "' + later(1) + '", step: offered, by: rhea }')
 check("a move along a track the bean does not have is refused by name", rc != 0 and "'ghost' is no key of `tracks`" in out,
       out[-600:])
 # typed, not stamped: a moment that is not the moment of the heading the commit adds

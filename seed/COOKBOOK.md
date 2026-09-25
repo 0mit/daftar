@@ -534,16 +534,17 @@ holds, and then the rows, as one table.
   the next occurrence — or listed, in a `span`, an extent from whose `from` each row writes its offset in the first
   column (`at`; `from` and `to` when a row is a region). `unit` is what an offset counts and the resolution held: a
   grid's stride is a whole number of it.
-- **Where a row sits.** `cells`: at its position (`point`, when silent), over a region (`bounds`), or at its position
-  and over the stretch back to the row before (`preceding`) or on to the next (`following`) — as here, an hour's rain.
+- **Where a row sits** is `cells`: here each row stands at its hour and over the hour after it (`following`), as
+  an hour's rain does; at a point is the reading when it is silent.
 - **What each position holds** is `holds`, one channel per column: a measured value (`quantity` and its one `unit`), a
   position (`system`), or a code of a published scheme (`scheme`). `stands_for` says what a cell is over its row's
-  place — a `point`, a `mean`, `sum`, `min` or `max` over its region, a `state` held until the next row, an `instant`.
-  `between: linear` reads a point on a straight line between two rows, only where the line and the channel are both
-  metered. `u` is the channel's standard uncertainty: a value read between rows is printed to its digits.
+  place: the rain is a `sum` over its hour, the battery a reading at its moment. `between: linear` reads a point on a
+  straight line between two rows, only where the line and the channel are both metered. `u` is the channel's standard
+  uncertainty: a value read between rows is printed to its digits. `python3 bin/dmrules.py --terms` lists every
+  position each of these may take.
 - **The rows** are a table: a header naming each column once, then one line per row, one TAB between two cells. No
-  cell is ever empty: a value nobody read is a gap token — `-` nothing was read, `?` read and unreadable, `<` and `>`
-  beyond a limit, `_` nothing there, `#` withheld. A table longer than a hundred rows goes in files instead, the parts
+  cell is ever empty: a value nobody read is a gap token, which says why — here `-`, nothing was read; `python3
+  bin/dmrules.py` lists the others. A table longer than a hundred rows goes in files instead, the parts
   `series/<bean>/<key>/<part>.tsv`, each added whole and never rewritten.
 
 <!-- example: beans/rain-gauge.md -->

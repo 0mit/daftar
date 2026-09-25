@@ -353,6 +353,16 @@ for _t, _r in _vt.items():
             f"pattern {_r['pattern']}" if _r.get('pattern') else 'read by its own reader')
     print(f"  {_t:15} {_how}")
 
+head("TABLES — a series' rows: one header, one line a row, a tab between two cells, never an empty cell")
+_rw = _m(_vt.get('rows'))
+if _rw:
+    print(f"  a table of more than {_rw.get('inline_most')} rows warns: its rows belong in the parts "
+          f"series/<bean>/<key>/<part>.tsv, each added whole and never rewritten")
+for g in reg('gap_tokens'):
+    if isinstance(g, dict) and g.get('token') is not None:
+        print(f"  {str(g.get('token')):3} {str(g.get('gap')):11} {g.get('meaning')}"
+              + (f" — takes a {g['takes']} after it" if g.get('takes') else ''))
+
 head("TEXT AND DAYS — what every key and string is, and which positions are days")
 _tx = _m(_vt.get('text'))
 if _tx.get('holds_no'):

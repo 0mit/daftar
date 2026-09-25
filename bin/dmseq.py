@@ -826,8 +826,17 @@ def check_moves(moves, steps, walk_name):
     by_id = {st['id']: st for st in steps if isinstance(st, dict) and isinstance(st.get('id'), str)}
     ids = [st['id'] for st in steps if isinstance(st, dict) and isinstance(st.get('id'), str)]
     prev, pause_from, prev_ms = None, None, None
+    seen = {}
     for i, mv in moves:
         sid = mv.get('step')
+        # A MOVE IS TOLD FROM ANOTHER BY ITS MOMENT: two moves of one track to one step at one moment are one move written
+        # twice, and a merge, which keys a move by its track, moment and step, could not tell them apart
+        _k = (str(mv.get('at')), str(sid))
+        if _k in seen:
+            out.append((i, 'error', f"reaches '{sid}' at {mv.get('at')}, as move {seen[_k]} does: a move is told from "
+                                    f"another by its moment — one move is written once, and a step visited again is "
+                                    f"visited at a later moment"))
+        seen.setdefault(_k, i)
         st = by_id.get(sid)
         if st is None:
             out.append((i, 'error', f"reaches '{sid}', which is no step of the walk {walk_name} ({', '.join(ids)})"))

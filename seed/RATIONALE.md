@@ -975,7 +975,9 @@ whitespace changes the number of cells — measured in a design's own example, e
 is a gap token, which also says why.
 
 A HUNDRED ROWS inline, then a warning: a bean stays legible on paper, and the pure-Python YAML reader a machine
-without libyaml falls back to reads a large block sixty-five times slower (Y2). The rows belong in the parts of a file
+without libyaml falls back to reads a large block sixty-five times slower (Y2). Measured again as the reader and the
+writer were built: a block of 350,400 rows (6.9 MB) loads in 0.04 s with libyaml and 2.4 s without it; the table
+reader then reads it in 0.29 s and the writer writes it in 0.42 s. The rows belong in the parts of a file
 then, and a warning says so without refusing a bean that passed.
 
 ## gap_tokens
@@ -1858,7 +1860,7 @@ named walk: the moves are the facts — the step reached, who moved it, a reason
 and the moment, stamped. The gate holds one track's moves to its walk: a move follows a `next`, reaches a way out or a
 pause, returns from a pause to where it was, and nothing follows a final step; a move the walk does not offer passes
 only with its `why`, and warns, because the world does not always follow a procedure and the record must say so
-rather than refuse it. The moves merge by track, moment and step, so a step visited twice never collides with itself.
+rather than refuse it. The moves merge by track, moment and step, so a step visited twice never collides with itself; a move is stamped to the minute, so two moves of one track to one step in one minute would be one move written twice, and the gate says so before a merge must refuse it.
 
 ## terms[tracks]
 
