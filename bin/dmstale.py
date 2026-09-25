@@ -59,7 +59,7 @@ def live_git_head(path):
         return None
     try:
         r = subprocess.run(['git', '-C', path, 'rev-parse', '--short=7', 'HEAD'],
-                           capture_output=True, text=True, timeout=10)
+                           capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=10)
         return r.stdout.strip() or None
     except Exception:
         return None
@@ -117,7 +117,7 @@ def moved_since(repo_path, key, positions):
         if anc.returncode != 0:
             return None
         top = subprocess.run(['git', '-C', repo_path, 'rev-parse', '--show-toplevel'],
-                             capture_output=True, text=True, timeout=10).stdout.strip()
+                             capture_output=True, text=True, encoding='utf-8', timeout=10).stdout.strip()
         rels = []
         for pos in positions:
             local = resolve_here(pos)
@@ -125,7 +125,8 @@ def moved_since(repo_path, key, positions):
                 rel = os.path.relpath(os.path.abspath(local), os.path.abspath(top))
                 rels.append('.' if rel == '.' else rel)
         r = subprocess.run(['git', '-C', repo_path, 'log', '--oneline', '--no-decorate', f'{key}..HEAD', '--']
-                           + (rels or ['.']), capture_output=True, text=True, timeout=20)
+                           + (rels or ['.']), capture_output=True, text=True, encoding='utf-8', errors='replace',
+                           timeout=20)
         return [l.strip() for l in r.stdout.splitlines() if l.strip()]
     except Exception:
         return None

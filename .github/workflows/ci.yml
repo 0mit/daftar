@@ -25,6 +25,10 @@ jobs:
         run: python3 test/refusals.py
       - name: "journal: the entry is written as given, in UTF-8 on every platform, one line to a line"
         run: python3 test/journal.py
+      - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
+        run: python3 test/save.py
+      - name: "stamps: the day of writing is the clock's — an `as_of` a commit adds is the day of the entry it adds"
+        run: python3 test/stamps.py
       - name: gardens converge
         run: python3 test/converge.py
       - name: a garden adopts a release

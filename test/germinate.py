@@ -14,6 +14,12 @@ It asserts BOTH directions, because a garden that accepts everything passes a po
   -  an undeclared genos is refused                     (this is what promoting gene to Tier-0 bought)
   -  a nature contradicting its genos is refused
   -  a bean in the words the law retired at 22.0 is refused, naming where each went
+  -  a bean staged broken and fixed only in the working tree is refused again: the hook judges the index, which is
+     what git commits (`commit -a` and `commit <paths>` by the index they build, an intent to add not at all), and a
+     clean commit's hook prints two lines
+  -  a bean named on the command line is judged within the whole garden; a path that names no bean is refused
+  -  on a machine that is not UTF-8, a Persian gardener's bean staged broken is still refused, with no traceback:
+     the staged blobs are read as UTF-8, never in the machine's code page
   -  the law removed is an ERROR, not a warning         (there is no fallback)
   -  a pin disagreeing with the vocabulary is an ERROR, not a warning
 
@@ -36,7 +42,7 @@ def check(name, ok, detail=''):
 
 
 def run(*a, cwd):
-    return subprocess.run(a, capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(a, capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=cwd)
 
 
 def gate(cwd):
@@ -44,6 +50,8 @@ def gate(cwd):
     return r.returncode, r.stdout + r.stderr
 
 
+# THE DAY OF WRITING IS STAMPED, NOT TYPED (23.0): the bean says `now`, and bin/dmjournal.py, run after it is written,
+# writes the day of its heading in its place — as a writer's save does.
 BEAN = """---
 bean: ada
 genos: person
@@ -53,8 +61,8 @@ summary: "A person written into a garden grown from the seed, proving the langua
 identity:
   status: confirmed
   anchors:
-    - {{ key: person_id, value: "person:ada", class: logical, establishing: true, observed: 2026-08-02 }}
-provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: 2026-08-02 }}
+    - {{ key: person_id, value: "person:ada", class: logical, establishing: true, observed: now }}
+provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
 nature: {nature}
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
@@ -117,8 +125,35 @@ check("a RELATIVE target grows the garden where the caller stands, and nothing l
 # says the gardener is planted, not that the cookbook starts with them, and every command it prints runs as printed in
 # Windows PowerShell 5.1 too — no `&&`, which 5.1 cannot parse, and no `<`, which no PowerShell redirects.
 _msg = r.stdout[r.stdout.find('germinated:'):]
-check("germinate's closing message after --gardener says the gardener is planted, and the cookbook goes on from there",
-      'keeper, is planted' in _msg and 'goes on from the gardener' in _msg, _msg[:400])
+check("germinate's closing message after --gardener says the gardener is planted, and gives an agent ONE next step: "
+      "read seed/FORMS.md, and save in one command, bin/dmsave.py — journal, git add and git commit were three",
+      'keeper, is planted' in _msg and 'AN AGENT reads seed/FORMS.md' in _msg
+      and re.search(r'(?m)^  python3? bin/dmsave\.py "<who>" "<what you did>" --body "', _msg)
+      and 'bin/dmjournal.py' not in _msg and 'git add -A' not in _msg, _msg[:600])
+# NO READING LIST (v0.34.1). The message named four documents to read, and an agent driving a small open model read them
+# — 85,000 characters and more of the law — before its first bean, and stalled. A person is given one step too.
+check("...and one for a person, and no list of documents to read: the law is read when a question needs it",
+      'A PERSON tells their agent to read AGENTS.md' in _msg
+      and not re.search(r'MODEL\.md|CHECKLIST\.md|COOKBOOK\.md|dmrules|std-vocab\.md', _msg), _msg[:900])
+# WHO COMMITS: said only where no identity is SET. A harness running an agent sets it in the environment, and an agent
+# told to set one anyway spent its turns on `git config`. Each run below has a global configuration of its own.
+_empty_cfg = os.path.join(TMP, 'no-identity.gitconfig')
+open(_empty_cfg, 'w').close()
+_bare_env = {k: v for k, v in os.environ.items() if not k.startswith(('GIT_AUTHOR_', 'GIT_COMMITTER_')) and k != 'EMAIL'}
+_bare_env.update(GIT_CONFIG_GLOBAL=_empty_cfg, GIT_CONFIG_NOSYSTEM='1')
+_ids = {}
+for _how, _extra in (('none', {}), ('env', {'GIT_AUTHOR_NAME': 'agent', 'GIT_AUTHOR_EMAIL': 'agent@localhost',
+                                          'GIT_COMMITTER_NAME': 'agent', 'GIT_COMMITTER_EMAIL': 'agent@localhost'})):
+    _ir = subprocess.run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), os.path.join(TMP, f'garden-id-{_how}'),
+                          '--gardener', 'sam'], capture_output=True, text=True, encoding='utf-8', errors='replace',
+                         cwd=TMP, env=dict(_bare_env, **_extra))
+    _ids[_how] = (_ir.returncode, _ir.stdout)
+check("germinate tells whoever commits next to set a git identity where none is set...",
+      _ids['none'][0] == 0 and 'BEFORE THE FIRST COMMIT' in _ids['none'][1] and 'config user.name' in _ids['none'][1],
+      _ids['none'][1][-600:])
+check("...and says nothing of it where one is set — in the environment, as a harness running an agent sets it",
+      _ids['env'][0] == 0 and 'BEFORE THE FIRST COMMIT' not in _ids['env'][1] and 'git config' not in _ids['env'][1]
+      and 'config user.name' not in _ids['env'][1], _ids['env'][1][-600:])
 check("...and every command it prints runs in PowerShell 5.1 as printed: no `&&`, no `< entry.md`",
       _msg and '&&' not in _msg and not re.search(r' < \S', _msg), [l for l in _msg.splitlines() if '&&' in l or ' < ' in l])
 # ...AND SO DOES EVERY COMMAND ANY TOOL OR PAGE SHOWS. A tool's text is every string in bin/ and seed/, read as Python reads
@@ -217,7 +252,8 @@ with open(_gcfg, 'w', newline='\n') as _fh:
     _fh.write('[core]\n\thooksPath = %s\n' % _hooks.replace('\\', '/'))
 _ft = os.path.join(TMP, 'garden-fails')
 _fr = subprocess.run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), _ft, '--gardener', 'sam'],
-                     capture_output=True, text=True, cwd=TMP, env=dict(os.environ, GIT_CONFIG_GLOBAL=_gcfg))
+                     capture_output=True, text=True,
+                     encoding='utf-8', errors='replace', cwd=TMP, env=dict(os.environ, GIT_CONFIG_GLOBAL=_gcfg))
 check("a first commit git refuses leaves nothing behind: germinate removes the directory it made, and says so",
       _fr.returncode != 0 and 'refused by a hook' in _fr.stderr and not os.path.exists(_ft)
       and 'nothing is left behind' in _fr.stderr, (_fr.returncode, _fr.stderr[-400:]))
@@ -292,8 +328,8 @@ check("...and prints no NOTE sending the stranger to check out a tag in the real
 # THE MODEL, THE PROCEDURE, THE QUEUE AND THE SKILL TRAVEL (2026-09-17). Without them a friend's garden had the
 # law's data and nothing saying what it meant; the first person bean took three attempts.
 _TRAVEL = ('MODEL.md', 'CHECKLIST.md', 'MERGE.md', 'log/pending.md', '.claude/skills/daftar/SKILL.md',
-           'AGENTS.md', 'seed/WELCOME.md')
-check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md and every door for an agent travel",
+           'AGENTS.md', 'seed/WELCOME.md', 'seed/FORMS.md')
+check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md, the forms and every door for an agent travel",
       all(os.path.isfile(os.path.join(G, f)) for f in _TRAVEL),
       [f for f in _TRAVEL if not os.path.isfile(os.path.join(G, f))])
 
@@ -375,10 +411,14 @@ for _doc in ('COOKBOOK.md', 'WELCOME.md'):
         _frags = re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', _sec, re.S)
         if _beans or _frags:
             _recipes.append((f"{_doc}: {_sec.split(chr(10), 1)[0].lstrip('# ')}", _beans, _frags))
+# A BEAN SAVED IS ITS EXAMPLE WITH THE DAY WRITTEN IN (23.0): the page shows `as_of: now`, and bin/dmjournal.py wrote
+# the day of its entry in its place. So a bean already there is compared as the page shows it, and the gardener shown
+# again is still found unchanged, never committed a second time as a journal entry alone.
+_STAMPED = re.compile(r'(\b(?:as_of|observed):[ \t]*)\d{4}-\d{2}-\d{2}\b')
 _committed, _failed = [], None
 for _name, _beans, _frags in _recipes:
     _changed = [p for p, x in _beans if not os.path.isfile(os.path.join(_ex_tmp, p))
-                or open(os.path.join(_ex_tmp, p), encoding='utf-8').read() != x + '\n']
+                or _STAMPED.sub(r'\1now', open(os.path.join(_ex_tmp, p), encoding='utf-8').read()) != x + '\n']
     if not _changed and not _frags:
         continue                                   # a bean shown again (the gardener) is already there, unchanged
     for _path, _text in _beans:
@@ -449,6 +489,31 @@ check("...and the cookbook begins with the gardener, as germinate's closing mess
 check("...and a name another garden minted arrives qualified by that garden, which the examples record as a `garden`",
       re.search(r'value: "([0-9a-f]{12})/[^"]+"', _ck) and re.search(r'key: garden_id, value: "%s"'
       % re.search(r'value: "([0-9a-f]{12})/[^"]+"', _ck).group(1), _ck))
+# WHAT NOBODY SAID (v0.34.1): seed/FORMS.md's forms for it pass the gate too, beside the recipes they follow — an event
+# placed by what it came after, a contract with no amount and no day, a garden whose id nobody gave, and the other
+# garden's gardener then named by this garden. Committed as one change, then taken back, so the garden below stays as
+# the recipes left it.
+_fp = open(os.path.join(ROOT, 'seed', 'FORMS.md'), encoding='utf-8').read()
+_unsaid = re.findall(r'<!-- unsaid: (beans/[a-z0-9-]+\.md), for ([a-z0-9_, ]+) -->\n```markdown\n(.*?)\n```', _fp, re.S)
+for _path, _for, _text in _unsaid:
+    open(os.path.join(_ex_tmp, _path), 'w', encoding='utf-8', newline='\n').write(_text + '\n')
+_ap = os.path.join(_ex_tmp, 'beans', 'ali.md')
+_ali = open(_ap, encoding='utf-8').read()
+open(_ap, 'w', encoding='utf-8', newline='\n').write(re.sub(r'value: "[0-9a-f]{12}/person:ali"', 'value: "person:ali"', _ali))
+run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmjournal.py'), 'human (test)', 'what nobody said', '--body',
+    '- action: ' + ', '.join(f"[[{os.path.basename(p)[:-3]}]]" for p, _, _ in _unsaid) + ', and [[ali]] named here.',
+    cwd=_ex_tmp)
+run('git', 'add', '-A', cwd=_ex_tmp)
+_uc = run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'what nobody said', cwd=_ex_tmp)
+check(f"seed/FORMS.md's {len(_unsaid)} forms for what nobody said commit with 0 errors and 0 warnings (23.0: `event-anchored` is universal), beside the recipes — an event "
+      "placed by what it came after, a contract with no amount and no day, a garden whose id nobody gave",
+      len(_unsaid) >= 3 and _uc.returncode == 0 and ' 0 error(s), 0 warning(s)' in _uc.stdout + _uc.stderr
+      and {'timing', 'identity'} <= {t.strip() for _, f, _ in _unsaid for t in f.split(',')},
+      (_uc.stdout + _uc.stderr)[-600:])
+if _uc.returncode == 0:
+    run('git', 'reset', '-q', '--hard', 'HEAD~1', cwd=_ex_tmp)
+else:
+    run('git', 'reset', '-q', '--hard', cwd=_ex_tmp)
 _ex_gate = run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmcheck.py'), cwd=_ex_tmp).stdout
 check("...with ZERO warnings, and the banner names the garden and the release it runs",
       ' 0 warning(s)' in _ex_gate and re.search(r'^readme-examples \(daftar [^)]+\): ', _ex_gate, re.M),
@@ -609,6 +674,208 @@ check("a bean still in 21.0's words — `kind`, `living`, `love` — is refused,
       rc != 0 and "missing 'genos'" in out and "'kind' is one the law retired on a bean" in out and 'retired: `genos`' in out
       and 'retired: `empsychon`' in out, out.strip()[-600:])
 
+# ---- THE HOOK JUDGES WHAT IS COMMITTED: the index, never the working tree (v0.34.1) ---------------------------------
+# It read the working tree while git committed the index, so a bean staged broken, refused, and fixed without being
+# staged again went through on the next `git commit` — the gate read the fix, and the broken copy was committed.
+def commit(*a, env=None):
+    _r = subprocess.run(['git', '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', *a], capture_output=True,
+                        text=True, encoding='utf-8', errors='replace', cwd=G, env=env)
+    return _r.returncode, _r.stdout + _r.stderr
+
+
+def journal(body):
+    run(sys.executable, os.path.join(G, 'bin', 'dmjournal.py'), 'agent', 'a probe', '--body', body, cwd=G)
+
+
+def at_head(path):
+    return run('git', 'show', f'HEAD:{path}', cwd=G).stdout
+
+
+run('git', 'checkout', '-q', 'HEAD', '--', '.', cwd=G)          # the probes above leave their last bean in the tree
+_ada = open(bean_path, encoding='utf-8').read()
+_good = _ada + 'She keeps a notebook.\n'
+open(bean_path, 'w', encoding='utf-8').write(_good.replace('status: active', 'status: pending', 1))
+journal('- action: a line on [[ada]].')
+run('git', 'add', '-A', cwd=G)
+rc1, o1 = commit('-m', 'refused')
+open(bean_path, 'w', encoding='utf-8').write(_good)               # fixed in the working tree, and not staged again
+rc2, o2 = commit('-m', 'the fix, unstaged')
+check("a bean staged broken, refused, then fixed in the working tree WITHOUT `git add` is refused again — the hook "
+      "judges the index, which still holds the broken copy, and nothing is committed",
+      rc1 != 0 and rc2 != 0 and "status 'pending'" in o2 and 'notebook' not in at_head('beans/ada.md'), o2[-500:])
+check("...and the refusal names the file the working tree holds otherwise, and says to stage it",
+      'beans/ada.md (changed)' in o2 and 'git add' in o2, o2[-400:])
+run('git', 'add', '-A', cwd=G)
+rc3, o3 = commit('-m', 'the fix, staged')
+check("...staged, the fix commits, and the commit holds it", rc3 == 0 and 'status: active' in at_head('beans/ada.md')
+      and 'notebook' in at_head('beans/ada.md'), o3[-400:])
+# the other direction: the staged copy is sound and the working tree's is not — the commit holds the sound one
+open(bean_path, 'w', encoding='utf-8').write(_good + 'And a pen.\n')
+journal('- action: a pen for [[ada]].')
+run('git', 'add', '-A', cwd=G)
+open(bean_path, 'w', encoding='utf-8').write(_good.replace('genos: person', 'genos: wizard', 1))
+rc4, o4 = commit('-m', 'sound staged, broken unstaged')
+check("...and a sound bean staged commits while the working tree holds it broken: what is judged is what is committed",
+      rc4 == 0 and 'a pen' in at_head('beans/ada.md'), o4[-400:])
+run('git', 'checkout', '-q', '--', '.', cwd=G)
+# `git commit -a` and `git commit <path>` build an index of their own, and the hook judges THAT one (GIT_INDEX_FILE)
+open(bean_path, 'w', encoding='utf-8').write(_good.replace('status: active', 'status: pending', 1) + 'And a pen.\n')
+journal('- action: [[ada]] put on hold.')
+rc5, o5 = commit('-a', '-m', 'all of it')
+check("`git commit -a` is judged by the index it builds from the working tree: the bean it takes in broken is refused",
+      rc5 != 0 and "status 'pending'" in o5, o5[-400:])
+run('git', 'checkout', '-q', '--', '.', cwd=G)
+open(os.path.join(G, 'beans', 'ada.md'), 'a', encoding='utf-8').write('And ink.\n')
+journal('- action: ink for [[ada]].')
+_kp = os.path.join(G, 'beans', 'keeper.md')
+_keeper = open(_kp, encoding='utf-8').read()
+open(_kp, 'w', encoding='utf-8').write(_keeper.replace('genos: person', 'genos: wizard', 1))
+rc6, o6 = commit('-m', 'only these', '--', 'beans/ada.md', 'log/journal.md')
+check("...and `git commit <paths>` by the index of those paths: a broken bean it leaves out does not stop it",
+      rc6 == 0 and 'ink' in at_head('beans/ada.md') and 'wizard' not in at_head('beans/keeper.md'), o6[-400:])
+run('git', 'checkout', '-q', '--', '.', cwd=G)
+
+# ---- A CLEAN COMMIT PRINTS TWO LINES (v0.34.1): whatever a hook prints stays in an agent's context for the session ----
+open(bean_path, 'a', encoding='utf-8').write('And paper.\n')
+journal('- action: paper for [[ada]].')
+run('git', 'add', '-A', cwd=G)
+rc7, o7 = commit('-m', 'clean')
+_said = [l for l in o7.splitlines() if l.strip()]
+check("a clean commit prints two lines — the gate's verdict and the fast suite's count — and no PASS line",
+      rc7 == 0 and len(_said) == 2
+      and re.match(r'^\S+ \(daftar [^)]+\): \d+ docs, 0 error\(s\), 0 warning\(s\)$', _said[0])
+      and re.match(r'^fast: (\d+)/\1 corpus checks passed$', _said[1]), o7)
+open(bean_path, 'a', encoding='utf-8').write('And a desk.\n')
+journal('- action: a desk for [[ada]].')
+run('git', 'add', '-A', cwd=G)
+rc8, o8 = commit('-m', 'verbose', env=dict(os.environ, DAFTAR_VERBOSE='1'))
+check("...and `DAFTAR_VERBOSE=1 git commit` lists every check the fast suite passed",
+      rc8 == 0 and 'PASS every bean carries BOTH ownership arcs' in o8, o8[-400:])
+rc, out = gate(G)
+check("the gate run by hand on a clean garden prints its verdict alone, on one line",
+      rc == 0 and len([l for l in out.splitlines() if l.strip()]) == 1 and ' 0 error(s)' in out, out)
+
+
+# ---- A BEAN NAMED ON THE COMMAND LINE IS JUDGED, within the whole garden (v0.34.1) ---------------------------------
+# The gate read no argument: `dmcheck.py beans/x.md` failed on another bean's error, and a path to nothing passed.
+def gate_on(*a, cwd=None):
+    _r = run(sys.executable, os.path.join(G, 'bin', 'dmcheck.py'), *a, cwd=cwd or G)
+    return _r.returncode, _r.stdout, _r.stderr
+
+
+open(os.path.join(G, 'beans', 'ali.md'), 'w', encoding='utf-8').write(
+    BEAN.format(nature='empsychon').replace('ada', 'ali').replace('Ada', 'Ali')
+    .replace('responsibility:', 'refs: { friend: { bean: ada, rel: friend } }\nresponsibility:', 1))
+open(os.path.join(G, 'beans', 'sam.md'), 'w', encoding='utf-8').write(
+    BEAN.format(nature='empsychon').replace('ada', 'sam').replace('Ada', 'Sam')
+    .replace('status: active', 'status: pending'))
+rc, out, err = gate_on('beans/ali.md')
+check("`dmcheck.py beans/ali.md` judges ali: her link to ada resolves against the whole garden, sam's error is counted "
+      "in the verdict and not shown, and it exits 0",
+      rc == 0 and 'beans/ali.md (1 of ' in out and ', 0 error(s)' in out and '1 error(s), 0 warning(s) in 1 other' in out
+      and "'pending'" not in out and 'dangling' not in out, out + err)
+rc, out, err = gate_on('ali', cwd=os.path.join(G, 'beans'))
+check("...a bare id names it too, from anywhere in the garden", rc == 0 and 'beans/ali.md (1 of ' in out, out + err)
+rc, out, err = gate_on('beans/sam.md')
+check("...and naming sam shows sam's error, and exits 1", rc == 1 and "status 'pending'" in out, out + err)
+rc, out, err = gate_on()
+check("...while no argument judges the whole garden, as before", rc == 1 and "status 'pending'" in out
+      and re.search(r': \d+ docs, 1 error\(s\)', out), out)
+rc, out, err = gate_on('--all')
+check("...and so does --all", rc == 1 and "status 'pending'" in out, out)
+for _arg, _says in (('beans/nobody.md', 'no such file'), ('GARDEN.md', 'not a bean or a mapping'),
+                    ('nobody', 'no bean or mapping of this garden'), ('beans', 'a directory'),
+                    ('--bogus', 'no option of the gate'), ('-v', 'only --staged over the whole garden runs')):
+    rc, out, err = gate_on(_arg)
+    check(f"`dmcheck.py {_arg}` is refused by name, never passed: exit 2, and no verdict",
+          rc == 2 and _says in err and 'error(s)' not in out, out + err)
+rc, out, err = gate_on('--staged', 'beans/ali.md')
+check("`dmcheck.py --staged beans/ali.md` refuses a bean the index does not hold", rc == 2 and 'index holds no' in err,
+      out + err)
+run('git', 'add', 'beans/ali.md', cwd=G)
+rc, out, err = gate_on('--staged', 'beans/ali.md')
+check("...and judges it once it is staged: the whole index read, ali's findings shown (the journal duty among them)",
+      rc == 1 and 'beans/ali.md (1 of ' in out and 'journal.md not updated' in out and "'pending'" not in out, out + err)
+run('git', 'reset', '-q', cwd=G)
+for _b in ('ali', 'sam'):
+    os.remove(os.path.join(G, 'beans', f'{_b}.md'))
+# an index a merge left unmerged has no one staged copy to judge, and git commits none of it: refused, by path
+_sha = run('git', 'rev-parse', 'HEAD:beans/ada.md', cwd=G).stdout.strip()
+subprocess.run(['git', 'update-index', '--index-info'], cwd=G, text=True, encoding='utf-8', capture_output=True,
+               input=f"0 {'0' * 40}\tbeans/ada.md\n" + ''.join(f"100644 {_sha} {n}\tbeans/ada.md\n" for n in (1, 2, 3)))
+rc, out, err = gate_on('--staged')
+check("`--staged` over an index holding an unmerged path refuses it by path: there is no staged copy to judge",
+      rc == 1 and 'unmerged' in out and 'beans/ada.md' in out, out + err)
+run('git', 'reset', '-q', cwd=G)
+# an intent to add (`git add -N`) is in the index and in no commit: git commits nothing of it, and neither is it judged
+_ita = os.path.join(G, 'beans', 'half.md')
+open(_ita, 'w', encoding='utf-8').write('---\nbean: half\n')
+run('git', 'add', '-N', 'beans/half.md', cwd=G)
+open(bean_path, 'a', encoding='utf-8').write('And a lamp.\n')
+journal('- action: a lamp for [[ada]].')
+run('git', 'add', 'beans/ada.md', 'log/journal.md', cwd=G)
+rc9, o9 = commit('-m', 'beside an intent to add')
+check("a bean only intended to be added (`git add -N`) is not judged, as git commits nothing of it: the staged bean "
+      "beside it commits, and the commit holds no half.md",
+      rc9 == 0 and 'a lamp' in at_head('beans/ada.md') and 'half.md' not in run('git', 'ls-tree', '-r', '--name-only',
+                                                                                  'HEAD', cwd=G).stdout, o9[-500:])
+run('git', 'reset', '-q', cwd=G)
+os.remove(_ita)
+
+# ---- ON A MACHINE THAT IS NOT UTF-8, the gate reads the staged blobs as UTF-8 all the same ------------------------
+# git writes UTF-8, and a Python before 3.15 (PEP 686) decodes a child's output in the machine's code page. On Windows
+# a gardener named in Persian made the gate print a reader thread's UnicodeDecodeError above its verdict, and the
+# staged bean it failed to read went unchecked, as a blob absent from the index. LC_ALL=C with UTF-8 mode off stands in
+# for that machine on every platform (its locale is ASCII; on Windows, PYTHONUTF8=0 leaves the ANSI code page). The
+# garden grows as usual; only the gate runs there. Each staged bean below differs from the working tree's, so what is
+# refused was read from the index — nowhere else.
+_fa = os.path.join(TMP, 'garden-fa')
+run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), _fa, '--gardener', 'sam', '--gardener-name', 'سام',
+    cwd=TMP)
+_NU = {k: v for k, v in os.environ.items() if k not in ('PYTHONUTF8', 'PYTHONIOENCODING')}
+_NU.update(LC_ALL='C', LANG='C', PYTHONUTF8='0')
+_enc = subprocess.run([sys.executable, '-c', 'import locale; print(locale.getpreferredencoding(False))'],
+                      capture_output=True, text=True, encoding='utf-8', errors='replace', env=_NU).stdout.strip()
+
+
+def _gate_nu(*a):
+    _g = subprocess.run([sys.executable, os.path.join(_fa, 'bin', 'dmcheck.py'), *a], capture_output=True, text=True,
+                        encoding='utf-8', errors='replace', cwd=_fa, env=_NU)
+    return _g.returncode, _g.stdout + _g.stderr
+
+
+_sb = os.path.join(_fa, 'beans', 'sam.md')
+with open(_sb, 'a', encoding='utf-8', newline='\n') as _fh:
+    _fh.write('سام keeps it in Persian too.\n')
+run(sys.executable, os.path.join(_fa, 'bin', 'dmjournal.py'), 'agent', 'a Persian line',
+    '--body', '- action: added a line in Persian to [[sam]].', cwd=_fa)
+run('git', 'add', '-A', cwd=_fa)
+rc, out = _gate_nu()
+check(f"on a machine whose locale reads a child's output as {_enc}, a staged Persian bean passes the gate: exit 0, "
+      "no traceback", rc == 0 and ' 0 error(s)' in out and 'Traceback' not in out and 'UnicodeDecodeError' not in out,
+      out.strip()[-600:])
+_whole = open(_sb, 'rb').read()
+_fm = re.match(rb'(?s)---\r?\n.*?\n---\r?\n', _whole).group(0)
+for _staged, _says, _what in ((_fm, 'NO human body', 'its body emptied'),
+                              (_whole.decode('utf-8').encode('utf-16'), 'destroyed document',
+                               "in UTF-16 (what Windows PowerShell 5.1's `>` writes)")):
+    open(_sb, 'wb').write(_staged)
+    run('git', 'add', 'beans/sam.md', cwd=_fa)
+    open(_sb, 'wb').write(_whole)                     # the working tree whole again: only the index holds the fault
+    rc, out = _gate_nu()
+    check(f"...and the same bean staged {_what} is refused, read from the index, with no traceback",
+          rc != 0 and _says in out and 'beans/sam.md' in out
+          and 'Traceback' not in out and 'UnicodeDecodeError' not in out,
+          out.strip()[-600:])
+    rc, out = _gate_nu('--staged')
+    check(f"...and so it is by the hook's own run, `--staged`, which judges a copy of the index",
+          rc != 0 and _says in out and 'beans/sam.md' in out and 'beans/sam.md (changed)' in out
+          and 'Traceback' not in out and 'UnicodeDecodeError' not in out,
+          out.strip()[-600:])
+if _enc.lower().replace('-', '') in ('utf8', ''):
+    print(f"NOTE: here even LC_ALL=C and PYTHONUTF8=0 read a child's output as UTF-8 ({_enc or 'nothing'}), so the "
+          f"three checks above could not meet a code page on this machine")
+
 # ---- NEGATIVE: the law itself ------------------------------------------------------------------------
 law = os.path.join(G, 'seed', 'std-vocab.md')
 saved = open(law, encoding='utf-8').read()
@@ -651,9 +918,9 @@ check("the child's bean is IN the merged result, not silently dropped",
 os.makedirs(os.path.join(G, 'captures', 'conversations'), exist_ok=True)
 with open(os.path.join(G, 'captures', 'conversations', 'a-session.md'), 'w', encoding='utf-8', newline='\n') as fh:
     fh.write("# a session\n\nthe agent said: `garden (daftar v0.1.0): 0 docs, 0 error(s)`\n")
-r = run(sys.executable, os.path.join(G, 'test', 'fast.py'), cwd=G)
+r = run(sys.executable, os.path.join(G, 'test', 'fast.py'), '-v', cwd=G)          # -v: the line of each check passed
 check("a capture that quotes a version as it was said passes the fast check — captures are records, like the journal",
-      r.returncode == 0 and 'no document states the product version' in r.stdout
+      r.returncode == 0 and 'PASS no document states the product version' in r.stdout
       and 'FAIL *** no document states the product version' not in r.stdout, r.stdout[-400:])
 with open(os.path.join(G, 'NOTES.md'), 'w', encoding='utf-8', newline='\n') as fh:
     fh.write("This garden runs daftar v0.1.0.\n")

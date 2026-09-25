@@ -14,7 +14,7 @@ def check(name, cond, detail=""):
         FAILS.append(name)
 
 def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 
 units, quantities = dmunits.law()
 # A QUANTITY WHOSE UNITS ARE A REGISTRY'S ROWS (21.0: money, whose units are the currencies) has NO factor between two

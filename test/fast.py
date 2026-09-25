@@ -11,7 +11,11 @@ in-process, and asserts the properties that must hold of the data — never the 
 behaviours, which is what makes it fast and what keeps it from duplicating golden.py's job. Anything
 here that fails means the garden is wrong, not that a rule is wrong.
 
-Run: python3 test/fast.py   (0 = green)
+Run: python3 test/fast.py [-v]   (0 = green)
+A green run prints one line, its count; a failed check prints its line, with what it found. -v / --verbose (or
+DAFTAR_VERBOSE=1) prints every check it passed too. The hook runs this on every commit, and every line it prints stays
+in the context of an agent committing, for the rest of its session: a PASS line for each check, on every commit,
+said nothing the count does not.
 """
 import glob, os, re, sys
 
@@ -21,10 +25,18 @@ import dmparse
 import dmform           # a term's law is read THROUGH the attribute form, here as everywhere (13.0)
 import yaml
 
-results = []
+_args = sys.argv[1:]
+if [a for a in _args if a not in ('-v', '--verbose')]:
+    print(f"fast: {' '.join(a for a in _args if a not in ('-v', '--verbose'))!r} — this suite takes only -v "
+          f"(every check it passed, not only its count)", file=sys.stderr)
+    sys.exit(2)
+VERBOSE = bool(_args) or os.environ.get('DAFTAR_VERBOSE', '').strip() not in ('', '0')
+results, printed = [], []
 def check(name, ok, detail=''):
     results.append(ok)
-    print(("PASS " if ok else "*** FAIL *** ") + name + (f"  [{detail}]" if detail and not ok else ''))
+    if VERBOSE or not ok:
+        printed.append(name)
+        print(("PASS " if ok else "*** FAIL *** ") + name + (f"  [{detail}]" if detail and not ok else ''))
 
 BEANS, MAPS, BAD = {}, {}, []
 for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + \
@@ -199,5 +211,5 @@ nostanding = [b for b, _ in carriers if not (BEANS[b].get('standing') or [])]
 check("a bean that carries the law's address also states which documents are law",
       not nostanding, ', '.join(nostanding))
 
-print(f"\nfast: {sum(results)}/{len(results)} corpus checks passed")
+print(f"{chr(10) if printed else ''}fast: {sum(results)}/{len(results)} corpus checks passed")
 sys.exit(0 if all(results) else 1)

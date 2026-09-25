@@ -3,10 +3,12 @@
 
 The law is held consistent by the other suites; the prose around it was checked by nobody. This one checks what
 can be COMPUTED about a document: that it names no construct the language has retired, that every tool and suite
-it names exists, and that the suites a contributor is told to run are the suites the release runs. Whether a
+it names exists, that the suites a contributor is told to run are the suites the release runs, and that a page made of
+another's text — the skill of AGENTS.md, the forms of the cookbook's recipes — holds it byte for byte. Whether a
 paragraph is true, or can be read two ways, is still a reader's work. The examples a document shows are committed
 in a fresh garden by `test/germinate.py`; this does not repeat that.
 """
+import subprocess
 import os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -19,7 +21,8 @@ def check(name, cond, detail=""):
 
 # HISTORY.md and the vocabulary's changelog are the record of what WAS: a retired name belongs there.
 PROSE = ["README.md", "MODEL.md", "CHECKLIST.md", "MERGE.md", "CONTRIBUTING.md", "seed/README.md", "seed/COOKBOOK.md",
-         ".claude/skills/daftar/SKILL.md", ".github/pull_request_template.md", "AGENTS.md", "seed/WELCOME.md"]
+         ".claude/skills/daftar/SKILL.md", ".github/pull_request_template.md", "AGENTS.md", "seed/WELCOME.md",
+         "seed/FORMS.md"]
 # Named in a document as NOT shipped here: the maintainers' corpus tests, which need a garden's beans.
 NOT_SHIPPED = {"test/golden.py", "test/diffgate.py"}
 # Shipped, and run by every garden's own hook rather than by the release: it needs a garden around it.
@@ -119,6 +122,47 @@ check("seed/WELCOME.md says in its first lines that its reader cannot run the ga
 _opens = [p for p in re.findall(r"`([A-Za-z0-9_./-]+\.(?:md|py|sh))`", text["seed/WELCOME.md"])
           if not os.path.isfile(os.path.join(ROOT, p))]
 check("...and names no file that does not exist", not _opens, _opens)
+
+# THE FORMS ARE THE COOKBOOK'S OWN EXAMPLES, NOT A SECOND COPY THAT CAN DRIFT (v0.34.1). seed/FORMS.md is what an agent
+# reads before writing, so it is short: the misreadings agents make most, the shapes of six recipes — each recipe's
+# example beans and commands, the fenced blocks with the marker above them, cut from the cookbook unchanged, under the
+# recipe's heading and its first sentence — and the forms for what nobody said. The recipes' prose stays in the cookbook
+# (it was two thirds of the page, and measured runs read all of it every session). A block changed in one and not the
+# other fails here, by recipe; the fix is to copy the cookbook's blocks into the forms again.
+def _sections(t):
+    return {s.split("\n", 1)[0]: s for s in t.split("\n## ")[1:]}
+def _blocks(sec):
+    return re.findall(r"(?:^<!-- [^\n]*-->\n)?^```[^\n]*\n.*?^```$", sec, re.S | re.M)
+_ck, _fo = _sections(text["seed/COOKBOOK.md"]), _sections(text["seed/FORMS.md"])
+_recipes = [h for h in _fo if h in _ck]
+# THE FORMS CARRY NO FACT (v0.34.1): each block is the cookbook's as the law derives it — a day someone said shown empty
+# with the law's meaning beside it, `as_of: now`, no day inside an anchor — so the check is the derivation, not a copy.
+_derived = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmforms.py"), "--check"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+check("seed/FORMS.md holds the shapes of six recipes of seed/COOKBOOK.md, every example block exactly as bin/dmforms.py "
+      "derives it from the cookbook's by the law", len(_recipes) == 6 and _derived.returncode == 0
+      and _recipes[0] == "The gardener, first", f"recipes {_recipes}; {_derived.stderr.strip()}")
+_days = [l.strip() for l in text["seed/FORMS.md"].split("\n")
+         if re.search(r"\b\d{4}-\d{2}-\d{2}\b", l) and not l.lstrip().startswith("start:")]
+check("...and no calendar day in them but a said time an event cannot be without (its `timing`): a day in a form is "
+      "the day a writer copies", not _days, _days)
+check("...and nothing else but the misreadings, first, and the forms for what nobody said",
+      set(_fo) - set(_recipes) == {"What nobody said", "Common misreadings"} and list(_fo)[0] == "Common misreadings",
+      sorted(set(_fo) - set(_recipes)))
+check("...and it stays short: under 16,000 characters", len(text["seed/FORMS.md"]) < 16000, len(text["seed/FORMS.md"]))
+_ord = [h for h in _ck if h in _recipes]
+check("...in the cookbook's own order, so they can be followed from the top", _recipes == _ord, (_recipes, _ord))
+_top = "\n".join(text["seed/FORMS.md"].split("\n## ", 1)[0].splitlines())
+# ONE COMMAND SAVES (v0.34.1): the entry, `git add -A` and the commit were three calls, and a refused one needed two more.
+check("...and its opening says how a bean is saved — one command, and `--again` after a refusal — and that the law is "
+      "read only for what it does not answer",
+      'python3 bin/dmsave.py "<who>" "<what you did>" --body "' in _top and "python3 bin/dmsave.py --again" in _top
+      and "AGENTS.md" in _top and len(_top) < 2000, _top[:400])
+check("AGENTS.md saves a write in one command, and says what to run after a refusal",
+      'python3 bin/dmsave.py "<who>" "<what changed>" --body "' in text["AGENTS.md"]
+      and "python3 bin/dmsave.py --again" in text["AGENTS.md"], "")
+check("AGENTS.md puts the forms first for writing, and the law after them, on demand",
+      0 <= text["AGENTS.md"].find("seed/FORMS.md") < text["AGENTS.md"].find("## On demand")
+      < text["AGENTS.md"].find("`MODEL.md`", text["AGENTS.md"].find("## On demand")), "")
 
 ci = open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8").read()
 ci_suites = set(re.findall(r"python3 (test/[a-z_]+\.py)", ci))

@@ -19,14 +19,15 @@ cannot be taken back, only answered by another. So the tool is held here to what
   -  a character some reader takes for a line break (\\x0b, \\x0c, \\x1c-\\x1e, NEL, U+2028, U+2029) is refused, and
      a line break in <who> or <what>: one written line must stay one line to every reader.
 
-And every tool that prints imports dmparse, which is where the UTF-8 streams are set for all of them; and
+And every tool that prints imports dmparse, which is where the UTF-8 streams are set for all of them; every
+subprocess call that reads a child's output as text, git's included, names UTF-8 rather than the code page; and
 bin/dmsafe.py, which every front-matter edit goes through, reads its block as this tool reads a body — as bytes, UTF-8
 or UTF-16 with its mark, anything else refused — from standard input or from a file with --block, the form PowerShell
 has.
 
 Run: python3 test/journal.py   (0 = green).  ~2s.
 """
-import codecs, os, re, shutil, subprocess, sys, tempfile
+import ast, codecs, os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 results = []
@@ -100,6 +101,11 @@ check("--body on a cp1252 machine, its output read through a pipe: written, exit
       r.returncode == 0 and b'Traceback' not in r.stderr, r.stderr.decode('utf-8', 'replace')[-300:])
 check("...exactly one entry, the body byte for byte", len(headings(added)) == 1
       and added.endswith(('\n' + BODY + '\n').encode('utf-8')), added[-200:])
+before = journal()
+r = tool(WHO, 'a body in parts', '--body', '- action: the first line.', '- detail: the second line.')
+added = journal()[len(before):]
+check("--body given one quoted line per item keeps every line, in order — none is dropped",
+      r.returncode == 0 and added.endswith(b'\n- action: the first line.\n- detail: the second line.\n'), added[-200:])
 
 # ---- + a closed pipe after the write is not a failure --------------------------------------------------------------
 _rd, _wr = os.pipe()
@@ -237,6 +243,27 @@ r = subprocess.run([sys.executable, os.path.join(G, 'bin', 'dmgeo.py'), 'مکا�
 check("...dmgeo, given a Persian position on a cp1252 machine, refuses it in words, not a traceback",
       r.returncode == 1 and 'مکان' in r.stdout.decode('utf-8', 'replace') and b'Traceback' not in r.stderr,
       r.stderr.decode('utf-8', 'replace')[-300:])
+# ...AND EVERY CALL THAT READS A CHILD'S OUTPUT AS TEXT NAMES UTF-8. With no `encoding`, a text-mode subprocess call
+# decodes in the machine's code page — on Windows until Python 3.15 — and the gate's reading of a Persian gardener's
+# bean from git failed in subprocess's reader thread, above its verdict. The tools, the seed, the tests and the site's
+# builder alike; test/germinate.py runs the gate on such a machine.
+_unnamed = []
+for _dir in ('bin', 'seed', 'test', 'site'):
+    for _dp, _dn, _fn in os.walk(os.path.join(ROOT, _dir)):
+        for _p in (os.path.join(_dp, f) for f in sorted(_fn) if f.endswith('.py')):
+            _tree = ast.parse(open(_p, encoding='utf-8').read())
+            _sp = {'subprocess'} | {a.asname for n in ast.walk(_tree) if isinstance(n, ast.Import)
+                                    for a in n.names if a.name == 'subprocess' and a.asname}
+            for _n in ast.walk(_tree):
+                if not (isinstance(_n, ast.Call) and isinstance(_n.func, ast.Attribute)
+                        and isinstance(_n.func.value, ast.Name) and _n.func.value.id in _sp):
+                    continue
+                _kw = {k.arg: k.value for k in _n.keywords if k.arg}
+                if any(k in _kw and not (isinstance(_kw[k], ast.Constant) and not _kw[k].value)
+                       for k in ('text', 'universal_newlines')) and 'encoding' not in _kw:
+                    _unnamed.append(f"{os.path.relpath(_p, ROOT)}:{_n.lineno}")
+check("every subprocess call that reads a child's output as text names its encoding, so git's UTF-8 is never read in "
+      "a code page", not _unnamed, _unnamed)
 
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\njournal: {sum(results)}/{len(results)} checks passed")

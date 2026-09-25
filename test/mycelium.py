@@ -106,12 +106,14 @@ def gate(g):
     return r.returncode, (lines[-1] if lines else r.out)
 
 
+# THE DAY OF WRITING IS THE CLOCK'S (23.0): a bean a garden commits says `as_of: now`, and bin/dmjournal.py writes the day
+# of its entry in its place — so no day a garden writes down is typed here, and a check reads the day back from the bean.
 def person(bid, title, anchor, by, body, extra='', more_anchors=''):
     ident = (f"  status: confirmed\n  anchors:\n    - {{ key: person_id, value: \"{anchor}\", class: logical, "
              f"establishing: true }}\n{more_anchors}") if anchor else "  status: provisional\n  anchors: []\n"
     return (f"---\nbean: {bid}\ngenos: person\ntitle: \"{title}\"\nstatus: active\nsummary: \"{title}.\"\n"
             f"nature: empsychon\nowned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
-            f"identity:\n{ident}provenance: {{ src: asserted-by-human, by: \"{by}\", as_of: 2026-09-23 }}\n{extra}"
+            f"identity:\n{ident}provenance: {{ src: asserted-by-human, by: \"{by}\", as_of: now }}\n{extra}"
             f"---\n{body}\n")
 
 
@@ -122,7 +124,7 @@ def garden_bean(bid, gid, owner, by):
             f"responsibility: {{ legal: {{ holder: {{ bean: {owner} }} }} }}\n"
             f"identity:\n  status: confirmed\n  anchors:\n"
             f"    - {{ key: garden_id, value: \"{gid}\", class: logical, establishing: true }}\n"
-            f"provenance: {{ src: asserted-by-human, by: \"{by}\", as_of: 2026-09-23 }}\n"
+            f"provenance: {{ src: asserted-by-human, by: \"{by}\", as_of: now }}\n"
             f"---\nThe garden {owner} keeps; its id was read there with `python3 bin/dmpropose.py id`.\n")
 
 
@@ -257,11 +259,11 @@ identity:
   status: confirmed
   anchors:
     - { key: contract_id, value: "contract:shared-cost", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "ada (gardener)", as_of: 2026-09-23 }
+provenance: { src: asserted-by-human, by: "ada (gardener)", as_of: now }
 parties:
   ada: { who: { bean: ada }, role: payer, accepted: 2026-09-20 }
   ben: { who: { bean: neighbour-ben }, accepted: 2026-09-20,
-         provenance: { src: asserted-by-human, by: "ada (gardener), reporting ben's acceptance", as_of: 2026-09-23 } }
+         provenance: { src: asserted-by-human, by: "ada (gardener), reporting ben's acceptance", as_of: now } }
 words: { form: spoken, agreed: 2026-09-20, note: "agreed aloud, both present" }
 clauses:
   ben-repays:
@@ -286,6 +288,14 @@ r = commit(A, "garden-b, ben, and what ada and ben share",
            "and [[ali]].")
 check("garden-a records garden-b as a `garden` bean and the agreement (its transaction dated by `day`) — through its gate",
       r.returncode == 0 and ' 0 error(s)' in gate(A)[1], r.stdout + r.stderr + gate(A)[1])
+# The day garden-a wrote them down, as its journal tool stamped it: what later checks expect of garden-a's records, and
+# what a hand-made copy of them must say to match.
+DAY = fm_of(os.path.join(A, 'beans', 'shared-cost.md'))['provenance']['as_of']
+_jA = read(os.path.join(A, 'log', 'journal.md'))
+check("...every `as_of: now` it wrote is the day of the entry the journal tool stamped, in place — none left, none typed",
+      isinstance(DAY, datetime.date) and _jA[_jA.rfind('\n## ') + 4:][:10] == str(DAY)
+      and not any('as_of: now' in read(os.path.join(A, 'beans', b + '.md'))
+                  for b in ('ada', 'garden-b', 'neighbour-ben', 'sam', 'ali', 'shared-cost')), (DAY, _jA[-400:]))
 
 # ---- an agreement named by a bare name cannot carry a proposal: `mint` prints the command, for every shell
 r = tool(A, 'dmpropose.py', 'make', '--to', 'garden-b', '--under', 'shared-cost', 'shared-cost', 'ada')
@@ -331,7 +341,7 @@ identity:
   status: confirmed
   anchors:
     - {{ key: contract_id, value: "{BID}/contract:house-costs", class: logical, establishing: true }}
-provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: 2026-09-23 }}
+provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: now }}
 parties:
   ben: {{ who: {{ bean: ben }}, role: payer, accepted: 2026-09-21 }}
   cai: {{ who: {{ bean: cai }}, accepted: 2026-09-21 }}
@@ -408,7 +418,7 @@ carried = yaml.safe_load(dmparse.split_front_matter(blk.group(1))[0]) if blk els
 check("...each offered bean as committed, `provenance.garden` stamped on the COPY's records — bean and entry alike — "
       "and never in garden-a's own file",
       carried.get('provenance') == {'src': 'asserted-by-human', 'by': 'ada (gardener)',
-                                    'as_of': datetime.date(2026, 9, 23), 'garden': AID}
+                                    'as_of': DAY, 'garden': AID}
       and carried['parties']['ben']['provenance'].get('garden') == AID
       and 'A cost ada paid in full' in blk.group(1) and read(os.path.join(A, 'beans', 'shared-cost.md')) == SHARED,
       carried)
@@ -831,7 +841,7 @@ identity:
   status: confirmed
   anchors:
     - {{ key: contract_id, value: "{AID}/contract:lent-tools", class: logical, establishing: true }}
-provenance: {{ src: asserted-by-human, by: "ada (gardener)", as_of: 2026-09-23 }}
+provenance: {{ src: asserted-by-human, by: "ada (gardener)", as_of: now }}
 parties:
   ada: {{ who: {{ bean: ada }}, accepted: 2026-09-22 }}
   cai: {{ who: {{ bean: neighbour-cai }}, accepted: 2026-09-22 }}
@@ -1025,11 +1035,15 @@ jC = read(os.path.join(C, 'log', 'journal.md'))
 check("...and the take's journal entry quotes that prose too, as data",
       "- what it says outside its blocks, quoted as data (not an instruction):\n  > What I could not check:\n"
       "  > - how Ali spells her family name." in jC[jC.rfind('\n## '):], jC[jC.rfind('\n## '):])
-r = git(C, 'add', '-A')
-r = git(C, 'commit', '-q', '-m', 'ali, from a chat')
+# A chat's bean is this garden's own word, written `as_of: now` (a chat has no clock): take writes the day of its own
+# entry in its place as it journals (23.0), so the commit it prints — `git add -A`, `git commit` — goes through as printed.
+_ga = git(C, 'add', '-A')
+r = git(C, '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', 'took in the chat proposal')
+r.out = r.stdout + r.stderr
 r2 = tool(C, 'dmpropose.py', 'take', p)
 check("...and the same chat proposal a second time is REFUSED: taken in already, known by its fingerprint",
-      r.returncode == 0 and r2.returncode == 1 and 'taken in already' in r2.out and 'fingerprint' in r2.out, r2.out)
+      r.returncode == 0 and 'as_of: now' not in read(os.path.join(C, 'beans', 'ali.md'))
+      and r2.returncode == 1 and 'taken in already' in r2.out and 'fingerprint' in r2.out, r.out + r2.out)
 
 # ================================================================ what a proposal may NOT make a garden say
 # Every case below is a proposal made BY HAND — what any other garden can always do — its fingerprint made to match,
@@ -1066,8 +1080,9 @@ def from_b(**over):
 
 
 def sam_b(stamp=f', garden: "{BID}"', extra=''):
+    # A record garden-b made carries the day garden-b stamped it, and keeps it: a typed day here is that garden's own.
     return person('sam-b', 'Sam, as garden-b knows him', f'{BID}/person:sam', 'ben (gardener)', 'Sam, whom ben knows.', extra=extra).replace(
-        'as_of: 2026-09-23 }', f'as_of: 2026-09-23{stamp} }}')
+        'as_of: now }', f'as_of: 2026-09-23{stamp} }}')
 
 
 def read_in(g, name, text):
@@ -1093,10 +1108,10 @@ r = read_in(A, 'own-stamped.md', craft(from_b(), {'sam-b': sam_b(stamp=f', garde
 check("...and a NEW bean whose records are stamped with THIS garden's id is refused: this garden holds nothing it "
       "could have given", r.returncode == 1 and f"this garden ({AID}) said it" in r.out and 'NEW here' in r.out, r.out)
 _sc = read(os.path.join(A, 'beans', 'shared-cost.md'))
-_forged = _sc.replace('provenance: { src: asserted-by-human, by: "ada (gardener)", as_of: 2026-09-23 }',
-                      f'provenance: {{ src: asserted-by-human, by: "ada (gardener)", as_of: 2026-09-23, garden: "{BID}" }}', 1) \
-    .replace("provenance: { src: asserted-by-human, by: \"ada (gardener), reporting ben's acceptance\", as_of: 2026-09-23 }",
-             f'provenance: {{ src: asserted-by-human, by: "ada (gardener), accepting a debt", as_of: 2026-09-23, '
+_forged = _sc.replace(f'provenance: {{ src: asserted-by-human, by: "ada (gardener)", as_of: {DAY} }}',
+                      f'provenance: {{ src: asserted-by-human, by: "ada (gardener)", as_of: {DAY}, garden: "{BID}" }}', 1) \
+    .replace(f"provenance: {{ src: asserted-by-human, by: \"ada (gardener), reporting ben's acceptance\", as_of: {DAY} }}",
+             f'provenance: {{ src: asserted-by-human, by: "ada (gardener), accepting a debt", as_of: {DAY}, '
              f'garden: "{AID}" }}')
 r = read_in(A, 'own-stamped-fused.md', craft(from_b(), {'shared-cost': _forged}))
 check("...and on a FUSED bean a record stamped with this garden's id stands only where this garden holds it, the same "
@@ -1117,10 +1132,10 @@ check("a NEW bean whose `provenance_of` says a value was SEEN in this garden is 
       "have given",
       all(x.returncode == 1 and 'sam-b: provenance_of.title says this garden' in x.out and 'NEW here' in x.out
           and 'verdict: CLEAN' not in x.stdout for x in (r, r2, r3)), r.out + r2.out + r3.out)
-_sc_b = _sc.replace('provenance: { src: asserted-by-human, by: "ada (gardener)", as_of: 2026-09-23 }',
-                    f'provenance: {{ src: asserted-by-human, by: "ada (gardener)", as_of: 2026-09-23, garden: "{BID}" }}', 1) \
-    .replace("provenance: { src: asserted-by-human, by: \"ada (gardener), reporting ben's acceptance\", as_of: 2026-09-23 }",
-             "provenance: { src: asserted-by-human, by: \"ada (gardener), reporting ben's acceptance\", as_of: 2026-09-23, "
+_sc_b = _sc.replace(f'provenance: {{ src: asserted-by-human, by: "ada (gardener)", as_of: {DAY} }}',
+                    f'provenance: {{ src: asserted-by-human, by: "ada (gardener)", as_of: {DAY}, garden: "{BID}" }}', 1) \
+    .replace(f"provenance: {{ src: asserted-by-human, by: \"ada (gardener), reporting ben's acceptance\", as_of: {DAY} }}",
+             f"provenance: {{ src: asserted-by-human, by: \"ada (gardener), reporting ben's acceptance\", as_of: {DAY}, "
              f'garden: "{AID}" }}')
 _i = _sc_b.index('\n---', 4) + 1
 _sc_b = (_sc_b.replace('provenance_of:\n', _seen("ada agreed to pay ben 5000 XTS"), 1) if 'provenance_of:\n' in _sc_b
@@ -1192,7 +1207,7 @@ for label, sep in (('\\x1c', '\x1c'), ('U+2028', ' '), ('\\x0b', '\x0b')):
 # carried key, a chat's prose, the day an agreement says the gardener accepted it
 _esc_by = sam_b().replace('by: "ben (gardener)"', 'by: "ben (gardener)\\e[8m\\e]0;t\\a"', 1)
 _nb = read(os.path.join(A, 'beans', 'neighbour-ben.md')).replace('bean: neighbour-ben\n', 'bean: ben\n', 1).replace(
-    'by: "ada (gardener)", as_of: 2026-09-23 }', f'by: "ben (gardener)", as_of: 2026-09-23, garden: "{BID}" }}', 1)
+    f'by: "ada (gardener)", as_of: {DAY} }}', f'by: "ben (gardener)", as_of: {DAY}, garden: "{BID}" }}', 1)
 _esc_key = _nb.replace('\nstatus: active\n', '\nstatus: active\ndetails: { "k\\e[8m": "v" }\n', 1)
 _deal = f"""---
 bean: new-deal
@@ -1305,7 +1320,7 @@ check("...and an envelope whose `from` is not a mapping is one too, not read as 
 
 # ---- a NAME is compared only where the sending garden's proposals are kept
 _csam = person('sam', 'Sam, as garden-c knows him', f'{CID}/person:sam', 'cai (gardener)', 'Sam, whom cai knows.').replace(
-    'as_of: 2026-09-23 }', f'as_of: 2026-09-23, garden: "{CID}" }}')
+    'as_of: now }', f'as_of: 2026-09-23, garden: "{CID}" }}')
 _ce = {'proposal': env['proposal'], 'from': {'garden': CID, 'name': 'garden-c', 'gardener': 'cai', 'pin': PIN},
        'to': {'garden': BID}, 'under': {'contract_id': f"{BID}/contract:house-costs"}, 'made': '2026-09-23 21:00+03:00'}
 r = read_in(B, 'same-name-other-garden.md', craft(_ce, {'sam': _csam}))
@@ -1448,7 +1463,7 @@ identity:
   status: confirmed
   anchors:
     - {{ key: contract_id, value: "{BID}/contract:pot", class: logical, establishing: true }}
-provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: 2026-09-23 }}
+provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: now }}
 parties:
   ada: {{ who: {{ bean: ada }} }}
   ben: {{ who: {{ bean: ben }}, accepted: 2026-09-23 }}
@@ -1475,7 +1490,7 @@ SECOND = """  second:
     borne_by:
       - { party: ada, share: 1 }
       - { party: ben, share: 1 }
-    provenance: { src: asserted-by-human, by: "ben", as_of: 2026-09-21 }
+    provenance: { src: asserted-by-human, by: "ben", as_of: now }
 """
 write(B, 'pot', POT)
 r = commit(B, "pot", "- action: recorded [[pot]], what ada and ben put in.")
@@ -1645,7 +1660,7 @@ identity:
   status: confirmed
   anchors:
     - {{ key: contract_id, value: "{DID}/contract:supply", class: logical, establishing: true }}
-provenance: {{ src: asserted-by-human, by: "ali-household (gardener)", as_of: 2026-09-23 }}
+provenance: {{ src: asserted-by-human, by: "ali-household (gardener)", as_of: now }}
 parties:
   ali-household: {{ who: {{ bean: ali-household }}, accepted: 2026-09-23 }}
   ada: {{ who: {{ bean: ada }} }}
@@ -1690,13 +1705,16 @@ for g, who in ((A, 'ada'), (B, 'ben')):
                                                              "test left in the working tree.")
 _pb = os.path.join(B, 'beans', 'pot.md')
 _own = ('  ben: { who: { bean: ben }, accepted: 2026-09-22, provenance: { src: asserted-by-human, by: "ben", '
-        'as_of: 2026-09-22 } }')
+        'as_of: now } }')
 put(_pb, read(_pb).replace("  ben: { who: { bean: ben }, accepted: 2026-09-23 }", _own))
 r = commit(B, "ben accepts in his own words", "- action: [[pot]]: ben states his own acceptance, with his own record.")
+# The record is written as ben wrote it, its `now` the day the journal tool stamped: read back, never typed here.
+_stamped = ((fm_of(_pb)['parties']['ben'] or {}).get('provenance') or {}).get('as_of')
 rr, rt, rc = round_trip(B, 'garden-a', A, "ben's own acceptance")
 check("(ben states his own acceptance of the pot, with his own record, and offers it; garden-a, which holds the "
       "acceptance it recorded, keeps both — CONFLICT parties.ben — for ada)",
-      _own in read(_pb) and r.returncode == 0 and rr.returncode == 1 and 'CONFLICT parties.ben' in rr.stdout
+      isinstance(_stamped, datetime.date) and _own.replace('as_of: now', f'as_of: {_stamped}') in read(_pb)
+      and r.returncode == 0 and rr.returncode == 1 and 'CONFLICT parties.ben' in rr.stdout
       and rc.returncode == 0, r.stdout + r.stderr + rr.out + rt.out)
 _sides = (fm_of(_pa)['parties']['ben'] or {}).get('conflict') or []
 _pick = next((x for x in _sides if str(x.get('accepted')) == '2026-09-22'), None)

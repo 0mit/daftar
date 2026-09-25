@@ -1,5 +1,5 @@
 ---
-version: "22.0"
+version: "23.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -126,7 +126,8 @@ retired:
 provenance_record:
   attrs: [src, by, as_of, from, garden]
   from_attrs: [src, by, as_of, at]
-  meaning: "who said a fact and how they know — on a bean, an anchor or an entry. `from` names the records the fact was TAKEN or COMPUTED from — a map of name to record, or a list of records, each {src, by, as_of, at?} with `at` pointing at the input (`<section>.<key>`, {bean, field}, or `file:`); a generated fact weighs as the weakest of them. `garden` is the `garden_id` of the garden the record was made in, where that is not this one: stamped once, when a proposal carries the fact across, and never changed."
+  as_of: stamped
+  meaning: "who said a fact and how they know — on a bean, an anchor or an entry. `from` names the records the fact was TAKEN or COMPUTED from — a map of name to record, or a list of records, each {src, by, as_of, at?} with `at` pointing at the input (`<section>.<key>`, {bean, field}, or `file:`); a generated fact weighs as the weakest of them. `garden` is the `garden_id` of the garden the record was made in, where that is not this one: stamped once, when a proposal carries the fact across, and never changed. `as_of` is the day the record was written down, and it is STAMPED (`as_of: stamped`): the day of a journal heading the same commit adds — read from the clock, as the heading is, and never typed. It is written `now`, and the save writes the day in its place. A record is matched by what it is (src, by, as_of), not where it sits, so one moved is not added; a record carrying ANOTHER garden's `garden` keeps the stamp that garden gave it; the merge engine's own record says `merged`."
 natures:
   - nature: soma
     meaning: "σῶμα, a body — a being with extension in space: machines, hardware, sites"
@@ -1088,8 +1089,8 @@ vacancies:
     why: "Declared because CIVIL TIME RESOLVES THROUGH IT — a UTC offset is a geographic fact — so a registry offering gregorian-civil while hiding what it resolves through would conceal the chain. Unoccupied because no bean states where its machine physically is: `owns.site` holds prose (a data-centre name) that has never been read as a position. Expected to fill the first time a time reading has to be reconciled across two sites — a +03:00 host read against UTC logs is the shape of that defect."
   - at: "registry:anchor_systems"
     position: event-anchored
-    reason: prediction
-    why: "A position fixed only by its neighbours — 'after the push, before the cutover' — carrying no coordinate at all. Declared because it is what makes this a registry of SYSTEMS rather than a pair of coordinate schemes: sequence is the general structure and a calendar is one restriction of it. Unoccupied because every position recorded so far has had a coordinate available. Expected first in the journal, where an entry's real position is often 'between these two commits' and a date was written because the form demanded one."
+    reason: universal
+    why: "A position fixed only by its neighbours — 'after the call, before the cutover' — carrying no coordinate at all: sequence is the general structure, and a calendar is one restriction of it. Declared whole with the positions it sits beside: `timing.system` is occupied through gregorian-civil and unix-epoch. It is the form every garden needs for a happening whose day nobody said — the forms show it for exactly that — so it is universal, not a prediction: a garden standing on it is not warned."
   - at: "registry:anchor_systems"
     position: network-segment
     reason: prediction
@@ -2735,6 +2736,25 @@ The portable, estate-agnostic classification shared by every garden — the abst
   aspect's figure and from the SHAPE the named system declares — neighbours, metering, levels — so a new system gets
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
+
+- **23.0** (2026-09-24, human-ratified rule-change) — **a day nobody said has its form, and the day of writing is the
+  clock's.** MAJOR: a commit that passed under 22.0 can be refused. TWO CHANGES, ratified together by the operator
+  ("Ratified and beautiful have them in the current pr"), after a local model recording four conversations in which
+  nobody said a day wrote 121 days across 18 runs — each the nearest date in view — and five runs read past the gate's
+  warning on the form a day nobody said takes. `anchor_systems` vacancy `event-anchored`: `reason: prediction` ->
+  `universal` — the form every garden needs for a happening whose day nobody said, declared whole with the calendar
+  positions `timing.system` occupies; a garden standing on it is no longer warned (the MINOR half: nothing that passed
+  stops passing). `provenance_record.as_of: stamped` — the day of writing is the day of a journal heading the same
+  commit adds, read from the clock and never typed, written `now` and stamped in its place by the tool that stamps the
+  heading; GATE: a provenance record a commit ADDS whose `as_of` is not the day of a heading it adds (one it did not
+  already hold) is refused, and so is one with no `as_of`, and a `now` left unstamped in any stamp position. A record
+  is matched by what it is — (src, by, as_of) — not by where it sits, so a record moved into a conflict, out of one or
+  to a renamed bean is not added; a record carrying ANOTHER garden's `garden` keeps that garden's stamp (this garden's
+  own id is no exemption); the merge engine's own record (`src: generated-by-tool, by: dmmerge`) says `merged`; a
+  garden's first commit is exempt as before. The journal tool, the save and `dmpropose take` stamp before they write
+  the entry, and only the documents the entry names.
+  No bean already committed changes: `bin/dmupgrade.py` moves the pins. With the release (not law): the forms are
+  derived from the cookbook by the law — a said date shown empty with its meaning, `as_of: now`, no day in an anchor.
 
 - **22.0** (2026-09-24, human-ratified rule-change) — **the law says what a being is in one tongue: its Greek.**
   MAJOR: every bean changes. The words for what a being is came from four traditions, and one misused its own — in

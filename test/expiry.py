@@ -27,7 +27,7 @@ def check(name, cond, detail=""):
         FAILS.append(name)
 
 def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 
 T = tempfile.mkdtemp(prefix="dmexp-")
 G = os.path.join(T, "g")
@@ -298,7 +298,7 @@ def unreckoned(first, rec, today="2026-09-23"):
     import json
     try:
         r = subprocess.run([sys.executable, "-c", _PROBE, json.dumps([first, dict(rec, of="time"), today])],
-                           capture_output=True, text=True, cwd=G, timeout=30)
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=G, timeout=30)
     except subprocess.TimeoutExpired:
         return "did not end in 30 seconds", 30.0
     return tuple(json.loads(r.stdout)) if r.stdout.strip() else (r.stderr[-300:], 0.0)
@@ -374,7 +374,8 @@ out = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G).
 check("the gate accepts clauses whose place no calendar has (`at` is prose to it) — so the tools must end on them",
       "0 error" in out, out[-600:])
 try:
-    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py")], capture_output=True, text=True, cwd=G, timeout=60)
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py")], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", cwd=G, timeout=60)
     out, ended = r.stdout, True
 except subprocess.TimeoutExpired:
     out, ended = "(killed after 60 s)", False
@@ -384,7 +385,8 @@ check("...dmstale ENDS on them, each a NOTE with the reason", ended and "Traceba
 check("...and a leap-day fee names the years it skips beside its row",
       any(l.startswith("NOTE") and "odd.clauses[leap]" in l and "it has no 02-29" in l for l in out.splitlines()), out[-900:])
 try:
-    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "odd"], capture_output=True, text=True, cwd=G, timeout=60)
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "odd"], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", cwd=G, timeout=60)
     lout, ended = r.stdout + r.stderr, True
 except subprocess.TimeoutExpired:
     lout, ended = "(killed after 60 s)", False
@@ -429,7 +431,8 @@ clauses:
 An agreement.
 """)
 try:
-    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py")], capture_output=True, text=True, cwd=G, timeout=60)
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py")], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", cwd=G, timeout=60)
     out, ended = r.stdout + r.stderr, True
 except subprocess.TimeoutExpired:
     out, ended = "(killed after 60 s)", False
@@ -470,7 +473,8 @@ check("...and where NO side can be walked, each reason is its own — a day beyo
       and "due jdn:99999999999 is not a day this can read" in line("unwalkable") and "by rule" not in line("unwalkable")
       and "(200 characters)" in line("unwalkable") and "9" * 200 not in line("unwalkable"), line("unwalkable"))
 try:
-    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py"), "--quiet"], capture_output=True, text=True, cwd=G,
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmstale.py"), "--quiet"], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", cwd=G,
                        timeout=60)
     qout = r.stdout + r.stderr
 except subprocess.TimeoutExpired:
@@ -479,7 +483,8 @@ check("...and under --quiet, where an OK row is not printed, the sides it could 
       "Traceback" not in qout and sum(1 for l in qout.splitlines() if l.startswith("NOTE") and "beyond.clauses[disputed]" in l
                                       and "a side of this merge conflict cannot be walked here" in l) == 2, qout[-900:])
 try:
-    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "beyond"], capture_output=True, text=True, cwd=G, timeout=60)
+    r = subprocess.run([sys.executable, os.path.join(G, "bin", "dmledger.py"), "beyond"], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", cwd=G, timeout=60)
     lout, ended = r.stdout + r.stderr, True
 except subprocess.TimeoutExpired:
     lout, ended = "(killed after 60 s)", False
@@ -587,7 +592,7 @@ for _tool, _args in (("dmstale.py", []), ("dmledger.py", ["long-lease"])):
     _t0 = _time.time()
     try:
         _r = subprocess.run([sys.executable, os.path.join(G, "bin", _tool)] + _args, capture_output=True, text=True,
-                            cwd=G, timeout=300)
+                            encoding="utf-8", errors="replace", cwd=G, timeout=300)
         _times[_tool] = (round(_time.time() - _t0, 1), _r.stdout)
     except subprocess.TimeoutExpired:
         _times[_tool] = (300, "(killed after 300 s)")

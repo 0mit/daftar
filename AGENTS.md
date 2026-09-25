@@ -34,7 +34,16 @@ Run this, and show its last line to the person you work for:
 Do not assume which you are. Find out. And another garden — even one on this machine, even one your shell can
 reach — is not yours to write: what you would give it is a proposal (`CHECKLIST.md` Part F).
 
-## Read these, in this order, before writing anything
+## Before writing: the forms
+
+`seed/FORMS.md` — what an agent writes most, written the way the gate accepts it: the gardener, another person and
+the garden she keeps, an event, money between two people, an agreement paid in instalments, a proposal to another
+garden, and what to write when nobody said. Write from it. When the gate refuses, its message says what to write
+instead, and `python3 bin/dmwhy.py <name>` says why that rule is as it is.
+
+## On demand: the law, for a question the forms do not answer
+
+Read these when a question needs them, and only the part it needs:
 
 1. `beans/daftar.md`, **if this garden has one** — its `standing:` list says which documents are **law**, which
    are **reasoning**, which are **journal**, and which are a **guide**. A garden grown from `seed/` has none:
@@ -45,11 +54,10 @@ reach — is not yours to write: what you would give it is a proposal (`CHECKLIS
 3. `CHECKLIST.md` — Part A (what the gate checks), Part B (the judgment only you can make), Part C (how a write
    is made), Part D (how a read is made), Part E (how to work beside, and after, another agent), Part F (how to
    work with another garden).
-4. `seed/COOKBOOK.md` — the common things, written the way the gate accepts them, in an order that can be followed:
-   the gardener first, then machines, another person and her garden, an event, money between two people, an
-   agreement, a document, and a proposal to another garden.
-5. `python3 bin/dmrules.py` — every rule in force, derived from the vocabulary rather than restated. Why a rule is
-   as it is: `python3 bin/dmwhy.py <name>`.
+4. `seed/COOKBOOK.md` — the rest of the common things, in an order that can be followed: machines, a domain, a
+   document, and a value or a kind of fact the vocabulary does not have yet.
+5. `python3 bin/dmrules.py` — every rule in force, derived from the vocabulary rather than restated — and
+   `seed/std-vocab.md`, the vocabulary itself. Both are long: for one rule, `python3 bin/dmwhy.py <name>`.
 
 ## Working
 
@@ -60,10 +68,11 @@ constraints inherited from a habitat two hops up.
 **Before editing front matter:** use `bin/dmsafe.py`. Measure first (`count`), then state the number you expect;
 there is no default. Text surgery that changes more places than intended is the commonest way a bean is damaged.
 
-**Every write:** edit the one bean that owns the fact, append to `log/journal.md` in the same commit, and commit.
-The entry goes through `bin/dmjournal.py`, which writes its heading from the clock; you give it the body.
-The gate reads the **staged** blobs and refuses a bean whose change is not journalled. A change to the vocabulary
-or the law must say RULE-CHANGE distinctly.
+**Every write:** edit the one bean that owns the fact, and save it with its journal entry in one command:
+`python3 bin/dmsave.py "<who>" "<what changed>" --body "- action: …"`. It writes the entry (its heading read from
+the clock), stages everything and commits; the gate judges what is committed, and refuses a bean whose change is not
+journalled. After a refusal, fix what it names and run `python3 bin/dmsave.py --again`. A change to the vocabulary or
+the law must say RULE-CHANGE distinctly.
 
 **When you meet a case the vocabulary does not cleanly cover:** stop, show the person the relevant term with its
 sibling records, and decide together — or, working alone, park it in `log/pending.md` as `status: proposed` with

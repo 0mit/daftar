@@ -159,7 +159,7 @@ def garden_identity(path):
     try:
         import subprocess
         top = subprocess.run(['git', '-C', path, 'rev-parse', '--show-toplevel'],
-                             capture_output=True, text=True, timeout=5).stdout.strip()
+                             capture_output=True, text=True, encoding='utf-8', timeout=5).stdout.strip()
     except Exception:
         return None
     if not top or os.path.normcase(os.path.realpath(top)) != os.path.normcase(os.path.realpath(path)):

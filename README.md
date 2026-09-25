@@ -53,7 +53,7 @@ identity:
   anchors:
     - { key: serial, value: "4XK9-2217",    class: hardware, establishing: true }
     - { key: ip,     value: "192.168.1.20", class: network,  establishing: false }
-provenance: { src: asserted-by-human, by: "you", as_of: 2026-09-22 }
+provenance: { src: asserted-by-human, by: "you", as_of: now }
 ```
 
 Six weeks later, in a new session — perhaps with an agent of another make, with none of the first one's
@@ -231,12 +231,13 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `seed/std-vocab.md` | the vocabulary — the law every garden pins |
 | `seed/germinate.py`, `seed/LANGUAGE` | how a garden is grown (Python, so on Windows too; `germinate.sh` hands over to it), and what it receives |
 | `bin/dmcheck.py` | the gate |
-| `bin/dm*.py` | the other tools — merge, proposals between gardens (`dmpropose`), what is owed (`dmledger`), upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
+| `bin/dm*.py` | the other tools — merge, proposals between gardens (`dmpropose`), what is owed (`dmledger`), upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), a change saved in one command (`dmsave`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
 | `seed/RATIONALE.md` | why each rule is as it is, keyed by the rule's own path; `python3 bin/dmwhy.py <name>` reads law and reason together |
 | `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules |
 | `seed/WELCOME.md` | the door for an assistant with no shell, written to be pasted into a chat |
 | `seed/README.md`, `seed/COOKBOOK.md` | worked beans that pass the gate as written: the gardener, a host, a domain, a service, a rented server, a cost shared between two people, an agreement paid in instalments, a statement, an event, another person's garden |
+| `seed/FORMS.md` | what an agent reads before writing: six of the cookbook's recipes, byte for byte, and what to write when nobody said |
 | `test/` | the release suites, all run in CI (`CONTRIBUTING.md` has the command); `fast.py` runs in every garden's hook |
 
 ## A seed, on a notebook

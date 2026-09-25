@@ -65,7 +65,7 @@ def attr(s):
 # ─── the demo root ────────────────────────────────────────────────────────────────────────────────────────────────
 
 def git_out(*a, cwd=REPO):
-    r = subprocess.run(['git', *a], cwd=cwd, capture_output=True, text=True)
+    r = subprocess.run(['git', *a], cwd=cwd, capture_output=True, text=True, encoding='utf-8', errors='replace')
     return r.returncode, r.stdout.strip()
 
 

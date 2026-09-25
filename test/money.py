@@ -19,7 +19,7 @@ def check(name, cond, detail=""):
         FAILS.append(name)
 
 def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 
 T = tempfile.mkdtemp(prefix="dmmoney-"); G = os.path.join(T, "g")
 r = run(sys.executable, os.path.join(ROOT, "seed", "germinate.py"), G, "--gardener", "sam", cwd=ROOT)
@@ -75,8 +75,17 @@ def one(tx):
 # ---------------------------------------------------------------- AN AMOUNT, AT THE GATE
 out = one('{ what: "a test", amount: { count: 900, unit: XTS }, paid_by: [ { party: sam } ] }')
 check("the gate accepts an amount in XTS, the code kept for testing", ok(out), out[-600:])
+check("...with no warning: XTS is `special` in its registry, never withdrawn — the forms' own examples use it",
+      "no longer in use" not in out, out[-600:])
 out = one('{ what: "a meal", amount: { count: "12.50", unit: EUR }, paid_by: [ { party: sam } ] }')
 check("...and in a real currency, as a decimal string within its places", ok(out), out[-600:])
+# A CURRENCY NO LONGER IN USE is a warning, never a refusal — an old amount may be in an old currency — and it names the
+# one in use by that name, because an agent told "lira" finds three and has taken the withdrawn one (v0.34.1).
+out = one('{ what: "a purchase", amount: { count: 9000, unit: TRL }, paid_by: [ { party: sam } ] }')
+check("an amount in a currency its registry calls historic passes, with a warning naming the one in use by that name",
+      ok(out) and "'TRL'" in out and "historic" in out and "TRY (Turkish Lira)" in out, out[-800:])
+out = one('{ what: "a purchase", amount: { count: 9000, unit: TRY }, paid_by: [ { party: sam } ] }')
+check("...and the one in use draws no such warning", ok(out) and "no longer in use" not in out, out[-600:])
 out = one('{ what: "a meal", amount: { count: 12.5, unit: EUR }, paid_by: [ { party: sam } ] }')
 check("a FLOAT is refused: a decimal is written as a string", "a float has no canonical form" in out, out[-600:])
 out = one('{ what: "a meal", amount: { count: "12.505", unit: EUR }, paid_by: [ { party: sam } ] }')

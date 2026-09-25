@@ -11,7 +11,12 @@ The gate is `bin/dmcheck.py`, run as the git pre-commit hook `bin/hooks/pre-comm
 is never cloned — so run `sh bin/install.sh` once in every new clone (`python bin/install.py` where there is no
 `sh`).
 
-The gate reads the **staged** files, not the working tree: what it checks is what the commit will contain.
+The hook judges the **staged** files, not the working tree: what it checks is what the commit will contain, so a
+fix is staged (`git add`) before the commit is tried again. `python3 bin/dmsave.py` journals, stages and commits in one
+command, and after a refusal and the fix, `python3 bin/dmsave.py --again` stages and commits again. By hand,
+`python3 bin/dmcheck.py` judges the working tree, `python3 bin/dmcheck.py beans/<id>.md` one bean within the whole
+garden, and `--staged` what a commit would hold. On a clean commit the hook prints two lines, beside git's own;
+`DAFTAR_VERBOSE=1` lists every check the hook's fast suite passed.
 
 ## Part A — what the gate checks (a commit is refused on any failure)
 - [ ] Front matter is valid YAML; `bean:` / `mapping:` equals the filename, in kebab-case.
@@ -64,6 +69,10 @@ The gate reads the **staged** files, not the working tree: what it checks is wha
       `bin/dmjournal.py`: a heading the tool did not register is refused. No line the commit adds to the journal holds
       a character some reader takes for a line break (a vertical tab, a form feed, `\x1c`-`\x1e`, NEL, U+2028,
       U+2029).
+- [ ] **The day of writing:** a provenance record a commit adds carries, as its `as_of`, the day of a journal heading
+      the same commit adds — written `as_of: now`, which the save (or `bin/dmjournal.py`) writes that day in place of.
+      A typed day, a `now` left unstamped, or a record added with no `as_of` is refused. A record moved is not added; a
+      record from another garden keeps the day its garden gave it; the merge's own record says `merged`.
 - [ ] **No silent damage:** a staged document still parses and keeps its body; a removed top-level key is named in
       the journal entry; a key is not emptied out while it stays.
 

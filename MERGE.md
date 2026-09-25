@@ -52,8 +52,8 @@ other. Which anchors may establish for a bean is the gate's business before the 
 identity:
   status: confirmed              # confirmed | provisional
   anchors:
-    - { key: serial, value: "…", class: hardware, establishing: true, observed: 2026-07-30 }
-    - { key: ip, value: "…", class: network, establishing: false, provenance: { src: observed, by: "…", as_of: 2026-07-30 } }   # its own record, because it differs from the bean's
+    - { key: serial, value: "…", class: hardware, establishing: true, observed: now }
+    - { key: ip, value: "…", class: network, establishing: false, provenance: { src: observed, by: "…", as_of: now } }   # its own record, because it differs from the bean's
   aka: [host-a, laptop-7]        # garden-local ids this object has been recorded under
 ```
 What an anchor may carry is `identity_policy.anchor_attrs`.

@@ -17,7 +17,7 @@ def check(name, cond, detail=""):
         FAILS.append(name)
 
 def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 
 T = tempfile.mkdtemp(prefix="dmreform-")
 G = os.path.join(T, "g")
@@ -67,7 +67,7 @@ check("...and so is an attribute the term does not declare", "carries `it_is_qui
 bean('rental: { renews: 2027-01-15 }\n')
 out = gate()
 check("...and a missing required attribute, named as the attribute it is",
-      "rental requires 'provider' (VOCAB rental.schema.attrs.provider: required)" in out, out[-600:])
+      "rental requires 'provider' (rule rental.schema.attrs.provider)" in out, out[-600:])
 
 # ---------------------------------------------------------------- a value added to a term that READS A REGISTRY
 ROW = 'registry_additions:\n  operating_systems:\n    - { os: probe-os, family: unix, path_grammar: unix-filesystem, meaning: "a probe" }'
@@ -247,9 +247,9 @@ analysis_cache:
 
 probe.
 """)
-r = run(sys.executable, os.path.join(G, "test", "fast.py"), cwd=G)
+r = run(sys.executable, os.path.join(G, "test", "fast.py"), "-v", cwd=G)       # -v: the line of each check it passed
 check("test/fast.py — which the commit hook runs — reads the staleness pattern from the law as it is now spelled",
-      "every cache entry carries a checkable staleness key" in r.stdout and "*** FAIL ***" not in r.stdout
+      "PASS every cache entry carries a checkable staleness key" in r.stdout and "*** FAIL ***" not in r.stdout
       and "neither set is empty" in r.stdout, (r.stdout + r.stderr)[-900:])
 
 shutil.rmtree(T, ignore_errors=True)

@@ -1,9 +1,15 @@
 #!/bin/sh
 # daftar pre-commit gate. VERSIONED here because .git/hooks is not cloned — install with
 #   python3 bin/install.py        (or: sh bin/install.sh, which hands over to it)
-# The gate reads the STAGED blobs, not the working tree, so what is checked is what is committed.
+# The gate reads the STAGED blobs, not the working tree, so what is checked is what is committed: `dmcheck.py
+# --staged` copies the index into a temporary directory and runs the gate and test/fast.py found there — the staged
+# law, beans, manifest and journal, and the staged gate itself. A fix left unstaged is not in the commit, and a refusal
+# names each file the working tree holds otherwise.
 # A failing write cannot be committed by any model or session; that is what makes the gate law rather
 # than advice. To override in a genuine emergency: git commit --no-verify, and say so in the journal.
+# ON A CLEAN COMMIT THIS PRINTS TWO LINES, the gate's verdict and the fast suite's count, because whatever a hook
+# prints stays in an agent's context for the rest of its session. DAFTAR_VERBOSE=1 git commit … lists every check the
+# suite passed.
 root=$(git rev-parse --show-toplevel)
 # WHICH PYTHON: the first that runs AND imports yaml, recorded per clone as `git config daftar.python`. python.sh
 # says why and is installed beside this hook, so the hook does not depend on what the working tree holds.
@@ -11,8 +17,7 @@ _here=$(dirname "$0")
 [ -f "$_here/python.sh" ] || { echo "daftar hook: $_here/python.sh is missing — run: python3 bin/install.py" >&2; exit 1; }
 . "$_here/python.sh"
 daftar_choose_python || exit 1
-# The GATE (staged blobs, the law) and the FAST corpus suite. Both are sub-second-to-2s; the full
+# The GATE (the law) and the FAST corpus suite, both over the index. Both are sub-second-to-2s;
 # a release's slower corpus tests are deliberately NOT here — a hook that slow invites --no-verify, which
 # is the failure mode a hook must avoid, and it let a failing test through on 2026-08-02.
-daftar_py "$root/bin/dmcheck.py" || exit 1
-daftar_py "$root/test/fast.py"
+daftar_py "$root/bin/dmcheck.py" --staged

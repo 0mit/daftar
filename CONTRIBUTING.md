@@ -45,6 +45,8 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
    python3 test/germinate.py
    python3 test/refusals.py
    python3 test/journal.py
+   python3 test/save.py
+   python3 test/stamps.py
    python3 test/converge.py
    python3 test/upgrade.py
    python3 test/knowledge.py

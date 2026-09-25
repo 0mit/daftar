@@ -57,7 +57,7 @@ identity:
   status: confirmed
   anchors:
     - { key: serial, value: "PRN-7781", class: hardware, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: sam } }, technical: { owner: { bean: sam } } }
 responsibility: { legal: { holder: { bean: sam } }, technical: { holder: { bean: sam } } }
 ---
@@ -76,7 +76,9 @@ The office printer. Sam read the serial off the label on the back.
   it — here a holder.
 - A fact that fits no field you know goes under `details:` intact. Do not bend it into a field that nearly fits,
   and do not invent a top-level key: the gate refuses one.
-- Absolute dates (`2026-09-17`), explicit units, spelled-out keys. It must read correctly to a stranger in a year.
+- `as_of` is `now`: the day of writing is the clock's, and the tool that commits the bean writes that day in its
+  place, so there is no day for you to type there. Any other date is absolute (`2026-09-17`); units are explicit,
+  keys spelled out. It must read correctly to a stranger in a year.
 
 And the journal entry: its lines, and no heading. The heading is a position in time that a tool in the garden reads
 from the clock when the entry is written, and the gate refuses one it did not write — so there is nothing for you to

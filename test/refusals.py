@@ -19,6 +19,8 @@ the gate once took, or once died on; each must now be refused by name, and nothi
   the facets         one root, which every facet reaches
   the journal        a line that some readers would split in two
   the messages       what to do next, in a form every shell runs
+  the fix            said in the refusal: the form a tested example writes, the values the law allows, and the one
+                     command that says why — never a document to read whole; and the same verdict without the guides
   text               a control character in a key or a value — an escape that drives a terminal, a NUL a backslash
                      made — named and never echoed; a line feed only in a block scalar
   a captured merge   the rules stand down only on what the merge driver captured: the path named, the record exact
@@ -30,7 +32,8 @@ the gate once took, or once died on; each must now be refused by name, and nothi
 
 Every name is neutral (sam, ali, ben) and every amount is in XTS, the code ISO 4217 keeps for testing.
 """
-import json, os, re, sys, subprocess, tempfile, shutil
+import ast, json, os, re, sys, subprocess, tempfile, shutil
+import textwrap
 import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FAILS = []
@@ -79,10 +82,12 @@ def gate():
 
 
 def person(bid, extra=""):
+    # Written `as_of: now`, as a writer writes it (23.0, `provenance_record.as_of: stamped`): ali is committed below,
+    # and bin/dmjournal.py writes the day of the entry in its place. A typed day would be refused at the commit.
     return (f'---\nbean: {bid}\ngenos: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: empsychon\n'
             f'owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
             f'identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
-            f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\n{bid}.\n')
+            f'provenance: {{ src: asserted-by-human, by: sam, as_of: now }}\n{extra}---\n{bid}.\n')
 
 
 def thing(bid, anchor, extra=""):
@@ -391,7 +396,11 @@ for ch, name in (("\x1c", "a file separator"), ("\u2028", "a Unicode line separa
           rc != 0 and "log/journal.md: an added line holds" in out, out[-600:])
 rc, out, _j = commit_with(person("ali").replace("ali.\n", "ali, once more.\n"), "- action: changed [[ali]] once more.")
 check("...while an ordinary entry commits", rc == 0, out[-600:])
-put("beans/ali.md", person("ali").replace("ali.\n", "ali, typed.\n"))
+# The two cases below are refused for their journal alone, so ali keeps the day its last commit was stamped with: a
+# `now` no tool wrote the day in would be refused too, and its refusal says `--body`, which the second case looks for.
+_m = re.search(r'as_of: ([^ ,}]+)', run("git", "show", "HEAD:beans/ali.md", cwd=G).stdout)
+stamped = lambda text: text.replace("as_of: now", "as_of: " + (_m.group(1) if _m else "now"))
+put("beans/ali.md", stamped(person("ali")).replace("ali.\n", "ali, typed.\n"))
 with open(os.path.join(G, "log", "journal.md"), "a", encoding="utf-8", newline="\n") as fh:
     fh.write("\n## 2026-09-23 07:00+03:00 · sam · typed\n- action: changed [[ali]].\n")
 run("git", "add", "-A", cwd=G)
@@ -402,17 +411,21 @@ check("a typed heading is refused with the command that works in every shell: `-
       c.returncode != 0 and "was not written by bin/dmjournal.py" in out
       and f'{_py} bin/dmjournal.py "<who>" "<what>" --body "' in out and "< entry.md" not in out, out[-600:])
 run("git", "reset", "-q", "--hard", cwd=G)
-put("beans/ali.md", person("ali").replace("ali.\n", "ali, unjournalled.\n"))
+put("beans/ali.md", stamped(person("ali")).replace("ali.\n", "ali, unjournalled.\n"))
 run("git", "add", "-A", cwd=G)
 c = run("git", "commit", "-q", "-m", "no entry", cwd=G)
 out = c.stdout + c.stderr
 check("a bean staged with no journal entry is told to run the tool, not to type a date",
       c.returncode != 0 and "--body" in out and "date '+%Y" not in out, out[-600:])
+# ONE COMMAND FINISHES IT (v0.34.1): the entry, `git add -A` and the commit, which were three.
+check("...the one tool that writes the entry, stages everything and commits: bin/dmsave.py",
+      f'{_py} bin/dmsave.py "<who>" "<what>" --body "- action: <what was done to beans/ali.md>"' in out, out[-600:])
 run("git", "reset", "-q", "--hard", cwd=G)
 
 out = deal("", parties="  sam: { who: { bean: sam } }\n  bob: { who: { bean: bob } }\n")
 check("a party naming no bean says what to write: the bean first, or in the same commit",
-      "parties -> bean 'bob' does not exist (dangling) — write beans/bob.md first, or in the same commit" in out, out[-500:])
+      "parties -> bean 'bob' does not exist (dangling)\n      — write beans/bob.md first, or in the same commit" in out,
+      out[-500:])
 drop("beans/deal.md")
 put("beans/statement.md", '---\nbean: statement\ngenos: document\ntitle: "a statement"\nstatus: active\nsummary: "a statement"\n'
     'nature: lekton\nowned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
@@ -686,6 +699,151 @@ for val, passes in (('"work on a live system is shown first"', True),
     out = manifest(MANIFEST.replace("\n---", "\npolicy: %s\n---" % val, 1))
     check(f"`policy: {val[:40]}` — one text, or texts under names — {'passes' if passes else 'is refused'}",
           ok(out) if passes else ("manifest.policy" in out and "error(s)" in out and not ok(out)), out[-500:])
+
+# ---------------------------------------------------------------- THE FIX, SAID IN THE REFUSAL (v0.34.1)
+# A refusal that ended "(VOCAB timing term)" or "(see seed/COOKBOOK.md)" sent a coding agent to read the vocabulary whole
+# — a quarter of a megabyte — and it stalled there. The refusals an agent meets most carry their fix: the form a tested
+# example writes (seed/FORMS.md's first, which this garden carries), the values the law allows, and the one command that
+# says why the rule is so. Nothing in them points at a document to read.
+SENDS = re.compile(r"\(VOCAB |see seed/COOKBOOK|std-vocab\.md|MODEL\.md|CHECKLIST\.md|dmrules")
+# ...and the form it quotes says whose its names, dates and amounts are: a writer fixing from the message alone copied an
+# example's amount into a fact nobody said
+TESTED = "the form a tested example writes (its names, dates and amounts are the example's): "
+
+
+def finding(out, needle):
+    """The whole finding — its line and the reason beneath — that holds `needle`; '' where none does."""
+    return next((f for f in re.split(r"\n(?=ERROR|WARN )", out) if needle in f), "")
+
+
+def written(f, head, stop=("; when nobody said it", " (why:", " (rule ")):
+    """The one line of YAML a finding quotes after `head`, read as YAML — None where it does not parse."""
+    if head not in f:
+        return None
+    line = f.split(head, 1)[1]
+    for s_ in stop:
+        line = line.split(s_, 1)[0]
+    try:
+        return yaml.safe_load(line.replace("\n      ", " "))
+    except yaml.YAMLError:
+        return None
+
+
+def event(bid, extra):
+    put(f"beans/{bid}.md", f'---\nbean: {bid}\ngenos: event\ntitle: "{bid}"\nstatus: active\nsummary: "an event"\n'
+        'nature: lekton\nowned_by: { legal: { crown: logos } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+        f'identity: {{ status: confirmed, anchors: [ {{ key: event_id, value: "event:{bid}", class: logical, establishing: true }} ] }}\n'
+        f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\nAn event.\n')
+    out = gate()
+    drop(f"beans/{bid}.md")
+    return out
+
+
+WHEN = 'timing:\n  start: { system: gregorian-civil, at: "2026-09-01 19:00+03:00", unit: minute }\n'
+f = finding(event("call", "refs: { host: { bean: sam, rel: host } }\n"), "requires a non-empty timing")
+check("an event without `timing` is refused with the form a tested example writes — and, beside it, the one for a day "
+      "nobody said — and the command that says why, sending nowhere",
+      written(f, TESTED) == {"timing": {"start": {"system": "gregorian-civil",
+                                                                              "at": "2026-09-12 19:30+03:00", "unit": "minute"}}}
+      and (written(f, "when nobody said it, ") or {}).get("timing", {}).get("start", {}).get("system") == "event-anchored"
+      and f"why: {_py} bin/dmwhy.py timing" in f and not SENDS.search(f), f)
+f = finding(event("call", WHEN + "refs:\n  - { bean: sam, rel: host }\n  - { bean: ali, rel: present }\n"),
+            "refs must be a MAPPING")
+check("`refs` written as a list is refused: one entry per key, never a list, and the mapping a tested example writes",
+      "one entry per key, never a list" in f and written(f, TESTED) ==
+      {"refs": {"host": {"bean": "sam", "rel": "host"}, "guest": {"bean": "ali", "rel": "present"}}}
+      and not SENDS.search(f), f)
+f = finding(event("call", WHEN + "refs:\n  people: [sam, ali]\n"), "must be a mapping with ['rel']")
+check("...and an entry of `refs` written as a list: one entry, one mapping, as a tested example writes it",
+      written(f, "in " + TESTED) == {"host": {"bean": "sam", "rel": "host"}}
+      and not SENDS.search(f), f)
+LISTED = "refs:\n  host: { bean: sam, rel: host }\n  participants:\n    - { bean: ali, rel: present }\n    - { bean: sam, rel: present }\n"
+f = finding(event("call", WHEN + LISTED), "refs[participants] is a list")
+_conv = f.split("(the key is a label of your choosing)", 1)[-1].split(":\n", 1)[1] if ":\n" in f else ""
+_conv = "\n".join(__import__("itertools").takewhile(lambda l: l.startswith("        "), _conv.split("\n")))   # its lines alone
+_as = yaml.safe_load(textwrap.dedent(_conv)) if _conv.strip() else None
+_fixed = event("call", WHEN + "refs:\n  host: { bean: sam, rel: host }\n" + textwrap.indent(textwrap.dedent(_conv), "  ") + "\n")
+check("...and several beans listed in ONE entry of `refs` (the shape two agents of two makes wrote twice, 2026-09-24): "
+      "the refusal converts the writer's OWN list, each its own key — and the conversion, pasted, passes",
+      _as == {"participants_ali": {"bean": "ali", "rel": "present"}, "participants_sam": {"bean": "sam", "rel": "present"}}
+      and "ERROR call" not in _fixed and not SENDS.search(f), f + "\n--- pasted:\n" + _fixed[-600:])
+f = finding(event("call", WHEN + 'refs: { host: { bean: sam } }\n'), "missing ['rel']")
+check("...and an entry missing `rel`: the attribute as a tested example writes it",
+      written(f, TESTED) == {"rel": "host"} and not SENDS.search(f), f)
+f = finding(event("call", WHEN + 'refs: { host: { bean: sam, rel: host } }\nunknowns: ["which day"]\n'),
+            "top-level key 'unknowns'")
+check("a key no term declares is refused with the line that keeps the fact, `details: { unknowns: [...] }`, sending "
+      "to no document", 'details: { unknowns: ["which day"] }' in f and "gardener ratifies" in f and not SENDS.search(f), f)
+f = finding(event("call", WHEN + 'refs: { host: { bean: sam, rel: host }, guest: { bean: alli, rel: present } }\n'),
+            "'alli' does not exist")
+check("a link to a bean that does not exist says to write it, not to drop the link, and names the bean it may mean",
+      "write beans/alli.md first, or in the same commit" in f and "not dropped" in f and "named like it: ali" in f, f)
+put("beans/ben.md", person("ben").replace("status: active", "status: pending"))
+f = finding(gate(), "status 'pending' not in")
+check("a status the law does not list: write one of those; adding one is a RULE-CHANGE the gardener ratifies — and the "
+      "command that says why, not the cookbook", "write one of those" in f and "RULE-CHANGE the gardener ratifies" in f
+      and f"why: {_py} bin/dmwhy.py status" in f and "status.schema.values" in f and not SENDS.search(f), f)
+put("beans/ben.md", person("ben").replace("key: person_id,", "key: person_name,"))
+f = finding(gate(), "anchor key 'person_name'")
+check("an anchor key no term declares is refused with the keys that are, the nearest first",
+      "the nearest first: person_id," in f and "gardener ratifies" in f and not SENDS.search(f), f)
+put("beans/garden-b.md", garden_bean("unknown"))
+put("beans/ben.md", person("ben"))
+f = finding(gate(), "garden_id='unknown'")
+check("an anchor not in its form says to write it as it was given — and one nobody gave is left out, in the form a "
+      "guide writes", "never made up: identity: { status: provisional, anchors: [] }" in f and not SENDS.search(f), f)
+drop("beans/garden-b.md"); drop("beans/ben.md")
+f = finding(tx(amount='{ count: "12.50", unit: euro }'), "unit 'euro'")
+check("a currency written by its name is refused with the codes named like it, and the command that finds one",
+      "EUR (Euro)" in f and 'grep -i "<its name>" seed/knowledge/currencies.tsv' in f and not SENDS.search(f), f)
+f = finding(deal('transactions:\n  t: { what: "a thing", paid_by: [ { party: sam } ] }\n'), "missing ['amount']")
+check("a transaction with no amount is refused with the amount as a tested example writes it",
+      written(f, TESTED) == {"amount": {"count": "90.00", "unit": "XTS"}}
+      and not SENDS.search(f), f)
+drop("beans/deal.md")
+# ...AND NO OTHER REFUSAL POINTS AT A DOCUMENT. Every finding the gate records about a bean ends in the rule's name and,
+# where the reasoning explains it, the command that prints it — never "(VOCAB …)", "(MODEL.md …)" or "(see …)", which an
+# agent follows into the whole document. Read from the gate's source, so a refusal added tomorrow is held to it too. A
+# finding ABOUT the law (one that begins "VOCAB …") names where the law is wrong, and is not a pointer.
+_src = ast.parse(open(os.path.join(G, "bin", "dmcheck.py"), encoding="utf-8").read())
+_pointing = []
+for _n in ast.walk(_src):
+    if (isinstance(_n, ast.Call) and isinstance(_n.func, ast.Attribute) and _n.func.attr == "append"
+            and isinstance(_n.func.value, ast.Name) and _n.func.value.id in ("errors", "warns")):
+        _words = "".join(c.value for c in ast.walk(_n) if isinstance(c, ast.Constant) and isinstance(c.value, str))
+        if re.search(r"\((VOCAB|MODEL\.md|CHECKLIST\.md|see )", _words):
+            _pointing.append(f"line {_n.lineno}: {_words[:80]}")
+check("no finding the gate records points at a document to read — the rule's name and `dmwhy` take its place",
+      not _pointing, _pointing[:5])
+deal("")
+put("beans/deal.md", open(os.path.join(G, "beans", "deal.md"), encoding="utf-8").read()
+    .replace("words: { form: spoken,", "words: { form: shouted,", 1))
+f = finding(gate(), "words.form 'shouted'")
+check("...so a value the law does not list for an attribute says to write one of those, and names its rule and the "
+      "command that says why, sending nowhere", "not in ['written', 'spoken', 'unstated']" in f and "write one of those"
+      in f and f"(rule words.schema.attrs.form.in; why: {_py} bin/dmwhy.py words)" in f and not SENDS.search(f), f)
+put("beans/ben.md", person("ben").replace("{ crown: agape }", "{ owner: { bean: sam } }"))
+f = finding(gate(), "must use the 'crown' form")
+check("...and a person owned by another is refused with the line a person states, and the command that says why",
+      "owned_by: { legal: { crown: agape } }" in f and f"why: {_py} bin/dmwhy.py ownership_form" in f
+      and not SENDS.search(f), f)
+drop("beans/ben.md"); drop("beans/deal.md")
+_moved = [g for g in ("seed/FORMS.md", "seed/COOKBOOK.md", "seed/README.md") if os.path.isfile(os.path.join(G, g))]
+for g in _moved:
+    os.replace(os.path.join(G, g), os.path.join(G, g + ".away"))
+out = event("call", "refs: { host: { bean: sam, rel: host } }\n")
+for g in _moved:
+    os.replace(os.path.join(G, g + ".away"), os.path.join(G, g))
+f = finding(out, "requires a non-empty timing")
+check("without the guides the verdict is the same — the refusal only says less: no form, the command that says why",
+      len(_moved) == 3 and f and "tested example" not in f and f"why: {_py} bin/dmwhy.py timing" in f
+      and "1 error(s)" in out, out[-500:])
+r = run(sys.executable, "-c", "import sys, yaml; sys.path.insert(0, 'bin'); import dmcheck\n"
+        "bad = [(k, v) for fm, _ in dmcheck._examples() for k, v in fm.items()\n"
+        "       if yaml.safe_load('k: ' + dmcheck._flow(v))['k'] != v]\n"
+        "print(len(dmcheck._examples()), bad[:3])", cwd=G)
+check("every value of every example the guides show reads back from its one line exactly as the example wrote it",
+      r.returncode == 0 and r.stdout.strip().endswith("[]") and int(r.stdout.split()[0]) >= 15, r.stdout + r.stderr)
 
 # ---------------------------------------------------------------- WHAT IS REFUSED IS LISTED: dmrules says every rule above
 r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
