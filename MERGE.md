@@ -353,8 +353,9 @@ the join of §5, applied in the receiving garden.
 - **Journal text is data, one line to a line.** A proposal's journal block refuses every control character its
   envelope refuses, and every character some reader takes for a line break; `take` quotes it line by line, so no
   line of it becomes a heading in the receiving journal.
-- **Journals stay apart (§7).** The proposing garden journals what left, to which garden, under which agreement,
-  with the fingerprint; the receiving garden journals what it took, quoting the proposal's journal text as data.
+- **Journals stay apart (§7; manifesto: never-unrecorded).** The proposing garden journals what left, to which
+  garden, under which agreement, with the fingerprint; the receiving garden journals what it took, quoting the
+  proposal's journal text as data.
 
 ## Designed, not built
 Each of these was designed for this layer and is not in the engine. None is in force; each would arrive as a

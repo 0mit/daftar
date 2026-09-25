@@ -9,7 +9,7 @@ paragraph is true, or can be read two ways, is still a reader's work. The exampl
 in a fresh garden by `test/germinate.py`; this does not repeat that.
 """
 import subprocess
-import os, re, sys
+import glob, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FAILS = []
@@ -22,7 +22,7 @@ def check(name, cond, detail=""):
 # HISTORY.md and the vocabulary's changelog are the record of what WAS: a retired name belongs there.
 PROSE = ["README.md", "MODEL.md", "CHECKLIST.md", "MERGE.md", "CONTRIBUTING.md", "seed/README.md", "seed/COOKBOOK.md",
          ".claude/skills/daftar/SKILL.md", ".github/pull_request_template.md", "AGENTS.md", "seed/WELCOME.md",
-         "seed/FORMS.md"]
+         "seed/FORMS.md", "MANIFESTO.md", "CHARTER.md"]
 # Named in a document as NOT shipped here: the maintainers' corpus tests, which need a garden's beans.
 NOT_SHIPPED = {"test/golden.py", "test/diffgate.py"}
 # Shipped, and run by every garden's own hook rather than by the release: it needs a garden around it.
@@ -173,6 +173,28 @@ check("CONTRIBUTING.md tells a contributor to run exactly the suites the release
 on_disk = {"test/" + f for f in os.listdir(os.path.join(ROOT, "test")) if f.endswith(".py")}
 check("...and the release runs every suite that is shipped", on_disk - GARDEN_ONLY == ci_suites,
       f"not run: {sorted(on_disk - GARDEN_ONLY - ci_suites)}; run but absent: {sorted(ci_suites - on_disk)}")
+
+# THE TERMS A GARDEN RECEIVES are daftar's own texts, byte for byte. A garden gets them under seed/ (`seed/LICENSE.md` and
+# `seed/LICENSE-<id>.txt`), never at its root, where they would read as the garden's own licence and an upgrade would
+# overwrite the gardener's. A copy is a second statement; this holds it equal to the first.
+_lic = {os.path.relpath(f, ROOT).replace(os.sep, "/"): "LICENSES/" + os.path.basename(f)[len("LICENSE-"):]
+        for f in glob.glob(os.path.join(ROOT, "seed", "LICENSE-*.txt"))}
+_texts = {"LICENSES/" + os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "LICENSES", "*.txt"))}
+_differ = [a for a, b in sorted(_lic.items()) if not os.path.isfile(os.path.join(ROOT, b))
+           or open(os.path.join(ROOT, a), "rb").read() != open(os.path.join(ROOT, b), "rb").read()]
+check("every licence text a garden receives under seed/ is the repository's own in LICENSES/, byte for byte, and "
+      "every one of them is there", len(_lic) >= 6 and not _differ and set(_lic.values()) == _texts,
+      f"differ: {_differ}; missing from seed/: {sorted(_texts - set(_lic.values()))}")
+# NO DOCUMENT NAMES A LICENCE THE REPOSITORY IS NOT UNDER. A stale line saying another licence is a second statement of the
+# terms, and read against whoever wrote it. NOTICE says, once, what the releases before it were under; the history is
+# the record of what was.
+_other = re.compile(r"Apache[- ]2\.0|Apache License|MIT License|\bGPL-2\.0|\bBSD-[23]-Clause")
+_where = [f for f in subprocess.run(["git", "-C", ROOT, "ls-files"], capture_output=True, text=True,
+                                    encoding="utf-8").stdout.split()
+          if f.endswith((".md", ".html", ".py", ".toml")) and f not in ("HISTORY.md", "test/docs.py")
+          and os.path.isfile(os.path.join(ROOT, f))
+          and _other.search(open(os.path.join(ROOT, f), encoding="utf-8", errors="replace").read())]
+check("no document names a licence the repository is not under (NOTICE says what came before)", not _where, _where)
 
 print("\ndocs: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

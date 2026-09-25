@@ -304,7 +304,7 @@ def control_characters(text, category='Cc', but=('\t',), lines_in='block'):
 #
 # The fallback is NOT a silent one: where libyaml is absent the pure-Python loader is correct and
 # merely slow, which is a performance difference and not a difference in law. That is the opposite of
-# `law_carrier.invariant_no_silent_fallback`, where falling back would substitute a DIFFERENT rule.
+# the one-path rule (MODEL.md, The journal and the gate), where falling back would substitute a DIFFERENT rule.
 try:
     import yaml as _yaml
     LOADER = _yaml.CSafeLoader

@@ -6,21 +6,10 @@
     python3 bin/dmwhy.py --check                # every reason names something the law still says (exit 1 if not)
     python3 bin/dmwhy.py --stale                # reasons that speak of a law name the law no longer has
 
-daftar keeps its own material in FOUR layers, and each stands on the one beneath it:
-
-  LAWS       clear and brief, there for usability and efficiency: what is in force, in the present tense. An item
-             carries, as DATA, the `meaning:` and `why:` a reader needs in order to APPLY it — and nothing else.
-             (`seed/std-vocab.md`, a garden's `VOCAB.md`, MODEL.md, CHECKLIST.md, MERGE.md)
-  REASONING  the backbone for the laws: why a law is the way it is — the argument, what was considered and refused.
-             Keyed by the PATH of the law item it supports. (`seed/RATIONALE.md`)
-  JOURNALS   the leads for the reasoning: what was done and why, by whom, entry by entry. Reasoning is drawn FROM these
-             and cites them. (the changelog at the foot of the law; a garden's `log/journal.md`)
-  HISTORY    the exact record of events, as accurate as it can be made, which the journals are written from: commits and
-             their diffs, tags, captured outputs, a datum's own append-only record. It is never summarised.
-
-A thing belongs in exactly ONE layer, and each layer points DOWN: a law item to its reasoning by path, reasoning to the
-journal entries it was drawn from, a journal entry to the commits and captures it describes. A GUIDE (README, the
-COOKBOOK) is outside the chain: nothing reads one, so nothing in one is load-bearing.
+The layers daftar's words stand in: manifesto: layers. What each holds, and which files are law: MODEL.md, "Five
+layers" and "The journal and the gate". This reads two of them together: a law item, and its reasoning in
+`seed/RATIONALE.md`, keyed by the item's PATH — or a clause of `MANIFESTO.md` and its reasoning, by
+`doc:MANIFESTO.md#<key>`.
 
 The law and its reasoning are RELATED, not merged: neither contains the other, and the key between them is checked.
 """

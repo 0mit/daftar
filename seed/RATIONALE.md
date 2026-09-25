@@ -3,9 +3,8 @@ rationale_for: seed/std-vocab.md
 ---
 # daftar — why the law says what it says
 
-LAWS are clear and brief, there for usability and efficiency. REASONING — this document — is their backbone: why a law
-is the way it is, the argument for a design, what was considered and refused. JOURNALS are the leads reasoning is drawn
-from, and HISTORY is the exact record of events the journals are written from. Each layer points down to the next.
+This is the reasoning layer (manifesto: layers): why a law, or a clause of the manifesto, is the way it is, the argument
+for a design, what was considered and refused.
 
 Every section here is keyed by the PATH of the law item it supports, so the two are related without either containing the
 other. `python3 bin/dmwhy.py <path or name>` reads them together. A key that names nothing in the law is an error
@@ -2356,3 +2355,66 @@ A DESIGN IS NOT A PROMISE, AND NOT A LAW. The merge layer was designed whole, fr
 While the design stood in the present tense among the rules, a reader could not tell the engine from the plan. So
 MERGE.md states what the engine does, and this section keeps the rest of the design — named, so it is not lost, and
 out of the present tense, so it is not read as in force.
+
+## doc:MANIFESTO.md#serve
+
+THE FIRST OF THE NINE LIVES. In the *Phaedrus* (248d–e) the soul that has seen most is born into the first of nine
+lives: «φιλοσόφου ἢ φιλοκάλου ἢ μουσικοῦ τινος καὶ ἐρωτικοῦ», a lover of wisdom, or of beauty, or one of the Muses'
+people and of love. The eighth is the sophist or the demagogue (σοφιστικὸς ἢ δημοκοπικός); the ninth, the tyrant
+(τυραννικός). The eldest Muses, Calliope and Urania, are told of those who spend their lives in philosophy (259d). The
+clause takes its place in the first life and names the two it refuses: the one who sells the appearance of wisdom,
+«σοφίας … δόξαν, οὐκ ἀλήθειαν» (275a), and the one who closes what belongs to all.
+
+A NOTEBOOK HOLDS REMINDERS, NOT MEMORY. Theuth offered writing as a drug for memory and wisdom, «μνήμης τε … καὶ σοφίας
+φάρμακον» (274e); Thamus answered that it is a drug for reminding, «οὔκουν μνήμης ἀλλὰ ὑπομνήσεως φάρμακον» (275a), and
+that a written word, wronged, «τοῦ πατρὸς ἀεὶ δεῖται βοηθοῦ» — always needs its father to help it (275e). daftar's
+answer to both is its structure: a record is a reminder, never a memory, and every fact keeps its father beside it,
+who said it and how they know (provenance). The wise man will still sow «ἐν γράμμασι κήπους», gardens in letters,
+storing reminders «ἑαυτῷ … καὶ παντὶ τῷ ταὐτὸν ἴχνος μετιόντι», for himself and for everyone who follows the same
+track (276d). That is daftar's word for its repositories, and the clause `after`.
+
+WHY NOT THE MUSES' SERVANT. «Μουσάων θεράπων» (*Theogony* 100) is Hesiod's title for the bard, whose life the
+*Phaedrus* ranks sixth (ποιητικός, 248e), and whose song makes the grieving forget (*Theogony* 55, 102–103). A
+ledger's work is the opposite of forgetting.
+
+## doc:MANIFESTO.md#who-where
+
+ONE PERSON, SEVERAL NAMES. A person may carry the name a state registered, the name they have been called by all
+their life, and a name they publish under. A rule that admits only the registered one makes the person prove, at every
+crossing, that the others are theirs. The cost is paid again at each crossing, by the person and by everyone who must
+check, and it falls hardest on whoever crosses most. daftar holds a person as one being with several anchors, each
+saying who said it and how they know, so the crossing is made once. daftar's own steward carries three names, and its
+charter says which is used where.
+
+## doc:MANIFESTO.md#gain
+
+WHY THE GAIN IS DIVIDED IN THREE. The tools that make daftar's efficiency were paid for three times over: by those who
+do the work and those who buy it; by the base, the world's shared knowledge the models learned from and the earth's
+resources they run on; and, where a right on the ground is trodden on, by whoever holds that right. So the gain is
+divided in three, and the steward's share is none (gain, cost). The text this manifesto was first drawn from gave the
+whole difference to those who work and those who buy; the steward's rule divides it in three, and keeps from that text
+what matters most, that none of it is his.
+
+A THIRD HELD, NOT A REWARD. The third for a right on the ground is paid toward what an established right is owed, never
+on top of it. A published promise of a reward can bind as one, and a bounty for suing is the opposite of prudence. It
+is held without end, because a right can be established late.
+
+## doc:MANIFESTO.md#sibling
+
+NO SIBLING, AND NO ESTATE, STANDS ABOVE ANOTHER. The old orders gave privilege by estate — by birth, nation, rank, or
+the register one was entered in — and the harm of it is written in every history. A tool that anyone can run, in any
+language, on any machine, has no reason to carry that privilege forward, and every reason not to: whatever it
+privileges, it multiplies. New tools need an ethics fit for them. So daftar's law names no country, language,
+calendar, currency, body, vendor or make of agent as the one the others are measured from, and no release carries a
+declaration in the form of one country's law.
+
+## doc:MANIFESTO.md#lawful
+
+EVERY PLACE'S LAW IS A SIBLING. The places on daftar's path differ:
+- some protect a work only when it is first published there;
+- some ask that a grant of rights be written and signed;
+- some hold that a model's output has no author;
+- some bar money across their borders.
+
+None is privileged (sibling). daftar is written in the form of none of them, and asks no one to break the law where
+they stand. What a place's law asks of a person, the steward answers for what he himself publishes.

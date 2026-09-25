@@ -73,7 +73,7 @@ def _head():
 
 
 def load_law():
-    """The vocabulary, read from the one path law_carrier names. No fallback: a missing law is an error."""
+    """The vocabulary, read from the one path the law has (MODEL.md, The journal and the gate). No fallback: a missing law is an error."""
     if not os.path.exists(STD):
         sys.exit(f"std-vocab not found at {STD} — the law has ONE path and there is no fallback")
     std = dmparse.loads(dmparse.read(STD)[0]) or {}

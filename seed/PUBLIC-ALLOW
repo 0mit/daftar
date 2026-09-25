@@ -8,7 +8,9 @@ daftar      # the project itself
 daftar-sessions  # this tool's OWN directory name (bin/dmsession.py); a garden that records a root of
                  # that name took the name FROM the tool, so refusing it here would be the tail wagging
                  # the dog — and renaming it, as was tried first, orphans every existing worktree.
-omid README.md  # the author, named once in README.md on a text of his own — by his word, 2026-09-22 ("the persian part is by me")
+omid README.md LICENSE NOTICE REUSE.toml CHARTER.md seed/LICENSE.md  # the steward, named where the terms need a name: README by his word, 2026-09-22 ("the persian part is by me"); the licence files by his word, 2026-09-25 ("I do"), with his registered name and his address
+omid@0mit.com CHARTER.md  # the steward's address, where a claim about what he publishes reaches him — by his word, 2026-09-25
+0mit.com      CHARTER.md  # the domain whose published contacts also reach him, while he holds it — by his word, 2026-09-25
 factory        site/machinery.html site/machinery/report.html site/machinery/drawn.json site/machinery/build.py
                # the name of the tool that draws daftar's mechanisms for the site's machinery page: its report names
                # itself, the page and the record of the drawing say what drew it, and the build that runs it calls

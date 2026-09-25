@@ -1,7 +1,7 @@
 # seed/knowledge — sources, licences and attribution
 
 The files in this directory are **data**, each under its own terms, distributed alongside daftar's
-Apache-2.0 code as separate works (aggregation). The gate reads them through `registry_files` in
+AGPL-3.0-or-later code and CC BY 4.0 law as separate works (aggregation). The gate reads them through `registry_files` in
 `seed/std-vocab.md`. Nothing here was invented to look complete: every row is copied from its source
 or derived from recorded evidence, and each file says which.
 
@@ -31,7 +31,7 @@ or derived from recorded evidence, and each file says which.
 
 - **Curated by daftar.** Every `docs` URL is the project's OWN documentation (checked 2026-09-19), never a
   third party's. `isced_f_2013` and `isco_08` name the fields a technology draws on and the occupations that
-  run it — a judgement, open to correction by pull request like any row. Apache-2.0 with daftar.
+  run it — a judgement, open to correction by pull request like any row. CC BY 4.0, with daftar's law.
 
 ## crosswalk-isco-08-isced-f-2013.tsv — which fields an occupation draws on
 
@@ -39,7 +39,7 @@ or derived from recorded evidence, and each file says which.
   ISCO-08 unit group, how many role→skill requirements of a hand-classified skills standard reach one ISCED-F
   field (split by importance: core, common, specialist), how many roles contribute, and the most frequent
   concrete topics. Coverage is that standard's domains only (96 unit groups) and grows as other gardens
-  classify roles. Apache-2.0 with daftar.
+  classify roles. CC BY 4.0, with daftar's law.
 
 ## currencies.tsv — the currencies, their numbers and the decimal places in use
 

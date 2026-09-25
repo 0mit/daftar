@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install PyYAML
+      - run: pip install PyYAML reuse
       - run: git config --global user.name ci && git config --global user.email ci@localhost
       - name: every document parses
         run: python3 bin/dmsafe.py
@@ -67,3 +67,13 @@ jobs:
         run: python3 test/public.py
       - name: "docs: the prose names nothing retired, nothing absent, and the suites the release runs"
         run: python3 test/docs.py
+      - name: "manifesto: stated once, above the law; every clause carried or said to be only stated; no copy grows"
+        run: python3 test/manifesto.py
+      - name: "licences: every file says whose it is and under which terms (REUSE)"
+        run: reuse lint
+      - name: "sign-off: every commit of a pull request is signed off by a person (CONTRIBUTING.md)"
+        if: github.event_name == 'pull_request'
+        run: |
+          missing=$(git log --format='%H %s%n%b%x00' "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" \
+            | python3 -c "import sys; print('\n'.join(c.split('\n')[0][:72] for c in sys.stdin.read().split('\x00') if c.strip() and 'Signed-off-by:' not in c))")
+          if [ -n "$missing" ]; then echo "commits with no Signed-off-by:"; echo "$missing"; exit 1; fi

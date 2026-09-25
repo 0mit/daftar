@@ -5,7 +5,7 @@ WHAT THIS IS NOT. It is not a second gate. `bin/dmcheck.py` has no `main`, no `a
 event-level entry point: it validates the garden containing `bin/`, globbing `beans/*.md` and reading
 the STAGED blobs. Running it "on an event" is not a thing that can be asked of it, and writing an
 ingestor that restates the staged rules would be the forbidden second copy of the law — the exact shape
-`law_carrier.invariant_no_silent_fallback` exists to prevent. So this materialises the event into a real
+the one-path rule (MODEL.md, The journal and the gate) exists to prevent. So this materialises the event into a real
 working tree and a real index, and then runs the gate UNCHANGED. The gate never learns it was fed by
 anything.
 

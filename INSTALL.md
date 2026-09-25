@@ -53,7 +53,7 @@ its first bean, and the gate refuses every other bean until `GARDEN.md` names on
 
 ```sh
 cd ~/garden-sam
-git config user.name  "agent (<model>, <session>)"       # the form germinate.sh prints; e.g. "agent (claude fable-5.1, claude-code 2026-09-22)"
+git config user.name  "agent (<model>, <session>)"       # the form germinate.sh prints; e.g. "agent (model-x, harness-y 2026-09-22)"
 git config user.email "<the address the person chose>"
 git remote add origin git@github.com:me/garden.git      # if there is a remote
 git push -u origin HEAD                                 # the branch is whatever `git init` named it

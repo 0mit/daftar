@@ -1,0 +1,56 @@
+version = 1
+SPDX-PackageName = "daftar"
+SPDX-PackageSupplier = "Omid (Ahmad Kordbacheh, 0mit)"
+SPDX-PackageDownloadLocation = "https://github.com/0mit/daftar"
+
+# THE LAW AND THE GUIDES — CC BY 4.0. First, so the blocks after it narrow it: of several matching blocks the last wins.
+[[annotations]]
+path = ["*.md", "NOTICE", "seed/*.md", "seed/LANGUAGE", "seed/PUBLIC-ALLOW",
+        "seed/knowledge/SOURCES.md", "seed/knowledge/technology.tsv", "seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv",
+        "site/**/*.html", "site/*.html", "site/assets/**", "site/drawings/**", "site/machinery/drawn.json",
+        "site/machinery/record.yaml", "site/RELEASE", ".github/ISSUE_TEMPLATE/**", ".github/pull_request_template.md",
+        ".claude/skills/daftar/SKILL.md"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# THE CODE — AGPL-3.0-or-later with the garden exception, and the additional terms in LICENSE
+[[annotations]]
+path = ["bin/**", "test/**", "seed/germinate.py", "seed/germinate.sh", "site/build.py", "site/machinery/*.py",
+        "site/demo/**", ".github/workflows/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
+SPDX-License-Identifier = "AGPL-3.0-or-later WITH LicenseRef-daftar-garden-exception"
+
+# A PAGE THAT CARRIES THE DRAWING TOOL'S RUNTIME: its words CC BY, its scripts the code's terms
+[[annotations]]
+path = "site/machinery/report.html"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
+SPDX-License-Identifier = "CC-BY-4.0 AND AGPL-3.0-or-later WITH LicenseRef-daftar-garden-exception"
+
+# THE SEEDS OF A GARDEN'S OWN FILES — CC0 1.0: what grows from them is the gardener's
+[[annotations]]
+path = ["seed/*.template", "seed/FORMS.md", ".gitignore", ".gitattributes"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
+SPDX-License-Identifier = "CC0-1.0"
+
+# THIRD-PARTY DATA — its own terms (NOTICE)
+[[annotations]]
+path = "seed/knowledge/currencies.tsv"
+precedence = "override"
+SPDX-FileCopyrightText = "2015-2024 Unicode, Inc."
+SPDX-License-Identifier = "Unicode-3.0"
+
+[[annotations]]
+path = "seed/knowledge/isced-f-2013.tsv"
+precedence = "override"
+SPDX-FileCopyrightText = "UNESCO Institute for Statistics"
+SPDX-License-Identifier = "CC-BY-SA-3.0-IGO"
+
+[[annotations]]
+path = "seed/knowledge/isco-08.tsv"
+precedence = "override"
+SPDX-FileCopyrightText = "2012 International Labour Organization"
+SPDX-License-Identifier = "LicenseRef-ILO-ISCO-08"

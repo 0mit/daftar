@@ -334,9 +334,9 @@ LANGUAGE_PATTERNS = []
 #
 # They are deliberately NOT pre-bound to empty defaults: a ply that runs out of order must raise
 # NameError rather than quietly judge an empty corpus and print `0 error(s)`, which is the same
-# refusal-over-silence rule `law_carrier` and the no-index check already make. Everything ELSE a ply
-# computes is its own local. These functions were carved out of top-level script code and the carve
-# left every loop variable behind as a module global — 109 names, none with a second reader, any one
+# refusal-over-silence rule the one path to the law (MODEL.md, The journal and the gate) and the no-index
+# check already make. Everything ELSE a ply computes is its own local. These functions were carved out of
+# top-level script code and the carve left every loop variable behind as a module global — 109 names, none with a second reader, any one
 # of which could have been read across plies with nothing saying so.
 
 
@@ -3254,12 +3254,12 @@ def check_vacancy_reasons_declared():
     global VACANCY_REASONS
     VACANCY_REASONS = set(std_fm.get('vacancy_reasons') or ())
     if not VACANCY_REASONS:
-        # No fallback, deliberately, and for the reason law_carrier already gives: a gate that cannot load
-        # the law must ERROR rather than substitute one of its own. A default set here would silently accept
+        # No fallback, deliberately, and for the reason MODEL.md (The journal and the gate) already gives: a gate
+        # that cannot load the law must ERROR rather than substitute one of its own. A default set here would silently accept
         # whatever this file happened to believe on a garden whose vocabulary says something else.
         errors.append("seed/std-vocab.md declares no `vacancy_reasons:` — the gate will not check a "
                       "vacancy's reason against a list of its own invention. Declare them in the "
-                      "vocabulary (law_carrier: there is exactly one path to the law).")
+                      "vocabulary (rule: the one path to the law — there is exactly one, and no fallback).")
 
 LOCAL_ADDED = set()      # (source, position) a garden added with `values_add` — the garden accounts for exactly these
 
@@ -3758,10 +3758,10 @@ def build_staged_constants():
 # with no .git — a `cp -r`, an unpacked tarball, a copy carried to another machine — five Part-A rules
 # silently did not run and the gate still printed `0 error(s)`. Reproduced before the fix: a copy of
 # this garden with .git removed and the entire `owns:` block deleted from beans/daftar.md — the block
-# carrying `invariant_no_silent_fallback` itself — reported `58 docs, 0 error(s)`, exit 0. The hole was
+# carrying the one-path rule itself — reported `58 docs, 0 error(s)`, exit 0. The hole was
 # not unknown: test/germinate.py's own docstring names it, and that test was built AROUND it.
-# A gate that cannot verify must REFUSE. That is not a new rule — it is what `law_carrier` already says
-# about the vocabulary, applied to the transport the other half of the law arrives on.
+# A gate that cannot verify must REFUSE. That is not a new rule — it is what MODEL.md (The journal and the gate)
+# already says about the vocabulary, applied to the transport the other half of the law arrives on.
 def _git(*args):
     """Run git in ROOT. Returns (stdout, None) on success, (None, why) when the question went unanswered.
 
@@ -3843,6 +3843,18 @@ def check_staged_state():
             errors.append(f"RULE-CHANGE staged ({', '.join(rc)}) but log/journal.md not updated — a change "
                           f"to the vocabulary or the law is human-ratified and must be logged distinctly, "
                           f"more than an ordinary state-change, not less")
+
+        # NO SECRET IN THE LEDGER (MODEL.md, Ground rule 7). Most secrets have no form a gate can know, and those are the
+        # writer's to keep out; a private key has one, so the gate refuses it wherever a commit stages it — in a bean, a
+        # capture, the journal, any file. The whole staged blob is read, not only the added lines: a key already in a
+        # file is still in the ledger. The pattern is written in two parts so that this file never matches it.
+        _pem = re.compile('-----BEGIN ' + r'[A-Z0-9 ]*PRIVATE KEY-----')
+        for p in staged:
+            _txt = _staged_text(p)
+            if _txt and _pem.search(_txt):
+                errors.append(f"{p}: a private-key block is staged. Take it out and keep it in your vault, and ROTATE it: "
+                              f"a key that reached a commit, even one never pushed, may already be copied. Journal the "
+                              f"rotation, never the key (rule: no secret in the ledger, Ground rule 7).")
 
         # ONLY the ADDED lines count as the declaration. Matching the whole diff would match its context
         # lines too, so on an append-only journal any common word would look "mentioned" — a false

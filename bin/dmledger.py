@@ -30,7 +30,7 @@ TWO CURRENCIES ARE NEVER ADDED. No factor joins two currencies (the `money` quan
 every position, debt and net is per currency. A transaction priced in one currency and `charged` in another shows the
 rate it implies — charged over amount, exactly — as a reading of the statement, never as a rate to reuse.
 
-WHAT IS NOT READ IS SAID. A transaction whose figures cannot be read exactly, a bean whose front matter does not parse,
+WHAT IS NOT READ IS SAID (manifesto: never-pathless). A transaction whose figures cannot be read exactly, a bean whose front matter does not parse,
 an entry a merge left as a disagreement for a person (`{conflict: [a, b]}`): each is left out of every total and named
 in a NOTE, so a total is never smaller than it looks without the reader being told why — under its agreement, and
 under --between too, where the net is then called PARTIAL, and an agreement whose party waits for a person to say who

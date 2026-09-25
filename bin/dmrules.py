@@ -399,6 +399,7 @@ if '--core' in want:
                  "no duplicate authoritative IP (vocab-driven from the std-vocab `ip` term)",
                  "a staged bean change requires a journal entry — provenance duty",
                  "a staged change to the vocabulary or the law must say RULE-CHANGE distinctly",
+                 "no staged file holds a private-key block: a secret is never in the ledger (MODEL.md, Ground rule 7)",
                  "a staged top-level key REMOVAL must be declared (allow_remove), never silent",
                  "a staged document must not lose its human body",
                  "std-vocab must be found at its one path — there is no fallback",

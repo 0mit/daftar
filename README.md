@@ -140,20 +140,21 @@ The line between "records" and "proposes" is the **Contract of Parts** in `MODEL
 record an observation or an inference; a person ratifies identity, safety and law. What an agent may not
 decide, it parks in a queue and carries on.
 
-Four layers, each standing on the one beneath, and each read at a different time:
+daftar's words stand in layers (manifesto: layers), each read at a different time; what each holds, and which files
+are law, is `MODEL.md`'s:
 
-1. **Laws** — the vocabulary and the model. Read by the gate on every commit, and by an agent when it arrives.
-2. **Reasoning** — why each rule is as it is. Read when a rule surprises someone.
-3. **Journals** — what was done and why. Read by the next agent to pick up where the last one stopped, and by
+1. **The manifesto** — `MANIFESTO.md`. Read when someone asks what daftar is for.
+2. **Laws** — the vocabulary and the model. Read by the gate on every commit, and by an agent when it arrives.
+3. **Reasoning** — why each rule is as it is. Read when a rule surprises someone.
+4. **Journals** — what was done and why. Read by the next agent to pick up where the last one stopped, and by
    a person on the day something is wrong.
-4. **History** — git. Read by nobody, until it is the only thing left.
+5. **History** — git. Read by nobody, until it is the only thing left.
 
 ## Start
 
-You need a coding agent with a shell and git — as of September 2026: Claude Code, Cursor, Codex CLI, Gemini
-CLI, GitHub Copilot's agent, Aider, and the like, on Linux, macOS or Windows — and a place for a private git
-repository. The notebook is
-yours; nothing here ever sees it.
+You need a coding agent with a shell and git — as of September 2026, in the alphabet's order: Aider, Claude Code,
+Codex CLI, Cursor, Gemini CLI, GitHub Copilot's agent, and the like, on Linux, macOS or Windows — and a place for a
+private git repository. The notebook is yours (manifesto: never-sells).
 
 Tell the agent:
 
@@ -166,7 +167,7 @@ The agent grows the notebook with you as its gardener: your own person bean is t
 `GARDEN.md` names you, so every agent that comes after knows whose notebook it is working in — the gate's last
 line says it.
 
-The next time you sit down, tell it to read `AGENTS.md` in the notebook — in Claude Code, *"load daftar"*.
+The next time you sit down, tell it to read `AGENTS.md` in the notebook.
 From then on you talk about your things, and the agent keeps the notebook. You will rarely open the folder.
 
 An assistant in a chat window, with no shell, cannot run the gate and so cannot write. Paste it
@@ -234,7 +235,7 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `bin/dm*.py` | the other tools — merge, proposals between gardens (`dmpropose`), what is owed (`dmledger`), upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), a change saved in one command (`dmsave`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
 | `seed/RATIONALE.md` | why each rule is as it is, keyed by the rule's own path; `python3 bin/dmwhy.py <name>` reads law and reason together |
-| `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules |
+| `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules. The second is one tool's adapter, which loads the door by itself; another tool's adapter would stand beside it |
 | `seed/WELCOME.md` | the door for an assistant with no shell, written to be pasted into a chat |
 | `seed/README.md`, `seed/COOKBOOK.md` | worked beans that pass the gate as written: the gardener, a host, a domain, a service, a rented server, a cost shared between two people, an agreement paid in instalments, a statement, an event, another person's garden |
 | `seed/FORMS.md` | what an agent reads before writing: six of the cookbook's recipes, byte for byte, and what to write when nobody said |
@@ -272,4 +273,8 @@ beautiful; the agent's text is its own.*
 
 ## License
 
-[Apache-2.0](LICENSE).
+The code: [AGPL-3.0-or-later](LICENSES/AGPL-3.0-or-later.txt), with the
+[garden exception](LICENSES/LicenseRef-daftar-garden-exception.txt). The law, the guides and the site:
+[CC BY 4.0](LICENSES/CC-BY-4.0.txt). The seeds of a garden's own files: [CC0 1.0](LICENSES/CC0-1.0.txt). Every path:
+[LICENSE](LICENSE) and `REUSE.toml`. What daftar holds to is [MANIFESTO.md](MANIFESTO.md); who answers for it is
+[CHARTER.md](CHARTER.md).

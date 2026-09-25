@@ -15,7 +15,9 @@ seed/*
 # under its own terms (seed/knowledge/SOURCES.md). A garden that does not extend the `knowledge` profile never reads them.
 seed/knowledge/*
 # What the law MEANS and how a write is made. A garden grown without these had the law's data and no
-# statement of what it meant; its first person bean took three attempts.
+# statement of what it meant; its first person bean took three attempts. The manifesto stands above them: the law
+# names the clause it carries, and the name must open in every garden, offline.
+MANIFESTO.md
 MODEL.md
 CHECKLIST.md
 MERGE.md

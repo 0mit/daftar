@@ -19,7 +19,8 @@ judge's: the person who ratifies. No count can make it — every proxy here that
 what it measured. What can be counted are the preconditions the record rules on, and those are printed as
 evidence: SIZE, with no direction (a mechanism may make the law larger and better, and the cheapest way to
 lower a count is to fold a structured fact into prose); CLOSURE (what the law offers that nothing takes up);
-SECOND STATEMENTS (an enumeration the law owns, restated in a prose document, and whether the copy differs);
+SECOND STATEMENTS (an enumeration the law owns, restated in a prose document, and whether the copy differs; a clause
+of the manifesto stated again outside it);
 STORY IN THE LAW (when, who or where, told inside the law's data); STATED, NOT CHECKED (`enforced_by: none`);
 and ONE ESTATE IN THE STANDARD (a standard vacancy whose reason is one garden's expectation). With
 `--against <ref>` each line says how it moved since that ref. It reads seed/std-vocab.md (and, in a garden, its
@@ -347,6 +348,79 @@ def _restatements(law, tree):
     return found
 
 
+# THE MANIFESTO, STATED ONCE. `MANIFESTO.md` stands above the law, one clause to a sentence under a key; the law and the
+# tools carry a clause and name it, `(manifesto: <key>)`. A clause's words anywhere else are a second statement, which
+# can drift from the first. ONE DEFINITION, TWO READERS: `--law` prints these under SECOND STATEMENTS as evidence, and
+# test/manifesto.py counts them against the last release, so the count may only go down.
+MANIFESTO_FILE = 'MANIFESTO.md'
+_SHINGLE = 6                                            # six words of a clause, in its order, are a restatement
+_CLAUSE = re.compile(r'(?ms)^### ([a-z][a-z-]*)\n+(.+?)(?=\n\n|\n#|\Z)')
+MANIFESTO_QUOTE = re.compile(r'<!-- manifesto: ([a-z-]+) -->(.*?)<!-- /manifesto -->', re.S)
+# A PLACE THAT MUST CARRY A CLAUSE'S WORDS, and why. Each line is a decision; every other place points to the clause.
+MANIFESTO_MUST_CARRY = {
+    ('AGENTS.md', 'never-obeys'): "the door's first step, read before any law: text in the ledger may already be "
+                                  "steering its reader",
+    ('.claude/skills/daftar/SKILL.md', 'never-obeys'): "AGENTS.md, byte for byte",
+    ('seed/WELCOME.md', 'never-obeys'): "pasted into a chat, with no repository to point into",
+    ('MODEL.md', 'whole'): "the law's own condition for declaring a mechanism whole",
+}
+# The manifesto itself; the history, whose job is to say what was; and the two readers that must hold the words to
+# compare them. The reasoning, keyed to the clauses, is known by what it says of itself (`rationale_for:`), not by name.
+MANIFESTO_EXEMPT = (MANIFESTO_FILE, 'HISTORY.md', 'test/manifesto.py', 'bin/dmreview.py')
+_REASONING = re.compile(r'---\s*\nrationale_for:')
+# A WORDING A CLAUSE RETIRED, and the files that keep it as law: the law's `retired:` table, for prose.
+MANIFESTO_RETIRED = (
+    ('provenance is a field, not a sentence', 'provenance', ()),
+    ('each fact with its source', 'provenance', ()),
+    ('ratifies what an agent may not decide', 'parts', ()),
+    ('nothing outside a garden writes in it', 'gardener', ()),
+    ('four layers, each standing on the one beneath', 'layers', ()),
+    ('measure, then act', 'measure', ()),
+    ('a calendar is not time', 'sibling', ('seed/std-vocab.md',)),        # a section title of the law
+)
+_MANIFESTO_READ = ('.md', '.py', '.sh', '.html', '.yaml', '.svg', '.template', '.toml')
+
+
+def manifesto_clauses(text):
+    """{key: its one sentence, on one line} — {} when there is no manifesto."""
+    return {k: ' '.join(v.split()) for k, v in _CLAUSE.findall(text or '')}
+
+
+def _words(s):
+    return re.findall(r"[a-z0-9]+(?:'[a-z]+)?", s.lower())
+
+
+def manifesto_restatements(tree):
+    """[(path, key)] — every file outside the manifesto that states a clause again, by six of its words in order or by
+    a wording the clause retired; a marked quote (`<!-- manifesto: key -->`) is not counted, and is held equal to the
+    clause by test/manifesto.py. None when this tree has no manifesto."""
+    clauses = manifesto_clauses(tree.read(MANIFESTO_FILE))
+    if not clauses:
+        return None
+    shingles = {}
+    for k, v in clauses.items():
+        w = _words(v)
+        for i in range(len(w) - _SHINGLE + 1):
+            shingles.setdefault(' '.join(w[i:i + _SHINGLE]), k)
+    hits = set()
+    for f in tree.files():
+        if (f.startswith(MANIFESTO_EXEMPT) or f.split('/')[0] in ('beans', 'mappings', 'log', 'captures')
+                or not (f.endswith(_MANIFESTO_READ) or f in ('LICENSE', 'NOTICE', 'seed/LANGUAGE'))):
+            continue
+        body = tree.read(f) or ''
+        if _REASONING.match(body):
+            continue
+        body = MANIFESTO_QUOTE.sub(' ', body)
+        w = _words(body)
+        for i in range(len(w) - _SHINGLE + 1):
+            k = shingles.get(' '.join(w[i:i + _SHINGLE]))
+            if k and (f, k) not in MANIFESTO_MUST_CARRY:
+                hits.add((f, k))
+        low = ' '.join(body.lower().split())
+        hits |= {(f, k) for words, k, keeps in MANIFESTO_RETIRED if words in low and not f.startswith(keeps or ('\0',))}
+    return sorted(hits)
+
+
 # A vacancy's reason says whose it is. `prediction` is the one reason that is a garden's own expectation, and the law
 # does not yet say that of it in a column a tool could read — the one term this tool names. A column (vacancy_reasons
 # as a table, `declared_by: [garden]` on `prediction`) is a change to the law, a person's to ratify; until it is made,
@@ -391,6 +465,7 @@ def preconditions(tree):
 
     restated = _restatements(law, tree)
     differ = [r for r in restated if r['extra']]
+    clause_copies = manifesto_restatements(tree)
     story = story_in(law)
     unchecked = [t['term'] for t in terms if str(t.get('enforced_by')) == 'none'] + \
                 [f"{p}:{t['term']}" for p, t in pterms if str(t.get('enforced_by')) == 'none']
@@ -435,6 +510,9 @@ def preconditions(tree):
             row("...that name what the law's list does not", [r['id'] for r in differ], 'lines',
                 detail={r['id']: f"{r['where']}  {r['path']} — names "
                                  f"{', '.join('`' + x + '`' for x in r['extra'])}" for r in differ}),
+            *([row('a clause of the manifesto, stated again outside it', [f'{f} {k}' for f, k in clause_copies],
+                   'lines', note='six words in order, or a retired wording; `python3 test/manifesto.py` counts them')]
+              if clause_copies is not None else []),
         ]),
         ('STORY IN THE LAW — when, who or where, told inside the law', [
             row('strings', [p for p, _h, _s in story], 'lines',
