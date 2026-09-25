@@ -46,6 +46,7 @@ import dmform
 import dmsafe          # the staged-state checks below run dmsafe's OWN comparison, not a copy of it
 import dmpass          # where each file sits: the law's layer map, read by its one reader and by no copy of it here
 import dmseq           # a series and a course, read by their one reader: the gate asks it, and keeps no copy
+import dmreckon        # a reading, a weighing and a pin, judged by the one reckoner's pure checks
 try:
     import yaml
 except ImportError:
@@ -496,10 +497,20 @@ def _registry_file(name):
     rows = []
     try:
         with open(path, encoding='utf-8') as fh:
-            head = fh.readline().rstrip('\n').split('\t')
-            for line in fh:
-                if line.strip():
-                    rows.append(dict(zip(head, line.rstrip('\n').split('\t'))))
+            if decl.get('format') == 'yaml':
+                # a registry whose rows are structured (a mechanism's steps, a coefficient's cases) is a YAML list of
+                # rows, read by the one parser; anything but a list of mappings is refused, never read as empty
+                _y = dmparse.loads(fh.read())
+                if not isinstance(_y, list) or not all(isinstance(r, dict) for r in _y):
+                    errors.append(f"registry_files: registry '{name}' ({decl.get('file')}) is `format: yaml`, and "
+                                  f"holds no list of rows — `[]` where it has none")
+                    _y = []
+                rows = list(_y)
+            else:
+                head = fh.readline().rstrip('\n').split('\t')
+                for line in fh:
+                    if line.strip():
+                        rows.append(dict(zip(head, line.rstrip('\n').split('\t'))))
     except OSError:
         errors.append(f"registry_files: registry '{name}' is declared at {decl.get('file')} and that file is missing "
                       f"— a declared registry is never read as empty")
@@ -3076,7 +3087,50 @@ OBS_ENTRY, OBS_PLIES = (), ()
 # ---- PLACE
 PLACE_ENTRY, PLACE_PLIES = (), ()
 # ---- RECKON
-RECKON_ENTRY, RECKON_PLIES = (), ()
+
+
+def _reckon_found(where_findings):
+    for _lv, _t in where_findings:
+        (errors if _lv == 'error' else warns).append(_t)
+
+
+def ectl_reckon(c):
+    """A reading (`selections`) against the law's closed list of operations, and a weighing's judgments (24.0, N1, step
+    10): judged by bin/dmreckon.py's pure checks, the one place the grammar is read."""
+    if c.term == 'selections':
+        _reckon_found(dmreckon.check_selection(f"{c.base}: selections[{c.label}]", c.entry, LAWVIEW))
+    elif c.term == 'weighings':
+        _reckon_found(dmreckon.check_weighing(f"{c.base}: weighings[{c.label}]", c.entry))
+
+
+def check_reckon_law():
+    """The law's own readings — each mechanism's and each ordering key's steps — in the grammar every reading is in."""
+    for _r in registry('mechanisms') or []:
+        if isinstance(_r, dict):
+            _reckon_found(dmreckon.check_selection(f"mechanisms '{_r.get('mechanism')}'", _r, LAWVIEW,
+                                                   [i.get('name') for i in _r.get('inputs') or [] if isinstance(i, dict)]))
+    for _r in registry('ordering_keys') or []:
+        if isinstance(_r, dict) and _r.get('steps'):
+            _reckon_found(dmreckon.check_selection(f"ordering_keys '{_r.get('key')}'", _r, LAWVIEW))
+
+
+def check_pins():
+    """A pin (`pin_form`) names a commit this garden has, an ancestor of HEAD, and a moment no later than the day the
+    commit is stamped (N2) — wherever a term declares an attribute `pin`."""
+    for (_ib, _base), (_fm, _b) in docs.items():
+        for _t, _s in SCHEMAS.items():
+            _node = _fm.get(_t) if isinstance(_fm, dict) else None
+            if 'pin' not in declared_attrs(_t, _s)[0] or not _node:
+                continue
+            _entries = _node.items() if isinstance(_node, dict) else enumerate(_node if isinstance(_node, list) else [])
+            for _k, _e in _entries:
+                if isinstance(_e, dict) and 'pin' in _e:
+                    _reckon_found(dmreckon.check_pin(f"{_base}: {_t}[{_k}].pin", _e['pin'], root=ROOT, days=STAMPED_DAYS))
+
+
+RECKON_ENTRY = (('selections, weighings', ectl_reckon),)
+RECKON_PLIES = ((check_reckon_law, "the law's own readings, in the one grammar"),
+                (check_pins, "a pinned reading names a commit this garden has, and a moment it had reached"))
 # ---- AGREE
 AGREE_ENTRY, AGREE_PLIES = (), ()
 # ---- VIEWCAP

@@ -131,6 +131,19 @@ one open fallback, `refs`.
 - A relation declared as the mirror of another (`inverse_of`) is held consistent with it.
 - `seed/COOKBOOK.md` shows which to use when.
 
+## Readings
+A question asked of the garden — how many, whether any, which first, how much — is a **reading**, declared on the bean it
+is about (`selections`) as steps of one closed list of operations (`operations`): select, count, sum, compare, a
+difference, a product, a value read along a series, a window's use of an allowance. Each step names only what came
+before it, so a reading never loops, and no formula is written or evaluated. A reading is read each time it is asked
+(`bin/dmreckon.py`) and never written back as a fact. Every number it gives comes with its lines — the beans and paths it
+was read from, and each step that made it — and with its uncertainty where the values it read state one. A truth may be
+NOT KNOWN: two values within a band that their uncertainty cannot resolve are neither equal nor unequal. A reading that
+reads a model (`mechanisms`) is refused outside the model's domain, and never extrapolated. An act that fixes a reading
+— an invoice, a verdict — records the commit and the moment it was read at (`pin`), and the same reading read at that
+commit gives the same answer. What is shown first is ordered by keys the law declares as readings (`ordering_keys`),
+and a judge's weighing of criteria (`weighings`) is written as judgments, its weights read.
+
 ## The vocabulary
 The rules are data, not code.
 - **`seed/std-vocab.md`** is the standard every garden pins. Opt-in **profiles** add groups of rules for

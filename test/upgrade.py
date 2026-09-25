@@ -469,7 +469,7 @@ with open(_gp21, 'w', encoding='utf-8', newline='\n') as fh:
     fh.write(_gt21)                                        # germinate as released, again
 _sv21 = os.path.join(R21, 'seed', 'std-vocab.md')
 _svt21 = open(_sv21, encoding='utf-8').read()
-_gene_in = 'in: { bean_id: { gene: [person, org] } }'
+_gene_in = 'gardener:       { in: { bean_id: { gene: [person, org] } }'   # the manifest's own line: another term may name the same gene
 
 
 def release_with_law(text, tag):
@@ -478,13 +478,13 @@ def release_with_law(text, tag):
     run('git', 'add', '-A', cwd=R21); run('git', 'commit', '-qm', tag, cwd=R21); run('git', 'tag', tag, cwd=R21)
 
 
-release_with_law(_svt21.replace(_gene_in, 'in: { bean_id: { gene: [person, org, host] } }', 1), 'v9.0.2')
+release_with_law(_svt21.replace(_gene_in, 'gardener:       { in: { bean_id: { gene: [person, org, host] } }', 1), 'v9.0.2')
 reset(_aged)
 r = up21('--gardener', 'laptop', tag='v9.0.2')
 check("...dmupgrade reads them from the release's law: one whose law lets a host keep a garden takes `laptop`",
       _svt21.count(_gene_in) == 1 and "'laptop' is a host" not in r.stdout + r.stderr
       and re.search(r'^gardener: laptop\b', get('GARDEN.md'), re.M), (r.stdout + r.stderr)[-400:])
-release_with_law(_svt21.replace(_gene_in, 'in: bean_id', 1), 'v9.0.3')
+release_with_law(_svt21.replace(_gene_in, 'gardener:       { in: bean_id', 1), 'v9.0.3')
 reset(_aged)
 r = up21('--gardener', 'sam', tag='v9.0.3')
 check("...and one whose law does not say which gene may keep a garden is REFUSED — the tool does not guess",

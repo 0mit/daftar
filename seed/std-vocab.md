@@ -1336,6 +1336,34 @@ operations:
     meaning: "whether two values stand as `is` says, exactly, by exact conversion within one quantity. With `band`: equal when |Δ| ≤ band and the difference is RESOLVABLE — k·u(Δ) ≤ band, k the law's `compatibility.multiple` — and NOT KNOWN when |Δ| ≤ band and it is not"
   - { op: read, gives: value, takes: { of: { in: { type: kebab } }, path: { required: true, in: { type: field_path } } }, meaning: "the one value at the path — of the one member of an earlier set, or of the bean the reading is read from — with its u; refused when the path holds none or several" }
   - { op: constant, gives: value, takes: { value: { required: true, in: { quantity: any } } }, meaning: "a value the reading states: a band, a limit, an allowance — with its u where it has one" }
+  - { op: difference,  gives: value, exact: true,  u_rule: absolute, takes: { of: { required: true, in: { type: kebab } }, with: { required: true, in: { type: kebab } } }, meaning: "the first less the second, one quantity" }
+  - { op: multiply,    gives: value, exact: true,  u_rule: relative, takes: { of: { required: true, in: { type: kebab } }, with: { in: { type: kebab } }, coefficient: { in: { type: kebab }, meaning: "a row of `coefficients`" }, count: { in: { type: count } } }, meaning: "the product of the first and one of `with`, `coefficient` or `count`; its quantity is the product of theirs" }
+  - { op: divide,      gives: value, exact: true,  u_rule: relative, takes: { of: { required: true, in: { type: kebab } }, with: { required: true, in: { type: kebab } } }, meaning: "the first over the second" }
+  - { op: power,       gives: value, exact: whole, u_rule: relative, takes: { of: { required: true, in: { type: kebab } }, exponent: { required: true, in: { type: count } } }, meaning: "the value to a power: exact for a whole exponent, ≈ otherwise" }
+  - { op: square-root, gives: value, exact: false, u_rule: relative, takes: { of: { required: true, in: { type: kebab } } }, meaning: "the square root, ≈ unless the value is the square of one" }
+  - { op: exp,         gives: value, exact: false, u_rule: derivative, takes: { of: { required: true, in: { type: kebab } } }, meaning: "e to the power of a number with no dimension: a model fitted in logarithms, ≈" }
+  - { op: ln,          gives: value, exact: false, u_rule: derivative, takes: { of: { required: true, in: { type: kebab } } }, meaning: "the natural logarithm of a positive number with no dimension, ≈" }
+  - { op: convert,     gives: value, exact: true,  u_rule: relative, takes: { of: { required: true, in: { type: kebab } }, unit: { required: true, in: { registry: units, take: unit } } }, meaning: "the value in another unit of its quantity, exactly" }
+  - { op: lookup,      gives: value, exact: true,  u_rule: row, takes: { coefficient: { required: true, in: { type: kebab } }, where: { required: true, in: { type: field_path }, meaning: "the code that selects the row" } }, meaning: "the row of `coefficients` a code selects, with its own u" }
+  - { op: elapsed,     gives: value, exact: true,  u_rule: resolution, takes: { of: { required: true, in: { type: kebab } }, with: { required: true, in: { type: kebab } }, unit: { required: true, in: { registry: units, take: unit } } }, meaning: "the extent from the second position to the first, of one time system; its u from the resolutions they were written to" }
+  - { op: choose,      gives: value, exact: per-row, u_rule: per-row, takes: { computes: { required: true, in: { type: kebab }, meaning: "the property code a row of `mechanisms` computes" }, of: { in: { type: kebab }, meaning: "the being it is read for: an earlier set of one" } }, meaning: "the mechanism whose `valid` covers the case, and of those the one with the smaller validated error; the others print as the spread. None covers it: refused, saying why" }
+  - { op: rotate,      gives: value, exact: false, u_rule: derivative, takes: { pole: { required: true, in: { type: kebab }, meaning: "the pole's rows of `coefficients`" }, of: { required: true, in: { type: kebab } } }, meaning: "the velocity, east and north, of a point on a body turning about an axis" }
+  - { op: position-to, gives: value, exact: false, u_rule: derivative, takes: { of: { required: true, in: { type: kebab } }, system: { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } } } }, meaning: "a position in another reference system; refused where PROJ is absent" }
+  - { op: within,      gives: set,   exact: true,  u_rule: none, takes: { of: { required: true, in: { type: kebab } }, path: { required: true, in: { type: field_path } }, extent: { in: extent }, place: { in: any } }, meaning: "the members whose position or moment at the path lies within the extent, or the place" }
+  - { op: ancestor-at-level, gives: set, exact: true, u_rule: none, takes: { of: { required: true, in: { type: kebab } }, level: { required: true, in: { type: kebab } } }, meaning: "each code's ancestor at a level, by its scheme's `parent`" }
+  - { op: neighbour-of, gives: set,  exact: true,  u_rule: none, takes: { of: { required: true, in: { type: kebab } }, relation: { in: { type: kebab }, meaning: "a registry of relations, rows {from, to, rel}" }, distance: { in: { quantity: length } } }, meaning: "the codes a relation's `adjacent` rows name beside each, or the beings within a distance (≈)" }
+  - { op: at,          gives: value, exact: per-channel, u_rule: ties, takes: { series: { required: true, in: { type: field_path }, meaning: "`<bean>:<term>.<key>`" }, channel: { in: { type: kebab } }, position: { required: true, in: any } }, meaning: "what a channel holds at a position, as the channel says it is read between rows" }
+  - { op: window,      gives: value, exact: per-channel, u_rule: absolute, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent }, by: { in: [mean, min, max, count, first, last] } }, meaning: "what a stretch of the line holds: by one of these, or several as groups" }
+  - { op: integral,    gives: value, exact: true,  u_rule: absolute, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent }, base: { in: any, meaning: "a position on the channel's scale, from which each value is measured" } }, meaning: "the channel summed along the line: a sum's rows added, a point's trapezoids" }
+  - { op: rate,        gives: value, exact: per-channel, u_rule: relative, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, from: { required: true, in: any }, to: { required: true, in: any } }, meaning: "the change over the distance between two positions of the line" }
+  - { op: trend,       gives: value, exact: false, u_rule: least-squares, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent } }, meaning: "the fitted slope and its u; a slope that does not exceed k·u is never called a motion, and the span that would resolve it is said" }
+  - { op: through,     gives: value, exact: true,  u_rule: ties, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, position: { required: true, in: any }, back: { in: [true, false] } }, meaning: "a position read across a tie series, forward or back, never beyond the outermost ties" }
+  - { op: gaps,        gives: set,   exact: true,  u_rule: none, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent } }, meaning: "every stretch holding no value, with its reason" }
+  - { op: travelled,   gives: value, exact: false, u_rule: derivative, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } } }, meaning: "the length along a channel of positions" }
+  - { op: join,        gives: set,   exact: per-channel, u_rule: absolute, takes: { series: { required: true, in: { type: field_path } }, with: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } } }, meaning: "two series row by row: agree, compatible (within k·u), differ, or one only" }
+  - { op: weigh,       gives: groups, exact: false, u_rule: none, takes: { weighing: { required: true, in: { key_of: weighings } } }, meaning: "the weights of a weighing's criteria (the principal eigenvector) and its consistency ratio" }
+  - { op: used-within, gives: value, exact: true,  u_rule: none, takes: { of: { required: true, in: { type: kebab } }, path: { required: true, in: { type: field_path } }, within: { required: true, in: extent }, at: { required: true, in: any } }, meaning: "the length of the members' extents inside the window of `within` that ends at `at`; where the path holds a position, how many fall inside it" }
+  - { op: conservation, gives: truth, exact: true, u_rule: none, takes: { walk: { required: true, in: { type: field_path }, meaning: "a path to a walk's `steps`" }, scheme: { required: true, in: { registry: knowledge_schemes, take: scheme } } }, meaning: "whether each step's `takes` and `gives` conserve every element and the charge, exactly; a substance with no formula is refused" }
 comparators:
   - { comparator: is,        monotone: false, meaning: "the value at the path equals the operand: a literal, `{input: <name>}`, or `{step: <id>}` of a value" }
   - { comparator: in,        monotone: false, meaning: "the value is one of a list of operands" }
@@ -1346,6 +1374,65 @@ comparators:
   - { comparator: reached,   monotone: true,  meaning: "the course at the path has at some moment held this step of its walk, or a step reachable from it by `next`: what has been reached stays reached" }
   - { comparator: at_step,   monotone: false, meaning: "the course's CURRENT step is this one" }
   - { comparator: refers_to, monotone: false, meaning: "a ref or a bean id at the path names this bean — the caller, a given value" }
+mechanism_form:
+  mechanism:  "kebab: the row's name, which names its source"
+  computes:   "{ property: {scheme, code}, quantity, unit } — what it reads"
+  inputs:     "[{ name, property: {scheme, code}, quantity, unit }] — each converted EXACTLY into the unit the source fitted it in"
+  steps:      "the steps of `selection_form`, over the inputs by name"
+  valid:      "{ where: [{scheme, code}], ranges: [{input, extent}] } — the domain the source fitted; outside it the reader REFUSES, says why, and names what would do"
+  residual:   "{ sigma: {count, unit}, form: log | relative | absolute, validated: {count, unit}, persists: per-being | none | unknown } — the source's model error, its VALIDATED error where it states one, and whether one being's error repeats at its next reading; `unknown` is read both ways, and a residual that persists scales a growth too"
+  known_bias: "optional prose, as the source states it"
+  source:     "{ cite, locator, doi? }"
+  terms:      "the terms the row is under, as NOTICE lists them"
+coefficient_form:
+  coefficient: "kebab"
+  count:       "the value"
+  unit:        "a unit"
+  u:           "optional: its standard uncertainty, or `bounds: [low, high]`"
+  where:       "[{scheme, code}] — the cases it applies to"
+  convention:  "optional true — fixed by agreement, not measured"
+  source:      "{ cite, locator }"
+  terms:       "as for a mechanism"
+pin_form:
+  commit: "the commit a reading was read at: an object id of this garden (7 to 40 hex digits), an ancestor of the commit that records the pin"
+  at:     "the moment it was read at (`moment`, `stamped`): written `now`, and the save writes the moment of its journal heading — the clock a reading that reads the clock took"
+  garden: "the `garden` bean of the garden read, where the reading was across gardens"
+compatibility:
+  multiple: 2
+  source: "JCGM 200:2012 (VIM) 2.47: two results are compatible when their difference is 'smaller than some chosen multiple of the standard measurement uncertainty of that difference'"
+  applies_to: "two values of ONE measurand that each state u: one property, of one being or part, at one moment, in one quantity"
+  never: [count-of-things, money, anchors, codes, names]
+  meaning: "what a reading and a merge's report call AGREEMENT within uncertainty. It orders and labels what a person is shown and never decides: two compatible values that differ stay two values, each with its speaker. A garden states another multiple in its VOCAB.md, with its judge named"
+ordering_keys:
+  - key: merge
+    meaning: "a disagreement a merge shows a person: weight × |Δ| / (k · u of Δ) for a measured value, the weight alone for an exact one — after the Contract's classes F, E and D, which no weight reorders"
+    inputs: [ { name: weight, origin: given, quantity: ratio }, { name: delta, origin: given, quantity: ratio, note: "|Δ|, in the unit of u" }, { name: u, origin: given, quantity: ratio } ]
+    steps:
+      - { id: k, op: constant, value: { count: 2, unit: one } }
+      - { id: ku, op: multiply, of: u, with: k }
+      - { id: z, op: divide, of: delta, with: ku }
+      - { id: key, op: multiply, of: weight, with: z }
+  - key: tests
+    meaning: "a suite in the working loop: weight × how often it failed ÷ its measured seconds; every suite still runs at a release"
+    inputs: [ { name: weight, origin: given, quantity: ratio }, { name: failed, origin: given, quantity: number }, { name: seconds, origin: given, quantity: duration } ]
+    steps:
+      - { id: w, op: multiply, of: weight, with: failed }
+      - { id: key, op: divide, of: w, with: seconds }
+  - key: controls
+    meaning: "a guard: weight × its distance from checked"
+    inputs: [ { name: weight, origin: given, quantity: ratio }, { name: distance, origin: given, quantity: ratio } ]
+    steps:
+      - { id: key, op: multiply, of: weight, with: distance }
+  - key: improvements
+    meaning: "an improvement: weight × the loss it removes, its cost beside"
+    inputs: [ { name: weight, origin: given, quantity: ratio }, { name: loss, origin: given, quantity: ratio } ]
+    steps:
+      - { id: key, op: multiply, of: weight, with: loss }
+  - key: effort
+    meaning: "where a model's effort goes: importance × uncertainty — key items to the best model and a person, the rest to deterministic tools"
+    inputs: [ { name: importance, origin: given, quantity: ratio }, { name: uncertainty, origin: given, quantity: ratio } ]
+    steps:
+      - { id: key, op: multiply, of: importance, with: uncertainty }
 # == VALUE TYPES ==
 value_types:
   - type: iso_date
@@ -1594,6 +1681,7 @@ registry_files:
   - { registry: mechanisms,  file: seed/knowledge/mechanisms.yaml, key: mechanism, format: yaml }
   - { registry: crosswalk-fhir-r5-observation, file: seed/knowledge/crosswalk-fhir-r5-observation.tsv, key: fhir }
   - { registry: crosswalk-dwc, file: seed/knowledge/crosswalk-dwc.tsv, key: dwc }
+  - { registry: coefficients, file: seed/knowledge/coefficients.yaml, key: coefficient, format: yaml }
 # == FACETS: the aspects of ownership, one owner and one holder each ==
 facets:
   - { facet: legal,      depends_on: [],      meaning: "who owns it in law, and answers for it there. Every other facet reaches it through `depends_on`" }
@@ -2228,6 +2316,19 @@ terms:
       kebab-case <cache_type> key — no VOCAB change, no gate change, no bean restructure is ever required.
     merge: { cardinality: multi, order: by-cache-type }
     exceptions: []
+  - term: weighings
+    meaning: "a judge's weighing of criteria against each other, pair by pair (the analytic hierarchy process): only the judgments are written — the weights and their consistency are READ (bin/dmreckon.py weigh), never stored. A weighing orders what a person is shown; it never decides, hides or drops anything, and the Contract of Parts comes before every weight"
+    context_keys: [weighings]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      attrs:
+        for:      { required: true, in: { registry: ordering_keys, take: key }, meaning: "what it orders" }
+        judge:    { required: true, in: { bean_id: { gene: [person, org] } }, meaning: "whose judgment it is" }
+        criteria: { required: true, in: { entries: { name: { required: true, in: { type: kebab } }, what: { required: true, in: prose } }, keyed_by: name }, meaning: "what is weighed, each in the words a person checks it against" }
+        pairwise: { required: true, in: { entries: { a: { required: true, in: { type: kebab } }, b: { required: true, in: { type: kebab } }, judged: { required: true, in: { pattern: '^(1/)?[1-9]$' } }, why: { in: prose } }, keyed_by: [a, b] }, meaning: "how much more `a` weighs than `b`, on Saaty's scale" }
+        why_inconsistent: { in: prose, meaning: "why a consistency ratio above 0.10 stands" }
+    merge: { cardinality: multi, order: by-key }
   - term: nature
     meaning: "the ontological category of a being; routes it to the correct branch of the ownership crown"
     context_keys: ["nature"]
@@ -2656,6 +2757,8 @@ terms:
         what:   { required: true, in: prose, meaning: "the clause in words, as its parties would say it" }
         by:     { in: { key_of: parties }, meaning: "the party it binds" }
         to:     { in: { key_of: parties }, meaning: "the party it is owed to" }
+        within:  { in: extent, meaning: "with `amount`: the window the amount is counted within — a length that slides (`measure`), or cells of a level (`level`, `count`): ninety days within any hundred and eighty, twenty days in each year" }
+        used_by: { in: { key_of: selections }, meaning: "with `within`: the entries whose extents use the allowance — a person's stays, their leave" }
         stance: { in: { aspect: capability, default: required }, meaning: "required | omissible | permitted | forbidden" }
         amount: { in: { quantity: any }, meaning: "how much, where it is measured — money, time, anything. Absent while unknown, and `what` then says how it will be known" }
         due:    { in: { type: date }, meaning: "the day it falls due — the first day, when it repeats" }

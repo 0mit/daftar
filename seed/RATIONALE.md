@@ -1597,6 +1597,57 @@ repository, so every reader asks the same object graph. `manual:<why>` stays for
 
 restated for the human reader; the gate reads schema.key_form
 
+## mechanism_form
+
+A MODEL IS A READING WITH A DOMAIN (24.0, step 9). A mechanism — how a tree's carbon follows from its girth, how fast a
+wick burns — is written in the one reading grammar over named inputs, so the reckoner that reads a garden's own
+selections reads it too, and no second evaluator exists. What makes it a model and not a fact is said beside it: the
+domain its source fitted (`valid`), outside which the reader refuses rather than extrapolates, and the source's own
+error, validated where the source states one, carried into the value's u. Where several are valid, the one with the
+smaller validated error is read and the others are printed as the spread, so a choice between models is never hidden.
+
+## coefficient_form
+
+A CONSTANT HAS A SOURCE AND AN UNCERTAINTY (24.0). A coefficient is a value some source fitted or some convention fixed;
+it is a row, with the cases it applies to and its u, so that a reading that uses it prints where it came from and how
+well it is known. `convention` marks the ones fixed by agreement, which have no u because they were not measured.
+
+## pin_form
+
+A FIXED ACT NAMES THE STATE IT READ (24.0, N2). An invoice, a closed period or a verdict is fixed while the beans it read
+go on changing. Recording the commit and the moment it was read at lets the same reading be read again, exactly, from
+the same state, whatever has changed since — and a pin is judged to name a commit the garden has, so it cannot point at
+a state that never was.
+
+## compatibility
+
+AGREEMENT WITHIN UNCERTAINTY LABELS, AND NEVER DECIDES (24.0). Two values of one measurand whose difference is within k
+times its uncertainty are compatible in the metrologists' sense (VIM 2.47). The label orders what a person is shown; two
+compatible values that differ stay two values, each with its speaker. Counts, money, anchors, codes and names are
+exact, and are never called compatible: they are equal or they differ.
+
+## ordering_keys
+
+WHAT IS SHOWN FIRST IS COMPUTED IN THE OPEN (24.0, step 10). A merge's disagreements, a working loop's tests, a garden's
+guards and its improvements are each ordered by a key the law declares as a reading, so the arithmetic that puts one
+thing first is written where anyone can read and check it. A key only orders: the Contract's classes come before every
+weight, and nothing is hidden or dropped by being last.
+
+## terms[weighings]
+
+A JUDGE'S JUDGMENTS ARE WRITTEN, AND THE WEIGHTS ARE READ (24.0, step 10). Pairwise judgment is the analytic hierarchy
+process's way to weigh criteria a person cannot weigh all at once; only the judgments are the judge's facts, and the
+weights and their consistency follow from them. Stored weights would go stale beside their judgments, so they are
+never written. A consistency ratio above one tenth means the judgments contradict each other, and it stands only with
+the judge's reason.
+
+## terms[clauses].schema.attrs.within
+
+AN ALLOWANCE IS AN AMOUNT WITHIN A WINDOW (24.0, N9). Ninety days within any hundred and eighty, twelve visits within
+any thirty days, twenty days of leave each year: each is an amount and the stretch it is counted within, sliding or cut
+by a calendar's level. What uses it is a reading (`used_by`), so the use is counted each time it is asked, never kept
+as a running total that could drift from the entries it counts.
+
 ## terms[nature].meaning
 
 Ontological type of a being — the routing key from a bean up to the ownership crown (MODEL §Ownership).

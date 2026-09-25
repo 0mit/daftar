@@ -75,3 +75,18 @@ Commission." Modified or adapted versions must be marked as such.
   changes it, and a stored one would be wrong from that day on without anyone having written anything.
 - **Refreshed** at a release from the tzdb release then current; a zone the database retires stays a row until no
   garden names it, and a link (`backward`) is never a row: a zone is named by its canonical name.
+
+## substances.tsv — substances by their chemical formula (D38)
+
+- **Source:** the formula of each substance, a fact of chemistry and no one's expression: `carbon-dioxide` CO2,
+  `dioxygen` O2, `water` H2O, `glucose` C6H12O6, and `pentacosane` C25H52 (a paraffin wax, the release's invented
+  candle's). `charge` is the net charge of one unit, 0 for these.
+- **Licence:** facts; the file is CC0, as every seed of a garden's files is.
+- **What the file is for:** `conservation` (bin/dmreckon.py) reads a walk's `takes` and `gives` against these formulas
+  and says whether every element and the charge is conserved. A substance with no one formula (a polymer, a mixture)
+  is not a row, and a walk that names one is not read for conservation.
+
+## mechanisms.yaml, coefficients.yaml — models and constants with their sources (step 9)
+
+- **Empty at this release** (`[]`): a row is added only with terms that allow it to be shipped, its `source` cited and
+  its `terms` stated (`mechanism_form`, `coefficient_form`). A garden adds its own through `registry_additions`.

@@ -74,6 +74,7 @@ parts, changes).
    python3 test/view.py
    python3 test/uncertainty.py
    python3 test/zones.py
+   python3 test/reckon.py
    reuse lint
    ```
 
