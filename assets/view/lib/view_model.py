@@ -636,15 +636,15 @@ def operate(key, v):
         op["thresholds"] = [{"at": share(t.get("fullness")), "label": t.get("label", "")} for t in v["thresholds"]
                             if isinstance(t, dict) and share(t.get("fullness")) is not None]
     if v.get("lanes"):
-        op["lanes"] = [{"name": ln.get("name", ""), "hops": [{"label": h.get("label", ""), "bind": h.get("bind")}
+        op["lanes"] = [{"name": ln.get("label", ""), "hops": [{"label": h.get("label", ""), "bind": h.get("bind")}
                                                           for h in (ln.get("hops") or []) if isinstance(h, dict)]}
                        for ln in v["lanes"] if isinstance(ln, dict)]
-    if v.get("items"):
+    if v.get("members"):
         op["items"] = [{"label": it.get("label", ""), "binds": _ids(it.get("binds")), "fact": it.get("fact"),
-                        "why": it.get("why", ""), "bean": it.get("being")} for it in v["items"] if isinstance(it, dict)]
+                        "why": it.get("why", ""), "bean": it.get("being")} for it in v["members"] if isinstance(it, dict)]
     if v.get("funnels"):
-        op["funnels"] = [{"name": f.get("name", ""), "stages": [
-            {"label": s.get("label", ""), "count": s.get("count"), "counts": s.get("counts", ""), "what": s.get("what", ""),
+        op["funnels"] = [{"name": f.get("label", ""), "stages": [
+            {"label": s.get("label", ""), "count": s.get("tally"), "counts": s.get("counts", ""), "what": s.get("what", ""),
              "stops": [{"label": x.get("label", ""), "bind": x.get("bind"), "what": x.get("what", "")} for x in s.get("stops") or []],
              "marks": [{"label": x.get("label", ""), "bind": x.get("bind"), "what": x.get("what", "")} for x in s.get("marks") or []]}
             for s in (f.get("stages") or []) if isinstance(s, dict)]} for f in v["funnels"] if isinstance(f, dict)]
@@ -661,7 +661,7 @@ def operate(key, v):
     if v.get("checkpoints"):
         op["checkpoints"] = [{"at": seconds(c.get("after")), "label": c.get("label", "")} for c in v["checkpoints"]
                              if isinstance(c, dict) and seconds(c.get("after")) is not None]
-    op["correlate"] = [{"title": c.get("title", ""), "rows": _ids(c.get("rows")), "band": c.get("band"),
+    op["correlate"] = [{"title": c.get("title", ""), "rows": _ids(c.get("traces")), "band": c.get("band"),
                         "bands": [STEP_NONE] + steps if c.get("band") else [],
                         "relate": _relate(c.get("relate"))} for c in correlates(v)]
     return op
@@ -706,16 +706,16 @@ def references_in(v):
         out += [(k, b) for b in _ids(v.get(k))]
     for ln in v.get("lanes") or []:
         out += [("lanes.hops", h.get("bind")) for h in (ln.get("hops") or []) if isinstance(h, dict)]
-    for it in v.get("items") or []:
-        out += [("items.binds", b) for b in _ids(it.get("binds"))] + ([("items.fact", it["fact"])] if it.get("fact") else [])
+    for it in v.get("members") or []:
+        out += [("members.binds", b) for b in _ids(it.get("binds"))] + ([("members.fact", it["fact"])] if it.get("fact") else [])
     for f in v.get("funnels") or []:
         for s in f.get("stages") or []:
-            out += [("funnels.stages.count", s.get("count"))] + [("funnels.stages.stops", x.get("bind")) for x in s.get("stops") or []] + \
+            out += [("funnels.stages.tally", s.get("tally"))] + [("funnels.stages.stops", x.get("bind")) for x in s.get("stops") or []] + \
                    [("funnels.stages.marks", x.get("bind")) for x in s.get("marks") or []]
     for r in v.get("rollcall") or []:
         out.append(("rollcall.per_item", r.get("per_item")))
     for c in correlates(v):
-        out += [("correlate.rows", b) for b in _ids(c.get("rows"))] + ([("correlate.band", c["band"])] if c.get("band") else [])
+        out += [("correlate.traces", b) for b in _ids(c.get("traces"))] + ([("correlate.band", c["band"])] if c.get("band") else [])
         r = _relate(c.get("relate"))
         if r:
             out += [("correlate.relate.across", r["across"]), ("correlate.relate.measure", r["measure"])]

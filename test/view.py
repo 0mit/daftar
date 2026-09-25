@@ -258,7 +258,7 @@ views:
     forecast: silo-full-in
     parts: [ { bind: silo-up }, { bind: grain-temperature } ]
     correlate:
-      - rows: [ { bind: silo-fill }, { bind: grain-temperature } ]
+      - traces: [ { bind: silo-fill }, { bind: grain-temperature } ]
         span: { of: time, measure: { count: 12, unit: hour } }
         every: { of: time, every: { count: 5, unit: minute } }
   drying:
@@ -279,7 +279,7 @@ views:
     checkpoints: [ { after: { of: time, measure: { count: 3, unit: hour } }, label: "heating should be done" } ]
     numbers: [ { bind: drying-batches } ]
     correlate:
-      - rows: [ { bind: grain-temperature } ]
+      - traces: [ { bind: grain-temperature } ]
         band: drying-step
         relate: { across: grain-temperature, measure: drying-left, bins: 4, at_step: 2, keep: positive }
 view_bindings:
@@ -887,7 +887,7 @@ _pp = free_port()
 mon = ThreadingHTTPServer(("127.0.0.1", _pp), FakeMonitor)
 threading.Thread(target=mon.serve_forever, daemon=True).start()
 for _u, _o in (("alice", ["--orgs", "grain-coop"]), ("carol", ["--orgs", "grain-coop", "--shared"]),
-               ("dave", ["--orgs", "hill-farm", "--no-actions"]), ("root", ["--orgs", "*"])):
+               ("dave", ["--orgs", "hill-farm", "--no-actions"]), ("root", ["--orgs", "*", "--bean", "tessa"])):
     out, rc = dmview("serve-init", "--config", CFG, "--user", _u, *_o)
 check("serve-init: the password is written to a file of its own and never printed",
       rc == 0 and "password is in" in out and open(os.path.join(T, "host", "root.password")).read().strip() not in out, out)
@@ -895,6 +895,11 @@ C = json.load(open(CFG))
 check("serve-init: the configuration and every password file are 0600, and no viewer is granted what no organisation owns "
       "unless said", oct(os.stat(CFG).st_mode & 0o777) == "0o600" and oct(os.stat(os.path.join(T, "host", "alice.password")).st_mode & 0o777) == "0o600"
       and C["users"]["alice"]["shared"] is False and C["users"]["carol"]["shared"] is True, C["users"].get("alice"))
+check("serve-init: a viewer's own bean is recorded as `bean`, for the law's grants to be asked about that person",
+      C["users"]["root"].get("bean") == "tessa" and "bean" not in C["users"]["alice"], C["users"].get("root"))
+_out, _rc = dmview("serve-init", "--config", os.path.join(T, "host", "nobody.json"), "--user", "eve", "--bean", "no-such-person")
+check("...and a bean the garden does not hold is refused, and nothing is written",
+      _rc != 0 and "no-such-person" in _out and not os.path.exists(os.path.join(T, "host", "nobody.json")), _out)
 _sp_ = free_port()
 C["listen"] = "127.0.0.1:%d" % _sp_
 C["recheck_seconds"] = 1

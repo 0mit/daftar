@@ -70,8 +70,9 @@ def _write_private(path, text):
         fh.write(text)
 
 
-def serve_init(config, user, orgs="*", actions=True, shared=False):
-    """Write (or add a viewer to) a host configuration. The password goes to a 0600 file, never to the terminal."""
+def serve_init(config, user, orgs="*", actions=True, shared=False, bean=None):
+    """Write (or add a viewer to) a host configuration. The password goes to a 0600 file, never to the terminal.
+    `bean` is the viewer's own bean in the garden: the person a grant the law declares is asked about."""
     cfg = json.load(open(config)) if os.path.exists(config) else {
         "listen": "127.0.0.1:8780", "monitors": {}, "history": "",
         "session_key": secrets.token_hex(32), "audit_log": os.path.join(os.path.dirname(os.path.abspath(config)), "actions.log"),
@@ -80,6 +81,8 @@ def serve_init(config, user, orgs="*", actions=True, shared=False):
     cfg["users"][user] = {"password": hash_password(pw),
                           "orgs": ["*"] if orgs == "*" else [o.strip() for o in orgs.split(",") if o.strip()],
                           "shared": bool(shared), "beans": [], "actions": bool(actions)}
+    if bean:
+        cfg["users"][user]["bean"] = bean
     os.makedirs(os.path.dirname(os.path.abspath(config)), exist_ok=True)
     _write_private(config, json.dumps(cfg, indent=1))
     pwfile = os.path.join(os.path.dirname(os.path.abspath(config)), "%s.password" % user)

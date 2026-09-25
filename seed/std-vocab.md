@@ -1944,17 +1944,17 @@ profiles:
           forecast:  { in: { key_of: view_bindings }, meaning: "reservoir: how long until the next threshold" }
           also:      { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "reservoir: what else fills it" }
           parts:     { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "the values of the parts beneath the shape: the evidence" }
-          lanes:     { in: { entries: { name: { required: true, in: prose }, hops: { required: true, in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } } } } } } }, meaning: "lanes: each path, and the hops it must get through in order" }
+          lanes:     { in: { entries: { label: { required: true, in: prose }, hops: { required: true, in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } } } } } } }, meaning: "lanes: each path, and the hops it must get through in order" }
           per_item:  { in: { key_of: view_bindings }, meaning: "roster, gauges: the live-series that gives one value per item" }
           active_over: { in: { type: count }, meaning: "roster: in that value's unit, the value from which an item counts as active" }
           top:       { in: { type: count }, meaning: "roster: how many items are shown" }
           min:       { in: { type: count }, meaning: "gauges: in that value's unit, the low end of each dial" }
           max:       { in: { type: count }, meaning: "gauges: in that value's unit, the high end of each dial" }
           facts:     { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "board: the headline numbers" }
-          items:     { in: { entries: { label: { required: true, in: prose }, binds: { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } } }, fact: { in: { key_of: view_bindings } }, why: { in: prose }, being: { in: bean_id } } }, meaning: "board: its parts, each with the values that say its state, one fact, and why an unmeasured part is not measured" }
+          members:   { in: { entries: { label: { required: true, in: prose }, binds: { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } } }, fact: { in: { key_of: view_bindings } }, why: { in: prose }, being: { in: bean_id } } }, meaning: "board: its parts, each with the values that say its state, one fact, and why an unmeasured part is not measured" }
           numbers:   { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "scoreboard, funnel, race: the headline numbers" }
           list:      { in: { key_of: view_bindings }, meaning: "scoreboard: the live-series of what is firing" }
-          funnels:   { in: { entries: { name: { required: true, in: prose }, stages: { required: true, in: { entries: { label: { required: true, in: prose }, count: { required: true, in: { key_of: view_bindings } }, counts: { in: prose }, what: { in: prose }, stops: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } }, marks: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } } } } } } }, meaning: "funnel: each stream, its stages in order with how many reached each and what each counts, and where the rest stopped or were marked" }
+          funnels:   { in: { entries: { label: { required: true, in: prose }, stages: { required: true, in: { entries: { label: { required: true, in: prose }, tally: { required: true, in: { key_of: view_bindings } }, counts: { in: prose }, what: { in: prose }, stops: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } }, marks: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } } } } } } }, meaning: "funnel: each stream, its stages in order with how many reached each and what each counts, and where the rest stopped or were marked" }
           window:    { in: prose, meaning: "funnel: the span its counts cover, in words" }
           rollcall:  { in: { entries: { label: { required: true, in: prose }, per_item: { required: true, in: { key_of: view_bindings } }, idle: { in: { entries: { item: { required: true, in: any } } } }, notes: { in: { prose: named } } } }, meaning: "funnel: the parts called by name, each up or down, and the items known to carry nothing" }
           step_at:   { in: { key_of: view_bindings }, meaning: "race: the value that says which step of the procedure the run is at — 0 before the first, n at the n-th of its `steps`" }
@@ -1969,17 +1969,17 @@ profiles:
             in:
               entries:
                 title: { in: prose }
-                rows:  { required: true, in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "the values drawn, one row each" }
+                traces: { required: true, in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "the values drawn, one trace each" }
                 span:  { in: extent, meaning: "how far back the axis reaches — a length on `time`" }
                 every: { in: recurrence, meaning: "how often a point is taken — every N units along `time`" }
-                band:  { in: { key_of: view_bindings }, meaning: "a step value (as `step_at`) that shades every row" }
+                band:  { in: { key_of: view_bindings }, meaning: "a step value (as `step_at`) that shades every trace" }
                 relate: { in: { entries: { across: { required: true, in: { key_of: view_bindings } }, measure: { required: true, in: { key_of: view_bindings } }, bins: { in: { type: count } }, at_step: { in: { type: count } }, keep: { in: [all, positive] } } }, meaning: "one value's mean across the bins of another, over the time drawn: only while the band is at `at_step` where it names one, and `positive` keeps the moments it is above zero" }
         cells:
           - { when: { archetype: reservoir },  requires: [fill, thresholds], why: "a reservoir answers with how full it is against its thresholds" }
           - { when: { archetype: lanes },      requires: [lanes],       why: "lanes answer with each path" }
           - { when: { archetype: roster },     requires: [per_item],    why: "a roster answers with the value of its items" }
           - { when: { archetype: gauges },     requires: [per_item],    why: "gauges answer with the value of their items" }
-          - { when: { archetype: board },      requires: [items],       why: "a board answers with its parts" }
+          - { when: { archetype: board },      requires: [members],     why: "a board answers with its parts" }
           - { when: { archetype: scoreboard }, requires: [numbers],     why: "a scoreboard answers with its numbers" }
           - { when: { archetype: funnel },     requires: [funnels],     why: "a funnel answers with its streams" }
           - { when: { archetype: race },       requires: [step_at],     why: "a race answers with the step the run is at" }

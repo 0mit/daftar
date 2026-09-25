@@ -7,7 +7,7 @@
     python3 assets/view/bin/dmview.py import <view-selection.json> an author-mode selection written into the page
     python3 assets/view/bin/dmview.py bundle --out DIR [--monitor <being>]   a monitor's deployment, by its adapter
     python3 assets/view/bin/dmview.py serve --config FILE          the served page and the action executor
-    python3 assets/view/bin/dmview.py serve-init --config FILE --user NAME [--orgs "*"|org-a,org-b] [--shared] [--no-actions]
+    python3 assets/view/bin/dmview.py serve-init --config FILE --user NAME [--bean <person>] [--orgs "*"|org-a,org-b] [--shared] [--no-actions]
 
 Every command takes `--garden PATH` (by default the garden this asset sits in, three directories up) and `--page <bean>`
 (by default the one bean that carries `view`). (`python` on Windows.)
@@ -119,7 +119,10 @@ def main():
         if not user:
             die("serve-init needs --user NAME")
         orgs = option(rest, "--orgs") or "*"
-        pw = view_serve.serve_init(cfg, user, orgs, "--no-actions" not in rest, "--shared" in rest)
+        bean = option(rest, "--bean")
+        if bean and not vm.fm(bean):
+            die("serve-init: the garden holds no bean %r to name as this viewer" % bean)
+        pw = view_serve.serve_init(cfg, user, orgs, "--no-actions" not in rest, "--shared" in rest, bean)
         print("dmview: %s is ready; the new password is in %s (0600) — it is not printed." % (cfg, pw))
         return 0
     die("unknown command %r — see `dmview --help`" % cmd)

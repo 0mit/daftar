@@ -62,14 +62,14 @@ A value a shape reads is the key of a `view_bindings` entry on the page.
 | lanes | `lanes` (each path, and the hops it must get through) |
 | roster | `per_item` (a live-series), `active_over`, `top`, `parts` |
 | gauges | `per_item`, `min`, `max` |
-| board | `facts`, `items` (each part, the values that say its state, one fact, why an unmeasured part is not measured) |
+| board | `facts`, `members` (each part, the values that say its state, one fact, why an unmeasured part is not measured) |
 | scoreboard | `numbers`, `list`, `parts` |
 | funnel | `funnels` (each stream's stages, stops and marks), `window`, `numbers`, `rollcall` |
 | race | `step_at` (0 before the first step, n at the n-th of the procedure it draws), `elapsed`, `eta`, `progress`, `deadline` (an extent) or `deadline_from`, `checkpoints`, `numbers`, `parts` |
 | health-chain | nothing of its own: a tile per bound element, and a blind spot for every part nothing measures |
 
-Any shape may add `correlate`: values on one time axis (`rows`), how far back (`span`, an extent) and how often
-(`every`, a recurrence), a step value that shades every row (`band`), and one value binned against another
+Any shape may add `correlate`: values on one time axis (`traces`), how far back (`span`, an extent) and how often
+(`every`, a recurrence), a step value that shades every trace (`band`), and one value binned against another
 (`relate`). The gate refuses a shape without what it answers with, a length written as a bare number, and a stride
 on a walk with no meter.
 
@@ -101,7 +101,7 @@ and, where it deploys anything, `bundle(monitor, views, out)`.
     python3 assets/view/bin/dmview.py report --out map/page.html  # the offline page, with the author mode
     python3 assets/view/bin/dmview.py import view-selection.json  # the author mode's selection, written and journalled
     python3 assets/view/bin/dmview.py bundle --out <dir>          # a monitor's deployment, written by its adapter
-    python3 assets/view/bin/dmview.py serve-init --config <file> --user <name> [--orgs "*"|org-a] [--shared] [--no-actions]
+    python3 assets/view/bin/dmview.py serve-init --config <file> --user <name> [--bean <person>] [--orgs "*"|org-a] [--shared] [--no-actions]
     python3 assets/view/bin/dmview.py serve --config <file>       # the served page and the action executor
 
 `check` refuses what the gate cannot: a page term written on a bean that does not carry `view`, a binding on an
