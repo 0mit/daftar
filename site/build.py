@@ -27,8 +27,9 @@ build: nothing is scrubbed silently.
     python3 site/build.py [--out DIR] [--machinery CHECKOUT] [--keep DIR]
 
   --out DIR            write the whole site to DIR (empty or absent), and leave site/ untouched
-  --machinery CHECKOUT after the scenes, run site/machinery/build.py CHECKOUT on the demo garden-sam; without it the
-                       machinery page keeps the drawing committed with it, and says when that was drawn
+  --machinery CHECKOUT after the scenes, run site/machinery/build.py CHECKOUT on the demo garden-sam: a checkout of
+                       daftar at the release whose `view` asset draws it; without it the machinery page keeps the
+                       drawing committed with it, and says when that was drawn
   --keep DIR           grow the gardens in DIR (empty or absent) and leave them there, with captures.json
 
 Exit 0 built; 1 a scene's expected result did not hold, a marker and a capture do not match, or a capture holds this
@@ -899,10 +900,10 @@ class Pages:
         rec = json.load(open(p, encoding='utf-8'))
         if cid == 'levels':
             rows = ''.join('<tr><th scope="row">%s</th><td>%s</td><td>%s</td></tr>'
-                           % (esc(lv.get('name', lv.get('id', ''))), esc(lv.get('audience', '')), esc(lv.get('question', '')))
+                           % (esc(lv.get('id', '')), esc(lv.get('form', '')), esc(lv.get('meaning', '')))
                            for lv in rec.get('levels', []))
-            return ('<div class="table"><table><thead><tr><th scope="col">level</th><th scope="col">for</th>'
-                    '<th scope="col">the question it answers</th></tr></thead><tbody>%s</tbody></table></div>' % rows)
+            return ('<div class="table"><table><thead><tr><th scope="col">lens</th><th scope="col">drawn as</th>'
+                    '<th scope="col">what it shows</th></tr></thead><tbody>%s</tbody></table></div>' % rows)
         if cid == 'mechanisms':
             rows = []
             for m in rec.get('mechanisms', []):
@@ -923,7 +924,7 @@ class Pages:
                 items.append('<li><strong>%s</strong>: %s%s</li>'
                              % (esc(m.get('title', m.get('key', ''))),
                                 ('it would take the <em>%s</em> shape with live data. ' % esc(would)) if would else
-                                'no shape of the drawing kit fits it. ', esc(why)))
+                                'no shape of the view asset fits it. ', esc(why)))
             return '<ul>%s</ul>' % ''.join(items)
         if cid == 'transcript':
             parts = []
@@ -937,15 +938,17 @@ class Pages:
                     % '\n'.join(parts))
         if cid == 'when':
             other = self.drawn_release()
-            return ('<p>Drawn by %s %s on %s, from a clone of garden-sam grown by daftar %s. Its garden ids are those of the '
-                    'build that drew it: each build of these pages grows the gardens again, with new ids.%s</p>'
+            return ('<p>Drawn by %s, of daftar %s, on %s, from a clone of garden-sam grown by daftar %s and moved to daftar '
+                    '%s. Its garden ids are those of the build that drew it: each build of these pages grows the gardens '
+                    'again, with new ids.%s</p>'
                     % (esc(rec.get('tool', '')), esc(rec.get('tool_release', '')), esc(rec.get('drawn_at', '')),
-                       esc(rec.get('daftar_release', '')),
+                       esc(rec.get('grown_by', '')), esc(rec.get('daftar_release', '')),
                        '' if not other else
                        (' That is not the release every other output on these pages comes from, daftar %s: the drawing, its '
-                        'commands and its report say what that garden said, in the words of the law daftar %s carried, and '
-                        'a word the law has renamed since is in them as it was. <code>python3 bin/dmwhy.py retired</code> '
-                        'lists what each old word became.' % (esc(self.release), esc(other)))))
+                        'commands and its report say what that garden said, in the words of the law daftar %s carries, '
+                        'and a word one of the two laws has renamed is in them as that law says it. '
+                        '<code>python3 bin/dmwhy.py retired</code> lists what each old word became.'
+                        % (esc(self.release), esc(other)))))
         raise Refused(f'{page}: drawn:{cid} is not a part of the drawing this build knows')
 
     def page(self, rel):
@@ -983,7 +986,7 @@ def fresh_dir(path, what):
 def main():
     ap = argparse.ArgumentParser(description='Grow the demo gardens and fill the pages with what the tools print.')
     ap.add_argument('--out', help='write the whole site to this directory and leave site/ untouched')
-    ap.add_argument('--machinery', metavar='CHECKOUT', help='draw the machinery with the drawing tool at CHECKOUT')
+    ap.add_argument('--machinery', metavar='CHECKOUT', help="draw the machinery with the view asset of the daftar release at CHECKOUT")
     ap.add_argument('--keep', metavar='DIR', help='grow the gardens here and leave them')
     a = ap.parse_args()
     try:
