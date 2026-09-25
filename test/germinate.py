@@ -342,7 +342,7 @@ run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _ex_tmp, cwd=ROOT)
 _examples, _fragments = [], []
 for _doc in ('README.md', 'COOKBOOK.md', 'WELCOME.md'):
     _page = open(os.path.join(ROOT, 'seed', _doc), encoding='utf-8').read()
-    _examples += re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _page, re.S)
+    _examples += re.findall(r'<!-- example: ((?:beans|mappings)/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _page, re.S)
     _fragments += re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', _page, re.S)
 # A BEAN SHOWN ON TWO PAGES IS SHOWN THE SAME. The gardener opens both the seed's README and the cookbook; two copies
 # are two chances to disagree, and the later one would silently win when both are written into the garden.
@@ -407,7 +407,7 @@ _recipes = []
 for _doc in ('COOKBOOK.md', 'WELCOME.md'):
     _page = open(os.path.join(ROOT, 'seed', _doc), encoding='utf-8').read()
     for _sec in _page.split('\n## '):
-        _beans = re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _sec, re.S)
+        _beans = re.findall(r'<!-- example: ((?:beans|mappings)/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _sec, re.S)
         _frags = re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', _sec, re.S)
         if _beans or _frags:
             _recipes.append((f"{_doc}: {_sec.split(chr(10), 1)[0].lstrip('# ')}", _beans, _frags))
@@ -422,6 +422,7 @@ for _name, _beans, _frags in _recipes:
     if not _changed and not _frags:
         continue                                   # a bean shown again (the gardener) is already there, unchanged
     for _path, _text in _beans:
+        os.makedirs(os.path.dirname(os.path.join(_ex_tmp, _path)), exist_ok=True)     # a walk is a mapping's
         open(os.path.join(_ex_tmp, _path), 'w', encoding='utf-8').write(_text + '\n')
     for _frag in _frags:
         _apply_fragment(_frag)

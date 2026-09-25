@@ -67,7 +67,7 @@ _live = set()
 def _collect(node):
     if isinstance(node, dict):
         for k, v in node.items():
-            if k == "attrs" and isinstance(v, (dict, list)):
+            if k in ("attrs", "entries") and isinstance(v, (dict, list)):     # an entry's attributes, nested ones too
                 _live.update(str(x) for x in v if isinstance(x, (str, int)))
             if k in ("term", "kind", "genos") and isinstance(v, str):
                 _live.add(v)
@@ -95,7 +95,8 @@ def _written(w, at, t):
         return re.search(r"(?m)^.*\bkey:.*\bvalue:.*[{,]\s*%s:|^.*[{,]\s*%s:.*\bkey:.*\bvalue:" % (e, e), t)
     if at == "manifest":
         return any(re.search(r"(?m)^%s:" % e, b) for b in _manifest_blocks(t))
-    return re.search(r"(?m)^%s:" % e, t)
+    # A NAME RETIRED ON A BEAN IS LIVE ON A MAPPING (`kind`): a mapping's own example is not a bean's
+    return re.search(r"(?m)^%s:" % e, _FENCE.sub(lambda m: '' if re.search(r"(?m)^mapping:", m.group(2)) else m.group(0), t))
 for d, t in text.items():
     hit = sorted(w for w, at in _retired.items() if _written(w, at, t))
     check(f"{d} writes no key the law retired", not hit, hit)

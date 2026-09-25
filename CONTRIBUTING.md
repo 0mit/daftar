@@ -47,6 +47,7 @@ parts, changes).
    python3 test/refusals.py
    python3 test/journal.py
    python3 test/save.py
+   python3 test/sequence.py
    python3 test/stamps.py
    python3 test/converge.py
    python3 test/upgrade.py
