@@ -1777,6 +1777,56 @@ for i, (frm, to, g) in enumerate(((A, 'garden-b', B), (B, 'garden-a', A), (A, 'g
           rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and 'REFUSED' not in rr.out
           and 'CONFLICT' not in rr.stdout + rt.stdout and rc.returncode == 0, rr.out + rt.out)
 
+# ================================================================ between gardens: the path a name travels (24.0)
+# A name passed on carries the gardens it came through: its origin first, each hop after it, the sender last. The
+# receiver trusts only the last hop — the garden it met — and refuses a path that holds its own id after the origin.
+_hc = [f for f in proposals(TWO) if f.startswith('PROPOSAL-garden-b') and 'house-costs' in read(os.path.join(TWO, f))]
+_txt = read(os.path.join(TWO, _hc[0])) if _hc else ''
+_paths = re.findall(r'(?m)^path:\n((?:- .*\n)+)', _txt)
+check("PATHS: every stub garden-b sends carries its path, ending at garden-b",
+      bool(_paths) and all(p.strip().splitlines()[-1].strip("- '\"") == BID for p in _paths), _txt[-1500:])
+if _paths:
+    looped = refingerprint(_txt.replace('path:\n' + _paths[0], f"path:\n- '{BID}'\n- '{CID}'\n- '{BID}'\n", 1))
+    put(os.path.join(TWO, 'looped.md'), looped)
+    r = tool(C, 'dmpropose.py', 'read', os.path.join(TWO, 'looped.md'))
+    check("...a path holding the receiver's own id after its origin is REFUSED as a loop",
+          r.returncode == 1 and 'a loop' in r.out, r.out[-900:])
+    odd = refingerprint(_txt.replace('path:\n' + _paths[0], f"path:\n- '{AID}'\n", 1))
+    put(os.path.join(TWO, 'odd-path.md'), odd)
+    r = tool(C, 'dmpropose.py', 'read', os.path.join(TWO, 'odd-path.md'))
+    check("...and one that does not end at the garden that sent it is REFUSED: only the last hop can be trusted",
+          r.returncode == 1 and 'does not end at the garden that sent it' in r.out, r.out[-900:])
+sys.path.insert(0, os.path.join(ROOT, 'bin'))
+import dmpropose as _dp
+_sk = _dp.anchor_lines({'identity': {'anchors': [{'key': 'org_id', 'value': f'{AID}/org:far-away', 'class': 'logical',
+                                                  'establishing': True}]}, 'path': [AID, BID]}, 'cai', CID)
+check("...a name taken in through a peer is recorded with its origin and the path after it (`garden`, `via`)",
+      f'garden: "{AID}"' in _sk and f'via: ["{BID}"]' in _sk, _sk)
+
+
+def _far(bid, origin, via):
+    return (f"---\nbean: {bid}\ngenos: org\ntitle: \"{bid}\"\nstatus: active\nsummary: \"an org known through a peer\"\n"
+            f"nature: lekton\nowned_by: {{ legal: {{ external: \"its members\" }} }}\n"
+            f"responsibility: {{ legal: {{ self: true }} }}\nidentity:\n  status: confirmed\n  anchors:\n"
+            f"    - {{ key: org_id, value: \"{origin}/org:{bid}\", class: logical, establishing: true, provenance: "
+            f"{{ src: asserted-by-human, by: \"ada (gardener)\", as_of: now, garden: \"{origin}\", via: [{', '.join(repr(v) for v in via)}] }} }}\n"
+            f"provenance: {{ src: asserted-by-human, by: \"ada (gardener)\", as_of: now }}\n---\nAn org.\n")
+
+
+for label, origin, via, ok, want in (
+        ("a name whose origin garden-a never met, passed on by garden-b which it did: accepted — only the last hop must be met",
+         'abcdef012345', [BID], True, ''),
+        ("...a path holding this garden's own id: REFUSED as a loop", 'abcdef012345', [AID, BID], False, 'a loop'),
+        ("...a last hop this garden never met: REFUSED", BID, ['abcdef012345'], False, 'does not know')):
+    write(A, 'far-away', _far('far-away', origin, via))
+    r = commit(A, "an org known through a peer", "- action: recorded [[far-away]], an org whose name came through a peer.")
+    check("THE GATE ON A PATH: " + label, (r.returncode == 0) == ok and want in r.stdout + r.stderr, r.stdout[-900:] + r.stderr[-400:])
+    if r.returncode == 0:
+        git(A, 'reset', '-q', '--hard', 'HEAD~1')
+    else:
+        git(A, 'reset', '-q', '--hard')
+        git(A, 'clean', '-qfd')
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nmycelium: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

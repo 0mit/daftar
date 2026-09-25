@@ -968,6 +968,23 @@ def no_id_why(fm, b):
     return "has no establishing anchor at all — its identity is provisional here", NO_ID_HINT.format(b=b)
 
 
+def path_of(fm, own):
+    """The PATH of a being's name (24.0, between gardens): the garden that minted it, then each garden it passed through
+    to this one, then this one — read from its establishing anchors' own records (`garden`, then `via`), where a name
+    taken in from another garden keeps them; a name minted here is [this garden]."""
+    for a in anchors_of(fm):
+        rec = a.get('provenance') if a.get('establishing') is True else None
+        if isinstance(rec, dict) and rec.get('garden') and str(rec['garden']) != own:
+            via = [str(x) for x in rec.get('via') or [] if x is not None] if isinstance(rec.get('via'), list) else []
+            return [str(rec['garden'])] + via + [own]
+    # A NAME TAKEN IN WHOLE carries its origin on the bean's own record, or in a qualified anchor (`<garden id>/…`)
+    g = (fm.get('provenance') or {}).get('garden') if isinstance(fm.get('provenance'), dict) else None
+    if not g:
+        g = next((str(a.get('value')).split('/', 1)[0] for a in anchors_of(fm) if a.get('establishing') is True
+                  and re.match(r'^[0-9a-f]{12}/', str(a.get('value')))), None)
+    return [str(g), own] if g and str(g) != own else [own]
+
+
 def stub_of(fm):
     """What a stub carries: the bean's name, genos, nature and title, and its ESTABLISHING anchors — what the other
     garden needs to find the being, and nothing more (a contact anchor is not offered by being referred to)."""
@@ -1098,6 +1115,16 @@ def cmd_make(argv):
             if not sb:
                 continue                                  # not a bean here: the gate has already said so
             stubs[r] = stub_of(sb[0])
+            # THE ANNOUNCEMENT'S PATH, AND THE WORD THAT LETS A PERSON'S NAME TRAVEL (24.0): a name passed on carries the
+            # gardens it came through, this one last; a person's consent travels with their name, as a community
+            # travels with a route — and is honoured only where their consent agreement crosses too (below).
+            if own:
+                stubs[r]['path'] = path_of(sb[0], own)
+                if to_id and to_id in stubs[r]['path'][1:]:
+                    refusals.append((f"{r}: its name came here through {to} (path {' > '.join(stubs[r]['path'])}) — "
+                                     f"passing it back is a loop", f"leave {r} out: {to} holds it already"))
+            if isinstance(sb[0].get('consent'), dict):            # the law holds `consent` to the beings that consent
+                stubs[r]['consent'] = dict(sb[0]['consent'])
             if only_bare(sb[0]):
                 if r == to_gardener:
                     # FIRST CONTACT: the other garden's gardener, known here only as that garden's gardener. A person
@@ -1504,12 +1531,19 @@ def _q(v):
     return json.dumps(str(v), ensure_ascii=False)
 
 
-def anchor_lines(cap):
+def anchor_lines(cap, here=None, own=None):
+    """The establishing anchors of a stub, as a bean writes them — each with its own record of where the name came from
+    (`garden`, its origin, and `via`, the gardens after it), where the stub carries a path that did not begin here."""
+    pth = cap.get('path') if isinstance(cap.get('path'), list) else None
+    rec = ''
+    if pth and own and pth[0] != own:
+        rec = (f", provenance: {{ src: asserted-by-human, by: {_q((here or 'the gardener') + ' (gardener)')}, as_of: now, "
+               f"garden: {_q(pth[0])}" + (f", via: [{', '.join(_q(x) for x in pth[1:])}]" if pth[1:] else '') + " }")
     return ''.join(f"    - {{ key: {_q(a.get('key'))}, value: {_q(a.get('value'))}, class: {_q(a.get('class') or 'logical')}, "
-                   f"establishing: true }}\n" for a in anchors_of(cap) if a.get('establishing') is True)
+                   f"establishing: true{rec} }}\n" for a in anchors_of(cap) if a.get('establishing') is True)
 
 
-def skeleton(s, cap, local, fid):
+def skeleton(s, cap, local, fid, own=None):
     """The fix for an UNRESOLVED stub: the bean to record here, its identity as the stub carries it and the rest the
     gardener's to write — or, where the stub is not in a bean's form, only the request to have it offered whole."""
     offer = f"or ask the sending garden to offer it whole (`{PY} bin/dmpropose.py make … {s}`)"
@@ -1524,7 +1558,8 @@ def skeleton(s, cap, local, fid):
             f"genos: {_q(cap.get('genos') or '<genos>')}\ntitle: {_q(cap.get('title') or s)}\nstatus: active\n"
             f"summary: \"<what it is, readable cold>\"\nnature: {_q(cap.get('nature') or '<nature>')}\n"
             f"owned_by: <its owner, in a form its genos allows>\nresponsibility: <who answers for it>\n"
-            f"identity:\n  status: confirmed\n  anchors:\n{anchor_lines(cap)}"
+            f"identity:\n  status: confirmed\n  anchors:\n{anchor_lines(cap, here, own)}"
+            + (f"consent: {{ bean: {_q(cap['consent'].get('bean'))} }}\n" if isinstance(cap.get('consent'), dict) else '') +
             f"provenance: {{ src: asserted-by-human, by: {_q(here + ' (gardener)')}, as_of: now }}\n"       # the save stamps it (23.0)
             f"---\n<what it is>\n===== end =====")
 
@@ -1789,6 +1824,22 @@ def analyse(path, as_test=False):
     # STUBS first: an offered bean's references are moved to the local beans before anything is compared.
     L.append("STUBS" if stubs else "STUBS: none")
     targets = {}
+    for s, cap in sorted(stubs.items()):
+        # THE PATH (24.0): it ends at the garden that sent it — the one hop this garden trusts — and holds this garden's
+        # own id only as its origin, where the name is given back; anywhere after that it is a loop, refused.
+        pth = cap.get('path')
+        if pth is None or A['chat']:
+            continue
+        if not isinstance(pth, list) or not pth or not all(isinstance(x, str) and re.fullmatch(r'[0-9a-f]{12}', x) for x in pth):
+            R.append((f"stub {s}: its path is not a list of garden ids", "ask the sending garden to make it again"))
+        elif pth[-1] != fid:
+            R.append((f"stub {s}: its path {' > '.join(pth)} does not end at the garden that sent it ({fid}) — only "
+                      f"the last hop is one this garden can trust", "ask the sending garden to make it again"))
+        elif own in pth[1:]:
+            R.append((f"stub {s}: its path {' > '.join(pth)} holds this garden's own id after its origin — a loop: it "
+                      f"passed through here once already", "leave it out; this garden holds it"))
+        else:
+            L.append(f"  {s:<24} path {' > '.join(pth)}" + (" — this garden's own name, given back" if pth[0] == own else ''))
     for s, hits in sorted(resolve('stub', stubs.items()).items()):
         mark_ = stubs[s].get(GARDENER_OF)
         if mark_ is not None:
@@ -1822,7 +1873,7 @@ def analyse(path, as_test=False):
             # texts for one file, written in order, left the skeleton the gate refuses in place of the bean it accepts.
             R.append((f"stub {s} is UNRESOLVED: this garden holds no bean it names",
                       f"beans/{bid}.md is written above, with the first-contact beans — once they are committed, read "
-                      f"the proposal again" if bid in A.get('first_contact', ()) else skeleton(s, stubs[s], local, fid)))
+                      f"the proposal again" if bid in A.get('first_contact', ()) else skeleton(s, stubs[s], local, fid, own)))
             L.append(f"  {s:<24} UNRESOLVED")
 
     fused = resolve('proposal', fms.items())

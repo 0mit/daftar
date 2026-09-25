@@ -1067,7 +1067,14 @@ def check_value_type(where, attr, val, typ):
             if len(errors) == _before:
                 return
             del errors[_before:]
-        errors.append(f"{where}.{attr} '{val}' {t.get('refusal') or 'is none of ' + str(t['either'])}")
+        # THE REASON OF THE TYPE IT IS WRITTEN AS: a value with a clock time is judged as the alternative that requires
+        # a clock, one without as one that does not — so a day that does not exist is refused for that, by name.
+        _clk = bool(re.search(r'[T ]\d{2}:\d{2}', str(val), re.ASCII))
+        _as = [a for a in t['either'] if ((VALUE_TYPES.get(a) or {}).get('clock') == 'required') == _clk]
+        if len(_as) == 1:
+            check_value_type(where, attr, val, _as[0])
+        else:
+            errors.append(f"{where}.{attr} '{val}' {t.get('refusal') or 'is none of ' + str(t['either'])}")
     elif t.get('any_system') and str(val).strip() == 'now' and attr in ('as_of', 'observed'):
         # `now` IS NOT A DAY BUT THE WORD FOR ONE (23.0): the save writes the day of its entry in its place
         errors.append(f"{where}.{attr} is `now` — the word the save writes the day of its entry in place of: save with "
@@ -1901,11 +1908,22 @@ def check_provenance_record(where, rec):
                 if not isinstance(_r, dict) or (_fattrs and set(_r) - set(_fattrs)) or not _r.get('src'):
                     errors.append(f"{where}.from holds {_r!r} — each record is {{{', '.join(_fattrs or [])}}} with a `src`")
     _g = rec.get('garden')
+    _via = rec.get('via')
+    if _via is not None and (not isinstance(_via, list) or not _via or not all(_GARDEN_ID.match(str(x)) for x in _via)):
+        errors.append(f"{where}.via must be a list of garden ids — the gardens it passed through after the one it was "
+                      f"made in, in order" + _rule('provenance_record.attrs', 'provenance_record'))
+        _via = None
+    if _via is not None and _g is None:
+        errors.append(f"{where}.via names a path, and `garden` names no origin — the path begins where it was made")
     if _g is not None:
         if not _GARDEN_ID.match(str(_g)):
             errors.append(f"{where}.garden '{_g}' is not a garden id (twelve lowercase hexadecimal digits)")
+        elif _via:
+            # A PATH (24.0, between gardens): only the LAST hop must be a garden met here — trust is in the peer, and
+            # the origin is recorded, not verified. The path is judged for a loop once this garden's id is known.
+            GARDEN_REFS.append((where + '.via', str(_via[-1]), str(_g), [str(x) for x in _via]))
         else:
-            GARDEN_REFS.append((where, str(_g)))
+            GARDEN_REFS.append((where, str(_g), None, None))
 def _odd_keys(x, path=''):
     """Keys YAML did not read as text: `on`, `off`, `yes`, `no` become booleans under YAML 1.1, and a bare number a
     number. Such a key cannot be compared, sorted or merged beside the others — the gate once crashed on one."""
@@ -2152,10 +2170,15 @@ def check_gardens():
             if bean_ids and not _g.get('gardener'):
                 errors.append(f"{_rel}: names no gardener — a garden is kept by someone: write their person bean first and "
                               f"name it here (`gardener: <bean id>`). An agent tends a garden; its gardener keeps it")
-    for _where, _gid in GARDEN_REFS:
-        if _gid not in KNOWN_GARDENS:
-            errors.append(f"{_where}.garden '{_gid}' names a garden this one does not know — record it as a `garden` bean "
-                          f"anchored by its `garden_id` before taking in what it said")
+    for _where, _gid, _origin, _path in GARDEN_REFS:
+        if _path is not None and _own in [_origin] + _path:
+            errors.append(f"{_where}: the path {' > '.join([_origin] + _path)} holds this garden's own id — a loop: what "
+                          f"passed through here once is not taken in again (between gardens, a path holding one's own "
+                          f"id is refused)")
+        elif _gid not in KNOWN_GARDENS:
+            errors.append(f"{_where}{'' if _path else '.garden'} '{_gid}' names a garden this one does not know — record "
+                          f"it as a `garden` bean anchored by its `garden_id` before taking in what it "
+                          f"{'passed on' if _path else 'said'}")
         elif _gid == _own:
             warns.append(f"{_where}.garden names this garden itself — a record made here carries no `garden`")
     _mint = IDP.get('minted') or {}
@@ -2176,11 +2199,17 @@ def check_gardens():
                                       f"to qualify. Write it as it was assigned ('{_rest}'); a name this garden mints is "
                                       f"`<genos>:<name>`, a genos this garden knows"
                                       + _rule('identity_policy.minted.form', 'identity_policy.minted'))
-                    elif _pre not in KNOWN_GARDENS:
+                    elif _pre not in KNOWN_GARDENS and not (
+                            # ANNOUNCED THROUGH A PEER (24.0): the anchor's own record names the minting garden as its
+                            # origin and a path whose last hop is a garden met here — the only hop trust needs
+                            isinstance(_a.get('provenance'), dict) and str(_a['provenance'].get('garden')) == _pre
+                            and isinstance(_a['provenance'].get('via'), list) and _a['provenance']['via']
+                            and str(_a['provenance']['via'][-1]) in KNOWN_GARDENS):
                         errors.append(f"{_base}: anchor '{_a['key']}' '{_v}' is a name minted by garden '{_pre}', which this "
                                       f"garden does not know" + (f" (its own id is {_own})" if _own else "") +
-                                      " — a qualified name is this garden's own, or arrives with the `garden` bean of the "
-                                      "garden that minted it")
+                                      " — a qualified name is this garden's own, arrives with the `garden` bean of the "
+                                      "garden that minted it, or records the path it came by (`garden`, `via`) through a "
+                                      "garden met here")
 
 
 def minted_form(value):

@@ -2068,6 +2068,16 @@ WHO ACTS IS NOT ALWAYS WHO IS BOUND (24.0, N13). An employee, a lawyer, a parent
 agent is a party of its own, with its own acceptance, and says whom it binds; a party acting for itself is refused,
 because it says nothing. `declined` (N14) records a refusal as `accepted` records a yes, with the same provenance.
 
+## provenance_record.attrs
+
+BETWEEN GARDENS IS A ROUTING DOMAIN, AND A NAME CARRIES ITS PATH (24.0, ratified 2026-09-26). A garden is an autonomous
+system and its `garden_id` its number; a being's name, announced from garden to garden, is a route. The receiver trusts
+only its peer — the last hop, a garden it met — and records the rest as said, not verified: `garden` the origin, `via`
+each garden after it, appended by the one that passes it on and never rewritten. A path holding the receiver's own id
+after its origin is a loop and is refused, as a path-vector protocol drops a route carrying its own number. Facts do
+not travel this way: what a third garden said is still not a garden's to pass on; only the name, and a person's
+`consent` with their name, as a community travels with a route.
+
 ## recurrence_form.closures
 
 AN OCCURRENCE THAT DOES NOT FALL IS SAID (24.0, N7). A lesson each Tuesday and Thursday, an hour long, not on a
