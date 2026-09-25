@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""dmseq — the reader of a series and of a track: what a line held at each position, and where a being stands on a walk.
+"""dmseq — the reader of a series and of a course: what a line held at each position, and where a being stands on a walk.
 
     python3 bin/dmseq.py show <bean> <key>              # each row at its position, every value with its unit
     python3 bin/dmseq.py rows <bean> <key>              # the rows as one table: the position, then each channel
     python3 bin/dmseq.py at <bean> <key> <position>     # what each channel holds there: an offset, or a position
-    python3 bin/dmseq.py track <bean> [<track>]         # where the being stands on each walk, since when, who acts next
-    python3 bin/dmseq.py check [<bean> ...]             # every series and track, judged as the gate judges them
+    python3 bin/dmseq.py course <bean> [<course>]         # where the being stands on each walk, since when, who acts next
+    python3 bin/dmseq.py check [<bean> ...]             # every series and course, judged as the gate judges them
     python3 bin/dmseq.py compare <bean> <key> <bean> <key> [--k 2]   # two recordings of one line, row by row
     add --exact to print a value read between two rows exactly, rather than to its uncertainty's digits
 
 (`python` on Windows.) It writes nothing, and nothing it prints is stored anywhere (manifesto: once): a series holds what
-was read, and whatever is read from it — a value between two rows, where a track stands, how long since — is read
+was read, and whatever is read from it — a value between two rows, where a course stands, how long since — is read
 again each time. It reads the garden whose tools it is, by the law the gate loads.
 
 A SERIES (std-vocab `series`) is a line whose positions hold values. Its positions are a rule — a `grid`, a recurrence
@@ -35,16 +35,16 @@ and an accuracy whose kind is `unstated` gives none.
 TIME is counted in days of 86400 seconds, as bin/dmcal.py counts it: no leap second is counted, so a grid of seconds
 across one reads the second after it.
 
-A TRACK (std-vocab `tracks`, `moves`) is a series along time whose value at each move is a step of the walk it names.
+A COURSE (std-vocab `courses`, `moves`) is a series along time whose value at each move is a step of the walk it names.
 Where the being stands is the step of its last move; how long since, the time from that move to now; who acts next, the
 step's `by`, read as a party of the being where it has `parties`; and whether the step has run past its `usually`.
 
 THE API other tools call, reading this garden:
     rows(root, bean, key)          -> [{'n', 'at', 'position', 'cells', 'excluded', 'source'}], in the order of the line
     read_at(root, bean, key, at)   -> {channel: {'value', 'how', 'rows', 'why'}}: what each channel holds at one position
-    where(root, bean, track, now)  -> {'step', 'since', 'by', 'party', 'overdue', 'moves'}: where a track stands
+    where(root, bean, course, now)  -> {'step', 'since', 'by', 'party', 'overdue', 'moves'}: where a course stands
     check_series(law, bean, key, entry, parts)   -> [(level, where, what)]: the gate's judgment of one series entry
-    walk_problems(steps, systems), check_moves(moves, steps, walk): its judgments of a walk's steps and of one track
+    walk_problems(steps, systems), check_moves(moves, steps, walk): its judgments of a walk's steps and of one course
 """
 import decimal
 import glob
@@ -188,7 +188,7 @@ class Series:
         self.channels, self.rows = {}, []
         self.kind = self.node = self.aspect = self.system = self.metered = self.unit = None
         self.stride = self.length = None
-        self.cells = self.entry.get('cells') or 'point'
+        self.cells = self.entry.get('placement') or 'point'
         self.read_form = form
         self._read()
 
@@ -250,7 +250,7 @@ class Series:
             self.err(f".{self.kind}", f"lies on a line with no measure ({'system ' + repr(self.system.get('system')) if self.system else 'aspect ' + repr(an)}"
                                       f" is metered in nothing): a series counts its positions in a unit of the line's "
                                       f"length — a count along a line with no measure is a local frame's, and a walk's "
-                                      f"steps are a track's")
+                                      f"steps are a course's")
         elif not self.unit:
             self.err('', f"states no `unit`: what an offset counts, and the resolution held — a unit of {self.metered}")
         elif self.law.factor(self.unit) is None or not self.law.measures(self.unit, self.metered):
@@ -266,7 +266,7 @@ class Series:
         """The grid's stride in whole units, and a listed series' length where the extent states one."""
         n, u = self.node, self.law.factor(self.unit)
         if self.kind == 'grid':
-            for k in ('to', 'times', 'at'):
+            for k in ('to', 'times', 'at', 'lasts', 'closures'):
                 if n.get(k) is not None:
                     self.err(f".grid.{k}", f"a grid's rows say where it ends and where in each stride they lie — "
                                            f"`{k}` is a repetition's, not a series'")
@@ -436,10 +436,10 @@ class Series:
             region = self.cells in ('bounds', 'preceding', 'following')
             position = self.cells in ('point', 'preceding', 'following')
             if sf in ('mean', 'sum', 'min', 'max') and not region:
-                self.err(w + '.stands_for', f"'{sf}' is over a region, and the series' rows sit at points (`cells: "
-                                            f"{self.cells}`): say where a row's region is with `cells`")
+                self.err(w + '.stands_for', f"'{sf}' is over a region, and the series' rows sit at points (`placement: "
+                                            f"{self.cells}`): say where a row's region is with `placement`")
             if sf in ('point', 'instant') and not position:
-                self.err(w + '.stands_for', f"'{sf}' is at a position, and the series' rows sit over regions (`cells: "
+                self.err(w + '.stands_for', f"'{sf}' is at a position, and the series' rows sit over regions (`placement: "
                                             f"bounds`) with none")
             if ch.get('between') == 'linear':
                 numeric = c['kind'] in ('quantity', 'offset')
@@ -450,23 +450,12 @@ class Series:
                     self.err(w + '.between', "is linear where " + ("the channel holds no measure" if not numeric else
                              "the line has none") + ": a value is read between two rows only where the line and the "
                              "channel are both metered — anything else invents a measure")
-            # uncertainty
-            if ch.get('u') is not None and ch.get('accuracy') is not None:
-                self.err(w, "states both `u` and `accuracy`: an uncertainty is stated once, as a standard `u` or as "
-                            "the accuracy its maker gave, with its kind")
+            # uncertainty: its form is `uncertainty_form`'s, judged by the gate's one check of it (`check_uncertainty`);
+            # what only a channel can say is that a position or a code states none here
             for k in ('u', 'accuracy'):
-                v = ch.get(k)
-                if isinstance(v, dict) and v.get('unit'):
-                    want = self.law.quantity_of(ch.get('unit')) if c['kind'] in ('quantity', 'offset') else None
-                    if c['kind'] in ('position', 'code'):
-                        self.err(w + f'.{k}', f"is a measured {k}, and the channel holds " + ("codes" if c['kind'] == 'code'
-                                 else "positions in their written form; state it where the position's system does"))
-                    elif want and self.law.quantity_of(v['unit']) != want:
-                        self.err(w + f'.{k}.unit', f"'{v['unit']}' measures {self.law.quantity_of(v['unit'])}, and the "
-                                                    f"channel's cells a {want}")
-            acc = ch.get('accuracy')
-            if isinstance(acc, dict) and acc.get('kind') != 'unstated' and acc.get('count') is None:
-                self.err(w + '.accuracy', f"a {acc.get('kind')} accuracy says how much: `count`")
+                if ch.get(k) is not None and c['kind'] in ('position', 'code'):
+                    self.err(w + f'.{k}', f"is a measured {k}, and the channel holds " + ("codes" if c['kind'] == 'code'
+                             else "positions in their written form; state it where the position's system does"))
             for k in ('limits', 'monotone'):
                 if ch.get(k) is not None and c['kind'] not in ('quantity', 'offset'):
                     self.err(w + f'.{k}', f"`{k}` is a measured channel's, and this one holds "
@@ -753,7 +742,7 @@ def check_series(law, bean, key, entry, parts=None, form=True):
     return Series(law, bean, key, entry, parts, form=form).problems
 
 
-# ============================================================================ walks and tracks
+# ============================================================================ walks and courses
 def walk_problems(steps, law_systems=None):
     """What is wrong with a walk's step attributes the gate's entry rules cannot say: [(step id, what)]. The step
     entries are the ones that are mappings; the ids, `next` and reachability are the walk's own check."""
@@ -787,26 +776,14 @@ def walk_problems(steps, law_systems=None):
 
 
 def _usually_problem(u, systems):
+    """What only a step can say of its `usually`: the extent's own form is judged as an extent (`in: extent`, the gate's
+    `check_extent`), and a length a step takes is on time and has no ends."""
     if not isinstance(u, dict):
-        return (f"is {u!r}: how long a step usually takes is an extent on time with a `measure` — `{{ of: time, measure: "
-                f"{{ count: 5, unit: day }} }}` — or a count of cells of a calendar's level — `{{ in: gregorian-civil, "
-                f"level: month, count: 1 }}`")
-    if 'of' in u:
-        if u.get('of') != 'time' or not isinstance(u.get('measure'), dict):
-            return "is an extent on time with a `measure`: how long, not from when — `{ of: time, measure: { count, unit } }`"
-        extra = sorted(set(u) - {'of', 'in', 'measure'})
-        return f"holds {extra} beside its measure: how long a step takes has no ends" if extra else None
-    if set(u) != {'in', 'level', 'count'}:
-        return "is `{ in: <calendar system>, level: <level>, count: <n> }`, or an extent on time with a `measure`"
-    row = systems.get(u.get('in')) if isinstance(u.get('in'), str) else None
-    if not row or row.get('dimension') != 'time':
-        return f"counts the cells of '{u.get('in')}', which is no calendar the law declares"
-    names = [l.get('level') for l in (row.get('levels') or []) if isinstance(l, dict)] if isinstance(row.get('levels'), list) else []
-    if u.get('level') not in names:
-        return f"counts '{u.get('level')}', which is no level of {u.get('in')} ({', '.join(map(str, names))})"
-    if isinstance(u.get('count'), bool) or not isinstance(u.get('count'), int) or u['count'] < 1:
-        return f"counts {u.get('count')!r} cells: a positive whole number"
-    return None
+        return None                                   # not an extent at all: refused as one, by name
+    if u.get('of') != 'time':
+        return f"is an extent on '{u.get('of')}': how long a step takes is an extent on time"
+    ends = sorted(set(u) & {'from', 'to'})
+    return f"holds {ends}: how long a step takes has no ends — a `measure`, or a `level` and a `count`" if ends else None
 
 
 def walk_ends(steps):
@@ -821,7 +798,7 @@ def reached_without_next(st):
 
 
 def check_moves(moves, steps, walk_name):
-    """[(index, level, what)] for one track's moves, in the order written, against the walk's steps."""
+    """[(index, level, what)] for one course's moves, in the order written, against the walk's steps."""
     out = []
     by_id = {st['id']: st for st in steps if isinstance(st, dict) and isinstance(st.get('id'), str)}
     ids = [st['id'] for st in steps if isinstance(st, dict) and isinstance(st.get('id'), str)]
@@ -829,8 +806,8 @@ def check_moves(moves, steps, walk_name):
     seen = {}
     for i, mv in moves:
         sid = mv.get('step')
-        # A MOVE IS TOLD FROM ANOTHER BY ITS MOMENT: two moves of one track to one step at one moment are one move written
-        # twice, and a merge, which keys a move by its track, moment and step, could not tell them apart
+        # A MOVE IS TOLD FROM ANOTHER BY ITS MOMENT: two moves of one course to one step at one moment are one move written
+        # twice, and a merge, which keys a move by its course, moment and step, could not tell them apart
         _k = (str(mv.get('at')), str(sid))
         if _k in seen:
             out.append((i, 'error', f"reaches '{sid}' at {mv.get('at')}, as move {seen[_k]} does: a move is told from "
@@ -847,7 +824,7 @@ def check_moves(moves, steps, walk_name):
         except Exception:
             ms = None                                        # its form is the type's to refuse, by name
         if ms is not None and prev_ms is not None and ms < prev_ms:
-            out.append((i, 'error', f"is at {mv.get('at')}, before the move it follows: a track's moments never go back "
+            out.append((i, 'error', f"is at {mv.get('at')}, before the move it follows: a course's moments never go back "
                                     f"— each move is written when it is made"))
         offered = None
         if prev is None:
@@ -857,7 +834,7 @@ def check_moves(moves, steps, walk_name):
             p = by_id.get(prev)
             if p is not None and p.get('final') is True:
                 out.append((i, 'error', f"follows '{prev}', a final step: nothing follows it — a case that goes on is "
-                                        f"a new track, or the walk's end is not final"))
+                                        f"a new course, or the walk's end is not final"))
             elif p is not None and p.get('resumes') is True:
                 if sid != pause_from and st.get('exit') is not True:
                     offered = f"'{prev}' is a pause, and the move after it returns to '{pause_from}', where it was entered from"
@@ -959,18 +936,18 @@ def read_at(root, bean, key, at):
     return s.read(x)
 
 
-def where(root, bean, track, now=None):
-    """Where one track of a bean stands: {'step', 'at', 'since' (ms, or None), 'by', 'party', 'usually', 'overdue',
+def where(root, bean, course, now=None):
+    """Where one course of a bean stands: {'step', 'at', 'since' (ms, or None), 'by', 'party', 'usually', 'overdue',
     'moves'} — read from its moves and its walk, never stored."""
     fm = _doc(root or ROOT, bean)
-    tr = (fm.get('tracks') or {}).get(track) if isinstance(fm.get('tracks'), dict) else None
+    tr = (fm.get('courses') or {}).get(course) if isinstance(fm.get('courses'), dict) else None
     if not isinstance(tr, dict):
-        raise ValueError(f"bean '{bean}' has no track '{track}'")
+        raise ValueError(f"bean '{bean}' has no course '{course}'")
     ref = tr.get('walk') or {}
     wid = ref.get('mapping') or ref.get('bean')
     wfm = _front(os.path.join(root or ROOT, 'mappings' if 'mapping' in ref else 'beans', f"{wid}.md")) or {}
     steps = [s for s in (wfm.get('steps') or []) if isinstance(s, dict)]
-    mv = [m for m in (fm.get('moves') or []) if isinstance(m, dict) and m.get('track') == track]
+    mv = [m for m in (fm.get('moves') or []) if isinstance(m, dict) and m.get('course') == course]
     if not mv:
         return {'step': None, 'moves': 0}
     last = mv[-1]
@@ -1102,18 +1079,18 @@ def main(argv):
                 print(f"  {n}: {_print_value(s, n, r['value'], exact_)} — {r['how']}"
                       + (f" ({'; '.join(r['rows'])})" if r['rows'] else '') + (f" — {r['why']}" if r['why'] else ''))
             return 0
-        if cmd == 'track' and rest:
+        if cmd == 'course' and rest:
             fm = _doc(ROOT, rest[0])
-            names = [rest[1]] if len(rest) > 1 else sorted((fm.get('tracks') or {}) if isinstance(fm.get('tracks'), dict) else [])
+            names = [rest[1]] if len(rest) > 1 else sorted((fm.get('courses') or {}) if isinstance(fm.get('courses'), dict) else [])
             if not names:
-                print(f"{rest[0]}: no track")
+                print(f"{rest[0]}: no course")
                 return 0
             for t in names:
                 w = where(ROOT, rest[0], t)
                 if not w.get('step'):
-                    print(f"{rest[0]}: track {t} — no move yet")
+                    print(f"{rest[0]}: course {t} — no move yet")
                     continue
-                print(f"{rest[0]}: track {t} on walk {w['walk']} — at '{w['step']}' since {w['at']} "
+                print(f"{rest[0]}: course {t} on walk {w['walk']} — at '{w['step']}' since {w['at']} "
                       f"({_since(w['since'])} ago; {w['moves']} move(s))"
                       + ("; a final step: nothing follows" if w['final'] else
                          f"; who acts next: {w['by']}" + (f" ({w['party']})" if w['party'] else '') if w['by'] else '')
@@ -1136,7 +1113,7 @@ def main(argv):
                         s = Series(law, b, key, e, parts_of(ROOT, b, key))
                         _problems_out(b, key, t, s)
                         n += sum(1 for p in s.problems if p[0] == 'error')
-            print(f"dmseq check: {n} error(s) in the series of {len(want)} bean(s) — the gate judges tracks and walks "
+            print(f"dmseq check: {n} error(s) in the series of {len(want)} bean(s) — the gate judges courses and walks "
                   f"with the rest: `{PY} bin/dmcheck.py`")
             return 1 if n else 0
         if cmd == 'compare' and len(rest) == 4:

@@ -594,11 +594,9 @@ def _attrs_problem(attrs, at):
             return f"`{at}.{a}.in.pattern` {regex_problem(d['pattern'])}"
         # `{ gene: [...] }` and nothing else (22.0: `kinds` until then) — a key it does not read would hold the id to no
         # genos at all, and say nothing
-        if d.get('bean_id') is not None and not (isinstance(d['bean_id'], dict) and set(d['bean_id']) <= {'gene', 'keyed'}
-                                                  and isinstance(d['bean_id'].get('gene') or [], list)
-                                                  and d['bean_id'].get('keyed') in (None, True)):
-            return (f"`{at}.{a}.in.bean_id` is a mapping {{ gene: [<genos>, ...] }}, its gene a list, or "
-                    f"{{ keyed: true }} for `<bean id>#<key>`")
+        if d.get('bean_id') is not None and not (isinstance(d['bean_id'], dict) and set(d['bean_id']) <= {'gene'}
+                                                  and isinstance(d['bean_id'].get('gene') or [], list)):
+            return f"`{at}.{a}.in.bean_id` is a mapping {{ gene: [<genos>, ...] }}, its gene a list"
         if d.get('where') is not None and not isinstance(d['where'], dict):
             return f"`{at}.{a}.in.where` is a mapping of a registry's field to the value it holds"
         if d.get('entries') is not None:

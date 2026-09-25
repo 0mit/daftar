@@ -534,7 +534,7 @@ holds, and then the rows, as one table.
   the next occurrence — or listed, in a `span`, an extent from whose `from` each row writes its offset in the first
   column (`at`; `from` and `to` when a row is a region). `unit` is what an offset counts and the resolution held: a
   grid's stride is a whole number of it.
-- **Where a row sits** is `cells`: here each row stands at its hour and over the hour after it (`following`), as
+- **Where a row sits** is `placement`: here each row stands at its hour and over the hour after it (`following`), as
   an hour's rain does; at a point is the reading when it is silent.
 - **What each position holds** is `holds`, one channel per column: a measured value (`quantity` and its one `unit`), a
   position (`system`), or a code of a published scheme (`scheme`). `stands_for` says what a cell is over its row's
@@ -567,7 +567,7 @@ series:
   september:
     grid: { of: time, in: gregorian-civil, every: { count: 1, unit: hour }, from: "2026-09-14 06:00+02:00" }
     unit: hour
-    cells: following
+    placement: following
     holds:
       - { name: rain, quantity: length, unit: millimetre, stands_for: sum, u: { count: "0.2", unit: millimetre } }
       - { name: battery, quantity: ratio, unit: percent, stands_for: point, between: linear }
@@ -589,7 +589,7 @@ what it is — the sum over the hour that began at 07:00, never a share of it. N
 after the last, and nothing read is stored. A cell someone sets aside — a reading they judge wrong — stays in the
 table, and `excluded` names the row, the channel, who judged it and why.
 
-## Where a case stands on a walk: a track
+## Where a case stands on a walk: a course
 
 Ali mends bicycles, and Sam brought her his. A repair goes through the same steps each time — handed over, looked at,
 mended, collected — and a **walk** says so once: the `steps` of a mapping. Each step may say who acts at it (`by`, a
@@ -614,7 +614,7 @@ steps:
 The steps of a bicycle repair.
 ```
 
-Where one repair stands is a **track** on the case: `tracks` names the walk, and each **move** along it is an entry of
+Where one repair stands is a **course** on the case: `courses` names the walk, and each **move** along it is an entry of
 `moves` — the step reached, who moved it, a `reason` from that step's list and `why` in words. Its moment is
 `at: now`: the save writes the moment of its journal entry in its place, read from the clock and never typed. A move
 follows a `next` of the step before it, or reaches a way out or a pause; after a pause the case returns to where it
@@ -643,17 +643,17 @@ parties:
 over:
   - { what: "Sam's bicycle" }
 words: { form: spoken }
-tracks:
+courses:
   repair: { walk: { mapping: walk-bike-repair } }
 moves:
-  - { track: repair, at: now, step: handed-over, by: sam }
-  - { track: repair, at: now, step: looked-at, by: ali, why: "the rear hub grinds" }
-  - { track: repair, at: now, step: waiting-for-part, by: ali, reason: part-ordered }
+  - { course: repair, at: now, step: handed-over, by: sam }
+  - { course: repair, at: now, step: looked-at, by: ali, why: "the rear hub grinds" }
+  - { course: repair, at: now, step: waiting-for-part, by: ali, reason: part-ordered }
 ---
 Ali mends Sam's bicycle; the parts are Sam's to pay for.
 ```
 
-`python3 bin/dmseq.py track bike-repair` reads where it stands: at `waiting-for-part`, since the moment of that move,
+`python3 bin/dmseq.py course bike-repair` reads where it stands: at `waiting-for-part`, since the moment of that move,
 and how long ago. When the part comes, the next move returns to `looked-at`; after `mended`, who acts next is the
 `owner`, read as Sam from the case's `parties`. Where a case stands is read from its moves, and never written down: a
 stored stage is a second copy, and it drifts.
@@ -661,7 +661,8 @@ stored stage is a second copy, and it drifts.
 **A checklist is a set, not a walk.** What a case asks for — the documents a form needs, the parts a publisher wants
 to see — is the `items` of a mapping of `kind: checklist`, each with an `id`, what it asks for (`do`), who provides it
 (`by`), and, of items any one of which will do, the same `one_of`. When an item is needed and what meets it are
-selections, named `{ selection: <bean>#<key> }`.
+selections: `needed_when` and `met_by` each name a key of `selections`, bare on the checklist itself or
+`<bean>:<key>` on another bean, as any part of a being is named.
 
 ## Proposing to another garden
 

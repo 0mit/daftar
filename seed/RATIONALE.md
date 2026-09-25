@@ -1855,17 +1855,17 @@ or withdrawn at any stage; a pause is no end.
 ## schema_language.moves_along
 
 WHERE A CASE STANDS IS READ, NOT STORED (N10, F8; the client-work and platform cases). A stage written on a case is a
-second copy of its last move, and it drifts. A track is a series along time whose value at each move is a step of a
+second copy of its last move, and it drifts. A course is a series along time whose value at each move is a step of a
 named walk: the moves are the facts — the step reached, who moved it, a reason from the step's own list, why in words,
-and the moment, stamped. The gate holds one track's moves to its walk: a move follows a `next`, reaches a way out or a
+and the moment, stamped. The gate holds one course's moves to its walk: a move follows a `next`, reaches a way out or a
 pause, returns from a pause to where it was, and nothing follows a final step; a move the walk does not offer passes
 only with its `why`, and warns, because the world does not always follow a procedure and the record must say so
-rather than refuse it. The moves merge by track, moment and step, so a step visited twice never collides with itself; a move is stamped to the minute, so two moves of one track to one step in one minute would be one move written twice, and the gate says so before a merge must refuse it.
+rather than refuse it. The moves merge by course, moment and step, so a step visited twice never collides with itself; a move is stamped to the minute, so two moves of one course to one step in one minute would be one move written twice, and the gate says so before a merge must refuse it.
 
-## terms[tracks]
+## terms[courses]
 
-A TRACK NAMES ITS WALK ONCE; its moves name the track. The moves are a list of their own term, not nested in the track,
-so two gardens' moves of one case unite by their key at a merge instead of one track entry conflicting with another.
+A COURSE NAMES ITS WALK ONCE; its moves name the course. The moves are a list of their own term, not nested in the course,
+so two gardens' moves of one case unite by their key at a merge instead of one course entry conflicting with another.
 
 ## terms[moves]
 
@@ -2296,11 +2296,13 @@ A part of a being — a link, a volume, a capture — is named by its key, not b
 joins no graph. Until 18.0 such a name was `untyped`, so a tunnel could ride a link that did not exist. The gate
 resolves it and draws no edge.
 
-## schema_language.attr_domains.bean_id
+## terms[items].schema.attrs.met_by
 
-A KEY ON A BEAN, NAMED WHERE IT IS DECLARED. A checklist item names the selection that makes it needed as the bean that
-declares it and its key, `<bean>#<key>`. The bean is a bean this garden holds, so the gate resolves it; the key belongs
-to whatever the bean declares it in, and is resolved by what reads it.
+A SELECTION IS A PART OF THE BEING THAT DECLARES IT. A checklist item names the selection that makes it needed, and the
+one that meets it, as a key of `selections`: bare on the checklist, `<bean>:<key>` on another bean. That is `key_of`,
+the one way a part of a being is named, so the gate resolves the bean and the key and draws no edge. A second spelling,
+`<bean>#<key>` through `bean_id`, was built first and removed before the release: two spellings of one name are two
+things a merge would not compare.
 
 ## quantities
 

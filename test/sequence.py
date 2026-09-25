@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Sequence (std-vocab `series`, `tracks`, `moves`, `items`): what a line held at each position, and where a case stands
+"""Sequence (std-vocab `series`, `courses`, `moves`, `items`): what a line held at each position, and where a case stands
 on a walk.
 
 Grows a garden with seed/germinate.py and writes into it INVENTED fixtures that use every term this adds — a water
 heater on a bench logged each minute (flow, water drawn, outlet temperature as a position, power as a state), a moth's
 night read against the rooted beings it rested on, a birch's dendrometer and its rings along the radius it lends, a
 rock core's strata along its depth, a tree's year as a walk that takes and gives, a literary agent placing a
-manuscript (a walk with a way out, a pause that resumes and a final end, a case with a track and its moves) and the
+manuscript (a walk with a way out, a pause that resumes and a final end, a case with a course and its moves) and the
 checklist of a manuscript's parts. Nothing here is a person's health or anyone's estate. Then it holds:
 
   +  the fixtures commit through the hook with 0 errors, the moves one save at a time, each moment stamped by the save
   +  bin/dmseq.py reads them: positions written in the line's own form, a value between rows on a straight line and
      printed to its uncertainty's digits, a state held, a region's value said as what it is, a gap with its reason, a
-     cell set aside with its judge, nothing extrapolated — and where a track stands, since when, and who acts next
+     cell set aside with its judge, nothing extrapolated — and where a course stands, since when, and who acts next
   +  bin/dmparse.py's table writer writes back what its reader read, byte for byte, and the merge and the proposals
      write a table as a block, where PyYAML alone writes one escaped line
   +  a merge compares every {count, unit} by exact conversion, a series' cells included: a length in millimetres and
@@ -108,12 +108,12 @@ HEATER = bean("heater-rig", "host", "soma", "heater-rig — a water heater on th
   run-3:
     grid: { of: time, in: gregorian-civil, every: { count: 1, unit: minute }, from: "2026-03-02 09:00+01:00" }
     unit: minute
-    cells: following
+    placement: following
     holds:
       - { name: flow, quantity: volume-flow, unit: litre-per-minute, stands_for: point, between: linear, u: { count: "0.05", unit: litre-per-minute }, persists: offset }
       - { name: drawn, quantity: volume, unit: litre, stands_for: sum }
       - { name: outlet, system: water-celsius, prefix: "C:", stands_for: point }
-      - { name: heating, quantity: ratio, unit: percent, stands_for: state, limits: { below: "5" } }
+      - { name: heating, quantity: ratio, unit: percent, stands_for: state, limits: { below: "5" }, accuracy: { count: "2", unit: percent, kind: bound } }
     rows: |
 """ + table(*HEATER_ROWS) + """    excluded:
       - { at: 3, channel: flow, by: keeper, why: "air in the flow sensor after the tank was refilled" }
@@ -146,7 +146,7 @@ series:
 """ + table(("radius-change",), ("0",), ("0.004",), ("0.011",), ("0.009",), ("0.015",)) + """  rings:
     span: { of: place, in: along, from: "birch-2/radius+0", measure: { count: 60, unit: millimetre } }
     unit: millimetre
-    cells: bounds
+    placement: bounds
     holds:
       - { name: latewood, quantity: ratio, unit: percent, stands_for: mean }
 """, "A birch with a band dendrometer.")
@@ -159,7 +159,7 @@ series:
   strata:
     span: { of: place, in: along, from: "core-b/depth+0", measure: { count: 3, unit: metre } }
     unit: millimetre
-    cells: bounds
+    placement: bounds
     holds:
       - { name: porosity, quantity: ratio, unit: percent, stands_for: mean }
       - { name: drilled, system: unix-epoch, from: "1767225600000", unit: minute, stands_for: max, monotone: increasing }
@@ -176,7 +176,7 @@ steps:
     do: "the leaves unfold and begin to feed the tree"
     takes: [ { scheme: tree-inputs, code: water, amount: { count: 40, unit: litre } }, { scheme: tree-inputs, code: carbon-dioxide } ]
     gives: [ { scheme: tree-inputs, code: sugar }, { scheme: tree-inputs, code: oxygen } ]
-    usually: { in: gregorian-civil, level: month, count: 4 }
+    usually: { of: time, in: gregorian-civil, level: month, count: 4 }
     next: [ { to: leaf-fall } ]
   - { id: leaf-fall, do: "the leaves colour and fall", next: [ { to: dormant } ] }
   - { id: dormant, do: "the tree rests through the cold", next: [ { to: bud-break } ] }
@@ -194,7 +194,7 @@ steps:
   - id: read
     do: "an editor reads it"
     by: publisher
-    usually: { in: gregorian-civil, level: month, count: 2 }
+    usually: { of: time, in: gregorian-civil, level: month, count: 2 }
     next: [ { to: offered, when: "the house wants it" }, { to: declined, when: "it does not" } ]
   - { id: offered, do: "the house offers terms", by: agent, next: [ { to: contracted } ] }
   - { id: contracted, do: "both sign", by: author, final: true }
@@ -219,8 +219,11 @@ CASE = bean("harbour-tale", "contract", "lekton", "harbour-tale — placing a ma
   agent: { who: { bean: rhea }, role: agent }
   publisher: { who: { bean: lark-press }, role: publisher }
 words: { form: spoken }
-tracks:
+courses:
   lark: { walk: { mapping: walk-placing }, note: "placing with Lark Press" }
+selections:
+  translation-rights: { what: "whether the house asks for translation rights", steps: [ { id: asked, op: select, genos: contract } ] }
+  rights-papers: { what: "the papers that show which translation rights are free", steps: [ { id: papers, op: select, genos: document } ] }
 """, "The placing of a manuscript.", own="owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n")
 CHECKLIST = """---
 mapping: manuscript-parts
@@ -231,7 +234,7 @@ items:
   - { id: three-chapters, do: "the first three chapters", by: author, one_of: sample }
   - { id: full-text, do: "the whole manuscript", by: author, one_of: sample }
   - { id: cover-letter, do: "a letter introducing the book", by: agent }
-  - { id: rights-list, do: "which translation rights are free", by: agent, needed_when: { selection: "harbour-tale#translation-rights" }, met_by: { selection: "wren#rights-papers" } }
+  - { id: rights-list, do: "which translation rights are free", by: agent, needed_when: "harbour-tale:translation-rights", met_by: "harbour-tale:rights-papers" }
 ---
 A checklist, invented.
 """
@@ -294,11 +297,11 @@ for _p, _t in DOCS.items():
     write(_p, _t)
 write("series/birch-2/rings/core-2026.tsv", RINGS)
 rc, out = save("the invented fixtures", [os.path.basename(p)[:-3] for p in DOCS], rule_change=True)
-check("the invented fixtures — a series of every shape, lines lent by beings, walks, a case with a track and a "
+check("the invented fixtures — a series of every shape, lines lent by beings, walks, a case with a course and a "
       "checklist — commit through the hook with 0 errors, a part of a series in its file beside them",
       rc == 0 and " 0 error(s)" in out, out)
-check("...and every new term is used by them: series, lines, tracks, items (and moves, below)",
-      all(re.search(rf"(?m)^{t}:", "".join(DOCS.values())) for t in ("series", "lines", "tracks", "items")))
+check("...and every new term is used by them: series, lines, courses, items (and moves, below)",
+      all(re.search(rf"(?m)^{t}:", "".join(DOCS.values())) for t in ("series", "lines", "courses", "items")))
 
 
 # ============================================================================ the moves, one save at a time
@@ -310,10 +313,10 @@ def move(line, what="a move"):
     return save(what, ["harbour-tale"])
 
 
-MOVES = ['{ track: lark, at: now, step: submitted, by: rhea, why: "sent with the first three chapters" }',
-         '{ track: lark, at: now, step: on-hold, by: rhea, reason: author-revising }',
-         '{ track: lark, at: now, step: submitted, by: rhea, why: "the revised chapters went back" }',
-         '{ track: lark, at: now, step: read, by: lark-press }']
+MOVES = ['{ course: lark, at: now, step: submitted, by: rhea, why: "sent with the first three chapters" }',
+         '{ course: lark, at: now, step: on-hold, by: rhea, reason: author-revising }',
+         '{ course: lark, at: now, step: submitted, by: rhea, why: "the revised chapters went back" }',
+         '{ course: lark, at: now, step: read, by: lark-press }']
 _res = [move(m) for m in MOVES[:2]]
 # A STEP VISITED AGAIN IS VISITED AT A LATER MOMENT: a move is stamped to the minute, and the return to `submitted` is
 # made once the clock has left the minute the first was made in, as a person's second visit is
@@ -381,7 +384,7 @@ check("...a region's value is read inside it, said as its mean; a stretch with n
       and (A.get("core") or {}).get("value") == "_", (A.get("core"), A.get("core_region")))
 check("a moth's perch — a position in a local frame, a state — is held from its last fix",
       (A.get("moth") or {}).get("value") == "lime-3#crown", A.get("moth"))
-check("dmseq.where reads where a track stands and who acts next, as a party of the case",
+check("dmseq.where reads where a course stands and who acts next, as a party of the case",
       A.get("where") == ["read", "publisher", "lark-press", 4], A.get("where"))
 _show = run(PY, "bin/dmseq.py", "at", "heater-rig", "run-3", "2026-03-02 09:01:30+01:00", cwd=G).stdout
 _exact = run(PY, "bin/dmseq.py", "at", "heater-rig", "run-3", "2026-03-02 09:01:30+01:00", "--exact", cwd=G).stdout
@@ -393,8 +396,8 @@ check("dmseq show prints each row with the line of the table it came from, gaps 
       "[.rows line 5]" in _shw and "? (a reading was made, and it cannot be read here)" in _shw
       and "SET ASIDE by keeper: air in the flow sensor" in _shw and "< 5 percent (below a limit)" in _shw
       and "no leap second counted" in _shw, _shw[-1200:])
-_tr = run(PY, "bin/dmseq.py", "track", "harbour-tale", cwd=G).stdout
-check("dmseq track says the step, since when, how many moves, and who acts next",
+_tr = run(PY, "bin/dmseq.py", "course", "harbour-tale", cwd=G).stdout
+check("dmseq course says the step, since when, how many moves, and who acts next",
       "at 'read' since" in _tr and "who acts next: publisher (lark-press)" in _tr and "4 move(s)" in _tr, _tr)
 _chk = run(PY, "bin/dmseq.py", "check", cwd=G)
 check("dmseq check judges every series as the gate does, and says so in one line", _chk.returncode == 0
@@ -463,10 +466,21 @@ refused("...a pause with a way on", "mappings/walk-placing.md", "resumes: true, 
 refused("...a final end with a way on", "mappings/walk-placing.md", '{ id: contracted, do: "both sign", by: author, final: true }',
         '{ id: contracted, do: "both sign", by: author, final: true, next: [ { to: read } ] }', "is `final` and names a `next`")
 refused("...and `usually` in a form the walk does not read", "mappings/walk-placing.md",
-        "usually: { in: gregorian-civil, level: month, count: 2 }", "usually: { in: gregorian-civil, level: fortnight, count: 2 }",
-        "counts 'fortnight', which is no level of gregorian-civil")
-refused("a series with both a grid and a span", "beans/heater-rig.md", "    unit: minute\n    cells: following",
-        "    span: { of: time, from: \"2026-03-02 09:00+01:00\" }\n    unit: minute\n    cells: following",
+        "usually: { of: time, in: gregorian-civil, level: month, count: 2 }",
+        "usually: { of: time, in: gregorian-civil, level: fortnight, count: 2 }", "fortnight")
+refused("...or `usually` with an end: how long a step takes has none", "mappings/walk-placing.md",
+        "usually: { of: time, in: gregorian-civil, level: month, count: 2 }",
+        'usually: { of: time, from: "2026-01-01", measure: { count: 2, unit: day } }', "how long a step takes has no ends")
+refused("a channel stating both `u` and `accuracy` is refused by name", "beans/heater-rig.md", 'limits: { below: "5" }, accuracy: { count: "2", unit: percent, kind: bound } }',
+        'limits: { below: "5" }, accuracy: { count: "2", unit: percent, kind: bound }, u: { count: "1", unit: percent } }',
+        "states both `u` and `accuracy`")
+refused("...an accuracy whose kind is no row of `accuracy_kinds`", "beans/heater-rig.md", 'limits: { below: "5" }, accuracy: { count: "2", unit: percent, kind: bound } }',
+        'limits: { below: "5" }, accuracy: { count: "2", unit: percent, kind: bound } }'.replace("kind: bound", "kind: roughly"), "roughly")
+refused("...an accuracy with no number", "beans/heater-rig.md", 'limits: { below: "5" }, accuracy: { count: "2", unit: percent, kind: bound } }', 'limits: { below: "5" }, accuracy: { count: "2", unit: percent, kind: bound } }'.replace('count: "2", ', ''), "count")
+refused("...an accuracy in a unit of another quantity", "beans/heater-rig.md", 'limits: { below: "5" }, accuracy: { count: "2", unit: percent, kind: bound } }', 'limits: { below: "5" }, accuracy: { count: "2", unit: percent, kind: bound } }'.replace('unit: percent, kind', 'unit: litre, kind'),
+        "measures volume")
+refused("a series with both a grid and a span", "beans/heater-rig.md", "    unit: minute\n    placement: following",
+        "    span: { of: time, from: \"2026-03-02 09:00+01:00\" }\n    unit: minute\n    placement: following",
         "states both a `grid` and a `span`")
 refused("a channel holding a measured value and a code at once", "beans/heater-rig.md",
         "{ name: drawn, quantity: volume, unit: litre, stands_for: sum }",
@@ -506,10 +520,10 @@ refused("a held series that says more than where it is kept", "beans/heater-rig.
 refused("a line along a being written with no distance", "beans/core-b.md", 'from: "core-b/depth+0"',
         'from: "core-b/depth"', "'core-b/depth' is not a position in the one form 'along' writes")
 refused("a checklist naming a selection on a bean that is not here", "mappings/manuscript-parts.md",
-        'met_by: { selection: "wren#rights-papers" }', 'met_by: { selection: "nobody#rights-papers" }',
-        "selection 'nobody' is not the id of a bean this garden holds")
-refused("...or naming it in a form that is no `<bean>#<key>`", "mappings/manuscript-parts.md",
-        'met_by: { selection: "wren#rights-papers" }', 'met_by: { selection: "wren" }', "is `<bean id>#<key>`")
+        'met_by: "harbour-tale:rights-papers"', 'met_by: "nobody:rights-papers"',
+        "names bean 'nobody', which this garden does not hold")
+refused("...or a selection the bean does not declare", "mappings/manuscript-parts.md",
+        'met_by: "harbour-tale:rights-papers"', 'met_by: "harbour-tale:rights-paper"', "is no key of `selections`")
 
 # a part no series claims; a part rewritten
 write("series/moth-7/night-2/a.tsv", "at\tfix\n0\t?\n")
@@ -559,53 +573,53 @@ def later(k):
     return dmcal.write_moment(m.ms + k * 60000, m.calendar, m.offset, "minute")
 
 
-rc, out = move_probe(f'{{ track: lark, at: "{LAST}", step: read, by: rhea }}')
-check("one move written twice — one track, one step, one moment — is refused by name: a merge keys a move by them",
+rc, out = move_probe(f'{{ course: lark, at: "{LAST}", step: read, by: rhea }}')
+check("one move written twice — one course, one step, one moment — is refused by name: a merge keys a move by them",
       rc != 0 and "reaches 'read' at " in out and "as move 3 does" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{later(1)}", step: printed, by: rhea }}')
+rc, out = move_probe(f'{{ course: lark, at: "{later(1)}", step: printed, by: rhea }}')
 check("a move to a step the walk does not have is refused by name", rc != 0
       and "reaches 'printed', which is no step of the walk walk-placing" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{later(2)}", step: contracted, by: rhea }}')
+rc, out = move_probe(f'{{ course: lark, at: "{later(2)}", step: contracted, by: rhea }}')
 check("a move the walk does not offer, with no `why`, is refused", rc != 0
       and "reaches 'contracted', a move the walk does not offer ('read' leads on to 'offered', 'declined' only)" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{later(3)}", step: contracted, by: rhea, why: "signed at the fair, unread" }}')
+rc, out = move_probe(f'{{ course: lark, at: "{later(3)}", step: contracted, by: rhea, why: "signed at the fair, unread" }}')
 check("...and with its `why` it passes, and warns", rc == 0 and "a move the walk does not offer" in out
       and "its `why` says why" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{later(4)}", step: withdrawn, by: rhea, reason: sold-elsewhere }}')
+rc, out = move_probe(f'{{ course: lark, at: "{later(4)}", step: withdrawn, by: rhea, reason: sold-elsewhere }}')
 check("a way out is reached from any step, with a reason from its own list", rc == 0, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{later(5)}", step: withdrawn, by: rhea, reason: lost-interest }}')
+rc, out = move_probe(f'{{ course: lark, at: "{later(5)}", step: withdrawn, by: rhea, reason: lost-interest }}')
 check("...and a reason the step does not list is refused by name", rc != 0
       and "cites the reason 'lost-interest', which is not one of the step 'withdrawn''s" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{later(6)}", step: declined, by: lark-press, reason: list-full }}\n'
-                     f'  - {{ track: lark, at: "{later(7)}", step: submitted, by: rhea, why: "sent again the next season" }}')
+rc, out = move_probe(f'{{ course: lark, at: "{later(6)}", step: declined, by: lark-press, reason: list-full }}\n'
+                     f'  - {{ course: lark, at: "{later(7)}", step: submitted, by: rhea, why: "sent again the next season" }}')
 check("an end that is not final may be left: a declined manuscript is sent again", rc == 0, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{later(8)}", step: offered, by: lark-press }}\n'
-                     f'  - {{ track: lark, at: "{later(9)}", step: contracted, by: rhea }}\n'
-                     f'  - {{ track: lark, at: "{later(10)}", step: read, by: rhea, why: "again" }}')
+rc, out = move_probe(f'{{ course: lark, at: "{later(8)}", step: offered, by: lark-press }}\n'
+                     f'  - {{ course: lark, at: "{later(9)}", step: contracted, by: rhea }}\n'
+                     f'  - {{ course: lark, at: "{later(10)}", step: read, by: rhea, why: "again" }}')
 check("nothing follows a final end, `why` or no `why`", rc != 0 and "follows 'contracted', a final step" in out, out[-600:])
-rc, out = move_probe(f'{{ track: lark, at: "{later(11)}", step: on-hold, by: rhea, reason: house-reorganising }}\n'
-                     f'  - {{ track: lark, at: "{later(12)}", step: offered, by: lark-press }}')
+rc, out = move_probe(f'{{ course: lark, at: "{later(11)}", step: on-hold, by: rhea, reason: house-reorganising }}\n'
+                     f'  - {{ course: lark, at: "{later(12)}", step: offered, by: lark-press }}')
 check("after a pause the case returns to where it was, or takes a way out", rc != 0
       and "'on-hold' is a pause, and the move after it returns to 'read'" in out, out[-600:])
-rc, out = move_probe('{ track: lark, at: "2020-01-01 10:00+00:00", step: offered, by: lark-press }')
-check("a track's moments never go back", rc != 0 and "before the move it follows: a track's moments never go back" in out,
+rc, out = move_probe('{ course: lark, at: "2020-01-01 10:00+00:00", step: offered, by: lark-press }')
+check("a course's moments never go back", rc != 0 and "before the move it follows: a course's moments never go back" in out,
       out[-600:])
-rc, out = move_probe('{ track: lark, at: "2026-13-01 10:00+00:00", step: offered, by: lark-press }')
+rc, out = move_probe('{ course: lark, at: "2026-13-01 10:00+00:00", step: offered, by: lark-press }')
 check("a moment on a day no calendar has is refused", rc != 0 and "is no day of gregorian-civil" in out, out[-600:])
-rc, out = move_probe('{ track: lark, at: "2026-12-01", step: offered, by: lark-press }')
+rc, out = move_probe('{ course: lark, at: "2026-12-01", step: offered, by: lark-press }')
 check("...and a day with no clock reading is no moment", rc != 0 and "must be a MOMENT" in out, out[-600:])
-rc, out = move_probe('{ track: lark, at: now, step: offered, by: lark-press }')
+rc, out = move_probe('{ course: lark, at: now, step: offered, by: lark-press }')
 check("`now` left unstamped is refused, with the save that stamps it", rc != 0 and ".at is `now`" in out
       and "the word the save writes the moment" in out and "bin/dmsave.py" in out, out[-600:])
-rc, out = move_probe('{ track: lark, at: "' + later(1) + '", step: offered, by: nobody }')
+rc, out = move_probe('{ course: lark, at: "' + later(1) + '", step: offered, by: nobody }')
 check("a move by a bean that is not here is refused by name", rc != 0 and ".by 'nobody' is not the id of a bean" in out,
       out[-600:])
-rc, out = move_probe('{ track: ghost, at: "' + later(1) + '", step: offered, by: rhea }')
-check("a move along a track the bean does not have is refused by name", rc != 0 and "'ghost' is no key of `tracks`" in out,
+rc, out = move_probe('{ course: ghost, at: "' + later(1) + '", step: offered, by: rhea }')
+check("a move along a course the bean does not have is refused by name", rc != 0 and "'ghost' is no key of `courses`" in out,
       out[-600:])
 # typed, not stamped: a moment that is not the moment of the heading the commit adds
 head, sep, body = BASE["beans/harbour-tale.md"].partition("\n---\n")
-write("beans/harbour-tale.md", head + '\n  - { track: lark, at: "2030-01-01 10:00+00:00", step: offered, by: lark-press }' + sep + body)
+write("beans/harbour-tale.md", head + '\n  - { course: lark, at: "2030-01-01 10:00+00:00", step: offered, by: lark-press }' + sep + body)
 rc, out = save("a typed moment", ["harbour-tale"])
 check("a moment typed rather than stamped is refused at the commit: it is read from the clock, never typed", rc != 0
       and "is 2030-01-01 10:00+00:00, and it is read from the clock, never typed" in out, out[-700:])

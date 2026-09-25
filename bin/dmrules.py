@@ -249,7 +249,7 @@ if '--terms' in want:
         if s.get('series') is True:
             bits.append("each entry a SERIES — its rows read against its channels")
         if s.get('moves_along'):
-            bits.append(f"each entry a MOVE along the track its `{s['moves_along']}` names — held to that track's walk")
+            bits.append(f"each entry a MOVE along the course its `{s['moves_along']}` names — held to that course's walk")
         print(f"  {n:20} [{TIER[n]}]  {' · '.join(bits)}")
         det = []
         _req_self = [a_ for a_, _ in dmform.facet(F, 'required', 'self')]

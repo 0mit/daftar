@@ -45,7 +45,7 @@ import dmparse
 import dmform
 import dmsafe          # the staged-state checks below run dmsafe's OWN comparison, not a copy of it
 import dmpass          # where each file sits: the law's layer map, read by its one reader and by no copy of it here
-import dmseq           # a series and a track, read by their one reader: the gate asks it, and keeps no copy
+import dmseq           # a series and a course, read by their one reader: the gate asks it, and keeps no copy
 try:
     import yaml
 except ImportError:
@@ -2914,14 +2914,6 @@ def ectl_bean_id(e):
         v = e.entry.get(attr)
         if v is None:
             continue
-        if isinstance(rule, dict) and rule.get('keyed') is True:
-            # `<bean id>#<key>` (`attr_domains.bean_id`): the bean is resolved here, the key by what reads it
-            _b, _sep, _k = str(v).partition('#')
-            if not _sep or not KEBAB or not KEBAB.match(_k):
-                errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is `<bean id>#<key>`: a bean, `#`, and a kebab-case key on "
-                              f"it" + _rule(f"{_law_path(e.term)}.attrs.{attr}.in", e.term))
-                continue
-            v = _b
         if not isinstance(v, str) or v not in bean_ids:
             errors.append(f"{e.base}: {e.ref}.{attr} '{v}' is not the id of a bean this garden holds — write "
                           f"beans/{v}.md first, or in the same commit")
@@ -2941,6 +2933,73 @@ def ectl_bean_id(e):
 BASE_ENTRY, BASE_PLIES = (), ()
 # ---- SEQ
 SEQ_ENTRY, SEQ_PLIES = (), ()
+# Its term controllers, `series` and `moves_along`, are registered in CONTROLLERS below, in the order they run.
+
+
+def _series_parts(bean, key):
+    """{part name: text} of a series' parts in this tree — the working tree by hand, the index's copy under --staged."""
+    return dmseq.parts_of(ROOT, str(bean), str(key))
+
+
+def ctl_series(c):
+    """`series: true` — each ENTRY is a SERIES (`schema_language.series`): its line, its channels and every row, judged by
+    the one reader of a series (bin/dmseq.py). The entry's own attributes — the recurrence, the extent, each channel's
+    domains — were judged as an entry already; this judges what only the whole entry can say."""
+    if c.sch.get('series') is not True or not isinstance(c.node, dict):
+        return None
+    for key, entry in c.node.items():
+        if not isinstance(entry, dict) or _captured(c.fm, f"{c.term}.{key}", entry) or _is_conflict(entry):
+            continue
+        for i, ch in enumerate(entry.get('holds') or [] if isinstance(entry.get('holds'), list) else []):
+            if isinstance(ch, dict) and (ch.get('u') is not None or ch.get('accuracy') is not None) \
+                    and not ch.get('scheme') and (not ch.get('system') or ch.get('from') is not None):
+                # a measured channel, or an offset one: a position or a code states none here, and dmseq says so
+                check_uncertainty(f"{c.base}: {c.term}[{key}].holds[{ch.get('name', i)}]", u=ch.get('u'),
+                                  accuracy=ch.get('accuracy'),
+                                  quantity=ch.get('quantity') or SEQ_LAW.quantity_of(ch.get('unit')) or 'any')
+        for level, _w, what in dmseq.check_series(SEQ_LAW, c.base, key, entry, _series_parts(c.base, key), form=False):
+            (errors if level == 'error' else warns).append(f"{c.base}: {c.term}[{key}]{_w} — {what}"
+                                                           + (_rule(f"{c.term}.schema.series", c.term) if level == 'error' else ''))
+    return None
+
+
+def ctl_moves_along(c):
+    """`moves_along: <attr>` — each entry is a MOVE along the course its <attr> names (`schema_language.moves_along`).
+    The moves of one course, in the order written, are held to the steps of its walk by the one reader of a course."""
+    _attr = c.sch.get('moves_along')
+    if not _attr or not isinstance(c.node, list):
+        return None
+    _tterm = dict(_facet(form_of(c.term), 'key_of', 'entry')).get(_attr)
+    if not _tterm:
+        errors.append(f"VOCAB {c.term}: moves_along '{_attr}' names no attribute `in: {{ key_of: <courses term> }}`")
+        return None
+    groups = {}
+    for i, mv in enumerate(c.node):
+        if isinstance(mv, dict) and isinstance(mv.get(_attr), str) and not _is_conflict(mv):
+            groups.setdefault(mv[_attr], []).append((i, mv))
+    for tk, moves in sorted(groups.items()):
+        owner, _, key = tk.rpartition(':')
+        tr = ((ALL_FM.get(owner or c.base) or {}).get(_tterm) or {})
+        tr = tr.get(key) if isinstance(tr, dict) else None
+        ref = tr.get('walk') if isinstance(tr, dict) else None
+        if not isinstance(ref, dict):
+            continue                                  # the course's own entry, or the key, is refused by name elsewhere
+        wid = ref.get('mapping') or ref.get('bean')
+        wdoc = docs.get(('mapping' not in ref, wid)) if isinstance(wid, str) else None
+        if wdoc is None:
+            continue                                  # a walk that is not here is a dangling ref, refused as one
+        _walks = [t for t, sch in SCHEMAS.items() if sch.get('on_sequence') and isinstance(wdoc[0].get(t), list)]
+        steps = [st for st in (wdoc[0].get(_walks[0]) if _walks else []) if isinstance(st, dict)]
+        if not steps:
+            errors.append(f"{c.base}: {c.term} along '{tk}' — its walk {wid} holds no step entries: a course moves along "
+                          f"steps with ids, `{{ id, do, next }}`" + _rule(f"{c.term}.schema.moves_along", c.term))
+            continue
+        for i, level, what in dmseq.check_moves(moves, steps, wid):
+            (errors if level == 'error' else warns).append(f"{c.base}: {c.term}[{i}] {what}"
+                                                           + (_rule(f"{c.term}.schema.moves_along", c.term) if level == 'error' else ''))
+    return None
+
+
 # ---- VIEW
 VIEW_ENTRY, VIEW_PLIES = (), ()
 # ---- QTY
@@ -3375,63 +3434,6 @@ def ctl_on_sequence(c):
                       (" (a pause is returned from, and ends nothing)" if any(not nexts[s] for s in ids) else ''))
     if _a.get('acyclic') is True and _cycles({k: v for k, v in nexts.items()}):
         errors.append(f"{where}: loops, and '{_asp}' declares acyclic")
-    return None
-
-
-def _series_parts(bean, key):
-    """{part name: text} of a series' parts in this tree — the working tree by hand, the index's copy under --staged."""
-    return dmseq.parts_of(ROOT, str(bean), str(key))
-
-
-def ctl_series(c):
-    """`series: true` — each ENTRY is a SERIES (`schema_language.series`): its line, its channels and every row, judged by
-    the one reader of a series (bin/dmseq.py). The entry's own attributes — the recurrence, the extent, each channel's
-    domains — were judged as an entry already; this judges what only the whole entry can say."""
-    if c.sch.get('series') is not True or not isinstance(c.node, dict):
-        return None
-    for key, entry in c.node.items():
-        if not isinstance(entry, dict) or _captured(c.fm, f"{c.term}.{key}", entry) or _is_conflict(entry):
-            continue
-        for level, _w, what in dmseq.check_series(SEQ_LAW, c.base, key, entry, _series_parts(c.base, key), form=False):
-            (errors if level == 'error' else warns).append(f"{c.base}: {c.term}[{key}]{_w} — {what}"
-                                                           + (_rule(f"{c.term}.schema.series", c.term) if level == 'error' else ''))
-    return None
-
-
-def ctl_moves_along(c):
-    """`moves_along: <attr>` — each entry is a MOVE along the track its <attr> names (`schema_language.moves_along`).
-    The moves of one track, in the order written, are held to the steps of its walk by the one reader of a track."""
-    _attr = c.sch.get('moves_along')
-    if not _attr or not isinstance(c.node, list):
-        return None
-    _tterm = dict(_facet(form_of(c.term), 'key_of', 'entry')).get(_attr)
-    if not _tterm:
-        errors.append(f"VOCAB {c.term}: moves_along '{_attr}' names no attribute `in: {{ key_of: <tracks term> }}`")
-        return None
-    groups = {}
-    for i, mv in enumerate(c.node):
-        if isinstance(mv, dict) and isinstance(mv.get(_attr), str) and not _is_conflict(mv):
-            groups.setdefault(mv[_attr], []).append((i, mv))
-    for tk, moves in sorted(groups.items()):
-        owner, _, key = tk.rpartition(':')
-        tr = ((ALL_FM.get(owner or c.base) or {}).get(_tterm) or {})
-        tr = tr.get(key) if isinstance(tr, dict) else None
-        ref = tr.get('walk') if isinstance(tr, dict) else None
-        if not isinstance(ref, dict):
-            continue                                  # the track's own entry, or the key, is refused by name elsewhere
-        wid = ref.get('mapping') or ref.get('bean')
-        wdoc = docs.get(('mapping' not in ref, wid)) if isinstance(wid, str) else None
-        if wdoc is None:
-            continue                                  # a walk that is not here is a dangling ref, refused as one
-        _walks = [t for t, sch in SCHEMAS.items() if sch.get('on_sequence') and isinstance(wdoc[0].get(t), list)]
-        steps = [st for st in (wdoc[0].get(_walks[0]) if _walks else []) if isinstance(st, dict)]
-        if not steps:
-            errors.append(f"{c.base}: {c.term} along '{tk}' — its walk {wid} holds no step entries: a track moves along "
-                          f"steps with ids, `{{ id, do, next }}`" + _rule(f"{c.term}.schema.moves_along", c.term))
-            continue
-        for i, level, what in dmseq.check_moves(moves, steps, wid):
-            (errors if level == 'error' else warns).append(f"{c.base}: {c.term}[{i}] {what}"
-                                                           + (_rule(f"{c.term}.schema.moves_along", c.term) if level == 'error' else ''))
     return None
 
 
