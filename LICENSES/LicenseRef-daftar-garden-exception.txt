@@ -1,0 +1,27 @@
+Additional permission under the GNU AGPL version 3, section 7 — the garden exception
+
+Each copyright holder of daftar's code grants, for the code in which it holds copyright, the following additional
+permission to every recipient, under section 7 of the GNU Affero General Public License version 3. If you use the
+Program under a later version of that licence, this permission applies as well.
+
+Definitions. "The Program's files" are daftar's files that carry this licence, in any version, modified or not, and
+any work based on them. A "garden" is a directory of files that the Program reads, checks, merges, draws or serves.
+"A garden's own content" is everything in a garden other than the Program's files: its beans, mappings, journal,
+captures, pending list, vocabulary (VOCAB.md), reasoning and manifest (GARDEN.md), and its independent modules. An
+"independent module" is a module written for use with the Program that is not derived from the Program's files and
+contains no part of them. It stays independent when the Program imports, loads or calls it, and when it imports,
+loads or calls the Program.
+
+1. The garden's own content. You may keep, use, modify, convey and serve a garden's own content, alone or with the
+Program, on terms of your choice. Sections 4 to 6 and 13 do not apply to it. They continue to apply to the Program's
+files.
+
+2. Section 13. When the Program, modified or not, serves a garden over a network, section 13 requires only the
+Corresponding Source of the Program's files as you modified them. It never requires offering, publishing or
+disclosing a garden's own content. An independent module is not part of that Corresponding Source.
+
+3. The Program's files in a garden. A copy of the Program's files kept in a garden stays under this licence and this
+permission. A change to it is a modification of the Program, wherever it is kept.
+
+Whoever conveys a copy may remove this permission from it, as section 7 allows. The Program as its copyright holders
+publish it keeps the permission.

@@ -4,8 +4,9 @@ This repository is the home of daftar's **language**: the vocabulary, the gate, 
 documents that say what they mean. Every garden that speaks it — including the maintainers' own — is a
 satellite. Satellites propose; the maintainers decide. **Merging a pull request is the ratification.**
 
-That follows `MODEL.md`'s Contract of Parts: a change to a vocabulary term or rule (class G) is proposed
-by anyone and ratified by a human, and it is recorded distinctly as a rule-change.
+That follows `MODEL.md`'s Contract of Parts: a change to a vocabulary term or rule, or to a clause of the manifesto
+(class G), is proposed by anyone and ratified by a human, and it is recorded distinctly as a rule-change (manifesto:
+parts, changes).
 
 ## Before you open a pull request
 
@@ -33,7 +34,7 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
    removes, restates and narrates, and judges nothing — the maintainer who merges judges, beauty included.
 3. **Leave your estate out of it.** Do not paste host names, addresses, paths, people, or findings from
    your own garden into the proposal or into the law. Use neutral examples — `host-a`, `203.0.113.10`,
-   `/home/user/…`. The vocabulary ships to everyone.
+   `/home/user/…`. The vocabulary ships to everyone (manifesto: never-sells).
 4. **Say which kind of change it is.** Adding a term, a value or a registry row is **minor**: nothing that
    passed before stops passing. Changing a rule, a merge order or a requirement is **major**: it can
    re-classify beans that already passed, in every garden.
@@ -65,9 +66,11 @@ by anyone and ratified by a human, and it is recorded distinctly as a rule-chang
    python3 test/site.py
    python3 test/public.py
    python3 test/docs.py
+   python3 test/manifesto.py
+   reuse lint
    ```
 
-   CI runs the same on every pull request. One exception: `test/site.py` rebuilds the pages with `site/build.py`,
+   CI runs the same on every pull request (`reuse lint` is the REUSE tool, `pip install reuse`). One exception: `test/site.py` rebuilds the pages with `site/build.py`,
    which runs the commands the pages show (`tail`, among them) as a Unix shell runs them — on Windows, in Git Bash.
 
 ## This repository carries the language, never a garden
@@ -91,16 +94,29 @@ comments and pull request text, and were found by the operator rather than by a 
 
 Say it without the name: "one host", "another machine", `/home/user/tree`, `host-a` and `host-b`.
 
+## Your contribution's terms
+
+What you contribute is given under the licence of the part it goes into, as `REUSE.toml` gives it: code under the GNU
+AGPL 3.0 or later with the garden exception, which you grant for your contribution as the steward grants it for his;
+the law and the guides under CC BY 4.0; the seeds of a garden's own files under CC0 1.0. Contributing to the law, you
+make the patent promise of `CHARTER.md` §4 for your own patents; contributing code, you grant the licence of the AGPL's
+section 11. You keep your copyright: nothing is assigned.
+
+**Sign each commit** (`git commit -s`). The sign-off is the Developer Certificate of Origin 1.1
+(https://developercertificate.org), and the licence it names is the one `REUSE.toml` gives the file. It is added by a
+person, never by an agent on its own: that person has read the change, has the right to give it (an employer's right
+included), and answers for it. The agent is named in its own trailer (`Co-Authored-By:` or `Assisted-by:`). A sign-off
+may use the name the contributor is known by. Commits made before this section was added carry none; they are the
+steward's own. CI refuses a pull request with a commit that carries no sign-off.
+
 ## Editing the vocabulary itself
 
 - The vocabulary is `seed/std-vocab.md`: YAML front matter (the law) and a Markdown body ending in a
   changelog. Edit the front matter; add one changelog entry, above its version's neighbours, naming the change and why.
-- **Four layers, each standing on the one beneath.** LAWS are clear and brief, for usability and efficiency: what a
-  reader needs in order to APPLY a rule goes in the item's own `meaning:` or `why:`, present tense, no date, no name,
-  and the law carries no commentary. REASONING is the backbone for the laws: why it is that way goes in
-  `seed/RATIONALE.md` under the item's path (`python3 bin/dmwhy.py <name>` reads both; `--check` finds a reason whose
-  law is gone). JOURNALS are the leads for the reasoning: the changelog entry says what changed and why. HISTORY is the
-  exact record the journals are written from: the commits themselves. A thing belongs in exactly one layer.
+- **The layers** (manifesto: layers; what each holds is `MODEL.md`'s). What a reader needs in order to APPLY a rule
+  goes in the item's own `meaning:` or `why:`, present tense, no date, no name, with no commentary; why it is that way
+  goes in `seed/RATIONALE.md` under the item's path (`python3 bin/dmwhy.py <name>` reads both; `--check` finds a
+  reason whose law is gone); the changelog entry says what changed and why; the commits are the record.
 - Bump its `version:` in the same change — minor for additive, major for a changed rule — and nothing else:
   gardens move their own pins when they adopt a release.
 - `python3 bin/dmrules.py` inside a garden prints every rule as the gate reads it; use it to check that your

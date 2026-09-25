@@ -1,0 +1,5 @@
+ISCO-08 — the International Standard Classification of Occupations 2008: its structure (codes and English titles).
+© International Labour Organization, 2012.
+
+This work is the ILO's, under the ILO's own terms. daftar includes it because daftar's law resolves occupation codes
+against it, and grants no right in it. A claim about it is addressed to daftar's steward (CHARTER.md, section 2).

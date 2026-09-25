@@ -1100,7 +1100,7 @@ def merge_component(comp):
 # reconcile before the beans mean anything.
 
 def std_fm_of(path):
-    """A garden's Tier-0 law, read from the one path `law_carrier` names."""
+    """A garden's Tier-0 law, read from the one path the law has (MODEL.md, The journal and the gate)."""
     p = os.path.join(path, 'seed', 'std-vocab.md')
     return (dmparse.loads(dmparse.read(p)[0] or '') or {}) if os.path.exists(p) else {}
 

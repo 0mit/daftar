@@ -29,6 +29,7 @@ the gate once took, or once died on; each must now be refused by name, and nothi
                      not UTF-8
   the manifest's     policy: one text, or texts under names
   words
+  a secret         a private-key block in any file a commit stages, and where a key is kept in its place
 
 Every name is neutral (sam, ali, ben) and every amount is in XTS, the code ISO 4217 keeps for testing.
 """
@@ -864,6 +865,22 @@ check("...and the manifest, the retired names and the provenance record, each in
 check("...text and days, each from the law's row: no control character but a tab, and which calendars' days are judged",
       "holds no character of Unicode category Cc but '\\t'" in rules and "In a calendar reckoned arithmetic" in rules
       and "islamic-calendar (observational)" in rules, [l for l in rules.splitlines() if "text:" in l or "a day:" in l])
+# ---------------------------------------------------------------- NO SECRET IN THE LEDGER (MODEL.md, Ground rule 7)
+# Written in parts, so that this file holds no private-key block of its own.
+KEY = "-----BEGIN " + "OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAA\n-----END " + "OPENSSH PRIVATE KEY-----\n"
+put("captures/host-a/id.txt", "the host's key, as it was found:\n" + KEY)
+run("git", "add", "captures/host-a/id.txt", cwd=G)
+out = gate()
+check("a private-key block staged in any file — here a capture — is refused, naming the file and saying to rotate it",
+      "captures/host-a/id.txt: a private-key block is staged" in out and "ROTATE" in out, out[-600:])
+put("captures/host-a/id.txt", "the host's key is kept in the gardener's vault, under host-a/ssh\n")
+run("git", "add", "captures/host-a/id.txt", cwd=G)
+out = gate()
+check("...and the same file saying where the key is kept, never what it is, is not refused", "private-key block" not in out,
+      out[-600:])
+run("git", "rm", "-q", "--cached", "captures/host-a/id.txt", cwd=G)
+drop("captures/host-a/id.txt")
+
 check("NOTHING above ended in a traceback: every case is a refusal or a pass", not TRACES, TRACES[:2])
 shutil.rmtree(T, ignore_errors=True)
 print("\nrefusals: %d failed" % len(FAILS))

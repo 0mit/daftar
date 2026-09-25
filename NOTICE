@@ -1,0 +1,33 @@
+daftar
+Copyright © 2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors.
+
+The code is licensed under the GNU Affero General Public License, version 3 or any later version, with the garden
+exception (LICENSES/LicenseRef-daftar-garden-exception.txt) and the additional terms in LICENSE. The law, the guides
+and daftar's curated tables are licensed under Creative Commons Attribution 4.0 International. The seeds of a
+garden's own files are dedicated under CC0 1.0. See LICENSE, and REUSE.toml for every path.
+
+Attribution for the law and the guides:
+  "daftar, by Omid (0mit) and daftar's contributors — https://github.com/0mit/daftar — CC BY 4.0,
+  https://creativecommons.org/licenses/by/4.0/" — and say whether you changed it.
+
+Every daftar release published before this notice was added was released under the Apache License 2.0, and
+everything so published remains available under it. The release that first carries this notice, and every later one,
+is under the terms above.
+
+Third-party data, distributed alongside daftar as separate works, each under its own terms:
+
+  seed/knowledge/currencies.tsv
+    Derived from Unicode CLDR (cldr-json): Copyright © 2015-2024 Unicode, Inc. Licensed under the Unicode License v3
+    (LICENSES/Unicode-3.0.txt), whose notice travels with every copy.
+
+  seed/knowledge/isced-f-2013.tsv
+    Source: UNESCO Institute for Statistics, ISCED Fields of Education and Training 2013 (ISCED-F 2013).
+    Licensed under CC BY-SA 3.0 IGO (LICENSES/CC-BY-SA-3.0-IGO.txt); its share-alike applies to that file only.
+
+  seed/knowledge/isco-08.tsv
+    ISCO-08, the International Standard Classification of Occupations: its structure (codes and English titles),
+    © International Labour Organization, 2012. The ILO's, under the ILO's own terms (LICENSES/LicenseRef-ILO-ISCO-08.txt);
+    daftar grants no right in it. The ILO was asked on 2026-09-19 to confirm that this structure may be redistributed
+    as data. A claim about it is addressed to the steward (CHARTER.md, section 2).
+
+daftar's own curated tables (seed/knowledge/technology.tsv, crosswalk-isco-08-isced-f-2013.tsv) are CC BY 4.0.
