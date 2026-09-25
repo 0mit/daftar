@@ -14,11 +14,11 @@ schema_language:
     form_of:     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form"
     system:      "in: { system: <anchor system> } — a position in ONE named system, in that system's one form. `form_of` asks a sibling WHICH system; this names it, for an attribute that is only ever in one"
     key_of:      "in: { key_of: <term> } — a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another: a PART of a being, resolved by the gate. Not an edge — the being is reached by the refs the bean already states"
-    entries:     "in: { entries: { <attr>: {required?, in, meaning} } } — entries INSIDE an entry: a list of them, or one mapping. Each is judged as an entry, by the attributes written here and by every rule an entry answers to. A ref inside one is resolved and draws no edge. `keyed_by: <attr>` beside `entries` says the list holds ONE entry per value of that attribute, and that the order of its entries carries nothing: two entries for one value are refused, and a merge compares the list in that attribute's order"
+    entries:     "in: { entries: { <attr>: {required?, in, meaning} } } — entries INSIDE an entry: a list of them, or one mapping. Each is judged as an entry, by the attributes written here and by every rule an entry answers to. A ref inside one is resolved and draws no edge. `keyed_by: <attr>` beside `entries` says the list holds ONE entry per value of that attribute, and that the order of its entries carries nothing: two entries for one value are refused, and a merge compares the list in that attribute's order `one_of: [<attr>, ...]` beside `entries`: each entry inside carries at least one of these; `at_most_one_of: [[<attr>, ...], ...]`: and at most one of each group. `keyed_by` may name several attributes, `[<a>, <b>]`: one entry per combination of their values."
     bean_id:     "in: bean_id — the bare id of a bean this garden holds: resolved by the gate, and not an edge (an edge is a `ref`). `in: { bean_id: { gene: [<genos>, ...] } }` holds it to a bean of one of those gene"
     any:         "in: any — DELIBERATELY any value, because its type is another attribute's business (a record's `value` is whatever the tracked field holds). A decision, where `untyped` is a debt"
     pattern:     "in: { pattern: '<regex>' } — a form the TERM owns. With `soft: true` and a `why` it WARNS instead of refusing: the form a value SHOULD take while a corpus is migrated onto it"
-    quantity:    "in: { quantity: <name> } — a MEASURED VALUE, written { count, unit }: a speed, an acceleration, an area, a data rate, an amount of money. The unit must measure the quantity named; `count` is a whole number or a decimal written as a string, in the form `value_types[count]` declares, so that no float reaches a canonical form and every reader holds it exactly. A quantity whose row takes its units from a registry (`units_from`) holds a count with at most the row's `digits` decimal places. `in: { quantity: any }` takes any."
+    quantity:    "in: { quantity: <name> } — a MEASURED VALUE, written { count, unit }: a speed, an acceleration, an area, a data rate, an amount of money. The unit must measure the quantity named; `count` is a whole number or a decimal written as a string, in the form `value_types[count]` declares, so that no float reaches a canonical form and every reader holds it exactly. A quantity whose row takes its units from a registry (`units_from`) holds a count with at most the row's `digits` decimal places. `in: { quantity: any }` takes any. A quantity may carry how well it is known inside it — `u` or `accuracy` (`uncertainty_form`) — and holds nothing else beside `count` and `unit`."
     extent:      "in: extent — a bounded region of an aspect's domain (`extent_form`)"
     recurrence:  "in: recurrence — a repetition over a sequence: every Nth neighbour, every N units, or the same place in each cell of a level (`recurrence_form`)"
     ref:         "in: ref — a {bean|mapping: <id>[, field: <key>]} ref; the gate RESOLVES it (dangling = error)"
@@ -39,7 +39,10 @@ schema_language:
   values_from:          "<term> | registry:<name>[].<field> — reuse another term's `values`, or a REGISTRY's own column, instead of restating it. A registry is its own enum owner: no term keeps a copy of its rows, and a position in it is addressed `registry:<name>`"
   key_form:             "kebab | values | values_from:<term> | values_from:registry:<name>[].<field> — the rule the KEYS of a mapping/open_map must satisfy"
   entry_one_of:         "[<attr>...] — each entry must carry at least one of these"
-  expiry:               "{attr, notice, why} — ONE of this term's attrs is the position at which the thing LAPSES if nothing is done, and a reader should be warned before it. `notice` is HOW LONG BEFORE, as an EXTENT on `time`. `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. Deliberately NOT derived from an attribute's type: most dates a bean carries are `observed` or `as_of`, the day a fact was READ rather than the day it runs out. A term that does not declare this is never warned about, which is why a garden's own term can buy the warning its Tier-0 neighbour has. On a term whose value is a list or an open map, the attribute is each ENTRY's, and each entry is warned about by itself. `repeats: <attr>` names a sibling attribute `in: recurrence`: the position falls due again at each occurrence after `attr`, and the reader is warned before the next. `unless: {<attr>: [<values>]}` names the entries that no longer lapse — a debt already met."
+  at_most_one_of:       "[[<attr>, ...], ...] — each inner list is a GROUP of attributes of which an entry carries AT MOST ONE: two are refused as a contradiction — a stated `due` beside a `falls_due`, a `u` beside an `accuracy`. With `entry_one_of` naming the same group, exactly one"
+  keyed_by:             "<attr> | [<attr>, ...] — beside a `shape` whose value has entries: ONE entry per value, or per combination of values, of these attributes among the term's entries on one bean (one observer's one verdict on one entry). An entry holding none of them is not counted; two holding the same are refused, and both are named"
+  exclusive:            "{extent: <attr>, being: <attr>, role?: <attr>} — the extents that entries of this term hold for ONE being, in ONE role, across every bean of the garden, do not overlap: one person booked twice over the same days, one room lent twice. The gate refuses an overlap and names both entries; an entry its term's `expiry.unless` silences, or that says it was declined, is not counted. The law puts this on no term: a garden that needs it adds it to a term in its VOCAB.md, a RULE-CHANGE"
+  expiry:               "{attr, notice, why} — ONE of this term's attrs is the position at which the thing LAPSES if nothing is done, and a reader should be warned before it. `notice` is HOW LONG BEFORE, as an EXTENT on `time`. `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. Deliberately NOT derived from an attribute's type: most dates a bean carries are `observed` or `as_of`, the day a fact was READ rather than the day it runs out. A term that does not declare this is never warned about, which is why a garden's own term can buy the warning its Tier-0 neighbour has. On a term whose value is a list or an open map, the attribute is each ENTRY's, and each entry is warned about by itself. `repeats: <attr>` names a sibling attribute `in: recurrence`: the position falls due again at each occurrence after `attr`, and the reader is warned before the next. `unless: {<attr>: [<values>]}` names the entries that no longer lapse — a debt already met. `relative: <attr>` names a sibling attribute holding the position RELATIVE to another (`from`, then `after` or `before` by an extent, then `on` a place in the cell reached), read in the place of `attr` where an entry states it. `lapses: <attr>` names a sibling attribute `in: extent`: the entry LAPSES at that extent's end, and a reader warns before it with `lapses_why`. `stance: <attr>` names the attribute whose EFFECTIVE position on its aspect chooses the words: `why` and `lapses_why` are each one text, or a map from that aspect's positions to the words — an obligation falls due, a permission lapses. `condition: <attr>` names the attribute holding what brings an entry into force where that is not a day: an entry holding one has no due to be missing."
   sums:                 "{whole: <attr> | [<attr>, ...], parts: <attr>.<attr>} — the PARTS of a quantity add up to its WHOLE: the parts are the named attribute of each entry inside `parts`' first attribute, the whole is the first of `whole` the entry states. Checked exactly, in fractions, whenever every count is known, and the parts must be in the whole's unit. An entry holding one part that states no amount holds the whole."
   on_sequence:          "<aspect> — the term's value is a walk on that SEQUENCE aspect (10.1): prose lines in list order, or step entries {id, do, next: [{to, when?}]} whose neighbourhoods are CLOSED; the gate refuses a `to` that names no step, a step nothing reaches, a branch with no condition, a routine with no end, and a loop when the aspect declares acyclic"
   dag:                  "true — this term's edges are positions on the `walk` sequence aspect (9.2: `dag` is that aspect's `term_key`), and they join the acyclic check BECAUSE that aspect declares `acyclic: true`"
@@ -1143,7 +1146,9 @@ extent_form:
   to:      "optional: the position it ends at"
   lines:   "a region spans as many LINES as its measure's unit has powers of the metered dimension — one for a length, two for an AREA, three for a VOLUME — and never more than the system it is stated in has."
   measure: "optional: { count, unit } — how much of the domain it spans. A METERED aspect only: a stretch of a routine has no length, because `routine` declares `metered: none`, and the unit's dimension must be the one the aspect meters."
-  requires: "at least one of from / to / measure — a region with no bound at either end and no length is not a region"
+  level:   "optional, with `count` and `in`, instead of `measure`: a length counted in CELLS of that level of the system `in` names — a month, two ISO weeks — which a measure cannot say, since a month is 28 to 31 days. Where `from` is stated, the other end is the same place in the cell `count` cells on; where that cell has no such place, its last place, and the reader says so"
+  count:   "with `level`: how many cells, a positive whole number"
+  requires: "at least one of from / to / measure / level — a region with no bound at either end and no length is not a region; never both `measure` and `level`"
   open_ends: >
     Ends may be open, as `figures` says, and which ones are open is carried by which keys are present:
     `from` alone is open-ended, `to` alone is open-start, and a `measure` alone is a LENGTH whose ends are
@@ -1160,6 +1165,7 @@ extent_form:
     not a measure — it is 28, 29, 30 or 31 days — and a year is not either. A term whose real rule is "on
     this date each month" is recording a recurrence anchored to a calendar, not a length, and `measure`
     would make it look like arithmetic that it is not.
+    A length in cells of a calendar's level is written `level` and `count` with `in`, and never as a `measure`.
 
 # == RECURRENCE ==
 recurrence_form:
@@ -1172,6 +1178,66 @@ recurrence_form:
   to:     "optional: the position it ends at, written as `from` is"
   times:  "optional: how many occurrences in all, the first included — six instalments. With `to`, whichever comes first ends it"
   requires: "exactly one of `every` / `each`"
+# == UNCERTAINTY: how well a value is known ==
+uncertainty_form:
+  u:        "{ count, unit } — the STANDARD uncertainty of the value (JCGM 100:2008, 2.3.1), in a unit of the value's own quantity, or of `ratio` for a relative one. A positive count: a value known exactly states none"
+  accuracy: "{ count, unit, kind } — an accuracy AS ITS MAKER STATED IT, with its kind (`accuracy_kinds`), in place of `u`. A reader turns it into u and says that it did; a writer never does"
+  where:    "INSIDE a quantity — `{count, unit, u}` or `{count, unit, accuracy}`; BESIDE a value that is not a quantity — a position, a series channel — as that entry's attributes `u` and `accuracy`, in the same two forms"
+  absent:   "a value stating neither is exact as written. A reader combining it prints `u not stated` and invents none"
+  requires: "at most one of `u` and `accuracy`"
+accuracy_kinds:
+  - { kind: bound,     meaning: "a limit the value lies within either way, as its maker states it: the smallest interval, or circle, that holds it (Darwin Core's coordinateUncertaintyInMeters). Read as a rectangular distribution: u = a/√3 per axis (JCGM 100:2008, 4.3.7)" }
+  - { kind: radius-68, meaning: "the distance within which the value lies 68 times in 100, as a receiver reports it: one standard uncertainty on one axis, 1.5096 of them for a circular error on two" }
+  - { kind: radius-95, meaning: "the distance within which it lies 95 times in 100: 1.96 standard uncertainties on one axis, 2.4477 for a circular error on two" }
+  - { kind: unstated,  meaning: "an accuracy its maker gave with no probability: kept as said, and never read as a standard uncertainty" }
+# == SELECTIONS: the one reading grammar ==
+selection_form:
+  inputs: "optional: values a reading takes from outside what the garden holds, one entry each, named. Their origin: `caller` — who is asking, as the guard that asks has signed them in; `clock` — the moment of the reading, read by the reader from the clock; `given` — a value the asker gives, in the form `type` or `quantity` states; `garden` — a value read from another garden at a commit it published and granted (`garden`, `path`). A step names an input `{input: <name>}`; a reading with an input is read only where the input is given"
+  steps:  "the reading, in order: each step applies ONE operation of `operations`, to what earlier steps gave and to the beans the garden holds, with what that operation's row `takes`; the last step's result is the reading's. A step names earlier steps by `id`, or an input by its `name`, and never a later step, so a reading never loops. No formula is written and no string is evaluated"
+  zone:   "optional: the civil time zone, a row of `time-zones`, in which a step that groups or compares by a calendar level reads a moment. A step that needs one refuses without it"
+  result: "what the last step gives, by its operation's row: a set (of beans, entries or values), a truth (true, false or NOT KNOWN), a value with its u, an order, or groups. Where a truth is asked — a clause's `when`, a checklist's `met_by`, a grant's audience — a set holds when it is not empty, and NOT KNOWN does not hold"
+  read:   "READ each time it is asked, by bin/dmreckon.py, and never written back as a fact. An act that fixes a reading — an invoice, a period closed, a verdict — records the commit and the moment it was read at (`pin_form`)"
+operations:
+  - op: select
+    gives: set
+    takes:
+      genos:   { in: { registry: gene, take: genos }, meaning: "the beans of this genos" }
+      of:      { in: { type: kebab }, meaning: "or the members of an earlier step's set" }
+      entries: { in: { type: field_path }, meaning: "the entries at this path of each bean selected, instead of the beans" }
+      where:   { in: any, meaning: "conditions, each `{path: <field_path>, <comparator>: <operand>}`; a member is selected when it meets every one (`comparators`)" }
+    meaning: "the beans, or their entries, that meet every condition"
+  - { op: intersect, gives: set, takes: { of: { required: true, in: { type: kebab } }, with: { required: true, in: { type: kebab } } }, meaning: "the members of both sets" }
+  - { op: union,     gives: set, takes: { of: { required: true, in: { type: kebab } }, with: { required: true, in: { type: kebab } } }, meaning: "the members of either set" }
+  - { op: minus,     gives: set, takes: { of: { required: true, in: { type: kebab } }, with: { required: true, in: { type: kebab } } }, meaning: "the members of the first set that are not in the second" }
+  - { op: count,     gives: value, takes: { of: { required: true, in: { type: kebab } } }, meaning: "how many members a set holds — per group, of groups — in the unit `item`" }
+  - { op: sum,       gives: value, takes: { of: { required: true, in: { type: kebab } }, path: { required: true, in: { type: field_path } } }, meaning: "the quantities at the path of every member added, exactly, by exact conversion within one quantity; a member whose value is not a quantity is named, and the sum is refused. Per group, of groups" }
+  - { op: min,       gives: value, takes: { of: { required: true, in: { type: kebab } }, path: { required: true, in: { type: field_path } } }, meaning: "the least value at the path, and the member that holds it" }
+  - { op: max,       gives: value, takes: { of: { required: true, in: { type: kebab } }, path: { required: true, in: { type: field_path } } }, meaning: "the greatest value at the path, and the member that holds it" }
+  - { op: order,     gives: order, takes: { of: { required: true, in: { type: kebab } }, path: { required: true, in: { type: field_path } }, direction: { in: [ascending, descending] } }, meaning: "the members in the order of the value at the path, ascending unless it says; ties in the order of their ids" }
+  - { op: group,     gives: groups, takes: { of: { required: true, in: { type: kebab } }, path: { required: true, in: { type: field_path } }, level: { in: { type: kebab } }, system: { in: { registry: anchor_systems, take: system, where: { dimension: [time] } } } }, meaning: "the members grouped by the value at the path — or, with `level` and `system`, by the cell of that level the moment at the path falls in, read in the reading's `zone`" }
+  - { op: some,      gives: truth, takes: { of: { required: true, in: { type: kebab } }, where: { in: any } }, meaning: "whether some member meets every condition" }
+  - { op: all,       gives: truth, takes: { of: { required: true, in: { type: kebab } }, where: { in: any } }, meaning: "whether every member meets every condition; of no members, true" }
+  - { op: not,       gives: truth, takes: { of: { required: true, in: { type: kebab } } }, meaning: "the truth reversed; NOT KNOWN stays not known" }
+  - op: compare
+    gives: truth
+    takes:
+      of:   { required: true, in: { type: kebab } }
+      with: { required: true, in: { type: kebab } }
+      is:   { required: true, in: [less, at-most, equal, at-least, greater] }
+      band: { in: { quantity: any }, meaning: "with `is: equal`: how far apart they may be and still be equal" }
+    meaning: "whether two values stand as `is` says, exactly, by exact conversion within one quantity. With `band`: equal when |Δ| ≤ band and the difference is RESOLVABLE — k·u(Δ) ≤ band, k the law's `compatibility.multiple` — and NOT KNOWN when |Δ| ≤ band and it is not"
+  - { op: read, gives: value, takes: { of: { in: { type: kebab } }, path: { required: true, in: { type: field_path } } }, meaning: "the one value at the path — of the one member of an earlier set, or of the bean the reading is read from — with its u; refused when the path holds none or several" }
+  - { op: constant, gives: value, takes: { value: { required: true, in: { quantity: any } } }, meaning: "a value the reading states: a band, a limit, an allowance — with its u where it has one" }
+comparators:
+  - { comparator: is,        monotone: false, meaning: "the value at the path equals the operand: a literal, `{input: <name>}`, or `{step: <id>}` of a value" }
+  - { comparator: in,        monotone: false, meaning: "the value is one of a list of operands" }
+  - { comparator: at_least,  monotone: false, meaning: "not less than the operand: a number exactly, a quantity by exact conversion, a position through the day, or through the instant in the reading's `zone`" }
+  - { comparator: at_most,   monotone: false, meaning: "not more than the operand, read as `at_least` is" }
+  - { comparator: exists,    monotone: false, meaning: "the path holds a value" }
+  - { comparator: absent,    monotone: false, meaning: "the path holds none" }
+  - { comparator: reached,   monotone: true,  meaning: "the track at the path has at some moment held this step of its walk, or a step reachable from it by `next`: what has been reached stays reached" }
+  - { comparator: at_step,   monotone: false, meaning: "the track's CURRENT step is this one" }
+  - { comparator: refers_to, monotone: false, meaning: "a ref or a bean id at the path names this bean — the caller, a given value" }
 # == VALUE TYPES ==
 value_types:
   - type: iso_date
@@ -1187,6 +1253,13 @@ value_types:
     exists: { reckoning: [arithmetic] }
     refusal: "must be an ABSOLUTE date held to the day, in the one form of the calendar it is stated in — `2026-09-20`, `persian:1405-06-29`, `hebrew:5787-01-09`, `2026-W38-7` (Rule 6 paper-durable)"
     meaning: "a position held to the DAY, in ANY calendar. What `observed`, `as_of` and `expires` are typed with: a fact is dated in the calendar it was known in, and no calendar is the one a date must be in. `iso_date` stays for a garden's own term that really means the Gregorian calendar. A day its calendar does not have is no date: where the calendar's row is reckoned in one of the ways `exists.reckoning` names, the day a position names, written back in that calendar, is the position written, and a year the reckoning cannot reach is no year. So it is for every position held to a day — a date, where a repetition starts and ends, a bound of a region in time."
+  - type: moment
+    dimension: time
+    unit: minute
+    any_system: true
+    clock: required
+    refusal: "must be a MOMENT: held to the minute or finer, in the one form of a calendar the law declares, with its offset — `2026-10-28 14:05-05:00`, `persian:1405-08-06 14:35+01:00`"
+    meaning: "a position in time held to the MINUTE or finer, in ANY calendar, with the offset it was read at: the form of a journal heading's moment, and of every value the save stamps from the clock. A day its calendar does not have is no moment, as it is no date"
   - type: kebab
     pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
     refusal: "must be kebab-case (the name is open, but still paper-durable)"
@@ -1201,6 +1274,22 @@ value_types:
     lines_in: block
     refusal: "a control character, which text never holds: no one reads it, and printed it moves, erases or hides what a reader's terminal shows. Text holds a tab, and a line feed only in a block scalar (`|` or `>`), whose lines are lines on the page"
     meaning: "what every key and every string value of a bean, a mapping, GARDEN.md and VOCAB.md is: characters a person reads. It holds no character of the Unicode general category `holds_no` but those in `but`, and a line feed only in a scalar of the style `lines_in` names. Every other value type is text first"
+  - type: date_or_moment
+    either: [date, moment]
+    refusal: "must be a day (`2026-10-28`, `hebrew:5787-02-06`) or a moment to the minute or finer with its offset (`2026-10-28 11:00-05:00`), each in the one form of the calendar it is stated in"
+    meaning: "a `date` or a `moment` — held to the unit its form is written at: a clause due on a day falls due that day, one due at 11:00 falls due at 11:00; a reading of a day is of the day. Where the resolution of a READING could be mistaken, `timing` states its unit apart, and that rule stands"
+  - type: field_path
+    pattern: '^(?:@occurrence|(?:[a-z0-9][a-z0-9-]*:)?(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?(?:\.(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?)*(?:>(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?(?:\.(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?)*)*)$'
+    refusal: "must be a path into what beans hold — keys joined by `.`; `*` for every key of a map or entry of a list; `[<attr>=<value>]` for the entries holding that value; `>` to follow a ref to the bean it names and go on there; `<bean>:` first to start at another bean; or `@occurrence`. For example `parties[role=seller].who>title`"
+    meaning: "a PATH into a bean's front matter, read by the one reader (bin/dmparse.py `path_read`; evaluated by bin/dmreckon.py). Read from the bean it is read from — the selected member, the occurrence, the bean that declares it — unless it names another. A list is gone into entry by entry. `@occurrence` is the moment an occurrence of an `each` clause entered its selection"
+  - type: held_pointer
+    pattern: '^root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32}$'
+    refusal: "must be `root:<logical root>/<32 lowercase hexadecimal digits>` — a key bin/dmheld.py mints, which says nothing of what it holds"
+    meaning: "where material held OFF git is (`held_form`): a logical root each host resolves through its own `roots`, and an opaque key minted at random"
+  - type: language_tag
+    pattern: '^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$'
+    refusal: "must be a language as BCP 47 writes one: `fa`, `pt-BR`, `sr-Latn-RS`, `es-419`"
+    meaning: "a language, as BCP 47 (RFC 5646) writes it: its language subtag, then its script and its region where they are needed"
 # == THE JOURNAL ==
 journal:
   path: log/journal.md
@@ -1246,8 +1335,8 @@ layers:
     meaning: "a way in for a reader: a reading order, a recipe, a form; a value in one is an example's, never a fact"
   - layer: estate
     files: true
-    holds: ["beans/*", "mappings/*"]
-    meaning: "a garden's facts about what it keeps, each saying who said it and how they know"
+    holds: ["beans/*", "mappings/*", "series/*", "extracts/*"]
+    meaning: "a garden's facts about what it keeps, each saying who said it and how they know, and the rows of its series and of the schemes it holds as extracts"
   - layer: gate
     files: true
     holds: ["bin/*", "test/*", "seed/germinate.*", .gitattributes, .gitignore]
@@ -1367,6 +1456,12 @@ registry_files:
   - { registry: technology,   file: seed/knowledge/technology.tsv,   key: code }
   - { registry: crosswalk-isco-08-isced-f-2013, file: seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv, key: isco_08 }
   - { registry: currencies,   file: seed/knowledge/currencies.tsv,   key: code }
+  - { registry: time-zones,  file: seed/knowledge/time-zones.tsv,  key: zone }
+  - { registry: ics-chart,   file: seed/knowledge/ics-chart-2026-06.tsv, key: unit }
+  - { registry: substances,  file: seed/knowledge/substances.tsv,  key: code }
+  - { registry: mechanisms,  file: seed/knowledge/mechanisms.yaml, key: mechanism, format: yaml }
+  - { registry: crosswalk-fhir-r5-observation, file: seed/knowledge/crosswalk-fhir-r5-observation.tsv, key: fhir }
+  - { registry: crosswalk-dwc, file: seed/knowledge/crosswalk-dwc.tsv, key: dwc }
 # == FACETS: the aspects of ownership, one owner and one holder each ==
 facets:
   - { facet: legal,      depends_on: [],      meaning: "who owns it in law, and answers for it there. Every other facet reaches it through `depends_on`" }
@@ -1388,6 +1483,13 @@ knowledge_schemes:
     levels: [ { level: major }, { level: sub-major }, { level: minor }, { level: unit } ]
     same_ground_as: [isced-f-2013]
     crosswalk: table
+    neighbours: none
+    sources: seed/knowledge/SOURCES.md
+  - scheme: substances
+    classifies: substances by their chemical formula, for walks whose steps take and give them
+    publisher: daftar (curated; each row a formula in Hill notation, a fact)
+    url: "seed/knowledge/substances.tsv"
+    levels: [ { level: substance } ]
     neighbours: none
     sources: seed/knowledge/SOURCES.md
   - scheme: technology
@@ -2490,6 +2592,30 @@ terms:
       entry says so in `evidence` and cites the capability by name. The alternative — deriving risks from
       capabilities in the gate — was rejected because a derived finding cannot carry a `consequence` that
       anybody wrote, and the consequence is the part worth having.
+    merge: { cardinality: multi, order: by-key }
+  - term: selections
+    meaning: "the readings this bean declares (`selection_form`): which beans or entries of the garden it selects and what it computes from them — how many, whether any, which first, how much — each under a name a clause, a checklist, a grant or a page names it by (`key_of: selections`). Read by bin/dmreckon.py each time, never stored"
+    context_keys: [selections]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      attrs:
+        what:   { required: true, in: prose, meaning: "what it selects, in the words a person checks it against" }
+        inputs:
+          meaning: "what it takes from outside what the garden holds (`selection_form.inputs`)"
+          in:
+            entries:
+              name:     { required: true, in: { type: kebab } }
+              origin:   { required: true, in: [caller, clock, given, garden] }
+              type:     { in: { registry: value_types, take: type }, meaning: "with `given`: the form of the value" }
+              quantity: { in: { registry: quantities, take: quantity }, meaning: "with `given`: the quantity it measures" }
+              garden:   { in: { bean_id: { gene: [garden] } }, meaning: "with `garden`: the garden read" }
+              path:     { in: { type: field_path }, meaning: "with `garden`: what is read there, `<bean>:<path>`" }
+              note:     { in: prose }
+            keyed_by: name
+        zone:   { in: { registry: time-zones, take: zone }, meaning: "the civil time zone a calendar level is read in (`selection_form.zone`)" }
+        steps:  { required: true, in: any, meaning: "the operations, in order, each `{id, op, ...}` with what its row of `operations` takes — judged against that row by bin/dmreckon.py's check, called by the gate" }
+        note:   { in: prose }
     merge: { cardinality: multi, order: by-key }
   - term: standing
     meaning: "the layer a file of a garden sits in, for a file the law's `layers` do not place: a garden's own words, an agent's handover, a document of its own. An entry that places a file the law places elsewhere is refused"

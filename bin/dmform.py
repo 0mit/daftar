@@ -65,7 +65,7 @@ DOMAINS = {
     'form_of':     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern }   a position in the system a SIBLING attr names, in that system's one form",
     'system':      "in: { system: <anchor system> }                a position in ONE named system, written in that system's one form (`unix-epoch`, `geographic`)",
     'key_of':      "in: { key_of: <term> }                         a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another — resolved by the gate, and not an edge",
-    'entries':     "in: { entries: { <attr>: {required?, in, meaning} }, keyed_by?: <attr> }   entries INSIDE an entry: a list of them, or one mapping — each judged as an entry, by the attributes written here; `keyed_by`: one entry per value of that attribute",
+    'entries':     "in: { entries: { <attr>: {required?, in, meaning} }, keyed_by?: <attr> | [<attr>, ...], one_of?: [<attr>, ...], at_most_one_of?: [[<attr>, ...], ...] }   entries INSIDE an entry: a list of them, or one mapping — each judged as an entry, by the attributes written here; `keyed_by`: one entry per value (or combination of values) of those attributes; `one_of`/`at_most_one_of`: at least one of these, at most one of each group",
     'bean_id':     "in: bean_id | { bean_id: { gene: [...] } }    the bare id of a bean this garden holds (of those gene): resolved by the gate, and not an edge (an edge is a `ref`)",
     'any':         "in: any                                        DELIBERATELY any value: its type is some other attribute's business. A decision, where `untyped` is a debt",
     'pattern':     "in: { pattern: '<regex>' }                     a form this term owns; with `soft: true` and a `why` it WARNS instead of refusing",
@@ -134,6 +134,9 @@ def attribute_form(term_def, sch):
     form = {'scope': scope, 'attrs': {}, 'order': {}, 'cells': [],
             'self_ref': bool(sch.get('is_ref')), 'value': {}, 'alt': None,
             'one_of': list(sch.get('entry_one_of') or []),
+            'at_most': [list(g) for g in (sch.get('at_most_one_of') or []) if isinstance(g, list)],
+            'keyed_by': ([sch['keyed_by']] if isinstance(sch.get('keyed_by'), str) else list(sch.get('keyed_by') or [])),
+            'exclusive': dict(sch['exclusive']) if isinstance(sch.get('exclusive'), dict) else None,
             'matches': {'entry': list(sch.get('entry_must_match') or []),
                         'form_from_genos': sch.get('entry_form_from_genos_attr'),
                         'equal_genos_attr': sch.get('must_equal_genos_attr')},
@@ -158,6 +161,10 @@ def attribute_form(term_def, sch):
             put(facet_name, name, rule)
         if facet_name == 'entries' and rec['in'].get('keyed_by') is not None:
             put('keyed_by', name, rec['in']['keyed_by'])
+        if facet_name == 'entries' and rec['in'].get('one_of') is not None:
+            put('nested_one_of', name, list(rec['in']['one_of']))            # 24.0: each entry inside carries one of these
+        if facet_name == 'entries' and rec['in'].get('at_most_one_of') is not None:
+            put('nested_at_most', name, [list(g) for g in rec['in']['at_most_one_of']])   # 24.0: and at most one of each group
         if isinstance(rec.get('default_from'), dict):
             put('default_from', name, dict(rec['default_from']))
         if rec.get('meaning') is not None:

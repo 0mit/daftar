@@ -38,7 +38,7 @@ Session/model-agnostic gate, in two halves (v2 P2 / plan D4):
               std-vocab and the garden's VOCAB); a term with no `schema:` is documentation only.
               The schema language is documented in VOCAB.md under `schema_language:`.
 """
-import collections, difflib, glob, json, math, os, posixpath, re, sys, fnmatch, ipaddress, shutil, stat, subprocess, tempfile
+import collections, difflib, glob, json, math, os, posixpath, re, sys, fnmatch, ipaddress, shutil, stat, subprocess, tempfile, types
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
@@ -1009,6 +1009,13 @@ def check_law_extents():
         _n = ((_term or {}).get('schema') or {}).get('expiry') or {}
         if isinstance(_n, dict) and _n.get('notice') is not None:
             check_extent(f"VOCAB {_name}.schema.expiry.notice", _n['notice'])
+        # THE ATTRIBUTES AN EXPIRY NAMES (24.0): each is one its term declares, or the reader would read a key nothing writes
+        if isinstance(_n, dict):
+            _attrs = (((_term or {}).get('schema') or {}).get('attrs') or {})
+            for _k in ('relative', 'lapses', 'stance', 'condition'):
+                if _n.get(_k) is not None and _n[_k] not in _attrs:
+                    errors.append(f"VOCAB {_name}.schema.expiry.{_k} names `{_n[_k]}`, which is no attribute of "
+                                  f"{_name} — {sorted(_attrs)}")
 
 
 def check_value_types():
@@ -1039,6 +1046,16 @@ def check_value_type(where, attr, val, typ):
         if not isinstance(val, (str, int, float)) or isinstance(val, bool):
             errors.append(f"{where}.{attr} is text, written as one string — not {type(val).__name__}")
         return
+    elif isinstance(t.get('either'), list):
+        # ONE OF SEVERAL TYPES (`either`, 24.0): a value that passes any of the named types passes; one that passes none
+        # is refused in the first's words, and not in every one's
+        for _alt in t['either']:
+            _before = len(errors)
+            check_value_type(where, attr, val, _alt)
+            if len(errors) == _before:
+                return
+            del errors[_before:]
+        errors.append(f"{where}.{attr} '{val}' {t.get('refusal') or 'is none of ' + str(t['either'])}")
     elif t.get('any_system') and str(val).strip() == 'now' and attr in ('as_of', 'observed'):
         # `now` IS NOT A DAY BUT THE WORD FOR ONE (23.0): the save writes the day of its entry in its place
         errors.append(f"{where}.{attr} is `now` — the word the save writes the day of its entry in place of: save with "
@@ -1046,11 +1063,14 @@ def check_value_type(where, attr, val, typ):
     elif t.get('any_system'):
         # A POSITION IN ANY SYSTEM OF THE TYPE'S DIMENSION, held to the type's unit (16.0): no system is the one a date
         # must be in. It must be in ONE system's own form, that system must HAVE the level, and a reading finer than
-        # the level (a clock time on a date) is not the type.
+        # the level (a clock time on a date) is not the type — unless the type asks for a clock (`clock: required`, a
+        # MOMENT), and then it is held to the minute or finer, with its offset, as a journal heading is.
         _held = [r for r in (registry('anchor_systems') or []) if isinstance(r, dict) and r.get('dimension') == t.get('dimension')
                  and isinstance(r.get('levels'), list) and any(l.get('level') == t.get('unit') for l in r['levels'])
                  and r.get('pattern') not in (None, 'none') and law_match(r['pattern'], val)]
-        if not _held or re.search(r'[T ]\d{2}:\d{2}', str(val), re.ASCII):
+        _clocked = re.search(r'[T ]\d{2}:\d{2}', str(val), re.ASCII)
+        if not _held or (bool(_clocked) != (t.get('clock') == 'required'))                 \
+                or (t.get('clock') == 'required' and not law_match(_TO_THE_MINUTE, val)):
             errors.append(f"{where}.{attr} '{val}' {t.get('refusal') or 'is in no system of dimension ' + str(t.get('dimension'))}")
         else:
             check_day_exists(f"{where}.{attr}", val, _held[0])
@@ -1218,6 +1238,38 @@ def check_quantity(where, node, want):
             errors.append(f"{where}.count '{c}' has {_places} decimal places, and {node['unit']} is written with at most "
                           f"{u['digits']} ({u.get('from_registry')}) — a fraction of the smallest unit in use is not an amount "
                           f"anyone paid; if a share does not come out even, say who takes the remainder in a clause")
+
+
+def check_uncertainty(where, *, u=None, accuracy=None, quantity=None):
+    """How well a value is known (`uncertainty_form`, 24.0): `u`, a standard uncertainty, or `accuracy`, as its maker
+    stated it — at most one. Appends what is wrong, by name. `quantity` is the value's own quantity where it has one: a
+    `u` is in a unit of it, or of `ratio` for a relative one."""
+    if u is not None and accuracy is not None:
+        errors.append(f"{where}: states both `u` and `accuracy` — at most one (`uncertainty_form.requires`): a reader "
+                      f"turns an accuracy into u, and a writer never does")
+    for _k, _v in (('u', u), ('accuracy', accuracy)):
+        if _v is None:
+            continue
+        if not isinstance(_v, dict) or _v.get('count') is None or not _v.get('unit'):
+            errors.append(f"{where}.{_k}: is written {{count, unit{', kind' if _k == 'accuracy' else ''}}} "
+                          f"(`uncertainty_form.{_k}`)")
+            continue
+        _extra = set(_v) - {'count', 'unit'} - ({'kind'} if _k == 'accuracy' else set())
+        if _extra:
+            errors.append(f"{where}.{_k}: holds {sorted(_extra)}, which `uncertainty_form.{_k}` does not declare")
+        _c = _v['count']
+        if not count_ok(_c) or not (Fraction(str(_c)) > 0):
+            errors.append(f"{where}.{_k}.count {_c!r} is a positive count: a value known exactly states none")
+        _un = UNITS.get(str(_v['unit']))
+        if not _un:
+            errors.append(f"{where}.{_k}.unit '{_v['unit']}' is not in the `units` registry" + _units_like(_v['unit'], quantity))
+        elif quantity not in (None, 'any') and _un.get('quantity') not in (quantity, 'ratio'):
+            errors.append(f"{where}.{_k}.unit '{_v['unit']}' measures {_un.get('quantity')}: an uncertainty is in a unit "
+                          f"of the value's own quantity, {quantity}, or of `ratio` for a relative one")
+        if _k == 'accuracy':
+            _kinds = [r.get('kind') for r in (std_fm.get('accuracy_kinds') or []) if isinstance(r, dict)]
+            if _v.get('kind') not in _kinds:
+                errors.append(f"{where}.accuracy.kind {_v.get('kind')!r} is not a row of `accuracy_kinds` {_kinds}")
 SYSTEMS = _Named({s['system']: s for s in (registry('anchor_systems') or []) if isinstance(s, dict) and s.get('system')})
 
 
@@ -1243,10 +1295,27 @@ def check_extent(where, node):
         errors.append(f"{where}: aspect '{an}' is a {asp.get('figure')} and carries no region — "
                       f"{fig.get('extent_why') or 'its figure declares extent: ' + str(fig.get('extent'))}")
         return
-    if not any(node.get(k) is not None for k in ('from', 'to', 'measure')):
-        errors.append(f"{where}: an extent needs at least one of from / to / measure — "
+    if not any(node.get(k) is not None for k in ('from', 'to', 'measure', 'level')):
+        errors.append(f"{where}: an extent needs at least one of from / to / measure / level — "
                       f"a region with neither bound and no length is not a region (`extent_form.requires`)")
     _row = _system_of(where, node, asp, an)
+    if node.get('level') is not None or node.get('count') is not None:
+        # A LENGTH IN CELLS OF A LEVEL (24.0): a month, two ISO weeks — which a measure cannot say. The level is one the
+        # system `in` names HAS, and the count a positive whole number of its cells.
+        _lv = node.get('level')
+        if node.get('measure') is not None:
+            errors.append(f"{where}: states both `measure` and `level` — a length is one or the other (`extent_form.requires`)")
+        if _lv is None or node.get('count') is None:
+            errors.append(f"{where}: `level` and `count` go together — how many cells, of which level (`extent_form.level`)")
+        elif node.get('in') is None:
+            errors.append(f"{where}.level '{_lv}': a level belongs to its system, and `in` names none (`extent_form.level`)")
+        elif _row is not None:
+            _levels = [l.get('level') for l in (_row.get('levels') or []) if isinstance(l, dict)]
+            if _lv not in _levels:
+                errors.append(f"{where}.level '{_lv}' is not a level of {_row.get('system')} — {_levels}")
+        _n = node.get('count')
+        if _n is not None and (not isinstance(_n, int) or isinstance(_n, bool) or _n <= 0):
+            errors.append(f"{where}.count must be a positive whole number of cells, not {_n!r}")
     m = node.get('measure')
     if m is not None:
         metered = ((_row or {}).get('restrictions') or {}).get('metered') or asp.get('metered')
@@ -2561,6 +2630,47 @@ def ectl_cross_aspect(e):
     _cells(e, 'cross')
 
 
+def _combination(item, key):
+    """The value, or the tuple of values, an entry holds of a `keyed_by` — or None where it holds none of them (it is not
+    counted) or one is a list or a map. A day YAML read as a date is a value like any other."""
+    if not isinstance(item, dict):
+        return None
+    _keys = [key] if isinstance(key, str) else list(key or [])
+    _vals = tuple(item.get(k) for k in _keys)
+    if all(v is None for v in _vals) or any(isinstance(v, (list, dict)) for v in _vals):
+        return None
+    return _vals[0] if isinstance(key, str) else _vals
+
+
+def ectl_at_most_one_of(e):
+    """`at_most_one_of` (24.0): of each group, an entry carries at most one — two are a contradiction, and both named."""
+    for _group in (e.form.get('at_most') or []):
+        _held = [k for k in _group if k in e.entry]
+        if len(_held) > 1:
+            errors.append(f"{e.base}: {e.ref} states {' and '.join(f'`{k}`' for k in _held)}, and carries at most one of "
+                          f"{_group}" + _rule(f"{_law_path(e.term)}.at_most_one_of", e.term))
+
+
+def ctl_keyed_by(c):
+    """`keyed_by` on a term (24.0): ONE entry per value, or per combination of values, of these attributes among the
+    term's entries on one bean. An entry holding none of them is not counted; two holding the same are both named."""
+    if not c.sch.get('keyed_by') or c.node is None:
+        return None
+    _key = form_of(c.term)['keyed_by']
+    _seen = {}
+    for label, entry in entries_of(c.sch.get('shape'), c.node):
+        k = _combination(entry, _key[0] if len(_key) == 1 else _key)
+        if k is None:
+            continue
+        if k in _seen:
+            errors.append(f"{c.base}: {c.term}[{_seen[k]}] and {c.term}[{label}] hold the same {' + '.join(_key)} "
+                          f"{k!r} — one entry per {' + '.join(_key)}; put what they say in one"
+                          + _rule(f"{c.term}.schema.keyed_by", c.term))
+        else:
+            _seen[k] = label
+    return None
+
+
 def ectl_entry_one_of(e):
     one_of = list(e.form['one_of'])
     if one_of and not any(k in e.entry for k in one_of):
@@ -2672,17 +2782,24 @@ def ectl_nested_entries(e):
         if v is None:
             continue
         sch = _NESTED.setdefault((e.term, attr), {'shape': 'list_of_entries', 'attrs': attrs})
+        # 24.0: what the `in: entries` says of each entry inside — at least one of, at most one of each group — is the
+        # entry's own `entry_one_of` and `at_most_one_of`, so the entry controllers judge it as they judge any entry
+        for _fct, _key in (('nested_one_of', 'entry_one_of'), ('nested_at_most', 'at_most_one_of')):
+            _said = dict(_facet(e.form, _fct, e.scope)).get(attr)
+            if _said:
+                sch.setdefault(_key, _said)
         if not isinstance(v, (list, dict)):
             errors.append(f"{e.base}: {e.ref}.{attr} holds entries — a list of mappings, or one mapping")
             continue
         # `keyed_by` (21.0): ONE entry per value of that attribute, and their order carries nothing. Two payers named
         # `sam` are one payer written twice — a sum over them counts sam twice — so the second is refused, not added.
+        # A list of attributes (24.0): one entry per COMBINATION of their values.
         _key = dict(_facet(e.form, 'keyed_by', e.scope)).get(attr)
         if _key and isinstance(v, list):
             _seen = {}
             for i, item in enumerate(v):
-                k = item.get(_key) if isinstance(item, dict) else None
-                if k is None or not isinstance(k, (str, int, bool)):
+                k = _combination(item, _key)
+                if k is None:
                     continue
                 if k in _seen:
                     errors.append(f"{e.base}: {e.ref}.{attr} holds two entries for {_key} '{k}' ({_seen[k]} and {i}) — "
@@ -2788,6 +2905,32 @@ def ectl_bean_id(e):
                           f"{' or '.join(map(str, _gene))}" + _rule(f"{_law_path(e.term)}.attrs.{attr}.in", e.term))
 
 
+# ============================== 24.0: EACH PART'S OWN CHECKS ==============================
+# A part of release 24.0 writes its gate code under its own banner and nowhere else in this file: thin calls into its own
+# module (pure functions returning findings), registered in its two tuples. ENTRY: (key, controller) pairs run after
+# every entry controller above; PLIES: (ply, why) pairs run after every ply, so each may read everything built before it.
+# ---- BASE
+BASE_ENTRY, BASE_PLIES = (), ()
+# ---- SEQ
+SEQ_ENTRY, SEQ_PLIES = (), ()
+# ---- VIEW
+VIEW_ENTRY, VIEW_PLIES = (), ()
+# ---- QTY
+QTY_ENTRY, QTY_PLIES = (), ()
+# ---- PRIV
+PRIV_ENTRY, PRIV_PLIES = (), ()
+# ---- OBS
+OBS_ENTRY, OBS_PLIES = (), ()
+# ---- PLACE
+PLACE_ENTRY, PLACE_PLIES = (), ()
+# ---- RECKON
+RECKON_ENTRY, RECKON_PLIES = (), ()
+# ---- AGREE
+AGREE_ENTRY, AGREE_PLIES = (), ()
+# ---- VIEWCAP
+VIEWCAP_ENTRY, VIEWCAP_PLIES = (), ()
+
+
 ENTRY_CONTROLLERS = (
     ('declared_attrs', ectl_declared_attrs),
     ('attr: required', ectl_entry_required_attrs),
@@ -2807,13 +2950,15 @@ ENTRY_CONTROLLERS = (
     ('in: aspect', ectl_on_aspect),
     ('cells: verdict', ectl_cross_aspect),
     ('entry_one_of', ectl_entry_one_of),
+    ('at_most_one_of', ectl_at_most_one_of),
     ('cells: requires / expects', ectl_entry_required_if),
     ('in: extent', ectl_entry_extents),
     ('in: recurrence', ectl_entry_recurrences),
     ('in: quantity', ectl_entry_quantities),
     ('sums', ectl_sums),
     ('in: pointer', ectl_pointer_fields),
-)
+) + BASE_ENTRY + SEQ_ENTRY + VIEW_ENTRY + QTY_ENTRY + PRIV_ENTRY + OBS_ENTRY + PLACE_ENTRY + RECKON_ENTRY + \
+    AGREE_ENTRY + VIEWCAP_ENTRY
 
 
 def check_entry(base, term, label, entry, sch):
@@ -2852,6 +2997,22 @@ def build_all_fm_and_targets():
             if isinstance(_n, dict) and isinstance(_n.get('bean'), str) and _n['bean']:
                 # a target is an id, written as text; one written otherwise is the link pass's to refuse, by name
                 TARGETS_OF.setdefault(_t, set()).add(_n['bean'])
+
+
+LAWVIEW = None
+
+
+def build_lawview():
+    """THE LAW AS A PART'S CHECK RECEIVES IT (24.0): what the gate has read, in one namespace, so a part's pure function is
+    handed the law rather than importing the gate — a part module never imports dmcheck at import time."""
+    global LAWVIEW
+    _gp = os.path.join(ROOT, 'GARDEN.md')
+    _g = load(_gp)[0] if os.path.isfile(_gp) else None
+    LAWVIEW = types.SimpleNamespace(root=ROOT, terms=TERMS, schemas=SCHEMAS, systems=SYSTEMS, units=UNITS,
+                                    quantities=QUANTITIES, aspects=ASPECTS, value_types=VALUE_TYPES, registry=registry,
+                                    docs=docs, all_fm=ALL_FM, bean_ids=bean_ids, map_ids=map_ids,
+                                    gardener=(_g or {}).get('gardener') if isinstance(_g, dict) else None,
+                                    garden_id=own_garden_id())
 
 # --- the interpreter, as controllers dispatched by schema key ----------------------------------------
 # One controller per key the schema language defines, named after the KEY and never after a term, so a
@@ -3202,6 +3363,7 @@ CONTROLLERS = (
     ('every other domain (value)', ctl_value_as_entry),
     ('key_form', ctl_key_form),
     ('entries', ctl_entries),
+    ('keyed_by', ctl_keyed_by),
     ('on_sequence', ctl_on_sequence),
 )
 
@@ -4033,6 +4195,25 @@ def _save_command(body):
 
 # Probe with rev-parse rather than with the diff itself: outside a repository `git diff` silently becomes
 # `--no-index` and complains about the FLAG, which names the wrong problem to whoever reads the error.
+# WHAT A COMMIT ADDS, published for a part's own commit-time ply (24.0): the staged paths, those git calls added (`A`), the
+# journal's added lines, and the days of the headings they add — each empty where there is no index. Read from the index
+# once, here, and by no part again.
+STAGED, STAGED_ADDED, JOURNAL_ADDED, STAMPED_DAYS = [], [], [], []
+
+
+def _publish_staged(staged):
+    global STAGED, STAGED_ADDED, JOURNAL_ADDED, STAMPED_DAYS
+    STAGED = list(staged)
+    if not STAGED:
+        return
+    STAGED_ADDED = [l.split('\t', 1)[1] for l in _git('diff', '--cached', '--name-status', '--no-renames')[0].split('\n')
+                    if l.startswith('A\t')]
+    if 'log/journal.md' in STAGED:
+        _raw = _git_bytes('diff', '--cached', '--unified=0', '--', 'log/journal.md')
+        JOURNAL_ADDED = [l[1:] for l in _raw.split('\n') if l.startswith('+') and not l.startswith('+++')]
+        STAMPED_DAYS = [l[3:].split(' · ', 1)[0].split(' ')[0].split('T')[0] for l in JOURNAL_ADDED if l.startswith('## ')]
+
+
 def check_staged_state():
     _out, _why = _git('rev-parse', '--git-dir')
     if not _why:
@@ -4048,6 +4229,7 @@ def check_staged_state():
         staged = []
     else:
         staged = _out.split()
+    _publish_staged(staged)
 
     if staged:
         # (K) provenance duty — a state-change must be logged
@@ -4561,6 +4743,8 @@ PLIES = (
      "consumes `est_owner`"),
     (build_all_fm_and_targets,
      "`ALL_FM` and `TARGETS_OF` — read by check_entry and by the term loop"),
+    (build_lawview,
+     "`LAWVIEW` — the law as every part of 24.0 receives it, once ALL_FM is built"),
     (check_terms,
      "the interpreter: every schema rule, per document"),
     (check_layers,
@@ -4600,7 +4784,8 @@ PLIES = (
      "a chain that stops is neither a cycle nor a termination (an error since 2026-09-17: the hook refused it already)"),
     (check_relation_occupancy,
      "PHASE 3 (warn): the reverse gate's rule applied to the relations the GARDEN declares"),
-)
+) + BASE_PLIES + SEQ_PLIES + VIEW_PLIES + QTY_PLIES + PRIV_PLIES + OBS_PLIES + PLACE_PLIES + RECKON_PLIES + \
+    AGREE_PLIES + VIEWCAP_PLIES
 
 def _shaped(msg, width=110):
     """THE FINDING ON ITS OWN LINE, THE REASON BENEATH IT. A finding and its reason were one 300-character line,

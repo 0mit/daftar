@@ -62,6 +62,11 @@ with the calendar would make the gate fail on a day for no committed reason.
 ten terms carried an iso_date and nine of them were `observed` or `as_of`: the day a fact was read, not the day it
 runs out.
 
+`relative`, `lapses`, `stance` and `condition` (24.0) each NAME an attribute of the term, as `attr` and `repeats` do, and
+the gate refuses one that names none: a position stated relative to another, a permission that lapses rather than falls
+due, the words chosen by the entry's effective stance, and a condition in place of a day. They are declared here and
+read by the parts that build them.
+
 ## schema_language.required_on_gene
 
 THE AXIS IS READ FROM THE REGISTRY (22.0). A `required_on_<registry>` or `only_on_<registry>` key names a registry, and
@@ -76,6 +81,107 @@ THE MIRROR OF `required_on_gene`. The language could say that a genos of being m
 it may, so a term that is a fact about one genos of being — that another garden is a rehearsal — could sit on a person,
 where nothing reads it. The alternative was the gate naming the term and the genos in its code, which is the one thing
 the interpreter does not do.
+
+## schema_language.at_most_one_of
+
+A CONTRADICTION IS REFUSED WHERE IT IS WRITTEN (24.0). `entry_one_of` could say that an entry states at least one of a
+group, and nothing could say that it states at most one: a clause could carry a stated `due` beside a `falls_due` that
+computes one, and a value a `u` beside an `accuracy`, and every reader then chose between them in its own way. A group of
+which at most one may be held says it once, in the law, and names both when two are written. Beside `entry_one_of` on
+the same group it says exactly one.
+
+## schema_language.keyed_by
+
+ONE ENTRY PER KEY, ON THE TERM ITSELF (24.0). `keyed_by` inside `in: entries` held a nested list to one entry per value
+since 21.0. Several mechanisms of 24.0 needed the same of a term's own entries, and some by more than one attribute —
+one observer's one verdict on one entry — so the construct is stated beside `shape` too, and takes a list: one entry per
+combination of values. An entry holding none of the attributes is not counted, because a key it does not have cannot be
+repeated; a merge sorts a compound-keyed list by the tuple of its values.
+
+## schema_language.exclusive
+
+DECLARED, AND ON NO TERM (24.0). Some extents cannot overlap for one being in one role — one person booked twice for the
+same days, one room lent twice — and the check is across every bean of the garden, not inside one. The construct is in
+the language so that a garden which needs it writes it in its own VOCAB.md, as a RULE-CHANGE; the law puts it on no term,
+because nothing the standard holds is exclusive for every garden.
+
+## extent_form.level
+
+A MONTH IS NOT A MEASURE (24.0). `not_a_calendar_bucket` refused a month as a length because it is 28 to 31 days, and
+that left no way to say "for one month" at all. A length counted in CELLS of a level of the system named says it without
+pretending to arithmetic: from a day, the other end is the same place in the cell that many cells on, and where that
+cell has no such place, its last one, said aloud. `measure` and `level` never stand together, because one length has
+one spelling.
+
+## value_types[moment]
+
+A POSITION BELOW THE DAY (24.0). Until 24.0 a clock time on a date was refused as finer than the type, and the only
+moments the law knew were the journal's headings. A moment is held to the minute or finer, in any calendar, with the
+offset it was read at — the form of a heading, so there is one form of a moment and not two.
+
+## value_types[date_or_moment]
+
+HELD TO THE UNIT IT IS WRITTEN AT (24.0). Some positions are a day for one entry and a moment for the next — a clause
+due on a day, another due at eleven. Two attributes for one position would let an entry state both; `either` names the
+types a value may be, and the value is held to the one it passes. It is the one row that uses `either`, declared by its
+own meaning rather than as a new construct of the language.
+
+## value_types[field_path]
+
+ONE SPELLING OF A PATH INTO WHAT BEANS HOLD (24.0). A reading, a checklist, a grant and a page each name a value inside
+a bean, and each would otherwise invent a syntax for it. The pattern is the law's, and one reader in bin/dmparse.py
+reads it, so a path is judged and followed the same way everywhere. `>` follows a ref because the graph is made of refs;
+`[<attr>=<value>]` selects entries by what they hold rather than by their position, which carries nothing.
+
+## value_types[held_pointer]
+
+A POINTER THAT SAYS NOTHING OF WHAT IT POINTS AT (24.0). Material kept off git is found through a logical root each
+host resolves for itself, and a key minted at random: a name chosen by a person would carry what it names into the
+history that the material was kept out of.
+
+## value_types[language_tag]
+
+A LANGUAGE AS THE WORLD ALREADY WRITES ONE (24.0). BCP 47 is the form every other system that names a language uses;
+the pattern takes its language, script and region subtags, which is what a garden's words have needed.
+
+## uncertainty_form
+
+HOW WELL A VALUE IS KNOWN, IN THE WORDS OF THE GUIDE (24.0). A value was exact as written, always. A reading has an
+uncertainty, and a comparison that ignores it says two values differ when nothing can tell them apart. `u` is the
+standard uncertainty of JCGM 100:2008, in a unit of the value's own quantity; `accuracy` keeps what a maker stated, with
+its kind, because turning it into `u` is a reader's act and a writer who did it would state a number nobody measured. A
+value stating neither is exact as written, and a reader combining it says so rather than inventing one.
+
+## accuracy_kinds
+
+WHAT A MAKER'S ACCURACY MEANT (24.0). The same "± 5 m" is a bound, a 68 % radius or a 95 % radius, and they differ by a
+factor of up to about four; the kind is written beside it so that a reader turns it into `u` by the rule for its kind.
+`unstated` is kept as said and never read as a standard uncertainty.
+
+## selection_form
+
+ONE GRAMMAR OF READINGS, AND NO FORMULA (24.0). A clause's condition, a checklist's `met_by`, a grant's audience and a
+page's table are each a selection of beans or entries and something computed from it. Written as steps of a closed list
+of operations, each naming earlier steps only, a reading cannot loop and no string is evaluated; read each time by one
+reader, it is never written back as a fact. An act that fixes a reading records the commit it was read at.
+
+## operations
+
+CLOSED, SO THAT A READER CAN HOLD EVERY ONE (24.0). Each row says what it takes, in the attribute language every term
+uses, and what it gives. A set, a truth that may be NOT KNOWN, a value with its uncertainty, an order, groups: the
+kinds are few so that a result is always one a person can check. bin/dmreckon.py applies these rows and nothing else; `takes` is an attribute block, read as `attrs` are. Rows are added by the release that builds their
+evaluation, and by no other.
+
+## comparators
+
+A CONDITION NAMES ITS COMPARISON (24.0). `monotone` marks the comparisons whose answer never turns back — what has been
+reached stays reached — because a reading over them can be read once per occurrence and not re-judged.
+
+## terms[selections]
+
+A READING IS DECLARED WHERE IT IS ABOUT (24.0). A selection is a key of a bean's `selections`, named from anywhere by
+`key_of: selections` — the one spelling the law already had for "a key of a term on a bean" — rather than by a new
+wrapper. It is read each time and never stored, so it cannot go stale.
 
 ## crown
 

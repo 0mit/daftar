@@ -290,7 +290,19 @@ if '--terms' in want:
         _keyed = dict(dmform.facet(F, 'keyed_by'))
         for a_, r in dmform.facet(F, 'entries'):
             det.append(f"{_w}.{a_} holds entries, each judged by {sorted(map(str, r))}"
-                       + (f"; ONE per `{_keyed[a_]}`, in no order" if a_ in _keyed else ''))
+                       + (f"; ONE per `{' + '.join(_keyed[a_]) if isinstance(_keyed[a_], list) else _keyed[a_]}`, in no order"
+                          if a_ in _keyed else ''))
+        for a_, r in dmform.facet(F, 'nested_one_of'):
+            det.append(f"{_w}.{a_}: each entry inside carries at least one of {r}")
+        for a_, r in dmform.facet(F, 'nested_at_most'):
+            det.append(f"{_w}.{a_}: each entry inside carries at most one of each of {r}")
+        for _g in (F.get('at_most') or []):
+            det.append(f"at most one of {_g}: two are a contradiction")
+        if F.get('keyed_by'):
+            det.append(f"ONE entry per {' + '.join(F['keyed_by'])} on one bean")
+        if F.get('exclusive'):
+            det.append(f"exclusive: the `{F['exclusive'].get('extent')}` of its entries for one `{F['exclusive'].get('being')}`"
+                       + (f", in one `{F['exclusive']['role']}`" if F['exclusive'].get('role') else '') + ", across the garden, do not overlap")
         if isinstance(s.get('sums'), dict):
             _wh = s['sums'].get('whole')
             det.append(f"sums: each entry's {s['sums'].get('parts')} add up EXACTLY to its "
@@ -323,6 +335,15 @@ print(f"  count: {_m(_vt.get('count')).get('pattern', 'NO value_types[count] —
 for q in reg('quantities'):
     if isinstance(q, dict) and q.get('quantity'):
         print(f"  {q['quantity']:14} {quantity_rule(q['quantity'])}")
+
+head("THE SCHEMA LANGUAGE AND THE VALUE TYPES — every construct a term may state, and every type a value may be")
+print("  constructs: " + ', '.join(k for k in (std.get('schema_language') or {}) if k != 'attr_domains'))
+for _t, _r in _vt.items():
+    _how = (f"one of {_r['either']}" if isinstance(_r.get('either'), list) else
+            f"a position to the {_r.get('unit')} in any system of {_r.get('dimension')}" + (", with its clock and offset"
+            if _r.get('clock') == 'required' else '') if _r.get('any_system') else
+            f"pattern {_r['pattern']}" if _r.get('pattern') else 'read by its own reader')
+    print(f"  {_t:15} {_how}")
 
 head("TEXT AND DAYS — what every key and string is, and which positions are days")
 _tx = _m(_vt.get('text'))

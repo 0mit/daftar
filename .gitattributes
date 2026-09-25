@@ -33,6 +33,8 @@ log/pending.md merge=union
 bin/hooks/* text eol=lf
 bin/*.sh    text eol=lf
 seed/*.sh   text eol=lf
+# AN EXTRACT OF A SCHEME IS A TABLE A READER SPLITS ON TABS: a CR git wrote on checkout would enter the last column it reads.
+extracts/** text eol=lf
 
 # A GARDEN'S OWN ATTRIBUTES go in a .gitattributes inside the directory they concern (git reads one per
 # directory), never here: this file is part of the language, and bin/dmupgrade.py replaces it on every upgrade.

@@ -68,6 +68,7 @@ parts, changes).
    python3 test/docs.py
    python3 test/manifesto.py
    python3 test/layers.py
+   python3 test/base.py
    reuse lint
    ```
 

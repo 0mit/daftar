@@ -60,6 +60,10 @@ def legacy_form(term_def, sch):
                    or any(sch.get(k) for _f, k in ENTRY_FACETS))
     form = {'scope': 'entry' if has_entries else 'self', 'attrs': {}, 'order': {}, 'cells': [],
             'self_ref': False, 'value': {}, 'alt': None, 'one_of': list(sch.get('entry_one_of') or []),
+            # 24.0's term-level constructs have one spelling, old and new alike: read as dmform reads them
+            'at_most': [list(g) for g in (sch.get('at_most_one_of') or []) if isinstance(g, list)],
+            'keyed_by': ([sch['keyed_by']] if isinstance(sch.get('keyed_by'), str) else list(sch.get('keyed_by') or [])),
+            'exclusive': dict(sch['exclusive']) if isinstance(sch.get('exclusive'), dict) else None,
             'matches': {'entry': list(sch.get('entry_must_match') or []),
                         'form_from_genos': sch.get('entry_form_from_genos_attr'),
                         'equal_genos_attr': sch.get('must_equal_genos_attr')},

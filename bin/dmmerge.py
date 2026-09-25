@@ -110,8 +110,10 @@ def _canon_entry(attrs, e):
                 v = [_canon_entry(dom['entries'], x) for x in v]
                 kb = dom.get('keyed_by')
                 if kb:
-                    v = sorted(v, key=lambda x: (0, canonical(x.get(kb)), canonical(x)) if isinstance(x, dict)
-                               else (1, '', canonical(x)))
+                    # one attribute, or several (24.0): a compound key sorts by the tuple of its values
+                    _kbs = [kb] if isinstance(kb, str) else list(kb)
+                    v = sorted(v, key=lambda x: (0, [canonical(x.get(k)) for k in _kbs], canonical(x)) if isinstance(x, dict)
+                               else (1, [], canonical(x)))
                 out[a] = v
             elif isinstance(v, dict):
                 out[a] = _canon_entry(dom['entries'], v)

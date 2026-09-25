@@ -10,6 +10,7 @@ fence #2. Everything after fence #2 is body, verbatim.
 
 One owner of a fact: dmcheck.py and dmmerge.py both import this — the parsing rule lives here only.
 """
+import collections
 import re
 import os, sys
 
@@ -157,6 +158,48 @@ def in_form(row, value):
 def form_said(row):
     """How a row's form is described to a person who got it wrong."""
     return f"checked by {row['checked_by']}" if row.get('checked_by') else repr(row.get('pattern'))
+
+
+# A PATH INTO WHAT BEANS HOLD (`value_types[field_path]`, 24.0): read here and nowhere else. A segment is a key, or `*` for
+# every key of a map or entry of a list, with `[<attr>=<value>]` for the entries holding that value; `.` goes in, `>` follows
+# a ref to the bean it names and goes on there; `<bean>:` first starts at another bean; `@occurrence` is a word of its own.
+Segment = collections.namedtuple('Segment', 'bean key star match follow')
+_PATH_BEAN = re.compile(r'([a-z0-9][a-z0-9-]*):', re.ASCII)
+_PATH_SEG = re.compile(r'(\*|[a-z0-9_][a-z0-9_-]*)(?:\[([a-z_][a-z0-9_]*)=([^\]\s]+)\])?', re.ASCII)
+
+
+def path_read(text):
+    """The segments of a field path, in order — or ValueError, saying where it stops being one (`path_problem`)."""
+    if text == '@occurrence':
+        return [Segment(None, '@occurrence', False, None, False)]
+    if not isinstance(text, str) or not text:
+        raise ValueError("a path is text, and not empty")
+    i, out, bean, follow = 0, [], None, False
+    m = _PATH_BEAN.match(text)
+    if m:
+        bean, i = m.group(1), m.end()
+    while True:
+        m = _PATH_SEG.match(text, i)
+        if not m:
+            raise ValueError(f"at character {i + 1}: a key, `*`, or a key with `[<attr>=<value>]` is wanted"
+                             + (f", not {text[i:i + 8]!r}" if i < len(text) else ", and the path ends"))
+        out.append(Segment(bean if not out else None, m.group(1), m.group(1) == '*',
+                           (m.group(2), m.group(3)) if m.group(2) else None, follow))
+        i = m.end()
+        if i == len(text):
+            return out
+        if text[i] not in '.>':
+            raise ValueError(f"at character {i + 1}: `.` goes in and `>` follows a ref — {text[i]!r} does neither")
+        follow, i = text[i] == '>', i + 1
+
+
+def path_problem(text):
+    """None when `text` is a field path; else what is wrong with it, in words."""
+    try:
+        path_read(text)
+    except ValueError as e:
+        return str(e)
+    return None
 
 
 def anchor_compare_form(terms, key):
@@ -377,7 +420,7 @@ _NAME_KEYS = ('shape', 'key_form', 'path', 'values_from', 'must_equal_genos_attr
               'canonical_note', 'compare_form', 'on_sequence')
 _LIST_KEYS = ('cells', 'values', 'values_add', 'entry_one_of', 'entry_must_match')
 _MAP_KEYS = ('attrs', 'alt_form', 'expiry', 'sums', 'value_in_registry')
-_IN_NAMES = ('registry', 'registry_from', 'take', 'type', 'system', 'key_of', 'form_of', 'keyed_by', 'aspect', 'quantity')
+_IN_NAMES = ('registry', 'registry_from', 'take', 'type', 'system', 'key_of', 'form_of', 'aspect', 'quantity')
 # The two verdicts the schema language names for a cell (`schema_language.cells`): `incoherent` an error, `in_breach` a
 # warning. Any other word was read as `in_breach` — a misspelt `incoherent` warned where the law meant to refuse.
 CELL_VERDICTS = ('incoherent', 'in_breach')
@@ -403,6 +446,22 @@ def regex_problem(pattern):
     return None
 
 
+def _names_problem(v, one_or_list=False):
+    """None when `v` is absent, or a list of attribute names (or, `one_or_list`, one name); else what it should be."""
+    if v is None or (one_or_list and _is_text(v)) or (isinstance(v, list) and v and all(_is_text(x) for x in v)):
+        return None
+    return ("names one attribute, or a list of them, each as text" if one_or_list
+            else "is a list of attributes, each named as text")
+
+
+def _groups_problem(v):
+    """None when `v` is absent or a list of GROUPS, each a list of two or more attribute names; else what it should be."""
+    if v is None or (isinstance(v, list) and v and all(isinstance(g, list) and len(g) > 1 and all(_is_text(x) for x in g)
+                                                       for g in v)):
+        return None
+    return "is a list of groups, each a list of two or more attributes named as text — `[[u, accuracy]]`"
+
+
 def _attrs_problem(attrs, at):
     """What is wrong with the shape of a schema's `attrs` (and the entries nested in one), or None."""
     if not isinstance(attrs, dict):
@@ -411,9 +470,16 @@ def _attrs_problem(attrs, at):
         d = rec.get('in') if isinstance(rec, dict) else None
         if not isinstance(d, dict):
             continue                        # a record with no domain the language offers is refused by name later
-        for k in _IN_NAMES:
+        for k in _IN_NAMES + (() if d.get('entries') is not None else ('keyed_by',)):
             if d.get(k) is not None and not _is_text(d[k]):
                 return f"`{at}.{a}.in.{k}` names one {k}, written as text — not {type(d[k]).__name__}"
+        # `keyed_by` beside `entries` may name several attributes (24.0), and beside `form_of` names one
+        if d.get('entries') is not None:
+            for k, _p in (('keyed_by', _names_problem(d.get('keyed_by'), one_or_list=True)),
+                          ('one_of', _names_problem(d.get('one_of'))),
+                          ('at_most_one_of', _groups_problem(d.get('at_most_one_of')))):
+                if _p:
+                    return f"`{at}.{a}.in.{k}` {_p}"
         if 'pattern' in d and regex_problem(d['pattern']):
             return f"`{at}.{a}.in.pattern` {regex_problem(d['pattern'])}"
         # `{ gene: [...] }` and nothing else (22.0: `kinds` until then) — a key it does not read would hold the id to no
@@ -480,6 +546,15 @@ def term_problem(t):
     for k in _MAP_KEYS:
         if s.get(k) is not None and not isinstance(s[k], dict):
             return f"`schema.{k}` is a mapping, not {type(s[k]).__name__}"
+    # 24.0: `at_most_one_of` a list of groups; `keyed_by` one attribute or several; `exclusive` {extent, being, role?}
+    for k, _p in (('at_most_one_of', _groups_problem(s.get('at_most_one_of'))),
+                  ('keyed_by', _names_problem(s.get('keyed_by'), one_or_list=True))):
+        if _p:
+            return f"`schema.{k}` {_p}"
+    _ex = s.get('exclusive')
+    if _ex is not None and not (isinstance(_ex, dict) and _is_text(_ex.get('extent')) and _is_text(_ex.get('being'))
+                                and set(_ex) <= {'extent', 'being', 'role'} and (_ex.get('role') is None or _is_text(_ex['role']))):
+        return "`schema.exclusive` is a mapping {extent: <attr>, being: <attr>, role?: <attr>}, each an attribute named as text"
     _alt = s.get('alt_form')
     if _alt is not None:
         if not _is_text(_alt.get('key')):
