@@ -3198,6 +3198,55 @@ places a file where the law places it says nothing new; one that places it elsew
 places, and is refused. A pattern may stand for many files, because a garden's handovers or a person's letters
 are many files of one kind.
 
+## terms[phone]
+
+A NUMBER IS WRITTEN ONE WAY, OR TWO SPELLINGS ARE TWO PEOPLE. `0044 20 …`, `+44 (0)20 …` and `+4420…` are one line, and
+a merge that compares text would keep three. E.164 is the form every exchange routes by: `+`, the country code, the
+digits, nothing between. The number is logical, as an email address is: it reaches someone, and whether it
+establishes who is the bean's to say. A third party's number is personal data about someone who did not write it
+here, so it is held off git unless their own consent puts it in.
+
+## terms[pass_log]
+
+A CLAIM NEEDS SOMETHING TO BE CHECKED AGAINST. A session that says what it read and where it wrote it can be held to
+that, but only if the record is its own and only grows. The log is a file, one pass to a line, named by the session's
+bean, so a commit that changes it claims that session and owes what the flow law asks of a claim. A session that
+keeps no log claims nothing and is held to nothing more than any writer, which is why a log is offered and never
+required.
+
+## methods
+
+HOW MATERIAL MOVED IS PART OF WHETHER IT MAY. The same words, taken down from a person, are her statement; copied from
+another bean, they are a copy, and a copy is not said. A flow row names its method, so the list of methods is closed:
+a method nobody declared could carry anything past every row.
+
+## flows
+
+EVERY PASS HAS A ROW, OR IT IS REFUSED. A garden's material comes from places of unequal standing — a person's words, a
+tool's output, the law, another garden — and a value placed in the estate carries where it came from. A list of what
+is forbidden is never finished, so the rows say what is allowed, source by destination by method, and each says why.
+Where two rows hold, the nearer decides, because the particular case is the one someone thought about.
+
+## flow_form
+
+THE FORM OF A ROW IS FIXED, SO THAT THE LAW OF FLOWS CAN BE READ BY A TOOL. A row's guard is computed from where a
+tool checks it, never typed, because a typed guard is a claim that is true until the tool changes. A garden may add
+refusals and may grant a named party where the standard asks for ratification, but never unguard a row of the
+standard: a garden that could loosen the law would loosen it the first time the law was in the way.
+
+## pass_form
+
+A PASS IS RECORDED BY WHERE, NOT WHAT. The record of a pass names its source, its destination and its method, and
+never holds the material, since a log of what passed that held the material would be a second copy of it, and
+the one least guarded. What a pass carries is found where it landed, and the log only says that it went there.
+
+## pass_metadata
+
+WHAT A PASS MAY SAY OF ITSELF IS COUNTS AND LOCATORS. A hash of a day or an amount does not hide it, and a snippet is
+the material. So a pass holds how long its material was, where it sat in the session, the id of the git object that
+already holds it (a locator into the repository, not a digest of a value), and how often its value was found in its
+source, which is the measure of whether it was quoted or only hoped.
+
 ## doc:MANIFESTO.md#serve
 
 THE FIRST OF THE NINE LIVES. In the *Phaedrus* (248d–e) the soul that has seen most is born into the first of nine

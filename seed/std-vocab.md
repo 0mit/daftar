@@ -1,5 +1,5 @@
 ---
-version: "23.1"
+version: "24.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -1967,7 +1967,7 @@ knowledge_schemes:
   - scheme: isco-08
     classifies: occupations
     holding: shipped
-    licence: LicenseRef-ILO-source-indicated
+    licence: LicenseRef-ILO-ISCO-08
     release: "ISCO-08 (structure, 2012)"
     publisher: International Labour Organization
     url: "https://ilostat.ilo.org/methods/concepts-and-definitions/classification-occupation/"
@@ -1988,7 +1988,7 @@ knowledge_schemes:
   - scheme: technology
     classifies: established technologies (software, protocols, operating systems), each with its OFFICIAL documentation
     holding: shipped
-    licence: CC0-1.0
+    licence: CC-BY-4.0
     publisher: daftar (curated; every row names the project's own documentation, never a third party's)
     url: "seed/knowledge/technology.tsv"
     levels: [ { level: technology } ]
@@ -2071,6 +2071,7 @@ profiles:
         attrs:
           bean:  { required: true, in: id }
           repo:  { in: { pattern: "^[a-z0-9][a-z0-9.-]*:[^ ]+$" }, meaning: "the repository AS ITS HOST NAMES IT (`host-a:git/ledger.git`) — what a clone that has forgotten its remote needs" }
+          note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       merge: { cardinality: single, order: none }
 
   network:
@@ -2152,6 +2153,7 @@ profiles:
           port:             { in: { form_of: anchor_systems, keyed_by: transport, take: pattern }, meaning: "the port: a position in the transport's port space, WITHIN the address beside it. One port per entry. Omitted where the protocol rides another (sftp over ssh) and has none of its own, and for a socket path, which has none at all." }
           via_link:         { in: { key_of: links }, meaning: "optional: the `links` key this surface is reachable over, when it is not reachable without it" }
           admitted_from:    { in: prose, meaning: "WHO may reach this surface, when not everyone who can reach its address may: the named sources the being itself admits, and where that is enforced. A second fact beside `exposure`, which says only WHERE the surface is bound. Absent means nothing restricts it." }
+          note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
         cells:
           - { when: { permission: forbidden }, verdict: in_breach, why: "a listening surface that MUST NOT exist, recorded as existing. Unlike a capability, an endpoint entry is not a stance about a possibility — it is a statement that the being answers there — so `forbidden` alone is the breach and needs no second aspect to confirm it. A database container published on 0.0.0.0:5432, reachable across the LAN, is this shape." }
           - { when: { permission: required, confidentiality: cleartext, exposure: [lan, link, internet] }, verdict: in_breach, why: "a channel the estate REQUIRES and which protects nothing on the wire, on a path something else can be on. A mail policy that forces cleartext delivery to a partner domain that mail must still reach is exactly this, so the requirement and the exposure are both real and neither can simply be withdrawn." }
@@ -2173,6 +2175,7 @@ profiles:
           confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "what the link protects, for everything carried over it" }
           plane:            { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR." }
           carried_by:       { in: { key_of: links }, meaning: "optional: the `links` entry this one rides over — a tunnel rides a WAN link rides an interface" }
+          note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       dag_note: >
         NOTHING HERE IS ACYCLIC, and the first draft of this term got that wrong twice in one line. It
         carried `dag: true` over `peer` and `carried_by`, and the design review caught both before any bean
@@ -2201,6 +2204,7 @@ profiles:
           target:     { in: ref, meaning: "a {bean[, field]} ref to what it reaches. A ref rather than an address, so the far end stays the one owner of its own address." }
           necessity:  { in: { aspect: necessity, default: necessary }, meaning: "the position on the necessity aspect — `necessary` if the being cannot do its work without it" }
           via_link:   { in: { key_of: links }, meaning: "optional: the link this reach must cross" }
+          note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       merge: { cardinality: multi, order: by-key }
     - term: treatments
       meaning: >
@@ -2219,6 +2223,7 @@ profiles:
           observed:    { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the treatment was read off the device" }
           to:          { in: ref, meaning: "optional: a {bean, field} ref to where the treatment sends traffic" }
           permission:  { in: { aspect: capability, default: permitted }, meaning: "the position on the capability aspect. `required` is the one that earns this term: a server's outbound SPF identity can DEPEND on firewall mangle marks, and today that is a prose safety note nothing enforces." }
+          note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       merge: { cardinality: multi, order: by-kind+what }
   domain:
     meaning: >
@@ -2345,6 +2350,7 @@ profiles:
                 genos: { required: true, in: { registry: gene, take: genos }, meaning: "the genos of the beings whose cards show it" }
                 term:  { required: true, in: { pattern: '^[a-z][a-z0-9_]*$' }, meaning: "the name of a term the law declares" }
                 shown_from: { required: true, in: { registry: view_lenses, take: lens }, meaning: "the first lens that shows it; every deeper lens shows it too" }
+          note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       merge: { cardinality: single, order: none }
     - term: view_monitors
       meaning: "the monitors a page's live values come from, one entry each. What a monitor watches is its own `reaches` and each target's own `endpoints`; which technology it runs is its own `knowledge` (`uses`), and the asset reads it through its adapter for that technology"
@@ -2354,6 +2360,7 @@ profiles:
         attrs:
           monitor:  { required: true, in: bean_id, meaning: "the being that collects the values" }
           settings: { in: { pointer: bean_field_pointer }, meaning: "where that monitor states what only its technology needs, read by the adapter in the technology's own form: stated, not checked, until a term the law declares carries it" }
+          note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       merge: { cardinality: multi, order: by-monitor }
     - term: views
       meaning: "what the page draws, one entry per drawing under the key its drawing module draws it by: the mapping or bean it draws, the story of it in plain words, the question each lens asks, the operate lens's shape and what the shape reads, where its processes and pipes are stated, and where a person may act. A value named in it is a key of `view_bindings` on the same page"
@@ -2406,6 +2413,7 @@ profiles:
                 reason:      { in: [asked], meaning: "asked — the person pressing states a reason, which the host's audit records" }
                 every:       { in: recurrence, meaning: "a schedule: the host runs it at each occurrence (`dmview run-scheduled`), as `answered_by`" }
                 answered_by: { in: { bean_id: { gene: [person, org] } }, meaning: "with `every`: who answers for what it does when nobody presses — the actor its grant is asked for" }
+                note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
           archetype: { required: true, in: { registry: view_archetypes, take: archetype }, meaning: "operate: the shape its vital sign is drawn in" }
           blind:     { required: true, meaning: "what the page cannot see of it, and why: never omitted", in: { entries: { what: { required: true, in: prose }, why: { in: prose } } } }
           notes:     { in: { entries: { note: { required: true, in: prose } } }, meaning: "operate: a line the person on call reads under the shape" }
@@ -2450,6 +2458,7 @@ profiles:
                 every: { in: recurrence, meaning: "how often a point is taken — every N units along `time`" }
                 band:  { in: { key_of: view_bindings }, meaning: "a step value (as `step_at`) that shades every trace" }
                 relate: { in: { entries: { across: { required: true, in: { key_of: view_bindings } }, measure: { required: true, in: { key_of: view_bindings } }, bins: { in: { type: count } }, at_step: { in: { type: count } }, keep: { in: [all, positive] } } }, meaning: "one value's mean across the bins of another, over the time drawn: only while the band is at `at_step` where it names one, and `positive` keeps the moments it is above zero" }
+          note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
         cells:
           - { when: { archetype: reservoir },  requires: [fill, thresholds], why: "a reservoir answers with how full it is against its thresholds" }
           - { when: { archetype: lanes },      requires: [lanes],       why: "lanes answer with each path" }
@@ -2487,6 +2496,7 @@ profiles:
                 says:       { required: true, in: any, meaning: "the query, in the technology's own language" }
                 items_by:   { in: any, meaning: "live-series: what tells its items apart, in the technology's own terms" }
               keyed_by: technology
+          note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
         cells:
           - { when: { live: live-value },  requires: [query], why: "a number is computed by a monitor" }
           - { when: { live: live-series }, requires: [query], why: "a series is computed by a monitor" }
@@ -2507,6 +2517,7 @@ terms:
         feasibility_why:  { in: prose, meaning: "optional: WHY the feasibility position holds — a sysctl is reversible, a kernel flag is not. Distinct from `why`, which is the reason for the PERMISSION" }
         code:             { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme } }, code: { required: true, in: { registry_from: scheme, take: code } } } }, meaning: "the code of a published scheme this stance is on — and every code beneath it" }
         within:           { in: { entries: { system: { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } } }, at: { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern } } } }, meaning: "the place it holds in" }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       cells:
         - { when: { permission: required, feasibility: impossible }, verdict: incoherent, why: "an unsatisfiable requirement — it must be had and cannot be. Either the requirement is not real, or the impossibility is not, and until that is resolved the entry asserts a contradiction." }
         - { when: { permission: forbidden, feasibility: necessary }, verdict: incoherent, why: "an unenforceable prohibition — it must not be had and unavoidably is. A rule that cannot be obeyed is not a rule; the being needs a different mitigation, or the necessity is overstated." }
@@ -2521,6 +2532,7 @@ terms:
       is_ref: true
       attrs:
         necessity:  { in: { aspect: necessity, default: necessary } }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: "by-bean?+mapping?+field?" }
   - term: refs
     meaning: "the open residual relation: any typed edge outside the canonical set, self-described by `rel`"
@@ -2542,6 +2554,7 @@ terms:
       is_ref: true
       attrs:
         necessity:  { in: { aspect: necessity, default: necessary } }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-bean }
   # == CORE GRAMMAR ENUMS ==
   - term: status
@@ -2632,8 +2645,9 @@ terms:
         for:      { required: true, in: { registry: ordering_keys, take: key }, meaning: "what it orders" }
         judge:    { required: true, in: { bean_id: { gene: [person, org] } }, meaning: "whose judgment it is" }
         criteria: { required: true, in: { entries: { name: { required: true, in: { type: kebab } }, what: { required: true, in: prose } }, keyed_by: name }, meaning: "what is weighed, each in the words a person checks it against" }
-        pairwise: { required: true, in: { entries: { a: { required: true, in: { type: kebab } }, b: { required: true, in: { type: kebab } }, judged: { required: true, in: { pattern: '^(1/)?[1-9]$' } }, why: { in: prose } }, keyed_by: [a, b] }, meaning: "how much more `a` weighs than `b`, on Saaty's scale" }
+        pairwise: { required: true, in: { entries: { a: { required: true, in: { type: kebab } }, b: { required: true, in: { type: kebab } }, judged: { required: true, in: { pattern: '^(1/)?[1-9]$' } }, why: { in: prose }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } }, keyed_by: [a, b] }, meaning: "how much more `a` weighs than `b`, on Saaty's scale" }
         why_inconsistent: { in: prose, meaning: "why a consistency ratio above 0.10 stands" }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
   - term: nature
     meaning: "the ontological category of a being; routes it to the correct branch of the ownership crown"
@@ -3059,6 +3073,7 @@ terms:
         thing: { in: ref, meaning: "a {bean} ref to what it concerns" }
         facet: { in: { registry: facets, take: facet }, meaning: "the facet of it the agreement shares, where it shares one" }
         what:  { in: prose, meaning: "what it concerns, in words: a purchase, a stake, the creation of a codebase" }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: set, order: none }
   - term: words
     meaning: "an agreement's own words: whether they were written, spoken, or not yet put into words; where they are; and the day it was agreed"
@@ -3120,16 +3135,16 @@ terms:
         paid_by:
           required: true
           meaning: "who paid, and how much each paid — one entry per party. A single payer may leave `amount` out: they paid the whole"
-          in: { entries: { party: { required: true, in: { key_of: parties } }, amount: { in: { quantity: money } } }, keyed_by: party }
+          in: { entries: { party: { required: true, in: { key_of: parties } }, amount: { in: { quantity: money } }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } }, keyed_by: party }
         borne_by:
           meaning: "who bears it, one entry per party, in whole-number shares: two to one is 2 and 1. Absent: whoever paid bears it"
-          in: { entries: { party: { required: true, in: { key_of: parties } }, share: { required: true, in: { pattern: '^[1-9][0-9]{0,39}$' } } }, keyed_by: party }
+          in: { entries: { party: { required: true, in: { key_of: parties } }, share: { required: true, in: { pattern: '^[1-9][0-9]{0,39}$' } }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } }, keyed_by: party }
         under:    { in: { key_of: clauses }, meaning: "the clause it was made under, or keeps" }
         through:  { in: ref, meaning: "the card, account or agreement it moved through — itself an agreement with whoever issued it" }
         category: { in: prose, meaning: "the person's own word for what kind of spending it was" }
         note:     { in: prose, meaning: "optional prose" }
         during:   { in: extent, meaning: "the period it is for: a month's fee, a season's share" }
-        settles:  { in: { entries: { clause: { required: true, in: { key_of: clauses } }, occurrence: { required: true, in: { pattern: '^[a-z0-9][a-z0-9-]*(:[a-z0-9_][a-z0-9_-]*(\.[a-z0-9_][a-z0-9_-]*)*)?$' } }, amount: { in: { quantity: any } } }, keyed_by: [clause, occurrence] }, meaning: "which occurrences of which clauses it settles, and how much of each: one payment across two rates, each under its own clause. With `settles`, `under` may be left out" }
+        settles:  { in: { entries: { clause: { required: true, in: { key_of: clauses } }, occurrence: { required: true, in: { pattern: '^[a-z0-9][a-z0-9-]*(:[a-z0-9_][a-z0-9_-]*(\.[a-z0-9_][a-z0-9_-]*)*)?$' } }, amount: { in: { quantity: any } }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } }, keyed_by: [clause, occurrence] }, meaning: "which occurrences of which clauses it settles, and how much of each: one payment across two rates, each under its own clause. With `settles`, `under` may be left out" }
         pin:      { in: { entries: { commit: { required: true, origin: { act: read, nature: soma }, in: { pattern: '^[0-9a-f]{7,40}$' } }, at: { required: true, origin: { act: read, nature: soma, by: save }, in: { type: moment } }, garden: { in: { bean_id: { gene: [garden] } } } } }, meaning: "the commit and the moment the reading it settles was read at (`pin_form`)" }
     merge: { cardinality: multi, order: by-key }
   - term: trigger
@@ -3150,7 +3165,7 @@ terms:
       attrs:
         id:      { required: true, in: { type: kebab }, meaning: "the step's name, once in its walk" }
         do:      { required: true, in: prose, meaning: "what is done at the step, in words" }
-        next:    { in: { entries: { to: { required: true, in: { type: kebab }, meaning: "the step it leads to" }, when: { in: prose, meaning: "when this way on is taken: said by each of two or more" } } }, meaning: "the ways on from the step: a CLOSED neighbourhood, these and no others" }
+        next:    { in: { entries: { to: { required: true, in: { type: kebab }, meaning: "the step it leads to" }, when: { in: prose, meaning: "when this way on is taken: said by each of two or more" }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } } }, meaning: "the ways on from the step: a CLOSED neighbourhood, these and no others" }
         by:      { in: { type: kebab }, meaning: "who acts at the step: a key of the `parties` of the being whose course reaches it" }
         usually: { in: extent, meaning: "how long the step usually takes: an extent on `time` with a `measure`, `{ of: time, measure: {count, unit} }`, or counted in cells of a calendar's level, `{ of: time, in: <system>, level: <level>, count: <n> }` (`extent_form.level`)" }
         exit:    { in: [true], meaning: "a way out, reached from any step with no `next` naming it: withdrawn, cancelled, lost" }
@@ -3160,6 +3175,7 @@ terms:
         is:      { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "the published process the step is, where a scheme names one" }
         takes:   { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" }, amount: { in: { quantity: any }, meaning: "how much, where it is measured" } }, keyed_by: code }, meaning: "what one run of the step takes in, each once" }
         gives:   { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" }, amount: { in: { quantity: any }, meaning: "how much, where it is measured" } }, keyed_by: code }, meaning: "what one run of the step gives out, each once" }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: single, order: none }
   - term: courses
     meaning: >
@@ -3189,6 +3205,7 @@ terms:
         by:     { required: true, in: bean_id, meaning: "who moved it" }
         reason: { in: { type: kebab }, meaning: "why, as one of the reasons the step reached lists in its `reasons`" }
         why:    { in: prose, meaning: "why, in words: owed where the walk's `next` does not offer the move" }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-course+at+step }
   - term: items
     meaning: "what a CHECKLIST asks for, one item each (a mapping of `kind: checklist`): what it is, who provides it, when it is needed, and what meets it. A checklist is a set and not a walk: its items have no order, and items of which any one will do share a `one_of`"
@@ -3252,6 +3269,7 @@ terms:
         system:   { required: true, in: { registry: anchor_systems, take: system }, meaning: "the system whose cells' boundaries its table (`boundaries_in`) lists" }
         boundary: { required: true, in: prose, meaning: "the boundary, as the system's table names it: the base of that cell" }
         level:    { required: true, in: { system: along }, meaning: "where on this being the mark is, along one of its own `lines`" }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
   - term: lines
     meaning: "the LINES this being lends to positions along it (`along`): each with the point it starts from and the way it runs, once"
@@ -3326,7 +3344,7 @@ terms:
               property:   { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "WHAT the channel is of, as a code of a published scheme, so that two gardens' channels meet by code and never by name" }
               note:       { in: prose, meaning: "optional prose" }
         rows:     { in: { type: rows }, meaning: "the table, inline: its header names the position columns (`at`, or `from` and `to` under `bounds`; none on a grid) and each channel once, then one line per row. Absent, the rows are the parts `series/<bean>/<key>/<part>.tsv`: a grid's part named by the number of its first row, a listed series' by any kebab name" }
-        excluded: { in: { entries: { at: { required: true, in: { type: count }, meaning: "the row: its offset on a listed series (its `from` under `bounds`), its number on a grid, the first 0" }, channel: { in: { type: kebab }, meaning: "the cell's channel; absent, every cell of the row" }, by: { required: true, in: bean_id, meaning: "the judge who set it aside" }, why: { required: true, in: prose, meaning: "why" } } }, meaning: "a cell SET ASIDE by a judge: kept and shown, and read by no operation" }
+        excluded: { in: { entries: { at: { required: true, in: { type: count }, meaning: "the row: its offset on a listed series (its `from` under `bounds`), its number on a grid, the first 0" }, channel: { in: { type: kebab }, meaning: "the cell's channel; absent, every cell of the row" }, by: { required: true, in: bean_id, meaning: "the judge who set it aside" }, why: { required: true, in: prose, meaning: "why" }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } } }, meaning: "a cell SET ASIDE by a judge: kept and shown, and read by no operation" }
         held:     { in: { pattern: '^root:[a-z0-9][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._-]*$' }, meaning: "the whole series is kept OFF GIT, in the held layer, under this opaque pointer, and the entry says nothing else" }
         note:     { in: prose, meaning: "optional prose" }
     merge: { cardinality: multi, order: by-key }
@@ -3367,6 +3385,7 @@ terms:
         role:      { required: true, in: { registry: roles, take: role }, meaning: "which job — a registry row, so a typo is an error and not a new role" }
         observed:  { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the role was confirmed to be one this being actually performs" }
         why:       { in: prose, meaning: "optional: what this being does in that role that another in the same role would not" }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-role }
   - term: os
     meaning: "the operating system this machine runs — a row of the `operating_systems` registry"
@@ -3393,6 +3412,7 @@ terms:
         carried_by:  { in: { key_of: volumes }, meaning: "the `volumes` key beneath this one. A local key and NOT a ref: the stack is intra-bean, which is why it joins no acyclic check." }
         uuid:        { origin: { act: read, nature: soma }, in: { pattern: "^[0-9A-Za-z][0-9A-Za-z:-]*$" }, meaning: "the volume's own identifier, as its format reports it. The datum a rebuild needs and the one that survives a device rename." }
         at:          { in: { pattern: "^(/[^ ]*|[A-Za-z]:[/\\\\].*)$" }, meaning: "where it is mounted, in this machine's path grammar. Absent for a volume that holds no filesystem — a LUKS container or an LVM member is mounted nowhere." }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     reproduction_note: >
       The LAYOUT only — what exists, what carries what, and where it is mounted: what a rebuild needs to
       recreate the shape. Never contents, keys or passphrases. Configuration is not layout: it is somebody
@@ -3434,6 +3454,7 @@ terms:
                     guide: { in: bean_id, meaning: "which context the operator had in attention" }
               to_where: { in: ref, meaning: "what the operation was performed ON, as a bean ref, where that differs from the bean carrying the beanger. Absent for a plain local read." }
               why: { in: prose, meaning: "optional: what caused the change. Load-bearing on `change` and `remove`, where the value alone does not say what happened." }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
 
   - term: workspace
@@ -3447,6 +3468,7 @@ terms:
         at:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$" }, meaning: "the working copy, as a position in that host's path grammar — `root:` form where a root exists, so it resolves on a second machine rather than reading as a literal path that is not there." }
         branch:     { required: true, in: { pattern: "^[A-Za-z0-9][A-Za-z0-9._/-]*$" }, meaning: "the git branch it commits to. `session/<slug>` by convention; `master` for a session that worked the main copy directly, which is what every session before 2026-08-07 did." }
         opened_at:  { origin: { act: read, nature: soma }, in: { system: unix-epoch }, meaning: "epoch milliseconds, stamped by bin/dmsession.py. A session's own start is the one moment nobody should be estimating." }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: single, order: none }
 
   - term: capture
@@ -3508,8 +3530,8 @@ terms:
       key_form: kebab
       attrs:
         over:   { required: true, in: { entries: { path: { required: true, in: { type: field_path }, meaning: "`<bean>:<term>.<key>`" } } }, meaning: "the entries that disagree, each `<bean>:<term>.<key>`" }
-        heard:  { in: { entries: { speaker: { required: true, in: bean_id, meaning: "who spoke" }, said: { required: true, in: prose, meaning: "what they said, in their own words" }, at: { in: { type: date_or_moment }, meaning: "when" } }, keyed_by: speaker }, meaning: "each side's statement, in their own words" }
-        ruling: { in: { entries: { by: { required: true, in: { bean_id: { gene: [person, org] } }, meaning: "who ruled" }, what: { required: true, in: prose, meaning: "the decision" }, at: { in: { type: date_or_moment }, meaning: "when" } } }, meaning: "the decision, by whom" }
+        heard:  { in: { entries: { speaker: { required: true, in: bean_id, meaning: "who spoke" }, said: { required: true, in: prose, meaning: "what they said, in their own words" }, at: { in: { type: date_or_moment }, meaning: "when" }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } }, keyed_by: speaker }, meaning: "each side's statement, in their own words" }
+        ruling: { in: { entries: { by: { required: true, in: { bean_id: { gene: [person, org] } }, meaning: "who ruled" }, what: { required: true, in: prose, meaning: "the decision" }, at: { in: { type: date_or_moment }, meaning: "when" }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } } }, meaning: "the decision, by whom" }
         note:   { in: prose, meaning: "optional prose" }
     merge: { cardinality: multi, order: by-key }
 
@@ -3574,6 +3596,7 @@ terms:
         standing: { required: true, in: { registry: layers, take: layer, where: { files: true } }, meaning: "the layer, one that holds files" }
         why:      { required: true, in: prose }
         since:    { in: { type: date }, meaning: "the day the file took this place" }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: set, order: none }
   - term: sensitivity
     meaning: "how much harm this bean can do a person if it leaves the garden, where a person RAISES it above what the law derives. What is derived is never stored (bin/dmpass.py `sensitivity`): SPECIAL-CATEGORY — a code of a scheme marked `sensitive`, or a capture or series such a bean points at; PERSONAL — a record `about` a person who is not the gardener, or an observation of one. A mark below the derived one is a safety change (Contract E): only a person's own word lowers it"
@@ -3617,6 +3640,7 @@ terms:
         during:    { in: extent, meaning: "when it holds, on `time`; absent, from now on" }
         reason:    { in: [asked], meaning: "asked — each use states a reason, which the guard records" }
         why:       { required: true, in: prose }
+        note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
 
 gene:

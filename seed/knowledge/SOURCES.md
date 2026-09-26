@@ -110,7 +110,7 @@ Commission." Modified or adapted versions must be marked as such.
 - **Source:** the formula of each substance, a fact of chemistry and no one's expression: `carbon-dioxide` CO2,
   `dioxygen` O2, `water` H2O, `glucose` C6H12O6, and `pentacosane` C25H52 (a paraffin wax, the release's invented
   candle's). `charge` is the net charge of one unit, 0 for these.
-- **Licence:** facts; the file is CC0, as every seed of a garden's files is.
+- **Licence:** facts; the file is CC0 1.0.
 - **What the file is for:** `conservation` (bin/dmreckon.py) reads a walk's `takes` and `gives` against these formulas
   and says whether every element and the charge is conserved. A substance with no one formula (a polymer, a mixture)
   is not a row, and a walk that names one is not read for conservation.
@@ -119,6 +119,7 @@ Commission." Modified or adapted versions must be marked as such.
 
 - **Empty at this release** (`[]`): a row is added only with terms that allow it to be shipped, its `source` cited and
   its `terms` stated (`mechanism_form`, `coefficient_form`). A garden adds its own through `registry_additions`.
+- **Licence:** the files are CC0 1.0; a row shipped later under other terms goes in a file of its own, one per licence.
 
 ## crosswalk-fhir-r5-observation.tsv, crosswalk-dwc.tsv — another standard's records, carried into beans (step 11)
 
@@ -127,7 +128,7 @@ Commission." Modified or adapted versions must be marked as such.
   Biodiversity Information Standards (TDWG)), and the UCUM codes of the units the law declares. Each row pairs one of
   their fields with the entry path of `observations` or `located_at` that carries it; the pairings and the notes are
   daftar's own.
-- **Licence:** the files are CC0, as every seed of a garden's files is. The names they cite remain their
-  publishers'.
+- **Licence:** the FHIR crosswalk is CC0, as FHIR is; the Darwin Core crosswalk is CC BY 4.0, as Darwin Core is, with
+  TDWG's attribution in NOTICE. The names they cite remain their publishers'.
 - **What the files are for:** `bin/dmcrosswalk.py` reads them, and nothing else, to carry records in and back. A field
   with no row is listed, never dropped; test/crosswalk.py proves a round trip equal field for field.

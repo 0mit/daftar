@@ -4111,12 +4111,19 @@ def check_pointers():
 def check_journal_appended():
     """A JOURNAL IS APPENDED, NEVER REWRITTEN (`flows[journal-rewritten]`): each file the map places in `journal`, as a
     commit stages it, begins with the whole of its copy at HEAD. A merge is exempt — two appends meet there — and so is
-    a garden's first commit, which has no HEAD."""
+    a garden's first commit, which has no HEAD. A journal the RELEASE keeps (seed/CHANGELOG.md) is written by the
+    release: in the commit that moves GARDEN.md's `daftar_release`, which is an upgrade's, it arrives whole, and the flow
+    law judges that pass as `upgrade` from `public`; in any other commit, as the garden's own edit."""
     if not STAGED or not LAYER_MAP or not _git('rev-parse', '--verify', '-q', 'HEAD')[0] \
             or _git('rev-parse', '-q', '--verify', 'MERGE_HEAD')[0]:
         return
+    _rel = [re.search(r'^daftar_release:[ \t]*(\S+)', _git_bytes('show', f'{_at}GARDEN.md') or '', re.M)
+            for _at in ('HEAD:', ':')]
+    _upgrade = _rel[1] is not None and (_rel[0] is None or _rel[0].group(1) != _rel[1].group(1))
     for _p in STAGED:
         if LAYER_MAP.layer_of(_p)[0] != 'journal':
+            continue
+        if _upgrade and LAYER_MAP.keeper_of(_p) == 'release' and FLOWS.decide('public', 'journal', 'upgrade').granted:
             continue
         _head = _git_bytes('show', f'HEAD:{_p}')
         if not _head:

@@ -251,6 +251,32 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **24.0** (2026-09-26, human-ratified rule-change, parts ratified one by one as the release was built) — **the law
+  learns quantities, reckoning, privacy, agreements, observations, place in time, where a fact came from, and one
+  sense per name.** MAJOR. A quantity holds `count`, `unit` and one of `u` or `accuracy`, and nothing else (Q-3, D17);
+  a sequence has `courses` and `series.placement`; forty-four reckoning operations with `mechanism_form`,
+  `coefficient_form`, `pin_form` and `weighings`, run by `bin/dmreckon.py`. Privacy: `sensitivity` is derived, never
+  said; the `held` layer keeps what may not be committed (`held_form`, `bin/dmheld.py`); a person who is not the
+  gardener, not a peered gardener and not an accepted party carries `consent` (F2, the export policy on a person's
+  root); `about`, `grants` and `dmpass.may`; an `emp_id` issued by an organisation names its issuer (N17). Agreements:
+  a clause's `when` is a reading or `{said: <words>}`, never bare prose (N6); `falls_due.at`, `within`, `used_by`,
+  `bin/dmacross.py`; `provenance_record.via` between gardens, a loop refused. Observations and hearings with
+  `knowledge_scheme_form`, one finder over every scheme. Place and time fused: `datum`, `cells_in`, `boundaries_in`,
+  `overlay`, the ICS chart and its GSSPs, `fixing`, `mobility`, place read at a moment. The `origin` facet: a fact's
+  source is an act `{act, nature?, by?}`, the rank derived. The flow law: thirty-five closed rows, pointers checked at
+  commit, the journal append-only in fact; `bin/dmlaunch.py`, `bin/dmhook.py`; the view host asks `dmpass.may` before
+  every page, table, action and write. A step may carry only the keys the term `steps` declares (N11), and `note` is
+  one of them, as 10.1 said it was: a record-like entry — a step and its ways on, a capability, a dependency, a
+  weighing and its pairs, a move, a fix, a role, a volume, a grant, an endpoint, a link, a hearing's statements and
+  ruling, a payment's parties and settlements, and 14 more — takes a `note`, so a remark never needs a key of its own.
+  `senses`: a name has one sense across the law, and a garden judges its own findings in VOCAB.md. A comment in the
+  law's front matter is refused (§9k) and moved to the garden's reasons. Crosswalks to FHIR R5 and Darwin Core. The
+  fact tables and the FHIR crosswalk are CC0 1.0; the time zones are tzdb 2026d, public domain. MAJOR because every
+  one of N6, Q-3, N11, F2, N17, §9k and `senses` refuses a bean the law before it accepted. `bin/dmupgrade.py`
+  translates a clause's prose `when` into `{said:}`, byte for byte where it was quoted, and moves §9k comments; it
+  LISTS, and moves nothing of, a quantity with other keys, a step with an undeclared key, a person without consent, an
+  `emp_id` without issuer, and a name with a second sense, because each is a person's to settle.
+
 - **23.1** (2026-09-25, a minor rule-change: the first body of the Leviathan, whose design the operator ratified) — **The
   layer map.** The law gains `layers`: where material sits and what stands on what. Five of its rows are daftar's own
   words, each on the one beneath (`beneath`): the manifesto, the law, the reasoning, the journal, the history; beside
