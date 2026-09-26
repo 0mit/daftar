@@ -259,6 +259,29 @@ refused("...an unknown parish is refused", "beans/core-e.md", '"parish:NORTH-2"'
 refused("...an overlay row with no source is refused", "extracts/parish-renames.tsv",
         "\tthe council's order of 2026, invented\n", "\t\n", "says no `source`")
 
+# ---------------------------------------------------------------- a path: an offset from a datum a host defines
+sys.path.insert(0, os.path.join(G, "bin"))
+import dmwhere  # noqa: E402
+ROOTS = {"tree": {"system": "unix-filesystem", "at": "host-a:/srv/tree"}, "rocks_db": {"system": "unix-filesystem",
+                                                                                        "at": "host-a:/srv/rocks"}}
+check("HOST the systems a host's datum anchors are read from the law (`datum: host`), never listed by a tool",
+      dmwhere.host_bound(G) == {"unix-filesystem", "windows-filesystem", "git-object-graph"}, dmwhere.host_bound(G))
+check("...`root:<name>/<rel>` is an offset from the root this host defines",
+      dmwhere.on_host("root:tree/a/b", ROOTS) == (os.path.join("/srv/tree", "a/b"), None, None))
+check("...`<root>@<object>` is an object reachable from that root, by the same resolver",
+      dmwhere.on_host("rocks_db@abc1234", ROOTS) == ("/srv/rocks", "abc1234", None))
+check("...`<host>:<path>` is an offset from the host itself: here only on that host, and elsewhere an answer",
+      dmwhere.on_host("host-a:/srv", {}, {"host-a"})[0] == "/srv"
+      and dmwhere.on_host("host-b:/srv", {}, {"host-a"})[:2] == (None, None))
+try:
+    dmwhere.on_host("EPSG:4326;10.1,20.2", ROOTS)
+    check("...a coordinate is no offset from a host, and is never read as a path on a host called EPSG", False)
+except ValueError:
+    check("...a coordinate is no offset from a host, and is never read as a path on a host called EPSG", True)
+rc, out = tool("bin/dmwhere.py", "root:tree/a")
+check("...a root this host does not define is an answer, not a failure (the one spelling crosses filesystems)",
+      rc == 0 and "declares no root 'tree'" in out, out)
+
 # ---------------------------------------------------------------- the fixing of a boundary, held at both ends
 refused("GSSP a boundary the table says is marked in a being whose `fixes` do not say so is refused",
         "beans/section-q.md", "fixes:\n  base-upper: { system: quarry-stage, boundary: Upper, level: \"section-q/height+2.35\" }\n",
@@ -280,6 +303,37 @@ refused("LAW a time system's unit symbol names a unit of duration", "VOCAB.md",
 refused("...a datum is `being` or {system, at, sense}", "VOCAB.md",
         "      cells_in: { registry: quarry-stages", "      datum: { system: gregorian-civil, at: \"1950\", sense: under }\n"
         "      cells_in: { registry: quarry-stages", "`datum` is `being`")
+
+refused("...`datum: host` is a place a host defines, never a time", "VOCAB.md",
+        "      cells_in: { registry: quarry-stages", "      datum: host\n      cells_in: { registry: quarry-stages",
+        "`datum: host` is a place a host defines")
+
+# ---------------------------------------------------------------- where a value may come from (the origin, Body 2)
+def with_term(attr):
+    """VOCAB.md with one invented local term whose one attribute is `attr`, and what the gate says of it."""
+    term = ("local_terms:\n  - term: survey\n    meaning: \"when a section was last walked, invented\"\n"
+            "    context_keys: [survey]\n    schema:\n      shape: mapping\n      attrs:\n"
+            f"        walked: {{ {attr}, meaning: \"the day it was walked\" }}\n"
+            "    merge: { cardinality: single, order: none }\n")
+    text = read("VOCAB.md")
+    assert "local_terms: []" in text
+    write("VOCAB.md", re.sub(r"local_terms: \[\][^\n]*\n", lambda _m: term, text, count=1))
+    out = gate()
+    restore()
+    return out
+
+
+out = with_term("in: { type: date }, origin: observed")
+check("ORIGIN a garden's own date read from the world states `origin: observed`, and the gate takes it", ok(out), out[-1500:])
+for name, attr, want in (
+        ("...an origin its domain already gives is refused: one is stated only where the domain's is wrong",
+         "in: { type: date }, origin: said", "which its domain already gives"),
+        ("...an origin that is no row of `origins` is refused", "in: { type: date }, origin: guessed",
+         "is not a row of `origins`"),
+        ("...an origin the save writes from the clock, on a position that holds neither a day nor a moment",
+         "in: prose, origin: stamped", "type it `date` or `moment`")):
+    out = with_term(attr)
+    check(name, not ok(out) and want in out and "RULE-CHANGE" in out, out[-1500:])
 
 # ---------------------------------------------------------------- L-4 a stance on a code, within a place
 refused("L-4 a stance's code is a code of its scheme", "beans/seed-library.md", 'code: "0811"', 'code: "0817"', "'0817' is not a declared isced-f-2013")

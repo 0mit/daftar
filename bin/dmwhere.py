@@ -44,9 +44,10 @@ margin it is in both cells beside it, and this reader chooses neither.
 
 TIME AND PLACE ARE ONE MECHANISM (24.0, ratified 2026-09-26), and this reader holds no branch for either. What it asks
 of a position is asked of its SYSTEM's row in the law:
-  datum          an offset from a being named in the position (`relative`), or from a position of another system,
-                 before or after it (`bp-1950` from 1950, `b2k` from 2000). Two systems over one ground whose
-                 datums are in one system are crosswalked by computing, never by a stated constant.
+  datum          an offset from a being named in the position (`relative`), from a datum a host defines (`host`: a
+                 root of its `roots`, or the host itself — a path), or from a position of another system, before or
+                 after it (`bp-1950` from 1950, `b2k` from 2000). Two systems over one ground whose datums are in one
+                 system are crosswalked by computing, never by a stated constant.
   cells_in       the table whose rows are its cells (ICS units, a garden's parishes), at the system's levels.
   boundaries_in  the table of what FIXES each cell's base (`fixing`): a mark in a being at a place — a golden spike,
                  a point along a rock section — or a value declared on the line itself.
@@ -72,7 +73,6 @@ except ImportError:
     print("ERROR: PyYAML required"); sys.exit(2)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HOST_BOUND = ('unix-filesystem', 'windows-filesystem', 'git-object-graph')   # positions that name a machine
 
 
 def load():
@@ -114,24 +114,82 @@ def this_host(beans):
     return None, None
 
 
+def names_of(hid, host_fm):
+    """What a machine is called: its host bean's id, its hostname/fqdn anchors and their first labels, lowercased —
+    and, for the machine this runs on, what it calls itself."""
+    names = {str(hid).lower()} if hid else set()
+    for a in ((host_fm or {}).get('identity') or {}).get('anchors') or []:
+        if a.get('key') in ('hostname', 'fqdn'):
+            v = str(a.get('value', '')).lower()
+            names |= {v, v.split('.')[0]}
+    return names
+
+
+def here(beans=None):
+    """(host bean id, its front matter, every name this machine goes by)."""
+    hid, hfm = this_host(load() if beans is None else beans)
+    me = socket.gethostname().lower()
+    return hid, hfm, names_of(hid, hfm) | {me, me.split('.')[0]}
+
+
 def roots_of(host_fm):
     return (host_fm or {}).get('roots') or {}
 
 
+# ---- a position on a host: an offset from a datum the host defines (`datum: host`; 24.0) ----------------------------
+def host_bound(root=ROOT):
+    """The systems whose positions are offsets from a datum a host defines — every row that says `datum: host`.
+    Read from the law: the list this replaced named three systems by heart, and a garden's own filesystem system
+    would have been read as a coordinate."""
+    return {n for n, r in Law(root).systems.items() if r.get('datum') == 'host'}
+
+
+ROOT_FORM = re.compile(r'^root:([a-z0-9][a-z0-9-]*)(?:/(.*))?$')
+OBJECT_FORM = re.compile(r'^([a-z0-9][a-z0-9._-]*)@([0-9a-f]{7,40})$')
+HOST_FORM = re.compile(r'^([a-z0-9][a-z0-9.-]*):(/.*|[A-Za-z]:\\.*)$')
+
+
+def on_host(position, roots, names=()):
+    """ONE RESOLVER FOR EVERY DATUM A HOST DEFINES: a position -> (literal path here, object, why not).
+
+      root:<name>[/<rel>]   an offset from the root <name>, which this host defines in its own `roots`
+      <root>@<object>       an object reachable from that root (the path is the root's; the object is returned)
+      <host>:<path>         an offset from the host itself, named in the position: here only when it is this one
+
+    A position the host does not hold gives (None, None, why): an answer, not a failure. A position in none of
+    these forms raises ValueError — it is no offset from a host, and the caller reads it as what it is."""
+    if not isinstance(position, str):
+        raise ValueError(f"{position!r} is not a position")
+    m = ROOT_FORM.match(position) or OBJECT_FORM.match(position)
+    if m:
+        name, rest = m.group(1), m.group(2)
+        oid = rest if m.re is OBJECT_FORM else None
+        row = roots.get(name)
+        if not isinstance(row, dict):
+            return None, oid, f"this host declares no root '{name}'"
+        # The root's own `at` is `<host>:<path>` on the host that declares it: that host IS the datum, so its
+        # name is not asked again here.
+        base = str(row.get('at', ''))
+        _host, _, path = base.partition(':')
+        if not path:
+            return None, oid, f"root '{name}' resolves to {base!r}, which names no path"
+        return (os.path.join(path, rest) if rest and not oid else path), oid, None
+    m = HOST_FORM.match(position)
+    if m:
+        host = m.group(1).lower()
+        if host in names or host.split('.')[0] in names:
+            return m.group(2), None, None
+        return None, None, f"a position on {m.group(1)}"
+    raise ValueError(f"'{position}' is no offset from a host: not `root:<name>/…`, `<root>@<object>` or `<host>:<path>`")
+
+
 def resolve(at, roots):
-    """A `root:<name>[/<rel>]` position -> (literal path on this host, note) or (None, why not)."""
-    if not isinstance(at, str) or not at.startswith('root:'):
+    """A `root:<name>[/<rel>]` position -> (literal path on this host, None) or (None, why not)."""
+    try:
+        path, _o, why = on_host(at, roots)
+    except ValueError:
         return None, 'not a root: position'
-    rest = at[len('root:'):]
-    name, _, rel = rest.partition('/')
-    row = roots.get(name)
-    if not row:
-        return None, f"this host declares no root '{name}'"
-    base = str(row.get('at', ''))
-    _host, _, path = base.partition(':')
-    if not path:
-        return None, f"root '{name}' resolves to {base!r}, which names no path"
-    return os.path.join(path, rel) if rel else path, None
+    return path, why
 
 
 def reachable_in_git(repo_path, oid):
@@ -149,7 +207,7 @@ def reachable_in_git(repo_path, oid):
         return False
 
 
-def classify(entry, roots):
+def classify(entry, roots, names=None, bound=None):
     """One position -> a verdict about THIS machine.
 
     MISSING is reserved for the one case that means the LEDGER IS WRONG: the bean claims the thing is
@@ -163,35 +221,25 @@ def classify(entry, roots):
     if openness == 'unreachable':
         return 'ELSEWHERE', f"{at} — declared unreachable; not checked from here"
 
-    if system == 'git-object-graph' and isinstance(at, str) and '@' in at:
-        repo, _, oid = at.partition('@')
-        path, why = resolve('root:' + repo, roots)
-        if path is None:
-            return 'NO-ROOT', f"{at} — {why}"
-        if reachable_in_git(path, oid):
-            return 'HERE', f"{oid} reachable in {path}"
-        return ('MISSING' if openness == 'here' else 'ELSEWHERE',
-                f"{oid} NOT reachable in {path}")
-
-    if system not in HOST_BOUND:
+    if system not in (host_bound() if bound is None else bound):
         # A COORDINATE, AN AGE, A PARISH NAMES NO MACHINE: `EPSG:4326;…` was once read here as a path on a host
         # called EPSG. Such a position is in a cell of its own system, and `dmwhere <position>` reads which.
         return 'PLACED', f"{at} — in {system}; `dmwhere.py {at}` reads what it is in"
 
-    if isinstance(at, str) and not at.startswith('root:'):
-        host, _, literal = at.partition(':')
-        if host.lower().split('.')[0] != socket.gethostname().lower().split('.')[0]:
-            return 'ELSEWHERE', f"{at} — a position on {host}"
-        return ('HERE', literal) if os.path.exists(literal) else (
-            'MISSING' if openness == 'here' else 'ELSEWHERE', literal)
-
-    path, why = resolve(at, roots)
+    try:
+        path, oid, why = on_host(at, roots, here()[2] if names is None else names)
+    except ValueError as e:
+        return 'NO-ROOT', str(e)
     if path is None:
-        return 'NO-ROOT', f"{at} — {why}"
+        return ('ELSEWHERE' if HOST_FORM.match(at) else 'NO-ROOT'), f"{at} — {why}"
+    if oid:
+        if reachable_in_git(path, oid):
+            return 'HERE', f"{oid} reachable in {path}"
+        return ('MISSING' if openness == 'here' else 'ELSEWHERE', f"{oid} NOT reachable in {path}")
     if os.path.exists(path):
         return 'HERE', path
     return ('MISSING' if openness == 'here' else 'ELSEWHERE',
-            f"{path} — not on this host, which is what the bean says")
+            path if HOST_FORM.match(at) else f"{path} — not on this host, which is what the bean says")
 
 
 # ============================================================== what a position is IN (24.0, PLACE; `at` is being-in)
@@ -207,7 +255,13 @@ class Law:
                         if isinstance(r, dict) and r.get('system')}
         self.units = {u['unit']: u for u in list(law.get('units') or []) + list(adds.get('units') or [])
                       if isinstance(u, dict) and u.get('unit')}
-        self.k = dmknowledge.Knowledge(root)
+        self._k = None
+
+    @property
+    def k(self):
+        if self._k is None:
+            self._k = dmknowledge.Knowledge(self.root)
+        return self._k
 
     def rows(self, registry):
         try:
@@ -343,14 +397,36 @@ def place_anchors(law, name, position, moment=None):
 
 def anchors(position, *, root=ROOT, moment=None):
     law = Law(root)
-    name = law.system_of(position)
+    try:
+        name = law.system_of(position)
+    except ValueError:
+        # A LOGICAL ROOT CROSSES SYSTEMS ON PURPOSE: `root:<name>/…` is one spelling in every filesystem a host defines
+        # (windows-filesystem's form_note), so it is in all of them, and the host's own `roots` entry says which.
+        hits = [n for n, r in law.systems.items() if r.get('pattern') not in (None, 'none')
+                and dmparse.law_match(r['pattern'], position)]
+        if not hits or any(law.systems[n].get('datum') != 'host' for n in hits):
+            raise
+        name = '/'.join(sorted(hits))
+        hid, hfm, names = here()
+        row = roots_of(hfm).get(ROOT_FORM.match(position).group(1)) if ROOT_FORM.match(position) else None
+        name = row.get('system', name) if isinstance(row, dict) else name
+        path, oid, why = on_host(position, roots_of(hfm), names)
+        return {'position': position, 'system': name, 'host': hid, 'path': path, 'object': oid, 'why': why}
     row = law.systems[name]
     if row.get('cells_in'):
         return cell_anchors(law, name, position)
-    if row.get('dimension') == 'time' and isinstance(row.get('datum'), dict):
+    # ONE RESOLVER PER DATUM, read from the system's row: an offset before or after another system's position, one
+    # from a being (and the ground such offsets resolve through), one from a datum a host defines.
+    datum = row.get('datum')
+    if row.get('dimension') == 'time' and isinstance(datum, dict):
         return time_anchors(law, name, position)
-    if row.get('dimension') == 'place' and name in ('geographic', 'relative'):
+    if row.get('dimension') == 'place' and (datum == 'being' or any(
+            r.get('datum') == 'being' and r.get('resolves_through') == name for r in law.systems.values())):
         return place_anchors(law, name, position, moment)
+    if datum == 'host':
+        hid, hfm, names = here()
+        path, oid, why = on_host(position, roots_of(hfm), names)
+        return {'position': position, 'system': name, 'host': hid, 'path': path, 'object': oid, 'why': why}
     raise ValueError(f"{name}: this reader computes no anchors for it yet — a system with `cells_in`, a `datum`, or a "
                      f"coordinate is what it reads")
 
@@ -361,7 +437,14 @@ def _num(x):
 
 def show(a):
     lines = []
-    if 'before' in a:
+    if 'path' in a:
+        on = f"on {a['host'] or socket.gethostname() + ' (no host bean)'}"
+        if a['path'] is None:
+            lines.append(f"{a['position']} ({a['system']}): not resolvable {on} — {a['why']}")
+        else:
+            lines.append(f"{a['position']} ({a['system']}) {on}: {a['path']}" + (f", object {a['object']}" if a['object'] else "")
+                         + ("" if os.path.exists(a['path']) else "  — NOT THERE"))
+    elif 'before' in a:
         for g, bp in a['before']:
             lines.append(f"{a['position']} is {_num(bp)} a before the datum of {g}")
         for c in a['cells']:
@@ -396,8 +479,8 @@ def show(a):
 
 def main():
     beans = load()
-    hid, hfm = this_host(beans)
-    roots = roots_of(hfm)
+    hid, hfm, names = here(beans)
+    roots, bound = roots_of(hfm), host_bound()
     me = socket.gethostname()
 
     if '--root' in sys.argv:
@@ -425,7 +508,7 @@ def main():
         for e in (d.get('located_at') or []):
             if not isinstance(e, dict):
                 continue
-            verdict, detail = classify(e, roots)
+            verdict, detail = classify(e, roots, names, bound)
             counts[verdict] = counts.get(verdict, 0) + 1
             rows.append((verdict, bid, e.get('system'), detail))
 

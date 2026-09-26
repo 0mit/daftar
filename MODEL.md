@@ -299,8 +299,8 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
     never-invents);
   - a journal line a commit adds that holds a character some reader takes for a line break, besides the line end
     itself: one line of the journal is one line to every reader.
-  - a value the law marks `stamped` that a commit adds and that is not the moment of a journal heading the same commit
-    adds: a moment read from the clock is written `now`, and the save writes it;
+  - a value at a position whose origin is `stamped` that a commit adds and that is not the reading of a journal heading
+    the same commit adds: a value read from the clock is written `now`, and the save writes it;
   - a series' part a commit already holds, changed: a part is written once, and what is new is a part of its own;
   - a person who is not the gardener, added by name with no consent of theirs recorded, and a future whereabouts of
     one in git (see below);

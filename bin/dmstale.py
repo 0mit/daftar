@@ -87,22 +87,6 @@ def reachable(path, oid):
         return None
 
 
-def _here_names():
-    """What this machine is called: its host bean's id and its hostname/fqdn anchors, lowercased."""
-    try:
-        import dmwhere
-        beans = dmwhere.load()
-        hid, hfm = dmwhere.this_host(beans)
-        names = {str(hid).lower()} if hid else set()
-        for a in ((hfm or {}).get('identity') or {}).get('anchors') or []:
-            if a.get('key') in ('hostname', 'fqdn'):
-                v = str(a.get('value', '')).lower()
-                names |= {v, v.split('.')[0]}
-        return names, hfm
-    except Exception:
-        return set(), None
-
-
 def moved_since(repo_path, key, positions):
     """The commits after `key`, reachable from HEAD, that TOUCH the covered paths — or None when the key is
     not an ancestor of HEAD.
@@ -138,24 +122,22 @@ def resolve_here(p):
     Two forms carry a host (std-vocab@5.1, and the place migration of 11.0): `root:<name>/…`, resolved
     through this host's own `roots` map, and `<host>:<path>`, which resolves here only when the host it
     names IS this machine. Treating the second as a plain path was reporting a tree as absent while the
-    reader stood in it.
+    reader stood in it. Both are offsets from a datum a host defines (`datum: host`, 24.0), and
+    `dmwhere.on_host` is the one resolver of them: this reader carries no copy of either form.
     """
     if not isinstance(p, str):
         return p
-    if p.startswith('root:'):
-        try:
-            import dmwhere
-            _names, hfm = _here_names()
-            path, _why = dmwhere.resolve(p, dmwhere.roots_of(hfm))
-            return path
-        except Exception:
-            return None
-    m = re.match(r'^([a-z0-9][a-z0-9.-]*):(/.*|[A-Za-z]:\\.*)$', p)
-    if m:
-        names, _hfm = _here_names()
-        host = m.group(1).lower()
-        return m.group(2) if (host in names or host.split('.')[0] in names) else None
-    return p
+    import dmwhere
+    try:
+        if dmwhere.on_host(p, {})[1]:
+            return p   # an object in a repository is no path: read as written, as it always was
+    except ValueError:
+        return p   # no offset from a host: a plain path, read as written
+    try:
+        _hid, hfm, names = dmwhere.here()
+        return dmwhere.on_host(p, dmwhere.roots_of(hfm), names)[0]
+    except Exception:
+        return None
 
 
 DAYS_PER = {'day': 1, 'minute': 1 / 1440, 'second': 1 / 86400, 'millisecond': 1 / 86_400_000}

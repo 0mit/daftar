@@ -400,16 +400,46 @@ stamp came from belongs to the value, not to a position: a record taken in from 
 say. Neither is an escape a writer can type: this garden's own id exempts nothing, and `merged` passes only on the
 merge engine's record.
 
-## schema_language.stamped
+## schema_language.origin
 
-A VALUE THE CLOCK SAYS, NOT A WRITER (the release of 2026-09-25, F8, with a platform case's finding that a typed move's moment is invented). A move along a walk records the
-moment it was made, and a typed moment is exactly where invented days came from: a writer types the nearest time in
-view. The provenance record's `as_of` was the first such value, a day; a move's `at` is the second, a moment. Rather
-than a second rule for a second name, an attribute's record says `stamped: true`, and the one mechanism serves both
-shapes: the save writes `now` away — the day of its heading for a day, the heading's whole moment for a moment — and the
-gate holds a value a commit adds to the moment of a heading the same commit adds. Matched by value, as the day is, so a
-value moved or merged is never judged again. The day of `as_of` keeps its own statement (`provenance_record.as_of`)
-because it lives on every record, not on a term.
+EVERY POSITION SAYS WHERE ITS VALUE MAY COME FROM (24.0, the Leviathan's Body 2, ratified 2026-09-25). A tool that
+must know whether a day was someone's word or the clock's kept its own list of names — `as_of` and `observed` in the
+forms, in the save, twice in the gate, and once more in the bench's tracer — and five lists of one fact drift. The
+position says it instead, once: `origin: <row of origins>`, and every reader asks bin/dmpass.py. It is stated only where
+the domain's default is wrong, and the gate refuses one stated equal to its default, so the statements that exist are
+exactly the exceptions a reader should notice.
+
+It began as `stamped: true` (the release of 2026-09-25, F8, with a platform case's finding that a typed move's moment is
+invented): a move records the moment it was made, and a typed moment is exactly where invented days came from, since a
+writer types the nearest time in view. `origin: stamped` is that facet with its siblings: the save writes `now` away — the
+day of its heading at a date, the heading's whole moment at a moment, read from the position's type — and the gate holds
+a value a commit adds to the reading of a heading the same commit adds. The save finds a `now` by the attribute's name,
+so one name read as a day in one place and a moment in another is refused: it could not tell which to write. The day of
+`as_of` keeps its own statement (`provenance_record.as_of`) because it lives on every record, not on a term.
+
+## origins
+
+FIVE, AS RATIFIED (daftar-leviathan-design.md §2). `said` is someone's words — the only origin the flow law must trace
+to a person. `stamped` is the save's clock, JUDGED: a typed value is refused. `observed` is a reading of the world by
+whoever recorded it — the day a surface was checked, a capture's moment, a volume's identifier, the commit a reading was
+read at: `now` is OFFERED, and a typed value stands, because a recorder may report a reading made before the entry that
+records it. `law-owned` is judged by the schema alone, whatever page the value was read on: a registry code the writer
+first saw in the forms is still the code. The gardener widened it on 2026-09-26 to the beings, parts and fields a garden
+holds (`ref`, `bean_id`, `key_of`, `pointer`, `id`, a `field_path`), rather than a sixth origin: the gate resolves every
+one, and a dangling one is already an error, so its source is judged the same way a registry code's is. `composed` is
+made here, from nothing given — prose, a minted name, a digest — the only origin that may hold a value found in nothing
+the writer was given.
+
+## origin_defaults
+
+A DOMAIN GIVES THE ORIGIN, so almost nothing states one. A closed list, a registry and an aspect are the law's; a
+reference is the garden's (as `origins` says); a date, a quantity, a position in a system, an extent and a recurrence are
+said, the strictest reading — a day read from the clock or the world is the exception, and its position says so
+(sixteen do); prose, a pattern and a kebab name are
+composed, because they are how a writer names and describes. `untyped` is said, the strictest, until someone declares
+it. `entries` and `any` are `inner`: their positions are their own entries', or the field's they track, and an origin
+of their own would be a second answer. Every domain `attr_domains` offers has one row, and the gate refuses a domain
+without one — a new domain is placed when it is declared, not found empty by a flow the law cannot judge.
 
 ## natures
 
@@ -583,6 +613,16 @@ that learned an observed calendar would have started refusing its days on arithm
 ## anchor_systems[unix-filesystem].levels
 
 a tree of any depth; a position is held to whatever depth it is written at
+
+## anchor_systems[unix-filesystem].datum
+
+A PATH IS AN OFFSET FROM A DATUM A HOST DEFINES (24.0, Body 2 of the Leviathan; carried from PLACE). `root:<name>/<rel>`
+is `<rel>` from the root `<name>`, which each host states for itself in its `roots`; `<host>:<path>` is an offset from
+the host named in the position; `<root>@<object>` is an object reachable from a root. Where and when were already one
+mechanism, an offset from a being or from another system's position; a path is the third datum, and one resolver
+(`dmwhere.on_host`) reads it for every tool that asks where a tree is. The systems a host anchors were a list of three
+names in that tool, and a garden's own filesystem system would have been read as a coordinate; `datum: host` puts the
+fact in the row, where the gate holds it to a place.
 
 ## anchor_systems[git-object-graph].neighbours
 

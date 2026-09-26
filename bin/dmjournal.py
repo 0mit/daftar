@@ -53,6 +53,7 @@ import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
 import dmsafe   # noqa: E402 — a stamp written into a bean is written through the edit that loses nothing
+import dmpass   # noqa: E402 — which positions read the clock: the law's origins, read once
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JOURNAL = os.path.join(ROOT, 'log', 'journal.md')
@@ -178,41 +179,17 @@ def append(who, what, body):
 
 # THE DAY OF WRITING IS THE CLOCK'S (23.0, `provenance_record.as_of: stamped`). The forms show `as_of: now`: the writer
 # never types the day of writing, because measured writers typed the nearest date in view instead — the example's, or
-# one read in another bean. This tool reads the clock once, for the heading; the same reading is the day every `now`
-# in a stamp position becomes. Only a bare `now` (or a quoted one) that is the whole value of `as_of` or `observed`.
-NOW = re.compile(r'(?<![\w-])((?:as_of|observed):[ \t]*)(["\']?)now\2(?=[ \t]*(?:[,}\]#\r\n]|$))', re.M)
-STAMPED = ('beans/', 'mappings/')
+# one read in another bean. This tool reads the clock once, for the heading; the same reading is what every `now` at a
+# position that reads the clock becomes — the day at a date, the moment at a moment. WHICH positions those are is the
+# law's (`origins`, 24.0), read by bin/dmpass.py: this tool names none of them. Only a bare `now` (or a quoted one)
+# that is the whole value.
+STAMPED = dmpass.DOCUMENTS
 
 
-def stamped_names(root=None):
-    """The names of the attributes the law marks `stamped` (`schema_language.stamped`), at any depth of any term — the
-    standard's, its profiles', and this garden's own: each is written `now`, and the save writes in its place the moment
-    of the heading it writes. Read from the law, so a tool names none of them."""
-    root = root or ROOT
-    out = set()
-
-    def walk(attrs):
-        for name, rec in (attrs.items() if isinstance(attrs, dict) else []):
-            if not isinstance(rec, dict):
-                continue
-            if rec.get('stamped') is True:
-                out.add(str(name))
-            d = rec.get('in')
-            if isinstance(d, dict) and isinstance(d.get('entries'), dict):
-                walk(d['entries'])
-    for path, key in ((os.path.join(root, 'seed', 'std-vocab.md'), 'terms'), (os.path.join(root, 'VOCAB.md'), 'local_terms')):
-        try:
-            fm = dmparse.loads(dmparse.read(path)[0] or '') if os.path.exists(path) else None
-        except Exception:
-            continue
-        if not isinstance(fm, dict):
-            continue
-        terms = list(fm.get(key) or []) + [t for p in ((fm.get('profiles') or {}).values() if isinstance(fm.get('profiles'), dict)
-                                                       else []) if isinstance(p, dict) for t in (p.get('terms') or [])]
-        for t in terms:
-            if isinstance(t, dict) and isinstance(t.get('schema'), dict):
-                walk(t['schema'].get('attrs'))
-    return out - {'as_of', 'observed'}
+def _now_at(names):
+    """The pattern of a `now` that is the whole value of one of these attributes, or None."""
+    return re.compile(r'(?<![\w-])((?:%s):[ \t]*)(["\']?)now\2(?=[ \t]*(?:[,}\]#\r\n]|$))' % '|'.join(map(re.escape, sorted(names))),
+                      re.M) if names else None
 
 
 def stamp_now(h, text=None, root=None):
@@ -223,12 +200,11 @@ def stamp_now(h, text=None, root=None):
     yet when this runs, so nothing is half done, and the gate names what is still `now`."""
     root = root or ROOT
     day = h[3:13]
-    # A MOMENT READ FROM THE CLOCK (`schema_language.stamped`): an attribute the law marks stamped is written `now`, and
-    # gets the heading's own moment — day, clock and offset — quoted, so no reader takes it for a number or a date
+    # A MOMENT gets the heading's own moment — day, clock and offset — quoted, so no reader takes it for a number or a
+    # date; a DAY gets the heading's day
     when = h[3:].split(' · ', 1)[0].strip()
-    names = sorted(stamped_names(root))
-    moment = re.compile(r'(?<![\w-])((?:%s):[ \t]*)(["\']?)now\2(?=[ \t]*(?:[,}\]#\r\n]|$))' % '|'.join(map(re.escape, names)),
-                        re.M) if names else None
+    clocked = dmpass.origins(root).clocked()
+    daily, moment = _now_at(clocked['day']), _now_at(clocked['moment'])
     out = subprocess.run(['git', '-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'], capture_output=True)
     done = []
     for rec in out.stdout.decode('utf-8', 'replace').split('\0'):
@@ -241,13 +217,13 @@ def stamp_now(h, text=None, root=None):
             continue
         try:
             fm, _ = dmparse.split_front_matter(open(f, encoding='utf-8').read())
-            if fm is None or not (NOW.search(fm) or (moment and moment.search(fm))):
+            if fm is None or not ((daily and daily.search(fm)) or (moment and moment.search(fm))):
                 continue
 
             def fix(t):
                 front, _b = dmparse.split_front_matter(t)
                 at = t.index(front)
-                new = NOW.sub(lambda m: m.group(1) + day, front)
+                new = daily.sub(lambda m: m.group(1) + day, front) if daily else front
                 if moment:
                     new = moment.sub(lambda m: m.group(1) + '"' + when + '"', new)
                 return t[:at] + new + t[at + len(front):]

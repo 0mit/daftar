@@ -609,6 +609,10 @@ for t in (vocab_fm.get('local_terms') or []):
     if isinstance(t, dict) and t.get('term'):
         TERMS[t['term']] = _overlay(TERMS[t['term']], t) if t['term'] in TERMS else t
 SCHEMAS = {n: t['schema'] for n, t in TERMS.items() if isinstance(t.get('schema'), dict)}
+# WHERE A VALUE MAY COME FROM (24.0, `origins`): each position's origin, read by bin/dmpass.py and by no list here.
+# CLOCKED: the attributes a `now` may be written at, by the unit the save writes in its place.
+ORIGINS = dmpass.Origins(std_fm, vocab_fm)
+CLOCKED = ORIGINS.clocked()
 
 # GENE registry (22.0; `kinds` until then): what each genos IS, including the nature it refines (P3/D1 `of_nature`).
 GENE = _Named()
@@ -1075,7 +1079,7 @@ def check_value_type(where, attr, val, typ):
             check_value_type(where, attr, val, _as[0])
         else:
             errors.append(f"{where}.{attr} '{val}' {t.get('refusal') or 'is none of ' + str(t['either'])}")
-    elif t.get('any_system') and str(val).strip() == 'now' and attr in ('as_of', 'observed'):
+    elif t.get('any_system') and str(val).strip() == 'now' and attr in CLOCKED['day']:
         # `now` IS NOT A DAY BUT THE WORD FOR ONE (23.0): the save writes the day of its entry in its place
         errors.append(f"{where}.{attr} is `now` — the word the save writes the day of its entry in place of: save with "
                       f"{_save_command('- action: <what changed>')}")
@@ -2515,7 +2519,7 @@ def ectl_entry_types(e):
         if e.entry.get(attr) is None:
             continue
         if attr in _stamped and str(e.entry[attr]).strip() == 'now':
-            # READ FROM THE CLOCK BY THE SAVE (`schema_language.stamped`): `now` is the word the save writes the moment of
+            # READ FROM THE CLOCK BY THE SAVE (`origin: stamped`): `now` is the word the save writes the moment of
             # its journal heading in place of — never a value to judge, and never one a commit may keep
             errors.append(f"{e.base}: {e.ref}.{attr} is `now` — the word the save writes the moment of its entry in place "
                           f"of: save with {_save_command('- action: <what changed>')}" + _rule(f"{_law_path(e.term)}.attrs.{attr}", e.term))
@@ -3618,14 +3622,18 @@ def check_place_law():
         for _sym, _u in (_row.get('unit_symbols') or {}).items():
             if _units.get(_u) != _want:
                 errors.append(f"{_w}: unit_symbols.{_sym} names '{_u}', which is no unit of {_want or 'this dimension'}")
-        # ONE DATUM, IN EITHER DIMENSION: a position here is an offset from a being named in it, or from a position
-        # of another system, before or after it. Two systems over one ground whose crosswalk is `computed` are
-        # computed FROM their datums, so both state one in the same system.
+        # ONE DATUM, IN EITHER DIMENSION: a position here is an offset from a being named in it, from a datum a host
+        # defines (a root of its `roots`, or the host itself), or from a position of another system, before or after
+        # it. Two systems over one ground whose crosswalk is `computed` are computed FROM their datums, so both state
+        # one in the same system.
         _o = _row.get('datum')
-        if _o is not None and _o != 'being':
+        if _o == 'host' and _row.get('dimension') != 'place':
+            errors.append(f"{_w}: `datum: host` is a place a host defines, and this system's dimension is "
+                          f"{_row.get('dimension')!r}")
+        if _o is not None and _o not in ('being', 'host'):
             if not isinstance(_o, dict) or set(_o) - {'system', 'at', 'sense'} or not _o.get('system') or not _o.get('at') \
                     or _o.get('sense') not in ('before', 'after'):
-                errors.append(f"{_w}: `datum` is `being`, or {{system, at, sense: before | after}} — got {_o!r}")
+                errors.append(f"{_w}: `datum` is `being`, `host`, or {{system, at, sense: before | after}} — got {_o!r}")
             elif _o['system'] not in _systems():
                 errors.append(f"{_w}: datum.system names '{_o['system']}', which is no declared system")
             elif not law_match(_systems()[_o['system']][1].get('pattern') or '.*', str(_o['at'])):
@@ -4376,6 +4384,15 @@ def check_series_parts():
 # law places elsewhere, places one file in two layers, is not written in the one form a path is written in, or names as
 # one file a file the garden does not hold. A FILE IN NO LAYER IS NO FINDING: the law cannot name every file a garden
 # keeps, and dmpass shows them where the map is shown.
+def check_origins():
+    """Every position says where its value may come from (24.0, `origins`): the rows, the defaults each domain gives,
+    and each origin a term or a garden's own term states are readable, and one name is never read from the clock as a
+    day at one position and a moment at another."""
+    for src, why in ORIGINS.problems():
+        errors.append(f"{'VOCAB local_terms' if src == 'VOCAB' else 'VOCAB origins'}: {why} (a RULE-CHANGE)"
+                      + _rule('origins', 'origin_defaults', 'schema_language.origin'))
+
+
 def check_layers():
     global LAYER_MAP
     LAYER_MAP = None
@@ -5056,7 +5073,7 @@ def _stamps_of(fm, own=None, path=()):
 
 
 def _stamped_values(fm):
-    """[(where, value)] of every value a document holds at an attribute the law marks `stamped` — read from the clock
+    """[(where, value)] of every value a document holds at an attribute whose origin is `stamped` — read from the clock
     by the save — in an entry of a term, or in an entry nested in one, wherever the term's attributes put it."""
     out = []
 
@@ -5083,11 +5100,12 @@ def _stamped_values(fm):
 
 
 def _nows_of(fm, path=()):
-    """[where] of every `as_of` or `observed` still holding the word `now`, anywhere in a front matter."""
+    """[where] of every attribute the save writes a day at (`CLOCKED`) still holding the word `now`, anywhere in a
+    front matter."""
     out = []
     if isinstance(fm, dict):
         for k, v in fm.items():
-            if k in ('as_of', 'observed') and str(v).strip() == 'now':
+            if k in CLOCKED['day'] and str(v).strip() == 'now':
                 out.append('.'.join(path + (str(k),)))
             out += _nows_of(v, path + (str(k),))
     elif isinstance(fm, list):
@@ -5390,7 +5408,7 @@ def check_staged_state():
             # bean. So a record this commit ADDS must carry the day of a heading it adds. A record is matched by what it
             # is — (src, by, as_of) — so one moved (into a conflict, out of it, to a renamed bean) is never judged again;
             # one made in another garden keeps its garden's stamp; the merge tool's own record says `merged`.
-            # A VALUE READ FROM THE CLOCK (`schema_language.stamped`): each one a commit adds is the moment of a journal
+            # A VALUE READ FROM THE CLOCK (`origin: stamped`): each one a commit adds is the moment of a journal
             # heading the same commit adds — the save wrote it there in place of `now`. Matched by value, so a value moved
             # is not a value added.
             _whens = {_h[3:].split(' · ', 1)[0].strip() for _h in _added if _h.startswith('## ')}
@@ -5417,7 +5435,7 @@ def check_staged_state():
                                       f"of this commit's journal entry"
                                       + (f" ({', '.join(sorted(_whens))})" if _whens else '')
                                       + f". Write `now` and save with {_save_command('- action: <what changed>')}: the save "
-                                        f"writes the moment in its place" + _rule('schema_language.stamped'))
+                                        f"writes the moment in its place" + _rule('schema_language.origin', 'origins'))
             if PROV.get('as_of') == 'stamped':
                 _own_id = own_garden_id()
                 _held = set(l.rstrip() for l in (_head_text('log/journal.md') or '').split('\n') if l.startswith('## '))
@@ -5810,6 +5828,8 @@ PLIES = (
      "a unit's factor is an exact ratio of whole numbers — a rounded one would bend every conversion through it"),
     (check_aspect_sanity,
      "an aspect is a closed figure — check the figure before using its positions"),
+    (check_origins,
+     "where each position's value may come from — read by the save and the clock checks below, so judged first"),
     (check_extends_pin,
      "which law is in force; everything downstream is judged under it"),
     (build_docs,

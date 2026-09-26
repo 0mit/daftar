@@ -57,7 +57,7 @@ def stores(root=ROOT, host=None):
     out = {}
     for name, row in (dmwhere.roots_of(hfm) or {}).items():
         if isinstance(row, dict) and row.get('keeps'):
-            path, _why = dmwhere.resolve('root:' + name, {name: row})
+            path, _o, _why = dmwhere.on_host('root:' + name, {name: row})
             if path:
                 out[name] = (path, row)
     return out

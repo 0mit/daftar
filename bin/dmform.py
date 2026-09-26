@@ -11,7 +11,7 @@ It is PURE: it reads a term's definition and returns data. It loads nothing and 
 THE FORM
     scope      'entry' | 'self'  — what the term's attributes describe (each entry, or the value itself)
     attrs      {name: {facet: rule, 'scope': …}}    facets: required, values, registry, aspect, type, system_from,
-               pattern, soft, extent, ref, pointer, bean_id, entries, keyed_by, one_of, stamped, meaning
+               pattern, soft, extent, ref, pointer, bean_id, entries, keyed_by, one_of, origin, stamped, meaning
     order      {(scope, facet): [names]}   the law's attribute order, per facet
     cells      combinations an entry may not hold (error) or should not (warning)
     value      the rule on the term's OWN value: values, values_from, consistent_with, governs_anchor, pattern,
@@ -120,6 +120,24 @@ def _domain(d):
     return 'unknown', d
 
 
+def domain_kind(d):
+    """The domain an attribute's `in:` names, as `schema_language.attr_domains` names it — `values`, `registry` (and
+    `registry_from`), `pattern` (soft or not), `form_of`, … — or None where it names none the language offers. The key
+    `origin_defaults` is read by: a position's origin is its domain's unless its record states one."""
+    if isinstance(d, list):
+        return 'values'
+    if d is None:
+        return 'untyped'
+    if isinstance(d, str):
+        return d if d in ('extent', 'ref', 'recurrence', 'bean_id', 'prose', 'untyped', 'id', 'any') else None
+    if isinstance(d, dict):
+        for k in ('aspect', 'type', 'entries', 'bean_id', 'system', 'key_of', 'form_of', 'pattern', 'registry',
+                  'registry_from', 'quantity', 'pointer', 'prose'):
+            if k in d:
+                return 'registry' if k == 'registry_from' else k
+    return None
+
+
 def scope_of(sch):
     """What a term's `attrs` describe: each ENTRY (a list, an open map, a faceted mapping) or the value ITSELF."""
     if sch.get('shape') in ENTRY_SHAPES or sch.get('key_form') or sch.get('entry_one_of'):
@@ -167,8 +185,10 @@ def attribute_form(term_def, sch):
             put('nested_at_most', name, [list(g) for g in rec['in']['at_most_one_of']])   # 24.0: and at most one of each group
         if isinstance(rec.get('default_from'), dict):
             put('default_from', name, dict(rec['default_from']))
-        if rec.get('stamped') is True:
-            put('stamped', name, True)          # read from the clock by the save, never typed (`schema_language.stamped`)
+        if isinstance(rec.get('origin'), str):
+            put('origin', name, rec['origin'])  # where a value here may come from, where its domain's is wrong (`origin`)
+            if rec['origin'] == 'stamped':
+                put('stamped', name, True)      # read from the clock by the save, never typed
         if rec.get('meaning') is not None:
             put('meaning', name, rec['meaning'])
     for name in form['one_of']:

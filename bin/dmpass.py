@@ -37,6 +37,7 @@ network path and writes nothing.
 import fnmatch, json, os, posixpath, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmform   # the one reader of how the law spells an attribute
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LAW = 'seed/std-vocab.md'
@@ -340,6 +341,159 @@ def tracked(root=ROOT):
         pass
     return sorted(os.path.relpath(os.path.join(d, f), root).replace(os.sep, '/')
                   for d, _s, fs in os.walk(root) if '.git' not in d.split(os.sep) for f in fs)
+
+
+# ============================== WHERE A VALUE MAY COME FROM (24.0; the Leviathan's Body 2) ==============================
+# Every position has ONE origin: the one its record states, or else its domain's (`origin_defaults`). Asked here and of
+# no copy — the save's `now`, the forms' said days and the gate's clock checks read it, and no tool keeps a list of
+# names. A position the law does not declare (a key of an open map, `details`) has none, and nothing here guesses one.
+INNER = 'inner'         # in `origin_defaults`: the domain's positions are its own entries', or the field's it tracks
+
+
+def _terms(fm, key):
+    """The terms a front matter declares under `key`, with those of its profiles: each with a schema."""
+    fm = fm if isinstance(fm, dict) else {}
+    out = list(fm.get(key) or [])
+    for p in ((fm.get('profiles') or {}).values() if isinstance(fm.get('profiles'), dict) else []):
+        out += list(p.get('terms') or []) if isinstance(p, dict) else []
+    return [t for t in out if isinstance(t, dict) and isinstance(t.get('schema'), dict)]
+
+
+class Origins:
+    """The law's origins, and the origin of each position its terms and a garden's own declare. `law` is the standard's
+    front matter, `local` a garden's VOCAB.md's; either may be None."""
+
+    def __init__(self, law, local=None):
+        law = law if isinstance(law, dict) else {}
+        self.law = law
+        self.rows = [r for r in (law.get('origins') or []) if isinstance(r, dict)]
+        self.names = [r.get('origin') for r in self.rows]
+        self.clocks = list(law.get('origin_clocks') or []) if isinstance(law.get('origin_clocks'), list) else []
+        self.defaults = [r for r in (law.get('origin_defaults') or []) if isinstance(r, dict)]
+        self.types = {t.get('type'): t for t in (law.get('value_types') or []) if isinstance(t, dict)}
+        _dom = (law.get('schema_language') or {}).get('attr_domains') if isinstance(law.get('schema_language'), dict) else None
+        self.domains = list(_dom) if isinstance(_dom, dict) else []
+        self.sources = [('law', t) for t in _terms(law, 'terms')] + [('VOCAB', t) for t in _terms(local, 'local_terms')]
+        _prov = law.get('provenance_record')
+        self.as_of = isinstance(_prov, dict) and _prov.get('as_of') == 'stamped'
+
+    def clock(self, origin):
+        """How an origin reads the clock — `judged`, `offered` — or None."""
+        return next((r.get('clock') for r in self.rows if r.get('origin') == origin), None)
+
+    def default(self, d):
+        """The origin a domain gives a position that states none: the row for its type, else its domain's."""
+        kind = dmform.domain_kind(d)
+        typ = d.get('type') if kind == 'type' and isinstance(d, dict) else None
+        rows = [r for r in self.defaults if r.get('in') == kind]
+        hit = [r for r in rows if typ is not None and r.get('type') == typ] or [r for r in rows if 'type' not in r]
+        return hit[0].get('origin') if hit else None
+
+    def of(self, rec):
+        """The origin of the position whose attribute record is `rec`: stated, or its domain's; INNER, or None."""
+        if not isinstance(rec, dict):
+            return None
+        return rec['origin'] if isinstance(rec.get('origin'), str) else self.default(rec.get('in'))
+
+    def positions(self):
+        """[(source, where, name, record)] of every attribute, at every depth, of every term the law and the garden declare."""
+        out = []
+
+        def walk(src, attrs, where):
+            for n, rec in (attrs.items() if isinstance(attrs, dict) else []):
+                if isinstance(rec, dict):
+                    out.append((src, f"{where}.{n}", str(n), rec))
+                    d = rec.get('in')
+                    if isinstance(d, dict) and isinstance(d.get('entries'), dict):
+                        walk(src, d['entries'], f"{where}.{n}")
+        for src, t in self.sources:
+            walk(src, t['schema'].get('attrs'), str(t.get('term') or t.get('name')))
+        return out
+
+    def unit(self, rec):
+        """What the save writes at a clock position — 'day' or 'moment', read from its type's row — or None."""
+        d = rec.get('in') if isinstance(rec, dict) else None
+        t = self.types.get(d.get('type')) if isinstance(d, dict) else None
+        if not isinstance(t, dict):
+            return None
+        return 'moment' if t.get('clock') == 'required' else 'day' if t.get('unit') == 'day' else None
+
+    def clocked(self):
+        """{'day': names, 'moment': names}: the attributes — by name, at any depth — that may be written `now`, with
+        what the save writes in its place: the reading of its heading, at the unit the position's type holds. A name
+        the law gives both units is in neither: the gate names it."""
+        out = {'day': set(), 'moment': set()}
+        for _s, _w, n, rec in self.positions():
+            u = self.unit(rec)
+            if u and self.clock(self.of(rec)):
+                out[u].add(n)
+        if self.as_of:
+            out['day'].add('as_of')
+        both = out['day'] & out['moment']
+        return {k: v - both for k, v in out.items()}
+
+    def problems(self):
+        """[(source, why)] — what in the origins, their defaults or a position's origin no reader can read."""
+        out = []
+        if not self.rows:
+            return [('law', "no `origins` — no position can say where its value may come from")]
+        for r in self.rows:
+            o = r.get('origin')
+            if not isinstance(o, str) or not o or self.names.count(o) > 1:
+                out.append(('law', f"origins: {o!r} is not one name no other row has"))
+            if r.get('clock') is not None and r.get('clock') not in self.clocks:
+                out.append(('law', f"origins[{o}].clock {r.get('clock')!r} is not one of origin_clocks {self.clocks}"))
+        seen = set()
+        for r in self.defaults:
+            k = (r.get('in'), r.get('type'))
+            if r.get('in') not in self.domains:
+                out.append(('law', f"origin_defaults: `in: {r.get('in')}` is no domain of schema_language.attr_domains"))
+            if r.get('type') is not None and (r.get('in') != 'type' or r.get('type') not in self.types):
+                out.append(('law', f"origin_defaults: `type: {r.get('type')}` is not a row of value_types under `in: type`"))
+            if r.get('origin') not in self.names + [INNER]:
+                out.append(('law', f"origin_defaults[{r.get('in')}].origin {r.get('origin')!r} is not a row of `origins`"))
+            if k in seen:
+                out.append(('law', f"origin_defaults: `in: {k[0]}`{f', type: {k[1]}' if k[1] else ''} has two rows"))
+            seen.add(k)
+        for d in self.domains:
+            if (d, None) not in seen:
+                out.append(('law', f"origin_defaults: the domain `{d}` has no row — a position in it would have no origin"))
+        units = {}
+        for src, where, n, rec in self.positions():
+            stated = rec.get('origin')
+            if stated is not None and (not isinstance(stated, str) or stated not in self.names):
+                out.append((src, f"{where}.origin {stated!r} is not a row of `origins` {self.names}"))
+                continue
+            if stated is not None and stated == self.default(rec.get('in')):
+                out.append((src, f"{where}.origin is `{stated}`, which its domain already gives — state an origin only "
+                                 f"where the domain's is wrong"))
+            o = self.of(rec)
+            if o is None:
+                out.append((src, f"{where}: its domain gives no origin, and it states none"))
+            if self.clock(o) == 'judged' and self.unit(rec) is None:
+                out.append((src, f"{where}.origin is `{o}`, which the save writes from the clock, but its type holds "
+                                 f"neither a day nor a moment — type it `date` or `moment`"))
+            if self.clock(o) and self.unit(rec):
+                units.setdefault(n, set()).add(self.unit(rec))
+        if self.as_of:
+            units.setdefault('as_of', set()).add('day')
+        for n, us in sorted(units.items()):
+            if len(us) > 1:
+                out.append(('law', f"`{n}` is read from the clock as a day at one position and a moment at another — "
+                                   f"the save finds a `now` by the attribute's name, and could not tell which to write"))
+        return out
+
+
+def origins(root=ROOT):
+    """The Origins of the law at its one path and of this garden's VOCAB.md. An unreadable law gives no rows, and every
+    reader then finds no position that reads the clock — the gate names the law."""
+    def fm(p):
+        try:
+            with open(os.path.join(root, *p.split('/')), encoding='utf-8') as fh:
+                return _front(fh.read())
+        except (OSError, UnicodeDecodeError):
+            return None
+    return Origins(fm(LAW), fm('VOCAB.md'))
 
 
 # ============================== WHO MAY SEE WHAT, AND HOW MUCH HARM IT CAN DO (24.0; step 1, N31) ==============================

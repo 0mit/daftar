@@ -188,7 +188,9 @@ for what, bad, want in (
     check("entries INSIDE an entry are judged as entries: %s is refused" % what, want in out, out[-500:])
 sv_now = open(os.path.join(ROOT, "seed", "std-vocab.md")).read()
 check("NOTHING in the law is `untyped` any more — and `any` is a decision, said as one",
-      "in: untyped," not in sv_now and "value: { in: any," in sv_now)
+      # an ATTRIBUTE's domain, `<name>: { in: untyped, … }`: `origin_defaults` names the domain as a row, and says no
+      # position is in it
+      not re.search(r"\w:\s*\{\s*in: untyped,", sv_now) and "value: { in: any," in sv_now)
 
 # ---------------------------------------------------------------- 21.0: A MAPPING'S OWN CLOSED LIST OFFERS POSITIONS
 # `shape: mapping` is one entry, and its attributes' closed lists are positions like an entry's. They were counted
