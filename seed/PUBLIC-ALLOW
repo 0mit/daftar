@@ -11,11 +11,3 @@ daftar-sessions  # this tool's OWN directory name (bin/dmsession.py); a garden t
 omid README.md LICENSE NOTICE REUSE.toml CHARTER.md seed/LICENSE.md  # the steward, named where the terms need a name: README by his word, 2026-09-22 ("the persian part is by me"); the licence files by his word, 2026-09-25 ("I do"), with his registered name and his address
 omid@0mit.com CHARTER.md  # the steward's address, where a claim about what he publishes reaches him — by his word, 2026-09-25
 0mit.com      CHARTER.md  # the domain whose published contacts also reach him, while he holds it — by his word, 2026-09-25
-factory        site/machinery.html site/machinery/report.html site/machinery/drawn.json site/machinery/build.py
-               # the name of the tool that draws daftar's mechanisms for the site's machinery page: its report names
-               # itself, the page and the record of the drawing say what drew it, and the build that runs it calls
-               # it by name. Every other file, and every commit message, avoids the word.
-               # ratified by: the operator, 2026-09-23 ("You can public factory if needed but make sure not leaking")
-design-factory site/machinery.html site/machinery/report.html site/machinery/drawn.json site/machinery/build.py
-               # the id of the design bean that tool's contract fixes, carried in every report it writes.
-               # ratified by: the operator, 2026-09-23 ("You can public factory if needed but make sure not leaking")

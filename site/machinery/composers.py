@@ -1,6 +1,6 @@
 """daftar's own mechanisms, drawn: the drawing module of the machinery page of daftar's site.
 
-Five composers — the gate, the journal, the merge, the mycelium and the ledger — each drawing one mechanism of daftar
+Five composers — the gate, the journal, the merge, peering and the ledger — each drawing one mechanism of daftar
 as it is recorded in a demo garden (`site/machinery/record.yaml`). They draw only with the kit of the `view` asset
 (`assets/view/lib/view_kit.py`, which the demo garden receives when it extends the profile), so every element is
 recorded: its pattern, its id (the slug of its label), its box, and the being it depicts. Nothing else is imported but
@@ -94,7 +94,7 @@ def _shared_name():
     return "contract:shared-camera"
 
 
-def mech_mycelium():
+def mech_peering():
     b = [boundary(16, 16, 300, 270, "garden-sam — kept by sam"),
          boundary(566, 16, 378, 270, "garden-ali — kept by ali"),
          store(36, 55, 260, 70, "shared-camera", "the agreement both are parties to", bean="shared-camera"),
@@ -116,7 +116,7 @@ def mech_mycelium():
            "agreement both gardeners are parties to. <b>garden-ali</b> reads it, which writes nothing, then takes it "
            "into the working tree, which commits nothing. Ali's commit is the ratification, and taking an agreement is "
            "not accepting it.")
-    return ("The mycelium", figure(960, 340, "".join(b), "the mycelium: a proposal between two gardens, taken in by the other gardener's commit"),
+    return ("Peering", figure(960, 340, "".join(b), "peering: a proposal between two gardens, taken in by the other gardener's commit"),
             cap, "What passes between gardens is only ever a proposal, and only its gardener lets it in.")
 
 
@@ -143,4 +143,4 @@ def mech_ledger():
 
 
 COMPOSERS = {"gate": mech_gate, "journal": mech_journal, "merge": mech_merge,
-             "mycelium": mech_mycelium, "ledger": mech_ledger}
+             "peering": mech_peering, "ledger": mech_ledger}

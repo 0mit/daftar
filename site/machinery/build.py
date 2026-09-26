@@ -15,7 +15,7 @@ WHAT IT DOES, in a clone of GARDEN_SAM (a clone is the same garden, with the sam
      tool — `bin/dmupgrade.py <tag> --from CHECKOUT --extend view`, which writes `extends_profiles` in VOCAB.md,
      brings `assets/view/` and journals it — and commits that.
   2. records, from `record.yaml` beside this file, in one journalled commit: the `daftar` product bean with the wiring
-     of its mechanisms, one `procedure` mapping per mechanism (gate, journal, merge, mycelium, ledger), and the page,
+     of its mechanisms, one `procedure` mapping per mechanism (gate, journal, merge, peering, ledger), and the page,
      the `machinery` bean, which draws them: its `view` (the drawing module, the parts a reader looks up, the facts a
      card shows, and the glossary, README.md's "Words you will meet" at the checkout's release) and its `views`. The
      drawing module is `drawings/mechanisms.py`, a copy of `composers.py`.
@@ -25,7 +25,7 @@ WHAT IT DOES, in a clone of GARDEN_SAM (a clone is the same garden, with the sam
   4. holds the drawings to the design: at most 18 elements and exactly one accent per figure, 960 wide and 280 to 340
      tall, no address, the patterns `record.yaml` lists; a story of 3 to 5 stages, labels of at most 5 words, doers of
      at most 14, technologies only git and python; every drawing on the health chain with no live binding and no
-     action, so every operate tile reads "no signal"; the wiring of the gate, the journal, the merge and the mycelium
+     action, so every operate tile reads "no signal"; the wiring of the gate, the journal, the merge and peering
      present.
   5. refuses to write when the report or the transcript holds this machine's host name, the user's name, the real
      home directory, the temporary directory or any absolute path. Paths are shown as `~/garden-sam` and `~/daftar`.
@@ -58,8 +58,8 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEMO_NOW = '2026-10-27T09:00:00+00:00'
-MECHANISMS = ('gate', 'journal', 'merge', 'mycelium', 'ledger')
-WIRED = ('gate', 'journal', 'merge', 'mycelium')
+MECHANISMS = ('gate', 'journal', 'merge', 'peering', 'ledger')
+WIRED = ('gate', 'journal', 'merge', 'peering')
 NEEDED_BEANS = ('sam', 'ali', 'garden-ali', 'shared-camera', 'washer-loan')
 TECH = {'git', 'python'}
 LENSES = ['orient', 'understand', 'operate', 'inspect']
@@ -447,7 +447,7 @@ def main():
         record(g, rec, day, glossary)
         what = "daftar's mechanisms recorded, and the page that draws them"
         body = ("- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], "
-                "[[mycelium]] and [[ledger]]; [[%s]], the page that draws them, and %s, its drawing module "
+                "[[peering]] and [[ledger]]; [[%s]], the page that draws them, and %s, its drawing module "
                 "(site/machinery/composers.py).\n"
                 "- why: the machinery page of daftar's site shows these mechanisms, drawn at four lenses." % (PAGE, MODULE))
         head = run.run([PY, 'bin/dmjournal.py', 'sam', what, '--body', body], cwd=g,

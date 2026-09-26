@@ -588,12 +588,12 @@ def scenes(d):
             '- action: [[card-statement-2026-09]] content_hash in capitals.', r'not in canonical form')
     d.write(d.p('owner.yaml'), 'owned_by: { legal: { owner: { bean: sam } } }\n')
     d.file('owner-sam', 'owner.yaml', 'owned_by: { legal: { owner: { bean: sam } } }\n')
-    refused('metaphysics-crown-refused', ('python3 bin/dmsafe.py remove-block beans/ali.md owned_by',
+    refused('model-crown-refused', ('python3 bin/dmsafe.py remove-block beans/ali.md owned_by',
                                    'python3 bin/dmsafe.py insert-after beans/ali.md provenance --block ../owner.yaml'),
             'ali', 'ali, owned by sam', '- action: [[ali]] owned by [[sam]].', r"must use the 'crown' form")
     d.write(d.p('note.yaml'), 'renewal_note: "renews next January"\n')
     d.file('renewal-note', 'note.yaml', 'renewal_note: "renews next January"\n')
-    refused('metaphysics-structure', 'python3 bin/dmsafe.py insert-after beans/vps-a.md provides_habitat --block ../note.yaml',
+    refused('model-structure', 'python3 bin/dmsafe.py insert-after beans/vps-a.md provides_habitat --block ../note.yaml',
             'vps-a', 'a renewal note on the VPS', '- action: [[vps-a]] renewal note.', r"top-level key 'renewal_note' is declared by no")
 
     # S8 — an agent of any make --------------------------------------------------------------------------------------
@@ -745,16 +745,16 @@ def scenes(d):
 
     # S11 — reasons --------------------------------------------------------------------------------------------------
     d.step = 'S11 reasons'
-    lay = d.out('metaphysics-layers', SAM, "python3 bin/dmwhy.py 'terms[parties].schema.attrs.accepted'")
+    lay = d.out('model-layers', SAM, "python3 bin/dmwhy.py 'terms[parties].schema.attrs.accepted'")
     d.expect('TAKING' in lay.upper(), 'dmwhy on `accepted` did not give the reason')
-    d.out('metaphysics-whole', SAM, 'python3 bin/dmwhy.py vacancy_reasons')
-    d.out('metaphysics-money', SAM, "python3 bin/dmwhy.py 'quantities[money]'")
-    words = d.out('metaphysics-words', SAM, 'python3 bin/dmwhy.py natures')
+    d.out('model-whole', SAM, 'python3 bin/dmwhy.py vacancy_reasons')
+    d.out('model-money', SAM, "python3 bin/dmwhy.py 'quantities[money]'")
+    words = d.out('model-words', SAM, 'python3 bin/dmwhy.py natures')
     d.expect(all(w in words for w in ('σῶμα', 'λεκτόν', 'ἔμψυχον', 'γένος', 'θεός', 'ἀγάπη')),
              'dmwhy natures did not give the reason for the Greek words')
     prev = sorted((t for t in git_out('tag', '-l', 'v*')[1].split() if semver(t) and semver(t) < semver(d.release)), key=semver)
     d.expect(prev, 'there is no release before site/RELEASE to count the law against')
-    d.out('metaphysics-judgment', clone, f'python3 bin/dmreview.py --law --against {prev[-1]}')
+    d.out('model-judgment', clone, f'python3 bin/dmreview.py --law --against {prev[-1]}')
 
     # S13 — what 24.0 added to the cookbook, each recipe committed through the gate; no page shows them yet -----------
     d.step = 'S13 the cookbook since 24.0'
