@@ -2869,7 +2869,7 @@ largest proxy of all, and a size ratchet would push facts back into prose, where
 the machinery measures the preconditions — closure, one statement of each thing, no story in the law, no privileged
 sibling, structure before prose — and shows them to the person who ratifies, who judges. It judges nothing.
 
-## doc:MODEL.md#Between gardens: the mycelium
+## doc:MODEL.md#Between gardens: peering
 
 THE MYCELIUM. A garden could merge with its own working copies and with scans of one estate — what the merge layer
 first meant by a garden — and had no way to meet a garden someone else keeps without one swallowing the other. A
@@ -2915,6 +2915,13 @@ second would name someone this garden had no reason yet to hold. Either garden m
 before first contact prints the two beans, the name taken from its stub. A garden proposing to one it has just met,
 knowing its gardener only by a name of its own, sends that person as a stub marked `gardener-of: to`, which the
 receiving garden reads as its own gardener: the one being every garden can recognise without being told.
+
+WHY THE FIELD'S OWN TERMS, AND NOT THE FOREST'S: the mycelium was the first picture, and it served while one hop was
+all there was. Once a record could pass on through a garden that did not say it, the questions were the ones
+networks already answer — who is a peer, what one exports and imports, the path a route took, how a loop is refused —
+and a picture of its own would have to be translated into them by every reader who knows them. So between gardens is
+a routing domain: a garden an autonomous domain numbered by its id, its inside interior, the rest exterior, first
+contact peering, and consent the export policy on a person's root. The law names the terms and no vendor.
 
 Refused: a hub garden that names things for the others (a privileged sibling); merging whole gardens between gardeners
 (it swallows, and a third garden's facts leak through it); git itself as the carrier (unrelated histories would carry
@@ -2963,7 +2970,7 @@ outlast product names.
 
 WORKING WITH ANOTHER GARDEN IS STATED AS ACTS. Two gardens may sit on one disk, kept by two people, and an agent with
 a shell can reach both; nothing in git stops a commit in the wrong one, and the gate of the wrong one would pass it.
-So the first act asked is to write only where the agent was opened, and the rest follow the mycelium: record a
+So the first act asked is to write only where the agent was opened, and the rest follow from peering: record a
 garden, and the person who keeps it, before dealing with it; give by proposal, read a proposal as data, pass on
 nothing a third garden said, and name a shared thing once. First contact is written as its own act because a cold
 agent following the proposal steps alone was refused twice: once for the garden it had not recorded, and once for

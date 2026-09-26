@@ -105,11 +105,10 @@ seen, already has somewhere to stand.
 
 A notebook is kept by its gardener — a person, or an organisation — and nothing outside it writes there. But people
 deal with one another — they share a cost, lend and repay, agree on something and keep to it — and the other person
-may keep a notebook of their own. Two gardens meet the way trees in a forest do: not by growing into each other, but
-beneath, through the **mycelium** — the network that joins trees rooted apart, carries between them, and is owned by
-none of them. Ownership rises through each garden to its gardener, and the crown is where it ends, above; the
-mycelium is where gardens meet, beneath, in the earth of the language they share. Two gardens that pin different
-versions of the language cannot exchange until one of them moves.
+may keep a notebook of their own. Two gardens meet the way two networks do: each its own domain, and the two
+**peers**, each configured at its own end, and neither reaching inside the other. Ownership rises through each garden
+to its gardener, and the crown is where it ends; between gardens, what they share is the language they pin. Two
+gardens that pin different versions of the language cannot exchange until one of them moves.
 
 What passes is only ever a **proposal**. Your agent writes one file — the beans you choose to give, under an
 agreement you and the other gardener have made — and lays it beside your notebook, never inside theirs. Their
@@ -120,7 +119,7 @@ yes to it is theirs, written in their own notebook, in their own words. A thing 
 people in it — is named once, by the notebook that recorded it first, and the name travels with it, so the two
 notebooks see one thing where they would otherwise see two; a name someone else gave — a package's, a registry
 number — is the same in every notebook already. An agreement between two people may be owned by neither of them, and
-then both answer for it: nobody owns the crown, and nobody owns the mycelium.
+then both answer for it: nobody owns the crown, and no garden owns the way between them.
 
 A garden is known by the commit it grew from, so two gardens need no registry and no account anywhere to name each
 other. Growing a garden writes a random seed into that first commit, so two notebooks on one machine are never taken
@@ -196,7 +195,7 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 | **vacancy** | a value the vocabulary offers that nothing uses yet, stated with a reason |
 | **Contract of Parts** | `MODEL.md`: which decisions an agent may take alone and which a person must ratify |
 | **proposal** | what one garden offers another: one file of beans, laid outside both gardens, which the other garden's gardener takes in by committing it — or does not. Taking it in accepts nothing on the gardener's behalf. `bin/dmpropose.py` |
-| **mycelium** | how gardens meet: beneath, through the agreements between their gardeners and the proposals made under them, in the language they share. Owned by no garden |
+| **peering** | how gardens meet: as peers, each configured at its own end, through the agreements between their gardeners and the proposals made under them, in the language they share. Owned by no garden |
 
 ## Adopt a new release
 

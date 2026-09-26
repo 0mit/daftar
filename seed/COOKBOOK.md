@@ -227,7 +227,7 @@ The rented server.
 
 Ali keeps a garden of her own, and nothing outside a garden writes in it — not Sam, and not Sam's agent, even on
 one machine. Gardens meet only by **proposal**: one file of beans, laid outside both gardens, that the other
-garden's gardener takes in by committing it, or does not (`MODEL.md`, Between gardens: the mycelium).
+garden's gardener takes in by committing it, or does not (`MODEL.md`, Between gardens: peering).
 
 Sam shares costs with Ali, and lent her money over a dinner — the recipes after this one — so she is recorded
 before them, and so is her garden: the record of a person who keeps a garden of her own names her the way her
@@ -794,6 +794,902 @@ word. Ali records the rehearsal garden as she records any garden, and writes `te
 says so or the sending garden's bean here does; `read` says so when an envelope claims a test that her record does
 not. A garden that is not a test garden takes a test proposal in only with `--as-test`, and then every bean it
 writes — new, appended or fused — says what the rehearsal changed.
+
+## A literary agent: manuscripts placed, a share of each advance
+
+Sam has written a novel, *The Salt Road*, and an agent, Noor, places it with publishers: at home with Heron Books,
+and its translation with a house abroad. Noor is paid a share of each advance the book earns — one rate at home,
+another abroad — and gives her share back of any advance that is returned. Each placing goes through the same steps,
+and a **walk** says so once; a pause a placing comes back from is `resumes`, an end nothing follows is `final`:
+
+<!-- example: mappings/walk-placing.md -->
+```markdown
+---
+mapping: walk-placing
+kind: procedure
+summary: "How a manuscript is placed with a publisher: sent, read, offered, signed — or declined, or set aside."
+steps:
+  - { id: submitted, do: "the agent sends the manuscript to the house", by: agent, next: [ { to: read } ] }
+  - { id: read, do: "an editor reads it", by: publisher, usually: { of: time, in: gregorian-civil, level: month, count: 2 }, next: [ { to: offered, when: "the house wants it" }, { to: declined, when: "it does not" } ] }
+  - { id: offered, do: "the house offers terms", by: publisher, next: [ { to: contracted } ] }
+  - { id: contracted, do: "author and house sign", by: author, next: [ { to: published, when: "it goes to print" }, { to: cancelled, when: "the contract is ended" } ] }
+  - { id: published, do: "the book is out", by: publisher, final: true }
+  - { id: cancelled, do: "the contract is ended and the advance given back", by: author, final: true, reasons: [house-closed, author-withdrew] }
+  - { id: declined, do: "the house says no", final: true, reasons: [list-full, not-for-us] }
+  - { id: on-hold, do: "the placing waits", resumes: true, reasons: [author-revising, house-reorganising] }
+---
+The steps of placing a manuscript.
+```
+
+What a house asks to see with a manuscript is a set, not a walk — a **checklist**. The list of which translation
+rights are still free is needed only when a house asks for them, and it is met when a paper that shows them is
+here: both are readings (`needed_when`, `met_by`) the agency agreement below holds.
+
+<!-- example: mappings/submission-pack.md -->
+```markdown
+---
+mapping: submission-pack
+kind: checklist
+summary: "What a publisher asks to see with a manuscript."
+items:
+  - { id: synopsis, do: "a one-page synopsis", by: author }
+  - { id: sample, do: "the first three chapters", by: author, one_of: text }
+  - { id: whole, do: "the whole manuscript", by: author, one_of: text }
+  - { id: letter, do: "a letter introducing the book", by: agent }
+  - { id: rights-list, do: "which translation rights are free", by: agent, needed_when: "agency-noor:translation-asked", met_by: "agency-noor:rights-papers" }
+---
+A submission pack.
+```
+
+Noor is written by name, on her consent — the agency agreement she accepted, over a call. Her commission is a clause that occurs
+**`each`** time a reading holds a member: each placing that reached `contracted`, at home or abroad, and it is a
+share **`of`** that placing's own advance. A refund is its own clause, occurring for each placing that was cancelled:
+an occurrence never leaves the ledger. A payment names what it **`settles`**, occurrence by occurrence. Noor's
+assistant signs for her while she travels: a party **`acting_for`** another. A month's report is a reading too.
+
+<!-- example: beans/agency-noor.md -->
+```markdown
+---
+bean: agency-noor
+genos: contract
+title: "agency-noor — Noor places Sam's novel"
+status: active
+summary: "Noor represents The Salt Road; she earns a share of each advance, and gives her share back of one returned."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:agency-noor", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  author: { who: { bean: sam }, role: author, accepted: 2026-06-02 }
+  agent: { who: { bean: noor }, role: agent, accepted: 2026-06-02 }
+  assistant: { external: "the agency's assistant", role: agent, acting_for: agent }
+over:
+  - { what: "the novel The Salt Road, at home and in translation" }
+words: { form: spoken, agreed: 2026-06-02 }
+selections:
+  placed-home: { what: "each placing at home that was signed", steps: [ { id: p, op: select, genos: contract, where: [ { path: courses.home, reached: contracted } ] } ] }
+  placed-abroad: { what: "each translation placing that was signed", steps: [ { id: p, op: select, genos: contract, where: [ { path: courses.abroad, reached: contracted } ] } ] }
+  returned-home: { what: "each placing at home whose advance was given back", steps: [ { id: p, op: select, genos: contract, where: [ { path: courses.home, reached: cancelled } ] } ] }
+  translation-asked: { what: "whether a house abroad is reading it", steps: [ { id: p, op: select, genos: contract, where: [ { path: courses.abroad, exists: true } ] } ] }
+  rights-papers: { what: "the papers that show which translation rights are free", steps: [ { id: d, op: select, genos: document } ] }
+  by-month:
+    what: "the agency's payments, month by month, as months fall where Sam lives"
+    zone: Europe/Berlin
+    steps:
+      - { id: this, op: select, genos: contract, where: [ { path: bean, is: agency-noor } ] }
+      - { id: paid, op: select, of: this, entries: "transactions.*" }
+      - { id: months, op: group, of: paid, path: day, level: month, system: gregory }
+      - { id: per-month, op: count, of: months }
+clauses:
+  commission:
+    what: "the author pays the agent fifteen parts in a hundred of each advance at home"
+    by: author
+    to: agent
+    amount: { count: 15, unit: percent }
+    each: placed-home
+    of: clauses.advance.amount
+  commission-abroad:
+    what: "the author pays the agent twenty parts in a hundred of each advance abroad"
+    by: author
+    to: agent
+    amount: { count: 20, unit: percent }
+    each: placed-abroad
+    of: clauses.advance.amount
+  refund:
+    what: "the agent gives back her fifteen parts of each advance at home that was returned"
+    by: agent
+    to: author
+    amount: { count: 15, unit: percent }
+    each: returned-home
+    of: clauses.advance.amount
+transactions:
+  first-payout:
+    what: "Sam paid Noor her share of Heron's advance"
+    amount: { count: "300.00", unit: XTS }
+    day: 2026-11-04
+    paid_by:
+      - { party: author }
+    settles:
+      - { clause: commission, occurrence: salt-road-heron, amount: { count: "300.00", unit: XTS } }
+---
+Noor has represented The Salt Road since June.
+```
+
+<!-- example: beans/noor.md -->
+```markdown
+---
+bean: noor
+genos: person
+title: "Noor — Sam's literary agent"
+status: active
+summary: "A literary agent; she places Sam's novel."
+nature: empsychon
+identity:
+  status: confirmed
+  anchors:
+    - { key: person_id, value: "person:noor", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+consent: { bean: agency-noor }
+owned_by: { legal: { crown: agape } }
+responsibility: { legal: { self: true } }
+---
+Noor, of a small literary agency.
+```
+
+Each placing is its own agreement, with its course along the walk and the advance the house pays. Heron's offer
+held for three weeks: a clause holds only **`during`** its window. The editor who read the book at Heron has given
+no consent to be kept here by name, so she is written under an **opaque id** — `python3 bin/dmheld.py person`
+mints it, and holds her name off git, where the garden keeps personal material — and what is written **`about`** her
+names her by that id alone.
+
+<!-- example: beans/heron-books.md -->
+```markdown
+---
+bean: heron-books
+genos: org
+title: "Heron Books — a publisher"
+status: active
+summary: "A small publishing house; it publishes The Salt Road at home."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: org_id, value: "org:heron-books", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { external: "its shareholders" } }
+responsibility: { legal: { self: true } }
+---
+A publisher.
+```
+
+<!-- example: beans/salt-road-signed.md -->
+```markdown
+---
+bean: salt-road-signed
+genos: document
+title: "salt-road-signed — the signed publishing contract"
+status: active
+summary: "The contract Sam and Heron Books signed for The Salt Road, as a scanned copy."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: doc_id, value: "document:salt-road-signed", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+located_at: [ { system: unix-filesystem, openness: unknown } ]
+---
+Eleven pages, signed by both.
+```
+
+<!-- example: beans/salt-road-heron.md -->
+```markdown
+---
+bean: salt-road-heron
+genos: contract
+title: "salt-road-heron — The Salt Road placed with Heron Books"
+status: active
+summary: "Heron Books publishes The Salt Road at home, for an advance."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:salt-road-heron", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  author: { who: { bean: sam }, role: author, accepted: 2026-10-20 }
+  agent: { who: { bean: noor }, role: agent }
+  publisher: { who: { bean: heron-books }, role: publisher, accepted: 2026-10-20 }
+words: { form: written, at: { bean: salt-road-signed }, agreed: 2026-10-20 }
+clauses:
+  offer: { what: "Heron holds its offer open", by: publisher, to: author, during: { of: time, from: 2026-10-01, to: 2026-10-21 }, state: met }
+  advance: { what: "Heron pays the author an advance on signing", by: publisher, to: author, amount: { count: "2000.00", unit: XTS }, state: met }
+courses:
+  home: { walk: { mapping: walk-placing } }
+moves:
+  - { course: home, at: now, step: submitted, by: noor }
+  - { course: home, at: now, step: read, by: heron-books }
+  - { course: home, at: now, step: offered, by: heron-books }
+  - { course: home, at: now, step: contracted, by: sam }
+---
+Signed in October.
+```
+
+<!-- example: beans/p-7d2e41c9.md -->
+```markdown
+---
+bean: p-7d2e41c9
+genos: person
+title: "p-7d2e41c9"
+status: active
+summary: "a person"
+nature: empsychon
+identity:
+  status: confirmed
+  anchors:
+    - { key: person_id, value: "person:p-7d2e41c9", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: agape } }
+responsibility: { legal: { self: true } }
+---
+A person.
+```
+
+<!-- example: beans/heron-report.md -->
+```markdown
+---
+bean: heron-report
+genos: document
+title: "heron-report — the editor's report on The Salt Road"
+status: active
+summary: "The report Heron's editor wrote on the manuscript, which Noor passed on."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: doc_id, value: "document:heron-report", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+about: [ { who: p-7d2e41c9 } ]
+located_at: [ { system: unix-filesystem, openness: unknown } ]
+---
+Two pages; the editor asks for a shorter middle.
+```
+
+`python3 bin/dmledger.py agency-noor` reads each occurrence: Heron's placing, owed 300 XTS (15 percent of 2000 XTS),
+settled 300 XTS by `first-payout`, nothing outstanding; `refund` occurs for nothing yet. `python3 bin/dmreckon.py
+agency-noor:by-month` reads the month's report, each time it is asked and never stored. Who at the agency may read
+what is a **grant** (*A tile workshop*, below), and the report shown as a table, or kept as a document, is a page's
+(*A page of drawings*).
+
+## A tile workshop: staff, their leave, a tiler booked on one job at a time
+
+Sam also runs a small tile workshop. Lale works there as a tiler; she has twenty days' leave in each year, is sent
+out to lay floors in customers' houses, and teaches an evening class twice a week. Two things here are the garden's
+own, and a garden says its own law in `VOCAB.md`: a term for the leave a person takes, and the rule that one tiler is
+never booked on two jobs over the same days — the law's `exclusive` overlay on `parties`, said by this garden and by
+no other.
+
+<!-- example-front-matter: VOCAB.md -->
+```yaml
+local_terms:
+  - term: leave
+    meaning: "the leave a person takes under an employment agreement, span by span"
+    context_keys: [leave]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      attrs:
+        during: { required: true, in: extent, meaning: "the days taken, from and to, each counted whole" }
+        note:   { in: prose, meaning: "optional prose" }
+    merge: { cardinality: multi, order: by-key }
+  - { term: parties, schema: { exclusive: { extent: during, being: who, role: role } } }
+```
+
+The workshop is an organisation; its phone is written as the world dials it, `+` and the country code first
+(E.164). Lale's staff number is the workshop's to give, so it is an anchor with an **`issuer`**: the same number from
+another employer is another anchor, never a clash.
+
+<!-- example: beans/tile-workshop.md -->
+```markdown
+---
+bean: tile-workshop
+genos: org
+title: "tile-workshop — Sam's tile workshop"
+status: active
+summary: "A small workshop that lays and sells tiles, and teaches an evening class."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: org_id, value: "org:tile-workshop", class: logical, establishing: true }
+    - { key: phone, value: "+15555550123", class: logical, establishing: false }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+---
+Sam's workshop.
+```
+
+Her employment is an agreement, and her consent to be written here by name. Her leave is an **allowance**: a clause
+with an `amount`, the window it is counted **`within`** — here each calendar year — and the reading whose members
+**use** it (`used_by`). The ledger reads how much is used; nothing stores a balance to drift from the spans it was
+counted from.
+
+<!-- example: beans/lale-employment.md -->
+```markdown
+---
+bean: lale-employment
+genos: contract
+title: "lale-employment — Lale tiles for the workshop"
+status: active
+summary: "Lale is employed as a tiler, with twenty days' leave in each year."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:lale-employment", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  employer: { who: { bean: tile-workshop }, role: employer, accepted: 2026-03-01 }
+  tiler: { who: { bean: lale }, role: employee, accepted: 2026-03-01 }
+words: { form: spoken, agreed: 2026-03-01 }
+selections:
+  leave-taken: { what: "the spans of leave Lale has taken", steps: [ { id: l, op: select, entries: "leave.*" } ] }
+clauses:
+  leave:
+    what: "the workshop gives Lale twenty days' leave in each year"
+    by: employer
+    to: tiler
+    amount: { count: 20, unit: day }
+    within: { of: time, in: gregorian-civil, level: year, count: 1 }
+    used_by: leave-taken
+leave:
+  summer: { during: { of: time, from: 2026-07-06, to: 2026-07-17 } }
+  late-august: { during: { of: time, from: 2026-08-24, to: 2026-08-28 }, note: "her sister's wedding" }
+---
+Lale started in March.
+```
+
+What a person lets others read of her is **hers to grant**, on her own bean: nobody but the gardener reads what no
+grant opens. Lale lets the workshop read her phone number, and nothing more of her.
+
+<!-- example: beans/lale.md -->
+```markdown
+---
+bean: lale
+genos: person
+title: "Lale — a tiler at the workshop"
+status: active
+summary: "A tiler; she lays floors and teaches the evening class."
+nature: empsychon
+identity:
+  status: confirmed
+  anchors:
+    - { key: person_id, value: "person:lale", class: logical, establishing: true }
+    - { key: emp_id, value: "0007", class: logical, establishing: true, issuer: { bean: tile-workshop } }
+    - { key: phone, value: "+15555550147", class: logical, establishing: false }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+consent: { bean: lale-employment }
+owned_by: { legal: { crown: agape } }
+responsibility: { legal: { self: true } }
+grants:
+  workshop-rings: { act: read, positions: [ { path: phone } ], audience: { who: tile-workshop }, why: "the workshop rings her when a job moves" }
+---
+Lale, a tiler.
+```
+
+Each job is its own agreement with the customer, and Lale is a party to it only for the days she is on it:
+`during` on her entry. Because this garden made `parties` exclusive, the gate refuses a second job that holds Lale,
+as tiler, over any of the same days, and names both agreements. A job she was offered and turned down stays on record
+as **`declined`**, and holds no days.
+
+<!-- example: beans/job-kitchen-floor.md -->
+```markdown
+---
+bean: job-kitchen-floor
+genos: contract
+title: "job-kitchen-floor — a kitchen floor laid"
+status: active
+summary: "The workshop lays a customer's kitchen floor; Lale is on it for a week."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:job-kitchen-floor", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  workshop: { who: { bean: tile-workshop }, role: contractor, accepted: 2026-09-15 }
+  customer: { external: "a customer across town", role: customer, accepted: 2026-09-15 }
+  tiler: { who: { bean: lale }, role: tiler, during: { of: time, from: 2026-10-05, to: 2026-10-09 } }
+words: { form: spoken, agreed: 2026-09-15 }
+clauses:
+  price: { what: "the customer pays for the floor, tiles and labour", by: customer, to: workshop, amount: { count: "1400.00", unit: XTS }, due: 2026-10-09 }
+---
+Forty square metres, grey.
+```
+
+<!-- example: beans/job-bathroom-wall.md -->
+```markdown
+---
+bean: job-bathroom-wall
+genos: contract
+title: "job-bathroom-wall — a bathroom wall, turned down"
+status: active
+summary: "A customer asked for Lale in the same week; she turned it down."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:job-bathroom-wall", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  workshop: { who: { bean: tile-workshop }, role: contractor }
+  customer: { external: "a neighbour of the kitchen customer", role: customer }
+  tiler: { who: { bean: lale }, role: tiler, during: { of: time, from: 2026-10-07, to: 2026-10-08 }, declined: 2026-09-18 }
+words: { form: spoken, agreed: 2026-09-18 }
+---
+Asked for the same week; declined.
+```
+
+The evening class repeats: two evenings **`every`** week, each lasting two hours, with a **closure** on a holiday.
+The offset in `due` says the zone its hours are kept in. The materials fee binds **every party of a role**
+(`by_role`), however many pupils there are; a pupil who withdrew stays on record, `declined`. The kiln fee is in
+force only once a firing is booked: a clause **`when`** a reading holds something, read each time and never set by
+hand.
+
+<!-- example: beans/kiln-firing-nov.md -->
+```markdown
+---
+bean: kiln-firing-nov
+genos: event
+title: "kiln-firing-nov — the class's tiles fired"
+status: active
+summary: "The kiln is booked for the class's tiles in November."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: event_id, value: "event:kiln-firing-2026-11", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { holder: { bean: sam } } }
+timing:
+  start: { system: gregorian-civil, at: "2026-11-20 09:00+01:00", unit: hour }
+refs:
+  kiln-keeper: { bean: lale, rel: host }
+---
+One firing.
+```
+
+<!-- example: beans/evening-class.md -->
+```markdown
+---
+bean: evening-class
+genos: contract
+title: "evening-class — tiles made by hand, two evenings a week"
+status: active
+summary: "Lale teaches a class on Tuesday and Thursday evenings; each pupil pays for materials and a firing."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:evening-class", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  workshop: { who: { bean: tile-workshop }, role: school, accepted: 2026-09-20 }
+  teacher: { who: { bean: lale }, role: teacher, accepted: 2026-09-20 }
+  pupil-a: { external: "a pupil from the street", role: pupil, accepted: 2026-09-22 }
+  pupil-b: { external: "a pupil from the library's notice", role: pupil, accepted: 2026-09-23 }
+  pupil-c: { external: "a pupil who moved away", role: pupil, declined: 2026-09-24 }
+words: { form: spoken, agreed: 2026-09-20 }
+selections:
+  firing-booked: { what: "a firing of the class's tiles is booked", steps: [ { id: f, op: select, genos: event, where: [ { path: bean, is: kiln-firing-nov } ] } ] }
+clauses:
+  lesson:
+    what: "Lale teaches the class"
+    by: teacher
+    to: workshop
+    due: "2026-10-06T18:00+02:00"
+    every: { of: time, in: iso-week, each: week, at: ["2", "4"], lasts: { of: time, measure: { count: 2, unit: hour } }, closures: [ "2026-W44-4" ] }
+  materials: { what: "each pupil pays for clay and glaze", by_role: pupil, to: workshop, amount: { count: 30, unit: XTS }, due: 2026-10-06 }
+  kiln-fee: { what: "each pupil pays for the firing, once one is booked", by_role: pupil, to: workshop, amount: { count: 12, unit: XTS }, when: { selection: firing-booked } }
+---
+Ten weeks, from October.
+```
+
+`python3 bin/dmledger.py lale-employment` reads how much of her twenty days she has used within the year ending
+today — seventeen, in 2026 — and says OVER when her spans pass the allowance. `python3 bin/dmledger.py evening-class`
+names the pupil who declined, binds the fees on every party whose role is pupil, holds the kiln fee in force while
+its reading holds the firing, and gives the next lesson, past the closure. Take `declined` off the bathroom job and
+the gate refuses it: Lale, as tiler, held twice over overlapping days, with both agreements named.
+
+## A beekeepers' co-op: its sites, its own codes, a reading disputed
+
+Sam keeps two hives in a co-op. The co-op tabulates its own apiary sites, valley by site, and inspects hives by its
+own list of what is read at a hive. Both are the garden's own law: a **tabulated place system**, its cells in a table
+the garden holds, with an **overlay** whose every row says its source; and a **scheme** held as the garden's own
+extract, with its names in another language (`labels`) and how its codes relate (`relations`). Hives are no kind of
+thing the standard has, so the garden adds one (`local_gene`).
+
+<!-- example-front-matter: VOCAB.md -->
+```yaml
+local_gene:
+  - { genos: hive, of_nature: empsychon, meaning: "a colony of bees, and the box it lives in" }
+registry_additions:
+  anchor_systems:
+    - system: apiary-site
+      dimension: place
+      resolves_through: geographic
+      levels: [ { level: valley }, { level: site } ]
+      neighbours: counted
+      cells_in: { registry: apiary-sites, take: code }
+      overlay: { registry: apiary-site-changes }
+      meaning: "the co-op's apiary sites, as its register tabulates them"
+      pattern: '^apiary:[A-Z]+(-[0-9]+)?$'
+      form_note: "`apiary:<code>` — `apiary:EAST-1`"
+      example: "apiary:EAST-1"
+      establishes: false
+      why: "a site says roughly where, never which hive"
+  knowledge_schemes:
+    - scheme: hive-checks
+      classifies: what a beekeeper reads of a hive at an inspection, and how
+      holding: extract
+      licence: CC0-1.0
+      release: "the co-op's own, 2026"
+      relations: hive-checks-relations
+      labels: [ { language: fr, registry: hive-checks-fr, attribution: "traduction de la coopérative" } ]
+      publisher: the co-op
+      url: "extracts/hive-checks.tsv"
+      levels: [ { level: check } ]
+      neighbours: none
+      sources: extracts/hive-checks.tsv
+registry_files:
+  - { registry: apiary-sites, file: extracts/apiary-sites.tsv, key: code }
+  - { registry: apiary-site-changes, file: extracts/apiary-site-changes.tsv, key: code }
+  - { registry: hive-checks, file: extracts/hive-checks.tsv, key: code }
+  - { registry: hive-checks-relations, file: extracts/hive-checks-relations.tsv, key: from }
+  - { registry: hive-checks-fr, file: extracts/hive-checks-fr.tsv, key: code }
+```
+
+The tables are tab-separated, one row per cell or code. An overlay row changes a cell of the register — here a site
+renamed when the co-op took on the meadow beside it — and says where that came from.
+
+<!-- example: extracts/apiary-sites.tsv -->
+```tsv
+code	parent	level	name	point
+EAST		valley	the east valley	EPSG:4326;10.42,20.31
+EAST-1	EAST	site	the orchard	EPSG:4326;10.421,20.312
+EAST-2	EAST	site	the mill field	EPSG:4326;10.418,20.305
+WEST		valley	the west valley	EPSG:4326;10.30,20.28
+```
+
+<!-- example: extracts/apiary-site-changes.tsv -->
+```tsv
+code	parent	level	name	point	source
+EAST-2	EAST	site	the mill field and meadow	EPSG:4326;10.418,20.305	the co-op's meeting of May 2026
+```
+
+<!-- example: extracts/hive-checks.tsv -->
+```tsv
+code	parent	name
+brood		the brood a colony is raising
+varroa-drop		the mites that fall from a colony in a day
+queen-seen		whether the queen was seen
+sticky-board		a board under the hive the mites fall onto
+frame-count		frames counted one by one
+```
+
+<!-- example: extracts/hive-checks-relations.tsv -->
+```tsv
+from	to	rel
+varroa-drop	sticky-board	requires
+```
+
+<!-- example: extracts/hive-checks-fr.tsv -->
+```tsv
+code	name
+brood	couvain
+varroa-drop	chute de varroas
+queen-seen	reine vue
+```
+
+The co-op is an agreement among its members, and the consent of each to be written here by name. What members may
+read of one another's hives is the agreement's to **grant**: each member reads every hive's inspections, and nobody
+reads where a hive stands — a **`forbidden`** grant is a ceiling that no permitted grant passes, because hives are
+stolen. The co-op also takes a **stance on a code, within a place**: no member moves a colony across the border,
+said as a capability forbidden on a field of work (`isced-f-2013`, livestock and crops) within a country.
+
+<!-- example: beans/bee-coop.md -->
+```markdown
+---
+bean: bee-coop
+genos: contract
+title: "bee-coop — the valley beekeepers' co-op"
+status: active
+summary: "Beekeepers who share an extractor, inspect by one list, and keep their sites to themselves."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:bee-coop", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  sam: { who: { bean: sam }, role: member, accepted: 2026-04-10 }
+  derya: { who: { bean: derya }, role: member, accepted: 2026-04-10 }
+words: { form: spoken, agreed: 2026-04-10 }
+selections:
+  members: { what: "the co-op's members", steps: [ { id: m, op: select, genos: person, where: [ { path: consent.bean, is: bee-coop } ] } ] }
+  hives: { what: "every hive the co-op's members keep", steps: [ { id: h, op: select, genos: hive } ] }
+  hive-count: { what: "how many hives there are", steps: [ { id: h, op: select, genos: hive }, { id: n, op: count, of: h } ] }
+grants:
+  members-read-checks: { act: read, over: hives, positions: [ { path: observations } ], audience: { selection: members }, why: "members compare their mite counts" }
+  sites-closed: { act: read, over: hives, positions: [ { path: located_at } ], audience: { selection: members }, stance: forbidden, why: "a hive's site is its keeper's own: hives are stolen" }
+capabilities:
+  no-colonies-abroad:
+    why: "a colony moved across the border can carry a mite the valley does not have"
+    permission: forbidden
+    code: { scheme: isced-f-2013, code: "0811" }
+    within: { system: iso-3166, at: ZZ }
+clauses:
+  extractor-fee: { what: "each member pays for the extractor's season", by_role: member, amount: { count: 25, unit: XTS }, due: 2026-07-01, state: met }
+---
+Two members, for now.
+```
+
+<!-- example: beans/derya.md -->
+```markdown
+---
+bean: derya
+genos: person
+title: "Derya — a beekeeper in the co-op"
+status: active
+summary: "A beekeeper; she keeps hives in the west valley."
+nature: empsychon
+identity:
+  status: confirmed
+  anchors:
+    - { key: person_id, value: "person:derya", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+consent: { bean: bee-coop }
+owned_by: { legal: { crown: agape } }
+responsibility: { legal: { self: true } }
+---
+Derya, of the co-op.
+```
+
+A hive is where its readings live. Each reading names what was read in the co-op's scheme, how, when and by whom;
+the count of mites carries its uncertainty. A colony has no number of its own — the number painted on its box is
+the box's — so its identity stays `provisional`. Derya, looking at the same board the next day, **disputes** Sam's count:
+a verdict is its own entry that **`answers`** the one it is on, and never edits it. Brought to the co-op, the dispute
+is a **hearing**, over both entries: a ruling stands only once every side is heard.
+
+<!-- example: beans/hive-orchard-1.md -->
+```markdown
+---
+bean: hive-orchard-1
+genos: hive
+title: "hive-orchard-1 — Sam's first hive, in the orchard"
+status: active
+summary: "A colony Sam keeps at the orchard site."
+nature: empsychon
+identity:
+  status: provisional
+  anchors:
+    - { key: serial, value: "HIVE-S1", class: hardware, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+located_at:
+  - { system: apiary-site, openness: elsewhere, at: "apiary:EAST-2" }
+observations:
+  mites-june:
+    property: { scheme: hive-checks, code: varroa-drop }
+    value: { count: "14", unit: item, u: { count: "3", unit: item } }
+    at: 2026-06-12
+    method: { scheme: hive-checks, code: sticky-board }
+    by: sam
+  queen-june:
+    property: { scheme: hive-checks, code: queen-seen }
+    presence: present
+    at: 2026-06-12
+    by: sam
+  second-count:
+    answers: "hive-orchard-1:observations.mites-june"
+    answer: disputes
+    by: derya
+    note: "the board had been in two days, not one"
+hearings:
+  mites-june:
+    over: [ { path: "hive-orchard-1:observations.mites-june" }, { path: "hive-orchard-1:observations.second-count" } ]
+    heard:
+      - { speaker: sam, said: "I cleared the board the day before", at: 2026-06-20 }
+      - { speaker: derya, said: "the date on the board says otherwise", at: 2026-06-20 }
+    ruling: { by: sam, what: "count again, the board cleared by both of us", at: 2026-06-20 }
+---
+A strong colony.
+```
+
+`python3 bin/dmwhere.py apiary:EAST-2` reads the site within its valley, by the name the overlay gives it, with its
+source. `python3
+bin/dmreckon.py bee-coop:hive-count` counts the hives. Whether Derya may read a hive's inspections, or its site, is
+asked of the grants, which name the grant that answers (`dmpass.may`): the inspections are open to her, the site is
+forbidden. A grant that lets someone else decide what only the gardener may — a `ratify:` grant — is the gardener's
+alone to give, on the gardener's own bean.
+
+## Two candles burnt side by side: a reading that brings an order into force
+
+Sam makes candles from the co-op's wax. A shop in town will stock them if a beeswax candle burns down no faster than
+the paraffin one it sells now. So Sam lights one of each on the same evening and reads their heights every hour. A
+candle is a body of matter, which the standard has no kind for; the garden adds one.
+
+<!-- example-front-matter: VOCAB.md -->
+```yaml
+local_gene:
+  - { genos: material, of_nature: soma, meaning: "a body of matter kept and used: a candle" }
+```
+
+Each hour's heights are a **series** on the candle's own bean, one row per hour. The ruler reads to a fifth of a
+millimetre, and every height carries that uncertainty (`u`), so whatever is computed from them carries it too.
+
+<!-- example: beans/candle-beeswax.md -->
+```markdown
+---
+bean: candle-beeswax
+genos: material
+title: "candle-beeswax — a pillar candle of the co-op's wax"
+status: active
+summary: "A beeswax pillar candle, its height read each hour as it burns."
+nature: soma
+identity:
+  status: confirmed
+  anchors:
+    - { key: serial, value: "CANDLE-BW-01", class: hardware, establishing: true }
+provenance: { src: observed, by: "sam", as_of: now }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+series:
+  burn:
+    grid: { of: time, in: gregorian-civil, every: { count: 1, unit: hour }, from: "2026-11-01 18:00+01:00" }
+    unit: hour
+    holds:
+      - { name: height, quantity: length, unit: millimetre, stands_for: point, between: linear, u: { count: "0.2", unit: millimetre } }
+    rows: |
+      height
+      200
+      191
+      182
+      173
+      164
+      155
+---
+Poured in October.
+```
+
+<!-- example: beans/candle-paraffin.md -->
+```markdown
+---
+bean: candle-paraffin
+genos: material
+title: "candle-paraffin — the shop's paraffin candle"
+status: active
+summary: "The paraffin pillar candle the shop sells, burnt beside the beeswax one."
+nature: soma
+identity:
+  status: confirmed
+  anchors:
+    - { key: serial, value: "CANDLE-PF-01", class: hardware, establishing: true }
+provenance: { src: observed, by: "sam", as_of: now }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+series:
+  burn:
+    grid: { of: time, in: gregorian-civil, every: { count: 1, unit: hour }, from: "2026-11-01 18:00+01:00" }
+    unit: hour
+    holds:
+      - { name: height, quantity: length, unit: millimetre, stands_for: point, between: linear, u: { count: "0.2", unit: millimetre } }
+    rows: |
+      height
+      200
+      190
+      180
+      170
+      160
+      150
+---
+Bought at the shop.
+```
+
+What share of each candle burnt away is a **reading**, step by step: its first height and its last (`window`), their
+difference, and that divided by where it began. The two shares, each read so, compared say whether the beeswax burnt down no faster
+(`compare`, `at-most`); a comparison `equal` within a **`band`** says whether the two burnt down alike, within a
+hundredth. Where the uncertainty is too wide to decide the band, the answer is NOT KNOWN — never rounded to either.
+The shop's order is a clause **`when`** the first reading holds: in force because the candles say so, not because
+anyone set it.
+
+<!-- example: beans/candle-supply.md -->
+```markdown
+---
+bean: candle-supply
+genos: contract
+title: "candle-supply — beeswax candles for the shop in town"
+status: active
+summary: "The shop orders Sam's beeswax candles if they burn down no faster than its paraffin ones."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:candle-supply", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  maker: { who: { bean: sam }, role: maker, accepted: 2026-10-28 }
+  shop: { external: "a candle shop in town", role: buyer, accepted: 2026-10-28 }
+words: { form: spoken, agreed: 2026-10-28 }
+selections:
+  worn-beeswax:
+    what: "the share of the beeswax candle burnt away"
+    steps:
+      - { id: first, op: window, series: "candle-beeswax:series.burn", by: first }
+      - { id: last, op: window, series: "candle-beeswax:series.burn", by: last }
+      - { id: gone, op: difference, of: first, with: last }
+      - { id: worn, op: divide, of: gone, with: first }
+  burns-no-faster:
+    what: "whether the beeswax burnt down no faster than the paraffin"
+    steps:
+      - { id: bw-first, op: window, series: "candle-beeswax:series.burn", by: first }
+      - { id: bw-last, op: window, series: "candle-beeswax:series.burn", by: last }
+      - { id: bw-gone, op: difference, of: bw-first, with: bw-last }
+      - { id: bw, op: divide, of: bw-gone, with: bw-first }
+      - { id: pf-first, op: window, series: "candle-paraffin:series.burn", by: first }
+      - { id: pf-last, op: window, series: "candle-paraffin:series.burn", by: last }
+      - { id: pf-gone, op: difference, of: pf-first, with: pf-last }
+      - { id: pf, op: divide, of: pf-gone, with: pf-first }
+      - { id: slower, op: compare, of: bw, with: pf, is: at-most }
+  alike:
+    what: "whether the two burnt down alike, within a hundredth"
+    steps:
+      - { id: bw-first, op: window, series: "candle-beeswax:series.burn", by: first }
+      - { id: bw-last, op: window, series: "candle-beeswax:series.burn", by: last }
+      - { id: bw-gone, op: difference, of: bw-first, with: bw-last }
+      - { id: bw, op: divide, of: bw-gone, with: bw-first }
+      - { id: pf-first, op: window, series: "candle-paraffin:series.burn", by: first }
+      - { id: pf-last, op: window, series: "candle-paraffin:series.burn", by: last }
+      - { id: pf-gone, op: difference, of: pf-first, with: pf-last }
+      - { id: pf, op: divide, of: pf-gone, with: pf-first }
+      - { id: same, op: compare, of: bw, with: pf, is: equal, band: { count: "0.01", unit: one } }
+clauses:
+  first-order: { what: "the shop orders forty beeswax candles", by: shop, to: maker, amount: { count: 40, unit: item }, when: { selection: burns-no-faster } }
+---
+Agreed at the shop, the trial to decide.
+```
+
+`python3 bin/dmreckon.py candle-supply:worn-beeswax` reads 0.225, with its uncertainty and every step it took;
+`candle-supply:burns-no-faster` is true, and `candle-supply:alike` is false — two and a half hundredths apart. `python3
+bin/dmledger.py candle-supply` shows the order in force while that reading holds. Nothing is written back: change a
+height and the next reading says so. A reading can be asked as the garden stood at an earlier commit (`--at`, with `--moment` for the clock), and the
+act that fixes one records that commit and moment as its **pin** (`pin_form`), so it can be read again. Were Ali to
+burn a candle of the same wax in her own garden, Sam's garden could read her heights only at a commit she published
+and granted it: `python3 bin/dmacross.py read garden-ali <bean>:<path>`, which copies nothing.
 
 ## A value the vocabulary does not have yet
 

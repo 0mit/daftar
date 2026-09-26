@@ -317,6 +317,36 @@ check("a garden makes `parties` exclusive in its VOCAB.md; bookings that do not 
 refused("...a second booking of the room as venue over overlapping days is refused, naming both agreements",
         "beans/book-2.md", "from: 2026-12-10", "from: 2026-12-03", "book-1", names=("book-2",))
 
+# N9 in the ledger: an allowance read from the one extent its entries' term declares — the TERM of `leave.*`, not `*`
+LEAVE_TERM = """  - term: leave
+    meaning: "the leave a person takes, span by span, invented"
+    context_keys: [leave]
+    schema:
+      shape: open_map_of_entries
+      attrs:
+        during: { required: true, in: extent, meaning: "the days taken" }
+    merge: { cardinality: multi, order: by-key }
+"""
+write("VOCAB.md", read("VOCAB.md").replace("local_terms:\n", "local_terms:\n" + LEAVE_TERM, 1))
+ly = today.year - 1
+write("beans/leave-terms.md", contract("leave-terms", f"""parties:
+  keeper: {{ who: {{ bean: keeper }}, role: employer, accepted: 2026-09-01 }}
+  pip: {{ who: {{ bean: pip }}, role: employee, accepted: 2026-09-01 }}
+words: {{ form: spoken, agreed: 2026-09-01 }}
+selections:
+  taken: {{ what: "the leave taken", steps: [ {{ id: l, op: select, entries: "leave.*" }} ] }}
+clauses:
+  leave: {{ what: "twenty days' leave in each two years", by: keeper, to: pip, amount: {{ count: 20, unit: day }}, within: {{ of: time, in: gregorian-civil, level: year, count: 2 }}, used_by: taken }}
+leave:
+  spring: {{ during: {{ of: time, from: {ly}-03-02, to: {ly}-03-06 }} }}
+  autumn: {{ during: {{ of: time, from: {ly}-11-02, to: {ly}-11-04 }} }}
+"""))
+rc, out = save("an allowance of leave", ["leave-terms"], rule_change=True)
+check("a clause with `within` and `used_by`, over a garden's own term of spans, is saved", rc == 0, out[-900:])
+code, led = tool("bin/dmledger.py", "leave-terms")
+check("...and the ledger reads how much of it is used, from the one extent the term declares",
+      f"used 8 day of 20 day within 2 year of gregorian-civil ending {today.isoformat()}" in led, led)
+
 # ============================================================================ N35: a reading across gardens
 H = grow("h", "hana")
 gid = run("git", "rev-list", "--max-parents=0", "HEAD", cwd=G).stdout.split()[0][:12]

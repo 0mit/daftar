@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""mycelium — three gardens, two of them on one machine, meet only by proposal (std-vocab 21.0).
+"""peering — three gardens, two of them on one machine, meet only by proposal (std-vocab 21.0).
 
 WHAT IT PROVES. A garden is kept by its gardener and nothing outside it writes there; what one garden gives another
 is a proposal (bin/dmpropose.py), made under an agreement both gardeners are party to, laid outside every garden,
@@ -19,7 +19,7 @@ and proposes it to garden-b with ada's own bean; garden-b takes it in. Garden-a 
 knowing cai only provisionally. Nothing here is mocked: real germination, real commits through the real pre-commit
 gate, the real tools each garden received.
 
-Run: python3 test/mycelium.py   (0 = green)
+Run: python3 test/peering.py   (0 = green)
 """
 import datetime
 import itertools
@@ -1828,5 +1828,5 @@ for label, origin, via, ok, want in (
         git(A, 'clean', '-qfd')
 
 shutil.rmtree(TMP, ignore_errors=True)
-print(f"\nmycelium: {sum(results)}/{len(results)} checks passed")
+print(f"\npeering: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

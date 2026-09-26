@@ -675,7 +675,7 @@ def allowance_lines(key, e, sch, units, fm, today):
     try:
         g = dmreckon.Garden(ROOT)
         sel = (fm.get('selections') or {}).get(e['used_by']) if ':' not in str(e['used_by']) else None
-        term = str((sel or {}).get('steps', [{}])[0].get('entries') or '').split('.')[-1] if sel else ''
+        term = str((sel or {}).get('steps', [{}])[0].get('entries') or '').split('.')[0] if sel else ''
         attrs = ((law()[0].get(term) or {}).get('schema') or {}).get('attrs') or {}
         cand = [a for a, r in attrs.items() if _in(r) == 'extent' or (isinstance(_in(r), dict) and
                                                                      _in(r).get('type') in ('date', 'moment', 'date_or_moment'))]

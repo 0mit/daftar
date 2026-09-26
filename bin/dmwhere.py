@@ -459,7 +459,9 @@ def show(a):
                          + (f", {b['location']}" if b.get('location') else ""))
     elif 'chain' in a:
         c = a['chain'][0]
-        lines.append(f"{a['position']}: {c.get('rank') or c.get('level') or ''} {c.get('begins_ma', '')}–{c.get('ends_ma') or '0'} Ma".rstrip()
+        span = f" {c['begins_ma']}–{c.get('ends_ma') or '0'} Ma" if c.get('begins_ma') not in (None, '') else ""   # a place cell has none
+        lines.append(f"{a['position']}: {c.get('rank') or c.get('level') or ''}{span}".rstrip()
+                     + (f" — {c['name']}" if c.get('name') else "")
                      + (f"   (an overlay row: {c.get('source')})" if c.get('_overlay') else ""))
         lines.append("  within: " + " ⊂ ".join(str(r.get('unit') or r.get('code')) for r in a['chain'][1:]) if a['chain'][1:] else "  a top cell")
         b = a['base']

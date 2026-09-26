@@ -46,8 +46,9 @@ recognise the same thing whatever its file is called.
   Only establishing anchors decide that two beans are one object.
 - What establishes follows the nature: matter (`serial`, `mac`) for a body, a being of the nature `soma`; a logical
   id (`fqdn`, a product or service id) for one that is `lekton` or `empsychon`. Network anchors (`ip`, `hostname`)
-  corroborate. Every
-  anchor's key is a term of the vocabulary, and where that term declares a policy, it overrules the bean.
+  corroborate. Every anchor's key is a term of the vocabulary, and where that term declares a policy, it overrules
+  the bean.
+- An anchor an organisation issues (an employee number) identifies only with its `issuer`.
 - How many establishing anchors a confirmed bean needs depends on its nature. A bean below that is
   `identity.status: provisional`, and the gate warns.
 - Two beans with the same establishing anchor are the same object: the gate refuses it. Serials are compared
@@ -212,7 +213,7 @@ The rules are data, not code.
   case stands, since when and who acts next are read. What a case asks for is a checklist's `items`: a set, not a walk.
 
 ## Knowledge: universal anchors
-The `knowledge` profile (vocabulary 9.1) lets a garden say what things ARE in the world's shared terms, with
+The `knowledge` profile lets a garden say what things ARE in the world's shared terms, with
 codes every garden uses: fields of knowledge (ISCED-F 2013), occupations (ISCO-08), and established
 technologies, each linked to its project's own documentation. They are kept whole as data in `seed/knowledge/`
 (each file under its own licence, see `SOURCES.md`) and read by `bin/dmknowledge.py`.
@@ -221,7 +222,7 @@ technologies, each linked to its project's own documentation. They are kept whol
 - As a **relation** (`knowledge:` entries `{scheme, code, rel, topic?}` with `rel` classified_as, draws_on or
   uses) any bean says what it rests on — an instance uses a technology, a design draws on a field.
 - The gate checks every code against its scheme; an invented code is refused.
-- A scheme says how its codes are **held** (`knowledge_scheme_form`, 24.0): shipped with the release; a garden's own
+- A scheme says how its codes are **held** (`knowledge_scheme_form`): shipped with the release; a garden's own
   **extract** in `extracts/<scheme>.tsv`, declared once in VOCAB.md (a RULE-CHANGE) and then edited row by row as an
   ordinary journalled write, which is how configuration — kinds of leave, a questionnaire — stays data; or held **at its
   authority**, where a code is checked by its form alone and the gate says so once. A scheme marked `sensitive` makes
@@ -230,7 +231,7 @@ technologies, each linked to its project's own documentation. They are kept whol
   code in another language with its publisher's attribution, `at` computes anchors for a position, and `gold` measures
   the finder against codes a person chose. It writes nothing; a person picks the code.
 
-**Observations** (24.0, step 5) are what was found of a being, one entry per reading, in ISO 19156's shape: a
+**Observations** are what was found of a being, one entry per reading, in ISO 19156's shape: a
 `property` coded in a published scheme, `of` a coded part, `presence` (an absence is a finding), `at` a moment or
 `during` a stretch, a result (`value` with its u, `code`, `position` or `extent`), a `method` and the observer `by`, a
 bean the garden holds. A reading made again is a new entry; change is read, never stored. A second observer's verdict is
@@ -277,8 +278,8 @@ This table is the one statement of who may decide what (manifesto: parts).
 
 The person who ratifies in a garden is its gardener — for an organisation, a person who answers for it — or, for a
 class the gardener delegates for named beans, the person a grant names (`grants`, act `ratify:<class>`), recorded as
-the gardener's own act. Nothing is delegated by default. When the class is unclear, an agent proposes and a person ratifies. An agent that meets something it may not decide parks it
-in `log/pending.md` as `status: proposed`, does everything safe around it, and carries on.
+the gardener's own act. Nothing is delegated by default. When the class is unclear, an agent proposes and a person
+ratifies. An agent that meets something it may not decide parks it in `log/pending.md` as `status: proposed`, does everything safe around it, and carries on.
 
 ## The journal and the gate
 - Every change is recorded in `log/journal.md` in the same commit: who, what and why (manifesto: hidden). People record decisions
@@ -298,7 +299,7 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
     writing is stamped, not typed — written `now`, and the save writes the day in its place (manifesto:
     never-invents);
   - a journal line a commit adds that holds a character some reader takes for a line break, besides the line end
-    itself: one line of the journal is one line to every reader.
+    itself: one line of the journal is one line to every reader;
   - a value at a position read by the save (`origin: { act: read, by: save }`) that a commit adds and that is not the
     reading of a journal heading the same commit adds: a value read from the clock is written `now`, and the save
     writes it;
@@ -339,7 +340,6 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
 - **Who may do what is closed by default** (`grants`, read by `bin/dmpass.py may`): the gardener may; anyone else may
   what a grant opens — held by the gardener, by the person the record is of or about, or by an agreement — and a
   `forbidden` grant refuses what any `permitted` one would open.
-- An anchor an organisation issues (an employee number) identifies only with its `issuer`.
 
 ## Merging
 Gardens merge object by object, matched on establishing anchors: losslessly, in any order, with the same
@@ -351,8 +351,10 @@ measured value by its value in its quantity's coherent unit (`12.5 metre` and `1
 list keyed by party by its entries, whatever their order. The bean keeps what was written. `MERGE.md` has the
 algebra.
 
-## Between gardens: the mycelium
+## Between gardens: peering
 (manifesto: gardener)
+Inside a garden is interior — its clones, its writers, its hub. Between gardens is exterior: each garden an
+autonomous domain, numbered by its id, and two that deal with each other peers, each configured at its own end.
 - **A garden's identity** is `garden_id`: the first twelve hexadecimal digits of the root of its first-parent
   history. It is read from git and never stated as the garden's own: `GARDEN.md` carries no id, and it appears in
   the garden's beans only as the prefix of names the garden minted. A clone is the same garden; a copy given a new

@@ -64,7 +64,7 @@ parts, changes).
    python3 test/recurrence.py
    python3 test/quantities.py
    python3 test/money.py
-   python3 test/mycelium.py
+   python3 test/peering.py
    python3 test/site.py
    python3 test/public.py
    python3 test/docs.py
@@ -84,6 +84,8 @@ parts, changes).
    python3 test/hub.py
    python3 test/agreements.py
    python3 test/observations.py
+   python3 test/crosswalk.py
+   python3 test/rehearsal.py
    python3 test/deeptime.py
    reuse lint
    ```

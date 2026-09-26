@@ -47,6 +47,7 @@ import dmparse  # noqa: E402 — the one reader of a path, a table and a front m
 import dmcal    # noqa: E402 — positions in any calendar, moments, civil offsets
 import dmseq    # noqa: E402 — a series' rows and what a channel holds between them
 import dmpass   # noqa: E402 — where a value comes from: an input's `origin`
+import dmheld   # noqa: E402 — what a garden keeps off git, read back on the host that holds it
 
 ROOT = os.path.dirname(HERE)
 PY = 'python' if os.name == 'nt' else 'python3'
@@ -207,7 +208,9 @@ class Garden:
             fm = None
         if isinstance(fm, dict):
             i = fm.get('bean') or fm.get('mapping') or os.path.basename(path)[:-3]
-            self.fm[str(i)], self.kind[str(i)] = fm, path.split('/')[0]
+            # A SEALED ENTRY IS READ WHERE IT IS HELD (24.0, DOCS D-2): on the host whose store holds it, a reading
+            # reads the entry itself; elsewhere, or erased, the pointer, and nothing is known of it.
+            self.fm[str(i)], self.kind[str(i)] = dmheld.unsealed(fm, root=self.root), path.split('/')[0]
 
     def bean(self, i):
         if i not in self.fm:

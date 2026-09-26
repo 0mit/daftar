@@ -2,7 +2,8 @@
 
 Read this page before writing in a garden. It holds six recipes of `COOKBOOK.md`, their beans copied byte for byte
 (the cookbook explains each), after the misreadings agents make most and before the forms for **what nobody said**.
-Every bean here passes the gate as written (`test/germinate.py`, `test/docs.py`).
+Every bean here passes the gate as written (`test/germinate.py`, `test/docs.py`). Shapes it does not hold are in the
+cookbook's worked chapters, *A literary agent* to *Two candles*.
 
 Write what you were told, in these shapes, and copy no value from here: `sam`, `ali`, `XTS`, `123456789abc` and the
 amounts below are the example's. The shapes carry no day: a day someone said goes where a field is empty, and
@@ -19,19 +20,18 @@ does not answer, `AGENTS.md` says where the law is. Every command here is writte
 
 ## Common misreadings
 
-What agents writing in gardens got wrong most often, in measured runs — each one a value nobody said, invented:
+What agents got wrong most often in measured runs — each a value nobody said, invented:
 
 - **Today is not the day it happened.** `day`, `accepted`, `agreed` and `due` are shown empty below, and stay empty
   unless someone said that day — nor is the day of writing, or a date in another bean, the day it happened. An
   event's timing nobody said is `event-anchored` (*What nobody said*, at the end).
 - **A transaction's amount is the whole that moved.** Its `borne_by` shares divide it: 90 paid by one and borne two
   parts to one is `amount: { count: "90", … }` with shares 2 and 1 — never the 30 that one of them owes.
-- **A currency is named by its code, looked up, not guessed.** People say "lira", "euro", "rial":
-  `grep -i "<the name>" seed/knowledge/currencies.tsv`, the row whose status is `current`. When no row or more than
+- **A currency is named by its code, looked up, not guessed** (*A currency*, at the end). When no row or more than
   one fits, ask — or leave the transaction out and put the question in `open:`.
-- **Everyone named is a person bean** — also someone only spoken about — kept by name only on their `consent` (else
-  `python3 bin/dmheld.py person`). A conversation or a meeting in which
-  something was agreed is itself an event, named by what was agreed there.
+- **Everyone named is a person bean**, also someone only spoken about. One who is not the gardener is kept by name
+  only on their `consent`; without it, under an opaque id, the name held off git (`python3 bin/dmheld.py person`). A
+  meeting in which something was agreed is itself an event, named by what was agreed there.
 - **How something was paid is written only as said** — a card, cash, a transfer, and whose.
 - **`open:` belongs to the front matter**, between the two `---` lines. Below them it is prose the gate cannot see.
 
@@ -252,7 +252,7 @@ Agreed over dinner; nothing was written down.
 
 ## Proposing to another garden
 
-Ali's garden is recorded here, and hers records Sam's (*Another person, and the garden she keeps*, above).
+Ali's garden is recorded here, and hers records Sam's (above).
 
 ```sh
 python3 bin/dmpropose.py mint shared-camera     # prints the qualified name and the dmsafe command that writes it

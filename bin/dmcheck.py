@@ -3426,6 +3426,8 @@ def check_observations():
     verdicts = {}
     for (_ib, _base), (_fm, _b) in sorted(docs.items()):
         for _k, _e in _agree_entries(_fm, 'observations'):
+            if _sealed('observations', SCHEMAS.get('observations', {}), _e):
+                continue   # held off git: its reading is checked where it is held, never here (check_sealed)
             _w = f"{_base}: observations[{_k}]"
             if _e.get('answers') is None and _e.get('property') is None:
                 errors.append(f"{_w}: a reading states its `property`, a code of a published scheme — only a verdict, "

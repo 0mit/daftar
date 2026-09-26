@@ -1,1 +1,31 @@
 fhir	daftar	note
+Observation.resourceType=Observation	-	the resource: every entry carried is one Observation, and every Observation carried is one entry of `observations`
+Observation.status=final	-	a reading made: preliminary, amended, cancelled and entered-in-error are not carried (a withdrawal is `retracted`, its observer's own word)
+Observation.id	key	the entry's key, kebab
+Observation.subject.reference=Patient/{}	bean	the bean the reading is of; a subject of another resource type is not carried
+Observation.code.coding	observations.property	the first coding {system, code}: the scheme whose `url` is its system; a further coding and a `display` are not carried
+Observation.bodySite.coding	observations.of	the part of the being it is of, as a coding
+Observation.method.coding	observations.method	how it was read, as a coding
+Observation.valueCodeableConcept.coding	observations.code	a classified result, as a coding
+Observation.valueQuantity.value	observations.value.count	a measured result, the decimal as written
+Observation.valueQuantity.system=http://unitsofmeasure.org	-	UCUM: its codes cross by the `ucum:` rows
+Observation.valueQuantity.code	observations.value.unit	the UCUM code, crossed by the `ucum:` rows; a code with no row is not carried
+Observation.effectiveDateTime	observations.at	when it held: a day, or a moment with its offset, as written
+Observation.performer.reference=Practitioner/{}	observations.by	who observed it, as a bean; a performer of another resource type is not carried
+Observation.note.text	observations.note	the first note
+ucum:mm[Hg]	unit:millimetre-of-mercury	the conventional millimetre of mercury
+ucum:kPa	unit:kilopascal	a thousand pascals
+ucum:Pa	unit:pascal	the SI pascal
+ucum:%	unit:percent	one part in a hundred
+ucum:kg	unit:kilogram	the SI kilogram
+ucum:g	unit:gram	a thousandth of a kilogram
+ucum:m	unit:metre	the SI metre
+ucum:cm	unit:centimetre	a hundredth of a metre
+ucum:mm	unit:millimetre	a thousandth of a metre
+ucum:L	unit:litre	a cubic decimetre
+ucum:mL	unit:millilitre	a thousandth of a litre
+ucum:L/min	unit:litre-per-minute	a litre each minute
+ucum:s	unit:second	the SI second
+ucum:min	unit:minute	sixty seconds
+ucum:h	unit:hour	sixty minutes
+ucum:d	unit:day	twenty-four hours

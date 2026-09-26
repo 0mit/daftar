@@ -252,8 +252,8 @@ refused("...an age in a symbol the system does not name is refused by its form",
 
 # ---------------------------------------------------------------- L-3 a garden's tabulated places, with an overlay
 rc, out = tool("bin/dmwhere.py", "parish:NORTH-2")
-check("L-3 a parish reads its district, and the overlay's row wins, with its source",
-      rc == 0 and "NORTH" in out and "the council's order of 2026" in out, out)
+check("L-3 a parish reads its district, and the overlay's row wins, with its name and source — and no span of time",
+      rc == 0 and "NORTH" in out and "Low Moor and Fen" in out and "the council's order of 2026" in out and " Ma" not in out, out)
 refused("...an unknown parish is refused", "beans/core-e.md", '"parish:NORTH-2"', '"parish:WEST-9"',
         "WEST-9 is no code of parish-renames or parishes")
 refused("...an overlay row with no source is refused", "extracts/parish-renames.tsv",

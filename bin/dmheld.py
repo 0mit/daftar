@@ -100,6 +100,28 @@ def resolve(pointer, *, root=ROOT, host=None, beans=None):
         return yaml.safe_load(fh)
 
 
+def unsealed(fm, *, root=ROOT, beans=None):
+    """A copy of a front matter with each sealed entry THIS HOST holds read back under its own key, for a reading made
+    here (bin/dmreckon.py): what a reading reads it never writes back, so the material stays off git. An entry held
+    elsewhere, or erased, stays its pointer, and a reading of it finds nothing: not known, never an error."""
+    out = None
+    for t, label, e in list(_pointers(fm)):
+        try:
+            rec = resolve(e['held'], root=root, beans=beans)
+        except (NotHere, Erased, ValueError, OSError):
+            continue
+        if not isinstance(rec, dict) or rec.get('term') != t:
+            continue
+        out = out or {k: (dict(v) if isinstance(v, dict) else list(v) if isinstance(v, list) else v) for k, v in fm.items()}
+        node = out[t]
+        if isinstance(node, dict):
+            out[t] = {(rec.get('key', k) if k == label else k): (rec.get('entry') if k == label else v)
+                      for k, v in node.items()}
+        else:
+            node[label] = rec.get('entry')
+    return out or fm
+
+
 def _write(path, key, record):
     os.makedirs(path, exist_ok=True)
     with open(os.path.join(path, key + '.yaml'), 'w', encoding='utf-8', newline='\n') as fh:
