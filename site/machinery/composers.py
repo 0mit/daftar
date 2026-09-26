@@ -1,29 +1,30 @@
-"""daftar's own mechanisms, drawn: the garden module for the machinery page of daftar's site.
+"""daftar's own mechanisms, drawn: the drawing module of the machinery page of daftar's site.
 
 Five composers — the gate, the journal, the merge, the mycelium and the ledger — each drawing one mechanism of daftar
-as it is recorded in a demo garden (`site/machinery/record.yaml`). They draw only with the pattern kit, so every
-element is recorded: its pattern, its id (the slug of its label), its box, and the bean it depicts. The kit is imported
-when the drawings are made, from the copy vendored into the demo garden; nothing else is imported but the kit's model.
+as it is recorded in a demo garden (`site/machinery/record.yaml`). They draw only with the kit of the `view` asset
+(`assets/view/lib/view_kit.py`, which the demo garden receives when it extends the profile), so every element is
+recorded: its pattern, its id (the slug of its label), its box, and the being it depicts. Nothing else is imported but
+the asset's model, for one fact of a bean.
 
-site/machinery/build.py copies this file into the demo garden as `bin/mechanisms.py` and names it there. Each composer
-returns (title, svg, caption, claim). A figure is 960 wide and 280 to 340 tall, draws at most 18 elements, carries
-exactly one accent (the point the mechanism turns on) and shows no address.
+site/machinery/build.py copies this file into the demo garden as `drawings/mechanisms.py`, and the page names it there.
+Each composer returns (title, svg, caption, claim). A figure is 960 wide and 280 to 340 tall, draws at most 18
+elements, carries exactly one accent (the point the mechanism turns on) and shows no address.
 
-Node classes carry the natures the site uses: `svc` a person (empsychon), `nas` a record or a program (lekton),
-`ext` what is outside this garden's hands.
+A node that depicts a being takes the colour of that being's nature (sam and ali are empsychon, the daftar product is
+lekton); a node that depicts none is a record or a program, lekton; `ext` is what is outside this garden's hands.
 """
-from fxdraw import node, store, gate, flow, elbow, tag, boundary, ribbon, figure, esc
-import fxmodel
+from view_kit import node, store, gate, flow, elbow, tag, boundary, ribbon, figure, esc
+import view_model
 
 
 def mech_gate():
     b = [boundary(226, 12, 720, 296, "this clone of the garden"),
-         node(16, 64, 180, 52, "A writer", "a person or an agent", cls="svc", bean="sam"),
+         node(16, 64, 180, 52, "A writer", "a person or an agent", bean="sam"),
          store(256, 58, 200, 66, "Staged files", "what git add put in the index"),
          gate(630, 91, "breaks a rule, or unjournalled?", 236, 66),
          store(286, 200, 200, 66, "The law", "std-vocab.md + VOCAB.md", bean="daftar"),
-         node(774, 20, 168, 52, "Refused", "what is wrong, and where", cls="nas"),
-         node(774, 210, 168, 52, "Committed", "history, with its entry", cls="nas"),
+         node(774, 20, 168, 52, "Refused", "what is wrong, and where"),
+         node(774, 210, 168, 52, "Committed", "history, with its entry"),
          flow(196, 90, 256, 90, "git add", ly=82),
          flow(456, 91, 512, 91, "git commit", lx=482, ly=78),
          elbow([(630, 58), (630, 46), (774, 46)], "refused", "accent", 702, 38),
@@ -38,13 +39,13 @@ def mech_gate():
 
 
 def mech_journal():
-    b = [node(16, 34, 172, 52, "A writer", "sam, or an agent", cls="svc", bean="sam"),
-         node(276, 34, 244, 52, "bin/dmjournal.py", "reads the clock, writes the heading", cls="nas", bean="daftar"),
+    b = [node(16, 34, 172, 52, "A writer", "sam, or an agent", bean="sam"),
+         node(276, 34, 244, 52, "bin/dmjournal.py", "reads the clock, writes the heading", bean="daftar"),
          node(276, 150, 244, 52, "The clock", "the machine's time, with its offset", cls="ext"),
          store(590, 20, 180, 64, "log/journal.md", "one entry per change"),
          store(590, 112, 180, 64, "journal-stamps", "this clone's register"),
          gate(680, 250, "stamped here?", 160, 56),
-         node(306, 224, 180, 52, "Refused", "a typed heading", cls="nas"),
+         node(306, 224, 180, 52, "Refused", "a typed heading"),
          flow(188, 60, 276, 60, "who, what, body", ly=52),
          flow(398, 150, 398, 86, "now", "sig", lx=420, ly=122),
          flow(520, 50, 590, 50, "appends", ly=42),
@@ -64,11 +65,11 @@ def mech_merge():
     b = [store(16, 24, 170, 62, "Record A", "a clone's branch"),
          store(16, 124, 170, 62, "Record B", "another session's branch"),
          node(236, 64, 204, 52, "git merge", "never merges a bean's lines", cls="ext"),
-         node(520, 64, 206, 52, "bin/dmmerge.py", "the daftar merge driver", cls="nas", bean="daftar"),
+         node(520, 64, 206, 52, "bin/dmmerge.py", "the daftar merge driver", bean="daftar"),
          gate(623, 190, "same establishing anchor?", 214, 58),
-         node(776, 164, 170, 52, "One canonical bean", "each fact joined", cls="nas"),
-         node(776, 276, 170, 52, "A disagreement, kept", "both values: merge_open", cls="nas"),
-         node(520, 276, 150, 52, "sam settles", "the gardener decides", cls="svc", bean="sam"),
+         node(776, 164, 170, 52, "One canonical bean", "each fact joined"),
+         node(776, 276, 170, 52, "A disagreement, kept", "both values: merge_open"),
+         node(520, 276, 150, 52, "sam settles", "the gardener decides", bean="sam"),
          flow(186, 55, 236, 82),
          flow(186, 155, 236, 100),
          flow(440, 90, 520, 90, "merge=daftar", ly=82),
@@ -87,7 +88,7 @@ def mech_merge():
 
 def _shared_name():
     """The name shared-camera carries across gardens: its establishing anchor as this garden records it."""
-    for a in ((fxmodel.fm("shared-camera").get("identity") or {}).get("anchors") or []):
+    for a in ((view_model.fm("shared-camera").get("identity") or {}).get("anchors") or []):
         if isinstance(a, dict) and a.get("establishing"):
             return str(a.get("value"))
     return "contract:shared-camera"
@@ -97,12 +98,12 @@ def mech_mycelium():
     b = [boundary(16, 16, 300, 270, "garden-sam — kept by sam"),
          boundary(566, 16, 378, 270, "garden-ali — kept by ali"),
          store(36, 55, 260, 70, "shared-camera", "the agreement both are parties to", bean="shared-camera"),
-         node(36, 200, 150, 52, "sam", "the gardener", cls="svc", bean="sam"),
+         node(36, 200, 150, 52, "sam", "the gardener", bean="sam"),
          store(340, 55, 200, 70, "A proposal", "one file, beside both gardens"),
          gate(640, 90, "clean?", 100, 48),
-         node(720, 64, 210, 52, "ali's working tree", "taken: written, not committed", cls="nas"),
+         node(720, 64, 210, 52, "ali's working tree", "taken: written, not committed"),
          node(780, 200, 150, 52, "ali's commit", "the ratification", cls="accent"),
-         node(590, 200, 140, 52, "ali", "the gardener", cls="svc", bean="ali"),
+         node(590, 200, 140, 52, "ali", "the gardener", bean="ali"),
          flow(111, 200, 111, 125, "a party", "sig", lx=142, ly=166),
          flow(296, 90, 340, 90, "make", ly=82),
          flow(540, 90, 590, 90, "read", ly=82),
@@ -122,10 +123,10 @@ def mech_mycelium():
 def mech_ledger():
     b = [store(16, 24, 200, 66, "shared-camera", "what moved: paid and borne", bean="shared-camera"),
          store(16, 150, 200, 66, "washer-loan", "lent, and repaid monthly", bean="washer-loan"),
-         node(350, 94, 190, 52, "bin/dmledger.py", "reads, in fractions", cls="nas", bean="daftar"),
+         node(350, 94, 190, 52, "bin/dmledger.py", "reads, in fractions", bean="daftar"),
          gate(655, 120, "comes out even?", 150, 54),
          node(770, 94, 176, 52, "What is owed", "read, never stored", cls="accent"),
-         node(770, 232, 176, 52, "Between two", "netted across agreements", cls="nas"),
+         node(770, 232, 176, 52, "Between two", "netted across agreements"),
          flow(216, 57, 350, 108, "transactions", lx=283, ly=72),
          flow(216, 183, 350, 132, "transactions, clauses", lx=283, ly=184),
          flow(540, 120, 580, 120),

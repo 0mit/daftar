@@ -58,6 +58,8 @@ Read these when a question needs them, and only the part it needs:
    document, and a value or a kind of fact the vocabulary does not have yet.
 5. `python3 bin/dmrules.py` — every rule in force, derived from the vocabulary rather than restated — and
    `seed/std-vocab.md`, the vocabulary itself. Both are long: for one rule, `python3 bin/dmwhy.py <name>`.
+6. `assets/<profile>/README.md`, **if `VOCAB.md` extends a profile that has an asset** — what the asset does with
+   that profile's facts, and the commands it runs.
 
 ## Working
 

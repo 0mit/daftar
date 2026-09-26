@@ -20,6 +20,7 @@
         <li><a href="use-cases/index.html">Use cases</a></li>
         <li><a href="metaphysics.html">Metaphysics</a></li>
         <li><a href="machinery.html" aria-current="page">Machinery</a></li>
+        <li><a href="terminology.html">Terminology</a></li>
         <li><a href="contribute.html">Contribute</a></li>
         <li><a href="https://github.com/0mit/daftar">GitHub <span aria-hidden="true">↗</span></a></li>
       </ul>
@@ -74,7 +75,7 @@
   <h2 id="levels">Four levels, four questions</h2>
   <p class="measure">Each mechanism is drawn at four levels of detail, from what it is to what exactly runs. The levels and their
     questions are the drawing tool's own definitions, recorded in the demo garden:</p>
-  <!-- daftar:drawn id="levels" --><div class="table"><table><thead><tr><th scope="col">level</th><th scope="col">for</th><th scope="col">the question it answers</th></tr></thead><tbody><tr><th scope="row">Orient — what it is</th><td>a newcomer: a new colleague, a manager seeing it for the first time, anyone who has never touched it</td><td>What does this mechanism do for us, what is it built from, and where do I learn it properly?</td></tr><tr><th scope="row">Understand — how it works</th><td>a technical manager or engineer who must reason about it</td><td>How do the parts co-operate, where does the mechanism decide, and where is it fragile?</td></tr><tr><th scope="row">Operate — is it working</th><td>the engineer on call</td><td>What must the person on call know first about this mechanism, right now?</td></tr><tr><th scope="row">Inspect — what exactly</th><td>an auditor, or the engineer about to change it</td><td>What exactly are the parts, how do we know, and what is still open?</td></tr></tbody></table></div><!-- /daftar:drawn -->
+  <!-- daftar:drawn id="levels" --><div class="table"><table><thead><tr><th scope="col">lens</th><th scope="col">drawn as</th><th scope="col">what it shows</th></tr></thead><tbody><tr><th scope="row">orient</th><td>story</td><td>what the drawn thing does and what it is built from, for someone who has never touched it: its purpose, three to five stages in the order work flows, its outcome, and each technology's own documentation. No address, port or live value</td></tr><tr><th scope="row">understand</th><td>schematic</td><td>how the parts co-operate, where the work is decided and where it is fragile: parts by what they do, flows as verbs, decisions as gates, boundaries where ownership or network changes. No address or live value</td></tr><tr><th scope="row">operate</th><td>health-chain</td><td>what the person on call must know first, now: the drawn thing's own vital sign in a shape native to it (a row of `view_archetypes`), the evidence beneath it, what the page cannot see, and where a person may act</td></tr><tr><th scope="row">inspect</th><td>anatomy</td><td>what exactly the parts are and how that is known: a card of each part's own facts with their provenance, the steps, the wiring, and what is still open</td></tr></tbody></table></div><!-- /daftar:drawn -->
 </section>
 
 <section aria-labelledby="report">
@@ -95,7 +96,7 @@
       part reads “no signal”, with the tool's own reason. That is the demo garden's true state, not a fault. No mechanism
       declares a live shape, because declaring one without data would be a false claim. For each, the shape it would take:</li>
   </ul>
-  <!-- daftar:drawn id="cannot" --><ul><li><strong>The gate</strong>: it would take the <em>funnel</em> shape with live data. A funnel counts the commits that arrive, those stopped at each check and those recorded; this garden exports no count of its hook's verdicts, and no Prometheus reads it.</li><li><strong>The journal</strong>: it would take the <em>roster</em> shape with live data. A roster shows who writes, and how much, from a live series; nothing here measures the journal.</li><li><strong>The merge</strong>: no shape of the drawing kit fits it. A merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric.</li><li><strong>The mycelium</strong>: no shape of the drawing kit fits it. What waits to be taken is a proposal file beside the gardens, not a metric.</li><li><strong>The ledger</strong>: no shape of the drawing kit fits it. What falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric.</li></ul><!-- /daftar:drawn -->
+  <!-- daftar:drawn id="cannot" --><ul><li><strong>The gate</strong>: it would take the <em>funnel</em> shape with live data. A funnel counts the commits that arrive, those stopped at each check and those recorded; this garden exports no count of its hook's verdicts, and no monitor reads one.</li><li><strong>The journal</strong>: it would take the <em>roster</em> shape with live data. A roster shows who writes, and how much, from a live series; nothing here measures the journal.</li><li><strong>The merge</strong>: no shape of the view asset fits it. A merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric.</li><li><strong>The mycelium</strong>: no shape of the view asset fits it. What waits to be taken is a proposal file beside the gardens, not a metric.</li><li><strong>The ledger</strong>: no shape of the view asset fits it. What falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric.</li></ul><!-- /daftar:drawn -->
   <ul class="prose">
     <li><strong>Actions.</strong> None is placed: an action asks for a tool that only a host's own configuration can run.</li>
     <li><strong>Author.</strong> The report's editor for the drawing's record works on a copy in your browser, and nothing reads
@@ -115,32 +116,48 @@
   <p class="measure">A clone of the demo garden-sam records daftar as a product bean, one mapping for each mechanism, and the
     drawing's record; the drawing tool is vendored into the clone at a tagged release; then it checks the record against the
     drawings and writes the report. The commands, and what they printed:</p>
-  <!-- daftar:drawn id="transcript" --><pre class="out" tabindex="0" aria-label="how the report was drawn"><code><span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "daftar's mechanisms recorded, and how they are drawn" --body "- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], [[mycelium]] and [[ledger]]; [[factory]] and [[design-factory]], which draw them; bin/mechanisms.py, the drawings (site/machinery/composers.py).
-- why: the machinery page of daftar's site shows these mechanisms, drawn at four levels."</span>
-## 2026-10-27 09:00+00:00 · sam · daftar's mechanisms recorded, and how they are drawn
-<span class="cmd">~/garden-sam$ git add -A</span>
-<span class="cmd">~/garden-sam$ git commit -q -m "daftar's mechanisms recorded, and how they are drawn"</span>
-garden-sam (daftar v0.33.1, gardener sam, garden 875a6f4d60d5): 21 docs, 0 error(s), 0 warning(s)
-…
+  <!-- daftar:drawn id="transcript" --><pre class="out" tabindex="0" aria-label="how the report was drawn"><code><span class="cmd">~/garden-sam$ python3 bin/dmupgrade.py v0.38.0 --from ~/daftar --extend view</span>
+handing over to v0.38.0's own bin/dmupgrade.py — a release is applied by its own upgrade logic
+upgraded to v0.38.0 (c8f7c5735d52): std-vocab 22.0 -&gt; 23.1; 36 changed, 31 added, 0 removed, 3 repinned; profiles +view.
+translated: std-vocab 23.1, what the law now says itself — nothing to translate
+garden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 13 docs, 0 error(s), 0 warning(s)
 
-fast: 14/14 corpus checks passed
-<span class="cmd">~/garden-sam$ python3 ~/factory/bin/factory upgrade --from ~/factory --garden .</span>
-factory: vendored v0.6.5 (15 files) into factory; the pin in [[factory]] now says v0.6.5. The skill is mirrored at .claude/skills/factory/SKILL.md. Nothing is committed.
-Journal it in the same commit, e.g.:
-- factory v0.6.5 vendored from ~/factory (`factory upgrade`); [[factory]] details.factory_release moved.
-<span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "factory v0.6.5 vendored" --body "- action: factory v0.6.5 vendored into factory/ by factory upgrade, which mirrors its skill at .claude/skills/factory/SKILL.md; [[factory]] already pins v0.6.5."</span>
-## 2026-10-27 09:00+00:00 · sam · factory v0.6.5 vendored
-<span class="cmd">~/garden-sam$ git add -A</span>
-<span class="cmd">~/garden-sam$ git commit -q -m "factory v0.6.5 vendored"</span>
-garden-sam (daftar v0.33.1, gardener sam, garden 875a6f4d60d5): 21 docs, 0 error(s), 0 warning(s)
+NOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then
+  git add -A
+  git commit
+To abandon it instead:
+  git checkout -- .
+  git clean -f -- MANIFESTO.md assets/view/README.md assets/view/bin/dmview.py assets/view/lib/sources/prometheus.py assets/view/lib/view_kit.py assets/view/lib/view_model.py assets/view/lib/view_report.py assets/view/lib/view_runtime.js assets/view/lib/view_serve.py assets/view/templates/drawings.py assets/view/templates/serve.json bin/dmforms.py bin/dmpass.py bin/dmsave.py bin/dmseq.py seed/CHANGELOG.md seed/FORMS.md seed/LICENSE-AGPL-3.0-or-later.txt seed/LICENSE-CC-BY-4.0.txt seed/LICENSE-CC-BY-SA-3.0-IGO.txt seed/LICENSE-CC0-1.0.txt seed/LICENSE-LicenseRef-ILO-ISCO-08.txt seed/LICENSE-LicenseRef-daftar-garden-exception.txt seed/LICENSE-Unicode-3.0.txt seed/LICENSE.md seed/knowledge/crosswalk-dwc.tsv seed/knowledge/crosswalk-fhir-r5-observation.tsv seed/knowledge/ics-chart-2026-06.tsv seed/knowledge/mechanisms.yaml seed/knowledge/substances.tsv seed/knowledge/time-zones.tsv
+<span class="cmd">~/garden-sam$ git diff -U0 -- log/journal.md</span>
 …
-
++
++## 2026-10-27 09:00+00:00 · sam · RULE-CHANGE: language upgraded to daftar v0.38.0
++- ratified_by: sam, here: the word of the gardener
++- action: **RULE-CHANGE — `bin/dmupgrade.py v0.38.0`** from ~/daftar at c8f7c5735d525b75a2e238489b1952db86e694a0; std-vocab 22.0 -&gt; 23.1; release v0.34.0 -&gt; v0.38.0.
++- changed: .claude/skills/daftar/SKILL.md, .gitattributes, AGENTS.md, CHECKLIST.md, MERGE.md, MODEL.md, bin/dmcal.py, bin/dmcheck.py, bin/dmform.py, bin/dmingest.py, bin/dmjournal.py, bin/dmledger.py, bin/dmmerge.py, bin/dmparse.py, bin/dmpos.py, bin/dmpropose.py, bin/dmpublic.py, bin/dmreform.py, bin/dmreview.py, bin/dmrules.py, bin/dmsession.py, bin/dmstale.py, bin/dmupgrade.py, bin/dmwhy.py, bin/hooks/pre-commit, seed/COOKBOOK.md, seed/LANGUAGE, seed/PUBLIC-ALLOW, seed/RATIONALE.md, seed/README.md, seed/WELCOME.md, seed/germinate.py, seed/knowledge/SOURCES.md, seed/std-vocab.md, test/fast.py, VOCAB.md (extends_profiles)
++- added: MANIFESTO.md, assets/view/README.md, assets/view/bin/dmview.py, assets/view/lib/sources/prometheus.py, assets/view/lib/view_kit.py, assets/view/lib/view_model.py, assets/view/lib/view_report.py, assets/view/lib/view_runtime.js, assets/view/lib/view_serve.py, assets/view/templates/drawings.py, assets/view/templates/serve.json, bin/dmforms.py, bin/dmpass.py, bin/dmsave.py, bin/dmseq.py, seed/CHANGELOG.md, seed/FORMS.md, seed/LICENSE-AGPL-3.0-or-later.txt, seed/LICENSE-CC-BY-4.0.txt, seed/LICENSE-CC-BY-SA-3.0-IGO.txt, seed/LICENSE-CC0-1.0.txt, seed/LICENSE-LicenseRef-ILO-ISCO-08.txt, seed/LICENSE-LicenseRef-daftar-garden-exception.txt, seed/LICENSE-Unicode-3.0.txt, seed/LICENSE.md, seed/knowledge/crosswalk-dwc.tsv, seed/knowledge/crosswalk-fhir-r5-observation.tsv, seed/knowledge/ics-chart-2026-06.tsv, seed/knowledge/mechanisms.yaml, seed/knowledge/substances.tsv, seed/knowledge/time-zones.tsv
++- removed: none
++- repinned: VOCAB.md, GARDEN.md, GARDEN.md daftar_release
++- translated: std-vocab 23.1, what the law now says itself — nothing to translate
++- profiles: +view
++- why: the view asset, which draws daftar's mechanisms for the machinery page of daftar's site
++- beans: none
+<span class="cmd">~/garden-sam$ git add -A</span>
+<span class="cmd">~/garden-sam$ git commit -q -m "daftar v0.38.0, with the view profile"</span>
+garden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 13 docs, 0 error(s), 0 warning(s)
 fast: 14/14 corpus checks passed
-<span class="cmd">~/garden-sam$ python3 factory/bin/factory check</span>
-factory: the record and the drawings agree
-<span class="cmd">~/garden-sam$ python3 factory/bin/factory report --out ../report.html</span>
-factory report: 5 mechanisms (5 shown) + reference + author mode -&gt; ../report.html</code></pre><!-- /daftar:drawn -->
-  <!-- daftar:drawn id="when" --><p>Drawn by factory v0.6.5 on 2026-09-23 15:35 UTC, from a clone of garden-sam grown by daftar v0.33.1. Its garden ids are those of the build that drew it: each build of these pages grows the gardens again, with new ids. That is not the release every other output on these pages comes from, daftar v0.34.0: the drawing, its commands and its report say what that garden said, in the words of the law daftar v0.33.1 carried, and a word the law has renamed since is in them as it was. <code>python3 bin/dmwhy.py retired</code> lists what each old word became.</p><!-- /daftar:drawn -->
+<span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "daftar's mechanisms recorded, and the page that draws them" --body "- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], [[mycelium]] and [[ledger]]; [[machinery]], the page that draws them, and drawings/mechanisms.py, its drawing module (site/machinery/composers.py).
+- why: the machinery page of daftar's site shows these mechanisms, drawn at four lenses."</span>
+## 2026-10-27 09:00+00:00 · sam · daftar's mechanisms recorded, and the page that draws them
+<span class="cmd">~/garden-sam$ git add -A</span>
+<span class="cmd">~/garden-sam$ git commit -q -m "daftar's mechanisms recorded, and the page that draws them"</span>
+garden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 20 docs, 0 error(s), 0 warning(s)
+fast: 14/14 corpus checks passed
+<span class="cmd">~/garden-sam$ python3 assets/view/bin/dmview.py check</span>
+dmview: the page and its drawings agree
+<span class="cmd">~/garden-sam$ python3 assets/view/bin/dmview.py report --out ../report.html</span>
+dmview report: 5 drawings + reference + author mode -&gt; ../report.html</code></pre><!-- /daftar:drawn -->
+  <!-- daftar:drawn id="when" --><p>Drawn by dmview, of daftar v0.38.0, on 2026-09-25 17:07 UTC, from a clone of garden-sam grown by daftar v0.34.0 and moved to daftar v0.38.0. Its garden ids are those of the build that drew it: each build of these pages grows the gardens again, with new ids. That is not the release every other output on these pages comes from, daftar v0.34.0: the drawing, its commands and its report say what that garden said, in the words of the law daftar v0.38.0 carries, and a word one of the two laws has renamed is in them as that law says it. <code>python3 bin/dmwhy.py retired</code> lists what each old word became.</p><!-- /daftar:drawn -->
   <p class="measure">The drawings and the record are files of this site:
     <a href="https://github.com/0mit/daftar/blob/master/site/machinery/composers.py">site/machinery/composers.py</a> draws each
     mechanism with the tool's pattern kit, and <a href="https://github.com/0mit/daftar/blob/master/site/machinery/record.yaml">site/machinery/record.yaml</a>
@@ -150,7 +167,7 @@ factory report: 5 mechanisms (5 shown) + reference + author mode -&gt; ../report
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
   <div>
-    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.33.1</code>.</p>
+    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.38.0</code>.</p>
     <p>Code AGPL-3.0-or-later · words and drawings CC BY 4.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
   </div>
 </footer><!-- /daftar:part -->

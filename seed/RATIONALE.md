@@ -36,6 +36,16 @@ A term with no `schema:` is documentation only; the gate never enforces it on be
 WHAT `in:` MAY SAY. Every attribute is a position in EXACTLY ONE domain,
 so `in:` is one thing, and it is never absent.
 
+
+A DOMAIN GIVES THE ORIGIN, so almost nothing states one. A closed list, a registry and an aspect are the law's; a
+reference is the garden's (`by: law`); a date, a quantity, a position in a system, an extent and a recurrence are
+said, the strictest reading — a day read from the clock or the world is the exception, and its position says so
+(sixteen do); prose, a pattern and a kebab name are
+made, because they are how a writer names and describes. `untyped` is said, the strictest, until someone declares
+it. `entries` and `any` are `inner`: their positions are their own entries', or the field's they track, and an origin
+of their own would be a second answer. Every domain `attr_domains` offers carries its origin beside its form, and the gate refuses a domain
+without one — a new domain is placed when it is declared, not found empty by a flow the law cannot judge.
+
 ## schema_language.sums
 
 PARTS ADD UP TO THEIR WHOLE, EXACTLY. A construct, not a rule on one term: whatever holds the parts of a measured
@@ -62,6 +72,11 @@ with the calendar would make the gate fail on a day for no committed reason.
 ten terms carried an iso_date and nine of them were `observed` or `as_of`: the day a fact was read, not the day it
 runs out.
 
+`relative`, `lapses`, `stance` and `condition` (24.0) each NAME an attribute of the term, as `attr` and `repeats` do, and
+the gate refuses one that names none: a position stated relative to another, a permission that lapses rather than falls
+due, the words chosen by the entry's effective stance, and a condition in place of a day. They are declared here and
+read by the parts that build them.
+
 ## schema_language.required_on_gene
 
 THE AXIS IS READ FROM THE REGISTRY (22.0). A `required_on_<registry>` or `only_on_<registry>` key names a registry, and
@@ -76,6 +91,115 @@ THE MIRROR OF `required_on_gene`. The language could say that a genos of being m
 it may, so a term that is a fact about one genos of being — that another garden is a rehearsal — could sit on a person,
 where nothing reads it. The alternative was the gate naming the term and the genos in its code, which is the one thing
 the interpreter does not do.
+
+## schema_language.at_most_one_of
+
+A CONTRADICTION IS REFUSED WHERE IT IS WRITTEN (24.0). `entry_one_of` could say that an entry states at least one of a
+group, and nothing could say that it states at most one: a clause could carry a stated `due` beside a `falls_due` that
+computes one, and a value a `u` beside an `accuracy`, and every reader then chose between them in its own way. A group of
+which at most one may be held says it once, in the law, and names both when two are written. Beside `entry_one_of` on
+the same group it says exactly one.
+
+## schema_language.keyed_by
+
+ONE ENTRY PER KEY, ON THE TERM ITSELF (24.0). `keyed_by` inside `in: entries` held a nested list to one entry per value
+since 21.0. Several mechanisms of 24.0 needed the same of a term's own entries, and some by more than one attribute —
+one observer's one verdict on one entry — so the construct is stated beside `shape` too, and takes a list: one entry per
+combination of values. An entry holding none of the attributes is not counted, because a key it does not have cannot be
+repeated; a merge sorts a compound-keyed list by the tuple of its values.
+
+## schema_language.exclusive
+
+DECLARED, AND ON NO TERM (24.0). Some extents cannot overlap for one being in one role — one person booked twice for the
+same days, one room lent twice — and the check is across every bean of the garden, not inside one. The construct is in
+the language so that a garden which needs it writes it in its own VOCAB.md, as a RULE-CHANGE; the law puts it on no term,
+because nothing the standard holds is exclusive for every garden.
+
+## extent_form.level
+
+A MONTH IS NOT A MEASURE (24.0). `not_a_calendar_bucket` refused a month as a length because it is 28 to 31 days, and
+that left no way to say "for one month" at all. A length counted in CELLS of a level of the system named says it without
+pretending to arithmetic: from a day, the other end is the same place in the cell that many cells on, and where that
+cell has no such place, its last one, said aloud. `measure` and `level` never stand together, because one length has
+one spelling.
+
+## value_types[moment]
+
+A POSITION BELOW THE DAY (24.0). Until 24.0 a clock time on a date was refused as finer than the type, and the only
+moments the law knew were the journal's headings. A moment is held to the minute or finer, in any calendar, with the
+offset it was read at — the form of a heading, so there is one form of a moment and not two.
+
+## value_types[date_or_moment]
+
+HELD TO THE UNIT IT IS WRITTEN AT (24.0). Some positions are a day for one entry and a moment for the next — a clause
+due on a day, another due at eleven. Two attributes for one position would let an entry state both; `either` names the
+types a value may be, and the value is held to the one it passes. It is the one row that uses `either`, declared by its
+own meaning rather than as a new construct of the language.
+
+## value_types[field_path]
+
+ONE SPELLING OF A PATH INTO WHAT BEANS HOLD (24.0). A reading, a checklist, a grant and a page each name a value inside
+a bean, and each would otherwise invent a syntax for it. The pattern is the law's, and one reader in bin/dmparse.py
+reads it, so a path is judged and followed the same way everywhere. `>` follows a ref because the graph is made of refs;
+`[<attr>=<value>]` selects entries by what they hold rather than by their position, which carries nothing.
+
+## value_types[held_pointer]
+
+A POINTER THAT SAYS NOTHING OF WHAT IT POINTS AT (24.0). Material kept off git is found through a logical root each
+host resolves for itself, and a key minted at random: a name chosen by a person would carry what it names into the
+history that the material was kept out of.
+
+## value_types[language_tag]
+
+A LANGUAGE AS THE WORLD ALREADY WRITES ONE (24.0). BCP 47 is the form every other system that names a language uses;
+the pattern takes its language, script and region subtags, which is what a garden's words have needed.
+
+## uncertainty_form
+
+HOW WELL A VALUE IS KNOWN, IN THE WORDS OF THE GUIDE (24.0). A value was exact as written, always. A reading has an
+uncertainty, and a comparison that ignores it says two values differ when nothing can tell them apart. `u` is the
+standard uncertainty of JCGM 100:2008, in a unit of the value's own quantity; `accuracy` keeps what a maker stated, with
+its kind, because turning it into `u` is a reader's act and a writer who did it would state a number nobody measured. A
+value stating neither is exact as written, and a reader combining it says so rather than inventing one.
+
+## accuracy_kinds
+
+WHAT A MAKER'S ACCURACY MEANT (24.0). The same "± 5 m" is a bound, a 68 % radius or a 95 % radius, and they differ by a
+factor of up to about four; the kind is written beside it so that a reader turns it into `u` by the rule for its kind.
+`unstated` is kept as said and never read as a standard uncertainty.
+
+## selection_form
+
+ONE GRAMMAR OF READINGS, AND NO FORMULA (24.0). A clause's condition, a checklist's `met_by`, a grant's audience and a
+page's table are each a selection of beans or entries and something computed from it. Written as steps of a closed list
+of operations, each naming earlier steps only, a reading cannot loop and no string is evaluated; read each time by one
+reader, it is never written back as a fact. An act that fixes a reading records the commit it was read at.
+
+## operations
+
+CLOSED, SO THAT A READER CAN HOLD EVERY ONE (24.0). Each row says what it takes, in the attribute language every term
+uses, and what it gives. A set, a truth that may be NOT KNOWN, a value with its uncertainty, an order, groups: the
+kinds are few so that a result is always one a person can check. bin/dmreckon.py applies these rows and nothing else; `takes` is an attribute block, read as `attrs` are. Rows are added by the release that builds their
+evaluation, and by no other.
+
+## comparators
+
+A CONDITION NAMES ITS COMPARISON (24.0). `monotone` marks the comparisons whose answer never turns back — what has been
+reached stays reached — because a reading over them can be read once per occurrence and not re-judged.
+
+## terms[selections]
+
+A READING IS DECLARED WHERE IT IS ABOUT (24.0). A selection is a key of a bean's `selections`, named from anywhere by
+`key_of: selections` — the one spelling the law already had for "a key of a term on a bean" — rather than by a new
+wrapper. It is read each time and never stored, so it cannot go stale.
+
+## schema_language.series
+
+ONE CONTROLLER FOR WHAT ONLY THE WHOLE ENTRY SAYS. Each attribute of a series is judged by the rule its domain already
+has — the recurrence, the extent, each channel's registry and type. What none of them can say alone — that the unit
+measures the line, that the stride is whole, that the header names the channels, that each cell is one its channel
+holds, that a monotone channel never goes back, that an exclusion names a row — is read by the one reader of a series,
+which the gate asks, as it asks the one reader of the layer map.
 
 ## crown
 
@@ -257,6 +381,28 @@ where its name went, so a garden not yet upgraded is refused with the new word, 
 name retired at the crown and is still a bean's attribute, and `kind` is retired on a bean and is still a mapping's: a
 name retired in one place may be live in another, and a row's `at` says which.
 
+## senses
+
+ONE NAME, ONE SENSE, JUDGED ONCE (24.0). What an attribute name means is read from its domain, over every term the law,
+its profiles and a garden declare, by bin/dmform.py. A name two domains give — `at` a moment in one term and a file
+pattern in another — or a name spelled as a term or a table that takes none of it is a finding, and each finding is a
+row: the one sense its uses share, in words. A finding with no row is a second sense and is refused, so a new name is
+chosen where a new sense is meant; a row whose finding has gone is refused as stale, since no judgment outlives its
+cause. Structure answers first, and a row only where structure cannot: an attribute taking a row of the table it is
+named for (or of the one named for many of it, `view` of `views`), of the table whose key column carries its name, a
+key of that term, or the attribute of the term it names, is in its sense without a row; a value type on a dimension
+gives the dimension, so a day and a moment are one sense at two precisions; a domain nobody declared gives no sense to
+compare; and a retired name is retired at its own position, which no attribute inside a term is.
+
+The rows were a judgment kept in one test, over the one profile with an asset; the law now carries them, and the gate
+asks them of every garden. A garden judges its own term's finding in VOCAB.md, and a garden's term giving a name the
+law judged a domain the law's row did not judge is a finding of the garden's too: that row judged the domains it saw,
+and whether the new use is in its sense is the garden's to say, in its own row, or to rename. Where a finding
+was one sense under two names, the names were made one: a pass says `from` and `to`, as a flow row does; its metadata
+counts `characters`, and nothing counts lines; a datum's `direction` is before or after, as an order's is ascending or
+descending; a table of a view reads a `series`, which is what it points at; and a fixing position's `origin` is an
+origin, in the form every position's origin takes.
+
 ## provenance_record
 
 THE RECORD EVERY FACT CARRIES, DECLARED. The merge has read `from` since a generated fact first borrowed the
@@ -270,9 +416,9 @@ proposal carries the fact across, and never changed — so an assertion that arr
 person's assertion, and the guard that an inference never overrides it holds across the boundary without a single
 new rule. It must name a garden this one knows: a fact from a garden nobody recorded has no one to ask.
 
-## provenance_record.as_of
+## provenance_record.origin
 
-STAMPED, NOT TYPED (23.0), for the reason the journal heading is (20.0) and with the same reading of the clock. The
+STAMPED, NOT TYPED (23.0; since sources-by-nature, `as_of` read `by: save`), for the reason the journal heading is (20.0) and with the same reading of the clock. The
 day of writing is a fact the writer is the one source of, and a writer who types it types a remembered day: measured
 on a local model with no date in its context, every `as_of` it wrote was the nearest date in view — the forms'
 example day, or the gardener's own stamp read in another bean. The gate cannot tell a typed day from a read one by its
@@ -285,6 +431,48 @@ stamp came from belongs to the value, not to a position: a record taken in from 
 `garden` and keeps its stamp; the merge engine's own record says `merged`, because when a merge happened is git's to
 say. Neither is an escape a writer can type: this garden's own id exempts nothing, and `merged` passes only on the
 merge engine's record.
+
+## schema_language.origin
+
+EVERY POSITION SAYS WHERE ITS VALUE COMES FROM (24.0, the Leviathan's Body 2, ratified 2026-09-25). A tool that
+must know whether a day was someone's word or the clock's kept its own list of names — `as_of` and `observed` in the
+forms, in the save, twice in the gate, and once more in the bench's tracer — and five lists of one fact drift. The
+position says it instead, once — `origin: {act, nature?, by?}` — and every reader asks bin/dmpass.py. It is stated only where
+the domain's default is wrong, and the gate refuses one stated equal to its default, so the statements that exist are
+exactly the exceptions a reader should notice.
+
+It began as `stamped: true` (the release of 2026-09-25, F8, with a platform case's finding that a typed move's moment is
+invented): a move records the moment it was made, and a typed moment is exactly where invented days came from, since a
+writer types the nearest time in view. `by: save` is that facet with its siblings: the save writes `now` away — the
+day of its heading at a date, the heading's whole moment at a moment, read from the position's type — and the gate holds
+a value a commit adds to the reading of a heading the same commit adds. The save finds a `now` by the attribute's name,
+so one name read as a day in one place and a moment in another is refused: it could not tell which to write. The day of
+`as_of` keeps its own statement (`provenance_record.origin`) because it lives on every record, not on a term; so does
+the journal's heading (`journal.origin`).
+
+## acts
+
+TWO QUESTIONS, NOT FIVE ANSWERS (sources-by-nature, ratified 2026-09-26). Part 10 wrote five origins — said, stamped,
+observed, law-owned, composed — beside a list of clocks and a table of each domain's default, while where a crosswalk, a reckoning and a
+datum come from, how a `provenance_src` is known and what fixes a boundary each answered the same question in a list of
+its own. Laid side by side, every one of those names answers two questions at once: HOW the value came to be where it
+is, and WHAT KIND of source it came from. `said` held a person and a document; `composed` held a minted name and a
+digest; `observed` was a reading of a body. So the law asks the two apart. The act is one of four — made here, derived
+from what was given, read off the world or a clock, said — and the source's nature is one of the natures a being
+already has: a machine's clock is soma, a document lekton, a person empsychon. A tool's output is physis, derived by a
+body from what it was given; a document's word is logos; a person's is agape.
+
+`by` names the few places where WHO performs the act changes how it is judged: the save reads the clock, and a typed
+value is refused (`save`, once `stamped`); the reckoner reads it at the moment of reading (`reader`); the schema owns the
+values (`law`, once `law-owned`, widened by the gardener on 2026-09-26 to the beings, parts and fields a garden holds,
+since the gate resolves every one); another garden said it, and the flow law judges it (`garden`). A reading typed by
+its recorder has no `by`: the recorder may report a reading made before the entry that records it, so `now` is offered
+and a typed value stands.
+
+The order is DERIVED, not written: acts lightest first — what is made holds nothing given, what is derived holds
+nothing its inputs did not, a reading can be read again, and what is said can be asked of the one who said it — then the
+natures in their own order. That is the provenance rank as it always stood, and it places a value it never had a place
+for: a document's word, above what was read off the world and below a person who can be asked.
 
 ## natures
 
@@ -402,6 +590,12 @@ postal layer and an administrative tree over one territory, two classifications 
 work. `crosswalk` says how a position in one is found in another: `computed` (by rule),
 `table` (somebody publishes the correspondence), `observed` (it is looked up in what was seen),
 `none`. Neither system is the other's parent; that is what distinguishes this from `within`.
+datum             (24.0) what a position here is an offset FROM: `being`, the being the position names, or
+{system, at, direction: before | after}, a position of another system. Two systems over one ground whose
+datums are in one system are crosswalked by computing.
+cells_in          (24.0) the table whose rows are its cells, `{registry, take}`; `overlay` a table whose rows win
+over them, each with its `source`; `boundaries_in` what fixes each cell's base (`fixing`).
+unit_symbols      (24.0) the symbols its positions are written in, each naming a unit of its dimension.
 example           one position in the system's form. The gate holds it to the system's own pattern, so the form
 a reader is shown is one the gate accepts.
 THE GATE CHECKS THE SHAPE, not its use: that what a row names exists, that `within` and `resolves_through` never
@@ -452,6 +646,16 @@ that learned an observed calendar would have started refusing its days on arithm
 ## anchor_systems[unix-filesystem].levels
 
 a tree of any depth; a position is held to whatever depth it is written at
+
+## anchor_systems[unix-filesystem].datum
+
+A PATH IS AN OFFSET FROM A DATUM A HOST DEFINES (24.0, Body 2 of the Leviathan; carried from PLACE). `root:<name>/<rel>`
+is `<rel>` from the root `<name>`, which each host states for itself in its `roots`; `<host>:<path>` is an offset from
+the host named in the position; `<root>@<object>` is an object reachable from a root. Where and when were already one
+mechanism, an offset from a being or from another system's position; a path is the third datum, and one resolver
+(`dmwhere.on_host`) reads it for every tool that asks where a tree is. The systems a host anchors were a list of three
+names in that tool, and a garden's own filesystem system would have been read as a coordinate; `datum: host` puts the
+fact in the row, where the gate holds it to a place.
 
 ## anchor_systems[git-object-graph].neighbours
 
@@ -655,6 +859,87 @@ were measured finer and rounded. Two positions whose resolutions OVERLAP ARE NOT
 that cannot say so invents an order instead — which is the failure this registry exists to make
 expressible. Keyed by `dimension`, so a length or an angle joins without a rule-change.
 
+## aspects[temperature]
+
+A TEMPERATURE IS WHERE SOMETHING IS ON A LINE, NOT HOW MUCH OF SOMETHING IT HAS. 36.4 °C is not 36.4 of anything: twice
+it is not "twice as hot", and adding two readings means nothing. What is additive is a DIFFERENCE — a rise of 2.5
+kelvin — exactly as a moment is a position on time and only a duration is a quantity. So the law says it the way it
+already says time: an aspect of one metered line (`temperature`), scales that are position systems on it
+(`kelvin-scale`, `celsius-scale`, `fahrenheit-scale`), and a quantity for the length of a region of it,
+`temperature-difference`, whose unit is the kelvin. That keeps the rule that a unit's factor is a pair of whole numbers
+with no offset (`## quantities`): the offset between Celsius and kelvin is the crossing between two SYSTEMS, computed
+exactly (`crosswalk: computed`, as the calendars cross), and never a property of a unit.
+
+The three scales are declared beside each other and none is the one a reading must be converted to: a thermometer that
+reads Fahrenheit is recorded in Fahrenheit, as a date is recorded in the calendar it was written in (manifesto:
+sibling).
+
+## anchor_systems[celsius-scale]
+
+`K = C + 273.15` and `F = C × 9/5 + 32` are definitions, so the crossing is exact arithmetic on decimals; nothing about
+it is observed. `same_ground_as` says the three scales position the one line, which is what lets a reading in one be
+compared with a reading in another at all.
+
+## quantities[number]
+
+HOW MANY THINGS, COUNTED, IS NOT A SHARE. Two seats at a recital, forty stems in a crate, three units of stock: each is
+dimensionless, and each would have fitted `ratio` by its dimensions alone. It is kept apart for the reason `level` is:
+it composes differently. Counts add; a share of a whole does not add to another share of another whole. So `number`
+is its own kind, and its one unit is `item`. Not `each`, which the law already uses for "the same place in each cell"
+(`recurrence_form.each`) and for one occurrence for each member of a selection: a unit named `each` would be a second
+sense of one name.
+
+## quantities[pressure]
+
+A gauge pressure — how far above the air around it — and an absolute one are the same quantity measured from two
+zeros. The zero is a property of what was measured (a tyre's gauge pressure, an atmosphere's absolute one), so it is
+said in the property, and the unit stays one: `kilopascal` does not come in a gauge and an absolute kind. The
+millimetre of mercury is the conventional one, a definition, so its factor is exact.
+
+## units[annus]
+
+AN AGE BEFORE THE PRESENT IS COUNTED IN A YEAR OF FIXED LENGTH. A calendar year varies — 365 or 366 days, and further
+back a different calendar altogether — so an age of 12 million years cannot be counted in calendar years without
+choosing whose. The geological sciences fixed the annus (IUPAC-IUGS, 2011) at 31556925.445 seconds, and astronomy the
+julian year at exactly 365.25 days; both are declared, each as what its science publishes in, and neither is a
+calendar year. A plate's drift is written in millimetres per julian year because that is how its velocities are
+published.
+
+## reference_systems
+
+A REALISATION IS NOT ITS ENSEMBLE. WGS 84 as a receiver reports it is an ensemble of several realisations, and EPSG
+states it accurate to about 2 m: two positions in it that differ by less than that may be one place. So the row says
+so (`ensemble_accuracy`), and a reader prints it beside a position, so that nobody reads a plateau's motion of
+millimetres a year out of it. Motion that fine is published in a single realisation, ITRF2020 (`EPSG:9990`), whose
+frame epoch is given in its row.
+
+A position may also be VERTICAL — one height, on one axis — or COMPOUND, a horizontal system and a vertical one written
+together (`EPSG:4326+5773`), as EPSG writes compound systems: a borehole's collar has a place and a height, and neither
+system alone says both.
+
+## terms[located_at].schema.attrs.u
+
+HOW WELL A POSITION IS KNOWN IS PART OF THE POSITION. A phone's fix and a surveyor's differ by three orders of
+magnitude, and a position that does not say which cannot be compared with another honestly. Horizontal and vertical are
+stated apart (`u`, `u_vertical`) because they are known apart: a satellite receiver is worst in height, which is also
+where most local ground motion is. `accuracy` keeps what a receiver stated, with its kind, because the four meanings a
+device's "accuracy" can have (a bound, one standard deviation, 95 in 100, or nothing said) turn into four different
+standard uncertainties, and only a reader that knows which may turn it into one (`uncertainty_form`).
+
+## terms[located_at].schema.attrs.zone
+
+AN OFFSET IS READ FROM A ZONE, NEVER STORED. A civil clock's offset is the rule a government set for a zone, at a
+moment, and governments change the rule: a stored offset is right until the day it silently is not. So a position says
+which zone of the IANA database is in force there, and a reader asks the database for the offset at the moment it
+needs (`dmcal.py --offset`). The zones are the database's canonical ones (`registry_files[time-zones]`), so a name is
+checked against it and not guessed.
+
+## registry_files[time-zones]
+
+One row per zone whose clocks have agreed since 1970, as the IANA database's `zone1970.tab` lists them, and `Etc/UTC`
+for a reading in UTC itself. The file holds names and places, never offsets: those are read from the platform's copy of
+the same database at the moment asked, so the file never has to change when a government moves its clocks.
+
 ## vacancy_reasons
 
 == VACANCIES (Tier-0). P6/B2: whoever DECLARES a position accounts for it, so the duty to explain
@@ -767,6 +1052,16 @@ case, a plain binary its one-axis case (`confidentiality`) and a cube its three-
 figure "square" would fix a count the gate is required to derive: "when doing the squares make sure
 cubes don't bite" (the operator, 2026-08-02).
 
+## figures[sequence].holds
+
+A POSITION MAY HOLD WHAT WAS FOUND THERE (D47, "develop the sequence machinery to fit the need"). A perfusion chart, a
+moth's night, a dendrometer's record, a core's strata and a case's stages are one shape: a line, positions on it, and at
+each what was read. The operator ruled out a separate series form, so the sequence figure gains the capability beside
+the one it had — `extent: possible`, a region of the line — and nothing is restated: a series' positions are the
+recurrence's occurrences or an extent's offsets, both forms the law already owns. An opposition's positions are stances
+a being takes; there is nothing further at one to hold, so it says `holds: impossible`, and the reason is printed where
+a series is refused for lying on one.
+
 ## extent_form
 
 == EXTENT (11.2): the bounded region `figures` has declared POSSIBLE since 11.0, carried at last ==
@@ -819,6 +1114,40 @@ gate reads it from the node graph, where a scalar's style is known, and names th
 tool that prints what a garden already holds spells such characters out, so a garden written before the rule cannot
 drive the terminal of the person reading the refusal.
 
+## value_types[moment]
+
+A MOMENT IS A JOURNAL HEADING'S POSITION, and nothing new. The heading has always been held to the minute, with its
+offset, in any declared calendar; a value the save stamps from the clock takes the same form, so it is the form the
+tool writes and the gate reads. Without the offset a wall-clock reading is ambiguous — the law's own `gregorian-civil`
+row says why — so a moment always carries one. A day its calendar lacks is no moment, as it is no date.
+
+## value_types[rows]
+
+ONE TABLE, WRITTEN BY ONE WRITER (sequence critic §5.1, F11). The three sequence designs all kept a short series inline
+as a tab-separated block, and none noticed that the merge re-emits a changed member through PyYAML, which will not
+write a tab in a block even when asked: a merged chart came back as one escaped line, the same value and a page nobody
+can read (measured, Y1). So the table has one reader and one writer, both in the parser, and the merge and the
+proposals write a table through it, byte for byte. Tab-separated rather than space-separated because a cell may hold a
+space; a file only, never inline, would put a five-row stratum table outside the bean it describes.
+
+NO CELL IS EVER EMPTY (settled row 4). An empty cell leaves a trailing tab on a row, and an editor that trims trailing
+whitespace changes the number of cells — measured in a design's own example, eleven of twelve rows. A value nobody read
+is a gap token, which also says why.
+
+A HUNDRED ROWS inline, then a warning: a bean stays legible on paper, and the pure-Python YAML reader a machine
+without libyaml falls back to reads a large block sixty-five times slower (Y2). Measured again as the reader and the
+writer were built: a block of 350,400 rows (6.9 MB) loads in 0.04 s with libyaml and 2.4 s without it; the table
+reader then reads it in 0.29 s and the writer writes it in 0.42 s. The rows belong in the parts of a file
+then, and a warning says so without refusing a bean that passed.
+
+## gap_tokens
+
+A GAP IS STATED, WITH WHY. A blank and a zero both lie about a missing reading: one says nothing and the other says
+something false. The six tokens are the reasons a value is absent that the designs' cases met — nothing read, read and
+unreadable, beyond an instrument's limit (with the limit, or the channel's own), nothing there to read (a core not
+recovered, a ring never formed), and withheld from this copy, which a partial export of a held series needs. Nothing is
+absorbed at a merge: a gap against a value is a disagreement a person sees, never the value winning.
+
 ## journal
 
 == THE JOURNAL (10.0, T3): where the record of what was done is, and how an entry is headed ==
@@ -835,9 +1164,9 @@ it was written in, and those stay what they were.
 entries a commit adds; never the history
 
 
-## journal.heading
+## journal.origin
 
-STAMPED, NOT TYPED (20.0). 10.0 made a heading a position in time and the gate checks its form; the truth of
+STAMPED, NOT TYPED (20.0; since sources-by-nature, the heading read `by: save`). 10.0 made a heading a position in time and the gate checks its form; the truth of
 the moment it never could. The evening this was written, the same writer typed the time before reading the
 clock twice in five hours — 20:06 for 19:52, 22:31 for 22:09 — and both headings were of perfect form. The
 gate cannot tell a measured moment from a remembered one by looking at it. What it can tell is whether the
@@ -1000,6 +1329,94 @@ every technology names the UNESCO field(s) it belongs to (its `isced_f_2013` col
 
 fields of knowledge are the ROOT, and a protocol, a product or a routing mechanism hangs from one
 
+## view_lenses
+
+FOUR READINGS OF ONE DRAWING, EACH FOR ITS READER. A page drawn once for everybody is drawn for nobody: a newcomer needs
+the promise and the path, a manager the causes, the person on call the one vital sign, an auditor the evidence. So a
+drawing is read at four lenses, each a row: its `depth` orders them, its `form` says how it is drawn, and `max` bounds
+what it may hold, so a lens that grows past its reader's attention is refused by the asset rather than tolerated. A
+REGISTRY and not a term, as `roles` and `planes` are: the rows are the one owner of the lenses, and
+`views.questions.lens` and `view.fields.shown_from` take a row by name, so a lens nobody declared is a refusal, not a
+new lens. What each lens leaves out (an address, a live value) is said in its `meaning`, because a drawing that shows
+an address at a lens whose reader should not see one shows it to every reader of the page.
+
+## view_archetypes
+
+THE SHAPE A VITAL SIGN IS DRAWN IN. What the person on call must know first differs by what is drawn: a store fills
+toward a limit, redundant paths must each get through, a stream narrows. Each shape is a row, and what it needs is
+stated once, as a `cells` requirement on `views` (a reservoir requires `fill` and `thresholds`), so the gate refuses a
+shape that cannot be drawn; the asset holds the drawing code, and no second list of what a shape needs is kept in it.
+The `race` row reads the steps of the procedure a view `draws` — its `steps`, a walk on the `routine` sequence — in
+place of a table of phases, which would restate them. `health-chain` is the fallback, named so that falling back is a
+choice written down.
+
+## terms[observations]
+
+A READING IS KEPT AS IT WAS MADE, AND WHAT FOLLOWS FROM READINGS IS READ (24.0, step 5). The shape is ISO 19156's: a
+property, a feature of interest, a phenomenon time and a result, with the procedure and the observer. The property is
+a code of a published scheme and never a garden's own word, so two gardens' readings of one thing meet by code. A
+reading made again is a new entry: growth, drift and recovery are read from the entries, never stored beside them,
+where they would go stale. `beanger` keeps one field's own history at the moments it was written; an observation keeps
+the world at the moment it held.
+
+## terms[observations].schema.attrs.by
+
+WHO READ IT IS A BEING THE GARDEN HOLDS (24.0, N19). A reading's weight depends on the standing of whoever made it — a
+person, an instrument — and standing can only be read from a bean. An observer written as a name alone could not be
+weighed, nor asked again.
+
+## terms[observations].schema.attrs.answers
+
+A VERDICT IS AN ENTRY OF ITS OWN (24.0, N20). A second observer who confirms, disputes or will not say writes that as
+an entry which answers the first, so the first is never edited by someone who did not make it, and the disagreement
+stays visible with both speakers. One observer gives one verdict on one entry, wherever it is written: two would be one
+voice counted twice. The answer `abstains` records that someone was asked and would not say, which is different from
+never having been asked.
+
+## terms[observations].schema.attrs.presence
+
+AN ABSENCE IS A FINDING (24.0, step 5). A sign looked for and not seen, a list that does not name something, is
+evidence, and a reading that simply is not there says nothing. An absent entry states no result, because a result
+beside an absence would contradict it.
+
+## terms[observations].schema.attrs.retracted
+
+A READING IS WITHDRAWN, NEVER ERASED (24.0, step 5). Its observer's withdrawal is kept with the day it was made, and a
+reading after that day does not read the entry. Only the observer can withdraw it, so the entry carries its own
+provenance stated by a person.
+
+## terms[hearings]
+
+A DISAGREEMENT IS HEARD BEFORE IT IS RULED ON (24.0, N21; manifesto: heard). The entries in dispute, each speaker's own
+words and the ruling are kept together, and the gate refuses a ruling while a speaker of the entries it is over has not
+been heard. A ruling that skipped a side would be the record of a decision nobody could check was fair.
+
+## knowledge_scheme_form
+
+A SCHEME SAYS HOW ITS CODES ARE HELD (24.0, step 6). Some are small and free and ship with the release; some are a
+garden's own, kept as an extract it edits as ordinary journalled writes, so configuration such as kinds of leave or a
+questionnaire's questions is data, not law (F9, N28); some are too large, or not ours to copy, and are held at their
+publisher and checked here by form alone — and the gate says once that they are not looked up, so a pass is not read as
+more than it is. Licence and release say under which terms and from which edition the rows are, which is what anyone
+passing them on needs.
+
+## knowledge_scheme_form.sensitive
+
+SENSITIVITY FOLLOWS THE CODE, NOT THE FIELD IT SITS IN (24.0, F3). A diagnosis is special-category material wherever it
+is written, so the mark sits on the scheme once and every code of it carries it; nothing is left to a writer's memory.
+
+## knowledge_scheme_form.relations
+
+RELATIONS BETWEEN A SCHEME'S OWN CODES ARE ITS OWN ROWS (24.0, N23). Part of, requires, adjacent to: a scheme's
+structure beyond its tree is kept as a table of its codes, resolved like any other link, so the finder and a reading can
+follow it and a code that is not the scheme's is refused.
+
+## knowledge_scheme_form.labels
+
+A LABEL IN ANOTHER LANGUAGE KEEPS ITS PUBLISHER'S WORDS (24.0, N25). Translations are often published on condition
+that an attribution is printed with them. The attribution is kept verbatim beside the labels it covers, and every reader
+that prints a label prints it.
+
 ## profiles.code.terms[code_paths].meaning
 
 The 'paths vocab' (added 2026-08-01, human-directed): so an agent LOCATES code without re-walking a tree,
@@ -1105,6 +1522,67 @@ in relation to them: a Samba instance USES the technology samba; a mail-filterin
 field 0612; a person's role is CLASSIFIED AS 2522. One term for every scheme: the entry names its scheme
 and the gate checks the code against THAT scheme's registry. `topic` names the concept inside the field
 ("fluid pressure and flow" for espresso, inside physics) — the overlap between domains is the point.
+
+## profiles.view
+
+A PAGE THAT DRAWS WHAT THE GARDEN KEEPS, AS AN OPT-IN PROFILE. Documentation and live values that live apart drift
+apart; the profile puts both on one page, drawn from the garden's own records. It is a profile, not the core: a garden
+that draws nothing inherits none of it. Its contract is law the gate checks — four terms on one page bean, two
+registries — and opting into the profile is what brings its asset, `assets/view/`, read through `bin/dmpass.py`, the
+one reader of what a release ships: there is no second list of files and no second upgrade.
+
+NO ASSET OPENS A CONCEPT OF ITS OWN. Everything the page says is a construct the law already has: what it draws is a
+`ref` to a mapping or a bean; a length of time is an `extent` on `time`, a repetition a `recurrence`, a share a
+`quantity` of `ratio`; a technology is a row of the `technology` registry; a value named in a drawing is a `key_of`
+`view_bindings`; a being is a `bean_id`; an address is the being's own `located_at`, never restated on the page. Every
+name the profile adds is held against the law's own names, so none is given a second sense (test/assets.py).
+
+## profiles.view.terms[view]
+
+THE PAGE IS ONE BEAN. Every fact the page states sits on the bean that carries `view`, and nothing about the beings it
+draws is written on them: a binding says what the page shows at one drawn element, which is presentation, not a fact
+about the being. The page names the garden's own drawing module by a `file:` `pointer`, which the gate resolves, and
+the module stays the garden's code. `reference` chooses, per being, the place system whose position stands for it, and
+the position is the being's own (`located_at`, its anchors, its `endpoints`): an address kept on the page would be a
+second statement of it, and it drifts. `fields` says per genos, as `registry` rows of `gene` and `view_lenses`, which of
+a being's own facts its card shows, from which lens on. `opens_on` is a `bean_id` held to the genos `org`.
+
+## profiles.view.terms[view_monitors]
+
+WHERE LIVE VALUES COME FROM IS A BEING THE GARDEN HOLDS. A monitor is a `bean_id`: what it watches is its own `reaches`
+and the targets' own `endpoints`, and which technology it runs is its own `knowledge`, so the asset picks the adapter
+for that technology by the monitor's record and never by a name written in code. No technology is privileged: a
+monitor of another technology is read by that technology's adapter, beside the first. What only one technology needs —
+its alert rules, the credentials it reads by name — is pointed at by `settings`, a `pointer` into the monitor's own
+record, stated and not checked until a term the law declares carries it, when a second technology or a second garden
+shows what is general.
+
+## profiles.view.terms[views]
+
+ONE ENTRY PER DRAWING, CHECKED AS DATA. Each entry `draws` a `ref` — a mapping of `kind: procedure` or a bean — and
+never restates what it draws. The operate lens's settings are typed attributes of the entry, and each archetype's
+needs are `cells` requirements, so the gate refuses a reservoir with no thresholds and a race with no step. Time is
+written in the law's own forms: a deadline or a span is an `extent` on `time`, a sampling interval a `recurrence`, and
+a threshold a `quantity` of `ratio`; a length is never written as a bare number whose unit a reader must guess. The
+values a shape reads are `key_of` `view_bindings` on the same page. The inspect lens's processes and pipes are
+`pointer`s at the entry's top level, where the gate resolves a `{bean, field}` pointer, to the field of the being that
+states them. A race reads the steps of the procedure it draws, 0 before the first and n at the n-th, so its phases are
+the procedure's own.
+
+## profiles.view.terms[view_bindings]
+
+A LIVE VALUE IS READ WHEN THE PAGE IS DRAWN, AND NEVER STORED. A binding says which drawing and which element it sits
+on, which of three kinds of live value it is (a `values` list, declared whole), its unit as a row of `units` and its
+limits as counts in that unit. How it is computed is one entry per technology (`entries` `keyed_by` technology), each
+in that technology's own language, so a second technology sits beside the first on the same binding rather than
+replacing it; the adapter refuses what it cannot read. A unit the law does not have is a row a garden adds to `units` in
+its VOCAB.md, and a temperature waits for the law's own temperature position rather than a unit that is not one.
+
+## profiles.view.vacancies
+
+DECLARED WHOLE. The nine shapes and the three kinds of live value are offered to every garden that extends the
+profile, which takes the ones its drawings need; the rest stand vacant with the reason `universal`, so a stranger's
+garden finds each where it expects it, and nobody mistakes the design for evidence.
 
 ## terms[capabilities].meaning
 
@@ -1217,6 +1695,10 @@ rank of its own for anchors — anchor authority; it is this one now.) The merge
 on keeps (the highest), and the guard itself — a value at the TOP of this rank is never dropped in favour
 of one below it, whatever precision the lower one claims. The merge REFUSES to run if this is absent.
 
+DERIVED SINCE sources-by-nature (2026-09-26): `order: source` ranks the values by what `values_source` says each is — its
+act, then its nature (`acts`) — so the rank is read, not written. It came out as the written one did, which is the test
+of the reading, and it placed the value the written one had no room for: `stated-in-document`.
+
 ## terms[provenance_src].values_meaning
 
 EACH PLACE IN THE RANK, EARNED. The rank orders HOW A FACT IS KNOWN:
@@ -1264,6 +1746,57 @@ repository, so every reader asks the same object graph. `manual:<why>` stays for
 ## terms[analysis_cache].open_keys
 
 restated for the human reader; the gate reads schema.key_form
+
+## mechanism_form
+
+A MODEL IS A READING WITH A DOMAIN (24.0, step 9). A mechanism — how a tree's carbon follows from its girth, how fast a
+wick burns — is written in the one reading grammar over named inputs, so the reckoner that reads a garden's own
+selections reads it too, and no second evaluator exists. What makes it a model and not a fact is said beside it: the
+domain its source fitted (`valid`), outside which the reader refuses rather than extrapolates, and the source's own
+error, validated where the source states one, carried into the value's u. Where several are valid, the one with the
+smaller validated error is read and the others are printed as the spread, so a choice between models is never hidden.
+
+## coefficient_form
+
+A CONSTANT HAS A SOURCE AND AN UNCERTAINTY (24.0). A coefficient is a value some source fitted or some convention fixed;
+it is a row, with the cases it applies to and its u, so that a reading that uses it prints where it came from and how
+well it is known. `convention` marks the ones fixed by agreement, which have no u because they were not measured.
+
+## pin_form
+
+A FIXED ACT NAMES THE STATE IT READ (24.0, N2). An invoice, a closed period or a verdict is fixed while the beans it read
+go on changing. Recording the commit and the moment it was read at lets the same reading be read again, exactly, from
+the same state, whatever has changed since — and a pin is judged to name a commit the garden has, so it cannot point at
+a state that never was.
+
+## compatibility
+
+AGREEMENT WITHIN UNCERTAINTY LABELS, AND NEVER DECIDES (24.0). Two values of one measurand whose difference is within k
+times its uncertainty are compatible in the metrologists' sense (VIM 2.47). The label orders what a person is shown; two
+compatible values that differ stay two values, each with its speaker. Counts, money, anchors, codes and names are
+exact, and are never called compatible: they are equal or they differ.
+
+## ordering_keys
+
+WHAT IS SHOWN FIRST IS COMPUTED IN THE OPEN (24.0, step 10). A merge's disagreements, a working loop's tests, a garden's
+guards and its improvements are each ordered by a key the law declares as a reading, so the arithmetic that puts one
+thing first is written where anyone can read and check it. A key only orders: the Contract's classes come before every
+weight, and nothing is hidden or dropped by being last.
+
+## terms[weighings]
+
+A JUDGE'S JUDGMENTS ARE WRITTEN, AND THE WEIGHTS ARE READ (24.0, step 10). Pairwise judgment is the analytic hierarchy
+process's way to weigh criteria a person cannot weigh all at once; only the judgments are the judge's facts, and the
+weights and their consistency follow from them. Stored weights would go stale beside their judgments, so they are
+never written. A consistency ratio above one tenth means the judgments contradict each other, and it stands only with
+the judge's reason.
+
+## terms[clauses].schema.attrs.within
+
+AN ALLOWANCE IS AN AMOUNT WITHIN A WINDOW (24.0, N9). Ninety days within any hundred and eighty, twelve visits within
+any thirty days, twenty days of leave each year: each is an amount and the stretch it is counted within, sliding or cut
+by a calendar's level. What uses it is a reading (`used_by`), so the use is counted each time it is asked, never kept
+as a running total that could drift from the entries it counts.
 
 ## terms[nature].meaning
 
@@ -1651,6 +2184,56 @@ parser received the attribute as a key that was not a name, the gate crashed on 
 an undeclared attribute, and no bean carrying it could cross to another garden. A key is text, and the gate now
 refuses any key YAML reads as a boolean or a number.
 
+## terms[clauses].schema.attrs.each
+
+AN OCCURRENCE NEVER LEAVES (24.0, N3). A share of each sale is one clause, not one per sale: the clause occurs once for
+each member a reading holds. Were an occurrence allowed to leave the reading — a sale later refunded dropping out of
+"the sales" — what was owed for it, and perhaps paid, would silently stop existing, and a refund would be owed twice
+or never. So the reading uses only conditions that cannot be lost (`comparators[].monotone`: a step reached stays
+reached), and a refund is its own clause, the reverse, occurring once for each refund. `settles` names the
+occurrences a payment is for, each its own amount, so one payment across two rates is read exactly.
+
+## terms[clauses].schema.attrs.falls_due
+
+A DUE RELATIVE TO ANOTHER POSITION IS READ, NEVER STORED (24.0, N4). "The tenth of the month after each tuning" is a
+rule; the day it gives is derived each time, as a balance is. Its place in the cell reached is `at`, as a
+recurrence's is — not `on`, which YAML 1.1 reads as the boolean true, the defect `transactions.day` was renamed for.
+
+## terms[clauses].schema.attrs.when
+
+A CONDITION IS A READING WHERE ONE CAN SAY IT (24.0, N6). Written in prose, "once the parts arrive" is true or false
+only to a person reading it. Written as a reading, the reader knows whether the clause is in force, and a clause not
+yet in force is silent rather than a due date called missing. Prose stays, as `said`, for a condition no reading can
+say yet; a bare string is refused so that the two are never confused.
+
+## terms[clauses].schema.expiry
+
+THE WORDS FOLLOW THE STANCE (24.0, N5). "Falls due, and from that day the party is owed it" is wrong for a permission,
+which is never owed: it opens, and it lapses. The words are chosen by the clause's position on the capability square,
+so a reader is warned of a permission's window closing in a permission's words.
+
+## terms[parties].schema.attrs.acting_for
+
+WHO ACTS IS NOT ALWAYS WHO IS BOUND (24.0, N13). An employee, a lawyer, a parent: their act binds another party. The
+agent is a party of its own, with its own acceptance, and says whom it binds; a party acting for itself is refused,
+because it says nothing. `declined` (N14) records a refusal as `accepted` records a yes, with the same provenance.
+
+## provenance_record.attrs
+
+BETWEEN GARDENS IS A ROUTING DOMAIN, AND A NAME CARRIES ITS PATH (24.0, ratified 2026-09-26). A garden is an autonomous
+system and its `garden_id` its number; a being's name, announced from garden to garden, is a route. The receiver trusts
+only its peer — the last hop, a garden it met — and records the rest as said, not verified: `garden` the origin, `via`
+each garden after it, appended by the one that passes it on and never rewritten. A path holding the receiver's own id
+after its origin is a loop and is refused, as a path-vector protocol drops a route carrying its own number. Facts do
+not travel this way: what a third garden said is still not a garden's to pass on; only the name, and a person's
+`consent` with their name, as a community travels with a route.
+
+## recurrence_form.closures
+
+AN OCCURRENCE THAT DOES NOT FALL IS SAID (24.0, N7). A lesson each Tuesday and Thursday, an hour long, not on a
+holiday: RFC 5545's DTSTART with DURATION and EXDATE, in the recurrence's own system. A closure still counts toward
+`times`, as an EXDATE does, and the reader is told of it rather than left to find a lesson missing.
+
 ## terms[trigger]
 
 == MAPPING KEYS. A `mapping` document records how bean data feeds a command or checklist. These were
@@ -1671,6 +2254,46 @@ NOT a set: these are a SEQUENCE, and order carries the meaning — validating af
 different procedure from validating before. A set-union would reorder them into nonsense, so the
 whole list merges as one atom and two gardens with different steps conflict.
 
+## terms[steps].schema.attrs
+
+A STEP SAYS WHAT A CASE ON IT NEEDS, AND NOTHING ELSE (N11, F8; S2, major). A client-work case's walks needed who acts at a step,
+how long it usually takes, the ways out, a pause that comes back to where it was, an end that is final and one that is
+not (a client given up returns), and the reasons a move may cite; the machinery's tree needed what a step takes in and
+gives out, stated once on the step. The gate read only `id`, `do` and `next`, and every other key passed unexamined —
+a walk with `by`, `usually`, `exit` and `reasons` in shapes of a writer's own choosing passed with no comment. So the
+term declares its attributes, each step is judged as an entry, and a key it does not declare is refused: a garden whose
+steps carry another key stops passing, which is what makes this major. Prose steps stay legal: the term declares no
+shape. A pause and a way out are reached from any step, with no `next` naming them, because a case can be put on hold
+or withdrawn at any stage; a pause is no end.
+
+## schema_language.moves_along
+
+WHERE A CASE STANDS IS READ, NOT STORED (N10, F8; the client-work and platform cases). A stage written on a case is a
+second copy of its last move, and it drifts. A course is a series along time whose value at each move is a step of a
+named walk: the moves are the facts — the step reached, who moved it, a reason from the step's own list, why in words,
+and the moment, stamped. The gate holds one course's moves to its walk: a move follows a `next`, reaches a way out or a
+pause, returns from a pause to where it was, and nothing follows a final step; a move the walk does not offer passes
+only with its `why`, and warns, because the world does not always follow a procedure and the record must say so
+rather than refuse it. The moves merge by course, moment and step, so a step visited twice never collides with itself; a move is stamped to the minute, so two moves of one course to one step in one minute would be one move written twice, and the gate says so before a merge must refuse it.
+
+## terms[courses]
+
+A COURSE NAMES ITS WALK ONCE; its moves name the course. The moves are a list of their own term, not nested in the course,
+so two gardens' moves of one case unite by their key at a merge instead of one course entry conflicting with another.
+
+## terms[moves]
+
+A MOVE IS KEPT, NEVER REWRITTEN. Each is who moved the case, to which step, when and why; where the case went next is the
+next move, so the list is the case's history and its present is read from its end. The moment is stamped by the save.
+
+## terms[items]
+
+A CHECKLIST IS A SET, NOT A WALK (the client-work case). A sequence is positions related by neighbourhood; a checklist's
+items have none, so they are a plain list, and items of which any one will do share a `one_of` name. What makes an
+item needed, and what meets it, is a selection over the beans of the case — so the law names no garden's own term (a
+document's kind) inside an item. The selection's own form is declared with the reckoner; an item names one by the bean
+that declares it and its key.
+
 ## terms[located_at].meaning
 
 THE BEING'S LOCATIONS. The meaningful object is the being — a codebase — and it may be found as a
@@ -1680,12 +2303,109 @@ this estate a session: a position that is NOT KNOWN is recorded as unknown rathe
 because an omitted location reads as "there is none" and that is how an exhaustive search over the
 wrong domain produced output identical to a real one.
 
+## terms[lines]
+
+A BEING LENDS A LINE (sequence critic S4). A depth down a core could not be written: in coordinates it is refused, and
+in a local frame it has no length. The being says once where its line starts and which way it runs, and a position on
+it is a distance in metres, in the `along` system.
+
+## anchor_systems[along]
+
+METRES, WRITTEN IN THE POSITION (settled row 14). A counted position within a being already has a system (`local-frame`,
+a ring counted from the pith); a distance along one did not. The form names the being and its line and carries metres
+always, so it describes itself: a unit kept on the bean would silently re-read every position the day it changed. The
+`+` is required, since `<being>/<line>` alone is a network segment's form.
+
+## anchor_systems[relative]
+
+WHERE AND WHEN ARE ONE MECHANISM (24.0, PLACE; ratified 2026-09-26). A position is an offset from a DATUM: a being
+named in the position (`datum: being`), or a position of another system, before or after it. `marker-a+3.2,-1.5` is
+metres east and north of where the mark is; `bp1950:3.93ka` is anni before 1950. The two were first drafted as siblings
+— a place reader and a deep-time reader — and the operator saw they were one ("ain't it obvious yet the fuse of the time
+and place?"). An offset taped from a mark survives the receiver that placed the mark, and is good to centimetres where
+the receiver is good to metres: that is why the report of fixed beings with no such offset exists (`dmreview --places`),
+as a policy printed and never a rule. The form is `+`, since `local-frame` owns `#` and `along` owns `/`: one spelling is
+read by one system (test/place.py).
+
+## anchor_systems[bp-1950]
+
+AN AGE BEFORE THE PRESENT IS AN OFFSET, NOT A CALENDAR (24.0, step 8). Deep time lies beyond every calendar's reach,
+and the sciences that count it name their present: 1950 for radiocarbon, 2000 for ice cores. Each system states its
+datum in structure, so `b2k = bp-1950 + 50 a` is COMPUTED from the two datums and written nowhere as a constant that
+could drift from them. The unit symbols name the law's fixed-length anni, never a calendar year.
+
+## anchor_systems[ics-chronostrat]
+
+A CELL OF DEEP TIME IS FIXED BY A MARK, AND ITS AGE IS A READING (24.0, step 8). The International Chronostratigraphic
+Chart names the units of Earth's history at seven levels, and ICS fixes the base of most by a Global Boundary Stratotype
+Section and Point: one point in one rock section, where a marker appears. A better dating moves the age and never the
+boundary. The chart's units are the system's cells (`cells_in`) and the GSSPs its boundaries (`boundaries_in`), each
+shipped as published (CC BY 4.0, International Commission on Stratigraphy). The margins the chart states are kept as
+said: it gives no probability, so none is read. `AT` IS BEING-IN (در بودن, the operator's word): a position names the
+cell it is in at some level, so an age within a boundary's margin is in both cells beside it, and neither is chosen.
+
+## aspects[fixing]
+
+TWO WAYS A BOUNDARY IS FIXED, AND THEY ARE CONTRADICTORY (24.0, PLACE). ICS itself sorts its boundaries so: a GSSP is
+fixed by a point in the rock, a GSSA by an age declared with no point. The pair is general — a survey datum fixed by a
+monument, a zero fixed by decree — so it is an aspect of its own, and the pole a boundary is on says which dimension
+establishes it and which is read from it: the cut `establishes` already makes for anchors.
+
+## terms[fixes]
+
+A MARK IS SAID AT BOTH ENDS (24.0, PLACE). A boundary a table says is marked in a being, and the being that says it
+marks it, are one fact seen from two sides, and the gate holds them to each other as `inverse_of` holds a relation and
+its mirror: a mark the being does not claim, a claim the table does not make, a mark along another being's line, and a
+mark on a boundary declared as a value are refused. The level is a position `along` the being's own line: the distance
+up a quarry face, down a core, into a stalagmite.
+
+## terms[located_at].schema.attrs.mobility
+
+PLACE IS READ AT A TIME (24.0, step 7). Rootedness is a position over a window, never a kind: a tree is `fixed` while
+`during` holds, and a transplant is two entries. The readers take a moment and answer where a being was then; one that
+dropped the time would say where a tree stands today about a survey taken before it was moved. Motion is read only
+between fixed marks.
+
+## terms[capabilities].schema.attrs.within
+
+A STANCE HOLDS SOMEWHERE (24.0, N26). A permission on a code of a published scheme — and on every code beneath it — is
+held within a place, in that place's own system, so a seed library's rule for crop seed on its island is one entry and
+never a sentence.
+
 ## terms[timing].meaning
 
 WHEN, AT A DECLARED RESOLUTION. The open key is what makes this serve sessions without a session
 schema: `start`, `sync`, `stop` are keys, not law, and a run with four sync points needs no
 rule-change to record them. The closed part is each entry's shape — the same open-key/closed-figure
 pattern `analysis_cache` proved.
+
+## terms[series]
+
+THE WORLD ALONG A LINE (D47; sequence critic §6, S0–S5). One entry is one recording: its positions by rule or listed,
+the unit an offset counts, where a row sits, the channels and the rows. Everything else a reader needs is read and
+never stored — a value between rows, a window's mean, a trend — and printed with the rows it came from.
+
+NOTHING IS COPIED FROM ANOTHER FORM (settled row 1). A grid is a recurrence whose occurrences hold rows, and a listed
+series is an extent whose offsets do; the stride stays a whole number of the unit held (settled row 5), because a
+decimal stride is a unit not yet chosen.
+
+A CHANNEL HOLDS ONE KIND OF THING: a measured value in one unit, a position in a system (temperature is a position, D8),
+or a code of a scheme. What a cell stands for over its row's place is said, so a mean is never read at a point and a
+point never summed over a region. Between two rows only a point on a metered line and a metered channel is read, on a
+straight line (settled row 6): anything else would invent a measure the law denies. An uncertainty is the channel's,
+and a value read with it is printed to its digits (GUM 7.2.6, settled row 16).
+
+A JUDGMENT NAMES ITS JUDGE (settled row 7). A cell set aside is kept and shown, with who set it aside and why, and read
+by nothing — never a flag on the row.
+
+WHERE THE ROWS SIT (F12). A short table stays in the bean; a long one is the parts `series/<bean>/<key>/<part>.tsv`, in
+the estate, because a garden's own readings are its facts and not a capture of someone else's. A part is written once
+and never rewritten: a new download is a new part, so two gardens' parts meet as a set of files with no merge driver,
+and git's own object id pins each one, so no hash is stored. Git neither turns a part's line ends nor merges it as
+text.
+
+KEPT OFF GIT (F13, F14). A special series is sealed whole in the held layer, and the entry says nothing but where; it
+waits for that layer, so the position is declared and vacant.
 
 ## terms[roots].meaning
 
@@ -1695,6 +2415,9 @@ never edit the same text to disagree about a path — each states its own resolu
 which is what makes adding a machine a one-line change instead of a corpus migration.
 It lives on the HOST because that is whose fact it is. A root map in a shared file would be one
 document every machine has to edit, which is the merge conflict this design exists to avoid.
+And so the host an `at` names is the bean it sits on, and the gate says so. The resolver takes that host for
+the datum and never asks it again, so a root on laptop-a whose `at` said `laptop-b:/srv/x` read as a path
+here. What a machine is called is dmwhere's one reading: the bean's id and its hostname and fqdn anchors.
 
 ## terms[roots].schema.entry_must_match[·]
 
@@ -1769,6 +2492,14 @@ list. All three were stored fields in the first draft and all three are gone: a 
 a fact that can disagree with itself, which is the argument this vocabulary already makes for
 refusing a direction aspect. The chain is walkable both ways from `prev` plus list order, which is
 what "walkable all ways" actually required.
+
+## system_shape.sources
+
+WHERE A SYSTEM'S MACHINERY COMES FROM, in the one pair every position uses (sources-by-nature). A reckoning by
+arithmetic is derived; one by the sky or by sight is read off a body; a table is said, by a document. A crosswalk
+is derived, tabled or observed in the same way. A datum read at a being is a reading of a body; one read at a host is
+mixed — a body, and the name it is kept under — so its nature is both; a datum written as a position is said. Kept
+beside the words they source, not on them, because a system row states the word and the law states once what it means.
 
 ## system_shape.checked_by
 
@@ -2046,6 +2777,14 @@ A part of a being — a link, a volume, a capture — is named by its key, not b
 joins no graph. Until 18.0 such a name was `untyped`, so a tunnel could ride a link that did not exist. The gate
 resolves it and draws no edge.
 
+## terms[items].schema.attrs.met_by
+
+A SELECTION IS A PART OF THE BEING THAT DECLARES IT. A checklist item names the selection that makes it needed, and the
+one that meets it, as a key of `selections`: bare on the checklist, `<bean>:<key>` on another bean. That is `key_of`,
+the one way a part of a being is named, so the gate resolves the bean and the key and draws no edge. A second spelling,
+`<bean>#<key>` through `bean_id`, was built first and removed before the release: two spellings of one name are two
+things a merge would not compare.
+
 ## quantities
 
 Area and volume are not new figures: they are an extent on a sequence with two or three lines, and the unit carries the
@@ -2071,8 +2810,9 @@ A logarithmic quantity is marked because it COMPOSES differently: along a chain 
 instance of a wider idea — how a quantity composes along a walk (sum, product, or the weakest link, as a generated
 fact's standing already does) — which is noted here and not yet built.
 
-Considered and refused: temperature in degrees Celsius, which needs an offset as well as a factor; and compact strings
-such as `12.5 m/s`, a second spelling of what `{ count, unit }` already says.
+Considered and refused: temperature in degrees Celsius as a UNIT, which needs an offset as well as a factor; and compact
+strings such as `12.5 m/s`, a second spelling of what `{ count, unit }` already says. Temperature arrived at 24.0 by the
+other door (`aspects[temperature]`): a reading is a position on a line, and only a difference is a quantity.
 
 ## quantities[money]
 
@@ -2129,7 +2869,7 @@ largest proxy of all, and a size ratchet would push facts back into prose, where
 the machinery measures the preconditions — closure, one statement of each thing, no story in the law, no privileged
 sibling, structure before prose — and shows them to the person who ratifies, who judges. It judges nothing.
 
-## doc:MODEL.md#Between gardens: the mycelium
+## doc:MODEL.md#Between gardens: peering
 
 THE MYCELIUM. A garden could merge with its own working copies and with scans of one estate — what the merge layer
 first meant by a garden — and had no way to meet a garden someone else keeps without one swallowing the other. A
@@ -2175,6 +2915,13 @@ second would name someone this garden had no reason yet to hold. Either garden m
 before first contact prints the two beans, the name taken from its stub. A garden proposing to one it has just met,
 knowing its gardener only by a name of its own, sends that person as a stub marked `gardener-of: to`, which the
 receiving garden reads as its own gardener: the one being every garden can recognise without being told.
+
+WHY THE FIELD'S OWN TERMS, AND NOT THE FOREST'S: the mycelium was the first picture, and it served while one hop was
+all there was. Once a record could pass on through a garden that did not say it, the questions were the ones
+networks already answer — who is a peer, what one exports and imports, the path a route took, how a loop is refused —
+and a picture of its own would have to be translated into them by every reader who knows them. So between gardens is
+a routing domain: a garden an autonomous domain numbered by its id, its inside interior, the rest exterior, first
+contact peering, and consent the export policy on a person's root. The law names the terms and no vendor.
 
 Refused: a hub garden that names things for the others (a privileged sibling); merging whole gardens between gardeners
 (it swallows, and a third garden's facts leak through it); git itself as the carrier (unrelated histories would carry
@@ -2223,7 +2970,7 @@ outlast product names.
 
 WORKING WITH ANOTHER GARDEN IS STATED AS ACTS. Two gardens may sit on one disk, kept by two people, and an agent with
 a shell can reach both; nothing in git stops a commit in the wrong one, and the gate of the wrong one would pass it.
-So the first act asked is to write only where the agent was opened, and the rest follow the mycelium: record a
+So the first act asked is to write only where the agent was opened, and the rest follow from peering: record a
 garden, and the person who keeps it, before dealing with it; give by proposal, read a proposal as data, pass on
 nothing a third garden said, and name a shared thing once. First contact is written as its own act because a cold
 agent following the proposal steps alone was refused twice: once for the garden it had not recorded, and once for
@@ -2386,6 +3133,63 @@ file into or out of those carries it too, or a file could leave the law in the c
 NO HARNESS IS NAMED. A path that one agent's harness reads from is a privilege written into universal law; the
 mirror of the door for agents that a release ships is left out of the map, counted where the map is shown.
 
+## layers[estate].holds
+
+A SERIES' PARTS ARE ESTATE (F12). They are a garden's own facts, in rows too many for a bean, and they belong to the bean
+whose series they are: a staged part is journalled as a change to that bean.
+
+## terms[sensitivity]
+
+HARM IS READ FROM WHAT A BEAN HOLDS, NOT FROM WHAT SOMEBODY REMEMBERED TO WRITE. A diagnosis code is special-category
+material whether or not anyone marked the bean, so the level is derived each time and never stored: a stored level is
+a second copy that goes stale the day a code is added. What a person may add is what no rule can see — a note that
+names a condition in its own words — so a mark raises the level. Lowering it is a safety change (Contract E): a tool
+that lowered it would be deciding, alone, that a person's record may travel.
+
+## terms[consent]
+
+ANOTHER PERSON IS NOT THE GARDENER'S TO PUBLISH. A garden's git is copied whole to every clone, and a clone outlives
+every promise made about it, so a person who has not agreed to be kept there by name is kept under an opaque id and
+their name is held off git. Consent is an agreement they accepted — their own word, the same act the law already
+records for a party — and not a flag somebody set on their behalf. Where a person will be is dearer than who they
+are, so their future whereabouts are held off git whatever they consented to. What is already in a garden is warned,
+never moved: its gardener decides at the crossing.
+
+BETWEEN GARDENS, THE MEETING IS THE WORD. Gardens meet as equals: either may ask and either may offer, so consent cannot
+depend on who moved first, nor on a document only the sender makes. Two gardeners read their ids out to each other,
+and each records the other's garden and its keeper. That exchange is each one giving their name, and the gardener who
+records it decides, as their own act (class F), whether it was really them. Trust sits with whoever receives, so
+authenticity is checked there. A certifier above both would be a privilege the network of equals does not have.
+
+## terms[about]
+
+WHOM A RECORD CONCERNS IS NOT WHO OWNS IT. A certificate about a client is the practice's record and the client's
+data. Erasure, a person's request to be shown what is kept, and the derived sensitivity all ask the same question,
+so it is asked of one term.
+
+## terms[grants]
+
+CLOSED BY DEFAULT, AND DECIDED BY WHOEVER HOLDS THE GRANT. A garden served to more than its gardener needs one answer
+to "may this person see this", and an answer each host kept in its own configuration is an answer nobody can read in
+the ledger. A grant is held where the decision belongs — the gardener's bean, a person's own bean for her own record,
+an agreement's bean for what it shares — and a `forbidden` one is a no that no `permitted` one passes, so a person's
+refusal about herself is not undone by a wider grant. Delegating a ratification is the gardener's own act, or the
+Contract of Parts would be rewritable by anyone who can write a grant.
+
+## held_form
+
+GIT KEEPS ONLY WHAT MAY TRAVEL. An entry that cannot is sealed: the bean keeps an opaque pointer, and the entry is kept
+in a store that a host names in its `roots`. No hash is kept in git, because a hash of a phone number is the phone
+number to anyone who can count to fifteen digits. The gate never reads a store — a gate that passes on one machine
+and fails on another is a gate people turn off — so a store is checked where it is, by the save. A sealed entry is
+journalled in one line that says only that it was sealed.
+
+## identity_policy.issued
+
+AN EMPLOYEE NUMBER BELONGS TO ITS EMPLOYER. Two employers who each issued 0042 issued two identities, and a garden that
+merged them on the number would merge two people. An issued anchor names its issuer; one that does not is warned
+rather than refused, because an upgrade cannot invent who issued a number.
+
 ## terms[standing]
 
 A GARDEN PLACES WHAT THE LAW DOES NOT. It was a term one garden kept for itself, read by the gate under that name.
@@ -2393,6 +3197,55 @@ Promoted, its values are the rows of the map that hold files, so a new place nee
 places a file where the law places it says nothing new; one that places it elsewhere would give a file two
 places, and is refused. A pattern may stand for many files, because a garden's handovers or a person's letters
 are many files of one kind.
+
+## terms[phone]
+
+A NUMBER IS WRITTEN ONE WAY, OR TWO SPELLINGS ARE TWO PEOPLE. `0044 20 …`, `+44 (0)20 …` and `+4420…` are one line, and
+a merge that compares text would keep three. E.164 is the form every exchange routes by: `+`, the country code, the
+digits, nothing between. The number is logical, as an email address is: it reaches someone, and whether it
+establishes who is the bean's to say. A third party's number is personal data about someone who did not write it
+here, so it is held off git unless their own consent puts it in.
+
+## terms[pass_log]
+
+A CLAIM NEEDS SOMETHING TO BE CHECKED AGAINST. A session that says what it read and where it wrote it can be held to
+that, but only if the record is its own and only grows. The log is a file, one pass to a line, named by the session's
+bean, so a commit that changes it claims that session and owes what the flow law asks of a claim. A session that
+keeps no log claims nothing and is held to nothing more than any writer, which is why a log is offered and never
+required.
+
+## methods
+
+HOW MATERIAL MOVED IS PART OF WHETHER IT MAY. The same words, taken down from a person, are her statement; copied from
+another bean, they are a copy, and a copy is not said. A flow row names its method, so the list of methods is closed:
+a method nobody declared could carry anything past every row.
+
+## flows
+
+EVERY PASS HAS A ROW, OR IT IS REFUSED. A garden's material comes from places of unequal standing — a person's words, a
+tool's output, the law, another garden — and a value placed in the estate carries where it came from. A list of what
+is forbidden is never finished, so the rows say what is allowed, source by destination by method, and each says why.
+Where two rows hold, the nearer decides, because the particular case is the one someone thought about.
+
+## flow_form
+
+THE FORM OF A ROW IS FIXED, SO THAT THE LAW OF FLOWS CAN BE READ BY A TOOL. A row's guard is computed from where a
+tool checks it, never typed, because a typed guard is a claim that is true until the tool changes. A garden may add
+refusals and may grant a named party where the standard asks for ratification, but never unguard a row of the
+standard: a garden that could loosen the law would loosen it the first time the law was in the way.
+
+## pass_form
+
+A PASS IS RECORDED BY WHERE, NOT WHAT. The record of a pass names its source, its destination and its method, and
+never holds the material, since a log of what passed that held the material would be a second copy of it, and
+the one least guarded. What a pass carries is found where it landed, and the log only says that it went there.
+
+## pass_metadata
+
+WHAT A PASS MAY SAY OF ITSELF IS COUNTS AND LOCATORS. A hash of a day or an amount does not hide it, and a snippet is
+the material. So a pass holds how long its material was, where it sat in the session, the id of the git object that
+already holds it (a locator into the repository, not a digest of a value), and how often its value was found in its
+source, which is the measure of whether it was quoted or only hoped.
 
 ## doc:MANIFESTO.md#serve
 

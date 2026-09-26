@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """stamps — the day of writing is the clock's: a provenance `as_of` a commit adds is the day of the entry it adds.
 
-std-vocab 23.0, `provenance_record.as_of: stamped`. A local model with no date in its context typed, for the day it
+std-vocab 23.0: `provenance_record`'s `as_of`, read `by: save`. A local model with no date in its context typed, for the day it
 wrote a fact down, the nearest date in view — the forms' example day, the gardener's stamp read in another bean — and
 the gate could not tell that from a day read off the clock. It can tell whether it is the day of a heading the same
 commit adds, which bin/dmjournal.py read from the clock. The writer writes `now`, and the tool that stamps the heading
@@ -12,8 +12,10 @@ writes the day in its place. Held here, in a freshly grown garden:
   +  the day of the heading passes: `now` saved with bin/dmsave.py, and `now` journalled with bin/dmjournal.py and then
      committed with `git add` and `git commit`, are committed as the day of the entry;
   -  an anchor's own record and an entry's (`parties.<k>.provenance`) are judged as a bean's is, each named by its path;
-  +  a record carrying `garden`, from a garden this one knows, keeps the stamp its own garden gave it; a merge's
-     `merged` passes; the entry's day written in the Persian calendar passes against its Gregorian heading, and the
+  -  a record carrying another garden's `garden`, or a path through one, keeps its day only where the same commit
+     takes a proposal from the garden it came by — a capture keyed by the proposal's fingerprint; typed, or with a
+     capture whose key is not the fingerprint, it is refused;
+  +  that take passes, its day as it came; a merge's `merged` passes; the entry's day written in the Persian calendar passes against its Gregorian heading, and the
      day before it does not;
   +  a garden's first commit is exempt, and a record left as it was is never re-judged — a bean edited elsewhere, or
      its anchors put in another order, keeps its old day;
@@ -63,12 +65,27 @@ def run(*a, root=G):
     return r.returncode, r.stdout.decode('utf-8', 'replace'), r.stderr.decode('utf-8', 'replace')
 
 
+def _consents(root):
+    """The consent agreements written since the last commit: a save journals them beside the person they are for."""
+    st = subprocess.run(['git', 'status', '--porcelain', '--', 'beans'], capture_output=True, text=True, encoding='utf-8',
+                        errors='replace', cwd=root).stdout
+    return [l[3:].strip()[6:-3] for l in st.split('\n') if l[3:].strip().startswith('beans/consent-')]
+
+
+def _with_consents(a, root):
+    a = list(a)
+    if '--body' in a and _consents(root):
+        a.append('- action: ' + ', '.join(f'[[{c}]]' for c in _consents(root)) + ', the consent of whom it names.')
+    return a
+
+
 def save(*a, root=G):
-    return run(os.path.join(root, 'bin', 'dmsave.py'), *a, root=root)
+    return run(os.path.join(root, 'bin', 'dmsave.py'), *_with_consents(a, root), root=root)
 
 
 def journal_tool(who, what, body, root=G):
-    return run(os.path.join(root, 'bin', 'dmjournal.py'), who, what, '--body', body, root=root)
+    extra = _with_consents(['--body'], root)[1:]
+    return run(os.path.join(root, 'bin', 'dmjournal.py'), who, what, '--body', body, *extra, root=root)
 
 
 def commit(msg, root=G):
@@ -117,8 +134,33 @@ responsibility: {{ legal: {{ self: true }} }}
 
 
 def person(bid, as_of, by='sam', extra='', pid=None, summary="A friend of the gardener.", root=G):
-    write(bid, PERSON.format(id=bid, title=bid.capitalize(), summary=summary, pid=pid or f'person:{bid}', by=by,
-                             as_of=as_of, extra=extra), root=root)
+    text = PERSON.format(id=bid, title=bid.capitalize(), summary=summary, pid=pid or f'person:{bid}', by=by,
+                         as_of=as_of, extra=extra)
+    if bid != 'sam':
+        # ANOTHER PERSON IS KEPT BY NAME ON THEIR OWN CONSENT (24.0, F2): an agreement they accepted, written with them.
+        text = text.replace('owned_by:', f'consent: {{ bean: consent-{bid} }}\nowned_by:', 1)
+        write(f'consent-{bid}', CONSENT.format(id=bid, as_of='now' if as_of == 'merged' or 'garden:' in extra else as_of), root=root)
+    write(bid, text, root=root)
+
+
+CONSENT = """---
+bean: consent-{id}
+genos: contract
+title: "consent-{id}"
+status: active
+summary: "{id} agrees to be kept in this garden by name"
+nature: lekton
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:consent-{id}", class: logical, establishing: true }} ] }}
+provenance: {{ src: asserted-by-human, by: sam, as_of: {as_of} }}
+parties:
+  keeper: {{ who: {{ bean: sam }}, accepted: 2026-09-01 }}
+  kept: {{ who: {{ bean: {id} }}, accepted: 2026-09-01 }}
+words: {{ form: spoken, agreed: 2026-09-01 }}
+---
+The consent of {id}.
+"""
 
 
 _g = subprocess.run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), G, '--gardener', 'sam',
@@ -152,7 +194,7 @@ check("...and with `now` written, `--again` commits the bean with the day of the
 _h = head()
 # THE ENTRY FIRST, AND THE BEAN AFTER IT: the journal tool stamps what the working tree holds when it writes the entry,
 # so a bean written later reaches the commit with the word, and a plain `git commit` stamps nothing.
-journal_tool('sam', 'added cyrus', '- action: added [[cyrus]].')
+journal_tool('sam', 'added cyrus', '- action: added [[cyrus]], and [[consent-cyrus]], his consent.')
 person('cyrus', 'now')
 rc, said = commit('added cyrus')
 check("`as_of: now` in a bean written after its entry, committed by a plain `git commit`: refused — nothing wrote the "
@@ -238,12 +280,63 @@ check("...and with `now` in each, `--again` commits all three as the day of the 
       rc == 0 and 'as_of: now' not in _b and _b.count(f'as_of: {last_day()}') == 3, (rc, err[-600:], _b))
 
 # ---- + a stamp from another garden, and a merge's --------------------------------------------------------------------
+# A RECORD KEEPS ANOTHER GARDEN'S DAY ONLY BY A TAKE (guards-after-parts-1-10, fix 1): what a record claims is not how it
+# arrived. Without a take in the same commit, a record naming another garden — itself, or as the last hop of its path —
+# is this garden's own writing, and its typed day is refused.
+_h = head()
 person('bahar', OLD, by='ali', extra=f', garden: {ALI_GARDEN}', summary="A friend of Ali's, as her garden records her.")
 rc, out, err = save('sam', 'took in bahar from garden-ali', '--body',
                     '- action: added [[bahar]], as [[garden-ali]] recorded her.')
-check("a record carrying `garden`, made in a garden this one knows, keeps the stamp its own garden gave it: saved "
-      "(exit 0), its day as it came", rc == 0 and f'as_of: {OLD}, garden: {ALI_GARDEN}' in blob('bahar'),
-      (rc, err[-600:]))
+check("a record carrying the `garden` of a garden this one knows, with a day typed and no take in the commit: refused, "
+      "naming the take that alone keeps another garden's day",
+      rc != 0 and head() == _h and f'beans/bahar.md: provenance.as_of is {OLD}' in err
+      and f'it names the garden {ALI_GARDEN}' in err and 'dmpropose take' in err, (rc, err[-800:]))
+person('bahar', OLD, by='ali', extra=f', garden: 9f8e7d6c5b4a, via: [{ALI_GARDEN}]',
+       summary="A friend of Ali's, as her garden records her.")
+rc, out, err = save('--again')
+check("...and one naming an unknown garden by way of a known one, with a day typed and no take: refused, the hop named",
+      rc != 0 and head() == _h and f'by way of {ALI_GARDEN}' in err, (rc, err[-800:]))
+
+PID = 'p-20260917-bahar'
+PROPOSAL = f"""---
+proposal: {PID}
+from: {{ garden: {ALI_GARDEN} }}
+---
+```bean bahar
+(the bean as garden-ali made it)
+```
+"""
+
+
+def take_capture(key):
+    """What `dmpropose take` adds: the proposal kept whole under captures/, and a `capture` entry on the sending
+    garden's bean keyed by the proposal, whose `staleness_key` is the fingerprint the take read."""
+    d = os.path.join(G, 'captures', 'proposals', 'garden-ali')
+    os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, PID + '.md'), 'w', encoding='utf-8', newline='\n').write(PROPOSAL)
+    _gp = os.path.join(G, 'beans', 'garden-ali.md')
+    _t = open(_gp, encoding='utf-8').read()
+    open(_gp, 'w', encoding='utf-8', newline='\n').write(_t.replace('\n---\nAli', (
+        f"\ncapture:\n  {PID}:\n    of: \"proposal {PID}: bahar, from the garden garden-ali\"\n"
+        f"    owned_by_them: \"ali, who keeps garden-ali (garden {ALI_GARDEN}), as this garden records it\"\n"
+        f"    source: \"dmpropose take\"\n    taken_at: 1789000000000\n    staleness_key: \"{key}\"\n"
+        f"    redactions: \"none\"\n    holds: \"file:captures/proposals/garden-ali/{PID}.md\"\n---\nAli"), 1))
+
+
+person('bahar', OLD, by='ali', extra=f', garden: {ALI_GARDEN}', summary="A friend of Ali's, as her garden records her.")
+take_capture('sha256:' + '0' * 64)
+rc, out, err = save('--again')
+check("...and a capture entry that says `dmpropose take` over a proposal whose fingerprint is not its key: still refused",
+      rc != 0 and head() == _h and f'beans/bahar.md: provenance.as_of is {OLD}' in err, (rc, err[-800:]))
+import dmparse, dmpropose  # noqa: E402 — the fingerprint the take reads, by the one function that reads it
+_env, _body = dmparse.split_front_matter(PROPOSAL)
+_t = open(os.path.join(G, 'beans', 'garden-ali.md'), encoding='utf-8').read()
+open(os.path.join(G, 'beans', 'garden-ali.md'), 'w', encoding='utf-8', newline='\n').write(
+    _t.replace('sha256:' + '0' * 64, dmpropose.fingerprint(dmparse.loads(_env), _body)))
+rc, out, err = save('--again')
+check("...and the take itself — the proposal kept whole, its capture keyed by its fingerprint, on the `garden` bean of "
+      "the garden the record names: saved (exit 0), its day as it came",
+      rc == 0 and f'as_of: {OLD}, garden: {ALI_GARDEN}' in blob('bahar'), (rc, err[-800:]))
 person('farid', 'merged')
 rc, out, err = save('sam', 'added farid', '--body', '- action: added [[farid]].')
 check("`as_of: merged` typed on a person's record is refused: only the merge's own record says it",
@@ -258,7 +351,8 @@ check("...and the merge's own record — `src: generated-by-tool, by: dmmerge` �
 
 # ---- + a day is a day, in whichever calendar it is written -----------------------------------------------------------
 _h = head()
-journal_tool('sam', 'added golnar', '- action: added [[golnar]], the day she was written down in the Persian calendar.')
+journal_tool('sam', 'added golnar', '- action: added [[golnar]], the day she was written down in the Persian calendar, '
+             'and [[consent-golnar]], her consent.')
 _n = dmcal.to_day(last_day())
 _fa, _fa_before = dmcal.from_day(_n, 'persian'), dmcal.from_day(_n - 1, 'persian')
 # THE BEAN AFTER THE ENTRY, AND ITS DAY TYPED: the journal tool writes `now` in the Gregorian form, so a day in another

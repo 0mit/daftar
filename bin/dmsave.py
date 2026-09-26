@@ -27,12 +27,28 @@ from its last commit (nothing to save); the index holds unmerged paths (`git add
 and all); no pre-commit gate is installed in this clone (the commit would not be judged: `bin/install.py` installs
 it); no git identity is set (git would guess an author from the machine, and the log's "who" would be nobody's).
 
+SAVE (24.0, Leg 2): IN A SESSION'S COPY, EACH SAID VALUE THE SAVE WOULD ADD IS TRACED FIRST, before anything is
+written. The session's material (what `bin/dmlaunch.py` or `bin/dmhook.py` kept, per clone and off git) is searched for
+the value as written, through every relay — the model's own output, and the session's own beans, only carry it — to
+where it came from: a person's words or instructions, a take-down; a run's capture, a record; a file whose layer the
+flow law keeps from a said value, found by a distinctive needle, REFUSED (exit 2), naming the row; found nowhere, HOPED —
+logged from instructions with `quoted: 0`, and said so. Each traced pass is appended to the session's log in the commit
+that adds the value, once, so the claim the gate checks is made by the save and not typed.
+
+ONE SAVE AT A TIME (24.0, N34): a save holds an exclusive lock on `<git dir>/daftar-save.lock` from its first read to
+its commit, so two writers in one clone — a person and an agent, two agents, a view host's form — queue, and neither
+journals over the other's staged files. A save that waits longer than `DAFTAR_SAVE_WAIT` seconds (120 unless set) is
+REFUSED, nothing written, naming the wait. The lock is the operating system's (flock, or msvcrt on Windows), so a save
+that dies releases it.
+
 It reaches a garden as every tool does, by `seed/LANGUAGE`'s `bin/dm*.py`, with no list to remember it in; nothing
 installs it. It is called "save" because that is the whole act — journal, stage, commit — where "commit" names its last
 step.
 """
 import collections
+import json
 import os
+import posixpath
 import re
 import subprocess
 import sys
@@ -42,6 +58,7 @@ import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr
 import dmjournal  # noqa: E402 — the entry is written by the journal tool's own code, and nowhere else
 
 ROOT = dmjournal.ROOT
+TRACED = []                 # (log, pass) the SAVE guard found, written in commit()
 PY = 'python' if os.name == 'nt' else 'python3'
 AGAIN = f"{PY} bin/dmsave.py --again"
 
@@ -130,7 +147,93 @@ def ready(again, body=''):
         refuse("no git identity is set here, so the commit's author would be guessed from the machine — nothing "
                "written. Set the one you commit under (an agent: its own name, e.g. \"agent (model, session)\"):\n"
                "  git config user.name \"Your Name\"\n  git config user.email \"you@example.org\"")
+    trace_said()
     return pending
+
+
+def trace_said():
+    """SAVE: every said value the working copy's beans add over HEAD, traced through the current session's material.
+    A value found only where the flow law refuses it is refused here, before a word is written; the rest are kept in
+    TRACED for commit(). Nothing is done where no session is current in this copy."""
+    try:
+        import dmlaunch
+        import dmpass
+    except ImportError:
+        return
+    s = dmlaunch.Session.current(ROOT)
+    if s is None:
+        return
+    fl = dmpass.flows(ROOT)
+    mats = s.materials()
+    base = s.state.get('base')
+    own = set(git('diff', '--name-only', f'{base}..HEAD', '--', 'beans').stdout.split()) if base else set()
+    own |= {posixpath.basename(p)[:-3] for p in list(own)}
+    changed = sorted(set(git('diff', '--name-only', 'HEAD', '--', 'beans').stdout.split())
+                     | set(git('ls-files', '--others', '--exclude-standard', '--', 'beans').stdout.split()))
+    titles = {}
+
+    def title(b):
+        if b not in titles:
+            fm = front(os.path.join(ROOT, 'beans', b + '.md'))
+            titles[b] = fm.get('title') if isinstance(fm.get('title'), str) else None
+        return titles[b]
+    refused, hoped = [], []
+    for p in changed:
+        if not p.endswith('.md') or not os.path.exists(os.path.join(ROOT, p)):
+            continue
+        bid = posixpath.basename(p)[:-3]
+        new, old = front(os.path.join(ROOT, p)), front(None, git('show', f'HEAD:{p}').stdout)
+        for at, v in sorted(fl.said_values(new) - fl.said_values(old)):
+            t = dmpass.trace(fl, json.loads(v), fl.origin_at(at), mats, skip=own | {p, bid}, titles=title)
+            dest = {'bean': bid, 'at': at}
+            if t.verdict == 'refused':
+                why = next((r.get('why') for r in fl.rows if r.get('flow') in t.decision.rows), '')
+                refused.append(f"{p} {at} = {v[:60]}: found, as written, only in {json.dumps(t.source)}, and "
+                               f"{', '.join(t.decision.rows) or 'no row'} refuses it" + (f" — {why}" if why else ''))
+                continue
+            md = {'quoted': t.quoted}
+            if t.method == 'take-down':
+                md['form'] = 'written'
+            if t.verdict == 'nowhere':
+                hoped.append(f"{p} {at} = {v[:60]}")
+            TRACED.append((s.state.get('log'), {'from': t.source, 'to': dest, 'method': t.method,
+                                                'metadata': md}))
+    if refused:
+        refuse("a said value came from where the flow law refuses it (SAVE):\n  " + '\n  '.join(refused) +
+               "\nA said value is a person's word: take it from their words, or point at where it is kept; nothing "
+               "written")
+    for h in hoped:
+        print(dmparse.said(f"dmsave: HOPED — {h}: found nowhere the session read, as written; its pass is logged from "
+                           f"instructions with `quoted: 0` (the words may say it another way)"), file=sys.stderr)
+
+
+def front(path, text=None):
+    try:
+        if text is None:
+            with open(path, encoding='utf-8') as fh:
+                text = fh.read()
+        d = dmparse.loads(dmparse.split_front_matter(text or '')[0] or '')
+    except Exception:
+        return {}
+    return d if isinstance(d, dict) else {}
+
+
+def log_traced():
+    """The passes SAVE traced, appended to the session's log once each: a save made again adds none twice."""
+    for rel, p in TRACED:
+        if not rel:
+            continue
+        f = os.path.join(ROOT, *rel.split('/'))
+        try:
+            with open(f, encoding='utf-8') as fh:
+                have = {l.strip() for l in fh}
+        except OSError:
+            have = set()
+        line = json.dumps(p, sort_keys=True, ensure_ascii=False)
+        if line not in have:
+            os.makedirs(os.path.dirname(f), exist_ok=True)
+            with open(f, 'a', encoding='utf-8', newline='\n') as fh:
+                fh.write(line + '\n')
 
 
 def commit(message, again):
@@ -149,6 +252,7 @@ def commit(message, again):
     _text = _text[len(_held):] if _held and _text.startswith(_held) else _text
     if pend:
         dmjournal.stamp_now(pend[-1], _text)
+    log_traced()
     add = git('add', '-A')
     if add.returncode != 0:
         print(add.stderr.rstrip(), file=sys.stderr)
@@ -164,10 +268,38 @@ def commit(message, again):
     return 0
 
 
+def lock():
+    """Wait for the clone's save lock and hold it until this process ends; refuse after the stated wait."""
+    import time
+    d = git('rev-parse', '--absolute-git-dir').stdout.strip()
+    if not d:
+        return None
+    wait = float(os.environ.get('DAFTAR_SAVE_WAIT', '120'))
+    f = open(os.path.join(d, 'daftar-save.lock'), 'a+')
+    end = time.monotonic() + wait
+    while True:
+        try:
+            if os.name == 'nt':
+                import msvcrt
+                f.seek(0)
+                msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return f
+        except OSError:
+            if time.monotonic() >= end:
+                f.close()
+                refuse(f"another save is in progress in this clone, and did not finish within {wait:g}s "
+                       f"(DAFTAR_SAVE_WAIT) — try again when it has")
+            time.sleep(0.1)
+
+
 def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         print(__doc__)
         return 0 if argv else 2
+    held = lock()                                 # noqa: F841 — held until the process ends
     if '--again' in argv:
         if argv != ['--again']:
             refuse("--again takes nothing else: it commits the entry already written, under its own <what>")

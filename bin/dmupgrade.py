@@ -5,6 +5,8 @@
     python3 bin/dmupgrade.py <tag> --from <url-or-path>  # from any clone that carries the tag
     DAFTAR_GARDENER=<id> python3 bin/dmupgrade.py <tag>  # into std-vocab 21.0, from a garden at any release
     python3 bin/dmupgrade.py <tag> --gardener <id>       # the same, where the garden's own tool knows the flag
+    python3 bin/dmupgrade.py <tag> --extend <profile>    # opt into a profile the law offers, and receive its asset
+    python3 bin/dmupgrade.py <tag> --retract <profile>   # leave it, and have its asset taken away
 
 A release is a TAG on the public repository. What a garden receives from it is declared once, in the
 release's own `seed/LANGUAGE` — the same file `seed/germinate.py` reads — so a new garden and an upgraded
@@ -106,6 +108,15 @@ one reader of the map.
   garden kept of its own; its journal entry is written as the 22.0 step's is. Where all it finds is a person's to do,
   it names that and exits non-zero, --keep-on-failure or not: nothing translated is not nothing to do.
 
+OPTING INTO A PROFILE IS ONE ACT OF THIS TOOL. `--extend <profile>` (or `--retract <profile>`), each as often as
+needed, with the release GARDEN.md records — or with a newer one, in the same run as the crossing: the profile is
+written in, or taken out of, VOCAB.md's `extends_profiles` (the edit PROVED as every other: the front matter parses to
+exactly the old one with that list changed, and the body is untouched), what a garden extending the profiles receives
+is copied — a profile's asset, `assets/<profile>/`, among it — and what it no longer receives is removed, read by
+bin/dmpass.py, the one reader of seed/LANGUAGE; the journal entry says RULE-CHANGE and names the profiles; and the gate
+runs, putting every file back when the garden does not pass — a garden that still writes a term of a profile it
+leaves, say. A profile the release's law does not offer is refused before anything is touched.
+
 THE RELEASE'S OWN TOOL DOES THE WORK. When the release carries a different bin/dmupgrade.py, this one hands
 over to it (with --garden and --no-delegate) instead of applying a newer release with older logic: v0.4.0
 added the release record and the downgrade guard, and a v0.3.1 garden running its own v0.3.1 tool received the
@@ -189,16 +200,53 @@ def patterns(root):
     if not os.path.isfile(path):
         sys.exit(f"REFUSING: {path} does not exist — a release without seed/LANGUAGE does not say what it "
                  f"contains, and guessing would be a second, silent list.")
-    return [l.strip() for l in open(path, encoding='utf-8') if l.strip() and not l.lstrip().startswith('#')]
+    return dmpass.language(open(path, encoding='utf-8').read())
 
 
-def expand(root, pats):
-    out = set()
-    for p in pats:
-        for f in glob.glob(os.path.join(root, p)):
-            if os.path.isfile(f):
-                out.add(os.path.relpath(f, root))
-    return out
+def shipped(root, extends=None):
+    """What the tree at `root` ships, read by bin/dmpass.py, the one reader of seed/LANGUAGE: with `extends` None, every
+    file its release KEEPS (a line naming a profile's asset read for every profile its law offers); with a list of
+    profiles, what a garden extending them RECEIVES. Paths are `/`-separated, as git and seed/LANGUAGE write them."""
+    lines = patterns(root)
+    offers = dmpass.offered(std_fm(root))
+    files = [f for f in dmpass.tracked(root) if os.path.isfile(os.path.join(root, *f.split('/')))]
+    return set(dmpass.kept(files, lines, offers) if extends is None else dmpass.received(files, lines, extends, offers))
+
+
+def set_profiles(text, profiles):
+    """VOCAB.md's text with `extends_profiles` set to `profiles`, in order: the key's whole block written again as one
+    line where there is one, else a line written above `local_terms` (or before the closing fence); with none left, the
+    key taken out. Proved before it is written: the front matter parses to exactly the old one with that one key changed,
+    and the body is untouched — or the edit is refused."""
+    old_fm, body = _parse(text)
+    line = f"extends_profiles: [{', '.join(profiles)}]\n"
+    try:
+        s, e = dmsafe.top_level_span(text, 'extends_profiles')
+        new = text[:s] + (line if profiles else '') + text[e:]
+    except dmsafe.UnsafeEdit:
+        if not profiles:
+            return text
+        new = re.sub(r'(?m)^(local_terms:)', lambda m: line + m.group(1), text, count=1)
+        if new == text:
+            head, sep, rest = text.partition('\n---\n')
+            new = head + '\n' + line.rstrip('\n') + sep + rest
+    new_fm, new_body = _parse(new)
+    want = copy.deepcopy(old_fm) if isinstance(old_fm, dict) else {}
+    if profiles:
+        want['extends_profiles'] = list(profiles)
+    else:
+        want.pop('extends_profiles', None)
+    if new_fm != want or new_body != body:
+        refuse("VOCAB.md's `extends_profiles` could not be written without changing something else — write it by hand: "
+               f"`{line.strip()}`, journal it as a RULE-CHANGE, commit, and run this again.")
+    return new
+
+
+def garden_profiles(root=None):
+    """The profiles the garden's VOCAB.md extends, as it states them."""
+    path = os.path.join(root or ROOT, 'VOCAB.md')
+    fm = dmparse.loads(dmparse.read(path)[0] or '') or {} if os.path.isfile(path) else {}
+    return dmpass.extended(fm)
 
 
 def recorded_release():
@@ -408,6 +456,30 @@ def move_attributes(text, fm):
     if a_s < d_s:
         return text[:a_s] + text[a_e:d_s] + block + text[d_e:], None
     return text[:d_s] + block + text[d_e:a_s] + text[a_e:], None
+
+
+# WHAT THE SEED ONCE WROTE BESIDE VOCAB.md's KEYS (24.0). Its template commented two keys; a law carries no commentary
+# but its section titles, and the gate refuses one in VOCAB.md's front matter. Those words are the release's, never a
+# person's, so they are taken off at the crossing, the front matter PROVED to parse as it did. Any other comment is the
+# garden's own words, and is left for the gate to name.
+TEMPLATE_COMMENTS = ('# terms specific to this estate. One that proves general is PROMOTED to Tier-0.',
+                     '# kinds are Tier-0. Add one here only if this estate needs a kind nowhere else does.',
+                     '# gene are Tier-0. Add one here only if this estate needs a genos nowhere else does.')
+
+
+def drop_template_comments(text):
+    """(text, n): VOCAB.md with the seed template's own comments taken off its front matter's lines, and how many were;
+    (text, 0) where there were none, or where taking them off would change what the front matter says."""
+    reg = _fm_region(text)
+    if reg is None:
+        return text, 0
+    head, n = [], 0
+    for line in text[reg[0]:reg[1]].split('\n'):
+        cut = next((line[:-len(c)].rstrip() for c in TEMPLATE_COMMENTS if line.rstrip().endswith(' ' + c)), None)
+        head.append(line if cut is None else cut)
+        n += cut is not None
+    out = text[:reg[0]] + '\n'.join(head) + text[reg[1]:]
+    return (out, n) if n and _parse(out) == _parse(text) else (text, 0)
 
 
 def _parse(text):
@@ -1168,7 +1240,7 @@ class Step22:
     def code_left(self):
         """[(path, how many lines)] of the garden's own files, outside the language and its records, that say a word
         22.0 retired — for a person to read before relying on them."""
-        own = {p.replace(os.sep, '/') for p in expand(self.rel, patterns(self.rel))}
+        own = shipped(self.rel)
         out = []
         for f in sorted(x for x in run('git', 'ls-files', '-z', check=False).stdout.split('\0') if x):
             if f in own or f in ('VOCAB.md', 'GARDEN.md') or f.split('/')[0] in self.RECORDS:
@@ -1741,6 +1813,154 @@ class Step23_1:
         return None, []
 
 
+# ==== THE 24.0 STEP =============================================================================================
+# The law spells ONE thing another way: what brings a clause into force is a reading (`when: {selection}`) or the words
+# (`when: {said}`), and a prose `when` is refused. The words are the words, so they are written `{said: <them>}` — the
+# one translation, proved per clause. Everything else 24.0 now refuses or warns about asks for what only a person knows —
+# a quantity's stray key, a step's own key, a person's consent, an anchor's issuer — and an upgrade can invent none of
+# it: those are LISTED, read from the release's own gate, and moved by nobody. A bean one product's kit reads is that
+# garden's own crossing to settle, never a step of the release: no product is privileged in the law.
+STEP_24 = (24, 0)
+LISTED_24 = (           # (what a person is shown, the words of the release's gate that name one) — test/upgrade.py pins each
+    ('a quantity holding a key beside count, unit and u or accuracy (Q-3)', 'and a quantity holds count, unit and one of u / accuracy'),
+    ('a step holding what the law does not declare (N11)', 'which the term `steps` does not declare'),
+    ('a person kept by name with no consent recorded (F2)', 'names a person who is not the gardener, and no consent'),
+    ('an issued anchor naming no issuer (N17)', 'is issued by an organisation, and names none'),
+    ("a term of the garden's own giving a name a second sense (`senses`)", 'has a second sense'),
+    ("a comment in VOCAB.md's front matter that no name it sat on could take (§9k)", "a comment in the law's front matter"),
+)
+
+
+class Step24:
+    """The translation into std-vocab 24.0: a clause's prose `when` into `{said: <the words>}`, planned before any file
+    is touched and proved on each file as the steps before it left it; and the list of what a person must do."""
+
+    def __init__(self, rel, tag, keep):
+        self.rel, self.tag, self.keep = rel, tag, keep
+        self.problems, self.said, self.leftover = [], [], False
+
+    @staticmethod
+    def docs():
+        return sorted(p for d in DOCS for p in glob.glob(os.path.join(ROOT, d, '*.md')))
+
+    @staticmethod
+    def spans(text):
+        """[(start, end, replacement, clause)] — each prose `when` of a clause in the front matter, and the text that says
+        it as `{said: …}`: a quoted scalar keeps its own bytes; any other is written as a double-quoted string."""
+        y, region = dmparse._yaml, _fm_region(text)
+        if not region:
+            return []
+        lo, hi = region
+        head = text[lo:hi]
+        try:
+            root = y.compose(head, Loader=dmparse.LOADER)
+        except Exception:
+            return []
+        if not isinstance(root, y.MappingNode):
+            return []
+        out = []
+        for k, v in root.value:
+            if not (isinstance(k, y.ScalarNode) and k.value == 'clauses' and isinstance(v, y.MappingNode)):
+                continue
+            for ck, cv in v.value:
+                if not isinstance(cv, y.MappingNode):
+                    continue
+                for wk, wv in cv.value:
+                    if not (isinstance(wk, y.ScalarNode) and wk.value == 'when' and isinstance(wv, y.ScalarNode)):
+                        continue
+                    if wv.tag != 'tag:yaml.org,2002:str' or not wv.value.strip():
+                        continue            # a date, a number, an empty `when`: not words — the gate names it
+                    a, b = wv.start_mark.index, wv.end_mark.index
+                    own = head[a:b]
+                    tail = own[len(own.rstrip('\r\n')):]
+                    if wv.style in ('|', '>'):
+                        # A BLOCK SCALAR STAYS ONE, a level deeper under `said:`: its lines may hold what a line does not
+                        k_end = wk.end_mark.index
+                        if not re.fullmatch(r'[ \t]*:[ \t]*', head[k_end:a]):
+                            continue        # written some other way: the gate names the prose `when`, a person moves it
+                        nl = '\r\n' if '\r\n' in own else '\n'
+                        first, _sep, rest = own.partition(nl)
+                        pad = ' ' * (wk.start_mark.column + 2)
+                        deeper = nl.join(('  ' + l) if l.strip() else l for l in rest.split(nl))
+                        out.append((lo + k_end, lo + b, f":{nl}{pad}said: {first}{nl}{deeper}", str(ck.value)))
+                        continue
+                    body = own.rstrip('\r\n') if wv.style in ('"', "'") else json.dumps(wv.value, ensure_ascii=False)
+                    out.append((lo + a, lo + b, '{ said: ' + body + ' }' + tail, str(ck.value)))
+        return out
+
+    def one(self, path):
+        """(new text or None, [clause names]) — PROVED: the new front matter must parse to the old one with each prose
+        `when` now `{said: <the same words>}`, and the body unchanged; otherwise nothing, and the problem says so."""
+        text, _form = read_text(path)
+        spans = self.spans(text)
+        if not spans:
+            return None, []
+        fm, body = _parse(text)
+        want = copy.deepcopy(fm)
+        for *_x, clause in spans:
+            want['clauses'][clause]['when'] = {'said': fm['clauses'][clause]['when']}
+        new = text
+        for a, b, rep, _c in sorted(spans, reverse=True):
+            new = new[:a] + rep + new[b:]
+        try:
+            nfm, nbody = _parse(new)
+        except Exception:
+            nfm, nbody = None, None
+        if nfm != want or nbody != body:
+            rel = os.path.relpath(path, ROOT).replace(os.sep, '/')
+            why = (f"{rel}: the prose `when` of {', '.join(c for *_x, c in spans)} could not be written "
+                   f"`{{ said: <the words> }}` without changing something else — write it so by hand")
+            if why not in self.problems:
+                self.problems.append(why)
+            return None, []
+        return new, [c for *_x, c in spans]
+
+    def left(self):
+        """Whether any bean or mapping says a clause's `when` in prose: a garden crossing, or one that crossed and merged
+        it in since from a branch still at 23.1. `leftover` is the second: the language did not move."""
+        found = any(self.spans(read_text(p)[0]) for p in self.docs())
+        self.leftover = found and vtuple(vocab_version(ROOT)) >= STEP_24
+        return found
+
+    def plan(self):
+        for p in self.docs():
+            self.one(p)
+        if self.problems and not self.keep:
+            refuse(f"crossing into std-vocab {vocab_version(self.rel)}, {len(self.problems)} thing(s) are a person's to "
+                   f"do, not a translation's:\n" + '\n'.join('  - ' + p for p in self.problems) +
+                   "\nDo them and commit, then run this again — or pass --keep-on-failure to apply the rest and "
+                   "leave these, named, for the person.")
+
+    def apply(self):
+        """Writes what was planned, on each file as the steps before it left it: (the `translated:` text, the ids)."""
+        touched = []
+        for p in self.docs():
+            new, clauses = self.one(p)
+            if new is None:
+                continue
+            write_text(p, new, read_text(p)[1])
+            ident = Step21._id(p)
+            touched.append(ident)
+            self.said.append(f"{ident} `clauses`: the prose `when` of {', '.join(clauses)} written `{{ said: <the same "
+                             f"words> }}`")
+        if self.problems:
+            self.said.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
+        return (f"std-vocab {vocab_version(self.rel)}, a clause's `when` a reading or the words — "
+                + '; '.join(self.said or ['nothing to translate'])), touched
+
+    @staticmethod
+    def listed(gate_out):
+        """[(what, [the gate's lines])] — what 24.0 refuses or warns about that only a person can say, read from the
+        release's own gate, in LISTED_24's order; moved by nobody."""
+        lines = [l.strip() for l in gate_out.splitlines()]
+        out = []
+        for what, needle in LISTED_24:
+            hit = [l for l in lines if needle in l]
+            if hit:
+                out.append((what, hit))
+        return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
@@ -1757,6 +1977,10 @@ def main():
                          "organisation (or DAFTAR_GARDENER_GENOS in the environment; default: a person, as "
                          "seed/germinate.py plants one). `--gardener-kind` and DAFTAR_GARDENER_KIND, the names before "
                          "22.0, are read the same")
+    ap.add_argument('--extend', action='append', default=[], metavar='PROFILE',
+                    help='opt into a profile the release\'s law offers: written in VOCAB.md, its asset received (again for another)')
+    ap.add_argument('--retract', action='append', default=[], metavar='PROFILE',
+                    help='leave a profile: taken out of VOCAB.md, its asset removed (again for another)')
     ap.add_argument('--no-delegate', action='store_true', help=argparse.SUPPRESS)
     ap.add_argument('--recorded-source', help=argparse.SUPPRESS)
     a, unknown = ap.parse_known_args()
@@ -1804,6 +2028,10 @@ def main():
                 args += ['--gardener-name', a.gardener_name]
             if a.gardener_genos:
                 args += ['--gardener-genos', a.gardener_genos]
+            for _p in a.extend:
+                args += ['--extend', _p]
+            for _p in a.retract:
+                args += ['--retract', _p]
             return subprocess.run(args + unknown).returncode
         if unknown:
             ap.error(f"unrecognized arguments: {' '.join(unknown)}")
@@ -1832,8 +2060,20 @@ def main():
             if vtuple(before) < STEP_23_1 or _s23.left():
                 step23 = _s23
                 step23.plan()
-        want = expand(rel, patterns(rel))
-        have = expand(ROOT, patterns(ROOT)) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
+        # ...and so is one where a clause says what brings it into force in prose: the words become `{said: <them>}`.
+        step24 = None
+        if STEP_24 <= vtuple(vocab_version(rel)):
+            _s24 = Step24(rel, a.tag, a.keep_on_failure)
+            if _s24.left():
+                step24 = _s24
+                step24.plan()
+        # WHAT THE GARDEN RECEIVES, AND WHAT IT HELD, read by the one reader (bin/dmpass.py): `want` is what a garden
+        # extending its profiles receives from the release; `have` is every file of the garden its own release keeps, so
+        # a file it no longer receives — a retired tool, the asset of a profile it left — leaves, and a file of its own
+        # beside them is never the release's to remove.
+        profiles = plan_profiles(rel, a.tag, a.extend, a.retract)
+        want = shipped(rel, profiles)
+        have = shipped(ROOT) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
         # "applied" when either side is unknown: a garden that records no release cannot be told which way it moved.
         verb = ('applied' if not (cur_v and new_v) else
                 'downgraded' if tuple(map(int, new_v.groups())) < tuple(map(int, cur_v.groups())) else 'upgraded')
@@ -1842,7 +2082,8 @@ def main():
         # An exception midway (a file an editor, the indexer or antivirus holds open on Windows, where os.replace then
         # fails) once left release files copied, both pins moved, beans half translated and no journal entry.
         try:
-            return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22, step23)
+            return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22, step23,
+                                 profiles, step24)
         except BaseException as e:
             put_back(added + (step21.created if step21 else []))
             print(f"NOT {verb.upper()}: the upgrade stopped midway"
@@ -1851,6 +2092,24 @@ def main():
             raise
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def plan_profiles(rel, tag, extend, retract):
+    """The profiles the garden extends once this run is done: its own, with `--extend` added and `--retract` taken out,
+    in the order it states them. A profile the release's law does not offer is refused before anything is touched; one
+    both extended and retracted is a contradiction, refused too."""
+    if not (extend or retract):
+        return garden_profiles()
+    offers = dmpass.offered(std_fm(rel))
+    both = sorted(set(extend) & set(retract))
+    if both:
+        refuse(f"{', '.join(both)} is both extended and retracted in one run: say which.")
+    unknown = [p for p in extend if p not in offers]
+    if unknown:
+        refuse(f"{tag}'s law offers {', '.join(offers) or 'no profile'}; it does not offer {', '.join(unknown)}.")
+    now = garden_profiles()
+    out = [p for p in now if p not in retract] + [p for p in extend if p not in now]
+    return out
 
 
 def put_back(added):
@@ -1866,7 +2125,8 @@ def put_back(added):
     install()
 
 
-def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None):
+def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None,
+                  profiles=None, step24=None):
     """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
     caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
     changed = []
@@ -1883,6 +2143,12 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     removed = sorted(have - want)
     for f in removed:
         os.remove(os.path.join(ROOT, f))
+        # a directory the removal emptied goes with it — a profile's asset left behind as empty folders is still there
+        # to a reader of the tree; git never held the folders, so taking them away is not a change it records
+        d = os.path.dirname(os.path.join(ROOT, f))
+        while os.path.realpath(d) != os.path.realpath(ROOT) and os.path.isdir(d) and not os.listdir(d):
+            os.rmdir(d)
+            d = os.path.dirname(d)
 
     after = vocab_version(ROOT)
     repinned = []
@@ -1948,11 +2214,46 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         beans += [b for b in _b if b not in beans]
         if _vocab and 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
             changed.append('VOCAB.md (translated)')
+    if step24:
+        _t, _b = step24.apply()
+        translated.append(_t); steps.append(_t)
+        beans += [b for b in _b if b not in beans]
 
+    _vp = os.path.join(ROOT, 'VOCAB.md')
+    if os.path.isfile(_vp):
+        _vt, _vf = read_text(_vp)
+        _vt2, _n = drop_template_comments(_vt)
+        if _n:
+            write_text(_vp, _vt2, _vf)
+            translated.append(f"VOCAB.md: the seed template's {_n} comment(s) taken off its front matter (24.0: the law carries none)")
+            if 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
+                changed.append('VOCAB.md (translated)')
+        # the garden's OWN comments are reasons: each moved, under the name it sat on, to the reasoning kept beside the law
+        # — by bin/dmwhy.py, the one tool that writes it. VOCAB.md is left as it was where it would read otherwise.
+        import dmwhy
+        _why, _moved = dmwhy.take_comments(ROOT)
+        if _moved:
+            translated.append(f"VOCAB.md: {len(_moved)} comment(s) of the garden's own moved to {_why}, each under the name it "
+                              f"sat on ({', '.join(sorted({k for k, _s in _moved}))}) (24.0: the law carries no story)")
+            if 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
+                changed.append('VOCAB.md (translated)')
+            if _why not in changed:
+                changed.append(_why)
+
+    # THE PROFILES, LAST: written in VOCAB.md after every translation read it, so no step's proof sees the list move.
+    moved = []
+    if profiles is not None and (a.extend or a.retract):
+        vpath = os.path.join(ROOT, 'VOCAB.md')
+        vtext, vform = read_text(vpath)
+        was = garden_profiles()
+        if list(profiles) != list(was):
+            write_text(vpath, set_profiles(vtext, profiles), vform)
+            moved = ([f"+{p}" for p in profiles if p not in was] + [f"-{p}" for p in was if p not in profiles])
+            changed.append('VOCAB.md (extends_profiles)')
     if not (changed or added or removed or repinned or beans):
         # NOTHING MOVED IS NOT NOTHING TO DO. With --keep-on-failure a step that could translate nothing still names what
         # it left for a person, and the gate still refuses the garden for it: saying "nothing to do" hid both.
-        left = [p for s in (step22, step23) if s for p in s.problems]
+        left = [p for s in (step22, step23, step24) if s for p in s.problems]
         if left:
             print(f"NOTHING TRANSLATED: this garden runs {a.tag} ({sha[:12]}) already, and {len(left)} thing(s) are a "
                   f"person's to do, not a translation's:\n" + '\n'.join('  - ' + p for p in left) +
@@ -1963,12 +2264,13 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     # ONLY WORDS MOVED: the garden runs this release already, and what changed is the translation of what came in since it
     # crossed. The law did not move and nothing is a person's to decide — the translation is the one the garden adopted
     # when it crossed — so the entry asks nothing, and says RULE-CHANGE only where VOCAB.md itself was translated.
-    ran = [s for s in (step22, step23) if s]
+    ran = [s for s in (step22, step23, step24) if s]
     words_only = bool(ran and all(s.leftover for s in ran) and not (added or removed or repinned)
                       and all(c.endswith(('(translated)', '(re-keyed)')) for c in changed))
     since = ' and '.join(w for s, w in ((step22, "into std-vocab 22.0 still in 21.0's words"),
                                         (step23, "into std-vocab 23.1 still placing a file where the law places it "
-                                                 "otherwise")) if s)
+                                                 "otherwise"),
+                                        (step24, "into std-vocab 24.0 with a clause's `when` still in prose")) if s)
     if words_only:
         verb = 'translated'
 
@@ -1984,6 +2286,18 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
                  f"- changed: {', '.join(changed) or 'none'}",
                  f"- translated: {'; '.join(translated) or 'none'}",
                  f"- beans: {', '.join(beans) or 'none'}"]
+    elif moved and not (repinned or beans or steps) and current == a.tag:
+        # A PROFILE EXTENDED OR RETRACTED, at the release the garden runs: the law is the same law, and what it extends
+        # is not; the entry says which profiles moved and what came and went with them.
+        lines = ['\n' + dmjournal.stamp(_who, f"RULE-CHANGE: profiles {' '.join(moved)}, at daftar {a.tag}", ROOT),
+                 "- ratified_by: (fill in who ratified — the gardener's word, given here)",
+                 f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** "
+                 + ' '.join(f"--{'extend' if m[0] == '+' else 'retract'} {m[1:]}" for m in moved)
+                 + f"; VOCAB.md extends_profiles: [{', '.join(profiles)}].",
+                 f"- changed: {', '.join(changed) or 'none'}",
+                 f"- added: {', '.join(added) or 'none'}",
+                 f"- removed: {', '.join(removed) or 'none'}",
+                 "- why: (fill in — what the garden takes the profile up, or leaves it, for)"]
     else:
         lines = ['\n' + dmjournal.stamp(_who, f"RULE-CHANGE: language {verb} to daftar {a.tag}", ROOT),
                  "- ratified_by: (fill in who ratified — merging the release's pull request, or the word given here)",
@@ -1994,6 +2308,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
                  f"- removed: {', '.join(removed) or 'none'}",
                  f"- repinned: {', '.join(repinned) or 'none'}",
                  f"- translated: {'; '.join(translated) or 'none'}",
+                 f"- profiles: {' '.join(moved) or 'unchanged'}",
                  "- why: (fill in — what this release brings that this garden adopts)",
                  f"- beans: {', '.join(beans) or 'none'}"]
     jpath = os.path.join(ROOT, 'log', 'journal.md')
@@ -2001,6 +2316,10 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         j.write('\n'.join(lines) + '\n')
 
     gate = run(sys.executable, os.path.join(ROOT, 'bin', 'dmcheck.py'), check=False)
+    # WHAT ONLY A PERSON CAN SAY, LISTED, NOT MOVED (24.0): read from the release's own gate, which names each one.
+    listed = Step24.listed(gate.stdout) if STEP_24 <= vtuple(after) and vtuple(before) < STEP_24 else []
+    shown = [f"  {what} — {len(hit)}:\n" + '\n'.join('    ' + h for h in hit[:20]) + ('\n    …' if len(hit) > 20 else '')
+             for what, hit in listed]
     if gate.returncode != 0 and not a.keep_on_failure:
         # PUT IT ALL BACK. The tree was clean before we started, so git holds every file as it was. A cold-start
         # drill downgraded a garden that used a profile the older release lacks, and was left half-applied.
@@ -2012,13 +2331,24 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         errs[:0] = ['dmreform ' + t for t in translated if t.startswith('REFUSED')]
         print(f"NOT {verb.upper()}: under {a.tag} this garden fails its own gate, so every file was put back as it was.\n"
               + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') +
-              "\nFix what these name (or pass --keep-on-failure to repair by hand), then run this again.")
+              "\nFix what these name (or pass --keep-on-failure to repair by hand), then run this again."
+              + ("\n\nFOR A PERSON, which no upgrade moves (std-vocab 24.0):\n" + '\n'.join(shown) if shown else ''))
         return 1
+    if listed:
+        with open(jpath, 'a', encoding='utf-8', newline=read_text(jpath)[1].nl) as j:
+            j.write(f"- for a person (std-vocab 24.0, moved by no upgrade): "
+                    + '; '.join(f"{what}: {len(hit)}" for what, hit in listed) + "\n")
     print(f"translated into the words of {a.tag} ({sha[:12]}), which this garden runs: std-vocab {after}, the language "
-          f"unchanged." if words_only else f"{verb} to {a.tag} ({sha[:12]}): std-vocab {before} -> {after}; "
-          f"{len(changed)} changed, {len(added)} added, {len(removed)} removed, {len(repinned)} repinned.")
+          f"unchanged." if words_only else
+          f"profiles {' '.join(moved)} at {a.tag} ({sha[:12]}): VOCAB.md extends [{', '.join(profiles or [])}]; "
+          f"{len(added)} added, {len(removed)} removed." if (moved and current == a.tag and not repinned) else
+          f"{verb} to {a.tag} ({sha[:12]}): std-vocab {before} -> {after}; "
+          f"{len(changed)} changed, {len(added)} added, {len(removed)} removed, {len(repinned)} repinned"
+          + (f"; profiles {' '.join(moved)}." if moved else "."))
     for _t in steps:
         print(f"translated: {_t}")
+    if shown:
+        print("FOR A PERSON, which no upgrade moves (std-vocab 24.0):\n" + '\n'.join(shown))
     print((gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1])
     # TWO COMMANDS, NOT ONE JOINED BY `&&`, and no `rm`: Windows PowerShell 5.1 parses neither `&&` nor `rm a b`, and
     # git runs alike in every shell — `git clean` removes exactly the files the upgrade added, which git has never held.

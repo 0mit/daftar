@@ -1,0 +1,13 @@
+dwc	daftar	note
+dwc:occurrenceID	bean	the being recorded, as a bean: its id is the occurrence's
+dwc:eventDate	located_at.observed	the day it was seen there, as written; an interval is not carried
+dwc:geodeticDatum	located_at.at#crs	the coordinate reference system, as its EPSG code: `EPSG:4326`
+dwc:decimalLatitude	located_at.at#lat	the latitude in decimal degrees, as written
+dwc:decimalLongitude	located_at.at#lon	the longitude in decimal degrees, as written
+dwc:coordinateUncertaintyInMeters	located_at.accuracy.count	the smallest circle that holds it, as Darwin Core defines it: an accuracy of kind `bound`, in metres
+dwc:locality	located_at.note	the place in words
+form:located_at.at	{crs};{lat},{lon}	the one form of the system `geographic`: a coordinate is never bare
+given:located_at.system	located_at.system=geographic	a position by coordinates
+given:located_at.openness	located_at.openness=elsewhere	a being seen in the field: reachable, and not from the machine that records it
+given:located_at.accuracy.unit	located_at.accuracy.unit=metre	Darwin Core's uncertainty is in metres
+given:located_at.accuracy.kind	located_at.accuracy.kind=bound	Darwin Core's uncertainty is a bound

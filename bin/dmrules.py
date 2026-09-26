@@ -13,6 +13,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
 import dmform          # a term's law keyed by attribute — the one reader of the schema constructs
+import dmpass          # where a value comes from: acts, a domain's origin, a rank by source
 try:
     import yaml
 except ImportError:
@@ -244,25 +245,35 @@ if '--terms' in want:
         for _k, _a in WALK_KEYS.items():
             if s.get(_k) is True:
                 bits.append(f"on the '{_a['aspect']}' sequence" + (" · must stay ACYCLIC" if _a.get('acyclic') else ""))
+        if s.get('on_sequence'):
+            bits.append(f"a WALK on the '{s['on_sequence']}' sequence — each step judged by the attributes below")
+        if s.get('series') is True:
+            bits.append("each entry a SERIES — its rows read against its channels")
+        if s.get('moves_along'):
+            bits.append(f"each entry a MOVE along the course its `{s['moves_along']}` names — held to that course's walk")
         print(f"  {n:20} [{TIER[n]}]  {' · '.join(bits)}")
         det = []
         _req_self = [a_ for a_, _ in dmform.facet(F, 'required', 'self')]
         _req_entry = [a_ for a_, _ in dmform.facet(F, 'required', 'entry')]
         if V.get('values'):              det.append(f"values {V['values']}")
         if V.get('values_from'):         det.append(f"values from term '{V['values_from']}'")
-        if _req_self:                    det.append(f"needs {_req_self}")
+        if _req_self:                    det.append(f"{'each step ' if s.get('on_sequence') else ''}needs {_req_self}")
         if _req_entry:                   det.append(f"each entry needs {_req_entry}")
         for a_, v in dmform.facet(F, 'values', 'entry'):
             det.append(f"entry.{a_} ∈ {v}")
         # 13.0: every attribute says what it is a position IN, so the listing can say it for ALL of them. Until
         # then this printed the enums, the types and the aspects and was silent about registries, forms and refs.
-        _w = 'entry' if F['scope'] == 'entry' else 'value'
+        _w = 'entry' if F['scope'] == 'entry' else 'step' if s.get('on_sequence') else 'value'
         for a_, v in dmform.facet(F, 'type'):
             det.append(f"{_w}.{a_} is {v}")
         for a_, r in dmform.facet(F, 'registry'):
             det.append(f"{_w}.{a_} is a row of " + (f"the registry its `{r['registry_from']}` names" if r.get('registry_from')
                                                      else f"registry '{r.get('registry')}'")
                        + (' where ' + ', '.join(f"{k} is {v}" for k, v in r['where'].items()) if r.get('where') else ''))
+        for a_, _r in dmform.facet(F, 'origin_of'):
+            det.append(f"{_w}.{a_} is an origin {{act, nature?, by?}} — of `acts` and `natures`")
+        for a_, _r in dmform.facet(F, 'stamped'):
+            det.append(f"{_w}.{a_} is STAMPED: written `now`, and the save writes the moment of its journal heading")
         for a_, r in dmform.facet(F, 'default_from'):
             det.append(f"{_w}.{a_}, when the entry is silent, is read from {r.get('registry')}.{r.get('take')} "
                        f"(the row its `{r.get('keyed_by')}` names)")
@@ -290,7 +301,19 @@ if '--terms' in want:
         _keyed = dict(dmform.facet(F, 'keyed_by'))
         for a_, r in dmform.facet(F, 'entries'):
             det.append(f"{_w}.{a_} holds entries, each judged by {sorted(map(str, r))}"
-                       + (f"; ONE per `{_keyed[a_]}`, in no order" if a_ in _keyed else ''))
+                       + (f"; ONE per `{' + '.join(_keyed[a_]) if isinstance(_keyed[a_], list) else _keyed[a_]}`, in no order"
+                          if a_ in _keyed else ''))
+        for a_, r in dmform.facet(F, 'nested_one_of'):
+            det.append(f"{_w}.{a_}: each entry inside carries at least one of {r}")
+        for a_, r in dmform.facet(F, 'nested_at_most'):
+            det.append(f"{_w}.{a_}: each entry inside carries at most one of each of {r}")
+        for _g in (F.get('at_most') or []):
+            det.append(f"at most one of {_g}: two are a contradiction")
+        if F.get('keyed_by'):
+            det.append(f"ONE entry per {' + '.join(F['keyed_by'])} on one bean")
+        if F.get('exclusive'):
+            det.append(f"exclusive: the `{F['exclusive'].get('extent')}` of its entries for one `{F['exclusive'].get('being')}`"
+                       + (f", in one `{F['exclusive']['role']}`" if F['exclusive'].get('role') else '') + ", across the garden, do not overlap")
         if isinstance(s.get('sums'), dict):
             _wh = s['sums'].get('whole')
             det.append(f"sums: each entry's {s['sums'].get('parts')} add up EXACTLY to its "
@@ -323,6 +346,25 @@ print(f"  count: {_m(_vt.get('count')).get('pattern', 'NO value_types[count] —
 for q in reg('quantities'):
     if isinstance(q, dict) and q.get('quantity'):
         print(f"  {q['quantity']:14} {quantity_rule(q['quantity'])}")
+
+head("THE SCHEMA LANGUAGE AND THE VALUE TYPES — every construct a term may state, and every type a value may be")
+print("  constructs: " + ', '.join(k for k in (std.get('schema_language') or {}) if k != 'attr_domains'))
+for _t, _r in _vt.items():
+    _how = (f"one of {_r['either']}" if isinstance(_r.get('either'), list) else
+            f"a position to the {_r.get('unit')} in any system of {_r.get('dimension')}" + (", with its clock and offset"
+            if _r.get('clock') == 'required' else '') if _r.get('any_system') else
+            f"pattern {_r['pattern']}" if _r.get('pattern') else 'read by its own reader')
+    print(f"  {_t:15} {_how}")
+
+head("TABLES — a series' rows: one header, one line a row, a tab between two cells, never an empty cell")
+_rw = _m(_vt.get('rows'))
+if _rw:
+    print(f"  a table of more than {_rw.get('inline_most')} rows warns: its rows belong in the parts "
+          f"series/<bean>/<key>/<part>.tsv, each added whole and never rewritten")
+for g in reg('gap_tokens'):
+    if isinstance(g, dict) and g.get('token') is not None:
+        print(f"  {str(g.get('token')):3} {str(g.get('gap')):11} {g.get('meaning')}"
+              + (f" — takes a {g['takes']} after it" if g.get('takes') else ''))
 
 head("TEXT AND DAYS — what every key and string is, and which positions are days")
 _tx = _m(_vt.get('text'))
@@ -359,7 +401,8 @@ head("PROVENANCE RECORD — on a bean, an anchor or an entry")
 _pr = std.get('provenance_record') or {}
 print(f"  a record carries only {_pr.get('attrs')}; each record in `from` only {_pr.get('from_attrs')}, with a `src`")
 print("  `garden` names another garden this one knows (a `garden` bean's garden_id); a record made here carries none (warned)")
-if _pr.get('as_of') == 'stamped':
+_ORIG = dmpass.Origins(std)
+if _ORIG.judged('provenance_record', 'as_of'):
     print("  `as_of` is STAMPED: a record a commit adds carries the day of a journal heading the same commit adds — written "
           "`now`, the save writes that day in its place; typed, left `now`, or left out, it is refused. A record from "
           "another garden keeps its garden's day; the merge's own record says `merged`; a record moved is not added")
@@ -369,9 +412,31 @@ _jr = std.get('journal') or {}
 print(f"  {_jr.get('path')}: each entry under {_jr.get('heading_form')}")
 print(f"  <when> in {'any declared calendar' if _jr.get('system') in (None, 'any') else _jr.get('system')}, to the "
       f"{_jr.get('unit_at_least')} at least; only headings a commit adds are judged ({_jr.get('checks')})")
-if _jr.get('heading') == 'stamped':
+if _ORIG.judged('journal', 'heading'):
     print("  a heading is STAMPED: written from the clock by the journal tool and registered in the clone; a heading a "
           "commit adds that the tool did not write is refused")
+
+head("WHERE A VALUE COMES FROM — `{act, nature?, by?}`, lightest act first, then nature by `natures`")
+for _a in _ORIG.acts:
+    print(f"  {str(_a.get('act')):8} {_a.get('meaning')}")
+    for _b, _bm in ((_a.get('by') or {}).items() if isinstance(_a.get('by'), dict) else []):
+        print(f"    by: {_b:7} {_bm}")
+def _said_as(o):
+    if not isinstance(o, dict):
+        return str(o)
+    _n = o.get('nature')
+    return ' '.join([str(o.get('act'))] + (['·'.join(_n) if isinstance(_n, list) else str(_n)] if _n else [])
+                    + ([f"by {o['by']}"] if o.get('by') else []))
+_by_origin = {}
+for _d, _r in _ORIG.domains.items():
+    _by_origin.setdefault(_said_as(_r.get('origin') if isinstance(_r, dict) else None), []).append(_d)
+print("  each domain gives its positions one, unless a position states its own:")
+for _o, _ds in _by_origin.items():
+    print(f"    {_o:28} {', '.join(_ds)}")
+for _t in reg('terms'):
+    if isinstance(_t, dict) and ((_t.get('merge') or {}).get('order') == 'source'):
+        print(f"  {_t.get('term')} ranked by source, lightest first: "
+              + ' < '.join(_ORIG.rank(_t.get('values_source')) or ['NO RANK — the gate refuses it']))
 
 head("REVERSE GATE — the rules must be passed by the objects")
 print("  every position a term declares — a closed list on an entry's attribute or on a mapping's own, an aspect, a "

@@ -1,0 +1,179 @@
+unit	parent	rank	begins_ma	begins_margin_ma	ends_ma	ends_margin_ma	name_en
+Precambrian		super-eon	4567		538.8	0.6	Precambrian
+Hadean	Precambrian	eon	4567		4031	3	Hadean
+Archean	Precambrian	eon	4031	3	2500		Archean
+Eoarchean	Archean	era	4031	3	3600		Eoarchean
+Paleoarchean	Archean	era	3600		3200		Paleoarchean
+Mesoarchean	Archean	era	3200		2800		Mesoarchean
+Neoarchean	Archean	era	2800		2500		Neoarchean
+Proterozoic	Precambrian	eon	2500		538.8	0.6	Proterozoic
+Paleoproterozoic	Proterozoic	era	2500		1600		Paleoproterozoic
+Siderian	Paleoproterozoic	period	2500		2300		Siderian
+Rhyacian	Paleoproterozoic	period	2300		2050		Rhyacian
+Orosirian	Paleoproterozoic	period	2050		1800		Orosirian
+Statherian	Paleoproterozoic	period	1800		1600		Statherian
+Mesoproterozoic	Proterozoic	era	1600		1000		Mesoproterozoic
+Calymmian	Mesoproterozoic	period	1600		1400		Calymmian
+Ectasian	Mesoproterozoic	period	1400		1200		Ectasian
+Stenian	Mesoproterozoic	period	1200		1000		Stenian
+Neoproterozoic	Proterozoic	era	1000		538.8	0.6	Neoproterozoic
+Tonian	Neoproterozoic	period	1000		720		Tonian
+Cryogenian	Neoproterozoic	period	720		635		Cryogenian
+Ediacaran	Neoproterozoic	period	635		538.8	0.6	Ediacaran
+Phanerozoic		eon	538.8	0.6	0		Phanerozoic
+Paleozoic	Phanerozoic	era	538.8	0.6	251.902	0.024	Paleozoic
+Cambrian	Paleozoic	period	538.8	0.6	486.85	1.5	Cambrian
+Terreneuvian	Cambrian	epoch	538.8	0.6	521.0		Terreneuvian
+Fortunian	Terreneuvian	age	538.8	0.6	529.0		Fortunian
+CambrianStage2	Terreneuvian	age	529.0		521.0		Stage 2
+CambrianSeries2	Cambrian	epoch	521.0		506.5		Series 2
+CambrianStage3	CambrianSeries2	age	521.0		514.5		Stage 3
+CambrianStage4	CambrianSeries2	age	514.5		506.5		Stage 4
+Miaolingian	Cambrian	epoch	506.5		497.0		Miaolingian
+Wuliuan	Miaolingian	age	506.5		504.5		Wuliuan
+Drumian	Miaolingian	age	504.5		500.5		Drumian
+Guzhangian	Miaolingian	age	500.5		497.0		Guzhangian
+Furongian	Cambrian	epoch	497.0		486.85	1.5	Furongian
+Paibian	Furongian	age	497.0		494.2		Paibian
+Jiangshanian	Furongian	age	494.2		491.0		Jiangshanian
+CambrianStage10	Furongian	age	491.0		486.85	1.5	Stage 10
+Ordovician	Paleozoic	period	486.85	1.5	443.1	1.0	Ordovician
+LowerOrdovician	Ordovician	epoch	486.85	1.5	471.3	1.4	
+Tremadocian	LowerOrdovician	age	486.85	1.5	477.1	1.2	Tremadocian
+Floian	LowerOrdovician	age	477.1	1.2	471.3	1.4	Floian
+MiddleOrdovician	Ordovician	epoch	471.3	1.4	458.2	0.7	
+Dapingian	MiddleOrdovician	age	471.3	1.4	469.4	0.9	Dapingian
+Darriwilian	MiddleOrdovician	age	469.4	0.9	458.2	0.7	Darriwilian
+UpperOrdovician	Ordovician	epoch	458.2	0.7	443.1	1.0	
+Sandbian	UpperOrdovician	age	458.2	0.7	452.8	0.7	Sandbian
+Katian	UpperOrdovician	age	452.8	0.7	445.2	0.9	Katian
+Hirnantian	UpperOrdovician	age	445.2	0.9	443.1	1.0	Hirnantian
+Silurian	Paleozoic	period	443.1	1.0	419.62	1.36	Silurian
+Llandovery	Silurian	epoch	443.1	1.0	432.9	1.2	Llandovery
+Rhuddanian	Llandovery	age	443.1	1.0	440.5	1.0	Rhuddanian
+Aeronian	Llandovery	age	440.5	1.0	438.6	1.0	Aeronian
+Telychian	Llandovery	age	438.6	1.0	432.9	1.2	Telychian
+Wenlock	Silurian	epoch	432.9	1.2	426.7	1.5	Wenlock
+Sheinwoodian	Wenlock	age	432.9	1.2	430.6	1.3	Sheinwoodian
+Homerian	Wenlock	age	430.6	1.3	426.7	1.5	Homerian
+Ludlow	Silurian	epoch	426.7	1.5	419.62	1.36	Ludlow
+Gorstian	Ludlow	age	426.7	1.5	425.0	1.5	Gorstian
+Ludfordian	Ludlow	age	425.0	1.5	422.7	1.6	Ludfordian
+Pridoli	Silurian	epoch	422.7	1.6	419.62	1.36	Pridoli
+Devonian	Paleozoic	period	419.62	1.36	358.86	0.19	Devonian
+LowerDevonian	Devonian	epoch	419.62	1.36	393.47	0.99	
+Lochkovian	LowerDevonian	age	419.62	1.36	413.02	1.91	Lochkovian
+Pragian	LowerDevonian	age	413.02	1.91	410.62	1.95	Pragian
+Emsian	LowerDevonian	age	410.62	1.95	393.47	0.99	Emsian
+MiddleDevonian	Devonian	epoch	393.47	0.99	382.31	1.36	
+Eifelian	MiddleDevonian	age	393.47	0.99	387.95	1.04	Eifelian
+Givetian	MiddleDevonian	age	387.95	1.04	382.31	1.36	Givetian
+UpperDevonian	Devonian	epoch	382.31	1.36	358.86	0.19	
+Frasnian	UpperDevonian	age	382.31	1.36	372.15	0.46	Frasnian
+Famennian	UpperDevonian	age	372.15	0.46	358.86	0.19	Famennian
+Carboniferous	Paleozoic	period	358.86	0.19	298.9	0.15	Carboniferous
+Mississippian	Carboniferous	sub-period	358.86	0.19	323.4	0.4	Mississippian
+LowerMississippian	Mississippian	epoch	358.86	0.19	346.7	0.4	
+Tournaisian	LowerMississippian	age	358.86	0.19	346.7	0.4	Tournaisian
+MiddleMississippian	Mississippian	epoch	346.7	0.4	330.3	0.4	
+Visean	MiddleMississippian	age	346.7	0.4	330.3	0.4	Visean
+UpperMississippian	Mississippian	epoch	330.3	0.4	323.4	0.4	
+Serpukhovian	UpperMississippian	age	330.3	0.4	323.4	0.4	Serpukhovian
+Pennsylvanian	Carboniferous	sub-period	323.4	0.4	298.9	0.15	Pennsylvanian
+LowerPennsylvanian	Pennsylvanian	epoch	323.4	0.4	315.2	0.2	
+Bashkirian	LowerPennsylvanian	age	323.4	0.4	315.2	0.2	Bashkirian
+MiddlePennsylvanian	Pennsylvanian	epoch	315.2	0.2	307.0	0.1	
+Moscovian	MiddlePennsylvanian	age	315.2	0.2	307.0	0.1	Moscovian
+UpperPennsylvanian	Pennsylvanian	epoch	307.0	0.1	298.9	0.15	
+Kasimovian	UpperPennsylvanian	age	307.0	0.1	303.7	0.1	Kasimovian
+Gzhelian	UpperPennsylvanian	age	303.7	0.1	298.9	0.15	Gzhelian
+Permian	Paleozoic	period	298.9	0.15	251.902	0.024	Permian
+Cisuralian	Permian	epoch	298.9	0.15	274.4	0.4	Cisuralian
+Asselian	Cisuralian	age	298.9	0.15	293.52	0.17	Asselian
+Sakmarian	Cisuralian	age	293.52	0.17	290.1	0.26	Sakmarian
+Artinskian	Cisuralian	age	290.1	0.26	283.3	0.4	Artinskian
+Kungurian	Cisuralian	age	283.3	0.4	274.4	0.4	Kungurian
+Guadalupian	Permian	epoch	274.4	0.4	259.857	0.084	Guadalupian
+Roadian	Guadalupian	age	274.4	0.4	266.9	0.4	Roadian
+Wordian	Guadalupian	age	266.9	0.4	264.28	0.16	Wordian
+Capitanian	Guadalupian	age	264.28	0.16	259.857	0.084	Capitanian
+Lopingian	Permian	epoch	259.857	0.084	251.902	0.024	Lopingian
+Wuchiapingian	Lopingian	age	259.857	0.084	254.14	0.07	Wuchiapingian
+Changhsingian	Lopingian	age	254.14	0.07	251.902	0.024	Changhsingian
+Mesozoic	Phanerozoic	era	251.902	0.024	66.00		Mesozoic
+Triassic	Mesozoic	period	251.902	0.024	201.4	0.2	Triassic
+LowerTriassic	Triassic	epoch	251.902	0.024	247.0		
+Induan	LowerTriassic	age	251.902	0.024	250.8		Induan
+Olenekian	LowerTriassic	age	250.8		247.0		Olenekian
+MiddleTriassic	Triassic	epoch	247.0		237		
+Anisian	MiddleTriassic	age	247.0		241.464	0.28	Anisian
+Ladinian	MiddleTriassic	age	241.464	0.28	237		Ladinian
+UpperTriassic	Triassic	epoch	237		201.4	0.2	
+Carnian	UpperTriassic	age	237		227.3		Carnian
+Norian	UpperTriassic	age	227.3		205.7		Norian
+Rhaetian	UpperTriassic	age	205.7		201.4	0.2	Rhaetian
+Jurassic	Mesozoic	period	201.4	0.2	143.1	0.6	Jurassic
+LowerJurassic	Jurassic	epoch	201.4	0.2	174.7	0.8	
+Hettangian	LowerJurassic	age	201.4	0.2	199.5	0.3	Hettangian
+Sinemurian	LowerJurassic	age	199.5	0.3	192.9	0.3	Sinemurian
+Pliensbachian	LowerJurassic	age	192.9	0.3	184.2	0.3	Pliensbachian
+Toarcian	LowerJurassic	age	184.2	0.3	174.7	0.8	Toarcian
+MiddleJurassic	Jurassic	epoch	174.7	0.8	161.5	1.0	
+Aalenian	MiddleJurassic	age	174.7	0.8	170.9	0.8	Aalenian
+Bajocian	MiddleJurassic	age	170.9	0.8	168.2	1.2	Bajocian
+Bathonian	MiddleJurassic	age	168.2	1.2	165.3	1.1	Bathonian
+Callovian	MiddleJurassic	age	165.3	1.1	161.5	1.0	Callovian
+UpperJurassic	Jurassic	epoch	161.5	1.0	143.1	0.6	
+Oxfordian	UpperJurassic	age	161.5	1.0	154.8	0.8	Oxfordian
+Kimmeridgian	UpperJurassic	age	154.8	0.8	149.2	0.7	Kimmeridgian
+Tithonian	UpperJurassic	age	149.2	0.7	143.1	0.6	Tithonian
+Cretaceous	Mesozoic	period	143.1	0.6	66.00		Cretaceous
+LowerCretaceous	Cretaceous	epoch	143.1	0.6	100.5	0.1	
+Berriasian	LowerCretaceous	age	143.1	0.6	137.05	0.2	Berriasian
+Valanginian	LowerCretaceous	age	137.05	0.2	132.6	0.6	Valanginian
+Hauterivian	LowerCretaceous	age	132.6	0.6	125.77		Hauterivian
+Barremian	LowerCretaceous	age	125.77		121.4	0.6	Barremian
+Aptian	LowerCretaceous	age	121.4	0.6	113.2	0.3	Aptian
+Albian	LowerCretaceous	age	113.2	0.3	100.5	0.1	Albian
+UpperCretaceous	Cretaceous	epoch	100.5	0.1	66.00		
+Cenomanian	UpperCretaceous	age	100.5	0.1	93.9	0.2	Cenomanian
+Turonian	UpperCretaceous	age	93.9	0.2	89.8	0.3	Turonian
+Coniacian	UpperCretaceous	age	89.8	0.3	85.7	0.2	Coniacian
+Santonian	UpperCretaceous	age	85.7	0.2	83.6	0.2	Santonian
+Campanian	UpperCretaceous	age	83.6	0.2	72.2	0.2	Campanian
+Maastrichtian	UpperCretaceous	age	72.2	0.2	66.00		Maastrichtian
+Cenozoic	Phanerozoic	era	66.00		0		Cenozoic
+Paleogene	Cenozoic	period	66.00		23.04		Paleogene
+Paleocene	Paleogene	epoch	66.00		56.00		Paleocene
+Danian	Paleocene	age	66.00		61.66		Danian
+Selandian	Paleocene	age	61.66		59.24		Selandian
+Thanetian	Paleocene	age	59.24		56.00		Thanetian
+Eocene	Paleogene	epoch	56.00		33.9		Eocene
+Ypresian	Eocene	age	56.00		48.07		Ypresian
+Lutetian	Eocene	age	48.07		41.03		Lutetian
+Bartonian	Eocene	age	41.03		37.71		Bartonian
+Priabonian	Eocene	age	37.71		33.9		Priabonian
+Oligocene	Paleogene	epoch	33.9		23.04		Oligocene
+Rupelian	Oligocene	age	33.9		27.30		Rupelian
+Chattian	Oligocene	age	27.30		23.04		Chattian
+Neogene	Cenozoic	period	23.04		2.58		Neogene
+Miocene	Neogene	epoch	23.04		5.333		Miocene
+Aquitanian	Miocene	age	23.03		20.45		Aquitanian
+Burdigalian	Miocene	age	20.45		15.98		Burdigalian
+Langhian	Miocene	age	15.98		13.82		Langhian
+Serravallian	Miocene	age	13.82		11.63		Serravallian
+Tortonian	Miocene	age	11.63		7.246		Tortonian
+Messinian	Miocene	age	7.246		5.333		Messinian
+Pliocene	Neogene	epoch	5.333		2.58		Pliocene
+Zanclean	Pliocene	age	5.333		3.600		Zanclean
+Piacenzian	Pliocene	age	3.600		2.58		Piacenzian
+Quaternary	Cenozoic	period	2.58		0		Quaternary
+Pleistocene	Quaternary	epoch	2.58		0.0117		Pleistocene
+Gelasian	Pleistocene	age	2.58		1.80		Gelasian
+Calabrian	Pleistocene	age	1.80		0.774		Calabrian
+Chibanian	Pleistocene	age	0.774		0.129		Chibanian
+UpperPleistocene	Pleistocene	age	0.129		0.0117		
+Holocene	Quaternary	epoch	0.0117		0		Holocene
+Greenlandian	Holocene	age	0.0117		0.0082		Greenlandian
+Northgrippian	Holocene	age	0.0082		0.0042		Northgrippian
+Meghalayan	Holocene	age	0.0042		0		Meghalayan

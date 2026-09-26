@@ -31,7 +31,7 @@ U+2028, U+2029) would let one line carry a heading nobody stamped. Such a charac
 control character but a tab, and DEL: an escape clears a terminal's screen for whoever reads the journal there,
 and a NUL makes git read the whole journal as binary.
 
-HOW THIS IS ENFORCED (std-vocab 20.0, `journal.heading: stamped`). Every heading this tool writes is also
+HOW THIS IS ENFORCED (std-vocab 20.0; the `heading` of `journal.origin`, read `by: save`). Every heading this tool writes is also
 recorded in the clone's git directory (`.git/daftar/journal-stamps`), and the gate refuses a heading a commit
 adds that is not recorded there. The gate cannot tell a measured moment from a remembered one by looking at
 it; it can tell whether the clock-reading tool wrote it. The register is per clone and never versioned: it
@@ -53,6 +53,7 @@ import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
 import dmsafe   # noqa: E402 — a stamp written into a bean is written through the edit that loses nothing
+import dmpass   # noqa: E402 — which positions read the clock: the law's origins, read once
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JOURNAL = os.path.join(ROOT, 'log', 'journal.md')
@@ -176,12 +177,19 @@ def append(who, what, body):
     return h
 
 
-# THE DAY OF WRITING IS THE CLOCK'S (23.0, `provenance_record.as_of: stamped`). The forms show `as_of: now`: the writer
+# THE DAY OF WRITING IS THE CLOCK'S (23.0; `provenance_record`'s `as_of`, read `by: save`). The forms show `as_of: now`: the writer
 # never types the day of writing, because measured writers typed the nearest date in view instead — the example's, or
-# one read in another bean. This tool reads the clock once, for the heading; the same reading is the day every `now`
-# in a stamp position becomes. Only a bare `now` (or a quoted one) that is the whole value of `as_of` or `observed`.
-NOW = re.compile(r'(?<![\w-])((?:as_of|observed):[ \t]*)(["\']?)now\2(?=[ \t]*(?:[,}\]#\r\n]|$))', re.M)
-STAMPED = ('beans/', 'mappings/')
+# one read in another bean. This tool reads the clock once, for the heading; the same reading is what every `now` at a
+# position that reads the clock becomes — the day at a date, the moment at a moment. WHICH positions those are is the
+# law's (each position's `origin`, read `by: save`), read by bin/dmpass.py: this tool names none of them. Only a bare `now` (or a quoted one)
+# that is the whole value.
+STAMPED = dmpass.DOCUMENTS
+
+
+def _now_at(names):
+    """The pattern of a `now` that is the whole value of one of these attributes, or None."""
+    return re.compile(r'(?<![\w-])((?:%s):[ \t]*)(["\']?)now\2(?=[ \t]*(?:[,}\]#\r\n]|$))' % '|'.join(map(re.escape, sorted(names))),
+                      re.M) if names else None
 
 
 def stamp_now(h, text=None, root=None):
@@ -192,6 +200,11 @@ def stamp_now(h, text=None, root=None):
     yet when this runs, so nothing is half done, and the gate names what is still `now`."""
     root = root or ROOT
     day = h[3:13]
+    # A MOMENT gets the heading's own moment — day, clock and offset — quoted, so no reader takes it for a number or a
+    # date; a DAY gets the heading's day
+    when = h[3:].split(' · ', 1)[0].strip()
+    clocked = dmpass.origins(root).clocked()
+    daily, moment = _now_at(clocked['day']), _now_at(clocked['moment'])
     out = subprocess.run(['git', '-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'], capture_output=True)
     done = []
     for rec in out.stdout.decode('utf-8', 'replace').split('\0'):
@@ -204,13 +217,16 @@ def stamp_now(h, text=None, root=None):
             continue
         try:
             fm, _ = dmparse.split_front_matter(open(f, encoding='utf-8').read())
-            if fm is None or not NOW.search(fm):
+            if fm is None or not ((daily and daily.search(fm)) or (moment and moment.search(fm))):
                 continue
 
             def fix(t):
                 front, _b = dmparse.split_front_matter(t)
                 at = t.index(front)
-                return t[:at] + NOW.sub(lambda m: m.group(1) + day, front) + t[at + len(front):]
+                new = daily.sub(lambda m: m.group(1) + day, front) if daily else front
+                if moment:
+                    new = moment.sub(lambda m: m.group(1) + '"' + when + '"', new)
+                return t[:at] + new + t[at + len(front):]
             dmsafe.edit(f, fix)
             done.append(p)
         except Exception as e:                  # never a traceback after the heading is registered

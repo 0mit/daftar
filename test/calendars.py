@@ -183,10 +183,20 @@ check("...and its help names the interpreter as it is named where it runs: `pyth
       "    python bin/dmcal.py 2026-09-20" in _buf.getvalue() and "python3 bin/" not in _buf.getvalue(), _buf.getvalue()[:300])
 
 # ---------------------------------------------------------------- where, by coordinates
-check("the tool's bodies are the law's, to the metre", {b["body"]: b["mean_radius_m"] for b in sv["bodies"]} == dmgeo.BODIES)
-check("the tool's reference systems are rows of the law's, with the same body, kind and frame",
-      all(any(r["crs"] == k and (r["body"], r["kind"], r["frame"]) == (v["body"], v["kind"], v["frame"]) for r in sv["reference_systems"])
-          for k, v in dmgeo.SYSTEMS.items()))
+check("the tool's bodies are the law's, to the metre, read from it", {b["body"]: b["mean_radius_m"] for b in sv["bodies"]} == dmgeo.bodies())
+check("the tool's reference systems are the law's rows, read from it and never copied",
+      set(dmgeo.systems()) == {r["crs"] for r in sv["reference_systems"]} and not hasattr(dmgeo, "SYSTEMS") and not hasattr(dmgeo, "BODIES"))
+check("a vertical position takes one coordinate", dmgeo.parse("EPSG:5773;-12.5")["axes"] == ("H",))
+check("a compound one takes three: the horizontal system's axes, then the vertical's",
+      dmgeo.parse("EPSG:4326+5773;10.1,20.2,-3.5")["axes"] == ("lat", "lon", "H"))
+for _bad in ("EPSG:4326;1,2,3,4", "EPSG:4326+5773;10.1,20.2"):
+    try:
+        dmgeo.parse(_bad); ok = False
+    except ValueError:
+        ok = True
+    check(f"...and {_bad} is refused: four coordinates, or a compound one short of its axes", ok)
+_o = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmgeo.py"), "EPSG:4326;10.1,20.2"], capture_output=True, text=True, encoding="utf-8").stdout
+check("dmgeo prints the law's ensemble accuracy beside a WGS 84 position", "accurate to 2 metre" in _o, _o)
 try:
     dmgeo.parse("35.6892,51.3890"); ok = False
 except ValueError:

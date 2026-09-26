@@ -46,8 +46,9 @@ recognise the same thing whatever its file is called.
   Only establishing anchors decide that two beans are one object.
 - What establishes follows the nature: matter (`serial`, `mac`) for a body, a being of the nature `soma`; a logical
   id (`fqdn`, a product or service id) for one that is `lekton` or `empsychon`. Network anchors (`ip`, `hostname`)
-  corroborate. Every
-  anchor's key is a term of the vocabulary, and where that term declares a policy, it overrules the bean.
+  corroborate. Every anchor's key is a term of the vocabulary, and where that term declares a policy, it overrules
+  the bean.
+- An anchor an organisation issues (an employee number) identifies only with its `issuer`.
 - How many establishing anchors a confirmed bean needs depends on its nature. A bean below that is
   `identity.status: provisional`, and the gate warns.
 - Two beans with the same establishing anchor are the same object: the gate refuses it. Serials are compared
@@ -118,6 +119,21 @@ Ownership is separate from **habitat**: a running instance is owned through its 
   clauses (`bin/dmledger.py`), exactly, in fractions; a stored balance is a second copy, and it drifts. A share that
   does not come out even in the currency's places is shown as the fraction it is, and who takes the remainder is a
   clause, never arithmetic.
+- **A clause may occur once for each member of a reading** (`each`): each sale, each tuning, from the moment it
+  entered. An occurrence never leaves — a refund is its own clause, occurring for each refund — so the reading uses
+  only conditions nothing can lose. Its amount may be a share `of` a value read from each occurrence; a transaction
+  `settles` named occurrences, each its own amount, and what is outstanding is read.
+- **When it falls due may be relative** (`falls_due`): after or before another position — its occurrence, a moment of
+  `timing`, another clause's due — by an extent, then at a place in the cell reached; read each time, never stored.
+  A clause may hold only within a window (`during`), and its stance chooses the words a reader is warned with: an
+  obligation falls due, a permission lapses. A permission is never owed.
+- **What brings a clause into force** (`when`) is a reading that holds, or the condition in words where no reading
+  says it yet. A clause whose reading does not hold is not yet in force, and nothing of it is due.
+- **A party may act for another** (`acting_for`: what it does binds that one), may have `declined`, and a clause may
+  bind every party of a role (`by_role`). Where a garden needs one being held once at a time — a room, a person
+  booked — it marks the term `exclusive` in its VOCAB.md, and the gate refuses an overlap across beans.
+- **A value another garden holds is read there, never copied** (`bin/dmacross.py`): at a commit that garden
+  published, and only when that garden grants its reading to this garden's gardener as it knows them.
 
 ## Relations
 A small set of typed edges — `owned_by`, `responsibility`, `lives_in`, `instance_of`, `part_of`,
@@ -131,10 +147,28 @@ one open fallback, `refs`.
 - A relation declared as the mirror of another (`inverse_of`) is held consistent with it.
 - `seed/COOKBOOK.md` shows which to use when.
 
+## Readings
+A question asked of the garden — how many, whether any, which first, how much — is a **reading**, declared on the bean it
+is about (`selections`) as steps of one closed list of operations (`operations`): select, count, sum, compare, a
+difference, a product, a value read along a series, a window's use of an allowance. Each step names only what came
+before it, so a reading never loops, and no formula is written or evaluated. A reading is read each time it is asked
+(`bin/dmreckon.py`) and never written back as a fact. Every number it gives comes with its lines — the beans and paths it
+was read from, and each step that made it — and with its uncertainty where the values it read state one. A truth may be
+NOT KNOWN: two values within a band that their uncertainty cannot resolve are neither equal nor unequal. A reading that
+reads a model (`mechanisms`) is refused outside the model's domain, and never extrapolated. An act that fixes a reading
+— an invoice, a verdict — records the commit and the moment it was read at (`pin`), and the same reading read at that
+commit gives the same answer. What is shown first is ordered by keys the law declares as readings (`ordering_keys`),
+and a judge's weighing of criteria (`weighings`) is written as judgments, its weights read.
+
 ## The vocabulary
 The rules are data, not code.
 - **`seed/std-vocab.md`** is the standard every garden pins. Opt-in **profiles** add groups of rules for
-  gardens that need them (`code`, `network`, `domain`, `knowledge`).
+  gardens that need them (`code`, `network`, `domain`, `knowledge`, `view`).
+- A profile may bring an **asset**: `assets/<profile>/`, the code, templates and guide that put the profile's facts to
+  use. A garden receives it while it extends the profile — at birth (`seed/germinate.py --profile <profile>`), or by
+  the one act that opts in and out (`bin/dmupgrade.py <release> --extend <profile>`, `--retract <profile>`) — and its
+  files are the release's. An asset reads the law only through the garden's own tools, and **opens no concept of its
+  own**: what it needs is a construct the law already has, or arrives as any term does, proved and then proposed.
 - **`VOCAB.md`** is the garden's own layer: local terms, profiles it opts into (`extends_profiles`), values it
   adds to a term's own closed list (`values_add`), rows it adds to a registry (`registry_additions`), and dated
   exceptions. A term that reads its values from a registry takes a row; `values_add` on it adds nothing.
@@ -165,9 +199,21 @@ The rules are data, not code.
   totally, partially or not ordered, whether a walk can return, and where the domain ends. `time`, `place`
   and `walk` are sequences; "must stay acyclic" is the `walk` aspect's restriction, and a duration is a
   bounded region of an ordered sequence.
+- **A sequence's positions may hold what was found there: a series.** An entry of `series` is one recording along a
+  line — its positions by a rule (a recurrence: row n at occurrence n) or listed (an extent, each row writing its
+  offset from its `from`), the unit an offset counts, the channels it holds (a measured value, a position, or a code),
+  and one table of rows: inline in the bean, or the parts `series/<bean>/<key>/<part>.tsv` in the estate, each added
+  whole and never rewritten. A cell that holds no value says why, with a gap token; a cell set aside names its judge.
+  What is read from a series — a value between two rows, where a moment falls — is read (`bin/dmseq.py`), never
+  stored. A series is the world along a line, where it held; a `beanger` is one field's own log, when it was recorded.
+- **Where a case stands: a walk and a track.** A walk is the `steps` of a mapping, each saying who acts at it, how long
+  it usually takes, and whether it is a way out, a pause, or a final end; a step holds only what the term declares. A
+  track (`tracks`) names a walk, and each move along it is an entry of `moves`: the step reached, who moved it, a reason
+  from that step's list, why, and its moment, stamped by the save. The gate holds the moves to the walk; where the
+  case stands, since when and who acts next are read. What a case asks for is a checklist's `items`: a set, not a walk.
 
 ## Knowledge: universal anchors
-The `knowledge` profile (vocabulary 9.1) lets a garden say what things ARE in the world's shared terms, with
+The `knowledge` profile lets a garden say what things ARE in the world's shared terms, with
 codes every garden uses: fields of knowledge (ISCED-F 2013), occupations (ISCO-08), and established
 technologies, each linked to its project's own documentation. They are kept whole as data in `seed/knowledge/`
 (each file under its own licence, see `SOURCES.md`) and read by `bin/dmknowledge.py`.
@@ -176,6 +222,21 @@ technologies, each linked to its project's own documentation. They are kept whol
 - As a **relation** (`knowledge:` entries `{scheme, code, rel, topic?}` with `rel` classified_as, draws_on or
   uses) any bean says what it rests on — an instance uses a technology, a design draws on a field.
 - The gate checks every code against its scheme; an invented code is refused.
+- A scheme says how its codes are **held** (`knowledge_scheme_form`): shipped with the release; a garden's own
+  **extract** in `extracts/<scheme>.tsv`, declared once in VOCAB.md (a RULE-CHANGE) and then edited row by row as an
+  ordinary journalled write, which is how configuration — kinds of leave, a questionnaire — stays data; or held **at its
+  authority**, where a code is checked by its form alone and the gate says so once. A scheme marked `sensitive` makes
+  every code of it special-category wherever it is written.
+- `bin/dmknowledge.py` is the one finder over all of them: `find` ranks candidates with their ancestry, `label` gives a
+  code in another language with its publisher's attribution, `at` computes anchors for a position, and `gold` measures
+  the finder against codes a person chose. It writes nothing; a person picks the code.
+
+**Observations** are what was found of a being, one entry per reading, in ISO 19156's shape: a
+`property` coded in a published scheme, `of` a coded part, `presence` (an absence is a finding), `at` a moment or
+`during` a stretch, a result (`value` with its u, `code`, `position` or `extent`), a `method` and the observer `by`, a
+bean the garden holds. A reading made again is a new entry; change is read, never stored. A second observer's verdict is
+an entry that `answers` the first — confirms, disputes or abstains — one per observer per entry. A disagreement is
+kept as a `hearing`, and its ruling is refused until every speaker of the entries it is over has been heard.
 
 ## Ground rules
 1. **One owner per fact.** A fact lives in one bean's `owns:`; elsewhere it is referenced (manifesto: once).
@@ -215,9 +276,10 @@ This table is the one statement of who may decide what (manifesto: parts).
 | **J** | resolve a **merge conflict or uncertain identity** | **a person ratifies** |
 | **K** | **log** what was done | everyone, always |
 
-The person who ratifies in a garden is its gardener — for an organisation, a person who answers for it. When the
-class is unclear, an agent proposes and a person ratifies. An agent that meets something it may not decide parks it
-in `log/pending.md` as `status: proposed`, does everything safe around it, and carries on.
+The person who ratifies in a garden is its gardener — for an organisation, a person who answers for it — or, for a
+class the gardener delegates for named beans, the person a grant names (`grants`, act `ratify:<class>`), recorded as
+the gardener's own act. Nothing is delegated by default. When the class is unclear, an agent proposes and a person
+ratifies. An agent that meets something it may not decide parks it in `log/pending.md` as `status: proposed`, does everything safe around it, and carries on.
 
 ## The journal and the gate
 - Every change is recorded in `log/journal.md` in the same commit: who, what and why (manifesto: hidden). People record decisions
@@ -237,13 +299,47 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
     writing is stamped, not typed — written `now`, and the save writes the day in its place (manifesto:
     never-invents);
   - a journal line a commit adds that holds a character some reader takes for a line break, besides the line end
-    itself: one line of the journal is one line to every reader.
+    itself: one line of the journal is one line to every reader;
+  - a value at a position read by the save (`origin: { act: read, by: save }`) that a commit adds and that is not the
+    reading of a journal heading the same commit adds: a value read from the clock is written `now`, and the save
+    writes it;
+  - a record naming another garden, or a path through one, whose day is typed and which the same commit did not take
+    from that garden (`dmpropose take`, its capture keyed by the proposal's fingerprint): what a record claims is not
+    how it arrived;
+  - a root whose `at` names a host other than the bean it sits on;
+  - a series' part a commit already holds, changed: a part is written once, and what is new is a part of its own;
+  - a person who is not the gardener, added by name with no consent of theirs recorded, and a future whereabouts of
+    one in git (see below);
+  - an entry sealed or unsealed with no `- held: <bean> <key> added|erased` line in the journal.
 - The gate reads the law its garden pins, at the one path `seed/std-vocab.md`. A gate that cannot load it, or
   that loads another version than the pin, refuses: it never falls back to another copy.
 - These checks confirm that the words are there, not that they are true; honesty is still the writer's (manifesto:
   checked).
 - Each person and each agent session commits under its own git identity, so the log's "who" is real.
 - `CHECKLIST.md` is how a write is made.
+- A garden with more than one writer has a hub that judges every push again: each commit signed by a key a writer's
+  bean carries as an anchor (`ssh_key_fingerprint`, `openpgp_fingerprint`), what it changes within that writer's
+  grants, and the whole garden by the gate (`bin/dmhub.py`).
+
+## Who may see, and what is held off git
+- **Sensitivity is derived, never stored** (`bin/dmpass.py sensitivity`): a code of a scheme marked `sensitive` makes
+  a bean special-category; a record `about` a person who is not the gardener, or such a person's own bean, makes it
+  personal. A person may raise it with `sensitivity:`; only a person's own word lowers it (Contract E).
+- **What harm can come of, git does not keep.** An entry of a list or an open map may be SEALED — `{held: <pointer>,
+  basis?, until?}` in place of its attributes — and what it held is kept in a store a host resolves through its
+  `roots` (`bin/dmheld.py`). Git keeps only the pointer; the gate never reads a store; a store is checked where it is,
+  by the pre-commit hook, which runs on the host: a pointer a commit adds that resolves nowhere here is refused.
+  Erasure for a person deletes what the stores here hold of them, and the pointers stay, saying so.
+- **Another person is kept by name only on their own word**: an agreement held here that they accepted (named by
+  `consent`, or in whose `parties` they stand with `accepted`), or, for the gardener of a garden this one has met, the
+  meeting itself. Between gardens this is export policy: `make` sends a person by name only where their word reaches
+  — either gardener, a party who accepted the agreement it is made under, or someone whose consent crosses with them
+  — and the receiving gate judges it again.
+  Otherwise they are an opaque id (`p-<8 hex>`), their name and the ways to reach them held off git; and their future
+  whereabouts are held off git whatever they consented to.
+- **Who may do what is closed by default** (`grants`, read by `bin/dmpass.py may`): the gardener may; anyone else may
+  what a grant opens — held by the gardener, by the person the record is of or about, or by an agreement — and a
+  `forbidden` grant refuses what any `permitted` one would open.
 
 ## Merging
 Gardens merge object by object, matched on establishing anchors: losslessly, in any order, with the same
@@ -251,11 +347,14 @@ result, and never creating two beans for one object. A genuine disagreement is k
 to settle (manifesto: heard). A name a garden minted fuses only within that garden unless it is qualified by the garden's id; equal
 bare names from two gardens are shown to a person, never fused. Values are compared in one canonical form, so that
 one fact written two ways is not a disagreement: an amount by its value (`900`, `"900"` and `"900.00"` are one), a
+measured value by its value in its quantity's coherent unit (`12.5 metre` and `12500 millimetre` are one), a
 list keyed by party by its entries, whatever their order. The bean keeps what was written. `MERGE.md` has the
 algebra.
 
-## Between gardens: the mycelium
+## Between gardens: peering
 (manifesto: gardener)
+Inside a garden is interior — its clones, its writers, its hub. Between gardens is exterior: each garden an
+autonomous domain, numbered by its id, and two that deal with each other peers, each configured at its own end.
 - **A garden's identity** is `garden_id`: the first twelve hexadecimal digits of the root of its first-parent
   history. It is read from git and never stated as the garden's own: `GARDEN.md` carries no id, and it appears in
   the garden's beans only as the prefix of names the garden minted. A clone is the same garden; a copy given a new
@@ -264,7 +363,9 @@ algebra.
 - **First contact.** Another garden this one deals with is a `garden` bean, anchored by its `garden_id`, owned by
   that garden's gardener and answered for by them — so that gardener is a person or organisation bean here, named
   as their own garden names them. Recording a new garden, and its gardener, is the gardener's decision (class F),
-  made in one commit.
+  made in one commit. Gardens are equals: either may ask or offer first. The exchange of ids is how the other gardener
+  gives their name, so they are kept here by name with no other consent, and whether it was really them is the
+  receiving gardener's to judge, where their trust is.
 - **A name is minted once and carried.** A value of an anchor term marked `minted` is a name a garden gave when it
   has the form the law's `identity_policy.minted` gives one: `<genos>:<name>`, the genos one this garden knows
   (`person:sam`, `contract:shared-camera`). Bare, it identifies only within that garden; qualified —

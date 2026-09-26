@@ -173,7 +173,7 @@ _named = [(l, p, d) for l, p in PATTERNS for d in TOOL_DIRS
 _reach = [(l, p, f) for l, p in PATTERNS for f in TREES if hidden_dirs(f) and dmpass.matches(p, f)]
 check(f"...nor names a tool's directory, dotted or bare, nor matches a file inside one ({len(TOOL_DIRS)} such "
       f"directories, read from the release and the garden)", not _named and not _reach, _named + _reach)
-GROWN = ("RATIONALE.md", "captures/*", "mappings/*")    # a garden's own reasons, its captures, its mappings: none at birth
+GROWN = ("RATIONALE.md", "captures/*", "mappings/*", "series/*", "extracts/*")    # a garden's own reasons, captures, mappings, series parts, extracts: none at birth
 _empty = [(l, p) for l, p in PATTERNS if p not in GROWN and not any(dmpass.matches(p, f) for f in TREES)]
 check("...and every pattern a layer holds names a file the release or a new garden has, but for the paths a garden "
       f"grows ({', '.join(GROWN)})", not _empty, _empty)

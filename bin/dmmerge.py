@@ -28,6 +28,7 @@ CLI: dmmerge.py <garden_dir> [<garden_dir> ...]   # prints seeds + fingerprint, 
 Library: merge_gardens(list_of_beanlists) -> {seed_id: seed_dict}, fingerprint(seeds), candidates(beans)
 """
 import sys, os, re, glob, json, hashlib, unicodedata, ipaddress, datetime
+from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
 import dmcal
@@ -90,6 +91,127 @@ def _canon_count(c):
         return c
 
 
+# EVERY {count, unit} IS COMPARED BY EXACT CONVERSION (D17). A measured value is one value however it is written:
+# `{count: 1500, unit: millimetre}` and `{count: "1.5", unit: metre}` are one length, so each is compared as its count in
+# its quantity's coherent unit — the unit whose factor is one — exactly, in fractions. A unit with no factor (a currency:
+# no factor joins two) is compared in its own unit, its count in its shortest exact decimal. COMPARISON ONLY: the bean
+# keeps what was written, and what the merge writes is a side's own spelling wherever one equals the value it chose.
+_LAW_UNITS = []
+
+
+def _units():
+    """(units, quantities) as the law this garden runs declares them — the standard's rows and the ones this garden adds,
+    read as the merge reads every registry (`registry_rows`), once. A unit a registry's file lists (a currency) has no
+    factor, and is compared in its own unit."""
+    if not _LAW_UNITS:
+        _LAW_UNITS.append(({str(r['unit']): r for r in registry_rows('units') if r.get('unit')},
+                           {str(r['quantity']): r for r in registry_rows('quantities') if r.get('quantity')}))
+    return _LAW_UNITS[0]
+
+
+def _factor_of(unit):
+    """(the unit's exact factor, its quantity's coherent unit), or None where it has no factor or no coherent unit."""
+    units, _q = _units()
+    u = units.get(unit) if isinstance(unit, str) else None
+    f = (u or {}).get('factor')
+    if not (isinstance(f, list) and len(f) == 2 and all(isinstance(i, int) and not isinstance(i, bool) and i > 0 for i in f)):
+        return None
+    coh = next((n for n, r in sorted(units.items()) if r.get('quantity') == u.get('quantity') and r.get('factor') == [1, 1]), None)
+    return (Fraction(f[0], f[1]), coh) if coh else None
+
+
+def _converted(c, f):
+    """A count converted exactly by `f`, as text; a count that is not one read exactly, as it was."""
+    try:
+        import dmunits
+        x = dmunits.exact(c)
+        return dmunits.show(x * f) if x is not None else c
+    except Exception:
+        return c
+
+
+def canon_quantity(v):
+    """A measured value `{count, unit}` as the merge compares it: its value in its quantity's coherent unit where its
+    unit has a factor, else in its own unit, the count in its shortest exact decimal — read by the one converter,
+    `dmunits.canonical`, over the law this garden runs. How well it is known, `u` or `accuracy`, is compared the same
+    way inside it (24.0). Anything else, as it is."""
+    if not (isinstance(v, dict) and {'count', 'unit'} <= set(v) <= {'count', 'unit', 'u', 'accuracy'}
+            and isinstance(v.get('unit'), str)):
+        return v
+    try:
+        import dmunits
+        _q, x, unit = dmunits.canonical(v, law=_units())
+    except Exception:
+        return v                                         # the gate says what is wrong; a canonical form never guesses
+    out = {'count': dmunits.show(x), 'unit': unit}
+    for k in ('u', 'accuracy'):
+        if isinstance(v.get(k), dict):
+            inner = canon_quantity({a: b for a, b in v[k].items() if a in ('count', 'unit')})
+            out[k] = dict(inner, **({'kind': v[k].get('kind')} if k == 'accuracy' else {}))
+        elif k in v:
+            out[k] = v[k]
+    return out
+
+
+def _canon_quantities(v):
+    """Every `{count, unit}` in a value, at any depth, as `canon_quantity` compares it."""
+    if isinstance(v, dict):
+        q = canon_quantity(v)
+        if q is not v:
+            return q
+        return {k: _canon_quantities(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_canon_quantities(x) for x in v]
+    return v
+
+
+def _canon_series(e):
+    """A series entry (`schema: series`) as the merge compares it: its table read by the one reader of a table and
+    written again in one order (the position columns, then the channels by name, a listed series' rows by position),
+    every cell of a measured channel and a listed series' offsets converted exactly into the coherent unit. Two gardens
+    that wrote one recording in millimetres and in metres hold one series; a cell that differs is a disagreement for a
+    person, and nothing is absorbed: a gap token is compared as the token it is."""
+    if not isinstance(e, dict) or not isinstance(e.get('rows'), str):
+        return e
+    text = e['rows'] if e['rows'].endswith('\n') else e['rows'] + '\n'
+    try:
+        head, rows = dmparse.table_read(text)
+    except ValueError:
+        return e
+    chans = [c for c in (e.get('holds') or []) if isinstance(c, dict) and isinstance(c.get('name'), str)]
+    conv = {c['name']: _factor_of(c.get('unit')) for c in chans if c.get('quantity') and _factor_of(c.get('unit'))}
+    pos = [h for h in head if h in ('at', 'from', 'to')]
+    span = _factor_of(e.get('unit')) if 'span' in e else None
+
+    def cell(h, v):
+        if h in pos and span:
+            return _converted(v, span[0])
+        if h in conv:
+            f = conv[h][0]
+            if v[:1] in ('<', '>') and len(v) > 1:
+                return v[:1] + _converted(v[1:], f)
+            return _converted(v, f)
+        return v
+    out_rows = [{h: cell(h, v) for h, v in zip(head, r)} for r in rows]
+    if pos and 'span' in e:
+        import dmunits
+        out_rows.sort(key=lambda r: tuple((dmunits.exact(r[p]) if dmunits.exact(r[p]) is not None else Fraction(0))
+                                          for p in pos))
+    header = pos + sorted(h for h in head if h not in pos)
+    try:
+        table = dmparse.table_write(header, [[r[h] for h in header] for r in out_rows])
+    except ValueError:
+        return e
+    out = dict(e, rows=table.rstrip('\n'))          # as `norm` leaves a text, so the comparison is the same each time
+    out['holds'] = [dict(c, unit=conv[c['name']][1],
+                         **({'limits': {k: _converted(x, conv[c['name']][0]) for k, x in c['limits'].items()}}
+                            if isinstance(c.get('limits'), dict) else {}))
+                    if c['name'] in conv else c for c in chans]
+    if span:
+        out['unit'] = span[1]
+    return out
+
+
 def _canon_entry(attrs, e):
     """One entry in the canonical form its attributes declare. A captured disagreement (`{conflict: [a, b]}`) is the
     values it stands for, each in canonical form."""
@@ -104,14 +226,17 @@ def _canon_entry(attrs, e):
             continue
         v = out[a]
         if 'quantity' in dom and isinstance(v, dict) and 'count' in v:
-            out[a] = dict(v, count=_canon_count(v['count']))
+            _cq = canon_quantity(v)
+            out[a] = _cq if _cq is not v else dict(v, count=_canon_count(v['count']))
         elif isinstance(dom.get('entries'), dict):
             if isinstance(v, list):
                 v = [_canon_entry(dom['entries'], x) for x in v]
                 kb = dom.get('keyed_by')
                 if kb:
-                    v = sorted(v, key=lambda x: (0, canonical(x.get(kb)), canonical(x)) if isinstance(x, dict)
-                               else (1, '', canonical(x)))
+                    # one attribute, or several (24.0): a compound key sorts by the tuple of its values
+                    _kbs = [kb] if isinstance(kb, str) else list(kb)
+                    v = sorted(v, key=lambda x: (0, [canonical(x.get(k)) for k in _kbs], canonical(x)) if isinstance(x, dict)
+                               else (1, [], canonical(x)))
                 out[a] = v
             elif isinstance(v, dict):
                 out[a] = _canon_entry(dom['entries'], v)
@@ -122,7 +247,7 @@ def canon_value(key, v):
     """A top-level value of term `key` as the merge compares it: `norm`, then the canonical forms the term's schema
     declares for each of its entries (the entries of a list, of an open map or of a faceted mapping, as the gate reads
     them). A value this cannot read is compared as `norm` left it."""
-    v = norm(v)
+    v = _canon_quantities(norm(v))
     sch = (TERMS.get(key) or {}).get('schema')
     attrs = sch.get('attrs') if isinstance(sch, dict) else None
     if not isinstance(attrs, dict):
@@ -134,7 +259,8 @@ def canon_value(key, v):
         if shape == 'mapping' and not sch.get('key_form') and isinstance(v, dict):
             return _canon_entry(attrs, v)                 # the attributes describe the mapping itself
         if shape in ('open_map_of_entries', 'mapping') and isinstance(v, dict):
-            return {k: _canon_entry(attrs, e) for k, e in v.items()}
+            out = {k: _canon_entry(attrs, e) for k, e in v.items()}
+            return {k: _canon_series(e) for k, e in out.items()} if sch.get('series') is True else out
     except TypeError:
         pass                                  # a key YAML did not read as text: the gate names it; nothing is guessed
     return v
@@ -538,8 +664,23 @@ def ranked_order(key):
     2026-09-20, `leaf_order('authority', …)` answered `none`. A law the code ignores is worse than a rule in
     code, because the vocabulary says it is in force."""
     m = (TERMS.get(key) or {}).get('merge') or {}
+    if m.get('order') == 'source':
+        return _source_rank(key)
     o = str(m.get('order') or '')
     return [p.strip() for p in o.split('<')] if '<' in o else None
+
+
+_SOURCE_RANKS = {}
+
+
+def _source_rank(key):
+    """`merge: {order: source}`: the term's values ranked by where each comes from (`values_source`), read by
+    bin/dmpass.py `Origins.rank` — the row of `acts` first, lightest first, then the row of `natures`. The rank is
+    derived, not written: a value added to the term takes its place from what it says it is (sources-by-nature)."""
+    if key not in _SOURCE_RANKS:
+        import dmpass
+        _SOURCE_RANKS[key] = dmpass.origins(ROOT).rank((TERMS.get(key) or {}).get('values_source'))
+    return _SOURCE_RANKS[key]
 
 
 def leaf_order(key, val):
@@ -773,7 +914,8 @@ def _src_rank(src):
         _SRC_RANK = ranked_order('provenance_src')
         if not _SRC_RANK:
             raise SystemExit("dmmerge: the vocabulary declares no rank for `provenance_src` "
-                             "(merge: {order: \"a<b<c\"}) — refusing to merge without the provenance guard")
+                             "(merge: {order: \"a<b<c\"}, or {order: source} with each value's `values_source`) — "
+                             "refusing to merge without the provenance guard")
     return _SRC_RANK.index(src if src in _SRC_RANK else DEFAULT_SRC)
 
 
@@ -1363,7 +1505,7 @@ def render_bean(seed, fmA, fmB, bodyA, bodyB):
         fm['merge_conflicts'] = conflicts
         fm['merge_open'] = True
 
-    front = yaml.safe_dump(fm, sort_keys=True, allow_unicode=True, default_flow_style=False)
+    front = yaml.dump(fm, Dumper=_RenderDumper, sort_keys=True, allow_unicode=True, default_flow_style=False)
     body = "\n<!-- merged by dmmerge (ours) -->\n" + (bodyA or '').strip() + \
            "\n\n<!-- theirs -->\n" + (bodyB or '').strip() + "\n"
     return "---\n" + front + "---\n" + body
@@ -1393,6 +1535,12 @@ class _IndentedDumper(yaml.SafeDumper):
     """A block sequence indented under its key, as every other block is (see merge_in_place.dump)."""
     def increase_indent(self, flow=False, indentless=False):
         return super().increase_indent(flow, False)
+
+
+# A TABLE IS WRITTEN BACK AS THE TABLE IT WAS: PyYAML double-quotes any text that holds a tab, so a series' rows merged
+# through the plain dumper came back as one escaped line. The one writer of a table is dmparse's (D46).
+_IndentedDumper = dmparse.table_dumper(_IndentedDumper)
+_RenderDumper = dmparse.table_dumper(yaml.SafeDumper)
 
 
 def merge_in_place(A, fmA, fmB, bodyB, seed):
@@ -1469,15 +1617,29 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
     def spelt(k, mk, want):
         """What to WRITE for a merged value: ours, or theirs, as it was written, where the merge chose a value equal to
         it in canonical form — `"900.00"` stays `"900.00"`; only a value neither side wrote is written canonically."""
+        if isinstance(want, dict) and set(want) == {'conflict'} and isinstance(want['conflict'], list):
+            # a disagreement is written as each side wrote its value: a length one side wrote in millimetres stays so
+            return {'conflict': [spelt(k, mk, w) for w in want['conflict']]}
         for side in (fmA, fmB):
             v = side.get(k, MISSING)
             if mk is not None:
                 v = v.get(mk, MISSING) if isinstance(v, dict) else MISSING
             if v is not MISSING and (canon_value(k, v) if mk is None else canon_member(k, mk, v)) == want:
-                return norm(v)
+                return _kept(v)
         return want
 
-    def rewrite(dotted, name, old, new, indent, log, write):
+    def _kept(v):
+        """A side's value as it is written back: `norm`'s form, but a text of several lines — a table, a block — keeps
+        its lines as they were, its last line end included, so a table is written back as the block it was."""
+        if isinstance(v, str) and '\n' in v.rstrip('\n'):
+            return unicodedata.normalize('NFC', v)
+        if isinstance(v, dict):
+            return {norm(k2): _kept(x) for k2, x in v.items()}
+        if isinstance(v, list):
+            return [_kept(x) for x in v]
+        return norm(v)
+
+    def rewrite(dotted, name, old, new, indent, log, write, literal=MISSING):
         # TWO GATES, and both are needed. The caller already established that THEIRS differs from ours —
         # that is what makes this position worth merging at all. This is the second: the merged RESULT
         # may still equal ours, and then there is nothing to write. It happens whenever ours already
@@ -1487,7 +1649,9 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
         # canonical form; what is written is `write`, the merged value as one side spelt it where it can be.
         if old == new:
             return
-        gone = [p for p in dmsafe.leaf_paths({name: old})
+        # WHAT THE FILE LOSES is read from what the file holds (`literal`), never from the canonical form: a list keyed
+        # by one of its attributes is compared in that attribute's order, and its leaves sit elsewhere in the file
+        gone = [p for p in dmsafe.leaf_paths({name: old if literal is MISSING else literal})
                 if p not in set(dmsafe.leaf_paths({name: write}))]
         prefix = dotted[:-len(name)] if dotted != name else ''
         dmsafe.set_nested(A, dotted, keep_comments(dotted, dump(name, write, indent), indent), expect=1,
@@ -1520,7 +1684,7 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
                 ours = canon_member(k, mk, fmA[k].get(mk))
                 if ours == canon_member(k, mk, (fmB.get(k) or {}).get(mk)):
                     continue
-                rewrite(f"{k}.{mk}", mk, ours, want_k[mk], 2, changed, spelt(k, mk, want_k[mk]))
+                rewrite(f"{k}.{mk}", mk, ours, want_k[mk], 2, changed, spelt(k, mk, want_k[mk]), fmA[k].get(mk))
             # A member only THEIRS has must be inserted, and `dmsafe.insert_after` addresses top-level
             # keys only. Rewriting the block's LAST member as itself-plus-the-additions appends without
             # touching any sibling, so at most one inline comment is at risk instead of all of them.
@@ -1537,7 +1701,7 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
                 dmsafe.set_nested(A, f"{k}.{anchor}", keep_comments(f"{k}.{anchor}", blk, 2), expect=1)
                 added += [f"{k}.{m}" for m in fresh]
             continue
-        rewrite(k, k, canon_value(k, fmA[k]), want_k, 0, changed, spelt(k, None, want_k))
+        rewrite(k, k, canon_value(k, fmA[k]), want_k, 0, changed, spelt(k, None, want_k), fmA[k])
 
     conflicts = sorted(p for k, v in seed['facts'].items() for p in conflict_paths(v, k))
     if conflicts:
@@ -1549,7 +1713,9 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
         had = now.get('merge_conflicts')
         paths = sorted(set(conflicts) | {str(p) for p in (had if isinstance(had, list) else [])})
         if 'merge_conflicts' not in now:
-            dmsafe.insert_after(A, 'status', 'merge_conflicts: ' + json.dumps(paths) + '\n')
+            # beside `status` on a bean; a mapping, which records no being, has none, and the mark goes beside its `kind`
+            _at = next((k for k in ('status', 'kind', 'summary') if k in now), sorted(now)[-1])
+            dmsafe.insert_after(A, _at, 'merge_conflicts: ' + json.dumps(paths) + '\n')
         elif had != paths:
             dmsafe.replace_block(A, 'merge_conflicts', 'merge_conflicts: ' + json.dumps(paths) + '\n',
                                  allow_remove=['merge_conflicts'])

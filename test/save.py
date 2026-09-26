@@ -20,6 +20,8 @@ freshly grown garden to what its first lines say:
      installed, or one git would skip; no git identity set; an index with unmerged paths; an option it does not know;
   -  it never passes --no-verify.
 
+  +  one save at a time: a save waits for the clone's lock, and past its bound is refused (N34).
+
 Run: python3 test/save.py   (0 = green).  ~10s.
 """
 import datetime
@@ -60,22 +62,24 @@ TOOL = os.path.join(G, 'bin', 'dmsave.py')
 JP = os.path.join(G, 'log', 'journal.md')
 _py = 'python' if os.name == 'nt' else 'python3'
 
+# A bean the gardener keeps that is not a person: what is saved here is how a save works, and a person who is not the
+# gardener is kept by name only on their consent (24.0, F2) — which is test/privacy.py's to show, not this suite's.
 PERSON = """---
 bean: {id}
-genos: person
+genos: program
 title: "{title}"
 status: {status}
-summary: "A friend of the gardener."
-nature: empsychon
+summary: "A program the gardener keeps."
+nature: lekton
 identity:
   status: confirmed
   anchors:
-    - {{ key: person_id, value: "person:{id}", class: logical, establishing: true }}
+    - {{ key: program_id, value: "program:{id}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "sam", as_of: now }}
-owned_by: {{ legal: {{ crown: agape }} }}
-responsibility: {{ legal: {{ self: true }} }}
+owned_by: {{ legal: {{ owner: {{ bean: sam }} }} }}
+responsibility: {{ legal: {{ holder: {{ bean: sam }} }} }}
 ---
-A friend.
+A program.
 """
 
 
@@ -355,6 +359,25 @@ rc, out, err = save('sam', 'added pia', '--body', '- action: added [[pia]].')
 check("...and another typed day is refused by the gate, and the tool leaves it as the writer typed it",
       rc != 0 and 'stamped, not typed' in err
       and 'as_of: 2001-01-02' in open(os.path.join(G, 'beans', 'pia.md'), encoding='utf-8').read(), (rc, err[-400:]))
+
+# ---- + one save at a time: a save waits for the clone's lock, and past its bound is refused (24.0, N34) ----------------
+_lp = os.path.join(G, git('rev-parse', '--git-dir').stdout.strip(), 'daftar-save.lock')
+_lf = open(_lp, 'a+')
+if os.name == 'nt':
+    import msvcrt
+    _lf.seek(0)
+    msvcrt.locking(_lf.fileno(), msvcrt.LK_NBLCK, 1)
+else:
+    import fcntl
+    fcntl.flock(_lf.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+_s = (journal(), None, head())
+bean('quinn')
+rc, out, err = save('sam', 'added quinn', '--body', '- action: added [[quinn]].', env={**ENV, 'DAFTAR_SAVE_WAIT': '1'})
+check("a save while another holds the clone's lock waits its bound, then is refused (exit 2), nothing written: two "
+      "writers in one clone queue, and neither journals over the other's staged files",
+      rc == 2 and 'another save is in progress' in err and journal() == _s[0] and head() == _s[2], (rc, err))
+_lf.close()                                       # the other save ends: its lock goes with it
+os.remove(os.path.join(G, 'beans', 'quinn.md'))
 
 # ---- - it never passes --no-verify -----------------------------------------------------------------------------------
 _src = ast.parse(open(os.path.join(ROOT, 'bin', 'dmsave.py'), encoding='utf-8').read())

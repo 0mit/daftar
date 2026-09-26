@@ -1,11 +1,9 @@
 # Forms — what an agent writes most, the way the gate accepts it
 
-Read this page before writing in a garden. It holds the shapes of six recipes of `COOKBOOK.md` — the gardener,
-another person and the garden she keeps, an event, money between two people, an agreement paid in instalments, and a
-proposal to another garden: their example beans, copied from it byte for byte (the cookbook explains each) — after the
-misreadings agents make most, and before the forms for **what nobody said**. Every bean on this page passes the gate as
-written: `test/germinate.py` commits each one in a freshly grown garden, and `test/docs.py` holds the examples to the
-cookbook's.
+Read this page before writing in a garden. It holds six recipes of `COOKBOOK.md`, their beans copied byte for byte
+(the cookbook explains each), after the misreadings agents make most and before the forms for **what nobody said**.
+Every bean here passes the gate as written (`test/germinate.py`, `test/docs.py`). Shapes it does not hold are in the
+cookbook's worked chapters, *A literary agent* to *Two candles*.
 
 Write what you were told, in these shapes, and copy no value from here: `sam`, `ali`, `XTS`, `123456789abc` and the
 amounts below are the example's. The shapes carry no day: a day someone said goes where a field is empty, and
@@ -22,18 +20,18 @@ does not answer, `AGENTS.md` says where the law is. Every command here is writte
 
 ## Common misreadings
 
-What agents writing in gardens got wrong most often, in measured runs — each one a value nobody said, invented:
+What agents got wrong most often in measured runs — each a value nobody said, invented:
 
 - **Today is not the day it happened.** `day`, `accepted`, `agreed` and `due` are shown empty below, and stay empty
   unless someone said that day — nor is the day of writing, or a date in another bean, the day it happened. An
   event's timing nobody said is `event-anchored` (*What nobody said*, at the end).
 - **A transaction's amount is the whole that moved.** Its `borne_by` shares divide it: 90 paid by one and borne two
   parts to one is `amount: { count: "90", … }` with shares 2 and 1 — never the 30 that one of them owes.
-- **A currency is named by its code, looked up, not guessed.** People say "lira", "euro", "rial":
-  `grep -i "<the name>" seed/knowledge/currencies.tsv`, the row whose status is `current`. When no row or more than
+- **A currency is named by its code, looked up, not guessed** (*A currency*, at the end). When no row or more than
   one fits, ask — or leave the transaction out and put the question in `open:`.
-- **Everyone named is a person bean** — also someone only spoken about; and a conversation or a meeting in which
-  something was agreed is itself an event, named by what was agreed there.
+- **Everyone named is a person bean**, also someone only spoken about. One who is not the gardener is kept by name
+  only on their `consent`; without it, under an opaque id, the name held off git (`python3 bin/dmheld.py person`). A
+  meeting in which something was agreed is itself an event, named by what was agreed there.
 - **How something was paid is written only as said** — a card, cash, a transfer, and whose.
 - **`open:` belongs to the front matter**, between the two `---` lines. Below them it is prose the gate cannot see.
 
@@ -63,7 +61,7 @@ Sam keeps this ledger.
 
 ## Another person, and the garden she keeps
 
-Ali keeps a garden of her own, and nothing outside a garden writes in it — not Sam, and not Sam's agent, even on one machine.
+Ali keeps a garden of her own.
 
 <!-- example: beans/garden-ali.md -->
 ```markdown
@@ -85,6 +83,30 @@ responsibility: { legal: { holder: { bean: ali } } }
 Ali's garden. Its id is what `python3 bin/dmpropose.py id` printed there.
 ```
 
+<!-- example: beans/ali-consent.md -->
+```markdown
+---
+bean: ali-consent
+genos: contract
+title: "Ali's consent"
+status: active
+summary: "Ali agreed to be kept here by name."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: contract_id, value: "contract:ali-consent", class: logical, establishing: true }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+parties:
+  sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted; empty unless said
+  ali: { who: { bean: ali }, accepted: }   # accepted: the day this party accepted; empty unless said
+words: { form: spoken, agreed: }   # agreed: the day it was agreed, in any calendar; empty unless said
+---
+Agreed on the phone. Where she will be is never written here.
+```
+
 <!-- example: beans/ali.md -->
 ```markdown
 ---
@@ -99,6 +121,7 @@ identity:
   anchors:
     - { key: person_id, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
+consent: { bean: ali-consent }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
@@ -206,14 +229,14 @@ clauses:
     by: ali
     to: sam
     amount: { count: "20.00", unit: XTS }
-    due:   # due: the day it falls due — the first day, when it repeats; empty unless said
+    due:   # due: the day, or the moment, it falls due — the first, when it repeats; empty unless said
     every: { of: time, in: gregorian-civil, each: month, times: 6 }
   late-interest:
     what: "an instalment paid after its day carries one percent of itself for each month it is late"
     by: ali
     to: sam
     amount: { count: 1, unit: percent }
-    when: "an instalment is paid after the day it was due"
+    when: { said: "an instalment is paid late" }
 transactions:
   the-loan:
     what: "Sam paid the shop for Ali's washing machine"
@@ -229,7 +252,7 @@ Agreed over dinner; nothing was written down.
 
 ## Proposing to another garden
 
-Ali's garden is recorded here, and hers records Sam's (*Another person, and the garden she keeps*, above).
+Ali's garden is recorded here, and hers records Sam's (above).
 
 ```sh
 python3 bin/dmpropose.py mint shared-camera     # prints the qualified name and the dmsafe command that writes it
@@ -252,8 +275,7 @@ python3 bin/dmpropose.py take ../PROPOSAL-<garden>-<when>.md    # writes in the 
 
 ## What nobody said
 
-A fact nobody said is never made up — not to fill a form, and not to get past the gate. Each form below passes the gate
-as written, in a garden that holds the recipes above.
+A fact nobody said is never made up. Each form below passes the gate as written, beside the recipes above.
 
 ### An event whose day nobody said
 
@@ -289,8 +311,7 @@ Sam called Ali some day after the dinner; nobody said which.
 ### A day nobody said
 
 A day nobody said — `accepted`, `agreed`, `day`, `due` — stays empty, as the forms show it, or is left out: each of
-them may be absent. A party with no `accepted` has no acceptance on record, and the record then says just that. The
-`as_of` of a provenance is the day the fact was written down: write `now`, and the save writes that day in its place.
+them may be absent. A party with no `accepted` has no acceptance on record, and the record then says just that.
 
 ### An amount nobody said
 
@@ -346,8 +367,7 @@ grep -i "<its name in English>" seed/knowledge/currencies.tsv
 
 (In PowerShell: `Select-String "<its name in English>" seed\knowledge\currencies.tsv`.) Take the row whose `status` is
 `current`: its `code` is the unit, and its `digits` how many decimal places an amount in it may have — `"12.50"` in a
-currency of two, `1250` in one of none. `XTS`, in the recipes above, is the code ISO keeps for testing, never a real
-amount's.
+currency of two, `1250` in one of none.
 
 ### An id nobody told you
 

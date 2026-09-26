@@ -87,22 +87,6 @@ def reachable(path, oid):
         return None
 
 
-def _here_names():
-    """What this machine is called: its host bean's id and its hostname/fqdn anchors, lowercased."""
-    try:
-        import dmwhere
-        beans = dmwhere.load()
-        hid, hfm = dmwhere.this_host(beans)
-        names = {str(hid).lower()} if hid else set()
-        for a in ((hfm or {}).get('identity') or {}).get('anchors') or []:
-            if a.get('key') in ('hostname', 'fqdn'):
-                v = str(a.get('value', '')).lower()
-                names |= {v, v.split('.')[0]}
-        return names, hfm
-    except Exception:
-        return set(), None
-
-
 def moved_since(repo_path, key, positions):
     """The commits after `key`, reachable from HEAD, that TOUCH the covered paths — or None when the key is
     not an ancestor of HEAD.
@@ -138,24 +122,22 @@ def resolve_here(p):
     Two forms carry a host (std-vocab@5.1, and the place migration of 11.0): `root:<name>/…`, resolved
     through this host's own `roots` map, and `<host>:<path>`, which resolves here only when the host it
     names IS this machine. Treating the second as a plain path was reporting a tree as absent while the
-    reader stood in it.
+    reader stood in it. Both are offsets from a datum a host defines (`datum: host`, 24.0), and
+    `dmwhere.on_host` is the one resolver of them: this reader carries no copy of either form.
     """
     if not isinstance(p, str):
         return p
-    if p.startswith('root:'):
-        try:
-            import dmwhere
-            _names, hfm = _here_names()
-            path, _why = dmwhere.resolve(p, dmwhere.roots_of(hfm))
-            return path
-        except Exception:
-            return None
-    m = re.match(r'^([a-z0-9][a-z0-9.-]*):(/.*|[A-Za-z]:\\.*)$', p)
-    if m:
-        names, _hfm = _here_names()
-        host = m.group(1).lower()
-        return m.group(2) if (host in names or host.split('.')[0] in names) else None
-    return p
+    import dmwhere
+    try:
+        if dmwhere.on_host(p, {})[1]:
+            return p   # an object in a repository is no path: read as written, as it always was
+    except ValueError:
+        return p   # no offset from a host: a plain path, read as written
+    try:
+        _hid, hfm, names = dmwhere.here()
+        return dmwhere.on_host(p, dmwhere.roots_of(hfm), names)[0]
+    except Exception:
+        return None
 
 
 DAYS_PER = {'day': 1, 'minute': 1 / 1440, 'second': 1 / 86400, 'millisecond': 1 / 86_400_000}
@@ -359,10 +341,22 @@ class _Cells:
 
 def _at(rec, k, default):
     """Where in each cell: `at` as k whole numbers joined by `-` (`15` in a month, `12-01` in a year); the first
-    occurrence's own place when silent."""
+    occurrence's own place when silent. A LIST of places (24.0, N7) is read by `_ats`."""
     at = rec.get('at')
     if at is None:
         return default
+    return _one_at(at, k)
+
+
+def _ats(rec, k):
+    """Every place in the cell `at` names, in order — one, or a list of them (24.0, N7) — or None when silent."""
+    at = rec.get('at')
+    if at is None:
+        return None
+    return sorted({_one_at(a, k) for a in (at if isinstance(at, list) else [at])})
+
+
+def _one_at(at, k):
     parts = str(at).split('-')
     if isinstance(at, bool) or len(parts) != k or not all(p.isdigit() and p.isascii() for p in parts):
         want = '`15`' if k == 1 else '`' + '-'.join(['MM', 'DD', 'NN'][:k]) + '`' if k <= 3 else f"{k} numbers"
@@ -440,7 +434,7 @@ def _after_first(first, rec, systems, units, skipped=None, near=None, times=None
             yield n - first + 1, n
     cells = _Cells(row)
     try:
-        at = _at(rec, k, None) or cells.place(first, k)
+        ats = _ats(rec, k) or [cells.place(first, k)]
     except ValueError as e:
         raise Unreckoned(str(e))
     s, misses, longest, i, walked = cells.start(first, k), 0, 0, 1, 0
@@ -454,25 +448,28 @@ def _after_first(first, rec, systems, units, skipped=None, near=None, times=None
             if s2 > s:
                 s, i = s2, None
         e = cells.end(s, k)
-        n = cells.find(s, e, k, at)
-        if n is None:
+        found = sorted(x for x in (cells.find(s, e, k, a) for a in ats) if x is not None)
+        at = ats[0] if len(ats) == 1 else None
+        if not found:
             # A CELL WITHOUT THE PLACE HAS NO OCCURRENCE (RFC 5545 §3.3.10: an invalid date is ignored, not moved):
             # "the 31st of each month" skips a month of 30 rather than inventing a day the parties never named. The
             # skip is recorded, because a reader who is not told of it cannot tell a rule from a gap.
             misses += 1
             if k == 1:
                 longest = max(longest, cells.place(e - 1, 1)[0])
+            places = ', '.join(_place_words(a) for a in ats)
             if skipped is not None:
-                skipped.append((s, e, cells.label(s, k), _place_words(at)))
+                skipped.append((s, e, cells.label(s, k), places))
             if misses >= _MISS_CAP:
-                raise Unreckoned(f"no {each} of {row.get('system')} in {misses} running has a place {_place_words(at)}"
+                raise Unreckoned(f"no {each} of {row.get('system')} in {misses} running has a place {places}"
                                  + (f" (the longest runs to {longest})" if k == 1 else '')
                                  + " — the clause names a place its calendar does not have")
         else:
             misses = 0
-            if n > first:
-                i = i + 1 if i is not None else None
-                yield i, n
+            for n in found:          # a list of places: each an occurrence of its own, in the order of the days
+                if n > first:
+                    i = i + 1 if i is not None else None
+                    yield i, n
         s = e
 
 
@@ -500,7 +497,9 @@ def _occurrences(first, rec, systems=None, units=None, skipped=None, near=None):
             raise Unreckoned(f"`to: {brief(rec['to'])}` — {e}")
     if end is not None and first > end:
         return
-    yield 1, first
+    closed = closure_days(rec, systems)
+    if not _closed(first, closed, skipped):
+        yield 1, first
     if times == 1:
         return
     # WHERE THE READER LOOKS: today — or, for a repetition that ends before today, its end, so its last is found.
@@ -509,11 +508,38 @@ def _occurrences(first, rec, systems=None, units=None, skipped=None, near=None):
         for i, n in _after_first(first, rec, systems, units, skipped, near=near, times=times):
             if end is not None and n > end:
                 return
+            if _closed(n, closed, skipped):
+                continue             # it counts toward `times`, and falls on no day (RFC 5545's EXDATE)
             yield i, _writable(n)
             if times is not None and i is not None and i >= times:
                 return
     except (ValueError, OverflowError, KeyError, dmcal.NotByRule) as e:
         raise Unreckoned(str(e))
+
+
+def closure_days(rec, systems=None):
+    """[(first, last)] day ranges on which no occurrence falls (`recurrence_form.closures`, 24.0, N7): a position is one
+    day, an extent from its `from` to its `to`. A closure that cannot be read is Unreckoned, never ignored."""
+    out = []
+    for c in (rec.get('closures') or []) if isinstance(rec, dict) else []:
+        try:
+            if isinstance(c, dict):
+                a, b = day_of(c.get('from')), day_of(c.get('to'))
+            else:
+                a = b = day_of(c)
+        except (ValueError, dmcal.NotByRule) as e:
+            raise Unreckoned(f"the closure {brief(c)} is not a day or an extent of days this can read ({e})")
+        out.append((a, b))
+    return out
+
+
+def _closed(n, closed, skipped):
+    for a, b in closed:
+        if a <= n <= b:
+            if skipped is not None:
+                skipped.append((n, n + 1, show_day(n), None))
+            return True
+    return False
 
 
 def _writable(n):
@@ -555,6 +581,8 @@ def nth(i, times=None):
 def skip_words(cell):
     """A skipped cell in words, for a NOTE."""
     _s, _e, label, place = cell
+    if place is None:
+        return f"no occurrence on {label} — a closure the repetition names"
     return (f"no occurrence in {label} — it has no {place}, and a cell without the place is skipped (RFC 5545), "
             f"never moved to a day nobody named; if the parties meant another day, the clause says which")
 
@@ -571,7 +599,22 @@ def describe(rec):
             + (f" at {brief(rec['at'])}" if rec.get('at') is not None else '')
             + (f", from {brief(rec['from'])}" if rec.get('from') is not None else '')
             + (f", to {brief(rec['to'])}" if rec.get('to') is not None else '')
-            + (f", {brief(rec['times'])} times" if rec.get('times') is not None else ''))
+            + (f", {brief(rec['times'])} times" if rec.get('times') is not None else '')
+            + (f", each lasting {extent_words(rec['lasts'])}" if rec.get('lasts') is not None else '')
+            + (f", closed on {', '.join(extent_words(c) if isinstance(c, dict) else brief(c) for c in rec['closures'])}"
+               if isinstance(rec.get('closures'), list) and rec['closures'] else ''))
+
+
+def extent_words(x):
+    """An extent in words: `1 hour`, `2026-11-01 to 2026-11-14`, `1 month of gregorian-civil`."""
+    if not isinstance(x, dict):
+        return brief(x)
+    m = x.get('measure')
+    if isinstance(m, dict):
+        return f"{brief(m.get('count'))} {brief(m.get('unit'))}"
+    if x.get('level') is not None:
+        return f"{brief(x.get('count', 1))} {brief(x['level'])}" + (f" of {brief(x['in'])}" if x.get('in') else '')
+    return ' to '.join(brief(x[k]) for k in ('from', 'to') if x.get(k) is not None)
 
 
 def silenced(entry, decl):
@@ -582,9 +625,127 @@ def silenced(entry, decl):
     return False
 
 
+def settled_occurrences(fm, clause):
+    """The occurrences of a clause some transaction of the bean `settles` — named, whatever amount (the ledger reads how
+    much is outstanding; this tool warns of an occurrence nothing has yet been paid toward)."""
+    out = set()
+    for t in (fm.get('transactions') or {}).values() if isinstance(fm.get('transactions'), dict) else []:
+        for x in (t.get('settles') or []) if isinstance(t, dict) else []:
+            if isinstance(x, dict) and x.get('clause') == clause and x.get('occurrence'):
+                out.add(str(x['occurrence']))
+    return out
+
+
+def rel_words(rel):
+    """A relative position in words: `1 month of gregorian-civil after its occurrence, at 10`."""
+    src = 'its occurrence' if rel.get('from') == '@occurrence' else f"`{brief(rel.get('from'))}`"
+    side = 'after' if rel.get('after') is not None else 'before'
+    return (f"{extent_words(rel.get(side))} {side} {src}" + (f", at {brief(rel['at'])}" if rel.get('at') is not None else ''))
+
+
 def conflicted(v):
     """The sides of a disagreement bin/dmmerge.py captured and nobody has resolved (`{conflict: [a, b]}`), or None."""
     return v['conflict'] if isinstance(v, dict) and isinstance(v.get('conflict'), list) else None
+
+
+def stance_of(entry, decl, sch=None):
+    """The EFFECTIVE position of an entry on the aspect `expiry.stance` names (24.0, N5): as written, else the attribute's
+    default (`required`), else None."""
+    a = (decl or {}).get('stance')
+    if not a or not isinstance(entry, dict):
+        return None
+    if entry.get(a) is not None:
+        return str(entry[a])
+    rec = (((sch or {}).get('attrs') or {}).get(a) or {}) if isinstance(sch, dict) else {}
+    asp = (rec.get('in') or {}).get('aspect') if isinstance(rec.get('in'), dict) else None
+    return str(rec['in'].get('default')) if asp and rec['in'].get('default') is not None else None
+
+
+def why_of(decl, entry, key='why', sch=None):
+    """The consequence printed with a warning: `why` (or `lapses_why`) as one text, or the text for the entry's stance."""
+    w = (decl or {}).get(key)
+    if isinstance(w, dict):
+        return w.get(stance_of(entry, decl, sch) or 'required')
+    return w
+
+
+def condition_holds(fm, entry, decl):
+    """True / False / None — whether what brings the entry into force holds (`expiry.condition`, 24.0, N6). A condition in
+    words (`said`) is not read, and holds as far as this tool knows (None); no condition at all is True."""
+    a = (decl or {}).get('condition')
+    c = entry.get(a) if a and isinstance(entry, dict) else None
+    if not isinstance(c, dict) or not c.get('selection'):
+        return True if c is None else None
+    import dmreckon
+    ref = c['selection'] if ':' in str(c['selection']) else f"{fm.get('bean')}:{c['selection']}"
+    try:
+        return dmreckon.holds(ref, root=ROOT)
+    except dmreckon.Refused as e:
+        raise Unreckoned(f"its condition {ref} cannot be read: {e}")
+
+
+def relative_day(rel, fm, at=None, systems=None, units=None):
+    """The day a position RELATIVE to another falls on (`expiry.relative`, 24.0, N4): the position `from` names — `at`,
+    the occurrence's own moment, for `@occurrence`; else the value at that path of the bean — moved `after` or `before`
+    by an extent (a measure in days, or cells of a level of a system), then to the place `at` names in the cell reached.
+    Read each time, never stored. Raises Unreckoned with the reason."""
+    systems = systems if systems is not None else _law('SYSTEMS')
+    src = rel.get('from')
+    if src == '@occurrence':
+        if at is None:
+            raise Unreckoned("it falls due relative to its occurrence, and no moment is read for this one")
+        v = at
+    else:
+        import dmreckon
+        try:
+            found = dmreckon.walk(dmreckon.Garden(ROOT), fm, str(src), at=fm.get('bean'))
+        except dmreckon.Refused as e:
+            raise Unreckoned(f"`from: {brief(src)}` cannot be read: {e}")
+        vals = [x for x, _w in found if x is not None]
+        if len(vals) != 1:
+            raise Unreckoned(f"`from: {brief(src)}` holds {len(vals)} positions, where it falls due relative to one")
+        v = vals[0]
+    try:
+        base = day_of(v)
+    except (ValueError, dmcal.NotByRule) as e:
+        raise Unreckoned(f"`from: {brief(src)}` reads {brief(v)}, which is not a day this can read ({e})")
+    sign = 1 if rel.get('after') is not None else -1
+    ext = rel.get('after') if sign == 1 else rel.get('before')
+    if not isinstance(ext, dict):
+        raise Unreckoned("it names neither `after` nor `before` as an extent")
+    on = rel.get('at')
+    if isinstance(ext.get('measure'), dict):
+        m = ext['measure']
+        units = units if units is not None else _law('UNITS')
+        u, d = units.get(str(m.get('unit'))) or {}, units.get('day') or {}
+        c = dmunits.exact(m.get('count'))
+        if c is None or not isinstance(u.get('factor'), (list, tuple)) or not isinstance(d.get('factor'), (list, tuple)):
+            raise Unreckoned(f"an offset of {extent_words(ext)} is not one this tool measures in days")
+        x = Fraction(c * Fraction(*u['factor']), Fraction(*d['factor']))
+        if x.denominator != 1:
+            raise Unreckoned(f"an offset of {extent_words(ext)} is not a whole number of days, and this tool reads days")
+        if on is not None:
+            raise Unreckoned("`at` names a place in a CELL, and a measured offset reaches a day, not a cell")
+        n = base + sign * int(x)
+        return n
+    row = systems.get(ext.get('in')) or {}
+    levels = [l.get('level') for l in row.get('levels') or [] if isinstance(l, dict)]
+    days = [l.get('level') for l in row.get('levels') or [] if isinstance(l, dict) and l.get('unit') == 'day']
+    lv, count = ext.get('level'), ext.get('count', 1)
+    if not row.get('calendar') or lv not in levels or not days or not isinstance(count, int):
+        raise Unreckoned(f"an offset of {extent_words(ext)} needs a level of a system reckoned here (`in:`)")
+    k = levels.index(days[0]) - levels.index(lv)
+    cells = _Cells(row)
+    if k <= 0:
+        return base + sign * count
+    c = cells.start(base, k)
+    for _ in range(count):
+        c = cells.end(c, k) if sign == 1 else cells.start(c - 1, k)
+    place = _one_at(on, k) if on is not None else cells.place(base, k)
+    n = cells.find(c, cells.end(c, k), k, place)
+    if n is None:
+        raise Unreckoned(f"the {lv} reached, {cells.label(c, k)}, has no place {_place_words(place)}")
+    return n
 
 
 def due_entries(fm, term, decl, today=None, notes=None):
@@ -609,12 +770,54 @@ def due_entries(fm, term, decl, today=None, notes=None):
     else:
         entries = [('', held)] if isinstance(held, dict) else []
     out = []
+    words = lambda e, key='why': why_of(decl, e, key, sch)        # noqa: E731 — the words for this entry's stance
     for label, e in entries:
         sides = conflicted(e)
         if sides is not None:
-            out += _due_in_dispute(label, e, [x for x in sides if isinstance(x, dict)], attr, rep, decl, today)
+            out += [r + (words(e),) for r in _due_in_dispute(label, e, [x for x in sides if isinstance(x, dict)], attr,
+                                                           rep, decl, today)]
             continue
-        if not e.get(attr) or silenced(e, decl):
+        if silenced(e, decl):
+            continue
+        # WHAT BRINGS IT INTO FORCE (24.0, N6): a reading that does not hold is silence — nothing is due yet.
+        try:
+            if condition_holds(fm, e, decl) is False:
+                continue
+        except Unreckoned as w:
+            out.append((label, e, None, None, str(w), None))
+            continue
+        # THE WINDOW IT HOLDS IN (N5): it lapses at the window's end, warned with `lapses_why`.
+        win = e.get(decl.get('lapses')) if decl.get('lapses') else None
+        if isinstance(win, dict) and win.get('to') is not None:
+            try:
+                n = day_of(win['to'])
+                out.append((label, e, n, show_day(n, written=win['to']), f"  — its window ({extent_words(win)}) ends",
+                            words(e, 'lapses_why') or words(e)))
+            except (ValueError, dmcal.NotByRule) as w:
+                out.append((label, e, None, None, f"its window's end {brief(win['to'])} is not a day this can read: {w}", None))
+        # RELATIVE TO ANOTHER POSITION (N4): read each time; for each occurrence where it is `@occurrence`.
+        relv = e.get(decl.get('relative')) if decl.get('relative') else None
+        if not e.get(attr) and isinstance(relv, dict):
+            occ = [(None, None)]
+            if relv.get('from') == '@occurrence':
+                import dmreckon
+                try:
+                    occ = dmreckon.occurrences(fm.get('bean'), label[1:-1], root=ROOT)
+                except dmreckon.Refused as w:
+                    out.append((label, e, None, None, f"its occurrences cannot be read: {w}", None))
+                    continue
+                paid = settled_occurrences(fm, label[1:-1])
+                occ = [o for o in occ if o[0] not in paid]
+            for member, at in occ:
+                lab = label + (f"@{member}" if member else '')
+                try:
+                    n = relative_day(relv, fm, at)
+                except Unreckoned as w:
+                    out.append((lab, e, None, None, f"falls due relative to {brief(relv.get('from'))}: {w}", None))
+                    continue
+                out.append((lab, e, n, show_day(n), f"  — {rel_words(relv)}", words(e)))
+            continue
+        if not e.get(attr):
             continue
         try:
             # THROUGH THE DAY, in whatever calendar the date was stated in (16.0). A calendar that is not reckoned
@@ -626,21 +829,21 @@ def due_entries(fm, term, decl, today=None, notes=None):
             # A DAY THAT CANNOT BE READ IS SAID, NEVER DROPPED: `2026-02-30` read as nothing at all was a clause that
             # silently stopped falling due, while bin/dmledger.py named it. The gate refuses such a day; the working
             # tree, where this reads, may still hold one.
-            out.append((label, e, None, None, f"{attr} {brief(e[attr])} is not a day this can read: {why}"))
+            out.append((label, e, None, None, f"{attr} {brief(e[attr])} is not a day this can read: {why}", None))
             continue
         rec = e.get(rep) if rep else None
         beside = []
         if not isinstance(rec, dict):
-            out.append((label, e, first, show_day(first, notes=beside, written=e[attr]), ''))
+            out.append((label, e, first, show_day(first, notes=beside, written=e[attr]), '', words(e)))
         else:
             skipped = []
             try:
                 day, i, times, ended = next_due(first, rec, today, skipped=skipped)
-            except Unreckoned as why:
-                out.append((label, e, None, None, f"{attr} {brief(e[attr])}, then {describe(rec)}: {why}"))
+            except Unreckoned as w:
+                out.append((label, e, None, None, f"{attr} {brief(e[attr])}, then {describe(rec)}: {w}", None))
             else:
                 out.append((label, e, day, show_day(day, rec, notes=beside, written=e[attr]),
-                            f"  — {'the last' if ended else 'next'}: {nth(i, times)}, {describe(rec)}"))
+                            f"  — {'the last' if ended else 'next'}: {nth(i, times)}, {describe(rec)}", words(e)))
                 if not ended:
                     beside += [skip_words(c) for c in skipped]
             fw = from_words(first, rec, attr, e[attr])
@@ -704,8 +907,14 @@ def day_of(v):
     """The day number of a position a bean wrote — text, or a date YAML read — or ValueError saying it is none. A list,
     a map, a boolean or nothing is no date, and is said to be one in the reader's words, never handed to dmcal as
     Python spells it (`['a', 'b']`, `True`)."""
+    if isinstance(v, datetime.datetime):
+        return v.date().toordinal()
     if isinstance(v, (str, datetime.date)) and not isinstance(v, bool):
-        return dmcal.to_day(str(v))
+        t = str(v)
+        # A MOMENT (24.0) is read to the day it names in the zone it is written in: `2026-11-01T23:30+03:00` is the
+        # first of November where it was said, whatever day it is in UTC.
+        m = re.match(r'^(\d{4}-\d{2}-\d{2})T\d', t)
+        return dmcal.to_day(m.group(1) if m else t)
     raise ValueError(f"{brief(v, quote=True)} is not a date")
 
 
@@ -970,7 +1179,7 @@ def report():
                 notes.append((fm.get('bean'), term, f"could not be read ({type(e).__name__}: {brief(e, 200)}) — the rest "
                                                     f"of this report stands"))
                 continue
-            for label, held, day, shown, detail in due:
+            for label, held, day, shown, detail, rwhy in due:
                 if day is None:
                     notes.append((fm.get('bean'), term + label, detail))
                     notes.extend((fm.get('bean'), term + label, t) for l, t in asides if l == label)
@@ -986,8 +1195,8 @@ def report():
                 state = 'EXPIRED' if days < 0 else ('EXPIRING' if days <= horizon else 'OK')
                 if state != 'OK':
                     expiring += 1
-                exp_rows.append((state, fm.get('bean'), days, shown, term + label, decl, held, horizon, detail, term,
-                                 [t for l, t in asides if l == label]))
+                exp_rows.append((state, fm.get('bean'), days, shown, term + label, dict(decl, why=rwhy), held, horizon,
+                                 detail, term, [t for l, t in asides if l == label]))
 
     if exp_rows or notes:
         _out()

@@ -37,6 +37,14 @@ import functools, glob, os, re, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import dmparse
+
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+GUARDS = {
+    'kept-private': {'checks': "a file, a commit message or a pull-request body naming a being of the garden is refused",
+                     'proof': 'test/public.py', 'label': "a file that names a host bean is refused"},
+    'release-public': {'checks': "a file that names no being of the garden passes",
+                       'proof': 'test/public.py', 'label': "a file that names no being passes"},
+}
 try:
     import yaml
 except ImportError:

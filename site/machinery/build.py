@@ -1,42 +1,44 @@
 #!/usr/bin/env python3
-"""site/machinery/build.py — daftar's own mechanisms, drawn by factory, for the machinery page of daftar's site.
+"""site/machinery/build.py — daftar's own mechanisms, drawn by the `view` asset, for the machinery page of daftar's site.
 
     python3 site/machinery/build.py CHECKOUT --garden GARDEN_SAM [--site SITE_DIR] [--keep DIR]
 
-CHECKOUT is a checkout of factory, the application layer that draws a daftar garden's mechanisms, at a release tag and
-with nothing uncommitted. This script is the one place it is run for the site, and the site publishes what it draws,
-never its source. GARDEN_SAM is the demo garden-sam that `site/build.py` grows (`site/build.py --keep DIR` leaves it at
-DIR/garden-sam); `site/build.py --machinery CHECKOUT` runs this script on it. SITE_DIR is the site written into, by
-default the directory above this one. `--keep DIR` works in DIR, which must not exist, and leaves it there.
+CHECKOUT is a checkout of daftar at a release tag, with nothing uncommitted: the release whose `view` asset draws the
+page. This script is the one place the drawing is made for the site, and the site publishes what it draws. GARDEN_SAM
+is the demo garden-sam that `site/build.py` grows (`site/build.py --keep DIR` leaves it at DIR/garden-sam);
+`site/build.py --machinery CHECKOUT` runs this script on it. SITE_DIR is the site written into, by default the
+directory above this one. `--keep DIR` works in DIR, which must not exist, and leaves it there.
 
 WHAT IT DOES, in a clone of GARDEN_SAM (a clone is the same garden, with the same id) in a temporary directory:
 
-  1. records, from `record.yaml` beside this file, in one journalled commit: the `daftar` product bean with the wiring
-     of its mechanisms, one `procedure` mapping per mechanism (gate, journal, merge, mycelium, ledger), the `factory`
-     bean that says which mechanisms are drawn and how, the `design-factory` bean — the levels, archetypes and level
-     patterns of the checkout's templates/levels.yaml and the pattern library of templates/pattern_library.yaml, with
-     `drawing.boundary` added, because the kit draws a boundary the template library does not list — and
-     `bin/mechanisms.py`, a copy of `composers.py`, the drawings. The glossary is README.md's "Words you will meet",
-     read from this repository at the release the garden runs.
-  2. vendors the checkout's release into the clone (`factory upgrade`), journals it and commits it.
-  3. runs `factory check` and `factory report` on the real clock. Everything before runs under the held day of the
-     demo gardens (`site/demo/clock/sitecustomize.py`, or the one the caller's PYTHONPATH carries, at
-     $DAFTAR_DEMO_NOW, by default 2026-10-27 09:00 UTC), so the garden's journal agrees with the rest of the site.
+  1. moves the clone to the checkout's release and opts it into the `view` profile, in one act of the garden's own
+     tool — `bin/dmupgrade.py <tag> --from CHECKOUT --extend view`, which writes `extends_profiles` in VOCAB.md,
+     brings `assets/view/` and journals it — and commits that.
+  2. records, from `record.yaml` beside this file, in one journalled commit: the `daftar` product bean with the wiring
+     of its mechanisms, one `procedure` mapping per mechanism (gate, journal, merge, mycelium, ledger), and the page,
+     the `machinery` bean, which draws them: its `view` (the drawing module, the parts a reader looks up, the facts a
+     card shows, and the glossary, README.md's "Words you will meet" at the checkout's release) and its `views`. The
+     drawing module is `drawings/mechanisms.py`, a copy of `composers.py`.
+  3. runs `dmview check` and `dmview report` on the real clock. Everything before runs under the held day of the demo
+     gardens (`site/demo/clock/sitecustomize.py`, or the one the caller's PYTHONPATH carries, at $DAFTAR_DEMO_NOW, by
+     default 2026-10-27 09:00 UTC), so the garden's journal agrees with the rest of the site.
   4. holds the drawings to the design: at most 18 elements and exactly one accent per figure, 960 wide and 280 to 340
-     tall, no address; a story of 3 to 5 stages, labels of at most 5 words, doers of at most 14, technologies only
-     git and python; no Operate archetype and no live binding anywhere, so every Operate tile reads "no signal"; the
-     wiring of the gate, the journal, the merge and the mycelium present.
+     tall, no address, the patterns `record.yaml` lists; a story of 3 to 5 stages, labels of at most 5 words, doers of
+     at most 14, technologies only git and python; every drawing on the health chain with no live binding and no
+     action, so every operate tile reads "no signal"; the wiring of the gate, the journal, the merge and the mycelium
+     present.
   5. refuses to write when the report or the transcript holds this machine's host name, the user's name, the real
-     home directory, the temporary directory or any absolute path. Paths are shown as `~/garden-sam` and `~/factory`.
-  6. writes SITE_DIR/machinery/report.html and SITE_DIR/machinery/drawn.json (the page's data: the levels, the
+     home directory, the temporary directory or any absolute path. Paths are shown as `~/garden-sam` and `~/daftar`.
+  6. writes SITE_DIR/machinery/report.html and SITE_DIR/machinery/drawn.json (the page's data: the lenses, the
      mechanisms, what the demo cannot show, the commands run and what they printed), each through a temporary file.
 
 The environment of every command is set here: HOME is a directory of its own, the clone commits as sam
-<sam@example.org>, TZ=UTC, and no DAFTAR_*, GIT_* or FACTORY_* variable of the caller reaches a tool — the held moment
-is set again from $DAFTAR_DEMO_NOW, for the garden's writes only.
+<sam@example.org>, TZ=UTC, and no DAFTAR_* or GIT_* variable of the caller reaches a tool — the held moment is set
+again from $DAFTAR_DEMO_NOW, for the garden's writes only.
 
 Exit 0 drawn; 2 anything else — a checkout that is not exactly a tag or holds uncommitted changes, a garden that is not
-the demo garden-sam, a refusal by the gate or by factory, a drawing out of the design, a leak — with nothing written.
+the demo garden-sam, a refusal by the upgrade, the gate or the asset, a drawing out of the design, a leak — with
+nothing written.
 """
 import datetime
 import getpass
@@ -60,15 +62,19 @@ MECHANISMS = ('gate', 'journal', 'merge', 'mycelium', 'ledger')
 WIRED = ('gate', 'journal', 'merge', 'mycelium')
 NEEDED_BEANS = ('sam', 'ali', 'garden-ali', 'shared-camera', 'washer-loan')
 TECH = {'git', 'python'}
+LENSES = ['orient', 'understand', 'operate', 'inspect']
+PAGE = 'machinery'
+MODULE = 'drawings/mechanisms.py'
 PY = sys.executable
 CANNOT = [
-    "Operate reads live data. The demo garden has no probe, no metric and no Prometheus, so no mechanism declares an "
-    "archetype or a binding, and every part reads \u201cno signal\u201d, with the reason: that is the demo garden's true state.",
+    "Operate reads live data. The demo garden has no probe, no metric and no monitor, so every drawing takes the "
+    "health chain and binds nothing, and every part reads \u201cno signal\u201d, with the reason: that is the demo garden's "
+    "true state.",
     "Actions: none is placed. A button in the report asks for a tool by name, and only a host's own configuration can "
     "make it run anything.",
-    "Author edits a copy of the record in the reader's browser. What it exports is imported into a garden by a command "
-    "run in that garden; nothing imports it here.",
-    "Grafana and the live page are not part of this site.",
+    "Author edits a copy of the page's record in the reader's browser. What it exports is imported into a garden by a "
+    "command run in that garden; nothing imports it here.",
+    "The served page, and a monitor's dashboards, are not part of this site.",
 ]
 
 
@@ -111,9 +117,9 @@ def git(*a, cwd):
 # refusals before any work
 # ---------------------------------------------------------------------------------------------------------------------
 def check_checkout(co):
-    for f in ('bin/factory', 'lib/fxmodel.py', 'lib/fxdraw.py', 'templates/levels.yaml', 'templates/pattern_library.yaml'):
+    for f in ('bin/dmupgrade.py', 'seed/std-vocab.md', 'assets/view/bin/dmview.py', 'assets/view/lib/view_kit.py'):
         if not os.path.isfile(os.path.join(co, f)):
-            refuse('%s is not a checkout of the drawing tool: it has no %s' % (co, f))
+            refuse('%s is not a checkout of a daftar release with the view asset: it has no %s' % (co, f))
     r = git('describe', '--exact-match', '--tags', 'HEAD', cwd=co)
     if r.returncode != 0 or not r.stdout.strip():
         refuse("the checkout's HEAD is not exactly a tag — check out a release (git checkout vX.Y.Z)")
@@ -122,10 +128,7 @@ def check_checkout(co):
         refuse('the checkout is at tag %r, which is not a release (vX.Y.Z)' % tag)
     if git('status', '--porcelain', cwd=co).stdout.strip():
         refuse('the checkout has uncommitted changes — a release is what its tag says, nothing else')
-    m = re.search(r'(?m)^CONTRACT = (\d+)', open(os.path.join(co, 'lib', 'fxmodel.py'), encoding='utf-8').read())
-    if not m:
-        refuse("cannot read the contract number from the checkout's lib/fxmodel.py")
-    return tag, int(m.group(1))
+    return tag
 
 
 def check_garden(g):
@@ -163,11 +166,11 @@ def held_clock():
     refuse('the held clock is missing: no site/demo/clock/sitecustomize.py, and none on the caller\'s PYTHONPATH')
 
 
-def readme_glossary(release):
-    """README.md's "Words you will meet", at the release the garden runs, as {term: meaning} with Markdown taken out."""
-    r = git('show', '%s:README.md' % release, cwd=HERE)
+def readme_glossary(checkout, release):
+    """README.md's "Words you will meet", at the release drawn, as {term: meaning} with Markdown taken out."""
+    r = git('show', 'HEAD:README.md', cwd=checkout)
     if r.returncode != 0:
-        refuse('cannot read README.md at %s from this repository: %s' % (release, r.stderr.strip()))
+        refuse('cannot read README.md at %s from the checkout: %s' % (release, r.stderr.strip()))
     sec = re.search(r'(?ms)^## Words you will meet\n(.*?)(?=^## )', r.stdout)
     if not sec:
         refuse('README.md at %s has no "Words you will meet" section' % release)
@@ -201,7 +204,7 @@ class Run:
 
     def env(self, held):
         e = {k: v for k, v in os.environ.items()
-             if not k.startswith(('DAFTAR_', 'GIT_', 'FACTORY_')) and k not in ('PYTHONPATH', 'PYTHONHOME', 'PYTHONSTARTUP')}
+             if not k.startswith(('DAFTAR_', 'GIT_')) and k not in ('PYTHONPATH', 'PYTHONHOME', 'PYTHONSTARTUP')}
         e.update(HOME=self.home, GIT_CONFIG_NOSYSTEM='1', TZ='UTC', LANG='C.UTF-8', LC_ALL='C.UTF-8', PYTHONUTF8='1',
                  PYTHONDONTWRITEBYTECODE='1', PYTHONUSERBASE=os.environ.get('PYTHONUSERBASE') or site.getuserbase())
         if held:
@@ -209,8 +212,8 @@ class Run:
         return e
 
     def shown(self, s):
-        """A path as the page shows it: the checkout as ~/factory, the temporary root as ~."""
-        return s.replace(self.checkout, '~/factory').replace(self.root, '~')
+        """A path as the page shows it: the checkout as ~/daftar, the temporary root as ~."""
+        return s.replace(self.checkout, '~/daftar').replace(self.root, '~')
 
     def run(self, argv, cwd, held=True, show=None, elide=None, ok=(0,)):
         """Run one command. `show` is the command as the transcript records it (None: not recorded); `elide` a regex
@@ -251,9 +254,8 @@ def write_md(path, fm, body):
         fh.write('---\n' + front(fm) + '---\n' + body.strip() + '\n')
 
 
-def record(g, rec, checkout, tag, contract, day, glossary):
-    """Write the record of §4.1 into the clone `g`."""
-    import yaml
+def record(g, rec, day, glossary):
+    """Write the record of `record.yaml` into the clone `g`: the product, its mappings, the page and its drawing module."""
     prov = {'src': 'observed', 'by': 'sam', 'as_of': day}
     p = rec['product']
     write_md(os.path.join(g, 'beans', 'daftar.md'), {
@@ -267,51 +269,45 @@ def record(g, rec, checkout, tag, contract, day, glossary):
         m = rec['mappings'][key]
         write_md(os.path.join(g, 'mappings', key + '.md'), {
             'mapping': key, 'kind': 'procedure', 'summary': m['summary'], 'provenance': prov, 'steps': m['steps']},
-            "daftar's %s, as the machinery page draws it. Its drawing is bin/mechanisms.py's." % key)
-    lv = yaml.safe_load(open(os.path.join(checkout, 'templates', 'levels.yaml'), encoding='utf-8'))
-    lib = yaml.safe_load(open(os.path.join(checkout, 'templates', 'pattern_library.yaml'), encoding='utf-8'))['pattern_library']
-    if 'boundary' not in lib['drawing']:
-        lib['drawing']['boundary'] = {'depth': 1, 'meaning': lv['level_patterns']['understand']['boundary']}
-    write_md(os.path.join(g, 'beans', 'design-factory.md'), {
-        'bean': 'design-factory', 'genos': 'design',
-        'title': 'design-factory — the levels of detail factory draws this garden at',
-        'status': 'active',
-        'summary': "factory's default levels, archetypes and pattern library, copied from its templates, with the "
-                   "boundary its kit draws.",
+            "daftar's %s, as the machinery page draws it. Its drawing is %s's." % (key, MODULE))
+    pg = rec['page']
+    write_md(os.path.join(g, 'beans', PAGE + '.md'), {
+        'bean': PAGE, 'genos': 'service', 'title': pg['title'], 'status': 'active', 'summary': pg['summary'],
         'nature': 'lekton',
         'identity': {'status': 'confirmed', 'anchors': [
-            {'key': 'product_id', 'value': 'design:levels-of-detail', 'class': 'logical', 'establishing': True}]},
+            {'key': 'service_id', 'value': 'service:' + PAGE, 'class': 'logical', 'establishing': True}]},
         'provenance': prov, 'owned_by': {'legal': {'owner': {'bean': 'sam'}}},
         'responsibility': {'legal': {'holder': {'bean': 'sam'}}},
-        'details': {'levels': lv['levels'], 'archetypes': lv['archetypes'], 'level_patterns': lv['level_patterns'],
-                    'pattern_library': lib}},
-        "The levels of detail, their archetypes and the pattern library, as the templates of factory %s give them; "
-        "`drawing.boundary` is added, with the meaning the understand level gives a boundary." % tag)
-    d = rec['drawing']
-    mechs = []
-    for m in d['mechanisms']:
-        m = {k: v for k, v in m.items() if k != 'demo'}
-        mechs.append(m)
-    write_md(os.path.join(g, 'beans', 'factory.md'), {
-        'bean': 'factory', 'genos': 'product', 'title': "factory — draws daftar's mechanisms at four levels",
-        'status': 'active',
-        'summary': "Which of daftar's mechanisms this garden draws, in what order, and what each level asks of them.",
-        'nature': 'lekton',
-        'identity': {'status': 'confirmed', 'anchors': [
-            {'key': 'product_id', 'value': 'product:mechanism-drawings', 'class': 'logical', 'establishing': True}]},
-        'provenance': prov, 'owned_by': {'legal': {'external': 'the factory project'}},
-        'responsibility': {'legal': {'holder': {'bean': 'sam'}}},
-        'details': {'factory_contract': contract, 'factory_release': tag, 'garden_module': 'bin/mechanisms.py',
-                    'live_base': d['live_base'], 'report': d['report'], 'mechanisms': mechs,
-                    'reference': d['reference'], 'kind_details': d['kind_details'], 'glossary': glossary}},
-        "What factory draws in this garden: daftar's own mechanisms, for the machinery page of daftar's site.")
-    shutil.copyfile(os.path.join(HERE, 'composers.py'), os.path.join(g, 'bin', 'mechanisms.py'))
+        'view': dict({'drawings': 'file:' + MODULE}, **pg['view'], glossary=glossary),
+        'views': pg['views']}, pg['body'])
+    os.makedirs(os.path.join(g, os.path.dirname(MODULE)), exist_ok=True)
+    shutil.copyfile(os.path.join(HERE, 'composers.py'), os.path.join(g, *MODULE.split('/')))
 
 
-def fxdata(report):
-    m = re.search(r'<script type="application/json" id="fxdata">(.*?)</script>', report, re.S)
+RATIFY = {"(fill in who ratified — merging the release's pull request, or the word given here)":
+          "sam, here: the word of the gardener",
+          "(fill in — what this release brings that this garden adopts)":
+          "the view asset, which draws daftar's mechanisms for the machinery page of daftar's site"}
+
+
+def ratify(g, tag):
+    """sam's word in the entry the upgrade wrote: who ratified it, and why. The upgrade commits nothing, and the gate
+    refuses an entry with a field left to fill in; the gardener writes these two by hand, and this is that hand."""
+    p = os.path.join(g, 'log', 'journal.md')
+    text = open(p, encoding='utf-8').read()
+    head = '## %s' % text.rsplit('\n## ', 1)[-1].split('\n', 1)[0] if '\n## ' in text else ''
+    if 'RULE-CHANGE' not in head or tag not in head or any(text.count(k) != 1 for k in RATIFY):
+        refuse('the upgrade did not leave one RULE-CHANGE entry for %s with its two fields to fill in (%r)' % (tag, head))
+    for k, v in RATIFY.items():
+        text = text.replace(k, v)
+    with open(p, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(text)
+
+
+def viewdata(report):
+    m = re.search(r'<script type="application/json" id="viewdata">(.*?)</script>', report, re.S)
     if not m:
-        refuse('the report carries no data block (id="fxdata")')
+        refuse('the report carries no data block (id="viewdata")')
     return json.loads(m.group(1))
 
 
@@ -321,13 +317,12 @@ def plain(s):
 
 
 def hold_to_design(p, rec):
-    """Refusals when a drawing, a story or a level strays from the design (SITE-DESIGN §4.3)."""
+    """Refusals when a drawing, a story or a lens strays from the design (SITE-DESIGN §4.3)."""
     probs = []
     views = p['views']
-    keys = [m['key'] for m in p['mechanisms']]
-    if keys != list(MECHANISMS) or not all(m['include'] for m in p['mechanisms']):
-        probs.append('the report shows %s, not the five mechanisms in order' % keys)
-    recd = {m['key']: m for m in rec['drawing']['mechanisms']}
+    if p['order'] != list(MECHANISMS):
+        probs.append('the report shows %s, not the five mechanisms in order' % p['order'])
+    recd = rec['page']['views']
     for k in MECHANISMS:
         v = views.get(k)
         if not v:
@@ -344,9 +339,9 @@ def hold_to_design(p, rec):
             probs.append('%s: the figure is %s, not 960 wide and 280 to 340 tall' % (k, vb and vb.groups()))
         if re.search(r'(?<![\w.])\d{1,3}(\.\d{1,3}){3}(?![\w.])|(?<![\w:])[0-9a-fA-F]{1,4}(:[0-9a-fA-F]{0,4}){2,}', v['svg']):
             probs.append('%s: the drawing shows an address' % k)
-        if sorted(v['patterns']) != sorted(recd[k]['schema_patterns']):
-            probs.append('%s: drawn %s, recorded %s' % (k, v['patterns'], recd[k]['schema_patterns']))
-        st = recd[k]['story']['stages']
+        if sorted(v['patterns']) != sorted(rec['design'][k]['patterns']):
+            probs.append('%s: drawn %s, recorded %s' % (k, v['patterns'], rec['design'][k]['patterns']))
+        st = recd[k]['stages']
         if not 3 <= len(st) <= 5:
             probs.append('%s: %d story stages, 3 to 5' % (k, len(st)))
         for i, s in enumerate(st, 1):
@@ -354,19 +349,20 @@ def hold_to_design(p, rec):
                 probs.append('%s: stage %d label has more than 5 words' % (k, i))
             if len(s['doer'].split()) > 14:
                 probs.append('%s: stage %d doer has more than 14 words' % (k, i))
-            if set(s.get('tech') or []) - TECH:
+            if {u['technology'] for u in s.get('uses') or []} - TECH:
                 probs.append('%s: stage %d names technology outside %s' % (k, i, sorted(TECH)))
-        if v['binds'] or v['live_patterns'] or (v['operate'] or {}).get('archetype') or v['actions']:
-            probs.append('%s: a live binding, an Operate archetype or an action is declared; the demo has no live data' % k)
+        if v['binds'] or v['live_patterns'] or (v['operate'] or {}).get('archetype') != 'health-chain' or v['actions']:
+            probs.append('%s: a live binding, a shape other than the health chain or an action is declared; the demo has '
+                         'no live data' % k)
         if not v['tiles'] or not all(t.get('blind') for t in v['tiles']):
-            probs.append('%s: an Operate tile does not read "no signal"' % k)
+            probs.append('%s: an operate tile does not read "no signal"' % k)
         w = v.get('wiring') or {}
         if k in WIRED and not (w.get('pipes') or w.get('processes')):
-            probs.append('%s: no wiring at the Inspect level' % k)
-        if set(v['questions']) != {'orient', 'understand', 'operate', 'inspect'}:
-            probs.append('%s: questions for %s, not the four levels' % (k, sorted(v['questions'])))
-    if [l['id'] for l in p['levels']] != ['orient', 'understand', 'operate', 'inspect']:
-        probs.append('the levels are %s' % [l['id'] for l in p['levels']])
+            probs.append('%s: no wiring at the inspect lens' % k)
+        if set(v['questions']) != set(LENSES):
+            probs.append('%s: questions for %s, not the four lenses' % (k, sorted(v['questions'])))
+    if [l['id'] for l in p['levels']] != LENSES:
+        probs.append('the lenses are %s' % [l['id'] for l in p['levels']])
     if probs:
         refuse('the drawings stray from the design:\n  - ' + '\n  - '.join(probs))
 
@@ -404,11 +400,11 @@ def main():
         import yaml
     except ImportError:
         refuse('PyYAML is required (pip install PyYAML)')
-    tag, contract = check_checkout(checkout)
-    gname, daftar_release = check_garden(garden)
+    tag = check_checkout(checkout)
+    gname, grown_by = check_garden(garden)
     clock, now = held_clock()
     rec = yaml.safe_load(open(os.path.join(HERE, 'record.yaml'), encoding='utf-8'))
-    glossary = readme_glossary(daftar_release)
+    glossary = readme_glossary(checkout, tag)
     day = datetime.datetime.fromisoformat(now).date()
     os.makedirs(os.path.join(site_dir, 'machinery'), exist_ok=True)
 
@@ -427,28 +423,31 @@ def main():
         run.run(['git', 'config', 'user.name', 'sam'], cwd=g)
         run.run(['git', 'config', 'user.email', 'sam@example.org'], cwd=g)
 
-        # 1. the record, in one journalled commit, under the held day
-        record(g, rec, checkout, tag, contract, day, glossary)
-        what = "daftar's mechanisms recorded, and how they are drawn"
+        # 1. the release drawn, and the view profile, in one act of the garden's own tool; committed under the held day
+        run.run([PY, 'bin/dmupgrade.py', tag, '--from', checkout, '--extend', 'view'], cwd=g,
+                show='python3 bin/dmupgrade.py %s --from ~/daftar --extend view' % tag)
+        ratify(g, tag)
+        run.run(['git', 'diff', '--no-color', '-U0', '--', 'log/journal.md'], cwd=g,
+                show='git diff -U0 -- log/journal.md', elide=r'(diff --git|index [0-9a-f]|--- |\+\+\+ |@@ )')
+        run.run(['git', 'add', '-A'], cwd=g, show='git add -A')
+        what = 'daftar %s, with the view profile' % tag
+        run.run(['git', 'commit', '-q', '-m', what], cwd=g, show='git commit -q -m "%s"' % what, elide=r'PASS ')
+        _name, release = check_garden(g)
+        if release != tag or not os.path.isfile(os.path.join(g, 'assets', 'view', 'bin', 'dmview.py')):
+            refuse('the clone runs daftar %s after the upgrade, with%s the view asset' %
+                   (release, '' if os.path.isfile(os.path.join(g, 'assets', 'view', 'bin', 'dmview.py')) else 'out'))
+
+        # 2. the record, in one journalled commit, under the held day
+        record(g, rec, day, glossary)
+        what = "daftar's mechanisms recorded, and the page that draws them"
         body = ("- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], "
-                "[[mycelium]] and [[ledger]]; [[factory]] and [[design-factory]], which draw them; bin/mechanisms.py, "
-                "the drawings (site/machinery/composers.py).\n"
-                "- why: the machinery page of daftar's site shows these mechanisms, drawn at four levels.")
+                "[[mycelium]] and [[ledger]]; [[%s]], the page that draws them, and %s, its drawing module "
+                "(site/machinery/composers.py).\n"
+                "- why: the machinery page of daftar's site shows these mechanisms, drawn at four lenses." % (PAGE, MODULE))
         head = run.run([PY, 'bin/dmjournal.py', 'sam', what, '--body', body], cwd=g,
                        show='python3 bin/dmjournal.py sam "%s" --body "%s"' % (what, body))
         if day.isoformat() not in head:
             refuse('the journal heading %r does not carry the held day %s: the clock was not held' % (head, day))
-        run.run(['git', 'add', '-A'], cwd=g, show='git add -A')
-        run.run(['git', 'commit', '-q', '-m', what], cwd=g, show='git commit -q -m "%s"' % what, elide=r'PASS ')
-
-        # 2. the drawing tool's release, vendored into the clone, journalled and committed
-        up = [PY, os.path.join(checkout, 'bin', 'factory'), 'upgrade', '--from', checkout, '--garden', '.']
-        run.run(up, cwd=g, show='python3 ~/factory/bin/factory upgrade --from ~/factory --garden .')
-        what = 'factory %s vendored' % tag
-        body = ('- action: factory %s vendored into factory/ by factory upgrade, which mirrors its skill at '
-                '.claude/skills/factory/SKILL.md; [[factory]] already pins %s.' % (tag, tag))
-        run.run([PY, 'bin/dmjournal.py', 'sam', what, '--body', body], cwd=g,
-                show='python3 bin/dmjournal.py sam "%s" --body "%s"' % (what, body))
         run.run(['git', 'add', '-A'], cwd=g, show='git add -A')
         run.run(['git', 'commit', '-q', '-m', what], cwd=g, show='git commit -q -m "%s"' % what, elide=r'PASS ')
         last = run.run([PY, 'bin/dmcheck.py', '--all'], cwd=g).splitlines()[-1]
@@ -456,41 +455,42 @@ def main():
             refuse('the clone does not pass its gate: %s' % last)
 
         # 3. check and report, on the real clock
-        fx = [PY, 'factory/bin/factory']
-        out = run.run(fx + ['check'], cwd=g, held=False, show='python3 factory/bin/factory check')
-        if 'the record and the drawings agree' not in out:
-            refuse('factory check: %s' % out)
-        out = run.run(fx + ['report', '--out', '../report.html'], cwd=g, held=False,
-                      show='python3 factory/bin/factory report --out ../report.html')
+        dv = [PY, 'assets/view/bin/dmview.py']
+        out = run.run(dv + ['check'], cwd=g, held=False, show='python3 assets/view/bin/dmview.py check')
+        if 'the page and its drawings agree' not in out or 'warn:' in out:
+            refuse('dmview check: %s' % out)
+        out = run.run(dv + ['report', '--out', '../report.html'], cwd=g, held=False,
+                      show='python3 assets/view/bin/dmview.py report --out ../report.html')
         n = len(MECHANISMS)
-        if '%d mechanisms (%d shown)' % (n, n) not in out:
-            refuse('factory report: %s' % out)
+        if 'dmview report: %d drawings' % n not in out:
+            refuse('dmview report: %s' % out)
         report = open(os.path.join(root, 'report.html'), encoding='utf-8').read()
 
         # 4. the drawings against the design
-        p = fxdata(report)
+        p = viewdata(report)
         hold_to_design(p, rec)
-        stamp = re.search(r'generated (\d{4}-\d\d-\d\d \d\d:\d\d)', report)
+        stamp = re.search(r' · drawn (\d{4}-\d\d-\d\d \d\d:\d\d) · ', report)
         if not stamp:
-            refuse('the report carries no "generated" stamp')
+            refuse('the report carries no "drawn" stamp')
 
         # 5. drawn.json, from the report's own data
-        demo = {m['key']: m['demo'] for m in rec['drawing']['mechanisms']}
+        design = rec['design']
         raw = report.encode('utf-8')
         drawn = {
-            'tool': 'factory', 'tool_release': tag, 'tool_contract': contract,
-            'daftar_release': daftar_release, 'demo_day': day.isoformat(), 'garden': gname,
+            'tool': 'dmview', 'tool_release': tag,
+            'daftar_release': release, 'grown_by': grown_by, 'demo_day': day.isoformat(), 'garden': gname,
             'drawn_at': stamp.group(1) + ' UTC',
             'report': 'machinery/report.html', 'report_bytes': len(raw),
             'report_sha256': hashlib.sha256(raw).hexdigest(),
-            'title': (p.get('report') or {}).get('title', ''),
-            'levels': [{k: l.get(k) for k in ('id', 'depth', 'name', 'audience', 'question')} for l in p['levels']],
+            'title': p['page']['title'],
+            'levels': [{'id': l['id'], 'depth': l['depth'], 'form': l['form'], 'meaning': l['question']} for l in p['levels']],
             'mechanisms': [{
-                'key': k, 'title': p['views'][k]['title'], 'claim': plain(p['views'][k]['claim']),
-                'questions': {lv: p['views'][k]['questions'].get(lv) for lv in ('orient', 'understand', 'operate', 'inspect')},
+                'key': k, 'title': plain(p['views'][k]['title']), 'claim': plain(p['views'][k]['claim']),
+                'questions': {lv: p['views'][k]['questions'].get(lv) for lv in LENSES},
                 'parts': [x['bean'] for x in p['views'][k]['parts']],
                 'patterns': p['views'][k]['patterns'],
-                'operate': {'archetype': None, 'would_take': demo[k].get('would_take'), 'why_none': demo[k]['why_none']},
+                'operate': {'archetype': p['views'][k]['operate']['archetype'], 'would_take': design[k].get('would_take'),
+                            'why_none': design[k]['why_none']},
             } for k in MECHANISMS],
             'cannot': CANNOT,
             'transcript': run.transcript,
@@ -509,9 +509,9 @@ def main():
             tmp.append((t, os.path.join(dest, name)))
         for t, final in tmp:
             os.replace(t, final)
-        print('machinery: drawn by factory %s at %s from %s (daftar %s): %d mechanisms, %d bytes; wrote %s and %s in %.0f s'
-              % (tag, drawn['drawn_at'], gname, daftar_release, n, len(raw), os.path.relpath(tmp[0][1]),
-                 os.path.relpath(tmp[1][1]), time.time() - t0))
+        print('machinery: drawn by dmview of daftar %s at %s from %s (grown by daftar %s): %d mechanisms, %d bytes; '
+              'wrote %s and %s in %.0f s' % (tag, drawn['drawn_at'], gname, grown_by, n, len(raw),
+                                             os.path.relpath(tmp[0][1]), os.path.relpath(tmp[1][1]), time.time() - t0))
     finally:
         if not keep:
             shutil.rmtree(root, ignore_errors=True)

@@ -191,7 +191,7 @@ out = period('{ of: time, measure: { count: 1, unit: month } }')
 check("a unit the registry does not hold is refused — a month is 28 to 31 days and is not a measure",
       "not in the `units` registry" in out, out[-400:])
 out = period('{ of: time, measure: { count: 0, unit: day } }')
-check("a non-positive count is refused", "positive whole number" in out, out[-400:])
+check("a non-positive count is refused", "must be a positive count" in out, out[-400:])
 out = period('{ of: time, from: "early October" }')
 check("a boundary that is no position in the aspect's domain is refused",
       "is not a position in any system" in out, out[-400:])

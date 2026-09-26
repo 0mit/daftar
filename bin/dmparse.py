@@ -10,6 +10,7 @@ fence #2. Everything after fence #2 is body, verbatim.
 
 One owner of a fact: dmcheck.py and dmmerge.py both import this — the parsing rule lives here only.
 """
+import collections
 import re
 import os, sys
 
@@ -157,6 +158,48 @@ def in_form(row, value):
 def form_said(row):
     """How a row's form is described to a person who got it wrong."""
     return f"checked by {row['checked_by']}" if row.get('checked_by') else repr(row.get('pattern'))
+
+
+# A PATH INTO WHAT BEANS HOLD (`value_types[field_path]`, 24.0): read here and nowhere else. A segment is a key, or `*` for
+# every key of a map or entry of a list, with `[<attr>=<value>]` for the entries holding that value; `.` goes in, `>` follows
+# a ref to the bean it names and goes on there; `<bean>:` first starts at another bean; `@occurrence` is a word of its own.
+Segment = collections.namedtuple('Segment', 'bean key star match follow')
+_PATH_BEAN = re.compile(r'([a-z0-9][a-z0-9-]*):', re.ASCII)
+_PATH_SEG = re.compile(r'(\*|[a-z0-9_][a-z0-9_-]*)(?:\[([a-z_][a-z0-9_]*)=([^\]\s]+)\])?', re.ASCII)
+
+
+def path_read(text):
+    """The segments of a field path, in order — or ValueError, saying where it stops being one (`path_problem`)."""
+    if text == '@occurrence':
+        return [Segment(None, '@occurrence', False, None, False)]
+    if not isinstance(text, str) or not text:
+        raise ValueError("a path is text, and not empty")
+    i, out, bean, follow = 0, [], None, False
+    m = _PATH_BEAN.match(text)
+    if m:
+        bean, i = m.group(1), m.end()
+    while True:
+        m = _PATH_SEG.match(text, i)
+        if not m:
+            raise ValueError(f"at character {i + 1}: a key, `*`, or a key with `[<attr>=<value>]` is wanted"
+                             + (f", not {text[i:i + 8]!r}" if i < len(text) else ", and the path ends"))
+        out.append(Segment(bean if not out else None, m.group(1), m.group(1) == '*',
+                           (m.group(2), m.group(3)) if m.group(2) else None, follow))
+        i = m.end()
+        if i == len(text):
+            return out
+        if text[i] not in '.>':
+            raise ValueError(f"at character {i + 1}: `.` goes in and `>` follows a ref — {text[i]!r} does neither")
+        follow, i = text[i] == '>', i + 1
+
+
+def path_problem(text):
+    """None when `text` is a field path; else what is wrong with it, in words."""
+    try:
+        path_read(text)
+    except ValueError as e:
+        return str(e)
+    return None
 
 
 def anchor_compare_form(terms, key):
@@ -362,6 +405,190 @@ def loads(text):
     return _yaml.load(text, Loader=LOADER)
 
 
+# ---- A COMMENT IN A FRONT MATTER, AND WHAT IT SITS ON (24.0: the law carries no story) ----------------------------------
+# A `#` begins a comment where it is outside quotes, at a line's start or after a blank, and outside a block scalar
+# (`|`, `>`), whose lines are the value's text. What a comment sits on is the item on its line, or, for a comment on a
+# line of its own, the item on the next line that holds one; named as bin/dmwhy.py keys a reason: `a.b[x].c`, a list's
+# item by the first scalar it holds. One reader, so the gate and the upgrade find the same comments.
+TITLE = re.compile(r'^\s*# == [^=]+ ==\s*$')
+
+
+def comment_start(line):
+    """The column a comment begins at in one YAML line, or -1."""
+    q = None
+    for i, ch in enumerate(line):
+        if ch in "\"'":
+            q = None if q == ch else (q or ch)
+        if ch == '#' and q is None and (i == 0 or line[i - 1] in ' \t'):
+            return i
+    return -1
+
+
+def comments(head):
+    """[(line, column, text, [paths])] of every comment in a front matter's text, section titles (`# == x ==`) left out;
+    `paths` runs from the finest item the comment sits on to its top-level key. [] where the text does not parse."""
+    if _yaml is None:
+        raise RuntimeError("PyYAML required")
+    try:
+        root = _yaml.compose(head, Loader=LOADER)
+    except _yaml.YAMLError:
+        return []
+    spans, block = [], set()
+
+    def walk(node, path):
+        if isinstance(node, _yaml.ScalarNode):
+            if node.style in ('|', '>'):
+                block.update(range(node.start_mark.line + 1, node.end_mark.line + (1 if node.end_mark.column else 0)))
+            return
+        if isinstance(node, _yaml.MappingNode):
+            for k, v in node.value:
+                p = f"{path}.{k.value}" if path else str(k.value)
+                spans.append((k.start_mark.line, v.end_mark.line, p))
+                walk(v, p)
+        elif isinstance(node, _yaml.SequenceNode):
+            for item in node.value:
+                ident = next((v.value for _k, v in (item.value if isinstance(item, _yaml.MappingNode) else [])
+                              if isinstance(v, _yaml.ScalarNode)), item.value if isinstance(item, _yaml.ScalarNode) else '')
+                p = f"{path}[{ident}]"
+                spans.append((item.start_mark.line, item.end_mark.line, p))
+                walk(item, p)
+    if root is not None:
+        walk(root, '')
+    lines = head.split('\n')
+    content = [i for i, l in enumerate(lines) if l.strip() and i not in block
+               and (comment_start(l) < 0 or l[:comment_start(l)].strip())]
+
+    def paths(at):
+        here = [s for s in spans if s[0] <= at <= max(s[1], s[0])] or [s for s in spans if s[0] == at]
+        if not here:
+            return []
+        start = max(s[0] for s in here)
+        best = min((s for s in here if s[0] == start), key=lambda s: len(s[2]))[2]    # the line's own item
+        out, p = [], best
+        while p:
+            out.append(p)
+            p = re.sub(r'(\.[^.\[\]]+|\[[^\]]*\])$', '', p) if re.search(r'[.\[]', p) else ''
+        return out
+    found = []
+    for i, l in enumerate(lines):
+        c = comment_start(l) if i not in block else -1
+        if c < 0 or TITLE.match(l):
+            continue
+        on = i if l[:c].strip() else next((j for j in content if j > i), next((j for j in reversed(content) if j < i), None))
+        found.append((i, c, l[c:].lstrip('#').strip(), paths(on) if on is not None else []))
+    return found
+
+
+# ---- A TABLE: ROWS OF CELLS, READ AND WRITTEN HERE AND NOWHERE ELSE (std-vocab `value_types[rows]`) ------------------
+# A series holds its rows as a table — a header line, then one line per row, the cells separated by one tab — inline in
+# a bean as a block scalar (`rows: |`), or in a file of its own. ONE READER AND ONE WRITER, both here (D46): the gate,
+# bin/dmseq.py, the merge and the proposals read a table only through `table_read`, and whatever re-emits a bean writes
+# one only through `table_dumper`. PyYAML will not write a tab inside a block scalar, even asked to: it double-quotes the
+# string, and a merged chart became one escaped line — the same value, and a page nobody can read. So the dumper chooses
+# the block itself for a value that IS a table, and writes it back byte for byte.
+#
+# THE FORM IS FIXED SO THAT NOTHING CHANGES IT: every line ends in a line feed alone; no line is empty; no cell is empty
+# and none begins or ends in a space — a value nobody read is written as a gap token, never left blank — so no line
+# ends in whitespace, and an editor that trims trailing whitespace changes nothing. What a cell MEANS (a count, a
+# position, a code, a gap) is the channel's, read by bin/dmseq.py against the law; this reads only the form.
+class TableError(ValueError):
+    """A table not in its one form, refused by name: the line and what is wrong with it."""
+
+
+def table_problems(text):
+    """[what is wrong] with `text` as a table, or [] — the form only, never what a cell means."""
+    if not isinstance(text, str):
+        return [f"a table is text — a header line and one line per row, written as a block (`|`) — not {type(text).__name__}"]
+    out = []
+    if '\r' in text:
+        out.append("a line ends in a carriage return: every line of a table ends in a line feed alone")
+    lines = text.split('\n')
+    if lines and lines[-1] == '':
+        lines = lines[:-1]
+    if not lines:
+        return out + ["it is empty: a table has a header line, naming its columns"]
+    head = lines[0].split('\t')
+    for j, h in enumerate(head):
+        if not h or h != h.strip():
+            out.append(f"the header's column {j + 1} is {'empty' if not h else repr(h) + ', with a space at an end'}: "
+                       f"a column is named, and its name is one word")
+    _seen = set()
+    for h in head:
+        if h in _seen:
+            out.append(f"the header names the column {h!r} twice: a table is read by its header's names")
+        _seen.add(h)
+    for i, line in enumerate(lines[1:], start=2):
+        if line == '':
+            out.append(f"line {i} is empty: a row that holds nothing is not a row — a value nobody read is a gap token")
+            continue
+        cells = line.split('\t')
+        if len(cells) != len(head):
+            out.append(f"line {i} holds {len(cells)} cell(s) and the header names {len(head)} column(s): a row has "
+                       f"one cell per column, a tab between two")
+            continue
+        for j, c in enumerate(cells):
+            if c == '':
+                out.append(f"line {i}, column {head[j]!r} is an empty cell: a value nobody read is written as a gap "
+                           f"token, never left blank")
+            elif c != c.strip():
+                out.append(f"line {i}, column {head[j]!r} begins or ends in a space: {c!r}")
+        if len(out) > 20:
+            out.append("… and more")
+            break
+    return out
+
+
+def table_read(text):
+    """(header, rows) of a table in its one form: the column names, and each row as a list of its cells, as text. Raises
+    TableError naming what is wrong — the first thing — when it is not in its form."""
+    bad = table_problems(text)
+    if bad:
+        raise TableError(bad[0])
+    lines = text.split('\n')
+    if lines[-1] == '':
+        lines = lines[:-1]
+    return lines[0].split('\t'), [line.split('\t') for line in lines[1:]]
+
+
+def table_write(header, rows):
+    """A table in its one form, from its column names and its rows of cells: what `table_read` reads back, byte for byte.
+    Raises TableError for a cell that has no form here — empty, holding a tab or a line break, or spaced at an end."""
+    out = []
+    for n, row in enumerate([list(header)] + [list(r) for r in rows]):
+        cells = [str(c) for c in row]
+        for c in cells:
+            if c == '' or c != c.strip() or '\t' in c or '\n' in c or '\r' in c:
+                raise TableError(f"{'the header' if n == 0 else f'row {n}'} holds {c!r}: a cell is one word or value, "
+                                 f"never empty, holding no tab or line break")
+        out.append('\t'.join(cells))
+    text = '\n'.join(out) + '\n'
+    bad = table_problems(text)
+    if bad:
+        raise TableError(bad[0])
+    return text
+
+
+def is_table(value):
+    """True when `value` is a table in its one form, of two lines or more — a header and a row, however many columns:
+    the text `table_dumper` writes back as a block, whatever its style was when it was read."""
+    return isinstance(value, str) and '\n' in value.rstrip('\n') and not table_problems(value)
+
+
+def table_dumper(base):
+    """A YAML dumper, from `base`, that writes every value that is a table (`is_table`) as a block scalar, byte for
+    byte — the only change it makes. Where a table is a key, or inside a flow collection, it is left to the base, which
+    quotes it: a table is written as a value in block style."""
+    class _TableDumper(base):
+        def choose_scalar_style(self):
+            v = self.event.value
+            if not self.flow_level and not self.simple_key_context and is_table(v):
+                if self.analysis is None:
+                    self.analysis = self.analyze_scalar(v)
+                return '|'
+            return super().choose_scalar_style()
+    return _TableDumper
+
+
 # ---- A GARDEN'S VOCABULARY, READ IN ITS OWN SHAPE -----------------------------------------------------------------
 # VOCAB.md is written by hand, and what the interpreter iterates must be a list, what it looks a row up by a name, what it
 # prints a word, and a pattern it matches one Python compiles. So each block of it, and each ENTRY of a block, is read in
@@ -377,7 +604,7 @@ _NAME_KEYS = ('shape', 'key_form', 'path', 'values_from', 'must_equal_genos_attr
               'canonical_note', 'compare_form', 'on_sequence')
 _LIST_KEYS = ('cells', 'values', 'values_add', 'entry_one_of', 'entry_must_match')
 _MAP_KEYS = ('attrs', 'alt_form', 'expiry', 'sums', 'value_in_registry')
-_IN_NAMES = ('registry', 'registry_from', 'take', 'type', 'system', 'key_of', 'form_of', 'keyed_by', 'aspect', 'quantity')
+_IN_NAMES = ('registry', 'registry_from', 'take', 'type', 'system', 'key_of', 'form_of', 'aspect', 'quantity')
 # The two verdicts the schema language names for a cell (`schema_language.cells`): `incoherent` an error, `in_breach` a
 # warning. Any other word was read as `in_breach` — a misspelt `incoherent` warned where the law meant to refuse.
 CELL_VERDICTS = ('incoherent', 'in_breach')
@@ -403,6 +630,22 @@ def regex_problem(pattern):
     return None
 
 
+def _names_problem(v, one_or_list=False):
+    """None when `v` is absent, or a list of attribute names (or, `one_or_list`, one name); else what it should be."""
+    if v is None or (one_or_list and _is_text(v)) or (isinstance(v, list) and v and all(_is_text(x) for x in v)):
+        return None
+    return ("names one attribute, or a list of them, each as text" if one_or_list
+            else "is a list of attributes, each named as text")
+
+
+def _groups_problem(v):
+    """None when `v` is absent or a list of GROUPS, each a list of two or more attribute names; else what it should be."""
+    if v is None or (isinstance(v, list) and v and all(isinstance(g, list) and len(g) > 1 and all(_is_text(x) for x in g)
+                                                       for g in v)):
+        return None
+    return "is a list of groups, each a list of two or more attributes named as text — `[[u, accuracy]]`"
+
+
 def _attrs_problem(attrs, at):
     """What is wrong with the shape of a schema's `attrs` (and the entries nested in one), or None."""
     if not isinstance(attrs, dict):
@@ -411,9 +654,16 @@ def _attrs_problem(attrs, at):
         d = rec.get('in') if isinstance(rec, dict) else None
         if not isinstance(d, dict):
             continue                        # a record with no domain the language offers is refused by name later
-        for k in _IN_NAMES:
+        for k in _IN_NAMES + (() if d.get('entries') is not None else ('keyed_by',)):
             if d.get(k) is not None and not _is_text(d[k]):
                 return f"`{at}.{a}.in.{k}` names one {k}, written as text — not {type(d[k]).__name__}"
+        # `keyed_by` beside `entries` may name several attributes (24.0), and beside `form_of` names one
+        if d.get('entries') is not None:
+            for k, _p in (('keyed_by', _names_problem(d.get('keyed_by'), one_or_list=True)),
+                          ('one_of', _names_problem(d.get('one_of'))),
+                          ('at_most_one_of', _groups_problem(d.get('at_most_one_of')))):
+                if _p:
+                    return f"`{at}.{a}.in.{k}` {_p}"
         if 'pattern' in d and regex_problem(d['pattern']):
             return f"`{at}.{a}.in.pattern` {regex_problem(d['pattern'])}"
         # `{ gene: [...] }` and nothing else (22.0: `kinds` until then) — a key it does not read would hold the id to no
@@ -480,6 +730,15 @@ def term_problem(t):
     for k in _MAP_KEYS:
         if s.get(k) is not None and not isinstance(s[k], dict):
             return f"`schema.{k}` is a mapping, not {type(s[k]).__name__}"
+    # 24.0: `at_most_one_of` a list of groups; `keyed_by` one attribute or several; `exclusive` {extent, being, role?}
+    for k, _p in (('at_most_one_of', _groups_problem(s.get('at_most_one_of'))),
+                  ('keyed_by', _names_problem(s.get('keyed_by'), one_or_list=True))):
+        if _p:
+            return f"`schema.{k}` {_p}"
+    _ex = s.get('exclusive')
+    if _ex is not None and not (isinstance(_ex, dict) and _is_text(_ex.get('extent')) and _is_text(_ex.get('being'))
+                                and set(_ex) <= {'extent', 'being', 'role'} and (_ex.get('role') is None or _is_text(_ex['role']))):
+        return "`schema.exclusive` is a mapping {extent: <attr>, being: <attr>, role?: <attr>}, each an attribute named as text"
     _alt = s.get('alt_form')
     if _alt is not None:
         if not _is_text(_alt.get('key')):

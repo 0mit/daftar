@@ -245,10 +245,10 @@ check("...dmgeo, given a Persian position on a cp1252 machine, refuses it in wor
       r.stderr.decode('utf-8', 'replace')[-300:])
 # ...AND EVERY CALL THAT READS A CHILD'S OUTPUT AS TEXT NAMES UTF-8. With no `encoding`, a text-mode subprocess call
 # decodes in the machine's code page — on Windows until Python 3.15 — and the gate's reading of a Persian gardener's
-# bean from git failed in subprocess's reader thread, above its verdict. The tools, the seed, the tests and the site's
-# builder alike; test/germinate.py runs the gate on such a machine.
+# bean from git failed in subprocess's reader thread, above its verdict. The tools, an asset's code, the seed, the tests
+# and the site's builder alike; test/germinate.py runs the gate on such a machine.
 _unnamed = []
-for _dir in ('bin', 'seed', 'test', 'site'):
+for _dir in ('bin', 'seed', 'test', 'site', 'assets'):
     for _dp, _dn, _fn in os.walk(os.path.join(ROOT, _dir)):
         for _p in (os.path.join(_dp, f) for f in sorted(_fn) if f.endswith('.py')):
             _tree = ast.parse(open(_p, encoding='utf-8').read())

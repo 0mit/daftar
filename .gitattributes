@@ -24,6 +24,10 @@ log/journal.md merge=union
 # add two different items and neither has touched the other. Declared 2026-08-03 after a purely additive
 # pair conflicted textually while log/journal.md absorbed the same shape losslessly.
 log/pending.md merge=union
+# A SERIES' PARTS ARE ITS ROWS, BYTE FOR BYTE: a part is a table written once and never rewritten (a new download is a new
+# part), so git neither turns its line ends nor merges it as text. Two gardens' parts meet as a set of files; the same
+# part written two ways is a conflict for a person, never a text merge of two recordings.
+series/** -text -merge
 
 # THE LANGUAGE'S SHELL IS CHECKED OUT WITH LF, on every machine. Git for Windows checks text out with CRLF by
 # default (core.autocrlf=true), and `sh` reads the CR as part of each line: a hook with one fails closed, and
@@ -33,6 +37,8 @@ log/pending.md merge=union
 bin/hooks/* text eol=lf
 bin/*.sh    text eol=lf
 seed/*.sh   text eol=lf
+# AN EXTRACT OF A SCHEME IS A TABLE A READER SPLITS ON TABS: a CR git wrote on checkout would enter the last column it reads.
+extracts/** text eol=lf
 
 # A GARDEN'S OWN ATTRIBUTES go in a .gitattributes inside the directory they concern (git reads one per
 # directory), never here: this file is part of the language, and bin/dmupgrade.py replaces it on every upgrade.

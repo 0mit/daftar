@@ -30,3 +30,6 @@ AGENTS.md
 # The pre-commit hook runs it, so a garden without it cannot commit. The other tests assert things about the
 # release's own fixtures and stay in the release.
 test/fast.py
+# AN ASSET: the directory named for a profile the law offers. `<profile>` stands for each profile this garden's
+# VOCAB.md extends, and for no other: opting into the profile is what brings its asset, and leaving it takes it away.
+assets/<profile>/*

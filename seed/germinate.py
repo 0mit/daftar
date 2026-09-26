@@ -5,6 +5,7 @@
     python3 seed/germinate.py <target-directory> --gardener <id> [--gardener-name "<how they are called>"]
                                                  [--gardener-genos org]  # an organisation keeps it, not a person
                                                  [--name <garden-name>]  # a name other than the directory's
+                                                 [--profile <name>]...   # a profile the law offers, extended at birth
 
 (`python` on Windows.) Name the directory for the garden — `garden-sam`, not `garden` — because its name is the
 garden's name, which another garden and every proposal this one makes will show. The name is held to the form the
@@ -21,6 +22,11 @@ the same file, so a new garden and an upgraded one receive exactly the same set.
 name, its vocabulary pin and the release it runs, its first commit as `germinate`, the gate as a pre-commit
 hook, and it is checked: it passes its own gate with nothing in it.
 
+A PROFILE CAN BE EXTENDED AT BIRTH. `--profile <name>`, once for each, writes the profile in VOCAB.md's
+`extends_profiles` and brings what it brings: the asset a profile has (`assets/<profile>/`, the line of seed/LANGUAGE
+that names a profile) arrives with the rest of the language. A name the law does not offer is refused before anything
+is created. Later, it is one act of bin/dmupgrade.py: `--extend <name>`, or `--retract <name>`.
+
 A GARDEN IS KEPT BY SOMEONE. With `--gardener <id>` the second commit plants the gardener's bean — a person, or
 with `--gardener-genos org` an organisation: a genos the law's `manifest.gardener` admits — and names it in GARDEN.md,
 so the garden begins as someone's and the gardener is its first bean. Without it the closing message says that this
@@ -28,7 +34,6 @@ is the first thing to write — the gate asks for it as soon as the garden holds
 
 Python, not shell, because a garden is grown on Windows too. `seed/germinate.sh` remains and hands over here.
 """
-import glob
 import os
 import re
 import shlex
@@ -97,18 +102,18 @@ def run(*args, cwd=None, check=True):
     return r
 
 
-def language_files(root, seed):
-    """Every file seed/LANGUAGE names, in order; a pattern that matches nothing is an error."""
-    out = []
-    for line in open(os.path.join(seed, 'LANGUAGE'), encoding='utf-8'):
-        pat = line.strip()
-        if not pat or pat.startswith('#'):
-            continue
-        hits = [f for f in sorted(glob.glob(os.path.join(root, pat))) if os.path.isfile(f)]
-        if not hits and not any(os.path.isdir(f) for f in glob.glob(os.path.join(root, pat))):
+def language_files(root, seed, law, profiles=()):
+    """Every file seed/LANGUAGE names that a garden extending `profiles` receives, read by bin/dmpass.py — the one reader
+    of seed/LANGUAGE, which bin/dmupgrade.py and the gate ask too. A line that names no profile and matches no file is an
+    error; a line that names a profile matches what that profile brings, which may be nothing."""
+    import dmpass
+    lines = dmpass.language(open(os.path.join(seed, 'LANGUAGE'), encoding='utf-8').read())
+    files = [f for f in dmpass.tracked(root) if '__pycache__' not in f.split('/')
+             and os.path.isfile(os.path.join(root, *f.split('/')))]
+    for pat in lines:
+        if dmpass.PLACE not in pat and not dmpass.received(files, [pat], (), ()):
             die(f"seed/LANGUAGE names '{pat}', which matches no file", 1)
-        out += [os.path.relpath(f, root) for f in hits]
-    return out
+    return dmpass.received(files, lines, profiles, dmpass.offered(law))
 
 
 def gardener_gene(law):
@@ -176,6 +181,13 @@ provenance: {{ src: asserted-by-human, by: "{gid} (gardener)", as_of: {when} }}
 def main(argv):
     gid = gname = name = None
     ggenos = 'person'
+    profiles = []
+    while '--profile' in argv:
+        i = argv.index('--profile'); p = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
+        if not p:
+            die("--profile takes the name of a profile the law offers: e.g. --profile knowledge")
+        if p not in profiles:
+            profiles.append(p)
     if '--name' in argv:
         i = argv.index('--name'); name = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
         if not name:
@@ -229,6 +241,12 @@ def main(argv):
             f"  Name the directory in kebab-case, e.g. {like} — or keep it, and give the garden that name: "
             f"--name {like}\n"
             f"Nothing was created.")
+    import dmpass
+    _offered = dmpass.offered(law)
+    _unknown = [p for p in profiles if p not in _offered]
+    if _unknown:
+        die(f"--profile {', '.join(_unknown)}: the law at std-vocab@{ver} offers {', '.join(_offered) or 'no profile'}. "
+            f"Nothing was created.")
     gform = None
     if gid:
         admitted = gardener_gene(law)
@@ -270,7 +288,7 @@ def main(argv):
     # copy, an interrupt — removes it whole, so a stranger's second try starts from nothing rather than from "already
     # exists — refusing to plant over it".
     try:
-        grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform)
+        grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, law, profiles)
     except BaseException:
         if os.path.isdir(target):
             try:
@@ -284,11 +302,11 @@ def main(argv):
     return finish(target, root, ver, release, gid, ggenos, grown_in)
 
 
-def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform):
+def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, law, profiles=()):
     """The language copied, the templates filled, the first commit made, and the gardener planted."""
     for d in ('beans', 'mappings', 'log', 'seed'):
         os.makedirs(os.path.join(target, d), exist_ok=True)
-    for rel in language_files(root, seed):
+    for rel in language_files(root, seed, law, profiles):
         dst = os.path.join(target, rel)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copy2(os.path.join(root, rel), dst)
@@ -306,6 +324,13 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform):
             fh.write(text)
     for f in ('VOCAB', 'GARDEN'):
         fill(os.path.join(seed, f + '.md.template'), os.path.join(target, f + '.md'))
+    if profiles:
+        # THE PROFILES A GARDEN EXTENDS ARE ITS VOCAB.md's: one line, above its own terms, in the order given
+        vp = os.path.join(target, 'VOCAB.md')
+        vt = open(vp, encoding='utf-8').read()
+        vt = re.sub(r'(?m)^(local_terms:)', lambda m: f"extends_profiles: [{', '.join(profiles)}]\n" + m.group(1), vt, count=1)
+        with open(vp, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(vt)
     fill(os.path.join(seed, 'journal.md.template'), os.path.join(target, 'log', 'journal.md'))
     fill(os.path.join(seed, 'pending.md.template'), os.path.join(target, 'log', 'pending.md'))
 

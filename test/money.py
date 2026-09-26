@@ -190,7 +190,7 @@ due_soon = (today + datetime.timedelta(days=3)).isoformat()
 agreement("instalments", clauses=f'''  repay: {{ what: "ali repays sam", by: ali, to: sam, amount: {{ count: 300, unit: XTS }}, due: {due_soon} }}
   done: {{ what: "a deposit", by: ali, to: sam, due: 2026-09-02, state: met }}
   monthly: {{ what: "ali pays sam 50 XTS a month", by: ali, to: sam, amount: {{ count: 50, unit: XTS }}, due: 2026-01-10, every: {{ of: time, in: gregorian-civil, each: month, at: "10" }} }}
-  late: {{ what: "interest on a late payment", by: ali, to: sam, amount: {{ count: 2, unit: percent }}, when: "a payment is late" }}''')
+  late: {{ what: "interest on a late payment", by: ali, to: sam, amount: {{ count: 2, unit: percent }}, when: {{ said: "a payment is late" }} }}''')
 out = gate()
 check("an agreement's clauses — a date, a repetition, a ratio, a condition — pass the gate", ok(out), out[-800:])
 code, out = ledger("instalments")

@@ -191,7 +191,10 @@ required term is covered once it fuses with another garden's bean that has it.
   quantity's count is never a float (MODEL.md, Agreements and money), and the gate warns about a float in `owns` or
   `details`.
 - **One fact written two ways is one value.** A quantity's count is compared in one form, the shortest exact decimal,
-  as a string: `900`, `"900"` and `"900.00"` are one amount, and so are `"12.50"` and `"12.5"`. A list of entries the
+  as a string: `900`, `"900"` and `"900.00"` are one amount, and so are `"12.50"` and `"12.5"`. And a measured value
+  is compared by its value in the coherent unit of its quantity (`dmunits.canonical`), its `u` or `accuracy` with it:
+  `12.5 metre` and `12500 millimetre` are one value, and the bean keeps what was written. No factor joins two
+  currencies, so an amount is compared in its own currency. A list of entries the
   law keys by an attribute (`keyed_by`, as `paid_by` and `borne_by` are keyed by `party`) is ordered by that key, so
   the same parties in another order are one list. The engine writes the canonical form; a bean keeps what was
   written.
@@ -250,7 +253,7 @@ law, J a merge conflict or uncertain identity) are defined there.
 clock values, and the deterministic id (§4.4.7, §4.6). The release suites hold it: `test/converge.py` grows gardens
 from the seed, lets them diverge, and pulls them back into one — refinements subsume, sets union, a disagreement
 keeps both values and marks the bean, every journal entry survives the union, and the result passes its gate.
-`test/mycelium.py` holds them between gardens kept by different people: the same canonical beans and candidates in
+`test/peering.py` holds them between gardens kept by different people: the same canonical beans and candidates in
 every order of three gardens, a bare name fused only within its garden, and the refusals of §16.
 
 ## 12. (nothing in force)
@@ -270,8 +273,8 @@ The number is kept so the sections after it keep theirs.
 The number is kept so that references to the sections after it hold.
 
 ## 16. Between gardens: proposals
-Two gardens kept by two gardeners never merge whole, and neither writes in the other (MODEL.md, Between gardens: the
-mycelium). What passes is a proposal (`bin/dmpropose.py`), and the algebra above serves it: the identity of §4 and
+Two gardens kept by two gardeners never merge whole, and neither writes in the other (MODEL.md, Between gardens:
+peering). What passes is a proposal (`bin/dmpropose.py`), and the algebra above serves it: the identity of §4 and
 the join of §5, applied in the receiving garden.
 
 - **A proposal is a garden of a few beans.** Its offered beans, verbatim as committed in the proposing garden, are a

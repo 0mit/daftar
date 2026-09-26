@@ -61,3 +61,74 @@ or derived from recorded evidence, and each file says which.
 ESCO (European Skills, Competences, Qualifications and Occupations), © European Union, reusable under
 Commission Decision 2011/833/EU. Attribution: "This service uses the ESCO classification of the European
 Commission." Modified or adapted versions must be marked as such.
+
+## time-zones.tsv — the civil time zones (N8)
+
+- **Source:** the IANA time zone database (tzdb), release 2026d, its `zone1970.tab`: one row for each zone whose civil
+  clocks have agreed since 1970, with the countries it overlaps (ISO 3166 codes, the most populous first), its principal
+  location (ISO 6709, `±DDMM±DDDMM` or `±DDMMSS±DDDMMSS`) and its comment where a country has several zones. One row
+  is added from the same database's `etcetera` file: `Etc/UTC`, so that a reading can be asked in UTC itself.
+- **Derived:** the rows sorted by zone; the columns renamed `zone`, `countries`, `coordinates`, `comment`.
+- **Licence:** public domain, as the database itself states.
+- **What the file is NOT:** the offsets. A zone's offset at a moment is READ, through Python's `zoneinfo` and the
+  platform's copy of the same database (`bin/dmcal.py offset`), and never stored: an offset changes when a government
+  changes it, and a stored one would be wrong from that day on without anyone having written anything.
+- **Refreshed** at a release from the tzdb release then current; a zone the database retires stays a row until no
+  garden names it, and a link (`backward`) is never a row: a zone is named by its canonical name.
+
+## ics-chart-2026-06.tsv — the units of the International Chronostratigraphic Chart (step 8)
+
+- **Source:** the International Commission on Stratigraphy's SKOS vocabulary of the chart, `chart.ttl` in
+  github.com/i-c-stratigraphy/chart, `owl:versionInfo` 2026-06 (modified 2026-06-20): 178 units.
+- **Derived:** one row per `skos:Concept` — `unit` its local name as the chart names it (`Meghalayan`,
+  `CambrianStage2`), `parent` its `skos:broader`, `rank` its `gts:rank` in lower case (`super-eon`, `eon`, `era`,
+  `period`, `sub-period`, `epoch`, `age`), `begins_ma`/`ends_ma` the `gtsd:inMYA` of `time:hasBeginning`/`hasEnd`
+  as written, their `schema:marginOfError` where stated, and `name_en` its English `skos:prefLabel`. Sorted oldest
+  first. Pridoli is ranked both Age and Epoch by the chart and is held at its higher rank, `epoch`. The chart states no
+  English label for 21 units (the Lower, Middle and Upper series of several periods, and the Upper Pleistocene): their
+  `name_en` is empty, as published, and none is invented.
+- **Licence:** CC BY 4.0, © International Commission on Stratigraphy (NOTICE).
+- **What the file is NOT:** a boundary's definition. A unit's base is fixed by its GSSP (the next file); the ages here are
+  readings of those points, and the margins are kept as the chart states them, with no probability read into them.
+
+## ics-gssps-2026-09.tsv — what fixes each unit's base: the golden spikes (step 8)
+
+- **Source:** the ICS table of Global Boundary Stratotype Sections and Points, `data/source/gssps.ttl` in
+  github.com/i-c-stratigraphy/gssps at commit 54344ff (2026-09-18): 117 boundaries.
+- **Derived:** one row per `gssp:GSSP` or `gssp:GSSA` — `boundary` the unit whose base it is (the record's own name, which
+  is the chart's unit; where the record names another unit sharing that base, the stage is kept), `fixing` `marked` for a
+  GSSP and `declared` for a GSSA (the aspect `fixing`), `at` its `geo:asWKT` point as `EPSG:4326;<lat>,<lon>` (GeoJSON and
+  WKT give longitude first; the law's form is latitude first), `level` its `gssp:boundaryLevel`, `location` its
+  `schema:location`, `status` `ratified` or `proposed` read from `schema:status`, `status_as_published` that text itself,
+  and `cite` its citation. 104 are marked and 13 declared; 88 are ratified and 27 proposed. A proposed boundary has no
+  point yet; one declared boundary (the Eoarchean) names a place as its reference, which does not fix it.
+- **Licence:** CC BY 4.0, © International Commission on Stratigraphy (NOTICE).
+- **Refreshed** at a release with the chart; a boundary ratified since moves from `proposed` with its point.
+
+## substances.tsv — substances by their chemical formula (D38)
+
+- **Source:** the formula of each substance, a fact of chemistry and no one's expression: `carbon-dioxide` CO2,
+  `dioxygen` O2, `water` H2O, `glucose` C6H12O6, and `pentacosane` C25H52 (a paraffin wax, the release's invented
+  candle's). `charge` is the net charge of one unit, 0 for these.
+- **Licence:** facts; the file is CC0 1.0.
+- **What the file is for:** `conservation` (bin/dmreckon.py) reads a walk's `takes` and `gives` against these formulas
+  and says whether every element and the charge is conserved. A substance with no one formula (a polymer, a mixture)
+  is not a row, and a walk that names one is not read for conservation.
+
+## mechanisms.yaml, coefficients.yaml — models and constants with their sources (step 9)
+
+- **Empty at this release** (`[]`): a row is added only with terms that allow it to be shipped, its `source` cited and
+  its `terms` stated (`mechanism_form`, `coefficient_form`). A garden adds its own through `registry_additions`.
+- **Licence:** the files are CC0 1.0; a row shipped later under other terms goes in a file of its own, one per licence.
+
+## crosswalk-fhir-r5-observation.tsv, crosswalk-dwc.tsv — another standard's records, carried into beans (step 11)
+
+- **Source:** the field names of HL7 FHIR R5's `Observation` resource (hl7.org/fhir/R5/observation.html; the
+  specification is published under CC0) and of Darwin Core's occurrence terms (dwc.tdwg.org/terms; CC BY 4.0,
+  Biodiversity Information Standards (TDWG)), and the UCUM codes of the units the law declares. Each row pairs one of
+  their fields with the entry path of `observations` or `located_at` that carries it; the pairings and the notes are
+  daftar's own.
+- **Licence:** the FHIR crosswalk is CC0, as FHIR is; the Darwin Core crosswalk is CC BY 4.0, as Darwin Core is, with
+  TDWG's attribution in NOTICE. The names they cite remain their publishers'.
+- **What the files are for:** `bin/dmcrosswalk.py` reads them, and nothing else, to carry records in and back. A field
+  with no row is listed, never dropped; test/crosswalk.py proves a round trip equal field for field.

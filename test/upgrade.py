@@ -27,17 +27,19 @@ def run(*a, cwd):
 TMP = tempfile.mkdtemp(prefix='dmupg-')
 REL, GARDEN = os.path.join(TMP, 'release'), os.path.join(TMP, 'garden')
 
-# ---- the release, v1: this tree's language exactly as seed/LANGUAGE declares it
+# ---- the release, v1: this tree's language exactly as seed/LANGUAGE declares it — every file the release keeps, read by
+# bin/dmpass.py, the one reader of seed/LANGUAGE (an asset of every profile the law offers among them)
 import glob
+sys.path.insert(0, os.path.join(ROOT, 'bin'))
+import dmparse, dmpass
 def release_from_tree(dst, tag):
     os.makedirs(dst)
-    pats = [l.strip() for l in open(os.path.join(ROOT, 'seed', 'LANGUAGE')) if l.strip() and not l.lstrip().startswith('#')]
-    for p in pats:
-        for f in glob.glob(os.path.join(ROOT, p)):
-            if os.path.isfile(f):
-                rel = os.path.relpath(f, ROOT)
-                os.makedirs(os.path.join(dst, os.path.dirname(rel)), exist_ok=True)
-                shutil.copy2(f, os.path.join(dst, rel))
+    _law = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, 'seed', 'std-vocab.md'), encoding='utf-8').read())[0])
+    for rel in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
+                           dmpass.language(open(os.path.join(ROOT, 'seed', 'LANGUAGE'), encoding='utf-8').read()),
+                           dmpass.offered(_law)):
+        os.makedirs(os.path.join(dst, os.path.dirname(rel)), exist_ok=True)
+        shutil.copy2(os.path.join(ROOT, rel), os.path.join(dst, rel))
     run('git', 'init', '-q', cwd=dst); run('git', 'add', '-A', cwd=dst)
     run('git', 'commit', '-qm', tag, cwd=dst); run('git', 'tag', tag, cwd=dst)
 release_from_tree(REL, 'v0.1.0')
@@ -148,6 +150,9 @@ open(os.path.join(GARDEN, 'beans', 'sam.md'), 'w').write(_ex['beans/sam.md'] + '
 open(os.path.join(GARDEN, 'beans', 'vps-a.md'), 'w').write(_ex['beans/vps-a.md'].replace('provides_habitat: linux-vm\n', 'provides_habitat: linux-vm\nos: debian\n') + '\n')
 _gp = os.path.join(GARDEN, 'GARDEN.md')
 _gtext = open(_gp).read()                       # read FIRST: open(..., 'w') truncates before the read would run
+# sam, the README's person, keeps this garden here: a person who is not the gardener is kept by name only on their
+# consent (24.0, F2), and what this setup needs is a garden that passes, not a second person.
+_gtext = re.sub(r'^gardener:.*$', 'gardener: sam', _gtext, count=1, flags=re.M)
 open(_gp, 'w').write(re.sub(r'^(extends: std-vocab@.*)$', r'\1\ndaftar_release: "v0.2.0"', _gtext, count=1, flags=re.M))
 subprocess.run([sys.executable, os.path.join(GARDEN, 'bin', 'dmjournal.py'), 'human (test)',
                 '[[sam]] and [[vps-a]], a debian VPS; RULE-CHANGE: release v0.2.0 recorded', '--body', '- action: added both.'],
@@ -467,7 +472,7 @@ with open(_gp21, 'w', encoding='utf-8', newline='\n') as fh:
     fh.write(_gt21)                                        # germinate as released, again
 _sv21 = os.path.join(R21, 'seed', 'std-vocab.md')
 _svt21 = open(_sv21, encoding='utf-8').read()
-_gene_in = 'in: { bean_id: { gene: [person, org] } }'
+_gene_in = 'gardener:       { in: { bean_id: { gene: [person, org] } }'   # the manifest's own line: another term may name the same gene
 
 
 def release_with_law(text, tag):
@@ -476,13 +481,13 @@ def release_with_law(text, tag):
     run('git', 'add', '-A', cwd=R21); run('git', 'commit', '-qm', tag, cwd=R21); run('git', 'tag', tag, cwd=R21)
 
 
-release_with_law(_svt21.replace(_gene_in, 'in: { bean_id: { gene: [person, org, host] } }', 1), 'v9.0.2')
+release_with_law(_svt21.replace(_gene_in, 'gardener:       { in: { bean_id: { gene: [person, org, host] } }', 1), 'v9.0.2')
 reset(_aged)
 r = up21('--gardener', 'laptop', tag='v9.0.2')
 check("...dmupgrade reads them from the release's law: one whose law lets a host keep a garden takes `laptop`",
       _svt21.count(_gene_in) == 1 and "'laptop' is a host" not in r.stdout + r.stderr
       and re.search(r'^gardener: laptop\b', get('GARDEN.md'), re.M), (r.stdout + r.stderr)[-400:])
-release_with_law(_svt21.replace(_gene_in, 'in: bean_id', 1), 'v9.0.3')
+release_with_law(_svt21.replace(_gene_in, 'gardener:       { in: bean_id', 1), 'v9.0.3')
 reset(_aged)
 r = up21('--gardener', 'sam', tag='v9.0.3')
 check("...and one whose law does not say which gene may keep a garden is REFUSED — the tool does not guess",
@@ -724,9 +729,9 @@ check("a MAPPING keeps its `kind`: it records no being, and is not a bean", get2
       get21('mappings/wind-up.md'))
 _v = get21('VOCAB.md')
 check("VOCAB.md: `local_kinds` is `local_gene`, its row's `kind` is `genos` and its `of_nature` lekton, a local term's "
-      "`required_on_kinds` is `required_on_gene` — its comments kept",
+      "`required_on_kinds` is `required_on_gene` — its comments moved to the garden's reasons (24.0: the law carries none)",
       re.search(r'(?m)^local_gene:$', _v) and '- { genos: widget, of_nature: "lekton", meaning:' in _v
-      and 'required_on_gene: [widget] }   # a widget names it' in _v and '# a genos this estate needs, as 21.0 spelled it' in _v
+      and 'required_on_gene: [widget] }\n' in _v and 'a widget names it' not in _v and 'as 21.0 spelled it' not in _v
       and 'local_kinds' not in _v and 'required_on_kinds' not in _v, _v[:900])
 _j = get21('log/journal.md').split('\n## ')[-1]
 _tl = next((l for l in _j.splitlines() if l.startswith('- translated:')), '')
@@ -746,8 +751,13 @@ _why = run(sys.executable, p21('bin/dmwhy.py'), '--check', cwd=G21)
 check("the garden's own reasons follow the paths VOCAB.md renamed — the heading alone; what a reason says is its own",
       '\n## local_gene\n' in _rt and '\n## local_gene[widget].genos\n' in _rt
       and '\n## local_terms[widget_part].schema.required_on_gene\n' in _rt and 'A widget is a kind of made thing.' in _rt
-      and 'RATIONALE.md: 3 reasons, 0 orphaned' in _why.stdout and "RATIONALE.md, the garden's own reasons re-keyed" in _tl,
+      and 'RATIONALE.md: 5 reasons, 0 orphaned' in _why.stdout and "RATIONALE.md, the garden's own reasons re-keyed" in _tl,
       (_rt, _why.stdout[-300:], _tl[-300:]))
+check("...and each comment VOCAB.md carried is a reason now, under the name it sat on, its words as written; the "
+      "`translated:` line names them",
+      '\n## local_gene[widget]\n\na genos this estate needs, as 21.0 spelled it\n' in _rt
+      and '\n## local_terms[widget_part].schema\n\na widget names it\n' in _rt
+      and "2 comment(s) of the garden's own moved to RATIONALE.md" in _tl, (_rt, _tl[-400:]))
 _jp21 = p21('log/journal.md')
 put21('log/journal.md', get21('log/journal.md').replace(
     "(fill in who ratified — merging the release's pull request, or the word given here)", 'human (test)')
@@ -922,6 +932,7 @@ def ruled23():
 
 
 _sv23 = get23('seed/std-vocab.md')
+_V23 = re.search(r'^version: "([^"]+)"', _sv23, re.M).group(1)   # the release's: 23.1 or a later one
 _law230 = re.sub(r'(?ms)^  - term: standing\n.*?(?=^  - term: |^\S)', '',
                  re.sub(r'^version: "[^"]+"', 'version: "23.0"', _sv23, count=1, flags=re.M), count=1)
 put23('seed/std-vocab.md', _law230)
@@ -933,6 +944,7 @@ _bare23 = commit23('a garden as std-vocab 23.0 left it, with nothing of its own 
 _SHELF23 = ('  # == the garden\'s own ==\n  - term: shelf\n    meaning: "the shelf a thing is kept on"\n'
             '    context_keys: [shelf]\n    schema: { shape: scalar }\n')
 _OVERLAY23 = '  - term: status\n    schema: { values_add: [retired] }   # a value of its own on a term 23.0 had\n'
+_OVERLAY23_BARE = '  - term: status\n    schema: { values_add: [retired] }\n'
 _TERM23 = ('  # == what a document is for ==\n  - term: standing\n    meaning: "what a document of this system is FOR"\n'
            '    context_keys: [standing]\n    schema:\n      shape: list_of_entries\n      attrs:\n'
            '        doc:       { required: true, in: { pointer: bean_field_pointer } }\n'
@@ -968,10 +980,10 @@ check("the upgrade crosses into 23.1 and the gate passes on the result", r.retur
 _v23 = get23('VOCAB.md')
 check("VOCAB.md loses the garden's own term the law now declares, and the vacancy on it; every other byte stays, the "
       "comment between the terms with it",
-      _v23 == _vocab230.replace(_TERM23_BODY, '', 1).replace(_VAC23, 'vacancies: []\n', 1).replace('std-vocab@23.0', 'std-vocab@23.1', 1),
-      _v23[:900])
-check("...and an overlay on a term the law it ran already had is the garden's on purpose: it stays, byte for byte",
-      _OVERLAY23 in _v23 and 'status: retired' in get23('beans/sam.md'), _v23[:900])
+      _v23 == _vocab230.replace(_TERM23_BODY, '', 1).replace(_VAC23, 'vacancies: []\n', 1).replace('std-vocab@23.0', f'std-vocab@{_V23}', 1)
+      .replace(_OVERLAY23, _OVERLAY23_BARE, 1), _v23[:900])
+check("...and an overlay on a term the law it ran already had is the garden's on purpose: it stays, its comment a reason now",
+      _OVERLAY23_BARE in _v23 and 'status: retired' in get23('beans/sam.md'), _v23[:900])
 check("the entries that placed log/pending.md in journal and AGENTS.md in law are taken out, a comment with its own; the "
       "one placing MODEL.md in law stays, and nothing else of the bean moves",
       get23('beans/sam.md') == _sam23.replace(_PENDING23, '', 1).replace(_AGENTS23, '', 1), get23('beans/sam.md')[-500:])
@@ -979,11 +991,13 @@ check("...and the files a change to which is a RULE-CHANGE are the same after th
       "AGENTS.md in law leaves, and the release still keeps the file",
       _ruled_before == ruled23() and 'AGENTS.md' in _ruled_before and 'MODEL.md' in _ruled_before,
       (_ruled_before, ruled23()))
-check("the garden's own reasons are left as written", get23('RATIONALE.md') == _WHY23, get23('RATIONALE.md'))
+check("the garden's own reasons are left as written; the comment VOCAB.md carried joins them, under the name it sat on",
+      get23('RATIONALE.md') == _WHY23 + '\n## local_terms[status].schema\n\na value of its own on a term 23.0 had\n',
+      get23('RATIONALE.md'))
 _tl, _j = tline23()
 _bl = next((l for l in _j.splitlines() if l.startswith('- beans:')), '')
 check("the `translated:` line names the term, the vacancy, the reasons left behind and the entries — and nothing that stayed",
-      'std-vocab 23.1' in _tl and "the garden's own term `standing` taken out" in _tl and 'standing.standing = history' in _tl
+      f'std-vocab {_V23}' in _tl and "the garden's own term `standing` taken out" in _tl and 'standing.standing = history' in _tl
       and '`## local_terms[standing].meaning`' in _tl and '`## vacancies[standing.standing]`' in _tl
       and 'local_terms[shelf]' not in _tl and '`status`' not in _tl
       and '[[sam]] `standing`: the entry file:log/pending.md (journal) taken out' in _tl and 'in queue' in _tl
@@ -1171,6 +1185,173 @@ check("a whole list with a column-0 comment between its entries is taken out who
       (_n, _k))
 check("dmupgrade names no term of its own: the terms it translates are read from the two laws",
       not re.search(r'''['"]standing['"]''', open(os.path.join(ROOT, 'bin', 'dmupgrade.py'), encoding='utf-8').read()))
+
+# ==== CROSSING INTO std-vocab 24.0: a clause's `when` a reading or the words, and what only a person can say ==========
+# A garden grown from this tree and AGED into 23.1's shape: its law's version said 23.1, and beans a garden at 23.1 could
+# hold — an agreement whose clauses say what brings them into force in prose (plain, quoted, folded, and one already in
+# 24.0's words), a person kept by name with no consent and an employee number with no issuer, a transaction's amount
+# with a key of its own, and a walk's step with a key of its own. The upgrade writes each prose `when` as
+# `{said: <the same words>}` and nothing else; what only a person can say it LISTS, from the release's own gate, and
+# moves none.
+R24, G24 = os.path.join(TMP, 'release24'), os.path.join(TMP, 'garden24')
+release_from_tree(R24, 'v9.3.0')
+g = run(sys.executable, os.path.join(R24, 'seed', 'germinate.py'), G24, '--gardener', 'sam', '--gardener-name', 'Sam', cwd=R24)
+check("(setup) a garden grows from a release at std-vocab 24.0", g.returncode == 0, (g.stdout + g.stderr)[-300:])
+
+
+def p24(rel):
+    return os.path.join(G24, *rel.split('/'))
+
+
+def put24(rel, text):
+    os.makedirs(os.path.dirname(p24(rel)), exist_ok=True)
+    with open(p24(rel), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(text)
+
+
+def get24(rel):
+    return open(p24(rel), encoding='utf-8').read()
+
+
+def up24(*extra, tag='v9.3.0'):
+    e = dict(os.environ, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@x', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@x')
+    return subprocess.run([sys.executable, p24('bin/dmupgrade.py'), tag, '--from', R24, *extra], capture_output=True,
+                          text=True, encoding='utf-8', errors='replace', cwd=G24, env=e)
+
+
+def commit24(msg):
+    run('git', 'add', '-A', cwd=G24); run('git', 'commit', '-qm', msg, '--no-verify', cwd=G24)
+    return run('git', 'rev-parse', 'HEAD', cwd=G24).stdout.strip()
+
+
+def untouched24(head):
+    return (not run('git', 'status', '--porcelain', '--untracked-files=all', cwd=G24).stdout.strip()
+            and run('git', 'rev-parse', 'HEAD', cwd=G24).stdout.strip() == head)
+
+
+def reset24(to):
+    run('git', 'reset', '-q', '--hard', to, cwd=G24); run('git', 'clean', '-qfdx', '-e', '.git', cwd=G24)
+
+
+_V24 = re.search(r'^version: "([^"]+)"', get24('seed/std-vocab.md'), re.M).group(1)
+put24('seed/std-vocab.md', re.sub(r'^version: "[^"]+"', 'version: "23.1"', get24('seed/std-vocab.md'), count=1, flags=re.M))
+for _d in ('VOCAB.md', 'GARDEN.md'):
+    put24(_d, re.sub(r'^(extends: std-vocab@)\S+', r'\g<1>23.1', get24(_d), count=1, flags=re.M))
+put24('GARDEN.md', re.sub(r'^daftar_release:.*$', 'daftar_release: "v9.2.9"  # the daftar release this garden runs; '
+                          'bin/dmupgrade.py moves it', get24('GARDEN.md'), count=1, flags=re.M))
+# its changelog as 23.1 left it: the release's newest entry, which goes ABOVE the one before, not yet there
+_cl = get24('seed/CHANGELOG.md')
+put24('seed/CHANGELOG.md', re.sub(r'^- \*\*24\.0\*\*.*?(?=^- \*\*23\.1\*\*)', '', _cl, count=1, flags=re.M | re.S))
+_ali = ('---\nbean: ali\ngenos: person\ntitle: "Ali"\nstatus: active\nsummary: "a neighbour"\nnature: empsychon\n'
+        'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n'
+        'identity: { status: confirmed, anchors: [ { key: person_id, value: "person:ali", class: logical, establishing: true },'
+        ' { key: emp_id, value: "0042", class: logical, establishing: true } ] }\n'
+        'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n---\nA neighbour.\n')
+put24('beans/ali.md', _ali)
+_bo = _ali.replace('bean: ali', 'bean: bo', 1).replace('title: "Ali"', 'title: "Bo"', 1).replace(
+    'person:ali', 'person:bo', 1).replace(', { key: emp_id, value: "0042", class: logical, establishing: true }', '', 1)
+put24('beans/bo.md', _bo)             # a party to nothing: no consent of theirs is recorded
+_WHEN_PLAIN = '    when: the roof is on, and the scaffold is down\n'
+_WHEN_QUOTED = "    when: 'the gutters are hung'   # as Ali put it\n"
+_WHEN_FOLDED = '    when: >\n      the first frost\n      after the roof\n'
+_WHEN_SAID = '    when: { said: "the tiles arrive" }\n'
+_AMOUNT = '    amount: { count: "80.00", unit: XTS }\n'
+_roof = ('---\nbean: roof-work\ngenos: contract\ntitle: "roof-work — Ali retiles Sam\'s shed"\nstatus: active\n'
+         'summary: "Ali retiles the shed roof; Sam pays in parts."\nnature: lekton\n'
+         'identity:\n  status: confirmed\n  anchors:\n    - { key: contract_id, value: "contract:roof-work", class: logical, establishing: true }\n'
+         'provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-01 }\n'
+         'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
+         'parties:\n  sam: { who: { bean: sam }, role: owner, accepted: 2026-09-01 }\n'
+         '  ali: { who: { bean: ali }, role: tiler, accepted: 2026-09-01 }\n'
+         'words: { form: spoken, agreed: 2026-09-01 }\n'
+         'clauses:\n'
+         '  first-part:\n    what: "Sam pays half once the roof is on"\n    by: sam\n    to: ali\n' + _AMOUNT + _WHEN_PLAIN +
+         '  second-part:\n    what: "Sam pays the rest when the gutters are hung"\n    by: sam\n    to: ali\n' + _AMOUNT + _WHEN_QUOTED +
+         '  check-leaks:\n    what: "Ali looks at the roof for leaks"\n    by: ali\n    to: sam\n' + _WHEN_FOLDED +
+         '  order-tiles:\n    what: "Ali orders the tiles"\n    by: ali\n    to: sam\n' + _WHEN_SAID +
+         '---\nThe shed roof.\n')
+put24('beans/roof-work.md', _roof)
+_aged24 = commit24('a garden as std-vocab 23.1 left it')
+check("(setup) the garden is aged into std-vocab 23.1's shape, with clauses whose `when` is prose",
+      _V24 == '24.0' and 'std-vocab@23.1' in get24('VOCAB.md') and _WHEN_PLAIN in get24('beans/roof-work.md')
+      and '- **24.0**' in _cl and '- **24.0**' not in get24('seed/CHANGELOG.md') and '- **23.1**' in get24('seed/CHANGELOG.md'))
+
+# WHAT THE GATE REFUSES AND ONLY A PERSON CAN SAY: listed, nothing moved, everything put back
+put24('beans/roof-work.md', _roof.replace(_AMOUNT, '    amount: { count: "80.00", unit: XTS, paid_in: cash }\n', 1))
+put24('mappings/walk-roofing.md', '---\nmapping: walk-roofing\nkind: procedure\nsummary: "How a roof is retiled."\n'
+      'steps:\n  - { id: stripped, do: "the old tiles come off", weather: dry, next: [ { to: tiled } ] }\n'
+      '  - { id: tiled, do: "the new tiles go on", final: true }\n---\nThe steps of a roof.\n')
+_bad = commit24('a stray key on a quantity and on a step')
+r = up24()
+out = r.stdout + r.stderr
+_fp = out.split('FOR A PERSON', 1)[1] if 'FOR A PERSON' in out else ''
+check("a quantity holding a key of its own and a step holding a key of its own: refused, put back, and LISTED for a "
+      "person under what 24.0 asks (Q-3, N11), with the consent and issuer warnings beside them",
+      r.returncode != 0 and untouched24(_bad) and '(Q-3)' in _fp and 'paid_in' in _fp and '(N11)' in _fp
+      and 'weather' in _fp and '(F2)' in _fp and '(N17)' in _fp, out[-1500:])
+reset24(_aged24)
+
+# THE CROSSING: each prose `when` becomes `{said: <the same words>}`; nothing else moves; the rest is shown, not moved
+r = up24()
+out = r.stdout + r.stderr
+check("the upgrade crosses into 24.0 and the gate passes on the result", r.returncode == 0 and '0 error(s)' in r.stdout,
+      out[-900:])
+_rw = get24('beans/roof-work.md')
+check("each prose `when` is written `{ said: … }`: a quoted one keeps its own bytes and its comment, a plain one is "
+      "written as a string, a folded one stays a block a level deeper, one already in 24.0's words is left — and no other byte of the bean moves",
+      _rw == _roof.replace(_WHEN_PLAIN, '    when: { said: "the roof is on, and the scaffold is down" }\n', 1)
+      .replace(_WHEN_QUOTED, "    when: { said: 'the gutters are hung' }   # as Ali put it\n", 1)
+      .replace(_WHEN_FOLDED, '    when:\n      said: >\n        the first frost\n        after the roof\n', 1), _rw[-700:])
+check("...and the person and their anchor, which only a person can put right, are left as they were",
+      get24('beans/ali.md') == _ali and get24('beans/bo.md') == _bo)
+_e = get24('log/journal.md').split('\n## ')[-1]
+_tl = next((l for l in _e.splitlines() if l.startswith('- translated:')), '')
+_pl = next((l for l in _e.splitlines() if l.startswith('- for a person')), '')
+check("the `translated:` line names the bean and each clause translated; `for a person` counts what was listed",
+      "[[roof-work]] `clauses`: the prose `when` of first-part, second-part, check-leaks" in _tl and 'order-tiles' not in _tl
+      and '(F2): 1' in _pl and '(N17): 1' in _pl and 'Q-3' not in _pl, _e[-1500:])
+check("...and the tool prints the same list for the person, each line the gate's own",
+      'FOR A PERSON' in out and "bo: names a person who is not the gardener" in out
+      and "anchor 'emp_id' is issued by an organisation, and names none" in out, out[-1500:])
+put24('log/journal.md', get24('log/journal.md').replace(
+    "(fill in who ratified — merging the release's pull request, or the word given here)", 'human (test)')
+      .replace('(fill in — what this release brings that this garden adopts)', "a clause's `when` a reading or the words"))
+run('git', 'add', '-A', cwd=G24)
+c = run('git', 'commit', '-qm', 'adopt 24.0', cwd=G24)
+check("...and the crossing commits through the garden's own hook — the release's changelog, a journal the release "
+      "keeps, arriving with its newest entry above the one before (`flows[released]`, by `upgrade`)",
+      c.returncode == 0 and get24('seed/CHANGELOG.md') == _cl, (c.stdout + c.stderr)[-900:])
+_crossed = run('git', 'rev-parse', 'HEAD', cwd=G24).stdout.strip()
+put24('seed/CHANGELOG.md', _cl.replace('- **24.0** (', '- **24.0** (edited here, ', 1))
+subprocess.run([sys.executable, p24('bin/dmjournal.py'), 'human (test)', 'RULE-CHANGE: the changelog edited',
+                '--body', '- action: a hand edit.'], cwd=G24, check=True, capture_output=True)
+run('git', 'add', '-A', cwd=G24)
+c = run('git', 'commit', '-qm', 'edit the changelog', cwd=G24)
+check("...but the same journal edited by hand, in a commit that is no upgrade, is refused (`flows[journal-rewritten]`)",
+      c.returncode != 0 and 'seed/CHANGELOG.md' in c.stdout + c.stderr and 'changed or taken out' in c.stdout + c.stderr,
+      (c.stdout + c.stderr)[-600:])
+reset24(_crossed)
+
+# A PROSE `when` MERGED IN AFTER THE CROSSING — from a branch still at 23.1 — is translated as the crossing did
+put24('beans/roof-work.md', get24('beans/roof-work.md').replace(
+    '---\nThe shed roof.', '  sweep-up:\n    what: "Ali sweeps the yard"\n    by: ali\n    to: sam\n    when: the tiles are all on\n'
+    '---\nThe shed roof.', 1))
+_late = commit24('a clause from a branch still at 23.1')
+r = up24()
+out = r.stdout + r.stderr
+_e = get24('log/journal.md').split('\n## ')[-1]
+check("a prose `when` merged in after the crossing is translated, the language unchanged, and nothing listed again",
+      r.returncode == 0 and 'translated into the words of' in out and 'when: { said: "the tiles are all on" }' in
+      get24('beans/roof-work.md') and 'sweep-up' in _e and '- for a person' not in _e and 'RULE-CHANGE' not in
+      _e.splitlines()[0], out[-900:])
+run('git', 'add', '-A', cwd=G24)
+c = run('git', 'commit', '-qm', 'translate the merged clause', cwd=G24)
+check("...and commits through the hook", c.returncode == 0, (c.stdout + c.stderr)[-900:])
+_h = run('git', 'rev-parse', 'HEAD', cwd=G24).stdout.strip()
+r = up24()
+check("run again, there is nothing to do and nothing is touched",
+      r.returncode == 0 and 'nothing to do' in r.stdout and untouched24(_h), (r.stdout + r.stderr)[-600:])
+
 
 # ==== WHICH PYTHON runs the hooks and the merge driver: the first that RUNS and IMPORTS yaml =======================
 # A Windows machine's `python3` may be the Store's App execution alias: found on the PATH, running no Python. Faked

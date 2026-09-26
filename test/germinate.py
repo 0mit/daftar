@@ -66,9 +66,38 @@ provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
 nature: {nature}
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
+consent: {{ bean: consent-ada }}
 ---
 A person, written to prove a fresh garden can hold one.
 """
+
+# ANOTHER PERSON IS KEPT BY NAME ON THEIR OWN CONSENT (24.0, F2): an agreement they accepted, written beside them.
+CONSENT = """---
+bean: {id}
+genos: contract
+title: "{id}"
+status: active
+summary: "consent to be kept in this garden by name"
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - {{ key: contract_id, value: "contract:{id}", class: logical, establishing: true }}
+provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
+owned_by: {{ legal: {{ crown: logos }} }}
+responsibility: {{ legal: {{ parties: true }} }}
+parties:
+{parties}words: {{ form: spoken, agreed: 2026-09-01 }}
+---
+Their consent.
+"""
+
+
+def consent(cid, people):
+    with open(os.path.join(G, 'beans', cid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(CONSENT.format(id=cid, parties=''.join(f"  {p}: {{ who: {{ bean: {p} }}, accepted: 2026-09-01 }}\n"
+                                                         for p in people)))
+
 
 TMP = tempfile.mkdtemp(prefix='dmgerm-')
 G = os.path.join(TMP, 'newgarden')
@@ -302,12 +331,14 @@ check("every command germinate prints names a path with a space as ONE argument:
 # garden's own last commit as `untagged <sha>`, and prints no NOTE telling the stranger to check out a tag in the garden.
 _rel = os.path.join(TMP, 'tagged-release')
 os.makedirs(_rel)
-for _pat in [l.strip() for l in open(os.path.join(ROOT, 'seed', 'LANGUAGE'), encoding='utf-8')
-             if l.strip() and not l.lstrip().startswith('#')]:
-    for _f in glob.glob(os.path.join(ROOT, _pat)):
-        if os.path.isfile(_f):
-            os.makedirs(os.path.join(_rel, os.path.dirname(os.path.relpath(_f, ROOT))), exist_ok=True)
-            shutil.copy2(_f, os.path.join(_rel, os.path.relpath(_f, ROOT)))
+sys.path.insert(0, os.path.join(ROOT, 'bin'))
+import dmparse as _dmparse, dmpass as _dmpass            # the one reader of seed/LANGUAGE: what the release keeps
+_law0 = _dmparse.loads(_dmparse.split_front_matter(open(os.path.join(ROOT, 'seed', 'std-vocab.md'), encoding='utf-8').read())[0])
+for _f in _dmpass.kept([f for f in _dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
+                       _dmpass.language(open(os.path.join(ROOT, 'seed', 'LANGUAGE'), encoding='utf-8').read()),
+                       _dmpass.offered(_law0)):
+    os.makedirs(os.path.join(_rel, os.path.dirname(_f)), exist_ok=True)
+    shutil.copy2(os.path.join(ROOT, _f), os.path.join(_rel, _f))
 run('git', 'init', '-q', cwd=_rel); run('git', 'add', '-A', cwd=_rel)
 run('git', '-c', 'user.name=ada', '-c', 'user.email=ada@localhost', 'commit', '-qm', 'a release', cwd=_rel)
 run('git', 'tag', 'v9.9.9', cwd=_rel)
@@ -334,7 +365,8 @@ check("MODEL.md, CHECKLIST.md, MERGE.md, log/pending.md, the forms and every doo
       [f for f in _TRAVEL if not os.path.isfile(os.path.join(G, f))])
 
 # THE EXAMPLES IN seed/README.md AND seed/COOKBOOK.md ARE COMMITTED IN A FRESH GARDEN, so the pages cannot drift
-# from the law. The cookbook's VOCAB.md fragment is applied too, and the NAS then uses the value it adds.
+# from the law. The cookbook's VOCAB.md fragments are applied too, each merged into what earlier recipes opened, and its
+# extracts written beside them; the NAS then uses the value the last fragment adds.
 # GROWN WITHOUT --gardener (21.0), because seed/README.md teaches the gardener written by hand: the person bean and
 # the one GARDEN.md line. The flag's own path is the garden above.
 _ex_tmp = os.path.join(TMP, 'readme-examples')
@@ -342,7 +374,7 @@ run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _ex_tmp, cwd=ROOT)
 _examples, _fragments = [], []
 for _doc in ('README.md', 'COOKBOOK.md', 'WELCOME.md'):
     _page = open(os.path.join(ROOT, 'seed', _doc), encoding='utf-8').read()
-    _examples += re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _page, re.S)
+    _examples += re.findall(r'<!-- example: ((?:beans|mappings|extracts)/[a-z0-9-]+\.(?:md|tsv)) -->\n```(?:markdown|tsv)\n(.*?)\n```', _page, re.S)
     _fragments += re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', _page, re.S)
 # A BEAN SHOWN ON TWO PAGES IS SHOWN THE SAME. The gardener opens both the seed's README and the cookbook; two copies
 # are two chances to disagree, and the later one would silently win when both are written into the garden.
@@ -399,15 +431,21 @@ check("A STRANGER'S FIRST COMMIT GOES THROUGH: the gardener, the host, the manif
 _vp = os.path.join(_ex_tmp, 'VOCAB.md')
 def _apply_fragment(_frag):
     _v = open(_vp, encoding='utf-8').read()
-    for _key in re.findall(r'^([a-z_]+):', _frag, re.M):          # a key the template holds empty is REPLACED
-        _v = re.sub(rf'^{_key}: \[\].*\n', '', _v, count=1, flags=re.M)
-    _head, _sep, _rest = _v.partition('\n---\n')                   # insert before the closing fence
-    open(_vp, 'w', encoding='utf-8').write(_head + '\n' + _frag + _sep + _rest)
+    for _blk in [b for b in re.split(r'(?m)^(?=[a-z_]+:)', _frag) if b.strip()]:
+        _key = _blk.split(':', 1)[0]
+        _v = re.sub(rf'^{_key}: \[\].*\n', '', _v, count=1, flags=re.M)     # a key the template holds empty is REPLACED
+        _m = re.search(rf'(?m)^{_key}:[ \t]*\n', _v)
+        if _m:                                                          # a key an earlier recipe opened takes these too
+            _v = _v[:_m.end()] + _blk.split('\n', 1)[1].rstrip('\n') + '\n' + _v[_m.end():]
+        else:                                                           # a new key goes before the closing fence
+            _head, _sep, _rest = _v.partition('\n---\n')
+            _v = _head + '\n' + _blk.rstrip('\n') + _sep + _rest
+    open(_vp, 'w', encoding='utf-8').write(_v)
 _recipes = []
 for _doc in ('COOKBOOK.md', 'WELCOME.md'):
     _page = open(os.path.join(ROOT, 'seed', _doc), encoding='utf-8').read()
     for _sec in _page.split('\n## '):
-        _beans = re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', _sec, re.S)
+        _beans = re.findall(r'<!-- example: ((?:beans|mappings|extracts)/[a-z0-9-]+\.(?:md|tsv)) -->\n```(?:markdown|tsv)\n(.*?)\n```', _sec, re.S)
         _frags = re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', _sec, re.S)
         if _beans or _frags:
             _recipes.append((f"{_doc}: {_sec.split(chr(10), 1)[0].lstrip('# ')}", _beans, _frags))
@@ -422,6 +460,7 @@ for _name, _beans, _frags in _recipes:
     if not _changed and not _frags:
         continue                                   # a bean shown again (the gardener) is already there, unchanged
     for _path, _text in _beans:
+        os.makedirs(os.path.dirname(os.path.join(_ex_tmp, _path)), exist_ok=True)     # a walk is a mapping's
         open(os.path.join(_ex_tmp, _path), 'w', encoding='utf-8').write(_text + '\n')
     for _frag in _frags:
         _apply_fragment(_frag)
@@ -430,7 +469,7 @@ for _name, _beans, _frags in _recipes:
         _n = open(_nas, encoding='utf-8').read()
         open(_nas, 'w', encoding='utf-8').write(_n.replace('provides_habitat: linux-baremetal\n', 'provides_habitat: linux-baremetal\nos: nas-os\n', 1))
         _changed.append('beans/nas.md')
-    _names = ', '.join(f"[[{os.path.basename(p)[:-3]}]]" for p in _changed)
+    _names = ', '.join(p if p.startswith('extracts/') else f"[[{os.path.basename(p)[:-3]}]]" for p in _changed)
     run(sys.executable, os.path.join(_ex_tmp, 'bin', 'dmjournal.py'), 'human (test)', _name[:60],
         '--body', f"- action: {'RULE-CHANGE (VOCAB.md); ' if _frags else ''}{_names or 'VOCAB.md only'}", cwd=_ex_tmp)
     run('git', 'add', '-A', cwd=_ex_tmp)
@@ -442,7 +481,7 @@ for _name, _beans, _frags in _recipes:
     _committed.append(_name)
 check(f"the {len(_examples)} bean examples and {len(_fragments)} VOCAB fragments in seed/COOKBOOK.md + seed/WELCOME.md "
       f"commit one recipe at a time, in the order of the page, each with 0 errors ({len(_committed)} commits)",
-      len(_examples) >= 15 and len(_fragments) == 2 and _failed is None and len(_committed) >= 10, _failed)
+      len(_examples) >= 15 and len(_fragments) == 5 and _failed is None and len(_committed) >= 10, _failed)
 # THE VARIANTS A PAGE SHOWS BESIDE A RECIPE PASS TOO: the statement's copy on Windows, and Ali's own yes written in her
 # garden. Each is put in place of what it varies, judged by the gate, and taken back.
 _ck_page = open(os.path.join(ROOT, 'seed', 'COOKBOOK.md'), encoding='utf-8').read()
@@ -637,6 +676,7 @@ check(f"the pins are interpolated from the vocabulary itself (@{_ver}), not type
 # ---- NEGATIVE: a bean without its journal entry -------------------------------------------------------
 bean_path = os.path.join(G, 'beans', 'ada.md')
 open(bean_path, 'w', encoding='utf-8').write(BEAN.format(nature='empsychon'))
+consent('consent-ada', ('keeper', 'ada'))
 run('git', 'add', 'beans/ada.md', cwd=G)
 rc, out = gate(G)
 check("a bean staged WITHOUT a journal entry is refused (provenance duty)",
@@ -644,7 +684,8 @@ check("a bean staged WITHOUT a journal entry is refused (provenance duty)",
 
 # ---- POSITIVE: the same bean, journalled, commits -----------------------------------------------------
 run(sys.executable, os.path.join(G, 'bin', 'dmjournal.py'), 'agent', 'first bean',
-    '--body', "- action: wrote beans/ada.md to prove the garden holds one.\n- refs: beans/ada.md", cwd=G)
+    '--body', "- action: wrote beans/ada.md to prove the garden holds one, and beans/consent-ada.md, her consent.\n"
+              "- refs: beans/ada.md", cwd=G)
 run('git', 'add', '-A', cwd=G)
 rc, out = gate(G)
 check("with the journal entry, the gate passes", rc == 0 and '0 error(s)' in out, out.strip()[-300:])
@@ -764,10 +805,11 @@ def gate_on(*a, cwd=None):
 
 
 open(os.path.join(G, 'beans', 'ali.md'), 'w', encoding='utf-8').write(
-    BEAN.format(nature='empsychon').replace('ada', 'ali').replace('Ada', 'Ali')
+    BEAN.format(nature='empsychon').replace('ada', 'ali').replace('Ada', 'Ali').replace('consent-ali', 'consent-friends')
     .replace('responsibility:', 'refs: { friend: { bean: ada, rel: friend } }\nresponsibility:', 1))
+consent('consent-friends', ('keeper', 'ali', 'sam'))
 open(os.path.join(G, 'beans', 'sam.md'), 'w', encoding='utf-8').write(
-    BEAN.format(nature='empsychon').replace('ada', 'sam').replace('Ada', 'Sam')
+    BEAN.format(nature='empsychon').replace('ada', 'sam').replace('Ada', 'Sam').replace('consent-sam', 'consent-friends')
     .replace('status: active', 'status: pending'))
 rc, out, err = gate_on('beans/ali.md')
 check("`dmcheck.py beans/ali.md` judges ali: her link to ada resolves against the whole garden, sam's error is counted "

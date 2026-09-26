@@ -32,23 +32,31 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import dmparse  # noqa: E402 — the one loader, and UTF-8 streams on every platform
 import dmform   # noqa: E402 — the one reader of how the law spells an attribute
+import dmpass   # noqa: E402 — where a position's value may come from (`acts`, `origin`)
+
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+GUARDS = {
+    'law-derived': {'checks': "every form the guide shows is derived from the law, and `--check` refuses one that is not",
+                    'proof': 'test/docs.py', 'label': "seed/FORMS.md holds the shapes of six recipes"},
+}
 
 ROOT = os.path.dirname(HERE)
 FORMS, COOKBOOK, LAW = (os.path.join(ROOT, 'seed', f) for f in ('FORMS.md', 'COOKBOOK.md', 'std-vocab.md'))
-STAMPS = ('as_of', 'observed')           # written by the tool from the clock; every other date is someone's word
 DAY = r'\d{4}-\d{2}-\d{2}'
 
 
 def said_dates():
-    """{(term, attribute): the law's meaning, first clause} for every optional date attribute that is not a stamp."""
+    """{(term, attribute): the law's meaning, first clause} for every optional date attribute whose origin is `act: said` —
+    someone's word, not a reading of the clock or the world (bin/dmpass.py `Origins`)."""
     law = dmparse.loads(dmparse.split_front_matter(open(LAW, encoding='utf-8').read())[0]) or {}
-    out = {}
+    out, origins = {}, dmpass.Origins(law)
     for t in law.get('terms') or []:
         sch = t.get('schema') if isinstance(t, dict) else None
         if not isinstance(sch, dict):
             continue
         for attr, rec in (dmform.attribute_form(t.get('term'), sch).get('attrs') or {}).items():
-            if rec.get('type') == 'date' and not rec.get('required') and attr not in STAMPS:
+            if (rec.get('type') in ('date', 'date_or_moment') and not rec.get('required')
+                    and origins.said(origins.of((sch.get('attrs') or {}).get(attr)))):
                 meaning = re.split(r'(?<=[a-z])\. ', str(rec.get('meaning') or '').replace('optional: ', ''))[0].rstrip('.')
                 out[(t.get('term'), attr)] = meaning
     return out

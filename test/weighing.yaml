@@ -1,0 +1,18 @@
+# The working loop's weighing of the release's suites (D41): the maintainer's judgments, pair by pair, in the form of a
+# `weighings` entry. `python3 bin/dmreckon.py order tests <items.tsv>` reads the weights with each suite's failures and
+# measured seconds (test/timings.tsv, when it is measured). It orders the loop only; every suite still runs at a release,
+# and no gate judges this file.
+for: tests
+judge: "the maintainer"
+criteria:
+  - { name: law, what: "the suite guards what the law says: the gate, the forms, the vocabulary" }
+  - { name: data, what: "the suite guards what a garden holds: a merge, a series, money" }
+  - { name: tools, what: "the suite guards a tool a person runs: a reader, a save, an upgrade" }
+  - { name: pages, what: "the suite guards what a page shows" }
+pairwise:
+  - { a: law, b: data, judged: "2" }
+  - { a: law, b: tools, judged: "3" }
+  - { a: law, b: pages, judged: "5" }
+  - { a: data, b: tools, judged: "2" }
+  - { a: data, b: pages, judged: "3" }
+  - { a: tools, b: pages, judged: "2" }

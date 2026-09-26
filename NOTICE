@@ -20,6 +20,21 @@ Third-party data, distributed alongside daftar as separate works, each under its
     Derived from Unicode CLDR (cldr-json): Copyright © 2015-2024 Unicode, Inc. Licensed under the Unicode License v3
     (LICENSES/Unicode-3.0.txt), whose notice travels with every copy.
 
+  seed/knowledge/ics-chart-2026-06.tsv, seed/knowledge/ics-gssps-2026-09.tsv
+    Derived from the International Chronostratigraphic Chart (v2026-06) and the ICS table of GSSPs, © International
+    Commission on Stratigraphy. Licensed under CC BY 4.0 (LICENSES/CC-BY-4.0.txt). Cite the chart as: Cohen, K.M.,
+    Finney, S.C., Gibbard, P.L. & Fan, J.-X. (2013; updated) The ICS International Chronostratigraphic Chart.
+    Episodes 36: 199-204.
+
+  seed/knowledge/time-zones.tsv
+    Derived from the IANA time zone database (tzdb), release 2026d: its zone1970.tab and one row of its etcetera file.
+    In the public domain, as the database itself states (LICENSES/LicenseRef-tzdb-public-domain.txt).
+
+  seed/knowledge/crosswalk-dwc.tsv
+    Cites the names of Darwin Core's occurrence terms, © Biodiversity Information Standards (TDWG), published under
+    CC BY 4.0 (dwc.tdwg.org/terms). The pairings and notes are daftar's own, and the file is CC BY 4.0
+    (LICENSES/CC-BY-4.0.txt).
+
   seed/knowledge/isced-f-2013.tsv
     Source: UNESCO Institute for Statistics, ISCED Fields of Education and Training 2013 (ISCED-F 2013).
     Licensed under CC BY-SA 3.0 IGO (LICENSES/CC-BY-SA-3.0-IGO.txt); its share-alike applies to that file only.
@@ -31,3 +46,5 @@ Third-party data, distributed alongside daftar as separate works, each under its
     as data. A claim about it is addressed to the steward (CHARTER.md, section 2).
 
 daftar's own curated tables (seed/knowledge/technology.tsv, crosswalk-isco-08-isced-f-2013.tsv) are CC BY 4.0.
+daftar's own tables of facts (seed/knowledge/substances.tsv, mechanisms.yaml, coefficients.yaml) and the FHIR R5
+crosswalk (seed/knowledge/crosswalk-fhir-r5-observation.tsv; FHIR is published under CC0) are CC0 1.0.

@@ -20,4 +20,8 @@ daftar_choose_python || exit 1
 # The GATE (the law) and the FAST corpus suite, both over the index. Both are sub-second-to-2s;
 # a release's slower corpus tests are deliberately NOT here — a hook that slow invites --no-verify, which
 # is the failure mode a hook must avoid, and it let a failing test through on 2026-08-02.
-daftar_py "$root/bin/dmcheck.py" --staged
+daftar_py "$root/bin/dmcheck.py" --staged || exit 1
+# MATERIAL SEALED HERE IS HERE (24.0, N30): every pointer the commit adds resolves in a store on this host. The gate
+# never reads a store — it judges alike on every copy and in CI — so the hook, which runs on the host, asks dmheld.
+# Silent when nothing is added or all of it resolves.
+daftar_py "$root/bin/dmheld.py" new --staged

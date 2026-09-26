@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""mycelium — three gardens, two of them on one machine, meet only by proposal (std-vocab 21.0).
+"""peering — three gardens, two of them on one machine, meet only by proposal (std-vocab 21.0).
 
 WHAT IT PROVES. A garden is kept by its gardener and nothing outside it writes there; what one garden gives another
 is a proposal (bin/dmpropose.py), made under an agreement both gardeners are party to, laid outside every garden,
@@ -19,7 +19,7 @@ and proposes it to garden-b with ada's own bean; garden-b takes it in. Garden-a 
 knowing cai only provisionally. Nothing here is mocked: real germination, real commits through the real pre-commit
 gate, the real tools each garden received.
 
-Run: python3 test/mycelium.py   (0 = green)
+Run: python3 test/peering.py   (0 = green)
 """
 import datetime
 import itertools
@@ -115,6 +115,19 @@ def person(bid, title, anchor, by, body, extra='', more_anchors=''):
             f"nature: empsychon\nowned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
             f"identity:\n{ident}provenance: {{ src: asserted-by-human, by: \"{by}\", as_of: now }}\n{extra}"
             f"---\n{body}\n")
+
+
+def neighbours(gid, keeper, people):
+    """The agreement in which neighbours who keep no garden consented to be kept by name (24.0, F2) — named by the garden
+    that holds it, qualified, since each garden's is its own."""
+    ps = ''.join(f"  {p}: {{ who: {{ bean: {p} }}, accepted: 2026-09-20 }}\n" for p in (keeper,) + tuple(people))
+    return (f"---\nbean: neighbours\ngenos: contract\ntitle: \"Neighbours kept here by name\"\nstatus: active\n"
+            f"summary: \"The neighbours agreed to be kept in this garden by name.\"\nnature: lekton\n"
+            f"owned_by: {{ legal: {{ crown: logos }} }}\nresponsibility: {{ legal: {{ parties: true }} }}\n"
+            f"identity:\n  status: confirmed\n  anchors:\n"
+            f"    - {{ key: contract_id, value: \"{gid}/contract:neighbours\", class: logical, establishing: true }}\n"
+            f"provenance: {{ src: asserted-by-human, by: \"{keeper} (gardener)\", as_of: now }}\n"
+            f"parties:\n{ps}words: {{ form: spoken, agreed: 2026-09-20 }}\n---\nAgreed over the fence.\n")
 
 
 def garden_bean(bid, gid, owner, by):
@@ -244,8 +257,11 @@ write(A, 'neighbour-ben', person('neighbour-ben', 'Ben — gardener of garden-b'
                                  'Ben keeps garden-b, on machine two.',
                                  more_anchors='    - { key: email, value: "ben@example.org", class: logical, '
                                               'establishing: false }\n'))
-write(A, 'sam', person('sam', 'Sam — a neighbour', 'person:sam', 'ada (gardener)', 'Sam lives nearby.'))
-write(A, 'ali', person('ali', 'Ali — a friend', None, 'ada (gardener)', 'Nobody has named Ali yet.'))
+write(A, 'sam', person('sam', 'Sam — a neighbour', 'person:sam', 'ada (gardener)', 'Sam lives nearby.',
+                       extra='consent: { bean: neighbours }\n'))
+write(A, 'ali', person('ali', 'Ali — a friend', None, 'ada (gardener)', 'Nobody has named Ali yet.',
+                       extra='consent: { bean: neighbours }\n'))
+write(A, 'neighbours', neighbours(AID, 'ada', ('sam', 'ali')))
 SHARED = """---
 bean: shared-cost
 genos: contract
@@ -285,7 +301,7 @@ write(A, 'shared-cost', SHARED)
 r = commit(A, "garden-b, ben, and what ada and ben share",
            "- action: recorded [[garden-b]] (read there with dmpropose id), [[neighbour-ben]] who keeps it, "
            "[[shared-cost]] under a name this garden made up, [[ada]]'s gardening_since, and two neighbours [[sam]] "
-           "and [[ali]].")
+           "and [[ali]], kept by name on their word ([[neighbours]]).")
 check("garden-a records garden-b as a `garden` bean and the agreement (its transaction dated by `day`) — through its gate",
       r.returncode == 0 and ' 0 error(s)' in gate(A)[1], r.stdout + r.stderr + gate(A)[1])
 # The day garden-a wrote them down, as its journal tool stamped it: what later checks expect of garden-a's records, and
@@ -363,8 +379,11 @@ What ben and cai share.
 r = commit(B, "garden-a and garden-c, their gardeners, and the house costs",
            "- action: recorded [[garden-a]] and [[garden-c]] (their ids read there), [[ada]] (inferred by the agent), "
            "[[cai]], and [[house-costs]] shared with cai.")
-write(C, 'sam', person('sam', 'Sam — a neighbour', 'person:sam', 'cai (gardener)', 'Sam lives nearby.'))
-r2 = commit(C, "a neighbour", "- action: recorded [[sam]] under a name this garden made up.")
+write(C, 'sam', person('sam', 'Sam — a neighbour', 'person:sam', 'cai (gardener)', 'Sam lives nearby.',
+                       extra='consent: { bean: neighbours }\n'))
+write(C, 'neighbours', neighbours(CID, 'cai', ('sam',)))
+r2 = commit(C, "a neighbour", "- action: recorded [[sam]] under a name this garden made up, kept by name on his word "
+                              "([[neighbours]]).")
 check("garden-b records garden-a (and garden-c) the same way, and garden-c a `sam` under the same BARE name as "
       "garden-a's", r.returncode == 0 and r2.returncode == 0 and ' 0 error(s)' in gate(B)[1],
       r.stdout + r.stderr + r2.stdout + r2.stderr + gate(B)[1])
@@ -375,6 +394,9 @@ r = tool(A, 'dmpropose.py', 'make', '--to', 'garden-b', '--under', 'shared-cost'
 check("make REFUSES a bean known only by a BARE minted name — with the mint hint — and writes nothing",
       r.returncode == 1 and 'BARE' in r.out and 'dmpropose.py mint sam' in r.out and not proposals(ONE)
       and read(os.path.join(A, 'log', 'journal.md')) == jA, r.out)
+check("...and a person whose own word does not reach the other garden: no gardener, no party who accepted the agreement, "
+      "and no consent of theirs offered with them — refused by export policy (F2), naming the ways their word crosses",
+      'whose own word does not reach garden-b' in r.out and 'offer their consent agreement too (neighbours)' in r.out, r.out)
 r = tool(A, 'dmpropose.py', 'make', '--to', 'garden-b', '--under', 'shared-cost', 'ali')
 check("...and an ANCHORLESS bean too: it would identify nothing beyond this garden — and, having no name to qualify, it "
       "is told it has no identity here yet, never pointed at `mint`",
@@ -760,7 +782,8 @@ seeds = seeds_of(r.stdout)
 one = anchored(seeds, f"{AID}/contract:shared-cost")
 check("dmmerge of garden-a and garden-b yields ONE canonical agreement — not two, not four",
       len(one) == 1 and one[0]['gardens'] == ['garden-a', 'garden-b']
-      and len([s for s in seeds.values() if s['genos'] == 'contract']) == 2, sorted(seeds))
+      # each garden's own agreement with its neighbours (F2) is its own, qualified by it, and is not between the two
+      and len([k for k, s in seeds.items() if s['genos'] == 'contract' and 'neighbours' not in k]) == 2, sorted(seeds))
 ada_seed = anchored(seeds, f"{AID}/person:ada")
 check("...ada is one being in both, and her asserted day survives the merge beside the inferred reading",
       len(ada_seed) == 1 and '2026-09-01"' in json.dumps(ada_seed[0]['facts'].get('details'))
@@ -1019,9 +1042,12 @@ r = tool(B, 'dmpropose.py', 'read', p)
 check("two stubs the proposal holds apart and this garden holds as ONE being are refused, for a person (class J)",
       r.returncode == 1 and 'x1 and x2 are 2 beans in the proposal and ONE here ([[ben]])' in r.out, r.out)
 p = os.path.join(TWO, 'chat-ali.md')
+_ali_ok = neighbours('x', 'cai', ('ali',)).replace('bean: neighbours', 'bean: ali-consent').replace(
+    '"x/contract:neighbours"', '"contract:ali-consent"')
 put(p, chat('chat-20260923-1204', {'ali': person('ali', 'Ali — a friend of cai', 'person:ali', 'cai (gardener)',
-                                                 'Ali, whom cai knows.')},
-            journal="- action: added [[ali]], proposed by an assistant in chat.\n")
+                                                 'Ali, whom cai knows.', extra='consent: { bean: ali-consent }\n'),
+                                   'ali-consent': _ali_ok},
+            journal="- action: added [[ali]], proposed by an assistant in chat, kept by name on her word ([[ali-consent]]).\n")
     + "\nWhat I could not check:\n- how Ali spells her family name.\n")
 rr = tool(C, 'dmpropose.py', 'read', p)
 check("read shows what a chat proposal says OUTSIDE its blocks — what the assistant could not check — as data",
@@ -1092,7 +1118,20 @@ def read_in(g, name, text):
 
 
 statusA = git(A, 'status', '--porcelain').stdout
-r = read_in(A, 'hand-made.md', craft(from_b(), {'sam-b': sam_b()}))
+def consent_of(gid, pid, who):
+    """A neighbour's consent to be kept by name, as the garden that holds it records it — stamped as `make` stamps it —
+    carried with them: their word crosses with their name (24.0, F2), or they do not cross by name."""
+    return (f"---\nbean: {pid}-consent\ngenos: contract\ntitle: \"{pid} agrees to be kept by name\"\nstatus: active\n"
+            f"summary: \"{pid}'s consent.\"\nnature: lekton\nowned_by: {{ legal: {{ crown: logos }} }}\n"
+            f"responsibility: {{ legal: {{ parties: true }} }}\nidentity:\n  status: confirmed\n  anchors:\n"
+            f"    - {{ key: contract_id, value: \"{gid}/contract:{pid}-consent\", class: logical, establishing: true }}\n"
+            f"provenance: {{ src: asserted-by-human, by: \"{who}\", as_of: 2026-09-23, garden: \"{gid}\" }}\n"
+            f"parties:\n  kept: {{ who: {{ bean: {pid} }}, accepted: 2026-09-20 }}\n"
+            f"words: {{ form: spoken, agreed: 2026-09-20 }}\n---\nAgreed over the fence.\n")
+
+
+r = read_in(A, 'hand-made.md', craft(from_b(), {'sam-b': sam_b(extra='consent: { bean: sam-b-consent }\n'),
+                                                 'sam-b-consent': consent_of(BID, 'sam-b', 'ben (gardener)')}))
 check("(a proposal made by hand, every record stamped with its garden as `make` stamps it, is refused for nothing — "
       "so each refusal below is the stamp's)", 'REFUSED' not in r.out and re.search(r'sam-b\s+NEW', r.stdout)
       and re.search(r'GATE .*: .* 0 error\(s\)', r.stdout), r.out)
@@ -1323,7 +1362,8 @@ _csam = person('sam', 'Sam, as garden-c knows him', f'{CID}/person:sam', 'cai (g
     'as_of: now }', f'as_of: 2026-09-23, garden: "{CID}" }}')
 _ce = {'proposal': env['proposal'], 'from': {'garden': CID, 'name': 'garden-c', 'gardener': 'cai', 'pin': PIN},
        'to': {'garden': BID}, 'under': {'contract_id': f"{BID}/contract:house-costs"}, 'made': '2026-09-23 21:00+03:00'}
-r = read_in(B, 'same-name-other-garden.md', craft(_ce, {'sam': _csam}))
+r = read_in(B, 'same-name-other-garden.md', craft(_ce, {'sam': _csam.replace('---\nSam, whom', 'consent: { bean: sam-consent }\n---\nSam, whom'),
+                                                        'sam-consent': consent_of(CID, 'sam', 'cai (gardener)')}))
 check("another garden's proposal that happens to carry a name garden-b took from garden-a is not 'taken already' — "
       "a name is one garden's to give once, and compared only on that garden's own `garden` bean",
       'taken in already' not in r.out and r.returncode == 0 and 'verdict: CLEAN' in r.stdout, r.out)
@@ -1737,6 +1777,56 @@ for i, (frm, to, g) in enumerate(((A, 'garden-b', B), (B, 'garden-a', A), (A, 'g
           rr.returncode == 0 and 'verdict: CLEAN' in rr.stdout and 'REFUSED' not in rr.out
           and 'CONFLICT' not in rr.stdout + rt.stdout and rc.returncode == 0, rr.out + rt.out)
 
+# ================================================================ between gardens: the path a name travels (24.0)
+# A name passed on carries the gardens it came through: its origin first, each hop after it, the sender last. The
+# receiver trusts only the last hop — the garden it met — and refuses a path that holds its own id after the origin.
+_hc = [f for f in proposals(TWO) if f.startswith('PROPOSAL-garden-b') and 'house-costs' in read(os.path.join(TWO, f))]
+_txt = read(os.path.join(TWO, _hc[0])) if _hc else ''
+_paths = re.findall(r'(?m)^path:\n((?:- .*\n)+)', _txt)
+check("PATHS: every stub garden-b sends carries its path, ending at garden-b",
+      bool(_paths) and all(p.strip().splitlines()[-1].strip("- '\"") == BID for p in _paths), _txt[-1500:])
+if _paths:
+    looped = refingerprint(_txt.replace('path:\n' + _paths[0], f"path:\n- '{BID}'\n- '{CID}'\n- '{BID}'\n", 1))
+    put(os.path.join(TWO, 'looped.md'), looped)
+    r = tool(C, 'dmpropose.py', 'read', os.path.join(TWO, 'looped.md'))
+    check("...a path holding the receiver's own id after its origin is REFUSED as a loop",
+          r.returncode == 1 and 'a loop' in r.out, r.out[-900:])
+    odd = refingerprint(_txt.replace('path:\n' + _paths[0], f"path:\n- '{AID}'\n", 1))
+    put(os.path.join(TWO, 'odd-path.md'), odd)
+    r = tool(C, 'dmpropose.py', 'read', os.path.join(TWO, 'odd-path.md'))
+    check("...and one that does not end at the garden that sent it is REFUSED: only the last hop can be trusted",
+          r.returncode == 1 and 'does not end at the garden that sent it' in r.out, r.out[-900:])
+sys.path.insert(0, os.path.join(ROOT, 'bin'))
+import dmpropose as _dp
+_sk = _dp.anchor_lines({'identity': {'anchors': [{'key': 'org_id', 'value': f'{AID}/org:far-away', 'class': 'logical',
+                                                  'establishing': True}]}, 'path': [AID, BID]}, 'cai', CID)
+check("...a name taken in through a peer is recorded with its origin and the path after it (`garden`, `via`)",
+      f'garden: "{AID}"' in _sk and f'via: ["{BID}"]' in _sk, _sk)
+
+
+def _far(bid, origin, via):
+    return (f"---\nbean: {bid}\ngenos: org\ntitle: \"{bid}\"\nstatus: active\nsummary: \"an org known through a peer\"\n"
+            f"nature: lekton\nowned_by: {{ legal: {{ external: \"its members\" }} }}\n"
+            f"responsibility: {{ legal: {{ self: true }} }}\nidentity:\n  status: confirmed\n  anchors:\n"
+            f"    - {{ key: org_id, value: \"{origin}/org:{bid}\", class: logical, establishing: true, provenance: "
+            f"{{ src: asserted-by-human, by: \"ada (gardener)\", as_of: now, garden: \"{origin}\", via: [{', '.join(repr(v) for v in via)}] }} }}\n"
+            f"provenance: {{ src: asserted-by-human, by: \"ada (gardener)\", as_of: now }}\n---\nAn org.\n")
+
+
+for label, origin, via, ok, want in (
+        ("a name whose origin garden-a never met, passed on by garden-b which it did: accepted — only the last hop must be met",
+         'abcdef012345', [BID], True, ''),
+        ("...a path holding this garden's own id: REFUSED as a loop", 'abcdef012345', [AID, BID], False, 'a loop'),
+        ("...a last hop this garden never met: REFUSED", BID, ['abcdef012345'], False, 'does not know')):
+    write(A, 'far-away', _far('far-away', origin, via))
+    r = commit(A, "an org known through a peer", "- action: recorded [[far-away]], an org whose name came through a peer.")
+    check("THE GATE ON A PATH: " + label, (r.returncode == 0) == ok and want in r.stdout + r.stderr, r.stdout[-900:] + r.stderr[-400:])
+    if r.returncode == 0:
+        git(A, 'reset', '-q', '--hard', 'HEAD~1')
+    else:
+        git(A, 'reset', '-q', '--hard')
+        git(A, 'clean', '-qfd')
+
 shutil.rmtree(TMP, ignore_errors=True)
-print(f"\nmycelium: {sum(results)}/{len(results)} checks passed")
+print(f"\npeering: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

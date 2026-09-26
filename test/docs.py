@@ -27,6 +27,8 @@ PROSE = ["README.md", "MODEL.md", "CHECKLIST.md", "MERGE.md", "CONTRIBUTING.md",
 NOT_SHIPPED = {"test/golden.py", "test/diffgate.py"}
 # Shipped, and run by every garden's own hook rather than by the release: it needs a garden around it.
 GARDEN_ONLY = {"test/fast.py"}
+# measurements, not suites: they run the suites (timings.py) or time the gate (cost.py), and CONTRIBUTING.md says how
+MEASURES = {"test/timings.py", "test/cost.py"}
 
 text = {}
 for d in PROSE:
@@ -67,7 +69,7 @@ _live = set()
 def _collect(node):
     if isinstance(node, dict):
         for k, v in node.items():
-            if k == "attrs" and isinstance(v, (dict, list)):
+            if k in ("attrs", "entries") and isinstance(v, (dict, list)):     # an entry's attributes, nested ones too
                 _live.update(str(x) for x in v if isinstance(x, (str, int)))
             if k in ("term", "kind", "genos") and isinstance(v, str):
                 _live.add(v)
@@ -95,7 +97,8 @@ def _written(w, at, t):
         return re.search(r"(?m)^.*\bkey:.*\bvalue:.*[{,]\s*%s:|^.*[{,]\s*%s:.*\bkey:.*\bvalue:" % (e, e), t)
     if at == "manifest":
         return any(re.search(r"(?m)^%s:" % e, b) for b in _manifest_blocks(t))
-    return re.search(r"(?m)^%s:" % e, t)
+    # A NAME RETIRED ON A BEAN IS LIVE ON A MAPPING (`kind`): a mapping's own example is not a bean's
+    return re.search(r"(?m)^%s:" % e, _FENCE.sub(lambda m: '' if re.search(r"(?m)^mapping:", m.group(2)) else m.group(0), t))
 for d, t in text.items():
     hit = sorted(w for w, at in _retired.items() if _written(w, at, t))
     check(f"{d} writes no key the law retired", not hit, hit)
@@ -164,6 +167,15 @@ check("AGENTS.md puts the forms first for writing, and the law after them, on de
       0 <= text["AGENTS.md"].find("seed/FORMS.md") < text["AGENTS.md"].find("## On demand")
       < text["AGENTS.md"].find("`MODEL.md`", text["AGENTS.md"].find("## On demand")), "")
 
+# THE PROFILES MODEL.md NAMES ARE THE LAW'S. MODEL.md lists them for a reader who has not opened the law; a list kept by
+# hand is a second statement, so it is held equal to what the law offers — a profile added to the law and not named
+# here, or one named here the law no longer offers, fails by name.
+_offered = sorted(str(k) for k in (_law.get("profiles") or {}))
+_listed = re.search(r"Opt-in \*\*profiles\*\* add groups of rules for\s+gardens that need them \(([^)]*)\)", text["MODEL.md"])
+_named = sorted(re.findall(r"`([a-z][a-z0-9-]*)`", _listed.group(1))) if _listed else None
+check("MODEL.md names exactly the profiles the law offers", _named == _offered and len(_offered) >= 5,
+      f"MODEL.md: {_named}; the law: {_offered}")
+
 ci = open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8").read()
 ci_suites = set(re.findall(r"python3 (test/[a-z_]+\.py)", ci))
 assert ci_suites, "no suite was found in the workflow"
@@ -171,8 +183,10 @@ told = set(re.findall(r"(?m)^\s*python3 (test/[a-z_]+\.py)\s*$", text["CONTRIBUT
 check("CONTRIBUTING.md tells a contributor to run exactly the suites the release runs",
       told == ci_suites, f"only in CI: {sorted(ci_suites - told)}; only in the document: {sorted(told - ci_suites)}")
 on_disk = {"test/" + f for f in os.listdir(os.path.join(ROOT, "test")) if f.endswith(".py")}
-check("...and the release runs every suite that is shipped", on_disk - GARDEN_ONLY == ci_suites,
-      f"not run: {sorted(on_disk - GARDEN_ONLY - ci_suites)}; run but absent: {sorted(ci_suites - on_disk)}")
+check("...and the release runs every suite that is shipped", on_disk - GARDEN_ONLY - MEASURES == ci_suites,
+      f"not run: {sorted(on_disk - GARDEN_ONLY - MEASURES - ci_suites)}; run but absent: {sorted(ci_suites - on_disk)}")
+check("...and every measurement shipped is one CONTRIBUTING.md says how to run",
+      all(("python3 " + m) in text["CONTRIBUTING.md"] for m in MEASURES & on_disk), sorted(MEASURES & on_disk))
 
 # THE TERMS A GARDEN RECEIVES are daftar's own texts, byte for byte. A garden gets them under seed/ (`seed/LICENSE.md` and
 # `seed/LICENSE-<id>.txt`), never at its root, where they would read as the garden's own licence and an upgrade would

@@ -43,10 +43,12 @@ parts, changes).
 
    ```sh
    python3 bin/dmsafe.py
+   python3 test/assets.py
    python3 test/germinate.py
    python3 test/refusals.py
    python3 test/journal.py
    python3 test/save.py
+   python3 test/sequence.py
    python3 test/stamps.py
    python3 test/converge.py
    python3 test/upgrade.py
@@ -62,17 +64,41 @@ parts, changes).
    python3 test/recurrence.py
    python3 test/quantities.py
    python3 test/money.py
-   python3 test/mycelium.py
+   python3 test/peering.py
    python3 test/site.py
+   python3 test/terminology.py
    python3 test/public.py
    python3 test/docs.py
    python3 test/manifesto.py
    python3 test/layers.py
+   python3 test/base.py
+   python3 test/view.py
+   python3 test/viewcap.py
+   python3 test/senses.py
+   python3 test/uncertainty.py
+   python3 test/zones.py
+   python3 test/reckon.py
+   python3 test/privacy.py
+   python3 test/held.py
+   python3 test/passes.py
+   python3 test/launch.py
+   python3 test/hub.py
+   python3 test/agreements.py
+   python3 test/observations.py
+   python3 test/crosswalk.py
+   python3 test/rehearsal.py
+   python3 test/deeptime.py
    reuse lint
    ```
 
    CI runs the same on every pull request (`reuse lint` is the REUSE tool, `pip install reuse`). One exception: `test/site.py` rebuilds the pages with `site/build.py`,
    which runs the commands the pages show (`tail`, among them) as a Unix shell runs them — on Windows, in Git Bash.
+
+   Two files under test/ measure rather than judge, and CI does not run them. The one runner of the whole list is
+   `python3 test/timings.py [-j N] [--status FILE]`: it runs the suites above, N at a time, and appends each one's seconds
+   to `test/timings.tsv`. With `--status`, it also keeps a JSON document of the run in progress, which a page can draw
+   as a race. `python3 test/cost.py` measures the gate's cost per 10,000 series rows, with each YAML loader, and appends
+   it to the same file. Run it before a change that moves population-sized data.
 
 ## This repository carries the language, never a garden
 

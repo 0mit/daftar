@@ -98,6 +98,29 @@ def _law():
     return units, quantities
 
 
+def canonical(q, law=None):
+    """A measured value `{count, unit}` as ONE value, however it was written (D17): (its quantity, its value in that
+    quantity's coherent unit — the unit whose factor is one — as an exact Fraction, that unit's name). A unit with no
+    factor, a currency, is its own: two currencies are never one value. `law` is (units, quantities) where the caller
+    holds the law already (the merge does); otherwise it is read as `convert` reads it. ValueError for a unit the law
+    does not declare, or a count that is not read exactly. A COMPARISON, never a record: the bean keeps what was
+    written."""
+    units, _quantities = law or _law()
+    if not isinstance(q, dict) or not isinstance(q.get('unit'), str) or q['unit'] not in units:
+        raise ValueError(f"{q!r} is not a measured value in a unit the law declares")
+    u = units[q['unit']]
+    x = q['count'] if isinstance(q.get('count'), Fraction) else exact(q.get('count'))
+    if x is None:
+        raise ValueError(f"{q.get('count')!r}: a count is a whole number or a decimal written as a string")
+    f = u.get('factor')
+    if u.get('from_registry') or not (isinstance(f, list) and len(f) == 2):
+        return u['quantity'], x, q['unit']
+    coherent = sorted(n for n, r in units.items() if r.get('quantity') == u['quantity'] and r.get('factor') == [1, 1])
+    if not coherent:
+        return u['quantity'], x, q['unit']
+    return u['quantity'], x * Fraction(f[0], f[1]), coherent[0]
+
+
 RATE_REFUSED = "a rate is a fact someone observed: pass the one you observed, and record it with its source"
 
 
