@@ -32,6 +32,7 @@ that is a garden's own expectation, which the law does not yet mark in a column 
 
 Usage: python3 bin/dmreview.py [--all]     (--all lists every occurrence rather than a sample)
        python3 bin/dmreview.py --law [--against <git-ref>]     (also --against=<git-ref>)
+       python3 bin/dmreview.py --places                         (fixed beings stated from no other fixed being)
 """
 import difflib, errno, glob, os, re, subprocess, sys, textwrap
 from collections import Counter
@@ -65,8 +66,10 @@ _TICKS = re.compile(r'`[^`]*`')
 # The keys whose value IS a value rather than something told to a reader: an `example` of one, a `pattern` that checks
 # one (`value_pattern` too), and a term's `forms` — the ways a value is written. A story regex run over a value finds
 # the value's own digits. Every other string the law holds is read, whatever its key: a list of the keys that TELL
-# missed the `rules`, `handling` and schema-language descriptions that told story all the same.
-_VALUE_KEYS = ('example', 'pattern', 'forms')
+# missed the `rules`, `handling` and schema-language descriptions that told story all the same. `at` (24.0) is where the
+# law writes a POSITION — a datum's `1950-01-01` or `2000-01-01`, a vacancy's `registry:units` — so a date there is the
+# datum itself, which the regex would read as the day something happened.
+_VALUE_KEYS = ('example', 'pattern', 'forms', 'at')
 
 
 def is_value_key(key):
@@ -977,9 +980,39 @@ def _against(argv):
     return None, None
 
 
+def places_report():
+    """AT LEAST THE NEAREST BEING (24.0, step 7, D23): every being set in place (`mobility: fixed`) that holds a
+    coordinate and no position FROM another fixed being is named, with the fixed beings nearest it. A coordinate from
+    a receiver is good to metres; an offset taped from a mark beside it is good to centimetres, and survives the
+    receiver. Whether this being needs one is the reader's judgment — a policy printed, never a rule."""
+    import dmgeo, dmpass
+    beans = dmpass.beans_here(ROOT)
+    fixed = {}
+    for b, fm in sorted(beans.items()):
+        now = dmgeo._current(fm.get('located_at'))
+        if any(e.get('mobility') == 'fixed' for e in now):
+            fixed[b] = now
+    named = 0
+    for b, now in fixed.items():
+        rel = [e for e in now if e.get('system') == 'relative' and dmgeo.RELATIVE.match(str(e['at']))
+               and dmgeo.RELATIVE.match(str(e['at'])).group(1) in fixed]
+        geo = [e for e in now if e.get('system') == 'geographic']
+        if geo and not rel:
+            named += 1
+            try:
+                near = dmgeo.nearest(str(geo[0]['at']), root=ROOT, k=3, beans=beans)
+            except ValueError as e:
+                near, why = [], str(e)
+            _say(f"PLACES  {b}: set at {geo[0]['at']}, and stated from no other fixed being — nearest: "
+                 + (', '.join(f"{n} ≈ {m:.0f} m" for n, m in near) or 'none in its system'))
+    _say(f"PLACES  {named} of {len(fixed)} fixed being(s) hold a coordinate and no position from another fixed being")
+
+
 def main(argv):
     try:
-        if '--law' in argv:
+        if '--places' in argv:
+            places_report()
+        elif '--law' in argv:
             ref, complaint = _against(argv)
             if complaint:
                 _say(f"dmreview: {complaint}")

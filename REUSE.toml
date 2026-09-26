@@ -7,7 +7,7 @@ SPDX-PackageDownloadLocation = "https://github.com/0mit/daftar"
 [[annotations]]
 path = ["*.md", "NOTICE", "seed/*.md", "seed/LANGUAGE", "seed/PUBLIC-ALLOW",
         "seed/knowledge/SOURCES.md", "seed/knowledge/technology.tsv", "seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv",
-        "seed/knowledge/time-zones.tsv", "seed/knowledge/ics-chart-2026-06.tsv", "seed/knowledge/substances.tsv",
+        "seed/knowledge/time-zones.tsv", "seed/knowledge/substances.tsv",
         "seed/knowledge/mechanisms.yaml", "seed/knowledge/coefficients.yaml", "seed/knowledge/crosswalk-fhir-r5-observation.tsv", "seed/knowledge/crosswalk-dwc.tsv",
         "site/**/*.html", "site/*.html", "site/assets/**", "site/drawings/**", "site/machinery/drawn.json",
         "site/machinery/record.yaml", "site/RELEASE", ".github/ISSUE_TEMPLATE/**", ".github/pull_request_template.md",
@@ -44,6 +44,12 @@ path = "seed/knowledge/currencies.tsv"
 precedence = "override"
 SPDX-FileCopyrightText = "2015-2024 Unicode, Inc."
 SPDX-License-Identifier = "Unicode-3.0"
+
+[[annotations]]
+path = ["seed/knowledge/ics-chart-2026-06.tsv", "seed/knowledge/ics-gssps-2026-09.tsv"]
+precedence = "override"
+SPDX-FileCopyrightText = "International Commission on Stratigraphy"
+SPDX-License-Identifier = "CC-BY-4.0"
 
 [[annotations]]
 path = "seed/knowledge/isced-f-2013.tsv"

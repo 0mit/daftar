@@ -247,6 +247,30 @@ _elsewhere = run(sys.executable, os.path.join(G, "bin", "dmcursor.py"),
 check("...and a path no declared position covers still resolves to nothing",
       "no bean points at" in _elsewhere, _elsewhere[:300])
 
+# ONE SPELLING, ONE SYSTEM (24.0, PLACE). A position is read by the ONE system whose form it is in (bin/dmwhere.py asks
+# no one else), so no sample a system teaches — its `example`, and each backquoted spelling in its `form_note` that
+# carries no <placeholder> — may be in a second system's form. `relative` (`<bean>+…`) sits beside `local-frame`
+# (`<bean>#…`) and `along` (`<being>/<line>+…`) for exactly this reason.
+import re as _re2, dmparse as _dp
+_law = _dp.split_front_matter(open(os.path.join(ROOT, "seed", "std-vocab.md"), encoding="utf-8").read())[0]
+import yaml as _yaml
+_rows = [r for r in (_yaml.safe_load(_law).get("anchor_systems") or []) if isinstance(r, dict) and r.get("pattern") not in (None, "none")]
+_twice = []
+for _r in _rows:
+    _samples = ([_r["example"]] if _r.get("example") else []) + \
+        [x for x in _re2.findall(r"`([^`<>]+)`", str(_r.get("form_note") or "")) if ":" in x or "+" in x or "#" in x]
+    for _x in _samples:
+        _in = [o["system"] for o in _rows if _dp.law_match(o["pattern"], _x)]
+        if _r["system"] in _in and len(_in) > 1:
+            _twice.append((_x, _in))
+# ONE COLLISION IS KNOWN, found by this check when it was written and parked for the gardener (log/pending.md
+# `osm-and-network-segment-share-a-spelling`): changing either pattern changes what gardens already hold. It is named
+# here so that a second one fails.
+_KNOWN = {("relation/1234567", ("network-segment", "osm"))}
+_twice = [t for t in _twice if (t[0], tuple(sorted(t[1]))) not in _KNOWN]
+check("no sample a system teaches is in a second system's form — one spelling is read by one system (one parked)",
+      not _twice, _twice)
+
 shutil.rmtree(T, ignore_errors=True)
 print("\nplace: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

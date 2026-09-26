@@ -76,6 +76,35 @@ Commission." Modified or adapted versions must be marked as such.
 - **Refreshed** at a release from the tzdb release then current; a zone the database retires stays a row until no
   garden names it, and a link (`backward`) is never a row: a zone is named by its canonical name.
 
+## ics-chart-2026-06.tsv — the units of the International Chronostratigraphic Chart (step 8)
+
+- **Source:** the International Commission on Stratigraphy's SKOS vocabulary of the chart, `chart.ttl` in
+  github.com/i-c-stratigraphy/chart, `owl:versionInfo` 2026-06 (modified 2026-06-20): 178 units.
+- **Derived:** one row per `skos:Concept` — `unit` its local name as the chart names it (`Meghalayan`,
+  `CambrianStage2`), `parent` its `skos:broader`, `rank` its `gts:rank` in lower case (`super-eon`, `eon`, `era`,
+  `period`, `sub-period`, `epoch`, `age`), `begins_ma`/`ends_ma` the `gtsd:inMYA` of `time:hasBeginning`/`hasEnd`
+  as written, their `schema:marginOfError` where stated, and `name_en` its English `skos:prefLabel`. Sorted oldest
+  first. Pridoli is ranked both Age and Epoch by the chart and is held at its higher rank, `epoch`. The chart states no
+  English label for 21 units (the Lower, Middle and Upper series of several periods, and the Upper Pleistocene): their
+  `name_en` is empty, as published, and none is invented.
+- **Licence:** CC BY 4.0, © International Commission on Stratigraphy (NOTICE).
+- **What the file is NOT:** a boundary's definition. A unit's base is fixed by its GSSP (the next file); the ages here are
+  readings of those points, and the margins are kept as the chart states them, with no probability read into them.
+
+## ics-gssps-2026-09.tsv — what fixes each unit's base: the golden spikes (step 8)
+
+- **Source:** the ICS table of Global Boundary Stratotype Sections and Points, `data/source/gssps.ttl` in
+  github.com/i-c-stratigraphy/gssps at commit 54344ff (2026-09-18): 117 boundaries.
+- **Derived:** one row per `gssp:GSSP` or `gssp:GSSA` — `boundary` the unit whose base it is (the record's own name, which
+  is the chart's unit; where the record names another unit sharing that base, the stage is kept), `fixing` `marked` for a
+  GSSP and `declared` for a GSSA (the aspect `fixing`), `at` its `geo:asWKT` point as `EPSG:4326;<lat>,<lon>` (GeoJSON and
+  WKT give longitude first; the law's form is latitude first), `level` its `gssp:boundaryLevel`, `location` its
+  `schema:location`, `status` `ratified` or `proposed` read from `schema:status`, `status_as_published` that text itself,
+  and `cite` its citation. 104 are marked and 13 declared; 88 are ratified and 27 proposed. A proposed boundary has no
+  point yet; one declared boundary (the Eoarchean) names a place as its reference, which does not fix it.
+- **Licence:** CC BY 4.0, © International Commission on Stratigraphy (NOTICE).
+- **Refreshed** at a release with the chart; a boundary ratified since moves from `proposed` with its point.
+
 ## substances.tsv — substances by their chemical formula (D38)
 
 - **Source:** the formula of each substance, a fact of chemistry and no one's expression: `carbon-dioxide` CO2,

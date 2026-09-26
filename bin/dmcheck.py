@@ -2686,6 +2686,7 @@ def ectl_entry_pattern_from_registry(e):
                           f"owns its format so nothing invents a second spelling of it.")
         else:
             check_day_exists(f"{e.base}: {e.ref}.{rule['attr']}", val, row)
+            check_position_cells(f"{e.base}: {e.ref}.{rule['attr']}", val, row)          # PLACE (24.0)
 
 
 def ectl_entry_form_from_genos_attr(e):
@@ -3520,7 +3521,198 @@ OBS_PLIES = ((check_observations, "a reading states what it is of; a verdict ans
              (check_hearings, "N21: a ruling waits until every speaker of the entries it is over is heard"),
              (check_scheme_rows, "a published scheme says how its codes are held, and its labels and relations are its own"))
 # ---- PLACE
-PLACE_ENTRY, PLACE_PLIES = (), ()
+
+
+def _relative_from(at):
+    _m = re.match(r'^([a-z0-9][a-z0-9-]*)\+', str(at))
+    return _m.group(1) if _m else None
+
+
+def check_relative_positions():
+    """A `relative` position is stated from a being the garden holds, and that being is placed now — at a geographic
+    position, or at a relative one that resolves to one without returning to itself (24.0, step 7). Where a being
+    is, and where it was, is read from `during`: an entry whose window has closed places nothing now."""
+    def _now(fm):
+        return [e for e in (fm.get('located_at') if isinstance(fm.get('located_at'), list) else [])
+                if isinstance(e, dict) and e.get('at') is not None
+                and not (isinstance(e.get('during'), dict) and e['during'].get('to') is not None)]
+
+    def _placed(bean, path):
+        if bean in path:
+            return f"returns to itself ({' -> '.join(path + [bean])})"
+        fm = ALL_FM.get(bean)
+        if not isinstance(fm, dict):
+            return f"is stated from {bean}, which is no bean of this garden"
+        cur = _now(fm)
+        if any(e.get('system') == 'geographic' for e in cur):
+            return None
+        rel = [e for e in cur if e.get('system') == 'relative']
+        if not rel:
+            return f"is stated from {bean}, which holds no geographic position to resolve through"
+        return _placed(_relative_from(rel[0]['at']), path + [bean])
+
+    for _b, _fm in sorted(ALL_FM.items()):
+        if not isinstance(_fm, dict) or not isinstance(_fm.get('located_at'), list):
+            continue
+        for _i, _e in enumerate(_fm['located_at']):
+            if not isinstance(_e, dict) or _e.get('system') != 'relative' or _e.get('at') is None:
+                continue
+            _from = _relative_from(_e['at'])
+            if _from is None:
+                continue                    # its form is refused where every position's form is judged
+            _why = _placed(_from, [_b])
+            if _why:
+                errors.append(f"{_b}: located_at[{_i}] '{_e['at']}' {_why}")
+
+
+def _cells_of(row):
+    """{cell: its row} of a system whose cells are rows of a table (`cells_in`), with the `overlay`'s rows winning
+    over the base's (N24)."""
+    _ci, _ov = row.get('cells_in') or {}, row.get('overlay') or {}
+    _take = _ci.get('take')
+    out = {str(r.get(_take)): r for r in registry(_ci.get('registry')) or [] if isinstance(r, dict)}
+    if _ov.get('registry'):
+        out.update({str(r.get(_take)): r for r in registry(_ov['registry']) or [] if isinstance(r, dict)})
+    return out
+
+
+def check_position_cells(where, val, row):
+    """A position in a system whose cells are the rows of a table names one of them: `ics:Megalayan` is no unit of the
+    chart (24.0, step 8). The cell is what follows the position's first `:`."""
+    if not isinstance(row, dict) or not isinstance(row.get('cells_in'), dict):
+        return
+    _cell = str(val).split(':', 1)[-1]
+    _cells = _cells_of(row)
+    if _cells and _cell not in _cells:
+        errors.append(f"{where} '{val}': {_cell} is no {row['cells_in'].get('take')} of "
+                      f"{(row.get('overlay') or {}).get('registry') or row['cells_in'].get('registry')}"
+                      f"{' or ' + row['cells_in'].get('registry') if row.get('overlay') else ''} — a cell of "
+                      f"{row.get('system')} is a row of its table, spelled as the table spells it")
+
+
+def check_place_law():
+    """What a place or a time system says of its cells and units is resolved (24.0, steps 7–8, N24): `cells_in` and
+    `overlay` name registries a `registry_files` row declares, and hold the column taken; every overlay row says its
+    `source`; `unit_symbols` name units of `duration` for a time system and of `length` for a place."""
+    _units = {u.get('unit'): u.get('quantity') for u in registry('units') or [] if isinstance(u, dict)}
+    for _name, (_reg, _row) in sorted(_systems().items()):
+        _w = f"VOCAB {_reg}.{_name}"
+        for _k in ('cells_in', 'overlay'):
+            _v = _row.get(_k)
+            if _v is None:
+                continue
+            if not isinstance(_v, dict) or not _v.get('registry') or (_k == 'cells_in' and not _v.get('take')):
+                errors.append(f"{_w}: `{_k}` is {{registry: <name>{', take: <column>' if _k == 'cells_in' else ''}}} — got {_v!r}")
+                continue
+            _rows = registry(_v['registry'])
+            if not _rows:
+                errors.append(f"{_w}: `{_k}` names registry '{_v['registry']}', which holds no rows here")
+            elif _k == 'overlay':
+                for _r in _rows:
+                    if isinstance(_r, dict) and not _r.get('source'):
+                        errors.append(f"{_w}: overlay row {_r.get((_row.get('cells_in') or {}).get('take'))} says no `source` "
+                                      f"— a row that wins over the published table says whose word it is")
+        if _row.get('overlay') is not None and not _row.get('cells_in'):
+            errors.append(f"{_w}: an `overlay` lies over a table of cells, and this system names none (`cells_in`)")
+        _want = {'time': 'duration', 'place': 'length'}.get(_row.get('dimension'))
+        for _sym, _u in (_row.get('unit_symbols') or {}).items():
+            if _units.get(_u) != _want:
+                errors.append(f"{_w}: unit_symbols.{_sym} names '{_u}', which is no unit of {_want or 'this dimension'}")
+        # ONE DATUM, IN EITHER DIMENSION: a position here is an offset from a being named in it, or from a position
+        # of another system, before or after it. Two systems over one ground whose crosswalk is `computed` are
+        # computed FROM their datums, so both state one in the same system.
+        _o = _row.get('datum')
+        if _o is not None and _o != 'being':
+            if not isinstance(_o, dict) or set(_o) - {'system', 'at', 'sense'} or not _o.get('system') or not _o.get('at') \
+                    or _o.get('sense') not in ('before', 'after'):
+                errors.append(f"{_w}: `datum` is `being`, or {{system, at, sense: before | after}} — got {_o!r}")
+            elif _o['system'] not in _systems():
+                errors.append(f"{_w}: datum.system names '{_o['system']}', which is no declared system")
+            elif not law_match(_systems()[_o['system']][1].get('pattern') or '.*', str(_o['at'])):
+                errors.append(f"{_w}: datum.at '{_o['at']}' is not in {_o['system']}'s form")
+        if _row.get('crosswalk') == 'computed' and isinstance(_o, dict):
+            for _t in _row.get('same_ground_as') or []:
+                _to = (_systems().get(_t) or (None, {}))[1].get('datum')
+                if not isinstance(_to, dict) or _to.get('system') != _o.get('system'):
+                    errors.append(f"{_w}: its crosswalk to {_t} is `computed` from the two datums, and {_t} states "
+                                  f"none in {_o.get('system')}")
+        _bi = _row.get('boundaries_in')
+        if _bi is not None:
+            if not isinstance(_bi, dict) or not _bi.get('registry') or not _bi.get('take') or not _row.get('cells_in'):
+                errors.append(f"{_w}: `boundaries_in` is {{registry, take}} beside a `cells_in` — got {_bi!r}")
+                continue
+            _cells = _cells_of(_row)
+            _fix = {p.get('position') for a in registry('aspects') or [] if isinstance(a, dict) and a.get('aspect') == 'fixing'
+                    for p in a.get('positions') or [] if isinstance(p, dict)}
+            _geo = (_systems().get('geographic') or (None, {}))[1].get('pattern') or '.*'
+            for _r in registry(_bi['registry']) or []:
+                if not isinstance(_r, dict):
+                    continue
+                _b, _rw = str(_r.get(_bi['take'])), f"{_w}: boundary '{_r.get(_bi['take'])}'"
+                if _cells and _b not in _cells:
+                    errors.append(f"{_rw} is the base of no cell of {_row['cells_in'].get('registry')}")
+                if _r.get('fixing') not in _fix:
+                    errors.append(f"{_rw}: fixing '{_r.get('fixing')}' is no position of the aspect `fixing` {sorted(_fix)}")
+                if _r.get('status') not in ('ratified', 'proposed'):
+                    errors.append(f"{_rw}: status '{_r.get('status')}' — ratified or proposed")
+                if _r.get('at') and not law_match(_geo, str(_r['at'])):
+                    errors.append(f"{_rw}: at '{_r['at']}' is not a geographic position")
+                if _r.get('fixing') == 'marked' and _r.get('status') == 'ratified' and not _r.get('at') and not _r.get('being'):
+                    errors.append(f"{_rw} is marked and ratified, and says neither where the mark is (`at`) nor which "
+                                  f"being holds it (`being`)")
+
+
+def check_fixes():
+    """A boundary MARKED in a being is said at both ends, and the two agree (24.0, PLACE): the being's `fixes` entry
+    names a boundary its system's table (`boundaries_in`) lists as `marked`, at a position along one of the being's
+    own lines; and a table row that names the being (`being`) is marked by it. Either end alone is a mark nobody holds."""
+    _sys = _systems()
+    _claimed = set()
+    for _b, _fm in sorted(ALL_FM.items()):
+        _mk = _fm.get('fixes') if isinstance(_fm, dict) else None
+        if not isinstance(_mk, dict):
+            continue
+        _lines = _fm.get('lines') if isinstance(_fm.get('lines'), dict) else {}
+        for _k, _e in _mk.items():
+            if not isinstance(_e, dict):
+                continue
+            _w = f"{_b}: fixes.{_k}"
+            _row = (_sys.get(_e.get('system')) or (None, {}))[1]
+            _bi = _row.get('boundaries_in') if isinstance(_row, dict) else None
+            if not isinstance(_bi, dict):
+                errors.append(f"{_w}: {_e.get('system')} lists no boundaries (`boundaries_in`)")
+                continue
+            _r = next((r for r in registry(_bi.get('registry')) or [] if isinstance(r, dict)
+                       and str(r.get(_bi.get('take'))) == str(_e.get('boundary'))), None)
+            if _r is None:
+                errors.append(f"{_w}: '{_e.get('boundary')}' is no boundary of {_bi.get('registry')}")
+                continue
+            _claimed.add((_bi.get('registry'), str(_e.get('boundary')), _b))
+            if _r.get('fixing') != 'marked':
+                errors.append(f"{_w}: {_bi.get('registry')} says '{_e.get('boundary')}' is fixed `{_r.get('fixing')}` — "
+                              f"a boundary declared as a value is marked in no being")
+            if _r.get('being') and str(_r['being']) != _b:
+                errors.append(f"{_w}: {_bi.get('registry')} says '{_e.get('boundary')}' is marked in {_r['being']}")
+            _lv = re.match(r'^([a-z0-9][a-z0-9-]*)/([a-z0-9][a-z0-9-]*)\+', str(_e.get('level') or ''))
+            if _lv and (_lv.group(1) != _b or _lv.group(2) not in _lines):
+                errors.append(f"{_w}: level '{_e.get('level')}' is along "
+                              f"{'another being' if _lv.group(1) != _b else 'no line this being lends (`lines`)'} — a mark "
+                              f"is in the being that holds it")
+    for _name, (_reg, _row) in sorted(_sys.items()):
+        _bi = _row.get('boundaries_in')
+        if not isinstance(_bi, dict):
+            continue
+        for _r in registry(_bi.get('registry')) or []:
+            if isinstance(_r, dict) and _r.get('being') and \
+                    (_bi.get('registry'), str(_r.get(_bi.get('take'))), str(_r['being'])) not in _claimed:
+                errors.append(f"VOCAB {_bi.get('registry')}: boundary '{_r.get(_bi.get('take'))}' is marked in "
+                              f"{_r['being']}, whose `fixes` do not say so")
+
+
+PLACE_ENTRY = ()
+PLACE_PLIES = ((check_fixes, "a boundary marked in a being is said at both ends, and they agree"),
+               (check_relative_positions, "a position from another being resolves through where that being is"),
+               (check_place_law, "a system's datum, cells, boundaries and unit symbols are rows the law holds"))
 # ---- RECKON
 
 

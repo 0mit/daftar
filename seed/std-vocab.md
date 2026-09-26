@@ -802,6 +802,60 @@ anchor_systems:
     form_note: "`<ISO country>:<code or prefix>`, e.g. `IR:14155`"
     establishes: false
     why: "codes are re-drawn by the operator that issues them, and one code covers many places"
+  - system: relative
+    dimension: place
+    resolves_through: geographic
+    neighbours: metered
+    restrictions: { lines: 3, metered: length }
+    datum: being
+    meaning: "a position stated as metres EAST, NORTH and, where it says, UP from another being's own position, on the plane that touches the body there (a topocentric conversion, EPSG method 9837). It resolves through that being's geographic position at the same epoch, and that being must hold one"
+    pattern: '^[a-z0-9][a-z0-9-]*\+-?\d+(\.\d+)?,-?\d+(\.\d+)?(,-?\d+(\.\d+)?)?$'
+    form_note: "`<bean>+<east>,<north>[,<up>]`, each in metres — `marker-a+3.2,-1.5`"
+    example: "marker-a+3.2,-1.5"
+    establishes: false
+    why: "an offset says where something is from its neighbour, never which thing it is"
+  # == DEEP TIME: beyond every calendar's reach ==
+  - system: bp-1950
+    dimension: time
+    neighbours: metered
+    restrictions: { lines: 1, metered: time }
+    datum: { system: gregorian-civil, at: "1950-01-01", sense: before }
+    unit_symbols: { a: annus, ka: kilo-annus, Ma: mega-annus, Ga: giga-annus }
+    meaning: "a time BEFORE THE PRESENT, where the present is 1950, the year radiocarbon ages are reported against: beyond every calendar's reach"
+    pattern: '^bp1950:\d+(\.\d+)?(a|ka|Ma|Ga)$'
+    form_note: "`bp1950:<count><symbol>` — `bp1950:3.93ka`; the symbol names the unit (`unit_symbols`)"
+    example: "bp1950:3.93ka"
+    establishes: false
+    why: "an age says when, never what"
+  - system: b2k
+    dimension: time
+    same_ground_as: [bp-1950]
+    crosswalk: computed
+    neighbours: metered
+    restrictions: { lines: 1, metered: time }
+    datum: { system: gregorian-civil, at: "2000-01-01", sense: before }
+    unit_symbols: { a: annus, ka: kilo-annus, Ma: mega-annus, Ga: giga-annus }
+    meaning: "a time before 2000, the zero an ice-core chronology counts from"
+    pattern: '^b2k:\d+(\.\d+)?(a|ka|Ma|Ga)$'
+    form_note: "`b2k:<count><symbol>`"
+    example: "b2k:3.98ka"
+    establishes: false
+    why: "as for bp-1950"
+  - system: ics-chronostrat
+    dimension: time
+    levels: [ { level: super-eon }, { level: eon }, { level: era }, { level: period }, { level: sub-period }, { level: epoch }, { level: age } ]
+    neighbours: counted
+    restrictions: { lines: 1, order: partial }
+    cells_in: { registry: ics-chart, take: unit }
+    boundaries_in: { registry: ics-gssps, take: boundary }
+    same_ground_as: [bp-1950]
+    crosswalk: table
+    meaning: "a unit of the International Chronostratigraphic Chart: named cells on the line of deep time, each bounded by ages with the margins the chart states. A unit's base is FIXED (`fixing`) by a point in a rock section somewhere on the body, its age a reading of that point, or declared as an age with no point"
+    pattern: '^ics:[A-Z][A-Za-z0-9]*$'
+    form_note: "`ics:<unit>`, as the chart names it — `ics:Meghalayan`, `ics:CambrianStage2`"
+    example: "ics:Meghalayan"
+    establishes: false
+    why: "a cell says roughly when, never what"
 # == ROLES: what a being DOES, as against what it IS ==
 roles:
   - { role: router,             meaning: "forwards traffic between networks and decides what may cross" }
@@ -1165,8 +1219,8 @@ vacancies:
     why: "No being in this estate is recorded as a physical copy yet. It is expected and not hypothetical: this ledger's first rule is that it must survive being printed on paper and rescanned, a codebase can exist as a printed listing or a disk in a drawer, and the operator named exactly that case when this term was designed. It is the one system deliberately carrying `pattern: none`, so occupying it also exercises the deliberate-absence path."
   - at: "registry:anchor_systems"
     position: geographic
-    reason: prediction
-    why: "Declared because CIVIL TIME RESOLVES THROUGH IT — a UTC offset is a geographic fact — so a registry offering gregorian-civil while hiding what it resolves through would conceal the chain. Unoccupied because no bean states where its machine physically is: `owns.site` holds prose (a data-centre name) that has never been read as a position. Expected to fill the first time a time reading has to be reconciled across two sites — a +03:00 host read against UTC logs is the shape of that defect."
+    reason: universal
+    why: "THE ROOT OF PLACE (24.0, PLACE): every other place system resolves through it, civil time resolves through it, a position stated from another being is laid on it, and the nearest beings and a place's cells are read from it. Declared whole, whatever a garden has yet placed"
   - at: "registry:anchor_systems"
     position: event-anchored
     reason: universal
@@ -1634,6 +1688,14 @@ aspects:
       - { position: encrypted, complement: cleartext, meaning: "the payload is unreadable to anything between the two ends" }
       - { position: cleartext, complement: encrypted, meaning: "the payload is readable by anything on the path. The DEFAULT, deliberately: a channel nobody has said protects anything does not, and a default that assumed otherwise would report an estate safer than it is." }
 
+  - aspect: fixing
+    meaning: "what fixes a boundary on a line: a mark in a being, or a value stated on the line itself"
+    figure: opposition
+    poles: [marked, declared]
+    positions:
+      - { position: marked,   complement: declared, meaning: "fixed by a MARK in a being — a point in a rock section, a monument, a benchmark. The mark is the boundary; its value on the line is a reading of the mark, and a better reading moves the value and never the boundary" }
+      - { position: declared, complement: marked,   meaning: "fixed by stating its value on the line: nothing in the world marks it, and a place named beside it is a reference, not the definition" }
+
   - aspect: time
     meaning: "when: a position on the one line everything that happens is ordered along"
     figure: sequence
@@ -1691,6 +1753,7 @@ registry_files:
   - { registry: currencies,   file: seed/knowledge/currencies.tsv,   key: code }
   - { registry: time-zones,  file: seed/knowledge/time-zones.tsv,  key: zone }
   - { registry: ics-chart,   file: seed/knowledge/ics-chart-2026-06.tsv, key: unit }
+  - { registry: ics-gssps,   file: seed/knowledge/ics-gssps-2026-09.tsv, key: boundary }
   - { registry: substances,  file: seed/knowledge/substances.tsv,  key: code }
   - { registry: mechanisms,  file: seed/knowledge/mechanisms.yaml, key: mechanism, format: yaml }
   - { registry: crosswalk-fhir-r5-observation, file: seed/knowledge/crosswalk-fhir-r5-observation.tsv, key: fhir }
@@ -2240,6 +2303,8 @@ terms:
         feasibility:      { in: { aspect: feasibility, default: possible }, meaning: "the position on the feasibility aspect — whether the being CAN be in that state at all, independent of whether it may. `forbidden` + `possible` is a live risk; `forbidden` + `impossible` is already prevented by something else." }
         by:               { in: prose, meaning: "optional: who imposes it, when the enforcer is not us (e.g. a hosting provider)" }
         feasibility_why:  { in: prose, meaning: "optional: WHY the feasibility position holds — a sysctl is reversible, a kernel flag is not. Distinct from `why`, which is the reason for the PERMISSION" }
+        code:             { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme } }, code: { required: true, in: { registry_from: scheme, take: code } } } }, meaning: "the code of a published scheme this stance is on — and every code beneath it" }
+        within:           { in: { entries: { system: { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } } }, at: { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern } } } }, meaning: "the place it holds in" }
       cells:
         - { when: { permission: required, feasibility: impossible }, verdict: incoherent, why: "an unsatisfiable requirement — it must be had and cannot be. Either the requirement is not real, or the impossibility is not, and until that is resolved the entry asserts a contradiction." }
         - { when: { permission: forbidden, feasibility: necessary }, verdict: incoherent, why: "an unenforceable prohibition — it must not be had and unavoidably is. A rule that cannot be obeyed is not a rule; the being needs a different mitigation, or the necessity is overstated." }
@@ -2950,11 +3015,24 @@ terms:
         zone:       { in: { registry: time-zones, take: zone }, meaning: "the civil time zone in force at this position, a zone of the IANA time zone database: an offset is READ from it for a moment, never stored (N8)" }
         at:        { in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position itself, in that system's ONE canonical form. Required unless openness is `unknown`, which is precisely the case where there is no position to state." }
         note:      { in: prose, meaning: "optional prose — the only place a `physical` address can live, since that system declares no canonical form" }
+        mobility:  { in: [fixed, free], meaning: "fixed — the being does not move, and is not moved, while `during` holds (a rooted tree, a set mark); free — it moves. Rootedness is a position over a time, never a kind" }
+        during:    { in: extent, meaning: "when the being was at this position: a transplant is two entries, each with its window" }
       cells:
         - { when: { openness: here }, requires: [at] }
         - { when: { openness: elsewhere }, requires: [at] }
         - { when: { openness: unreachable }, requires: [at] }
     merge: { cardinality: multi, order: "by-system+at?" }
+  - term: fixes
+    meaning: "the boundaries of a system's cells this being FIXES by a mark in it (`fixing: marked`): each at a position along one of its own lines, and each the same boundary the system's table says is marked here — the two ends are held to each other"
+    context_keys: [fixes]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      attrs:
+        system:   { required: true, in: { registry: anchor_systems, take: system }, meaning: "the system whose cells' boundaries its table (`boundaries_in`) lists" }
+        boundary: { required: true, in: prose, meaning: "the boundary, as the system's table names it: the base of that cell" }
+        level:    { required: true, in: { system: along }, meaning: "where on this being the mark is, along one of its own `lines`" }
+    merge: { cardinality: multi, order: by-key }
   - term: lines
     meaning: "the LINES this being lends to positions along it (`along`): each with the point it starts from and the way it runs, once"
     context_keys: [lines]

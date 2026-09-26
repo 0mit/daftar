@@ -527,6 +527,12 @@ postal layer and an administrative tree over one territory, two classifications 
 work. `crosswalk` says how a position in one is found in another: `computed` (by rule),
 `table` (somebody publishes the correspondence), `observed` (it is looked up in what was seen),
 `none`. Neither system is the other's parent; that is what distinguishes this from `within`.
+datum             (24.0) what a position here is an offset FROM: `being`, the being the position names, or
+{system, at, sense: before | after}, a position of another system. Two systems over one ground whose
+datums are in one system are crosswalked by computing.
+cells_in          (24.0) the table whose rows are its cells, `{registry, take}`; `overlay` a table whose rows win
+over them, each with its `source`; `boundaries_in` what fixes each cell's base (`fixing`).
+unit_symbols      (24.0) the symbols its positions are written in, each naming a unit of its dimension.
 example           one position in the system's form. The gate holds it to the system's own pattern, so the form
 a reader is shown is one the gate accepts.
 THE GATE CHECKS THE SHAPE, not its use: that what a row names exists, that `within` and `resolves_through` never
@@ -2232,6 +2238,62 @@ METRES, WRITTEN IN THE POSITION (settled row 14). A counted position within a be
 a ring counted from the pith); a distance along one did not. The form names the being and its line and carries metres
 always, so it describes itself: a unit kept on the bean would silently re-read every position the day it changed. The
 `+` is required, since `<being>/<line>` alone is a network segment's form.
+
+## anchor_systems[relative]
+
+WHERE AND WHEN ARE ONE MECHANISM (24.0, PLACE; ratified 2026-09-26). A position is an offset from a DATUM: a being
+named in the position (`datum: being`), or a position of another system, before or after it. `marker-a+3.2,-1.5` is
+metres east and north of where the mark is; `bp1950:3.93ka` is anni before 1950. The two were first drafted as siblings
+— a place reader and a deep-time reader — and the operator saw they were one ("ain't it obvious yet the fuse of the time
+and place?"). An offset taped from a mark survives the receiver that placed the mark, and is good to centimetres where
+the receiver is good to metres: that is why the report of fixed beings with no such offset exists (`dmreview --places`),
+as a policy printed and never a rule. The form is `+`, since `local-frame` owns `#` and `along` owns `/`: one spelling is
+read by one system (test/place.py).
+
+## anchor_systems[bp-1950]
+
+AN AGE BEFORE THE PRESENT IS AN OFFSET, NOT A CALENDAR (24.0, step 8). Deep time lies beyond every calendar's reach,
+and the sciences that count it name their present: 1950 for radiocarbon, 2000 for ice cores. Each system states its
+datum in structure, so `b2k = bp-1950 + 50 a` is COMPUTED from the two datums and written nowhere as a constant that
+could drift from them. The unit symbols name the law's fixed-length anni, never a calendar year.
+
+## anchor_systems[ics-chronostrat]
+
+A CELL OF DEEP TIME IS FIXED BY A MARK, AND ITS AGE IS A READING (24.0, step 8). The International Chronostratigraphic
+Chart names the units of Earth's history at seven levels, and ICS fixes the base of most by a Global Boundary Stratotype
+Section and Point: one point in one rock section, where a marker appears. A better dating moves the age and never the
+boundary. The chart's units are the system's cells (`cells_in`) and the GSSPs its boundaries (`boundaries_in`), each
+shipped as published (CC BY 4.0, International Commission on Stratigraphy). The margins the chart states are kept as
+said: it gives no probability, so none is read. `AT` IS BEING-IN (در بودن, the operator's word): a position names the
+cell it is in at some level, so an age within a boundary's margin is in both cells beside it, and neither is chosen.
+
+## aspects[fixing]
+
+TWO WAYS A BOUNDARY IS FIXED, AND THEY ARE CONTRADICTORY (24.0, PLACE). ICS itself sorts its boundaries so: a GSSP is
+fixed by a point in the rock, a GSSA by an age declared with no point. The pair is general — a survey datum fixed by a
+monument, a zero fixed by decree — so it is an aspect of its own, and the pole a boundary is on says which dimension
+establishes it and which is read from it: the cut `establishes` already makes for anchors.
+
+## terms[fixes]
+
+A MARK IS SAID AT BOTH ENDS (24.0, PLACE). A boundary a table says is marked in a being, and the being that says it
+marks it, are one fact seen from two sides, and the gate holds them to each other as `inverse_of` holds a relation and
+its mirror: a mark the being does not claim, a claim the table does not make, a mark along another being's line, and a
+mark on a boundary declared as a value are refused. The level is a position `along` the being's own line: the distance
+up a quarry face, down a core, into a stalagmite.
+
+## terms[located_at].schema.attrs.mobility
+
+PLACE IS READ AT A TIME (24.0, step 7). Rootedness is a position over a window, never a kind: a tree is `fixed` while
+`during` holds, and a transplant is two entries. The readers take a moment and answer where a being was then; one that
+dropped the time would say where a tree stands today about a survey taken before it was moved. Motion is read only
+between fixed marks.
+
+## terms[capabilities].schema.attrs.within
+
+A STANCE HOLDS SOMEWHERE (24.0, N26). A permission on a code of a published scheme — and on every code beneath it — is
+held within a place, in that place's own system, so a seed library's rule for crop seed on its island is one entry and
+never a sentence.
 
 ## terms[timing].meaning
 

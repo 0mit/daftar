@@ -12,7 +12,7 @@ candidates, and a person picks the code (a model's pick is `inferred`).
     python3 bin/dmknowledge.py tree isced-f-2013 06       # a subtree, by `parent`
     python3 bin/dmknowledge.py find tile setter [--scheme S]   # candidates ranked, each with its ancestry
     python3 bin/dmknowledge.py label <scheme> <code> <language>   # a label in another language, with its attribution
-    python3 bin/dmknowledge.py at <position>              # COMPUTED anchors: an age's ICS unit, a place's nearest beings
+    python3 bin/dmknowledge.py at <position>              # COMPUTED anchors (bin/dmwhere.py): the cells it is in, its nearest
     python3 bin/dmknowledge.py gold <file.tsv>            # recall@k of `find` against a gold set a person chose
     python3 bin/dmknowledge.py resolve <scheme> <code>    # a lookup at the authority — refused until the flow law grants it
     python3 bin/dmknowledge.py bean <bean-id>             # a bean's `knowledge:` entries, resolved
@@ -155,26 +155,16 @@ def _gold(k, path, at=5):
 
 
 def _at(k, root, position):
-    """COMPUTED anchors for a position, never stored: an age before the present gives the ICS unit it falls in; a place
-    gives the nearest fixed beings. The age is written `<n><unit>` after the system's name, with a unit of years."""
-    m = re.match(r"^[a-z0-9-]+:([0-9]+(?:\.[0-9]+)?)(a|ka|ma|ga)$", position.lower())
-    if m:
-        ma = float(m.group(1)) * {"a": 1e-6, "ka": 1e-3, "ma": 1.0, "ga": 1e3}[m.group(2)]
-        if "ics-chart" not in k.decl or not k.rows("ics-chart"):
-            print("the ICS chart holds no units in this garden's law — the age cannot be placed"); return 1
-        units = [r for r in k.rows("ics-chart") if r.get("begins_ma") and float(r["begins_ma"]) >= ma
-                 and float(r.get("ends_ma") or 0) <= ma]
-        units.sort(key=lambda r: float(r["begins_ma"]) - float(r.get("ends_ma") or 0))
-        for r in units:
-            print("ics-chart %-24s %-8s %s–%s Ma" % (r.get("unit"), r.get("rank", ""), r.get("begins_ma"), r.get("ends_ma") or "0"))
-        return 0 if units else 1
-    import dmgeo
-    if not hasattr(dmgeo, "nearest"):
-        print("no reader of the nearest beings in this garden's tools (dmgeo.nearest) — a place cannot be anchored"); return 1
-    for bean, metres in dmgeo.nearest(position, root=root):
-        print("%-28s ≈ %.0f m" % (bean, metres))
+    """COMPUTED anchors for a position, never stored — read by bin/dmwhere.py, the one reader of a position in either
+    dimension: the cells it is in (an age's ICS units, a coordinate's grid cells), what fixes the nearest boundaries,
+    and the fixed beings nearest a place."""
+    import dmwhere
+    try:
+        a = dmwhere.anchors(position, root=root)
+    except ValueError as e:
+        print("dmwhere: %s" % e); return 1
+    print(dmwhere.show(a))
     return 0
-
 
 def main():
     root = os.path.dirname(HERE)

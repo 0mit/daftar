@@ -22,8 +22,7 @@ written back as a fact (manifesto: once). An act that fixes a reading records th
 (`pin_form`); `--at` reads every bean as it stood at that commit, and takes the clock as `--moment`.
 
 NOT HERE YET, and refused by name rather than guessed: a position in another reference system where PROJ is absent;
-`rotate` until PLACE's pole rows land; a distance between places (`within` a place, `neighbour-of` by distance,
-`travelled` on a map) until PLACE's bin/dmgeo.py reads one; an input read from another garden until AGREE's
+`rotate` until a pole's published rows are held (a vacancy: PLACE carried none); an input read from another garden until AGREE's
 bin/dmacross.py lands.
 
 THE API other tools call (the contract's §4):
@@ -1190,9 +1189,39 @@ class Reckoner:
         u = hyp(*[sqrt(r * r / 12)[0] for r in res.values()])
         return to_unit(V(secs, 'second', u), s['unit'], f"step {s['id']}")
 
+    def _geo(self, position, sid):
+        """A place position as a coordinate, a `relative` one resolved through the being it is stated from, at the
+        reading's moment — place is read AT a time (24.0, PLACE)."""
+        import dmgeo
+        try:
+            if dmgeo.RELATIVE.match(str(position)):
+                return dmgeo.resolve_relative(str(position), root=self.g.root, beans=self.g.fm, moment=self.now)
+            dmgeo.parse(str(position), self.g.root)             # refused here if it is not a coordinate
+            return str(position)
+        except ValueError as e:
+            raise Refused(f"step {sid}: {e}") from None
+
+    def _metres(self, measure, sid):
+        return to_unit(value_of(measure, sid, self.notes), 'metre', f"step {sid}").v
+
     def op_within(self, s):
         if 'place' in s:
-            raise Refused(f"step {s['id']}: `within` a place reads a distance, and that is PLACE's bin/dmgeo.py, not here yet")
+            import dmgeo
+            pl = s['place'] if isinstance(s['place'], dict) else {}
+            if pl.get('at') is None or not isinstance(pl.get('distance'), dict):
+                raise Refused(f"step {s['id']}: `within` a place is {{at: <a place>, distance: {{count, unit}}}}")
+            here, d = self._geo(pl['at'], s['id']), self._metres(pl['distance'], s['id'])
+            out = []
+            for m in self.arg(s, 'of', 'set'):
+                for x, _w in walk(self.g, m.node, s['path'], at=m.bean):
+                    try:
+                        if dmgeo.distance(self._geo(x, s['id']), here, self.g.root) <= d:
+                            out.append(m)
+                            break
+                    except ValueError as e:
+                        raise Refused(f"step {s['id']}: {m.id}: {e}") from None
+            self.notes.append(f"step {s['id']}: distances great-circle on the body's mean sphere (≈)")
+            return out
         ext = s.get('extent') or {}
         a, b = ext.get('from'), ext.get('to')
         out = []
@@ -1231,7 +1260,22 @@ class Reckoner:
 
     def op_neighbour_of(self, s):
         if 'distance' in s:
-            raise Refused(f"step {s['id']}: `neighbour-of` by distance reads PLACE's bin/dmgeo.py, not here yet")
+            import dmgeo
+            d, out, ids = self._metres(s['distance'], s['id']), [], set()
+            for m in self.arg(s, 'of', 'set'):
+                try:
+                    got = dmgeo.position_of(m.bean, self.g.fm, self.g.root, moment=self.now)
+                except ValueError as e:
+                    raise Refused(f"step {s['id']}: {m.bean}: {e}") from None
+                if got is None:
+                    raise Refused(f"step {s['id']}: {m.bean} holds no position to measure from at this moment")
+                for b, metres in dmgeo.nearest(got[0], root=self.g.root, k=len(self.g.fm), fixed_only=False,
+                                               beans=self.g.fm, moment=self.now):
+                    if metres <= d and b != m.bean and b not in ids:
+                        ids.add(b)
+                        out.append(Member(b, self.g.fm[b], b))
+            self.notes.append(f"step {s['id']}: distances great-circle on the body's mean sphere (≈)")
+            return out
         rel = self.reg(s['relation']) or []
         out, ids = [], set()
         for scheme, code, m in self._code_members(s):
@@ -1444,8 +1488,19 @@ class Reckoner:
         ch = self._channel(ser, s, name, s['id'])
         rows = self._live(ser, ch)
         if not rows:
-            raise Refused(f"step {s['id']}: {name}.{ch} holds no position read as a number — a position on a map is "
-                          f"measured by PLACE's bin/dmgeo.py, not here yet")
+            # A CHANNEL OF PLACES: the track a being made, each row where it was then — measured leg by leg on the map
+            import dmgeo
+            excl = ser.excluded_cells()
+            pts = [self._geo(r['cells'][ch], s['id']) for p, a, b, r in ser.places()
+                   if r['cells'].get(ch) is not None and (ser._row_key(r), ch) not in excl and (ser._row_key(r), None) not in excl]
+            if len(pts) < 2:
+                raise Refused(f"step {s['id']}: {name}.{ch} holds fewer than two positions — nothing was travelled")
+            try:
+                total = sum(Fraction(dmgeo.distance(a, b, self.g.root)) for a, b in zip(pts, pts[1:]))
+            except ValueError as e:
+                raise Refused(f"step {s['id']}: {e}") from None
+            self.notes.append(f"step {s['id']}: {len(pts) - 1} legs, great-circle on the body's mean sphere (≈)")
+            return V(total, 'metre', None, True)
         total = sum(abs(b[1] - a[1]) for a, b in zip(rows, rows[1:]))
         return V(total, ser.channels[ch].get('unit'), None, False)
 
@@ -1629,7 +1684,8 @@ class Reckoner:
         return best[2]
 
     def op_rotate(self, s):
-        raise Refused(f"step {s['id']}: `rotate` reads a pole's rows, which PLACE brings (part 9) — not here yet")
+        raise Refused(f"step {s['id']}: `rotate` reads a pole's rows of `coefficients`, and the law holds none yet — a "
+                      f"plate's published pole is added as coefficient rows with their source")
 
     def op_position_to(self, s):
         try:
@@ -1637,7 +1693,8 @@ class Reckoner:
         except ImportError:
             raise Refused(f"step {s['id']}: `position-to` needs PROJ (pyproj), and this machine has none — no "
                           f"transformation is guessed") from None
-        raise Refused(f"step {s['id']}: `position-to` through PROJ lands with PLACE (part 9)")
+        raise Refused(f"step {s['id']}: `position-to` through PROJ is not wired: no transformation is guessed, and none "
+                      f"is read until a garden's tools carry PROJ and a test holds its result")
 
 
 _FORMULA = re.compile(r'([A-Z][a-z]?)([0-9]*)|(\()|(\))([0-9]*)', re.ASCII)
