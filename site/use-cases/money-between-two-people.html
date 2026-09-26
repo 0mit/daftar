@@ -20,6 +20,7 @@
         <li><a href="../use-cases/index.html" aria-current="true">Use cases</a></li>
         <li><a href="../metaphysics.html">Metaphysics</a></li>
         <li><a href="../machinery.html">Machinery</a></li>
+        <li><a href="../terminology.html">Terminology</a></li>
         <li><a href="../contribute.html">Contribute</a></li>
         <li><a href="https://github.com/0mit/daftar">GitHub <span aria-hidden="true">↗</span></a></li>
       </ul>
@@ -120,14 +121,14 @@
     <p class="plain">Saving runs the notebook's gate over every page, not only the new one. If anything breaks a rule,
       nothing is saved, and the message says what to change.</p>
 <!-- daftar:out id="money-commit" steps="3" match="docs, \d+ error|^fast:" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;the camera sam and ali share&quot;"><code><span class="cmd">~/garden-sam$ git commit -qm "the camera sam and ali share"</span>
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 10 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">cea8b1bf570c</span>): 10 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span>
 fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
 <!-- daftar:out id="event-commit" steps="3" match="docs, \d+ error" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;the dinner at Sam&#x27;s&quot;"><code><span class="cmd">~/garden-sam$ git commit -qm "the dinner at Sam's"</span>
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 9 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">cea8b1bf570c</span>): 9 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span></code></pre><!-- /daftar:out -->
 <!-- daftar:out id="loan-recipe-commit" steps="3" match="docs, \d+ error" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;the washing-machine loan&quot;"><code><span class="cmd">~/garden-sam$ git commit -qm "the washing-machine loan"</span>
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 11 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">cea8b1bf570c</span>): 11 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span></code></pre><!-- /daftar:out --></li>
   <li class="refused"><h3><span class="tool">git commit</span> A mistake, refused</h3>
     <p class="plain">The statement's fingerprint in capital letters: refused, nothing saved, and the message names the
@@ -135,10 +136,10 @@ garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" tit
 <!-- daftar:out id="statement-refused" steps="4" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;the statement hash, as Get-FileHash prints it&quot;"><code><span class="cmd">~/garden-sam-scratch$ git commit -qm "the statement hash, as Get-FileHash prints it"</span>
 ERROR card-statement-2026-09: anchor content_hash='sha256:9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08' is not in canonical form (`sha256:` and sixty-four lowercase hexadecimal digits) (VOCAB content_hash.schema.value_pattern)
 
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 12 docs, 1 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">cea8b1bf570c</span>): 12 docs, 1 error(s), 0 warning(s)
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
 <!-- daftar:out id="statement-commit" steps="3" match="docs, \d+ error" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;the September card statement&quot;"><code><span class="cmd">~/garden-sam$ git commit -qm "the September card statement"</span>
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 12 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">cea8b1bf570c</span>): 12 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span></code></pre><!-- /daftar:out --></li>
   <li><h3><span class="tool">dmsafe</span> A payment is added by structure, not by guesswork</h3>
     <p class="plain">The first instalment goes in beside the loan. The tool edits the page by its structure, and undoes
@@ -146,7 +147,7 @@ garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" tit
 <!-- daftar:out id="loan-dmsafe" --><pre class="out" tabindex="0" aria-label="output of dmsafe.py replace-block beans/washer-loan.md transactions --b…"><code><span class="cmd">~/garden-sam$ python3 bin/dmsafe.py replace-block beans/washer-loan.md transactions --block ../instalment.yaml</span>
 dmsafe: removed nothing; added ['transactions.instalment-1.amount.count', 'transactions.instalment-1.amount.unit', 'transactions.instalment-1.borne_by[0].party', 'transactions.instalment-1.borne_by[0].share', 'transactions.instalment-1.day', 'transactions.instalment-1.paid_by[0].party', 'transactions.instalment-1.under', 'transactions.instalment-1.what']</code></pre><!-- /daftar:out -->
 <!-- daftar:out id="loan-commit" steps="3" match="docs, \d+ error" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;Ali&#x27;s first instalment&quot;"><code><span class="cmd">~/garden-sam$ git commit -qm "Ali's first instalment"</span>
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 11 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">cea8b1bf570c</span>): 11 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span></code></pre><!-- /daftar:out --></li>
   <li><h3><span class="tool">dmledger</span> It reads what is owed — never a stored balance</h3>
     <p class="plain">Each bearer owes each payer its share of what that payer paid, in fractions, so nothing is rounded.</p>
@@ -271,7 +272,7 @@ dmsafe: removed nothing; added ['transactions.instalment-1.amount.count', 'trans
 ## 2026-10-27 09:00+00:00 · sam · Ali's first instalment
 <span class="cmd">~/garden-sam$ git add -A</span>
 <span class="cmd">~/garden-sam$ git commit -qm "Ali's first instalment"</span>
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 11 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">cea8b1bf570c</span>): 11 docs, 0 error(s), 0 warning(s)
 <span class="el" title="lines left out">…</span>
 fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
 <!-- daftar:out id="loan-ledger-2" --><pre class="out" tabindex="0" aria-label="output of dmledger.py washer-loan"><code><span class="cmd">~/garden-sam$ python3 bin/dmledger.py washer-loan</span>
@@ -323,7 +324,7 @@ dmsafe: removed nothing; added nothing
 <span class="cmd">~/garden-sam-scratch$ git commit -qm "the statement hash, as Get-FileHash prints it"</span>
 ERROR card-statement-2026-09: anchor content_hash='sha256:9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08' is not in canonical form (`sha256:` and sixty-four lowercase hexadecimal digits) (VOCAB content_hash.schema.value_pattern)
 
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 12 docs, 1 error(s), 0 warning(s)
+garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">cea8b1bf570c</span>): 12 docs, 1 error(s), 0 warning(s)
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
 </section>
 
@@ -534,8 +535,8 @@ The card statement.</code></pre><!-- /daftar:bean -->
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
   <div>
-    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="../machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.33.1</code>.</p>
-    <p>Apache-2.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
+    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="../machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.38.0</code>.</p>
+    <p>Code AGPL-3.0-or-later · words and drawings CC BY 4.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
   </div>
 </footer><!-- /daftar:part -->
 </body>
