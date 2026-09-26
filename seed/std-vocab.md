@@ -1779,8 +1779,8 @@ flows:
       why: "a garden's own material never goes to a public repository" }
   - { flow: release-public, from: [manifesto, law, reasoning, guide, gate], to: public, method: publish, grant: granted, keeper: release,
       why: "what the release keeps is public under its licences" }
-  - { flow: composed-here, from: [manifesto, law, reasoning, journal, history, queue, guide, estate, gate, words, work, instructions], to: request, method: [render, show], grant: granted,
-      why: "a request composed on this host keeps what it holds on this host" }
+  - { flow: composed-here, from: [manifesto, law, reasoning, journal, history, queue, guide, estate, gate, words, work, instructions, self], to: request, method: [render, show], grant: granted,
+      why: "a request composed on this host keeps what it holds on this host, the model's own earlier turns among it" }
   - { flow: sent-out, from: [request, estate], to: remote, method: send, grant: ratified,
       why: "a hosted or remote party is refused until the gardener grants that party, with the basis the gardener's own law asks for sending there" }
   - { flow: served, from: estate, to: remote, method: serve, grant: granted,
@@ -1802,6 +1802,7 @@ pass_metadata:
   - { key: oid,    in: oid,    meaning: "the git object id of the material, as `git hash-object` gives it" }
   - { key: form,   in: form,   meaning: "how a person's words were carried: a word of `words.form`" }
   - { key: party,  in: bean,   meaning: "the bean of the party it went to, where it left the garden" }
+  - { key: quoted, in: count,  meaning: "how often the value a pass carries was found, as written, in its source; 0 where it was found nowhere quoted, and the pass is HOPED: the words may say it another way" }
 aspects:
   - aspect: necessity
     meaning: "what a being requires in order to do its work"

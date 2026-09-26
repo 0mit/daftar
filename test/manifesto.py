@@ -111,8 +111,12 @@ check("no verdict reads the manifesto: the law carries it, and only the readers 
 _NET = re.compile(r"^\s*(?:import|from)\s+(?:urllib|http|socket|requests|ftplib|smtplib)\b", re.M)
 net = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "dm*.py"))
              if _NET.search(open(f, encoding="utf-8").read()))
-check("no tool but the one that fetches a release opens a network path (manifesto: never-sells)",
-      set(net) <= {"dmupgrade.py"}, net)
+TOOL_NET = {   # each with why: never-sells is "never … anywhere its gardener did not send it"
+    "dmupgrade.py": "it fetches a release, from where the gardener's pin says",
+    "dmlaunch.py": "it sends a request only to a party the gardener's own VOCAB.md row grants by name, on a basis",
+}
+check("a tool opens a network path only where it is declared to, each with why (manifesto: never-sells)",
+      set(net) <= set(TOOL_NET), f"found {net}; declared {sorted(TOOL_NET)}")
 # AN ASSET'S CODE IS HELD THE SAME WAY, and more closely: a network module imported anywhere in an import line is found,
 # and the modules that open a network path are exactly the ones declared here, each with why — a module added that
 # opens one, or one declared that no longer does, fails by name.

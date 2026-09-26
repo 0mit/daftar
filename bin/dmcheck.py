@@ -4072,37 +4072,6 @@ def check_journal_appended():
                       f"entry of its own" + _rule('flows', 'journal-rewritten'))
 
 
-def _said_values(fm):
-    """{(dotted path, value as JSON)} of every value a front matter holds at a position whose origin is `said` — a
-    list's entry by its place, an open map's by its key."""
-    out = set()
-
-    def walk(path, entries, attrs):
-        for _lab, _e in entries:
-            if not isinstance(_e, dict):
-                continue
-            _here = f"{path}.{_lab}" if _lab is not None else path
-            for _a, _rec in attrs.items():
-                if not isinstance(_rec, dict) or _e.get(_a) is None:
-                    continue
-                _d = _rec.get('in')
-                if isinstance(_d, dict) and isinstance(_d.get('entries'), dict):
-                    _v = _e[_a]
-                    walk(f"{_here}.{_a}", list(enumerate(_v)) if isinstance(_v, list) else [(None, _v)], _d['entries'])
-                elif dmpass.Origins.said(FLOWS.origins.of(_rec)):
-                    out.add((f"{_here}.{_a}", json.dumps(_e[_a], sort_keys=True, default=str)))
-    for _k, _v in (fm.items() if isinstance(fm, dict) else []):
-        _t = FLOWS.terms.get(_k)
-        _s = _t.get('schema') if isinstance(_t, dict) else None
-        if not isinstance(_s, dict) or not isinstance(_s.get('attrs'), dict):
-            continue
-        _shape = _s.get('shape')
-        _es = (list(_v.items()) if _shape == 'open_map_of_entries' and isinstance(_v, dict) else
-               list(enumerate(_v)) if _shape == 'list_of_entries' and isinstance(_v, list) else [(None, _v)])
-        walk(str(_k), _es, _s['attrs'])
-    return out
-
-
 def _front_of(text):
     try:
         _d = dmparse.loads(dmparse.split_front_matter(text or '')[0] or '')
@@ -4181,7 +4150,7 @@ def check_pass_logs():
             continue
         _base = posixpath.basename(_p)[:-3]
         _new, _old = _front_of(_staged_text(_p)), _front_of(_head_text(_p))
-        for _path, _v in sorted(_said_values(_new) - _said_values(_old)):
+        for _path, _v in sorted(FLOWS.said_values(_new) - FLOWS.said_values(_old)):
             if (_base, _path) not in _into:
                 errors.append(f"{_p}: {_path} = {_v[:60]} is a said value this claimed commit adds, and no granted pass "
                               f"in its log has it for destination — a said value is someone's words: log the pass "

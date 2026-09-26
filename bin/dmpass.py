@@ -35,6 +35,10 @@ by default.
 AND THE FLOW LAW (24.0): `Flows.decide(source, destination, method)` — whether a pass is granted, closed by default —
 and `--flows`, each row with its guard, computed from the `GUARDS` the tools declare and the hooks that run them.
 
+AND LEG 2 (24.0): `trace` — where a said value the save is about to commit came from, through every relay to its
+terminal source — and `denied_lines`/`post_hits`, POST's look at a tool's output by content. They judge what they are
+handed; the launcher and the hook keep the material.
+
 It reads the law at the one path it has, and refuses rather than guess when the law does not parse. It opens no
 network path and writes nothing.
 """
@@ -778,6 +782,36 @@ class Flows:
                 out.append(f"metadata `{k}`: {v!r} is not {'a ' + kind if kind != 'form' else 'a word of `words.form` ' + str(self.forms)}")
         return out
 
+    def said_values(self, fm):
+        """{(dotted path, value as JSON)} of every value a front matter holds at a position whose origin is `said` — a
+        list's entry by its place, an open map's by its key. The gate's claim and the save's trace read this one."""
+        out = set()
+
+        def walk(path, entries, attrs):
+            for lab, e in entries:
+                if not isinstance(e, dict):
+                    continue
+                here = f"{path}.{lab}" if lab is not None else path
+                for a, rec in attrs.items():
+                    if not isinstance(rec, dict) or e.get(a) is None:
+                        continue
+                    d = rec.get('in')
+                    if isinstance(d, dict) and isinstance(d.get('entries'), dict):
+                        v = e[a]
+                        walk(f"{here}.{a}", list(enumerate(v)) if isinstance(v, list) else [(None, v)], d['entries'])
+                    elif Origins.said(self.origins.of(rec)):
+                        out.add((f"{here}.{a}", json.dumps(e[a], sort_keys=True, default=str)))
+        for k, v in (fm.items() if isinstance(fm, dict) else []):
+            t = self.terms.get(k)
+            sch = t.get('schema') if isinstance(t, dict) else None
+            if not isinstance(sch, dict) or not isinstance(sch.get('attrs'), dict):
+                continue
+            shape = sch.get('shape')
+            es = (list(v.items()) if shape == 'open_map_of_entries' and isinstance(v, dict) else
+                  list(enumerate(v)) if shape == 'list_of_entries' and isinstance(v, list) else [(None, v)])
+            walk(str(k), es, sch['attrs'])
+        return out
+
     # -- the law's own soundness
     def cells(self, row):
         """[(from, to, method, keeper)] a row covers, one per layer and method it names; `to` a layer, or its origin."""
@@ -1148,6 +1182,144 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
         return Answer(True, f"granted by {h}:grants[{k}]" + tail, read, asked)
     return Answer(False, f"no grant opens {act} on {bean}" + (f" at {', '.join(positions)}" if positions else '')
                   + " to " + actor + " — closed by default" + tail, read)
+
+
+# ============================== LEG 2 (24.0): what the save traces, and what POST looks for ==============================
+# The launcher (bin/dmlaunch.py) and the hook (bin/dmhook.py) keep a session's material, per clone and off git; the save
+# (bin/dmsave.py) traces each said value it is about to commit back through it. The judging is here, and reads only
+# what it is handed: it opens no store and writes nothing.
+RELAYS = ('self',)          # material that only carries: the model's own output. A session's own beans are named per call
+PERSON = ('words', 'instructions')
+DISTINCT = 8                # a needle this long names one thing; a shorter one is found everywhere, and decides nothing
+_DAY = re.compile(r'^\d{4}-\d{2}-\d{2}')
+_AMOUNT = re.compile(r'^-?\d[\d.,]{2,}$')
+
+
+def needles(value, titles=None):
+    """The strings a value would be found by in material, as written: each scalar in it, a day as the law writes it,
+    and for a bean it names, the id and that bean's title (`titles`), since words name a party, not its id."""
+    out = []
+
+    def walk(v):
+        if isinstance(v, dict):
+            if isinstance(v.get('bean'), str):
+                out.append(v['bean'])
+                t = titles(v['bean']) if callable(titles) else (titles or {}).get(v['bean'])
+                if isinstance(t, str) and t.strip():
+                    out.append(t.strip())
+            for k, x in v.items():
+                if k != 'bean':
+                    walk(x)
+        elif isinstance(v, list):
+            for x in v:
+                walk(x)
+        elif isinstance(v, bool) or v is None:
+            return
+        else:
+            s = v.isoformat() if hasattr(v, 'isoformat') else str(v)
+            if s.strip():
+                out.append(s.strip())
+    walk(value)
+    return list(dict.fromkeys(out))
+
+
+def distinctive(n):
+    """True where finding `n` in material says where it came from: a day, an amount of three digits or more, or a
+    string of DISTINCT characters or more. A short word or a small number is in everything, and proves nothing."""
+    return bool(_DAY.match(n) or _AMOUNT.match(n) or len(n) >= DISTINCT)
+
+
+def quoted(n, text):
+    """How often `n` stands in `text` as written — whole, not inside a longer word or number; case aside."""
+    return len(re.findall(r'(?<![\w])' + re.escape(n) + r'(?![\w])', text or '', re.I)) if n else 0
+
+
+class Trace(tuple):
+    """(verdict, source, method, quoted, decision): `words` — found in a person's words or instructions, the pass
+    take-down; `granted` — found only where another granted row holds (a run's capture, by `record`); `refused` — found,
+    by a distinctive needle, only where the flow law refuses it; `nowhere` — found nowhere quoted, HOPED."""
+    __slots__ = ()
+
+    def __new__(cls, verdict, source, method, n, decision=None):
+        return tuple.__new__(cls, (verdict, source, method, n, decision))
+
+    verdict = property(lambda s: s[0])
+    source = property(lambda s: s[1])
+    method = property(lambda s: s[2])
+    quoted = property(lambda s: s[3])
+    decision = property(lambda s: s[4])
+
+
+def trace(fl, value, origin, materials, skip=(), titles=None):
+    """Where a said value the save is about to commit came from, traced THROUGH EVERY RELAY to its terminal source:
+    the model's own output is skipped, and so are `skip` (the session's own beans, whose values were traced when they
+    were written, and the bean itself). `materials` is [(entry, text)], an entry {source, layer}. A person's words win
+    wherever they hold it; else a granted row; else a refusal where a distinctive needle was found; else nowhere."""
+    ns = needles(value, titles)
+    dest = (ESTATE, origin)
+    others = []
+    for e, text in materials:
+        layer, src = e.get('layer'), e.get('source') or {}
+        if layer in RELAYS or src.get('file') in skip or src.get('bean') in skip:
+            continue
+        n = sum(quoted(x, text) for x in ns)
+        if not n:
+            continue
+        if layer in PERSON:
+            d = fl.decide(layer, dest, 'take-down')
+            if d.granted:
+                return Trace('words', src, 'take-down', n, d)
+        others.append((e, n, any(distinctive(x) and quoted(x, text) for x in ns)))
+    refused = None
+    for e, n, strong in others:
+        d = fl.direction(e['layer'], dest)
+        if d.granted:
+            row = next((r for r in fl.rows if r.get('flow') in d.rows and r.get('grant') == 'granted'), {})
+            return Trace('granted', e['source'], (_list(row.get('method')) or [None])[0], n, d)
+        if strong and refused is None:
+            refused = Trace('refused', e['source'], None, n, d)
+    return refused or Trace('nowhere', {'layer': 'instructions'}, 'take-down', 0, None)
+
+
+def _line_key(s):
+    import hashlib
+    return hashlib.sha256(s.encode('utf-8')).hexdigest()[:24]
+
+
+POST_MIN = 12               # a line this long, stripped, is one line of one file; a shorter one is in many
+
+
+def denied_lines(root, m, fl, files=None):
+    """POST's index: {hash of a line: path} of every line of POST_MIN characters or more, of every file in the tree a
+    request may not carry — one in no layer (R4: refused as a launcher's source), or in a layer the flow law does not
+    let into a request by `render`. Derived from the law each time, and never kept."""
+    out = {}
+    for p in (files if files is not None else tracked(root)):
+        layer = m.layer_of(p)[0]
+        if layer and fl.decide(layer, 'request', 'render', 'release' if m.keeper_of(p) == 'release' else None).granted:
+            continue
+        f = os.path.join(root, *p.split('/'))
+        try:
+            if os.path.getsize(f) > 1 << 20:
+                continue
+            with open(f, encoding='utf-8') as fh:
+                text = fh.read()
+        except (OSError, UnicodeDecodeError, ValueError):
+            continue
+        for l in text.split('\n'):
+            if len(l.strip()) >= POST_MIN:
+                out.setdefault(_line_key(l.strip()), p)
+    return out
+
+
+def post_hits(text, index):
+    """{path: lines} of the lines of `text` (a tool's output) that stand, whole, in a file POST's index holds."""
+    out = {}
+    for l in (text or '').split('\n'):
+        p = index.get(_line_key(l.strip())) if len(l.strip()) >= POST_MIN else None
+        if p:
+            out[p] = out.get(p, 0) + 1
+    return out
 
 
 def _kept(m, p):
