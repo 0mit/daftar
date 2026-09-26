@@ -284,10 +284,15 @@ def record(g, rec, day, glossary):
     shutil.copyfile(os.path.join(HERE, 'composers.py'), os.path.join(g, *MODULE.split('/')))
 
 
-RATIFY = {"(fill in who ratified — merging the release's pull request, or the word given here)":
-          "sam, here: the word of the gardener",
-          "(fill in — what this release brings that this garden adopts)":
-          "the view asset, which draws daftar's mechanisms for the machinery page of daftar's site"}
+RATIFY = ({"(fill in who ratified — merging the release's pull request, or the word given here)":
+           "sam, here: the word of the gardener",
+           "(fill in — what this release brings that this garden adopts)":
+           "the view asset, which draws daftar's mechanisms for the machinery page of daftar's site"},
+          # a garden already at the release extends the profile alone, and the upgrade's entry says so (24.0)
+          {"(fill in who ratified — the gardener's word, given here)":
+           "sam, here: the word of the gardener",
+           "(fill in — what the garden takes the profile up, or leaves it, for)":
+           "the view asset, which draws daftar's mechanisms for the machinery page of daftar's site"})
 
 
 def ratify(g, tag):
@@ -296,9 +301,10 @@ def ratify(g, tag):
     p = os.path.join(g, 'log', 'journal.md')
     text = open(p, encoding='utf-8').read()
     head = '## %s' % text.rsplit('\n## ', 1)[-1].split('\n', 1)[0] if '\n## ' in text else ''
-    if 'RULE-CHANGE' not in head or tag not in head or any(text.count(k) != 1 for k in RATIFY):
+    fill = next((r for r in RATIFY if all(text.count(k) == 1 for k in r)), None)
+    if 'RULE-CHANGE' not in head or tag not in head or fill is None:
         refuse('the upgrade did not leave one RULE-CHANGE entry for %s with its two fields to fill in (%r)' % (tag, head))
-    for k, v in RATIFY.items():
+    for k, v in fill.items():
         text = text.replace(k, v)
     with open(p, 'w', encoding='utf-8', newline='\n') as fh:
         fh.write(text)

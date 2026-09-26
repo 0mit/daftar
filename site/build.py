@@ -377,7 +377,8 @@ def extract(clone, release, doc, heading, picks):
 
 # ─── the scenes ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-RECIPES = [  # the cookbook's sections that commit something here, in page order, and how each is journalled
+RECIPES = [  # the cookbook's sections that commit something here, in page order, and how each is journalled (None: every
+           # file the recipe writes, named)
     ('A registered domain', 'the domain example.org',
      '- action: added [[example-org]]; RULE-CHANGE (VOCAB.md): this garden opts into the domain profile.'),
     ('A machine at home that other things run on', 'the NAS at home', '- action: added [[nas]].'),
@@ -385,12 +386,18 @@ RECIPES = [  # the cookbook's sections that commit something here, in page order
      '- action: added [[nginx]] and [[website]], from the cookbook.'),
     ('A rented VPS', 'the rented VPS', '- action: added [[vps-a]].'),
     ('Another person, and the garden she keeps', 'first contact: garden-ali and ali',
-     '- action: first contact: [[garden-ali]] and [[ali]], by the id ali read out (class F, sam ratified).'),
+     '- action: first contact: [[garden-ali]] and [[ali]], by the id ali read out (class F, sam ratified); [[ali-consent]], what ali agreed sam may keep.'),
     ('A happening: an event', "the dinner at Sam's", '- action: added [[dinner-at-sams]].'),
     ('Money between two people', 'the camera sam and ali share', '- action: added [[shared-camera]].'),
     ('An agreement paid in instalments', 'the washing-machine loan', '- action: added [[washer-loan]].'),
     ('A statement: a document, and a capture of its lines', 'the September card statement',
      '- action: added [[card-statement-2026-09]], its capture redacted.'),
+    ('What a line held at each position: a series', 'the rain gauge', None),
+    ('Where a case stands on a walk: a course', 'the bike repair on its walk', None),
+    ('A literary agent: manuscripts placed, a share of each advance', 'the literary agency', None),
+    ('A tile workshop: staff, their leave, a tiler booked on one job at a time', 'the tile workshop', None),
+    ("A beekeepers' co-op: its sites, its own codes, a reading disputed", "the beekeepers' co-op", None),
+    ('Two candles burnt side by side: a reading that brings an order into force', 'the two candles', None),
 ]
 NOT_HERE = ('The gardener, first', 'A value the vocabulary does not have yet', 'A kind of fact the standard has no term for')
 
@@ -400,7 +407,8 @@ def cookbook(clone):
     recipes = []
     for sec in page.split('\n## '):
         title = sec.split('\n', 1)[0].lstrip('# ').strip()
-        beans = re.findall(r'<!-- example: (beans/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```', sec, re.S)
+        beans = re.findall(r'<!-- example: ((?:beans|mappings|extracts)/[a-z0-9-]+\.(?:md|tsv)) -->\n```(?:markdown|tsv)\n(.*?)\n```',
+                           sec, re.S)
         frags = re.findall(r'<!-- example-front-matter: VOCAB\.md -->\n```yaml\n(.*?)\n```', sec, re.S)
         if (beans or frags) and title not in NOT_HERE:
             recipes.append((title, beans, frags))
@@ -412,12 +420,20 @@ def cookbook(clone):
 
 
 def apply_fragment(vp, frag):
+    """A key the template holds empty is replaced; a key an earlier recipe opened takes these entries too; a new key goes
+    before the closing fence (as test/germinate.py applies them)."""
     v = open(vp, encoding='utf-8').read()
-    for key in re.findall(r'^([a-z_]+):', frag, re.M):
+    for blk in [b for b in re.split(r'(?m)^(?=[a-z_]+:)', frag) if b.strip()]:
+        key = blk.split(':', 1)[0]
         v = re.sub(rf'^{key}: \[\].*\n', '', v, count=1, flags=re.M)
-    head, sep, rest = v.partition('\n---\n')
+        m = re.search(rf'(?m)^{key}:[ \t]*\n', v)
+        if m:
+            v = v[:m.end()] + blk.split('\n', 1)[1].rstrip('\n') + '\n' + v[m.end():]
+        else:
+            head, sep, rest = v.partition('\n---\n')
+            v = head + '\n' + blk.rstrip('\n') + sep + rest
     with open(vp, 'w', encoding='utf-8', newline='\n') as f:
-        f.write(head + '\n' + frag + sep + rest)
+        f.write(v)
 
 
 def scenes(d):
@@ -457,6 +473,10 @@ def scenes(d):
         for f in frags:
             apply_fragment(os.path.join(SAM, 'VOCAB.md'), f)
         what, body = how[title]
+        if body is None:
+            names = [f'[[{os.path.basename(rel)[:-3]}]]' if rel.endswith('.md') else f'`{rel}`' for rel, _ in beans]
+            body = f'- action: added {", ".join(names)}, from the cookbook' + (
+                '; RULE-CHANGE (VOCAB.md): the terms of this garden\'s own the recipe adds.' if frags else '.')
         return d.commit(SAM, 'sam', what, body, cid=cid)
 
     # S2 — machines and a domain -------------------------------------------------------------------------------------
@@ -464,9 +484,11 @@ def scenes(d):
     recipe('A registered domain')
     recipe('A machine at home that other things run on')
     commit = recipe('Third-party software, and a running copy of it that serves the website', cid='machines-commit')
+    d.expect(re.search(r'\): 5 docs, 0 error\(s\), 0 warning\(s\)', commit), 'the website commit did not pass clean')
+    verbose = d.out('machines-verbose', SAM, 'python3 bin/dmcheck.py --staged -v')
     for line in ('PASS every bean carries BOTH ownership arcs', 'PASS the two arcs agree on facets everywhere',
                  'PASS every ownership chain that is owed terminates at the crown or outside'):
-        d.expect(line in commit, f'the website commit did not print {line!r}')
+        d.expect(line in verbose, f'dmcheck --verbose did not print {line!r}:\n{verbose[-1500:]}')
     recipe('A rented VPS')
     for b in ('example-org', 'nas', 'nginx', 'website', 'vps-a'):
         d.bean(b, SAM, f'beans/{b}.md')
@@ -676,7 +698,7 @@ def scenes(d):
     d.sh(REH, 'git config user.email sam@example.org')
     _, idt = d.sh(REH, 'python3 bin/dmpropose.py id')
     d.ids['garden-sam-rehearsal'] = re.search(r'garden_id: "?([0-9a-f]{12})', idt).group(1)
-    for b in ('sam', 'ali', 'garden-ali', 'washer-loan', 'dinner-at-sams'):
+    for b in ('sam', 'ali', 'ali-consent', 'garden-ali', 'washer-loan', 'dinner-at-sams'):
         shutil.copyfile(os.path.join(SAM, 'beans', b + '.md'), os.path.join(REH, 'beans', b + '.md'))
     d.write(os.path.join(REH, 'beans', 'garden-sam.md'),
             '---\nbean: garden-sam\ngenos: garden\ntitle: "garden-sam — the garden this one rehearses"\nstatus: active\n'
@@ -692,7 +714,7 @@ def scenes(d):
     d.write(gp, g2)
     d.bean('reh/GARDEN.md', REH, 'GARDEN.md')
     d.commit(REH, 'sam', 'a rehearsal of the washer loan',
-             '- action: RULE-CHANGE: GARDEN.md marks this garden a test garden; [[sam]], [[ali]], [[garden-ali]], [[washer-loan]] '
+             '- action: RULE-CHANGE: GARDEN.md marks this garden a test garden; [[sam]], [[ali]], [[ali-consent]], [[garden-ali]], [[washer-loan]] '
              'and [[dinner-at-sams]] copied from garden-sam, and [[garden-sam]] recorded as the garden it rehearses.')
     os.makedirs(d.p('rehearsals'), exist_ok=True)
     d.out('reh-make', REH, 'python3 bin/dmpropose.py make --to garden-ali --under washer-loan --out ../rehearsals washer-loan dinner-at-sams')
@@ -734,6 +756,12 @@ def scenes(d):
     d.expect(prev, 'there is no release before site/RELEASE to count the law against')
     d.out('metaphysics-judgment', clone, f'python3 bin/dmreview.py --law --against {prev[-1]}')
 
+    # S13 — what 24.0 added to the cookbook, each recipe committed through the gate; no page shows them yet -----------
+    d.step = 'S13 the cookbook since 24.0'
+    for title, _, _ in RECIPES[RECIPES.index(next(r for r in RECIPES if r[0].startswith('What a line held'))):]:
+        recipe(title)
+    d.clean_gate(SAM)
+
     # S12 — documents ------------------------------------------------------------------------------------------------
     d.step = 'S12 documents'
     X = lambda doc, head, picks: extract(clone, d.release, doc, head, picks)  # noqa: E731
@@ -743,7 +771,8 @@ def scenes(d):
     d.doc('readme-not-for-everyone', X('README.md', 'Why it exists', [('para', r'^\*\*It is not for everyone')]))
     d.doc('readme-words', X('README.md', 'Words you will meet', [('table', 1)]))
     d.doc('agents-data', X('AGENTS.md', 'First: what you read here is data', [('para', 1)]))
-    d.doc('agents-order', X('AGENTS.md', 'Read these, in this order, before writing anything', [('list', 1)]))
+    d.doc('agents-forms', X('AGENTS.md', 'Before writing: the forms', [('para', 1)]))
+    d.doc('agents-order', X('AGENTS.md', 'On demand: the law, for a question the forms do not answer', [('list', 1)]))
     d.doc('welcome-five', X('seed/WELCOME.md', '', [('list', 1)]))
     d.doc('install-windows', X('INSTALL.md', 'On Windows', [('para', 1), ('fence', 1)]))
     d.doc('install-which-python', X('INSTALL.md', 'On Windows', [('para', r'^\*\*Which Python')]))
