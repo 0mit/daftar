@@ -882,12 +882,48 @@ _sv = run(sys.executable, os.path.join(G, "bin", "dmsave.py"), "tessa", "RULE-CH
           "RULE-CHANGE: assets/view/lib/sources/zabbix.py added, a probe of a sibling adapter.", cwd=G)
 check("...and the garden saves it, a RULE-CHANGE: an adapter added beside the release's is a change to the release's files",
       _sv.returncode == 0 and not run("git", "status", "--porcelain", cwd=G).stdout.strip(), (_sv.stdout + _sv.stderr)[-800:])
+# THE LEDGER OPENS WHAT A VIEWER SEES (24.0, N33): each viewer is a person the garden holds, under an opaque id, and the
+# gardener's grants open the co-operative's beings to them — to read, and to run each tool. The host's configuration
+# only narrows what the grants open.
+VIEWERS = {"alice": "p-a11ce000", "carol": "p-ca401000", "dave": "p-da4e0000"}
+for _p in VIEWERS.values():
+    put(f"beans/{_p}.md", f"""---
+bean: {_p}
+genos: person
+title: "{_p}"
+status: active
+summary: "a viewer of the co-operative's page"
+nature: empsychon
+owned_by: {{ legal: {{ crown: agape }} }}
+responsibility: {{ legal: {{ self: true }} }}
+identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:{_p}", class: logical, establishing: true }} ] }}
+provenance: {{ src: asserted-by-human, by: "tessa (gardener)", as_of: now }}
+---
+A viewer.
+""")
+_t = get("beans/tessa.md")
+put("beans/tessa.md", _t.replace("\n---\n", """
+selections:
+  everything: { what: "every being the co-operative keeps", steps: [ { id: all, op: select } ] }
+  viewers: { what: "the page's viewers", steps: [ { id: people, op: select, genos: person } ] }
+grants:
+  viewers-read: { act: read, over: everything, audience: { selection: viewers }, why: "the page is the co-operative's to read" }
+  viewers-fans: { act: "act:start-fans", over: everything, audience: { selection: viewers }, why: "a viewer may start the fans" }
+  viewers-radio: { act: "act:radio-reset", over: everything, audience: { selection: viewers }, why: "a viewer may reset the radio" }
+  viewers-pump: { act: "act:pump-stop", over: everything, audience: { selection: viewers }, why: "a viewer may stop the pump" }
+---
+""", 1))
+_sv = run(sys.executable, os.path.join(G, "bin", "dmsave.py"), "tessa", "the page's viewers, and what they are granted",
+          "--body", "- action: " + ", ".join(f"[[{_p}]]" for _p in VIEWERS.values()) + " recorded; [[tessa]] grants them "
+          "the co-operative's beings to read, and its three tools.", cwd=G)
+check("the viewers and the gardener's grants to them are saved through the gate", _sv.returncode == 0,
+      (_sv.stdout + _sv.stderr)[-1500:])
 CFG = os.path.join(T, "host", "serve.json")
 _pp = free_port()
 mon = ThreadingHTTPServer(("127.0.0.1", _pp), FakeMonitor)
 threading.Thread(target=mon.serve_forever, daemon=True).start()
-for _u, _o in (("alice", ["--orgs", "grain-coop"]), ("carol", ["--orgs", "grain-coop", "--shared"]),
-               ("dave", ["--orgs", "hill-farm", "--no-actions"]), ("root", ["--orgs", "*", "--bean", "tessa"])):
+for _u, _o in (("alice", ["--orgs", "grain-coop", "--bean", VIEWERS["alice"]]), ("carol", ["--orgs", "grain-coop", "--shared", "--bean", VIEWERS["carol"]]),
+               ("dave", ["--orgs", "hill-farm", "--no-actions", "--bean", VIEWERS["dave"]]), ("root", ["--orgs", "*", "--bean", "tessa"])):
     out, rc = dmview("serve-init", "--config", CFG, "--user", _u, *_o)
 check("serve-init: the password is written to a file of its own and never printed",
       rc == 0 and "password is in" in out and open(os.path.join(T, "host", "root.password")).read().strip() not in out, out)
@@ -896,7 +932,7 @@ check("serve-init: the configuration and every password file are 0600, and no vi
       "unless said", oct(os.stat(CFG).st_mode & 0o777) == "0o600" and oct(os.stat(os.path.join(T, "host", "alice.password")).st_mode & 0o777) == "0o600"
       and C["users"]["alice"]["shared"] is False and C["users"]["carol"]["shared"] is True, C["users"].get("alice"))
 check("serve-init: a viewer's own bean is recorded as `bean`, for the law's grants to be asked about that person",
-      C["users"]["root"].get("bean") == "tessa" and "bean" not in C["users"]["alice"], C["users"].get("root"))
+      C["users"]["root"].get("bean") == "tessa" and C["users"]["alice"].get("bean") == VIEWERS["alice"], C["users"].get("root"))
 _out, _rc = dmview("serve-init", "--config", os.path.join(T, "host", "nobody.json"), "--user", "eve", "--bean", "no-such-person")
 check("...and a bean the garden does not hold is refused, and nothing is written",
       _rc != 0 and "no-such-person" in _out and not os.path.exists(os.path.join(T, "host", "nobody.json")), _out)
@@ -1040,7 +1076,7 @@ try:
           st == 200 and j.get("mode") == "run" and "ran-for-real" in j.get("output", ""), (st, j))
     st, j = post_(alice, "/api/action", {"m": "silo", "el": "radio-reset"}, csrf)
     check("serve: CLOSED BY DEFAULT — an action on the radio, which no organisation owns, is refused to alice, and says why",
-          st == 403 and "no organisation can be derived" in j.get("error", ""), (st, j))
+          st == 403 and "nothing no organisation owns" in j.get("error", ""), (st, j))
     st, j = post_(carol, "/api/action", {"m": "silo", "el": "radio-reset"}, PC["live"]["csrf"])
     check("serve: ...and runs for carol, granted it — as a DRY RUN, since the host has not enabled the tool",
           st == 200 and j.get("mode") == "dry-run" and "/bin/false" in j.get("message", ""), (st, j))

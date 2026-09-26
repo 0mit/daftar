@@ -3905,7 +3905,48 @@ AGREE_ENTRY = ()
 AGREE_PLIES = ((check_agreements, "an agreement's occurrences, settlements and agents read the selections and clauses built before"),
                (check_exclusive, "N27: an exclusive term's extents, across every bean"))
 # ---- VIEWCAP
-VIEWCAP_ENTRY, VIEWCAP_PLIES = (), ()
+def check_viewcap():
+    """What a page's `views` ask the host to do (24.0, N33, N36–N40): a scheduled action names who answers for it, and
+    only a scheduled one does; a table lists one thing, a reading or a series; an entry form names attributes the law
+    gives the term it writes."""
+    for (_ib, _base), (_fm, _b) in docs.items():
+        vs = _fm.get('views') if isinstance(_fm, dict) and isinstance(_fm.get('views'), dict) else {}
+        for _k, _v in vs.items():
+            if not isinstance(_v, dict):
+                continue
+            _w = f"{_base}: views[{_k}]"
+            for _i, _a in enumerate(_v.get('actions') or []):
+                if not isinstance(_a, dict):
+                    continue
+                if _a.get('every') is not None and not _a.get('answered_by'):
+                    errors.append(f"{_w}.actions[{_i}] runs on a schedule (`every`) and names nobody who answers for it — "
+                                  f"a schedule names who answers for it (`answered_by`), the actor its grant is asked for")
+                if _a.get('answered_by') and _a.get('every') is None:
+                    errors.append(f"{_w}.actions[{_i}] names `answered_by` without `every` — a pressed action is answered "
+                                  f"for by whoever presses it")
+            if _v.get('archetype') == 'table' and (_v.get('selection') is None) == (_v.get('rows_of') is None):
+                errors.append(f"{_w}: a table lists the members of one reading (`selection`) or the rows of one series "
+                              f"(`rows_of`) — {'neither' if _v.get('selection') is None else 'both'} given")
+            for _x in ('selection', 'rows_of', 'columns', 'writes', 'renders', 'feed'):
+                if _x in ('selection', 'rows_of', 'columns') and _v.get(_x) is not None and _v.get('archetype') != 'table':
+                    errors.append(f"{_w}: `{_x}` belongs to a table, and this drawing's shape is {_v.get('archetype')}")
+            for _i, _e in enumerate(_v.get('writes') or []):
+                if not isinstance(_e, dict):
+                    continue
+                _t = _e.get('term')
+                _sch = SCHEMAS.get(_t)
+                if _sch is None:
+                    errors.append(f"{_w}.writes[{_i}]: {_t!r} is no term of the law — a form writes a term the law declares")
+                    continue
+                _attrs = _sch.get('attrs') if isinstance(_sch.get('attrs'), dict) else {}
+                for _at in _e.get('attrs') or []:
+                    _n = _at.get('attr') if isinstance(_at, dict) else None
+                    if _n is not None and _n not in _attrs:
+                        errors.append(f"{_w}.writes[{_i}]: `{_t}` has no attribute {_n!r} (it has {', '.join(sorted(_attrs)) or 'none'})")
+
+
+VIEWCAP_ENTRY = ()
+VIEWCAP_PLIES = ((check_viewcap, "what a page asks the host to do: a schedule answered for, a table of one thing, a form of the law's attributes"),)
 # ---- GATE (24.0; the Leviathan's Body 3 and Leg 1): the flow law, and what a commit is judged by it for
 # The law's `flows` say which passes are granted, and the gate judges three things by them at every commit: a value's
 # pointer, where one is kept (`provenance_of.<path>[].at`, a record's `from[].at`); the journal, appended and never
@@ -5205,7 +5246,8 @@ def section_keys(fm):
     # point into `refs` or `access`, which carry no authoritative values of their own. Stated because an
     # undeclared difference between two nearly-identical lists reads as a bug and invites a tidy-up.
     s = set(fm.keys())
-    for sect in ('owns', 'attributes', 'refs', 'access', 'details'):
+    # `series`: a drawing's table names a series on another bean by its key (`views.series`, {bean, field}; 24.0, N36)
+    for sect in ('owns', 'attributes', 'refs', 'access', 'details', 'series'):
         if isinstance(fm.get(sect), dict):
             s |= set(fm[sect].keys())
     return s

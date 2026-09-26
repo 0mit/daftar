@@ -104,6 +104,7 @@ h1{font-size:17px;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wra
 .tab,.seg button,.btn{padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--muted);cursor:pointer;font:600 13px system-ui}
 .tab.active,.seg button.active{background:var(--accent);color:#1a1206;border-color:var(--accent)}
 .seg{display:flex;gap:0}.seg button{border-radius:0;margin-left:-1px}.seg button:first-child{border-radius:8px 0 0 8px}.seg button:last-child{border-radius:0 8px 8px 0}
+.forms{margin:12px 0;display:flex;gap:8px;flex-wrap:wrap}a.btn{text-decoration:none}
 .btn.primary{border-color:var(--accent);color:var(--accent)}.btn.on{background:var(--accent);color:#1a1206}
 .spacer{flex:1}
 main{max-width:1180px;margin:0 auto;padding:20px}
@@ -149,9 +150,29 @@ function toast(t, bad){ let d = document.getElementById('toast'); if (!d) { d = 
 function doAction(a){
   if (!LIVE.actions) { toast('You may view but not act.', true); return; }
   if (!confirm(a.confirm + '\n\n(tool: ' + a.tool + ')')) return;
-  fetch('/api/action', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-View-CSRF': LIVE.csrf}, body: JSON.stringify({m: tab, el: a.el})})
+  // WHAT THE LAW ASKS FOR, ASKED: each input the action declares, given by the viewer; a reason where a grant asks one
+  const inputs = {}; for (const i of (a.inputs || [])) { if (i.origin && i.origin.act && i.origin.act !== 'said') continue;
+    const x = prompt((i.note || i.name) + (i.quantity ? ' (' + i.quantity + ')' : ''), ''); if (x === null) return; inputs[i.name] = x; }
+  let reason = null; if (a.reason) { reason = prompt('The reason for running ' + a.tool + ' (recorded):', ''); if (!reason) return; }
+  fetch('/api/action', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-View-CSRF': LIVE.csrf}, body: JSON.stringify({m: tab, el: a.el, inputs, reason})})
    .then(r => r.json().then(j => [r.status, j])).then(([st, j]) => toast(st !== 200 ? ('Refused: ' + j.error) : j.mode === 'dry-run' ? j.message : ('Ran ' + j.tool + ' — exit ' + j.rc + '\n' + (j.output || '').slice(-600)), st !== 200 || (j.rc && j.rc !== 0)))
    .catch(e => toast('Failed: ' + e, true)); }
+// AN ENTRY FORM (24.0, N37): each attribute the law's form of the term asks, then the gate's answer, whatever it is
+function doWrite(f){
+  if (!LIVE.actions) { toast('You may view but not act.', true); return; }
+  const v = P.views[tab] || {}; const bean = prompt('The being the ' + f.term + ' entry is written on:', v.draws_bean || ''); if (!bean) return;
+  let entry = ''; if (f.keyed) { entry = prompt('A short kebab name for the entry:', ''); if (!entry) return; }
+  const values = {}; for (const a of f.attrs) { const x = prompt(a.attr + (a.required ? ' (required)' : '') + (a.meaning ? ' — ' + a.meaning.slice(0, 160) : ''), '');
+    if (x === null) return; if (x !== '') values[a.attr] = x; }
+  fetch('/api/write', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-View-CSRF': LIVE.csrf}, body: JSON.stringify({m: tab, w: f.w, bean, entry, values})})
+   .then(r => r.json().then(j => [r.status, j])).then(([st, j]) => toast(st !== 200 ? ('Refused: ' + j.error + (j.output ? '\n' + j.output.slice(-900) : '')) : 'Saved.\n' + (j.output || '').slice(-400), st !== 200))
+   .catch(e => toast('Failed: ' + e, true)); }
+function renderForms(){ const v = P.views[tab] || {}, op = v.operate || {}; if (tab === 'ref') return;
+  const fs = LIVE ? (v.writes || []) : [], t = op.table; if (!fs.length && !t) return;
+  const d = document.createElement('div'); d.className = 'forms';
+  d.innerHTML = fs.map((f, i) => '<button class="btn" data-w="' + i + '">add ' + esc(f.term) + '</button>').join(' ') +
+    (t ? ' <a class="btn" href="' + (LIVE ? '/api/csv?m=' + encodeURIComponent(tab) : esc((P.csv || {})[tab] || '')) + '" download>lines as CSV</a>' : '');
+  $('#view').appendChild(d); d.querySelectorAll('[data-w]').forEach(b => b.onclick = () => doWrite(fs[+b.dataset.w])); }
 function poll(){ if (!LIVE || tab === 'ref') return;
   fetch('/api/values?m=' + encodeURIComponent(tab)).then(r => r.status === 401 ? (location.href = '/login') : r.json()).then(j => { if (j && j.values) { VALS[tab] = j.values; mountView(); } }).catch(() => {});
   // history: once per tab for the sparklines, and again each minute where the drawing correlates values over time
@@ -219,7 +240,7 @@ function render(){
   if (tab === 'ref') renderRef();
   else { const root = document.createElement('div'); $('#view').innerHTML = ''; $('#view').appendChild(root);
     if (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) root.classList.add('light');
-    window.viewMount(root, viewFor(tab), state());
+    window.viewMount(root, viewFor(tab), state()); renderForms();
     if (LIVE && !VALS[tab]) poll(); }
   if (document.body.classList.contains('authoring')) renderAuthor();
 }
@@ -354,6 +375,15 @@ def main(args):
     out = args[args.index("--out") + 1]
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     p = payload()
+    import view_export
+    stem = os.path.splitext(out)[0]
+    csvs, p["csv"] = [], {}
+    for key, t in view_export.tables().items():
+        with open("%s.%s.csv" % (stem, key), "w", encoding="utf-8", newline="") as fh:
+            fh.write(view_export.csv_text(t))
+        csvs.append("%s.%s.csv" % (stem, key))
+        p["csv"][key] = os.path.basename(csvs[-1])
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(build_html(p))
-    print("dmview report: %d drawings + reference + author mode -> %s" % (len(p["views"]), out))
+    print("dmview report: %d drawings + reference + author mode -> %s%s" % (len(p["views"]), out,
+          "" if not csvs else "; %d table(s) as CSV beside it" % len(csvs)))

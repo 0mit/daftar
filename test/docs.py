@@ -27,6 +27,8 @@ PROSE = ["README.md", "MODEL.md", "CHECKLIST.md", "MERGE.md", "CONTRIBUTING.md",
 NOT_SHIPPED = {"test/golden.py", "test/diffgate.py"}
 # Shipped, and run by every garden's own hook rather than by the release: it needs a garden around it.
 GARDEN_ONLY = {"test/fast.py"}
+# measurements, not suites: they run the suites (timings.py) or time the gate (cost.py), and CONTRIBUTING.md says how
+MEASURES = {"test/timings.py", "test/cost.py"}
 
 text = {}
 for d in PROSE:
@@ -181,8 +183,10 @@ told = set(re.findall(r"(?m)^\s*python3 (test/[a-z_]+\.py)\s*$", text["CONTRIBUT
 check("CONTRIBUTING.md tells a contributor to run exactly the suites the release runs",
       told == ci_suites, f"only in CI: {sorted(ci_suites - told)}; only in the document: {sorted(told - ci_suites)}")
 on_disk = {"test/" + f for f in os.listdir(os.path.join(ROOT, "test")) if f.endswith(".py")}
-check("...and the release runs every suite that is shipped", on_disk - GARDEN_ONLY == ci_suites,
-      f"not run: {sorted(on_disk - GARDEN_ONLY - ci_suites)}; run but absent: {sorted(ci_suites - on_disk)}")
+check("...and the release runs every suite that is shipped", on_disk - GARDEN_ONLY - MEASURES == ci_suites,
+      f"not run: {sorted(on_disk - GARDEN_ONLY - MEASURES - ci_suites)}; run but absent: {sorted(ci_suites - on_disk)}")
+check("...and every measurement shipped is one CONTRIBUTING.md says how to run",
+      all(("python3 " + m) in text["CONTRIBUTING.md"] for m in MEASURES & on_disk), sorted(MEASURES & on_disk))
 
 # THE TERMS A GARDEN RECEIVES are daftar's own texts, byte for byte. A garden gets them under seed/ (`seed/LICENSE.md` and
 # `seed/LICENSE-<id>.txt`), never at its root, where they would read as the garden's own licence and an upgrade would

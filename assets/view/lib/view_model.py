@@ -581,8 +581,63 @@ def actions(key, v, elements):
         if at not in by or by[at]["pattern"] != "action":
             probs.append("%s: action %r sits on %r, which is not an action element of the drawing" % (key, tool, at)); continue
         out.append({"el": at, "tool": tool, "confirm": a.get("confirm") or ("Run %s?" % tool),
-                    "bean": a.get("acts_on") or by[at]["bean"], "label": by[at]["label"]})
+                    "bean": a.get("acts_on") or by[at]["bean"], "label": by[at]["label"],
+                    "inputs": [dict(i) for i in a.get("inputs") or [] if isinstance(i, dict)],
+                    "reason": a.get("reason") == "asked", "every": a.get("every"), "answered_by": a.get("answered_by")})
     return out, probs
+
+
+def members(sel):
+    """The members of one of the page's readings (`selections`), by the one grammar (bin/dmreckon.py)."""
+    import dmreckon
+    return dmreckon.select("%s:%s" % (PAGE, sel), root=ROOT)
+
+
+def writes(v):
+    """A drawing's entry forms (24.0, N37): for each `writes`, the term, whether its entries are keyed, and each attribute
+    the form asks for — the ones it names, or all the term's — with the law's own `required` and meaning."""
+    out = []
+    for n, w in enumerate(v.get("writes") or []):
+        if not isinstance(w, dict) or not w.get("term"):
+            continue
+        sch = law().SCHEMAS.get(w["term"]) or {}
+        rec = sch.get("attrs") or {}
+        names = [a.get("attr") for a in w.get("attrs") or [] if isinstance(a, dict)] or list(rec)
+        out.append({"w": n, "term": w["term"], "keyed": sch.get("shape") == "open_map_of_entries",
+                    "attrs": [{"attr": a, "required": (rec.get(a) or {}).get("required") is True,
+                               "meaning": str((rec.get(a) or {}).get("meaning") or "")} for a in names]})
+    return out
+
+
+def _cell(x):
+    if isinstance(x, (list, tuple)):
+        return ", ".join(_cell(y) for y in x)
+    return "" if x is None else x if isinstance(x, (int, float, str)) and not isinstance(x, bool) else str(x)
+
+
+def table(v):
+    """A table's lines (24.0, N36): {columns, rows}. From a reading, one line per member, each column the values at its
+    path; from a series (`{bean, field}`, or `<section>.<key>` on the page), one line per row, each column a channel —
+    or `at`, the row's position. Each line names the being it shows, for the host to send it only where it may."""
+    cols = [c for c in v.get("columns") or [] if isinstance(c, dict)]
+    out = {"columns": [str(c.get("label") or c.get("path")) for c in cols], "rows": [],
+           # the top-level terms the columns read: a line is sent where the viewer may see these parts of its being
+           "reads": sorted({re.split(r"[.\[]", str(c.get("path")))[0] for c in cols if c.get("path") not in (None, "at", "position")})}
+    if v.get("selection"):
+        import dmreckon
+        for m in members(v["selection"]):
+            out["rows"].append({"bean": m, "cells": [_cell(dmreckon.path_values(fm(m), c["path"], root=ROOT)) for c in cols]})
+        return out
+    p = v.get("rows_of")
+    bean, key = (p.get("bean"), p.get("field")) if isinstance(p, dict) else (PAGE, str(p).partition(".")[2])
+    out["reads"] = ["series"]
+    import dmseq
+    for r in dmseq.rows(ROOT, bean, key):
+        pos = r.get("position")
+        at = "%s – %s" % pos if isinstance(pos, tuple) else pos
+        out["rows"].append({"bean": bean, "cells": [_cell(at if c["path"] in ("at", "position") else r["cells"].get(c["path"]))
+                                                    for c in cols]})
+    return out
 
 
 def steps_of(v):
@@ -645,14 +700,20 @@ def operate(key, v):
     if v.get("funnels"):
         op["funnels"] = [{"name": f.get("label", ""), "stages": [
             {"label": s.get("label", ""), "count": s.get("tally"), "counts": s.get("counts", ""), "what": s.get("what", ""),
+             "members": members(s["selection"]) if s.get("selection") else None,
              "stops": [{"label": x.get("label", ""), "bind": x.get("bind"), "what": x.get("what", "")} for x in s.get("stops") or []],
              "marks": [{"label": x.get("label", ""), "bind": x.get("bind"), "what": x.get("what", "")} for x in s.get("marks") or []]}
             for s in (f.get("stages") or []) if isinstance(s, dict)]} for f in v["funnels"] if isinstance(f, dict)]
+        for f in op["funnels"]:
+            for st in f["stages"]:
+                st["static"] = len(st["members"]) if st["members"] is not None else None
     if v.get("rollcall"):
         op["rollcall"] = [{"label": r.get("label", ""), "per_item": r.get("per_item"),
                            "idle": [str(x.get("member")) for x in (r.get("idle") or []) if isinstance(x, dict)],
                            "notes": r.get("notes") if isinstance(r.get("notes"), dict) else {}}
                           for r in v["rollcall"] if isinstance(r, dict)]
+    if v.get("archetype") == "table":
+        op["table"] = table(v)
     steps = steps_of(v)
     if v.get("archetype") == "race" or v.get("correlate"):
         op["steps"] = steps
@@ -878,7 +939,7 @@ def views(figs=None):
                     "facts": {b: facts(b) for b in beans if facts(b)},
                     "steps": bound_steps(v, [p["bean"] for p in parts]),
                     "legend": kit.legend_rows(pats + kinds, live), "patterns": pats, "live_patterns": kinds,
-                    "actions": actions(k, v, els)[0], "levels": lv, "story": resolve_story(v),
+                    "actions": actions(k, v, els)[0], "writes": writes(v), "levels": lv, "story": resolve_story(v),
                     "tiles": health_tiles(els, binds), "parts": parts,
                     "questions": {q.get("lens"): q.get("ask") for q in (v.get("questions") or []) if isinstance(q, dict)},
                     "operate": operate(k, v), "wiring": w, "window": {"hours": hours, "step": step},

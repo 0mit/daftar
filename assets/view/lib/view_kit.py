@@ -511,6 +511,7 @@ SCHEMA_CSS = """
 .vw .rel{width:100%;max-width:620px;height:auto;display:block}.vw .rel-bar{fill:var(--accent);opacity:.75}.vw .rel-v{fill:var(--fg);font:600 11px ui-monospace,monospace}
 /* board + scoreboard */
 .vw .op-facts{display:flex;flex-wrap:wrap;gap:34px;margin:10px 0 6px}
+.vw .op-table{overflow-x:auto;margin:10px 0}.vw .op-table table{border-collapse:collapse;font-size:13px;min-width:100%}.vw .op-table th,.vw .op-table td{text-align:left;padding:4px 10px;border-bottom:1px solid rgba(128,128,128,.25);white-space:nowrap}.vw .op-table th{font-weight:600}
 .vw .op-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:12px}
 .vw .dev{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;outline:none;cursor:help}
 .vw .dev.down{border-color:var(--down)}.vw .dev.blind{background:repeating-linear-gradient(135deg,var(--panel) 0 8px,var(--nfill) 8px 16px)}

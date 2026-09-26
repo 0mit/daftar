@@ -1988,6 +1988,7 @@ view_archetypes:
   - { archetype: scoreboard,   meaning: "the watcher's own vital numbers and what is firing, or a calm 'nothing is firing'", when: "what is drawn is the watching itself" }
   - { archetype: funnel,       meaning: "a stream narrowing through its stages: how many reached each, where the rest stopped and why, then a roll call of the parts", when: "work enters, is judged at a series of stages, and leaves" }
   - { archetype: race,         meaning: "a run of a procedure against its deadline: the step it is at (a step of the procedure the view `draws`, in the order its `steps` list them), how long it has run, how long it still needs, and the verdict", when: "what is drawn is a bounded run that must end before a moment" }
+  - { archetype: table,        meaning: "the members of a reading, or the rows of a series, one line each with a column per path: the report, and an offline file of it", when: "the question is which ones, and what each holds" }
   - { archetype: health-chain, meaning: "tiles in flow order with value, limit and trend, and the blind spots", when: "no shape native to what is drawn is designed yet" }
 profiles:
   code:
@@ -2288,6 +2289,7 @@ profiles:
     - { at: "registry:view_archetypes", position: scoreboard,   reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
     - { at: "registry:view_archetypes", position: funnel,       reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
     - { at: "registry:view_archetypes", position: race,         reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
+    - { at: "registry:view_archetypes", position: table,        reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
     - { at: "registry:view_archetypes", position: health-chain, reason: universal, why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need" }
     - { at: "view_bindings.live", position: live-state,  reason: universal, why: "the three kinds of live value, declared whole" }
     - { at: "view_bindings.live", position: live-value,  reason: universal, why: "the three kinds of live value, declared whole" }
@@ -2365,6 +2367,19 @@ profiles:
                 tool:    { required: true, in: { type: kebab }, meaning: "the tool, by the name the host's own configuration gives it" }
                 confirm: { in: prose, meaning: "what the button asks before it runs" }
                 acts_on: { in: bean_id, meaning: "the being it acts on, where that is not the element's" }
+                inputs:
+                  meaning: "what the tool is given beyond who pressed, the moment and the being acted on, which the host always hands it: each value by name, with its `origin` as a reading's inputs state it (`selection_form.inputs`) — the clock, read by the reader; any other, a value the person pressing types"
+                  in:
+                    entries:
+                      name:     { required: true, in: { type: kebab } }
+                      origin:   { required: true, in: origin, meaning: "`{act: read, nature: soma, by: reader}`, the clock; any other, a value the person pressing gives" }
+                      type:     { in: { registry: value_types, take: type }, meaning: "the form of a value given" }
+                      quantity: { in: { registry: quantities, take: quantity }, meaning: "the quantity a value given measures" }
+                      note:     { in: prose }
+                    keyed_by: name
+                reason:      { in: [asked], meaning: "asked — the person pressing states a reason, which the host's audit records" }
+                every:       { in: recurrence, meaning: "a schedule: the host runs it at each occurrence (`dmview run-scheduled`), as `answered_by`" }
+                answered_by: { in: { bean_id: { gene: [person, org] } }, meaning: "with `every`: who answers for what it does when nobody presses — the actor its grant is asked for" }
           archetype: { required: true, in: { registry: view_archetypes, take: archetype }, meaning: "operate: the shape its vital sign is drawn in" }
           blind:     { required: true, meaning: "what the page cannot see of it, and why: never omitted", in: { entries: { what: { required: true, in: prose }, why: { in: prose } } } }
           notes:     { in: { entries: { note: { required: true, in: prose } } }, meaning: "operate: a line the person on call reads under the shape" }
@@ -2383,9 +2398,15 @@ profiles:
           members:   { in: { entries: { label: { required: true, in: prose }, binds: { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } } }, fact: { in: { key_of: view_bindings } }, why: { in: prose }, being: { in: bean_id } } }, meaning: "board: its parts, each with the values that say its state, one fact, and why an unmeasured part is not measured" }
           numbers:   { in: { entries: { bind: { required: true, in: { key_of: view_bindings } } } }, meaning: "scoreboard, funnel, race: the headline numbers" }
           list:      { in: { key_of: view_bindings }, meaning: "scoreboard: the live-series of what is firing" }
-          funnels:   { in: { entries: { label: { required: true, in: prose }, stages: { required: true, in: { entries: { label: { required: true, in: prose }, tally: { required: true, in: { key_of: view_bindings } }, counts: { in: prose }, what: { in: prose }, stops: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } }, marks: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } } } } } } }, meaning: "funnel: each stream, its stages in order with how many reached each and what each counts, and where the rest stopped or were marked" }
+          funnels:   { in: { entries: { label: { required: true, in: prose }, stages: { required: true, in: { entries: { label: { required: true, in: prose }, tally: { in: { key_of: view_bindings } }, selection: { in: { key_of: selections }, meaning: "or a reading of the page whose members are counted: a walk's step (`at_step`)" }, counts: { in: prose }, what: { in: prose }, stops: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } }, marks: { in: { entries: { label: { required: true, in: prose }, bind: { required: true, in: { key_of: view_bindings } }, what: { in: prose } } } } }, one_of: [tally, selection], at_most_one_of: [[tally, selection]] } } } }, meaning: "funnel: each stream, its stages in order with how many reached each — a live value, or the members of a reading — and what each counts, and where the rest stopped or were marked" }
           window:    { in: prose, meaning: "funnel: the span its counts cover, in words" }
           rollcall:  { in: { entries: { label: { required: true, in: prose }, per_item: { required: true, in: { key_of: view_bindings } }, idle: { in: { entries: { member: { required: true, in: any } } } }, notes: { in: { prose: named } } } }, meaning: "funnel: the parts called by name, each up or down, and the items known to carry nothing" }
+          selection: { in: { key_of: selections }, meaning: "table: the members it lists, one line each — a reading of the page's own `selections`" }
+          rows_of:   { in: { pointer: bean_field_pointer }, meaning: "table: or the rows of a being's `series` (`{bean, field}`), one line per position" }
+          columns:   { in: { entries: { label: { required: true, in: prose }, path: { required: true, in: { type: field_path }, meaning: "a path in each member, or a channel of the series" } } }, meaning: "table: a column per path" }
+          writes:    { in: { entries: { term: { required: true, in: { pattern: '^[a-z][a-z0-9_]*$' } }, attrs: { in: { entries: { attr: { required: true, in: { type: kebab } } } } } } }, meaning: "an entry form for those attributes of that term, built from the law's form of it, saved through bin/dmsave.py as the host with the person in `<who>`, after `write` is granted them; the gate judges it as any other commit" }
+          renders:   { in: { entries: { template: { required: true, in: { pointer: bean_field_pointer } }, selection: { in: { key_of: selections } } } }, meaning: "a template of the garden (`file:<path>`) rendered from each member of a reading (`selection`; absent, the being drawn) into a document; once kept, a `document` bean with its `content_hash`" }
+          feed:      { in: { entries: { selection: { required: true, in: { key_of: selections } }, notice: { in: extent } } }, meaning: "a calendar export (RFC 5545) of a reading's members, each at its `timing` or its clause's due, a notice `notice` before; every export is a pass the host audits" }
           step_at:   { in: { key_of: view_bindings }, meaning: "race: the value that says which step of the procedure the run is at — 0 before the first, n at the n-th of its `steps`" }
           elapsed:   { in: { key_of: view_bindings }, meaning: "race: how long it has run" }
           deadline:  { in: extent, meaning: "race: how long after its start it must be done — a length on `time`" }
@@ -2413,6 +2434,7 @@ profiles:
           - { when: { archetype: funnel },     requires: [funnels],     why: "a funnel answers with its streams" }
           - { when: { archetype: race },       requires: [step_at],     why: "a race answers with the step the run is at" }
           - { when: { archetype: race },       expects: [elapsed],      why: "without how long it has run, the bar against the deadline cannot be drawn" }
+          - { when: { archetype: table },      requires: [columns],     why: "a table answers with a column per path" }
       merge: { cardinality: multi, order: by-key }
     - term: view_bindings
       meaning: "the live values the page draws, each under a key the views name it by: which drawing and which of its elements it sits on, what kind of value it is, its unit and limits, and how each technology computes it. A value is read when the page is drawn, and never stored"

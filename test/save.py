@@ -20,6 +20,8 @@ freshly grown garden to what its first lines say:
      installed, or one git would skip; no git identity set; an index with unmerged paths; an option it does not know;
   -  it never passes --no-verify.
 
+  +  one save at a time: a save waits for the clone's lock, and past its bound is refused (N34).
+
 Run: python3 test/save.py   (0 = green).  ~10s.
 """
 import datetime
@@ -357,6 +359,25 @@ rc, out, err = save('sam', 'added pia', '--body', '- action: added [[pia]].')
 check("...and another typed day is refused by the gate, and the tool leaves it as the writer typed it",
       rc != 0 and 'stamped, not typed' in err
       and 'as_of: 2001-01-02' in open(os.path.join(G, 'beans', 'pia.md'), encoding='utf-8').read(), (rc, err[-400:]))
+
+# ---- + one save at a time: a save waits for the clone's lock, and past its bound is refused (24.0, N34) ----------------
+_lp = os.path.join(G, git('rev-parse', '--git-dir').stdout.strip(), 'daftar-save.lock')
+_lf = open(_lp, 'a+')
+if os.name == 'nt':
+    import msvcrt
+    _lf.seek(0)
+    msvcrt.locking(_lf.fileno(), msvcrt.LK_NBLCK, 1)
+else:
+    import fcntl
+    fcntl.flock(_lf.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+_s = (journal(), None, head())
+bean('quinn')
+rc, out, err = save('sam', 'added quinn', '--body', '- action: added [[quinn]].', env={**ENV, 'DAFTAR_SAVE_WAIT': '1'})
+check("a save while another holds the clone's lock waits its bound, then is refused (exit 2), nothing written: two "
+      "writers in one clone queue, and neither journals over the other's staged files",
+      rc == 2 and 'another save is in progress' in err and journal() == _s[0] and head() == _s[2], (rc, err))
+_lf.close()                                       # the other save ends: its lock goes with it
+os.remove(os.path.join(G, 'beans', 'quinn.md'))
 
 # ---- - it never passes --no-verify -----------------------------------------------------------------------------------
 _src = ast.parse(open(os.path.join(ROOT, 'bin', 'dmsave.py'), encoding='utf-8').read())

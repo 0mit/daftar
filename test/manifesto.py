@@ -125,6 +125,7 @@ _NET_ANY = re.compile(r"^\s*(?:import\s+[^\n#]*\b(?:urllib|http|socket|requests|
 ASSET_NET = {
     "assets/view/lib/view_serve.py": "the served page listens for its signed-in viewers, on the address the host gives",
     "assets/view/lib/sources/prometheus.py": "the adapter asks the monitor the host's configuration names for values",
+    "assets/view/lib/sources/http.py": "the adapter reads the one document at the address the host's configuration names",
 }
 asset_net = sorted({os.path.relpath(f, ROOT).replace(os.sep, "/") for pat in ("assets/*/bin/*.py", "assets/*/lib/**/*.py")
                     for f in glob.glob(os.path.join(ROOT, pat), recursive=True) if _NET_ANY.search(open(f, encoding="utf-8").read())})

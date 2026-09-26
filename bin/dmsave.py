@@ -35,6 +35,12 @@ flow law keeps from a said value, found by a distinctive needle, REFUSED (exit 2
 logged from instructions with `quoted: 0`, and said so. Each traced pass is appended to the session's log in the commit
 that adds the value, once, so the claim the gate checks is made by the save and not typed.
 
+ONE SAVE AT A TIME (24.0, N34): a save holds an exclusive lock on `<git dir>/daftar-save.lock` from its first read to
+its commit, so two writers in one clone — a person and an agent, two agents, a view host's form — queue, and neither
+journals over the other's staged files. A save that waits longer than `DAFTAR_SAVE_WAIT` seconds (120 unless set) is
+REFUSED, nothing written, naming the wait. The lock is the operating system's (flock, or msvcrt on Windows), so a save
+that dies releases it.
+
 It reaches a garden as every tool does, by `seed/LANGUAGE`'s `bin/dm*.py`, with no list to remember it in; nothing
 installs it. It is called "save" because that is the whole act — journal, stage, commit — where "commit" names its last
 step.
@@ -262,10 +268,38 @@ def commit(message, again):
     return 0
 
 
+def lock():
+    """Wait for the clone's save lock and hold it until this process ends; refuse after the stated wait."""
+    import time
+    d = git('rev-parse', '--absolute-git-dir').stdout.strip()
+    if not d:
+        return None
+    wait = float(os.environ.get('DAFTAR_SAVE_WAIT', '120'))
+    f = open(os.path.join(d, 'daftar-save.lock'), 'a+')
+    end = time.monotonic() + wait
+    while True:
+        try:
+            if os.name == 'nt':
+                import msvcrt
+                f.seek(0)
+                msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return f
+        except OSError:
+            if time.monotonic() >= end:
+                f.close()
+                refuse(f"another save is in progress in this clone, and did not finish within {wait:g}s "
+                       f"(DAFTAR_SAVE_WAIT) — try again when it has")
+            time.sleep(0.1)
+
+
 def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         print(__doc__)
         return 0 if argv else 2
+    held = lock()                                 # noqa: F841 — held until the process ends
     if '--again' in argv:
         if argv != ['--again']:
             refuse("--again takes nothing else: it commits the entry already written, under its own <what>")

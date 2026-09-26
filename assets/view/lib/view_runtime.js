@@ -286,15 +286,16 @@ function scoreboard(root,view,lv,state,op){let o=head(view,lv)+'<div class="op-f
    branches off below it, with the reason; what was marked on the way sits beside it. Below: the headline numbers and a
    ROLL CALL of the parts, each up or down, and the items known to carry nothing. */
 function funnel(root,view,lv,state,op){const live=state.live,val=id=>live?V(state,id):null;
+ const cnt=s=>s.static!=null?s.static:val(s.count);   // a stage counts a live value, or the members of a reading (drawn with the page)
  const L=x=>Math.sqrt(Math.max(0,+x||0));
  let o=head(view,lv);
  if((op.numbers||[]).length)o+='<div class="op-facts">'+op.numbers.map(id=>{const b=B(view,id),v=val(id),st=stateOf(b,v,live);
   return '<div class="big '+st+'" data-ev="'+h(id)+'"><span class="bv">'+(live?fmt(v,b):'—')+'</span><span class="bl">'+h(b.name)+'</span></div>';}).join('')+'</div>';
- (op.funnels||[]).forEach((f,fi)=>{const mx=Math.max(1,...f.stages.map(s=>L(val(s.count))));
+ (op.funnels||[]).forEach((f,fi)=>{const mx=Math.max(1,...f.stages.map(s=>L(cnt(s))));
   o+='<div class="fun"><div class="fun-h"><b>'+h(f.name)+'</b>'+(op.window?'<span>'+h(op.window)+'</span>':'')+'</div><div class="fun-row">';
-  f.stages.forEach((s,si)=>{const v=val(s.count),b=B(view,s.count),w=live&&v!=null?Math.max(4,100*L(v)/mx):0;
+  f.stages.forEach((s,si)=>{const v=cnt(s),b=s.static!=null?{}:B(view,s.count),w=v!=null?Math.max(4,100*L(v)/mx):0;
    o+=(si?'<div class="fun-arrow">→</div>':'')+'<div class="fun-st" data-fs="'+fi+'-'+si+'"><div class="fun-bar"><i style="height:'+w.toFixed(1)+'%"></i></div>'+
-    '<div class="fun-n">'+(live?fmt(v,b):'—')+'</div><div class="fun-l">'+h(s.label)+'</div>'+(s.counts?'<div class="fun-u">'+h(s.counts)+'</div>':'')+
+    '<div class="fun-n">'+(v!=null?fmt(v,b):'—')+'</div><div class="fun-l">'+h(s.label)+'</div>'+(s.counts?'<div class="fun-u">'+h(s.counts)+'</div>':'')+
     (s.marks||[]).map((mk,mi)=>{const mv=val(mk.bind);return '<div class="fun-mark" data-fm="'+fi+'-'+si+'-'+mi+'">'+(live?fmt(mv,B(view,mk.bind)):'—')+' '+h(mk.label)+'</div>';}).join('')+
     (s.stops||[]).map((sp,pi)=>{const sv=val(sp.bind),hit=live&&sv>0;return '<div class="fun-stop'+(hit?' hit':'')+'" data-fp="'+fi+'-'+si+'-'+pi+'">↓ '+(live?fmt(sv,B(view,sp.bind)):'—')+' '+h(sp.label)+'</div>';}).join('')+'</div>';});
   o+='</div></div>';});
@@ -404,7 +405,15 @@ function wireCorr(root,view,state){const op=view.operate;((op&&op.correlate)||[]
   rd.innerHTML='<b>'+hhmm(t)+'</b>'+(bv!=null?' · '+h(bands[bv]!=null?bands[bv]:'= '+bv):'')+' · '+c.rows.map(id=>{const b=B(view,id);return h(b.short||b.name)+' <b>'+fmt(atT(H[id]||[],t),b)+'</b>';}).join(' · ');};
  sv.addEventListener('mousemove',show);sv.addEventListener('mouseleave',()=>{cur.setAttribute('x1',-9);cur.setAttribute('x2',-9);rd.innerHTML='';});});}
 
-const ARCH={race:race,funnel:funnel,reservoir:reservoir,lanes:lanes,roster:roster,gauges:gauges,board:board,scoreboard:scoreboard};
+/* table: the members of a reading, or the rows of a series, one line each with a column per path — the report, and the
+   offline file of it (`dmview table` writes the same lines as CSV). Drawn with the page: nothing in it is live. */
+function table(root,view,lv,state,op){const t=op.table||{columns:[],rows:[]};
+ let o=head(view,lv)+'<div class="op-table"><table><thead><tr>'+t.columns.map(c=>'<th>'+h(c)+'</th>').join('')+'</tr></thead><tbody>'+
+  (t.rows.length?t.rows.map(r=>'<tr>'+r.cells.map(c=>'<td>'+h(c)+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+Math.max(1,t.columns.length)+'" class="bl">nothing to list</td></tr>')+
+  '</tbody></table></div>';
+ root.innerHTML=o+opFoot(view,op,state);wireActs(root,view,state);}
+
+const ARCH={table:table,race:race,funnel:funnel,reservoir:reservoir,lanes:lanes,roster:roster,gauges:gauges,board:board,scoreboard:scoreboard};
 function operate(root,view,lv,state){const op=view.operate;if(op&&ARCH[op.archetype])return ARCH[op.archetype](root,view,lv,state,op);chain(root,view,lv,state);
  if(op&&(op.correlate||[]).length){const d=document.createElement('div');d.innerHTML=opFoot(view,{correlate:op.correlate,notes:op.notes,blind:op.blind},state);root.appendChild(d);wireCorr(root,view,state);}}
 const FORMS={story:story,schematic:schematic,'health-chain':operate,anatomy:anatomy};
