@@ -5,10 +5,10 @@
  "grown_by": "v0.38.0",
  "demo_day": "2026-10-27",
  "garden": "garden-sam",
- "drawn_at": "2026-09-26 21:09 UTC",
+ "drawn_at": "2026-09-26 23:16 UTC",
  "report": "machinery/report.html",
- "report_bytes": 262040,
- "report_sha256": "aade6d688a3c746cc6a7391623f1d6e17312fd8a2a5c6c3dc5bbe4895ff057a5",
+ "report_bytes": 262018,
+ "report_sha256": "3c3229e1c2c5d4f27fd76ad0491a8511f765efb9bba1343392f9aeeab8b6bc05",
  "title": "daftar — its mechanisms, drawn",
  "levels": [
   {
@@ -129,8 +129,8 @@
    }
   },
   {
-   "key": "mycelium",
-   "title": "The mycelium",
+   "key": "peering",
+   "title": "Peering",
    "claim": "What passes between gardens is only ever a proposal, and only its gardener lets it in.",
    "questions": {
     "orient": "How do two people's notebooks share one agreement?",
@@ -204,7 +204,7 @@
   {
    "cwd": "~/garden-sam",
    "cmd": "python3 bin/dmupgrade.py v0.38.0 --from ~/daftar --extend view",
-   "out": "profiles +view at v0.38.0 (2565be6d3ded): VOCAB.md extends [domain, view]; 12 added, 0 removed.\ngarden-sam (daftar v0.38.0, gardener sam, garden 88441465279f): 39 docs, 0 error(s), 0 warning(s)\n\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n  git add -A\n  git commit\nTo abandon it instead:\n  git checkout -- .\n  git clean -f -- assets/view/README.md assets/view/bin/dmview.py assets/view/lib/sources/http.py assets/view/lib/sources/prometheus.py assets/view/lib/view_export.py assets/view/lib/view_kit.py assets/view/lib/view_model.py assets/view/lib/view_report.py assets/view/lib/view_runtime.js assets/view/lib/view_serve.py assets/view/templates/drawings.py assets/view/templates/serve.json",
+   "out": "profiles +view at v0.38.0 (2565be6d3ded): VOCAB.md extends [domain, view]; 12 added, 0 removed.\ngarden-sam (daftar v0.38.0, gardener sam, garden 31fc45db8710): 39 docs, 0 error(s), 0 warning(s)\n\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n  git add -A\n  git commit\nTo abandon it instead:\n  git checkout -- .\n  git clean -f -- assets/view/README.md assets/view/bin/dmview.py assets/view/lib/sources/http.py assets/view/lib/sources/prometheus.py assets/view/lib/view_export.py assets/view/lib/view_kit.py assets/view/lib/view_model.py assets/view/lib/view_report.py assets/view/lib/view_runtime.js assets/view/lib/view_serve.py assets/view/templates/drawings.py assets/view/templates/serve.json",
    "exit": 0
   },
   {
@@ -222,12 +222,12 @@
   {
    "cwd": "~/garden-sam",
    "cmd": "git commit -q -m \"daftar v0.38.0, with the view profile\"",
-   "out": "garden-sam (daftar v0.38.0, gardener sam, garden 88441465279f): 39 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
+   "out": "garden-sam (daftar v0.38.0, gardener sam, garden 31fc45db8710): 39 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
    "exit": 0
   },
   {
    "cwd": "~/garden-sam",
-   "cmd": "python3 bin/dmjournal.py sam \"daftar's mechanisms recorded, and the page that draws them\" --body \"- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], [[mycelium]] and [[ledger]]; [[machinery]], the page that draws them, and drawings/mechanisms.py, its drawing module (site/machinery/composers.py).\n- why: the machinery page of daftar's site shows these mechanisms, drawn at four lenses.\"",
+   "cmd": "python3 bin/dmjournal.py sam \"daftar's mechanisms recorded, and the page that draws them\" --body \"- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], [[peering]] and [[ledger]]; [[machinery]], the page that draws them, and drawings/mechanisms.py, its drawing module (site/machinery/composers.py).\n- why: the machinery page of daftar's site shows these mechanisms, drawn at four lenses.\"",
    "out": "## 2026-10-27 09:00+00:00 · sam · daftar's mechanisms recorded, and the page that draws them",
    "exit": 0
   },
@@ -240,7 +240,7 @@
   {
    "cwd": "~/garden-sam",
    "cmd": "git commit -q -m \"daftar's mechanisms recorded, and the page that draws them\"",
-   "out": "garden-sam (daftar v0.38.0, gardener sam, garden 88441465279f): 46 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
+   "out": "garden-sam (daftar v0.38.0, gardener sam, garden 31fc45db8710): 46 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
    "exit": 0
   },
   {

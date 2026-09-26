@@ -42,11 +42,11 @@ product:
       - { from: "git merge", to: "bin/dmmerge.py", channel: "merge driver", at: "beans/*.md", config: "beans/*.md merge=daftar (.gitattributes)", rail: merge }
       - { from: "git merge", to: "bin/dmmerge.py", channel: "merge driver", at: "mappings/*.md", config: "mappings/*.md merge=daftar (.gitattributes)", rail: merge }
       - { from: "git merge", to: "log/pending.md", channel: union, at: "log/pending.md", config: "log/pending.md merge=union (.gitattributes)", rail: merge }
-    mycelium_processes:
+    peering_processes:
       - { proc: "bin/dmpropose.py make", user: "sam's agent", role: "makes the proposal, and journals what left, to which garden, under which agreement, with the fingerprint", config: "--to garden-ali --under shared-camera", rail: propose }
       - { proc: "bin/dmpropose.py read, take", user: "ali's agent", role: "reads (the gate's verdict on a scratch copy), then takes into the working tree", config: "run by hand, in garden-ali", rail: receive }
       - { proc: "git commit", user: "ali", role: "the ratification: what was taken becomes garden-ali's record", config: "git config user.name", rail: receive }
-    mycelium_pipes:
+    peering_pipes:
       - { from: "garden-sam", to: "a proposal file", channel: make, at: "beside both gardens", config: "bin/dmpropose.py make --to garden-ali --under shared-camera shared-camera", rail: propose }
       - { from: "a proposal file", to: "garden-ali", channel: read, at: "a scratch copy of garden-ali", config: "bin/dmpropose.py read <proposal>: writes nothing", rail: receive }
       - { from: "a proposal file", to: "garden-ali", channel: take, at: "the working tree of garden-ali", config: "bin/dmpropose.py take <proposal>: commits nothing", rail: receive }
@@ -77,7 +77,7 @@ mappings:
       - "two beans are one object when an establishing anchor says so; one bare minted name from two gardens is a candidate for a person, never fused"
       - "each fact is joined: a value another subsumes is recorded in provenance, and an inferred value never overrides one sam asserted"
       - "a disagreement nothing orders is kept, both values, and the bean is marked merge_open until sam settles it"
-  mycelium:
+  peering:
     summary: "How two gardens share one agreement: only a proposal passes between them, made under the agreement, read and taken by the other garden, and committed by its gardener."
     steps:
       - "sam and ali are parties to shared-camera, so their gardens may exchange proposals under it"
@@ -97,7 +97,7 @@ mappings:
 page:
   title: "daftar — its mechanisms, drawn"
   summary: "daftar's own mechanisms, drawn at four lenses for the machinery page of daftar's site."
-  body: "A page of drawings of the language this garden speaks: the gate, the journal, the merge, the mycelium and the ledger."
+  body: "A page of drawings of the language this garden speaks: the gate, the journal, the merge, peering and the ledger."
   view:
     reference:
       - { being: daftar, what: "the language this garden speaks: the law, the gate, the tools" }
@@ -170,9 +170,9 @@ page:
       pipes: { bean: daftar, field: merge_pipes }
       archetype: health-chain
       blind: [ { what: "a merge waiting for a person", why: "it is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric" } ]
-    mycelium:
-      draws: { mapping: mycelium }
-      label: "The mycelium"
+    peering:
+      draws: { mapping: peering }
+      label: "Peering"
       purpose: "Two gardens exchange only what their gardeners agree to give and to take."
       outcome: "Each garden holds the other's offer, in its own words, by its own gardener's hand."
       stages:
@@ -186,8 +186,8 @@ page:
         - { lens: understand, ask: "Where does a proposal stop, and who lets it in?" }
         - { lens: operate, ask: "What is waiting to be taken?" }
         - { lens: inspect, ask: "What does a proposal carry, and where is it kept?" }
-      processes: { bean: daftar, field: mycelium_processes }
-      pipes: { bean: daftar, field: mycelium_pipes }
+      processes: { bean: daftar, field: peering_processes }
+      pipes: { bean: daftar, field: peering_pipes }
       archetype: health-chain
       blind: [ { what: "what waits to be taken", why: "it is a proposal file beside the gardens, not a metric" } ]
     ledger:
@@ -212,5 +212,5 @@ design:
   gate:     { patterns: [accent, boundary, flow, gate, node, signal, store, tag, warning], would_take: funnel, why_none: "a funnel counts the commits that arrive, those stopped at each check and those recorded; this garden exports no count of its hook's verdicts, and no monitor reads one" }
   journal:  { patterns: [accent, external, flow, gate, node, signal, store, tag], would_take: roster, why_none: "a roster shows who writes, and how much, from a live series; nothing here measures the journal" }
   merge:    { patterns: [accent, external, flow, gate, node, signal, store, tag], would_take: null, why_none: "a merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric" }
-  mycelium: { patterns: [accent, boundary, flow, gate, node, ribbon, signal, store, warning], would_take: null, why_none: "what waits to be taken is a proposal file beside the gardens, not a metric" }
+  peering: { patterns: [accent, boundary, flow, gate, node, ribbon, signal, store, warning], would_take: null, why_none: "what waits to be taken is a proposal file beside the gardens, not a metric" }
   ledger:   { patterns: [accent, flow, gate, node, store, tag, warning], would_take: null, why_none: "what falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric" }

@@ -508,6 +508,9 @@ being's type, and was not renamed (`terms[kind]`).
 THE PAGE ON BEING — the public page once called "philosophy" is `Metaphysics` (τὰ μετὰ τὰ φυσικά): with the natures
 renamed, the word no longer collides with a value on a bean. Not taken: First philosophy (πρώτη φιλοσοφία, Aristotle's
 own name for the study, and the one the agent recommended); Ontology (ὄν and λόγος, a coinage of the 1600s).
+Since 2026-09-26 the page is `Model`, by the operator's word ("now that we use another term for the kind lets rename
+the github pages's website's metaphysic to model"): with `genos` where `kind` was, the page is named for what it
+shows, the law's own `MODEL.md`, and not for a tradition.
 
 KEPT AS IT WAS — the bean attribute `nature:`, the registry `natures` and a genos's `of_nature`. Its Greek word, φύσις,
 is now the crown's branch for bodies, and `physis: soma` beside a branch called physis would read badly. Recorded, and
