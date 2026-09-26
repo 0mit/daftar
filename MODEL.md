@@ -299,8 +299,13 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
     never-invents);
   - a journal line a commit adds that holds a character some reader takes for a line break, besides the line end
     itself: one line of the journal is one line to every reader.
-  - a value at a position whose origin is `stamped` that a commit adds and that is not the reading of a journal heading
-    the same commit adds: a value read from the clock is written `now`, and the save writes it;
+  - a value at a position read by the save (`origin: { act: read, by: save }`) that a commit adds and that is not the
+    reading of a journal heading the same commit adds: a value read from the clock is written `now`, and the save
+    writes it;
+  - a record naming another garden, or a path through one, whose day is typed and which the same commit did not take
+    from that garden (`dmpropose take`, its capture keyed by the proposal's fingerprint): what a record claims is not
+    how it arrived;
+  - a root whose `at` names a host other than the bean it sits on;
   - a series' part a commit already holds, changed: a part is written once, and what is new is a part of its own;
   - a person who is not the gardener, added by name with no consent of theirs recorded, and a future whereabouts of
     one in git (see below);
@@ -322,7 +327,8 @@ in `log/pending.md` as `status: proposed`, does everything safe around it, and c
 - **What harm can come of, git does not keep.** An entry of a list or an open map may be SEALED — `{held: <pointer>,
   basis?, until?}` in place of its attributes — and what it held is kept in a store a host resolves through its
   `roots` (`bin/dmheld.py`). Git keeps only the pointer; the gate never reads a store; a store is checked where it is,
-  and by every save. Erasure for a person deletes what the stores here hold of them, and the pointers stay, saying so.
+  by the pre-commit hook, which runs on the host: a pointer a commit adds that resolves nowhere here is refused.
+  Erasure for a person deletes what the stores here hold of them, and the pointers stay, saying so.
 - **Another person is kept by name only on their own word**: an agreement held here that they accepted (named by
   `consent`, or in whose `parties` they stand with `accepted`), or, for the gardener of a garden this one has met, the
   meeting itself. Between gardens this is export policy: `make` sends a person by name only where their word reaches

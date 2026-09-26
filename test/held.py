@@ -169,9 +169,20 @@ restore()
 text = read("beans/intake-letter.md")
 write("beans/intake-letter.md", text.replace("located_at: [", "located_at: [ { held: \"root:vault/" + "0" * 32 + "\", basis: { bean: service-2026 } }, "))
 code, out = save("a pointer from nowhere", "- action: a pointer to nothing.\n- held: intake-letter located_at added")
-check("dmsave refuses a pointer that resolves to nothing on this host, before anything is staged",
-      code != 0 and "holds nothing here" in out, out)
+check("dmsave refuses a pointer that resolves to nothing on this host: the hook its commit runs says so",
+      code != 0 and "holds nothing here" in out and run("git", "diff", "HEAD", "--quiet", cwd=G).returncode != 0, out)
+run("git", "reset", "-q", cwd=G)
+# A PLAIN COMMIT IS JUDGED AS THE SAVE IS (guards-after-parts-1-10, fix 2): the hook runs on the host, and asks dmheld.
+r = run(PY, "bin/dmjournal.py", "keeper (test)", "a pointer from nowhere, by hand", "--body",
+        "- action: a pointer to nothing.\n- held: intake-letter located_at added", cwd=G)
+run("git", "add", "-A", cwd=G)
+r = run("git", "commit", "-q", "-m", "a pointer from nowhere, by hand", cwd=G)
+check("...and so does a plain `git commit` of the same, which the gate alone would let through",
+      r.returncode != 0 and "holds nothing here" in r.stdout + r.stderr
+      and run(PY, "bin/dmheld.py", "new", "--staged", cwd=G).returncode == 1, (r.stdout + r.stderr)[-1500:])
 restore()
+code, out = held("new", "--staged")
+check("...and with nothing added, `dmheld new --staged` is silent and passes", code == 0 and out == "", out)
 
 # ---- nothing of her is in git
 blobs = run("git", "log", "-p", "--all", cwd=G).stdout

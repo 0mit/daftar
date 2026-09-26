@@ -149,13 +149,6 @@ def commit(message, again):
     _text = _text[len(_held):] if _held and _text.startswith(_held) else _text
     if pend:
         dmjournal.stamp_now(pend[-1], _text)
-    # MATERIAL SEALED HERE IS HERE (24.0, N30): every pointer the save adds resolves in a store on this host. The gate
-    # never reads a store, so the save does, before anything is staged.
-    import dmheld
-    _unheld = dmheld.unresolved_new(root=ROOT)
-    if _unheld:
-        return not_saved("a pointer this save adds holds nothing here:\n  " + "\n  ".join(_unheld)
-                         + "\nseal it with bin/dmheld.py put, on the host whose store holds it")
     add = git('add', '-A')
     if add.returncode != 0:
         print(add.stderr.rstrip(), file=sys.stderr)

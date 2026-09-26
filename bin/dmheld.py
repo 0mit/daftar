@@ -7,6 +7,7 @@
     python3 bin/dmheld.py erase <person>
     python3 bin/dmheld.py check
     python3 bin/dmheld.py due [--days N]
+    python3 bin/dmheld.py new --staged        # the pointers the index adds that do not resolve here; the hook runs it
 
 A SEALED ENTRY is `{held: root:<name>/<32 hex>, basis?, until?}` in place of an entry's attributes (`held_form`). What
 it held is a file `<store>/<32 hex>.yaml` holding `{bean, term, key, entry, about}`, where `<store>` is what THIS host's
@@ -14,7 +15,7 @@ it held is a file `<store>/<32 hex>.yaml` holding `{bean, term, key, entry, abou
 
 GIT KEEPS ONLY THE POINTER: no hash, no name, no count. The gate never reads a store — a gate that fails on one
 machine and passes on another is a gate people disable — so a store is checked where it is: here, by `check`, and
-by bin/dmsave.py before every save.
+by the pre-commit hook on every commit (`new --staged`), which runs on the host whose stores these are.
 
 ERASURE deletes every file the subject is in and writes the key to `<store>/ERASED`, which names no one: a pointer
 to it then resolves to `Erased`, and one this host cannot reach to `NotHere`. Neither is an error of the bean.
@@ -44,16 +45,16 @@ class Erased(Exception):
     """The material was erased for its subject; the pointer stays and says only that."""
 
 
-def _host(root, host=None):
-    beans = dmpass.beans_here(root)
+def _host(root, host=None, beans=None):
+    beans = dmpass.beans_here(root) if beans is None else beans
     if host:
         return host, beans.get(host)
     return dmwhere.this_host(beans)
 
 
-def stores(root=ROOT, host=None):
+def stores(root=ROOT, host=None, beans=None):
     """{root name: (path, row)} of every root this host declares a store (`keeps`)."""
-    _hid, hfm = _host(root, host)
+    _hid, hfm = _host(root, host, beans)
     out = {}
     for name, row in (dmwhere.roots_of(hfm) or {}).items():
         if isinstance(row, dict) and row.get('keeps'):
@@ -63,11 +64,11 @@ def stores(root=ROOT, host=None):
     return out
 
 
-def _file(pointer, root, host):
+def _file(pointer, root, host, beans=None):
     m = POINTER.match(str(pointer))
     if not m:
         raise ValueError(f"{pointer!r} is not a held pointer — `root:<name>/<32 hex>`")
-    st = stores(root, host).get(m.group(1))
+    st = stores(root, host, beans).get(m.group(1))
     if not st:
         raise NotHere(f"this host declares no store `{m.group(1)}` — it does not hold {pointer}")
     return st[0], m.group(2)
@@ -81,9 +82,9 @@ def _erased(path):
         return set()
 
 
-def resolve(pointer, *, root=ROOT, host=None):
+def resolve(pointer, *, root=ROOT, host=None, beans=None):
     """What a pointer holds, `{bean, term, key, entry, about}` — or raises NotHere, or Erased."""
-    path, key = _file(pointer, root, host)
+    path, key = _file(pointer, root, host, beans)
     f = os.path.join(path, key + '.yaml')
     if not os.path.isfile(f):
         if key in _erased(path):
@@ -293,12 +294,36 @@ def due(*, root=ROOT, beans=None, days=30):
     return out
 
 
-def unresolved_new(*, root=ROOT):
-    """The pointers the working tree's beans hold that HEAD's do not, and which do not resolve here: a save refuses
-    them — material sealed on this host is on this host."""
+def _staged_beans(root):
+    """{id: front matter} of every bean in the INDEX — what a commit would hold, read as the gate reads it."""
+    import subprocess
+    ls = subprocess.run(['git', '-C', root, 'ls-files', '-z', '--', 'beans/'], capture_output=True)
+    paths = [p for p in ls.stdout.decode('utf-8', 'replace').split('\0') if p.endswith('.md') and '/' not in p[6:]]
+    if not paths:
+        return {}
+    r = subprocess.run(['git', '-C', root, 'cat-file', '--batch'], capture_output=True,
+                       input=''.join(f':{p}\n' for p in paths).encode('utf-8'))
+    out, buf = {}, r.stdout
+    for p in paths:
+        head, _, buf = buf.partition(b'\n')
+        parts = head.split()
+        if len(parts) != 3:
+            continue
+        n = int(parts[2])
+        text, buf = buf[:n].decode('utf-8', 'replace'), buf[n + 1:]
+        fm = dmpass._front(text)
+        if fm:
+            out[str(fm.get('bean') or os.path.basename(p)[:-3])] = fm
+    return out
+
+
+def unresolved_new(*, root=ROOT, staged=False):
+    """The pointers the beans hold that HEAD's do not, and which do not resolve here: a commit refuses them — material
+    sealed on this host is on this host. `staged` reads the index, as the hook must; otherwise the working tree."""
     import subprocess
     bad = []
-    for bid, fm in sorted(dmpass.beans_here(root).items()):
+    beans = _staged_beans(root) if staged else dmpass.beans_here(root)
+    for bid, fm in sorted(beans.items()):
         r = subprocess.run(['git', '-C', root, 'show', f'HEAD:beans/{bid}.md'], capture_output=True, text=True,
                            encoding='utf-8', errors='replace')
         was = set()
@@ -312,7 +337,7 @@ def unresolved_new(*, root=ROOT):
             if e['held'] in was:
                 continue
             try:
-                resolve(e['held'], root=root)
+                resolve(e['held'], root=root, beans=beans)
             except (NotHere, Erased, ValueError) as x:
                 bad.append(f"{bid}: {t}[{label}] — {x}")
     return bad
@@ -354,6 +379,12 @@ def main(argv):
                 print(f"{lv.upper()}: {t}")
             print(f"held: {sum(1 for f in found if f[0] == 'error')} error(s), {sum(1 for f in found if f[0] == 'warn')} warning(s)")
             return 1 if any(f[0] == 'error' for f in found) else 0
+        elif cmd == 'new' and argv == ['--staged']:
+            bad = unresolved_new(staged=True)
+            if bad:
+                print("NOT COMMITTED: a pointer this commit adds holds nothing here:\n  " + "\n  ".join(bad)
+                      + "\nseal it with bin/dmheld.py put, on the host whose store holds it", file=sys.stderr)
+                return 1
         elif cmd == 'due':
             for b, t, l, d in due(days=int(_opt(argv, '--days', '30'))):
                 print(f"{b}: {t}[{l}] — {'due in ' + str(d) + ' day(s)' if d >= 0 else str(-d) + ' day(s) past'}")

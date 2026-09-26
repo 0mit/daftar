@@ -92,8 +92,14 @@ check("a bean with a `selections` entry (select, then count) passes, and so does
 
 # -- selections ----------------------------------------------------------------------------------------------------
 out = gate(inputs="    inputs:\n      - { name: asker, origin: telepathy }\n")
-check("an input of origin `telepathy` is refused by name", "telepathy" in out and "not in ['caller', 'clock', 'given', 'garden']" in out, out[-900:])
-out = gate(inputs="    inputs:\n      - { name: asker, origin: caller }\n      - { name: asker, origin: clock }\n")
+check("an input of origin `telepathy` is refused by name", "telepathy" in out and "is not `{act, nature?, by?}`" in out, out[-900:])
+out = gate(inputs="    inputs:\n      - { name: asker, origin: { act: dreamt } }\n")
+check("...an input whose act is no row of `acts` is refused, the rows named",
+      "act 'dreamt' is not a row of `acts`" in out, out[-900:])
+out = gate(inputs="    inputs:\n      - { name: asker, origin: { act: said, by: reader } }\n")
+check("...and one whose `by` its act does not list (the reader reads the clock; it says nothing)",
+      "by 'reader' is not one of the names `acts[said]` lists" in out, out[-900:])
+out = gate(inputs="    inputs:\n      - { name: asker, origin: { act: said } }\n      - { name: asker, origin: { act: read, nature: soma, by: reader } }\n")
 check("two inputs of one name are refused, both named", "two entries for name 'asker' (0 and 1)" in out, out[-900:])
 out = gate(rows=(R1.replace("met_by: members", "met_by: nobody"), R2))
 check("`key_of: selections` refuses a key the bean does not declare, and names the one it does",

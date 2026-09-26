@@ -31,7 +31,7 @@ U+2028, U+2029) would let one line carry a heading nobody stamped. Such a charac
 control character but a tab, and DEL: an escape clears a terminal's screen for whoever reads the journal there,
 and a NUL makes git read the whole journal as binary.
 
-HOW THIS IS ENFORCED (std-vocab 20.0, `journal.heading: stamped`). Every heading this tool writes is also
+HOW THIS IS ENFORCED (std-vocab 20.0; the `heading` of `journal.origin`, read `by: save`). Every heading this tool writes is also
 recorded in the clone's git directory (`.git/daftar/journal-stamps`), and the gate refuses a heading a commit
 adds that is not recorded there. The gate cannot tell a measured moment from a remembered one by looking at
 it; it can tell whether the clock-reading tool wrote it. The register is per clone and never versioned: it
@@ -177,11 +177,11 @@ def append(who, what, body):
     return h
 
 
-# THE DAY OF WRITING IS THE CLOCK'S (23.0, `provenance_record.as_of: stamped`). The forms show `as_of: now`: the writer
+# THE DAY OF WRITING IS THE CLOCK'S (23.0; `provenance_record`'s `as_of`, read `by: save`). The forms show `as_of: now`: the writer
 # never types the day of writing, because measured writers typed the nearest date in view instead — the example's, or
 # one read in another bean. This tool reads the clock once, for the heading; the same reading is what every `now` at a
 # position that reads the clock becomes — the day at a date, the moment at a moment. WHICH positions those are is the
-# law's (`origins`, 24.0), read by bin/dmpass.py: this tool names none of them. Only a bare `now` (or a quoted one)
+# law's (each position's `origin`, read `by: save`), read by bin/dmpass.py: this tool names none of them. Only a bare `now` (or a quoted one)
 # that is the whole value.
 STAMPED = dmpass.DOCUMENTS
 

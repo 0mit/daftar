@@ -83,7 +83,7 @@ def gate():
 
 
 def person(bid, extra=""):
-    # Written `as_of: now`, as a writer writes it (23.0, `provenance_record.as_of: stamped`): ali is committed below,
+    # Written `as_of: now`, as a writer writes it (23.0; `provenance_record`'s `as_of`, read `by: save`): ali is committed below,
     # and bin/dmjournal.py writes the day of the entry in its place. A typed day would be refused at the commit.
     return (f'---\nbean: {bid}\ngenos: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: empsychon\n'
             f'owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'

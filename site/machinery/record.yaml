@@ -33,7 +33,7 @@ product:
       - { from: "bin/dmjournal.py", to: "log/journal.md", channel: append, at: "log/journal.md", config: "## <when> · <who> · <what>, <when> read from the clock", rail: write }
       - { from: "bin/dmjournal.py", to: "journal-stamps", channel: register, at: ".git/daftar/journal-stamps", config: "per clone, never versioned", rail: write }
       - { from: "bin/dmcheck.py", to: "log/journal.md", channel: read, at: "the staged log/journal.md", config: "only the headings the commit adds", rail: check }
-      - { from: "bin/dmcheck.py", to: "journal-stamps", channel: read, at: ".git/daftar/journal-stamps", config: "journal.heading: stamped (seed/std-vocab.md)", rail: check }
+      - { from: "bin/dmcheck.py", to: "journal-stamps", channel: read, at: ".git/daftar/journal-stamps", config: "journal.origin: the heading read by the save (seed/std-vocab.md)", rail: check }
       - { from: "git merge", to: "log/journal.md", channel: union, at: "log/journal.md", config: "log/journal.md merge=union (.gitattributes)", rail: merge }
     merge_processes:
       - { proc: "bin/dmmerge.py --file", user: "whoever runs git merge", role: "merges one bean in place; refuses, leaving the file untouched, rather than lose a key or the body", config: "git config merge.daftar.driver, set by bin/install.py: … bin/dmmerge.py --file %O %A %B", rail: merge }

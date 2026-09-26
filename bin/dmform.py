@@ -73,6 +73,7 @@ DOMAINS = {
     'extent':      "in: extent                                     a bounded region of an aspect's domain (`extent_form`)",
     'recurrence':  "in: recurrence                                 a repetition over a sequence: every Nth neighbour, every N units, or the same place in each cell of a level (`recurrence_form`)",
     'ref':         "in: ref                                        a {bean|mapping[, field]} ref, resolved by the gate",
+    'origin':      "in: origin                                     where a value comes from, `{act, nature?, by?}`: a row of `acts`, a row of `natures` or a list of them, and one of the names the act's row lists",
     'pointer':     "in: { pointer: bean_field_pointer }            '<section>.<key>' on this bean, {bean, field} on another, or 'file:<path>'",
     'id':          "in: id                                         the id of a bean or mapping — a key of the ref FORM itself, which the gate resolves",
     'prose':       "in: prose | { prose: named }                   a reason, a description, a remark: deliberately not a position. `why`, `what`, `note`; `named`: one text, or texts under names",
@@ -86,6 +87,8 @@ def _domain(d):
         return 'values', list(d)
     if d in ('extent', 'ref', 'recurrence', 'bean_id'):
         return d, True
+    if d == 'origin':
+        return 'origin_of', True             # a value that IS an origin; `origin` is the facet saying a position's own
     if d == 'prose':
         return 'prose', True                 # words: any text, and only text — never a list or a map
     if d in ('untyped', 'id', 'any') or d is None:
@@ -123,13 +126,13 @@ def _domain(d):
 def domain_kind(d):
     """The domain an attribute's `in:` names, as `schema_language.attr_domains` names it — `values`, `registry` (and
     `registry_from`), `pattern` (soft or not), `form_of`, … — or None where it names none the language offers. The key
-    `origin_defaults` is read by: a position's origin is its domain's unless its record states one."""
+    a domain's origin is read by: a position's origin is its domain's unless its record states one."""
     if isinstance(d, list):
         return 'values'
     if d is None:
         return 'untyped'
     if isinstance(d, str):
-        return d if d in ('extent', 'ref', 'recurrence', 'bean_id', 'prose', 'untyped', 'id', 'any') else None
+        return d if d in ('extent', 'ref', 'recurrence', 'bean_id', 'origin', 'prose', 'untyped', 'id', 'any') else None
     if isinstance(d, dict):
         for k in ('aspect', 'type', 'entries', 'bean_id', 'system', 'key_of', 'form_of', 'pattern', 'registry',
                   'registry_from', 'quantity', 'pointer', 'prose'):
@@ -185,10 +188,10 @@ def attribute_form(term_def, sch):
             put('nested_at_most', name, [list(g) for g in rec['in']['at_most_one_of']])   # 24.0: and at most one of each group
         if isinstance(rec.get('default_from'), dict):
             put('default_from', name, dict(rec['default_from']))
-        if isinstance(rec.get('origin'), str):
-            put('origin', name, rec['origin'])  # where a value here may come from, where its domain's is wrong (`origin`)
-            if rec['origin'] == 'stamped':
-                put('stamped', name, True)      # read from the clock by the save, never typed
+        if rec.get('origin') is not None:
+            put('origin', name, rec['origin'])  # where a value here comes from, where its domain's is wrong (`origin`)
+            if isinstance(rec['origin'], dict) and rec['origin'].get('act') == 'read' and rec['origin'].get('by') == 'save':
+                put('stamped', name, True)      # read from the clock by the save, never typed (dmpass.SAVE)
         if rec.get('meaning') is not None:
             put('meaning', name, rec['meaning'])
     for name in form['one_of']:

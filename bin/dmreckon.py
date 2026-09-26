@@ -46,6 +46,7 @@ sys.path.insert(0, HERE)
 import dmparse  # noqa: E402 — the one reader of a path, a table and a front matter
 import dmcal    # noqa: E402 — positions in any calendar, moments, civil offsets
 import dmseq    # noqa: E402 — a series' rows and what a channel holds between them
+import dmpass   # noqa: E402 — where a value comes from: an input's `origin`
 
 ROOT = os.path.dirname(HERE)
 PY = 'python' if os.name == 'nt' else 'python3'
@@ -642,12 +643,14 @@ class Reckoner:
         for d in decls or []:
             if not isinstance(d, dict):
                 continue
-            n, o = d.get('name'), d.get('origin')
-            if o == 'clock':
+            # WHERE AN INPUT COMES FROM (`origin`, `{act, nature?, by?}`): the reader's clock, another garden, or else
+            # the asker's word — recorded on its line as said, and by what nature where the law says.
+            n, o = d.get('name'), d.get('origin') if isinstance(d.get('origin'), dict) else {}
+            if o.get('act') == 'read' and o.get('by') == dmpass.READER:
                 at = self.pin.at if self.pin else (self.now or _now())
                 self.env[n] = V(at)
                 self.lines.append(f"input {n}: the clock, {at}")
-            elif o == 'garden':
+            elif o.get('act') == 'said' and o.get('by') == dmpass.GARDEN:
                 # ACROSS GARDENS (N35): read at a commit the other garden published and granted, never copied here; a
                 # pin naming that garden reads it again at the pinned commit.
                 import dmacross
@@ -664,9 +667,12 @@ class Reckoner:
                 self.across = getattr(self, 'across', []) + [(d.get('garden'), got.commit)]
             elif n in self.given:
                 self.env[n] = self._given(n, self.given[n], d)
-                self.lines.append(f"input {n} ({o}): {show(self.env[n])}")
+                _nat = o.get('nature')
+                self.lines.append(f"input {n}, said by the asker"
+                                  + (f" ({'·'.join(_nat) if isinstance(_nat, list) else _nat})" if _nat else '')
+                                  + f": {show(self.env[n])}")
             else:
-                raise Refused(f"the reading takes the input '{n}' ({o}), and it is not given — "
+                raise Refused(f"the reading takes the input '{n}', said by the asker, and it is not given — "
                               f"`--input {n}=<value>`" + (f", a value in {d['quantity']}" if d.get('quantity') else ''))
 
     def _given(self, n, raw, decl):

@@ -120,6 +120,22 @@ out = stale_run("tree@0000000")
 check("dmstale: a clone that does not have the keyed objects is BEHIND, not stale",
       "NOT-HERE" in out and "STALE" not in out and "is behind" in out, out[-500:])
 
+# A ROOT IS ON THE HOST THAT DECLARES IT (guards-after-parts-1-10, fix 4): an `at` naming another host was read as a
+# path here. The gate refuses it, and refuses an `at` that names no host at all.
+_hp = os.path.join(G, "beans", "this-host.md")
+_ht = open(_hp).read()
+_me = __import__("socket").gethostname().lower()
+out = gate()
+check("a root whose `at` names the host it sits on passes", "roots.tree.at" not in out, out[-600:])
+open(_hp, "w").write(_ht.replace('at: "' + _me + ':', 'at: "far-host:', 1))
+out = gate()
+check("a root whose `at` names another host is refused, naming both",
+      "this-host: roots.tree.at is 'far-host:" in out and "names the host far-host" in out and "this-host" in out, out[-900:])
+open(_hp, "w").write(_ht.replace('at: "' + _me + ':' + R, 'at: "root:tree', 1))
+out = gate()
+check("...and one whose `at` is itself a root, naming no host, is refused", "which names no host" in out, out[-900:])
+open(_hp, "w").write(_ht)
+
 import dmmerge as M
 def merged(a, b):
     def g(garden, val):

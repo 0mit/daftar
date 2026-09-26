@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """stamps — the day of writing is the clock's: a provenance `as_of` a commit adds is the day of the entry it adds.
 
-std-vocab 23.0, `provenance_record.as_of: stamped`. A local model with no date in its context typed, for the day it
+std-vocab 23.0: `provenance_record`'s `as_of`, read `by: save`. A local model with no date in its context typed, for the day it
 wrote a fact down, the nearest date in view — the forms' example day, the gardener's stamp read in another bean — and
 the gate could not tell that from a day read off the clock. It can tell whether it is the day of a heading the same
 commit adds, which bin/dmjournal.py read from the clock. The writer writes `now`, and the tool that stamps the heading
@@ -12,8 +12,10 @@ writes the day in its place. Held here, in a freshly grown garden:
   +  the day of the heading passes: `now` saved with bin/dmsave.py, and `now` journalled with bin/dmjournal.py and then
      committed with `git add` and `git commit`, are committed as the day of the entry;
   -  an anchor's own record and an entry's (`parties.<k>.provenance`) are judged as a bean's is, each named by its path;
-  +  a record carrying `garden`, from a garden this one knows, keeps the stamp its own garden gave it; a merge's
-     `merged` passes; the entry's day written in the Persian calendar passes against its Gregorian heading, and the
+  -  a record carrying another garden's `garden`, or a path through one, keeps its day only where the same commit
+     takes a proposal from the garden it came by — a capture keyed by the proposal's fingerprint; typed, or with a
+     capture whose key is not the fingerprint, it is refused;
+  +  that take passes, its day as it came; a merge's `merged` passes; the entry's day written in the Persian calendar passes against its Gregorian heading, and the
      day before it does not;
   +  a garden's first commit is exempt, and a record left as it was is never re-judged — a bean edited elsewhere, or
      its anchors put in another order, keeps its old day;
@@ -278,12 +280,63 @@ check("...and with `now` in each, `--again` commits all three as the day of the 
       rc == 0 and 'as_of: now' not in _b and _b.count(f'as_of: {last_day()}') == 3, (rc, err[-600:], _b))
 
 # ---- + a stamp from another garden, and a merge's --------------------------------------------------------------------
+# A RECORD KEEPS ANOTHER GARDEN'S DAY ONLY BY A TAKE (guards-after-parts-1-10, fix 1): what a record claims is not how it
+# arrived. Without a take in the same commit, a record naming another garden — itself, or as the last hop of its path —
+# is this garden's own writing, and its typed day is refused.
+_h = head()
 person('bahar', OLD, by='ali', extra=f', garden: {ALI_GARDEN}', summary="A friend of Ali's, as her garden records her.")
 rc, out, err = save('sam', 'took in bahar from garden-ali', '--body',
                     '- action: added [[bahar]], as [[garden-ali]] recorded her.')
-check("a record carrying `garden`, made in a garden this one knows, keeps the stamp its own garden gave it: saved "
-      "(exit 0), its day as it came", rc == 0 and f'as_of: {OLD}, garden: {ALI_GARDEN}' in blob('bahar'),
-      (rc, err[-600:]))
+check("a record carrying the `garden` of a garden this one knows, with a day typed and no take in the commit: refused, "
+      "naming the take that alone keeps another garden's day",
+      rc != 0 and head() == _h and f'beans/bahar.md: provenance.as_of is {OLD}' in err
+      and f'it names the garden {ALI_GARDEN}' in err and 'dmpropose take' in err, (rc, err[-800:]))
+person('bahar', OLD, by='ali', extra=f', garden: 9f8e7d6c5b4a, via: [{ALI_GARDEN}]',
+       summary="A friend of Ali's, as her garden records her.")
+rc, out, err = save('--again')
+check("...and one naming an unknown garden by way of a known one, with a day typed and no take: refused, the hop named",
+      rc != 0 and head() == _h and f'by way of {ALI_GARDEN}' in err, (rc, err[-800:]))
+
+PID = 'p-20260917-bahar'
+PROPOSAL = f"""---
+proposal: {PID}
+from: {{ garden: {ALI_GARDEN} }}
+---
+```bean bahar
+(the bean as garden-ali made it)
+```
+"""
+
+
+def take_capture(key):
+    """What `dmpropose take` adds: the proposal kept whole under captures/, and a `capture` entry on the sending
+    garden's bean keyed by the proposal, whose `staleness_key` is the fingerprint the take read."""
+    d = os.path.join(G, 'captures', 'proposals', 'garden-ali')
+    os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, PID + '.md'), 'w', encoding='utf-8', newline='\n').write(PROPOSAL)
+    _gp = os.path.join(G, 'beans', 'garden-ali.md')
+    _t = open(_gp, encoding='utf-8').read()
+    open(_gp, 'w', encoding='utf-8', newline='\n').write(_t.replace('\n---\nAli', (
+        f"\ncapture:\n  {PID}:\n    of: \"proposal {PID}: bahar, from the garden garden-ali\"\n"
+        f"    owned_by_them: \"ali, who keeps garden-ali (garden {ALI_GARDEN}), as this garden records it\"\n"
+        f"    source: \"dmpropose take\"\n    taken_at: 1789000000000\n    staleness_key: \"{key}\"\n"
+        f"    redactions: \"none\"\n    holds: \"file:captures/proposals/garden-ali/{PID}.md\"\n---\nAli"), 1))
+
+
+person('bahar', OLD, by='ali', extra=f', garden: {ALI_GARDEN}', summary="A friend of Ali's, as her garden records her.")
+take_capture('sha256:' + '0' * 64)
+rc, out, err = save('--again')
+check("...and a capture entry that says `dmpropose take` over a proposal whose fingerprint is not its key: still refused",
+      rc != 0 and head() == _h and f'beans/bahar.md: provenance.as_of is {OLD}' in err, (rc, err[-800:]))
+import dmparse, dmpropose  # noqa: E402 — the fingerprint the take reads, by the one function that reads it
+_env, _body = dmparse.split_front_matter(PROPOSAL)
+_t = open(os.path.join(G, 'beans', 'garden-ali.md'), encoding='utf-8').read()
+open(os.path.join(G, 'beans', 'garden-ali.md'), 'w', encoding='utf-8', newline='\n').write(
+    _t.replace('sha256:' + '0' * 64, dmpropose.fingerprint(dmparse.loads(_env), _body)))
+rc, out, err = save('--again')
+check("...and the take itself — the proposal kept whole, its capture keyed by its fingerprint, on the `garden` bean of "
+      "the garden the record names: saved (exit 0), its day as it came",
+      rc == 0 and f'as_of: {OLD}, garden: {ALI_GARDEN}' in blob('bahar'), (rc, err[-800:]))
 person('farid', 'merged')
 rc, out, err = save('sam', 'added farid', '--body', '- action: added [[farid]].')
 check("`as_of: merged` typed on a person's record is refused: only the merge's own record says it",

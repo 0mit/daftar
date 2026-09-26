@@ -343,11 +343,14 @@ def tracked(root=ROOT):
                   for d, _s, fs in os.walk(root) if '.git' not in d.split(os.sep) for f in fs)
 
 
-# ============================== WHERE A VALUE MAY COME FROM (24.0; the Leviathan's Body 2) ==============================
-# Every position has ONE origin: the one its record states, or else its domain's (`origin_defaults`). Asked here and of
-# no copy — the save's `now`, the forms' said days and the gate's clock checks read it, and no tool keeps a list of
-# names. A position the law does not declare (a key of an open map, `details`) has none, and nothing here guesses one.
-INNER = 'inner'         # in `origin_defaults`: the domain's positions are its own entries', or the field's it tracks
+# ============================== WHERE A VALUE COMES FROM (24.0; the Leviathan's Body 2; sources by nature) ==============================
+# Every position has ONE origin, `{act, nature?, by?}`: the one its record states, or else its domain's (its record in
+# `schema_language.attr_domains`, or its value type's row). Asked here and of no copy — the save's `now`, the forms'
+# said days, the gate's clock checks and the merge's rank of sources read it, and no tool keeps a list of names. A
+# position the law does not declare (a key of an open map, `details`) has none, and nothing here guesses one.
+INNER = 'inner'         # a domain whose positions are its own entries', or the field's it tracks
+SAVE, READER = 'save', 'reader'     # the `by` names of `read` the save and the reckoner answer to
+LAW_BY, GARDEN = 'law', 'garden'    # the `by` names of `said`: the schema owns it; another garden said it
 
 
 def _terms(fm, key):
@@ -359,41 +362,96 @@ def _terms(fm, key):
     return [t for t in out if isinstance(t, dict) and isinstance(t.get('schema'), dict)]
 
 
+def _natures_of(o):
+    """The natures an origin names, as a list — [] where it names none (any nature)."""
+    n = o.get('nature') if isinstance(o, dict) else None
+    return list(n) if isinstance(n, list) else [] if n is None else [n]
+
+
 class Origins:
-    """The law's origins, and the origin of each position its terms and a garden's own declare. `law` is the standard's
-    front matter, `local` a garden's VOCAB.md's; either may be None."""
+    """The law's acts and natures, and the origin of each position its terms and a garden's own declare. `law` is the
+    standard's front matter, `local` a garden's VOCAB.md's; either may be None."""
 
     def __init__(self, law, local=None):
         law = law if isinstance(law, dict) else {}
         self.law = law
-        self.rows = [r for r in (law.get('origins') or []) if isinstance(r, dict)]
-        self.names = [r.get('origin') for r in self.rows]
-        self.clocks = list(law.get('origin_clocks') or []) if isinstance(law.get('origin_clocks'), list) else []
-        self.defaults = [r for r in (law.get('origin_defaults') or []) if isinstance(r, dict)]
+        self.acts = [r for r in (law.get('acts') or []) if isinstance(r, dict)] if isinstance(law.get('acts'), list) else []
+        self.act_names = [r.get('act') for r in self.acts]
+        self.natures = [r.get('nature') for r in (law.get('natures') or []) if isinstance(r, dict)] \
+            if isinstance(law.get('natures'), list) else []
         self.types = {t.get('type'): t for t in (law.get('value_types') or []) if isinstance(t, dict)}
-        _dom = (law.get('schema_language') or {}).get('attr_domains') if isinstance(law.get('schema_language'), dict) else None
-        self.domains = list(_dom) if isinstance(_dom, dict) else []
+        _sl = law.get('schema_language') if isinstance(law.get('schema_language'), dict) else {}
+        self.domains = dict(_sl['attr_domains']) if isinstance(_sl.get('attr_domains'), dict) else {}
         self.sources = [('law', t) for t in _terms(law, 'terms')] + [('VOCAB', t) for t in _terms(local, 'local_terms')]
-        _prov = law.get('provenance_record')
-        self.as_of = isinstance(_prov, dict) and _prov.get('as_of') == 'stamped'
+        # the positions of a record the law declares outside the terms: provenance's `as_of`, a journal's heading
+        self.records = {k: (law.get(k) or {}).get('origin') if isinstance(law.get(k), dict) else None
+                        for k in ('provenance_record', 'journal')}
 
-    def clock(self, origin):
-        """How an origin reads the clock — `judged`, `offered` — or None."""
-        return next((r.get('clock') for r in self.rows if r.get('origin') == origin), None)
+    def by_names(self, act):
+        """The `by` names an act's row lists."""
+        r = next((r for r in self.acts if r.get('act') == act), None)
+        return list(r['by']) if isinstance(r, dict) and isinstance(r.get('by'), dict) else []
+
+    def invalid(self, o):
+        """Why `o` is not an origin — `{act, nature?, by?}` against `acts` and `natures` — or None."""
+        if not isinstance(o, dict):
+            return f"{o!r} is not `{{act, nature?, by?}}`"
+        extra = sorted(set(o) - {'act', 'nature', 'by'})
+        if extra:
+            return f"{o!r} holds {extra}: an origin holds `act`, `nature` and `by` only"
+        if o.get('act') not in self.act_names:
+            return f"act {o.get('act')!r} is not a row of `acts` {self.act_names}"
+        ns = _natures_of(o)
+        if 'nature' in o and (not ns or len(set(map(str, ns))) != len(ns) or any(n not in self.natures for n in ns)):
+            return f"nature {o.get('nature')!r} is not a row of `natures` {self.natures}, or a list of them each once"
+        if 'by' in o and o['by'] not in self.by_names(o['act']):
+            return f"by {o['by']!r} is not one of the names `acts[{o['act']}]` lists {self.by_names(o['act'])}"
+        return None
 
     def default(self, d):
-        """The origin a domain gives a position that states none: the row for its type, else its domain's."""
+        """The origin a domain gives a position that states none: its value type's row's, else its domain's."""
         kind = dmform.domain_kind(d)
-        typ = d.get('type') if kind == 'type' and isinstance(d, dict) else None
-        rows = [r for r in self.defaults if r.get('in') == kind]
-        hit = [r for r in rows if typ is not None and r.get('type') == typ] or [r for r in rows if 'type' not in r]
-        return hit[0].get('origin') if hit else None
+        if kind == 'type' and isinstance(d, dict):
+            t = self.types.get(d.get('type'))
+            if isinstance(t, dict) and t.get('origin') is not None:
+                return t['origin']
+        rec = self.domains.get(kind)
+        return rec.get('origin') if isinstance(rec, dict) else None
 
     def of(self, rec):
         """The origin of the position whose attribute record is `rec`: stated, or its domain's; INNER, or None."""
         if not isinstance(rec, dict):
             return None
-        return rec['origin'] if isinstance(rec.get('origin'), str) else self.default(rec.get('in'))
+        return rec['origin'] if rec.get('origin') is not None else self.default(rec.get('in'))
+
+    @staticmethod
+    def clock(o):
+        """How an origin reads the clock: 'judged' — the save reads it, and a value typed is refused; 'offered' — its
+        recorder reads it, and `now` is offered; or None."""
+        if not isinstance(o, dict) or o.get('act') != 'read':
+            return None
+        return 'judged' if o.get('by') == SAVE else 'offered' if o.get('by') is None else None
+
+    @staticmethod
+    def said(o):
+        """True where a value in this position is someone's word, not a reading of the clock or the world."""
+        return isinstance(o, dict) and o.get('act') == 'said'
+
+    def judged(self, record, attr):
+        """True where the law's `record` (`provenance_record`, `journal`) says the save reads `attr` from the clock."""
+        m = self.records.get(record)
+        return isinstance(m, dict) and self.clock(m.get(attr)) == 'judged'
+
+    def rank(self, source):
+        """A map of value to origin (`values_source`) as the values' order, lightest first: by the row of `acts`
+        first, then by the row of `natures` — or None where two values would rank the same, or one is no origin."""
+        if not isinstance(source, dict) or any(self.invalid(o) for o in source.values()):
+            return None
+        key = {v: (self.act_names.index(o['act']), min((self.natures.index(n) for n in _natures_of(o)), default=-1))
+               for v, o in source.items()}
+        if len(set(key.values())) != len(key):
+            return None
+        return sorted(key, key=key.get)
 
     def positions(self):
         """[(source, where, name, record)] of every attribute, at every depth, of every term the law and the garden declare."""
@@ -420,67 +478,109 @@ class Origins:
 
     def clocked(self):
         """{'day': names, 'moment': names}: the attributes — by name, at any depth — that may be written `now`, with
-        what the save writes in its place: the reading of its heading, at the unit the position's type holds. A name
-        the law gives both units is in neither: the gate names it."""
+        what the save writes in its place: the reading of its heading, at the unit the position's type holds. A
+        provenance record's `as_of` is a day. A name the law gives both units is in neither: the gate names it."""
         out = {'day': set(), 'moment': set()}
         for _s, _w, n, rec in self.positions():
             u = self.unit(rec)
             if u and self.clock(self.of(rec)):
                 out[u].add(n)
-        if self.as_of:
+        if self.judged('provenance_record', 'as_of'):
             out['day'].add('as_of')
         both = out['day'] & out['moment']
         return {k: v - both for k, v in out.items()}
 
     def problems(self):
-        """[(source, why)] — what in the origins, their defaults or a position's origin no reader can read."""
+        """[(source, why)] — what in the acts, the domains' origins, a position's origin or a source no reader can read."""
         out = []
-        if not self.rows:
-            return [('law', "no `origins` — no position can say where its value may come from")]
-        for r in self.rows:
-            o = r.get('origin')
-            if not isinstance(o, str) or not o or self.names.count(o) > 1:
-                out.append(('law', f"origins: {o!r} is not one name no other row has"))
-            if r.get('clock') is not None and r.get('clock') not in self.clocks:
-                out.append(('law', f"origins[{o}].clock {r.get('clock')!r} is not one of origin_clocks {self.clocks}"))
-        seen = set()
-        for r in self.defaults:
-            k = (r.get('in'), r.get('type'))
-            if r.get('in') not in self.domains:
-                out.append(('law', f"origin_defaults: `in: {r.get('in')}` is no domain of schema_language.attr_domains"))
-            if r.get('type') is not None and (r.get('in') != 'type' or r.get('type') not in self.types):
-                out.append(('law', f"origin_defaults: `type: {r.get('type')}` is not a row of value_types under `in: type`"))
-            if r.get('origin') not in self.names + [INNER]:
-                out.append(('law', f"origin_defaults[{r.get('in')}].origin {r.get('origin')!r} is not a row of `origins`"))
-            if k in seen:
-                out.append(('law', f"origin_defaults: `in: {k[0]}`{f', type: {k[1]}' if k[1] else ''} has two rows"))
-            seen.add(k)
-        for d in self.domains:
-            if (d, None) not in seen:
-                out.append(('law', f"origin_defaults: the domain `{d}` has no row — a position in it would have no origin"))
+        if not self.acts:
+            return [('law', "no `acts` — no position can say where its value comes from")]
+        bys = []
+        for r in self.acts:
+            a = r.get('act')
+            if not isinstance(a, str) or not a or self.act_names.count(a) > 1:
+                out.append(('law', f"acts: {a!r} is not one name no other row has"))
+            if 'by' in r and not (isinstance(r['by'], dict) and r['by']
+                                  and all(isinstance(k, str) and isinstance(v, str) for k, v in r['by'].items())):
+                out.append(('law', f"acts[{a}].by is not a map of name to meaning"))
+            bys += self.by_names(a)
+        for b in sorted({b for b in bys if bys.count(b) > 1}):
+            out.append(('law', f"acts: `by: {b}` is listed under two acts — a reader that asks `by` could not tell which"))
+        if not self.natures:
+            out.append(('law', "no `natures` — no origin can say what nature its source is"))
+        for d, rec in self.domains.items():
+            o = rec.get('origin') if isinstance(rec, dict) else None
+            if not isinstance(rec, dict) or not isinstance(rec.get('form'), str):
+                out.append(('law', f"schema_language.attr_domains.{d} is not `{{form, origin}}`"))
+            elif o is None:
+                out.append(('law', f"schema_language.attr_domains.{d} gives no origin — a position in it would have none"))
+            elif o != INNER and self.invalid(o):
+                out.append(('law', f"schema_language.attr_domains.{d}.origin: {self.invalid(o)}"))
+        for t, row in self.types.items():
+            if row.get('origin') is not None and self.invalid(row['origin']):
+                out.append(('law', f"value_types[{t}].origin: {self.invalid(row['origin'])}"))
+        for k, m in self.records.items():
+            for attr, o in (m.items() if isinstance(m, dict) else []):
+                if self.invalid(o):
+                    out.append(('law', f"{k}.origin.{attr}: {self.invalid(o)}"))
+            if m is not None and not isinstance(m, dict):
+                out.append(('law', f"{k}.origin is not a map of attribute to origin"))
+        _pa = (self.law.get('provenance_record') or {}).get('attrs') if isinstance(self.law.get('provenance_record'), dict) else None
+        for attr in (self.records.get('provenance_record') or {}) if isinstance(self.records.get('provenance_record'), dict) else []:
+            if attr not in (_pa or []):
+                out.append(('law', f"provenance_record.origin.{attr}: not one of provenance_record.attrs {_pa}"))
         units = {}
         for src, where, n, rec in self.positions():
             stated = rec.get('origin')
-            if stated is not None and (not isinstance(stated, str) or stated not in self.names):
-                out.append((src, f"{where}.origin {stated!r} is not a row of `origins` {self.names}"))
+            if stated is not None and self.invalid(stated):
+                out.append((src, f"{where}.origin: {self.invalid(stated)}"))
                 continue
             if stated is not None and stated == self.default(rec.get('in')):
-                out.append((src, f"{where}.origin is `{stated}`, which its domain already gives — state an origin only "
+                out.append((src, f"{where}.origin is {stated}, which its domain already gives — state an origin only "
                                  f"where the domain's is wrong"))
             o = self.of(rec)
             if o is None:
                 out.append((src, f"{where}: its domain gives no origin, and it states none"))
             if self.clock(o) == 'judged' and self.unit(rec) is None:
-                out.append((src, f"{where}.origin is `{o}`, which the save writes from the clock, but its type holds "
-                                 f"neither a day nor a moment — type it `date` or `moment`"))
+                out.append((src, f"{where}.origin is read by the save from the clock, but its type holds neither a "
+                                 f"day nor a moment — type it `date` or `moment`"))
             if self.clock(o) and self.unit(rec):
                 units.setdefault(n, set()).add(self.unit(rec))
-        if self.as_of:
+        if self.judged('provenance_record', 'as_of'):
             units.setdefault('as_of', set()).add('day')
         for n, us in sorted(units.items()):
             if len(us) > 1:
                 out.append(('law', f"`{n}` is read from the clock as a day at one position and a moment at another — "
                                    f"the save finds a `now` by the attribute's name, and could not tell which to write"))
+        # A TERM RANKED BY SOURCE: every value says where it comes from, and no two rank the same.
+        for src, t in self.sources:
+            m = t.get('merge') if isinstance(t.get('merge'), dict) else {}
+            vs = t['schema'].get('values')
+            if m.get('order') != 'source' and 'values_source' not in t:
+                continue
+            name = t.get('term') or t.get('name')
+            srcmap = t.get('values_source')
+            if m.get('order') != 'source':
+                out.append((src, f"{name}: `values_source` with no `merge: {{order: source}}` — nothing reads it"))
+            elif not isinstance(srcmap, dict) or not isinstance(vs, list) or set(srcmap) != set(vs):
+                out.append((src, f"{name}: `merge: {{order: source}}` needs `values_source` naming each of its values "
+                                 f"{vs} once, and nothing else"))
+            elif self.rank(srcmap) is None:
+                out.append((src, f"{name}.values_source: {next((f'{v}: {self.invalid(o)}' for v, o in srcmap.items() if self.invalid(o)), 'two values would rank the same (the same act and nature)')}"))
+        # WHERE A SYSTEM'S OWN MACHINERY COMES FROM: each way a system is reckoned, walked or placed.
+        shape = self.law.get('system_shape') if isinstance(self.law.get('system_shape'), dict) else {}
+        for word, m in (shape.get('sources') or {}).items() if isinstance(shape.get('sources'), dict) else []:
+            offered = shape.get(word)
+            if isinstance(offered, list) and (not isinstance(m, dict) or set(m) != set(offered)):
+                out.append(('law', f"system_shape.sources.{word}: names {sorted(m) if isinstance(m, dict) else m}, "
+                                   f"and system_shape.{word} offers {offered}: each once"))
+            for k, o in (m.items() if isinstance(m, dict) else []):
+                if o is not None and self.invalid(o):
+                    out.append(('law', f"system_shape.sources.{word}.{k}: {self.invalid(o)}"))
+        for a in (self.law.get('aspects') or []) if isinstance(self.law.get('aspects'), list) else []:
+            for p in (a.get('positions') or []) if isinstance(a, dict) else []:
+                if isinstance(p, dict) and p.get('source') is not None and self.invalid(p['source']):
+                    out.append(('law', f"aspects[{a.get('aspect')}].{p.get('position')}.source: {self.invalid(p['source'])}"))
         return out
 
 

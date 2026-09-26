@@ -188,7 +188,7 @@ for what, bad, want in (
     check("entries INSIDE an entry are judged as entries: %s is refused" % what, want in out, out[-500:])
 sv_now = open(os.path.join(ROOT, "seed", "std-vocab.md")).read()
 check("NOTHING in the law is `untyped` any more — and `any` is a decision, said as one",
-      # an ATTRIBUTE's domain, `<name>: { in: untyped, … }`: `origin_defaults` names the domain as a row, and says no
+      # an ATTRIBUTE's domain, `<name>: { in: untyped, … }`: `attr_domains` names the domain as a row, and says no
       # position is in it
       not re.search(r"\w:\s*\{\s*in: untyped,", sv_now) and "value: { in: any," in sv_now)
 

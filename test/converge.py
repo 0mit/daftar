@@ -288,9 +288,18 @@ def _said(garden, src, owns):
     return g
 def _owns(a, b):
     return list(M.merge_gardens([a, b]).values())[0]['facts']['owns']['members']
-check("the src rank comes from the vocabulary, in the order the constant held",
-      M.ranked_order('provenance_src') == ['generated-by-tool', 'inferred', 'observed', 'asserted-by-human'],
-      str(M.ranked_order('provenance_src')))
+# SINCE sources-by-nature (2026-09-26) THE RANK IS DERIVED, not listed: each src says what act and nature it is
+# (`values_source`), and the order is act first, then nature — the constant's four in their old order, with a
+# document's word (`stated-in-document`, said by a lekton) between what was read and what a person said.
+check("the src rank comes from the vocabulary, derived from each src's act and nature, the old four in their order",
+      M.ranked_order('provenance_src') == ['generated-by-tool', 'inferred', 'observed', 'stated-in-document',
+                                           'asserted-by-human'], str(M.ranked_order('provenance_src')))
+_o = _owns(_said('g1', 'observed', {'site': 'IST'}), _said('g2', 'stated-in-document', {'site': 'IST'}))
+check("...so what a document says outranks what was observed, and a person's word outranks a document's",
+      _o['site'].get('src') == 'stated-in-document'
+      and _owns(_said('g1', 'asserted-by-human', {'site': 'IST'}),
+                _said('g2', 'stated-in-document', {'site': 'IST'}))['site'].get('src') == 'asserted-by-human',
+      json.dumps(_o['site']))
 check("...and no copy of it is left in the merge", not hasattr(M, 'SRC_RANK'))
 for _pair in ((('g1', 'asserted-by-human', {'os': 'AlmaLinux 9'}), ('g2', 'inferred', {'os': 'AlmaLinux 9.8'})),
               (('g2', 'inferred', {'os': 'AlmaLinux 9.8'}), ('g1', 'asserted-by-human', {'os': 'AlmaLinux 9'}))):

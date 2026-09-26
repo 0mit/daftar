@@ -664,8 +664,23 @@ def ranked_order(key):
     2026-09-20, `leaf_order('authority', …)` answered `none`. A law the code ignores is worse than a rule in
     code, because the vocabulary says it is in force."""
     m = (TERMS.get(key) or {}).get('merge') or {}
+    if m.get('order') == 'source':
+        return _source_rank(key)
     o = str(m.get('order') or '')
     return [p.strip() for p in o.split('<')] if '<' in o else None
+
+
+_SOURCE_RANKS = {}
+
+
+def _source_rank(key):
+    """`merge: {order: source}`: the term's values ranked by where each comes from (`values_source`), read by
+    bin/dmpass.py `Origins.rank` — the row of `acts` first, lightest first, then the row of `natures`. The rank is
+    derived, not written: a value added to the term takes its place from what it says it is (sources-by-nature)."""
+    if key not in _SOURCE_RANKS:
+        import dmpass
+        _SOURCE_RANKS[key] = dmpass.origins(ROOT).rank((TERMS.get(key) or {}).get('values_source'))
+    return _SOURCE_RANKS[key]
 
 
 def leaf_order(key, val):
@@ -899,7 +914,8 @@ def _src_rank(src):
         _SRC_RANK = ranked_order('provenance_src')
         if not _SRC_RANK:
             raise SystemExit("dmmerge: the vocabulary declares no rank for `provenance_src` "
-                             "(merge: {order: \"a<b<c\"}) — refusing to merge without the provenance guard")
+                             "(merge: {order: \"a<b<c\"}, or {order: source} with each value's `values_source`) — "
+                             "refusing to merge without the provenance guard")
     return _SRC_RANK.index(src if src in _SRC_RANK else DEFAULT_SRC)
 
 

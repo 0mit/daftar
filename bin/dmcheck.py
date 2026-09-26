@@ -609,7 +609,7 @@ for t in (vocab_fm.get('local_terms') or []):
     if isinstance(t, dict) and t.get('term'):
         TERMS[t['term']] = _overlay(TERMS[t['term']], t) if t['term'] in TERMS else t
 SCHEMAS = {n: t['schema'] for n, t in TERMS.items() if isinstance(t.get('schema'), dict)}
-# WHERE A VALUE MAY COME FROM (24.0, `origins`): each position's origin, read by bin/dmpass.py and by no list here.
+# WHERE A VALUE MAY COME FROM (24.0; `acts`): each position's origin, read by bin/dmpass.py and by no list here.
 # CLOCKED: the attributes a `now` may be written at, by the unit the save writes in its place.
 ORIGINS = dmpass.Origins(std_fm, vocab_fm)
 CLOCKED = ORIGINS.clocked()
@@ -1047,6 +1047,8 @@ def check_value_types():
 # `journal` is one mapping, not a registry of rows, so it is read as the garden states it, else as the standard does.
 JOURNAL = (vocab_fm.get('journal') if isinstance(vocab_fm.get('journal'), dict) else None) or \
           (std_fm.get('journal') if isinstance(std_fm.get('journal'), dict) else {})
+# a heading the tool writes from the clock and a person never types: the journal's `heading` read `by: save`
+JOURNAL_STAMPED = ORIGINS.clock((JOURNAL['origin'] if isinstance(JOURNAL.get('origin'), dict) else {}).get('heading')) == 'judged'
 
 def check_value_type(where, attr, val, typ):
     """A value against a declared value type. An undeclared type is itself an error: a schema naming a type
@@ -1615,6 +1617,8 @@ def check_system_structure():
         elif _lv not in (None, 'open'):
             errors.append(f"{_w}: `levels` is a list of named levels, a counted range {{by, from, to}}, or `open` — got {_lv!r}")
         for _word, _offered in (std_fm.get('system_shape') or {}).items():
+            if _word == 'sources':
+                continue                              # where each way comes from (dmpass `Origins`), not a word a row states
             if _row.get(_word) is not None and _row[_word] not in (_offered or []):
                 errors.append(f"{_w}: `{_word}` is one of {_offered} — got {_row[_word]!r}")
         for _t in (_row.get('same_ground_as') or []):
@@ -2519,7 +2523,7 @@ def ectl_entry_types(e):
         if e.entry.get(attr) is None:
             continue
         if attr in _stamped and str(e.entry[attr]).strip() == 'now':
-            # READ FROM THE CLOCK BY THE SAVE (`origin: stamped`): `now` is the word the save writes the moment of
+            # READ FROM THE CLOCK BY THE SAVE (`by: save`): `now` is the word the save writes the moment of
             # its journal heading in place of — never a value to judge, and never one a commit may keep
             errors.append(f"{e.base}: {e.ref}.{attr} is `now` — the word the save writes the moment of its entry in place "
                           f"of: save with {_save_command('- action: <what changed>')}" + _rule(f"{_law_path(e.term)}.attrs.{attr}", e.term))
@@ -2881,6 +2885,14 @@ def ectl_entry_recurrences(c):
         v = c.entry.get(attr)
         if v is not None:
             check_recurrence(f"{c.base}: {c.ref}.{attr}", v)
+
+
+def ectl_entry_origins(c):
+    """`in: origin` — where a value comes from, `{act, nature?, by?}`, judged against `acts` and `natures`."""
+    for attr, _ in _facet(c.form, 'origin_of', c.scope):
+        v = c.entry.get(attr)
+        if v is not None and ORIGINS.invalid(v):
+            errors.append(f"{c.base}: {c.ref}.{attr}: {ORIGINS.invalid(v)}" + _rule('acts', 'schema_language.origin'))
 
 
 def ectl_entry_extents(c):
@@ -3717,8 +3729,30 @@ def check_fixes():
                               f"{_r['being']}, whose `fixes` do not say so")
 
 
+def check_root_hosts():
+    """A ROOT IS ON THE HOST THAT DECLARES IT (guards-after-parts-1-10, fix 4): its `at` is "the literal position this
+    root means HERE, host named", and the resolver takes that host for the datum without asking again. So the host it
+    names is one of the names of the bean it sits on — by dmwhere's own reading of what a machine is called."""
+    import dmwhere
+    for (_ib, base), (fm, _b) in sorted(docs.items()):
+        if not _ib or not isinstance(dmwhere.roots_of(fm), dict):
+            continue
+        _names = dmwhere.names_of(base, fm)
+        for _k, _row in sorted(dmwhere.roots_of(fm).items()):
+            _at = _row.get('at') if isinstance(_row, dict) else None
+            if not isinstance(_at, str):
+                continue
+            _m = dmwhere.HOST_FORM.match(_at)
+            _h = _m.group(1).lower() if _m else _at.partition(':')[0]
+            if _h not in _names:
+                errors.append(f"{base}: roots.{_k}.at is '{_at}', which names {'no host' if not _m else f'the host {_h}'}"
+                              f" — a root is a place on the host that declares it, and this one is called "
+                              f"{', '.join(sorted(_names))}" + _rule('terms[roots].schema.attrs.at', 'roots'))
+
+
 PLACE_ENTRY = ()
 PLACE_PLIES = ((check_fixes, "a boundary marked in a being is said at both ends, and they agree"),
+               (check_root_hosts, "a root is a place on the host that declares it"),
                (check_relative_positions, "a position from another being resolves through where that being is"),
                (check_place_law, "a system's datum, cells, boundaries and unit symbols are rows the law holds"))
 # ---- RECKON
@@ -3897,6 +3931,7 @@ ENTRY_CONTROLLERS = (
     ('cells: requires / expects', ectl_entry_required_if),
     ('in: extent', ectl_entry_extents),
     ('in: recurrence', ectl_entry_recurrences),
+    ('in: origin', ectl_entry_origins),
     ('in: quantity', ectl_entry_quantities),
     ('sums', ectl_sums),
     ('in: pointer', ectl_pointer_fields),
@@ -4385,12 +4420,12 @@ def check_series_parts():
 # one file a file the garden does not hold. A FILE IN NO LAYER IS NO FINDING: the law cannot name every file a garden
 # keeps, and dmpass shows them where the map is shown.
 def check_origins():
-    """Every position says where its value may come from (24.0, `origins`): the rows, the defaults each domain gives,
+    """Every position says where its value may come from (24.0; `acts`): the acts, the origin each domain gives,
     and each origin a term or a garden's own term states are readable, and one name is never read from the clock as a
     day at one position and a moment at another."""
     for src, why in ORIGINS.problems():
-        errors.append(f"{'VOCAB local_terms' if src == 'VOCAB' else 'VOCAB origins'}: {why} (a RULE-CHANGE)"
-                      + _rule('origins', 'origin_defaults', 'schema_language.origin'))
+        errors.append(f"{'VOCAB local_terms' if src == 'VOCAB' else 'VOCAB acts'}: {why} (a RULE-CHANGE)"
+                      + _rule('acts', 'schema_language.origin'))
 
 
 def check_layers():
@@ -5055,15 +5090,14 @@ def check_single_owner_of_a_fact():
 # WHY a blob is absent (a path not staged and a path deleted in the index are both "nothing to read"),
 # which is exactly the distinction `_git` returns and these two discard on purpose.
 def _stamps_of(fm, own=None, path=()):
-    """[(where, record)] of every provenance record in a front matter that is THIS garden's own — a record carrying the
-    `garden` of another garden was made there and keeps that garden's stamp; one naming this garden itself is this
-    garden's, and is judged. `where` is the record's path, for the message only: a record is matched by what it is
-    (src, by, as_of), never by where it sits, so a record moved — into a conflict, out of one, to a renamed bean — is
-    not a record added."""
+    """[(where, record)] of every provenance record in a front matter: this garden's own, and those carrying the
+    `garden` of another — which keep that garden's stamp only where they arrived by a take (`_taken_from`). `where` is
+    the record's path, for the message only: a record is matched by what it is (src, by, as_of, garden), never by where
+    it sits, so a record moved — into a conflict, out of one, to a renamed bean — is not a record added."""
     out = []
     if isinstance(fm, dict):
         for k, v in fm.items():
-            if k == 'provenance' and isinstance(v, dict) and (v.get('garden') is None or str(v.get('garden')) == own):
+            if k == 'provenance' and isinstance(v, dict):
                 out.append(('.'.join(path + ('provenance',)), v))
             out += _stamps_of(v, own, path + (str(k),))
     elif isinstance(fm, list):
@@ -5073,7 +5107,7 @@ def _stamps_of(fm, own=None, path=()):
 
 
 def _stamped_values(fm):
-    """[(where, value)] of every value a document holds at an attribute whose origin is `stamped` — read from the clock
+    """[(where, value)] of every value a document holds at an attribute whose origin the save reads from the clock (`by: save`) — read from the clock
     by the save — in an entry of a term, or in an entry nested in one, wherever the term's attributes put it."""
     out = []
 
@@ -5125,6 +5159,46 @@ def _day_number(position):
 
 def _staged_text(p):
     return _git('show', f':{p}')[0]
+
+
+def _taken_from(staged):
+    """{garden id}: the gardens this commit TAKES a proposal from — a `capture` entry the commit adds on that garden's
+    `garden` bean, written by `dmpropose take`, holding a proposal file the commit adds whose fingerprint is the
+    entry's `staleness_key`. Only a take brings in another garden's records whole, each with the day its own garden
+    stamped; a record claiming another garden that came any other way is judged as this garden's own
+    (guards-after-parts-1-10, fix 1)."""
+    out, added = set(), set(staged)
+    for p in staged:
+        if not (p.startswith('beans/') and p.endswith('.md')):
+            continue
+        try:
+            fm = dmparse.loads(dmparse.split_front_matter(_staged_text(p) or '')[0] or '') or {}
+        except Exception:
+            continue
+        if fm.get('genos') != 'garden' or not isinstance(fm.get('capture'), dict):
+            continue
+        try:
+            was = dmparse.loads(dmparse.split_front_matter(_head_text(p) or '')[0] or '') or {}
+        except Exception:
+            was = {}
+        had = was.get('capture') if isinstance(was.get('capture'), dict) else {}
+        gids = {str(a.get('value')) for a in ((fm.get('identity') or {}).get('anchors') or [])
+                if isinstance(a, dict) and a.get('key') == 'garden_id'}
+        for key, e in fm['capture'].items():
+            if key in had or not isinstance(e, dict) or e.get('source') != 'dmpropose take':
+                continue
+            held = str(e.get('holds') or '')
+            f = held[5:] if held.startswith('file:') else None
+            if not f or f not in added or _head_text(f):
+                continue
+            try:
+                import dmpropose
+                env, body = dmparse.split_front_matter(_staged_text(f) or '')
+                if dmpropose.fingerprint(dmparse.loads(env or '') or {}, body or '') == str(e.get('staleness_key')):
+                    out |= gids
+            except Exception:
+                continue
+    return out
 
 
 def _head_text(p):
@@ -5384,14 +5458,14 @@ def check_staged_state():
                 if not journal_heading_ok(_h):
                     errors.append(f"journal heading '{_h}' is not a position in time — "
                                   + ("a heading is the tool's, read from the clock and never typed: remove it and its "
-                                     f"lines, then {_journal_command()}" if JOURNAL.get('heading') == 'stamped' else
+                                     f"lines, then {_journal_command()}" if JOURNAL_STAMPED else
                                      f"write {JOURNAL.get('heading_form')}, read from the clock: {_journal_command()} "
-                                     f"writes it") + _rule('journal.heading_form', 'journal.heading'))
+                                     f"writes it") + _rule('journal.heading_form', 'journal.origin'))
                     continue
-                # THE MOMENT IS MEASURED, NOT REMEMBERED (20.0, `journal.heading: stamped`). The gate cannot tell
+                # THE MOMENT IS MEASURED, NOT REMEMBERED (20.0, the journal's `heading` read `by: save`). The gate cannot tell
                 # a clock reading from a typed one by its form; it can tell whether bin/dmjournal.py wrote it,
                 # because the tool registers every heading it writes in this clone's git directory.
-                if JOURNAL.get('heading') == 'stamped':
+                if JOURNAL_STAMPED:
                     if _stamped is None:
                         try:
                             import dmjournal
@@ -5401,14 +5475,14 @@ def check_staged_state():
                     if _h.rstrip() not in _stamped:
                         errors.append(f"journal heading '{_h[:80]}' was not written by bin/dmjournal.py — a heading "
                                       f"is read from the clock by the tool, never typed: remove the typed heading and "
-                                      f"its lines, then {_journal_command()}" + _rule('journal.heading'))
-            # THE DAY OF WRITING IS STAMPED, NOT TYPED (23.0, `provenance_record.as_of: stamped`). A bean's `as_of` is the
+                                      f"its lines, then {_journal_command()}" + _rule('journal.origin'))
+            # THE DAY OF WRITING IS STAMPED, NOT TYPED (23.0, `provenance_record`'s `as_of` read `by: save`). A bean's `as_of` is the
             # day it was written down — the day this commit's journal entry was stamped with, read from the clock by
             # bin/dmjournal.py. Measured writers typed the nearest date in view instead: an example's, one read in another
             # bean. So a record this commit ADDS must carry the day of a heading it adds. A record is matched by what it
             # is — (src, by, as_of) — so one moved (into a conflict, out of it, to a renamed bean) is never judged again;
             # one made in another garden keeps its garden's stamp; the merge tool's own record says `merged`.
-            # A VALUE READ FROM THE CLOCK (`origin: stamped`): each one a commit adds is the moment of a journal
+            # A VALUE READ FROM THE CLOCK BY THE SAVE (`by: save`): each one a commit adds is the moment of a journal
             # heading the same commit adds — the save wrote it there in place of `now`. Matched by value, so a value moved
             # is not a value added.
             _whens = {_h[3:].split(' · ', 1)[0].strip() for _h in _added if _h.startswith('## ')}
@@ -5435,8 +5509,8 @@ def check_staged_state():
                                       f"of this commit's journal entry"
                                       + (f" ({', '.join(sorted(_whens))})" if _whens else '')
                                       + f". Write `now` and save with {_save_command('- action: <what changed>')}: the save "
-                                        f"writes the moment in its place" + _rule('schema_language.origin', 'origins'))
-            if PROV.get('as_of') == 'stamped':
+                                        f"writes the moment in its place" + _rule('schema_language.origin', 'acts'))
+            if ORIGINS.judged('provenance_record', 'as_of'):
                 _own_id = own_garden_id()
                 _held = set(l.rstrip() for l in (_head_text('log/journal.md') or '').split('\n') if l.startswith('## '))
                 _new_h = [_h for _h in _added if _h.startswith('## ') and _h.rstrip() not in _held]
@@ -5444,6 +5518,7 @@ def check_staged_state():
                 _waiting = bool(_new_h) and all(_h.rstrip() in (_stamped or set()) for _h in _new_h) if _stamped is not None else False
                 _fix = (f"{'python' if os.name == 'nt' else 'python3'} bin/dmsave.py --again" if _waiting and
                         os.path.isfile(os.path.join(ROOT, 'bin', 'dmsave.py')) else _save_command('- action: <what changed>'))
+                _taken = _taken_from(staged)
                 _renamed = {}
                 for _l in _git('diff', '--cached', '-M', '--name-status')[0].split('\n'):
                     _f = _l.split('\t')
@@ -5466,21 +5541,25 @@ def check_staged_state():
                             continue
                         errors.append(f"{_p}: {_w} is `now` — the word the save writes the day of its entry in place of; "
                                       f"this commit was made without it. Save with {_fix}"
-                                      + _rule('provenance_record.as_of', 'provenance_record'))
+                                      + _rule('provenance_record.origin', 'provenance_record'))
                     def _key(r):
-                        return (str(r.get('src')), str(r.get('by')), str(r.get('as_of')))
+                        return (str(r.get('src')), str(r.get('by')), str(r.get('as_of')), str(r.get('garden')))
                     _before = collections.Counter(_key(r) for _w, r in _stamps_of(_was_fm, _own_id))
                     for _w, _r in _stamps_of(_now_fm, _own_id):
                         _k = _key(_r)
                         if _before[_k]:
                             _before[_k] -= 1
                             continue
+                        _g = _r.get('garden')
+                        _via = _r.get('via') if isinstance(_r.get('via'), list) and _r.get('via') else None
+                        if _g is not None and str(_g) != _own_id and str(_via[-1] if _via else _g) in _taken:
+                            continue              # taken in whole from the garden it came by: its own garden's day
                         _v = _r.get('as_of')
                         if str(_v).strip() == 'now':
                             continue                  # refused above, with the save that stamps it
                         if _v is None:
                             errors.append(f"{_p}: {_w} has no `as_of` — the day it was written down is part of the record: "
-                                          f"write `as_of: now` and save with {_fix}" + _rule('provenance_record.as_of', 'provenance_record'))
+                                          f"write `as_of: now` and save with {_fix}" + _rule('provenance_record.origin', 'provenance_record'))
                         elif str(_v) == 'merged' and _r.get('src') == 'generated-by-tool' and _r.get('by') == 'dmmerge':
                             continue                  # the merge's own record: when a merge happened is git's to say
                         elif _day_number(_v) not in _days:
@@ -5489,8 +5568,14 @@ def check_staged_state():
                                           + (f" ({', '.join(sorted({_h[3:13] for _h in _new_h}))})" if _days else '')
                                           + f". Write `as_of: now` and save with {_fix}: the save writes the day in its place"
                                           + (" (a record this garden took from another carries that garden's `garden`, and "
-                                             "keeps its day)" if str(_r.get('garden')) == _own_id else '')
-                                          + _rule('provenance_record.as_of', 'provenance_record'))
+                                             "keeps its day)" if str(_r.get('garden')) == _own_id else
+                                             f" — it names the garden {_r.get('garden')}"
+                                             + (f", by way of {_via[-1]}" if _via else '')
+                                             + ", and a record keeps another garden's day only where this commit takes a "
+                                               "proposal from the garden it came by (`dmpropose take`, which keeps the "
+                                               "proposal whole): anything else written here is this garden's own"
+                                             if _g is not None else '')
+                                          + _rule('provenance_record.origin', 'provenance_record'))
         for p in staged:
             if not (p.startswith(DOCUMENTISH) or p.endswith(FRONT_MATTER_DOCS)):
                 continue

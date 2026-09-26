@@ -36,6 +36,16 @@ A term with no `schema:` is documentation only; the gate never enforces it on be
 WHAT `in:` MAY SAY. Every attribute is a position in EXACTLY ONE domain,
 so `in:` is one thing, and it is never absent.
 
+
+A DOMAIN GIVES THE ORIGIN, so almost nothing states one. A closed list, a registry and an aspect are the law's; a
+reference is the garden's (`by: law`); a date, a quantity, a position in a system, an extent and a recurrence are
+said, the strictest reading — a day read from the clock or the world is the exception, and its position says so
+(sixteen do); prose, a pattern and a kebab name are
+made, because they are how a writer names and describes. `untyped` is said, the strictest, until someone declares
+it. `entries` and `any` are `inner`: their positions are their own entries', or the field's they track, and an origin
+of their own would be a second answer. Every domain `attr_domains` offers carries its origin beside its form, and the gate refuses a domain
+without one — a new domain is placed when it is declared, not found empty by a flow the law cannot judge.
+
 ## schema_language.sums
 
 PARTS ADD UP TO THEIR WHOLE, EXACTLY. A construct, not a rule on one term: whatever holds the parts of a measured
@@ -384,9 +394,9 @@ proposal carries the fact across, and never changed — so an assertion that arr
 person's assertion, and the guard that an inference never overrides it holds across the boundary without a single
 new rule. It must name a garden this one knows: a fact from a garden nobody recorded has no one to ask.
 
-## provenance_record.as_of
+## provenance_record.origin
 
-STAMPED, NOT TYPED (23.0), for the reason the journal heading is (20.0) and with the same reading of the clock. The
+STAMPED, NOT TYPED (23.0; since sources-by-nature, `as_of` read `by: save`), for the reason the journal heading is (20.0) and with the same reading of the clock. The
 day of writing is a fact the writer is the one source of, and a writer who types it types a remembered day: measured
 on a local model with no date in its context, every `as_of` it wrote was the nearest date in view — the forms'
 example day, or the gardener's own stamp read in another bean. The gate cannot tell a typed day from a read one by its
@@ -402,44 +412,45 @@ merge engine's record.
 
 ## schema_language.origin
 
-EVERY POSITION SAYS WHERE ITS VALUE MAY COME FROM (24.0, the Leviathan's Body 2, ratified 2026-09-25). A tool that
+EVERY POSITION SAYS WHERE ITS VALUE COMES FROM (24.0, the Leviathan's Body 2, ratified 2026-09-25). A tool that
 must know whether a day was someone's word or the clock's kept its own list of names — `as_of` and `observed` in the
 forms, in the save, twice in the gate, and once more in the bench's tracer — and five lists of one fact drift. The
-position says it instead, once: `origin: <row of origins>`, and every reader asks bin/dmpass.py. It is stated only where
+position says it instead, once — `origin: {act, nature?, by?}` — and every reader asks bin/dmpass.py. It is stated only where
 the domain's default is wrong, and the gate refuses one stated equal to its default, so the statements that exist are
 exactly the exceptions a reader should notice.
 
 It began as `stamped: true` (the release of 2026-09-25, F8, with a platform case's finding that a typed move's moment is
 invented): a move records the moment it was made, and a typed moment is exactly where invented days came from, since a
-writer types the nearest time in view. `origin: stamped` is that facet with its siblings: the save writes `now` away — the
+writer types the nearest time in view. `by: save` is that facet with its siblings: the save writes `now` away — the
 day of its heading at a date, the heading's whole moment at a moment, read from the position's type — and the gate holds
 a value a commit adds to the reading of a heading the same commit adds. The save finds a `now` by the attribute's name,
 so one name read as a day in one place and a moment in another is refused: it could not tell which to write. The day of
-`as_of` keeps its own statement (`provenance_record.as_of`) because it lives on every record, not on a term.
+`as_of` keeps its own statement (`provenance_record.origin`) because it lives on every record, not on a term; so does
+the journal's heading (`journal.origin`).
 
-## origins
+## acts
 
-FIVE, AS RATIFIED (daftar-leviathan-design.md §2). `said` is someone's words — the only origin the flow law must trace
-to a person. `stamped` is the save's clock, JUDGED: a typed value is refused. `observed` is a reading of the world by
-whoever recorded it — the day a surface was checked, a capture's moment, a volume's identifier, the commit a reading was
-read at: `now` is OFFERED, and a typed value stands, because a recorder may report a reading made before the entry that
-records it. `law-owned` is judged by the schema alone, whatever page the value was read on: a registry code the writer
-first saw in the forms is still the code. The gardener widened it on 2026-09-26 to the beings, parts and fields a garden
-holds (`ref`, `bean_id`, `key_of`, `pointer`, `id`, a `field_path`), rather than a sixth origin: the gate resolves every
-one, and a dangling one is already an error, so its source is judged the same way a registry code's is. `composed` is
-made here, from nothing given — prose, a minted name, a digest — the only origin that may hold a value found in nothing
-the writer was given.
+TWO QUESTIONS, NOT FIVE ANSWERS (sources-by-nature, ratified 2026-09-26). Part 10 wrote five origins — said, stamped,
+observed, law-owned, composed — beside a list of clocks and a table of each domain's default, while where a crosswalk, a reckoning and a
+datum come from, how a `provenance_src` is known and what fixes a boundary each answered the same question in a list of
+its own. Laid side by side, every one of those names answers two questions at once: HOW the value came to be where it
+is, and WHAT KIND of source it came from. `said` held a person and a document; `composed` held a minted name and a
+digest; `observed` was a reading of a body. So the law asks the two apart. The act is one of four — made here, derived
+from what was given, read off the world or a clock, said — and the source's nature is one of the natures a being
+already has: a machine's clock is soma, a document lekton, a person empsychon. A tool's output is physis, derived by a
+body from what it was given; a document's word is logos; a person's is agape.
 
-## origin_defaults
+`by` names the few places where WHO performs the act changes how it is judged: the save reads the clock, and a typed
+value is refused (`save`, once `stamped`); the reckoner reads it at the moment of reading (`reader`); the schema owns the
+values (`law`, once `law-owned`, widened by the gardener on 2026-09-26 to the beings, parts and fields a garden holds,
+since the gate resolves every one); another garden said it, and the flow law judges it (`garden`). A reading typed by
+its recorder has no `by`: the recorder may report a reading made before the entry that records it, so `now` is offered
+and a typed value stands.
 
-A DOMAIN GIVES THE ORIGIN, so almost nothing states one. A closed list, a registry and an aspect are the law's; a
-reference is the garden's (as `origins` says); a date, a quantity, a position in a system, an extent and a recurrence are
-said, the strictest reading — a day read from the clock or the world is the exception, and its position says so
-(sixteen do); prose, a pattern and a kebab name are
-composed, because they are how a writer names and describes. `untyped` is said, the strictest, until someone declares
-it. `entries` and `any` are `inner`: their positions are their own entries', or the field's they track, and an origin
-of their own would be a second answer. Every domain `attr_domains` offers has one row, and the gate refuses a domain
-without one — a new domain is placed when it is declared, not found empty by a flow the law cannot judge.
+The order is DERIVED, not written: acts lightest first — what is made holds nothing given, what is derived holds
+nothing its inputs did not, a reading can be read again, and what is said can be asked of the one who said it — then the
+natures in their own order. That is the provenance rank as it always stood, and it places a value it never had a place
+for: a document's word, above what was read off the world and below a person who can be asked.
 
 ## natures
 
@@ -1131,9 +1142,9 @@ it was written in, and those stay what they were.
 entries a commit adds; never the history
 
 
-## journal.heading
+## journal.origin
 
-STAMPED, NOT TYPED (20.0). 10.0 made a heading a position in time and the gate checks its form; the truth of
+STAMPED, NOT TYPED (20.0; since sources-by-nature, the heading read `by: save`). 10.0 made a heading a position in time and the gate checks its form; the truth of
 the moment it never could. The evening this was written, the same writer typed the time before reading the
 clock twice in five hours — 20:06 for 19:52, 22:31 for 22:09 — and both headings were of perfect form. The
 gate cannot tell a measured moment from a remembered one by looking at it. What it can tell is whether the
@@ -1661,6 +1672,10 @@ bin/dmmerge.py, the oldest rule in the system kept as a constant in a tool. (Unt
 rank of its own for anchors — anchor authority; it is this one now.) The merge reads it for two things: which src a value several gardens agree
 on keeps (the highest), and the guard itself — a value at the TOP of this rank is never dropped in favour
 of one below it, whatever precision the lower one claims. The merge REFUSES to run if this is absent.
+
+DERIVED SINCE sources-by-nature (2026-09-26): `order: source` ranks the values by what `values_source` says each is — its
+act, then its nature (`acts`) — so the rank is read, not written. It came out as the written one did, which is the test
+of the reading, and it placed the value the written one had no room for: `stated-in-document`.
 
 ## terms[provenance_src].values_meaning
 
@@ -2378,6 +2393,9 @@ never edit the same text to disagree about a path — each states its own resolu
 which is what makes adding a machine a one-line change instead of a corpus migration.
 It lives on the HOST because that is whose fact it is. A root map in a shared file would be one
 document every machine has to edit, which is the merge conflict this design exists to avoid.
+And so the host an `at` names is the bean it sits on, and the gate says so. The resolver takes that host for
+the datum and never asks it again, so a root on laptop-a whose `at` said `laptop-b:/srv/x` read as a path
+here. What a machine is called is dmwhere's one reading: the bean's id and its hostname and fqdn anchors.
 
 ## terms[roots].schema.entry_must_match[·]
 
@@ -2452,6 +2470,14 @@ list. All three were stored fields in the first draft and all three are gone: a 
 a fact that can disagree with itself, which is the argument this vocabulary already makes for
 refusing a direction aspect. The chain is walkable both ways from `prev` plus list order, which is
 what "walkable all ways" actually required.
+
+## system_shape.sources
+
+WHERE A SYSTEM'S MACHINERY COMES FROM, in the one pair every position uses (sources-by-nature). A reckoning by
+arithmetic is derived; one by the sky or by sight is read off a body; a table is said, by a document. A crosswalk
+is derived, tabled or observed in the same way. A datum read at a being is a reading of a body; one read at a host is
+mixed — a body, and the name it is kept under — so its nature is both; a datum written as a position is said. Kept
+beside the words they source, not on them, because a system row states the word and the law states once what it means.
 
 ## system_shape.checked_by
 

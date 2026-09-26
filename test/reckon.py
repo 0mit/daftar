@@ -144,7 +144,7 @@ selections:
   wick:
     what: "the burn rate of a wick, by the one mechanism valid for it"
     inputs:
-      - {{ name: wick, origin: given, quantity: length }}
+      - {{ name: wick, origin: {{ act: said }}, quantity: length }}
     steps:
       - {{ id: rate, op: choose, computes: burn-rate }}
   evenings:
@@ -351,7 +351,7 @@ visits:
   used:
     what: "the visits within the thirty days that end on the day asked"
     inputs:
-      - { name: day, origin: given, type: date }
+      - { name: day, origin: { act: said }, type: date }
     steps:
       - { id: all, op: select, entries: "visits.*" }
       - { id: used, op: used-within, of: all, path: day, within: { of: time, measure: { count: 30, unit: day } }, at: { input: day } }
