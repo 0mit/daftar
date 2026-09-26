@@ -435,9 +435,17 @@ class Page:
         it = self.s.items[eid]
         return ('<div class="term" id="%s"><div class="th"><h4>%s</h4> <span class="lay">%s</span> %s</div>%s%s%s%s%s%s</div>'
                 % (anchor(eid), title_html or '<code>%s</code>' % esc(it['name']), esc(it['layer']), self.src(it['where']),
-                   '<p>%s</p>' % inline(it['meaning']) if it.get('meaning') else '', body, self.relations(eid),
+                   self.meaning(it), body, self.relations(eid),
                    self.reasons(eid), self.history(it['name']) if it['kind'] in ('term', 'registry', 'row', 'form') else '',
                    self.journal(it['name']) if it['kind'] in ('term', 'registry', 'form', 'section', 'row') else ''))
+
+    def meaning(self, it):
+        """A clause is quoted between the manifesto quote markers (bin/dmreview.py MANIFESTO_QUOTE): test/manifesto.py holds it to the clause word for
+        word, and does not count it as a second statement."""
+        if not it.get('meaning'):
+            return ''
+        p = '<p>%s</p>' % inline(it['meaning'])
+        return '<!-- manifesto: %s -->%s<!-- /manifesto -->' % (it['name'], p) if it['kind'] == 'clause' else p
 
     # ---------------------------------------------------------------- sections
     def html(self):

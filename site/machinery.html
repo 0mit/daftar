@@ -117,47 +117,41 @@
     drawing's record; the drawing tool is vendored into the clone at a tagged release; then it checks the record against the
     drawings and writes the report. The commands, and what they printed:</p>
   <!-- daftar:drawn id="transcript" --><pre class="out" tabindex="0" aria-label="how the report was drawn"><code><span class="cmd">~/garden-sam$ python3 bin/dmupgrade.py v0.38.0 --from ~/daftar --extend view</span>
-handing over to v0.38.0's own bin/dmupgrade.py — a release is applied by its own upgrade logic
-upgraded to v0.38.0 (c8f7c5735d52): std-vocab 22.0 -&gt; 23.1; 36 changed, 31 added, 0 removed, 3 repinned; profiles +view.
-translated: std-vocab 23.1, what the law now says itself — nothing to translate
-garden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 13 docs, 0 error(s), 0 warning(s)
+profiles +view at v0.38.0 (2565be6d3ded): VOCAB.md extends [domain, view]; 12 added, 0 removed.
+garden-sam (daftar v0.38.0, gardener sam, garden 88441465279f): 39 docs, 0 error(s), 0 warning(s)
 
 NOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then
   git add -A
   git commit
 To abandon it instead:
   git checkout -- .
-  git clean -f -- MANIFESTO.md assets/view/README.md assets/view/bin/dmview.py assets/view/lib/sources/prometheus.py assets/view/lib/view_kit.py assets/view/lib/view_model.py assets/view/lib/view_report.py assets/view/lib/view_runtime.js assets/view/lib/view_serve.py assets/view/templates/drawings.py assets/view/templates/serve.json bin/dmforms.py bin/dmpass.py bin/dmsave.py bin/dmseq.py seed/CHANGELOG.md seed/FORMS.md seed/LICENSE-AGPL-3.0-or-later.txt seed/LICENSE-CC-BY-4.0.txt seed/LICENSE-CC-BY-SA-3.0-IGO.txt seed/LICENSE-CC0-1.0.txt seed/LICENSE-LicenseRef-ILO-ISCO-08.txt seed/LICENSE-LicenseRef-daftar-garden-exception.txt seed/LICENSE-Unicode-3.0.txt seed/LICENSE.md seed/knowledge/crosswalk-dwc.tsv seed/knowledge/crosswalk-fhir-r5-observation.tsv seed/knowledge/ics-chart-2026-06.tsv seed/knowledge/mechanisms.yaml seed/knowledge/substances.tsv seed/knowledge/time-zones.tsv
+  git clean -f -- assets/view/README.md assets/view/bin/dmview.py assets/view/lib/sources/http.py assets/view/lib/sources/prometheus.py assets/view/lib/view_export.py assets/view/lib/view_kit.py assets/view/lib/view_model.py assets/view/lib/view_report.py assets/view/lib/view_runtime.js assets/view/lib/view_serve.py assets/view/templates/drawings.py assets/view/templates/serve.json
 <span class="cmd">~/garden-sam$ git diff -U0 -- log/journal.md</span>
 …
 +
-+## 2026-10-27 09:00+00:00 · sam · RULE-CHANGE: language upgraded to daftar v0.38.0
++## 2026-10-27 09:00+00:00 · sam · RULE-CHANGE: profiles +view, at daftar v0.38.0
 +- ratified_by: sam, here: the word of the gardener
-+- action: **RULE-CHANGE — `bin/dmupgrade.py v0.38.0`** from ~/daftar at c8f7c5735d525b75a2e238489b1952db86e694a0; std-vocab 22.0 -&gt; 23.1; release v0.34.0 -&gt; v0.38.0.
-+- changed: .claude/skills/daftar/SKILL.md, .gitattributes, AGENTS.md, CHECKLIST.md, MERGE.md, MODEL.md, bin/dmcal.py, bin/dmcheck.py, bin/dmform.py, bin/dmingest.py, bin/dmjournal.py, bin/dmledger.py, bin/dmmerge.py, bin/dmparse.py, bin/dmpos.py, bin/dmpropose.py, bin/dmpublic.py, bin/dmreform.py, bin/dmreview.py, bin/dmrules.py, bin/dmsession.py, bin/dmstale.py, bin/dmupgrade.py, bin/dmwhy.py, bin/hooks/pre-commit, seed/COOKBOOK.md, seed/LANGUAGE, seed/PUBLIC-ALLOW, seed/RATIONALE.md, seed/README.md, seed/WELCOME.md, seed/germinate.py, seed/knowledge/SOURCES.md, seed/std-vocab.md, test/fast.py, VOCAB.md (extends_profiles)
-+- added: MANIFESTO.md, assets/view/README.md, assets/view/bin/dmview.py, assets/view/lib/sources/prometheus.py, assets/view/lib/view_kit.py, assets/view/lib/view_model.py, assets/view/lib/view_report.py, assets/view/lib/view_runtime.js, assets/view/lib/view_serve.py, assets/view/templates/drawings.py, assets/view/templates/serve.json, bin/dmforms.py, bin/dmpass.py, bin/dmsave.py, bin/dmseq.py, seed/CHANGELOG.md, seed/FORMS.md, seed/LICENSE-AGPL-3.0-or-later.txt, seed/LICENSE-CC-BY-4.0.txt, seed/LICENSE-CC-BY-SA-3.0-IGO.txt, seed/LICENSE-CC0-1.0.txt, seed/LICENSE-LicenseRef-ILO-ISCO-08.txt, seed/LICENSE-LicenseRef-daftar-garden-exception.txt, seed/LICENSE-Unicode-3.0.txt, seed/LICENSE.md, seed/knowledge/crosswalk-dwc.tsv, seed/knowledge/crosswalk-fhir-r5-observation.tsv, seed/knowledge/ics-chart-2026-06.tsv, seed/knowledge/mechanisms.yaml, seed/knowledge/substances.tsv, seed/knowledge/time-zones.tsv
++- action: **RULE-CHANGE — `bin/dmupgrade.py v0.38.0`** --extend view; VOCAB.md extends_profiles: [domain, view].
++- changed: VOCAB.md (extends_profiles)
++- added: assets/view/README.md, assets/view/bin/dmview.py, assets/view/lib/sources/http.py, assets/view/lib/sources/prometheus.py, assets/view/lib/view_export.py, assets/view/lib/view_kit.py, assets/view/lib/view_model.py, assets/view/lib/view_report.py, assets/view/lib/view_runtime.js, assets/view/lib/view_serve.py, assets/view/templates/drawings.py, assets/view/templates/serve.json
 +- removed: none
-+- repinned: VOCAB.md, GARDEN.md, GARDEN.md daftar_release
-+- translated: std-vocab 23.1, what the law now says itself — nothing to translate
-+- profiles: +view
 +- why: the view asset, which draws daftar's mechanisms for the machinery page of daftar's site
-+- beans: none
 <span class="cmd">~/garden-sam$ git add -A</span>
 <span class="cmd">~/garden-sam$ git commit -q -m "daftar v0.38.0, with the view profile"</span>
-garden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 13 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.38.0, gardener sam, garden 88441465279f): 39 docs, 0 error(s), 0 warning(s)
 fast: 14/14 corpus checks passed
 <span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "daftar's mechanisms recorded, and the page that draws them" --body "- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], [[mycelium]] and [[ledger]]; [[machinery]], the page that draws them, and drawings/mechanisms.py, its drawing module (site/machinery/composers.py).
 - why: the machinery page of daftar's site shows these mechanisms, drawn at four lenses."</span>
 ## 2026-10-27 09:00+00:00 · sam · daftar's mechanisms recorded, and the page that draws them
 <span class="cmd">~/garden-sam$ git add -A</span>
 <span class="cmd">~/garden-sam$ git commit -q -m "daftar's mechanisms recorded, and the page that draws them"</span>
-garden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 20 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.38.0, gardener sam, garden 88441465279f): 46 docs, 0 error(s), 0 warning(s)
 fast: 14/14 corpus checks passed
 <span class="cmd">~/garden-sam$ python3 assets/view/bin/dmview.py check</span>
 dmview: the page and its drawings agree
 <span class="cmd">~/garden-sam$ python3 assets/view/bin/dmview.py report --out ../report.html</span>
 dmview report: 5 drawings + reference + author mode -&gt; ../report.html</code></pre><!-- /daftar:drawn -->
-  <!-- daftar:drawn id="when" --><p>Drawn by dmview, of daftar v0.38.0, on 2026-09-25 17:07 UTC, from a clone of garden-sam grown by daftar v0.34.0 and moved to daftar v0.38.0. Its garden ids are those of the build that drew it: each build of these pages grows the gardens again, with new ids. That is not the release every other output on these pages comes from, daftar v0.34.0: the drawing, its commands and its report say what that garden said, in the words of the law daftar v0.38.0 carries, and a word one of the two laws has renamed is in them as that law says it. <code>python3 bin/dmwhy.py retired</code> lists what each old word became.</p><!-- /daftar:drawn -->
+  <!-- daftar:drawn id="when" --><p>Drawn by dmview, of daftar v0.38.0, on 2026-09-26 21:09 UTC, from a clone of garden-sam grown by daftar v0.38.0 and moved to daftar v0.38.0. Its garden ids are those of the build that drew it: each build of these pages grows the gardens again, with new ids.</p><!-- /daftar:drawn -->
   <p class="measure">The drawings and the record are files of this site:
     <a href="https://github.com/0mit/daftar/blob/master/site/machinery/composers.py">site/machinery/composers.py</a> draws each
     mechanism with the tool's pattern kit, and <a href="https://github.com/0mit/daftar/blob/master/site/machinery/record.yaml">site/machinery/record.yaml</a>
@@ -167,7 +161,7 @@ dmview report: 5 drawings + reference + author mode -&gt; ../report.html</code><
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
   <div>
-    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.38.0</code>.</p>
+    <p>Every output on these pages was produced by daftar <code>v0.38.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
     <p>Code AGPL-3.0-or-later · words and drawings CC BY 4.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
   </div>
 </footer><!-- /daftar:part -->

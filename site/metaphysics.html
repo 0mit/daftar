@@ -20,6 +20,7 @@
         <li><a href="use-cases/index.html">Use cases</a></li>
         <li><a href="metaphysics.html" aria-current="page">Metaphysics</a></li>
         <li><a href="machinery.html">Machinery</a></li>
+        <li><a href="terminology.html">Terminology</a></li>
         <li><a href="contribute.html">Contribute</a></li>
         <li><a href="https://github.com/0mit/daftar">GitHub <span aria-hidden="true">↗</span></a></li>
       </ul>
@@ -218,9 +219,9 @@ dmsafe: removed nothing; added ['owned_by.legal.owner.bean']
 <span class="cmd">~/garden-sam-scratch$ git add -A</span>
 <span class="cmd">~/garden-sam-scratch$ git commit -qm "ali, owned by sam"</span>
 ERROR ali: owned_by[legal] must use the 'crown' form
-      — genos 'person' pins owned_by.ownership_form to it (VOCAB gene.person.ownership_form). A genos:person bean states its own: owned_by: { legal: { crown: agape } }
+      — genos 'person' pins owned_by.ownership_form to it. A genos:person bean states its own: owned_by: { legal: { crown: agape } } (rule gene.person.ownership_form; why: python3 bin/dmwhy.py ownership_form)
 
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 12 docs, 1 error(s), 0 warning(s)
+garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">ed5e5bad9b1f</span>): 13 docs, 1 error(s), 0 warning(s)
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
   <p class="note">The reason, in full: <code>python3 bin/dmwhy.py crown</code>.</p>
 </section>
@@ -258,8 +259,8 @@ garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" tit
   <p>A chain rises through the garden until it ends: at a person, at someone outside the notebook — a registry, a provider, a
     project — or at the crown. Where a thing runs is habitat, not ownership: the website lives in the NAS and is owned by Sam, and
     moving it changes where it lives, never who owns it.</p>
-  <p class="lead">Every garden's hook checks it on every commit. Three of its lines, from the commit that added the website:</p>
-  <!-- daftar:out id="machines-commit" steps="3" match="^PASS every bean carries|^PASS the two arcs|^PASS every ownership chain" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;nginx, and the website it serves&quot;"><code><span class="cmd">~/garden-sam$ git commit -qm "nginx, and the website it serves"</span>
+  <p class="lead">Every garden's hook checks it on every commit. It prints nothing more on a clean commit; asked with <code>--verbose</code> after the commit that added the website, three of its lines:</p>
+  <!-- daftar:out id="machines-verbose" match="^PASS every bean carries|^PASS the two arcs|^PASS every ownership chain" --><pre class="out" tabindex="0" aria-label="output of dmcheck.py --staged -v"><code><span class="cmd">~/garden-sam$ python3 bin/dmcheck.py --staged -v</span>
 <span class="el" title="lines left out">…</span>
 PASS every bean carries BOTH ownership arcs
 PASS the two arcs agree on facets everywhere
@@ -305,7 +306,7 @@ PASS every ownership chain that is owed terminates at the crown or outside — n
     (<a href="use-cases/two-gardens-meet.html">the whole exchange</a>):</p>
   <!-- daftar:out id="gardens-read-2" match="^UNDER|^  NOTE" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py read ../PROPOSAL-garden-sam-20261027-0900.md"><code><span class="cmd">~/garden-ali$ python3 bin/dmpropose.py read ../PROPOSAL-garden-sam-20261027-0900.md</span>
 <span class="el" title="lines left out">…</span>
-UNDER <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>/contract:shared-camera: carried in this proposal. Taking it records what garden-sam offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
+UNDER <span class="v" data-v="id" title="differs in every build: a garden id">ed5e5bad9b1f</span>/contract:shared-camera: carried in this proposal. Taking it records what garden-sam offers; accepting the agreement is ali's own word, written as `parties.ali.accepted` in their own commit
   NOTE it says ali accepted (2026-09-10) — that is garden-sam's record; ali's own acceptance is written here, by them
 <span class="el" title="lines left out">…</span></code></pre><!-- /daftar:out -->
   <p class="note">The reason, in full: <code>python3 bin/dmwhy.py 'doc:MODEL.md#Between gardens: the mycelium'</code>.</p>
@@ -313,9 +314,9 @@ UNDER <span class="v" data-v="id" title="differs in every build: a garden id">32
 
 <section class="with-figure" aria-labelledby="layers">
   <h2 id="layers">5. Four layers</h2>
-  <figure class="drawing" id="fig-layers"><!-- daftar:svg id="layers" --><svg class="d" viewBox="0 0 400 412" role="img" aria-labelledby="layers-t layers-d" xmlns="http://www.w3.org/2000/svg">
-<title id="layers-t">Four layers</title><desc id="layers-d">Four layers, each standing on the one beneath. Laws: the vocabulary and the model, read by the gate on every commit. Reasoning: seed/RATIONALE.md, read when a rule surprises someone. Journals: log/journal.md, read by the next agent. History: git, read by nobody until it is all that is left. A story — when, who, where — that tries to enter the law is refused, and goes to the journals instead; the reason for a rule goes to the reasoning.</desc>
-<defs><marker id="layers-ah" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="layers-ah-accent" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah-accent" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="layers-ah-s" viewBox="0 0 7 6" refX="0.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M7,0 L0,3 L7,6 Z"/></marker><pattern id="layers-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(135)"><rect class="h0" width="8" height="8"/><rect class="h1" width="3" height="8"/></pattern></defs>
+  <figure class="drawing" id="fig-layers"><!-- daftar:svg id="layers" --><svg class="d" viewBox="0 0 400 498" role="img" aria-labelledby="layers-t layers-d" xmlns="http://www.w3.org/2000/svg">
+<title id="layers-t">Five layers</title><desc id="layers-d">Five layers, each standing on the one beneath. The manifesto: MANIFESTO.md, what daftar holds to, read when someone asks what it is for. Laws: the vocabulary and the model, read by the gate on every commit. Reasoning: seed/RATIONALE.md, read when a rule surprises someone. Journals: log/journal.md, read by the next agent. History: git, read by nobody until it is all that is left. A story — when, who, where — that tries to enter the law is refused, and goes to the journals instead; the reason for a rule goes to the reasoning.</desc>
+<defs><marker id="layers-ah" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="layers-ah-accent" viewBox="0 0 7 6" refX="6.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah-accent" d="M0,0 L7,3 L0,6 Z"/></marker><marker id="layers-ah-s" viewBox="0 0 7 6" refX="0.5" refY="3" markerWidth="7" markerHeight="6" orient="auto"><path class="ah" d="M7,0 L0,3 L7,6 Z"/></marker><pattern id="layers-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(135)"><rect class="h0" width="8" height="8"/><rect class="h1" width="3" height="8"/></pattern></defs><g class="node lekton"><rect class="box" x="8" y="14" width="284" height="64" rx="7"/><rect class="bar" x="8" y="14" width="5" height="64" rx="2"/><text class="t" x="22" y="33">MANIFESTO</text><text class="s" x="22" y="49">MANIFESTO.md: what daftar holds</text><text class="s" x="22" y="64">to, read when someone asks why</text></g><g class="flow"><path class="l" d="M150,100 L150,78" marker-end="url(#layers-ah)"/><text class="fl" x="158" y="93" text-anchor="start">stands on</text></g><g transform="translate(0,86)">
 <g class="node lekton"><rect class="box" x="8" y="14" width="284" height="64" rx="7"/><rect class="bar" x="8" y="14" width="5" height="64" rx="2"/><text class="t" x="22" y="33">LAWS</text><text class="s" x="22" y="49">the vocabulary and the model:</text><text class="s" x="22" y="64">read by the gate, every commit</text></g>
 <g class="flow"><path class="l" d="M150,100 L150,78" marker-end="url(#layers-ah)"/><text class="fl" x="158" y="93" text-anchor="start">stands on</text></g>
 <g class="node lekton"><rect class="box" x="8" y="100" width="284" height="64" rx="7"/><rect class="bar" x="8" y="100" width="5" height="64" rx="2"/><text class="t" x="22" y="119">REASONING</text><text class="s" x="22" y="135">seed/RATIONALE.md: read when</text><text class="s" x="22" y="150">a rule surprises someone</text></g>
@@ -327,7 +328,7 @@ UNDER <span class="v" data-v="id" title="differs in every build: a garden id">32
 <g class="refused"><path class="l" d="M300,46 L292,46"/><circle class="o" cx="292" cy="46" r="9"/><path class="x" d="M287.8,41.8 L296.2,50.2 M287.8,50.2 L296.2,41.8"/></g>
 <g class="flow accent"><path class="l" d="M346,66 L346,218 L292,218" marker-end="url(#layers-ah-accent)"/><text class="fl" x="340" y="210" text-anchor="end">goes here</text></g>
 <g class="band"><rect class="b" x="8" y="368" width="384" height="34" rx="6"/><text class="cap" x="18" y="389">NO STORY IN THE LAW — EACH LAYER READ AT ITS OWN TIME</text></g>
-</svg><!-- /daftar:svg --><figcaption>Each layer stands on the
+</g></svg><!-- /daftar:svg --><figcaption>Each layer stands on the
     one beneath. A story that tries to enter the law goes to the journals; the reason for a rule, to the reasoning.</figcaption></figure>
   <p>What the project writes down stands in four layers, each on the one beneath, and each read at a different time: laws,
     reasoning, journals, history.</p>
@@ -343,8 +344,8 @@ UNDER <span class="v" data-v="id" title="differs in every build: a garden id">32
    receiving gardener saying yes to an agreement, and a tool that wrote it so would put words in a person's mouth. The
    receiving gardener accepts by writing `parties.&lt;them&gt;.accepted` in a commit of their own — the commit is the
    ratification, and the entry's provenance says whose word it is.</code></pre><!-- /daftar:out -->
-  <p class="note">The reason, in full: the opening of <a href="https://github.com/0mit/daftar/blob/v0.34.0/seed/RATIONALE.md">seed/RATIONALE.md</a>,
-    and <a href="https://github.com/0mit/daftar/blob/v0.34.0/CONTRIBUTING.md#editing-the-vocabulary-itself">CONTRIBUTING.md</a>.</p>
+  <p class="note">The reason, in full: the opening of <a href="https://github.com/0mit/daftar/blob/v0.38.0/seed/RATIONALE.md">seed/RATIONALE.md</a>,
+    and <a href="https://github.com/0mit/daftar/blob/v0.38.0/CONTRIBUTING.md#editing-the-vocabulary-itself">CONTRIBUTING.md</a>.</p>
 </section>
 
 <section class="with-figure" aria-labelledby="data">
@@ -407,12 +408,12 @@ dmsafe: removed nothing; added ['renewal_note']
 ## 2026-10-27 09:00+00:00 · sam · a renewal note on the VPS
 <span class="cmd">~/garden-sam-scratch$ git add -A</span>
 <span class="cmd">~/garden-sam-scratch$ git commit -qm "a renewal note on the VPS"</span>
-ERROR vps-a: top-level key 'renewal_note' is declared by no vocabulary term. A fact that fits no term belongs in details: (ground rule 2); a new KIND of fact is a vocabulary proposal
-      — park it in log/pending.md
+ERROR vps-a: top-level key 'renewal_note' is declared by no vocabulary term
+      — a fact no term names is kept under `details:` (ground rule 2): details: { renewal_note: "renews next January" }. A new KIND of fact is a vocabulary proposal, which the gardener ratifies: park it in log/pending.md
 
-garden-sam (daftar v0.34.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">32f1d1874318</span>): 12 docs, 1 error(s), 0 warning(s)
+garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">ed5e5bad9b1f</span>): 13 docs, 1 error(s), 0 warning(s)
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
-  <p class="note">The rule, in full: <a href="https://github.com/0mit/daftar/blob/v0.34.0/MODEL.md#ground-rules">MODEL.md, ground rule 2</a>; and <code>python3 bin/dmwhy.py retired</code> — what the law took back, and why.</p>
+  <p class="note">The rule, in full: <a href="https://github.com/0mit/daftar/blob/v0.38.0/MODEL.md#ground-rules">MODEL.md, ground rule 2</a>; and <code>python3 bin/dmwhy.py retired</code> — what the law took back, and why.</p>
 </section>
 
 <section class="with-figure" aria-labelledby="whole">
@@ -530,9 +531,9 @@ day 739871
     law, no privileged sibling, structure before prose — and they are counted for the person who ratifies, who judges. For a
     change to the law, <code>dmreview --law</code> counts them, and the merge is the judgment.</p>
   <p class="lead">The first lines of what it prints, run in the release against the one before:</p>
-  <!-- daftar:out id="metaphysics-judgment" head="5" --><pre class="out" tabindex="0" aria-label="output of dmreview.py --law --against v0.33.1"><code><span class="cmd">~/daftar$ python3 bin/dmreview.py --law --against v0.33.1</span>
+  <!-- daftar:out id="metaphysics-judgment" head="5" --><pre class="out" tabindex="0" aria-label="output of dmreview.py --law --against v0.37.0"><code><span class="cmd">~/daftar$ python3 bin/dmreview.py --law --against v0.37.0</span>
 dmreview --law: the preconditions of beauty in the law, counted — the person who merges judges
-  seed/std-vocab.md, std-vocab 22.0, as the working tree holds it · against v0.33.1, std-vocab 21.0
+  seed/std-vocab.md, std-vocab 24.0, as the working tree holds it · against v0.37.0, std-vocab 23.1
   Nothing here passes or fails, and no count has a direction: a mechanism may make the law larger and better,
   and the cheapest way to lower a count is to fold a structured fact into prose. Each line is a question for
   whoever ratifies; the merge is the judgment.
@@ -543,8 +544,8 @@ dmreview --law: the preconditions of beauty in the law, counted — the person w
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
   <div>
-    <p>Every output on these pages was produced by daftar <code>v0.34.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC — except <a href="machinery.html#drawn">the machinery's drawing</a>, its commands and its report, made from a garden grown by daftar <code>v0.33.1</code>.</p>
-    <p>Apache-2.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
+    <p>Every output on these pages was produced by daftar <code>v0.38.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
+    <p>Code AGPL-3.0-or-later · words and drawings CC BY 4.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
   </div>
 </footer><!-- /daftar:part -->
 </body>

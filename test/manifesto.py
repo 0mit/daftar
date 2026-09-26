@@ -86,11 +86,15 @@ check("...and a clause said to be only stated is one the manifesto has",
 bad = [(f, k) for f, t in TEXT.items() for k, q in dmreview.MANIFESTO_QUOTE.findall(t)
        if " ".join(re.sub(r"<[^>]+>|[*>_]", " ", q).split()) != CLAUSES.get(k)]
 check("a marked quote of a clause is the clause, word for word", not bad, bad)
+# The terminology page is the seed drawn again by site/terminology.py: every clause, reason and heading it prints is counted
+# where the seed holds it, so the drawing is not a second statement of its own.
+MIRROR = ('site/terminology.html',)
 here = dmreview.Tree()
-hits = dmreview.manifesto_restatements(here)
+hits = [h for h in dmreview.manifesto_restatements(here) if h[0] not in MIRROR]
 _tag = subprocess.run(["git", "-C", ROOT, "describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*",
                        "--exclude", "*-*"], capture_output=True, text=True, encoding="utf-8").stdout.strip()
 _then = dmreview.manifesto_restatements(dmreview.Tree(_tag)) if _tag else None
+_then = [h for h in _then if h[0] not in MIRROR] if _then is not None else None
 RESTATED_AT_START = 35       # measured on the commit that adds the manifesto; a release that carries it takes over
 if _then is not None:
     ceiling, since = len(_then), _tag
@@ -101,7 +105,7 @@ check(f"second statements of the manifesto have not grown (now {len(hits)}, ceil
 print(f"      (the next release's ceiling is {len(hits)}; `python3 bin/dmreview.py --law` lists every one)")
 
 # ------------------------------------------------------------------ one word, one sense; no verdict reads it
-two = [f for f, t in TEXT.items() if not f.startswith(dmreview.MANIFESTO_EXEMPT)
+two = [f for f, t in TEXT.items() if not f.startswith(dmreview.MANIFESTO_EXEMPT + MIRROR)
        and re.search(r"\bMANIFEST\.md\b|\bthe manifesto\b[^.\n]*\bGARDEN\.md\b|\bGARDEN\.md\b[^.\n]*\bmanifesto\b", t)]
 check("GARDEN.md is the law's `manifest`, MANIFESTO.md is the manifesto, and neither is called the other", not two, two)
 readers = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "dm*.py"))

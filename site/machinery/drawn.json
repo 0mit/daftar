@@ -2,13 +2,13 @@
  "tool": "dmview",
  "tool_release": "v0.38.0",
  "daftar_release": "v0.38.0",
- "grown_by": "v0.34.0",
+ "grown_by": "v0.38.0",
  "demo_day": "2026-10-27",
  "garden": "garden-sam",
- "drawn_at": "2026-09-25 17:07 UTC",
+ "drawn_at": "2026-09-26 21:09 UTC",
  "report": "machinery/report.html",
- "report_bytes": 245828,
- "report_sha256": "5acf7ca7cb89d4d147c720f77771e4870630b44aa7a4a90e45a85d67024ddbcd",
+ "report_bytes": 262040,
+ "report_sha256": "aade6d688a3c746cc6a7391623f1d6e17312fd8a2a5c6c3dc5bbe4895ff057a5",
  "title": "daftar — its mechanisms, drawn",
  "levels": [
   {
@@ -204,13 +204,13 @@
   {
    "cwd": "~/garden-sam",
    "cmd": "python3 bin/dmupgrade.py v0.38.0 --from ~/daftar --extend view",
-   "out": "handing over to v0.38.0's own bin/dmupgrade.py — a release is applied by its own upgrade logic\nupgraded to v0.38.0 (c8f7c5735d52): std-vocab 22.0 -> 23.1; 36 changed, 31 added, 0 removed, 3 repinned; profiles +view.\ntranslated: std-vocab 23.1, what the law now says itself — nothing to translate\ngarden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 13 docs, 0 error(s), 0 warning(s)\n\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n  git add -A\n  git commit\nTo abandon it instead:\n  git checkout -- .\n  git clean -f -- MANIFESTO.md assets/view/README.md assets/view/bin/dmview.py assets/view/lib/sources/prometheus.py assets/view/lib/view_kit.py assets/view/lib/view_model.py assets/view/lib/view_report.py assets/view/lib/view_runtime.js assets/view/lib/view_serve.py assets/view/templates/drawings.py assets/view/templates/serve.json bin/dmforms.py bin/dmpass.py bin/dmsave.py bin/dmseq.py seed/CHANGELOG.md seed/FORMS.md seed/LICENSE-AGPL-3.0-or-later.txt seed/LICENSE-CC-BY-4.0.txt seed/LICENSE-CC-BY-SA-3.0-IGO.txt seed/LICENSE-CC0-1.0.txt seed/LICENSE-LicenseRef-ILO-ISCO-08.txt seed/LICENSE-LicenseRef-daftar-garden-exception.txt seed/LICENSE-Unicode-3.0.txt seed/LICENSE.md seed/knowledge/crosswalk-dwc.tsv seed/knowledge/crosswalk-fhir-r5-observation.tsv seed/knowledge/ics-chart-2026-06.tsv seed/knowledge/mechanisms.yaml seed/knowledge/substances.tsv seed/knowledge/time-zones.tsv",
+   "out": "profiles +view at v0.38.0 (2565be6d3ded): VOCAB.md extends [domain, view]; 12 added, 0 removed.\ngarden-sam (daftar v0.38.0, gardener sam, garden 88441465279f): 39 docs, 0 error(s), 0 warning(s)\n\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n  git add -A\n  git commit\nTo abandon it instead:\n  git checkout -- .\n  git clean -f -- assets/view/README.md assets/view/bin/dmview.py assets/view/lib/sources/http.py assets/view/lib/sources/prometheus.py assets/view/lib/view_export.py assets/view/lib/view_kit.py assets/view/lib/view_model.py assets/view/lib/view_report.py assets/view/lib/view_runtime.js assets/view/lib/view_serve.py assets/view/templates/drawings.py assets/view/templates/serve.json",
    "exit": 0
   },
   {
    "cwd": "~/garden-sam",
    "cmd": "git diff -U0 -- log/journal.md",
-   "out": "…\n+\n+## 2026-10-27 09:00+00:00 · sam · RULE-CHANGE: language upgraded to daftar v0.38.0\n+- ratified_by: sam, here: the word of the gardener\n+- action: **RULE-CHANGE — `bin/dmupgrade.py v0.38.0`** from ~/daftar at c8f7c5735d525b75a2e238489b1952db86e694a0; std-vocab 22.0 -> 23.1; release v0.34.0 -> v0.38.0.\n+- changed: .claude/skills/daftar/SKILL.md, .gitattributes, AGENTS.md, CHECKLIST.md, MERGE.md, MODEL.md, bin/dmcal.py, bin/dmcheck.py, bin/dmform.py, bin/dmingest.py, bin/dmjournal.py, bin/dmledger.py, bin/dmmerge.py, bin/dmparse.py, bin/dmpos.py, bin/dmpropose.py, bin/dmpublic.py, bin/dmreform.py, bin/dmreview.py, bin/dmrules.py, bin/dmsession.py, bin/dmstale.py, bin/dmupgrade.py, bin/dmwhy.py, bin/hooks/pre-commit, seed/COOKBOOK.md, seed/LANGUAGE, seed/PUBLIC-ALLOW, seed/RATIONALE.md, seed/README.md, seed/WELCOME.md, seed/germinate.py, seed/knowledge/SOURCES.md, seed/std-vocab.md, test/fast.py, VOCAB.md (extends_profiles)\n+- added: MANIFESTO.md, assets/view/README.md, assets/view/bin/dmview.py, assets/view/lib/sources/prometheus.py, assets/view/lib/view_kit.py, assets/view/lib/view_model.py, assets/view/lib/view_report.py, assets/view/lib/view_runtime.js, assets/view/lib/view_serve.py, assets/view/templates/drawings.py, assets/view/templates/serve.json, bin/dmforms.py, bin/dmpass.py, bin/dmsave.py, bin/dmseq.py, seed/CHANGELOG.md, seed/FORMS.md, seed/LICENSE-AGPL-3.0-or-later.txt, seed/LICENSE-CC-BY-4.0.txt, seed/LICENSE-CC-BY-SA-3.0-IGO.txt, seed/LICENSE-CC0-1.0.txt, seed/LICENSE-LicenseRef-ILO-ISCO-08.txt, seed/LICENSE-LicenseRef-daftar-garden-exception.txt, seed/LICENSE-Unicode-3.0.txt, seed/LICENSE.md, seed/knowledge/crosswalk-dwc.tsv, seed/knowledge/crosswalk-fhir-r5-observation.tsv, seed/knowledge/ics-chart-2026-06.tsv, seed/knowledge/mechanisms.yaml, seed/knowledge/substances.tsv, seed/knowledge/time-zones.tsv\n+- removed: none\n+- repinned: VOCAB.md, GARDEN.md, GARDEN.md daftar_release\n+- translated: std-vocab 23.1, what the law now says itself — nothing to translate\n+- profiles: +view\n+- why: the view asset, which draws daftar's mechanisms for the machinery page of daftar's site\n+- beans: none",
+   "out": "…\n+\n+## 2026-10-27 09:00+00:00 · sam · RULE-CHANGE: profiles +view, at daftar v0.38.0\n+- ratified_by: sam, here: the word of the gardener\n+- action: **RULE-CHANGE — `bin/dmupgrade.py v0.38.0`** --extend view; VOCAB.md extends_profiles: [domain, view].\n+- changed: VOCAB.md (extends_profiles)\n+- added: assets/view/README.md, assets/view/bin/dmview.py, assets/view/lib/sources/http.py, assets/view/lib/sources/prometheus.py, assets/view/lib/view_export.py, assets/view/lib/view_kit.py, assets/view/lib/view_model.py, assets/view/lib/view_report.py, assets/view/lib/view_runtime.js, assets/view/lib/view_serve.py, assets/view/templates/drawings.py, assets/view/templates/serve.json\n+- removed: none\n+- why: the view asset, which draws daftar's mechanisms for the machinery page of daftar's site",
    "exit": 0
   },
   {
@@ -222,7 +222,7 @@
   {
    "cwd": "~/garden-sam",
    "cmd": "git commit -q -m \"daftar v0.38.0, with the view profile\"",
-   "out": "garden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 13 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
+   "out": "garden-sam (daftar v0.38.0, gardener sam, garden 88441465279f): 39 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
    "exit": 0
   },
   {
@@ -240,7 +240,7 @@
   {
    "cwd": "~/garden-sam",
    "cmd": "git commit -q -m \"daftar's mechanisms recorded, and the page that draws them\"",
-   "out": "garden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 20 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
+   "out": "garden-sam (daftar v0.38.0, gardener sam, garden 88441465279f): 46 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
    "exit": 0
   },
   {

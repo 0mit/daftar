@@ -91,7 +91,9 @@ parts, changes).
    reuse lint
    ```
 
-   CI runs the same on every pull request (`reuse lint` is the REUSE tool, `pip install reuse`). One exception: `test/site.py` rebuilds the pages with `site/build.py`,
+   CI runs a brief set of them on every push and pull request — the documents, the manifesto, the journal, the assets,
+   the site and what is public — and the whole list only when the workflow is run by hand; before a release, run the
+   whole list here with `python3 test/timings.py -j 6` (`reuse lint` is the REUSE tool, `pip install reuse`). One exception: `test/site.py` rebuilds the pages with `site/build.py`,
    which runs the commands the pages show (`tail`, among them) as a Unix shell runs them — on Windows, in Git Bash.
 
    Two files under test/ measure rather than judge, and CI does not run them. The one runner of the whole list is
