@@ -85,6 +85,14 @@ try:
 except ImportError:
     print("ERROR: PyYAML required"); sys.exit(2)
 
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+GUARDS = {
+    'peer-offered': {'checks': "a proposal is made beside the garden, inside no garden, from what this one says",
+                     'proof': 'test/mycelium.py', 'label': "make lays ONE proposal beside the garden"},
+    'transit': {'checks': "a path holding the receiver's own id after its origin is refused as a loop",
+                'proof': 'test/mycelium.py', 'label': "...a path holding the receiver's own id after its origin is REFUSED as a loop"},
+}
+
 ROOT = os.path.dirname(HERE)
 PY = 'python' if os.name == 'nt' else 'python3'
 MISSING = object()

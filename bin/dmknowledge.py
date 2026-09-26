@@ -28,6 +28,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import dmparse
 
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+GUARDS = {
+    'sent-out': {'checks': "a lookup at a remote authority is refused until the gardener grants that party",
+                 'proof': 'test/observations.py', 'label': "O-5 a lookup at the authority is REFUSED until the flow law grants that party"},
+}
+
 
 class NotGranted(Exception):
     """A lookup at a scheme's authority leaves the garden: it is refused until the flow law grants that party."""

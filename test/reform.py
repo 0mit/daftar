@@ -162,10 +162,16 @@ check("bin/dmreform.py translates the garden's own terms", r.returncode == 0 and
 check("...into one record per attribute", 'renews:' in new and 'in: { type: iso_date }' in new
       and 'in: { aspect: capability, default: permitted }' in new and 'entry_attrs' not in new, new[-1500:])
 check("...conditionals became cells", '{ when: { billing: yearly }, requires: [note] }' in new, new[-1200:])
-check("...and NO COMMENT WAS LOST — the reasons travel with the law",
+check("...and NO COMMENT WAS LOST — a translator keeps what it was given, and the gate says where a reason goes",
       "both, always: a rental with no date is a guess" in new and "a provider is a being where one exists" in new, new[-1500:])
 out = gate()
-check("the translated vocabulary passes the gate", "0 error" in out, out[-900:])
+_errs = [l for l in out.split("\n") if l.startswith("ERROR")]
+check("the translated vocabulary is refused only for its two comments: the law carries no story (§9k, in every garden)",
+      len(_errs) == 2 and all("a comment in the law's front matter" in l for l in _errs), out[-900:])
+new = re.sub(r"\s*# (both, always|a provider is)[^\n]*", "", new)
+open(VOC, "w").write(new)
+out = gate()
+check("...and with its reasons taken out of the law, the translated vocabulary passes the gate", "0 error" in out, out[-900:])
 r = run(sys.executable, os.path.join(G, "bin", "dmreform.py"), "--check", VOC, cwd=G)
 check("...and --check finds nothing left to translate", r.returncode == 0, r.stdout)
 r = run(sys.executable, os.path.join(G, "bin", "dmreform.py"), VOC, cwd=G)

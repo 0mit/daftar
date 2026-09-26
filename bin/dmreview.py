@@ -39,6 +39,12 @@ from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse, dmpass
+
+# What this review shows, for a person to judge: it refuses nothing (`bin/dmpass.py --flows` counts it as evidence).
+EVIDENCE = {
+    'law-restated': {'checks': "a second statement of a list the law owns, counted against the list it restates",
+                     'proof': 'test/rationale.py', 'label': "dmreview counts a restatement once, against the list it restates best"},
+}
 try:
     import yaml
 except ImportError:

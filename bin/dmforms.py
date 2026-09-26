@@ -34,6 +34,12 @@ import dmparse  # noqa: E402 — the one loader, and UTF-8 streams on every plat
 import dmform   # noqa: E402 — the one reader of how the law spells an attribute
 import dmpass   # noqa: E402 — where a position's value may come from (`acts`, `origin`)
 
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+GUARDS = {
+    'law-derived': {'checks': "every form the guide shows is derived from the law, and `--check` refuses one that is not",
+                    'proof': 'test/docs.py', 'label': "seed/FORMS.md holds the shapes of six recipes"},
+}
+
 ROOT = os.path.dirname(HERE)
 FORMS, COOKBOOK, LAW = (os.path.join(ROOT, 'seed', f) for f in ('FORMS.md', 'COOKBOOK.md', 'std-vocab.md'))
 DAY = r'\d{4}-\d{2}-\d{2}'

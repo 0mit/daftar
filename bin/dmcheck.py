@@ -3906,6 +3906,303 @@ AGREE_PLIES = ((check_agreements, "an agreement's occurrences, settlements and a
                (check_exclusive, "N27: an exclusive term's extents, across every bean"))
 # ---- VIEWCAP
 VIEWCAP_ENTRY, VIEWCAP_PLIES = (), ()
+# ---- GATE (24.0; the Leviathan's Body 3 and Leg 1): the flow law, and what a commit is judged by it for
+# The law's `flows` say which passes are granted, and the gate judges three things by them at every commit: a value's
+# pointer, where one is kept (`provenance_of.<path>[].at`, a record's `from[].at`); the journal, appended and never
+# rewritten; and a session's pass log, where a commit claims one (`pass_form.claim`). Besides, in every garden: a
+# person's words are placed only on a bean a person's record carries, and the garden's own law carries no story.
+FLOWS = dmpass.Flows(std_fm, vocab_fm if isinstance(vocab_fm, dict) and '__err__' not in vocab_fm else None)
+PASS_DIR = 'captures/passes/'
+
+# The rows of the flow law this gate checks, and the fixture that shows it (`dmpass --flows` computes each row's guard).
+GUARDS = {
+    'stamped-is-not-typed': {'checks': "a day the save reads, typed on a record a commit adds, is refused",
+                             'proof': 'test/stamps.py', 'label': "a day the writer typed, on a new bean: refused"},
+    'clock-to-stamped': {'checks': "`now` is committed as the day of the heading the commit adds",
+                         'proof': 'test/stamps.py', 'label': "`as_of: now` saved with bin/dmsave.py: committed (exit 0)"},
+    'peer-copied': {'checks': "a record carrying another garden's `garden`, with no take in the commit, is this garden's own",
+                    'proof': 'test/stamps.py', 'label': "a record carrying the `garden` of a garden this one knows, with a day typed and no take in the commit: refused"},
+    'peer-taken': {'checks': "a take in the commit keeps the other garden's records whole",
+                   'proof': 'test/stamps.py', 'label': "...and the take itself"},
+    'law-ratified': {'checks': "a change to the law is journalled, and says RULE-CHANGE",
+                     'proof': 'test/layers.py', 'label': "THE RULE-CHANGE DUTY IS UNCHANGED"},
+    'journalled': {'checks': "an entry appended after the last passes",
+                   'proof': 'test/passes.py', 'label': "a journal appended to, and nothing before it changed: passes"},
+    'journal-rewritten': {'checks': "a line of a journal file at HEAD, changed or taken out, is refused outside a merge",
+                          'proof': 'test/passes.py', 'label': "a journal line rewritten after the fact: refused"},
+    'story-in-law': {'checks': "VOCAB.md's front matter carries no commentary but section titles, and a reason beside it that names nothing VOCAB.md still says is shown (asked of bin/dmwhy.py)",
+                     'proof': 'test/passes.py', 'label': "a comment in VOCAB.md's front matter: refused"},
+    'examples-are-not-facts': {'checks': "a pointer into a guide, for a value in a bean, is refused",
+                               'proof': 'test/passes.py', 'label': "a value whose pointer names a guide: refused", 'when': 'pointed'},
+    'copied-is-not-said': {'checks': "a said value whose own pointer names another bean is refused",
+                           'proof': 'test/passes.py', 'label': "a said value pointed at another bean: refused", 'when': 'pointed'},
+    'words-to-said': {'checks': "a claimed commit's said values each have a granted pass",
+                      'proof': 'test/passes.py', 'label': "a claimed commit whose said value has its pass from words: passes", 'when': 'claimed'},
+    'model-output-is-no-word': {'checks': "a claimed commit's pass from an agent's own work into a said value is refused",
+                                'proof': 'test/passes.py', 'label': "a pass from work into a said value: refused", 'when': 'claimed'},
+    'sealed': {'checks': "a commit that seals an entry journals its `- held:` line",
+               'proof': 'test/held.py', 'label': "F13: a commit that seals an entry without its `- held:` line is refused by name"},
+    'unsealed': {'checks': "a sealed entry holds its pointer and its basis, and says nothing else in git",
+                 'proof': 'test/held.py', 'label': "a sealed entry that still says something beside its pointer is refused"},
+}
+
+
+def check_flows():
+    """The flow law reads (every row names known layers, methods and grants; one cell, one row), and a garden's own rows
+    only refuse, or grant a named party where the standard says `ratified`."""
+    for src, why in FLOWS.problems():
+        errors.append(f"{'VOCAB flows' if src == 'VOCAB' else 'seed/std-vocab.md flows'}: {why} (a RULE-CHANGE)"
+                      + _rule('flow_form.closed', 'flows'))
+
+
+def check_garden_law_prose():
+    """THE LAW CARRIES NO STORY (§9k, in every garden). VOCAB.md's front matter holds no comment but a section title
+    (`# == <title> ==`). A reason the garden keeps beside it that names nothing VOCAB.md still says is SHOWN, not refused:
+    a translation that takes a garden's term leaves its reasons for a person to move to the journal, or remove. Asked of
+    bin/dmwhy.py, the one reader of reasons, so no verdict on the law reads them."""
+    _p = os.path.join(ROOT, 'VOCAB.md')
+    try:
+        with open(_p, encoding='utf-8') as fh:
+            _fm = dmparse.split_front_matter(fh.read())[0] or ''
+    except (OSError, UnicodeDecodeError):
+        _fm = ''
+    for _n, _c, _text, _paths in dmparse.comments(_fm):
+        _l = _fm.split('\n')[_n]
+        errors.append(f"VOCAB.md:{_n + 2}: a comment in the law's front matter ('{_l.strip()[:70]}') — the law is applied "
+                      f"alone, in the present tense: a reason goes beside it, under the name it explains (`python3 "
+                      f"bin/dmwhy.py --take-comments` moves each there), a story in the journal; only a section title "
+                      f"`# == <title> ==` stays"
+                      + _rule('flows', 'story-in-law'))
+    try:
+        import dmwhy
+        _why, _bad = dmwhy.garden_orphans(ROOT)
+    except Exception as e:                  # a reasoning that cannot be read is named, never skipped
+        _why, _bad = 'the reasoning', [f"(it could not be read against VOCAB.md: {e.__class__.__name__})"]
+    for _k in _bad:
+        warns.append(f"{_why}: `## {_k}` explains something VOCAB.md no longer says — a reason outlives its law only "
+                      f"as journal: move it there, or name what it explains" + _rule('flows', 'story-in-law'))
+
+
+def check_words_placed():
+    """ONLY A PERSON MAKES MATERIAL THEIR WORDS (`layers[words]`): a `standing` entry placing files in `words` is on a
+    bean whose own record says a person stated it."""
+    for (_ib, _base), (_fm, _b) in docs.items():
+        _st = _fm.get('standing')
+        for _i, _e in enumerate(_st if isinstance(_st, list) else []):
+            if isinstance(_e, dict) and _e.get('standing') == 'words' and not dmpass.by_a_person(_fm):
+                errors.append(f"{_base}: standing[{_i}] places {_e.get('doc')!r} in `words`, on a bean whose record is "
+                              f"not a person's ({(_fm.get('provenance') or {}).get('src') if isinstance(_fm.get('provenance'), dict) else None!r})"
+                              f" — only a person makes material their words: the entry goes on a bean they stated "
+                              f"(`src: asserted-by-human`)" + _rule('layers', 'flows'))
+
+
+def _pointed(base, at):
+    """(layer, keeper) a value's pointer names, (None, None) for a file in no layer — no pass can be judged from it —
+    or a str: why it resolves to nothing. The forms are `provenance_record.from`'s: `file:<path>`, {bean, field}, or
+    `<section>.<key>` on this bean."""
+    if isinstance(at, str) and at.startswith('file:'):
+        _p = at[5:]
+        if not _p or not os.path.lexists(os.path.join(ROOT, *_p.split('/'))):
+            return f"'{at}' resolves to no file in the tree committed"
+        _l = LAYER_MAP.layer_of(_p)[0] if LAYER_MAP else None
+        return (_l, LAYER_MAP.keeper_of(_p)) if _l else (None, None)
+    if isinstance(at, dict) and set(at) == {'bean', 'field'}:
+        return ('estate', None) if str(at['bean']) in bean_ids else f"{at!r} names a bean this garden does not hold"
+    if isinstance(at, str) and '.' in at:
+        _s, _, _k = at.partition('.')
+        _n = ALL_FM.get(base, {}).get(_s)
+        return ('estate', None) if _k and isinstance(_n, dict) and _k in _n else f"'{at}' names nothing on this bean"
+    return f"{at!r} is not a pointer: `file:<path>`, {{bean, field}}, or `<section>.<key>` on this bean"
+
+
+def check_pointers():
+    """A VALUE'S OWN SOURCE, WHERE ONE IS KEPT (`pass_form.pointer`), resolves in the tree committed, and the flow law
+    judges its layer against the value's position: a `provenance_of.<path>[].at` against the origin at that path, a
+    record's `from[].at` against a derived value. A value with no pointer is `unrecorded`, and nothing is guessed."""
+    for (_ib, _base), (_fm, _b) in docs.items():
+        _pts = []
+        _po = _fm.get('provenance_of')
+        for _path, _rs in (_po.items() if isinstance(_po, dict) else []):
+            for _r in (_rs if isinstance(_rs, list) else []):
+                if isinstance(_r, dict) and _r.get('at') is not None:
+                    _pts.append((f"provenance_of.{_path}", _r['at'], (dmpass.ESTATE, FLOWS.origin_at(_path))))
+        for _where, _rec in _stamps_of(_fm):
+            _from = _rec.get('from')
+            for _r in (list(_from.values()) if isinstance(_from, dict) else _from if isinstance(_from, list) else []):
+                if isinstance(_r, dict) and _r.get('at') is not None:
+                    _pts.append((f"{_where}.from", _r['at'], (dmpass.ESTATE, {'act': 'derived'})))
+        for _where, _at, _dest in _pts:
+            _src = _pointed(_base, _at)
+            if isinstance(_src, str):
+                errors.append(f"{_base}: {_where}: the pointer {_src} — a value's source, where it is kept, is one a "
+                              f"reader can follow" + _rule('pass_form.pointer', 'flows'))
+                continue
+            if _src[0] is None:
+                continue
+            _d = FLOWS.direction(_src[0], _dest, _src[1])
+            if not _d.granted:
+                _o = _dest[1]
+                _why = next((r.get('why') for r in FLOWS.rows if r.get('flow') in _d.rows), None)
+                errors.append(f"{_base}: {_where}: its pointer {_at!r} is in `{_src[0]}`, and no pass from `{_src[0]}` to "
+                              f"a value {'of origin ' + json.dumps(_o) if _o else 'the law declares no origin for'} is "
+                              f"granted ({', '.join(_d.rows) or 'no row holds it: closed'})"
+                              + (f" — {_why}" if _why else '') + _rule('flows', *(_d.rows or ('flows',))))
+
+
+def check_journal_appended():
+    """A JOURNAL IS APPENDED, NEVER REWRITTEN (`flows[journal-rewritten]`): each file the map places in `journal`, as a
+    commit stages it, begins with the whole of its copy at HEAD. A merge is exempt — two appends meet there — and so is
+    a garden's first commit, which has no HEAD."""
+    if not STAGED or not LAYER_MAP or not _git('rev-parse', '--verify', '-q', 'HEAD')[0] \
+            or _git('rev-parse', '-q', '--verify', 'MERGE_HEAD')[0]:
+        return
+    for _p in STAGED:
+        if LAYER_MAP.layer_of(_p)[0] != 'journal':
+            continue
+        _head = _git_bytes('show', f'HEAD:{_p}')
+        if not _head:
+            continue                        # a journal new in this commit
+        _now = _git_bytes('show', f':{_p}')
+        if _now.startswith(_head) or (not _head.endswith('\n') and _now.startswith(_head + '\n')):
+            continue
+        _i = next((i for i, (a, b) in enumerate(zip(_head, _now)) if a != b), min(len(_head), len(_now)))
+        _line = _head.count('\n', 0, _i) + 1
+        errors.append(f"{_p}:{_line}: a line the journal held at HEAD is changed or taken out — a journal is appended "
+                      f"and never rewritten: restore it (`git checkout HEAD -- {_p}`), and append what corrects it as an "
+                      f"entry of its own" + _rule('flows', 'journal-rewritten'))
+
+
+def _said_values(fm):
+    """{(dotted path, value as JSON)} of every value a front matter holds at a position whose origin is `said` — a
+    list's entry by its place, an open map's by its key."""
+    out = set()
+
+    def walk(path, entries, attrs):
+        for _lab, _e in entries:
+            if not isinstance(_e, dict):
+                continue
+            _here = f"{path}.{_lab}" if _lab is not None else path
+            for _a, _rec in attrs.items():
+                if not isinstance(_rec, dict) or _e.get(_a) is None:
+                    continue
+                _d = _rec.get('in')
+                if isinstance(_d, dict) and isinstance(_d.get('entries'), dict):
+                    _v = _e[_a]
+                    walk(f"{_here}.{_a}", list(enumerate(_v)) if isinstance(_v, list) else [(None, _v)], _d['entries'])
+                elif dmpass.Origins.said(FLOWS.origins.of(_rec)):
+                    out.add((f"{_here}.{_a}", json.dumps(_e[_a], sort_keys=True, default=str)))
+    for _k, _v in (fm.items() if isinstance(fm, dict) else []):
+        _t = FLOWS.terms.get(_k)
+        _s = _t.get('schema') if isinstance(_t, dict) else None
+        if not isinstance(_s, dict) or not isinstance(_s.get('attrs'), dict):
+            continue
+        _shape = _s.get('shape')
+        _es = (list(_v.items()) if _shape == 'open_map_of_entries' and isinstance(_v, dict) else
+               list(enumerate(_v)) if _shape == 'list_of_entries' and isinstance(_v, list) else [(None, _v)])
+        walk(str(_k), _es, _s['attrs'])
+    return out
+
+
+def _front_of(text):
+    try:
+        _d = dmparse.loads(dmparse.split_front_matter(text or '')[0] or '')
+    except Exception:
+        return {}
+    return _d if isinstance(_d, dict) else {}
+
+
+def check_pass_logs():
+    """A SESSION'S PASS LOG, AND WHAT A COMMIT THAT CLAIMS ONE OWES (`pass_form.claim`). A file under captures/passes/
+    is one a session bean's `pass_log` names. A commit that stages one claims that session: the log extends its copy at
+    HEAD, each pass it adds is a pass (`pass_form`) the flow law grants, each said value the commit adds to a bean has a
+    pass into it, and a person's record it adds has a pass from `words` or `instructions` into its bean. A commit that
+    claims nothing owes none of it."""
+    _owned = {}
+    for (_ib, _base), (_fm, _b) in docs.items():
+        _pl = _fm.get('pass_log')
+        for _k, _e in (_pl.items() if isinstance(_pl, dict) else []):
+            _h = _e.get('holds') if isinstance(_e, dict) else None
+            if isinstance(_h, str) and _h.startswith('file:'):
+                _owned[_h[5:]] = f"{_base}.pass_log.{_k}"
+    _claimed = []
+    for _p in STAGED:
+        if not _p.startswith(PASS_DIR):
+            continue
+        if _p not in _owned:
+            errors.append(f"{_p}: a pass log no session bean's `pass_log` names — a log is a session's, and says whose"
+                          + _rule('pass_log', 'pass_form'))
+            continue
+        _claimed.append(_p)
+    if not _claimed:
+        return
+    _layer = (lambda p: LAYER_MAP.layer_of(p)[0]) if LAYER_MAP else None
+    _granted = []                                   # (source's layer, destination dict)
+    for _p in _claimed:
+        _head, _now = _git_bytes('show', f'HEAD:{_p}'), _git_bytes('show', f':{_p}')
+        if not _now.startswith(_head):
+            errors.append(f"{_p}: the log does not extend its copy at HEAD — a pass log only grows: restore it "
+                          f"(`git checkout HEAD -- {_p}`) and append" + _rule('pass_form.log', 'pass_form'))
+            continue
+        _n0 = _head.count('\n')
+        for _i, _l in enumerate(_now[len(_head):].split('\n')):
+            if not _l.strip():
+                continue
+            _at = f"{_p}:{_n0 + _i + 1}"
+            try:
+                _pass = json.loads(_l)
+            except ValueError:
+                errors.append(f"{_at}: not one JSON object — a log holds one pass to a line" + _rule('pass_form.log'))
+                continue
+            _bad = FLOWS.pass_problems(_pass)
+            _src = FLOWS.endpoint(_pass.get('source'), _layer) if isinstance(_pass, dict) else None
+            _dst = FLOWS.endpoint(_pass.get('destination'), _layer) if isinstance(_pass, dict) else None
+            _bad += [f"{w}: {e}" for w, e in (('source', _src), ('destination', _dst))
+                     if isinstance(e, str) and e not in FLOWS.layers]     # a layer, or why it is none
+            if _bad:
+                errors.append(f"{_at}: not a pass — {'; '.join(_bad)}" + _rule('pass_form', 'pass_metadata'))
+                continue
+            _md = _pass.get('metadata') or {}
+            _keeper = LAYER_MAP.keeper_of(_pass['source']['file']) if 'file' in _pass['source'] and LAYER_MAP else None
+            _d = FLOWS.decide(_src, _dst, _pass['method'], 'release' if _keeper == 'release' else None, _md.get('party'))
+            if not _d.granted:
+                _why = next((r.get('why') for r in FLOWS.rows if r.get('flow') in _d.rows), None)
+                errors.append(f"{_at}: {_pass['method']} from `{_src if isinstance(_src, str) else _src[0]}` to "
+                              f"{_dst if isinstance(_dst, str) else 'a value of origin ' + json.dumps(_dst[1])} is "
+                              f"{'refused' if _d.grant != 'closed' else 'held by no row, so refused'}"
+                              f" ({', '.join(_d.rows) or 'closed'})" + (f" — {_why}" if _why else '')
+                              + _rule('flows', *(_d.rows or ('flows',))))
+                continue
+            _granted.append((_src, _pass['destination']))
+    # what the claim owes, of every bean the commit stages
+    _into = {(str(d.get('bean')), str(d.get('at'))) for _s, d in _granted if 'at' in d}
+    _from_person = {str(d.get('bean')) for s, d in _granted if s in ('words', 'instructions') and 'bean' in d}
+    for _p in STAGED:
+        if not (_p.startswith(DOCUMENTISH) and _p.endswith('.md')):
+            continue
+        _base = posixpath.basename(_p)[:-3]
+        _new, _old = _front_of(_staged_text(_p)), _front_of(_head_text(_p))
+        for _path, _v in sorted(_said_values(_new) - _said_values(_old)):
+            if (_base, _path) not in _into:
+                errors.append(f"{_p}: {_path} = {_v[:60]} is a said value this claimed commit adds, and no granted pass "
+                              f"in its log has it for destination — a said value is someone's words: log the pass "
+                              f"{{source, destination: {{bean: {_base}, at: {_path}}}, method, metadata}}"
+                              + _rule('pass_form.claim', 'flows'))
+        _key = lambda r: (r.get('src'), r.get('by'), str(r.get('as_of')))
+        _was = {_key(r) for _w, r in _stamps_of(_old)}
+        if any(r.get('src') == 'asserted-by-human' and _key(r) not in _was for _w, r in _stamps_of(_new)) \
+                and _base not in _from_person:
+            errors.append(f"{_p}: a record `asserted-by-human` this claimed commit adds has no pass from `words` or "
+                          f"`instructions` into {_base} — a person's word is shown by the pass that carried it"
+                          + _rule('pass_form.claim', 'flows'))
+
+
+GATE_ENTRY = ()
+GATE_PLIES = ((check_flows, "the flow law, and a garden's own rows of it — read before anything is judged by it"),
+              (check_garden_law_prose, "§9k in every garden: VOCAB.md carries no story; a reason beside it orphaned is shown"),
+              (check_words_placed, "`words` is placed only on a bean a person's record carries — needs `docs`"),
+              (check_pointers, "a value's pointer resolves and its direction is granted — needs `LAYER_MAP` and `ALL_FM`"),
+              (check_journal_appended, "the journal only grows — needs the staged paths and `LAYER_MAP`"),
+              (check_pass_logs, "a claimed commit's passes, and what the claim owes — needs the staged paths"))
 
 
 ENTRY_CONTROLLERS = (
@@ -5977,7 +6274,7 @@ PLIES = (
     (check_relation_occupancy,
      "PHASE 3 (warn): the reverse gate's rule applied to the relations the GARDEN declares"),
 ) + BASE_PLIES + SEQ_PLIES + VIEW_PLIES + QTY_PLIES + PRIV_PLIES + OBS_PLIES + PLACE_PLIES + RECKON_PLIES + \
-    AGREE_PLIES + VIEWCAP_PLIES
+    AGREE_PLIES + VIEWCAP_PLIES + GATE_PLIES
 
 def _shaped(msg, width=110):
     """THE FINDING ON ITS OWN LINE, THE REASON BENEATH IT. A finding and its reason were one 300-character line,

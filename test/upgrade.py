@@ -729,9 +729,9 @@ check("a MAPPING keeps its `kind`: it records no being, and is not a bean", get2
       get21('mappings/wind-up.md'))
 _v = get21('VOCAB.md')
 check("VOCAB.md: `local_kinds` is `local_gene`, its row's `kind` is `genos` and its `of_nature` lekton, a local term's "
-      "`required_on_kinds` is `required_on_gene` — its comments kept",
+      "`required_on_kinds` is `required_on_gene` — its comments moved to the garden's reasons (24.0: the law carries none)",
       re.search(r'(?m)^local_gene:$', _v) and '- { genos: widget, of_nature: "lekton", meaning:' in _v
-      and 'required_on_gene: [widget] }   # a widget names it' in _v and '# a genos this estate needs, as 21.0 spelled it' in _v
+      and 'required_on_gene: [widget] }\n' in _v and 'a widget names it' not in _v and 'as 21.0 spelled it' not in _v
       and 'local_kinds' not in _v and 'required_on_kinds' not in _v, _v[:900])
 _j = get21('log/journal.md').split('\n## ')[-1]
 _tl = next((l for l in _j.splitlines() if l.startswith('- translated:')), '')
@@ -751,8 +751,13 @@ _why = run(sys.executable, p21('bin/dmwhy.py'), '--check', cwd=G21)
 check("the garden's own reasons follow the paths VOCAB.md renamed — the heading alone; what a reason says is its own",
       '\n## local_gene\n' in _rt and '\n## local_gene[widget].genos\n' in _rt
       and '\n## local_terms[widget_part].schema.required_on_gene\n' in _rt and 'A widget is a kind of made thing.' in _rt
-      and 'RATIONALE.md: 3 reasons, 0 orphaned' in _why.stdout and "RATIONALE.md, the garden's own reasons re-keyed" in _tl,
+      and 'RATIONALE.md: 5 reasons, 0 orphaned' in _why.stdout and "RATIONALE.md, the garden's own reasons re-keyed" in _tl,
       (_rt, _why.stdout[-300:], _tl[-300:]))
+check("...and each comment VOCAB.md carried is a reason now, under the name it sat on, its words as written; the "
+      "`translated:` line names them",
+      '\n## local_gene[widget]\n\na genos this estate needs, as 21.0 spelled it\n' in _rt
+      and '\n## local_terms[widget_part].schema\n\na widget names it\n' in _rt
+      and "2 comment(s) of the garden's own moved to RATIONALE.md" in _tl, (_rt, _tl[-400:]))
 _jp21 = p21('log/journal.md')
 put21('log/journal.md', get21('log/journal.md').replace(
     "(fill in who ratified — merging the release's pull request, or the word given here)", 'human (test)')
@@ -938,6 +943,7 @@ _bare23 = commit23('a garden as std-vocab 23.0 left it, with nothing of its own 
 _SHELF23 = ('  # == the garden\'s own ==\n  - term: shelf\n    meaning: "the shelf a thing is kept on"\n'
             '    context_keys: [shelf]\n    schema: { shape: scalar }\n')
 _OVERLAY23 = '  - term: status\n    schema: { values_add: [retired] }   # a value of its own on a term 23.0 had\n'
+_OVERLAY23_BARE = '  - term: status\n    schema: { values_add: [retired] }\n'
 _TERM23 = ('  # == what a document is for ==\n  - term: standing\n    meaning: "what a document of this system is FOR"\n'
            '    context_keys: [standing]\n    schema:\n      shape: list_of_entries\n      attrs:\n'
            '        doc:       { required: true, in: { pointer: bean_field_pointer } }\n'
@@ -973,10 +979,10 @@ check("the upgrade crosses into 23.1 and the gate passes on the result", r.retur
 _v23 = get23('VOCAB.md')
 check("VOCAB.md loses the garden's own term the law now declares, and the vacancy on it; every other byte stays, the "
       "comment between the terms with it",
-      _v23 == _vocab230.replace(_TERM23_BODY, '', 1).replace(_VAC23, 'vacancies: []\n', 1).replace('std-vocab@23.0', 'std-vocab@23.1', 1),
-      _v23[:900])
-check("...and an overlay on a term the law it ran already had is the garden's on purpose: it stays, byte for byte",
-      _OVERLAY23 in _v23 and 'status: retired' in get23('beans/sam.md'), _v23[:900])
+      _v23 == _vocab230.replace(_TERM23_BODY, '', 1).replace(_VAC23, 'vacancies: []\n', 1).replace('std-vocab@23.0', 'std-vocab@23.1', 1)
+      .replace(_OVERLAY23, _OVERLAY23_BARE, 1), _v23[:900])
+check("...and an overlay on a term the law it ran already had is the garden's on purpose: it stays, its comment a reason now",
+      _OVERLAY23_BARE in _v23 and 'status: retired' in get23('beans/sam.md'), _v23[:900])
 check("the entries that placed log/pending.md in journal and AGENTS.md in law are taken out, a comment with its own; the "
       "one placing MODEL.md in law stays, and nothing else of the bean moves",
       get23('beans/sam.md') == _sam23.replace(_PENDING23, '', 1).replace(_AGENTS23, '', 1), get23('beans/sam.md')[-500:])
@@ -984,7 +990,9 @@ check("...and the files a change to which is a RULE-CHANGE are the same after th
       "AGENTS.md in law leaves, and the release still keeps the file",
       _ruled_before == ruled23() and 'AGENTS.md' in _ruled_before and 'MODEL.md' in _ruled_before,
       (_ruled_before, ruled23()))
-check("the garden's own reasons are left as written", get23('RATIONALE.md') == _WHY23, get23('RATIONALE.md'))
+check("the garden's own reasons are left as written; the comment VOCAB.md carried joins them, under the name it sat on",
+      get23('RATIONALE.md') == _WHY23 + '\n## local_terms[status].schema\n\na value of its own on a term 23.0 had\n',
+      get23('RATIONALE.md'))
 _tl, _j = tline23()
 _bl = next((l for l in _j.splitlines() if l.startswith('- beans:')), '')
 check("the `translated:` line names the term, the vacancy, the reasons left behind and the entries — and nothing that stayed",

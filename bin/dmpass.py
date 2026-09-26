@@ -4,6 +4,7 @@
     python3 bin/dmpass.py --layers            # each layer with the files it holds, and the files in none
     python3 bin/dmpass.py --layers --json     # the same, for a tool
     python3 bin/dmpass.py <path> ...          # the layer and the keeper of each path
+    python3 bin/dmpass.py --flows [--json]    # each row of the flow law, and how far it is guarded
 
 THE MAP IS LAW (manifesto: layers). The law's `layers` place what every garden has, and a garden places the rest with
 `standing`, a list on any of its beans. A pattern is matched as a release's `seed/LANGUAGE` is matched — `*` crosses `/`
@@ -31,10 +32,13 @@ TWO MORE QUESTIONS OF A BEAN (24.0), answered here and by no copy: `sensitivity(
 person, derived from what it holds and never stored — and `may(actor, act, bean)` — whether a grant opens it, closed
 by default.
 
+AND THE FLOW LAW (24.0): `Flows.decide(source, destination, method)` — whether a pass is granted, closed by default —
+and `--flows`, each row with its guard, computed from the `GUARDS` the tools declare and the hooks that run them.
+
 It reads the law at the one path it has, and refuses rather than guess when the law does not parse. It opens no
 network path and writes nothing.
 """
-import fnmatch, json, os, posixpath, subprocess, sys
+import fnmatch, json, os, posixpath, re, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
 import dmform   # the one reader of how the law spells an attribute
@@ -596,6 +600,356 @@ def origins(root=ROOT):
     return Origins(fm(LAW), fm('VOCAB.md'))
 
 
+# ============================== WHICH PASSES ARE GRANTED (24.0; the Leviathan's Body 3, the flow law) ==============================
+# A pass is material moving from a SOURCE to a DESTINATION by a METHOD. The law's `flows` are closed rows of the three:
+# a pass no row holds is refused, the nearest row that holds decides, and of two as near a refusal. A garden's own rows
+# (VOCAB.md `flows`) only add refusals, or grant a named party where the standard says `ratified`. Asked here and of no
+# copy: the gate judges a pointer and a pass log by it, and test/passes.py holds each row to a granted and a refused pass.
+GRANTS = ('granted', 'refused', 'ratified')
+KEEPERS = ('release',)
+ROW_KEYS = ('flow', 'from', 'to', 'method', 'grant', 'keeper', 'why')     # `flow_form`, less its two sentences
+LOCAL_KEYS = ROW_KEYS + ('party', 'basis')      # a garden's grant names its party and the basis it grants on
+PASS_KEYS = ('source', 'destination', 'method', 'metadata')
+ESTATE = 'estate'
+
+
+def _list(x):
+    return list(x) if isinstance(x, list) else [] if x is None else [x]
+
+
+class Decision(tuple):
+    """(granted, grant, rows): whether the pass may be made; the standard's word on it — granted, refused, ratified, or
+    `closed` where no row holds; and the names of the rows that decided."""
+
+    def __new__(cls, granted, grant, rows):
+        return super().__new__(cls, (bool(granted), grant, tuple(rows)))
+
+    granted = property(lambda s: s[0])
+    grant = property(lambda s: s[1])
+    rows = property(lambda s: s[2])
+
+
+class Flows:
+    """The law's `flows`, and a garden's own. A destination is a layer's name, or `(ESTATE, origin)` for a value placed
+    in the estate at a position of that origin (None where the law declares none)."""
+
+    def __init__(self, law, local=None):
+        law = law if isinstance(law, dict) else {}
+        local = local if isinstance(local, dict) else {}
+        self.origins = Origins(law, local)
+        self.layers = {r.get('layer'): r for r in (law.get('layers') or []) if isinstance(r, dict)}
+        self.methods = [r.get('method') for r in (law.get('methods') or []) if isinstance(r, dict)]
+        self.rows = [r for r in (law.get('flows') or []) if isinstance(r, dict)] if isinstance(law.get('flows'), list) else []
+        self.local = [r for r in (local.get('flows') or []) if isinstance(r, dict)] if isinstance(local.get('flows'), list) else []
+        _k = self.origins.types.get('kebab') or {}
+        self.kebab = _k.get('pattern') if isinstance(_k.get('pattern'), str) else r'[a-z0-9]+(-[a-z0-9]+)*'
+        self.metadata = {r.get('key'): r.get('in') for r in (law.get('pass_metadata') or []) if isinstance(r, dict)}
+        self.terms = {}
+        for _src, t in self.origins.sources:
+            for k in (t.get('context_keys') or [t.get('term') or t.get('name')]):
+                self.terms.setdefault(k, t)
+        _w = (self.terms.get('words') or {}).get('schema', {}).get('attrs', {}).get('form', {})
+        self.forms = list(_w.get('in')) if isinstance(_w, dict) and isinstance(_w.get('in'), list) else []
+
+    # -- judging one pass
+    @staticmethod
+    def near(row, dest):
+        """How near a row's destination is to `dest`: 0 where it does not hold; 1 for a layer; 2 for an origin whose
+        act is the value's, and 1 more for each of `nature` and `by` it names, where they are the value's too."""
+        to = row.get('to')
+        if isinstance(dest, tuple):
+            o = dest[1]
+            if not isinstance(to, dict):
+                return 1 if ESTATE in _list(to) else 0
+            if not isinstance(o, dict) or to.get('act') != o.get('act'):
+                return 0
+            n = 2
+            if 'nature' in to:
+                if not set(_natures_of(to)) & set(_natures_of(o)):
+                    return 0
+                n += 1
+            if 'by' in to:
+                if to['by'] != o.get('by'):
+                    return 0
+                n += 1
+            return n
+        return 1 if not isinstance(to, dict) and dest in _list(to) else 0
+
+    @staticmethod
+    def holds(row, src, method, keeper=None):
+        return (src in _list(row.get('from')) and method in _list(row.get('method'))
+                and (row.get('keeper') is None or row.get('keeper') == keeper))
+
+    def decide(self, src, dest, method, keeper=None, party=None):
+        """Whether a pass from the layer `src` to `dest` by `method` is granted — a Decision. `keeper` is the source
+        file's (`release`, or None), `party` the bean of the party it goes to, where a garden's grant must name one."""
+        mine = [r for r in self.local if self.holds(r, src, method, keeper) and self.near(r, dest)]
+        refused = [r.get('flow') for r in mine if r.get('grant') == 'refused']
+        hit = [(self.near(r, dest), r) for r in self.rows if self.holds(r, src, method, keeper)]
+        hit = [(n, r) for n, r in hit if n]
+        if not hit:
+            return Decision(False, 'closed', refused)
+        top = max(n for n, _ in hit)
+        rows = [r for n, r in hit if n == top]
+        said = {r.get('grant') for r in rows}
+        grant = 'refused' if 'refused' in said or not said <= set(GRANTS) else 'ratified' if 'ratified' in said else 'granted'
+        names = [r.get('flow') for r in rows]
+        if refused:
+            return Decision(False, grant, names + refused)
+        if grant == 'ratified':
+            ok = [r.get('flow') for r in mine if r.get('grant') == 'granted' and party is not None and r.get('party') == party]
+            return Decision(bool(ok), grant, names + ok)
+        return Decision(grant == 'granted', grant, names)
+
+    def direction(self, src, dest, keeper=None):
+        """Whether material may come from `src` to `dest` at all — a pointer says where a value came from, not how it
+        was carried. The rows NEAREST the destination decide, by whichever method they name: of those, one that grants
+        grants (a proposal taken, where another row refuses a copy by hand), else the refusal; `closed` where none holds.
+        So a said value pointed at another bean meets `copied-is-not-said`, and not a merge's row for the estate."""
+        top = {}
+        for m in self.methods:
+            n = max((self.near(r, dest) for r in self.rows if self.holds(r, src, m, keeper)), default=0)
+            if n:
+                top[m] = n
+        if not top:
+            return self.decide(src, dest, self.methods[0] if self.methods else None, keeper)
+        n = max(top.values())
+        ds = [self.decide(src, dest, m, keeper) for m in self.methods if top.get(m) == n]
+        return next((d for d in ds if d.granted), ds[0])
+
+    # -- where a pass's ends are
+    def origin_at(self, at):
+        """The origin of the position a bean's dotted path `at` names — `cost.amount`, `contacts.anna.email` — or None
+        where the law declares none there. A segment no attribute names is an entry's key, or a list's place."""
+        segs = [s for s in str(at).split('.') if s]
+        t = self.terms.get(segs[0]) if segs else None
+        if t is None:
+            return None
+        attrs, rec = t['schema'].get('attrs'), None
+        for s in segs[1:]:
+            if isinstance(attrs, dict) and isinstance(attrs.get(s), dict):
+                rec = attrs[s]
+                d = rec.get('in')
+                attrs = d.get('entries') if isinstance(d, dict) else None
+        return self.origins.of(rec) if rec is not None else None
+
+    def endpoint(self, e, layer_of=None):
+        """A pass's source or destination as the law judges it — a layer, or (ESTATE, origin) — or a str: why it is
+        none. `layer_of(path)` gives a file's layer (the tree's map); without one a file cannot be placed."""
+        if not isinstance(e, dict) or not e:
+            return f"{e!r} is not one of `pass_form.source`'s forms"
+        keys = set(e)
+        if keys == {'file'} and isinstance(e['file'], str):
+            layer = layer_of(e['file']) if layer_of else None
+            return layer or f"file {e['file']!r} is in no layer: a pass cannot be judged from it"
+        if 'bean' in e and keys <= {'bean', 'at'} and isinstance(e['bean'], str):
+            return (ESTATE, self.origin_at(e['at'])) if 'at' in e else ESTATE
+        if keys == {'garden'} and isinstance(e['garden'], str):
+            return 'other-garden'
+        if keys == {'layer'}:
+            r = self.layers.get(e['layer'])
+            if isinstance(r, dict) and r.get('files') is False:
+                return e['layer']
+            return f"layer {e['layer']!r} is not a layer that holds no files — name a file, a bean or a garden instead"
+        return f"{e!r} is not one of `pass_form.source`'s forms: {{file}}, {{bean, at?}}, {{garden}} or {{layer}}"
+
+    def pass_problems(self, p):
+        """Why `p` is not a pass (`pass_form`), as a list: the four keys and nothing else, a known method, metadata
+        from `pass_metadata` only."""
+        if not isinstance(p, dict):
+            return [f"{p!r} is not a pass: a map of {', '.join(PASS_KEYS)}"]
+        out = []
+        if set(p) != set(PASS_KEYS):
+            out.append(f"a pass holds {', '.join(PASS_KEYS)} and nothing else; this one holds {sorted(p)}")
+        if p.get('method') not in self.methods:
+            out.append(f"method {p.get('method')!r} is not a row of `methods`")
+        md = p.get('metadata', {})
+        if not isinstance(md, dict):
+            return out + ["`metadata` is not a map"]
+        for k, v in md.items():
+            kind = self.metadata.get(k)
+            ok = (kind == 'count' and isinstance(v, int) and not isinstance(v, bool) and v >= 0
+                  or kind == 'oid' and isinstance(v, str) and len(v) in (40, 64) and all(c in '0123456789abcdef' for c in v)
+                  or kind == 'form' and v in self.forms
+                  or kind == 'bean' and isinstance(v, str) and bool(v))
+            if kind is None:
+                out.append(f"metadata `{k}` is not a row of `pass_metadata` — a pass carries lengths, locators and object ids, never the material")
+            elif not ok:
+                out.append(f"metadata `{k}`: {v!r} is not {'a ' + kind if kind != 'form' else 'a word of `words.form` ' + str(self.forms)}")
+        return out
+
+    # -- the law's own soundness
+    def cells(self, row):
+        """[(from, to, method, keeper)] a row covers, one per layer and method it names; `to` a layer, or its origin."""
+        tos = [('o', tuple(sorted(row['to'].items(), key=str)))] if isinstance(row.get('to'), dict) else _list(row.get('to'))
+        return [(s, t, m, row.get('keeper')) for s in _list(row.get('from')) for t in tos for m in _list(row.get('method'))]
+
+    def problems(self):
+        """[(source, why)] — what in the flow law, or a garden's own rows, no reader can judge by."""
+        out = []
+        if not self.rows:
+            return [('law', "no `flows` — every pass would be refused, and none could be granted")]
+        if not self.methods or len(set(self.methods)) != len(self.methods) or not all(isinstance(m, str) and m for m in self.methods):
+            out.append(('law', f"methods: {self.methods} is not a list of names, each once"))
+        for k, v in self.metadata.items():
+            if v not in ('count', 'oid', 'form', 'bean'):
+                out.append(('law', f"pass_metadata[{k}].in: {v!r} is not count, oid, form or bean"))
+        names = []
+        for src, rows, keys in (('law', self.rows, ROW_KEYS), ('VOCAB', self.local, LOCAL_KEYS)):
+            for r in rows:
+                n = r.get('flow')
+                names.append(n)
+                where = f"flows[{n}]"
+                if not isinstance(n, str) or not re.fullmatch(self.kebab, n):
+                    out.append((src, f"{where}: `flow` is not a kebab name"))
+                extra = sorted(set(r) - set(keys))
+                if extra:
+                    out.append((src, f"{where} holds {extra}: a row holds {', '.join(keys)}"))
+                for layer in _list(r.get('from')):
+                    if layer not in self.layers:
+                        out.append((src, f"{where}.from: {layer!r} is not a row of `layers`"))
+                to = r.get('to')
+                if isinstance(to, dict):
+                    if self.origins.invalid(to):
+                        out.append((src, f"{where}.to: {self.origins.invalid(to)}"))
+                elif not _list(to) or any(t not in self.layers for t in _list(to)):
+                    out.append((src, f"{where}.to: {to!r} is not a layer, a list of layers, or an origin"))
+                if not _list(r.get('method')) or any(m not in self.methods for m in _list(r.get('method'))):
+                    out.append((src, f"{where}.method: {r.get('method')!r} is not a row of `methods`, or a list of them"))
+                if r.get('grant') not in GRANTS:
+                    out.append((src, f"{where}.grant: {r.get('grant')!r} is not one of {', '.join(GRANTS)}"))
+                if 'keeper' in r and r['keeper'] not in KEEPERS:
+                    out.append((src, f"{where}.keeper: {r['keeper']!r} is not one of {', '.join(KEEPERS)}"))
+                if not (isinstance(r.get('why'), str) and r['why'].strip()):
+                    out.append((src, f"{where}: no `why` — a row says why it is as it is"))
+        for n in sorted({n for n in names if names.count(n) > 1 and isinstance(n, str)}):
+            out.append(('law', f"flows: `{n}` names two rows"))
+        seen = {}
+        for r in self.rows:
+            for c in self.cells(r):
+                if c in seen and seen[c] != r.get('flow'):
+                    out.append(('law', f"flows[{r.get('flow')}] and flows[{seen[c]}] both decide {c[2]} from {c[0]} to "
+                                       f"{c[1] if isinstance(c[1], str) else dict(c[1][1])}: one cell, one row"))
+                seen.setdefault(c, r.get('flow'))
+        # A GARDEN NEVER UNGUARDS THE STANDARD: its rows refuse, or grant a named party a cell the standard ratifies.
+        for r in self.local:
+            where = f"flows[{r.get('flow')}]"
+            if r.get('grant') == 'refused':
+                continue
+            if r.get('grant') != 'granted':
+                out.append(('VOCAB', f"{where}: a garden's row is `refused`, or `granted` to a party where the standard "
+                                     f"says `ratified` — never {r.get('grant')!r}"))
+                continue
+            if not (isinstance(r.get('party'), str) and r['party']) or not (isinstance(r.get('basis'), str) and r['basis'].strip()):
+                out.append(('VOCAB', f"{where}: a garden's grant names its `party` (a bean) and the `basis` it grants on"))
+            for s, t, m, k in self.cells(r):
+                dest = (ESTATE, dict(t[1])) if isinstance(t, tuple) else t
+                d = self.decide(s, dest, m, k)
+                if d.grant != 'ratified':
+                    out.append(('VOCAB', f"{where}: grants {m} from {s} to {t if isinstance(t, str) else dict(t[1])}, which "
+                                         f"the standard decides {d.grant} ({', '.join(d.rows) or 'no row'}) — a garden "
+                                         f"grants only where the standard says `ratified`"))
+        return out
+
+
+def flows(root=ROOT):
+    """The Flows of the law at its one path and of this garden's VOCAB.md."""
+    o = origins(root)
+    return Flows(o.law, _read_front(root, 'VOCAB.md'))
+
+
+# ------------------------------ how far each row is guarded: COMPUTED, never typed ------------------------------
+# A tool says which rows it checks in a module-level dict literal, `GUARDS = {flow: {checks, proof, label, when?}}`,
+# and a review that only shows what it found says so in `EVIDENCE`. Where the tool runs places the check: at every
+# commit where the pre-commit hook names it, at a push where the pre-push hook does, otherwise in that tool alone. A
+# registration made `when: claimed` (a commit that claims its session) or `when: pointed` (where a value's pointer is
+# kept) is weaker than one that holds always. A row no tool registers is `hoped`.
+PLACES = ('hoped', 'evidence', 'tool', 'push', 'commit')    # weakest first
+CONDITIONS = ('claimed', 'pointed')
+HOOKS = (('commit', 'bin/hooks/pre-commit'), ('push', 'bin/hooks/pre-push'))
+TOOL_GLOBS = ('bin/*.py', 'assets/*/bin/*.py', 'assets/*/lib/*.py')
+
+
+def _registrations(path):
+    """{name: literal} of the module-level `GUARDS` and `EVIDENCE` of one Python file, read without running it."""
+    import ast
+    try:
+        with open(path, encoding='utf-8') as fh:
+            tree = ast.parse(fh.read())
+    except (OSError, UnicodeDecodeError, SyntaxError):
+        return {}
+    out = {}
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) \
+                and node.targets[0].id in ('GUARDS', 'EVIDENCE'):
+            try:
+                out[node.targets[0].id] = ast.literal_eval(node.value)
+            except ValueError:
+                out[node.targets[0].id] = None
+    return out
+
+
+def guards(root=ROOT):
+    """[(flow, tool, place, when, reg)] of every registration in this tree's tools, and [(tool, why)] of those that
+    cannot be read. `reg` is the registration as the tool wrote it."""
+    import glob
+    hooks = {}
+    for place, p in HOOKS:
+        try:
+            with open(os.path.join(root, *p.split('/')), encoding='utf-8') as fh:
+                hooks[place] = fh.read()
+        except OSError:
+            hooks[place] = ''
+    regs, bad = [], []
+    for g in TOOL_GLOBS:
+        for f in sorted(glob.glob(os.path.join(root, *g.split('/')))):
+            tool = os.path.relpath(f, root).replace(os.sep, '/')
+            found = _registrations(f)
+            runs = next((place for place, text in hooks.items() if tool in text), 'tool')
+            for name, place in (('GUARDS', runs), ('EVIDENCE', 'evidence')):
+                lit = found.get(name)
+                if name not in found:
+                    continue
+                if not isinstance(lit, dict):
+                    bad.append((tool, f"`{name}` is not a dict literal of flow to registration"))
+                    continue
+                for flow, reg in lit.items():
+                    if not isinstance(reg, dict) or not {'checks', 'proof', 'label'} <= set(reg) \
+                            or not set(reg) <= {'checks', 'proof', 'label', 'when'} \
+                            or reg.get('when', CONDITIONS[0]) not in CONDITIONS:
+                        bad.append((tool, f"`{name}[{flow}]` is not {{checks, proof, label, when?}}, `when` one of {CONDITIONS}"))
+                        continue
+                    regs.append((flow, tool, place, reg.get('when'), reg))
+    return regs, bad
+
+
+def rank(place, when):
+    """A guard's strength, for the ratchet: its place, and within it a check that always holds above one on a condition."""
+    return PLACES.index(place) * 2 + (0 if when else 1) if place != 'hoped' else 0
+
+
+def status(fl, regs):
+    """{flow: (place, when, [tools])}: each row's strongest guard, `hoped` where none."""
+    out = {}
+    for r in fl.rows:
+        mine = [g for g in regs if g[0] == r.get('flow')]
+        if not mine:
+            out[r.get('flow')] = ('hoped', None, [])
+            continue
+        top = max(rank(g[2], g[3]) for g in mine)
+        best = [g for g in mine if rank(g[2], g[3]) == top]
+        out[r.get('flow')] = (best[0][2], best[0][3], sorted({g[1] for g in best}))
+    return out
+
+
+def _read_front(root, p):
+    try:
+        with open(os.path.join(root, *p.split('/')), encoding='utf-8') as fh:
+            return _front(fh.read())
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
 # ============================== WHO MAY SEE WHAT, AND HOW MUCH HARM IT CAN DO (24.0; step 1, N31) ==============================
 # Two questions every reader asks of a bean, answered here and by no copy: how sensitive it is — DERIVED from what it
 # holds, never stored — and whether an actor may read, write, act on or ratify it, read from the garden's `grants`.
@@ -834,6 +1188,33 @@ def main(argv):
         print(f"\nin no layer: {len(none)} — shown, never refused; a garden places what it keeps with `standing`")
         for p in none:
             print(f"  {p}  [kept {_kept(m, p)}]")
+        return 0
+    if '--flows' in argv:
+        fl = flows()
+        regs, bad = guards()
+        st = status(fl, regs)
+        rows = {r.get('flow'): {'from': r.get('from'), 'to': r.get('to'), 'method': r.get('method'), 'grant': r.get('grant'),
+                                'guard': st[r.get('flow')][0], 'when': st[r.get('flow')][1], 'by': st[r.get('flow')][2]}
+                for r in fl.rows}
+        stray = sorted({g[0] for g in regs} - set(rows))
+        if '--json' in argv:
+            print(json.dumps({'version': m.version, 'flows': rows, 'problems': fl.problems(), 'unreadable': bad,
+                              'unknown': stray}, ensure_ascii=False, indent=1))
+            return 0
+        print(f"the flow law of std-vocab {m.version}: {len(rows)} rows, a pass no row holds refused")
+        for name, r in rows.items():
+            print(f"  {name:<24} {r['grant']:<9} {r['guard']}{' when ' + r['when'] if r['when'] else ''}"
+                  + (f"  ({', '.join(r['by'])})" if r['by'] else ''))
+        by = {}
+        for r in rows.values():
+            by[r['guard']] = by.get(r['guard'], 0) + 1
+        print('  ' + ', '.join(f"{by[p]} {p}" for p in reversed(PLACES) if p in by))
+        for src, why in fl.problems():
+            print(f"  PROBLEM ({src}): {why}")
+        for tool, why in bad:
+            print(f"  UNREADABLE {tool}: {why}")
+        for f in stray:
+            print(f"  a tool registers `{f}`, which no row of the law names")
         return 0
     paths = [a for a in argv if not a.startswith('-')]
     if not paths:

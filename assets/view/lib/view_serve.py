@@ -40,6 +40,12 @@ sys.path.insert(0, HERE)
 import view_model as vm
 import view_report
 
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+GUARDS = {
+    'served': {'checks': "a page or an action is served only where a grant opens it to the viewer, asked before each",
+               'proof': 'test/view.py', 'label': "serve: carol, granted what no organisation owns, sees the radio"},
+}
+
 SESSION_HOURS = 12
 PBKDF2_ROUNDS = 200000
 COOKIE = "view_session"

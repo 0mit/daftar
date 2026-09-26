@@ -33,6 +33,12 @@ import dmpass    # noqa: E402 — sensitivity, and the gardener
 import dmwhere   # noqa: E402 — this host, and what a root means on it
 import yaml      # noqa: E402
 
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+GUARDS = {
+    'sealed': {'checks': "every pointer a commit adds resolves in a store this host holds",
+               'proof': 'test/held.py', 'label': "...and so does a plain `git commit` of the same"},
+}
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POINTER = re.compile(r'^root:([a-z0-9][a-z0-9-]*)/([0-9a-f]{32})$')
 

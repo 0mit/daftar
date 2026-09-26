@@ -1653,7 +1653,7 @@ layers:
     meaning: "the law applied: the gate, the tools that read the law, an asset's code, the tests that hold them, and the repository's own settings"
   - layer: words
     files: true
-    meaning: "a person's own words, or a document they gave; a garden places them"
+    meaning: "a person's own words, or a document they gave. A garden places them, by a `standing` entry on a bean a person's own record carries (`asserted-by-human`): only a person makes material their words, and a tool or an agent cannot"
   - layer: work
     files: true
     meaning: "an agent's own plan, notes, handover or report; a garden places them"
@@ -1684,6 +1684,124 @@ layers:
   - layer: held
     files: false
     meaning: "material a garden keeps OFF git — a document's bytes, a sealed entry, a series — in a store a host resolves through its `roots`, pointed at from a bean by a `held_pointer`; erasable per subject, and backed up on its own"
+# == THE FLOW LAW: which passes between layers are granted ==
+methods:
+  - { method: edit,      meaning: "a writer changes a file, by hand or through a tool at the writer's word" }
+  - { method: take-down, meaning: "a person's words put into a said value. How the words were carried is the pass's `form`, one of `words.form`'s own: written or spoken" }
+  - { method: stamp,     meaning: "the save writes the clock's reading where `now` stood" }
+  - { method: append,    meaning: "an entry added after the last, and nothing before it changed" }
+  - { method: derive,    meaning: "a tool computes a value from the inputs it names" }
+  - { method: record,    meaning: "a tool writes what it read off the world, with the reading's moment" }
+  - { method: capture,   meaning: "a command's output kept as it came, its owner and its command named" }
+  - { method: merge,     meaning: "the merge engine joins two copies of one being, keeping each value's source" }
+  - { method: hold,      meaning: "material sealed into a store off git, git keeping only its pointer" }
+  - { method: take,      meaning: "a peer's proposal read and taken in, its fingerprint recorded; the gardener's commit ratifies it" }
+  - { method: make,      meaning: "a proposal made for a peer, from what the garden making it says" }
+  - { method: pass-on,   meaning: "what a garden holds from another, made for a third, the passing garden's id appended to its path" }
+  - { method: upgrade,   meaning: "a release's files laid into a garden, by germination or an upgrade" }
+  - { method: publish,   meaning: "material pushed, or offered for merging, to a public repository" }
+  - { method: render,    meaning: "material placed into a request to a model" }
+  - { method: show,      meaning: "a tool prints material to whoever runs it" }
+  - { method: send,      meaning: "material sent to a party outside the garden" }
+  - { method: serve,     meaning: "a page or an action served to a viewer" }
+flow_form:
+  flow:   "the row's name, kebab, no other row's"
+  from:   "the SOURCE: a layer, or a list of layers"
+  to:     "the DESTINATION: a layer, or an origin `{act, nature?, by?}` — a value placed in the estate at a position of that origin. A row naming an origin is nearer than one naming a layer, and the more of `act`, `nature` and `by` it names, the nearer still"
+  method: "a method, or a list of them"
+  grant:  "granted | refused | ratified — `ratified` is refused until the gardener grants a named party, by a row of a garden's own `flows` (a RULE-CHANGE) with `party` and `basis`"
+  keeper: "optional: `release` — the row holds only for a file the release keeps"
+  why:    "why the row is as it is, in the present tense"
+  closed: "a pass no row holds is REFUSED. Of the rows that hold a pass, the nearest decides, and of two as near, a refusal. A garden's own rows only add refusals, or grant a party where the standard says `ratified`: a garden never unguards the standard"
+  guard:  "how far a row is guarded is COMPUTED, never typed: from the tools that say they check it (a tool's `GUARDS`) and where each runs — at every commit where the pre-commit hook runs it, at a push where the pre-push hook does, otherwise in that tool alone — and `hoped` where no tool checks it. A row checked at one release is checked at the next (bin/dmpass.py --flows)"
+flows:
+  - { flow: words-to-said, from: [words, instructions], to: { act: said }, method: take-down, grant: granted,
+      why: "a said value's source is a person's words: a document they gave, or what they asked, recorded with who said it" }
+  - { flow: law-owned, from: [law, guide, estate, words, instructions, work, self], to: { act: said, by: law }, method: [edit, take-down], grant: granted,
+      why: "a value the law owns — a registry's row, a closed list's word — is judged by the schema alone, whatever page it was read on" }
+  - { flow: model-output-is-no-word, from: [self, work], to: { act: said }, method: [edit, take-down, derive], grant: refused,
+      why: "a model's own output, or an agent's own notes, is no one's words: a said value the agent wrote on its own say is a guess" }
+  - { flow: examples-are-not-facts, from: guide, to: estate, method: [edit, take-down, derive, record], grant: refused,
+      why: "a value in a guide is an example's: a name, a day or an amount copied from one into a bean is a fact nobody gave" }
+  - { flow: copied-is-not-said, from: estate, to: { act: said }, method: edit, grant: refused,
+      why: "a value copied from another bean has that bean for its source, not a person: it is cited in `from` and derived" }
+  - { flow: derived, from: [estate, law, words, world, clock, history, other-garden], to: { act: derived }, method: [derive, merge], grant: granted,
+      why: "a value computed from inputs it names is as strong as its weakest input" }
+  - { flow: made-here, from: [self, work, instructions, words], to: { act: made }, method: edit, grant: granted,
+      why: "prose, and a name minted, are made where they are written" }
+  - { flow: clock-to-stamped, from: clock, to: { act: read, by: save }, method: stamp, grant: granted,
+      why: "the save reads the clock and writes the reading, as it writes the journal heading beside it" }
+  - { flow: stamped-is-not-typed, from: [self, work, words, instructions, guide, estate], to: { act: read, by: save }, method: [edit, take-down], grant: refused,
+      why: "a day the save reads is never typed: a typed day is a guess, or a copy of an example's" }
+  - { flow: world-read, from: world, to: { act: read }, method: [record, edit], grant: granted,
+      why: "a reading of a machine, a service or a run, recorded by whoever took it, with its moment" }
+  - { flow: world-captured, from: world, to: history, method: capture, grant: granted,
+      why: "a command's output is kept as it came, with its owner and its command, so it can be taken again and compared" }
+  - { flow: run-observed, from: history, to: { act: said }, method: record, grant: granted,
+      why: "a result a captured run printed, a suite's verdict at a commit, is recorded as an observation that points at its capture, by a journalled save: the capture is the reading, and can be read again" }
+  - { flow: merged, from: [estate, other-garden], to: estate, method: merge, grant: granted,
+      why: "two copies of one being are joined with every value's source kept, and a subsumed value kept beside the winner" }
+  - { flow: peer-taken, from: other-garden, to: estate, method: take, grant: granted,
+      why: "import: authenticity is the receiver's, about the peer it met; what the peer said crosses one hop, the path recorded" }
+  - { flow: peer-copied, from: other-garden, to: estate, method: edit, grant: refused,
+      why: "another garden's facts come in through a proposal taken, whose fingerprint is recorded, never as a hand copy nobody can trace" }
+  - { flow: peer-offered, from: estate, to: other-garden, method: make, grant: granted,
+      why: "export: a person's name crosses only where their word reaches, and nothing is sold" }
+  - { flow: peer-written, from: [estate, self, work], to: other-garden, method: edit, grant: refused,
+      why: "another garden is written only by its own gardener: what this one would give it is a proposal" }
+  - { flow: transit, from: other-garden, to: other-garden, method: pass-on, grant: granted,
+      why: "transit: passed on as it came, the passing garden's id appended to the path; a path that holds the receiver is a loop" }
+  - { flow: sealed, from: estate, to: held, method: hold, grant: granted,
+      why: "material that must not sit in git is kept off it, where it can be erased per subject" }
+  - { flow: unsealed, from: held, to: [estate, public, other-garden], method: [edit, make, publish], grant: refused,
+      why: "sealed material comes back into git, or out of the garden, only as its pointer" }
+  - { flow: sealed-read, from: held, to: request, method: [render, show], grant: ratified,
+      why: "sealed material is read into a request only where the gardener grants it" }
+  - { flow: journalled, from: [work, instructions, self, history], to: journal, method: append, grant: granted,
+      why: "what was done and why is appended, entry by entry, beside the commit that did it" }
+  - { flow: journal-rewritten, from: [work, instructions, self, history, journal], to: journal, method: edit, grant: refused,
+      why: "a journal is appended and never rewritten: an entry changed after the fact is a record nobody can trust" }
+  - { flow: queued, from: [work, instructions, self], to: queue, method: edit, grant: granted,
+      why: "what waits for a person is proposed, parked and settled in place" }
+  - { flow: law-ratified, from: [instructions, words], to: [law, manifesto], method: edit, grant: granted,
+      why: "a change to the law is ratified by a person, and said distinctly as a RULE-CHANGE" }
+  - { flow: story-in-law, from: [journal, history, reasoning, work], to: [law, manifesto], method: edit, grant: refused,
+      why: "the law is applied alone, in the present tense: a story or a reason in it leans on a layer beneath" }
+  - { flow: law-restated, from: law, to: [reasoning, guide, journal], method: edit, grant: refused,
+      why: "a second statement of a rule disagrees with the first in time; a form is derived from the law, never copied" }
+  - { flow: law-derived, from: law, to: guide, method: derive, grant: granted,
+      why: "a form or a list is derived from the law by a tool, so it cannot disagree with it" }
+  - { flow: released, from: public, to: [law, manifesto, reasoning, guide, gate, journal], method: upgrade, grant: granted,
+      why: "a release's files are laid into a garden whole, and the commit says RULE-CHANGE" }
+  - { flow: release-in-estate, from: public, to: estate, method: upgrade, grant: refused,
+      why: "a release carries no garden's facts" }
+  - { flow: kept-private, from: [estate, words, work, instructions, journal, queue, history, self], to: public, method: publish, grant: refused,
+      why: "a garden's own material never goes to a public repository" }
+  - { flow: release-public, from: [manifesto, law, reasoning, guide, gate], to: public, method: publish, grant: granted, keeper: release,
+      why: "what the release keeps is public under its licences" }
+  - { flow: composed-here, from: [manifesto, law, reasoning, journal, history, queue, guide, estate, gate, words, work, instructions], to: request, method: [render, show], grant: granted,
+      why: "a request composed on this host keeps what it holds on this host" }
+  - { flow: sent-out, from: [request, estate], to: remote, method: send, grant: ratified,
+      why: "a hosted or remote party is refused until the gardener grants that party, with the basis the gardener's own law asks for sending there" }
+  - { flow: served, from: estate, to: remote, method: serve, grant: granted,
+      why: "a page or an action is served only to a viewer a grant opens it to, asked before each one" }
+pass_form:
+  source:      "where material came from: `{file: <path>}` (its layer is the map's), `{bean: <id>, at?: <dotted path>}` (the estate), `{garden: <id>}` (another garden), or `{layer: <a layer that holds no files>}`"
+  destination: "where it went, in the same forms; a value is `{bean, at}`, and its position's origin is what the flow law judges"
+  method:      "a row of `methods`"
+  metadata:    "only lengths, locators and git object ids, from `pass_metadata`: never the material — a day or an amount is not hidden by a hash, and is in the bean anyway"
+  keys:        "a pass holds these four and nothing else"
+  log:         "a session's passes, one JSON object to a line, in a file under `captures/passes/` that a session bean's `pass_log` names; it only grows"
+  claim:       "a commit that stages a change to a pass log CLAIMS its session, and owes: the log extends the copy at HEAD; every pass it adds is one the flow law grants; every said value the commit adds to a bean has a pass whose destination is that value; and a record `asserted-by-human` it adds has a pass from `words` or `instructions` into its bean. A commit that claims nothing owes none of it, and for it those rows are `hoped`"
+  pointer:     "a value's own source, where one is kept: `provenance_of.<path>[].at` beside the value it names, or a record's `from[].at`, in the forms `provenance_record` gives. Where present it must resolve in the tree committed, and the flow law judges its layer against the value's origin; a value with none is `unrecorded`, and nothing is guessed for it"
+pass_metadata:
+  - { key: length, in: count,  meaning: "how long the material was, in characters" }
+  - { key: lines,  in: count,  meaning: "how many lines it held" }
+  - { key: seq,    in: count,  meaning: "the pass's place in its session, where the log's order is not enough" }
+  - { key: turn,   in: count,  meaning: "the turn of the session it happened in" }
+  - { key: oid,    in: oid,    meaning: "the git object id of the material, as `git hash-object` gives it" }
+  - { key: form,   in: form,   meaning: "how a person's words were carried: a word of `words.form`" }
+  - { key: party,  in: bean,   meaning: "the bean of the party it went to, where it left the garden" }
 aspects:
   - aspect: necessity
     meaning: "what a being requires in order to do its work"
@@ -2733,6 +2851,17 @@ terms:
     enforced_by: none
     anchor: { class: logical, establishing: true, minted: true }
     merge: { cardinality: single, order: none }
+  - term: pass_log
+    meaning: "a session's record of what passed where (`pass_form`): one entry per log, holding a file under `captures/passes/`. A commit that stages a change to one claims the session"
+    context_keys: [pass_log]
+    schema:
+      shape: open_map_of_entries
+      key_form: kebab
+      only_on_gene: [session]
+      attrs:
+        holds: { required: true, in: { pattern: "^file:captures/passes/[a-z0-9][a-z0-9-]*\\.jsonl$" }, meaning: "the log, a `file:` pointer into `captures/passes/`: one pass to a line, only ever appended to" }
+        note:  { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes" }
+    merge: { cardinality: multi, order: by-key }
   - term: email
     meaning: "an e-mail address a person or an organisation is reached at. Logical; whether it ESTABLISHES is the bean's to say, because an address is reassigned and a person outlives it"
     context_keys: ["email"]
@@ -2841,7 +2970,7 @@ terms:
     enforced_by: core
     merge: { cardinality: set, order: none }
   - term: provenance_of
-    meaning: "who said each merged value and how they know, keyed by the same dotted path merge_conflicts uses: {path: [{value, src, seen_in, subsumed?}]}. A subsumed value appears here and NOWHERE else, because the document carries only the winner."
+    meaning: "who said each value and how they know, keyed by the same dotted path merge_conflicts uses: {path: [{value, src, seen_in?, subsumed?, at?}]}. A subsumed value appears here and NOWHERE else, because the document carries only the winner. `at` is the value's own source, a pointer in the forms `provenance_record.from` gives (`pass_form.pointer`): where it is present it resolves, and the flow law judges it"
     context_keys: [provenance_of]
     enforced_by: none
     merge: { cardinality: single, order: none }

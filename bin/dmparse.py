@@ -405,6 +405,80 @@ def loads(text):
     return _yaml.load(text, Loader=LOADER)
 
 
+# ---- A COMMENT IN A FRONT MATTER, AND WHAT IT SITS ON (24.0: the law carries no story) ----------------------------------
+# A `#` begins a comment where it is outside quotes, at a line's start or after a blank, and outside a block scalar
+# (`|`, `>`), whose lines are the value's text. What a comment sits on is the item on its line, or, for a comment on a
+# line of its own, the item on the next line that holds one; named as bin/dmwhy.py keys a reason: `a.b[x].c`, a list's
+# item by the first scalar it holds. One reader, so the gate and the upgrade find the same comments.
+TITLE = re.compile(r'^\s*# == [^=]+ ==\s*$')
+
+
+def comment_start(line):
+    """The column a comment begins at in one YAML line, or -1."""
+    q = None
+    for i, ch in enumerate(line):
+        if ch in "\"'":
+            q = None if q == ch else (q or ch)
+        if ch == '#' and q is None and (i == 0 or line[i - 1] in ' \t'):
+            return i
+    return -1
+
+
+def comments(head):
+    """[(line, column, text, [paths])] of every comment in a front matter's text, section titles (`# == x ==`) left out;
+    `paths` runs from the finest item the comment sits on to its top-level key. [] where the text does not parse."""
+    if _yaml is None:
+        raise RuntimeError("PyYAML required")
+    try:
+        root = _yaml.compose(head, Loader=LOADER)
+    except _yaml.YAMLError:
+        return []
+    spans, block = [], set()
+
+    def walk(node, path):
+        if isinstance(node, _yaml.ScalarNode):
+            if node.style in ('|', '>'):
+                block.update(range(node.start_mark.line + 1, node.end_mark.line + (1 if node.end_mark.column else 0)))
+            return
+        if isinstance(node, _yaml.MappingNode):
+            for k, v in node.value:
+                p = f"{path}.{k.value}" if path else str(k.value)
+                spans.append((k.start_mark.line, v.end_mark.line, p))
+                walk(v, p)
+        elif isinstance(node, _yaml.SequenceNode):
+            for item in node.value:
+                ident = next((v.value for _k, v in (item.value if isinstance(item, _yaml.MappingNode) else [])
+                              if isinstance(v, _yaml.ScalarNode)), item.value if isinstance(item, _yaml.ScalarNode) else '')
+                p = f"{path}[{ident}]"
+                spans.append((item.start_mark.line, item.end_mark.line, p))
+                walk(item, p)
+    if root is not None:
+        walk(root, '')
+    lines = head.split('\n')
+    content = [i for i, l in enumerate(lines) if l.strip() and i not in block
+               and (comment_start(l) < 0 or l[:comment_start(l)].strip())]
+
+    def paths(at):
+        here = [s for s in spans if s[0] <= at <= max(s[1], s[0])] or [s for s in spans if s[0] == at]
+        if not here:
+            return []
+        start = max(s[0] for s in here)
+        best = min((s for s in here if s[0] == start), key=lambda s: len(s[2]))[2]    # the line's own item
+        out, p = [], best
+        while p:
+            out.append(p)
+            p = re.sub(r'(\.[^.\[\]]+|\[[^\]]*\])$', '', p) if re.search(r'[.\[]', p) else ''
+        return out
+    found = []
+    for i, l in enumerate(lines):
+        c = comment_start(l) if i not in block else -1
+        if c < 0 or TITLE.match(l):
+            continue
+        on = i if l[:c].strip() else next((j for j in content if j > i), next((j for j in reversed(content) if j < i), None))
+        found.append((i, c, l[c:].lstrip('#').strip(), paths(on) if on is not None else []))
+    return found
+
+
 # ---- A TABLE: ROWS OF CELLS, READ AND WRITTEN HERE AND NOWHERE ELSE (std-vocab `value_types[rows]`) ------------------
 # A series holds its rows as a table — a header line, then one line per row, the cells separated by one tab — inline in
 # a bean as a block scalar (`rows: |`), or in a file of its own. ONE READER AND ONE WRITER, both here (D46): the gate,

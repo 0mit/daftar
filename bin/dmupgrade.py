@@ -458,6 +458,30 @@ def move_attributes(text, fm):
     return text[:d_s] + block + text[d_e:a_s] + text[a_e:], None
 
 
+# WHAT THE SEED ONCE WROTE BESIDE VOCAB.md's KEYS (24.0). Its template commented two keys; a law carries no commentary
+# but its section titles, and the gate refuses one in VOCAB.md's front matter. Those words are the release's, never a
+# person's, so they are taken off at the crossing, the front matter PROVED to parse as it did. Any other comment is the
+# garden's own words, and is left for the gate to name.
+TEMPLATE_COMMENTS = ('# terms specific to this estate. One that proves general is PROMOTED to Tier-0.',
+                     '# kinds are Tier-0. Add one here only if this estate needs a kind nowhere else does.',
+                     '# gene are Tier-0. Add one here only if this estate needs a genos nowhere else does.')
+
+
+def drop_template_comments(text):
+    """(text, n): VOCAB.md with the seed template's own comments taken off its front matter's lines, and how many were;
+    (text, 0) where there were none, or where taking them off would change what the front matter says."""
+    reg = _fm_region(text)
+    if reg is None:
+        return text, 0
+    head, n = [], 0
+    for line in text[reg[0]:reg[1]].split('\n'):
+        cut = next((line[:-len(c)].rstrip() for c in TEMPLATE_COMMENTS if line.rstrip().endswith(' ' + c)), None)
+        head.append(line if cut is None else cut)
+        n += cut is not None
+    out = text[:reg[0]] + '\n'.join(head) + text[reg[1]:]
+    return (out, n) if n and _parse(out) == _parse(text) else (text, 0)
+
+
 def _parse(text):
     head, body = dmparse.split_front_matter(text)
     fm = dmparse.loads(head) if head is not None else None
@@ -2035,6 +2059,27 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         beans += [b for b in _b if b not in beans]
         if _vocab and 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
             changed.append('VOCAB.md (translated)')
+
+    _vp = os.path.join(ROOT, 'VOCAB.md')
+    if os.path.isfile(_vp):
+        _vt, _vf = read_text(_vp)
+        _vt2, _n = drop_template_comments(_vt)
+        if _n:
+            write_text(_vp, _vt2, _vf)
+            translated.append(f"VOCAB.md: the seed template's {_n} comment(s) taken off its front matter (24.0: the law carries none)")
+            if 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
+                changed.append('VOCAB.md (translated)')
+        # the garden's OWN comments are reasons: each moved, under the name it sat on, to the reasoning kept beside the law
+        # — by bin/dmwhy.py, the one tool that writes it. VOCAB.md is left as it was where it would read otherwise.
+        import dmwhy
+        _why, _moved = dmwhy.take_comments(ROOT)
+        if _moved:
+            translated.append(f"VOCAB.md: {len(_moved)} comment(s) of the garden's own moved to {_why}, each under the name it "
+                              f"sat on ({', '.join(sorted({k for k, _s in _moved}))}) (24.0: the law carries no story)")
+            if 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
+                changed.append('VOCAB.md (translated)')
+            if _why not in changed:
+                changed.append(_why)
 
     # THE PROFILES, LAST: written in VOCAB.md after every translation read it, so no step's proof sees the list move.
     moved = []
