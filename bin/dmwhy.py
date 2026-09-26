@@ -5,22 +5,12 @@
     python3 bin/dmwhy.py aspects[place].metered # or by the exact path
     python3 bin/dmwhy.py --check                # every reason names something the law still says (exit 1 if not)
     python3 bin/dmwhy.py --stale                # reasons that speak of a law name the law no longer has
+    python3 bin/dmwhy.py --take-comments        # a garden's VOCAB.md comments moved to its reasons, each under its name
 
-daftar keeps its own material in FOUR layers, and each stands on the one beneath it:
-
-  LAWS       clear and brief, there for usability and efficiency: what is in force, in the present tense. An item
-             carries, as DATA, the `meaning:` and `why:` a reader needs in order to APPLY it — and nothing else.
-             (`seed/std-vocab.md`, a garden's `VOCAB.md`, MODEL.md, CHECKLIST.md, MERGE.md)
-  REASONING  the backbone for the laws: why a law is the way it is — the argument, what was considered and refused.
-             Keyed by the PATH of the law item it supports. (`seed/RATIONALE.md`)
-  JOURNALS   the leads for the reasoning: what was done and why, by whom, entry by entry. Reasoning is drawn FROM these
-             and cites them. (the changelog at the foot of the law; a garden's `log/journal.md`)
-  HISTORY    the exact record of events, as accurate as it can be made, which the journals are written from: commits and
-             their diffs, tags, captured outputs, a datum's own append-only record. It is never summarised.
-
-A thing belongs in exactly ONE layer, and each layer points DOWN: a law item to its reasoning by path, reasoning to the
-journal entries it was drawn from, a journal entry to the commits and captures it describes. A GUIDE (README, the
-COOKBOOK) is outside the chain: nothing reads one, so nothing in one is load-bearing.
+The layers daftar's words stand in: manifesto: layers. What each holds, and which files are law: MODEL.md, "Five
+layers" and "The journal and the gate". This reads two of them together: a law item, and its reasoning in
+`seed/RATIONALE.md`, keyed by the item's PATH — or a clause of `MANIFESTO.md` and its reasoning, by
+`doc:MANIFESTO.md#<key>`.
 
 The law and its reasoning are RELATED, not merged: neither contains the other, and the key between them is checked.
 """
@@ -101,6 +91,21 @@ def orphans():
     return bad
 
 
+def garden_orphans(root):
+    """(the reasoning's path, [its orphaned keys]) of a garden's own pair at `root` — asked by the gate, which reads law
+    and nothing else, so that only this reader opens the reasoning. (None, []) where the garden keeps none."""
+    global LAW, WHY
+    law_p, why_p = os.path.join(root, 'VOCAB.md'), os.path.join(root, 'RATIONALE.md')
+    if not (os.path.exists(law_p) and os.path.exists(why_p)):
+        return None, []
+    was = (LAW, WHY)
+    LAW, WHY = law_p, why_p
+    try:
+        return os.path.relpath(why_p, root).replace(os.sep, '/'), orphans()
+    finally:
+        LAW, WHY = was
+
+
 def stale():
     """Reasons that speak of a law name the law no longer has. A reason that names a RETIRED construct or a removed
     registry has become journal — an account of what used to be — and is sitting one layer too high. Found by the
@@ -150,6 +155,63 @@ def rekey(root, rules):
     return name, done
 
 
+HEAD = "---\nrationale_for: VOCAB.md\n---\n# why this garden's own terms are as they are\n"
+
+
+def take_comments(root):
+    """THE LAW CARRIES NO STORY (24.0): each comment in the front matter of `root`'s VOCAB.md moved to the reasoning kept
+    beside it, under the finest path it sits on that the law resolves — a reason already there keeps its words, and the
+    comment's are added after them. Section titles stay. VOCAB.md is written only where its front matter reads the same
+    after. Returns (the reasoning's name, [(path, text)]); (None, []) where there is nothing to move, or VOCAB.md would
+    read otherwise without its comments."""
+    law_p, name = os.path.join(root, 'VOCAB.md'), 'RATIONALE.md'
+    why_p = os.path.join(root, name)
+    if not os.path.isfile(law_p):
+        return None, []
+    text = open(law_p, encoding='utf-8', newline='').read()
+    head, _body = dmparse.split_front_matter(text)
+    if head is None:
+        return None, []
+    found = dmparse.comments(head)
+    if not found:
+        return None, []
+    data = dmparse.loads(head) or {}
+    lines, moved = head.split('\n'), []
+    for n, c, said, paths in found:
+        key = next((p for p in paths if _resolves(data, p)), None) or next(iter(data), 'local_terms')
+        if said:
+            moved.append((key, said))
+        lines[n] = lines[n][:c].rstrip() if lines[n][:c].strip() else None
+    new_head = '\n'.join(l for l in lines if l is not None)
+    new_text = text.replace(head, new_head, 1)
+    if dmparse.loads(new_head) != data:
+        return None, []
+    old = open(why_p, encoding='utf-8', newline='').read() if os.path.isfile(why_p) else HEAD
+    out = old.split('\n')
+    for key, said in moved:
+        at = next((i for i, l in enumerate(out) if l.rstrip('\r') == '## ' + key), None)
+        if at is None:
+            out += (['', f'## {key}', '', said] if out[-1].strip() else [f'## {key}', '', said])
+            continue
+        end = next((i for i in range(at + 1, len(out)) if out[i].startswith('## ')), len(out))
+        while end > at + 1 and not out[end - 1].strip():
+            end -= 1
+        out[end:end] = ['', said]
+    for p, s in ((why_p, '\n'.join(out).rstrip('\n') + '\n'), (law_p, new_text)):
+        with open(p + '.tmp', 'w', encoding='utf-8', newline='') as fh:
+            fh.write(s)
+        os.replace(p + '.tmp', p)
+    return name, moved
+
+
+def _resolves(data, path):
+    try:
+        resolve(data, path)
+        return True
+    except KeyError:
+        return False
+
+
 def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         print(__doc__); return 0
@@ -161,6 +223,13 @@ def main(argv):
                 print(f"ORPHAN  {k} — {_why} explains something {_law} no longer says")
             print(f"dmwhy: {_why}: {len(rationale())} reasons, {len(bad)} orphaned")
         return 1 if total else 0
+    if argv[0] == '--take-comments':
+        name, moved = take_comments(ROOT)
+        for key, said in moved:
+            print(f"MOVED   VOCAB.md → {name} ## {key}: {said[:80]}")
+        print(f"dmwhy: {len(moved)} comment(s) of VOCAB.md moved to the reasoning beside it" if moved else
+              "dmwhy: VOCAB.md's front matter carries no comment to move (or would read otherwise without them)")
+        return 0
     if argv[0] == '--stale':
         for _law, _why in each_pair():
             st = stale()
@@ -176,9 +245,25 @@ def main(argv):
     return 0
 
 
+def names(want, why=None):
+    """The reasons `dmwhy <want>` prints, by key: the one keyed `want`, and each whose path holds it as a segment."""
+    return [k for k in (rationale() if why is None else why)
+            if k == want or re.search(r'(^|[.\[])' + re.escape(want) + r'($|[.\]])', k)]
+
+
+def answers(want):
+    """True when `dmwhy <want>` finds a reason, in either pair — what a refusal asks before it offers the command."""
+    global LAW, WHY
+    _was = LAW, WHY
+    try:
+        return any(names(want) for _pair in each_pair())
+    finally:
+        LAW, WHY = _was
+
+
 def _show(want):
     data, why = law(), rationale()
-    keys = [k for k in why if k == want or re.search(r'(^|[.\[])' + re.escape(want) + r'($|[.\]])', k)]
+    keys = names(want, why)
     for k in keys:
         print(f"== {k}")
         try:

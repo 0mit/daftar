@@ -369,10 +369,10 @@ def named_for_every_reader(parsed, own):
 
 
 # ---- 5. the machinery's record of its drawing -----------------------------------------------------------------------
-KEYS = {"tool": str, "tool_release": str, "tool_contract": int, "daftar_release": str, "demo_day": str, "garden": str,
+KEYS = {"tool": str, "tool_release": str, "daftar_release": str, "grown_by": str, "demo_day": str, "garden": str,
         "drawn_at": str, "report": str, "report_bytes": int, "report_sha256": str, "title": str, "levels": list,
         "mechanisms": list, "transcript": list}
-ITEM_KEYS = {"levels": {"id", "depth", "name", "audience", "question"},
+ITEM_KEYS = {"levels": {"id", "depth", "form", "meaning"},
              "mechanisms": {"key", "title", "claim", "questions", "parts", "patterns", "operate"},
              "transcript": {"cwd", "cmd", "out", "exit"}}
 

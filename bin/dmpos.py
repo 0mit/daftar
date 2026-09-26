@@ -57,7 +57,7 @@ NOT_APPLICABLE, ABSENT, STATED = '-', '0', '1'
 def _product():
     try:
         v = subprocess.run(['git', '-C', ROOT, 'describe', '--tags', '--always', '--dirty'],
-                           capture_output=True, text=True, timeout=5).stdout.strip()
+                           capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=5).stdout.strip()
         return v or '(untagged)'
     except Exception:
         return '(untagged)'
@@ -66,14 +66,14 @@ def _product():
 def _head():
     try:
         r = subprocess.run(['git', '-C', ROOT, 'rev-parse', '--short', 'HEAD'],
-                           capture_output=True, text=True, timeout=5)
+                           capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=5)
         return r.stdout.strip() if r.returncode == 0 else None
     except Exception:
         return None
 
 
 def load_law():
-    """The vocabulary, read from the one path law_carrier names. No fallback: a missing law is an error."""
+    """The vocabulary, read from the one path the law has (MODEL.md, The journal and the gate). No fallback: a missing law is an error."""
     if not os.path.exists(STD):
         sys.exit(f"std-vocab not found at {STD} — the law has ONE path and there is no fallback")
     std = dmparse.loads(dmparse.read(STD)[0]) or {}

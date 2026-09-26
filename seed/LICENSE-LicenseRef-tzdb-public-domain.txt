@@ -1,0 +1,9 @@
+The IANA time zone database (tzdb) states its terms in its LICENSE file:
+
+Unless specified below, all files in the tz code and data (including this LICENSE file) are in the public domain.
+
+If the files date.c, newstrftime.3, and strftime.c are present, they contain material derived from BSD and use the
+BSD 3-clause license.
+
+seed/knowledge/time-zones.tsv is derived from the data files zone1970.tab and etcetera only, which are in the public
+domain. Source: https://www.iana.org/time-zones (release 2026d).

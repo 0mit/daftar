@@ -346,3 +346,30 @@ ol.under .exact b { color: var(--fg); font-weight: 600; }
 ol.under pre.out { margin: 0.3em 0 0.4em; }
 ol.under .refused h3 .tool { color: var(--refuse); }
 ol.under .writes h3 .tool { color: var(--lekton); }
+/* the terminology page (site/terminology.py) */
+.tm .lede { font-size: 17px; max-width: 46em; }
+.tm .measure { max-width: 46em; }
+.tm .toc ol { columns: 2; padding-left: 1.4em; }
+.tm .term, .tm .reg { border-top: 1px solid var(--line); padding: 10px 0 4px; }
+.tm .reg > details > summary { font-weight: 600; }
+.tm .th { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.8em; }
+.tm .th h4 { margin: 0; font-size: 1em; }
+.tm .lay { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+.tm .src { font-size: 13px; color: var(--muted); }
+.tm ul.rels { list-style: none; padding-left: 0; margin: 0 0 0.6em; font-size: 14.5px; }
+.tm ul.rels li { padding: 1px 0; }
+.tm .rk { display: inline-block; min-width: 9em; font-size: 12.5px; color: var(--muted); }
+.tm .why { color: var(--muted); }
+.tm details { margin: 0 0 0.4em; }
+.tm details > summary { font-weight: 500; font-size: 14px; }
+.tm ul.jl { list-style: none; padding-left: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.tm ul.jl button { font: inherit; font-size: 13px; background: var(--nfill); color: var(--fg); border: 1px solid var(--line); border-radius: 5px; padding: 1px 7px; cursor: pointer; }
+.tm .pop { max-width: min(46em, 92vw); max-height: 80vh; overflow: auto; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; }
+.tm .pop .ph { display: flex; gap: 0.8em; align-items: baseline; margin-bottom: 8px; }
+.tm .pop .ph button { margin-left: auto; font: inherit; font-size: 13px; }
+.tm ul.heads { list-style: none; padding-left: 0; }
+.tm ul.heads li.d3 { padding-left: 1.4em; }
+.tm ul.reasons { list-style: none; padding-left: 0; }
+.tm .rtext { font-size: 14.5px; max-width: 46em; }
+.tm .hist { font-size: 14px; color: var(--muted); }
+@media (max-width: 640px) { .tm .toc ol { columns: 1; } .tm .rk { min-width: 0; } }

@@ -5,6 +5,7 @@
     python3 seed/germinate.py <target-directory> --gardener <id> [--gardener-name "<how they are called>"]
                                                  [--gardener-genos org]  # an organisation keeps it, not a person
                                                  [--name <garden-name>]  # a name other than the directory's
+                                                 [--profile <name>]...   # a profile the law offers, extended at birth
 
 (`python` on Windows.) Name the directory for the garden — `garden-sam`, not `garden` — because its name is the
 garden's name, which another garden and every proposal this one makes will show. The name is held to the form the
@@ -21,6 +22,11 @@ the same file, so a new garden and an upgraded one receive exactly the same set.
 name, its vocabulary pin and the release it runs, its first commit as `germinate`, the gate as a pre-commit
 hook, and it is checked: it passes its own gate with nothing in it.
 
+A PROFILE CAN BE EXTENDED AT BIRTH. `--profile <name>`, once for each, writes the profile in VOCAB.md's
+`extends_profiles` and brings what it brings: the asset a profile has (`assets/<profile>/`, the line of seed/LANGUAGE
+that names a profile) arrives with the rest of the language. A name the law does not offer is refused before anything
+is created. Later, it is one act of bin/dmupgrade.py: `--extend <name>`, or `--retract <name>`.
+
 A GARDEN IS KEPT BY SOMEONE. With `--gardener <id>` the second commit plants the gardener's bean — a person, or
 with `--gardener-genos org` an organisation: a genos the law's `manifest.gardener` admits — and names it in GARDEN.md,
 so the garden begins as someone's and the gardener is its first bean. Without it the closing message says that this
@@ -28,7 +34,6 @@ is the first thing to write — the gate asks for it as soon as the garden holds
 
 Python, not shell, because a garden is grown on Windows too. `seed/germinate.sh` remains and hands over here.
 """
-import glob
 import os
 import re
 import shlex
@@ -91,24 +96,24 @@ def remove_tree(path):
 
 
 def run(*args, cwd=None, check=True):
-    r = subprocess.run(args, cwd=cwd, capture_output=True, text=True)
+    r = subprocess.run(args, cwd=cwd, capture_output=True, text=True, encoding='utf-8', errors='replace')
     if check and r.returncode != 0:
         die(f"`{' '.join(args)}` failed:\n{r.stdout}{r.stderr}", 1)
     return r
 
 
-def language_files(root, seed):
-    """Every file seed/LANGUAGE names, in order; a pattern that matches nothing is an error."""
-    out = []
-    for line in open(os.path.join(seed, 'LANGUAGE'), encoding='utf-8'):
-        pat = line.strip()
-        if not pat or pat.startswith('#'):
-            continue
-        hits = [f for f in sorted(glob.glob(os.path.join(root, pat))) if os.path.isfile(f)]
-        if not hits and not any(os.path.isdir(f) for f in glob.glob(os.path.join(root, pat))):
+def language_files(root, seed, law, profiles=()):
+    """Every file seed/LANGUAGE names that a garden extending `profiles` receives, read by bin/dmpass.py — the one reader
+    of seed/LANGUAGE, which bin/dmupgrade.py and the gate ask too. A line that names no profile and matches no file is an
+    error; a line that names a profile matches what that profile brings, which may be nothing."""
+    import dmpass
+    lines = dmpass.language(open(os.path.join(seed, 'LANGUAGE'), encoding='utf-8').read())
+    files = [f for f in dmpass.tracked(root) if '__pycache__' not in f.split('/')
+             and os.path.isfile(os.path.join(root, *f.split('/')))]
+    for pat in lines:
+        if dmpass.PLACE not in pat and not dmpass.received(files, [pat], (), ()):
             die(f"seed/LANGUAGE names '{pat}', which matches no file", 1)
-        out += [os.path.relpath(f, root) for f in hits]
-    return out
+    return dmpass.received(files, lines, profiles, dmpass.offered(law))
 
 
 def gardener_gene(law):
@@ -176,6 +181,13 @@ provenance: {{ src: asserted-by-human, by: "{gid} (gardener)", as_of: {when} }}
 def main(argv):
     gid = gname = name = None
     ggenos = 'person'
+    profiles = []
+    while '--profile' in argv:
+        i = argv.index('--profile'); p = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
+        if not p:
+            die("--profile takes the name of a profile the law offers: e.g. --profile knowledge")
+        if p not in profiles:
+            profiles.append(p)
     if '--name' in argv:
         i = argv.index('--name'); name = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
         if not name:
@@ -229,6 +241,12 @@ def main(argv):
             f"  Name the directory in kebab-case, e.g. {like} — or keep it, and give the garden that name: "
             f"--name {like}\n"
             f"Nothing was created.")
+    import dmpass
+    _offered = dmpass.offered(law)
+    _unknown = [p for p in profiles if p not in _offered]
+    if _unknown:
+        die(f"--profile {', '.join(_unknown)}: the law at std-vocab@{ver} offers {', '.join(_offered) or 'no profile'}. "
+            f"Nothing was created.")
     gform = None
     if gid:
         admitted = gardener_gene(law)
@@ -270,7 +288,7 @@ def main(argv):
     # copy, an interrupt — removes it whole, so a stranger's second try starts from nothing rather than from "already
     # exists — refusing to plant over it".
     try:
-        grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform)
+        grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, law, profiles)
     except BaseException:
         if os.path.isdir(target):
             try:
@@ -284,11 +302,11 @@ def main(argv):
     return finish(target, root, ver, release, gid, ggenos, grown_in)
 
 
-def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform):
+def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, law, profiles=()):
     """The language copied, the templates filled, the first commit made, and the gardener planted."""
     for d in ('beans', 'mappings', 'log', 'seed'):
         os.makedirs(os.path.join(target, d), exist_ok=True)
-    for rel in language_files(root, seed):
+    for rel in language_files(root, seed, law, profiles):
         dst = os.path.join(target, rel)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copy2(os.path.join(root, rel), dst)
@@ -306,6 +324,13 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform):
             fh.write(text)
     for f in ('VOCAB', 'GARDEN'):
         fill(os.path.join(seed, f + '.md.template'), os.path.join(target, f + '.md'))
+    if profiles:
+        # THE PROFILES A GARDEN EXTENDS ARE ITS VOCAB.md's: one line, above its own terms, in the order given
+        vp = os.path.join(target, 'VOCAB.md')
+        vt = open(vp, encoding='utf-8').read()
+        vt = re.sub(r'(?m)^(local_terms:)', lambda m: f"extends_profiles: [{', '.join(profiles)}]\n" + m.group(1), vt, count=1)
+        with open(vp, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(vt)
     fill(os.path.join(seed, 'journal.md.template'), os.path.join(target, 'log', 'journal.md'))
     fill(os.path.join(seed, 'pending.md.template'), os.path.join(target, 'log', 'pending.md'))
 
@@ -326,8 +351,7 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform):
     run('git', '-C', target, '-c', 'user.name=germinate', '-c', 'user.email=germinate@localhost',
         'commit', '-q', '-m', f"germinate: {garden} — the language, at std-vocab@{ver}. No beans.\n\nseed {uuid.uuid4().hex}")
     if gid:
-        import datetime
-        today = datetime.date.today().isoformat()
+        today = 'now'            # the entry below stamps it: one reading of the clock for the heading and the bean (23.0)
         with open(os.path.join(target, 'beans', gid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
             _root = run('git', '-C', target, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD', check=False).stdout.split()
             fh.write(gardener_bean(gid, gname or gid, today, _root[-1][:12] if _root else None, ggenos, gform))
@@ -348,6 +372,13 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform):
             'commit', '-q', '-m', f"germinate: {gid} keeps this garden")
 
 
+def identity_set(target):
+    """True when git has an identity to commit under in `target` that someone SET — in a git configuration or in the
+    environment — rather than one git would guess from the machine, or refuse to guess."""
+    return all(run('git', '-C', target, '-c', 'user.useConfigOnly=true', 'var', v, check=False).returncode == 0
+               for v in ('GIT_AUTHOR_IDENT', 'GIT_COMMITTER_IDENT'))
+
+
 def finish(target, root, ver, release, gid, ggenos, grown_in):
     """The garden's own gate, and what to do next."""
     gate = subprocess.run([sys.executable, os.path.join(target, 'bin', 'dmcheck.py')], cwd=target)
@@ -360,35 +391,27 @@ def finish(target, root, ver, release, gid, ggenos, grown_in):
               else 'The garden does NOT pass its own gate: read the errors above before anything else.')
     if gid:
         who = 'person who keeps' if ggenos == 'person' else 'organisation that keeps'
-        opening = (f"{passes} Its gardener, {gid}, is planted: the {who} it, named in GARDEN.md. "
-                   f"To plant the next bean:")
-        cookbook = "goes on from the gardener to machines, money, agreements and other gardens"
+        opening = f"{passes} Its gardener, {gid}, is planted: the {who} it, named in GARDEN.md."
+        forms = "the forms the gate accepts, and what to write when nobody said"
     else:
         opening = (f"{passes} Its FIRST bean is its gardener — the person or organisation who keeps it — named in "
                    f"GARDEN.md `gardener:`.")
-        cookbook = "starts with the gardener"
+        forms = "the forms the gate accepts, the gardener's first"
+    # ONE NEXT STEP FOR EACH READER, and no reading list. The closing text named four documents to read, and a coding
+    # agent driving a small open model read them — 85,000 characters and more of the law — before writing a bean, and
+    # stalled; told to read one short page of forms, it read that and finished. The law is read when a question needs
+    # it, and AGENTS.md says where it is. The save is ONE command, bin/dmsave.py: journal, stage and commit were three.
     print(f"""
 germinated: {shown(target)}  (std-vocab@{ver}, daftar {release})
 
 {opening}
-  1. write {shown(os.path.join(target, 'beans', '<id>.md'))}   (bean: <id> must equal the filename; seed/COOKBOOK.md {cookbook})
-  2. append an entry to {shown(os.path.join(target, 'log', 'journal.md'))}  — the gate REFUSES a bean staged without one.
-     Its heading is a POSITION IN TIME, read from the clock by a tool, never typed; give it the body only:
-       {py} bin/dmjournal.py "your-name" "what you did" --body "- action: added [[<id>]]."
-  3. git add -A
-     git commit
 
-  {py} bin/dmrules.py   prints every rule in force, derived from the vocabulary.
-  seed/README.md           a first person, a first host and a first journal entry, passing as written.
-  seed/COOKBOOK.md         the common things, the gardener first: machines, a domain, another person's garden, an
-                           event, money shared and lent, a statement, a proposal between gardens, a missing value.
-  MODEL.md, CHECKLIST.md   what the rules mean, and how a write is made.
-
-WORKING WITH AN AGENT? AGENTS.md came with the garden, and .claude/skills/daftar/ holds the same text.
-An agent with a shell reads it and loads the law from THIS garden rather than guessing — which is the
-point of the whole thing: one language, both parties writing in it, neither able to corrupt it quietly.
-An assistant in a chat window, with no shell, cannot run the gate: paste it seed/WELCOME.md, and what
-it gives you back is a proposal for you to check and commit.""")
+AN AGENT reads seed/FORMS.md — {forms} — writes beans/<id>.md,
+and saves it with its journal entry, in one command:
+  cd {shown(target)}
+  {py} bin/dmsave.py "<who>" "<what you did>" --body "- action: added [[<id>]]."
+A PERSON tells their agent to read AGENTS.md in the garden. An assistant in a chat window, with no shell, cannot run
+the gate: paste it seed/WELCOME.md, and what it gives back is a proposal to check and commit.""")
     # AN UNTAGGED CLONE MAKES AN UNPINNABLE GARDEN, and this is said LAST, where it is still on the screen. A copy with
     # no git history is no clone: `git -C` on it fails, so the way to a release is a clone of the repository. A garden
     # grown from inside another runs what that garden runs, and neither NOTE is its to follow: that garden is no clone
@@ -428,16 +451,17 @@ which names no release anybody else can fetch. Fine for a look around. To pin on
 and grow again — or, in this garden as it stands, adopt one deliberately with
   cd {shown(target)}
   {py} bin/dmupgrade.py <tag>""")
-    # WHO COMMITS. germinate commits as "germinate"; every later commit is yours, and git refuses one with no identity.
-    name = run('git', '-C', target, 'config', 'user.name', check=False).stdout.strip()
-    email = run('git', '-C', target, 'config', 'user.email', check=False).stdout.strip()
-    if not name or not email:
+    # WHO COMMITS. germinate commits as "germinate"; every later commit is yours, and git needs an identity to make one.
+    # Said only where none is SET — in a configuration, or in the environment, where a harness running an agent sets
+    # GIT_AUTHOR_NAME and the rest — and asked of git itself, strictly (`git var`, guessing forbidden), so every place
+    # git reads an identity from is read. An agent told to set one where the harness had set it spent its turns on it.
+    if not identity_set(target):
         print(f"""
-BEFORE YOUR FIRST COMMIT: git has no identity here, and will refuse it. Set one for this garden:
+BEFORE THE FIRST COMMIT: no git identity is set here, and git would refuse the commit or guess a name from the machine.
+Set one for this garden:
   git -C {shown(target)} config user.name  "Your Name"
   git -C {shown(target)} config user.email "you@example.org"
-An agent working in the garden should commit under its own name (e.g. "agent (model, session)"), so the journal's
-"who" and git's author agree.""")
+An agent commits under its own name (e.g. "agent (model, session)"), so the journal's "who" and git's author agree.""")
     return gate.returncode
 
 

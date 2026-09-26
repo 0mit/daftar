@@ -17,7 +17,7 @@ def check(name, cond, detail=""):
         FAILS.append(name)
 
 def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 
 T = tempfile.mkdtemp(prefix="dmpos-")
 G = os.path.join(T, "g")
@@ -188,7 +188,9 @@ for what, bad, want in (
     check("entries INSIDE an entry are judged as entries: %s is refused" % what, want in out, out[-500:])
 sv_now = open(os.path.join(ROOT, "seed", "std-vocab.md")).read()
 check("NOTHING in the law is `untyped` any more — and `any` is a decision, said as one",
-      "in: untyped," not in sv_now and "value: { in: any," in sv_now)
+      # an ATTRIBUTE's domain, `<name>: { in: untyped, … }`: `attr_domains` names the domain as a row, and says no
+      # position is in it
+      not re.search(r"\w:\s*\{\s*in: untyped,", sv_now) and "value: { in: any," in sv_now)
 
 # ---------------------------------------------------------------- 21.0: A MAPPING'S OWN CLOSED LIST OFFERS POSITIONS
 # `shape: mapping` is one entry, and its attributes' closed lists are positions like an entry's. They were counted
@@ -201,22 +203,22 @@ open(v, "w").write(V1.replace("local_terms:\n", """local_terms:
     schema:
       shape: mapping
       attrs:
-        level: { in: [calm, stormy], meaning: "how it is" }
+        temper: { in: [calm, stormy], meaning: "how it is" }
     merge: { cardinality: single, order: none }
 """, 1))
-out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: calm }\n")
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { temper: calm }\n")
 check("a closed list on a MAPPING's attribute is a set of positions: the one no bean takes is named",
-      "VOCAB mood.level: position 'stormy' is declared but NO bean occupies it" in out
-      and "mood.level: position 'calm'" not in out, out[-700:])
+      "VOCAB mood.temper: position 'stormy' is declared but NO bean occupies it" in out
+      and "mood.temper: position 'calm'" not in out, out[-700:])
 V2 = open(v).read()
-open(v, "w").write(V2.replace("\n---", '\nvacancies: [ { at: "mood.level", position: stormy, reason: prediction, why: "a storm comes" } ]\n---', 1))
-out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: calm }\n")
-check("...declared vacant, it is accounted for", "0 error" in out and "mood.level" not in out, out[-700:])
-out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: stormy }\n")
+open(v, "w").write(V2.replace("\n---", '\nvacancies: [ { at: "mood.temper", position: stormy, reason: prediction, why: "a storm comes" } ]\n---', 1))
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { temper: calm }\n")
+check("...declared vacant, it is accounted for", "0 error" in out and "mood.temper" not in out, out[-700:])
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { temper: stormy }\n")
 check("...and a vacancy for one a bean takes is reported stale",
-      "VOCAB vacancies: mood.level = 'stormy' is declared vacant but IS occupied" in out, out[-700:])
+      "VOCAB vacancies: mood.temper = 'stormy' is declared vacant but IS occupied" in out, out[-700:])
 open(v, "w").write(V2.replace("\n---", '\nvacancies: [ { at: "words.form", position: unstated, reason: prediction, why: "x" } ]\n---', 1))
-out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { level: calm }\n")
+out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25") + "mood: { temper: calm }\n")
 check("`words.form` is a declared position a vacancy may be declared at — and the law accounts for its own",
       "is not a declared position" not in out and "words.form" not in out, out[-700:])
 open(v, "w").write(V1)
@@ -239,7 +241,7 @@ identity: { status: confirmed, anchors: [ { key: product_id, value: "product:wid
 provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
 owned_by: { legal: { owner: { bean: keeper } }, moral: { owner: { bean: keeper } } }
 responsibility: { legal: { holder: { bean: keeper } }, moral: { holder: { bean: keeper } } }
-notes_x: [ { a: "one form" }, { b: "the other" } ]
+notes_x: [ { one: "one form" }, { other: "the other" } ]
 ---
 probe.
 """)
@@ -248,10 +250,10 @@ LISTY = """  - term: notes_x
     context_keys: [notes_x]
     schema:
       shape: list_of_entries
-      entry_one_of: [a, b]
+      entry_one_of: [one, other]
       attrs:
-        a: { in: prose }
-        b: { in: prose }
+        one:   { in: prose }
+        other: { in: prose }
     merge: { cardinality: single, order: none }"""
 assert V0.count("local_terms:\n") == 1
 open(v, "w").write(V0.replace("local_terms:\n", "local_terms:\n" + LISTY + "\n", 1)); V0 = open(v).read()

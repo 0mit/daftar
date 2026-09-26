@@ -14,7 +14,7 @@ def check(name, cond, detail=""):
         FAILS.append(name)
 
 def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 
 units, quantities = dmunits.law()
 # A QUANTITY WHOSE UNITS ARE A REGISTRY'S ROWS (21.0: money, whose units are the currencies) has NO factor between two
@@ -50,6 +50,18 @@ for q in quantities:
             if dmunits.convert(dmunits.convert(x, a_, b_), b_, a_) != Fraction(x):
                 bad.append((x, a_, b_))
 check("EVERY conversion, between every pair of units of every quantity, comes back EXACTLY — even thirty digits", not bad, bad[:3])
+for _n, _to, _want in (("annus", "second", "31556925.445"), ("julian-year", "day", "365.25"), ("mega-annus", "annus", "1000000"),
+                       ("millimetre-of-mercury", "pascal", "133.322387415"), ("gram-per-cubic-centimetre", "kilogram-per-cubic-metre", "1000"),
+                       ("litre-per-minute", "millilitre", None), ("arcsecond", "degree", "1/3600"), ("item", "item", "1")):
+    if _want is None:
+        continue                     # a flow and a volume are two quantities: refused, and said so below
+    check(f"one {_n} is {_want} {_to}, exactly as its definition states", dmunits.show(dmunits.convert("1", _n, _to)) == _want,
+          dmunits.show(dmunits.convert("1", _n, _to)))
+try:
+    dmunits.convert("1", "litre-per-minute", "millilitre"); _ok = False
+except ValueError:
+    _ok = True
+check("a flow is not a volume, however the numbers line up", _ok)
 check("a result is printed exactly, not through a float: thirty digits survive",
       dmunits.show(dmunits.convert("123456789012345678901234567890.5", "metre", "millimetre")) == "123456789012345678901234567890500")
 check("...a terminating decimal in full", dmunits.show(dmunits.convert("1", "gibibyte", "gigabyte")) == "1.073741824")

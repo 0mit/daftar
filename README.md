@@ -53,7 +53,7 @@ identity:
   anchors:
     - { key: serial, value: "4XK9-2217",    class: hardware, establishing: true }
     - { key: ip,     value: "192.168.1.20", class: network,  establishing: false }
-provenance: { src: asserted-by-human, by: "you", as_of: 2026-09-22 }
+provenance: { src: asserted-by-human, by: "you", as_of: now }
 ```
 
 Six weeks later, in a new session — perhaps with an agent of another make, with none of the first one's
@@ -105,11 +105,10 @@ seen, already has somewhere to stand.
 
 A notebook is kept by its gardener — a person, or an organisation — and nothing outside it writes there. But people
 deal with one another — they share a cost, lend and repay, agree on something and keep to it — and the other person
-may keep a notebook of their own. Two gardens meet the way trees in a forest do: not by growing into each other, but
-beneath, through the **mycelium** — the network that joins trees rooted apart, carries between them, and is owned by
-none of them. Ownership rises through each garden to its gardener, and the crown is where it ends, above; the
-mycelium is where gardens meet, beneath, in the earth of the language they share. Two gardens that pin different
-versions of the language cannot exchange until one of them moves.
+may keep a notebook of their own. Two gardens meet the way two networks do: each its own domain, and the two
+**peers**, each configured at its own end, and neither reaching inside the other. Ownership rises through each garden
+to its gardener, and the crown is where it ends; between gardens, what they share is the language they pin. Two
+gardens that pin different versions of the language cannot exchange until one of them moves.
 
 What passes is only ever a **proposal**. Your agent writes one file — the beans you choose to give, under an
 agreement you and the other gardener have made — and lays it beside your notebook, never inside theirs. Their
@@ -120,7 +119,7 @@ yes to it is theirs, written in their own notebook, in their own words. A thing 
 people in it — is named once, by the notebook that recorded it first, and the name travels with it, so the two
 notebooks see one thing where they would otherwise see two; a name someone else gave — a package's, a registry
 number — is the same in every notebook already. An agreement between two people may be owned by neither of them, and
-then both answer for it: nobody owns the crown, and nobody owns the mycelium.
+then both answer for it: nobody owns the crown, and no garden owns the way between them.
 
 A garden is known by the commit it grew from, so two gardens need no registry and no account anywhere to name each
 other. Growing a garden writes a random seed into that first commit, so two notebooks on one machine are never taken
@@ -140,20 +139,21 @@ The line between "records" and "proposes" is the **Contract of Parts** in `MODEL
 record an observation or an inference; a person ratifies identity, safety and law. What an agent may not
 decide, it parks in a queue and carries on.
 
-Four layers, each standing on the one beneath, and each read at a different time:
+daftar's words stand in layers (manifesto: layers), each read at a different time; what each holds, and which files
+are law, is `MODEL.md`'s:
 
-1. **Laws** — the vocabulary and the model. Read by the gate on every commit, and by an agent when it arrives.
-2. **Reasoning** — why each rule is as it is. Read when a rule surprises someone.
-3. **Journals** — what was done and why. Read by the next agent to pick up where the last one stopped, and by
+1. **The manifesto** — `MANIFESTO.md`. Read when someone asks what daftar is for.
+2. **Laws** — the vocabulary and the model. Read by the gate on every commit, and by an agent when it arrives.
+3. **Reasoning** — why each rule is as it is. Read when a rule surprises someone.
+4. **Journals** — what was done and why. Read by the next agent to pick up where the last one stopped, and by
    a person on the day something is wrong.
-4. **History** — git. Read by nobody, until it is the only thing left.
+5. **History** — git. Read by nobody, until it is the only thing left.
 
 ## Start
 
-You need a coding agent with a shell and git — as of September 2026: Claude Code, Cursor, Codex CLI, Gemini
-CLI, GitHub Copilot's agent, Aider, and the like, on Linux, macOS or Windows — and a place for a private git
-repository. The notebook is
-yours; nothing here ever sees it.
+You need a coding agent with a shell and git — as of September 2026, in the alphabet's order: Aider, Claude Code,
+Codex CLI, Cursor, Gemini CLI, GitHub Copilot's agent, and the like, on Linux, macOS or Windows — and a place for a
+private git repository. The notebook is yours (manifesto: never-sells).
 
 Tell the agent:
 
@@ -166,7 +166,7 @@ The agent grows the notebook with you as its gardener: your own person bean is t
 `GARDEN.md` names you, so every agent that comes after knows whose notebook it is working in — the gate's last
 line says it.
 
-The next time you sit down, tell it to read `AGENTS.md` in the notebook — in Claude Code, *"load daftar"*.
+The next time you sit down, tell it to read `AGENTS.md` in the notebook.
 From then on you talk about your things, and the agent keeps the notebook. You will rarely open the folder.
 
 An assistant in a chat window, with no shell, cannot run the gate and so cannot write. Paste it
@@ -195,7 +195,7 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 | **vacancy** | a value the vocabulary offers that nothing uses yet, stated with a reason |
 | **Contract of Parts** | `MODEL.md`: which decisions an agent may take alone and which a person must ratify |
 | **proposal** | what one garden offers another: one file of beans, laid outside both gardens, which the other garden's gardener takes in by committing it — or does not. Taking it in accepts nothing on the gardener's behalf. `bin/dmpropose.py` |
-| **mycelium** | how gardens meet: beneath, through the agreements between their gardeners and the proposals made under them, in the language they share. Owned by no garden |
+| **peering** | how gardens meet: as peers, each configured at its own end, through the agreements between their gardeners and the proposals made under them, in the language they share. Owned by no garden |
 
 ## Adopt a new release
 
@@ -231,12 +231,13 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `seed/std-vocab.md` | the vocabulary — the law every garden pins |
 | `seed/germinate.py`, `seed/LANGUAGE` | how a garden is grown (Python, so on Windows too; `germinate.sh` hands over to it), and what it receives |
 | `bin/dmcheck.py` | the gate |
-| `bin/dm*.py` | the other tools — merge, proposals between gardens (`dmpropose`), what is owed (`dmledger`), upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
+| `bin/dm*.py` | the other tools — merge, proposals between gardens (`dmpropose`), what is owed (`dmledger`), upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), a change saved in one command (`dmsave`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
 | `seed/RATIONALE.md` | why each rule is as it is, keyed by the rule's own path; `python3 bin/dmwhy.py <name>` reads law and reason together |
-| `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules |
+| `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules. The second is one tool's adapter, which loads the door by itself; another tool's adapter would stand beside it |
 | `seed/WELCOME.md` | the door for an assistant with no shell, written to be pasted into a chat |
 | `seed/README.md`, `seed/COOKBOOK.md` | worked beans that pass the gate as written: the gardener, a host, a domain, a service, a rented server, a cost shared between two people, an agreement paid in instalments, a statement, an event, another person's garden |
+| `seed/FORMS.md` | what an agent reads before writing: six of the cookbook's recipes, byte for byte, and what to write when nobody said |
 | `test/` | the release suites, all run in CI (`CONTRIBUTING.md` has the command); `fast.py` runs in every garden's hook |
 
 ## A seed, on a notebook
@@ -271,4 +272,8 @@ beautiful; the agent's text is its own.*
 
 ## License
 
-[Apache-2.0](LICENSE).
+The code: [AGPL-3.0-or-later](LICENSES/AGPL-3.0-or-later.txt), with the
+[garden exception](LICENSES/LicenseRef-daftar-garden-exception.txt). The law, the guides and the site:
+[CC BY 4.0](LICENSES/CC-BY-4.0.txt). The seeds of a garden's own files: [CC0 1.0](LICENSES/CC0-1.0.txt). Every path:
+[LICENSE](LICENSE) and `REUSE.toml`. What daftar holds to is [MANIFESTO.md](MANIFESTO.md); who answers for it is
+[CHARTER.md](CHARTER.md).

@@ -4,6 +4,7 @@
     python3 bin/dmcal.py 2026-09-20                      # a position, read in every calendar that reckons by rule
     python3 bin/dmcal.py persian:1405-06-29 hebrew       # one position, in one other calendar
     python3 bin/dmcal.py --day 739880                    # a day number, in every calendar
+    python3 bin/dmcal.py --offset Pacific/Auckland 2026-04-04T13:30Z    # a zone's civil offset at a moment, read
 
 A CALENDAR IS NOT TIME. It is one PARTITION of the line of days into named cells — years, months — and the law
 declares each as a positioning system with its own levels (`seed/std-vocab.md`, `anchor_systems`, dimension
@@ -26,8 +27,12 @@ arithmetic alone would read it as the day after the 29th — a day nobody named.
 back unchanged from its own day (`from_day(to_day(p)) == p`), and `to_day` raises ValueError for one that does not; so
 it does for a year outside the days reckoned here (FIRST_DAY .. LAST_DAY, below), and `from_day` for a day outside them.
 
-Pure: it reads nothing, writes nothing, imports nothing outside the standard library — except, run as a command, the
-module that makes its output UTF-8 on every platform (bin/dmparse.py).
+A CIVIL OFFSET IS READ, NEVER STORED (24.0, N8). `offset(zone, moment)` asks the platform's copy of the IANA time zone
+database, through the standard library's `zoneinfo`, what offset a zone kept at that moment; where the machine has no
+copy it raises NoZoneData naming the fix, and guesses none.
+
+Pure: it writes nothing and imports nothing outside the standard library, and reads nothing but the zone database for
+an offset — except, run as a command, the module that makes its output UTF-8 on every platform (bin/dmparse.py).
 """
 import datetime, math, os, re, sys
 
@@ -439,6 +444,126 @@ def convert(position, calendar):
     return from_day(to_day(position), calendar)
 
 
+# ------------------------------------------------------------------ BELOW THE DAY: a moment, and a stride through moments
+# A MOMENT is a day and a clock reading at a stated offset: `2026-03-02 09:00+01:00`, `persian:1404-12-11 11:30+03:30`.
+# Every calendar meets the others at the day, so a moment is counted as the milliseconds from the start of day 0 of the
+# day numbers here, at offset zero — whichever calendar wrote it — and written back in the calendar, the offset and the
+# resolution it was read in. A DAY IS 86400 SECONDS HERE: no leap second is counted, as POSIX time counts none, so a
+# stride of a second across a leap second reads the second after it; a reader that needs a leap second says so.
+DAY_MS = 86400000
+UNIX_DAY = 719163                       # the day number of 1970-01-01, where `unix-epoch` counts from
+_MOMENT = re.compile(r'^(?P<date>[^ T]+)(?P<sep>[T ])(?P<h>\d{2}):(?P<m>\d{2})(?::(?P<s>\d{2})(?:\.(?P<ms>\d{1,3}))?)?'
+                     r'(?P<off>Z|[+-]\d{2}:\d{2})$', re.ASCII)
+_EPOCH = re.compile(r'^\d{13}$', re.ASCII)
+RESOLUTIONS = ('minute', 'second', 'millisecond')
+
+
+def calendar_of(date):
+    """The calendar a date is written in, by the name `from_day` writes it in — or ValueError."""
+    date = str(date)
+    if _JAPANESE.match(date):
+        return 'japanese'
+    m = _TAGGED.match(date)
+    if m:
+        return m.group(1)
+    if _JDN.match(date):
+        return 'julian-day'
+    if _MAYAN.match(date):
+        return 'mayan-long-count'
+    if _ISO_WEEK.match(date):
+        return 'iso8601'
+    if re.fullmatch(r'\d{4}-\d{2}-\d{2}', date, re.ASCII):
+        return 'gregory'
+    raise ValueError(f"'{date}' is in no calendar's form")
+
+
+class Moment(tuple):
+    """(milliseconds from the start of day 0 at offset zero, the calendar it was written in, its offset as written or
+    None for an epoch count, the resolution written: minute, second or millisecond)."""
+    __slots__ = ()
+
+    def __new__(cls, ms, calendar, offset, resolution):
+        return tuple.__new__(cls, (ms, calendar, offset, resolution))
+
+    ms = property(lambda self: self[0])
+    calendar = property(lambda self: self[1])
+    offset = property(lambda self: self[2])
+    resolution = property(lambda self: self[3])
+
+
+def moment(position):
+    """The Moment a position names: a calendar's day with a clock reading and its offset, or a `unix-epoch` count of
+    milliseconds. ValueError for one that names no moment — a date alone, a clock with no offset (whose moment depends
+    on where it was read), a day its calendar does not have — and NotByRule for a calendar not reckoned by rule."""
+    position = str(position).strip()
+    if _EPOCH.match(position):
+        return Moment(UNIX_DAY * DAY_MS + int(position), 'unix-epoch', None, 'millisecond')
+    m = _MOMENT.match(position)
+    if not m:
+        raise ValueError(f"'{position[:60]}' is no moment: a moment is a day, a clock reading to the minute or finer, "
+                         f"and the offset it was read at — `2026-03-02 09:00+01:00`")
+    day = to_day(m.group('date'))
+    h, mi = int(m.group('h')), int(m.group('m'))
+    sec = int(m.group('s') or 0)
+    ms = int((m.group('ms') or '0').ljust(3, '0'))
+    if h > 23 or mi > 59 or sec > 59:
+        raise ValueError(f"'{position[:60]}' names no clock reading: hours run 00-23, minutes and seconds 00-59")
+    off = m.group('off')
+    om = 0 if off == 'Z' else (1 if off[0] == '+' else -1) * (int(off[1:3]) * 60 + int(off[4:6]))
+    res = 'millisecond' if m.group('ms') is not None else 'second' if m.group('s') is not None else 'minute'
+    return Moment(day * DAY_MS + ((h * 60 + mi) * 60 + sec) * 1000 + ms - om * 60000, calendar_of(m.group('date')),
+                  off, res)
+
+
+def write_moment(ms, calendar, offset, resolution='minute'):
+    """The moment `ms` (as `moment` counts it) written in `calendar` at `offset` (`Z`, `+03:30`; None for a `unix-epoch`
+    count), to `resolution` — a clock reading finer than the resolution is refused, never rounded away."""
+    if calendar == 'unix-epoch' or offset is None:
+        n = ms - UNIX_DAY * DAY_MS
+        if not 0 <= n < 10 ** 13:
+            raise ValueError(f"{n} milliseconds since 1970 is not thirteen digits: `unix-epoch` writes exactly thirteen")
+        return '%013d' % n
+    om = 0 if offset == 'Z' else (1 if offset[0] == '+' else -1) * (int(offset[1:3]) * 60 + int(offset[4:6]))
+    local = ms + om * 60000
+    day, rest = local // DAY_MS, local % DAY_MS
+    h, rest = rest // 3600000, rest % 3600000
+    mi, rest = rest // 60000, rest % 60000
+    sec, milli = rest // 1000, rest % 1000
+    if resolution not in RESOLUTIONS:
+        raise ValueError(f"a moment is written to one of {RESOLUTIONS}, not {resolution!r}")
+    if (resolution == 'minute' and (sec or milli)) or (resolution == 'second' and milli):
+        raise ValueError(f"the moment falls between two {resolution}s, and is not written as either")
+    clock = '%02d:%02d' % (h, mi) + (':%02d' % sec if resolution != 'minute' else '') \
+        + ('.%03d' % milli if resolution == 'millisecond' else '')
+    return f"{from_day(day, calendar)} {clock}{offset}"
+
+
+class NoZoneData(Exception):
+    """This machine holds no copy of the IANA time zone database, so no civil offset can be read here."""
+
+
+def offset(zone, instant):
+    """The civil offset in force in `zone` (a row of `time-zones`, `Pacific/Auckland`) at `instant` (a moment, as
+    `moment` reads one), in minutes east of UTC — READ from the platform's copy of the IANA database through `zoneinfo`,
+    never stored and never guessed: an offset is the zone's rule at that moment, and a government can change the rule.
+    NoZoneData where this machine holds no zone database; ValueError for a zone the database does not name."""
+    import zoneinfo
+    try:
+        tz = zoneinfo.ZoneInfo(str(zone))
+    except zoneinfo.ZoneInfoNotFoundError:
+        if not zoneinfo.available_timezones():
+            raise NoZoneData(f"this machine holds no time zone database, so the offset of {zone} cannot be read here — "
+                             f"install one (`pip install tzdata`), and no offset is guessed meanwhile") from None
+        raise ValueError(f"'{zone}' is not a zone of the time zone database — a row of seed/knowledge/time-zones.tsv, "
+                         f"`Region/City`") from None
+    except ValueError as e:
+        raise ValueError(f"'{zone}' is not a zone name: {e}") from None
+    ms = moment(instant).ms - UNIX_DAY * DAY_MS
+    at = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc) + datetime.timedelta(milliseconds=ms)
+    td = at.astimezone(tz).utcoffset()
+    return (td.days * 86400 + td.seconds) // 60                   # whole numbers throughout: no float reaches an offset
+
+
 EVERY = ['gregory', 'iso8601', 'julian', 'persian', 'islamic-civil', 'islamic-tbla', 'hebrew', 'coptic', 'ethiopic',
          'ethioaa', 'indian', 'buddhist', 'roc', 'japanese', 'julian-day', 'mayan-long-count']
 
@@ -452,6 +577,16 @@ def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         # the interpreter as it is named where this runs: `python3` may be the Microsoft Store's alias on Windows
         print(__doc__.replace('python3 bin/', ('python' if os.name == 'nt' else 'python3') + ' bin/')); return 0
+    if argv[0] == '--offset':
+        # `--offset <zone> <moment>`: the civil offset read for that moment, never stored
+        if len(argv) != 3:
+            print("dmcal: --offset takes a zone and a moment, e.g. --offset Pacific/Auckland 2026-04-05T13:30Z"); return 2
+        try:
+            m = offset(argv[1], argv[2])
+        except (NoZoneData, ValueError) as e:
+            print(f"dmcal: {e}"); return 1
+        print(f"{argv[1]} at {argv[2]}: {'+' if m >= 0 else '-'}{abs(m) // 60:02d}:{abs(m) % 60:02d}")
+        return 0
     if argv[0] == '--day' and (len(argv) < 2 or not re.fullmatch(r'-?[0-9]+', argv[1], re.ASCII)):
         print("dmcal: --day takes a day number, e.g. --day 739880"); return 2
     try:

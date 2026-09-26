@@ -37,6 +37,14 @@ import functools, glob, os, re, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import dmparse
+
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+GUARDS = {
+    'kept-private': {'checks': "a file, a commit message or a pull-request body naming a being of the garden is refused",
+                     'proof': 'test/public.py', 'label': "a file that names a host bean is refused"},
+    'release-public': {'checks': "a file that names no being of the garden passes",
+                       'proof': 'test/public.py', 'label': "a file that names no being passes"},
+}
 try:
     import yaml
 except ImportError:
@@ -55,9 +63,9 @@ def own_garden_id(garden):
     imported outside a garden and this runs from the language's repository. None when git cannot say."""
     try:
         r = subprocess.run(['git', '-C', garden, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD'],
-                           capture_output=True, text=True, timeout=10)
+                           capture_output=True, text=True, encoding='utf-8', timeout=10)
         shallow = subprocess.run(['git', '-C', garden, 'rev-parse', '--is-shallow-repository'],
-                                 capture_output=True, text=True, timeout=10).stdout.strip()
+                                 capture_output=True, text=True, encoding='utf-8', timeout=10).stdout.strip()
     except Exception:
         return None
     roots = r.stdout.split()
@@ -182,7 +190,7 @@ def main():
     words = estate_words(garden, public) - public
     bad = []
     if '--no-files' not in a:
-        for f in subprocess.run(['git', 'ls-files'], capture_output=True, text=True,
+        for f in subprocess.run(['git', 'ls-files'], capture_output=True, text=True, encoding='utf-8', errors='replace',
                                 cwd=repo).stdout.split():
             p = os.path.join(repo, f)
             try:
@@ -193,7 +201,7 @@ def main():
                 bad.append((f"{f}:{line}", w))
     if rng:
         msgs = subprocess.run(['git', 'log', '--format=%H%n%B', rng], capture_output=True, text=True,
-                              cwd=repo).stdout
+                              encoding='utf-8', errors='replace', cwd=repo).stdout
         for w, _line in hits(msgs, words).items():
             bad.append((f"commit message in {rng}", w))
     if text_file:

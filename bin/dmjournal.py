@@ -31,21 +31,29 @@ U+2028, U+2029) would let one line carry a heading nobody stamped. Such a charac
 control character but a tab, and DEL: an escape clears a terminal's screen for whoever reads the journal there,
 and a NUL makes git read the whole journal as binary.
 
-HOW THIS IS ENFORCED (std-vocab 20.0, `journal.heading: stamped`). Every heading this tool writes is also
+HOW THIS IS ENFORCED (std-vocab 20.0; the `heading` of `journal.origin`, read `by: save`). Every heading this tool writes is also
 recorded in the clone's git directory (`.git/daftar/journal-stamps`), and the gate refuses a heading a commit
 adds that is not recorded there. The gate cannot tell a measured moment from a remembered one by looking at
 it; it can tell whether the clock-reading tool wrote it. The register is per clone and never versioned: it
 proves only that THIS clone's tool stamped the heading, which is all a pre-commit hook can honestly check.
+
+THE SAME READING DATES THE BEANS (23.0). A bean written with `as_of: now` (or `observed: now`), the form
+seed/FORMS.md shows, has the day of this entry's heading written in its place, in every bean the working tree
+changes and the entry names — so the day of writing is the clock's, read once, never a day typed or copied. A day the
+writer typed is left as typed. `bin/dmsave.py` calls this tool, and on `--again` stamps with the entry waiting.
 """
 import codecs
 import datetime
 import os
+import re
 import subprocess
 import sys
 import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
+import dmsafe   # noqa: E402 — a stamp written into a bean is written through the edit that loses nothing
+import dmpass   # noqa: E402 — which positions read the clock: the law's origins, read once
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JOURNAL = os.path.join(ROOT, 'log', 'journal.md')
@@ -64,7 +72,8 @@ CONTROL_NAMES = {'\x00': 'NUL', '\x07': 'BEL', '\x08': 'a backspace', '\x1b': 'E
 
 def stamps_path(root=ROOT):
     """The register, in the git directory every worktree of this clone shares."""
-    r = subprocess.run(['git', '-C', root, 'rev-parse', '--git-common-dir'], capture_output=True, text=True)
+    r = subprocess.run(['git', '-C', root, 'rev-parse', '--git-common-dir'], capture_output=True, text=True,
+                       encoding='utf-8')
     gd = r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else '.git'
     if not os.path.isabs(gd):
         gd = os.path.join(root, gd)
@@ -159,10 +168,70 @@ def append(who, what, body):
     refuse_breaks('the body', body)
     text = open(JOURNAL, encoding='utf-8').read()
     h = stamp(who, what)
+    # STAMPED BEFORE THE ENTRY IS WRITTEN: a document that cannot be stamped is reported, and the entry is still written
+    # once — a run that failed after appending would be run again, and append it twice
+    stamp_now(h, f"{what}\n{body}")          # silent when it succeeds: a clean save prints only its verdict
     entry = ('' if text.endswith('\n\n') else ('\n' if text.endswith('\n') else '\n\n')) + h + '\n' + body + '\n'
     with open(JOURNAL, 'a', encoding='utf-8', newline='\n') as fh:
         fh.write(entry)
     return h
+
+
+# THE DAY OF WRITING IS THE CLOCK'S (23.0; `provenance_record`'s `as_of`, read `by: save`). The forms show `as_of: now`: the writer
+# never types the day of writing, because measured writers typed the nearest date in view instead — the example's, or
+# one read in another bean. This tool reads the clock once, for the heading; the same reading is what every `now` at a
+# position that reads the clock becomes — the day at a date, the moment at a moment. WHICH positions those are is the
+# law's (each position's `origin`, read `by: save`), read by bin/dmpass.py: this tool names none of them. Only a bare `now` (or a quoted one)
+# that is the whole value.
+STAMPED = dmpass.DOCUMENTS
+
+
+def _now_at(names):
+    """The pattern of a `now` that is the whole value of one of these attributes, or None."""
+    return re.compile(r'(?<![\w-])((?:%s):[ \t]*)(["\']?)now\2(?=[ \t]*(?:[,}\]#\r\n]|$))' % '|'.join(map(re.escape, sorted(names))),
+                      re.M) if names else None
+
+
+def stamp_now(h, text=None, root=None):
+    """Write the day of heading `h` in place of every `now` in a stamp position of the front matter of each document
+    under beans/ or mappings/ that the working tree changes — and, given the entry's `text`, that the entry names (the
+    gate asks an entry to name every bean it commits; one still being written, named by no entry yet, is left for its
+    own). Returns the paths stamped. A document it cannot stamp is reported and left as it is: the entry is not written
+    yet when this runs, so nothing is half done, and the gate names what is still `now`."""
+    root = root or ROOT
+    day = h[3:13]
+    # A MOMENT gets the heading's own moment — day, clock and offset — quoted, so no reader takes it for a number or a
+    # date; a DAY gets the heading's day
+    when = h[3:].split(' · ', 1)[0].strip()
+    clocked = dmpass.origins(root).clocked()
+    daily, moment = _now_at(clocked['day']), _now_at(clocked['moment'])
+    out = subprocess.run(['git', '-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'], capture_output=True)
+    done = []
+    for rec in out.stdout.decode('utf-8', 'replace').split('\0'):
+        p = rec[3:] if len(rec) > 3 else ''
+        f = os.path.join(root, p)
+        if not (p.startswith(STAMPED) and p.endswith('.md') and os.path.isfile(f)):
+            continue
+        bid = os.path.basename(p)[:-3]
+        if text is not None and not re.search(r'(?<![\w-])' + re.escape(bid) + r'(?![\w-])', text):
+            continue
+        try:
+            fm, _ = dmparse.split_front_matter(open(f, encoding='utf-8').read())
+            if fm is None or not ((daily and daily.search(fm)) or (moment and moment.search(fm))):
+                continue
+
+            def fix(t):
+                front, _b = dmparse.split_front_matter(t)
+                at = t.index(front)
+                new = daily.sub(lambda m: m.group(1) + day, front) if daily else front
+                if moment:
+                    new = moment.sub(lambda m: m.group(1) + '"' + when + '"', new)
+                return t[:at] + new + t[at + len(front):]
+            dmsafe.edit(f, fix)
+            done.append(p)
+        except Exception as e:                  # never a traceback after the heading is registered
+            print(dmparse.said(f"dmjournal: {p}: its `now` left as it is — {e}"), file=sys.stderr)
+    return done
 
 
 def say(line):
@@ -190,10 +259,15 @@ def main(argv):
     who, what = argv[0], argv[1]
     if '--body' in argv:
         i = argv.index('--body')
-        if i + 1 >= len(argv):
+        # EVERY WORD AFTER --body IS A LINE OF THE BODY, up to the next option: only the first was read, and the rest
+        # of a body an agent passed as one quoted line per item was dropped without a word (measured).
+        j = i + 1
+        while j < len(argv) and not argv[j].startswith('--'):
+            j += 1
+        if j == i + 1:
             print("dmjournal: --body takes the entry's body, in quotes", file=sys.stderr)
             return 2
-        body = argv[i + 1]
+        body = '\n'.join(argv[i + 1:j])
     else:
         stream = getattr(sys.stdin, 'buffer', None)
         if stream is None:

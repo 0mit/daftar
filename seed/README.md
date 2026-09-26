@@ -58,6 +58,9 @@ Then:
 2. append what you did to `log/journal.md` with `bin/dmjournal.py` — the gate **refuses** a bean staged without it
 3. `git add -A`, then `git commit` — two commands, because Windows PowerShell 5.1 cannot run `&&`
 
+`python3 bin/dmsave.py "<who>" "<what you did>" --body "- action: …"` does 2 and 3 in one command, and when the gate
+refuses, says what to run after the fix.
+
 `python3 bin/dmrules.py` prints every rule in force, derived from the vocabulary rather than restated.
 
 ## Your first beans
@@ -87,7 +90,7 @@ identity:
   status: confirmed
   anchors:
     - { key: person_id, value: "person:sam", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-17 }
+provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
 ---
@@ -123,7 +126,7 @@ identity:
   anchors:
     - { key: serial, value: "PF-12345", class: hardware, establishing: true }
     - { key: hostname, value: "laptop", class: network, establishing: false }
-provenance: { src: observed, by: "sam", as_of: 2026-09-17 }
+provenance: { src: observed, by: "sam", as_of: now }
 owned_by: { legal: {owner: {bean: sam}}, technical: {owner: {bean: sam}} }
 responsibility: { legal: {holder: {bean: sam}}, technical: {holder: {bean: sam}} }
 ---
@@ -151,16 +154,18 @@ python3 bin/dmjournal.py "sam" "the first two beans" --body "- action: added [[s
 ```
 
 The line breaks inside the quotes are kept, in a Unix shell and in PowerShell alike, and the journal then holds
-`## 2026-09-17 09:30+03:00 · sam · the first two beans` — the moment it was run — above those three lines. A body
-kept in a file can come on standard input instead (`… "the first two beans" < entry.md`, the file holding the
-three lines and no heading) in a shell that has `<`; PowerShell has not.
+`## 2026-09-17 09:30+03:00 · sam · the first two beans` — the moment it was run — above those three lines. The same
+run writes that day in place of each bean's `as_of: now`, so the beans are written before their entry: the day a fact
+was written down is the clock's, and never typed. A body kept in a file can come on standard input instead
+(`… "the first two beans" < entry.md`, the file holding the three lines and no heading) in a shell that has `<`;
+PowerShell has not.
 
 The `[[bean-id]]` is what makes the entry count: the gate refuses a staged bean that the entry does not
 name, and a staged `GARDEN.md` whose entry does not say RULE-CHANGE. `- action:` is the only required line;
 `detail` and `why` are for the reader you cannot answer questions for, which in a year is you. (If `--gardener`
 planted the gardener already, the first commit is the laptop alone, and its entry names only `[[laptop]]`.) When
-the gate refuses something, its message says what to write; `MODEL.md` says why, and `CHECKLIST.md` says how a
-write is made. `COOKBOOK.md` goes on from here.
+the gate refuses something, its message says what to write, and `python3 bin/dmwhy.py <name>` says why; `MODEL.md`
+is the model, and `CHECKLIST.md` says how a write is made. `COOKBOOK.md` goes on from here.
 
 ## Contents
 
@@ -173,6 +178,7 @@ write is made. `COOKBOOK.md` goes on from here.
 | `pending.md.template` | the park-and-proceed queue: its header and **zero entries** |
 | `germinate.py` | the procedure above (`germinate.sh` hands over to it) |
 | `COOKBOOK.md` | the common things, written the way the gate accepts them, the gardener first |
+| `FORMS.md` | what an agent reads before writing: six of the cookbook's recipes, byte for byte, and what to write when nobody said |
 | `WELCOME.md` | the door for an assistant with no shell |
 | `RATIONALE.md` | why each rule of `std-vocab.md` is as it is, keyed by the rule's path |
 

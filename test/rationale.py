@@ -53,7 +53,8 @@ import dmreview
 NARRATIVE_IN_DATA = 58
 hits = dmreview.story_in(dmparse.loads(fm))
 _tag = subprocess.run(["git", "-C", ROOT, "describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*",
-                       "--exclude", "*-*"], capture_output=True, text=True).stdout.strip()
+                       "--exclude", "*-*"], capture_output=True, text=True,
+                      encoding="utf-8", errors="replace").stdout.strip()
 _at_tag = dmreview.law_at(_tag) if _tag else None
 if _at_tag is not None:
     ceiling, since, _was = len(dmreview.story_in(_at_tag)), _tag, {p for p, _h, _s in dmreview.story_in(_at_tag)}
@@ -221,7 +222,8 @@ for _name in ("MODEL.md", "CHECKLIST.md", "MERGE.md"):
 # ---------------------------------------------------------------- 18.0: a GARDEN's overlay has its reasoning too
 import subprocess, tempfile, shutil
 _T = tempfile.mkdtemp(prefix="dmwhy-"); _G = os.path.join(_T, "g")
-subprocess.run(["sh", os.path.join(ROOT, "seed", "germinate.sh"), _G, "--gardener", "keeper"], cwd=ROOT, capture_output=True, text=True)
+subprocess.run(["sh", os.path.join(ROOT, "seed", "germinate.sh"), _G, "--gardener", "keeper"], cwd=ROOT, capture_output=True, text=True,
+               encoding="utf-8", errors="replace")
 _v = os.path.join(_G, "VOCAB.md"); _s = open(_v).read(); assert _s.count("local_terms: []") == 1
 open(_v, "w").write(_s.replace("local_terms: []", """local_terms:
   - term: shelf
@@ -230,7 +232,8 @@ open(_v, "w").write(_s.replace("local_terms: []", """local_terms:
     merge: { cardinality: single, order: none }"""))
 def _why(text):
     open(os.path.join(_G, "RATIONALE.md"), "w").write(text)
-    r = subprocess.run([sys.executable, os.path.join(_G, "bin", "dmwhy.py"), "--check"], cwd=_G, capture_output=True, text=True)
+    r = subprocess.run([sys.executable, os.path.join(_G, "bin", "dmwhy.py"), "--check"], cwd=_G, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
     return r.returncode, r.stdout + r.stderr
 _rc, _o = _why("# why this garden's terms are as they are\n\n## local_terms[shelf]\n\nthings were being lost.\n")
 check("a garden keeps the reasoning for ITS OWN terms beside its VOCAB.md, under the same key and the same check",

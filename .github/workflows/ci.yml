@@ -15,16 +15,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install PyYAML
+      - run: pip install PyYAML reuse
       - run: git config --global user.name ci && git config --global user.email ci@localhost
       - name: every document parses
         run: python3 bin/dmsafe.py
+      - name: "assets: one reader of what a release ships; an asset is a profile's, and opens no concept of its own"
+        run: python3 test/assets.py
       - name: a garden germinates, passes its gate, refuses bad writes and merges back
         run: python3 test/germinate.py
       - name: "refusals: what the gate refuses, and that it refuses rather than crashes"
         run: python3 test/refusals.py
       - name: "journal: the entry is written as given, in UTF-8 on every platform, one line to a line"
         run: python3 test/journal.py
+      - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
+        run: python3 test/save.py
+      - name: "sequence: a series holds what its positions held, a track moves along a walk, a checklist is a set"
+        run: python3 test/sequence.py
+      - name: "stamps: the day of writing is the clock's — an `as_of` a commit adds is the day of the entry it adds"
+        run: python3 test/stamps.py
       - name: gardens converge
         run: python3 test/converge.py
       - name: a garden adopts a release
@@ -53,13 +61,61 @@ jobs:
         run: python3 test/quantities.py
       - name: "money: amounts are exact, parts add up to their whole, what is owed is read, never written"
         run: python3 test/money.py
-      - name: "mycelium: gardens meet only by proposal; a name minted once is carried, never re-minted"
-        run: python3 test/mycelium.py
+      - name: "peering: gardens meet only by proposal; a name minted once is carried, never re-minted"
+        run: python3 test/peering.py
       - name: "the preconditions of beauty in the law, counted against the last release — evidence for whoever merges"
         run: python3 bin/dmreview.py --law --against "$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*')"
       - name: "site: the pages parse, their links resolve, and every example is what the tools print"
         run: python3 test/site.py
+      - name: "terminology: every word of the seed is on its page, and every relation drawn is one the law states"
+        run: python3 test/terminology.py
       - name: "public: a repository carries the language, never a garden"
         run: python3 test/public.py
       - name: "docs: the prose names nothing retired, nothing absent, and the suites the release runs"
         run: python3 test/docs.py
+      - name: "manifesto: stated once, above the law; every clause carried or said to be only stated; no copy grows"
+        run: python3 test/manifesto.py
+      - name: "layers: each file sits in one layer, placed by the law or by its garden; no tool's path in the law; the changelog is journal"
+        run: python3 test/layers.py
+      - name: "base: the shapes release 24.0's parts share — selections, a compound key, at most one of a group, cells of a level, the new value types"
+        run: python3 test/base.py
+      - name: "view: a page of drawings checked as law, drawn by its asset, and closed to a viewer by default"
+        run: python3 test/view.py
+      - name: "viewcap: a page's asks put to the ledger's grants — parts, tables and CSV, entry forms through the gate, renders, a calendar as a pass, a schedule; daftar's own suite results drawn"
+        run: python3 test/viewcap.py
+      - name: "senses: one sense per name over the terms in force — a second sense refused, a garden's own judged in VOCAB.md, a stale row refused"
+        run: python3 test/senses.py
+      - name: "uncertainty: positions in one to three axes, temperature as a position, u and accuracy, counts, one value however written"
+        run: python3 test/uncertainty.py
+      - name: "zones: a position names its IANA zone, and an offset is read for a moment, never stored or guessed"
+        run: python3 test/zones.py
+      - name: "reckon: one reckoner for every reading — a series read through it, a pinned reading, an allowance, a weighing"
+        run: python3 test/reckon.py
+      - name: "privacy: sensitivity derived, another person kept by name only on consent, grants closed by default, issued anchors, E.164"
+        run: python3 test/privacy.py
+      - name: "held: material sealed off git in a store this host resolves, journalled in one line, erased per subject"
+        run: python3 test/held.py
+      - name: "passes: the flow law's rows each granted and refused, each row's guard computed, the journal only grown, a pointer and a claimed session's passes judged at commit"
+        run: python3 test/passes.py
+      - name: "launch: daftar's own loop logging each piece before the send, a party the gardener grants, the save's trace to a person's words, POST by content, and the hooks for another loop failing closed"
+        run: python3 test/launch.py
+      - name: "hub: every push judged again — signed by a writer's key, within the writer's grants, and by the gate"
+        run: python3 test/hub.py
+      - name: "agreements: occurrences settled one by one, dues relative to them, windows and stance, a condition read, an exclusive term, a reading across gardens"
+        run: python3 test/agreements.py
+      - name: "observations: readings coded in published schemes, verdicts once per observer, hearings, a garden's own extracts, the one finder and its gold set"
+        run: python3 test/observations.py
+      - name: "crosswalk: FHIR R5 Observations and Darwin Core occurrences carried into beans and back by the law's tables alone; what a table cannot carry listed, never dropped"
+        run: python3 test/crosswalk.py
+      - name: "rehearsal: an invented health garden end to end — readings and a series sealed off git, read where they are held, no special value in any blob of history, a cleartext remote store in breach, erasure leaving every pointer Erased"
+        run: python3 test/rehearsal.py
+      - name: "deeptime: where and when as one mechanism — a position from another being read at a time, deep time from its datums, the ICS chart and its golden spikes, a garden's tabulated places, a boundary fixed at both ends"
+        run: python3 test/deeptime.py
+      - name: "licences: every file says whose it is and under which terms (REUSE)"
+        run: reuse lint
+      - name: "sign-off: every commit of a pull request is signed off by a person (CONTRIBUTING.md)"
+        if: github.event_name == 'pull_request'
+        run: |
+          missing=$(git log --format='%H %s%n%b%x00' "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" \
+            | python3 -c "import sys; print('\n'.join(c.split('\n')[0][:72] for c in sys.stdin.read().split('\x00') if c.strip() and 'Signed-off-by:' not in c))")
+          if [ -n "$missing" ]; then echo "commits with no Signed-off-by:"; echo "$missing"; exit 1; fi

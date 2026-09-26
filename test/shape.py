@@ -13,7 +13,7 @@ def check(name, cond, detail=""):
         FAILS.append(name)
 
 def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 
 T = tempfile.mkdtemp(prefix="dmshape-")
 G = os.path.join(T, "g")
@@ -48,7 +48,8 @@ mutate("    transport: tcp\n    within: [ipv4, ipv6]\n    neighbours: counted\n 
        "    transport: tcp\n    within: [ipv4, ipv6]\n    neighbours: counted\n    restrictions: { lines: 1, order: none, ends: bounded }\n")
 _g = gate()
 check("a system NARROWS its aspect and may not widen it", "WIDEN aspect 'place'" in _g and "order none" in _g, _g[-600:])
-mutate("    restrictions: { lines: 3, metered: length }", "    restrictions: { lines: 3, metered: enthusiasm }")
+mutate("    restrictions: { lines: 3, metered: length }\n    meaning: \"a position BY COORDINATES",
+       "    restrictions: { lines: 3, metered: enthusiasm }\n    meaning: \"a position BY COORDINATES")
 check("a system is metered only in a dimension some unit measures", "metered 'enthusiasm' is no dimension" in gate(), gate()[-500:])
 mutate("  - { protocol: ospf,  technology: ospf,", "  - { protocol: ospf,  technology: ospff,")
 check("a registry LINK is resolved: a protocol names a real entry of the technology catalogue",

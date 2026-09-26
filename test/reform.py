@@ -17,7 +17,7 @@ def check(name, cond, detail=""):
         FAILS.append(name)
 
 def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, cwd=cwd)
+    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 
 T = tempfile.mkdtemp(prefix="dmreform-")
 G = os.path.join(T, "g")
@@ -67,7 +67,7 @@ check("...and so is an attribute the term does not declare", "carries `it_is_qui
 bean('rental: { renews: 2027-01-15 }\n')
 out = gate()
 check("...and a missing required attribute, named as the attribute it is",
-      "rental requires 'provider' (VOCAB rental.schema.attrs.provider: required)" in out, out[-600:])
+      "rental requires 'provider' (rule rental.schema.attrs.provider)" in out, out[-600:])
 
 # ---------------------------------------------------------------- a value added to a term that READS A REGISTRY
 ROW = 'registry_additions:\n  operating_systems:\n    - { os: probe-os, family: unix, path_grammar: unix-filesystem, meaning: "a probe" }'
@@ -162,10 +162,20 @@ check("bin/dmreform.py translates the garden's own terms", r.returncode == 0 and
 check("...into one record per attribute", 'renews:' in new and 'in: { type: iso_date }' in new
       and 'in: { aspect: capability, default: permitted }' in new and 'entry_attrs' not in new, new[-1500:])
 check("...conditionals became cells", '{ when: { billing: yearly }, requires: [note] }' in new, new[-1200:])
-check("...and NO COMMENT WAS LOST — the reasons travel with the law",
+check("...and NO COMMENT WAS LOST — a translator keeps what it was given, and the gate says where a reason goes",
       "both, always: a rental with no date is a guess" in new and "a provider is a being where one exists" in new, new[-1500:])
 out = gate()
-check("the translated vocabulary passes the gate", "0 error" in out, out[-900:])
+_errs = [l for l in out.split("\n") if l.startswith("ERROR")]
+check("the translated vocabulary is refused only for its two comments (the law carries no story, §9k, in every garden) "
+      "and for `paid_by`, a ref in the garden's term and a payer's entries in the law's, whose sense is the garden's to judge",
+      len(_errs) == 3 and sum("a comment in the law's front matter" in l for l in _errs) == 2
+      and any("`paid_by` has a second sense" in l for l in _errs), out[-900:])
+new = re.sub(r"\s*# (both, always|a provider is)[^\n]*", "", new)
+new = new.replace("vacancies:\n", 'senses:\n  - { name: paid_by, sense: "who paid: the being, or each party and its amount" }\nvacancies:\n', 1)
+open(VOC, "w").write(new)
+out = gate()
+check("...and with its reasons taken out of the law and the sense judged, the translated vocabulary passes the gate",
+      "0 error" in out, out[-900:])
 r = run(sys.executable, os.path.join(G, "bin", "dmreform.py"), "--check", VOC, cwd=G)
 check("...and --check finds nothing left to translate", r.returncode == 0, r.stdout)
 r = run(sys.executable, os.path.join(G, "bin", "dmreform.py"), VOC, cwd=G)
@@ -197,10 +207,13 @@ check("the standard uses none of the constructs it retired", dmreform.uses_old_c
 # move of "every reader" onto the form had looked only under bin/. One read made the commit hook refuse every
 # garden with a cached analysis; the other came back EMPTY and silently weakened a check. So the guard covers
 # everything `seed/LANGUAGE` ships, not a directory somebody remembered.
-import fnmatch, io, tokenize
-_pats = [l.strip() for l in open(os.path.join(ROOT, "seed", "LANGUAGE")) if l.strip() and not l.startswith("#")]
-_shipped = [os.path.relpath(os.path.join(d, f), ROOT) for d, _ds, fs in os.walk(ROOT) if ".git" not in d for f in fs]
-_shipped = [f for f in _shipped if f.endswith(".py") and any(fnmatch.fnmatch(f, p) for p in _pats)]
+import io, tokenize
+import dmparse, dmpass                    # bin/dmpass.py, the one reader of seed/LANGUAGE: what the release keeps
+_law = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, "seed", "std-vocab.md"), encoding="utf-8").read())[0])
+_shipped = [f.replace("/", os.sep) for f in dmpass.kept(
+    [f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
+    dmpass.language(open(os.path.join(ROOT, "seed", "LANGUAGE"), encoding="utf-8").read()), dmpass.offered(_law))
+    if f.endswith(".py")]
 _KNOWS_THE_OLD_SPELLING = {os.path.join("bin", "dmreform.py")}      # the translator, and only the translator
 _RETIRED = set(dmreform.OLD_SCHEMA_KEYS) | {"entry_attrs"}
 _gate_src = open(os.path.join(ROOT, "bin", "dmcheck.py"), encoding="utf-8").read().split("\n")
@@ -247,9 +260,9 @@ analysis_cache:
 
 probe.
 """)
-r = run(sys.executable, os.path.join(G, "test", "fast.py"), cwd=G)
+r = run(sys.executable, os.path.join(G, "test", "fast.py"), "-v", cwd=G)       # -v: the line of each check it passed
 check("test/fast.py — which the commit hook runs — reads the staleness pattern from the law as it is now spelled",
-      "every cache entry carries a checkable staleness key" in r.stdout and "*** FAIL ***" not in r.stdout
+      "PASS every cache entry carries a checkable staleness key" in r.stdout and "*** FAIL ***" not in r.stdout
       and "neither set is empty" in r.stdout, (r.stdout + r.stderr)[-900:])
 
 shutil.rmtree(T, ignore_errors=True)

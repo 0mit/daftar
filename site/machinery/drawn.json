@@ -1,43 +1,39 @@
 {
- "tool": "factory",
- "tool_release": "v0.6.5",
- "tool_contract": 2,
- "daftar_release": "v0.33.1",
+ "tool": "dmview",
+ "tool_release": "v0.38.0",
+ "daftar_release": "v0.38.0",
+ "grown_by": "v0.34.0",
  "demo_day": "2026-10-27",
  "garden": "garden-sam",
- "drawn_at": "2026-09-23 15:35 UTC",
+ "drawn_at": "2026-09-25 17:07 UTC",
  "report": "machinery/report.html",
- "report_bytes": 253221,
- "report_sha256": "13f58f6f8640564a5a7e6703ab343bdf9dd1450e717fdfda6d61ffac13d2a277",
+ "report_bytes": 245828,
+ "report_sha256": "5acf7ca7cb89d4d147c720f77771e4870630b44aa7a4a90e45a85d67024ddbcd",
  "title": "daftar — its mechanisms, drawn",
  "levels": [
   {
    "id": "orient",
    "depth": 0,
-   "name": "Orient — what it is",
-   "audience": "a newcomer: a new colleague, a manager seeing it for the first time, anyone who has never touched it",
-   "question": "What does this mechanism do for us, what is it built from, and where do I learn it properly?"
+   "form": "story",
+   "meaning": "what the drawn thing does and what it is built from, for someone who has never touched it: its purpose, three to five stages in the order work flows, its outcome, and each technology's own documentation. No address, port or live value"
   },
   {
    "id": "understand",
    "depth": 1,
-   "name": "Understand — how it works",
-   "audience": "a technical manager or engineer who must reason about it",
-   "question": "How do the parts co-operate, where does the mechanism decide, and where is it fragile?"
+   "form": "schematic",
+   "meaning": "how the parts co-operate, where the work is decided and where it is fragile: parts by what they do, flows as verbs, decisions as gates, boundaries where ownership or network changes. No address or live value"
   },
   {
    "id": "operate",
    "depth": 2,
-   "name": "Operate — is it working",
-   "audience": "the engineer on call",
-   "question": "What must the person on call know first about this mechanism, right now?"
+   "form": "health-chain",
+   "meaning": "what the person on call must know first, now: the drawn thing's own vital sign in a shape native to it (a row of `view_archetypes`), the evidence beneath it, what the page cannot see, and where a person may act"
   },
   {
    "id": "inspect",
    "depth": 3,
-   "name": "Inspect — what exactly",
-   "audience": "an auditor, or the engineer about to change it",
-   "question": "What exactly are the parts, how do we know, and what is still open?"
+   "form": "anatomy",
+   "meaning": "what exactly the parts are and how that is known: a card of each part's own facts with their provenance, the steps, the wiring, and what is still open"
   }
  ],
  "mechanisms": [
@@ -67,9 +63,9 @@
     "warning"
    ],
    "operate": {
-    "archetype": null,
+    "archetype": "health-chain",
     "would_take": "funnel",
-    "why_none": "a funnel counts the commits that arrive, those stopped at each check and those recorded; this garden exports no count of its hook's verdicts, and no Prometheus reads it"
+    "why_none": "a funnel counts the commits that arrive, those stopped at each check and those recorded; this garden exports no count of its hook's verdicts, and no monitor reads one"
    }
   },
   {
@@ -97,7 +93,7 @@
     "tag"
    ],
    "operate": {
-    "archetype": null,
+    "archetype": "health-chain",
     "would_take": "roster",
     "why_none": "a roster shows who writes, and how much, from a live series; nothing here measures the journal"
    }
@@ -127,7 +123,7 @@
     "tag"
    ],
    "operate": {
-    "archetype": null,
+    "archetype": "health-chain",
     "would_take": null,
     "why_none": "a merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric"
    }
@@ -160,7 +156,7 @@
     "warning"
    ],
    "operate": {
-    "archetype": null,
+    "archetype": "health-chain",
     "would_take": null,
     "why_none": "what waits to be taken is a proposal file beside the gardens, not a metric"
    }
@@ -192,23 +188,29 @@
     "warning"
    ],
    "operate": {
-    "archetype": null,
+    "archetype": "health-chain",
     "would_take": null,
     "why_none": "what falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric"
    }
   }
  ],
  "cannot": [
-  "Operate reads live data. The demo garden has no probe, no metric and no Prometheus, so no mechanism declares an archetype or a binding, and every part reads “no signal”, with the reason: that is the demo garden's true state.",
+  "Operate reads live data. The demo garden has no probe, no metric and no monitor, so every drawing takes the health chain and binds nothing, and every part reads “no signal”, with the reason: that is the demo garden's true state.",
   "Actions: none is placed. A button in the report asks for a tool by name, and only a host's own configuration can make it run anything.",
-  "Author edits a copy of the record in the reader's browser. What it exports is imported into a garden by a command run in that garden; nothing imports it here.",
-  "Grafana and the live page are not part of this site."
+  "Author edits a copy of the page's record in the reader's browser. What it exports is imported into a garden by a command run in that garden; nothing imports it here.",
+  "The served page, and a monitor's dashboards, are not part of this site."
  ],
  "transcript": [
   {
    "cwd": "~/garden-sam",
-   "cmd": "python3 bin/dmjournal.py sam \"daftar's mechanisms recorded, and how they are drawn\" --body \"- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], [[mycelium]] and [[ledger]]; [[factory]] and [[design-factory]], which draw them; bin/mechanisms.py, the drawings (site/machinery/composers.py).\n- why: the machinery page of daftar's site shows these mechanisms, drawn at four levels.\"",
-   "out": "## 2026-10-27 09:00+00:00 · sam · daftar's mechanisms recorded, and how they are drawn",
+   "cmd": "python3 bin/dmupgrade.py v0.38.0 --from ~/daftar --extend view",
+   "out": "handing over to v0.38.0's own bin/dmupgrade.py — a release is applied by its own upgrade logic\nupgraded to v0.38.0 (c8f7c5735d52): std-vocab 22.0 -> 23.1; 36 changed, 31 added, 0 removed, 3 repinned; profiles +view.\ntranslated: std-vocab 23.1, what the law now says itself — nothing to translate\ngarden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 13 docs, 0 error(s), 0 warning(s)\n\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n  git add -A\n  git commit\nTo abandon it instead:\n  git checkout -- .\n  git clean -f -- MANIFESTO.md assets/view/README.md assets/view/bin/dmview.py assets/view/lib/sources/prometheus.py assets/view/lib/view_kit.py assets/view/lib/view_model.py assets/view/lib/view_report.py assets/view/lib/view_runtime.js assets/view/lib/view_serve.py assets/view/templates/drawings.py assets/view/templates/serve.json bin/dmforms.py bin/dmpass.py bin/dmsave.py bin/dmseq.py seed/CHANGELOG.md seed/FORMS.md seed/LICENSE-AGPL-3.0-or-later.txt seed/LICENSE-CC-BY-4.0.txt seed/LICENSE-CC-BY-SA-3.0-IGO.txt seed/LICENSE-CC0-1.0.txt seed/LICENSE-LicenseRef-ILO-ISCO-08.txt seed/LICENSE-LicenseRef-daftar-garden-exception.txt seed/LICENSE-Unicode-3.0.txt seed/LICENSE.md seed/knowledge/crosswalk-dwc.tsv seed/knowledge/crosswalk-fhir-r5-observation.tsv seed/knowledge/ics-chart-2026-06.tsv seed/knowledge/mechanisms.yaml seed/knowledge/substances.tsv seed/knowledge/time-zones.tsv",
+   "exit": 0
+  },
+  {
+   "cwd": "~/garden-sam",
+   "cmd": "git diff -U0 -- log/journal.md",
+   "out": "…\n+\n+## 2026-10-27 09:00+00:00 · sam · RULE-CHANGE: language upgraded to daftar v0.38.0\n+- ratified_by: sam, here: the word of the gardener\n+- action: **RULE-CHANGE — `bin/dmupgrade.py v0.38.0`** from ~/daftar at c8f7c5735d525b75a2e238489b1952db86e694a0; std-vocab 22.0 -> 23.1; release v0.34.0 -> v0.38.0.\n+- changed: .claude/skills/daftar/SKILL.md, .gitattributes, AGENTS.md, CHECKLIST.md, MERGE.md, MODEL.md, bin/dmcal.py, bin/dmcheck.py, bin/dmform.py, bin/dmingest.py, bin/dmjournal.py, bin/dmledger.py, bin/dmmerge.py, bin/dmparse.py, bin/dmpos.py, bin/dmpropose.py, bin/dmpublic.py, bin/dmreform.py, bin/dmreview.py, bin/dmrules.py, bin/dmsession.py, bin/dmstale.py, bin/dmupgrade.py, bin/dmwhy.py, bin/hooks/pre-commit, seed/COOKBOOK.md, seed/LANGUAGE, seed/PUBLIC-ALLOW, seed/RATIONALE.md, seed/README.md, seed/WELCOME.md, seed/germinate.py, seed/knowledge/SOURCES.md, seed/std-vocab.md, test/fast.py, VOCAB.md (extends_profiles)\n+- added: MANIFESTO.md, assets/view/README.md, assets/view/bin/dmview.py, assets/view/lib/sources/prometheus.py, assets/view/lib/view_kit.py, assets/view/lib/view_model.py, assets/view/lib/view_report.py, assets/view/lib/view_runtime.js, assets/view/lib/view_serve.py, assets/view/templates/drawings.py, assets/view/templates/serve.json, bin/dmforms.py, bin/dmpass.py, bin/dmsave.py, bin/dmseq.py, seed/CHANGELOG.md, seed/FORMS.md, seed/LICENSE-AGPL-3.0-or-later.txt, seed/LICENSE-CC-BY-4.0.txt, seed/LICENSE-CC-BY-SA-3.0-IGO.txt, seed/LICENSE-CC0-1.0.txt, seed/LICENSE-LicenseRef-ILO-ISCO-08.txt, seed/LICENSE-LicenseRef-daftar-garden-exception.txt, seed/LICENSE-Unicode-3.0.txt, seed/LICENSE.md, seed/knowledge/crosswalk-dwc.tsv, seed/knowledge/crosswalk-fhir-r5-observation.tsv, seed/knowledge/ics-chart-2026-06.tsv, seed/knowledge/mechanisms.yaml, seed/knowledge/substances.tsv, seed/knowledge/time-zones.tsv\n+- removed: none\n+- repinned: VOCAB.md, GARDEN.md, GARDEN.md daftar_release\n+- translated: std-vocab 23.1, what the law now says itself — nothing to translate\n+- profiles: +view\n+- why: the view asset, which draws daftar's mechanisms for the machinery page of daftar's site\n+- beans: none",
    "exit": 0
   },
   {
@@ -219,20 +221,14 @@
   },
   {
    "cwd": "~/garden-sam",
-   "cmd": "git commit -q -m \"daftar's mechanisms recorded, and how they are drawn\"",
-   "out": "garden-sam (daftar v0.33.1, gardener sam, garden 875a6f4d60d5): 21 docs, 0 error(s), 0 warning(s)\n…\n\nfast: 14/14 corpus checks passed",
+   "cmd": "git commit -q -m \"daftar v0.38.0, with the view profile\"",
+   "out": "garden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 13 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
    "exit": 0
   },
   {
    "cwd": "~/garden-sam",
-   "cmd": "python3 ~/factory/bin/factory upgrade --from ~/factory --garden .",
-   "out": "factory: vendored v0.6.5 (15 files) into factory; the pin in [[factory]] now says v0.6.5. The skill is mirrored at .claude/skills/factory/SKILL.md. Nothing is committed.\nJournal it in the same commit, e.g.:\n- factory v0.6.5 vendored from ~/factory (`factory upgrade`); [[factory]] details.factory_release moved.",
-   "exit": 0
-  },
-  {
-   "cwd": "~/garden-sam",
-   "cmd": "python3 bin/dmjournal.py sam \"factory v0.6.5 vendored\" --body \"- action: factory v0.6.5 vendored into factory/ by factory upgrade, which mirrors its skill at .claude/skills/factory/SKILL.md; [[factory]] already pins v0.6.5.\"",
-   "out": "## 2026-10-27 09:00+00:00 · sam · factory v0.6.5 vendored",
+   "cmd": "python3 bin/dmjournal.py sam \"daftar's mechanisms recorded, and the page that draws them\" --body \"- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], [[mycelium]] and [[ledger]]; [[machinery]], the page that draws them, and drawings/mechanisms.py, its drawing module (site/machinery/composers.py).\n- why: the machinery page of daftar's site shows these mechanisms, drawn at four lenses.\"",
+   "out": "## 2026-10-27 09:00+00:00 · sam · daftar's mechanisms recorded, and the page that draws them",
    "exit": 0
   },
   {
@@ -243,20 +239,20 @@
   },
   {
    "cwd": "~/garden-sam",
-   "cmd": "git commit -q -m \"factory v0.6.5 vendored\"",
-   "out": "garden-sam (daftar v0.33.1, gardener sam, garden 875a6f4d60d5): 21 docs, 0 error(s), 0 warning(s)\n…\n\nfast: 14/14 corpus checks passed",
+   "cmd": "git commit -q -m \"daftar's mechanisms recorded, and the page that draws them\"",
+   "out": "garden-sam (daftar v0.38.0, gardener sam, garden 71f4088d37f9): 20 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
    "exit": 0
   },
   {
    "cwd": "~/garden-sam",
-   "cmd": "python3 factory/bin/factory check",
-   "out": "factory: the record and the drawings agree",
+   "cmd": "python3 assets/view/bin/dmview.py check",
+   "out": "dmview: the page and its drawings agree",
    "exit": 0
   },
   {
    "cwd": "~/garden-sam",
-   "cmd": "python3 factory/bin/factory report --out ../report.html",
-   "out": "factory report: 5 mechanisms (5 shown) + reference + author mode -> ../report.html",
+   "cmd": "python3 assets/view/bin/dmview.py report --out ../report.html",
+   "out": "dmview report: 5 drawings + reference + author mode -> ../report.html",
    "exit": 0
   }
  ]

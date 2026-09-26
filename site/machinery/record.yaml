@@ -1,20 +1,20 @@
 # What the machinery page's demo garden records about daftar's own mechanisms. site/machinery/build.py writes it into
-# a clone of the demo garden-sam, in one journalled commit, and the drawings in site/machinery/composers.py are held
-# to it: the drawing tool's `check` refuses a mechanism whose recorded patterns differ from what its composer draws.
+# a clone of the demo garden-sam, once the clone runs the release being drawn and extends the `view` profile, in one
+# journalled commit; the drawings in site/machinery/composers.py are held to it.
 #
-#   product    the `daftar` product bean: its title, summary, body and `details:`, the wiring rows the Inspect
-#              level reads (processes and pipes, each on a rail). Every row is true of daftar v0.33.1: the hook is
+#   product    the `daftar` product bean: its title, summary, body and `details:`, the wiring rows the inspect lens
+#              reads (processes and pipes, each on a rail). Every row is true of daftar as released: the hook is
 #              bin/hooks/pre-commit, the merge driver's configuration bin/install.py, the union lines .gitattributes,
 #              the stamps bin/dmjournal.py, and the proposal flow MERGE.md §16.
 #   mappings   one `procedure` mapping per mechanism: a summary and its steps, each a line that names the beans it
-#              touches (the Inspect level shows those beans beside the step).
-#   drawing    the details of the drawing bean, less the three keys build.py sets (the contract, the release and the
-#              garden module) and the glossary, which build.py reads from the release's README.md.
-#
-# `demo:` on a mechanism is read by build.py for drawn.json and never written to the bean: it says which Operate
-# archetype the mechanism would take where live data exists, and why none is declared here. The demo garden has no
-# probe, no metric and no Prometheus, so no mechanism declares an archetype or a binding, and Operate falls back to
-# the health chain, every part reading "no signal".
+#              touches (the inspect lens shows those beans beside the step).
+#   page       the `machinery` bean, a page of drawings: its title, summary and body, its `view` (less `drawings` and
+#              `glossary`, which build.py sets: the drawing module it copies in, and README.md's "Words you will
+#              meet" at the release drawn) and its `views`, one per mechanism, in the page's order.
+#   design     read by build.py alone, never written to a bean: per mechanism, the kit's patterns its drawing must use,
+#              and, for drawn.json, the operate shape it would take where live data exists and why none is bound here.
+#              The demo garden has no probe, no metric and no monitor, so every drawing takes the health chain and
+#              binds nothing, and every part of it reads "no signal".
 
 product:
   title: "daftar — the language this garden speaks"
@@ -26,31 +26,31 @@ product:
       - { proc: "bin/dmcheck.py", user: "the committer", role: "the gate: reads the staged files against the law", config: "git config daftar.python", rail: commit }
       - { proc: "test/fast.py", user: "the committer", role: "asks whether the garden's records are sound now, in under two seconds", config: "seed/LANGUAGE ships it to every garden", rail: commit }
     gate_pipes:
-      - { from: "git commit", to: "pre-commit hook", kind: hook, at: ".git/hooks/pre-commit", config: "copied from bin/hooks/pre-commit by bin/install.py", rail: commit }
-      - { from: "pre-commit hook", to: "bin/dmcheck.py", kind: exec, at: "the staged files", config: "daftar_py \"$root/bin/dmcheck.py\" || exit 1", rail: commit }
-      - { from: "pre-commit hook", to: "test/fast.py", kind: exec, at: "the garden", config: "daftar_py \"$root/test/fast.py\"", rail: commit }
+      - { from: "git commit", to: "pre-commit hook", channel: hook, at: ".git/hooks/pre-commit", config: "copied from bin/hooks/pre-commit by bin/install.py", rail: commit }
+      - { from: "pre-commit hook", to: "bin/dmcheck.py", channel: exec, at: "the staged files", config: "daftar_py \"$root/bin/dmcheck.py\" || exit 1", rail: commit }
+      - { from: "pre-commit hook", to: "test/fast.py", channel: exec, at: "the garden", config: "daftar_py \"$root/test/fast.py\"", rail: commit }
     journal_pipes:
-      - { from: "bin/dmjournal.py", to: "log/journal.md", kind: append, at: "log/journal.md", config: "## <when> · <who> · <what>, <when> read from the clock", rail: write }
-      - { from: "bin/dmjournal.py", to: "journal-stamps", kind: register, at: ".git/daftar/journal-stamps", config: "per clone, never versioned", rail: write }
-      - { from: "bin/dmcheck.py", to: "log/journal.md", kind: read, at: "the staged log/journal.md", config: "only the headings the commit adds", rail: check }
-      - { from: "bin/dmcheck.py", to: "journal-stamps", kind: read, at: ".git/daftar/journal-stamps", config: "journal.heading: stamped (seed/std-vocab.md)", rail: check }
-      - { from: "git merge", to: "log/journal.md", kind: union, at: "log/journal.md", config: "log/journal.md merge=union (.gitattributes)", rail: merge }
+      - { from: "bin/dmjournal.py", to: "log/journal.md", channel: append, at: "log/journal.md", config: "## <when> · <who> · <what>, <when> read from the clock", rail: write }
+      - { from: "bin/dmjournal.py", to: "journal-stamps", channel: register, at: ".git/daftar/journal-stamps", config: "per clone, never versioned", rail: write }
+      - { from: "bin/dmcheck.py", to: "log/journal.md", channel: read, at: "the staged log/journal.md", config: "only the headings the commit adds", rail: check }
+      - { from: "bin/dmcheck.py", to: "journal-stamps", channel: read, at: ".git/daftar/journal-stamps", config: "journal.origin: the heading read by the save (seed/std-vocab.md)", rail: check }
+      - { from: "git merge", to: "log/journal.md", channel: union, at: "log/journal.md", config: "log/journal.md merge=union (.gitattributes)", rail: merge }
     merge_processes:
       - { proc: "bin/dmmerge.py --file", user: "whoever runs git merge", role: "merges one bean in place; refuses, leaving the file untouched, rather than lose a key or the body", config: "git config merge.daftar.driver, set by bin/install.py: … bin/dmmerge.py --file %O %A %B", rail: merge }
       - { proc: "bin/dmmerge.py <garden> <garden> …", user: "whoever runs it", role: "merges whole gardens, prints the canonical beans and the candidates; commits nothing", config: "run by hand", rail: merge }
     merge_pipes:
-      - { from: "git merge", to: "bin/dmmerge.py", kind: "merge driver", at: "beans/*.md", config: "beans/*.md merge=daftar (.gitattributes)", rail: merge }
-      - { from: "git merge", to: "bin/dmmerge.py", kind: "merge driver", at: "mappings/*.md", config: "mappings/*.md merge=daftar (.gitattributes)", rail: merge }
-      - { from: "git merge", to: "log/pending.md", kind: union, at: "log/pending.md", config: "log/pending.md merge=union (.gitattributes)", rail: merge }
+      - { from: "git merge", to: "bin/dmmerge.py", channel: "merge driver", at: "beans/*.md", config: "beans/*.md merge=daftar (.gitattributes)", rail: merge }
+      - { from: "git merge", to: "bin/dmmerge.py", channel: "merge driver", at: "mappings/*.md", config: "mappings/*.md merge=daftar (.gitattributes)", rail: merge }
+      - { from: "git merge", to: "log/pending.md", channel: union, at: "log/pending.md", config: "log/pending.md merge=union (.gitattributes)", rail: merge }
     mycelium_processes:
       - { proc: "bin/dmpropose.py make", user: "sam's agent", role: "makes the proposal, and journals what left, to which garden, under which agreement, with the fingerprint", config: "--to garden-ali --under shared-camera", rail: propose }
       - { proc: "bin/dmpropose.py read, take", user: "ali's agent", role: "reads (the gate's verdict on a scratch copy), then takes into the working tree", config: "run by hand, in garden-ali", rail: receive }
       - { proc: "git commit", user: "ali", role: "the ratification: what was taken becomes garden-ali's record", config: "git config user.name", rail: receive }
     mycelium_pipes:
-      - { from: "garden-sam", to: "a proposal file", kind: make, at: "beside both gardens", config: "bin/dmpropose.py make --to garden-ali --under shared-camera shared-camera", rail: propose }
-      - { from: "a proposal file", to: "garden-ali", kind: read, at: "a scratch copy of garden-ali", config: "bin/dmpropose.py read <proposal>: writes nothing", rail: receive }
-      - { from: "a proposal file", to: "garden-ali", kind: take, at: "the working tree of garden-ali", config: "bin/dmpropose.py take <proposal>: commits nothing", rail: receive }
-      - { from: "a proposal file", to: "garden-ali's garden-sam bean", kind: capture, at: "captures/proposals/garden-sam/", config: "kept whole; its fingerprint is the capture's staleness_key", rail: receive }
+      - { from: "garden-sam", to: "a proposal file", channel: make, at: "beside both gardens", config: "bin/dmpropose.py make --to garden-ali --under shared-camera shared-camera", rail: propose }
+      - { from: "a proposal file", to: "garden-ali", channel: read, at: "a scratch copy of garden-ali", config: "bin/dmpropose.py read <proposal>: writes nothing", rail: receive }
+      - { from: "a proposal file", to: "garden-ali", channel: take, at: "the working tree of garden-ali", config: "bin/dmpropose.py take <proposal>: commits nothing", rail: receive }
+      - { from: "a proposal file", to: "garden-ali's garden-sam bean", channel: capture, at: "captures/proposals/garden-sam/", config: "kept whole; its fingerprint is the capture's staleness_key", rail: receive }
 
 mappings:
   gate:
@@ -94,131 +94,123 @@ mappings:
       - "no balance is stored: a stored one would drift the first time a transaction was added and the balance was not"
       - "a share that does not come out even in the currency's places is shown as the fraction it is; who takes the remainder is a clause"
 
-drawing:
-  live_base: ""
-  report: { title: "daftar — its mechanisms, drawn", filter_default: { org: shared } }
-  mechanisms:
-    - key: gate
-      title: "The gate"
-      include: true
-      source: { mapping: gate }
-      dashboard: { uid: daftar-gate }
-      schema_patterns: [accent, boundary, flow, gate, node, signal, store, tag, warning]
-      live_patterns: []
-      story:
-        purpose: "Nothing enters the notebook that breaks a rule or goes unrecorded."
-        outcome: "Every commit in the garden's history passed the gate of its day."
-        stages:
-          - { label: "Stage a change", doer: "a person or an agent, with git add", beans: [sam], tech: [git] }
-          - { label: "Ask to commit", doer: "git runs the pre-commit hook", tech: [git] }
-          - { label: "Read against the law", doer: "the gate reads the staged files, not the working tree", beans: [daftar], tech: [python] }
-          - { label: "Refuse, or record", doer: "each refusal says what is wrong, and where" }
-      levels:
-        orient: { question: "What keeps a wrong fact out of the notebook?" }
-        understand: { question: "Where is a commit refused, and on what?" }
-        operate: { question: "Is the gate refusing what it should, right now?" }
-        inspect: { question: "Which hook runs which program, on what?", wiring: { bean: daftar, processes: details.gate_processes, pipes: details.gate_pipes } }
-      bindings: []
-      demo: { would_take: funnel, why_none: "a funnel counts the commits that arrive, those stopped at each check and those recorded; this garden exports no count of its hook's verdicts, and no Prometheus reads it" }
-    - key: journal
-      title: "The journal"
-      include: true
-      source: { mapping: journal }
-      dashboard: { uid: daftar-journal }
-      schema_patterns: [accent, external, flow, gate, node, signal, store, tag]
-      live_patterns: []
-      story:
-        purpose: "Every change says who made it, when, and why, in the same commit."
-        outcome: "The journal reads as a history anyone can follow, in order."
-        stages:
-          - { label: "Say what was done", doer: "who, what, and the body", beans: [sam] }
-          - { label: "Read the clock", doer: "bin/dmjournal.py writes the heading, never a hand", tech: [python] }
-          - { label: "Register the heading", doer: "in this clone's git directory", tech: [git] }
-          - { label: "Commit with the change", doer: "the gate checks that the entry names each bean", tech: [git] }
-      levels:
-        orient: { question: "Who changed what, and why?" }
-        understand: { question: "Why can no one type a heading?" }
-        operate: { question: "Is every change journalled as it is made?" }
-        inspect: { question: "Where is each heading recorded, and who reads it?", wiring: { bean: daftar, pipes: details.journal_pipes } }
-      bindings: []
-      demo: { would_take: roster, why_none: "a roster shows who writes, and how much, from a live series; nothing here measures the journal" }
-    - key: merge
-      title: "The merge"
-      include: true
-      source: { mapping: merge }
-      dashboard: { uid: daftar-merge }
-      schema_patterns: [accent, external, flow, gate, node, signal, store, tag]
-      live_patterns: []
-      story:
-        purpose: "Two records of one thing become one, and nothing either said is lost."
-        outcome: "Merged in any order, the records reach the same facts; disagreements wait for a person."
-        stages:
-          - { label: "Two records meet", doer: "two clones, or two sessions' branches", tech: [git] }
-          - { label: "Match by anchor", doer: "a serial, a domain name, a minted name, never a file name" }
-          - { label: "Join each fact", doer: "bin/dmmerge.py, one bean at a time", beans: [daftar], tech: [python] }
-          - { label: "Keep a disagreement", doer: "both values, for a person to settle", beans: [sam] }
-      levels:
-        orient: { question: "What happens when two records of one thing meet?" }
-        understand: { question: "What decides that two beans are one object?" }
-        operate: { question: "Is any merge waiting for a person?" }
-        inspect: { question: "Which lines route a merge, and where?", wiring: { bean: daftar, processes: details.merge_processes, pipes: details.merge_pipes } }
-      bindings: []
-      demo: { would_take: null, why_none: "a merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric" }
-    - key: mycelium
-      title: "The mycelium"
-      include: true
-      source: { mapping: mycelium }
-      dashboard: { uid: daftar-mycelium }
-      schema_patterns: [accent, boundary, flow, gate, node, ribbon, signal, store, warning]
-      live_patterns: []
-      story:
-        purpose: "Two gardens exchange only what their gardeners agree to give and to take."
-        outcome: "Each garden holds the other's offer, in its own words, by its own gardener's hand."
-        stages:
-          - { label: "Agree first", doer: "both gardeners are parties to one agreement", beans: [shared-camera] }
-          - { label: "Meet once", doer: "each records the other's garden and gardener", beans: [garden-ali, ali] }
-          - { label: "Propose a file", doer: "bin/dmpropose.py make, beside both gardens", tech: [python] }
-          - { label: "Read, then take", doer: "the other garden's agent; nothing is committed" }
-          - { label: "Commit, or not", doer: "the other gardener's commit is the ratification", tech: [git] }
-      levels:
-        orient: { question: "How do two people's notebooks share one agreement?" }
-        understand: { question: "Where does a proposal stop, and who lets it in?" }
-        operate: { question: "What is waiting to be taken?" }
-        inspect: { question: "What does a proposal carry, and where is it kept?", wiring: { bean: daftar, processes: details.mycelium_processes, pipes: details.mycelium_pipes } }
-      bindings: []
-      demo: { would_take: null, why_none: "what waits to be taken is a proposal file beside the gardens, not a metric" }
-    - key: ledger
-      title: "The ledger"
-      include: true
-      source: { mapping: ledger }
-      dashboard: { uid: daftar-ledger }
-      schema_patterns: [accent, flow, gate, node, store, tag, warning]
-      live_patterns: []
-      story:
-        purpose: "What one person owes another is read from what moved, never written."
-        outcome: "Every reading adds up exactly, and no stored balance can drift."
-        stages:
-          - { label: "Record what moved", doer: "an amount, who paid, who bears it", beans: [shared-camera] }
-          - { label: "Keep amounts exact", doer: "a count in its currency, never rounded" }
-          - { label: "Read what is owed", doer: "bin/dmledger.py, in fractions", tech: [python] }
-          - { label: "Net between two", doer: "across the agreements they share", beans: [sam, ali] }
-      levels:
-        orient: { question: "Who owes whom, and how do we know?" }
-        understand: { question: "Where is what is owed computed, and why is it never stored?" }
-        operate: { question: "What falls due next?" }
-        inspect: { question: "Which transactions make up what is owed?" }
-      bindings: []
-      demo: { would_take: null, why_none: "what falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric" }
-  reference:
-    - { bean: daftar, address: "github.com/0mit/daftar", role: "the language this garden speaks: the law, the gate, the tools" }
-    - { bean: sam, address: "~/garden-sam", role: "the gardener: ratifies what an agent may not decide" }
-    - { bean: ali, address: "~/garden-ali", role: "keeps a garden of her own; shares costs with sam" }
-    - { bean: garden-ali, address: "~/garden-ali", role: "the other garden, met by first contact" }
-    - { bean: shared-camera, address: "beans/shared-camera.md", role: "an agreement both gardens hold" }
-    - { bean: washer-loan, address: "beans/washer-loan.md", role: "a loan repaid in instalments" }
-  kind_details:
-    product: { summary: 1 }
-    person: { summary: 1 }
-    garden: { summary: 1 }
-    contract: { summary: 1, words: 3, transactions: 3 }
-    design: { summary: 1 }
+page:
+  title: "daftar — its mechanisms, drawn"
+  summary: "daftar's own mechanisms, drawn at four lenses for the machinery page of daftar's site."
+  body: "A page of drawings of the language this garden speaks: the gate, the journal, the merge, the mycelium and the ledger."
+  view:
+    reference:
+      - { being: daftar, what: "the language this garden speaks: the law, the gate, the tools" }
+      - { being: sam, what: "the gardener: ratifies what an agent may not decide" }
+      - { being: ali, what: "keeps a garden of her own; shares costs with sam" }
+      - { being: garden-ali, what: "the other garden, met by first contact" }
+      - { being: shared-camera, what: "an agreement both gardens hold" }
+      - { being: washer-loan, what: "a loan repaid in instalments" }
+    fields:
+      - { genos: product, term: summary, shown_from: understand }
+      - { genos: person, term: summary, shown_from: understand }
+      - { genos: garden, term: summary, shown_from: understand }
+      - { genos: contract, term: summary, shown_from: understand }
+      - { genos: contract, term: words, shown_from: inspect }
+      - { genos: contract, term: transactions, shown_from: inspect }
+  views:
+    gate:
+      draws: { mapping: gate }
+      label: "The gate"
+      purpose: "Nothing enters the notebook that breaks a rule or goes unrecorded."
+      outcome: "Every commit in the garden's history passed the gate of its day."
+      stages:
+        - { label: "Stage a change", doer: "a person or an agent, with git add", beings: [ { being: sam } ], uses: [ { technology: git } ] }
+        - { label: "Ask to commit", doer: "git runs the pre-commit hook", uses: [ { technology: git } ] }
+        - { label: "Read against the law", doer: "the gate reads the staged files, not the working tree", beings: [ { being: daftar } ], uses: [ { technology: python } ] }
+        - { label: "Refuse, or record", doer: "each refusal says what is wrong, and where" }
+      questions:
+        - { lens: orient, ask: "What keeps a wrong fact out of the notebook?" }
+        - { lens: understand, ask: "Where is a commit refused, and on what?" }
+        - { lens: operate, ask: "Is the gate refusing what it should, right now?" }
+        - { lens: inspect, ask: "Which hook runs which program, on what?" }
+      processes: { bean: daftar, field: gate_processes }
+      pipes: { bean: daftar, field: gate_pipes }
+      archetype: health-chain
+      blind: [ { what: "how many commits the gate refused, and on what", why: "this garden exports no count of its hook's verdicts, and no monitor reads one" } ]
+    journal:
+      draws: { mapping: journal }
+      label: "The journal"
+      purpose: "Every change says who made it, when, and why, in the same commit."
+      outcome: "The journal reads as a history anyone can follow, in order."
+      stages:
+        - { label: "Say what was done", doer: "who, what, and the body", beings: [ { being: sam } ] }
+        - { label: "Read the clock", doer: "bin/dmjournal.py writes the heading, never a hand", uses: [ { technology: python } ] }
+        - { label: "Register the heading", doer: "in this clone's git directory", uses: [ { technology: git } ] }
+        - { label: "Commit with the change", doer: "the gate checks that the entry names each bean", uses: [ { technology: git } ] }
+      questions:
+        - { lens: orient, ask: "Who changed what, and why?" }
+        - { lens: understand, ask: "Why can no one type a heading?" }
+        - { lens: operate, ask: "Is every change journalled as it is made?" }
+        - { lens: inspect, ask: "Where is each heading recorded, and who reads it?" }
+      pipes: { bean: daftar, field: journal_pipes }
+      archetype: health-chain
+      blind: [ { what: "who writes, and how much", why: "nothing here measures the journal" } ]
+    merge:
+      draws: { mapping: merge }
+      label: "The merge"
+      purpose: "Two records of one thing become one, and nothing either said is lost."
+      outcome: "Merged in any order, the records reach the same facts; disagreements wait for a person."
+      stages:
+        - { label: "Two records meet", doer: "two clones, or two sessions' branches", uses: [ { technology: git } ] }
+        - { label: "Match by anchor", doer: "a serial, a domain, a minted name, never a file name" }
+        - { label: "Join each fact", doer: "bin/dmmerge.py, one bean at a time", beings: [ { being: daftar } ], uses: [ { technology: python } ] }
+        - { label: "Keep a disagreement", doer: "both values, for a person to settle", beings: [ { being: sam } ] }
+      questions:
+        - { lens: orient, ask: "What happens when two records of one thing meet?" }
+        - { lens: understand, ask: "What decides that two beans are one object?" }
+        - { lens: operate, ask: "Is any merge waiting for a person?" }
+        - { lens: inspect, ask: "Which lines route a merge, and where?" }
+      processes: { bean: daftar, field: merge_processes }
+      pipes: { bean: daftar, field: merge_pipes }
+      archetype: health-chain
+      blind: [ { what: "a merge waiting for a person", why: "it is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric" } ]
+    mycelium:
+      draws: { mapping: mycelium }
+      label: "The mycelium"
+      purpose: "Two gardens exchange only what their gardeners agree to give and to take."
+      outcome: "Each garden holds the other's offer, in its own words, by its own gardener's hand."
+      stages:
+        - { label: "Agree first", doer: "both gardeners are parties to one agreement", beings: [ { being: shared-camera } ] }
+        - { label: "Meet once", doer: "each records the other's garden and gardener", beings: [ { being: garden-ali }, { being: ali } ] }
+        - { label: "Propose a file", doer: "bin/dmpropose.py make, beside both gardens", uses: [ { technology: python } ] }
+        - { label: "Read, then take", doer: "the other garden's agent; nothing is committed" }
+        - { label: "Commit, or not", doer: "the other gardener's commit is the ratification", uses: [ { technology: git } ] }
+      questions:
+        - { lens: orient, ask: "How do two people's notebooks share one agreement?" }
+        - { lens: understand, ask: "Where does a proposal stop, and who lets it in?" }
+        - { lens: operate, ask: "What is waiting to be taken?" }
+        - { lens: inspect, ask: "What does a proposal carry, and where is it kept?" }
+      processes: { bean: daftar, field: mycelium_processes }
+      pipes: { bean: daftar, field: mycelium_pipes }
+      archetype: health-chain
+      blind: [ { what: "what waits to be taken", why: "it is a proposal file beside the gardens, not a metric" } ]
+    ledger:
+      draws: { mapping: ledger }
+      label: "The ledger"
+      purpose: "What one person owes another is read from what moved, never written."
+      outcome: "Every reading adds up exactly, and no stored balance can drift."
+      stages:
+        - { label: "Record what moved", doer: "an amount, who paid, who bears it", beings: [ { being: shared-camera } ] }
+        - { label: "Keep amounts exact", doer: "a count in its currency, never rounded" }
+        - { label: "Read what is owed", doer: "bin/dmledger.py, in fractions", uses: [ { technology: python } ] }
+        - { label: "Net between two", doer: "across the agreements they share", beings: [ { being: sam }, { being: ali } ] }
+      questions:
+        - { lens: orient, ask: "Who owes whom, and how do we know?" }
+        - { lens: understand, ask: "Where is what is owed computed, and why is it never stored?" }
+        - { lens: operate, ask: "What falls due next?" }
+        - { lens: inspect, ask: "Which transactions make up what is owed?" }
+      archetype: health-chain
+      blind: [ { what: "what falls due next", why: "bin/dmstale.py and bin/dmledger.py answer it on demand; it is not a metric" } ]
+
+design:
+  gate:     { patterns: [accent, boundary, flow, gate, node, signal, store, tag, warning], would_take: funnel, why_none: "a funnel counts the commits that arrive, those stopped at each check and those recorded; this garden exports no count of its hook's verdicts, and no monitor reads one" }
+  journal:  { patterns: [accent, external, flow, gate, node, signal, store, tag], would_take: roster, why_none: "a roster shows who writes, and how much, from a live series; nothing here measures the journal" }
+  merge:    { patterns: [accent, external, flow, gate, node, signal, store, tag], would_take: null, why_none: "a merge waiting for a person is a fact of the ledger, merge_open on the bean, which the gate reads; it is not a metric" }
+  mycelium: { patterns: [accent, boundary, flow, gate, node, ribbon, signal, store, warning], would_take: null, why_none: "what waits to be taken is a proposal file beside the gardens, not a metric" }
+  ledger:   { patterns: [accent, flow, gate, node, store, tag, warning], would_take: null, why_none: "what falls due next is answered on demand by bin/dmstale.py and bin/dmledger.py, not by a metric" }

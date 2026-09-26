@@ -17,8 +17,14 @@ paid how much of it, who bears it in what shares — and this tool reads the res
   CLAUSES    each clause still in force — not met, waived or broken, as the law's `expiry.unless` says — with when it
              falls due, when it falls due NEXT if it repeats (walked through the day in its own calendar, by the same
              function bin/dmstale.py warns with), the condition that brings it into force, and what is not yet known.
-             NOT YET READ: the payments recorded `under:` a clause are not matched to its occurrences, so an occurrence
-             paid, paid late or unpaid is not told apart — the next one is the calendar's, whatever was paid.
+             A clause whose condition is a reading that does not hold is listed apart, NOT YET in force. A permission
+             is printed as one, and never as owed.
+  OCCURRENCES  a clause that occurs `each` time a selection holds a member (24.0, N3): every occurrence, the amount owed
+             for it (`amount`, or `amount` as a share of the value at `of`, exactly), what transactions `settles` paid
+             of it, what is outstanding, and when it fell due (`falls_due`, walked by bin/dmstale.py). An occurrence
+             never leaves: a refund is its own clause, occurring for each refund.
+  ALLOWANCES a clause with `within` and `used_by`: how much of its amount the entries its reading holds have used in
+             the window ending today (bin/dmreckon.py, `used-within`).
 
 EVERY FIGURE IS EXACT. A count is a whole number or a decimal written as a string, no longer than a count may be
 (bin/dmunits.py, `DIGITS`), and it is read as a `fractions.Fraction`; every sum, share, balance and rate is one. This file holds no float, calls no rounding and has no
@@ -30,7 +36,7 @@ TWO CURRENCIES ARE NEVER ADDED. No factor joins two currencies (the `money` quan
 every position, debt and net is per currency. A transaction priced in one currency and `charged` in another shows the
 rate it implies — charged over amount, exactly — as a reading of the statement, never as a rate to reuse.
 
-WHAT IS NOT READ IS SAID. A transaction whose figures cannot be read exactly, a bean whose front matter does not parse,
+WHAT IS NOT READ IS SAID (manifesto: never-pathless). A transaction whose figures cannot be read exactly, a bean whose front matter does not parse,
 an entry a merge left as a disagreement for a person (`{conflict: [a, b]}`): each is left out of every total and named
 in a NOTE, so a total is never smaller than it looks without the reader being told why — under its agreement, and
 under --between too, where the net is then called PARTIAL, and an agreement whose party waits for a person to say who
@@ -79,11 +85,6 @@ def emit(line=''):
 # parts: paid_by.amount, borne: borne_by.share}`, after which these two names leave this file and a garden's own term
 # that bears in shares is read the same way.
 BEARING, SHARE = 'borne_by', 'share'
-# THE CONDITION THAT BRINGS A CLAUSE INTO FORCE, where that is not a date. A clause holding one has no due date to be
-# missing, so its `due` is not "not yet known". The law has no construct that says which attribute is the condition —
-# it says so only in the attribute's meaning — so it is named here, beside the bearer. PROPOSED, NOT RATIFIED (class G):
-# `expiry: {attr: due, …, condition: when}`, after which this name leaves this file too.
-CONDITION = 'when'
 
 
 class NotAGarden(Exception):
@@ -395,7 +396,7 @@ def _ref_bean(p, ref):
 def read_agreement(bid, fm, mterms, cterms, prefs, units):
     """Everything this tool reads of one agreement: its parties, its transactions per currency, its clauses."""
     ag = {'bean': bid, 'title': fm.get('title'), 'parties': {}, 'txs': [], 'owed': {}, 'position': {}, 'notes': [],
-          'clauses': [], 'disputed': [], 'left_out': [], 'maybe': set()}
+          'clauses': [], 'pending': [], 'disputed': [], 'left_out': [], 'maybe': set(), 'fm': fm}
     # WHAT IS LEFT OUT OF A TOTAL, and why — each (what, why) — so a net across agreements can say which of them it
     # could not read whole, and `maybe`: the beans a party in dispute may be, so an agreement between two parties is
     # not passed over in silence because who one of them is waits for a person.
@@ -471,7 +472,11 @@ def read_agreement(bid, fm, mterms, cterms, prefs, units):
                 # Listed apart, with what the sides differ on, so it is neither silently dropped nor silently owed.
                 ag['disputed'].append((term, k, sides))
             elif isinstance(e, dict) and not dmstale.silenced(e, decl):
-                ag['clauses'].append((term, k, e, sch))
+                try:
+                    holds = dmstale.condition_holds(fm, e, decl)
+                except dmstale.Unreckoned as why:
+                    holds, e = None, dict(e, **{'@note': str(why)})
+                (ag['pending'] if holds is False else ag['clauses']).append((term, k, e, sch))
     return ag
 
 
@@ -480,12 +485,17 @@ def _when(n, today):
     return 'today' if d == 0 else f"in {d} day{'s' if d != 1 else ''}" if d > 0 else f"{-d} day{'s' if d != -1 else ''} ago"
 
 
-def clause_lines(term, key, e, sch, units, systems, today):
+def clause_lines(term, key, e, sch, units, systems, today, fm=None):
     """A clause in words: its own sentence, then every attribute the law declares for it, read by its domain — who,
-    to whom, how much, when it falls due and next falls due, the condition — then what is not yet known."""
+    to whom, how much, when it falls due and next falls due, the condition, the window — then what is not yet known,
+    what its stance means, each occurrence, and how much of an allowance is used. The roles of `due`, the condition,
+    the relative position, the window and the stance are the law's (`expiry`), never names kept here."""
     form = dmform.attribute_form({}, sch)
     decl = sch.get('expiry') or {}
     due, rep = decl.get('attr'), decl.get('repeats')
+    cond, rel, lapse = decl.get('condition'), decl.get('relative'), decl.get('lapses')
+    stance = dmstale.stance_of(e, decl, sch)
+    occurs = e.get('each') is not None
     # ITS OWN SENTENCE FIRST: the attributes the law requires in prose (`what`), as its parties would say it.
     heading = [a for a, r in (sch.get('attrs') or {}).items()
                if form['attrs'].get(a, {}).get('required') and _in(r) == 'prose' and e.get(a) is not None]
@@ -494,16 +504,41 @@ def clause_lines(term, key, e, sch, units, systems, today):
     for a, rec in (sch.get('attrs') or {}).items():
         f = form['attrs'].get(a, {})
         v = e.get(a)
-        if a in heading or a == rep:
+        if a in heading or a == rep or a in ('each', 'of', 'used_by'):
             continue
         if 'aspect' in f:
             facts.append(dmstale.brief(v if v is not None else (f['aspect'] or {}).get('default') or '—'))
         elif v is None:
-            # A CLAUSE IN FORCE BY A CONDITION has no due date to be missing: "not yet known: due" read as if it had one.
-            if 'quantity' in f or (a == due and e.get(CONDITION) is None):
+            # A CLAUSE IN FORCE BY A CONDITION, BY A RELATIVE POSITION OR BY ITS OCCURRENCES has no due date to be missing.
+            if ('quantity' in f and stance in (None, 'required')) or \
+                    (a == due and e.get(cond) is None and e.get(rel) is None and not occurs and stance in (None, 'required')):
                 unknown.append(a)
-        elif a == CONDITION:
-            facts.append(f"in force when: \"{esc(v)}\"" if isinstance(v, str) else f"in force when: {dmstale.brief(v, 200, quote=True)}")
+        elif a == cond:
+            if isinstance(v, dict) and v.get('said') is not None:
+                facts.append(f"in force when: \"{esc(v['said'])}\"")
+            elif isinstance(v, dict) and v.get('selection') is not None:
+                facts.append(f"in force while the reading {esc(v['selection'])} holds")
+            else:
+                facts.append(f"in force when: {dmstale.brief(v, 200, quote=True)}")
+        elif a == rel and isinstance(v, dict):
+            text = f"falls due {dmstale.rel_words(v)}"
+            if v.get('from') != '@occurrence':
+                try:
+                    n = dmstale.relative_day(v, fm or {}, None, systems, units)
+                    text += f" — {dmstale.show_day(n)} ({_when(n, today)})"
+                except dmstale.Unreckoned as why:
+                    text += f" (not walked here: {why})"
+            facts.append(text)
+        elif a == lapse and isinstance(v, dict):
+            text = f"holds within {dmstale.extent_words(v)}"
+            try:
+                n = dmstale.day_of(v.get('to')) if v.get('to') is not None else None
+                text += f" — lapses after {dmstale.show_day(n)} ({_when(n, today)})" if n is not None else ''
+            except (ValueError, dmcal.NotByRule):
+                pass
+            facts.append(text)
+        elif a == 'by_role':
+            facts.append(f"by every party whose role is {esc(v)}")
         elif 'quantity' in f:
             c, why = read_count(v)
             facts.append(f"{a} " + (said(c, v.get('unit'), units) if c is not None else
@@ -517,12 +552,146 @@ def clause_lines(term, key, e, sch, units, systems, today):
             facts.append(f"{a} {dmstale.brief(v)}")
         elif 'recurrence' in f:
             facts.append(f"{a} {dmstale.describe(v)}")
+        elif 'extent' in f:
+            facts.append(f"{a} {dmstale.extent_words(v)}")
         else:
             facts.append(f"{a}: \"{esc(v)}\"")
     lines = [head, "        " + ' · '.join(facts)]
+    # WHAT ITS STANCE MEANS (N5): a permission is never owed, a prohibition never paid.
+    if stance == 'permitted':
+        lines.append("        a permission: the party may — nothing is owed by it")
+    elif stance == 'forbidden':
+        lines.append("        a prohibition: the party must not — nothing is owed by it")
+    elif stance == 'omissible':
+        lines.append("        the party need not — nothing is owed by it")
     if unknown:
         lines.append("        not yet known: " + ', '.join(unknown))
+    if e.get('@note'):
+        lines.append(f"        NOTE {esc(e['@note'])}")
+    if occurs:
+        lines += occurrence_lines(key, e, decl, units, systems, today, fm or {}, stance)
+    if e.get('within') is not None and e.get('used_by') is not None:
+        lines += allowance_lines(key, e, sch, units, fm or {}, today)
     return lines + [f"        NOTE {n}" for n in asides]
+
+
+def _share(q, units):
+    """(Fraction, None) when `q` is a ratio (percent, basis point) — the share of a whole it names, exactly — else
+    (None, its unit)."""
+    c, _why = read_count(q)
+    row = units.get(str(q.get('unit'))) if isinstance(q, dict) else None
+    if c is not None and isinstance(row, dict) and row.get('quantity') == 'ratio' and isinstance(row.get('factor'), (list, tuple)):
+        return c * Fraction(*row['factor']), None
+    return None, (q.get('unit') if isinstance(q, dict) else None)
+
+
+def settlements(fm, clause):
+    """{occurrence: [(amount Fraction | None, unit, transaction key)]} — what the bean's transactions `settles` of a
+    clause. A `settles` entry that states no amount, alone in its transaction, settles the transaction's whole."""
+    out = {}
+    for tk, t in (fm.get('transactions') or {}).items() if isinstance(fm.get('transactions'), dict) else []:
+        xs = [x for x in (t.get('settles') or []) if isinstance(x, dict)] if isinstance(t, dict) else []
+        for x in xs:
+            if x.get('clause') != clause:
+                continue
+            q = x.get('amount') if x.get('amount') is not None else (t.get('amount') if len(xs) == 1 else None)
+            c, _ = read_count(q) if isinstance(q, dict) else (None, '')
+            out.setdefault(str(x.get('occurrence')), []).append((c, q.get('unit') if isinstance(q, dict) else None, tk))
+    return out
+
+
+def occurrence_lines(key, e, decl, units, systems, today, fm, stance):
+    """Each occurrence of an `each` clause: when it entered, what is owed for it, what was settled, what is outstanding,
+    and when it fell due — each figure exact, each one not read said to be."""
+    import dmreckon
+    try:
+        occ = dmreckon.occurrences(fm.get('bean'), key, root=ROOT)
+    except dmreckon.Refused as why:
+        return [f"        NOTE its occurrences cannot be read: {esc(why)}"]
+    out = [f"        occurs for each member of {esc(e['each'])}: {len(occ)} occurrence{'s' if len(occ) != 1 else ''}"]
+    paid = settlements(fm, key)
+    rel = e.get(decl.get('relative')) if decl.get('relative') else None
+    share, per = _share(e.get('amount'), units) if isinstance(e.get('amount'), dict) else (None, None)
+    g = dmreckon.Garden(ROOT)
+    totals = {}
+    for member, at in occ:
+        bits = [f"entered {dmstale.brief(at)}" if at else "when it entered is not read"]
+        owed_, unit = None, None
+        if stance not in (None, 'required'):
+            pass                                         # a permission occurs, and owes nothing
+        elif share is not None and e.get('of'):
+            bean, _, path = member.partition(':')
+            node = g.fm.get(bean) or {}
+            if path:
+                found = dmreckon.walk(g, node, path, at=bean)
+                node = found[0][0] if len(found) == 1 else None
+            try:
+                vals = [x for x, _w in dmreckon.walk(g, node or {}, e['of'], at=bean)] if node is not None else []
+            except dmreckon.Refused as why:
+                vals, bits = [], bits + [f"`of` not read: {esc(why)}"]
+            c, _ = read_count(vals[0]) if len(vals) == 1 and isinstance(vals[0], dict) else (None, '')
+            if c is None:
+                bits.append(f"what it is a share of is not read ({len(vals)} value{'s' if len(vals) != 1 else ''} at `of`)")
+            else:
+                owed_, unit = c * share, str(vals[0].get('unit'))
+                bits.append(f"owed {said(owed_, unit, units)} ({dmstale.brief(e['amount'].get('count'))} "
+                            f"{dmstale.brief(e['amount'].get('unit'))} of {said(c, unit, units)})")
+        elif isinstance(e.get('amount'), dict) and share is None:
+            owed_, _w = read_count(e['amount'])
+            unit = per
+            if owed_ is not None:
+                bits.append(f"owed {said(owed_, unit, units)}")
+        got = paid.get(member, [])
+        if got:
+            known = [c for c, u, _t in got if c is not None and (unit is None or str(u) == unit)]
+            if len(known) != len(got):
+                bits.append("a settlement's amount is not read exactly (" + ', '.join(t for _c, _u, t in got) + ")")
+            else:
+                p = sum(known, Fraction(0))
+                bits.append(f"settled {said(p, unit, units) if unit else dmunits.show(p)} by "
+                            + ', '.join(esc(t) for _c, _u, t in got))
+                if owed_ is not None:
+                    bits.append(f"outstanding {said(owed_ - p, unit, units)}")
+                    totals[unit] = totals.get(unit, Fraction(0)) + owed_ - p
+        elif owed_ is not None:
+            bits.append(f"outstanding {said(owed_, unit, units)}")
+            totals[unit] = totals.get(unit, Fraction(0)) + owed_
+        if isinstance(rel, dict) and rel.get('from') == '@occurrence' and at:
+            try:
+                n = dmstale.relative_day(rel, fm, at, systems, units)
+                bits.append(f"{'fell' if n <= today else 'falls'} due {dmstale.show_day(n)} ({_when(n, today)})")
+            except dmstale.Unreckoned as why:
+                bits.append(f"when it falls due is not walked here: {esc(why)}")
+        out.append(f"          {esc(member)}  " + ' · '.join(bits))
+    for unit, x in sorted(totals.items()):
+        out.append(f"        outstanding in all: {said(x, unit, units)}")
+    return out
+
+
+def allowance_lines(key, e, sch, units, fm, today):
+    """`used X of <amount> within <window> ending <day>` (N9): read by bin/dmreckon.py over the entries `used_by`
+    holds, from the attribute their term declares an extent or a day — named by the law, never guessed."""
+    import dmreckon
+    try:
+        g = dmreckon.Garden(ROOT)
+        sel = (fm.get('selections') or {}).get(e['used_by']) if ':' not in str(e['used_by']) else None
+        term = str((sel or {}).get('steps', [{}])[0].get('entries') or '').split('.')[0] if sel else ''
+        attrs = ((law()[0].get(term) or {}).get('schema') or {}).get('attrs') or {}
+        cand = [a for a, r in attrs.items() if _in(r) == 'extent' or (isinstance(_in(r), dict) and
+                                                                     _in(r).get('type') in ('date', 'moment', 'date_or_moment'))]
+        if len(cand) != 1:
+            return [f"        NOTE how much of the allowance is used is not read: the entries of `{esc(term)}` hold "
+                    f"{len(cand)} extents or days ({', '.join(cand) or 'none'}), where one is read"]
+        day = datetime.date.fromordinal(today).isoformat()
+        v, _lines = dmreckon.used(fm.get('bean'), key, cand[0], at=day, root=ROOT)
+    except dmreckon.Refused as why:
+        return [f"        NOTE how much of the allowance is used is not read: {esc(why)}"]
+    amt, _ = read_count(e.get('amount')) if isinstance(e.get('amount'), dict) else (None, '')
+    of = f"{dmunits.show(amt)} {e['amount'].get('unit')}" if amt is not None else 'an amount not yet known'
+    used_ = f"{dmunits.show(v.v)} {v.unit}"
+    over = amt is not None and v.v > amt
+    return [f"        used {used_} of {of} within {dmstale.extent_words(e['within'])} ending {day}"
+            + (" — OVER the allowance" if over else '')]
 
 
 def due_words(attr, v, rec, systems, today):
@@ -561,6 +730,12 @@ def print_agreement(ag, units, systems, today):
     if ag['parties']:
         emit("   parties: " + ', '.join(f"{esc(k)}" + (f" [[{esc(b)}]]" if b and b != k else '')
                                        for k, b in sorted(ag['parties'].items())))
+    for pt in ('parties',):
+        for k, p in (ag['fm'].get(pt) or {}).items() if isinstance(ag['fm'].get(pt), dict) else []:
+            if isinstance(p, dict) and p.get('acting_for'):
+                emit(f"   {esc(k)} acts for {esc(p['acting_for'])}: what it does binds {esc(p['acting_for'])} (N13)")
+            if isinstance(p, dict) and p.get('declined'):
+                emit(f"   {esc(k)} declined on {dmstale.brief(p['declined'])} (N14)")
     for n in ag['notes']:
         emit(f"   NOTE {n}")
     if ag['txs']:
@@ -600,7 +775,12 @@ def print_agreement(ag, units, systems, today):
     if ag['clauses']:
         emit(f"   clauses in force ({len(ag['clauses'])}):")
         for term, key, e, sch in ag['clauses']:
-            for l in clause_lines(term, key, e, sch, units, systems, today):
+            for l in clause_lines(term, key, e, sch, units, systems, today, ag['fm']):
+                emit(l)
+    if ag['pending']:
+        emit(f"   clauses not yet in force ({len(ag['pending'])}) — the reading that brings each into force does not hold:")
+        for term, key, e, sch in ag['pending']:
+            for l in clause_lines(term, key, e, sch, units, systems, today, ag['fm']):
                 emit(l)
     if ag['disputed']:
         emit(f"   clauses in a merge conflict ({len(ag['disputed'])}) — neither in force nor met until a person chooses:")
