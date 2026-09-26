@@ -876,6 +876,13 @@ class Pages:
                     .replace('{except}', self.drawn_elsewhere(root)))
         if typ == 'drawn':
             return self.drawn(cid, page)
+        if typ == 'terms':
+            if cid != 'all':
+                raise Refused(f'{page}: terms:{cid} is not one this build knows; terms:all is')
+            self.used.add('terms:all')
+            sys.path.insert(0, self.src)
+            import terminology
+            return terminology.render(self.d.p('daftar'), self.release)
         raise Refused(f'{page}: marker type {typ!r} is not one this build knows')
 
     def drawn_release(self):

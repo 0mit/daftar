@@ -66,6 +66,7 @@ parts, changes).
    python3 test/money.py
    python3 test/peering.py
    python3 test/site.py
+   python3 test/terminology.py
    python3 test/public.py
    python3 test/docs.py
    python3 test/manifesto.py
