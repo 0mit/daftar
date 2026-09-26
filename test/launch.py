@@ -233,8 +233,8 @@ check("each request is preceded by its `send` pass, naming the party", len(_send
       and all(p["metadata"]["party"] == "lab" for p in _sends), _sends)
 check("each piece is one render pass, logged once: the task from `instructions`, the model's turns from `self`",
       len({p["metadata"]["seq"] for p in _render}) == len(_render)
-      and any(p["source"] == {"layer": "instructions"} for p in _render)
-      and sum(p["source"] == {"layer": "self"} for p in _render) == 4, _render)
+      and any(p["from"] == {"layer": "instructions"} for p in _render)
+      and sum(p["from"] == {"layer": "self"} for p in _render) == 4, _render)
 _last = _bodies[-1]
 check("the model's own earlier turns ride in the next request, by `composed-here`",
       [m["role"] for m in _last["messages"]][:3] == ["user", "assistant", "user"], _last["messages"][:3])
@@ -242,9 +242,9 @@ _log = run("git", "log", "-1", "--name-only", "--format=%s", cwd=G).stdout
 check("a save made by the model is committed in the session's own garden, its log claimed and the gate green",
       "the shop lease taken down" in _log and "captures/passes/lease-talk.jsonl" in _log
       and "beans/lease.md" in _log, _log)
-_take = [p for p in _ps if p["method"] == "take-down" and p["destination"].get("bean") == "lease"]
+_take = [p for p in _ps if p["method"] == "take-down" and p["to"].get("bean") == "lease"]
 check("the save traced each said value to the person's instructions, quoted as written",
-      len(_take) == 6 and all(p["source"] == {"layer": "instructions"} and p["metadata"]["quoted"] >= 1 for p in _take),
+      len(_take) == 6 and all(p["from"] == {"layer": "instructions"} and p["metadata"]["quoted"] >= 1 for p in _take),
       _take)
 check("...and the session's bean was given its pass_log", "captures/passes/lease-talk.jsonl" in read(
     "beans/session-lease-talk.md"))
@@ -255,11 +255,11 @@ sys.path.insert(0, os.path.join(G, "bin"))
 import dmlaunch                                            # noqa: E402
 _L = dmlaunch.Log(G, "captures/passes/lease-talk.jsonl")
 _since = _L.next_seq()
-_L.append({"layer": "instructions"}, {"layer": "request"}, "render", length=5, seq=_since, turn=9)
+_L.append({"layer": "instructions"}, {"layer": "request"}, "render", characters=5, seq=_since, turn=9)
 check("a body whose pieces and the log's render passes differ: refused",
-      dmlaunch.unlogged([{"seq": _since, "length": 5}, {"seq": _since + 1, "length": 3}], _L, _since)
-      and dmlaunch.unlogged([{"seq": _since, "length": 6}], _L, _since)
-      and not dmlaunch.unlogged([{"seq": _since, "length": 5}], _L, _since))
+      dmlaunch.unlogged([{"seq": _since, "characters": 5}, {"seq": _since + 1, "characters": 3}], _L, _since)
+      and dmlaunch.unlogged([{"seq": _since, "characters": 6}], _L, _since)
+      and not dmlaunch.unlogged([{"seq": _since, "characters": 5}], _L, _since))
 restore()
 
 # the chat wire, the same loop
@@ -287,7 +287,7 @@ check("a said value found only in a guide: refused by the save, before a word is
 restore()
 write("beans/lease.md", LEASE % "2026-06-30")
 rc, out = save("a lease whose day nobody gave")
-_h = [p for p in passes() if p["destination"] == {"bean": "lease", "at": "parties.bea.accepted"}]
+_h = [p for p in passes() if p["to"] == {"bean": "lease", "at": "parties.bea.accepted"}]
 check("a said value found nowhere: saved, HOPED, its pass logged with quoted 0",
       rc == 0 and "HOPED" in out and _h and _h[-1]["metadata"]["quoted"] == 0, out)
 restore()
@@ -295,13 +295,13 @@ rc, out = launch("record", "--keep", "meter-read", "--", PY, "-c", "print('the m
 _cap = [p for p in passes() if p["method"] == "capture"]
 check("record --keep: a run's output captured, its `capture` pass logged from the world",
       rc == 0 and os.path.exists(os.path.join(G, "captures", "runs", "meter-read.log")) and _cap
-      and _cap[-1]["source"] == {"layer": "world"} and len(_cap[-1]["metadata"]["oid"]) == 40, out)
+      and _cap[-1]["from"] == {"layer": "world"} and len(_cap[-1]["metadata"]["oid"]) == 40, out)
 write("beans/lease.md", LEASE % "2026-07-14")
 rc, out = save("a lease whose day a run observed")
-_rec = [p for p in passes() if p["destination"] == {"bean": "lease", "at": "parties.bea.accepted"}]
+_rec = [p for p in passes() if p["to"] == {"bean": "lease", "at": "parties.bea.accepted"}]
 check("...and a said value read from it is traced to it, by `record`, and committed",
       rc == 0 and _rec and _rec[-1]["method"] == "record"
-      and _rec[-1]["source"] == {"file": "captures/runs/meter-read.log"}, out)
+      and _rec[-1]["from"] == {"file": "captures/runs/meter-read.log"}, out)
 restore()
 
 # the trace on an invented table: where it refuses, against where a reader would
@@ -324,7 +324,7 @@ GOLD = [  # (value, [(layer, source, text)], skip, refused?)
 ]
 _tp = _fp = _fn = 0
 for v, ms, skip, want in GOLD:
-    t = dmpass.trace(FL, v, ORIGIN, [({"layer": l, "source": s}, x) for l, s, x in ms], skip=set(skip))
+    t = dmpass.trace(FL, v, ORIGIN, [({"layer": l, "from": s}, x) for l, s, x in ms], skip=set(skip))
     got = t.verdict == "refused"
     _tp, _fp, _fn = _tp + (got and want), _fp + (got and not want), _fn + (want and not got)
 _prec, _rec = _tp / max(1, _tp + _fp), _tp / max(1, _tp + _fn)

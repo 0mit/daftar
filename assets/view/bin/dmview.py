@@ -233,7 +233,7 @@ def ics(rest):
     refused = sorted({m for m, name, *_ in evs
                       if not host.may(user, m, positions=["title", "timing" if name in (vm.fm(m).get("timing") or {}) else "clauses"])[0]})
     entry = {"user": user, "actor": host.cfg["users"][user].get("bean"), "act": "pass", "view": key, "mode": "ics",
-             "pass": {"source": {"layer": "estate"}, "destination": {"layer": "remote"}, "method": "serve"}, "flow": "served",
+             "pass": {"from": {"layer": "estate"}, "to": {"layer": "remote"}, "method": "serve"}, "flow": "served",
              "members": sorted({m for m, *_ in evs}), "head": (host.head or "")[:12]}
     if refused:
         host.audit(dict(entry, granted=False, why="no read of %s" % ", ".join(refused)))

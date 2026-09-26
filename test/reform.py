@@ -166,12 +166,16 @@ check("...and NO COMMENT WAS LOST — a translator keeps what it was given, and 
       "both, always: a rental with no date is a guess" in new and "a provider is a being where one exists" in new, new[-1500:])
 out = gate()
 _errs = [l for l in out.split("\n") if l.startswith("ERROR")]
-check("the translated vocabulary is refused only for its two comments: the law carries no story (§9k, in every garden)",
-      len(_errs) == 2 and all("a comment in the law's front matter" in l for l in _errs), out[-900:])
+check("the translated vocabulary is refused only for its two comments (the law carries no story, §9k, in every garden) "
+      "and for `paid_by`, a ref in the garden's term and a payer's entries in the law's, whose sense is the garden's to judge",
+      len(_errs) == 3 and sum("a comment in the law's front matter" in l for l in _errs) == 2
+      and any("`paid_by` has a second sense" in l for l in _errs), out[-900:])
 new = re.sub(r"\s*# (both, always|a provider is)[^\n]*", "", new)
+new = new.replace("vacancies:\n", 'senses:\n  - { name: paid_by, sense: "who paid: the being, or each party and its amount" }\nvacancies:\n', 1)
 open(VOC, "w").write(new)
 out = gate()
-check("...and with its reasons taken out of the law, the translated vocabulary passes the gate", "0 error" in out, out[-900:])
+check("...and with its reasons taken out of the law and the sense judged, the translated vocabulary passes the gate",
+      "0 error" in out, out[-900:])
 r = run(sys.executable, os.path.join(G, "bin", "dmreform.py"), "--check", VOC, cwd=G)
 check("...and --check finds nothing left to translate", r.returncode == 0, r.stdout)
 r = run(sys.executable, os.path.join(G, "bin", "dmreform.py"), VOC, cwd=G)

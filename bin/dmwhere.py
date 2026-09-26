@@ -319,9 +319,9 @@ def before_ground(law, name, position, ground):
     go = law.systems[ground].get('datum')
     if not isinstance(o, dict) or not isinstance(go, dict) or o.get('system') != go.get('system'):
         raise ValueError(f"{name} and {ground} state no datums in one system: no crosswalk is computed")
-    sign = 1 if o.get('sense') == 'before' else -1
+    sign = 1 if o.get('direction') == 'before' else -1
     ce = year_of_datum(o) - sign * years                      # a year of the common era, as a number
-    return (year_of_datum(go) - ce) if go.get('sense') == 'before' else (ce - year_of_datum(go))
+    return (year_of_datum(go) - ce) if go.get('direction') == 'before' else (ce - year_of_datum(go))
 
 
 def _ma(r, k):

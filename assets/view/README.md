@@ -67,7 +67,7 @@ A value a shape reads is the key of a `view_bindings` entry on the page.
 | funnel | `funnels` (each stream's stages, stops and marks), `window`, `numbers`, `rollcall` |
 | race | `step_at` (0 before the first step, n at the n-th of the procedure it draws), `elapsed`, `eta`, `progress`, `deadline` (an extent) or `deadline_from`, `checkpoints`, `numbers`, `parts` |
 | health-chain | nothing of its own: a tile per bound element, and a blind spot for every part nothing measures |
-| table | the members of one reading (`selection`) or the rows of one series (`rows_of`, a `{bean, field}` pointer), one line each, and its `columns` (a field path of each member, or a channel and `at`) |
+| table | the members of one reading (`selection`) or the rows of one series (`series`, a `{bean, field}` pointer), one line each, and its `columns` (a field path of each member, or a channel and `at`) |
 
 Any shape may add `correlate`: values on one time axis (`traces`), how far back (`span`, an extent) and how often
 (`every`, a recurrence), a step value that shades every trace (`band`), and one value binned against another

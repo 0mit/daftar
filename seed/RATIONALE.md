@@ -381,6 +381,28 @@ where its name went, so a garden not yet upgraded is refused with the new word, 
 name retired at the crown and is still a bean's attribute, and `kind` is retired on a bean and is still a mapping's: a
 name retired in one place may be live in another, and a row's `at` says which.
 
+## senses
+
+ONE NAME, ONE SENSE, JUDGED ONCE (24.0). What an attribute name means is read from its domain, over every term the law,
+its profiles and a garden declare, by bin/dmform.py. A name two domains give — `at` a moment in one term and a file
+pattern in another — or a name spelled as a term or a table that takes none of it is a finding, and each finding is a
+row: the one sense its uses share, in words. A finding with no row is a second sense and is refused, so a new name is
+chosen where a new sense is meant; a row whose finding has gone is refused as stale, since no judgment outlives its
+cause. Structure answers first, and a row only where structure cannot: an attribute taking a row of the table it is
+named for (or of the one named for many of it, `view` of `views`), of the table whose key column carries its name, a
+key of that term, or the attribute of the term it names, is in its sense without a row; a value type on a dimension
+gives the dimension, so a day and a moment are one sense at two precisions; a domain nobody declared gives no sense to
+compare; and a retired name is retired at its own position, which no attribute inside a term is.
+
+The rows were a judgment kept in one test, over the one profile with an asset; the law now carries them, and the gate
+asks them of every garden. A garden judges its own term's finding in VOCAB.md, and a garden's term giving a name the
+law judged a domain the law's row did not judge is a finding of the garden's too: that row judged the domains it saw,
+and whether the new use is in its sense is the garden's to say, in its own row, or to rename. Where a finding
+was one sense under two names, the names were made one: a pass says `from` and `to`, as a flow row does; its metadata
+counts `characters`, and nothing counts lines; a datum's `direction` is before or after, as an order's is ascending or
+descending; a table of a view reads a `series`, which is what it points at; and a fixing position's `origin` is an
+origin, in the form every position's origin takes.
+
 ## provenance_record
 
 THE RECORD EVERY FACT CARRIES, DECLARED. The merge has read `from` since a generated fact first borrowed the
@@ -569,7 +591,7 @@ work. `crosswalk` says how a position in one is found in another: `computed` (by
 `table` (somebody publishes the correspondence), `observed` (it is looked up in what was seen),
 `none`. Neither system is the other's parent; that is what distinguishes this from `within`.
 datum             (24.0) what a position here is an offset FROM: `being`, the being the position names, or
-{system, at, sense: before | after}, a position of another system. Two systems over one ground whose
+{system, at, direction: before | after}, a position of another system. Two systems over one ground whose
 datums are in one system are crosswalked by computing.
 cells_in          (24.0) the table whose rows are its cells, `{registry, take}`; `overlay` a table whose rows win
 over them, each with its `source`; `boundaries_in` what fixes each cell's base (`fixing`).

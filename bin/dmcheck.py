@@ -3643,9 +3643,9 @@ def check_place_law():
             errors.append(f"{_w}: `datum: host` is a place a host defines, and this system's dimension is "
                           f"{_row.get('dimension')!r}")
         if _o is not None and _o not in ('being', 'host'):
-            if not isinstance(_o, dict) or set(_o) - {'system', 'at', 'sense'} or not _o.get('system') or not _o.get('at') \
-                    or _o.get('sense') not in ('before', 'after'):
-                errors.append(f"{_w}: `datum` is `being`, `host`, or {{system, at, sense: before | after}} — got {_o!r}")
+            if not isinstance(_o, dict) or set(_o) - {'system', 'at', 'direction'} or not _o.get('system') or not _o.get('at') \
+                    or _o.get('direction') not in ('before', 'after'):
+                errors.append(f"{_w}: `datum` is `being`, `host`, or {{system, at, direction: before | after}} — got {_o!r}")
             elif _o['system'] not in _systems():
                 errors.append(f"{_w}: datum.system names '{_o['system']}', which is no declared system")
             elif not law_match(_systems()[_o['system']][1].get('pattern') or '.*', str(_o['at'])):
@@ -3924,11 +3924,11 @@ def check_viewcap():
                 if _a.get('answered_by') and _a.get('every') is None:
                     errors.append(f"{_w}.actions[{_i}] names `answered_by` without `every` — a pressed action is answered "
                                   f"for by whoever presses it")
-            if _v.get('archetype') == 'table' and (_v.get('selection') is None) == (_v.get('rows_of') is None):
+            if _v.get('archetype') == 'table' and (_v.get('selection') is None) == (_v.get('series') is None):
                 errors.append(f"{_w}: a table lists the members of one reading (`selection`) or the rows of one series "
-                              f"(`rows_of`) — {'neither' if _v.get('selection') is None else 'both'} given")
-            for _x in ('selection', 'rows_of', 'columns', 'writes', 'renders', 'feed'):
-                if _x in ('selection', 'rows_of', 'columns') and _v.get(_x) is not None and _v.get('archetype') != 'table':
+                              f"(`series`) — {'neither' if _v.get('selection') is None else 'both'} given")
+            for _x in ('selection', 'series', 'columns', 'writes', 'renders', 'feed'):
+                if _x in ('selection', 'series', 'columns') and _v.get(_x) is not None and _v.get('archetype') != 'table':
                     errors.append(f"{_w}: `{_x}` belongs to a table, and this drawing's shape is {_v.get('archetype')}")
             for _i, _e in enumerate(_v.get('writes') or []):
                 if not isinstance(_e, dict):
@@ -4022,6 +4022,22 @@ def check_garden_law_prose():
     for _k in _bad:
         warns.append(f"{_why}: `## {_k}` explains something VOCAB.md no longer says — a reason outlives its law only "
                       f"as journal: move it there, or name what it explains" + _rule('flows', 'story-in-law'))
+
+
+def check_senses():
+    """ONE SENSE PER NAME (24.0; `senses`), over every term in force — the law's, its profiles', this garden's own. A name
+    two domains give two senses, or one spelled as a term or a table that takes none of it, is judged by a row of
+    `senses` or refused. A garden judges its own term's finding in VOCAB.md's `senses`, and so judges the use a term of
+    its own makes of a name the law judged in a domain the law's row does not; a row there that nothing of the garden's
+    calls for is refused as stale. The law's rows are judged stale over every profile, by the release. Found by
+    bin/dmform.py, the one reader of an attribute's domain."""
+    _own = list(vocab_fm.get('senses') or [])
+    _law = list(std_fm.get('terms') or []) + [t for _v in (std_fm.get('profiles') or {}).values() if isinstance(_v, dict)
+                                              for t in _v.get('terms') or []]
+    _errs, _judged = dmform.sense_verdicts(list(TERMS.values()), std_fm, list(std_fm.get('senses') or []) + _own, _own,
+                                           _law)
+    for _e in _errs:
+        errors.append(_e + _rule('senses', 'senses'))
 
 
 def check_words_placed():
@@ -4164,15 +4180,15 @@ def check_pass_logs():
                 errors.append(f"{_at}: not one JSON object — a log holds one pass to a line" + _rule('pass_form.log'))
                 continue
             _bad = FLOWS.pass_problems(_pass)
-            _src = FLOWS.endpoint(_pass.get('source'), _layer) if isinstance(_pass, dict) else None
-            _dst = FLOWS.endpoint(_pass.get('destination'), _layer) if isinstance(_pass, dict) else None
-            _bad += [f"{w}: {e}" for w, e in (('source', _src), ('destination', _dst))
+            _src = FLOWS.endpoint(_pass.get('from'), _layer) if isinstance(_pass, dict) else None
+            _dst = FLOWS.endpoint(_pass.get('to'), _layer) if isinstance(_pass, dict) else None
+            _bad += [f"{w}: {e}" for w, e in (('from', _src), ('to', _dst))
                      if isinstance(e, str) and e not in FLOWS.layers]     # a layer, or why it is none
             if _bad:
                 errors.append(f"{_at}: not a pass — {'; '.join(_bad)}" + _rule('pass_form', 'pass_metadata'))
                 continue
             _md = _pass.get('metadata') or {}
-            _keeper = LAYER_MAP.keeper_of(_pass['source']['file']) if 'file' in _pass['source'] and LAYER_MAP else None
+            _keeper = LAYER_MAP.keeper_of(_pass['from']['file']) if 'file' in _pass['from'] and LAYER_MAP else None
             _d = FLOWS.decide(_src, _dst, _pass['method'], 'release' if _keeper == 'release' else None, _md.get('party'))
             if not _d.granted:
                 _why = next((r.get('why') for r in FLOWS.rows if r.get('flow') in _d.rows), None)
@@ -4182,7 +4198,7 @@ def check_pass_logs():
                               f" ({', '.join(_d.rows) or 'closed'})" + (f" — {_why}" if _why else '')
                               + _rule('flows', *(_d.rows or ('flows',))))
                 continue
-            _granted.append((_src, _pass['destination']))
+            _granted.append((_src, _pass['to']))
     # what the claim owes, of every bean the commit stages
     _into = {(str(d.get('bean')), str(d.get('at'))) for _s, d in _granted if 'at' in d}
     _from_person = {str(d.get('bean')) for s, d in _granted if s in ('words', 'instructions') and 'bean' in d}
@@ -4195,7 +4211,7 @@ def check_pass_logs():
             if (_base, _path) not in _into:
                 errors.append(f"{_p}: {_path} = {_v[:60]} is a said value this claimed commit adds, and no granted pass "
                               f"in its log has it for destination — a said value is someone's words: log the pass "
-                              f"{{source, destination: {{bean: {_base}, at: {_path}}}, method, metadata}}"
+                              f"{{from, to: {{bean: {_base}, at: {_path}}}, method, metadata}}"
                               + _rule('pass_form.claim', 'flows'))
         _key = lambda r: (r.get('src'), r.get('by'), str(r.get('as_of')))
         _was = {_key(r) for _w, r in _stamps_of(_old)}
@@ -4208,6 +4224,7 @@ def check_pass_logs():
 
 GATE_ENTRY = ()
 GATE_PLIES = ((check_flows, "the flow law, and a garden's own rows of it — read before anything is judged by it"),
+              (check_senses, "one sense per name: every finding over the terms in force is judged, and no judgment is stale"),
               (check_garden_law_prose, "§9k in every garden: VOCAB.md carries no story; a reason beside it orphaned is shown"),
               (check_words_placed, "`words` is placed only on a bean a person's record carries — needs `docs`"),
               (check_pointers, "a value's pointer resolves and its direction is granted — needs `LAYER_MAP` and `ALL_FM`"),

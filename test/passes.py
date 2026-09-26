@@ -123,10 +123,10 @@ check("a pointer is judged by the row nearest the value, whatever its method: a 
       and F.direction(dmpass.ESTATE, (dmpass.ESTATE, {'act': 'derived'})).granted)
 
 # the pass record
-_ok = {'source': {'file': 'words/offer.md'}, 'destination': {'bean': 'lease', 'at': 'parties.bea.accepted'},
-       'method': 'take-down', 'metadata': {'form': F.forms[0] if F.forms else None, 'length': 120,
+_ok = {'from': {'file': 'words/offer.md'}, 'to': {'bean': 'lease', 'at': 'parties.bea.accepted'},
+       'method': 'take-down', 'metadata': {'form': F.forms[0] if F.forms else None, 'characters': 120,
                                            'oid': '0' * 40, 'turn': 3}}
-check("a pass is {source, destination, method, metadata}, its metadata lengths, locators, object ids and the words' form",
+check("a pass is {from, to, method, metadata}, its metadata counts, locators, object ids and the words' form",
       F.forms and not F.pass_problems(_ok), (F.forms, F.pass_problems(_ok)))
 check("a pass that carries the material, or a key beside the four, is not a pass",
       F.pass_problems(dict(_ok, metadata={'text': 'the shop is let from May'}))
@@ -376,7 +376,7 @@ SAID = ["parties.bea.who", "parties.bea.accepted", "parties.keeper.who", "partie
 
 
 def pass_(src, at, method="take-down"):
-    return json.dumps({"source": src, "destination": {"bean": "lease", "at": at}, "method": method,
+    return json.dumps({"from": src, "to": {"bean": "lease", "at": at}, "method": method,
                        "metadata": {"form": "written"} if method == "take-down" else {}})
 
 
@@ -405,7 +405,7 @@ rc, out = claim([pass_({"bean": "keeper"}, p, "edit") for p in SAID])
 check("a claimed commit whose person's record has no pass from words or instructions: refused",
       rc != 0 and "has no pass from `words` or `instructions`" in out, out)
 restore()
-rc, out = claim([json.dumps({"source": WORDS, "destination": {"bean": "lease", "at": SAID[1]}, "method": "take-down",
+rc, out = claim([json.dumps({"from": WORDS, "to": {"bean": "lease", "at": SAID[1]}, "method": "take-down",
                              "metadata": {"text": "let from the first of May"}})] + [pass_(WORDS, p) for p in SAID])
 check("a pass that carries the material into the log: refused", rc != 0 and "not a pass" in out, out)
 restore()

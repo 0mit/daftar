@@ -36,6 +36,8 @@ TERM = """  - term: works
         seats: { in: { quantity: number }, meaning: "how many seats" }
         note:  { in: prose, meaning: "a note" }
     merge: { cardinality: multi, order: by-key }
+senses:
+  - { name: span, sense: "how far it reaches: a length measured, or the region of a line a series covers" }
 """
 V = os.path.join(G, "VOCAB.md")
 VOCAB0 = open(V, encoding="utf-8").read()

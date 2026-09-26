@@ -130,6 +130,33 @@ retired:
   - { name: god,           at: crown,    instead: "`theos`, θεός: the root, still nameable on no bean" }
   - { name: nature,        at: crown,    instead: "`physis`, φύσις: the branch for a being of the nature soma" }
   - { name: love,          at: crown,    instead: "`agape`, ἀγάπη: the branch for a being of the nature empsychon" }
+# == ONE SENSE PER NAME: a name the law uses in more than one domain, and the one sense its uses share ==
+senses:
+  - { name: at,            sense: "a position — on a line, in a system or in a file — written in the form its place takes" }
+  - { name: by,            sense: "who or what does it or did it: a person, a party, an instrument, a tool" }
+  - { name: code,          sense: "a code of a published scheme, or the entry naming the scheme it is a code of" }
+  - { name: from,          sense: "where something starts: the position, system or field it is read or counted from" }
+  - { name: holds,         sense: "what it holds — its contents, or the one place they are kept" }
+  - { name: host,          sense: "the host a thing runs on or was read at" }
+  - { name: id,            sense: "the name that identifies one of its kind once among its siblings: a bean's, a mapping's, a step's, an item's" }
+  - { name: is,            sense: "what it is, as a classification: a scheme's process, a level of sensitivity" }
+  - { name: kind,          sense: "which kind it is, from the list its place gives" }
+  - { name: notes,         sense: "remarks beside it, in words or as entries of words" }
+  - { name: of,            sense: "what it is of or concerns: a part, a copied thing, an amount it is a share of" }
+  - { name: over,          sense: "what it is over or concerns: the beings of an agreement or a grant, the entries of a hearing" }
+  - { name: path,          sense: "a way to one thing through a tree: of fields, or of files" }
+  - { name: reason,        sense: "why, as one of a closed set of reasons" }
+  - { name: rel,           sense: "the relation one thing has to another, by name" }
+  - { name: role,          sense: "the part it plays, from the list its place gives" }
+  - { name: series,        sense: "a being's series of positions, or a pointer to one" }
+  - { name: staleness_key, sense: "the value that, when it moves, makes what is kept stale" }
+  - { name: steps,         sense: "the ordered steps it performs: a mapping's walk, a selection's operations" }
+  - { name: title,         sense: "prose: the name a reader sees, as a bean's `title` is" }
+  - { name: to,            sense: "where or whom toward: a party, a treatment's destination, the next step" }
+  - { name: tool,          sense: "the executable a host runs, named by the host, as a mapping's `tool` is" }
+  - { name: when,          sense: "the condition under which it holds or is taken" }
+  - { name: who,           sense: "the person, party or being meant" }
+  - { name: within,        sense: "the bounds it lies within: a place in a system, a window of time" }
 # == PROVENANCE: the record every fact carries, declared ==
 provenance_record:
   attrs: [src, by, as_of, from, garden, via]
@@ -852,7 +879,7 @@ anchor_systems:
     dimension: time
     neighbours: metered
     restrictions: { lines: 1, metered: time }
-    datum: { system: gregorian-civil, at: "1950-01-01", sense: before }
+    datum: { system: gregorian-civil, at: "1950-01-01", direction: before }
     unit_symbols: { a: annus, ka: kilo-annus, Ma: mega-annus, Ga: giga-annus }
     meaning: "a time BEFORE THE PRESENT, where the present is 1950, the year radiocarbon ages are reported against: beyond every calendar's reach"
     pattern: '^bp1950:\d+(\.\d+)?(a|ka|Ma|Ga)$'
@@ -866,7 +893,7 @@ anchor_systems:
     crosswalk: computed
     neighbours: metered
     restrictions: { lines: 1, metered: time }
-    datum: { system: gregorian-civil, at: "2000-01-01", sense: before }
+    datum: { system: gregorian-civil, at: "2000-01-01", direction: before }
     unit_symbols: { a: annus, ka: kilo-annus, Ma: mega-annus, Ga: giga-annus }
     meaning: "a time before 2000, the zero an ice-core chronology counts from"
     pattern: '^b2k:\d+(\.\d+)?(a|ka|Ma|Ga)$'
@@ -1786,17 +1813,16 @@ flows:
   - { flow: served, from: estate, to: remote, method: serve, grant: granted,
       why: "a page or an action is served only to a viewer a grant opens it to, asked before each one" }
 pass_form:
-  source:      "where material came from: `{file: <path>}` (its layer is the map's), `{bean: <id>, at?: <dotted path>}` (the estate), `{garden: <id>}` (another garden), or `{layer: <a layer that holds no files>}`"
-  destination: "where it went, in the same forms; a value is `{bean, at}`, and its position's origin is what the flow law judges"
+  from:        "where material came from, as a row's `from` names a layer: `{file: <path>}` (its layer is the map's), `{bean: <id>, at?: <dotted path>}` (the estate), `{garden: <id>}` (another garden), or `{layer: <a layer that holds no files>}`"
+  to:          "where it went, in the same forms, as a row's `to`; a value is `{bean, at}`, and its position's origin is what the flow law judges"
   method:      "a row of `methods`"
-  metadata:    "only lengths, locators and git object ids, from `pass_metadata`: never the material — a day or an amount is not hidden by a hash, and is in the bean anyway"
+  metadata:    "only counts, locators and git object ids, from `pass_metadata`: never the material — a day or an amount is not hidden by a hash, and is in the bean anyway"
   keys:        "a pass holds these four and nothing else"
   log:         "a session's passes, one JSON object to a line, in a file under `captures/passes/` that a session bean's `pass_log` names; it only grows"
-  claim:       "a commit that stages a change to a pass log CLAIMS its session, and owes: the log extends the copy at HEAD; every pass it adds is one the flow law grants; every said value the commit adds to a bean has a pass whose destination is that value; and a record `asserted-by-human` it adds has a pass from `words` or `instructions` into its bean. A commit that claims nothing owes none of it, and for it those rows are `hoped`"
+  claim:       "a commit that stages a change to a pass log CLAIMS its session, and owes: the log extends the copy at HEAD; every pass it adds is one the flow law grants; every said value the commit adds to a bean has a pass whose `to` is that value; and a record `asserted-by-human` it adds has a pass from `words` or `instructions` into its bean. A commit that claims nothing owes none of it, and for it those rows are `hoped`"
   pointer:     "a value's own source, where one is kept: `provenance_of.<path>[].at` beside the value it names, or a record's `from[].at`, in the forms `provenance_record` gives. Where present it must resolve in the tree committed, and the flow law judges its layer against the value's origin; a value with none is `unrecorded`, and nothing is guessed for it"
 pass_metadata:
-  - { key: length, in: count,  meaning: "how long the material was, in characters" }
-  - { key: lines,  in: count,  meaning: "how many lines it held" }
+  - { key: characters, in: count, meaning: "how long the material was, counted in characters" }
   - { key: seq,    in: count,  meaning: "the pass's place in its session, where the log's order is not enough" }
   - { key: turn,   in: count,  meaning: "the turn of the session it happened in" }
   - { key: oid,    in: oid,    meaning: "the git object id of the material, as `git hash-object` gives it" }
@@ -1847,8 +1873,8 @@ aspects:
     figure: opposition
     poles: [marked, declared]
     positions:
-      - { position: marked,   complement: declared, source: { act: read, nature: soma }, meaning: "fixed by a MARK in a being — a point in a rock section, a monument, a benchmark. The mark is the boundary; its value on the line is a reading of the mark, and a better reading moves the value and never the boundary" }
-      - { position: declared, complement: marked,   source: { act: said, nature: lekton }, meaning: "fixed by stating its value on the line: nothing in the world marks it, and a place named beside it is a reference, not the definition" }
+      - { position: marked,   complement: declared, origin: { act: read, nature: soma }, meaning: "fixed by a MARK in a being — a point in a rock section, a monument, a benchmark. The mark is the boundary; its value on the line is a reading of the mark, and a better reading moves the value and never the boundary" }
+      - { position: declared, complement: marked,   origin: { act: said, nature: lekton }, meaning: "fixed by stating its value on the line: nothing in the world marks it, and a place named beside it is a reference, not the definition" }
 
   - aspect: time
     meaning: "when: a position on the one line everything that happens is ordered along"
@@ -2402,7 +2428,7 @@ profiles:
           window:    { in: prose, meaning: "funnel: the span its counts cover, in words" }
           rollcall:  { in: { entries: { label: { required: true, in: prose }, per_item: { required: true, in: { key_of: view_bindings } }, idle: { in: { entries: { member: { required: true, in: any } } } }, notes: { in: { prose: named } } } }, meaning: "funnel: the parts called by name, each up or down, and the items known to carry nothing" }
           selection: { in: { key_of: selections }, meaning: "table: the members it lists, one line each — a reading of the page's own `selections`" }
-          rows_of:   { in: { pointer: bean_field_pointer }, meaning: "table: or the rows of a being's `series` (`{bean, field}`), one line per position" }
+          series:    { in: { pointer: bean_field_pointer }, meaning: "table: or the positions of one of a being's `series` (`{bean, field}`), one line each" }
           columns:   { in: { entries: { label: { required: true, in: prose }, path: { required: true, in: { type: field_path }, meaning: "a path in each member, or a channel of the series" } } }, meaning: "table: a column per path" }
           writes:    { in: { entries: { term: { required: true, in: { pattern: '^[a-z][a-z0-9_]*$' } }, attrs: { in: { entries: { attr: { required: true, in: { type: kebab } } } } } } }, meaning: "an entry form for those attributes of that term, built from the law's form of it, saved through bin/dmsave.py as the host with the person in `<who>`, after `write` is granted them; the gate judges it as any other commit" }
           renders:   { in: { entries: { template: { required: true, in: { pointer: bean_field_pointer } }, selection: { in: { key_of: selections } } } }, meaning: "a template of the garden (`file:<path>`) rendered from each member of a reading (`selection`; absent, the being drawn) into a document; once kept, a `document` bean with its `content_hash`" }

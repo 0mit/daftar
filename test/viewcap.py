@@ -319,7 +319,7 @@ check("dmview check: the page and its drawings agree — a table, a funnel of re
 
 # ---------------------------------------------------------------- the ply: what the gate refuses of a page's asks
 _bad = PAGE.replace(f", answered_by: {BOSUN} }}", " }", 1) \
-           .replace("    selection: outings\n    columns:", "    selection: outings\n    rows_of: { bean: club-page, field: none }\n    columns:", 1) \
+           .replace("    selection: outings\n    columns:", "    selection: outings\n    series: { bean: club-page, field: none }\n    columns:", 1) \
            .replace("{ attr: value } ]", "{ attr: value }, { attr: colour } ]", 1) \
            .replace("    funnels:\n", "    selection: outings\n    funnels:\n", 1)
 C.put("beans/club-page.md", _bad)
@@ -448,7 +448,7 @@ check("V-6 ics: a VEVENT per outing, at its timing in UTC, with a VALARM a day b
 _last = [json.loads(l) for l in open(_log, encoding="utf-8").read().splitlines()][-1]
 check("V-6 ...audited as a pass of the flow law's row `served` — out of the estate to a remote viewer, served — granted",
       _last.get("mode") == "ics" and _last.get("flow") == "served"
-      and _last.get("pass") == {"source": {"layer": "estate"}, "destination": {"layer": "remote"}, "method": "serve"}
+      and _last.get("pass") == {"from": {"layer": "estate"}, "to": {"layer": "remote"}, "method": "serve"}
       and _last.get("granted") is True and _last.get("actor") == BOSUN, _last)
 os.remove(_ics)
 _o, _rc = C.dmview("ics", "outings", "--out", _ics, "--config", CFG, "--user", "guest")
@@ -665,7 +665,7 @@ views:
     questions: [ { lens: operate, ask: "Which suite grew slower?" } ]
     archetype: table
     blind: [ { what: "runs that were not closing runs", why: "they are held off git" } ]
-    rows_of: { bean: daftar, field: suite-seconds }
+    series: { bean: daftar, field: suite-seconds }
     columns:
       - { label: at, path: at }
 """ + "".join("      - { label: %s, path: %s }\n" % (s, s) for s, _d, _v in RUN) + """view_bindings:

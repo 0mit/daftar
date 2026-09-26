@@ -293,89 +293,24 @@ check("...and it sees one: a profile's own list of sources, keyed by a technolog
       bool(_probe["x_sources"] & _probe.get("technology", set())), sorted(_probe.get("technology", set()))[:5])
 
 
-# 4. NO NAME IS GIVEN A SECOND SENSE. The names the law uses, read from it: its terms, its tables, the rows of the tables
-# a name is looked up in, the names it retired, and the sense each attribute name has in every term outside the profile.
-def senses_of(terms):
-    out = {}
-
-    def dom(rec):
-        f, r = dmform._domain(rec.get("in")) if isinstance(rec, dict) else (None, None)
-        return ("registry:" + str(r.get("registry") or r.get("registry_from"))) if f == "registry" else \
-               ("type:" + str(r)) if f == "type" else str(f)
-
-    def walk(attrs, where):
-        for n, rec in (attrs or {}).items():
-            out.setdefault(str(n), set()).add((dom(rec), where))
-            i = rec.get("in") if isinstance(rec, dict) else None
-            if isinstance(i, dict) and isinstance(i.get("entries"), dict):
-                walk(i["entries"], where)
-    for t in terms:
-        walk((t.get("schema") or {}).get("attrs"), t["term"])
-    return out
-
-
-def law_names(except_profile):
-    names = {str(t["term"]) for t in _core + [t for q in PROFILES if q != except_profile for t in terms_of(q)]}
-    names |= {k for k, v in LAW.items() if isinstance(v, list) and v and isinstance(v[0], dict)}
-    for reg, col in (("quantities", "quantity"), ("units", "unit"), ("aspects", "aspect"), ("figures", "figure"),
-                     ("gene", "genos"), ("roles", "role")):
-        names |= {str(r.get(col)) for r in LAW.get(reg) or [] if isinstance(r, dict)}
-    names |= {str(r.get("name")) for r in LAW.get("retired") or [] if isinstance(r, dict)}
-    return names
-
-
-# A NAME USED IN THE LAW'S OWN SENSE, and why — the ratifier's judgment, written down. Found by reading the law; listed
-# here only once judged, and a judgment the law no longer calls for fails as stale.
-SAME_SENSE = {
-    "title": "prose: the name a reader sees, as a bean's `title` is",
-    "tool": "the executable a host runs, named by the host, as a mapping's `tool` is",
-}
-
-
-def findings(p):
-    other = senses_of(_core + [t for q in PROFILES if q != p for t in terms_of(q)])
-    names = law_names(p)
-    mine = senses_of(terms_of(p))
-    out = []
-    for t in terms_of(p):
-        if t["term"] in names:
-            out.append((t["term"], "a term the law already declares"))
-    for n, ss in sorted(mine.items()):
-        doms = {d for d, _w in ss}
-        lawdoms = {d for d, _w in other.get(n, set())}
-        taken = {d[len("registry:"):] for d in doms if d.startswith("registry:")}
-        if n in names and n not in other:
-            # a name the law uses for a table, a term or a row: the same sense only where this attribute takes a row of
-            # that very table, or of the table whose rows the name is the key of
-            if not any(n == r or n == key_column(REG_ROWS.get(r, [])) for r in taken):
-                out.append((n, "a name the law uses (a term, a table or a row)"))
-        elif lawdoms and not doms <= lawdoms:
-            out.append((n, f"the law has it as {sorted(lawdoms)}, the profile as {sorted(doms)}"))
-    return out
-
-
-REG_ROWS = {k: v for k, v in LAW.items() if isinstance(v, list)}
-for rf in LAW.get("registry_files") or []:
-    REG_ROWS.setdefault(rf["registry"], [{rf.get("key"): None}])
-_bad4, _judged = [], set()
-for _p in ASSETED:
-    for _n, _why in findings(_p):
-        if _n in SAME_SENSE:
-            _judged.add(_n)
-        else:
-            _bad4.append(f"{_p}.{_n}: {_why}")
-check("4. no name a profile with an asset adds is a name the law gives another sense", not _bad4, _bad4)
-check("...and every name judged to be used in the law's own sense is still a finding: no judgment outlives its cause",
-      _judged == set(SAME_SENSE) if ASSETED else True, sorted(set(SAME_SENSE) - _judged))
-_probe_terms = [{"term": "x_page", "schema": {"attrs": {"level": {"in": "prose"}, "of": {"in": "bean_id"},
-                                                         "source": {"in": {"registry": "x_sources", "take": "x"}}}}}]
-_saved = PROFILES.get("x")
-PROFILES["x"] = {"terms": _probe_terms}
-_pf = [n for n, _w in findings("x")]
-if _saved is None:
-    del PROFILES["x"]
-check("...and it sees one: `level` (a quantity), `of` (prose in the law) and `source` (prose in the law) are found",
-      set(_pf) >= {"level", "of", "source"}, _pf)
+# 4. NO NAME IS GIVEN A SECOND SENSE. Asked of bin/dmform.py, the one reader of an attribute's domain, over every term the
+# law declares, each profile's included: a finding is judged by a row of `senses`, and a row no finding calls for is stale.
+_all_terms = _core + [t for q in PROFILES for t in terms_of(q)]
+_bad4, _judged4 = dmform.sense_verdicts(_all_terms, LAW, LAW.get("senses"))
+check("4. every name the law's terms give two domains, or spell as a term or a table, is judged by a row of `senses`, "
+      "and no row outlives its finding", not _bad4, _bad4)
+_probe_terms = [{"term": "x_page", "schema": {"attrs": {"genos": {"in": "prose"}, "standing": {"in": {"type": "kebab"}},
+                                                         "technology": {"in": {"registry": "technology", "take": "technology"}}}}}]
+_probe_rows = list(LAW.get("senses") or []) + [{"name": "x-never", "sense": "a sense nothing calls for"}, {"name": "at", "sense": "twice"}]
+_pe, _pj = dmform.sense_verdicts(_all_terms + _probe_terms, LAW, _probe_rows)
+_pe = [e for e in _pe if e not in _bad4]
+check("...and it sees one: `genos` and `standing` spelled as terms they do not take are second senses, `technology` "
+      "taking its own table is not, a row nothing calls for is stale, and a name judged twice is refused",
+      sum("`genos` has a second sense" in e or "`standing` has a second sense" in e for e in _pe) == 2
+      and not any("`technology`" in e for e in _pe) and any("`x-never` is judged, and no longer" in e for e in _pe)
+      and any("`at` is judged twice" in e for e in _pe), _pe)
+check("...and every row of `senses` judges a finding: the judged are the rows", sorted(_judged4) ==
+      sorted(r["name"] for r in LAW.get("senses") or []), sorted(_judged4))
 
 # 5. NO SCHEMA-LANGUAGE KEY AND NO DOMAIN OF ITS OWN.
 _lang = set(LAW.get("schema_language") or {})

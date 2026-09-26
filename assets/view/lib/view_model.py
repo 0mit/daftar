@@ -628,7 +628,7 @@ def table(v):
         for m in members(v["selection"]):
             out["rows"].append({"bean": m, "cells": [_cell(dmreckon.path_values(fm(m), c["path"], root=ROOT)) for c in cols]})
         return out
-    p = v.get("rows_of")
+    p = v.get("series")
     bean, key = (p.get("bean"), p.get("field")) if isinstance(p, dict) else (PAGE, str(p).partition(".")[2])
     out["reads"] = ["series"]
     import dmseq

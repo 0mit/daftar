@@ -300,8 +300,8 @@ refused("LAW a time system's unit symbol names a unit of duration", "VOCAB.md",
         "      restrictions: { lines: 1, order: partial }\n      cells_in: { registry: quarry-stages",
         "      restrictions: { lines: 1, order: partial }\n      unit_symbols: { m: metre }\n      cells_in: { registry: quarry-stages",
         "unit_symbols.m names 'metre'")
-refused("...a datum is `being` or {system, at, sense}", "VOCAB.md",
-        "      cells_in: { registry: quarry-stages", "      datum: { system: gregorian-civil, at: \"1950\", sense: under }\n"
+refused("...a datum is `being` or {system, at, direction}", "VOCAB.md",
+        "      cells_in: { registry: quarry-stages", "      datum: { system: gregorian-civil, at: \"1950\", direction: under }\n"
         "      cells_in: { registry: quarry-stages", "`datum` is `being`")
 
 refused("...`datum: host` is a place a host defines, never a time", "VOCAB.md",

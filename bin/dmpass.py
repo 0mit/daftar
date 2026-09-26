@@ -32,7 +32,7 @@ TWO MORE QUESTIONS OF A BEAN (24.0), answered here and by no copy: `sensitivity(
 person, derived from what it holds and never stored — and `may(actor, act, bean)` — whether a grant opens it, closed
 by default.
 
-AND THE FLOW LAW (24.0): `Flows.decide(source, destination, method)` — whether a pass is granted, closed by default —
+AND THE FLOW LAW (24.0): `Flows.decide(from, to, method)` — whether a pass is granted, closed by default —
 and `--flows`, each row with its guard, computed from the `GUARDS` the tools declare and the hooks that run them.
 
 AND LEG 2 (24.0): `trace` — where a said value the save is about to commit came from, through every relay to its
@@ -587,8 +587,8 @@ class Origins:
                     out.append(('law', f"system_shape.sources.{word}.{k}: {self.invalid(o)}"))
         for a in (self.law.get('aspects') or []) if isinstance(self.law.get('aspects'), list) else []:
             for p in (a.get('positions') or []) if isinstance(a, dict) else []:
-                if isinstance(p, dict) and p.get('source') is not None and self.invalid(p['source']):
-                    out.append(('law', f"aspects[{a.get('aspect')}].{p.get('position')}.source: {self.invalid(p['source'])}"))
+                if isinstance(p, dict) and p.get('origin') is not None and self.invalid(p['origin']):
+                    out.append(('law', f"aspects[{a.get('aspect')}].{p.get('position')}.origin: {self.invalid(p['origin'])}"))
         return out
 
 
@@ -613,7 +613,7 @@ GRANTS = ('granted', 'refused', 'ratified')
 KEEPERS = ('release',)
 ROW_KEYS = ('flow', 'from', 'to', 'method', 'grant', 'keeper', 'why')     # `flow_form`, less its two sentences
 LOCAL_KEYS = ROW_KEYS + ('party', 'basis')      # a garden's grant names its party and the basis it grants on
-PASS_KEYS = ('source', 'destination', 'method', 'metadata')
+PASS_KEYS = ('from', 'to', 'method', 'metadata')
 ESTATE = 'estate'
 
 
@@ -741,7 +741,7 @@ class Flows:
         """A pass's source or destination as the law judges it — a layer, or (ESTATE, origin) — or a str: why it is
         none. `layer_of(path)` gives a file's layer (the tree's map); without one a file cannot be placed."""
         if not isinstance(e, dict) or not e:
-            return f"{e!r} is not one of `pass_form.source`'s forms"
+            return f"{e!r} is not one of `pass_form.from`'s forms"
         keys = set(e)
         if keys == {'file'} and isinstance(e['file'], str):
             layer = layer_of(e['file']) if layer_of else None
@@ -755,7 +755,7 @@ class Flows:
             if isinstance(r, dict) and r.get('files') is False:
                 return e['layer']
             return f"layer {e['layer']!r} is not a layer that holds no files — name a file, a bean or a garden instead"
-        return f"{e!r} is not one of `pass_form.source`'s forms: {{file}}, {{bean, at?}}, {{garden}} or {{layer}}"
+        return f"{e!r} is not one of `pass_form.from`'s forms: {{file}}, {{bean, at?}}, {{garden}} or {{layer}}"
 
     def pass_problems(self, p):
         """Why `p` is not a pass (`pass_form`), as a list: the four keys and nothing else, a known method, metadata
@@ -777,7 +777,7 @@ class Flows:
                   or kind == 'form' and v in self.forms
                   or kind == 'bean' and isinstance(v, str) and bool(v))
             if kind is None:
-                out.append(f"metadata `{k}` is not a row of `pass_metadata` — a pass carries lengths, locators and object ids, never the material")
+                out.append(f"metadata `{k}` is not a row of `pass_metadata` — a pass carries counts, locators and object ids, never the material")
             elif not ok:
                 out.append(f"metadata `{k}`: {v!r} is not {'a ' + kind if kind != 'form' else 'a word of `words.form` ' + str(self.forms)}")
         return out
@@ -1259,7 +1259,7 @@ def trace(fl, value, origin, materials, skip=(), titles=None):
     dest = (ESTATE, origin)
     others = []
     for e, text in materials:
-        layer, src = e.get('layer'), e.get('source') or {}
+        layer, src = e.get('layer'), e.get('from') or {}
         if layer in RELAYS or src.get('file') in skip or src.get('bean') in skip:
             continue
         n = sum(quoted(x, text) for x in ns)
@@ -1275,9 +1275,9 @@ def trace(fl, value, origin, materials, skip=(), titles=None):
         d = fl.direction(e['layer'], dest)
         if d.granted:
             row = next((r for r in fl.rows if r.get('flow') in d.rows and r.get('grant') == 'granted'), {})
-            return Trace('granted', e['source'], (_list(row.get('method')) or [None])[0], n, d)
+            return Trace('granted', e['from'], (_list(row.get('method')) or [None])[0], n, d)
         if strong and refused is None:
-            refused = Trace('refused', e['source'], None, n, d)
+            refused = Trace('refused', e['from'], None, n, d)
     return refused or Trace('nowhere', {'layer': 'instructions'}, 'take-down', 0, None)
 
 

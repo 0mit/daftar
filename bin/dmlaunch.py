@@ -144,7 +144,7 @@ class Session:
         if not os.path.exists(p):
             with open(p, 'w', encoding='utf-8', newline='') as fh:
                 fh.write(text)
-        e = {'sha': sha, 'source': source, 'layer': layer, 'length': len(text)}
+        e = {'sha': sha, 'from': source, 'layer': layer, 'characters': len(text)}
         if json.dumps(e, sort_keys=True) not in {json.dumps(x, sort_keys=True) for x in self.index()}:
             self._append('index.jsonl', e)
         return sha
@@ -202,7 +202,7 @@ class Log:
             return []
 
     def append(self, source, destination, method, **metadata):
-        p = {'source': source, 'destination': destination, 'method': method,
+        p = {'from': source, 'to': destination, 'method': method,
              'metadata': {k: v for k, v in metadata.items() if v is not None}}
         os.makedirs(os.path.dirname(self.path), exist_ok=True)
         with open(self.path, 'a', encoding='utf-8', newline='\n') as fh:
@@ -217,10 +217,10 @@ def unlogged(pieces, log, since):
     """The completeness invariant, read back from the log on disk: {seq: length} of the pieces in a body against the
     render passes the log holds from `since` on. Empty where they are the same; else what differs, and the send is
     refused."""
-    logged = {p['metadata']['seq']: p['metadata'].get('length') for p in log.passes()
+    logged = {p['metadata']['seq']: p['metadata'].get('characters') for p in log.passes()
               if p.get('method') == 'render' and isinstance(p.get('metadata', {}).get('seq'), int)
               and p['metadata']['seq'] >= since}
-    body = {x['seq']: x['length'] for x in pieces}
+    body = {x['seq']: x['characters'] for x in pieces}
     return {k: (body.get(k), logged.get(k)) for k in set(body) | set(logged) if body.get(k) != logged.get(k)}
 
 
@@ -379,10 +379,10 @@ class Launch:
         """One piece of the requests to come: its render pass is logged now, once."""
         text = text if isinstance(text, str) else json.dumps(text, sort_keys=True, ensure_ascii=False)
         seq = self.log.next_seq()
-        self.log.append(source, {'layer': 'request'}, 'render', length=len(text), seq=seq, turn=self.turn)
+        self.log.append(source, {'layer': 'request'}, 'render', characters=len(text), seq=seq, turn=self.turn)
         if layer:
             self.store.add(text, source, layer)
-        self.pieces.append({'kind': kind, 'text': text, 'seq': seq, 'length': len(text), **more})
+        self.pieces.append({'kind': kind, 'text': text, 'seq': seq, 'characters': len(text), **more})
 
     def give(self, path):
         """A file the person gives, judged as a read is (PRE)."""
@@ -465,7 +465,7 @@ class Launch:
             if off:
                 fail(f"the request's pieces and the log's render passes differ ({off}) — not sent")
             wire = json.dumps(body)
-            self.log.append({'layer': 'request'}, {'layer': 'remote'}, 'send', length=len(wire),
+            self.log.append({'layer': 'request'}, {'layer': 'remote'}, 'send', characters=len(wire),
                             party=self.c['party'], turn=self.turn)
             reply = send(self.c, body)
             self.piece('self', reply, {'layer': 'self'}, 'self', reply=reply)
@@ -510,8 +510,7 @@ def cmd_record(root, keep, argv):
         text = out.decode('utf-8', 'replace')
         oid = git(root, 'hash-object', rel).stdout.strip()
         if s and s.state.get('log'):
-            Log(root, s.state['log']).append({'layer': 'world'}, {'file': rel}, 'capture', length=len(out),
-                                             lines=text.count('\n'), oid=oid)
+            Log(root, s.state['log']).append({'layer': 'world'}, {'file': rel}, 'capture', characters=len(out), oid=oid)
             s.add(text, {'file': rel}, 'history')
         print(dmparse.said(f"dmlaunch: captured {rel}" + ('' if s else " — no session here, so no pass is logged")),
               file=sys.stderr)

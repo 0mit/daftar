@@ -196,7 +196,7 @@ def trace_said():
                 md['form'] = 'written'
             if t.verdict == 'nowhere':
                 hoped.append(f"{p} {at} = {v[:60]}")
-            TRACED.append((s.state.get('log'), {'source': t.source, 'destination': dest, 'method': t.method,
+            TRACED.append((s.state.get('log'), {'from': t.source, 'to': dest, 'method': t.method,
                                                 'metadata': md}))
     if refused:
         refuse("a said value came from where the flow law refuses it (SAVE):\n  " + '\n  '.join(refused) +

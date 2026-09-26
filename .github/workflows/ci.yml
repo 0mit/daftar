@@ -81,6 +81,8 @@ jobs:
         run: python3 test/view.py
       - name: "viewcap: a page's asks put to the ledger's grants — parts, tables and CSV, entry forms through the gate, renders, a calendar as a pass, a schedule; daftar's own suite results drawn"
         run: python3 test/viewcap.py
+      - name: "senses: one sense per name over the terms in force — a second sense refused, a garden's own judged in VOCAB.md, a stale row refused"
+        run: python3 test/senses.py
       - name: "uncertainty: positions in one to three axes, temperature as a position, u and accuracy, counts, one value however written"
         run: python3 test/uncertainty.py
       - name: "zones: a position names its IANA zone, and an offset is read for a moment, never stored or guessed"

@@ -145,7 +145,7 @@ def on_pre(ev, root):
                 deny(f"{rel} is in no layer, and a file in no layer is not read into a request (R4) — ask the gardener "
                      f"to place it")
             s = session(ev, root)
-            if any(e.get('source') == {'file': rel} for e in s.index()):
+            if any(e.get('from') == {'file': rel} for e in s.index()):
                 print(json.dumps({'systemMessage': f"dmhook: {rel} was read before in this session"}))
 
 

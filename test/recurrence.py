@@ -28,7 +28,9 @@ TERM = """local_terms:
         what:   { required: true, in: prose }
         when:   { required: true, in: recurrence }
         covers: { in: extent }
-    merge: { cardinality: multi, order: by-key }"""
+    merge: { cardinality: multi, order: by-key }
+senses:
+  - { name: when, sense: "when it is taken: here, the moments it recurs at" }"""
 assert s.count("local_terms: []") == 1
 open(v, "w").write(s.replace("local_terms: []", TERM))
 
