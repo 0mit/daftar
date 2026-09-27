@@ -1266,19 +1266,22 @@ def quoted(n, text):
 
 
 class Trace(tuple):
-    """(verdict, source, method, quoted, decision): `words` — found in a person's words or instructions, the pass
-    take-down; `granted` — found only where another granted row holds (a run's capture, by `record`); `refused` — found,
-    by a distinctive needle, only where the flow law refuses it; `nowhere` — found nowhere quoted, HOPED."""
+    """(verdict, source, method, quoted, decision, distinct): `words` — found in a person's words or instructions, the
+    pass take-down; `granted` — found only where another granted row holds (a run's capture, by `record`); `refused` —
+    found, by a distinctive needle, only where the flow law refuses it; `nowhere` — found nowhere quoted, HOPED.
+    `distinct` counts the finds by a needle that names one thing (`distinctive`): a `words` found only by a short word
+    or a small number is `distinct: 0`, and the record says the attribution is weak rather than claim it."""
     __slots__ = ()
 
-    def __new__(cls, verdict, source, method, n, decision=None):
-        return tuple.__new__(cls, (verdict, source, method, n, decision))
+    def __new__(cls, verdict, source, method, n, decision=None, distinct=0):
+        return tuple.__new__(cls, (verdict, source, method, n, decision, distinct))
 
     verdict = property(lambda s: s[0])
     source = property(lambda s: s[1])
     method = property(lambda s: s[2])
     quoted = property(lambda s: s[3])
     decision = property(lambda s: s[4])
+    distinct = property(lambda s: s[5])
 
 
 def trace(fl, value, origin, materials, skip=(), titles=None):
@@ -1296,20 +1299,21 @@ def trace(fl, value, origin, materials, skip=(), titles=None):
         n = sum(quoted(x, text) for x in ns)
         if not n:
             continue
+        k = sum(quoted(x, text) for x in ns if distinctive(x))
         if layer in PERSON:
             d = fl.decide(layer, dest, 'take-down')
             if d.granted:
-                return Trace('words', src, 'take-down', n, d)
-        others.append((e, n, any(distinctive(x) and quoted(x, text) for x in ns)))
+                return Trace('words', src, 'take-down', n, d, k)
+        others.append((e, n, k))
     refused = None
-    for e, n, strong in others:
+    for e, n, k in others:
         d = fl.direction(e['layer'], dest)
         if d.granted:
             row = next((r for r in fl.rows if r.get('flow') in d.rows and r.get('grant') == 'granted'), {})
-            return Trace('granted', e['from'], (_list(row.get('method')) or [None])[0], n, d)
-        if strong and refused is None:
-            refused = Trace('refused', e['from'], None, n, d)
-    return refused or Trace('nowhere', {'layer': 'instructions'}, 'take-down', 0, None)
+            return Trace('granted', e['from'], (_list(row.get('method')) or [None])[0], n, d, k)
+        if k and refused is None:
+            refused = Trace('refused', e['from'], None, n, d, k)
+    return refused or Trace('nowhere', {'layer': 'instructions'}, 'take-down', 0, None, 0)
 
 
 def _line_key(s):

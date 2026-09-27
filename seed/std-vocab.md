@@ -1829,6 +1829,7 @@ pass_metadata:
   - { key: form,   in: form,   meaning: "how a person's words were carried: a word of `words.form`" }
   - { key: party,  in: bean,   meaning: "the bean of the party it went to, where it left the garden" }
   - { key: quoted, in: count,  meaning: "how often the value a pass carries was found, as written, in its source; 0 where it was found nowhere quoted, and the pass is HOPED: the words may say it another way" }
+  - { key: distinct, in: count, meaning: "how many of those finds were by a part of the value that names one thing — a day, an amount of three digits or more, eight characters or more; 0 where every find was by a short word or a small number, which is in everything: the attribution is weak" }
 aspects:
   - aspect: necessity
     meaning: "what a being requires in order to do its work"
