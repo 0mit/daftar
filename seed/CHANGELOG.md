@@ -251,6 +251,10 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **26.1** (2026-09-28, proposed rule-change) — **a link's peer is mutual.** MINOR, no rule changes: `links.peer` says in
+  its meaning what its reasoning always said — a link has no direction, and each end records the other — beside the
+  `to` a reach and a treatment are directed at. The catalogue had read the two as one domain under two names; they are
+  two relations.
 - **26.0** (2026-09-28, proposed rule-change) — **one word for one thing, and the law held to its own shape.** MAJOR:
   names a garden writes change, and a garden crosses by `bin/dmupgrade.py`, which translates them. Found by the
   catalogue of the language (`bin/dmcatalog.py --findings`), and by a garden another maker's agent wrote, which showed

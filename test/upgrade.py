@@ -57,6 +57,9 @@ sv = os.path.join(REL, 'seed', 'std-vocab.md')
 _major, _minor = ver1.split('.')
 ver2 = f"{_major}.{int(_minor) + 1}"
 _text = open(sv).read()                 # read BEFORE opening for write: 'w' truncates first
+# ...and its law may drop a top-level key (26.0 folded `registry_links` into `registry_forms`): the gate asks a commit
+# that removes one to name it in its entry, so the upgrade's own entry must, or no garden adopts the release cleanly
+_text = re.sub(r'(?m)^retired:\n(?:  - [^\n]*\n)+', '', _text, count=1)
 # a release that retires a tool retires its verb with it (26.0, `verbs`: each names a tool the garden holds)
 _text = re.sub(r'(?m)^  - \{ verb: digest,[^\n]*\n', '', _text)
 open(sv, 'w').write(_text.replace(f'version: "{ver1}"', f'version: "{ver2}"', 1))
@@ -84,6 +87,8 @@ check("both pins move to the release's vocabulary",
 j = open(os.path.join(GARDEN, 'log', 'journal.md')).read()
 check("a RULE-CHANGE journal entry names the tag, the vocabulary move and the files",
       'RULE-CHANGE' in j and 'daftar v0.2.0' in j and f'{ver1} -> {ver2}' in j and 'bin/dmhello.py' in j and 'bin/dmdigest.py' in j)
+check("...and names each top-level key a document no longer holds, the law's among them",
+      '- keys no longer held: seed/std-vocab.md: `retired`' in j, [l for l in j.splitlines() if 'keys' in l][:3])
 check("a release that does not cross into std-vocab 21.0 translates nothing", '- translated: none' in j, j[-600:])
 check("NOTHING IS COMMITTED — adopting a release is the garden's own decision",
       run('git', 'log', '--oneline', cwd=GARDEN).stdout.count('\n') == _commits_before and run('git', 'status', '--porcelain', cwd=GARDEN).stdout.strip())

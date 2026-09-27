@@ -2408,6 +2408,32 @@ def put_back(added):
     install()
 
 
+def keys_dropped():
+    """{file: [top-level key it no longer holds]} for each changed document whose front matter the upgrade took a key
+    out of — the release's law folding a registry into another, a translation moving a key. The gate asks a commit that
+    removes a top-level key to name it in its journal entry, so the upgrade's own entry names each one, and adopting a
+    release commits cleanly once a person has filled in what only a person can say."""
+    out = {}
+    for f in run('git', 'diff', '--name-only', 'HEAD', check=False).stdout.split():
+        if not f.endswith('.md'):
+            continue
+        try:
+            old = _parse(run('git', 'show', f'HEAD:{f}', check=False).stdout)[0]
+            new = _parse(read_text(os.path.join(ROOT, *f.split('/')))[0])[0]
+        except Exception:
+            continue
+        if isinstance(old, dict) and isinstance(new, dict):
+            gone = [str(k) for k in old if k not in new]
+            if gone:
+                out[f] = gone
+    return out
+
+
+def dropped_line(dropped):
+    return [f"- keys no longer held: " + '; '.join(f"{f}: " + ', '.join(f"`{k}`" for k in ks)
+                                                 for f, ks in sorted(dropped.items()))] if dropped else []
+
+
 def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None,
                   profiles=None, step24=None, step26=None):
     """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
@@ -2568,6 +2594,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     if words_only:
         verb = 'translated'
 
+    dropped = keys_dropped()
     install()
     sys.path.insert(0, os.path.join(ROOT, 'bin')); import dmjournal          # the release's own tool, just applied
     _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
@@ -2578,7 +2605,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
                  f"{after}, release {a.tag}). What came in after the garden crossed {since} — from a branch or a clone "
                  f"merged since, or a proposal — is translated as the crossing translated the rest.",
                  f"- changed: {', '.join(changed) or 'none'}",
-                 f"- translated: {'; '.join(translated) or 'none'}",
+                 f"- translated: {'; '.join(translated) or 'none'}"] + dropped_line(dropped) + [
                  f"- beans: {', '.join(beans) or 'none'}"]
     elif moved and not (repinned or beans or steps) and current == a.tag:
         # A PROFILE EXTENDED OR RETRACTED, at the release the garden runs: the law is the same law, and what it extends
@@ -2590,7 +2617,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
                  + f"; VOCAB.md extends_profiles: [{', '.join(profiles)}].",
                  f"- changed: {', '.join(changed) or 'none'}",
                  f"- added: {', '.join(added) or 'none'}",
-                 f"- removed: {', '.join(removed) or 'none'}",
+                 f"- removed: {', '.join(removed) or 'none'}"] + dropped_line(dropped) + [
                  "- why: (fill in — what the garden takes the profile up, or leaves it, for)"]
     else:
         lines = ['\n' + dmjournal.stamp(_who, f"RULE-CHANGE: language {verb} to daftar {a.tag}", ROOT),
@@ -2602,7 +2629,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
                  f"- removed: {', '.join(removed) or 'none'}",
                  f"- repinned: {', '.join(repinned) or 'none'}",
                  f"- translated: {'; '.join(translated) or 'none'}",
-                 f"- profiles: {' '.join(moved) or 'unchanged'}",
+                 f"- profiles: {' '.join(moved) or 'unchanged'}"] + dropped_line(dropped) + [
                  "- why: (fill in — what this release brings that this garden adopts)",
                  f"- beans: {', '.join(beans) or 'none'}"]
     jpath = os.path.join(ROOT, 'log', 'journal.md')
