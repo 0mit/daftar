@@ -689,6 +689,14 @@ check("dmrules over a VOCAB.md in UTF-16 says so, as the gate does — not UTF-8
       r.returncode == 0 and "Traceback" not in r.stdout + r.stderr
       and "VOCAB.md: its front matter does not read (not UTF-8 — it looks like UTF-16" in r.stdout, (r.stdout + r.stderr)[-600:])
 put("VOCAB.md", _vocab)
+put("VOCAB.md", re.sub(r"(?m)^local_terms:.*\n", "", _vocab, count=1).replace("---\n", "---\nlocal_terms: [ { term: standing, "
+    "schema: { attrs: { note: { in: prose, meaning: \"the garden's own remark on a placement\" } } } } ]\n", 1))
+r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
+_st = (re.search(r"(?ms)^  standing .*?(?=^  \S)", r.stdout) or re.search("$", "")).group(0)
+check("dmrules merges a garden's overlay onto a Tier-0 term attribute by attribute, as the gate does: one attribute given "
+      "a meaning of its own, and the term's others still required",
+      "overlay" in _st and "['doc', 'standing', 'why']" in _st, (_st or r.stdout)[-600:])
+put("VOCAB.md", _vocab)
 
 # ---------------------------------------------------------------- A DAY IS JUDGED WHERE THE LAW SAYS ITS CALENDAR IS RECKONED
 _law = open(os.path.join(G, "seed", "std-vocab.md"), encoding="utf-8").read()
