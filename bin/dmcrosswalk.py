@@ -30,7 +30,7 @@ import yaml
 
 
 def _law():
-    fm = yaml.safe_load(dmparse.split_front_matter(open(os.path.join(ROOT, 'seed', 'std-vocab.md'), encoding='utf-8').read())[0])
+    fm = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, 'seed', 'std-vocab.md'), encoding='utf-8').read())[0])
     if os.path.exists(os.path.join(ROOT, 'VOCAB.md')):
         import dmcheck
         return fm.get('registry_files') or [], dmcheck.registry('knowledge_schemes') or []
@@ -360,7 +360,7 @@ def main(argv):
         ids = [argv[2]] if name == 'fhir' else argv[2:]
         beans = {}
         for b in ids:
-            fm = yaml.safe_load(dmparse.split_front_matter(open(os.path.join(ROOT, 'beans', b + '.md'), encoding='utf-8').read())[0])
+            fm = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, 'beans', b + '.md'), encoding='utf-8').read())[0])
             if want:
                 fm = {**fm, 'observations': {k: v for k, v in (fm.get('observations') or {}).items() if k in want}}
             beans[b] = fm

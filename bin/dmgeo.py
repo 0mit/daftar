@@ -47,9 +47,8 @@ def _rows(root):
     if os.path.exists(os.path.join(root, 'VOCAB.md')):
         import dmcheck
         return list(dmcheck.registry('bodies') or []), list(dmcheck.registry('reference_systems') or [])
-    import yaml
     with open(os.path.join(root, 'seed', 'std-vocab.md'), encoding='utf-8') as fh:
-        fm = yaml.safe_load(dmparse.split_front_matter(fh.read())[0])
+        fm = dmparse.loads(dmparse.split_front_matter(fh.read())[0])
     return list(fm.get('bodies') or []), list(fm.get('reference_systems') or [])
 
 

@@ -221,8 +221,8 @@ def main(argv):
     except ImportError:
         die("PyYAML is required (pip install PyYAML)")
     sys.path.insert(0, os.path.join(root, 'bin'))
-    import dmparse, yaml
-    law = yaml.safe_load(dmparse.read(os.path.join(seed, 'std-vocab.md'))[0])
+    import dmparse
+    law = dmparse.loads(dmparse.read(os.path.join(seed, 'std-vocab.md'))[0])     # the gate's own loader
     ver = str(law['version'])
     if not ver:
         die("could not read the vocabulary version", 1)
