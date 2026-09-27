@@ -6,7 +6,10 @@ enforces, so this listing cannot drift from the law. If a rule appears here it i
 checked it appears here. The only hand-written section is CORE, which is the bean grammar that is not
 a per-term rule and so still lives in code.
 
-Usage: python3 bin/dmrules.py [--terms] [--core]     (no flags = everything)
+Usage: python3 bin/dmrules.py [--terms] [--core] [--every-profile]     (no --terms or --core = both)
+
+`--every-profile` lists the rules of every profile the law offers, as a garden that extended them all would be held to
+them: what opting into a profile would bring, and the whole law for a reader of the release (bin/dmcatalog.py).
 """
 import os, sys
 
@@ -69,7 +72,8 @@ if loc is None:
                         f"of what it adds to the law; the rules below are the law's alone")
     loc = {}
 NOT_READ += dmparse.vocab_read(loc)
-prof_names = loc.get('extends_profiles') or []
+EVERY = '--every-profile' in sys.argv[1:]
+prof_names = list(std.get('profiles') or {}) if EVERY else (loc.get('extends_profiles') or [])
 prof_terms = [t for p in prof_names for t in ((std.get('profiles') or {}).get(p, {}).get('terms') or [])]
 # A PROFILE'S VACANCIES ARE PART OF THE LAW IN FORCE and were never listed here. dmcheck has always read
 # them — they join the tier0 bucket — so the GATE was right and only this REPORT was silent, which is the
@@ -112,7 +116,7 @@ def _m(x):
 
 def _seq(x):
     return x if isinstance(x, list) else []
-want = set(a for a in sys.argv[1:] if a.startswith('--')) or {'--terms', '--core'}
+want = set(a for a in sys.argv[1:] if a.startswith('--')) - {'--every-profile'} or {'--terms', '--core'}
 
 
 def quantity_rule(qname):
@@ -145,7 +149,7 @@ def head(s):
 
 
 print(f"{_product()} rules — {loc.get('extends')} + garden '{loc.get('vocab')}'"
-      f"{' + profiles ' + ', '.join(prof_names) if prof_names else ''}")
+      f"{(' + every profile the law offers, as if extended: ' if EVERY else ' + profiles ') + ', '.join(prof_names) if prof_names else ''}")
 
 head("AXIS — nature routes every bean to the crown")
 for n in reg('natures'):

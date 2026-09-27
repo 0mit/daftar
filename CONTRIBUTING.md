@@ -88,6 +88,7 @@ parts, changes).
    python3 test/crosswalk.py
    python3 test/rehearsal.py
    python3 test/deeptime.py
+   python3 test/catalogue.py
    reuse lint
    ```
 
@@ -155,6 +156,10 @@ steward's own. CI refuses a pull request with a commit that carries no sign-off.
   term says what you meant.
 - `python3 bin/dmwhy.py <name>` shows why an existing rule is the way it is (`seed/RATIONALE.md`); `HISTORY.md` has
   the design steps before that. Read the relevant part before proposing to change one.
+- `python3 bin/dmcatalog.py --part <name>` shows what a change to an item touches: every file that mentions, states,
+  covers or explains it, what it uses and what uses it, and the rules, checklist items and suite checks that name it.
+  `--findings` lists the candidates for a reword it sees (an item nothing references, one domain under two names, a
+  sibling shaped unlike the rest), for a person to judge.
 - Some comments mention `test/golden.py` and `test/diffgate.py`. They are the maintainers' corpus tests,
   which need a real garden's beans and so are not published.
 

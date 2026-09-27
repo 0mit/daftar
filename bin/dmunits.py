@@ -22,7 +22,7 @@ is a reading at that rate, never a record: the rate is a fact with a source and 
 import copy, decimal, functools, os, re, sys
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import yaml, dmparse
+import dmparse          # the one loader: the law read as the gate reads it
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -78,7 +78,7 @@ def _law():
     if os.path.exists(os.path.join(ROOT, 'VOCAB.md')):
         import dmcheck
         return dict(dmcheck.UNITS), dict(dmcheck.QUANTITIES)
-    fm = yaml.safe_load(dmparse.split_front_matter(open(os.path.join(ROOT, 'seed', 'std-vocab.md'), encoding='utf-8').read())[0])
+    fm = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, 'seed', 'std-vocab.md'), encoding='utf-8').read())[0])
     units = {u['unit']: u for u in fm.get('units') or []}
     quantities = {q['quantity']: q for q in fm.get('quantities') or []}
     # A QUANTITY WHOSE UNITS ARE A REGISTRY'S ROWS: each row is a unit with NO factor, carrying its decimal places —

@@ -150,6 +150,9 @@ jobs:
       - name: "deeptime: where and when as one mechanism — a position from another being read at a time, deep time from its datums, the ICS chart and its golden spikes, a garden's tabulated places, a boundary fixed at both ends"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/deeptime.py
+      - name: "catalogue: every part of the language, how the parts relate and what each is held to — read from the sources each time, the same bytes twice, and in a garden its copy of the language alone"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/catalogue.py
       - name: "licences: every file says whose it is and under which terms (REUSE)"
         run: reuse lint
       - name: "sign-off: every commit of a pull request is signed off by a person (CONTRIBUTING.md)"

@@ -125,7 +125,7 @@ def estate_words(garden, public=frozenset()):
     for f in glob.glob(os.path.join(garden, 'beans', '*.md')):
         head, _ = dmparse.read(f)
         try:
-            fm = yaml.safe_load(head) or {}
+            fm = dmparse.loads(head) or {}
         except Exception:
             continue
         if not isinstance(fm, dict):
@@ -145,7 +145,7 @@ def estate_words(garden, public=frozenset()):
     for f in glob.glob(os.path.join(garden, 'mappings', '*.md')):
         names.add(os.path.basename(f)[:-3])
         try:
-            fm = yaml.safe_load(dmparse.read(f)[0]) or {}
+            fm = dmparse.loads(dmparse.read(f)[0]) or {}
         except Exception:
             continue
         if isinstance(fm, dict) and fm.get('mapping'):
@@ -191,7 +191,7 @@ def _law_words():
     """The law's own names for kinds of being and for the keys a being is identified by (`product` in `product:samba`):
     this repository publishes them."""
     try:
-        law = yaml.safe_load(dmparse.read(os.path.join(HERE, '..', 'seed', 'std-vocab.md'))[0]) or {}
+        law = dmparse.loads(dmparse.read(os.path.join(HERE, '..', 'seed', 'std-vocab.md'))[0]) or {}
     except Exception:
         return frozenset()
     names = [str(g.get('genos')) for g in law.get('gene') or [] if isinstance(g, dict) and g.get('genos')]
