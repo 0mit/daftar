@@ -651,6 +651,23 @@ def facet(key, val, member=False):
     return 'single', 'none'
 
 
+def facet_of_all(key, values, member=False):
+    """(cardinality, order) for a key as EVERY garden holds it, whatever order the gardens arrived in. A term decides
+    alone; a key no term describes is read by shape, and the shapes are read from every value, never the first one's:
+    where they agree, that; a list against a scalar, a set (the scalar one member of it); any other disagreement of
+    shape, one value — a conflict kept whole. Read from the first, the join depended on which garden came first."""
+    fs = {facet(key, v, member) for v in values} or {facet(key, None, member)}
+    if len(fs) == 1:
+        return fs.pop()
+    return ('set', 'none') if {c for c, _o in fs} == {'set', 'single'} else ('single', 'none')
+
+
+def leaf_order_of_all(key, values):
+    """The leaf order every value agrees on, or none: read from each value, as `facet_of_all` reads the facet."""
+    orders = {leaf_order(key, v) for v in values}
+    return orders.pop() if len(orders) == 1 else 'none'
+
+
 # Every order this module can APPLY, named once. `leaf_order` used to whitelist a different set from the one
 # `subsumes` implements: `prefix` and `subsumes` were accepted and do nothing, while `instant` and
 # `containment` (std-vocab 9.3 and 11.0) were implemented and could not be declared on a TERM — a term saying
@@ -892,7 +909,7 @@ def merge_key(key, items):
         # Recorded at the TOP LEVEL only. The keys INSIDE `owns`/`details` are facts, not terms, and are
         # not expected to declare anything; listing them would bury the real gap in three hundred names.
         UNDECLARED.add(key)
-    card, order = facet(key, items[0]['value'])
+    card, order = facet_of_all(key, [it['value'] for it in items])
     if card != 'multi':
         return merge_field(key, _apply_prov(key, items))
     per = {}
@@ -964,8 +981,8 @@ def merge_field(key, items, member=False):
         for one, _p in _unfold(it['value']):
             _expanded.append(dict(it, value=one))
     items = _expanded
-    kind, _ = facet(key, items[0]['value'], member)
-    order = leaf_order(key, items[0]['value'])
+    kind, _ = facet_of_all(key, [it['value'] for it in items], member)
+    order = leaf_order_of_all(key, [it['value'] for it in items])
     if kind == 'set':
         vals, seen = set(), set()
         for it in items:
