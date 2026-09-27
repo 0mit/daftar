@@ -76,7 +76,7 @@
   <h2 id="levels">Four levels, four questions</h2>
   <p class="measure">Each mechanism is drawn at four levels of detail, from what it is to what exactly runs. The levels and their
     questions are the law's own (<code>view_lenses</code>), read by <code>dmview</code> in the demo garden:</p>
-  <!-- daftar:drawn id="levels" --><div class="table"><table><thead><tr><th scope="col">lens</th><th scope="col">drawn as</th><th scope="col">what it shows</th></tr></thead><tbody><tr><th scope="row">orient</th><td>story</td><td>what the drawn thing does and what it is built from, for someone who has never touched it: its purpose, three to five stages in the order work flows, its outcome, and each technology's own documentation. No address, port or live value</td></tr><tr><th scope="row">understand</th><td>schematic</td><td>how the parts co-operate, where the work is decided and where it is fragile: parts by what they do, flows as verbs, decisions as gates, boundaries where ownership or network changes. No address or live value</td></tr><tr><th scope="row">operate</th><td>health-chain</td><td>what the person on call must know first, now: the drawn thing's own vital sign in a shape native to it (a row of `view_archetypes`), the evidence beneath it, what the page cannot see, and where a person may act</td></tr><tr><th scope="row">inspect</th><td>anatomy</td><td>what exactly the parts are and how that is known: a card of each part's own facts with their provenance, the steps, the wiring, and what is still open</td></tr></tbody></table></div><!-- /daftar:drawn -->
+  <!-- daftar:drawn id="levels" --><div class="table"><table><thead><tr><th scope="col">lens</th><th scope="col">drawn as</th><th scope="col">what it shows</th></tr></thead><tbody><tr><th scope="row">orient</th><td>story</td><td>what the drawn thing does and what it is built from, for someone who has never touched it: its purpose, three to five stages in the order work flows, its outcome, and each technology's own documentation. No address, port or live value</td></tr><tr><th scope="row">understand</th><td>schematic</td><td>how the parts co-operate, where the work is decided and where it is fragile: parts by what they do, flows as verbs, decisions as gates, boundaries where ownership or network changes. No live value, and no address unless the page is private (`view.visibility`)</td></tr><tr><th scope="row">operate</th><td>health-chain</td><td>what the person on call must know first, now: the drawn thing's own vital sign in a shape native to it (a row of `view_archetypes`), the evidence beneath it, what the page cannot see, and where a person may act</td></tr><tr><th scope="row">inspect</th><td>anatomy</td><td>what exactly the parts are and how that is known: a card of each part's own facts with their provenance, the steps, the wiring, and what is still open</td></tr></tbody></table></div><!-- /daftar:drawn -->
 </section>
 
 <section aria-labelledby="report">
@@ -116,10 +116,10 @@
   <p class="measure">A clone of the demo garden-sam records daftar as a product bean, one mapping for each mechanism, and the
     drawing's record; the clone moves to a tagged release and extends the <code>view</code> profile, which brings
     <code>dmview</code>; then <code>dmview</code> checks the record against the drawings and writes the report. The commands, and what they printed:</p>
-  <!-- daftar:drawn id="transcript" --><pre class="out" tabindex="0" aria-label="how the report was drawn"><code><span class="cmd">~/garden-sam$ python3 bin/dmupgrade.py v0.39.0 --from ~/daftar --extend view</span>
-v0.39.0 (41df1b4e2808): its tag is signed by a key seed/RELEASE-SIGNERS names (Good "git" signature for daftar-release with ED25519 key SHA256:9mnuXmb6IMsdX1QJ66O8XMopeh8eSx0sebrZAW51yYk)
-profiles +view at v0.39.0 (41df1b4e2808): VOCAB.md extends [domain, view]; 12 added, 0 removed.
-garden-sam (daftar v0.39.0, gardener sam, garden 7c41ea527a78): 39 docs, 0 error(s), 0 warning(s)
+  <!-- daftar:drawn id="transcript" --><pre class="out" tabindex="0" aria-label="how the report was drawn"><code><span class="cmd">~/garden-sam$ python3 bin/dmupgrade.py v0.40.0 --from ~/daftar --extend view</span>
+v0.40.0 (c1d6686005ae): its tag is signed by a key seed/RELEASE-SIGNERS names (Good "git" signature for daftar-release with ED25519 key SHA256:9mnuXmb6IMsdX1QJ66O8XMopeh8eSx0sebrZAW51yYk)
+profiles +view at v0.40.0 (c1d6686005ae): VOCAB.md extends [domain, view]; 12 added, 0 removed.
+garden-sam (daftar v0.40.0, gardener sam, garden cea457be0dac): 39 docs, 0 error(s), 0 warning(s)
 
 NOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then
   git add -A
@@ -130,29 +130,29 @@ To abandon it instead:
 <span class="cmd">~/garden-sam$ git diff -U0 -- log/journal.md</span>
 …
 +
-+## 2026-10-27 09:00+00:00 · sam · RULE-CHANGE: profiles +view, at daftar v0.39.0
++## 2026-10-27 09:00+00:00 · sam · RULE-CHANGE: profiles +view, at daftar v0.40.0
 +- ratified_by: sam, here: the word of the gardener
-+- action: **RULE-CHANGE — `bin/dmupgrade.py v0.39.0`** --extend view; VOCAB.md extends_profiles: [domain, view].
++- action: **RULE-CHANGE — `bin/dmupgrade.py v0.40.0`** --extend view; VOCAB.md extends_profiles: [domain, view].
 +- changed: VOCAB.md (extends_profiles)
 +- added: assets/view/README.md, assets/view/bin/dmview.py, assets/view/lib/sources/http.py, assets/view/lib/sources/prometheus.py, assets/view/lib/view_export.py, assets/view/lib/view_kit.py, assets/view/lib/view_model.py, assets/view/lib/view_report.py, assets/view/lib/view_runtime.js, assets/view/lib/view_serve.py, assets/view/templates/drawings.py, assets/view/templates/serve.json
 +- removed: none
 +- why: the view asset, which draws daftar's mechanisms for the machinery page of daftar's site
 <span class="cmd">~/garden-sam$ git add -A</span>
-<span class="cmd">~/garden-sam$ git commit -q -m "daftar v0.39.0, with the view profile"</span>
-garden-sam (daftar v0.39.0, gardener sam, garden 7c41ea527a78): 39 docs, 0 error(s), 0 warning(s)
+<span class="cmd">~/garden-sam$ git commit -q -m "daftar v0.40.0, with the view profile"</span>
+garden-sam (daftar v0.40.0, gardener sam, garden cea457be0dac): 39 docs, 0 error(s), 0 warning(s)
 fast: 14/14 corpus checks passed
 <span class="cmd">~/garden-sam$ python3 bin/dmjournal.py sam "daftar's mechanisms recorded, and the page that draws them" --body "- action: [[daftar]], with the wiring of its mechanisms; the mappings [[gate]], [[journal]], [[merge]], [[peering]] and [[ledger]]; [[machinery]], the page that draws them, and drawings/mechanisms.py, its drawing module (site/machinery/composers.py).
 - why: the machinery page of daftar's site shows these mechanisms, drawn at four lenses."</span>
 ## 2026-10-27 09:00+00:00 · sam · daftar's mechanisms recorded, and the page that draws them
 <span class="cmd">~/garden-sam$ git add -A</span>
 <span class="cmd">~/garden-sam$ git commit -q -m "daftar's mechanisms recorded, and the page that draws them"</span>
-garden-sam (daftar v0.39.0, gardener sam, garden 7c41ea527a78): 46 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.40.0, gardener sam, garden cea457be0dac): 46 docs, 0 error(s), 0 warning(s)
 fast: 14/14 corpus checks passed
 <span class="cmd">~/garden-sam$ python3 assets/view/bin/dmview.py check</span>
 dmview: the page and its drawings agree
 <span class="cmd">~/garden-sam$ python3 assets/view/bin/dmview.py report --out ../report.html</span>
 dmview report: 5 drawings + reference + author mode -&gt; ../report.html</code></pre><!-- /daftar:drawn -->
-  <!-- daftar:drawn id="when" --><p>Drawn by dmview, of daftar v0.39.0, on 2026-09-27 14:32 UTC, from a clone of garden-sam grown by daftar v0.39.0 and moved to daftar v0.39.0. Its garden ids are those of the build that drew it: each build of these pages grows the gardens again, with new ids.</p><!-- /daftar:drawn -->
+  <!-- daftar:drawn id="when" --><p>Drawn by dmview, of daftar v0.40.0, on 2026-09-27 16:54 UTC, from a clone of garden-sam grown by daftar v0.40.0 and moved to daftar v0.40.0. Its garden ids are those of the build that drew it: each build of these pages grows the gardens again, with new ids.</p><!-- /daftar:drawn -->
   <p class="measure">The drawings and the record are files of this site:
     <a href="https://github.com/0mit/daftar/blob/master/site/machinery/composers.py">site/machinery/composers.py</a> draws each
     mechanism with the tool's pattern kit, and <a href="https://github.com/0mit/daftar/blob/master/site/machinery/record.yaml">site/machinery/record.yaml</a>
@@ -162,7 +162,7 @@ dmview report: 5 drawings + reference + author mode -&gt; ../report.html</code><
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
   <div>
-    <p>Every output on these pages was produced by daftar <code>v0.39.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
+    <p>Every output on these pages was produced by daftar <code>v0.40.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
     <p>Code AGPL-3.0-or-later · words and drawings CC BY 4.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
   </div>
 </footer><!-- /daftar:part -->
