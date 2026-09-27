@@ -13,8 +13,14 @@ one is a RULE-CHANGE, as an edit to any tool the release ships is.
 ## What it draws
 
 A **page** is the one bean that carries `view`. It names the garden's own **drawing module** (`view.drawings`, a
-`file:` pointer) — the garden's code, never the release's — and lists what it draws in `views`, one entry per drawing,
-under the key the module draws it by. Each entry `draws` a mapping (a procedure) or a bean the garden holds, and says:
+`file:` pointer to a Python file inside the garden, with no `..`) — the garden's code, never the release's — and lists
+what it draws in `views`, one entry per drawing, under the key the module draws it by.
+
+**The drawing module is code the view host runs**, and so is every adapter under `lib/sources/`: whoever may change
+one may run code on the host, and the host runs it again on each new commit that passes `dmview check`. So a garden
+served to more than its gardener keeps the module the gardener's — at a hub, `bin/dmhub.py` asks `ratify:G` for a
+change to it, to the name `view.drawings` gives, and to any Python file — and the host serves a clone only the hub
+writes to. Each entry `draws` a mapping (a procedure) or a bean the garden holds, and says:
 
 - its **story**, for someone who has never touched it: `purpose`, three to five `stages` (each with the `beings` that
   do it and the technologies it `uses`, each opening its own documentation), and its `outcome`;

@@ -381,8 +381,19 @@ _GARDEN = None
 
 
 def drawings_path():
+    """The drawing module the page names, as a path inside the garden — or None where it names none, or names a file
+    that is not a Python module inside it. The module is code the view host RUNS: a `file:` that climbed out of the
+    garden (`..`, an absolute path, a link) would run whatever that path holds."""
     d = page_view().get("drawings")
-    return os.path.join(ROOT, *str(d)[5:].split("/")) if isinstance(d, str) and d.startswith("file:") else None
+    if not (isinstance(d, str) and d.startswith("file:")):
+        return None
+    rel = d[5:]
+    if not rel or rel.startswith("/") or "\\" in rel or any(x in ("", ".", "..") for x in rel.split("/")) \
+            or not rel.endswith(".py"):
+        return None
+    path = os.path.join(ROOT, *rel.split("/"))
+    top = os.path.realpath(ROOT)
+    return path if os.path.commonpath([top, os.path.realpath(path)]) == top else None
 
 
 def garden():
@@ -391,7 +402,8 @@ def garden():
     if _GARDEN is None:
         path = drawings_path()
         if not path or not os.path.isfile(path):
-            raise NoPage("the page names no drawing module that exists (`view.drawings`: file:<path>)")
+            raise NoPage("the page names no drawing module that exists inside the garden (`view.drawings`: "
+                         "file:<path>.py, a path in the garden, with no `..`)")
         if HERE not in sys.path:
             sys.path.insert(0, HERE)
         spec = importlib.util.spec_from_file_location("garden_drawings", path)
