@@ -31,6 +31,30 @@ link integrity, journal<->commit binding) plus ONE generic loop that enforces ev
 schema here — that is a human-ratified rule-change — and the gate follows without a code edit.
 A term with no `schema:` is documentation only; the gate never enforces it on beans.
 
+## schema_language.is_ref
+
+Declared at 13.0.
+
+## schema_language.path
+
+Added at 2.0 for the five core grammar enums, and not declared in the schema language until 11.3.
+
+## schema_language.alt_form
+
+In use since the first schema language; declared at 11.3.
+
+## schema_language.dag
+
+`dag` became the term key of the `walk` sequence aspect at 9.2.
+
+## schema_language.values_add
+
+Declared at 8.2.
+
+## schema_language.compare_form
+
+Declared at 9.0.
+
 ## schema_language.attr_domains
 
 WHAT `in:` MAY SAY. Every attribute is a position in EXACTLY ONE domain,
@@ -660,6 +684,15 @@ mechanism, an offset from a being or from another system's position; a path is t
 names in that tool, and a garden's own filesystem system would have been read as a coordinate; `datum: host` puts the
 fact in the row, where the gate holds it to a place.
 
+## anchor_systems[unix-epoch]
+
+Declared at 7.0 for `beanger` records. The misreading its `why` names happened: a UTC reading labelled +03 was misread
+in the journal of the estate the law was first written in.
+
+## anchor_systems[network-segment]
+
+Declared at 11.0, when the operator ratified that a segment is a place and not an address.
+
 ## anchor_systems[git-object-graph].neighbours
 
 parent and child commits: a history is walked, never measured
@@ -854,6 +887,10 @@ dmsafe compares leaf paths BY INDEX, so inserting a row mid-list reads as deleti
 every row after it — the rollback said so and was right about what it could see. Grouping by layer
 is a legibility preference; a clean, honest diff is not.
 
+## net_protocols[pppoe]
+
+9.0 removed a `transport: tcp` and a port, 1723, that had been copied from pptp.
+
 ## units
 
 == UNITS: the resolution a position is actually held to (added 5.1) ==
@@ -1030,6 +1067,33 @@ like any entry's, and was not counted until the reverse gate learned to count it
 are declared for every garden that does not stand on them. The domain profile's `registration.auto_renew` is declared
 whole for the same reason.
 
+## vacancies[registry:storage_formats]
+
+Measured at zero across the corpus on 2026-08-07, when it was declared.
+
+## vacancies[responsibility.entry_one_of]
+
+When it was declared, no facet in the estate the law was first written in was co-owned, so none was co-answered-for.
+
+## vacancies[external]
+
+When it was declared, the estate the law was first written in had recorded no duty borne by an outside party.
+
+## vacancies[contingent]
+
+When it was declared, every requirement recorded in the estate the law was first written in was load-bearing: all 5 of
+its consumes/depends_on edges sat at `necessary`.
+
+## vacancies[physical]
+
+When it was declared, no being in the estate the law was first written in was recorded as a physical copy, and the
+operator named exactly that case — a codebase as a printed listing or a disk in a drawer — when the term was designed.
+
+## vacancies[network-segment]
+
+Declared at 11.0, with the operator's ratification that a segment is a place and not an address, while no bean yet
+stated which segment it was attached to.
+
 ## figures
 
 == FIGURES: the shapes an aspect may take (added 9.2, human-ratified rule-change, "T0") ==
@@ -1197,6 +1261,8 @@ BOTH axes: a square is 2-dimensional,
 ## aspects[necessity].positions
 
 and declaring one would orient it like a line
+
+`impossible` was first occupied on 2026-08-02, by a domain's backup MX record that named its own primary.
 
 ## aspects[capability].meaning
 
@@ -1488,6 +1554,23 @@ beans, and the direct cost of that is on record: the router's `owns.wg_tunnel` s
 endpoint 203.0.113.19 while the VPS's `owns.wg_identity` said it dials .16 and listed .19 as a freed
 spare. Two beans, the same scanning agent, one day apart, and the gate cannot see it because
 `owns` has no rule to check. A link whose far end is a RESOLVED REF cannot contradict itself.
+
+## profiles.network.terms[links].dag_note
+
+The first draft of this term got it wrong twice in one line: it carried `dag: true` over `peer` and `carried_by`, and
+the design review caught both before any bean was written — the failure `inverse_of` carries a cardinality to avoid,
+met twice more in a single term. The note is long for that reason.
+
+## profiles.network.vacancies[pptp]
+
+Measured when it was declared: zero occurrences of pptp across the estate the law was first written in.
+
+## profiles.network.vacancies[registry:anchor_systems]
+
+Measured on 2026-08-07 rather than assumed: no being in the estate the law was first written in answered at a v6
+address. A host booted with `ipv6.disable=1` recorded it as `capabilities.ipv6-socket-binding` with feasibility
+`impossible`, and the only v6 address anywhere in the corpus was `2001:db8::53` — a REMOTE resolver a VPS failed to
+reach, which is a fact about somebody else's endpoint and not about ours.
 
 ## profiles.network.terms[reaches].meaning
 
@@ -2055,6 +2138,11 @@ FORM they share. This is the MAJOR change of the release: an existing term's han
 
 the link FORM and its resolution are CORE checks (target exists, named field present, shallow). Since 2.0 the acyclicity is declared per relation via schema.dag rather than here.
 
+## terms[ref].handling
+
+`graph` was narrowed at 2.0: from acyclicity asserted for a fixed list of sections to acyclicity declared per
+relation.
+
 ## terms[genos]
 
 == THE BEAN-GRAMMAR AND FACT-SECTION KEYS (added std-vocab@5.0, 2026-08-02, human-ratified) ==
@@ -2432,6 +2520,10 @@ which is the same machinery that fixes a crown branch from a bean's nature. It i
 NOT on `located_at`, deliberately: roots is the host describing itself and every bean carrying
 it has an `os`, while `located_at` is carried by codebases, which have none.
 
+## terms[roots].schema.attrs.system
+
+Pinned to the grammar the host's `os` declares since 7.0.
+
 ## terms[roles].meaning
 
 WHAT A BEING DOES. A LIST, and that is the whole point: a server may do five things and a router one,
@@ -2498,6 +2590,16 @@ a fact that can disagree with itself, which is the argument this vocabulary alre
 refusing a direction aspect. The chain is walkable both ways from `prev` plus list order, which is
 what "walkable all ways" actually required.
 
+## terms[beanger].schema.attrs.source
+
+The estate the law was first written in met that failure: /sys/class/net reported a bond's MAC where ethtool -P
+reported the NIC's.
+
+## terms[beanger].schema.attrs.records.in.entries.unit
+
+The rule exists because the estate the law was first written in twice wrote a value that looked measured and was
+inferred.
+
 ## system_shape.sources
 
 WHERE A SYSTEM'S MACHINERY COMES FROM, in the one pair every position uses (sources-by-nature). A reckoning by
@@ -2549,6 +2651,10 @@ A WORKTREE IS THE FIX AND THE BRANCH IS THE HAND-OFF. Each session gets its own 
 own index while sharing one object store, so they cannot stage over each other — and they can still
 read and merge one another's branches with no network hop, which is the sync-between-sessions half.
 
+## terms[workspace].schema.attrs.branch
+
+Every session before 2026-08-07 worked the main copy directly, on `master`.
+
 ## terms[capture].meaning
 
 THE THIRD STATE GROUND RULE 3 NOW ALLOWS, ratified 2026-08-07. Until today a fact was either OURS or
@@ -2573,6 +2679,11 @@ and a router export contains wireguard private keys, PPPoE passwords and communi
 the field required means "nothing was removed" has to be WRITTEN DOWN as a claim somebody made,
 rather than being the silent default of a field nobody filled in. An omission looks identical to a
 clean capture; a required attr does not.
+
+## terms[capture].schema.attrs.source
+
+The argument earned its place in `beanger.source` within the hour of being made: naming the command is what got it
+run.
 
 ## terms[capture].schema.attrs.staleness_key
 
