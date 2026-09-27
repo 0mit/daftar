@@ -27,7 +27,7 @@ keeps what was written; only the comparison, the seed and the fingerprint use th
 CLI: dmmerge.py <garden_dir> [<garden_dir> ...]   # prints seeds + fingerprint, then the CANDIDATES
 Library: merge_gardens(list_of_beanlists) -> {seed_id: seed_dict}, fingerprint(seeds), candidates(beans)
 """
-import sys, os, re, glob, json, hashlib, unicodedata, ipaddress, datetime
+import sys, os, re, glob, json, hashlib, unicodedata, ipaddress, datetime, copy
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
@@ -1732,6 +1732,69 @@ def merge_in_place(A, fmA, fmB, bodyB, seed):
     return changed, added, conflicts
 
 
+def three_way(fmO, fmA, fmB):
+    """(A, B, gone, take): the two sides as the join reads them, with what ONE side changed since the base applied to
+    both — so the join meets a disagreement only where both sides changed a position, differently.
+
+    GIT HANDS THE DRIVER THREE BLOBS, and a two-way join of the last two cannot tell an edit from a value the other side
+    never had. A value one side changed and the other left as the base had it is that side's change, and stands; a key
+    or a member one side REMOVED and the other left alone is removed, and does not come back from the side that merely
+    never touched it (MERGE.md invariant 1: a value is corrected only by a recorded, attributed change — and a removal
+    is one). Positions are read at a top-level key, and for a key that is a map on all three at its members; a list
+    both sides changed is the join's, as it was. `gone` is the keys only theirs removed, which the file loses; `take`
+    is the structural keys — identity, provenance, the merge's own marks, which the join does not rewrite — that only
+    theirs changed, which the file takes as theirs wrote them. With no base (a file both sides added) the two sides are
+    returned as they are."""
+    A2, B2 = copy.deepcopy(fmA), copy.deepcopy(fmB)
+    gone, take = [], []
+    if not isinstance(fmO, dict):
+        return A2, B2, gone, take
+
+    def same(k, x, y, mk=None):
+        if x is MISSING or y is MISSING:
+            return x is y
+        if mk is None:
+            return canon_value(k, x) == canon_value(k, y)
+        return canon_member(k, mk, x) == canon_member(k, mk, y)
+
+    for k in sorted(set(fmO) | set(fmA) | set(fmB), key=str):
+        if k in ('bean', 'mapping'):
+            continue
+        a, b, o = fmA.get(k, MISSING), fmB.get(k, MISSING), fmO.get(k, MISSING)
+        if same(k, a, b):
+            continue
+        if same(k, a, o):                                   # only theirs changed it
+            if k in STRUCTURAL:
+                take.append(k)
+            elif b is MISSING:
+                gone.append(k)
+            if b is MISSING:
+                A2.pop(k, None)
+            else:
+                A2[k] = copy.deepcopy(b)
+        elif same(k, b, o):                                 # only ours changed it
+            if a is MISSING:
+                B2.pop(k, None)
+            else:
+                B2[k] = copy.deepcopy(a)
+        elif k not in STRUCTURAL and all(isinstance(x, dict) for x in (a, b, o)):
+            for m in sorted(set(o) | set(a) | set(b), key=str):
+                am, bm, om = a.get(m, MISSING), b.get(m, MISSING), o.get(m, MISSING)
+                if same(k, am, bm, m):
+                    continue
+                if same(k, am, om, m):
+                    if bm is MISSING:
+                        A2[k].pop(m, None)
+                    else:
+                        A2[k][m] = copy.deepcopy(bm)
+                elif same(k, bm, om, m):
+                    if am is MISSING:
+                        B2[k].pop(m, None)
+                    else:
+                        B2[k][m] = copy.deepcopy(am)
+    return A2, B2, gone, take
+
+
 def lost_keys(fmA, fmB, rendered_fm):
     """Top-level keys present on either side but absent from the rendered result.
 
@@ -1806,12 +1869,58 @@ if __name__ == '__main__':
                 if _done:
                     _du.write_text(_p, _new, _form)
                     read_in.append(f"{_side} ({len(_done)} word(s))")
+        import dmsafe
         fmA, bodyA = parse_file(A); fmB, bodyB = parse_file(B)
-        bid = fmA.get('bean') or fmB.get('bean')
-        seed = merge_component([{'garden': 'ours', 'id': bid, 'fm': fmA},
-                                {'garden': 'theirs', 'id': bid, 'fm': fmB}])
+        # THE BASE (%O): what both sides started from, read in the same words. An empty or unreadable base — a file both
+        # sides added — leaves the merge two-way, as it is between two gardens, which share no base.
+        fmO, bodyO = None, None
         try:
-            changed, added, conflicts = merge_in_place(A, fmA, fmB, bodyB, seed)
+            if os.path.isfile(_O) and os.path.getsize(_O):
+                _t, _f = _du.read_text(_O)
+                try:
+                    _t = _du.renamed(_t, _du.bean_rule_22)[0] if _ver and _du.vtuple(_ver) >= _du.STEP_22 else _t
+                except _du.CannotRename:
+                    pass
+                _h, bodyO = dmparse.split_front_matter(_t.replace('\r\n', '\n'))
+                fmO = dmparse.loads(_h or '') if _h is not None else None
+                fmO = fmO if isinstance(fmO, dict) else None
+        except Exception:
+            fmO, bodyO = None, None
+        bid = fmA.get('bean') or fmB.get('bean')
+        effA, effB, gone, take = three_way(fmO, fmA, fmB)
+        seed = merge_component([{'garden': 'ours', 'id': bid, 'fm': effA},
+                                {'garden': 'theirs', 'id': bid, 'fm': effB}])
+        try:
+            # WHAT ONLY THEIRS CHANGED THAT THE JOIN DOES NOT WRITE goes into ours first: a key theirs removed leaves;
+            # a structural key theirs changed is written as theirs wrote it
+            _textB = open(B, encoding='utf-8').read()
+            for k in gone:
+                dmsafe.remove_block(A, k, allow_remove=dmsafe.leaf_paths({k: fmA[k]}))
+            for k in take:
+                old = fmA.get(k, MISSING)
+                if k not in fmB:
+                    dmsafe.remove_block(A, k, allow_remove=dmsafe.leaf_paths({k: old}))
+                    continue
+                s_, e_ = dmsafe.top_level_span(_textB, k)
+                blk = _textB[s_:e_]
+                if old is MISSING:
+                    dmsafe.insert_after(A, sorted(parse_file(A)[0])[-1], blk)
+                else:
+                    lose = [x for x in dmsafe.leaf_paths({k: old}) if x not in set(dmsafe.leaf_paths({k: fmB[k]}))]
+                    dmsafe.replace_block(A, k, blk, allow_remove=lose)
+            # THE BODY, three ways too: one only theirs changed is theirs; one theirs left as the base had it adds nothing
+            _theirs_body = bodyB
+            if bodyO is not None:
+                if (bodyB or '').strip() == (bodyO or '').strip():
+                    _theirs_body = ''
+                elif (bodyA or '').strip() == (bodyO or '').strip():
+                    _theirs_body = ''
+                    _now = open(A, encoding='utf-8').read()
+                    _fm_now, _body_now = dmparse.split_front_matter(_now)
+                    with open(A, 'w', encoding='utf-8', newline='\n') as fh:
+                        fh.write(_now[:len(_now) - len(_body_now)] + bodyB)
+            changed, added, conflicts = merge_in_place(A, parse_file(A)[0], effB, _theirs_body, seed)
+            changed = sorted(set(changed) | set(gone) | set(take))
             after_fm, after_body = parse_file(A)
         except Exception as e:                             # any structured-edit failure is a refusal
             open(A, 'w', encoding='utf-8').write(before)
@@ -1822,7 +1931,7 @@ if __name__ == '__main__':
         # it. A driver returning non-zero leaves the file alone and lets git record an ordinary conflict
         # for a human. A driver that writes back a bean missing a key has destroyed the working copy, and
         # the pre-commit gate that would refuse that bean only runs afterwards.
-        lost = lost_keys(fmA, fmB, after_fm)
+        lost = lost_keys(effA, effB, after_fm)
         if lost or not after_body.strip():
             open(A, 'w', encoding='utf-8').write(before)
             why = f"would lose {len(lost)} key(s) ({', '.join(lost)})" if lost else "would lose the body"

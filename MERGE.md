@@ -203,7 +203,8 @@ required term is covered once it fuses with another garden's bean that has it.
 - **No clock value enters a canonical bean.** The engine writes none; a merged bean's provenance says
   `as_of: merged`, and when a merge happened is git's to say.
 - **The body is outside the guarantee.** Prose is not convergent across models, and the canonical bean carries no
-  body. The git merge driver keeps ours and appends theirs below `<!-- theirs -->`, for a person.
+  body. The git merge driver takes a body only one side changed since the base as that side wrote it, and where both
+  changed it keeps ours and appends theirs below `<!-- theirs -->`, for a person.
 
 ## 7. The journal
 - `log/journal.md` and `log/pending.md` merge by git's own union (`merge=union` in `.gitattributes`): both sides'
@@ -221,6 +222,12 @@ required term is covered once it fuses with another garden's bean that has it.
   bean changed on a branch or a clone still at 21.0 is translated into 22.0's as `bin/dmupgrade.py` translates a
   garden crossing into it, so the merged bean carries one `genos` and no disagreement over a word; a side that cannot
   be translated without a person is refused. A mapping keeps its `kind`, and is merged as written.
+- **The driver merges three ways.** Two branches of one garden share a base, and git hands it over (`%O`): a value,
+  a key or a member of a map that ONE side changed or removed since the base, and the other left as the base had it,
+  is that side's change and stands — a removal stays removed, and an identity or a provenance only one side changed is
+  taken as that side wrote it. Only a position both sides changed, differently, is joined as §5 joins two gardens, a
+  disagreement kept whole for a person. With no base — a bean both sides added — the merge is two-way, as it is
+  between gardens, which share none.
 - `python3 bin/dmmerge.py <garden> <garden> …` merges whole gardens: it reconciles the law first (§5.2), prints each
   canonical bean and the fingerprint, and reports the canonical beans with a garden-local id, the candidates (§4.4),
   the keys merged by shape, and whether the merged law covers the merged corpus. It commits nothing. An input is
