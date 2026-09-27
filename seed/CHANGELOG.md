@@ -256,7 +256,9 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   names, `seed/RELEASE-SIGNERS`, which the law places in `law` beside what a release ships (`bin/dmupgrade.py`,
   `--expect <commit>` for a person who checked the commit, a confirmation at a terminal otherwise). A hub asks
   `ratify:G` for a change to code — a file of the `gate` layer, one a release keeps, a Python or shell file, the
-  drawing module a page names — and takes a commit with no parent only when it is empty (MODEL.md). MAJOR, because a
+  drawing module a page names — and takes a commit with no parent only when it is empty (MODEL.md). The git merge
+  driver merges three ways (MERGE.md §8): what one branch changed or removed since the base and the other left stands,
+  and only a position both changed differently is a disagreement. MAJOR, because a
   garden that upgraded unasked from a network is now asked, and a writer's push a hub took is now refused.
 
 - **24.0** (2026-09-26, human-ratified rule-change, parts ratified one by one as the release was built) — **the law
