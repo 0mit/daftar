@@ -416,11 +416,32 @@ def pos_cmp(a, b, zone):
 
 
 # ============================================================================ the gate's check (pure)
+# A registry a garden extends by a key of its own (`local_gene`), not by `registry_additions`: the reader here does not
+# hold those rows, and the gate judges the value against the garden's whole law.
+_EXTENDED_ELSEWHERE = ('gene',)
+
+
+def _registry_values(registry, dom):
+    """The values a `{registry, take, where}` domain admits, read from the law's rows (a garden's added rows among them),
+    or None where the registry cannot be read here."""
+    try:
+        rows = [r for r in (registry(dom['registry']) or []) if isinstance(r, dict)]
+    except Exception:
+        return None
+    if not rows:
+        return None
+    wh = dom.get('where') if isinstance(dom.get('where'), dict) else {}
+    take = dom.get('take') or dom['registry'].rstrip('s')
+    return {str(r.get(take)) for r in rows if r.get(take) is not None
+            and all(r.get(f) in (w if isinstance(w, list) else [w]) for f, w in wh.items())}
+
+
 def _takes_check(where, step, row, env, law_):
     """A step against its operation's row: its keys are those the row takes, the required ones present, a name a step
-    reads an earlier step or an input, a path a path, an enum a value of it."""
+    reads an earlier step or an input, a path a path, an enum a value of it, a registry's value one of its rows."""
     out = []
     takes = row.get('takes') or {}
+    registry = getattr(law_, 'registry', law_)
     for k in step:
         if k not in ('id', 'op') and k not in takes:
             out.append(('error', f"{where}: `{k}` is not what `{row['op']}` takes — it takes {sorted(takes)}"))
@@ -443,6 +464,17 @@ def _takes_check(where, step, row, env, law_):
             out.append(('error', f"{where}: `{k}: {v}` is not one of {dom}"))
         elif isinstance(dom, dict) and dom.get('type') == 'count' and not (isinstance(v, int) or dmseq.exact(v) is not None):
             out.append(('error', f"{where}: `{k}: {v!r}` is not a count"))
+        elif isinstance(dom, dict) and isinstance(dom.get('registry'), str) and callable(registry) \
+                and dom['registry'] not in _EXTENDED_ELSEWHERE:
+            vals = _registry_values(registry, dom)
+            if vals is not None and str(v) not in vals:
+                # a calendar written by its CLDR name (`gregory`) is the row that carries it (`gregorian-civil`)
+                row_of = next((str(r.get('system')) for r in (registry(dom['registry']) or [])
+                               if isinstance(r, dict) and r.get('calendar') == v and str(r.get('system')) in vals), None)
+                out.append(('error', f"{where}: `{k}: {v}` is not a row of `{dom['registry']}`"
+                                     + (f" where {dom['where']}" if dom.get('where') else '')
+                                     + (f" — write `{k}: {row_of}`, the system whose calendar is {v}" if row_of
+                                        else f" — {', '.join(sorted(vals)[:12])}{', …' if len(vals) > 12 else ''}")))
     return out
 
 
@@ -947,8 +979,11 @@ class Reckoner:
         return dict(sorted(out.items()))
 
     def _cell(self, x, s):
-        """The cell of a calendar level a moment or a day falls in, read in the reading's zone."""
-        cal = s.get('system') or 'gregory'
+        """The cell of a calendar level a moment or a day falls in, read in the reading's zone. `system` is a row of the
+        law's `anchor_systems`, read through the calendar that row names; absent, the civil Gregorian one."""
+        sysname = s.get('system') or 'gregorian-civil'
+        _row = next((r for r in (self.reg('anchor_systems') or []) if isinstance(r, dict) and r.get('system') == sysname), None)
+        cal = (_row or {}).get('calendar') or sysname
         p = _pos(x, self.zone, self.notes)
         if p is None:
             raise Refused(f"step {s['id']}: {x!r} is no position of time, and falls in no {s['level']}")

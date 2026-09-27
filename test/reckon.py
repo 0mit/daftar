@@ -152,8 +152,15 @@ selections:
     zone: Pacific/Auckland
     steps:
       - {{ id: lit, op: select, entries: "lightings.*" }}
-      - {{ id: by-day, op: group, of: lit, path: at, level: day, system: gregory }}
+      - {{ id: by-day, op: group, of: lit, path: at, level: day, system: gregorian-civil }}
       - {{ id: per-day, op: count, of: by-day }}
+  evenings-persian:
+    what: "the candles lit, grouped by the month of the Solar Hijri calendar they were lit in, in Auckland"
+    zone: Pacific/Auckland
+    steps:
+      - {{ id: lit, op: select, entries: "lightings.*" }}
+      - {{ id: by-month, op: group, of: lit, path: at, level: month, system: persian-calendar }}
+      - {{ id: per-month, op: count, of: by-month }}
 {extra_selections}lightings:
   first: {{ at: "2026-04-04T10:00Z" }}
   second: {{ at: "2026-04-04T13:30Z" }}
@@ -265,6 +272,10 @@ refused_sel("a key an operation does not take is refused, naming what it takes",
 refused_sel("a comparator the law does not list is refused",
             "      - { id: n, op: select, genos: person, where: [ { path: title, like: \"%a%\" } ] }\n",
             "names exactly one comparator of the law")
+refused_sel("a group's `system` that is no row of the law's time systems is refused, naming the row that carries a "
+            "calendar written by its CLDR name",
+            "      - { id: l, op: select, entries: \"lightings.*\" }\n      - { id: g, op: group, of: l, path: at, level: day, system: gregory }\n",
+            "`system: gregory` is not a row of `anchor_systems`", "write `system: gregorian-civil`")
 refused_sel("a group by a calendar level with no zone is refused",
             "      - { id: l, op: select, entries: \"lightings.*\" }\n      - { id: g, op: group, of: l, path: at, level: day }\n",
             "states `zone`")
@@ -273,6 +284,9 @@ restore()
 rc, out = reckon("chandlery:evenings")
 check("lightings grouped by day IN AUCKLAND: 10:00Z is the 4th there, 13:30Z and 14:30Z both the 5th, across the end of "
       "daylight time", rc == 0 and "2026-04-04: 1 item" in out and "2026-04-05: 2 item" in out, out)
+rc, out = reckon("chandlery:evenings-persian")
+check("...and by the month of a calendar the law names as a system, `persian-calendar`, read through the calendar its "
+      "row carries: all three in Farvardin 1405", rc == 0 and "1405-01" in out and "3 item" in out, out)
 
 # conservation (D38)
 rc, out = reckon("chandlery:burns-clean")
