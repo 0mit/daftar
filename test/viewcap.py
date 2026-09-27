@@ -547,6 +547,39 @@ try:
     _aud = [json.loads(l) for l in open(_log, encoding="utf-8").read().splitlines()]
     check("V-3 every write, saved or refused, is audited with the answer that decided it",
           [a["mode"] for a in _aud if a.get("act") == "write"] == ["refused", "saved", "refused", "refused", "refused"], [a.get("mode") for a in _aud])
+    # ---- the doors: a body's length, a cookie over HTTPS, a sign-out that holds, and a lockout
+    import http.client
+    _hc = http.client.HTTPConnection("127.0.0.1", _sp, timeout=10)
+    _hc.putrequest("POST", "/api/write"); _hc.putheader("Content-Length", "-1"); _hc.endheaders()
+    try:
+        _st = _hc.getresponse().status
+    except Exception as e:
+        _st = repr(e)
+    check("a request whose Content-Length is less than nothing is refused at once, never waited on", _st == 400, _st)
+    _pw = open(os.path.join(T, "host", "bosun.password")).read().strip()
+    _hc = http.client.HTTPConnection("127.0.0.1", _sp, timeout=10)
+    _hc.request("POST", "/login", urllib.parse.urlencode({"user": "bosun", "password": _pw}),
+                {"Content-Type": "application/x-www-form-urlencoded", "X-Forwarded-Proto": "https"})
+    _r = _hc.getresponse(); _ck = _r.getheader("Set-Cookie") or ""; _r.read()
+    check("reached over HTTPS (the proxy says so), the session's cookie is Secure", "; Secure" in _ck, _ck)
+    _tok = _ck.split(";", 1)[0]
+    def _with(cookie, path):
+        c = http.client.HTTPConnection("127.0.0.1", _sp, timeout=10)
+        c.request("GET", path, headers={"Cookie": cookie})
+        r = c.getresponse(); r.read(); return r.status
+    _before = _with(_tok, "/")
+    _with(_tok, "/logout")
+    _after = _with(_tok, "/")
+    check("a token signed out opens nothing again, though the browser that held it kept a copy",
+          _before == 200 and _after == 303, (_before, _after))
+    _codes = []
+    for _i in range(6):
+        c = http.client.HTTPConnection("127.0.0.1", _sp, timeout=10)
+        c.request("POST", "/login", urllib.parse.urlencode({"user": "bosun", "password": "wrong" if _i < 5 else _pw}),
+                  {"Content-Type": "application/x-www-form-urlencoded"})
+        r = c.getresponse(); r.read(); _codes.append(r.status)
+    check("five wrong passwords lock the address and the user out: the sixth try, right or wrong, is refused (429)",
+          _codes == [401] * 5 + [429], _codes)
 finally:
     srv.terminate()
     try:
