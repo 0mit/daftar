@@ -114,8 +114,10 @@ real names, a commit message, a pull request body. Those are the places nobody g
 `bin/install.sh` installs a **pre-push hook** that runs it over the files and over the messages of the
 commits being pushed. It derives the forbidden names from the garden itself — every bean and mapping id,
 the value of every identity anchor, root names — so a bean added tomorrow is covered tomorrow, and nobody
-maintains a denylist. A word the published classifications carry is not a leak; anything else that is genuinely public
-goes in `seed/PUBLIC-ALLOW` with its reason.
+maintains a denylist. It guards names of three letters and more, bean titles of three words and more, and every network
+and email address a bean holds (those kept for documentation aside). A word the published technology catalogue carries,
+or the law's own name for a kind of being, is not a leak; a word of the other published tables is public only in its
+own table; anything else that is genuinely public goes in `seed/PUBLIC-ALLOW` with its reason.
 
 **Check the pull request body too.** The hook cannot see it: write it to a file, run `--text` over it, then
 open the pull request. This rule exists because five estate names reached this repository in one night, in
