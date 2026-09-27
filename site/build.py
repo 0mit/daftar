@@ -13,7 +13,9 @@ markers, and nothing outside them:
          (`steps` picks commands of a block; the line options pick lines of what each printed)
   file   an input the build wrote                                              doc    an extract of a release document
   svg    site/drawings/<id>.svg, inline                                        part   site/_parts/<id>.html
-  drawn  the record of the machinery's drawing, site/machinery/drawn.json      terms  the law's words (`terms:all`)
+  drawn  the record of the machinery's drawing, site/machinery/drawn.json
+  map    the map of the language, drawn by site/atlas.py from the release's own catalogue (`field`, `cards`,
+         `findings`, `counts`)
   held   what the build holds still: `release`, the held `day`, or the `moment` with its hour
 
 The committed pages are the templates. A marker whose id nothing produces, or a capture no page uses, fails the build.
@@ -923,13 +925,14 @@ class Pages:
             return esc(held[cid])
         if typ == 'drawn':
             return self.drawn(cid, page)
-        if typ == 'terms':
-            if cid != 'all':
-                raise Refused(f'{page}: terms:{cid} is not one this build knows; terms:all is')
-            self.used.add('terms:all')
+        if typ == 'map':
+            # THE MAP OF THE LANGUAGE (site/atlas.py): drawn from the release's own catalogue, never kept
+            if cid not in ('field', 'cards', 'findings', 'counts'):
+                raise Refused(f'{page}: map:{cid} is not one this build draws; field, cards, findings and counts are')
+            self.used.add('map:' + cid)
             sys.path.insert(0, self.src)
-            import terminology
-            return terminology.render(self.d.p('daftar'), self.release)
+            import atlas
+            return atlas.render(self.d.p('daftar'), cid)
         raise Refused(f'{page}: marker type {typ!r} is not one this build knows')
 
     def drawn_release(self):
@@ -942,7 +945,7 @@ class Pages:
     def drawn_elsewhere(self, root):
         """What the footer's claim does not cover: the machinery's drawing, when it was made under another release."""
         rel = self.drawn_release()
-        return ('' if not rel else ' — except <a href="%smachinery.html#drawn">the machinery\'s drawing</a>, its commands and its '
+        return ('' if not rel else ' — except <a href="%sindex.html#machinery-drawn">the machinery\'s drawing</a>, its commands and its '
                 'report, made from a garden grown by daftar <code>%s</code>' % (root, esc(rel)))
 
     def drawn(self, cid, page):

@@ -262,7 +262,7 @@ def record(g, rec, day, glossary):
         'bean': 'daftar', 'genos': 'product', 'title': p['title'], 'status': 'active', 'summary': p['summary'],
         'nature': 'lekton',
         'identity': {'status': 'confirmed', 'anchors': [
-            {'key': 'product_id', 'value': 'product:daftar', 'class': 'logical', 'establishing': True}]},
+            {'key': 'identifier', 'value': 'product:daftar', 'class': 'logical', 'establishing': True}]},
         'provenance': prov, 'owned_by': {'legal': {'external': 'the daftar project'}},
         'responsibility': {'legal': {'holder': {'bean': 'sam'}}}, 'details': p['details']}, p['body'])
     for key in MECHANISMS:
@@ -275,7 +275,7 @@ def record(g, rec, day, glossary):
         'bean': PAGE, 'genos': 'service', 'title': pg['title'], 'status': 'active', 'summary': pg['summary'],
         'nature': 'lekton',
         'identity': {'status': 'confirmed', 'anchors': [
-            {'key': 'service_id', 'value': 'service:' + PAGE, 'class': 'logical', 'establishing': True}]},
+            {'key': 'identifier', 'value': 'service:' + PAGE, 'class': 'logical', 'establishing': True}]},
         'provenance': prov, 'owned_by': {'legal': {'owner': {'bean': 'sam'}}},
         'responsibility': {'legal': {'holder': {'bean': 'sam'}}},
         'view': dict({'drawings': 'file:' + MODULE}, **pg['view'], glossary=glossary),

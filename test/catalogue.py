@@ -91,8 +91,8 @@ check("an import is read: the gate imports the one loader", has("imports", "bin/
 check("a module loaded by its path is an import: the view's model loads each adapter beside it",
       has("imports", "assets/view/lib/view_model.py", "assets/view/lib/sources/http.py")
       and has("imports", "assets/view/lib/view_model.py", "assets/view/lib/sources/prometheus.py"))
-check("an import is looked for where the importer put sys.path: test/terminology.py imports site/terminology.py, "
-      "not itself", has("imports", "test/terminology.py", "site/terminology.py"))
+check("an import is looked for where the importer put sys.path: test/atlas.py imports site/atlas.py, "
+      "not itself", has("imports", "test/atlas.py", "site/atlas.py"))
 _hook = open(os.path.join(ROOT, "bin", "hooks", "pre-commit"), encoding="utf-8").read()
 check("a hook runs what its lines run: the pre-commit hook runs the gate", has("runs", "bin/hooks/pre-commit", "bin/dmcheck.py"))
 check("...and not what it only tells a person to run, nor what a comment names",

@@ -507,6 +507,11 @@ def _words(s):
     return re.findall(r"[a-z0-9]+(?:'[a-z]+)?", s.lower())
 
 
+# A BLOCK A PAGE DRAWS FROM THE LAW (site/build.py's `map`) is the seed drawn again, counted where the seed
+# holds it: the law's own words about a layer are not a second statement because a page shows them.
+_DRAWN_FROM_LAW = re.compile(r'<!-- daftar:(map) id="[^"]+"[^>]*-->.*?<!-- /daftar:\1 -->', re.S)
+
+
 def manifesto_restatements(tree):
     """[(path, key)] — every file outside the manifesto that states a clause again, by six of its words in order or by
     a wording the clause retired; a marked quote (`<!-- manifesto: key -->`) is not counted, and is held equal to the
@@ -530,6 +535,7 @@ def manifesto_restatements(tree):
         if _REASONING.match(body):
             continue
         body = MANIFESTO_QUOTE.sub(' ', body)
+        body = _DRAWN_FROM_LAW.sub(' ', body)
         w = _words(body)
         for i in range(len(w) - _SHINGLE + 1):
             k = shingles.get(' '.join(w[i:i + _SHINGLE]))
