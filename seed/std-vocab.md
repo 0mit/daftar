@@ -1,5 +1,5 @@
 ---
-version: "26.0"
+version: "26.1"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -2400,7 +2400,7 @@ profiles:
         attrs:
           protocol:         { required: true, in: { registry: net_protocols, take: protocol }, meaning: "what makes this link — wireguard for a tunnel, and a physical row where one exists" }
           observed:         { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the link was checked" }
-          peer:             { in: ref, meaning: "a {bean, field} ref to the far end. A REF, not a retyped address: this is the field whose absence produced the .169/.146 contradiction." }
+          peer:             { in: ref, meaning: "a {bean, field} ref to the other end. A link is MUTUAL, and has no direction: each end records the other as its peer, where a reach or a treatment names the end it is directed at, `to`. A REF, not a retyped address" }
           confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "what the link protects, for everything carried over it" }
           plane:            { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR." }
           carried_by:       { in: { key_of: links }, meaning: "optional: the `links` entry this one rides over — a tunnel rides a WAN link rides an interface" }
