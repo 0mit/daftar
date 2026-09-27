@@ -5388,13 +5388,23 @@ def collect_ips(fm):
     return out
 
 
+def _networks(fm):
+    """The networks a bean is attached to, by its `located_at` in `network-segment` (`<network>/<segment>`)."""
+    la = fm.get('located_at')
+    return frozenset(str(e['at']).split('/', 1)[0] for e in (la if isinstance(la, list) else [])
+                     if isinstance(e, dict) and e.get('system') == 'network-segment' and isinstance(e.get('at'), str))
+
+
 def check_duplicate_authoritative_ip():
+    """One address, one owner — unless the beans say otherwise in the law's words: an address a bean lists in
+    `shared_identifiers` answers for more than one (floating, VRRP, anycast), and two beans on networks that share none,
+    by their `located_at` in `network-segment`, hold a private range each (the `ip` term's `escape`)."""
     owner = {}
     for (is_bean, base), (fm, body) in docs.items():
         if not is_bean:
             continue
-        shared = set(fm.get('shared_identifiers') or [])
-        scope = fm.get('scope') or fm.get('network') or ''
+        shared = {str(x) for x in fm.get('shared_identifiers') or []} if isinstance(fm.get('shared_identifiers'), list) else set()
+        nets = _networks(fm)
         for v in collect_ips(fm):
             if v in shared:
                 continue
@@ -5402,11 +5412,16 @@ def check_duplicate_authoritative_ip():
                 norm = str(ipaddress.ip_address(v))
             except ValueError:
                 warns.append(f"{base}: value '{v}' under an ip key is not a valid IP"); continue
-            owner.setdefault((norm, scope), []).append(base)
-    for (ip, scope), bs in sorted(owner.items()):
-        if len(bs) > 1:
-            errors.append(f"duplicate authoritative IP {ip}{'@'+scope if scope else ''} owned by {bs} "
-                          f"(ref it, or shared_identifiers/scope per VOCAB 'ip')")
+            owner.setdefault(norm, []).append((base, nets))
+    for ip, held in sorted(owner.items()):
+        clash = sorted({b for i, (b, n) in enumerate(held) for c, m in held[i + 1:]
+                        if not n or not m or n & m} | {c for i, (b, n) in enumerate(held) for c, m in held[i + 1:]
+                                                        if not n or not m or n & m})
+        if len(clash) > 1:
+            errors.append(f"duplicate authoritative IP {ip} owned by {clash} — one bean owns it and the others ref it; "
+                          f"an address several answer for is listed in each one's `shared_identifiers`; a private range "
+                          f"reused on networks apart is told apart by each bean's `located_at` in `network-segment` "
+                          f"(the `ip` term's escape)")
 
 
 

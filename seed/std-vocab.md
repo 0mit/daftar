@@ -2768,12 +2768,17 @@ terms:
     anchor: { class: network, establishing: false }
     merge: { cardinality: single, order: cidr, authority: "scanned<operator-asserted<external" }
     canonical: "python ipaddress normal form (v4/v6); reject bad octets"
-    escape: "bean `shared_identifiers:` (floating/VRRP/anycast), or the network the address is on (reused private range)"
+    escape: "bean `shared_identifiers:` (floating/VRRP/anycast), or the network the address is on, as the bean's `located_at` in `network-segment` (reused private range)"
     exceptions:
       - { case: "shared/floating/VRRP/anycast IP", decision: "co-owned; own-bean+ref OR shared_identifiers", why: "many nodes answer for one address", acked: 2026-07-31 }
       - { case: "reused RFC1918 range on isolated LANs", decision: "qualify with the network it is on", why: "private ranges exist independently", acked: 2026-07-31 }
       - { case: "dotted-quad that is NOT an ip (v17.0.0.0, CIDR base)", decision: "only values under context_keys are ips; parse with ipaddress", why: "free-text mis-read as IPs", acked: 2026-07-31 }
       - { case: "IPv6 / abbreviated shorthand (.160)", decision: "canonical full form required; ipv6 deduped", why: "invisible to IPv4-only check", acked: 2026-07-31 }
+  - term: shared_identifiers
+    meaning: "the addresses this bean answers for together with other beans — a floating, VRRP or anycast address — each still written where the bean keeps its addresses; one address, one owner holds for every other"
+    context_keys: [shared_identifiers]
+    enforced_by: none
+    merge: { cardinality: set, order: none }
   - term: hostname
     meaning: "a machine's OS hostname"
     context_keys: ["hostname", "identity.anchors[].hostname"]
