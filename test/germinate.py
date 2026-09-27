@@ -61,7 +61,7 @@ summary: "A person written into a garden grown from the seed, proving the langua
 identity:
   status: confirmed
   anchors:
-    - {{ key: person_id, value: "person:ada", class: logical, establishing: true, observed: now }}
+    - {{ key: identifier, value: "person:ada", class: logical, establishing: true, observed: now }}
 provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
 nature: {nature}
 owned_by: {{ legal: {{ crown: agape }} }}
@@ -82,7 +82,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - {{ key: contract_id, value: "contract:{id}", class: logical, establishing: true }}
+    - {{ key: identifier, value: "contract:{id}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
@@ -650,8 +650,9 @@ check("the release's hook and installer are committed executable (mode 100755)",
 # paths and a LAN address — and, with no .gitignore, 15 .pyc files in the first commit.
 _tracked = run('git', 'ls-files', cwd=G).stdout.split()
 _bin = [f for f in _tracked if f.startswith('bin/')]
-check("only daftar's own tools travel under bin/ — every bin/dm*.py, the hooks and the installer, nothing else",
-      _bin and all(re.match(r'^bin/(dm[a-z]*\.py|install\.(sh|py)|hooks/[^/]+)$', f) for f in _bin)
+check("only daftar's own tools travel under bin/ — every bin/dm*.py, the one entry, the hooks and the installer, "
+      "nothing else",
+      _bin and all(re.match(r'^bin/(dm[a-z]*\.py|daftar\.py|install\.(sh|py)|hooks/[^/]+)$', f) for f in _bin)
       and 'bin/dmcheck.py' in _bin and 'bin/dmsafe.py' in _bin and 'bin/install.py' in _bin,
       [f for f in _bin if not re.match(r'^bin/(dm[a-z]*\.py|install\.(sh|py)|hooks/[^/]+)$', f)][:10])
 check("no bytecode is committed, and `.gitignore` travelled to keep it that way",

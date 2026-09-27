@@ -13,7 +13,7 @@ WHAT IT DRAWS. A relation only where the seed's data states it, each with the re
   in            an attribute's domain: a registry, an aspect, a system, a sibling's registry (`form_of`,
                 `registry_from`), a term's keys (`key_of`), a value type, a quantity — the reason is the attribute's
                 own `meaning`
-  link          a row of `registry_links`: one registry's field names rows of another — its `why`
+  link          a column of a registry's form (`registry_forms`) that names rows of another — its `why`
   resolves_through, within, same_ground_as, datum, cells_in, boundaries_in
                 between systems and schemes, or a system and the registry its cells come from — the row's `meaning`
   inverse_of    a relation that mirrors another
@@ -30,6 +30,14 @@ sit behind it, closed, and open as popovers: HTML only, since the site's pages r
 Exit 0 written; 2 the checkout has no seed/std-vocab.md or PyYAML is missing.
 """
 import argparse, html, os, re, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin'))
+import dmparse  # noqa: E402 — the one reader of a registry's form, so the links drawn are the ones the gate resolves
+
+
+def _links(law):
+    """The links between registries of the law being drawn: its `registry_forms` (26.0), or the `registry_links` rows a law
+    before 26.0 states — the page draws the release it is given, which may be older than the tools drawing it."""
+    return dmparse.registry_links(law) or [r for r in (law.get('registry_links') or []) if isinstance(r, dict)]
 
 LAW_DOCS = ('MODEL.md', 'CHECKLIST.md', 'MERGE.md')
 GITHUB = 'https://github.com/0mit/daftar'
@@ -173,7 +181,7 @@ class Seed:
             elif it['kind'] == 'row' and it['registry'] == 'operations':
                 walk(next(r for r in L['operations'] if r.get('op') == it['name']), eid, [])
         # registry links
-        for r in L.get('registry_links') or []:
+        for r in _links(L):
             if isinstance(r, dict) and r.get('from') and r.get('to'):
                 self.rel('link', self.registry_id(r['from']), self.registry_id(r['to']), f'{r.get("field")} → {r.get("take")}',
                          r.get('why', ''))
@@ -213,7 +221,7 @@ class Seed:
                 if isinstance(p, dict) and p.get('complement'):
                     self.rel('complement', me, me, f'{p["position"]} ↔ {p["complement"]}', p.get('meaning', ''))
         # layers
-        why = next((r.get('why', '') for r in L.get('registry_links') or []
+        why = next((r.get('why', '') for r in _links(L)
                     if isinstance(r, dict) and (r.get('from'), r.get('field')) == ('layers', 'beneath')), '')
         for lay in L.get('layers') or []:
             if isinstance(lay, dict) and lay.get('beneath'):

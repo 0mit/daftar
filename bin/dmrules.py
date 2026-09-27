@@ -220,8 +220,14 @@ if '--terms' in want:
             eb = t.get('enforced_by')
             _anc = t.get('anchor') or {}
             if _anc.get('minted'):
+                _forms = {str(k.get('genos')): k['identifier_forms'] for k in _seq(std.get('gene')) + list(loc.get('local_gene') or [])
+                          if isinstance(k, dict) and isinstance(k.get('identifier_forms'), list)}
                 print(f"  {n:20} [{TIER[n]}]  anchor term, MINTED — CORE enforces establishing={_anc.get('establishing', 'the bean’s to say')}; "
-                      f"a qualified value is `<garden_id>/<genos>:<name>`, by a garden this garden knows (see AXIS: minted)")
+                      f"a qualified value is `<garden_id>/<genos>:<name>`, by a garden this garden knows (see AXIS: minted); "
+                      f"a minted name carries the bean's own genos"
+                      + ("; ISSUED where it carries `issuer: {bean: <org>}`" if _anc.get('issued') == 'optional' else '')
+                      + (("; the forms a genos admits: " + ', '.join(f"{g} {'|'.join(map(str, f))}" for g, f in sorted(_forms.items())))
+                         if _forms else ''))
                 continue
             if eb == 'core':
                 print(f"  {n:20} [{TIER[n]}]  no schema — enforced by CORE (see the CORE section)")

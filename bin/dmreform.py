@@ -42,11 +42,33 @@ ENTRY_FACETS = (('required', 'entry_required_attrs'), ('values', 'entry_values')
 SELF_FACETS = (('required', 'required_attrs'), ('type', 'attr_types'), ('extent', 'attr_extents'),
                ('ref', 'ref_fields'))
 
+def _renamed_aspects():
+    """{old name: new name} for each aspect the law in force RETIRED (`retired`, at: aspect, instead: "`<new>`: …"): an
+    old construct is read under the name the law gives the aspect now (26.0: `capability` is `permission`), so the term
+    it translates into names an aspect the law has."""
+    try:
+        head, _ = dmparse.read(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'seed',
+                                            'std-vocab.md'))
+        law = dmparse.loads(head) or {}
+    except Exception:
+        return {}
+    out = {}
+    for r in law.get('retired') or []:
+        m = re.match(r'^`([a-z][a-z0-9_-]*)`', str(r.get('instead') or '')) if isinstance(r, dict) else None
+        if m and r.get('at') == 'aspect':
+            out[str(r.get('name'))] = m.group(1)
+    return out
+
+
+_RENAMED = _renamed_aspects()
+
+
 def _legacy_aspects(sch):
     a = (sch or {}).get('on_aspect')
     if isinstance(a, dict):
         a = [a]
-    return [x for x in (a or []) if isinstance(x, dict) and x.get('aspect')]
+    return [dict(x, aspect=_RENAMED.get(str(x['aspect']), x['aspect']))
+            for x in (a or []) if isinstance(x, dict) and x.get('aspect')]
 
 
 

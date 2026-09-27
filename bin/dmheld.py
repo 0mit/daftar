@@ -35,6 +35,7 @@ bin/dmsave.py's `--body`, and say no more of what was held.
 import os, re, secrets, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse   # noqa: E402 — the one reader of a front matter
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmpass    # noqa: E402 — sensitivity, and the gardener
 import dmwhere   # noqa: E402 — this host, and what a root means on it
 import yaml      # noqa: E402
@@ -252,7 +253,7 @@ def person(fields, *, root=ROOT, host=None, store=None, basis=None):
                         f"---\nbean: {pid}\ngenos: person\ntitle: \"{pid}\"\nstatus: active\n"
                         f"summary: \"a person whose name and contacts are held off git\"\nnature: empsychon\n"
                         f"owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
-                        f"identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: \"person:{pid}\", "
+                        f"identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: \"person:{pid}\", "
                         f"class: logical, establishing: true }} ] }}\n"
                         f"provenance: {{ src: asserted-by-human, by: {g}, as_of: now }}\n---\n"
                         f"Held: `root:{name}/{hexkey}`{' on ' + basis if basis else ''}.\n")
@@ -344,8 +345,7 @@ def due(*, root=ROOT, beans=None, days=30):
 def _staged_beans(root):
     """{id: front matter} of every bean in the INDEX — what a commit would hold, read as the gate reads it."""
     import subprocess
-    ls = subprocess.run(['git', '-C', root, 'ls-files', '-z', '--', 'beans/'], capture_output=True)
-    paths = [p for p in ls.stdout.decode('utf-8', 'replace').split('\0') if p.endswith('.md') and '/' not in p[6:]]
+    paths = dmgarden.listed(root, 'beans', at='index')
     if not paths:
         return {}
     r = subprocess.run(['git', '-C', root, 'cat-file', '--batch'], capture_output=True,

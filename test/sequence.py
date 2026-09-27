@@ -207,15 +207,15 @@ The agency's walk.
 
 
 def person(id, name):
-    return bean(id, "person", "empsychon", f"{id} — {name}", f"{name}, invented.", "person_id", f"person:{id}", "logical", "",
+    return bean(id, "person", "empsychon", f"{id} — {name}", f"{name}, invented.", "identifier", f"person:{id}", "logical", "",
                 f"{name}, invented.", own="owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n"
                 ).replace("owned_by:", "consent: { bean: harbour-tale }\nowned_by:", 1)   # kept by name on their word (F2)
 
 
 LARK = bean("lark-press", "org", "lekton", "lark-press — a publisher", "An invented small publishing house.",
-            "org_id", "org:lark-press", "logical", "", "A publisher.")
+            "identifier", "org:lark-press", "logical", "", "A publisher.")
 CASE = bean("harbour-tale", "contract", "lekton", "harbour-tale — placing a manuscript",
-            "Rhea places Wren's manuscript with Lark Press.", "contract_id", "contract:harbour-tale", "logical", """parties:
+            "Rhea places Wren's manuscript with Lark Press.", "identifier", "contract:harbour-tale", "logical", """parties:
   author: { who: { bean: wren }, role: author, accepted: 2026-09-01 }
   agent: { who: { bean: rhea }, role: agent, accepted: 2026-09-01 }
   publisher: { who: { bean: lark-press }, role: publisher }

@@ -125,7 +125,7 @@ Ownership is separate from **habitat**: a running instance is owned through its 
   `settles` named occurrences, each its own amount, and what is outstanding is read.
 - **When it falls due may be relative** (`falls_due`): after or before another position — its occurrence, a moment of
   `timing`, another clause's due — by an extent, then at a place in the cell reached; read each time, never stored.
-  A clause may hold only within a window (`during`), and its stance chooses the words a reader is warned with: an
+  A clause may hold only within a window (`during`), and its permission chooses the words a reader is warned with: an
   obligation falls due, a permission lapses. A permission is never owed.
 - **What brings a clause into force** (`when`) is a reading that holds, or the condition in words where no reading
   says it yet. A clause whose reading does not hold is not yet in force, and nothing of it is due.

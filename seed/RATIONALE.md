@@ -264,7 +264,7 @@ P3/D1: identity policy attaches to the ROOT AXIS...
 
 AN OPEN KEY WAS AN OPEN MERGE KEY (19.0). Identity is matched by (key, value), and until 19.0 the key was any
 string a bean wrote. The fourth cold-start drill invented a key, product_name, and the gate took it; measured, the
-first garden's beans carried seventeen keys no term declared — `product_id`, `session_id`, `service_id`, the
+first garden's beans carried seventeen keys no term declared — a product's id, a session's, a service's, the
 ids the registry of gene had NAMED IN PROSE since P3 and never declared. Two gardens spelling one anchor model
 and product_name would never recognise the same object, which is the one thing identity anchors exist to do.
 So the key names a term that declares `anchor:`, and the gate refuses any other. A garden-local key is a local
@@ -784,6 +784,8 @@ systems every garden shares, and two gardens that never met agree which place th
 
 == MORE WAYS OF SAYING WHERE BY IDENTIFIER — each resolves through a coordinate, none is one ==
 
+**Why it has no pattern.** no two countries write an address the same way, and inventing a canonical form would reject valid addresses to look thorough. The address is prose; the country it is within is not.
+
 ## roles
 
 == ROLES: what a being DOES, as against what it IS (added 7.0) ==
@@ -832,7 +834,7 @@ reaches it (ssh, a vendor console, SNMP). The split matters because the three de
 surface is often public by design, and A MANAGEMENT SURFACE ANSWERING ON THE INTERNET is the oldest finding in any
 audit. With a plane stated, that is a CELL a term can declare rather than a line in somebody's report.
 
-## registry_links
+## registry_forms
 
 == REGISTRY LINKS: a row of one registry names a row of another, and the gate resolves it ==
 A protocol is also a TECHNOLOGY with a specification somebody publishes, and the technology catalogue is rooted in
@@ -1264,7 +1266,7 @@ and declaring one would orient it like a line
 
 `impossible` was first occupied on 2026-08-02, by a domain's backup MX record that named its own primary.
 
-## aspects[capability].meaning
+## aspects[permission].meaning
 
 The SECOND aspect, and the first evidence that the machinery generalises. It reuses the square of
 opposition but NOT the same square: `necessity` is ALETHIC modality (what IS the case — this input is
@@ -1274,7 +1276,7 @@ Conflating them is the same error as one axis doing two jobs: "this VPS cannot s
 Positions relate a being to a CAPABILITY (an open kebab name), not to another being, which is what
 the necessity aspect could not express.
 
-## aspects[capability].poles
+## aspects[permission].poles
 
 both deontic axes
 
@@ -1501,14 +1503,6 @@ GATE (P2): enforced generically from here, not from code
 
 a genos:codebase bean MUST carry a non-empty code_paths
 
-## profiles.code.terms[code_paths].agent_directive
-
-MOVED OUT 2026-08-02 (P1 / D6, human-ratified): `summary_ref` and `last_indexed` left this term and now
-live in `analysis_cache`. Rationale (one-owner-of-a-fact): a summary is an ANALYSIS RESULT, not a property
-of a filesystem path, and a date is a weaker staleness signal than the source's own git sha. code_paths
-now does exactly ONE job — LOCATE the tree and say whether it may be walked. An analysis_cache entry
-binds back to the tree it analysed via its `covers_paths`.
-
 ## profiles.code.terms[git_remote].anchor
 
 a remote URL is globally unique for the repo → establishes a codebase's identity
@@ -1554,12 +1548,6 @@ beans, and the direct cost of that is on record: the router's `owns.wg_tunnel` s
 endpoint 203.0.113.19 while the VPS's `owns.wg_identity` said it dials .16 and listed .19 as a freed
 spare. Two beans, the same scanning agent, one day apart, and the gate cannot see it because
 `owns` has no rule to check. A link whose far end is a RESOLVED REF cannot contradict itself.
-
-## profiles.network.terms[links].dag_note
-
-The first draft of this term got it wrong twice in one line: it carried `dag: true` over `peer` and `carried_by`, and
-the design review caught both before any bean was written — the failure `inverse_of` carries a cardinality to avoid,
-met twice more in a single term. The note is long for that reason.
 
 ## profiles.network.vacancies[pptp]
 
@@ -1809,6 +1797,14 @@ EACH PLACE IN THE RANK, EARNED. The rank orders HOW A FACT IS KNOWN:
 merged value still says a tool produced it, which Phase 7 (2026-08-03) showed is exactly what must not be
 lost or gained by passing through a tool. Only the weighing borrows.
 
+restated for the human reader; the gate reads schema.key_form
+
+**Its keys.** kebab-case <cache_type>. Known types so far (a NON-exhaustive registry, NOT an enum the gate enforces): code-structure | framework-surface | api-surface | api-client-contract | security-surface | bcf-domain. Anticipated: dep-graph | sql-schema | revit-ui | csharp-api | python-models | test-coverage.
+
+**When an entry may be used.** An entry is VALID only while its staleness_key matches the live source at covers_paths. A STALE entry is NEVER silently used: re-run the analysis, then REFRESH the entry (new as_of + new staleness_key). Trusting a stale entry is a provenance violation, not a shortcut.
+
+**What an agent does.** Before code of this bean is analysed, `analysis_cache` is read: an entry of the type needed whose `staleness_key` still matches the live source at `covers_paths` is used, not derived again. The code is analysed again only when the key has moved or no entry of that type exists, and a refreshed entry (a new `as_of` and `staleness_key`) is then written back. A new kind of analysis is a new kebab-case `<cache_type>` key: it asks no change of the law, the gate or the bean's shape.
+
 ## terms[analysis_cache].meaning
 
 Design step D6, executed as P1 (2026-08-02, human-ratified rule-change).
@@ -1842,10 +1838,6 @@ Rule 6: absolute dates only
 11.0: a staleness key is a POSITION, and `git-head:<sha>` was resolved against whatever tree the
 READER had checked out — one analysis, one verdict per machine. The git-object-graph form names the
 repository, so every reader asks the same object graph. `manual:<why>` stays for what no key can track.
-
-## terms[analysis_cache].open_keys
-
-restated for the human reader; the gate reads schema.key_form
 
 ## mechanism_form
 
@@ -2088,15 +2080,6 @@ written by the hypervisor and moves with the VM's definition, so on a `virtual-h
 The class stays `hardware` — that is what the fact is — and the pin was dropped at 19.0 so the family rule can
 say which.
 
-## terms[product_id]
-
-Declared at 19.0 with `service_id`, `org_id`, `person_id`, `program_id`, `contract_id`, `design_id`, `doc_id`,
-`manifest_id`, `session_id`, `instance_id` and `email`: the ids the registry of gene had named in prose since P3
-("Establishing anchor: a logical product_id") and the first garden had used all along, made terms when
-`identity_policy.anchor_key` required every key to be one. All logical; none declares a form, because each is
-whatever its home assigns or the estate mints once. `manifest_id` and `email` leave `establishing` to the bean
-— a module's name corroborates beside the git remote that establishes, and an address is reassigned.
-
 ## terms[garden_id]
 
 A GARDEN IS KNOWN BY THE COMMIT IT GERMINATED FROM. Content-addressed: assigned by no registry and no person, the
@@ -2121,20 +2104,7 @@ offer until it can.
 A document kept whole is identified by its own bytes. The SHA-256 of them names one content in every garden that
 holds it, needs no home and no registry, and a changed byte is another thing — which is right for a statement
 downloaded from a bank or a conversation saved as a transcript, the documents that have no id of their own.
-`doc_id` stays for a document whose home names it.
-
-## terms[event_id]
-
-A happening has an identity where it is kept — the UID an invitation carries — or one a garden mints once. Minted,
-because two gardens recording one dinner will each name it, and the name must be qualified before it crosses.
-
-## terms[emp_id].enforced_by
-
-no canonical form declared: an employer-assigned id has whatever shape the employer uses.
-
-## terms[emp_id].anchor
-
-name is NEVER an anchor
+An `identifier` stays for a document whose home names it.
 
 ## terms[id].enforced_by
 
@@ -2149,11 +2119,6 @@ FORM they share. This is the MAJOR change of the release: an existing term's han
 ## terms[ref].enforced_by
 
 the link FORM and its resolution are CORE checks (target exists, named field present, shallow). Since 2.0 the acyclicity is declared per relation via schema.dag rather than here.
-
-## terms[ref].handling
-
-`graph` was narrowed at 2.0: from acyclicity asserted for a fixed list of sections to acyclicity declared per
-relation.
 
 ## terms[genos]
 
@@ -2563,15 +2528,6 @@ the point of the term: a path grammar is a property of the OS's API and a storag
 property of the volume, and NTFS mounted through ntfs-3g has unix paths, so a model that had one
 axis for both could not describe an ordinary Windows disk read from Linux.
 
-## terms[volumes].reproduction_note
-
-SCOPE, STATED BECAUSE IT IS ABOUT TO GROW. This term records the LAYOUT — what exists, what carries
-what, and where it is mounted — which is what a rebuild needs to recreate the shape. It does NOT
-record contents, keys or passphrases, and it must not: `no secrets` is a founding rule of this
-ledger. The operator has asked for beans complete enough to reproduce a machine, and the honest
-remaining gap is CONFIGURATION, which is a separate question from layout because config is
-SOMEBODY ELSE'S authoritative truth and ground rule 3 forbids mirroring it.
-
 ## terms[beanger].meaning
 
 THE OPERATOR'S TERM, THEIR DESIGN AND THEIR NAME, 2026-08-07. BEAN + LEDGER: a per-datum ledger,
@@ -2770,7 +2726,7 @@ the reading: a VM has no matter, so under `host` (soma, family `hardware`) it co
 honestly — the one rented VPS in the first garden was anchored on its name, and another carried its OpenStack
 instance UUID as a `serial`, `class: hardware`, and sat provisional. What a VM IS is a running machine-instance
 on a hypervisor: created, running, torn down. That is the nature empsychon, whose crown `agape` "lapses at death or
-teardown", and whose family is logical — a name or the id its provider assigns (`instance_id`). Tenancy stays
+teardown", and whose family is logical — a name or the id its provider assigns (`identifier`). Tenancy stays
 where it was: a rented VM is owned `external` and answered for here; a VM on the estate's own hypervisor is
 owned through it and `lives_in` it. A rented BARE-METAL server stays a `host`: it has a serial, and ownership
 was always orthogonal to nature.
@@ -2800,7 +2756,7 @@ clone recorded as a rehearsal, which is the same garden under another folder nam
 
 ## gene[document]
 
-`doc_id` promised a document since it was declared, and there was no genos to anchor with it. A document is a being:
+The law named a document's id before there was a genos to anchor it with. A document is a being:
 it has an owner who is often not its holder — a bank's statement is the bank's — an identity, and copies in places.
 What must not be kept whole stays out of it: a transcription of its lines is a `capture` on it, whose `redactions`
 say what was left out and why, so a card number is never in the ledger and its absence is on the record.
@@ -3460,3 +3416,189 @@ EVERY PLACE'S LAW IS A SIBLING. The places on daftar's path differ:
 
 None is privileged (sibling). daftar is written in the form of none of them, and asks no one to break the law where
 they stand. What a place's law asks of a person, the steward answers for what he himself publishes.
+
+## profiles.code.terms[code_paths]
+
+MOVED OUT 2026-08-02 (P1 / D6, human-ratified): `summary_ref` and `last_indexed` left this term and now
+live in `analysis_cache`. Rationale (one-owner-of-a-fact): a summary is an ANALYSIS RESULT, not a property
+of a filesystem path, and a date is a weaker staleness signal than the source's own git sha. code_paths
+now does exactly ONE job — LOCATE the tree and say whether it may be walked. An analysis_cache entry
+binds back to the tree it analysed via its `covers_paths`.
+
+**What an agent does.** A reader of this product's code reads the owning bean's `code_paths` to locate the tree, then its `analysis_cache` for a result that stands in for a scan. A tree whose `scan_policy` is `reference-only` (a vendored framework, say) is read by its summary and not walked for context; it is searched only for one named symbol. A tree is analysed again only when the entry that covers it is STALE (its `staleness_key` no longer matches the live source), and that entry is then refreshed.
+
+## profiles.code.terms[git_remote]
+
+**Its canonical form.** verbatim remote string (e.g. host:path or scheme URL); lowercase host only
+
+## profiles.network.terms[links]
+
+The first draft of this term got it wrong twice in one line: it carried `dag: true` over `peer` and `carried_by`, and
+the design review caught both before any bean was written — the failure `inverse_of` carries a cardinality to avoid,
+met twice more in a single term. The note is long for that reason.
+
+**Why it is acyclic.** NOTHING HERE IS ACYCLIC. `peer` is MUTUAL — a router peers a VPS and the VPS peers the router — so an acyclic check would refuse the very first tunnel recorded honestly: a rule made unsatisfiable by its own subject matter. `carried_by` names another entry on THE SAME bean, so it is not a cross-bean edge and there is no graph to walk; it is documented ordering, and it is deliberately NOT `in: ref`. PROTOCOL carriage is separately and permanently not acyclic — wireguard is carried by udp over ipv4 and then carries ipv4, because that recursion is what encapsulation IS — which is why `rides_on` in the registry is descriptive and joins no check. A rule that cannot be satisfied is worse than no rule: it is the failure `inverse_of` carries a cardinality to avoid.
+
+## terms[owned_by]
+
+**Its forms, written out.**
+
+```
+owned_by: { <facet>: { owner: {bean: <person|org>} }, ... }   # introduce facet-owners here
+owned_by: { via: {bean: <parent>} }                           # inherit parent's facet-owners
+owned_by: { <facet>: { contract: {bean: <contract>} } }       # a SINGLE facet co-owned -> a contract resolves it
+owned_by: { <facet>: { external: '<who>' } }                  # owned OUTSIDE this garden (third-party software, a vendor); names the owner in prose because they are not a managed object here
+owned_by: { <facet>: { crown: <branch> } }                     # ownership TERMINATES at the axiom; the branch must be the one this bean's nature routes to. A person is pinned to it; an agreement between parties, or a happening between people, may choose it — owned by none of them
+```
+
+## terms[responsibility]
+
+**Its forms, written out.**
+
+```
+responsibility: { <facet>: { holder: {bean: <person|org>} } }
+responsibility: { via: {bean: <parent>} }
+responsibility: { <facet>: { contract: {bean: <contract>} } }   # shared duty -> a contract, as with co-ownership
+responsibility: { <facet>: { external: '<who>' } }              # answered for outside this garden
+responsibility: { <facet>: { self: true } }                      # a being answers for ITSELF (persons). Reflexive, so it is deliberately NOT an edge — a self-edge would be a cycle, and autonomy is not a dependency.
+responsibility: { <facet>: { parties: true } }                   # an agreement is answered for by the parties it binds, each for its own clauses. Reflexive like `self`: the parties are named in `parties`, so this draws no edge. Reserved to the gene that name it (an agreement).
+```
+
+**Its rules, in words.** - `parity`: every facet with an OWNER must have a HOLDER and vice versa. An ownership claim nothing answers for is a loose end; a duty nobody owns is orphaned.
+- Not the same as ownership: they are opposite arcs, not synonyms. A rented VPS is owned by the provider and answered for by whoever runs it; that is the normal case, not an exception.
+
+## terms[instance_of]
+
+**Its form, written out.**
+
+```
+instance_of: {bean: <product|codebase>}
+```
+
+## terms[lives_in]
+
+**Its form, written out.**
+
+```
+lives_in: {bean: <habitat>}   # follow the chain for the full stack
+```
+
+## terms[ip]
+
+**The way out, when one address is several beans'.** bean `shared_identifiers:` (floating/VRRP/anycast), or the network the address is on, as the bean's `located_at` in `network-segment` (reused private range)
+
+## terms[id]
+
+**How it is handled.** - `format`: kebab-case; quote if numeric/reserved; genos-prefixed for high-cardinality gene
+- `unique`: per (space,base)
+
+## terms[ref]
+
+`graph` was narrowed at 2.0: from acyclicity asserted for a fixed list of sections to acyclicity declared per
+relation.
+
+**How it is handled.** - `resolve`: target exists in right space; field present in target owns/attributes/details; shallow (ref-to-ref=warn)
+- `graph`: acyclicity is declared PER RELATION via schema.dag — not asserted here for a fixed list of sections
+
+## terms[timing]
+
+**Its keys.** kebab-case moment names. Used so far: start | sync | stop. The key is DELIBERATELY OPEN and the gate is forbidden from enumerating it — a run with four sync points, or a moment nobody has named yet, must never require a rule-change.
+
+## terms[roots]
+
+**Its keys.** kebab-case root names, shared across hosts by AGREEMENT rather than by a registry: a root is a name two machines both choose to use, and centralising the list would re-introduce the one shared document this term exists to avoid.
+
+## terms[os]
+
+**Why the release is not part of the value.** The RELEASE (15.0, 9.7) is deliberately NOT part of this value. A version moves on every upgrade while the OS does not, and putting both in one scalar would make the enum unclosable — a new point release would be a rule-change. The release belongs in `owns.os_release`, beside the date it was read.
+
+## terms[volumes]
+
+SCOPE, STATED BECAUSE IT IS ABOUT TO GROW. This term records the LAYOUT — what exists, what carries
+what, and where it is mounted — which is what a rebuild needs to recreate the shape. It does NOT
+record contents, keys or passphrases, and it must not: `no secrets` is a founding rule of this
+ledger. The operator has asked for beans complete enough to reproduce a machine, and the honest
+remaining gap is CONFIGURATION, which is a separate question from layout because config is
+SOMEBODY ELSE'S authoritative truth and ground rule 3 forbids mirroring it.
+
+**What it records, and what it never does.** The LAYOUT only — what exists, what carries what, and where it is mounted: what a rebuild needs to recreate the shape. Never contents, keys or passphrases. Configuration is not layout: it is somebody else's authoritative truth, referenced and never mirrored.
+
+## terms[risks]
+
+**Why a risk is not a capability.** A `capabilities` entry at `forbidden` + `possible` IS a latent risk, and the two are deliberately NOT merged: a capability records the STANCE a being takes, a risk records a FAILURE MODE, and the same prohibition can hold on beings with no risk attached. Where one produces the other, the risk entry says so in `evidence` and cites the capability by name. The alternative — deriving risks from capabilities in the gate — was rejected because a derived finding cannot carry a `consequence` that anybody wrote, and the consequence is the part worth having.
+
+## anchor_systems[unix-filesystem]
+
+**Its scope.** UNIX-SHAPED ON PURPOSE, and named so rather than called `host-filesystem`. C:\Users\user\source\repos\tree cannot satisfy this pattern, and bending it in would give one system two formats — the exact reinvention the pattern rule exists to stop. `windows-filesystem` is declared beside it as a SEPARATE system for exactly that reason.
+
+## anchor_systems[physical]
+
+**Why it has no pattern.** a shelf, a room and a building have no canonical form a garden could impose without inventing one. Stating `none` is the honest position: the address is prose, and prose is what a human reads to go and find it.
+
+## operating_systems[routeros]
+
+**Why it has no path grammar.** DELIBERATELY none, and the most interesting row here. RouterOS positions are CONFIG MENU paths — `/ip firewall nat`, `/interface/wireguard/peers` — not filesystem paths, and they resolve in a configuration tree rather than in a directory. `pattern: none` is already an honoured value in `anchor_systems`, declared there for the `physical` system, so refusing to invent a grammar is a shape this law can already express rather than a special case invented for this row.
+
+## terms[identifier]
+
+ONE TERM FOR AN IDENTITY A BEING IS GIVEN (26.0). Until then each genos had a term of its own — thirteen of them —
+and every one said the same thing — the logical identity of a <genos>, an id its home assigns
+or a name the garden mints once, `<genos>:<name>`. A new genos needed a new term before its first bean could be named,
+so the law grew by one word per kind of being, and a name already carried its genos: `person:sam` under a term named for persons
+said "person" twice. The catalogue of the language showed the pattern as thirteen siblings of one shape.
+
+What the thirteen told apart is kept, and said where it belongs. That a minted name is the bean's own genos is now
+checked, where before a `contract:` name under the persons' term passed. Which forms a genos admits is a column of its row
+in `gene` (`identifier_forms`), so the one prose rule that mattered — a person is never identified by a number a state
+assigns — is a check: a person's identifier is minted or issued, and one that reads as neither is warned, as an issued
+anchor with no issuer always was, because an upgrade can invent no issuer. Whether an identifier ESTABLISHES is the
+bean's to say, as it already was for a document's reference and a manifest's name; the natures' minimum of
+establishing anchors still stands behind it, so a confirmed person with none is still told.
+
+What stays apart, and why: `garden_id`, `content_hash`, `email`, `phone`, `fqdn`, `hostname`, `mac`, `serial`,
+`wg_pubkey` and the two fingerprints each have a value system of their own — a pattern, a canonical form, a registry —
+and are read off the thing or its address, never given to it.
+
+**The ids it gathers.** They were made terms at 19.0, when `identity_policy.anchor_key` required every key to be
+one: the ids the registry of gene had named in prose since P3 and the first garden had used all along. All logical;
+none declares a form, because each is whatever its home assigns or a garden mints once. A module's name leaves
+`establishing` to the bean — it corroborates beside the git remote that establishes.
+
+**A happening's.** It has an identity where it is kept — the UID an invitation carries — or one a garden mints once.
+Minted, because two gardens recording one dinner will each name it, and the name must be qualified before it crosses.
+
+**An employee number.** No canonical form is declared: an employer-assigned id has whatever shape the employer uses,
+and it identifies only with its issuer. A name is never an anchor.
+
+## term_form
+
+ONE SHAPE FOR A TERM (26.0). A term had grown keys that no tool read — a note on its keys, the release left out of a
+value, a form written out, a directive to an agent — each named for the occasion. They were prose riding on the law: a
+reader could not tell a rule from a remark, and nothing kept the next one from arriving under a new name. The record
+is now declared, and the gate holds every term to it, the law's, a profile's and a garden's alike. What a writer needs
+to apply a term is its `meaning`; why it is so is reasoning, here, under the term's path.
+
+## registry_forms
+
+EVERY REGISTRY DECLARES ITS COLUMNS (26.0). The catalogue found forty-six siblings shaped unlike their group, and most
+were a row carrying a note its siblings lacked, or a column only one row needed. A registry's form says which columns a
+row holds and which it may, so a note cannot ride on a row, a fact of a new kind is a column the form is given first,
+and a garden's rows are held to the same form as the law's. It took in what `registry_links` said, because a link is
+one thing a column says: where its values come from. A form admits what a tool lets a garden write — a system's
+`overlay`, a scheme's `labels` — even where no row of the law uses it yet, because a form is for every garden.
+
+## tool_families
+
+THE TOOLS BY WHAT THEY ARE FOR (26.0). Every tool lay flat in one directory, one layer of the law, and a reader met
+forty of them in alphabetical order. A family says what a tool is for, in the words of what a person does: read the
+law, judge, write, read the garden, measure, deal with another garden, run the loop. The files did not move: every
+command a document, a hook or a garden's habit names still runs, and a move would have doubled each file as a shim on
+systems without links. The entry groups them instead.
+
+## verbs
+
+ONE ENTRY (26.0). `bin/daftar.py <verb>` runs a tool under the Python that runs the entry, so one command works alike
+wherever Python does — on Windows too, where `python3` may be missing or a store alias. The verb is the tool's name
+without `dm`, so the row states the family and nothing a file name already says; what the tool does is the first line
+of its own help, read from it, never restated.
+

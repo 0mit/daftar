@@ -37,11 +37,12 @@ Exit: 0 = nothing stale or expiring, 1 = something needs action, 2 = setup probl
 Usage: python3 bin/dmstale.py [--quiet] [--days N]   (--quiet prints only what needs attention)
 """
 import datetime
-import glob, os, re, subprocess, sys
+import os, re, subprocess, sys
 from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmcal
 import dmform
 import dmunits
@@ -649,9 +650,9 @@ def conflicted(v):
 
 
 def stance_of(entry, decl, sch=None):
-    """The EFFECTIVE position of an entry on the aspect `expiry.stance` names (24.0, N5): as written, else the attribute's
-    default (`required`), else None."""
-    a = (decl or {}).get('stance')
+    """The EFFECTIVE position of an entry on the aspect `expiry.permission` names (24.0, N5): as written, else the
+    attribute's default (`required`), else None."""
+    a = (decl or {}).get('permission')
     if not a or not isinstance(entry, dict):
         return None
     if entry.get(a) is not None:
@@ -1120,7 +1121,7 @@ def report():
     HORIZON = int(_d)
     counts = {'FRESH': 0, 'STALE': 0, 'UNKNOWN': 0, 'NOT-HERE': 0}
     rows = []
-    for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
+    for f in dmgarden.paths(ROOT, 'beans'):
         head, _ = dmparse.read(f)
         if head is None:
             continue
@@ -1158,7 +1159,7 @@ def report():
     # runs out — so a tool that warned about every date would be wrong nine times in ten, and a warning
     # that is usually wrong is one people stop reading.
     exp_rows, expiring, notes = [], 0, []
-    for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
+    for f in dmgarden.paths(ROOT, 'beans'):
         head, _ = dmparse.read(f)
         if head is None:
             continue

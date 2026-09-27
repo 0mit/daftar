@@ -21,6 +21,7 @@ import collections, glob, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -37,7 +38,7 @@ def _host_names():
     list was once typed here as this estate's six hosts, and in any other garden every command would have
     been reported host-ambiguous — or worse, claimed by a name that means nothing there."""
     names = {'localhost'}
-    for path in glob.glob(os.path.join(ROOT, 'beans', '*.md')):
+    for path in dmgarden.paths(ROOT, 'beans'):
         fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
         if not isinstance(fm, dict) or fm.get('genos') not in ('host', 'virtual-host'):
             continue

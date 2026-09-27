@@ -155,9 +155,9 @@ check("the path reader says where a path stops being one", "character 3" in (dmp
 vocab(at_most="[room]")
 out = gate()
 check("`at_most_one_of` written as a flat list is refused by name", "`schema.at_most_one_of` is a list of groups" in out, out[-900:])
-vocab(expiry="\n      expiry: { attr: day, notice: { of: time, measure: { count: 7, unit: day } }, why: \"a rehearsal missed\", stance: mood }")
+vocab(expiry="\n      expiry: { attr: day, notice: { of: time, measure: { count: 7, unit: day } }, why: \"a rehearsal missed\", permission: mood }")
 out = gate()
-check("an `expiry` whose `stance` names no attribute of its term is refused", "rehearsals.schema.expiry.stance names `mood`, which is no attribute of rehearsals" in out, out[-900:])
+check("an `expiry` whose `permission` names no attribute of its term is refused", "rehearsals.schema.expiry.permission names `mood`, which is no attribute of rehearsals" in out, out[-900:])
 vocab()
 
 r = run(sys.executable, os.path.join(ROOT, "bin", "dmrules.py"), cwd=G)

@@ -124,7 +124,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - {{ key: person_id, value: "{pid}", class: logical, establishing: true }}
+    - {{ key: identifier, value: "{pid}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "{by}", as_of: {as_of}{extra} }}
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
@@ -152,7 +152,7 @@ summary: "{id} agrees to be kept in this garden by name"
 nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:consent-{id}", class: logical, establishing: true }} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:consent-{id}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: sam, as_of: {as_of} }}
 parties:
   keeper: {{ who: {{ bean: sam }}, accepted: 2026-09-01 }}
@@ -251,7 +251,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - {{ key: contract_id, value: "contract:shared-camera", class: logical, establishing: true, provenance: {{ src: asserted-by-human, by: "ali", as_of: {anchor} }} }}
+    - {{ key: identifier, value: "contract:shared-camera", class: logical, establishing: true, provenance: {{ src: asserted-by-human, by: "ali", as_of: {anchor} }} }}
 provenance: {{ src: asserted-by-human, by: "sam", as_of: now }}
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}

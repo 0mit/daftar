@@ -64,7 +64,6 @@ nothing it carries can hide, retitle or add a line of what this tool says.
 """
 import copy
 import datetime
-import glob
 import hashlib
 import json
 import os
@@ -80,6 +79,7 @@ sys.dont_write_bytecode = True          # `read` writes NOTHING in the garden �
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 try:
     import yaml
 except ImportError:
@@ -300,7 +300,7 @@ def uncommitted(bid):
 def local_beans():
     """{id: (fm, body, path)} for the working tree — what a proposal would be taken into."""
     out = {}
-    for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
+    for f in dmgarden.paths(ROOT, 'beans'):
         fm, body = parse_text(open(f, encoding='utf-8').read())
         if fm:
             out[os.path.basename(f)[:-3]] = (fm, body, f)
@@ -839,6 +839,13 @@ def load_proposal(path):
     return env, beans, stubs, journal, body, ''.join(prose).strip('\n')
 
 
+def under_id_of(under):
+    """The identity of the agreement a proposal is made under: `under.identifier` (26.0), or `under.contract_id`, as a
+    proposal made by a release before 26.0 names it — a proposal is read as it was made, and never rewritten."""
+    under = under if isinstance(under, dict) else {}
+    return under.get('identifier') or under.get('contract_id')
+
+
 def envelope_shape(env):
     """What in a proposal's envelope does not have the shape `make` gives it — each a place and what it should be."""
     out = []
@@ -846,7 +853,7 @@ def envelope_shape(env):
         if k in env and not isinstance(env[k], dict):
             out.append(f"`{k}` should be a mapping")
     for sec, keys in (('from', ('garden', 'name', 'gardener', 'pin', 'test')), ('to', ('garden',)),
-                      ('under', ('contract_id',))):
+                      ('under', ('identifier', 'contract_id'))):
         for k in keys:
             v = (env.get(sec) if isinstance(env.get(sec), dict) else {}).get(k)
             if v is not None and not isinstance(v, str):
@@ -1061,11 +1068,11 @@ def cmd_make(argv):
             refusals.append((f"--under {under} does not name {' and '.join(missing)} among its `parties`",
                              f"a proposal is made under an agreement whose parties include this garden's gardener "
                              f"({gardener}) and the other garden's ({to_gardener})"))
-        under_id = anchor_value(ub[0], 'contract_id')
+        under_id = anchor_value(ub[0], 'identifier') or anchor_value(ub[0], 'contract_id')
         if not under_id:
-            refusals.append((f"--under {under} has no establishing `contract_id` — the receiving garden could not tell "
+            refusals.append((f"--under {under} has no establishing `identifier` — the receiving garden could not tell "
                              f"which agreement this is", MINT_HINT.format(b=under)))
-        elif _merge().bare('contract_id', under_id):
+        elif _merge().bare('identifier', under_id):
             refusals.append((f"--under {under} is named by a BARE name ({under_id}), which identifies it only inside "
                              f"this garden", MINT_HINT.format(b=under)))
 
@@ -1240,7 +1247,7 @@ def cmd_make(argv):
     def front(env):
         return '---\n' + yaml.safe_dump(env, sort_keys=False, allow_unicode=True, width=10 ** 6) + '---'
 
-    env = {'proposal': pid, 'from': frm, 'to': {'garden': to_id}, 'under': {'contract_id': under_id}, 'made': made,
+    env = {'proposal': pid, 'from': frm, 'to': {'garden': to_id}, 'under': {'identifier': under_id}, 'made': made,
            'fingerprint': None, 'beans': offered, 'stubs': sorted(stubs)}
     # THE FINGERPRINT OF WHAT THE READER WILL READ: the envelope and the body as parsed back from the file's own text.
     head_r, body_r = dmparse.split_front_matter(front({k: v for k, v in env.items() if k != 'fingerprint'}) + body)
@@ -1988,12 +1995,12 @@ def analyse(path, as_test=False):
         A['attention'] += [f"{b}: candidate {c}" for c in cands]
 
     # UNDER: the agreement is held here, or carried in the proposal, and names this garden's gardener.
-    uid = under.get('contract_id')
+    uid = under_id_of(under)
     if uid or not A['chat']:
         probe = [('under', {'bean': 'under', 'identity': {'anchors': [
-            {'key': 'contract_id', 'value': str(uid), 'class': 'logical', 'establishing': True}]}})]
+            {'key': 'identifier', 'value': str(uid), 'class': 'logical', 'establishing': True}]}})]
         held = resolve('under', probe).get('under') or []
-        carried = [b for b in btexts if anchor_value(fms[b], 'contract_id') == str(uid)]
+        carried = [b for b in btexts if str(uid) in (anchor_value(fms[b], 'identifier'), anchor_value(fms[b], 'contract_id'))]
         ufm = local[held[0]][0] if held else (rewrite_refs(fms[carried[0]], A['map']) if carried else None)
         if not uid or ufm is None:
             R.append((f"it is made under {uid or 'no agreement'}, which this garden does not hold and the proposal does "
@@ -2382,7 +2389,7 @@ def cmd_take(argv):
             # WHO OFFERED IT is who this garden records as keeping that garden — never the name the proposal gives.
             who_keeps = f"{owner}, who keeps {fb}" if owner else f"the gardener of {fb}"
             entry = {pid: {'of': f"proposal {pid}: {', '.join(A['texts'])}, from the garden {fb} (garden {fid}), kept by "
-                                 f"{owner or 'its gardener'}, under {(env.get('under') or {}).get('contract_id')}",
+                                 f"{owner or 'its gardener'}, under {under_id_of(env.get('under'))}",
                            'owned_by_them': f"{who_keeps} (garden {fid}), as this garden records it",
                            'source': "dmpropose take",
                            'taken_at': int(time.time() * 1000),
@@ -2407,7 +2414,7 @@ def cmd_take(argv):
         prose = A.get('prose') if A['chat'] else None
         body = (f"- action: took in proposal {pid} "
                 + (f"from [[{fb}]] (garden {fid}), kept by {keeper}, under "
-                   f"{(env.get('under') or {}).get('contract_id')}" if fid else
+                   f"{under_id_of(env.get('under'))}" if fid else
                    "— a chat proposal: the gardener vouches for its origin")
                 + (f"; FROM A TEST GARDEN ({A['test']}), taken with --as-test" if A.get('test') else '') + ".\n"
                 + ''.join(l + '\n' for l in done) + cap_line

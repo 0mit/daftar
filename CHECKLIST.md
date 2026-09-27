@@ -137,7 +137,7 @@ Three kinds of entry have a writer of their own, or a form that is easy to get a
       `python3 bin/dmheld.py person`.
 - [ ] **A grant** is written on the bean whose decision it is — the gardener's own, a person's own for her own
       record, an agreement's for what it shares — with `act`, `audience`, `why`, and `over`/`positions` where it is
-      narrower than the whole bean. Nobody but the gardener may do what no grant opens; `stance: forbidden` is a
+      narrower than the whole bean. Nobody but the gardener may do what no grant opens; `permission: forbidden` is a
       ceiling. A `ratify:` grant is the gardener's alone.
 - [ ] **A selection** is steps, each an `id` and an `op`, later steps naming earlier ones by id. It is read by
       `python3 bin/dmreckon.py <bean>:<selection>` before it is committed: a reading that is refused is refused

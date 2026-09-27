@@ -195,7 +195,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:lease", class: logical, establishing: true }
+    - { key: identifier, value: "contract:lease", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: keeper, as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }

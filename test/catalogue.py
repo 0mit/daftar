@@ -139,7 +139,7 @@ check("...and a name the law gives a term and a registry is found as one, and a 
 
 # ---------------------------------------------------------------- what a person reads
 cat = dmcatalog.Catalogue()
-for _args, _want in ((["--part", "capabilities"], ("term:capabilities — term", "permission: aspect:capability",
+for _args, _want in ((["--part", "capabilities"], ("term:capabilities — term", "permission: aspect:permission",
                                                      "rules (bin/dmrules.py)", "explained by")),
                      (["--part", "dmsave"], ("bin/dmsave.py — tool, in the gate layer", "run by", "suite checks that name it"))):
     _out = io.StringIO()

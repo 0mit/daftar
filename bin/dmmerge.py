@@ -27,10 +27,11 @@ keeps what was written; only the comparison, the seed and the fingerprint use th
 CLI: dmmerge.py <garden_dir> [<garden_dir> ...]   # prints seeds + fingerprint, then the CANDIDATES
 Library: merge_gardens(list_of_beanlists) -> {seed_id: seed_dict}, fingerprint(seeds), candidates(beans)
 """
-import sys, os, re, glob, json, hashlib, unicodedata, ipaddress, datetime, copy
+import sys, os, re, json, hashlib, unicodedata, ipaddress, datetime, copy
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmcal
 import yaml
 
@@ -311,7 +312,7 @@ def load_garden(path, gid, garden_id=_UNREAD):
     ident = garden_identity(path) if garden_id is _UNREAD else garden_id
     test = garden_test(path)
     beans = []
-    for f in sorted(glob.glob(os.path.join(path, 'beans', '*.md'))):
+    for f in dmgarden.paths(path, 'beans'):
         fm = dmparse.loads(dmparse.read(f)[0] or '') or {}
         b = {'garden': gid, 'garden_id': ident, 'id': fm.get('bean', os.path.basename(f)[:-3]), 'fm': fm}
         if test:
@@ -557,14 +558,13 @@ def registry_keys(name):
 
 
 def root_of(registry):
-    """The one row of `registry` every other reaches — where a `registry_links` row from it declares `rooted: true` —
+    """The one row of `registry` every other reaches — where a column of its form (`registry_forms`) declares `rooted: true` —
     by the name that row gives (`facets`: the facet ownership is rooted in); None where the law declares no root, or the
     rows name more than one. Read, so no facet is named in a tool."""
     if registry in _ROOTS:
         return _ROOTS[registry]
     std, loc = _law_heads()
-    links = [l for h in (std, loc) for l in (h.get('registry_links') if isinstance(h.get('registry_links'), list) else [])
-             if isinstance(l, dict) and l.get('rooted') is True and l.get('from') == registry]
+    links = [l for l in dmparse.registry_links(std, loc) if l.get('rooted') is True and l.get('from') == registry]
     if not links:
         _ROOTS[registry] = None
         return None

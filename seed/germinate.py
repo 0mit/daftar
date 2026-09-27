@@ -137,9 +137,10 @@ def gardener_form(law, genos):
     if row is None:
         return None
     nature = row.get('of_nature')
-    term = next((t for t in law.get('terms') or [] if isinstance(t, dict) and t.get('term') == f'{genos}_id'
-                 and isinstance(t.get('anchor'), dict)), None)
-    if term is None:
+    # the term whose names a garden MINTS (26.0: one, `identifier`, for every genos), where the genos admits a minted one
+    term = next((t for t in law.get('terms') or [] if isinstance(t, dict) and isinstance(t.get('anchor'), dict)
+                 and t['anchor'].get('minted') is True), None)
+    if term is None or (isinstance(row.get('identifier_forms'), list) and 'minted' not in row['identifier_forms']):
         return None
     forms = row.get('ownership_form')
     crown = next((n.get('crown') for n in law.get('natures') or [] if isinstance(n, dict) and n.get('nature') == nature),
@@ -154,7 +155,7 @@ def gardener_bean(gid, name, when, garden_id=None, genos='person', form=None):
     known — so the gardener can be named in another garden from the first proposal on, and no other garden's
     `<genos>:<id>` is them."""
     import json
-    form = form or {'nature': 'empsychon', 'key': 'person_id', 'class': 'logical', 'crown': 'agape'}
+    form = form or {'nature': 'empsychon', 'key': 'identifier', 'class': 'logical', 'crown': 'agape'}
     pid = f"{garden_id}/{genos}:{gid}" if garden_id else f"{genos}:{gid}"
     owner = (f"crown: {form['crown']}" if form['crown']
              else 'external: "its members, as its own rules say: outside this garden"')

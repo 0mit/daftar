@@ -145,7 +145,7 @@ title: "a twin"
 status: active
 summary: "probe"
 nature: lekton
-identity: { status: confirmed, anchors: [ { key: product_id, value: "product:twin-%s", class: logical, establishing: true } ] }
+identity: { status: confirmed, anchors: [ { key: identifier, value: "product:twin-%s", class: logical, establishing: true } ] }
 provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
 owned_by: { legal: { owner: { bean: keeper } } }
 responsibility: { legal: { holder: { bean: keeper } } }
@@ -237,7 +237,7 @@ title: "a widget"
 status: active
 summary: "probe"
 nature: lekton
-identity: { status: confirmed, anchors: [ { key: product_id, value: "product:widget", class: logical, establishing: true } ] }
+identity: { status: confirmed, anchors: [ { key: identifier, value: "product:widget", class: logical, establishing: true } ] }
 provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
 owned_by: { legal: { owner: { bean: keeper } }, moral: { owner: { bean: keeper } } }
 responsibility: { legal: { holder: { bean: keeper } }, moral: { holder: { bean: keeper } } }
@@ -274,7 +274,7 @@ out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25"))
 check("...and with nothing using it, the added facet is unoccupied again, and says so",
       "VOCAB registry:facets: position 'moral' is declared but NO bean occupies it" in out, out[-700:])
 
-# ---- one address, one owner — and the two ways the `ip` term's escape says it is otherwise, both written in the law's words
+# ---- one address, one owner — and the two ways the `ip` term's `exceptions` say it is otherwise, both written in the law's words
 def two_hosts(extra_a="", extra_b=""):
     for bid, serial, extra in (("box-a", "SN-DUP-A", extra_a), ("box-b", "SN-DUP-B", extra_b)):
         open(os.path.join(G, "beans", bid + ".md"), "w").write(f"""---

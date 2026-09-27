@@ -73,7 +73,7 @@ summary: "a person"
 nature: empsychon
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:{bid}", class: logical, establishing: true }}{anchors} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{bid}", class: logical, establishing: true }}{anchors} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 {extra}---
 A person.
@@ -91,7 +91,7 @@ summary: "an agreement"
 nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:{bid}", class: logical, establishing: true }} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:{bid}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 parties:
 {body}
@@ -129,7 +129,7 @@ title: "a firing class"
 status: active
 summary: "next month's firing class, at the kiln room"
 nature: praxis
-{OWN}identity: {{ status: confirmed, anchors: [ {{ key: event_id, value: "event:firing-class", class: logical, establishing: true }} ] }}
+{OWN}identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "event:firing-class", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 timing:
   start: {{ system: gregorian-civil, at: "2099-10-20T18:00", unit: minute }}
@@ -151,7 +151,7 @@ title: "a note on a student's glaze"
 status: active
 summary: "a note"
 nature: lekton
-{OWN}identity: {{ status: confirmed, anchors: [ {{ key: doc_id, value: "document:kiln-note", class: logical, establishing: true }} ] }}
+{OWN}identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "document:kiln-note", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 about: [ {{ who: p-3f9a0c1d }} ]
 located_at: [ {{ system: unix-filesystem, openness: unknown }} ]
@@ -207,7 +207,7 @@ out = py(ask.format("keeper", "write", "p-4e5f6a7b", None))
 check("…the gardener is granted, as the keeper", out.startswith("True") and "gardener" in out, out)
 k2 = read("beans/keeper.md")
 write("beans/keeper.md", k2.replace("---\nkeeper", "---\nkeeper", 1).replace(
-    '  leaders-read-names:', '  no-titles: { act: read, over: members, positions: [ { path: title } ], audience: { selection: section-leaders }, stance: forbidden, why: "a ceiling" }\n  leaders-read-names:'))
+    '  leaders-read-names:', '  no-titles: { act: read, over: members, positions: [ { path: title } ], audience: { selection: section-leaders }, permission: forbidden, why: "a ceiling" }\n  leaders-read-names:'))
 out = py(ask.format("p-0a1b2c3d", "read", "p-4e5f6a7b", ["title"]))
 check("…the gardener's forbidden grant is a ceiling no permitted one passes", out.startswith("False") and "forbidden by keeper:grants[no-titles]" in out, out)
 restore()
@@ -260,20 +260,20 @@ title: "{org}"
 status: active
 summary: "an employer"
 nature: lekton
-{OWN}identity: {{ status: confirmed, anchors: [ {{ key: org_id, value: "org:{org}", class: logical, establishing: true }} ] }}
+{OWN}identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "org:{org}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 ---
 An employer.
 """)
 contract("staff-2026", [("keeper", True), ("rook-hale", True), ("tam-ivy", True)])
-person("rook-hale", "consent: { bean: staff-2026 }\n", anchors=', { key: emp_id, value: "0042", class: logical, establishing: true, issuer: { bean: fern-bakery } }')
-person("tam-ivy", "consent: { bean: staff-2026 }\n", anchors=', { key: emp_id, value: "0042", class: logical, establishing: true, issuer: { bean: gull-ferries } }')
+person("rook-hale", "consent: { bean: staff-2026 }\n", anchors=', { key: identifier, value: "0042", class: logical, establishing: true, issuer: { bean: fern-bakery } }')
+person("tam-ivy", "consent: { bean: staff-2026 }\n", anchors=', { key: identifier, value: "0042", class: logical, establishing: true, issuer: { bean: gull-ferries } }')
 code, out = save("two employees", ["fern-bakery", "gull-ferries", "staff-2026", "rook-hale", "tam-ivy"])
 check("N17: two employers each issuing 0042 are two identities, no collision", code == 0, out[-1500:])
 t = read("beans/tam-ivy.md")
 write("beans/tam-ivy.md", t.replace("gull-ferries", "fern-bakery"))
 out = gate()
-check("…the same issuer twice collides", "emp_id=0042 issued by fern-bakery" in out, out[-1500:])
+check("…the same issuer twice collides", "identifier=0042 issued by fern-bakery" in out, out[-1500:])
 write("beans/tam-ivy.md", t.replace(", issuer: { bean: gull-ferries }", ""))
 out = gate()
 check("…and an issued anchor with no issuer is warned, not refused", "names none" in out and " 0 error" in out, out[-1500:])

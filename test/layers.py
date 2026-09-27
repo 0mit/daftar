@@ -112,9 +112,8 @@ check("...and it is the only chain: every row that stands on another, or that an
       _linked == set(CHAIN), sorted(_linked - set(CHAIN)))
 _dangling = [(r["layer"], r["beneath"]) for r in ROWS if r.get("beneath") and r["beneath"] not in NAMES]
 check("every `beneath` names a row of the map", not _dangling, _dangling)
-_link = [l for l in LAW.get("registry_links") or [] if isinstance(l, dict)
-         and l.get("from") == "layers" and l.get("field") == "beneath"]
-check("...and the law holds it so: a `registry_links` row takes `beneath` to a layer, and allows no cycle",
+_link = [l for l in dmparse.registry_links(LAW) if l.get("from") == "layers" and l.get("field") == "beneath"]
+check("...and the law holds it so: the form of `layers` takes `beneath` to a layer, and allows no cycle",
       len(_link) == 1 and _link[0].get("to") == "layers" and _link[0].get("take") == "layer"
       and _link[0].get("acyclic") is True, _link)
 

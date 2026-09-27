@@ -7,14 +7,16 @@ the generator against itself:
   1. every term (and every term a profile adds), every registry of the law and each of its rows, every form, every
      manifesto clause, every RATIONALE entry and every CHANGELOG entry has its place on the page, and no id is twice;
   2. every relation drawn (`data-rel`, `data-from`, `data-to`) is stated by the law: an `in:` of the owner names the
-     target, a row of `registry_links` joins the two, a system's row names the other in that field, an aspect names
+     target, a column of a registry's form (`registry_forms`) joins the two, a system's row names the other in that field, an aspect names
      its figure and its poles, a layer the one beneath, a file's line cites the clause, a RATIONALE key names its item;
-  3. every relation the law states between terms and registries, and every row of `registry_links`, is drawn;
+  3. every relation the law states between terms and registries, and every link a registry's form states, is drawn;
   4. the page runs no script, every disclosure is closed, every `popovertarget` and `#fragment` names an id on it.
 Whether each word's gloss reads well is still a reader's work. site.py checks that the committed page is what the
 release's seed builds.
 """
 import os, re, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin'))
+import dmparse  # noqa: E402
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -117,7 +119,7 @@ def main():
     items.update({('form:' if k.endswith('_form') else 'section:') + k: law[k] for k in forms})
     items.update({'row:operations:' + str(o.get('op')): o for o in law.get('operations') or []})
     systems = {**rows('anchor_systems', 'system'), **rows('knowledge_schemes', 'scheme')}
-    links = {(l['from'], l['to']) for l in law.get('registry_links') or []}
+    links = {(l['from'], l['to']) for l in dmparse.registry_links(law)}
     layers = rows('layers', 'layer')
     rat = read('seed/RATIONALE.md')
     name = lambda eid: eid.rsplit(':', 1)[-1]
@@ -165,7 +167,7 @@ def main():
                 lost.append((eid, d['registry']))
     check('every registry a term takes its values from is drawn from it', not lost, lost[:10])
     lost = [l for l in links if not any(r == 'link' and name(f) == l[0] and name(x) == l[1] for r, f, x in drawn)]
-    check('every row of registry_links is drawn (%d)' % len(links), not lost, lost)
+    check('every link a registry form states is drawn (%d)' % len(links), not lost, lost)
 
     # 4. how the page behaves
     check('the page runs no script', 'script' not in s.tags and not re.search(r'<[^>]+\son[a-z]+=', body))

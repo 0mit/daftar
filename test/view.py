@@ -57,7 +57,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: org_id, value: "org:grain-coop", class: logical, establishing: true }
+    - { key: identifier, value: "org:grain-coop", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
 owned_by: { legal: { owner: { bean: tessa } } }
 responsibility: { legal: { holder: { bean: tessa } } }
@@ -71,7 +71,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: org_id, value: "org:hill-farm", class: logical, establishing: true }
+    - { key: identifier, value: "org:hill-farm", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
 owned_by: { legal: { owner: { bean: tessa } } }
 responsibility: { legal: { holder: { bean: tessa } } }
@@ -176,7 +176,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: instance_id, value: "instance:yard-monitor", class: logical, establishing: true }
+    - { key: identifier, value: "instance:yard-monitor", class: logical, establishing: true }
 provenance: { src: observed, by: "tessa (gardener)", as_of: now }
 owned_by: { via: { bean: silo-controller } }
 responsibility: { via: { bean: silo-controller } }
@@ -188,11 +188,11 @@ knowledge:
 located_at:
   - { system: unix-filesystem, openness: here, at: "silo-controller:/srv/yard-monitor", observed: now }
 reaches:
-  silo-web: { protocol: http, target: { bean: silo-controller } }
-  dryer-shell: { protocol: ssh, target: { bean: dryer-controller } }
-  radio-ping: { protocol: icmp, target: { bean: field-radio } }
-  pump-ping: { protocol: icmp, target: { bean: hill-pump } }
-  pump-snmp: { protocol: snmp, target: { bean: hill-pump } }
+  silo-web: { protocol: http, to: { bean: silo-controller } }
+  dryer-shell: { protocol: ssh, to: { bean: dryer-controller } }
+  radio-ping: { protocol: icmp, to: { bean: field-radio } }
+  pump-ping: { protocol: icmp, to: { bean: hill-pump } }
+  pump-snmp: { protocol: snmp, to: { bean: hill-pump } }
 details:
   monitoring:
     alerts:
@@ -212,7 +212,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: service_id, value: "service:grain-page", class: logical, establishing: true }
+    - { key: identifier, value: "service:grain-page", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
 owned_by: { legal: { owner: { bean: grain-coop } } }
 responsibility: { legal: { holder: { bean: tessa } } }
@@ -553,7 +553,7 @@ ASSET_REFUSED = [
      "  - { scheme: technology, code: prometheus, rel: uses }", "  - { scheme: technology, code: zabbix, rel: uses }",
      ("yard-monitor", "zabbix", "no adapter")),
     ("a live-state on a being no monitor reaches", "beans/yard-monitor.md",
-     "  radio-ping: { protocol: icmp, target: { bean: field-radio } }\n", "", ("radio-up", "field-radio", "reaches")),
+     "  radio-ping: { protocol: icmp, to: { bean: field-radio } }\n", "", ("radio-up", "field-radio", "reaches")),
     ("a value no monitor of the page can compute", "beans/grain-page.md",
      'query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]',
      'query: [ { technology: zabbix, says: "silo.days" } ]', ("silo-full-in", "zabbix")),
@@ -575,7 +575,7 @@ check("dmview passes `pipes` without `processes`: pipes alone are wiring enough"
 put("beans/grain-page.md", PAGE_T)
 
 # A REACH IT CANNOT PROBE IS SAID, NEVER DROPPED: a being with no endpoint of the protocol and no address to probe.
-put("beans/yard-monitor.md", YARD_T.replace("  pump-snmp:", "  coop-web: { protocol: http, target: { bean: grain-coop } }\n  pump-snmp:", 1))
+put("beans/yard-monitor.md", YARD_T.replace("  pump-snmp:", "  coop-web: { protocol: http, to: { bean: grain-coop } }\n  pump-snmp:", 1))
 out, rc = dmview("check")
 check("dmview WARNS, and passes: a reach the adapter cannot probe (grain-coop over http: no endpoint, no address)",
       rc == 0 and "warn: monitor yard-monitor: reaches grain-coop over http, and does not probe it" in out, out[-700:])
@@ -829,10 +829,10 @@ put("beans/zabbix.md", "---\nbean: zabbix\ngenos: product\ntitle: \"Zabbix\"\nst
     "responsibility: { legal: { holder: { bean: tessa } } }\n---\nA second monitor's software.\n")
 put("beans/radio-monitor.md", "---\nbean: radio-monitor\ngenos: instance\ntitle: \"The radio monitor\"\nstatus: active\n"
     "summary: \"Reads the field radio's signal.\"\nnature: empsychon\nidentity:\n  status: confirmed\n  anchors:\n"
-    "    - { key: instance_id, value: \"instance:radio-monitor\", class: logical, establishing: true }\n"
+    "    - { key: identifier, value: \"instance:radio-monitor\", class: logical, establishing: true }\n"
     "provenance: { src: observed, by: \"tessa (gardener)\", as_of: now }\nowned_by: { legal: { owner: { bean: tessa } } }\n"
     "responsibility: { legal: { holder: { bean: tessa } } }\ninstance_of: { bean: zabbix }\nlives_in: { bean: silo-controller }\n"
-    "knowledge:\n  - { scheme: technology, code: zabbix, rel: uses }\nreaches:\n  radio-agent: { protocol: icmp, target: { bean: field-radio } }\n"
+    "knowledge:\n  - { scheme: technology, code: zabbix, rel: uses }\nreaches:\n  radio-agent: { protocol: icmp, to: { bean: field-radio } }\n"
     "---\nThe radio monitor.\n")
 put("beans/grain-page.md", PAGE_T.replace("  - { monitor: yard-monitor, settings: { bean: yard-monitor, field: monitoring } }\n",
                                           "  - { monitor: yard-monitor, settings: { bean: yard-monitor, field: monitoring } }\n"
@@ -903,7 +903,7 @@ summary: "a viewer of the co-operative's page"
 nature: empsychon
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:{_p}", class: logical, establishing: true }} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{_p}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: "tessa (gardener)", as_of: now }}
 ---
 A viewer.

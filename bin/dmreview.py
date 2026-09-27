@@ -34,11 +34,12 @@ Usage: python3 bin/dmreview.py [--all]     (--all lists every occurrence rather 
        python3 bin/dmreview.py --law [--against <git-ref>]     (also --against=<git-ref>)
        python3 bin/dmreview.py --places                         (fixed beings stated from no other fixed being)
 """
-import difflib, errno, glob, os, re, subprocess, sys, textwrap
+import difflib, errno, os, re, subprocess, sys, textwrap
 from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse, dmpass
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 
 # What this review shows, for a person to judge: it refuses nothing (`bin/dmpass.py --flows` counts it as evidence).
 EVIDENCE = {
@@ -737,8 +738,7 @@ def law_report(against=None):
 # ============================== PART B: THE EVIDENCE OVER A GARDEN'S BEANS ==============================
 def load_docs():
     docs = {}
-    for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + \
-             sorted(glob.glob(os.path.join(ROOT, 'mappings', '*.md'))):
+    for f in dmgarden.paths(ROOT):
         h, body = dmparse.read(f)
         if h is None:
             continue

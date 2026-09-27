@@ -51,7 +51,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: person_id, value: "person:sam", class: logical, establishing: true }
+    - { key: identifier, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
@@ -95,7 +95,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:ali-consent", class: logical, establishing: true }
+    - { key: identifier, value: "contract:ali-consent", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -119,7 +119,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: person_id, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
+    - { key: identifier, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 consent: { bean: ali-consent }
 owned_by: { legal: { crown: agape } }
@@ -144,7 +144,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: event_id, value: "event:dinner-at-sams", class: logical, establishing: true }
+    - { key: identifier, value: "event:dinner-at-sams", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { holder: { bean: sam } } }
@@ -173,7 +173,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:shared-camera", class: logical, establishing: true }
+    - { key: identifier, value: "contract:shared-camera", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -213,7 +213,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:washer-loan", class: logical, establishing: true }
+    - { key: identifier, value: "contract:washer-loan", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -294,7 +294,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: event_id, value: "event:call-with-ali", class: logical, establishing: true }
+    - { key: identifier, value: "event:call-with-ali", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { holder: { bean: sam } } }
@@ -331,7 +331,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:phone-loan", class: logical, establishing: true }
+    - { key: identifier, value: "contract:phone-loan", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -395,6 +395,6 @@ open: ["its id: what `python3 bin/dmpropose.py id` prints in Ali's garden"]
 Ali's garden. Its id is still to be read out there.
 ```
 
-Until that id is known, the name her garden gave her cannot be written either: her bean's `person_id` is `person:ali`,
+Until that id is known, the name her garden gave her cannot be written either: her bean's `identifier` is `person:ali`,
 a name this garden gives her, until the id arrives and her garden's name for her replaces it — a change to an anchor,
 which the gardener ratifies.

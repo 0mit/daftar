@@ -75,7 +75,7 @@ OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal
 def person(id):
     return (f"---\nbean: {id}\ngenos: person\ntitle: \"{id}\"\nstatus: active\nsummary: \"{id}, invented\"\nnature: empsychon\n"
             f"{PERSON_OWN}consent: {{ bean: survey }}\n"
-            f"identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: \"person:{id}\", class: logical, "
+            f"identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: \"person:{id}\", class: logical, "
             f"establishing: true }} ] }}\nprovenance: {{ src: asserted-by-human, by: keeper, as_of: now }}\n---\n{id}, invented.\n")
 
 
@@ -140,7 +140,7 @@ summary: "an invented agreement: two surveyors read the stones' lichen, and the 
 nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:survey", class: logical, establishing: true }} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:survey", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 parties:
   ada: {{ who: {{ bean: ada }}, role: surveyor, accepted: 2026-04-01 }}

@@ -57,6 +57,8 @@ sv = os.path.join(REL, 'seed', 'std-vocab.md')
 _major, _minor = ver1.split('.')
 ver2 = f"{_major}.{int(_minor) + 1}"
 _text = open(sv).read()                 # read BEFORE opening for write: 'w' truncates first
+# a release that retires a tool retires its verb with it (26.0, `verbs`: each names a tool the garden holds)
+_text = re.sub(r'(?m)^  - \{ verb: digest,[^\n]*\n', '', _text)
 open(sv, 'w').write(_text.replace(f'version: "{ver1}"', f'version: "{ver2}"', 1))
 run('git', 'add', '-A', cwd=REL); run('git', 'commit', '-qm', 'v2', cwd=REL); run('git', 'tag', 'v0.2.0', cwd=REL)
 
@@ -1303,9 +1305,12 @@ check("each prose `when` is written `{ said: … }`: a quoted one keeps its own 
       "written as a string, a folded one stays a block a level deeper, one already in 24.0's words is left — and no other byte of the bean moves",
       _rw == _roof.replace(_WHEN_PLAIN, '    when: { said: "the roof is on, and the scaffold is down" }\n', 1)
       .replace(_WHEN_QUOTED, "    when: { said: 'the gutters are hung' }   # as Ali put it\n", 1)
-      .replace(_WHEN_FOLDED, '    when:\n      said: >\n        the first frost\n        after the roof\n', 1), _rw[-700:])
-check("...and the person and their anchor, which only a person can put right, are left as they were",
-      get24('beans/ali.md') == _ali and get24('beans/bo.md') == _bo)
+      .replace(_WHEN_FOLDED, '    when:\n      said: >\n        the first frost\n        after the roof\n', 1)
+      .replace('{ key: contract_id,', '{ key: identifier,', 1), _rw[-700:])
+_id26 = lambda t: re.sub(r'key: (person_id|emp_id|contract_id),', 'key: identifier,', t)   # the 26.0 step, crossed too
+check("...and the person and their anchor, which only a person can put right, are left as they were — but for the "
+      "anchor key 26.0 made one word",
+      get24('beans/ali.md') == _id26(_ali) and get24('beans/bo.md') == _id26(_bo))
 _e = get24('log/journal.md').split('\n## ')[-1]
 _tl = next((l for l in _e.splitlines() if l.startswith('- translated:')), '')
 _pl = next((l for l in _e.splitlines() if l.startswith('- for a person')), '')
@@ -1314,7 +1319,7 @@ check("the `translated:` line names the bean and each clause translated; `for a 
       and '(F2): 1' in _pl and '(N17): 1' in _pl and 'Q-3' not in _pl, _e[-1500:])
 check("...and the tool prints the same list for the person, each line the gate's own",
       'FOR A PERSON' in out and "bo: names a person who is not the gardener" in out
-      and "anchor 'emp_id' is issued by an organisation, and names none" in out, out[-1500:])
+      and "anchor 'identifier' is issued by an organisation, and names none" in out, out[-1500:])
 put24('log/journal.md', get24('log/journal.md').replace(
     "(fill in who ratified — merging the release's pull request, or the word given here)", 'human (test)')
       .replace('(fill in — what this release brings that this garden adopts)', "a clause's `when` a reading or the words"))

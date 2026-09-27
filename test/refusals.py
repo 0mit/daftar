@@ -87,21 +87,21 @@ def person(bid, extra=""):
     # and bin/dmjournal.py writes the day of the entry in its place. A typed day would be refused at the commit.
     return (f'---\nbean: {bid}\ngenos: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: empsychon\n'
             f'owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
-            f'identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
+            f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
             f'provenance: {{ src: asserted-by-human, by: sam, as_of: now }}\n{extra}---\n{bid}.\n')
 
 
 def thing(bid, anchor, extra=""):
     return (f'---\nbean: {bid}\ngenos: program\ntitle: "{bid}"\nstatus: active\nsummary: "a program"\nnature: lekton\n'
             f'owned_by: {{ legal: {{ owner: {{ bean: sam }} }} }}\nresponsibility: {{ legal: {{ holder: {{ bean: sam }} }} }}\n'
-            f'identity: {{ status: confirmed, anchors: [ {{ key: program_id, value: "{anchor}", class: logical, establishing: true }} ] }}\n'
+            f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "{anchor}", class: logical, establishing: true }} ] }}\n'
             f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\nA program.\n')
 
 
 def deal(extra, parties="  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n  ali: { who: { bean: ali }, accepted: 2026-09-01 }\n"):
     put("beans/deal.md", '---\nbean: deal\ngenos: contract\ntitle: "a deal"\nstatus: active\nsummary: "a deal"\nnature: lekton\n'
         'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
-        'identity: { status: confirmed, anchors: [ { key: contract_id, value: "contract:deal", class: logical, establishing: true } ] }\n'
+        'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:deal", class: logical, establishing: true } ] }\n'
         'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
         f'parties:\n{parties}words: {{ form: spoken, agreed: 2026-09-01 }}\n{extra}---\nA deal.\n')
     return gate()
@@ -234,7 +234,7 @@ check("a repetition whose `in:` is a list is refused by name, not a traceback",
 out = deal("clauses:\n  rent: { what: \"rent\", by: ali, to: sam, due: 2026-09-01, every: { of: [ time ], each: month } }\n")
 check("...and one whose `of:` is a list", "names no aspect" in out and "Traceback" not in out, out[-500:])
 drop("beans/deal.md")
-put("beans/ben.md", person("ben").replace("key: person_id,", "key: [ person_id ],"))
+put("beans/ben.md", person("ben").replace("key: identifier,", "key: [ person_id ],"))
 out = gate()
 check("an anchor whose key is a list is refused by name, not a traceback",
       "an anchor's key is a term's name" in out and "Traceback" not in out, out[-500:])
@@ -387,7 +387,7 @@ def commit_with(bean_text, body, typed=None):
 put("beans/kept-by-name.md", '---\nbean: kept-by-name\ngenos: contract\ntitle: "kept by name"\nstatus: active\n'
     'summary: "ali agrees to be kept in this garden by name"\nnature: lekton\n'
     'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
-    'identity: { status: confirmed, anchors: [ { key: contract_id, value: "contract:kept-by-name", class: logical, establishing: true } ] }\n'
+    'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:kept-by-name", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: sam, as_of: now }\n'
     'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n  ali: { who: { bean: ali }, accepted: 2026-09-01 }\n'
     'words: { form: spoken, agreed: 2026-09-01 }\n---\nali\'s consent.\n')
@@ -440,7 +440,7 @@ check("a party naming no bean says what to write: the bean first, or in the same
 drop("beans/deal.md")
 put("beans/statement.md", '---\nbean: statement\ngenos: document\ntitle: "a statement"\nstatus: active\nsummary: "a statement"\n'
     'nature: lekton\nowned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
-    'identity: { status: confirmed, anchors: [ { key: doc_id, value: "document:statement", class: logical, establishing: true } ] }\n'
+    'identity: { status: confirmed, anchors: [ { key: identifier, value: "document:statement", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
     'located_at: [ { system: windows-filesystem, openness: here, at: "laptop:C:/Users/ali/statement.pdf" } ]\n---\nA statement.\n')
 out = gate()
@@ -547,9 +547,9 @@ drop("beans/deal.md")
 
 # ---------------------------------------------------------------- ONE POSITION IS ONE VALUE
 for shape, val in (("a list", "[ required ]"), ("a map", "{ a: 1 }")):
-    out = deal("clauses:\n  c: { what: \"sam keeps it clean\", by: sam, to: ali, stance: %s }\n" % val)
-    check(f"a clause's `stance` written as {shape} is refused by name — one position on aspect capability — not a traceback",
-          "clauses[c].stance is one position on aspect 'capability', not a " + ("list" if shape == "a list" else "mapping") in out
+    out = deal("clauses:\n  c: { what: \"sam keeps it clean\", by: sam, to: ali, permission: %s }\n" % val)
+    check(f"a clause's `permission` written as {shape} is refused by name — one position on aspect permission — not a traceback",
+          "clauses[c].permission is one position on aspect 'permission', not a " + ("list" if shape == "a list" else "mapping") in out
           and "Traceback" not in out, out[-600:])
 drop("beans/deal.md")
 
@@ -648,8 +648,8 @@ put("VOCAB.md", _vocab)
 put("beans/ali.md", person("ali"))
 
 # ---------------------------------------------------------------- A SET, TEXT, AND A DAY'S RULE RESTATED
-out = deal("clauses:\n  c: { what: \"sam keeps it clean\", by: sam, to: ali, stance: !!set { required } }\n")
-check("a clause's `stance` written as a YAML set is refused by name — no shape a garden writes — never a traceback",
+out = deal("clauses:\n  c: { what: \"sam keeps it clean\", by: sam, to: ali, permission: !!set { required } }\n")
+check("a clause's `permission` written as a YAML set is refused by name — no shape a garden writes — never a traceback",
       "a YAML set (`!!set`) is no shape a garden writes" in out and "Traceback" not in out, out[-600:])
 drop("beans/deal.md")
 put("VOCAB.md", _vocab.replace("local_terms: []", "local_terms: [ { term: mood, context_keys: [mood], schema: { shape: mapping, "
@@ -751,7 +751,7 @@ def written(f, head, stop=("; when nobody said it", " (why:", " (rule ")):
 def event(bid, extra):
     put(f"beans/{bid}.md", f'---\nbean: {bid}\ngenos: event\ntitle: "{bid}"\nstatus: active\nsummary: "an event"\n'
         'nature: lekton\nowned_by: { legal: { crown: logos } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
-        f'identity: {{ status: confirmed, anchors: [ {{ key: event_id, value: "event:{bid}", class: logical, establishing: true }} ] }}\n'
+        f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "event:{bid}", class: logical, establishing: true }} ] }}\n'
         f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\nAn event.\n')
     out = gate()
     drop(f"beans/{bid}.md")
@@ -802,10 +802,10 @@ f = finding(gate(), "status 'pending' not in")
 check("a status the law does not list: write one of those; adding one is a RULE-CHANGE the gardener ratifies — and the "
       "command that says why, not the cookbook", "write one of those" in f and "RULE-CHANGE the gardener ratifies" in f
       and f"why: {_py} bin/dmwhy.py status" in f and "status.schema.values" in f and not SENDS.search(f), f)
-put("beans/ben.md", person("ben").replace("key: person_id,", "key: person_name,"))
+put("beans/ben.md", person("ben").replace("key: identifier,", "key: person_name,"))
 f = finding(gate(), "anchor key 'person_name'")
 check("an anchor key no term declares is refused with the keys that are, the nearest first",
-      "the nearest first: person_id," in f and "gardener ratifies" in f and not SENDS.search(f), f)
+      "the nearest first: identifier," in f and "gardener ratifies" in f and not SENDS.search(f), f)
 put("beans/garden-b.md", garden_bean("unknown"))
 put("beans/ben.md", person("ben"))
 f = finding(gate(), "garden_id='unknown'")
@@ -869,7 +869,7 @@ r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
 rules = r.stdout
 check("dmrules shows what a minted name is — the form, the gene, the qualified pattern — not 'no rule to check'",
       r.returncode == 0 and "minted:" in rules and "^[a-z][a-z0-9-]*:.+$" in rules
-      and re.search(r"(?m)^  person_id +\[tier0\]  anchor term, MINTED", rules), rules[:600])
+      and re.search(r"(?m)^  identifier +\[tier0\]  anchor term, MINTED", rules), rules[:600])
 check("...the sums, one entry per party, and a key of the parties",
       "sums: each entry's paid_by.amount add up EXACTLY" in rules and "ONE per `party`" in rules
       and "is a key of `parties`" in rules, [l for l in rules.splitlines() if "transactions" in l or "paid_by" in l][:4])

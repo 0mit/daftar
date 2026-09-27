@@ -42,6 +42,7 @@ import collections, difflib, glob, json, math, os, posixpath, re, sys, fnmatch, 
 from fractions import Fraction
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmform
 import dmsafe          # the staged-state checks below run dmsafe's OWN comparison, not a copy of it
 import dmpass          # where each file sits: the law's layer map, read by its one reader and by no copy of it here
@@ -303,7 +304,7 @@ def _staged(args):
         # THE REFUSAL QUOTED THE STAGED COPY. A writer who fixed the file and did not stage it again sees a fix the
         # commit does not hold, so each file the working tree holds otherwise is named, with what to do.
         _changed, _ = ask('diff', '--name-only', '-z')
-        _new, _ = ask('ls-files', '--others', '--exclude-standard', '-z', '--', 'beans', 'mappings')
+        _new = '\0'.join(dmgarden.untracked(ROOT))
         _held = [f"{p} (changed)" for p in (_changed or '').split('\0') if p] + \
                 [f"{p} (new)" for p in (_new or '').split('\0') if p]
         if _held:
@@ -850,6 +851,45 @@ def check_schema_language():
                          "spelling against `schema_language` in seed/std-vocab.md"))
 
 
+def _term_records():
+    """(record, where) for every term the law, its profiles and this garden's `local_terms` write — every profile's, not
+    only those this garden extends: the law is held to its own shape whole."""
+    out = [(t, 'the law') for t in (std_fm.get('terms') or [])]
+    for _p, _prof in sorted((std_fm.get('profiles') or {}).items()):
+        out += [(t, f"profile {_p}") for t in ((_prof or {}).get('terms') or []) if isinstance(_prof, dict)]
+    return out + [(t, 'VOCAB.md') for t in (vocab_fm.get('local_terms') or [])]
+
+
+def _aspect_attrs(attrs, at):
+    """(where, attribute, aspect) for each attribute, at any depth of `entries`, whose domain is an aspect."""
+    for _a, _rec in (attrs or {}).items() if isinstance(attrs, dict) else ():
+        _in = _rec.get('in') if isinstance(_rec, dict) else None
+        if isinstance(_in, dict) and _in.get('aspect') is not None:
+            yield at, _a, _in['aspect']
+        if isinstance(_in, dict) and isinstance(_in.get('entries'), dict):
+            yield from _aspect_attrs(_in['entries'], f"{at}.{_a}.in.entries")
+
+
+def check_term_records():
+    """THE TERM RECORD IS CLOSED (26.0, `term_form`): a term holds what the record declares and nothing else, so a note
+    cannot ride on the law as a key no tool reads. AN ASPECT'S ATTRIBUTE IS NAMED AFTER THE ASPECT (26.0): one domain
+    under one name, so two terms can never take the same position under two words."""
+    _record = set(((std_fm.get('term_form') or {}).get('attrs')) or [])
+    for _t, _where in _term_records():
+        if not isinstance(_t, dict):
+            continue
+        _name = _t.get('term')
+        for _k in sorted((set(_t) - _record) if _record else (), key=str):
+            errors.append(f"VOCAB {_name} ({_where}): `{_k}` is no part of a term record ({', '.join(sorted(_record))}) "
+                          f"— what a reader needs to apply the term goes in its `meaning`, and why it is so goes in "
+                          f"the reasoning, read by `bin/dmwhy.py` under the term's path")
+        _sch = _t.get('schema') if isinstance(_t.get('schema'), dict) else {}
+        for _at, _a, _asp in _aspect_attrs(_sch.get('attrs'), 'schema.attrs'):
+            if _a != _asp:
+                errors.append(f"VOCAB {_name} ({_where}): `{_at}.{_a}` takes a position on the aspect `{_asp}` and is "
+                              f"named `{_a}` — an attribute on an aspect is named after it: `{_asp}`")
+
+
 def _restated(local, std):
     """The keys of a garden's overlay that REPLACE what the standard's own term states, dotted — read branch by branch
     from `_overlay`, so the two cannot disagree about what merges. Two things merge: an attribute's fields (`attrs`, where
@@ -1012,7 +1052,7 @@ def check_law_extents():
         # THE ATTRIBUTES AN EXPIRY NAMES (24.0): each is one its term declares, or the reader would read a key nothing writes
         if isinstance(_n, dict):
             _attrs = (((_term or {}).get('schema') or {}).get('attrs') or {})
-            for _k in ('relative', 'lapses', 'stance', 'condition'):
+            for _k in ('relative', 'lapses', 'permission', 'condition'):
                 if _n.get(_k) is not None and _n[_k] not in _attrs:
                     errors.append(f"VOCAB {_name}.schema.expiry.{_k} names `{_n[_k]}`, which is no attribute of "
                                   f"{_name} — {sorted(_attrs)}")
@@ -1651,8 +1691,50 @@ def check_system_structure():
 
 
 # --- a row of one registry names a row of another (std-vocab 15.0) ---------------------------------------------------
+def check_registry_forms():
+    """EVERY REGISTRY HAS A FORM, AND EVERY ROW KEEPS IT (26.0, `registry_forms`): a registry's columns are declared, each
+    required or optional, and a row holds the required ones and no other — the law's rows, a profile's, and every row a
+    garden adds, alike. A column no form declares is a note riding on the law, or a fact of a new kind the form must
+    first be given; a required one a row lacks leaves a reader of that row without what every sibling gives."""
+    _forms = dict(std_fm.get('registry_forms') or {})
+    _forms.update(vocab_fm.get('registry_forms') or {})
+    for _k, _v in std_fm.items():
+        if (isinstance(_v, list) and _v and all(isinstance(r, dict) for r in _v) and _k != 'terms'
+                and _k not in _forms):
+            errors.append(f"VOCAB {_k}: a registry of the law with no form in `registry_forms` — its columns are "
+                          f"declared there, each `required` or `optional`")
+    _more = {'gene': list(vocab_fm.get('local_gene') or []),
+             'vacancies': list(PROFILE_VAC) + ([] if vocab_fm.get('vacancies') is None else [])}
+    for _reg, _cols in sorted(_forms.items()):
+        if not isinstance(_cols, dict):
+            continue
+        _req = {c for c, v in _cols.items() if dmparse.registry_form(v)[0]}
+        for _row in list(registry(_reg) or []) + _more.get(_reg, []):
+            if not isinstance(_row, dict) or not _row:
+                continue
+            _name = _row.get(next(iter(_row)))
+            for _k in sorted(set(_row) - set(_cols), key=str):
+                errors.append(f"VOCAB {_reg} '{_name}': column `{_k}` is not in the registry's form — it holds "
+                              f"{', '.join(map(str, _cols))} (`registry_forms.{_reg}`); why a row is so is reasoning, "
+                              f"and a fact of a new kind is a column the form is given first")
+            for _k in sorted(_req - set(_row), key=str):
+                errors.append(f"VOCAB {_reg} '{_name}': the row holds no `{_k}`, which every row of `{_reg}` holds "
+                              f"(`registry_forms.{_reg}`)")
+
+
+def check_verbs():
+    """THE ONE ENTRY (26.0, `verbs`): `bin/daftar.py <verb>` runs the tool a verb names — `bin/dm<verb>.py`, or
+    `bin/<verb>.py` — so a verb the law declares names a tool this garden holds, or the entry would offer a command that
+    runs nothing."""
+    for _v in registry('verbs') or []:
+        _n = _v.get('verb') if isinstance(_v, dict) else None
+        if isinstance(_n, str) and not any(os.path.isfile(os.path.join(ROOT, 'bin', f)) for f in (f'dm{_n}.py', f'{_n}.py')):
+            errors.append(f"VOCAB verbs '{_n}': no tool of this garden answers it — bin/dm{_n}.py or bin/{_n}.py; the "
+                          f"release's tools are the garden's copy of the language (`bin/dmupgrade.py` brings them)")
+
+
 def check_registry_links():
-    for _l in (std_fm.get('registry_links') or []) + (vocab_fm.get('registry_links') or []):
+    for _l in dmparse.registry_links(std_fm, vocab_fm):
         _to = {str(r.get(_l.get('take'))) for r in (registry(_l.get('to')) or []) if isinstance(r, dict)}
         _edges = {}
         for _row in (registry(_l.get('from')) or []):
@@ -1941,8 +2023,7 @@ def _has_float(x):
 def build_docs():
     global docs, bean_ids, map_ids
     docs, bean_ids, map_ids = {}, set(), set()
-    for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + \
-             sorted(glob.glob(os.path.join(ROOT, 'mappings', '*.md'))):
+    for f in dmgarden.paths(ROOT):
         base = os.path.basename(f)[:-3]
         is_bean = os.sep + 'beans' + os.sep in f
         idkey = 'bean' if is_bean else 'mapping'
@@ -1967,7 +2048,10 @@ def build_docs():
             warns.append(f"{base}: no human body (Rule 6 paper-durable)")
         prov = fm.get('provenance')
         if is_bean and not isinstance(prov, dict):
-            warns.append(f"{base}: missing provenance {{src,by,as_of}}")
+            # an ERROR since 26.0, as `provenance.src` missing always was: a bean that cannot say who said it holds no fact
+            errors.append(f"{base}: missing provenance {{src,by,as_of}} — who said this, how they know it and the day: "
+                          f"`provenance: {{ src: <how>, by: <who>, as_of: <YYYY-MM-DD> }}` (`bin/dmrules.py` lists "
+                          f"each `src`); where nobody said, seed/FORMS.md shows what to write")
         elif isinstance(prov, dict) and not prov.get('src'):
             errors.append(f"{base}: provenance.src missing")
         elif isinstance(prov, dict):
@@ -2051,8 +2135,7 @@ def _undeclared_fix(key, value, declared):
 # the parsed document can see it. Read from the node graph instead — beans, mappings, and the law itself,
 # where the first run of this check found two.
 def check_duplicate_keys():
-    _paths = (sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + sorted(glob.glob(os.path.join(ROOT, 'mappings', '*.md')))
-              + [STD, os.path.join(ROOT, 'VOCAB.md'), os.path.join(ROOT, 'GARDEN.md')])
+    _paths = (dmgarden.paths(ROOT) + [STD, os.path.join(ROOT, 'VOCAB.md'), os.path.join(ROOT, 'GARDEN.md')])
     for _f in _paths:
         if not os.path.exists(_f):
             continue
@@ -2081,8 +2164,7 @@ def check_text():
     t = VALUE_TYPES.get('text')
     if not t or not t.get('holds_no'):
         return                          # check_value_types has said the row is missing, once
-    _paths = (sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + sorted(glob.glob(os.path.join(ROOT, 'mappings', '*.md')))
-              + [os.path.join(ROOT, 'VOCAB.md'), os.path.join(ROOT, 'GARDEN.md')])
+    _paths = (dmgarden.paths(ROOT) + [os.path.join(ROOT, 'VOCAB.md'), os.path.join(ROOT, 'GARDEN.md')])
     for _f in _paths:
         if not os.path.exists(_f):
             continue
@@ -2285,8 +2367,16 @@ def check_identity_capsule():
             # AN ANCHOR'S KEY IS A TERM (19.0, `identity_policy.anchor_key: term`): identity is matched by
             # (key, value), so a key no term declares is a merge key nobody agreed on. The term's `anchor:`
             # policy is what a garden declares; a local key is a local term with one.
-            if IDP.get('anchor_key') == 'term' and not isinstance(pol, dict):
+            if IDP.get('anchor_key') == 'term' and not isinstance(pol, dict) and RETIRED.get(('term', str(a['key']))):
+                errors.append(f"{base}: anchor key '{a['key']}' is a term the law retired" + retired_hint('term', a['key'])
+                              + " — `python3 bin/dmupgrade.py` translates it when the garden adopts the release")
+            elif IDP.get('anchor_key') == 'term' and not isinstance(pol, dict):
                 _keys = _by_nearness(a['key'], [t for t, d in TERMS.items() if isinstance(d.get('anchor'), dict)])
+                # a key that begins with a genos (`person_name`, `org_code`) means the identity that being is GIVEN: the
+                # term whose names a garden mints comes first (26.0: one for every genos), whatever its spelling
+                _given = [t for t, d in TERMS.items() if isinstance(d.get('anchor'), dict) and d['anchor'].get('minted') is True]
+                if re.split(r'[_-]', str(a['key']))[0] in GENE:
+                    _keys = _given + [k for k in _keys if k not in _given]
                 errors.append(f"{base}: anchor key '{a['key']}' is not a term that declares `anchor:` — write one "
                               f"that does, the nearest first: {', '.join(_keys)}. A key of this garden's own is a local "
                               f"term with `anchor: {{ class: …, establishing: … }}` in VOCAB.md: a RULE-CHANGE, which "
@@ -2294,7 +2384,8 @@ def check_identity_capsule():
             # AN ISSUED ANCHOR IDENTIFIES WITH ITS ISSUER (24.0, N17): an employee number is one employer's, and the
             # same number from two employers is two identities. One with no issuer is warned: an upgrade invents none.
             _issuer = None
-            if isinstance(pol, dict) and pol.get('issued') is True:
+            _ipol = pol.get('issued') if isinstance(pol, dict) else None
+            if _ipol is True or (_ipol == 'optional' and a.get('issuer') is not None):
                 _iss = a.get('issuer')
                 if _iss is None:
                     warns.append(f"{base}: anchor '{a['key']}' is issued by an organisation, and names none — write "
@@ -2307,7 +2398,36 @@ def check_identity_capsule():
                     _issuer = _iss['bean']
             elif a.get('issuer') is not None:
                 errors.append(f"{base}: anchor '{a['key']}' carries an `issuer`, and its term does not say it is issued "
-                              f"(`anchor: {{ issued: true }}`)" + _rule('identity_policy.issued'))
+                              f"(`anchor: {{ issued: true }}`, or `optional`)" + _rule('identity_policy.issued'))
+            # WHICH FORM A GIVEN IDENTITY TAKES (26.0, `identifier`; `gene[].identifier_forms`): a name a garden minted
+            # names the bean's own genos, and a genos that says which forms it admits is held to them — a person's is
+            # minted or issued, never a bare number someone assigned, which would fuse everyone numbered alike.
+            if isinstance(pol, dict) and pol.get('minted') is True and _ipol == 'optional':
+                _v = str(a.get('value') or '')
+                _qp = (IDP.get('minted') or {}).get('pattern')
+                _bare = _v.split('/', 1)[1] if _qp and law_match(_qp, _v) else _v
+                _form = 'minted' if minted_form(_bare) else 'issued' if a.get('issuer') is not None else 'assigned'
+                _g = fm.get('genos')
+                if _form == 'minted' and isinstance(_g, str) and _bare.split(':', 1)[0] != _g:
+                    errors.append(f"{base}: anchor '{a['key']}' is a name minted for a {_bare.split(':', 1)[0]}, and "
+                                  f"this bean is a {_g} — a minted name carries the genos of the being it names: "
+                                  f"`{_g}:{_bare.split(':', 1)[1]}`" + _rule(f"{a['key']}.meaning", a['key']))
+                _forms = (GENE.get(_g) or {}).get('identifier_forms') if isinstance(_g, str) else None
+                if isinstance(_forms, list) and _form == 'assigned' and 'issued' in _forms:
+                    # an id with no issuer, where the genos's is issued: WARNED, as an issued anchor with no issuer always
+                    # was (24.0, N17) — an upgrade invents no issuer, and a person names it
+                    warns.append(f"{base}: anchor '{a['key']}' is issued by an organisation, and names none — write "
+                                 f"`issuer: {{ bean: <org> }}`: the same value from two issuers is two identities, and a "
+                                 f"{_g}'s identifier is {' or '.join(_forms)} (`gene`, its `identifier_forms`)"
+                                 + _rule('identity_policy.issued'))
+                elif isinstance(_forms, list) and _form not in _forms:
+                    errors.append(f"{base}: anchor '{a['key']}' is {_form} — an id " + {
+                        'minted': "a garden minted", 'issued': "an organisation issued",
+                        'assigned': "someone outside assigned, with no issuer"}[_form] +
+                                  f" — and a {_g}'s identifier is {' or '.join(_forms)} (`gene`, its "
+                                  f"`identifier_forms`)" + (" — an issued one names its issuer, `issuer: {bean: <org>}`"
+                                                            if 'issued' in _forms else '')
+                                  + _rule(f"{a['key']}.meaning", a['key']))
             if a.get('establishing') is True:
                 n_est += 1
                 est_owner.setdefault((a['key'], compare_value(a['key'], a['value']))
@@ -2458,10 +2578,13 @@ def undeclared_attrs(base, term, where, node, sch):
         return                              # a free container, or a pure ref: nothing is declared to hold it to
     for _k in node:
         if _k not in _decl:
+            _h = retired_hint('attr', _k) if (_rn := RETIRED.get(('attr', str(_k)))) and \
+                str(_rn).startswith('`') and str(_rn)[1:].split('`', 1)[0] in _decl else ''
             errors.append(f"{base}: {where} carries `{_k}`, which the term `{term}` does not declare — an entry "
-                          f"holds only declared attributes {sorted(map(str, _decl - set(_REF_FORM) - {'provenance'}))}. Prose belongs in "
-                          f"the attribute the term declares for it (`note`, `why`); a new kind of fact is "
-                          f"proposed as a new attribute, not written as a new key")
+                          f"holds only declared attributes {sorted(map(str, _decl - set(_REF_FORM) - {'provenance'}))}. " + (
+                              f"The law retired it{_h}" if _h else
+                              "Prose belongs in the attribute the term declares for it (`note`, `why`); a new kind of "
+                              "fact is proposed as a new attribute, not written as a new key"))
 
 
 def ectl_declared_attrs(e):
@@ -3248,7 +3371,7 @@ def _opaque(pid, fm):
     """A person written as bin/dmheld.py mints one: an opaque id, its title the id, one anchor `person:<id>`."""
     anchors = ((fm.get('identity') or {}).get('anchors') or []) if isinstance(fm.get('identity'), dict) else []
     return bool(_OPAQUE_PERSON.match(pid)) and fm.get('title') == pid and \
-        all(isinstance(a, dict) and a.get('key') == 'person_id' and a.get('value') == f"person:{pid}" for a in anchors)
+        all(isinstance(a, dict) and a.get('key') == 'identifier' and a.get('value') == f"person:{pid}" for a in anchors)
 
 
 def _day_of(x):
@@ -5405,7 +5528,7 @@ def check_duplicate_authoritative_ip():
             errors.append(f"duplicate authoritative IP {ip} owned by {clash} — one bean owns it and the others ref it; "
                           f"an address several answer for is listed in each one's `shared_identifiers`; a private range "
                           f"reused on networks apart is told apart by each bean's `located_at` in `network-segment` "
-                          f"(the `ip` term's escape)")
+                          f"(the cases the `ip` term's `exceptions` hold)")
 
 
 
@@ -6257,6 +6380,8 @@ PLIES = (
      "a local addition the standard already carries — named as that, before anything else reads the enum"),
     (check_schema_language,
      "a construct the language does not declare is a rule nothing reads — said before any term is interpreted"),
+    (check_term_records,
+     "a term holds what the term record declares, and an aspect's attribute is named after it — the law's own shape"),
     (check_merge_identity,
      "a list term's merge identity must name fields its entries carry — the same self-agreement, for merging"),
     (check_value_types,
@@ -6265,6 +6390,10 @@ PLIES = (
      "an extent the LAW itself writes is judged by the same rule as one on a bean"),
     (check_system_structure,
      "a system's declared shape: what it names exists, nesting ends, a metric level has a unit, restrictions narrow"),
+    (check_registry_forms,
+     "every registry has a form, and every row — the law's, a profile's, a garden's — keeps it"),
+    (check_verbs,
+     "each verb of the one entry names a tool this garden holds"),
     (check_registry_links,
      "a row that names a row of another registry is resolved, like any other link"),
     (check_retired_terms,
@@ -6385,7 +6514,7 @@ def main(args=None):
         # finding is its id and its path, including a document too broken to load, which `docs` does not hold.
         labels = {}
         for _d, _is_bean in (('beans', True), ('mappings', False)):
-            for _f in glob.glob(os.path.join(ROOT, _d, '*.md')):
+            for _f in dmgarden.paths(ROOT, _d):
                 _k = (_is_bean, os.path.basename(_f)[:-3])
                 for _l in {_k[1], os.path.relpath(_f, ROOT), os.path.relpath(_f, ROOT).replace(os.sep, '/')}:
                     labels[_l] = labels.get(_l, frozenset()) | {_k}

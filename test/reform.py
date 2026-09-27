@@ -160,7 +160,7 @@ r = run(sys.executable, os.path.join(G, "bin", "dmreform.py"), VOC, cwd=G)
 new = open(VOC).read()
 check("bin/dmreform.py translates the garden's own terms", r.returncode == 0 and "1 term(s) rewritten — rental" in r.stdout, r.stdout + r.stderr)
 check("...into one record per attribute", 'renews:' in new and 'in: { type: iso_date }' in new
-      and 'in: { aspect: capability, default: permitted }' in new and 'entry_attrs' not in new, new[-1500:])
+      and 'in: { aspect: permission, default: permitted }' in new and 'entry_attrs' not in new, new[-1500:])
 check("...conditionals became cells", '{ when: { billing: yearly }, requires: [note] }' in new, new[-1200:])
 check("...and NO COMMENT WAS LOST — a translator keeps what it was given, and the gate says where a reason goes",
       "both, always: a rental with no date is a guess" in new and "a provider is a being where one exists" in new, new[-1500:])

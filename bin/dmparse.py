@@ -642,7 +642,7 @@ def table_dumper(base):
 # compile ended the run at the first value matched against it. ONE definition, read by the gate (which refuses what this
 # leaves out) and by dmrules (which lists no rule of it), so the two never disagree about what a garden's vocabulary says.
 VOCAB_BLOCKS = (('local_terms', list), ('local_gene', list), ('vacancies', list), ('extends_profiles', list),
-                ('registry_files', list), ('registry_links', list), ('registry_additions', dict),
+                ('registry_files', list), ('registry_forms', dict), ('registry_additions', dict),
                 ('identity_policy', dict))
 _NAME_KEYS = ('shape', 'key_form', 'path', 'values_from', 'must_equal_genos_attr', 'entry_form_from_genos_attr',
               'facet_parity_with', 'required_on_targets_of', 'governs_anchor', 'value_form', 'value_pattern',
@@ -884,8 +884,14 @@ def vocab_read(vocab):
     keep('extends_profiles', lambda p: None if _is_text(p) else f"names a profile as text, not {type(p).__name__}", '')
     keep('registry_files', lambda r: None if isinstance(r, dict) and all(_is_text(r.get(k)) for k in ('registry', 'file'))
          else "is a mapping {registry, file, key}, each named as text", 'registry')
-    keep('registry_links', lambda r: None if isinstance(r, dict) and all(_is_text(r.get(k)) for k in ('from', 'to', 'field', 'take'))
-         else "is a mapping {from, to, field, take}, each named as text", 'from')
+    # a registry the garden holds of its own (`registry_files`) declares its form as the law's do (26.0)
+    for _reg in list(vocab.get('registry_forms') or {}):
+        _cols = vocab['registry_forms'][_reg]
+        if not (isinstance(_cols, dict) and all(_is_text(c) and (v in ('required', 'optional') or isinstance(v, dict))
+                                                for c, v in _cols.items())):
+            out.append(f"VOCAB.md: `registry_forms.{_reg}` is a mapping of each column to `required`, `optional` or "
+                       f"{{required?, in: {{registry, take}}?, acyclic?, rooted?, why?}} — it is left unread until it is one")
+            vocab['registry_forms'].pop(_reg)
     for _reg in list(vocab.get('registry_additions') or {}):
         _rows = vocab['registry_additions'][_reg]
         if not isinstance(_rows, list):
@@ -912,6 +918,31 @@ def vocab_read(vocab):
             out.append(f"VOCAB.md: identity_policy {_why} — the law's identity policy is read until it is")
             vocab['identity_policy'] = None
     return out
+
+
+def registry_links(*laws):
+    """Every column that names a row of another registry, as `{from, field, to, take, acyclic?, rooted?, why?}`: read from
+    the laws' `registry_forms` (26.0, where a column says where its values come from), the law's first and a garden's
+    after. One reading, so no tool keeps a list of links beside the law."""
+    out = []
+    for law in laws:
+        for reg, cols in sorted(((law or {}).get('registry_forms') or {}).items()) if isinstance(law, dict) else ():
+            for col, spec in (cols.items() if isinstance(cols, dict) else ()):
+                _in = spec.get('in') if isinstance(spec, dict) else None
+                if isinstance(_in, dict) and _is_text(_in.get('registry')) and _is_text(_in.get('take')):
+                    out.append({'from': reg, 'field': col, 'to': _in['registry'], 'take': _in['take'],
+                                **{k: spec[k] for k in ('acyclic', 'rooted', 'why') if spec.get(k) is not None}})
+    return out
+
+
+def registry_form(spec):
+    """(required, the column's spec as a mapping) for one column of a registry's form: `required`, `optional`, or a
+    mapping `{required?, in?, acyclic?, rooted?, why?}`."""
+    if spec == 'required':
+        return True, {}
+    if spec == 'optional':
+        return False, {}
+    return bool(isinstance(spec, dict) and spec.get('required')), (spec if isinstance(spec, dict) else {})
 
 
 def restated_rows(vocab, name):

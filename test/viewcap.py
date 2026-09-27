@@ -129,7 +129,7 @@ summary: "{what}"
 nature: empsychon
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:{pid}", class: logical, establishing: true }} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{pid}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: "rosa (gardener)", as_of: now }}
 ---
 {what}.
@@ -170,7 +170,7 @@ registry_files:
 """)
 C.put("extracts/boat-checks.tsv", "code\tparent\tname\nhull\t\tthe hull, for cracks\nmast\t\tthe mast, for a bend\n")
 C.put("beans/boat-club.md", bean("boat-club", "org", "lekton", "The lake boat club", "An invented club that keeps boats on a lake.",
-                                 ("org_id", "org:boat-club", "logical"), own="owned_by: { legal: { owner: { bean: rosa } } }\n"))
+                                 ("identifier", "org:boat-club", "logical"), own="owned_by: { legal: { owner: { bean: rosa } } }\n"))
 C.put(f"beans/{BOSUN}.md", person(BOSUN, "the club's bosun, a volunteer"))
 C.put(f"beans/{GUEST}.md", person(GUEST, "a guest of the club"))
 for _b, _s in (("boat-heron", "SN-HERON-1"), ("boat-tern", "SN-TERN-2")):
@@ -180,18 +180,18 @@ for _b, _s in (("boat-heron", "SN-HERON-1"), ("boat-tern", "SN-TERN-2")):
                                        "at: \"2026-09-20\", value: { count: \"4\", unit: millimetre } }\n"))
 for _o, _at, _boat in (("outing-0927", "2026-09-27 10:00+03:00", "boat-heron"), ("outing-1004", "2026-10-04 09:30+03:00", "boat-tern")):
     C.put(f"beans/{_o}.md", bean(_o, "event", "lekton", "%s on the %s" % (_o, _boat[5:]),
-                                 "Booked by a member, whose number is 555-0100.", ("event_id", "event:" + _o, "logical"),
+                                 "Booked by a member, whose number is 555-0100.", ("identifier", "event:" + _o, "logical"),
                                  extra=f"timing:\n  start: {{ system: gregorian-civil, at: \"{_at}\", unit: minute }}\n"
                                        f"refs:\n  boat: {{ bean: {_boat}, rel: sails }}\n",
                                  own="owned_by: { legal: { crown: logos } }\n"))
 C.put("beans/clubhouse-pi.md", bean("clubhouse-pi", "host", "soma", "The clubhouse computer", "A small computer in the clubhouse.",
                                     ("serial", "SN-PI-77", "hardware"), extra="provides_habitat: linux-baremetal\nlocated_at:\n  - { system: ipv4, openness: here, at: 192.0.2.10, observed: now }\n"))
 C.put("beans/hygro-firmware.md", bean("hygro-firmware", "product", "lekton", "The hygrometer's firmware",
-                                      "The software a hygrometer runs, recorded so its copy has a type.", ("product_id", "product:hygro-firmware", "logical"),
+                                      "The software a hygrometer runs, recorded so its copy has a type.", ("identifier", "product:hygro-firmware", "logical"),
                                       own="owned_by: { legal: { external: \"its makers\" } }\n"))
 C.put("beans/boathouse-hygrometer.md", bean("boathouse-hygrometer", "instance", "empsychon", "The boathouse hygrometer",
                                             "Reads the air in the boathouse and serves it as one JSON document.",
-                                            ("instance_id", "instance:boathouse-hygrometer", "logical"),
+                                            ("identifier", "instance:boathouse-hygrometer", "logical"),
                                             extra="instance_of: { bean: hygro-firmware }\nlives_in: { bean: clubhouse-pi }\n"
                                                   "knowledge:\n  - { scheme: technology, code: http, rel: uses }\n"))
 C.put("templates/slip.md", "# Sailing slip: {{ title }}\n\nStarts {{ timing.start.at }}, on {{ refs.boat.bean }}.\n")
@@ -206,7 +206,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - {{ key: service_id, value: "service:club-page", class: logical, establishing: true }}
+    - {{ key: identifier, value: "service:club-page", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "rosa (gardener)", as_of: now }}
 owned_by: {{ legal: {{ owner: {{ bean: boat-club }} }} }}
 responsibility: {{ legal: {{ holder: {{ bean: rosa }} }} }}
@@ -650,12 +650,12 @@ R.put("beans/runner.md", "---\nbean: runner\ngenos: host\ntitle: \"The machine t
       "located_at:\n  - { system: ipv4, openness: here, at: 192.0.2.90, observed: now }\n---\nThe runner.\n")
 R.put("beans/suite-py.md", "---\nbean: suite-py\ngenos: product\ntitle: \"The suite runner\"\nstatus: active\n"
       "summary: \"The script that runs every suite and writes its status as one JSON document.\"\nnature: lekton\n"
-      "identity:\n  status: confirmed\n  anchors:\n    - { key: product_id, value: \"product:suite-py\", class: logical, establishing: true }\n"
+      "identity:\n  status: confirmed\n  anchors:\n    - { key: identifier, value: \"product:suite-py\", class: logical, establishing: true }\n"
       "provenance: { src: asserted-by-human, by: keeper, as_of: now }\nowned_by: { legal: { owner: { bean: keeper } } }\n"
       "responsibility: { legal: { holder: { bean: keeper } } }\n---\nThe runner's script.\n")
 R.put("beans/suite-status.md", "---\nbean: suite-status\ngenos: instance\ntitle: \"The run's status\"\nstatus: active\n"
       "summary: \"The status document of the run in progress, served where the runner writes it.\"\nnature: empsychon\n"
-      "identity:\n  status: confirmed\n  anchors:\n    - { key: instance_id, value: \"instance:suite-status\", class: logical, establishing: true }\n"
+      "identity:\n  status: confirmed\n  anchors:\n    - { key: identifier, value: \"instance:suite-status\", class: logical, establishing: true }\n"
       "provenance: { src: observed, by: keeper, as_of: now }\nowned_by: { legal: { owner: { bean: keeper } } }\n"
       "responsibility: { legal: { holder: { bean: keeper } } }\ninstance_of: { bean: suite-py }\nlives_in: { bean: runner }\n"
       "knowledge:\n  - { scheme: technology, code: http, rel: uses }\n---\nThe status.\n")
@@ -673,7 +673,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: service_id, value: "service:results-page", class: logical, establishing: true }
+    - { key: identifier, value: "service:results-page", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: keeper, as_of: now }
 owned_by: { legal: { owner: { bean: keeper } } }
 responsibility: { legal: { holder: { bean: keeper } } }

@@ -50,12 +50,13 @@ from that rule, the parties from the `key_of` its parts name and the party's bea
 clauses from every term that falls due between those parties (`expiry` and a `key_of` the parties). Never writes.
 Exit 0; 2 when this is not a garden, or a bean named is not here or does not parse, or `--between` is not two parties.
 """
-import datetime, glob, os, re, sys
+import datetime, os, re, sys
 from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmcal
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmform
 import dmunits
 import dmstale
@@ -362,7 +363,7 @@ def load_beans():
     """({bean id: front matter}, {file stem: why it was not read}) — a bean that does not parse is not skipped in
     silence: whatever it records is missing from every total, and the reader is told which file and why."""
     beans, unread = {}, {}
-    for f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))):
+    for f in dmgarden.paths(ROOT, 'beans'):
         stem = os.path.splitext(os.path.basename(f))[0]
         head, _ = dmparse.read(f)
         if head is None:

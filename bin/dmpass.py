@@ -45,6 +45,7 @@ network path and writes nothing.
 import fnmatch, json, os, posixpath, re, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmform   # the one reader of how the law spells an attribute
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -1076,7 +1077,7 @@ class Answer(tuple):
 def beans_here(root=ROOT):
     """{id: front matter} of every bean in the working tree."""
     out, d = {}, os.path.join(root, 'beans')
-    for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+    for f in (os.path.basename(p) for p in dmgarden.paths(root, 'beans')):
         if f.endswith('.md'):
             try:
                 with open(os.path.join(d, f), encoding='utf-8') as fh:
@@ -1204,7 +1205,7 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
             if not held:
                 continue
             read.append((holder, key))
-            (forbid if g.get('stance') == 'forbidden' else permit).append((holder, key, g))
+            (forbid if g.get('permission') == 'forbidden' else permit).append((holder, key, g))
     tail = ('; ' + '; '.join(notes)) if notes else ''
     if forbid:
         h, k, _g = forbid[0]
