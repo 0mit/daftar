@@ -501,7 +501,7 @@ def monitors():
 def reached(being):
     """The first monitor that reaches a being (its own `reaches`, targeting it)."""
     return next((m for m in monitors() if m["adapter"] and any(
-        (r.get("target") or {}).get("bean") == being for r in m["reaches"].values())), None)
+        (r.get("to") or {}).get("bean") == being for r in m["reaches"].values())), None)
 
 
 def computing(b):

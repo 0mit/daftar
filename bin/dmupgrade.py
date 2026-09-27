@@ -145,11 +145,12 @@ garden's own human ratifies: read `git diff`, then `git add -A` and `git commit`
 this tool prints runs as printed in Windows PowerShell 5.1 too. The journal entry is already written, so the gate's
 provenance duty is met by the commit that adopts it.
 """
-import argparse, copy, datetime, glob, importlib.util, inspect, json, os, re, shlex, shutil, subprocess, sys, tempfile
+import argparse, copy, datetime, importlib.util, inspect, json, os, re, shlex, shutil, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmform
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmpass
 import dmreform
 import dmsafe
@@ -880,7 +881,7 @@ class Step21:
                   + (f", of the genos {self.ksrc} gives ({self.gardener_genos})" if self.plant and self.ksrc in (ENV_GENOS, ENV_KIND)
                      else ''), flush=True)
         for sub in DOCS:
-            for path in sorted(glob.glob(os.path.join(ROOT, sub, '*.md'))):
+            for path in dmgarden.paths(ROOT, sub):
                 new, form, facts, problems = plan_doc(path)
                 self.problems += problems
                 if new is not None:
@@ -911,7 +912,7 @@ class Step21:
             refuse(f"{self.tag}'s law does not say which gene of bean may keep a garden (`manifest.attrs.gardener`, "
                    f"`in: {{ bean_id: {{ gene }} }}`), and this tool does not guess it.")
         either = ' or '.join(gene)
-        keepers = sorted(os.path.basename(p)[:-3] for p in glob.glob(os.path.join(ROOT, 'beans', '*.md'))
+        keepers = sorted(os.path.basename(p)[:-3] for p in dmgarden.paths(ROOT, 'beans')
                          if genos_of(p) in gene)
         here = (f" (here: {', '.join(keepers[:12])}" + (', …' if len(keepers) > 12 else '') + ")") if keepers else ''
         if not gid:
@@ -1255,7 +1256,7 @@ class Step22:
     @staticmethod
     def docs():
         """Every bean, and VOCAB.md. A mapping records no being and keeps its `kind`; GARDEN.md says nothing renamed."""
-        return sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + [os.path.join(ROOT, 'VOCAB.md')]
+        return dmgarden.paths(ROOT, 'beans') + [os.path.join(ROOT, 'VOCAB.md')]
 
     def one(self, path, dry=False):
         """Plan (dry) or make the renames in one document; what was renamed is kept in `facts`, a refusal in `problems`."""
@@ -1935,7 +1936,7 @@ class Step24:
 
     @staticmethod
     def docs():
-        return sorted(p for d in DOCS for p in glob.glob(os.path.join(ROOT, d, '*.md')))
+        return sorted(dmgarden.paths(ROOT, DOCS))
 
     @staticmethod
     def spans(text):
@@ -2055,6 +2056,181 @@ class Step24:
         return out
 
 
+# ==== THE 26.0 STEP =============================================================================================
+# One word for one thing. The thirteen terms that each named the identity given to one genos of being are one term,
+# `identifier`: the genos is already in a minted name, and an assigned or issued id says its home by how it is written.
+# An attribute on an aspect is named after it: the aspect `capability` is `permission`, and `stance` beside `permission`
+# is `permission`. The far end a reach is directed at is `to`, as a treatment's is. What moves is STRUCTURE — an anchor's
+# key, an entry's attribute, an aspect a garden's own term names — and each move is checked first against the release's
+# own `retired:` list, so a step and a law that disagree are refused, never guessed at. Values are kept byte for byte.
+STEP_26 = (26, 0)
+ID_TERMS_26 = ('person_id', 'contract_id', 'event_id', 'session_id', 'program_id', 'design_id', 'doc_id', 'service_id',
+               'org_id', 'product_id', 'manifest_id', 'instance_id', 'emp_id')
+ATTRS_26 = {('clauses', 'stance'): 'permission', ('grants', 'stance'): 'permission', ('reaches', 'target'): 'to'}
+
+
+def bean_rule_26(path, role, name, parent):
+    """A bean in 26.0's words: an anchor keyed by a per-genos id term is keyed `identifier`; a clause's or a grant's
+    `stance` is its `permission`; a reach's `target` is its `to`. Nothing else of a bean is the law's."""
+    if role == 'value':
+        if len(path) == 4 and path[:2] == ('identity', 'anchors') and path[3] == 'key' and name in ID_TERMS_26:
+            return 'identifier'
+        return None
+    if len(path) == 2 and isinstance(path[1], str):
+        return ATTRS_26.get((path[0], name))
+    return None
+
+
+def vocab_rule_26(path, role, name, parent):
+    """A garden's VOCAB.md in 26.0's words: in its own terms, an attribute on the aspect `capability` names the aspect
+    `permission`, and is itself named `permission` where it was `stance`, as is an `expiry` that names it; a vacancy of
+    that aspect follows it."""
+    if path[:1] == ('local_terms',):
+        if role == 'value':
+            return 'permission' if path[-2:] == ('in', 'aspect') and name == 'capability' else (
+                'permission' if len(path) >= 2 and path[-2:] == ('expiry', 'stance') and name == 'stance' else None)
+        if path[-1:] == ('attrs',) and name == 'stance' and isinstance(parent, dict):
+            _in = (parent.get('stance') or {}).get('in') if isinstance(parent.get('stance'), dict) else None
+            return 'permission' if isinstance(_in, dict) and _in.get('aspect') in ('capability', 'permission') else None
+        if path[-1:] == ('expiry',) and name == 'stance':
+            return 'permission'
+        return None
+    if role == 'value' and path[:1] == ('vacancies',) and path[-1] == 'at' and name == 'aspect:capability':
+        return 'aspect:permission'
+    return None
+
+
+class Step26(Step22):
+    """The translation into std-vocab 26.0, made as 22.0's was: planned, and refused if it must be, before any file is
+    touched, and made again at apply time on each file as the steps before it left it."""
+    RULES = (bean_rule_26, vocab_rule_26)
+
+    def left(self):
+        for path in self.docs():
+            if os.path.isfile(path):
+                try:
+                    if renamed(read_text(path)[0], self._rule(path))[1]:
+                        self.leftover = True
+                except CannotRename:
+                    self.leftover = True
+            if self.leftover:
+                return True
+        return False
+
+    def _rule(self, path):
+        return vocab_rule_26 if os.path.basename(path) == 'VOCAB.md' else bean_rule_26
+
+    def plan(self):
+        law = {(str(r.get('at')), str(r.get('name'))): str(r.get('instead') or '')
+               for r in (std_fm(self.rel).get('retired') or []) if isinstance(r, dict)}
+        want = [(('term', n), 'identifier') for n in ID_TERMS_26] + [(('aspect', 'capability'), 'permission'),
+                                                                      (('attr', 'stance'), 'permission'),
+                                                                      (('attr', 'target'), 'to')]
+        wrong = [f"{a} `{o}` -> `{n}`" for (a, o), n in want if not law.get((a, o), '').startswith(f"`{n}`")]
+        if wrong:
+            refuse(f"{self.tag}'s law does not retire, as this tool's 26.0 step translates them, "
+                   f"{', '.join(wrong)}. The step and the law disagree; neither is guessed at.")
+        # a garden's own term of a retired name (an overlay of a per-genos id term) is its gardener's to fold in
+        _v = os.path.join(ROOT, 'VOCAB.md')
+        if os.path.isfile(_v):
+            _fm = _parse(read_text(_v)[0])[0] or {}
+            for _t in _fm.get('local_terms') or []:
+                if isinstance(_t, dict) and _t.get('term') in ID_TERMS_26:
+                    self.problems.append(f"VOCAB.md: local_terms '{_t['term']}' restates a term 26.0 folded into "
+                                         f"`identifier` — fold what it adds into the garden's own use of `identifier`, or "
+                                         f"remove it")
+        for path in self.docs():
+            self.one(path, dry=True)
+        if self.problems and not self.keep:
+            refuse(f"crossing into std-vocab 26.0, {len(self.problems)} thing(s) are a person's to do, not a "
+                   f"translation's:\n" + '\n'.join('  - ' + p for p in self.problems) +
+                   "\nDo them and commit, then run this again — or pass --keep-on-failure to apply the rest and "
+                   "leave these, named, for the person.")
+
+    def one(self, path, dry=False):
+        if not os.path.isfile(path):
+            return
+        text, form = read_text(path)
+        rel = os.path.relpath(path, ROOT).replace(os.sep, '/')
+        try:
+            new, done = renamed(text, self._rule(path))
+        except CannotRename as e:
+            why = f"{rel}: {e} — translate it by hand"
+            if why not in self.problems:
+                self.problems.append(why)
+            return
+        if not dry and done:
+            write_text(path, new, form)
+            self.facts[rel] = done
+
+    _SEGMENT = r'(?=$|[.\[])'
+    REKEY_26 = (
+        (re.compile(r'^(local_terms\[[^\]]*\]\.schema\.attrs\.)stance' + _SEGMENT), lambda m: m.group(1) + 'permission'),
+    )
+
+    def rekey_reasons(self):
+        if any(p.startswith('VOCAB.md:') for p in self.problems):
+            return
+        sys.path.insert(0, os.path.join(ROOT, 'bin'))
+        import dmwhy
+        self.reasons, done = dmwhy.rekey(ROOT, self.REKEY_26)
+        if done:
+            self.facts[self.reasons] = [('heading', o, n) for o, n in done]
+        else:
+            self.reasons = None
+
+    CODE_WORD = re.compile(r"""(['"])(?:""" + '|'.join(ID_TERMS_26) + r""")\1|\bkey:\s*['"]?(?:"""
+                           + '|'.join(ID_TERMS_26) + r""")\b|(['"])(?:stance|target)\2|\bstance:\s""")
+
+    def code_left(self):
+        own = shipped(self.rel)
+        out = []
+        for f in sorted(x for x in run('git', 'ls-files', '-z', check=False).stdout.split('\0') if x):
+            if f in own or f in ('VOCAB.md', 'GARDEN.md') or f.split('/')[0] in self.RECORDS:
+                continue
+            try:
+                text = read_text(os.path.join(ROOT, *f.split('/')))[0]
+            except (OSError, UnicodeDecodeError):
+                continue
+            n = 0
+            if f.endswith('.md'):
+                fm = _parse(text)[0]
+                if isinstance(fm, dict) and 'bean' in fm:
+                    try:
+                        n = len(renamed(text, bean_rule_26)[1])
+                    except CannotRename:
+                        n = 1
+            elif f.endswith(self.CODE_EXT) or text.startswith('#!'):
+                n = sum(1 for line in text.split('\n') if self.CODE_WORD.search(line))
+            if n:
+                out.append((f, n))
+        return out
+
+    def report(self):
+        from collections import Counter
+        beans = sorted(r for r in self.facts if r.startswith('beans/'))
+        parts = []
+        if beans:
+            tally = Counter(f"`{o}` -> `{n}`" for r in beans for _w, o, n in self.facts[r])
+            parts.append(f"{len(beans)} bean(s): " + ', '.join(f"{k} ×{c}" for k, c in sorted(tally.items()))
+                         + " — " + ', '.join(f"[[{os.path.basename(r)[:-3]}]]" for r in beans))
+        if 'VOCAB.md' in self.facts:
+            vt = Counter(f"`{o}` -> `{n}`" for _w, o, n in self.facts['VOCAB.md'])
+            parts.append("VOCAB.md: " + ', '.join(k + (f" ×{c}" if c > 1 else '') for k, c in sorted(vt.items())))
+        if self.reasons:
+            parts.append(f"{self.reasons}, the garden's own reasons re-keyed: " + ', '.join(
+                f"`## {o}` -> `## {n}`" for _w, o, n in self.facts[self.reasons]))
+        if self.problems:
+            parts.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
+        code = [] if self.leftover else self.code_left()
+        if code:
+            parts.append(f"NOT TRANSLATED, for a person to read: {len(code)} file(s) of the garden's own code say a word "
+                         f"26.0 retired, and may read a bean by it — " + ', '.join(f"{f} ({n})" for f, n in code[:20])
+                         + (f" and {len(code) - 20} more" if len(code) > 20 else ''))
+        return ('std-vocab 26.0, one word for one thing — ' + '; '.join(parts or ['nothing to translate']),
+                [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
@@ -2167,6 +2343,13 @@ def main():
             if _s24.left():
                 step24 = _s24
                 step24.plan()
+        # ...and so is one that still says a word 26.0 made one: an identity term per genos, `capability`, `stance`, `target`.
+        step26 = None
+        if STEP_26 <= vtuple(vocab_version(rel)):
+            _s26 = Step26(rel, a.tag, a.keep_on_failure)
+            if vtuple(before) < STEP_26 or _s26.left():
+                step26 = _s26
+                step26.plan()
         # WHAT THE GARDEN RECEIVES, AND WHAT IT HELD, read by the one reader (bin/dmpass.py): `want` is what a garden
         # extending its profiles receives from the release; `have` is every file of the garden its own release keeps, so
         # a file it no longer receives — a retired tool, the asset of a profile it left — leaves, and a file of its own
@@ -2183,7 +2366,7 @@ def main():
         # fails) once left release files copied, both pins moved, beans half translated and no journal entry.
         try:
             return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22, step23,
-                                 profiles, step24)
+                                 profiles, step24, step26)
         except BaseException as e:
             put_back(added + (step21.created if step21 else []))
             print(f"NOT {verb.upper()}: the upgrade stopped midway"
@@ -2226,7 +2409,7 @@ def put_back(added):
 
 
 def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None,
-                  profiles=None, step24=None):
+                  profiles=None, step24=None, step26=None):
     """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
     caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
     changed = []
@@ -2275,6 +2458,12 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
             changed.append('VOCAB.md (translated)')
         if step22.reasons:
             changed.append(f'{step22.reasons} (re-keyed)')
+    if step26:
+        step26.apply(vocab_only=True)
+        if 'VOCAB.md' in step26.facts and 'VOCAB.md' not in changed:
+            changed.append('VOCAB.md (translated)')
+        if step26.reasons:
+            changed.append(f'{step26.reasons} (re-keyed)')
     if os.path.isfile(reform):
         _r = run(sys.executable, reform, os.path.join(ROOT, 'VOCAB.md'), check=False)
         _out = (_r.stdout + _r.stderr).strip()
@@ -2318,6 +2507,10 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         _t, _b = step24.apply()
         translated.append(_t); steps.append(_t)
         beans += [b for b in _b if b not in beans]
+    if step26:
+        _t, _b = step26.apply()
+        translated.append(_t); steps.append(_t)
+        beans += [b for b in _b if b not in beans]
 
     _vp = os.path.join(ROOT, 'VOCAB.md')
     if os.path.isfile(_vp):
@@ -2353,7 +2546,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     if not (changed or added or removed or repinned or beans):
         # NOTHING MOVED IS NOT NOTHING TO DO. With --keep-on-failure a step that could translate nothing still names what
         # it left for a person, and the gate still refuses the garden for it: saying "nothing to do" hid both.
-        left = [p for s in (step22, step23, step24) if s for p in s.problems]
+        left = [p for s in (step22, step23, step24, step26) if s for p in s.problems]
         if left:
             print(f"NOTHING TRANSLATED: this garden runs {a.tag} ({sha[:12]}) already, and {len(left)} thing(s) are a "
                   f"person's to do, not a translation's:\n" + '\n'.join('  - ' + p for p in left) +
@@ -2364,13 +2557,14 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     # ONLY WORDS MOVED: the garden runs this release already, and what changed is the translation of what came in since it
     # crossed. The law did not move and nothing is a person's to decide — the translation is the one the garden adopted
     # when it crossed — so the entry asks nothing, and says RULE-CHANGE only where VOCAB.md itself was translated.
-    ran = [s for s in (step22, step23, step24) if s]
+    ran = [s for s in (step22, step23, step24, step26) if s]
     words_only = bool(ran and all(s.leftover for s in ran) and not (added or removed or repinned)
                       and all(c.endswith(('(translated)', '(re-keyed)')) for c in changed))
     since = ' and '.join(w for s, w in ((step22, "into std-vocab 22.0 still in 21.0's words"),
                                         (step23, "into std-vocab 23.1 still placing a file where the law places it "
                                                  "otherwise"),
-                                        (step24, "into std-vocab 24.0 with a clause's `when` still in prose")) if s)
+                                        (step24, "into std-vocab 24.0 with a clause's `when` still in prose"),
+                                        (step26, "into std-vocab 26.0 still in 25.x's words")) if s)
     if words_only:
         verb = 'translated'
 

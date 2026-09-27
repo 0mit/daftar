@@ -101,7 +101,7 @@ summary: "{what}"
 nature: lekton
 owned_by: {{ legal: {{ owner: {{ bean: keeper }} }} }}
 responsibility: {{ legal: {{ holder: {{ bean: keeper }} }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: doc_id, value: "document:{bid}", class: logical, establishing: true }} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "document:{bid}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 located_at: [ {{ system: unix-filesystem, openness: unknown }} ]
 ---
@@ -149,7 +149,7 @@ summary: "the baker's terms"
 nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:bake-2026", class: logical, establishing: true }} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:bake-2026", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 parties:
   bakery: {{ who: {{ bean: keeper }}, accepted: 2026-09-01 }}
@@ -167,7 +167,7 @@ summary: "the baker"
 nature: empsychon
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:baker", class: logical, establishing: true }}, {{ key: {ANCHOR}, value: "{BAKER_FPR}", class: logical, establishing: {ESTABLISHING} }} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:baker", class: logical, establishing: true }}, {{ key: {ANCHOR}, value: "{BAKER_FPR}", class: logical, establishing: {ESTABLISHING} }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 consent: {{ bean: bake-2026 }}
 ---

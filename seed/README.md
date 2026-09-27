@@ -89,7 +89,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: person_id, value: "person:sam", class: logical, establishing: true }
+    - { key: identifier, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }

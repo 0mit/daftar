@@ -74,7 +74,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - {{ key: program_id, value: "program:{id}", class: logical, establishing: true }}
+    - {{ key: identifier, value: "program:{id}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "sam", as_of: now }}
 owned_by: {{ legal: {{ owner: {{ bean: sam }} }} }}
 responsibility: {{ legal: {{ holder: {{ bean: sam }} }} }}

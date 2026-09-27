@@ -22,10 +22,11 @@ fallback that runs.
 
 Usage: python3 bin/dmfacets.py [--all] [--csv]
 """
-import os, sys, glob, collections
+import os, sys, collections
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmmerge as M
 try:
     import yaml
@@ -43,8 +44,7 @@ def walk():
     """Every (key, value) a merge would actually reach: top-level keys, then the members of multi ones."""
     seen = collections.defaultdict(lambda: {'shapes': collections.Counter(), 'where': set(),
                                             'top': False, 'declarable': False, 'parents': set()})
-    for path in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + \
-            sorted(glob.glob(os.path.join(ROOT, 'mappings', '*.md'))):
+    for path in dmgarden.paths(ROOT):
         fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
         base = os.path.basename(path)[:-3]
         for k, v in fm.items():

@@ -72,7 +72,7 @@ bean("someone", 'bean: someone\ngenos: person\ntitle: "a person"\nstatus: active
      'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n')
 for a, b in (("part-a", "part-b"), ("part-b", "part-a")):
     bean(a, f'bean: {a}\ngenos: product\ntitle: "{a}"\nstatus: active\nsummary: "x"\nnature: lekton\n'
-         f'identity: {{ status: confirmed, anchors: [ {{ key: product_id, value: "product:{a}", class: logical, establishing: true }} ] }}\n'
+         f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "product:{a}", class: logical, establishing: true }} ] }}\n'
          f'provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}\n' + OWN + f'part_of: {{ bean: {b} }}\n')
 out = gate()
 check("a cycle on a walked relation is refused while `walk` says acyclic", "cycle" in out.lower() and "0 error" not in out, out[-900:])
@@ -192,7 +192,7 @@ _f = _gate.attribute_form("endpoints", _gate.SCHEMAS["endpoints"])
 check("S1: one record per attribute — `at` says it is required and takes its form from the system beside it",
       _f["attrs"]["at"].get("required") is True and _f["attrs"]["at"]["system_from"]["keyed_by"] == "system"
       and "meaning" in _f["attrs"]["at"], str(_f["attrs"].get("at"))[:300])
-check("S1: an aspect position is an attribute like any other", _f["attrs"]["permission"]["aspect"]["aspect"] == "capability")
+check("S1: an aspect position is an attribute like any other", _f["attrs"]["permission"]["aspect"]["aspect"] == "permission")
 check("S1: cross_aspect became cells", [c["origin"] for c in _f["cells"]] == ["in_breach"] * 2 + ["expect_if"], str([c["when"] for c in _f["cells"]])[:300])
 _f = _gate.attribute_form("analysis_cache", _gate.SCHEMAS["analysis_cache"])
 check("S1: ...and so did entry_required_if and entry_expect_if — three constructs, one idea",

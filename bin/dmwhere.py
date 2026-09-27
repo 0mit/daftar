@@ -60,11 +60,12 @@ A path on a host and a coordinate on a body are both answers to "where is it": t
 this runs on, the second is read for the cells it is in. The coordinate arithmetic is bin/dmgeo.py's; the tables are
 read as bin/dmknowledge.py reads them.
 """
-import glob, os, re, socket, sys
+import os, re, socket, sys
 from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmknowledge
 
 try:
@@ -85,7 +86,7 @@ def load():
     """
     out = {}
     for space, key in (('beans', 'bean'), ('mappings', 'mapping')):
-        for f in sorted(glob.glob(os.path.join(ROOT, space, '*.md'))):
+        for f in dmgarden.paths(ROOT, space):
             fm, _ = dmparse.read(f)
             try:
                 d = dmparse.loads(fm) if fm else None

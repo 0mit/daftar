@@ -39,11 +39,12 @@ given for every file, commit message and pull request.
 Checks, each only if asked for: every tracked file (default), the messages of the commits in `--range`, and
 a text file such as a pull request body. Exit 0 = nothing found, 1 = something names the estate, 2 = setup.
 """
-import functools, glob, ipaddress, os, re, subprocess, sys
+import functools, ipaddress, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 
 # The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
 GUARDS = {
@@ -122,7 +123,7 @@ def estate_words(garden, public=frozenset()):
     (bean and mapping ids, root names, its own id) and every value it identifies something by (each identity
     anchor's value, whatever its key), less an anchor value every token of which is `public`."""
     names, values = set(), set()
-    for f in glob.glob(os.path.join(garden, 'beans', '*.md')):
+    for f in dmgarden.paths(garden, 'beans'):
         head, _ = dmparse.read(f)
         try:
             fm = dmparse.loads(head) or {}
@@ -142,7 +143,7 @@ def estate_words(garden, public=frozenset()):
                 values.add(str(a['value']))
         for name in (fm.get('roots') if isinstance(fm.get('roots'), dict) else {}):
             names.add(str(name))
-    for f in glob.glob(os.path.join(garden, 'mappings', '*.md')):
+    for f in dmgarden.paths(garden, 'mappings'):
         names.add(os.path.basename(f)[:-3])
         try:
             fm = dmparse.loads(dmparse.read(f)[0]) or {}

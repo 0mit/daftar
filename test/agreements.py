@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Agreements (std-vocab 24.0, AGREE): a clause that occurs for each member of a reading, settled occurrence by
-occurrence; a due relative to another position; a window a clause holds in and the words its stance chooses; what
+occurrence; a due relative to another position; a window a clause holds in and the words its permission chooses; what
 brings a clause into force as a reading; a party acting for another, one that declined, every party of a role; a
 repetition at several places in its cell, lasting, with closures; one being held twice over one time refused where a
 garden says a term is exclusive; and a value read across gardens only at a commit the other garden published and granted.
@@ -82,11 +82,11 @@ ORG_OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { l
 
 
 def person(id, consent):
-    return bean(id, "person", "empsychon", "person_id", f"consent: {{ bean: {consent} }}\n", PERSON_OWN)
+    return bean(id, "person", "empsychon", "identifier", f"consent: {{ bean: {consent} }}\n", PERSON_OWN)
 
 
 def contract(id, rest):
-    return bean(id, "contract", "lekton", "contract_id", rest, CROWN)
+    return bean(id, "contract", "lekton", "identifier", rest, CROWN)
 
 
 # ============================================================================ the fixtures
@@ -156,7 +156,7 @@ clauses:
   van:
     what: "the tuner may take the shop's van"
     by: tuner
-    stance: permitted
+    permission: permitted
     during: { of: time, from: 2026-11-01, to: 2026-11-14 }
   parts-said: { what: "the shop fits the new hammers", by: shop, when: { said: "the parts have arrived" } }
   parts-read: { what: "the shop pays for the parts", by: shop, when: { selection: parts-arrived } }
@@ -198,7 +198,7 @@ clauses:
 """)
 
 write("mappings/walk-tuning.md", WALK)
-write("beans/fine-keys.md", bean("fine-keys", "org", "lekton", "org_id", "", ORG_OWN))
+write("beans/fine-keys.md", bean("fine-keys", "org", "lekton", "identifier", "", ORG_OWN))
 for p in ("ivo", "ada", "bo"):
     write(f"beans/{p}.md", person(p, "tuner-terms"))
 write("beans/ana.md", person("ana", "choir-dues"))
@@ -244,7 +244,7 @@ code, choir = tool("bin/dmledger.py", "choir-dues")
 check("...a clause binding every party of a role", "by every party whose role is member" in choir, choir)
 
 # the reading brings the clause into force once a document of the parts is here
-write("beans/parts-note.md", bean("parts-note", "document", "lekton", "doc_id", "located_at: [ { system: physical, openness: unknown } ]\n",
+write("beans/parts-note.md", bean("parts-note", "document", "lekton", "identifier", "located_at: [ { system: physical, openness: unknown } ]\n",
                                   ORG_OWN))
 rc, out = save("the parts' delivery note", ["parts-note"])
 code, led2 = tool("bin/dmledger.py", "tuner-terms")
@@ -282,7 +282,7 @@ refused("both `due` and `falls_due` is refused", "beans/tuner-terms.md", "    ea
 refused("`of` on a clause that occurs for nothing is refused", "beans/tuner-terms.md",
         "  van:\n", "  van:\n    of: clauses.fee.amount\n", "occurs for none")
 refused("a due relative to `@occurrence` on a clause that occurs for nothing is refused", "beans/tuner-terms.md",
-        "    stance: permitted\n", '    stance: permitted\n    falls_due: { from: "@occurrence", after: { of: time, measure: { count: 7, unit: day } } }\n',
+        "    permission: permitted\n", '    permission: permitted\n    falls_due: { from: "@occurrence", after: { of: time, measure: { count: 7, unit: day } } }\n',
         "occurs for none")
 refused("`settles` naming a clause with no `each` is refused", "beans/tuner-terms.md",
         "{ clause: pay-concert, occurrence: tune-b,", "{ clause: van, occurrence: tune-b,", "occurs for nothing")
@@ -297,7 +297,7 @@ overlay = "  - { term: parties, schema: { exclusive: { extent: during, being: wh
 voc = re.sub(r"(?m)^local_terms: \[\].*$", "local_terms:\n" + overlay.rstrip("\n"), voc, count=1)
 check("(the overlay is written into VOCAB.md)", "term: parties, schema: { exclusive" in voc, voc[:400])
 write("VOCAB.md", voc)
-write("beans/room-b.md", bean("room-b", "org", "lekton", "org_id", "", ORG_OWN))
+write("beans/room-b.md", bean("room-b", "org", "lekton", "identifier", "", ORG_OWN))
 
 
 def booking(id, frm, to, extra=""):
@@ -363,14 +363,14 @@ def garden_bean(bid, gidv, owner, at=None):
 
 
 # garden h keeps a candle and knows garden g, kept by `keeper` as h knows them
-write("beans/candle.md", bean("candle", "contract", "lekton", "contract_id", """parties:
+write("beans/candle.md", bean("candle", "contract", "lekton", "identifier", """parties:
   hana: { who: { bean: hana }, role: holder, accepted: 2026-09-01 }
 words: { form: spoken, agreed: 2026-09-01 }
 clauses:
   share: { what: "the share of the candle", by: hana, amount: { count: 50, unit: percent } }
 """, CROWN), g=H)
 # h's own record of g's gardener: a person kept by name because the garden they keep is met here (F2)
-write("beans/keeper.md", bean("keeper", "person", "empsychon", "person_id", "", PERSON_OWN), g=H)
+write("beans/keeper.md", bean("keeper", "person", "empsychon", "identifier", "", PERSON_OWN), g=H)
 write("beans/g-garden.md", garden_bean("g-garden", gid, "keeper"), g=H)
 rc, out = save("the candle, and the garden g", ["candle", "g-garden", "keeper"], g=H, who="hana (test)")
 check("garden h holds a candle and records garden g", rc == 0, out[-600:])
@@ -391,7 +391,7 @@ provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 ---
 A laptop.
 """)
-write("beans/hana.md", bean("hana", "person", "empsychon", "person_id", "", PERSON_OWN))
+write("beans/hana.md", bean("hana", "person", "empsychon", "identifier", "", PERSON_OWN))
 write("beans/h-garden.md", garden_bean("h-garden", hid, "hana", at="root:hgarden"))
 rc, out = save("garden h recorded here", ["h-garden", "hana", "this-host"])
 check("garden g records garden h, located on this host", rc == 0, out[-600:])

@@ -40,7 +40,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: person_id, value: "person:sam", class: logical, establishing: true }
+    - { key: identifier, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
@@ -70,9 +70,10 @@ Pick the most specific relation that is true; `refs` is the open fallback.
 
 Anchors say what an object IS, so two gardens recognise the same thing. A machine is best anchored on
 hardware (a serial or a MAC); a rented machine you cannot touch on its name (`fqdn`); a domain on its `fqdn`;
-software or a deployment on a logical id you choose (`product_id`, `service_id`). A person uses a logical id
-(`person_id`) — never their name. An agreement or a happening uses an id you mint (`contract_id`, `event_id`); a
-document its `content_hash`, or the reference its home gives it (`doc_id`); another garden its `garden_id`.
+software or a deployment on a logical id you choose (`identifier`: `product:<name>`, `service:<name>`). A person
+uses a logical id (`identifier`, `person:<id>`) — never their name. An agreement or a happening uses an id you mint
+(`identifier`: `contract:<name>`, `event:<name>`); a document its `content_hash`, or the reference its home gives it
+(`identifier`); another garden its `garden_id`.
 
 ## A registered domain
 
@@ -164,7 +165,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: product_id, value: "product:nginx", class: logical, establishing: true }
+    - { key: identifier, value: "product:nginx", class: logical, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
 owned_by: { legal: { external: "the nginx project" } }
 responsibility: { legal: { holder: { bean: sam } } }
@@ -184,7 +185,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: service_id, value: "nginx:example.org@nas", class: logical, establishing: true }
+    - { key: identifier, value: "nginx:example.org@nas", class: logical, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
 instance_of: { bean: nginx }
 lives_in: { bean: nas }
@@ -283,7 +284,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:ali-consent", class: logical, establishing: true }
+    - { key: identifier, value: "contract:ali-consent", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -311,7 +312,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: person_id, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
+    - { key: identifier, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 consent: { bean: ali-consent }
 owned_by: { legal: { crown: agape } }
@@ -344,7 +345,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: event_id, value: "event:dinner-at-sams-2026-09-12", class: logical, establishing: true }
+    - { key: identifier, value: "event:dinner-at-sams-2026-09-12", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { holder: { bean: sam } } }
@@ -399,7 +400,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:shared-camera", class: logical, establishing: true }
+    - { key: identifier, value: "contract:shared-camera", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -427,7 +428,7 @@ Sam uses the camera more, so Sam bears two parts of its cost and Ali one.
 
 Sam lent Ali the price of a washing machine, to be repaid in six monthly instalments, with interest on one paid
 late. What the agreement asks is written as **clauses**, each a position on the `capability` square — `required`
-(must, the reading when `stance` is silent), `omissible` (need not), `permitted` (may), `forbidden` (must not) —
+(must, the reading when `permission` is silent), `omissible` (need not), `permitted` (may), `forbidden` (must not) —
 with who it binds (`by`), whom it is owed to (`to`), how much, from when (`due`) and how it repeats (`every`). A
 clause that is not brought into force by a date says what brings it (`when`). `bin/dmstale.py` warns before each
 instalment falls due, and stops once a clause's `state` says it was met, waived or broken.
@@ -446,7 +447,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:washer-loan", class: logical, establishing: true }
+    - { key: identifier, value: "contract:washer-loan", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -663,7 +664,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:bike-repair", class: logical, establishing: true }
+    - { key: identifier, value: "contract:bike-repair", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -859,7 +860,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:agency-noor", class: logical, establishing: true }
+    - { key: identifier, value: "contract:agency-noor", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -931,7 +932,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: person_id, value: "person:noor", class: logical, establishing: true }
+    - { key: identifier, value: "person:noor", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 consent: { bean: agency-noor }
 owned_by: { legal: { crown: agape } }
@@ -958,7 +959,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: org_id, value: "org:heron-books", class: logical, establishing: true }
+    - { key: identifier, value: "org:heron-books", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { external: "its shareholders" } }
 responsibility: { legal: { self: true } }
@@ -978,7 +979,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: doc_id, value: "document:salt-road-signed", class: logical, establishing: true }
+    - { key: identifier, value: "document:salt-road-signed", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: sam } } }
 responsibility: { legal: { holder: { bean: sam } } }
@@ -999,7 +1000,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:salt-road-heron", class: logical, establishing: true }
+    - { key: identifier, value: "contract:salt-road-heron", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -1034,7 +1035,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: person_id, value: "person:p-7d2e41c9", class: logical, establishing: true }
+    - { key: identifier, value: "person:p-7d2e41c9", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
@@ -1054,7 +1055,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: doc_id, value: "document:heron-report", class: logical, establishing: true }
+    - { key: identifier, value: "document:heron-report", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: sam } } }
 responsibility: { legal: { holder: { bean: sam } } }
@@ -1110,7 +1111,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: org_id, value: "org:tile-workshop", class: logical, establishing: true }
+    - { key: identifier, value: "org:tile-workshop", class: logical, establishing: true }
     - { key: phone, value: "+15555550123", class: logical, establishing: false }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: sam } } }
@@ -1136,7 +1137,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:lale-employment", class: logical, establishing: true }
+    - { key: identifier, value: "contract:lale-employment", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -1176,8 +1177,8 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: person_id, value: "person:lale", class: logical, establishing: true }
-    - { key: emp_id, value: "0007", class: logical, establishing: true, issuer: { bean: tile-workshop } }
+    - { key: identifier, value: "person:lale", class: logical, establishing: true }
+    - { key: identifier, value: "0007", class: logical, establishing: true, issuer: { bean: tile-workshop } }
     - { key: phone, value: "+15555550147", class: logical, establishing: false }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 consent: { bean: lale-employment }
@@ -1206,7 +1207,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:job-kitchen-floor", class: logical, establishing: true }
+    - { key: identifier, value: "contract:job-kitchen-floor", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -1233,7 +1234,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:job-bathroom-wall", class: logical, establishing: true }
+    - { key: identifier, value: "contract:job-bathroom-wall", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -1264,7 +1265,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: event_id, value: "event:kiln-firing-2026-11", class: logical, establishing: true }
+    - { key: identifier, value: "event:kiln-firing-2026-11", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { holder: { bean: sam } } }
@@ -1288,7 +1289,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:evening-class", class: logical, establishing: true }
+    - { key: identifier, value: "contract:evening-class", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -1428,7 +1429,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:bee-coop", class: logical, establishing: true }
+    - { key: identifier, value: "contract:bee-coop", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -1442,7 +1443,7 @@ selections:
   hive-count: { what: "how many hives there are", steps: [ { id: h, op: select, genos: hive }, { id: n, op: count, of: h } ] }
 grants:
   members-read-checks: { act: read, over: hives, positions: [ { path: observations } ], audience: { selection: members }, why: "members compare their mite counts" }
-  sites-closed: { act: read, over: hives, positions: [ { path: located_at } ], audience: { selection: members }, stance: forbidden, why: "a hive's site is its keeper's own: hives are stolen" }
+  sites-closed: { act: read, over: hives, positions: [ { path: located_at } ], audience: { selection: members }, permission: forbidden, why: "a hive's site is its keeper's own: hives are stolen" }
 capabilities:
   no-colonies-abroad:
     why: "a colony moved across the border can carry a mite the valley does not have"
@@ -1467,7 +1468,7 @@ nature: empsychon
 identity:
   status: confirmed
   anchors:
-    - { key: person_id, value: "person:derya", class: logical, establishing: true }
+    - { key: identifier, value: "person:derya", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 consent: { bean: bee-coop }
 owned_by: { legal: { crown: agape } }
@@ -1637,7 +1638,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:candle-supply", class: logical, establishing: true }
+    - { key: identifier, value: "contract:candle-supply", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
@@ -1816,7 +1817,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: service_id, value: "service:bakery-page", class: logical, establishing: true }
+    - { key: identifier, value: "service:bakery-page", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: sam } } }
 responsibility: { legal: { holder: { bean: sam } } }

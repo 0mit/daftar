@@ -344,7 +344,7 @@ check("12.0: borrowing never launders UPWARD past the guard's own protection of 
 def _deal(garden, count, borne):
     return [{'garden': garden, 'id': 'deal', 'fm': {
         'bean': 'deal', 'genos': 'contract', 'nature': 'lekton', 'title': 'a deal', 'status': 'active',
-        'identity': {'status': 'confirmed', 'anchors': [{'key': 'contract_id', 'value': 'abcdefabcdef/contract:deal',
+        'identity': {'status': 'confirmed', 'anchors': [{'key': 'identifier', 'value': 'abcdefabcdef/contract:deal',
                                                          'class': 'logical', 'establishing': True}]},
         'provenance': {'src': 'asserted-by-human', 'by': garden, 'as_of': '2026-09-23'},
         'transactions': {'t1': {'what': 'x', 'amount': {'count': count, 'unit': 'XTS'},

@@ -89,6 +89,7 @@ parts, changes).
    python3 test/rehearsal.py
    python3 test/deeptime.py
    python3 test/catalogue.py
+   python3 test/garden.py
    reuse lint
    ```
 

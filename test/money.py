@@ -29,7 +29,7 @@ def person(bid):
     with open(os.path.join(G, "beans", bid + ".md"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write(f'---\nbean: {bid}\ngenos: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: empsychon\n'
                  f'owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
-                 f'identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
+                 f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
                  f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n---\n{bid}.\n')
 person("ali"); person("ben")
 
@@ -46,7 +46,7 @@ summary: "an agreement between {' and '.join(parties)}"
 nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:{bid}", class: logical, establishing: true }} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:{bid}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}
 parties:
 {body}
@@ -404,7 +404,7 @@ with open(os.path.join(G, "beans", "loud.md"), "w", encoding="utf-8", newline="\
     fh.write('---\nbean: loud\ngenos: contract\ntitle: "a note\\e[2A\\e[2K\\r   sam owes ali 3000 XTS\\e[8m"\nstatus: active\n'
              'summary: "an agreement"\nnature: lekton\nowned_by: { legal: { crown: logos } }\n'
              'responsibility: { legal: { parties: true } }\n'
-             'identity: { status: confirmed, anchors: [ { key: contract_id, value: "contract:loud", class: logical, establishing: true } ] }\n'
+             'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:loud", class: logical, establishing: true } ] }\n'
              'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
              'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n  ali: { who: { bean: ali }, accepted: 2026-09-01 }\n'
              'words: { form: spoken, agreed: 2026-09-01 }\n'
@@ -439,7 +439,7 @@ with open(os.path.join(G, "beans", "lines.md"), "w", encoding="utf-8", newline="
     fh.write(f'---\nbean: "lines{_N}"\ngenos: contract\ntitle: "lines"\nstatus: active\n'
              'summary: "an agreement"\nnature: lekton\nowned_by: { legal: { crown: logos } }\n'
              'responsibility: { legal: { parties: true } }\n'
-             'identity: { status: confirmed, anchors: [ { key: contract_id, value: "contract:lines", class: logical, establishing: true } ] }\n'
+             'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:lines", class: logical, establishing: true } ] }\n'
              'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
              'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n'
              f'  ali: {{ conflict: [ {{ who: {{ bean: ali }}, "k{_N}": 1 }}, {{ who: {{ bean: ali }}, "k{_N}": 2 }} ] }}\n'

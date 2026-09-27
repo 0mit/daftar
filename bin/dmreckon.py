@@ -45,6 +45,7 @@ from fractions import Fraction
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import dmparse  # noqa: E402 — the one reader of a path, a table and a front matter
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmcal    # noqa: E402 — positions in any calendar, moments, civil offsets
 import dmseq    # noqa: E402 — a series' rows and what a channel holds between them
 import dmpass   # noqa: E402 — where a value comes from: an input's `origin`
@@ -169,20 +170,15 @@ class Garden:
         self.fm, self.kind = {}, {}
         if pin is not None:
             self._check_pin()
-            names = self._git('ls-tree', '-r', '--name-only', pin.commit, '--', 'beans', 'mappings').split('\n')
-            for p in names:
-                if p.endswith('.md') and p.count('/') == 1:
-                    self._add(p, self._git('show', f"{pin.commit}:{p}"))
+            for p in dmgarden.listed(root, ('beans', 'mappings'), at=pin.commit):
+                self._add(p, self._git('show', f"{pin.commit}:{p}"))
         else:
-            for d in ('beans', 'mappings'):
-                full = os.path.join(root, d)
-                for n in sorted(os.listdir(full)) if os.path.isdir(full) else []:
-                    if n.endswith('.md'):
-                        try:
-                            head, _ = dmparse.read(os.path.join(full, n))
-                        except Exception:
-                            continue
-                        self._put(f"{d}/{n}", head)
+            for path in dmgarden.paths(root):
+                try:
+                    head, _ = dmparse.read(path)
+                except Exception:
+                    continue
+                self._put(f"{os.path.basename(os.path.dirname(path))}/{os.path.basename(path)}", head)
 
     def _git(self, *a):
         r = subprocess.run(['git', '-C', self.root, *a], capture_output=True, text=True, encoding='utf-8')

@@ -41,7 +41,7 @@ THE FINDINGS are candidates for a person to judge, never verdicts: a law item th
 suite imports, runs or names; one domain taken under different attribute names whose meanings share their words; a
 sibling whose shape differs from the rest of its group (the terms of one tier or profile, the rows of one registry); a
 name the law gives several items; a file that lists the beans itself — a call that reads a directory of beans, one
-finding a call — instead of reading them through bin/dmreckon.py.
+finding a call — instead of reading them through the one garden model, bin/dmgarden.py.
 
 IN A GARDEN it maps the garden's copy of the language: the law, and the files the release keeps (`seed/LANGUAGE`). The
 garden's own files are the garden's, and no part of the language.
@@ -663,6 +663,11 @@ class Catalogue:
             v = s.get('value_in_registry')
             if isinstance(v, dict):
                 self.edge('uses', 'term:' + name, 'registry:' + str(v.get('registry')), 'value_in_registry')
+        # a registry whose column takes its values from another's rows uses that registry (26.0, `registry_forms`)
+        for link in dmparse.registry_links(self.law):
+            a, b = 'registry:' + str(link['from']), 'registry:' + str(link['to'])
+            if a in self.parts and b in self.parts:
+                self.edge('uses', a, b, str(link['field']))
 
     def _record(self, term, path):
         t = self.terms[term][0]
@@ -835,6 +840,12 @@ class Catalogue:
                 continue
             by = sorted({a for rel, a in into.get(pid, ()) if rel in ('mentions', 'states', 'covers', 'explains', 'names')
                          and a not in quiet and self.parts[a]['kind'] in counted})
+            # the law references it itself: another of its items takes values from it, or it governs a PATH of every bean
+            # (`schema.path`: identity.status, provenance.src), which the gate's core reads by that path and not its name
+            by += [a for rel, a in into.get(pid, ()) if rel == 'uses' and self.parts[a]['kind'] in ('term', 'registry')]
+            if v['kind'] == 'term' and isinstance(((self.terms.get(pid[5:]) or ({},))[0].get('schema') or {}), dict) \
+                    and ((self.terms.get(pid[5:]) or ({},))[0].get('schema') or {}).get('path'):
+                by.append(pid)
             if not by:
                 unreferenced.append({'part': pid})
         # a tool no suite imports, runs, loads or names
@@ -919,9 +930,9 @@ class Catalogue:
     def _walks(self):
         out = []
         for f, p in self.py.items():
-            if p.walks and self.parts[f]['kind'] in ('tool', 'module', 'hook') and f != 'bin/dmreckon.py':
+            if p.walks and self.parts[f]['kind'] in ('tool', 'module', 'hook') and f not in ('bin/dmgarden.py',):
                 out.append({'part': f, 'walks': len(p.walks), 'lines': sorted(line for line, _col in p.walks),
-                            'reads_through_dmreckon': ('imports', f, 'bin/dmreckon.py', '') in self.edges})
+                            'reads_through_dmgarden': ('imports', f, 'bin/dmgarden.py', '') in self.edges})
         return sorted(out, key=lambda x: (-x['walks'], x['part']))
 
     # -------------------------------------------------------------- the map, whole
@@ -1049,11 +1060,11 @@ def show_findings(cat):
     print(f"\nnames the law gives several items ({len(f['one_name_many_items'])}) — a text naming one cannot say which")
     for x in f['one_name_many_items']:
         print(f"  {x['name']:24} {', '.join(x['parts'])}")
-    print(f"\nfiles that list the beans themselves, rather than read them through bin/dmreckon.py "
+    print(f"\nfiles that list the beans themselves, rather than read them through bin/dmgarden.py "
           f"({len(f['own_bean_walks'])})")
     for x in f['own_bean_walks']:
         print(f"  {x['part']:40} {x['walks']:3}  lines {', '.join(map(str, x['lines']))}"
-              + ("   (imports dmreckon too)" if x['reads_through_dmreckon'] else ''))
+              + ("   (imports dmgarden too)" if x['reads_through_dmgarden'] else ''))
 
 
 def find(cat, name):

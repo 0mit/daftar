@@ -160,7 +160,7 @@ title: "Sam's page"
 status: active
 summary: "A page of one drawing."
 nature: lekton
-identity: { status: confirmed, anchors: [ { key: service_id, value: "service:sam-page", class: logical, establishing: true } ] }
+identity: { status: confirmed, anchors: [ { key: identifier, value: "service:sam-page", class: logical, establishing: true } ] }
 provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: 2026-01-01 }
 owned_by: { legal: { owner: { bean: sam } } }
 responsibility: { legal: { holder: { bean: sam } } }

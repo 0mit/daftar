@@ -73,7 +73,7 @@ check("...and passes once the names are gone", r.returncode == 0, r.stdout + r.s
 
 write(os.path.join(G, "beans", "samba-here.md"),
     '---\nbean: samba\ngenos: product\ntitle: "the file server software"\nstatus: active\nsummary: "s"\nnature: lekton\n'
-    'identity: { status: confirmed, anchors: [ { key: product_id, value: "product:samba", class: logical, establishing: true } ] }\n'
+    'identity: { status: confirmed, anchors: [ { key: identifier, value: "product:samba", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
     'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
     '---\nSamba.\n')
@@ -92,7 +92,7 @@ write(os.path.join(G, "beans", "design-lantern-stack.md"),
 write(os.path.join(G, "beans", "kettle-share.md"),
     '---\nbean: kettle-share\ngenos: contract\ntitle: "a kettle bought together"\nstatus: active\nsummary: "c"\n'
     'nature: lekton\n'
-    'identity: { status: confirmed, anchors: [ { key: contract_id, value: "kettle-2026-17", class: logical, establishing: true } ] }\n'
+    'identity: { status: confirmed, anchors: [ { key: identifier, value: "kettle-2026-17", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
     'owned_by: { legal: { crown: logos } }\n---\nAn agreement.\n')
 commit("where that is being taken up, see [[design-lantern-stack]] `open:`\n", "neutral")
@@ -130,13 +130,13 @@ check("an EMAIL anchor's value in a public file is refused — a person is ident
       r.returncode == 1 and "a@example.org" in r.stdout and "doc.md" in r.stdout, r.stdout)
 commit("the agreement is filed as kettle-2026-17\n", "neutral")
 r = dmpublic()
-check("...and so is a CONTRACT_ID's value — an agreement's own name for itself",
+check("...and so is an agreement's IDENTIFIER — its own name for itself",
       r.returncode == 1 and "kettle-2026-17" in r.stdout, r.stdout)
 commit("a serial like SN-Q1 is printed on the case\n", "neutral")
 r = dmpublic()
 check("...and a SERIAL's, an anchor key no list named", r.returncode == 1 and "sn-q1" in r.stdout, r.stdout)
 _pid = next(l.split('value: "')[1].split('"')[0] for l in open(os.path.join(G, "beans", "keeper.md"), encoding="utf-8")
-            if "key: person_id" in l)
+            if "key: identifier" in l)
 _gid = run("git", "-C", G, "rev-list", "--first-parent", "--max-parents=0", "HEAD").stdout.split()[-1][:12]
 commit("the gardener is %s\n" % _pid, "neutral")
 r = dmpublic()

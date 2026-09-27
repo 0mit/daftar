@@ -156,7 +156,7 @@ def targets(m):
     groups = {k: [] for k in ("icmp", "tcp", "http", "smtp", "tls", "fs")}
     parked = []
     for key, r in (m.get("reaches") or {}).items():
-        p, t = r.get("protocol"), (r.get("target") or {}).get("bean")
+        p, t = r.get("protocol"), (r.get("to") or {}).get("bean")
         if not t or not vm.fm(t):
             parked.append((t or key, p, "the reach names no being of the garden")); continue
         if p == "snmp":
@@ -561,7 +561,7 @@ def snmp_parts(m):
     /tmp, so the value never enters the bundle, git or the ledger."""
     st = m.get("settings") if isinstance(m.get("settings"), dict) else {}
     sn = st.get("snmp") if isinstance(st.get("snmp"), dict) else {}
-    reached = [(r.get("target") or {}).get("bean") for r in (m.get("reaches") or {}).values() if r.get("protocol") == "snmp"]
+    reached = [(r.get("to") or {}).get("bean") for r in (m.get("reaches") or {}).values() if r.get("protocol") == "snmp"]
     reached = [b for b in reached if b and vm.fm(b)]
     auths = sn.get("auths") if isinstance(sn.get("auths"), dict) else {}
     if not reached or not auths:

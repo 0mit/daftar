@@ -98,7 +98,7 @@ summary: "the service agreement the client accepted"
 nature: lekton
 owned_by: {{ legal: {{ crown: logos }} }}
 responsibility: {{ legal: {{ parties: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: contract_id, value: "contract:service-2026", class: logical, establishing: true }} ] }}
+identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:service-2026", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 parties:
   practice: {{ who: {{ bean: keeper }}, accepted: 2026-09-01 }}
@@ -114,7 +114,7 @@ title: "an intake letter"
 status: active
 summary: "a client's letter, scanned at intake"
 nature: lekton
-{OWN}identity: {{ status: confirmed, anchors: [ {{ key: doc_id, value: "document:intake-letter", class: logical, establishing: true }} ] }}
+{OWN}identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "document:intake-letter", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 about: [ {{ who: {pid} }} ]
 located_at: [ {{ system: unix-filesystem, openness: here, at: "{HOST}:/srv/scans/letter.pdf" }} ]

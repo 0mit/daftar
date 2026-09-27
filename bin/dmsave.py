@@ -55,6 +55,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmjournal  # noqa: E402 — the entry is written by the journal tool's own code, and nowhere else
 
 ROOT = dmjournal.ROOT
@@ -169,7 +170,7 @@ def trace_said():
     own = set(git('diff', '--name-only', f'{base}..HEAD', '--', 'beans').stdout.split()) if base else set()
     own |= {posixpath.basename(p)[:-3] for p in list(own)}
     changed = sorted(set(git('diff', '--name-only', 'HEAD', '--', 'beans').stdout.split())
-                     | set(git('ls-files', '--others', '--exclude-standard', '--', 'beans').stdout.split()))
+                     | set(dmgarden.untracked(ROOT, 'beans')))
     titles = {}
 
     def title(b):

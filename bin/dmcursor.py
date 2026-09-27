@@ -27,10 +27,11 @@ Usage:
     python3 bin/dmcursor.py <bean-id>
     python3 bin/dmcursor.py /home/user/src/app/models/invoice.py
 """
-import glob, os, sys
+import os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmform
 import dmstale                       # the ONE implementation of the staleness verdict
 try:
@@ -42,8 +43,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BOLD = (lambda s: f"\033[1m{s}\033[0m") if sys.stdout.isatty() else (lambda s: s)
 
 BEANS = {}
-for _f in sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + \
-          sorted(glob.glob(os.path.join(ROOT, 'mappings', '*.md'))):
+for _f in dmgarden.paths(ROOT):
     _h, _b = dmparse.read(_f)
     if _h is None:
         continue

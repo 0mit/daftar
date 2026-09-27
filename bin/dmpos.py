@@ -29,6 +29,7 @@ import os, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmform
 try:
     import yaml
@@ -160,9 +161,7 @@ def rows(terms, aspects):
     """Every (bean, term, entry) that takes a stance, as (position-key, subject-key)."""
     axes = axis_order(aspects)
     out = []
-    import glob
-    docs = sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) + \
-        sorted(glob.glob(os.path.join(ROOT, 'mappings', '*.md')))
+    docs = dmgarden.paths(ROOT)
     for path in docs:
         fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
         base = os.path.basename(path)[:-3]

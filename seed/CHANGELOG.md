@@ -251,6 +251,38 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **26.0** (2026-09-28, proposed rule-change) — **one word for one thing, and the law held to its own shape.** MAJOR:
+  names a garden writes change, and a garden crosses by `bin/dmupgrade.py`, which translates them. Found by the
+  catalogue of the language (`bin/dmcatalog.py --findings`), and by a garden another maker's agent wrote, which showed
+  where a cold writer had to improvise.
+  - **`identifier`.** Thirteen terms — `person_id`, `contract_id`, `event_id`, `session_id`, `program_id`,
+    `design_id`, `doc_id`, `service_id`, `org_id`, `product_id`, `manifest_id`, `instance_id`, `emp_id` — each named
+    the identity given to one genos, and a new genos needed a new term. They are one term. A minted name already
+    says its genos (`person:sam`), and must now say the bean's own; an assigned id says its home by how it is
+    written; an issued one carries `issuer`. A genos may narrow the forms (`gene[].identifier_forms`): a person's is
+    minted or issued, never a bare number someone assigned, and a session's is minted. Whether an identifier
+    establishes is the bean's to say, as it already was for a document's and a manifest's; each nature's minimum of
+    establishing anchors still holds.
+  - **`permission`.** An attribute that takes a position on an aspect is named after the aspect, and the gate checks
+    it on every term. `feasibility`, `necessity` and `confidentiality` already were; the aspect `capability` was
+    taken as `permission` by three terms and `stance` by two. The aspect is `permission`, and so is the attribute.
+  - **`to`.** A reach's far end was `target`, and a treatment's and a clause's were `to`. It is `to`; a link's
+    `peer`, which has no direction, stays.
+  - **`term_form`.** A term holds what the term record declares and nothing else. Twenty-nine keys no tool read —
+    notes, forms written out, handling, directives — moved to the reasoning, under each term's path; four
+    `canonical` restated their schema's `canonical_note` and went; `ip`'s became its `canonical_note`; `os` and
+    `git_remote` took what a writer needs into their `meaning`. Three registry rows' prose went the same way.
+  - **`registry_forms`.** Every registry declares its columns, each required or optional, and every row keeps them —
+    the law's, a profile's and a garden's alike. A column that names rows of another registry says so there, with
+    `acyclic`, `rooted` and its `why`: `registry_links` is folded into it. A protocol's `technology` is optional, so a
+    protocol no catalogue lists (a vendor's own) is written without inventing one.
+  - **A bean with no provenance is an error**, as one whose provenance lacks `src` already was: a fact that cannot
+    say who said it is not a fact.
+  - **`verbs` and `tool_families`.** One entry to every tool, `bin/daftar.py <verb>`: each verb and the family of what
+    it is for (law, gate, write, read, measure, between, launch) are rows of the law, and the gate holds that each verb
+    names a tool the garden holds. The tools stay where every command names them; the entry groups them.
+  - Retired, each saying where it went: the thirteen id terms, `capability` (aspect), `stance` and `target`
+    (attributes).
 - **25.1** (2026-09-27, proposed rule-change) — **a private page shows its addresses.** MINOR, additive: `view.visibility`,
   `public` or `private`, absent meaning public, so a page that says nothing stays as it was. A public page is one that
   may be published, and no drawing on it shows an address: the rule was made for that, and 25.0 applied it to every

@@ -48,10 +48,11 @@ code page, a Persian block went into the bean as mojibake, and the edit, the exi
 UTF-16 without its mark (a NUL after every letter) is refused by name, as bin/dmjournal.py refuses it; CRLF is read
 as LF, since a bean is written with LF on every platform.
 """
-import codecs, glob, os, re, stat, sys, tempfile
+import codecs, os, re, stat, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
 try:
     import yaml
 except ImportError:
@@ -575,8 +576,7 @@ if __name__ == '__main__':
     if _rc is not None:
         sys.exit(_rc)
     args = [a for a in sys.argv[1:] if not a.startswith('--') and a != 'verify']
-    targets = args or (sorted(glob.glob(os.path.join(ROOT, 'beans', '*.md'))) +
-                       sorted(glob.glob(os.path.join(ROOT, 'mappings', '*.md'))) +
+    targets = args or (dmgarden.paths(ROOT) +
                        [os.path.join(ROOT, f) for f in ('VOCAB.md', 'GARDEN.md')] +
                        [os.path.join(ROOT, 'seed', 'std-vocab.md')])
     targets = [t for t in targets if os.path.exists(t)]

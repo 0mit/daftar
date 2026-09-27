@@ -109,7 +109,7 @@ def gate(g):
 # THE DAY OF WRITING IS THE CLOCK'S (23.0): a bean a garden commits says `as_of: now`, and bin/dmjournal.py writes the day
 # of its entry in its place — so no day a garden writes down is typed here, and a check reads the day back from the bean.
 def person(bid, title, anchor, by, body, extra='', more_anchors=''):
-    ident = (f"  status: confirmed\n  anchors:\n    - {{ key: person_id, value: \"{anchor}\", class: logical, "
+    ident = (f"  status: confirmed\n  anchors:\n    - {{ key: identifier, value: \"{anchor}\", class: logical, "
              f"establishing: true }}\n{more_anchors}") if anchor else "  status: provisional\n  anchors: []\n"
     return (f"---\nbean: {bid}\ngenos: person\ntitle: \"{title}\"\nstatus: active\nsummary: \"{title}.\"\n"
             f"nature: empsychon\nowned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
@@ -125,7 +125,7 @@ def neighbours(gid, keeper, people):
             f"summary: \"The neighbours agreed to be kept in this garden by name.\"\nnature: lekton\n"
             f"owned_by: {{ legal: {{ crown: logos }} }}\nresponsibility: {{ legal: {{ parties: true }} }}\n"
             f"identity:\n  status: confirmed\n  anchors:\n"
-            f"    - {{ key: contract_id, value: \"{gid}/contract:neighbours\", class: logical, establishing: true }}\n"
+            f"    - {{ key: identifier, value: \"{gid}/contract:neighbours\", class: logical, establishing: true }}\n"
             f"provenance: {{ src: asserted-by-human, by: \"{keeper} (gardener)\", as_of: now }}\n"
             f"parties:\n{ps}words: {{ form: spoken, agreed: 2026-09-20 }}\n---\nAgreed over the fence.\n")
 
@@ -274,7 +274,7 @@ responsibility: { legal: { parties: true } }
 identity:
   status: confirmed
   anchors:
-    - { key: contract_id, value: "contract:shared-cost", class: logical, establishing: true }
+    - { key: identifier, value: "contract:shared-cost", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "ada (gardener)", as_of: now }
 parties:
   ada: { who: { bean: ada }, role: payer, accepted: 2026-09-20 }
@@ -356,7 +356,7 @@ responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
   anchors:
-    - {{ key: contract_id, value: "{BID}/contract:house-costs", class: logical, establishing: true }}
+    - {{ key: identifier, value: "{BID}/contract:house-costs", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: now }}
 parties:
   ben: {{ who: {{ bean: ben }}, role: payer, accepted: 2026-09-21 }}
@@ -424,7 +424,7 @@ check("make lays ONE proposal beside the garden, PROPOSAL-<garden>-<YYYYMMDD-HHM
 check("...its envelope: from garden-a's id and gardener at its pin, to garden-b's id, under the qualified agreement",
       env.get('from', {}).get('garden') == AID and env['from'].get('gardener') == 'ada'
       and env['from'].get('pin') == fm_of(os.path.join(A, 'GARDEN.md'))['extends']
-      and env.get('to') == {'garden': BID} and env.get('under') == {'contract_id': f"{AID}/contract:shared-cost"}
+      and env.get('to') == {'garden': BID} and env.get('under') == {'identifier': f"{AID}/contract:shared-cost"}
       and env.get('beans') == ['shared-cost', 'ada'] and env.get('stubs') == ['neighbour-ben']
       and str(env.get('fingerprint', '')).startswith('sha256:'), env)
 import dmpropose
@@ -796,11 +796,11 @@ check("each input carries its garden: the garden_id read from git for a garden d
 r = tool(A, 'dmmerge.py', A, C)
 sams = anchored(seeds_of(r.stdout), 'person:sam')
 check("a BARE `person:sam` in garden-a and in garden-c is a CANDIDATE, reported for a person — and never fused",
-      'CANDIDATES — a person decides (class J)' in r.stdout and re.search(r'person_id person:sam — garden-a:sam, '
+      'CANDIDATES — a person decides (class J)' in r.stdout and re.search(r'identifier person:sam — garden-a:sam, '
                                                                           r'garden-c:sam', r.stdout)
       and len(sams) == 2 and all(s['identity'].get('id_collision') for s in sams), r.stdout[-800:])
 cands = M.candidates(gA + gC)
-check("...the library says the same", [(c['key'], c['value']) for c in cands] == [('person_id', 'person:sam')]
+check("...the library says the same", [(c['key'], c['value']) for c in cands] == [('identifier', 'person:sam')]
       and len(anchored(M.merge_gardens([gA, gC]), 'person:sam')) == 2, cands)
 CLONE = os.path.join(ONE, 'clone-of-a')
 git(ONE, 'clone', '-q', A, CLONE)
@@ -863,7 +863,7 @@ responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
   anchors:
-    - {{ key: contract_id, value: "{AID}/contract:lent-tools", class: logical, establishing: true }}
+    - {{ key: identifier, value: "{AID}/contract:lent-tools", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "ada (gardener)", as_of: now }}
 parties:
   ada: {{ who: {{ bean: ada }}, accepted: 2026-09-22 }}
@@ -1020,7 +1020,7 @@ check("garden-b's own agreement with cai goes to garden-c, beside garden-b and i
 
 # ================================================================ chat proposals
 p = os.path.join(TWO, 'twins.md')
-twin = lambda s: f"bean: {s}\ngenos: person\nidentity:\n  anchors:\n  - {{key: person_id, value: '{BID}/person:ben', " \
+twin = lambda s: f"bean: {s}\ngenos: person\nidentity:\n  anchors:\n  - {{key: identifier, value: '{BID}/person:ben', " \
                  f"class: logical, establishing: true}}\n"
 put(p, chat('chat-20260923-1203', {'rota': f"""---
 bean: rota
@@ -1030,7 +1030,7 @@ status: active
 identity:
   status: confirmed
   anchors:
-    - {{ key: contract_id, value: "contract:rota", class: logical, establishing: true }}
+    - {{ key: identifier, value: "contract:rota", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: 2026-09-23 }}
 parties:
   one: {{ who: {{ bean: x1 }} }}
@@ -1100,7 +1100,7 @@ def from_b(**over):
     """An envelope from garden-b to garden-a under their agreement, named afresh each time."""
     e = {'proposal': f"garden-b-20260923-{next(N)}", 'from': {'garden': BID, 'name': 'garden-b', 'gardener': 'ben',
                                                              'pin': PIN},
-         'to': {'garden': AID}, 'under': {'contract_id': f"{AID}/contract:shared-cost"}, 'made': '2026-09-23 20:00+03:00'}
+         'to': {'garden': AID}, 'under': {'identifier': f"{AID}/contract:shared-cost"}, 'made': '2026-09-23 20:00+03:00'}
     e.update(over)
     return e
 
@@ -1124,7 +1124,7 @@ def consent_of(gid, pid, who):
     return (f"---\nbean: {pid}-consent\ngenos: contract\ntitle: \"{pid} agrees to be kept by name\"\nstatus: active\n"
             f"summary: \"{pid}'s consent.\"\nnature: lekton\nowned_by: {{ legal: {{ crown: logos }} }}\n"
             f"responsibility: {{ legal: {{ parties: true }} }}\nidentity:\n  status: confirmed\n  anchors:\n"
-            f"    - {{ key: contract_id, value: \"{gid}/contract:{pid}-consent\", class: logical, establishing: true }}\n"
+            f"    - {{ key: identifier, value: \"{gid}/contract:{pid}-consent\", class: logical, establishing: true }}\n"
             f"provenance: {{ src: asserted-by-human, by: \"{who}\", as_of: 2026-09-23, garden: \"{gid}\" }}\n"
             f"parties:\n  kept: {{ who: {{ bean: {pid} }}, accepted: 2026-09-20 }}\n"
             f"words: {{ form: spoken, agreed: 2026-09-20 }}\n---\nAgreed over the fence.\n")
@@ -1189,7 +1189,7 @@ r = read_in(C, 'chat-own-stamp.md', chat('chat-20260923-1300', {'sam-b': sam_b(s
 check("...and a CHAT proposal carrying any `garden` stamp — this garden's own included — is refused",
       r.returncode == 1 and f"garden {CID}, this one's" in r.out and 'GATE' not in r.stdout, r.out)
 _ben_is_ada = {'bean': 'ben', 'genos': 'person', 'identity': {'status': 'confirmed', 'anchors': [
-    {'key': 'person_id', 'value': f'{AID}/person:ada', 'class': 'logical', 'establishing': True}]}}
+    {'key': 'identifier', 'value': f'{AID}/person:ada', 'class': 'logical', 'establishing': True}]}}
 _note = f"""---
 bean: a-note
 genos: contract
@@ -1202,7 +1202,7 @@ responsibility: {{ legal: {{ holder: {{ bean: ben }} }} }}
 identity:
   status: confirmed
   anchors:
-    - {{ key: contract_id, value: "{BID}/contract:a-note", class: logical, establishing: true }}
+    - {{ key: identifier, value: "{BID}/contract:a-note", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: 2026-09-23, garden: "{BID}" }}
 ---
 A note.
@@ -1219,7 +1219,7 @@ check("a proposal carrying a merge its garden has not settled (`merge_open`, a c
       "it would stand this garden's gate down on another garden's say",
       r.returncode == 1 and 'holds a merge its garden has not settled' in r.out and 'verdict: CLEAN' not in r.out, r.out)
 _mallory = {'bean': 'mallory', 'genos': 'person', 'identity': {'status': 'confirmed', 'anchors': [
-    {'key': 'person_id', 'value': f'{BID}/person:mallory', 'class': 'logical', 'establishing': True}]}}
+    {'key': 'identifier', 'value': f'{BID}/person:mallory', 'class': 'logical', 'establishing': True}]}}
 _e = from_b()
 _e['from'] = dict(_e['from'], gardener='mallory')
 r = read_in(A, 'gardener-is-mallory.md', craft(_e, {'a-note': _note.replace('bean: ben }', 'bean: mallory }')},
@@ -1260,7 +1260,7 @@ responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
   anchors:
-    - {{ key: contract_id, value: "{BID}/contract:new-deal", class: logical, establishing: true }}
+    - {{ key: identifier, value: "{BID}/contract:new-deal", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: 2026-09-23, garden: "{BID}" }}
 parties:
   ada: {{ who: {{ bean: ada }}, accepted: "2026-09-21\\e[8m" }}
@@ -1270,12 +1270,12 @@ words: {{ form: spoken, agreed: 2026-09-21 }}
 A new deal.
 """
 _stub = lambda b, v: {'bean': b, 'genos': 'person', 'title': b.title(), 'identity': {'status': 'confirmed', 'anchors': [
-    {'key': 'person_id', 'value': v, 'class': 'logical', 'establishing': True}]}}
+    {'key': 'identifier', 'value': v, 'class': 'logical', 'establishing': True}]}}
 _escs = [('a record\'s `by`', read_in(A, 'esc-by.md', craft(from_b(), {'sam-b': _esc_by})),
           'said by ben (gardener)\\x1b[8m\\x1b]0;t\\x07'),
          ('a carried key', read_in(A, 'esc-key.md', craft(from_b(), {'ben': _esc_key})), 'details.k\\x1b[8m: + "v"'),
          ('the day an agreement says the gardener accepted it',
-          read_in(A, 'esc-accepted.md', craft(from_b(under={'contract_id': f"{BID}/contract:new-deal"}),
+          read_in(A, 'esc-accepted.md', craft(from_b(under={'identifier': f"{BID}/contract:new-deal"}),
                                               {'new-deal': _deal}, {'ada': _stub('ada', f'{AID}/person:ada'),
                                                                     'ben': _stub('ben', f'{BID}/person:ben')})),
           'it says ada accepted (2026-09-21\\x1b[8m)'),
@@ -1319,8 +1319,8 @@ check("...and this garden's working tree is as it was", git(A, 'status', '--porc
 _inj = {'bean': 'cai', 'genos': 'person', 'title': 'Cai',
         'nature': 'living\nstatus: retired\nx_injected: true',
         'identity': {'status': 'confirmed', 'anchors': [
-            {'key': 'person_id', 'value': 'dddddddddddd/person:cai',
-             'class': 'logical, establishing: true }\n    - { key: person_id, value: "' + AID + '/person:ada"',
+            {'key': 'identifier', 'value': 'dddddddddddd/person:cai',
+             'class': 'logical, establishing: true }\n    - { key: identifier, value: "' + AID + '/person:ada"',
              'establishing': True}]}}
 _dnote = _note.replace(BID, 'dddddddddddd').replace('bean: ben', 'bean: cai').replace('ben (gardener)', 'cai')
 _de = from_b(**{'from': {'garden': 'dddddddddddd', 'name': 'garden-d', 'gardener': 'cai', 'pin': PIN}})
@@ -1334,7 +1334,7 @@ check("FIRST CONTACT with a crafted stub: no bean is printed from it — its cla
           'bean', 'genos', 'title', 'status', 'summary', 'nature', 'owned_by', 'responsibility', 'identity', 'provenance'},
       r.out)
 _ok = dict(_inj, nature='empsychon', title='Cai "of the gate": the keeper')
-_ok['identity'] = {'status': 'confirmed', 'anchors': [{'key': 'person_id', 'value': 'dddddddddddd/person:cai',
+_ok['identity'] = {'status': 'confirmed', 'anchors': [{'key': 'identifier', 'value': 'dddddddddddd/person:cai',
                                                        'class': 'logical', 'establishing': True}]}
 r = read_in(A, 'first-contact.md', craft(_de, {'a-note': _dnote}, {'cai': _ok}))
 texts = dict(re.findall(r'^===== beans/(\S+)\.md =====\n(.*?)(?=^===== )', r.stdout, re.S | re.M))
@@ -1361,7 +1361,7 @@ check("...and an envelope whose `from` is not a mapping is one too, not read as 
 _csam = person('sam', 'Sam, as garden-c knows him', f'{CID}/person:sam', 'cai (gardener)', 'Sam, whom cai knows.').replace(
     'as_of: now }', f'as_of: 2026-09-23, garden: "{CID}" }}')
 _ce = {'proposal': env['proposal'], 'from': {'garden': CID, 'name': 'garden-c', 'gardener': 'cai', 'pin': PIN},
-       'to': {'garden': BID}, 'under': {'contract_id': f"{BID}/contract:house-costs"}, 'made': '2026-09-23 21:00+03:00'}
+       'to': {'garden': BID}, 'under': {'identifier': f"{BID}/contract:house-costs"}, 'made': '2026-09-23 21:00+03:00'}
 r = read_in(B, 'same-name-other-garden.md', craft(_ce, {'sam': _csam.replace('---\nSam, whom', 'consent: { bean: sam-consent }\n---\nSam, whom'),
                                                         'sam-consent': consent_of(CID, 'sam', 'cai (gardener)')}))
 check("another garden's proposal that happens to carry a name garden-b took from garden-a is not 'taken already' — "
@@ -1369,7 +1369,7 @@ check("another garden's proposal that happens to carry a name garden-b took from
       'taken in already' not in r.out and r.returncode == 0 and 'verdict: CLEAN' in r.stdout, r.out)
 
 # ---- an UNRESOLVED stub: its fix is the bean to write, identity and all
-_ben_stub = f"bean: ben\ngenos: person\ntitle: Ben\nnature: empsychon\nidentity:\n  anchors:\n  - {{key: person_id, value: " \
+_ben_stub = f"bean: ben\ngenos: person\ntitle: Ben\nnature: empsychon\nidentity:\n  anchors:\n  - {{key: identifier, value: " \
        f"'{BID}/person:ben', class: logical, establishing: true}}\n"
 r = read_in(C, 'unresolved.md', chat('chat-20260923-1301', {'ben-rota': f"""---
 bean: ben-rota
@@ -1383,7 +1383,7 @@ responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
   anchors:
-    - {{ key: contract_id, value: "contract:ben-rota", class: logical, establishing: true }}
+    - {{ key: identifier, value: "contract:ben-rota", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "cai (gardener)", as_of: 2026-09-23 }}
 parties:
   ben: {{ who: {{ bean: ben }} }}
@@ -1420,7 +1420,7 @@ else:
 def _prog(g, gid, value):
     return [{'garden': g, 'garden_id': gid, 'id': 'the-program', 'fm': {
         'bean': 'the-program', 'genos': 'program', 'nature': 'lekton', 'title': 'a program', 'status': 'active',
-        'identity': {'status': 'confirmed', 'anchors': [{'key': 'program_id', 'value': value, 'class': 'logical',
+        'identity': {'status': 'confirmed', 'anchors': [{'key': 'identifier', 'value': value, 'class': 'logical',
                                                          'establishing': True}]}}}]
 _one = M.merge_gardens([_prog('ga', AID, 'postfix'), _prog('gc', CID, 'postfix')])
 _two = M.merge_gardens([_prog('ga', AID, 'program:x'), _prog('gc', CID, 'program:x')])
@@ -1431,11 +1431,11 @@ check("G1: two gardens that record `program_id: postfix` — a name its own ecos
                                                               + _prog('gc', CID, 'program:x'))] == ['program:x'])
 check("...a prefix that names no genos is no minted name either (`urn:uuid:…` is an invitation's UID); a qualified "
       "name fuses everywhere",
-      not M.bare('event_id', 'urn:uuid:7c9e6679') and not M.bare('program_id', f'{AID}/program:x')
-      and M.bare('program_id', 'program:x'))
+      not M.bare('identifier', 'urn:uuid:7c9e6679') and not M.bare('identifier', f'{AID}/program:x')
+      and M.bare('identifier', 'program:x'))
 write(C, 'the-program', "---\nbean: the-program\ngenos: program\ntitle: \"Postfix\"\nstatus: active\n"
                         "summary: \"A mail server.\"\nnature: lekton\nidentity:\n  status: confirmed\n  anchors:\n"
-                        "    - { key: program_id, value: \"postfix\", class: logical, establishing: true }\n---\nPostfix.\n")
+                        "    - { key: identifier, value: \"postfix\", class: logical, establishing: true }\n---\nPostfix.\n")
 m = tool(C, 'dmpropose.py', 'mint', 'the-program')
 os.remove(os.path.join(C, 'beans', 'the-program.md'))
 check("...and `mint` offers to qualify only a name in the minted form: `postfix` is never qualified",
@@ -1502,7 +1502,7 @@ responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
   anchors:
-    - {{ key: contract_id, value: "{BID}/contract:pot", class: logical, establishing: true }}
+    - {{ key: identifier, value: "{BID}/contract:pot", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "ben (gardener)", as_of: now }}
 parties:
   ada: {{ who: {{ bean: ada }} }}
@@ -1699,7 +1699,7 @@ responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
   anchors:
-    - {{ key: contract_id, value: "{DID}/contract:supply", class: logical, establishing: true }}
+    - {{ key: identifier, value: "{DID}/contract:supply", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "ali-household (gardener)", as_of: now }}
 parties:
   ali-household: {{ who: {{ bean: ali-household }}, accepted: 2026-09-23 }}
@@ -1798,7 +1798,7 @@ if _paths:
           r.returncode == 1 and 'does not end at the garden that sent it' in r.out, r.out[-900:])
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 import dmpropose as _dp
-_sk = _dp.anchor_lines({'identity': {'anchors': [{'key': 'org_id', 'value': f'{AID}/org:far-away', 'class': 'logical',
+_sk = _dp.anchor_lines({'identity': {'anchors': [{'key': 'identifier', 'value': f'{AID}/org:far-away', 'class': 'logical',
                                                   'establishing': True}]}, 'path': [AID, BID]}, 'cai', CID)
 check("...a name taken in through a peer is recorded with its origin and the path after it (`garden`, `via`)",
       f'garden: "{AID}"' in _sk and f'via: ["{BID}"]' in _sk, _sk)
@@ -1808,7 +1808,7 @@ def _far(bid, origin, via):
     return (f"---\nbean: {bid}\ngenos: org\ntitle: \"{bid}\"\nstatus: active\nsummary: \"an org known through a peer\"\n"
             f"nature: lekton\nowned_by: {{ legal: {{ external: \"its members\" }} }}\n"
             f"responsibility: {{ legal: {{ self: true }} }}\nidentity:\n  status: confirmed\n  anchors:\n"
-            f"    - {{ key: org_id, value: \"{origin}/org:{bid}\", class: logical, establishing: true, provenance: "
+            f"    - {{ key: identifier, value: \"{origin}/org:{bid}\", class: logical, establishing: true, provenance: "
             f"{{ src: asserted-by-human, by: \"ada (gardener)\", as_of: now, garden: \"{origin}\", via: [{', '.join(repr(v) for v in via)}] }} }}\n"
             f"provenance: {{ src: asserted-by-human, by: \"ada (gardener)\", as_of: now }}\n---\nAn org.\n")
 
