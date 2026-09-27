@@ -274,6 +274,44 @@ out = gate(E % ("smtp", "ipv4", "203.0.113.10", ", port: 25"))
 check("...and with nothing using it, the added facet is unoccupied again, and says so",
       "VOCAB registry:facets: position 'moral' is declared but NO bean occupies it" in out, out[-700:])
 
+# ---- one address, one owner — and the two ways the `ip` term's escape says it is otherwise, both written in the law's words
+def two_hosts(extra_a="", extra_b=""):
+    for bid, serial, extra in (("box-a", "SN-DUP-A", extra_a), ("box-b", "SN-DUP-B", extra_b)):
+        open(os.path.join(G, "beans", bid + ".md"), "w").write(f"""---
+bean: {bid}
+genos: host
+title: "{bid}"
+status: active
+summary: "a machine on a LAN"
+nature: soma
+identity: {{ status: confirmed, anchors: [ {{ key: serial, value: "{serial}", class: hardware, establishing: true }} ] }}
+provenance: {{ src: observed, by: probe, as_of: 2026-09-20 }}
+owned_by: {{ legal: {{ external: "someone" }} }}
+responsibility: {{ legal: {{ external: "someone" }} }}
+owns: {{ lan_ip: "10.0.0.5" }}
+{extra}---
+A machine.
+""")
+    r = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G)
+    return r.stdout + r.stderr
+
+
+out = two_hosts()
+check("two beans owning one address is refused, naming the ways out in the law's words",
+      "duplicate authoritative IP 10.0.0.5 owned by ['box-a', 'box-b']" in out and "`shared_identifiers`" in out
+      and "`network-segment`" in out, out[-700:])
+out = two_hosts('shared_identifiers: ["10.0.0.5"]\n', 'shared_identifiers: ["10.0.0.5"]\n')
+check("...an address both list in `shared_identifiers` (a floating one) is theirs together, and the term is the law's: "
+      "no undeclared key", "duplicate authoritative IP" not in out and "shared_identifiers" not in out, out[-700:])
+_seg = 'located_at: [ {{ system: network-segment, openness: here, at: "{}/lan" }} ]\n'
+out = two_hosts(_seg.format("site-a"), _seg.format("site-b"))
+check("...a private range reused on two networks apart, each bean placed on its own, is two addresses",
+      "duplicate authoritative IP" not in out and "located_at" not in out.split("error(s)")[0].split("ERROR")[-1] , out[-700:])
+out = two_hosts(_seg.format("site-a"), _seg.format("site-a"))
+check("...and on one network it is one address again, and refused", "duplicate authoritative IP 10.0.0.5" in out, out[-700:])
+for _b in ("box-a", "box-b"):
+    os.remove(os.path.join(G, "beans", _b + ".md"))
+
 shutil.rmtree(T, ignore_errors=True)
 print("\npositions: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)
