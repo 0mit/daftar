@@ -23,6 +23,12 @@ to it then resolves to `Erased`, and one this host cannot reach to `NotHere`. Ne
 A PERSON who is not the gardener and has not consented to be kept by name is written as `person` mints one: the id
 `p-<8 hex>`, the title the id, one anchor `person:<id>`; the name and the ways to reach them held off git.
 
+A STORE IS PLAIN TEXT, AND ITS FILES ARE ITS PROTECTION. A record is YAML as written, not encrypted: what keeps it
+is the host — whose disk it is on, who can log in, the file's mode (a record is written its owner's alone to read,
+0600), and the store's own `backup`. A root that `keeps` special-category material and is readable from a remote party
+is warned by the gate; `check` warns of a record here that others may read. A store that needs more — an encrypted
+volume, a vault — is one a root points at, and this tool reads and writes files in it as it finds them.
+
 `put` and `erase` print the one journal line F13 asks for (`- held: <bean> <key> added|erased`): give it to
 bin/dmsave.py's `--body`, and say no more of what was held.
 """
@@ -301,6 +307,14 @@ def check(*, root=ROOT, host=None, beans=None):
             if not isinstance(rec, dict) or rec.get('bean') != bid or rec.get('term') != t:
                 out.append(('error', f"{bid}: {t}[{label}] points at material held for another place "
                                      f"({rec.get('bean') if isinstance(rec, dict) else '?'})"))
+            try:
+                _path, _key = _file(e['held'], root, host, None)
+                _mode = os.stat(os.path.join(_path, _key + '.yaml')).st_mode
+            except (OSError, ValueError, NotHere):
+                _mode = None
+            if os.name != 'nt' and _mode is not None and _mode & 0o077:
+                out.append(('warn', f"{bid}: {t}[{label}] — its record here may be read by others than its owner "
+                                    f"(mode {oct(_mode & 0o777)}): chmod 600 it; a store is plain text, kept by its files"))
     for bid, t, label, days in due(root=root, beans=beans, days=0):
         out.append(('warn', f"{bid}: {t}[{label}] was to be erased {-days} day(s) ago — bin/dmheld.py erase"))
     return out
@@ -310,7 +324,9 @@ def due(*, root=ROOT, beans=None, days=30):
     """[(bean, term, label, days left)] of sealed entries whose `until` falls within `days`."""
     import time
     import dmcal
-    today = int(time.time() // 86400)
+    # today in dmcal's count of days, as `until` is read: the count since 1970 (about 20,700 against about 739,000) put
+    # every `until` two thousand years off, and no sealed entry was ever due
+    today = dmcal.to_day(time.strftime('%Y-%m-%d', time.gmtime(time.time())))
     out = []
     for bid, fm in sorted((beans or dmpass.beans_here(root)).items()):
         for t, label, e in _pointers(fm):
