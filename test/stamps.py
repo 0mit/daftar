@@ -452,6 +452,21 @@ rc, out, err = save('sam', 'added nora', '--body', '- action: added [[nora]].', 
 check("...and a record added with NO `as_of` is refused, and told to write `as_of: now` — leaving the day out is no escape",
       rc == 1 and 'has no `as_of`' in err and 'as_of: now' in err, (rc, err[-600:]))
 
+# THE REGISTER LETS GO OF WHAT IS COMMITTED: the gate asks it only of a heading a commit adds
+_spec = __import__('importlib.util').util.spec_from_file_location('dmjournal_f', os.path.join(F, 'bin', 'dmjournal.py'))
+_dj = __import__('importlib.util').util.module_from_spec(_spec); _spec.loader.exec_module(_dj)
+_reg = _dj.stamps_path(F)
+_before = open(_reg, encoding='utf-8').read().splitlines()
+with open(_reg, 'a', encoding='utf-8', newline='\n') as _fh:
+    _fh.write('## 2099-01-01 00:00+00:00 · sam · waiting, never committed\n')
+_gone = _dj.prune(F)
+_after = open(_reg, encoding='utf-8').read().splitlines()
+_committed = {l for l in subprocess.run(['git', '-C', F, 'show', 'HEAD:log/journal.md'], capture_output=True, text=True,
+                                        encoding='utf-8').stdout.splitlines() if l.startswith('## ')}
+check("the stamp register lets go of every heading the committed journal holds, and keeps the one still waiting",
+      _gone >= 1 and not (set(_after) & _committed) and '## 2099-01-01 00:00+00:00 · sam · waiting, never committed' in _after
+      and len(_after) < len(_before) + 1, (_gone, len(_before), _after[-3:]))
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nstamps: {sum(results)}/{len(results)} checks passed"
       + ('' if all(results) else f", {results.count(False)} FAILED"))
