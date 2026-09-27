@@ -14,14 +14,22 @@ again, commit by commit, oldest first:
      THE GARDEN STOOD AT THE PARENT COMMIT. A key no bean carries is refused. A key anchor added is itself a class-F
      change, so trust grows only through the gardener.
   3. THE RIGHTS, read at the parent: the gardener may do anything; any other writer needs `write` for every bean or
-     mapping it changes, `ratify:F` for an identity anchor it adds or changes, and `ratify:G` for a file in the `law` or
-     `manifesto` layer (bin/dmpass.py `may`, and the layer map).
+     mapping it changes (and for a bean's series files), `ratify:F` for an identity anchor it adds or changes, and
+     `ratify:G` for a file in the `law` or `manifesto` layer — and for CODE: a file in the `gate` layer, one a release
+     keeps (`seed/LANGUAGE`), any Python or shell file, the drawing module a page names (`view.drawings`) and the
+     name itself (bin/dmpass.py `may`, and the layer map).
   4. THE GATE, in a checkout of the pushed tip — or of every commit, with `--each`.
+
+THE HUB RUNS ONLY CODE THE GARDENER LET IN. The gate it runs is the one the pushed tree carries, because a garden's
+gate reads the law beside it; so no push reaches step 4 until every commit in it has passed step 3, and step 3 lets
+no writer but the gardener, or one granted `ratify:G`, change a line of code. A writer who could change `bin/` could
+make the hub run anything, and pass anything. For the same reason a commit with no parent is taken only by an empty
+hub, and only from the gardener its own tree names: a root commit read as its own parent would name its own writers.
 
 `--only <person>` accepts pushes signed by the gardener and that one writer: the `view` host's own key (F5 (a)).
 It writes nothing to the garden; a refusal names the commit, the writer and what was missing.
 """
-import os, re, shutil, subprocess, sys, tempfile
+import io, os, posixpath, re, shutil, subprocess, sys, tarfile, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse   # noqa: E402
 import dmpass    # noqa: E402
@@ -29,6 +37,7 @@ import dmpass    # noqa: E402
 HERE = os.path.abspath(__file__)
 ZERO = '0' * 40
 KEY_TERMS = ('ssh_key_fingerprint', 'openpgp_fingerprint')
+CODE = ('.py', '.pyc', '.pyw', '.pyd', '.pyz', '.so', '.sh', '.bash', '.ps1', '.psm1', '.cmd', '.bat')   # what runs
 
 
 class Refused(Exception):
@@ -122,9 +131,24 @@ class Tree:
         return g.get('gardener') if isinstance(g, dict) else None
 
     def checkout(self, where):
-        r = subprocess.run(f"git archive {self.commit} | tar -x -C '{where}'", shell=True, capture_output=True, env=self.env)
+        """The commit's files under `where`: `git archive`, read here, with no shell between — a link or a name that
+        would land outside `where` is refused, not followed."""
+        r = subprocess.run(['git', 'archive', '--format=tar', self.commit], capture_output=True, env=self.env)
         if r.returncode != 0:
             raise Refused(f"the hub could not check out {self.commit[:10]}: {r.stderr.decode('utf-8', 'replace')[:200]}")
+        with tarfile.open(fileobj=io.BytesIO(r.stdout), mode='r:') as tar:
+            try:
+                if hasattr(tarfile, 'data_filter'):
+                    tar.extractall(where, filter='data')
+                else:
+                    base = os.path.realpath(where)
+                    for m in tar.getmembers():
+                        dest = os.path.realpath(os.path.join(base, m.name))
+                        if m.issym() or m.islnk() or os.path.commonpath([base, dest]) != base:
+                            raise tarfile.TarError(f"{m.name} would land outside the checkout")
+                    tar.extractall(where)
+            except (tarfile.TarError, OSError) as x:
+                raise Refused(f"the hub could not check out {self.commit[:10]}: {x}")
 
 
 def writer_of(kind, fpr, beans):
@@ -140,32 +164,60 @@ def _anchors(fm):
     return sorted(repr(x) for x in a or [])
 
 
+def _drawn(fm):
+    """The file a page names as its drawing module (`view.drawings: file:<path>`), normalised, or None."""
+    v = (fm or {}).get('view')
+    d = v.get('drawings') if isinstance(v, dict) else None
+    return posixpath.normpath(d[5:]) if isinstance(d, str) and d.startswith('file:') else None
+
+
+def is_code(m, path, drawn=()):
+    """True for a file whose change can make a machine run something: what the `gate` layer holds, what a release keeps,
+    a Python or shell file wherever it is, and a drawing module a page names. Only the gardener, or a writer granted
+    `ratify:G`, changes one at the hub."""
+    return (m.layer_of(path)[0] == 'gate' or m.keeper_of(path) == 'release' or path.lower().endswith(CODE)
+            or path in drawn)
+
+
 def rights(writer, commit, parent, env, tmp):
     """What the writer changed that its grants at the parent do not open: [(path, act)]."""
     before = Tree(parent, env) if parent else None
     if before is None or writer == before.gardener():
         return []
     root = os.path.join(tmp, 'parent')
-    os.makedirs(root, exist_ok=True)
+    if os.path.isdir(root):
+        shutil.rmtree(root)
+    os.makedirs(root)
     before.checkout(root)
     beans = before.beans()
     _c, out, _e = git('diff', '--name-only', '--no-renames', parent, commit, env=env)
     after = Tree(commit, env)
     m = dmpass.Map.here(root)
+    drawn = {d for fm in list(beans.values()) + list(after.beans().values()) for d in [_drawn(fm)] if d}
     missing = []
+
+    def ratify_g():
+        return dmpass.may(writer, 'ratify:G', before.gardener() or '', root=root, beans=beans).granted
+
     for p in [x for x in out.split('\n') if x]:
-        layer = m.layer_of(p)[0]
-        if layer in dmpass.RULED:
-            if not dmpass.may(writer, 'ratify:G', before.gardener() or '', root=root, beans=beans).granted:
+        if m.layer_of(p)[0] in dmpass.RULED or is_code(m, p, drawn):
+            if not ratify_g():
                 missing.append((p, 'ratify:G'))
             continue
         if p.startswith(('beans/', 'mappings/')) and p.endswith('.md'):
             bid = p.split('/', 1)[1][:-3]
+            was, now = _fm(before.text(p)), _fm(after.text(p))
             if not dmpass.may(writer, 'write', bid, root=root, beans=beans).granted:
                 missing.append((p, 'write'))
-            if _anchors(_fm(before.text(p))) != _anchors(_fm(after.text(p))) and \
+            if _anchors(was) != _anchors(now) and \
                     not dmpass.may(writer, 'ratify:F', bid, root=root, beans=beans).granted:
                 missing.append((p, 'ratify:F'))
+            if _drawn(was) != _drawn(now) and not ratify_g():
+                missing.append((p, 'ratify:G'))
+        elif p.startswith('series/') and p.count('/') >= 2:
+            bid = p.split('/')[1]
+            if not dmpass.may(writer, 'write', bid, root=root, beans=beans).granted:
+                missing.append((p, 'write'))
     return missing
 
 
@@ -209,9 +261,17 @@ def judge(old, new, only=None, each=False, env=None):
                 if sig is None:
                     raise Refused("it is not signed: a hub accepts a commit signed by a key a writer's bean carries")
                 kind, fpr = fingerprint(payload, sig, tmp)
+                if parent is None:
+                    _r, refs, _e = git('for-each-ref', '--format=%(refname)', env=env)
+                    if refs.strip():
+                        raise Refused("it has no parent, and this hub already holds the garden: a garden has one root, "
+                                      "and a commit with none would be judged by writers its own tree names")
                 at = Tree(parent or c, env)
                 beans, gardener = at.beans(), at.gardener()
                 who = writer_of(kind, fpr, beans)
+                if parent is None and who != gardener:
+                    raise Refused(f"it has no parent: an empty hub takes a garden's first commit only from the gardener "
+                                  f"its tree names ({gardener})")
                 if who is None:
                     raise Refused(f"it is signed by {fpr}, which no bean carries as an anchor as the garden stood before "
                                   f"it — the gardener adds a writer's key (a class-F change)")
