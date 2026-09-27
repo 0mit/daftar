@@ -423,6 +423,23 @@ write("beans/bea.md", read("beans/bea.md").replace('summary: "The company that l
 rc, out = save("Bea's summary, in a commit that claims no session")
 check("a commit that claims no session owes none of it", rc == 0, out)
 
+# THE TOOLS READ A GARDEN'S ROWS AS THE GATE DOES: its restated registry, and the rows it adds
+sys.path.insert(0, os.path.join(ROOT, "bin"))
+import dmpass as _dp
+_o = _dp.Origins({"natures": [{"nature": "soma"}]}, {"registry_additions": {"natures": [{"nature": "ergon"}]}})
+check("the origins read a nature a garden adds, as the gate reads it", _o.natures == ["soma", "ergon"], _o.natures)
+_v = open(os.path.join(G, "VOCAB.md"), encoding="utf-8").read()
+open(os.path.join(G, "VOCAB.md"), "w", encoding="utf-8", newline="\n").write(re.sub(r"(?m)^registry_additions:.*\n", "", _v).replace(
+    "\n---\n", "\nregistry_additions:\n  anchor_systems: [ { system: office-grid, dimension: place, levels: open, neighbours: none, "
+    "meaning: \"a grid of desks\", pattern: \"^[a-z][0-9]+$\", establishes: false } ]\n"
+    "  leaf_orders: [ { order: office-rank, suffix: _desk, exact: [], why: \"a test's order\" } ]\n---\n", 1))
+_r = subprocess.run([sys.executable, "-c", "import sys; sys.path.insert(0, 'bin'); import dmmerge as M; "
+                     "print('office-grid' in M.SYSTEM_ROWS, any(r.get('order') == 'office-rank' for r in M.LEAF_ORDERS))"],
+                    capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=G)
+open(os.path.join(G, "VOCAB.md"), "w", encoding="utf-8", newline="\n").write(_v)
+check("...and the merge reads a system and an order a garden adds, as its gate does",
+      _r.stdout.strip() == "True True", _r.stdout + _r.stderr[-600:])
+
 shutil.rmtree(T, ignore_errors=True)
 print(f"\npasses: {RUN[0] - len(FAILS)}/{RUN[0]} checks passed, {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)

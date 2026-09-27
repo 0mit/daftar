@@ -385,8 +385,12 @@ class Origins:
         self.law = law
         self.acts = [r for r in (law.get('acts') or []) if isinstance(r, dict)] if isinstance(law.get('acts'), list) else []
         self.act_names = [r.get('act') for r in self.acts]
-        self.natures = [r.get('nature') for r in (law.get('natures') or []) if isinstance(r, dict)] \
-            if isinstance(law.get('natures'), list) else []
+        # THE NATURES AS THE GATE READS THEM: a garden's restatement where it declares one, and the rows it adds
+        _loc = local if isinstance(local, dict) else {}
+        _rows = _loc.get('natures') if isinstance(_loc.get('natures'), list) else law.get('natures')
+        _adds = _loc.get('registry_additions').get('natures') if isinstance(_loc.get('registry_additions'), dict) else None
+        self.natures = [r.get('nature') for r in (list(_rows) if isinstance(_rows, list) else [])
+                        + (list(_adds) if isinstance(_adds, list) else []) if isinstance(r, dict)]
         self.types = {t.get('type'): t for t in (law.get('value_types') or []) if isinstance(t, dict)}
         _sl = law.get('schema_language') if isinstance(law.get('schema_language'), dict) else {}
         self.domains = dict(_sl['attr_domains']) if isinstance(_sl.get('attr_domains'), dict) else {}
