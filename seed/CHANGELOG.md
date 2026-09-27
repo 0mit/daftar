@@ -270,8 +270,11 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   save traces carries `distinct` beside `quoted` (`pass_metadata`): how many finds named one thing, so a person's words
   credited by a short word alone say the attribution is weak. The law's documents say what the law says: MODEL.md
   names `stated-in-document` and `courses`, MERGE.md the source order as it is derived; two `agent_directive`s state
-  rules rather than address an agent; four `meaning`s tell no story and name no estate; the `ip` term's `authority`,
-  which nothing read, is gone. And the note on the gap after 1.0 said git holds the four releases this file lacks; it
+  rules rather than address an agent; the versions, dates, measurements of one estate and incidents that twenty-six
+  `meaning`s and `why`s carried are in seed/RATIONALE.md under each item's path, and `this garden` and `the operator`
+  are said as any garden reads them, so the story bin/dmreview.py `story_in` finds in the law is none where v0.38.0
+  shipped 56 (a `prediction`'s reason, one estate's expectation, is counted apart and is unchanged). The `ip` term's
+  `authority`, which nothing read, is gone. And the note on the gap after 1.0 said git holds the four releases this file lacks; it
   does not: this repository's history begins on 2026-09-17 with the law at 8.2, so the gap stays a gap. MAJOR, because
   a garden that upgraded unasked from a network is now asked, and a writer's push a hub took, and a commit carrying a
   special value the gate warned of, are now refused.
