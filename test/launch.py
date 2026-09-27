@@ -370,6 +370,23 @@ check("pre: --no-verify: refused", rc == 2 and "--no-verify" in out, out)
 rc, out = hook("pre", {"tool_name": "Bash", "tool_input": {"command": f'{PY} bin/dmsave.py "k" "w" --body "- action: x"'}})
 rc2, out2 = hook("pre", {"tool_name": "Bash", "tool_input": {"command": "git log -n 3"}})
 check("...and the save, or git's other verbs, go through", rc == 0 and rc2 == 0, out + out2)
+_denied = []
+for _c in ("git commit -nm 'quick'", "git commit --no-ver -m y", "git -c core.hooksPath=/dev/null commit -m y",
+           "echo dmsave.py && git commit -m 'by hand'"):
+    rc, out = hook("pre", {"tool_name": "Bash", "tool_input": {"command": _c}})
+    _denied.append((_c, rc))
+check("pre: `-n`, `--no-verify` abbreviated, a hooks path of its own, and a commit beside a word that only mentions the "
+      "save: each refused", all(rc == 2 for _c, rc in _denied), _denied)
+rc, out = hook("pre", {"tool_name": "Bash", "tool_input": {"command":
+                f'{PY} bin/dmsave.py "k" "fix: git commit was by hand" --body "- action: git commit -n undone"'}})
+check("...while a save whose words say `git commit` goes through: what a quoted argument says is not what runs",
+      rc == 0, out)
+import shlex
+_r = run(PY, "-c", "import sys; sys.path.insert(0, 'bin'); import dmhook; "
+         "print(dmhook._q('/opt/my python/bin/python3') + ' ' + dmhook._q('/home/sam/my garden/bin/dmhook.py') + ' pre')", cwd=G)
+check("the hook's command quotes its Python and its script, so a path with a space is one word to the shell",
+      os.name == "nt" or shlex.split(_r.stdout.strip()) == ["/opt/my python/bin/python3", "/home/sam/my garden/bin/dmhook.py", "pre"],
+      _r.stdout + _r.stderr)
 O = os.path.join(T, "other")
 os.makedirs(os.path.join(O, "bin"))
 run("git", "init", "-q", O)

@@ -25,6 +25,7 @@ clone's own settings — never into the law.
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 
@@ -46,7 +47,22 @@ HARNESSES = {
 }
 H = HARNESSES['claude-code']
 COMMIT = re.compile(r'\bgit\b(?:\s+-[cC]\s+\S+|\s+--?[\w-]+(?:=\S+)?)*\s+commit\b')
-NO_VERIFY = re.compile(r'\bgit\b[^|;&\n]*\s--no-verify\b')
+# --no-verify as git takes it, abbreviated too (`--no-ver`); a commit's `-n` alone or in a cluster (`-nm`); and a
+# hooks path pointed away from the garden's own, which runs no hook at all
+NO_VERIFY = re.compile(r'\bgit\b[^|;&\n]*\s--no-v(?:e(?:r(?:i(?:fy?)?)?)?)?\b'
+                       r'|\bcommit\b[^|;&\n]*\s-[A-Za-z]*n[A-Za-z]*\b'
+                       r'|\bgit\b[^|;&\n]*core\.hooks[Pp]ath')
+
+
+def unquoted(cmd):
+    """The command with every quoted argument emptied: what a message says is not what runs (`dmsave.py "w" --body
+    "…git commit…"` commits nothing by hand), and a word that only mentions the save is not the save."""
+    return re.sub(r"'[^']*'|\"(?:[^\"\\]|\\.)*\"", '""', cmd)
+
+
+def _q(path):
+    """A path as the harness's shell takes it whole, a space and all: double quotes on Windows, a shell's quoting else."""
+    return f'"{path}"' if os.name == 'nt' else shlex.quote(path)
 
 
 def deny(why):
@@ -125,10 +141,13 @@ def on_prompt(ev, root):
 def on_pre(ev, root):
     tool, a = ev.get('tool_name'), ev.get('tool_input') or {}
     if tool == H['shell']:
-        cmd = str(a.get('command') or '')
+        cmd = unquoted(str(a.get('command') or ''))
         if NO_VERIFY.search(cmd):
-            deny("--no-verify steps past the gate; a garden's commit is judged by it — save through bin/dmsave.py")
-        if COMMIT.search(cmd) and 'dmsave.py' not in cmd:
+            deny("--no-verify (or -n, or a hooks path of its own) steps past the gate; a garden's commit is judged by it "
+                 "— save through bin/dmsave.py")
+        # the save commits from inside its own process, so no command line the model runs is ever its commit: a
+        # `git commit` in one is by hand, whatever else the line mentions
+        if COMMIT.search(cmd):
             deny(f"a commit here is made by the save, which journals and is traced: {PY} bin/dmsave.py \"<who>\" "
                  f"\"<what>\" --body \"- action: …\"")
     elif tool in H['writes']:
@@ -187,7 +206,7 @@ def install(root, harness, on=True):
         keep = [g for g in hooks.get(event, []) if not any('dmhook.py' in str(x.get('command', ''))
                                                             for x in g.get('hooks', []))]
         if on:
-            g = {'hooks': [{'type': 'command', 'command': f'{sys.executable} {me} {verb}'}]}
+            g = {'hooks': [{'type': 'command', 'command': f'{_q(sys.executable)} {_q(me)} {verb}'}]}
             if matcher:
                 g['matcher'] = matcher
             keep.append(g)
