@@ -421,7 +421,27 @@ class Host:
         if not ans[0]:
             self.audit(dict(base, mode="refused", why=ans[1]))
             return 403, {"error": "refused: %s" % ans[1]}
+        # EACH VALUE IS ONE VALUE. A value may be a node of its own — `{ scheme: boat-checks, code: hull }`, a quantity —
+        # but a viewer's text went into the entry as written, so `hello, by: someone, flag: yes` became three attributes
+        # the form never offered. Each value is read alone, as `{ <attr>: <value> }`, and refused unless it is exactly
+        # that attribute; and the entry is read again whole, and refused unless it holds exactly the attributes given.
+        spill = []
+        for a in given:
+            try:
+                one = vm.dmparse.loads("{ %s: %s }" % (a, given[a]))
+            except Exception:
+                one = None
+            if not (isinstance(one, dict) and list(one) == [a]):
+                spill.append(a)
         line = "{ %s }" % ", ".join("%s: %s" % (a, given[a]) for a in allowed if a in given)
+        try:
+            back = vm.dmparse.loads(line) if not spill else None
+        except Exception:
+            back = None
+        if spill or not (isinstance(back, dict) and set(back) == set(given)):
+            why = "a value is one value, of its own attribute (%s)" % ", ".join(spill or sorted(given))
+            self.audit(dict(base, mode="refused", why=why))
+            return 400, {"error": "refused: %s — nothing written" % why}
         line = ("  %s: %s" % (entry, line)) if f["keyed"] else ("  - %s" % line)
         with self.wlock:
             if self._git("status", "--porcelain").stdout.strip():
