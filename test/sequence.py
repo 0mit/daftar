@@ -650,13 +650,15 @@ _mm = run(PY, "-c", "import sys; sys.path.insert(0, 'bin'); import dmmerge, dmpr
 check("...and the merge and the proposals write it through the dumper: a block, tabs and all",
       _mm.stdout.count("rows: |") == 2 and "\\t" not in _mm.stdout, _mm.stdout + _mm.stderr)
 
-# a real merge of two branches that both change the rain of one series: the driver rewrites the member, as a block
+# a real merge of two branches that both change one series, differently — each notes its flow channel its own way, and
+# one adds a run: the driver merges three ways, so the run added on one side is taken, and the member both changed is
+# kept both ways for a person, rewritten as a block
 run("git", "checkout", "-q", "-b", "ours", cwd=G)
 _hb = read("beans/heater-rig.md")
 write("beans/heater-rig.md", _hb.replace('persists: offset }', 'persists: offset, note: "calibrated before the run" }', 1))
 save("a note on the flow channel", ["heater-rig"])
 run("git", "checkout", "-q", "master", cwd=G)
-write("beans/heater-rig.md", _hb.replace("  run-3:\n", "  run-2:\n    grid: { of: time, in: gregorian-civil, every: { count: 1, unit: minute }, from: \"2026-03-01 09:00+01:00\" }\n"
+write("beans/heater-rig.md", _hb.replace('persists: offset }', 'persists: offset, note: "calibrated after the run" }', 1).replace("  run-3:\n", "  run-2:\n    grid: { of: time, in: gregorian-civil, every: { count: 1, unit: minute }, from: \"2026-03-01 09:00+01:00\" }\n"
                                          "    unit: minute\n    holds:\n      - { name: flow, quantity: volume-flow, unit: litre-per-minute, stands_for: point }\n"
                                          "    rows: |\n" + table(("flow",), ("0",), ("3.9",)) + "  run-3:\n", 1))
 save("the run before", ["heater-rig"])
@@ -707,13 +709,13 @@ _h2 = read("mappings/birch-season.md")
 write("mappings/birch-season.md", _h2.replace("amount: { count: 40, unit: litre }", "amount: { count: 40000, unit: litre }"))
 save("the water in millilitres... no: in litres, differently", ["birch-season"])
 run("git", "checkout", "-q", "master", cwd=G)
-write("mappings/birch-season.md", _h2.replace("amount: { count: 40, unit: litre }", "amount: { count: \"0.04\", unit: cubic-metre }"))
-save("the water in cubic metres", ["birch-season"])
+write("mappings/birch-season.md", _h2.replace("amount: { count: 40, unit: litre }", "amount: { count: \"0.05\", unit: cubic-metre }"))
+save("the water in cubic metres, and more of it", ["birch-season"])
 _mg = run("git", "merge", "-q", "--no-edit", "mm", cwd=G)
 _ms = read("mappings/birch-season.md")
 check("S5: two sides that disagree on an amount keep both, each as its side wrote it — never respelt in the coherent unit",
       _mg.returncode == 0 and "merge_open: true" in _ms and "40000" in _ms and "cubic-metre" in _ms
-      and "unit: litre" in _ms and "0.04" in _ms, _ms[-900:] + _mg.stdout + _mg.stderr)
+      and "unit: litre" in _ms and "0.05" in _ms, _ms[-900:] + _mg.stdout + _mg.stderr)
 run("git", "reset", "-q", "--hard", "ORIG_HEAD", cwd=G)
 restore()
 run("git", "checkout", "-q", "-b", "eq", cwd=G)
