@@ -6365,10 +6365,11 @@ def main(args=None):
     """Run every ply in the declared order, report, and set the exit status.
 
     Under `if __name__ == '__main__'` so that IMPORTING this file cannot run the gate or kill the
-    process: `test/golden.py` spawns it as a subprocess for every negative case it checks, which is
-    the only way to observe a gate whose verdict is `sys.exit`, and a suite that wanted to call one
-    ply directly had no way to do it. (The vocabulary above still loads at import — it is what the
-    module IS, and the same refusal-over-fallback rule governs it either way.)
+    process: `test/golden.py` (the maintainers' corpus test, not shipped here) spawns it as a
+    subprocess for every negative case it checks, which is the only way to observe a gate whose
+    verdict is `sys.exit`, and a suite that wanted to call one ply directly had no way to do it.
+    (The vocabulary above still loads at import — it is what the module IS, and the same
+    refusal-over-fallback rule governs it either way.)
     """
     args = args or _arguments([])
     named = _named(args['paths']) if args['paths'] else {}

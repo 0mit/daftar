@@ -3074,9 +3074,9 @@ is under "Designed, not built". The number is kept so the sections after it keep
 ## doc:MERGE.md#15
 
 The P1-P4 gates named here were all shipped, and their numbering **collides head-on** with the v2 P0-P7d
-used by `log/journal.md`, `test/golden.py`'s section headers and both design beans. Two numbering schemes
-in one repo is a trap for a cold reader, so this one is deleted rather than renumbered. What actually
-happened is in the journal.
+used by `log/journal.md`, `test/golden.py`'s section headers (the maintainers' corpus test, not shipped here)
+and both design beans. Two numbering schemes in one repo is a trap for a cold reader, so this one is deleted
+rather than renumbered. What actually happened is in the journal.
 
 (The section was headed: Implementation phasing — superseded.)
 

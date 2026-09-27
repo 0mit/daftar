@@ -187,6 +187,12 @@ check("...and the release runs every suite that is shipped", on_disk - GARDEN_ON
       f"not run: {sorted(on_disk - GARDEN_ONLY - MEASURES - ci_suites)}; run but absent: {sorted(ci_suites - on_disk)}")
 check("...and every measurement shipped is one CONTRIBUTING.md says how to run",
       all(("python3 " + m) in text["CONTRIBUTING.md"] for m in MEASURES & on_disk), sorted(MEASURES & on_disk))
+# A MEASUREMENT NAMES A SUITE THAT RUNS. test/timings.tsv is keyed by a suite's path, and the reckoner orders the loop by
+# it; a row under a name no suite answers to any more is read by nothing (test/mycelium.py's, after it became peering).
+_timed = {c[1] for c in (ln.split("\t") for ln in open(os.path.join(ROOT, "test", "timings.tsv"), encoding="utf-8").read()
+                          .splitlines()[1:]) if len(c) == 5 and c[1].startswith("test/")}
+check("...and every suite test/timings.tsv measures is one the release runs", _timed and not _timed - ci_suites,
+      sorted(_timed - ci_suites))
 
 # THE TERMS A GARDEN RECEIVES are daftar's own texts, byte for byte. A garden gets them under seed/ (`seed/LICENSE.md` and
 # `seed/LICENSE-<id>.txt`), never at its root, where they would read as the garden's own licence and an upgrade would

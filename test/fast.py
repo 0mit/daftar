@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """fast — corpus integrity, in under two seconds, for the pre-commit hook.
 
-WHY A SECOND SUITE. test/golden.py takes ~66 seconds because it spawns a gate subprocess per negative
-case and builds throwaway git repos: it tests whether the MACHINERY BEHAVES. A hook that slow invites
-`--no-verify`, which is the failure mode a hook must avoid — and on 2026-08-02 a commit went through
-with a failing test for exactly that reason.
+WHY A SECOND SUITE. test/golden.py (the maintainers' corpus test, not shipped here: CONTRIBUTING.md) takes
+~66 seconds because it spawns a gate subprocess per negative case and builds throwaway git repos: it tests
+whether the MACHINERY BEHAVES. A hook that slow invites `--no-verify`, which is the failure mode a hook must
+avoid — and on 2026-08-02 a commit went through with a failing test for exactly that reason.
 
 This asks a different and cheaper question: IS THE CORPUS SOUND RIGHT NOW. It reads every document once,
 in-process, and asserts the properties that must hold of the data — never the gate's negative
