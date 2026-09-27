@@ -1,5 +1,5 @@
 ---
-version: "24.0"
+version: "25.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -1644,9 +1644,9 @@ layers:
   - layer: law
     files: true
     beneath: reasoning
-    holds: [seed/std-vocab.md, VOCAB.md, GARDEN.md, MODEL.md, CHECKLIST.md, MERGE.md, seed/LANGUAGE, seed/PUBLIC-ALLOW,
-            "seed/knowledge/*", seed/LICENSE.md, "seed/LICENSE-*"]
-    meaning: "what is in force, in the present tense, applied alone: the vocabulary, a garden's own terms and its manifest, the model, the way a write is made, the merge, what a release ships, the published classifications, and the terms the release's files are under"
+    holds: [seed/std-vocab.md, VOCAB.md, GARDEN.md, MODEL.md, CHECKLIST.md, MERGE.md, seed/LANGUAGE, seed/RELEASE-SIGNERS,
+            seed/PUBLIC-ALLOW, "seed/knowledge/*", seed/LICENSE.md, "seed/LICENSE-*"]
+    meaning: "what is in force, in the present tense, applied alone: the vocabulary, a garden's own terms and its manifest, the model, the way a write is made, the merge, what a release ships and the keys it is signed with, the published classifications, and the terms the release's files are under"
   - layer: reasoning
     files: true
     beneath: journal

@@ -319,7 +319,12 @@ ratifies. An agent that meets something it may not decide parks it in `log/pendi
 - `CHECKLIST.md` is how a write is made.
 - A garden with more than one writer has a hub that judges every push again: each commit signed by a key a writer's
   bean carries as an anchor (`ssh_key_fingerprint`, `openpgp_fingerprint`), what it changes within that writer's
-  grants, and the whole garden by the gate (`bin/dmhub.py`).
+  grants, and the whole garden by the gate (`bin/dmhub.py`). Code is the gardener's: a change to a file of the `gate`
+  layer, to one a release keeps, to a Python or shell file, or to the drawing module a page names needs `ratify:G`,
+  and no push reaches the gate until every commit in it has passed. A commit with no parent is taken only by an empty
+  hub, from the gardener its tree names.
+- A release a garden upgrades to is authenticated before any of it runs: a signed tag against the keys the garden's
+  own release names (`seed/RELEASE-SIGNERS`), or the commit a person names or confirms (`bin/dmupgrade.py`).
 
 ## Who may see, and what is held off git
 - **Sensitivity is derived, never stored** (`bin/dmpass.py sensitivity`): a code of a scheme marked `sensitive` makes

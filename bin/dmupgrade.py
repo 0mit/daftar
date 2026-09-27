@@ -14,7 +14,7 @@ one cannot disagree about what the language is.
 
 WHAT IT DOES, and nothing else:
   1. refuses a working tree with uncommitted changes, so the upgrade is the only thing in the diff;
-  2. fetches the tag into a temporary clone;
+  2. fetches the tag into a temporary clone, and AUTHENTICATES it before anything it carries runs (below);
   3. copies every file the release's LANGUAGE matches, and removes files the garden's copy of the same
      patterns matched that the release no longer has (a retired tool leaves, rather than lingering);
   4. moves the `extends: std-vocab@<ver>` pin in VOCAB.md and GARDEN.md to the release's vocabulary, and records
@@ -117,6 +117,19 @@ bin/dmpass.py, the one reader of seed/LANGUAGE; the journal entry says RULE-CHAN
 runs, putting every file back when the garden does not pass — a garden that still writes a term of a profile it
 leaves, say. A profile the release's law does not offer is refused before anything is touched.
 
+A RELEASE IS AUTHENTICATED BEFORE ANY OF IT RUNS. Its own tool, its seed/germinate.py and the hooks it installs are
+code, and the release is fetched from a network; so, between the fetch and the first line of it that runs:
+  - a SIGNED tag must verify against the keys this garden's own release names (`seed/RELEASE-SIGNERS`, an
+    allowed-signers file read by `ssh-keygen -Y verify`): a signature that does not verify, or one by a key the file
+    does not name, is REFUSED. The file travels with each release, so a garden trusts the next release by the keys of
+    the one it runs, and a key is changed only by a release signed by the key before it;
+  - `--expect <commit>` (twelve hexadecimal digits or more) accepts the commit named and no other, signed or not:
+    what a person checked against the release's own page;
+  - otherwise a tag fetched from a network — unsigned, or signed where this machine cannot check it — is shown, with
+    its commit, and run only when the person at the terminal types that commit's first twelve digits; with no
+    terminal it is REFUSED, printing the `--expect` line to run once the commit is checked. A repository on this
+    machine is the person's own copy, and is used with a line saying it was not authenticated, and why.
+
 THE RELEASE'S OWN TOOL DOES THE WORK. When the release carries a different bin/dmupgrade.py, this one hands
 over to it (with --garden and --no-delegate) instead of applying a newer release with older logic: v0.4.0
 added the release record and the downgrade guard, and a v0.3.1 garden running its own v0.3.1 tool received the
@@ -146,6 +159,8 @@ UPSTREAM = 'https://github.com/0mit/daftar.git'
 PIN = re.compile(r'^(extends: std-vocab@)(\S+)', re.M)
 RELEASE = re.compile(r'^daftar_release:.*$', re.M)
 SEMVER = re.compile(r'^v?(\d+)\.(\d+)\.(\d+)$')
+SIGNERS = 'seed/RELEASE-SIGNERS'      # the keys a release is signed with, as `ssh-keygen -Y verify` reads them
+PRINCIPAL = 'daftar-release'          # the one name those keys are given there
 
 
 # A CHILD WRITES UTF-8, AND IS READ AS UTF-8. On Windows a Python writing to a pipe uses the old code page, so the gate
@@ -161,6 +176,85 @@ def run(*args, cwd=None, check=True):
         detail = '\n'.join(s.strip() for s in (r.stdout, r.stderr) if s.strip())
         sys.exit(f"{' '.join(args)} failed:\n{detail or '(no output)'}")
     return r
+
+
+def local_source(src):
+    """True for a repository on this machine: a directory, or a file:// URL."""
+    return str(src).startswith('file://') or os.path.isdir(str(src))
+
+
+def tag_signature(rel, tag):
+    """(payload, signature, kind) of an annotated tag in the clone at `rel` — the tag object without its signature, the
+    signature, and 'ssh' or 'openpgp' — or None for a tag that carries none, or is no annotated tag at all."""
+    r = subprocess.run(['git', 'cat-file', 'tag', tag], cwd=rel, capture_output=True)
+    if r.returncode != 0:
+        return None
+    for marker, kind in ((b'-----BEGIN SSH SIGNATURE-----', 'ssh'), (b'-----BEGIN PGP SIGNATURE-----', 'openpgp')):
+        i = r.stdout.find(marker)
+        if i >= 0:
+            return r.stdout[:i], r.stdout[i:], kind
+    return None
+
+
+def verify_signature(payload, signature, signers):
+    """(True, how) when an SSH signature over `payload` verifies with a key the allowed-signers file `signers` gives
+    the release's name; (False, why) when it does not; (None, why) when this machine cannot say."""
+    if not shutil.which('ssh-keygen'):
+        return None, "this machine has no ssh-keygen to check its signature"
+    with tempfile.TemporaryDirectory(prefix='dmupgrade-sig-') as t:
+        sig = os.path.join(t, 'tag.sig')
+        with open(sig, 'wb') as fh:
+            fh.write(signature)
+        r = subprocess.run(['ssh-keygen', '-Y', 'verify', '-f', signers, '-I', PRINCIPAL, '-n', 'git', '-s', sig],
+                           input=payload, capture_output=True)
+    out = (r.stdout + r.stderr).decode('utf-8', 'replace').strip()
+    if r.returncode == 0:
+        return True, f"its tag is signed by a key {SIGNERS} names ({out.splitlines()[0][:120] if out else 'verified'})"
+    if 'unknown option' in out or 'usage:' in out.lower():
+        return None, "this machine's ssh-keygen cannot check a signature (`ssh-keygen -Y verify`, OpenSSH 8.2 and later)"
+    return False, f"its tag's signature does not verify with a key {SIGNERS} names ({out[:200] or 'no reason given'})"
+
+
+def authenticate(rel, tag, sha, src, expect, garden):
+    """How the release in the clone at `rel` is known to be the one meant, before anything in it runs — or exit,
+    having run nothing of it and touched nothing of the garden. See `A RELEASE IS AUTHENTICATED` above."""
+    if expect:
+        e = expect.strip().lower()
+        if not re.fullmatch(r'[0-9a-f]{12,40}', e):
+            sys.exit(f"REFUSING: --expect takes the release's commit, twelve hexadecimal digits or more; {expect!r} "
+                     f"is not one. Nothing from {tag} has run.")
+        if not sha.startswith(e):
+            sys.exit(f"REFUSING: {tag} from {src} is commit {sha}, not the {e} --expect names. Nothing from it has "
+                     f"run, and nothing in this garden changed.")
+        return f"the commit --expect names ({sha[:12]})"
+    signed = tag_signature(rel, tag)
+    signers = os.path.join(garden, *SIGNERS.split('/'))
+    why = "its tag carries no signature" if signed is None else \
+        "its tag is signed with OpenPGP, and a release is checked against SSH keys" if signed[2] != 'ssh' else \
+        f"this garden's release names no keys ({SIGNERS} is not here)" if not os.path.isfile(signers) else None
+    if why is None:
+        ok, why = verify_signature(signed[0], signed[1], signers)
+        if ok:
+            return why
+        if ok is False:
+            sys.exit(f"REFUSING: {tag} from {src} (commit {sha}): {why}. Nothing from it has run, and nothing in this "
+                     f"garden changed. If the release's keys changed, check {tag}'s commit against its own page and run "
+                     f"again with --expect <commit>.")
+    if local_source(src):
+        return f"not authenticated — {why} — and taken as it stands, from a repository on this machine"
+    head = (f"{tag} from {src} is commit {sha}, and is NOT AUTHENTICATED: {why}. Nothing from it has run yet. "
+            f"Check the commit against the release's own page before running its code.")
+    if sys.stdin is not None and sys.stdin.isatty():
+        print(head, flush=True)
+        try:
+            said = input(f"Type the commit's first twelve digits to run {tag}, or anything else to stop: ")
+        except EOFError:
+            said = ''
+        if said.strip().lower() == sha[:12]:
+            return f"not authenticated — {why} — and confirmed at the terminal ({sha[:12]})"
+        sys.exit("REFUSING: not confirmed. Nothing from the release ran, and nothing in this garden changed.")
+    sys.exit(f"REFUSING: {head}\nOnce it is checked, run:\n  python3 bin/dmupgrade.py {tag} --expect {sha[:12]}"
+             + (f" --from {src}" if src != UPSTREAM else ''))
 
 
 class Form(tuple):
@@ -1981,6 +2075,8 @@ def main():
                     help='opt into a profile the release\'s law offers: written in VOCAB.md, its asset received (again for another)')
     ap.add_argument('--retract', action='append', default=[], metavar='PROFILE',
                     help='leave a profile: taken out of VOCAB.md, its asset removed (again for another)')
+    ap.add_argument('--expect', metavar='COMMIT',
+                    help="the release's commit, checked against its own page: accept that commit and no other")
     ap.add_argument('--no-delegate', action='store_true', help=argparse.SUPPRESS)
     ap.add_argument('--recorded-source', help=argparse.SUPPRESS)
     a, unknown = ap.parse_known_args()
@@ -2013,11 +2109,15 @@ def main():
         rel = os.path.join(tmp, 'release')
         run('git', 'clone', '-q', '--depth', '1', '--branch', a.tag, a.src, rel, cwd=tmp)
         sha = run('git', 'rev-parse', 'HEAD', cwd=rel).stdout.strip()
+        # NOTHING THE RELEASE CARRIES RUNS BEFORE THIS: its tool, its germinate.py, its hooks
+        print(f"{a.tag} ({sha[:12]}): {authenticate(rel, a.tag, sha, a.src, a.expect, ROOT)}", flush=True)
         tool = os.path.join(rel, 'bin', 'dmupgrade.py')
         if (not a.no_delegate and os.path.isfile(tool) and '--no-delegate' in open(tool, encoding='utf-8').read()
                 and open(tool, 'rb').read() != open(os.path.abspath(__file__), 'rb').read()):
             print(f"handing over to {a.tag}'s own bin/dmupgrade.py — a release is applied by its own upgrade logic", flush=True)
             args = [sys.executable, tool, a.tag, '--from', rel, '--garden', ROOT, '--no-delegate', '--recorded-source', source]
+            if "'--expect'" in open(tool, encoding='utf-8').read():
+                args += ['--expect', sha]            # authenticated above; the release's tool is told which commit
             if a.allow_downgrade:
                 args.append('--allow-downgrade')
             if a.keep_on_failure:

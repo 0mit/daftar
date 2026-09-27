@@ -5,7 +5,7 @@ SPDX-PackageDownloadLocation = "https://github.com/0mit/daftar"
 
 # THE LAW AND THE GUIDES — CC BY 4.0. First, so the blocks after it narrow it: of several matching blocks the last wins.
 [[annotations]]
-path = ["*.md", "NOTICE", "seed/*.md", "seed/LANGUAGE", "seed/PUBLIC-ALLOW",
+path = ["*.md", "NOTICE", "seed/*.md", "seed/LANGUAGE", "seed/PUBLIC-ALLOW", "seed/RELEASE-SIGNERS",
         "seed/knowledge/SOURCES.md", "seed/knowledge/technology.tsv", "seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv",
         "seed/knowledge/crosswalk-dwc.tsv",
         "site/**/*.html", "site/*.html", "site/assets/**", "site/drawings/**", "site/machinery/drawn.json",

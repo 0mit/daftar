@@ -3136,6 +3136,17 @@ file into or out of those carries it too, or a file could leave the law in the c
 NO HARNESS IS NAMED. A path that one agent's harness reads from is a privilege written into universal law; the
 mirror of the door for agents that a release ships is left out of the map, counted where the map is shown.
 
+## layers[law].holds
+
+THE KEYS A RELEASE IS SIGNED WITH ARE LAW (25.0). An upgrade runs the release's own tool, its germinate.py and the hooks
+it installs, fetched from a network; a tag that moved, an account that was taken, a source that was not the project's,
+would each run in every garden that upgrades. So a signed tag is checked against keys the garden already holds, and
+they are the ones the release it runs brought, as a package manager's keyring is: which next release a garden trusts is
+decided by the release it trusts now, and a key changes only in a release its predecessor signed. What decides whether
+code runs is in force, applied alone, and a change to it is a RULE-CHANGE: it is law, beside what a release ships.
+Not taken: the keys fetched with the release (the release would vouch for itself); a key named in the tool's code (a
+change of key would be a change of code, and the tool is the thing being checked).
+
 ## layers[estate].holds
 
 A SERIES' PARTS ARE ESTATE (F12). They are a garden's own facts, in rows too many for a bean, and they belong to the bean
