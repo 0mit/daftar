@@ -123,9 +123,11 @@ def unsealed(fm, *, root=ROOT, beans=None):
 
 
 def _write(path, key, record):
+    """One record of a store, written whole and swapped in (bin/dmsafe.py `write_atomic`), its owner's alone to read."""
+    import dmsafe
     os.makedirs(path, exist_ok=True)
-    with open(os.path.join(path, key + '.yaml'), 'w', encoding='utf-8', newline='\n') as fh:
-        yaml.safe_dump(record, fh, allow_unicode=True, sort_keys=False)
+    dmsafe.write_atomic(os.path.join(path, key + '.yaml'),
+                        yaml.safe_dump(record, allow_unicode=True, sort_keys=False), mode=0o600)
 
 
 def _pick(level, root, host, name=None):
@@ -214,8 +216,8 @@ def put(bean, term, key, *, root=ROOT, host=None, store=None, basis=None, until=
     else:
         label = f"{term}[{sealed['held']}]"
         node = [sealed if i == int(key) else v for i, v in enumerate(node)]
-    with open(path_, 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write(_replace_term(text, term, node))
+    import dmsafe
+    dmsafe.write_atomic(path_, _replace_term(text, term, node))
     return sealed['held'], f"- held: {bean} {term}.{label} added" if isinstance(fm.get(term), dict) else \
         f"- held: {bean} {term} added"
 
@@ -239,14 +241,15 @@ def person(fields, *, root=ROOT, host=None, store=None, basis=None):
     hexkey = secrets.token_hex(16)
     _write(path, hexkey, {'bean': pid, 'term': 'person', 'key': 'contact', 'entry': dict(fields), 'about': [pid]})
     g = dmpass.gardener_of(root) or 'keeper'
-    with open(os.path.join(root, 'beans', pid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write(f"---\nbean: {pid}\ngenos: person\ntitle: \"{pid}\"\nstatus: active\n"
-                 f"summary: \"a person whose name and contacts are held off git\"\nnature: empsychon\n"
-                 f"owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
-                 f"identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: \"person:{pid}\", class: logical, "
-                 f"establishing: true }} ] }}\n"
-                 f"provenance: {{ src: asserted-by-human, by: {g}, as_of: now }}\n---\n"
-                 f"Held: `root:{name}/{hexkey}`{' on ' + basis if basis else ''}.\n")
+    import dmsafe
+    dmsafe.write_atomic(os.path.join(root, 'beans', pid + '.md'),
+                        f"---\nbean: {pid}\ngenos: person\ntitle: \"{pid}\"\nstatus: active\n"
+                        f"summary: \"a person whose name and contacts are held off git\"\nnature: empsychon\n"
+                        f"owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
+                        f"identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: \"person:{pid}\", "
+                        f"class: logical, establishing: true }} ] }}\n"
+                        f"provenance: {{ src: asserted-by-human, by: {g}, as_of: now }}\n---\n"
+                        f"Held: `root:{name}/{hexkey}`{' on ' + basis if basis else ''}.\n")
     return pid
 
 

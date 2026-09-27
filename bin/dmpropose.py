@@ -2317,9 +2317,8 @@ def cmd_take(argv):
             remember(p)
             text, _fm = unstamp_garden(A['texts'][b], own)
             text, _fm = move_refs(text, A['map'])
-            with open(p, 'w', encoding='utf-8', newline='\n') as fh:
-                fh.write(text.rstrip('\n') + '\n' + rehearsal_line(A['test'], "this whole bean is the rehearsal's")
-                         if rehearsal else text)
+            dmsafe.write_atomic(p, text.rstrip('\n') + '\n' + rehearsal_line(A['test'], "this whole bean is the rehearsal's")
+                                if rehearsal else text)
             moved = [(s, A['map'][s]) for s in refs_of(A['fms'][b]) if s in A['map']]
             done.append(f"- new: [[{b}]]" + (" — its references moved to the beans here: "
                                              + ', '.join(f"{s} → [[{t}]]" for s, t in moved) if moved else ''))
@@ -2457,14 +2456,15 @@ def cmd_take(argv):
 
 
 def put_back(touched, made_dirs):
-    """Every file `take` touched back as it was — a file it made removed, with the directories it made for it."""
+    """Every file `take` touched back as it was — a file it made removed, with the directories it made for it; each put
+    back whole (bin/dmsafe.py `write_atomic`)."""
+    import dmsafe
     for p, data in touched.items():
         if data is None:
             if os.path.exists(p):
                 os.remove(p)
         else:
-            with open(p, 'wb') as fh:
-                fh.write(data)
+            dmsafe.write_atomic(p, data)
     for d in made_dirs:
         try:
             os.rmdir(d)
