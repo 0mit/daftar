@@ -41,6 +41,7 @@ _REC = None
 _NODE_MOD = {"ext": "external", "accent": "accent", "off": "disabled"}
 _EDGE_PAT = {"": ["flow"], "sig": ["signal"], "accent": ["flow", "accent"], "off": ["flow", "disabled"]}   # accent/disabled MODIFY a flow
 NATURE_OF = None        # set by the model: the nature of the being a node depicts, which colours its bar
+ADDRESSES = False       # set by the model: True on a private page (`view.visibility: private`), whose parts show their address
 
 
 def _rec(patterns, label="", box=None, bean=None, eid=None):
@@ -121,13 +122,30 @@ def _term_title(*texts):
 def node(x, y, w, h, title, sub="", ipv="", cls=None, bean=None, eid=None):
     """A part: a box with a bar coloured by what it is, its name and a one-line role. `cls` is `ext` (outside the
     garden's hands), `accent` (the point the drawing turns on) or `off` (wired, not running); otherwise the bar takes
-    the nature of the being it depicts. `ipv` is accepted and never drawn: a drawing carries no address."""
+    the nature of the being it depicts. `ipv` is the part's address: on a public page it is never drawn. On a private one
+    (ADDRESSES) it is drawn beside the name, else beside the role line, else on a line of its own under it — the first
+    that fits the box — marked with the being it belongs to, so that the host sends it only to a viewer who may see that
+    being. One that fits nowhere is left out and recorded on the element, and `dmview check` names it: the card has it,
+    and a wider box would draw it."""
     kind = cls or ((NATURE_OF(bean) if NATURE_OF and bean else None) or "lekton")
     eid = _rec(["node"] + ([_NODE_MOD[kind]] if kind in _NODE_MOD else []), title, (x, y, w, h), bean, eid)
     p = [_g(eid, "node", kind, bean), _term_title(title, sub),
          f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="7" class="nbox"/>',
          f'<rect x="{x}" y="{y}" width="5" height="{h}" rx="2.5" class="nbar"/>',
          f'<text x="{x+14}" y="{y+19}" class="ntitle">{esc(title)}</text>']
+    if ADDRESSES and ipv:
+        a, tag = str(ipv), f'class="nip" data-addr-of="{esc(bean or "")}"'
+        aw = 12 + 6.6 * len(a)                      # mono 11px, ~6.6 a character, and the gap before it
+        if 14 + 6.8 * len(title) + aw <= w - 4:      # beside the name (bold 13px, ~6.8 a character)
+            p.append(f'<text x="{x+w-10}" y="{y+19}" text-anchor="end" {tag}>{esc(a)}</text>')
+        elif not sub and h >= 40 and 14 + aw <= w:   # where the role line would be
+            p.append(f'<text x="{x+14}" y="{y+35}" {tag}>{esc(a)}</text>')
+        elif sub and 14 + 6.5 * len(sub) + aw <= w - 4:   # beside the role (12px, ~6.5 a character)
+            p.append(f'<text x="{x+w-10}" y="{y+35}" text-anchor="end" {tag}>{esc(a)}</text>')
+        elif h >= 52 and 14 + aw <= w:               # a line of its own, under the role
+            p.append(f'<text x="{x+14}" y="{y+50}" {tag}>{esc(a)}</text>')
+        elif _REC:
+            _REC[-1]["unfit_address"] = a
     if sub:
         p.append(f'<text x="{x+14}" y="{y+35}" class="nsub" data-sub="1">{esc(sub)}</text>')
     p.append('</g>')
@@ -359,7 +377,6 @@ SCHEMA_CSS = """
 .vw .lvname{font:700 11px ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .vw .lvq{color:var(--muted);font-size:12.5px;font-style:italic}
 .vw .vw-empty{color:var(--muted)}
-.vw svg.lv-schematic .nip{display:none}
 .vw svg.schema .el[data-ins]{cursor:pointer;outline:none}
 .vw svg.schema .el[data-ins]:hover .nbox,.vw svg.schema .el[data-ins]:focus .nbox{stroke:var(--accent);stroke-width:2}
 .vw .bnd{fill:none;stroke:var(--line);stroke-width:1.2;stroke-dasharray:6 4}.vw .bndtext{fill:var(--muted);font:600 10.5px system-ui;letter-spacing:.05em;text-transform:uppercase}

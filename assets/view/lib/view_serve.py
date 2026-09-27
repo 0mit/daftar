@@ -40,7 +40,7 @@ Usage (through assets/view/bin/dmview.py):
   dmview serve-init --config <path> --user <name> [--orgs "*"|org-a,org-b] [--shared] [--no-actions]
   dmview serve --config <path>
 """
-import base64, hashlib, hmac, json, os, re, secrets, subprocess, sys, threading, time, urllib.parse
+import base64, hashlib, hmac, html, json, os, re, secrets, subprocess, sys, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -107,6 +107,15 @@ def serve_init(config, user, orgs="*", actions=True, shared=False, bean=None):
 # ---------------------------------------------------------------------------------------------------------------------
 # the server
 # ---------------------------------------------------------------------------------------------------------------------
+
+_NIP = re.compile(r'<text [^>]*class="nip" data-addr-of="([^"]*)"[^>]*>[^<]*</text>')
+
+
+def strip_addresses(svg, ok):
+    """A private page's drawing as a viewer may see it: each part's address that belongs to a being the viewer may not
+    see is taken out. What the drawing's own text says belongs to no being, and stays, as the page's `visibility` says."""
+    return _NIP.sub(lambda m: m.group(0) if not m.group(1) or ok(html.unescape(m.group(1))) else "", svg)
+
 class Verdict(tuple):
     """(yes, why), and the grants the answer read — compares as the pair it is."""
     def __new__(cls, yes, why, grants=(), reason_asked=False):
@@ -264,6 +273,7 @@ class Host:
                 p["order"] = [x for x in p["order"] if x != k]
                 continue
             v["facts"] = {b: f for b, f in (v.get("facts") or {}).items() if ok(b)}
+            v["svg"] = strip_addresses(v.get("svg") or "", ok)
             v["parts"] = [x for x in (v.get("parts") or []) if ok(x["bean"])]
             if v.get("wiring") and not ok(v["wiring"]["bean"]):
                 v["wiring"] = None

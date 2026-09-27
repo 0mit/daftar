@@ -412,9 +412,14 @@ def garden():
     return _GARDEN
 
 
+def private():
+    """Whether the page is read only by the viewers its host signs in (`view.visibility: private`); absent, it is public."""
+    return page_view().get("visibility") == "private"
+
+
 def ip(b, system="ipv4"):
-    """The address the page's reference chooses for a being (for a drawing module written to pass one to `node`, which
-    never draws it)."""
+    """The address the page's reference chooses for a being, for a drawing module to pass to `node`: drawn in the
+    part's box on a private page, and never on a public one."""
     return address(b, reference_row(b).get("system") or system)
 
 
@@ -424,6 +429,7 @@ def compose_all():
     g = page_view().get("glossary")
     kit.GLOSSARY.update({str(k): str(v) for k, v in g.items()} if isinstance(g, dict) else {})
     kit.NATURE_OF = lambda b: fm(b).get("nature")
+    kit.ADDRESSES = private()
     comps = getattr(garden(), "COMPOSERS", None)
     if not isinstance(comps, dict):
         raise NoPage("the drawing module defines no COMPOSERS = {key: function}")
@@ -947,7 +953,7 @@ def views(figs=None):
         out.append({"key": k, "title": kit.esc(v.get("label") or title), "claim": kit.gloss_html(claim),
                     "caption": kit.gloss_html(cap), "rel": rel, "svg": svg, "uid": "view-%s" % k,
                     "source": draws_label(v), "draws_bean": draws_of(v)[1] if draws_of(v)[0] == "bean" else None,
-                    "elements": els, "binds": binds,
+                    "elements": [{a: x for a, x in e.items() if a != "unfit_address"} for e in els], "binds": binds,
                     "facts": {b: facts(b) for b in beans if facts(b)},
                     "steps": bound_steps(v, [p["bean"] for p in parts]),
                     "legend": kit.legend_rows(pats + kinds, live), "patterns": pats, "live_patterns": kinds,
@@ -971,7 +977,9 @@ def svg_text(svg):
 
 
 def addresses_drawn(svg):
-    """The addresses a drawing's own text shows: what a lens that shows no address would show every viewer."""
+    """The addresses a drawing's own text shows: on a public page, what a lens that shows no address would show every
+    viewer. A part's own address, drawn on a private page, is not among them: the host sends it only to a viewer who may
+    see that being."""
     return sorted({m for m in _ADDRESS.findall(svg_text(svg)) if _ip_system(m)})
 
 
@@ -1020,10 +1028,15 @@ def check(figs=None):
                                  % (k, i + 1, n, story_lens["id"], mx["words_per_stage"]))
         if (und.get("max") or {}).get("elements") is not None and len(els) > int(und["max"]["elements"]):
             warns.append("%s: the drawing has %d elements, and the %s lens holds %s" % (k, len(els), und["id"], und["max"]["elements"]))
+        for e in els:
+            if e.get("unfit_address"):
+                warns.append("%s: %s's address %s fits nowhere in its box (%s wide): it is on the part's card, and a wider "
+                             "box would draw it" % (k, e["id"], e["unfit_address"], int(e["box"][2]) if e.get("box") else "?"))
         drawn = addresses_drawn(figs[k][1])
-        if drawn:
-            errs.append("%s: the drawing shows %s — a drawing carries no address: a being's addresses are on its card, "
-                        "for a viewer who may see them" % (k, ", ".join(drawn)))
+        if drawn and not private():
+            errs.append("%s: the drawing shows %s — a public page's drawing carries no address: a being's addresses are "
+                        "on its card, for a viewer who may see them; a page read only behind its host's sign-in says "
+                        "`view.visibility: private`" % (k, ", ".join(drawn)))
         binds, e = bindings(k, els)
         errs += e
         errs += actions(k, v, els)[1]

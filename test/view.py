@@ -1121,6 +1121,58 @@ finally:
     srv.terminate()
     mon.shutdown()
 restore()
+
+# ------------------------------------------------------------------ a private page: its drawings carry addresses
+# The page says who reads it (`view.visibility`). Public, the default, is a page that may be published: no drawing shows
+# an address, as every check above has held. Private is a page only its host's signed-in viewers read, a network map
+# among them: each part shows its own address beside it, sent only to a viewer who may see that being, and a drawing's
+# own text may carry one.
+_page, _draw = get("beans/grain-page.md"), get("bin/drawings.py")
+put("beans/grain-page.md", _page.replace("  opens_on: grain-coop\n", "  opens_on: grain-coop\n  visibility: secret\n", 1))
+out, rc = gate()
+check("the law: a page's visibility is public or private, and nothing else", rc != 0 and said(out, "ERROR", "visibility", "secret"),
+      out[-600:])
+put("beans/grain-page.md", _page.replace("  opens_on: grain-coop\n", "  opens_on: grain-coop\n  visibility: private\n", 1))
+_d2 = (_draw.replace("from view_kit import", "from view_model import ip\nfrom view_kit import", 1)
+       .replace('node(600, 60, 170, 48, "Silo controller", "reads the fill", bean="silo-controller")',
+                'node(600, 60, 170, 52, "Silo controller", "reads 192.0.2.99", ip("silo-controller"), bean="silo-controller")', 1)
+       .replace('node(400, 160, 170, 48, "Hill pump", "the hill farm\'s", bean="hill-pump")',
+                'node(400, 160, 170, 48, "Hill pump", "the hill farm\'s", ip("hill-pump"), bean="hill-pump")', 1)
+       .replace('node(600, 160, 170, 48, "Field radio", "carries the readings", bean="field-radio")',
+                'node(600, 160, 90, 40, "Field radio", "carries the readings", ip("field-radio"), bean="field-radio")', 1))
+check("(the drawing module now hands three parts their address, and writes one address in a role line)",
+      _d2.count(', ip("') == 3 and "192.0.2.99" in _d2, "")
+put("bin/drawings.py", _d2)
+out, rc = gate()
+_vout, _vrc = dmview("check")
+check("a private page passes the gate and the asset, though a drawing's own text shows an address (192.0.2.99)",
+      rc == 0 and _vrc == 0 and "192.0.2.99" not in _vout, out[-300:] + " | " + _vout[-700:])
+check("...and an address that fits nowhere in its box is named, never dropped in silence: the card has it",
+      "field-radio's address" in _vout and "fits nowhere" in _vout, _vout[-700:])
+REPORT2 = os.path.join(T, "report-private.html")
+out, rc = dmview("report", "--out", REPORT2)
+H2 = open(REPORT2, encoding="utf-8").read() if os.path.isfile(REPORT2) else ""
+_m2 = re.search(r'<script type="application/json" id="viewdata">(.*?)</script>', H2, re.S)
+P2 = json.loads(_m2.group(1).replace("<\\/", "</")) if _m2 else {}
+_svg = ((P2.get("views") or {}).get("silo") or {}).get("svg", "")
+_a = lambda b: ((P2.get("addresses") or {}).get(b) or [{}])[0].get("address")
+check("a private page's drawing shows each part's own address, the one its reference chooses, marked with the being: "
+      "the pump's beside its name, the silo controller's on a line of its own, and nothing hides it at the understand lens",
+      rc == 0 and _a("silo-controller") and _a("hill-pump")
+      and 'data-addr-of="silo-controller">%s<' % _a("silo-controller") in _svg
+      and 'data-addr-of="hill-pump">%s<' % _a("hill-pump") in _svg and ".lv-schematic .nip{display:none}" not in H2,
+      (_a("silo-controller"), _a("hill-pump"), _svg[:400]))
+check("...and the elements the runtime is handed carry no address: an address that did not fit stays with the check",
+      not any("unfit_address" in e for v in (P2.get("views") or {}).values() for e in v.get("elements", [])), "")
+_H2 = _vs.Host(CFG)
+_H2.refresh(force=True, reexec=False)
+_sv = lambda u: ((_H2.scoped_payload(u).get("views") or {}).get("silo") or {}).get("svg", "")
+check("the host sends a part's address only to a viewer who may see that being: alice (grain-coop) is sent the silo "
+      "controller's and not the hill farm's pump's, `*` both, and the drawing's own text reaches each of them",
+      'data-addr-of="silo-controller">%s<' % _a("silo-controller") in _sv("alice") and 'data-addr-of="hill-pump"' not in _sv("alice")
+      and 'data-addr-of="hill-pump">%s<' % _a("hill-pump") in _sv("root") and "192.0.2.99" in _sv("alice") + _sv("root"),
+      _sv("alice")[:400])
+restore()
 run("git", "tag", "v9.9.10", cwd=REL, env=_env)             # the release the garden now records, as a tag of the release
 
 
