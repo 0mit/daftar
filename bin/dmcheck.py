@@ -555,29 +555,7 @@ def registry(name):
     return list(base) + [r for r in ((vocab_fm.get('registry_additions') or {}).get(name) or []) if not _dup(r)]
 
 # TERMS: every vocabulary term from both tiers, garden-local last so a garden may refine a std term.
-def _overlay(base, over):
-    """Garden-local overlay on a Tier-0 term: local keys win, `schema` merges key-by-key.
-
-    `schema.values_add: [...]` APPENDS to the Tier-0 enum instead of replacing it, so a garden adds one value
-    without restating (and then having to account for) every value Tier-0 already offers."""
-    out = dict(base)
-    for k, v in over.items():
-        if k == 'schema' and isinstance(v, dict) and isinstance(base.get('schema'), dict):
-            out['schema'] = {**base['schema'], **v}
-            # `attrs` merges PER ATTRIBUTE (13.0): a garden that adds one attribute to a Tier-0 term, or gives one
-            # a domain, must not thereby restate — and then own — every attribute the standard already declares.
-            if isinstance(v.get('attrs'), dict) and isinstance(base['schema'].get('attrs'), dict):
-                out['schema']['attrs'] = {**base['schema']['attrs'],
-                                          **{a: {**(base['schema']['attrs'].get(a) or {}), **(r or {})}
-                                             for a, r in v['attrs'].items()}}
-            if isinstance(v.get('cells'), list) and isinstance(base['schema'].get('cells'), list):
-                out['schema']['cells'] = list(base['schema']['cells']) + list(v['cells'])
-        else:
-            out[k] = v
-    _s = out.get('schema')
-    if isinstance(_s, dict) and _s.get('values_add'):
-        _s['values'] = list(_s.get('values') or []) + [x for x in _s['values_add'] if x not in (_s.get('values') or [])]
-    return out
+_overlay = dmparse.overlay_term       # one merge of a garden's overlay onto a Tier-0 term: bin/dmrules.py reads it too
 
 # PROFILES (2.0/E4): Tier-0 terms a garden must OPT IN to. A garden that manages no code should not
 # inherit code terms — and their vacancies come with them, so opting in never imports unexplained debt.

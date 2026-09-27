@@ -84,11 +84,8 @@ for t, tier in [(t, 'tier0') for t in (std.get('terms') or [])] + \
     n = t.get('term') if isinstance(t, dict) else None
     if not isinstance(n, str) or not n:
         continue                         # an entry the gate refuses by name is no rule in force
-    if n in TERMS:                       # a garden overlay merges onto its Tier-0 base
-        base = dict(TERMS[n])
-        sch = {**(base.get('schema') or {}), **(t.get('schema') or {})}
-        base.update(t); base['schema'] = sch
-        TERMS[n] = base; TIER[n] = TIER[n] + '+overlay'
+    if n in TERMS:                       # a garden overlay merges onto its Tier-0 base, as the gate merges it
+        TERMS[n] = dmparse.overlay_term(TERMS[n], t); TIER[n] = TIER[n] + '+overlay'
     else:
         TERMS[n] = t; TIER[n] = tier
 _RESTATED = {}
