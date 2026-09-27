@@ -3160,6 +3160,12 @@ a second copy that goes stale the day a code is added. What a person may add is 
 names a condition in its own words — so a mark raises the level. Lowering it is a safety change (Contract E): a tool
 that lowered it would be deciding, alone, that a person's record may travel.
 
+REFUSED WHERE A COMMIT ADDS IT, WARNED WHERE IT IS (25.0). A warning came after the harm: the gate warned of a reading
+written unsealed, and a writer who committed anyway had put the value in every clone, every bundle and every hub, where
+the seal made next took none of it back. A person added without consent was refused from the start for the same
+reason. What is already in git is warned, not refused: refusing it would stop every commit of a garden whose history
+already holds it, and only a rewrite of every copy takes it out, which is the gardener's decision.
+
 ## terms[consent]
 
 ANOTHER PERSON IS NOT THE GARDENER'S TO PUBLISH. A garden's git is copied whole to every clone, and a clone outlives

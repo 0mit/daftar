@@ -258,8 +258,10 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   `ratify:G` for a change to code — a file of the `gate` layer, one a release keeps, a Python or shell file, the
   drawing module a page names — and takes a commit with no parent only when it is empty (MODEL.md). The git merge
   driver merges three ways (MERGE.md §8): what one branch changed or removed since the base and the other left stands,
-  and only a position both changed differently is a disagreement. MAJOR, because a
-  garden that upgraded unasked from a network is now asked, and a writer's push a hub took is now refused.
+  and only a position both changed differently is a disagreement. Special-category material a commit adds unsealed is
+  refused, not warned: no seal made after the commit takes the value back (MODEL.md). MAJOR, because a
+  garden that upgraded unasked from a network is now asked, and a writer's push a hub took, and a commit carrying a
+  special value the gate warned of, are now refused.
 
 - **24.0** (2026-09-26, human-ratified rule-change, parts ratified one by one as the release was built) — **the law
   learns quantities, reckoning, privacy, agreements, observations, place in time, where a fact came from, and one
