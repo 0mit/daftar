@@ -294,6 +294,17 @@ check("...and a write that dies before it is swapped in leaves the bean as it wa
       _crashed and open(_p, encoding='utf-8').read() == '---\nbean: b\nx: 1\n---\nBody.\n' and os.listdir(_d) == ['b.md'],
       os.listdir(_d))
 
+# ---- a quote is read as YAML reads it, by every scanner of a front matter's lines ---------------------------------
+import dmparse
+_cs = {l: dmparse.comment_start(l) for l in ('title: "a \\" # b"', "summary: it's here # note", "x: 'it''s # not' # yes",
+                                              "k: 'C:\\' # c", 'k: "C:\\\\" # c')}
+check("a comment is found where YAML finds one: not inside a double-quoted scalar past an escaped quote, and after a "
+      "plain value an apostrophe stands in", list(_cs.values()) == [-1, 19, 17, 9, 10], _cs)
+_t = "---\nidentity:\n  anchors:\n    - { key: path, value: 'C:\\', class: logical }\n---\nx\n"
+_fs = [_t[a:b] for a, b in dmsafe.flow_spans(_t, "identity.anchors[key=path].class")]
+check("...and dmsafe finds a flow mapping's value past a single-quoted scalar that ends in a backslash, which escapes "
+      "nothing there", _fs == ["logical"], _fs)
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\njournal: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

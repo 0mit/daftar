@@ -246,6 +246,18 @@ def count(path, dotted):
         return 0, 'none'
 
 
+def _closes(text, i, q):
+    """Whether text[i], the quote character `q`, closes the quoted scalar it stands in: in double quotes only after an
+    EVEN run of backslashes (`"C:\\"` ends a Windows path), in single quotes always — a single-quoted scalar has no
+    backslash escape, and `''` reopens at once. The one rule both flow scanners read."""
+    if q != '"':
+        return True
+    n = 0
+    while i - 1 - n >= 0 and text[i - 1 - n] == '\\':
+        n += 1
+    return n % 2 == 0
+
+
 def _flow_pairs(text, lo, hi):
     """[(key, key_span, value_span)] for a flow mapping `{...}` spanning text[lo:hi].
 
@@ -257,14 +269,8 @@ def _flow_pairs(text, lo, hi):
     while i < inner_hi:
         c = text[i]
         if q:
-            if c == q:
-                # escaped only by an ODD run of backslashes, and only in double quotes: `"C:\\"` ends a Windows path,
-                # and a single-quoted scalar has no backslash escape at all
-                n = 0
-                while q == '"' and text[i - 1 - n] == '\\':
-                    n += 1
-                if n % 2 == 0:
-                    q = None
+            if c == q and _closes(text, i, q):
+                q = None
         elif c in '"\'':
             q = c
         elif c in '{[':
@@ -317,7 +323,7 @@ def flow_spans(text, dotted):
             while j < b:
                 c = text[j]
                 if q:
-                    if c == q and text[j - 1] != '\\':
+                    if c == q and _closes(text, j, q):
                         q = None
                 elif c in '"\'':
                     q = c
