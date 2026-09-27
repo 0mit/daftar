@@ -20,7 +20,7 @@ away — both one act of bin/dmupgrade.py (`--extend view`, `--retract view`), o
 birth. Its files are the release's: an edit to one is a RULE-CHANGE, as an edit to any tool the release ships is. What it
 reads is law the gate checks — the page's `view`, `views`, `view_bindings` and `view_monitors` — and what it cannot
 check the gate cannot either, it checks here: that those terms sit on the page, that a drawing's elements are there,
-that a race draws a procedure that does not branch, that a drawing shows no address. `assets/view/README.md` is the
+that a race draws a procedure that does not branch, that a public page's drawing shows no address. `assets/view/README.md` is the
 guide.
 
 Nothing it writes enters the ledger but through `import`, which writes the page's own terms through bin/dmsafe.py and

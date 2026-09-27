@@ -251,6 +251,16 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **25.1** (2026-09-27, proposed rule-change) — **a private page shows its addresses.** MINOR, additive: `view.visibility`,
+  `public` or `private`, absent meaning public, so a page that says nothing stays as it was. A public page is one that
+  may be published, and no drawing on it shows an address: the rule was made for that, and 25.0 applied it to every
+  page. A private page is read only by the viewers its host signs in, and a network map read there needs its
+  addresses. At the understand lens each part shows its own in its box, the one the page's `reference` chooses
+  from the being's own record, and the host sends it only to a viewer who may see that being, as it already filters
+  the cards; a drawing's own text may carry addresses too (a segment's range, an egress line, a word's definition),
+  which every viewer of that drawing sees; `dmview check` names an address that fits nowhere in its box. The understand
+  lens's row says so.
+
 - **25.0** (2026-09-27, proposed rule-change) — **what runs is authenticated, and code is the gardener's.** A
   release a garden upgrades to is checked before any of it runs: a signed tag against the keys the garden's own release
   names, `seed/RELEASE-SIGNERS`, which the law places in `law` beside what a release ships (`bin/dmupgrade.py`,

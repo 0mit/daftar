@@ -1,7 +1,8 @@
 /* view runtime — ONE script for every host: the offline report and the served page.
    viewMount(root, view, state) draws a view at the lens state.level, in the FORM that lens's row names:
      story        (orient)      meaning before machinery: stages in plain words, technologies linked to their manuals
-     schematic    (understand)  the drawing: parts by what they do, flows, gates, one hinge — no address, no live value
+     schematic    (understand)  the drawing: parts by what they do, flows, gates, one hinge — no live value, and an address
+                                only on a private page (`view.visibility`), each part's own, in its box
      health-chain (operate)     the drawing's own vital sign in its archetype's shape (reservoir, lanes, roster, gauges,
                                 board, scoreboard, funnel, race), or tiles in flow order as the fallback; blind spots
                                 shown; actions where they act; correlate blocks — values on one time axis — beneath

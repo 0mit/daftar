@@ -37,8 +37,20 @@ per genos, which of a being's own facts its card shows, from which lens on; `vie
 looks up, each with the place system whose position stands for it. The position is the being's own — its
 `located_at`, its anchors, its `endpoints` — and the page chooses it, never states it.
 
-A drawing carries **no address**. The kit's `node()` takes an address argument and never draws it; a being's
-addresses are on its card, for a viewer who may see them. `dmview check` refuses a drawing whose text shows one.
+**Who reads the page decides whether its drawings carry addresses** (`view.visibility`).
+
+- **public**, the default: a page that may be published. Its drawings carry **no address**. The kit's `node()` takes the
+  part's address and never draws it, a being's addresses are on its card for a viewer who may see them, and `dmview
+  check` refuses a drawing whose text shows one.
+- **private**: a page read only by the viewers its host signs in, such as a garden's network map.
+  - At the understand lens, `node()` draws each part's address in its box: beside its name, else beside its role line,
+    else on a line of its own. It is the address the page's `reference` chooses from the being's own record, and the
+    drawing module passes it (`ip(being)`). `dmview check` names an address that fits nowhere; the part's card has it.
+  - The host sends that address only to a viewer who may see the being, as it filters the cards.
+  - A drawing's own text may carry addresses as well (a segment's range, an egress line, a word's definition), and every
+    viewer of that drawing sees them.
+  - A monitor's bundle carries each drawing whole, addresses and all, onto its Grafana pages, for every user of that
+    Grafana: let it admit only people the page itself would show them to.
 
 ## The drawing module
 
@@ -116,7 +128,7 @@ and, where it deploys anything, `bundle(monitor, views, out)`.
 
 `check` refuses what the gate cannot: a page term written on a bean that does not carry `view`, a binding on an
 element the drawing does not have, an action on an element that is not a button, `processes` without `pipes`, a race
-that draws a procedure which branches, a drawing that shows an address, a value no monitor of the page can compute, a
+that draws a procedure which branches, a drawing that shows an address on a public page, a value no monitor of the page can compute, a
 monitor whose technology no adapter here reads. It warns where a lens holds more than its row allows, and where a
 monitor reaches a being it cannot probe.
 

@@ -1,5 +1,5 @@
 ---
-version: "25.0"
+version: "25.1"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -2001,7 +2001,7 @@ view_lenses:
   - { lens: orient,     depth: 0, form: story,        max: { stages: 5, words_per_stage: 14 },
       meaning: "what the drawn thing does and what it is built from, for someone who has never touched it: its purpose, three to five stages in the order work flows, its outcome, and each technology's own documentation. No address, port or live value" }
   - { lens: understand, depth: 1, form: schematic,    max: { elements: 18 },
-      meaning: "how the parts co-operate, where the work is decided and where it is fragile: parts by what they do, flows as verbs, decisions as gates, boundaries where ownership or network changes. No address or live value" }
+      meaning: "how the parts co-operate, where the work is decided and where it is fragile: parts by what they do, flows as verbs, decisions as gates, boundaries where ownership or network changes. No live value, and no address unless the page is private (`view.visibility`)" }
   - { lens: operate,    depth: 2, form: health-chain, max: { tiles: 12 },
       meaning: "what the person on call must know first, now: the drawn thing's own vital sign in a shape native to it (a row of `view_archetypes`), the evidence beneath it, what the page cannot see, and where a person may act" }
   - { lens: inspect,    depth: 3, form: anatomy,      max: { cards: 12 },
@@ -2319,13 +2319,14 @@ profiles:
     - { at: "view_bindings.live", position: live-series, reason: universal, why: "the three kinds of live value, declared whole" }
     terms:
     - term: view
-      meaning: "this bean is a page of drawings: the garden's own drawing module, the organisation it opens on, the parts a reader looks up, which of a being's own facts a card shows, and the words a reader may hover. What it is called is its `title`; what it draws is its `views`; where its live values come from is its `view_monitors`"
+      meaning: "this bean is a page of drawings: the garden's own drawing module, the organisation it opens on, who reads it, the parts a reader looks up, which of a being's own facts a card shows, and the words a reader may hover. What it is called is its `title`; what it draws is its `views`; where its live values come from is its `view_monitors`"
       context_keys: [view]
       schema:
         shape: mapping
         attrs:
           drawings:  { required: true, in: { pointer: bean_field_pointer }, meaning: "`file:<path>` of the garden's own drawing module: the garden's code, never the law's" }
           opens_on:  { in: { bean_id: { gene: [org] } }, meaning: "the organisation the page opens on; absent, every organisation the reader may see" }
+          visibility: { in: [public, private], meaning: "who reads the page. public (absent): anyone it is published to — no drawing shows an address, and a being's addresses are on its card, for a viewer who may see them | private: only the viewers its host signs in — at the understand lens each part shows its own address in its box, the one `reference` chooses from the being's own record, sent only to a viewer who may see that being; and a drawing's own text may show addresses, which every viewer of that drawing sees" }
           glossary:  { in: { prose: named }, meaning: "what a word on the page means, under the word" }
           reference:
             meaning: "the parts a reader looks up, one entry per being, in the order listed. The address that stands for a being is one the being itself states, and is chosen here, never stated here"

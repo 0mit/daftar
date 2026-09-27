@@ -1635,6 +1635,18 @@ the position is the being's own (`located_at`, its anchors, its `endpoints`): an
 second statement of it, and it drifts. `fields` says per genos, as `registry` rows of `gene` and `view_lenses`, which of
 a being's own facts its card shows, from which lens on. `opens_on` is a `bean_id` held to the genos `org`.
 
+## profiles.view.terms[view].schema.attrs.visibility
+
+WHO READS THE PAGE DECIDES WHETHER ITS DRAWINGS CARRY ADDRESSES. A drawing is sent whole to everyone who may see it,
+so an address in its text is shown to every one of them, and a page that may be published must show none: that is
+the public page, and the default, so a page that says nothing fails closed. A private page is read only by the
+viewers its host signs in, and for them a network map without its addresses is not a map. So there each part shows
+its own address, taken from the being's own record by the page's `reference` and never restated on the page, and
+the host sends it only to a viewer who may see that being, the grant that already decides the part's card. What a
+drawing's own text says (a range, an egress line) belongs to no being the host could ask about, so it is shown to
+every viewer of the drawing, and the page says so by being private. An enumeration and not a flag, as `openness`
+is: the two values say who reads, and what follows from that is the asset's.
+
 ## profiles.view.terms[view_monitors]
 
 WHERE LIVE VALUES COME FROM IS A BEING THE GARDEN HOLDS. A monitor is a `bean_id`: what it watches is its own `reaches`
