@@ -439,13 +439,32 @@ TITLE = re.compile(r'^\s*# == [^=]+ ==\s*$')
 
 
 def comment_start(line):
-    """The column a comment begins at in one YAML line, or -1."""
-    q = None
-    for i, ch in enumerate(line):
-        if ch in "\"'":
-            q = None if q == ch else (q or ch)
-        if ch == '#' and q is None and (i == 0 or line[i - 1] in ' \t'):
+    """The column a comment begins at in one YAML line, or -1. Quotes are read as YAML reads them: a quote opens a
+    quoted scalar only where a scalar begins (after `: `, `- `, `[`, `{`, `,`, or at the line's start), so `it's here
+    # note` holds a comment; in double quotes a backslash escapes the next character (`"a \" # b"` holds none); in
+    single quotes `''` is a quote, and a backslash is itself."""
+    q, i, n = None, 0, len(line)
+    while i < n:
+        ch = line[i]
+        if q == '"':
+            if ch == '\\':
+                i += 2
+                continue
+            if ch == '"':
+                q = None
+        elif q == "'":
+            if ch == "'":
+                if i + 1 < n and line[i + 1] == "'":
+                    i += 2
+                    continue
+                q = None
+        elif ch in "\"'":
+            before = line[:i].rstrip()
+            if (i == 0 or line[i - 1] in ' \t[{,') and (not before or before[-1] in ':-[{,?'):
+                q = ch
+        elif ch == '#' and (i == 0 or line[i - 1] in ' \t'):
             return i
+        i += 1
     return -1
 
 
