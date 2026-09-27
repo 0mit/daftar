@@ -1,14 +1,14 @@
 {
  "tool": "dmview",
- "tool_release": "v0.42.0",
- "daftar_release": "v0.42.0",
- "grown_by": "v0.42.0",
+ "tool_release": "v0.42.1",
+ "daftar_release": "v0.42.1",
+ "grown_by": "v0.42.1",
  "demo_day": "2026-10-27",
  "garden": "garden-sam",
- "drawn_at": "2026-09-27 22:23 UTC",
+ "drawn_at": "2026-09-27 23:22 UTC",
  "report": "machinery/report.html",
  "report_bytes": 262402,
- "report_sha256": "1331af834f57e827bb0362ef5b7ba26da62b0369157729cccd5ae9d73ad639be",
+ "report_sha256": "c174f2d68c2e13a926014f99782207d54e537f0b416aa9d4567c2fabdb0ff9be",
  "title": "daftar — its mechanisms, drawn",
  "levels": [
   {
@@ -203,14 +203,14 @@
  "transcript": [
   {
    "cwd": "~/garden-sam",
-   "cmd": "python3 bin/dmupgrade.py v0.42.0 --from ~/daftar --extend view",
-   "out": "v0.42.0 (0e698d9b4993): its tag is signed by a key seed/RELEASE-SIGNERS names (Good \"git\" signature for daftar-release with ED25519 key SHA256:9mnuXmb6IMsdX1QJ66O8XMopeh8eSx0sebrZAW51yYk)\nprofiles +view at v0.42.0 (0e698d9b4993): VOCAB.md extends [domain, view]; 12 added, 0 removed.\ngarden-sam (daftar v0.42.0, gardener sam, garden 423af2457e0b): 39 docs, 0 error(s), 0 warning(s)\n\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n  git add -A\n  git commit\nTo abandon it instead:\n  git checkout -- .\n  git clean -f -- assets/view/README.md assets/view/bin/dmview.py assets/view/lib/sources/http.py assets/view/lib/sources/prometheus.py assets/view/lib/view_export.py assets/view/lib/view_kit.py assets/view/lib/view_model.py assets/view/lib/view_report.py assets/view/lib/view_runtime.js assets/view/lib/view_serve.py assets/view/templates/drawings.py assets/view/templates/serve.json",
+   "cmd": "python3 bin/dmupgrade.py v0.42.1 --from ~/daftar --extend view",
+   "out": "v0.42.1 (6267ad95a04f): its tag is signed by a key seed/RELEASE-SIGNERS names (Good \"git\" signature for daftar-release with ED25519 key SHA256:9mnuXmb6IMsdX1QJ66O8XMopeh8eSx0sebrZAW51yYk)\nprofiles +view at v0.42.1 (6267ad95a04f): VOCAB.md extends [domain, view]; 12 added, 0 removed.\ngarden-sam (daftar v0.42.1, gardener sam, garden aa3c0518dcb6): 39 docs, 0 error(s), 0 warning(s)\n\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n  git add -A\n  git commit\nTo abandon it instead:\n  git checkout -- .\n  git clean -f -- assets/view/README.md assets/view/bin/dmview.py assets/view/lib/sources/http.py assets/view/lib/sources/prometheus.py assets/view/lib/view_export.py assets/view/lib/view_kit.py assets/view/lib/view_model.py assets/view/lib/view_report.py assets/view/lib/view_runtime.js assets/view/lib/view_serve.py assets/view/templates/drawings.py assets/view/templates/serve.json",
    "exit": 0
   },
   {
    "cwd": "~/garden-sam",
    "cmd": "git diff -U0 -- log/journal.md",
-   "out": "…\n+\n+## 2026-10-27 09:00+00:00 · sam · RULE-CHANGE: profiles +view, at daftar v0.42.0\n+- ratified_by: sam, here: the word of the gardener\n+- action: **RULE-CHANGE — `bin/dmupgrade.py v0.42.0`** --extend view; VOCAB.md extends_profiles: [domain, view].\n+- changed: VOCAB.md (extends_profiles)\n+- added: assets/view/README.md, assets/view/bin/dmview.py, assets/view/lib/sources/http.py, assets/view/lib/sources/prometheus.py, assets/view/lib/view_export.py, assets/view/lib/view_kit.py, assets/view/lib/view_model.py, assets/view/lib/view_report.py, assets/view/lib/view_runtime.js, assets/view/lib/view_serve.py, assets/view/templates/drawings.py, assets/view/templates/serve.json\n+- removed: none\n+- why: the view asset, which draws daftar's mechanisms for the machinery page of daftar's site",
+   "out": "…\n+\n+## 2026-10-27 09:00+00:00 · sam · RULE-CHANGE: profiles +view, at daftar v0.42.1\n+- ratified_by: sam, here: the word of the gardener\n+- action: **RULE-CHANGE — `bin/dmupgrade.py v0.42.1`** --extend view; VOCAB.md extends_profiles: [domain, view].\n+- changed: VOCAB.md (extends_profiles)\n+- added: assets/view/README.md, assets/view/bin/dmview.py, assets/view/lib/sources/http.py, assets/view/lib/sources/prometheus.py, assets/view/lib/view_export.py, assets/view/lib/view_kit.py, assets/view/lib/view_model.py, assets/view/lib/view_report.py, assets/view/lib/view_runtime.js, assets/view/lib/view_serve.py, assets/view/templates/drawings.py, assets/view/templates/serve.json\n+- removed: none\n+- why: the view asset, which draws daftar's mechanisms for the machinery page of daftar's site",
    "exit": 0
   },
   {
@@ -221,8 +221,8 @@
   },
   {
    "cwd": "~/garden-sam",
-   "cmd": "git commit -q -m \"daftar v0.42.0, with the view profile\"",
-   "out": "garden-sam (daftar v0.42.0, gardener sam, garden 423af2457e0b): 39 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
+   "cmd": "git commit -q -m \"daftar v0.42.1, with the view profile\"",
+   "out": "garden-sam (daftar v0.42.1, gardener sam, garden aa3c0518dcb6): 39 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
    "exit": 0
   },
   {
@@ -240,7 +240,7 @@
   {
    "cwd": "~/garden-sam",
    "cmd": "git commit -q -m \"daftar's mechanisms recorded, and the page that draws them\"",
-   "out": "garden-sam (daftar v0.42.0, gardener sam, garden 423af2457e0b): 46 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
+   "out": "garden-sam (daftar v0.42.1, gardener sam, garden aa3c0518dcb6): 46 docs, 0 error(s), 0 warning(s)\nfast: 14/14 corpus checks passed",
    "exit": 0
   },
   {
