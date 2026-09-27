@@ -765,6 +765,25 @@ try:
 except Exception:
     _res = {}
 _rv = json.dumps(_res.get("run"))
+_out5 = run(PY, "-c", """
+import sys, time
+sys.path.insert(0, %r)
+import view_model as vm
+vm.init(%r)
+import view_serve as vs
+h = vs.Host(%r)
+today = time.strftime('%%Y-%%m-%%d', time.gmtime())
+h.refresh(force=True, reexec=False)
+h.beans['keeper']['grants']['watchers-read']['during'] = {'to': today}
+first = h.may('watcher')[0]
+_real = time.time
+time.time = lambda: _real() + 2 * 86400
+later = h.may('watcher')[0]
+print(first, later)
+""" % (os.path.join(R.g, "assets", "view", "lib"), R.g, CFG2), cwd=R.g)
+check("a grant whose `during` ends today opens the page today, and the day after it does not: an answer the host keeps "
+      "holds for the day it was asked on, not until the next commit",
+      _out5.stdout.strip().splitlines()[-1:] == ["True False"], _out5.stdout[-400:] + _out5.stderr[-900:])
 check("RESULTS: behind the view guard, the watcher (granted the garden to read) is sent the race's values, read by the http "
       "adapter from the runner's status document: two suites done, 99.5 s run, 44.5 s left",
       _res.get("may") is True and "2.0" in _rv and "99.5" in _rv and "44.5" in _rv, _out.stdout[-600:] + _out.stderr[-900:])

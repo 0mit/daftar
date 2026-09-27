@@ -221,6 +221,14 @@ out = gate()
 check("a grant's position that names no term is refused", "'shoe-size' names no term" in out, out[-1500:])
 restore()
 
+# a grant's `during` read against TODAY when no moment is given: its `from` and `to` in the same count of days
+out = py("import dmpass, time; t = time.strftime('%Y-%m-%d', time.gmtime()); "
+         "print([dmpass._during(d, None) for d in ({'to': '2020-01-01'}, {'from': '2020-01-01'}, {'from': t, 'to': t}, "
+         "{'from': '2999-01-01'})])")
+check("a grant whose `to` has passed is closed today, one whose `from` has come is open, one for today is open, one "
+      "not yet begun is closed — read with no moment given, as the view host and the hub read it",
+      out == "[False, True, True, False]", out)
+
 # an agreement decides over its own bean and what a party who ACCEPTED it brings — never the rest of the garden
 contract("reading-circle", [("keeper", True), ("p-0a1b2c3d", True)], """selections:
   people: { what: "every person the garden holds", steps: [ { id: p, op: select, genos: person } ] }

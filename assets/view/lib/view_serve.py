@@ -154,6 +154,11 @@ class Host:
             return Verdict(True, "this viewer may act, where a grant opens the tool")
         what = ("act:" + tool) if act else "write" if write else "read"
         target = bean if bean is not None else vm.PAGE
+        # AN ANSWER HOLDS FOR THE DAY IT WAS ASKED ON. A grant's `during` is read by the day (dmpass `_during`), and an
+        # answer kept until the next commit went on granting past a grant's last day: the cache is the day's.
+        day = int(time.time() // 86400)
+        if getattr(self, "answers_day", None) != day:
+            self.answers, self.answers_day = {}, day
         k = (actor, what, target, tuple(positions) if positions else None, bool(reason))
         a = self.answers.get(k)
         if a is None:
