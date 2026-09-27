@@ -1127,12 +1127,41 @@ def _select(holder, key, root):
         return None
 
 
+def _subjects(bid, fm):
+    """The persons a bean is the record of: whoever it is `about`, and the person it is, for a person's own bean."""
+    out = {e.get('who') for e in fm.get('about') or [] if isinstance(e, dict)} if isinstance(fm.get('about'), list) else set()
+    if fm.get('genos') == 'person':
+        out.add(bid)
+    return out
+
+
+def _owners(fm):
+    """The beans a bean's `owned_by` names as owner, in any facet."""
+    ob = fm.get('owned_by')
+    return {f['owner']['bean'] for f in (ob.values() if isinstance(ob, dict) else [])
+            if isinstance(f, dict) and isinstance(f.get('owner'), dict) and isinstance(f['owner'].get('bean'), str)}
+
+
+def shares(holder, hfm, bid, fm):
+    """Whether the agreement `holder` may decide a grant over the bean `bid`: its own bean, and what a party who ACCEPTED
+    it brings into it — a bean that party owns, or is the record of. Nothing else: an agreement is not a key to the
+    garden, and a bean nobody who accepted it holds is not its to open."""
+    if bid == holder:
+        return True
+    ps = hfm.get('parties')
+    accepted = {e['who']['bean'] for e in (ps.values() if isinstance(ps, dict) else [])
+                if isinstance(e, dict) and e.get('accepted') and isinstance(e.get('who'), dict)
+                and isinstance(e['who'].get('bean'), str)}
+    return bool(accepted & (_owners(fm) | _subjects(bid, fm)))
+
+
 def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None):
     """Whether `actor` may `act` (read, write, act:<tool>, ratify:<class>) on `bean` — at `positions`, or the whole bean.
     CLOSED BY DEFAULT: the gardener is granted; nobody is granted what no grant opens. A grant counts when its holder may
-    decide it — the gardener, the person the bean is of or `about`, an agreement — and it matches the act, holds the
-    bean (`over`, or the bean holding it), covers the positions, names the actor and holds at `at`. A `forbidden` one
-    refuses whatever a `permitted` one opens."""
+    decide it — the gardener; the person the bean is of or `about`; an agreement, over its own bean and what a party who
+    accepted it owns or is the record of (`shares`) — and it matches the act, holds the bean (`over`, or the bean holding
+    it), covers the positions, names the actor and holds at `at`. A `forbidden` one refuses whatever a `permitted` one
+    opens."""
     gardener = gardener if gardener is not None else gardener_of(root)
     if actor is None:
         return Answer(False, "nobody named: an actor no one can name is granted nothing")
@@ -1140,15 +1169,14 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
         return Answer(True, f"{actor} is the gardener, who keeps the garden")
     beans = beans if beans is not None else beans_here(root)
     fm = beans.get(bean) or {}
-    subjects = {e.get('who') for e in fm.get('about') or [] if isinstance(e, dict)} if isinstance(fm.get('about'), list) else set()
-    if fm.get('genos') == 'person':
-        subjects.add(bean)
+    subjects = _subjects(bean, fm)
     read, forbid, permit, notes = [], [], [], []
     for holder, hfm in sorted(beans.items()):
         gs = hfm.get('grants')
         if not isinstance(gs, dict):
             continue
-        may_decide = holder == gardener or holder in subjects or hfm.get('genos') == 'contract'
+        may_decide = holder == gardener or holder in subjects or \
+            (hfm.get('genos') == 'contract' and shares(holder, hfm, bean, fm))
         for key, g in sorted(gs.items()):
             if not isinstance(g, dict) or g.get('act') != act or not may_decide:
                 continue
