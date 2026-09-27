@@ -246,6 +246,11 @@ _take = [p for p in _ps if p["method"] == "take-down" and p["to"].get("bean") ==
 check("the save traced each said value to the person's instructions, quoted as written",
       len(_take) == 6 and all(p["from"] == {"layer": "instructions"} and p["metadata"]["quoted"] >= 1 for p in _take),
       _take)
+_by = {p["to"]["at"]: p["metadata"] for p in _take}
+check("...each pass saying how many finds named one thing: a day is distinct, a short word (`spoken`) is found but "
+      "proves little, and says so — `distinct: 0`",
+      all(m.get("distinct", 0) >= 1 for a, m in _by.items() if "accepted" in a or "agreed" in a)
+      and _by.get("words.form", {}).get("distinct") == 0 and _by.get("words.form", {}).get("quoted", 0) >= 1, _by)
 check("...and the session's bean was given its pass_log", "captures/passes/lease-talk.jsonl" in read(
     "beans/session-lease-talk.md"))
 check("the gate over the whole garden: 0 errors", " 0 error" in run(PY, "bin/dmcheck.py", "--all", cwd=G).stdout)

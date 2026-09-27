@@ -191,7 +191,7 @@ def trace_said():
                 refused.append(f"{p} {at} = {v[:60]}: found, as written, only in {json.dumps(t.source)}, and "
                                f"{', '.join(t.decision.rows) or 'no row'} refuses it" + (f" — {why}" if why else ''))
                 continue
-            md = {'quoted': t.quoted}
+            md = {'quoted': t.quoted, 'distinct': t.distinct}
             if t.method == 'take-down':
                 md['form'] = 'written'
             if t.verdict == 'nowhere':
