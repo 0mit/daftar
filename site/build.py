@@ -782,10 +782,18 @@ def scenes(d):
     d.doc('install-line-ends', X('INSTALL.md', 'On Windows', [('para', r'^\*\*Line ends')]))
 
 
+# THE NAME OF AN ACCOUNT EVERY MACHINE HAS names no one, and is an ordinary word of the pages (`root:vault`, a user):
+# built as one of them, the build refused its own pages. Its home is still guarded, as a path.
+SYSTEM_ACCOUNTS = frozenset({'root', 'admin', 'administrator', 'user', 'runner', 'ubuntu', 'builder', 'nobody', 'build'})
+
+
 def leaks(d):
     """Words of the build machine a capture must not hold."""
     host = socket.gethostname()
-    words = {host, host.split('.')[0], getpass.getuser(), os.path.expanduser('~'), os.path.realpath(os.path.expanduser('~'))}
+    who = getpass.getuser()
+    words = {host, host.split('.')[0], os.path.expanduser('~'), os.path.realpath(os.path.expanduser('~'))}
+    if who.lower() not in SYSTEM_ACCOUNTS:
+        words.add(who)
     words |= d.real
     words = {w for w in words if w and len(w) > 2}
     found = []
