@@ -252,12 +252,12 @@ anchor_systems:
     levels: open
     neighbours: none
     datum: host
-    meaning: "a position in ONE NAMED HOST's UNIX filesystem. The host is part of the position: /home/user/addin on laptop-a and on laptop-b are different positions that print identically."
+    meaning: "a position in ONE NAMED HOST's UNIX filesystem. The host is part of the position: /home/user/tree on laptop-a and on laptop-b are different positions that print identically."
     pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:/.*)$'
     form_note: "root:<logical root>[/<relative path>] — resolved per host through that host's OWN root map, which is the form that survives a second machine; or <host>:<absolute path> stated outright where there is no root to hang it on"
     establishes: false
     why: "a path is reassignable and a tree can be checked out anywhere, so it CORROBORATES a location and never fixes it — the same rule that keeps `hostname` and `ip` corroborating-only"
-    scope_note: "UNIX-SHAPED ON PURPOSE, and named so rather than called `host-filesystem`. C:\\Users\\user\\source\\repos\\addin cannot satisfy this pattern, and bending it in would give one system two formats — the exact reinvention the pattern rule exists to stop. `windows-filesystem` is declared beside it as a SEPARATE system for exactly that reason."
+    scope_note: "UNIX-SHAPED ON PURPOSE, and named so rather than called `host-filesystem`. C:\\Users\\user\\source\\repos\\tree cannot satisfy this pattern, and bending it in would give one system two formats — the exact reinvention the pattern rule exists to stop. `windows-filesystem` is declared beside it as a SEPARATE system for exactly that reason."
   - system: git-object-graph
     dimension: place
     neighbours: counted
@@ -729,7 +729,7 @@ anchor_systems:
     levels: open
     neighbours: none
     datum: host
-    meaning: "a position in ONE NAMED HOST's Windows filesystem. A SEPARATE SYSTEM from unix-filesystem, not a dialect of it: C:\\Users\\user\\source\\repos\\addin and /home/user/addin share no canonical form, and one system carrying two patterns is exactly the reinvention this registry forbids."
+    meaning: "a position in ONE NAMED HOST's Windows filesystem. A SEPARATE SYSTEM from unix-filesystem, not a dialect of it: C:\\Users\\user\\source\\repos\\tree and /home/user/tree share no canonical form, and one system carrying two patterns is exactly the reinvention this registry forbids."
     pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:[A-Za-z]:\\.*)$'
     form_note: "root:<logical root>[/<relative path>], or <host>:<Drive>:\\<path> stated outright. The two colons are unambiguous — hostname, then drive letter — and the root: form is IDENTICAL to the unix one on purpose: a LOGICAL root is what crosses systems, a literal path is what does not. That is the whole mechanism for resolving one repository on machines that do not agree what a path looks like."
     establishes: false
@@ -1018,7 +1018,7 @@ net_protocols:
     layer: application
     transport: tcp
     rides_on: [ssh, http]
-    meaning: "the git wire protocol. It is usually carried — `host-a:git/ledger.git` and `vps-a:addin` are both git over ssh — so its protection is whatever carries it, and the row says so instead of claiming one."
+    meaning: "the git wire protocol. It is usually carried — `host-a:git/ledger.git` and `vps-a:tree` are both git over ssh — so its protection is whatever carries it, and the row says so instead of claiming one."
   - protocol: http
     technology: http
     layer: application
@@ -1060,7 +1060,7 @@ net_protocols:
     layer: application
     transport: udp
     default_ports: [53]
-    meaning: "the Domain Name System query protocol. Added beyond the eighteen names the design was asked for, because this estate runs three BIND beans and omitting it would have forced them to record their listening surface as something they do not speak."
+    meaning: "the Domain Name System query protocol"
   - protocol: wireguard
     technology: wireguard
     layer: link
@@ -2040,19 +2040,18 @@ profiles:
         shape: list_of_entries
         required_on_gene: [codebase]
         attrs:
-          path:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare absolute path names no host: give it `root:<name>/…` (resolved by each host's `roots`) or `<host>:<path>`" }, meaning: "WHERE THE TREE IS, as a position: `root:<name>[/<relative>]` resolved through each host's own `roots` map, or `<host>:<absolute path>` stated outright. A bare absolute path names no host and WARNS (11.0): this estate holds 13 paths that exist on two machines as two different trees, so a path with no host is a position in a system nobody named." }
+          path:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare absolute path names no host: give it `root:<name>/…` (resolved by each host's `roots`) or `<host>:<path>`" }, meaning: "WHERE THE TREE IS, as a position: `root:<name>[/<relative>]` resolved through each host's own `roots` map, or `<host>:<absolute path>` stated outright. A bare absolute path names no host and WARNS: one path on two machines is two different trees, so a path with no host is a position in a system nobody named." }
           role:         { required: true, in: [own-source, framework-reference, vendored-dependency, generated-artifact], meaning: "own-source | framework-reference | vendored-dependency | generated-artifact" }
           scan_policy:  { required: true, in: [index, reference-only, skim], meaning: "index (own code — walk fully) | reference-only (do NOT re-scan each session; consult analysis_cache, grep on demand only) | skim (structure only)" }
           stack:        { in: { type: kebab }, meaning: "language/runtime tag, e.g. python-django | csharp-dotnet (optional)" }
           entrypoint:   { in: prose, meaning: "manifest / solution / addin that roots the tree (optional)" }
           note:         { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       agent_directive: >
-        LATER AGENTS / OTHER MODELS: before scanning any code for this product, READ the owning bean's code_paths
-        to LOCATE the tree, then READ its analysis_cache for a result that stands in for the scan. Treat
-        scan_policy:reference-only trees (e.g. a vendored framework at /home/user/src/framework-17) as READ-BY-SUMMARY
-        — do NOT walk them for general context; grep only when you need one specific symbol. Re-analyse a tree only
-        when the covering analysis_cache entry has gone STALE (its staleness_key no longer matches the live source);
-        then refresh that entry. This is how the garden avoids re-scanning 1.6 GB of framework code every session.
+        A reader of this product's code reads the owning bean's `code_paths` to locate the tree, then its
+        `analysis_cache` for a result that stands in for a scan. A tree whose `scan_policy` is `reference-only` (a
+        vendored framework, say) is read by its summary and not walked for context; it is searched only for one named
+        symbol. A tree is analysed again only when the entry that covers it is STALE (its `staleness_key` no longer
+        matches the live source), and that entry is then refreshed.
       merge: { cardinality: multi, order: by-path }
       exceptions: []
       promotion: { status: candidate, note: "reference-only scan-policy looks general (every estate has a big framework/vendor tree agents shouldn't re-walk) — REVIEW in the planned attrs-to-universal session" }
@@ -2609,7 +2608,7 @@ terms:
       attrs:
         produced_by:     { required: true, in: { pattern: "^((agent|tool|human):[^ ].*|[^ :][^:]* \\(.+\\))$", soft: true, why: "attribution has one convention across the ledger — `agent:<model>/<garden>` for an agent, `tool:<name>` for a tool, `name (role)` for a person — so that `who to ask` can be read by something" }, meaning: "the agent/tool id that produced this analysis (provenance — who to ask, who to blame)" }
         as_of:           { required: true, origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)" }
-        staleness_key:   { required: true, in: { pattern: "^([a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}|manual:.+)$" }, meaning: "the value that makes this entry VALID; when it MOVES, the entry is STALE. The FORM is the pattern this attribute declares, beside this sentence, and is not restated here: `<repo>@<object-id>`, a position in a named repository's object graph, or `manual:<why>` for what no key can track. Until 2026-09-20 this line listed three spellings — the git-head, the digest and the manual one — two of which the pattern had already refused since 11.0. A person reading the term was taught the form the gate rejects, which is the same defect as a law the code ignores, pointing the other way. (The superseded wording is in git, and is deliberately NOT quoted here: a document that quotes a spelling it is abolishing still contains it, and the check in test/place.py cannot tell a quotation from a lesson. Nor should it have to.)" }
+        staleness_key:   { required: true, in: { pattern: "^([a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}|manual:.+)$" }, meaning: "the value that makes this entry VALID; when it MOVES, the entry is STALE. The FORM is the pattern this attribute declares, beside this sentence, and is not restated here: `<repo>@<object-id>`, a position in a named repository's object graph, or `manual:<why>` for what no key can track." }
         policy:          { required: true, in: [index, reference-only, skim], meaning: "index | reference-only | skim — how the analysed source is to be treated" }
         form:            { in: [summary_ref, inline, external], meaning: "summary_ref | inline | external — where the cached result physically lives" }
         covers_paths:    { in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare absolute path names no host — the same defect `code_paths.path` carries" }, meaning: "the code_paths path(s) this entry analysed — this is WHERE an agent re-checks staleness_key" }
@@ -2629,11 +2628,11 @@ terms:
       NEVER silently used: re-run the analysis, then REFRESH the entry (new as_of + new staleness_key). Trusting
       a stale entry is a provenance violation, not a shortcut.
     agent_directive: >
-      LATER AGENTS / OTHER MODELS: BEFORE analysing any code for this bean, READ analysis_cache. If an entry of the
-      type you need exists AND its staleness_key still matches the live source at covers_paths, USE IT — do not
-      re-derive it. Re-analyse ONLY when the key has moved, or when no entry of that type exists; then WRITE BACK a
-      refreshed entry (bump as_of + staleness_key). To start caching a NEW kind of analysis, simply add a new
-      kebab-case <cache_type> key — no VOCAB change, no gate change, no bean restructure is ever required.
+      Before code of this bean is analysed, `analysis_cache` is read: an entry of the type needed whose
+      `staleness_key` still matches the live source at `covers_paths` is used, not derived again. The code is analysed
+      again only when the key has moved or no entry of that type exists, and a refreshed entry (a new `as_of` and
+      `staleness_key`) is then written back. A new kind of analysis is a new kebab-case `<cache_type>` key: it asks no
+      change of the law, the gate or the bean's shape.
     merge: { cardinality: multi, order: by-cache-type }
     exceptions: []
   - term: weighings
@@ -2767,7 +2766,7 @@ terms:
       governs_anchor: ip
       value_form: ip
     anchor: { class: network, establishing: false }
-    merge: { cardinality: single, order: cidr, authority: "scanned<operator-asserted<external" }
+    merge: { cardinality: single, order: cidr }
     canonical: "python ipaddress normal form (v4/v6); reject bad octets"
     escape: "bean `shared_identifiers:` (floating/VRRP/anycast), or the network the address is on, as the bean's `located_at` in `network-segment` (reused private range)"
     exceptions:

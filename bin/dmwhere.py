@@ -7,7 +7,7 @@ were the location itself, and it failed twice in one day — a commit reported t
 NOT on disk (true of the machine searched, false of the estate), and one analysis reported FRESH on one laptop
 and STALE on another the same minute.
 
-WHAT IT DOES. A bean states where a thing is in a PORTABLE form (`root:addin/CloudApi`). A HOST
+WHAT IT DOES. A bean states where a thing is in a PORTABLE form (`root:src/app`). A HOST
 states what that root means on itself (`roots:` on the host's own bean). This resolves the first through
 the second and reports, per position, one of:
 

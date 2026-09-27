@@ -25,7 +25,7 @@ design steps before that are in `HISTORY.md` in the daftar repository.
 ## Facts carry their provenance
 A fact knows who said it and how they know (manifesto: provenance).
 - Each bean states a default `provenance: { src, by, as_of }`, where `src` is `observed`, `inferred`,
-  `asserted-by-human` or `generated-by-tool`. The vocabulary ranks them by HOW THE FACT IS KNOWN and says why
+  `stated-in-document`, `asserted-by-human` or `generated-by-tool`. The vocabulary ranks them by HOW THE FACT IS KNOWN and says why
   (`provenance_src`). A `generated-by-tool` fact has no standing of its own: it names what it was computed
   from in `provenance.from`, and weighs as the weakest of those.
 - A fact whose source differs from the bean's default carries its own record. What a record may hold, and what
@@ -206,9 +206,9 @@ The rules are data, not code.
   whole and never rewritten. A cell that holds no value says why, with a gap token; a cell set aside names its judge.
   What is read from a series — a value between two rows, where a moment falls — is read (`bin/dmseq.py`), never
   stored. A series is the world along a line, where it held; a `beanger` is one field's own log, when it was recorded.
-- **Where a case stands: a walk and a track.** A walk is the `steps` of a mapping, each saying who acts at it, how long
+- **Where a case stands: a walk and a course.** A walk is the `steps` of a mapping, each saying who acts at it, how long
   it usually takes, and whether it is a way out, a pause, or a final end; a step holds only what the term declares. A
-  track (`tracks`) names a walk, and each move along it is an entry of `moves`: the step reached, who moved it, a reason
+  course (`courses`) names a walk, and each move along it is an entry of `moves`: the step reached, who moved it, a reason
   from that step's list, why, and its moment, stamped by the save. The gate holds the moves to the walk; where the
   case stands, since when and who acts next are read. What a case asks for is a checklist's `items`: a set, not a walk.
 

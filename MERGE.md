@@ -124,7 +124,8 @@ governed conflict, kept as a canonical, deterministic set. Cardinality and order
 so the engine names no term and the conflict logic is written once:
 ```yaml
 merge: { cardinality: single|set|multi, order: none|version|cidr|instant|containment|by-<field>|"a<b<c" }
-# and, once, on provenance_src: { order: "generated-by-tool<inferred<observed<asserted-by-human", borrows: generated-by-tool }
+# and, once, on provenance_src: { order: source, borrows: generated-by-tool } — the rank derived from each source's act:
+#   generated-by-tool < inferred < observed < stated-in-document < asserted-by-human
 ```
 Values differ and the term is a `set`: union. Values differ, the term is `single` and the order compares them: keep
 the subsuming value and record the subsumed in provenance. Values differ and nothing compares them: both are kept, a

@@ -21,7 +21,10 @@ what the LAW says of the position, never by a list kept here:
      something, and that something is the invented day;
   2. every `as_of:` of a provenance is `now` — the day of writing is the clock's, and `bin/dmjournal.py` (which
      `bin/dmsave.py` calls) writes the day of the heading it stamps in its place;
-  3. a calendar day inside an anchor's value (`event:dinner-at-sams-2026-09-12`) is cut: an identity is not dated.
+  3. a calendar day inside an anchor's value (`event:dinner-at-sams-2026-09-12`) is cut: an identity is not dated;
+  4. a REQUIRED position someone said — a moment in a time system, `timing`'s `at` — cannot be shown empty, since the
+     gate would refuse the form; it keeps the example's value, and the line says at its end that the value is the
+     example's own, and the one to write is the moment someone said.
 The prose around the blocks is FORMS.md's own and is not touched.
 """
 import os
@@ -62,7 +65,23 @@ def said_dates():
     return out
 
 
-def form_of(block, said):
+def said_positions():
+    """{(term, attribute)} of every REQUIRED position whose origin is `act: said`: a moment in a time system, which a form
+    cannot show empty (rule 4)."""
+    law = dmparse.loads(dmparse.split_front_matter(open(LAW, encoding='utf-8').read())[0]) or {}
+    out, origins = set(), dmpass.Origins(law)
+    for t in law.get('terms') or []:
+        sch = t.get('schema') if isinstance(t, dict) else None
+        if not isinstance(sch, dict):
+            continue
+        for attr, rec in (dmform.attribute_form(t.get('term'), sch).get('attrs') or {}).items():
+            if (rec.get('required') and isinstance(rec.get('system_from'), dict)
+                    and origins.said(origins.of((sch.get('attrs') or {}).get(attr)))):
+                out.add((t.get('term'), attr))
+    return out
+
+
+def form_of(block, said, positions=frozenset()):
     """One cookbook block as the forms show it."""
     out = []
     entry = re.match(r'<!-- example-entry: \S+ ([a-z_]+)\.', block)       # an entry shown alone names its term in its marker
@@ -81,6 +100,9 @@ def form_of(block, said):
                 emptied.append(f"{attr}: {meaning}; empty unless said")
         line = re.sub(r'(\bas_of:) ?' + DAY + r'\b', r'\1 now', line)
         line = re.sub(r'(\bvalue: "[^"]*?)-' + DAY + '"', r'\1"', line)
+        for (t, attr) in positions:
+            if t == term and re.search(r'\b' + attr + r': "?' + DAY, line):
+                emptied.append(f"{attr}: the example's")
         if emptied:
             line = re.sub(r'\s+$', '', line) + '   # ' + '; '.join(emptied)
         out.append(line)
@@ -94,16 +116,16 @@ def _sections(t):
 BLOCK = re.compile(r'(?:^<!-- [^\n]*-->\n)?^```[^\n]*\n.*?^```$', re.S | re.M)
 
 
-def derive(forms_text, cookbook_text, said):
+def derive(forms_text, cookbook_text, said, positions=frozenset()):
     """FORMS.md with each recipe section's blocks replaced by the forms of the cookbook's, in order."""
     ck = _sections(cookbook_text)
     head, *secs = forms_text.split('\n## ')
     for i, sec in enumerate(secs):
         name = sec.split('\n', 1)[0]
         if name not in ck:              # the forms' own blocks (what nobody said): the same rules, on themselves
-            secs[i] = BLOCK.sub(lambda m: form_of(m.group(0), said), sec)
+            secs[i] = BLOCK.sub(lambda m: form_of(m.group(0), said, positions), sec)
             continue
-        want = [form_of(b, said) for b in BLOCK.findall(ck[name])]
+        want = [form_of(b, said, positions) for b in BLOCK.findall(ck[name])]
         have = BLOCK.findall(sec)
         if len(want) != len(have):
             raise SystemExit(f"dmforms: '{name}' holds {len(have)} blocks and the cookbook's {len(want)} — the sections no "
@@ -118,7 +140,7 @@ def derive(forms_text, cookbook_text, said):
 
 def main(argv):
     forms = open(FORMS, encoding='utf-8').read()
-    new = derive(forms, open(COOKBOOK, encoding='utf-8').read(), said_dates())
+    new = derive(forms, open(COOKBOOK, encoding='utf-8').read(), said_dates(), said_positions())
     if '--check' in argv:
         if new != forms:
             print("dmforms: seed/FORMS.md's recipe blocks are not the forms of the cookbook's — run: python3 bin/dmforms.py",
