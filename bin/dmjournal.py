@@ -80,11 +80,41 @@ def stamps_path(root=ROOT):
     return os.path.join(gd, 'daftar', 'journal-stamps')
 
 
+REGISTER_KEEPS = 256        # past this many lines, the headings the committed journal already holds are let go
+
+
 def register(h, root=ROOT):
     p = stamps_path(root)
     os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, 'a', encoding='utf-8', newline='\n') as fh:
         fh.write(h + '\n')
+    try:
+        with open(p, encoding='utf-8') as fh:
+            n = sum(1 for _l in fh)
+    except OSError:
+        return
+    if n > REGISTER_KEEPS:
+        prune(root)
+
+
+def prune(root=ROOT):
+    """The register less every heading the committed journal already holds. The gate asks it only of a heading a commit
+    ADDS, so one committed is never asked of again, and a register kept whole grew by a line for every entry ever
+    written in the clone. What is let go is only what no commit can add again. Returns how many were let go."""
+    p = stamps_path(root)
+    r = subprocess.run(['git', '-C', root, 'show', 'HEAD:log/journal.md'], capture_output=True, text=True,
+                       encoding='utf-8', errors='replace')
+    if r.returncode != 0 or not os.path.exists(p):
+        return 0
+    committed = {l.rstrip() for l in r.stdout.split('\n') if l.startswith('## ')}
+    with open(p, encoding='utf-8') as fh:
+        lines = [l.rstrip('\n') for l in fh]
+    keep = [l for l in lines if l not in committed]
+    if len(keep) == len(lines):
+        return 0
+    import dmsafe
+    dmsafe.write_atomic(p, ''.join(l + '\n' for l in keep))
+    return len(lines) - len(keep)
 
 
 def registered(root=ROOT):
