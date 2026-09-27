@@ -53,6 +53,12 @@ except ImportError:
     print("ERROR: PyYAML required"); sys.exit(2)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# HOW LONG A QUESTION TO GIT MAY TAKE. Five seconds was a refusal on a large garden, a slow disk or a busy machine — a
+# gate that refuses what it could not read in time is a gate people turn off. DAFTAR_GIT_TIMEOUT sets another.
+try:
+    GIT_TIMEOUT = max(1.0, float(os.environ.get('DAFTAR_GIT_TIMEOUT', '60')))
+except ValueError:
+    GIT_TIMEOUT = 60.0
 
 
 def own_garden_id(root=None):
@@ -80,7 +86,7 @@ def _product():
         return f"{_g['garden']} (daftar {_g['daftar_release']}" + ''.join(', ' + w for w in _who + ([f"garden {_gid}"] if _gid else [])) + ")"
     try:
         v = subprocess.run(['git', '-C', ROOT, 'describe', '--tags', '--always', '--dirty'],
-                           capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=5).stdout.strip()
+                           capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=GIT_TIMEOUT).stdout.strip()
         return f"daftar {v}" if v else "daftar (untagged)"
     except Exception:
         return "daftar (untagged)"
@@ -2604,7 +2610,7 @@ def ectl_entry_in_registry(e):
                       and r.get('holding') == 'at-authority'), None) if rule.get('registry_from') else None
         if _auth is not None:
             try:
-                _ok = re.fullmatch(str(_auth.get('code_pattern')), str(val)) is not None
+                _ok = dmparse.law_match('^(?:' + str(_auth.get('code_pattern')) + ')$', val) is not None
             except re.error:
                 continue                    # the row's own refusal (check_scheme_rows) names the pattern
             if not _ok:
@@ -5639,7 +5645,7 @@ def _git(*args):
     Replaced, it is still judged: a UTF-16 blob has no fences and is refused as a destroyed document."""
     try:
         r = subprocess.run(['git', '-C', ROOT, *args], capture_output=True, text=True, encoding='utf-8',
-                           errors='replace', timeout=5)
+                           errors='replace', timeout=GIT_TIMEOUT)
     except Exception as e:                    # git absent, or it hung — still an unanswered question
         return None, f"{e.__class__.__name__}: {e}"
     if r.returncode != 0:
@@ -5652,11 +5658,13 @@ def _git_bytes(*args):
     """git's output as it wrote it — decoded as UTF-8, with no newline translated. '' when the question went unanswered
     (`_git` has already said why, for the questions that must be answered)."""
     try:
-        r = subprocess.run(['git', '-C', ROOT, *args], capture_output=True, timeout=5)
+        r = subprocess.run(['git', '-C', ROOT, *args], capture_output=True, timeout=GIT_TIMEOUT)
     except Exception:
         return ''
     return r.stdout.decode('utf-8', 'replace') if r.returncode == 0 else ''
 
+
+RULE_CHANGE_SAID = re.compile(r'(?<!(?i:not a ))(?<!(?i:not an ))(?<!(?i:not ))(?<!(?i:no ))(?<!(?i:non-))\bRULE-CHANGE\b')
 
 # What `str.splitlines()` ends a line at, beside the newline itself. A journal line holds none of them.
 _LINE_BOUNDARIES = frozenset('\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029')
@@ -5791,7 +5799,8 @@ def check_staged_state():
         # MODEL.md, the journal template and dmrules all described both as enforced. A garden's FIRST commit —
         # germination, which has no HEAD to compare against — is exempt: nothing in it was decided by anyone yet.
         if 'log/journal.md' in staged and _git('rev-parse', '--verify', '-q', 'HEAD')[0]:
-            if rc and 'RULE-CHANGE' not in jdiff:
+            # the word as a claim: "not a RULE-CHANGE" says the opposite, and a substring test took it for one
+            if rc and not RULE_CHANGE_SAID.search(jdiff):
                 errors.append(f"RULE-CHANGE staged ({', '.join(rc)}) but the staged journal entry never says RULE-CHANGE — "
                               f"a change to the law is logged DISTINCTLY. Put the word RULE-CHANGE in the entry.")
             for _p in sc:
