@@ -30,7 +30,14 @@ if not os.path.exists(STD):
 def _product():
     """`daftar v<tag>` — DERIVED from git, because the version lives in an annotated tag and nowhere else.
     Every version this repo ever typed into prose rotted (four titles reading v1.0 over v2 bodies, two
-    stale pins); the two that stayed correct were derived. A tag has no second copy to disagree with."""
+    stale pins); the two that stayed correct were derived. A tag has no second copy to disagree with.
+
+    IN A GARDEN, the release its GARDEN.md says it adopted (`daftar_release`, written by germination and
+    bin/dmupgrade.py), as the gate reads it: a garden's history carries no daftar tag, and describing it
+    named the garden's own commits."""
+    _g = _front(os.path.join(ROOT, 'GARDEN.md'))[0] if os.path.isfile(os.path.join(ROOT, 'GARDEN.md')) else None
+    if isinstance(_g, dict) and _g.get('daftar_release'):
+        return f"daftar {_g['daftar_release']}"
     try:
         import subprocess as _sp
         v = _sp.run(['git', '-C', ROOT, 'describe', '--tags', '--always', '--dirty'],

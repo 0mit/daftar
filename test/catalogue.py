@@ -174,6 +174,13 @@ own = [f for f in gp if gp[f]["kind"] not in dmcatalog.LAW_KINDS and f not in ke
 check("...and nothing of the garden's own: no bean, no journal, no manifest",
       not own and os.path.isfile(os.path.join(G, "beans", "sam.md")), own[:5])
 check("...and the whole law", all("term:" + n in gp for n in names), [n for n in names if "term:" + n not in gp][:5])
+_gm = dmparse.loads(dmparse.split_front_matter(open(os.path.join(G, "GARDEN.md"), encoding="utf-8").read())[0]) or {}
+check("...and the release it names is the one the garden adopted, as its GARDEN.md says and the gate prints, never "
+      "what the garden's own history describes", _gm.get("daftar_release")
+      and gd["catalogue"].get("release") == str(_gm["daftar_release"]), (gd["catalogue"].get("release"), _gm.get("daftar_release")))
+r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
+check("...and bin/dmrules.py names the same release", r.stdout.startswith("daftar %s rules" % _gm.get("daftar_release")),
+      r.stdout[:160])
 shutil.rmtree(T, ignore_errors=True)
 
 print("\ncatalogue: %d failed" % len(FAILS))
