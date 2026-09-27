@@ -13,7 +13,8 @@ markers, and nothing outside them:
          (`steps` picks commands of a block; the line options pick lines of what each printed)
   file   an input the build wrote                                              doc    an extract of a release document
   svg    site/drawings/<id>.svg, inline                                        part   site/_parts/<id>.html
-  drawn  the record of the machinery's drawing, site/machinery/drawn.json
+  drawn  the record of the machinery's drawing, site/machinery/drawn.json      terms  the law's words (`terms:all`)
+  held   what the build holds still: `release`, the held `day`, or the `moment` with its hour
 
 The committed pages are the templates. A marker whose id nothing produces, or a capture no page uses, fails the build.
 
@@ -41,6 +42,10 @@ import argparse, getpass, html, json, os, re, shlex, shutil, site as _site, sock
 SITE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(SITE)
 CLOCK = os.path.join(SITE, 'demo', 'clock')
+# THE DAY THE PAGES ARE HELD AT comes after what the cookbook's story tells: its loan's first instalment is paid on
+# 2026-10-01, and the September statement is kept once September is over. So it is later than the release the pages
+# are built from (v0.38.0, 2026-09-26), and site/use-cases/index.html says why. It can be the release's own day once
+# the story is dated before it. A page names the release and the day through `held` markers, never by hand.
 DEMO_NOW = '2026-10-27T09:00:00+00:00'
 DEMO_SHOWN = '2026-10-27 09:00 UTC'
 PY = sys.executable
@@ -911,6 +916,11 @@ class Pages:
             text = re.sub(r'\{cur:([a-z/-]+)\}', cur, text)
             return (text.replace('{root}', root).replace('{release}', self.release).replace('{day}', DEMO_SHOWN)
                     .replace('{except}', self.drawn_elsewhere(root)))
+        if typ == 'held':
+            held = {'release': self.release, 'day': DEMO_NOW[:10], 'moment': DEMO_SHOWN}
+            if cid not in held:
+                raise Refused(f'{page}: held:{cid} is not one this build holds; {", ".join(held)} are')
+            return esc(held[cid])
         if typ == 'drawn':
             return self.drawn(cid, page)
         if typ == 'terms':
