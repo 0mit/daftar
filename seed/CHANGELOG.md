@@ -271,8 +271,9 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   credited by a short word alone say the attribution is weak. The law's documents say what the law says: MODEL.md
   names `stated-in-document` and `courses`, MERGE.md the source order as it is derived; two `agent_directive`s state
   rules rather than address an agent; four `meaning`s tell no story and name no estate; the `ip` term's `authority`,
-  which nothing read, is gone. MAJOR, because a
-  garden that upgraded unasked from a network is now asked, and a writer's push a hub took, and a commit carrying a
+  which nothing read, is gone. And the note on the gap after 1.0 said git holds the four releases this file lacks; it
+  does not: this repository's history begins on 2026-09-17 with the law at 8.2, so the gap stays a gap. MAJOR, because
+  a garden that upgraded unasked from a network is now asked, and a writer's push a hub took, and a commit carrying a
   special value the gate warned of, are now refused.
 
 - **24.0** (2026-09-26, human-ratified rule-change, parts ratified one by one as the release was built) — **the law
