@@ -390,6 +390,13 @@ class Catalogue:
         self.findings = self._findings()
 
     def _release(self):
+        """The release this tree is. In a garden, the one its GARDEN.md says it adopted (`daftar_release`, which germination
+        and bin/dmupgrade.py write), as the gate reads it: a garden's own history carries no daftar tag, and describing it
+        named the garden's own commits. In the release's repository, the tag git describes."""
+        g = _read(self.root, 'GARDEN.md') if self.garden else None
+        fm = dmparse.loads(dmparse.split_front_matter(g)[0] or '') if g else None
+        if isinstance(fm, dict) and fm.get('daftar_release'):
+            return str(fm['daftar_release'])
         r = subprocess.run(['git', '-C', self.root, 'describe', '--tags', '--always', '--dirty'], capture_output=True,
                            text=True, encoding='utf-8', errors='replace')
         return r.stdout.strip() or 'untagged'
