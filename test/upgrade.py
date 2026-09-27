@@ -1511,16 +1511,23 @@ else:
 if shutil.which('ssh-keygen') and 'check-novalidate' in ''.join(
         subprocess.run(['ssh-keygen', *x], capture_output=True, text=True, encoding='utf-8',
                        errors='replace').stderr or '' for x in (['-Y', 'x'], ['-?'])):
+    _keys = os.path.join(TMP, 'auth-keys')     # its own directory: `auth-release` is the release repository (AR)
+    os.makedirs(_keys, exist_ok=True)
+
     def _sshkey(n):
-        k = os.path.join(TMP, 'auth-' + n)
-        subprocess.run(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-C', n, '-f', k], capture_output=True)
+        k = os.path.join(_keys, n)
+        r = subprocess.run(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-C', n, '-f', k], capture_output=True,
+                           text=True, encoding='utf-8', errors='replace')
+        if r.returncode != 0 or not os.path.isfile(k + '.pub'):
+            raise SystemExit(f"FAIL  (setup) ssh-keygen could not make the key {n}: {(r.stderr or r.stdout).strip()}")
         return k
     _good, _other = _sshkey('release'), _sshkey('other')
     with open(os.path.join(AG, 'seed', 'RELEASE-SIGNERS'), 'w') as fh:
         fh.write('# test keys\ndaftar-release namespaces="git" ' + open(_good + '.pub').read().rsplit(' ', 1)[0] + '\n')
     for k, ok in ((_good, True), (_other, False)):
-        subprocess.run(['git', '-c', 'gpg.format=ssh', '-c', f'user.signingkey={k}', 'tag', '-s', '-f', 'v9.9.0', '-m',
-                        'an SSH-signed release'], capture_output=True, cwd=AR)
+        # ssh-keygen named: a machine's own gpg.ssh.program would sign with its key, not the one made here
+        subprocess.run(['git', '-c', 'gpg.format=ssh', '-c', 'gpg.ssh.program=ssh-keygen', '-c', f'user.signingkey={k}',
+                        'tag', '-s', '-f', 'v9.9.0', '-m', 'an SSH-signed release'], capture_output=True, cwd=AR)
         got, refused = auth(NET)
         if ok:
             check("a tag signed by a key the garden's seed/RELEASE-SIGNERS names is authenticated",
