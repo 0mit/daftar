@@ -1,12 +1,12 @@
 # Forms — what an agent writes most, the way the gate accepts it
 
-Read this page before writing in a garden. It holds six recipes of `COOKBOOK.md`, their beans copied byte for byte
-(the cookbook explains each), after the misreadings agents make most and before the forms for **what nobody said**.
-Every bean here passes the gate as written (`test/germinate.py`, `test/docs.py`). Shapes it does not hold are in the
-cookbook's worked chapters, *A literary agent* to *Two candles*.
+Read this page before writing in a garden. It holds six recipes of `COOKBOOK.md`, derived by
+`bin/dmforms.py` (the cookbook tells each), after the misreadings agents make most, before the forms for **what
+nobody said**. Every bean here passes the gate as written (`test/germinate.py`, `test/docs.py`). Shapes it does not
+hold are in the cookbook's worked chapters.
 
 Write what you were told, in these shapes, and copy no value from here: `sam`, `ali`, `XTS`, `123456789abc` and the
-amounts below are the example's. The shapes carry no day: a day someone said goes where a field is empty, and
+amounts below are the example's. The shapes carry no day but the dinner's time (the example's): a said day goes where a field is empty, and
 `as_of: now` stays as it is — the save writes the day in its place. Beans that name each other are committed together. A bean is saved with its
 journal entry in one command, which writes the entry (its heading read from the clock), stages everything and commits:
 
@@ -149,7 +149,7 @@ provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
-  start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }
+  start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }   # at: the example's
 refs:
   host:  { bean: sam, rel: host }
   guest: { bean: ali, rel: present }

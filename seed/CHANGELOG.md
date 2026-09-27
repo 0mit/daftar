@@ -268,7 +268,10 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   term (MINOR on its own): the `ip` term's escape named it and the gate refused it as undeclared, and a reused private
   range is told apart by each bean's `located_at` in `network-segment`, where it was an undeclared `scope`. A pass the
   save traces carries `distinct` beside `quoted` (`pass_metadata`): how many finds named one thing, so a person's words
-  credited by a short word alone say the attribution is weak. MAJOR, because a
+  credited by a short word alone say the attribution is weak. The law's documents say what the law says: MODEL.md
+  names `stated-in-document` and `courses`, MERGE.md the source order as it is derived; two `agent_directive`s state
+  rules rather than address an agent; four `meaning`s tell no story and name no estate; the `ip` term's `authority`,
+  which nothing read, is gone. MAJOR, because a
   garden that upgraded unasked from a network is now asked, and a writer's push a hub took, and a commit carrying a
   special value the gate warned of, are now refused.
 

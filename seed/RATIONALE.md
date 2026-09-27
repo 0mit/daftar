@@ -693,9 +693,10 @@ ONE FORM MEANS ONE SET OF DIGITS. A pattern's `\d` matches every script's digits
 ASCII-ONLY: a position is WRITTEN in ASCII digits whatever calendar it is in, and the digits a reader sees are a
 matter for whatever shows it to them.
 EVERY DATED ATTRIBUTE OF THE STANDARD IS TYPED `date`: a day in ANY calendar, held to that calendar's own form.
-WHAT STILL READS ONLY THE GREGORIAN CALENDAR, named because 16.0 does not fix it: `leaf_orders.instant` (the merge
-absorbs a coarser reading into a finer one only within it) and the journal's heading form. Each is a Gregorian-only
-READER, not a rule that time is Gregorian.
+WHAT 16.0 LEFT READING ONLY THE GREGORIAN CALENDAR — `leaf_orders.instant` (the merge absorbs a coarser reading into a
+finer one only within it) and the journal's heading form — 18.0 took into every calendar: the `instant` order holds
+between readings in any declared calendar, asked at the day, and a heading is a position in any declared calendar's own
+form. Each had been a Gregorian-only READER, never a rule that time is Gregorian.
 THE FORM IS TAGGED — `persian:1405-06-29` — because `1405-06-29` is ALSO a Gregorian date, in the year 1405.
 One form per system; and between calendars, forms that cannot be mistaken for each other.
 
@@ -1157,8 +1158,9 @@ absorbed at a merge: a gap against a value is a disagreement a person sees, neve
 The journal is the garden's time record, and it had no rule for time. One real garden, measured on
 2026-09-19: 663 entries, 276 headed with a date only, 387 with a time in `+0300` or `+0330` while the calendar
 system's one form is `+03:00`; and one entry headed 23:59 that was committed at 23:32, a precision written
-rather than read. A heading is now a position in gregorian-civil's one form, held to at least the MINUTE,
-with its offset, because an entry is ordered against every other and a reading with no offset cannot be.
+rather than read. A heading is now a position in a declared calendar's own form (gregorian-civil's until 18.0), held to
+at least the MINUTE, with its offset, because an entry is ordered against every other and a reading with no offset
+cannot be.
 Only headings ADDED by a commit are checked: the journal is never rewritten, so its history keeps the forms
 it was written in, and those stay what they were.
 
@@ -2413,7 +2415,7 @@ waits for that layer, so the position is declared and vacant.
 ## terms[roots].meaning
 
 THE RESOLUTION HALF of the `root:` position form. A bean says WHERE a thing is in a portable way
-(`root:addin/CloudApi`); a HOST says what that root means on itself. Two hosts therefore
+(`root:src/app`); a HOST says what that root means on itself. Two hosts therefore
 never edit the same text to disagree about a path — each states its own resolution on its own bean,
 which is what makes adding a machine a one-line change instead of a corpus migration.
 It lives on the HOST because that is whose fact it is. A root map in a shared file would be one
