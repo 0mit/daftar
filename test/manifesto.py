@@ -86,8 +86,9 @@ check("...and a clause said to be only stated is one the manifesto has",
 bad = [(f, k) for f, t in TEXT.items() for k, q in dmreview.MANIFESTO_QUOTE.findall(t)
        if " ".join(re.sub(r"<[^>]+>|[*>_]", " ", q).split()) != CLAUSES.get(k)]
 check("a marked quote of a clause is the clause, word for word", not bad, bad)
-# The terminology page is the seed drawn again by site/terminology.py: every clause, reason and heading it prints is counted
-# where the seed holds it, so the drawing is not a second statement of its own.
+# What a page draws from the seed is counted where the seed holds it, so the drawing is not a second statement of its own:
+# the map's blocks are left out by bin/dmreview.py itself, and the terminology page a release before the one page drew
+# is named here, so the ceiling read at that release counts it the same way.
 MIRROR = ('site/terminology.html',)
 here = dmreview.Tree()
 hits = [h for h in dmreview.manifesto_restatements(here) if h[0] not in MIRROR]
