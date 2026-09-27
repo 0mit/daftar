@@ -39,6 +39,7 @@ import re
 import subprocess
 import sys
 import time
+import unicodedata
 from fractions import Fraction
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -668,6 +669,7 @@ class Reckoner:
         self.given = dict(inputs or {})
         self.now = now
         self.env, self.lines, self.notes = {}, [], []
+        self.independent = False     # two or more uncertainties combined, each taken as independent of the others
         self.entered = {}          # member id -> the moment it entered, where a `reached` condition read one (AGREE)
         self.reg = law().registry
         self.ops = op_rows(self.reg)
@@ -846,10 +848,9 @@ class Reckoner:
         b = o if isinstance(o, V) else value_of(o, 'an operand', self.notes)
         if isinstance(a.v, Fraction) and isinstance(b.v, Fraction):
             if a.unit != b.unit:
-                try:
-                    b = to_unit(b, a.unit, 'a comparison')
-                except Refused:
-                    return None
+                # two quantities of different kinds are not compared, and a member is not quietly left out for it:
+                # the reading is refused, as `min`, `max` and `order` refuse it (to_unit says which two)
+                b = to_unit(b, a.unit, 'a comparison')
             return (a.v > b.v) - (a.v < b.v)
         if isinstance(a.v, str) and isinstance(b.v, str):
             try:
@@ -930,7 +931,7 @@ class Reckoner:
                 return V(Fraction(0))
             unit = vs[0].unit
             vs = [to_unit(v, unit, f"step {s['id']}") for v in vs]
-            return V(sum(v.v for v in vs), unit, hyp(*[v.u for v in vs]),
+            return V(sum(v.v for v in vs), unit, self.hyp(*[v.u for v in vs]),
                      any(v.approx for v in vs), {v.member: v.u * v.u for v in vs if v.u})
         return self._each_group(s, total)
 
@@ -959,8 +960,17 @@ class Reckoner:
         keyed = [(self._at(m, s['path'], s['id']), m) for m in sorted(ms, key=lambda m: m.id)]
         import functools
 
+        def text(v):
+            v = v.v if isinstance(v, V) else v
+            return v if isinstance(v, str) else None
+
         def cmp(a, b):
             c = self._cmp(a[0], b[0])
+            if c is None and text(a[0]) is not None and text(b[0]) is not None:
+                # TEXT IS ORDERED BY ITS CHARACTERS — case aside first, then exactly — where it is no position of the
+                # law's: a title, a name. Two positions of different systems are still not ordered.
+                ka, kb = (unicodedata.normalize('NFC', text(x[0])) for x in (a, b))
+                c = ((ka.casefold(), ka) > (kb.casefold(), kb)) - ((ka.casefold(), ka) < (kb.casefold(), kb))
             if c is None:
                 raise Refused(f"step {s['id']}: {a[1].id} and {b[1].id} are not ordered one against the other")
             return c
@@ -1022,7 +1032,7 @@ class Reckoner:
         d = a.v - b.v
         if s['is'] == 'equal' and s.get('band') is not None:
             band = to_unit(value_of(s['band'], f"step {s['id']}.band", self.notes), a.unit, f"step {s['id']}.band").v
-            ud = hyp(a.u, b.u)
+            ud = self.hyp(a.u, b.u)
             self.lines.append(f"  |Δ| = {dmseq.show(abs(d))}" + (f", u(Δ) {dmseq.rounded(ud, dmseq.u_places(ud))}, "
                               f"k·u(Δ) {dmseq.rounded(self.k * ud, dmseq.u_places(ud))}" if ud else '')
                               + f", band {dmseq.show(band)}")
@@ -1055,8 +1065,14 @@ class Reckoner:
     def op_difference(self, s):
         a, b = self._two(s)
         b = to_unit(b, a.unit, f"step {s['id']}")
-        return V(a.v - b.v, a.unit, hyp(a.u, b.u), a.approx or b.approx, {**a.budget, **b.budget} or budget(
+        return V(a.v - b.v, a.unit, self.hyp(a.u, b.u), a.approx or b.approx, {**a.budget, **b.budget} or budget(
             **{s.get('of'): a.u, s.get('with'): b.u}))
+
+    def hyp(self, *us):
+        """`hyp`, and a record that two or more uncertainties were combined as independent ones, which the result says."""
+        if sum(u is not None for u in us) >= 2:
+            self.independent = True
+        return hyp(*us)
 
     def _rel(self, r, a, b, na, nb):
         """The relative rule: u(r)/|r| = √((u(a)/a)² + (u(b)/b)²)."""
@@ -1064,6 +1080,8 @@ class Reckoner:
         for n, x in ((na, a), (nb, b)):
             if x is not None and x.u is not None and x.v:
                 parts[n] = (x.u / abs(x.v)) ** 2 * r * r
+        if len(parts) >= 2:
+            self.independent = True
         u = sqrt(sum(parts.values()))[0] if parts else None
         return u, parts
 
@@ -1230,7 +1248,7 @@ class Reckoner:
             else:
                 res[n] = {'minute': Fraction(60), 'second': Fraction(1), 'millisecond': Fraction(1, 1000)}[dmcal.moment(x).resolution]
         secs = Fraction(pa[1] - pb[1]) * (86400 if pa[0] == 'day' else Fraction(1, 1000))
-        u = hyp(*[sqrt(r * r / 12)[0] for r in res.values()])
+        u = self.hyp(*[sqrt(r * r / 12)[0] for r in res.values()])
         return to_unit(V(secs, 'second', u), s['unit'], f"step {s['id']}")
 
     def _geo(self, position, sid):
@@ -1444,7 +1462,7 @@ class Reckoner:
                 raise Refused(f"step {s['id']}: {name}.{ch} at {p} is not read — {r['why']}")
         v0, v1 = (x['value'] if isinstance(x['value'], Fraction) else dmseq.exact(x['value']) for x in (r0, r1))
         u = ser.u_of(ch)
-        d = V(v1 - v0, ser.channels[ch].get('unit'), hyp(u, u) if u else None)
+        d = V(v1 - v0, ser.channels[ch].get('unit'), self.hyp(u, u) if u else None)
         return self._product(d, V(x1 - x0, ser.unit), -1, s)
 
     def op_trend(self, s):
@@ -1562,7 +1580,7 @@ class Reckoner:
                 out.append(Member(f"@{dmseq.show(p)}", {'verdict': 'one only', 'in': na if p in la else nb}, None))
                 continue
             d = abs(la[p][0] - lb[p][0])
-            ud = hyp(ua, ub)
+            ud = self.hyp(ua, ub)
             verdict = 'agree' if d == 0 else 'compatible' if ud and d <= self.k * ud else 'differ'
             out.append(Member(f"@{dmseq.show(p)}", {'verdict': verdict, 'difference': dmseq.show(d)}, None))
         return out
@@ -1583,13 +1601,24 @@ class Reckoner:
                 raise Refused(f"step {s['id']}: a window is counted in whole days")
             lo = day_at - int(days) + 1
         elif w.get('level') in ('year', 'month') and isinstance(w.get('count'), int):
-            y, m, _d = (int(x) for x in dmcal.from_day(day_at, 'gregory').split('-'))
+            # THE CALENDAR THE WINDOW NAMES (`in`, a time system of the law), read through the calendar its row carries:
+            # a month of the Solar Hijri year is not a Gregorian one. A month is stepped back through that calendar's
+            # own month starts, so a calendar of thirteen months is counted as it is.
+            cal = self._calendar_of(w.get('in'), s['id'])
             n = w['count'] - 1
+            def parts(day):
+                txt = dmcal.from_day(day, cal)
+                pre, _c, ymd = txt.rpartition(':')
+                y, m, d = (int(x) for x in ymd.split('-'))
+                return (pre + ':' if pre else ''), y, m, d
+            pre, y, m, d = parts(day_at)
             if w['level'] == 'year':
-                lo = dmcal.to_day(f"{y - n:04d}-01-01")
+                lo = dmcal.to_day(f"{pre}{y - n:04d}-01-01" if not pre else f"{pre}{y - n}-01-01")
             else:
-                k = y * 12 + m - 1 - n
-                lo = dmcal.to_day(f"{k // 12:04d}-{k % 12 + 1:02d}-01")
+                lo = day_at - (d - 1)
+                for _i in range(n):
+                    _p, _y, _m, _d = parts(lo - 1)
+                    lo = lo - 1 - (_d - 1)
         else:
             raise Refused(f"step {s['id']}: `within` is a sliding `measure`, or `level: year | month` with a `count`")
         used, counted = Fraction(0), 0
@@ -1610,8 +1639,20 @@ class Reckoner:
                     if d is not None and lo <= d <= day_at:
                         counted += 1
                         self.lines.append(f"  {wh}: inside")
-        self.lines.append(f"  the window: {dmcal.from_day(lo, 'gregory')} to {dmcal.from_day(day_at, 'gregory')}")
+        _cal = self._calendar_of(w.get('in'), s['id']) if w.get('level') else 'gregory'
+        self.lines.append(f"  the window: {dmcal.from_day(lo, _cal)} to {dmcal.from_day(day_at, _cal)}")
         return V(used, 'day') if used else V(Fraction(counted), 'item')
+
+    def _calendar_of(self, system, sid):
+        """The calendar a time system of the law names (its row's `calendar`); the civil Gregorian one where none is
+        named. A system that is no time system of the law is refused."""
+        if system is None:
+            return 'gregory'
+        row = next((r for r in (self.reg('anchor_systems') or []) if isinstance(r, dict) and r.get('system') == system
+                    and r.get('dimension') == 'time'), None)
+        if row is None or not row.get('calendar'):
+            raise Refused(f"step {sid}: `in: {system}` is no time system of the law that names a calendar")
+        return row['calendar']
 
     def op_weigh(self, s):
         ref = s['weighing']
@@ -1788,6 +1829,9 @@ def _find(g, ref):
 def _result(kind, value, rk, pin):
     u = value.u if isinstance(value, V) else None
     unit = value.unit if isinstance(value, V) else None
+    if rk.independent:
+        rk.notes.append("u: uncertainties combined in quadrature, each input taken as independent of the others "
+                        "(GUM 5.1.2) — inputs that are correlated would make it larger or smaller, and are not modelled")
     return Result(kind, value, u, unit, rk.lines, pin, rk.notes)
 
 
@@ -1843,6 +1887,8 @@ def used(bean, clause, attr, *, at, root=ROOT, pin=None, zone=None):
     its `within` ending at `at`, read from each member's `attr` (N9, read for AGREE's ledger)."""
     g = Garden(root, pin)
     c = (g.bean(bean).get('clauses') or {}).get(clause) or {}
+    if not isinstance(c.get('used_by'), str) or not c['used_by']:
+        raise Refused(f"{bean}:clauses.{clause} names no `used_by` — the selection of the entries that use its allowance")
     ref = c['used_by'] if ':' in c['used_by'] else f"{bean}:{c['used_by']}"
     sb, entry = _find(g, ref)
     rk = Reckoner(g, sb, None, pin, zone=zone)
