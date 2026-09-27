@@ -509,6 +509,13 @@ put("beans/silo-controller.md", _ctl)
 # the first; the opt-in act; the cookbook's recipe.
 out, rc = dmview("check")
 check("dmview check: the page and its drawings agree", rc == 0 and "the page and its drawings agree" in out, out[-800:])
+_page = get("beans/grain-page.md")
+for _bad in ("file:../drawings.py", "file:/tmp/drawings.py", "file:bin/../../drawings.py", "file:beans/grain-page.md"):
+    put("beans/grain-page.md", _page.replace("drawings: file:bin/drawings.py", f"drawings: {_bad}", 1))
+    out, rc = dmview("check")
+    check(f"the drawing module is code the host runs: `view.drawings: {_bad}`, outside the garden or no Python file, is "
+          f"refused, and nothing of it runs", rc != 0 and "inside the garden" in out, out[-600:])
+put("beans/grain-page.md", _page)
 out, rc = dmview("elements", "silo")
 check("dmview elements: ids are the slugs of labels, and each records the being it depicts",
       rc == 0 and re.search(r"(?m)^silo\s+store\s+silo-controller", out) and re.search(r"(?m)^start-fans\s+action", out), out)
