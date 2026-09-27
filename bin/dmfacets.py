@@ -11,10 +11,11 @@ because the cost of the phase is not the number of keys — it is how many of th
   A declaration that CHANGES it retroactively re-classifies beans that already passed the gate. That is
   a MAJOR bump by this garden's own versioning rule and it belongs to the operator.
 
-The dangerous middle is the point of the whole exercise: `facet()` reads cardinality from
-`items[0]['value']` — the FIRST garden's value — so a key whose shape differs between gardens merges by
-whichever one arrived first. For those keys there is no "current behaviour" to ratify; declaring one
-picks a winner, and that is a decision, not a tidy-up.
+The dangerous middle is the point of the whole exercise: a key whose shape differs between gardens is read
+by `facet_of_all()` from every garden's value — a list against a scalar merges as a set, any other
+disagreement as one value, a conflict kept whole — the same in any order, and rarely what either garden
+meant. For those keys the fallback is a floor, not a behaviour to ratify; declaring one picks what the key
+is, and that is a decision, not a tidy-up.
 
 This tool imports bin/dmmerge.py rather than restating its rules: the fallback it reports must be the
 fallback that runs.
@@ -97,8 +98,8 @@ def classify(key, rec):
         return 'RATIFIES', fallback[shapes[0]], f"one shape everywhere ({shapes[0]}, {sum(rec['shapes'].values())}x)"
     counts = ', '.join(f"{s}x{n}" for s, n in sorted(rec['shapes'].items()))
     return 'MOVES', ' | '.join(sorted({fallback[s] for s in shapes})), \
-        f"SHAPE VARIES ({counts}) — the fallback reads the FIRST garden's value, so this key merges by " \
-        f"arrival order today and any declaration picks a winner"
+        f"SHAPE VARIES ({counts}) — the fallback reads every garden's value and merges a list against a " \
+        f"scalar as a set, any other disagreement as one conflicted value: a declaration picks what it is"
 
 
 NAME_HEURISTIC = "leaf_order() infers this from the KEY'S NAME, not from a declaration"
@@ -172,7 +173,7 @@ def main():
 
     print(f"\nTHE SPLIT (declarable keys only): {len(buckets['MOVES'])} move · "
           f"{len(buckets['RATIFIES'])} ratify · {len(buckets['DECLARED'])} already declared")
-    print("\nMEASURED ON ONE GARDEN, WHICH IS THE LIMIT OF THIS REPORT. `facet()` reads the FIRST\n"
+    print("\nMEASURED ON ONE GARDEN, WHICH IS THE LIMIT OF THIS REPORT. The fallback reads every\n"
           "garden's value, so the risk it measures is disagreement BETWEEN gardens. This corpus can only\n"
           "show where one garden is already inconsistent with itself. A key listed as RATIFIES here is\n"
           "safe to declare AS THIS GARDEN MERGES TODAY; a second garden may still disagree about it, and\n"

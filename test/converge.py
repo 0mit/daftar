@@ -443,6 +443,21 @@ _ok = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '
 check("...while a law it can read merges as before", 'cannot be read' not in _ok.stderr and 'Traceback' not in _ok.stderr
       and 'fingerprint:' in _ok.stdout, _ok.stderr[-400:])
 
+# ---------------------------------------------------------------- a member no term describes: its shape read from all
+def _box(garden, val):
+    return [{'garden': garden, 'id': 'box', 'fm': {'bean': 'box', 'genos': 'host', 'nature': 'soma', 'title': 'box',
+             'status': 'active', 'summary': 'box', 'owns': {'mixed': val},
+             'identity': {'status': 'confirmed', 'anchors': [{'key': 'serial', 'value': 'SN-MIX', 'class': 'hardware',
+                                                              'establishing': True}]}}}]
+_orders = []
+for _a, _b in ((['x', 'y'], 'z'), ({'k': 1}, 'z'), ({'k': 1}, ['x'])):
+    _one = M.merge_component(_box('ga', _a) + _box('gb', _b))['facts']['owns']
+    _two = M.merge_component(_box('gb', _b) + _box('ga', _a))['facts']['owns']
+    _orders.append((json.dumps(_one, sort_keys=True, default=str) == json.dumps(_two, sort_keys=True, default=str), _one))
+check("a member no term describes merges alike whichever garden comes first: a list against a scalar is one set, a "
+      "mapping against either is one value, both kept",
+      all(o for o, _v in _orders) and "'z'" in str(_orders[0][1]) and "'x'" in str(_orders[0][1]), _orders)
+
 # ---------------------------------------------------------------- a version refines only at a component's boundary
 _v = [(a, b, M.subsumes(a, b, 'version')) for a, b in (('AlmaLinux 9', 'AlmaLinux 9.4'), ('v1', 'v1.0'), ('12', '12-rc1'),
                                                         ('9', '90'), ('1.2', '1.23'), ('v1', 'v10'), ('9.4', '9'))]
