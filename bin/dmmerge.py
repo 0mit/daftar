@@ -594,31 +594,24 @@ def load_minted():
 MINTED, MINT_RE, MINT_FORM, MINT_GENE = load_minted()
 # The subsumption orders, read from the law rather than known by name. No fallback: an empty registry
 # means no key is ordered, which is a visible loss of merging rather than a silent one.
+# READ AS THE GATE READS THEM: the law's rows, a garden's restatement where it declares one, and the rows it adds
+# (`registry_rows`). Read from the standard alone, a garden that added a system or an order merged by a law its own
+# gate did not apply.
 def load_leaf_orders():
-    path = os.path.join(ROOT, 'seed', 'std-vocab.md')
-    if not os.path.exists(path):
-        return []
-    fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
-    return [r for r in (fm.get('leaf_orders') or []) if isinstance(r, dict)]
+    return registry_rows('leaf_orders')
 
 
 LEAF_ORDERS = load_leaf_orders()
 
 
-SYSTEM_ROWS = {r['system']: r for r in ((dmparse.loads(dmparse.read(os.path.join(ROOT, 'seed', 'std-vocab.md'))[0] or '') or {})
-                                        .get('anchor_systems') or []) if isinstance(r, dict) and r.get('system')} \
-    if os.path.exists(os.path.join(ROOT, 'seed', 'std-vocab.md')) else {}
+SYSTEM_ROWS = {r['system']: r for r in registry_rows('anchor_systems') if r.get('system')}
 
 
 def load_time_systems():
     """The rows of `anchor_systems` that are CALENDARS — a system of the time dimension that names one — most
     specific form first, so a tagged reading is never taken for an untagged one."""
-    path = os.path.join(ROOT, 'seed', 'std-vocab.md')
-    if not os.path.exists(path):
-        return []
-    fm = dmparse.loads(dmparse.read(path)[0] or '') or {}
-    rows = [r for r in (fm.get('anchor_systems') or []) if isinstance(r, dict) and r.get('dimension') == 'time'
-            and r.get('calendar') and r.get('pattern') not in (None, 'none')]
+    rows = [r for r in registry_rows('anchor_systems') if r.get('dimension') == 'time'
+            and r.get('calendar') and isinstance(r.get('pattern'), str) and r.get('pattern') != 'none']
     return sorted(rows, key=lambda r: -len(r['pattern']))
 
 
