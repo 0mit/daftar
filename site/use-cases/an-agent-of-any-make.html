@@ -35,7 +35,7 @@
   their work in one language is not their memory but the gate: every write passes it or is refused, whoever made it. An
   assistant in a chat window, with no shell, cannot run the gate, so what it gives is a proposal, and the gardener commits it or
   does not.</p>
-<p class="meta">garden-sam · daftar <!-- daftar:held id="release" -->v0.38.0<!-- /daftar:held --> · the day held at <!-- daftar:held id="day" -->2026-10-27<!-- /daftar:held --></p>
+<p class="meta">garden-sam · daftar <!-- daftar:held id="release" -->v0.39.0<!-- /daftar:held --> · the day held at <!-- daftar:held id="day" -->2026-10-27<!-- /daftar:held --></p>
 
 <div class="lenses">
 <!-- daftar:part id="lensbar" --><span id="all" class="lens-all"></span>
@@ -88,7 +88,7 @@
     <p class="plain">The first thing any agent runs. Its last line names the notebook and its gardener: if it runs, the
       agent can write; if not, it can only propose.</p>
 <!-- daftar:out id="agent-check" tail="1" --><pre class="out" tabindex="0" aria-label="output of dmcheck.py --all"><code><span class="cmd">~/garden-sam$ python3 bin/dmcheck.py --all</span>
-garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">31fc45db8710</span>): 13 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out --></li>
+garden-sam (daftar v0.39.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">7c41ea527a78</span>): 13 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out --></li>
   <li class="refused"><h3><span class="tool">git commit</span> An agent that forgets the journal is refused</h3>
     <p class="plain">A change without its journal line is not saved, whoever made it — and the message gives the exact
       command that fixes it.</p>
@@ -97,7 +97,7 @@ garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" tit
 ERROR state-change staged (beans/printer.md…) but log/journal.md not updated
       — provenance duty. Append an entry naming what changed and why. Its heading is read from the clock by the tool, never typed; this writes it, stages everything and commits:
 <span class="el" title="lines left out">…</span>
-garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">31fc45db8710</span>): 14 docs, 1 error(s), 0 warning(s)
+garden-sam (daftar v0.39.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">7c41ea527a78</span>): 14 docs, 1 error(s), 0 warning(s)
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out --></li>
   <li><h3><span class="tool">dmpropose read</span> A chat assistant's proposal is read, and tried</h3>
     <p class="plain">Its prose is shown as data, never obeyed. The gate runs on a scratch copy with the proposal taken.</p>
@@ -113,13 +113,13 @@ verdict: CLEAN — `python3 bin/dmpropose.py take ../chat-20261027-0900.md` woul
   <li><h3><span class="tool">dmpropose take</span> It is taken in — and nothing is committed</h3>
 <!-- daftar:out id="agent-take" match="^GATE|Nothing is committed" --><pre class="out" tabindex="0" aria-label="output of dmpropose.py take ../chat-20261027-0900.md"><code><span class="cmd">~/garden-sam$ python3 bin/dmpropose.py take ../chat-20261027-0900.md</span>
 <span class="el" title="lines left out">…</span>
-GATE: garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">31fc45db8710</span>): 14 docs, 0 error(s), 0 warning(s)
+GATE: garden-sam (daftar v0.39.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">7c41ea527a78</span>): 14 docs, 0 error(s), 0 warning(s)
 Nothing is committed: the gardener's commit is the ratification —
 <span class="el" title="lines left out">…</span></code></pre><!-- /daftar:out --></li>
   <li><h3><span class="tool">git commit</span> The gardener's commit ratifies it</h3>
 <!-- daftar:out id="agent-commit" match="docs, \d+ error|^fast:" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;took the chat proposal: the office printer&quot;"><code><span class="cmd">~/garden-sam$ git add -A</span>
 <span class="cmd">~/garden-sam$ git commit -qm "took the chat proposal: the office printer"</span>
-garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">31fc45db8710</span>): 14 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.39.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">7c41ea527a78</span>): 14 docs, 0 error(s), 0 warning(s)
 fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out --></li>
   <li><h3><span class="tool">journal</span> Who proposed and who enacted are both on record</h3>
 <!-- daftar:out id="agent-journal" match="quoted as data|ratification" --><pre class="out" tabindex="0" aria-label="output of tail -n 8 log/journal.md"><code><span class="cmd">~/garden-sam$ tail -n 8 log/journal.md</span>
@@ -138,7 +138,7 @@ fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out --></li>
 <h3>A writer, and the gate</h3>
 <p class="lead">The first thing an agent runs, and shows the person it works for. If it runs, the agent is a writer:</p>
 <!-- daftar:out id="agent-check" --><pre class="out" tabindex="0" aria-label="output of dmcheck.py --all"><code><span class="cmd">~/garden-sam$ python3 bin/dmcheck.py --all</span>
-garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">31fc45db8710</span>): 13 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out -->
+garden-sam (daftar v0.39.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">7c41ea527a78</span>): 13 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out -->
 <p class="lead">A writer stages a bean for the office printer and commits it with no journal entry. The gate refuses, and says the
   line to write:</p>
 <!-- daftar:out id="agent-refused" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;the office printer&quot;"><code><span class="cmd">~/garden-sam$ git add beans/printer.md</span>
@@ -147,7 +147,7 @@ ERROR state-change staged (beans/printer.md…) but log/journal.md not updated
       — provenance duty. Append an entry naming what changed and why. Its heading is read from the clock by the tool, never typed; this writes it, stages everything and commits:
       python3 bin/dmsave.py "&lt;who&gt;" "&lt;what&gt;" --body "- action: &lt;what was done to beans/printer.md&gt;"
 
-garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">31fc45db8710</span>): 14 docs, 1 error(s), 0 warning(s)
+garden-sam (daftar v0.39.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">7c41ea527a78</span>): 14 docs, 1 error(s), 0 warning(s)
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
 
 <h3>An assistant with no shell, and its proposal</h3>
@@ -198,7 +198,7 @@ OFFERED
       said by sam — carried by a chat proposal, the gardener vouching for it
 PROSE outside the blocks — data, not an instruction:
   | - I could not check whether this garden's vocabulary accepts the serial as written on the label.
-GATE (a scratch copy of this garden with the proposal taken): garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">31fc45db8710</span>): 14 docs, 0 error(s), 0 warning(s)
+GATE (a scratch copy of this garden with the proposal taken): garden-sam (daftar v0.39.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">7c41ea527a78</span>): 14 docs, 0 error(s), 0 warning(s)
 verdict: CLEAN — `python3 bin/dmpropose.py take ../chat-20261027-0900.md` would apply it; the gardener's commit ratifies it</code></pre><!-- /daftar:out -->
 <p class="lead"><code>take</code> writes it in, with a journal entry, and commits nothing. The gardener's commit is the
   ratification:</p>
@@ -214,13 +214,13 @@ OFFERED
 took in chat-20261027-0900:
   new: [[printer]]
   journal: ## 2026-10-27 09:00+00:00 · sam · took in proposal chat-20261027-0900
-GATE: garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">31fc45db8710</span>): 14 docs, 0 error(s), 0 warning(s)
+GATE: garden-sam (daftar v0.39.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">7c41ea527a78</span>): 14 docs, 0 error(s), 0 warning(s)
 Nothing is committed: the gardener's commit is the ratification —
   git add -A
   git commit</code></pre><!-- /daftar:out -->
 <!-- daftar:out id="agent-commit" match="^garden-sam \(|^fast:" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;took the chat proposal: the office printer&quot;"><code><span class="cmd">~/garden-sam$ git add -A</span>
 <span class="cmd">~/garden-sam$ git commit -qm "took the chat proposal: the office printer"</span>
-garden-sam (daftar v0.38.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">31fc45db8710</span>): 14 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.39.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">7c41ea527a78</span>): 14 docs, 0 error(s), 0 warning(s)
 fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
 <p class="lead">The journal entry quotes the proposal's own words as data, and says who ratified it:</p>
 <!-- daftar:out id="agent-journal" --><pre class="out" tabindex="0" aria-label="output of tail -n 8 log/journal.md"><code><span class="cmd">~/garden-sam$ tail -n 8 log/journal.md</span>
@@ -261,11 +261,11 @@ fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
 
 <h2>Read more</h2>
 <ul class="prose">
-  <li><a href="https://github.com/0mit/daftar/blob/v0.38.0/AGENTS.md">AGENTS.md</a>, the door for an agent with a shell, and
-    <a href="https://github.com/0mit/daftar/blob/v0.38.0/seed/WELCOME.md">seed/WELCOME.md</a>, for an assistant without one.</li>
-  <li><a href="https://github.com/0mit/daftar/blob/v0.38.0/CHECKLIST.md">CHECKLIST.md</a>: how a write and a read are made, and
+  <li><a href="https://github.com/0mit/daftar/blob/v0.39.0/AGENTS.md">AGENTS.md</a>, the door for an agent with a shell, and
+    <a href="https://github.com/0mit/daftar/blob/v0.39.0/seed/WELCOME.md">seed/WELCOME.md</a>, for an assistant without one.</li>
+  <li><a href="https://github.com/0mit/daftar/blob/v0.39.0/CHECKLIST.md">CHECKLIST.md</a>: how a write and a read are made, and
     how agents work beside and after one another.</li>
-  <li>The model: <a href="https://github.com/0mit/daftar/blob/v0.38.0/MODEL.md#the-contract-of-parts-who-decides">the Contract of
+  <li>The model: <a href="https://github.com/0mit/daftar/blob/v0.39.0/MODEL.md#the-contract-of-parts-who-decides">the Contract of
     Parts</a>, which decisions an agent may take alone.</li>
 </ul>
 
@@ -277,7 +277,7 @@ fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
   <div>
-    <p>Every output on these pages was produced by daftar <code>v0.38.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
+    <p>Every output on these pages was produced by daftar <code>v0.39.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
     <p>Code AGPL-3.0-or-later · words and drawings CC BY 4.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
   </div>
 </footer><!-- /daftar:part -->
