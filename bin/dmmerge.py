@@ -827,7 +827,10 @@ def subsumes(a, b, order, key=None):     # True if a is subsumed by (more-genera
     if order == 'instant':
         return _instant_contains(a, b)
     if order == 'version':
-        return str(b).startswith(str(a))                     # "AlmaLinux 9" ⊑ "AlmaLinux 9.8"
+        # "AlmaLinux 9" ⊑ "AlmaLinux 9.8": the longer continues the shorter at a component's boundary. "9" is not "90",
+        # nor "1.2" "1.23", nor "v1" "v10": a prefix that ends inside a number is another release, and a disagreement
+        a_, b_ = str(a), str(b)
+        return bool(a_) and b_.startswith(a_) and (not a_[-1].isalnum() or b_[len(a_)] in '.-_+ ')
     if order == 'cidr':
         try:
             na, nb = ipaddress.ip_network(str(a), False), ipaddress.ip_network(str(b), False)

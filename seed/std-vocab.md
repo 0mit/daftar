@@ -1211,7 +1211,7 @@ leaf_orders:
   - order: version
     suffix: _version
     exact: [os, version]
-    why: "a release string is absorbed by a more precise one that starts with it"
+    why: "a release string is absorbed by a more precise one that starts with it and goes on at a component's boundary — a `.`, `-`, `_`, `+` or a space: `9` by `9.4`, never by `90`"
   - order: containment
     system: unix-filesystem
     also_systems: [windows-filesystem]

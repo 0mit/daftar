@@ -443,6 +443,13 @@ _ok = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '
 check("...while a law it can read merges as before", 'cannot be read' not in _ok.stderr and 'Traceback' not in _ok.stderr
       and 'fingerprint:' in _ok.stdout, _ok.stderr[-400:])
 
+# ---------------------------------------------------------------- a version refines only at a component's boundary
+_v = [(a, b, M.subsumes(a, b, 'version')) for a, b in (('AlmaLinux 9', 'AlmaLinux 9.4'), ('v1', 'v1.0'), ('12', '12-rc1'),
+                                                        ('9', '90'), ('1.2', '1.23'), ('v1', 'v10'), ('9.4', '9'))]
+check("the `version` order: a release is refined by one that goes on at a component's boundary, and never by one that "
+      "only starts with its text — `9` and `90` are two releases, a disagreement",
+      [x[2] for x in _v] == [True, True, True, False, False, False, False], _v)
+
 # ---------------------------------------------------------------- three ways: the base git hands the driver (%O)
 # Two branches of ONE garden share a base, and the driver reads it: what one side changed and the other left as the
 # base had it is that side's change, and stands — a removal among them, which must not come back from the side that
