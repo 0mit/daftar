@@ -3196,6 +3196,12 @@ an agreement's bean for what it shares — and a `forbidden` one is a no that no
 refusal about herself is not undone by a wider grant. Delegating a ratification is the gardener's own act, or the
 Contract of Parts would be rewritable by anyone who can write a grant.
 
+WHAT AN AGREEMENT SHARES IS WHAT ITS PARTIES BROUGHT (25.0). An agreement's grant counted over whatever its `over`
+selected, so whoever could write one agreement could open any person's bean, or any special-category record, to anyone.
+An agreement speaks for the people who accepted it, and for nothing they did not bring: its own bean, and a bean one of
+them owns or is the record of. Beyond that its grant opens nothing, and the gate warns rather than refuses, because a
+selection grows with the garden and a bean somebody else adds must not stop their commit.
+
 ## held_form
 
 GIT KEEPS ONLY WHAT MAY TRAVEL. An entry that cannot is sealed: the bean keeps an opaque pointer, and the entry is kept

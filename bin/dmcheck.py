@@ -3345,13 +3345,23 @@ def check_sensitivity():
 
 def check_grants():
     """N31, N16: a `ratify:` grant is the gardener's own act, on the gardener's bean; a position names a term, or
-    `title`, `summary`, `body`."""
+    `title`, `summary`, `body`. And an agreement decides over its own bean and what a party who accepted it owns or is
+    the record of (bin/dmpass.py `shares`): a grant it holds over any other bean opens nothing there, and is warned,
+    naming them — warned, not refused, because a selection grows as the garden does, and a bean another writer adds
+    must not stop their commit."""
     for (_ib, base), (fm, _b) in docs.items():
         gs = fm.get('grants')
         for key, g in (gs.items() if isinstance(gs, dict) else []):
             if not isinstance(g, dict):
                 continue
             at = f"{base}: grants[{key}]"
+            if fm.get('genos') == 'contract' and g.get('over') is not None:
+                _sel = dmpass._select(base, g['over'], ROOT)
+                _out = sorted(b for b in _sel or () if not dmpass.shares(base, fm, b, (docs.get((True, b)) or ({}, ''))[0]))
+                if _out:
+                    warns.append(f"{at} is over {', '.join(_out[:5])}{' and more' if len(_out) > 5 else ''}, which this "
+                                 f"agreement does not share: it opens nothing there — an agreement decides over its own "
+                                 f"bean and what a party who accepted it owns or is the record of")
             if str(g.get('act', '')).startswith('ratify:') and not (base == LAWVIEW.gardener and dmpass.by_a_person(fm)):
                 _priv_found('error', f"{at} delegates {g['act']}: a ratification is delegated only by the gardener's "
                                      f"own act (N16) — on the gardener's bean, `provenance.src: asserted-by-human`", 'grants')

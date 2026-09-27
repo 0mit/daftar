@@ -3626,7 +3626,7 @@ terms:
         note: { in: prose }
     merge: { cardinality: multi, order: by-who }
   - term: grants
-    meaning: "who, besides the gardener, may read, write, act on or ratify what: one grant each. CLOSED BY DEFAULT: nobody but the gardener may do what no grant opens. A grant is the decision of whoever holds it — the gardener's on the gardener's own bean, a person's on her own bean for her own record, an agreement's on its bean for what it shares. A `forbidden` grant is a refusal no `permitted` one passes: held by the gardener, a ceiling; held by a person on her own bean, her own no. Read by bin/dmpass.py (`may`) and by no copy"
+    meaning: "who, besides the gardener, may read, write, act on or ratify what: one grant each. CLOSED BY DEFAULT: nobody but the gardener may do what no grant opens. A grant is the decision of whoever holds it — the gardener's on the gardener's own bean, a person's on her own bean for her own record, an agreement's on its bean, over its own bean and what a party who accepted it owns or is the record of, and over nothing else. A `forbidden` grant is a refusal no `permitted` one passes: held by the gardener, a ceiling; held by a person on her own bean, her own no. Read by bin/dmpass.py (`may`) and by no copy"
     context_keys: [grants]
     schema:
       shape: open_map_of_entries

@@ -348,8 +348,9 @@ ratifies. An agent that meets something it may not decide parks it in `log/pendi
   Otherwise they are an opaque id (`p-<8 hex>`), their name and the ways to reach them held off git; and their future
   whereabouts are held off git whatever they consented to.
 - **Who may do what is closed by default** (`grants`, read by `bin/dmpass.py may`): the gardener may; anyone else may
-  what a grant opens — held by the gardener, by the person the record is of or about, or by an agreement — and a
-  `forbidden` grant refuses what any `permitted` one would open.
+  what a grant opens — held by the gardener, by the person the record is of or about, or by an agreement over its own
+  bean and what a party who accepted it owns or is the record of — and a `forbidden` grant refuses what any
+  `permitted` one would open. An agreement's grant over any other bean opens nothing there, and the gate says so.
 
 ## Merging
 Gardens merge object by object, matched on establishing anchors: losslessly, in any order, with the same
