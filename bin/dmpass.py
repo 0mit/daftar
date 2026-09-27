@@ -1110,7 +1110,10 @@ def _during(d, at):
         return True
     import time
     try:
-        now = _day(at) if at else int(time.time() // 86400)
+        # TODAY IN THE SAME COUNT AS THE BOUNDS: dmcal's day number. It was the count of days since 1970, and a bound's is
+        # dmcal's (about 739,000 now against about 20,700), so a grant with a `to` never ended and one with a `from`
+        # never began, wherever no `at` was given — the view host, the hub, the gate.
+        now = _day(at) if at else _day(time.strftime('%Y-%m-%d', time.gmtime(time.time())))
         lo = _day(d['from']) if d.get('from') is not None else None
         hi = _day(d['to']) if d.get('to') is not None else None
     except Exception:
