@@ -310,6 +310,8 @@ ratifies. An agent that meets something it may not decide parks it in `log/pendi
   - a series' part a commit already holds, changed: a part is written once, and what is new is a part of its own;
   - a person who is not the gardener, added by name with no consent of theirs recorded, and a future whereabouts of
     one in git (see below);
+  - special-category material a commit adds unsealed: a value committed is in every clone for good, so it is sealed
+    first (see below); what is already in git is warned, by its path;
   - an entry sealed or unsealed with no `- held: <bean> <key> added|erased` line in the journal.
 - The gate reads the law its garden pins, at the one path `seed/std-vocab.md`. A gate that cannot load it, or
   that loads another version than the pin, refuses: it never falls back to another copy.
@@ -334,6 +336,9 @@ ratifies. An agent that meets something it may not decide parks it in `log/pendi
   basis?, until?}` in place of its attributes — and what it held is kept in a store a host resolves through its
   `roots` (`bin/dmheld.py`). Git keeps only the pointer; the gate never reads a store; a store is checked where it is,
   by the pre-commit hook, which runs on the host: a pointer a commit adds that resolves nowhere here is refused.
+  Special-category material is sealed BEFORE the commit that would carry it, and the gate refuses one that adds it
+  unsealed: no seal takes back a value already in the history, which only a rewrite of every copy removes
+  (`seed/COOKBOOK.md`, "What harm can come of").
   Erasure for a person deletes what the stores here hold of them, and the pointers stay, saying so.
 - **Another person is kept by name only on their own word**: an agreement held here that they accepted (named by
   `consent`, or in whose `parties` they stand with `accepted`), or, for the gardener of a garden this one has met, the

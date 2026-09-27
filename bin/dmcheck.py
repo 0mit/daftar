@@ -3310,8 +3310,10 @@ def check_sealed():
 
 
 def check_sensitivity():
-    """Step 1: a bean's sensitivity is DERIVED (bin/dmpass.py); a mark below it stands only on a person's word, and
-    special-category material unsealed in git is warned — by its path, never its value."""
+    """Step 1: a bean's sensitivity is DERIVED (bin/dmpass.py); a mark below it stands only on a person's word; and
+    special-category material unsealed in git is REFUSED where a commit adds it, and warned where it is already there —
+    by its path, never its value. A value committed is in every clone and every copy of the history for good, and no
+    seal made afterwards takes it back: what harm can come of is sealed BEFORE the commit that would carry it."""
     for (_ib, base), (fm, _b) in docs.items():
         level, why = dmpass.derived_sensitivity(fm, LAWVIEW)
         s = fm.get('sensitivity')
@@ -3319,10 +3321,26 @@ def check_sensitivity():
                 dmpass.LEVELS.index(s['is']) < dmpass.LEVELS.index(level) and not dmpass.by_a_person(fm):
             _priv_found('error', f"{base}: is marked {s['is']}, below the {level} its content derives "
                                  f"({'; '.join(why)}): lowering is a person's own word — Contract E", 'sensitivity')
-        if level == 'special-category':
-            for w in why:
-                warns.append(f"{base}: holds special-category material at {w.rsplit(' at ', 1)[-1]}: hold it off git "
-                             f"— bin/dmheld.py put")
+        if level != 'special-category':
+            continue
+        path = f"{'beans' if _ib else 'mappings'}/{base}.md"
+        before = set()
+        if path in STAGED and path not in STAGED_ADDED:
+            _was = dmparse.split_front_matter(_head_text(path) or '')[0]
+            try:
+                was = dmparse.loads(_was) if _was else {}
+            except Exception:
+                was = {}
+            _lv, _why = dmpass.derived_sensitivity(was if isinstance(was, dict) else {}, LAWVIEW)
+            before = set(_why) if _lv == 'special-category' else set()
+        for w in why:
+            at = w.rsplit(' at ', 1)[-1]
+            if path in STAGED and w not in before:
+                _priv_found('error', f"{base}: this commit adds special-category material at {at}, unsealed: a value "
+                                     f"committed is in every clone for good — seal it first (bin/dmheld.py put "
+                                     f"<bean> <term> <key>), then commit", 'sensitivity')
+            else:
+                warns.append(f"{base}: holds special-category material at {at}: hold it off git — bin/dmheld.py put")
 
 
 def check_grants():
