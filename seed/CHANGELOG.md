@@ -262,7 +262,9 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   refused, not warned: no seal made after the commit takes the value back (MODEL.md). An agreement's grant decides over
   its own bean and what a party who accepted it owns or is the record of, and opens nothing else (`grants`,
   `dmpass.shares`). The `version` order absorbs a release only into one that goes on at a component's boundary: `9`
-  and `90` are two releases, a disagreement, where they merged into `90` unseen. MAJOR, because a
+  and `90` are two releases, a disagreement, where they merged into `90` unseen. A reading's step names a registry's
+  row where the law says so — a `group`'s `system` is a time system of `anchor_systems`, read through the calendar its
+  row carries — and `gregory`, which the cookbook wrote, is refused, naming `gregorian-civil`. MAJOR, because a
   garden that upgraded unasked from a network is now asked, and a writer's push a hub took, and a commit carrying a
   special value the gate warned of, are now refused.
 

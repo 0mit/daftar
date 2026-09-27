@@ -882,7 +882,7 @@ selections:
     steps:
       - { id: this, op: select, genos: contract, where: [ { path: bean, is: agency-noor } ] }
       - { id: paid, op: select, of: this, entries: "transactions.*" }
-      - { id: months, op: group, of: paid, path: day, level: month, system: gregory }
+      - { id: months, op: group, of: paid, path: day, level: month, system: gregorian-civil }
       - { id: per-month, op: count, of: months }
 clauses:
   commission:
