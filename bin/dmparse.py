@@ -336,7 +336,8 @@ def control_characters(text, category='Cc', but=('\t',), lines_in='block'):
 
 # --- the ONE loader ------------------------------------------------------------------------------
 # MEASURED 2026-08-07, not assumed: `yaml.safe_load` accounted for 4.2 s of the gate's 4.6 s, and the
-# gate is spawned ~115 times by test/golden.py — so the whole suite was pure-Python YAML parsing.
+# gate is spawned ~115 times by test/golden.py (the maintainers' corpus test, not shipped here) — so
+# the whole suite was pure-Python YAML parsing.
 # libyaml's CSafeLoader is 13.3x faster on this corpus and produces IDENTICAL objects for all 72
 # documents (verified by comparing both loaders' output document by document, with the comparison
 # itself first shown able to detect a difference).

@@ -24,8 +24,8 @@ It asserts BOTH directions, because a garden that accepts everything passes a po
   -  a pin disagreeing with the vocabulary is an ERROR, not a warning
 
 It is NOT in the pre-commit hook, deliberately: it germinates a child garden and commits inside it, so a
-hook that ran it would recurse. It tests machinery, like golden.py — run it by hand before any change to
-seed/ lands.
+hook that ran it would recurse. It tests machinery, like golden.py (the maintainers' corpus test, not shipped
+here) — run it by hand before any change to seed/ lands.
 
 Run: python3 test/germinate.py   (0 = green).  ~2s.
 """

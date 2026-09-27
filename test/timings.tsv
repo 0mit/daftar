@@ -25,7 +25,7 @@ date	suite	seconds	passed	failed
 2026-09-26	test/layers.py	24.6	60	0
 2026-09-26	test/manifesto.py	1.3	15	1
 2026-09-26	test/money.py	27.0	101	0
-2026-09-26	test/mycelium.py	334.0	173	0
+2026-09-26	test/peering.py	334.0	173	0
 2026-09-26	test/observations.py	22.1	35	0
 2026-09-26	test/passes.py	25.9	73	0
 2026-09-26	test/place.py	17.1	29	0
@@ -66,7 +66,7 @@ date	suite	seconds	passed	failed
 2026-09-26	test/layers.py	24.3	60	0
 2026-09-26	test/manifesto.py	1.2	16	0
 2026-09-26	test/money.py	28.8	101	0
-2026-09-26	test/mycelium.py	385.4	173	0
+2026-09-26	test/peering.py	385.4	173	0
 2026-09-26	test/observations.py	23.4	35	0
 2026-09-26	test/passes.py	25.9	73	0
 2026-09-26	test/place.py	17.5	29	0
