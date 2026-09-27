@@ -110,9 +110,13 @@ nav.thumbs a { display: block; text-decoration: none; font-family: var(--sans); 
   nav.thumbs li:nth-child(4) { --tab: #7390ae; --tab-ink: #f4f7fb; }
   nav.thumbs li:nth-child(5) { --tab: #3f5c86; --tab-ink: #f4f7fb; }
   nav.thumbs li:nth-child(6) { --tab: #1a2438; --tab-ink: #f4f7fb; }
-  body:has(#notebook:target) nav.thumbs a[href="#notebook"], body:has(#cases:target) nav.thumbs a[href="#cases"],
-  body:has(#model:target) nav.thumbs a[href="#model"], body:has(#machinery:target) nav.thumbs a[href="#machinery"],
-  body:has(#map:target) nav.thumbs a[href="#map"], body:has(#contribute:target) nav.thumbs a[href="#contribute"] {
+  body:not(:has(article.chapter:target, article.chapter :target)) nav.thumbs a[href="#notebook"],
+  body:has(#notebook:target, #notebook :target) nav.thumbs a[href="#notebook"],
+  body:has(#cases:target, #cases :target) nav.thumbs a[href="#cases"],
+  body:has(#model:target, #model :target) nav.thumbs a[href="#model"],
+  body:has(#machinery:target, #machinery :target) nav.thumbs a[href="#machinery"],
+  body:has(#map:target, #map :target) nav.thumbs a[href="#map"],
+  body:has(#contribute:target, #contribute :target) nav.thumbs a[href="#contribute"] {
     padding-bottom: 26px; box-shadow: inset 0 3px 0 var(--margin); }
 }
 @media (max-width: 1099px) {
@@ -165,6 +169,26 @@ ol.talk > li.person .who { font-style: normal; }
 ol.talk > li.agent { padding: 10px 14px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px; margin-left: 5%; }
 ol.talk > li.agent.asks { border-style: dashed; }
 ol.talk > li.aside { font-family: var(--sans); font-size: 0.82rem; color: var(--graphite); padding-top: 6px; }
+
+/* ─── one chapter at a time: the one the reader turned to, and the notebook when none ─────────────────────────────── */
+/* No script: a chapter shows when it is the page's target or holds it — a tab of the index, a case, a card, a lens.
+   Within the cases, the list, or the one case chosen; within the model, one idea, the first when none is chosen. */
+@supports selector(:has(a)) {
+  main:has(article.chapter:target, article.chapter :target) article.chapter:not(:target):not(:has(:target)),
+  main:not(:has(article.chapter:target, article.chapter :target)) article.chapter:not(#notebook) { display: none; }
+  #cases > section.case { display: none; }
+  #cases > section.case:is(:target, :has(:target)) { display: block; }
+  #cases:has(> section.case:target, > section.case :target) > :not(section.case) { display: none; }
+  #model > section:not(:has(:target)) { display: none; }
+  #model:not(:has(> section :target)) > section:first-of-type { display: block; }
+}
+p.back, nav.next { font-family: var(--sans); font-size: 0.85rem; margin: 1.2em 0; }
+nav.next { border-top: 1px solid var(--rule); padding-top: 10px; max-width: var(--measure); }
+nav.next a { font-weight: 600; }
+@media print {
+  article.chapter, #cases > *, #model > section { display: block !important; }
+  p.back, nav.next { display: none; }
+}
 
 /* ─── the depth dial, read by the whole page ─────────────────────────────────────────────────────────────────────── */
 /* the person: what is said, and read back — the drawings, the reasons; the curious: + what the agent does underneath;
