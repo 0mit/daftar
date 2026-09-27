@@ -1495,7 +1495,7 @@ if shutil.which('gpg'):
     subprocess.run(['gpg', '--batch', '--pinentry-mode', 'loopback', '--passphrase', '', '--quick-gen-key',
                     'rel <rel@example.org>', 'ed25519', 'sign', 'never'], capture_output=True, env=_genv)
     _fpr = re.search(r'^fpr:+([0-9A-F]{40,64}):', subprocess.run(['gpg', '--with-colons', '--list-secret-keys'],
-                     capture_output=True, text=True, env=_genv).stdout, re.M).group(1)
+                     capture_output=True, text=True, encoding='utf-8', errors='replace', env=_genv).stdout, re.M).group(1)
     subprocess.run(['git', '-c', 'gpg.format=openpgp', '-c', f'user.signingkey={_fpr}', 'tag', '-s', '-f', 'v9.9.0',
                     '-m', 'an OpenPGP-signed release'], capture_output=True, cwd=AR, env=_genv)
     _sig = _up.tag_signature(AR, 'v9.9.0')
@@ -1509,7 +1509,8 @@ else:
     print("SKIP  no gpg: the OpenPGP-signed tag is not shown")
 
 if shutil.which('ssh-keygen') and 'check-novalidate' in ''.join(
-        subprocess.run(['ssh-keygen', *x], capture_output=True, text=True).stderr or '' for x in (['-Y', 'x'], ['-?'])):
+        subprocess.run(['ssh-keygen', *x], capture_output=True, text=True, encoding='utf-8',
+                       errors='replace').stderr or '' for x in (['-Y', 'x'], ['-?'])):
     def _sshkey(n):
         k = os.path.join(TMP, 'auth-' + n)
         subprocess.run(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-C', n, '-f', k], capture_output=True)
