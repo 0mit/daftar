@@ -538,9 +538,15 @@ try:
     st, j = post_(bosun, "/api/write", {"m": "outings", "w": 0, "bean": "boat-heron", "entry": "x",
                                         "values": {"colour": "red"}}, csrf)
     check("V-3 an attribute the form does not ask for is refused", st == 400 and "asks for no colour" in j.get("error", ""), (st, j))
+    st, j = post_(bosun, "/api/write", {"m": "outings", "w": 0, "bean": "boat-heron", "entry": "spill",
+                                        "values": {"property": "{ scheme: boat-checks, code: hull }", "at": "2026-09-26, by: rosa",
+                                                   "value": "{ count: \"1\", unit: millimetre }"}}, csrf)
+    check("V-3 a value that would spill into an attribute the form does not offer (`2026-09-26, by: rosa`) is refused, "
+          "naming it, and nothing is written", st == 400 and "one value, of its own attribute (at)" in j.get("error", "")
+          and "spill" not in C.get("beans/boat-heron.md") and C.clean(), (st, j))
     _aud = [json.loads(l) for l in open(_log, encoding="utf-8").read().splitlines()]
     check("V-3 every write, saved or refused, is audited with the answer that decided it",
-          [a["mode"] for a in _aud if a.get("act") == "write"] == ["refused", "saved", "refused", "refused"], [a.get("mode") for a in _aud])
+          [a["mode"] for a in _aud if a.get("act") == "write"] == ["refused", "saved", "refused", "refused", "refused"], [a.get("mode") for a in _aud])
 finally:
     srv.terminate()
     try:
