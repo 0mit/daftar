@@ -34,7 +34,7 @@
 <p class="lede">Sam keeps a NAS at home that serves his website, has registered <code>example.org</code> for it, and rents a
   virtual server. Each of these is one bean: what it is, what identifies it, who said so, who owns it and who answers for it.
   The domain's registration runs out on a date, and a tool reads that date before it does.</p>
-<p class="meta">garden-sam · daftar <!-- daftar:held id="release" -->v0.41.0<!-- /daftar:held --> · the day held at <!-- daftar:held id="day" -->2026-10-27<!-- /daftar:held --></p>
+<p class="meta">garden-sam · daftar <!-- daftar:held id="release" -->v0.41.1<!-- /daftar:held --> · the day held at <!-- daftar:held id="day" -->2026-10-27<!-- /daftar:held --></p>
 
 <div class="lenses">
 <!-- daftar:part id="lensbar" --><span id="all" class="lens-all"></span>
@@ -96,7 +96,7 @@
       owns it and who answers for it, and that every chain of ownership ends somewhere. When all is well it
       says so in one line.</p>
 <!-- daftar:out id="machines-commit" steps="3" match="docs, \d+ error|^fast:" --><pre class="out" tabindex="0" aria-label="output of git commit -qm &quot;nginx, and the website it serves&quot;"><code><span class="cmd">~/garden-sam$ git commit -qm "nginx, and the website it serves"</span>
-garden-sam (daftar v0.41.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">f74daf52f4d2</span>): 5 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.41.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">a30bcac611dd</span>): 5 docs, 0 error(s), 0 warning(s)
 fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out --></li>
   <li><h3><span class="tool">dmcursor</span> Before touching a page, it asks what it stands on</h3>
     <p class="plain">The agent looks a thing up before it changes it: what it lives in, what must be attended to.</p>
@@ -125,7 +125,7 @@ expiring: 0 ok, 1 within their horizon, 0 EXPIRED
 ## 2026-10-27 09:00+00:00 · sam · nginx, and the website it serves
 <span class="cmd">~/garden-sam$ git add -A</span>
 <span class="cmd">~/garden-sam$ git commit -qm "nginx, and the website it serves"</span>
-garden-sam (daftar v0.41.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">f74daf52f4d2</span>): 5 docs, 0 error(s), 0 warning(s)
+garden-sam (daftar v0.41.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">a30bcac611dd</span>): 5 docs, 0 error(s), 0 warning(s)
 fast: 14/14 corpus checks passed</code></pre><!-- /daftar:out -->
 <p class="lead">Before an agent touches the website, <code>dmcursor</code> says what it is and where it lives, and what must be
   attended to first:</p>
@@ -152,7 +152,7 @@ analysis_cache: 0 fresh, 0 stale, 0 not on this host, 0 unknown
 <span class="exit">exit 1</span></code></pre><!-- /daftar:out -->
 <p class="lead">The gate's last line names the garden, the release it runs, its gardener and its id:</p>
 <!-- daftar:out id="machines-check" --><pre class="out" tabindex="0" aria-label="output of dmcheck.py --all"><code><span class="cmd">~/garden-sam$ python3 bin/dmcheck.py --all</span>
-garden-sam (daftar v0.41.0, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">f74daf52f4d2</span>): 6 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out -->
+garden-sam (daftar v0.41.1, gardener sam, garden <span class="v" data-v="id" title="differs in every build: a garden id">a30bcac611dd</span>): 6 docs, 0 error(s), 0 warning(s)</code></pre><!-- /daftar:out -->
 </section>
 
 <section class="lens" data-lens="inspect" id="inspect" aria-labelledby="h-inspect">
@@ -291,15 +291,15 @@ The rented server.</code></pre><!-- /daftar:bean -->
 
 <h2>Read more</h2>
 <ul class="prose">
-  <li>The cookbook: <a href="https://github.com/0mit/daftar/blob/v0.41.0/seed/COOKBOOK.md#a-registered-domain">a registered
-    domain</a>, <a href="https://github.com/0mit/daftar/blob/v0.41.0/seed/COOKBOOK.md#a-machine-at-home-that-other-things-run-on">a
-    machine at home</a>, <a href="https://github.com/0mit/daftar/blob/v0.41.0/seed/COOKBOOK.md#third-party-software-and-a-running-copy-of-it-that-serves-the-website">software
-    and a running copy of it</a>, <a href="https://github.com/0mit/daftar/blob/v0.41.0/seed/COOKBOOK.md#a-rented-vps">a rented
+  <li>The cookbook: <a href="https://github.com/0mit/daftar/blob/v0.41.1/seed/COOKBOOK.md#a-registered-domain">a registered
+    domain</a>, <a href="https://github.com/0mit/daftar/blob/v0.41.1/seed/COOKBOOK.md#a-machine-at-home-that-other-things-run-on">a
+    machine at home</a>, <a href="https://github.com/0mit/daftar/blob/v0.41.1/seed/COOKBOOK.md#third-party-software-and-a-running-copy-of-it-that-serves-the-website">software
+    and a running copy of it</a>, <a href="https://github.com/0mit/daftar/blob/v0.41.1/seed/COOKBOOK.md#a-rented-vps">a rented
     VPS</a>.</li>
-  <li>The model: <a href="https://github.com/0mit/daftar/blob/v0.41.0/MODEL.md#identity-anchors">identity</a> and
-    <a href="https://github.com/0mit/daftar/blob/v0.41.0/MODEL.md#ownership-and-responsibility">ownership</a>.</li>
-  <li>The tools: <a href="https://github.com/0mit/daftar/blob/v0.41.0/bin/dmstale.py">bin/dmstale.py</a> and
-    <a href="https://github.com/0mit/daftar/blob/v0.41.0/bin/dmcursor.py">bin/dmcursor.py</a>, each explained in its first lines.</li>
+  <li>The model: <a href="https://github.com/0mit/daftar/blob/v0.41.1/MODEL.md#identity-anchors">identity</a> and
+    <a href="https://github.com/0mit/daftar/blob/v0.41.1/MODEL.md#ownership-and-responsibility">ownership</a>.</li>
+  <li>The tools: <a href="https://github.com/0mit/daftar/blob/v0.41.1/bin/dmstale.py">bin/dmstale.py</a> and
+    <a href="https://github.com/0mit/daftar/blob/v0.41.1/bin/dmcursor.py">bin/dmcursor.py</a>, each explained in its first lines.</li>
 </ul>
 
 <p class="strip">Is your situation like this, but not quite?
@@ -309,7 +309,7 @@ The rented server.</code></pre><!-- /daftar:bean -->
 </main>
 <!-- daftar:part id="foot" --><footer class="site">
   <div>
-    <p>Every output on these pages was produced by daftar <code>v0.41.0</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
+    <p>Every output on these pages was produced by daftar <code>v0.41.1</code> on two demo gardens, the clock held at 2026-10-27 09:00 UTC.</p>
     <p>Code AGPL-3.0-or-later · words and drawings CC BY 4.0 · Source and issues: <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a></p>
   </div>
 </footer><!-- /daftar:part -->
