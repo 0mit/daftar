@@ -40,7 +40,8 @@ the items of CHECKLIST.md that name it, and the checks of the suites whose names
 THE FINDINGS are candidates for a person to judge, never verdicts: a law item that nothing references; a tool that no
 suite imports, runs or names; one domain taken under different attribute names whose meanings share their words; a
 sibling whose shape differs from the rest of its group (the terms of one tier or profile, the rows of one registry); a
-file that lists the beans itself instead of reading them through bin/dmreckon.py.
+name the law gives several items; a file that lists the beans itself — a call that reads a directory of beans, one
+finding a call — instead of reading them through bin/dmreckon.py.
 
 IN A GARDEN it maps the garden's copy of the language: the law, and the files the release keeps (`seed/LANGUAGE`). The
 garden's own files are the garden's, and no part of the language.
@@ -442,11 +443,12 @@ class Catalogue:
             self.part('layer:' + r['layer'], 'layer', r['layer'], files=r.get('files', True), beneath=r.get('beneath'),
                       holds=r.get('holds') or [], meaning=r.get('meaning'))
         # the names a file may mention: a term's, a registry's, a section's
-        self.names = {n: 'term:' + n for n in self.terms}
-        for k in self.registries:
-            self.names.setdefault(k, 'registry:' + k)
-        for k in self.sections:
-            self.names.setdefault(k, 'section:' + k)
+        # the names a file may mention, each with every item the law gives it: a text naming `roles` names the term and
+        # the registry alike, and nothing in it says which
+        self.names = {}
+        for pid in ['term:' + n for n in self.terms] + ['registry:' + k for k in self.registries] \
+                + ['section:' + k for k in self.sections]:
+            self.names.setdefault(pid.split(':', 1)[1], []).append(pid)
 
     # -------------------------------------------------------------- the files
     def _file_parts(self):
@@ -495,7 +497,8 @@ class Catalogue:
                 self._script(f, text)
             if not f.endswith('.py') and self.parts[f]['kind'] not in ('knowledge table', 'licence', 'fixture'):
                 for n in law_names_in(text, self.names, self.profiles):
-                    self.edge('mentions', f, self.names.get(n, n))
+                    for pid in self.names.get(n, [n]):
+                        self.edge('mentions', f, pid)
             if self.parts[f]['kind'] in ('document', 'page', 'form', 'workflow', 'template', 'other') \
                     and not f.endswith('.py'):
                 self._names(f, text)
@@ -576,7 +579,8 @@ class Catalogue:
                 for n in law_names_in(name, self.terms):
                     self.edge('covers', f, 'term:' + n, 'a check names it')
         for n in law_names_in(text, self.names, self.profiles):
-            self.edge('mentions', f, self.names.get(n, n))
+            for pid in self.names.get(n, [n]):
+                self.edge('mentions', f, pid)
 
     def _module(self, mod, first, importer):
         """The file an import names: in a directory the importer put on sys.path, beside it, among the tools, or in an
@@ -724,7 +728,8 @@ class Catalogue:
             elif head == 'layers' and nxt[1] and 'layer:' + nxt[1] in self.parts:
                 tgt = 'layer:' + nxt[1]
             else:
-                tgt = self.names.get(head) if head in self.registries or head in self.sections else None
+                tgt = ('registry:' if head in self.registries else 'section:') + head \
+                    if head in self.registries or head in self.sections else None
             if tgt:
                 self.edge('explains', why, tgt, key)
 
@@ -761,7 +766,7 @@ class Catalogue:
             head = title.split(' — ')[0].lower()
             whole = [pid for pid in self._law_ids() if _named_in(self.parts[pid]['name'], head)]
             for ln in body:
-                for pid in set(whole) | {self.names[n] for n in law_names_in(ln, self.names) if self.names[n] in self.parts}:
+                for pid in set(whole) | {pid for n in law_names_in(ln, self.names) for pid in self.names[n]}:
                     self._rule(pid, title, ln.strip().lstrip('· '))
         # the items of CHECKLIST.md
         text = _read(self.root, CHECKLIST) or ''
@@ -797,7 +802,7 @@ class Catalogue:
 
     def _named(self, words, where):
         """The parts a line of prose names: a law item in backticks or quotes, a file by its path, a tool by its name."""
-        out = {self.names[n] if n in self.names else n for n in law_names_in(words, self.names, self.profiles)}
+        out = {pid for n in law_names_in(words, self.names, self.profiles) for pid in self.names.get(n, [n])}
         here = where.rsplit('/', 1)[0] if '/' in where else ''
         for m in _PATHY.finditer(words):
             h = self.file_of(m.group(1), here)
@@ -829,8 +834,16 @@ class Catalogue:
         named = {b for rel, a, b, _ in self.edges if rel in ('imports', 'runs', 'covers', 'names')
                  and self.parts[a]['kind'] == 'suite'}
         untested = [{'part': f} for f in sorted(self.files) if self.parts[f]['kind'] == 'tool' and f not in named]
+        # one name the law gives several items: a text that names it cannot say which it means. A term named for the
+        # registry whose rows it takes is one such (the senses' structural reading); a profile named for its main term is
+        # another. Listed, since whether each is meant is a person's to say.
+        shared = {}
+        for pid, v in self.parts.items():
+            if v['kind'] in ('term', 'registry', 'section', 'profile'):
+                shared.setdefault(v['name'], []).append(pid)
+        one_name = [{'name': n, 'parts': sorted(ps)} for n, ps in sorted(shared.items()) if len(ps) > 1]
         return {'unreferenced': unreferenced, 'untested_tools': untested, 'one_domain_many_names': self._close_names(),
-                'odd_siblings': self._odd_siblings(), 'own_bean_walks': self._walks()}
+                'odd_siblings': self._odd_siblings(), 'own_bean_walks': self._walks(), 'one_name_many_items': one_name}
 
     def _close_names(self):
         """One domain taken under different attribute names whose meanings share their words: a name for the same
@@ -998,6 +1011,8 @@ def report(cat):
           + (f" — first: {' / '.join(f['one_domain_many_names'][0]['names'])} in {f['one_domain_many_names'][0]['domain']}"
              if f['one_domain_many_names'] else ''))
     print(f"  siblings whose shape differs from their group's: {len(f['odd_siblings'])}")
+    print(f"  names the law gives several items: {len(f['one_name_many_items'])}"
+          + (f" — {', '.join(x['name'] for x in f['one_name_many_items'])}" if f['one_name_many_items'] else ''))
     w = f['own_bean_walks']
     print(f"  files that list the beans themselves: {len(w)}"
           + (f" — {', '.join(x['part'].rsplit('/', 1)[-1][:-3] + ' ' + str(x['walks']) for x in w)}" if w else ''))
@@ -1024,6 +1039,9 @@ def show_findings(cat):
         bits = ([f"holds {', '.join(x['holds_rare'])}"] if x['holds_rare'] else []) + \
                ([f"lacks {', '.join(x['lacks_common'])}"] if x['lacks_common'] else [])
         print(f"  {x['part']:48} {'; '.join(bits)}   ({x['group']})")
+    print(f"\nnames the law gives several items ({len(f['one_name_many_items'])}) — a text naming one cannot say which")
+    for x in f['one_name_many_items']:
+        print(f"  {x['name']:24} {', '.join(x['parts'])}")
     print(f"\nfiles that list the beans themselves, rather than read them through bin/dmreckon.py "
           f"({len(f['own_bean_walks'])})")
     for x in f['own_bean_walks']:

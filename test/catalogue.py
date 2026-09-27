@@ -13,7 +13,7 @@ bin/dmcatalog.py reads the release's own sources each time it runs. This holds i
                   function, a help text that names a tool and runs nothing, a reason, a layer, a domain, a suite, an
                   example block, an asset
   the same bytes  two runs give byte-identical JSON; the parts and the relations are sorted, and each list of findings
-                  by its own key
+                  by its own key; a name the law gives two items is one finding, and a mention of it counts for both
   one part        `--part` shows a term and a tool, and refuses a name no part has
   a garden        in a garden it maps the garden's copy of the language — the files the release keeps, and the whole law
                   — and nothing of the garden's own
@@ -123,12 +123,19 @@ check("the parts are sorted, and the relations", list(parts) == sorted(parts)
 F = d["findings"]
 ORDER = {"unreferenced": lambda x: x["part"], "untested_tools": lambda x: x["part"],
          "one_domain_many_names": lambda x: (-x["similarity"], x["domain"], x["names"]),
-         "odd_siblings": lambda x: (x["group"], x["part"]), "own_bean_walks": lambda x: (-x["walks"], x["part"])}
-check("the findings are the five the tool names", set(F) == set(ORDER), sorted(F))
+         "odd_siblings": lambda x: (x["group"], x["part"]), "own_bean_walks": lambda x: (-x["walks"], x["part"]),
+         "one_name_many_items": lambda x: x["name"]}
+check("the findings are the six the tool names", set(F) == set(ORDER), sorted(F))
 check("...and each list is sorted by its own key", not [k for k, key in ORDER.items() if F.get(k) != sorted(F.get(k, []), key=key)],
       [k for k, key in ORDER.items() if F.get(k) != sorted(F.get(k, []), key=key)])
 check("...and a tool a suite runs is not found untested: the catalogue is not",
       "bin/dmcatalog.py" not in [x["part"] for x in F.get("untested_tools", [])])
+_twice = sorted(n for n in set(names) & {k for k, v in law.items() if isinstance(v, list)})
+check("...and a name the law gives a term and a registry is found as one, and a mention of it counts for both",
+      all(any(x["name"] == n and x["parts"] == ["registry:" + n, "term:" + n] for x in F.get("one_name_many_items", []))
+          for n in _twice)
+      and all(p not in [x["part"] for x in F.get("unreferenced", [])] for n in _twice for p in ("registry:" + n, "term:" + n)),
+      _twice)
 
 # ---------------------------------------------------------------- what a person reads
 cat = dmcatalog.Catalogue()
