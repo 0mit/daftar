@@ -177,6 +177,46 @@ commit("quietbox notes/about.md   # consented to on that page only\n", "neutral"
 r = dmpublic_l()
 check("...while PUBLIC-ALLOW itself may say the word: the line that records the decision has to",
       r.returncode == 0, r.stdout + r.stderr)
+# WHAT ELSE A GARDEN SAYS OF ITSELF: a three-letter name, an address anywhere in a front matter, an email that is no
+# anchor, a title of three words; a file whose path holds a space; and the published tables public only in themselves.
+run("git", "-C", R, "rm", "-q", "notes/about.md", "seed/PUBLIC-ALLOW")      # the scoped consent above was the copy's
+write(os.path.join(G, "beans", "nas.md"),
+    '---\nbean: nas\ngenos: host\ntitle: "the cellar storage box"\nstatus: active\nsummary: "h"\nnature: soma\n'
+    'identity: { status: confirmed, anchors: [ { key: serial, value: "SN-N1", class: hardware, establishing: true } ] }\n'
+    'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n'
+    'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
+    'owns: { lan_ip: "10.20.30.40", doc_ip: "203.0.113.77", contact: "ops-desk@cellar-net.io", manual: "help@example.org" }\n'
+    '---\nStorage.\n')
+write(os.path.join(G, "beans", "bakers.md"),
+    '---\nbean: bakers\ngenos: host\ntitle: "m"\nstatus: active\nsummary: "h"\nnature: soma\n'
+    'identity: { status: confirmed, anchors: [ { key: serial, value: "SN-M1", class: hardware, establishing: true } ] }\n'
+    'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n'
+    'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n---\nM.\n')
+for _text, _word, _why in (("the nas in the cellar\n", "nas", "a name of three letters"),
+                           ("it answers at 10.20.30.40\n", "10.20.30.40", "an address that is no anchor"),
+                           ("write to ops-desk@cellar-net.io\n", "ops-desk@cellar-net.io", "an email that is no anchor"),
+                           ("see the cellar storage box\n", "the cellar storage box", "a title of three words"),
+                           ("the bakers restart it\n", "bakers", "a host a garden calls by a word of the occupations' table")):
+    commit(_text, "neutral")
+    r = dmpublic()
+    check(f"{_why} in a public file is refused", r.returncode == 1 and _word in r.stdout, r.stdout + r.stderr)
+commit("at 203.0.113.77, or help@example.org\n", "neutral")
+r = dmpublic()
+check("...while an address or a domain kept for documentation is not", r.returncode == 0, r.stdout + r.stderr)
+commit("the nas in the cellar\n", "neutral", name="notes with a space.md")
+commit("an example\n", "neutral")
+r = dmpublic()
+check("a file whose path holds a space is read, and named whole", r.returncode == 1 and "notes with a space.md" in r.stdout,
+      r.stdout + r.stderr)
+run("git", "-C", R, "rm", "-q", "notes with a space.md")
+os.makedirs(os.path.join(R, "seed", "knowledge"), exist_ok=True)
+commit("code\tname\n1\tbakers and cooks\n", "neutral", name="seed/knowledge/occupations.tsv")
+r = dmpublic()
+check("a published table may say its own words (`bakers`), where the rest of the repository may not",
+      r.returncode == 0, r.stdout + r.stderr)
+for _b in ("nas", "bakers"):
+    os.remove(os.path.join(G, "beans", _b + ".md"))
+
 _scoped = [l.split("#")[0].split() for l in open(os.path.join(ROOT, "seed", "PUBLIC-ALLOW"), encoding="utf-8")]
 _dead = [c for cells in _scoped for c in cells[1:] if not os.path.isfile(os.path.join(ROOT, *c.split("/")))]
 check("every file a line of this repository's PUBLIC-ALLOW is scoped to exists", not _dead, _dead)

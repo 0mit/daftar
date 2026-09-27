@@ -168,7 +168,8 @@ os.remove(BEAN)
 
 # ---------------------------------------------------------------- the attribute form (S1)
 # The gate translates every term's schema into ONE record per attribute and interprets only that. These pin the
-# form itself; that it reproduces the old gate byte for byte is proved in a garden, by test/diffgate.py.
+# form itself; that it reproduces the old gate byte for byte is proved in a garden, by test/diffgate.py (a
+# maintainers' test, not shipped here: it needs a garden's beans).
 import importlib.util, io, contextlib
 _vp = os.path.join(G, "VOCAB.md"); _vs = open(_vp).read()
 if "extends_profiles:" in _vs:

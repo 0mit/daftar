@@ -538,9 +538,48 @@ try:
     st, j = post_(bosun, "/api/write", {"m": "outings", "w": 0, "bean": "boat-heron", "entry": "x",
                                         "values": {"colour": "red"}}, csrf)
     check("V-3 an attribute the form does not ask for is refused", st == 400 and "asks for no colour" in j.get("error", ""), (st, j))
+    st, j = post_(bosun, "/api/write", {"m": "outings", "w": 0, "bean": "boat-heron", "entry": "spill",
+                                        "values": {"property": "{ scheme: boat-checks, code: hull }", "at": "2026-09-26, by: rosa",
+                                                   "value": "{ count: \"1\", unit: millimetre }"}}, csrf)
+    check("V-3 a value that would spill into an attribute the form does not offer (`2026-09-26, by: rosa`) is refused, "
+          "naming it, and nothing is written", st == 400 and "one value, of its own attribute (at)" in j.get("error", "")
+          and "spill" not in C.get("beans/boat-heron.md") and C.clean(), (st, j))
     _aud = [json.loads(l) for l in open(_log, encoding="utf-8").read().splitlines()]
     check("V-3 every write, saved or refused, is audited with the answer that decided it",
-          [a["mode"] for a in _aud if a.get("act") == "write"] == ["refused", "saved", "refused", "refused"], [a.get("mode") for a in _aud])
+          [a["mode"] for a in _aud if a.get("act") == "write"] == ["refused", "saved", "refused", "refused", "refused"], [a.get("mode") for a in _aud])
+    # ---- the doors: a body's length, a cookie over HTTPS, a sign-out that holds, and a lockout
+    import http.client
+    _hc = http.client.HTTPConnection("127.0.0.1", _sp, timeout=180)
+    _hc.putrequest("POST", "/api/write"); _hc.putheader("Content-Length", "-1"); _hc.endheaders()
+    try:
+        _st = _hc.getresponse().status
+    except Exception as e:
+        _st = repr(e)
+    check("a request whose Content-Length is less than nothing is refused at once, never waited on", _st == 400, _st)
+    _pw = open(os.path.join(T, "host", "bosun.password")).read().strip()
+    _hc = http.client.HTTPConnection("127.0.0.1", _sp, timeout=180)
+    _hc.request("POST", "/login", urllib.parse.urlencode({"user": "bosun", "password": _pw}),
+                {"Content-Type": "application/x-www-form-urlencoded", "X-Forwarded-Proto": "https"})
+    _r = _hc.getresponse(); _ck = _r.getheader("Set-Cookie") or ""; _r.read()
+    check("reached over HTTPS (the proxy says so), the session's cookie is Secure", "; Secure" in _ck, _ck)
+    _tok = _ck.split(";", 1)[0]
+    def _with(cookie, path):
+        c = http.client.HTTPConnection("127.0.0.1", _sp, timeout=180)
+        c.request("GET", path, headers={"Cookie": cookie})
+        r = c.getresponse(); r.read(); return r.status
+    _before = _with(_tok, "/")
+    _with(_tok, "/logout")
+    _after = _with(_tok, "/")
+    check("a token signed out opens nothing again, though the browser that held it kept a copy",
+          _before == 200 and _after == 303, (_before, _after))
+    _codes = []
+    for _i in range(6):
+        c = http.client.HTTPConnection("127.0.0.1", _sp, timeout=180)
+        c.request("POST", "/login", urllib.parse.urlencode({"user": "bosun", "password": "wrong" if _i < 5 else _pw}),
+                  {"Content-Type": "application/x-www-form-urlencoded"})
+        r = c.getresponse(); r.read(); _codes.append(r.status)
+    check("five wrong passwords lock the address and the user out: the sixth try, right or wrong, is refused (429)",
+          _codes == [401] * 5 + [429], _codes)
 finally:
     srv.terminate()
     try:
@@ -759,6 +798,25 @@ try:
 except Exception:
     _res = {}
 _rv = json.dumps(_res.get("run"))
+_out5 = run(PY, "-c", """
+import sys, time
+sys.path.insert(0, %r)
+import view_model as vm
+vm.init(%r)
+import view_serve as vs
+h = vs.Host(%r)
+today = time.strftime('%%Y-%%m-%%d', time.gmtime())
+h.refresh(force=True, reexec=False)
+h.beans['keeper']['grants']['watchers-read']['during'] = {'to': today}
+first = h.may('watcher')[0]
+_real = time.time
+time.time = lambda: _real() + 2 * 86400
+later = h.may('watcher')[0]
+print(first, later)
+""" % (os.path.join(R.g, "assets", "view", "lib"), R.g, CFG2), cwd=R.g)
+check("a grant whose `during` ends today opens the page today, and the day after it does not: an answer the host keeps "
+      "holds for the day it was asked on, not until the next commit",
+      _out5.stdout.strip().splitlines()[-1:] == ["True False"], _out5.stdout[-400:] + _out5.stderr[-900:])
 check("RESULTS: behind the view guard, the watcher (granted the garden to read) is sent the race's values, read by the http "
       "adapter from the runner's status document: two suites done, 99.5 s run, 44.5 s left",
       _res.get("may") is True and "2.0" in _rv and "99.5" in _rv and "44.5" in _rv, _out.stdout[-600:] + _out.stderr[-900:])

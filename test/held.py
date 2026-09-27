@@ -146,6 +146,22 @@ code, out = held("resolve", ptr)
 check("dmheld resolve reads the entry back from the store", code == 0 and "letter-scan" in out and "service-2026" in out, out)
 code, out = held("check")
 check("dmheld check: every pointer resolves here", code == 0 and "0 error" in out, out)
+import datetime as _dt
+_text = read("beans/intake-letter.md")
+_yday = (_dt.datetime.now(_dt.timezone.utc).date() - _dt.timedelta(days=1)).isoformat()
+write("beans/intake-letter.md", _text.replace("basis: { bean: service-2026 } }", f"basis: {{ bean: service-2026 }}, until: {_yday} }}", 1))
+code, out = held("check")
+check("an entry whose `until` was yesterday is due: check says it was to be erased a day ago", "was to be erased 1 day(s) ago" in out,
+      out)
+write("beans/intake-letter.md", _text)
+_rec = os.path.join(STORE, ptr[11:] + ".yaml")
+check("a record is written its owner's alone to read (0600)", os.name == "nt" or (os.stat(_rec).st_mode & 0o777) == 0o600,
+      oct(os.stat(_rec).st_mode))
+os.chmod(_rec, 0o644)
+code, out = held("check")
+check("...and check warns of one that others may read — a store is plain text, kept by its files",
+      os.name == "nt" or "may be read by others" in out, out)
+os.chmod(_rec, 0o600)
 
 # ---- what the gate refuses of a sealed entry
 text = read("beans/intake-letter.md")

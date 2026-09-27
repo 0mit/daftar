@@ -882,7 +882,7 @@ selections:
     steps:
       - { id: this, op: select, genos: contract, where: [ { path: bean, is: agency-noor } ] }
       - { id: paid, op: select, of: this, entries: "transactions.*" }
-      - { id: months, op: group, of: paid, path: day, level: month, system: gregory }
+      - { id: months, op: group, of: paid, path: day, level: month, system: gregorian-civil }
       - { id: per-month, op: count, of: months }
 clauses:
   commission:
@@ -1690,6 +1690,26 @@ height and the next reading says so. A reading can be asked as the garden stood 
 act that fixes one records that commit and moment as its **pin** (`pin_form`), so it can be read again. Were Ali to
 burn a candle of the same wax in her own garden, Sam's garden could read her heights only at a commit she published
 and granted it: `python3 bin/dmacross.py read garden-ali <bean>:<path>`, which copies nothing.
+
+## What harm can come of: sealed before it is committed
+
+A value that could harm a person if it left the garden — a code of a scheme marked `sensitive: special-category`, a
+reading of a body — is SEALED before the commit that would carry it. `python3 bin/dmheld.py put <bean> <term> <key>`
+moves the entry into a store this host keeps off git (a root of the host's bean that `keeps: special-category`),
+leaves a pointer in its place, and prints the one journal line the save carries (`- held: <bean> <key> added`). The
+gate refuses a commit that adds such material unsealed, naming the path and never the value, so the order is: write,
+seal, save.
+
+A value committed before it was sealed is in the history of every clone, every bundle and every hub the garden was
+pushed to, and a seal made now takes none of it back. Taking it out rewrites the history, which is the gardener's
+decision and the work of everyone who holds a copy:
+
+1. Seal it, and save: the tree no longer carries it.
+2. In one clone, rewrite every commit that held it — `git filter-repo --replace-text <a file of the values>` (a tool
+   of its own, not part of git) does. Every commit from the first that held it gets a new id.
+3. Replace every other copy: push the rewritten history to the hub with `--force`, and have each other clone deleted
+   and cloned again. A copy that is not replaced still holds the value, and a merge from it brings it back.
+4. Say what was done in the journal, by path and never by value.
 
 ## A value the vocabulary does not have yet
 

@@ -265,6 +265,46 @@ for _dir in ('bin', 'seed', 'test', 'site', 'assets'):
 check("every subprocess call that reads a child's output as text names its encoding, so git's UTF-8 is never read in "
       "a code page", not _unnamed, _unnamed)
 
+# ---- a bean is written WHOLE: judged first, then swapped in, so a crash never leaves half of one --------------------
+sys.path.insert(0, os.path.join(ROOT, 'bin'))
+import dmsafe
+_d = tempfile.mkdtemp(prefix='dmsafe-', dir=TMP)
+_p = os.path.join(_d, 'b.md')
+with open(_p, 'w', encoding='utf-8', newline='\n') as _fh:
+    _fh.write('---\nbean: b\nx: 1\n---\nBody.\n')
+_m0 = os.stat(_p).st_mtime_ns
+try:
+    dmsafe.edit(_p, lambda t: t.replace('x: 1\n', ''))
+    _refused = False
+except dmsafe.UnsafeEdit as e:
+    _refused = 'nothing written' in str(e)
+check("dmsafe: an edit that would lose a key is refused before anything is written — the file's time never moves",
+      _refused and os.stat(_p).st_mtime_ns == _m0)
+_real = os.replace
+os.replace = lambda *a: (_ for _ in ()).throw(OSError('the disk is full'))
+try:
+    try:
+        dmsafe.edit(_p, lambda t: t.replace('x: 1', 'x: 2'))
+        _crashed = False
+    except OSError:
+        _crashed = True
+finally:
+    os.replace = _real
+check("...and a write that dies before it is swapped in leaves the bean as it was, and no half-written copy beside it",
+      _crashed and open(_p, encoding='utf-8').read() == '---\nbean: b\nx: 1\n---\nBody.\n' and os.listdir(_d) == ['b.md'],
+      os.listdir(_d))
+
+# ---- a quote is read as YAML reads it, by every scanner of a front matter's lines ---------------------------------
+import dmparse
+_cs = {l: dmparse.comment_start(l) for l in ('title: "a \\" # b"', "summary: it's here # note", "x: 'it''s # not' # yes",
+                                              "k: 'C:\\' # c", 'k: "C:\\\\" # c')}
+check("a comment is found where YAML finds one: not inside a double-quoted scalar past an escaped quote, and after a "
+      "plain value an apostrophe stands in", list(_cs.values()) == [-1, 19, 17, 9, 10], _cs)
+_t = "---\nidentity:\n  anchors:\n    - { key: path, value: 'C:\\', class: logical }\n---\nx\n"
+_fs = [_t[a:b] for a, b in dmsafe.flow_spans(_t, "identity.anchors[key=path].class")]
+check("...and dmsafe finds a flow mapping's value past a single-quoted scalar that ends in a backslash, which escapes "
+      "nothing there", _fs == ["logical"], _fs)
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\njournal: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

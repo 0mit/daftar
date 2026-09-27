@@ -336,7 +336,8 @@ def control_characters(text, category='Cc', but=('\t',), lines_in='block'):
 
 # --- the ONE loader ------------------------------------------------------------------------------
 # MEASURED 2026-08-07, not assumed: `yaml.safe_load` accounted for 4.2 s of the gate's 4.6 s, and the
-# gate is spawned ~115 times by test/golden.py — so the whole suite was pure-Python YAML parsing.
+# gate is spawned ~115 times by test/golden.py (the maintainers' corpus test, not shipped here) — so
+# the whole suite was pure-Python YAML parsing.
 # libyaml's CSafeLoader is 13.3x faster on this corpus and produces IDENTICAL objects for all 72
 # documents (verified by comparing both loaders' output document by document, with the comparison
 # itself first shown able to detect a difference).
@@ -398,6 +399,31 @@ if LOADER is not None:
     LOADER = _Loader
 
 
+def overlay_term(base, over):
+    """Garden-local overlay on a Tier-0 term: local keys win, `schema` merges key-by-key.
+
+    `schema.values_add: [...]` APPENDS to the Tier-0 enum instead of replacing it, so a garden adds one value
+    without restating (and then having to account for) every value Tier-0 already offers."""
+    out = dict(base)
+    for k, v in over.items():
+        if k == 'schema' and isinstance(v, dict) and isinstance(base.get('schema'), dict):
+            out['schema'] = {**base['schema'], **v}
+            # `attrs` merges PER ATTRIBUTE (13.0): a garden that adds one attribute to a Tier-0 term, or gives one
+            # a domain, must not thereby restate — and then own — every attribute the standard already declares.
+            if isinstance(v.get('attrs'), dict) and isinstance(base['schema'].get('attrs'), dict):
+                out['schema']['attrs'] = {**base['schema']['attrs'],
+                                          **{a: {**(base['schema']['attrs'].get(a) or {}), **(r or {})}
+                                             for a, r in v['attrs'].items()}}
+            if isinstance(v.get('cells'), list) and isinstance(base['schema'].get('cells'), list):
+                out['schema']['cells'] = list(base['schema']['cells']) + list(v['cells'])
+        else:
+            out[k] = v
+    _s = out.get('schema')
+    if isinstance(_s, dict) and _s.get('values_add'):
+        _s['values'] = list(_s.get('values') or []) + [x for x in _s['values_add'] if x not in (_s.get('values') or [])]
+    return out
+
+
 def loads(text):
     """Parse YAML the one way this garden parses it. Semantically identical to yaml.safe_load."""
     if _yaml is None:
@@ -414,13 +440,32 @@ TITLE = re.compile(r'^\s*# == [^=]+ ==\s*$')
 
 
 def comment_start(line):
-    """The column a comment begins at in one YAML line, or -1."""
-    q = None
-    for i, ch in enumerate(line):
-        if ch in "\"'":
-            q = None if q == ch else (q or ch)
-        if ch == '#' and q is None and (i == 0 or line[i - 1] in ' \t'):
+    """The column a comment begins at in one YAML line, or -1. Quotes are read as YAML reads them: a quote opens a
+    quoted scalar only where a scalar begins (after `: `, `- `, `[`, `{`, `,`, or at the line's start), so `it's here
+    # note` holds a comment; in double quotes a backslash escapes the next character (`"a \" # b"` holds none); in
+    single quotes `''` is a quote, and a backslash is itself."""
+    q, i, n = None, 0, len(line)
+    while i < n:
+        ch = line[i]
+        if q == '"':
+            if ch == '\\':
+                i += 2
+                continue
+            if ch == '"':
+                q = None
+        elif q == "'":
+            if ch == "'":
+                if i + 1 < n and line[i + 1] == "'":
+                    i += 2
+                    continue
+                q = None
+        elif ch in "\"'":
+            before = line[:i].rstrip()
+            if (i == 0 or line[i - 1] in ' \t[{,') and (not before or before[-1] in ':-[{,?'):
+                q = ch
+        elif ch == '#' and (i == 0 or line[i - 1] in ' \t'):
             return i
+        i += 1
     return -1
 
 

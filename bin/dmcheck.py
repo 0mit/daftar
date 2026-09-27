@@ -53,6 +53,12 @@ except ImportError:
     print("ERROR: PyYAML required"); sys.exit(2)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# HOW LONG A QUESTION TO GIT MAY TAKE. Five seconds was a refusal on a large garden, a slow disk or a busy machine — a
+# gate that refuses what it could not read in time is a gate people turn off. DAFTAR_GIT_TIMEOUT sets another.
+try:
+    GIT_TIMEOUT = max(1.0, float(os.environ.get('DAFTAR_GIT_TIMEOUT', '60')))
+except ValueError:
+    GIT_TIMEOUT = 60.0
 
 
 def own_garden_id(root=None):
@@ -80,7 +86,7 @@ def _product():
         return f"{_g['garden']} (daftar {_g['daftar_release']}" + ''.join(', ' + w for w in _who + ([f"garden {_gid}"] if _gid else [])) + ")"
     try:
         v = subprocess.run(['git', '-C', ROOT, 'describe', '--tags', '--always', '--dirty'],
-                           capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=5).stdout.strip()
+                           capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=GIT_TIMEOUT).stdout.strip()
         return f"daftar {v}" if v else "daftar (untagged)"
     except Exception:
         return "daftar (untagged)"
@@ -555,29 +561,7 @@ def registry(name):
     return list(base) + [r for r in ((vocab_fm.get('registry_additions') or {}).get(name) or []) if not _dup(r)]
 
 # TERMS: every vocabulary term from both tiers, garden-local last so a garden may refine a std term.
-def _overlay(base, over):
-    """Garden-local overlay on a Tier-0 term: local keys win, `schema` merges key-by-key.
-
-    `schema.values_add: [...]` APPENDS to the Tier-0 enum instead of replacing it, so a garden adds one value
-    without restating (and then having to account for) every value Tier-0 already offers."""
-    out = dict(base)
-    for k, v in over.items():
-        if k == 'schema' and isinstance(v, dict) and isinstance(base.get('schema'), dict):
-            out['schema'] = {**base['schema'], **v}
-            # `attrs` merges PER ATTRIBUTE (13.0): a garden that adds one attribute to a Tier-0 term, or gives one
-            # a domain, must not thereby restate — and then own — every attribute the standard already declares.
-            if isinstance(v.get('attrs'), dict) and isinstance(base['schema'].get('attrs'), dict):
-                out['schema']['attrs'] = {**base['schema']['attrs'],
-                                          **{a: {**(base['schema']['attrs'].get(a) or {}), **(r or {})}
-                                             for a, r in v['attrs'].items()}}
-            if isinstance(v.get('cells'), list) and isinstance(base['schema'].get('cells'), list):
-                out['schema']['cells'] = list(base['schema']['cells']) + list(v['cells'])
-        else:
-            out[k] = v
-    _s = out.get('schema')
-    if isinstance(_s, dict) and _s.get('values_add'):
-        _s['values'] = list(_s.get('values') or []) + [x for x in _s['values_add'] if x not in (_s.get('values') or [])]
-    return out
+_overlay = dmparse.overlay_term       # one merge of a garden's overlay onto a Tier-0 term: bin/dmrules.py reads it too
 
 # PROFILES (2.0/E4): Tier-0 terms a garden must OPT IN to. A garden that manages no code should not
 # inherit code terms — and their vacancies come with them, so opting in never imports unexplained debt.
@@ -2626,7 +2610,7 @@ def ectl_entry_in_registry(e):
                       and r.get('holding') == 'at-authority'), None) if rule.get('registry_from') else None
         if _auth is not None:
             try:
-                _ok = re.fullmatch(str(_auth.get('code_pattern')), str(val)) is not None
+                _ok = dmparse.law_match('^(?:' + str(_auth.get('code_pattern')) + ')$', val) is not None
             except re.error:
                 continue                    # the row's own refusal (check_scheme_rows) names the pattern
             if not _ok:
@@ -3310,8 +3294,10 @@ def check_sealed():
 
 
 def check_sensitivity():
-    """Step 1: a bean's sensitivity is DERIVED (bin/dmpass.py); a mark below it stands only on a person's word, and
-    special-category material unsealed in git is warned — by its path, never its value."""
+    """Step 1: a bean's sensitivity is DERIVED (bin/dmpass.py); a mark below it stands only on a person's word; and
+    special-category material unsealed in git is REFUSED where a commit adds it, and warned where it is already there —
+    by its path, never its value. A value committed is in every clone and every copy of the history for good, and no
+    seal made afterwards takes it back: what harm can come of is sealed BEFORE the commit that would carry it."""
     for (_ib, base), (fm, _b) in docs.items():
         level, why = dmpass.derived_sensitivity(fm, LAWVIEW)
         s = fm.get('sensitivity')
@@ -3319,21 +3305,47 @@ def check_sensitivity():
                 dmpass.LEVELS.index(s['is']) < dmpass.LEVELS.index(level) and not dmpass.by_a_person(fm):
             _priv_found('error', f"{base}: is marked {s['is']}, below the {level} its content derives "
                                  f"({'; '.join(why)}): lowering is a person's own word — Contract E", 'sensitivity')
-        if level == 'special-category':
-            for w in why:
-                warns.append(f"{base}: holds special-category material at {w.rsplit(' at ', 1)[-1]}: hold it off git "
-                             f"— bin/dmheld.py put")
+        if level != 'special-category':
+            continue
+        path = f"{'beans' if _ib else 'mappings'}/{base}.md"
+        before = set()
+        if path in STAGED and path not in STAGED_ADDED:
+            _was = dmparse.split_front_matter(_head_text(path) or '')[0]
+            try:
+                was = dmparse.loads(_was) if _was else {}
+            except Exception:
+                was = {}
+            _lv, _why = dmpass.derived_sensitivity(was if isinstance(was, dict) else {}, LAWVIEW)
+            before = set(_why) if _lv == 'special-category' else set()
+        for w in why:
+            at = w.rsplit(' at ', 1)[-1]
+            if path in STAGED and w not in before:
+                _priv_found('error', f"{base}: this commit adds special-category material at {at}, unsealed: a value "
+                                     f"committed is in every clone for good — seal it first (bin/dmheld.py put "
+                                     f"<bean> <term> <key>), then commit", 'sensitivity')
+            else:
+                warns.append(f"{base}: holds special-category material at {at}: hold it off git — bin/dmheld.py put")
 
 
 def check_grants():
     """N31, N16: a `ratify:` grant is the gardener's own act, on the gardener's bean; a position names a term, or
-    `title`, `summary`, `body`."""
+    `title`, `summary`, `body`. And an agreement decides over its own bean and what a party who accepted it owns or is
+    the record of (bin/dmpass.py `shares`): a grant it holds over any other bean opens nothing there, and is warned,
+    naming them — warned, not refused, because a selection grows as the garden does, and a bean another writer adds
+    must not stop their commit."""
     for (_ib, base), (fm, _b) in docs.items():
         gs = fm.get('grants')
         for key, g in (gs.items() if isinstance(gs, dict) else []):
             if not isinstance(g, dict):
                 continue
             at = f"{base}: grants[{key}]"
+            if fm.get('genos') == 'contract' and g.get('over') is not None:
+                _sel = dmpass._select(base, g['over'], ROOT)
+                _out = sorted(b for b in _sel or () if not dmpass.shares(base, fm, b, (docs.get((True, b)) or ({}, ''))[0]))
+                if _out:
+                    warns.append(f"{at} is over {', '.join(_out[:5])}{' and more' if len(_out) > 5 else ''}, which this "
+                                 f"agreement does not share: it opens nothing there — an agreement decides over its own "
+                                 f"bean and what a party who accepted it owns or is the record of")
             if str(g.get('act', '')).startswith('ratify:') and not (base == LAWVIEW.gardener and dmpass.by_a_person(fm)):
                 _priv_found('error', f"{at} delegates {g['act']}: a ratification is delegated only by the gardener's "
                                      f"own act (N16) — on the gardener's bean, `provenance.src: asserted-by-human`", 'grants')
@@ -5360,13 +5372,23 @@ def collect_ips(fm):
     return out
 
 
+def _networks(fm):
+    """The networks a bean is attached to, by its `located_at` in `network-segment` (`<network>/<segment>`)."""
+    la = fm.get('located_at')
+    return frozenset(str(e['at']).split('/', 1)[0] for e in (la if isinstance(la, list) else [])
+                     if isinstance(e, dict) and e.get('system') == 'network-segment' and isinstance(e.get('at'), str))
+
+
 def check_duplicate_authoritative_ip():
+    """One address, one owner — unless the beans say otherwise in the law's words: an address a bean lists in
+    `shared_identifiers` answers for more than one (floating, VRRP, anycast), and two beans on networks that share none,
+    by their `located_at` in `network-segment`, hold a private range each (the `ip` term's `escape`)."""
     owner = {}
     for (is_bean, base), (fm, body) in docs.items():
         if not is_bean:
             continue
-        shared = set(fm.get('shared_identifiers') or [])
-        scope = fm.get('scope') or fm.get('network') or ''
+        shared = {str(x) for x in fm.get('shared_identifiers') or []} if isinstance(fm.get('shared_identifiers'), list) else set()
+        nets = _networks(fm)
         for v in collect_ips(fm):
             if v in shared:
                 continue
@@ -5374,11 +5396,16 @@ def check_duplicate_authoritative_ip():
                 norm = str(ipaddress.ip_address(v))
             except ValueError:
                 warns.append(f"{base}: value '{v}' under an ip key is not a valid IP"); continue
-            owner.setdefault((norm, scope), []).append(base)
-    for (ip, scope), bs in sorted(owner.items()):
-        if len(bs) > 1:
-            errors.append(f"duplicate authoritative IP {ip}{'@'+scope if scope else ''} owned by {bs} "
-                          f"(ref it, or shared_identifiers/scope per VOCAB 'ip')")
+            owner.setdefault(norm, []).append((base, nets))
+    for ip, held in sorted(owner.items()):
+        clash = sorted({b for i, (b, n) in enumerate(held) for c, m in held[i + 1:]
+                        if not n or not m or n & m} | {c for i, (b, n) in enumerate(held) for c, m in held[i + 1:]
+                                                        if not n or not m or n & m})
+        if len(clash) > 1:
+            errors.append(f"duplicate authoritative IP {ip} owned by {clash} — one bean owns it and the others ref it; "
+                          f"an address several answer for is listed in each one's `shared_identifiers`; a private range "
+                          f"reused on networks apart is told apart by each bean's `located_at` in `network-segment` "
+                          f"(the `ip` term's escape)")
 
 
 
@@ -5618,7 +5645,7 @@ def _git(*args):
     Replaced, it is still judged: a UTF-16 blob has no fences and is refused as a destroyed document."""
     try:
         r = subprocess.run(['git', '-C', ROOT, *args], capture_output=True, text=True, encoding='utf-8',
-                           errors='replace', timeout=5)
+                           errors='replace', timeout=GIT_TIMEOUT)
     except Exception as e:                    # git absent, or it hung — still an unanswered question
         return None, f"{e.__class__.__name__}: {e}"
     if r.returncode != 0:
@@ -5631,11 +5658,13 @@ def _git_bytes(*args):
     """git's output as it wrote it — decoded as UTF-8, with no newline translated. '' when the question went unanswered
     (`_git` has already said why, for the questions that must be answered)."""
     try:
-        r = subprocess.run(['git', '-C', ROOT, *args], capture_output=True, timeout=5)
+        r = subprocess.run(['git', '-C', ROOT, *args], capture_output=True, timeout=GIT_TIMEOUT)
     except Exception:
         return ''
     return r.stdout.decode('utf-8', 'replace') if r.returncode == 0 else ''
 
+
+RULE_CHANGE_SAID = re.compile(r'(?<!(?i:not a ))(?<!(?i:not an ))(?<!(?i:not ))(?<!(?i:no ))(?<!(?i:non-))\bRULE-CHANGE\b')
 
 # What `str.splitlines()` ends a line at, beside the newline itself. A journal line holds none of them.
 _LINE_BOUNDARIES = frozenset('\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029')
@@ -5770,7 +5799,8 @@ def check_staged_state():
         # MODEL.md, the journal template and dmrules all described both as enforced. A garden's FIRST commit —
         # germination, which has no HEAD to compare against — is exempt: nothing in it was decided by anyone yet.
         if 'log/journal.md' in staged and _git('rev-parse', '--verify', '-q', 'HEAD')[0]:
-            if rc and 'RULE-CHANGE' not in jdiff:
+            # the word as a claim: "not a RULE-CHANGE" says the opposite, and a substring test took it for one
+            if rc and not RULE_CHANGE_SAID.search(jdiff):
                 errors.append(f"RULE-CHANGE staged ({', '.join(rc)}) but the staged journal entry never says RULE-CHANGE — "
                               f"a change to the law is logged DISTINCTLY. Put the word RULE-CHANGE in the entry.")
             for _p in sc:
@@ -6335,10 +6365,11 @@ def main(args=None):
     """Run every ply in the declared order, report, and set the exit status.
 
     Under `if __name__ == '__main__'` so that IMPORTING this file cannot run the gate or kill the
-    process: `test/golden.py` spawns it as a subprocess for every negative case it checks, which is
-    the only way to observe a gate whose verdict is `sys.exit`, and a suite that wanted to call one
-    ply directly had no way to do it. (The vocabulary above still loads at import — it is what the
-    module IS, and the same refusal-over-fallback rule governs it either way.)
+    process: `test/golden.py` (the maintainers' corpus test, not shipped here) spawns it as a
+    subprocess for every negative case it checks, which is the only way to observe a gate whose
+    verdict is `sys.exit`, and a suite that wanted to call one ply directly had no way to do it.
+    (The vocabulary above still loads at import — it is what the module IS, and the same
+    refusal-over-fallback rule governs it either way.)
     """
     args = args or _arguments([])
     named = _named(args['paths']) if args['paths'] else {}

@@ -221,6 +221,36 @@ out = gate()
 check("a grant's position that names no term is refused", "'shoe-size' names no term" in out, out[-1500:])
 restore()
 
+# a grant's `during` read against TODAY when no moment is given: its `from` and `to` in the same count of days
+out = py("import dmpass, time; t = time.strftime('%Y-%m-%d', time.gmtime()); "
+         "print([dmpass._during(d, None) for d in ({'to': '2020-01-01'}, {'from': '2020-01-01'}, {'from': t, 'to': t}, "
+         "{'from': '2999-01-01'})])")
+check("a grant whose `to` has passed is closed today, one whose `from` has come is open, one for today is open, one "
+      "not yet begun is closed — read with no moment given, as the view host and the hub read it",
+      out == "[False, True, True, False]", out)
+
+# an agreement decides over its own bean and what a party who ACCEPTED it brings — never the rest of the garden
+contract("reading-circle", [("keeper", True), ("p-0a1b2c3d", True)], """selections:
+  people: { what: "every person the garden holds", steps: [ { id: p, op: select, genos: person } ] }
+grants:
+  circle-reads: { act: read, over: people, audience: { selection: people }, why: "the circle reads one another" }
+  circle-notes: { act: read, audience: { selection: people }, why: "the circle's own terms are its members' to read" }
+""")
+out = py(ask.format("p-4e5f6a7b", "read", "p-0a1b2c3d", None))
+check("H4: an agreement's grant opens the bean of a party who accepted it", out.startswith("True")
+      and "reading-circle:grants[circle-reads]" in out, out)
+out = py(ask.format("p-0a1b2c3d", "read", "p-4e5f6a7b", None))
+check("…and not the bean of a person who never accepted it, whatever its `over` selects — an agreement is not a key to "
+      "the garden", out.startswith("False") and "closed by default" in out, out)
+out = py(ask.format("p-4e5f6a7b", "read", "reading-circle", None))
+check("…its own bean it opens, `over` or not", out.startswith("True") and "reading-circle:grants[circle-notes]" in out, out)
+out = gate()
+_w = next((l for l in out.splitlines() if "reading-circle: grants[circle-reads] is over" in l), "")
+check("…and the gate names the beans its `over` reaches that it does not share, as a warning: they open nothing",
+      "p-4e5f6a7b" in _w and "p-0a1b2c3d" not in _w and "which this agreement does not share" in _w
+      and " 0 error(s)" in out, out[-1500:])
+restore()
+
 # ============================================================ N17 issuer-scoped anchors, N18 phone
 for org in ("fern-bakery", "gull-ferries"):
     write(f"beans/{org}.md", f"""---

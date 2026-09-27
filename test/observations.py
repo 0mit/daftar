@@ -274,6 +274,12 @@ refused("O-3 a relation of a kind the law does not know is refused",
 refused("O-3 a code not of the form an at-authority scheme declares is refused",
         "beans/stone-d.md", stone("stone-d", "observations:\n  mark:\n    property: { scheme: field-codes, code: b-42 }\n    at: 2026-05-03\n    by: bea\n"),
         "'b-42' is not in the form of a field-codes code")
+write("VOCAB.md", read("VOCAB.md").replace("      code_pattern: '^[A-Z][0-9]{2}$'\n", "      code_pattern: '^[A-Z]\\d{2}$'\n"))
+refused("O-3 a code's form is read as the law reads every pattern, in ASCII: `\\d` is 0 to 9, and `B۴۲` in Persian "
+        "digits is not in it",
+        "beans/stone-d.md", stone("stone-d", "observations:\n  mark:\n    property: { scheme: field-codes, code: \"B۴۲\" }\n"
+                                             "    at: 2026-05-03\n    by: bea\n"),
+        "'B۴۲' is not in the form of a field-codes code")
 refused("O-3 a scheme held at its authority with no code_pattern is refused",
         "VOCAB.md", read("VOCAB.md").replace("      code_pattern: '^[A-Z][0-9]{2}$'\n", ""), "states no `code_pattern`")
 refused("O-3 a holding the law does not know is refused",

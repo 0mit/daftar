@@ -152,8 +152,15 @@ selections:
     zone: Pacific/Auckland
     steps:
       - {{ id: lit, op: select, entries: "lightings.*" }}
-      - {{ id: by-day, op: group, of: lit, path: at, level: day, system: gregory }}
+      - {{ id: by-day, op: group, of: lit, path: at, level: day, system: gregorian-civil }}
       - {{ id: per-day, op: count, of: by-day }}
+  evenings-persian:
+    what: "the candles lit, grouped by the month of the Solar Hijri calendar they were lit in, in Auckland"
+    zone: Pacific/Auckland
+    steps:
+      - {{ id: lit, op: select, entries: "lightings.*" }}
+      - {{ id: by-month, op: group, of: lit, path: at, level: month, system: persian-calendar }}
+      - {{ id: per-month, op: count, of: by-month }}
 {extra_selections}lightings:
   first: {{ at: "2026-04-04T10:00Z" }}
   second: {{ at: "2026-04-04T13:30Z" }}
@@ -265,6 +272,10 @@ refused_sel("a key an operation does not take is refused, naming what it takes",
 refused_sel("a comparator the law does not list is refused",
             "      - { id: n, op: select, genos: person, where: [ { path: title, like: \"%a%\" } ] }\n",
             "names exactly one comparator of the law")
+refused_sel("a group's `system` that is no row of the law's time systems is refused, naming the row that carries a "
+            "calendar written by its CLDR name",
+            "      - { id: l, op: select, entries: \"lightings.*\" }\n      - { id: g, op: group, of: l, path: at, level: day, system: gregory }\n",
+            "`system: gregory` is not a row of `anchor_systems`", "write `system: gregorian-civil`")
 refused_sel("a group by a calendar level with no zone is refused",
             "      - { id: l, op: select, entries: \"lightings.*\" }\n      - { id: g, op: group, of: l, path: at, level: day }\n",
             "states `zone`")
@@ -273,6 +284,9 @@ restore()
 rc, out = reckon("chandlery:evenings")
 check("lightings grouped by day IN AUCKLAND: 10:00Z is the 4th there, 13:30Z and 14:30Z both the 5th, across the end of "
       "daylight time", rc == 0 and "2026-04-04: 1 item" in out and "2026-04-05: 2 item" in out, out)
+rc, out = reckon("chandlery:evenings-persian")
+check("...and by the month of a calendar the law names as a system, `persian-calendar`, read through the calendar its "
+      "row carries: all three in Farvardin 1405", rc == 0 and "1405-01" in out and "3 item" in out, out)
 
 # conservation (D38)
 rc, out = reckon("chandlery:burns-clean")
@@ -449,6 +463,46 @@ ops = {a or b for a, b in ops}
 missing = [o for o in ops if f"def op_{o.replace('-', '_')}(" not in src]
 check("every operation of the law has its one reader in bin/dmreckon.py, and none more", len(ops) > 40 and not missing
       and len(re.findall(r"(?m)^    def op_", src)) == len(ops), (len(ops), missing))
+
+# ---- what a reading does not say quietly: a comparison of two kinds, uncertainties taken as independent, a month of
+# another calendar, text in order, a clause with no selection
+rc, out = reckon("chandlery:alike")
+check("a reading that combines two uncertainties says it took them as independent", rc == 0
+      and "taken as independent" in out, out)
+for _cal, _want in (("persian-calendar", "= 0 item"), ("gregorian-civil", "= 3 item")):
+    write("adhoc.yaml", "what: \"the lightings in this month\"\nzone: Pacific/Auckland\nsteps:\n"
+          "  - { id: lit, op: select, entries: \"lightings.*\" }\n"
+          f"  - {{ id: u, op: used-within, of: lit, path: at, within: {{ level: month, count: 1, in: {_cal} }}, at: \"2026-04-25\" }}\n")
+    rc, out = reckon("--ad-hoc", "adhoc.yaml", "--bean", "chandlery")
+    check(f"a window of one month `in: {_cal}`, ending 2026-04-25, is that calendar's month: {_want}",
+          rc == 0 and _want in out and ("persian:1405-02-01" in out if _cal == "persian-calendar" else "2026-04-01" in out), out)
+write("adhoc.yaml", "what: \"the candles, by their titles\"\nsteps:\n  - { id: c, op: select, genos: material }\n"
+      "  - { id: o, op: order, of: c, path: title, direction: descending }\n")
+rc, out = reckon("--ad-hoc", "adhoc.yaml")
+_ord = [l.strip() for l in out.split("= a set of", 1)[-1].splitlines() if re.fullmatch(r"candle-[a-z]", l.strip())]
+check("text is ordered by its characters: the candles by title, descending", rc == 0 and _ord == ["candle-c", "candle-b", "candle-a"],
+      out)
+restore()
+_r = subprocess.run([sys.executable, "-c", """
+import sys
+sys.path.insert(0, 'bin')
+import dmreckon as RK
+from fractions import Fraction
+rk = RK.Reckoner.__new__(RK.Reckoner)
+rk.zone, rk.notes = None, []
+for f in (lambda: rk._cmp(RK.V(Fraction(3), 'millimetre'), RK.V(Fraction(1), 'kilogram')),
+          lambda: RK.used('chandlery', 'no-such-clause', 'at', at='2026-04-05', root='.')):
+    try:
+        f()
+        print('NOT REFUSED')
+    except RK.Refused as e:
+        print('REFUSED', e)
+"""], capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=G)
+_lines = _r.stdout.strip().splitlines()
+check("a condition comparing a length with a mass is refused — a member is never quietly left out for it",
+      len(_lines) == 2 and _lines[0].startswith("REFUSED"), _r.stdout + _r.stderr[-800:])
+check("...and an allowance read of a clause with no `used_by` is refused, naming it — not a KeyError",
+      len(_lines) == 2 and _lines[1].startswith("REFUSED") and "used_by" in _lines[1], _r.stdout + _r.stderr[-800:])
 
 shutil.rmtree(T, ignore_errors=True)
 print(f"\nreckon: {len(FAILS)} failed")

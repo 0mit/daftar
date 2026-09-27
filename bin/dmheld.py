@@ -23,6 +23,12 @@ to it then resolves to `Erased`, and one this host cannot reach to `NotHere`. Ne
 A PERSON who is not the gardener and has not consented to be kept by name is written as `person` mints one: the id
 `p-<8 hex>`, the title the id, one anchor `person:<id>`; the name and the ways to reach them held off git.
 
+A STORE IS PLAIN TEXT, AND ITS FILES ARE ITS PROTECTION. A record is YAML as written, not encrypted: what keeps it
+is the host — whose disk it is on, who can log in, the file's mode (a record is written its owner's alone to read,
+0600), and the store's own `backup`. A root that `keeps` special-category material and is readable from a remote party
+is warned by the gate; `check` warns of a record here that others may read. A store that needs more — an encrypted
+volume, a vault — is one a root points at, and this tool reads and writes files in it as it finds them.
+
 `put` and `erase` print the one journal line F13 asks for (`- held: <bean> <key> added|erased`): give it to
 bin/dmsave.py's `--body`, and say no more of what was held.
 """
@@ -123,9 +129,11 @@ def unsealed(fm, *, root=ROOT, beans=None):
 
 
 def _write(path, key, record):
+    """One record of a store, written whole and swapped in (bin/dmsafe.py `write_atomic`), its owner's alone to read."""
+    import dmsafe
     os.makedirs(path, exist_ok=True)
-    with open(os.path.join(path, key + '.yaml'), 'w', encoding='utf-8', newline='\n') as fh:
-        yaml.safe_dump(record, fh, allow_unicode=True, sort_keys=False)
+    dmsafe.write_atomic(os.path.join(path, key + '.yaml'),
+                        yaml.safe_dump(record, allow_unicode=True, sort_keys=False), mode=0o600)
 
 
 def _pick(level, root, host, name=None):
@@ -214,8 +222,8 @@ def put(bean, term, key, *, root=ROOT, host=None, store=None, basis=None, until=
     else:
         label = f"{term}[{sealed['held']}]"
         node = [sealed if i == int(key) else v for i, v in enumerate(node)]
-    with open(path_, 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write(_replace_term(text, term, node))
+    import dmsafe
+    dmsafe.write_atomic(path_, _replace_term(text, term, node))
     return sealed['held'], f"- held: {bean} {term}.{label} added" if isinstance(fm.get(term), dict) else \
         f"- held: {bean} {term} added"
 
@@ -239,14 +247,15 @@ def person(fields, *, root=ROOT, host=None, store=None, basis=None):
     hexkey = secrets.token_hex(16)
     _write(path, hexkey, {'bean': pid, 'term': 'person', 'key': 'contact', 'entry': dict(fields), 'about': [pid]})
     g = dmpass.gardener_of(root) or 'keeper'
-    with open(os.path.join(root, 'beans', pid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write(f"---\nbean: {pid}\ngenos: person\ntitle: \"{pid}\"\nstatus: active\n"
-                 f"summary: \"a person whose name and contacts are held off git\"\nnature: empsychon\n"
-                 f"owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
-                 f"identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: \"person:{pid}\", class: logical, "
-                 f"establishing: true }} ] }}\n"
-                 f"provenance: {{ src: asserted-by-human, by: {g}, as_of: now }}\n---\n"
-                 f"Held: `root:{name}/{hexkey}`{' on ' + basis if basis else ''}.\n")
+    import dmsafe
+    dmsafe.write_atomic(os.path.join(root, 'beans', pid + '.md'),
+                        f"---\nbean: {pid}\ngenos: person\ntitle: \"{pid}\"\nstatus: active\n"
+                        f"summary: \"a person whose name and contacts are held off git\"\nnature: empsychon\n"
+                        f"owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
+                        f"identity: {{ status: confirmed, anchors: [ {{ key: person_id, value: \"person:{pid}\", "
+                        f"class: logical, establishing: true }} ] }}\n"
+                        f"provenance: {{ src: asserted-by-human, by: {g}, as_of: now }}\n---\n"
+                        f"Held: `root:{name}/{hexkey}`{' on ' + basis if basis else ''}.\n")
     return pid
 
 
@@ -298,6 +307,14 @@ def check(*, root=ROOT, host=None, beans=None):
             if not isinstance(rec, dict) or rec.get('bean') != bid or rec.get('term') != t:
                 out.append(('error', f"{bid}: {t}[{label}] points at material held for another place "
                                      f"({rec.get('bean') if isinstance(rec, dict) else '?'})"))
+            try:
+                _path, _key = _file(e['held'], root, host, None)
+                _mode = os.stat(os.path.join(_path, _key + '.yaml')).st_mode
+            except (OSError, ValueError, NotHere):
+                _mode = None
+            if os.name != 'nt' and _mode is not None and _mode & 0o077:
+                out.append(('warn', f"{bid}: {t}[{label}] — its record here may be read by others than its owner "
+                                    f"(mode {oct(_mode & 0o777)}): chmod 600 it; a store is plain text, kept by its files"))
     for bid, t, label, days in due(root=root, beans=beans, days=0):
         out.append(('warn', f"{bid}: {t}[{label}] was to be erased {-days} day(s) ago — bin/dmheld.py erase"))
     return out
@@ -307,7 +324,9 @@ def due(*, root=ROOT, beans=None, days=30):
     """[(bean, term, label, days left)] of sealed entries whose `until` falls within `days`."""
     import time
     import dmcal
-    today = int(time.time() // 86400)
+    # today in dmcal's count of days, as `until` is read: the count since 1970 (about 20,700 against about 739,000) put
+    # every `until` two thousand years off, and no sealed entry was ever due
+    today = dmcal.to_day(time.strftime('%Y-%m-%d', time.gmtime(time.time())))
     out = []
     for bid, fm in sorted((beans or dmpass.beans_here(root)).items()):
         for t, label, e in _pointers(fm):

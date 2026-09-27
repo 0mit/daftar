@@ -1239,9 +1239,11 @@ for _d in ('VOCAB.md', 'GARDEN.md'):
     put24(_d, re.sub(r'^(extends: std-vocab@)\S+', r'\g<1>23.1', get24(_d), count=1, flags=re.M))
 put24('GARDEN.md', re.sub(r'^daftar_release:.*$', 'daftar_release: "v9.2.9"  # the daftar release this garden runs; '
                           'bin/dmupgrade.py moves it', get24('GARDEN.md'), count=1, flags=re.M))
-# its changelog as 23.1 left it: the release's newest entry, which goes ABOVE the one before, not yet there
+# its changelog as 23.1 left it: the release's newest entries — 24.0 and every one since — which go ABOVE the one
+# before, not yet there
 _cl = get24('seed/CHANGELOG.md')
-put24('seed/CHANGELOG.md', re.sub(r'^- \*\*24\.0\*\*.*?(?=^- \*\*23\.1\*\*)', '', _cl, count=1, flags=re.M | re.S))
+put24('seed/CHANGELOG.md', re.sub(r'^- \*\*(?:2[4-9]|[3-9]\d)\.\d+\*\*.*?(?=^- \*\*23\.1\*\*)', '', _cl, count=1,
+                                  flags=re.M | re.S))
 _ali = ('---\nbean: ali\ngenos: person\ntitle: "Ali"\nstatus: active\nsummary: "a neighbour"\nnature: empsychon\n'
         'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n'
         'identity: { status: confirmed, anchors: [ { key: person_id, value: "person:ali", class: logical, establishing: true },'
@@ -1273,7 +1275,7 @@ _roof = ('---\nbean: roof-work\ngenos: contract\ntitle: "roof-work — Ali retil
 put24('beans/roof-work.md', _roof)
 _aged24 = commit24('a garden as std-vocab 23.1 left it')
 check("(setup) the garden is aged into std-vocab 23.1's shape, with clauses whose `when` is prose",
-      _V24 == '24.0' and 'std-vocab@23.1' in get24('VOCAB.md') and _WHEN_PLAIN in get24('beans/roof-work.md')
+      tuple(map(int, _V24.split('.'))) >= (24, 0) and 'std-vocab@23.1' in get24('VOCAB.md') and _WHEN_PLAIN in get24('beans/roof-work.md')
       and '- **24.0**' in _cl and '- **24.0**' not in get24('seed/CHANGELOG.md') and '- **23.1**' in get24('seed/CHANGELOG.md'))
 
 # WHAT THE GATE REFUSES AND ONLY A PERSON CAN SAY: listed, nothing moved, everything put back
@@ -1424,6 +1426,130 @@ if os.name != 'nt':
     check("seed/germinate.sh refuses where no Python runs, naming the Store alias, and grows nothing",
           r.returncode != 0 and 'python3: is the Microsoft Store alias' in r.stderr and not os.path.exists(_gt),
           r.stdout + r.stderr)
+
+# ---- A RELEASE IS AUTHENTICATED BEFORE ANY OF IT RUNS: its tag's signature against the garden's own
+# seed/RELEASE-SIGNERS, or the commit a person names (--expect) or types; a repository on this machine is used as it
+# stands, saying so. Each way is asked of bin/dmupgrade.py's `authenticate`, with no network: it reads a clone and a
+# source's name, and nothing else.
+import builtins, importlib.util, io
+_spec = importlib.util.spec_from_file_location('dmupgrade_auth', os.path.join(ROOT, 'bin', 'dmupgrade.py'))
+_up = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_up)
+AR, AG = os.path.join(TMP, 'auth-release'), os.path.join(TMP, 'auth-garden')
+os.makedirs(AR); os.makedirs(os.path.join(AG, 'seed'))
+shutil.copy2(os.path.join(ROOT, 'seed', 'RELEASE-SIGNERS'), os.path.join(AG, 'seed', 'RELEASE-SIGNERS'))
+open(os.path.join(AR, 'README'), 'w').write('a release\n')
+run('git', 'init', '-q', cwd=AR); run('git', 'add', '-A', cwd=AR)
+run('git', '-c', 'commit.gpgsign=false', 'commit', '-qm', 'r', cwd=AR)
+run('git', 'tag', '--no-sign', '-a', 'v9.9.0', '-m', 'an unsigned release', cwd=AR)
+_sha = run('git', 'rev-parse', 'HEAD', cwd=AR).stdout.strip()
+NET = 'https://example.invalid/daftar.git'
+
+
+class _Term(io.StringIO):
+    def isatty(self):
+        return True
+
+
+def auth(src, expect=None, stdin=None, typed=None):
+    """(returned, refused): what `authenticate` said, or the refusal it exited with."""
+    saved_in, saved_input = sys.stdin, builtins.input
+    sys.stdin = stdin if stdin is not None else io.StringIO('')
+    if typed is not None:
+        builtins.input = lambda *_a: typed
+    try:
+        return _up.authenticate(AR, 'v9.9.0', _sha, src, expect, AG), None
+    except SystemExit as x:
+        return None, str(x.code)
+    finally:
+        sys.stdin, builtins.input = saved_in, saved_input
+
+
+got, refused = auth(NET)
+check("an unsigned tag fetched from a network, with no terminal, is REFUSED before any of it runs — printing the "
+      "--expect line to run once the commit is checked",
+      got is None and 'NOT AUTHENTICATED' in refused and 'carries no signature' in refused
+      and f'--expect {_sha[:12]} --from {NET}' in refused and 'Nothing from it has run' in refused, refused)
+got, refused = auth(NET, stdin=_Term(''), typed=_sha[:12])
+check("...at a terminal, it runs when the person types the commit's first twelve digits",
+      got and 'confirmed at the terminal' in got and refused is None, (got, refused))
+got, refused = auth(NET, stdin=_Term(''), typed='yes')
+check("...and anything else typed stops it", got is None and 'not confirmed' in refused, (got, refused))
+got, refused = auth(NET, expect=_sha[:12])
+check("--expect <the commit> accepts it, signed or not", got and '--expect names' in got, (got, refused))
+got, refused = auth(NET, expect='0' * 12)
+check("--expect <another commit> refuses it, naming both", got is None and _sha in refused and '000000000000' in refused,
+      (got, refused))
+got, refused = auth(NET, expect='v9.9.0')
+check("--expect takes a commit and nothing else", got is None and 'twelve hexadecimal digits' in refused, (got, refused))
+got, refused = auth(AR)
+check("a repository on this machine is taken as it stands, and the line says it was not authenticated, and why",
+      got and got.startswith('not authenticated') and 'carries no signature' in got and 'on this machine' in got,
+      (got, refused))
+_sig = _up.tag_signature(AR, 'v9.9.0')
+check("an unsigned annotated tag has no signature to check", _sig is None, _sig)
+
+if shutil.which('gpg'):
+    _gh = os.path.join(TMP, 'auth-gnupg'); os.makedirs(_gh, mode=0o700)
+    _genv = dict(os.environ, GNUPGHOME=_gh)
+    subprocess.run(['gpg', '--batch', '--pinentry-mode', 'loopback', '--passphrase', '', '--quick-gen-key',
+                    'rel <rel@example.org>', 'ed25519', 'sign', 'never'], capture_output=True, env=_genv)
+    _fpr = re.search(r'^fpr:+([0-9A-F]{40,64}):', subprocess.run(['gpg', '--with-colons', '--list-secret-keys'],
+                     capture_output=True, text=True, encoding='utf-8', errors='replace', env=_genv).stdout, re.M).group(1)
+    subprocess.run(['git', '-c', 'gpg.format=openpgp', '-c', f'user.signingkey={_fpr}', 'tag', '-s', '-f', 'v9.9.0',
+                    '-m', 'an OpenPGP-signed release'], capture_output=True, cwd=AR, env=_genv)
+    _sig = _up.tag_signature(AR, 'v9.9.0')
+    check("a signed tag is split into the tag without its signature, and the signature",
+          _sig and _sig[2] == 'openpgp' and b'an OpenPGP-signed release' in _sig[0] and b'BEGIN PGP' in _sig[1]
+          and b'BEGIN PGP' not in _sig[0], _sig and _sig[2])
+    got, refused = auth(NET)
+    check("a tag signed with OpenPGP, from a network, is not taken for authenticated: a release is checked against "
+          "SSH keys", got is None and 'signed with OpenPGP' in refused, (got, refused))
+else:
+    print("SKIP  no gpg: the OpenPGP-signed tag is not shown")
+
+if shutil.which('ssh-keygen') and 'check-novalidate' in ''.join(
+        subprocess.run(['ssh-keygen', *x], capture_output=True, text=True, encoding='utf-8',
+                       errors='replace').stderr or '' for x in (['-Y', 'x'], ['-?'])):
+    _keys = os.path.join(TMP, 'auth-keys')     # its own directory: `auth-release` is the release repository (AR)
+    os.makedirs(_keys, exist_ok=True)
+
+    def _sshkey(n):
+        k = os.path.join(_keys, n)
+        r = subprocess.run(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-C', n, '-f', k], capture_output=True,
+                           text=True, encoding='utf-8', errors='replace')
+        if r.returncode != 0 or not os.path.isfile(k + '.pub'):
+            raise SystemExit(f"FAIL  (setup) ssh-keygen could not make the key {n}: {(r.stderr or r.stdout).strip()}")
+        return k
+    _good, _other = _sshkey('release'), _sshkey('other')
+    with open(os.path.join(AG, 'seed', 'RELEASE-SIGNERS'), 'w') as fh:
+        fh.write('# test keys\ndaftar-release namespaces="git" ' + open(_good + '.pub').read().rsplit(' ', 1)[0] + '\n')
+    for k, ok in ((_good, True), (_other, False)):
+        # ssh-keygen named: a machine's own gpg.ssh.program would sign with its key, not the one made here
+        subprocess.run(['git', '-c', 'gpg.format=ssh', '-c', 'gpg.ssh.program=ssh-keygen', '-c', f'user.signingkey={k}',
+                        'tag', '-s', '-f', 'v9.9.0', '-m', 'an SSH-signed release'], capture_output=True, cwd=AR)
+        got, refused = auth(NET)
+        if ok:
+            check("a tag signed by a key the garden's seed/RELEASE-SIGNERS names is authenticated",
+                  got and 'signed by a key' in got, (got, refused))
+        else:
+            check("a tag signed by a key the file does not name is REFUSED, even from this machine",
+                  got is None and 'does not verify' in refused and auth(AR)[0] is None, (got, refused))
+else:
+    print("SKIP  this machine's ssh-keygen cannot check a signature: the SSH-signed tag is not shown")
+
+# ...and from the command line: a commit other than the one --expect names stops the upgrade, and the garden is as it was
+AU = os.path.join(TMP, 'auth-upgraded')
+g = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), AU, '--gardener', 'keeper', cwd=ROOT)
+_head = run('git', 'rev-parse', 'HEAD', cwd=AU).stdout.strip()
+_rsha = run('git', 'rev-parse', 'v0.1.0^{commit}', cwd=REL).stdout.strip()
+r = run(sys.executable, 'bin/dmupgrade.py', 'v0.1.0', '--from', REL, '--expect', '0' * 12, cwd=AU)
+check("dmupgrade --expect <another commit> refuses, names the commit it fetched, and the garden is untouched",
+      r.returncode != 0 and _rsha in r.stdout + r.stderr and run('git', 'rev-parse', 'HEAD', cwd=AU).stdout.strip() == _head
+      and not run('git', 'status', '--porcelain', cwd=AU).stdout.strip(), (r.stdout + r.stderr)[-600:])
+r = run(sys.executable, 'bin/dmupgrade.py', 'v0.1.0', '--from', REL, cwd=AU)
+check("...and without it, a release from a repository on this machine is used, the line saying it was not authenticated",
+      f"v0.1.0 ({_rsha[:12]}): not authenticated" in r.stdout, (r.stdout + r.stderr)[-600:])
 
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nupgrade: {sum(results)}/{len(results)} checks passed")

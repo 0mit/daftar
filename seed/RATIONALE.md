@@ -31,6 +31,30 @@ link integrity, journal<->commit binding) plus ONE generic loop that enforces ev
 schema here — that is a human-ratified rule-change — and the gate follows without a code edit.
 A term with no `schema:` is documentation only; the gate never enforces it on beans.
 
+## schema_language.is_ref
+
+Declared at 13.0.
+
+## schema_language.path
+
+Added at 2.0 for the five core grammar enums, and not declared in the schema language until 11.3.
+
+## schema_language.alt_form
+
+In use since the first schema language; declared at 11.3.
+
+## schema_language.dag
+
+`dag` became the term key of the `walk` sequence aspect at 9.2.
+
+## schema_language.values_add
+
+Declared at 8.2.
+
+## schema_language.compare_form
+
+Declared at 9.0.
+
 ## schema_language.attr_domains
 
 WHAT `in:` MAY SAY. Every attribute is a position in EXACTLY ONE domain,
@@ -660,6 +684,15 @@ mechanism, an offset from a being or from another system's position; a path is t
 names in that tool, and a garden's own filesystem system would have been read as a coordinate; `datum: host` puts the
 fact in the row, where the gate holds it to a place.
 
+## anchor_systems[unix-epoch]
+
+Declared at 7.0 for `beanger` records. The misreading its `why` names happened: a UTC reading labelled +03 was misread
+in the journal of the estate the law was first written in.
+
+## anchor_systems[network-segment]
+
+Declared at 11.0, when the operator ratified that a segment is a place and not an address.
+
 ## anchor_systems[git-object-graph].neighbours
 
 parent and child commits: a history is walked, never measured
@@ -693,9 +726,10 @@ ONE FORM MEANS ONE SET OF DIGITS. A pattern's `\d` matches every script's digits
 ASCII-ONLY: a position is WRITTEN in ASCII digits whatever calendar it is in, and the digits a reader sees are a
 matter for whatever shows it to them.
 EVERY DATED ATTRIBUTE OF THE STANDARD IS TYPED `date`: a day in ANY calendar, held to that calendar's own form.
-WHAT STILL READS ONLY THE GREGORIAN CALENDAR, named because 16.0 does not fix it: `leaf_orders.instant` (the merge
-absorbs a coarser reading into a finer one only within it) and the journal's heading form. Each is a Gregorian-only
-READER, not a rule that time is Gregorian.
+WHAT 16.0 LEFT READING ONLY THE GREGORIAN CALENDAR — `leaf_orders.instant` (the merge absorbs a coarser reading into a
+finer one only within it) and the journal's heading form — 18.0 took into every calendar: the `instant` order holds
+between readings in any declared calendar, asked at the day, and a heading is a position in any declared calendar's own
+form. Each had been a Gregorian-only READER, never a rule that time is Gregorian.
 THE FORM IS TAGGED — `persian:1405-06-29` — because `1405-06-29` is ALSO a Gregorian date, in the year 1405.
 One form per system; and between calendars, forms that cannot be mistaken for each other.
 
@@ -852,6 +886,10 @@ APPENDED AFTER THE APPLICATION ROWS RATHER THAN BESIDE `wireguard`, where they b
 dmsafe compares leaf paths BY INDEX, so inserting a row mid-list reads as deleting the fields of
 every row after it — the rollback said so and was right about what it could see. Grouping by layer
 is a legibility preference; a clean, honest diff is not.
+
+## net_protocols[pppoe]
+
+9.0 removed a `transport: tcp` and a port, 1723, that had been copied from pptp.
 
 ## units
 
@@ -1029,6 +1067,33 @@ like any entry's, and was not counted until the reverse gate learned to count it
 are declared for every garden that does not stand on them. The domain profile's `registration.auto_renew` is declared
 whole for the same reason.
 
+## vacancies[registry:storage_formats]
+
+Measured at zero across the corpus on 2026-08-07, when it was declared.
+
+## vacancies[responsibility.entry_one_of]
+
+When it was declared, no facet in the estate the law was first written in was co-owned, so none was co-answered-for.
+
+## vacancies[external]
+
+When it was declared, the estate the law was first written in had recorded no duty borne by an outside party.
+
+## vacancies[contingent]
+
+When it was declared, every requirement recorded in the estate the law was first written in was load-bearing: all 5 of
+its consumes/depends_on edges sat at `necessary`.
+
+## vacancies[physical]
+
+When it was declared, no being in the estate the law was first written in was recorded as a physical copy, and the
+operator named exactly that case — a codebase as a printed listing or a disk in a drawer — when the term was designed.
+
+## vacancies[network-segment]
+
+Declared at 11.0, with the operator's ratification that a segment is a place and not an address, while no bean yet
+stated which segment it was attached to.
+
 ## figures
 
 == FIGURES: the shapes an aspect may take (added 9.2, human-ratified rule-change, "T0") ==
@@ -1157,8 +1222,9 @@ absorbed at a merge: a gap against a value is a disagreement a person sees, neve
 The journal is the garden's time record, and it had no rule for time. One real garden, measured on
 2026-09-19: 663 entries, 276 headed with a date only, 387 with a time in `+0300` or `+0330` while the calendar
 system's one form is `+03:00`; and one entry headed 23:59 that was committed at 23:32, a precision written
-rather than read. A heading is now a position in gregorian-civil's one form, held to at least the MINUTE,
-with its offset, because an entry is ordered against every other and a reading with no offset cannot be.
+rather than read. A heading is now a position in a declared calendar's own form (gregorian-civil's until 18.0), held to
+at least the MINUTE, with its offset, because an entry is ordered against every other and a reading with no offset
+cannot be.
 Only headings ADDED by a commit are checked: the journal is never rewritten, so its history keeps the forms
 it was written in, and those stay what they were.
 
@@ -1195,6 +1261,8 @@ BOTH axes: a square is 2-dimensional,
 ## aspects[necessity].positions
 
 and declaring one would orient it like a line
+
+`impossible` was first occupied on 2026-08-02, by a domain's backup MX record that named its own primary.
 
 ## aspects[capability].meaning
 
@@ -1486,6 +1554,23 @@ beans, and the direct cost of that is on record: the router's `owns.wg_tunnel` s
 endpoint 203.0.113.19 while the VPS's `owns.wg_identity` said it dials .16 and listed .19 as a freed
 spare. Two beans, the same scanning agent, one day apart, and the gate cannot see it because
 `owns` has no rule to check. A link whose far end is a RESOLVED REF cannot contradict itself.
+
+## profiles.network.terms[links].dag_note
+
+The first draft of this term got it wrong twice in one line: it carried `dag: true` over `peer` and `carried_by`, and
+the design review caught both before any bean was written — the failure `inverse_of` carries a cardinality to avoid,
+met twice more in a single term. The note is long for that reason.
+
+## profiles.network.vacancies[pptp]
+
+Measured when it was declared: zero occurrences of pptp across the estate the law was first written in.
+
+## profiles.network.vacancies[registry:anchor_systems]
+
+Measured on 2026-08-07 rather than assumed: no being in the estate the law was first written in answered at a v6
+address. A host booted with `ipv6.disable=1` recorded it as `capabilities.ipv6-socket-binding` with feasibility
+`impossible`, and the only v6 address anywhere in the corpus was `2001:db8::53` — a REMOTE resolver a VPS failed to
+reach, which is a fact about somebody else's endpoint and not about ours.
 
 ## profiles.network.terms[reaches].meaning
 
@@ -2053,6 +2138,11 @@ FORM they share. This is the MAJOR change of the release: an existing term's han
 
 the link FORM and its resolution are CORE checks (target exists, named field present, shallow). Since 2.0 the acyclicity is declared per relation via schema.dag rather than here.
 
+## terms[ref].handling
+
+`graph` was narrowed at 2.0: from acyclicity asserted for a fixed list of sections to acyclicity declared per
+relation.
+
 ## terms[genos]
 
 == THE BEAN-GRAMMAR AND FACT-SECTION KEYS (added std-vocab@5.0, 2026-08-02, human-ratified) ==
@@ -2413,7 +2503,7 @@ waits for that layer, so the position is declared and vacant.
 ## terms[roots].meaning
 
 THE RESOLUTION HALF of the `root:` position form. A bean says WHERE a thing is in a portable way
-(`root:addin/CloudApi`); a HOST says what that root means on itself. Two hosts therefore
+(`root:src/app`); a HOST says what that root means on itself. Two hosts therefore
 never edit the same text to disagree about a path — each states its own resolution on its own bean,
 which is what makes adding a machine a one-line change instead of a corpus migration.
 It lives on the HOST because that is whose fact it is. A root map in a shared file would be one
@@ -2429,6 +2519,10 @@ can no longer disagree. `keyed_by: os` selects the operating_systems row by a fi
 which is the same machinery that fixes a crown branch from a bean's nature. It is on `roots` and
 NOT on `located_at`, deliberately: roots is the host describing itself and every bean carrying
 it has an `os`, while `located_at` is carried by codebases, which have none.
+
+## terms[roots].schema.attrs.system
+
+Pinned to the grammar the host's `os` declares since 7.0.
 
 ## terms[roles].meaning
 
@@ -2496,6 +2590,16 @@ a fact that can disagree with itself, which is the argument this vocabulary alre
 refusing a direction aspect. The chain is walkable both ways from `prev` plus list order, which is
 what "walkable all ways" actually required.
 
+## terms[beanger].schema.attrs.source
+
+The estate the law was first written in met that failure: /sys/class/net reported a bond's MAC where ethtool -P
+reported the NIC's.
+
+## terms[beanger].schema.attrs.records.in.entries.unit
+
+The rule exists because the estate the law was first written in twice wrote a value that looked measured and was
+inferred.
+
 ## system_shape.sources
 
 WHERE A SYSTEM'S MACHINERY COMES FROM, in the one pair every position uses (sources-by-nature). A reckoning by
@@ -2547,6 +2651,10 @@ A WORKTREE IS THE FIX AND THE BRANCH IS THE HAND-OFF. Each session gets its own 
 own index while sharing one object store, so they cannot stage over each other — and they can still
 read and merge one another's branches with no network hop, which is the sync-between-sessions half.
 
+## terms[workspace].schema.attrs.branch
+
+Every session before 2026-08-07 worked the main copy directly, on `master`.
+
 ## terms[capture].meaning
 
 THE THIRD STATE GROUND RULE 3 NOW ALLOWS, ratified 2026-08-07. Until today a fact was either OURS or
@@ -2571,6 +2679,11 @@ and a router export contains wireguard private keys, PPPoE passwords and communi
 the field required means "nothing was removed" has to be WRITTEN DOWN as a claim somebody made,
 rather than being the silent default of a field nobody filled in. An omission looks identical to a
 clean capture; a required attr does not.
+
+## terms[capture].schema.attrs.source
+
+The argument earned its place in `beanger.source` within the hour of being made: naming the command is what got it
+run.
 
 ## terms[capture].schema.attrs.staleness_key
 
@@ -3072,9 +3185,9 @@ is under "Designed, not built". The number is kept so the sections after it keep
 ## doc:MERGE.md#15
 
 The P1-P4 gates named here were all shipped, and their numbering **collides head-on** with the v2 P0-P7d
-used by `log/journal.md`, `test/golden.py`'s section headers and both design beans. Two numbering schemes
-in one repo is a trap for a cold reader, so this one is deleted rather than renumbered. What actually
-happened is in the journal.
+used by `log/journal.md`, `test/golden.py`'s section headers (the maintainers' corpus test, not shipped here)
+and both design beans. Two numbering schemes in one repo is a trap for a cold reader, so this one is deleted
+rather than renumbered. What actually happened is in the journal.
 
 (The section was headed: Implementation phasing — superseded.)
 
@@ -3136,6 +3249,17 @@ file into or out of those carries it too, or a file could leave the law in the c
 NO HARNESS IS NAMED. A path that one agent's harness reads from is a privilege written into universal law; the
 mirror of the door for agents that a release ships is left out of the map, counted where the map is shown.
 
+## layers[law].holds
+
+THE KEYS A RELEASE IS SIGNED WITH ARE LAW (25.0). An upgrade runs the release's own tool, its germinate.py and the hooks
+it installs, fetched from a network; a tag that moved, an account that was taken, a source that was not the project's,
+would each run in every garden that upgrades. So a signed tag is checked against keys the garden already holds, and
+they are the ones the release it runs brought, as a package manager's keyring is: which next release a garden trusts is
+decided by the release it trusts now, and a key changes only in a release its predecessor signed. What decides whether
+code runs is in force, applied alone, and a change to it is a RULE-CHANGE: it is law, beside what a release ships.
+Not taken: the keys fetched with the release (the release would vouch for itself); a key named in the tool's code (a
+change of key would be a change of code, and the tool is the thing being checked).
+
 ## layers[estate].holds
 
 A SERIES' PARTS ARE ESTATE (F12). They are a garden's own facts, in rows too many for a bean, and they belong to the bean
@@ -3148,6 +3272,12 @@ material whether or not anyone marked the bean, so the level is derived each tim
 a second copy that goes stale the day a code is added. What a person may add is what no rule can see — a note that
 names a condition in its own words — so a mark raises the level. Lowering it is a safety change (Contract E): a tool
 that lowered it would be deciding, alone, that a person's record may travel.
+
+REFUSED WHERE A COMMIT ADDS IT, WARNED WHERE IT IS (25.0). A warning came after the harm: the gate warned of a reading
+written unsealed, and a writer who committed anyway had put the value in every clone, every bundle and every hub, where
+the seal made next took none of it back. A person added without consent was refused from the start for the same
+reason. What is already in git is warned, not refused: refusing it would stop every commit of a garden whose history
+already holds it, and only a rewrite of every copy takes it out, which is the gardener's decision.
 
 ## terms[consent]
 
@@ -3178,6 +3308,12 @@ the ledger. A grant is held where the decision belongs — the gardener's bean, 
 an agreement's bean for what it shares — and a `forbidden` one is a no that no `permitted` one passes, so a person's
 refusal about herself is not undone by a wider grant. Delegating a ratification is the gardener's own act, or the
 Contract of Parts would be rewritable by anyone who can write a grant.
+
+WHAT AN AGREEMENT SHARES IS WHAT ITS PARTIES BROUGHT (25.0). An agreement's grant counted over whatever its `over`
+selected, so whoever could write one agreement could open any person's bean, or any special-category record, to anyone.
+An agreement speaks for the people who accepted it, and for nothing they did not bring: its own bean, and a bean one of
+them owns or is the record of. Beyond that its grant opens nothing, and the gate warns rather than refuses, because a
+selection grows with the garden and a bean somebody else adds must not stop their commit.
 
 ## held_form
 

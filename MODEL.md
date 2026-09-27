@@ -25,7 +25,7 @@ design steps before that are in `HISTORY.md` in the daftar repository.
 ## Facts carry their provenance
 A fact knows who said it and how they know (manifesto: provenance).
 - Each bean states a default `provenance: { src, by, as_of }`, where `src` is `observed`, `inferred`,
-  `asserted-by-human` or `generated-by-tool`. The vocabulary ranks them by HOW THE FACT IS KNOWN and says why
+  `stated-in-document`, `asserted-by-human` or `generated-by-tool`. The vocabulary ranks them by HOW THE FACT IS KNOWN and says why
   (`provenance_src`). A `generated-by-tool` fact has no standing of its own: it names what it was computed
   from in `provenance.from`, and weighs as the weakest of those.
 - A fact whose source differs from the bean's default carries its own record. What a record may hold, and what
@@ -206,9 +206,9 @@ The rules are data, not code.
   whole and never rewritten. A cell that holds no value says why, with a gap token; a cell set aside names its judge.
   What is read from a series — a value between two rows, where a moment falls — is read (`bin/dmseq.py`), never
   stored. A series is the world along a line, where it held; a `beanger` is one field's own log, when it was recorded.
-- **Where a case stands: a walk and a track.** A walk is the `steps` of a mapping, each saying who acts at it, how long
+- **Where a case stands: a walk and a course.** A walk is the `steps` of a mapping, each saying who acts at it, how long
   it usually takes, and whether it is a way out, a pause, or a final end; a step holds only what the term declares. A
-  track (`tracks`) names a walk, and each move along it is an entry of `moves`: the step reached, who moved it, a reason
+  course (`courses`) names a walk, and each move along it is an entry of `moves`: the step reached, who moved it, a reason
   from that step's list, why, and its moment, stamped by the save. The gate holds the moves to the walk; where the
   case stands, since when and who acts next are read. What a case asks for is a checklist's `items`: a set, not a walk.
 
@@ -310,6 +310,8 @@ ratifies. An agent that meets something it may not decide parks it in `log/pendi
   - a series' part a commit already holds, changed: a part is written once, and what is new is a part of its own;
   - a person who is not the gardener, added by name with no consent of theirs recorded, and a future whereabouts of
     one in git (see below);
+  - special-category material a commit adds unsealed: a value committed is in every clone for good, so it is sealed
+    first (see below); what is already in git is warned, by its path;
   - an entry sealed or unsealed with no `- held: <bean> <key> added|erased` line in the journal.
 - The gate reads the law its garden pins, at the one path `seed/std-vocab.md`. A gate that cannot load it, or
   that loads another version than the pin, refuses: it never falls back to another copy.
@@ -319,7 +321,12 @@ ratifies. An agent that meets something it may not decide parks it in `log/pendi
 - `CHECKLIST.md` is how a write is made.
 - A garden with more than one writer has a hub that judges every push again: each commit signed by a key a writer's
   bean carries as an anchor (`ssh_key_fingerprint`, `openpgp_fingerprint`), what it changes within that writer's
-  grants, and the whole garden by the gate (`bin/dmhub.py`).
+  grants, and the whole garden by the gate (`bin/dmhub.py`). Code is the gardener's: a change to a file of the `gate`
+  layer, to one a release keeps, to a Python or shell file, or to the drawing module a page names needs `ratify:G`,
+  and no push reaches the gate until every commit in it has passed. A commit with no parent is taken only by an empty
+  hub, from the gardener its tree names.
+- A release a garden upgrades to is authenticated before any of it runs: a signed tag against the keys the garden's
+  own release names (`seed/RELEASE-SIGNERS`), or the commit a person names or confirms (`bin/dmupgrade.py`).
 
 ## Who may see, and what is held off git
 - **Sensitivity is derived, never stored** (`bin/dmpass.py sensitivity`): a code of a scheme marked `sensitive` makes
@@ -329,6 +336,9 @@ ratifies. An agent that meets something it may not decide parks it in `log/pendi
   basis?, until?}` in place of its attributes — and what it held is kept in a store a host resolves through its
   `roots` (`bin/dmheld.py`). Git keeps only the pointer; the gate never reads a store; a store is checked where it is,
   by the pre-commit hook, which runs on the host: a pointer a commit adds that resolves nowhere here is refused.
+  Special-category material is sealed BEFORE the commit that would carry it, and the gate refuses one that adds it
+  unsealed: no seal takes back a value already in the history, which only a rewrite of every copy removes
+  (`seed/COOKBOOK.md`, "What harm can come of").
   Erasure for a person deletes what the stores here hold of them, and the pointers stay, saying so.
 - **Another person is kept by name only on their own word**: an agreement held here that they accepted (named by
   `consent`, or in whose `parties` they stand with `accepted`), or, for the gardener of a garden this one has met, the
@@ -338,8 +348,9 @@ ratifies. An agent that meets something it may not decide parks it in `log/pendi
   Otherwise they are an opaque id (`p-<8 hex>`), their name and the ways to reach them held off git; and their future
   whereabouts are held off git whatever they consented to.
 - **Who may do what is closed by default** (`grants`, read by `bin/dmpass.py may`): the gardener may; anyone else may
-  what a grant opens — held by the gardener, by the person the record is of or about, or by an agreement — and a
-  `forbidden` grant refuses what any `permitted` one would open.
+  what a grant opens — held by the gardener, by the person the record is of or about, or by an agreement over its own
+  bean and what a party who accepted it owns or is the record of — and a `forbidden` grant refuses what any
+  `permitted` one would open. An agreement's grant over any other bean opens nothing there, and the gate says so.
 
 ## Merging
 Gardens merge object by object, matched on establishing anchors: losslessly, in any order, with the same

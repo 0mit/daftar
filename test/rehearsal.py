@@ -165,6 +165,14 @@ write("beans/keeper.md", "---\n" + head + "\n" + READINGS.rstrip() + "\n---\n" +
 out = gate()
 check("written in the bean, the readings pass the gate and are WARNED as special-category material in git, by path",
       ok(out) and "holds special-category material at" in out and not any(s in out for s in SPECIAL), out[-2500:])
+code, out = save("the readings, as the patient says them", "- action: the readings of [[keeper]], as said.")
+check("...and a commit that would carry them unsealed is REFUSED, each path named and no value: a value committed is "
+      "in every clone for good, and no seal made afterwards takes it back",
+      code != 0 and "this commit adds special-category material at observations.bp-0314" in out
+      and "seal it first" in out and not any(s in out for s in SPECIAL)
+      and run("git", "log", "-p", "--all", cwd=G).stdout.count("127.5") == 0, out[-2500:])
+run("git", "reset", "-q", cwd=G)
+run("git", "checkout", "-q", "--", "log/journal.md", cwd=G)
 
 # ---------------------------------------------------------------- sealed, one by one, and the series whole
 lines = []

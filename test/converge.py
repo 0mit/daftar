@@ -443,6 +443,108 @@ _ok = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '
 check("...while a law it can read merges as before", 'cannot be read' not in _ok.stderr and 'Traceback' not in _ok.stderr
       and 'fingerprint:' in _ok.stdout, _ok.stderr[-400:])
 
+# ---------------------------------------------------------------- a member no term describes: its shape read from all
+def _box(garden, val):
+    return [{'garden': garden, 'id': 'box', 'fm': {'bean': 'box', 'genos': 'host', 'nature': 'soma', 'title': 'box',
+             'status': 'active', 'summary': 'box', 'owns': {'mixed': val},
+             'identity': {'status': 'confirmed', 'anchors': [{'key': 'serial', 'value': 'SN-MIX', 'class': 'hardware',
+                                                              'establishing': True}]}}}]
+_orders = []
+for _a, _b in ((['x', 'y'], 'z'), ({'k': 1}, 'z'), ({'k': 1}, ['x'])):
+    _one = M.merge_component(_box('ga', _a) + _box('gb', _b))['facts']['owns']
+    _two = M.merge_component(_box('gb', _b) + _box('ga', _a))['facts']['owns']
+    _orders.append((json.dumps(_one, sort_keys=True, default=str) == json.dumps(_two, sort_keys=True, default=str), _one))
+check("a member no term describes merges alike whichever garden comes first: a list against a scalar is one set, a "
+      "mapping against either is one value, both kept",
+      all(o for o, _v in _orders) and "'z'" in str(_orders[0][1]) and "'x'" in str(_orders[0][1]), _orders)
+
+# ---------------------------------------------------------------- a version refines only at a component's boundary
+_v = [(a, b, M.subsumes(a, b, 'version')) for a, b in (('AlmaLinux 9', 'AlmaLinux 9.4'), ('v1', 'v1.0'), ('12', '12-rc1'),
+                                                        ('9', '90'), ('1.2', '1.23'), ('v1', 'v10'), ('9.4', '9'))]
+check("the `version` order: a release is refined by one that goes on at a component's boundary, and never by one that "
+      "only starts with its text — `9` and `90` are two releases, a disagreement",
+      [x[2] for x in _v] == [True, True, True, False, False, False, False], _v)
+
+# ---------------------------------------------------------------- three ways: the base git hands the driver (%O)
+# Two branches of ONE garden share a base, and the driver reads it: what one side changed and the other left as the
+# base had it is that side's change, and stands — a removal among them, which must not come back from the side that
+# never touched it. Only a position both sides changed, differently, is a disagreement for a person.
+TW = os.path.join(TMP, 'three-ways')
+r = subprocess.run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), TW, '--gardener', 'keeper'],
+                   capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=ROOT)
+for _k, _v in (('user.name', 'tw'), ('user.email', 'tw@g'), ('commit.gpgsign', 'false')):
+    git('config', _k, _v, cwd=TW)
+HOST = """---
+bean: gate-host
+genos: host
+title: "gate-host"
+status: active
+summary: "a host two branches of one garden both keep"
+identity:
+  status: confirmed
+  anchors:
+    - { key: serial, value: "SN-TW-1", class: hardware, establishing: true }
+provenance: { src: observed, by: "keeper", as_of: now }
+nature: soma
+owned_by: { legal: { owner: { bean: keeper } } }
+responsibility: { legal: { holder: { bean: keeper } } }
+roles:
+  - { role: web }
+os: linux
+---
+The gate host.
+"""
+
+
+def tw_write(text):
+    open(os.path.join(TW, 'beans', 'gate-host.md'), 'w', encoding='utf-8').write(text)
+
+
+def tw_read():
+    return open(os.path.join(TW, 'beans', 'gate-host.md'), encoding='utf-8').read()
+
+
+def tw_save(what):
+    return subprocess.run([sys.executable, 'bin/dmsave.py', 'tw (test)', what, '--body', f'- action: [[gate-host]] {what}'],
+                          capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=TW)
+
+
+def tw_branches(theirs, ours, name):
+    """From the saved base: `theirs` on a branch, `ours` on the trunk, then the branch merged in. (rc, output, bean)"""
+    base = git('rev-parse', 'HEAD', cwd=TW).stdout.strip()
+    git('checkout', '-q', '-b', name, cwd=TW)
+    tw_write(theirs(tw_read())); a = tw_save('theirs: ' + name.replace('-', ' '))
+    git('checkout', '-q', '-', cwd=TW)
+    tw_write(ours(tw_read())); b = tw_save('ours: ' + name)
+    m = git('merge', '--no-edit', name, cwd=TW)
+    out = a.stdout + a.stderr + b.stdout + b.stderr + m.stdout + m.stderr
+    bean = yaml.safe_load(dmparse.split_front_matter(tw_read())[0])
+    return m.returncode == 0 and a.returncode == 0 and b.returncode == 0, out, bean, base
+
+
+tw_write(HOST)
+_b = tw_save('the gate host')
+check("(setup) a garden keeps a host on its trunk", r.returncode == 0 and _b.returncode == 0, (_b.stdout + _b.stderr)[-400:])
+ok, out, fm, _base = tw_branches(lambda t: t.replace('status: active', 'status: deprecated').replace('roles:\n  - { role: web }\n', ''),
+                                 lambda t: t.replace('The gate host.', 'The gate host, as the trunk keeps it.'),
+                                 'retire-and-drop-roles')
+check("a value only theirs changed is theirs, and a key only theirs removed stays removed — no conflict, and the "
+      "trunk's own edit of the body kept, with nothing appended",
+      ok and fm['status'] == 'deprecated' and 'roles' not in fm and not fm.get('merge_open')
+      and tw_read().count('The gate host') == 1 and 'as the trunk keeps it' in tw_read(), out[-900:])
+ok, out, fm, _base = tw_branches(lambda t: t.replace('os: linux', 'os: freebsd'),
+                                 lambda t: t.replace('os: linux', 'os: debian'), 'both-os')
+check("...a value BOTH changed, differently, is a disagreement for a person, both values kept",
+      ok and isinstance(fm.get('os'), dict) and sorted(fm['os'].get('conflict') or []) == ['debian', 'freebsd']
+      and fm.get('merge_open') is True and fm.get('merge_conflicts') == ['os'], out[-900:])
+git('reset', '-q', '--hard', _base, cwd=TW)
+ok, out, fm, _base = tw_branches(
+    lambda t: t.replace('establishing: true }\n', 'establishing: true }\n    - { key: mac, value: "02:00:5e:10:00:01", '
+                                                   'class: hardware, establishing: false }\n', 1),
+    lambda t: t.replace('The gate host', 'The gate host, its anchors kept', 1), 'anchor')
+check("...an identity anchor only theirs added arrives — the driver used to keep ours' identity whole, and drop it",
+      ok and any(a.get('key') == 'mac' for a in fm['identity']['anchors']), out[-900:])
+
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"\nconverge: {sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

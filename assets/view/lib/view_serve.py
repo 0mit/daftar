@@ -123,7 +123,8 @@ class Host:
         self.lock = threading.Lock()
         self.wlock = threading.Lock()                # one form's save at a time in this host; dmsave's own lock queues others
         self.head, self.checked, self.payload, self.views = None, 0, None, {}
-        self.fails = {}
+        self.fails = {}                              # ip or user -> [the moments of its failed sign-ins in the window]
+        self.revoked = self._load_revoked()          # the signatures of tokens signed out, until each would expire
         self.beans, self.gardener, self.answers = {}, None, {}
         self.argv = argv or sys.argv
         self.release_at_start = self.release()
@@ -154,6 +155,11 @@ class Host:
             return Verdict(True, "this viewer may act, where a grant opens the tool")
         what = ("act:" + tool) if act else "write" if write else "read"
         target = bean if bean is not None else vm.PAGE
+        # AN ANSWER HOLDS FOR THE DAY IT WAS ASKED ON. A grant's `during` is read by the day (dmpass `_during`), and an
+        # answer kept until the next commit went on granting past a grant's last day: the cache is the day's.
+        day = int(time.time() // 86400)
+        if getattr(self, "answers_day", None) != day:
+            self.answers, self.answers_day = {}, day
         k = (actor, what, target, tuple(positions) if positions else None, bool(reason))
         a = self.answers.get(k)
         if a is None:
@@ -421,7 +427,27 @@ class Host:
         if not ans[0]:
             self.audit(dict(base, mode="refused", why=ans[1]))
             return 403, {"error": "refused: %s" % ans[1]}
+        # EACH VALUE IS ONE VALUE. A value may be a node of its own — `{ scheme: boat-checks, code: hull }`, a quantity —
+        # but a viewer's text went into the entry as written, so `hello, by: someone, flag: yes` became three attributes
+        # the form never offered. Each value is read alone, as `{ <attr>: <value> }`, and refused unless it is exactly
+        # that attribute; and the entry is read again whole, and refused unless it holds exactly the attributes given.
+        spill = []
+        for a in given:
+            try:
+                one = vm.dmparse.loads("{ %s: %s }" % (a, given[a]))
+            except Exception:
+                one = None
+            if not (isinstance(one, dict) and list(one) == [a]):
+                spill.append(a)
         line = "{ %s }" % ", ".join("%s: %s" % (a, given[a]) for a in allowed if a in given)
+        try:
+            back = vm.dmparse.loads(line) if not spill else None
+        except Exception:
+            back = None
+        if spill or not (isinstance(back, dict) and set(back) == set(given)):
+            why = "a value is one value, of its own attribute (%s)" % ", ".join(spill or sorted(given))
+            self.audit(dict(base, mode="refused", why=why))
+            return 400, {"error": "refused: %s — nothing written" % why}
         line = ("  %s: %s" % (entry, line)) if f["keyed"] else ("  - %s" % line)
         with self.wlock:
             if self._git("status", "--porcelain").stdout.strip():
@@ -503,6 +529,55 @@ class Host:
         return rows[-n:]
 
     # --- sessions ---
+    # SIGNING IN IS LIMITED, AND SIGNING OUT IS FOR GOOD. Five failures in a quarter of an hour, from one address or for
+    # one user, lock that address or user out until the quarter has passed: the password is not even asked. Nothing
+    # sleeps, so a flood of failures ties up no thread, and a failure older than the window is forgotten. A token signed
+    # out is kept, by its signature, in `revoked.json` beside the host's configuration until it would have expired —
+    # the key outlives a restart, so the revocation does too.
+    FAIL_WINDOW, FAIL_LIMIT = 900, 5
+
+    def locked(self, *who):
+        now = time.time()
+        for k in list(self.fails):
+            self.fails[k] = [t for t in self.fails[k] if now - t < self.FAIL_WINDOW]
+            if not self.fails[k]:
+                del self.fails[k]
+        return any(len(self.fails.get(w, ())) >= self.FAIL_LIMIT for w in who if w)
+
+    def failed(self, *who):
+        if len(self.fails) > 10000:                  # a flood of addresses: forget the oldest, never grow without end
+            for k in sorted(self.fails, key=lambda k: max(self.fails[k]))[:len(self.fails) - 10000]:
+                del self.fails[k]
+        for w in who:
+            if w:
+                self.fails.setdefault(w, []).append(time.time())
+
+    def _revoked_path(self):
+        return os.path.join(os.path.dirname(os.path.abspath(self.config_path)), "revoked.json")
+
+    def _load_revoked(self):
+        try:
+            with open(self._revoked_path()) as fh:
+                got = json.load(fh)
+        except (OSError, ValueError):
+            return {}
+        now = time.time()
+        return {str(k): int(v) for k, v in (got.items() if isinstance(got, dict) else []) if int(v) > now}
+
+    def revoke(self, tok):
+        """Sign a token out: kept by its signature until it would have expired, and written whole beside the config."""
+        try:
+            _user, exp, sig = base64.urlsafe_b64decode(tok.encode()).decode().split("|")
+        except Exception:
+            return
+        now = time.time()
+        self.revoked = {k: v for k, v in self.revoked.items() if v > now}
+        self.revoked[sig] = int(exp)
+        tmp = self._revoked_path() + ".tmp"
+        with open(tmp, "w") as fh:
+            json.dump(self.revoked, fh)
+        os.replace(tmp, self._revoked_path())
+
     def token(self, user):
         exp = int(time.time()) + SESSION_HOURS * 3600
         body = "%s|%d" % (user, exp)
@@ -513,7 +588,8 @@ class Host:
         try:
             user, exp, sig = base64.urlsafe_b64decode(tok.encode()).decode().split("|")
             good = hmac.new(self.key, ("%s|%s" % (user, exp)).encode(), hashlib.sha256).hexdigest()
-            if hmac.compare_digest(sig, good) and int(exp) > time.time() and user in self.cfg["users"]:
+            if hmac.compare_digest(sig, good) and int(exp) > time.time() and user in self.cfg["users"] \
+                    and sig not in self.revoked:
                 return user
         except Exception:
             pass
@@ -577,6 +653,12 @@ def make_handler(F):
         def _json(self, code, obj):
             self._send(code, json.dumps(obj, ensure_ascii=False), "application/json")
 
+        def _secure(self):
+            """`; Secure` where the viewer reached the host over HTTPS — said by the host's configuration, or by the proxy
+            in front of it — so the cookie never travels in the clear; over plain HTTP a browser would refuse it."""
+            https = F.cfg.get("secure_cookie") is True or (self.headers.get("X-Forwarded-Proto") or "").lower() == "https"
+            return "; Secure" if https else ""
+
         def _session(self):
             for part in (self.headers.get("Cookie") or "").split(";"):
                 k, _, v = part.strip().partition("=")
@@ -592,7 +674,11 @@ def make_handler(F):
             if u.path == "/login":
                 return self._send(200, LOGIN % {"title": title, "err": ""})
             if u.path == "/logout":
-                return self._send(303, "", headers={"Location": "/login", "Set-Cookie": "%s=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict" % COOKIE})
+                tok, user = self._session()
+                if user:
+                    F.revoke(tok)                  # the token itself, not only the browser's copy of it
+                return self._send(303, "", headers={"Location": "/login", "Set-Cookie": "%s=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict%s"
+                                                     % (COOKIE, self._secure())})
             tok, user = self._session()
             if not user:
                 if u.path.startswith("/api/"):
@@ -635,7 +721,12 @@ def make_handler(F):
 
         def do_POST(self):
             u = urllib.parse.urlparse(self.path)
-            n = int(self.headers.get("Content-Length") or 0)
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                n = -1
+            if n < 0:                                  # read(-1) would wait for a body that never ends
+                return self._send(400, "a Content-Length is a count of bytes", "text/plain")
             if n > 65536:
                 return self._send(413, "too large", "text/plain")
             raw = self.rfile.read(n).decode("utf-8", "replace")
@@ -643,15 +734,16 @@ def make_handler(F):
                 f = urllib.parse.parse_qs(raw)
                 user, pw = f.get("user", [""])[0], f.get("password", [""])[0]
                 ip = self.client_address[0]
-                if F.fails.get(ip, 0) >= 5:
-                    time.sleep(3)
+                who = ("ip:" + ip, "user:" + user if user else None)
+                if F.locked(*who):
+                    return self._send(429, LOGIN % {"title": title, "err": '<div class="e">too many tries — wait a quarter '
+                                                                           'of an hour</div>'})
                 rec = F.cfg["users"].get(user)
                 if rec and check_password(pw, rec["password"]):
-                    F.fails.pop(ip, None)
-                    return self._send(303, "", headers={"Location": "/", "Set-Cookie": "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d"
-                                                         % (COOKIE, F.token(user), SESSION_HOURS * 3600)})
-                F.fails[ip] = F.fails.get(ip, 0) + 1
-                time.sleep(1)
+                    F.fails.pop(who[0], None)
+                    return self._send(303, "", headers={"Location": "/", "Set-Cookie": "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d%s"
+                                                         % (COOKIE, F.token(user), SESSION_HOURS * 3600, self._secure())})
+                F.failed(*who)
                 return self._send(401, LOGIN % {"title": title, "err": '<div class="e">wrong user or password</div>'})
             tok, user = self._session()
             if not user:

@@ -177,8 +177,9 @@ is the model, and `CHECKLIST.md` says how a write is made. `COOKBOOK.md` goes on
 | `journal.md.template` | the header and **zero entries**, so no provenance is falsified |
 | `pending.md.template` | the park-and-proceed queue: its header and **zero entries** |
 | `germinate.py` | the procedure above (`germinate.sh` hands over to it) |
+| `RELEASE-SIGNERS` | the keys a release tag is signed with: `bin/dmupgrade.py` checks the next release against the garden's copy before any of it runs |
 | `COOKBOOK.md` | the common things, written the way the gate accepts them, the gardener first |
-| `FORMS.md` | what an agent reads before writing: six of the cookbook's recipes, byte for byte, and what to write when nobody said |
+| `FORMS.md` | what an agent reads before writing: six of the cookbook's recipes as forms (`bin/dmforms.py` derives them, every day nobody could have said taken out), and what to write when nobody said |
 | `WELCOME.md` | the door for an assistant with no shell |
 | `RATIONALE.md` | why each rule of `std-vocab.md` is as it is, keyed by the rule's path |
 

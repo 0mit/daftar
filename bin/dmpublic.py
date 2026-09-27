@@ -18,11 +18,18 @@ not the values of chosen keys, for the same reason: a list of three keys (hostna
 email, an agreement's id, a serial number and a session id through, and an anchor key the law adds tomorrow
 names something a garden identifies — which is exactly what must not leave it.
 
-WHAT IS NOT A LEAK. A word that the PUBLISHED knowledge carries is public knowledge, not an estate fact:
+WHAT ELSE A GARDEN SAYS OF ITSELF. A bean's title of three words or more (a phrase that long is a name), and every
+network address and email address its front matter holds, anchor or not — a contact, an interface's address — except
+the ranges and domains kept for documentation (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24, 2001:db8::/32,
+example.org and its kind), which every page of this repository may use. A name of three letters is guarded (`nas`,
+`vps`); shorter ones are found everywhere, and are not.
+
+WHAT IS NOT A LEAK. A word that the PUBLISHED technology catalogue carries is public knowledge, not an estate fact:
 `seed/knowledge/technology.tsv` names MikroTik, Samba and Docker, and a garden whose router bean is called
 `mikrotik` must not make the word unsayable in a vocabulary that documents RouterOS. Those are subtracted
 automatically, and so is an anchor value made ONLY of public words (`product:samba` says what the catalogue
-already says). Anything else that is genuinely public — the account name, the project name — goes in
+already says). The other tables — occupations, fields of education — are thousands of ordinary words, `nurse` and
+`manager` among them, and a host a garden calls `manager` is its own name: they are public only in their own files. Anything else that is genuinely public — the account name, the project name — goes in
 `seed/PUBLIC-ALLOW`, one word per line, which is a decision recorded rather than a special case in code. A line
 may name the files the word is public IN (`<word> <path> ...`): a consent given for one page is not a consent
 given for every file, commit message and pull request.
@@ -32,7 +39,7 @@ given for every file, commit message and pull request.
 Checks, each only if asked for: every tracked file (default), the messages of the commits in `--range`, and
 a text file such as a pull request body. Exit 0 = nothing found, 1 = something names the estate, 2 = setup.
 """
-import functools, glob, os, re, subprocess, sys
+import functools, glob, ipaddress, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -72,6 +79,44 @@ def own_garden_id(garden):
     return roots[-1][:12] if r.returncode == 0 and roots and shallow != 'true' else None
 
 
+_EMAIL = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+')
+_ADDR = re.compile(r'(?<![\w.:])(?:\d{1,3}(?:\.\d{1,3}){3}|[0-9A-Fa-f]{0,4}(?::[0-9A-Fa-f]{0,4}){2,7})(?:/\d{1,3})?(?![\w.:])')
+_DOC_NETS = [ipaddress.ip_network(n) for n in ('192.0.2.0/24', '198.51.100.0/24', '203.0.113.0/24', '2001:db8::/32',
+                                                '127.0.0.0/8', '::1/128', '0.0.0.0/32', '::/128')]
+_DOC_DOMAINS = ('example.org', 'example.com', 'example.net', 'example', 'invalid', 'localhost', 'test')
+
+
+def _said(node):
+    """Every text a front matter holds, keys and values, however deep."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            yield str(k)
+            yield from _said(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _said(v)
+    elif isinstance(node, str):
+        yield node
+
+
+def reachable(fm):
+    """The network and email addresses a front matter holds anywhere, less those kept for documentation."""
+    out = set()
+    for text in _said(fm):
+        for m in _ADDR.findall(text):
+            try:
+                a = ipaddress.ip_network(m, strict=False)
+            except ValueError:
+                continue
+            if not any(a.version == n.version and a.subnet_of(n) for n in _DOC_NETS):
+                out.add(m)
+        for m in _EMAIL.findall(text):
+            dom = m.rsplit('@', 1)[1].lower()
+            if not any(dom == d or dom.endswith('.' + d) for d in _DOC_DOMAINS):
+                out.add(m)
+    return out
+
+
 def estate_words(garden, public=frozenset()):
     """What a garden knows that this repository must never say. Derived from the garden itself: every name it gives
     (bean and mapping ids, root names, its own id) and every value it identifies something by (each identity
@@ -87,6 +132,9 @@ def estate_words(garden, public=frozenset()):
             continue
         if fm.get('bean'):
             names.add(str(fm['bean']))
+        if isinstance(fm.get('title'), str) and len(fm['title'].split()) >= 3:
+            values.add(' '.join(fm['title'].split()))
+        values |= reachable(fm)
         ident = fm.get('identity') if isinstance(fm.get('identity'), dict) else {}
         for a in (ident.get('anchors') or []):
             # a yes/no is no one's identity, and `True` guarded as a word would make "true" unsayable
@@ -109,7 +157,7 @@ def estate_words(garden, public=frozenset()):
     # not, while `a@example.org` keeps its guard because `a` is nobody's public word — and a MAC address, cut into
     # two-letter tokens that no catalogue carries, keeps its guard too.
     values = {v for v in values if not (_tokens(v) and all(t in public for t in _tokens(v)))}
-    return {w.lower() for w in names | values if len(w) >= 4}
+    return {w.lower() for w in names | values if len(w) >= 3}
 
 
 @functools.lru_cache(maxsize=None)
@@ -132,21 +180,47 @@ def public_words(garden):
     (a technology catalogue names MikroTik and Samba), plus the lines of this repository's PUBLIC-ALLOW that name
     no file. A line that names files is public only in those (`allowed_in`)."""
     ok = set()
-    for tsv in glob.glob(os.path.join(HERE, '..', 'seed', 'knowledge', '*.tsv')):
-        with open(tsv, encoding='utf-8', errors='replace') as fh:
-            for line in fh:
-                for cell in line.rstrip('\n').split('\t'):
-                    for token in _tokens(cell):
-                        if len(token) >= 4:
-                            ok.add(token)
+    ok |= _table_words(os.path.join(HERE, '..', 'seed', 'knowledge', 'technology.tsv'))
+    ok |= _law_words()
     ok |= {w for w, paths in _allow_lines() if not paths}
     return ok
 
 
-def allowed_in(path):
+@functools.lru_cache(maxsize=None)
+def _law_words():
+    """The law's own names for kinds of being and for the keys a being is identified by (`product` in `product:samba`):
+    this repository publishes them."""
+    try:
+        law = yaml.safe_load(dmparse.read(os.path.join(HERE, '..', 'seed', 'std-vocab.md'))[0]) or {}
+    except Exception:
+        return frozenset()
+    names = [str(g.get('genos')) for g in law.get('gene') or [] if isinstance(g, dict) and g.get('genos')]
+    names += [str(t.get('term')) for t in law.get('terms') or [] if isinstance(t, dict) and isinstance(t.get('anchor'), dict)]
+    return frozenset(t for n in names for t in _tokens(n) if len(t) >= 3)
+
+
+@functools.lru_cache(maxsize=None)
+def _table_words(path):
+    """The words of one published table's cells, four letters and more."""
+    ok = set()
+    try:
+        with open(path, encoding='utf-8', errors='replace') as fh:
+            for line in fh:
+                for cell in line.rstrip('\n').split('\t'):
+                    ok.update(t for t in _tokens(cell) if len(t) >= 4)
+    except OSError:
+        pass
+    return frozenset(ok)
+
+
+def allowed_in(path, repo=None):
     """The words PUBLIC-ALLOW makes public in one tracked file (a path as git spells it) and nowhere else — and every
-    word it names, in PUBLIC-ALLOW itself: the line that records a decision has to be able to say the word."""
-    return {w for w, paths in _allow_lines() if path in paths or path == 'seed/PUBLIC-ALLOW'}
+    word it names, in PUBLIC-ALLOW itself: the line that records a decision has to be able to say the word. A published
+    table under seed/knowledge/ may say its own words."""
+    out = {w for w, paths in _allow_lines() if path in paths or path == 'seed/PUBLIC-ALLOW'}
+    if path.startswith('seed/knowledge/') and path.endswith('.tsv') and repo:
+        out |= _table_words(os.path.join(repo, *path.split('/')))
+    return out
 
 
 def _pattern(w):
@@ -190,14 +264,15 @@ def main():
     words = estate_words(garden, public) - public
     bad = []
     if '--no-files' not in a:
-        for f in subprocess.run(['git', 'ls-files'], capture_output=True, text=True, encoding='utf-8', errors='replace',
-                                cwd=repo).stdout.split():
+        # -z: a path holding a space is one path, not two that exist nowhere
+        for f in [x for x in subprocess.run(['git', 'ls-files', '-z'], capture_output=True, text=True, encoding='utf-8',
+                                            errors='replace', cwd=repo).stdout.split('\0') if x]:
             p = os.path.join(repo, f)
             try:
                 body = open(p, encoding='utf-8', errors='replace').read()
             except Exception:
                 continue
-            for w, line in hits(body, words - allowed_in(f)).items():
+            for w, line in hits(body, words - allowed_in(f, repo)).items():
                 bad.append((f"{f}:{line}", w))
     if rng:
         msgs = subprocess.run(['git', 'log', '--format=%H%n%B', rng], capture_output=True, text=True,

@@ -582,6 +582,17 @@ for rel in ("MODEL.md", "VOCAB.md", "GARDEN.md", "seed/std-vocab.md", "seed/CHAN
     run("git", "reset", "-q", "--hard", cwd=G)
 check("THE RULE-CHANGE DUTY IS UNCHANGED: an edit to MODEL.md, VOCAB.md, GARDEN.md, seed/std-vocab.md, "
       "seed/CHANGELOG.md or bin/dmcheck.py staged with no journal entry is refused as a RULE-CHANGE", not _missed, _missed)
+_said = {}
+for _body in ("- action: a note in MODEL.md, not a RULE-CHANGE", "- action: RULE-CHANGE — a note in MODEL.md"):
+    with open(os.path.join(G, "MODEL.md"), "a", encoding="utf-8", newline="\n") as fh:
+        fh.write("\nA local edit.\n")
+    run(sys.executable, os.path.join(G, "bin", "dmjournal.py"), "keeper (test)", "a note", "--body", _body, cwd=G)
+    run("git", "add", "-A", cwd=G)
+    out, rc = gate()
+    _said[_body] = "never says RULE-CHANGE" in out
+    run("git", "reset", "-q", "--hard", cwd=G)
+check("...and an entry that says it is `not a RULE-CHANGE` does not say it is one: the word is read as a claim",
+      list(_said.values()) == [True, False], _said)
 with open(os.path.join(G, "log", "pending.md"), "a", encoding="utf-8", newline="\n") as fh:
     fh.write("\nA local note in the queue.\n")
 run("git", "add", "log/pending.md", cwd=G)

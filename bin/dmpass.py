@@ -385,8 +385,12 @@ class Origins:
         self.law = law
         self.acts = [r for r in (law.get('acts') or []) if isinstance(r, dict)] if isinstance(law.get('acts'), list) else []
         self.act_names = [r.get('act') for r in self.acts]
-        self.natures = [r.get('nature') for r in (law.get('natures') or []) if isinstance(r, dict)] \
-            if isinstance(law.get('natures'), list) else []
+        # THE NATURES AS THE GATE READS THEM: a garden's restatement where it declares one, and the rows it adds
+        _loc = local if isinstance(local, dict) else {}
+        _rows = _loc.get('natures') if isinstance(_loc.get('natures'), list) else law.get('natures')
+        _adds = _loc.get('registry_additions').get('natures') if isinstance(_loc.get('registry_additions'), dict) else None
+        self.natures = [r.get('nature') for r in (list(_rows) if isinstance(_rows, list) else [])
+                        + (list(_adds) if isinstance(_adds, list) else []) if isinstance(r, dict)]
         self.types = {t.get('type'): t for t in (law.get('value_types') or []) if isinstance(t, dict)}
         _sl = law.get('schema_language') if isinstance(law.get('schema_language'), dict) else {}
         self.domains = dict(_sl['attr_domains']) if isinstance(_sl.get('attr_domains'), dict) else {}
@@ -1110,7 +1114,10 @@ def _during(d, at):
         return True
     import time
     try:
-        now = _day(at) if at else int(time.time() // 86400)
+        # TODAY IN THE SAME COUNT AS THE BOUNDS: dmcal's day number. It was the count of days since 1970, and a bound's is
+        # dmcal's (about 739,000 now against about 20,700), so a grant with a `to` never ended and one with a `from`
+        # never began, wherever no `at` was given — the view host, the hub, the gate.
+        now = _day(at) if at else _day(time.strftime('%Y-%m-%d', time.gmtime(time.time())))
         lo = _day(d['from']) if d.get('from') is not None else None
         hi = _day(d['to']) if d.get('to') is not None else None
     except Exception:
@@ -1127,12 +1134,41 @@ def _select(holder, key, root):
         return None
 
 
+def _subjects(bid, fm):
+    """The persons a bean is the record of: whoever it is `about`, and the person it is, for a person's own bean."""
+    out = {e.get('who') for e in fm.get('about') or [] if isinstance(e, dict)} if isinstance(fm.get('about'), list) else set()
+    if fm.get('genos') == 'person':
+        out.add(bid)
+    return out
+
+
+def _owners(fm):
+    """The beans a bean's `owned_by` names as owner, in any facet."""
+    ob = fm.get('owned_by')
+    return {f['owner']['bean'] for f in (ob.values() if isinstance(ob, dict) else [])
+            if isinstance(f, dict) and isinstance(f.get('owner'), dict) and isinstance(f['owner'].get('bean'), str)}
+
+
+def shares(holder, hfm, bid, fm):
+    """Whether the agreement `holder` may decide a grant over the bean `bid`: its own bean, and what a party who ACCEPTED
+    it brings into it — a bean that party owns, or is the record of. Nothing else: an agreement is not a key to the
+    garden, and a bean nobody who accepted it holds is not its to open."""
+    if bid == holder:
+        return True
+    ps = hfm.get('parties')
+    accepted = {e['who']['bean'] for e in (ps.values() if isinstance(ps, dict) else [])
+                if isinstance(e, dict) and e.get('accepted') and isinstance(e.get('who'), dict)
+                and isinstance(e['who'].get('bean'), str)}
+    return bool(accepted & (_owners(fm) | _subjects(bid, fm)))
+
+
 def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None):
     """Whether `actor` may `act` (read, write, act:<tool>, ratify:<class>) on `bean` — at `positions`, or the whole bean.
     CLOSED BY DEFAULT: the gardener is granted; nobody is granted what no grant opens. A grant counts when its holder may
-    decide it — the gardener, the person the bean is of or `about`, an agreement — and it matches the act, holds the
-    bean (`over`, or the bean holding it), covers the positions, names the actor and holds at `at`. A `forbidden` one
-    refuses whatever a `permitted` one opens."""
+    decide it — the gardener; the person the bean is of or `about`; an agreement, over its own bean and what a party who
+    accepted it owns or is the record of (`shares`) — and it matches the act, holds the bean (`over`, or the bean holding
+    it), covers the positions, names the actor and holds at `at`. A `forbidden` one refuses whatever a `permitted` one
+    opens."""
     gardener = gardener if gardener is not None else gardener_of(root)
     if actor is None:
         return Answer(False, "nobody named: an actor no one can name is granted nothing")
@@ -1140,15 +1176,14 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
         return Answer(True, f"{actor} is the gardener, who keeps the garden")
     beans = beans if beans is not None else beans_here(root)
     fm = beans.get(bean) or {}
-    subjects = {e.get('who') for e in fm.get('about') or [] if isinstance(e, dict)} if isinstance(fm.get('about'), list) else set()
-    if fm.get('genos') == 'person':
-        subjects.add(bean)
+    subjects = _subjects(bean, fm)
     read, forbid, permit, notes = [], [], [], []
     for holder, hfm in sorted(beans.items()):
         gs = hfm.get('grants')
         if not isinstance(gs, dict):
             continue
-        may_decide = holder == gardener or holder in subjects or hfm.get('genos') == 'contract'
+        may_decide = holder == gardener or holder in subjects or \
+            (hfm.get('genos') == 'contract' and shares(holder, hfm, bean, fm))
         for key, g in sorted(gs.items()):
             if not isinstance(g, dict) or g.get('act') != act or not may_decide:
                 continue
@@ -1235,19 +1270,22 @@ def quoted(n, text):
 
 
 class Trace(tuple):
-    """(verdict, source, method, quoted, decision): `words` — found in a person's words or instructions, the pass
-    take-down; `granted` — found only where another granted row holds (a run's capture, by `record`); `refused` — found,
-    by a distinctive needle, only where the flow law refuses it; `nowhere` — found nowhere quoted, HOPED."""
+    """(verdict, source, method, quoted, decision, distinct): `words` — found in a person's words or instructions, the
+    pass take-down; `granted` — found only where another granted row holds (a run's capture, by `record`); `refused` —
+    found, by a distinctive needle, only where the flow law refuses it; `nowhere` — found nowhere quoted, HOPED.
+    `distinct` counts the finds by a needle that names one thing (`distinctive`): a `words` found only by a short word
+    or a small number is `distinct: 0`, and the record says the attribution is weak rather than claim it."""
     __slots__ = ()
 
-    def __new__(cls, verdict, source, method, n, decision=None):
-        return tuple.__new__(cls, (verdict, source, method, n, decision))
+    def __new__(cls, verdict, source, method, n, decision=None, distinct=0):
+        return tuple.__new__(cls, (verdict, source, method, n, decision, distinct))
 
     verdict = property(lambda s: s[0])
     source = property(lambda s: s[1])
     method = property(lambda s: s[2])
     quoted = property(lambda s: s[3])
     decision = property(lambda s: s[4])
+    distinct = property(lambda s: s[5])
 
 
 def trace(fl, value, origin, materials, skip=(), titles=None):
@@ -1265,20 +1303,21 @@ def trace(fl, value, origin, materials, skip=(), titles=None):
         n = sum(quoted(x, text) for x in ns)
         if not n:
             continue
+        k = sum(quoted(x, text) for x in ns if distinctive(x))
         if layer in PERSON:
             d = fl.decide(layer, dest, 'take-down')
             if d.granted:
-                return Trace('words', src, 'take-down', n, d)
-        others.append((e, n, any(distinctive(x) and quoted(x, text) for x in ns)))
+                return Trace('words', src, 'take-down', n, d, k)
+        others.append((e, n, k))
     refused = None
-    for e, n, strong in others:
+    for e, n, k in others:
         d = fl.direction(e['layer'], dest)
         if d.granted:
             row = next((r for r in fl.rows if r.get('flow') in d.rows and r.get('grant') == 'granted'), {})
-            return Trace('granted', e['from'], (_list(row.get('method')) or [None])[0], n, d)
-        if strong and refused is None:
-            refused = Trace('refused', e['from'], None, n, d)
-    return refused or Trace('nowhere', {'layer': 'instructions'}, 'take-down', 0, None)
+            return Trace('granted', e['from'], (_list(row.get('method')) or [None])[0], n, d, k)
+        if k and refused is None:
+            refused = Trace('refused', e['from'], None, n, d, k)
+    return refused or Trace('nowhere', {'layer': 'instructions'}, 'take-down', 0, None, 0)
 
 
 def _line_key(s):

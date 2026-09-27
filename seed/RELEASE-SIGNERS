@@ -1,0 +1,6 @@
+# The keys a daftar release tag is signed with, as `ssh-keygen -Y verify` reads them (an allowed-signers file:
+# ssh-keygen(1), "ALLOWED SIGNERS"). bin/dmupgrade.py checks a release it fetches against THIS copy — the one the
+# garden's own release brought — before any of the release runs: the keys of the release a garden runs decide which
+# next release it trusts, and a key is changed only by a release the key before it signed.
+# One line to a key: the name the tool asks for, the namespace git signs in, and the public key.
+daftar-release namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJp2h8Rl5Be9+rseqPAAVN171VhxEMpRIZXqsme1hAeU

@@ -48,7 +48,7 @@ code page, a Persian block went into the bean as mojibake, and the edit, the exi
 UTF-16 without its mark (a NUL after every letter) is refused by name, as bin/dmjournal.py refuses it; CRLF is read
 as LF, since a bean is written with LF on every platform.
 """
-import codecs, glob, os, re, sys
+import codecs, glob, os, re, stat, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
@@ -64,7 +64,31 @@ _MUST_STATE = object()   # a sentinel, so a missing `expect` teaches instead of 
 
 
 class UnsafeEdit(Exception):
-    """Raised when an edit would break a document or lose undeclared content. The write is rolled back."""
+    """Raised when an edit would break a document or lose undeclared content. Nothing is written."""
+
+
+def write_atomic(path, text, mode=0o644):
+    """`text` (str, written as UTF-8 with LF, or bytes) written WHOLE beside `path`, flushed to the disk, and swapped in
+    with os.replace: a crash, a kill or a full disk leaves the file as it was, never a half-written one. The file keeps
+    its mode where it exists; a new one is given `mode` (a record held off git passes 0o600: its owner's alone)."""
+    d = os.path.dirname(os.path.abspath(path))
+    fd, tmp = tempfile.mkstemp(prefix='.' + os.path.basename(path) + '.', suffix='.tmp', dir=d)
+    try:
+        with os.fdopen(fd, 'wb') as fh:
+            fh.write(text if isinstance(text, bytes) else text.encode('utf-8'))
+            fh.flush()
+            os.fsync(fh.fileno())
+        try:
+            os.chmod(tmp, stat.S_IMODE(os.stat(path).st_mode) if os.path.exists(path) else mode)
+        except OSError:
+            pass
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def parse(text):
@@ -222,6 +246,18 @@ def count(path, dotted):
         return 0, 'none'
 
 
+def _closes(text, i, q):
+    """Whether text[i], the quote character `q`, closes the quoted scalar it stands in: in double quotes only after an
+    EVEN run of backslashes (`"C:\\"` ends a Windows path), in single quotes always — a single-quoted scalar has no
+    backslash escape, and `''` reopens at once. The one rule both flow scanners read."""
+    if q != '"':
+        return True
+    n = 0
+    while i - 1 - n >= 0 and text[i - 1 - n] == '\\':
+        n += 1
+    return n % 2 == 0
+
+
 def _flow_pairs(text, lo, hi):
     """[(key, key_span, value_span)] for a flow mapping `{...}` spanning text[lo:hi].
 
@@ -233,14 +269,8 @@ def _flow_pairs(text, lo, hi):
     while i < inner_hi:
         c = text[i]
         if q:
-            if c == q:
-                # escaped only by an ODD run of backslashes, and only in double quotes: `"C:\\"` ends a Windows path,
-                # and a single-quoted scalar has no backslash escape at all
-                n = 0
-                while q == '"' and text[i - 1 - n] == '\\':
-                    n += 1
-                if n % 2 == 0:
-                    q = None
+            if c == q and _closes(text, i, q):
+                q = None
         elif c in '"\'':
             q = c
         elif c in '{[':
@@ -293,7 +323,7 @@ def flow_spans(text, dotted):
             while j < b:
                 c = text[j]
                 if q:
-                    if c == q and text[j - 1] != '\\':
+                    if c == q and _closes(text, j, q):
                         q = None
                 elif c in '"\'':
                     q = c
@@ -424,7 +454,8 @@ def edit(path, transform, allow_remove=(), allow_empty_body=False):
         raise UnsafeEdit(f"{path}: the edit changed nothing — a pattern that matched nothing is a bug, "
                          f"not a no-op (this is how a 'fixed' file silently stays unfixed)")
 
-    open(path, 'w', encoding='utf-8', newline='\n').write(new_text)       # LF on every platform: a bean is one text
+    # JUDGED BEFORE IT IS WRITTEN, THEN WRITTEN WHOLE. The new text was written first, parsed, and the old written back
+    # on a refusal — so a crash or a kill between the two left a broken or a lossy bean, the one outcome this guards.
     try:
         after_fm, after_body = parse(new_text)
         if not allow_empty_body and not after_body.strip():
@@ -438,10 +469,10 @@ def edit(path, transform, allow_remove=(), allow_empty_body=False):
                 f"the edit would LOSE {len(lost)} leaf path(s) you did not declare: "
                 f"{sorted(lost)[:6]}{' …' if len(lost) > 6 else ''} — pass them in allow_remove if the "
                 f"removal is intended")
-        return sorted(before - after), sorted(after - before)
     except Exception as e:
-        open(path, 'w', encoding='utf-8', newline='\n').write(original)          # roll back, always
-        raise UnsafeEdit(f"{path}: ROLLED BACK — {e}") from None
+        raise UnsafeEdit(f"{path}: REFUSED, nothing written — {e}") from None
+    write_atomic(path, new_text.replace('\r\n', '\n'))                       # LF on every platform: a bean is one text
+    return sorted(before - after), sorted(after - before)
 
 
 def verify(paths):

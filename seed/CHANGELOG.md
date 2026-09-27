@@ -251,6 +251,34 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **25.0** (2026-09-27, proposed rule-change) — **what runs is authenticated, and code is the gardener's.** A
+  release a garden upgrades to is checked before any of it runs: a signed tag against the keys the garden's own release
+  names, `seed/RELEASE-SIGNERS`, which the law places in `law` beside what a release ships (`bin/dmupgrade.py`,
+  `--expect <commit>` for a person who checked the commit, a confirmation at a terminal otherwise). A hub asks
+  `ratify:G` for a change to code — a file of the `gate` layer, one a release keeps, a Python or shell file, the
+  drawing module a page names — and takes a commit with no parent only when it is empty (MODEL.md). The git merge
+  driver merges three ways (MERGE.md §8): what one branch changed or removed since the base and the other left stands,
+  and only a position both changed differently is a disagreement. Special-category material a commit adds unsealed is
+  refused, not warned: no seal made after the commit takes the value back (MODEL.md). An agreement's grant decides over
+  its own bean and what a party who accepted it owns or is the record of, and opens nothing else (`grants`,
+  `dmpass.shares`). The `version` order absorbs a release only into one that goes on at a component's boundary: `9`
+  and `90` are two releases, a disagreement, where they merged into `90` unseen. A reading's step names a registry's
+  row where the law says so — a `group`'s `system` is a time system of `anchor_systems`, read through the calendar its
+  row carries — and `gregory`, which the cookbook wrote, is refused, naming `gregorian-civil`. `shared_identifiers` is a
+  term (MINOR on its own): the `ip` term's escape named it and the gate refused it as undeclared, and a reused private
+  range is told apart by each bean's `located_at` in `network-segment`, where it was an undeclared `scope`. A pass the
+  save traces carries `distinct` beside `quoted` (`pass_metadata`): how many finds named one thing, so a person's words
+  credited by a short word alone say the attribution is weak. The law's documents say what the law says: MODEL.md
+  names `stated-in-document` and `courses`, MERGE.md the source order as it is derived; two `agent_directive`s state
+  rules rather than address an agent; the versions, dates, measurements of one estate and incidents that twenty-six
+  `meaning`s and `why`s carried are in seed/RATIONALE.md under each item's path, and `this garden` and `the operator`
+  are said as any garden reads them, so the story bin/dmreview.py `story_in` finds in the law is none where v0.38.0
+  shipped 56 (a `prediction`'s reason, one estate's expectation, is counted apart and is unchanged). The `ip` term's
+  `authority`, which nothing read, is gone. And the note on the gap after 1.0 said git holds the four releases this file lacks; it
+  does not: this repository's history begins on 2026-09-17 with the law at 8.2, so the gap stays a gap. MAJOR, because
+  a garden that upgraded unasked from a network is now asked, and a writer's push a hub took, and a commit carrying a
+  special value the gate warned of, are now refused.
+
 - **24.0** (2026-09-26, human-ratified rule-change, parts ratified one by one as the release was built) — **the law
   learns quantities, reckoning, privacy, agreements, observations, place in time, where a fact came from, and one
   sense per name.** MAJOR. A quantity holds `count`, `unit` and one of `u` or `accuracy`, and nothing else (Q-3, D17);
