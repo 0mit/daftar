@@ -252,8 +252,8 @@ identity: { status: confirmed, anchors: [ { key: git_remote, value: "host-a:git/
 provenance: { src: observed, by: probe, as_of: 2026-09-20 }
 owned_by: { legal: { external: "someone" } }
 responsibility: { legal: { external: "someone" } }
-code_paths:
-  - { path: "root:a-tool", role: own-source, scan_policy: index }
+located_at:
+  - { system: unix-filesystem, openness: here, at: "root:a-tool", role: own-source, scan_policy: index }
 analysis_cache:
   code-structure: { produced_by: probe, as_of: 2026-09-20, staleness_key: "a-tool@abc1234", policy: index, form: inline, covers_paths: ["root:a-tool"] }
 ---

@@ -61,7 +61,7 @@ _law = yaml.safe_load(dmparse.split_front_matter(open(os.path.join(ROOT, "seed",
 _retired = {str(r["name"]): r.get("at") for r in (_law.get("retired") or []) if isinstance(r, dict)
             and r.get("at") in ("bean", "anchor", "manifest")}
 assert len(_retired) >= 8, "the law's list of retired keys was not found"
-# A NAME RETIRED IN ONE PLACE MAY BE LIVE IN ANOTHER: `created` left the manifest and is still a registration's date;
+# A NAME RETIRED IN ONE PLACE MAY BE LIVE IN ANOTHER: `created` left the manifest (a registration's day is `timing` now);
 # `authority` left the anchor and is still a term. Such a name is looked for only where it was retired — at the head
 # of a GARDEN.md block's line, inside an anchor's mapping, at the head of a bean's line — and any other is looked for
 # wherever a key is written.
@@ -79,7 +79,7 @@ def _collect(node):
             _collect(x)
 _collect({k: v for k, v in _law.items() if k != "retired"})
 _live.update(str(k) for k in _law)
-assert "created" in _live and "scope" not in _live, "the law's live names were not read"
+assert "authority" in _live and "scope" not in _live, "the law's live names were not read"
 _FENCE = re.compile(r"(?ms)^(`{3,})[^\n]*\n(.*?)^\1[ \t]*$")
 def _manifest_blocks(t):
     """The fenced blocks of a document that are a GARDEN.md: marked as one, or pinning the standard as it does."""
@@ -103,11 +103,13 @@ for d, t in text.items():
     hit = sorted(w for w, at in _retired.items() if _written(w, at, t))
     check(f"{d} writes no key the law retired", not hit, hit)
 _probe = "```yaml\nregistration: { created: 2020-01-15 }\n```\n<!-- example-front-matter: GARDEN.md -->\n```yaml\ngardener: sam\n```\n"
+_live.add("created")    # as it was while a registration kept its day (until 29.0): the reading of a live name's context is checked
 check("...and a name the law retired in one place is not taken for a key where it is still live",
       not _written("created", "manifest", _probe) and _written("created", "manifest", _probe.replace("gardener: sam", "created: x"))
       and not _written("authority", "anchor", "authority: { source: x }\n")
       and _written("authority", "anchor", "  - { key: fqdn, value: x, authority: scanned }\n"),
       "the context of a retired name that is live elsewhere is not read")
+_live.discard("created")
 
 for d, t in text.items():
     named = sorted(set(re.findall(r"(?<![A-Za-z0-9_/.-])((?:bin|test)/[A-Za-z0-9_./-]+\.(?:py|sh))", t)))

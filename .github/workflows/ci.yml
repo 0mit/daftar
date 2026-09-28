@@ -32,6 +32,12 @@ jobs:
         run: python3 test/journal.py
       - name: "days: a day is a position in either of its forms, and one nobody said is placed by what it followed"
         run: python3 test/days.py
+      - name: "ordinal: a sequence on the ordinal line holds at no time, and its whole is checked exactly"
+        run: python3 test/ordinal.py
+      - name: "profiles: every profile composes with every other, and analytic accounting is kept in the field's words"
+        run: python3 test/profiles.py
+      - name: "rope: the line from place to location, what a placement takes from where it is placed, and 29.0's translation"
+        run: python3 test/rope.py
       - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/save.py

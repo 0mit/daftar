@@ -24,7 +24,7 @@ is not, and the difference is whether you said so.
 Library — PREFER the structure-aware operations; they make the incident shapes unexpressible rather
 than merely caught, because they address a document by KEY instead of by offset, pattern or indent:
     dmsafe.insert_after(path, 'owned_by', block)      # lands after the WHOLE block, never inside it
-    dmsafe.replace_block(path, 'code_paths', block)
+    dmsafe.replace_block(path, 'located_at', block)
     dmsafe.remove_block(path, 'tags')                 # the removal is declared by calling this
 Fall back to the general form only when no operation fits:
     dmsafe.edit(path, lambda text: text.replace(...), allow_remove=['owns.stale_key'])

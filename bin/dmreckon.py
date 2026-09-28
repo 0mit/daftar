@@ -1234,7 +1234,9 @@ class Reckoner:
     def _coefficient(self, name, code, sid):
         rows = [r for r in (self.reg('coefficients') or []) if isinstance(r, dict) and r.get('coefficient') == name]
         if code is not None:
-            rows = [r for r in rows if any(isinstance(w, dict) and str(w.get('code')) == str(code) for w in r.get('where') or [])]
+            # a row's cases are codings (29.0); what is looked up is a coding, or a code alone where the path holds one
+            rows = [r for r in rows if any(w == code if dmparse.split_coding(code)[0] else dmparse.split_coding(w)[1] == str(code)
+                                           for w in r.get('where') or [])]
         if len(rows) != 1:
             raise Refused(f"step {sid}: {len(rows)} row(s) of `coefficients` are '{name}'"
                           + (f" where the code is {code}" if code is not None else '') + " — one is read")
@@ -1321,11 +1323,75 @@ class Reckoner:
         out = []
         for m in self.arg(s, 'of', 'set'):
             n = m.node
-            if isinstance(n, dict) and n.get('scheme') and n.get('code') is not None:
-                out.append((n['scheme'], str(n['code']), m))
+            sch, code = dmparse.split_coding(n)
+            if sch is not None:
+                out.append((sch, code, m))
             else:
-                raise Refused(f"step {s['id']}: {m.id} is not a code of a scheme ({{scheme, code}})")
+                raise Refused(f"step {s['id']}: {m.id} is not a code with its scheme (`<scheme>:<code>`)")
         return out
+
+    def _ancestor(self, scheme, code, level):
+        """The code's ancestor at `level` in its scheme (the code itself where it is at that level), by `parent` — or None."""
+        rows = {str(r.get('code', r.get('unit'))): r for r in (self.reg(scheme) or []) if isinstance(r, dict)}
+        c, seen = str(code), set()
+        while c in rows and c not in seen:
+            seen.add(c)
+            if level in (rows[c].get('level'), rows[c].get('rank')):
+                return c
+            c = str(rows[c].get('parent') or '')
+        return None
+
+    def op_apportion(self, s):
+        """EACH CODE'S PART OF THE AMOUNTS (28.1): a member's amount shared over its entries at `over` — by an entry's share of
+        its group's shares, a group being the codes under one ancestor at `per` (the scheme's first level: a plan), or by an
+        entry's own amount — and summed per code, or per the ancestor at `level`. Exact, in fractions; `digits: true` writes
+        each part in the currency's places, the cents a split leaves over going to the largest remainders, first code first.
+        What an account holds is read here, never stored."""
+        out, unit = {}, None
+        firsts = {str(r.get('scheme')): ((r.get('levels') or [{}])[0] or {}).get('level')
+                  for r in (self.reg('knowledge_schemes') or []) if isinstance(r, dict)}
+        cur = {str(r.get('code')): r for r in (self.reg('currencies') or []) if isinstance(r, dict)}
+        for m in self.arg(s, 'of', 'set'):
+            got = [x for x, _w in walk(self.g, m.node, s['amount'], at=m.bean)]
+            if len(got) != 1:
+                raise Refused(f"step {s['id']}: {m.id} holds {len(got)} values at `{s['amount']}`, where one amount is shared")
+            amt = value_of(got[0], f"{m.id}.{s['amount']}", self.notes)
+            if not isinstance(amt.v, Fraction) or amt.unit is None:
+                raise Refused(f"step {s['id']}: {m.id}.{s['amount']} is no amount")
+            if unit is not None and amt.unit != unit:
+                raise Refused(f"step {s['id']}: the amounts are in {unit} and {amt.unit} — apportion within one currency")
+            unit = amt.unit
+            groups = {}
+            for d, _w in _flatten(walk(self.g, m.node, s['over'], at=m.bean)):
+                if not isinstance(d, dict) or dmparse.split_coding(d.get('code'))[0] is None:
+                    continue
+                sch, code = dmparse.split_coding(d['code'])
+                lv = s.get('per') or firsts.get(sch)
+                k = self._ancestor(sch, code, lv) if lv else None
+                if k is None:
+                    raise Refused(f"step {s['id']}: {d['code']} of {m.id} has no ancestor at `{lv}`")
+                groups.setdefault(k, []).append(d)
+            for k, ds in groups.items():
+                if all(d.get('amount') is not None for d in ds):
+                    parts = [(d, value_of(d['amount'], f"{m.id}", self.notes).v) for d in ds]
+                elif all(d.get('share') is not None for d in ds):
+                    tot = sum(Fraction(int(str(d['share']))) for d in ds)
+                    parts = [(d, amt.v * Fraction(int(str(d['share']))) / tot) for d in ds]
+                    places = (cur.get(unit) or {}).get('digits')
+                    if s.get('digits') and places is not None:
+                        q = 10 ** int(places)
+                        floors = [(d, Fraction(int(x * q), q), x) for d, x in parts]
+                        left = int(amt.v * q) - sum(int(f * q) for _d, f, _x in floors)
+                        order = sorted(range(len(floors)), key=lambda i: (-(floors[i][2] - floors[i][1]), i))
+                        parts = [(d, f + (Fraction(1, q) if i in order[:left] else 0)) for i, (d, f, _x) in enumerate(floors)]
+                else:
+                    raise Refused(f"step {s['id']}: {m.id} states shares for some codes under {k} and amounts for others")
+                for d, x in parts:
+                    code = self._ancestor(*dmparse.split_coding(d['code']), s['level']) if s.get('level') \
+                        else dmparse.split_coding(d['code'])[1]
+                    out[code] = out.get(code, Fraction(0)) + x
+        self.lines.append(f"  apportioned over {len(out)} code(s), in {unit or 'no currency'}")
+        return {k: V(v, unit) for k, v in sorted(out.items())}
 
     def op_ancestor_at_level(self, s):
         out = []
@@ -1336,7 +1402,7 @@ class Reckoner:
                 seen.add(c)
                 r = rows[c]
                 if s['level'] in (r.get('level'), r.get('rank')):
-                    out.append(Member(f"{scheme}:{c}", {'scheme': scheme, 'code': c}, m.bean))
+                    out.append(Member(f"{scheme}:{c}", f"{scheme}:{c}", m.bean))
                     break
                 c = str(r.get('parent') or '')
             else:
@@ -1370,7 +1436,7 @@ class Reckoner:
                 for a, b in ((r.get('from'), r.get('to')), (r.get('to'), r.get('from'))):
                     if str(a) == code and f"{scheme}:{b}" not in ids:
                         ids.add(f"{scheme}:{b}")
-                        out.append(Member(f"{scheme}:{b}", {'scheme': scheme, 'code': b}, m.bean))
+                        out.append(Member(f"{scheme}:{b}", f"{scheme}:{b}", m.bean))
         return out
 
     # a series' reads (S7)
@@ -1443,7 +1509,20 @@ class Reckoner:
         if not rows and by != ['count']:
             raise Refused(f"step {s['id']}: the stretch of {name} holds no value of {ch}")
         n = len(rows)
-        f = {'mean': lambda: V(sum(x for _p, x, _r in rows) / n, unit, u / sqrt(Fraction(n))[0] if u else None),
+        _dimless = law().quantity_of(unit) in ('number', 'ratio') if unit else True
+
+        def _product():
+            # A PRODUCT OF MEASURES IS ANOTHER QUANTITY (m·m is an area): a window multiplies only what has no dimension
+            if not _dimless:
+                raise Refused(f"step {s['id']}: the product of {ch} multiplies {unit}s into a unit of another quantity — "
+                              f"a window multiplies only counts and ratios")
+            p = Fraction(1)
+            for _p, x, _r in rows:
+                p *= x
+            return V(p, unit)
+        f = {'sum': lambda: V(sum((x for _p, x, _r in rows), Fraction(0)), unit, u * sqrt(Fraction(n))[0] if u else None),
+             'product': _product,
+             'mean': lambda: V(sum(x for _p, x, _r in rows) / n, unit, u / sqrt(Fraction(n))[0] if u else None),
              'min': lambda: V(min(x for _p, x, _r in rows), unit, u),
              'max': lambda: V(max(x for _p, x, _r in rows), unit, u),
              'count': lambda: V(Fraction(n), 'item'),
@@ -1699,12 +1778,12 @@ class Reckoner:
             tally = {'takes': collections.Counter(), 'gives': collections.Counter()}
             for side in ('takes', 'gives'):
                 for e in st.get(side) or []:
-                    if not isinstance(e, dict) or e.get('scheme') != scheme:
+                    if not isinstance(e, dict) or dmparse.split_coding(e.get('code'))[0] != scheme:
                         continue
-                    r = rows.get(str(e.get('code')))
+                    r = rows.get(dmparse.split_coding(e['code'])[1])
                     f = (r or {}).get('formula')
                     if not f or f in ('-', 'none'):
-                        raise Refused(f"step {s['id']}: {e.get('code')} has no formula in {scheme} (a polymer, a "
+                        raise Refused(f"step {s['id']}: {dmparse.split_coding(e['code'])[1]} has no formula in {scheme} (a polymer, a "
                                       f"mixture) — conservation is read only over substances with one")
                     n = e.get('amount', {}).get('count', 1) if isinstance(e.get('amount'), dict) else 1
                     n = Fraction(n) if isinstance(n, int) else dmseq.exact(n)
@@ -1726,7 +1805,8 @@ class Reckoner:
 
     def op_choose(self, s):
         mechs = [r for r in (self.reg('mechanisms') or []) if isinstance(r, dict)
-                 and ((r.get('computes') or {}).get('property') or {}).get('code') == s['computes']]
+                 and s['computes'] in (dmparse.split_coding((r.get('computes') or {}).get('property'))[1],
+                                       (r.get('computes') or {}).get('property'))]
         if not mechs:
             raise Refused(f"step {s['id']}: no mechanism of the law computes '{s['computes']}'")
         member = self.arg(s, 'of', 'set') if s.get('of') in self.env and isinstance(self.env[s['of']], list) else None
@@ -1734,12 +1814,12 @@ class Reckoner:
             raise Refused(f"step {s['id']}: `of` holds {len(member)} beings, and a mechanism reads one")
         codes = set()
         for x, _w in _flatten(walk(self.g, member[0].node, 'is', at=member[0].bean)) if member else []:
-            if isinstance(x, dict):
-                codes.add((x.get('scheme'), str(x.get('code'))))
+            if dmparse.split_coding(x)[0] is not None:
+                codes.add(dmparse.split_coding(x))
         covering, why = [], []
         for r in mechs:
             v = r.get('valid') or {}
-            wants = {(w.get('scheme'), str(w.get('code'))) for w in v.get('where') or [] if isinstance(w, dict)}
+            wants = {dmparse.split_coding(w) for w in v.get('where') or [] if dmparse.split_coding(w)[0] is not None}
             if wants and not (wants & codes):
                 why.append(f"{r['mechanism']}: valid where {sorted(c for _s, c in wants)}, and the being is {sorted(c for _s, c in codes) or 'none of them'}")
                 continue

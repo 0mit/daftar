@@ -57,13 +57,14 @@ for _f in dmgarden.paths(ROOT):
 
 
 def resolve(target):
-    """A bean id, or a filesystem path resolved back to the bean whose code_paths COVER it.
+    """A bean id, or a filesystem path resolved back to the bean whose LOCATION COVERS it (`located_at`; `code_paths`
+    until 29.0, when a code bean's trees became its locations and a framework's tree its own bean's).
 
     The reverse lookup is the point: you are about to touch a file, and the question is which being owns
     it and what that being requires you to know. Longest matching path wins, so an own-source tree beats
     the framework tree it sits beside.
 
-    THE DECLARED PATH IS A POSITION, NOT A LITERAL PATH, since std-vocab 11.0 (place): `code_paths` now
+    THE DECLARED PATH IS A POSITION, NOT A LITERAL PATH, since std-vocab 11.0 (place): a code bean's trees
     carry `root:<name>/<rel>` or `<host>:<path>`, and a bare absolute path names no machine. This lookup
     compared the argument against the raw string, so after a garden migrated its positions NOTHING
     resolved: `dmcursor /home/user/tree/models/x.py` answered "no bean points at it — nothing in the
@@ -76,8 +77,8 @@ def resolve(target):
     ap = os.path.abspath(target)
     best, best_len, covering = None, -1, None
     for b, fm in BEANS.items():
-        for cp in (fm.get('code_paths') or []):
-            pos = str(cp.get('path', ''))
+        for cp in (fm.get('located_at') or [] if isinstance(fm.get('located_at'), list) else []):
+            pos = str(cp.get('at') or '') if isinstance(cp, dict) else ""
             if not pos:
                 continue
             here = dmstale.resolve_here(pos)
@@ -189,12 +190,13 @@ def main(target):
     if _lv and _lv != 'none':
         print(f"  sensitivity {_lv}" + (" [special]" if _lv == 'special-category' else '') + (f" — {'; '.join(_why)}" if _why else ''))
     if covering:
-        print(f"\n  resolved from a FILE: covered by code_paths {covering.get('path')} "
+        print(f"\n  resolved from a FILE: covered by located_at {covering.get('at')} "
               f"(role {covering.get('role')}, scan_policy {covering.get('scan_policy')})")
 
     # ---- MEASURED: what is known and still true --------------------------------------------------
     print("\n" + BOLD("MEASURED") + "  — what is already known, and whether it still holds")
-    cps = fm.get('code_paths') or []
+    cps = [e for e in (fm.get('located_at') or [] if isinstance(fm.get('located_at'), list) else [])
+           if isinstance(e, dict) and e.get('scan_policy')]
     for cp in cps:
         pol = cp.get('scan_policy')
         verdict = "WALK IT" if pol == 'index' else ("DO NOT WALK — read by summary" if pol == 'reference-only'
@@ -203,9 +205,9 @@ def main(target):
         # declares and what merges; the path is what the reader has to type. Printing only the position
         # would hand a reader `root:<some-name>` and leave them to look up what it means on this machine,
         # which is the work this tool exists to save.
-        _here = dmstale.resolve_here(str(cp.get('path') or ''))
-        _where = f"  ->  {_here}" if _here and _here != cp.get('path') else ""
-        print(f"  path   {cp.get('path')}{_where}\n         role {cp.get('role')} · {pol} -> {verdict}")
+        _here = dmstale.resolve_here(str(cp.get('at') or ''))
+        _where = f"  ->  {_here}" if _here and _here != cp.get('at') else ""
+        print(f"  path   {cp.get('at')}{_where}\n         role {cp.get('role')} · {pol} -> {verdict}")
     cache = fm.get('analysis_cache') or {}
     if not cache:
         print("  cache  none — this being has no recorded analysis; reading is unavoidable")

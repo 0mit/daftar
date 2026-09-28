@@ -1018,12 +1018,18 @@ def _registry(law, name):
 
 
 def _codes(node, path=''):
-    """(path, scheme) of every code a front matter holds: a mapping that names a `scheme`, wherever it is."""
-    if isinstance(node, dict):
+    """(path, scheme) of every code a front matter holds, wherever it is: a coding, `<scheme>:<code>` (29.0) — and a
+    mapping that still names a `scheme`, so a special-category code is never missed in a garden not yet translated."""
+    if isinstance(node, str):
+        if dmparse.split_coding(node)[0] is not None:
+            yield path, dmparse.split_coding(node)[0]
+    elif isinstance(node, dict):
         if isinstance(node.get('scheme'), str):
             yield path, node['scheme']
         for k, v in node.items():
-            if path == '' and k == 'sensitivity':
+            # the bean's own verdict, and the questions its readings ask: a code in a selection says what is asked for,
+            # and is no material about anyone (29.0: a question now names its code with its scheme, as a record does)
+            if path == '' and k in ('sensitivity', 'selections'):
                 continue
             yield from _codes(v, f"{path}.{k}" if path else str(k))
     elif isinstance(node, list):

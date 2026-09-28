@@ -153,7 +153,7 @@ check("no key NAME is pinned to a date or a version, at any level (it could neve
 restating = []
 for b, fm in BEANS.items():
     src = ((fm.get('details') or {}).get('logs') or {}).get('source')
-    cp = [c.get('path') for c in (fm.get('code_paths') or []) if c.get('role') == 'own-source']
+    cp = [c.get('at') for c in (fm.get('located_at') or []) if isinstance(c, dict) and c.get('role') == 'own-source']
     gr = {a['key']: a['value'] for a in ((fm.get('identity') or {}).get('anchors') or [])}.get('git_remote')
     if src and cp and gr and cp[0] in str(src) and str(gr) in str(src):
         restating.append(b)

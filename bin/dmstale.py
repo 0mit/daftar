@@ -1048,7 +1048,7 @@ def show_day(n, rec=None, systems=None, notes=None, written=None):
     return f"day {n}"
 
 
-def refine(term, held, state):
+def refine(term, held, state, fm=None):
     """A term's own extra sentence, where a general rule cannot carry the judgment.
 
     KEPT DELIBERATELY SMALL AND KEPT HERE. `registration` says more than "expires in N days": it says
@@ -1059,12 +1059,16 @@ def refine(term, held, state):
     refinement stays beside the term it is about. If a second term wants one, that is the moment to ask
     what they have in common; one is not a pattern.
     """
-    if term != 'registration':
+    # 29.0: a registration is a contract, and what prevents the loss is its renewal clause's `auto_renew` (the domain
+    # profile's word), read beside the party the agreement names `registrar` — the line follows the word, not a term
+    if not isinstance(held, dict) or 'auto_renew' not in held:
         return ''
     auto = held.get('auto_renew', 'unknown')
     flag = '  auto-renew UNKNOWN: nothing on record prevents this' if (
         state != 'OK' and auto != 'enabled') else ''
-    return f"  auto_renew={brief(auto)}  registrar={esc(str(held.get('registrar'))[:40])}{flag}"
+    _p = ((fm or {}).get('parties') or {}).get('registrar') if isinstance((fm or {}).get('parties'), dict) else None
+    _r = (_p.get('external') or (_p.get('who') or {}).get('bean')) if isinstance(_p, dict) else None
+    return f"  auto_renew={brief(auto)}" + (f"  registrar={esc(str(_r)[:40])}" if _r else '') + flag
 
 
 def verdict(entry):
@@ -1184,7 +1188,7 @@ def report():
     # ten day attrs in the standard are `observed` or `as_of` — when a fact was READ, not when it
     # runs out — so a tool that warned about every date would be wrong nine times in ten, and a warning
     # that is usually wrong is one people stop reading.
-    exp_rows, expiring, notes = [], 0, []
+    exp_rows, expiring, notes, docs_fm = [], 0, [], {}
     for f in dmgarden.paths(ROOT, 'beans'):
         head, _ = dmparse.read(f)
         if head is None:
@@ -1195,6 +1199,7 @@ def report():
             continue
         if not isinstance(fm, dict):
             continue
+        docs_fm[fm.get('bean')] = fm
         for term, decl in expiry_terms().items():
             asides = []
             try:
@@ -1218,7 +1223,9 @@ def report():
                 # bare integer it was for one release, which was a fifth way of writing a duration in a
                 # vocabulary that had just declared the first. The gate validates the region; this only
                 # converts it, and only a unit it knows how to convert.
-                horizon = HORIZON if HORIZON_SET else notice_days(decl.get('notice'))
+                # an entry's own notice (29.0: a clause's `notice`, ninety days before a name lapses) wins over its term's
+                _own = held.get('notice') if isinstance(held, dict) and isinstance(held.get('notice'), dict) else None
+                horizon = HORIZON if HORIZON_SET else notice_days({'of': 'time', 'measure': _own} if _own else decl.get('notice'))
                 state = 'EXPIRED' if days < 0 else ('EXPIRING' if days <= horizon else 'OK')
                 if state != 'OK':
                     expiring += 1
@@ -1232,7 +1239,7 @@ def report():
                 continue
             why = f"  <-- {decl['why']}" if (state != 'OK' and decl.get('why')) else ''
             _out(f"{state:8} {esc(bean)}.{esc(where)}  {decl['attr']} {shown} ({days} days){detail}"
-                  f"{refine(term, held, state)}{why}")
+                  f"{refine(term, held, state, docs_fm.get(bean))}{why}")
             for text in beside:                     # a month the repetition skipped, said beside the row it explains
                 _out(f"{'NOTE':8} {esc(bean)}.{esc(where)}  {text}")
         for bean, where, detail in notes:
