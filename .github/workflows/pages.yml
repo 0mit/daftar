@@ -1,6 +1,5 @@
-# The public pages: what is committed under site/, published as it is. The check regrows the demo gardens to compare
-# every page with what the tools print now; nothing here draws the machinery page's report, which is a committed file
-# of the site and is published as committed.
+# The public page: site/index.html and the assets it links, published as committed. The check builds the page again from
+# the release site/RELEASE names — its forms proved and its refusals printed by that release's gate — and compares.
 name: pages
 on:
   push:
@@ -18,13 +17,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0          # the tags: site/RELEASE names one, and site/build.py clones it
+          fetch-depth: 0          # the tags: site/RELEASE names one, and site/board.py clones it
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install PyYAML
       - run: git config --global user.name ci && git config --global user.email ci@localhost
-      - name: "site: the pages parse, their links resolve, and every example is what the tools print"
+      - name: "site: the page parses, loads nothing from outside, and every form and refusal is what the release prints"
         run: python3 test/site.py
   deploy:
     needs: check
@@ -39,9 +38,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - name: "the published files: every page, the report and the assets; never a source, a drawing file or _parts/"
+      - name: "the published files: the page and its assets; never a source, the template or the scene garden"
         run: >-
-          rsync -a --prune-empty-dirs --exclude '_parts/' --include '*/' --include '*.html'
+          rsync -a --prune-empty-dirs --include 'index.html'
           --include 'assets/***' --exclude '*' site/ _site/
       - uses: actions/upload-pages-artifact@v3
         with:

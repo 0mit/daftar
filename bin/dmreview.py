@@ -507,7 +507,7 @@ def _words(s):
     return re.findall(r"[a-z0-9]+(?:'[a-z]+)?", s.lower())
 
 
-# A BLOCK A PAGE DRAWS FROM THE LAW (site/build.py's `map`) is the seed drawn again, counted where the seed
+# A BLOCK A PAGE DRAWS FROM THE LAW (a `map` a page marks as drawn) is the seed drawn again, counted where the seed
 # holds it: the law's own words about a layer are not a second statement because a page shows them.
 _DRAWN_FROM_LAW = re.compile(r'<!-- daftar:(map) id="[^"]+"[^>]*-->.*?<!-- /daftar:\1 -->', re.S)
 

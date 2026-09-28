@@ -8,8 +8,8 @@ SPDX-PackageDownloadLocation = "https://github.com/0mit/daftar"
 path = ["*.md", "NOTICE", "seed/*.md", "seed/LANGUAGE", "seed/PUBLIC-ALLOW", "seed/RELEASE-SIGNERS",
         "seed/knowledge/SOURCES.md", "seed/knowledge/technology.tsv", "seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv",
         "seed/knowledge/crosswalk-dwc.tsv",
-        "site/**/*.html", "site/*.html", "site/assets/**", "site/drawings/**", "site/machinery/drawn.json",
-        "site/machinery/record.yaml", "site/RELEASE", ".github/ISSUE_TEMPLATE/**", ".github/pull_request_template.md",
+        "site/*.html", "site/*.yaml", "site/assets/**", "site/RELEASE", ".github/ISSUE_TEMPLATE/**",
+        ".github/pull_request_template.md",
         ".claude/skills/daftar/SKILL.md", "assets/*/README.md"]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
@@ -17,18 +17,11 @@ SPDX-License-Identifier = "CC-BY-4.0"
 
 # THE CODE — AGPL-3.0-or-later with the garden exception, and the additional terms in LICENSE
 [[annotations]]
-path = ["bin/**", "test/**", "seed/germinate.py", "seed/germinate.sh", "site/build.py", "site/atlas.py", "site/machinery/*.py",
-        "site/demo/**", ".github/workflows/**", "assets/*/bin/**", "assets/*/lib/**"]
+path = ["bin/**", "test/**", "seed/germinate.py", "seed/germinate.sh", "site/board.py", "site/assets/*.js",
+        ".github/workflows/**", "assets/*/bin/**", "assets/*/lib/**"]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
 SPDX-License-Identifier = "AGPL-3.0-or-later WITH LicenseRef-daftar-garden-exception"
-
-# A PAGE THAT CARRIES THE DRAWING TOOL'S RUNTIME: its words CC BY, its scripts the code's terms
-[[annotations]]
-path = "site/machinery/report.html"
-precedence = "override"
-SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
-SPDX-License-Identifier = "CC-BY-4.0 AND AGPL-3.0-or-later WITH LicenseRef-daftar-garden-exception"
 
 # THE SEEDS OF A GARDEN'S OWN FILES — CC0 1.0: what grows from them is the gardener's; and daftar's tables of facts
 [[annotations]]
