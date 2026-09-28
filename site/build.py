@@ -387,7 +387,8 @@ def extract(clone, release, doc, heading, picks):
 RECIPES = [  # the cookbook's sections that commit something here, in page order, and how each is journalled (None: every
            # file the recipe writes, named)
     ('A registered domain', 'the domain example.org',
-     '- action: added [[example-org]]; RULE-CHANGE (VOCAB.md): this garden opts into the domain profile.'),
+     '- action: added [[example-org]] and [[example-org-registration]], the contract it is held under; RULE-CHANGE '
+     '(VOCAB.md): this garden opts into the domain profile.'),
     ('A machine at home that other things run on', 'the NAS at home', '- action: added [[nas]].'),
     ('Third-party software, and a running copy of it that serves the website', 'nginx, and the website it serves',
      '- action: added [[nginx]] and [[website]], from the cookbook.'),
@@ -405,6 +406,7 @@ RECIPES = [  # the cookbook's sections that commit something here, in page order
     ('A tile workshop: staff, their leave, a tiler booked on one job at a time', 'the tile workshop', None),
     ("A beekeepers' co-op: its sites, its own codes, a reading disputed", "the beekeepers' co-op", None),
     ('Two candles burnt side by side: a reading that brings an order into force', 'the two candles', None),
+    ('Where a thing is, and what it takes there', 'the office rack', '- action: added [[rack-a]].'),
 ]
 NOT_HERE = ('The gardener, first', 'A value the vocabulary does not have yet', 'A kind of fact the standard has no term for')
 
@@ -491,19 +493,20 @@ def scenes(d):
     recipe('A registered domain')
     recipe('A machine at home that other things run on')
     commit = recipe('Third-party software, and a running copy of it that serves the website', cid='machines-commit')
-    d.expect(re.search(r'\): 5 docs, 0 error\(s\), 0 warning\(s\)', commit), 'the website commit did not pass clean')
+    d.expect(re.search(r'\): 6 docs, 0 error\(s\), 0 warning\(s\)', commit), 'the website commit did not pass clean')
     verbose = d.out('machines-verbose', SAM, 'python3 bin/dmcheck.py --staged -v')
     for line in ('PASS every bean carries BOTH ownership arcs', 'PASS the two arcs agree on facets everywhere',
                  'PASS every ownership chain that is owed terminates at the crown or outside'):
         d.expect(line in verbose, f'dmcheck --verbose did not print {line!r}:\n{verbose[-1500:]}')
     recipe('A rented VPS')
-    for b in ('example-org', 'nas', 'nginx', 'website', 'vps-a'):
+    for b in ('example-org', 'example-org-registration', 'nas', 'nginx', 'website', 'vps-a'):
         d.bean(b, SAM, f'beans/{b}.md')
     d.doc('cookbook-domain-profile', extract(clone, d.release, 'seed/COOKBOOK.md', 'A registered domain', [('fence', 1)]))
     cur = d.out('machines-cursor', SAM, 'python3 bin/dmcursor.py website')
     d.expect('living in nas' in cur or 'nas' in cur, 'dmcursor did not name the NAS the website lives in')
     stale = d.out('machines-stale', SAM, 'python3 bin/dmstale.py', expect=1)
-    d.expect(re.search(r'EXPIRING\s+example-org\.registration', stale), 'dmstale did not warn about the domain')
+    d.expect(re.search(r'EXPIRING\s+example-org-registration\.clauses\[renewal\]', stale),
+             'dmstale did not warn about the domain')
     d.out('machines-check', SAM, 'python3 bin/dmcheck.py --all')
     d.clean_gate(SAM)
 
