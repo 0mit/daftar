@@ -63,11 +63,14 @@ Read these when a question needs them, and only the part it needs:
 3. `CHECKLIST.md` — Part A (what the gate checks), Part B (the judgment only you can make), Part C (how a write
    is made), Part D (how a read is made), Part E (how to work beside, and after, another agent), Part F (how to
    work with another garden).
-4. `seed/COOKBOOK.md` — the rest of the common things, in an order that can be followed: machines, a domain, a
-   document, and a value or a kind of fact the vocabulary does not have yet.
-5. `python3 bin/dmrules.py` — every rule in force, derived from the vocabulary rather than restated — and
+4. `seed/COOKBOOK.md` — the rest of the common things, in an order that can be followed: machines, a domain and the
+   agreement it is held under, a document, a series, a course, accounts, where a thing is and what it takes there, and
+   a value or a kind of fact the vocabulary does not have yet.
+5. `python3 bin/daftar.py catalog` — the whole language and how its parts relate: `--part <item>` for one term, registry
+   or tool, `--findings` for what is unjudged. Ask it before grepping the seed.
+6. `python3 bin/dmrules.py` — every rule in force, derived from the vocabulary rather than restated — and
    `seed/std-vocab.md`, the vocabulary itself. Both are long: for one rule, `python3 bin/dmwhy.py <name>`.
-6. `assets/<profile>/README.md`, **if `VOCAB.md` extends a profile that has an asset** — what the asset does with
+7. `assets/<profile>/README.md`, **if `VOCAB.md` extends a profile that has an asset** — what the asset does with
    that profile's facts, and the commands it runs.
 
 ## Working

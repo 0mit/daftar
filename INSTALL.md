@@ -42,6 +42,12 @@ python3 seed/germinate.py ~/garden-sam --gardener sam --gardener-name "Sam"
 (`sh seed/germinate.sh ~/garden-sam --gardener sam --gardener-name "Sam"` does the same; it hands over to the
 Python. For an organisation, add `--gardener-genos org`.)
 
+A garden takes the profiles its things need at birth, one `--profile` each — `accounting` (where amounts belong),
+`code` (source trees and repositories), `domain` (registered names), `knowledge` (published codes, and the garden's own
+classifications), `network` (what answers where, and what it reaches), `view` (pages of drawings, with their asset). Every
+profile composes with every other, so taking one more costs nothing but its rules; one can be taken later with
+`bin/dmupgrade.py <release> --extend <profile>`.
+
 The target must not exist. The script copies what `seed/LANGUAGE` declares — the vocabulary, the tools, the
 gate, the templates, `AGENTS.md` — makes the first commit as `germinate`, installs the gate as the pre-commit
 hook, and then plants the gardener: a person bean, `beans/sam.md` (an `org` bean with `--gardener-genos org`), named

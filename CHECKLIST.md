@@ -51,6 +51,16 @@ garden, and `--staged` what a commit would hold. On a clean commit the hook prin
 - [ ] A day is one its calendar has. A position in a calendar reckoned by rule that names no real day — `2026-02-30`,
       `persian:1404-12-30` in a year whose last month has twenty-nine days — or a year beyond what the calendar can
       reckon, is refused.
+- [ ] A code is written with its scheme, `<scheme>:<code>`, and is one of that scheme's codes — looked up where the
+      scheme is held here, held to its form where it is held at its authority. A mapping `{scheme, code}` is the
+      retired spelling, refused with the one to write.
+- [ ] What is placed takes from where it is placed within what that holds: shares past a host's `capacity` are warned,
+      room past it refused; two beings taking the same room at once — a rack's slot, a port on an address — are refused
+      unless one is part of, or lives in, the other; a being present at two happenings whose spans overlap is refused.
+      A location's `host` is the being its position names; a working copy is one position of its host's filesystem.
+- [ ] Every profile composes with every other, whichever a garden extends: a profile adds terms and adds to the core's
+      terms, and never names a core term, never states an attribute the core term states, and never adds one another
+      profile adds.
 - [ ] A qualified name (`<garden_id>/<genos>:<name>`) and a record's `provenance.garden` name this garden, or a garden
       it holds a `garden` bean for. Only a name in the minted form is qualified: an identifier someone else assigned
       (a package's name, a registry number) is refused with a garden's id in front of it.
@@ -155,7 +165,7 @@ None of this catches an edit that is well-formed and simply wrong. That is Part 
       re-reading the source. A tree marked `DO NOT WALK` is read through its summary.
 - [ ] **Carry the constraints.** The cursor lists what is forbidden, required, impossible or in breach, including
       what a being inherits from the machine it lives on, what it depends on, and what it is part of.
-- [ ] `python3 bin/dmstale.py` lists caches and registrations that have aged; `python3 bin/dmrules.py` every rule.
+- [ ] `python3 bin/dmstale.py` lists caches that have aged and agreements that fall due or lapse within their notice; `python3 bin/dmrules.py` every rule.
 - [ ] **A reading is read, never written back.** What `dmreckon` or `dmledger` computes — a total, a
       balance, whether a clause is in force — is asked again each time and is not copied into a bean, where it would
       drift from what it was computed from. A reading that must be read again as it was is fixed by its `pin`.

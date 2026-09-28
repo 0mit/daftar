@@ -70,7 +70,6 @@ parts, changes).
    python3 test/money.py
    python3 test/peering.py
    python3 test/site.py
-   python3 test/atlas.py
    python3 test/public.py
    python3 test/docs.py
    python3 test/manifesto.py
@@ -99,8 +98,8 @@ parts, changes).
 
    CI runs a brief set of them on every push and pull request — the documents, the manifesto, the journal, the assets,
    the site and what is public — and the whole list only when the workflow is run by hand; before a release, run the
-   whole list here with `python3 test/timings.py -j 6` (`reuse lint` is the REUSE tool, `pip install reuse`). One exception: `test/site.py` rebuilds the pages with `site/build.py`,
-   which runs the commands the pages show (`tail`, among them) as a Unix shell runs them — on Windows, in Git Bash.
+   whole list here with `python3 test/timings.py -j 6` (`reuse lint` is the REUSE tool, `pip install reuse`). `test/site.py` builds the page again with `site/board.py`,
+   which clones this repository at the tag `site/RELEASE` names: a clone without its tags cannot run it.
 
    Two files under test/ measure rather than judge, and CI does not run them. The one runner of the whole list is
    `python3 test/timings.py [-j N] [--status FILE]`: it runs the suites above, N at a time, and appends each one's seconds
@@ -170,17 +169,20 @@ steward's own. CI refuses a pull request with a commit that carries no sign-off.
 
 ## The site
 
-`site/` holds the project's public pages: what daftar is, its use cases, its philosophy, its mechanisms drawn, and how
-to ask. Every output they show was printed by the tools of the release that `site/RELEASE` names:
-`python3 site/build.py` clones this repository at that tag, grows demo gardens from it with the day held at one date,
-runs the commands the pages show, and writes what they print between the markers the pages carry. A change to a tool
-reaches the pages only through a release: bump `site/RELEASE` to its tag, run `python3 site/build.py`, and commit the
-pages it rewrites. `python3 test/site.py` builds the site again in a temporary directory and fails until every page
-agrees with it. It also checks that every page parses, that every link inside the site resolves, that nothing is
-loaded from outside it, and that every issue form asks for the situation and warns against pasting from a garden; with
-`git config daftar.garden` set, it runs the leak guard over every file of the site. The report on the machinery page,
-`site/machinery/report.html`, is drawn separately and committed, and `site/build.py` keeps it as committed unless it
-is asked to draw it again (`--machinery`).
+`site/` holds the project's public page: one page, `site/index.html`, that shows daftar through four lenses (someone
+curious, a gardener, an agent, a keeper of the law) and ten mechanisms, a board for every crossing. `python3
+site/board.py` writes it from the release that `site/RELEASE` names, cloned at that tag. A keeper's board is read from
+that release (the law's meanings, their reasons, the catalogue's rules, checks and relations), so it cannot drift from
+it. An agent's board is proved: the builder grows a garden from the release, writes the beans of `site/garden.yaml`,
+and saves them with the command the gate board shows, and the gate must pass them. It then breaks each board's form
+once, as its `scene` in `site/boards.yaml` says, and shows the refusal the gate printed. The words each lens reads are
+written in `site/boards.yaml`; the page's template, style and script are `site/board.html` and `site/assets/`. A
+change to a tool reaches the page only through a release: bump `site/RELEASE` to its tag, run `python3
+site/board.py`, and commit the page. `python3 test/site.py` builds the page again in a temporary directory and fails
+until the committed page agrees with it. It also checks that the page parses under a policy that runs no script and
+loads no style but the site's own, that every link inside the site resolves, that nothing is loaded from outside it,
+and that every issue form asks for the situation and warns against pasting from a garden; with `git config
+daftar.garden` set, it runs the leak guard over every file of the site.
 
 To ask rather than propose (a need, a use case, a suggestion, a question, a bug), open an issue. Each form asks for
 the situation in your own words, and for nothing from your garden.

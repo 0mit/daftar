@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'none'; form-action 'none'">
+<title>daftar</title>
+<meta name="description" content="A notebook you keep with your AI agents: every fact says who said it, every change is journalled, and a gate refuses what breaks the rules.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/board.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <div class="brand"><h1>daftar</h1><span class="fa" lang="fa" dir="rtl">دفتر</span></div>
+    <p class="tag">A notebook you keep with your AI agents about the things you work on together. Every fact says who said it, every change is journalled, and a gate refuses what breaks the rules.</p>
+  </div>
+  <div class="meta"><span><b>__RELEASE__</b> · std-vocab <b>__VERSION__</b></span><span id="counts"></span><span>4 lenses × 10 mechanisms · 40 boards</span></div>
+</header>
+
+<div class="axis" role="group" aria-label="who is looking">
+  <span class="name">lens</span>
+  <button class="rot" id="lprev" aria-label="previous lens">‹</button>
+  <div class="lenses" id="lenses"></div>
+  <button class="rot" id="lnext" aria-label="next lens">›</button>
+</div>
+
+<div class="stage">
+  <div class="dialbox">
+    <svg id="dial" viewBox="-66 -4 492 368" role="group" aria-label="the ten mechanisms, and the files that hold each pair together"></svg>
+    <div class="mrot">
+      <button class="rot" id="mprev" aria-label="previous mechanism">‹</button>
+      <div class="cap" id="cap"></div>
+      <button class="rot" id="mnext" aria-label="next mechanism">›</button>
+    </div>
+    <p class="dialnote">A chord joins two mechanisms; its weight is how many of daftar's own files (tools, suites, documents) hold both. Arrow keys: ← → mechanism, ↑ ↓ lens.</p>
+  </div>
+  <section class="board" id="board" aria-live="polite"></section>
+</div>
+
+<footer>
+  <span>This page is built from the release it describes. The keeper's boards and the chords are read from the law, its reasons and its catalogue.</span>
+  <a href="https://github.com/0mit/daftar">github.com/0mit/daftar</a>
+  <a href="https://github.com/0mit/daftar/blob/master/README.md">README</a>
+  <a href="https://github.com/0mit/daftar/blob/master/MODEL.md">The model</a>
+  <a href="https://github.com/0mit/daftar/blob/master/MANIFESTO.md">Manifesto</a>
+</footer>
+</div>
+<script type="application/json" id="data">/*__DATA__*/</script>
+<script src="assets/board.js"></script>
+</body>
+</html>
