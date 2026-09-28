@@ -176,7 +176,9 @@ that release (the law's meanings, their reasons, the catalogue's rules, checks a
 it. An agent's board is proved: the builder grows a garden from the release, writes the beans of `site/garden.yaml`,
 and saves them with the command the gate board shows, and the gate must pass them. It then breaks each board's form
 once, as its `scene` in `site/boards.yaml` says, and shows the refusal the gate printed. The words each lens reads are
-written in `site/boards.yaml`; the page's template, style and script are `site/board.html` and `site/assets/`. A
+written in `site/boards.yaml`, in each of the page's languages (English, and Persian, read right to left), with the
+page's own words under `ui`; the law's words, the forms and what the gate prints stay as the release states them. The
+page's template, style and script are `site/board.html` and `site/assets/`. A
 change to a tool reaches the page only through a release: bump `site/RELEASE` to its tag, run `python3
 site/board.py`, and commit the page. `python3 test/site.py` builds the page again in a temporary directory and fails
 until the committed page agrees with it. It also checks that the page parses under a policy that runs no script and

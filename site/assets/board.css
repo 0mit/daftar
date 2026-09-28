@@ -3,10 +3,13 @@
   color-scheme:light;
   --ground:#EEF1EF; --paper:#FBFCFB; --ink:#18201C; --muted:#56615B; --rule:#D0D7D2; --lapis:#1E4F8F; --on-lapis:#FFFFFF;
   --gate:#8E2F22; --gate-soft:#F5E3DF; --code-bg:#E6EBE8;
-  --serif:"Source Serif 4",Charter,"Bitstream Charter","Sitka Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
-  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Helvetica Neue",Arial,sans-serif;
+  --latin-serif:"Source Serif 4",Charter,"Bitstream Charter","Sitka Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --latin-sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Helvetica Neue",Arial,sans-serif;
+  --fa-serif:"Noto Naskh Arabic",Vazirmatn,"Geeza Pro","Segoe UI",Tahoma,serif;
+  --fa-sans:Vazirmatn,"Noto Sans Arabic","Segoe UI",Tahoma,"Geeza Pro",sans-serif;
+  --serif:var(--latin-serif); --sans:var(--latin-sans);
   --mono:"IBM Plex Mono",ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,"Liberation Mono",monospace;
-  --fa:Vazirmatn,"Noto Naskh Arabic","Geeza Pro","Segoe UI",Tahoma,sans-serif;
+  --fa:var(--fa-sans);
   --hue-s:40%; --hue-l:38%;
 }
 @media (prefers-color-scheme: dark){
@@ -29,7 +32,13 @@ header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between
 .brand h1{margin:0;font-family:var(--serif);font-weight:600;font-size:clamp(2.1rem,4.6vw,3.2rem);letter-spacing:-.01em;line-height:1}
 .brand .fa{font-family:var(--fa);font-size:clamp(1.7rem,3.6vw,2.5rem);color:var(--lapis);line-height:1}
 .tag{font-family:var(--serif);font-size:1.1rem;color:var(--muted);max-width:56ch;margin:8px 0 0;text-wrap:pretty}
-.meta{font-family:var(--mono);font-size:.74rem;color:var(--muted);text-align:right;display:grid;gap:2px;font-variant-numeric:tabular-nums}
+.side{display:grid;gap:10px;justify-items:end}
+.langs{display:flex;gap:2px;background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:3px}
+.langs button{border:0;background:none;border-radius:6px;padding:3px 11px;cursor:pointer;font-size:.84rem;color:var(--muted)}
+.langs button[lang="fa"]{font-family:var(--fa-sans)}
+.langs button:hover{color:var(--ink)}
+.langs button[aria-pressed="true"]{background:var(--lapis);color:var(--on-lapis)}
+.meta{font-family:var(--mono);font-size:.74rem;color:var(--muted);text-align:end;display:grid;gap:2px;justify-items:end;font-variant-numeric:tabular-nums}
 .meta b{color:var(--ink);font-weight:500}
 
 /* axis L: who is looking */
@@ -38,7 +47,7 @@ header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between
 .rot{flex:none;width:38px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--muted);font-size:1.15rem;cursor:pointer}
 .rot:hover{color:var(--ink);border-color:var(--muted)}
 .lenses{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:4px}
-.lenses button{border:0;background:none;border-radius:7px;padding:9px 12px;text-align:left;cursor:pointer;display:grid;gap:1px}
+.lenses button{border:0;background:none;border-radius:7px;padding:9px 12px;text-align:start;cursor:pointer;display:grid;gap:1px}
 .lenses button b{font-weight:600;font-size:.98rem;color:var(--ink)}
 .lenses button span{font-size:.78rem;color:var(--muted)}
 .lenses button:hover{background:var(--ground)}
@@ -48,7 +57,7 @@ header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between
 /* the stage: axis M as a dial, beside the board of the crossing */
 .stage{display:grid;grid-template-columns:minmax(300px,390px) minmax(0,1fr);gap:20px;align-items:start}
 .dialbox{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 14px);background:var(--paper);border:1px solid var(--rule);border-radius:14px;padding:8px 10px 12px;display:grid;gap:8px}
-.dialbox svg{width:100%;height:auto;display:block}
+.dialbox svg{width:100%;height:auto;display:block;direction:ltr}
 .mrot{display:flex;gap:8px;align-items:center}
 .mrot .rot{height:34px}
 .mrot .cap{flex:1;text-align:center;font-size:.84rem;color:var(--muted);line-height:1.35}
@@ -77,8 +86,9 @@ header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between
 .prose{font-family:var(--serif);font-size:1.22rem;line-height:1.6;max-width:60ch;margin:0;text-wrap:pretty}
 .note{font-size:.95rem;color:var(--muted);max-width:68ch;margin:0}
 pre{margin:0;background:var(--code-bg);border:1px solid var(--rule);border-radius:9px;padding:12px 14px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.55}
+pre.cmd{background:none;font-size:.8rem;color:var(--muted)}
 .refusal{overflow-wrap:anywhere;border:1px solid var(--gate);background:var(--gate-soft);border-radius:9px;padding:10px 14px;font-family:var(--mono);font-size:.82rem}
-.refusal b{color:var(--gate);font-weight:500;margin-right:6px}
+.refusal b{color:var(--gate);font-weight:500;margin-inline-end:6px}
 .refusal .fix{display:block;margin-top:6px;color:var(--muted)}
 .label{font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
 .items{display:grid;gap:10px}
@@ -86,18 +96,18 @@ pre{margin:0;background:var(--code-bg);border:1px solid var(--rule);border-radiu
 .item .top{display:flex;gap:8px 10px;align-items:baseline;flex-wrap:wrap}
 .item .top code{font-size:.92rem;font-weight:500;color:var(--h)}
 .item .k{font-family:var(--mono);font-size:.68rem;color:var(--muted);border:1px solid var(--rule);border-radius:4px;padding:0 6px}
-.item .n{margin-left:auto;font-family:var(--mono);font-size:.7rem;color:var(--muted);display:flex;gap:10px;font-variant-numeric:tabular-nums}
+.item .n{margin-inline-start:auto;font-family:var(--mono);font-size:.7rem;color:var(--muted);display:flex;gap:10px;font-variant-numeric:tabular-nums}
 .item p{margin:0;font-size:.9rem;max-width:80ch}
 .item .why{color:var(--muted);font-family:var(--serif);font-style:italic;font-size:.95rem}
-.item ul{margin:0;padding-left:1.1em;font-family:var(--mono);font-size:.72rem;color:var(--muted);display:grid;gap:2px}
+.item ul{margin:0;padding-inline-start:1.1em;font-family:var(--mono);font-size:.72rem;color:var(--muted);display:grid;gap:2px}
 .ropes{display:grid;gap:6px}
-.rope{display:grid;grid-template-columns:minmax(120px,190px) 44px minmax(0,1fr);gap:10px;align-items:baseline;font-size:.84rem;border:0;background:none;text-align:left;cursor:pointer;padding:4px 6px;border-radius:6px}
+.rope{display:grid;grid-template-columns:minmax(120px,190px) 44px minmax(0,1fr);gap:10px;align-items:baseline;font-size:.84rem;border:0;background:none;text-align:start;cursor:pointer;padding:4px 6px;border-radius:6px}
 .rope:hover{background:var(--ground)}
 .rope .who{color:var(--c);font-weight:600}
 .rope .bar{height:6px;border-radius:3px;background:var(--c);align-self:center}
 .rope .fs{font-family:var(--mono);font-size:.72rem;color:var(--muted);overflow-wrap:anywhere}
 .staples{display:flex;flex-wrap:wrap;gap:8px}
-.staple{max-width:100%;border:1px solid var(--rule);background:none;border-radius:99px;padding:5px 12px 5px 9px;cursor:pointer;font-size:.86rem;display:flex;gap:7px;align-items:baseline;text-align:left}
+.staple{max-width:100%;border:1px solid var(--rule);background:none;border-radius:99px;padding-block:5px;padding-inline:9px 12px;cursor:pointer;font-size:.86rem;display:flex;gap:7px;align-items:baseline;text-align:start}
 .staple i{font-style:normal;color:var(--c)}
 .staple em{font-style:normal;color:var(--muted)}
 .staple:hover{border-color:var(--c)}
@@ -115,8 +125,24 @@ footer a{color:var(--lapis)}
   .lenses{grid-template-columns:repeat(2,1fr)}
   .axis .name{display:none}
   .board{padding:18px 16px}
-  .meta{text-align:left}
+  .side{justify-items:start}
+  .meta{text-align:start;justify-items:start}
   .rope{grid-template-columns:1fr 44px}
   .rope .fs{grid-column:1 / -1}
 }
+/* Persian: its own faces, no letter-spacing (it would break the joins), no italic, a taller line; what the release
+   states in English inside it keeps the latin faces */
+:root[lang="fa"]{--serif:var(--fa-serif);--sans:var(--fa-sans)}
+:root[lang="fa"] body{line-height:1.8}
+:root[lang="fa"] [lang="en"]{--serif:var(--latin-serif);--sans:var(--latin-sans);line-height:1.55}
+:root[lang="fa"] .crumb,:root[lang="fa"] .label,:root[lang="fa"] .axis .name{letter-spacing:0;text-transform:none;font-family:var(--fa-sans)}
+:root[lang="fa"] .label{font-size:.8rem}
+:root[lang="fa"] .crumb{font-size:.8rem}
+:root[lang="fa"] .axis .name{font-size:.8rem}
+:root[lang="fa"] .q{font-style:normal}
+:root[lang="fa"] .prose{font-size:1.2rem;line-height:1.95}
+:root[lang="fa"] .tag{line-height:1.9}
+:root[lang="fa"] .node text.l{font-size:13px}
+:root[lang="fa"] .meta span:not([dir]){font-family:var(--fa-sans);font-size:.8rem}
+:root[lang="fa"] .board h2{line-height:1.4}
 @media (prefers-reduced-motion:no-preference){ .chord{transition:stroke .2s,opacity .2s} .node circle{transition:fill .2s} }
