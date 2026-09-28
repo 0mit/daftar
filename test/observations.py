@@ -153,21 +153,21 @@ The survey, invented.
 
 B_OBS = """observations:
   crust-cover:
-    property: { scheme: lichen-forms, code: cover }
-    of: { scheme: lichen-forms, code: face }
+    property: lichen-forms:cover
+    of: lichen-forms:face
     value: { count: "35", unit: percent, u: { count: "5", unit: percent } }
     at: 2026-05-02
-    method: { scheme: lichen-forms, code: transect }
+    method: lichen-forms:transect
     by: ada
   crust-form:
-    property: { scheme: lichen-forms, code: cover }
-    code: { scheme: lichen-forms, code: crustose }
+    property: lichen-forms:cover
+    code: lichen-forms:crustose
     at: 2026-05-02
     by: ada
 """
 C_OBS = """observations:
   crust-cover:
-    property: { scheme: lichen-forms, code: cover }
+    property: lichen-forms:cover
     presence: absent
     at: 2026-05-02
     by: ada
@@ -179,7 +179,7 @@ C_OBS = """observations:
 """
 write("beans/stone-b.md", stone("stone-b", B_OBS))
 write("beans/stone-c.md", stone("stone-c", C_OBS))
-write("beans/stone-d.md", stone("stone-d", "observations:\n  mark:\n    property: { scheme: field-codes, code: B42 }\n    at: 2026-05-03\n    by: bea\n"))
+write("beans/stone-d.md", stone("stone-d", "observations:\n  mark:\n    property: field-codes:B42\n    at: 2026-05-03\n    by: bea\n"))
 out = gate()
 check("O-1 the survey passes: a reading with its u, a coded result, an absence, a verdict that disputes it",
       ok(out), out[-2500:])
@@ -215,11 +215,11 @@ refused("O-1 an absent entry with a value is refused",
         "beans/stone-c.md", stone("stone-c", C_OBS.replace("    presence: absent\n", "    presence: absent\n    value: { count: \"2\", unit: percent }\n")),
         "`presence: absent` beside a result (value)")
 refused("O-1 a reading that states no property is refused",
-        "beans/stone-b.md", stone("stone-b", B_OBS.replace("    property: { scheme: lichen-forms, code: cover }\n    of:", "    of:", 1)),
+        "beans/stone-b.md", stone("stone-b", B_OBS.replace("    property: lichen-forms:cover\n    of:", "    of:", 1)),
         "a reading states its `property`")
 refused("O-1 a property coded in a word the scheme does not hold is refused",
-        "beans/stone-b.md", stone("stone-b", B_OBS.replace("code: cover }\n    of:", "code: moss }\n    of:", 1)),
-        "'moss' is not a declared lichen-forms")
+        "beans/stone-b.md", stone("stone-b", B_OBS.replace("property: lichen-forms:cover\n    of:", "property: lichen-forms:moss\n    of:", 1)),
+        "'moss' is not a code of lichen-forms")
 refused("O-1 both `at` and `during` is refused (when it held is one of the two)",
         "beans/stone-b.md", stone("stone-b", B_OBS.replace("    at: 2026-05-02\n    method:", "    at: 2026-05-02\n    during: { from: 2026-05-01, to: 2026-05-02 }\n    method:", 1)),
         "at_most_one_of")
@@ -272,12 +272,12 @@ refused("O-3 a relation between codes the scheme does not hold is refused",
 refused("O-3 a relation of a kind the law does not know is refused",
         "extracts/lichen-forms-relations.tsv", "from\tto\trel\nrim\tface\tbeside\n", "part-of, requires or adjacent")
 refused("O-3 a code not of the form an at-authority scheme declares is refused",
-        "beans/stone-d.md", stone("stone-d", "observations:\n  mark:\n    property: { scheme: field-codes, code: b-42 }\n    at: 2026-05-03\n    by: bea\n"),
+        "beans/stone-d.md", stone("stone-d", "observations:\n  mark:\n    property: field-codes:b-42\n    at: 2026-05-03\n    by: bea\n"),
         "'b-42' is not in the form of a field-codes code")
 write("VOCAB.md", read("VOCAB.md").replace("      code_pattern: '^[A-Z][0-9]{2}$'\n", "      code_pattern: '^[A-Z]\\d{2}$'\n"))
 refused("O-3 a code's form is read as the law reads every pattern, in ASCII: `\\d` is 0 to 9, and `B۴۲` in Persian "
         "digits is not in it",
-        "beans/stone-d.md", stone("stone-d", "observations:\n  mark:\n    property: { scheme: field-codes, code: \"B۴۲\" }\n"
+        "beans/stone-d.md", stone("stone-d", "observations:\n  mark:\n    property: field-codes:B۴۲\n"
                                              "    at: 2026-05-03\n    by: bea\n"),
         "'B۴۲' is not in the form of a field-codes code")
 refused("O-3 a scheme held at its authority with no code_pattern is refused",

@@ -121,7 +121,7 @@ provenance: { src: generated-by-tool, by: "bin/dmsession.py", as_of: now }
 owned_by: { legal: { owner: { bean: keeper } } }
 responsibility: { legal: { holder: { bean: keeper } } }
 timing: { start: { system: gregorian-civil, at: "2026-04-21 10:00+03:00", unit: minute } }
-workspace: { host: { bean: laptop }, at: "shop-laptop:/home/keeper/garden", branch: "session/lease-talk" }
+workspace: { host: { bean: laptop }, system: unix-filesystem, at: "shop-laptop:/home/keeper/garden", branch: "session/lease-talk" }
 ---
 An agent's session that takes the lease down.
 """)

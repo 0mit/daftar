@@ -80,6 +80,11 @@ first the entry states is the whole, so a purchase charged in another currency i
 Checked exactly or not at all: a sum that is nearly right is a sum that is wrong, and a tolerance would have to be
 somebody's choice of how wrong.
 
+SEVERAL WHOLES, A CONSTANT WHOLE, A WHOLE PER GROUP (28.1). One entry can make more than one whole — a payment's payers
+make its amount, and each plan of its analytic distribution makes it again — so `sums` takes a list of rules. A whole
+may be a constant quantity where the parts are shares of something no attribute states. And `per: {level}` groups the
+parts by the ancestor, at a level of their scheme, of the code each names: each group is a whole on its own, and a
+group stated partly one way and partly another is refused, since it cannot be judged a whole at all.
 ## schema_language.expiry
 
 PER ENTRY, REPEATING, AND SILENT ONCE MET. `expiry` was written for a term with one date — a registration runs
@@ -198,6 +203,13 @@ ONE GRAMMAR OF READINGS, AND NO FORMULA (24.0). A clause's condition, a checklis
 page's table are each a selection of beans or entries and something computed from it. Written as steps of a closed list
 of operations, each naming earlier steps only, a reading cannot loop and no string is evaluated; read each time by one
 reader, it is never written back as a fact. An act that fixes a reading records the commit it was read at.
+
+## aggregates
+
+ONE LIST OF WHAT A WHOLE IS MADE BY (28.0). The reckoner's `window` took its own list (mean, min, max, count, first,
+last), and a series' whole needed one too; two lists of one idea drift, and the first had no sum. The aggregates are
+rows of the law, each exact in fractions, read by the gate for a series' whole and by the reckoner for a window. What a
+single cell stands for (`stands_for`) keeps its own list, because a point, a state and an instant are no aggregates.
 
 ## operations
 
@@ -621,7 +633,9 @@ work. `crosswalk` says how a position in one is found in another: `computed` (by
 `table` (somebody publishes the correspondence), `observed` (it is looked up in what was seen),
 `none`. Neither system is the other's parent; that is what distinguishes this from `within`.
 datum             (24.0) what a position here is an offset FROM: `being`, the being the position names, or
-{system, at, direction: before | after}, a position of another system. Two systems over one ground whose
+{system, at, direction: before | after}, a position of another system; (28.0) `line`, the first position of
+whatever line the position is read on — a series' or a repetition's `from` — so a position standing alone has none;
+and `named`, the position a position names itself (`after:<it>`), whose offset from it is known only in direction. Two systems over one ground whose
 datums are in one system are crosswalked by computing.
 cells_in          (24.0) the table whose rows are its cells, `{registry, take}`; `overlay` a table whose rows win
 over them, each with its `source`; `boundaries_in` what fixes each cell's base (`fixing`).
@@ -770,6 +784,25 @@ geography; every calendar whose day begins somewhere now says so, and the gate a
 ## anchor_systems[geographic].restrictions
 
 the one place system with a measure: what "every 5 metres" needs
+
+## anchor_systems[ordinal-number].datum
+
+A COUNT NEEDS A FIRST TO COUNT FROM (28.0). `event-anchored` carries its reference in the position itself —
+`after:dinner-at-sams` — and so it can stand alone. An ordinal number does not: "2" is the second of something, and
+the something is the line it is read on, whose first a series' or a repetition's `from` gives. `datum: line` says so,
+and the gate refuses an ordinal number where a position stands alone: a day, a moment of `timing`, a place, an
+endpoint. Measured before it was written: with the ordinal number of dimension `any` and no such datum, a day written
+`{ system: ordinal, at: "2", unit: day }` passed the gate.
+
+## anchor_systems[event-anchored].datum
+
+A POSITION IS AN OFFSET FROM A DATUM, AND THE DATUM SAYS WHICH KIND (28.0; the operator: "isn't event-anchored going to
+be a new use of the latest machinery with new law?"). Three kinds meet here. A fixed datum, with an offset measured from
+it: `bp-1950`, years before 1950. The first of a line, with an offset counted from it: `ordinal-number`. And the
+position a position names itself, with an offset known only in direction: `after:dinner-at-sams`. `event-anchored` was
+the third all along; stating it lets the gate read whether a position can stand alone from its datum — one that names
+its own stands alone, one that counts from a line's first cannot — where it had read it from `dimension: any`, which
+the ordinal number now shares.
 
 ## anchor_systems[event-anchored].pattern
 
@@ -1398,6 +1431,24 @@ one declared restriction of a sequence instead of the definition of walkable.
 
 a term carrying `dag: true` places its edges on this aspect
 
+## aspects[ordinal]
+
+WHICH, AND NOT HOW MANY (28.0; the operator: "absorb 2 x 2 as a sequence with two 2s summing a 4 as the whole sequence
+numeric value having two nodes", and "make sure we are not misusing the aspect dimension and other terms"). A sequence
+of values had nowhere to lie but time, place or temperature, so a fact that holds at no time — two times two is four —
+had no line to be written on. The ordinal line is that line: its positions are the first, the second, with nothing
+between them, and it is no time and no place, so what lies on it holds at none of them. The time question dissolves:
+a timeless fact needs no marker saying time does not apply; it is written on a line that is not time.
+
+IT IS NAMED FOR WHAT ITS POSITIONS SAY. `count` was the first name, and the law already gives `count` one sense — how
+many (a value type, an operation, an aggregate): cardinal. A position on this line says which: ordinal. One name for
+the two would let "the second" and "two of them" be read for each other.
+
+ITS DOMAIN IS `any`. An aspect's domain names the dimension of the systems whose positions it holds; the ordinal line
+holds only positions placed by counting — `ordinal-number`, and `event-anchored`, which is placed by what it follows —
+and neither is a time or a place. A dimension of its own would have made the ordinal number serve this line alone,
+where as a system of dimension `any` it counts on every line: the third meeting of a series of them, the fifth seat.
+
 ## aspects[walk].domain
 
 its positions are beans, not positions in an anchor system
@@ -1441,7 +1492,8 @@ seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv
 
 ## knowledge_schemes[technology].within
 
-every technology names the UNESCO field(s) it belongs to (its `isced_f_2013` column): the
+every technology names the UNESCO field(s) it belongs to, in its column of ISCED-F 2013 codes: the tree of knowledge a
+technology hangs from, so a mail server and a routing mechanism meet at the field they both draw on.
 
 ## knowledge_schemes[technology].neighbours
 
@@ -1535,18 +1587,30 @@ A LABEL IN ANOTHER LANGUAGE KEEPS ITS PUBLISHER'S WORDS (24.0, N25). Translation
 that an attribution is printed with them. The attribution is kept verbatim beside the labels it covers, and every reader
 that prints a label prints it.
 
-## profiles.code.terms[code_paths].meaning
+## profiles.accounting
 
-The 'paths vocab' (added 2026-08-01, human-directed): so an agent LOCATES code without re-walking a tree,
-and knows which trees are REFERENCE-ONLY (never re-scanned each session).
+A FIELD'S WORDS, THE CORE'S MACHINERY (28.1; the operator: "we need to keep the law clean and define the field specific
+names to help existing users through profiles"). Analytic accounting needs nothing the core does not have in general —
+codes in a tree with levels (a scheme a garden keeps), parts that make a whole (`sums`), a reading that shares an amount
+out (`apportion`). What it needs of its own is its words: `analytic_distribution`, a plan, an account. So the core stays
+field-neutral and the profile says the field's names, adding its one attribute to the core's `transactions` and
+`clauses` rather than restating them. A plan is a code at the first level of the garden's scheme, and an account one
+beneath it: plans and accounts are one mechanism (the operator: "coudn't codes and plans use the same daftar
+machinery?"), and a new account is a row, a journalled write, never a law change.
 
-## profiles.code.terms[code_paths].schema
+ONE SENSE, FOUND BY THE GATE. The share was first a ratio (`{ count: 60, unit: percent }`); the gate refused it — `share`
+already meant whole parts of a whole, a party's share of a cost. The two were one sense written two ways, so the
+analytic share took the law's: 60 and 40 are three fifths and two fifths, and a plan's shares are its whole by
+construction. No rule of a hundred percent was needed, and none is kept.
 
-GATE (P2): enforced generically from here, not from code
+## profiles.accounting.overlays
 
-## profiles.code.terms[code_paths].schema.required_on_gene
-
-a genos:codebase bean MUST carry a non-empty code_paths
+A PROFILE ADDS, AND NEVER REWRITES (28.1). A profile's terms were whole terms, merged by name; a term of a profile named as
+a core term would have REPLACED it in every tool that reads terms into one table. So what a profile adds to a core term
+is its own key, `overlays` — attributes beside the term's, `sums` and `cells` after its own — and the gate judges every
+profile against every other whichever a garden extends: no profile term named as a core
+term or as another profile's, no overlay that states an attribute the core term states, no two profiles adding one
+attribute to one term. A gardener may extend them all, and meet no name held two ways and no fact in two places.
 
 ## profiles.code.terms[git_remote].anchor
 
@@ -1559,6 +1623,12 @@ is a fact about a network interface, not about anything a being can reach. A mai
 `details.boot_surface.mail_ports_expected` was straining toward this shape and could not get
 there — it carries `{ port: 25, service: postscreen }` beside `port: "110/143/993/995"`, four
 ports jammed into one string, and `service` naming IMPLEMENTATIONS where it means protocols.
+
+## profiles.network.terms[endpoints].placement
+
+WHERE A BEING ANSWERS IS A LOCATION THAT TAKES ROOM (29.1): a port on an address is one listener's at a time, so two
+beings binding it are refused unless one lives in, or is part of, the other. Its system is one of place: an endpoint
+placed after an event, which `any` let in, is no address — and a view's reference, which reads one, is held the same.
 
 ## profiles.network.terms[endpoints].schema.attrs.transport
 
@@ -1621,20 +1691,16 @@ the shape would be satisfied and it would be the wrong shape.
 
 7.0: was `required_on_kinds: [router]` until `router` stopped being a genos
 
-## profiles.domain.terms[registration].meaning
+## profiles.domain.overlays
 
-PROMOTED 2026-09-17 (human-ratified, std-vocab 8.2) from one garden's local vocabulary, where it had been
-a candidate "to revisit with a second garden that has domains". A cold-start drill garden modelled a
-domain and had nowhere standard to put its registrar or expiry. A PROFILE, not the core: a garden
-with no domains inherits neither the term nor its requirement.
-
-## profiles.domain.terms[registration].schema.expiry
-
-WHICH DATE AGES, said here rather than in the tool. bin/dmstale.py named `registration` and
-`expires` in its own source until 2026-09-20: this term was born garden-local with the tool
-extended for it the same day, and when it was promoted to Tier-0 nobody went back. A garden
-that invents a term with an expiry got no warning, however well the gate enforced the date —
-first-class to the gate, invisible to the tool that would have made it useful.
+A REGISTRATION IS AN AGREEMENT (29.0). The profile's term was promoted because a garden had nowhere standard to put a
+registrar or an expiry; the core now holds agreements — parties, an `external` party the garden holds no bean for,
+clauses that fall due with notice, a text held elsewhere — and a registration is one: the registrant holds a name
+through a registrar until a day it lapses unless renewed. RDAP (RFC 9083) writes it the same way, entities in roles
+(registrant, registrar) and events (registration, expiration). So it is written as a contract `over` the domain, and
+the profile adds only the word of its field the core lacks, `auto_renew`: whether the registrar renews without being
+asked, an account setting no registry shows — hence `unknown` as its honest default. The registrant who holds the
+record is a party of it, where the domain's `responsibility` says only who answers for it here.
 
 ## profiles.knowledge.terms[knowledge].meaning
 
@@ -2299,6 +2365,13 @@ makes six monthly instalments one clause and not six; and a condition that is no
 instalment paid late — is prose in `when`, because the reason IS the fact. `state` records what became of it; the
 balance it implies is read, never stored.
 
+## terms[clauses].schema.attrs.notice
+
+WHICH DATE AGES, AND HOW FAR AHEAD, IS THE RECORD'S (29.0). A clause falls due with the agreement's notice, seven days;
+a name lapsing is known ninety days ahead or it is lost, and a lease is known sixty. The notice is the clause's own where
+its default is too short, and `bin/dmstale.py` reads it there — it once named a term and its date in its own source,
+which left every other agreement that ages first-class to the gate and invisible to the tool.
+
 ## terms[transactions]
 
 WHAT MOVED, AND NOTHING DERIVED FROM IT. A transaction records the inputs — an amount, who paid how much of it, and
@@ -2510,6 +2583,20 @@ schema: `start`, `sync`, `stop` are keys, not law, and a run with four sync poin
 rule-change to record them. The closed part is each entry's shape — the same open-key/closed-figure
 pattern `analysis_cache` proved.
 
+## terms[series].schema.attrs.whole
+
+THE WHOLE OF A SEQUENCE (28.0). Two nodes of 2 are one thing as well as two: a sequence has a value as a whole, made of
+what its positions hold, and saying how it is made is saying what the whole is — by sum it is 4, by product 4 again, by
+count 2. The whole is stated and checked exactly, in fractions, as a payment's parts are checked against what was
+paid (`sums`); a gap in a row leaves a whole nobody can check, and that is said rather than guessed past. How the parts
+make the whole is a row of `aggregates`, the one list the reckoner's `window` reads too, so the gate and a reading
+cannot name the same aggregate two ways.
+
+A SERIES ON AN ORDINAL LINE COUNTS BY NEIGHBOURS. A series counted its positions in a unit of the line's length, and
+refused a line with no measure. On a line whose neighbours are counted, a row lies a number of neighbours after `from`,
+and nothing measures the distance: so the series states no unit, a grid strides by neighbours, and where the system
+writes its positions as the count itself (`ordinal-number`), the position n neighbours on is `from` + n.
+
 ## terms[series]
 
 THE WORLD ALONG A LINE (D47; sequence critic §6, S0–S5). One entry is one recording: its positions by rule or listed,
@@ -2559,6 +2646,10 @@ NOT on `located_at`, deliberately: roots is the host describing itself and every
 it has an `os`, while `located_at` is carried by codebases, which have none.
 
 ## terms[roots].schema.attrs.system
+
+A ROOT IS A PLACE (28.0). Its system chose from every anchor system, though its meaning names a filesystem; it takes
+one of place now, as a location does, and a `timing` moment one of time or one placed by counting or by its neighbours.
+Every garden known held only such systems there.
 
 Pinned to the grammar the host's `os` declares since 7.0.
 
@@ -2683,6 +2774,12 @@ read and merge one another's branches with no network hop, which is the sync-bet
 ## terms[workspace].schema.attrs.branch
 
 Every session before 2026-08-07 worked the main copy directly, on `master`.
+
+## terms[workspace].schema.attrs.system
+
+A WORKING COPY IS A POSITION (29.1). Its `at` held a pattern of its own, a third copy of the filesystems' forms, loose
+enough to read `root:a (main) and root:b (main)` as a path on a host called `root`. It names its filesystem now, and its
+`at` is in that system's one form — and on the one machine it names, which the gate holds to `host`.
 
 ## terms[capture].meaning
 
@@ -2834,6 +2931,11 @@ the host's garden and in a guest's would disagree about its owner every time the
 one agreement would; and nobody owns an evening they shared. So it may end at the crown, `logos`, as an agreement
 may. It is answered for by whoever hosted it — a holder, one being who can be asked — and not by the `parties` form,
 because a happening binds no one to anything.
+
+## gene[event].takes_time_of
+
+WHOSE HOURS A HAPPENING TAKES (29.1): those its `refs` name `present` or its `host`. An invitation takes nobody's hour —
+RFC 5545's TRANSPARENT — and two happenings whose spans overlap cannot both have had one person present.
 
 ## recurrence_form
 
@@ -3478,15 +3580,22 @@ EVERY PLACE'S LAW IS A SIBLING. The places on daftar's path differ:
 None is privileged (sibling). daftar is written in the form of none of them, and asks no one to break the law where
 they stand. What a place's law asks of a person, the steward answers for what he himself publishes.
 
-## profiles.code.terms[code_paths]
+## profiles.code.overlays
 
-MOVED OUT 2026-08-02 (P1 / D6, human-ratified): `summary_ref` and `last_indexed` left this term and now
-live in `analysis_cache`. Rationale (one-owner-of-a-fact): a summary is an ANALYSIS RESULT, not a property
-of a filesystem path, and a date is a weaker staleness signal than the source's own git sha. code_paths
-now does exactly ONE job — LOCATE the tree and say whether it may be walked. An analysis_cache entry
-binds back to the tree it analysed via its `covers_paths`.
+A CODE BEAN'S TREES ARE ITS LOCATIONS (29.0). `code_paths` was added so an agent LOCATES code without re-walking a tree,
+and knows which trees are REFERENCE-ONLY; it did one job — locate the tree, and say whether it may be walked — once the
+analyses moved to `analysis_cache`. But locating a being is what `located_at` exists for, and its own reason names a
+codebase first: a tree on a host, objects in a repository, a printed copy. Two terms held one fact: one tree stood in
+both, and the framework a dozen addons are read beside was written a dozen times as a path in each. So the profile says
+what a code tree is in the code's own words — `role`, `scan_policy`, `stack`, `entrypoint` — beside the position, and a
+codebase carries one such location. A tree of another code it is only read beside is that code's own location, and the
+code depends on it (`depends_on`): one bean per tree, and `dmcursor` resolves a file in it to the being whose tree it is.
 
-**What an agent does.** A reader of this product's code reads the owning bean's `code_paths` to locate the tree, then its `analysis_cache` for a result that stands in for a scan. A tree whose `scan_policy` is `reference-only` (a vendored framework, say) is read by its summary and not walked for context; it is searched only for one named symbol. A tree is analysed again only when the entry that covers it is STALE (its `staleness_key` no longer matches the live source), and that entry is then refreshed.
+**What an agent does.** A reader of this product's code reads the owning bean's locations to find the tree, then its
+`analysis_cache` for a result that stands in for a scan. A tree whose `scan_policy` is `reference-only` (a vendored
+framework, say) is read by its summary and not walked for context; it is searched only for one named symbol. A tree is
+analysed again only when the entry that covers it is STALE (its `staleness_key` no longer matches the live source), and
+that entry is then refreshed.
 
 ## profiles.code.terms[git_remote]
 
@@ -3663,3 +3772,76 @@ wherever Python does — on Windows too, where `python3` may be missing or a sto
 without `dm`, so the row states the family and nothing a file name already says; what the tool does is the first line
 of its own help, read from it, never restated.
 
+
+## placement
+
+THE LINE FROM PLACE TO LOCATION (29.0). Every tradition that has thought about being "in" something orders its ways from
+the most general to the most bodily, and separates a placement that takes room from one that takes nothing. Aristotle
+lists the senses of "in" (Physics IV.3) and calls "as in a vessel, and generally in a place" the most proper, while
+"in a subject" — knowledge in the soul — is in something not as a part and takes no room (Categories 1a24). The
+scholastics order the modes of being in a place: circumscriptive, a body measured by its place and excluding others;
+definitive, here and not elsewhere, taking none; repletive, filling all and contained by none (Peter Lombard, Sent. I
+d.37; Aquinas, ST I q.52). Kalām says it in two words: a body fills its ḥayyiz (taḥayyuz), and two cannot share one; an
+accident inheres in its maḥall (ḥulūl) and fills none. Persian keeps the pair in jā and makān, Hebrew in māqôm and
+miqqum, German in Ort and Platz. The law's own natures are the Stoics', for whom only a body occupies and a lekton
+subsists without place. So the line is data: `place`, the ancestor every placement walks up to, and its modes in
+order — order, presence, habitat, location — each saying what it `takes` from where it places a being: none, a share,
+or room. The extracted concept is the economists' subtractability (Samuelson 1954; the Ostroms 1977): whether one
+placement leaves less for the next. A share can be promised past what a host holds, as a hypervisor overcommits its
+memory, and is warned; room cannot, as two bodies are never in one place, and is refused. Time asks the same question —
+RFC 5545's TRANSP says whether an event takes an attendee's time — and the line carries it (29.1) as place's sibling,
+the rung `time`: Aristotle's categories set *pou* (where) beside *pote* (when), and Arabic grammar's vessel, ẓarf, is
+of place and of time alike. A happening takes the hours of those present at it, and nobody spends one hour twice.
+
+## value_types[coding]
+
+ONE CAPSULE FOR A CODE (29.0). A code of a published scheme was written as a mapping `{scheme, code}` in eleven places
+and beside other attributes in three more, each checking its code against the scheme it named; a knowledge scheme's
+codes were three anchor terms besides. One value type holds it everywhere, written as the calendars and the ordinal line
+write a tagged position: `<scheme>:<code>` — HL7 FHIR's Coding, a system and a code. The first colon ends the scheme,
+whose name has none, and no scheme is named as a genos, so a coding and a minted name `<genos>:<name>` never read
+alike.
+
+## terms[capacity]
+
+WHAT A HOST CAN HOLD IS ITS OWN FACT (29.0). A rack's slots, a disk's bytes, a table's load: stated on the being that
+holds them, in a unit whose quantity says what a placement's `takes` is measured in, and summed exactly across units.
+A capacity may name the rung whose placements draw on it; a host with none stated is never summed — nothing is
+inferred of what it holds.
+
+## terms[located_at].schema.attrs.host
+
+THE PLACE KNOWN, THE POSITION NOT (29.0). A position in a host's own frame — a path, a repository, a slot — names its
+host in its form; `host` names it as a being. Stated alone, with `openness: unknown`, it says what was known before and
+could not be written: the machine a thing is on, and not where on it. Beside `at` it is the being the position names,
+and agrees with it.
+
+## terms[located_at].schema.attrs.takes
+
+WHAT A LOCATION TAKES (29.0). Room at a position in a being's frame, measured: two rack units, four hundred gigabytes.
+Only where it is stated is it taken — a location that states nothing takes nothing the gate can sum, and none is
+invented for it.
+
+## terms[lives_in].schema.attrs.takes
+
+A HABITAT TAKES A SHARE (29.0): memory, cores, disk, drawn from what the host holds and summable against its capacity.
+
+## anchor_systems[git-remote]
+
+WHERE A REPOSITORY IS FETCHED FROM (29.0). The code profile had a term for the machine that held a code's repository,
+and in most beans the code's own `git_remote` said it already; where it did not, the repository's address is a location of the code. Its form
+is kept apart from every other system's: a remote with its user, a path relative to the login that shows it is a
+repository, or a URL — and a repository at an absolute path on a named host is a position in that host's filesystem.
+
+## terms[words].schema.attrs.external
+
+A TEXT HELD ELSEWHERE (29.0). A written agreement names the document that holds its text; a registrar's registration
+agreement and a bank's terms for a card are written and never held in a garden. `external` names where the text is, as
+a party the garden holds no bean for is named — and a cell's requirement may be one of several attributes.
+
+## profiles.knowledge
+
+A CODE IDENTIFIES WHAT IT CLASSIFIES (29.0). The profile's codes were three anchor terms, one per scheme, made terms so
+that `value_in_registry` had a term to sit on. `identifier` (26.0) kept apart only keys with a value system of their own;
+a coding names its system in its value, so a being that IS an occupation, a field or a technology is identified by the
+code its scheme's publisher assigned — `identifier: isco-08:2522` — an identity given outside every garden.

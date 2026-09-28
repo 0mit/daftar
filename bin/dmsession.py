@@ -189,6 +189,7 @@ owned_by: {{ legal: {{owner: {{bean: {owner}}}}}, technical: {{owner: {{bean: {o
 responsibility: {{ legal: {{holder: {{bean: {owner}}}}}, technical: {{holder: {{bean: {owner}}}}} }}
 workspace:
   host: {{ bean: {host} }}
+  system: {'windows-filesystem' if os.name == 'nt' else 'unix-filesystem'}
   at: "root:daftar-sessions/{slug}"
   branch: "session/{slug}"
   opened_at: {now}

@@ -174,8 +174,8 @@ steps:
   - { id: bud-break, do: "the buds open", usually: { of: time, measure: { count: 10, unit: day } }, next: [ { to: leaf-out } ] }
   - id: leaf-out
     do: "the leaves unfold and begin to feed the tree"
-    takes: [ { scheme: tree-inputs, code: water, amount: { count: 40, unit: litre } }, { scheme: tree-inputs, code: carbon-dioxide } ]
-    gives: [ { scheme: tree-inputs, code: sugar }, { scheme: tree-inputs, code: oxygen } ]
+    takes: [ { code: tree-inputs:water, amount: { count: 40, unit: litre } }, { code: tree-inputs:carbon-dioxide } ]
+    gives: [ { code: tree-inputs:sugar }, { code: tree-inputs:oxygen } ]
     usually: { of: time, in: gregorian-civil, level: month, count: 4 }
     next: [ { to: leaf-fall } ]
   - { id: leaf-fall, do: "the leaves colour and fall", next: [ { to: dormant } ] }

@@ -218,6 +218,21 @@ for _b in ("nas", "bakers"):
     os.remove(os.path.join(G, "beans", _b + ".md"))
 
 _scoped = [l.split("#")[0].split() for l in open(os.path.join(ROOT, "seed", "PUBLIC-ALLOW"), encoding="utf-8")]
+# ---- a word the gardener keeps out, though the world knows it (29.1: the garden's own PUBLIC-DENY) ----------------------
+commit("samba serves the files here\n", "a neutral message", "old.md")
+_base = run("git", "-C", R, "rev-parse", "HEAD").stdout.strip()
+write(os.path.join(G, "PUBLIC-DENY"), "# the gardener's own reason is kept here\nsamba\n")
+r = dmpublic("--range", _base + "..HEAD")
+check("a word the catalogue makes public, that the gardener denies, is not refused where it was published before",
+      r.returncode == 0, r.stdout + r.stderr)
+commit("and samba again, in a new line\n", "a neutral message", "new.md")
+r = dmpublic("--range", _base + "..HEAD")
+check("...and is refused in a line the range adds", r.returncode == 1 and "samba" in r.stdout and "added" in r.stdout, r.stdout)
+open(os.path.join(T, "pr.md"), "w").write("this pull request speaks of Samba\n")
+r = dmpublic("--no-files", "--text", os.path.join(T, "pr.md"))
+check("...in a pull request's text, and in a commit message", r.returncode == 1 and "samba" in r.stdout.lower(), r.stdout)
+os.remove(os.path.join(G, "PUBLIC-DENY"))
+
 _dead = [c for cells in _scoped for c in cells[1:] if not os.path.isfile(os.path.join(ROOT, *c.split("/")))]
 check("every file a line of this repository's PUBLIC-ALLOW is scoped to exists", not _dead, _dead)
 

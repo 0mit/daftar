@@ -118,7 +118,9 @@ def money_terms(terms):
     out = []
     for name, t in sorted(terms.items()):
         sch = (t or {}).get('schema') or {}
-        rule = sch.get('sums')
+        # the rule of what moved: the one whose whole is an attribute of the entry and which groups its parts by no code
+        rule = next((r for r in (sch.get('sums') if isinstance(sch.get('sums'), list) else [sch.get('sums')])
+                     if isinstance(r, dict) and not isinstance(r.get('whole'), dict) and not r.get('per')), None)
         if not isinstance(rule, dict):
             continue
         wholes = rule.get('whole') if isinstance(rule.get('whole'), list) else [rule.get('whole')]

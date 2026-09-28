@@ -251,6 +251,99 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **29.1** (2026-09-28, human-ratified rule-change) — **time is place's sibling; a working copy is a position; each
+  profile in its place on the line.** The operator: "yes it take (does a meeting take someone's hour?) … fold
+  workspace.at and check if view and other profiles occupies the right place".
+  - **The rung `time`**, declared by `timing`: a happening takes the hours of those present at it (the event's
+    `takes_time_of`: present, host), and one being present at two happenings whose spans overlap is refused. An
+    invitation takes nobody's hour (RFC 5545's TRANSPARENT).
+  - **`workspace`** names its `system`, and its `at` is in that system's one form, on the machine it names; its own
+    pattern retires. bin/dmsession.py writes it; the 29.0 step translates a garden's working copies.
+  - **The profiles on the line**: `endpoints` is a `location` that takes room — one port on one address is one
+    listener's, refused when two beings bind it unless one lives in the other; `endpoints.system` and a view's
+    `reference.system` take systems of place only. `links`, `reaches`, `treatments`, `knowledge` and the view's terms
+    relate beings and place none; the code profile's trees are locations and the domain's registration an agreement.
+  - **`dmpublic`** refuses, in what a range adds, a word the garden's own `PUBLIC-DENY` keeps out.
+
+- **29.0** (2026-09-28, human-ratified rule-change) — **the line from place to location, and one capsule for a code:
+  the five places a profile and the core said one thing twice, folded.** MAJOR: stored facts are reshaped, and
+  `bin/dmupgrade.py`'s 29.0 step translates them where they are written, every comment carried to where its fact goes.
+  The operator: "All 5 ratified … to make sure we are doing the most structural implementation possible, look if we can
+  fold them through profiles, with a why check for the being of any of them"; and, of the third and fourth, a place
+  (جا) as the ancestral definition of a being's placement and a location (مکان) as the more physical one, the line that
+  orders them by abstraction, and whether a placement makes its host more limited.
+  - **`placement`, the line**: `place`, the ancestor every placement walks up to, and its modes in order — `order`,
+    `presence`, `habitat`, `location` — each saying what it `takes` from where it places a being: none, a share, or room.
+    A term states its rung (`lives_in` habitat, `located_at` and `workspace` location); a shipped scheme, so the
+    ancestor machinery reads it.
+  - **`capacity`** on a host and **`takes`** on a placement: shares past a capacity are warned (a host may promise more
+    than it holds), room past it refused, and the same room taken twice at once refused unless one is part of the other.
+  - **`located_at.host`**: the being a position's frame belongs to — alone, the place known and the position not.
+    `local-frame` states its datum, `host`; a new place system, **`git-remote`**, holds a repository as a client names it.
+  - **`coding`**, one value type for a code with its scheme, `<scheme>:<code>`: observations, a stance's code, a step's
+    process and its inputs and outputs, a channel's property, a relation to knowledge, a distribution. `scheme` retires as
+    an attribute; no scheme is named as a genos.
+  - **`identifier`** takes a code a published scheme gives what it classifies, as a coding: `isco_08`, `isced_f_2013`
+    and `technology` retire as anchor keys.
+  - **The code profile** overlays `located_at` with `role`, `scan_policy`, `stack`, `entrypoint`, and requires one on a
+    codebase: `code_paths` and `git_host` retire. A tree of another code it is read beside is that code's location,
+    reached by `depends_on`.
+  - **The domain profile** adds `auto_renew` to clauses: `registration` retires into the contract it is — parties
+    `registrant` and `registrar`, `timing.registration`, a `renewal` clause that falls due on the day the name lapses.
+    Clauses gain their own `notice`; `words` gains `external`, a text held outside the garden; a cell may require one of
+    several attributes.
+  - **Profiles compose with the core's senses**: an overlay's attribute is the law's word, judged by the law's row.
+
+- **28.1** (2026-09-28, human-ratified rule-change) — **analytic accounting, in the field's words, on the core's
+  machinery; and every profile composes with every other.** MINOR: additive, nothing a garden holds changes. The
+  operator: "we need to keep the law clean and define the field specific names to help existing users through
+  profiles"; "ratified, but re-inspect our other profiles and go hunt of a general-law and profile lense sense merging
+  opportunity then make sure a gardener can use all profiles when needed without data-duplication and conflicts".
+  - **A profile may extend a core term** (`overlays`): attributes beside the term's, `sums` and `cells` after its own,
+    and never an attribute the term states. The gate judges every profile against every other whichever a garden
+    extends: no profile term named as a core term or as another profile's, no overlay rewriting the core, no two
+    profiles adding one attribute to one term. A garden may extend them all. A key a profile adds, in a garden that
+    does not extend it, is refused with the profile named and the command that extends it.
+  - **`sums`** takes a list of rules, a constant whole, parts in another unit of the whole's quantity (converted
+    exactly), and `per: {level}`: the parts grouped by the ancestor of the code each names, each group a whole; a group
+    stated partly one way and partly another is refused.
+  - **`apportion`**, an operation of the reckoner: each code's part of the members' amounts, by shares within a group
+    or by amounts, summed per code or per ancestor at a level; exact, and with `digits: true` in the currency's cents by
+    the largest remainders — the one rule for a split that cannot be exact.
+  - **The `accounting` profile**: `analytic_distribution` on `transactions` and on `clauses` (a budget line) — entries of
+    `{scheme, code, share | amount}`, a plan's amounts making the amount. A plan is a code at the first level of the
+    garden's own scheme and an account one beneath it: one mechanism, and a new account a journalled row, never a law
+    change. The field's words and where each is kept: seed/COOKBOOK.md, beside an ERP's.
+  - **One sense, merged**: the analytic share was first a ratio; the gate's one-sense rule refused it, since `share`
+    already means whole parts of a whole, a party's share of a cost. The analytic share takes that sense: 60 and 40 are
+    three fifths and two fifths, and a plan's shares are its whole.
+- **28.0** (2026-09-28, human-ratified rule-change) — **the ordinal line: a sequence that holds at no time.** MAJOR: three
+  system choosers are narrowed to the dimension their meaning names, which can refuse a bean that passed. The operator:
+  "absorb 2 x 2 as a sequence with two 2s summing a 4 as the whole sequence numeric value having two nodes", then
+  "ratified just make sure we are not misusing the aspect dimension and other terms, look through catalogue for any
+  candidates to be generalized with our new method".
+  - **The `ordinal` aspect**: which in order — the first, the second — with nothing between two neighbours; no time and
+    no place, so what lies on it holds at none of them. Its domain is `any`. Named for what its positions say: `count`
+    is the law's word for how many, and an ordinal says which.
+  - **The `ordinal-number` system**, of dimension `any`, `datum: line`, written tagged — `ordinal:2` — since a bare
+    number is a port's and a geohash's spelling too: a position counted from the first of the line it
+    is read on (`datum: line` is new), so it counts on every line — the second node, the third meeting, the fifth seat.
+    A position standing alone lies on no line: a day, a `timing` moment, a place or an endpoint naming it is refused.
+  - **A series on a counted line**: a series whose system's neighbours are counted states no unit, a grid strides by
+    neighbours, and an ordinal number's position n neighbours on is `from` + n.
+  - **A series' `whole`**: `{value, of, by}` — the value the series is as a whole, the channel it is made of, and how
+    (`by`, a row of `aggregates`); checked exactly against the rows. Two times two: two nodes of 2, a whole of 4 by sum
+    (and by product), 2 by count.
+  - **`aggregates`**, one registry: sum, product, mean, min, max, count, first, last — read by a series' whole and by the
+    reckoner's `window`, which gains sum and product (a product only of what has no dimension).
+  - **`event-anchored` states its datum: `named`** — the position it names, its offset known only in direction (the
+    operator: "isn't event-anchored going to be a new use of the latest machinery with new law?"). A position is an offset
+    from a datum, and the datum says the kind: fixed, with a measured offset (`bp-1950`); the line's first, with a counted
+    one (`ordinal-number`); or named in the position itself (`event-anchored`). The gate reads from the datum whether a
+    position can stand alone — the long form of a day takes a system of time or one whose datum it names — where it read
+    it from `dimension: any`.
+  - **Narrowed**: `timing.system` to systems of time or of dimension `any`; `located_at.system` and `roots.system` to
+    systems of place. Every garden known held only such systems there.
 - **27.1** (2026-09-28, human-ratified rule-change) — **the permission square says its own name.** MINOR, no rule
   changes: 26.0 renamed the aspect `capability` `permission`, and the prose kept the old name in six places — the meaning
   of `clauses` (law), MODEL.md twice, the cookbook's agreement chapter, and the reasons for the square, for a clause

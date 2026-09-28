@@ -162,7 +162,7 @@ def to(table, record):
             sys_, code = got.get('system'), got.get('code')
             if sys_ and code and table.by_url.get(str(sys_[1])):
                 _set(entry, dst.split('.', 1)[1] if '.' in dst else dst,
-                     {'scheme': table.by_url[str(sys_[1])], 'code': str(code[1])})
+                     f"{table.by_url[str(sys_[1])]}:{code[1]}")
                 used.update({sys_[0], code[0]})
             continue
         for leaf, v in take(path):
@@ -227,9 +227,10 @@ def back(table, bean, key, entry):
         elif path.endswith('.coding'):
             rel = dst.split('.', 1)[1] if '.' in dst else dst
             c = _get(entry, rel)
-            if isinstance(c, dict) and c.get('scheme') in table.url_of and c.get('code'):
-                _put(rec, _listed(table, path), {'system': table.url_of[c['scheme']], 'code': str(c['code'])})
-                used.update({f"{rel}.scheme", f"{rel}.code"})
+            sch, code = dmparse.split_coding(c)
+            if sch in table.url_of:
+                _put(rec, _listed(table, path), {'system': table.url_of[sch], 'code': code})
+                used.add(rel)
             continue
         elif '#' in dst:
             whole, part = dst.split('#')

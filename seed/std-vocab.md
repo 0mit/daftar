@@ -1,12 +1,12 @@
 ---
-version: "27.1"
+version: "29.1"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
   attrs:                "{<attr>: {required?, in, meaning}} — THE ATTRIBUTES: one record each, saying what the attribute is a position IN, whether it is required, and what it means — once, for the gate and the reader both. They describe each ENTRY of a list, an open map or a faceted mapping, and otherwise the mapping itself. An entry holds only the attributes declared here. See `attr_domains` for what `in:` may say."
   default_from:         "{registry, keyed_by, take} — inside an attribute's record: when the entry is SILENT, the attribute's value is READ from a registry row, the row selected by another attribute of the same entry. The registry stays the one owner of the usual value (a protocol's transport), and an entry states the attribute only when it differs. Like an aspect's default, a value that came from here never counts as OCCUPYING a position."
   origin:               "{act, nature?, by?} — inside an attribute's record: WHERE A VALUE IN THIS POSITION COMES FROM, sorted by nature. `act` is a row of `acts`: made here, derived from what was given, read off the world or a clock, or said; `nature` is the nature of what it comes from, a row of `natures` or a list of them, and absent it may be any; `by` is one of the names the act's row lists, and absent the act is the recorder's own. Stated only where the one its domain gives (the domain's record in `attr_domains`, or the `origin` of its value type's row) is wrong, so every position has one origin and no tool keeps a list of names. A position read by the save (`by: save`) is written `now`, and the save writes in its place the reading of the journal heading it writes: the day at a date, the moment at a moment. A position its recorder reads (`act: read` and no `by`) may be written `now` too, and a reading typed there stands. A domain whose positions are its own (`entries`) or another's (`any`: the value of the field it tracks) takes no origin of its own, written `inner`"
-  cells:                "[{when, verdict|requires|expects, why}] — COMBINATIONS of what an entry holds. `verdict: incoherent` is an ERROR (the positions cannot both hold, so one is mis-stated); `verdict: in_breach` a WARNING (all can hold, and the state needs action). `requires: [...]` is an error when the entry sits in the cell and lacks those attributes; `expects: [...]` the same as a warning. `when` maps an attribute to the value it holds, or to `{starts_with: …}`; an aspect attribute is read at its EFFECTIVE position, stated or defaulted."
+  cells:                "[{when, verdict|requires|expects, why}] — COMBINATIONS of what an entry holds. `verdict: incoherent` is an ERROR (the positions cannot both hold, so one is mis-stated); `verdict: in_breach` a WARNING (all can hold, and the state needs action). `requires: [...]` is an error when the entry sits in the cell and lacks those attributes — an item that is itself a list names alternatives, one of which is enough (`[[at, external]]`); `expects: [...]` the same as a warning. `when` maps an attribute to the value it holds, or to `{starts_with: …}`; an aspect attribute is read at its EFFECTIVE position, stated or defaulted."
   attr_domains:
     values:      { form: "in: [a, b, c] — one of a closed list written here", origin: { act: said, nature: lekton, by: law } }
     registry:    { form: "in: { registry: <name>, take: <field> } — a row of a registry, so the registry OWNS the enum and no term restates it. `where: { <field>: <value> | [<values>] }` narrows it to the rows that say so — a PLACE system, a TRANSPORT-layer protocol — so one registry serves attributes that may name only some of its rows. `registry_from: <attr>` instead of `registry`: the registry is NAMED by another attribute of the same entry", origin: { act: said, nature: lekton, by: law } }
@@ -45,7 +45,7 @@ schema_language:
   keyed_by:             "<attr> | [<attr>, ...] — beside a `shape` whose value has entries: ONE entry per value, or per combination of values, of these attributes among the term's entries on one bean (one observer's one verdict on one entry). An entry holding none of them is not counted; two holding the same are refused, and both are named"
   exclusive:            "{extent: <attr>, being: <attr>, role?: <attr>} — the extents that entries of this term hold for ONE being, in ONE role, across every bean of the garden, do not overlap: one person booked twice over the same days, one room lent twice. The gate refuses an overlap and names both entries; an entry its term's `expiry.unless` silences, or that says it was declined, is not counted. The law puts this on no term: a garden that needs it adds it to a term in its VOCAB.md, a RULE-CHANGE"
   expiry:               "{attr, notice, why} — ONE of this term's attrs is the position at which the thing LAPSES if nothing is done, and a reader should be warned before it. `notice` is HOW LONG BEFORE, as an EXTENT on `time`. `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. Deliberately NOT derived from an attribute's type: most dates a bean carries are `observed` or `as_of`, the day a fact was READ rather than the day it runs out. A term that does not declare this is never warned about, which is why a garden's own term can buy the warning its Tier-0 neighbour has. On a term whose value is a list or an open map, the attribute is each ENTRY's, and each entry is warned about by itself. `repeats: <attr>` names a sibling attribute `in: recurrence`: the position falls due again at each occurrence after `attr`, and the reader is warned before the next. `unless: {<attr>: [<values>]}` names the entries that no longer lapse — a debt already met. `relative: <attr>` names a sibling attribute holding the position RELATIVE to another (`from`, then `after` or `before` by an extent, then `at` a place in the cell reached), read in the place of `attr` where an entry states it. `lapses: <attr>` names a sibling attribute `in: extent`: the entry LAPSES at that extent's end, and a reader warns before it with `lapses_why`. `permission: <attr>` names the attribute whose EFFECTIVE position on its aspect chooses the words: `why` and `lapses_why` are each one text, or a map from that aspect's positions to the words — an obligation falls due, a permission lapses. `condition: <attr>` names the attribute holding what brings an entry into force where that is not a day: an entry holding one has no due to be missing."
-  sums:                 "{whole: <attr> | [<attr>, ...], parts: <attr>.<attr>} — the PARTS of a quantity add up to its WHOLE: the parts are the named attribute of each entry inside `parts`' first attribute, the whole is the first of `whole` the entry states. Checked exactly, in fractions, whenever every count is known, and the parts must be in the whole's unit. An entry holding one part that states no amount holds the whole."
+  sums:                 "{whole: <attr> | [<attr>, ...], parts: <attr>.<attr>} — the PARTS of a quantity add up to its WHOLE: the parts are the named attribute of each entry inside `parts`' first attribute, the whole is the first of `whole` the entry states. Checked exactly, in fractions, whenever every count is known, and the parts must be in the whole's unit. An entry holding one part that states no amount holds the whole. A LIST of such rules is several wholes, each checked. `whole` may be a constant quantity instead of an attribute (`{ count: 100, unit: percent }`: shares of a whole), and parts in another unit of the same quantity are converted exactly. `per: { level: <level> }` groups the parts by the ancestor, at that level, of the code each part names (its entry's `scheme` and `code`): each group makes the whole on its own — the amounts of each plan of an analytic distribution make the amount"
   on_sequence:          "<aspect> — the term's value is a walk on that SEQUENCE aspect: prose lines in list order, or step entries {id, do, next: [{to, when?}]} whose neighbourhoods are CLOSED; each step entry is judged by the term's `attrs`, and a key they do not declare is refused; the gate refuses a `to` that names no step, a step nothing reaches, a branch with no condition, a routine with no end, and a loop when the aspect declares acyclic"
   series:               "true — each ENTRY of this term is a SERIES: a line whose positions HOLD values (the figure's `holds`). Its positions are its `grid`, a recurrence whose occurrences are its rows in order, or listed in its `span`, an extent from whose `from` each row writes its offset; `unit` is what an offset counts and the resolution held; `holds` names the channels, one column each; its rows are one table (`value_types[rows]`) inline in `rows`, or the parts `series/<bean>/<key>/<part>.tsv` in the estate, each added whole and never rewritten; `excluded` sets a cell aside, naming its judge. The gate reads every row against its channels, and nothing read from a series is stored"
   moves_along:          "<attr> — each entry of this term is a MOVE along the course its <attr> names, a key of a term whose entries each name a `walk`: its `step` is a step of that walk, and the moves of one course, in the order of their moments, are held to it — a move follows a `next`, reaches an `exit`, or returns to the step a pause (`resumes`) was entered from; a move `next` does not offer passes only with a `why`, and warns; nothing follows a `final` step; a moment never goes back, and one course's two moves to one step are two moments. Where a course stands is read, never stored"
@@ -65,7 +65,7 @@ schema_language:
   value_in_registry:    "{registry, take} — with governs_anchor: the anchor value must be a ROW of that registry (a code of a published classification, 9.1)"
   inverse_of:           "<term>, or {term, cardinality: one-to-one | many-to-one} — this relation mirrors another and the gate holds the pair consistent so the convenience edge cannot drift from the fact. A BARE NAME means one-to-one and the mirror is enforced BOTH ways. `many-to-one` enforces only the functional direction: many instances point at one type, and the type cannot point back at all of them through a single mapping. Declare the cardinality; assuming a bijection is how a rule becomes unsatisfiable without anyone noticing."
 term_form:
-  attrs: [term, meaning, context_keys, schema, merge, anchor, enforced_by, exceptions, values_meaning, values_source, promotion]
+  attrs: [term, meaning, context_keys, schema, merge, anchor, enforced_by, exceptions, values_meaning, values_source, promotion, placement]
   meaning: "THE TERM RECORD: what a term of the law, of a profile or of a garden's `local_terms` may hold — its name, its meaning, where it is found, its schema, how it merges, how it anchors, what enforces it, its dated case law, the meaning and source of each value of an enum, and a garden term's promotion. Nothing else: a note a reader needs in order to apply the term is part of its `meaning`, and why the term is so is reasoning, kept apart from the law"
 # == NATURES: the root axiom layer ==
 # == THE CROWN ==
@@ -153,14 +153,21 @@ retired:
   - { name: capability, at: aspect, instead: "`permission`: the aspect a being, an agreement or a grant takes a position on, and the attribute that takes it" }
   - { name: stance, at: attr, instead: "`permission`: an attribute on an aspect is named after the aspect" }
   - { name: target, at: attr, instead: "`to`: the far end an entry is directed at, as a treatment's and a clause's" }
+  - { name: isced_f_2013, at: term, instead: "`identifier`, written as a coding of its scheme: `isced-f-2013:<code>` — a code a scheme's publisher assigned identifies the being that IS it, as any identity assigned outside every garden does" }
+  - { name: isco_08, at: term, instead: "`identifier`, written as a coding of its scheme: `isco-08:<code>` — a code a scheme's publisher assigned identifies the being that IS it, as any identity assigned outside every garden does" }
+  - { name: technology, at: term, instead: "`identifier`, written as a coding of its scheme: `technology:<code>` — a code a scheme's publisher assigned identifies the being that IS it, as any identity assigned outside every garden does" }
+  - { name: git_host, at: bean, instead: "`located_at`, in the `git-remote` system — `{ system: git-remote, openness: here, at: <the remote> }`, or `host: { bean: <machine> }` alone where only the machine is known; where the code's own `git_remote` names its host, nothing: the host is read from it" }
+  - { name: code_paths, at: bean, instead: "`located_at`: each tree a position in its host's filesystem, with the code profile's `role`, `scan_policy`, `stack` and `entrypoint` — and a tree of another code this one is read beside is that code's own location, reached through `depends_on`" }
+  - { name: registration, at: bean, instead: "a contract `over` the domain: parties `registrant` and `registrar` (`external` where the garden holds no bean for one), `timing: { registration: <the day it began> }`, a clause `renewal` that falls due on the day it lapses with `notice: { count: 90, unit: day }` and the domain profile's `auto_renew`, and `words: { form: written, external: <whose terms> }`" }
+  - { name: scheme, at: attr, instead: "`code`, which holds the code with the scheme it is a code of: `<scheme>:<code>`, one `coding`" }
 # == ONE SENSE PER NAME: a name the law uses in more than one domain, and the one sense its uses share ==
 senses:
   - { name: at,            sense: "a position — on a line, in a system or in a file — written in the form its place takes" }
   - { name: by,            sense: "who or what does it or did it: a person, a party, an instrument, a tool" }
-  - { name: code,          sense: "a code of a published scheme, or the entry naming the scheme it is a code of" }
   - { name: from,          sense: "where something starts: the position, system or field it is read or counted from" }
   - { name: holds,         sense: "what it holds — its contents, or the one place they are kept" }
-  - { name: host,          sense: "the host a thing runs on or was read at" }
+  - { name: host,          sense: "the being a thing runs on, is kept on or was read at — the being a position's frame belongs to" }
+  - { name: placement,     sense: "how a thing is placed in, at or among another: a row on its line, a being in or at its host" }
   - { name: id,            sense: "the name that identifies one of its kind once among its siblings: a bean's, a mapping's, a step's, an item's" }
   - { name: is,            sense: "what it is, as a classification: a scheme's process, a level of sensitivity" }
   - { name: kind,          sense: "which kind it is, from the list its place gives" }
@@ -171,6 +178,7 @@ senses:
   - { name: reason,        sense: "why, as one of a closed set of reasons" }
   - { name: rel,           sense: "the relation one thing has to another, by name" }
   - { name: role,          sense: "the part it plays, from the list its place gives" }
+  - { name: notice,        sense: "how long before a day a reader is told of it: a clause's own, a feed's lead" }
   - { name: series,        sense: "a being's series of positions, or a pointer to one" }
   - { name: staleness_key, sense: "the value that, when it moves, makes what is kept stale" }
   - { name: steps,         sense: "the ordered steps it performs: a mapping's walk, a selection's operations" }
@@ -280,6 +288,15 @@ anchor_systems:
     form_note: "root:<logical root>[/<relative path>] — resolved per host through that host's OWN root map, which is the form that survives a second machine; or <host>:<absolute path> stated outright where there is no root to hang it on"
     establishes: false
     why: "a path is reassignable and a tree can be checked out anywhere, so it CORROBORATES a location and never fixes it — the same rule that keeps `hostname` and `ip` corroborating-only"
+  - system: git-remote
+    dimension: place
+    neighbours: none
+    datum: host
+    meaning: "a REPOSITORY as a client names it to fetch from: `<host>:<path>` as ssh writes it (`host-a:git/ledger.git`, `me@host-a:/srv/git/ledger.git`), or a URL (`https://example.org/ledger.git`). The host is part of the position, as a path's is: one path on two hosts is two repositories"
+    pattern: '^([A-Za-z0-9._-]+@[a-z0-9][a-z0-9.-]*:[^ :][^ ]*|(?!root:)[a-z0-9][a-z0-9.-]*:([^/ :][^ ]*/[^ ]*|[^/ :][^ ]*\.git)|[a-z][a-z0-9+.-]*://[^ ]+)$'
+    form_note: "the remote as `git remote -v` prints it, its host in lowercase. An ssh remote shows it names a repository — its user (`me@host-a:ledger`), or a path relative to the login with a `/` or a `.git` (`host-a:git/ledger.git`) — so it is never read as another system's `<name>:<value>`; a repository at an absolute path on a host is a position in that host's filesystem"
+    establishes: false
+    why: "a repository is mirrored and moved between hosts: where it is fetched from corroborates which code it holds, and the code's own identity is its `git_remote`"
   - system: git-object-graph
     dimension: place
     neighbours: counted
@@ -752,12 +769,24 @@ anchor_systems:
     why: "a coordinate says where something IS and never which thing it is: two beings can stand in one spot, and one being can move"
   - system: event-anchored
     dimension: any
+    datum: named
     neighbours: counted
     meaning: "a position fixed by NEIGHBOURING EVENTS rather than by any coordinate — 'after the branch was pushed, before the cutover'. Fully positioned while carrying no calendar value at all. Declared because it is what makes this a registry rather than a two-item enum: SEQUENCE is the general structure and a coordinate system is one restriction of it."
     pattern: '^(after|before):[^<>]+$'
     form_note: "after:<position> or before:<position> — the position itself, a bean's id or a few words, and never a placeholder in angle brackets; state both as two entries when an interval is meant"
     establishes: false
     why: "an event anchor positions relative to other positions — it fixes an interval, never a point"
+  - system: ordinal-number
+    dimension: any
+    datum: line
+    neighbours: counted
+    restrictions: { lines: 1, order: total }
+    meaning: "a position COUNTED from the first of the line it is read on: `ordinal:1`, `ordinal:2` — the second node of a sequence, the third meeting of a series of them, the fifth seat of a row. Its line gives it its first: a series' or a repetition's `from`. A position standing alone has no line, and names nothing with it"
+    pattern: '^ordinal:[1-9][0-9]*$'
+    form_note: "`ordinal:` and a whole number from 1: `ordinal:2` — tagged, as a calendar's day is, because a bare number is a port's and a geohash's spelling too"
+    example: "ordinal:2"
+    establishes: false
+    why: "an ordinal number says which of a line's positions, never which being"
   - system: network-segment
     dimension: place
     resolves_through: geographic
@@ -853,6 +882,7 @@ anchor_systems:
     why: "an address names a DELIVERY POINT that is renumbered, renamed and shared — and one building has many"
   - system: local-frame
     dimension: place
+    datum: host
     resolves_through: geographic
     neighbours: counted
     meaning: "a position in a frame that TRAVELS WITH ITS HOST: the third floor, room 12, rack 3 slot 7, a deck of a ship. ISO 19111 calls it an engineering system. It is where a thing is WITHIN something, and it keeps its meaning when the something moves — which is exactly what a coordinate does not."
@@ -1118,6 +1148,8 @@ registry_forms:
     ends_values: optional
   accuracy_kinds: { kind: required, meaning: required }
   operations: { op: required, gives: required, takes: required, meaning: required, exact: optional, u_rule: optional }
+  aggregates: { aggregate: required, meaning: required }
+  placement: { code: required, level: required, parent: optional, takes: optional, meaning: required }
   comparators: { comparator: required, monotone: required, meaning: required }
   ordering_keys: { key: required, meaning: required, inputs: required, steps: required }
   value_types:
@@ -1137,6 +1169,7 @@ registry_forms:
     but: optional
     lines_in: optional
     either: optional
+    scheme_from: optional
     separator: optional
     inline_most: optional
     gaps: optional
@@ -1208,6 +1241,7 @@ registry_forms:
     ownership_form: optional
     identifier_forms: optional
     responsibility_form: optional
+    takes_time_of: optional
 
 # == NET PROTOCOLS: the one owner of what a being may SPEAK ==
 net_protocols:
@@ -1687,10 +1721,11 @@ operations:
   - { op: rotate,      gives: value, exact: false, u_rule: derivative, takes: { pole: { required: true, in: { type: kebab }, meaning: "the pole's rows of `coefficients`" }, of: { required: true, in: { type: kebab } } }, meaning: "the velocity, east and north, of a point on a body turning about an axis" }
   - { op: position-to, gives: value, exact: false, u_rule: derivative, takes: { of: { required: true, in: { type: kebab } }, system: { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } } } }, meaning: "a position in another reference system; refused where PROJ is absent" }
   - { op: within,      gives: set,   exact: true,  u_rule: none, takes: { of: { required: true, in: { type: kebab } }, path: { required: true, in: { type: field_path } }, extent: { in: extent }, place: { in: any } }, meaning: "the members whose position or moment at the path lies within the extent, or the place" }
+  - { op: apportion,   gives: groups, exact: true, u_rule: none, takes: { of: { required: true, in: { type: kebab } }, amount: { required: true, in: { type: field_path } }, over: { required: true, in: { type: field_path } }, per: { in: { type: kebab } }, level: { in: { type: kebab } }, digits: { in: [true, false] } }, meaning: "each code's part of the members' amounts: each member's amount (at `amount`) shared over its entries at `over` — by an entry's share of its group's shares, the group being the codes under one ancestor at `per` (the scheme's first level where none is named), or by an entry's own amount — summed per code, or per the code's ancestor at `level`. Exact, in fractions. With `digits: true` each part is written in the currency's decimal places, the cents a split leaves over going to the parts with the largest remainders, the first code first — the one rule, so no two readings round a split two ways" }
   - { op: ancestor-at-level, gives: set, exact: true, u_rule: none, takes: { of: { required: true, in: { type: kebab } }, level: { required: true, in: { type: kebab } } }, meaning: "each code's ancestor at a level, by its scheme's `parent`" }
   - { op: neighbour-of, gives: set,  exact: true,  u_rule: none, takes: { of: { required: true, in: { type: kebab } }, relation: { in: { type: kebab }, meaning: "a registry of relations, rows {from, to, rel}" }, distance: { in: { quantity: length } } }, meaning: "the codes a relation's `adjacent` rows name beside each, or the beings within a distance (≈)" }
   - { op: at,          gives: value, exact: per-channel, u_rule: ties, takes: { series: { required: true, in: { type: field_path }, meaning: "`<bean>:<term>.<key>`" }, channel: { in: { type: kebab } }, position: { required: true, in: any } }, meaning: "what a channel holds at a position, as the channel says it is read between rows" }
-  - { op: window,      gives: value, exact: per-channel, u_rule: absolute, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent }, by: { in: [mean, min, max, count, first, last] } }, meaning: "what a stretch of the line holds: by one of these, or several as groups" }
+  - { op: window,      gives: value, exact: per-channel, u_rule: absolute, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent }, by: { in: { registry: aggregates, take: aggregate } } }, meaning: "what a stretch of the line holds: by one of these, or several as groups" }
   - { op: integral,    gives: value, exact: true,  u_rule: absolute, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent }, base: { in: any, meaning: "a position on the channel's scale, from which each value is measured" } }, meaning: "the channel summed along the line: a sum's rows added, a point's trapezoids" }
   - { op: rate,        gives: value, exact: per-channel, u_rule: relative, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, from: { required: true, in: any }, to: { required: true, in: any } }, meaning: "the change over the distance between two positions of the line" }
   - { op: trend,       gives: value, exact: false, u_rule: least-squares, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent } }, meaning: "the fitted slope and its u; a slope that does not exceed k·u is never called a motion, and the span that would resolve it is said" }
@@ -1713,10 +1748,10 @@ comparators:
   - { comparator: refers_to, monotone: false, meaning: "a ref or a bean id at the path names this bean — the caller, a given value" }
 mechanism_form:
   mechanism:  "kebab: the row's name, which names its source"
-  computes:   "{ property: {scheme, code}, quantity, unit } — what it reads"
-  inputs:     "[{ name, property: {scheme, code}, quantity, unit }] — each converted EXACTLY into the unit the source fitted it in"
+  computes:   "{ property: <scheme>:<code> (a `coding`), quantity, unit } — what it reads"
+  inputs:     "[{ name, property: <scheme>:<code>, quantity, unit }] — each converted EXACTLY into the unit the source fitted it in"
   steps:      "the steps of `selection_form`, over the inputs by name"
-  valid:      "{ where: [{scheme, code}], ranges: [{input, extent}] } — the domain the source fitted; outside it the reader REFUSES, says why, and names what would do"
+  valid:      "{ where: [<scheme>:<code>], ranges: [{input, extent}] } — the domain the source fitted; outside it the reader REFUSES, says why, and names what would do"
   residual:   "{ sigma: {count, unit}, form: log | relative | absolute, validated: {count, unit}, persists: per-being | none | unknown } — the source's model error, its VALIDATED error where it states one, and whether one being's error repeats at its next reading; `unknown` is read both ways, and a residual that persists scales a growth too"
   known_bias: "optional prose, as the source states it"
   source:     "{ cite, locator, doi? }"
@@ -1726,7 +1761,7 @@ coefficient_form:
   count:       "the value"
   unit:        "a unit"
   u:           "optional: its standard uncertainty, or `bounds: [low, high]`"
-  where:       "[{scheme, code}] — the cases it applies to"
+  where:       "[<scheme>:<code>] — the cases it applies to, each a `coding`"
   convention:  "optional true — fixed by agreement, not measured"
   source:      "{ cite, locator }"
   terms:       "as for a mechanism"
@@ -1770,6 +1805,24 @@ ordering_keys:
     inputs: [ { name: importance, origin: { act: said }, quantity: ratio }, { name: uncertainty, origin: { act: said }, quantity: ratio } ]
     steps:
       - { id: key, op: multiply, of: importance, with: uncertainty }
+# == AGGREGATES: what a whole is, made of its parts ==
+# == PLACEMENT: the line from place to location, and what a placement takes from where it is placed ==
+placement:
+  - { code: place,    level: place, meaning: "PLACED — in, at or among another: the ancestor of every placement. It says nothing yet of what is taken" }
+  - { code: order,    level: mode,  parent: place, takes: none,  meaning: "among others in an order: a code under its parent, a node on a line. An order has room for any number" }
+  - { code: presence, level: mode,  parent: place, takes: none,  meaning: "in a being without taking any of it: a record in a register, a memory in a mind, someone held in a heart" }
+  - { code: habitat,  level: mode,  parent: place, takes: share, meaning: "kept by a being that gives it what it runs or rests on: a process on a machine, a repository on a server. It draws a share of what the host holds, and shares may be promised past it" }
+  - { code: time,     level: mode,  parent: place, takes: room,  meaning: "at a position in time, a moment or a span: where the span is in a being's own hours — a meeting in the time of those present at it — it takes that time, which they spend on nothing else at once (RFC 5545's OPAQUE); in no one's hours, it takes none (TRANSPARENT)" }
+  - { code: location, level: mode,  parent: place, takes: room,  meaning: "at a position in a place system, measured from a datum: a coordinate, a path, an address, a slot. Where the position is in a being's own frame it takes room there, which no other takes at once" }
+aggregates:
+  - { aggregate: sum,     meaning: "the parts added: two nodes of 2 are 4" }
+  - { aggregate: product, meaning: "the parts multiplied: two nodes of 2 are 4 again, three of 2 are 8" }
+  - { aggregate: mean,    meaning: "the sum shared equally over the parts: their sum divided by how many they are" }
+  - { aggregate: min,     meaning: "the least of the parts" }
+  - { aggregate: max,     meaning: "the greatest of the parts" }
+  - { aggregate: count,   meaning: "how many parts there are, in the unit `item`: how long an ordinal line is" }
+  - { aggregate: first,   meaning: "the part at the line's first position" }
+  - { aggregate: last,    meaning: "the part at the line's last position" }
 # == VALUE TYPES ==
 value_types:
   - type: position
@@ -1809,6 +1862,11 @@ value_types:
     pattern: '^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$'
     refusal: "must be a language as BCP 47 writes one: `fa`, `pt-BR`, `sr-Latn-RS`, `es-419`"
     meaning: "a language, as BCP 47 (RFC 5646) writes it: its language subtag, then its script and its region where they are needed"
+  - type: coding
+    pattern: '^[a-z0-9][a-z0-9-]*:\S+$'
+    scheme_from: knowledge_schemes
+    refusal: "must be a CODE WITH ITS SCHEME, written `<scheme>:<code>` — `isco-08:2522`, `technology:samba`, `analytic:orchard` — the scheme a row of `knowledge_schemes` and the code one of its codes"
+    meaning: "a CODE OF A SCHEME, written with the scheme it is a code of: `<scheme>:<code>`. One capsule wherever a code is written — what an observation is of and what it found, what a step is and takes, what a channel holds, what a stance covers, where an amount belongs, what a being draws on, an identity assigned outside every garden. The scheme is a row of `knowledge_schemes`; the code is one of its codes, looked up where the scheme is held here and held to its form where it is held at its authority. The first colon ends the scheme, whose name has none."
   - type: rows
     separator: "\t"
     inline_most: 100
@@ -2168,6 +2226,15 @@ aspects:
     acyclic: false
     ends: bounded
     domain: { systems: none }
+  - aspect: ordinal
+    meaning: "which in order: a position on the ORDINAL line — the first, the second — with nothing between two neighbours. It says which, never how many (a count is how many), and it is no time and no place, so what lies on it holds at none of them: two nodes of 2 whose whole is 4"
+    figure: sequence
+    lines: 1
+    metered: none
+    order: total
+    acyclic: true
+    ends: open-end
+    domain: { systems: any }
   - aspect: temperature
     meaning: "how hot: a position on the one line of thermodynamic temperature, bounded below by absolute zero"
     figure: sequence
@@ -2250,6 +2317,15 @@ knowledge_schemes:
     within: [isced-f-2013]
     neighbours: none
     sources: seed/knowledge/SOURCES.md
+  - scheme: placement
+    classifies: how one being is placed in, at or among another — from the most general to the most bodily, each rung saying what a placement takes from where it is placed
+    holding: shipped
+    licence: CC-BY-4.0
+    publisher: daftar (the law's own registry, `placement`)
+    url: "seed/std-vocab.md"
+    levels: [ { level: place }, { level: mode } ]
+    neighbours: none
+    sources: seed/RATIONALE.md
 # == VIEW: the registries only the `view` profile reads ==
 view_lenses:
   - { lens: orient,     depth: 0, form: story,        max: { stages: 5, words_per_stage: 14 },
@@ -2272,54 +2348,68 @@ view_archetypes:
   - { archetype: table,        meaning: "the members of a reading, or the rows of a series, one line each with a column per path: the report, and an offline file of it", when: "the question is which ones, and what each holds" }
   - { archetype: health-chain, meaning: "tiles in flow order with value, limit and trend, and the blind spots", when: "no shape native to what is drawn is designed yet" }
 profiles:
+  accounting:
+    meaning: "for a garden that keeps accounts, in the words its field uses. Analytic accounting first: where each amount's cost or revenue belongs, along plans the garden keeps as its own scheme of codes — a plan is a code at the scheme's first level, `plan`, and an account one beneath it, `account`. What an account holds is READ (bin/dmreckon.py `apportion`), never stored. Its names are the field's: `analytic_distribution` is what an ERP's user already writes, and seed/COOKBOOK.md pairs each of the field's names with where it is kept"
+    overlays:
+      - term: transactions
+        schema:
+          attrs:
+            analytic_distribution:
+              meaning: "where this amount belongs: one entry per account of the garden's analytic scheme, each with its share (whole parts of the plan's whole) or its amount (which, in a plan, add up to the amount)"
+              in:
+                entries:
+                  code:   { required: true, in: { type: coding }, meaning: "the account, with the garden's own analytic scheme it is in: `analytic:orchard`" }
+                  share:  { in: { pattern: '^[1-9][0-9]{0,39}$' }, meaning: "its part of the whole, in whole parts, as a party's share of a cost is: 60 and 40 are three fifths and two fifths — a plan's shares are its whole" }
+                  amount: { in: { quantity: money }, meaning: "instead of a share: its part, in the amount's currency" }
+                  note:   { in: prose, meaning: "optional prose" }
+                one_of: [share, amount]
+                at_most_one_of: [[share, amount]]
+          sums:
+            - { whole: [charged, amount], parts: analytic_distribution.amount, per: { level: plan } }
+      - term: clauses
+        schema:
+          attrs:
+            analytic_distribution:
+              meaning: "where what the clause asks belongs — a budget line: one entry per account, each with its share (whole parts of the plan's whole) or its amount (which, in a plan, add up to the clause's)"
+              in:
+                entries:
+                  code:   { required: true, in: { type: coding }, meaning: "the account, with the garden's own analytic scheme it is in: `analytic:orchard`" }
+                  share:  { in: { pattern: '^[1-9][0-9]{0,39}$' }, meaning: "its part of the whole, in whole parts, as a party's share of a cost is: 60 and 40 are three fifths and two fifths — a plan's shares are its whole" }
+                  amount: { in: { quantity: money }, meaning: "instead of a share: its part, in the amount's currency" }
+                  note:   { in: prose, meaning: "optional prose" }
+                one_of: [share, amount]
+                at_most_one_of: [[share, amount]]
+          sums:
+            - { whole: [amount], parts: analytic_distribution.amount, per: { level: plan } }
   code:
-    meaning: "for a garden that manages source code: locating trees, and the repo identity of a code bean"
+    meaning: "for a garden that manages source code: where its trees are and how an agent treats each, and the repository identity of a code bean"
     vacancies:
-    - at: code_paths.role
+    - at: located_at.role
       position: vendored-dependency
       reason: prediction
-      why: "No bean vendors a third-party tree into its own source today. Kept because vendoring is an ordinary state for a code estate, and without the position a vendored tree would be recorded as own-source, silently losing the distinction between code we wrote and code we merely carry."
-    - at: code_paths.role
+      why: "No bean vendors a third-party tree into its own source today. Kept because vendoring is an ordinary state for a code estate, and without the position a vendored tree would be recorded as own-source, silently losing the distinction between the code the estate wrote and the code it carries."
+    - at: located_at.role
       position: generated-artifact
       reason: prediction
       why: "No bean records a build-output tree yet. Kept because an artifact tree must never be indexed as own-source: it is derived, so re-analysing it teaches nothing the source did not already say."
+    overlays:
+      - term: located_at
+        schema:
+          required_on_gene: [codebase]
+          attrs:
+            role:         { in: [own-source, vendored-dependency, generated-artifact], meaning: "what the tree at this position is of the code bean: own-source (its own source) | vendored-dependency (another code's tree carried inside it) | generated-artifact (what its build made). A tree of another code that it is only read beside is that code's own location, reached through `depends_on`" }
+            scan_policy:  { in: [index, reference-only, skim], meaning: "index (own code — walk fully) | reference-only (do NOT re-scan each session; consult analysis_cache, grep on demand only) | skim (structure only)" }
+            stack:        { in: { type: kebab }, meaning: "language/runtime tag, e.g. python-django | csharp-dotnet (optional)" }
+            entrypoint:   { in: prose, meaning: "manifest / solution / addin that roots the tree (optional)" }
+          cells:
+            - { when: { role: [own-source, vendored-dependency, generated-artifact] }, requires: [scan_policy] }
     terms:
-    - term: code_paths
-      meaning: >
-        The on-disk code trees a code bean is built from or references. Each entry is a CLASSED path so any
-        agent locates code without re-walking a tree, and knows which trees are reference-only (never re-scanned
-        each session — consult summary_ref + grep only for one specific symbol on demand).
-      context_keys: ["code_paths"]
-      schema:
-        shape: list_of_entries
-        required_on_gene: [codebase]
-        attrs:
-          path:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$", soft: true, why: "a bare absolute path names no host: give it `root:<name>/…` (resolved by each host's `roots`) or `<host>:<path>`" }, meaning: "WHERE THE TREE IS, as a position: `root:<name>[/<relative>]` resolved through each host's own `roots` map, or `<host>:<absolute path>` stated outright. A bare absolute path names no host and WARNS: one path on two machines is two different trees, so a path with no host is a position in a system nobody named." }
-          role:         { required: true, in: [own-source, framework-reference, vendored-dependency, generated-artifact], meaning: "own-source | framework-reference | vendored-dependency | generated-artifact" }
-          scan_policy:  { required: true, in: [index, reference-only, skim], meaning: "index (own code — walk fully) | reference-only (do NOT re-scan each session; consult analysis_cache, grep on demand only) | skim (structure only)" }
-          stack:        { in: { type: kebab }, meaning: "language/runtime tag, e.g. python-django | csharp-dotnet (optional)" }
-          entrypoint:   { in: prose, meaning: "manifest / solution / addin that roots the tree (optional)" }
-          note:         { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
-      merge: { cardinality: multi, order: by-path }
-      exceptions: []
-      promotion: { status: candidate, note: "reference-only scan-policy looks general (every estate has a big framework/vendor tree agents shouldn't re-walk) — REVIEW in the planned attrs-to-universal session" }
     - term: git_remote
       meaning: "a source repository's remote URL (the crypto/logical identity of a code tree), written verbatim as the remote string (`host:path` or a scheme URL) with only its host lowercased"
       context_keys: ["git_remote"]
       anchor: { class: logical, establishing: true }
       merge: { cardinality: single, order: none }
       promotion: { status: candidate, note: "general (any code garden has repos) — REVIEW in the attrs-to-universal session" }
-    - term: git_host
-      meaning: "the being hosting the source repository of a code bean (storage habitat, not ownership)"
-      context_keys: ["git_host"]
-      schema:
-        shape: mapping
-        is_ref: true
-        attrs:
-          bean:  { required: true, in: id }
-          repo:  { in: { pattern: "^[a-z0-9][a-z0-9.-]*:[^ ]+$" }, meaning: "the repository AS ITS HOST NAMES IT (`host-a:git/ledger.git`) — what a clone that has forgotten its remote needs" }
-          note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
-      merge: { cardinality: single, order: none }
 
   network:
     meaning: >
@@ -2380,11 +2470,12 @@ profiles:
         address it answers at, the port, and what the channel protects. An endpoint entry is a STATEMENT
         THAT THE BEING ANSWERS THERE — which is why a `forbidden` position on one is a breach by itself.
       context_keys: [endpoints]
+      placement: location
       schema:
         shape: list_of_entries
         attrs:
           protocol:         { required: true, in: { registry: net_protocols, take: protocol }, meaning: "which protocol is spoken here — a row of net_protocols, never an implementation name" }
-          system:           { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place, any] } }, meaning: "the PLACE system the surface is stated in — `ipv4` or `ipv6` for a network address, `unix-filesystem` for a socket path. It selects the form `at` must take. Named `system`, as in `roots`, `located_at` and `timing`: `keyed_by` resolves a registry row by a field that exists on BOTH the entry and the row, so the two are one name by construction." }
+          system:           { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } }, meaning: "the PLACE system the surface is stated in — `ipv4` or `ipv6` for a network address, `unix-filesystem` for a socket path. It selects the form `at` must take. Named `system`, as in `roots`, `located_at` and `timing`: `keyed_by` resolves a registry row by a field that exists on BOTH the entry and the row, so the two are one name by construction." }
           at:               { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the address answered at, in that system's ONE canonical form" }
           exposure:         { in: [loopback, lan, link, internet], meaning: "loopback (this machine only) | lan (the local segment) | link (reachable only over a named link, e.g. the wireguard tunnel) | internet (bound to a public address directly)" }
           observed:         { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the surface was checked. Endpoints age faster than almost anything else here." }
@@ -2458,83 +2549,40 @@ profiles:
   domain:
     meaning: >
       for a garden that holds delegated names — registered domains. The one class of fact that can lose a name
-      outright is its registration: an unrenewed domain takes its DNS and its mail with it. A garden with no
-      domains should inherit none of it.
-    terms:
-    - term: registration
-      meaning: "the registration facts of a delegated name: who holds the record, when it lapses, and when that was last observed"
-      context_keys: ["registration"]
-      schema:
-        shape: mapping
-        required_on_gene: [domain]
-        expiry:
-          attr: expires
-          notice: { of: time, measure: { count: 90, unit: day } }
-          why: "an unrenewed name takes its DNS and its mail with it"
-        attrs:
-          registrar:   { required: true, in: prose, meaning: "the registrar of record — who the renewal is actually paid to" }
-          created:     { required: true, in: { type: position }, meaning: "ABSOLUTE date the registration began" }
-          expires:     { required: true, in: { type: position }, meaning: "ABSOLUTE date it lapses if unrenewed — the fact that can lose the name" }
-          auto_renew:  { required: true, in: [enabled, disabled, unknown], meaning: "enabled | disabled | unknown. `unknown` is the honest default: it is a registrar-ACCOUNT setting and does not appear in WHOIS, so it cannot be observed the way the dates can." }
-          observed:    { required: true, origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer." }
-          source:      { required: true, in: prose, meaning: "where they were read from" }
-          registrant:  { in: prose, meaning: "optional: the party holding the registration, where the registry discloses it" }
-          note:        { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
-      merge: { cardinality: single, order: none }
+      outright is its registration, and a registration is an agreement: the registrant holds the name through a
+      registrar until a day on which it lapses unless it is renewed — a contract `over` the domain, its parties
+      `registrant` and `registrar`, its `timing` the `registration`, and a clause `renewal` that falls due on the
+      day it lapses, with ninety days' `notice`: an unrenewed domain takes its DNS and its mail with it. The
+      profile adds the one word of the field the core does not have. A garden with no domains inherits none of it.
+    overlays:
+      - term: clauses
+        schema:
+          attrs:
+            auto_renew: { in: [enabled, disabled, unknown], meaning: "on the renewal of a registration: whether the registrar renews the name without being asked — enabled | disabled | unknown. `unknown` is the honest default: it is a registrar-ACCOUNT setting and does not appear in WHOIS, so it cannot be observed the way the dates can" }
     vacancies:
-    - { at: "registration.auto_renew", position: enabled, reason: universal, why: "whether the registrar renews the name by itself, declared whole — on, off, or not known — because every registration is in one of the three; a garden holding a few names takes one or two of them" }
-    - { at: "registration.auto_renew", position: disabled, reason: universal, why: "whether the registrar renews the name by itself, declared whole — on, off, or not known — because every registration is in one of the three; a garden holding a few names takes one or two of them" }
-    - { at: "registration.auto_renew", position: unknown, reason: universal, why: "whether the registrar renews the name by itself, declared whole — on, off, or not known — because every registration is in one of the three; a garden holding a few names takes one or two of them" }
+    - { at: "clauses.auto_renew", position: enabled, reason: universal, why: "whether the registrar renews the name by itself, declared whole — on, off, or not known — because every registration is in one of the three; a garden holding a few names takes one or two of them" }
+    - { at: "clauses.auto_renew", position: disabled, reason: universal, why: "whether the registrar renews the name by itself, declared whole — on, off, or not known — because every registration is in one of the three; a garden holding a few names takes one or two of them" }
+    - { at: "clauses.auto_renew", position: unknown, reason: universal, why: "whether the registrar renews the name by itself, declared whole — on, off, or not known — because every registration is in one of the three; a garden holding a few names takes one or two of them" }
 
   knowledge:
     meaning: >
       for a garden that says what things ARE in the world's shared terms: the field of knowledge a skill or a
       technology draws on (ISCED-F 2013), the occupation a role or a person's work is (ISCO-08), and the
       established technology a program, instance or host runs (with its official documentation). The codes are
-      UNIVERSAL ANCHORS: the same in every garden, so knowledge merges across gardens that never met.
+      UNIVERSAL: the same in every garden, so knowledge merges across gardens that never met — and a being that IS one
+      of them (an occupation, a field, a technology) is identified by it, `identifier: isco-08:2522`, a coding.
     terms:
-    - term: isced_f_2013
-      meaning: "an ISCED-F 2013 field code (UNESCO) — a being that IS a field of knowledge, e.g. a course or a body of practice"
-      context_keys: ["isced_f_2013", "identity.anchors[].isced_f_2013"]
-      schema:
-        governs_anchor: isced_f_2013
-        value_pattern: '^[0-9]{2,4}$'
-        canonical_note: "the code as published: 2 digits broad, 3 narrow, 4 detailed"
-        value_in_registry: { registry: isced-f-2013, take: code }
-      anchor: { class: logical, establishing: true }
-      merge: { cardinality: single, order: none }
-    - term: isco_08
-      meaning: "an ISCO-08 occupation code (ILO) — a being that IS an occupation or a role classified as one"
-      context_keys: ["isco_08", "identity.anchors[].isco_08"]
-      schema:
-        governs_anchor: isco_08
-        value_pattern: '^[0-9]{1,4}$'
-        canonical_note: "the code as published: 1 digit major, 2 sub-major, 3 minor, 4 unit group"
-        value_in_registry: { registry: isco-08, take: code }
-      anchor: { class: logical, establishing: true }
-      merge: { cardinality: single, order: none }
-    - term: technology
-      meaning: "a technology code from seed/knowledge/technology.tsv — a being that IS that technology (a third-party product bean, typically)"
-      context_keys: ["technology", "identity.anchors[].technology"]
-      schema:
-        governs_anchor: technology
-        value_pattern: '^[a-z0-9][a-z0-9-]*$'
-        canonical_note: "kebab-case, as in seed/knowledge/technology.tsv"
-        value_in_registry: { registry: technology, take: code }
-      anchor: { class: logical, establishing: true }
-      merge: { cardinality: single, order: none }
     - term: knowledge
       meaning: "how this being stands to published knowledge: classified as an occupation, drawing on a field, using a technology"
       context_keys: [knowledge]
       schema:
         shape: list_of_entries
         attrs:
-          scheme:  { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "which classification: isced-f-2013, isco-08, technology" }
-          code:    { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" }
+          code:    { required: true, in: { type: coding }, meaning: "the code, with the classification it is in: `isced-f-2013:0612`, `isco-08:2522`, `technology:samba`" }
           rel:     { required: true, in: [classified_as, draws_on, uses], meaning: "classified_as (this IS of that kind) | draws_on (this rests on that knowledge) | uses (this runs that technology)" }
           topic:   { in: prose, meaning: "optional: the concept inside the field this draws on" }
           note:    { in: prose, meaning: optional }
-      merge: { cardinality: multi, order: by-scheme+code+rel }
+      merge: { cardinality: multi, order: by-code+rel }
 
   view:
     meaning: >
@@ -2571,7 +2619,7 @@ profiles:
             in:
               entries:
                 being:  { required: true, in: bean_id, meaning: "the part" }
-                system: { in: { registry: anchor_systems, take: system, where: { dimension: [place, any] } }, meaning: "the place system whose position stands for it: the first the being states in that system, in `located_at`, its anchors or its `endpoints`, in that order" }
+                system: { in: { registry: anchor_systems, take: system, where: { dimension: [place] } }, meaning: "the place system whose position stands for it: the first the being states in that system, in `located_at`, its anchors or its `endpoints`, in that order" }
                 what:   { in: prose, meaning: "one line: what the part is for, in this page's words" }
               keyed_by: being
           fields:
@@ -2746,7 +2794,7 @@ terms:
         feasibility:      { in: { aspect: feasibility, default: possible }, meaning: "the position on the feasibility aspect — whether the being CAN be in that state at all, independent of whether it may. `forbidden` + `possible` is a live risk; `forbidden` + `impossible` is already prevented by something else." }
         by:               { in: prose, meaning: "optional: who imposes it, when the enforcer is not us (e.g. a hosting provider)" }
         feasibility_why:  { in: prose, meaning: "optional: WHY the feasibility position holds — a sysctl is reversible, a kernel flag is not. Distinct from `why`, which is the reason for the PERMISSION" }
-        code:             { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme } }, code: { required: true, in: { registry_from: scheme, take: code } } } }, meaning: "the code of a published scheme this stance is on — and every code beneath it" }
+        code:             { in: { type: coding }, meaning: "the code of a published scheme this stance is on — and every code beneath it" }
         within:           { in: { entries: { system: { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } } }, at: { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern } } } }, meaning: "the place it holds in" }
         note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
       cells:
@@ -2923,6 +2971,7 @@ terms:
   - term: lives_in
     meaning: "the immediate habitat a token lives in/on; recursive (habitat may itself be a token); a DAG"
     context_keys: ["lives_in"]
+    placement: habitat
     schema:
       shape: mapping
       required_on_gene: [instance]
@@ -2930,7 +2979,19 @@ terms:
       is_ref: true
       attrs:
         bean:  { required: true, in: id }
+        takes: { in: { entries: { count: { required: true, in: { type: count } }, unit: { required: true, in: { registry: units, take: unit } } } }, meaning: "what this placement takes of what its host can hold (`capacity`), each a measure in a unit of the capacity's quantity: 2 rack units, 400 gigabytes. Only a placement whose rung takes (`placement`) takes anything" }
     merge: { cardinality: single, order: none }
+  - term: capacity
+    meaning: "what this being can hold of what is placed in it, each a measure: 42 rack units, 2 terabytes, 30 kilograms, 12 seats. A placement whose rung takes a share or room (`placement`) takes from it; one whose rung takes nothing — an entry in a register, a memory in a mind — never does, however many are placed there"
+    context_keys: [capacity]
+    schema:
+      shape: list_of_entries
+      attrs:
+        count:     { required: true, in: { type: count }, meaning: "how much" }
+        unit:      { required: true, in: { registry: units, take: unit }, meaning: "a unit of what is held: its quantity says what a placement's `takes` is measured in" }
+        placement: { in: { registry: placement, take: code, where: { level: mode } }, meaning: "optional: the rung whose placements draw on it — `habitat` (a share), `location` (room); absent, every rung that takes" }
+        note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
+    merge: { cardinality: multi, order: "by-unit+placement?" }
   - term: provides_habitat
     meaning: "the kind of habitat this being offers to the tokens that live in it"
     context_keys: ["provides_habitat"]
@@ -3041,7 +3102,7 @@ terms:
     anchor: { class: logical }
     merge: { cardinality: set, order: none }
   - term: identifier
-    meaning: "the logical identity a being is GIVEN — as against one read off its matter (`serial`, `mac`), its address (`ip`, `fqdn`) or its content (`content_hash`). One of three forms, told apart by how it is written: a name a garden MINTS once, `<genos>:<name>` with the bean's own genos (`person:sam`, `contract:shared-purchase`, `session:<slug>`), qualified by the garden's id when it is to be known elsewhere; an id ASSIGNED outside every garden, written as its home writes it — a package name (`postfix`), a registry or tax number, the UID an invitation carries, a provider's or hypervisor's id, the id a manifest declares, a deployment coordinate `<product>@<host>[/<db>]` — which identifies wherever it is written; or a number ISSUED by an organisation that identifies only together with it, written with `issuer: {bean: <org>}` — an employee number, a file number, a membership number. Which forms a genos admits is its row's `identifier_forms` in `gene`; a genos that names none admits all three. Whether it ESTABLISHES is the bean's to say: a document's reference establishes the document and corroborates a design it renders, and a module's name corroborates beside the `git_remote` that establishes. A person is never identified by a national or government number: that is a secret"
+    meaning: "the logical identity a being is GIVEN — as against one read off its matter (`serial`, `mac`), its address (`ip`, `fqdn`) or its content (`content_hash`). One of three forms, told apart by how it is written: a name a garden MINTS once, `<genos>:<name>` with the bean's own genos (`person:sam`, `contract:shared-purchase`, `session:<slug>`), qualified by the garden's id when it is to be known elsewhere; an id ASSIGNED outside every garden, written as its home writes it — a package name (`postfix`), a registry or tax number, the UID an invitation carries, a provider's or hypervisor's id, the id a manifest declares, a deployment coordinate `<product>@<host>[/<db>]`, a code a published scheme gives what it classifies, written as a coding (`isco-08:2522` an occupation, `technology:samba` a technology, and checked as one) — which identifies wherever it is written; or a number ISSUED by an organisation that identifies only together with it, written with `issuer: {bean: <org>}` — an employee number, a file number, a membership number. Which forms a genos admits is its row's `identifier_forms` in `gene`; a genos that names none admits all three. Whether it ESTABLISHES is the bean's to say: a document's reference establishes the document and corroborates a design it renders, and a module's name corroborates beside the `git_remote` that establishes. A person is never identified by a national or government number: that is a secret"
     context_keys: ["identifier"]
     enforced_by: core
     anchor: { class: logical, minted: true, issued: optional }
@@ -3206,12 +3267,13 @@ terms:
       shape: mapping
       required_on_gene: [contract]
       attrs:
-        form:   { required: true, in: [written, spoken, unstated], meaning: "written — a text exists, and `at` names the document that holds it | spoken — agreed aloud; `at` may name the happening | unstated — the agreement is named, and its terms have not been put into words" }
+        form:   { required: true, in: [written, spoken, unstated], meaning: "written — a text exists, and `at` names the document that holds it, or `external` where it is held outside the garden | spoken — agreed aloud; `at` may name the happening | unstated — the agreement is named, and its terms have not been put into words" }
         at:     { in: ref, meaning: "the `document` that holds its text, or the `event` at which it was said" }
+        external: { in: prose, meaning: "where its text is held, when the garden holds no document of it: the registrar's registration agreement, a bank's terms for a card — named as the record can name it, as a party the garden holds no bean for is" }
         agreed: { in: { type: position }, meaning: "the day it was agreed, in any calendar" }
         note:   { in: prose, meaning: "optional prose" }
       cells:
-        - { when: { form: written }, requires: [at], why: "a written agreement can be found: name the document that holds it" }
+        - { when: { form: written }, requires: [[at, external]], why: "a written agreement can be found: name the document that holds it, or say where its text is held outside the garden" }
     merge: { cardinality: single, order: none }
   - term: clauses
     meaning: "what an agreement asks of its parties, one clause each: an open map keyed by a short name. A clause is a position on the `permission` aspect — required (must), omissible (need not), permitted (may), forbidden (must not) — the square of obligation a being's capabilities already take. A clause with no `by` is a rule of the agreement that binds every party"
@@ -3232,6 +3294,7 @@ terms:
         permission: { in: { aspect: permission, default: required }, meaning: "required | omissible | permitted | forbidden" }
         amount: { in: { quantity: any }, meaning: "how much, where it is measured — money, time, anything. Absent while unknown, and `what` then says how it will be known" }
         due:    { in: { type: position }, meaning: "the day, or the moment, it falls due — the first, when it repeats" }
+        notice: { in: { quantity: duration }, meaning: "how long before it falls due a reader is told — this clause's own, where the agreement's (seven days) is too short: ninety days before a name lapses, sixty before a lease ends" }
         every:  { in: recurrence, meaning: "how it repeats: each month of a calendar, six times" }
         when:
           meaning: "what brings it into force, where that is not a day: a reading that holds — an entry made under another clause, a step reached, anything a selection says — or the condition in words, where no reading says it yet"
@@ -3296,9 +3359,9 @@ terms:
         resumes: { in: [true], meaning: "a PAUSE, reached from any step with no `next` naming it: the move after it returns to the step it was entered from, or takes a way out" }
         final:   { in: [true], meaning: "an end nothing follows: a move after it is refused. An end that is not final may be left, and the case taken up again" }
         reasons: { in: any, meaning: "the reasons a move into this step may cite, as a list of kebab words, each once. Its form is the walk's to judge" }
-        is:      { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "the published process the step is, where a scheme names one" }
-        takes:   { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" }, amount: { in: { quantity: any }, meaning: "how much, where it is measured" } }, keyed_by: code }, meaning: "what one run of the step takes in, each once" }
-        gives:   { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" }, amount: { in: { quantity: any }, meaning: "how much, where it is measured" } }, keyed_by: code }, meaning: "what one run of the step gives out, each once" }
+        is:      { in: { type: coding }, meaning: "the published process the step is, where a scheme names one" }
+        takes:   { in: { entries: { code: { required: true, in: { type: coding }, meaning: "the code, with its scheme" }, amount: { in: { quantity: any }, meaning: "how much, where it is measured" } }, keyed_by: code }, meaning: "what one run of the step takes in, each once" }
+        gives:   { in: { entries: { code: { required: true, in: { type: coding }, meaning: "the code, with its scheme" }, amount: { in: { quantity: any }, meaning: "how much, where it is measured" } }, keyed_by: code }, meaning: "what one run of the step gives out, each once" }
         note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: single, order: none }
   - term: courses
@@ -3362,13 +3425,14 @@ terms:
       it is known to reach. A being may be located in several systems at once, and a location that is not
       known is STATED as unknown rather than left out.
     context_keys: [located_at]
+    placement: location
     schema:
       shape: list_of_entries
       required_on_gene: [document]
       at_most_one_of: [[u, accuracy]]
       attrs:
-        system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which anchor system this position is stated in — it selects the form the position must take" }
-        openness:  { required: true, in: [here, elsewhere, unreachable, unknown], meaning: "here (reachable from the machine that recorded it) | elsewhere (reachable, and NOT from here) | unreachable (known, and cannot be reached) | unknown (nobody has established where it is)" }
+        system:    { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } }, meaning: "which anchor system of place this position is stated in — it selects the form the position must take" }
+        openness:  { required: true, in: [here, elsewhere, unreachable, unknown], meaning: "here (reachable from the machine that recorded it) | elsewhere (reachable, and NOT from here) | unreachable (known, and cannot be reached) | unknown (nobody has established where it is — beyond the being it is in, where `host` names one)" }
         observed:  { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date this location was checked. A location ages: a tree is moved, a branch is checked out elsewhere, a printout is filed." }
         u:          { in: { quantity: length }, meaning: "the position's HORIZONTAL standard uncertainty (`uncertainty_form`); for a position on one vertical axis, its only one" }
         u_vertical: { in: { quantity: length }, meaning: "the standard uncertainty of its height, where it states one: where most local ground motion is, and where a receiver is worst" }
@@ -3378,6 +3442,8 @@ terms:
         note:      { in: prose, meaning: "optional prose — the only place a `physical` address can live, since that system declares no canonical form" }
         mobility:  { in: [fixed, free], meaning: "fixed — the being does not move, and is not moved, while `during` holds (a rooted tree, a set mark); free — it moves. Rootedness is a position over a time, never a kind" }
         during:    { in: extent, meaning: "when the being was at this position: a transplant is two entries, each with its window" }
+        host:      { in: ref, meaning: "the being whose own frame the position is in — the machine a path is on, the server a repository is fetched from, the rack a slot is in. Stated alone where the position within it is not known (`openness: unknown`); beside `at`, it is the being the position names, and agrees with it" }
+        takes:     { in: { entries: { count: { required: true, in: { type: count } }, unit: { required: true, in: { registry: units, take: unit } } } }, meaning: "what this placement takes of what its host can hold (`capacity`), each a measure in a unit of the capacity's quantity: 2 rack units, 400 gigabytes. Only a placement whose rung takes (`placement`) takes anything" }
       cells:
         - { when: { openness: here }, requires: [at] }
         - { when: { openness: elsewhere }, requires: [at] }
@@ -3413,12 +3479,13 @@ terms:
       from how many digits were typed, so two positions whose resolutions overlap can be known to be
       unordered rather than silently ordered. One entry is also the long form of every day the law holds.
     context_keys: [timing]
+    placement: time
     schema:
       shape: open_map_of_entries
       key_form: kebab
       required_on_gene: [session, event]
       attrs:
-        system:  { required: true, in: { registry: anchor_systems, take: system }, meaning: "the time anchor system — gregorian-civil for a calendar reading, event-anchored for a position fixed only by its neighbours" }
+        system:  { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [time, any] } }, meaning: "the time anchor system — gregorian-civil for a calendar reading, event-anchored for a position fixed only by its neighbours" }
         at:      { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position, in that system's ONE canonical form" }
         unit:    { required: true, in: { registry: units, take: unit }, meaning: "the resolution ACTUALLY HELD. `2026-08-07T05:21` recorded at unit: minute means the second is not known — not that it was zero." }
         by:      { in: prose, meaning: "optional: who or what read the clock, when that is not the bean's default provenance" }
@@ -3448,7 +3515,7 @@ terms:
       attrs:
         grid:     { in: recurrence, meaning: "the positions BY RULE: a recurrence with a `from` and no `to` or `times`, striding by a measure or by a level with a length; row n is at occurrence n, the first at `from`, and the last row is its end" }
         span:     { in: extent, meaning: "the positions LISTED: the region the rows lie in, whose `from` is offset 0; each row writes its offset" }
-        unit:     { in: { registry: units, take: unit }, meaning: "the resolution held, and what an offset counts: a row's offset and a grid's stride are whole numbers of it" }
+        unit:     { in: { registry: units, take: unit }, meaning: "the resolution held, and what an offset counts: a row's offset and a grid's stride are whole numbers of it. On a COUNTED line (its system's neighbours counted) no unit is stated: an offset there is a count of neighbours, and nothing measures it" }
         placement: { in: [point, bounds, preceding, following], meaning: "where a row sits on the line: point — at its position, the reading when silent | bounds — over a region, a listed row writing its `from` and `to`, a grid's row n over [n, n+1) strides | preceding — at its position, over the region back to the row before | following — at its position, over the region on to the next" }
         holds:
           meaning: "the CHANNELS: what a position holds, one column each — a measured value, a position, or a code"
@@ -3471,11 +3538,18 @@ terms:
               persists:   { in: [none, offset, scale, unknown], meaning: "whether one cell's error repeats in the next: none | offset — a common offset, which cancels in a difference | scale — a common relative error, which scales a difference | unknown, read both ways" }
               monotone:   { in: [increasing, decreasing], meaning: "the channel never goes back along the line: a row that does is refused, unless its cell is excluded" }
               limits:     { in: { entries: { below: { in: { type: count }, meaning: "what a bare `<` is below" }, above: { in: { type: count }, meaning: "what a bare `>` is above" } } }, meaning: "the limits a bare `<` or `>` in a cell stands for" }
-              property:   { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "WHAT the channel is of, as a code of a published scheme, so that two gardens' channels meet by code and never by name" }
+              property:   { in: { type: coding }, meaning: "WHAT the channel is of, as a code of a published scheme, so that two gardens' channels meet by code and never by name" }
               note:       { in: prose, meaning: "optional prose" }
         rows:     { in: { type: rows }, meaning: "the table, inline: its header names the position columns (`at`, or `from` and `to` under `bounds`; none on a grid) and each channel once, then one line per row. Absent, the rows are the parts `series/<bean>/<key>/<part>.tsv`: a grid's part named by the number of its first row, a listed series' by any kebab name" }
         excluded: { in: { entries: { at: { required: true, in: { type: count }, meaning: "the row: its offset on a listed series (its `from` under `bounds`), its number on a grid, the first 0" }, channel: { in: { type: kebab }, meaning: "the cell's channel; absent, every cell of the row" }, by: { required: true, in: bean_id, meaning: "the judge who set it aside" }, why: { required: true, in: prose, meaning: "why" }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } } }, meaning: "a cell SET ASIDE by a judge: kept and shown, and read by no operation" }
         held:     { in: { pattern: '^root:[a-z0-9][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._-]*$' }, meaning: "the whole series is kept OFF GIT, in the held layer, under this opaque pointer, and the entry says nothing else" }
+        whole:
+          meaning: "what the series is AS A WHOLE, made of what its positions hold: the value, the channel it is made of, and how (`by`, an aggregate) — two nodes of 2 are a whole of 4 `by: sum`, and of 4 `by: product`. Checked exactly, in fractions, against the rows; a row that holds a gap leaves a whole that cannot be checked, and says so"
+          in:
+            entries:
+              value: { required: true, in: { quantity: any }, meaning: "the whole, a measured value in a unit of the channel's quantity (`count` is in `item`)" }
+              of:    { required: true, in: { type: kebab }, meaning: "the channel it is made of, by its name" }
+              by:    { required: true, in: { registry: aggregates, take: aggregate }, meaning: "how the parts make the whole" }
         note:     { in: prose, meaning: "optional prose" }
     merge: { cardinality: multi, order: by-key }
   - term: roots
@@ -3490,7 +3564,7 @@ terms:
       entry_must_match:
         - { attr: system, registry: operating_systems, keyed_by: os, take: path_grammar }
       attrs:
-        system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which filesystem system this host resolves the root in — pinned to the grammar this host's `os` declares, so it is checked rather than merely stated" }
+        system:    { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } }, meaning: "which filesystem system this host resolves the root in — pinned to the grammar this host's `os` declares, so it is checked rather than merely stated" }
         at:        { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the literal position this root means HERE, host named, in that system's canonical form" }
         observed:  { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the resolution was checked — a tree gets moved" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
@@ -3578,12 +3652,14 @@ terms:
   - term: workspace
     meaning: "the working copy and branch a session commits from, on a named host"
     context_keys: [workspace]
+    placement: location
     schema:
       shape: mapping
       required_on_gene: [session]
       attrs:
         host:       { required: true, in: ref, meaning: "a {bean} ref to the machine the session ran on. A session is not portable: its shell history, its reachability and what it could measure all belong to one machine." }
-        at:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$" }, meaning: "the working copy, as a position in that host's path grammar — `root:` form where a root exists, so it resolves on a second machine rather than reading as a literal path that is not there." }
+        system:     { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place], datum: host } }, meaning: "the filesystem the working copy is in — the host's own: `unix-filesystem`, `windows-filesystem`" }
+        at:         { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the working copy, as a position in that system's one form — `root:` form where a root exists, so it resolves on a second machine rather than reading as a literal path that is not there." }
         branch:     { required: true, in: { pattern: "^[A-Za-z0-9][A-Za-z0-9._/-]*$" }, meaning: "the git branch it commits to. `session/<slug>` by convention; `master` for a session that works the main copy directly." }
         opened_at:  { origin: { act: read, nature: soma }, in: { system: unix-epoch }, meaning: "epoch milliseconds, stamped by bin/dmsession.py. A session's own start is the one moment nobody should be estimating." }
         note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
@@ -3619,16 +3695,16 @@ terms:
       entry_one_of: [at, during, answers]
       at_most_one_of: [[value, code, position, extent], [at, during]]
       attrs:
-        property:  { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "what was observed: a code of a published scheme — never a garden's own word — so that two gardens' readings meet. Every reading states one; a verdict takes it from the entry it answers" }
-        of:        { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "the part of this being the reading is of, as a code; absent, the whole being" }
+        property:  { in: { type: coding }, meaning: "what was observed: a code of a published scheme — never a garden's own word — so that two gardens' readings meet. Every reading states one; a verdict takes it from the entry it answers" }
+        of:        { in: { type: coding }, meaning: "the part of this being the reading is of, as a code; absent, the whole being" }
         presence:  { in: [present, absent], meaning: "present — found (the reading when silent); absent — looked for and not found: a list that does not name it, a sign not seen. An absent entry states no result" }
         at:        { in: { type: position }, meaning: "when it held: the moment of the phenomenon, at the unit its form is written in — not when it was written down, which is provenance" }
         during:    { in: extent, meaning: "when it held, where that is a stretch: a day's intake, a season's growth" }
         value:     { in: { quantity: any }, meaning: "a measured result, with its `u` or `accuracy` inside it" }
-        code:      { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "a classified result" }
+        code:      { in: { type: coding }, meaning: "a classified result" }
         position:  { in: { entries: { system: { required: true, in: { registry: anchor_systems, take: system }, meaning: "the system the position is in" }, at: { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position, in that system's one form" }, u: { in: { quantity: any }, meaning: "its standard uncertainty" } } }, meaning: "a result that is a position: a temperature on a scale, an age before the present" }
         extent:    { in: extent, meaning: "a result that is a region" }
-        method:    { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "how it was read, as a code" }
+        method:    { in: { type: coding }, meaning: "how it was read, as a code" }
         by:        { in: bean_id, meaning: "who or what observed it — a person, an instrument — as a bean, so that its standing can be read (N19)" }
         answers:   { in: { type: field_path }, meaning: "the entry this one is a verdict on, `<bean>:observations.<key>` (N20)" }
         answer:    { in: [confirms, disputes, abstains], meaning: "with `answers`: confirms | disputes | abstains — asked, and would not say" }
@@ -3817,6 +3893,7 @@ gene:
   - genos: event
     of_nature: lekton
     ownership_form: [crown]
+    takes_time_of: [present, host]
     meaning: "a happening between people at a time: a meeting, a dinner, a party, a conversation in which something was agreed. When is `timing`; who took part is `refs`, each naming what they were in `rel` — present, invited, host, paid, or any other part a person played. A happening between people is owned by none of them — it may end at the crown — and whoever hosted it answers for it."
 ---
 # daftar — Tier-0 Universal Standard Vocabulary

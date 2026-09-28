@@ -2346,6 +2346,539 @@ class Step27(Step26):
                 [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
 
 
+STEP_29 = (29, 0)
+CODING_ATTRS_29 = ('property', 'of', 'code', 'method', 'is')       # an attribute whose value IS one code with its scheme
+KNOWLEDGE_ANCHORS_29 = {'isced_f_2013': 'isced-f-2013', 'isco_08': 'isco-08', 'technology': 'technology'}
+_CODE_29 = r'("?)([^\s,{}\[\]"#]+)'                                # a code as a line writes it, quoted or not
+
+
+def _schemes_29(rel):
+    """Every scheme a code may name here: the release's, and the garden's own (`registry_additions`)."""
+    out = {str(r.get('scheme')) for r in (std_fm(rel).get('knowledge_schemes') or []) if isinstance(r, dict)}
+    _v = os.path.join(ROOT, 'VOCAB.md')
+    if os.path.isfile(_v):
+        _fm = _parse(read_text(_v)[0])[0] or {}
+        _ra = _fm.get('registry_additions') if isinstance(_fm.get('registry_additions'), dict) else {}
+        out |= {str(r.get('scheme')) for r in (_ra.get('knowledge_schemes') or []) if isinstance(r, dict)}
+    return {s for s in out if s and s != 'None'}
+
+
+def _recode_29(node, schemes, key=None):
+    """The data as 29.0 holds it: every `{scheme, code}` one coding — the whole value of an attribute that IS a code
+    (`property: isco-08:2522`), or, in an entry that says more (`rel`, `amount`, `share`), its `code`."""
+    if isinstance(node, dict):
+        if str(node.get('scheme')) in schemes and 'code' in node and not isinstance(node.get('code'), (dict, list)):
+            c = f"{node['scheme']}:{node['code']}"
+            if key in CODING_ATTRS_29 and set(node) == {'scheme', 'code'}:
+                return c
+            return {k: (c if k == 'code' else _recode_29(v, schemes, k)) for k, v in node.items() if k != 'scheme'}
+        if key == 'identity' and isinstance(node.get('anchors'), list):
+            return {k: ([_anchor_29(a) for a in v] if k == 'anchors' else _recode_29(v, schemes, k)) for k, v in node.items()}
+        return {k: _recode_29(v, schemes, k) for k, v in node.items()}
+    if isinstance(node, list):
+        return [_recode_29(v, schemes) for v in node]
+    return node
+
+
+def _anchor_29(a):
+    if isinstance(a, dict) and a.get('key') in KNOWLEDGE_ANCHORS_29 and not isinstance(a.get('value'), (dict, list)):
+        return {k: ('identifier' if k == 'key' else f"{KNOWLEDGE_ANCHORS_29[a['key']]}:{a['value']}" if k == 'value' else v)
+                for k, v in a.items()}
+    return a
+
+
+def recoded_29(text, schemes):
+    """(the new text, n) — a front matter with every code written with its scheme, `<scheme>:<code>`, and every anchor a
+    knowledge scheme keyed written as the `identifier` it is. Made on the lines where they are written, everything else
+    byte for byte, and PROVED: the new front matter must parse to exactly the data 29.0 holds. Raises CannotRename."""
+    region = _fm_region(text)
+    if not region:
+        return text, 0
+    lo, hi = region
+    head = text[lo:hi]
+    try:
+        data = dmparse.loads(head)
+    except Exception:
+        return text, 0
+    want = _recode_29(data, schemes)
+    if want == data:
+        return text, 0
+    S = '(' + '|'.join(re.escape(s) for s in sorted(schemes, key=len, reverse=True)) + ')'
+    n = [0]
+
+    def sub(pat, repl, s, flags=0):
+        out, k = re.subn(pat, repl, s, flags=flags)
+        n[0] += k
+        return out
+    new = head
+    # the whole value of an attribute that IS a code: `property: { scheme: S, code: C }` -> `property: S:C`
+    new = sub(r'(\b(?:' + '|'.join(CODING_ATTRS_29) + r'):[ \t]*)\{[ \t]*scheme:[ \t]*' + S + r'[ \t]*,[ \t]*code:[ \t]*'
+              + _CODE_29 + r'\3[ \t]*\}', lambda m: f"{m.group(1)}{m.group(2)}:{m.group(4)}", new)
+    # an entry that says more, or a list's member: `{ scheme: S, code: C, … }` -> `{ code: S:C, … }`
+    new = sub(r'(\{[ \t]*)scheme:[ \t]*' + S + r'[ \t]*,[ \t]*code:[ \t]*' + _CODE_29 + r'\3(?=[ \t]*[,}])',
+              lambda m: f"{m.group(1)}code: {m.group(2)}:{m.group(4)}", new)
+    # the same, written as a block: `scheme: S` over `code: C`
+    new = sub(r'(?m)^([ \t]*)(- )?scheme:[ \t]*' + S + r'[ \t]*\n[ \t]*code:[ \t]*' + _CODE_29 + r'\4[ \t]*$',
+              lambda m: f"{m.group(1)}{m.group(2) or ''}code: {m.group(3)}:{m.group(5)}", new)
+    # an anchor a knowledge scheme keyed: `key: isco_08, value: "2522"` -> `key: identifier, value: isco-08:2522`
+    for _k, _s in KNOWLEDGE_ANCHORS_29.items():
+        new = sub(r'(\bkey:[ \t]*)' + _k + r'(\b[ \t]*,[ \t]*value:[ \t]*)' + _CODE_29 + r'\3',
+                  lambda m, _s=_s: f"{m.group(1)}identifier{m.group(2)}{_s}:{m.group(4)}", new)
+        new = sub(r'(?m)^([ \t]*(?:- )?key:[ \t]*)' + _k + r'([ \t]*\n[ \t]*value:[ \t]*)' + _CODE_29 + r'\3[ \t]*$',
+                  lambda m, _s=_s: f"{m.group(1)}identifier{m.group(2)}{_s}:{m.group(4)}", new)
+    try:
+        got = dmparse.loads(new)
+    except Exception:
+        got = None
+    if got != want:
+        raise CannotRename("a code with its scheme is written here in a form this step cannot rewrite in place")
+    return text[:lo] + new + text[hi:], n[0]
+
+
+class ForAPerson(CannotRename):
+    """What only a person can decide, said as what to do."""
+
+
+def _carried_29(text, key):
+    """(the block's own comments, [each item's comments]) of the top-level block `key`, read as a comment is read
+    everywhere here (dmparse): one on a line with an item sits on that item, one on a line of its own on the item below
+    it. The key's own line, and lines of their own before the first item, are the block's; each item's comments are
+    kept in order. They are a person's words, and go where the fact they sit on goes."""
+    s, e = dmsafe.top_level_span(text, key)
+    lines = text[s:e].splitlines()
+    head_c = dmparse.comment_start(lines[0])
+    own = [lines[0][head_c:].strip()] if head_c >= 0 else []
+    items, pend, indent = [], [], None
+    for line in lines[1:]:
+        c = dmparse.comment_start(line)
+        code = line if c < 0 else line[:c]
+        com = None if c < 0 else line[c:].strip()
+        m = re.match(r'^([ \t]*)- ', code)
+        if m and (indent is None or len(m.group(1)) == indent):
+            indent = len(m.group(1))
+            items.append(pend + ([com] if com else []))
+            pend = []
+        elif not code.strip():
+            if com:
+                # a line of its own indented INSIDE an item, under its keys, is that item's; at the items' own margin or
+                # less it sits on the item below it
+                inside = items and indent is not None and len(line) - len(line.lstrip()) > indent
+                (items[-1] if inside else pend if items else own).append(com)
+        elif com:
+            (items[-1] if items else own).append(com)
+    if pend:
+        (items[-1] if items else own).extend(pend)
+    return own, items
+
+
+def _commented_29(flow, comments, indent='  '):
+    """An entry line with its comments: one trailing comment where it is the only one, and otherwise each on a line of
+    its own above the entry, as a person wrote them."""
+    if not comments:
+        return [f"{indent}- {flow}"]
+    if len(comments) == 1 and len(comments[0]) < 120:
+        return [f"{indent}- {flow}   {comments[0]}"]
+    return [f"{indent}{c}" for c in comments] + [f"{indent}- {flow}"]
+
+
+def _drop_block_29(text, key):
+    s, e = dmsafe.top_level_span(text, key)
+    return text[:s] + text[e:]
+
+
+def _append_29(text, key, items, own=()):
+    """`items` — each (flow mapping, [its comments]) — added to the end of the top-level list `key`, which is written as
+    a block, or as `[]`, or is not there yet; `own`, comments on the list itself where they came from, go on its key
+    line when the list is new and above the first item added otherwise. Raises CannotRename for a list written any
+    other way."""
+    lines = text.splitlines(keepends=True)
+    fences = [i for i, l in enumerate(lines) if l.rstrip('\r\n') == '---']
+
+    def body(ind, above):
+        out = [f"{ind}{c}" for c in above]
+        for flow, com in items:
+            out += _commented_29(flow, com, ind)
+        return ''.join(l + '\n' for l in out)
+    own = list(own)
+    try:
+        s, e = dmsafe.top_level_span(text, key)
+    except dmsafe.UnsafeEdit:
+        at = sum(map(len, lines[:fences[1]]))
+        first = f"{key}:" + (f"   {own[0]}" if own and len(own[0]) < 120 else '') + '\n'
+        return text[:at] + first + body('  ', own[1:] if own and len(own[0]) < 120 else own) + text[at:]
+    blk = text[s:e]
+    head, _, rest = blk.partition('\n')
+    if re.match(rf'^{re.escape(key)}:[ \t]*\[[ \t]*\][ \t]*(#.*)?$', head):
+        return text[:s] + f"{key}:\n" + body('  ', own) + text[e:]
+    m = re.search(r'(?m)^([ \t]*)- ', rest)
+    if re.match(rf'^{re.escape(key)}:[ \t]*(#.*)?$', head) and m:
+        tail = '' if blk.endswith('\n') else '\n'
+        return text[:e] + tail + body(m.group(1), own) + text[e:]
+    raise CannotRename(f"`{key}` is written in a form this step does not add to — add {'; '.join(f for f, _c in items)} by hand")
+
+
+def _host_of_remote_29(v):
+    """The host a git remote names: `[user@]host:path`, or a URL's."""
+    v = str(v or '')
+    m = re.match(r'^[a-z][a-z0-9+.-]*://(?:[^@/]*@)?([^/:]+)', v)
+    return (m.group(1) if m else v.split(':', 1)[0].split('@')[-1]).lower()
+
+
+def _fs_system_29(pos, roots_seen):
+    """The filesystem a `code_paths` position is in: `<host>:/…` UNIX, `<host>:C:\\…` Windows; a `root:` position the
+    system the hosts that resolve its root say — UNIX where none says, as the garden's own `root:` locations are."""
+    if re.match(r'^[a-z0-9][a-z0-9.-]*:[A-Za-z]:\\', pos):
+        return 'windows-filesystem'
+    if pos.startswith('root:'):
+        said = roots_seen.get(pos[5:].split('/', 1)[0]) or set()
+        return next(iter(said)) if len(said) == 1 else 'unix-filesystem'
+    return 'unix-filesystem'
+
+
+def _flow_29(d):
+    """A mapping written as one flow line, its strings quoted where a line would otherwise misread them."""
+    def val(v):
+        if isinstance(v, dict):
+            return _flow_29(v)
+        s = str(v)
+        return s if re.match(r'^[A-Za-z0-9_][A-Za-z0-9_./@+-]*$', s) and ':' not in s else json.dumps(s, ensure_ascii=False)
+    return '{ ' + ', '.join(f"{k}: {val(v)}" for k, v in d.items()) + ' }'
+
+
+class Step29:
+    """The translation into std-vocab 29.0, the line from place to location. Planned, and refused if it must be, before
+    any file is touched; made again at apply time on each file as the steps before it left it:
+      - every `{scheme, code}` a coding, `<scheme>:<code>`; every anchor a knowledge scheme keyed an `identifier`;
+      - `git_host` read from the code's own `git_remote` where that names its host, and otherwise a `located_at` entry
+        in `git-remote` — its `repo`, or its `host` alone;
+      - `code_paths` a code bean's `located_at` entries, with the code profile's words; a tree of another code that it
+        is read beside, a `depends_on` that code, whose location it is;
+      - `registration` the agreement it is: a contract over the domain, written beside it."""
+
+    def __init__(self, rel, tag, keep):
+        self.rel, self.tag, self.keep = rel, tag, keep
+        self.problems, self.facts, self.reasons = [], {}, None
+        self.leftover, self.new_beans = False, []
+        self.schemes = _schemes_29(rel)
+        self.forms = {str(r.get('system')): r.get('pattern') for r in (std_fm(rel).get('anchor_systems') or [])
+                      if isinstance(r, dict) and r.get('pattern') not in (None, 'none')}
+
+    @staticmethod
+    def docs():
+        return dmgarden.paths(ROOT, 'beans')
+
+    def _beans(self):
+        out = {}
+        for p in self.docs():
+            try:
+                fm = _parse(read_text(p)[0])[0]
+            except Exception:
+                continue
+            if isinstance(fm, dict) and fm.get('bean'):
+                out[str(fm['bean'])] = (p, fm)
+        return out
+
+    def left(self):
+        for _p, fm in self._beans().values():
+            ws = fm.get('workspace')
+            if any(k in fm for k in ('git_host', 'code_paths', 'registration')) or _recode_29(fm, self.schemes) != fm \
+                    or (isinstance(ws, dict) and ws.get('at') and not ws.get('system')):
+                self.leftover = True
+                return True
+        return False
+
+    def plan(self):
+        law = {(str(r.get('at')), str(r.get('name'))): str(r.get('instead') or '')
+               for r in (std_fm(self.rel).get('retired') or []) if isinstance(r, dict)}
+        want = [(('attr', 'scheme'), '`code`'), (('bean', 'git_host'), '`located_at`'), (('bean', 'code_paths'), '`located_at`'),
+                (('bean', 'registration'), 'a contract')] + [(('term', k), '`identifier`') for k in KNOWLEDGE_ANCHORS_29]
+        wrong = [f"{a} `{o}`" for (a, o), n in want if not law.get((a, o), '').startswith(n)]
+        if wrong:
+            refuse(f"{self.tag}'s law does not retire, as this tool's 29.0 step translates them, {', '.join(wrong)}. "
+                   f"The step and the law disagree; neither is guessed at.")
+        self.run(dry=True)
+        if self.problems and not self.keep:
+            refuse(f"crossing into std-vocab 29.0, {len(self.problems)} thing(s) are a person's to do, not a "
+                   f"translation's:\n" + '\n'.join('  - ' + p for p in self.problems) +
+                   "\nDo them and commit, then run this again — or pass --keep-on-failure to apply the rest and "
+                   "leave these, named, for the person.")
+
+    def apply(self, vocab_only=False):
+        if vocab_only:
+            return None, []
+        self.problems = []
+        self.run(dry=False)
+        return self.report()
+
+    def rekey_reasons(self):
+        self.reasons = None
+
+    def code_left(self):
+        return []
+
+    def _note(self, rel, what, old, new):
+        self.facts.setdefault(rel, []).append((what, old, new))
+
+    def run(self, dry):
+        import dmwhere
+        beans = self._beans()
+        names = {b: dmwhere.names_of(b, fm) for b, (_p, fm) in beans.items()}
+        roots_seen = {}
+        for b, (_p, fm) in beans.items():
+            for k, r in (fm.get('roots') or {}).items() if isinstance(fm.get('roots'), dict) else []:
+                if isinstance(r, dict) and r.get('system'):
+                    roots_seen.setdefault(str(k), set()).add(str(r['system']))
+        # WHOSE TREE A POSITION IS: every position a bean is located at, or holds its own code at — a tree of another code
+        # that a bean is read beside becomes a dependency on the bean whose tree it is
+        own = {}
+        for b, (_p, fm) in beans.items():
+            for e in (fm.get('located_at') or []) if isinstance(fm.get('located_at'), list) else []:
+                if isinstance(e, dict) and e.get('at'):
+                    own.setdefault(str(e['at']), b)
+            for c in (fm.get('code_paths') or []) if isinstance(fm.get('code_paths'), list) else []:
+                if isinstance(c, dict) and c.get('path') and c.get('role') != 'framework-reference':
+                    own.setdefault(str(c['path']), b)
+        for b, (path, fm) in sorted(beans.items()):
+            rel = os.path.relpath(path, ROOT).replace(os.sep, '/')
+            text, form = read_text(path)
+            self.want = copy.deepcopy(_recode_29(fm, self.schemes))
+            try:
+                text, k = recoded_29(text, self.schemes)
+                if k:
+                    self._note(rel, 'coding', '{scheme, code}', f'<scheme>:<code> ×{k}')
+                text = self._git_host(b, rel, text, fm, names)
+                text = self._code_paths(b, rel, text, fm, roots_seen, own)
+                text = self._registration(b, rel, text, fm, beans, dry)
+                text = self._workspace(rel, text, fm, roots_seen)
+                # PROVED: the whole front matter now holds exactly what 29.0 holds of it, and nothing else moved
+                got = _parse(text)[0]
+                if got != self.want:
+                    raise CannotRename("the translation could not be made without changing something else")
+            except (CannotRename, dmsafe.UnsafeEdit) as e:
+                why = f"{rel}: {e}" + ('' if isinstance(e, ForAPerson) else " — translate it by hand")
+                if why not in self.problems:
+                    self.problems.append(why)
+                continue
+            if not dry and rel in self.facts:
+                write_text(path, text, form)
+
+    def _git_host(self, b, rel, text, fm, names):
+        gh = fm.get('git_host')
+        if not isinstance(gh, dict):
+            return text
+        hb = str(gh.get('bean') or '')
+        remotes = [a.get('value') for a in ((fm.get('identity') or {}).get('anchors') or [])
+                   if isinstance(a, dict) and a.get('key') == 'git_remote']
+        said = any(_host_of_remote_29(r) in names.get(hb, {hb}) for r in remotes)
+        own, _items = _carried_29(text, 'git_host')
+        new = _drop_block_29(text, 'git_host')
+        self.want.pop('git_host', None)
+        if said and not gh.get('repo'):
+            if own:
+                raise ForAPerson("its git_host is read from its git_remote now, and carries a person's comment: move the "
+                                 "words onto the git_remote anchor by hand, then take git_host out")
+            self._note(rel, 'git_host', f"{{bean: {hb}}}", "read from its git_remote, which names that host")
+            return new
+        entry = {'system': 'git-remote', 'openness': 'here', 'at': str(gh['repo'])} if gh.get('repo') else \
+            {'system': 'git-remote', 'openness': 'unknown', 'host': {'bean': hb}}
+        if gh.get('note'):
+            entry['note'] = str(gh['note'])
+        new = _append_29(new, 'located_at', [(_flow_29(entry), own)])
+        self.want['located_at'] = list(self.want.get('located_at') or []) + [entry]
+        self._note(rel, 'git_host', f"{{bean: {hb}}}", f"located_at {_flow_29(entry)}")
+        return new
+
+    def _code_paths(self, b, rel, text, fm, roots_seen, owner):
+        cps = fm.get('code_paths')
+        if not isinstance(cps, list):
+            return text
+        have = {str(e.get('at')) for e in (fm.get('located_at') or []) if isinstance(e, dict) and e.get('at')} \
+            if isinstance(fm.get('located_at'), list) else set()
+        adds, deps, merged, refs_said = [], [], [], {}
+        own, per = _carried_29(text, 'code_paths')
+        per = per + [[] for _ in range(len(cps) - len(per))]
+        for i, c in enumerate(cps):
+            if not isinstance(c, dict) or not c.get('path'):
+                continue
+            pos = str(c['path'])
+            if c.get('role') == 'framework-reference':
+                whose = owner.get(pos)
+                refs_said.setdefault(whose, []).extend(per[i])
+                if not whose or whose == b:
+                    raise ForAPerson(f"code_paths names {pos} as a tree it is read beside, and no bean holds that tree: give "
+                                     f"it a bean of its own — a codebase whose `code_paths` hold {pos} (`role: own-source, "
+                                     f"scan_policy: reference-only`) — and run this again; each code read beside it then "
+                                     f"`depends_on` that bean")
+                deps.append(whose)
+                continue
+            words = {k: c[k] for k in ('role', 'scan_policy', 'stack', 'entrypoint') if c.get(k) is not None}
+            if pos in have:
+                merged.append((pos, words, per[i]))     # located already: its entry takes the words, and the comments
+                continue
+            entry = {'system': _fs_system_29(pos, roots_seen), 'openness': 'here', 'at': pos}
+            if self.forms.get(entry['system']) and not dmparse.law_match(self.forms[entry['system']], pos):
+                raise ForAPerson(f"its code_paths hold {pos}, which names no host: write it `root:<name>/…` (resolved by "
+                                 f"each host's `roots`) or `<host>:<path>` — a location is on one host — and run this again")
+            entry.update(words)
+            if c.get('note') is not None:
+                entry['note'] = c['note']
+            adds.append((entry, per[i]))
+        new = _drop_block_29(text, 'code_paths')
+        self.want.pop('code_paths', None)
+        for pos, words, said in merged:
+            new = self._merge_words(new, pos, words, said)
+            for e in self.want.get('located_at') or []:
+                if isinstance(e, dict) and str(e.get('at')) == pos:
+                    e.update({k: v for k, v in words.items() if k not in e})
+        if adds or own:
+            if not adds:
+                raise ForAPerson("its code_paths carries a person's comment and no tree of its own: move the words where "
+                                 "they belong by hand, then take code_paths out")
+            new = _append_29(new, 'located_at', [(_flow_29(x), com) for x, com in adds], own)
+            self.want['located_at'] = list(self.want.get('located_at') or []) + [x for x, _c in adds]
+        held = fm.get('depends_on') if isinstance(fm.get('depends_on'), dict) else {}
+        on = {str(v.get('bean')) for v in held.values() if isinstance(v, dict)}
+        for d in dict.fromkeys(deps):
+            if d in on:
+                continue
+            key = 'framework' if 'framework' not in held else f"framework-{d}"
+            held = dict(held, **{key: {'bean': d}})
+            new = self._depend(new, key, d, refs_said.get(d) or [])
+            self.want['depends_on'] = dict(self.want.get('depends_on') or {}, **{key: {'bean': d}})
+        self._note(rel, 'code_paths', f"{len(cps)} tree(s)", f"located_at ×{len(adds)}" + (f", depends_on {', '.join(dict.fromkeys(deps))}" if deps else ''))
+        return new
+
+    @staticmethod
+    def _merge_words(text, pos, words, said=()):
+        """The code profile's words added, before its closing brace, to the flow entry of `located_at` whose `at` is
+        `pos` — on one line or continued over several, found by the quote-aware reading of a flow mapping."""
+        s, e = dmsafe.top_level_span(text, 'located_at')
+        blk = text[s:e]
+        at = re.compile(r'(?:^|[{,\s])at:[ \t]*(["\']?)' + re.escape(pos) + r'\1[ \t]*[,}]')
+        hits = [(lo, hi) for lo, hi in _flow_maps(blk) if at.search(blk[lo:hi])
+                and not any(a < lo and hi < b for a, b in _flow_maps(blk) if (a, b) != (lo, hi))]
+        if len(hits) != 1:
+            raise ForAPerson(f"its code_paths and its located_at both hold {pos}: write `{', '.join(f'{k}: {v}' for k, v in words.items())}` "
+                             f"into that located_at entry by hand, and take the tree out of code_paths")
+        lo, hi = hits[0]
+        add = ''.join(f", {k}: {v}" for k, v in words.items() if not re.search(rf'(?:^|[{{,\s]){k}:', blk[lo:hi]))
+        close = blk.rindex('}', lo, hi)
+        k = close
+        while k > lo and blk[k - 1] in ' \t':
+            k -= 1
+        blk = blk[:k] + add + blk[k:]
+        if said:                                # the words that sat on the tree in code_paths, above its entry here
+            ls = blk.rfind('\n', 0, lo) + 1
+            ind = re.match(r'[ \t]*', blk[ls:]).group(0)
+            blk = blk[:ls] + ''.join(f"{ind}{c}\n" for c in said) + blk[ls:]
+        return text[:s] + blk + text[e:]
+
+    @staticmethod
+    def _depend(text, key, bean, comments=()):
+        # the words that sat on the framework's tree in code_paths go with the dependency that now names it
+        line = ''.join(f"  {c}\n" for c in (comments if len(comments) != 1 or len(comments[0]) >= 120 else ())) + \
+            f"  {key}: {{ bean: {bean} }}" + (f"   {comments[0]}" if len(comments) == 1 and len(comments[0]) < 120 else '') + "\n"
+        try:
+            s, e = dmsafe.top_level_span(text, 'depends_on')
+        except dmsafe.UnsafeEdit:
+            lines = text.splitlines(keepends=True)
+            fences = [i for i, l in enumerate(lines) if l.rstrip('\r\n') == '---']
+            at = sum(map(len, lines[:fences[1]]))
+            return text[:at] + "depends_on:\n" + line + text[at:]
+        blk = text[s:e]
+        if not re.match(r'^depends_on:[ \t]*(#.*)?\n', blk):
+            raise CannotRename(f"`depends_on` is written in a form this step does not add to — add `{key}: {{ bean: {bean} }}` by hand")
+        return text[:e] + ('' if blk.endswith('\n') else '\n') + line + text[e:]
+
+    def _registration(self, b, rel, text, fm, beans, dry):
+        reg = fm.get('registration')
+        if not isinstance(reg, dict):
+            return text
+        cid = f"{b}-registration"
+        if cid in beans:
+            raise CannotRename(f"its registration would be the contract {cid}, and a bean of that id is here already")
+        day = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+        for k in ('created', 'expires'):
+            if reg.get(k) is not None and not day.match(str(reg[k])):
+                raise CannotRename(f"registration.{k} is {reg[k]}, and this step writes a gregorian day long only")
+        # the comment on each line of the block is the person's own word, and goes where its fact goes
+        s, e = dmsafe.top_level_span(text, 'registration')
+        said = {m.group(1): m.group(2).rstrip() for m in re.finditer(r'(?m)^[ \t]+([a-z_]+):[^#\n]*?(#[^\n]*)$', text[s:e])}
+        reg_by = reg.get('registrant')
+        # the name as it is known: the domain's own fqdn, where it holds one
+        _name = next((str(x.get('value')) for x in ((fm.get('identity') or {}).get('anchors') or [])
+                      if isinstance(x, dict) and x.get('key') == 'fqdn'), b)
+        prov = fm.get('provenance') if isinstance(fm.get('provenance'), dict) else {}
+        out = ["---", f"bean: {cid}", "genos: contract",
+               f"title: {json.dumps('the registration of ' + _name, ensure_ascii=False)}", "status: active",
+               "summary: " + json.dumps(f"held through {reg.get('registrar')}" + (f" until {reg['expires']}, when it lapses unless renewed" if reg.get('expires') else ''), ensure_ascii=False),
+               "nature: lekton", "identity:", "  status: confirmed", "  anchors:",
+               f"    - {{ key: identifier, value: \"contract:{cid}\", class: logical, establishing: true }}",
+               "provenance: " + _flow_29({'src': prov.get('src', 'observed'), 'by': prov.get('by', 'unknown'),
+                                          'as_of': str(reg.get('observed') or prov.get('as_of'))}),
+               "owned_by: { legal: { crown: logos } }", "responsibility: { legal: { parties: true } }",
+               "over:", f"  - {{ thing: {{ bean: {b} }} }}", "parties:",
+               "  registrant: " + _flow_29({'external': str(reg_by) if reg_by else 'not disclosed by the registry',
+                                            'role': 'registrant'}),
+               "  registrar: " + _flow_29({'external': str(reg.get('registrar')), 'role': 'registrar'}),
+               "words: " + _flow_29({'form': 'written', 'external': 'the registrar\'s registration agreement'})]
+        if reg.get('created') is not None:
+            out += ["timing:", f"  registration: {{ system: gregorian-civil, at: {reg['created']}, unit: day }}"
+                    + (f"   {said['created']}" if said.get('created') else '')]
+        if reg.get('expires') is not None:
+            out += ["clauses:", "  renewal:",
+                    "    what: \"renew the registration, or the name lapses with its DNS and its mail\"",
+                    "    by: registrant", "    permission: required",
+                    f"    due: {reg['expires']}" + (f"   {said['expires']}" if said.get('expires') else ''),
+                    "    notice: { count: 90, unit: day }",
+                    f"    auto_renew: {reg.get('auto_renew', 'unknown')}" + (f"   {said['auto_renew']}" if said.get('auto_renew') else '')]
+            if reg.get('note'):
+                out.append(f"    note: {json.dumps(str(reg['note']), ensure_ascii=False)}")
+        out += ["---", f"Read from {reg.get('source')}." if reg.get('source') else "Its registration, as the domain's record held it.", ""]
+        new = _drop_block_29(text, 'registration')
+        self.want.pop('registration', None)
+        cpath = os.path.join(os.path.dirname(beans[b][0]), cid + '.md')
+        if not dry:
+            write_text(cpath, '\n'.join(out), LF)
+            self.new_beans.append(cid)
+        self._note(rel, 'registration', 'registration', f"the contract [[{cid}]], over it")
+        return new
+
+    def _workspace(self, rel, text, fm, roots_seen):
+        """A working copy is a position in its host's filesystem (29.1): `system` written before its `at`, read from the
+        position's own form as a code tree's is."""
+        ws = fm.get('workspace')
+        if not isinstance(ws, dict) or not ws.get('at') or ws.get('system'):
+            return text
+        fs = _fs_system_29(str(ws['at']), roots_seen)
+        if self.forms.get(fs) and not dmparse.law_match(self.forms[fs], str(ws['at'])):
+            raise ForAPerson(f"its workspace.at is '{ws['at']}', which is not one position in {fs}: a working copy is one "
+                             f"tree — write the one the session committed from (`root:<name>`), and any other in its `note`")
+        s, e = dmsafe.top_level_span(text, 'workspace')
+        blk = text[s:e]
+        if re.match(r'^workspace:[ \t]*(#[^\n]*)?\n', blk):          # a block: a line of its own, above `at:`
+            new = re.sub(r'(?m)^([ \t]+)(at:)', lambda m: f"{m.group(1)}system: {fs}\n{m.group(1)}{m.group(2)}", blk, count=1)
+        else:                                                           # one flow mapping: beside it
+            new = re.sub(r'([{,][ \t]*)(at:)', lambda m: f"{m.group(1)}system: {fs}, {m.group(2)}", blk, count=1)
+        self.want['workspace'] = dict(self.want.get('workspace') or {}, system=fs)
+        self._note(rel, 'workspace', 'at', f"system: {fs}")
+        return text[:s] + new + text[e:]
+
+    def report(self):
+        beans = sorted(r for r in self.facts if r.startswith('beans/'))
+        parts = []
+        for what in ('coding', 'git_host', 'code_paths', 'registration', 'workspace'):
+            hit = [r for r in beans if any(w == what for w, _o, _n in self.facts[r])]
+            if hit:
+                parts.append(f"{what} in {len(hit)} bean(s)")
+        if self.new_beans:
+            parts.append("written: " + ', '.join(f"[[{b}]]" for b in self.new_beans))
+        if self.problems:
+            parts.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
+        return ('std-vocab 29.0, the line from place to location — ' + '; '.join(parts or ['nothing to translate']),
+                [f"[[{os.path.basename(r)[:-3]}]]" for r in beans] + [f"[[{b}]]" for b in self.new_beans])
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
@@ -2472,6 +3005,13 @@ def main():
             if vtuple(before) < STEP_27 or _s27.left():
                 step27 = _s27
                 step27.plan()
+        # ...and so is one that still writes a code apart from its scheme, a `git_host`, a `code_paths`, a `registration`.
+        step29 = None
+        if STEP_29 <= vtuple(vocab_version(rel)):
+            _s29 = Step29(rel, a.tag, a.keep_on_failure)
+            if vtuple(before) < STEP_29 or _s29.left():
+                step29 = _s29
+                step29.plan()
         # WHAT THE GARDEN RECEIVES, AND WHAT IT HELD, read by the one reader (bin/dmpass.py): `want` is what a garden
         # extending its profiles receives from the release; `have` is every file of the garden its own release keeps, so
         # a file it no longer receives — a retired tool, the asset of a profile it left — leaves, and a file of its own
@@ -2488,7 +3028,7 @@ def main():
         # fails) once left release files copied, both pins moved, beans half translated and no journal entry.
         try:
             return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22, step23,
-                                 profiles, step24, step26, step27)
+                                 profiles, step24, step26, step27, step29)
         except BaseException as e:
             put_back(added + (step21.created if step21 else []))
             print(f"NOT {verb.upper()}: the upgrade stopped midway"
@@ -2557,7 +3097,7 @@ def dropped_line(dropped):
 
 
 def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None,
-                  profiles=None, step24=None, step26=None, step27=None):
+                  profiles=None, step24=None, step26=None, step27=None, step29=None):
     """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
     caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
     changed = []
@@ -2666,6 +3206,10 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         beans += [b for b in _b if b not in beans]
         if 'VOCAB.md' in step27.facts and 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
             changed.append('VOCAB.md (translated)')
+    if step29:
+        _t, _b = step29.apply()
+        translated.append(_t); steps.append(_t)
+        beans += [b for b in _b if b not in beans]
 
     _vp = os.path.join(ROOT, 'VOCAB.md')
     if os.path.isfile(_vp):
@@ -2701,7 +3245,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     if not (changed or added or removed or repinned or beans):
         # NOTHING MOVED IS NOT NOTHING TO DO. With --keep-on-failure a step that could translate nothing still names what
         # it left for a person, and the gate still refuses the garden for it: saying "nothing to do" hid both.
-        left = [p for s in (step22, step23, step24, step26, step27) if s for p in s.problems]
+        left = [p for s in (step22, step23, step24, step26, step27, step29) if s for p in s.problems]
         if left:
             print(f"NOTHING TRANSLATED: this garden runs {a.tag} ({sha[:12]}) already, and {len(left)} thing(s) are a "
                   f"person's to do, not a translation's:\n" + '\n'.join('  - ' + p for p in left) +
@@ -2712,7 +3256,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     # ONLY WORDS MOVED: the garden runs this release already, and what changed is the translation of what came in since it
     # crossed. The law did not move and nothing is a person's to decide — the translation is the one the garden adopted
     # when it crossed — so the entry asks nothing, and says RULE-CHANGE only where VOCAB.md itself was translated.
-    ran = [s for s in (step22, step23, step24, step26, step27) if s]
+    ran = [s for s in (step22, step23, step24, step26, step27, step29) if s]
     words_only = bool(ran and all(s.leftover for s in ran) and not (added or removed or repinned)
                       and all(c.endswith(('(translated)', '(re-keyed)')) for c in changed))
     since = ' and '.join(w for s, w in ((step22, "into std-vocab 22.0 still in 21.0's words"),
@@ -2720,7 +3264,9 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
                                                  "otherwise"),
                                         (step24, "into std-vocab 24.0 with a clause's `when` still in prose"),
                                         (step26, "into std-vocab 26.0 still in 25.x's words"),
-                                        (step27, "into std-vocab 27.0 with a day still typed `iso_date`")) if s)
+                                        (step27, "into std-vocab 27.0 with a day still typed `iso_date`"),
+                                        (step29, "into std-vocab 29.0 with a code apart from its scheme, or a word it "
+                                                 "folded")) if s)
     if words_only:
         verb = 'translated'
 

@@ -116,6 +116,9 @@ Ownership is separate from **habitat**: a running instance is owned through its 
 - **A moment is in time and in place.** No time is absolute: a calendar's day begins at a moment of some place, and an
   offset is read from the prime meridian. A moment may say where it was (`where`), beside its time in one entry; a
   being's place says when it held (`during`). A meter belongs to a system, never to the aspect it is on.
+- **Not everything lies in time.** The ordinal line holds positions that say which — the first, the second — and is
+  no time and no place: a sequence of values written on it holds at none of them, and says what it is as a whole
+  (`whole`, by an aggregate): two nodes of 2 are 4. An ordinal number counts from the first of the line it is read on.
 - **Money is a quantity.** An amount is `{ count, unit }`: the unit is a currency, the count a whole number or a
   decimal string with no more places than the currency uses. A count or a share is what was written: plain decimal
   digits, as many as the law's pattern bounds — a spelling YAML would read as another number (`010`, `0x64`, `1:30`)
@@ -145,7 +148,7 @@ Ownership is separate from **habitat**: a running instance is owned through its 
 
 ## Relations
 A small set of typed edges — `owned_by`, `responsibility`, `lives_in`, `instance_of`, `part_of`,
-`depends_on`, `consumes`, `creator`, `git_host` and a few more (`python3 bin/dmrules.py` lists them) — plus
+`depends_on`, `consumes`, `creator` and a few more (`python3 bin/dmrules.py` lists them) — plus
 one open fallback, `refs`.
 - Every edge is `{ bean|mapping: <id> [, field: <key>] }`, and the gate resolves it: a missing target or field
   is an error.
@@ -171,7 +174,9 @@ and a judge's weighing of criteria (`weighings`) is written as judgments, its we
 ## The vocabulary
 The rules are data, not code.
 - **`seed/std-vocab.md`** is the standard every garden pins. Opt-in **profiles** add groups of rules for
-  gardens that need them (`code`, `network`, `domain`, `knowledge`, `view`).
+  gardens that need them (`accounting`, `code`, `network`, `domain`, `knowledge`, `view`). A profile speaks its field's
+  words: it brings terms of its own, and adds attributes to a term of the core (`overlays`) without rewriting any. Every
+  profile composes with every other — no name held two ways, no fact in two places — so a garden may extend them all.
 - A profile may bring an **asset**: `assets/<profile>/`, the code, templates and guide that put the profile's facts to
   use. A garden receives it while it extends the profile — at birth (`seed/germinate.py --profile <profile>`), or by
   the one act that opts in and out (`bin/dmupgrade.py <release> --extend <profile>`, `--retract <profile>`) — and its
