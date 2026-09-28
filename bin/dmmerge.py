@@ -1362,6 +1362,10 @@ def uncovered(seeds, merged_vocab, std_fm):
     for p in merged_vocab['profiles']:
         for t in ((std_fm.get('profiles') or {}).get(p, {}).get('terms') or []):
             defs[t['term']] = t
+    # ...and what those profiles add to the core's terms (29.0: the code profile requires a location on a codebase)
+    for _p, _o in dmparse.profile_overlays(std_fm, merged_vocab['profiles']):
+        if isinstance(_o, dict) and _o.get('term') in defs:
+            defs[_o['term']] = dmparse.extend_term(defs[_o['term']], _o)
     defs.update(merged_vocab['terms'])
     terms = set(defs)
 
