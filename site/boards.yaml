@@ -1,0 +1,200 @@
+# The boards of the one page: what each lens is told of each mechanism. The keeper's board is read from the release
+# itself (the law's meanings, their reasons, the catalogue's rules, relations and checks); these are the words a person
+# writes. `items` are the law's own parts the mechanism is made of, as the catalogue names them.
+lenses:
+  - { id: person,   label: "What is it?",            who: "someone curious" }
+  - { id: gardener, label: "What do I do?",          who: "a gardener" }
+  - { id: agent,    label: "How is it written?",     who: "an agent" }
+  - { id: keeper,   label: "Why is it so, and where?", who: "a keeper of the law" }
+mechanisms:
+  - id: who
+    short: "Who said it"
+    name: "Who said it"
+    glyph: "✎"
+    items: [term:provenance_src, term:identity_status, term:identifier, section:identity_policy, section:provenance_record]
+    staples: { what: "an identity is given to a kind of being", between: "a fact keeps who said it as it crosses", gate: "a fact with no source does not pass" }
+    person: >
+      Every fact in the notebook says who said it and how they know — you, or an agent; told, measured or guessed. A
+      thing is recognised by what identifies it (a serial, a domain name, a code someone published), never by the name
+      of its file, so two notebooks that never met can find the same thing.
+    gardener: >
+      You say what is true; the agent writes it with you as its source. What an agent later measures is written beside
+      what you said, never over it — only you change your own word. You ratify what identifies a thing.
+    agent_form: |
+      identity:
+        status: confirmed
+        anchors:
+          - { key: serial, value: "4XK9-2217", class: hardware, establishing: true }
+      provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }
+    agent_note: "An agent alone records what it observed or inferred; an identity anchor is a person's to ratify."
+    refusal: "anchor 'serial' establishes, and another bean holds the same value — two beings cannot share one identity"
+  - id: what
+    short: "What & whose"
+    name: "What it is, and whose"
+    glyph: "◈"
+    items: [section:natures, section:gene, section:crown, term:owned_by, term:responsibility]
+    staples: { who: "its kind says which identities it may take", money: "an agreement may be owned by neither party", gate: "every ownership chain must end" }
+    person: >
+      A thing is first a nature — soma, a body; lekton, what exists by being said; empsychon, what lives — then its
+      kind. Each thing has exactly one owner and one who answers for it, per facet, and every chain ends: at a person,
+      at someone outside the notebook, or at the crown, where nobody owns.
+    gardener: >
+      Say what a thing is and who it belongs to; the agent picks its kind and writes who answers for it. A domain is
+      held, not owned; a person owns themselves; an agreement between two may be owned by neither.
+    agent_form: |
+      genos: host
+      nature: soma
+      owned_by: { legal: { owner: { bean: sam } } }
+      responsibility: { legal: { holder: { bean: sam } } }
+    agent_note: "The kind refines the nature; the rules for what a thing may say attach to its nature and every kind inherits them."
+    refusal: "owned_by[legal] needs one of owner, contract, external, crown — every chain ends somewhere"
+  - id: when
+    short: "When"
+    name: "When"
+    glyph: "◷"
+    items: [value_types, term:timing, section:anchor_systems, section:aspects]
+    staples: { where: "a moment is in time and in place together", line: "a series lies along a line of time", money: "a clause falls due on a day" }
+    person: >
+      A day or a moment is a position, in any calendar — Gregorian, Persian, Hebrew and more — at the precision it was
+      said. Where nobody said the day, it is placed by what it followed. Deep time too, and lines that hold at no time:
+      the first, the second.
+    gardener: >
+      Say the day as you know it, in your own calendar; say "after the dinner" if that is all you know. Nothing is
+      invented to fill a gap: what nobody said stays unsaid, and the notebook says so.
+    agent_form: |
+      timing:
+        start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }
+      accepted: { system: event-anchored, at: "after:dinner-at-sams", unit: day }
+    agent_note: "A day may be written short (2026-09-20) or long, as one entry of timing, to say its system, its unit, or what it followed."
+    refusal: "'2026-02-30' is no day its calendar has"
+  - id: where
+    short: "Where"
+    name: "Where, and what it takes"
+    glyph: "⌖"
+    items: [section:placement, term:capacity, term:located_at, term:lives_in, term:workspace]
+    staples: { when: "a meeting takes the hours of those present", what: "a host is a body with room to give", pages: "a page draws where things are" }
+    person: >
+      Things are in, at or among other things — a code in its list, a record in a register, a program on a machine, a
+      meeting in someone's hours, a server in its rack. Some placements take nothing from where they are; some take a
+      share; some take room no other thing can take at once.
+    gardener: >
+      Say where a thing is and, if it matters, how much room it takes and how much its host can hold. The notebook
+      warns when shares are promised past a host, and refuses two things in one place at once.
+    agent_form: |
+      located_at:
+        - { system: local-frame, openness: here, at: "rack-a#u17", takes: [ { count: 2, unit: item } ] }
+      capacity:
+        - { count: 42, unit: item, placement: location }
+    agent_note: "A location in a being's own frame names that being; stated alone (host), the place is known and the position not."
+    refusal: "takes the room at rack-a#u17 in rack-a, which web-1 takes at the same time — two beings do not take the same room at once"
+  - id: codes
+    short: "Codes"
+    name: "Codes"
+    glyph: "#"
+    items: [value_types, section:knowledge_schemes, term:observations, section:registry_files]
+    staples: { who: "a code a publisher gave identifies what it classifies", money: "an account is a code in the garden's own plan", line: "a reading is coded in a scheme" }
+    person: >
+      An occupation, a field of knowledge, a technology, an account in your own chart: each is a code of a scheme,
+      written with the scheme it belongs to, so two notebooks mean the same thing by it.
+    gardener: >
+      Keep your own classifications as a scheme of your own; a new code is one new row, journalled like any change.
+      Published schemes — occupations, fields, technologies — come with the release.
+    agent_form: |
+      knowledge:
+        - { code: technology:samba, rel: uses }
+        - { code: isced-f-2013:0612, rel: draws_on, topic: "network file sharing" }
+    agent_note: "One form everywhere a code is written: <scheme>:<code>, checked against the scheme it names."
+    refusal: "'0699' is not a code of isced-f-2013"
+  - id: money
+    short: "Money"
+    name: "Money and agreements"
+    glyph: "⇄"
+    items: [term:parties, term:clauses, term:transactions, term:words, section:profiles]
+    staples: { when: "what falls due, and when it lapses", codes: "where each amount belongs", between: "the other party keeps a notebook too" }
+    person: >
+      An agreement says who is bound and what each owes; a payment says who paid and who bears it. What one person owes
+      another is read from what was paid and agreed — never written down beside it, where it could drift.
+    gardener: >
+      Tell the agent what was agreed and what was paid, in the currency it was paid in. Your notebook reads the balance;
+      it tells you ninety days before a name you hold lapses.
+    agent_form: |
+      parties:
+        sam: { who: { bean: sam }, accepted: 2026-09-01 }
+        ali: { who: { bean: ali } }
+      transactions:
+        september: { what: "the rent", amount: { count: "100.00", unit: TRY }, paid_by: [ { party: sam } ] }
+    agent_note: "Amounts are exact, in the currency's own places; the parts of an amount add up to its whole, plan by plan."
+    refusal: "analytic_distribution in the plan projects adds up to 90 TRY, and amount is 100 TRY"
+  - id: line
+    short: "Along a line"
+    name: "Along a line"
+    glyph: "∿"
+    items: [term:series, section:aggregates, section:operations, term:selections]
+    staples: { when: "a line of time, or a line of order", codes: "what a channel holds is coded", money: "a total is read, not stored" }
+    person: >
+      What a gauge held at each moment, what was found of a thing when it was read: series and readings. What follows
+      from them — a total, a trend, a share — is computed each time it is asked, so it never drifts from what was recorded.
+    gardener: >
+      Ask the notebook a question — how much, how many, which first — and it answers with the lines it read and how.
+      Nothing it computes is written back as a fact.
+    agent_form: |
+      series:
+        by-grid:
+          grid: { of: ordinal, in: ordinal-number, from: "ordinal:1", every: { count: 1 } }
+          holds: [ { name: value, quantity: number, unit: item, stands_for: point } ]
+          whole: { value: { count: 4, unit: item }, of: value, by: sum }
+    agent_note: "A series' whole is checked exactly; a gap in a node leaves a whole nobody can check, and that is said."
+    refusal: "says 5 item, and the sum of `value` over its 2 row(s) is 4 item"
+  - id: between
+    short: "Between gardens"
+    name: "Between gardens"
+    glyph: "⇋"
+    items: [term:consent, term:shared_identifiers, term:merge_open, section:planes]
+    staples: { who: "a fact keeps its source as it crosses", money: "a shared cost crosses as a proposal", gate: "the other side's gate takes it in" }
+    person: >
+      Two notebooks meet as two networks do: each its own, neither reaching inside the other. What passes is only ever
+      a proposal — one file laid beside, taken in by the other gardener's own hand.
+    gardener: >
+      Agree with the other person what you share; your agent writes the proposal. Nothing is sent for you, and nothing
+      the other side proposes enters your notebook until you commit it.
+    agent_form: |
+      consent: { bean: ali-consent }
+      # the proposal is written beside the garden, never inside another:
+      # python3 bin/dmpropose.py <beans...> --to <garden>
+    agent_note: "A person who is not the gardener is kept by name only with their consent on record."
+    refusal: "names a person who is not the gardener, and no consent of theirs is recorded"
+  - id: gate
+    short: "Gate & journal"
+    name: "The gate and the journal"
+    glyph: "⛨"
+    items: [section:schema_language, section:layers, section:retired, section:senses]
+    staples: { who: "no fact without its source", what: "the rules attach to natures", between: "each garden's gate is its own" }
+    person: >
+      The rules are data, versioned, read by a gate on every commit; the gate itself names no term. Every change is
+      journalled in the commit that makes it. A change to the rules is itself a journalled change a person ratifies.
+    gardener: >
+      You ratify what an agent may not decide: identities, safety, and every change to the rules. A new release reaches
+      your notebook only when you adopt it — translated, proved, and journalled.
+    agent_form: |
+      python3 bin/dmsave.py "agent for sam" "the NAS on .21" \
+        --body "- action: [[hallway-nas]] observed on 192.168.1.21"
+    agent_note: "One command journals, stages and commits; the gate judges what is committed, and its refusal says the fix."
+    refusal: "staged, but the staged journal entry never names it — write [[omid-watch]] in the entry"
+  - id: pages
+    short: "Pages"
+    name: "Pages"
+    glyph: "▦"
+    items: [section:view_lenses, section:view_archetypes]
+    staples: { where: "a page draws where things are and how they relate", line: "live values beside the drawing", gate: "a page is checked against the law" }
+    person: >
+      A notebook can be read as pages: its parts, how work flows between them, and the live values beside each — drawn
+      from the notebook itself, never kept anywhere else.
+    gardener: >
+      Ask for a page of what you care about. It is drawn by one module your notebook keeps, reused from page to page,
+      and checked against the law like everything else.
+    agent_form: |
+      view:
+        drawings: "file:assets/view/drawings.py"
+      # python3 assets/view/bin/dmview.py check
+    agent_note: "Every screen is a view page; write each drawing once, reuse it; the garden is the only store."
+    refusal: "dmview: the page and its drawings disagree — a drawing names an element the page does not hold"
