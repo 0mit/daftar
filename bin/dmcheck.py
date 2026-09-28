@@ -4303,6 +4303,13 @@ def check_position_hosts():
     for (_ib, base), (fm, _b) in sorted(docs.items()):
         if not _ib:
             continue
+        ws = fm.get('workspace')
+        if isinstance(ws, dict) and isinstance(ws.get('host'), dict) and ws.get('at'):
+            _named = _named_host(ws.get('system'), ws.get('at'))
+            _hb = ws['host'].get('bean')
+            if _named and _hb and _named not in dmwhere.names_of(_hb, (docs.get((True, _hb)) or ({}, ''))[0]):
+                errors.append(f"{base}: workspace.at names the host {_named}, and `host` is {_hb} — a working copy is on "
+                              f"the one machine its position names" + _rule('terms[workspace].schema.attrs.at', 'workspace'))
         for i, e in enumerate(fm.get('located_at') or [] if isinstance(fm.get('located_at'), list) else []):
             if not isinstance(e, dict) or e.get('host') is None:
                 continue
@@ -4395,6 +4402,75 @@ def check_capacity():
             seen.setdefault(k, (base, where))
 
 
+def _walk_related(a, b):
+    """True when one bean lives in or is part of the other, by the `lives_in` and `part_of` walks: a service answers on
+    its machine's address as the machine does."""
+    def up(x):
+        seen = set()
+        while x and x not in seen:
+            seen.add(x)
+            fm = (docs.get((True, x)) or ({}, ''))[0] or {}
+            nxt = [v.get('bean') for v in (fm.get('lives_in'), fm.get('part_of')) if isinstance(v, dict) and v.get('bean')]
+            for n in nxt[1:]:
+                yield n
+            x = nxt[0] if nxt else None
+            if x:
+                yield x
+    return b in set(up(a)) or a in set(up(b))
+
+
+def check_ports_taken():
+    """A PORT IS ROOM (29.1): where a being answers — a port on an address, over a transport — is a location that no
+    other takes at once, and two beings binding it are refused unless one lives in, or is part of, the other."""
+    seen = {}
+    for (_ib, base), (fm, _b) in sorted(docs.items()):
+        if not _ib or fm.get('status') not in ('active', None):
+            continue
+        eps = fm.get('endpoints')
+        for k, e in (eps.items() if isinstance(eps, dict) else enumerate(eps) if isinstance(eps, list) else []):
+            if not isinstance(e, dict) or e.get('at') is None or e.get('port') is None:
+                continue
+            key = (str(e.get('system')), str(e.get('at')), str(e.get('transport')), str(e.get('port')))
+            if key in seen and seen[key][0] != base and not _walk_related(seen[key][0], base):
+                errors.append(f"{base}: endpoints[{k}] answers on {key[1]} port {key[3]}/{key[2]}, which {seen[key][0]} "
+                              f"({seen[key][1]}) binds as well — one port on one address is one listener's at a time; one "
+                              f"of them has moved, or one lives in the other (`lives_in`)" + _rule('placement', 'placement'))
+            else:
+                seen.setdefault(key, (base, f"endpoints[{k}]"))
+
+
+def check_time_taken():
+    """A HAPPENING TAKES THE TIME OF THOSE PRESENT AT IT (29.1; the rung `time`). Its span is its `timing` from `start`
+    to `end`, both moments; whose time it takes is its `refs` whose `rel` the genos's `takes_time_of` names. A being
+    present at two happenings whose spans overlap is refused: nobody is at two dinners at once. A happening whose span
+    is not stated to the moment is not judged."""
+    import dmcal
+    spans = {}
+    for (_ib, base), (fm, _b) in sorted(docs.items()):
+        if not _ib:
+            continue
+        rels = (GENE.get(fm.get('genos')) or {}).get('takes_time_of') if isinstance(fm.get('genos'), str) else None
+        tm = fm.get('timing') if isinstance(fm.get('timing'), dict) else {}
+        if not isinstance(rels, list) or not isinstance(tm.get('start'), dict) or not isinstance(tm.get('end'), dict):
+            continue
+        try:
+            lo, hi = dmcal.moment(tm['start'])[0], dmcal.moment(tm['end'])[0]
+        except Exception:
+            continue
+        if hi <= lo:
+            continue
+        for _k, r in (fm.get('refs') or {}).items() if isinstance(fm.get('refs'), dict) else []:
+            if isinstance(r, dict) and r.get('rel') in rels and r.get('bean'):
+                spans.setdefault(str(r['bean']), []).append((lo, hi, base))
+    for who, lst in sorted(spans.items()):
+        lst.sort()
+        for (l1, h1, b1), (l2, h2, b2) in zip(lst, lst[1:]):
+            if l2 < h1 and b1 != b2:
+                errors.append(f"{b2}: {who} is present at it and at {b1}, and their times overlap — a happening takes the "
+                              f"time of those present at it, and nobody spends one hour twice; one of the times, or who "
+                              f"was there, is mis-stated" + _rule('placement', 'placement'))
+
+
 def _part_of_either(a, b):
     """True when one bean is part of the other, by the `part_of` walk: a disk takes its server's room as the server does."""
     def up(x):
@@ -4412,6 +4488,8 @@ PLACE_PLIES = ((check_fixes, "a boundary marked in a being is said at both ends,
                (check_placement_law, "a term that places a being names a rung of the line from place to location"),
                (check_position_hosts, "a location's host is the one its position names"),
                (check_capacity, "what is placed takes from where it is placed, within what that holds"),
+               (check_ports_taken, "a port on an address is one listener's at a time"),
+               (check_time_taken, "a happening takes the time of those present at it"),
                (check_root_hosts, "a root is a place on the host that declares it"),
                (check_relative_positions, "a position from another being resolves through where that being is"),
                (check_place_law, "a system's datum, cells, boundaries and unit symbols are rows the law holds"))

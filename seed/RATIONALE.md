@@ -1624,6 +1624,12 @@ is a fact about a network interface, not about anything a being can reach. A mai
 there — it carries `{ port: 25, service: postscreen }` beside `port: "110/143/993/995"`, four
 ports jammed into one string, and `service` naming IMPLEMENTATIONS where it means protocols.
 
+## profiles.network.terms[endpoints].placement
+
+WHERE A BEING ANSWERS IS A LOCATION THAT TAKES ROOM (29.1): a port on an address is one listener's at a time, so two
+beings binding it are refused unless one lives in, or is part of, the other. Its system is one of place: an endpoint
+placed after an event, which `any` let in, is no address — and a view's reference, which reads one, is held the same.
+
 ## profiles.network.terms[endpoints].schema.attrs.transport
 
 THE TRANSPORT IS USUALLY THE PROTOCOL'S OWN, so an entry states it only when it differs: a DNS server's second
@@ -2769,6 +2775,12 @@ read and merge one another's branches with no network hop, which is the sync-bet
 
 Every session before 2026-08-07 worked the main copy directly, on `master`.
 
+## terms[workspace].schema.attrs.system
+
+A WORKING COPY IS A POSITION (29.1). Its `at` held a pattern of its own, a third copy of the filesystems' forms, loose
+enough to read `root:a (main) and root:b (main)` as a path on a host called `root`. It names its filesystem now, and its
+`at` is in that system's one form — and on the one machine it names, which the gate holds to `host`.
+
 ## terms[capture].meaning
 
 THE THIRD STATE GROUND RULE 3 NOW ALLOWS, ratified 2026-08-07. Until today a fact was either OURS or
@@ -2919,6 +2931,11 @@ the host's garden and in a guest's would disagree about its owner every time the
 one agreement would; and nobody owns an evening they shared. So it may end at the crown, `logos`, as an agreement
 may. It is answered for by whoever hosted it — a holder, one being who can be asked — and not by the `parties` form,
 because a happening binds no one to anything.
+
+## gene[event].takes_time_of
+
+WHOSE HOURS A HAPPENING TAKES (29.1): those its `refs` name `present` or its `host`. An invitation takes nobody's hour —
+RFC 5545's TRANSPARENT — and two happenings whose spans overlap cannot both have had one person present.
 
 ## recurrence_form
 
@@ -3772,7 +3789,9 @@ order — order, presence, habitat, location — each saying what it `takes` fro
 or room. The extracted concept is the economists' subtractability (Samuelson 1954; the Ostroms 1977): whether one
 placement leaves less for the next. A share can be promised past what a host holds, as a hypervisor overcommits its
 memory, and is warned; room cannot, as two bodies are never in one place, and is refused. Time asks the same question —
-RFC 5545's TRANSP says whether an event takes an attendee's time — and is the sibling this line does not yet carry.
+RFC 5545's TRANSP says whether an event takes an attendee's time — and the line carries it (29.1) as place's sibling,
+the rung `time`: Aristotle's categories set *pou* (where) beside *pote* (when), and Arabic grammar's vessel, ẓarf, is
+of place and of time alike. A happening takes the hours of those present at it, and nobody spends one hour twice.
 
 ## value_types[coding]
 

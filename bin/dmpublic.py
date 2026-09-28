@@ -161,6 +161,16 @@ def estate_words(garden, public=frozenset()):
     return {w.lower() for w in names | values if len(w) >= 3}
 
 
+def denied_words(garden):
+    """The words the gardener keeps out of what is published, whatever the world knows of them: the garden's own
+    `PUBLIC-DENY`, one word per line, `#` a comment. A decision recorded in the garden, where the reason for it is kept —
+    never in this repository, which would have to say the word to guard it."""
+    p = os.path.join(garden, 'PUBLIC-DENY')
+    if not os.path.isfile(p):
+        return set()
+    return {l.split('#', 1)[0].strip().lower() for l in open(p, encoding='utf-8') if l.split('#', 1)[0].strip()}
+
+
 @functools.lru_cache(maxsize=None)
 def _allow_lines():
     """seed/PUBLIC-ALLOW as [(word, [path, ...])]: a line with no path is public everywhere."""
@@ -263,6 +273,7 @@ def main():
     quiet = '--quiet' in a
     public = public_words(garden)
     words = estate_words(garden, public) - public
+    denied = denied_words(garden)
     bad = []
     if '--no-files' not in a:
         # -z: a path holding a space is one path, not two that exist nowhere
@@ -275,13 +286,21 @@ def main():
                 continue
             for w, line in hits(body, words - allowed_in(f, repo)).items():
                 bad.append((f"{f}:{line}", w))
+    if rng and denied:
+        # A WORD THE GARDENER KEEPS OUT is refused in what the range ADDS, whatever the world knows of it; what was
+        # published before stays as it is, and is not read again
+        added = '\n'.join(l[1:] for l in subprocess.run(['git', 'diff', '--unified=0', rng], capture_output=True, text=True,
+                                                         encoding='utf-8', errors='replace', cwd=repo).stdout.splitlines()
+                          if l.startswith('+') and not l.startswith('+++'))
+        for w, _line in hits(added, denied).items():
+            bad.append((f"a line added in {rng}", w))
     if rng:
         msgs = subprocess.run(['git', 'log', '--format=%H%n%B', rng], capture_output=True, text=True,
                               encoding='utf-8', errors='replace', cwd=repo).stdout
-        for w, _line in hits(msgs, words).items():
+        for w, _line in hits(msgs, words | denied).items():
             bad.append((f"commit message in {rng}", w))
     if text_file:
-        for w, line in hits(open(text_file, encoding='utf-8', errors='replace').read(), words).items():
+        for w, line in hits(open(text_file, encoding='utf-8', errors='replace').read(), words | denied).items():
             bad.append((f"{text_file}:{line}", w))
     if not bad:
         if not quiet:

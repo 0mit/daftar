@@ -2580,7 +2580,9 @@ class Step29:
 
     def left(self):
         for _p, fm in self._beans().values():
-            if any(k in fm for k in ('git_host', 'code_paths', 'registration')) or _recode_29(fm, self.schemes) != fm:
+            ws = fm.get('workspace')
+            if any(k in fm for k in ('git_host', 'code_paths', 'registration')) or _recode_29(fm, self.schemes) != fm \
+                    or (isinstance(ws, dict) and ws.get('at') and not ws.get('system')):
                 self.leftover = True
                 return True
         return False
@@ -2647,6 +2649,7 @@ class Step29:
                 text = self._git_host(b, rel, text, fm, names)
                 text = self._code_paths(b, rel, text, fm, roots_seen, own)
                 text = self._registration(b, rel, text, fm, beans, dry)
+                text = self._workspace(rel, text, fm, roots_seen)
                 # PROVED: the whole front matter now holds exactly what 29.0 holds of it, and nothing else moved
                 got = _parse(text)[0]
                 if got != self.want:
@@ -2841,10 +2844,30 @@ class Step29:
         self._note(rel, 'registration', 'registration', f"the contract [[{cid}]], over it")
         return new
 
+    def _workspace(self, rel, text, fm, roots_seen):
+        """A working copy is a position in its host's filesystem (29.1): `system` written before its `at`, read from the
+        position's own form as a code tree's is."""
+        ws = fm.get('workspace')
+        if not isinstance(ws, dict) or not ws.get('at') or ws.get('system'):
+            return text
+        fs = _fs_system_29(str(ws['at']), roots_seen)
+        if self.forms.get(fs) and not dmparse.law_match(self.forms[fs], str(ws['at'])):
+            raise ForAPerson(f"its workspace.at is '{ws['at']}', which is not one position in {fs}: a working copy is one "
+                             f"tree — write the one the session committed from (`root:<name>`), and any other in its `note`")
+        s, e = dmsafe.top_level_span(text, 'workspace')
+        blk = text[s:e]
+        if re.match(r'^workspace:[ \t]*(#[^\n]*)?\n', blk):          # a block: a line of its own, above `at:`
+            new = re.sub(r'(?m)^([ \t]+)(at:)', lambda m: f"{m.group(1)}system: {fs}\n{m.group(1)}{m.group(2)}", blk, count=1)
+        else:                                                           # one flow mapping: beside it
+            new = re.sub(r'([{,][ \t]*)(at:)', lambda m: f"{m.group(1)}system: {fs}, {m.group(2)}", blk, count=1)
+        self.want['workspace'] = dict(self.want.get('workspace') or {}, system=fs)
+        self._note(rel, 'workspace', 'at', f"system: {fs}")
+        return text[:s] + new + text[e:]
+
     def report(self):
         beans = sorted(r for r in self.facts if r.startswith('beans/'))
         parts = []
-        for what in ('coding', 'git_host', 'code_paths', 'registration'):
+        for what in ('coding', 'git_host', 'code_paths', 'registration', 'workspace'):
             hit = [r for r in beans if any(w == what for w, _o, _n in self.facts[r])]
             if hit:
                 parts.append(f"{what} in {len(hit)} bean(s)")

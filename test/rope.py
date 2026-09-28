@@ -170,6 +170,53 @@ st = run(sys.executable, os.path.join(G, "bin", "dmstale.py"), cwd=G).stdout
 check("...and dmstale reads the renewal as it read the registration: its day, its registrar, whether it renews itself",
       "example-org-registration.clauses[renewal]" in st and "auto_renew=disabled" in st and "Example Registrar Inc." in st, st[-600:])
 
+# ---- 29.1: time is place's sibling, a port is room, a working copy is a position --------------------------------------------
+_voc = open(os.path.join(G, "VOCAB.md")).read()
+open(os.path.join(G, "VOCAB.md"), "w").write(_voc.replace("extends_profiles: [code, domain, knowledge]",
+                                                           "extends_profiles: [code, domain, knowledge, network]"))
+def event(name, start, end, rel="present"):
+    return (f'---\nbean: {name}\ngenos: event\ntitle: "{name}"\nstatus: active\nsummary: "a dinner"\nnature: lekton\n'
+            f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "event:{name}", class: logical, establishing: true }} ] }}\n'
+            + PROV + 'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+            f'timing:\n  start: {{ system: gregorian-civil, at: "{start}", unit: minute }}\n'
+            f'  end: {{ system: gregorian-civil, at: "{end}", unit: minute }}\n'
+            f'refs:\n  guest: {{ bean: sam, rel: {rel} }}\n---\nA dinner.\n')
+write("dinner-a", event("dinner-a", "2026-09-12 19:30+03:00", "2026-09-12 22:00+03:00"))
+write("dinner-b", event("dinner-b", "2026-09-12 21:00+03:00", "2026-09-12 23:00+03:00"))
+out = gate()
+check("a meeting takes the hours of those present at it: sam at two dinners whose times overlap is refused",
+      "sam is present at it and at dinner-a, and their times overlap" in out, out[-900:])
+write("dinner-b", event("dinner-b", "2026-09-12 22:00+03:00", "2026-09-12 23:00+03:00"))
+check("...one after the other is no overlap", " 0 error(s)" in gate(), "")
+write("dinner-b", event("dinner-b", "2026-09-12 21:00+03:00", "2026-09-12 23:00+03:00", rel="invited"))
+check("...and an invitation takes no one's hour (RFC 5545's TRANSPARENT): only those present are judged", " 0 error(s)" in gate(), "")
+EP = 'endpoints:\n  - { protocol: ssh, system: ipv4, at: "192.0.2.10", port: 22, exposure: lan }\n'
+write("mx-1", host("mx-1", EP))
+write("mx-2", host("mx-2", EP))
+out = gate()
+check("a port is room: two beings answering on one port of one address are refused",
+      "answers on 192.0.2.10 port 22" in out and "mx-1" in out, out[-900:])
+write("mx-2", host("mx-2", EP + "part_of: { bean: mx-1 }\n"))
+check("...unless one is part of the other", " 0 error(s)" in gate(), "")
+write("mx-2", host("mx-2", EP.replace("system: ipv4, at: \"192.0.2.10\"", "system: event-anchored, at: \"after:dinner-a\"")))
+out = gate()
+check("an endpoint is a place: a system of any dimension is refused where it answers", "where dimension is ['place']" in out, out[-900:])
+os.remove(os.path.join(G, "beans", "mx-2.md"))
+SESSION = ('---\nbean: session-one\ngenos: session\ntitle: "a session"\nstatus: active\nsummary: "work"\nnature: lekton\n'
+           'identity: { status: confirmed, anchors: [ { key: identifier, value: "session:session-one", class: logical, establishing: true } ] }\n'
+           + PROV + OWN + 'timing:\n  start: { system: gregorian-civil, at: "2026-09-28 10:00+03:00", unit: minute }\n'
+           'workspace:\n  host: { bean: box }\n  {AT}\n  branch: main\n---\nA session.\n')
+write("session-one", SESSION.replace("{AT}", "system: unix-filesystem\n  at: \"box:/srv/tree\""))
+check("a working copy is a position in its host's filesystem", " 0 error(s)" in gate(), gate()[-600:])
+write("session-one", SESSION.replace("{AT}", "system: unix-filesystem\n  at: \"mx-1:/srv/tree\""))
+out = gate()
+check("...on the one machine its position names", "workspace.at names the host mx-1, and `host` is box" in out, out[-600:])
+write("session-one", SESSION.replace("{AT}", "at: \"root:tree\""))
+r = run(sys.executable, "-c", STEP, ROOT, cwd=G)
+check("...and the translation writes the filesystem a working copy is in, from its position's form",
+      "system: unix-filesystem" in open(os.path.join(G, "beans", "session-one.md")).read() and " 0 error(s)" in gate(),
+      (r.stdout + r.stderr)[-400:])
+
 # ---- the law holds its line -------------------------------------------------------------------------------------------------
 STD = os.path.join(G, "seed", "std-vocab.md")
 law = open(STD).read()

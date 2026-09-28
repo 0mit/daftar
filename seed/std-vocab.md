@@ -1,5 +1,5 @@
 ---
-version: "29.0"
+version: "29.1"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -1241,6 +1241,7 @@ registry_forms:
     ownership_form: optional
     identifier_forms: optional
     responsibility_form: optional
+    takes_time_of: optional
 
 # == NET PROTOCOLS: the one owner of what a being may SPEAK ==
 net_protocols:
@@ -1811,6 +1812,7 @@ placement:
   - { code: order,    level: mode,  parent: place, takes: none,  meaning: "among others in an order: a code under its parent, a node on a line. An order has room for any number" }
   - { code: presence, level: mode,  parent: place, takes: none,  meaning: "in a being without taking any of it: a record in a register, a memory in a mind, someone held in a heart" }
   - { code: habitat,  level: mode,  parent: place, takes: share, meaning: "kept by a being that gives it what it runs or rests on: a process on a machine, a repository on a server. It draws a share of what the host holds, and shares may be promised past it" }
+  - { code: time,     level: mode,  parent: place, takes: room,  meaning: "at a position in time, a moment or a span: where the span is in a being's own hours — a meeting in the time of those present at it — it takes that time, which they spend on nothing else at once (RFC 5545's OPAQUE); in no one's hours, it takes none (TRANSPARENT)" }
   - { code: location, level: mode,  parent: place, takes: room,  meaning: "at a position in a place system, measured from a datum: a coordinate, a path, an address, a slot. Where the position is in a being's own frame it takes room there, which no other takes at once" }
 aggregates:
   - { aggregate: sum,     meaning: "the parts added: two nodes of 2 are 4" }
@@ -2347,7 +2349,7 @@ view_archetypes:
   - { archetype: health-chain, meaning: "tiles in flow order with value, limit and trend, and the blind spots", when: "no shape native to what is drawn is designed yet" }
 profiles:
   accounting:
-    meaning: "for a garden that keeps accounts, in the words its field uses. Analytic accounting first: where each amount's cost or revenue belongs, along plans the garden keeps as its own scheme of codes — a plan is a code at the scheme's first level, `plan`, and an account one beneath it, `account`. What an account holds is READ (bin/dmreckon.py `apportion`), never stored. Its names are the field's: `analytic_distribution` is what an Odoo user already writes, and seed/COOKBOOK.md pairs each of the field's names with where it is kept"
+    meaning: "for a garden that keeps accounts, in the words its field uses. Analytic accounting first: where each amount's cost or revenue belongs, along plans the garden keeps as its own scheme of codes — a plan is a code at the scheme's first level, `plan`, and an account one beneath it, `account`. What an account holds is READ (bin/dmreckon.py `apportion`), never stored. Its names are the field's: `analytic_distribution` is what an ERP's user already writes, and seed/COOKBOOK.md pairs each of the field's names with where it is kept"
     overlays:
       - term: transactions
         schema:
@@ -2468,11 +2470,12 @@ profiles:
         address it answers at, the port, and what the channel protects. An endpoint entry is a STATEMENT
         THAT THE BEING ANSWERS THERE — which is why a `forbidden` position on one is a breach by itself.
       context_keys: [endpoints]
+      placement: location
       schema:
         shape: list_of_entries
         attrs:
           protocol:         { required: true, in: { registry: net_protocols, take: protocol }, meaning: "which protocol is spoken here — a row of net_protocols, never an implementation name" }
-          system:           { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place, any] } }, meaning: "the PLACE system the surface is stated in — `ipv4` or `ipv6` for a network address, `unix-filesystem` for a socket path. It selects the form `at` must take. Named `system`, as in `roots`, `located_at` and `timing`: `keyed_by` resolves a registry row by a field that exists on BOTH the entry and the row, so the two are one name by construction." }
+          system:           { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } }, meaning: "the PLACE system the surface is stated in — `ipv4` or `ipv6` for a network address, `unix-filesystem` for a socket path. It selects the form `at` must take. Named `system`, as in `roots`, `located_at` and `timing`: `keyed_by` resolves a registry row by a field that exists on BOTH the entry and the row, so the two are one name by construction." }
           at:               { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the address answered at, in that system's ONE canonical form" }
           exposure:         { in: [loopback, lan, link, internet], meaning: "loopback (this machine only) | lan (the local segment) | link (reachable only over a named link, e.g. the wireguard tunnel) | internet (bound to a public address directly)" }
           observed:         { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the surface was checked. Endpoints age faster than almost anything else here." }
@@ -2616,7 +2619,7 @@ profiles:
             in:
               entries:
                 being:  { required: true, in: bean_id, meaning: "the part" }
-                system: { in: { registry: anchor_systems, take: system, where: { dimension: [place, any] } }, meaning: "the place system whose position stands for it: the first the being states in that system, in `located_at`, its anchors or its `endpoints`, in that order" }
+                system: { in: { registry: anchor_systems, take: system, where: { dimension: [place] } }, meaning: "the place system whose position stands for it: the first the being states in that system, in `located_at`, its anchors or its `endpoints`, in that order" }
                 what:   { in: prose, meaning: "one line: what the part is for, in this page's words" }
               keyed_by: being
           fields:
@@ -3476,6 +3479,7 @@ terms:
       from how many digits were typed, so two positions whose resolutions overlap can be known to be
       unordered rather than silently ordered. One entry is also the long form of every day the law holds.
     context_keys: [timing]
+    placement: time
     schema:
       shape: open_map_of_entries
       key_form: kebab
@@ -3654,7 +3658,8 @@ terms:
       required_on_gene: [session]
       attrs:
         host:       { required: true, in: ref, meaning: "a {bean} ref to the machine the session ran on. A session is not portable: its shell history, its reachability and what it could measure all belong to one machine." }
-        at:         { required: true, in: { pattern: "^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:([/A-Za-z]).*)$" }, meaning: "the working copy, as a position in that host's path grammar — `root:` form where a root exists, so it resolves on a second machine rather than reading as a literal path that is not there." }
+        system:     { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place], datum: host } }, meaning: "the filesystem the working copy is in — the host's own: `unix-filesystem`, `windows-filesystem`" }
+        at:         { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the working copy, as a position in that system's one form — `root:` form where a root exists, so it resolves on a second machine rather than reading as a literal path that is not there." }
         branch:     { required: true, in: { pattern: "^[A-Za-z0-9][A-Za-z0-9._/-]*$" }, meaning: "the git branch it commits to. `session/<slug>` by convention; `master` for a session that works the main copy directly." }
         opened_at:  { origin: { act: read, nature: soma }, in: { system: unix-epoch }, meaning: "epoch milliseconds, stamped by bin/dmsession.py. A session's own start is the one moment nobody should be estimating." }
         note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
@@ -3888,6 +3893,7 @@ gene:
   - genos: event
     of_nature: lekton
     ownership_form: [crown]
+    takes_time_of: [present, host]
     meaning: "a happening between people at a time: a meeting, a dinner, a party, a conversation in which something was agreed. When is `timing`; who took part is `refs`, each naming what they were in `rel` — present, invited, host, paid, or any other part a person played. A happening between people is owned by none of them — it may end at the crown — and whoever hosted it answers for it."
 ---
 # daftar — Tier-0 Universal Standard Vocabulary

@@ -251,6 +251,20 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **29.1** (2026-09-28, human-ratified rule-change) — **time is place's sibling; a working copy is a position; each
+  profile in its place on the line.** The operator: "yes it take (does a meeting take someone's hour?) … fold
+  workspace.at and check if view and other profiles occupies the right place".
+  - **The rung `time`**, declared by `timing`: a happening takes the hours of those present at it (the event's
+    `takes_time_of`: present, host), and one being present at two happenings whose spans overlap is refused. An
+    invitation takes nobody's hour (RFC 5545's TRANSPARENT).
+  - **`workspace`** names its `system`, and its `at` is in that system's one form, on the machine it names; its own
+    pattern retires. bin/dmsession.py writes it; the 29.0 step translates a garden's working copies.
+  - **The profiles on the line**: `endpoints` is a `location` that takes room — one port on one address is one
+    listener's, refused when two beings bind it unless one lives in the other; `endpoints.system` and a view's
+    `reference.system` take systems of place only. `links`, `reaches`, `treatments`, `knowledge` and the view's terms
+    relate beings and place none; the code profile's trees are locations and the domain's registration an agreement.
+  - **`dmpublic`** refuses, in what a range adds, a word the garden's own `PUBLIC-DENY` keeps out.
+
 - **29.0** (2026-09-28, human-ratified rule-change) — **the line from place to location, and one capsule for a code:
   the five places a profile and the core said one thing twice, folded.** MAJOR: stored facts are reshaped, and
   `bin/dmupgrade.py`'s 29.0 step translates them where they are written, every comment carried to where its fact goes.
@@ -299,7 +313,7 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   - **The `accounting` profile**: `analytic_distribution` on `transactions` and on `clauses` (a budget line) — entries of
     `{scheme, code, share | amount}`, a plan's amounts making the amount. A plan is a code at the first level of the
     garden's own scheme and an account one beneath it: one mechanism, and a new account a journalled row, never a law
-    change. The field's words and where each is kept: seed/COOKBOOK.md, beside Odoo 17's.
+    change. The field's words and where each is kept: seed/COOKBOOK.md, beside an ERP's.
   - **One sense, merged**: the analytic share was first a ratio; the gate's one-sense rule refused it, since `share`
     already means whole parts of a whole, a party's share of a cost. The analytic share takes that sense: 60 and 40 are
     three fifths and two fifths, and a plan's shares are its whole.

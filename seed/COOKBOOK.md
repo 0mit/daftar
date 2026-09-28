@@ -1941,7 +1941,7 @@ steps:
 `level: plan` rolls it up to the plans, and `digits: true` writes each part in the currency's cents, the cents a split
 leaves over going to the largest remainders. The field's words, and where daftar keeps each:
 
-| Odoo 17 | daftar |
+| an ERP's analytic accounting | daftar |
 |---|---|
 | `account.analytic.plan` | a code at level `plan` of the garden's analytic scheme |
 | `account.analytic.account` (`code`, `plan_id`) | a code at level `account`, its `parent` the plan |
@@ -1953,7 +1953,8 @@ leaves over going to the largest remainders. The field's words, and where daftar
 
 A being is placed in, at or among another, and the law orders the ways from the most general to the most bodily
 (`placement`): **place** is the ancestor of them all; beneath it, a code in its **order**, a record's **presence**
-in a register, a process's **habitat** in its machine, and a **location** — a position in a place system. Each rung
+in a register, a process's **habitat** in its machine, a happening's **time** — the hours of those present at it,
+which nobody spends twice — and a **location**, a position in a place system. Each rung
 says what a placement takes from where it is placed: nothing (a memory takes nothing from a mind), **a share** of
 what the host holds (a guest's memory of a hypervisor's), or **room** that no other takes at once (a machine's
 slots in a rack). A host says what it can hold in `capacity`; a placement says what it takes in `takes`. Shares
