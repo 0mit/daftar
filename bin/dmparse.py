@@ -424,6 +424,38 @@ def overlay_term(base, over):
     return out
 
 
+def profile_overlays(law, names=None):
+    """[(profile, overlay)] of the profiles named — every profile the law offers where `names` is None — in the law's order:
+    what each ADDS to a term of the core (28.1). One reader, so the gate, the rules and the catalogue read one list."""
+    out = []
+    profs = law.get('profiles') if isinstance(law, dict) and isinstance(law.get('profiles'), dict) else {}
+    for pn, prof in profs.items():
+        if names is not None and pn not in names or not isinstance(prof, dict):
+            continue
+        for o in prof.get('overlays') or []:
+            if isinstance(o, dict) and isinstance(o.get('term'), str):
+                out.append((pn, o))
+    return out
+
+
+def extend_term(base, over):
+    """A profile's overlay on a core term (28.1): what it ADDS, merged — its attributes beside the term's, its `sums` rules
+    after the term's, its `cells` after the term's. It rewrites nothing: an attribute the term already states is the
+    caller's to refuse, never merged over. Returns the term as the garden that extends the profile reads it."""
+    out = dict(base)
+    sch = dict(base.get('schema') or {}) if isinstance(base.get('schema'), dict) else {}
+    osch = over.get('schema') if isinstance(over.get('schema'), dict) else {}
+    if isinstance(osch.get('attrs'), dict):
+        sch['attrs'] = {**(sch.get('attrs') or {}), **{a: r for a, r in osch['attrs'].items() if a not in (sch.get('attrs') or {})}}
+    for k in ('sums', 'cells'):
+        if osch.get(k) is not None:
+            mine = sch.get(k)
+            mine = [] if mine is None else (list(mine) if isinstance(mine, list) else [mine])
+            sch[k] = mine + (list(osch[k]) if isinstance(osch[k], list) else [osch[k]])
+    out['schema'] = sch
+    return out
+
+
 def loads(text):
     """Parse YAML the one way this garden parses it. Semantically identical to yaml.safe_load."""
     if _yaml is None:
@@ -648,7 +680,7 @@ _NAME_KEYS = ('shape', 'key_form', 'path', 'values_from', 'must_equal_genos_attr
               'facet_parity_with', 'required_on_targets_of', 'governs_anchor', 'value_form', 'value_pattern',
               'canonical_note', 'compare_form', 'on_sequence')
 _LIST_KEYS = ('cells', 'values', 'values_add', 'entry_one_of', 'entry_must_match')
-_MAP_KEYS = ('attrs', 'alt_form', 'expiry', 'sums', 'value_in_registry')
+_MAP_KEYS = ('attrs', 'alt_form', 'expiry', 'value_in_registry')
 _IN_NAMES = ('registry', 'registry_from', 'take', 'type', 'system', 'key_of', 'form_of', 'aspect', 'quantity')
 # The two verdicts the schema language names for a cell (`schema_language.cells`): `incoherent` an error, `in_breach` a
 # warning. Any other word was read as `in_breach` — a misspelt `incoherent` warned where the law meant to refuse.
@@ -775,6 +807,10 @@ def term_problem(t):
     for k in _MAP_KEYS:
         if s.get(k) is not None and not isinstance(s[k], dict):
             return f"`schema.{k}` is a mapping, not {type(s[k]).__name__}"
+    # `sums` (28.1): one rule, a mapping — or several, a list of them
+    _sm = s.get('sums')
+    if _sm is not None and not (isinstance(_sm, dict) or (isinstance(_sm, list) and all(isinstance(x, dict) for x in _sm))):
+        return f"`schema.sums` is a rule, a mapping — or a list of rules — not {type(_sm).__name__}"
     # 24.0: `at_most_one_of` a list of groups; `keyed_by` one attribute or several; `exclusive` {extent, being, role?}
     for k, _p in (('at_most_one_of', _groups_problem(s.get('at_most_one_of'))),
                   ('keyed_by', _names_problem(s.get('keyed_by'), one_or_list=True))):

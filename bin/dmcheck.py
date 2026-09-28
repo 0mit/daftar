@@ -590,6 +590,13 @@ for t in (std_fm.get('terms') or []) + PROFILE_TERMS:
     if isinstance(t, dict) and t.get('term'):
         TERMS[t['term']] = t
         TIER0_TERMS.add(t['term'])
+# A PROFILE EXTENDS A TERM OF THE CORE (28.1): what it adds (`overlays`) is merged onto the term for the garden that extends
+# it — attributes beside the term's, rules after its rules. What each profile may add is judged once, over every profile the
+# law offers (`check_profiles_compose`), so no set of profiles a garden extends can meet a conflict.
+PROFILE_OVERLAYS = dmparse.profile_overlays(std_fm, vocab_fm.get('extends_profiles') or [])
+for _pn, _o in PROFILE_OVERLAYS:
+    if _o['term'] in TERMS:
+        TERMS[_o['term']] = dmparse.extend_term(TERMS[_o['term']], _o)
 for t in (vocab_fm.get('local_terms') or []):
     if isinstance(t, dict) and t.get('term'):
         TERMS[t['term']] = _overlay(TERMS[t['term']], t) if t['term'] in TERMS else t
@@ -1056,6 +1063,51 @@ def check_law_extents():
                 if _n.get(_k) is not None and _n[_k] not in _attrs:
                     errors.append(f"VOCAB {_name}.schema.expiry.{_k} names `{_n[_k]}`, which is no attribute of "
                                   f"{_name} — {sorted(_attrs)}")
+
+
+def check_profiles_compose():
+    """EVERY PROFILE WITH EVERY OTHER (28.1): a gardener may extend them all, so what the profiles offer is judged together,
+    whichever this garden extends. A profile's term is its own, named as no core term and no other profile's term is; what
+    a profile adds to a core term (`overlays`) names a term the core has, states no attribute the term already states — a
+    profile adds, and never rewrites — and no attribute another profile adds to the same term. So no two profiles can say
+    one fact in two places, or one name two ways."""
+    _profs = std_fm.get('profiles') if isinstance(std_fm.get('profiles'), dict) else {}
+    _core = {t.get('term'): t for t in (std_fm.get('terms') or []) if isinstance(t, dict)}
+    _owner = {}
+    for _pn, _p in _profs.items():
+        for _t in (_p.get('terms') or []) if isinstance(_p, dict) else []:
+            _n = _t.get('term') if isinstance(_t, dict) else None
+            if not _n:
+                continue
+            if _n in _core:
+                errors.append(f"VOCAB profiles.{_pn}: its term `{_n}` is named as a core term — a profile extends a core term "
+                              f"by `overlays`, never by a term of the same name")
+            elif _n in _owner:
+                errors.append(f"VOCAB profiles.{_pn}: its term `{_n}` is also profile {_owner[_n]}'s — a gardener who extends "
+                              f"both would hold one name two ways")
+            else:
+                _owner[_n] = _pn
+    _added = {}
+    for _pn, _o in dmparse.profile_overlays(std_fm):
+        _t = _core.get(_o['term'])
+        if _t is None:
+            errors.append(f"VOCAB profiles.{_pn}.overlays: `{_o['term']}` is no term of the core — a profile extends the core, "
+                          f"and a term of its own is one of its `terms`")
+            continue
+        _have = ((_t.get('schema') or {}).get('attrs') or {}) if isinstance(_t.get('schema'), dict) else {}
+        _schema = _o.get('schema') if isinstance(_o.get('schema'), dict) else {}
+        for _k in sorted(set(_schema) - {'attrs', 'sums', 'cells'}):
+            errors.append(f"VOCAB profiles.{_pn}.overlays[{_o['term']}]: `{_k}` would rewrite the term's own — an overlay adds "
+                          f"attributes, sums and cells, and nothing else")
+        for _a in (_schema.get('attrs') or {}):
+            if _a in _have:
+                errors.append(f"VOCAB profiles.{_pn}.overlays[{_o['term']}]: `{_a}` is the core term's own attribute — a "
+                              f"profile adds, and never rewrites")
+            elif (_o['term'], _a) in _added:
+                errors.append(f"VOCAB profiles.{_pn}.overlays[{_o['term']}]: `{_a}` is also added by profile "
+                              f"{_added[(_o['term'], _a)]} — a gardener who extends both would write one fact in two places")
+            else:
+                _added[(_o['term'], _a)] = _pn
 
 
 def check_value_types():
@@ -2725,11 +2777,25 @@ def declared_attrs(term, sch):
     return out, _form['self_ref']
 
 
+def _overlaying_profile(term, attr):
+    """The profile the law offers, and this garden does not extend, that adds `attr` to `term` (28.1) — or None."""
+    for _pn, _o in dmparse.profile_overlays(std_fm):
+        if _pn not in (vocab_fm.get('extends_profiles') or []) and _o.get('term') == term \
+                and attr in (((_o.get('schema') or {}).get('attrs') or {}) if isinstance(_o.get('schema'), dict) else {}):
+            return _pn
+    return None
+
+
 def undeclared_attrs(base, term, where, node, sch):
     _decl, _self = declared_attrs(term, sch)
     if not _decl or not isinstance(node, dict):
         return                              # a free container, or a pure ref: nothing is declared to hold it to
     for _k in node:
+        _ofp = _overlaying_profile(str(term).split('.')[0], _k) if _k not in _decl else None
+        if _ofp:
+            errors.append(f"{base}: {where} carries `{_k}`, which the profile `{_ofp}` adds to `{term}`, and this garden does "
+                          f"not extend it. {_extend_hint(_ofp)}")
+            continue
         if _k not in _decl:
             _h = retired_hint('attr', _k) if (_rn := RETIRED.get(('attr', str(_k)))) and \
                 str(_rn).startswith('`') and str(_rn)[1:].split('`', 1)[0] in _decl else ''
@@ -3295,45 +3361,96 @@ def ectl_sums(e):
     """`sums: {whole, parts}` (21.0) — the PARTS of a quantity add up to its WHOLE: what each payer paid adds up to what
     was paid. Checked EXACTLY, in fractions, never floats — the rule that closed truncation for units closes it for money
     — and only when every part's count is known, since an unknown part is a question and not a contradiction. A single
-    part that states no amount holds the whole."""
-    rule = e.sch.get('sums') if e.scope == 'entry' else None
-    if not isinstance(rule, dict):
-        return
-    wholes = rule.get('whole') if isinstance(rule.get('whole'), list) else [rule.get('whole')]
-    wattr = next((w for w in wholes if w and e.entry.get(w) is not None), None)
+    part that states no amount holds the whole. A LIST of rules is several wholes (28.1); a whole may be a constant
+    quantity, parts in another unit of its quantity are converted exactly, and `per: {level}` groups the parts by the
+    ancestor of the code each names, each group making the whole."""
+    rules = e.sch.get('sums') if e.scope == 'entry' else None
+    for rule in (rules if isinstance(rules, list) else [rules]):
+        if isinstance(rule, dict):
+            _sums_rule(e, rule)
+
+
+def _ancestor_at(scheme, code, level):
+    """The code's ancestor at `level` in the scheme's rows (the code itself where it is at that level), by `parent` — or
+    None where the chain reaches no row at that level."""
+    rows = {str(r.get('code')): r for r in (registry(scheme) or []) if isinstance(r, dict) and r.get('code') is not None}
+    c, seen = str(code), set()
+    while c in rows and c not in seen:
+        seen.add(c)
+        if rows[c].get('level') == level:
+            return c
+        c = str(rows[c].get('parent') or '')
+    return None
+
+
+def _sums_rule(e, rule):
+    def _count(q):
+        """A quantity's count as a Fraction, or None when it is not a count the law reads exactly."""
+        c = q.get('count') if isinstance(q, dict) else None
+        return Fraction(str(c)) if count_ok(c) else None
+    w = rule.get('whole')
+    if isinstance(w, dict):
+        whole, wattr = w, f"the whole ({w.get('count')} {w.get('unit')})"
+    else:
+        wholes = w if isinstance(w, list) else [w]
+        wattr = next((x for x in wholes if x and e.entry.get(x) is not None), None)
+        whole = e.entry.get(wattr) if wattr else None
     pattr, _, pfield = str(rule.get('parts') or '').partition('.')
     parts = e.entry.get(pattr)
     if isinstance(parts, dict):
         parts = [parts]                     # the entries domain takes one mapping as one entry
     if not wattr or not isinstance(parts, list) or not parts:
         return
-    whole = e.entry[wattr]
     if not isinstance(whole, dict):
         return                              # its form is check_quantity's to refuse
     if not all(isinstance(p, dict) for p in parts):
         return                              # a part that is not an entry is ectl_nested_entries' to refuse, by name
-    stated = [p.get(pfield) for p in parts]
-    if len(parts) == 1 and stated[0] is None:
-        return
-    if any(x is None for x in stated):
-        return
-
-    def _count(q):
-        """A quantity's count as a Fraction, or None when it is not a count the law reads exactly."""
-        c = q.get('count') if isinstance(q, dict) else None
-        return Fraction(str(c)) if count_ok(c) else None
-    units = {str(q.get('unit')) for q in stated if isinstance(q, dict)}
-    if units != {str(whole.get('unit'))}:
-        errors.append(f"{e.base}: {e.ref}.{pattr} is in {sorted(units)} and {wattr} in {whole.get('unit')} — the parts of an "
-                      f"amount are in its own currency; a payment in another is a transaction of its own, or `charged`")
-        return
-    total, w = [_count(q) for q in stated], _count(whole)
-    if w is None or any(x is None for x in total):
-        return
-    if sum(total) != w:
-        errors.append(f"{e.base}: {e.ref}.{pattr} adds up to {_exact(sum(total))} {whole.get('unit')}, and {wattr} is "
-                      f"{_exact(w)} {whole.get('unit')} — the parts of a whole add up to it exactly"
-                      + _rule(f"{e.term}.schema.sums", e.term))
+    per = rule.get('per') if isinstance(rule.get('per'), dict) else None
+    groups = {None: parts}
+    if per and per.get('level'):
+        groups = {}
+        for p in parts:
+            k = _ancestor_at(p.get('scheme'), p.get('code'), per['level'])
+            if k is None:
+                errors.append(f"{e.base}: {e.ref}.{pattr} names {p.get('scheme')}:{p.get('code')}, which has no ancestor at the "
+                              f"level `{per['level']}` in its scheme — each part belongs to one {per['level']}, whose parts "
+                              f"make the whole" + _rule(f"{e.term}.schema.sums", e.term))
+                continue
+            groups.setdefault(k, []).append(p)
+    wu = str(whole.get('unit'))
+    for key, grp in groups.items():
+        stated = [p.get(pfield) for p in grp]
+        if key is None and len(grp) == 1 and stated[0] is None:
+            continue
+        where = f"{e.base}: {e.ref}.{pattr}" + (f" in the {per['level']} {key}" if key is not None else '')
+        if key is not None and any(x is None for x in stated) and any(x is not None for x in stated):
+            # ONE WHOLE, STATED ONE WAY: a group whose parts are some amounts and some not cannot be judged a whole
+            errors.append(f"{where} states `{pfield}` for some of its parts and not for others — the parts of one whole "
+                          f"are stated one way" + _rule(f"{e.term}.schema.sums", e.term))
+            continue
+        if any(x is None for x in stated):
+            continue
+        units = {str(q.get('unit')) for q in stated if isinstance(q, dict)}
+        conv = {}
+        for u in units:
+            fu, fw = (UNITS.get(u) or {}).get('factor'), (UNITS.get(wu) or {}).get('factor')
+            same_q = (UNITS.get(u) or {}).get('quantity') == (UNITS.get(wu) or {}).get('quantity')
+            if u == wu:
+                conv[u] = Fraction(1)
+            elif same_q and isinstance(fu, list) and isinstance(fw, list):
+                conv[u] = Fraction(*[int(x) for x in fu]) / Fraction(*[int(x) for x in fw])
+        if set(conv) != units:
+            errors.append(f"{where} is in {sorted(units)} and {wattr} in {wu} — the parts of an "
+                          f"amount are in its own currency; a payment in another is a transaction of its own, or `charged`")
+            continue
+        total, wc = [_count(q) for q in stated], _count(whole)
+        if wc is None or any(x is None for x in total):
+            continue
+        t = sum(x * conv[str(q.get('unit'))] for x, q in zip(total, stated))
+        if t != wc:
+            errors.append(f"{where} adds up to {_exact(t)} {wu}, and {wattr} is "
+                          f"{_exact(wc)} {wu} — the parts of a whole add up to it exactly"
+                          + _rule(f"{e.term}.schema.sums", e.term))
 
 
 def _law_path(term):
@@ -6568,6 +6685,8 @@ PLIES = (
      "a list term's merge identity must name fields its entries carry — the same self-agreement, for merging"),
     (check_value_types,
      "the value types the schemas name are declared in the law"),
+    (check_profiles_compose,
+     "every profile composes with every other: no name two ways, no fact in two places, no core term rewritten"),
     (check_law_extents,
      "an extent the LAW itself writes is judged by the same rule as one on a bean"),
     (check_system_structure,

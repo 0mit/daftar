@@ -231,7 +231,7 @@ _keys = [l.split(":", 1)[1].strip() for l in _hdr if l.startswith("# staleness_k
 sys.path.insert(0, os.path.join(G, "bin"))
 import dmparse as _dp, yaml as _y
 _sv = _y.safe_load(_dp.read(os.path.join(G, "seed", "std-vocab.md"))[0])
-_ac = next(t for t in (list(_sv["terms"]) + [x for pr in _sv["profiles"].values() for x in pr["terms"]])
+_ac = next(t for t in (list(_sv["terms"]) + [x for pr in _sv["profiles"].values() for x in (pr.get("terms") or [])])
            if t["term"] == "analysis_cache")
 _PAT = _ac["schema"]["attrs"]["staleness_key"]["in"]["pattern"]
 check("the position index writes a staleness key the LAW would accept, in the one declared spelling",

@@ -1866,3 +1866,54 @@ knowledge:
 
 `python3 bin/dmknowledge.py find <word>` finds a code; `show <scheme> <code>` shows its ancestry and, for a
 technology, its official documentation.
+
+## Where each amount belongs: analytic accounting (`accounting` profile)
+
+Opt in with `bin/dmupgrade.py <release> --extend accounting`. Keep your plans and their accounts as a scheme of your own,
+in VOCAB.md and a file beside it — a plan is a code at the first level, an account one beneath it:
+
+```yaml
+registry_additions:
+  knowledge_schemes:
+    - { scheme: analytic, classifies: "where this garden's amounts belong", holding: extract, publisher: the gardener,
+        url: "file:extracts/analytic.tsv", levels: [ { level: plan }, { level: account } ], neighbours: none,
+        sources: extracts/analytic.tsv }
+registry_files:
+  - { registry: analytic, file: extracts/analytic.tsv, key: code }
+```
+
+`extracts/analytic.tsv` holds `code`, `level`, `parent` and `name`, one account a row; a new account is a new row, saved
+with its journal entry like any other write. Then a transaction says where its amount belongs, each plan on its own:
+
+```yaml
+transactions:
+  september:
+    what: "the server's rent for September"
+    amount: { count: "100.00", unit: TRY }
+    paid_by: [ { party: sam } ]
+    analytic_distribution:
+      - { scheme: analytic, code: orchard, share: 60 }       # projects: 60 and 40 are three fifths and two fifths
+      - { scheme: analytic, code: workshop, share: 40 }
+      - { scheme: analytic, code: engineering, share: 1 }    # departments: the whole
+```
+
+A share is whole parts, as a party's share of a cost is; an entry may give its `amount` instead, and a plan's amounts
+then add up to the transaction's. A budget line is a clause with the same `analytic_distribution`. What an account
+holds is read, never stored:
+
+```yaml
+steps:
+  - { id: rent, op: select, entries: "transactions.*" }
+  - { id: where, op: apportion, of: rent, amount: amount, over: analytic_distribution, digits: true }
+```
+
+`level: plan` rolls it up to the plans, and `digits: true` writes each part in the currency's cents, the cents a split
+leaves over going to the largest remainders. The field's words, and where daftar keeps each:
+
+| Odoo 17 | daftar |
+|---|---|
+| `account.analytic.plan` | a code at level `plan` of the garden's analytic scheme |
+| `account.analytic.account` (`code`, `plan_id`) | a code at level `account`, its `parent` the plan |
+| `account.move.line.analytic_distribution` | `transactions.<key>.analytic_distribution` — a percentage is a share |
+| budget lines of an analytic account | `clauses.<key>.analytic_distribution` beside the clause's `amount` |
+| `account.analytic.line` | not stored: `apportion` reads it from the transactions each time it is asked |

@@ -89,16 +89,25 @@ prof_terms = [t for p in prof_names for t in ((std.get('profiles') or {}).get(p,
 prof_vacs = [v for p in prof_names for v in ((std.get('profiles') or {}).get(p, {}).get('vacancies') or [])]
 
 TERMS, TIER = {}, {}
-for t, tier in [(t, 'tier0') for t in (std.get('terms') or [])] + \
-               [(t, f'profile:{",".join(prof_names)}') for t in prof_terms] + \
-               [(t, 'garden') for t in (loc.get('local_terms') or [])]:
-    n = t.get('term') if isinstance(t, dict) else None
-    if not isinstance(n, str) or not n:
-        continue                         # an entry the gate refuses by name is no rule in force
-    if n in TERMS:                       # a garden overlay merges onto its Tier-0 base, as the gate merges it
-        TERMS[n] = dmparse.overlay_term(TERMS[n], t); TIER[n] = TIER[n] + '+overlay'
-    else:
-        TERMS[n] = t; TIER[n] = tier
+
+
+def _take(pairs):
+    for t, tier in pairs:
+        n = t.get('term') if isinstance(t, dict) else None
+        if not isinstance(n, str) or not n:
+            continue                     # an entry the gate refuses by name is no rule in force
+        if n in TERMS:                   # a garden overlay merges onto its Tier-0 base, as the gate merges it
+            TERMS[n] = dmparse.overlay_term(TERMS[n], t); TIER[n] = TIER[n] + '+overlay'
+        else:
+            TERMS[n] = t; TIER[n] = tier
+
+
+_take([(t, 'tier0') for t in (std.get('terms') or [])] + [(t, f'profile:{",".join(prof_names)}') for t in prof_terms])
+# what a profile ADDS to a core term (28.1), merged as the gate merges it, before the garden's own overlays
+for _pn, _o in dmparse.profile_overlays(std, prof_names):
+    if _o['term'] in TERMS:
+        TERMS[_o['term']] = dmparse.extend_term(TERMS[_o['term']], _o); TIER[_o['term']] += f'+profile:{_pn}'
+_take([(t, 'garden') for t in (loc.get('local_terms') or [])])
 _RESTATED = {}
 
 
@@ -328,10 +337,15 @@ if '--terms' in want:
         if F.get('exclusive'):
             det.append(f"exclusive: the `{F['exclusive'].get('extent')}` of its entries for one `{F['exclusive'].get('being')}`"
                        + (f", in one `{F['exclusive']['role']}`" if F['exclusive'].get('role') else '') + ", across the garden, do not overlap")
-        if isinstance(s.get('sums'), dict):
-            _wh = s['sums'].get('whole')
-            det.append(f"sums: each entry's {s['sums'].get('parts')} add up EXACTLY to its "
-                       f"{' or '.join(_wh) if isinstance(_wh, list) else _wh} (the first it states), in the whole's unit")
+        for _sr in (s.get('sums') if isinstance(s.get('sums'), list) else [s.get('sums')]):
+            if not isinstance(_sr, dict):
+                continue
+            _wh = _sr.get('whole')
+            _whs = (f"{_wh.get('count')} {_wh.get('unit')}" if isinstance(_wh, dict) else
+                    ' or '.join(_wh) if isinstance(_wh, list) else _wh)
+            det.append(f"sums: each entry's {_sr.get('parts')} add up EXACTLY to {'its ' if not isinstance(_wh, dict) else ''}"
+                       f"{_whs}{' (the first it states)' if isinstance(_wh, list) else ''}, in the whole's unit"
+                       + (f" — per {(_sr.get('per') or {}).get('level')}, each group whole" if isinstance(_sr.get('per'), dict) else ''))
         _typed = {'values', 'registry', 'aspect', 'type', 'system_from', 'pattern', 'soft', 'extent', 'ref', 'pointer'}
         _raw = (s.get('attrs') or {})
         _untyped = [a_ for a_, r in _raw.items() if isinstance(r, dict) and r.get('in') == 'untyped']

@@ -445,6 +445,9 @@ class Catalogue:
         for p, r in self.profiles.items():
             self.part('profile:' + p, 'profile', p, meaning=r.get('meaning'),
                       terms=[str(t.get('term')) for t in r.get('terms') or [] if isinstance(t, dict)],
+                      # what the profile ADDS to a core term (28.1): `<term>.<attribute>`, each
+                      overlays=[f"{o['term']}.{a}" for _pn, o in dmparse.profile_overlays(law, [p])
+                                for a in ((o.get('schema') or {}).get('attrs') or {})],
                       vacancies=len(r.get('vacancies') or []), asset=f'assets/{p}/')
         for r in self.map.rows:
             self.part('layer:' + r['layer'], 'layer', r['layer'], files=r.get('files', True), beneath=r.get('beneath'),

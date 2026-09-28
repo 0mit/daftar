@@ -174,7 +174,9 @@ and a judge's weighing of criteria (`weighings`) is written as judgments, its we
 ## The vocabulary
 The rules are data, not code.
 - **`seed/std-vocab.md`** is the standard every garden pins. Opt-in **profiles** add groups of rules for
-  gardens that need them (`code`, `network`, `domain`, `knowledge`, `view`).
+  gardens that need them (`accounting`, `code`, `network`, `domain`, `knowledge`, `view`). A profile speaks its field's
+  words: it brings terms of its own, and adds attributes to a term of the core (`overlays`) without rewriting any. Every
+  profile composes with every other — no name held two ways, no fact in two places — so a garden may extend them all.
 - A profile may bring an **asset**: `assets/<profile>/`, the code, templates and guide that put the profile's facts to
   use. A garden receives it while it extends the profile — at birth (`seed/germinate.py --profile <profile>`), or by
   the one act that opts in and out (`bin/dmupgrade.py <release> --extend <profile>`, `--retract <profile>`) — and its

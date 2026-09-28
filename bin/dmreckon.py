@@ -1327,6 +1327,67 @@ class Reckoner:
                 raise Refused(f"step {s['id']}: {m.id} is not a code of a scheme ({{scheme, code}})")
         return out
 
+    def _ancestor(self, scheme, code, level):
+        """The code's ancestor at `level` in its scheme (the code itself where it is at that level), by `parent` — or None."""
+        rows = {str(r.get('code', r.get('unit'))): r for r in (self.reg(scheme) or []) if isinstance(r, dict)}
+        c, seen = str(code), set()
+        while c in rows and c not in seen:
+            seen.add(c)
+            if level in (rows[c].get('level'), rows[c].get('rank')):
+                return c
+            c = str(rows[c].get('parent') or '')
+        return None
+
+    def op_apportion(self, s):
+        """EACH CODE'S PART OF THE AMOUNTS (28.1): a member's amount shared over its entries at `over` — by an entry's share of
+        its group's shares, a group being the codes under one ancestor at `per` (the scheme's first level: a plan), or by an
+        entry's own amount — and summed per code, or per the ancestor at `level`. Exact, in fractions; `digits: true` writes
+        each part in the currency's places, the cents a split leaves over going to the largest remainders, first code first.
+        What an account holds is read here, never stored."""
+        out, unit = {}, None
+        firsts = {str(r.get('scheme')): ((r.get('levels') or [{}])[0] or {}).get('level')
+                  for r in (self.reg('knowledge_schemes') or []) if isinstance(r, dict)}
+        cur = {str(r.get('code')): r for r in (self.reg('currencies') or []) if isinstance(r, dict)}
+        for m in self.arg(s, 'of', 'set'):
+            got = [x for x, _w in walk(self.g, m.node, s['amount'], at=m.bean)]
+            if len(got) != 1:
+                raise Refused(f"step {s['id']}: {m.id} holds {len(got)} values at `{s['amount']}`, where one amount is shared")
+            amt = value_of(got[0], f"{m.id}.{s['amount']}", self.notes)
+            if not isinstance(amt.v, Fraction) or amt.unit is None:
+                raise Refused(f"step {s['id']}: {m.id}.{s['amount']} is no amount")
+            if unit is not None and amt.unit != unit:
+                raise Refused(f"step {s['id']}: the amounts are in {unit} and {amt.unit} — apportion within one currency")
+            unit = amt.unit
+            groups = {}
+            for d, _w in _flatten(walk(self.g, m.node, s['over'], at=m.bean)):
+                if not isinstance(d, dict) or d.get('code') is None:
+                    continue
+                lv = s.get('per') or firsts.get(str(d.get('scheme')))
+                k = self._ancestor(d.get('scheme'), d.get('code'), lv) if lv else None
+                if k is None:
+                    raise Refused(f"step {s['id']}: {d.get('scheme')}:{d.get('code')} of {m.id} has no ancestor at `{lv}`")
+                groups.setdefault(k, []).append(d)
+            for k, ds in groups.items():
+                if all(d.get('amount') is not None for d in ds):
+                    parts = [(d, value_of(d['amount'], f"{m.id}", self.notes).v) for d in ds]
+                elif all(d.get('share') is not None for d in ds):
+                    tot = sum(Fraction(int(str(d['share']))) for d in ds)
+                    parts = [(d, amt.v * Fraction(int(str(d['share']))) / tot) for d in ds]
+                    places = (cur.get(unit) or {}).get('digits')
+                    if s.get('digits') and places is not None:
+                        q = 10 ** int(places)
+                        floors = [(d, Fraction(int(x * q), q), x) for d, x in parts]
+                        left = int(amt.v * q) - sum(int(f * q) for _d, f, _x in floors)
+                        order = sorted(range(len(floors)), key=lambda i: (-(floors[i][2] - floors[i][1]), i))
+                        parts = [(d, f + (Fraction(1, q) if i in order[:left] else 0)) for i, (d, f, _x) in enumerate(floors)]
+                else:
+                    raise Refused(f"step {s['id']}: {m.id} states shares for some codes under {k} and amounts for others")
+                for d, x in parts:
+                    code = self._ancestor(d.get('scheme'), d.get('code'), s['level']) if s.get('level') else str(d['code'])
+                    out[code] = out.get(code, Fraction(0)) + x
+        self.lines.append(f"  apportioned over {len(out)} code(s), in {unit or 'no currency'}")
+        return {k: V(v, unit) for k, v in sorted(out.items())}
+
     def op_ancestor_at_level(self, s):
         out = []
         for scheme, code, m in self._code_members(s):

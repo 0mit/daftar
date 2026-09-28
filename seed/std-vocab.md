@@ -1,5 +1,5 @@
 ---
-version: "28.0"
+version: "28.1"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -45,7 +45,7 @@ schema_language:
   keyed_by:             "<attr> | [<attr>, ...] — beside a `shape` whose value has entries: ONE entry per value, or per combination of values, of these attributes among the term's entries on one bean (one observer's one verdict on one entry). An entry holding none of them is not counted; two holding the same are refused, and both are named"
   exclusive:            "{extent: <attr>, being: <attr>, role?: <attr>} — the extents that entries of this term hold for ONE being, in ONE role, across every bean of the garden, do not overlap: one person booked twice over the same days, one room lent twice. The gate refuses an overlap and names both entries; an entry its term's `expiry.unless` silences, or that says it was declined, is not counted. The law puts this on no term: a garden that needs it adds it to a term in its VOCAB.md, a RULE-CHANGE"
   expiry:               "{attr, notice, why} — ONE of this term's attrs is the position at which the thing LAPSES if nothing is done, and a reader should be warned before it. `notice` is HOW LONG BEFORE, as an EXTENT on `time`. `why` is the CONSEQUENCE, printed with the warning, because a date alone does not say what is lost. Read by bin/dmstale.py, not by the gate: a check whose answer changes with the calendar would make the gate non-deterministic, and a gate that fails on a Tuesday for no committed reason is a gate people disable. Deliberately NOT derived from an attribute's type: most dates a bean carries are `observed` or `as_of`, the day a fact was READ rather than the day it runs out. A term that does not declare this is never warned about, which is why a garden's own term can buy the warning its Tier-0 neighbour has. On a term whose value is a list or an open map, the attribute is each ENTRY's, and each entry is warned about by itself. `repeats: <attr>` names a sibling attribute `in: recurrence`: the position falls due again at each occurrence after `attr`, and the reader is warned before the next. `unless: {<attr>: [<values>]}` names the entries that no longer lapse — a debt already met. `relative: <attr>` names a sibling attribute holding the position RELATIVE to another (`from`, then `after` or `before` by an extent, then `at` a place in the cell reached), read in the place of `attr` where an entry states it. `lapses: <attr>` names a sibling attribute `in: extent`: the entry LAPSES at that extent's end, and a reader warns before it with `lapses_why`. `permission: <attr>` names the attribute whose EFFECTIVE position on its aspect chooses the words: `why` and `lapses_why` are each one text, or a map from that aspect's positions to the words — an obligation falls due, a permission lapses. `condition: <attr>` names the attribute holding what brings an entry into force where that is not a day: an entry holding one has no due to be missing."
-  sums:                 "{whole: <attr> | [<attr>, ...], parts: <attr>.<attr>} — the PARTS of a quantity add up to its WHOLE: the parts are the named attribute of each entry inside `parts`' first attribute, the whole is the first of `whole` the entry states. Checked exactly, in fractions, whenever every count is known, and the parts must be in the whole's unit. An entry holding one part that states no amount holds the whole."
+  sums:                 "{whole: <attr> | [<attr>, ...], parts: <attr>.<attr>} — the PARTS of a quantity add up to its WHOLE: the parts are the named attribute of each entry inside `parts`' first attribute, the whole is the first of `whole` the entry states. Checked exactly, in fractions, whenever every count is known, and the parts must be in the whole's unit. An entry holding one part that states no amount holds the whole. A LIST of such rules is several wholes, each checked. `whole` may be a constant quantity instead of an attribute (`{ count: 100, unit: percent }`: shares of a whole), and parts in another unit of the same quantity are converted exactly. `per: { level: <level> }` groups the parts by the ancestor, at that level, of the code each part names (its entry's `scheme` and `code`): each group makes the whole on its own — the amounts of each plan of an analytic distribution make the amount"
   on_sequence:          "<aspect> — the term's value is a walk on that SEQUENCE aspect: prose lines in list order, or step entries {id, do, next: [{to, when?}]} whose neighbourhoods are CLOSED; each step entry is judged by the term's `attrs`, and a key they do not declare is refused; the gate refuses a `to` that names no step, a step nothing reaches, a branch with no condition, a routine with no end, and a loop when the aspect declares acyclic"
   series:               "true — each ENTRY of this term is a SERIES: a line whose positions HOLD values (the figure's `holds`). Its positions are its `grid`, a recurrence whose occurrences are its rows in order, or listed in its `span`, an extent from whose `from` each row writes its offset; `unit` is what an offset counts and the resolution held; `holds` names the channels, one column each; its rows are one table (`value_types[rows]`) inline in `rows`, or the parts `series/<bean>/<key>/<part>.tsv` in the estate, each added whole and never rewritten; `excluded` sets a cell aside, naming its judge. The gate reads every row against its channels, and nothing read from a series is stored"
   moves_along:          "<attr> — each entry of this term is a MOVE along the course its <attr> names, a key of a term whose entries each name a `walk`: its `step` is a step of that walk, and the moves of one course, in the order of their moments, are held to it — a move follows a `next`, reaches an `exit`, or returns to the step a pause (`resumes`) was entered from; a move `next` does not offer passes only with a `why`, and warns; nothing follows a `final` step; a moment never goes back, and one course's two moves to one step are two moments. Where a course stands is read, never stored"
@@ -1700,6 +1700,7 @@ operations:
   - { op: rotate,      gives: value, exact: false, u_rule: derivative, takes: { pole: { required: true, in: { type: kebab }, meaning: "the pole's rows of `coefficients`" }, of: { required: true, in: { type: kebab } } }, meaning: "the velocity, east and north, of a point on a body turning about an axis" }
   - { op: position-to, gives: value, exact: false, u_rule: derivative, takes: { of: { required: true, in: { type: kebab } }, system: { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } } } }, meaning: "a position in another reference system; refused where PROJ is absent" }
   - { op: within,      gives: set,   exact: true,  u_rule: none, takes: { of: { required: true, in: { type: kebab } }, path: { required: true, in: { type: field_path } }, extent: { in: extent }, place: { in: any } }, meaning: "the members whose position or moment at the path lies within the extent, or the place" }
+  - { op: apportion,   gives: groups, exact: true, u_rule: none, takes: { of: { required: true, in: { type: kebab } }, amount: { required: true, in: { type: field_path } }, over: { required: true, in: { type: field_path } }, per: { in: { type: kebab } }, level: { in: { type: kebab } }, digits: { in: [true, false] } }, meaning: "each code's part of the members' amounts: each member's amount (at `amount`) shared over its entries at `over` — by an entry's share of its group's shares, the group being the codes under one ancestor at `per` (the scheme's first level where none is named), or by an entry's own amount — summed per code, or per the code's ancestor at `level`. Exact, in fractions. With `digits: true` each part is written in the currency's decimal places, the cents a split leaves over going to the parts with the largest remainders, the first code first — the one rule, so no two readings round a split two ways" }
   - { op: ancestor-at-level, gives: set, exact: true, u_rule: none, takes: { of: { required: true, in: { type: kebab } }, level: { required: true, in: { type: kebab } } }, meaning: "each code's ancestor at a level, by its scheme's `parent`" }
   - { op: neighbour-of, gives: set,  exact: true,  u_rule: none, takes: { of: { required: true, in: { type: kebab } }, relation: { in: { type: kebab }, meaning: "a registry of relations, rows {from, to, rel}" }, distance: { in: { quantity: length } } }, meaning: "the codes a relation's `adjacent` rows name beside each, or the beings within a distance (≈)" }
   - { op: at,          gives: value, exact: per-channel, u_rule: ties, takes: { series: { required: true, in: { type: field_path }, meaning: "`<bean>:<term>.<key>`" }, channel: { in: { type: kebab } }, position: { required: true, in: any } }, meaning: "what a channel holds at a position, as the channel says it is read between rows" }
@@ -2304,6 +2305,41 @@ view_archetypes:
   - { archetype: table,        meaning: "the members of a reading, or the rows of a series, one line each with a column per path: the report, and an offline file of it", when: "the question is which ones, and what each holds" }
   - { archetype: health-chain, meaning: "tiles in flow order with value, limit and trend, and the blind spots", when: "no shape native to what is drawn is designed yet" }
 profiles:
+  accounting:
+    meaning: "for a garden that keeps accounts, in the words its field uses. Analytic accounting first: where each amount's cost or revenue belongs, along plans the garden keeps as its own scheme of codes — a plan is a code at the scheme's first level, `plan`, and an account one beneath it, `account`. What an account holds is READ (bin/dmreckon.py `apportion`), never stored. Its names are the field's: `analytic_distribution` is what an Odoo user already writes, and seed/COOKBOOK.md pairs each of the field's names with where it is kept"
+    overlays:
+      - term: transactions
+        schema:
+          attrs:
+            analytic_distribution:
+              meaning: "where this amount belongs: one entry per account of the garden's analytic scheme, each with its share (whole parts of the plan's whole) or its amount (which, in a plan, add up to the amount)"
+              in:
+                entries:
+                  scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the analytic scheme — the garden's own, held as an extract" }
+                  code:   { required: true, in: { registry_from: scheme, take: code }, meaning: "the account" }
+                  share:  { in: { pattern: '^[1-9][0-9]{0,39}$' }, meaning: "its part of the whole, in whole parts, as a party's share of a cost is: 60 and 40 are three fifths and two fifths — a plan's shares are its whole" }
+                  amount: { in: { quantity: money }, meaning: "instead of a share: its part, in the amount's currency" }
+                  note:   { in: prose, meaning: "optional prose" }
+                one_of: [share, amount]
+                at_most_one_of: [[share, amount]]
+          sums:
+            - { whole: [charged, amount], parts: analytic_distribution.amount, per: { level: plan } }
+      - term: clauses
+        schema:
+          attrs:
+            analytic_distribution:
+              meaning: "where what the clause asks belongs — a budget line: one entry per account, each with its share (whole parts of the plan's whole) or its amount (which, in a plan, add up to the clause's)"
+              in:
+                entries:
+                  scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the analytic scheme — the garden's own, held as an extract" }
+                  code:   { required: true, in: { registry_from: scheme, take: code }, meaning: "the account" }
+                  share:  { in: { pattern: '^[1-9][0-9]{0,39}$' }, meaning: "its part of the whole, in whole parts, as a party's share of a cost is: 60 and 40 are three fifths and two fifths — a plan's shares are its whole" }
+                  amount: { in: { quantity: money }, meaning: "instead of a share: its part, in the amount's currency" }
+                  note:   { in: prose, meaning: "optional prose" }
+                one_of: [share, amount]
+                at_most_one_of: [[share, amount]]
+          sums:
+            - { whole: [amount], parts: analytic_distribution.amount, per: { level: plan } }
   code:
     meaning: "for a garden that manages source code: locating trees, and the repo identity of a code bean"
     vacancies:

@@ -134,7 +134,7 @@ import yaml
 sys.path.insert(0, os.path.join(G, "bin"))
 import dmparse
 sv = yaml.safe_load(dmparse.read(os.path.join(G, "seed", "std-vocab.md"))[0])
-terms = list(sv["terms"]) + [x for p in sv["profiles"].values() for x in p["terms"]]
+terms = list(sv["terms"]) + [x for p in sv["profiles"].values() for x in (p.get("terms") or [])]
 dated, declared = [], []
 for t_ in terms:
     s = (t_.get("schema") or {})

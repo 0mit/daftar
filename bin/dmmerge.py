@@ -441,9 +441,11 @@ def entry_problems(e, at, name_key):
         if e.get(k) is not None and not isinstance(e[k], dict):
             out.append(f"{at}.{k} should be a mapping")
     sch = e.get('schema') if isinstance(e.get('schema'), dict) else {}
-    for k in ('attrs', 'expiry', 'sums'):
+    for k in ('attrs', 'expiry'):
         if sch.get(k) is not None and not isinstance(sch[k], dict):
             out.append(f"{at}.schema.{k} should be a mapping")
+    if sch.get('sums') is not None and not isinstance(sch['sums'], (dict, list)):
+        out.append(f"{at}.schema.sums should be a rule or a list of rules")
     for holder, k in ((e, 'context_keys'), (sch, 'required_on_gene')):
         v = holder.get(k)
         if v is not None and not (isinstance(v, list) and all(isinstance(x, str) for x in v)):

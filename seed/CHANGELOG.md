@@ -251,6 +251,29 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **28.1** (2026-09-28, human-ratified rule-change) — **analytic accounting, in the field's words, on the core's
+  machinery; and every profile composes with every other.** MINOR: additive, nothing a garden holds changes. The
+  operator: "we need to keep the law clean and define the field specific names to help existing users through
+  profiles"; "ratified, but re-inspect our other profiles and go hunt of a general-law and profile lense sense merging
+  opportunity then make sure a gardener can use all profiles when needed without data-duplication and conflicts".
+  - **A profile may extend a core term** (`overlays`): attributes beside the term's, `sums` and `cells` after its own,
+    and never an attribute the term states. The gate judges every profile against every other whichever a garden
+    extends: no profile term named as a core term or as another profile's, no overlay rewriting the core, no two
+    profiles adding one attribute to one term. A garden may extend them all. A key a profile adds, in a garden that
+    does not extend it, is refused with the profile named and the command that extends it.
+  - **`sums`** takes a list of rules, a constant whole, parts in another unit of the whole's quantity (converted
+    exactly), and `per: {level}`: the parts grouped by the ancestor of the code each names, each group a whole; a group
+    stated partly one way and partly another is refused.
+  - **`apportion`**, an operation of the reckoner: each code's part of the members' amounts, by shares within a group
+    or by amounts, summed per code or per ancestor at a level; exact, and with `digits: true` in the currency's cents by
+    the largest remainders — the one rule for a split that cannot be exact.
+  - **The `accounting` profile**: `analytic_distribution` on `transactions` and on `clauses` (a budget line) — entries of
+    `{scheme, code, share | amount}`, a plan's amounts making the amount. A plan is a code at the first level of the
+    garden's own scheme and an account one beneath it: one mechanism, and a new account a journalled row, never a law
+    change. The field's words and where each is kept: seed/COOKBOOK.md, beside Odoo 17's.
+  - **One sense, merged**: the analytic share was first a ratio; the gate's one-sense rule refused it, since `share`
+    already means whole parts of a whole, a party's share of a cost. The analytic share takes that sense: 60 and 40 are
+    three fifths and two fifths, and a plan's shares are its whole.
 - **28.0** (2026-09-28, human-ratified rule-change) — **the ordinal line: a sequence that holds at no time.** MAJOR: three
   system choosers are narrowed to the dimension their meaning names, which can refuse a bean that passed. The operator:
   "absorb 2 x 2 as a sequence with two 2s summing a 4 as the whole sequence numeric value having two nodes", then

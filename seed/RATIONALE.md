@@ -80,6 +80,11 @@ first the entry states is the whole, so a purchase charged in another currency i
 Checked exactly or not at all: a sum that is nearly right is a sum that is wrong, and a tolerance would have to be
 somebody's choice of how wrong.
 
+SEVERAL WHOLES, A CONSTANT WHOLE, A WHOLE PER GROUP (28.1). One entry can make more than one whole — a payment's payers
+make its amount, and each plan of its analytic distribution makes it again — so `sums` takes a list of rules. A whole
+may be a constant quantity where the parts are shares of something no attribute states. And `per: {level}` groups the
+parts by the ancestor, at a level of their scheme, of the code each names: each group is a whole on its own, and a
+group stated partly one way and partly another is refused, since it cannot be judged a whole at all.
 ## schema_language.expiry
 
 PER ENTRY, REPEATING, AND SILENT ONCE MET. `expiry` was written for a term with one date — a registration runs
@@ -1580,6 +1585,31 @@ follow it and a code that is not the scheme's is refused.
 A LABEL IN ANOTHER LANGUAGE KEEPS ITS PUBLISHER'S WORDS (24.0, N25). Translations are often published on condition
 that an attribution is printed with them. The attribution is kept verbatim beside the labels it covers, and every reader
 that prints a label prints it.
+
+## profiles.accounting
+
+A FIELD'S WORDS, THE CORE'S MACHINERY (28.1; the operator: "we need to keep the law clean and define the field specific
+names to help existing users through profiles"). Analytic accounting needs nothing the core does not have in general —
+codes in a tree with levels (a scheme a garden keeps), parts that make a whole (`sums`), a reading that shares an amount
+out (`apportion`). What it needs of its own is its words: `analytic_distribution`, a plan, an account. So the core stays
+field-neutral and the profile says the field's names, adding its one attribute to the core's `transactions` and
+`clauses` rather than restating them. A plan is a code at the first level of the garden's scheme, and an account one
+beneath it: plans and accounts are one mechanism (the operator: "coudn't codes and plans use the same daftar
+machinery?"), and a new account is a row, a journalled write, never a law change.
+
+ONE SENSE, FOUND BY THE GATE. The share was first a ratio (`{ count: 60, unit: percent }`); the gate refused it — `share`
+already meant whole parts of a whole, a party's share of a cost. The two were one sense written two ways, so the
+analytic share took the law's: 60 and 40 are three fifths and two fifths, and a plan's shares are its whole by
+construction. No rule of a hundred percent was needed, and none is kept.
+
+## profiles.accounting.overlays
+
+A PROFILE ADDS, AND NEVER REWRITES (28.1). A profile's terms were whole terms, merged by name; a term of a profile named as
+a core term would have REPLACED it in every tool that reads terms into one table. So what a profile adds to a core term
+is its own key, `overlays` — attributes beside the term's, `sums` and `cells` after its own — and the gate judges every
+profile against every other whichever a garden extends: no profile term named as a core
+term or as another profile's, no overlay that states an attribute the core term states, no two profiles adding one
+attribute to one term. A gardener may extend them all, and meet no name held two ways and no fact in two places.
 
 ## profiles.code.terms[code_paths].meaning
 
