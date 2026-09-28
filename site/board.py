@@ -233,10 +233,13 @@ def scenes():
 
 
 SCENES = scenes()
-DATA = {'version': VERSION, 'release': RELEASE, 'lenses': B['lenses'], 'mechanisms': []}
+LANGS = [x['id'] for x in B.get('languages') or [{'id': 'en'}]]
+DATA = {'version': VERSION, 'release': RELEASE, 'languages': B.get('languages') or [], 'ui': B.get('ui') or {},
+        'lenses': B['lenses'], 'mechanisms': []}
 for m in B['mechanisms']:
-    DATA['mechanisms'].append({k: m.get(k) for k in ('id', 'name', 'short', 'glyph', 'staples', 'person', 'gardener',
-                                                     'agent_note')} | {'keeper': keeper(m)} | SCENES[m['id']])
+    DATA['mechanisms'].append({k: m.get(k) for k in ['id', 'name', 'short', 'glyph', 'staples', 'person', 'gardener',
+                                                     'agent_note'] + LANGS[1:] if k in m}
+                              | {'keeper': keeper(m)} | SCENES[m['id']])
 counts = {'terms': sum(1 for k in PARTS if k.startswith('term:')),
           'registries': sum(1 for k in PARTS if k.startswith('registry:')),
           'relations': len(RELS), 'reasons': len(REASONS)}
@@ -247,8 +250,15 @@ for m in DATA['mechanisms']:
     m['files'] = len(FILES[m['id']])
 
 page = open(os.path.join(ROOT, 'site', 'board.html'), encoding='utf-8').read()
-page = page.replace('/*__DATA__*/', json.dumps(DATA, ensure_ascii=False).replace('</', '<\\/'))
+# The first language's words stand in the page as written, for a reader whose browser runs no script. They are filled
+# in before the data is, so that nothing in the data is ever read as a placeholder.
+UI0 = dict((B.get('ui') or {}).get(LANGS[0]) or {})
+UI0['boards'] = UI0.get('boards', '').replace('{l}', str(len(B['lenses']))).replace(
+    '{m}', str(len(B['mechanisms']))).replace('{b}', str(len(B['lenses']) * len(B['mechanisms'])))
+page = re.sub(r'\{\{(\w+)\}\}', lambda x: html.escape(UI0[x.group(1)]) if x.group(1) in UI0
+              else _fail(f"site/board.html names {x.group(0)}, which ui.{LANGS[0]} in site/boards.yaml lacks"), page)
 page = page.replace('__VERSION__', html.escape(VERSION)).replace('__RELEASE__', html.escape(RELEASE or 'the release'))
+page = page.replace('/*__DATA__*/', json.dumps(DATA, ensure_ascii=False).replace('</', '<\\/'))
 open(OUT, 'w', encoding='utf-8').write(page)
 print(f"site/board.py: {len(DATA['mechanisms'])} mechanisms × {len(DATA['lenses'])} lenses = "
       f"{len(DATA['mechanisms']) * len(DATA['lenses'])} boards, std-vocab {VERSION}; "

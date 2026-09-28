@@ -4,10 +4,84 @@
 # its refusal are proved, never written: `scene` names the beans of site/garden.yaml the form is shown from and how to
 # break it once, and the refusal shown is what the gate printed — it must contain `refused`, or the page is not built.
 lenses:
-  - { id: person,   label: "What is it?",            who: "someone curious" }
-  - { id: gardener, label: "What do I do?",          who: "a gardener" }
-  - { id: agent,    label: "How is it written?",     who: "an agent" }
-  - { id: keeper,   label: "Why is it so, and where?", who: "a keeper of the law" }
+  - { id: person, label: "What is it?", who: "someone curious",
+      fa: { label: "این چیست؟", who: "کسی کنجکاو" } }
+  - { id: gardener, label: "What do I do?", who: "a gardener",
+      fa: { label: "من چه کنم؟", who: "باغبان" } }
+  - { id: agent, label: "How is it written?", who: "an agent",
+      fa: { label: "چگونه نوشته می‌شود؟", who: "عامل" } }
+  - { id: keeper, label: "Why is it so, and where?", who: "a keeper of the law",
+      fa: { label: "چرا چنین است، و کجا؟", who: "نگهبان قانون" } }
+languages:
+  - { id: en, label: "English", dir: ltr }
+  - { id: fa, label: "فارسی", dir: rtl }
+# The page's own words, in each language. `{name}` is filled by the page; the law's words, the forms and what the gate
+# prints are the release's own, and stay as it states them.
+ui:
+  en:
+    tagline: "A notebook you keep with your AI agents about the things you work on together. Every fact says who said it, every change is journalled, and a gate refuses what breaks the rules."
+    boards: "{l} lenses × {m} mechanisms · {b} boards"
+    counts: "{terms} terms · {registries} registries · {relations} relations · {reasons} reasons"
+    lang_group: "language"
+    lens_axis: "lens"
+    lens_group: "who is looking"
+    prev_lens: "previous lens"
+    next_lens: "next lens"
+    prev_mech: "previous mechanism"
+    next_mech: "next mechanism"
+    dial_label: "the ten mechanisms, and the files that hold each pair together"
+    dialnote: "A chord joins two mechanisms; its weight is how many of daftar's own files (tools, suites, documents) hold both. Arrow keys: ← → mechanism, ↑ ↓ lens."
+    footer: "This page is built from the release it describes. The keeper's boards and the chords are read from the law, its reasons and its catalogue."
+    link_model: "The model"
+    link_manifesto: "Manifesto"
+    cap: "held with {n} others by {f} files"
+    nums: "{parts} parts of the law · {rules} rules · {checks} checks · {files} files of its own"
+    gardener_note: "You talk and the agent writes. What an agent may not decide, it asks you, and it carries on with the rest."
+    form_label: "the form, as the gate passed it"
+    refusal_label: "written wrong, the gate printed"
+    proved_note: "Both were proved when this page was built: the form in a garden grown from the release, where the gate passed it, and the refusal by breaking it once. Save with the first command below; after a refusal, fix what it names and run the second."
+    keeper_note: "Each part of the law this mechanism is made of, as the release states it: what it means, why it is so, the rules the gate derives from it, and the suites that check it."
+    item_rules: "{n} rules"
+    item_checks: "{n} checks"
+    item_relations: "{n} relations"
+    more_rules: "and {n} more: {cmd}"
+    checked_in: "checked in {suites}"
+    rope_label: "the rope: the files that hold it with each other mechanism"
+    rope_files: "{n} files"
+    ground: "Held by every mechanism, and so left out of the chords: {files}."
+    stapled: "stapled to"
+  fa:
+    tagline: "دفتری که شما و عامل‌های هوش مصنوعی‌تان درباره‌ی چیزهایی که با هم رویشان کار می‌کنید نگه می‌دارید. هر گزاره می‌گوید چه کسی آن را گفته، هر تغییر در روزنامه ثبت می‌شود، و دروازه‌ای هر آنچه قاعده‌ها را بشکند پس می‌زند."
+    boards: "{l} نگاه × {m} سازوکار، {b} تابلو"
+    counts: "{terms} اصطلاح، {registries} فهرست، {relations} رابطه، {reasons} دلیل"
+    lang_group: "زبان"
+    lens_axis: "نگاه"
+    lens_group: "چه کسی نگاه می‌کند"
+    prev_lens: "نگاه قبلی"
+    next_lens: "نگاه بعدی"
+    prev_mech: "سازوکار قبلی"
+    next_mech: "سازوکار بعدی"
+    dial_label: "ده سازوکار، و پرونده‌هایی که هر جفت را به هم می‌بندند"
+    dialnote: "هر وتر دو سازوکار را به هم می‌پیوندد؛ ضخامتش نشان می‌دهد چند پرونده از خودِ دفتر (ابزارها، آزمون‌ها، سندها) هر دو را در بر دارند. کلیدهای جهت: ← → سازوکار، ↑ ↓ نگاه."
+    footer: "این صفحه از همان نسخه‌ای ساخته می‌شود که توصیفش می‌کند. تابلوهای نگهبان و وترها از قانون، دلیل‌هایش و کاتالوگش خوانده می‌شوند."
+    link_model: "مدل"
+    link_manifesto: "بیانیه"
+    cap: "به {n} سازوکار دیگر بسته است، با {f} پرونده"
+    nums: "{parts} بخش از قانون، {rules} قاعده، {checks} بررسی، {files} پرونده‌ی ویژه"
+    gardener_note: "شما حرف می‌زنید و عامل می‌نویسد. آنچه عامل نمی‌تواند درباره‌اش تصمیم بگیرد، از شما می‌پرسد و باقی کار را ادامه می‌دهد."
+    form_label: "شکل نوشتن، همان‌گونه که دروازه پذیرفت"
+    refusal_label: "وقتی نادرست نوشته شد، دروازه این را چاپ کرد"
+    proved_note: "هر دو هنگام ساختن این صفحه اثبات شدند: شکل نوشتن در باغی که از همین نسخه رویید و دروازه آن را پذیرفت، و پاسخِ رد با یک بار شکستنِ آن. شکل‌ها و واژه‌های دروازه خروجیِ خودِ نسخه‌اند و به انگلیسی می‌مانند. با فرمان نخستِ زیر ذخیره کنید؛ پس از رد، آنچه را نام می‌برد درست کنید و فرمان دوم را اجرا کنید."
+    keeper_note: "هر بخش از قانون که این سازوکار از آن ساخته شده، همان‌گونه که نسخه بیانش می‌کند: معنایش، دلیلش، قاعده‌هایی که دروازه از آن بیرون می‌کشد، و آزمون‌هایی که بررسی‌اش می‌کنند. واژه‌های قانون به زبان خودشان، انگلیسی، آمده‌اند."
+    item_rules: "{n} قاعده"
+    item_checks: "{n} بررسی"
+    item_relations: "{n} رابطه"
+    more_rules: "و {n} مورد دیگر: {cmd}"
+    checked_in: "بررسی‌شده در {suites}"
+    rope_label: "ریسمان: پرونده‌هایی که آن را به هر سازوکار دیگر می‌بندند"
+    rope_files: "{n} پرونده"
+    ground: "پرونده‌هایی که همه‌ی سازوکارها را نگه می‌دارند و از همین رو در وترها نیامده‌اند: {files}."
+    stapled: "دوخته به"
 mechanisms:
   - id: who
     short: "Who said it"
@@ -27,6 +101,13 @@ mechanisms:
       show: [ { bean: hallway-nas, keys: [identity, provenance] } ]
       break: { bean: hallway-nas-2, copy_of: hallway-nas }
       refused: "establishing anchor serial"
+    fa:
+      name: "چه کسی گفت"
+      short: "چه کسی گفت"
+      person: "هر گزاره در این دفتر می‌گوید چه کسی آن را گفته و از کجا می‌داند: شما یا یک عامل؛ شنیده، سنجیده یا حدس‌زده. هر چیز را با آنچه هویتش را نشان می‌دهد می‌شناسند (یک شماره‌ی سریال، یک نام دامنه، کدی که کسی منتشر کرده)، نه با نام پرونده‌اش؛ پس دو دفتری که هرگز همدیگر را ندیده‌اند می‌توانند یک چیز واحد را پیدا کنند."
+      gardener: "شما می‌گویید چه چیزی درست است؛ عامل آن را می‌نویسد و شما را منبعش می‌گذارد. آنچه عامل بعدها می‌سنجد کنار گفته‌ی شما نوشته می‌شود، هرگز روی آن؛ تنها خودتان حرف خودتان را تغییر می‌دهید. آنچه هویت یک چیز را نشان می‌دهد، شما تأیید می‌کنید."
+      agent_note: "عامل به‌تنهایی فقط آنچه را دیده یا استنباط کرده ثبت می‌کند؛ تأیید لنگر هویت با یک انسان است."
+      staples: { what: "هویت به گونه‌ای از موجود داده می‌شود", between: "گزاره هنگام گذر، گوینده‌اش را با خود نگه می‌دارد", gate: "گزاره‌ی بی‌منبع از دروازه نمی‌گذرد" }
   - id: what
     short: "What & whose"
     name: "What it is, and whose"
@@ -45,6 +126,13 @@ mechanisms:
       show: [ { bean: hallway-nas, keys: [genos, nature, owned_by, responsibility] } ]
       break: { bean: hallway-nas, replace: ["owned_by: { legal: { owner: { bean: sam } } }", "owned_by: { legal: { } }"] }
       refused: "needs one of"
+    fa:
+      name: "چیست، و از آنِ کیست"
+      short: "چیستی و مالکیت"
+      person: "هر چیز نخست یک سرشت است (سوما، تن؛ لکتون، آنچه با گفته شدن هست؛ امپسوخون، آنچه جان دارد) و سپس گونه‌اش. هر چیز، در هر وجه، دقیقاً یک مالک دارد و یک پاسخگو، و هر زنجیره‌ای پایان می‌یابد: به یک شخص، به کسی بیرون از دفتر، یا به تاج، جایی که هیچ‌کس مالک نیست."
+      gardener: "بگویید یک چیز چیست و از آنِ کیست؛ عامل گونه‌اش را برمی‌گزیند و می‌نویسد چه کسی پاسخگوی آن است. دامنه در اختیار است، نه در مالکیت؛ هر شخص مالک خویش است؛ توافقی میان دو نفر ممکن است از آنِ هیچ‌کدام نباشد."
+      agent_note: "گونه، سرشت را دقیق‌تر می‌کند؛ قاعده‌های آنچه یک چیز می‌تواند بگوید به سرشتش بسته‌اند و هر گونه آن‌ها را به ارث می‌برد."
+      staples: { who: "گونه‌اش می‌گوید چه هویت‌هایی می‌تواند بپذیرد", money: "توافق ممکن است از آنِ هیچ‌یک از دو طرف نباشد", gate: "هر زنجیره‌ی مالکیت باید پایان یابد" }
   - id: when
     short: "When"
     name: "When"
@@ -63,6 +151,13 @@ mechanisms:
       show: [ { bean: dinner-at-sams, keys: [timing] }, { bean: storage-rent, keys: [parties] } ]
       break: { bean: dinner-at-sams, replace: ["2026-09-12 19:30", "2026-02-30 19:30"] }
       refused: "is no day of gregorian-civil"
+    fa:
+      name: "کِی"
+      short: "کِی"
+      person: "یک روز یا یک لحظه، جایگاهی است در هر گاه‌شماری (میلادی، خورشیدی، عبری و بیشتر) با همان دقتی که گفته شده. جایی که کسی روز را نگفته، بر پایه‌ی آنچه پیش از آن رخ داده جای می‌گیرد. زمان ژرف هم، و ترتیب‌هایی که به هیچ زمانی بسته نیستند: نخستین، دومین."
+      gardener: "روز را همان‌گونه که می‌دانید بگویید، با گاه‌شمار خودتان؛ اگر تنها همین را می‌دانید، بگویید «بعد از شام». هیچ چیز برای پر کردن جای خالی ساخته نمی‌شود: آنچه کسی نگفته ناگفته می‌ماند، و دفتر همین را می‌گوید."
+      agent_note: "روز را می‌توان کوتاه نوشت (`2026-09-20`) یا بلند، به‌صورت یک مدخل `timing`، تا گاه‌شمار، یکا یا آنچه پیش از آن آمده گفته شود."
+      staples: { where: "هر لحظه هم در زمان است و هم در جا", line: "سری در امتداد خطِ زمان می‌نشیند", money: "هر بند در روزی سررسید می‌شود" }
   - id: where
     short: "Where"
     name: "Where, and what it takes"
@@ -81,6 +176,13 @@ mechanisms:
       show: [ { bean: rack-a, keys: [capacity] }, { bean: web-1, keys: [located_at] } ]
       break: { bean: web-2, replace: ["rack-a#u19", "rack-a#u17"] }
       refused: "do not take the same room"
+    fa:
+      name: "کجا، و چه جایی می‌گیرد"
+      short: "کجا"
+      person: "چیزها در، بر یا میان چیزهای دیگرند: کدی در فهرستش، سابقه‌ای در دفتر ثبت، برنامه‌ای روی ماشین، جلسه‌ای در ساعت‌های کسی، سروری در رکش. برخی جای‌گیری‌ها چیزی از جایی که در آن‌اند نمی‌گیرند؛ برخی سهمی می‌گیرند؛ و برخی جایی می‌گیرند که هیچ چیز دیگری هم‌زمان نمی‌تواند بگیرد."
+      gardener: "بگویید یک چیز کجاست و، اگر مهم است، چقدر جا می‌گیرد و میزبانش چقدر ظرفیت دارد. دفتر وقتی سهم‌هایی بیش از توان میزبان وعده داده شود هشدار می‌دهد، و دو چیز را هم‌زمان در یک جا نمی‌پذیرد."
+      agent_note: "مکانی در چارچوبِ خودِ یک موجود، نامِ آن موجود را می‌برد؛ اگر تنها میزبان گفته شود (`host`)، جا معلوم است و جایگاه نه."
+      staples: { when: "جلسه ساعت‌های حاضران را می‌گیرد", what: "میزبان تنی است که جا برای دادن دارد", pages: "صفحه نشان می‌دهد چیزها کجایند" }
   - id: codes
     short: "Codes"
     name: "Codes"
@@ -98,6 +200,13 @@ mechanisms:
       show: [ { bean: hallway-nas, keys: [knowledge] } ]
       break: { bean: hallway-nas, replace: ["isced-f-2013:0612", "isced-f-2013:0699"] }
       refused: "is not a code of"
+    fa:
+      name: "کدها"
+      short: "کدها"
+      person: "یک پیشه، یک رشته‌ی دانش، یک فناوری، حسابی در سرفصل حساب‌های خودتان: هر کدام کدی از یک رده‌بندی است و همراه با رده‌بندی‌اش نوشته می‌شود، تا دو دفتر از آن یک معنا را بفهمند."
+      gardener: "دسته‌بندی‌های خودتان را به‌صورت رده‌بندی‌ای از آنِ خودتان نگه دارید؛ کد تازه یک ردیف تازه است که مانند هر تغییر دیگری در روزنامه ثبت می‌شود. رده‌بندی‌های منتشرشده (پیشه‌ها، رشته‌ها، فناوری‌ها) همراه نسخه می‌آیند."
+      agent_note: "هر جا کدی نوشته شود یک شکل دارد: `<scheme>:<code>`، که در برابر رده‌بندی‌ای که نام می‌برد سنجیده می‌شود."
+      staples: { who: "کدی که ناشری داده، آنچه را رده‌بندی می‌کند می‌شناساند", money: "حساب کدی است در طرح حساب‌های خودِ باغ", line: "هر خوانش در یک رده‌بندی کد می‌خورد" }
   - id: money
     short: "Money"
     name: "Money and agreements"
@@ -115,6 +224,13 @@ mechanisms:
       show: [ { bean: storage-rent, keys: [transactions] } ]
       break: { bean: storage-rent, replace: ["count: \"40.00\"", "count: \"30.00\""] }
       refused: "adds up to"
+    fa:
+      name: "پول و توافق‌ها"
+      short: "پول"
+      person: "توافق می‌گوید چه کسی متعهد است و هر کس چه بدهکار است؛ پرداخت می‌گوید چه کسی پرداخت و هزینه بر دوش کیست. بدهی یک نفر به دیگری از آنچه پرداخت و توافق شده خوانده می‌شود، و هرگز جداگانه کنارش نوشته نمی‌شود، جایی که بتواند از آن فاصله بگیرد."
+      gardener: "به عامل بگویید چه توافق شد و چه پرداخت شد، به همان ارزی که پرداخت شد. دفترتان مانده را می‌خواند؛ و نود روز پیش از آنکه نامی که در اختیار دارید منقضی شود، به شما خبر می‌دهد."
+      agent_note: "مبلغ‌ها دقیق‌اند، با رقم‌های اعشاری خودِ آن ارز، و آنچه هر طرف پرداخته دقیقاً با کل مبلغ جمع می‌شود."
+      staples: { when: "چه سررسید می‌شود، و کی منقضی می‌شود", codes: "هر مبلغ به کجا تعلق دارد", between: "طرف دیگر هم دفتری دارد" }
   - id: line
     short: "Along a line"
     name: "Along a line"
@@ -132,6 +248,13 @@ mechanisms:
       show: [ { bean: front-door, keys: [series] } ]
       break: { bean: front-door, replace: ["whole: { value: { count: 4", "whole: { value: { count: 5"] }
       refused: "the sum of"
+    fa:
+      name: "در امتداد یک خط"
+      short: "در امتداد خط"
+      person: "آنچه یک سنجه در هر لحظه نشان داد، آنچه از یک چیز هنگام خواندنش یافته شد: سری‌ها و خوانش‌ها. آنچه از آن‌ها برمی‌آید (یک جمع، یک روند، یک سهم) هر بار که پرسیده شود از نو محاسبه می‌شود، پس هرگز از آنچه ثبت شده دور نمی‌افتد."
+      gardener: "از دفتر بپرسید (چقدر، چند تا، کدام اول) و پاسخ می‌دهد، همراه با سطرهایی که خوانده و اینکه چگونه خوانده. هیچ چیزی که محاسبه می‌کند به‌عنوان گزاره بازنویسی نمی‌شود."
+      agent_note: "کلِ یک سری دقیقاً بررسی می‌شود؛ جای خالی در یک گره، کلی باقی می‌گذارد که هیچ‌کس نمی‌تواند بررسی‌اش کند، و این گفته می‌شود."
+      staples: { when: "خطی از زمان، یا خطی از ترتیب", codes: "آنچه یک کانال نگه می‌دارد کد دارد", money: "جمع خوانده می‌شود، نه نگه‌داری" }
   - id: between
     short: "Between gardens"
     name: "Between gardens"
@@ -149,6 +272,13 @@ mechanisms:
       show: [ { bean: ali, keys: [consent] }, { bean: ali-consent, keys: [parties, words] } ]
       break: { bean: bea, copy_of: ali, staged: true, replace: [ ["consent: { bean: ali-consent }\n", ""], ["123456789abc/person:ali", "person:bea"], ["title: \"Ali\"", "title: \"Bea\""] ] }
       refused: "no consent of theirs"
+    fa:
+      name: "میان باغ‌ها"
+      short: "میان باغ‌ها"
+      person: "دو دفتر همان‌گونه به هم می‌رسند که دو شبکه: هر کدام از آنِ خود، و هیچ‌یک به درون دیگری دست نمی‌برد. آنچه می‌گذرد همیشه فقط یک پیشنهاد است: پرونده‌ای که کنار گذاشته می‌شود و باغبانِ دیگر به دست خودش آن را می‌پذیرد."
+      gardener: "با آن شخص دیگر بر سر آنچه به اشتراک می‌گذارید توافق کنید؛ عاملتان پیشنهاد را می‌نویسد. هیچ چیز از طرف شما فرستاده نمی‌شود، و هیچ پیشنهادی از سوی دیگر وارد دفترتان نمی‌شود تا خودتان آن را ثبت کنید."
+      agent_note: "شخصی که باغبان نیست تنها با رضایتِ ثبت‌شده‌اش با نام نگه داشته می‌شود."
+      staples: { who: "گزاره هنگام گذر منبعش را نگه می‌دارد", money: "هزینه‌ی مشترک به‌صورت پیشنهاد می‌گذرد", gate: "دروازه‌ی سوی دیگر آن را می‌پذیرد" }
   - id: gate
     short: "Gate & journal"
     name: "The gate and the journal"
@@ -166,6 +296,13 @@ mechanisms:
       show: [ { save: true } ]
       break: { bean: hallway-nas, replace: ["the family's photos", "the family's photos and films"], staged: true }
       refused: "log/journal.md not updated"
+    fa:
+      name: "دروازه و دفتر روزنامه"
+      short: "دروازه و روزنامه"
+      person: "قاعده‌ها داده‌اند، نسخه‌دار، و دروازه آن‌ها را در هر ثبت می‌خواند؛ خودِ دروازه هیچ اصطلاحی را نام نمی‌برد. هر تغییر در همان ثبتی که آن را می‌سازد در روزنامه نوشته می‌شود. تغییرِ قاعده‌ها خود تغییری است که در روزنامه می‌آید و انسانی آن را تأیید می‌کند."
+      gardener: "آنچه عامل نمی‌تواند درباره‌اش تصمیم بگیرد، شما تأیید می‌کنید: هویت‌ها، ایمنی، و هر تغییر در قاعده‌ها. نسخه‌ی تازه تنها وقتی به دفترتان می‌رسد که آن را بپذیرید: ترجمه‌شده، اثبات‌شده، و ثبت‌شده در روزنامه."
+      agent_note: "یک فرمان، روزنامه را می‌نویسد، آماده می‌کند و ثبت می‌کند؛ دروازه درباره‌ی آنچه ثبت می‌شود داوری می‌کند، و پاسخِ ردش راه اصلاح را می‌گوید."
+      staples: { who: "هیچ گزاره‌ای بی‌منبع نیست", what: "قاعده‌ها به سرشت‌ها بسته‌اند", between: "دروازه‌ی هر باغ از آنِ خودِ آن است" }
   - id: pages
     short: "Pages"
     name: "Pages"
@@ -183,3 +320,10 @@ mechanisms:
       show: [ { bean: home-page, keys: [view] } ]
       break: { bean: home-page, replace: ["shown_from: understand", "shown_from: glance"] }
       refused: "is not a declared view_lenses"
+    fa:
+      name: "صفحه‌ها"
+      short: "صفحه‌ها"
+      person: "دفتر را می‌توان به‌صورت صفحه خواند: بخش‌هایش، اینکه کار چگونه میانشان جریان دارد، و مقدارهای زنده کنار هر یک؛ همه برگرفته از خودِ دفتر، و هرگز نگه‌داری‌شده در جای دیگر."
+      gardener: "صفحه‌ای درباره‌ی آنچه برایتان مهم است بخواهید. آن را یک ماژول می‌کشد که دفترتان نگه می‌دارد، از صفحه‌ای به صفحه‌ی دیگر دوباره به کار می‌رود، و مانند هر چیز دیگری در برابر قانون سنجیده می‌شود."
+      agent_note: "هر صفحه‌نمایش یک صفحه‌ی `view` است؛ هر نگاره را یک بار بنویسید و دوباره به کار ببرید؛ باغ تنها انبار است."
+      staples: { where: "صفحه نشان می‌دهد چیزها کجایند و چگونه به هم مربوط‌اند", line: "مقدارهای زنده کنار نگاره", gate: "صفحه در برابر قانون سنجیده می‌شود" }

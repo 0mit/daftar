@@ -14,7 +14,8 @@ checked here:
   4. the page is what the build writes NOW: `site/board.py --out <tmp>` writes it back byte for byte — so every form it
      shows passed the release's gate and every refusal is the line that gate printed;
   5. its data holds a board for every crossing: every lens, every mechanism, each with its words, its proved form and
-     refusal, and the parts of the law it names;
+     refusal, and the parts of the law it names — and every word of the page in each of its languages, with the same
+     places to fill;
   6. the pages workflow publishes the page and its assets, and nothing else of site/;
   7. the issue forms parse as GitHub reads them, open with the warning against pasting from a garden, require the
      situation (or the change, the question, what was expected) and the neutral-names checkbox; blank issues are off;
@@ -68,6 +69,7 @@ def published():
     return out
 
 
+PLACE = re.compile(r"\{(\w+)\}")          # a place a word of the page leaves to be filled: {name}
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 
 
@@ -201,6 +203,27 @@ def every_crossing(p):
     stray = [f"{m['id']} → {t}" for m in M for t in (m.get("staples") or {}) if t not in ids or t == m["id"]]
     stray += [f"rope {r.get('a')}–{r.get('b')}" for r in data.get("ropes") or [] if not {r.get("a"), r.get("b")} <= ids]
     check("every staple and every rope joins two mechanisms the page has", not stray, stray)
+    langs = [x.get("id") for x in data.get("languages") or []]
+    ui = data.get("ui") or {}
+    missing = [f"ui.{lg}" for lg in langs if lg not in ui]
+    if langs and langs[0] in ui:
+        base = ui[langs[0]]
+        for lg in langs[1:]:
+            got = ui.get(lg) or {}
+            missing += [f"ui.{lg}.{k}" for k in base if not str(got.get(k) or "").strip()]
+            missing += [f"ui.{lg}.{k}: its places {sorted(set(PLACE.findall(got[k])))} are not "
+                        f"{sorted(set(PLACE.findall(v)))}" for k, v in base.items()
+                        if k in got and set(PLACE.findall(got[k])) != set(PLACE.findall(v))]
+            missing += [f"lens {x.get('id')}.{lg}.{k}" for x in L for k in ("label", "who")
+                        if not str((x.get(lg) or {}).get(k) or "").strip()]
+            missing += [f"{m.get('id')}.{lg}.{k}" for m in M for k in ("name", "short", "person", "gardener", "agent_note")
+                        if not str((m.get(lg) or {}).get(k) or "").strip()]
+            missing += [f"{m.get('id')}.{lg}.staples" for m in M
+                        if set((m.get(lg) or {}).get("staples") or {}) != set(m.get("staples") or {})]
+    check(f"every word of the page is written in each of its languages ({', '.join(langs) or 'none'}), with the same "
+          f"places to fill", len(langs) >= 1 and not missing, missing)
+    check("...and every word the template names is filled in: no `{{` is left in the page",
+          "{{" not in TEXT.split('id="data"')[0], re.findall(r"\{\{\w+\}\}", TEXT)[:5])
     board = yaml.safe_load(read(os.path.join(ROOT, "site", "boards.yaml")))
     named = sum(len(m.get("items") or []) for m in board.get("mechanisms") or [])
     have = sum(len(m.get("keeper") or []) for m in M)
