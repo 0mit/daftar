@@ -427,7 +427,7 @@ Sam uses the camera more, so Sam bears two parts of its cost and Ali one.
 ## An agreement paid in instalments
 
 Sam lent Ali the price of a washing machine, to be repaid in six monthly instalments, with interest on one paid
-late. What the agreement asks is written as **clauses**, each a position on the `capability` square — `required`
+late. What the agreement asks is written as **clauses**, each a position on the `permission` square — `required`
 (must, the reading when `permission` is silent), `omissible` (need not), `permitted` (may), `forbidden` (must not) —
 with who it binds (`by`), whom it is owed to (`to`), how much, from when (`due`) and how it repeats (`every`). A
 clause that is not brought into force by a date says what brings it (`when`). `bin/dmstale.py` warns before each

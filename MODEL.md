@@ -103,7 +103,7 @@ Ownership is separate from **habitat**: a running instance is owned through its 
 ## Agreements and money
 - An agreement is a `contract` bean: who it binds (`parties`), where its words are (`words`: written, spoken, or not
   yet put into words, and the `document` or `event` that holds them), what it asks of each party (`clauses`, each a
-  position on the `capability` square — must, need not, may, must not — with its amount, its day, how it repeats and
+  position on the `permission` square — must, need not, may, must not — with its amount, its day, how it repeats and
   what brings it into force), and what has moved under it (`transactions`).
 - **An offer is not an acceptance.** A party with `accepted` said yes on that day — or, where nobody said the day, on
   one placed by what it followed, which is an acceptance all the same; a party without it has no acceptance on record —
@@ -202,7 +202,7 @@ The rules are data, not code.
   unit) may be declared whole, ahead of its occupants, when it is universal and general — its empty positions
   declared vacant as `universal`. `CONTRIBUTING.md` has the test.
 - **Aspects have a shape (a figure).** An *opposition* is a closed set of contradictory positions along one or
-  more axes (necessity, capability and feasibility are squares; confidentiality is a single axis). A *sequence* is a domain walked along direction lines
+  more axes (necessity, permission and feasibility are squares; confidentiality is a single axis). A *sequence* is a domain walked along direction lines
   and is declared only by its restrictions: how many lines, whether positions are measured, whether they are
   totally, partially or not ordered, whether a walk can return, and where the domain ends. `time`, `place`
   and `walk` are sequences; "must stay acyclic" is the `walk` aspect's restriction, and a duration is a

@@ -251,6 +251,11 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **27.1** (2026-09-28, human-ratified rule-change) — **the permission square says its own name.** MINOR, no rule
+  changes: 26.0 renamed the aspect `capability` `permission`, and the prose kept the old name in six places — the meaning
+  of `clauses` (law), MODEL.md twice, the cookbook's agreement chapter, and the reasons for the square, for a clause
+  on it and for why a risk is not one. Each now says `permission`. `capabilities`, what a being may or must be able to
+  do, is a term of its own and keeps its name.
 - **27.0** (2026-09-28, human-ratified rule-change) — **a day is a position, in either of its forms, and a moment is in
   time and place together.** MAJOR: a garden's own term typed `iso_date`, `date` or `date_or_moment` is translated by
   `bin/dmupgrade.py`, one typed `moment` is named for its gardener, and a garden's own metered system states its meter.
