@@ -2814,8 +2814,11 @@ class Step29:
                "summary: " + json.dumps(f"held through {reg.get('registrar')}" + (f" until {reg['expires']}, when it lapses unless renewed" if reg.get('expires') else ''), ensure_ascii=False),
                "nature: lekton", "identity:", "  status: confirmed", "  anchors:",
                f"    - {{ key: identifier, value: \"contract:{cid}\", class: logical, establishing: true }}",
-               "provenance: " + _flow_29({'src': prov.get('src', 'observed'), 'by': prov.get('by', 'unknown'),
-                                          'as_of': str(reg.get('observed') or prov.get('as_of'))}),
+               # the day of writing is the save's to stamp; the day the facts were read is the record they were taken from
+               "provenance: " + _flow_29({'src': prov.get('src', 'observed'), 'by': prov.get('by', 'unknown'), 'as_of': 'now'})[:-2]
+               + ", from: [ " + _flow_29({'src': prov.get('src', 'observed'), 'by': prov.get('by', 'unknown'),
+                                         'as_of': str(reg.get('observed') or prov.get('as_of'))})[:-2]
+               + f", at: {{ bean: {b}, field: registration }} }} ] }}",
                "owned_by: { legal: { crown: logos } }", "responsibility: { legal: { parties: true } }",
                "over:", f"  - {{ thing: {{ bean: {b} }} }}", "parties:",
                "  registrant: " + _flow_29({'external': str(reg_by) if reg_by else 'not disclosed by the registry',

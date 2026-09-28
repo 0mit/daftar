@@ -29,7 +29,7 @@ G = os.path.join(T, "g")
 r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "sam", cwd=ROOT)
 check("a garden germinates on the law with the line from place to location", r.returncode == 0, r.stdout + r.stderr)
 OWN = 'owned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
-PROV = 'provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-28 }\n'
+PROV = 'provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: 2026-09-28 }\n'
 
 
 def host(name, extra=""):
@@ -166,6 +166,13 @@ check("...a registration is the contract it is, over its domain: the registrar a
       R_.get("over") == [{"thing": {"bean": "example-org"}}] and R_["parties"]["registrar"]["external"] == "Example Registrar Inc."
       and R_["clauses"]["renewal"]["due"].isoformat() == "2027-01-15" and R_["clauses"]["renewal"]["notice"] == {"count": 90, "unit": "day"}
       and "# the gardener said so" in open(_reg).read() and "registration" not in fm("example-org"), R_)
+run("git", "-C", G, "config", "user.name", "sam"); run("git", "-C", G, "config", "user.email", "sam@example.org")
+_all = sorted(f[:-3] for f in os.listdir(os.path.join(G, "beans")) if f.endswith(".md"))
+sv = run(sys.executable, os.path.join(G, "bin", "dmsave.py"), "sam (gardener)", "crossed into 29.0", "--body",
+         "- action: RULE-CHANGE (VOCAB.md) extends the code, domain and knowledge profiles; the translation of "
+         + ", ".join(f"[[{b}]]" for b in _all), cwd=G)
+check("...and the translated garden is saved: what the step wrote passes the save's own rules, a new record's day stamped "
+      "at writing and the day its facts were read kept in `from`", sv.returncode == 0, (sv.stdout + sv.stderr)[-700:])
 st = run(sys.executable, os.path.join(G, "bin", "dmstale.py"), cwd=G).stdout
 check("...and dmstale reads the renewal as it read the registration: its day, its registrar, whether it renews itself",
       "example-org-registration.clauses[renewal]" in st and "auto_renew=disabled" in st and "Example Registrar Inc." in st, st[-600:])
