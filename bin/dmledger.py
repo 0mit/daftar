@@ -127,7 +127,7 @@ def money_terms(terms):
         # WHEN IT HAPPENED: the attribute the law types as a date — found by its type, so a garden's term that names
         # its day otherwise is read the same way.
         dates = [a for a, r in (sch.get('attrs') or {}).items()
-                 if isinstance(_in(r), dict) and _in(r).get('type') in ('date', 'iso_date')]
+                 if isinstance(_in(r), dict) and _in(r).get('type') == 'date']
         said_as = [a for a, r in (sch.get('attrs') or {}).items() if isinstance(r, dict) and r.get('required') and _in(r) == 'prose']
         share = ((_in((sch.get('attrs') or {}).get(BEARING)) or {}).get('entries') or {}).get(SHARE)
         out.append((name, {'wholes': [w for w in wholes if w], 'parts': pattr, 'part_amount': pfield,
@@ -550,7 +550,7 @@ def clause_lines(term, key, e, sch, units, systems, today, fm=None):
             text, asides = due_words(a, v, e.get(rep) if rep else None, systems, today)
             facts.append(text)
         elif 'key_of' in f or 'values' in f or 'type' in f:
-            facts.append(f"{a} {dmstale.brief(v)}")
+            facts.append(f"{a} {dmstale.day_words(v)}")
         elif 'recurrence' in f:
             facts.append(f"{a} {dmstale.describe(v)}")
         elif 'extent' in f:
@@ -616,7 +616,7 @@ def occurrence_lines(key, e, decl, units, systems, today, fm, stance):
     g = dmreckon.Garden(ROOT)
     totals = {}
     for member, at in occ:
-        bits = [f"entered {dmstale.brief(at)}" if at else "when it entered is not read"]
+        bits = [f"entered {dmstale.day_words(at)}" if at else "when it entered is not read"]
         owed_, unit = None, None
         if stance not in (None, 'required'):
             pass                                         # a permission occurs, and owes nothing
@@ -698,9 +698,11 @@ def allowance_lines(key, e, sch, units, fm, today):
 def due_words(attr, v, rec, systems, today):
     """(text, notes) — when a clause falls due and, for one that repeats, when it falls due NEXT, walked by
     bin/dmstale.py; the notes name each cell the walk skipped on the way to it (a month without the day named)."""
-    shown = dmstale.brief(v)
+    shown = dmstale.day_words(v)
     try:
         first = dmstale.day_of(v)
+    except dmcal.Unplaced:
+        return f"{attr} {shown} — placed by what it follows, on no day this can reckon", []
     except (ValueError, dmcal.NotByRule) as why:
         return f"{attr} {shown} ({why})", []
     if not isinstance(rec, dict):
@@ -736,7 +738,7 @@ def print_agreement(ag, units, systems, today):
             if isinstance(p, dict) and p.get('acting_for'):
                 emit(f"   {esc(k)} acts for {esc(p['acting_for'])}: what it does binds {esc(p['acting_for'])} (N13)")
             if isinstance(p, dict) and p.get('declined'):
-                emit(f"   {esc(k)} declined on {dmstale.brief(p['declined'])} (N14)")
+                emit(f"   {esc(k)} declined on {dmstale.day_words(p['declined'])} (N14)")
     for n in ag['notes']:
         emit(f"   NOTE {n}")
     if ag['txs']:
@@ -745,7 +747,7 @@ def print_agreement(ag, units, systems, today):
         if tx['whole'] is None:
             emit(f"     {esc(tx['key'])}  — " + '; '.join(tx['notes']))
             continue
-        line = f"     {esc(tx['key'])}" + (f"  {dmstale.brief(tx['day'])}" if tx.get('day') else '') + \
+        line = f"     {esc(tx['key'])}" + (f"  {dmstale.day_words(tx['day'])}" if tx.get('day') else '') + \
             f"  {said(tx['whole'], tx['unit'], units)}"
         if tx['paid'] is not None:
             line += "  paid by " + ', '.join(f"{esc(p)}" + ('' if len(tx['paid']) == 1 else f" {said(x, tx['unit'], units)}")

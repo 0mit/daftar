@@ -24,7 +24,7 @@ What agents got wrong most often in measured runs — each a value nobody said, 
 
 - **Today is not the day it happened.** `day`, `accepted`, `agreed` and `due` are shown empty below, and stay empty
   unless someone said that day — nor is the day of writing, or a date in another bean, the day it happened. An
-  event's timing nobody said is `event-anchored` (*What nobody said*, at the end).
+  event's timing nobody said is `event-anchored`, and so is a yes nobody dated (*What nobody said*, at the end).
 - **A transaction's amount is the whole that moved.** Its `borne_by` shares divide it: 90 paid by one and borne two
   parts to one is `amount: { count: "90", … }` with shares 2 and 1 — never the 30 that one of them owes.
 - **A currency is named by its code, looked up, not guessed** (*A currency*, at the end). When no row or more than
@@ -100,7 +100,7 @@ provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
-  sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted; empty unless said
+  sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted; empty unless said — where they accepted and nobody said the day: `{ system: event-anchored, at: "after:<what it followed>", unit: day }`, placed by what it followed
   ali: { who: { bean: ali }, accepted: }   # accepted: the day this party accepted; empty unless said
 words: { form: spoken, agreed: }   # agreed: the day it was agreed, in any calendar; empty unless said
 ---
@@ -311,7 +311,9 @@ Sam called Ali some day after the dinner; nobody said which.
 ### A day nobody said
 
 A day nobody said — `accepted`, `agreed`, `day`, `due` — stays empty, as the forms show it, or is left out: each of
-them may be absent. A party with no `accepted` has no acceptance on record, and the record then says just that.
+them may be absent. A party with no `accepted` has no acceptance on record. One who said yes on a day nobody said did
+accept: that day is placed as an event's is, by what it came after — the long form every day may take, as Sam's and
+Ali's in the loan below — and it counts as consent.
 
 ### An amount nobody said
 
@@ -336,8 +338,8 @@ provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
-  sam: { who: { bean: sam }, role: lender }
-  ali: { who: { bean: ali }, role: borrower }
+  sam: { who: { bean: sam }, role: lender, accepted: { system: event-anchored, at: "after:dinner-at-sams", unit: day } }
+  ali: { who: { bean: ali }, role: borrower, accepted: { system: event-anchored, at: "after:dinner-at-sams", unit: day, note: "on the call" } }
 over:
   - { what: "the price of Ali's phone" }
 words: { form: spoken, at: { bean: call-with-ali } }

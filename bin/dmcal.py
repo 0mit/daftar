@@ -41,6 +41,40 @@ class NotByRule(Exception):
     pass
 
 
+class Unplaced(ValueError):
+    """A position placed only by its NEIGHBOURS — `after:<position>`, `before:<position>`, the law's `event-anchored` —
+    names no day, and no arithmetic finds one. A ValueError, so a reader that says "not a day this can read" still says
+    it; one that can say more (what the day came after) catches this first."""
+
+
+_NEIGHBOURED = re.compile(r'^(after|before):(.+)$', re.S)
+
+
+def written(position):
+    """THE TEXT A CALENDAR READS, from either form of a position (std-vocab 27.0). The SHORT form is that text:
+    `2026-09-20`, `persian:1405-06-29 14:05+03:30`. The LONG form is one entry of the law's `timing` — `{system, at,
+    unit, by?, note?}` — whose `at` is the short form in its system; or `after:`/`before:` another position, which
+    names no day and raises Unplaced. Anything else comes back as it was, for the reader's own refusal."""
+    if not isinstance(position, dict):
+        return position
+    at = position.get('at')
+    if at is None or isinstance(at, (dict, list, bool)):
+        raise ValueError("a position written long holds its place in `at`, in its system's one form")
+    m = _NEIGHBOURED.match(str(at).strip())
+    if m:
+        raise Unplaced(f"placed {m.group(1)} {m.group(2).strip()}, by its neighbours — it names no day")
+    return at
+
+
+def shown(position):
+    """A position as a reader shows it: the short form as written; the long form as its `at`, or, placed by its
+    neighbours, in words (`after the call`) — never a mapping as Python spells it."""
+    if not isinstance(position, dict):
+        return str(position)
+    m = _NEIGHBOURED.match(str(position.get('at', '')).strip())
+    return f"{m.group(1)} {m.group(2).strip()}" if m else str(position.get('at'))
+
+
 def _q(a, b):
     return a // b
 
@@ -328,8 +362,9 @@ _GREGORIAN = re.compile(r'^(\d{4})-(\d{2})-(\d{2})')
 
 def to_day(position):
     """The day number of a position written in its system's one form (the date part). ValueError for a day its calendar
-    does not have, and for one outside the days reckoned here; NotByRule for a calendar that is not reckoned by rule."""
-    position = str(position).strip()
+    does not have, and for one outside the days reckoned here; NotByRule for a calendar that is not reckoned by rule.
+    A position written long is read by its `at` (`written`)."""
+    position = str(written(position)).strip()
     shown = position if len(position) <= 60 else f"{position[:60]}… ({len(position)} characters)"
     try:
         return within(_to_day(position, shown), shown)
@@ -494,8 +529,9 @@ class Moment(tuple):
 def moment(position):
     """The Moment a position names: a calendar's day with a clock reading and its offset, or a `unix-epoch` count of
     milliseconds. ValueError for one that names no moment — a date alone, a clock with no offset (whose moment depends
-    on where it was read), a day its calendar does not have — and NotByRule for a calendar not reckoned by rule."""
-    position = str(position).strip()
+    on where it was read), a day its calendar does not have — and NotByRule for a calendar not reckoned by rule. A
+    position written long is read by its `at` (`written`)."""
+    position = str(written(position)).strip()
     if _EPOCH.match(position):
         return Moment(UNIX_DAY * DAY_MS + int(position), 'unix-epoch', None, 'millisecond')
     m = _MOMENT.match(position)

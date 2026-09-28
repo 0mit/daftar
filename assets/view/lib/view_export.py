@@ -119,6 +119,14 @@ def _ics_time(at):
     return ("", t.astimezone(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
 
 
+def _civil(p):
+    """A position's gregorian-civil text in either of its forms (27.0): the short form as written; the long form's `at`
+    where its system is the civil calendar, else None."""
+    if isinstance(p, dict):
+        return p.get("at") if p.get("system") == "gregorian-civil" else None
+    return p
+
+
 def _duration(secs):
     secs = int(secs)
     d, r = divmod(secs, 86400)
@@ -143,8 +151,8 @@ def feed_events(key):
                 if isinstance(t, dict) and t.get("system") == "gregorian-civil" and _ics_time(t.get("at")):
                     out.append((m, name, t.get("at"), f.get("title") or m, notice))
             for name, c in sorted((f.get("clauses") or {}).items()):         # a clause's `due` (its first, where it repeats)
-                if isinstance(c, dict) and c.get("state") not in ("met", "waived") and _ics_time(c.get("due")):
-                    out.append((m, name, c["due"], "%s: %s" % (f.get("title") or m, c.get("what") or name), notice))
+                if isinstance(c, dict) and c.get("state") not in ("met", "waived") and _ics_time(_civil(c.get("due"))):
+                    out.append((m, name, _civil(c["due"]), "%s: %s" % (f.get("title") or m, c.get("what") or name), notice))
     return out
 
 

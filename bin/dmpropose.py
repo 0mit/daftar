@@ -80,6 +80,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import dmparse
 import dmgarden  # noqa: E402 — the one garden model: where its documents are
+import dmcal     # noqa: E402 — a day in either of its forms, as a reader is shown it
 try:
     import yaml
 except ImportError:
@@ -2020,7 +2021,7 @@ def analyse(path, as_test=False):
                          f"`parties.{mine_k or '<their party>'}.accepted` in their own commit")
                 said = (((ufm.get('parties') or {}).get(mine_k) or {}) if mine_k else {}).get('accepted')
                 if said is not None:
-                    L.append(f"  NOTE it says {gardener_here} accepted ({_esc(said)}) — that is {fname}'s record; "
+                    L.append(f"  NOTE it says {gardener_here} accepted ({_esc(dmcal.shown(said))}) — that is {fname}'s record; "
                              f"{gardener_here}'s own acceptance is written here, by them")
             if gardener_here and gardener_here not in who_parties(ufm):
                 R.append((f"the agreement it is made under does not name this garden's gardener "

@@ -60,7 +60,14 @@ check("every 5 minutes — a stride by MEASURE on time", ok(gate("{ of: time, ev
 check("every 5 METRES — the same construct on place, because `geographic` is metered and says so",
       ok(gate("{ of: place, in: geographic, every: { count: 5, unit: metre } }")))
 out = gate("{ of: place, every: { count: 5, unit: metre } }")
-check("...and without the system it is refused: `place` itself claims no measure", "neither aspect 'place' nor the system it names is metered" in out, out[-500:])
+check("...and without the system it is refused: place has many lines, and a stride walks one (27.0)",
+      "aspect 'place' has open lines, and a stride of 5 metre walks one" in out, out[-500:])
+check("...while a REGION of place measures a length in no system, as one of time measures a duration (27.0: `place` is "
+      "metered in length, as `time` in time)", ok(gate("{ of: time, every: { count: 5, unit: minute } }",
+                                                        ", covers: { of: place, measure: { count: 5, unit: metre } }")))
+out = gate("{ of: time, in: ics-chronostrat, every: { count: 1, unit: annus } }")
+check("...and a meter is the SYSTEM's: the rock record's line is counted, not measured, and a stride in years along it "
+      "is refused — a system inherits no meter from its aspect (27.0)", "neither aspect 'time' nor the system it names is metered" in out, out[-500:])
 out = gate("{ of: place, in: geographic, every: { count: 5, unit: minute } }")
 check("a minute is not a length", "measures duration, and a stride here is measured in length" in out, out[-500:])
 check("every 10th RELEASE — a stride by NEIGHBOURS, on a sequence with no meter at all",

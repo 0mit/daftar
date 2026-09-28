@@ -390,6 +390,8 @@ a term, a schema, the manifest) and where it went, and the gate keeps no list of
 What went, and why. `scope`: read by nothing, and false on every minted name; the term and the name's own form say
 it now. `between`, `agreement_ref`, `conflict_rule`: declared with no schema, so each checked nothing; `parties`,
 `words` and a clause say it with structure. `balance`: a stored copy of what the transactions say, which drifts.
+`iso_date` (27.0): one calendar held as though a day had to be in it; `date` holds every Gregorian day it held, and
+the days of every other calendar besides, and no term of the law used it.
 `attributes`: a second bag for the one purpose `details` serves. The `facets` term: three prose rules that nothing
 checked, now a registry whose walk is checked. `values_consistent_with`: a guard against a list's own copies, whose
 last user became registry rows. `seeds_from`, `created`, `models`: manifest keys that nothing read; what a garden
@@ -670,6 +672,28 @@ The rule is stated where a date is defined, and which calendars it judges is rea
 tool happened to carry, the gate and the reader that walks a repetition could disagree about one calendar — a tool
 that learned an observed calendar would have started refusing its days on arithmetic the law says it does not follow.
 
+## value_types[date].long_form
+
+ONE POSITION, TWO FORMS (27.0). Since 10.0 a date has been read as a position — a calendar at unit day, its time of day
+unknown — and `timing` wrote a position with its system, its resolution, who read it and a note. Only the form kept
+them apart, and it cost what the short form cannot hold. A day nobody said had no place: `accepted` either held a day
+or was empty, and empty says that nobody accepted. Measured on a small model at v0.41.1 — the case said the person
+agreed, and nobody said when — the run went to it: it would not invent a day, and tried empty, `null`,
+`true` and `[]` in turn, and kept one fact of eight where 23.0 had kept eight.
+
+So each day type names the term whose one entry it may be written as, and every day position of the law takes that
+long form besides the short: the same position, judged by the same rules — its `at` is the short form, held to the
+type's unit — and able to say what only `timing` could, a day placed by what it came after (`event-anchored`), who
+read it, a note. The attributes keep their names, because the law reads them by name: `accepted` for consent,
+`expires` and `due` for what falls due, `since` for an order of owners. `timing` keeps its open keys, which the gate
+may not enumerate. One reader reads both forms (`bin/dmcal.py`, `written`), so no tool learns the long form alone.
+
+A POSITION PLACED BY ITS NEIGHBOURS NAMES NO DAY. It orders; it does not reckon. A reader that needs a day says it
+has none — a `due` placed after an event falls due on no day a reader can warn of — and never guesses one.
+
+What stays out: a position coarser than its type (a date held to the month). `timing` can say it; a day position
+that said it would be read as an interval by every tool that reckons with a day, which is a change of its own.
+
 ## anchor_systems[unix-filesystem].levels
 
 a tree of any depth; a position is held to whatever depth it is written at
@@ -683,6 +707,11 @@ mechanism, an offset from a being or from another system's position; a path is t
 (`dmwhere.on_host`) reads it for every tool that asks where a tree is. The systems a host anchors were a list of three
 names in that tool, and a garden's own filesystem system would have been read as a coordinate; `datum: host` puts the
 fact in the row, where the gate holds it to a place.
+
+## anchor_systems[unix-epoch].datum
+
+ITS ORIGIN IS A MOMENT OF A PLACE (27.0): a count of milliseconds from the start of 1970-01-01 on the prime meridian. The
+one system here that writes no offset was still read from a place; stating its datum says from which.
 
 ## anchor_systems[unix-epoch]
 
@@ -733,9 +762,20 @@ form. Each had been a Gregorian-only READER, never a rule that time is Gregorian
 THE FORM IS TAGGED — `persian:1405-06-29` — because `1405-06-29` is ALSO a Gregorian date, in the year 1405.
 One form per system; and between calendars, forms that cannot be mistaken for each other.
 
+NO TIME IS ABSOLUTE (27.0). A calendar's day begins at a moment of some place — midnight, sunset, noon at a meridian —
+and an offset is minutes east of the prime meridian, whose own time `Z` is. Only this row said it resolves through
+geography; every calendar whose day begins somewhere now says so, and the gate asks it of any that states `day_begins`.
+
 ## anchor_systems[geographic].restrictions
 
 the one place system with a measure: what "every 5 metres" needs
+
+## anchor_systems[event-anchored].pattern
+
+A NEIGHBOUR IS WRITTEN AS ITSELF (27.0). The forms show a day nobody said as `after:<what it followed>`, because a
+shape is what a writer copies. Copied as it stands, it would pass a pattern that took anything after the colon, and
+record a position placed after a placeholder. Angle brackets name no neighbour anyone writes, so the pattern refuses
+them, and the form a writer copies cannot be kept unfilled.
 
 ## anchor_systems[event-anchored].neighbours
 
@@ -1149,8 +1189,8 @@ that aspect's own restrictions, rather than time getting a construct nothing els
 ## value_types
 
 == VALUE TYPES (10.0, T3): the named types an attribute may be `in: { type: … }` ==
-They were patterns written in the gate's code. A TIME value type is a POSITION: `iso_date` is not "a date
-format" but the calendar system held at unit DAY, so every `observed: 2026-08-09` in a garden was always a
+They were patterns written in the gate's code. A TIME value type is a POSITION: a `date` is not "a date
+format" but a calendar held at unit DAY, so every `observed: 2026-08-09` in a garden was always a
 position in gregorian-civil whose second and minute are UNKNOWN, not zero. Saying so needs no data change;
 it states what those values already were. A type with no system (kebab) is only a form.
 
@@ -1334,11 +1374,15 @@ many there are.
 
 ## aspects[place].metered
 
-geographic coordinates are metered and containment is not; until a term needs
+A LENGTH ALONG PLACE IS A DISTANCE (27.0), as one along time is a duration: the aspect says what a length along it is
+measured in, and a system says whether it has one. Until 27.0 place said `none`, because a filesystem tree or a postal
+code has no distance, while time said `time` though the rock record's line is counted and never measured — each aspect
+answered for its systems, and the two answered differently. A meter is the SYSTEM's: geography says length, every
+calendar says time, and a system that says nothing is not metered. The aspect's word is read only where no system is
+named: a region of time seven days long, a region of place five metres across. A stride still names its system on
+place, because place has many lines and a stride walks one.
 
 ## aspects[place].order
-
-the difference, the aspect claims no measure it cannot give every system
 
 containment orders a path within its tree and nothing across trees
 
@@ -2207,12 +2251,28 @@ agreement failed its own gate. Per member, a disagreement about one party stays 
 their names. The danger the atom guarded against is met where it belongs: a party only one side names is a difference
 `dmpropose read` shows before anything is taken in, and the gardener decides.
 
+## terms[timing].schema.attrs.where
+
+A MOMENT IS IN TIME AND IN PLACE (27.0; the operator: "moments they have time and places together"). Civil time is
+read from a place — an offset is minutes east of the prime meridian, and a day begins at a place's midnight or sunset —
+so a moment that says only its time leaves out what its time was read from. The place is a coordinate beside the time,
+in the same entry, and not a second record that could drift from it; it takes the form a being's place takes, without
+what is a being's alone: whether it can be reached, and how long it stayed (`located_at`, where time sits inside place
+as `during`, the mirror of this). The zone in force there is what checks the offset, and a zone's rule is read from a
+machine's copy of the zone database (bin/dmwhere.py), never by the gate, whose verdict must not depend on the machine.
+
 ## terms[parties].schema.attrs.accepted
 
 TAKING IS NOT ACCEPTING. Taking another garden's proposal in records what that garden offers; it is not the
 receiving gardener saying yes to an agreement, and a tool that wrote it so would put words in a person's mouth. The
 receiving gardener accepts by writing `parties.<them>.accepted` in a commit of their own — the commit is the
 ratification, and the entry's provenance says whose word it is.
+
+A YES WHOSE DAY NOBODY SAID IS STILL A YES (27.0, ratified by the gardener as an E decision). The acceptance is the fact;
+its day is a fact about it. Held only as a day, an acceptance nobody dated could be written only as none — the record
+then said the party had not accepted, and a person who had agreed to be kept by name was refused as one who had not.
+Written long and placed by what it followed, it is an acceptance on record, and it counts as consent where the
+agreement is one. Whose word it is stays the entry's provenance, as it is for a dated one.
 
 ## terms[over].merge
 

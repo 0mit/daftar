@@ -1,5 +1,5 @@
 ---
-version: "26.1"
+version: "27.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -118,6 +118,7 @@ retired:
   - { name: seeds_from,    at: manifest, instead: "nothing: what a garden took in from another is in its journal, and in the captures on that garden's `garden` bean" }
   - { name: created,       at: manifest, instead: "nothing: when a garden began is its first commit" }
   - { name: models,        at: manifest, instead: "nothing: who wrote here is in the journal and in git" }
+  - { name: iso_date,      at: value_type, instead: "`date`: a position held to the day, in any calendar — the Gregorian day `2026-09-20` is one, written as before" }
   - { name: kind,          at: bean,     instead: "`genos`: which genos of being the bean records, a row of `gene`. A mapping, which records no being, keeps its `kind`" }
   - { name: kinds,         at: law,      instead: "`gene`: the registry of the gene a bean may be, one row `- genos: <name>` each, with its `of_nature`" }
   - { name: local_kinds,   at: vocab,    instead: "`local_gene`: the rows a garden adds to `gene`, each `- genos: <name>` with its `of_nature`" }
@@ -311,8 +312,8 @@ anchor_systems:
               { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     resolves_through: geographic
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
-    meaning: "a calendar position with a stated offset. Civil time RESOLVES THROUGH a geographic position, which is why it does not establish on its own."
+    restrictions: { lines: 1, order: partial, metered: time }
+    meaning: "a calendar position with a stated offset. Civil time RESOLVES THROUGH a geographic position, which is why it does not establish on its own: an offset is minutes east of the prime meridian, and `Z` is that meridian's own time — no time here is absolute, each is read from a place."
     pattern: '^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "YYYY-MM-DD[THH:MM[:SS[.sss]][+HH:MM|Z]] — the RESOLUTION actually held is stated separately in `unit` and is never inferred from how many digits were typed"
     establishes: false
@@ -322,11 +323,12 @@ anchor_systems:
     calendar: iso8601
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: week }, { level: day, unit: day } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the ISO 8601 week calendar: the SAME days as the Gregorian calendar, partitioned into weeks instead of months. A week does not nest in a month, so this is a second partition and not a level of the first — which is why it is its own system."
     pattern: '^-?\d{4}-W\d{2}-[1-7]$'
     form_note: "`2026-W38-7`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -338,11 +340,12 @@ anchor_systems:
     calendar: julian
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Julian calendar: a leap year every fourth year, with no century rule. Not among CLDR's identifiers; declared because the Coptic, Ethiopic and Hijri epochs are stated in it, and because a historical date before a country's Gregorian reform IS in it."
     pattern: '^julian:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`julian:2026-09-07`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -354,11 +357,12 @@ anchor_systems:
     calendar: persian
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Solar Hijri calendar, civil in Iran and Afghanistan: the year begins at the March equinox; six months of 31 days, five of 30, and Esfand of 29 or 30. The OFFICIAL calendar is astronomical; it is reckoned here by the published table of 33-year-cycle breaks, which reproduces it over the range the tool states and refuses outside it."
     pattern: '^persian:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`persian:1405-06-29`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -370,11 +374,12 @@ anchor_systems:
     calendar: hebrew
     reckoning: arithmetic
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: [12, 13] }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Hebrew calendar: lunisolar, and reckoned WHOLLY BY RULE since the 4th century. A leap year has THIRTEEN months: months are numbered from Tishri as CLDR numbers them, month 6 (Adar I) exists only in a leap year, and two months vary in length to keep the new year off forbidden weekdays."
     pattern: '^hebrew:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`hebrew:5787-01-09`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -386,11 +391,12 @@ anchor_systems:
     calendar: islamic-civil
     reckoning: arithmetic
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the tabular Hijri calendar, civil epoch (Friday 16 July 622 Julian): alternating months of 30 and 29 days and eleven leap days in a thirty-year cycle. An ARITHMETIC approximation of a calendar that is properly observed — good for reckoning, never for saying when a month actually began."
     pattern: '^islamic-civil:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`islamic-civil:1448-04-07`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -402,11 +408,12 @@ anchor_systems:
     calendar: islamic-tbla
     reckoning: arithmetic
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the tabular Hijri calendar, astronomical epoch (Thursday 15 July 622 Julian): the same rule as islamic-civil, one day earlier."
     pattern: '^islamic-tbla:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`islamic-tbla:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -418,11 +425,12 @@ anchor_systems:
     calendar: islamic
     reckoning: observational
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Hijri calendar as OBSERVED: a month begins when the new crescent is sighted, so its length is known only once it has been seen, and two places may begin it on different days."
     pattern: '^islamic:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`islamic:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -434,11 +442,12 @@ anchor_systems:
     calendar: islamic-rgsa
     reckoning: observational
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Hijri calendar by the sighting announced in Saudi Arabia."
     pattern: '^islamic-rgsa:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`islamic-rgsa:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -450,11 +459,12 @@ anchor_systems:
     calendar: islamic-umalqura
     reckoning: tabulated
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: table
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Umm al-Qura calendar: the civil Hijri calendar of Saudi Arabia, published as a table computed for Mecca."
     pattern: '^islamic-umalqura:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`islamic-umalqura:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -466,11 +476,12 @@ anchor_systems:
     calendar: coptic
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 13 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Coptic calendar: twelve months of thirty days and a thirteenth of five or six; the era of the Martyrs, from 284."
     pattern: '^coptic:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`coptic:1743-01-10`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -482,11 +493,12 @@ anchor_systems:
     calendar: ethiopic
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 13 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Ethiopic calendar, Amete Mihret: the Coptic structure with an epoch in the year 8."
     pattern: '^ethiopic:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`ethiopic:2019-01-10`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -498,11 +510,12 @@ anchor_systems:
     calendar: ethioaa
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 13 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Ethiopic calendar counted from Amete Alem, 5500 years earlier."
     pattern: '^ethioaa:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`ethioaa:7519-01-10`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -514,11 +527,12 @@ anchor_systems:
     calendar: indian
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Indian national calendar (Saka era): tied to the Gregorian leap rule, beginning on 22 March, or 21 March in a leap year."
     pattern: '^indian:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`indian:1948-06-29`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -530,11 +544,12 @@ anchor_systems:
     calendar: buddhist
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Thai Buddhist calendar: Gregorian months and days, the year counted from 543 BCE."
     pattern: '^buddhist:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`buddhist:2569-09-20`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -546,11 +561,12 @@ anchor_systems:
     calendar: roc
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Republic of China calendar: Gregorian months and days, the year counted from 1912."
     pattern: '^roc:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`roc:115-09-20`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -562,11 +578,12 @@ anchor_systems:
     calendar: japanese
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: era }, { level: year }, { level: month }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Japanese imperial calendar: Gregorian months and days, the year counted within an ERA. The era is a LEVEL above the year — and the one level in this registry whose cells are named rather than numbered. Reckoned from 1873, when Japan adopted the Gregorian calendar."
     pattern: '^japanese:[a-z]+-\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`japanese:reiwa-8-09-20`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -578,11 +595,12 @@ anchor_systems:
     calendar: chinese
     reckoning: astronomical
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: [12, 13] }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the traditional Chinese calendar: lunisolar, months beginning at the new moon computed for the 120th meridian east, with an intercalary month — written `L` — in some years."
     pattern: '^chinese:-?\d+-\d{2}L?-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`chinese:4723-08-09`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -594,11 +612,12 @@ anchor_systems:
     calendar: dangi
     reckoning: astronomical
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: [12, 13] }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the traditional Korean calendar: the Chinese structure computed for Korea's meridian."
     pattern: '^dangi:-?\d+-\d{2}L?-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`dangi:4359-08-09`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -610,11 +629,12 @@ anchor_systems:
     calendar: julian-day
     reckoning: arithmetic
     day_begins: noon
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: day, unit: day } ]
     neighbours: metered
-    restrictions: { lines: 1, order: total }
+    restrictions: { lines: 1, order: total, metered: time }
     meaning: "the Julian Day Number: a plain count of days, as astronomers keep it. EVERY CALENDAR MEETS THE OTHERS AT THE DAY, and this is that meeting point given a name: a system with one level and no months at all. Its day begins at NOON, so that a night of observation falls on one number."
     pattern: '^jdn:\d+$'
     form_note: "`jdn:<integer>` — the number of the day whose noon it is"
@@ -626,11 +646,12 @@ anchor_systems:
     calendar: mayan-long-count
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: baktun }, { level: katun }, { level: tun }, { level: uinal }, { level: kin, unit: day } ]
     neighbours: metered
-    restrictions: { lines: 1, order: total }
+    restrictions: { lines: 1, order: total, metered: time }
     meaning: "the Mayan long count: a count of days written in mixed base — 20 kin to a uinal, 18 uinal to a tun, 20 tun to a katun, 20 katun to a baktun. A calendar with NO MONTHS OF UNEQUAL LENGTH: every level is a fixed number of days. Reckoned from the Goodman-Martinez-Thompson correlation."
     pattern: '^mayan:\d+\.\d+\.\d+\.\d+\.\d+$'
     form_note: "`mayan:<baktun>.<katun>.<tun>.<uinal>.<kin>`"
@@ -642,11 +663,12 @@ anchor_systems:
     calendar: bahai
     reckoning: astronomical
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: 19 }, { level: day, unit: day } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Badi calendar: nineteen months of nineteen days and a few days between, the year beginning at the March equinox as computed for Tehran."
     pattern: '^bahai:\d+-\d{2}-\d{2}$'
     form_note: "`bahai:<year>-<month>-<day>`; the intercalary days are written as month 00"
@@ -658,11 +680,12 @@ anchor_systems:
     calendar: french-republican
     reckoning: astronomical
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: 12 }, { level: decade }, { level: day, unit: day } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the calendar of the French Republic: twelve months of thirty days in three ten-day decades, and five or six days over, the year beginning at the autumn equinox as observed from Paris. Declared because dated sources exist in it, and because its ten-day decade is a partition no other calendar here has."
     pattern: '^french-republican:\d+-\d{2}-\d{2}$'
     form_note: "`french-republican:<year>-<month>-<day>`; the days over are written as month 13"
@@ -672,8 +695,9 @@ anchor_systems:
   - system: unix-epoch
     dimension: time
     levels: [ { level: millisecond, unit: millisecond } ]
+    datum: { system: gregorian-civil, at: "1970-01-01 00:00Z", direction: after }
     neighbours: metered
-    restrictions: { lines: 1, order: total }
+    restrictions: { lines: 1, order: total, metered: time }
     meaning: "a time position as milliseconds since 1970-01-01T00:00:00Z. It serves `beanger` records, whose ORDER is the thing being recorded — two operations in one session land in the same second, and a position that cannot separate them cannot order them."
     pattern: '^\d{13}$'
     form_note: "exactly 13 digits: epoch MILLISECONDS, never seconds. One length, one meaning — a 10-digit value would be a different unit wearing the same shape, which is the ambiguity `unit` was added to stop."
@@ -727,8 +751,8 @@ anchor_systems:
     dimension: any
     neighbours: counted
     meaning: "a position fixed by NEIGHBOURING EVENTS rather than by any coordinate — 'after the branch was pushed, before the cutover'. Fully positioned while carrying no calendar value at all. Declared because it is what makes this a registry rather than a two-item enum: SEQUENCE is the general structure and a coordinate system is one restriction of it."
-    pattern: '^(after|before):.+$'
-    form_note: "after:<position> or before:<position>; state both as two entries when an interval is meant"
+    pattern: '^(after|before):[^<>]+$'
+    form_note: "after:<position> or before:<position> — the position itself, a bean's id or a few words, and never a placeholder in angle brackets; state both as two entries when an interval is meant"
     establishes: false
     why: "an event anchor positions relative to other positions — it fixes an interval, never a point"
   - system: network-segment
@@ -1103,6 +1127,7 @@ registry_forms:
     dimension: optional
     any_system: optional
     exists: optional
+    long_form: optional
     clock: optional
     origin: optional
     holds_no: optional
@@ -1744,26 +1769,22 @@ ordering_keys:
       - { id: key, op: multiply, of: importance, with: uncertainty }
 # == VALUE TYPES ==
 value_types:
-  - type: iso_date
-    system: gregorian-civil
-    unit: day
-    pattern: '^\d{4}-\d{2}-\d{2}$'
-    refusal: "must be an ABSOLUTE date YYYY-MM-DD (Rule 6 paper-durable)"
-    meaning: "a calendar position held to the DAY; its time of day is not known, which is different from midnight"
   - type: date
     dimension: time
     unit: day
     any_system: true
     exists: { reckoning: [arithmetic] }
-    refusal: "must be an ABSOLUTE date held to the day, in the one form of the calendar it is stated in — `2026-09-20`, `persian:1405-06-29`, `hebrew:5787-01-09`, `2026-W38-7` (Rule 6 paper-durable)"
-    meaning: "a position held to the DAY, in ANY calendar. What `observed`, `as_of` and `expires` are typed with: a fact is dated in the calendar it was known in, and no calendar is the one a date must be in. `iso_date` stays for a garden's own term that really means the Gregorian calendar. A day its calendar does not have is no date: where the calendar's row is reckoned in one of the ways `exists.reckoning` names, the day a position names, written back in that calendar, is the position written, and a year the reckoning cannot reach is no year. So it is for every position held to a day — a date, where a repetition starts and ends, a bound of a region in time."
+    long_form: timing
+    refusal: "must be an ABSOLUTE date held to the day, in the one form of the calendar it is stated in — `2026-09-20`, `persian:1405-06-29`, `hebrew:5787-01-09`, `2026-W38-7` (Rule 6 paper-durable) — or the same position written long, as one entry of `timing` at `unit: day`: `{ system: gregorian-civil, at: 2026-09-20, unit: day }`, or, where nobody said the day, `{ system: event-anchored, at: \"after:<what it followed>\", unit: day, note: <what is known of when> }`"
+    meaning: "a position held to the DAY, in ANY calendar. What `observed`, `as_of` and `expires` are typed with: a fact is dated in the calendar it was known in, and no calendar is the one a date must be in. It is written SHORT, as the calendar writes it, or LONG as one entry of the term `long_form` names — `timing`, `{system, at, unit, by?, note?}` at the type's unit — which is the same position, and holds what the short form cannot: a day nobody said, placed by its neighbours (`event-anchored`), who read it, and a note. A day its calendar does not have is no date: where the calendar's row is reckoned in one of the ways `exists.reckoning` names, the day a position names, written back in that calendar, is the position written, and a year the reckoning cannot reach is no year. So it is for every position held to a day — a date, where a repetition starts and ends, a bound of a region in time."
   - type: moment
     dimension: time
     unit: minute
     any_system: true
     clock: required
-    refusal: "must be a MOMENT: held to the minute or finer, in the one form of a calendar the law declares, with its offset — `2026-10-28 14:05-05:00`, `persian:1405-08-06 14:35+01:00`"
-    meaning: "a position in time held to the MINUTE or finer, in ANY calendar, with the offset it was read at: the form of a journal heading's moment, and of every value the save stamps from the clock. A day its calendar does not have is no moment, as it is no date"
+    long_form: timing
+    refusal: "must be a MOMENT: held to the minute or finer, in the one form of a calendar the law declares, with its offset — `2026-10-28 14:05-05:00`, `persian:1405-08-06 14:35+01:00` — or the same position written long, as one entry of `timing` at `unit: minute` or finer"
+    meaning: "a position in time held to the MINUTE or finer, in ANY calendar, with the offset it was read at: the form of a journal heading's moment, and of every value the save stamps from the clock. Written short or long as a date is, the long form at `unit: minute` or a finer unit of time. A day its calendar does not have is no moment, as it is no date"
   - type: kebab
     origin: { act: made }
     pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
@@ -1782,7 +1803,7 @@ value_types:
   - type: date_or_moment
     either: [date, moment]
     refusal: "must be a day (`2026-10-28`, `hebrew:5787-02-06`) or a moment to the minute or finer with its offset (`2026-10-28 11:00-05:00`), each in the one form of the calendar it is stated in"
-    meaning: "a `date` or a `moment` — held to the unit its form is written at: a clause due on a day falls due that day, one due at 11:00 falls due at 11:00; a reading of a day is of the day. Where the resolution of a READING could be mistaken, `timing` states its unit apart, and that rule stands"
+    meaning: "a `date` or a `moment` — held to the unit its form is written at: a clause due on a day falls due that day, one due at 11:00 falls due at 11:00; a reading of a day is of the day. Written long, its `unit` says which it is. Where the resolution of a READING could be mistaken, `timing` states its unit apart, and that rule stands"
   - type: field_path
     origin: { act: said, nature: lekton, by: law }
     pattern: '^(?:@occurrence|(?:[a-z0-9][a-z0-9-]*:)?(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?(?:\.(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?)*(?:>(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?(?:\.(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?)*)*)$'
@@ -2131,7 +2152,7 @@ aspects:
     meaning: "where: a position among the places a being can be, whether a coordinate, a site or a path in a tree"
     figure: sequence
     lines: open
-    metered: none
+    metered: length
     order: partial
     acyclic: true
     ends: bounded
@@ -3168,7 +3189,7 @@ terms:
         who:      { in: ref, meaning: "the party: a person or an organisation the garden holds, {bean: <id>}" }
         external: { in: prose, meaning: "a party the garden holds no bean for — the bank that issued a card — named as the record can name it" }
         role:     { in: { type: kebab }, meaning: "what the party is to the agreement: payer, cardholder, buyer, lender, facilitator. Open, like `rel`" }
-        accepted: { in: { type: date }, meaning: "the day this party accepted. Whose word it is, is the entry's provenance: the party's own word, or another person's report of it — never an inference" }
+        accepted: { in: { type: date }, meaning: "the day this party accepted. Where they accepted and nobody said the day: `{ system: event-anchored, at: \"after:<what it followed>\", unit: day }`, placed by what it followed. Whose word it is, is the entry's provenance: the party's own word, or another person's report of it — never an inference" }
         during:   { in: extent, meaning: "when this party was a party, where that is not the agreement's whole life" }
         note:     { in: prose, meaning: "optional prose" }
         acting_for: { in: { key_of: parties }, meaning: "the party this one acts for: what it does binds that party — an employee, a lawyer, a parent" }
@@ -3396,8 +3417,9 @@ terms:
   - term: timing
     meaning: >
       When something happened, as an OPEN map of moment-name -> a position in a time anchor system at a
-      STATED resolution. The resolution is declared, never inferred from how many digits were typed, so
-      two positions whose resolutions overlap can be known to be unordered rather than silently ordered.
+      STATED resolution, and, where it is known, where (`where`). The resolution is declared, never inferred
+      from how many digits were typed, so two positions whose resolutions overlap can be known to be
+      unordered rather than silently ordered. One entry is also the long form of every day the law holds.
     context_keys: [timing]
     schema:
       shape: open_map_of_entries
@@ -3408,6 +3430,15 @@ terms:
         at:      { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position, in that system's ONE canonical form" }
         unit:    { required: true, in: { registry: units, take: unit }, meaning: "the resolution ACTUALLY HELD. `2026-08-07T05:21` recorded at unit: minute means the second is not known — not that it was zero." }
         by:      { in: prose, meaning: "optional: who or what read the clock, when that is not the bean's default provenance" }
+        where:
+          meaning: "WHERE the moment was: one place position beside its time — a moment is in time and in place together, and civil time is read from a place. The form a being's place takes (`located_at`), without what is a being's alone: whether it can be reached, and how long it stayed"
+          in:
+            entries:
+              system: { required: true, in: { registry: anchor_systems, take: system, where: { dimension: place } }, meaning: "the place system it is stated in" }
+              at:     { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "where, in that system's one form" }
+              zone:   { in: { registry: time-zones, take: zone }, meaning: "the civil time zone in force there: the moment's offset is READ from it, never stored (N8)" }
+              u:      { in: { quantity: length }, meaning: "how well the place is known: its standard uncertainty (`uncertainty_form`)" }
+              note:   { in: prose, meaning: "optional prose" }
         note:    { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
   - term: series

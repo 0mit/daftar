@@ -709,7 +709,7 @@ def relative_day(rel, fm, at=None, systems=None, units=None):
     try:
         base = day_of(v)
     except (ValueError, dmcal.NotByRule) as e:
-        raise Unreckoned(f"`from: {brief(src)}` reads {brief(v)}, which is not a day this can read ({e})")
+        raise Unreckoned(f"`from: {brief(src)}` reads {day_words(v)}, which is not a day this can read ({e})")
     sign = 1 if rel.get('after') is not None else -1
     ext = rel.get('after') if sign == 1 else rel.get('before')
     if not isinstance(ext, dict):
@@ -826,11 +826,17 @@ def due_entries(fm, term, decl, today=None, notes=None):
             first = day_of(e[attr])
         except dmcal.NotByRule:
             continue                          # looked up, never computed: left alone rather than guessed at (16.0)
+        except dmcal.Unplaced:
+            # PLACED BY ITS NEIGHBOURS (27.0): a day nobody said, written after or before what it followed — said as that,
+            # and never aged: no arithmetic reaches a day from it
+            out.append((label, e, None, None, f"{attr} {day_words(e[attr])} — placed by what it follows, on no day this "
+                                              f"can reckon", None))
+            continue
         except ValueError as why:
             # A DAY THAT CANNOT BE READ IS SAID, NEVER DROPPED: `2026-02-30` read as nothing at all was a clause that
             # silently stopped falling due, while bin/dmledger.py named it. The gate refuses such a day; the working
             # tree, where this reads, may still hold one.
-            out.append((label, e, None, None, f"{attr} {brief(e[attr])} is not a day this can read: {why}", None))
+            out.append((label, e, None, None, f"{attr} {day_words(e[attr])} is not a day this can read: {why}", None))
             continue
         rec = e.get(rep) if rep else None
         beside = []
@@ -841,7 +847,7 @@ def due_entries(fm, term, decl, today=None, notes=None):
             try:
                 day, i, times, ended = next_due(first, rec, today, skipped=skipped)
             except Unreckoned as w:
-                out.append((label, e, None, None, f"{attr} {brief(e[attr])}, then {describe(rec)}: {w}", None))
+                out.append((label, e, None, None, f"{attr} {day_words(e[attr])}, then {describe(rec)}: {w}", None))
             else:
                 out.append((label, e, day, show_day(day, rec, notes=beside, written=e[attr]),
                             f"  — {'the last' if ended else 'next'}: {nth(i, times)}, {describe(rec)}", words(e)))
@@ -892,6 +898,14 @@ def written(v):
     return esc(str(v))
 
 
+def day_words(v, width=60, quote=False):
+    """A DAY as a reader is shown it (27.0): the short form as the bean writes it (`brief`); the long form as the day its
+    `at` names — or, placed by its neighbours, in words (`after the call`) with its note — never as the mapping."""
+    if isinstance(v, dict) and 'at' in v:
+        return brief(dmcal.shown(v) + (f" ({v['note']})" if isinstance(v.get('note'), str) else ''), width, quote)
+    return brief(v, width, quote)
+
+
 def brief(v, width=60, quote=False):
     """A value as a reader is shown it (`written`): whole when it is short, else its start and its length — in backticks
     when `quote` is set. A value of five thousand characters is one the reader is told of, not handed."""
@@ -905,9 +919,12 @@ def brief(v, width=60, quote=False):
 
 
 def day_of(v):
-    """The day number of a position a bean wrote — text, or a date YAML read — or ValueError saying it is none. A list,
-    a map, a boolean or nothing is no date, and is said to be one in the reader's words, never handed to dmcal as
-    Python spells it (`['a', 'b']`, `True`)."""
+    """The day number of a position a bean wrote — text, or a date YAML read, or either written long as one entry of
+    `timing` (27.0), read by its `at` — or ValueError saying it is none; dmcal.Unplaced, a ValueError, for one placed only
+    by its neighbours. A list, any other map, a boolean or nothing is no date, and is said to be one in the reader's
+    words, never handed to dmcal as Python spells it (`['a', 'b']`, `True`)."""
+    if isinstance(v, dict) and 'at' in v:
+        v = dmcal.written(v)
     if isinstance(v, datetime.datetime):
         return v.date().toordinal()
     if isinstance(v, (str, datetime.date)) and not isinstance(v, bool):
@@ -932,7 +949,7 @@ def from_words(first, rec, attr, v):
         unread = ''
     except (ValueError, dmcal.NotByRule) as e:
         unread = f", which is not a day this can read ({e})"
-    return (f"its repetition says `from: {brief(f)}`{unread}, and its `{attr}` is {brief(v)} — it is walked from its "
+    return (f"its repetition says `from: {brief(f)}`{unread}, and its `{attr}` is {day_words(v)} — it is walked from its "
             f"`{attr}`, the day the entry names; if it begins on another day, `{attr}` is that day and `from` agrees")
 
 
@@ -952,10 +969,13 @@ def _due_in_dispute(label, e, sides, attr, rep, decl, today):
         try:
             first = day_of(x[attr])
         except dmcal.NotByRule:
-            unwalked.append(f"{attr} {brief(x[attr])} cannot be aged by rule — it is looked up, never computed")
+            unwalked.append(f"{attr} {day_words(x[attr])} cannot be aged by rule — it is looked up, never computed")
+            continue
+        except dmcal.Unplaced:
+            unwalked.append(f"{attr} {day_words(x[attr])} — placed by what it follows, on no day this can reckon")
             continue
         except ValueError as why:
-            unwalked.append(f"{attr} {brief(x[attr])} is not a day this can read: {why}")
+            unwalked.append(f"{attr} {day_words(x[attr])} is not a day this can read: {why}")
             continue
         rec = x.get(rep) if rep else None
         beside = []
@@ -965,7 +985,7 @@ def _due_in_dispute(label, e, sides, attr, rep, decl, today):
         try:
             day, i, times, ended = next_due(first, rec, today)
         except Unreckoned as why:
-            unwalked.append(f"{attr} {brief(x[attr])}, then {describe(rec)}: {why}")
+            unwalked.append(f"{attr} {day_words(x[attr])}, then {describe(rec)}: {why}")
             continue
         fw = from_words(first, rec, attr, x[attr])
         shown = show_day(day, rec, notes=beside, written=x[attr])
@@ -990,8 +1010,14 @@ def system_of(value, systems=None):
     """The positioning system a written position is in — the row of the law's `anchor_systems` whose `pattern` it
     matches and that names a calendar — or {}. Found as the gate finds it, by the law's pattern: no calendar is named
     here, so a garden that writes its days in the Persian calendar is shown them in it."""
+    systems = systems if systems is not None else _law('SYSTEMS')
+    if isinstance(value, dict):                 # written long (27.0): the system it names, where that is a calendar
+        row = systems.get(value.get('system'))
+        if isinstance(row, dict) and row.get('calendar'):
+            return row
+        value = value.get('at')
     text = str(value) if isinstance(value, (str, datetime.date)) and not isinstance(value, bool) else None
-    for row in (systems if systems is not None else _law('SYSTEMS')).values():
+    for row in systems.values():
         pat = row.get('pattern') if isinstance(row, dict) else None
         if text is not None and row.get('calendar') and isinstance(pat, str) and pat != 'none':
             try:
@@ -1155,7 +1181,7 @@ def report():
     # the gate, invisible to the tool that would have made it useful.
     #
     # A term opts in with `schema.expiry: {attr, horizon_days, why}`. Nothing is inferred: nine of the
-    # ten iso_date attrs in the standard are `observed` or `as_of` — when a fact was READ, not when it
+    # ten day attrs in the standard are `observed` or `as_of` — when a fact was READ, not when it
     # runs out — so a tool that warned about every date would be wrong nine times in ten, and a warning
     # that is usually wrong is one people stop reading.
     exp_rows, expiring, notes = [], 0, []

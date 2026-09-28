@@ -2231,6 +2231,83 @@ class Step26(Step22):
                 [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
 
 
+STEP_27 = (27, 0)
+
+
+def vocab_rule_27(path, role, name, parent):
+    """A garden's VOCAB.md in 27.0's words: an attribute typed `iso_date` is typed `date`, which holds every Gregorian day
+    it held. Nothing of a bean moves: a day is written as before, and may be written long besides."""
+    if role == 'value' and path[-2:] == ('in', 'type') and name == 'iso_date':
+        return 'date'
+    return None
+
+
+class Step27(Step26):
+    """The translation into std-vocab 27.0: the retired value type `iso_date` becomes `date` in a garden's own terms. Made
+    on VOCAB.md after bin/dmreform.py has written the garden's terms in the law's spelling, which keeps a type as it read
+    it. No bean is touched: the day positions keep their short form, and take the long one besides."""
+
+    @staticmethod
+    def docs():
+        return [os.path.join(ROOT, 'VOCAB.md')]
+
+    def _rule(self, path):
+        return vocab_rule_27
+
+    def plan(self):
+        law = {(str(r.get('at')), str(r.get('name'))): str(r.get('instead') or '')
+               for r in (std_fm(self.rel).get('retired') or []) if isinstance(r, dict)}
+        if not law.get(('value_type', 'iso_date'), '').startswith('`date`'):
+            refuse(f"{self.tag}'s law does not retire, as this tool's 27.0 step translates it, value_type `iso_date` -> "
+                   f"`date`. The step and the law disagree; neither is guessed at.")
+        # A METER IS THE SYSTEM'S (27.0): a garden's own system whose neighbours are metered and which states no meter
+        # inherited its aspect's until now. Which dimension it is metered in is its gardener's to say — `time` for a
+        # calendar kept what it had — so it is named for a person, never written in by a guess.
+        _v = os.path.join(ROOT, 'VOCAB.md')
+        if os.path.isfile(_v):
+            _fm = _parse(read_text(_v)[0])[0] or {}
+            _ra = _fm.get('registry_additions') if isinstance(_fm.get('registry_additions'), dict) else {}
+            for _r in _ra.get('anchor_systems') or []:
+                if not isinstance(_r, dict) or _r.get('neighbours') != 'metered':
+                    continue
+                if (_r.get('restrictions') or {}).get('metered') in (None, 'none'):
+                    _was = 'time' if _r.get('dimension') == 'time' else 'none'
+                    self.problems.append(
+                        f"VOCAB.md: registry_additions.anchor_systems '{_r.get('system')}' has metered neighbours and states no "
+                        f"meter, which 27.0 asks of every metered system — add `restrictions: {{ metered: <dimension> }}`"
+                        + (" (`time`: what it inherited from its aspect until now)" if _was == 'time' else
+                           " (it inherited none: say what a length along it is measured in, or that its neighbours are "
+                           "counted)"))
+        for path in self.docs():
+            self.one(path, dry=True)
+        if self.problems and not self.keep:
+            refuse(f"crossing into std-vocab 27.0, {len(self.problems)} thing(s) are a person's to do, not a "
+                   f"translation's:\n" + '\n'.join('  - ' + p for p in self.problems) +
+                   "\nDo them and commit, then run this again — or pass --keep-on-failure to apply the rest and "
+                   "leave these, named, for the person.")
+
+    def apply(self, vocab_only=False):
+        for path in self.docs():
+            self.one(path)
+        return self.report()
+
+    def rekey_reasons(self):
+        self.reasons = None
+
+    def code_left(self):
+        return []                        # a garden's own code that names the type reads the law, and is told so below
+
+    def report(self):
+        from collections import Counter
+        parts = []
+        if 'VOCAB.md' in self.facts:
+            vt = Counter(f"`{o}` -> `{n}`" for _w, o, n in self.facts['VOCAB.md'])
+            parts.append("VOCAB.md: " + ', '.join(k + (f" ×{c}" if c > 1 else '') for k, c in sorted(vt.items())))
+        if self.problems:
+            parts.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
+        return ('std-vocab 27.0, a day in either form — ' + '; '.join(parts or ['nothing to translate']), [])
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
@@ -2350,6 +2427,13 @@ def main():
             if vtuple(before) < STEP_26 or _s26.left():
                 step26 = _s26
                 step26.plan()
+        # ...and so is one whose own terms still type a day `iso_date`, which 27.0 retired into `date`.
+        step27 = None
+        if STEP_27 <= vtuple(vocab_version(rel)):
+            _s27 = Step27(rel, a.tag, a.keep_on_failure)
+            if vtuple(before) < STEP_27 or _s27.left():
+                step27 = _s27
+                step27.plan()
         # WHAT THE GARDEN RECEIVES, AND WHAT IT HELD, read by the one reader (bin/dmpass.py): `want` is what a garden
         # extending its profiles receives from the release; `have` is every file of the garden its own release keeps, so
         # a file it no longer receives — a retired tool, the asset of a profile it left — leaves, and a file of its own
@@ -2366,7 +2450,7 @@ def main():
         # fails) once left release files copied, both pins moved, beans half translated and no journal entry.
         try:
             return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22, step23,
-                                 profiles, step24, step26)
+                                 profiles, step24, step26, step27)
         except BaseException as e:
             put_back(added + (step21.created if step21 else []))
             print(f"NOT {verb.upper()}: the upgrade stopped midway"
@@ -2435,7 +2519,7 @@ def dropped_line(dropped):
 
 
 def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None,
-                  profiles=None, step24=None, step26=None):
+                  profiles=None, step24=None, step26=None, step27=None):
     """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
     caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
     changed = []
@@ -2537,6 +2621,12 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         _t, _b = step26.apply()
         translated.append(_t); steps.append(_t)
         beans += [b for b in _b if b not in beans]
+    if step27:
+        # on VOCAB.md as bin/dmreform.py left it, which writes a garden's old constructs with the type they named
+        _t, _b = step27.apply()
+        translated.append(_t); steps.append(_t)
+        if 'VOCAB.md' in step27.facts and 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
+            changed.append('VOCAB.md (translated)')
 
     _vp = os.path.join(ROOT, 'VOCAB.md')
     if os.path.isfile(_vp):
@@ -2572,7 +2662,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     if not (changed or added or removed or repinned or beans):
         # NOTHING MOVED IS NOT NOTHING TO DO. With --keep-on-failure a step that could translate nothing still names what
         # it left for a person, and the gate still refuses the garden for it: saying "nothing to do" hid both.
-        left = [p for s in (step22, step23, step24, step26) if s for p in s.problems]
+        left = [p for s in (step22, step23, step24, step26, step27) if s for p in s.problems]
         if left:
             print(f"NOTHING TRANSLATED: this garden runs {a.tag} ({sha[:12]}) already, and {len(left)} thing(s) are a "
                   f"person's to do, not a translation's:\n" + '\n'.join('  - ' + p for p in left) +
@@ -2583,14 +2673,15 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     # ONLY WORDS MOVED: the garden runs this release already, and what changed is the translation of what came in since it
     # crossed. The law did not move and nothing is a person's to decide — the translation is the one the garden adopted
     # when it crossed — so the entry asks nothing, and says RULE-CHANGE only where VOCAB.md itself was translated.
-    ran = [s for s in (step22, step23, step24, step26) if s]
+    ran = [s for s in (step22, step23, step24, step26, step27) if s]
     words_only = bool(ran and all(s.leftover for s in ran) and not (added or removed or repinned)
                       and all(c.endswith(('(translated)', '(re-keyed)')) for c in changed))
     since = ' and '.join(w for s, w in ((step22, "into std-vocab 22.0 still in 21.0's words"),
                                         (step23, "into std-vocab 23.1 still placing a file where the law places it "
                                                  "otherwise"),
                                         (step24, "into std-vocab 24.0 with a clause's `when` still in prose"),
-                                        (step26, "into std-vocab 26.0 still in 25.x's words")) if s)
+                                        (step26, "into std-vocab 26.0 still in 25.x's words"),
+                                        (step27, "into std-vocab 27.0 with a day still typed `iso_date`")) if s)
     if words_only:
         verb = 'translated'
 

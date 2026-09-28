@@ -36,7 +36,7 @@ def mutate(old, new):
 check("the standard's systems all state a shape the gate accepts", "0 error" in gate(), gate()[-900:])
 mutate("    resolves_through: geographic\n    within: [iso-3166]\n    levels:", "    resolves_through: geographic\n    within: [atlantis]\n    levels:")
 check("`within` must name a declared system", "`within` names 'atlantis'" in gate(), gate()[-600:])
-mutate("    resolves_through: geographic\n    neighbours: metered\n    restrictions: { lines: 1, order: partial }\n    meaning: \"a calendar position", "    resolves_through: geographic\n    within: [unix-epoch]\n    neighbours: metered\n    restrictions: { lines: 1, order: partial }\n    meaning: \"a calendar position")
+mutate("    resolves_through: geographic\n    neighbours: metered\n    restrictions: { lines: 1, order: partial, metered: time }\n    meaning: \"a calendar position", "    resolves_through: geographic\n    within: [unix-epoch]\n    neighbours: metered\n    restrictions: { lines: 1, order: partial, metered: time }\n    meaning: \"a calendar position")
 out = gate()
 check("...nesting that does not loop is accepted", "nesting loops" not in out, out[-500:])
 mutate("  - system: geographic\n    dimension: place\n", "  - system: geographic\n    dimension: place\n    resolves_through: gregorian-civil\n")

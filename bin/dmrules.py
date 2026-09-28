@@ -368,6 +368,8 @@ for _t, _r in _vt.items():
             f"a position to the {_r.get('unit')} in any system of {_r.get('dimension')}" + (", with its clock and offset"
             if _r.get('clock') == 'required' else '') if _r.get('any_system') else
             f"pattern {_r['pattern']}" if _r.get('pattern') else 'read by its own reader')
+    if _r.get('long_form'):
+        _how += f" — or written long, as one entry of `{_r['long_form']}` at that unit"
     print(f"  {_t:15} {_how}")
 
 head("TABLES — a series' rows: one header, one line a row, a tab between two cells, never an empty cell")
