@@ -199,7 +199,7 @@ check("S1: ...and so did entry_required_if and entry_expect_if — three constru
       sorted(c["origin"] for c in _f["cells"]) == ["expect_if", "required_if"], str(_f["cells"])[:300])
 _f = _gate.attribute_form("registration", _gate.SCHEMAS["registration"])
 check("S1: a mapping's own attributes take the same form, scoped to the value itself",
-      _f["scope"] == "self" and _f["attrs"]["expires"].get("type") == "date" and _f["attrs"]["expires"].get("required") is True)
+      _f["scope"] == "self" and _f["attrs"]["expires"].get("type") == "position" and _f["attrs"]["expires"].get("required") is True)
 _untyped = sorted((t, n) for t, sc in _gate.SCHEMAS.items() for n, a in ((sc or {}).get("attrs") or {}).items()
                   if isinstance(a, dict) and a.get("in") == "untyped")
 check("S1: the form makes an UNTYPED attribute visible — and since 18.1 the law has none", _untyped == [], str(_untyped))

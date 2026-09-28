@@ -608,7 +608,8 @@ check("a course's moments never go back", rc != 0 and "before the move it follow
 rc, out = move_probe('{ course: lark, at: "2026-13-01 10:00+00:00", step: offered, by: lark-press }')
 check("a moment on a day no calendar has is refused", rc != 0 and "is no day of gregorian-civil" in out, out[-600:])
 rc, out = move_probe('{ course: lark, at: "2026-12-01", step: offered, by: lark-press }')
-check("...and a day with no clock reading is no moment", rc != 0 and "must be a MOMENT" in out, out[-600:])
+check("...and a day with no clock reading is no moment: a move is held to the minute", rc != 0
+      and "is written to the day, and `at` holds a position to the minute or finer" in out, out[-600:])
 rc, out = move_probe('{ course: lark, at: now, step: offered, by: lark-press }')
 check("`now` left unstamped is refused, with the save that stamps it", rc != 0 and ".at is `now`" in out
       and "the word the save writes the moment" in out and "bin/dmsave.py" in out, out[-600:])

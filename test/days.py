@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """A day is a position, in either of its forms, and a moment is in time and place together (std-vocab 27.0).
 
+A day and a moment are one value type, `position`, held to the unit its form is written at; an attribute that needs a
+finer one says so (`in: { type: position, unit: minute }`).
+
 Grows a garden and writes an agreement whose days are written LONG — as one entry of `timing` — in the Gregorian and the
 Persian calendars, and placed only by what they followed. Checks that the gate judges the long form as it judges the
 short (its unit, its system, the day itself), that an acceptance nobody dated is an acceptance and counts as consent,
@@ -113,16 +116,20 @@ check("...and a `date_or_moment` written long at unit minute is a moment", " 0 e
 
 # ---- the long form is judged as the short one, and as an entry of `timing` -------------------------------------------
 for why, ali, want in (
-        ("its unit is the type's: a date is held to the day", '{ system: gregorian-civil, at: 2026-09-14, unit: minute }',
-         "parties[ali].accepted.unit is `minute`, and a date is held to `day`"),
+        ("a unit finer than the day is a clock reading", '{ system: gregorian-civil, at: 2026-09-14, unit: minute }',
+         "accepted.at '2026-09-14' is written without a clock reading, and its unit is `minute`"),
+        ("and no position is coarser than the day: a month is a level, and no unit", '{ system: gregorian-civil, at: 2026-09-14, unit: month }',
+         "timing[parties[ali].accepted].unit 'month' is not a declared units"),
         ("its `at` is in the form of the system it names", '{ system: persian-calendar, at: 2026-09-14, unit: day }',
          "is not in the one canonical form 'persian-calendar' declares"),
         ("it holds only what an entry of `timing` declares", '{ system: gregorian-civil, at: 2026-09-14, unit: day, said: "yes" }',
          "carries `said`, which the term `timing` does not declare"),
         ("a day its calendar lacks is no date, written long as short", '{ system: persian-calendar, at: "persian:1404-12-30", unit: day }',
          "is no day of persian-calendar"),
-        ("a clock reading on a date is finer than the type", '{ system: gregorian-civil, at: "2026-09-14 10:00+03:00", unit: day }',
-         "parties[ali].accepted.at '2026-09-14 10:00+03:00' must be an ABSOLUTE date"),
+        ("a clock reading at unit day says two resolutions", '{ system: gregorian-civil, at: "2026-09-14 10:00+03:00", unit: day }',
+         "accepted.at '2026-09-14 10:00+03:00' is written with a clock reading, and its unit is `day`"),
+        ("a clock reading carries its offset", '{ system: gregorian-civil, at: "2026-09-14 10:00", unit: minute }',
+         "parties[ali].accepted.at '2026-09-14 10:00' must be a POSITION in time"),
         ("a position with no `at` is none", '{ system: gregorian-civil, unit: day }', "missing ['at']"),
         ("a neighbour is written as itself, never as a placeholder in angle brackets",
          '{ system: event-anchored, at: "after:<what it followed>", unit: day }',
@@ -130,9 +137,12 @@ for why, ali, want in (
 ):
     out = gate(ali=ali)
     check("the long form is refused where the short would be: " + why, want in out and " 1 error(s)" in out, out[-900:])
-out = gate(due='{ system: gregorian-civil, at: 2099-01-15, unit: hour }')
-check("...and a `date_or_moment` written long is held to a day, or to a minute or finer — not to the hour",
-      "clauses[first].due.unit is `hour`, and a date_or_moment is held to `day` or `minute` or finer" in out, out[-700:])
+out = gate(due='{ system: gregorian-civil, at: "2099-01-15 09:00+03:00", unit: hour }')
+check("...and one position type holds whatever unit its calendar has between the day and the millisecond: a clause due "
+      "in the ninth hour, its minutes not said", " 0 error(s)" in out, out[-700:])
+out = gate(ali='"2026-09-14 10:05+03:30"')
+check("...and a position written short at a moment is a position too: a yes on the minute, where a day was the only "
+      "form before", " 0 error(s)" in out, out[-600:])
 
 # ---- consent: without an acceptance, the refusal names the long form -------------------------------------------------
 _nodate = LOAN.replace("role: borrower, accepted: %(ali)s", "role: borrower")
@@ -206,20 +216,62 @@ A rented machine.
 out = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G)
 out = out.stdout + out.stderr
 check("a garden's own term typed `iso_date` is refused, and the refusal says where the type went",
-      "type 'iso_date' is not declared in `value_types`" in out and "retired: `date`" in out, out[-900:])
+      "type 'iso_date' is not declared in `value_types`" in out and "retired: `position`" in out, out[-900:])
 import dmupgrade  # noqa: E402
 _new, _done = dmupgrade.renamed(open(v).read(), dmupgrade.vocab_rule_27)
-check("...and the upgrade's 27.0 step types it `date`, touching nothing else",
-      "in: { type: date }" in _new and "iso_date" not in _new and len(_done) == 1, _done)
+check("...and the upgrade's 27.0 step types it `position`, touching nothing else",
+      "in: { type: position }" in _new and "iso_date" not in _new and len(_done) == 1, _done)
+for _old in ("date", "date_or_moment"):
+    _n2, _d2 = dmupgrade.renamed(open(v).read().replace("type: iso_date", "type: " + _old), dmupgrade.vocab_rule_27)
+    check(f"...as it types a garden's own `{_old}`", "in: { type: position }" in _n2 and len(_d2) == 1, _d2)
+_n3, _d3 = dmupgrade.renamed(open(v).read().replace("type: iso_date", "type: moment"), dmupgrade.vocab_rule_27)
+check("...and leaves a `moment` for a person, since what it held — the minute — is a unit no rename can write in",
+      "type: moment" in _n3 and not _d3, _d3)
 open(v, "w").write(_new)
 out = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G)
 out = out.stdout + out.stderr
-check("...after which the same bean passes: every Gregorian day the old type held, `date` holds",
+check("...after which the same bean passes: every Gregorian day the old type held, `position` holds",
       " 0 error(s)" in out, out[-600:])
 
+# ---- an attribute holds a position to a unit: no coarser position is its value ---------------------------------------
+_held = open(v).read()
+def lamp(lit, unit="unit: minute", more=""):
+    open(v, "w").write(_held.replace("    merge: { cardinality: single, order: none }", """    merge: { cardinality: single, order: none }
+  - term: lamp
+    meaning: "when the lamp was lit"
+    context_keys: [lamp]
+    schema:
+      shape: mapping
+      attrs:
+        lit: { required: true, in: { type: position, %s }, meaning: "the moment it was lit" }%s
+    merge: { cardinality: single, order: none }""" % (unit, more), 1))
+    b = open(os.path.join(BEANS, "box.md")).read()
+    b = re.sub(r"(?m)^lamp:.*\n", "", b).replace("rental:", "lamp: { lit: %s }\nrental:" % lit, 1)
+    open(os.path.join(BEANS, "box.md"), "w").write(b)
+    r = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G)
+    return r.stdout + r.stderr
+out = lamp('"2026-09-20 21:05+03:30"')
+check("an attribute held to the minute takes a moment", " 0 error(s)" in out, out[-600:])
+out = lamp("2026-09-20")
+check("...and refuses a day: no coarser position is its value", "lamp.lit '2026-09-20' is written to the day, and `lit` "
+      "holds a position to the minute or finer" in out, out[-700:])
+out = lamp("{ system: gregorian-civil, at: 2026-09-20, unit: day }")
+check("...written long as short", "lamp.lit.unit is `day`, and `lit` holds a position to `minute` or finer" in out, out[-700:])
+out = lamp('"2026-09-20 21:05+03:30"', "unit: month")
+check("the law holds a unit to one a position can take: the day, or finer", "holds a position to `month`, which is no "
+      "unit it can be held to" in out, out[-700:])
+out = lamp('"2026-09-20 21:05+03:30"', more='\n        kind: { in: { type: kebab, unit: day }, meaning: "what lamp" }')
+check("...and a unit beside a type that is no position is refused", "`unit` beside type 'kebab', which is no position" in out,
+      out[-700:])
+open(v, "w").write(_held)
+b = open(os.path.join(BEANS, "box.md")).read()
+open(os.path.join(BEANS, "box.md"), "w").write(re.sub(r"(?m)^lamp:.*\n", "", b))
+
 rules = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G).stdout
-check("the rules a garden prints say a day may be written long", re.search(
-    r"^  date +a position to the day in any system of time — or written long, as one entry of `timing` at that unit$", rules, re.M))
+check("the rules a garden prints name one position type, and say it may be written long", re.search(
+    r"^  position +a position in any system of time, held to the day or finer .* or written long, as one entry of `timing`", rules, re.M)
+      and not re.search(r"^  (date|moment|date_or_moment) +a position", rules, re.M)
+      and re.search(r"^  date_or_moment +\(on value_type\) → `position`", rules, re.M))
 check("...and that a length along place is measured, as one along time is: place in length, time in time",
       re.search(r"^  place +sequence +lines open · metered length", rules, re.M)
       and re.search(r"^  time +sequence +lines 1 · metered time", rules, re.M), [l for l in rules.splitlines() if "sequence " in l])

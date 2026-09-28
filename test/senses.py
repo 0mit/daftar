@@ -73,7 +73,7 @@ out = gate()
 check("...and a row of VOCAB.md's judging that use in the law's sense lets it stand", "`at` has a second sense" not in out
       and "`at` is judged" not in out, out[-900:])
 
-vocab(TERM.replace('genos: { in: prose', 'at: { in: { type: date }'), '  - { name: at, sense: "the day it was counted" }\n')
+vocab(TERM.replace('genos: { in: prose', 'at: { in: { type: position }'), '  - { name: at, sense: "the day it was counted" }\n')
 out = gate()
 check("...given a domain the law's row judged, it stands with no row of its own, and a row of its own is stale",
       "`at` has a second sense" not in out and "`at` is judged, and no longer a finding" in out, out[-900:])

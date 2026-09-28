@@ -70,7 +70,7 @@ def _said_meanings():
         if not isinstance(sch, dict):
             continue
         for attr, rec in (dmform.attribute_form(t.get('term'), sch).get('attrs') or {}).items():
-            if (rec.get('type') in ('date', 'date_or_moment') and not rec.get('required')
+            if (rec.get('type') == 'position' and not rec.get('required')
                     and origins.said(origins.of((sch.get('attrs') or {}).get(attr)))):
                 sentences = re.split(r'(?<=[a-z])\. ', str(rec.get('meaning') or '').replace('optional: ', ''))
                 out[(t.get('term'), attr)] = sentences[0].rstrip('.')

@@ -2234,11 +2234,24 @@ class Step26(Step22):
 STEP_27 = (27, 0)
 
 
+RETYPED_27 = ('iso_date', 'date', 'date_or_moment')     # held to the day, or to the unit written: `position` as it is
+
+
 def vocab_rule_27(path, role, name, parent):
-    """A garden's VOCAB.md in 27.0's words: an attribute typed `iso_date` is typed `date`, which holds every Gregorian day
-    it held. Nothing of a bean moves: a day is written as before, and may be written long besides."""
-    if role == 'value' and path[-2:] == ('in', 'type') and name == 'iso_date':
-        return 'date'
+    """A garden's VOCAB.md in 27.0's words: an attribute typed `iso_date`, `date` or `date_or_moment` is typed `position`,
+    which holds every position they held. A `moment` is held to the minute, which a rename cannot say: it is a person's
+    (`Step27.plan`). Nothing a bean holds moves: a day is written as before, and may be written long besides."""
+    if role == 'value' and path[-2:] == ('in', 'type') and name in RETYPED_27:
+        return 'position'
+    return None
+
+
+def bean_rule_27(path, role, name, parent):
+    """A bean in 27.0's words: an input a reading or an action takes, typed by a retired type, is typed `position` — an
+    input states no unit, and a given value is read at the unit it is written at."""
+    if role == 'value' and len(path) >= 3 and path[-1] == 'type' and path[-3] == 'inputs' \
+            and name in RETYPED_27 + ('moment',):
+        return 'position'
     return None
 
 
@@ -2247,19 +2260,37 @@ class Step27(Step26):
     on VOCAB.md after bin/dmreform.py has written the garden's terms in the law's spelling, which keeps a type as it read
     it. No bean is touched: the day positions keep their short form, and take the long one besides."""
 
-    @staticmethod
-    def docs():
-        return [os.path.join(ROOT, 'VOCAB.md')]
-
     def _rule(self, path):
-        return vocab_rule_27
+        return vocab_rule_27 if os.path.basename(path) == 'VOCAB.md' else bean_rule_27
 
     def plan(self):
         law = {(str(r.get('at')), str(r.get('name'))): str(r.get('instead') or '')
                for r in (std_fm(self.rel).get('retired') or []) if isinstance(r, dict)}
-        if not law.get(('value_type', 'iso_date'), '').startswith('`date`'):
-            refuse(f"{self.tag}'s law does not retire, as this tool's 27.0 step translates it, value_type `iso_date` -> "
-                   f"`date`. The step and the law disagree; neither is guessed at.")
+        wrong = [n for n in RETYPED_27 + ('moment',) if not law.get(('value_type', n), '').startswith('`position`')]
+        if wrong:
+            refuse(f"{self.tag}'s law does not retire, as this tool's 27.0 step translates them, value_type "
+                   f"{', '.join(f'`{n}`' for n in wrong)} -> `position`. The step and the law disagree; neither is guessed at.")
+        # ONE POSITION TYPE (27.0): a garden's own attribute typed `moment` is held to the minute, and one typed `date` whose
+        # origin reads the clock is stamped a day — a unit a rename cannot write in, so each is named for a person
+        _v0 = os.path.join(ROOT, 'VOCAB.md')
+        if os.path.isfile(_v0):
+            def _walk(attrs, where):
+                for _n, _rec in (attrs.items() if isinstance(attrs, dict) else []):
+                    _d = _rec.get('in') if isinstance(_rec, dict) else None
+                    if not isinstance(_d, dict):
+                        continue
+                    if isinstance(_d.get('entries'), dict):
+                        _walk(_d['entries'], f"{where}.{_n}")
+                    _o = _rec.get('origin') if isinstance(_rec.get('origin'), dict) else {}
+                    if _d.get('type') == 'moment':
+                        self.problems.append(f"VOCAB.md: {where}.{_n} is typed `moment`, which 27.0 folded into `position` — "
+                                             f"write `in: {{ type: position, unit: minute }}`: held to the minute, as it was")
+                    elif _d.get('type') in RETYPED_27 and _o.get('act') == 'read' and _d.get('unit') is None:
+                        self.problems.append(f"VOCAB.md: {where}.{_n} is typed `{_d['type']}` and read from the clock — write "
+                                             f"`in: {{ type: position, unit: day }}`, so the save still writes the day for `now`")
+            for _t in (_parse(read_text(_v0)[0])[0] or {}).get('local_terms') or []:
+                if isinstance(_t, dict) and isinstance(_t.get('schema'), dict):
+                    _walk(_t['schema'].get('attrs'), f"local_terms[{_t.get('term')}]")
         # A METER IS THE SYSTEM'S (27.0): a garden's own system whose neighbours are metered and which states no meter
         # inherited its aspect's until now. Which dimension it is metered in is its gardener's to say — `time` for a
         # calendar kept what it had — so it is named for a person, never written in by a guess.
@@ -2288,8 +2319,9 @@ class Step27(Step26):
 
     def apply(self, vocab_only=False):
         for path in self.docs():
-            self.one(path)
-        return self.report()
+            if (os.path.basename(path) == 'VOCAB.md') == vocab_only or not vocab_only:
+                self.one(path)
+        return self.report() if not vocab_only else (None, [])
 
     def rekey_reasons(self):
         self.reasons = None
@@ -2300,12 +2332,18 @@ class Step27(Step26):
     def report(self):
         from collections import Counter
         parts = []
+        beans = sorted(r for r in self.facts if r.startswith('beans/'))
+        if beans:
+            tally = Counter(f"`{o}` -> `{n}`" for r in beans for _w, o, n in self.facts[r])
+            parts.append(f"{len(beans)} bean(s): " + ', '.join(f"{k} ×{c}" for k, c in sorted(tally.items()))
+                         + " — " + ', '.join(f"[[{os.path.basename(r)[:-3]}]]" for r in beans))
         if 'VOCAB.md' in self.facts:
             vt = Counter(f"`{o}` -> `{n}`" for _w, o, n in self.facts['VOCAB.md'])
             parts.append("VOCAB.md: " + ', '.join(k + (f" ×{c}" if c > 1 else '') for k, c in sorted(vt.items())))
         if self.problems:
             parts.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
-        return ('std-vocab 27.0, a day in either form — ' + '; '.join(parts or ['nothing to translate']), [])
+        return ('std-vocab 27.0, one position type — ' + '; '.join(parts or ['nothing to translate']),
+                [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
 
 
 def main():
@@ -2625,6 +2663,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         # on VOCAB.md as bin/dmreform.py left it, which writes a garden's old constructs with the type they named
         _t, _b = step27.apply()
         translated.append(_t); steps.append(_t)
+        beans += [b for b in _b if b not in beans]
         if 'VOCAB.md' in step27.facts and 'VOCAB.md' not in changed and 'VOCAB.md (translated)' not in changed:
             changed.append('VOCAB.md (translated)')
 

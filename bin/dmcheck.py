@@ -1059,15 +1059,35 @@ def check_law_extents():
 
 
 def check_value_types():
-    for _t in ('date', 'kebab', 'count', 'text'):
+    for _t in ('position', 'kebab', 'count', 'text'):
         if _t not in VALUE_TYPES:
             errors.append(f"VOCAB: no `value_types` row for '{_t}' — the gate reads its type patterns from the law "
                           f"and has no copy of its own")
-    _ex = (VALUE_TYPES.get('date') or {}).get('exists')
+    _ex = (VALUE_TYPES.get('position') or {}).get('exists')
     if _ex is not None and not (isinstance(_ex, dict) and isinstance(_ex.get('reckoning'), list)
                                 and all(isinstance(r, str) for r in _ex['reckoning'])):
-        errors.append("VOCAB value_types[date].exists is a mapping { reckoning: [<reckoning>, ...] } — as written it "
+        errors.append("VOCAB value_types[position].exists is a mapping { reckoning: [<reckoning>, ...] } — as written it "
                       "judges no day, and no day is judged until it is one")
+    # THE UNIT AN ATTRIBUTE HOLDS A POSITION TO (27.0) is a unit of time the type can be held to: its own, or finer
+    def _units_in(attrs, where):
+        for _n, _rec in (attrs.items() if isinstance(attrs, dict) else []):
+            _d = _rec.get('in') if isinstance(_rec, dict) else None
+            if not isinstance(_d, dict):
+                continue
+            if isinstance(_d.get('entries'), dict):
+                _units_in(_d['entries'], f"{where}.{_n}")
+            if _d.get('unit') is None or 'type' not in _d:
+                continue
+            _vt = VALUE_TYPES.get(_d.get('type')) or {}
+            if not _vt.get('any_system'):
+                errors.append(f"VOCAB {where}.{_n}: `unit` beside type '{_d.get('type')}', which is no position — a unit holds "
+                              f"only a position to itself")
+            elif not (_d['unit'] == _vt.get('unit') or (_vt.get('clock') in ('required', 'offset')
+                                                          and _finer_or_same(_d['unit'], _vt.get('unit')))):
+                errors.append(f"VOCAB {where}.{_n}: holds a {_d['type']} to `{_d['unit']}`, which is no unit it can be held "
+                              f"to — `{_vt.get('unit')}`, or a finer unit of time")
+    for _tn, _sch in (SCHEMAS or {}).items():
+        _units_in(_sch.get('attrs'), _tn)
     # THE LONG FORM NAMES A TERM THE LAW DECLARES (27.0), whose entry holds a position: a system, where in it, a unit
     for _t, _r in VALUE_TYPES.items():
         _lf = _r.get('long_form') if isinstance(_r, dict) else None
@@ -1083,9 +1103,17 @@ JOURNAL = (vocab_fm.get('journal') if isinstance(vocab_fm.get('journal'), dict) 
 # a heading the tool writes from the clock and a person never types: the journal's `heading` read `by: save`
 JOURNAL_STAMPED = ORIGINS.clock((JOURNAL['origin'] if isinstance(JOURNAL.get('origin'), dict) else {}).get('heading')) == 'judged'
 
-def check_value_type(where, attr, val, typ):
+def _written_unit(val):
+    """The unit a clock reading is WRITTEN to — minute, second or millisecond — read from its digits; the day where it
+    carries none. What a position is held to is declared, never inferred: this reads only what was written."""
+    m = re.search(r'[T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?', str(val), re.ASCII)
+    return 'day' if not m else 'millisecond' if m.group(2) else 'second' if m.group(1) else 'minute'
+
+
+def check_value_type(where, attr, val, typ, held_to=None):
     """A value against a declared value type. An undeclared type is itself an error: a schema naming a type
-    the law does not define would otherwise check nothing and look as if it did."""
+    the law does not define would otherwise check nothing and look as if it did. `held_to` is the unit the attribute
+    holds a position to (`in: { type: position, unit: … }`): no coarser position is its value."""
     t = VALUE_TYPES.get(typ)
     if not t and not VALUE_TYPES:
         return                      # the law itself is missing; check_value_types has said so once
@@ -1124,17 +1152,24 @@ def check_value_type(where, attr, val, typ):
         errors.append(f"{where}.{attr} is `now` — the word the save writes the day of its entry in place of: save with "
                       f"{_save_command('- action: <what changed>')}")
     elif t.get('any_system'):
-        # A POSITION IN ANY SYSTEM OF THE TYPE'S DIMENSION, held to the type's unit (16.0): no system is the one a date
-        # must be in. It must be in ONE system's own form, that system must HAVE the level, and a reading finer than
-        # the level (a clock time on a date) is not the type — unless the type asks for a clock (`clock: required`, a
-        # MOMENT), and then it is held to the minute or finer, with its offset, as a journal heading is.
-        _held = [r for r in (registry('anchor_systems') or []) if isinstance(r, dict) and r.get('dimension') == t.get('dimension')
-                 and isinstance(r.get('levels'), list) and any(l.get('level') == t.get('unit') for l in r['levels'])
-                 and r.get('pattern') not in (None, 'none') and law_match(r['pattern'], val)]
+        # A POSITION IN ANY SYSTEM OF THE TYPE'S DIMENSION (16.0), HELD TO THE UNIT ITS FORM IS WRITTEN AT (27.0): no system
+        # is the one a position must be in. It is in ONE system's own form, and that system HAS the level it is written at
+        # — the type's own unit (a day), or, where the type takes a clock, the minute, second or millisecond its reading
+        # is written to. A clock reading carries its offset, as a journal heading does (`clock: offset`; `required`: a
+        # clock must be read). It is no coarser than the unit the attribute holds it to.
         _clocked = re.search(r'[T ]\d{2}:\d{2}', str(val), re.ASCII)
-        if not _held or (bool(_clocked) != (t.get('clock') == 'required'))                 \
-                or (t.get('clock') == 'required' and not law_match(_TO_THE_MINUTE, val)):
+        _res = _written_unit(val) if _clocked else t.get('unit')
+        _held = [r for r in (registry('anchor_systems') or []) if isinstance(r, dict) and r.get('dimension') == t.get('dimension')
+                 and isinstance(r.get('levels'), list) and any(l.get('unit') == _res for l in r['levels'] if isinstance(l, dict))
+                 and r.get('pattern') not in (None, 'none') and law_match(r['pattern'], val)]
+        if not _held or (bool(_clocked) and t.get('clock') not in ('required', 'offset'))                 \
+                or (not _clocked and t.get('clock') == 'required') \
+                or (_clocked and not law_match(_TO_THE_MINUTE, val)):
             errors.append(f"{where}.{attr} '{val}' {t.get('refusal') or 'is in no system of dimension ' + str(t.get('dimension'))}")
+        elif held_to and not _finer_or_same(_res, held_to):
+            errors.append(f"{where}.{attr} '{val}' is written to the {_res}, and `{attr}` holds a position to the {held_to} "
+                          f"or finer — write it to the {held_to}, with the offset it was read at"
+                          + _rule(f'value_types[{typ}]', 'value_types'))
         else:
             check_day_exists(f"{where}.{attr}", val, _held[0])
     elif t.get('separator') is not None:
@@ -1178,7 +1213,7 @@ def _finer_or_same(unit, of):
         return False
 
 
-def check_long_position(base, ref, attr, val, typ):
+def check_long_position(base, ref, attr, val, typ, held_to=None):
     """A POSITION WRITTEN LONG (27.0): one entry of the term the type's `long_form` names — `timing` — judged as every entry
     of that term is, and then held to the type. Its unit is the type's (a date's `day`; a moment's `minute`, or a finer unit
     of the same quantity), and it says which alternative a `date_or_moment` is. Its system is one of time, where `at` is
@@ -1196,18 +1231,29 @@ def check_long_position(base, ref, attr, val, typ):
         return
     unit, row = val.get('unit'), SYSTEMS.get(val.get('system')) or {}
 
-    def _holds(a):                          # the type's own unit — or, for one that asks for a clock, a finer one
+    def _holds(a):                          # the type's own unit — or, for one that takes a clock, a finer one
         r = VALUE_TYPES.get(a) or {}
-        return unit == r.get('unit') or (r.get('clock') == 'required' and _finer_or_same(unit, r.get('unit')))
+        return (unit == r.get('unit') or (r.get('clock') in ('required', 'offset') and _finer_or_same(unit, r.get('unit')))) \
+            and (not held_to or _finer_or_same(unit, held_to))
     fits = [a for a in alts if _holds(a)]
     if not fits:
-        _held = ' or '.join(f"`{(VALUE_TYPES.get(a) or {}).get('unit')}`" + (' or finer' if (VALUE_TYPES.get(a) or {}).get('clock') == 'required' else '')
+        _held = ' or '.join(f"`{held_to or (VALUE_TYPES.get(a) or {}).get('unit')}`"
+                            + (' or finer' if held_to or (VALUE_TYPES.get(a) or {}).get('clock') in ('required', 'offset') else '')
                             for a in alts)
-        errors.append(f"{where}.unit is `{unit}`, and a {typ} is held to {_held} — the unit of a position written long "
-                      f"is its type's" + _rule(f'value_types[{alts[0]}]', 'value_types'))
+        errors.append(f"{where}.unit is `{unit}`, and `{attr}` holds a {typ} to {_held} — the unit a position written "
+                      f"long states is one it may be held to" + _rule(f'value_types[{alts[0]}]', 'value_types'))
         return
     _as = fits[0]
     if row.get('dimension') == (VALUE_TYPES.get(_as) or {}).get('dimension'):
+        # ITS `at` IS WRITTEN AT ITS UNIT: a day where the unit is the day, a clock reading where it is finer
+        _r = VALUE_TYPES.get(_as) or {}
+        _needs = unit != _r.get('unit') or _r.get('clock') == 'required'
+        _clk = bool(re.search(r'[T ]\d{2}:\d{2}', str(val.get('at')), re.ASCII))
+        if _clk != _needs:
+            errors.append(f"{where}.at '{val.get('at')}' is written {'with' if _clk else 'without'} a clock reading, and its "
+                          f"unit is `{unit}` — " + ("a day is written without one" if not _needs else
+                                                    "a position finer than the day is a clock reading, with its offset"))
+            return
         check_value_type(f"{base}: {ref}", f"{attr}.at", val.get('at'), _as)
     elif row.get('dimension') != 'any':
         errors.append(f"{where}.system `{val.get('system')}` is a system of {row.get('dimension')} — a {typ} is a position in a "
@@ -1217,7 +1263,7 @@ def check_long_position(base, ref, attr, val, typ):
 
 def day_unwritten(val, row):
     """None when the DAY a position names exists in its calendar — or when that calendar is not reckoned by rule, so no
-    arithmetic can say — else what is wrong with it (`value_types[date].exists`).
+    arithmetic can say — else what is wrong with it (`value_types[position].exists`).
 
     A pattern admits `persian:1404-12-30` and `2026-02-30` alike: two digits are two digits. Only the calendar knows that
     Esfand 1404 has twenty-nine days, and `bin/dmcal.py` carries each calendar that reckons by rule as its two functions,
@@ -1228,7 +1274,7 @@ def day_unwritten(val, row):
     type's `exists` names. A calendar the tool happens to carry and the law says is observed is not judged by it."""
     if not isinstance(row, dict) or not row.get('calendar'):
         return None
-    _exists = (VALUE_TYPES.get('date') or {}).get('exists')
+    _exists = (VALUE_TYPES.get('position') or {}).get('exists')
     _judged = (_exists.get('reckoning') if isinstance(_exists, dict) else None) or []
     if not isinstance(_judged, list) or not isinstance(row.get('reckoning'), str) or row.get('reckoning') not in _judged:
         return None
@@ -2736,10 +2782,11 @@ def ectl_entry_types(e):
             errors.append(f"{e.base}: {e.ref}.{attr} is `now` — the word the save writes the moment of its entry in place "
                           f"of: save with {_save_command('- action: <what changed>')}" + _rule(f"{_law_path(e.term)}.attrs.{attr}", e.term))
             continue
+        _to = dict(_facet(e.form, 'held_to', e.scope)).get(attr)
         if isinstance(e.entry[attr], dict) and long_form_of(typ)[0]:
-            check_long_position(e.base, e.ref, attr, e.entry[attr], typ)
+            check_long_position(e.base, e.ref, attr, e.entry[attr], typ, _to)
             continue
-        check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ)
+        check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ, _to)
 
 
 def ectl_prose(e):

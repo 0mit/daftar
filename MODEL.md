@@ -109,8 +109,9 @@ Ownership is separate from **habitat**: a running instance is owned through its 
   one placed by what it followed, which is an acceptance all the same; a party without it has no acceptance on record —
   an offer not yet taken up, or an agreement whose acceptance nobody recorded. One party's report of another's
   acceptance is the reporter's word, and its provenance says so.
-- **A day is a position, written short or long** (27.0). Every day the law holds may be written as its calendar writes
-  it, or as one entry of `timing` — its system, where in it, its unit, and who read it or a note. The long form holds
+- **A day is a position, written short or long** (27.0). A day and a moment are one value type, `position`, held to the
+  unit its form is written at; an attribute that needs a finer one says so (`unit: minute`). Every day the law holds
+  may be written as its calendar writes it, or as one entry of `timing` — its system, where in it, its unit, and who read it or a note. The long form holds
   what the short cannot: a day nobody said, placed after or before what it followed, which orders and names no day.
 - **A moment is in time and in place.** No time is absolute: a calendar's day begins at a moment of some place, and an
   offset is read from the prime meridian. A moment may say where it was (`where`), beside its time in one entry; a

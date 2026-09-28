@@ -252,11 +252,18 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
 - **27.0** (2026-09-28, human-ratified rule-change) — **a day is a position, in either of its forms, and a moment is in
-  time and place together.** MAJOR: a garden's own term typed `iso_date` is translated by `bin/dmupgrade.py`, and a
-  garden's own metered system states its meter. Found by the local-model bench at v0.41.1, where a person
+  time and place together.** MAJOR: a garden's own term typed `iso_date`, `date` or `date_or_moment` is translated by
+  `bin/dmupgrade.py`, one typed `moment` is named for its gardener, and a garden's own metered system states its meter.
+  Found by the local-model bench at v0.41.1, where a person
   who had agreed was refused as one who had not, because nobody said the day of the yes; and by the catalogue of the
   language (`daftar catalog --part value_types`): 29 attributes of 19 terms hold a day, and none could hold one nobody said.
-  - **The long form.** `date` and `moment` name the term whose one entry they may be written as (`long_form: timing`), and
+  - **One position type** (the operator: "fold date and moment into one position type"). `date`, `moment` and
+    `date_or_moment` are one value type, `position`: a position in time in any calendar, held to the unit its form is
+    written at — a day, or a moment to the minute or finer with its offset. What the three said moves to the attribute:
+    `in: { type: position, unit: minute }` holds a move and a pin to the minute, and the unit is what the save writes for
+    `now` (`observed` and an analysis's `as_of` say `day`). The rest take a position at any unit: a yes may be written to
+    the minute. The three are retired into it.
+  - **The long form.** `position` names the term whose one entry it may be written as (`long_form: timing`), and
     so every day position of the law — `accepted`, `declined`, `agreed`, `day`, `due`, `since`, `created`, `expires`,
     `observed`, `found`, `resolved`, `retracted`, an analysis's `as_of`, an observation's and a move's `at`, a pin's — takes
     `{system, at, unit, by?, note?}` besides its short form, at the type's unit. It is the same position: its `at` is the
@@ -266,7 +273,7 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   - **An acceptance whose day nobody said is an acceptance** (E, ratified by the gardener): written long and placed by what
     it followed, it counts as consent where the agreement is one. The forms show it; the refusal of a person kept by name
     without consent names it.
-  - **`iso_date` is retired** into `date`, which holds every day it held. No term of the law used it.
+  - **`iso_date` is retired** into `position`, which holds every day it held. No term of the law used it.
   - **`event-anchored` refuses a placeholder**: a neighbour in angle brackets (`after:<what it followed>`, as the forms
     show the shape) is no neighbour, and a copy left unfilled is refused.
   - One reader: `bin/dmcal.py` reads both forms (`written`, `shown`), and `Unplaced` says a day placed by its neighbours

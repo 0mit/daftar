@@ -1758,7 +1758,7 @@ local_terms:
       shape: mapping
       attrs:
         provider: { required: true, in: prose,              meaning: "who it is rented from" }
-        renews:   { required: true, in: { type: date },     meaning: "the day the next payment is due, in any calendar" }
+        renews:   { required: true, in: { type: position }, meaning: "the day the next payment is due, in any calendar" }
         note:     { in: prose,                              meaning: "optional remark" }
     merge: { cardinality: single, order: none }
 ```

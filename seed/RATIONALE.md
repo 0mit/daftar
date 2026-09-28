@@ -147,18 +147,18 @@ pretending to arithmetic: from a day, the other end is the same place in the cel
 cell has no such place, its last one, said aloud. `measure` and `level` never stand together, because one length has
 one spelling.
 
-## value_types[moment]
+## value_types[position]
 
-A POSITION BELOW THE DAY (24.0). Until 24.0 a clock time on a date was refused as finer than the type, and the only
-moments the law knew were the journal's headings. A moment is held to the minute or finer, in any calendar, with the
-offset it was read at — the form of a heading, so there is one form of a moment and not two.
-
-## value_types[date_or_moment]
-
-HELD TO THE UNIT IT IS WRITTEN AT (24.0). Some positions are a day for one entry and a moment for the next — a clause
-due on a day, another due at eleven. Two attributes for one position would let an entry state both; `either` names the
-types a value may be, and the value is held to the one it passes. It is the one row that uses `either`, declared by its
-own meaning rather than as a new construct of the language.
+ONE POSITION TYPE (27.0; the operator: "fold date and moment into one position type"). A day and a moment are one thing
+held to two units: a position in time, in whatever calendar it was known in. The law had three types for it — `date`,
+held to the day; `moment`, held to the minute or finer with its offset (24.0, when a clock time on a date stopped being
+refused and the journal's heading form became the one form of a moment); and a third that took either, which held a value to the
+unit it was written at, because a clause falls due on a day for one entry and at eleven for the next. The third was
+already the rule: a position is held to the unit its form is written at. So there is one type, and what the other two
+said is said where it belongs. The type says the coarsest a position may be (a day) and that a clock reading carries its
+offset, since civil time is read from a place. The ATTRIBUTE says where it needs more: a move is written when it is made,
+to the minute (`unit: minute`), and that unit is what the save writes for `now`, as a stamped `observed` says `day`. A
+day that must never be finer — none was, once `accepted` could be read at a moment — needs no type of its own.
 
 ## value_types[field_path]
 
@@ -390,8 +390,9 @@ a term, a schema, the manifest) and where it went, and the gate keeps no list of
 What went, and why. `scope`: read by nothing, and false on every minted name; the term and the name's own form say
 it now. `between`, `agreement_ref`, `conflict_rule`: declared with no schema, so each checked nothing; `parties`,
 `words` and a clause say it with structure. `balance`: a stored copy of what the transactions say, which drifts.
-`iso_date` (27.0): one calendar held as though a day had to be in it; `date` holds every Gregorian day it held, and
-the days of every other calendar besides, and no term of the law used it.
+`iso_date` (27.0): one calendar held as though a day had to be in it; `position` holds every Gregorian day it held, and
+the days of every other calendar besides, and no term of the law used it. `date`, `moment`, `date_or_moment` (27.0):
+one position held to three units, folded into `position` (`value_types[position]`).
 `attributes`: a second bag for the one purpose `details` serves. The `facets` term: three prose rules that nothing
 checked, now a registry whose walk is checked. `values_consistent_with`: a guard against a list's own copies, whose
 last user became registry rows. `seeds_from`, `created`, `models`: manifest keys that nothing read; what a garden
@@ -657,7 +658,7 @@ by centimetres a year, and a coordinate is complete only with the EPOCH it was m
 
 THE WORDS A SYSTEM'S SHAPE MAY USE, declared so the gate carries no copy of them.
 
-## value_types[date].exists
+## value_types[position].exists
 
 A DAY ITS CALENDAR DOES NOT HAVE IS NOT A DATE. A pattern admits `persian:1404-12-30` and `2026-02-30` alike, and
 each reader did something different with them: the Persian date moved silently to the first of Farvardin, so a clause
@@ -672,7 +673,7 @@ The rule is stated where a date is defined, and which calendars it judges is rea
 tool happened to carry, the gate and the reader that walks a repetition could disagree about one calendar — a tool
 that learned an observed calendar would have started refusing its days on arithmetic the law says it does not follow.
 
-## value_types[date].long_form
+## value_types[position].long_form
 
 ONE POSITION, TWO FORMS (27.0). Since 10.0 a date has been read as a position — a calendar at unit day, its time of day
 unknown — and `timing` wrote a position with its system, its resolution, who read it and a note. Only the form kept
@@ -681,7 +682,7 @@ or was empty, and empty says that nobody accepted. Measured on a small model at 
 agreed, and nobody said when — the run went to it: it would not invent a day, and tried empty, `null`,
 `true` and `[]` in turn, and kept one fact of eight where 23.0 had kept eight.
 
-So each day type names the term whose one entry it may be written as, and every day position of the law takes that
+So the position type names the term whose one entry it may be written as, and every day position of the law takes that
 long form besides the short: the same position, judged by the same rules — its `at` is the short form, held to the
 type's unit — and able to say what only `timing` could, a day placed by what it came after (`event-anchored`), who
 read it, a note. The attributes keep their names, because the law reads them by name: `accepted` for consent,
@@ -754,7 +755,7 @@ that fails at the worst possible moment.
 ONE FORM MEANS ONE SET OF DIGITS. A pattern's `\d` matches every script's digits, so the law's patterns are matched
 ASCII-ONLY: a position is WRITTEN in ASCII digits whatever calendar it is in, and the digits a reader sees are a
 matter for whatever shows it to them.
-EVERY DATED ATTRIBUTE OF THE STANDARD IS TYPED `date`: a day in ANY calendar, held to that calendar's own form.
+EVERY DATED ATTRIBUTE OF THE STANDARD IS TYPED `position`: a day, or a moment, in ANY calendar, held to that calendar's own form.
 WHAT 16.0 LEFT READING ONLY THE GREGORIAN CALENDAR — `leaf_orders.instant` (the merge absorbs a coarser reading into a
 finer one only within it) and the journal's heading form — 18.0 took into every calendar: the `instant` order holds
 between readings in any declared calendar, asked at the day, and a heading is a position in any declared calendar's own
@@ -1189,7 +1190,7 @@ that aspect's own restrictions, rather than time getting a construct nothing els
 ## value_types
 
 == VALUE TYPES (10.0, T3): the named types an attribute may be `in: { type: … }` ==
-They were patterns written in the gate's code. A TIME value type is a POSITION: a `date` is not "a date
+They were patterns written in the gate's code. A TIME value type is a POSITION: a day is not "a date
 format" but a calendar held at unit DAY, so every `observed: 2026-08-09` in a garden was always a
 position in gregorian-civil whose second and minute are UNKNOWN, not zero. Saying so needs no data change;
 it states what those values already were. A type with no system (kebab) is only a form.
@@ -1224,12 +1225,12 @@ gate reads it from the node graph, where a scalar's style is known, and names th
 tool that prints what a garden already holds spells such characters out, so a garden written before the rule cannot
 drive the terminal of the person reading the refusal.
 
-## value_types[moment]
+## value_types[position].clock
 
 A MOMENT IS A JOURNAL HEADING'S POSITION, and nothing new. The heading has always been held to the minute, with its
 offset, in any declared calendar; a value the save stamps from the clock takes the same form, so it is the form the
 tool writes and the gate reads. Without the offset a wall-clock reading is ambiguous — the law's own `gregorian-civil`
-row says why — so a moment always carries one. A day its calendar lacks is no moment, as it is no date.
+row says why — so a position read on a clock always carries one. A day its calendar lacks is no moment, as it is no day.
 
 ## value_types[rows]
 

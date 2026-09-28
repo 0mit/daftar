@@ -323,17 +323,17 @@ def with_term(attr):
     return out
 
 
-out = with_term("in: { type: date }, origin: { act: read, nature: soma }")
+out = with_term("in: { type: position }, origin: { act: read, nature: soma }")
 check("ORIGIN a garden's own date read off the world states `origin: {act: read, nature: soma}`, and the gate takes it",
       ok(out), out[-1500:])
 for name, attr, want in (
         ("...an origin its domain already gives is refused: one is stated only where the domain's is wrong",
-         "in: { type: date }, origin: { act: said, nature: [lekton, empsychon] }", "which its domain already gives"),
-        ("...an origin whose act is no row of `acts` is refused", "in: { type: date }, origin: { act: guessed }",
+         "in: { type: position }, origin: { act: said, nature: [lekton, empsychon] }", "which its domain already gives"),
+        ("...an origin whose act is no row of `acts` is refused", "in: { type: position }, origin: { act: guessed }",
          "is not a row of `acts`"),
-        ("...an origin whose nature is no row of `natures` is refused", "in: { type: date }, origin: { act: said, nature: pneuma }",
+        ("...an origin whose nature is no row of `natures` is refused", "in: { type: position }, origin: { act: said, nature: pneuma }",
          "is not a row of `natures`"),
-        ("...an origin whose `by` its act does not list is refused", "in: { type: date }, origin: { act: made, by: save }",
+        ("...an origin whose `by` its act does not list is refused", "in: { type: position }, origin: { act: made, by: save }",
          "is not one of the names `acts[made]` lists"),
         ("...an origin the save writes from the clock, on a position that holds neither a day nor a moment",
          "in: prose, origin: { act: read, nature: soma, by: save }", "type it `date` or `moment`")):

@@ -61,7 +61,7 @@ DOMAINS = {
     'values':      "in: [a, b, c]                                  one of a closed list written here",
     'registry':    "in: { registry: <name>, take: <field> }        a row of a registry (or `registry_from: <attr>`: the registry another attr names)",
     'aspect':      "in: { aspect: <name>, default: <position> }    a position on an opposition; the default applies when the entry is silent",
-    'type':        "in: { type: <value type> }                     a row of `value_types` — its pattern, and for a time type its system and unit",
+    'type':        "in: { type: <value type>, unit?: <unit> }      a row of `value_types` — its pattern, and for a time type its system and unit; `unit` holds a position to that unit or a finer one, and is what the save writes for `now`",
     'form_of':     "in: { form_of: <registry>, keyed_by: <attr>, take: pattern }   a position in the system a SIBLING attr names, in that system's one form",
     'system':      "in: { system: <anchor system> }                a position in ONE named system, written in that system's one form (`unix-epoch`, `geographic`)",
     'key_of':      "in: { key_of: <term> }                         a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another — resolved by the gate, and not an edge",
@@ -180,6 +180,8 @@ def attribute_form(term_def, sch):
             put('system_from', name, dict(rule, attr=name))
         elif facet_name:
             put(facet_name, name, rule)
+        if facet_name == 'type' and rec['in'].get('unit') is not None:
+            put('held_to', name, rec['in']['unit'])                         # 27.0: a position held to this unit or finer
         if facet_name == 'entries' and rec['in'].get('keyed_by') is not None:
             put('keyed_by', name, rec['in']['keyed_by'])
         if facet_name == 'entries' and rec['in'].get('one_of') is not None:

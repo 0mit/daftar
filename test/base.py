@@ -33,7 +33,7 @@ TERM = """  - term: rehearsals
       keyed_by: [section, day]
       attrs:
         section: { required: true, in: { type: kebab }, meaning: "the section" }
-        day:     { required: true, in: { type: date_or_moment }, meaning: "the day, or the moment" }
+        day:     { required: true, in: { type: position }, meaning: "the day, or the moment" }
         room:    { in: prose, meaning: "a room" }
         hall:    { in: prose, meaning: "a hall" }
         length:  { in: extent, meaning: "how long the run of rehearsals lasts" }

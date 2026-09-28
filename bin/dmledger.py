@@ -127,7 +127,7 @@ def money_terms(terms):
         # WHEN IT HAPPENED: the attribute the law types as a date — found by its type, so a garden's term that names
         # its day otherwise is read the same way.
         dates = [a for a, r in (sch.get('attrs') or {}).items()
-                 if isinstance(_in(r), dict) and _in(r).get('type') == 'date']
+                 if isinstance(_in(r), dict) and _in(r).get('type') == 'position']
         said_as = [a for a, r in (sch.get('attrs') or {}).items() if isinstance(r, dict) and r.get('required') and _in(r) == 'prose']
         share = ((_in((sch.get('attrs') or {}).get(BEARING)) or {}).get('entries') or {}).get(SHARE)
         out.append((name, {'wholes': [w for w in wholes if w], 'parts': pattr, 'part_amount': pfield,
@@ -679,7 +679,7 @@ def allowance_lines(key, e, sch, units, fm, today):
         term = str((sel or {}).get('steps', [{}])[0].get('entries') or '').split('.')[0] if sel else ''
         attrs = ((law()[0].get(term) or {}).get('schema') or {}).get('attrs') or {}
         cand = [a for a, r in attrs.items() if _in(r) == 'extent' or (isinstance(_in(r), dict) and
-                                                                     _in(r).get('type') in ('date', 'moment', 'date_or_moment'))]
+                                                                     _in(r).get('type') == 'position')]
         if len(cand) != 1:
             return [f"        NOTE how much of the allowance is used is not read: the entries of `{esc(term)}` hold "
                     f"{len(cand)} extents or days ({', '.join(cand) or 'none'}), where one is read"]

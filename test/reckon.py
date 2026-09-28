@@ -176,7 +176,7 @@ LIGHTINGS_TERM = """  - term: lightings
     schema:
       shape: open_map_of_entries
       attrs:
-        at:  { required: true, in: { type: moment }, meaning: "the moment it was lit" }
+        at:  { required: true, in: { type: position, unit: minute }, meaning: "the moment it was lit" }
         pin: { in: any, meaning: "the commit and moment a reading of it was read at (`pin_form`)" }
     merge: { cardinality: multi, order: by-key }
   - term: visits
@@ -185,7 +185,7 @@ LIGHTINGS_TERM = """  - term: lightings
     schema:
       shape: open_map_of_entries
       attrs:
-        day: { required: true, in: { type: date }, meaning: "the day" }
+        day: { required: true, in: { type: position }, meaning: "the day" }
     merge: { cardinality: multi, order: by-key }
 """
 WICK = """registry_additions:
@@ -365,7 +365,7 @@ visits:
   used:
     what: "the visits within the thirty days that end on the day asked"
     inputs:
-      - { name: day, origin: { act: said }, type: date }
+      - { name: day, origin: { act: said }, type: position }
     steps:
       - { id: all, op: select, entries: "visits.*" }
       - { id: used, op: used-within, of: all, path: day, within: { of: time, measure: { count: 30, unit: day } }, at: { input: day } }
