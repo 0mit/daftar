@@ -482,12 +482,14 @@ class Origins:
         return out
 
     def unit(self, rec):
-        """What the save writes at a clock position — 'day' or 'moment', read from its type's row — or None."""
+        """What the save writes at a clock position — 'day' or 'moment' — read from the unit the position is held to
+        (27.0: `in: { type: position, unit: <unit> }`): a day, or a moment for a unit finer than the day. None where the
+        position states no unit, so the save has no resolution to write `now` at."""
         d = rec.get('in') if isinstance(rec, dict) else None
         t = self.types.get(d.get('type')) if isinstance(d, dict) else None
-        if not isinstance(t, dict):
+        if not isinstance(t, dict) or not t.get('any_system') or d.get('unit') is None:
             return None
-        return 'moment' if t.get('clock') == 'required' else 'day' if t.get('unit') == 'day' else None
+        return 'day' if d['unit'] == t.get('unit') else 'moment'
 
     def clocked(self):
         """{'day': names, 'moment': names}: the attributes — by name, at any depth — that may be written `now`, with

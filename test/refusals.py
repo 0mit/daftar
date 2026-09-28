@@ -661,19 +661,19 @@ check("an attribute typed `text` holds one text: a list is refused", "is text, w
 put("VOCAB.md", _vocab)
 put("beans/ali.md", person("ali"))
 _law = yaml.safe_load(open(os.path.join(G, "seed", "std-vocab.md"), encoding="utf-8").read().split("\n---\n")[0].split("---\n", 1)[1])
-_vt = [dict(r, exists=5) if r.get("type") == "date" else r for r in _law["value_types"]]
+_vt = [dict(r, exists=5) if r.get("type") == "position" else r for r in _law["value_types"]]
 put("VOCAB.md", _vocab.replace("---\n", "---\nvalue_types: " + json.dumps(_vt) + "\n", 1))
 out = deal("clauses:\n  c: { what: \"rent\", by: ali, to: sam, amount: { count: 100, unit: XTS }, due: 2026-10-01 }\n")
-check("a garden that restates the date type with an `exists` in no shape the law gives is told so once, by name — and a "
+check("a garden that restates the position type with an `exists` in no shape the law gives is told so once, by name — and a "
       "bean holding a day is still read, never a traceback",
-      "value_types[date].exists is a mapping" in out and "Traceback" not in out, out[-600:])
+      "value_types[position].exists is a mapping" in out and "Traceback" not in out, out[-600:])
 drop("beans/deal.md")
 put("VOCAB.md", _vocab)
 
 # ---------------------------------------------------------------- DMRULES READS VOCAB.md AS THE GATE READS IT
 for blk in ("local_terms: 5", "local_terms: [ { term: x, schema: 5 } ]", "local_terms: [ { term: x, schema: { attrs: 5 } } ]",
             "vacancies: [ 5 ]", "vacancies: [ { at: x, position: y } ]", "aspects: [ { aspect: x, positions: 5 } ]",
-            "value_types: [ { type: date, exists: 5 } ]"):
+            "value_types: [ { type: position, exists: 5 } ]"):
     key = blk.split(":")[0]
     put("VOCAB.md", re.sub(r"(?m)^" + key + r":.*\n", "", _vocab, count=1).replace("---\n", "---\n" + blk + "\n", 1))
     r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)

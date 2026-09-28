@@ -251,6 +251,50 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **27.0** (2026-09-28, human-ratified rule-change) — **a day is a position, in either of its forms, and a moment is in
+  time and place together.** MAJOR: a garden's own term typed `iso_date`, `date` or `date_or_moment` is translated by
+  `bin/dmupgrade.py`, one typed `moment` is named for its gardener, and a garden's own metered system states its meter.
+  Found by the local-model bench at v0.41.1, where a person
+  who had agreed was refused as one who had not, because nobody said the day of the yes; and by the catalogue of the
+  language (`daftar catalog --part value_types`): 29 attributes of 19 terms hold a day, and none could hold one nobody said.
+  - **One position type** (the operator: "fold date and moment into one position type"). `date`, `moment` and
+    `date_or_moment` are one value type, `position`: a position in time in any calendar, held to the unit its form is
+    written at — a day, or a moment to the minute or finer with its offset. What the three said moves to the attribute:
+    `in: { type: position, unit: minute }` holds a move and a pin to the minute, and the unit is what the save writes for
+    `now` (`observed` and an analysis's `as_of` say `day`). The rest take a position at any unit: a yes may be written to
+    the minute. The three are retired into it.
+  - **The long form.** `position` names the term whose one entry it may be written as (`long_form: timing`), and
+    so every day position of the law — `accepted`, `declined`, `agreed`, `day`, `due`, `since`, `created`, `expires`,
+    `observed`, `found`, `resolved`, `retracted`, an analysis's `as_of`, an observation's and a move's `at`, a pin's — takes
+    `{system, at, unit, by?, note?}` besides its short form, at the type's unit. It is the same position: its `at` is the
+    short form, judged as that. It says what only `timing` could: a day placed by what it followed (`event-anchored`), who
+    read it, a note. No bean changes; the attribute names stay, because the law reads them by name. A provenance's
+    `as_of` is the save's reading of the clock, never a day nobody said, and stays as it is.
+  - **An acceptance whose day nobody said is an acceptance** (E, ratified by the gardener): written long and placed by what
+    it followed, it counts as consent where the agreement is one. The forms show it; the refusal of a person kept by name
+    without consent names it.
+  - **`iso_date` is retired** into `position`, which holds every day it held. No term of the law used it.
+  - **`event-anchored` refuses a placeholder**: a neighbour in angle brackets (`after:<what it followed>`, as the forms
+    show the shape) is no neighbour, and a copy left unfilled is refused.
+  - One reader: `bin/dmcal.py` reads both forms (`written`, `shown`), and `Unplaced` says a day placed by its neighbours
+    names none; the readers that reckon with a day — the ledger, what falls due, the reckoner, a course, the page's
+    calendar — read the long form as the short, and say of one placed by its neighbours that it names no day.
+  - **A moment says where it was** (the operator: "moments they have time and places together"). A `timing` entry, and so
+    every day written long, takes `where`: one place position `{system, at, zone?, u?, note?}`, a place system's. Civil
+    time is read from a place, so the moment carries the place its time was read from, in the same entry.
+    `bin/dmwhere.py` reads a moment's offset against the zone in force there — from the machine's zone database, which
+    is why the gate does not.
+  - **A meter is the system's.** An aspect says what a length along it is measured in — `time` a duration and, from
+    27.0, `place` a distance (`metered: length`); a system says whether it has one. The 24 calendars state
+    `restrictions: { metered: time }` as geography states length; a system whose neighbours are metered and states no
+    meter is refused, and one that states none is not metered — a stride in years along the rock record's counted line
+    is refused. Where no system is named the aspect's word is read, and a stride along place names its system, since
+    place has many lines and a stride walks one.
+  - **No time is absolute.** Every calendar whose day begins at a local moment resolves through a place
+    (`resolves_through: geographic`), as gregorian-civil did, and the gate asks it of any that states `day_begins`;
+    `unix-epoch` states its datum, 1970-01-01 00:00Z.
+  - Left out, parked: a fact that holds at every time (2 × 2 = 4). No position of the law holds a time for it, so a
+    "does not apply" system would have no occupant; it is the fact's to say, not a position's.
 - **26.1** (2026-09-28, proposed rule-change) — **a link's peer is mutual.** MINOR, no rule changes: `links.peer` says in
   its meaning what its reasoning always said — a link has no direction, and each end records the other — beside the
   `to` a reach and a treatment are directed at. The catalogue had read the two as one domain under two names; they are

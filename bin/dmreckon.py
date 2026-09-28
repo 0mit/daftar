@@ -299,6 +299,9 @@ def value_of(node, where, notes):
         if x is None:
             raise Refused(f"{where}: {node.get('count')!r} is not a count read exactly")
         return V(x, node['unit'], _u_of(node, node['unit'], where, notes))
+    if _long(node):
+        node = _text(node)                  # a position written long is read as its short form (27.0)
+        node = str(node) if node is not None and not isinstance(node, str) else node
     if isinstance(node, bool) or node is None:
         return V(node)
     if isinstance(node, int):
@@ -381,8 +384,29 @@ def _coherent(v, what):
 
 
 # ============================================================================ positions
+_LONG = frozenset(('system', 'at', 'unit', 'by', 'note'))
+
+
+def _long(x):
+    """Whether `x` is a position written LONG (27.0): one entry of `timing`, `{system, at, unit, by?, note?}` — a day
+    position's long form, and a timing entry itself, which is the same thing."""
+    return isinstance(x, dict) and {'system', 'at', 'unit'} <= set(x) and set(x) <= _LONG
+
+
+def _text(x):
+    """A position as a calendar reads it: the long form by its `at` (dmcal.written), anything else as it is — and None
+    for one placed only by its neighbours, which names no day."""
+    try:
+        return dmcal.written(x) if _long(x) else x
+    except ValueError:
+        return None
+
+
 def _pos(x, zone, notes):
-    """A position as ('ms', milliseconds) for a moment, or ('day', n) for a day — or None."""
+    """A position as ('ms', milliseconds) for a moment, or ('day', n) for a day — or None. Either form of a position."""
+    x = _text(x)
+    if x is None:
+        return None
     s = str(x).strip()
     try:
         return ('ms', dmcal.moment(s).ms)
@@ -403,7 +427,7 @@ def pos_cmp(a, b, zone):
     """-1, 0 or 1: two positions ordered — a moment against a day through the day it falls on in the reading's zone."""
     pa, pb = _pos(a, zone, []), _pos(b, zone, [])
     if pa is None or pb is None:
-        raise Refused(f"{a!r} and {b!r} are not two positions of time this reader orders")
+        raise Refused(f"{dmcal.shown(a)!r} and {dmcal.shown(b)!r} are not two positions of time this reader orders")
     if pa[0] != pb[0]:
         if not zone:
             raise Refused(f"{a!r} against {b!r}: a moment is read against a day in a civil zone — the reading states `zone`")
@@ -833,6 +857,7 @@ class Reckoner:
 
     def _eq(self, x, o):
         o = o.v if isinstance(o, V) and o.unit is None else o
+        x = _text(x) if _long(x) else x
         if isinstance(o, V) or (isinstance(x, dict) and 'count' in x):
             return self._cmp(x, o) == 0
         if isinstance(x, dict) and 'bean' in x:
@@ -881,9 +906,11 @@ class Reckoner:
         hit = [x for x in moves if x.get('step') in reach]
         if hit and hit[0].get('at') is not None:
             # WHEN IT ENTERED: the first move into the reach — the latest such moment across the conditions it meets
-            at = str(hit[0]['at'])
+            at = _text(hit[0]['at'])
             prev = self.entered.get(m.id)
-            self.entered[m.id] = at if prev is None or pos_cmp(prev, at, self.zone) < 0 else prev
+            if at is not None:                  # a move placed only by its neighbours (27.0) says no moment it entered
+                at = str(at)
+                self.entered[m.id] = at if prev is None or pos_cmp(prev, at, self.zone) < 0 else prev
         return bool(hit)
 
     def op_intersect(self, s):
@@ -1873,7 +1900,8 @@ def occurrences(bean, clause, *, root=ROOT, pin=None, now=None):
     for m in v:
         at = rk.entered.get(m.id)
         if at is None and isinstance(m.node, dict) and m.node.get('at') is not None:
-            at = str(m.node['at'])
+            at = _text(m.node['at'])
+            at = str(at) if at is not None else None
         out.append((m.id, at))
     return out
 

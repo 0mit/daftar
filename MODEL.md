@@ -105,9 +105,17 @@ Ownership is separate from **habitat**: a running instance is owned through its 
   yet put into words, and the `document` or `event` that holds them), what it asks of each party (`clauses`, each a
   position on the `capability` square — must, need not, may, must not — with its amount, its day, how it repeats and
   what brings it into force), and what has moved under it (`transactions`).
-- **An offer is not an acceptance.** A party with `accepted` said yes on that day; a party without it has no
-  acceptance on record — an offer not yet taken up, or an agreement whose acceptance nobody recorded. One party's
-  report of another's acceptance is the reporter's word, and its provenance says so.
+- **An offer is not an acceptance.** A party with `accepted` said yes on that day — or, where nobody said the day, on
+  one placed by what it followed, which is an acceptance all the same; a party without it has no acceptance on record —
+  an offer not yet taken up, or an agreement whose acceptance nobody recorded. One party's report of another's
+  acceptance is the reporter's word, and its provenance says so.
+- **A day is a position, written short or long** (27.0). A day and a moment are one value type, `position`, held to the
+  unit its form is written at; an attribute that needs a finer one says so (`unit: minute`). Every day the law holds
+  may be written as its calendar writes it, or as one entry of `timing` — its system, where in it, its unit, and who read it or a note. The long form holds
+  what the short cannot: a day nobody said, placed after or before what it followed, which orders and names no day.
+- **A moment is in time and in place.** No time is absolute: a calendar's day begins at a moment of some place, and an
+  offset is read from the prime meridian. A moment may say where it was (`where`), beside its time in one entry; a
+  being's place says when it held (`during`). A meter belongs to a system, never to the aspect it is on.
 - **Money is a quantity.** An amount is `{ count, unit }`: the unit is a currency, the count a whole number or a
   decimal string with no more places than the currency uses. A count or a share is what was written: plain decimal
   digits, as many as the law's pattern bounds — a spelling YAML would read as another number (`010`, `0x64`, `1:30`)

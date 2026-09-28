@@ -234,7 +234,8 @@ class Series:
             dim = (self.aspect.get('domain') or {}).get('systems')
             self.system = next((s for s in self.law.systems.values() if s.get('dimension') in (dim, 'any')
                                 and dmparse.in_form(s, self.node['from'])), None)
-        m = ((self.system or {}).get('restrictions') or {}).get('metered') or self.aspect.get('metered')
+        # the system's meter where one is named (27.0: a meter is the system's); else the aspect's
+        m = ((self.system.get('restrictions') or {}).get('metered') if self.system else self.aspect.get('metered'))
         self.metered = None if m in (None, 'none') else m
         _f = self.node.get('from')
         if self.system and _f is not None and dmparse.in_form(self.system, _f) is False:
@@ -463,14 +464,10 @@ class Series:
             self.channels[ch['name']] = c
 
     def metered_in(self, row):
-        """The dimension a system's line is metered in: its own restriction, else its aspect's — the aspect whose domain
-        is the system's dimension."""
+        """The dimension a system's line is metered in: its own, which it states (27.0) — a system inherits no meter."""
         if not isinstance(row, dict):
             return None
         m = (row.get('restrictions') or {}).get('metered')
-        if m in (None, 'none'):
-            asp = next((a for a in self.law.aspects.values() if (a.get('domain') or {}).get('systems') == row.get('dimension')), None)
-            m = (asp or {}).get('metered')
         return None if m in (None, 'none') else m
 
     # -- the table
@@ -808,9 +805,9 @@ def check_moves(moves, steps, walk_name):
         sid = mv.get('step')
         # A MOVE IS TOLD FROM ANOTHER BY ITS MOMENT: two moves of one course to one step at one moment are one move written
         # twice, and a merge, which keys a move by its course, moment and step, could not tell them apart
-        _k = (str(mv.get('at')), str(sid))
+        _k = (dmcal.shown(mv.get('at')), str(sid))     # a moment in either form (27.0) is one moment
         if _k in seen:
-            out.append((i, 'error', f"reaches '{sid}' at {mv.get('at')}, as move {seen[_k]} does: a move is told from "
+            out.append((i, 'error', f"reaches '{sid}' at {dmcal.shown(mv.get('at'))}, as move {seen[_k]} does: a move is told from "
                                     f"another by its moment — one move is written once, and a step visited again is "
                                     f"visited at a later moment"))
         seen.setdefault(_k, i)
@@ -824,7 +821,7 @@ def check_moves(moves, steps, walk_name):
         except Exception:
             ms = None                                        # its form is the type's to refuse, by name
         if ms is not None and prev_ms is not None and ms < prev_ms:
-            out.append((i, 'error', f"is at {mv.get('at')}, before the move it follows: a course's moments never go back "
+            out.append((i, 'error', f"is at {dmcal.shown(mv.get('at'))}, before the move it follows: a course's moments never go back "
                                     f"— each move is written when it is made"))
         offered = None
         if prev is None:
@@ -968,7 +965,7 @@ def where(root, bean, course, now=None):
         f = law.factor(u['measure'].get('unit'))
         if f is not None and exact(u['measure'].get('count')) is not None and law.quantity_of(u['measure'].get('unit')) == 'duration':
             over = Fraction(since, 1000) > exact(u['measure']['count']) * f
-    return {'step': last.get('step'), 'at': last.get('at'), 'since': since, 'by': st.get('by'), 'party': party,
+    return {'step': last.get('step'), 'at': dmcal.shown(last.get('at')), 'since': since, 'by': st.get('by'), 'party': party,
             'usually': u, 'overdue': over, 'final': st.get('final') is True, 'moves': len(mv), 'walk': wid}
 
 

@@ -12,7 +12,7 @@ maintainers anticipated."
 
 So this asserts the two halves that must both hold:
   +  a GARDEN'S OWN term with `schema.expiry` is warned about, exactly as Tier-0's registration is
-  -  a term WITHOUT the declaration is never warned about, however many iso_date attrs it carries —
+  -  a term WITHOUT the declaration is never warned about, however many position attrs it carries —
      nine of the ten dates in the standard are `observed` or `as_of`, and a tool that warned about all
      of them would be wrong nine times in ten
 """
@@ -67,7 +67,7 @@ RENTAL = """  - term: rental
       shape: mapping
       attrs:
         provider: { required: true, in: prose }
-        renews:   { required: true, in: { type: date } }
+        renews:   { required: true, in: { type: position } }
         period:   { in: extent }
       expiry:
         attr: renews
@@ -123,13 +123,13 @@ assert _DECL in _s, "the expiry declaration was not where this test put it"
 open(v, "w", encoding="utf-8").write(_s.replace(_DECL, ""))
 host(f'rental: {{ provider: "someone", renews: "{SOON}" }}\n')
 out = stale()
-check("a term WITHOUT the declaration is never warned about, though its date is an enforced iso_date",
+check("a term WITHOUT the declaration is never warned about, though its date is an enforced position",
       "vps.rental" not in out, out[-500:])
 check("...and the gate still enforces that date, so the silence is the TOOL's, not a gap in the law",
       "0 error" in run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G).stdout,
       "gate should pass")
 
-# ---- and the standard's own dates stay quiet, which is why this is not inferred from iso_date ----------
+# ---- and the standard's own dates stay quiet, which is why this is not inferred from the position type ----------
 import yaml
 sys.path.insert(0, os.path.join(G, "bin"))
 import dmparse
@@ -139,7 +139,7 @@ dated, declared = [], []
 for t_ in terms:
     s = (t_.get("schema") or {})
     if [k for k, v in (s.get("attrs") or {}).items()
-        if isinstance((v or {}).get("in"), dict) and v["in"].get("type") in ("date", "iso_date")]:
+        if isinstance((v or {}).get("in"), dict) and v["in"].get("type") == "position"]:
         dated.append(t_["term"])
     if (s.get("expiry") or {}).get("attr"):
         declared.append(t_["term"])

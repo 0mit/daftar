@@ -267,9 +267,9 @@ probe.
     return gate()
 for d in ("2026-09-20", '"persian:1405-06-29"', '"hebrew:5787-01-09"', "2026-W38-7", '"islamic:1448-04-08"'):
     check(f"`observed: {d}` is a date — NO CALENDAR IS THE ONE A DATE MUST BE IN", "0 error" in dated(d), dated(d)[-400:])
-for d, why in (('"1405-06-29 12:00"', "a clock time is finer than a day"), ('"29 Shahrivar 1405"', "prose"), ("1758369600000", "a system with no day level"),
+for d, why in (('"1405-06-29 12:00"', "a clock reading with no offset"), ('"29 Shahrivar 1405"', "prose"), ("1758369600000", "a system with no day level"),
                ('"persian:۱۴۰۵-۰۶-۲۹"', "another script's digits")):
-    check(f"`observed: {d}` is refused ({why})", "must be an ABSOLUTE date held to the day" in dated(d), dated(d)[-400:])
+    check(f"`observed: {d}` is refused ({why})", "must be a POSITION in time" in dated(d), dated(d)[-400:])
 
 assert ORIG.count('    example: "2026-W38-7"\n') == 1
 open(STD, "w").write(ORIG.replace('    example: "2026-W38-7"\n', '    example: "2026-38-7"\n'))

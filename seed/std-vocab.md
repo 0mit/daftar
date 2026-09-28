@@ -1,5 +1,5 @@
 ---
-version: "26.1"
+version: "27.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -11,7 +11,7 @@ schema_language:
     values:      { form: "in: [a, b, c] — one of a closed list written here", origin: { act: said, nature: lekton, by: law } }
     registry:    { form: "in: { registry: <name>, take: <field> } — a row of a registry, so the registry OWNS the enum and no term restates it. `where: { <field>: <value> | [<values>] }` narrows it to the rows that say so — a PLACE system, a TRANSPORT-layer protocol — so one registry serves attributes that may name only some of its rows. `registry_from: <attr>` instead of `registry`: the registry is NAMED by another attribute of the same entry", origin: { act: said, nature: lekton, by: law } }
     aspect:      { form: "in: { aspect: <name>, default: <position> } — a position on an opposition; the default applies when the entry is silent, and a default never counts as occupying the position", origin: { act: said, nature: lekton, by: law } }
-    type:        { form: "in: { type: <value type> } — a row of `value_types`: its pattern, and for a time type its system and unit", origin: { act: said, nature: [lekton, empsychon] } }
+    type:        { form: "in: { type: <value type>, unit?: <unit> } — a row of `value_types`: its pattern, and for a time type its system and unit. `unit` beside a position type holds the attribute to that unit or a finer one — `minute` for a moment — and is the unit the save writes for `now`", origin: { act: said, nature: [lekton, empsychon] } }
     form_of:     { form: "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form", origin: { act: said, nature: [lekton, empsychon] } }
     system:      { form: "in: { system: <anchor system> } — a position in ONE named system, in that system's one form. `form_of` asks a sibling WHICH system; this names it, for an attribute that is only ever in one", origin: { act: said, nature: [lekton, empsychon] } }
     key_of:      { form: "in: { key_of: <term> } — a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another: a PART of a being, resolved by the gate. Not an edge — the being is reached by the refs the bean already states", origin: { act: said, nature: lekton, by: law } }
@@ -118,6 +118,10 @@ retired:
   - { name: seeds_from,    at: manifest, instead: "nothing: what a garden took in from another is in its journal, and in the captures on that garden's `garden` bean" }
   - { name: created,       at: manifest, instead: "nothing: when a garden began is its first commit" }
   - { name: models,        at: manifest, instead: "nothing: who wrote here is in the journal and in git" }
+  - { name: iso_date,      at: value_type, instead: "`position`: a position in time, in any calendar — the Gregorian day `2026-09-20` is one, written as before" }
+  - { name: date,          at: value_type, instead: "`position`: a day is a position held to the day, written as before — `in: { type: position }`, or `in: { type: position, unit: day }` where the save writes the day for `now`" }
+  - { name: moment,        at: value_type, instead: "`position` held to the minute: `in: { type: position, unit: minute }` — a moment is written as before, with its offset" }
+  - { name: date_or_moment, at: value_type, instead: "`position`: a day, or a moment to the minute or finer, held to the unit its form is written at — `in: { type: position }`" }
   - { name: kind,          at: bean,     instead: "`genos`: which genos of being the bean records, a row of `gene`. A mapping, which records no being, keeps its `kind`" }
   - { name: kinds,         at: law,      instead: "`gene`: the registry of the gene a bean may be, one row `- genos: <name>` each, with its `of_nature`" }
   - { name: local_kinds,   at: vocab,    instead: "`local_gene`: the rows a garden adds to `gene`, each `- genos: <name>` with its `of_nature`" }
@@ -311,8 +315,8 @@ anchor_systems:
               { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     resolves_through: geographic
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
-    meaning: "a calendar position with a stated offset. Civil time RESOLVES THROUGH a geographic position, which is why it does not establish on its own."
+    restrictions: { lines: 1, order: partial, metered: time }
+    meaning: "a calendar position with a stated offset. Civil time RESOLVES THROUGH a geographic position, which is why it does not establish on its own: an offset is minutes east of the prime meridian, and `Z` is that meridian's own time — no time here is absolute, each is read from a place."
     pattern: '^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "YYYY-MM-DD[THH:MM[:SS[.sss]][+HH:MM|Z]] — the RESOLUTION actually held is stated separately in `unit` and is never inferred from how many digits were typed"
     establishes: false
@@ -322,11 +326,12 @@ anchor_systems:
     calendar: iso8601
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: week }, { level: day, unit: day } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the ISO 8601 week calendar: the SAME days as the Gregorian calendar, partitioned into weeks instead of months. A week does not nest in a month, so this is a second partition and not a level of the first — which is why it is its own system."
     pattern: '^-?\d{4}-W\d{2}-[1-7]$'
     form_note: "`2026-W38-7`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -338,11 +343,12 @@ anchor_systems:
     calendar: julian
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Julian calendar: a leap year every fourth year, with no century rule. Not among CLDR's identifiers; declared because the Coptic, Ethiopic and Hijri epochs are stated in it, and because a historical date before a country's Gregorian reform IS in it."
     pattern: '^julian:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`julian:2026-09-07`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -354,11 +360,12 @@ anchor_systems:
     calendar: persian
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Solar Hijri calendar, civil in Iran and Afghanistan: the year begins at the March equinox; six months of 31 days, five of 30, and Esfand of 29 or 30. The OFFICIAL calendar is astronomical; it is reckoned here by the published table of 33-year-cycle breaks, which reproduces it over the range the tool states and refuses outside it."
     pattern: '^persian:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`persian:1405-06-29`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -370,11 +377,12 @@ anchor_systems:
     calendar: hebrew
     reckoning: arithmetic
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: [12, 13] }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Hebrew calendar: lunisolar, and reckoned WHOLLY BY RULE since the 4th century. A leap year has THIRTEEN months: months are numbered from Tishri as CLDR numbers them, month 6 (Adar I) exists only in a leap year, and two months vary in length to keep the new year off forbidden weekdays."
     pattern: '^hebrew:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`hebrew:5787-01-09`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -386,11 +394,12 @@ anchor_systems:
     calendar: islamic-civil
     reckoning: arithmetic
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the tabular Hijri calendar, civil epoch (Friday 16 July 622 Julian): alternating months of 30 and 29 days and eleven leap days in a thirty-year cycle. An ARITHMETIC approximation of a calendar that is properly observed — good for reckoning, never for saying when a month actually began."
     pattern: '^islamic-civil:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`islamic-civil:1448-04-07`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -402,11 +411,12 @@ anchor_systems:
     calendar: islamic-tbla
     reckoning: arithmetic
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the tabular Hijri calendar, astronomical epoch (Thursday 15 July 622 Julian): the same rule as islamic-civil, one day earlier."
     pattern: '^islamic-tbla:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`islamic-tbla:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -418,11 +428,12 @@ anchor_systems:
     calendar: islamic
     reckoning: observational
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Hijri calendar as OBSERVED: a month begins when the new crescent is sighted, so its length is known only once it has been seen, and two places may begin it on different days."
     pattern: '^islamic:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`islamic:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -434,11 +445,12 @@ anchor_systems:
     calendar: islamic-rgsa
     reckoning: observational
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Hijri calendar by the sighting announced in Saudi Arabia."
     pattern: '^islamic-rgsa:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`islamic-rgsa:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -450,11 +462,12 @@ anchor_systems:
     calendar: islamic-umalqura
     reckoning: tabulated
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: table
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Umm al-Qura calendar: the civil Hijri calendar of Saudi Arabia, published as a table computed for Mecca."
     pattern: '^islamic-umalqura:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`islamic-umalqura:1448-04-08`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -466,11 +479,12 @@ anchor_systems:
     calendar: coptic
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 13 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Coptic calendar: twelve months of thirty days and a thirteenth of five or six; the era of the Martyrs, from 284."
     pattern: '^coptic:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`coptic:1743-01-10`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -482,11 +496,12 @@ anchor_systems:
     calendar: ethiopic
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 13 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Ethiopic calendar, Amete Mihret: the Coptic structure with an epoch in the year 8."
     pattern: '^ethiopic:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`ethiopic:2019-01-10`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -498,11 +513,12 @@ anchor_systems:
     calendar: ethioaa
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 13 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Ethiopic calendar counted from Amete Alem, 5500 years earlier."
     pattern: '^ethioaa:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`ethioaa:7519-01-10`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -514,11 +530,12 @@ anchor_systems:
     calendar: indian
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Indian national calendar (Saka era): tied to the Gregorian leap rule, beginning on 22 March, or 21 March in a leap year."
     pattern: '^indian:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`indian:1948-06-29`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -530,11 +547,12 @@ anchor_systems:
     calendar: buddhist
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Thai Buddhist calendar: Gregorian months and days, the year counted from 543 BCE."
     pattern: '^buddhist:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`buddhist:2569-09-20`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -546,11 +564,12 @@ anchor_systems:
     calendar: roc
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: year }, { level: month, count: 12 }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Republic of China calendar: Gregorian months and days, the year counted from 1912."
     pattern: '^roc:-?\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`roc:115-09-20`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -562,11 +581,12 @@ anchor_systems:
     calendar: japanese
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: era }, { level: year }, { level: month }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Japanese imperial calendar: Gregorian months and days, the year counted within an ERA. The era is a LEVEL above the year — and the one level in this registry whose cells are named rather than numbered. Reckoned from 1873, when Japan adopted the Gregorian calendar."
     pattern: '^japanese:[a-z]+-\d+-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`japanese:reiwa-8-09-20`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -578,11 +598,12 @@ anchor_systems:
     calendar: chinese
     reckoning: astronomical
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: [12, 13] }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the traditional Chinese calendar: lunisolar, months beginning at the new moon computed for the 120th meridian east, with an intercalary month — written `L` — in some years."
     pattern: '^chinese:-?\d+-\d{2}L?-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`chinese:4723-08-09`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -594,11 +615,12 @@ anchor_systems:
     calendar: dangi
     reckoning: astronomical
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: [12, 13] }, { level: day, unit: day }, { level: hour, unit: hour }, { level: minute, unit: minute }, { level: second, unit: second }, { level: millisecond, unit: millisecond } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the traditional Korean calendar: the Chinese structure computed for Korea's meridian."
     pattern: '^dangi:-?\d+-\d{2}L?-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?$'
     form_note: "`dangi:4359-08-09`, optionally followed by a clock reading and its offset exactly as gregorian-civil writes one"
@@ -610,11 +632,12 @@ anchor_systems:
     calendar: julian-day
     reckoning: arithmetic
     day_begins: noon
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: day, unit: day } ]
     neighbours: metered
-    restrictions: { lines: 1, order: total }
+    restrictions: { lines: 1, order: total, metered: time }
     meaning: "the Julian Day Number: a plain count of days, as astronomers keep it. EVERY CALENDAR MEETS THE OTHERS AT THE DAY, and this is that meeting point given a name: a system with one level and no months at all. Its day begins at NOON, so that a night of observation falls on one number."
     pattern: '^jdn:\d+$'
     form_note: "`jdn:<integer>` — the number of the day whose noon it is"
@@ -626,11 +649,12 @@ anchor_systems:
     calendar: mayan-long-count
     reckoning: arithmetic
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: computed
     levels: [ { level: baktun }, { level: katun }, { level: tun }, { level: uinal }, { level: kin, unit: day } ]
     neighbours: metered
-    restrictions: { lines: 1, order: total }
+    restrictions: { lines: 1, order: total, metered: time }
     meaning: "the Mayan long count: a count of days written in mixed base — 20 kin to a uinal, 18 uinal to a tun, 20 tun to a katun, 20 katun to a baktun. A calendar with NO MONTHS OF UNEQUAL LENGTH: every level is a fixed number of days. Reckoned from the Goodman-Martinez-Thompson correlation."
     pattern: '^mayan:\d+\.\d+\.\d+\.\d+\.\d+$'
     form_note: "`mayan:<baktun>.<katun>.<tun>.<uinal>.<kin>`"
@@ -642,11 +666,12 @@ anchor_systems:
     calendar: bahai
     reckoning: astronomical
     day_begins: sunset
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: 19 }, { level: day, unit: day } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the Badi calendar: nineteen months of nineteen days and a few days between, the year beginning at the March equinox as computed for Tehran."
     pattern: '^bahai:\d+-\d{2}-\d{2}$'
     form_note: "`bahai:<year>-<month>-<day>`; the intercalary days are written as month 00"
@@ -658,11 +683,12 @@ anchor_systems:
     calendar: french-republican
     reckoning: astronomical
     day_begins: midnight
+    resolves_through: geographic
     same_ground_as: [gregorian-civil]
     crosswalk: observed
     levels: [ { level: year }, { level: month, count: 12 }, { level: decade }, { level: day, unit: day } ]
     neighbours: metered
-    restrictions: { lines: 1, order: partial }
+    restrictions: { lines: 1, order: partial, metered: time }
     meaning: "the calendar of the French Republic: twelve months of thirty days in three ten-day decades, and five or six days over, the year beginning at the autumn equinox as observed from Paris. Declared because dated sources exist in it, and because its ten-day decade is a partition no other calendar here has."
     pattern: '^french-republican:\d+-\d{2}-\d{2}$'
     form_note: "`french-republican:<year>-<month>-<day>`; the days over are written as month 13"
@@ -672,8 +698,9 @@ anchor_systems:
   - system: unix-epoch
     dimension: time
     levels: [ { level: millisecond, unit: millisecond } ]
+    datum: { system: gregorian-civil, at: "1970-01-01 00:00Z", direction: after }
     neighbours: metered
-    restrictions: { lines: 1, order: total }
+    restrictions: { lines: 1, order: total, metered: time }
     meaning: "a time position as milliseconds since 1970-01-01T00:00:00Z. It serves `beanger` records, whose ORDER is the thing being recorded — two operations in one session land in the same second, and a position that cannot separate them cannot order them."
     pattern: '^\d{13}$'
     form_note: "exactly 13 digits: epoch MILLISECONDS, never seconds. One length, one meaning — a 10-digit value would be a different unit wearing the same shape, which is the ambiguity `unit` was added to stop."
@@ -727,8 +754,8 @@ anchor_systems:
     dimension: any
     neighbours: counted
     meaning: "a position fixed by NEIGHBOURING EVENTS rather than by any coordinate — 'after the branch was pushed, before the cutover'. Fully positioned while carrying no calendar value at all. Declared because it is what makes this a registry rather than a two-item enum: SEQUENCE is the general structure and a coordinate system is one restriction of it."
-    pattern: '^(after|before):.+$'
-    form_note: "after:<position> or before:<position>; state both as two entries when an interval is meant"
+    pattern: '^(after|before):[^<>]+$'
+    form_note: "after:<position> or before:<position> — the position itself, a bean's id or a few words, and never a placeholder in angle brackets; state both as two entries when an interval is meant"
     establishes: false
     why: "an event anchor positions relative to other positions — it fixes an interval, never a point"
   - system: network-segment
@@ -1103,6 +1130,7 @@ registry_forms:
     dimension: optional
     any_system: optional
     exists: optional
+    long_form: optional
     clock: optional
     origin: optional
     holds_no: optional
@@ -1704,7 +1732,7 @@ coefficient_form:
   terms:       "as for a mechanism"
 pin_form:
   commit: "the commit a reading was read at: an object id of the garden (7 to 40 hex digits), an ancestor of the commit that records the pin"
-  at:     "the moment it was read at (`moment`, read by the save): written `now`, and the save writes the moment of its journal heading — the clock a reading that reads the clock took"
+  at:     "the moment it was read at (a `position` held to the minute, read by the save): written `now`, and the save writes the moment of its journal heading — the clock a reading that reads the clock took"
   garden: "the `garden` bean of the garden read, where the reading was across gardens"
 compatibility:
   multiple: 2
@@ -1744,26 +1772,15 @@ ordering_keys:
       - { id: key, op: multiply, of: importance, with: uncertainty }
 # == VALUE TYPES ==
 value_types:
-  - type: iso_date
-    system: gregorian-civil
-    unit: day
-    pattern: '^\d{4}-\d{2}-\d{2}$'
-    refusal: "must be an ABSOLUTE date YYYY-MM-DD (Rule 6 paper-durable)"
-    meaning: "a calendar position held to the DAY; its time of day is not known, which is different from midnight"
-  - type: date
+  - type: position
     dimension: time
     unit: day
     any_system: true
+    clock: offset
     exists: { reckoning: [arithmetic] }
-    refusal: "must be an ABSOLUTE date held to the day, in the one form of the calendar it is stated in — `2026-09-20`, `persian:1405-06-29`, `hebrew:5787-01-09`, `2026-W38-7` (Rule 6 paper-durable)"
-    meaning: "a position held to the DAY, in ANY calendar. What `observed`, `as_of` and `expires` are typed with: a fact is dated in the calendar it was known in, and no calendar is the one a date must be in. `iso_date` stays for a garden's own term that really means the Gregorian calendar. A day its calendar does not have is no date: where the calendar's row is reckoned in one of the ways `exists.reckoning` names, the day a position names, written back in that calendar, is the position written, and a year the reckoning cannot reach is no year. So it is for every position held to a day — a date, where a repetition starts and ends, a bound of a region in time."
-  - type: moment
-    dimension: time
-    unit: minute
-    any_system: true
-    clock: required
-    refusal: "must be a MOMENT: held to the minute or finer, in the one form of a calendar the law declares, with its offset — `2026-10-28 14:05-05:00`, `persian:1405-08-06 14:35+01:00`"
-    meaning: "a position in time held to the MINUTE or finer, in ANY calendar, with the offset it was read at: the form of a journal heading's moment, and of every value the save stamps from the clock. A day its calendar does not have is no moment, as it is no date"
+    long_form: timing
+    refusal: "must be a POSITION in time, in the one form of the calendar it is stated in: a day (`2026-09-20`, `persian:1405-06-29`, `hebrew:5787-01-09`, `2026-W38-7`), or a moment to the minute or finer with the offset it was read at (`2026-10-28 14:05-05:00`, `persian:1405-08-06 14:35+01:00`) (Rule 6 paper-durable) — or the same position written long, as one entry of `timing`: `{ system: gregorian-civil, at: 2026-09-20, unit: day }`, or, where nobody said the day, `{ system: event-anchored, at: \"after:<what it followed>\", unit: day, note: <what is known of when> }`"
+    meaning: "a POSITION IN TIME, in ANY calendar, held to the unit its form is written at: a day, or a moment to the minute or finer with the offset it was read at — no calendar is the one a position must be in, and a clock reading is never without its offset (`clock: offset`), since civil time is read from a place. `unit` is the coarsest a position is held to; an attribute held to a finer one says so beside the type (`in: { type: position, unit: minute }`), and that unit is also what the save writes for `now`. It is written SHORT, as its calendar writes it, or LONG as one entry of the term `long_form` names — `timing`, `{system, at, unit, by?, note?, where?}` — the same position, which also holds what the short form cannot: a day nobody said, placed by its neighbours (`event-anchored`), who read it, where it was, a note. A day its calendar does not have is no position: where the calendar's row is reckoned in one of the ways `exists.reckoning` names, the day a position names, written back in that calendar, is the position written, and a year the reckoning cannot reach is no year. So it is for every position held to a day — where a repetition starts and ends, a bound of a region in time."
   - type: kebab
     origin: { act: made }
     pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
@@ -1779,10 +1796,6 @@ value_types:
     lines_in: block
     refusal: "a control character, which text never holds: no one reads it, and printed it moves, erases or hides what a reader's terminal shows. Text holds a tab, and a line feed only in a block scalar (`|` or `>`), whose lines are lines on the page"
     meaning: "what every key and every string value of a bean, a mapping, GARDEN.md and VOCAB.md is: characters a person reads. It holds no character of the Unicode general category `holds_no` but those in `but`, and a line feed only in a scalar of the style `lines_in` names. Every other value type is text first"
-  - type: date_or_moment
-    either: [date, moment]
-    refusal: "must be a day (`2026-10-28`, `hebrew:5787-02-06`) or a moment to the minute or finer with its offset (`2026-10-28 11:00-05:00`), each in the one form of the calendar it is stated in"
-    meaning: "a `date` or a `moment` — held to the unit its form is written at: a clause due on a day falls due that day, one due at 11:00 falls due at 11:00; a reading of a day is of the day. Where the resolution of a READING could be mistaken, `timing` states its unit apart, and that rule stands"
   - type: field_path
     origin: { act: said, nature: lekton, by: law }
     pattern: '^(?:@occurrence|(?:[a-z0-9][a-z0-9-]*:)?(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?(?:\.(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?)*(?:>(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?(?:\.(?:\*|[a-z0-9_][a-z0-9_-]*)(?:\[[a-z_][a-z0-9_]*=[^\]\s]+\])?)*)*)$'
@@ -2131,7 +2144,7 @@ aspects:
     meaning: "where: a position among the places a being can be, whether a coordinate, a site or a path in a tree"
     figure: sequence
     lines: open
-    metered: none
+    metered: length
     order: partial
     acyclic: true
     ends: bounded
@@ -2374,7 +2387,7 @@ profiles:
           system:           { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place, any] } }, meaning: "the PLACE system the surface is stated in — `ipv4` or `ipv6` for a network address, `unix-filesystem` for a socket path. It selects the form `at` must take. Named `system`, as in `roots`, `located_at` and `timing`: `keyed_by` resolves a registry row by a field that exists on BOTH the entry and the row, so the two are one name by construction." }
           at:               { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the address answered at, in that system's ONE canonical form" }
           exposure:         { in: [loopback, lan, link, internet], meaning: "loopback (this machine only) | lan (the local segment) | link (reachable only over a named link, e.g. the wireguard tunnel) | internet (bound to a public address directly)" }
-          observed:         { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the surface was checked. Endpoints age faster than almost anything else here." }
+          observed:         { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the surface was checked. Endpoints age faster than almost anything else here." }
           confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "the position on the confidentiality aspect — what the channel protects. Defaults to cleartext, because a channel nobody has said protects anything does not." }
           permission:       { in: { aspect: permission, default: permitted }, meaning: "the position on the permission aspect — whether this surface MAY exist at all" }
           transport:        { in: { registry: net_protocols, take: protocol, where: { layer: transport } }, default_from: { registry: net_protocols, keyed_by: protocol, take: transport }, meaning: "tcp | udp — which transport's port space `port` is a position in. Defaults to the protocol row's `transport`." }
@@ -2399,7 +2412,7 @@ profiles:
         key_form: kebab
         attrs:
           protocol:         { required: true, in: { registry: net_protocols, take: protocol }, meaning: "what makes this link — wireguard for a tunnel, and a physical row where one exists" }
-          observed:         { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the link was checked" }
+          observed:         { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the link was checked" }
           peer:             { in: ref, meaning: "a {bean, field} ref to the other end. A link is MUTUAL, and has no direction: each end records the other as its peer, where a reach or a treatment names the end it is directed at, `to`. A REF, not a retyped address" }
           confidentiality:  { in: { aspect: confidentiality, default: cleartext }, meaning: "what the link protects, for everything carried over it" }
           plane:            { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR." }
@@ -2417,7 +2430,7 @@ profiles:
         key_form: kebab
         attrs:
           protocol:   { required: true, in: { registry: net_protocols, take: protocol }, meaning: "what it speaks to get there" }
-          observed:   { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the reach was verified to work" }
+          observed:   { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the reach was verified to work" }
           to:         { in: ref, meaning: "a {bean[, field]} ref to what it reaches. A ref rather than an address, so the far end stays the one owner of its own address." }
           necessity:  { in: { aspect: necessity, default: necessary }, meaning: "the position on the necessity aspect — `necessary` if the being cannot do its work without it" }
           via_link:   { in: { key_of: links }, meaning: "optional: the link this reach must cross" }
@@ -2437,7 +2450,7 @@ profiles:
           plane:       { in: { registry: planes, take: plane }, meaning: "data | control | management — what this is FOR." }
           what:        { required: true, in: prose, meaning: "the treatment itself, briefly. A POINTER to the device's own config, never a copy of it — ground rule 3: the router owns its rules and they are not hand-edited from here." }
           why:         { required: true, in: prose, meaning: "what breaks if it is removed. This is the load-bearing attr: a treatment with no stated consequence is an inventory row, and inventory is what the device's own export already gives you." }
-          observed:    { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the treatment was read off the device" }
+          observed:    { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the treatment was read off the device" }
           to:          { in: ref, meaning: "optional: a {bean, field} ref to where the treatment sends traffic" }
           permission:  { in: { aspect: permission, default: permitted }, meaning: "the position on the permission aspect. `required` is the one that earns this term: a server's outbound SPF identity can DEPEND on firewall mangle marks, and today that is a prose safety note nothing enforces." }
           note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
@@ -2460,10 +2473,10 @@ profiles:
           why: "an unrenewed name takes its DNS and its mail with it"
         attrs:
           registrar:   { required: true, in: prose, meaning: "the registrar of record — who the renewal is actually paid to" }
-          created:     { required: true, in: { type: date }, meaning: "ABSOLUTE date the registration began" }
-          expires:     { required: true, in: { type: date }, meaning: "ABSOLUTE date it lapses if unrenewed — the fact that can lose the name" }
+          created:     { required: true, in: { type: position }, meaning: "ABSOLUTE date the registration began" }
+          expires:     { required: true, in: { type: position }, meaning: "ABSOLUTE date it lapses if unrenewed — the fact that can lose the name" }
           auto_renew:  { required: true, in: [enabled, disabled, unknown], meaning: "enabled | disabled | unknown. `unknown` is the honest default: it is a registrar-ACCOUNT setting and does not appear in WHOIS, so it cannot be observed the way the dates can." }
-          observed:    { required: true, origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer." }
+          observed:    { required: true, origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date these facts were read. They age: an expiry moves on renewal, and a registrar changes on transfer." }
           source:      { required: true, in: prose, meaning: "where they were read from" }
           registrant:  { in: prose, meaning: "optional: the party holding the registration, where the registry discloses it" }
           note:        { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
@@ -2825,7 +2838,7 @@ terms:
       required_on_gene: [codebase]
       attrs:
         produced_by:     { required: true, in: { pattern: "^((agent|tool|human):[^ ].*|[^ :][^:]* \\(.+\\))$", soft: true, why: "attribution has one convention across the ledger — `agent:<model>/<garden>` for an agent, `tool:<name>` for a tool, `name (role)` for a person — so that `who to ask` can be read by something" }, meaning: "the agent/tool id that produced this analysis (provenance — who to ask, who to blame)" }
-        as_of:           { required: true, origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)" }
+        as_of:           { required: true, origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the analysis was produced, YYYY-MM-DD (Rule 6 paper-durable)" }
         staleness_key:   { required: true, in: { pattern: "^([a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}|manual:.+)$" }, meaning: "the value that makes this entry VALID; when it MOVES, the entry is STALE. The FORM is the pattern this attribute declares, beside this sentence, and is not restated here: `<repo>@<object-id>`, a position in a named repository's object graph, or `manual:<why>` for what no key can track." }
         policy:          { required: true, in: [index, reference-only, skim], meaning: "index | reference-only | skim — how the analysed source is to be treated" }
         form:            { in: [summary_ref, inline, external], meaning: "summary_ref | inline | external — where the cached result physically lives" }
@@ -2877,7 +2890,7 @@ terms:
       attrs:
         owner:     { in: ref }
         contract:  { in: ref }
-        since:     { in: { type: date }, meaning: "optional: ABSOLUTE date this owner came to hold the facet" }
+        since:     { in: { type: position }, meaning: "optional: ABSOLUTE date this owner came to hold the facet" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-facet }
   - term: responsibility
@@ -2894,7 +2907,7 @@ terms:
       attrs:
         holder:    { in: ref }
         contract:  { in: ref }
-        since:     { in: { type: date }, meaning: "optional: ABSOLUTE date this holder came to answer for the facet" }
+        since:     { in: { type: position }, meaning: "optional: ABSOLUTE date this holder came to answer for the facet" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-facet }
   - term: instance_of
@@ -3168,11 +3181,11 @@ terms:
         who:      { in: ref, meaning: "the party: a person or an organisation the garden holds, {bean: <id>}" }
         external: { in: prose, meaning: "a party the garden holds no bean for — the bank that issued a card — named as the record can name it" }
         role:     { in: { type: kebab }, meaning: "what the party is to the agreement: payer, cardholder, buyer, lender, facilitator. Open, like `rel`" }
-        accepted: { in: { type: date }, meaning: "the day this party accepted. Whose word it is, is the entry's provenance: the party's own word, or another person's report of it — never an inference" }
+        accepted: { in: { type: position }, meaning: "the day this party accepted. Where they accepted and nobody said the day: `{ system: event-anchored, at: \"after:<what it followed>\", unit: day }`, placed by what it followed. Whose word it is, is the entry's provenance: the party's own word, or another person's report of it — never an inference" }
         during:   { in: extent, meaning: "when this party was a party, where that is not the agreement's whole life" }
         note:     { in: prose, meaning: "optional prose" }
         acting_for: { in: { key_of: parties }, meaning: "the party this one acts for: what it does binds that party — an employee, a lawyer, a parent" }
-        declined:   { in: { type: date }, meaning: "the day this party refused the agreement, or withdrew from it; whose word it is, is the entry's provenance" }
+        declined:   { in: { type: position }, meaning: "the day this party refused the agreement, or withdrew from it; whose word it is, is the entry's provenance" }
     merge: { cardinality: multi, order: by-key }
   - term: over
     meaning: "what an agreement concerns: the beings it is about, or in words what it is about"
@@ -3195,7 +3208,7 @@ terms:
       attrs:
         form:   { required: true, in: [written, spoken, unstated], meaning: "written — a text exists, and `at` names the document that holds it | spoken — agreed aloud; `at` may name the happening | unstated — the agreement is named, and its terms have not been put into words" }
         at:     { in: ref, meaning: "the `document` that holds its text, or the `event` at which it was said" }
-        agreed: { in: { type: date }, meaning: "the day it was agreed, in any calendar" }
+        agreed: { in: { type: position }, meaning: "the day it was agreed, in any calendar" }
         note:   { in: prose, meaning: "optional prose" }
       cells:
         - { when: { form: written }, requires: [at], why: "a written agreement can be found: name the document that holds it" }
@@ -3218,7 +3231,7 @@ terms:
         used_by: { in: { key_of: selections }, meaning: "with `within`: the entries whose extents use the allowance — a person's stays, their leave" }
         permission: { in: { aspect: permission, default: required }, meaning: "required | omissible | permitted | forbidden" }
         amount: { in: { quantity: any }, meaning: "how much, where it is measured — money, time, anything. Absent while unknown, and `what` then says how it will be known" }
-        due:    { in: { type: date_or_moment }, meaning: "the day, or the moment, it falls due — the first, when it repeats" }
+        due:    { in: { type: position }, meaning: "the day, or the moment, it falls due — the first, when it repeats" }
         every:  { in: recurrence, meaning: "how it repeats: each month of a calendar, six times" }
         when:
           meaning: "what brings it into force, where that is not a day: a reading that holds — an entry made under another clause, a step reached, anything a selection says — or the condition in words, where no reading says it yet"
@@ -3242,7 +3255,7 @@ terms:
         what:     { required: true, in: prose, meaning: "what was bought, paid, repaid or charged, in the person's own words" }
         amount:   { required: true, in: { quantity: money }, meaning: "the whole, in the currency it was priced in" }
         charged:  { in: { quantity: money }, meaning: "what it came to in the currency it was paid in, where that is another currency — both as the statement shows them. The rate between them is READ (charged ÷ amount, exactly), never stored" }
-        day:      { in: { type: date }, meaning: "the day it happened, where known" }
+        day:      { in: { type: position }, meaning: "the day it happened, where known" }
         paid_by:
           required: true
           meaning: "who paid, and how much each paid — one entry per party. A single payer may leave `amount` out: they paid the whole"
@@ -3256,7 +3269,7 @@ terms:
         note:     { in: prose, meaning: "optional prose" }
         during:   { in: extent, meaning: "the period it is for: a month's fee, a season's share" }
         settles:  { in: { entries: { clause: { required: true, in: { key_of: clauses } }, occurrence: { required: true, in: { pattern: '^[a-z0-9][a-z0-9-]*(:[a-z0-9_][a-z0-9_-]*(\.[a-z0-9_][a-z0-9_-]*)*)?$' } }, amount: { in: { quantity: any } }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } }, keyed_by: [clause, occurrence] }, meaning: "which occurrences of which clauses it settles, and how much of each: one payment across two rates, each under its own clause. With `settles`, `under` may be left out" }
-        pin:      { in: { entries: { commit: { required: true, origin: { act: read, nature: soma }, in: { pattern: '^[0-9a-f]{7,40}$' } }, at: { required: true, origin: { act: read, nature: soma, by: save }, in: { type: moment } }, garden: { in: { bean_id: { gene: [garden] } } } } }, meaning: "the commit and the moment the reading it settles was read at (`pin_form`)" }
+        pin:      { in: { entries: { commit: { required: true, origin: { act: read, nature: soma }, in: { pattern: '^[0-9a-f]{7,40}$' } }, at: { required: true, origin: { act: read, nature: soma, by: save }, in: { type: position, unit: minute } }, garden: { in: { bean_id: { gene: [garden] } } } } }, meaning: "the commit and the moment the reading it settles was read at (`pin_form`)" }
     merge: { cardinality: multi, order: by-key }
   - term: trigger
     meaning: "what causes a mapping to run: manual, an event, or a schedule"
@@ -3311,7 +3324,7 @@ terms:
       moves_along: course
       attrs:
         course:  { required: true, in: { key_of: courses }, meaning: "the course moved along: a key of `courses` on this bean" }
-        at:     { required: true, origin: { act: read, nature: soma, by: save }, in: { type: moment }, meaning: "the moment of the move, read from the clock: written `now`, and the save writes the moment of its journal heading" }
+        at:     { required: true, origin: { act: read, nature: soma, by: save }, in: { type: position, unit: minute }, meaning: "the moment of the move, read from the clock: written `now`, and the save writes the moment of its journal heading" }
         step:   { required: true, in: { type: kebab }, meaning: "the step reached: a step of the course's walk" }
         by:     { required: true, in: bean_id, meaning: "who moved it" }
         reason: { in: { type: kebab }, meaning: "why, as one of the reasons the step reached lists in its `reasons`" }
@@ -3356,7 +3369,7 @@ terms:
       attrs:
         system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which anchor system this position is stated in — it selects the form the position must take" }
         openness:  { required: true, in: [here, elsewhere, unreachable, unknown], meaning: "here (reachable from the machine that recorded it) | elsewhere (reachable, and NOT from here) | unreachable (known, and cannot be reached) | unknown (nobody has established where it is)" }
-        observed:  { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date this location was checked. A location ages: a tree is moved, a branch is checked out elsewhere, a printout is filed." }
+        observed:  { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date this location was checked. A location ages: a tree is moved, a branch is checked out elsewhere, a printout is filed." }
         u:          { in: { quantity: length }, meaning: "the position's HORIZONTAL standard uncertainty (`uncertainty_form`); for a position on one vertical axis, its only one" }
         u_vertical: { in: { quantity: length }, meaning: "the standard uncertainty of its height, where it states one: where most local ground motion is, and where a receiver is worst" }
         accuracy:   { in: { entries: { count: { required: true, in: { type: count } }, unit: { required: true, in: { registry: units, take: unit } }, kind: { required: true, in: { registry: accuracy_kinds, take: kind } } } }, meaning: "instead of `u`: the horizontal accuracy as the receiver stated it, with its kind" }
@@ -3396,8 +3409,9 @@ terms:
   - term: timing
     meaning: >
       When something happened, as an OPEN map of moment-name -> a position in a time anchor system at a
-      STATED resolution. The resolution is declared, never inferred from how many digits were typed, so
-      two positions whose resolutions overlap can be known to be unordered rather than silently ordered.
+      STATED resolution, and, where it is known, where (`where`). The resolution is declared, never inferred
+      from how many digits were typed, so two positions whose resolutions overlap can be known to be
+      unordered rather than silently ordered. One entry is also the long form of every day the law holds.
     context_keys: [timing]
     schema:
       shape: open_map_of_entries
@@ -3408,6 +3422,15 @@ terms:
         at:      { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position, in that system's ONE canonical form" }
         unit:    { required: true, in: { registry: units, take: unit }, meaning: "the resolution ACTUALLY HELD. `2026-08-07T05:21` recorded at unit: minute means the second is not known — not that it was zero." }
         by:      { in: prose, meaning: "optional: who or what read the clock, when that is not the bean's default provenance" }
+        where:
+          meaning: "WHERE the moment was: one place position beside its time — a moment is in time and in place together, and civil time is read from a place. The form a being's place takes (`located_at`), without what is a being's alone: whether it can be reached, and how long it stayed"
+          in:
+            entries:
+              system: { required: true, in: { registry: anchor_systems, take: system, where: { dimension: place } }, meaning: "the place system it is stated in" }
+              at:     { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "where, in that system's one form" }
+              zone:   { in: { registry: time-zones, take: zone }, meaning: "the civil time zone in force there: the moment's offset is READ from it, never stored (N8)" }
+              u:      { in: { quantity: length }, meaning: "how well the place is known: its standard uncertainty (`uncertainty_form`)" }
+              note:   { in: prose, meaning: "optional prose" }
         note:    { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
   - term: series
@@ -3469,7 +3492,7 @@ terms:
       attrs:
         system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which filesystem system this host resolves the root in — pinned to the grammar this host's `os` declares, so it is checked rather than merely stated" }
         at:        { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the literal position this root means HERE, host named, in that system's canonical form" }
-        observed:  { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the resolution was checked — a tree gets moved" }
+        observed:  { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the resolution was checked — a tree gets moved" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
         keeps:           { in: [none, personal, special-category], meaning: "the most sensitive material this root may hold as a store of the held layer — `none` for material that is neither; absent, the root is no store" }
         controller:      { in: { bean_id: { gene: [person, org] } }, meaning: "who controls the store: the subject, for special-category material (D4)" }
@@ -3486,7 +3509,7 @@ terms:
       shape: list_of_entries
       attrs:
         role:      { required: true, in: { registry: roles, take: role }, meaning: "which job — a registry row, so a typo is an error and not a new role" }
-        observed:  { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the role was confirmed to be one this being actually performs" }
+        observed:  { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the role was confirmed to be one this being actually performs" }
         why:       { in: prose, meaning: "optional: what this being does in that role that another in the same role would not" }
         note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-role }
@@ -3507,7 +3530,7 @@ terms:
       key_form: kebab
       attrs:
         format:      { required: true, in: { registry: storage_formats, take: format }, meaning: "a row of storage_formats — ext4, crypto_LUKS, LVM2_member and so on" }
-        observed:    { origin: { act: read, nature: soma }, in: { type: date }, meaning: "ABSOLUTE date the layout was read off the machine" }
+        observed:    { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the layout was read off the machine" }
         carried_by:  { in: { key_of: volumes }, meaning: "the `volumes` key beneath this one. A local key and NOT a ref: the stack is intra-bean, which is why it joins no acyclic check." }
         uuid:        { origin: { act: read, nature: soma }, in: { pattern: "^[0-9A-Za-z][0-9A-Za-z:-]*$" }, meaning: "the volume's own identifier, as its format reports it. The datum a rebuild needs and the one that survives a device rename." }
         at:          { in: { pattern: "^(/[^ ]*|[A-Za-z]:[/\\\\].*)$" }, meaning: "where it is mounted, in this machine's path grammar. Absent for a volume that holds no filesystem — a LUKS container or an LVM member is mounted nowhere." }
@@ -3599,7 +3622,7 @@ terms:
         property:  { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "what was observed: a code of a published scheme — never a garden's own word — so that two gardens' readings meet. Every reading states one; a verdict takes it from the entry it answers" }
         of:        { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "the part of this being the reading is of, as a code; absent, the whole being" }
         presence:  { in: [present, absent], meaning: "present — found (the reading when silent); absent — looked for and not found: a list that does not name it, a sign not seen. An absent entry states no result" }
-        at:        { in: { type: date_or_moment }, meaning: "when it held: the moment of the phenomenon, at the unit its form is written in — not when it was written down, which is provenance" }
+        at:        { in: { type: position }, meaning: "when it held: the moment of the phenomenon, at the unit its form is written in — not when it was written down, which is provenance" }
         during:    { in: extent, meaning: "when it held, where that is a stretch: a day's intake, a season's growth" }
         value:     { in: { quantity: any }, meaning: "a measured result, with its `u` or `accuracy` inside it" }
         code:      { in: { entries: { scheme: { required: true, in: { registry: knowledge_schemes, take: scheme }, meaning: "the published scheme" }, code: { required: true, in: { registry_from: scheme, take: code }, meaning: "the code in it" } } }, meaning: "a classified result" }
@@ -3609,9 +3632,9 @@ terms:
         by:        { in: bean_id, meaning: "who or what observed it — a person, an instrument — as a bean, so that its standing can be read (N19)" }
         answers:   { in: { type: field_path }, meaning: "the entry this one is a verdict on, `<bean>:observations.<key>` (N20)" }
         answer:    { in: [confirms, disputes, abstains], meaning: "with `answers`: confirms | disputes | abstains — asked, and would not say" }
-        retracted: { in: { type: date }, meaning: "the day its own observer withdrew it: kept, and read by no reading after that day. A retraction is its observer's own word, so the entry carries a provenance of its own, stated by a person" }
+        retracted: { in: { type: position }, meaning: "the day its own observer withdrew it: kept, and read by no reading after that day. A retraction is its observer's own word, so the entry carries a provenance of its own, stated by a person" }
         sample:    { in: bean_id, meaning: "a specimen taken from this being that it was read on" }
-        pin:       { in: { entries: { commit: { required: true, origin: { act: read, nature: soma }, in: { pattern: '^[0-9a-f]{7,40}$' } }, at: { required: true, origin: { act: read, nature: soma, by: save }, in: { type: moment } }, garden: { in: { bean_id: { gene: [garden] } } } } }, meaning: "the commit and the moment the readings it rests on were read at (`pin_form`, N2)" }
+        pin:       { in: { entries: { commit: { required: true, origin: { act: read, nature: soma }, in: { pattern: '^[0-9a-f]{7,40}$' } }, at: { required: true, origin: { act: read, nature: soma, by: save }, in: { type: position, unit: minute } }, garden: { in: { bean_id: { gene: [garden] } } } } }, meaning: "the commit and the moment the readings it rests on were read at (`pin_form`, N2)" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes" }
       cells:
         - { when: { answer: [confirms, disputes, abstains] }, requires: [answers], why: "a verdict names the entry it is a verdict on" }
@@ -3625,8 +3648,8 @@ terms:
       key_form: kebab
       attrs:
         over:   { required: true, in: { entries: { path: { required: true, in: { type: field_path }, meaning: "`<bean>:<term>.<key>`" } } }, meaning: "the entries that disagree, each `<bean>:<term>.<key>`" }
-        heard:  { in: { entries: { speaker: { required: true, in: bean_id, meaning: "who spoke" }, said: { required: true, in: prose, meaning: "what they said, in their own words" }, at: { in: { type: date_or_moment }, meaning: "when" }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } }, keyed_by: speaker }, meaning: "each side's statement, in their own words" }
-        ruling: { in: { entries: { by: { required: true, in: { bean_id: { gene: [person, org] } }, meaning: "who ruled" }, what: { required: true, in: prose, meaning: "the decision" }, at: { in: { type: date_or_moment }, meaning: "when" }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } } }, meaning: "the decision, by whom" }
+        heard:  { in: { entries: { speaker: { required: true, in: bean_id, meaning: "who spoke" }, said: { required: true, in: prose, meaning: "what they said, in their own words" }, at: { in: { type: position }, meaning: "when" }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } }, keyed_by: speaker }, meaning: "each side's statement, in their own words" }
+        ruling: { in: { entries: { by: { required: true, in: { bean_id: { gene: [person, org] } }, meaning: "who ruled" }, what: { required: true, in: prose, meaning: "the decision" }, at: { in: { type: position }, meaning: "when" }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } } }, meaning: "the decision, by whom" }
         note:   { in: prose, meaning: "optional prose" }
     merge: { cardinality: multi, order: by-key }
 
@@ -3645,9 +3668,9 @@ terms:
         state:        { required: true, in: [live, latent, unproven, resolved, superseded], meaning: "live (the defect IS the case right now) | latent (it is not, and nothing prevents it — the `forbidden` + `possible` shape) | unproven (nobody has established which, and that is the finding) | resolved | superseded (a different change made it moot; say which).\n" }
         evidence:     { required: true, in: prose, meaning: "how the state was established, specific enough to re-run. `unproven` states what WOULD establish it — a risk whose test is unnamed cannot be closed by anyone but its author." }
         owned_with:   { in: ref, meaning: "optional {bean} ref: where the FIX lives, when that is not this bean. A defect on one being is often only fixable on another." }
-        found:        { in: { type: date }, meaning: "ABSOLUTE date the finding was first made." }
+        found:        { in: { type: position }, meaning: "ABSOLUTE date the finding was first made." }
         resolution:   { in: prose, meaning: "on `resolved` / `superseded`: WHAT settled it. A closed risk that does not say how is a risk a reader must re-open to trust." }
-        resolved:     { in: { type: date }, meaning: "ABSOLUTE date it was settled." }
+        resolved:     { in: { type: position }, meaning: "ABSOLUTE date it was settled." }
         note:         { in: prose, meaning: "optional: history, partial resolutions, and what a reader would otherwise re-derive." }
     merge: { cardinality: multi, order: by-key }
   - term: selections
@@ -3683,7 +3706,7 @@ terms:
         doc:      { required: true, in: { pattern: '^file:\S+$' }, meaning: "the file, or a pattern of files matched as a release's list of what it ships is matched: a star crosses a slash" }
         standing: { required: true, in: { registry: layers, take: layer, where: { files: true } }, meaning: "the layer, one that holds files" }
         why:      { required: true, in: prose }
-        since:    { in: { type: date }, meaning: "the day the file took this place" }
+        since:    { in: { type: position }, meaning: "the day the file took this place" }
         note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: set, order: none }
   - term: sensitivity

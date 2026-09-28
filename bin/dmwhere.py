@@ -17,6 +17,15 @@ the second and reports, per position, one of:
   NO-ROOT     this host declares no resolution for that root — it does not hold the thing
   UNKNOWN     the bean itself says nobody has established where it is
 
+A MOMENT THAT SAYS WHERE IT WAS (27.0) and names the zone in force there is read against that zone: the offset it was
+written with must be the one the zone kept at that moment. The zone's rule is read from THIS machine's copy of the time
+zone database, never from the ledger — which is why this tool reads it, and the gate does not: a gate whose verdict
+depended on a machine's copy would pass on one and fail on another.
+
+  OFFSET-OK         the offset written is the one the zone kept then
+  OFFSET-DISAGREES  it is not: the moment or its zone is wrong (a clock read on a +03 host written for a +03:30 place)
+  NO-ZONE-DATA      this machine holds no zone database, so it cannot say — an answer, like NO-ROOT
+
 NO-ROOT AND UNKNOWN ARE ANSWERS, NOT FAILURES. That is the whole point: "not measured here" is a true
 statement, where "stale" was a false one. A reader who is told a thing is not on this machine has learned
 something; a reader shown a path that does not resolve has been misled with the same confident output.
@@ -67,6 +76,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dmparse
 import dmgarden  # noqa: E402 — the one garden model: where its documents are
 import dmknowledge
+import dmcal     # noqa: E402 — a moment, and the offset a zone kept at it
 
 try:
     import yaml
@@ -480,6 +490,47 @@ def show(a):
 
 
 
+def placed_moments(node, path=''):
+    """[(path, position)] of every position a front matter holds that says where it was: a `timing` entry, or a day
+    written long, with a `where` (27.0)."""
+    out = []
+    if isinstance(node, dict):
+        if {'system', 'at', 'unit'} <= set(node) and isinstance(node.get('where'), dict):
+            out.append((path, node))
+        for k, v in node.items():
+            out += placed_moments(v, f"{path}.{k}" if path else str(k))
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            out += placed_moments(v, f"{path}[{i}]")
+    return out
+
+
+def zone_verdict(position):
+    """(verdict, detail) for a moment whose place names its zone — or None where there is nothing to compare: no zone, or
+    a position that is no moment (a day, or one placed by its neighbours, which carries no offset)."""
+    zone = position['where'].get('zone')
+    if not zone:
+        return None
+    try:
+        m = dmcal.moment(position)
+    except (ValueError, dmcal.NotByRule):
+        return None
+    if m.offset is None:
+        return None
+    try:
+        kept = dmcal.offset(zone, position)
+    except dmcal.NoZoneData as e:
+        return 'NO-ZONE-DATA', str(e)
+    except ValueError as e:
+        return 'OFFSET-DISAGREES', str(e)
+    said = 0 if m.offset == 'Z' else (1 if m.offset[0] == '+' else -1) * (int(m.offset[1:3]) * 60 + int(m.offset[4:6]))
+    shown = f"{'+' if kept >= 0 else '-'}{abs(kept) // 60:02d}:{abs(kept) % 60:02d}"
+    if said == kept:
+        return 'OFFSET-OK', f"{dmcal.shown(position)} — {zone} kept {shown} then"
+    return 'OFFSET-DISAGREES', (f"{dmcal.shown(position)} is written at {m.offset}, and {zone} kept {shown} at that moment — "
+                                f"the moment or its zone is wrong")
+
+
 def main():
     beans = load()
     hid, hfm, names = here(beans)
@@ -515,6 +566,15 @@ def main():
             counts[verdict] = counts.get(verdict, 0) + 1
             rows.append((verdict, bid, e.get('system'), detail))
 
+    for bid, d in sorted(beans.items()):
+        if only and bid != only:
+            continue
+        for path, pos in placed_moments(d):
+            zv = zone_verdict(pos)
+            if zv:
+                counts[zv[0]] = counts.get(zv[0], 0) + 1
+                rows.append((zv[0], bid, path, zv[1]))
+
     for v, bid, sysname, detail in rows:
         print(f"  {v:10s} {bid:14s} {str(sysname):19s} {detail}")
 
@@ -524,7 +584,7 @@ def main():
     # MISSING is the only verdict that means the LEDGER is wrong. NO-ROOT and ELSEWHERE are facts about
     # this machine, and exiting non-zero on them would train a reader to ignore the tool on every host
     # that does not happen to hold everything.
-    return 1 if counts.get('MISSING') else 0
+    return 1 if counts.get('MISSING') or counts.get('OFFSET-DISAGREES') else 0
 
 
 if __name__ == '__main__':

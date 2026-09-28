@@ -1059,29 +1059,71 @@ def check_law_extents():
 
 
 def check_value_types():
-    for _t in ('iso_date', 'kebab', 'count', 'text'):
+    for _t in ('position', 'kebab', 'count', 'text'):
         if _t not in VALUE_TYPES:
             errors.append(f"VOCAB: no `value_types` row for '{_t}' — the gate reads its type patterns from the law "
                           f"and has no copy of its own")
-    _ex = (VALUE_TYPES.get('date') or {}).get('exists')
+    _ex = (VALUE_TYPES.get('position') or {}).get('exists')
     if _ex is not None and not (isinstance(_ex, dict) and isinstance(_ex.get('reckoning'), list)
                                 and all(isinstance(r, str) for r in _ex['reckoning'])):
-        errors.append("VOCAB value_types[date].exists is a mapping { reckoning: [<reckoning>, ...] } — as written it "
+        errors.append("VOCAB value_types[position].exists is a mapping { reckoning: [<reckoning>, ...] } — as written it "
                       "judges no day, and no day is judged until it is one")
+    # THE UNIT AN ATTRIBUTE HOLDS A POSITION TO (27.0) is a unit of time the type can be held to: its own, or finer
+    def _units_in(attrs, where):
+        for _n, _rec in (attrs.items() if isinstance(attrs, dict) else []):
+            _d = _rec.get('in') if isinstance(_rec, dict) else None
+            if not isinstance(_d, dict):
+                continue
+            if isinstance(_d.get('entries'), dict):
+                _units_in(_d['entries'], f"{where}.{_n}")
+            if _d.get('unit') is None or 'type' not in _d:
+                continue
+            _vt = VALUE_TYPES.get(_d.get('type')) or {}
+            if not _vt.get('any_system'):
+                errors.append(f"VOCAB {where}.{_n}: `unit` beside type '{_d.get('type')}', which is no position — a unit holds "
+                              f"only a position to itself")
+            elif not (_d['unit'] == _vt.get('unit') or (_vt.get('clock') in ('required', 'offset')
+                                                          and _finer_or_same(_d['unit'], _vt.get('unit')))):
+                errors.append(f"VOCAB {where}.{_n}: holds a {_d['type']} to `{_d['unit']}`, which is no unit it can be held "
+                              f"to — `{_vt.get('unit')}`, or a finer unit of time")
+    for _tn, _sch in (SCHEMAS or {}).items():
+        _units_in(_sch.get('attrs'), _tn)
+    # THE LONG FORM NAMES A TERM THE LAW DECLARES (27.0), whose entry holds a position: a system, where in it, a unit
+    for _t, _r in VALUE_TYPES.items():
+        _lf = _r.get('long_form') if isinstance(_r, dict) else None
+        if _lf is None:
+            continue
+        _attrs = ((SCHEMAS.get(_lf) or {}).get('attrs') or {}) if isinstance(_lf, str) else {}
+        if not {'system', 'at', 'unit'} <= set(_attrs):
+            errors.append(f"VOCAB value_types[{_t}].long_form names `{_lf}`, which is no term whose entry holds a position "
+                          f"— `system`, `at` and `unit` — so no value of the type could be written long")
 # `journal` is one mapping, not a registry of rows, so it is read as the garden states it, else as the standard does.
 JOURNAL = (vocab_fm.get('journal') if isinstance(vocab_fm.get('journal'), dict) else None) or \
           (std_fm.get('journal') if isinstance(std_fm.get('journal'), dict) else {})
 # a heading the tool writes from the clock and a person never types: the journal's `heading` read `by: save`
 JOURNAL_STAMPED = ORIGINS.clock((JOURNAL['origin'] if isinstance(JOURNAL.get('origin'), dict) else {}).get('heading')) == 'judged'
 
-def check_value_type(where, attr, val, typ):
+def _written_unit(val):
+    """The unit a clock reading is WRITTEN to — minute, second or millisecond — read from its digits; the day where it
+    carries none. What a position is held to is declared, never inferred: this reads only what was written."""
+    m = re.search(r'[T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?', str(val), re.ASCII)
+    return 'day' if not m else 'millisecond' if m.group(2) else 'second' if m.group(1) else 'minute'
+
+
+def check_value_type(where, attr, val, typ, held_to=None):
     """A value against a declared value type. An undeclared type is itself an error: a schema naming a type
-    the law does not define would otherwise check nothing and look as if it did."""
+    the law does not define would otherwise check nothing and look as if it did. `held_to` is the unit the attribute
+    holds a position to (`in: { type: position, unit: … }`): no coarser position is its value."""
     t = VALUE_TYPES.get(typ)
     if not t and not VALUE_TYPES:
         return                      # the law itself is missing; check_value_types has said so once
     if not t:
-        errors.append(f"{where}.{attr}: type '{typ}' is not declared in `value_types` {sorted(VALUE_TYPES)}")
+        errors.append(f"{where}.{attr}: type '{typ}' is not declared in `value_types` {sorted(VALUE_TYPES)}"
+                      + retired_hint('value_type', typ))
+    elif isinstance(val, dict) and long_form_of(typ)[0]:
+        # the long form is judged where the entry is known (ectl_entry_types); reached another way, it is refused by name
+        errors.append(f"{where}.{attr} is written long, as one entry of `{long_form_of(typ)[0]}`, where only the short "
+                      f"form is read")
     elif t.get('holds_no'):
         # text: its characters are held by check_text, over every key and string of the document; here, only that it
         # IS one text — a list or a map is not "characters a person reads"
@@ -1110,17 +1152,24 @@ def check_value_type(where, attr, val, typ):
         errors.append(f"{where}.{attr} is `now` — the word the save writes the day of its entry in place of: save with "
                       f"{_save_command('- action: <what changed>')}")
     elif t.get('any_system'):
-        # A POSITION IN ANY SYSTEM OF THE TYPE'S DIMENSION, held to the type's unit (16.0): no system is the one a date
-        # must be in. It must be in ONE system's own form, that system must HAVE the level, and a reading finer than
-        # the level (a clock time on a date) is not the type — unless the type asks for a clock (`clock: required`, a
-        # MOMENT), and then it is held to the minute or finer, with its offset, as a journal heading is.
-        _held = [r for r in (registry('anchor_systems') or []) if isinstance(r, dict) and r.get('dimension') == t.get('dimension')
-                 and isinstance(r.get('levels'), list) and any(l.get('level') == t.get('unit') for l in r['levels'])
-                 and r.get('pattern') not in (None, 'none') and law_match(r['pattern'], val)]
+        # A POSITION IN ANY SYSTEM OF THE TYPE'S DIMENSION (16.0), HELD TO THE UNIT ITS FORM IS WRITTEN AT (27.0): no system
+        # is the one a position must be in. It is in ONE system's own form, and that system HAS the level it is written at
+        # — the type's own unit (a day), or, where the type takes a clock, the minute, second or millisecond its reading
+        # is written to. A clock reading carries its offset, as a journal heading does (`clock: offset`; `required`: a
+        # clock must be read). It is no coarser than the unit the attribute holds it to.
         _clocked = re.search(r'[T ]\d{2}:\d{2}', str(val), re.ASCII)
-        if not _held or (bool(_clocked) != (t.get('clock') == 'required'))                 \
-                or (t.get('clock') == 'required' and not law_match(_TO_THE_MINUTE, val)):
+        _res = _written_unit(val) if _clocked else t.get('unit')
+        _held = [r for r in (registry('anchor_systems') or []) if isinstance(r, dict) and r.get('dimension') == t.get('dimension')
+                 and isinstance(r.get('levels'), list) and any(l.get('unit') == _res for l in r['levels'] if isinstance(l, dict))
+                 and r.get('pattern') not in (None, 'none') and law_match(r['pattern'], val)]
+        if not _held or (bool(_clocked) and t.get('clock') not in ('required', 'offset'))                 \
+                or (not _clocked and t.get('clock') == 'required') \
+                or (_clocked and not law_match(_TO_THE_MINUTE, val)):
             errors.append(f"{where}.{attr} '{val}' {t.get('refusal') or 'is in no system of dimension ' + str(t.get('dimension'))}")
+        elif held_to and not _finer_or_same(_res, held_to):
+            errors.append(f"{where}.{attr} '{val}' is written to the {_res}, and `{attr}` holds a position to the {held_to} "
+                          f"or finer — write it to the {held_to}, with the offset it was read at"
+                          + _rule(f'value_types[{typ}]', 'value_types'))
         else:
             check_day_exists(f"{where}.{attr}", val, _held[0])
     elif t.get('separator') is not None:
@@ -1139,9 +1188,82 @@ def check_value_type(where, attr, val, typ):
         check_day_exists(f"{where}.{attr}", val, SYSTEMS.get(t['system']))
 
 
+def long_form_of(typ):
+    """(term, [types]) — the term whose ONE ENTRY a value of this type may be written as (`value_types[<type>].long_form`,
+    27.0), and the types it may be read as: `date_or_moment` is written long as its alternatives are. (None, []) for a
+    type with no long form."""
+    t = VALUE_TYPES.get(typ) or {}
+    alts = [str(a) for a in t['either']] if isinstance(t.get('either'), list) else [typ]
+    terms = {(VALUE_TYPES.get(a) or {}).get('long_form') for a in alts}
+    return (terms.pop(), alts) if len(terms) == 1 and None not in terms else (None, [])
+
+
+def _finer_or_same(unit, of):
+    """Whether `unit` is `of`, or a unit of the same quantity whose factor is smaller: a second is finer than a minute."""
+    a, b = UNITS.get(unit) or {}, UNITS.get(of) or {}
+    fa, fb = a.get('factor'), b.get('factor')
+    if unit == of:
+        return True
+    if not (isinstance(fa, list) and isinstance(fb, list) and len(fa) == len(fb) == 2 and a.get('quantity') == b.get('quantity')):
+        return False
+    from fractions import Fraction
+    try:
+        return Fraction(int(fa[0]), int(fa[1])) < Fraction(int(fb[0]), int(fb[1]))
+    except (TypeError, ValueError, ZeroDivisionError):
+        return False
+
+
+def check_long_position(base, ref, attr, val, typ, held_to=None):
+    """A POSITION WRITTEN LONG (27.0): one entry of the term the type's `long_form` names — `timing` — judged as every entry
+    of that term is, and then held to the type. Its unit is the type's (a date's `day`; a moment's `minute`, or a finer unit
+    of the same quantity), and it says which alternative a `date_or_moment` is. Its system is one of time, where `at` is
+    the short form itself and is judged as that; or one of neighbours (`dimension: any`, the law's `event-anchored`), where
+    `at` places it `after:` or `before:` another position and names no day. A position in a system of place is no day."""
+    term, alts = long_form_of(typ)
+    where = f"{base}: {ref}.{attr}"
+    sch = SCHEMAS.get(term)
+    if not isinstance(sch, dict):
+        errors.append(f"{where} is written long, as one entry of `{term}`, and the law declares no such term")
+        return
+    _before = len(errors)
+    check_entry(base, term, f"{ref}.{attr}", val, sch)
+    if len(errors) > _before:
+        return
+    unit, row = val.get('unit'), SYSTEMS.get(val.get('system')) or {}
+
+    def _holds(a):                          # the type's own unit — or, for one that takes a clock, a finer one
+        r = VALUE_TYPES.get(a) or {}
+        return (unit == r.get('unit') or (r.get('clock') in ('required', 'offset') and _finer_or_same(unit, r.get('unit')))) \
+            and (not held_to or _finer_or_same(unit, held_to))
+    fits = [a for a in alts if _holds(a)]
+    if not fits:
+        _held = ' or '.join(f"`{held_to or (VALUE_TYPES.get(a) or {}).get('unit')}`"
+                            + (' or finer' if held_to or (VALUE_TYPES.get(a) or {}).get('clock') in ('required', 'offset') else '')
+                            for a in alts)
+        errors.append(f"{where}.unit is `{unit}`, and `{attr}` holds a {typ} to {_held} — the unit a position written "
+                      f"long states is one it may be held to" + _rule(f'value_types[{alts[0]}]', 'value_types'))
+        return
+    _as = fits[0]
+    if row.get('dimension') == (VALUE_TYPES.get(_as) or {}).get('dimension'):
+        # ITS `at` IS WRITTEN AT ITS UNIT: a day where the unit is the day, a clock reading where it is finer
+        _r = VALUE_TYPES.get(_as) or {}
+        _needs = unit != _r.get('unit') or _r.get('clock') == 'required'
+        _clk = bool(re.search(r'[T ]\d{2}:\d{2}', str(val.get('at')), re.ASCII))
+        if _clk != _needs:
+            errors.append(f"{where}.at '{val.get('at')}' is written {'with' if _clk else 'without'} a clock reading, and its "
+                          f"unit is `{unit}` — " + ("a day is written without one" if not _needs else
+                                                    "a position finer than the day is a clock reading, with its offset"))
+            return
+        check_value_type(f"{base}: {ref}", f"{attr}.at", val.get('at'), _as)
+    elif row.get('dimension') != 'any':
+        errors.append(f"{where}.system `{val.get('system')}` is a system of {row.get('dimension')} — a {typ} is a position in a "
+                      f"system of {(VALUE_TYPES.get(_as) or {}).get('dimension')}, or one placed by its neighbours "
+                      f"(a system of dimension `any`)" + _rule(f'value_types[{_as}]', 'value_types'))
+
+
 def day_unwritten(val, row):
     """None when the DAY a position names exists in its calendar — or when that calendar is not reckoned by rule, so no
-    arithmetic can say — else what is wrong with it (`value_types[date].exists`).
+    arithmetic can say — else what is wrong with it (`value_types[position].exists`).
 
     A pattern admits `persian:1404-12-30` and `2026-02-30` alike: two digits are two digits. Only the calendar knows that
     Esfand 1404 has twenty-nine days, and `bin/dmcal.py` carries each calendar that reckons by rule as its two functions,
@@ -1152,7 +1274,7 @@ def day_unwritten(val, row):
     type's `exists` names. A calendar the tool happens to carry and the law says is observed is not judged by it."""
     if not isinstance(row, dict) or not row.get('calendar'):
         return None
-    _exists = (VALUE_TYPES.get('date') or {}).get('exists')
+    _exists = (VALUE_TYPES.get('position') or {}).get('exists')
     _judged = (_exists.get('reckoning') if isinstance(_exists, dict) else None) or []
     if not isinstance(_judged, list) or not isinstance(row.get('reckoning'), str) or row.get('reckoning') not in _judged:
         return None
@@ -1386,7 +1508,9 @@ def check_extent(where, node):
             errors.append(f"{where}.count must be a positive whole number of cells, not {_n!r}")
     m = node.get('measure')
     if m is not None:
-        metered = ((_row or {}).get('restrictions') or {}).get('metered') or asp.get('metered')
+        # the system's meter where one is named (27.0: a meter is the system's); else the aspect's — a duration of time, a
+        # distance of place, measured in no system
+        metered = ((_row.get('restrictions') or {}).get('metered') if _row else asp.get('metered'))
         if not metered or metered == 'none':
             errors.append(f"{where}: aspect '{an}' declares `metered: {metered}`, so a region on it has no "
                           f"length — drop `measure`, or bound it with from/to")
@@ -1550,7 +1674,13 @@ def check_recurrence(where, node):
                           f"so there is no Nth")
         return
     u = UNITS.get(str(every['unit']))
-    metered = ((row or {}).get('restrictions') or {}).get('metered') or asp.get('metered')
+    metered = ((row.get('restrictions') or {}).get('metered') if row else asp.get('metered'))
+    if not row and asp.get('lines') != 1 and metered not in (None, 'none'):
+        # A STRIDE WALKS A LINE (27.0): an aspect of one line strides along it by its own length; one of many lines has a
+        # length along each, and which line is walked is the system's to say
+        errors.append(f"{where}: aspect '{an}' has {asp.get('lines')} lines, and a stride of {every.get('count')} "
+                      f"{every['unit']} walks one — name the system whose line it walks (`in:`)")
+        return
     if not u:
         errors.append(f"{where}.every.unit '{every['unit']}' is not in the `units` registry {sorted(UNITS)}")
     elif not metered or metered == 'none':
@@ -1626,6 +1756,14 @@ def check_system_structure():
                 if _t not in _sys:
                     errors.append(f"{_w}: `{_key}` names '{_t}', which is no declared system {sorted(_sys)[:6]}…")
                 _graph.setdefault(_name, set()).add(_t)
+        # NO TIME IS ABSOLUTE (27.0): a calendar whose day begins at a local moment — midnight, sunset, noon — is read from
+        # a place, and says through which, as civil time says it through geography
+        if _row.get('day_begins') is not None:
+            _through = _row.get('resolves_through')
+            _through = _through if isinstance(_through, list) else [_through] if _through else []
+            if not any((_sys.get(_t) or (None, {}))[1].get('dimension') == 'place' for _t in _through):
+                errors.append(f"{_w}: its day begins at {_row['day_begins']}, a moment of some place, and it resolves "
+                              f"through none — `resolves_through: <a place system>`, as gregorian-civil through geographic")
         _lv = _row.get('levels')
         if isinstance(_lv, list):
             _names = [l.get('level') if isinstance(l, dict) else None for l in _lv]
@@ -1671,6 +1809,15 @@ def check_system_structure():
                 errors.append(f"{_w}: restrictions.metered '{_val}' is no dimension any unit measures")
             elif _k == 'lines' and not (_val == 'open' or (isinstance(_val, int) and _val > 0)):
                 errors.append(f"{_w}: restrictions.lines is a positive integer or `open` — got {_val!r}")
+        # A METER IS THE SYSTEM'S (27.0): a system whose neighbours are metered says what it is metered in, as geography says
+        # length and a calendar time — none inherits one from its aspect, which says only what a length along it is
+        _m = _r.get('metered')
+        if _row.get('neighbours') == 'metered' and _m in (None, 'none'):
+            errors.append(f"{_w}: its neighbours are `metered`, and it states no meter — `restrictions: {{ metered: <dimension> }}`, "
+                          f"the dimension a length along it is measured in")
+        elif _m not in (None, 'none') and _row.get('neighbours') != 'metered':
+            errors.append(f"{_w}: it is metered in {_m}, and its neighbours are `{_row.get('neighbours')}` — a line measured in "
+                          f"a unit has metered neighbours")
         if _asp:
             # NARROW, NEVER WIDEN. A system may be more definite than its aspect; it may not contradict it.
             _widens = []
@@ -1682,8 +1829,8 @@ def check_system_structure():
                 _widens.append(f"ends {_r['ends']} under an aspect that is bounded")
             if isinstance(_asp.get('lines'), int) and _r.get('lines') not in (None, _asp['lines']):
                 _widens.append(f"lines {_r['lines']} under an aspect with exactly {_asp['lines']}")
-            if _asp.get('metered') not in (None, 'none') and _r.get('metered') not in (None, _asp['metered']):
-                _widens.append(f"metered {_r['metered']} under an aspect metered in {_asp['metered']}")
+            if _asp.get('metered') not in (None, 'none') and _r.get('metered') not in (None, 'none', _asp['metered']):
+                _widens.append(f"metered {_r['metered']} under an aspect whose lengths are {_asp['metered']}")
             for _m in _widens:
                 errors.append(f"{_w}: its restrictions WIDEN aspect '{_asp.get('aspect')}' — {_m}. A system narrows its aspect")
     for _cyc in _cycles({k: sorted(v) for k, v in _graph.items()}):
@@ -2635,7 +2782,11 @@ def ectl_entry_types(e):
             errors.append(f"{e.base}: {e.ref}.{attr} is `now` — the word the save writes the moment of its entry in place "
                           f"of: save with {_save_command('- action: <what changed>')}" + _rule(f"{_law_path(e.term)}.attrs.{attr}", e.term))
             continue
-        check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ)
+        _to = dict(_facet(e.form, 'held_to', e.scope)).get(attr)
+        if isinstance(e.entry[attr], dict) and long_form_of(typ)[0]:
+            check_long_position(e.base, e.ref, attr, e.entry[attr], typ, _to)
+            continue
+        check_value_type(f"{e.base}: {e.ref}", attr, e.entry[attr], typ, _to)
 
 
 def ectl_prose(e):
@@ -3351,7 +3502,9 @@ def _kept_gardens(pid):
 def _consented(pid, fm):
     """Whether a person is kept here by name on their own word: they keep a garden this one has met (peering: the
     exchange of ids is their word, and the gardener who recorded it trusted them there), they accepted an agreement held
-    here, or their `consent` names one they accepted."""
+    here, or their `consent` names one they accepted. An acceptance is its `accepted`, in either form of a day (27.0):
+    one whose day nobody said, placed by what it followed (`event-anchored`), is an acceptance on record all the same —
+    the word was given; only its day was not said."""
     if _kept_gardens(pid):
         return True
     for k in ALL_FM.values():                     # a party who accepted an agreement held here gave their word in it
@@ -3377,10 +3530,10 @@ def _opaque(pid, fm):
 def _day_of(x):
     import dmcal
     try:
-        return dmcal.moment(str(x)).ms // dmcal.DAY_MS
+        return dmcal.moment(x).ms // dmcal.DAY_MS
     except Exception:
         try:
-            return dmcal.to_day(str(x))
+            return dmcal.to_day(x)
         except Exception:
             return None
 
@@ -3492,7 +3645,9 @@ def check_persons():
             continue
         _t = (f"{base}: names a person who is not the gardener, and no consent of theirs is recorded: write them as "
               f"bin/dmheld.py person mints — an opaque id, the name held off git — or record their consent: an "
-              f"agreement they accepted, or the garden they keep, met here (F2)")
+              f"agreement they accepted (a party's `accepted`, its day — or, where nobody said the day, "
+              f"`{{ system: event-anchored, at: \"after:<what it followed>\", unit: day }}`), or the garden they keep, "
+              f"met here (F2)")
         if f"beans/{base}.md" in added:
             _priv_found('error', _t, 'consent')
         else:
@@ -5636,7 +5791,7 @@ def _day_number(position):
     """The day a position names, in whichever declared calendar it is written — None where it names no day."""
     try:
         import dmcal
-        return dmcal.to_day(str(position))
+        return dmcal.to_day(position)
     except Exception:
         return None
 

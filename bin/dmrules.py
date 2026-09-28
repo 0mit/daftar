@@ -365,9 +365,13 @@ head("THE SCHEMA LANGUAGE AND THE VALUE TYPES — every construct a term may sta
 print("  constructs: " + ', '.join(k for k in (std.get('schema_language') or {}) if k != 'attr_domains'))
 for _t, _r in _vt.items():
     _how = (f"one of {_r['either']}" if isinstance(_r.get('either'), list) else
-            f"a position to the {_r.get('unit')} in any system of {_r.get('dimension')}" + (", with its clock and offset"
-            if _r.get('clock') == 'required' else '') if _r.get('any_system') else
+            f"a position in any system of {_r.get('dimension')}, held to the {_r.get('unit')}" + (
+                ", with its clock and offset" if _r.get('clock') == 'required' else
+                " or finer — a clock reading with its offset; an attribute holds it finer with `unit`"
+                if _r.get('clock') == 'offset' else '') if _r.get('any_system') else
             f"pattern {_r['pattern']}" if _r.get('pattern') else 'read by its own reader')
+    if _r.get('long_form'):
+        _how += f" — or written long, as one entry of `{_r['long_form']}` at that unit"
     print(f"  {_t:15} {_how}")
 
 head("TABLES — a series' rows: one header, one line a row, a tab between two cells, never an empty cell")
@@ -388,7 +392,7 @@ if _tx.get('holds_no'):
           f"only in a {_tx.get('lines_in')} scalar (`|` or `>`) — the character is named, never echoed")
 else:
     print("  text: NO value_types[text] — the gate reports the missing row")
-_ex = _seq(_m(_m(_vt.get('date')).get('exists')).get('reckoning'))
+_ex = _seq(_m(_m(_vt.get('position')).get('exists')).get('reckoning'))
 _rows = [r for r in reg('anchor_systems') if r.get('calendar')]
 print(f"  a day: a position held to a day — a date, where a repetition starts and ends, a bound in time — is a day its "
       f"calendar has. In a calendar reckoned {' or '.join(map(str, _ex)) or '(none named)'} the day it names, written back, "
