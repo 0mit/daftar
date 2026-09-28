@@ -237,6 +237,10 @@ def classify(entry, roots, names=None, bound=None):
         # called EPSG. Such a position is in a cell of its own system, and `dmwhere <position>` reads which.
         return 'PLACED', f"{at} — in {system}; `dmwhere.py {at}` reads what it is in"
 
+    if not (str(at).startswith('root:') or HOST_FORM.match(str(at)) or re.match(r'^[a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}$', str(at))):
+        # A POSITION ON A HOST THAT IS NO PATH (29.0): a slot in a rack, a repository as a client fetches it. Its datum is
+        # the host, and it is not a file this machine resolves — placed, as a coordinate is, never reported missing
+        return 'PLACED', f"{at} — on a host, in {system}; not a path this machine resolves"
     try:
         path, oid, why = on_host(at, roots, here()[2] if names is None else names)
     except ValueError as e:

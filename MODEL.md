@@ -148,7 +148,7 @@ Ownership is separate from **habitat**: a running instance is owned through its 
 
 ## Relations
 A small set of typed edges — `owned_by`, `responsibility`, `lives_in`, `instance_of`, `part_of`,
-`depends_on`, `consumes`, `creator`, `git_host` and a few more (`python3 bin/dmrules.py` lists them) — plus
+`depends_on`, `consumes`, `creator` and a few more (`python3 bin/dmrules.py` lists them) — plus
 one open fallback, `refs`.
 - Every edge is `{ bean|mapping: <id> [, field: <key>] }`, and the gate resolves it: a missing target or field
   is an error.

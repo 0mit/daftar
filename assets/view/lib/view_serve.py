@@ -437,7 +437,7 @@ class Host:
         if not ans[0]:
             self.audit(dict(base, mode="refused", why=ans[1]))
             return 403, {"error": "refused: %s" % ans[1]}
-        # EACH VALUE IS ONE VALUE. A value may be a node of its own — `{ scheme: boat-checks, code: hull }`, a quantity —
+        # EACH VALUE IS ONE VALUE. A value may be a node of its own — a quantity, a position written long —
         # but a viewer's text went into the entry as written, so `hello, by: someone, flag: yes` became three attributes
         # the form never offered. Each value is read alone, as `{ <attr>: <value> }`, and refused unless it is exactly
         # that attribute; and the entry is read again whole, and refused unless it holds exactly the attributes given.

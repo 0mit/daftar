@@ -93,9 +93,9 @@ transactions:
     day: 2026-09-01
     paid_by: [ { party: sam } ]
     analytic_distribution:
-      - { scheme: analytic, code: orchard, share: 60 }
-      - { scheme: analytic, code: workshop, share: 40 }
-      - { scheme: analytic, code: engineering, share: 1 }
+      - { code: analytic:orchard, share: 60 }
+      - { code: analytic:workshop, share: 40 }
+      - { code: analytic:engineering, share: 1 }
 ---
 r
 """
@@ -117,22 +117,22 @@ check("...and its rules show the core term with what a profile adds to it",
                                                                      cwd=G).stdout, re.M))
 
 # ---- a distribution is judged plan by plan --------------------------------------------------------------------------------
-TWO = ("      - { scheme: analytic, code: orchard, share: 60 }\n      - { scheme: analytic, code: workshop, share: 40 }\n")
-out = gate(TWO, '      - { scheme: analytic, code: orchard, amount: { count: "70.00", unit: TRY } }\n'
-                '      - { scheme: analytic, code: workshop, amount: { count: "30.00", unit: TRY } }\n')
+TWO = ("      - { code: analytic:orchard, share: 60 }\n      - { code: analytic:workshop, share: 40 }\n")
+out = gate(TWO, '      - { code: analytic:orchard, amount: { count: "70.00", unit: TRY } }\n'
+                '      - { code: analytic:workshop, amount: { count: "30.00", unit: TRY } }\n')
 check("a plan's parts may be amounts, which make the transaction's amount", " 0 error(s)" in out, out[-700:])
-out = gate(TWO, '      - { scheme: analytic, code: orchard, amount: { count: "70.00", unit: TRY } }\n'
-                '      - { scheme: analytic, code: workshop, amount: { count: "20.00", unit: TRY } }\n')
+out = gate(TWO, '      - { code: analytic:orchard, amount: { count: "70.00", unit: TRY } }\n'
+                '      - { code: analytic:workshop, amount: { count: "20.00", unit: TRY } }\n')
 check("...and are refused, plan by plan, where they do not", "analytic_distribution in the plan projects adds up to 90 TRY, "
       "and amount is 100 TRY" in out, out[-700:])
-out = gate(TWO, '      - { scheme: analytic, code: orchard, amount: { count: "70.00", unit: TRY } }\n'
-                '      - { scheme: analytic, code: workshop, share: 40 }\n')
+out = gate(TWO, '      - { code: analytic:orchard, amount: { count: "70.00", unit: TRY } }\n'
+                '      - { code: analytic:workshop, share: 40 }\n')
 check("...a plan stated partly in amounts and partly in shares is no whole anyone can judge", "in the plan projects states "
       "`amount` for some of its parts and not for others" in out, out[-700:])
-out = gate("code: engineering, share: 1 }", 'code: engineering, share: 1, amount: { count: "100.00", unit: TRY } }')
+out = gate("code: analytic:engineering, share: 1 }", 'code: analytic:engineering, share: 1, amount: { count: "100.00", unit: TRY } }')
 check("...an entry states its share or its amount, not both", "states `share` and `amount`" in out, out[-700:])
-out = gate("code: engineering", "code: nowhere")
-check("...and names an account the garden's scheme holds", "code 'nowhere' is not a declared analytic" in out, out[-700:])
+out = gate("code: analytic:engineering", "code: analytic:nowhere")
+check("...and names an account the garden's scheme holds", "'nowhere' is not a code of analytic" in out, out[-700:])
 
 # ---- a key a profile adds, where it is not extended ------------------------------------------------------------------------
 gate()
@@ -158,8 +158,8 @@ check("apportion reads each account's part exactly: 60 and 40 of the projects, t
       got == {"orchard": "60 TRY", "workshop": "40 TRY", "engineering": "100 TRY"}, out[-600:])
 got, out = reading(", level: plan", "per-plan")
 check("...rolled up to the plans, each plan holds the whole", got == {"projects": "100 TRY", "departments": "100 TRY"}, out[-600:])
-gate(TWO, "      - { scheme: analytic, code: orchard, share: 1 }\n      - { scheme: analytic, code: workshop, share: 1 }\n"
-          "      - { scheme: analytic, code: bench, share: 1 }\n")
+gate(TWO, "      - { code: analytic:orchard, share: 1 }\n      - { code: analytic:workshop, share: 1 }\n"
+          "      - { code: analytic:bench, share: 1 }\n")
 got, out = reading("", "thirds")
 check("...a split that is no whole number of cents is kept exact", got.get("orchard") == "100/3 TRY", out[-600:])
 got, out = reading(", digits: true", "thirds-cents")
@@ -179,9 +179,9 @@ def law_gate(mut, want, why):
 open(BEAN, "w").write(RENT)
 law_gate(("    overlays:\n      - term: transactions\n", "    overlays:\n      - term: transactions\n        schema: { attrs: { amount: { in: prose } } }\n      - term: transactions\n"),
          "overlays[transactions]: `amount` is the core term's own attribute", "a profile that would rewrite a core attribute is refused")
-law_gate(("  code:\n    meaning:", "  code:\n    overlays:\n      - term: transactions\n        schema: { attrs: { analytic_distribution: { in: prose } } }\n    meaning:"),
+law_gate(("    overlays:\n      - term: located_at\n", "    overlays:\n      - term: transactions\n        schema: { attrs: { analytic_distribution: { in: prose } } }\n      - term: located_at\n"),
          "`analytic_distribution` is also added by profile accounting", "two profiles adding one attribute to one term are refused")
-law_gate(("    - term: code_paths\n", "    - term: transactions\n      meaning: \"x\"\n    - term: code_paths\n"),
+law_gate(("    - term: git_remote\n", "    - term: transactions\n      meaning: \"x\"\n    - term: git_remote\n"),
          "its term `transactions` is named as a core term", "a profile term named as a core term is refused")
 law_gate(("    overlays:\n      - term: transactions\n", "    overlays:\n      - term: nothing-here\n        schema: { attrs: { x: { in: prose } } }\n      - term: transactions\n"),
          "`nothing-here` is no term of the core", "an overlay of a term the core does not have is refused")

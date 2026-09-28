@@ -655,6 +655,12 @@ class Catalogue:
                 self.parts['term:' + term]['contents']['attributes'][path] = label
                 tgt, detail = self._target(facet, rule)
                 self.edge('uses', 'term:' + term, tgt, path + (' in ' + detail if detail else ''))
+                # a value type that names the registry its values are drawn from (29.0: a coding's schemes) is a use of
+                # that registry too, through the type
+                _vt = next((r for r in (self.law.get('value_types') or []) if isinstance(r, dict)
+                            and facet == 'type' and r.get('type') == str(rule)), None)
+                if _vt and _vt.get('scheme_from'):
+                    self.edge('uses', 'term:' + term, 'registry:' + str(_vt['scheme_from']), path + ' through ' + str(rule))
         for name, (t, _tier) in self.terms.items():
             s = t.get('schema') if isinstance(t.get('schema'), dict) else {}
             for k in ('values_from', 'key_form'):

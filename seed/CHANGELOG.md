@@ -251,6 +251,35 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **29.0** (2026-09-28, human-ratified rule-change) — **the line from place to location, and one capsule for a code:
+  the five places a profile and the core said one thing twice, folded.** MAJOR: stored facts are reshaped, and
+  `bin/dmupgrade.py`'s 29.0 step translates them where they are written, every comment carried to where its fact goes.
+  The operator: "All 5 ratified … to make sure we are doing the most structural implementation possible, look if we can
+  fold them through profiles, with a why check for the being of any of them"; and, of the third and fourth, a place
+  (جا) as the ancestral definition of a being's placement and a location (مکان) as the more physical one, the line that
+  orders them by abstraction, and whether a placement makes its host more limited.
+  - **`placement`, the line**: `place`, the ancestor every placement walks up to, and its modes in order — `order`,
+    `presence`, `habitat`, `location` — each saying what it `takes` from where it places a being: none, a share, or room.
+    A term states its rung (`lives_in` habitat, `located_at` and `workspace` location); a shipped scheme, so the
+    ancestor machinery reads it.
+  - **`capacity`** on a host and **`takes`** on a placement: shares past a capacity are warned (a host may promise more
+    than it holds), room past it refused, and the same room taken twice at once refused unless one is part of the other.
+  - **`located_at.host`**: the being a position's frame belongs to — alone, the place known and the position not.
+    `local-frame` states its datum, `host`; a new place system, **`git-remote`**, holds a repository as a client names it.
+  - **`coding`**, one value type for a code with its scheme, `<scheme>:<code>`: observations, a stance's code, a step's
+    process and its inputs and outputs, a channel's property, a relation to knowledge, a distribution. `scheme` retires as
+    an attribute; no scheme is named as a genos.
+  - **`identifier`** takes a code a published scheme gives what it classifies, as a coding: `isco_08`, `isced_f_2013`
+    and `technology` retire as anchor keys.
+  - **The code profile** overlays `located_at` with `role`, `scan_policy`, `stack`, `entrypoint`, and requires one on a
+    codebase: `code_paths` and `git_host` retire. A tree of another code it is read beside is that code's location,
+    reached by `depends_on`.
+  - **The domain profile** adds `auto_renew` to clauses: `registration` retires into the contract it is — parties
+    `registrant` and `registrar`, `timing.registration`, a `renewal` clause that falls due on the day the name lapses.
+    Clauses gain their own `notice`; `words` gains `external`, a text held outside the garden; a cell may require one of
+    several attributes.
+  - **Profiles compose with the core's senses**: an overlay's attribute is the law's word, judged by the law's row.
+
 - **28.1** (2026-09-28, human-ratified rule-change) — **analytic accounting, in the field's words, on the core's
   machinery; and every profile composes with every other.** MINOR: additive, nothing a garden holds changes. The
   operator: "we need to keep the law clean and define the field specific names to help existing users through

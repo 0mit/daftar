@@ -191,7 +191,7 @@ LIGHTINGS_TERM = """  - term: lightings
 WICK = """registry_additions:
   mechanisms:
     - mechanism: wick-demo
-      computes: { property: { scheme: technology, code: burn-rate }, quantity: length, unit: millimetre }
+      computes: { property: technology:burn-rate, quantity: length, unit: millimetre }
       inputs: [ { name: wick, quantity: length, unit: millimetre } ]
       steps: [ { id: rate, op: multiply, of: wick, count: 2 } ]
       valid: { ranges: [ { input: wick, extent: { from: { count: 1, unit: millimetre }, to: { count: 5, unit: millimetre } } } ] }
@@ -206,8 +206,8 @@ summary: "An invented walk: a candle's wax burnt in air."
 steps:
   - id: burn
     do: "pentacosane burns in oxygen to carbon dioxide and water"
-    takes: [ { scheme: substances, code: pentacosane, amount: { count: 1, unit: item } }, { scheme: substances, code: dioxygen, amount: { count: 38, unit: item } } ]
-    gives: [ { scheme: substances, code: carbon-dioxide, amount: { count: 25, unit: item } }, { scheme: substances, code: water, amount: { count: %s, unit: item } } ]
+    takes: [ { code: substances:pentacosane, amount: { count: 1, unit: item } }, { code: substances:dioxygen, amount: { count: 38, unit: item } } ]
+    gives: [ { code: substances:carbon-dioxide, amount: { count: 25, unit: item } }, { code: substances:water, amount: { count: %s, unit: item } } ]
     final: true
 ---
 The burning of wax, invented.

@@ -270,6 +270,11 @@ if '--terms' in want:
                 bits.append(f"on the '{_a['aspect']}' sequence" + (" · must stay ACYCLIC" if _a.get('acyclic') else ""))
         if s.get('on_sequence'):
             bits.append(f"a WALK on the '{s['on_sequence']}' sequence — each step judged by the attributes below")
+        _pl = (TERMS.get(n) or {}).get('placement')
+        if _pl:
+            _rg = next((r for r in (std.get('placement') or []) if isinstance(r, dict) and r.get('code') == _pl), {})
+            bits.append(f"placement {_pl}, under place: takes " + {'none': "nothing from its host", 'share': "a share of what its host "
+                        "holds", 'room': "room its host holds"}.get(str(_rg.get('takes')), str(_rg.get('takes'))))
         if s.get('series') is True:
             bits.append("each entry a SERIES — its rows read against its channels")
         if s.get('moves_along'):

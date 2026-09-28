@@ -328,7 +328,7 @@ def tech(code):
     k = knowledge()
     if not k:
         return {"code": code, "name": code}
-    e = k.resolve({"scheme": "technology", "code": code})
+    e = k.resolve({"code": "technology:%s" % code})
     r = k.row("technology", code) or {}
     return {"code": code, "name": r.get("name", code), "docs": r.get("docs", ""), "homepage": r.get("homepage", ""),
             "category": r.get("category", ""), "vendor": r.get("vendor", ""), "fields": e.get("fields", []),
@@ -337,8 +337,14 @@ def tech(code):
 
 def bean_tech(b):
     """The technologies a being says it runs or is (its `knowledge` entries in the technology scheme)."""
-    return [tech(str(e.get("code"))) for e in (fm(b).get("knowledge") or [])
-            if isinstance(e, dict) and e.get("scheme") == "technology" and e.get("rel") in ("uses", "classified_as")]
+    return [tech(_tech_code(e)) for e in (fm(b).get("knowledge") or [])
+            if _tech_code(e) and e.get("rel") in ("uses", "classified_as")]
+
+
+def _tech_code(e):
+    """The technology code of a `knowledge` entry, whose `code` is written with its scheme (`technology:samba`) — or None."""
+    c = e.get("code") if isinstance(e, dict) else None
+    return c.split(":", 1)[1] if isinstance(c, str) and c.startswith("technology:") else None
 
 
 def _short(v, n=180):
@@ -488,8 +494,8 @@ def monitors():
     for _i, e in entries("view_monitors"):
         b = e.get("monitor")
         f = fm(b)
-        uses = [str(k.get("code")) for k in (f.get("knowledge") or [])
-                if isinstance(k, dict) and k.get("scheme") == "technology" and k.get("rel") == "uses"]
+        uses = [_tech_code(k) for k in (f.get("knowledge") or [])
+                if _tech_code(k) and k.get("rel") == "uses"]
         code = next((c for c in uses if adapter(c)), None)
         reaches = f.get("reaches") if isinstance(f.get("reaches"), dict) else {}
         out.append({"bean": b, "technology": code, "uses": uses, "adapter": adapter(code) if code else None,

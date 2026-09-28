@@ -1492,7 +1492,8 @@ seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv
 
 ## knowledge_schemes[technology].within
 
-every technology names the UNESCO field(s) it belongs to (its `isced_f_2013` column): the
+every technology names the UNESCO field(s) it belongs to, in its column of ISCED-F 2013 codes: the tree of knowledge a
+technology hangs from, so a mail server and a routing mechanism meet at the field they both draw on.
 
 ## knowledge_schemes[technology].neighbours
 
@@ -1611,19 +1612,6 @@ profile against every other whichever a garden extends: no profile term named as
 term or as another profile's, no overlay that states an attribute the core term states, no two profiles adding one
 attribute to one term. A gardener may extend them all, and meet no name held two ways and no fact in two places.
 
-## profiles.code.terms[code_paths].meaning
-
-The 'paths vocab' (added 2026-08-01, human-directed): so an agent LOCATES code without re-walking a tree,
-and knows which trees are REFERENCE-ONLY (never re-scanned each session).
-
-## profiles.code.terms[code_paths].schema
-
-GATE (P2): enforced generically from here, not from code
-
-## profiles.code.terms[code_paths].schema.required_on_gene
-
-a genos:codebase bean MUST carry a non-empty code_paths
-
 ## profiles.code.terms[git_remote].anchor
 
 a remote URL is globally unique for the repo → establishes a codebase's identity
@@ -1697,20 +1685,16 @@ the shape would be satisfied and it would be the wrong shape.
 
 7.0: was `required_on_kinds: [router]` until `router` stopped being a genos
 
-## profiles.domain.terms[registration].meaning
+## profiles.domain.overlays
 
-PROMOTED 2026-09-17 (human-ratified, std-vocab 8.2) from one garden's local vocabulary, where it had been
-a candidate "to revisit with a second garden that has domains". A cold-start drill garden modelled a
-domain and had nowhere standard to put its registrar or expiry. A PROFILE, not the core: a garden
-with no domains inherits neither the term nor its requirement.
-
-## profiles.domain.terms[registration].schema.expiry
-
-WHICH DATE AGES, said here rather than in the tool. bin/dmstale.py named `registration` and
-`expires` in its own source until 2026-09-20: this term was born garden-local with the tool
-extended for it the same day, and when it was promoted to Tier-0 nobody went back. A garden
-that invents a term with an expiry got no warning, however well the gate enforced the date —
-first-class to the gate, invisible to the tool that would have made it useful.
+A REGISTRATION IS AN AGREEMENT (29.0). The profile's term was promoted because a garden had nowhere standard to put a
+registrar or an expiry; the core now holds agreements — parties, an `external` party the garden holds no bean for,
+clauses that fall due with notice, a text held elsewhere — and a registration is one: the registrant holds a name
+through a registrar until a day it lapses unless renewed. RDAP (RFC 9083) writes it the same way, entities in roles
+(registrant, registrar) and events (registration, expiration). So it is written as a contract `over` the domain, and
+the profile adds only the word of its field the core lacks, `auto_renew`: whether the registrar renews without being
+asked, an account setting no registry shows — hence `unknown` as its honest default. The registrant who holds the
+record is a party of it, where the domain's `responsibility` says only who answers for it here.
 
 ## profiles.knowledge.terms[knowledge].meaning
 
@@ -2374,6 +2358,13 @@ someone the agreement names; the amount is any quantity, because what is owed is
 makes six monthly instalments one clause and not six; and a condition that is not a date — interest on an
 instalment paid late — is prose in `when`, because the reason IS the fact. `state` records what became of it; the
 balance it implies is read, never stored.
+
+## terms[clauses].schema.attrs.notice
+
+WHICH DATE AGES, AND HOW FAR AHEAD, IS THE RECORD'S (29.0). A clause falls due with the agreement's notice, seven days;
+a name lapsing is known ninety days ahead or it is lost, and a lease is known sixty. The notice is the clause's own where
+its default is too short, and `bin/dmstale.py` reads it there — it once named a term and its date in its own source,
+which left every other agreement that ages first-class to the gate and invisible to the tool.
 
 ## terms[transactions]
 
@@ -3572,15 +3563,22 @@ EVERY PLACE'S LAW IS A SIBLING. The places on daftar's path differ:
 None is privileged (sibling). daftar is written in the form of none of them, and asks no one to break the law where
 they stand. What a place's law asks of a person, the steward answers for what he himself publishes.
 
-## profiles.code.terms[code_paths]
+## profiles.code.overlays
 
-MOVED OUT 2026-08-02 (P1 / D6, human-ratified): `summary_ref` and `last_indexed` left this term and now
-live in `analysis_cache`. Rationale (one-owner-of-a-fact): a summary is an ANALYSIS RESULT, not a property
-of a filesystem path, and a date is a weaker staleness signal than the source's own git sha. code_paths
-now does exactly ONE job — LOCATE the tree and say whether it may be walked. An analysis_cache entry
-binds back to the tree it analysed via its `covers_paths`.
+A CODE BEAN'S TREES ARE ITS LOCATIONS (29.0). `code_paths` was added so an agent LOCATES code without re-walking a tree,
+and knows which trees are REFERENCE-ONLY; it did one job — locate the tree, and say whether it may be walked — once the
+analyses moved to `analysis_cache`. But locating a being is what `located_at` exists for, and its own reason names a
+codebase first: a tree on a host, objects in a repository, a printed copy. Two terms held one fact: one tree stood in
+both, and the framework a dozen addons are read beside was written a dozen times as a path in each. So the profile says
+what a code tree is in the code's own words — `role`, `scan_policy`, `stack`, `entrypoint` — beside the position, and a
+codebase carries one such location. A tree of another code it is only read beside is that code's own location, and the
+code depends on it (`depends_on`): one bean per tree, and `dmcursor` resolves a file in it to the being whose tree it is.
 
-**What an agent does.** A reader of this product's code reads the owning bean's `code_paths` to locate the tree, then its `analysis_cache` for a result that stands in for a scan. A tree whose `scan_policy` is `reference-only` (a vendored framework, say) is read by its summary and not walked for context; it is searched only for one named symbol. A tree is analysed again only when the entry that covers it is STALE (its `staleness_key` no longer matches the live source), and that entry is then refreshed.
+**What an agent does.** A reader of this product's code reads the owning bean's locations to find the tree, then its
+`analysis_cache` for a result that stands in for a scan. A tree whose `scan_policy` is `reference-only` (a vendored
+framework, say) is read by its summary and not walked for context; it is searched only for one named symbol. A tree is
+analysed again only when the entry that covers it is STALE (its `staleness_key` no longer matches the live source), and
+that entry is then refreshed.
 
 ## profiles.code.terms[git_remote]
 
@@ -3757,3 +3755,74 @@ wherever Python does — on Windows too, where `python3` may be missing or a sto
 without `dm`, so the row states the family and nothing a file name already says; what the tool does is the first line
 of its own help, read from it, never restated.
 
+
+## placement
+
+THE LINE FROM PLACE TO LOCATION (29.0). Every tradition that has thought about being "in" something orders its ways from
+the most general to the most bodily, and separates a placement that takes room from one that takes nothing. Aristotle
+lists the senses of "in" (Physics IV.3) and calls "as in a vessel, and generally in a place" the most proper, while
+"in a subject" — knowledge in the soul — is in something not as a part and takes no room (Categories 1a24). The
+scholastics order the modes of being in a place: circumscriptive, a body measured by its place and excluding others;
+definitive, here and not elsewhere, taking none; repletive, filling all and contained by none (Peter Lombard, Sent. I
+d.37; Aquinas, ST I q.52). Kalām says it in two words: a body fills its ḥayyiz (taḥayyuz), and two cannot share one; an
+accident inheres in its maḥall (ḥulūl) and fills none. Persian keeps the pair in jā and makān, Hebrew in māqôm and
+miqqum, German in Ort and Platz. The law's own natures are the Stoics', for whom only a body occupies and a lekton
+subsists without place. So the line is data: `place`, the ancestor every placement walks up to, and its modes in
+order — order, presence, habitat, location — each saying what it `takes` from where it places a being: none, a share,
+or room. The extracted concept is the economists' subtractability (Samuelson 1954; the Ostroms 1977): whether one
+placement leaves less for the next. A share can be promised past what a host holds, as a hypervisor overcommits its
+memory, and is warned; room cannot, as two bodies are never in one place, and is refused. Time asks the same question —
+RFC 5545's TRANSP says whether an event takes an attendee's time — and is the sibling this line does not yet carry.
+
+## value_types[coding]
+
+ONE CAPSULE FOR A CODE (29.0). A code of a published scheme was written as a mapping `{scheme, code}` in eleven places
+and beside other attributes in three more, each checking its code against the scheme it named; a knowledge scheme's
+codes were three anchor terms besides. One value type holds it everywhere, written as the calendars and the ordinal line
+write a tagged position: `<scheme>:<code>` — HL7 FHIR's Coding, a system and a code. The first colon ends the scheme,
+whose name has none, and no scheme is named as a genos, so a coding and a minted name `<genos>:<name>` never read
+alike.
+
+## terms[capacity]
+
+WHAT A HOST CAN HOLD IS ITS OWN FACT (29.0). A rack's slots, a disk's bytes, a table's load: stated on the being that
+holds them, in a unit whose quantity says what a placement's `takes` is measured in, and summed exactly across units.
+A capacity may name the rung whose placements draw on it; a host with none stated is never summed — nothing is
+inferred of what it holds.
+
+## terms[located_at].schema.attrs.host
+
+THE PLACE KNOWN, THE POSITION NOT (29.0). A position in a host's own frame — a path, a repository, a slot — names its
+host in its form; `host` names it as a being. Stated alone, with `openness: unknown`, it says what was known before and
+could not be written: the machine a thing is on, and not where on it. Beside `at` it is the being the position names,
+and agrees with it.
+
+## terms[located_at].schema.attrs.takes
+
+WHAT A LOCATION TAKES (29.0). Room at a position in a being's frame, measured: two rack units, four hundred gigabytes.
+Only where it is stated is it taken — a location that states nothing takes nothing the gate can sum, and none is
+invented for it.
+
+## terms[lives_in].schema.attrs.takes
+
+A HABITAT TAKES A SHARE (29.0): memory, cores, disk, drawn from what the host holds and summable against its capacity.
+
+## anchor_systems[git-remote]
+
+WHERE A REPOSITORY IS FETCHED FROM (29.0). The code profile had a term for the machine that held a code's repository,
+and in most beans the code's own `git_remote` said it already; where it did not, the repository's address is a location of the code. Its form
+is kept apart from every other system's: a remote with its user, a path relative to the login that shows it is a
+repository, or a URL — and a repository at an absolute path on a named host is a position in that host's filesystem.
+
+## terms[words].schema.attrs.external
+
+A TEXT HELD ELSEWHERE (29.0). A written agreement names the document that holds its text; a registrar's registration
+agreement and a bank's terms for a card are written and never held in a garden. `external` names where the text is, as
+a party the garden holds no bean for is named — and a cell's requirement may be one of several attributes.
+
+## profiles.knowledge
+
+A CODE IDENTIFIES WHAT IT CLASSIFIES (29.0). The profile's codes were three anchor terms, one per scheme, made terms so
+that `value_in_registry` had a term to sit on. `identifier` (26.0) kept apart only keys with a value system of their own;
+a coding names its system in its value, so a being that IS an occupation, a field or a technology is identified by the
+code its scheme's publisher assigned — `identifier: isco-08:2522` — an identity given outside every garden.

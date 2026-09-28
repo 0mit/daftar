@@ -78,13 +78,15 @@ uses a logical id (`identifier`, `person:<id>`) — never their name. An agreeme
 ## A registered domain
 
 A domain is registered for a term, not owned outright, so the registry is the `external` owner and the
-person who renews it answers for it. Registration facts belong to the opt-in **`domain` profile**: a garden
-that holds domains adds this inside `VOCAB.md`'s front matter, and `registration` then becomes available and
-required on every `genos: domain` bean. Its dates are read from WHOIS before the bean is written: `created` and
-`expires` take a date and nothing else — there is no `unknown` for a fact that is always there to be read, and
-an invented date would pass the gate and then be reported as sound by `dmstale`. `auto_renew` alone may be
-`unknown`, because it is an account setting WHOIS does not show. `observed` is the day they were read — here the day
-of writing, so `now`.
+person who renews it answers for it. Its registration is an agreement, and is written as one: the registrant
+holds the name through a registrar until a day on which it lapses unless it is renewed — a contract `over` the
+domain. The opt-in **`domain` profile** adds the one word of the field the core does not have, `auto_renew`.
+The dates are read before the contract is written, from RDAP or WHOIS: the day the registration began is its
+`timing`, and the day it lapses is the day its `renewal` clause falls due, with ninety days' `notice` — how far
+ahead `dmstale` warns. Neither takes `unknown`, for a fact that is always there to be read; an invented day
+would pass the gate and then be reported as sound. `auto_renew` alone may be `unknown`, because it is an account
+setting a registry does not show. The contract's `provenance` says when the facts were read — here the day of
+writing, so `now`.
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
@@ -107,15 +109,44 @@ identity:
 provenance: { src: observed, by: "sam", as_of: now }
 owned_by: { legal: { external: "the .org registry, under a registration agreement" } }
 responsibility: { legal: { holder: { bean: sam } } }
-registration:
-  registrar: "Example Registrar Inc."
-  created: 2020-01-15
-  expires: 2027-01-15
-  auto_renew: enabled
-  observed: now
-  source: "WHOIS for example.org"
 ---
 Sam's domain.
+```
+
+<!-- example: beans/example-org-registration.md -->
+```markdown
+---
+bean: example-org-registration
+genos: contract
+title: "the registration of example.org"
+status: active
+summary: "example.org is held through Example Registrar Inc. until 2027-01-15, when it lapses unless renewed."
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: identifier, value: "contract:example-org-registration", class: logical, establishing: true }
+provenance: { src: observed, by: "sam", as_of: now }
+owned_by: { legal: { crown: logos } }
+responsibility: { legal: { parties: true } }
+over:
+  - { thing: { bean: example-org } }
+parties:
+  registrant: { who: { bean: sam }, role: registrant }
+  registrar: { external: "Example Registrar Inc.", role: registrar }
+words: { form: written, external: "the registrar's registration agreement" }
+timing:
+  registration: { system: gregorian-civil, at: 2020-01-15, unit: day }
+clauses:
+  renewal:
+    what: "renew the registration, or the name lapses with its DNS and its mail"
+    by: registrant
+    permission: required
+    due: 2027-01-15
+    notice: { count: 90, unit: day }
+    auto_renew: enabled
+---
+Read from WHOIS for example.org.
 ```
 
 ## A machine at home that other things run on
@@ -1448,7 +1479,7 @@ capabilities:
   no-colonies-abroad:
     why: "a colony moved across the border can carry a mite the valley does not have"
     permission: forbidden
-    code: { scheme: isced-f-2013, code: "0811" }
+    code: isced-f-2013:0811
     within: { system: iso-3166, at: ZZ }
 clauses:
   extractor-fee: { what: "each member pays for the extractor's season", by_role: member, amount: { count: 25, unit: XTS }, due: 2026-07-01, state: met }
@@ -1503,13 +1534,13 @@ located_at:
   - { system: apiary-site, openness: elsewhere, at: "apiary:EAST-2" }
 observations:
   mites-june:
-    property: { scheme: hive-checks, code: varroa-drop }
+    property: hive-checks:varroa-drop
     value: { count: "14", unit: item, u: { count: "3", unit: item } }
     at: 2026-06-12
-    method: { scheme: hive-checks, code: sticky-board }
+    method: hive-checks:sticky-board
     by: sam
   queen-june:
-    property: { scheme: hive-checks, code: queen-seen }
+    property: hive-checks:queen-seen
     presence: present
     at: 2026-06-12
     by: sam
@@ -1856,12 +1887,12 @@ Opt in with `extends_profiles: [knowledge]` in VOCAB.md. Then:
 
 ```yaml
 # a third-party product that IS a technology: anchor it, so every garden's "samba" is one object
-identity: { status: confirmed, anchors: [ { key: technology, value: samba, class: logical, establishing: true } ] }
+identity: { status: confirmed, anchors: [ { key: identifier, value: technology:samba, class: logical, establishing: true } ] }
 # anything may say what it stands on
 knowledge:
-  - { scheme: technology,   code: samba, rel: uses }
-  - { scheme: isced-f-2013, code: "0612", rel: draws_on, topic: "network file sharing" }
-  - { scheme: isco-08,      code: "2522", rel: classified_as }
+  - { code: technology:samba, rel: uses }
+  - { code: isced-f-2013:0612, rel: draws_on, topic: "network file sharing" }
+  - { code: isco-08:2522, rel: classified_as }
 ```
 
 `python3 bin/dmknowledge.py find <word>` finds a code; `show <scheme> <code>` shows its ancestry and, for a
@@ -1892,9 +1923,9 @@ transactions:
     amount: { count: "100.00", unit: TRY }
     paid_by: [ { party: sam } ]
     analytic_distribution:
-      - { scheme: analytic, code: orchard, share: 60 }       # projects: 60 and 40 are three fifths and two fifths
-      - { scheme: analytic, code: workshop, share: 40 }
-      - { scheme: analytic, code: engineering, share: 1 }    # departments: the whole
+      - { code: analytic:orchard, share: 60 }       # projects: 60 and 40 are three fifths and two fifths
+      - { code: analytic:workshop, share: 40 }
+      - { code: analytic:engineering, share: 1 }    # departments: the whole
 ```
 
 A share is whole parts, as a party's share of a cost is; an entry may give its `amount` instead, and a plan's amounts
@@ -1917,3 +1948,45 @@ leaves over going to the largest remainders. The field's words, and where daftar
 | `account.move.line.analytic_distribution` | `transactions.<key>.analytic_distribution` — a percentage is a share |
 | budget lines of an analytic account | `clauses.<key>.analytic_distribution` beside the clause's `amount` |
 | `account.analytic.line` | not stored: `apportion` reads it from the transactions each time it is asked |
+
+## Where a thing is, and what it takes there
+
+A being is placed in, at or among another, and the law orders the ways from the most general to the most bodily
+(`placement`): **place** is the ancestor of them all; beneath it, a code in its **order**, a record's **presence**
+in a register, a process's **habitat** in its machine, and a **location** — a position in a place system. Each rung
+says what a placement takes from where it is placed: nothing (a memory takes nothing from a mind), **a share** of
+what the host holds (a guest's memory of a hypervisor's), or **room** that no other takes at once (a machine's
+slots in a rack). A host says what it can hold in `capacity`; a placement says what it takes in `takes`. Shares
+past a capacity are warned — a host may promise more than it holds — and room past it is refused, as is the same
+room taken twice at once.
+
+<!-- example: beans/rack-a.md -->
+```markdown
+---
+bean: rack-a
+genos: host
+title: "rack-a — the office rack"
+status: active
+summary: "The office rack, 42 slots."
+nature: soma
+identity:
+  status: confirmed
+  anchors:
+    - { key: serial, value: "RACK-0001", class: hardware, establishing: true }
+provenance: { src: observed, by: "sam", as_of: now }
+owned_by: { legal: { owner: { bean: sam } } }
+responsibility: { legal: { holder: { bean: sam } } }
+capacity:
+  - { count: 42, unit: item, placement: location, note: "its slots" }
+---
+The rack.
+```
+
+A machine in it takes room at its slot — the rack is the being its frame belongs to, named by the position
+(`rack-a#u17`), and `host` may say so beside it. A location known only as far as the machine it is on is `host`
+alone, `openness: unknown`: the place known, the position not.
+
+```yaml
+located_at:
+  - { system: local-frame, openness: here, at: "rack-a#u17", takes: [ { count: 2, unit: item } ] }
+```

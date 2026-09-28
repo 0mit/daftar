@@ -195,7 +195,7 @@ write("beans/seed-library.md", bean("seed-library", "material", "soma", "an isla
   share-farmed-crops:
     why: "the island's council forbids moving crop seed off the island, so a pest cannot travel with it"
     permission: forbidden
-    code: { scheme: isced-f-2013, code: "0811" }
+    code: isced-f-2013:0811
     within: { system: iso-3166, at: ZZ }
 """))
 NAMES = ["marker-a", "stone-d", "stone-e", "sapling", "walker", "core-e", "section-q", "seed-library",
@@ -265,7 +265,8 @@ import dmwhere  # noqa: E402
 ROOTS = {"tree": {"system": "unix-filesystem", "at": "host-a:/srv/tree"}, "rocks_db": {"system": "unix-filesystem",
                                                                                         "at": "host-a:/srv/rocks"}}
 check("HOST the systems a host's datum anchors are read from the law (`datum: host`), never listed by a tool",
-      dmwhere.host_bound(G) == {"unix-filesystem", "windows-filesystem", "git-object-graph"}, dmwhere.host_bound(G))
+      dmwhere.host_bound(G) == {"unix-filesystem", "windows-filesystem", "git-object-graph", "git-remote", "local-frame"},
+      dmwhere.host_bound(G))
 check("...`root:<name>/<rel>` is an offset from the root this host defines",
       dmwhere.on_host("root:tree/a/b", ROOTS) == (os.path.join("/srv/tree", "a/b"), None, None))
 check("...`<root>@<object>` is an object reachable from that root, by the same resolver",
@@ -341,7 +342,7 @@ for name, attr, want in (
     check(name, not ok(out) and want in out and "RULE-CHANGE" in out, out[-1500:])
 
 # ---------------------------------------------------------------- L-4 a stance on a code, within a place
-refused("L-4 a stance's code is a code of its scheme", "beans/seed-library.md", 'code: "0811"', 'code: "0817"', "'0817' is not a declared isced-f-2013")
+refused("L-4 a stance's code is a code of its scheme", "beans/seed-library.md", 'code: isced-f-2013:0811', 'code: isced-f-2013:0817', "'0817' is not a code of isced-f-2013")
 refused("...and its place is in its system's form", "beans/seed-library.md", "at: ZZ", "at: Zz", "Zz")
 
 print(f"deeptime: {len(FAILS)} failed")

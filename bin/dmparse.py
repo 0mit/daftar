@@ -141,6 +141,17 @@ def law_match(pattern, value):
     return m
 
 
+def split_coding(value):
+    """(scheme, code) of a CODING (`value_types[coding]`, 29.0): a code written with the scheme it is a code of,
+    `<scheme>:<code>`. The first colon ends the scheme, whose name has none; a code may hold one. (None, None) for
+    anything else — a reader that meets another spelling reads no code there, and the gate says why."""
+    if isinstance(value, str) and ':' in value:
+        s, c = value.split(':', 1)
+        if s and c and law_match(r'^[a-z0-9][a-z0-9-]*$', s):
+            return s, c
+    return None, None
+
+
 def in_form(row, value):
     """True when `value` is written in the ONE form the system row declares: by the check it names, else by its
     pattern. None when the row declares no form at all (`pattern: none`, deliberately)."""
@@ -440,8 +451,9 @@ def profile_overlays(law, names=None):
 
 def extend_term(base, over):
     """A profile's overlay on a core term (28.1): what it ADDS, merged — its attributes beside the term's, its `sums` rules
-    after the term's, its `cells` after the term's. It rewrites nothing: an attribute the term already states is the
-    caller's to refuse, never merged over. Returns the term as the garden that extends the profile reads it."""
+    after the term's, its `cells` after the term's, and the genos it requires the term on beside the term's own (29.0: a
+    codebase carries a location where the `code` profile is extended). It rewrites nothing: an attribute the term already
+    states is the caller's to refuse, never merged over. Returns the term as the garden that extends the profile reads it."""
     out = dict(base)
     sch = dict(base.get('schema') or {}) if isinstance(base.get('schema'), dict) else {}
     osch = over.get('schema') if isinstance(over.get('schema'), dict) else {}
@@ -452,6 +464,9 @@ def extend_term(base, over):
             mine = sch.get(k)
             mine = [] if mine is None else (list(mine) if isinstance(mine, list) else [mine])
             sch[k] = mine + (list(osch[k]) if isinstance(osch[k], list) else [osch[k]])
+    if isinstance(osch.get('required_on_gene'), list):
+        mine = sch.get('required_on_gene') if isinstance(sch.get('required_on_gene'), list) else []
+        sch['required_on_gene'] = list(mine) + [g for g in osch['required_on_gene'] if g not in mine]
     out['schema'] = sch
     return out
 

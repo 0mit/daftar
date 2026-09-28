@@ -129,7 +129,7 @@ class Knowledge:
 
     def resolve(self, entry):
         """A `knowledge:` entry -> {scheme, code, rel, topic, label, path, docs, homepage, fields, occupations}."""
-        sch, code = entry.get("scheme"), str(entry.get("code"))
+        sch, code = dmparse.split_coding(entry.get("code"))
         r = self.row(sch, code) or {}
         out = {"scheme": sch, "code": code, "rel": entry.get("rel"), "topic": entry.get("topic", ""),
                "label": r.get("name_en") or r.get("name") or "",
@@ -184,7 +184,7 @@ def main():
             print("%-6s %-10s %s%s" % (r.get("code"), r.get("level", r.get("category", "")), k.name(r),
                                        ("   docs: " + r["docs"]) if r.get("docs") else ""))
         if a[1] == "technology":
-            e = k.resolve({"scheme": a[1], "code": a[2]})
+            e = k.resolve({"code": "%s:%s" % (a[1], a[2])})
             print("  draws on: " + "; ".join("%s %s" % (f["code"], f["label"]) for f in e["fields"]))
             print("  run by:   " + "; ".join("%s %s" % (o["code"], o["label"]) for o in e["occupations"]))
         if a[1] == "isco-08":

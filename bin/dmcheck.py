@@ -1003,7 +1003,8 @@ def check_merge_identity():
         _form = dmform.attribute_form(_term, _s)
         _required = {n for n, _ in _facet(_form, 'required', 'entry')}
         _declared = (_required | {n for n, _ in _facet(_form, 'meaning')}
-                     | {a for c in _form['cells'] if c['origin'] == 'required_if' for a in c['lacks']}
+                     | {x for c in _form['cells'] if c['origin'] == 'required_if' for a in c['lacks']
+                        for x in (a if isinstance(a, list) else [a])}
                      | (REF_ATTRS if _form['self_ref'] else set()))
         for _f, _may_lack in _ident:
             if _f not in _declared:
@@ -1023,6 +1024,7 @@ def check_merge_identity():
 # A figure with a loose end cannot say what a being is NOT, which is half of what a classification is for.
 # VALUE TYPES (10.0): the patterns `entry_types` / `attr_types` name are rows of the law, not constants here.
 VALUE_TYPES = {t['type']: t for t in (registry('value_types') or []) if isinstance(t, dict) and t.get('type')}
+SCHEME_NAMES = {str(r.get('scheme')) for r in (registry('knowledge_schemes') or []) if isinstance(r, dict) and r.get('scheme')}
 # No copy of a pattern lives here. Without the row, check_value_types reports the missing law ONCE, and the
 # per-value checks stand down rather than refuse every id in the garden for a cause they cannot name.
 # ONE FORM MEANS ONE SET OF DIGITS (std-vocab 16.0). In Python `\d` matches EVERY Unicode decimal digit, so until 16.0
@@ -1096,9 +1098,9 @@ def check_profiles_compose():
             continue
         _have = ((_t.get('schema') or {}).get('attrs') or {}) if isinstance(_t.get('schema'), dict) else {}
         _schema = _o.get('schema') if isinstance(_o.get('schema'), dict) else {}
-        for _k in sorted(set(_schema) - {'attrs', 'sums', 'cells'}):
+        for _k in sorted(set(_schema) - {'attrs', 'sums', 'cells', 'required_on_gene'}):
             errors.append(f"VOCAB profiles.{_pn}.overlays[{_o['term']}]: `{_k}` would rewrite the term's own — an overlay adds "
-                          f"attributes, sums and cells, and nothing else")
+                          f"attributes, sums, cells and the genos it is required on, and nothing else")
         for _a in (_schema.get('attrs') or {}):
             if _a in _have:
                 errors.append(f"VOCAB profiles.{_pn}.overlays[{_o['term']}]: `{_a}` is the core term's own attribute — a "
@@ -1111,6 +1113,11 @@ def check_profiles_compose():
 
 
 def check_value_types():
+    # A CODING AND A MINTED NAME NEVER READ ALIKE (29.0): `<scheme>:<code>` and `<genos>:<name>` are told apart by what
+    # comes before the colon, so no scheme — the law's or a garden's — is named as a genos is
+    for _s in sorted(SCHEME_NAMES & set(GENE)):
+        errors.append(f"knowledge_schemes '{_s}' is named as a genos is — `{_s}:<code>` would read as a name minted for a "
+                      f"{_s} as well as a code of the scheme: name the scheme otherwise" + _rule('value_types[coding]', 'value_types'))
     for _t in ('position', 'kebab', 'count', 'text'):
         if _t not in VALUE_TYPES:
             errors.append(f"VOCAB: no `value_types` row for '{_t}' — the gate reads its type patterns from the law "
@@ -1234,10 +1241,50 @@ def check_value_type(where, attr, val, typ, held_to=None):
             warns.append(f"{where}.{attr} holds {str(val).count(chr(10)) - 1} rows, more than {t['inline_most']}: a table "
                          f"that long is kept in the parts of a file, where a bean stays legible on paper — the series' "
                          f"`rows` moved to {dmseq.SERIES_DIR}/<bean>/<key>/<part>.tsv" + _rule(f'value_types[{typ}]', 'value_types'))
+    elif t.get('scheme_from'):
+        check_coding(where, attr, val, t)
     elif not law_match(t['pattern'], val):
         errors.append(f"{where}.{attr}" + ("" if typ != 'kebab' else f" '{val}'") + f" {t.get('refusal') or 'does not match its type ' + typ}")
     elif t.get('system'):
         check_day_exists(f"{where}.{attr}", val, SYSTEMS.get(t['system']))
+
+
+def check_coding(where, attr, val, t):
+    """A CODE WITH ITS SCHEME (`value_types[coding]`, 29.0): `<scheme>:<code>`, the scheme a row of the registry the type
+    names, and the code one of that scheme's codes — looked up where the scheme is held here, held to its form where it
+    is held at its authority, as `registry_from` holds a code. One capsule, judged in one place, wherever a code is
+    written. A mapping `{scheme, code}` is the capsule's retired spelling, and the refusal says the one to write."""
+    if isinstance(val, dict) and set(val) >= {'scheme', 'code'}:
+        errors.append(f"{where}.{attr} is written as `{{scheme, code}}`, which 29.0 writes as one value: "
+                      f"`{attr}: \"{val.get('scheme')}:{val.get('code')}\"`. {translate_hint()}" + _rule('value_types[coding]', 'value_types'))
+        return
+    sch, code = dmparse.split_coding(val)
+    rows = [r for r in (registry(t['scheme_from']) or []) if isinstance(r, dict) and r.get('scheme')]
+    row = next((r for r in rows if str(r.get('scheme')) == sch), None)
+    if sch is None or not law_match(t.get('pattern') or '^$', val):
+        errors.append(f"{where}.{attr} '{val}' {t.get('refusal') or 'is no coding'}" + _rule('value_types[coding]', 'value_types'))
+    elif row is None:
+        errors.append(f"{where}.{attr} '{val}' names the scheme '{sch}', which is not a declared {t['scheme_from']} "
+                      f"— known: {sorted(str(r.get('scheme')) for r in rows)}" + _rule('value_types[coding]', 'value_types'))
+    elif row.get('holding') == 'at-authority':
+        try:
+            _ok = dmparse.law_match('^(?:' + str(row.get('code_pattern')) + ')$', code) is not None
+        except re.error:
+            return                          # the row's own refusal (check_scheme_rows) names the pattern
+        if not _ok:
+            errors.append(f"{where}.{attr} '{val}': '{code}' is not in the form of a {sch} code ({row.get('code_pattern')}) "
+                          f"— the scheme is held at its authority, and checked here by form")
+        elif sch not in _AT_AUTHORITY_SAID:
+            _AT_AUTHORITY_SAID.add(sch)
+            warns.append(f"{sch}: held at its authority — its codes are checked here by their form alone, and not "
+                         f"looked up (`knowledge_scheme_form.holding`)")
+    else:
+        codes = [str(r.get('code')) for r in (registry(sch) or []) if isinstance(r, dict)]
+        if code not in codes:
+            _near = _by_nearness(code, codes)[:5] if codes else []
+            errors.append(f"{where}.{attr} '{val}': '{code}' is not a code of {sch}"
+                          + (f" — nearest: {', '.join(_near)}" if _near else f" — {sch} holds no codes this garden can read")
+                          + _rule('value_types[coding]', 'value_types'))
 
 
 def long_form_of(typ):
@@ -2612,6 +2659,10 @@ def check_identity_capsule():
                 _qp = (IDP.get('minted') or {}).get('pattern')
                 _bare = _v.split('/', 1)[1] if _qp and law_match(_qp, _v) else _v
                 _form = 'minted' if minted_form(_bare) else 'issued' if a.get('issuer') is not None else 'assigned'
+                # A CODE A PUBLISHED SCHEME GIVES (29.0): an identity assigned outside every garden, written as a coding and
+                # judged as one — the code is one of its scheme's, as wherever else a code is written
+                if _form == 'assigned' and dmparse.split_coding(_bare)[0] in SCHEME_NAMES:
+                    check_coding(f"{base}: anchor '{a['key']}'", 'value', _bare, VALUE_TYPES.get('coding') or {'scheme_from': 'knowledge_schemes'})
                 _g = fm.get('genos')
                 if _form == 'minted' and isinstance(_g, str) and _bare.split(':', 1)[0] != _g:
                     errors.append(f"{base}: anchor '{a['key']}' is a name minted for a {_bare.split(':', 1)[0]}, and "
@@ -3116,7 +3167,10 @@ def _cells(e, phase):
     for cell in e.form['cells']:
         if cell['phase'] != phase or not _cell_holds(e, cell):
             continue
-        lack = [k for k in cell['lacks'] if not e.entry.get(k)]
+        # an item may be a list of alternatives, of which one is enough (29.0): a written agreement names the document
+        # that holds its text, or says the text is held outside the garden
+        lack = [' or '.join(k) if isinstance(k, list) else k for k in cell['lacks']
+                if not (any(e.entry.get(x) for x in k) if isinstance(k, list) else e.entry.get(k))]
         if cell['lacks'] and not lack:
             continue
         sink = errors if cell['severity'] == 'error' else warns
@@ -3410,9 +3464,11 @@ def _sums_rule(e, rule):
     if per and per.get('level'):
         groups = {}
         for p in parts:
-            k = _ancestor_at(p.get('scheme'), p.get('code'), per['level'])
+            if dmparse.split_coding(p.get('code'))[0] is None:
+                continue                    # a part whose code is no coding is check_coding's to refuse, by name
+            k = _ancestor_at(*dmparse.split_coding(p.get('code')), per['level'])
             if k is None:
-                errors.append(f"{e.base}: {e.ref}.{pattr} names {p.get('scheme')}:{p.get('code')}, which has no ancestor at the "
+                errors.append(f"{e.base}: {e.ref}.{pattr} names {p.get('code')}, which has no ancestor at the "
                               f"level `{per['level']}` in its scheme — each part belongs to one {per['level']}, whose parts "
                               f"make the whole" + _rule(f"{e.term}.schema.sums", e.term))
                 continue
@@ -4185,8 +4241,177 @@ def check_root_hosts():
                               f"{', '.join(sorted(_names))}" + _rule('terms[roots].schema.attrs.at', 'roots'))
 
 
+def _rungs():
+    """The rungs of the line from place to location (`placement`, 29.0), by code."""
+    return {str(r.get('code')): r for r in (registry('placement') or []) if isinstance(r, dict) and r.get('code')}
+
+
+def check_placement_law():
+    """A TERM SAYS HOW IT PLACES A BEING (29.0): its `placement` is a rung of the line at the level `mode` — order,
+    presence, habitat, location — and a rung that takes nothing from where it places a being declares no `takes`: a
+    memory takes nothing from a heart, and an entry in a register nothing from the register."""
+    rows = _rungs()
+    modes = sorted(k for k, r in rows.items() if r.get('level') == 'mode')
+    for name, t in sorted(TERMS.items()):
+        if not isinstance(t, dict) or 'placement' not in t:
+            continue
+        r = rows.get(str(t['placement']))
+        if not r or r.get('level') != 'mode':
+            errors.append(f"VOCAB {name}: placement '{t['placement']}' is no rung of the line from place to location — "
+                          f"one of {modes}" + _rule('placement', 'placement'))
+        elif r.get('takes') == 'none' and 'takes' in (((t.get('schema') or {}).get('attrs')) or {}):
+            errors.append(f"VOCAB {name}: its rung, `{r['code']}`, takes nothing from where it places a being, and the term "
+                          f"declares `takes` — what is placed {r['code']}-wise is placed without limiting its host" + _rule('placement', 'placement'))
+
+
+def _named_host(system, at):
+    """The name of the host a position names, or None: `<host>:<path>` in a filesystem, `[user@]<host>:<path>` or a URL's
+    host in `git-remote`, `<host>#<position>` in a local frame. A `root:` position names none: it is where a root is on every host that resolves it."""
+    import dmwhere
+    at = str(at or '')
+    if not at or at.startswith('root:'):
+        return None
+    if system == 'git-remote':
+        m = re.match(r'^[a-z][a-z0-9+.-]*://(?:[^@/]*@)?([^/:]+)', at, re.ASCII)
+        if m:
+            return m.group(1).lower()
+        return at.split(':', 1)[0].split('@')[-1].lower()
+    if system == 'local-frame' and '#' in at:
+        return at.split('#', 1)[0].lower()
+    m = dmwhere.HOST_FORM.match(at)
+    return m.group(1).lower() if m else None
+
+
+def _host_beans():
+    """name -> bean, for every bean a position can name as its host: its id, its hostname and fqdn and their first labels."""
+    import dmwhere
+    out = {}
+    for (_ib, base), (fm, _b) in sorted(docs.items()):
+        if _ib:
+            for n in dmwhere.names_of(base, fm):
+                out.setdefault(n, base)
+    return out
+
+
+def check_position_hosts():
+    """A LOCATION'S HOST IS THE ONE ITS POSITION NAMES (29.0): `host` is the being a position is measured from — stated
+    alone where the position within it is not known, and beside `at` the being the position names, which it agrees
+    with. A system measured from no host (its datum is no `host`) takes none."""
+    import dmwhere
+    systems = {str(r.get('system')): r for r in (registry('anchor_systems') or []) if isinstance(r, dict)}
+    by_name = _host_beans()
+    for (_ib, base), (fm, _b) in sorted(docs.items()):
+        if not _ib:
+            continue
+        for i, e in enumerate(fm.get('located_at') or [] if isinstance(fm.get('located_at'), list) else []):
+            if not isinstance(e, dict) or e.get('host') is None:
+                continue
+            row = systems.get(str(e.get('system'))) or {}
+            hb = e['host'].get('bean') if isinstance(e['host'], dict) else None
+            if row and row.get('datum') != 'host':
+                errors.append(f"{base}: located_at[{i}].host names the being a position is measured from, and "
+                              f"`{e.get('system')}` is measured from none (its datum is {row.get('datum') or 'its own'}) — "
+                              f"write the position in a system of a host's own frame, or leave `host` out"
+                              + _rule('terms[located_at].schema.attrs.host', 'located_at'))
+                continue
+            named = _named_host(e.get('system'), e.get('at'))
+            if named and hb and named not in dmwhere.names_of(hb, (docs.get((True, hb)) or ({}, ''))[0]):
+                errors.append(f"{base}: located_at[{i}].at names the host {named}, and `host` is {hb}, which is called "
+                              f"{', '.join(sorted(dmwhere.names_of(hb, (docs.get((True, hb)) or ({}, ''))[0])))} — a position "
+                              f"is on the one host it names" + _rule('terms[located_at].schema.attrs.host', 'located_at'))
+
+
+def _placements():
+    """(host bean, rung, [(count, unit)], who, where, entry) for every placement that takes something, in an active bean:
+    a habitat (`lives_in`) and every location (`located_at`) with its `takes`."""
+    out, by_name = [], _host_beans()
+    rung_of = {n: (TERMS.get(n) or {}).get('placement') for n in ('lives_in', 'located_at')}
+    for (_ib, base), (fm, _b) in sorted(docs.items()):
+        if not _ib or fm.get('status') not in ('active', None):
+            continue
+        li = fm.get('lives_in')
+        if isinstance(li, dict) and isinstance(li.get('takes'), list):
+            out.append((li.get('bean'), rung_of['lives_in'], li['takes'], base, 'lives_in', li))
+        for i, e in enumerate(fm.get('located_at') or [] if isinstance(fm.get('located_at'), list) else []):
+            if not isinstance(e, dict) or not isinstance(e.get('takes'), list):
+                continue
+            if isinstance((e.get('during') or {}), dict) and (e.get('during') or {}).get('to') is not None:
+                continue                    # a placement that has ended takes nothing now
+            hb = e['host'].get('bean') if isinstance(e.get('host'), dict) else by_name.get(_named_host(e.get('system'), e.get('at')) or '')
+            if hb is None:
+                _what = ', '.join(f"{q.get('count')} {q.get('unit')}" for q in e['takes'] if isinstance(q, dict))
+                errors.append(f"{base}: located_at[{i}] takes {_what} of no host the garden holds — name it, "
+                              f"`host: {{ bean: <it> }}`: room is taken from a being"
+                              + _rule('terms[located_at].schema.attrs.takes', 'located_at'))
+                continue
+            out.append((hb, rung_of['located_at'], e['takes'], base, f"located_at[{i}]", e))
+    return out
+
+
+def check_capacity():
+    """WHAT IS PLACED TAKES FROM WHERE IT IS PLACED (29.0), and a host holds what its `capacity` says. Every placement
+    into it that takes something is summed, exactly, in the unit of each capacity it draws on: shares past a capacity
+    are warned — a host may promise more than it holds, as a hypervisor overcommits its memory — and room past it is
+    refused, as two beings taking the same room at once are: two bodies are never in one place."""
+    rows = _rungs()
+    takers = _placements()
+    for (_ib, host), (fm, _b) in sorted(docs.items()):
+        caps = fm.get('capacity') if _ib and isinstance(fm.get('capacity'), list) else []
+        for j, c in enumerate(caps):
+            if not isinstance(c, dict) or not count_ok(c.get('count')):
+                continue
+            cu = str(c.get('unit')); cq = (UNITS.get(cu) or {}).get('quantity'); cf = (UNITS.get(cu) or {}).get('factor')
+            if not isinstance(cf, list):
+                continue
+            total, room, who = Fraction(0), False, []
+            for hb, rung, takes, base, where, _e in takers:
+                if hb != host or (c.get('placement') and rung != c.get('placement')):
+                    continue
+                for q in takes:
+                    u = str((q or {}).get('unit')); f = (UNITS.get(u) or {}).get('factor')
+                    if (UNITS.get(u) or {}).get('quantity') != cq or not isinstance(f, list) or not count_ok(q.get('count')):
+                        continue
+                    total += Fraction(str(q['count'])) * Fraction(*[int(x) for x in f]) / Fraction(*[int(x) for x in cf])
+                    room = room or (rows.get(str(rung)) or {}).get('takes') == 'room'
+                    who.append(f"{base} ({where}: {q['count']} {u})")
+            cap = Fraction(str(c['count']))
+            if total > cap:
+                (errors if room else warns).append(
+                    f"{host}: capacity[{j}] holds {c['count']} {cu}, and what is placed in it takes {dmseq.show(total)} {cu} — "
+                    + '; '.join(who) + (" — room is taken once: two beings do not take the same room at once" if room else
+                                        " — shares promised past what the host holds: overcommitted")
+                    + _rule('terms[capacity]', 'capacity'))
+    # the same room taken twice at once
+    seen = {}
+    for hb, rung, takes, base, where, e in takers:
+        if (rows.get(str(rung)) or {}).get('takes') != 'room' or not e.get('at'):
+            continue
+        k = (hb, str(e.get('system')), str(e.get('at')))
+        if k in seen and seen[k][0] != base and not _part_of_either(seen[k][0], base):
+            errors.append(f"{base}: {where} takes the room at {e.get('at')} in {hb}, which {seen[k][0]} ({seen[k][1]}) "
+                          f"takes at the same time — two beings do not take the same room at once; one of them has moved "
+                          f"(`during`), or one is part of the other (`part_of`)" + _rule('placement', 'placement'))
+        else:
+            seen.setdefault(k, (base, where))
+
+
+def _part_of_either(a, b):
+    """True when one bean is part of the other, by the `part_of` walk: a disk takes its server's room as the server does."""
+    def up(x):
+        seen = set()
+        while x and x not in seen:
+            seen.add(x)
+            po = ((docs.get((True, x)) or ({}, ''))[0] or {}).get('part_of')
+            x = po.get('bean') if isinstance(po, dict) else None
+            yield x
+    return b in set(up(a)) or a in set(up(b))
+
+
 PLACE_ENTRY = ()
 PLACE_PLIES = ((check_fixes, "a boundary marked in a being is said at both ends, and they agree"),
+               (check_placement_law, "a term that places a being names a rung of the line from place to location"),
+               (check_position_hosts, "a location's host is the one its position names"),
+               (check_capacity, "what is placed takes from where it is placed, within what that holds"),
                (check_root_hosts, "a root is a place on the host that declares it"),
                (check_relative_positions, "a position from another being resolves through where that being is"),
                (check_place_law, "a system's datum, cells, boundaries and unit symbols are rows the law holds"))
@@ -4467,8 +4692,14 @@ def check_senses():
     calls for is refused as stale. The law's rows are judged stale over every profile, by the release. Found by
     bin/dmform.py, the one reader of an attribute's domain."""
     _own = list(vocab_fm.get('senses') or [])
-    _law = list(std_fm.get('terms') or []) + [t for _v in (std_fm.get('profiles') or {}).values() if isinstance(_v, dict)
-                                              for t in _v.get('terms') or []]
+    # the law's uses are its terms as every profile extends them (29.0): an overlay's attribute is the law's word, judged
+    # by the law's row, whichever profiles a garden takes
+    _core = {t['term']: t for t in (std_fm.get('terms') or []) if isinstance(t, dict) and t.get('term')}
+    for _pn, _o in dmparse.profile_overlays(std_fm):
+        if isinstance(_o, dict) and _o.get('term') in _core:
+            _core[_o['term']] = dmparse.extend_term(_core[_o['term']], _o)
+    _law = list(_core.values()) + [t for _v in (std_fm.get('profiles') or {}).values() if isinstance(_v, dict)
+                                   for t in _v.get('terms') or []]
     _errs, _judged = dmform.sense_verdicts(list(TERMS.values()), std_fm, list(std_fm.get('senses') or []) + _own, _own,
                                            _law)
     for _e in _errs:

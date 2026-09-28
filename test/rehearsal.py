@@ -120,19 +120,19 @@ check("a scheme marked special-category, and a store that keeps such material on
 SPECIAL = ("127.5", "83.5", "121.5", "0.3172", "0.3418", "0.2963")
 READINGS = """observations:
   bp-0314:
-    property: { scheme: vital-signs, code: systolic }
-    of: { scheme: vital-signs, code: upper-arm }
+    property: vital-signs:systolic
+    of: vital-signs:upper-arm
     value: { count: "127.5", unit: millimetre-of-mercury, u: { count: "2.5", unit: millimetre-of-mercury } }
     at: "2026-03-14 08:30+03:00"
-    method: { scheme: vital-signs, code: cuff }
+    method: vital-signs:cuff
     by: keeper
   bp-0314-d:
-    property: { scheme: vital-signs, code: diastolic }
+    property: vital-signs:diastolic
     value: { count: "83.5", unit: millimetre-of-mercury, u: { count: "2.5", unit: millimetre-of-mercury } }
     at: "2026-03-14 08:30+03:00"
     by: keeper
   bp-0315:
-    property: { scheme: vital-signs, code: systolic }
+    property: vital-signs:systolic
     value: { count: "121.5", unit: millimetre-of-mercury, u: { count: "2.5", unit: millimetre-of-mercury } }
     at: "2026-03-15 08:25+03:00"
     by: keeper
@@ -151,12 +151,12 @@ selections:
   highest-systolic:
     what: "the highest systolic pressure read"
     steps:
-      - { id: sys, op: select, entries: "observations.*", where: [ { path: property.code, is: systolic } ] }
+      - { id: sys, op: select, entries: "observations.*", where: [ { path: property, is: vital-signs:systolic } ] }
       - { id: top, op: max, of: sys, path: value }
   systolic-readings:
     what: "how many systolic readings there are"
     steps:
-      - { id: sys, op: select, entries: "observations.*", where: [ { path: property.code, is: systolic } ] }
+      - { id: sys, op: select, entries: "observations.*", where: [ { path: property, is: vital-signs:systolic } ] }
       - { id: n, op: count, of: sys }
 """
 k = read("beans/keeper.md")

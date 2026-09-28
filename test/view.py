@@ -162,7 +162,7 @@ nature: lekton
 identity:
   status: confirmed
   anchors:
-    - { key: technology, value: prometheus, class: logical, establishing: true }
+    - { key: identifier, value: technology:prometheus, class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
 owned_by: { legal: { external: "the Prometheus authors" } }
 responsibility: { legal: { holder: { bean: tessa } } }
@@ -184,7 +184,7 @@ instance_of: { bean: prometheus }
 lives_in: { bean: silo-controller }
 roles: [ { role: monitoring } ]
 knowledge:
-  - { scheme: technology, code: prometheus, rel: uses }
+  - { code: technology:prometheus, rel: uses }
 located_at:
   - { system: unix-filesystem, openness: here, at: "silo-controller:/srv/yard-monitor", observed: now }
 reaches:
@@ -550,7 +550,7 @@ ASSET_REFUSED = [
     ("a fact on a card that is no term of the law", "beans/grain-page.md", "{ genos: host, term: summary,",
      "{ genos: host, term: summery,", ("summery", "no term")),
     ("a monitor whose technology no adapter here reads", "beans/yard-monitor.md",
-     "  - { scheme: technology, code: prometheus, rel: uses }", "  - { scheme: technology, code: zabbix, rel: uses }",
+     "  - { code: technology:prometheus, rel: uses }", "  - { code: technology:zabbix, rel: uses }",
      ("yard-monitor", "zabbix", "no adapter")),
     ("a live-state on a being no monitor reaches", "beans/yard-monitor.md",
      "  radio-ping: { protocol: icmp, to: { bean: field-radio } }\n", "", ("radio-up", "field-radio", "reaches")),
@@ -824,7 +824,7 @@ def alerts(settings, beans, binds):
 """
 put("assets/view/lib/sources/zabbix.py", SIBLING)
 put("beans/zabbix.md", "---\nbean: zabbix\ngenos: product\ntitle: \"Zabbix\"\nstatus: active\nsummary: \"A second monitoring system.\"\n"
-    "nature: lekton\nidentity:\n  status: confirmed\n  anchors:\n    - { key: technology, value: zabbix, class: logical, establishing: true }\n"
+    "nature: lekton\nidentity:\n  status: confirmed\n  anchors:\n    - { key: identifier, value: technology:zabbix, class: logical, establishing: true }\n"
     "provenance: { src: asserted-by-human, by: \"tessa (gardener)\", as_of: now }\nowned_by: { legal: { external: \"its authors\" } }\n"
     "responsibility: { legal: { holder: { bean: tessa } } }\n---\nA second monitor's software.\n")
 put("beans/radio-monitor.md", "---\nbean: radio-monitor\ngenos: instance\ntitle: \"The radio monitor\"\nstatus: active\n"
@@ -832,7 +832,7 @@ put("beans/radio-monitor.md", "---\nbean: radio-monitor\ngenos: instance\ntitle:
     "    - { key: identifier, value: \"instance:radio-monitor\", class: logical, establishing: true }\n"
     "provenance: { src: observed, by: \"tessa (gardener)\", as_of: now }\nowned_by: { legal: { owner: { bean: tessa } } }\n"
     "responsibility: { legal: { holder: { bean: tessa } } }\ninstance_of: { bean: zabbix }\nlives_in: { bean: silo-controller }\n"
-    "knowledge:\n  - { scheme: technology, code: zabbix, rel: uses }\nreaches:\n  radio-agent: { protocol: icmp, to: { bean: field-radio } }\n"
+    "knowledge:\n  - { code: technology:zabbix, rel: uses }\nreaches:\n  radio-agent: { protocol: icmp, to: { bean: field-radio } }\n"
     "---\nThe radio monitor.\n")
 put("beans/grain-page.md", PAGE_T.replace("  - { monitor: yard-monitor, settings: { bean: yard-monitor, field: monitoring } }\n",
                                           "  - { monitor: yard-monitor, settings: { bean: yard-monitor, field: monitoring } }\n"

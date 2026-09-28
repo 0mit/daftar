@@ -23,7 +23,7 @@ def run(*a, cwd=None):
 T = tempfile.mkdtemp(prefix="dmplace-")
 G = os.path.join(T, "g")
 run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
-_v = os.path.join(G, "VOCAB.md"); _s = open(_v).read()        # code_paths and analysis_cache are `code` profile terms
+_v = os.path.join(G, "VOCAB.md"); _s = open(_v).read()        # a tree's role and scan policy, and analysis_cache, are the `code` profile's
 open(_v, "w").write(_s.replace("extends_profiles: [", "extends_profiles: [code, ", 1)
                     .replace("extends_profiles: []", "extends_profiles: [code]")
                     if "extends_profiles:" in _s else _s.replace("\n---", "\nextends_profiles: [code]\n---", 1))
@@ -41,9 +41,10 @@ def codebase(path, key, located=""):
         '---\nbean: tree\ngenos: codebase\ntitle: "a codebase"\nstatus: active\nsummary: "s"\nnature: lekton\n'
         'identity: { status: confirmed, anchors: [ { key: git_remote, value: "git@example.org:t.git", class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
-        f'code_paths:\n  - {{ path: "{path}", role: own-source, scan_policy: index }}\n'
+        f'located_at:\n  - {{ system: unix-filesystem, openness: here, at: "{path}", role: own-source, scan_policy: index }}\n'
+        + located.replace('located_at:\n', '', 1) +
         'analysis_cache:\n  code-structure:\n    produced_by: "tool:test"\n    as_of: 2026-01-01\n'
-        f'    staleness_key: "{key}"\n    policy: index\n' + located + '---\nA tree.\n')
+        f'    staleness_key: "{key}"\n    policy: index\n' + '---\nA tree.\n')
     return gate()
 
 out = codebase("root:tree/src", "tree@a1b2c3d4e5f6")
@@ -55,8 +56,8 @@ check("the host-relative `git-head:<sha>` key is refused — one analysis had on
 out = codebase("root:tree/src", "manual:checked by hand")
 check("`manual:<why>` stays legal for what no key can track", "0 error" in out, out[-900:])
 out = codebase("/home/someone/tree", "tree@a1b2c3d4e5f6")
-check("a bare absolute path WARNS while a corpus is migrated, and does not block",
-      "0 error" in out and "names no host" in out, out[-900:])
+check("a bare absolute path is refused: a code bean's tree is a location, and a position names its host (29.0; `code_paths` "
+      "only warned while a corpus was migrated)", "located_at[0].at" in out and " 0 error" not in out, out[-900:])
 out = codebase("host-a:/home/someone/tree", "tree@a1b2c3d4e5f6")
 check("...and a path that states its host passes", "0 error" in out and " 0 warning" in out, out[-900:])
 
@@ -193,7 +194,7 @@ def twin(name, key, manifest):
         f'identity: {{ status: confirmed, anchors: [ {{ key: git_remote, value: "git@example.org:{name}.git", '
         'class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
-        f'code_paths:\n  - {{ path: "root:{name}/src", role: own-source, scan_policy: index }}\n'
+        f'located_at:\n  - {{ system: unix-filesystem, openness: here, at: "root:{name}/src", role: own-source, scan_policy: index }}\n'
         'analysis_cache:\n  code-structure:\n    produced_by: "tool:test"\n    as_of: 2026-01-01\n'
         f'    staleness_key: "{key}"\n    policy: index\n    form: summary_ref\n'
         '    summary_ref: [owns.manifest]\n'
@@ -246,7 +247,7 @@ _bad = [s for s in _taught if not _re.match(_PAT, s.replace("<repo>@<object-id>"
 check("the term's own prose teaches no spelling its pattern would refuse",
       not _bad, f"taught but refused: {_bad}")
 
-# A POSITION MUST RESOLVE BOTH WAYS. `code_paths` stopped being a literal path in 11.0, and
+# A POSITION MUST RESOLVE BOTH WAYS. A code bean's trees stopped being literal paths in 11.0, and
 # bin/dmcursor.py's REVERSE lookup — "you are about to touch this file; which being owns it, and what
 # does it require you to know" — still compared the argument against the raw declared string. After a
 # garden migrated, `dmcursor <a real file>` answered "nothing in the garden claims it" about a file a

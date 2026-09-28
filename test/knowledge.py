@@ -40,27 +40,27 @@ bean("someone", 'bean: someone\ngenos: person\ntitle: "a person"\nstatus: active
      'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
      'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n')
 bean("file-server", 'bean: file-server\ngenos: product\ntitle: "a file server product"\nstatus: active\nsummary: "the SMB server software"\nnature: lekton\n'
-     'identity: { status: confirmed, anchors: [ { key: technology, value: samba, class: logical, establishing: true } ] }\n'
+     'identity: { status: confirmed, anchors: [ { key: identifier, value: technology:samba, class: logical, establishing: true } ] }\n'
      'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n' + OWN +
-     'knowledge:\n  - { scheme: technology, code: samba, rel: classified_as }\n  - { scheme: isced-f-2013, code: "0612", rel: draws_on, topic: "network file sharing" }\n'
-     '  - { scheme: isco-08, code: "2522", rel: classified_as, note: "who runs it" }\n')
+     'knowledge:\n  - { code: technology:samba, rel: classified_as }\n  - { code: isced-f-2013:0612, rel: draws_on, topic: "network file sharing" }\n'
+     '  - { code: isco-08:2522, rel: classified_as, note: "who runs it" }\n')
 r = gate()
 check("real codes pass: a technology anchor and knowledge entries in three schemes", "0 error" in r.stdout + r.stderr, r.stdout[-1500:] + r.stderr[-800:])
 
 bean("bad-anchor", 'bean: bad-anchor\ngenos: product\ntitle: "x"\nstatus: active\nsummary: "x"\nnature: lekton\n'
-     'identity: { status: confirmed, anchors: [ { key: isco_08, value: "9999", class: logical, establishing: true } ] }\n'
+     'identity: { status: confirmed, anchors: [ { key: identifier, value: isco-08:9999, class: logical, establishing: true } ] }\n'
      'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n' + OWN)
 r = gate()
-check("an invented ISCO-08 code as an anchor is refused", "anchor isco_08='9999' is not a isco-08 code" in r.stdout + r.stderr, r.stdout[-1200:])
+check("an invented ISCO-08 code as an anchor is refused", "anchor 'identifier'.value 'isco-08:9999': '9999' is not a code of isco-08" in r.stdout + r.stderr, r.stdout[-1200:])
 os.remove(os.path.join(G, "beans", "bad-anchor.md"))
 
 bean("bad-entry", 'bean: bad-entry\ngenos: product\ntitle: "x"\nstatus: active\nsummary: "x"\nnature: lekton\n'
-     'identity: { status: confirmed, anchors: [ { key: technology, value: postfix, class: logical, establishing: true } ] }\n'
+     'identity: { status: confirmed, anchors: [ { key: identifier, value: technology:postfix, class: logical, establishing: true } ] }\n'
      'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n' + OWN +
-     'knowledge:\n  - { scheme: isced-f-2013, code: "0699", rel: draws_on }\n  - { scheme: nonsense, code: "1", rel: uses }\n')
+     'knowledge:\n  - { code: isced-f-2013:0699, rel: draws_on }\n  - { code: nonsense:1, rel: uses }\n')
 r = gate(); out = r.stdout + r.stderr
-check("a code checked against the scheme its entry names is refused when absent", "'0699' is not a declared isced-f-2013" in out, out[-1200:])
-check("an unknown scheme is refused", "'nonsense' is not a declared knowledge_schemes" in out, out[-1200:])
+check("a code checked against the scheme its entry names is refused when absent", "'0699' is not a code of isced-f-2013" in out, out[-1200:])
+check("an unknown scheme is refused", "the scheme 'nonsense', which is not a declared knowledge_schemes" in out, out[-1200:])
 os.remove(os.path.join(G, "beans", "bad-entry.md"))
 
 r = run(sys.executable, os.path.join(G, "bin", "dmknowledge.py"), "bean", "file-server", cwd=G)

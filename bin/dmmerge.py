@@ -985,7 +985,7 @@ def merge_field(key, items, member=False):
                 vals.add(json.dumps(norm(e), sort_keys=True, ensure_ascii=False))
             seen.update(it.get('_origin') or [it['garden']])
         # Sort the CANONICAL STRINGS, not the parsed values. Sorting parsed values raises on a set whose
-        # members are mappings (`standing`, `code_paths`) and orders numbers by their digits when a set is
+        # members are mappings (`standing`, `located_at`) and orders numbers by their digits when a set is
         # heterogeneous; a canonical-string sort is total over every JSON type. The antichain branch below
         # has always sorted this way, so this also makes the two paths agree.
         return {'set': [json.loads(x) for x in sorted(vals)], 'seen_in': sorted(seen)}

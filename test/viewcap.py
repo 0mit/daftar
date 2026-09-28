@@ -176,7 +176,7 @@ C.put(f"beans/{GUEST}.md", person(GUEST, "a guest of the club"))
 for _b, _s in (("boat-heron", "SN-HERON-1"), ("boat-tern", "SN-TERN-2")):
     C.put(f"beans/{_b}.md", bean(_b, "boat", "soma", _b.replace("boat-", "The ").title(), "A dinghy the club keeps.",
                                  ("serial", _s, "hardware"),
-                                 extra="" if _b == "boat-heron" else "observations:\n  mast-sprung: { property: { scheme: boat-checks, code: mast }, "
+                                 extra="" if _b == "boat-heron" else "observations:\n  mast-sprung: { property: boat-checks:mast, "
                                        "at: \"2026-09-20\", value: { count: \"4\", unit: millimetre } }\n"))
 for _o, _at, _boat in (("outing-0927", "2026-09-27 10:00+03:00", "boat-heron"), ("outing-1004", "2026-10-04 09:30+03:00", "boat-tern")):
     C.put(f"beans/{_o}.md", bean(_o, "event", "lekton", "%s on the %s" % (_o, _boat[5:]),
@@ -193,7 +193,7 @@ C.put("beans/boathouse-hygrometer.md", bean("boathouse-hygrometer", "instance", 
                                             "Reads the air in the boathouse and serves it as one JSON document.",
                                             ("identifier", "instance:boathouse-hygrometer", "logical"),
                                             extra="instance_of: { bean: hygro-firmware }\nlives_in: { bean: clubhouse-pi }\n"
-                                                  "knowledge:\n  - { scheme: technology, code: http, rel: uses }\n"))
+                                                  "knowledge:\n  - { code: technology:http, rel: uses }\n"))
 C.put("templates/slip.md", "# Sailing slip: {{ title }}\n\nStarts {{ timing.start.at }}, on {{ refs.boat.bean }}.\n")
 EVERY = '{ of: time, from: "2026-09-21", every: { count: 7, unit: day } }'
 PAGE = f"""---
@@ -516,30 +516,30 @@ try:
     check("V-2 ...and as the gardener may: every line", st == 200 and len(csvr.splitlines()) == 3, (st, csvr))
     _h0 = C.head()
     st, j = post_(bosun, "/api/write", {"m": "outings", "w": 0, "bean": "boat-heron", "entry": "hull-crack",
-                                        "values": {"property": "{ scheme: boat-checks, code: hull }", "at": "2026-09-26",
+                                        "values": {"property": "boat-checks:hull", "at": "2026-09-26",
                                                    "value": "{ count: \"3\", unit: furlong }"}}, csrf)
     check("V-3 a value the law refuses (a unit it has not got): the GATE refuses the save, the page is shown its message, and "
           "nothing is kept — the bean, the journal and HEAD as they were",
           st == 422 and "furlong" in j.get("output", "") and C.head() == _h0 and C.clean() and "hull-crack" not in C.get("beans/boat-heron.md"),
           (st, j.get("error"), j.get("output", "")[-800:]))
     st, j = post_(bosun, "/api/write", {"m": "outings", "w": 0, "bean": "boat-heron", "entry": "hull-crack",
-                                        "values": {"property": "{ scheme: boat-checks, code: hull }", "at": "2026-09-26",
+                                        "values": {"property": "boat-checks:hull", "at": "2026-09-26",
                                                    "value": "{ count: \"3\", unit: millimetre }"}}, csrf)
     _lg = run("git", "log", "-1", "--format=%s", cwd=C.g).stdout.strip()
     _jn = C.get("log/journal.md").split("\n## ")[-1]
     check("V-3 a value the law takes: saved through bin/dmsave.py, the entry on the boat, the journal naming the bosun as who",
-          st == 200 and C.head() != _h0 and "hull-crack: { property: { scheme: boat-checks, code: hull }" in C.get("beans/boat-heron.md")
+          st == 200 and C.head() != _h0 and "hull-crack: { property: boat-checks:hull" in C.get("beans/boat-heron.md")
           and _lg == "observations hull-crack on boat-heron, entered on the page" and BOSUN in _jn.splitlines()[0] and C.clean(),
           (st, j, _lg, _jn[:300]))
     st, j = post_(bosun, "/api/write", {"m": "outings", "w": 0, "bean": "outing-0927", "entry": "late",
-                                        "values": {"property": "{ scheme: boat-checks, code: hull }", "at": "2026-09-26"}}, csrf)
+                                        "values": {"property": "boat-checks:hull", "at": "2026-09-26"}}, csrf)
     check("V-3 a write to an outing, which the bosun is granted only to read in part, is refused by the law before anything is written",
           st == 403 and "outing-0927" not in run("git", "status", "--porcelain", cwd=C.g).stdout, (st, j))
     st, j = post_(bosun, "/api/write", {"m": "outings", "w": 0, "bean": "boat-heron", "entry": "x",
                                         "values": {"colour": "red"}}, csrf)
     check("V-3 an attribute the form does not ask for is refused", st == 400 and "asks for no colour" in j.get("error", ""), (st, j))
     st, j = post_(bosun, "/api/write", {"m": "outings", "w": 0, "bean": "boat-heron", "entry": "spill",
-                                        "values": {"property": "{ scheme: boat-checks, code: hull }", "at": "2026-09-26, by: rosa",
+                                        "values": {"property": "boat-checks:hull", "at": "2026-09-26, by: rosa",
                                                    "value": "{ count: \"1\", unit: millimetre }"}}, csrf)
     check("V-3 a value that would spill into an attribute the form does not offer (`2026-09-26, by: rosa`) is refused, "
           "naming it, and nothing is written", st == 400 and "one value, of its own attribute (at)" in j.get("error", "")
@@ -625,8 +625,8 @@ identity: { status: confirmed, anchors: [ { key: git_remote, value: "example.org
 provenance: { src: asserted-by-human, by: keeper, as_of: now }
 owned_by: { legal: { owner: { bean: keeper } } }
 responsibility: { legal: { holder: { bean: keeper } } }
-code_paths:
-  - { path: "root:daftar", role: own-source, scan_policy: index }
+located_at:
+  - { system: unix-filesystem, openness: here, at: "root:daftar", role: own-source, scan_policy: index }
 analysis_cache:
   code-structure: { produced_by: "tool:suite.py", as_of: 2026-09-26, staleness_key: "daftar@f0e1d2c", policy: index, form: inline, covers_paths: ["root:daftar"] }
 series:
@@ -658,7 +658,7 @@ R.put("beans/suite-status.md", "---\nbean: suite-status\ngenos: instance\ntitle:
       "identity:\n  status: confirmed\n  anchors:\n    - { key: identifier, value: \"instance:suite-status\", class: logical, establishing: true }\n"
       "provenance: { src: observed, by: keeper, as_of: now }\nowned_by: { legal: { owner: { bean: keeper } } }\n"
       "responsibility: { legal: { holder: { bean: keeper } } }\ninstance_of: { bean: suite-py }\nlives_in: { bean: runner }\n"
-      "knowledge:\n  - { scheme: technology, code: http, rel: uses }\n---\nThe status.\n")
+      "knowledge:\n  - { code: technology:http, rel: uses }\n---\nThe status.\n")
 R.put("mappings/suite-run.md", "---\nmapping: suite-run\nkind: procedure\n"
       "summary: \"A run of the suites, one after another, each a step.\"\n"
       "provenance: { src: asserted-by-human, by: keeper, as_of: now }\nsteps:\n"
@@ -745,7 +745,7 @@ R.put("beans/p-0b5e0001.md", person("p-0b5e0001", "a watcher of the runs").repla
 PIN = R.head()[:12]
 _d = R.get("beans/daftar.md")
 R.put("beans/daftar.md", _d.replace("\n---\n", "\nobservations:\n" + "".join(
-    "  run-%s: { property: { scheme: daftar-suites, code: %s }, at: \"2026-09-26 10:00+03:00\", code: { scheme: daftar-suites, code: %s }, "
+    "  run-%s: { property: daftar-suites:%s, at: \"2026-09-26 10:00+03:00\", code: daftar-suites:%s, "
     "by: runner, pin: { commit: %s, at: now }, note: \"the suite run against daftar f0e1d2c\" }\n" % (s, s, v, PIN) for s, _d2, v in RUN)
     + "---\n", 1))
 rc, out = R.save("keeper", "daftar's suites as observations and a series, and their page",
