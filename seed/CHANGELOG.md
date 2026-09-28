@@ -251,6 +251,33 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **28.0** (2026-09-28, human-ratified rule-change) — **the ordinal line: a sequence that holds at no time.** MAJOR: three
+  system choosers are narrowed to the dimension their meaning names, which can refuse a bean that passed. The operator:
+  "absorb 2 x 2 as a sequence with two 2s summing a 4 as the whole sequence numeric value having two nodes", then
+  "ratified just make sure we are not misusing the aspect dimension and other terms, look through catalogue for any
+  candidates to be generalized with our new method".
+  - **The `ordinal` aspect**: which in order — the first, the second — with nothing between two neighbours; no time and
+    no place, so what lies on it holds at none of them. Its domain is `any`. Named for what its positions say: `count`
+    is the law's word for how many, and an ordinal says which.
+  - **The `ordinal-number` system**, of dimension `any`, `datum: line`, written tagged — `ordinal:2` — since a bare
+    number is a port's and a geohash's spelling too: a position counted from the first of the line it
+    is read on (`datum: line` is new), so it counts on every line — the second node, the third meeting, the fifth seat.
+    A position standing alone lies on no line: a day, a `timing` moment, a place or an endpoint naming it is refused.
+  - **A series on a counted line**: a series whose system's neighbours are counted states no unit, a grid strides by
+    neighbours, and an ordinal number's position n neighbours on is `from` + n.
+  - **A series' `whole`**: `{value, of, by}` — the value the series is as a whole, the channel it is made of, and how
+    (`by`, a row of `aggregates`); checked exactly against the rows. Two times two: two nodes of 2, a whole of 4 by sum
+    (and by product), 2 by count.
+  - **`aggregates`**, one registry: sum, product, mean, min, max, count, first, last — read by a series' whole and by the
+    reckoner's `window`, which gains sum and product (a product only of what has no dimension).
+  - **`event-anchored` states its datum: `named`** — the position it names, its offset known only in direction (the
+    operator: "isn't event-anchored going to be a new use of the latest machinery with new law?"). A position is an offset
+    from a datum, and the datum says the kind: fixed, with a measured offset (`bp-1950`); the line's first, with a counted
+    one (`ordinal-number`); or named in the position itself (`event-anchored`). The gate reads from the datum whether a
+    position can stand alone — the long form of a day takes a system of time or one whose datum it names — where it read
+    it from `dimension: any`.
+  - **Narrowed**: `timing.system` to systems of time or of dimension `any`; `located_at.system` and `roots.system` to
+    systems of place. Every garden known held only such systems there.
 - **27.1** (2026-09-28, human-ratified rule-change) — **the permission square says its own name.** MINOR, no rule
   changes: 26.0 renamed the aspect `capability` `permission`, and the prose kept the old name in six places — the meaning
   of `clauses` (law), MODEL.md twice, the cookbook's agreement chapter, and the reasons for the square, for a clause

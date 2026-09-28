@@ -199,6 +199,13 @@ page's table are each a selection of beans or entries and something computed fro
 of operations, each naming earlier steps only, a reading cannot loop and no string is evaluated; read each time by one
 reader, it is never written back as a fact. An act that fixes a reading records the commit it was read at.
 
+## aggregates
+
+ONE LIST OF WHAT A WHOLE IS MADE BY (28.0). The reckoner's `window` took its own list (mean, min, max, count, first,
+last), and a series' whole needed one too; two lists of one idea drift, and the first had no sum. The aggregates are
+rows of the law, each exact in fractions, read by the gate for a series' whole and by the reckoner for a window. What a
+single cell stands for (`stands_for`) keeps its own list, because a point, a state and an instant are no aggregates.
+
 ## operations
 
 CLOSED, SO THAT A READER CAN HOLD EVERY ONE (24.0). Each row says what it takes, in the attribute language every term
@@ -621,7 +628,9 @@ work. `crosswalk` says how a position in one is found in another: `computed` (by
 `table` (somebody publishes the correspondence), `observed` (it is looked up in what was seen),
 `none`. Neither system is the other's parent; that is what distinguishes this from `within`.
 datum             (24.0) what a position here is an offset FROM: `being`, the being the position names, or
-{system, at, direction: before | after}, a position of another system. Two systems over one ground whose
+{system, at, direction: before | after}, a position of another system; (28.0) `line`, the first position of
+whatever line the position is read on — a series' or a repetition's `from` — so a position standing alone has none;
+and `named`, the position a position names itself (`after:<it>`), whose offset from it is known only in direction. Two systems over one ground whose
 datums are in one system are crosswalked by computing.
 cells_in          (24.0) the table whose rows are its cells, `{registry, take}`; `overlay` a table whose rows win
 over them, each with its `source`; `boundaries_in` what fixes each cell's base (`fixing`).
@@ -770,6 +779,25 @@ geography; every calendar whose day begins somewhere now says so, and the gate a
 ## anchor_systems[geographic].restrictions
 
 the one place system with a measure: what "every 5 metres" needs
+
+## anchor_systems[ordinal-number].datum
+
+A COUNT NEEDS A FIRST TO COUNT FROM (28.0). `event-anchored` carries its reference in the position itself —
+`after:dinner-at-sams` — and so it can stand alone. An ordinal number does not: "2" is the second of something, and
+the something is the line it is read on, whose first a series' or a repetition's `from` gives. `datum: line` says so,
+and the gate refuses an ordinal number where a position stands alone: a day, a moment of `timing`, a place, an
+endpoint. Measured before it was written: with the ordinal number of dimension `any` and no such datum, a day written
+`{ system: ordinal, at: "2", unit: day }` passed the gate.
+
+## anchor_systems[event-anchored].datum
+
+A POSITION IS AN OFFSET FROM A DATUM, AND THE DATUM SAYS WHICH KIND (28.0; the operator: "isn't event-anchored going to
+be a new use of the latest machinery with new law?"). Three kinds meet here. A fixed datum, with an offset measured from
+it: `bp-1950`, years before 1950. The first of a line, with an offset counted from it: `ordinal-number`. And the
+position a position names itself, with an offset known only in direction: `after:dinner-at-sams`. `event-anchored` was
+the third all along; stating it lets the gate read whether a position can stand alone from its datum — one that names
+its own stands alone, one that counts from a line's first cannot — where it had read it from `dimension: any`, which
+the ordinal number now shares.
 
 ## anchor_systems[event-anchored].pattern
 
@@ -1397,6 +1425,24 @@ one declared restriction of a sequence instead of the definition of walkable.
 ## aspects[walk].term_key
 
 a term carrying `dag: true` places its edges on this aspect
+
+## aspects[ordinal]
+
+WHICH, AND NOT HOW MANY (28.0; the operator: "absorb 2 x 2 as a sequence with two 2s summing a 4 as the whole sequence
+numeric value having two nodes", and "make sure we are not misusing the aspect dimension and other terms"). A sequence
+of values had nowhere to lie but time, place or temperature, so a fact that holds at no time — two times two is four —
+had no line to be written on. The ordinal line is that line: its positions are the first, the second, with nothing
+between them, and it is no time and no place, so what lies on it holds at none of them. The time question dissolves:
+a timeless fact needs no marker saying time does not apply; it is written on a line that is not time.
+
+IT IS NAMED FOR WHAT ITS POSITIONS SAY. `count` was the first name, and the law already gives `count` one sense — how
+many (a value type, an operation, an aggregate): cardinal. A position on this line says which: ordinal. One name for
+the two would let "the second" and "two of them" be read for each other.
+
+ITS DOMAIN IS `any`. An aspect's domain names the dimension of the systems whose positions it holds; the ordinal line
+holds only positions placed by counting — `ordinal-number`, and `event-anchored`, which is placed by what it follows —
+and neither is a time or a place. A dimension of its own would have made the ordinal number serve this line alone,
+where as a system of dimension `any` it counts on every line: the third meeting of a series of them, the fifth seat.
 
 ## aspects[walk].domain
 
@@ -2510,6 +2556,20 @@ schema: `start`, `sync`, `stop` are keys, not law, and a run with four sync poin
 rule-change to record them. The closed part is each entry's shape — the same open-key/closed-figure
 pattern `analysis_cache` proved.
 
+## terms[series].schema.attrs.whole
+
+THE WHOLE OF A SEQUENCE (28.0). Two nodes of 2 are one thing as well as two: a sequence has a value as a whole, made of
+what its positions hold, and saying how it is made is saying what the whole is — by sum it is 4, by product 4 again, by
+count 2. The whole is stated and checked exactly, in fractions, as a payment's parts are checked against what was
+paid (`sums`); a gap in a row leaves a whole nobody can check, and that is said rather than guessed past. How the parts
+make the whole is a row of `aggregates`, the one list the reckoner's `window` reads too, so the gate and a reading
+cannot name the same aggregate two ways.
+
+A SERIES ON AN ORDINAL LINE COUNTS BY NEIGHBOURS. A series counted its positions in a unit of the line's length, and
+refused a line with no measure. On a line whose neighbours are counted, a row lies a number of neighbours after `from`,
+and nothing measures the distance: so the series states no unit, a grid strides by neighbours, and where the system
+writes its positions as the count itself (`ordinal-number`), the position n neighbours on is `from` + n.
+
 ## terms[series]
 
 THE WORLD ALONG A LINE (D47; sequence critic §6, S0–S5). One entry is one recording: its positions by rule or listed,
@@ -2559,6 +2619,10 @@ NOT on `located_at`, deliberately: roots is the host describing itself and every
 it has an `os`, while `located_at` is carried by codebases, which have none.
 
 ## terms[roots].schema.attrs.system
+
+A ROOT IS A PLACE (28.0). Its system chose from every anchor system, though its meaning names a filesystem; it takes
+one of place now, as a location does, and a `timing` moment one of time or one placed by counting or by its neighbours.
+Every garden known held only such systems there.
 
 Pinned to the grammar the host's `os` declares since 7.0.
 

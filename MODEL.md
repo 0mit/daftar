@@ -116,6 +116,9 @@ Ownership is separate from **habitat**: a running instance is owned through its 
 - **A moment is in time and in place.** No time is absolute: a calendar's day begins at a moment of some place, and an
   offset is read from the prime meridian. A moment may say where it was (`where`), beside its time in one entry; a
   being's place says when it held (`during`). A meter belongs to a system, never to the aspect it is on.
+- **Not everything lies in time.** The ordinal line holds positions that say which — the first, the second — and is
+  no time and no place: a sequence of values written on it holds at none of them, and says what it is as a whole
+  (`whole`, by an aggregate): two nodes of 2 are 4. An ordinal number counts from the first of the line it is read on.
 - **Money is a quantity.** An amount is `{ count, unit }`: the unit is a currency, the count a whole number or a
   decimal string with no more places than the currency uses. A count or a share is what was written: plain decimal
   digits, as many as the law's pattern bounds — a spelling YAML would read as another number (`010`, `0x64`, `1:30`)

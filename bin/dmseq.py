@@ -128,6 +128,28 @@ def exact(c):
     return None
 
 
+# THE AGGREGATES THIS READER MAKES, by the law's names (`aggregates`): each exact, in fractions, over what the rows hold
+AGGREGATE_READ = ('sum', 'product', 'mean', 'min', 'max', 'count', 'first', 'last')
+
+
+def aggregate(by, vals):
+    """The aggregate `by` of `vals` (Fractions, in row order) exactly — or None for no rows, or an aggregate not read here."""
+    if by == 'count':
+        return Fraction(len(vals))
+    if not vals or by not in AGGREGATE_READ:
+        return None
+    if by == 'sum':
+        return sum(vals, Fraction(0))
+    if by == 'product':
+        p = Fraction(1)
+        for v in vals:
+            p *= v
+        return p
+    if by == 'mean':
+        return sum(vals, Fraction(0)) / len(vals)
+    return {'min': min, 'max': max, 'first': lambda v: v[0], 'last': lambda v: v[-1]}[by](vals)
+
+
 def show(x):
     """A Fraction exactly: a terminating decimal in full, else n/d."""
     n, d = x.numerator, x.denominator
@@ -187,6 +209,7 @@ class Series:
         self.problems = []
         self.channels, self.rows = {}, []
         self.kind = self.node = self.aspect = self.system = self.metered = self.unit = None
+        self.counted = False
         self.stride = self.length = None
         self.cells = self.entry.get('placement') or 'point'
         self.read_form = form
@@ -237,6 +260,9 @@ class Series:
         # the system's meter where one is named (27.0: a meter is the system's); else the aspect's
         m = ((self.system.get('restrictions') or {}).get('metered') if self.system else self.aspect.get('metered'))
         self.metered = None if m in (None, 'none') else m
+        # A LINE COUNTED BY NEIGHBOURS (28.0): no measure between two positions, and a row lies a number of neighbours
+        # after `from` — the ordinal line's nodes, the third meeting of a series of them
+        self.counted = not self.metered and bool(self.system) and self.system.get('neighbours') == 'counted'
         _f = self.node.get('from')
         if self.system and _f is not None and dmparse.in_form(self.system, _f) is False:
             self.err(f".{self.kind}.from", f"'{_f}' is not a position in the one form '{self.system.get('system')}' "
@@ -247,11 +273,17 @@ class Series:
             self.err(f".{self.kind}", f"states no `from`: {'a grid' if self.kind == 'grid' else 'a listed series'} "
                                       f"counts its rows from the position it begins at")
         self.unit = e.get('unit')
-        if not self.metered:
+        if self.counted:
+            if self.unit is not None:
+                self.err('.unit', f"is '{self.unit}' on a line counted by neighbours (`{self.system.get('system')}`): an "
+                                  f"offset there is how many neighbours after `from`, and no unit measures it")
+            else:
+                self._stride()
+        elif not self.metered:
             self.err(f".{self.kind}", f"lies on a line with no measure ({'system ' + repr(self.system.get('system')) if self.system else 'aspect ' + repr(an)}"
-                                      f" is metered in nothing): a series counts its positions in a unit of the line's "
-                                      f"length — a count along a line with no measure is a local frame's, and a walk's "
-                                      f"steps are a course's")
+                                      f" is metered in nothing, and its neighbours are not counted): a series counts its "
+                                      f"positions in a unit of the line's length, or by neighbours on a line that counts "
+                                      f"them (`ordinal-number`); a walk's steps are a course's")
         elif not self.unit:
             self.err('', f"states no `unit`: what an offset counts, and the resolution held — a unit of {self.metered}")
         elif self.law.factor(self.unit) is None or not self.law.measures(self.unit, self.metered):
@@ -266,6 +298,8 @@ class Series:
     def _stride(self):
         """The grid's stride in whole units, and a listed series' length where the extent states one."""
         n, u = self.node, self.law.factor(self.unit)
+        if self.counted:
+            return self._stride_counted()
         if self.kind == 'grid':
             for k in ('to', 'times', 'at', 'lasts', 'closures'):
                 if n.get(k) is not None:
@@ -305,6 +339,41 @@ class Series:
                 if a is not None and b is not None:
                     self.length = b - a
 
+    def _stride_counted(self):
+        """On a line counted by neighbours (28.0): a grid strides by neighbours alone, and a listed series' length is how
+        many neighbours its `to` lies after its `from`."""
+        n = self.node
+        if self.kind == 'grid':
+            for k in ('to', 'times', 'at', 'lasts', 'closures', 'each'):
+                if n.get(k) is not None:
+                    self.err(f".grid.{k}", f"a grid on a counted line strides by neighbours from its `from` — `{k}` is a "
+                                           f"repetition's, not a series'")
+            ev = n.get('every')
+            if isinstance(ev, dict) and ev.get('unit') is None and isinstance(ev.get('count'), int) and ev['count'] > 0:
+                self.stride = ev['count']
+            elif isinstance(ev, dict) and ev.get('unit') is not None:
+                self.err('.grid.every', f"strides {ev.get('count')} {ev.get('unit')}, and the line counts neighbours with "
+                                        f"no measure between them: stride by neighbours (`every: {{ count: 1 }}`)")
+        else:
+            if n.get('measure') is not None:
+                self.err('.span.measure', "measures a region of a line counted by neighbours, which has no length: bound "
+                                          "it with `from` and `to`")
+            elif n.get('to') is not None:
+                a, b = self.offset_of(n.get('from')), self.offset_of(n.get('to'))
+                if a is not None and b is not None:
+                    self.length = b - a
+
+    def _counts(self):
+        """Whether the line's system writes its positions as the count itself (`datum: line`, `ordinal-number`): the
+        position n neighbours after `from` is `from` + n, the count being the whole number its form ends in."""
+        return self.counted and (self.system or {}).get('datum') == 'line'
+
+    @staticmethod
+    def _count_in(p):
+        """The count a line-counted position writes: the whole number its form ends in (`ordinal:3` is 3) — or None."""
+        m = re.search(r'(?<![0-9])([1-9][0-9]{0,39})$', str(p), re.ASCII)
+        return int(m.group(1)) if m else None
+
     # -- positions on the line
     def _ms(self):
         """Milliseconds in one unit held, where the line is time and a unit is a whole number of them."""
@@ -323,6 +392,9 @@ class Series:
         if isinstance(offset, Fraction) and offset.denominator != 1:
             return None
         offset = int(offset)
+        if self.counted:
+            n = self._count_in(start) if self._counts() else None
+            return None if n is None else str(start)[:len(str(start)) - len(str(n))] + str(n + offset)
         if self.metered == 'time':
             ms = self._ms()
             if ms is None:
@@ -359,6 +431,9 @@ class Series:
         start = (self.node or {}).get('from')
         if position is None or start is None:
             return None
+        if self.counted:
+            a, b = (self._count_in(start), self._count_in(position)) if self._counts() else (None, None)
+            return Fraction(b - a) if a is not None and b is not None else None
         if SIGNED.match(str(position)):
             return Fraction(int(str(position)))
         if self.metered == 'time':
@@ -523,7 +598,8 @@ class Series:
                     bad = [p for p in pos if not WHOLE.match(p)]
                     if bad:
                         self.err(f"{where} line {line}", f"writes its position as {bad[0]!r}: an offset is a whole number "
-                                                         f"of {self.unit}s from the series' `from`, never a gap")
+                                                         f"of {self.unit + 's' if self.unit else 'neighbours'} from the "
+                                                         f"series' `from`, never a gap")
                         continue
                     at = tuple(Fraction(int(p)) for p in pos) if len(pos) > 1 else Fraction(int(pos[0]))
                     key = at
@@ -563,6 +639,52 @@ class Series:
         self.rows = order
         self._monotone()
         self._excluded()
+        self._whole()
+
+    def _whole(self):
+        """THE SERIES AS A WHOLE (28.0): what its positions hold, made one by an aggregate (`aggregates`), checked exactly
+        against the stated value — two nodes of 2, a whole of 4 `by: sum`. A gap in a row leaves a whole nobody can check,
+        and that is said, never guessed past."""
+        w = self.entry.get('whole')
+        if w is None:
+            return
+        for i, x in enumerate(w if isinstance(w, list) else [w]):
+            where = f".whole[{i}]" if isinstance(w, list) else '.whole'
+            if not isinstance(x, dict):
+                continue                                     # the entries' own check refuses it
+            ch, by, val = self.channels.get(x.get('of')), x.get('by'), x.get('value')
+            if ch is None:
+                self.err(where + '.of', f"names '{x.get('of')}', no channel of this series "
+                                        f"({', '.join(sorted(self.channels)) or 'none'})")
+                continue
+            if by != 'count' and ch.get('kind') not in ('quantity', 'offset'):
+                self.err(where + '.of', f"is made of `{x['of']}`, which holds {'codes' if ch.get('kind') == 'code' else 'positions'}: "
+                                        f"only measured values add, multiply or average into a whole")
+                continue
+            cells = [r['cells'].get(x['of']) for r in self.rows]
+            vals = [exact(c) for c in cells]
+            if by not in ('count',) and any(v is None for v in vals):
+                self.warn(where, f"is made of `{x['of']}` over rows one of which holds a gap "
+                                 f"({next(c for c, v in zip(cells, vals) if v is None)!r}): the whole cannot be checked")
+                continue
+            agg = aggregate(by, vals)
+            if agg is None:
+                if by in AGGREGATE_READ:
+                    self.err(where, f"is the {by} of `{x['of']}` over no row: a series with no rows has no {by}")
+                continue                                     # an aggregate the law does not name is its own check's
+            if not isinstance(val, dict) or exact(val.get('count')) is None or not val.get('unit'):
+                continue                                     # the quantity's own check refuses it
+            unit = 'item' if by == 'count' else ch.get('unit')
+            said = exact(val['count'])
+            fs, fc = self.law.factor(val['unit']), self.law.factor(unit)
+            if val['unit'] != unit:
+                if fs is None or fc is None or self.law.quantity_of(val['unit']) != self.law.quantity_of(unit):
+                    self.err(where + '.value', f"is in '{val['unit']}', and the {by} of `{x['of']}` is in '{unit}'")
+                    continue
+                said = said * fs / fc
+            if said != agg:
+                self.err(where, f"says {show(exact(val['count']))} {val['unit']}, and the {by} of `{x['of']}` over its "
+                                f"{len(vals)} row(s) is {show(agg)} {unit}")
 
     def _said(self, key):
         return f"{show(key[0])}–{show(key[1])}" if isinstance(key, tuple) else (show(key) if isinstance(key, Fraction) else str(key))

@@ -1443,7 +1443,20 @@ class Reckoner:
         if not rows and by != ['count']:
             raise Refused(f"step {s['id']}: the stretch of {name} holds no value of {ch}")
         n = len(rows)
-        f = {'mean': lambda: V(sum(x for _p, x, _r in rows) / n, unit, u / sqrt(Fraction(n))[0] if u else None),
+        _dimless = law().quantity_of(unit) in ('number', 'ratio') if unit else True
+
+        def _product():
+            # A PRODUCT OF MEASURES IS ANOTHER QUANTITY (m·m is an area): a window multiplies only what has no dimension
+            if not _dimless:
+                raise Refused(f"step {s['id']}: the product of {ch} multiplies {unit}s into a unit of another quantity — "
+                              f"a window multiplies only counts and ratios")
+            p = Fraction(1)
+            for _p, x, _r in rows:
+                p *= x
+            return V(p, unit)
+        f = {'sum': lambda: V(sum((x for _p, x, _r in rows), Fraction(0)), unit, u * sqrt(Fraction(n))[0] if u else None),
+             'product': _product,
+             'mean': lambda: V(sum(x for _p, x, _r in rows) / n, unit, u / sqrt(Fraction(n))[0] if u else None),
              'min': lambda: V(min(x for _p, x, _r in rows), unit, u),
              'max': lambda: V(max(x for _p, x, _r in rows), unit, u),
              'count': lambda: V(Fraction(n), 'item'),

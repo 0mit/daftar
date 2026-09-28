@@ -1,5 +1,5 @@
 ---
-version: "27.1"
+version: "28.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -752,12 +752,24 @@ anchor_systems:
     why: "a coordinate says where something IS and never which thing it is: two beings can stand in one spot, and one being can move"
   - system: event-anchored
     dimension: any
+    datum: named
     neighbours: counted
     meaning: "a position fixed by NEIGHBOURING EVENTS rather than by any coordinate — 'after the branch was pushed, before the cutover'. Fully positioned while carrying no calendar value at all. Declared because it is what makes this a registry rather than a two-item enum: SEQUENCE is the general structure and a coordinate system is one restriction of it."
     pattern: '^(after|before):[^<>]+$'
     form_note: "after:<position> or before:<position> — the position itself, a bean's id or a few words, and never a placeholder in angle brackets; state both as two entries when an interval is meant"
     establishes: false
     why: "an event anchor positions relative to other positions — it fixes an interval, never a point"
+  - system: ordinal-number
+    dimension: any
+    datum: line
+    neighbours: counted
+    restrictions: { lines: 1, order: total }
+    meaning: "a position COUNTED from the first of the line it is read on: `ordinal:1`, `ordinal:2` — the second node of a sequence, the third meeting of a series of them, the fifth seat of a row. Its line gives it its first: a series' or a repetition's `from`. A position standing alone has no line, and names nothing with it"
+    pattern: '^ordinal:[1-9][0-9]*$'
+    form_note: "`ordinal:` and a whole number from 1: `ordinal:2` — tagged, as a calendar's day is, because a bare number is a port's and a geohash's spelling too"
+    example: "ordinal:2"
+    establishes: false
+    why: "an ordinal number says which of a line's positions, never which being"
   - system: network-segment
     dimension: place
     resolves_through: geographic
@@ -1118,6 +1130,7 @@ registry_forms:
     ends_values: optional
   accuracy_kinds: { kind: required, meaning: required }
   operations: { op: required, gives: required, takes: required, meaning: required, exact: optional, u_rule: optional }
+  aggregates: { aggregate: required, meaning: required }
   comparators: { comparator: required, monotone: required, meaning: required }
   ordering_keys: { key: required, meaning: required, inputs: required, steps: required }
   value_types:
@@ -1690,7 +1703,7 @@ operations:
   - { op: ancestor-at-level, gives: set, exact: true, u_rule: none, takes: { of: { required: true, in: { type: kebab } }, level: { required: true, in: { type: kebab } } }, meaning: "each code's ancestor at a level, by its scheme's `parent`" }
   - { op: neighbour-of, gives: set,  exact: true,  u_rule: none, takes: { of: { required: true, in: { type: kebab } }, relation: { in: { type: kebab }, meaning: "a registry of relations, rows {from, to, rel}" }, distance: { in: { quantity: length } } }, meaning: "the codes a relation's `adjacent` rows name beside each, or the beings within a distance (≈)" }
   - { op: at,          gives: value, exact: per-channel, u_rule: ties, takes: { series: { required: true, in: { type: field_path }, meaning: "`<bean>:<term>.<key>`" }, channel: { in: { type: kebab } }, position: { required: true, in: any } }, meaning: "what a channel holds at a position, as the channel says it is read between rows" }
-  - { op: window,      gives: value, exact: per-channel, u_rule: absolute, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent }, by: { in: [mean, min, max, count, first, last] } }, meaning: "what a stretch of the line holds: by one of these, or several as groups" }
+  - { op: window,      gives: value, exact: per-channel, u_rule: absolute, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent }, by: { in: { registry: aggregates, take: aggregate } } }, meaning: "what a stretch of the line holds: by one of these, or several as groups" }
   - { op: integral,    gives: value, exact: true,  u_rule: absolute, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent }, base: { in: any, meaning: "a position on the channel's scale, from which each value is measured" } }, meaning: "the channel summed along the line: a sum's rows added, a point's trapezoids" }
   - { op: rate,        gives: value, exact: per-channel, u_rule: relative, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, from: { required: true, in: any }, to: { required: true, in: any } }, meaning: "the change over the distance between two positions of the line" }
   - { op: trend,       gives: value, exact: false, u_rule: least-squares, takes: { series: { required: true, in: { type: field_path } }, channel: { in: { type: kebab } }, extent: { in: extent } }, meaning: "the fitted slope and its u; a slope that does not exceed k·u is never called a motion, and the span that would resolve it is said" }
@@ -1770,6 +1783,16 @@ ordering_keys:
     inputs: [ { name: importance, origin: { act: said }, quantity: ratio }, { name: uncertainty, origin: { act: said }, quantity: ratio } ]
     steps:
       - { id: key, op: multiply, of: importance, with: uncertainty }
+# == AGGREGATES: what a whole is, made of its parts ==
+aggregates:
+  - { aggregate: sum,     meaning: "the parts added: two nodes of 2 are 4" }
+  - { aggregate: product, meaning: "the parts multiplied: two nodes of 2 are 4 again, three of 2 are 8" }
+  - { aggregate: mean,    meaning: "the sum shared equally over the parts: their sum divided by how many they are" }
+  - { aggregate: min,     meaning: "the least of the parts" }
+  - { aggregate: max,     meaning: "the greatest of the parts" }
+  - { aggregate: count,   meaning: "how many parts there are, in the unit `item`: how long an ordinal line is" }
+  - { aggregate: first,   meaning: "the part at the line's first position" }
+  - { aggregate: last,    meaning: "the part at the line's last position" }
 # == VALUE TYPES ==
 value_types:
   - type: position
@@ -2168,6 +2191,15 @@ aspects:
     acyclic: false
     ends: bounded
     domain: { systems: none }
+  - aspect: ordinal
+    meaning: "which in order: a position on the ORDINAL line — the first, the second — with nothing between two neighbours. It says which, never how many (a count is how many), and it is no time and no place, so what lies on it holds at none of them: two nodes of 2 whose whole is 4"
+    figure: sequence
+    lines: 1
+    metered: none
+    order: total
+    acyclic: true
+    ends: open-end
+    domain: { systems: any }
   - aspect: temperature
     meaning: "how hot: a position on the one line of thermodynamic temperature, bounded below by absolute zero"
     figure: sequence
@@ -3367,7 +3399,7 @@ terms:
       required_on_gene: [document]
       at_most_one_of: [[u, accuracy]]
       attrs:
-        system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which anchor system this position is stated in — it selects the form the position must take" }
+        system:    { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } }, meaning: "which anchor system of place this position is stated in — it selects the form the position must take" }
         openness:  { required: true, in: [here, elsewhere, unreachable, unknown], meaning: "here (reachable from the machine that recorded it) | elsewhere (reachable, and NOT from here) | unreachable (known, and cannot be reached) | unknown (nobody has established where it is)" }
         observed:  { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date this location was checked. A location ages: a tree is moved, a branch is checked out elsewhere, a printout is filed." }
         u:          { in: { quantity: length }, meaning: "the position's HORIZONTAL standard uncertainty (`uncertainty_form`); for a position on one vertical axis, its only one" }
@@ -3418,7 +3450,7 @@ terms:
       key_form: kebab
       required_on_gene: [session, event]
       attrs:
-        system:  { required: true, in: { registry: anchor_systems, take: system }, meaning: "the time anchor system — gregorian-civil for a calendar reading, event-anchored for a position fixed only by its neighbours" }
+        system:  { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [time, any] } }, meaning: "the time anchor system — gregorian-civil for a calendar reading, event-anchored for a position fixed only by its neighbours" }
         at:      { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the position, in that system's ONE canonical form" }
         unit:    { required: true, in: { registry: units, take: unit }, meaning: "the resolution ACTUALLY HELD. `2026-08-07T05:21` recorded at unit: minute means the second is not known — not that it was zero." }
         by:      { in: prose, meaning: "optional: who or what read the clock, when that is not the bean's default provenance" }
@@ -3448,7 +3480,7 @@ terms:
       attrs:
         grid:     { in: recurrence, meaning: "the positions BY RULE: a recurrence with a `from` and no `to` or `times`, striding by a measure or by a level with a length; row n is at occurrence n, the first at `from`, and the last row is its end" }
         span:     { in: extent, meaning: "the positions LISTED: the region the rows lie in, whose `from` is offset 0; each row writes its offset" }
-        unit:     { in: { registry: units, take: unit }, meaning: "the resolution held, and what an offset counts: a row's offset and a grid's stride are whole numbers of it" }
+        unit:     { in: { registry: units, take: unit }, meaning: "the resolution held, and what an offset counts: a row's offset and a grid's stride are whole numbers of it. On a COUNTED line (its system's neighbours counted) no unit is stated: an offset there is a count of neighbours, and nothing measures it" }
         placement: { in: [point, bounds, preceding, following], meaning: "where a row sits on the line: point — at its position, the reading when silent | bounds — over a region, a listed row writing its `from` and `to`, a grid's row n over [n, n+1) strides | preceding — at its position, over the region back to the row before | following — at its position, over the region on to the next" }
         holds:
           meaning: "the CHANNELS: what a position holds, one column each — a measured value, a position, or a code"
@@ -3476,6 +3508,13 @@ terms:
         rows:     { in: { type: rows }, meaning: "the table, inline: its header names the position columns (`at`, or `from` and `to` under `bounds`; none on a grid) and each channel once, then one line per row. Absent, the rows are the parts `series/<bean>/<key>/<part>.tsv`: a grid's part named by the number of its first row, a listed series' by any kebab name" }
         excluded: { in: { entries: { at: { required: true, in: { type: count }, meaning: "the row: its offset on a listed series (its `from` under `bounds`), its number on a grid, the first 0" }, channel: { in: { type: kebab }, meaning: "the cell's channel; absent, every cell of the row" }, by: { required: true, in: bean_id, meaning: "the judge who set it aside" }, why: { required: true, in: prose, meaning: "why" }, note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" } } }, meaning: "a cell SET ASIDE by a judge: kept and shown, and read by no operation" }
         held:     { in: { pattern: '^root:[a-z0-9][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._-]*$' }, meaning: "the whole series is kept OFF GIT, in the held layer, under this opaque pointer, and the entry says nothing else" }
+        whole:
+          meaning: "what the series is AS A WHOLE, made of what its positions hold: the value, the channel it is made of, and how (`by`, an aggregate) — two nodes of 2 are a whole of 4 `by: sum`, and of 4 `by: product`. Checked exactly, in fractions, against the rows; a row that holds a gap leaves a whole that cannot be checked, and says so"
+          in:
+            entries:
+              value: { required: true, in: { quantity: any }, meaning: "the whole, a measured value in a unit of the channel's quantity (`count` is in `item`)" }
+              of:    { required: true, in: { type: kebab }, meaning: "the channel it is made of, by its name" }
+              by:    { required: true, in: { registry: aggregates, take: aggregate }, meaning: "how the parts make the whole" }
         note:     { in: prose, meaning: "optional prose" }
     merge: { cardinality: multi, order: by-key }
   - term: roots
@@ -3490,7 +3529,7 @@ terms:
       entry_must_match:
         - { attr: system, registry: operating_systems, keyed_by: os, take: path_grammar }
       attrs:
-        system:    { required: true, in: { registry: anchor_systems, take: system }, meaning: "which filesystem system this host resolves the root in — pinned to the grammar this host's `os` declares, so it is checked rather than merely stated" }
+        system:    { required: true, in: { registry: anchor_systems, take: system, where: { dimension: [place] } }, meaning: "which filesystem system this host resolves the root in — pinned to the grammar this host's `os` declares, so it is checked rather than merely stated" }
         at:        { required: true, in: { form_of: anchor_systems, keyed_by: system, take: pattern }, meaning: "the literal position this root means HERE, host named, in that system's canonical form" }
         observed:  { origin: { act: read, nature: soma }, in: { type: position, unit: day }, meaning: "ABSOLUTE date the resolution was checked — a tree gets moved" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }

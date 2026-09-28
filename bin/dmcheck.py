@@ -1215,10 +1215,10 @@ def _finer_or_same(unit, of):
 
 def check_long_position(base, ref, attr, val, typ, held_to=None):
     """A POSITION WRITTEN LONG (27.0): one entry of the term the type's `long_form` names — `timing` — judged as every entry
-    of that term is, and then held to the type. Its unit is the type's (a date's `day`; a moment's `minute`, or a finer unit
-    of the same quantity), and it says which alternative a `date_or_moment` is. Its system is one of time, where `at` is
-    the short form itself and is judged as that; or one of neighbours (`dimension: any`, the law's `event-anchored`), where
-    `at` places it `after:` or `before:` another position and names no day. A position in a system of place is no day."""
+    of that term is, and then held to the type: its unit is one the type and the attribute hold it to. Its system is one of
+    time, where `at` is the short form itself and is judged as that; or one whose datum the position names itself
+    (`datum: named`, the law's `event-anchored`), where `at` places it `after:` or `before:` another position and names
+    no day. One that counts from a line's first (`datum: line`) lies on no line here, and a position of place is no day."""
     term, alts = long_form_of(typ)
     where = f"{base}: {ref}.{attr}"
     sch = SCHEMAS.get(term)
@@ -1255,10 +1255,16 @@ def check_long_position(base, ref, attr, val, typ, held_to=None):
                                                     "a position finer than the day is a clock reading, with its offset"))
             return
         check_value_type(f"{base}: {ref}", f"{attr}.at", val.get('at'), _as)
-    elif row.get('dimension') != 'any':
+    elif row.get('datum') == 'line':
+        errors.append(f"{where}.system `{val.get('system')}` counts from the first of a line, and a {typ} standing alone lies "
+                      f"on none — a day nobody said is placed by what it followed (`event-anchored`)"
+                      + _rule(f'anchor_systems[{val.get("system")}].datum', 'anchor_systems'))
+    elif row.get('datum') != 'named':
+        # A POSITION STANDS ALONE WHERE ITS DATUM IS ITS OWN (28.0): a position in a system of time, or one whose datum it
+        # names itself — `after:<what it followed>`, the law's `event-anchored`, whose offset is known only in direction
         errors.append(f"{where}.system `{val.get('system')}` is a system of {row.get('dimension')} — a {typ} is a position in a "
-                      f"system of {(VALUE_TYPES.get(_as) or {}).get('dimension')}, or one placed by its neighbours "
-                      f"(a system of dimension `any`)" + _rule(f'value_types[{_as}]', 'value_types'))
+                      f"system of {(VALUE_TYPES.get(_as) or {}).get('dimension')}, or one placed after or before a position "
+                      f"it names (`datum: named`, `event-anchored`)" + _rule(f'value_types[{_as}]', 'value_types'))
 
 
 def day_unwritten(val, row):
@@ -2864,6 +2870,20 @@ def effective(e, attr):
 _AT_AUTHORITY_SAID = set()
 
 
+def ectl_line_counted(e):
+    """A POSITION STANDING ALONE LIES ON NO LINE (28.0). A system whose `datum` is `line` — `ordinal` — counts from the
+    first of the line it is read on: a series' or a repetition's `from` gives it one, through `in:`. An entry that names
+    such a system for a position of its own (a `timing` moment, a place, an endpoint) has no first to count from."""
+    for attr, rule in _facet(e.form, 'registry', e.scope):
+        if rule.get('registry') != 'anchor_systems' or e.entry.get(attr) is None:
+            continue
+        row = SYSTEMS.get(e.entry.get(attr)) or {}
+        if row.get('datum') == 'line':
+            errors.append(f"{e.base}: {e.ref}.{attr} `{e.entry.get(attr)}` counts from the first of a line, and this "
+                          f"position stands alone on none — `{e.entry.get(attr)}` is read where a line gives it a first: a "
+                          f"series' or a repetition's `in:`" + _rule(f'anchor_systems[{e.entry.get(attr)}].datum', 'anchor_systems'))
+
+
 def ectl_entry_in_registry(e):
     """An entry attr whose value must be a row of a REGISTRY — so the registry is the enum's one owner.
 
@@ -3934,10 +3954,16 @@ def check_place_law():
         if _o == 'host' and _row.get('dimension') != 'place':
             errors.append(f"{_w}: `datum: host` is a place a host defines, and this system's dimension is "
                           f"{_row.get('dimension')!r}")
-        if _o is not None and _o not in ('being', 'host'):
+        if _o == 'line' and _row.get('dimension') != 'any':
+            errors.append(f"{_w}: `datum: line` counts from the first of whatever line it is read on, and this system is one "
+                          f"of {_row.get('dimension')!r} — a system of one dimension has a first of its own")
+        if _o == 'named' and not re.search(r'[(]after[|]before[)]', str(_row.get('pattern') or '')):
+            errors.append(f"{_w}: `datum: named` is the position a position names — `after:<it>`, `before:<it>` — and its form "
+                          f"names none")
+        if _o is not None and _o not in ('being', 'host', 'line', 'named'):
             if not isinstance(_o, dict) or set(_o) - {'system', 'at', 'direction'} or not _o.get('system') or not _o.get('at') \
                     or _o.get('direction') not in ('before', 'after'):
-                errors.append(f"{_w}: `datum` is `being`, `host`, or {{system, at, direction: before | after}} — got {_o!r}")
+                errors.append(f"{_w}: `datum` is `being`, `host`, `line`, `named`, or {{system, at, direction: before | after}} — got {_o!r}")
             elif _o['system'] not in _systems():
                 errors.append(f"{_w}: datum.system names '{_o['system']}', which is no declared system")
             elif not law_match(_systems()[_o['system']][1].get('pattern') or '.*', str(_o['at'])):
@@ -4541,6 +4567,7 @@ ENTRY_CONTROLLERS = (
     ('in: pattern, soft', ectl_entry_soft_pattern),
     ('entry_must_match', ectl_entry_must_match),
     ('in: registry', ectl_entry_in_registry),
+    ('datum: line', ectl_line_counted),
     ('in: form_of', ectl_entry_pattern_from_registry),
     ('in: system', ectl_in_system),
     ('in: key_of', ectl_key_of),
