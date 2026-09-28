@@ -158,6 +158,24 @@ one open fallback, `refs`.
 - A relation declared as the mirror of another (`inverse_of`) is held consistent with it.
 - `seed/COOKBOOK.md` shows which to use when.
 
+## Place, and what a placement takes
+A being is placed in, at or among another, and the law orders the ways (`placement`) from the most general to the most
+bodily: **place**, the ancestor of every placement; then a code's **order** among others, a record's **presence** in a
+register, a process's **habitat** in its machine, a happening's **time** in the hours of those present at it, and a
+**location** — a position in a place system, measured from its datum. A term says which it is (`lives_in` a habitat,
+`timing` a time, `located_at` a location), and each rung says what it `takes` from where it places a being: nothing (a
+memory from a mind), a share of what the host holds, or room that no other takes at once.
+- A host states what it can hold (`capacity`: 42 rack units, 2 terabytes); a placement states what it `takes`. Shares
+  past a capacity are warned — a host may promise more than it holds — and room past it refused, as are two beings
+  taking the same room at once, unless one is part of the other: a slot in a rack, a port on an address.
+- A happening takes the hours of those present at it (the event's `takes_time_of`), and one being present at two whose
+  spans overlap is refused; an invitation takes nobody's hour.
+- A location in a being's own frame names that being (`host`): a path on a machine, a repository on a server, a slot in
+  a rack. Stated alone, it says the place is known and the position within it is not.
+- A code bean's trees are its locations, with the code profile's words beside each (`role`, `scan_policy`); a tree of
+  another code it is only read beside is that code's own location, reached by `depends_on`. A working copy is a position
+  in its host's filesystem.
+
 ## Readings
 A question asked of the garden — how many, whether any, which first, how much — is a **reading**, declared on the bean it
 is about (`selections`) as steps of one closed list of operations (`operations`): select, count, sum, compare, a
@@ -225,15 +243,17 @@ The rules are data, not code.
   from that step's list, why, and its moment, stamped by the save. The gate holds the moves to the walk; where the
   case stands, since when and who acts next are read. What a case asks for is a checklist's `items`: a set, not a walk.
 
-## Knowledge: universal anchors
-The `knowledge` profile lets a garden say what things ARE in the world's shared terms, with
-codes every garden uses: fields of knowledge (ISCED-F 2013), occupations (ISCO-08), and established
-technologies, each linked to its project's own documentation. They are kept whole as data in `seed/knowledge/`
-(each file under its own licence, see `SOURCES.md`) and read by `bin/dmknowledge.py`.
-- As an **anchor** (`isco_08`, `isced_f_2013`, `technology`) the code IS the object's identity, so two gardens
-  that never met recognise the same occupation, field or technology.
-- As a **relation** (`knowledge:` entries `{scheme, code, rel, topic?}` with `rel` classified_as, draws_on or
-  uses) any bean says what it rests on — an instance uses a technology, a design draws on a field.
+## Knowledge: codes with their scheme
+A code of a scheme is one value wherever it is written, a **coding**: `<scheme>:<code>` — `isco-08:2522`,
+`isced-f-2013:0612`, `technology:samba`, `analytic:rent`. The first colon ends the scheme, whose name has none, and no
+scheme is named as a genos, so a coding never reads as a minted name. The `knowledge` profile lets a garden say what
+things ARE in the world's shared terms, with codes every garden uses: fields of knowledge (ISCED-F 2013), occupations
+(ISCO-08), and established technologies, each linked to its project's own documentation. They are kept whole as data
+in `seed/knowledge/` (each file under its own licence, see `SOURCES.md`) and read by `bin/dmknowledge.py`.
+- As an **identity** the code IS the object: `identifier: isco-08:2522` — an identity its scheme's publisher gave, so
+  two gardens that never met recognise the same occupation, field or technology.
+- As a **relation** (`knowledge:` entries `{code, rel, topic?}` with `rel` classified_as, draws_on or uses) any bean
+  says what it rests on — an instance uses a technology, a design draws on a field.
 - The gate checks every code against its scheme; an invented code is refused.
 - A scheme says how its codes are **held** (`knowledge_scheme_form`): shipped with the release; a garden's own
   **extract** in `extracts/<scheme>.tsv`, declared once in VOCAB.md (a RULE-CHANGE) and then edited row by row as an

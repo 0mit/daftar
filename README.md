@@ -101,6 +101,31 @@ can be declared whole, ahead of its first occupant, with its empty positions mar
 designed larger than any one garden's use of it, so that the next kind of thing, from a garden nobody here has
 seen, already has somewhere to stand.
 
+## What a garden can say
+
+The same small set of machines carries every kind of fact. Each is a line of the law, read by the gate and by every
+tool, so a garden that needs one uses it whole, and a garden that needs none never meets it:
+
+- **Time, in any calendar.** A day or a moment is a *position*: in the Gregorian, the Persian, the Hebrew calendar or
+  a dozen more, at the precision it was said — a day, a minute — and, where nobody said the day, placed by what it
+  followed. Deep time too: a year, a mega-annus, the geological chart's own stages.
+- **Place, and what a thing takes there.** From the most general placement to the most bodily — a code in its order, a
+  record in a register, a process in its machine, a meeting in the hours of those present, a machine in its rack — each
+  says what it takes from where it is placed: nothing, a share, or room. A host says what it can hold; a share past it
+  is warned, and room past it — two things in one place at once — refused.
+- **Codes, with their scheme.** An occupation, a field of knowledge, a technology, an account in a garden's own chart:
+  one form, `isco-08:2522`, `analytic:rent`, checked against the scheme it names.
+- **Series and readings.** What a gauge held at each position of a line, and its whole checked exactly; a reading, who
+  made it, when, and what it was of.
+- **Money and agreements.** Parties, the clauses that bind them, the payments between them; what is owed read from what
+  was paid and what was agreed, never written beside them; where each amount belongs, along a garden's own plans.
+- **Readings, never stored.** `bin/dmreckon.py` computes what follows from what is recorded — a total, a share, an
+  ancestor's roll-up, a published mechanism — each time it is asked, so a result can never drift from its inputs.
+- **Pages.** The `view` profile draws a garden as pages — its parts and how they relate, live values beside them — from
+  one drawing module the garden keeps, checked against the law like everything else.
+
+`python3 bin/daftar.py catalog` shows the whole language and how its parts relate; `--part <item>` shows one.
+
 ## Between gardens
 
 A notebook is kept by its gardener — a person, or an organisation — and nothing outside it writes there. But people
@@ -157,8 +182,8 @@ private git repository. The notebook is yours (manifesto: never-sells).
 
 Tell the agent:
 
-> Read https://raw.githubusercontent.com/0mit/daftar/master/INSTALL.md and follow it. My notebook goes at
-> `~/garden-sam`; my private remote is `git@github.com:me/garden.git`.
+> Read https://raw.githubusercontent.com/0mit/daftar/master/INSTALL.md and follow it, with the newest release tag. My
+> notebook goes at `~/garden-sam`; my private remote is `git@github.com:me/garden.git`.
 
 ([`INSTALL.md`](INSTALL.md) is that page.)
 
@@ -191,7 +216,10 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 | **nature / genos** | what sort of being it is: `soma`, a body; `lekton`, what exists by being said and agreed; or `empsychon`, what lives, while it lives — refined by a genos, its kind, such as `host`. The words are Greek, and `MODEL.md` gives each |
 | **facet** | an aspect of ownership, e.g. `legal` or `technical`; each has exactly one owner, and one entry saying who answers for it |
 | **crown** | where every ownership chain ends: at `theos`, which no bean names, through a branch for each nature — `physis` for soma, `logos` for lekton, `agape`, love that does not possess, for empsychon. A person writes `owned_by: { legal: { crown: agape } }` |
-| **profile** | an opt-in group of rules, e.g. `domain`, for gardens that hold that kind of thing |
+| **profile** | an opt-in group of rules in a field's own words, e.g. `domain` or `accounting`; it adds terms, and adds to the core's terms without rewriting them, so a garden may take every profile at once |
+| **position** | where something is on a line — a day in a calendar, a moment, a path on a machine, the second of a series — in the one form its system declares |
+| **coding** | a code written with the scheme it is a code of, `<scheme>:<code>`: an occupation, a technology, an account |
+| **placement** | how one thing is in, at or among another, from the most general to the most bodily; each says what it takes from its host — nothing, a share, or room |
 | **vacancy** | a value the vocabulary offers that nothing uses yet, stated with a reason |
 | **Contract of Parts** | `MODEL.md`: which decisions an agent may take alone and which a person must ratify |
 | **proposal** | what one garden offers another: one file of beans, laid outside both gardens, which the other garden's gardener takes in by committing it — or does not. Taking it in accepts nothing on the gardener's behalf. `bin/dmpropose.py` |
@@ -211,12 +239,11 @@ commit. It refuses a tag older than the one the garden records (pass `--allow-do
 file back if the garden would fail its gate under the release. Read `git diff`, fill in the two marked fields of the
 journal entry, and commit when you have decided to adopt it.
 
-A garden moving into std-vocab 21.0 must name its gardener. The garden's own copy of the tool may be older than the
-flag for it, so name them in the environment, which every copy passes on:
-`DAFTAR_GARDENER=sam python3 bin/dmupgrade.py <tag>` for an existing person or organisation bean, adding
-`DAFTAR_GARDENER_NAME="Sam"` to plant a new one (`INSTALL.md` has the PowerShell form). A garden already at 21.0 or
-later takes `--gardener sam` and `--gardener-name "Sam"` instead. Crossing into std-vocab 22.0 changes every bean and
-asks nothing: its words for what a being is are translated into the law's Greek ones.
+A release that re-spells what a garden holds translates it where it is written, every comment going with the fact
+it sat on, and proves each file: the new front matter must hold exactly what the release says it should. What only a
+person can decide — a tree of another code with no bean of its own, a value that is no single position — stops the
+upgrade, named, before anything is touched. `seed/CHANGELOG.md` says what each version of the law brought;
+`INSTALL.md` has the crossings of older gardens.
 
 ## Propose a change to the law
 
@@ -231,12 +258,14 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `seed/std-vocab.md` | the vocabulary — the law every garden pins |
 | `seed/germinate.py`, `seed/LANGUAGE` | how a garden is grown (Python, so on Windows too; `germinate.sh` hands over to it), and what it receives |
 | `bin/dmcheck.py` | the gate |
-| `bin/dm*.py` | the other tools — merge, proposals between gardens (`dmpropose`), what is owed (`dmledger`), upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), a change saved in one command (`dmsave`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
+| `bin/daftar.py` | the one entry: `daftar catalog` (the language and its relations), `daftar why`, `daftar rules`, `daftar form` |
+| `bin/dm*.py` | the other tools — merge, proposals between gardens (`dmpropose`), what is owed (`dmledger`), readings computed from what is recorded (`dmreckon`), upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), a change saved in one command (`dmsave`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
+| `assets/<profile>/` | what a profile brings besides its rules — the `view` profile's page drawer and server, `assets/view/README.md` |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
 | `seed/RATIONALE.md` | why each rule is as it is, keyed by the rule's own path; `python3 bin/dmwhy.py <name>` reads law and reason together |
 | `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules. The second is one tool's adapter, which loads the door by itself; another tool's adapter would stand beside it |
 | `seed/WELCOME.md` | the door for an assistant with no shell, written to be pasted into a chat |
-| `seed/README.md`, `seed/COOKBOOK.md` | worked beans that pass the gate as written: the gardener, a host, a domain, a service, a rented server, a cost shared between two people, an agreement paid in instalments, a statement, an event, another person's garden |
+| `seed/README.md`, `seed/COOKBOOK.md` | worked beans that pass the gate as written: the gardener, a host, a domain and the agreement it is held under, a service, a rented server, a cost shared between two people, an agreement paid in instalments, a statement, an event, another person's garden, a series, a course on its walk, a workshop's staff and bookings, a co-op's own codes, analytic accounts, a rack and what it holds |
 | `seed/FORMS.md` | what an agent reads before writing: six of the cookbook's recipes, byte for byte, and what to write when nobody said |
 | `test/` | the release suites, all run in CI (`CONTRIBUTING.md` has the command); `fast.py` runs in every garden's hook |
 

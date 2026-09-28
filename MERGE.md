@@ -179,8 +179,9 @@ overlay**. All three reconcile before the beans mean anything.
 Then the merged corpus is checked against the merged law, which is what "merges cleanly" MEANS: no genos
 it uses is undeclared, no top-level key it uses is undeclared, and no bean owes a required term it lacks.
 A merge whose data converges and whose law does not is reported as such and exits non-zero. The obligation
-set is built from the opted-in profiles only, and a merge can heal a divergence: a bean written without a
-required term is covered once it fuses with another garden's bean that has it.
+set is built from the opted-in profiles only — their own terms, and what they add to the core's (a profile's
+overlays: the `code` profile requires a location on a codebase) — and a merge can heal a divergence: a bean written
+without a required term is covered once it fuses with another garden's bean that has it.
 
 ## 6. Canonical form — the same bytes for the same inputs
 - **Two layers.** Beans are written as YAML front matter and a Markdown body. They are compared and hashed as a JSON
