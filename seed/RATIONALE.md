@@ -1311,7 +1311,7 @@ and declaring one would orient it like a line
 
 The SECOND aspect, and the first evidence that the machinery generalises. It reuses the square of
 opposition but NOT the same square: `necessity` is ALETHIC modality (what IS the case — this input is
-required), while capability is DEONTIC (what MAY or MUST be the case — this being must not do that).
+required), while permission is DEONTIC (what MAY or MUST be the case — this being must not do that).
 Conflating them is the same error as one axis doing two jobs: "this VPS cannot send mail directly" and
 "recursion must stay off" feel alike and are not — one is a fact about the world, the other a rule.
 Positions relate a being to a CAPABILITY (an open kebab name), not to another being, which is what
@@ -2235,7 +2235,7 @@ AN AGREEMENT IS STRUCTURE. The five contract keys were declared without a schema
 agreements a stranger recorded put every party, sum and condition in free keys under `details`, and the one agreement in
 the reference garden stated its parties twice and its object twice. `parties`, `words`, `clauses` and `transactions` say
 who is bound (each with the day they accepted: an offer is not an acceptance, and one party's report of another's consent
-is not that party's word), where the words are, what each must, may or must not do (the `capability` square, which a
+is not that party's word), where the words are, what each must, may or must not do (the `permission` square, which a
 being's capabilities already take), and what has moved. A balance is not among them: it is read, never stored.
 
 A party without `accepted` has no acceptance ON RECORD, and the meaning says exactly that. It first said the party
@@ -2292,7 +2292,7 @@ terms nobody has said, from being either dropped or invented.
 ## terms[clauses]
 
 WHAT AN AGREEMENT ASKS, ON A SQUARE THE LAW ALREADY HAS. An obligation is a position of deontic logic — must, need
-not, may, must not — and the `capability` aspect already is that square, taken by a being's capabilities. A clause
+not, may, must not — and the `permission` aspect already is that square, taken by a being's capabilities. A clause
 takes it too, rather than a fifth word for the same four. `by` and `to` are keys of the parties, so a clause binds
 someone the agreement names; the amount is any quantity, because what is owed is not always money; a recurrence
 makes six monthly instalments one clause and not six; and a condition that is not a date — interest on an
@@ -2340,7 +2340,7 @@ say yet; a bare string is refused so that the two are never confused.
 ## terms[clauses].schema.expiry
 
 THE WORDS FOLLOW THE STANCE (24.0, N5). "Falls due, and from that day the party is owed it" is wrong for a permission,
-which is never owed: it opens, and it lapses. The words are chosen by the clause's position on the capability square,
+which is never owed: it opens, and it lapses. The words are chosen by the clause's position on the permission square,
 so a reader is warned of a permission's window closing in a permission's words.
 
 ## terms[parties].schema.attrs.acting_for
@@ -2741,7 +2741,7 @@ WHY NOT JUST FOLD EVERYTHING INTO `capabilities`, which was the first idea and i
 findings do fit its grid — R1 and R4 and R6 are all "forbidden, and currently the case", which is
 already an in_breach cell. But R13 is "unattended LUKS unlock UNPROVEN" and R14 is "LIKELY a 502",
 and neither is a modal claim at all: they are EPISTEMIC, about what nobody has established. The
-capability aspects can say a thing is impossible or contingent; they cannot say nobody has looked.
+permission and feasibility aspects can say a thing is impossible or contingent; they cannot say nobody has looked.
 A register is full of exactly that, so forcing it into the grid would have silently converted "we
 do not know" into "it is fine", which is the worst possible loss for a risk inventory.
 

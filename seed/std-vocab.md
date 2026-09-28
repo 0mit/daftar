@@ -1,5 +1,5 @@
 ---
-version: "27.0"
+version: "27.1"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -3214,7 +3214,7 @@ terms:
         - { when: { form: written }, requires: [at], why: "a written agreement can be found: name the document that holds it" }
     merge: { cardinality: single, order: none }
   - term: clauses
-    meaning: "what an agreement asks of its parties, one clause each: an open map keyed by a short name. A clause is a position on the `capability` aspect — required (must), omissible (need not), permitted (may), forbidden (must not) — the square of obligation a being's capabilities already take. A clause with no `by` is a rule of the agreement that binds every party"
+    meaning: "what an agreement asks of its parties, one clause each: an open map keyed by a short name. A clause is a position on the `permission` aspect — required (must), omissible (need not), permitted (may), forbidden (must not) — the square of obligation a being's capabilities already take. A clause with no `by` is a rule of the agreement that binds every party"
     context_keys: [clauses]
     schema:
       shape: open_map_of_entries

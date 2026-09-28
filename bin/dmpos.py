@@ -15,7 +15,7 @@ requirement from one that holds itself." Those are prefixes here rather than a f
 
 WHAT IT IS NOT. There is no metric: adjacency is equality-of-prefix, not distance. A closed figure of
 named positions has no distance function and this does not invent one. Contiguity holds only for a
-PREFIX of the axis order, so "everything feasibility-impossible whatever its capability" is a scan plus
+PREFIX of the axis order, so "everything feasibility-impossible whatever its permission" is a scan plus
 a filter, not a range. And modal adjacency is not causal adjacency — two rows sharing a byte range share
 a STANCE and nothing else, so every reader must dereference the bean.
 
