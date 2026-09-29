@@ -161,7 +161,9 @@ check("...and every `accepted:` it leaves empty says what empty records, never '
 # 27.0 raised the ceiling by 600 for the form of a yes nobody dated (the long form once, the loan's two acceptances): the
 # local-model bench lost seven facts of eight to that case, and the page had stood 3 characters under 16,000. 29.2 raised
 # it by 400 for what an empty `accepted` records, on every line that empties it; the page had stood 23 under 16,600.
-check("...and it stays short: under 17,000 characters", len(text["seed/FORMS.md"]) < 17000, len(text["seed/FORMS.md"]))
+# 30.0 raised it by 700 for what a count is for: the phone loan's two purchases, one repaid in six instalments and one
+# in four, which is which not said (queue-44: seven runs of eight kept such counts only in prose).
+check("...and it stays short: under 17,700 characters", len(text["seed/FORMS.md"]) < 17700, len(text["seed/FORMS.md"]))
 _ord = [h for h in _ck if h in _recipes]
 check("...in the cookbook's own order, so they can be followed from the top", _recipes == _ord, (_recipes, _ord))
 _top = "\n".join(text["seed/FORMS.md"].split("\n## ", 1)[0].splitlines())

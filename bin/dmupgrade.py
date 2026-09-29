@@ -2882,6 +2882,172 @@ class Step29:
                 [f"[[{os.path.basename(r)[:-3]}]]" for r in beans] + [f"[[{b}]]" for b in self.new_beans])
 
 
+STEP_30 = (30, 0)
+_STOP_30 = {'a', 'an', 'the', 'of', 'for', 'and', 'or', 'on', 'in', 'to', 'with', 'by', 'at', 'from', 's'}
+
+
+def _over_key_30(e, taken):
+    """The key an `over` entry takes crossing into 30.0: the id of the being it names, or the first three words of what it
+    says, in kebab-case — told apart by a number where two would share one."""
+    t = e.get('thing') if isinstance(e, dict) else None
+    if isinstance(t, dict) and isinstance(t.get('bean'), str) and re.match(r'^[a-z0-9][a-z0-9-]*$', t['bean']):
+        base = t['bean']
+    else:
+        words = re.findall(r'[a-z0-9]+', str(e.get('what') or '').lower()) if isinstance(e, dict) else []
+        base = '-'.join([w for w in words if w not in _STOP_30][:3] or words[:3]) or 'part'
+    key, n = base, 2
+    while key in taken:
+        key, n = f"{base}-{n}", n + 1
+    taken.add(key)
+    return key
+
+
+_PATH_30 = re.compile(r'(?<![\w.*-])over\.(?=[a-z0-9_])')
+
+
+def _paths_30(v):
+    """A value with every field path into an agreement's `over` gone through its entries: `over.thing` is `over.*.thing`
+    (30.0), as a path into any map is."""
+    if isinstance(v, str):
+        return _PATH_30.sub('over.*.', v)
+    if isinstance(v, dict):
+        return {k: _paths_30(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_paths_30(x) for x in v]
+    return v
+
+
+class Step30:
+    """The translation into std-vocab 30.0, what a clause is for: an agreement's `over`, a list, becomes a map — each entry
+    under the id of the being it names, or a few words of what it says — so that a clause can name the part it is for
+    (`clauses.<key>.over`); a field path into it goes through its entries, `over.*.thing`. Made on each file as the steps
+    before it left it, and proved: the front matter then holds exactly that, and nothing else moved."""
+
+    def __init__(self, rel, tag, keep):
+        self.rel, self.tag, self.keep = rel, tag, keep
+        self.problems, self.facts, self.reasons = [], {}, None
+        self.leftover = False
+
+    @staticmethod
+    def docs():
+        return dmgarden.paths(ROOT, 'beans')
+
+    def _each(self):
+        for p in self.docs():
+            try:
+                text, form = read_text(p)
+                fm = _parse(text)[0]
+            except Exception:
+                continue
+            if isinstance(fm, dict):
+                yield p, text, form, fm
+
+    def left(self):
+        for _p, _t, _f, fm in self._each():
+            if isinstance(fm.get('over'), list) or _paths_30(fm) != fm:
+                self.leftover = True
+                return True
+        return False
+
+    def plan(self):
+        self.run(dry=True)
+        if self.problems and not self.keep:
+            refuse(f"crossing into std-vocab 30.0, {len(self.problems)} thing(s) are a person's to do, not a "
+                   f"translation's:\n" + '\n'.join('  - ' + p for p in self.problems) +
+                   "\nDo them and commit, then run this again — or pass --keep-on-failure to apply the rest and "
+                   "leave these, named, for the person.")
+
+    def apply(self, vocab_only=False):
+        if vocab_only:
+            return None, []
+        self.problems, self.facts = [], {}             # the plan's dry run noted them once already
+        self.run(dry=False)
+        return self.report()
+
+    def rekey_reasons(self):
+        self.reasons = None
+
+    def code_left(self):
+        return []
+
+    def _note(self, rel, what, old, new):
+        self.facts.setdefault(rel, []).append((what, old, new))
+
+    @staticmethod
+    def _keyed(text, keys):
+        """`over:` written as a map: each `- { … }` entry of its block, or of its one-line flow list, under its key."""
+        s, e = dmsafe.top_level_span(text, 'over')
+        blk = text[s:e]
+        lines = blk.split('\n')
+        m = re.match(r'^over:[ \t]*(\[.*\])[ \t]*(#.*)?$', lines[0])
+        if m:
+            flow = m.group(1)
+            spans = [(lo, hi) for lo, hi in _flow_maps(flow)
+                     if not any(a < lo and hi < b for a, b in _flow_maps(flow) if (a, b) != (lo, hi))]
+            if len(spans) != len(keys):
+                raise ForAPerson("its `over` is a flow list this step cannot read entry by entry: write it as a map by "
+                                 "hand, each entry under a short name")
+            out = ['over:' + (f"   {m.group(2)}" if m.group(2) else '')]
+            out += [f"  {k}: {flow[lo:hi]}" for k, (lo, hi) in zip(keys, spans)]
+            return text[:s] + '\n'.join(out + lines[1:]) + text[e:]
+        out, i = [lines[0]], 0
+        for ln in lines[1:]:
+            mm = re.match(r'^([ \t]+)- (\{.*)$', ln)
+            if mm and i < len(keys):
+                out.append(f"{mm.group(1)}{keys[i]}: {mm.group(2)}")
+                i += 1
+            elif not ln.strip() or ln.lstrip().startswith('#'):
+                out.append(ln)
+            else:
+                raise ForAPerson("its `over` holds an entry that is not one line `- { … }`: write it as a map by hand, "
+                                 "each entry under a short name — the id of the being it names, or a word of what it says")
+        if i != len(keys):
+            raise CannotRename("its `over` entries could not be counted line by line")
+        return text[:s] + '\n'.join(out) + text[e:]
+
+    def run(self, dry):
+        for path, text, form, fm in self._each():
+            rel = os.path.relpath(path, ROOT).replace(os.sep, '/')
+            want = _paths_30(copy.deepcopy(fm))
+            new = text
+            try:
+                if isinstance(fm.get('over'), list):
+                    taken = set()
+                    keys = [_over_key_30(x, taken) for x in fm['over']]
+                    want['over'] = dict(zip(keys, want['over']))
+                    new = self._keyed(new, keys)
+                    self._note(rel, 'over', 'a list', f"a map of {len(keys)}: {', '.join(keys)}")
+                fences = [i for i, l in enumerate(new.split('\n')) if l.rstrip('\r') == '---'][:2]
+                if len(fences) == 2:
+                    ls = new.split('\n')
+                    head = '\n'.join(ls[fences[0]:fences[1]])
+                    moved = _PATH_30.sub('over.*.', head)
+                    if moved != head:
+                        new = '\n'.join(ls[:fences[0]] + moved.split('\n') + ls[fences[1]:])
+                        self._note(rel, 'path', 'over.', 'over.*.')
+                if new != text and _parse(new)[0] != want:
+                    raise CannotRename("the translation could not be made without changing something else")
+            except (CannotRename, dmsafe.UnsafeEdit) as e:
+                why = f"{rel}: {e}" + ('' if isinstance(e, ForAPerson) else " — translate it by hand")
+                if why not in self.problems:
+                    self.problems.append(why)
+                continue
+            if not dry and rel in self.facts:
+                write_text(path, new, form)
+
+    def report(self):
+        beans = sorted(r for r in self.facts if r.startswith('beans/'))
+        parts = []
+        for what, words in (('over', "an agreement's `over` keyed"), ('path', "a path into `over` through its entries")):
+            hit = [r for r in beans if any(w == what for w, _o, _n in self.facts[r])]
+            if hit:
+                parts.append(f"{words} in {len(hit)} bean(s)")
+        if self.problems:
+            parts.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
+        return ('std-vocab 30.0, what a clause is for — ' + '; '.join(parts or ['nothing to translate']),
+                [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
@@ -3015,6 +3181,13 @@ def main():
             if vtuple(before) < STEP_29 or _s29.left():
                 step29 = _s29
                 step29.plan()
+        # ...and one whose agreement still holds what it is over as a list.
+        step30 = None
+        if STEP_30 <= vtuple(vocab_version(rel)):
+            _s30 = Step30(rel, a.tag, a.keep_on_failure)
+            if vtuple(before) < STEP_30 or _s30.left():
+                step30 = _s30
+                step30.plan()
         # WHAT THE GARDEN RECEIVES, AND WHAT IT HELD, read by the one reader (bin/dmpass.py): `want` is what a garden
         # extending its profiles receives from the release; `have` is every file of the garden its own release keeps, so
         # a file it no longer receives — a retired tool, the asset of a profile it left — leaves, and a file of its own
@@ -3031,7 +3204,7 @@ def main():
         # fails) once left release files copied, both pins moved, beans half translated and no journal entry.
         try:
             return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22, step23,
-                                 profiles, step24, step26, step27, step29)
+                                 profiles, step24, step26, step27, step29, step30)
         except BaseException as e:
             put_back(added + (step21.created if step21 else []))
             print(f"NOT {verb.upper()}: the upgrade stopped midway"
@@ -3100,7 +3273,7 @@ def dropped_line(dropped):
 
 
 def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None,
-                  profiles=None, step24=None, step26=None, step27=None, step29=None):
+                  profiles=None, step24=None, step26=None, step27=None, step29=None, step30=None):
     """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
     caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
     changed = []
@@ -3213,6 +3386,10 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         _t, _b = step29.apply()
         translated.append(_t); steps.append(_t)
         beans += [b for b in _b if b not in beans]
+    if step30:
+        _t, _b = step30.apply()
+        translated.append(_t); steps.append(_t)
+        beans += [b for b in _b if b not in beans]
 
     _vp = os.path.join(ROOT, 'VOCAB.md')
     if os.path.isfile(_vp):
@@ -3248,7 +3425,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     if not (changed or added or removed or repinned or beans):
         # NOTHING MOVED IS NOT NOTHING TO DO. With --keep-on-failure a step that could translate nothing still names what
         # it left for a person, and the gate still refuses the garden for it: saying "nothing to do" hid both.
-        left = [p for s in (step22, step23, step24, step26, step27, step29) if s for p in s.problems]
+        left = [p for s in (step22, step23, step24, step26, step27, step29, step30) if s for p in s.problems]
         if left:
             print(f"NOTHING TRANSLATED: this garden runs {a.tag} ({sha[:12]}) already, and {len(left)} thing(s) are a "
                   f"person's to do, not a translation's:\n" + '\n'.join('  - ' + p for p in left) +
@@ -3259,7 +3436,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     # ONLY WORDS MOVED: the garden runs this release already, and what changed is the translation of what came in since it
     # crossed. The law did not move and nothing is a person's to decide — the translation is the one the garden adopted
     # when it crossed — so the entry asks nothing, and says RULE-CHANGE only where VOCAB.md itself was translated.
-    ran = [s for s in (step22, step23, step24, step26, step27, step29) if s]
+    ran = [s for s in (step22, step23, step24, step26, step27, step29, step30) if s]
     words_only = bool(ran and all(s.leftover for s in ran) and not (added or removed or repinned)
                       and all(c.endswith(('(translated)', '(re-keyed)')) for c in changed))
     since = ' and '.join(w for s, w in ((step22, "into std-vocab 22.0 still in 21.0's words"),
@@ -3269,7 +3446,9 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
                                         (step26, "into std-vocab 26.0 still in 25.x's words"),
                                         (step27, "into std-vocab 27.0 with a day still typed `iso_date`"),
                                         (step29, "into std-vocab 29.0 with a code apart from its scheme, or a word it "
-                                                 "folded")) if s)
+                                                 "folded"),
+                                        (step30, "into std-vocab 30.0 with what an agreement is over still a list"))
+                        if s)
     if words_only:
         verb = 'translated'
 

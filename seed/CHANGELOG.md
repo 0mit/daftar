@@ -251,6 +251,19 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **30.0** (2026-09-30, human-ratified rule-change) — **what a clause is for: an agreement's `over` keyed, and a clause's
+  `over` naming the part it is for.** From queue-44: two purchases, one repaid in six instalments and one in four, which
+  is which not said; seven runs of eight kept the counts in prose, and the one that kept them as data named owners it
+  also said were unknown. The operator: "option 2 with over, raise the limit".
+  - **`over`** is an open map, keyed in kebab-case like `parties`, `clauses`, `transactions` and `selections`; it merges
+    by key. A field path into it goes through its entries: `over.*.thing`.
+  - **A clause's `over`** is a key of it: the part the clause is for. Absent where the clause is for all of it, or where
+    nobody has said — the question then in `open:`.
+  - **The 30.0 step** keys each list entry by the id of the being it names, or by the first words of what it says,
+    told apart by a number, keeping each entry's comment; paths into `over` are rewritten through its entries.
+  - **seed/FORMS.md**: the phone loan becomes two purchases, one in six instalments and one in four, which is which not
+    said; the page's limit moves from 17,000 characters to 17,700.
+
 - **29.2** (2026-09-30, human-ratified rule-change) — **a refusal names where the word was meant to be, and the law says
   what an empty acceptance records.** From queue-44: a consent agreement right but for its empty `accepted` was refused
   eight times in words naming no bean and no party, and its writer ended by inventing a day. The operator: "all ratified

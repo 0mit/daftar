@@ -130,7 +130,7 @@ provenance: { src: observed, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 over:
-  - { thing: { bean: example-org } }
+  example-org: { thing: { bean: example-org } }
 parties:
   registrant: { who: { bean: sam }, role: registrant }
   registrar: { external: "Example Registrar Inc.", role: registrar }
@@ -439,7 +439,7 @@ parties:
   sam: { who: { bean: sam }, accepted: 2026-09-10 }
   ali: { who: { bean: ali }, accepted: 2026-09-10 }
 over:
-  - { what: "a camera the two of them use" }
+  camera: { what: "a camera the two of them use" }
 words: { form: spoken, agreed: 2026-09-10 }
 transactions:
   camera:
@@ -486,7 +486,7 @@ parties:
   sam: { who: { bean: sam }, role: lender, accepted: 2026-09-12 }
   ali: { who: { bean: ali }, role: borrower, accepted: 2026-09-12 }
 over:
-  - { what: "the price of Ali's washing machine" }
+  washing-machine: { what: "the price of Ali's washing machine" }
 words: { form: spoken, at: { bean: dinner-at-sams }, agreed: 2026-09-12 }
 clauses:
   instalments:
@@ -703,7 +703,7 @@ parties:
   owner: { who: { bean: sam } }
   repairer: { who: { bean: ali } }
 over:
-  - { what: "Sam's bicycle" }
+  bicycle: { what: "Sam's bicycle" }
 words: { form: spoken }
 courses:
   repair: { walk: { mapping: walk-bike-repair } }
@@ -900,7 +900,7 @@ parties:
   agent: { who: { bean: noor }, role: agent, accepted: 2026-06-02 }
   assistant: { external: "the agency's assistant", role: agent, acting_for: agent }
 over:
-  - { what: "the novel The Salt Road, at home and in translation" }
+  the-salt-road: { what: "the novel The Salt Road, at home and in translation" }
 words: { form: spoken, agreed: 2026-06-02 }
 selections:
   placed-home: { what: "each placing at home that was signed", steps: [ { id: p, op: select, genos: contract, where: [ { path: courses.home, reached: contracted } ] } ] }

@@ -181,7 +181,7 @@ parties:
   sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
   ali: { who: { bean: ali }, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
 over:
-  - { what: "a camera the two of them use" }
+  camera: { what: "a camera the two of them use" }
 words: { form: spoken, agreed: }   # agreed: the day it was agreed, in any calendar; empty unless said
 transactions:
   camera:
@@ -221,7 +221,7 @@ parties:
   sam: { who: { bean: sam }, role: lender, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
   ali: { who: { bean: ali }, role: borrower, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
 over:
-  - { what: "the price of Ali's washing machine" }
+  washing-machine: { what: "the price of Ali's washing machine" }
 words: { form: spoken, at: { bean: dinner-at-sams }, agreed: }   # agreed: the day it was agreed, in any calendar; empty unless said
 clauses:
   instalments:
@@ -315,20 +315,21 @@ party with no `accepted` has no acceptance on record, and no consent (F2). One w
 accept: that day is placed as an event's is, by what it came after — the long form every day may take, as Sam's and
 Ali's in the loan below — and it counts as consent.
 
-### An amount nobody said
+### An amount nobody said, and what a count is for
 
 A transaction records what moved, so it has an amount: while nobody has said the amount, there is no transaction. A
 clause may leave `amount` out, and its `what` then says how the amount will be known. Over that call, Sam lent Ali the
-price of a phone, to be repaid monthly; nobody said the price, the instalments, or a day:
+price of a phone and of its case, repaid monthly, one in six instalments and one in four; nobody said the prices, which
+is which, or a day. Each count is a clause of its own, and neither names the part it is `over` until someone says:
 
 <!-- unsaid: beans/phone-loan.md, for clauses, words, parties -->
 ```markdown
 ---
 bean: phone-loan
 genos: contract
-title: "phone-loan — Sam lent Ali the price of a phone, repaid monthly in amounts not yet said"
+title: "phone-loan — Sam lent Ali the price of a phone and its case, repaid in six instalments and in four"
 status: active
-summary: "Sam paid for Ali's phone; she repays it monthly. The price, the instalments and the day were not said."
+summary: "Sam paid for Ali's phone and its case; she repays one in six monthly instalments, one in four. The prices, which is which and the day were not said."
 nature: lekton
 identity:
   status: confirmed
@@ -341,18 +342,26 @@ parties:
   sam: { who: { bean: sam }, role: lender, accepted: { system: event-anchored, at: "after:dinner-at-sams", unit: day } }
   ali: { who: { bean: ali }, role: borrower, accepted: { system: event-anchored, at: "after:dinner-at-sams", unit: day, note: "on the call" } }
 over:
-  - { what: "the price of Ali's phone" }
+  phone: { what: "the price of Ali's phone" }
+  case: { what: "the price of its case" }
 words: { form: spoken, at: { bean: call-with-ali } }
 clauses:
-  instalments:
-    what: "Ali repays the price monthly; how much each month, and from when, is not yet said"
+  six:
+    what: "Ali repays one of the two in six monthly instalments; how much, and from when, is not yet said"
     by: ali
     to: sam
-    every: { of: time, in: gregorian-civil, each: month }
-open: ["what the phone cost", "how much each instalment is, how many, and from which day"]
+    every: { of: time, in: gregorian-civil, each: month, times: 6 }
+  four:
+    what: "and the other in four"
+    by: ali
+    to: sam
+    every: { of: time, in: gregorian-civil, each: month, times: 4 }
+open: ["what the phone and its case cost", "which is repaid in six instalments and which in four", "from which day"]
 ---
-Agreed on the phone; nothing was written down, and the instalments are still to be said.
+Agreed on the phone; nothing was written down, and the prices are still to be said.
 ```
+
+When someone says which, the clause names its part — `six: { …, over: phone }` — and the question leaves `open:`.
 
 ### A question still open
 

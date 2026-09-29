@@ -2355,11 +2355,24 @@ WHAT EMPTY RECORDS, SAID WHERE THE WRITER COPIES (29.2). The forms showed every 
 field, and the empty field said the party had not accepted. The law now says what an empty `accepted` records — no
 acceptance, and so no consent — and the forms show it on every line that empties it.
 
+## terms[over]
+
+EACH PART UNDER A NAME, SO A CLAUSE CAN SAY WHICH IT IS FOR (30.0, ratified 2026-09-30). Two purchases on one card, one
+repaid in six instalments and one in four, and nobody said which is which: the counts are data — two clauses, each
+`every.times` — but which purchase a clause is for could be written only in words, and a later "the watch is the six"
+would rewrite a sentence instead of filling a field. Measured in queue-44, seven runs of eight kept such counts in prose,
+and the one that kept them as data had to name owners it also said were unknown. Every other part of an agreement —
+`parties`, `clauses`, `transactions`, `selections` — is an open map a clause names by key (`by`, `to`, `each`); `over`
+was the one list. Keyed, a clause's `over` names the part it is for, is absent while nobody has said, and is filled when
+someone does. The crossing keys each entry by the id of the being it names, or by the first words of what it says.
+
 ## terms[over].merge
 
-A SET of what the agreement concerns. It was a single reference capsule, one thing like `lives_in`; an agreement between
-people is often about several things at once — two purchases on one receipt — and two gardens that each name one of
-them both keep theirs. What would be dangerous to union is who is bound, and that is `parties`, which stays single.
+A SET of what the agreement concerns, and since 30.0 a set of named entries. It was a single reference capsule, one
+thing like `lives_in`; an agreement between people is often about several things at once — two purchases on one receipt
+— and two gardens that each name one of them both keep theirs, now by key: two names are two entries, and one name
+with two readings is a conflict to settle, as a party's is. What would be dangerous to union is who is bound, and that
+is `parties`, which stays single.
 
 ## terms[words]
 
@@ -2379,6 +2392,14 @@ makes six monthly instalments one clause and not six; and a condition that is no
 instalment paid late — is prose in `when`, because the reason IS the fact. `state` records what became of it; the
 balance it implies is read, never stored.
 
+
+## terms[clauses].schema.attrs.over
+
+WHAT A CLAUSE IS FOR, OR THAT NOBODY SAID (30.0). A clause bound to one part of what its agreement concerns names that
+part by its key in `over` — the lease's clause for one of two rooms, the instalments for one of two purchases. Absent,
+it is for all of it, or nobody has said which: the question is then the bean's `open:`, and the key is written the day
+someone says it. An absent field is the honest form of "not said"; a key guessed to fill it is the invented fact the
+measured runs count.
 ## terms[clauses].schema.attrs.notice
 
 WHICH DATE AGES, AND HOW FAR AHEAD, IS THE RECORD'S (29.0). A clause falls due with the agreement's notice, seven days;

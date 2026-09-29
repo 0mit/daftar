@@ -1,5 +1,5 @@
 ---
-version: "29.2"
+version: "30.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -3250,17 +3250,18 @@ terms:
         declined:   { in: { type: position }, meaning: "the day this party refused the agreement, or withdrew from it; whose word it is, is the entry's provenance" }
     merge: { cardinality: multi, order: by-key }
   - term: over
-    meaning: "what an agreement concerns: the beings it is about, or in words what it is about"
+    meaning: "what an agreement concerns: the beings it is about, or in words what it is about — each under a short name, by which a clause names the part it is for (a clause's `over`)"
     context_keys: [over]
     schema:
-      shape: list_of_entries
+      shape: open_map_of_entries
+      key_form: kebab
       entry_one_of: [thing, what]
       attrs:
         thing: { in: ref, meaning: "a {bean} ref to what it concerns" }
         facet: { in: { registry: facets, take: facet }, meaning: "the facet of it the agreement shares, where it shares one" }
         what:  { in: prose, meaning: "what it concerns, in words: a purchase, a stake, the creation of a codebase" }
         note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
-    merge: { cardinality: set, order: none }
+    merge: { cardinality: multi, order: by-key }
   - term: words
     meaning: "an agreement's own words: whether they were written, spoken, or not yet put into words; where they are; and the day it was agreed"
     context_keys: [words]
@@ -3303,10 +3304,11 @@ terms:
         state:  { in: [in-force, met, waived, broken, disputed], meaning: "in-force — it holds and is not yet discharged; the reading when it is silent | met | waived — released by the party it is owed to | broken | disputed — the parties disagree that it holds" }
         note:   { in: prose, meaning: "optional prose" }
         each:      { in: { key_of: selections }, meaning: "the clause OCCURS once for each bean or entry this selection holds — each sale, each booking — from the moment it entered; an occurrence never leaves: a refund is its own clause, the reverse, occurring for each refund. Its selection uses only conditions an occurrence cannot lose (`comparators[].monotone`)" }
-        of:        { in: { type: field_path }, meaning: "with `each`: the path, read FROM each occurrence, to the amount this clause's `amount` is a share of — `over.thing>clauses.fee.amount`" }
+        of:        { in: { type: field_path }, meaning: "with `each`: the path, read FROM each occurrence, to the amount this clause's `amount` is a share of — `over.*.thing>clauses.fee.amount`" }
         falls_due: { in: { entries: { from: { required: true, in: { type: field_path } }, after: { in: extent }, before: { in: extent }, at: { in: { pattern: '^[A-Za-z0-9-]+$' } } }, one_of: [after, before], at_most_one_of: [[after, before]] }, meaning: "instead of `due`: when it falls due RELATIVE to another position, read each time and never stored — `from` a path to a position (`@occurrence`, a moment of `timing`, another clause's `due`), `after` or `before` it by an extent (a measure, or cells of a level), then `at` the place the system writes in the cell reached (`10`), as `recurrence_form.at` names one" }
         during:    { in: extent, meaning: "the window in which it holds: a permission lapses at its end; an obligation holds within it" }
         by_role:   { in: { type: kebab }, meaning: "instead of `by`: every party whose `role` is this, each bound alike" }
+        over:      { in: { key_of: over }, meaning: "the part of what the agreement concerns that this clause is for — a key of its `over`: of two purchases, the one paid in six instalments. Absent where the clause is for all of it, and where nobody has said which part — the question is then the bean's `open:`, and the key is written when someone says it" }
     merge: { cardinality: multi, order: by-key }
   - term: transactions
     meaning: "what has moved between an agreement's parties, or out of it on their behalf: each an amount, who paid how much of it, and who bears it in what shares. What one party owes another is READ from these and from the clauses (bin/dmledger.py), never written: a stored balance is a second copy, and it drifts. Every figure is exact — a whole number or a decimal string — and every sum, share and balance is computed in fractions"
