@@ -113,7 +113,17 @@ def tx(amount="{ count: 900, unit: XTS }", paid="[ { party: sam } ]", borne=None
 
 
 ok = lambda out: " 0 error(s)" in out
-put("beans/ali.md", person("ali"))
+# ali is kept by name on her consent (F2): the agreement she accepted is written with her, and committed with her below;
+# 29.2 refuses a new person without it in `--all` as the save does
+KEPT = ('---\nbean: kept-by-name\ngenos: contract\ntitle: "kept by name"\nstatus: active\n'
+        'summary: "ali agrees to be kept in this garden by name"\nnature: lekton\n'
+        'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
+        'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:kept-by-name", class: logical, establishing: true } ] }\n'
+        'provenance: { src: asserted-by-human, by: sam, as_of: now }\n'
+        'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n  ali: { who: { bean: ali }, accepted: 2026-09-01 }\n'
+        'words: { form: spoken, agreed: 2026-09-01 }\n---\nali\'s consent.\n')
+put("beans/kept-by-name.md", KEPT)
+put("beans/ali.md", person("ali", "consent: { bean: kept-by-name }\n"))
 check("(setup) sam's garden with ali in it passes", ok(gate()), gate()[-600:])
 
 # ---------------------------------------------------------------- THE MANIFEST, JUDGED AS ITSELF
@@ -384,13 +394,7 @@ def commit_with(bean_text, body, typed=None):
 
 
 # ali is another person, kept by name on her own consent (24.0, F2): the agreement she accepted is committed with her.
-put("beans/kept-by-name.md", '---\nbean: kept-by-name\ngenos: contract\ntitle: "kept by name"\nstatus: active\n'
-    'summary: "ali agrees to be kept in this garden by name"\nnature: lekton\n'
-    'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
-    'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:kept-by-name", class: logical, establishing: true } ] }\n'
-    'provenance: { src: asserted-by-human, by: sam, as_of: now }\n'
-    'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n  ali: { who: { bean: ali }, accepted: 2026-09-01 }\n'
-    'words: { form: spoken, agreed: 2026-09-01 }\n---\nali\'s consent.\n')
+put("beans/kept-by-name.md", KEPT)
 put("beans/ali.md", person("ali", "consent: { bean: kept-by-name }\n"))
 run("git", "add", "-A", cwd=G)
 run(sys.executable, os.path.join(G, "bin", "dmjournal.py"), "sam", "ali", "--body",

@@ -3826,22 +3826,77 @@ def check_grants():
                                          f"`body` or a term's path", 'grants')
 
 
+def _parties_of(k, pid):
+    """The keys of an agreement's `parties` whose `who` is this person."""
+    ps = k.get('parties') if isinstance(k, dict) else None
+    return [key for key, e in ps.items() if isinstance(e, dict) and isinstance(e.get('who'), dict)
+            and e['who'].get('bean') == pid] if isinstance(ps, dict) else []
+
+
+def _consent_diagnosis(pid, fm):
+    """WHERE THIS GARDEN WAS MEANT TO HOLD A PERSON'S WORD, AND WHAT FAILS THERE (29.2): the bean their `consent` names,
+    and every agreement held here that holds them as a party — whose acceptance is empty, or `_consented` would have
+    counted it. The lines of the refusal, the one to act on ending in the line to write; none where nothing here was
+    meant to hold it. Measured in queue-44: an agreement right but for its empty `accepted` was refused eight times in
+    words that named no bean and no party, and the writer ended by inventing a day."""
+    out, named = [], None
+    c = fm.get('consent')
+    if isinstance(c, dict) and isinstance(c.get('bean'), str):
+        named = c['bean']
+        k = ALL_FM.get(named)                     # one not held, or no contract, the term's own schema refuses
+        if isinstance(k, dict) and k.get('genos') == 'contract' and not _parties_of(k, pid):
+            out.append(f"their `consent` names {named}, and none of its `parties` is {pid}: add them — `{pid}: {{ who: "
+                       f"{{ bean: {pid} }}, accepted: <the day, or where nobody said it, placed by what it followed> }}`")
+    held = [(b, key) for b in ([named] if named else []) + sorted(x for x in ALL_FM if x != named)
+            if isinstance(ALL_FM.get(b), dict) and ALL_FM[b].get('genos') == 'contract'
+            for key in _parties_of(ALL_FM[b], pid)]
+    refused = [(b, key) for b, key in held if ALL_FM[b]['parties'][key].get('declined')]
+    out += [f"{b} holds them as party `{key}`, who declined it: their word there is a refusal" for b, key in refused[:3]]
+    held = [h for h in held if h not in refused]
+    if not held:
+        return out
+    b, key = held[0]
+    empty = (((SCHEMAS.get('parties') or {}).get('attrs') or {}).get('accepted') or {}).get('empty') or 'no acceptance'
+    words = ALL_FM[b].get('words') if isinstance(ALL_FM[b].get('words'), dict) else {}
+    at = (words.get('at') or {}).get('bean') if isinstance(words.get('at'), dict) else None
+    others = [f"{x}'s (party `{y}`)" for x, y in held[1:4]]
+    out.append(f"{b}{', which their `consent` names,' if b == named else ''} holds them as party `{key}`, and its "
+               f"`accepted` is {'empty' if 'accepted' in ALL_FM[b]['parties'][key] else 'absent'}"
+               + (f" — as is {', '.join(others)}" if others else '')
+               + f". An empty `accepted` records {empty}. If they accepted, write the day that was said; where nobody said "
+               + "it, place it by what it followed" + (", here where its words were said (`words.at`):" if at else ":")
+               + f"\n          parties.{key}.accepted: {{ system: event-anchored, at: \"after:{at or '<what it followed>'}\", "
+               + "unit: day }")
+    if not at:
+        out.append(f"{b}'s `words` name no place they were said: where that was a session or an event this garden holds, "
+                   f"write `words: {{ …, at: {{ bean: <it> }} }}` and anchor the day at it")
+    return out
+
+
 def check_persons():
-    """F2: a person who is not the gardener is kept in git by name only on their own consent. ADDED without it, and
-    not opaque, the commit is refused; one already here is warned, the audit a garden reads at its crossing. And a
-    future whereabouts of such a person is held off git, consent or not."""
+    """F2: a person who is not the gardener is kept in git by name only on their own consent. NEW without it — not in the
+    commit before, staged or not yet (29.2: `--all` refuses what the save will) — and not opaque, the commit is refused;
+    one already here is warned, the audit a garden reads at its crossing. And a future whereabouts of such a person is
+    held off git, consent or not."""
     g, added = LAWVIEW.gardener, set(STAGED_ADDED)
     for (_ib, base), (fm, _b) in docs.items():
         if not _ib or fm.get('genos') != 'person' or base == g or _opaque(base, fm):
             continue
         if _consented(base, fm):
             continue
-        _t = (f"{base}: names a person who is not the gardener, and no consent of theirs is recorded: write them as "
-              f"bin/dmheld.py person mints — an opaque id, the name held off git — or record their consent: an "
-              f"agreement they accepted (a party's `accepted`, its day — or, where nobody said the day, "
-              f"`{{ system: event-anchored, at: \"after:<what it followed>\", unit: day }}`), or the garden they keep, "
-              f"met here (F2)")
-        if f"beans/{base}.md" in added:
+        _d = _consent_diagnosis(base, fm)
+        _held = ("write them as bin/dmheld.py person mints — an opaque id, the name held off git (it runs on a host that "
+                 "keeps personal material: a `roots` entry with `keeps: personal`)")
+        if _d:
+            _t = (f"{base}: names a person who is not the gardener, and no consent of theirs is recorded (F2)"
+                  + ''.join(f"\n      — {x}" for x in _d) + f"\n      — if it is not known that they accepted: {_held}")
+        else:
+            _t = (f"{base}: names a person who is not the gardener, and no consent of theirs is recorded: {_held} — or "
+                  f"record their consent: an agreement they accepted (a party's `accepted`, its day — or, where nobody "
+                  f"said the day, `{{ system: event-anchored, at: \"after:<what it followed>\", unit: day }}`), or the "
+                  f"garden they keep, met here (F2; the form: seed/FORMS.md, 'Another person, and the garden she keeps')")
+        path = f"beans/{base}.md"
+        if path in added or not _head_text(path):
             _priv_found('error', _t, 'consent')
         else:
             warns.append(_t)

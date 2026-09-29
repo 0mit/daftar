@@ -22,9 +22,9 @@ does not answer, `AGENTS.md` says where the law is. Every command here is writte
 
 What agents got wrong most often in measured runs — each a value nobody said, invented:
 
-- **Today is not the day it happened.** `day`, `accepted`, `agreed` and `due` are shown empty below, and stay empty
-  unless someone said that day — nor is the day of writing, or a date in another bean, the day it happened. An
-  event's timing nobody said is `event-anchored`, and so is a yes nobody dated (*What nobody said*, at the end).
+- **Today is not the day it happened.** `day`, `agreed` and `due` are shown empty below, and stay empty unless
+  someone said that day — nor is the day of writing, or a date in another bean, the day it happened. An event's timing
+  nobody said is `event-anchored`, and so is a yes nobody dated: an empty `accepted` records NO yes (*What nobody said*).
 - **A transaction's amount is the whole that moved.** Its `borne_by` shares divide it: 90 paid by one and borne two
   parts to one is `amount: { count: "90", … }` with shares 2 and 1 — never the 30 that one of them owes.
 - **A currency is named by its code, looked up, not guessed** (*A currency*, at the end). When no row or more than
@@ -100,8 +100,8 @@ provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
-  sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted; empty unless said — where they accepted and nobody said the day: `{ system: event-anchored, at: "after:<what it followed>", unit: day }`, placed by what it followed
-  ali: { who: { bean: ali }, accepted: }   # accepted: the day this party accepted; empty unless said
+  sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted — where they accepted and nobody said the day: `{ system: event-anchored, at: "after:<what it followed>", unit: day }`, placed by what it followed; empty records no acceptance, and so no consent (F2)
+  ali: { who: { bean: ali }, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
 words: { form: spoken, agreed: }   # agreed: the day it was agreed, in any calendar; empty unless said
 ---
 Agreed on the phone. Where she will be is never written here.
@@ -178,8 +178,8 @@ provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
-  sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted; empty unless said
-  ali: { who: { bean: ali }, accepted: }   # accepted: the day this party accepted; empty unless said
+  sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
+  ali: { who: { bean: ali }, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
 over:
   - { what: "a camera the two of them use" }
 words: { form: spoken, agreed: }   # agreed: the day it was agreed, in any calendar; empty unless said
@@ -218,8 +218,8 @@ provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { crown: logos } }
 responsibility: { legal: { parties: true } }
 parties:
-  sam: { who: { bean: sam }, role: lender, accepted: }   # accepted: the day this party accepted; empty unless said
-  ali: { who: { bean: ali }, role: borrower, accepted: }   # accepted: the day this party accepted; empty unless said
+  sam: { who: { bean: sam }, role: lender, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
+  ali: { who: { bean: ali }, role: borrower, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
 over:
   - { what: "the price of Ali's washing machine" }
 words: { form: spoken, at: { bean: dinner-at-sams }, agreed: }   # agreed: the day it was agreed, in any calendar; empty unless said
@@ -270,7 +270,7 @@ python3 bin/dmpropose.py take ../PROPOSAL-<garden>-<when>.md    # writes in the 
 
 <!-- example-entry: beans/shared-camera.md parties.ali -->
 ```yaml
-  ali: { who: { bean: ali }, accepted: , provenance: { src: asserted-by-human, by: "ali", as_of: now } }   # accepted: the day this party accepted; empty unless said
+  ali: { who: { bean: ali }, accepted: , provenance: { src: asserted-by-human, by: "ali", as_of: now } }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
 ```
 
 ## What nobody said
@@ -310,8 +310,8 @@ Sam called Ali some day after the dinner; nobody said which.
 
 ### A day nobody said
 
-A day nobody said — `accepted`, `agreed`, `day`, `due` — stays empty, as the forms show it, or is left out: each of
-them may be absent. A party with no `accepted` has no acceptance on record. One who said yes on a day nobody said did
+A day nobody said — `agreed`, `day`, `due` — stays empty, as the forms show it, or is left out. Not `accepted`: a
+party with no `accepted` has no acceptance on record, and no consent (F2). One who said yes on a day nobody said did
 accept: that day is placed as an event's is, by what it came after — the long form every day may take, as Sam's and
 Ali's in the loan below — and it counts as consent.
 

@@ -35,10 +35,8 @@ def bean(name, body):
 def gate():
     return run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G)
 
-OWN = 'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
-bean("someone", 'bean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
-     'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
-     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n')
+# owned by the gardener: a person who is not the gardener is kept by name only on their consent (F2, 29.2)
+OWN = 'owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n'
 bean("file-server", 'bean: file-server\ngenos: product\ntitle: "a file server product"\nstatus: active\nsummary: "the SMB server software"\nnature: lekton\n'
      'identity: { status: confirmed, anchors: [ { key: identifier, value: technology:samba, class: logical, establishing: true } ] }\n'
      'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n' + OWN +
