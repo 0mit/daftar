@@ -29,7 +29,8 @@ G = os.path.join(T, "g")
 r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "sam", cwd=ROOT)
 check("a garden germinates on the law with the line from place to location", r.returncode == 0, r.stdout + r.stderr)
 OWN = 'owned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
-PROV = 'provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: 2026-09-28 }\n'
+# `as_of: now`, as a writer writes it: the save stamps the day of writing (23.0), so a typed day passes only on that day
+PROV = 'provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }\n'
 
 
 def host(name, extra=""):
