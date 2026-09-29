@@ -182,7 +182,11 @@ clauses:
 
 today = datetime.date.today()
 tue = today + datetime.timedelta(days=(1 - today.weekday()) % 7 or 7)       # the next Tuesday after today
-closed = tue                                                                 # the next Tuesday: a holiday
+# the next lesson — and today's, where today is a lesson day, since a reading counts in days — is a holiday, so the
+# closure falls between the last lesson and the next whatever the weekday (it was the next Tuesday, which a Wednesday
+# or a Thursday morning passes over for the Thursday before it)
+_days = [today + datetime.timedelta(days=d) for d in range(8) if (today + datetime.timedelta(days=d)).weekday() in (1, 3)]
+closed = _days[:2] if _days[0] == today else _days[:1]
 LESSONS = contract("lessons", f"""parties:
   teacher: {{ who: {{ bean: keeper }}, role: teacher, accepted: 2026-09-01 }}
   pupil: {{ who: {{ bean: pip }}, role: pupil, accepted: 2026-09-01 }}
@@ -194,7 +198,7 @@ clauses:
     by: teacher
     to: pupil
     due: "{(tue - datetime.timedelta(days=7)).isoformat()}T16:00+03:00"
-    every: {{ of: time, in: iso-week, each: week, at: ["2", "4"], lasts: {{ of: time, measure: {{ count: 1, unit: hour }} }}, closures: [ "{closed.isocalendar()[0]}-W{closed.isocalendar()[1]:02d}-{closed.isoweekday()}" ] }}
+    every: {{ of: time, in: iso-week, each: week, at: ["2", "4"], lasts: {{ of: time, measure: {{ count: 1, unit: hour }} }}, closures: [ {', '.join(f'"{c.isocalendar()[0]}-W{c.isocalendar()[1]:02d}-{c.isoweekday()}"' for c in closed)} ] }}
 """)
 
 write("mappings/walk-tuning.md", WALK)

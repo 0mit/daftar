@@ -246,7 +246,7 @@ identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:
 provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
 parties:
   keeper: {{ who: {{ bean: keeper }} }}
-  ali: {{ who: {{ bean: ali }} }}
+  ali: {{ who: {{ bean: ali }}, accepted: 2026-01-01 }}
 words: {{ form: spoken }}
 clauses:
   soon:    {{ what: "ali repays the keeper", by: ali, to: keeper, due: {IN3} }}
@@ -361,7 +361,7 @@ identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:
 provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
 parties:
   keeper: {{ who: {{ bean: keeper }} }}
-  ali: {{ who: {{ bean: ali }} }}
+  ali: {{ who: {{ bean: ali }}, accepted: 2026-01-01 }}
 words: {{ form: spoken }}
 clauses:
   coptic:  {{ what: "rent", by: ali, to: keeper, due: 2026-01-31, every: {{ of: time, in: coptic-calendar, each: month, at: "31" }} }}
@@ -412,7 +412,7 @@ identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:
 provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
 parties:
   keeper: {{ who: {{ bean: keeper }} }}
-  ali: {{ who: {{ bean: ali }} }}
+  ali: {{ who: {{ bean: ali }}, accepted: 2026-01-01 }}
 words: {{ form: spoken }}
 clauses:
   feb-30:    {{ what: "a fee", by: ali, to: keeper, due: '2026-02-30' }}
@@ -520,7 +520,7 @@ identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:
 provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
 parties:
   keeper: {{ who: {{ bean: keeper }} }}
-  ali: {{ who: {{ bean: ali }} }}
+  ali: {{ who: {{ bean: ali }}, accepted: 2026-01-01 }}
 words: {{ form: spoken }}
 clauses:
   one-says-met: {{ conflict: [ {{ what: "a payment", by: ali, to: keeper, due: {IN3}, state: met }}, {{ what: "a payment", by: ali, to: keeper, due: {IN3} }} ] }}
@@ -549,7 +549,7 @@ def contract(bid, clauses):
         'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
         f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:{bid}", class: logical, establishing: true }} ] }}\n'
         'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-        'parties:\n  keeper: { who: { bean: keeper } }\n  ali: { who: { bean: ali } }\nwords: { form: spoken }\n'
+        'parties:\n  keeper: { who: { bean: keeper } }\n  ali: { who: { bean: ali }, accepted: 2026-01-01 }\nwords: { form: spoken }\n'
         f'clauses:\n{clauses}---\nAn agreement.\n')
 _fa4 = _dmcal.from_day(today.toordinal() + 4, "persian")
 _fa1 = _dmcal.from_day(today.toordinal() + 1, "persian")

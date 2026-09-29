@@ -116,6 +116,57 @@ person("wren-ash", "consent: { bean: enrolment-2026 }\n")
 contract("enrolment-2026", [("keeper", True), ("wren-ash", False)])
 code, out = save("a student who has not yet accepted", ["wren-ash", "enrolment-2026"])
 check("…a consent naming an agreement she has not accepted is no consent", code != 0 and "no consent" in out, out[-1200:])
+check("…and the refusal names the agreement her `consent` names, the party, what fails, and the one line to write (29.2)",
+      "enrolment-2026, which their `consent` names, holds them as party `wren-ash`, and its `accepted` is absent" in out
+      and "An empty `accepted` records no acceptance, and so no consent (F2)" in out
+      and 'parties.wren-ash.accepted: { system: event-anchored, at: "after:<what it followed>", unit: day }' in out
+      and "enrolment-2026's `words` name no place they were said" in out, out[-1500:])
+restore()
+person("wren-ash", "consent: { bean: enrolment-2026 }\n")
+contract("enrolment-2026", [("keeper", True), ("wren-ash", False)])
+out = gate()
+check("…`--all` refuses a new person not yet staged, as the save will: new is what the commit before does not hold (29.2)",
+      "ERROR wren-ash: names a person who is not the gardener" in out and "WARN  wren-ash" not in out, out[-1500:])
+write("beans/open-day.md", f"""---
+bean: open-day
+genos: event
+title: "the school's open day"
+status: active
+summary: "the open day at which the students enrolled"
+nature: lekton
+{OWN}identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "event:open-day", class: logical, establishing: true }} ] }}
+provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
+timing:
+  start: {{ system: gregorian-civil, at: 2026-09-01, unit: day }}
+---
+An open day.
+""")
+write("beans/enrolment-2026.md", read("beans/enrolment-2026.md").replace(
+    "words: { form: spoken, agreed: 2026-09-01 }", "words: { form: spoken, at: { bean: open-day } }"))
+out = gate()
+check("…where the agreement's words were said at an event, the line is anchored at it",
+      'parties.wren-ash.accepted: { system: event-anchored, at: "after:open-day", unit: day }' in out
+      and "name no place they were said" not in out, out[-1500:])
+write("beans/enrolment-2026.md", read("beans/enrolment-2026.md").replace(
+    "  wren-ash: { who: { bean: wren-ash } }",
+    '  wren-ash: { who: { bean: wren-ash }, accepted: { system: event-anchored, at: "after:open-day", unit: day } }'))
+code, out = save("a student who said yes at the open day, its day not said", ["wren-ash", "enrolment-2026", "open-day"])
+check("…and that line, written, is her consent: the save passes", code == 0, out[-1500:])
+restore()
+contract("enrolment-2026", [("keeper", True)])
+person("wren-ash", "consent: { bean: enrolment-2026 }\n")
+out = gate()
+check("…a `consent` naming an agreement she is no party to is told to add her", "their `consent` names enrolment-2026, "
+      "and none of its `parties` is wren-ash: add them" in out, out[-1500:])
+restore()
+person("wren-ash", "consent: { bean: enrolment-2026 }\n")
+contract("enrolment-2026", [("keeper", True), ("wren-ash", False)])
+write("beans/enrolment-2026.md", read("beans/enrolment-2026.md").replace(
+    "  wren-ash: { who: { bean: wren-ash } }", "  wren-ash: { who: { bean: wren-ash }, declined: 2026-09-02 }"))
+out = gate()
+check("…and a party who declined is named as a refusal, with no line to write", "enrolment-2026 holds them as party "
+      "`wren-ash`, who declined it: their word there is a refusal" in out and "parties.wren-ash.accepted" not in out,
+      out[-1500:])
 restore()
 person("wren-ash", "consent: { bean: enrolment-2026 }\n")
 contract("enrolment-2026", [("keeper", True), ("wren-ash", True)])

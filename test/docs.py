@@ -153,9 +153,15 @@ check("...and no calendar day in them but a said time an event cannot be without
 check("...and nothing else but the misreadings, first, and the forms for what nobody said",
       set(_fo) - set(_recipes) == {"What nobody said", "Common misreadings"} and list(_fo)[0] == "Common misreadings",
       sorted(set(_fo) - set(_recipes)))
+_acc = [l for l in text["seed/FORMS.md"].split("\n") if "# accepted:" in l]
+check("...and every `accepted:` it leaves empty says what empty records, never 'empty unless said' (29.2, rule 6): an "
+      "empty acceptance is no consent, and a writer copied one where the yes was known and only its day was not",
+      len(_acc) >= 6 and all("empty records no acceptance, and so no consent (F2)" in l and "empty unless said" not in l
+                             for l in _acc), _acc)
 # 27.0 raised the ceiling by 600 for the form of a yes nobody dated (the long form once, the loan's two acceptances): the
-# local-model bench lost seven facts of eight to that case, and the page had stood 3 characters under 16,000.
-check("...and it stays short: under 16,600 characters", len(text["seed/FORMS.md"]) < 16600, len(text["seed/FORMS.md"]))
+# local-model bench lost seven facts of eight to that case, and the page had stood 3 characters under 16,000. 29.2 raised
+# it by 400 for what an empty `accepted` records, on every line that empties it; the page had stood 23 under 16,600.
+check("...and it stays short: under 17,000 characters", len(text["seed/FORMS.md"]) < 17000, len(text["seed/FORMS.md"]))
 _ord = [h for h in _ck if h in _recipes]
 check("...in the cookbook's own order, so they can be followed from the top", _recipes == _ord, (_recipes, _ord))
 _top = "\n".join(text["seed/FORMS.md"].split("\n## ", 1)[0].splitlines())

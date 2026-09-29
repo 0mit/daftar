@@ -31,7 +31,7 @@ def person(bid):
                  f'owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
                  f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
                  f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n---\n{bid}.\n')
-person("ali"); person("ben")
+person("ali")          # ben is written where he is first a party: a person no agreement holds has no consent (29.2)
 
 def agreement(bid, transactions="", clauses="", parties=("sam", "ali")):
     """An agreement between parties, crowned (owned by none of them) and answered for by them, as 21.0 writes one."""
@@ -160,6 +160,7 @@ check("--between nets across the two agreements: 300 one way, 100 the other, 200
       and "net, across 2 agreements" in out and out.rstrip().endswith("ali owes sam 200 XTS"), out)
 
 # MORE THAN TWO PARTIES: each bearer owes each payer its share of what that payer put in.
+person("ben")
 agreement("trip", '  fuel: { what: "fuel", amount: { count: 90, unit: XTS }, paid_by: [ { party: sam } ], '
                   'borne_by: [ { party: sam, share: 1 }, { party: ali, share: 1 }, { party: ben, share: 1 } ] }',
           parties=("sam", "ali", "ben"))

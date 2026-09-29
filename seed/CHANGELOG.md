@@ -251,6 +251,20 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **29.2** (2026-09-30, human-ratified rule-change) — **a refusal names where the word was meant to be, and the law says
+  what an empty acceptance records.** From queue-44: a consent agreement right but for its empty `accepted` was refused
+  eight times in words naming no bean and no party, and its writer ended by inventing a day. The operator: "all ratified
+  go ahead".
+  - **The consent refusal diagnoses** (F2): it names the bean the person's `consent` names and every agreement holding
+    them as a party, says what fails there — not held, not a contract, not a party, declined, `accepted` empty — and
+    prints the one line to write, `parties.<key>.accepted: { system: event-anchored, at: "after:<words.at>", unit: day }`.
+  - **New is new, staged or not**: a person bean the commit before does not hold is refused by `--all` as by the save;
+    `--all` had warned where the save refused. The refusal also says what `bin/dmheld.py person` needs to run.
+  - **`empty`** in an attribute's record says what an empty or absent value records, where another rule reads it:
+    `parties.accepted` records no acceptance, and so no consent. bin/dmforms.py shows it on every line that empties the
+    position (rule 6), in place of 'empty unless said'; seed/FORMS.md's own prose says the same, and the page's limit
+    moves from 16,600 characters to 17,000.
+
 - **29.1** (2026-09-28, human-ratified rule-change) — **time is place's sibling; a working copy is a position; each
   profile in its place on the line.** The operator: "yes it take (does a meeting take someone's hour?) … fold
   workspace.at and check if view and other profiles occupies the right place".

@@ -66,10 +66,8 @@ check("a declared figure the gate has no check for is refused, not passed unexam
 open(VOC, "w").write(ORIG)
 def bean(name, body):
     open(os.path.join(G, "beans", name + ".md"), "w").write("---\n" + body + "---\n\n" + name + "\n")
-OWN = 'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
-bean("someone", 'bean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
-     'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
-     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n')
+# owned by the gardener: a person who is not the gardener is kept by name only on their consent (F2, 29.2)
+OWN = 'owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n'
 for a, b in (("part-a", "part-b"), ("part-b", "part-a")):
     bean(a, f'bean: {a}\ngenos: product\ntitle: "{a}"\nstatus: active\nsummary: "x"\nnature: lekton\n'
          f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "product:{a}", class: logical, establishing: true }} ] }}\n'

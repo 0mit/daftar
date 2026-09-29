@@ -27,7 +27,13 @@ what the LAW says of the position, never by a list kept here:
      example's own, and the one to write is the moment someone said;
   5. where the law's meaning of such a date also writes the day nobody said in its long form (27.0: a sentence holding
      `{ system: … }`), the FIRST line of the page that empties it carries that sentence too — once, where a writer
-     meets the position first, and not on every line after it, so the page stays short.
+     meets the position first, and not on every line after it, so the page stays short;
+  6. except where the law says what an EMPTY value of the position records (29.2: `empty` in its record), because another
+     rule reads it: an empty `accepted` records no acceptance, and so no consent (F2). There a copy left empty says
+     something false whenever the act is known and only its day is not, so every line that empties it says, instead of
+     'empty unless said', that a day nobody said is `event-anchored` (in full on the first line, as rule 5) and what
+     empty records — measured in queue-44, where an agent copied the third form's `accepted:` empty, was refused eight
+     times, and then wrote the day of the run.
 The prose around the blocks is FORMS.md's own and is not touched.
 """
 import os
@@ -62,9 +68,14 @@ def unsaid_forms():
     return _said_meanings()[1]
 
 
+def empty_meanings():
+    """{(term, attribute): what the law says an empty value of the position records} (rule 6)."""
+    return _said_meanings()[2]
+
+
 def _said_meanings():
     law = dmparse.loads(dmparse.split_front_matter(open(LAW, encoding='utf-8').read())[0]) or {}
-    out, unsaid, origins = {}, {}, dmpass.Origins(law)
+    out, unsaid, empty, origins = {}, {}, {}, dmpass.Origins(law)
     for t in law.get('terms') or []:
         sch = t.get('schema') if isinstance(t, dict) else None
         if not isinstance(sch, dict):
@@ -77,7 +88,9 @@ def _said_meanings():
                 longs = [x.rstrip('.') for x in sentences[1:] if '`{ system:' in x]
                 if longs:
                     unsaid[(t.get('term'), attr)] = longs[0]
-    return out, unsaid
+                if ((sch.get('attrs') or {}).get(attr) or {}).get('empty'):
+                    empty[(t.get('term'), attr)] = str(sch['attrs'][attr]['empty']).rstrip('.')
+    return out, unsaid, empty
 
 
 def said_positions():
@@ -96,10 +109,10 @@ def said_positions():
     return out
 
 
-def form_of(block, said, positions=frozenset(), unsaid=None, shown=None):
+def form_of(block, said, positions=frozenset(), unsaid=None, shown=None, empty=None):
     """One cookbook block as the forms show it. `shown` is the set, kept across the page, of the positions whose day
     nobody said has been written long already (rule 5)."""
-    unsaid = unsaid or {}
+    unsaid, empty = unsaid or {}, empty or {}
     shown = shown if shown is not None else set()
     out = []
     entry = re.match(r'<!-- example-entry: \S+ ([a-z_]+)\.', block)       # an entry shown alone names its term in its marker
@@ -117,6 +130,10 @@ def form_of(block, said, positions=frozenset(), unsaid=None, shown=None):
                 line = pat.sub(r'\1 ', line).replace(': ,', ': ,').replace(':  ', ': ')
                 long_ = unsaid.get((t, attr)) if (t, attr) not in shown else None
                 shown.add((t, attr))
+                if (t, attr) in empty and unsaid.get((t, attr)):          # rule 6: on every line, and no 'unless'
+                    emptied.append(f"{attr}: {meaning}" + (f" — {long_[0].lower()}{long_[1:]}" if long_ else
+                                                           ", or unsaid, `event-anchored`") + f"; empty records {empty[(t, attr)]}")
+                    continue
                 emptied.append(f"{attr}: {meaning}; empty unless said" + (f" — {long_[0].lower()}{long_[1:]}" if long_ else ''))
         line = re.sub(r'(\bas_of:) ?' + DAY + r'\b', r'\1 now', line)
         line = re.sub(r'(\bvalue: "[^"]*?)-' + DAY + '"', r'\1"', line)
@@ -136,16 +153,16 @@ def _sections(t):
 BLOCK = re.compile(r'(?:^<!-- [^\n]*-->\n)?^```[^\n]*\n.*?^```$', re.S | re.M)
 
 
-def derive(forms_text, cookbook_text, said, positions=frozenset(), unsaid=None):
+def derive(forms_text, cookbook_text, said, positions=frozenset(), unsaid=None, empty=None):
     """FORMS.md with each recipe section's blocks replaced by the forms of the cookbook's, in order."""
     ck, shown = _sections(cookbook_text), set()
     head, *secs = forms_text.split('\n## ')
     for i, sec in enumerate(secs):
         name = sec.split('\n', 1)[0]
         if name not in ck:              # the forms' own blocks (what nobody said): the same rules, on themselves
-            secs[i] = BLOCK.sub(lambda m: form_of(m.group(0), said, positions, unsaid, shown), sec)
+            secs[i] = BLOCK.sub(lambda m: form_of(m.group(0), said, positions, unsaid, shown, empty), sec)
             continue
-        want = [form_of(b, said, positions, unsaid, shown) for b in BLOCK.findall(ck[name])]
+        want = [form_of(b, said, positions, unsaid, shown, empty) for b in BLOCK.findall(ck[name])]
         have = BLOCK.findall(sec)
         if len(want) != len(have):
             raise SystemExit(f"dmforms: '{name}' holds {len(have)} blocks and the cookbook's {len(want)} — the sections no "
@@ -160,7 +177,8 @@ def derive(forms_text, cookbook_text, said, positions=frozenset(), unsaid=None):
 
 def main(argv):
     forms = open(FORMS, encoding='utf-8').read()
-    new = derive(forms, open(COOKBOOK, encoding='utf-8').read(), said_dates(), said_positions(), unsaid_forms())
+    new = derive(forms, open(COOKBOOK, encoding='utf-8').read(), said_dates(), said_positions(), unsaid_forms(),
+                 empty_meanings())
     if '--check' in argv:
         if new != forms:
             print("dmforms: seed/FORMS.md's recipe blocks are not the forms of the cookbook's — run: python3 bin/dmforms.py",

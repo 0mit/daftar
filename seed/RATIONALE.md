@@ -489,6 +489,15 @@ so one name read as a day in one place and a moment in another is refused: it co
 `as_of` keeps its own statement (`provenance_record.origin`) because it lives on every record, not on a term; so does
 the journal's heading (`journal.origin`).
 
+## schema_language.empty
+
+WHAT A POSITION'S EMPTINESS MEANS IS THE LAW'S TO SAY (29.2, ratified 2026-09-30). Most positions left empty say only
+that nobody gave a value — a transaction's day, a clause's due. A few are READ empty by another rule: an absent
+`accepted` is an absent acceptance, and so an absent consent. A tool that shows positions empty (the forms) or explains
+a refusal (the gate) must say which, or it teaches the wrong emptiness — and it was one tool's comment, 'empty unless
+said', written for every position alike. The law states it in the position's record, once, and both tools read it
+there; a position that states nothing keeps the ordinary meaning.
+
 ## acts
 
 TWO QUESTIONS, NOT FIVE ANSWERS (sources-by-nature, ratified 2026-09-26). Part 10 wrote five origins — said, stamped,
@@ -2341,6 +2350,11 @@ then said the party had not accepted, and a person who had agreed to be kept by 
 Written long and placed by what it followed, it is an acceptance on record, and it counts as consent where the
 agreement is one. Whose word it is stays the entry's provenance, as it is for a dated one.
 
+WHAT EMPTY RECORDS, SAID WHERE THE WRITER COPIES (29.2). The forms showed every day nobody said as an empty field,
+'empty unless said' — true of a day, false of an acceptance. A writer who knew the yes and not its day copied the empty
+field, and the empty field said the party had not accepted. The law now says what an empty `accepted` records — no
+acceptance, and so no consent — and the forms show it on every line that empties it.
+
 ## terms[over].merge
 
 A SET of what the agreement concerns. It was a single reference capsule, one thing like `lives_in`; an agreement between
@@ -3424,6 +3438,15 @@ depend on who moved first, nor on a document only the sender makes. Two gardener
 and each records the other's garden and its keeper. That exchange is each one giving their name, and the gardener who
 records it decides, as their own act (class F), whether it was really them. Trust sits with whoever receives, so
 authenticity is checked there. A certifier above both would be a privilege the network of equals does not have.
+
+A REFUSAL SAYS WHERE THE WORD WAS MEANT TO BE (29.2, from queue-44). A measured run wrote a consent agreement right in
+all but one field — each party's `accepted` empty, because nobody had said the day — and the gate refused it eight
+times in words that named no bean and no party. The writer deleted the person twice to get a pass, and ended by writing
+the day of the run: an invented day, the very failure the runs count. The refusal now names the bean the person's
+`consent` names and every agreement that holds them as a party, says what fails there, and prints the one line to
+write, anchored where the agreement's words were said. And a person is NEW where the commit before does not hold them,
+staged or not: `--all` had called an unsaved bean one already here, and warned, so the gate said 0 errors where the save
+refused the same bean.
 
 ## terms[about]
 
