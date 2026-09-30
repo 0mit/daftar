@@ -128,6 +128,17 @@ computes a shown number: its path), `check_binding(binding)` and `check_monitor(
 `history(url, binds, selector, hours, step, now)` (what the served page shows), `alerts(settings, beings, binds)`,
 and, where it deploys anything, `bundle(monitor, views, out)`.
 
+## Surfaces, and what every one must do
+
+Where a page meets a reader is a **surface**, named — as a source adapter is — by the code of the technology catalogue it
+speaks: `surfaces/html.py`, the page as one file, offline (`dmview report`); `surfaces/python.py`, the page served by
+daftar's own host (`dmview serve`); `surfaces/django.py`, one drawing as a fragment a framework's own view renders
+beside its pages. Each says whether it works offline (`OFFLINE`) and renders what it is given — the page already scoped
+to its viewer. The requirements a surface passes before daftar says it speaks it (`seed/knowledge/technology-daftar.tsv`)
+are one suite, in `test/view.py`: every drawn element carried by the id of the fact it stands for, no address added
+beyond what the scoped page held, and its row in the catalogue naming it. The reference tab shows the page's own chain to
+the eye, engraved from its record: where it is shown, what holds it there, and what that runs on.
+
 ## Commands
 
     python3 assets/view/bin/dmview.py check                       # the page against the law and its drawings

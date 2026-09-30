@@ -82,6 +82,7 @@ def payload():
         "views": views,
         "order": [key for key, _v in vm.views_raw() if key in views],
         "reference": ref,
+        "where": dict(zip(("svg", "places"), vm.where_shown())),
         "addresses": {r["being"]: vm.addresses(r["being"]) for r in ref if vm.fm(r["being"])},
         "beans": catalog(),
         "author": {"views": {key: {a: v.get(a) for a in vm.EDITABLE if v.get(a) is not None} for key, v in vm.views_raw()},
@@ -213,6 +214,7 @@ function renderRef(){
   const gene = [...new Set(rows.map(r => (P.beans[r.being]||{}).genos || ''))].sort();
   const def = P.opens_on || '';
   let o = '<p class="lead">What each part is for and where to find it — deeper lenses add what its own record says.</p>';
+  if (P.where && P.where.svg) o += '<h3>Where this page is shown — engraved from its own record</h3><div class="vw"><div class="vw-fig">' + P.where.svg + '</div></div>';
   o += '<div class="reffilter"><select id="f-org"><option value="">organisation: all</option>'+orgs.map(x => '<option value="'+esc(x)+'"'+(x===def?' selected':'')+'>'+esc(x || 'none derived')+'</option>').join('')+'</select>'+
        '<select id="f-genos"><option value="">genos: all</option>'+gene.map(x => '<option>'+esc(x)+'</option>').join('')+'</select>'+
        '<input id="f-q" type="search" placeholder="search"><span id="f-count" class="kd"></span>'+
@@ -385,6 +387,6 @@ def main(args):
         csvs.append("%s.%s.csv" % (stem, key))
         p["csv"][key] = os.path.basename(csvs[-1])
     with open(out, "w", encoding="utf-8") as fh:
-        fh.write(build_html(p))
+        fh.write(vm.surface("html").render(p))           # the surface of one file
     print("dmview report: %d drawings + reference + author mode -> %s%s" % (len(p["views"]), out,
           "" if not csvs else "; %d table(s) as CSV beside it" % len(csvs)))

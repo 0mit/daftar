@@ -480,6 +480,69 @@ def adapter(code):
     return mod
 
 
+SURFACES = os.path.join(HERE, "surfaces")
+_SURFACES = {}
+
+
+def surface(code):
+    """The surface for a technology: `surfaces/<code>.py` beside this file, or None — named, as a source adapter is, by
+    the code of the technology catalogue it speaks: static HTML, daftar's own server, a framework's pages."""
+    if code in _SURFACES:
+        return _SURFACES[code]
+    path = os.path.join(SURFACES, "%s.py" % code) if isinstance(code, str) and re.fullmatch(r"[a-z0-9][a-z0-9-]*", code) else None
+    mod = None
+    if path and os.path.isfile(path):
+        if SURFACES not in sys.path:
+            sys.path.insert(0, SURFACES)
+        spec = importlib.util.spec_from_file_location("view_surface_" + code.replace("-", "_"), path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+    _SURFACES[code] = mod
+    return mod
+
+
+def where_shown():
+    """(svg, places) — the page's own chain to the eye, engraved from its facts: each place it states it is shown at
+    (`located_at`), the being that holds it there (`host`) and where that being runs (`lives_in`). On a public page a
+    place whose position is an address is drawn by its system alone."""
+    import view_engrave
+    title = str(page().get("title") or PAGE)
+    parts, pipes, seen, places = [{"proc": title, "rail": "the page", "role": "this page"}], [], {title}, []
+
+    def part(name, rail, role):
+        if name not in seen:
+            seen.add(name)
+            parts.append({"proc": name, "rail": rail, "role": role})
+    for e in fm(PAGE).get("located_at") or []:
+        if not isinstance(e, dict):
+            continue
+        at = str(e.get("at") or "")
+        if not private() and _ADDRESS.search(at):
+            at = ""
+        where = ("%s %s" % (e.get("system"), at)).strip()
+        rail = "shown at: %s" % e.get("system")
+        part(where, rail, "open %s" % e.get("openness", "") if e.get("openness") else "")
+        pipes.append({"from": title, "to": where, "channel": "shown at", "rail": rail})
+        hb = e["host"].get("bean") if isinstance(e.get("host"), dict) else None
+        places.append({"system": e.get("system"), "at": at, "host": hb, "openness": e.get("openness")})
+        if hb and fm(hb):
+            part(hb, rail, "%s · %s" % (fm(hb).get("genos", ""), fm(hb).get("nature", "")))
+            pipes.append({"from": where, "to": hb, "channel": "held by", "rail": rail})
+            lb = (fm(hb).get("lives_in") or {}).get("bean") if isinstance(fm(hb).get("lives_in"), dict) else None
+            if lb and fm(lb):
+                part(lb, rail, "%s · %s" % (fm(lb).get("genos", ""), fm(lb).get("nature", "")))
+                pipes.append({"from": hb, "to": lb, "channel": "runs on", "rail": rail})
+    if len(parts) < 2:
+        return "", places
+    svg, _rep = view_engrave.engrave(parts, pipes, key="proc", rail="rail", of_bean=PAGE, parts_field="located_at",
+                                     pipes_field="located_at", sub="role", aria="where this page is shown")
+    return svg, places
+
+
+def surfaces_here():
+    return sorted(n[:-3] for n in os.listdir(SURFACES) if n.endswith(".py")) if os.path.isdir(SURFACES) else []
+
+
 def adapters_here():
     return sorted(n[:-3] for n in os.listdir(SOURCES) if n.endswith(".py")) if os.path.isdir(SOURCES) else []
 

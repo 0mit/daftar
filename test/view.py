@@ -618,6 +618,55 @@ check("...and a value with neither a query nor a signal is refused by the asset:
       and "silo-full-in" in out, out[-600:])
 put("beans/grain-page.md", PAGE_T)
 
+import json
+# THE SURFACES, AND WHAT EVERY ONE OF THEM MUST DO (the requirements a technology passes before daftar says it speaks it)
+_conf = run(sys.executable, "-c", """
+import json, os, re, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'assets', 'view', 'lib')); sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))
+import view_model as vm, view_report
+vm.init(os.getcwd())
+p = view_report.payload()
+ADDR = re.compile(r'(?<![\\w.])(?:\\d{1,3}\\.){3}\\d{1,3}(?![\\w.])')
+out = {'where': p.get('where') or {}}
+for code in vm.surfaces_here():
+    s = vm.surface(code)
+    docs = {k: s.render(p, key=k) for k in p['order']} if code == 'django' else {'*': s.render(p)}
+    def has(doc, i):
+        return ('data-el="%s"' % i) in doc or ('data-el=\\\\"%s\\\\"' % i) in doc
+    missing = sorted({e['id'] for k, v in p['views'].items() for e in v['elements']
+                      if not has(docs['*'] if code != 'django' else docs[k], e['id'])})
+    given = set(ADDR.findall(json.dumps(p)))
+    out[code] = {'technology': getattr(s, 'TECHNOLOGY', None), 'offline': getattr(s, 'OFFLINE', None), 'missing': missing,
+                 'addresses': sorted(set(ADDR.findall(''.join(docs.values()))) - given)}
+print('CONFORMANCE ' + json.dumps(out))
+""", cwd=G)
+try:
+    _cj = json.loads(next(l for l in _conf.stdout.splitlines() if l.startswith('CONFORMANCE '))[len('CONFORMANCE '):])
+except Exception:
+    _cj = {}
+_rows = {}
+with open(os.path.join(ROOT, "seed", "knowledge", "technology-daftar.tsv"), encoding="utf-8") as _fh:
+    _hdr = None
+    for _ln in _fh:
+        _c = _ln.rstrip("\n").split("\t")
+        if _hdr is None:
+            _hdr = _c
+        else:
+            _rows[_c[0]] = dict(zip(_hdr, _c))
+_surf = sorted(k for k in _cj if k != "where")
+check("every surface of the asset — %s — names the technology it speaks and says whether it works offline"
+      % ", ".join(_surf), len(_surf) >= 3 and all(isinstance(_cj[k]["offline"], bool) and _cj[k]["technology"] == k for k in _surf),
+      (_conf.stdout[-600:], _conf.stderr[-600:]))
+check("...each carries every drawn element by the fact's id it stands for", all(not _cj[k]["missing"] for k in _surf),
+      {k: _cj[k]["missing"][:5] for k in _surf})
+check("...and none adds an address the scoped page it was given did not hold", all(not _cj[k]["addresses"] for k in _surf),
+      {k: _cj[k]["addresses"] for k in _surf})
+check("...and daftar says it speaks each only where the catalogue's row names this surface as its adapter",
+      all((_rows.get(k) or {}).get("status") == "spoken" and (_rows.get(k) or {}).get("adapter") == f"assets/view/lib/surfaces/{k}.py"
+          for k in _surf), {k: _rows.get(k) for k in _surf})
+check("the page's own chain to the eye is engraved from its record: where it is shown",
+      "grain.example.org" in str((_cj.get("where") or {}).get("svg", "")), str(_cj.get("where"))[:400])
+
 # PIPES ALONE ARE WIRING: what a drawing draws may be joined by pipes and run no process of its own.
 put("beans/grain-page.md", PAGE_T.replace("    processes: { bean: silo-controller, field: processes }\n", "", 1))
 out, rc = dmview("check")
