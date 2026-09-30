@@ -667,6 +667,33 @@ check("...and daftar says it speaks each only where the catalogue's row names th
 check("the page's own chain to the eye is engraved from its record: where it is shown",
       "grain.example.org" in str((_cj.get("where") or {}).get("svg", "")), str(_cj.get("where"))[:400])
 
+# A DETAIL: a boundary opens as the region it draws, at a larger scale — the whole counts only what stands outside it
+put("bin/drawings.py", DRAWINGS_T.replace('         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),',
+    '         boundary(590, 40, 200, 180, "The controls", eid="controls"),\n         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),', 1)
+    .replace("from view_kit import ", "from view_kit import boundary, ", 1))
+put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    opens: [ { element: controls } ]\n", 1))
+out, rc = dmview("check")
+_dt = run(sys.executable, "-c", """
+import json, os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'assets', 'view', 'lib')); sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))
+import view_model as vm
+vm.init(os.getcwd())
+print('DETAILS ' + json.dumps({v['key']: v['details'] for v in vm.views()}))
+""", cwd=G)
+try:
+    _dj = json.loads(next(l for l in _dt.stdout.splitlines() if l.startswith("DETAILS "))[len("DETAILS "):])
+except Exception:
+    _dj = {}
+_d = (_dj.get("silo") or [{}])[0]
+check("a boundary opens as a detail of its drawing: the region it draws, holding the parts inside it",
+      rc == 0 and _d.get("el") == "controls" and {"silo-controller", "field-radio"} <= set(_d.get("inside") or []),
+      (out[-400:], _dt.stdout[-300:], _dt.stderr[-300:]))
+put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    opens: [ { element: trailer } ]\n", 1))
+out, rc = dmview("check")
+check("...and a detail opened from a part that is no boundary is refused", rc != 0 and "a detail is the region a boundary draws" in out, out[-500:])
+put("bin/drawings.py", DRAWINGS_T)
+put("beans/grain-page.md", PAGE_T)
+
 # THE SHEET: a title block of facts, clouds around what the last commit changed, and the garden's own palette
 _sh = run(sys.executable, "-c", """
 import json, os, sys

@@ -278,7 +278,8 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
     siblings, for publication; never read for meaning.
   - **The view, from fact to eye** (the view design, ratified with it): a page states where it is shown (`located_at`,
     in the new `uri` place system); a drawing may state its `frame`, an aspect that is a line; a part may `open` a drawing
-    of its own, and the lenses' limits are errors; the facts propose an operate shape (`view_archetypes` `frame`,
+    of its own, or a boundary a detail of its drawing (the region at a larger scale), and the lenses' limits are errors,
+    counted outside the details; the facts propose an operate shape (`view_archetypes` `frame`,
     `reads`). The kit records the fact an element stands for (`of`) and draws a part no fact states as `implied`;
     `view_engrave` lays a drawing out from a being's parts and pipes.
   - **Knowledge of the view's stack**: thirteen technologies join the catalogue (a `format` category among them), each

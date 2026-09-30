@@ -34,8 +34,10 @@ writes to. Each entry `draws` a mapping (a procedure) or a bean the garden holds
 **Where the page is shown is the page's own fact**: its `located_at` — a `uri` where it is served, a path where a copy
 is kept, each with the `host` that holds it — and `dmview check` refuses a page that states none. A drawing may say its
 **frame** (`views.frame`): the aspect it is laid out along — place, time, a routine, a walk, a line — so what stands where
-in it is read from the facts. A drawn part may **open** a drawing of its own (`views.opens`): the lens holds its limit
-by opening a part, never by crowding it, and the limits are errors. The facts **propose** an operate shape
+in it is read from the facts. A drawn part may **open** a drawing of its own (`views.opens`), and a boundary may open as a
+**detail** of its drawing — the region it draws at a larger scale, as a technical drawing's detail view is, the rest of
+the drawing hidden until the reader goes back. The whole counts only what stands outside its details: the lens holds its
+limit by opening, never by crowding, and the limits are errors. The facts **propose** an operate shape
 (`view_archetypes` `frame` and `reads`); a page that draws another is told so.
 
 A drawing is read at four **lenses**, the law's `view_lenses`: orient (a story), understand (the drawing itself),

@@ -353,6 +353,8 @@ SCHEMA_CSS = """
 .vw .nbox{stroke-width:1.2}.vw .edge{stroke-width:1.4}.vw .bnd{stroke-width:.7}
 .vw .revcloud{fill:none;stroke:var(--accent);stroke-width:1.4;stroke-dasharray:1 5;stroke-linecap:round}
 .vw .revmark{fill:var(--accent);font:700 12px system-ui}
+.vw .vw-closed{fill:var(--muted);font:600 12px system-ui;letter-spacing:.02em}
+.vw .vw-detail{margin:0 0 8px;font-size:12.5px;color:var(--muted)}.vw .vw-detail a{color:var(--accent)}
 /* zoom: a part that opens a drawing of its own carries a callout mark on its corner */
 .vw .el.opens .nbox,.vw .el.opens .bnd{stroke-width:1.6}.vw .el.opens:hover .nbox{stroke:var(--accent)}
 /* an element a lens hides */

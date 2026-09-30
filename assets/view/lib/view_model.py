@@ -167,6 +167,8 @@ def proposed_archetype(v):
     for r in rows:
         if v.get("frame") and v.get("frame") in (r.get("frame") or []):
             return r.get("archetype")
+    if kk == "bean" and any(e.get("monitor") == target for _i, e in entries("view_monitors")):
+        return "scoreboard"             # what is drawn is the watching itself: a monitor of this very page
     for r in rows:
         if any(f.get(x) for x in (r.get("reads") or [])):
             return r.get("archetype")
@@ -1095,6 +1097,24 @@ def alert_names(beans, binds):
     return out
 
 
+def details(v, els):
+    """The DETAILS a drawing opens: each boundary an `opens` entry without a `view` names, with its box and the drawn
+    elements that stand inside it — the region, at a larger scale, as a technical drawing's detail view is."""
+    by = {e["id"]: e for e in els}
+    out = []
+    for o in v.get("opens") or []:
+        if not isinstance(o, dict) or o.get("view") or o.get("element") not in by:
+            continue
+        b = by[o["element"]]
+        if b["pattern"] != "boundary" or not b.get("box"):
+            continue
+        bx, by_, bw, bh = b["box"]
+        inside = [e["id"] for e in els if e["id"] != b["id"] and e.get("box")
+                  and bx <= e["box"][0] + e["box"][2] / 2 <= bx + bw and by_ <= e["box"][1] + e["box"][3] / 2 <= by_ + bh]
+        out.append({"el": b["id"], "label": b["label"], "box": b["box"], "inside": inside})
+    return out
+
+
 def views(figs=None):
     """One view per drawing, in the page's order: what every renderer mounts."""
     figs = figs or compose_all()
@@ -1133,7 +1153,8 @@ def views(figs=None):
                     "questions": {q.get("lens"): q.get("ask") for q in (v.get("questions") or []) if isinstance(q, dict)},
                     "operate": operate(k, v), "wiring": w, "window": {"hours": hours, "step": step},
                     "patternMeaning": {p: kit.PATTERNS.get(p, "") for p in pats},
-                    "opens": [{"el": o.get("element"), "view": o.get("view")} for o in (v.get("opens") or []) if isinstance(o, dict)],
+                    "opens": [{"el": o.get("element"), "view": o.get("view")} for o in (v.get("opens") or []) if isinstance(o, dict) and o.get("view")],
+                    "details": details(v, els),
                     "frame": v.get("frame"), "proposed": proposed_archetype(v),
                     "sheet": dict(_sheet, n=_keys.index(k) + 1, of=len(_keys)),
                     "changed": [e["id"] for e in els if e.get("bean") in _changed
@@ -1202,9 +1223,17 @@ def check(figs=None):
                 if n > int(mx["words_per_stage"]):
                     errs.append("%s: story stage %d says %d words, and the %s lens holds %s a stage"
                                  % (k, i + 1, n, story_lens["id"], mx["words_per_stage"]))
-        if (und.get("max") or {}).get("elements") is not None and len(els) > int(und["max"]["elements"]):
-            errs.append("%s: the drawing has %d elements, and the %s lens holds %s — open a part as a drawing of its own "
-                        "(`views.opens`) rather than crowd it" % (k, len(els), und["id"], und["max"]["elements"]))
+        _dt = details(v, els)
+        _hidden = {i for d in _dt for i in d["inside"]}
+        _shown = [e for e in els if e["id"] not in _hidden]
+        if (und.get("max") or {}).get("elements") is not None and len(_shown) > int(und["max"]["elements"]):
+            errs.append("%s: the drawing has %d elements%s, and the %s lens holds %s — open a part as a drawing of its own, "
+                        "or a boundary as a detail (`views.opens`), rather than crowd it"
+                        % (k, len(_shown), " outside its details" if _dt else "", und["id"], und["max"]["elements"]))
+        for d in _dt:
+            if (und.get("max") or {}).get("elements") is not None and len(d["inside"]) > int(und["max"]["elements"]):
+                errs.append("%s: the detail %r holds %d elements, and the %s lens holds %s — a boundary inside it may open "
+                            "a detail of its own" % (k, d["el"], len(d["inside"]), und["id"], und["max"]["elements"]))
         for e in els:
             if e.get("unfit_address"):
                 warns.append("%s: %s's address %s fits nowhere in its box (%s wide): it is on the part's card, and a wider "
@@ -1245,6 +1274,9 @@ def check(figs=None):
         for o in v.get("opens") or []:
             if not isinstance(o, dict):
                 continue
+            if not o.get("view") and o.get("element") in by_id and by_id[o["element"]]["pattern"] != "boundary":
+                errs.append("%s: %r opens as a detail, and a detail is the region a boundary draws — %r is a %s"
+                            % (k, o["element"], o["element"], by_id[o["element"]]["pattern"]))
             if o.get("element") not in by_id:
                 errs.append("%s: opens %r from element %r, which the drawing does not have" % (k, o.get("view"), o.get("element")))
             elif by_id[o["element"]]["pattern"] in ("flow", "signal"):

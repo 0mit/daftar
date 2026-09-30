@@ -121,6 +121,19 @@ function schematic(root,view,lv,state){
  (view.actions||[]).forEach(a=>{const g=svg.querySelector('.el[data-el="'+a.el+'"]');if(!g)return;
   g.setAttribute('data-click','action');if(state.onAction){g.style.cursor='pointer';g.addEventListener('click',()=>state.onAction(a));}});
  clouds(svg,view);
+ // DETAILS: a boundary that opens as a detail is the region at a larger scale, as a drawing's detail view is. The whole
+ // shows each such region closed, with how many parts it holds; opened, the drawing is cropped to it, the rest hidden.
+ const det=(view.details||[]).find(d=>d.el===(root.dataset.detail||''));
+ if(det){const [x,y,w,hh]=det.box,m=14;svg.setAttribute('viewBox',(x-m)+' '+(y-m)+' '+(w+2*m)+' '+(hh+2*m));
+  const keep=new Set(det.inside.concat([det.el]));svg.querySelectorAll('.el').forEach(g=>{if(!keep.has(g.dataset.el))g.style.display='none';});
+  root.insertAdjacentHTML('afterbegin','<div class="vw-detail">detail of <b>'+h(det.label)+'</b> · <a href="#" class="vw-back">back to the whole</a></div>');
+  root.querySelector('.vw-back').addEventListener('click',ev=>{ev.preventDefault();delete root.dataset.detail;mount(root,view,state);});}
+ else (view.details||[]).forEach(d=>{const g=svg.querySelector('.el[data-el="'+d.el+'"]');if(!g)return;
+  const inside=new Set(d.inside);svg.querySelectorAll('.el').forEach(x=>{if(inside.has(x.dataset.el))x.style.display='none';});
+  const [x,y,w,hh]=d.box,NS='http://www.w3.org/2000/svg',t=document.createElementNS(NS,'text');
+  t.setAttribute('x',x+w/2);t.setAttribute('y',y+hh/2+4);t.setAttribute('text-anchor','middle');t.setAttribute('class','vw-closed');
+  t.textContent=d.inside.length+' parts — open the detail';g.appendChild(t);g.classList.add('opens');g.style.cursor='zoom-in';
+  g.addEventListener('click',()=>{root.dataset.detail=d.el;mount(root,view,state);});});
  // ZOOM: an element that opens a drawing of its own takes the reader there — a lens holds its limit by opening, not crowding
  (view.opens||[]).forEach(o=>{const g=svg.querySelector('.el[data-el="'+o.el+'"]');if(!g)return;
   g.classList.add('opens');g.setAttribute('data-opens',o.view);

@@ -2485,7 +2485,7 @@ view_archetypes:
   - { archetype: board,        reads: [part_of], meaning: "a fixed set of parts, each with its state and one fact, and the headline numbers", when: "a known set of parts must each be doing its job" }
   - { archetype: scoreboard,   reads: [view_monitors], meaning: "the watcher's own vital numbers and what is firing, or a calm 'nothing is firing'", when: "what is drawn is the watching itself" }
   - { archetype: funnel,       frame: [routine], meaning: "a stream narrowing through its stages: how many reached each, where the rest stopped and why, then a roll call of the parts", when: "work enters, is judged at a series of stages, and leaves" }
-  - { archetype: race,         frame: [routine, walk], reads: [steps], meaning: "a run of a procedure against its deadline: the step it is at (a step of the procedure the view `draws`, in the order its `steps` list them), how long it has run, how long it still needs, and the verdict", when: "what is drawn is a bounded run that must end before a moment" }
+  - { archetype: race,         frame: [routine, walk], meaning: "a run of a procedure against its deadline: the step it is at (a step of the procedure the view `draws`, in the order its `steps` list them), how long it has run, how long it still needs, and the verdict", when: "what is drawn is a bounded run that must end before a moment" }
   - { archetype: table,        reads: [series], meaning: "the members of a reading, or the rows of a series, one line each with a column per path: the report, and an offline file of it", when: "the question is which ones, and what each holds" }
   - { archetype: health-chain, meaning: "tiles in flow order with value, limit and trend, and the blind spots", when: "no shape native to what is drawn is designed yet" }
 profiles:
@@ -2838,11 +2838,11 @@ profiles:
           archetype: { required: true, in: { registry: view_archetypes, take: archetype }, meaning: "operate: the shape its vital sign is drawn in. The facts propose one (`view_archetypes` `frame` and `reads`); the page may choose another" }
           frame:     { in: { registry: aspects, take: aspect, where: { figure: [sequence] } }, meaning: "the aspect the drawing is laid out along — place (a map, a room, a rack), time (a timeline), routine or walk (its steps, a course), ordinal (a line) — and so what stands where in it; absent, placed by hand" }
           opens:
-            meaning: "zoom: a drawn element that opens a drawing of its own, of the parts of what it depicts. A lens holds its limit by opening a part, never by crowding it"
+            meaning: "zoom: a drawn element that opens a drawing of its own — another drawing of the page, or, with no `view`, a DETAIL of this one: the region a boundary draws, at a larger scale, as a technical drawing's detail view is. A lens holds its limit by opening a part, never by crowding it"
             in:
               entries:
-                element: { required: true, in: { type: kebab }, meaning: "the drawn element, by the id its drawing gives it" }
-                view:    { required: true, in: { key_of: views }, meaning: "the drawing it opens" }
+                element: { required: true, in: { type: kebab }, meaning: "the drawn element, by the id its drawing gives it: a part, or, for a detail, a boundary" }
+                view:    { in: { key_of: views }, meaning: "the drawing it opens; absent, the element is a boundary that opens as a detail of this drawing" }
           blind:     { required: true, meaning: "what the page cannot see of it, and why: never omitted", in: { entries: { what: { required: true, in: prose }, why: { in: prose } } } }
           notes:     { in: { entries: { note: { required: true, in: prose } } }, meaning: "operate: a line the person on call reads under the shape" }
           fill:      { in: { key_of: view_bindings }, meaning: "reservoir: how full it is" }
