@@ -34,7 +34,7 @@ def gate():
 
 # The owner is the gardener: a person who is not the gardener is kept by name only on their consent (24.0, F2), and
 # nothing here is about a second person.
-OWN = 'owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n'
+OWN = 'owned_by: { owner: { bean: keeper } }\n'
 
 def codebase(path, key, located=""):
     open(os.path.join(G, "beans", "tree.md"), "w").write(

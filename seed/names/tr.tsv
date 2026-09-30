@@ -5,7 +5,20 @@ natures:lekton	söylenebilen	söylemek (to say); anlam (meaning); itibarî (Otto
 term:nature	doğa	doğmak (to be born)	proposed	agent (claude opus-5.5), by hand
 term:genos	tür	tür (a kind, a species); cins (Arabic jins, genus)	proposed	agent (claude opus-5.5), by hand
 registry:gene	türler	tür (a kind)	proposed	agent (claude opus-5.5), by hand
+registry:lines	hatlar	hat (Arabic khaṭṭ: a line drawn)	proposed	agent (claude opus-5.5), by hand
+lines:frame	çerçeve	Persian chārchūb (four-wood: a frame)	proposed	agent (claude opus-5.5), by hand
+lines:matter	madde	Arabic mādda (stuff, matter)	proposed	agent (claude opus-5.5), by hand
+lines:gravitation	kütleçekim	kütle (mass) + çekim (a pull, from çekmek, to draw)	proposed	agent (claude opus-5.5), by hand
+lines:living	canlılar	can (Persian jān: life, soul)	proposed	agent (claude opus-5.5), by hand
+lines:logos	akıl	akıl (Arabic ʿaql: reason, first a tether); nutuk (Arabic nuṭq: speech and reason at once — hayvân-ı nâtık, the speaking animal)	proposed	agent (claude opus-5.5), by hand
+lines:made	yapılanlar	yapmak (to make, to build)	proposed	agent (claude opus-5.5), by hand
+registry:conditions	koşullar	koşmak (to harness, to yoke together)	proposed	agent (claude opus-5.5), by hand
+conditions:balance	denge	denk (equal on both sides); itidal (Ottoman: the mean, iʿtidāl)	proposed	agent (claude opus-5.5), by hand
+conditions:proportion	orantı	oran (a ratio)	proposed	agent (claude opus-5.5), by hand
+registry:foundation_rules	temel kurallar	temel (foundation, from θεμέλιον); kural (a rule, from kurmak, to set up)	proposed	agent (claude opus-5.5), by hand
+foundation_rules:weight	ağırlık	ağır (heavy)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	cisimlerin düzeni	düzen (order, from düzmek, to arrange); karmaşıklık (complexity); mertebe (Arabic: a rank one stands on)	proposed	agent (claude opus-5.5), by hand
+complexity:space-time	uzay∞zaman	uzay (space, from uzamak, to stretch out); zaman (time)	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	temel parçacık	temel (a foundation, from Greek θεμέλιον); parçacık (a little piece); nokta (the dot)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadron	ἁδρός (stout); kuark (quark)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	çekirdek	çekirdek (the seed of a fruit, the kernel)	proposed	agent (claude opus-5.5), by hand
@@ -20,16 +33,20 @@ complexity:population	popülasyon	populus (a people); nüfus (Arabic nufūs: sou
 complexity:community	topluluk	toplamak (to gather); biyolojik topluluk	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	ekosistem	οἶκος (a household) + σύστημα	proposed	agent (claude opus-5.5), by hand
 complexity:biosphere	biyosfer	βίος + σφαῖρα; küre (a sphere)	proposed	agent (claude opus-5.5), by hand
-complexity:material	madde	Arabic mādda (stuff, matter); malzeme (supplies)	proposed	agent (claude opus-5.5), by hand
+complexity:logos	akıl	akıl (Arabic ʿaql: reason, first a tether); nutuk (Arabic nuṭq: speech and reason at once — hayvân-ı nâtık, the speaking animal)	proposed	agent (claude opus-5.5), by hand
+complexity:material	malzeme	Arabic malzeme (supplies, what is needed); madde (the line it is on)	proposed	agent (claude opus-5.5), by hand
 complexity:rock	kaya	kaya (a rock, a cliff); taş (a stone)	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	gök cismi	gök (the sky); cisim (a body)	proposed	agent (claude opus-5.5), by hand
+complexity:planetary-system	gezegen sistemi	gezegen (a planet, from gezmek, to wander) — as πλανήτης is	proposed	agent (claude opus-5.5), by hand
+complexity:galaxy	gökada	gök (sky) + ada (island): a sky-island; Samanyolu (the straw road: the Milky Way)	proposed	agent (claude opus-5.5), by hand
 complexity:component	bileşen	bileşmek (to combine); parça (a piece)	proposed	agent (claude opus-5.5), by hand
 complexity:device	aygıt	aygıt (an apparatus); cihaz (Arabic jihāz: equipment)	proposed	agent (claude opus-5.5), by hand
 complexity:installation	tesis	Arabic taʾsīs (a founding); kurulum (a setting up, from kurmak)	proposed	agent (claude opus-5.5), by hand
 registry:crown	taç	Persian tāj (a crown)	proposed	agent (claude opus-5.5), by hand
-crown:theos	Bir Olan	bir (one); Tanrı (Old Turkic täŋri: heaven, God)	proposed	agent (claude opus-5.5), by hand
-crown:agape	sevgi	sevmek (to love); muhabbet (Arabic maḥabba); şefkat (tender care)	proposed	agent (claude opus-5.5), by hand
-term:creator	var eden	var (existent) + etmek (to make); Yaradan (the Creator) is THE ONE's, not a bean's	proposed	agent (claude opus-5.5), by hand
+crown:theone	Vâcibü'l-vücûd	Arabic wājib al-wujūd, the Necessary Existent; zorunlu varlık (necessary being, in today's Turkish)	proposed	agent (claude opus-5.5), by hand
+crown:love	sevgi	sevmek (to love); muhabbet (Arabic maḥabba); şefkat (tender care)	proposed	agent (claude opus-5.5), by hand
+crown:wisdom	hikmet	Arabic ḥikma (wisdom); bilgelik (wisdom, from bilmek, to know)	proposed	agent (claude opus-5.5), by hand
+term:via	aracılığıyla	aracı (a go-between, from ara, the between); vasıta (Arabic wāsiṭa, an intermediary)	proposed	agent (claude opus-5.5), by hand
 term:status	durum	durmak (to stand, to stop) — as status from stare	proposed	agent (claude opus-5.5), by hand
 registry:dimensions	boyutlar	boy (length, stature) + -ut	proposed	agent (claude opus-5.5), by hand
 dimensions:time	zaman	Persian zamān; süre (a duration, from sürmek, to last)	proposed	agent (claude opus-5.5), by hand
@@ -47,6 +64,12 @@ term:lives_in	yaşadığı yer	yaşamak (to live); yurt (a dwelling, a homeland)
 term:located_at	bulunduğu yer	bulunmak (to be found); konum (a position, from konmak, to alight, to settle)	proposed	agent (claude opus-5.5), by hand
 term:owned_by	sahibi	sahip (Arabic ṣāḥib: a companion, an owner); mülk (a property)	proposed	agent (claude opus-5.5), by hand
 term:responsibility	sorumlu	sormak (to ask): the one who is asked — as mas'ūl	proposed	agent (claude opus-5.5), by hand
+term:acquired	edinme	edinmek (to acquire, to get for oneself); satın almak (to buy)	proposed	agent (claude opus-5.5), by hand
+registry:facets	sorumluluk yönleri	yön (a side); sorumluluk (from sormak, to ask: being the one asked)	proposed	agent (claude opus-5.5), by hand
+facets:legal	hukuki	hukuk (Arabic ḥuqūq: rights)	proposed	agent (claude opus-5.5), by hand
+facets:technical	teknik	τέχνη (craft)	proposed	agent (claude opus-5.5), by hand
+facets:experience	deneyim	denemek (to try)	proposed	agent (claude opus-5.5), by hand
+facets:financial	mali	Arabic māl (wealth)	proposed	agent (claude opus-5.5), by hand
 registry:acts	edimler	etmek (to do); edim (an act)	proposed	agent (claude opus-5.5), by hand
 acts:made	yapılmış	yapmak (to make, to build)	proposed	agent (claude opus-5.5), by hand
 acts:derived	türetilmiş	türemek (to spring from, to come into being)	proposed	agent (claude opus-5.5), by hand

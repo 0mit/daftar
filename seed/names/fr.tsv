@@ -5,7 +5,20 @@ natures:lekton	le dicible	dire (dicere); l'exprimable (Bréhier's rendering of t
 term:nature	nature	natura	proposed	agent (claude opus-5.5), by hand
 term:genos	genre	genus (gignere, to beget); espèce	proposed	agent (claude opus-5.5), by hand
 registry:gene	les genres	genus	proposed	agent (claude opus-5.5), by hand
+registry:lines	les lignes	linea (a linen thread)	proposed	agent (claude opus-5.5), by hand
+lines:frame	cadre	quadrus (square): the frame of a picture	proposed	agent (claude opus-5.5), by hand
+lines:matter	matière	materia (timber)	proposed	agent (claude opus-5.5), by hand
+lines:gravitation	gravitation	gravis (heavy)	proposed	agent (claude opus-5.5), by hand
+lines:living	le vivant	vivere (to live)	proposed	agent (claude opus-5.5), by hand
+lines:logos	raison	ratio (a reckoning, a proportion)	proposed	agent (claude opus-5.5), by hand
+lines:made	le fabriqué	fabricare (to make, to forge); artefact	proposed	agent (claude opus-5.5), by hand
+registry:conditions	conditions	condicio (a stipulation)	proposed	agent (claude opus-5.5), by hand
+conditions:balance	juste milieu	le juste milieu (the mean); tempérament (temperamentum: the right mixing)	proposed	agent (claude opus-5.5), by hand
+conditions:proportion	proportion	pro portione (by each one's share)	proposed	agent (claude opus-5.5), by hand
+registry:foundation_rules	règles de fondement	fundamentum (fundus, the bottom)	proposed	agent (claude opus-5.5), by hand
+foundation_rules:weight	poids	pensum (what is weighed out, from pendere, to hang, to weigh)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	l'ordre des corps	ordre (ordo); Pascal, Pensées (Lafuma 308): bodies, minds and charity — three orders, the third infinitely above the first	proposed	agent (claude opus-5.5), by hand
+complexity:space-time	espace∞temps	spatium (a stretch); tempus	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	particule élémentaire	particule (particula, a little part); élément (elementum)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadron	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	noyau	noyau (the stone of a fruit, from nux)	proposed	agent (claude opus-5.5), by hand
@@ -20,16 +33,20 @@ complexity:population	population	populus (a people)	proposed	agent (claude opus-
 complexity:community	communauté	communis; biocénose (βίος + κοινός)	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	écosystème	οἶκος + σύστημα	proposed	agent (claude opus-5.5), by hand
 complexity:biosphere	biosphère	βίος + σφαῖρα (Vernadsky, La Biosphère, Paris 1929)	proposed	agent (claude opus-5.5), by hand
+complexity:logos	raison	ratio (a reckoning, a proportion)	proposed	agent (claude opus-5.5), by hand
 complexity:material	matériau	materia (timber)	proposed	agent (claude opus-5.5), by hand
 complexity:rock	roche	rocca	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	corps céleste	caelum + corpus	proposed	agent (claude opus-5.5), by hand
+complexity:planetary-system	système planétaire	πλανήτης (a wanderer)	proposed	agent (claude opus-5.5), by hand
+complexity:galaxy	galaxie	γάλα (milk); la Voie lactée	proposed	agent (claude opus-5.5), by hand
 complexity:component	composant	componere (to put together)	proposed	agent (claude opus-5.5), by hand
 complexity:device	appareil	apparare (to make ready)	proposed	agent (claude opus-5.5), by hand
 complexity:installation	installation	installare (to seat in place)	proposed	agent (claude opus-5.5), by hand
 registry:crown	la couronne	corona	proposed	agent (claude opus-5.5), by hand
-crown:theos	l'Un	un (unus); Dieu; l'Un (Plotinus)	proposed	agent (claude opus-5.5), by hand
-crown:agape	amour	amor; charité (caritas: Pascal's third order, infinitely above bodies and minds)	proposed	agent (claude opus-5.5), by hand
-term:creator	auteur	auctor (from augere, to make grow); créateur	proposed	agent (claude opus-5.5), by hand
+crown:theone	l'Être nécessaire	nécessaire (necesse); l'Être (being); Avicenna's necesse esse	proposed	agent (claude opus-5.5), by hand
+crown:love	amour	amor; charité (caritas: Pascal's third order, infinitely above bodies and minds)	proposed	agent (claude opus-5.5), by hand
+crown:wisdom	sagesse	sapere (to taste, to know): sage, the one who discerns the savour of things	proposed	agent (claude opus-5.5), by hand
+term:via	par	per (through); par l'entremise de (by the going-between of)	proposed	agent (claude opus-5.5), by hand
 term:status	état	status (stare)	proposed	agent (claude opus-5.5), by hand
 registry:dimensions	dimensions	dimetiri (to measure out)	proposed	agent (claude opus-5.5), by hand
 dimensions:time	temps	tempus (a stretch, a section — perhaps from the root of τέμνω, to cut)	proposed	agent (claude opus-5.5), by hand
@@ -47,6 +64,12 @@ term:lives_in	vit dans	habiter (habitare: to keep having, to dwell)	proposed	age
 term:located_at	situé	situs (a site, a position)	proposed	agent (claude opus-5.5), by hand
 term:owned_by	propriétaire	proprius (one's own)	proposed	agent (claude opus-5.5), by hand
 term:responsibility	responsable	respondere	proposed	agent (claude opus-5.5), by hand
+term:acquired	acquisition	acquirere (ad + quaerere, to seek)	proposed	agent (claude opus-5.5), by hand
+registry:facets	les modes du souci	souci (care: Heidegger's Sorge, in French)	proposed	agent (claude opus-5.5), by hand
+facets:legal	juridique	ius (right)	proposed	agent (claude opus-5.5), by hand
+facets:technical	technique	τέχνη (craft)	proposed	agent (claude opus-5.5), by hand
+facets:experience	expérience	experiri (to try)	proposed	agent (claude opus-5.5), by hand
+facets:financial	financier	finis (an end)	proposed	agent (claude opus-5.5), by hand
 registry:acts	actes	agere	proposed	agent (claude opus-5.5), by hand
 acts:made	fait	facere	proposed	agent (claude opus-5.5), by hand
 acts:derived	dérivé	derivare (rivus, a stream)	proposed	agent (claude opus-5.5), by hand

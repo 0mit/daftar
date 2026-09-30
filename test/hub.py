@@ -99,8 +99,7 @@ title: "{what}"
 status: active
 summary: "{what}"
 nature: lekton
-owned_by: {{ legal: {{ owner: {{ bean: keeper }} }} }}
-responsibility: {{ legal: {{ holder: {{ bean: keeper }} }} }}
+owned_by: {{ owner: {{ bean: keeper }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "document:{bid}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 located_at: [ {{ system: unix-filesystem, openness: unknown }} ]
@@ -147,7 +146,7 @@ title: "bake-2026"
 status: active
 summary: "the baker's terms"
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:bake-2026", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
@@ -165,7 +164,7 @@ title: "baker"
 status: active
 summary: "the baker"
 nature: soma
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ self: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:baker", class: logical, establishing: true }}, {{ key: {ANCHOR}, value: "{BAKER_FPR}", class: logical, establishing: {ESTABLISHING} }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}

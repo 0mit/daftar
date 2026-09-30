@@ -2898,8 +2898,10 @@ def unknown_value_hint(sch, rule=None, term=None):
 def ectl_entry_values(e):
     for attr, allowed in _facet(e.form, 'values', e.scope):
         if e.entry.get(attr) is not None and e.entry[attr] not in allowed:
-            errors.append(f"{e.base}: {e.ref}.{attr} '{e.entry[attr]}' not in {allowed} — write one of those"
-                          + _rule(f"{e.term}.schema.attrs.{attr}.in", e.term))
+            # the list as YAML writes it (`true`, never Python's `True`), and a word the law retired named with its successor
+            _shown = '[' + ', '.join(('true' if v is True else 'false' if v is False else str(v)) for v in allowed) + ']'
+            errors.append(f"{e.base}: {e.ref}.{attr} '{e.entry[attr]}' not in {_shown} — write one of those"
+                          + retired_hint(attr, e.entry[attr]) + _rule(f"{e.term}.schema.attrs.{attr}.in", e.term))
 
 
 def ectl_entry_types(e):
@@ -3698,8 +3700,7 @@ def _kept_gardens(pid):
     out = []
     for b, g in ALL_FM.items():
         if isinstance(g, dict) and g.get('genos') == 'garden' and isinstance(g.get('owned_by'), dict):
-            if any(isinstance(f, dict) and isinstance(f.get('owner'), dict) and f['owner'].get('bean') == pid
-                   for f in g['owned_by'].values()):
+            if isinstance(g['owned_by'].get('owner'), dict) and g['owned_by']['owner'].get('bean') == pid:
                 out.append(b)
     return out
 
@@ -5340,7 +5341,7 @@ def ctl_alt_form(c):
 
 def ctl_required_attrs(c):
     """`required_attrs:` — attributes the mapping itself must carry. And, since 12.0, ONLY declared ones."""
-    if c.sch.get('shape') == 'mapping' and not c.sch.get('key_form') and not form_of(c.term)['one_of']:
+    if c.sch.get('shape') == 'mapping' and not c.sch.get('key_form'):
         undeclared_attrs(c.base, c.term, c.term, c.node, c.sch)
     for attr, _ in _facet(attribute_form(c.term, c.sch), 'required', 'self'):
         if isinstance(c.node, dict) and attr not in c.node:
@@ -5351,7 +5352,7 @@ def ctl_required_attrs(c):
 
 
 # The entry-only constructs: what they say is about an ENTRY among entries, or is stated for a value in its own words.
-_NOT_FOR_A_VALUE = ('declared_attrs', 'attr: required', 'entry_must_match', 'entry_form_from_genos_attr', 'entry_one_of')
+_NOT_FOR_A_VALUE = ('declared_attrs', 'attr: required', 'entry_must_match')
 
 
 def ctl_value_as_entry(c):
@@ -5475,8 +5476,8 @@ def ctl_entries(c):
     """The per-ENTRY rules, for any shape that has entries at all."""
     shape = c.sch.get('shape')
     _form = form_of(c.term)
-    if shape in ('list_of_entries', 'open_map_of_entries') or _form['one_of'] \
-            or _facet(_form, 'required', 'entry'):
+    if shape in ('list_of_entries', 'open_map_of_entries') or (_form['scope'] == 'entry' and (
+            _form['one_of'] or _facet(_form, 'required', 'entry'))):
         for label, entry in entries_of(shape, c.node):
             _at = _member_path(c.term, c.term, label, entry) if isinstance(c.node, list) else f"{c.term}.{label}"
             if _captured(c.fm, _at, entry):
@@ -5690,61 +5691,146 @@ def check_layers():
                           + f": write 'file:{glob.escape(_d)}' to name that one file" + _rule('standing'))
 
 
-# --- facet parity: two arcs of one loop must carry the same facets (schema `facet_parity_with`; P7) ---
-# Ownership is meaningful only where responsibility covers it on the opposite aspect. A facet owned but
-# unanswered-for is a loose end; a facet answered for but unowned is orphaned.
-def _facet_shape(node, alt):
-    """The set of facets a node carries, or the INHERITED form's key when it uses that form instead.
-
-    `alt` comes from the term's own `alt_form.key`, never from a literal here: the interpreter reads
-    that declaration generically everywhere else, and this check was the one place that knew the name
-    by heart — a second copy of a declared datum, sitting three functions from where it is read.
-    """
-    if not isinstance(node, dict):
-        return None
-    return alt if (alt and alt in node) else frozenset(node)
+# --- answering for a being (32.0, `responsibility` over `facets`) -----------------------------------------------------
+def _ref_bean(v):
+    return v.get('bean') if isinstance(v, dict) else (v if isinstance(v, str) else None)
 
 
-def _alt_key(term):
-    return (form_of(term)['alt'] or {}).get('key')
-
-
-def _shape_str(shape, alt):
-    # key=str: a key YAML read as a number or a boolean (`1:`, `yes:`) sits beside the facet names, and the shape is
-    # printed, never compared — the refusal of that key by name is the answer, not a traceback in sorting it
-    return alt if shape == alt else sorted(shape, key=str)
-
-def check_facet_parity():
-    for _term, _sch in SCHEMAS.items():
-        _par = form_of(_term)['mirror']['parity_with'] if _term in SCHEMAS else None
-        if not _par:
+def check_answers_for():
+    """WHO ANSWERS FOR A BEING, AND HOW (32.0). Ownership says whose a being is; answering is care, facet by facet, and
+    the facets are ways of answering, never of owning. A facet the law marks `answered_by_owner` (legal) is its owner's
+    unless another is stated: an entry that repeats the owner is a placeholder and refused; where the owner cannot
+    answer — outside this ledger, or no bean — someone here must. A facet with `applies_to` is written only on a being
+    of those natures or gene: nobody runs a record."""
+    facets = {str(r.get('facet')): r for r in (registry('facets') or []) if isinstance(r, dict) and r.get('facet')}
+    by_owner = [f for f, r in facets.items() if r.get('answered_by_owner')]
+    for bid, fm in ALL_FM.items():
+        if not isinstance(fm, dict) or not bid or (fm.get('genos') is None and fm.get('kind') is not None):
             continue
-        for (_is_bean, _base), (_fm, _b) in docs.items():
-            if not _is_bean:
+        ob = fm.get('owned_by') if isinstance(fm.get('owned_by'), dict) else {}
+        rs = fm.get('responsibility') if isinstance(fm.get('responsibility'), dict) else {}
+        if 'from' in rs:
+            continue
+        owner = _ref_bean(ob.get('owner'))
+        for f in by_owner:
+            e = rs.get(f)
+            if isinstance(e, dict) and owner and _ref_bean(e.get('holder')) == owner:
+                errors.append(f"{bid}: responsibility.{f} names {owner}, who owns it — its owner answers for it {f}ly already, "
+                              f"so the entry is a placeholder: write `{f}` only where another answers, or where the owner "
+                              f"is outside this ledger or no bean" + _rule(f"facets.{f}", 'responsibility'))
+            if e is None and any(k in ob for k in ('external', 'crown')):
+                _who = 'someone outside this ledger' if 'external' in ob else 'no bean'
+                errors.append(f"{bid}: owned by {_who}, and nobody here answers for it {f}ly — "
+                              f"`responsibility: {{ {f}: {{ holder: … }} }}`, or `self: true` for a person, `parties: true` "
+                              f"for an agreement" + _rule(f"facets.{f}", 'responsibility'))
+        for f, e in rs.items():
+            at = (facets.get(str(f)) or {}).get('applies_to')
+            if not isinstance(at, dict):
                 continue
-            _a, _o = _fm.get(_term), _fm.get(_par)
-            if _a is None and _o is None:
-                continue
-            if _a is None:
-                errors.append(f"{_base}: has {_par} but no {_term} — an ownership claim nothing answers for "
-                              f"is a loose end" + _rule(f"{_term}.rules.parity", _term))
-            elif _o is None:
-                errors.append(f"{_base}: has {_term} but no {_par} — a duty nobody owns is orphaned "
-                              + _rule(f"{_term}.rules.parity", _term))
-            else:
-                _ka, _ko = _alt_key(_term), _alt_key(_par)
-                _sa, _so = _facet_shape(_a, _ka), _facet_shape(_o, _ko)
-                if _sa is None or _so is None:
-                    # One of the two is not a mapping at all, so it has no facet SHAPE to compare. The
-                    # `must be a MAPPING` rule owns that error; comparing anyway crashed the gate on
-                    # `sorted(None)` — reachable since this check was written, and reached for the first
-                    # time by the coverage pass that was measuring what the suite never fires.
-                    continue
-                if _sa != _so:
-                    errors.append(f"{_base}: {_term} and {_par} disagree on facets "
-                                  f"({_shape_str(_sa, _ka)} vs {_shape_str(_so, _ko)}) — "
-                                  f"the two arcs must close" + _rule(f"{_term}.rules.parity", _term))
+            g = GENE.get(fm.get('genos')) or {}
+            if fm.get('nature') not in (at.get('natures') or []) and fm.get('genos') not in (at.get('gene') or []):
+                errors.append(f"{bid}: responsibility.{f} on a {fm.get('genos')} — the facet `{f}` applies only to "
+                              f"{', '.join(map(str, (at.get('natures') or []) + (at.get('gene') or [])))}: "
+                              f"{str(facets[str(f)].get('meaning', '')).split(':')[0]}; a {fm.get('genos')} has none"
+                              + _rule(f"facets.{f}", 'responsibility'))
 
+
+# --- the life chain (32.0, `via`): the giver stands where the gift needs it -------------------------------------------
+def check_vias():
+    """THE LIFE CHAIN (32.0). A being came to be through its vias, and every chain ends at the Creator, `theone`, whom no
+    bean names. The giver stands where the gift needs it: a being on a line of the ladder whose `given_by` names a line
+    (the living) comes through beings of that line; one whose line or nature is given by a step (the made, the sayable:
+    `logos`) comes through hands — a being whose kind stands at that step — directly, or through tools whose own vias go
+    on to it. An unknown via is SOMEONE of a kind, reached through a being held here or named outside it. Never
+    demanded: a being that states none is held at the Creator all the same."""
+    cx = {str(r.get('level')): r for r in (registry('complexity') or []) if isinstance(r, dict) and r.get('level')}
+    ln = {str(r.get('line')): r for r in (registry('lines') or []) if isinstance(r, dict) and r.get('line')}
+    nat = {str(r.get('nature')): r for r in (registry('natures') or []) if isinstance(r, dict) and r.get('nature')}
+
+    def need(fm):
+        """What the gift needs of its giver: ('line', <line>) or ('rung', <step>), or None."""
+        g = GENE.get((fm or {}).get('genos')) or {}
+        lv = cx.get(str(g.get('level')))
+        if lv is not None:
+            gb = (ln.get(str(lv.get('line'))) or {}).get('given_by')
+            if gb:
+                return ('line', gb) if gb in ln and gb != 'logos' else ('rung', gb)
+            return None
+        gb = (nat.get(str((fm or {}).get('nature'))) or {}).get('given_by')
+        return ('rung', gb) if gb else None
+
+    def kind_meets(genos, what):
+        g = GENE.get(genos) or {}
+        if what[0] == 'line':
+            return str((cx.get(str(g.get('level'))) or {}).get('line')) == what[1]
+        return str(g.get('rung')) == what[1]
+
+    def reaches(bid, what, seen):
+        """Does the chain from `bid` reach a giver that meets `what`? (True, '') or (False, the being it stops at)."""
+        if bid in seen:
+            return False, f"{bid} (the chain returns to it)"
+        fm = ALL_FM.get(bid)
+        if fm is None:
+            return False, f"{bid} (no bean of this garden)"
+        if kind_meets(fm.get('genos'), what):
+            return True, ''
+        if what[0] == 'line':
+            return False, bid
+        vias = [v for v in (fm.get('via') or []) if isinstance(v, dict)]
+        if not vias:
+            return False, bid
+        stop = bid
+        for v in vias:
+            if v.get('someone') is not None:
+                if kind_meets(v['someone'], what):
+                    return True, ''
+                stop = f"someone ({v['someone']})"
+                continue
+            ok, stop = reaches(str(v.get('bean')), what, seen | {bid})
+            if ok:
+                return True, ''
+        return False, stop
+
+    for bid, fm in ALL_FM.items():
+        vias = (fm or {}).get('via')
+        if vias is None:
+            continue
+        if not isinstance(vias, list):
+            continue                      # the shape is the interpreter's to refuse
+        for v in vias:
+            if not isinstance(v, dict):
+                continue
+            if v.get('bean') is not None and str(v['bean']) not in ALL_FM:
+                errors.append(f"{bid}: via names {v['bean']}, which is no bean of this garden — a giver not held here is "
+                              f"SOMEONE: `{{ someone: <kind>, through: <a bean held here> }}` or `outside: <its name>`"
+                              + _rule('via', 'via'))
+            if v.get('someone') is not None and v.get('through') is None and v.get('outside') is None:
+                errors.append(f"{bid}: via someone ({v['someone']}) reached through nothing — an unknown giver is a fact only "
+                              f"with what it is reached through: `through: <a bean held here>`, or `outside: <its name>`"
+                              + _rule('via', 'via'))
+            if v.get('through') is not None and str(v['through']) not in ALL_FM:
+                errors.append(f"{bid}: via someone through {v['through']}, which is no bean of this garden — `outside: "
+                              f"<its name>` names one not held here" + _rule('via', 'via'))
+        what = need(fm)
+        if what is None:
+            continue
+        for v in vias:
+            if not isinstance(v, dict):
+                continue
+            if v.get('someone') is not None:
+                ok, stop = kind_meets(v['someone'], what), f"someone ({v['someone']})"
+            elif v.get('bean') is not None and str(v['bean']) in ALL_FM:
+                ok, stop = reaches(str(v['bean']), what, {bid})
+            else:
+                continue
+            if not ok:
+                _need = (f"a living being — a being of the line `{what[1]}`" if what[0] == 'line' else
+                         f"hands — a being whose kind stands at `{what[1]}` (" + ', '.join(sorted(
+                             g for g, r in GENE.items() if isinstance(r, dict) and str(r.get('rung')) == what[1])) + ")")
+                errors.append(f"{bid}: its life chain through {v.get('bean') or v.get('someone')} stops at {stop}, and "
+                              f"a {fm.get('genos')} comes through {_need}. A tool that acted for them is a via only when "
+                              f"its own `via` goes on to them; an unknown one is `{{ someone: person, through: … }}`"
+                              + _rule('via', 'via'))
 
 
 # --- declared inverse relations must agree (schema `inverse_of`; P4/D3) ----------------------------
@@ -6942,20 +7028,17 @@ def check_target_obligation_widened():
 
 
 def _termination_hint(term, bean):
-    """The line that would terminate a chain at `bean`, when the vocabulary pins that bean's form — read from
-    the genos's `ownership_form`, the nature's crown branch, and the term's own terminal forms, naming none."""
+    """The line that would terminate a chain at `bean`, when the vocabulary pins that bean's form — read from the genos's
+    `ownership_form` and the term's own terminal forms, naming none."""
     fm = ALL_FM.get(bean) or {}
     if (GENE.get(fm.get('genos')) or {}).get('ownership_form') != 'crown':
         return ''
     one_of = form_of(term)['one_of']
     if 'crown' in one_of:
-        # THE CROWN IS THE LIFE CHAIN: its one branch a bean names is the row that is not the root
-        branch = next((r.get('branch') for r in (registry('crown') or []) if isinstance(r, dict) and not r.get('root')), None)
-        return f". A genos:{fm.get('genos')} bean states its own: {term}: {{ legal: {{ crown: {branch} }} }}" if branch else ''
+        return f". A genos:{fm.get('genos')} bean states its own: {term}: {{ crown: true }} — its chain ends at the crown"
     if 'self' in one_of:
         return f". A genos:{fm.get('genos')} bean answers for itself: {term}: {{ legal: {{ self: true }} }}"
     return ''
-
 
 def check_divisions():
     """THE DOT, DIVIDED (31.0, `division_form`): every division the law or the garden declares is in the form's shape —
@@ -7108,6 +7191,38 @@ def check_names():
                           f"each naming what the others name" + _rule('name_form', 'name_form'))
 
 
+def check_foundation_rules():
+    """WHAT HOLDS FOR EVERYTHING STANDING ON A STEP (32.0, `foundation_rules`). A rule a step of the ladder carries holds
+    for every being standing on it, and a being that does not stand there has no part in it: every body has weight,
+    because it stands on space∞time, and a sayable being has none of its own. So a value in a measure the rule keeps for
+    one nature (a mass) is refused on a being of another — unless the attribute says it measures the bodies the being
+    stands for (`of_bodies: true`), as a product states each unit's weight."""
+    for rule in registry('foundation_rules') or []:
+        if not isinstance(rule, dict) or not rule.get('dimension'):
+            continue
+        dim, keeps = str(rule['dimension']), str(rule.get('holds_for'))
+        qs = {q for q, row in QUANTITIES.items() if isinstance(row, dict) and row.get('of') == {dim: 1}}
+        spots = []
+        for term, sch in SCHEMAS.items():
+            for attr, rec in ((sch or {}).get('attrs') or {}).items():
+                dom = rec.get('in') if isinstance(rec, dict) else None
+                if isinstance(dom, dict) and str(dom.get('quantity')) in qs and rec.get('of_bodies') is not True:
+                    spots.append((term, attr, sch.get('shape')))
+        for bid, fm in ALL_FM.items():
+            nature = (fm or {}).get('nature')
+            if not nature or nature == keeps:
+                continue
+            for term, attr, shape in spots:
+                node = (fm or {}).get(term)
+                entries = (node if isinstance(node, list) else list(node.values()) if shape == 'open_map_of_entries'
+                           and isinstance(node, dict) else [node])
+                if any(isinstance(e, dict) and e.get(attr) is not None for e in entries):
+                    errors.append(f"{bid}: {term}.{attr} states a {dim} of this {nature}'s own, and the rule '{rule.get('rule')}' "
+                                  f"holds only for {keeps}: a {nature} being has no {dim} of its own — state it on the body "
+                                  f"it stands for, or on an attribute that says it measures the being's bodies "
+                                  f"(`of_bodies: true`)" + _rule('foundation_rules', 'foundation_rules'))
+
+
 def check_frame():
     """THE FRAME (31.0): place and time, each only with the other. Every system of dimension place or time states its
     `complement` — how a position in it finds its other half: stated in the entry, the bearer's, or carried by the
@@ -7135,41 +7250,68 @@ def check_frame():
 
 
 def check_complexity():
-    """THE ORDER OF BODIES (31.0, `complexity`): a level stands on levels the law declares, and on none of them through
-    itself; a genos of the nature soma names the level it stands at, and a genos of any other nature names none — a
-    sayable being is placed in an order, not among bodies. And a part never stands above its whole: through `part_of`,
-    every body's level is its whole's, or one its whole stands on — "every being made sits on the previous less complex
-    structure". Complexity is what stands on what, and nothing else: no rate, no count."""
-    levels = {str(r.get('level')): [str(s) for s in (r.get('stands_on') or [])]
-              for r in (registry('complexity') or []) if isinstance(r, dict) and r.get('level')}
-    if not levels:
+    """THE LADDER (32.0, `complexity`): what stands on what, from the frame to the crown. Each step stands on steps the
+    law declares, each edge saying how — `made-of` (the lower is in the higher: a cell of molecules) or `possible-on`
+    (the lower is the condition, not a part: life on a world in balance), with the condition it holds `while`, a row of
+    `conditions` — and no step stands on itself through others. A step of a line of bodies may be a genos's `level`; a
+    step that holds no body (`bodies: false`: the frame, λόγος) never is, and a kind that stands there names it as its
+    `rung`. A part never stands above its whole: through `part_of`, a body's level is its whole's, or one its whole is
+    made of. Complexity is what stands on what, and nothing else: no rate, no count."""
+    rows = [r for r in (registry('complexity') or []) if isinstance(r, dict) and r.get('level')]
+    if not rows:
         return
+    lines = {str(r.get('line')) for r in (registry('lines') or []) if isinstance(r, dict) and r.get('line')}
+    conds = {str(r.get('condition')) for r in (registry('conditions') or []) if isinstance(r, dict) and r.get('condition')}
+    levels, made, bodies = {}, {}, {}
+    for r in rows:
+        lv = str(r['level'])
+        bodies[lv] = r.get('bodies') is not False
+        levels[lv], made[lv] = [], []
+        if lines and str(r.get('line')) not in lines:
+            errors.append(f"law complexity: '{lv}' is on the line '{r.get('line')}', which is no row of `lines`"
+                          + _rule('complexity', 'complexity'))
+        for s in r.get('stands_on') or []:
+            if not isinstance(s, dict) or s.get('as') not in ('made-of', 'possible-on') or not s.get('level'):
+                errors.append(f"law complexity: '{lv}' stands on {s!r} — each edge is `{{ level, as: made-of | possible-on, "
+                              f"while? }}`" + _rule('complexity', 'complexity'))
+                continue
+            levels[lv].append(str(s['level']))
+            if s['as'] == 'made-of':
+                made[lv].append(str(s['level']))
+            if s.get('while') is not None and str(s['while']) not in conds:
+                errors.append(f"law complexity: '{lv}' stands on '{s['level']}' while '{s['while']}', which is no row of "
+                              f"`conditions`" + _rule('complexity', 'complexity'))
     for lv, under in levels.items():
         for s in under:
             if s not in levels:
-                errors.append(f"law complexity: '{lv}' stands on '{s}', which is no level the law declares"
+                errors.append(f"law complexity: '{lv}' stands on '{s}', which is no step the law declares"
                               + _rule('complexity', 'complexity'))
 
-    def below(lv, seen=()):
+    def below(lv, graph, seen=()):
         out = set()
-        for s in levels.get(lv, []):
+        for s in graph.get(lv, []):
             if s in seen:
                 continue
             out.add(s)
-            out |= below(s, seen + (lv,))
+            out |= below(s, graph, seen + (lv,))
         return out
     for lv in levels:
-        if lv in below(lv):
-            errors.append(f"law complexity: '{lv}' stands on itself through the levels beneath it — the order of bodies is "
+        if lv in below(lv, levels):
+            errors.append(f"law complexity: '{lv}' stands on itself through the steps beneath it — the ladder is "
                           f"partial, and never a circle" + _rule('complexity', 'complexity'))
     for g, row in GENE.items():
         if not isinstance(row, dict):
             continue
         where = 'VOCAB local_gene' if any(isinstance(r, dict) and r.get('genos') == g for r in (registry('local_gene') or [])) \
             else 'law gene'
-        if row.get('of_nature') == 'soma' and str(row.get('level')) not in levels:
+        _body_levels = [x for x in levels if bodies[x]]
+        if row.get('of_nature') == 'soma' and (str(row.get('level')) not in levels or not bodies.get(str(row.get('level')))):
             errors.append(f"{where} '{g}': a body names the level it stands at among bodies — `level`, one of "
-                          f"{', '.join(levels)}" + _rule('complexity', 'complexity'))
+                          f"{', '.join(_body_levels)}" + _rule('complexity', 'complexity'))
+        if row.get('rung') is not None and (str(row['rung']) not in levels or bodies.get(str(row['rung']))):
+            errors.append(f"{where} '{g}': `rung: {row['rung']}` names a step that holds no body — one of "
+                          f"{', '.join(x for x in levels if not bodies[x])}; a body's own place is its `level`"
+                          + _rule('complexity', 'complexity'))
         _aw = row.get('alive_while')
         if _aw is not None and (not isinstance(_aw, dict) or _aw.get('known') not in ('measured', 'derived', 'said', 'always')
                                 or set(_aw) - {'known', 'by'}):
@@ -7186,10 +7328,9 @@ def check_complexity():
             continue
         lp = (GENE.get((fm or {}).get('genos')) or {}).get('level')
         lw = (GENE.get((ALL_FM[whole] or {}).get('genos')) or {}).get('level')
-        if lp and lw and str(lp) != str(lw) and str(lp) not in below(str(lw)):
+        if lp and lw and str(lp) != str(lw) and str(lp) not in below(str(lw), made):
             errors.append(f"{bid}: part_of {whole}, and a part never stands above its whole — '{lp}' is not '{lw}' and "
-                          f"not a level '{lw}' stands on" + _rule('complexity', 'complexity'))
-
+                          f"not a level '{lw}' is made of" + _rule('complexity', 'complexity'))
 
 def check_chain_termination():
     """MODEL.md: "every chain terminates there". The gate only checked that no chain LOOPS.
@@ -7204,14 +7345,17 @@ def check_chain_termination():
     """
     for _term, _sch in SCHEMAS.items():
         _form = form_of(_term)
-        if not on_walk(_sch) or not _form['one_of']:
+        # a chain must end only for a term every bean carries (`required`): an answerer needs no answering chain of its
+        # own, since its owner answers for it (32.0)
+        if not on_walk(_sch) or not _form['one_of'] or not _sch.get('required'):
             continue
         # THE TERM SAYS WHICH FORMS END A CHAIN: `entry_one_of` offers the forms and `entry_ref_fields`
         # names the ones that point at another bean, so the difference IS the terminal set. Listed by hand
         # here (as ('external','crown','self')) and differently in the hook's fast subset (which accepted
         # `contract`), one rule had two answers, and the vocabulary's — `contract` is a ref, so a chain
         # through it continues — was neither of them.
-        _terminal = set(_form['one_of']) - set(dmform.ref_attrs(_form, 'entry'))
+        _scope = _form['scope']
+        _terminal = set(_form['one_of']) - set(dmform.ref_attrs(_form, _scope))
         if not _terminal:
             continue
         _alt = (_form['alt'] or {}).get('key')
@@ -7229,6 +7373,11 @@ def check_chain_termination():
                     break
                 if _alt and _alt in _node:
                     _nxt = (_node[_alt] or {}).get('bean') if isinstance(_node[_alt], dict) else None
+                elif _scope == 'self':                           # the mapping is one entry (32.0: `owned_by`)
+                    if any(f in _terminal for f in _node):
+                        break
+                    _nxt = next(((_node.get(_r) or {}).get('bean') for _r in dmform.ref_attrs(_form, 'self')
+                                 if isinstance(_node.get(_r), dict)), None)
                 elif any(f in _terminal for _facet in _node.values()
                          if isinstance(_facet, dict) for f in _facet):
                     break                                        # a facet terminates outside or at the axiom
@@ -7348,8 +7497,10 @@ PLIES = (
      "judged; builds `LAYER_MAP`"),
     (check_gardens,
      "whose garden, which gardens it knows, what names cross — needs every bean, and the provenance records the terms read"),
-    (check_facet_parity,
-     "the two arcs of the ownership loop must carry the same facets"),
+    (check_answers_for,
+     "32.0: who answers for a being — legal only where its owner cannot, each facet only where it applies"),
+    (check_vias,
+     "32.0: the life chain — the giver stands where the gift needs it, and every chain ends at the Creator"),
     (check_inverse_relations,
      "a convenience edge may not drift from the fact it mirrors"),
     (check_vacancy_reasons_declared,
@@ -7382,6 +7533,8 @@ PLIES = (
      "31.0: the dot, divided — every division in the form's shape, naming the rule that judges it, a garden's own judged here"),
     (check_names,
      "31.0: the names layer — each language's file in the form, every row an item of the law, the languages siblings"),
+    (check_foundation_rules,
+     "32.0: what holds for everything standing on a step — every body has weight, and a sayable being none of its own"),
     (check_frame,
      "31.0: the frame — place and time each name the other, and every place or time system says how its positions find theirs"),
     (check_complexity,

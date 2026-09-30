@@ -231,7 +231,7 @@ summary: "probe"
 nature: soma
 identity: {{ status: confirmed, anchors: [ {{ key: serial, value: "SN-CAL-1", class: hardware, establishing: true }} ] }}
 provenance: {{ src: observed, by: probe, as_of: 2026-09-20 }}
-owned_by: {{ legal: {{ external: "someone" }} }}
+owned_by: {{ external: someone }}
 responsibility: {{ legal: {{ external: "someone" }} }}
 located_at:
   - {{ system: geographic, at: "{as_of}", openness: here, observed: 2026-09-20 }}
@@ -256,7 +256,7 @@ summary: "probe"
 nature: soma
 identity: {{ status: confirmed, anchors: [ {{ key: serial, value: "SN-CAL-1", class: hardware, establishing: true }} ] }}
 provenance: {{ src: observed, by: probe, as_of: 2026-09-20 }}
-owned_by: {{ legal: {{ external: "someone" }} }}
+owned_by: {{ external: someone }}
 responsibility: {{ legal: {{ external: "someone" }} }}
 located_at:
   - {{ system: geographic, at: "EPSG:4326;35.6892,51.3890", openness: here, observed: {observed} }}

@@ -89,7 +89,7 @@ def legacy_form(term_def, sch):
             'matches': {'entry': list(sch.get('entry_must_match') or []),
                         'form_from_genos': sch.get('entry_form_from_genos_attr'),
                         'equal_genos_attr': sch.get('must_equal_genos_attr')},
-            'mirror': {'parity_with': sch.get('facet_parity_with'), 'inverse_of': sch.get('inverse_of')}}
+            'mirror': {'inverse_of': sch.get('inverse_of')}}
 
     def put(scope, facet, name, rule):
         rec = form['attrs'].setdefault(name, {'scope': scope})

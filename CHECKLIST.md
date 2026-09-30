@@ -34,9 +34,12 @@ garden, and `--staged` what a commit would hold. On a clean commit the hook prin
       establishing anchor of a confirmed bean is of its nature's family.
 - [ ] No establishing anchor is shared by two beans (serials compared ignoring case and spaces).
 - [ ] Every edge resolves to an existing bean or mapping, and field; relations declared acyclic stay acyclic.
-- [ ] Every ownership chain ends — at a bean's owner, outside the ledger, or at the crown — and every facet with
-      an owner has one responsibility entry, and every facet with one has an owner. Every facet but `legal` reaches
-      it through what it depends on, and none reaches itself.
+- [ ] Every ownership chain ends — at a bean's owner, outside the ledger, or at the crown — and a being has one owner,
+      with no facets. Someone answers for it before the law: its owner, or, where the owner is outside or no bean, the
+      one `responsibility.legal` names. Every other facet of care is written only where someone answers for it and only
+      on a being it applies to; none repeats the owner.
+- [ ] A stated `via` reaches a giver of the gift's kind — the living for a living being, hands for a made or said
+      thing, named or `someone` reached through what is known.
 - [ ] Every position the garden declares is used by a bean, or declared vacant with a reason.
 - [ ] One authoritative owner per IP address.
 - [ ] `VOCAB.md` and `GARDEN.md` pin the installed vocabulary version.

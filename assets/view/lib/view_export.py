@@ -88,11 +88,11 @@ def document_bean(bid, title, digest, path, keeper, member):
     return ("---\nbean: %s\ngenos: document\ntitle: \"%s\"\nstatus: active\nsummary: \"%s\"\nnature: lekton\n"
             "identity:\n  status: confirmed\n  anchors:\n    - { key: content_hash, value: \"%s\", class: logical, establishing: true }\n"
             "provenance: { src: generated-by-tool, by: \"dmview render\", as_of: now }\n"
-            "owned_by: { legal: { owner: { bean: %s } } }\nresponsibility: { legal: { holder: { bean: %s } } }\n"
+            "owned_by: { owner: { bean: %s } }\n"
             "refs: { rendered-from: { bean: %s, rel: rendered-from } }\n"
             "located_at:\n  - { system: unix-filesystem, openness: here, at: \"%s\", observed: now }\n"
             "---\n%s, rendered from [[%s]] by the page's template and kept by its content.\n"
-            % (bid, title.replace('"', "'"), ("A document rendered from %s's record." % member), digest, keeper, keeper,
+            % (bid, title.replace('"', "'"), ("A document rendered from %s's record." % member), digest, keeper,
                member, path.replace('"', "'"), title.replace('"', "'"), member))
 
 

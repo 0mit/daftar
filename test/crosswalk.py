@@ -178,7 +178,7 @@ check("...a coordinate is never bare: the datum, then latitude and longitude, in
       'EPSG:4326;57.1203,-6.1044' in out, out)
 check("...and Darwin Core's uncertainty is an accuracy of kind bound, in metres; with none stated, none is given",
       re.search(r"accuracy: \{count: '30', unit: metre, kind: bound\}", out) and out.count("accuracy") == 1, out)
-OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
+OWN = "owned_by: { owner: { bean: keeper } }\n"
 for bid, text in re.findall(r"# beans/([a-z-]+)\.md\n(.*?)(?=\n# beans/|\Z)", out, re.S):
     write(f"beans/{bid}.md", f"---\nbean: {bid}\ngenos: organism\ntitle: \"{bid}\"\nstatus: active\n"
           f"summary: \"a rowan on an invented island\"\nnature: soma\n{OWN}"

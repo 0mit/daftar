@@ -5,7 +5,20 @@ natures:lekton	گفتنی	گفتن (goftan, to say); معنا (ma'nā: meaning, 
 term:nature	سرشت	سرشتن (to knead: the make a being is of)	proposed	agent (claude opus-5.5), by hand
 term:genos	گونه	گونه (gune, Middle Persian gōnag: colour, sort); جنس (jens, Arabic: genus); تیره (tire: a lineage)	proposed	agent (claude opus-5.5), by hand
 registry:gene	گونه‌ها	گونه (gune: a sort, a kind)	proposed	agent (claude opus-5.5), by hand
+registry:lines	رشته‌ها	رشته (reshte, from رشتن, to spin: a thread, a strand)	proposed	agent (claude opus-5.5), by hand
+lines:frame	چارچوب	چار (four) + چوب (wood): the four timbers that hold a thing	proposed	agent (claude opus-5.5), by hand
+lines:matter	ماده	م-د-د (to extend, to supply); the operator's word: an organisation of atoms makes ماده	proposed	agent (claude opus-5.5), by hand
+lines:gravitation	گرانش	گران (gerān: heavy — and dear, costly); گرانش (the Persian Academy's word for gravitation)	proposed	agent (claude opus-5.5), by hand
+lines:living	حیات	ح-ي-ي (to live) — the operator's word; زیستن (zistan: to live)	proposed	agent (claude opus-5.5), by hand
+lines:logos	نطق	ن-ط-ق (to speak: نطق is speech and reason at once — the philosophers' حیوان ناطق, the speaking animal, for ζῷον λόγον ἔχον); عقل (aql: reason, first a tether)	proposed	agent (claude opus-5.5), by hand
+lines:made	ساخته‌ها	ساختن (sākhtan: to make, to build)	proposed	agent (claude opus-5.5), by hand
+registry:conditions	شرایط	ش-ر-ط (a condition: شرط, first a mark, a sign)	proposed	agent (claude opus-5.5), by hand
+conditions:balance	اعتدال	ع-د-ل (to be even, just — عدل, justice); اعتدال المزاج (Ibn Sina: the balance of a mixture that readies it for a soul)	proposed	agent (claude opus-5.5), by hand
+conditions:proportion	تناسب	ن-س-ب (to relate: نسبت, a ratio, a relation)	proposed	agent (claude opus-5.5), by hand
+registry:foundation_rules	قواعد بنیاد	قاعده (qā'ede, ق-ع-د, to sit: a base, and a rule); بنیاد (foundation)	proposed	agent (claude opus-5.5), by hand
+foundation_rules:weight	وزن	و-ز-ن (to weigh: میزان, a balance, a measure) — the operator's word; سنگینی (heaviness)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	مراتب اجسام	مرتبه (martabe, ر-ت-ب: a step one stands firm on); پیچیدگی (pichidegi, from پیچیدن, to twist together); مراتب وجود (the philosophers' grades of being), here of bodies alone	proposed	agent (claude opus-5.5), by hand
+complexity:space-time	فضا∞زمان	فضا (fazā: an open expanse); زمان (zamān) — the operator's form, one thing seen from two sides	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	ذره‌ی بنیادی	ذره (zarre, Arabic ḏarra: a mote in a sunbeam); بنیاد (bonyād: the foundation); نقطه (noqte: the dot, undivided)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	هادرون	ἁδρός (stout); کوارک (quark)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	هسته	هسته (haste: the stone of a fruit, the kernel)	proposed	agent (claude opus-5.5), by hand
@@ -20,16 +33,20 @@ complexity:population	جمعیت	ج-م-ع (to gather): a gathering of one kind	p
 complexity:community	جامعه‌ی زیستی	جامعه (jāme'e, ج-م-ع: what gathers); زیستن (zistan, to live)	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	زیست‌بوم	زیست (life) + بوم (bum: the ground one lives on, a homeland)	proposed	agent (claude opus-5.5), by hand
 complexity:biosphere	زیست‌کره	زیست (life) + کره (kore: a sphere)	proposed	agent (claude opus-5.5), by hand
-complexity:material	ماده	م-د-د (to extend, to supply); مایه (māye: stuff, leaven)	proposed	agent (claude opus-5.5), by hand
+complexity:logos	نطق	ن-ط-ق (to speak: نطق is speech and reason at once — the philosophers' حیوان ناطق, the speaking animal, for ζῷον λόγον ἔχον); عقل (aql: reason, first a tether)	proposed	agent (claude opus-5.5), by hand
+complexity:material	جنس	جنس (jens: the stuff a thing is of — what is it made of?); ماده (the line it is on)	proposed	agent (claude opus-5.5), by hand
 complexity:rock	سنگ	سنگ (sang, Middle Persian: stone); صخره (sakhre, Arabic: a rock)	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	جرم آسمانی	جرم (jerm, Arabic: a body, a bulk — the astronomers' word); آسمان (āsmān, Avestan asman: stone, and the sky — once thought a vault of stone)	proposed	agent (claude opus-5.5), by hand
+complexity:planetary-system	سامانه‌ی سیاره‌ای	سیاره (sayyāre, س-ي-ر, to travel: the wanderer); سامانه (a system)	proposed	agent (claude opus-5.5), by hand
+complexity:galaxy	کهکشان	کاه (straw) + کشان (trailing): the trail of spilled straw across the sky	proposed	agent (claude opus-5.5), by hand
 complexity:component	قطعه	ق-ط-ع (to cut: a piece cut to fit); ساختن (to make)	proposed	agent (claude opus-5.5), by hand
 complexity:device	افزاره	افزار (afzār, Middle Persian abzār: an instrument, a means); the Persian Academy's word for a device	proposed	agent (claude opus-5.5), by hand
 complexity:installation	تأسیسات	أ-س-س (a foundation: اساس)	proposed	agent (claude opus-5.5), by hand
 registry:crown	تاج	تاج (tāj, Middle Persian tāg: a crown); افسر (afsar: a diadem)	proposed	agent (claude opus-5.5), by hand
-crown:theos	یکتا	یک (one) + تا (a fold): one without a second; خدا (khodā, Middle Persian xwadāy: the lord); احد (ahad, Qur'an 112:1)	proposed	agent (claude opus-5.5), by hand
-crown:agape	مهر	مهر (mehr, Avestan miθra: the covenant, the bond — and love, and the sun, which gives life); عشق (eshq: longing love)	proposed	agent (claude opus-5.5), by hand
-term:creator	پدیدآورنده	پدید (padid: come to light) + آوردن (to bring); آفریدگار (āfaridgār: the Creator) is THE ONE's, not a bean's	proposed	agent (claude opus-5.5), by hand
+crown:theone	واجب الوجود	و-ج-ب (to fall due, to be necessary) + وجود (being, و-ج-د: to find — being is what is found); ابن سینا: واجب الوجود بالذات, necessary by itself, beside ممکن الوجود, possible in itself and necessary only through another	proposed	agent (claude opus-5.5), by hand
+crown:love	مهر	مهر (mehr, Avestan miθra: the covenant, the bond — and love, and the sun, which gives life); عشق (eshq: longing love)	proposed	agent (claude opus-5.5), by hand
+crown:wisdom	خرد	خرد (kherad, Middle Persian xrad: wisdom, reason); Ferdowsi opens the Shahnameh: به نام خداوند جان و خرد — in the name of the Lord of life and wisdom; حکمت (hekmat)	proposed	agent (claude opus-5.5), by hand
+term:via	به‌واسطه‌ی	واسطه (vāsete, Arabic wāsiṭa, و-س-ط: what stands in the middle, an intermediary); واسطه‌ی فیض (the philosophers' intermediary through whom being flows)	proposed	agent (claude opus-5.5), by hand
 term:status	وضعیت	و-ض-ع (to lay down, to place); حال (hāl: a state)	proposed	agent (claude opus-5.5), by hand
 registry:dimensions	ابعاد	بُعد (bo'd, ب-ع-د: to be far — a dimension is a way of being far); اندازه (andāze: a measure)	proposed	agent (claude opus-5.5), by hand
 dimensions:time	زمان	زمان (zamān, Middle Persian: a time, a span; Avestan zrvan, time itself) — which Arabic took from Persian	proposed	agent (claude opus-5.5), by hand
@@ -47,6 +64,12 @@ term:lives_in	ساکنِ	س-ک-ن (to be still, to dwell); زیستگاه (zistg
 term:located_at	واقع در	و-ق-ع (to fall, to befall: where a thing has come to lie); جای (jāy: a place)	proposed	agent (claude opus-5.5), by hand
 term:owned_by	مالک	م-ل-ک (to possess, to rule: مُلک, a realm; مَلِک, a king); از آنِ (belonging to)	proposed	agent (claude opus-5.5), by hand
 term:responsibility	پاسخ‌گو	پاسخ (pāsokh: an answer) + گفتن (to say); مسئول (mas'ul, س-ا-ل: the one who will be asked)	proposed	agent (claude opus-5.5), by hand
+term:acquired	به دست آمده از	دست (dast: the hand): what came to hand, and from whom; خرید (kharid: a purchase)	proposed	agent (claude opus-5.5), by hand
+registry:facets	وجوه پاسخ‌گویی	وجه (vajh: a face, an aspect); پاسخ (an answer)	proposed	agent (claude opus-5.5), by hand
+facets:legal	حقوقی	حق (haqq: a right, and truth)	proposed	agent (claude opus-5.5), by hand
+facets:technical	فنی	فن (fann: a craft, an art)	proposed	agent (claude opus-5.5), by hand
+facets:experience	تجربه	ج-ر-ب (to try, to test)	proposed	agent (claude opus-5.5), by hand
+facets:financial	مالی	مال (māl: wealth, what one has)	proposed	agent (claude opus-5.5), by hand
 registry:acts	کنش‌ها	کنش (konesh, from کردن, to do)	proposed	agent (claude opus-5.5), by hand
 acts:made	ساخته	ساختن (sākhtan: to make, to build — and to suit, to agree)	proposed	agent (claude opus-5.5), by hand
 acts:derived	برگرفته	برگرفتن (to take from); مشتق (moshtaq, ش-ق-ق: split off)	proposed	agent (claude opus-5.5), by hand

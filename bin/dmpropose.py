@@ -330,17 +330,16 @@ def only_bare(fm):
 
 
 def root_facet():
-    """The facet ownership is rooted in — the one the `facets` registry's `rooted` link says every other reaches — read
+    """The facet answering is rooted in — the one the `facets` registry's `rooted` link says every other reaches — read
     from the law (bin/dmmerge.py `root_of`), never named here; None where the law declares none."""
     return _merge().root_of('facets')
 
 
 def owner_of(fm):
-    """The bean that owns a being's root facet (`owned_by.<root facet>.owner`) — for a `garden` bean, who keeps it."""
-    node = fm
-    for k in ('owned_by', root_facet(), 'owner', 'bean'):
-        node = node.get(k) if isinstance(node, dict) and k is not None else None
-    return str(node) if isinstance(node, str) and node else None
+    """The bean that owns a being (`owned_by.owner`) — for a `garden` bean, who keeps it. An earlier release wrote it
+    under the root facet; dmpass reads both."""
+    import dmpass
+    return dmpass.owner_of(fm)
 
 
 def _who(e):
@@ -1044,7 +1043,7 @@ def cmd_make(argv):
         if to_id == own:
             refusals.append((f"--to {to} is this garden itself ({own})", "a garden does not propose to itself"))
         if not to_gardener:
-            refusals.append((f"--to {to} names no owner (`owned_by.{root_facet() or '<the root facet>'}.owner`) — the "
+            refusals.append((f"--to {to} names no owner (`owned_by.owner`) — the "
                              f"gardener of that garden", "whoever keeps a garden owns its `garden` bean"))
 
     # THE AGREEMENT IT IS MADE UNDER. Consent is the soil: nothing flows without an agreement both gardeners are party to.
@@ -2057,7 +2056,7 @@ def first_contact(env, stubs, fms, local, resolve):
     byte for byte. Printed, never written: accepting a garden, and a name for its keeper, is the gardener's. Every value
     taken from the proposal is checked against the law first and written with JSON's quoting, so nothing it carries
     can add a line to the bean it is printed into. The gardener is written in the form the law gives a gardener of
-    their genos (`gardener_form`) — a person or an organisation alike — and ownership in the facet the law roots it in.
+    their genos (`gardener_form`) — a person or an organisation alike — answering for itself in the facet the law roots answering in.
 
     Returns (the text of the fix, the ids of the beans it prints)."""
     frm = env.get('from') or {}
@@ -2068,7 +2067,7 @@ def first_contact(env, stubs, fms, local, resolve):
     cap = stubs.get(g) or (stub_of(fms[g]) if g in fms else None)
     person, owner, note = None, g, ''
     if facet is None:
-        note = ("\n  This garden's law declares no facet that ownership is rooted in (a `rooted` link on `facets`), so "
+        note = ("\n  This garden's law declares no facet that answering is rooted in (a `rooted` link on `facets`), so "
                 "no bean is printed here: write both by hand.")
     elif cap is None:
         note = (f"\n  The proposal does not carry its gardener ({g}): record that person here first, under the name "
@@ -2088,11 +2087,11 @@ def first_contact(env, stubs, fms, local, resolve):
         else:
             owner = g if g not in local else f"{g}-{fid[:6]}"
             title = str(cap.get('title') or g)
-            owned = (f"crown: {form['crown']}" if form.get('crown')
+            owned = ('crown: true' if form.get('crown')
                      else 'external: "its members, as its own rules say: outside this garden"')
             person = (f"---\nbean: {owner}\ngenos: {_q(cap.get('genos'))}\ntitle: {_q(title)}\nstatus: active\n"
                       f"summary: {_q(f'The gardener of {name}, a garden this one deals with.')}\n"
-                      f"nature: {_q(cap.get('nature') or form['nature'])}\nowned_by: {{ {facet}: {{ {owned} }} }}\n"
+                      f"nature: {_q(cap.get('nature') or form['nature'])}\nowned_by: {{ {owned} }}\n"
                       f"responsibility: {{ {facet}: {{ self: true }} }}\n"
                       f"identity:\n  status: confirmed\n  anchors:\n{anchor_lines(cap)}"
                       f"provenance: {{ src: asserted-by-human, by: {_q(here + ' (gardener)')}, as_of: {today} }}\n---\n"
@@ -2102,8 +2101,7 @@ def first_contact(env, stubs, fms, local, resolve):
     garden = (f"---\nbean: {gbid}\ngenos: garden\n"
               f"title: {_q(f'{name} — the garden {owner} keeps')}\nstatus: active\n"
               f"summary: \"Another garden this one deals with.\"\nnature: lekton\n"
-              f"owned_by: {{ {facet}: {{ owner: {{ bean: {owner} }} }} }}\n"
-              f"responsibility: {{ {facet}: {{ holder: {{ bean: {owner} }} }} }}\n"
+              f"owned_by: {{ owner: {{ bean: {owner} }} }}\n"
               f"identity:\n  status: confirmed\n  anchors:\n"
               f"    - {{ key: garden_id, value: {_q(fid)}, class: logical, establishing: true }}\n"
               f"provenance: {{ src: asserted-by-human, by: {_q(here + ' (gardener)')}, as_of: {today} }}\n"

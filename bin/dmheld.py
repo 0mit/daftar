@@ -252,7 +252,7 @@ def person(fields, *, root=ROOT, host=None, store=None, basis=None):
     dmsafe.write_atomic(os.path.join(root, 'beans', pid + '.md'),
                         f"---\nbean: {pid}\ngenos: person\ntitle: \"{pid}\"\nstatus: active\n"
                         f"summary: \"a person whose name and contacts are held off git\"\nnature: soma\n"
-                        f"owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
+                        f"owned_by: {{ crown: true }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
                         f"identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: \"person:{pid}\", "
                         f"class: logical, establishing: true }} ] }}\n"
                         f"provenance: {{ src: asserted-by-human, by: {g}, as_of: now }}\n---\n"

@@ -5,7 +5,20 @@ natures:lekton	λεκτόν	λέγω (first to gather, to pick out, to lay in or
 term:nature	φύσις	φύω (to grow, to be born)	proposed	agent (claude opus-5.5), by hand
 term:genos	γένος	γίγνομαι (to come to be, to be born): a kind is a line of what comes to be alike; Aristotle's γένος (genus) above εἶδος (species)	proposed	agent (claude opus-5.5), by hand
 registry:gene	τὰ γένη	γένος (a kind), γίγνομαι (to come to be)	proposed	agent (claude opus-5.5), by hand
+registry:lines	αἱ γραμμαί	γραμμή (a line drawn, from γράφω, to scratch, to write)	proposed	agent (claude opus-5.5), by hand
+lines:frame	πλαίσιον	πλαίσιον (an oblong, a frame, a hollow square of troops); τὸ περιέχον (the containing: Aristotle's place is the limit of what contains)	proposed	agent (claude opus-5.5), by hand
+lines:matter	ὕλη	ὕλη (wood, timber — Aristotle's matter)	proposed	agent (claude opus-5.5), by hand
+lines:gravitation	βαρύτης	βαρύς (heavy); βάρος (weight)	proposed	agent (claude opus-5.5), by hand
+lines:living	βίος	βίος (a lived life, a course of life — beside ζωή, life as such)	proposed	agent (claude opus-5.5), by hand
+lines:logos	λόγος	λέγω (to gather, to lay in order, to say); ζῷον λόγον ἔχον (the living being that has λόγος: Aristotle, Politics I.2)	proposed	agent (claude opus-5.5), by hand
+lines:made	τὰ τεχνητά	τέχνη (craft, art); Aristotle, Physics II.1: some things are by nature, others through other causes, as by art	proposed	agent (claude opus-5.5), by hand
+registry:conditions	τὰ ὧν οὐκ ἄνευ	Plato, Phaedo 99b: the cause is one thing, and that without which the cause would not be a cause is another	proposed	agent (claude opus-5.5), by hand
+conditions:balance	εὐκρασία	κρᾶσις (a mixing) + εὖ (well): the good blend — the physicians' health, and a temperate climate; μεσότης (the mean)	proposed	agent (claude opus-5.5), by hand
+conditions:proportion	ἀναλογία	ἀνά + λόγος (according to ratio); Plato, Timaeus 31c: of bonds the most beautiful, which proportion accomplishes	proposed	agent (claude opus-5.5), by hand
+registry:foundation_rules	θεμελιώδεις νόμοι	θεμέλιον (a foundation stone) + νόμος (law) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
+foundation_rules:weight	βάρος	βαρύς (heavy)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	ἡ τάξις τῶν σωμάτων	τάξις (an arrangement, a rank in battle, from τάσσω, to array); Aristotle, History of Animals 588b: nature passes little by little from the lifeless to the living	proposed	agent (claude opus-5.5), by hand
+complexity:space-time	χώρα∞χρόνος	χώρα (room: the receptacle of Timaeus 52a); χρόνος (time: 'a moving image of eternity', Timaeus 37d)	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	στοιχειῶδες σωμάτιον	στοιχεῖον (a member of a row; a letter; Plato's and Aristotle's element); σωμάτιον (a little body); τὰ ἐλάχιστα (Epicurus: the least parts, themselves without parts) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	ἁδρόνιον	ἁδρός (thick, strong, full-grown) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	πυρήν	πυρήν (the stone of a fruit; Modern Greek's nucleus)	proposed	agent (claude opus-5.5), by hand
@@ -20,16 +33,20 @@ complexity:population	πληθυσμός	πλῆθος (a multitude, a throng); 
 complexity:community	κοινωνία	κοινός (common); Aristotle's κοινωνία: every partnership of the living, the city among them	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	οἰκοσύστημα	οἶκος (a house, a household); σύστημα — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:biosphere	βιόσφαιρα	βίος (a lived life — beside ζωή, life as such); σφαῖρα — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
-complexity:material	ὕλη	ὕλη (wood, timber, a forest — Aristotle's matter): the same image as materia	proposed	agent (claude opus-5.5), by hand
+complexity:logos	λόγος	λέγω (to gather, to lay in order, to say); ζῷον λόγον ἔχον (the living being that has λόγος: Aristotle, Politics I.2)	proposed	agent (claude opus-5.5), by hand
+complexity:material	ὑλικόν	ὕλη (wood, timber — matter): the material — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:rock	πέτρα	πέτρα (a rock, a cliff); λίθος (a stone)	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	οὐράνιον σῶμα	οὐρανός (the sky, heaven); Aristotle's heavenly bodies, of the fifth body, αἰθήρ	proposed	agent (claude opus-5.5), by hand
+complexity:planetary-system	πλανητικὸν σύστημα	πλανάομαι (to wander); σύστημα — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
+complexity:galaxy	γαλαξίας	γάλα (milk): ὁ γαλαξίας κύκλος, the milky circle (Aristotle, Meteorology I.8)	proposed	agent (claude opus-5.5), by hand
 complexity:component	ἐξάρτημα	ἐξαρτάω (to hang from, to fit on); ἐξαρτίζω (to fit out, as a ship is); μέρος (a part)	proposed	agent (claude opus-5.5), by hand
 complexity:device	μηχανή	μηχανή (a contrivance, a means, from μῆχος, a remedy, a way); ὄργανον (a tool)	proposed	agent (claude opus-5.5), by hand
 complexity:installation	κατασκευή	κατασκευάζω (to equip fully, to build, to furnish): a construction, an establishment	proposed	agent (claude opus-5.5), by hand
 registry:crown	στέφανος	στέφω (to encircle, to wreathe)	proposed	agent (claude opus-5.5), by hand
-crown:theos	θεός	θεός; τὸ ἕν (the One: Plotinus, Enneads VI.9 — the source of all, and itself none of the things it is the source of)	proposed	agent (claude opus-5.5), by hand
-crown:agape	ἀγάπη	ἀγαπάω (to welcome, to cherish, to be content with); beside ἔρως (desire) and φιλία (friendship); 1 Corinthians 13:5: οὐ ζητεῖ τὰ ἑαυτῆς, it seeks not its own	proposed	agent (claude opus-5.5), by hand
-term:creator	ποιητής	ποιέω (to make — the maker, and the poet); δημιουργός (a worker for the people: Plato's maker of the cosmos); ζωοποιός (life-making)	proposed	agent (claude opus-5.5), by hand
+crown:theone	τὸ ἐξ ἀνάγκης ὄν	ἀνάγκη (necessity) + ὄν (being); Aristotle, Metaphysics Λ.7 1072b: the first mover is ἐξ ἀνάγκης ὄν, being of necessity; τὸ ἕν (the One)	proposed	agent (claude opus-5.5), by hand
+crown:love	ἀγάπη	ἀγαπάω (to welcome, to cherish, to be content with); beside ἔρως (desire) and φιλία (friendship); 1 Corinthians 13:5: οὐ ζητεῖ τὰ ἑαυτῆς, it seeks not its own	proposed	agent (claude opus-5.5), by hand
+crown:wisdom	σοφία	σοφός (skilled, wise — first of a craftsman's skill); Proverbs 8 in the Septuagint: wisdom beside the maker as all was made	proposed	agent (claude opus-5.5), by hand
+term:via	δι' οὗ	διά with the genitive (through); 1 Corinthians 8:6: ἐξ οὗ τὰ πάντα … δι' οὗ τὰ πάντα — from whom all things, through whom all things: the source and the via	proposed	agent (claude opus-5.5), by hand
 term:status	κατάστασις	καθίστημι (to set down, to establish); στάσις (a standing)	proposed	agent (claude opus-5.5), by hand
 registry:dimensions	διαστάσεις	διΐστημι (to set apart); the Stoics' body is τριχῇ διαστατόν, extended three ways	proposed	agent (claude opus-5.5), by hand
 dimensions:time	χρόνος	χρόνος (a span of time); for the Stoics one of the four incorporeals, with τόπος (place), κενόν (void) and λεκτόν	proposed	agent (claude opus-5.5), by hand
@@ -47,6 +64,12 @@ term:lives_in	οἰκεῖ ἐν	οἰκέω (to dwell); οἶκος (a house)	p
 term:located_at	κεῖται ἐν	κεῖμαι (to lie: Aristotle's category κεῖσθαι, position); τόπος (a place); θέσις (a placing)	proposed	agent (claude opus-5.5), by hand
 term:owned_by	ὁ κεκτημένος	κτάομαι (to acquire): the possessor; κτῆμα (a possession)	proposed	agent (claude opus-5.5), by hand
 term:responsibility	ὑπεύθυνος	εὐθύνη (the account an Athenian official gave at the end of office): liable to give account	proposed	agent (claude opus-5.5), by hand
+term:acquired	κτῆσις	κτάομαι (to get, to acquire); ὠνή (a purchase)	proposed	agent (claude opus-5.5), by hand
+registry:facets	αἱ ἐπιμέλειαι	ἐπιμέλεια (care, attention: Socrates' ἐπιμέλεια ψυχῆς, the care of the soul)	proposed	agent (claude opus-5.5), by hand
+facets:legal	νόμιμον	νόμος (law)	proposed	agent (claude opus-5.5), by hand
+facets:technical	τεχνικόν	τέχνη (craft, art)	proposed	agent (claude opus-5.5), by hand
+facets:experience	ἐμπειρία	πεῖρα (a trial)	proposed	agent (claude opus-5.5), by hand
+facets:financial	χρηματικόν	χρήματα (things of use, money: χράομαι, to use)	proposed	agent (claude opus-5.5), by hand
 registry:acts	πράξεις	πράσσω (to do, to pass through)	proposed	agent (claude opus-5.5), by hand
 acts:made	ποιηθέν	ποιέω (to make — the root of poetry)	proposed	agent (claude opus-5.5), by hand
 acts:derived	παράγωγον	παράγω (to lead aside, to bring forth); the grammarians' παράγωγος (a word formed from another)	proposed	agent (claude opus-5.5), by hand

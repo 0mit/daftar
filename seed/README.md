@@ -91,7 +91,7 @@ identity:
   anchors:
     - { key: identifier, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 ---
 Sam keeps this ledger.
@@ -105,11 +105,13 @@ Three of its words are the law's, in Greek, each with its siblings:
   is an organism, a machine a device. The other is `lekton` (λεκτόν, the sayable — what exists by being said and
   agreed, placed in an order: code, a domain, a contract, a running instance). Life is no nature: each genos says
   while what it lives.
-- `agape` (ἀγάπη, love that does not possess) — the crown, which is the life chain: who gave a being its life, walked
-  to the life no garden holds, ends here, and its root is `theos` (θεός, THE ONE), which no bean names. A being owned
-  by no one is held so. No being holds a person; only agape does, and only while they live.
+- `crown: true` — owned by no bean: the being's chain ends at the crown, `theone`, the Necessary Existent, whom no bean
+  names; its faces are love (ἀγάπη, love that does not possess) and wisdom. No being holds a person; only love does,
+  and only while they live.
 
-A machine is owned by someone and answered for by someone — here the same person, on both facets. It is `soma`,
+A machine is owned by someone, and someone answers for running it (`technical`) — here the same person. Its owner
+answers for it before the law, so that is not written again. It came to be through the hands of someone at its maker,
+unknown by name (`via`, `someone` reached `outside`). It is `soma`,
 and its identity is a HARDWARE anchor (a serial or a MAC), because a hostname moves between machines:
 
 <!-- example: beans/laptop.md -->
@@ -127,8 +129,9 @@ identity:
     - { key: serial, value: "PF-12345", class: hardware, establishing: true }
     - { key: hostname, value: "laptop", class: network, establishing: false }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: {owner: {bean: sam}}, technical: {owner: {bean: sam}} }
-responsibility: { legal: {holder: {bean: sam}}, technical: {holder: {bean: sam}} }
+owned_by: { owner: { bean: sam } }
+responsibility: { technical: { holder: { bean: sam } } }
+via: [{ someone: person, outside: "Lenovo" }]
 ---
 The laptop.
 ```

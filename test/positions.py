@@ -43,7 +43,7 @@ summary: "probe"
 nature: soma
 identity: { status: confirmed, anchors: [ { key: serial, value: "SN-POS-1", class: hardware, establishing: true } ] }
 provenance: { src: observed, by: probe, as_of: 2026-09-20 }
-owned_by: { legal: { external: "someone" } }
+owned_by: { external: someone }
 responsibility: { legal: { external: "someone" } }
 endpoints:
 """ + endpoints + "---\n\nprobe.\n")
@@ -147,8 +147,7 @@ summary: "probe"
 nature: lekton
 identity: { status: confirmed, anchors: [ { key: identifier, value: "product:twin-%s", class: logical, establishing: true } ] }
 provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
-owned_by: { legal: { owner: { bean: keeper } } }
-responsibility: { legal: { holder: { bean: keeper } } }
+owned_by: { owner: { bean: keeper } }
 probe_stamp: { mode: %s }
 ---
 probe.
@@ -239,8 +238,8 @@ summary: "probe"
 nature: lekton
 identity: { status: confirmed, anchors: [ { key: identifier, value: "product:widget", class: logical, establishing: true } ] }
 provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-20 }
-owned_by: { legal: { owner: { bean: keeper } }, moral: { owner: { bean: keeper } } }
-responsibility: { legal: { holder: { bean: keeper } }, moral: { holder: { bean: keeper } } }
+owned_by: { owner: { bean: keeper } }
+responsibility: { moral: { holder: { bean: keeper } } }
 notes_x: [ { one: "one form" }, { other: "the other" } ]
 ---
 probe.
@@ -286,7 +285,7 @@ summary: "a machine on a LAN"
 nature: soma
 identity: {{ status: confirmed, anchors: [ {{ key: serial, value: "{serial}", class: hardware, establishing: true }} ] }}
 provenance: {{ src: observed, by: probe, as_of: 2026-09-20 }}
-owned_by: {{ legal: {{ external: "someone" }} }}
+owned_by: {{ external: someone }}
 responsibility: {{ legal: {{ external: "someone" }} }}
 owns: {{ lan_ip: "10.0.0.5" }}
 {extra}---

@@ -254,8 +254,7 @@ title: "Corner Lets"
 status: active
 summary: "The company that lets the shop."
 nature: lekton
-owned_by: { legal: { owner: { bean: keeper } } }
-responsibility: { legal: { holder: { bean: keeper } } }
+owned_by: { owner: { bean: keeper } }
 identity: { status: provisional, anchors: [] }
 provenance: { src: asserted-by-human, by: keeper, as_of: now }
 ---
@@ -271,8 +270,7 @@ nature: soma
 os: linux
 identity: { status: confirmed, anchors: [ { key: hostname, value: "shop-laptop", class: network, establishing: false }, { key: serial, value: "SN-SHOP-1", class: hardware, establishing: true } ] }
 provenance: { src: asserted-by-human, by: keeper, as_of: now }
-owned_by: { legal: { owner: { bean: keeper } } }
-responsibility: { legal: { holder: { bean: keeper } } }
+owned_by: { owner: { bean: keeper } }
 ---
 The laptop in the back room of the shop.
 """)
@@ -284,8 +282,7 @@ status: active
 summary: "An agent's session that takes Bea's offer into the garden."
 nature: lekton
 provenance: { src: generated-by-tool, by: "the session's harness", as_of: now }
-owned_by: { legal: { owner: { bean: keeper } } }
-responsibility: { legal: { holder: { bean: keeper } } }
+owned_by: { owner: { bean: keeper } }
 timing: { start: { system: gregorian-civil, at: "2026-04-21 10:00+03:00", unit: minute } }
 workspace: { host: { bean: laptop }, system: unix-filesystem, at: "shop-laptop:/home/keeper/garden", branch: master }
 pass_log:
@@ -337,7 +334,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:lease", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: keeper, as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   bea: { who: { bean: bea }, accepted: 2026-04-20 }

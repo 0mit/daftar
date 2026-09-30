@@ -87,7 +87,7 @@ T_ = "\t"
 HEAD = ('---\nbean: {id}\ngenos: {genos}\ntitle: "{title}"\nstatus: active\nsummary: "{summary}"\nnature: {nature}\n'
         'identity:\n  status: confirmed\n  anchors:\n    - {{ key: {akey}, value: "{aval}", class: {acls}, establishing: true }}\n'
         'provenance: {{ src: observed, by: "keeper", as_of: now }}\n')
-OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
+OWN = "owned_by: { owner: { bean: keeper } }\n"
 
 
 def bean(id, genos, nature, title, summary, akey, aval, acls, rest, body, own=OWN):
@@ -208,7 +208,7 @@ The agency's walk.
 
 def person(id, name):
     return bean(id, "person", "soma", f"{id} — {name}", f"{name}, invented.", "identifier", f"person:{id}", "logical", "",
-                f"{name}, invented.", own="owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n"
+                f"{name}, invented.", own="owned_by: { crown: true }\nresponsibility: { legal: { self: true } }\n"
                 ).replace("owned_by:", "consent: { bean: harbour-tale }\nowned_by:", 1)   # kept by name on their word (F2)
 
 
@@ -225,7 +225,7 @@ courses:
 selections:
   translation-rights: { what: "whether the house asks for translation rights", steps: [ { id: asked, op: select, genos: contract } ] }
   rights-papers: { what: "the papers that show which translation rights are free", steps: [ { id: papers, op: select, genos: document } ] }
-""", "The placing of a manuscript.", own="owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { parties: true } }\n")
+""", "The placing of a manuscript.", own="owned_by: { crown: true }\nresponsibility: { legal: { parties: true } }\n")
 CHECKLIST = """---
 mapping: manuscript-parts
 kind: checklist

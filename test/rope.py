@@ -28,7 +28,7 @@ T = tempfile.mkdtemp(prefix="dmrope-")
 G = os.path.join(T, "g")
 r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "sam", cwd=ROOT)
 check("a garden germinates on the law with the line from place to location", r.returncode == 0, r.stdout + r.stderr)
-OWN = 'owned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+OWN = 'owned_by: { owner: { bean: sam } }\n'
 # `as_of: now`, as a writer writes it: the save stamps the day of writing (23.0), so a typed day passes only on that day
 PROV = 'provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }\n'
 
@@ -130,7 +130,7 @@ write("samba", '---\nbean: samba\ngenos: product\ntitle: "Samba"\nstatus: active
       + PROV + OWN + '---\nSamba.\n')
 write("example-org", '---\nbean: example-org\ngenos: domain\ntitle: "example.org"\nstatus: active\nsummary: "a name"\nnature: lekton\n'
       'identity: { status: confirmed, anchors: [ { key: fqdn, value: "example.org", class: logical, establishing: true } ] }\n'
-      + PROV + 'owned_by: { legal: { external: "the .org registry" } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+      + PROV + 'owned_by: { external: "the .org registry" }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
       'registration:\n  registrar: "Example Registrar Inc."\n  created: 2020-01-15\n  expires: 2027-01-15\n'
       '  auto_renew: disabled     # the gardener said so; the registry does not show it\n  observed: 2026-09-28\n'
       '  source: "WHOIS for example.org"\n---\nA name.\n')
@@ -138,7 +138,8 @@ write("example-org", '---\nbean: example-org\ngenos: domain\ntitle: "example.org
 STEP = ("import os, sys\nsys.path.insert(0, os.path.join(os.getcwd(), 'bin'))\nimport dmupgrade\n"
         "s = dmupgrade.Step29(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n"
         "s = dmupgrade.Step30(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n"
-        "s = dmupgrade.Step31(sys.argv[1], 'v-next', False)\ns.zone = 'Europe/Istanbul'\ns.plan()\nprint(s.apply()[0])\n")
+        "s = dmupgrade.Step31(sys.argv[1], 'v-next', False)\ns.zone = 'Europe/Istanbul'\ns.plan()\nprint(s.apply()[0])\n"
+        "s = dmupgrade.Step32(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n")
 r = run(sys.executable, "-c", STEP, ROOT, cwd=G)
 out = gate()
 check("a garden in 28's words crosses into 29.0 by the step's own translation, with 0 errors", r.returncode == 0 and " 0 error(s)" in out,
@@ -188,7 +189,7 @@ open(os.path.join(G, "VOCAB.md"), "w").write(_voc.replace("extends_profiles: [co
 def event(name, start, end, rel="present"):
     return (f'---\nbean: {name}\ngenos: event\ntitle: "{name}"\nstatus: active\nsummary: "a dinner"\nnature: lekton\n'
             f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "event:{name}", class: logical, establishing: true }} ] }}\n'
-            + PROV + 'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+            + PROV + 'owned_by: { crown: true }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
             f'timing:\n  start: {{ system: gregorian-civil, at: "{start}", unit: minute }}\n'
             f'  end: {{ system: gregorian-civil, at: "{end}", unit: minute }}\n'
             f'refs:\n  guest: {{ bean: sam, rel: {rel} }}\n---\nA dinner.\n')
@@ -249,7 +250,7 @@ check("the rules a garden prints show the line", re.search(r"^  lives_in .*place
 DEAL = ('---\nbean: gear-deal\ngenos: contract\ntitle: "gear-deal"\nstatus: active\nsummary: "two purchases, repaid in six '
         'and in four"\nnature: lekton\n'
         'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:gear-deal", class: logical, establishing: true } ] }\n'
-        + PROV + 'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { parties: true } }\n'
+        + PROV + 'owned_by: { crown: true }\nresponsibility: { legal: { parties: true } }\n'
         'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\nwords: { form: spoken }\n'
         '%s'
         'clauses:\n  six: { what: "one of them in six", by: sam, %severy: { of: time, in: gregorian-civil, each: month, times: 6 } }\n'
@@ -258,7 +259,8 @@ write("gear-deal", DEAL % ('over:\n  - { thing: { bean: example-org } }   # the 
                            '  - { what: "a watch" }\n  - { what: "some wheel gear" }\n  - { what: "a watch" }\n', ''))
 STEP30 = ("import os, sys\nsys.path.insert(0, os.path.join(os.getcwd(), 'bin'))\nimport dmupgrade\n"
           "s = dmupgrade.Step30(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n"
-          "s = dmupgrade.Step31(sys.argv[1], 'v-next', False)\ns.zone = 'Europe/Istanbul'\ns.plan()\nprint(s.apply()[0])\n")
+          "s = dmupgrade.Step31(sys.argv[1], 'v-next', False)\ns.zone = 'Europe/Istanbul'\ns.plan()\nprint(s.apply()[0])\n"
+          "s = dmupgrade.Step32(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n")
 r = run(sys.executable, "-c", STEP30, ROOT, cwd=G)
 D_ = fm("gear-deal")
 check("30.0: an agreement's `over` crosses from a list into a map, each entry under the id of the being it names, or "

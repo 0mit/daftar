@@ -41,8 +41,7 @@ identity:
   anchors:
     - { key: identifier, value: "document:two-times-two", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-28 }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 located_at: [ { system: iso-3166, openness: unknown } ]
 series:
   by-grid:
@@ -126,7 +125,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:deal", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-28 }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: { system: ordinal-number, at: "ordinal:2", unit: day } }

@@ -66,7 +66,7 @@ identity:
     - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, observed: 2026-08-02 }}
 provenance: {{ src: observed, by: "agent/origin", as_of: now }}
 nature: soma
-owned_by: {{ legal: {{ external: "the relay's operator, outside every garden that observes it" }} }}
+owned_by: {{ external: "the relay's operator, outside every garden that observes it" }}
 responsibility: {{ legal: {{ external: "the relay's operator" }} }}
 owns:
   os: "AlmaLinux 9"
@@ -214,7 +214,7 @@ open(os.path.join(_one, 'beans', 'box.md'), 'w').write(
     '    - { key: serial, value: "SN-0042", class: hardware, establishing: true }\n'
     '    - { key: serial, value: "sn-0042", class: hardware, establishing: true }\n'
     'provenance: { src: observed, by: "test", as_of: 2026-09-17 }\n'
-    'owned_by: { legal: { external: "someone" } }\nresponsibility: { legal: { external: "someone" } }\n---\nA box.\n')
+    'owned_by: { external: someone }\nresponsibility: { legal: { external: "someone" } }\n---\nA box.\n')
 _g = subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True,
                     encoding='utf-8', errors='replace', cwd=_one).stdout
 check("one bean carrying both spellings is not reported as a duplicate of ITSELF (the lowercase one still warns)",
@@ -486,8 +486,7 @@ identity:
     - { key: serial, value: "SN-TW-1", class: hardware, establishing: true }
 provenance: { src: observed, by: "keeper", as_of: now }
 nature: soma
-owned_by: { legal: { owner: { bean: keeper } } }
-responsibility: { legal: { holder: { bean: keeper } } }
+owned_by: { owner: { bean: keeper } }
 roles:
   - { role: web }
 os: linux

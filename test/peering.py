@@ -112,7 +112,7 @@ def person(bid, title, anchor, by, body, extra='', more_anchors=''):
     ident = (f"  status: confirmed\n  anchors:\n    - {{ key: identifier, value: \"{anchor}\", class: logical, "
              f"establishing: true }}\n{more_anchors}") if anchor else "  status: provisional\n  anchors: []\n"
     return (f"---\nbean: {bid}\ngenos: person\ntitle: \"{title}\"\nstatus: active\nsummary: \"{title}.\"\n"
-            f"nature: soma\nowned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
+            f"nature: soma\nowned_by: {{ crown: true }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
             f"identity:\n{ident}provenance: {{ src: asserted-by-human, by: \"{by}\", as_of: now }}\n{extra}"
             f"---\n{body}\n")
 
@@ -123,7 +123,7 @@ def neighbours(gid, keeper, people):
     ps = ''.join(f"  {p}: {{ who: {{ bean: {p} }}, accepted: 2026-09-20 }}\n" for p in (keeper,) + tuple(people))
     return (f"---\nbean: neighbours\ngenos: contract\ntitle: \"Neighbours kept here by name\"\nstatus: active\n"
             f"summary: \"The neighbours agreed to be kept in this garden by name.\"\nnature: lekton\n"
-            f"owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ parties: true }} }}\n"
+            f"owned_by: {{ crown: true }}\nresponsibility: {{ legal: {{ parties: true }} }}\n"
             f"identity:\n  status: confirmed\n  anchors:\n"
             f"    - {{ key: identifier, value: \"{gid}/contract:neighbours\", class: logical, establishing: true }}\n"
             f"provenance: {{ src: asserted-by-human, by: \"{keeper} (gardener)\", as_of: now }}\n"
@@ -133,8 +133,8 @@ def neighbours(gid, keeper, people):
 def garden_bean(bid, gid, owner, by):
     return (f"---\nbean: {bid}\ngenos: garden\ntitle: \"{bid} — the garden {owner} keeps\"\nstatus: active\n"
             f"summary: \"Another garden this one deals with, kept by {owner}.\"\nnature: lekton\n"
-            f"owned_by: {{ legal: {{ owner: {{ bean: {owner} }} }} }}\n"
-            f"responsibility: {{ legal: {{ holder: {{ bean: {owner} }} }} }}\n"
+            f"owned_by: {{ owner: {{ bean: {owner} }} }}\n"
+            f""
             f"identity:\n  status: confirmed\n  anchors:\n"
             f"    - {{ key: garden_id, value: \"{gid}\", class: logical, establishing: true }}\n"
             f"provenance: {{ src: asserted-by-human, by: \"{by}\", as_of: now }}\n"
@@ -269,7 +269,7 @@ title: "A shared cost of 900 XTS, borne two to one by ada and ben"
 status: active
 summary: "Ada paid all of it; ada bears two parts and ben one. What each owes is read from the transaction, never written."
 nature: lekton
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 identity:
   status: confirmed
@@ -351,7 +351,7 @@ title: "House costs of 300 XTS, shared equally by ben and cai"
 status: active
 summary: "Ben paid; ben and cai bear it equally. What each owes is read, never written."
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -858,7 +858,7 @@ title: "Cai lends ada a ladder until the first of October"
 status: active
 summary: "A ladder lent across the road, to be returned."
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -911,7 +911,7 @@ r = commit(C, "garden-a, and ada as garden-a names her",
 check("...written as they are printed, in ONE commit, they pass garden-c's gate — ada's name kept byte for byte",
       r.returncode == 0 and ' 0 error(s)' in gate(C)[1]
       and fm_of(os.path.join(C, 'beans', 'ada.md'))['identity']['anchors'][0]['value'] == f"{AID}/person:ada"
-      and fm_of(os.path.join(C, 'beans', 'garden-a.md'))['owned_by'] == {'legal': {'owner': {'bean': 'ada'}}},
+      and fm_of(os.path.join(C, 'beans', 'garden-a.md'))['owned_by'] == {'owner': {'bean': 'ada'}},
       r.stdout + r.stderr + gate(C)[1])
 r = tool(C, 'dmpropose.py', 'read', PCC)
 check("...then read: the provisional stub RESOLVES TO garden-c's own gardener, ada to ada, the agreement is NEW, CLEAN",
@@ -1122,7 +1122,7 @@ def consent_of(gid, pid, who):
     """A neighbour's consent to be kept by name, as the garden that holds it records it — stamped as `make` stamps it —
     carried with them: their word crosses with their name (24.0, F2), or they do not cross by name."""
     return (f"---\nbean: {pid}-consent\ngenos: contract\ntitle: \"{pid} agrees to be kept by name\"\nstatus: active\n"
-            f"summary: \"{pid}'s consent.\"\nnature: lekton\nowned_by: {{ legal: {{ crown: agape }} }}\n"
+            f"summary: \"{pid}'s consent.\"\nnature: lekton\nowned_by: {{ crown: true }}\n"
             f"responsibility: {{ legal: {{ parties: true }} }}\nidentity:\n  status: confirmed\n  anchors:\n"
             f"    - {{ key: identifier, value: \"{gid}/contract:{pid}-consent\", class: logical, establishing: true }}\n"
             f"provenance: {{ src: asserted-by-human, by: \"{who}\", as_of: 2026-09-23, garden: \"{gid}\" }}\n"
@@ -1197,8 +1197,7 @@ title: "A note"
 status: active
 summary: "A note."
 nature: lekton
-owned_by: {{ legal: {{ owner: {{ bean: ben }} }} }}
-responsibility: {{ legal: {{ holder: {{ bean: ben }} }} }}
+owned_by: {{ owner: {{ bean: ben }} }}
 identity:
   status: confirmed
   anchors:
@@ -1255,7 +1254,7 @@ title: "A new deal"
 status: active
 summary: "A new deal."
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -1331,7 +1330,7 @@ check("FIRST CONTACT with a crafted stub: no bean is printed from it — its cla
       "nature — and the garden's bean printed parses to exactly the keys it should",
       r.returncode == 1 and list(texts) == ['garden-d'] and 'not in a bean\'s form here' in r.out
       and 'x_injected' not in ''.join(texts.values()) and set(fm_of_text(texts['garden-d'])) == {
-          'bean', 'genos', 'title', 'status', 'summary', 'nature', 'owned_by', 'responsibility', 'identity', 'provenance'},
+          'bean', 'genos', 'title', 'status', 'summary', 'nature', 'owned_by', 'identity', 'provenance'},
       r.out)
 _ok = dict(_inj, nature='soma', title='Cai "of the gate": the keeper')
 _ok['identity'] = {'status': 'confirmed', 'anchors': [{'key': 'identifier', 'value': 'dddddddddddd/person:cai',
@@ -1378,7 +1377,7 @@ title: "A rota with ben"
 status: active
 summary: "A rota."
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -1497,7 +1496,7 @@ title: "A pot ada and ben share"
 status: active
 summary: "What each of them put in."
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -1694,7 +1693,7 @@ title: "Ali's household supplies ada"
 status: active
 summary: "Ali's household supplies ada."
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -1806,7 +1805,7 @@ check("...a name taken in through a peer is recorded with its origin and the pat
 
 def _far(bid, origin, via):
     return (f"---\nbean: {bid}\ngenos: org\ntitle: \"{bid}\"\nstatus: active\nsummary: \"an org known through a peer\"\n"
-            f"nature: lekton\nowned_by: {{ legal: {{ external: \"its members\" }} }}\n"
+            f"nature: lekton\nowned_by: {{ external: \"its members\" }}\n"
             f"responsibility: {{ legal: {{ self: true }} }}\nidentity:\n  status: confirmed\n  anchors:\n"
             f"    - {{ key: identifier, value: \"{origin}/org:{bid}\", class: logical, establishing: true, provenance: "
             f"{{ src: asserted-by-human, by: \"ada (gardener)\", as_of: now, garden: \"{origin}\", via: [{', '.join(repr(v) for v in via)}] }} }}\n"

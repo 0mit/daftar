@@ -664,7 +664,10 @@ def reset21(to):
 
 
 OLD_WORDS = (('genos: ', 'kind: '), ('nature: soma', 'nature: physical'), ('nature: lekton', 'nature: metaphysical'),
-             ('nature: empsychon', 'nature: living'), ('crown: agape', 'crown: love'))
+             ('nature: empsychon', 'nature: living'),
+             ('owned_by: { crown: true }', 'owned_by: { legal: { crown: love } }'),            # 32.0's forms, as 21.0 wrote them
+             ('owned_by: { owner: { bean: sam } }', 'owned_by: { legal: { owner: { bean: sam } } }'),
+             ('crown: agape', 'crown: love'))
 
 
 def in21(text):
@@ -728,8 +731,9 @@ check("every bean's `kind:` is its `genos:`, and no bean says `kind:` any more",
 check("...its nature is soma or lekton — a person `living` crosses to `empsychon` and on to `soma` — a quoted value keeps its quotes",
       re.search(r'(?m)^nature: soma$', _b['laptop']) and re.search(r'(?m)^nature: soma$', _b['sam'])
       and re.search(r'(?m)^nature: "lekton"$', _b['w1']), _b)
-check("...a person's crown is agape, and the comment on that line — the garden's own words — is left as it was written",
-      'owned_by: { legal: { crown: agape } }   # the crown: love owns the living, while alive' in _b['sam'], _b['sam'])
+check("...a person's crown is the one crown (`crown: true`, 32.0), and the comment on that line — the garden's own words — "
+      "is left as it was written",
+      'owned_by: { crown: true }   # the crown: love owns the living, while alive' in _b['sam'], _b['sam'])
 check("...and a body's prose is left as it was written",
       _b['laptop'].endswith("\nIts kind: host, of nature physical — prose, the garden's own words.\n"), _b['laptop'][-200:])
 check("a MAPPING keeps its `kind`: it records no being, and is not a bean", get21('mappings/wind-up.md') == _MAP,
@@ -747,7 +751,11 @@ check("the journal's `translated:` line says what was renamed, how often and whe
       'std-vocab 22.0' in _tl and '`kind` -> `genos` ×3' in _tl and 'nature physical -> soma ×1' in _tl
       and 'crown love -> agape ×1' in _tl and 'nature living -> empsychon ×1' in _tl and '`empsychon` -> `soma` ×1' in _tl
       and '`local_kinds` -> `local_gene`' in _tl and '`required_on_kinds` -> `required_on_gene`' in _tl
-      and all(f'[[{b}]]' in _bl for b in ('sam', 'laptop', 'w1')) and 'wind-up' not in _bl, _j[-1200:])
+      and all(f'[[{b}]]' in _bl for b in ('sam', 'laptop', 'w1')) and 'wind-up' not in _bl,
+      {'22.0': 'std-vocab 22.0' in _tl, 'kind': '`kind` -> `genos` ×3' in _tl, 'physical': 'nature physical -> soma ×1' in _tl,
+       'love': 'crown love -> agape ×1' in _tl, 'living': 'nature living -> empsychon ×1' in _tl,
+       'empsychon': '`empsychon` -> `soma` ×1' in _tl, 'local_kinds': '`local_kinds` -> `local_gene`' in _tl,
+       'required_on': '`required_on_kinds` -> `required_on_gene`' in _tl, 'beans': _bl, 'tl': _tl[:900]})
 check("...and the console says it too", 'translated: std-vocab 22.0' in r.stdout, r.stdout[-600:])
 check("the garden's own code that says a retired word, and a template shaped like a bean, are NAMED for a person and left "
       "as written; a note in prose is neither",
@@ -1312,9 +1320,11 @@ check("each prose `when` is written `{ said: … }`: a quoted one keeps its own 
       _rw == _roof.replace(_WHEN_PLAIN, '    when: { said: "the roof is on, and the scaffold is down" }\n', 1)
       .replace(_WHEN_QUOTED, "    when: { said: 'the gutters are hung' }   # as Ali put it\n", 1)
       .replace(_WHEN_FOLDED, '    when:\n      said: >\n        the first frost\n        after the roof\n', 1)
-      .replace('{ key: contract_id,', '{ key: identifier,', 1).replace('crown: logos', 'crown: agape'), _rw[-700:])
+      .replace('{ key: contract_id,', '{ key: identifier,', 1).replace('owned_by: { legal: { crown: logos } }',
+                                                                         'owned_by: { crown: true }'), _rw[-700:])
 _id26 = lambda t: re.sub(r'key: (person_id|emp_id|contract_id),', 'key: identifier,', t).replace(   # 26.0, crossed too
-    'nature: empsychon', 'nature: soma').replace('crown: logos', 'crown: agape')                   # ...and 31.0
+    'nature: empsychon', 'nature: soma').replace('owned_by: { legal: { crown: logos } }', 'owned_by: { crown: true }').replace(
+    'owned_by: { legal: { crown: agape } }', 'owned_by: { crown: true }')                           # ...and 31.0, and 32.0
 check("...and the person and their anchor, which only a person can put right, are left as they were — but for the "
       "anchor key 26.0 made one word",
       get24('beans/ali.md') == _id26(_ali) and get24('beans/bo.md') == _id26(_bo))

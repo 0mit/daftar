@@ -109,8 +109,7 @@ def granted(repo, commit, bean, *, root=ROOT):
         if not me:
             raise NotGranted(f"the other garden, at {commit[:12]}, records no garden with this garden's id ({here}): "
                              f"it has not met this one, so nothing of it is granted here")
-        owner = (((beans[me[0]].get('owned_by') or {}).get('legal') or {}).get('owner') or {})
-        who = owner.get('bean') if isinstance(owner, dict) else None
+        who = dmpass.owner_of(beans[me[0]])
         ans = dmpass.may(who, 'read', bean, root=tmp, beans=beans, gardener=dmpass.gardener_of(tmp))
         if not ans.granted:
             raise NotGranted(f"the other garden, at {commit[:12]}, does not grant `read` over '{bean}' to {who} "

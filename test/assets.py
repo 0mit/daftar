@@ -162,8 +162,7 @@ summary: "A page of one drawing."
 nature: lekton
 identity: { status: confirmed, anchors: [ { key: identifier, value: "service:sam-page", class: logical, establishing: true } ] }
 provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: 2026-01-01 }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 view:
   drawings: file:bin/drawings.py
 views:

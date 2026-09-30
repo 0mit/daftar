@@ -6,21 +6,29 @@ law beneath it. Why each rule exists is in `seed/RATIONALE.md`, keyed by the rul
 design steps before that are in `HISTORY.md` in the daftar repository.
 
 ## The root
-Five axioms, beneath everything else here; their reasons are in `seed/RATIONALE.md`, under `division_form`,
-`complements`, `complexity`, `terms[status]` and `crown`.
+The axioms beneath everything else here; their reasons are in `seed/RATIONALE.md`, under `division_form`,
+`complements`, `complexity`, `foundation_rules`, `terms[status]`, `terms[via]` and `crown`.
 - **The dot.** A position is a dot: without parts in its own system. What is divided keeps its system — a finer system
   is a level of the coarser, or declared beside it — and its wholeness: how the parts make the whole is declared and
   held (`division_form`).
-- **The frame.** Place and time are one frame, neither prior: a position in one stands with its other half in the
-  other, stated or inherited, and a system says how its positions find theirs (`complement`).
-- **The order of bodies.** A body stands at a level of `complexity`, and a level stands on the levels it is built from
-  and on nothing else: complexity is that relation, a partial order, and no rate enters it. A part never stands above
-  its whole.
+- **The frame.** Space∞time is one structure with two faces, place and time, neither without the other: a position in
+  one stands with its other half in the other, stated or inherited, and a system says how its positions find theirs
+  (`complement`).
+- **The ladder.** What stands on what, from the frame to the crown (`complexity`, with its `lines`): the body's dot on
+  space∞time; matter; gravitation, where direction begins; the living, possible on a world in balance (`conditions`);
+  λόγος, reason, possible on living organisation; and the made. Each step says how it stands on another — `made-of`
+  (the lower is in it) or `possible-on` (the lower is its condition, `while` it holds). A body's genos stands at a
+  step of a line of bodies (`level`); a step that holds no body (the frame, λόγος) is a kind's `rung` — a person's
+  body is an organism, and a person speaks. The sayable stands on λόγος. Complexity is this relation, a partial order,
+  and no rate enters it; a part never stands above its whole. What holds at a step holds for all standing on it
+  (`foundation_rules`): every body has weight, and a sayable being none of its own.
 - **Life.** A being lives while its genos says it does (`alive_while`): a machine while it is powered, an agreement
   while it holds, a person while they live. Life is no nature.
-- **The life chain.** A living being lives through a living being's act (`creator`), and the chain walks to the life
-  no garden holds: `agape`, love that does not possess, whose root is `theos`, THE ONE, which no bean names. The
-  chain is no bean's. The crown is this chain.
+- **The life chain.** A being came to be through its vias (`via`): born of, planted, made, said, started — real causes,
+  each depending for its being on the Creator, `theone`, the Necessary Existent, where every chain ends and whom no bean
+  names. The giver stands where the gift needs it: a living being comes through the living, a made or said thing
+  through hands, named or not (`someone`, reached through what is known). Nothing demands a via: a being that states
+  none is held at the Creator all the same. The crown is one, with two faces, love and wisdom.
 
 ## Beans and gardens
 - A **bean** is one managed thing — a machine, a domain, a program, a person, a contract — as one file,
@@ -53,8 +61,8 @@ A fact knows who said it and how they know (manifesto: provenance).
 - **A judgment is its judge's** (manifesto: judge). That one version is better, clearer or more beautiful than another is recorded
   as a judgment — by whom (`provenance.by`), with its reason in prose — never as a property of the thing and never
   computed. A person's is `asserted-by-human`; an agent's is `inferred`, and never overrides a person's. Whose
-  judgment decides for a being is its owner's, for the facet the judgment concerns, and under an agreement
-  whoever its clauses name.
+  judgment decides for a being is whoever answers for it in the facet the judgment concerns — its owner, unless another
+  is stated — and under an agreement whoever its clauses name.
 
 ## Identity: anchors
 Every bean has an `identity:` block of **anchors** — facts that say which object this is, so two gardens can
@@ -87,33 +95,39 @@ is — such as identity anchors — attach to the nature, so every genos under i
 them. A mapping records no being: it has no nature and no genos, and its `kind` says what sort of procedure or
 relationship it records.
 
-## Ownership and responsibility
-Two arcs, over the same **facets** — the rows of the law's `facets` registry, and any a garden adds. A facet may
-depend on others — every other facet reaches `legal` through what it depends on — but never on itself through them,
-and never overlaps another:
-- `owned_by` points up: each facet has **exactly one owner**.
-- `responsibility` points down: each facet has **exactly one responsibility entry**, saying who answers for the
-  thing — a holder, say, or the parties of an agreement, or a person for themselves.
-- **Every facet with an owner has a responsibility entry, and vice versa.** The gate enforces the pairing.
+## Ownership, answering, and how a being came to us
+Four questions, each its own fact, never one: through whom a being came to be (`via`, above), **whose** it is,
+**who answers for it**, and **from whom it came to us**.
 
-The forms an entry can take:
-- `{ owner: { bean: … } }` — owned by another bean. The chain must end somewhere: the gate refuses one that
-  stops at a bean owning nothing.
-- `{ external: "…" }` — owned outside this ledger: a rented server's provider, software's vendor, a domain's
+**Whose it is — `owned_by`, one owner and no facets.** To own is to have, so ownership has one form:
+- `{ owner: { bean: … } }` — owned by another bean. The chain must end somewhere: the gate refuses one that stops at a
+  bean owning nothing.
+- `{ external: "…" }` — owned outside this ledger: a rented server's provider, software's authors, a domain's
   registry. Someone here still answers for it.
-- `{ via: { bean: … } }` — inherits the parent's owners, e.g. an instance through the product it runs.
-- `{ contract: { bean: … } }` — one facet owned together, through a `contract` bean: the agreement between its
-  owners, whose clauses say how they decide.
-- `{ crown: agape }` — owned by no bean, and held by its life chain. The crown IS the life chain: who gave the being
-  its life (`creator`), walked to the life no garden holds, ends at `agape` (ἀγάπη, love that does not possess), whose
-  root is `theos` (θεός, THE ONE), which no bean names. A **person** is pinned to it — owned by no bean,
-  `owned_by: { legal: { crown: agape } }`, and only while they live — and
-  answers for themselves: `responsibility: { legal: { self: true } }`.
-  An **agreement** between parties may choose it: owned by none of its parties, `owned_by: { legal: { crown:
-  agape } }` — held by the life its parties gave it by accepting it — and answered for by them, each for the clauses it is bound by: `responsibility: { legal: { parties:
-  true } }`. A **happening** between people (an `event`) may choose it too: owned by none of those who took part,
-  and answered for by whoever hosted it, as its holder. The crown owns and never answers; the parties answer and
-  never own. The crown is written only by a bean of these three gene, and `parties` only by an agreement.
+- `{ contract: { bean: … } }` — owned together, through a `contract` bean: the agreement between its owners, whose
+  clauses say how they decide.
+- `{ from: { bean: … } }` — owned as its parent is, e.g. an instance through the product it runs.
+- `{ crown: true }` — owned by no bean: its chain ends at the crown, `theone`, which no bean names. A **person** is
+  pinned to it — no bean holds a person, only love, the crown's face, and only while they live — and answers for
+  themselves: `responsibility: { legal: { self: true } }`. An **agreement** between parties may choose it: owned by
+  none of its parties, and answered for by them, each for the clauses it is bound by: `responsibility: { legal:
+  { parties: true } }`. A **happening** between people (an `event`) may choose it too, answered for by whoever hosted
+  it, as its holder. The crown owns and never answers; the parties answer and never own. The crown is written only by
+  a bean of these three gene, and `parties` only by an agreement.
+
+**Who answers for it — `responsibility`, one entry per facet of care.** The facets are the rows of the law's `facets`
+registry, and any a garden adds — ways of answering, never of owning: `legal` (before the law), `technical` (who runs
+and maintains it), `experience` (how people meet it), `financial` (who pays for it). Every facet reaches `legal`
+through what it depends on.
+- **Before the law, its owner answers**, unless another is stated. `legal` is written only where the owner cannot
+  answer — someone outside, or no bean (a person for themselves, an agreement's parties for it, a happening's host) —
+  or where a holder or a contract takes it over. A legal entry that repeats the owner is a placeholder, and refused.
+- The other facets are written where someone answers for them, and only on a being the facet applies to: nobody runs
+  a record, so a `technical` answerer stands only on a body or on something that runs or is kept.
+
+**From whom it came to us — `acquired`.** The vendor or the giver, how it came (bought, rented, given, lent,
+inherited), the day, and the agreement it came under. The seller of a server is neither the hands that made it (its
+`via`) nor its owner.
 
 Ownership is separate from **habitat**: a running instance is owned through its product, and separately
 `lives_in` the machine it runs on. Moving machines changes the habitat, never the owner.
@@ -166,7 +180,7 @@ Ownership is separate from **habitat**: a running instance is owned through its 
 
 ## Relations
 A small set of typed edges — `owned_by`, `responsibility`, `lives_in`, `instance_of`, `part_of`,
-`depends_on`, `consumes`, `creator` and a few more (`python3 bin/dmrules.py` lists them) — plus
+`depends_on`, `consumes` and a few more (`python3 bin/dmrules.py` lists them) — plus
 one open fallback, `refs`.
 - Every edge is `{ bean|mapping: <id> [, field: <key>] }`, and the gate resolves it: a missing target or field
   is an error.

@@ -53,7 +53,7 @@ identity:
   anchors:
     - { key: identifier, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 ---
 Sam keeps this ledger.
@@ -77,8 +77,7 @@ identity:
   anchors:
     - { key: garden_id, value: "123456789abc", class: logical, establishing: true }   # replace with what `dmpropose id` printed in Ali's garden
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: ali } } }
-responsibility: { legal: { holder: { bean: ali } } }
+owned_by: { owner: { bean: ali } }
 ---
 Ali's garden. Its id is what `python3 bin/dmpropose.py id` printed there.
 ```
@@ -97,7 +96,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:ali-consent", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted — where they accepted and nobody said the day: `{ system: event-anchored, at: "after:<what it followed>", unit: day }`, placed by what it followed; empty records no acceptance, and so no consent (F2)
@@ -122,7 +121,7 @@ identity:
     - { key: identifier, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 consent: { bean: ali-consent }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 ---
 Ali keeps garden-ali. Her name here is the one her own garden gave her.
@@ -146,7 +145,7 @@ identity:
   anchors:
     - { key: identifier, value: "event:dinner-at-sams", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
   start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }   # at: the example's
@@ -175,7 +174,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:shared-camera", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
@@ -215,7 +214,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:washer-loan", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, role: lender, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
@@ -296,7 +295,7 @@ identity:
   anchors:
     - { key: identifier, value: "event:call-with-ali", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
   start: { system: event-anchored, at: "after:dinner-at-sams", unit: day, note: "after the dinner at Sam's; its day was not said" }
@@ -336,7 +335,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:phone-loan", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, role: lender, accepted: { system: event-anchored, at: "after:dinner-at-sams", unit: day } }
@@ -399,8 +398,7 @@ identity:
   status: provisional
   anchors: []
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: ali } } }
-responsibility: { legal: { holder: { bean: ali } } }
+owned_by: { owner: { bean: ali } }
 open: ["its id: what `python3 bin/dmpropose.py id` prints in Ali's garden"]
 ---
 Ali's garden. Its id is still to be read out there.

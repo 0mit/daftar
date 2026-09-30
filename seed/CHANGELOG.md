@@ -251,6 +251,36 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **32.0** (2026-09-30, human-ratified rule-change) — **the base: the ladder from the frame to the crown, the life chain
+  as vias, and ownership without facets.** From the operator's reading of the names ("a better form for base
+  categorization … we need to make sure to inspect this as logical as possible"), inspected against Hartmann, Ibn Sina and
+  Heidegger and ratified whole: "All ratified go through design in one release". MAJOR: every garden is translated.
+  - **The ladder** (`complexity`, with `lines`): the frame, space∞time, one structure with two faces (`dimensions`
+    time and length are its `face`s); the body's dot on it; matter; gravitation (rock, celestial body, and the
+    planetary system and the galaxy, new); the living; λόγος, reason; the made. Each step says how it stands on another,
+    `{ level, as: made-of | possible-on, while? }`, and a step's condition is a row of `conditions` (balance, اعتدال, for
+    life; proportion for reason). A step that holds no body (`bodies: false`: the frame, λόγος) is no genos's `level`; a
+    kind stands at it as its `rung` — a person's body is an organism, and a person speaks (`rung: logos`). The sayable
+    stands on λόγος (`natures` `stands_on`). A part never stands above what its whole is made of.
+  - **What holds from a foundation** (`foundation_rules`): every body has weight; a sayable being's own mass is refused,
+    unless the attribute measures the bodies it stands for (`of_bodies`).
+  - **The crown is one**: `theone`, the Necessary Existent (واجب الوجود), with two faces, `love` and `wisdom`. A being it
+    holds says `owned_by: { crown: true }`; `theos` and `agape` are retired.
+  - **The life chain is vias** (`via`, retiring `creator`): the beings through whom this one came to be, each a bean or
+    `someone` of a kind reached through what is known (`through`, or `outside`). Strict: a living being's vias are
+    living; a made body's and a sayable being's reach hands, a being at `logos`, through any tool whose own via goes on.
+    Never demanded. Every chain ends at the Creator, `theone`.
+  - **Ownership has no facets**: `owned_by` is one owner — `owner`, `contract`, `external`, `crown: true`, or `from` a
+    parent (the inherited form, until now `via`). **The facets are ways of answering** (`responsibility`, the
+    `facets` of care): before the law the owner answers unless another is stated (`answered_by_owner`), so a legal
+    entry that repeats the owner is refused as a placeholder; a facet stands only on beings it applies to (`applies_to`:
+    nobody runs a record). `facet_parity_with` is withdrawn; the `ownership` division is the `answering` division.
+  - **How a being came to us** (`acquired`): the vendor or giver, how, the day, the agreement.
+  - **Names**: 26 new items named by hand in the nine languages (93 in all); `material` renamed where it met the new
+    line `matter`; the organ's English roots corrected (it is the capacity that has organs).
+  - **The 32.0 step** gives each bean its one owner, keeps each answering entry that says something (drops a legal one
+    that repeats the owner, and a facet on a being it does not apply to), writes `creator` as `via`, and gives a body
+    whose hardware names its maker `via: [{ someone: person, outside: <the maker> }]`.
 - **31.0** (2026-09-30, human-ratified rule-change) — **the root: the dot, the frame, the order of bodies, life, and
   the crown as the life chain.** From the operator's questions of the view's design: whether `empsychon` had been
   mistaken for a sibling of `soma` and `lekton`, and "we define dot, point, نقطه as undivisable being …". MAJOR: a

@@ -243,10 +243,11 @@ def org_of(b, _seen=None):
     if f.get("genos") == "org":
         return b
     ob = f.get("owned_by") if isinstance(f.get("owned_by"), dict) else {}
-    if isinstance(ob.get("via"), dict):
-        return org_of(ob["via"].get("bean"), seen)
-    owner = ((ob.get("legal") or {}) if isinstance(ob.get("legal"), dict) else {}).get("owner")
-    ob_bean = owner.get("bean") if isinstance(owner, dict) else None
+    parent = ob.get("from") if isinstance(ob.get("from"), dict) else ob.get("via") if isinstance(ob.get("via"), dict) else None
+    if parent:
+        return org_of(parent.get("bean"), seen)
+    import dmpass
+    ob_bean = dmpass.owner_of(f)
     return ob_bean if isinstance(ob_bean, str) and fm(ob_bean).get("genos") == "org" else None
 
 

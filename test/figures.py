@@ -67,7 +67,7 @@ open(VOC, "w").write(ORIG)
 def bean(name, body):
     open(os.path.join(G, "beans", name + ".md"), "w").write("---\n" + body + "---\n\n" + name + "\n")
 # owned by the gardener: a person who is not the gardener is kept by name only on their consent (F2, 29.2)
-OWN = 'owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n'
+OWN = 'owned_by: { owner: { bean: keeper } }\n'
 for a, b in (("part-a", "part-b"), ("part-b", "part-a")):
     bean(a, f'bean: {a}\ngenos: product\ntitle: "{a}"\nstatus: active\nsummary: "x"\nnature: lekton\n'
          f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "product:{a}", class: logical, establishing: true }} ] }}\n'
@@ -150,7 +150,7 @@ identity:
   anchors:
     - { key: serial, value: "SN-PROBE-1", class: hardware, establishing: true }
 provenance: { src: observed, by: probe, as_of: 2026-09-20 }
-owned_by: { legal: { external: "a provider" } }
+owned_by: { external: "a provider" }
 responsibility: { legal: { external: "a provider" } }
 """ + extra + "---\n\nprobe.\n")
     return gate()

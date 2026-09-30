@@ -5,7 +5,20 @@ natures:lekton	المَعْنى	معنى (ع-ن-ي: to intend, to mean — the p
 term:nature	الطبيعة	ط-ب-ع (the stamp a thing is struck with)	proposed	agent (claude opus-5.5), by hand
 term:genos	الجِنْس	ج-ن-س (to be alike; jins perhaps from γένος through Syriac); نوع (nawʿ: a species)	proposed	agent (claude opus-5.5), by hand
 registry:gene	الأجناس	جنس (a kind)	proposed	agent (claude opus-5.5), by hand
+registry:lines	الخطوط	خ-ط-ط (to draw a line)	proposed	agent (claude opus-5.5), by hand
+lines:frame	الإطار	أ-ط-ر (to bend round: a rim, a frame)	proposed	agent (claude opus-5.5), by hand
+lines:matter	المادة	م-د-د (to stretch, to supply); هيولى (hayūlā: prime matter, from ὕλη)	proposed	agent (claude opus-5.5), by hand
+lines:gravitation	الجاذبية	ج-ذ-ب (to draw, to pull)	proposed	agent (claude opus-5.5), by hand
+lines:living	الأحياء	ح-ي-ي (to live)	proposed	agent (claude opus-5.5), by hand
+lines:logos	النطق	ن-ط-ق (to speak: speech and reason at once); الحيوان الناطق (the speaking animal: the philosophers' rendering of ζῷον λογικόν)	proposed	agent (claude opus-5.5), by hand
+lines:made	المصنوعات	ص-ن-ع (to make, to craft)	proposed	agent (claude opus-5.5), by hand
+registry:conditions	الشروط	ش-ر-ط (a condition)	proposed	agent (claude opus-5.5), by hand
+conditions:balance	الاعتدال	ع-د-ل (to be even); ابن سينا: اعتدال المزاج	proposed	agent (claude opus-5.5), by hand
+conditions:proportion	التناسب	ن-س-ب (to relate)	proposed	agent (claude opus-5.5), by hand
+registry:foundation_rules	القواعد	ق-ع-د (to sit: قاعدة, a base and a rule)	proposed	agent (claude opus-5.5), by hand
+foundation_rules:weight	الوزن	و-ز-ن (to weigh); الميزان (the balance)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	مراتب الأجسام	ر-ت-ب (to stand firm in its place: a rank); Ibn Miskawayh: minerals, plants, animals, the highest of each order touching the lowest of the next	proposed	agent (claude opus-5.5), by hand
+complexity:space-time	الزمكان	زمان + مكان: the Arabic word for spacetime joins the two into one	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	جُسَيْم أوَّلي	جُسَيْم (jusaym: a little body, the diminutive of جسم); الجزء الذي لا يتجزّأ (the part that is not divided: the atom of the kalām)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	هادرون	ἁδρός (stout); كوارك (quark)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	النَّواة	ن-و-ي (a date-stone — and, from the same root, نيّة, an intention: the kernel and the intent)	proposed	agent (claude opus-5.5), by hand
@@ -20,16 +33,20 @@ complexity:population	الجَماعة	ج-م-ع (to gather); قطيع (qaṭīʿ
 complexity:community	المُجْتَمَع الأحيائي	ج-م-ع (to gather); ح-ي-ي (to live)	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	النِّظام البيئي	ن-ظ-م (to string pearls on a thread: an order); بيئة (bīʾa, ب-و-أ: a place one settles in)	proposed	agent (claude opus-5.5), by hand
 complexity:biosphere	المُحيط الحيوي	ح-و-ط (to surround: an envelope); ح-ي-ي (to live)	proposed	agent (claude opus-5.5), by hand
-complexity:material	المادّة	م-د-د (to stretch, to supply); هَيولى (hayūlā: the philosophers' prime matter, from ὕλη)	proposed	agent (claude opus-5.5), by hand
+complexity:logos	النطق	ن-ط-ق (to speak: speech and reason at once); الحيوان الناطق (the speaking animal: the philosophers' rendering of ζῷον λογικόν)	proposed	agent (claude opus-5.5), by hand
+complexity:material	الخامة	خامة (raw stuff, a material); المادة (the line it is on)	proposed	agent (claude opus-5.5), by hand
 complexity:rock	الصَّخْر	ص-خ-ر (rock); حَجَر (ḥajar: a stone)	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	الجِرْم السَّماوي	جِرْم (a body, the astronomers' word); سماء (samāʾ, س-م-و: what is high)	proposed	agent (claude opus-5.5), by hand
+complexity:planetary-system	النظام الكوكبي	كوكب (a star, a planet); ن-ظ-م (an order, pearls on a thread)	proposed	agent (claude opus-5.5), by hand
+complexity:galaxy	المجرّة	ج-ر-ر (to drag: the trail drawn across the sky); درب التبانة (the straw-sellers' path: the Milky Way)	proposed	agent (claude opus-5.5), by hand
 complexity:component	المُكَوِّن	ك-و-ن (to be: what brings a whole to be); قطعة (qiṭʿa: a piece)	proposed	agent (claude opus-5.5), by hand
 complexity:device	الآلة	آلة (āla: an instrument, a machine — what one works by); جهاز (jihāz: equipment)	proposed	agent (claude opus-5.5), by hand
 complexity:installation	المُنْشَأة	ن-ش-أ (to raise up, to originate)	proposed	agent (claude opus-5.5), by hand
 registry:crown	التاج	تاج (a crown, from Persian)	proposed	agent (claude opus-5.5), by hand
-crown:theos	الأحد	أ-ح-د (one, alone, without a second or a part: Qur'an 112:1); الواحد (al-wāḥid: the One)	proposed	agent (claude opus-5.5), by hand
-crown:agape	المَحَبّة	ح-ب-ب (love — and حَبّة, a seed); الرحمة (raḥma, from رَحِم, the womb: the love that gives life; وَرَحْمَتِي وَسِعَتْ كُلَّ شَيْءٍ, my mercy embraces all things, 7:156)	proposed	agent (claude opus-5.5), by hand
-term:creator	المُحْدِث	ح-د-ث (to happen, to be new: the one who brings about what is new); الخالق (al-khāliq: the Creator) is THE ONE's name, not a bean's	proposed	agent (claude opus-5.5), by hand
+crown:theone	واجب الوجود	و-ج-ب (to fall due, to be necessary); و-ج-د (to find: وجود, being); ابن سينا: واجب الوجود بذاته — عقل وعاقل ومعقول، وعاشق ومعشوق	proposed	agent (claude opus-5.5), by hand
+crown:love	المَحَبّة	ح-ب-ب (love — and حَبّة, a seed); الرحمة (raḥma, from رَحِم, the womb: the love that gives life; وَرَحْمَتِي وَسِعَتْ كُلَّ شَيْءٍ, my mercy embraces all things, 7:156)	proposed	agent (claude opus-5.5), by hand
+crown:wisdom	الحكمة	ح-ك-م (to judge, to hold back — حَكَمة, the bit that holds a horse); الحكيم (the Wise, among the names of God)	proposed	agent (claude opus-5.5), by hand
+term:via	بواسطة	و-س-ط (the middle: واسطة, an intermediary); سبب (sabab: first a rope let down, then a cause — what one reaches by)	proposed	agent (claude opus-5.5), by hand
 term:status	الحال	ح-و-ل (to turn, to change: a state is where a turning stands for now)	proposed	agent (claude opus-5.5), by hand
 registry:dimensions	الأبعاد	ب-ع-د (to be far)	proposed	agent (claude opus-5.5), by hand
 dimensions:time	الزمان	زمان (from Persian zamān); الدهر (al-dahr: time without end)	proposed	agent (claude opus-5.5), by hand
@@ -47,6 +64,12 @@ term:lives_in	يَسْكُن في	س-ك-ن (to be still, to dwell: سَكَن, a
 term:located_at	يقع في	و-ق-ع (to fall, to come to lie); موضع (mawḍiʿ, و-ض-ع: where a thing is put)	proposed	agent (claude opus-5.5), by hand
 term:owned_by	المالِك	م-ل-ك (to possess)	proposed	agent (claude opus-5.5), by hand
 term:responsibility	المسؤول	س-أ-ل (to ask): the one who will be asked	proposed	agent (claude opus-5.5), by hand
+term:acquired	الاقتناء	ق-ن-ي (to acquire, to keep); الشراء (a purchase)	proposed	agent (claude opus-5.5), by hand
+registry:facets	وجوه الرعاية	ر-ع-ي (to tend, to shepherd: رعاية, care); وجه (a face)	proposed	agent (claude opus-5.5), by hand
+facets:legal	قانوني	قانون (from κανών, a rule)	proposed	agent (claude opus-5.5), by hand
+facets:technical	تقني	τέχνη, through تقنية	proposed	agent (claude opus-5.5), by hand
+facets:experience	التجربة	ج-ر-ب (to try)	proposed	agent (claude opus-5.5), by hand
+facets:financial	مالي	م-و-ل (wealth)	proposed	agent (claude opus-5.5), by hand
 registry:acts	الأفعال	ف-ع-ل (to do)	proposed	agent (claude opus-5.5), by hand
 acts:made	مصنوع	ص-ن-ع (to make, to craft)	proposed	agent (claude opus-5.5), by hand
 acts:derived	مُشْتَقّ	ش-ق-ق (to split: split off from its source)	proposed	agent (claude opus-5.5), by hand

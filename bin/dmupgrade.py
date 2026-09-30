@@ -3192,6 +3192,243 @@ class Step30:
                 [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
 
 
+STEP_32 = (32, 0)
+_BARE_32 = re.compile(r'^[a-z0-9][a-z0-9.-]*$')
+
+
+def _flow_32(v):
+    """A value written as flow YAML, the way a bean's front matter writes ownership: `{ owner: { bean: sam } }`."""
+    if isinstance(v, dict):
+        return '{ ' + ', '.join(f"{k}: {_flow_32(x)}" for k, x in v.items()) + ' }' if v else '{}'
+    if isinstance(v, list):
+        return '[' + ', '.join(_flow_32(x) for x in v) + ']'
+    if isinstance(v, bool):
+        return 'true' if v else 'false'
+    if isinstance(v, (int, float)):
+        return str(v)
+    if hasattr(v, 'isoformat'):
+        return v.isoformat()
+    s = str(v)
+    return s if _BARE_32.match(s) and s not in ('true', 'false', 'null', 'yes', 'no', 'on', 'off') \
+        else json.dumps(s, ensure_ascii=False)
+
+
+class Step32:
+    """The translation into std-vocab 32.0, the base: ownership has no facets and the facets are ways of answering; the
+    life chain is its vias, ending at the Creator. Each bean's `owned_by` becomes its one owner (a person's, an
+    agreement's `crown: true`; the inherited form `from`); each `responsibility` keeps only what someone would need to be
+    told — a legal entry that repeats the owner goes, and so does a facet on a being it does not apply to; `creator`
+    becomes `via`; and a body whose hardware names its maker comes through someone at that maker. Made on each file as
+    the steps before it left it, and proved: the front matter then holds exactly that, and nothing else moved."""
+
+    def __init__(self, rel, tag, keep):
+        self.rel, self.tag, self.keep = rel, tag, keep
+        self.problems, self.facts, self.reasons = [], {}, None
+        self.leftover = False
+        self.facets = {}
+
+    @staticmethod
+    def docs():
+        return dmgarden.paths(ROOT, 'beans')
+
+    def _each(self):
+        for p in self.docs():
+            try:
+                text, form = read_text(p)
+                fm = _parse(text)[0]
+            except Exception:
+                continue
+            if isinstance(fm, dict):
+                yield p, text, form, fm
+
+    @staticmethod
+    def _old(fm):
+        ob, rs = fm.get('owned_by'), fm.get('responsibility')
+        return ((isinstance(ob, dict) and bool(set(ob) - {'owner', 'contract', 'external', 'crown', 'from', 'since', 'note'}))
+                or (isinstance(ob, dict) and 'crown' in ob and ob['crown'] is not True)
+                or (isinstance(rs, dict) and 'via' in rs) or 'creator' in fm)
+
+    def left(self):
+        for _p, _t, _f, fm in self._each():
+            if self._old(fm):
+                self.leftover = True
+                return True
+        return False
+
+    def plan(self):
+        law = std_fm(self.rel)
+        self.facets = {str(r.get('facet')): r for r in (law.get('facets') or []) if isinstance(r, dict) and r.get('facet')}
+        self.run(dry=True)
+        if self.problems and not self.keep:
+            refuse(f"crossing into std-vocab 32.0, {len(self.problems)} thing(s) are a person's to do, not a "
+                   f"translation's:\n" + '\n'.join('  - ' + p for p in self.problems) +
+                   "\nDo them and commit, then run this again — or pass --keep-on-failure to apply the rest and "
+                   "leave these, named, for the person.")
+
+    def apply(self, vocab_only=False):
+        if vocab_only:
+            return None, []
+        self.problems, self.facts = [], {}
+        self.run(dry=False)
+        return self.report()
+
+    def rekey_reasons(self):
+        self.reasons = None
+
+    def code_left(self):
+        return []
+
+    def _note(self, rel, what, old, new):
+        self.facts.setdefault(rel, []).append((what, old, new))
+
+    def _applies(self, facet, fm):
+        at = (self.facets.get(str(facet)) or {}).get('applies_to')
+        if not isinstance(at, dict):
+            return True
+        return fm.get('nature') in (at.get('natures') or []) or fm.get('genos') in (at.get('gene') or [])
+
+    def want(self, rel, fm):
+        """The front matter this bean holds in 32.0's words."""
+        w = copy.deepcopy(fm)
+        ob = fm.get('owned_by')
+        if isinstance(ob, dict) and bool(set(ob) - {'owner', 'contract', 'external', 'crown', 'from', 'since', 'note'}):
+            if 'via' in ob:
+                w['owned_by'] = {'from': ob['via']}
+                self._note(rel, 'owned_by', 'via', 'from')
+            else:
+                e = ob.get('legal') if isinstance(ob.get('legal'), dict) else next(
+                    (x for x in ob.values() if isinstance(x, dict)), {})
+                new = {}
+                for k in ('owner', 'contract', 'external', 'crown'):
+                    if k in e:
+                        new = {k: (True if k == 'crown' else e[k])}
+                        break
+                for k in ('since', 'note'):
+                    if k in e and new:
+                        new[k] = e[k]
+                if not new:
+                    raise ForAPerson("its `owned_by` names no owner this step can read — write `owned_by: { owner: … }`, "
+                                     "`external`, `contract` or `crown: true` by hand")
+                w['owned_by'] = new
+                dropped = [str(f) for f in ob if f != 'legal']
+                self._note(rel, 'owned_by', 'facets ' + ', '.join(map(str, ob)), 'one owner'
+                           + (f" (the {', '.join(dropped)} owner(s) dropped: a way of answering, not of owning)"
+                              if dropped else ''))
+        elif isinstance(ob, dict) and 'crown' in ob and ob['crown'] is not True:
+            w['owned_by'] = dict(ob, crown=True)
+            self._note(rel, 'owned_by', f"crown: {ob['crown']}", 'crown: true')
+        o = w.get('owned_by') if isinstance(w.get('owned_by'), dict) else {}
+        owner = o['owner'].get('bean') if isinstance(o.get('owner'), dict) else None
+        rs = fm.get('responsibility')
+        if isinstance(rs, dict):
+            if 'via' in rs:
+                w['responsibility'] = {'from': rs['via']}
+                self._note(rel, 'responsibility', 'via', 'from')
+            elif 'from' not in rs:
+                keep, gone = {}, []
+                for f, e in rs.items():
+                    rep = isinstance(e, dict) and isinstance(e.get('holder'), dict) and e['holder'].get('bean') == owner \
+                        and not (set(e) - {'holder', 'since'})
+                    if (self.facets.get(str(f)) or {}).get('answered_by_owner') and owner and rep:
+                        gone.append(f"{f} (repeats the owner)")
+                    elif not self._applies(f, fm):
+                        gone.append(f"{f} (applies to no {fm.get('genos')})")
+                    else:
+                        keep[f] = e
+                if gone:
+                    self._note(rel, 'responsibility', ', '.join(gone), 'dropped')
+                if keep:
+                    w['responsibility'] = keep
+                else:
+                    w.pop('responsibility', None)
+        if 'creator' in fm:
+            c = fm['creator'] if isinstance(fm['creator'], dict) else {}
+            if not isinstance(c.get('bean'), str):
+                raise ForAPerson("its `creator` names no bean — write `via` by hand")
+            v = {'bean': c['bean']}
+            if isinstance(c.get('via'), dict) and c['via'].get('bean'):
+                v['note'] = f"through {c['via']['bean']}, which acted for them"
+            w['via'] = [v]
+            w.pop('creator', None)
+            self._note(rel, 'via', 'creator', f"via {c['bean']}")
+        hw = (fm.get('details') or {}).get('hardware') if isinstance(fm.get('details'), dict) else None
+        vendor = hw.get('vendor') if isinstance(hw, dict) else None
+        if fm.get('nature') == 'soma' and 'via' not in w and isinstance(vendor, str) and vendor.strip():
+            w['via'] = [{'someone': 'person', 'outside': vendor.strip()}]
+            self._note(rel, 'via', 'details.hardware.vendor', f"someone at {vendor.strip()}")
+        return w
+
+    @staticmethod
+    def _put(text, key, value, after=None):
+        """`key: <flow>` written in place of its block — its first line's comment kept — or, new, after `after`'s block."""
+        line = f"{key}: {_flow_32(value)}"
+        try:
+            s, e = dmsafe.top_level_span(text, key)
+        except dmsafe.UnsafeEdit:
+            s = e = None
+        if s is not None:
+            first = text[s:e].split('\n', 1)[0]
+            m = re.search(r'(\s+#.*)$', first)
+            return text[:s] + line + (m.group(1) if m else '') + '\n' + text[e:]
+        for a in after or ():
+            try:
+                _s, _e = dmsafe.top_level_span(text, a)
+            except dmsafe.UnsafeEdit:
+                continue
+            return text[:_e] + line + '\n' + text[_e:]
+        raise CannotRename(f"no place to write `{key}`")
+
+    @staticmethod
+    def _drop(text, key):
+        s, e = dmsafe.top_level_span(text, key)
+        return text[:s] + text[e:]
+
+    def run(self, dry):
+        for path, text, form, fm in self._each():
+            rel = os.path.relpath(path, ROOT).replace(os.sep, '/')
+            try:
+                want = self.want(rel, fm)
+                if want == fm:
+                    continue
+                new = text
+                for key in ('owned_by', 'responsibility'):
+                    if key in want and want[key] != fm.get(key):
+                        new = self._put(new, key, want[key])
+                    elif key in fm and key not in want:
+                        new = self._drop(new, key)
+                if 'via' in want and want.get('via') != fm.get('via'):
+                    if 'creator' in fm:
+                        s, e = dmsafe.top_level_span(new, 'creator')
+                        new = new[:s] + f"via: {_flow_32(want['via'])}\n" + new[e:]
+                    else:
+                        new = self._put(new, 'via', want['via'], after=('responsibility', 'owned_by'))
+                if _parse(new)[0] != want:
+                    raise CannotRename("the translation could not be made without changing something else")
+            except (CannotRename, dmsafe.UnsafeEdit) as e:
+                why = f"{rel}: {e}" + ('' if isinstance(e, ForAPerson) else " — translate it by hand")
+                if why not in self.problems:
+                    self.problems.append(why)
+                self.facts.pop(rel, None)
+                continue
+            if not dry:
+                write_text(path, new, form)
+
+    def report(self):
+        beans = sorted(r for r in self.facts if r.startswith('beans/'))
+        parts = []
+        for what, words in (('owned_by', "ownership made one owner"),
+                            ('responsibility', "answering kept to what someone would need to be told"),
+                            ('via', "the life chain written as vias")):
+            hit = [r for r in beans if any(w == what for w, _o, _n in self.facts[r])]
+            if hit:
+                parts.append(f"{words} in {len(hit)} bean(s)")
+        if self.problems:
+            parts.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
+        return ('std-vocab 32.0, the base: ownership without facets, answering as care, the life chain as vias — '
+                + '; '.join(parts or ['nothing to translate']),
+                [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
@@ -3344,6 +3581,13 @@ def main():
             if vtuple(before) < STEP_31 or _s31.left() or _s31.zone_missing():
                 step31 = _s31
                 step31.plan()
+        # ...and one whose ownership still has facets, or whose life chain is still a `creator`.
+        step32 = None
+        if STEP_32 <= vtuple(vocab_version(rel)):
+            _s32 = Step32(rel, a.tag, a.keep_on_failure)
+            if vtuple(before) < STEP_32 or _s32.left():
+                step32 = _s32
+                step32.plan()
         # WHAT THE GARDEN RECEIVES, AND WHAT IT HELD, read by the one reader (bin/dmpass.py): `want` is what a garden
         # extending its profiles receives from the release; `have` is every file of the garden its own release keeps, so
         # a file it no longer receives — a retired tool, the asset of a profile it left — leaves, and a file of its own
@@ -3360,7 +3604,7 @@ def main():
         # fails) once left release files copied, both pins moved, beans half translated and no journal entry.
         try:
             return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22, step23,
-                                 profiles, step24, step26, step27, step29, step30, step31)
+                                 profiles, step24, step26, step27, step29, step30, step31, step32)
         except BaseException as e:
             put_back(added + (step21.created if step21 else []))
             print(f"NOT {verb.upper()}: the upgrade stopped midway"
@@ -3429,7 +3673,8 @@ def dropped_line(dropped):
 
 
 def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None,
-                  profiles=None, step24=None, step26=None, step27=None, step29=None, step30=None, step31=None):
+                  profiles=None, step24=None, step26=None, step27=None, step29=None, step30=None, step31=None,
+                  step32=None):
     """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
     caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
     changed = []
@@ -3550,6 +3795,10 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         _t, _b = step31.apply()
         translated.append(_t); steps.append(_t)
         beans += [b for b in _b if b not in beans]
+    if step32:
+        _t, _b = step32.apply()
+        translated.append(_t); steps.append(_t)
+        beans += [b for b in _b if b not in beans]
 
     _vp = os.path.join(ROOT, 'VOCAB.md')
     if os.path.isfile(_vp):
@@ -3585,7 +3834,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     if not (changed or added or removed or repinned or beans):
         # NOTHING MOVED IS NOT NOTHING TO DO. With --keep-on-failure a step that could translate nothing still names what
         # it left for a person, and the gate still refuses the garden for it: saying "nothing to do" hid both.
-        left = [p for s in (step22, step23, step24, step26, step27, step29, step30, step31) if s for p in s.problems]
+        left = [p for s in (step22, step23, step24, step26, step27, step29, step30, step31, step32) if s for p in s.problems]
         if left:
             print(f"NOTHING TRANSLATED: this garden runs {a.tag} ({sha[:12]}) already, and {len(left)} thing(s) are a "
                   f"person's to do, not a translation's:\n" + '\n'.join('  - ' + p for p in left) +
@@ -3596,7 +3845,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     # ONLY WORDS MOVED: the garden runs this release already, and what changed is the translation of what came in since it
     # crossed. The law did not move and nothing is a person's to decide — the translation is the one the garden adopted
     # when it crossed — so the entry asks nothing, and says RULE-CHANGE only where VOCAB.md itself was translated.
-    ran = [s for s in (step22, step23, step24, step26, step27, step29, step30, step31) if s]
+    ran = [s for s in (step22, step23, step24, step26, step27, step29, step30, step31, step32) if s]
     words_only = bool(ran and all(s.leftover for s in ran) and not (added or removed or repinned)
                       and all(c.endswith(('(translated)', '(re-keyed)')) for c in changed))
     since = ' and '.join(w for s, w in ((step22, "into std-vocab 22.0 still in 21.0's words"),
@@ -3609,7 +3858,9 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
                                                  "folded"),
                                         (step30, "into std-vocab 30.0 with what an agreement is over still a list"),
                                         (step31, "into std-vocab 31.0 with a being still `empsychon`, or a crown "
-                                                 "chosen by nature"))
+                                                 "chosen by nature"),
+                                        (step32, "into std-vocab 32.0 with ownership still in facets, or a life chain "
+                                                 "still a `creator`"))
                         if s)
     if words_only:
         verb = 'translated'

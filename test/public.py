@@ -30,14 +30,14 @@ run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper",
 write(os.path.join(G, "beans", "someone.md"),
     '---\nbean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: soma\n'
     'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
-    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\n'
+    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { crown: true }\n'
     'responsibility: { legal: { self: true } }\n---\nA person.\n')
 write(os.path.join(G, "beans", "quietbox.md"),
     '---\nbean: quietbox\ngenos: host\ntitle: "a machine"\nstatus: active\nsummary: "h"\nnature: soma\n'
     'identity: { status: confirmed, anchors: [ { key: serial, value: "SN-Q1", class: hardware, establishing: true },'
     ' { key: hostname, value: "quietbox.example.org", class: network, establishing: false } ] }\n'
     'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
+    'owned_by: { owner: { bean: someone } }\n'
     '---\nA machine.\n')
 
 R = os.path.join(T, "repo")
@@ -75,7 +75,7 @@ write(os.path.join(G, "beans", "samba-here.md"),
     '---\nbean: samba\ngenos: product\ntitle: "the file server software"\nstatus: active\nsummary: "s"\nnature: lekton\n'
     'identity: { status: confirmed, anchors: [ { key: identifier, value: "product:samba", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
+    'owned_by: { owner: { bean: someone } }\n'
     '---\nSamba.\n')
 commit("the vocabulary documents samba, which is public knowledge\n", "neutral")
 r = dmpublic()
@@ -88,13 +88,13 @@ check("a word the published classifications carry is NOT a leak — a garden can
 write(os.path.join(G, "beans", "design-lantern-stack.md"),
     '---\nbean: design-lantern-stack\ngenos: design\ntitle: "how the lanterns are wired"\nstatus: active\nsummary: "d"\n'
     'nature: lekton\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n---\nA design.\n')
+    'owned_by: { owner: { bean: someone } }\n---\nA design.\n')
 write(os.path.join(G, "beans", "kettle-share.md"),
     '---\nbean: kettle-share\ngenos: contract\ntitle: "a kettle bought together"\nstatus: active\nsummary: "c"\n'
     'nature: lekton\n'
     'identity: { status: confirmed, anchors: [ { key: identifier, value: "kettle-2026-17", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { legal: { crown: agape } }\n---\nAn agreement.\n')
+    'owned_by: { crown: true }\n---\nAn agreement.\n')
 commit("where that is being taken up, see [[design-lantern-stack]] `open:`\n", "neutral")
 r = dmpublic()
 check("a DESIGN's id in a public file is refused — the kind of leak the hand-kept list of kinds let through",
@@ -115,7 +115,7 @@ check("...by its `mapping:` id, when the file is named otherwise", r.returncode 
 write(os.path.join(G, "beans", "daftar.md"),
     '---\nbean: daftar\ngenos: product\ntitle: "the ledger this garden is kept in"\nstatus: active\nsummary: "p"\n'
     'nature: lekton\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n---\nd.\n')
+    'owned_by: { owner: { bean: someone } }\n---\nd.\n')
 commit("daftar is a ledger kept in git\n", "neutral")
 r = dmpublic()
 check("...while a word seed/PUBLIC-ALLOW records as public is not refused, though a garden also names a bean by it",
@@ -184,14 +184,14 @@ write(os.path.join(G, "beans", "nas.md"),
     '---\nbean: nas\ngenos: host\ntitle: "the cellar storage box"\nstatus: active\nsummary: "h"\nnature: soma\n'
     'identity: { status: confirmed, anchors: [ { key: serial, value: "SN-N1", class: hardware, establishing: true } ] }\n'
     'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n'
+    'owned_by: { owner: { bean: someone } }\n'
     'owns: { lan_ip: "10.20.30.40", doc_ip: "203.0.113.77", contact: "ops-desk@cellar-net.io", manual: "help@example.org" }\n'
     '---\nStorage.\n')
 write(os.path.join(G, "beans", "bakers.md"),
     '---\nbean: bakers\ngenos: host\ntitle: "m"\nstatus: active\nsummary: "h"\nnature: soma\n'
     'identity: { status: confirmed, anchors: [ { key: serial, value: "SN-M1", class: hardware, establishing: true } ] }\n'
     'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { legal: { owner: { bean: someone } } }\nresponsibility: { legal: { holder: { bean: someone } } }\n---\nM.\n')
+    'owned_by: { owner: { bean: someone } }\n---\nM.\n')
 for _text, _word, _why in (("the nas in the cellar\n", "nas", "a name of three letters"),
                            ("it answers at 10.20.30.40\n", "10.20.30.40", "an address that is no anchor"),
                            ("write to ops-desk@cellar-net.io\n", "ops-desk@cellar-net.io", "an email that is no anchor"),

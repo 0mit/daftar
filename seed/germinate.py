@@ -143,22 +143,21 @@ def gardener_form(law, genos):
     if term is None or (isinstance(row.get('identifier_forms'), list) and 'minted' not in row['identifier_forms']):
         return None
     forms = row.get('ownership_form')
-    # THE CROWN IS THE LIFE CHAIN (31.0): the one branch a bean may name is the crown row that is not the root
-    crown = next((c.get('branch') for c in law.get('crown') or [] if isinstance(c, dict) and not c.get('root')),
-                 None) if forms == 'crown' or forms == ['crown'] else None
+    # THE CROWN IS ONE (32.0): a genos pinned to it says only that its chain ends there, `crown: true`
+    crown = forms == 'crown' or forms == ['crown']
     return {'nature': nature, 'key': term['term'], 'class': term['anchor'].get('class', 'logical'), 'crown': crown}
 
 
 def gardener_bean(gid, name, when, garden_id=None, genos='person', form=None):
-    """The gardener's bean — the garden's first. A person is owned by no being (the crown: agape) and answers for
-    themself; an organisation is owned outside this garden, by whoever its own rules say, and answers for itself.
+    """The gardener's bean — the garden's first. A person is owned by no being (its chain ends at the crown) and
+    answers for themself; an organisation is owned outside this garden, by whoever its own rules say, and answers for itself.
     Its anchor is a name this garden mints, `<genos>:<id>`, QUALIFIED at birth by the garden's own id when that is
     known — so the gardener can be named in another garden from the first proposal on, and no other garden's
     `<genos>:<id>` is them."""
     import json
-    form = form or {'nature': 'soma', 'key': 'identifier', 'class': 'logical', 'crown': 'agape'}
+    form = form or {'nature': 'soma', 'key': 'identifier', 'class': 'logical', 'crown': True}
     pid = f"{garden_id}/{genos}:{gid}" if garden_id else f"{genos}:{gid}"
-    owner = (f"crown: {form['crown']}" if form['crown']
+    owner = ('crown: true' if form['crown']
              else 'external: "its members, as its own rules say: outside this garden"')
     who = 'person who keeps' if genos == 'person' else 'organisation that keeps'
     return f"""---
@@ -168,7 +167,7 @@ title: {json.dumps(name, ensure_ascii=False)}
 status: active
 summary: "The gardener: the {who} this garden."
 nature: {form['nature']}
-owned_by: {{ legal: {{ {owner} }} }}
+owned_by: {{ {owner} }}
 responsibility: {{ legal: {{ self: true }} }}
 identity:
   status: confirmed

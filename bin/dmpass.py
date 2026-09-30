@@ -810,6 +810,8 @@ class Flows:
                     if isinstance(d, dict) and isinstance(d.get('entries'), dict):
                         v = e[a]
                         walk(f"{here}.{a}", list(enumerate(v)) if isinstance(v, list) else [(None, v)], d['entries'])
+                    elif isinstance(e[a], bool):
+                        continue            # a form chosen (`crown: true`, `self: true`), not words: nothing to quote (32.0)
                     elif Origins.said(self.origins.of(rec)):
                         out.add((f"{here}.{a}", json.dumps(e[a], sort_keys=True, default=str)))
         for k, v in (fm.items() if isinstance(fm, dict) else []):
@@ -1155,11 +1157,22 @@ def _subjects(bid, fm):
     return out
 
 
+def owner_of(fm):
+    """The bean a bean's `owned_by` names as its owner, or None. Ownership has no facets (32.0): `owned_by: { owner:
+    {bean} }`. A garden still at an earlier release writes it under its root facet, `owned_by: { legal: { owner: … } }`,
+    and a reader of another garden meets both, so both are read."""
+    ob = (fm or {}).get('owned_by')
+    if not isinstance(ob, dict):
+        return None
+    e = ob if 'owner' in ob else ob.get('legal') if isinstance(ob.get('legal'), dict) else {}
+    o = e.get('owner') if isinstance(e, dict) else None
+    return o.get('bean') if isinstance(o, dict) and isinstance(o.get('bean'), str) else None
+
+
 def _owners(fm):
-    """The beans a bean's `owned_by` names as owner, in any facet."""
-    ob = fm.get('owned_by')
-    return {f['owner']['bean'] for f in (ob.values() if isinstance(ob, dict) else [])
-            if isinstance(f, dict) and isinstance(f.get('owner'), dict) and isinstance(f['owner'].get('bean'), str)}
+    """The beans a bean's `owned_by` names as owner."""
+    o = owner_of(fm)
+    return {o} if o else set()
 
 
 def shares(holder, hfm, bid, fm):

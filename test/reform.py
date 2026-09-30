@@ -48,7 +48,7 @@ identity:
   anchors:
     - { key: serial, value: "SN-RENT-1", class: hardware, establishing: true }
 provenance: { src: observed, by: probe, as_of: 2026-09-20 }
-owned_by: { legal: { external: "a provider" } }
+owned_by: { external: "a provider" }
 responsibility: { legal: { external: "a provider" } }
 """ + extra + "---\n\nprobe.\n")
 
@@ -250,7 +250,7 @@ summary: "probe"
 nature: lekton
 identity: { status: confirmed, anchors: [ { key: git_remote, value: "host-a:git/a-tool.git", class: logical, establishing: true } ] }
 provenance: { src: observed, by: probe, as_of: 2026-09-20 }
-owned_by: { legal: { external: "someone" } }
+owned_by: { external: someone }
 responsibility: { legal: { external: "someone" } }
 located_at:
   - { system: unix-filesystem, openness: here, at: "root:a-tool", role: own-source, scan_policy: index }
