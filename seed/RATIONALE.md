@@ -671,6 +671,18 @@ word of the law, and it is a layer of its own beneath the law because a name mus
 gate reads no meaning from it. Each name is `proposed` until a reader whose language it is confirms it, as the school's
 Persian and Turkish words are.
 
+The gate reads the files' FORM and nothing else: each is one of the form's languages, every row names an
+item of the whole law, whichever profiles a garden extends, once, and the languages are siblings — every file names what
+the others name, so no reader's language is a lesser copy of another's. A name is each language's own word for the
+item AS THE LAW USES IT, never a transliteration of the code: body is جسم, cisim, Körper — what takes room in three
+dimensions, as Ibn Sina and the Stoics defined it — and not تن or Leib, the lived body a stone lacks. Where a language's
+nearest word is one the law reserves or retired, another is chosen and the reserved one named in the roots, so a reader
+sees why: طبیعت names physis, not the natures; آفریدگار, Yaradan, Schöpfer and الخالق name THE ONE, and a bean's
+`creator` is پدیدآورنده, var eden, Urheber, المحدث. A word coined in an ancient language for a modern thing says so.
+The roots are chosen for what they show about the item's use here, and they show what the languages share: λεκτόν is
+from λέγω, first to gather and lay in order, as a lekton is placed in an order; tissue is woven in all nine; a lens is
+a lentil in all nine; the order of bodies is Pascal's first order, Hartmann's strata and Ibn Miskawayh's ranks.
+
 ## natures[soma].establishing_anchor_family
 
 serial / mac — bound to the matter itself. (`wg_pubkey` was listed here until 19.0; it never was.)

@@ -175,6 +175,28 @@ put("VOCAB.md", _v.replace("aggregate: sum", "aggregate: guess"))
 out = gate()
 check("...and one whose wholeness is no aggregate", "no row of `aggregates`" in out, out[-700:])
 
+# --- the names layer: each language a sibling, every row an item of the law
+put("VOCAB.md", _v)
+EN, FA = get("seed/names/en.tsv"), get("seed/names/fa.tsv")
+check("the names layer: nine languages, the same items in each, all of the law — and a garden grown with it passes",
+      len(os.listdir(os.path.join(G, "seed", "names"))) == 9 and EN.count("\n") == FA.count("\n") > 60 and ok(gate()), gate()[-600:])
+put("seed/names/en.tsv", EN + "term:nothing-of-the-kind\tnothing\t\tproposed\tsam\n")
+out = gate()
+check("a name for no item of the law is refused", "`term:nothing-of-the-kind` is no item of the law" in out, out[-600:])
+put("seed/names/en.tsv", EN.replace("\tproposed\t", "\tapproved\t", 1))
+out = gate()
+check("...a status neither proposed nor confirmed", "is `proposed` or `confirmed`" in out, out[-600:])
+put("seed/names/en.tsv", EN)
+put("seed/names/fa.tsv", "\n".join(l for l in FA.split("\n") if not l.startswith("natures:lekton\t")))
+out = gate()
+check("...a language that names fewer items than its siblings, naming what it lacks",
+      "seed/names/fa.tsv names" in out and "natures:lekton" in out, out[-600:])
+put("seed/names/fa.tsv", FA)
+put("seed/names/xx.tsv", "item\tname\troots\tstatus\tby\n")
+out = gate()
+check("...and a file in no language of the form", "seed/names/xx.tsv" in out and "one of the form's languages" in out, out[-600:])
+os.remove(os.path.join(G, "seed", "names", "xx.tsv"))
+
 check("NOTHING above ended in a traceback", True)
 shutil.rmtree(T, ignore_errors=True)
 print("\nroot: %d failed" % len(FAILS))

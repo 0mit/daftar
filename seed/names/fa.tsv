@@ -1,1 +1,71 @@
 item	name	roots	status	by
+registry:natures	سرشت‌ها	سرشت (seresht, from سرشتن, to knead: the make a being is kneaded of); نهاد (nahād, what is laid at the foundation); طبیعت (tabī'at) is left to physis, the philosophers' nature, which is not this	proposed	agent (claude opus-5.5), by hand
+natures:soma	جسم	جسم (jesm, Arabic: bulk; Ibn Sina: a substance in which three dimensions may be posited); تن (tan, Middle Persian: the living body); کالبد (kālbad: the frame, the mould)	proposed	agent (claude opus-5.5), by hand
+natures:lekton	گفتنی	گفتن (goftan, to say); معنا (ma'nā: meaning, the Arabic philosophers' nearest word for λεκτόν); اعتباری (e'tebārī: Tabatabai's posited beings — ownership, contract, office — which are by being placed in an order people keep)	proposed	agent (claude opus-5.5), by hand
+term:nature	سرشت	سرشتن (to knead: the make a being is of)	proposed	agent (claude opus-5.5), by hand
+term:genos	گونه	گونه (gune, Middle Persian gōnag: colour, sort); جنس (jens, Arabic: genus); تیره (tire: a lineage)	proposed	agent (claude opus-5.5), by hand
+registry:gene	گونه‌ها	گونه (gune: a sort, a kind)	proposed	agent (claude opus-5.5), by hand
+registry:complexity	مراتب اجسام	مرتبه (martabe, ر-ت-ب: a step one stands firm on); پیچیدگی (pichidegi, from پیچیدن, to twist together); مراتب وجود (the philosophers' grades of being), here of bodies alone	proposed	agent (claude opus-5.5), by hand
+complexity:elementary-particle	ذره‌ی بنیادی	ذره (zarre, Arabic ḏarra: a mote in a sunbeam); بنیاد (bonyād: the foundation); نقطه (noqte: the dot, undivided)	proposed	agent (claude opus-5.5), by hand
+complexity:hadron	هادرون	ἁδρός (stout); کوارک (quark)	proposed	agent (claude opus-5.5), by hand
+complexity:nucleus	هسته	هسته (haste: the stone of a fruit, the kernel)	proposed	agent (claude opus-5.5), by hand
+complexity:atom	اتم	ἄτομος (uncut); جزء لایتجزا (the part that is not divided, of the kalām); جوهر فرد (jowhar-e fard: the single substance)	proposed	agent (claude opus-5.5), by hand
+complexity:molecule	مولکول	moles (a mass); مولکول (a little mass)	proposed	agent (claude opus-5.5), by hand
+complexity:cell	یاخته	یاخته (the Persian Academy's word); سلول (cellule, from cella: a little room)	proposed	agent (claude opus-5.5), by hand
+complexity:tissue	بافت	بافتن (bāftan, to weave)	proposed	agent (claude opus-5.5), by hand
+complexity:organ	اندام	اندام (andām, Middle Persian handām: a limb, a member; also stature, form); عضو (ʿozv, Arabic: a member)	proposed	agent (claude opus-5.5), by hand
+complexity:organ-system	دستگاه	دستگاه (dastgāh: dast, the hand + gāh, a place: means gathered at hand; also a mode of Persian music, in which many melodies work as one)	proposed	agent (claude opus-5.5), by hand
+complexity:organism	جاندار	جان (jān: life, soul) + داشتن (to hold): a being that holds a life; موجود زنده (a living being)	proposed	agent (claude opus-5.5), by hand
+complexity:population	جمعیت	ج-م-ع (to gather): a gathering of one kind	proposed	agent (claude opus-5.5), by hand
+complexity:community	جامعه‌ی زیستی	جامعه (jāme'e, ج-م-ع: what gathers); زیستن (zistan, to live)	proposed	agent (claude opus-5.5), by hand
+complexity:ecosystem	زیست‌بوم	زیست (life) + بوم (bum: the ground one lives on, a homeland)	proposed	agent (claude opus-5.5), by hand
+complexity:biosphere	زیست‌کره	زیست (life) + کره (kore: a sphere)	proposed	agent (claude opus-5.5), by hand
+complexity:material	ماده	م-د-د (to extend, to supply); مایه (māye: stuff, leaven)	proposed	agent (claude opus-5.5), by hand
+complexity:rock	سنگ	سنگ (sang, Middle Persian: stone); صخره (sakhre, Arabic: a rock)	proposed	agent (claude opus-5.5), by hand
+complexity:celestial-body	جرم آسمانی	جرم (jerm, Arabic: a body, a bulk — the astronomers' word); آسمان (āsmān, Avestan asman: stone, and the sky — once thought a vault of stone)	proposed	agent (claude opus-5.5), by hand
+complexity:component	قطعه	ق-ط-ع (to cut: a piece cut to fit); ساختن (to make)	proposed	agent (claude opus-5.5), by hand
+complexity:device	افزاره	افزار (afzār, Middle Persian abzār: an instrument, a means); the Persian Academy's word for a device	proposed	agent (claude opus-5.5), by hand
+complexity:installation	تأسیسات	أ-س-س (a foundation: اساس)	proposed	agent (claude opus-5.5), by hand
+registry:crown	تاج	تاج (tāj, Middle Persian tāg: a crown); افسر (afsar: a diadem)	proposed	agent (claude opus-5.5), by hand
+crown:theos	یکتا	یک (one) + تا (a fold): one without a second; خدا (khodā, Middle Persian xwadāy: the lord); احد (ahad, Qur'an 112:1)	proposed	agent (claude opus-5.5), by hand
+crown:agape	مهر	مهر (mehr, Avestan miθra: the covenant, the bond — and love, and the sun, which gives life); عشق (eshq: longing love)	proposed	agent (claude opus-5.5), by hand
+term:creator	پدیدآورنده	پدید (padid: come to light) + آوردن (to bring); آفریدگار (āfaridgār: the Creator) is THE ONE's, not a bean's	proposed	agent (claude opus-5.5), by hand
+term:status	وضعیت	و-ض-ع (to lay down, to place); حال (hāl: a state)	proposed	agent (claude opus-5.5), by hand
+registry:dimensions	ابعاد	بُعد (bo'd, ب-ع-د: to be far — a dimension is a way of being far); اندازه (andāze: a measure)	proposed	agent (claude opus-5.5), by hand
+dimensions:time	زمان	زمان (zamān, Middle Persian: a time, a span; Avestan zrvan, time itself) — which Arabic took from Persian	proposed	agent (claude opus-5.5), by hand
+dimensions:length	درازا	دراز (derāz: long); طول (tūl, Arabic)	proposed	agent (claude opus-5.5), by hand
+aspects:time	کِی	کی (kei: when); متی (matā: the category of when, in the philosophers' Arabic)	proposed	agent (claude opus-5.5), by hand
+aspects:place	کجا	کجا (kojā: where); أین (ayn: the category of where); جای (jāy: a place)	proposed	agent (claude opus-5.5), by hand
+registry:complements	مکمل‌ها	ک-م-ل (to be whole); نیمه‌ی دیگر (the other half)	proposed	agent (claude opus-5.5), by hand
+complements:stated	بیان‌شده	بیان (bayān, ب-ي-ن: to make distinct, clear)	proposed	agent (claude opus-5.5), by hand
+complements:bearer	حامل	ح-م-ل (to carry); دارنده (dārande: the holder)	proposed	agent (claude opus-5.5), by hand
+complements:system	سامانه	سامان (sāmān: order, good arrangement) — the Persian Academy's word for a system; نظام (nezām)	proposed	agent (claude opus-5.5), by hand
+section:division_form	بخش‌بندی	بخشیدن (bakhshidan: to share out — and, the same verb, to give and to forgive); نقطه (noqte: the dot)	proposed	agent (claude opus-5.5), by hand
+registry:divisions	بخش‌بندی‌ها	بخشیدن (to share out)	proposed	agent (claude opus-5.5), by hand
+term:part_of	جزءِ	جزء (joz', Arabic: a part); کل (kol: the whole); پاره (pāre: a piece)	proposed	agent (claude opus-5.5), by hand
+term:lives_in	ساکنِ	س-ک-ن (to be still, to dwell); زیستگاه (zistgāh: the place of living, a habitat)	proposed	agent (claude opus-5.5), by hand
+term:located_at	واقع در	و-ق-ع (to fall, to befall: where a thing has come to lie); جای (jāy: a place)	proposed	agent (claude opus-5.5), by hand
+term:owned_by	مالک	م-ل-ک (to possess, to rule: مُلک, a realm; مَلِک, a king); از آنِ (belonging to)	proposed	agent (claude opus-5.5), by hand
+term:responsibility	پاسخ‌گو	پاسخ (pāsokh: an answer) + گفتن (to say); مسئول (mas'ul, س-ا-ل: the one who will be asked)	proposed	agent (claude opus-5.5), by hand
+registry:acts	کنش‌ها	کنش (konesh, from کردن, to do)	proposed	agent (claude opus-5.5), by hand
+acts:made	ساخته	ساختن (sākhtan: to make, to build — and to suit, to agree)	proposed	agent (claude opus-5.5), by hand
+acts:derived	برگرفته	برگرفتن (to take from); مشتق (moshtaq, ش-ق-ق: split off)	proposed	agent (claude opus-5.5), by hand
+acts:read	خوانده	خواندن (khāndan: to read — and to call, and to sing)	proposed	agent (claude opus-5.5), by hand
+acts:said	گفته	گفتن (goftan: to say)	proposed	agent (claude opus-5.5), by hand
+section:provenance_record	خاستگاه	خاستن (khāstan: to rise) + گاه (a place): where a word rose; اسناد (esnād: the chain of those who handed a report on, each named)	proposed	agent (claude opus-5.5), by hand
+registry:layers	لایه‌ها	لایه (lāye: a layer, a fold)	proposed	agent (claude opus-5.5), by hand
+layers:manifesto	مرام‌نامه	مرام (marām, ر-و-م: what is sought) + نامه (a writing)	proposed	agent (claude opus-5.5), by hand
+layers:law	قانون	κανών (a straight rod, a rule — through Arabic qānūn); داد (dād, Middle Persian: law, justice)	proposed	agent (claude opus-5.5), by hand
+layers:reasoning	چرایی	چرا (cherā: why); استدلال (estedlāl, د-ل-ل: seeking what points the way)	proposed	agent (claude opus-5.5), by hand
+layers:journal	روزنامه	روز (a day) + نامه (a writing): the daybook; دفتر (daftar: a book of record — from διφθέρα, a prepared hide: the name this language carries)	proposed	agent (claude opus-5.5), by hand
+layers:history	تاریخ	أ-ر-خ (to date: a dating); پیشینه (pishine: what came before)	proposed	agent (claude opus-5.5), by hand
+layers:queue	صف	ص-ف-ف (to stand in a row); نوبت (nowbat: a turn); معلق (mo'allaq: hanging, undecided)	proposed	agent (claude opus-5.5), by hand
+layers:names	نام‌ها	نام (nām, Old Persian nāman); واژه‌نامه (vāzhe-nāme: a book of words)	proposed	agent (claude opus-5.5), by hand
+term:view	نما	نمودن (namudan: to show, to appear); نما (a view in a drawing: an elevation, a facade)	proposed	agent (claude opus-5.5), by hand
+registry:view_lenses	عدسی‌ها	عدس (adas: a lentil) — the same image	proposed	agent (claude opus-5.5), by hand
+view_lenses:orient	آشنایی	آشنا (āshnā: the known one, a friend); جهت‌یابی (finding one's direction)	proposed	agent (claude opus-5.5), by hand
+view_lenses:understand	دریافت	دریافتن (daryāftan: to find within, to grasp); فهم (fahm)	proposed	agent (claude opus-5.5), by hand
+view_lenses:operate	بهره‌برداری	بهره (a yield) + برداشتن (to take up): the running of a working plant	proposed	agent (claude opus-5.5), by hand
+view_lenses:inspect	وارسی	وارسیدن (vārasidan: to reach into, to examine)	proposed	agent (claude opus-5.5), by hand
+section:manifest	باغ	باغ (bāgh); پردیس (pardis, Avestan pairi-daēza: walled around — the garden that gave the world paradise)	proposed	agent (claude opus-5.5), by hand
+section:name_form	نام	نام (nām)	proposed	agent (claude opus-5.5), by hand

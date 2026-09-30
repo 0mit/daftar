@@ -7034,6 +7034,80 @@ def check_divisions():
                               + _rule('division_form', 'division_form'))
 
 
+def check_names():
+    """THE NAMES LAYER (31.0, `name_form`): each file of `seed/names/` is one of the form's languages, headed with its
+    columns, and each row names an item the law has — a term, a registry, a section, or a registry's row — once, in the
+    file's language, proposed or confirmed, by someone. The languages are siblings: every file names the items every
+    other names, so no reader's language is a lesser copy of another's."""
+    form = std_fm.get('name_form') if isinstance(std_fm.get('name_form'), dict) else {}
+    langs = re.findall(r'\b[a-z]{2,3}\b', str(form.get('languages', '')).partition(':')[2])
+    folder = os.path.join(ROOT, 'seed', 'names')
+    if not form or not os.path.isdir(folder):
+        return
+    head = ['item', 'name', 'roots', 'status', 'by']
+    law_terms = {str(x.get('term')) for x in std_fm.get('terms') or [] if isinstance(x, dict)}
+    for prof in (std_fm.get('profiles') or {}).values() if isinstance(std_fm.get('profiles'), dict) else []:
+        law_terms |= {str(x.get('term')) for x in (prof or {}).get('terms') or [] if isinstance(x, dict)}
+
+    def resolves(item):                  # an item of the whole law, whichever profiles this garden extends
+        kind, _, key = item.partition(':')
+        if not key:
+            return False
+        if kind == 'term':
+            return key in law_terms or key in TERMS
+        if kind == 'registry':
+            return isinstance(registry(key), list) and bool(registry(key))
+        if kind == 'section':
+            return isinstance(std_fm.get(key), (dict, list))
+        rows = registry(kind) if isinstance(std_fm.get(kind), list) else None
+        return any(isinstance(r, dict) and r and str(next(iter(r.values()))) == key for r in rows or [])
+    named = {}
+    for fn in sorted(os.listdir(folder)):
+        path, lang = os.path.join(folder, fn), fn[:-4] if fn.endswith('.tsv') else fn
+        where = f"seed/names/{fn}"
+        if not fn.endswith('.tsv') or lang not in langs:
+            errors.append(f"{where}: a names file is `<language>.tsv`, one of the form's languages ({' · '.join(langs)})"
+                          + _rule('name_form', 'name_form'))
+            continue
+        lines = open(path, encoding='utf-8').read().split('\n')
+        if lines[:1] != ['\t'.join(head)]:
+            errors.append(f"{where}: its first line is the form's columns, `{chr(9).join(head)}` with tabs"
+                          + _rule('name_form', 'name_form'))
+            continue
+        items = named.setdefault(lang, [])
+        for n, line in enumerate(lines[1:], 2):
+            if not line.strip():
+                continue
+            cells = line.split('\t')
+            row = dict(zip(head, cells))
+            bad = []
+            if len(cells) != len(head):
+                bad.append(f"it has {len(cells)} columns, and a row has {len(head)}")
+            elif not resolves(row['item']):
+                bad.append(f"`{row['item']}` is no item of the law — `term:<term>`, `registry:<name>`, `section:<name>` "
+                           f"or `<registry>:<row>`")
+            elif row['item'] in items:
+                bad.append(f"`{row['item']}` is named twice")
+            else:
+                if not row['name'].strip():
+                    bad.append("it gives no name")
+                if row['status'] not in ('proposed', 'confirmed'):
+                    bad.append(f"its status {row['status']!r} is `proposed` or `confirmed`")
+                if not row['by'].strip():
+                    bad.append("it says nobody wrote it")
+            for b in bad:
+                errors.append(f"{where}:{n}: {b}" + _rule('name_form', 'name_form'))
+            if len(cells) == len(head):
+                items.append(row['item'])
+    every = set().union(*named.values()) if named else set()
+    for lang in sorted(named):
+        missing = [i for i in sorted(every) if i not in named[lang]]
+        if missing:
+            errors.append(f"seed/names/{lang}.tsv names {len(named[lang])} items, and its siblings name {len(missing)} "
+                          f"more: {', '.join(missing[:6])}{' …' if len(missing) > 6 else ''} — the languages are siblings, "
+                          f"each naming what the others name" + _rule('name_form', 'name_form'))
+
+
 def check_frame():
     """THE FRAME (31.0): place and time, each only with the other. Every system of dimension place or time states its
     `complement` — how a position in it finds its other half: stated in the entry, the bearer's, or carried by the
@@ -7306,6 +7380,8 @@ PLIES = (
      "a chain that stops is neither a cycle nor a termination (an error since 2026-09-17: the hook refused it already)"),
     (check_divisions,
      "31.0: the dot, divided — every division in the form's shape, naming the rule that judges it, a garden's own judged here"),
+    (check_names,
+     "31.0: the names layer — each language's file in the form, every row an item of the law, the languages siblings"),
     (check_frame,
      "31.0: the frame — place and time each name the other, and every place or time system says how its positions find theirs"),
     (check_complexity,

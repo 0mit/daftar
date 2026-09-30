@@ -1,1 +1,71 @@
 item	name	roots	status	by
+registry:natures	le nature	natura (nasci, to be born); modo d'essere (a way of being)	proposed	agent (claude opus-5.5), by hand
+natures:soma	corpo	corpo (corpus); res extensa (the extended thing)	proposed	agent (claude opus-5.5), by hand
+natures:lekton	il dicibile	dire (dicere); l'esprimibile (the expressible)	proposed	agent (claude opus-5.5), by hand
+term:nature	natura	natura	proposed	agent (claude opus-5.5), by hand
+term:genos	genere	genus (gignere, to beget)	proposed	agent (claude opus-5.5), by hand
+registry:gene	i generi	genus	proposed	agent (claude opus-5.5), by hand
+registry:complexity	l'ordine dei corpi	ordine (ordo); scala naturae (the ladder of nature)	proposed	agent (claude opus-5.5), by hand
+complexity:elementary-particle	particella elementare	particella (a little part); elemento	proposed	agent (claude opus-5.5), by hand
+complexity:hadron	adrone	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
+complexity:nucleus	nucleo	nucleus (a kernel)	proposed	agent (claude opus-5.5), by hand
+complexity:atom	atomo	ἄτομος (uncut)	proposed	agent (claude opus-5.5), by hand
+complexity:molecule	molecola	moles (a mass)	proposed	agent (claude opus-5.5), by hand
+complexity:cell	cellula	cellula (a little room)	proposed	agent (claude opus-5.5), by hand
+complexity:tissue	tessuto	tessere (to weave)	proposed	agent (claude opus-5.5), by hand
+complexity:organ	organo	ὄργανον (a tool)	proposed	agent (claude opus-5.5), by hand
+complexity:organ-system	apparato	apparatus (made ready); sistema	proposed	agent (claude opus-5.5), by hand
+complexity:organism	organismo	ὄργανον; essere vivente (a living being)	proposed	agent (claude opus-5.5), by hand
+complexity:population	popolazione	populus (a people)	proposed	agent (claude opus-5.5), by hand
+complexity:community	comunità	communis; biocenosi	proposed	agent (claude opus-5.5), by hand
+complexity:ecosystem	ecosistema	οἶκος + σύστημα	proposed	agent (claude opus-5.5), by hand
+complexity:biosphere	biosfera	βίος + σφαῖρα	proposed	agent (claude opus-5.5), by hand
+complexity:material	materiale	materia (timber)	proposed	agent (claude opus-5.5), by hand
+complexity:rock	roccia	rocca	proposed	agent (claude opus-5.5), by hand
+complexity:celestial-body	corpo celeste	caelum + corpus	proposed	agent (claude opus-5.5), by hand
+complexity:component	componente	componere	proposed	agent (claude opus-5.5), by hand
+complexity:device	dispositivo	disponere (to set in order)	proposed	agent (claude opus-5.5), by hand
+complexity:installation	impianto	impiantare (to plant in)	proposed	agent (claude opus-5.5), by hand
+registry:crown	la corona	corona	proposed	agent (claude opus-5.5), by hand
+crown:theos	l'Uno	uno (unus); Dio	proposed	agent (claude opus-5.5), by hand
+crown:agape	carità	caritas (carus, dear); amore (Paradiso XXXIII 145: l'amor che move il sole e l'altre stelle)	proposed	agent (claude opus-5.5), by hand
+term:creator	autore	auctor (augere, to make grow)	proposed	agent (claude opus-5.5), by hand
+term:status	stato	status (stare)	proposed	agent (claude opus-5.5), by hand
+registry:dimensions	dimensioni	dimetiri	proposed	agent (claude opus-5.5), by hand
+dimensions:time	tempo	tempus	proposed	agent (claude opus-5.5), by hand
+dimensions:length	lunghezza	longus	proposed	agent (claude opus-5.5), by hand
+aspects:time	quando	quando	proposed	agent (claude opus-5.5), by hand
+aspects:place	dove	de + ubi; luogo (locus)	proposed	agent (claude opus-5.5), by hand
+registry:complements	complementi	complere	proposed	agent (claude opus-5.5), by hand
+complements:stated	dichiarato	declarare (to make clear)	proposed	agent (claude opus-5.5), by hand
+complements:bearer	portatore	portare	proposed	agent (claude opus-5.5), by hand
+complements:system	sistema	σύστημα	proposed	agent (claude opus-5.5), by hand
+section:division_form	divisione	dividere; punto	proposed	agent (claude opus-5.5), by hand
+registry:divisions	divisioni	dividere	proposed	agent (claude opus-5.5), by hand
+term:part_of	parte di	pars; il tutto	proposed	agent (claude opus-5.5), by hand
+term:lives_in	vive in	abitare (habitare)	proposed	agent (claude opus-5.5), by hand
+term:located_at	situato	situs	proposed	agent (claude opus-5.5), by hand
+term:owned_by	proprietario	proprius	proposed	agent (claude opus-5.5), by hand
+term:responsibility	responsabile	respondere	proposed	agent (claude opus-5.5), by hand
+registry:acts	atti	agere	proposed	agent (claude opus-5.5), by hand
+acts:made	fatto	facere	proposed	agent (claude opus-5.5), by hand
+acts:derived	derivato	derivare	proposed	agent (claude opus-5.5), by hand
+acts:read	letto	legere	proposed	agent (claude opus-5.5), by hand
+acts:said	detto	dicere	proposed	agent (claude opus-5.5), by hand
+section:provenance_record	provenienza	provenire	proposed	agent (claude opus-5.5), by hand
+registry:layers	strati	sternere, stratum (to spread)	proposed	agent (claude opus-5.5), by hand
+layers:manifesto	manifesto	manifestus	proposed	agent (claude opus-5.5), by hand
+layers:law	legge	lex	proposed	agent (claude opus-5.5), by hand
+layers:reasoning	motivazione	movere (to move)	proposed	agent (claude opus-5.5), by hand
+layers:journal	giornale	diurnalis	proposed	agent (claude opus-5.5), by hand
+layers:history	storia	ἱστορία	proposed	agent (claude opus-5.5), by hand
+layers:queue	coda	cauda (a tail); pendenze (what hangs)	proposed	agent (claude opus-5.5), by hand
+layers:names	nomi	nomen	proposed	agent (claude opus-5.5), by hand
+term:view	vista	videre	proposed	agent (claude opus-5.5), by hand
+registry:view_lenses	lenti	lens (a lentil)	proposed	agent (claude opus-5.5), by hand
+view_lenses:orient	orientarsi	oriente (the east)	proposed	agent (claude opus-5.5), by hand
+view_lenses:understand	comprendere	comprehendere	proposed	agent (claude opus-5.5), by hand
+view_lenses:operate	esercizio	exercere (to keep at work): an impianto in esercizio is running	proposed	agent (claude opus-5.5), by hand
+view_lenses:inspect	ispezione	inspicere	proposed	agent (claude opus-5.5), by hand
+section:manifest	giardino	Frankish *gardo	proposed	agent (claude opus-5.5), by hand
+section:name_form	nome	nomen	proposed	agent (claude opus-5.5), by hand

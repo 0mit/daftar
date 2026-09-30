@@ -275,7 +275,10 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   - **`division_form` and `divisions`**: a whole, its parts and their wholeness, in one form; the law's five divisions
     name the rule that judges each, and a garden's own is judged by the gate.
   - **The names layer** (`name_form`, `seed/names/<language>.tsv`): the law's words named in its readers' languages,
-    siblings, for publication; never read for meaning.
+    siblings, for publication; never read for meaning. Its first seventy items — the root, the frame, divisions, the
+    relations, the acts, the layers, the lenses and the garden — are named by hand in nine languages (English, Persian,
+    Turkish, Ancient Greek, German, French, Italian, Latin, Arabic) with their roots, every name `proposed`; the gate
+    holds the files to the form and the languages to one another.
   - **The view, from fact to eye** (the view design, ratified with it): a page states where it is shown (`located_at`,
     in the new `uri` place system); a drawing may state its `frame`, an aspect that is a line; a part may `open` a drawing
     of its own, or a boundary a detail of its drawing (the region at a larger scale; closed, the flows between two

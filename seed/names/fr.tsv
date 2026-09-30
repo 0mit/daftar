@@ -1,1 +1,71 @@
 item	name	roots	status	by
+registry:natures	les natures	nature (natura, nasci); mode d'être (a way of being)	proposed	agent (claude opus-5.5), by hand
+natures:soma	corps	corps (corpus); étendue (extension: Descartes' res extensa, the body's whole essence)	proposed	agent (claude opus-5.5), by hand
+natures:lekton	le dicible	dire (dicere); l'exprimable (Bréhier's rendering of the Stoic λεκτόν)	proposed	agent (claude opus-5.5), by hand
+term:nature	nature	natura	proposed	agent (claude opus-5.5), by hand
+term:genos	genre	genus (gignere, to beget); espèce	proposed	agent (claude opus-5.5), by hand
+registry:gene	les genres	genus	proposed	agent (claude opus-5.5), by hand
+registry:complexity	l'ordre des corps	ordre (ordo); Pascal, Pensées (Lafuma 308): bodies, minds and charity — three orders, the third infinitely above the first	proposed	agent (claude opus-5.5), by hand
+complexity:elementary-particle	particule élémentaire	particule (particula, a little part); élément (elementum)	proposed	agent (claude opus-5.5), by hand
+complexity:hadron	hadron	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
+complexity:nucleus	noyau	noyau (the stone of a fruit, from nux)	proposed	agent (claude opus-5.5), by hand
+complexity:atom	atome	ἄτομος (uncut)	proposed	agent (claude opus-5.5), by hand
+complexity:molecule	molécule	moles (a mass)	proposed	agent (claude opus-5.5), by hand
+complexity:cell	cellule	cellula (a little room)	proposed	agent (claude opus-5.5), by hand
+complexity:tissue	tissu	tisser (texere, to weave)	proposed	agent (claude opus-5.5), by hand
+complexity:organ	organe	ὄργανον (a tool)	proposed	agent (claude opus-5.5), by hand
+complexity:organ-system	système d'organes	σύστημα; appareil (a set made ready: l'appareil digestif)	proposed	agent (claude opus-5.5), by hand
+complexity:organism	organisme	ὄργανον; être vivant (a living being)	proposed	agent (claude opus-5.5), by hand
+complexity:population	population	populus (a people)	proposed	agent (claude opus-5.5), by hand
+complexity:community	communauté	communis; biocénose (βίος + κοινός)	proposed	agent (claude opus-5.5), by hand
+complexity:ecosystem	écosystème	οἶκος + σύστημα	proposed	agent (claude opus-5.5), by hand
+complexity:biosphere	biosphère	βίος + σφαῖρα (Vernadsky, La Biosphère, Paris 1929)	proposed	agent (claude opus-5.5), by hand
+complexity:material	matériau	materia (timber)	proposed	agent (claude opus-5.5), by hand
+complexity:rock	roche	rocca	proposed	agent (claude opus-5.5), by hand
+complexity:celestial-body	corps céleste	caelum + corpus	proposed	agent (claude opus-5.5), by hand
+complexity:component	composant	componere (to put together)	proposed	agent (claude opus-5.5), by hand
+complexity:device	appareil	apparare (to make ready)	proposed	agent (claude opus-5.5), by hand
+complexity:installation	installation	installare (to seat in place)	proposed	agent (claude opus-5.5), by hand
+registry:crown	la couronne	corona	proposed	agent (claude opus-5.5), by hand
+crown:theos	l'Un	un (unus); Dieu; l'Un (Plotinus)	proposed	agent (claude opus-5.5), by hand
+crown:agape	amour	amor; charité (caritas: Pascal's third order, infinitely above bodies and minds)	proposed	agent (claude opus-5.5), by hand
+term:creator	auteur	auctor (from augere, to make grow); créateur	proposed	agent (claude opus-5.5), by hand
+term:status	état	status (stare)	proposed	agent (claude opus-5.5), by hand
+registry:dimensions	dimensions	dimetiri (to measure out)	proposed	agent (claude opus-5.5), by hand
+dimensions:time	temps	tempus (a stretch, a section — perhaps from the root of τέμνω, to cut)	proposed	agent (claude opus-5.5), by hand
+dimensions:length	longueur	longus (long)	proposed	agent (claude opus-5.5), by hand
+aspects:time	quand	quando; le quand (the category)	proposed	agent (claude opus-5.5), by hand
+aspects:place	où	ubi; lieu (locus)	proposed	agent (claude opus-5.5), by hand
+registry:complements	compléments	complere (to fill up)	proposed	agent (claude opus-5.5), by hand
+complements:stated	énoncé	enuntiare (to speak out)	proposed	agent (claude opus-5.5), by hand
+complements:bearer	porteur	portare (to carry)	proposed	agent (claude opus-5.5), by hand
+complements:system	système	σύστημα	proposed	agent (claude opus-5.5), by hand
+section:division_form	division	dividere; point (punctum)	proposed	agent (claude opus-5.5), by hand
+registry:divisions	divisions	dividere	proposed	agent (claude opus-5.5), by hand
+term:part_of	partie de	pars; le tout	proposed	agent (claude opus-5.5), by hand
+term:lives_in	vit dans	habiter (habitare: to keep having, to dwell)	proposed	agent (claude opus-5.5), by hand
+term:located_at	situé	situs (a site, a position)	proposed	agent (claude opus-5.5), by hand
+term:owned_by	propriétaire	proprius (one's own)	proposed	agent (claude opus-5.5), by hand
+term:responsibility	responsable	respondere	proposed	agent (claude opus-5.5), by hand
+registry:acts	actes	agere	proposed	agent (claude opus-5.5), by hand
+acts:made	fait	facere	proposed	agent (claude opus-5.5), by hand
+acts:derived	dérivé	derivare (rivus, a stream)	proposed	agent (claude opus-5.5), by hand
+acts:read	lu	legere	proposed	agent (claude opus-5.5), by hand
+acts:said	dit	dicere	proposed	agent (claude opus-5.5), by hand
+section:provenance_record	provenance	provenire (to come forth)	proposed	agent (claude opus-5.5), by hand
+registry:layers	couches	collocare (to lay in place)	proposed	agent (claude opus-5.5), by hand
+layers:manifesto	manifeste	manifestus	proposed	agent (claude opus-5.5), by hand
+layers:law	loi	lex	proposed	agent (claude opus-5.5), by hand
+layers:reasoning	exposé des motifs	motif (movere, to move: what moves a law)	proposed	agent (claude opus-5.5), by hand
+layers:journal	journal	diurnalis (daily)	proposed	agent (claude opus-5.5), by hand
+layers:history	histoire	ἱστορία	proposed	agent (claude opus-5.5), by hand
+layers:queue	file d'attente	file (a row); en suspens (hanging)	proposed	agent (claude opus-5.5), by hand
+layers:names	noms	nomen	proposed	agent (claude opus-5.5), by hand
+term:view	vue	videre	proposed	agent (claude opus-5.5), by hand
+registry:view_lenses	lentilles	lentille (a lentil, and a lens)	proposed	agent (claude opus-5.5), by hand
+view_lenses:orient	s'orienter	orient (the east)	proposed	agent (claude opus-5.5), by hand
+view_lenses:understand	comprendre	comprehendere (to seize together)	proposed	agent (claude opus-5.5), by hand
+view_lenses:operate	exploitation	explicitare (to unfold, to carry out)	proposed	agent (claude opus-5.5), by hand
+view_lenses:inspect	examen	examen (the tongue of a balance: to weigh)	proposed	agent (claude opus-5.5), by hand
+section:manifest	jardin	Frankish *gardo (an enclosure)	proposed	agent (claude opus-5.5), by hand
+section:name_form	nom	nomen	proposed	agent (claude opus-5.5), by hand
