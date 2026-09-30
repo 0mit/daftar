@@ -280,12 +280,13 @@ for _r in _rows:
         _in = [o["system"] for o in _rows if _dp.law_match(o["pattern"], _x)]
         if _r["system"] in _in and len(_in) > 1:
             _twice.append((_x, _in))
-# ONE COLLISION IS KNOWN, found by this check when it was written and parked for the gardener (log/pending.md
-# `osm-and-network-segment-share-a-spelling`): changing either pattern changes what gardens already hold. It is named
-# here so that a second one fails.
-_KNOWN = {("relation/1234567", ("network-segment", "osm"))}
+# TWO COLLISIONS ARE KNOWN, each found by this check and parked for the gardener: `osm` and `network-segment`
+# (log/pending.md `osm-and-network-segment-share-a-spelling`), and `uri` and `git-remote`, whose URL form a URI is
+# (`uri-and-git-remote-share-a-spelling`): changing either pattern changes what gardens already hold. They are named
+# here so that a third one fails.
+_KNOWN = {("relation/1234567", ("network-segment", "osm")), ("https://example.org/map/", ("git-remote", "uri"))}
 _twice = [t for t in _twice if (t[0], tuple(sorted(t[1]))) not in _KNOWN]
-check("no sample a system teaches is in a second system's form — one spelling is read by one system (one parked)",
+check("no sample a system teaches is in a second system's form — one spelling is read by one system (two parked)",
       not _twice, _twice)
 
 shutil.rmtree(T, ignore_errors=True)

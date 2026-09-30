@@ -280,7 +280,8 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
     Turkish, Ancient Greek, German, French, Italian, Latin, Arabic) with their roots, every name `proposed`; the gate
     holds the files to the form and the languages to one another.
   - **The view, from fact to eye** (the view design, ratified with it): a page states where it is shown (`located_at`,
-    in the new `uri` place system); a drawing may state its `frame`, an aspect that is a line; a part may `open` a drawing
+    in the new `uri` place system, beside which `unix-filesystem`'s `<host>:<path>` never opens its path with `//`, a
+    URI's authority); a drawing may state its `frame`, an aspect that is a line; a part may `open` a drawing
     of its own, or a boundary a detail of its drawing (the region at a larger scale; closed, the flows between two
     regions are one line a pair), and the lenses' limits are errors, counted outside the details; the being serving a
     URI is found by its own `endpoints`; the facts propose an operate shape (`view_archetypes` `frame`,

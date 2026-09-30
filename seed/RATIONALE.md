@@ -3852,6 +3852,11 @@ SOMEBODY ELSE'S authoritative truth and ground rule 3 forbids mirroring it.
 
 **Its scope.** UNIX-SHAPED ON PURPOSE, and named so rather than called `host-filesystem`. C:\Users\user\source\repos\tree cannot satisfy this pattern, and bending it in would give one system two formats — the exact reinvention the pattern rule exists to stop. `windows-filesystem` is declared beside it as a SEPARATE system for exactly that reason.
 
+**Never `//` after the host.** A position is read by the one system whose form it is in. With `uri` beside it,
+`<host>:<absolute path>` would also read `https://example.org/map/` — the host `https`, the path `//example.org/map/`.
+A path directly after a host never needs to open with two slashes, and a URI's authority always does, so the form
+refuses them and the two spellings part.
+
 ## anchor_systems[physical]
 
 **Why it has no pattern.** a shelf, a room and a building have no canonical form a garden could impose without inventing one. Stating `none` is the honest position: the address is prose, and prose is what a human reads to go and find it.

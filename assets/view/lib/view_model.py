@@ -22,7 +22,7 @@ Usage (through assets/view/bin/dmview.py):
   dmview elements <view>         a drawing's elements: id, pattern, being
   dmview import <file.json>      an author-mode selection written into the page, through dmsafe, and journalled
 """
-import importlib.util, ipaddress, json, os, re, subprocess, sys, urllib.parse
+import importlib.util, ipaddress, json, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -583,19 +583,21 @@ def surface(code):
 
 
 _PORTS = {"http": "80", "https": "443"}
+_URI = re.compile(r"^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?")    # RFC 3986, Appendix B
+_AUTHORITY = re.compile(r"^(?:[^@]*@)?(\[[^\]]+\]|[^:]*)(?::(\d*))?$")
 
 
 def answering(uri):
     """The being that answers at a URI: the one whose `endpoints` state its address and port. A URI is measured from no
     being, so it names none; the being serving it says so itself. None where no being here says it."""
-    try:
-        u = urllib.parse.urlsplit(str(uri))
-        port = str(u.port or _PORTS.get(u.scheme, ""))
-    except ValueError:
+    m = _URI.match(str(uri))
+    a = _AUTHORITY.match(m.group(4) or "") if m and m.group(4) else None
+    if not a:
         return None
+    host, port = a.group(1).strip("[]").lower(), a.group(2) or _PORTS.get((m.group(2) or "").lower(), "")
     for b in bean_ids():
         for e in fm(b).get("endpoints") or []:
-            if isinstance(e, dict) and str(e.get("at")) == u.hostname and str(e.get("port", "")) == port:
+            if isinstance(e, dict) and str(e.get("at")).lower() == host and str(e.get("port", "")) == port:
                 return b
     return None
 

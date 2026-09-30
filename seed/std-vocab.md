@@ -302,8 +302,8 @@ anchor_systems:
     neighbours: none
     datum: host
     meaning: "a position in ONE NAMED HOST's UNIX filesystem. The host is part of the position: /home/user/tree on laptop-a and on laptop-b are different positions that print identically."
-    pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:/.*)$'
-    form_note: "root:<logical root>[/<relative path>] — resolved per host through that host's OWN root map, which is the form that survives a second machine; or <host>:<absolute path> stated outright where there is no root to hang it on"
+    pattern: '^(root:[a-z0-9][a-z0-9-]*(/[^:]*)?|[a-z0-9][a-z0-9.-]*:/(?!/).*)$'
+    form_note: "root:<logical root>[/<relative path>] — resolved per host through that host's OWN root map, which is the form that survives a second machine; or <host>:<absolute path> stated outright where there is no root to hang it on, its path never opening with `//`, which is a URI's authority"
     establishes: false
     why: "a path is reassignable and a tree can be checked out anywhere, so it CORROBORATES a location and never fixes it — the same rule that keeps `hostname` and `ip` corroborating-only"
   - system: git-remote
