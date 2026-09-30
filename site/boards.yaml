@@ -112,12 +112,13 @@ mechanisms:
     short: "What & whose"
     name: "What it is, and whose"
     glyph: "◈"
-    items: [section:natures, section:gene, section:crown, term:owned_by, term:responsibility]
+    items: [section:natures, section:complexity, section:gene, section:crown, term:creator, term:owned_by, term:responsibility]
     staples: { who: "its kind says which identities it may take", money: "an agreement may be owned by neither party", gate: "every ownership chain must end" }
     person: >
-      A thing is first a nature — soma, a body; lekton, what exists by being said; empsychon, what lives — then its
-      kind. Each thing has exactly one owner and one who answers for it, per facet, and every chain ends: at a person,
-      at someone outside the notebook, or at the crown, where nobody owns.
+      A thing is first a nature — soma, a body, standing at its level among bodies; lekton, what exists by being
+      said — then its kind, which says while what it lives. Each thing has exactly one owner and one who answers for
+      it, per facet, and every chain ends: at a person, at someone outside the notebook, or at the crown, which is the
+      life chain, where nobody owns.
     gardener: >
       Say what a thing is and who it belongs to; the agent picks its kind and writes who answers for it. A domain is
       held, not owned; a person owns themselves; an agreement between two may be owned by neither.
@@ -129,7 +130,7 @@ mechanisms:
     fa:
       name: "چیست، و از آنِ کیست"
       short: "چیستی و مالکیت"
-      person: "هر چیز نخست یک سرشت است (سوما، تن؛ لکتون، آنچه با گفته شدن هست؛ امپسوخون، آنچه جان دارد) و سپس گونه‌اش. هر چیز، در هر وجه، دقیقاً یک مالک دارد و یک پاسخگو، و هر زنجیره‌ای پایان می‌یابد: به یک شخص، به کسی بیرون از دفتر، یا به تاج، جایی که هیچ‌کس مالک نیست."
+      person: "هر چیز نخست یک سرشت است (سوما، جسم، که در مرتبه‌ی خود میان اجسام می‌ایستد؛ لکتون، آنچه با گفته شدن هست) و سپس گونه‌اش، که می‌گوید در چه حالی زنده است. هر چیز، در هر وجه، دقیقاً یک مالک دارد و یک پاسخگو، و هر زنجیره‌ای پایان می‌یابد: به یک شخص، به کسی بیرون از دفتر، یا به تاج، که همان زنجیره‌ی زندگی است، جایی که هیچ‌کس مالک نیست."
       gardener: "بگویید یک چیز چیست و از آنِ کیست؛ عامل گونه‌اش را برمی‌گزیند و می‌نویسد چه کسی پاسخگوی آن است. دامنه در اختیار است، نه در مالکیت؛ هر شخص مالک خویش است؛ توافقی میان دو نفر ممکن است از آنِ هیچ‌کدام نباشد."
       agent_note: "گونه، سرشت را دقیق‌تر می‌کند؛ قاعده‌های آنچه یک چیز می‌تواند بگوید به سرشتش بسته‌اند و هر گونه آن‌ها را به ارث می‌برد."
       staples: { who: "گونه‌اش می‌گوید چه هویت‌هایی می‌تواند بپذیرد", money: "توافق ممکن است از آنِ هیچ‌یک از دو طرف نباشد", gate: "هر زنجیره‌ی مالکیت باید پایان یابد" }
