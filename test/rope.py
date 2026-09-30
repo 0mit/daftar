@@ -134,8 +134,10 @@ write("example-org", '---\nbean: example-org\ngenos: domain\ntitle: "example.org
       'registration:\n  registrar: "Example Registrar Inc."\n  created: 2020-01-15\n  expires: 2027-01-15\n'
       '  auto_renew: disabled     # the gardener said so; the registry does not show it\n  observed: 2026-09-28\n'
       '  source: "WHOIS for example.org"\n---\nA name.\n')
+# the crossing as bin/dmupgrade.py makes it: 29.0's step, then 30.0's on what it left (what an agreement is over, keyed)
 STEP = ("import os, sys\nsys.path.insert(0, os.path.join(os.getcwd(), 'bin'))\nimport dmupgrade\n"
-        "s = dmupgrade.Step29(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n")
+        "s = dmupgrade.Step29(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n"
+        "s = dmupgrade.Step30(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n")
 r = run(sys.executable, "-c", STEP, ROOT, cwd=G)
 out = gate()
 check("a garden in 28's words crosses into 29.0 by the step's own translation, with 0 errors", r.returncode == 0 and " 0 error(s)" in out,
@@ -164,7 +166,7 @@ _reg = os.path.join(G, "beans", "example-org-registration.md")
 R_ = fm("example-org-registration") if os.path.exists(_reg) else {}
 check("...a registration is the contract it is, over its domain: the registrar a party, its day its timing, its lapse a "
       "renewal clause with ninety days' notice and the gardener's word on it",
-      R_.get("over") == [{"thing": {"bean": "example-org"}}] and R_["parties"]["registrar"]["external"] == "Example Registrar Inc."
+      R_.get("over") == {"example-org": {"thing": {"bean": "example-org"}}} and R_["parties"]["registrar"]["external"] == "Example Registrar Inc."
       and R_["clauses"]["renewal"]["due"].isoformat() == "2027-01-15" and R_["clauses"]["renewal"]["notice"] == {"count": 90, "unit": "day"}
       and "# the gardener said so" in open(_reg).read() and "registration" not in fm("example-org"), R_)
 run("git", "-C", G, "config", "user.name", "sam"); run("git", "-C", G, "config", "user.email", "sam@example.org")
@@ -241,6 +243,47 @@ open(STD, "w").write(law)
 rules = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G).stdout
 check("the rules a garden prints show the line", re.search(r"^  lives_in .*placement habitat", rules, re.M)
       and re.search(r"^  located_at .*placement location", rules, re.M), [l for l in rules.splitlines() if "lives_in" in l][:2])
+
+# ---- 30.0: what a clause is for — an agreement's `over` keyed, so a clause can name the part it is for ----------------
+DEAL = ('---\nbean: gear-deal\ngenos: contract\ntitle: "gear-deal"\nstatus: active\nsummary: "two purchases, repaid in six '
+        'and in four"\nnature: lekton\n'
+        'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:gear-deal", class: logical, establishing: true } ] }\n'
+        + PROV + 'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
+        'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\nwords: { form: spoken }\n'
+        '%s'
+        'clauses:\n  six: { what: "one of them in six", by: sam, %severy: { of: time, in: gregorian-civil, each: month, times: 6 } }\n'
+        '---\nTwo purchases.\n')
+write("gear-deal", DEAL % ('over:\n  - { thing: { bean: example-org } }   # the name, bought with them\n'
+                           '  - { what: "a watch" }\n  - { what: "some wheel gear" }\n  - { what: "a watch" }\n', ''))
+STEP30 = ("import os, sys\nsys.path.insert(0, os.path.join(os.getcwd(), 'bin'))\nimport dmupgrade\n"
+          "s = dmupgrade.Step30(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n")
+r = run(sys.executable, "-c", STEP30, ROOT, cwd=G)
+D_ = fm("gear-deal")
+check("30.0: an agreement's `over` crosses from a list into a map, each entry under the id of the being it names, or "
+      "the first words of what it says, told apart by a number where two would share one",
+      D_.get("over") == {"example-org": {"thing": {"bean": "example-org"}}, "watch": {"what": "a watch"},
+                         "some-wheel-gear": {"what": "some wheel gear"}, "watch-2": {"what": "a watch"}},
+      (r.stdout + r.stderr)[-500:] + str(D_.get("over")))
+check("...its comments kept on their entries, and the step says what it keyed",
+      "example-org: { thing: { bean: example-org } }   # the name, bought with them" in open(os.path.join(G, "beans", "gear-deal.md")).read()
+      and "an agreement's `over` keyed in 1 bean(s)" in r.stdout, r.stdout[-500:])
+write("gear-deal", DEAL % ('over:\n  watch: { what: "a watch" }\n  wheel-gear: { what: "some wheel gear" }\n', 'over: watch, '))
+out = gate()
+check("...a clause names the part it is for by its key", "gear-deal" not in out and " 0 error(s)" in out, out[-600:])
+write("gear-deal", DEAL % ('over:\n  watch: { what: "a watch" }\n  wheel-gear: { what: "some wheel gear" }\n', 'over: bicycle, '))
+out = gate()
+check("...and a key the agreement's `over` does not hold is refused",
+      re.search(r"^ERROR  ?gear-deal: .*bicycle", out, re.M) and " 1 error(s)" in out, out[-600:])
+write("gear-deal", DEAL % ('over:\n  - { what: "a watch" }\n', ''))
+out = gate()
+check("...and an `over` still written as a list is refused: its entries are named now",
+      re.search(r"^ERROR  ?gear-deal: .*over", out, re.M) and " 1 error(s)" in out, out[-600:])
+_p = run(sys.executable, "-c", "import sys; sys.path.insert(0, 'bin'); import dmupgrade; "
+         "print(dmupgrade._paths_30({'of': 'over.thing>clauses.fee.amount', 'note': 'the call is over. Then moreover.x'}))",
+         cwd=G).stdout
+check("...and a field path into it goes through its entries, `over.*.thing`, prose left alone",
+      "'of': 'over.*.thing>clauses.fee.amount'" in _p and "'note': 'the call is over. Then moreover.x'" in _p, _p)
+os.remove(os.path.join(G, "beans", "gear-deal.md"))
 
 shutil.rmtree(T, ignore_errors=True)
 print("\nrope: %d failed" % len(FAILS))

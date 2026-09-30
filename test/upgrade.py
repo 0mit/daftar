@@ -1553,11 +1553,13 @@ AU = os.path.join(TMP, 'auth-upgraded')
 g = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), AU, '--gardener', 'keeper', cwd=ROOT)
 _head = run('git', 'rev-parse', 'HEAD', cwd=AU).stdout.strip()
 _rsha = run('git', 'rev-parse', 'v0.1.0^{commit}', cwd=REL).stdout.strip()
-r = run(sys.executable, 'bin/dmupgrade.py', 'v0.1.0', '--from', REL, '--expect', '0' * 12, cwd=AU)
+# --allow-downgrade: the fixture's v0.1.0 is older than any release the garden may record — from a checkout that sits on a
+# tag it records that tag, and the order would be refused before the authentication these two checks are about
+r = run(sys.executable, 'bin/dmupgrade.py', 'v0.1.0', '--from', REL, '--expect', '0' * 12, '--allow-downgrade', cwd=AU)
 check("dmupgrade --expect <another commit> refuses, names the commit it fetched, and the garden is untouched",
       r.returncode != 0 and _rsha in r.stdout + r.stderr and run('git', 'rev-parse', 'HEAD', cwd=AU).stdout.strip() == _head
       and not run('git', 'status', '--porcelain', cwd=AU).stdout.strip(), (r.stdout + r.stderr)[-600:])
-r = run(sys.executable, 'bin/dmupgrade.py', 'v0.1.0', '--from', REL, cwd=AU)
+r = run(sys.executable, 'bin/dmupgrade.py', 'v0.1.0', '--from', REL, '--allow-downgrade', cwd=AU)
 check("...and without it, a release from a repository on this machine is used, the line saying it was not authenticated",
       f"v0.1.0 ({_rsha[:12]}): not authenticated" in r.stdout, (r.stdout + r.stderr)[-600:])
 

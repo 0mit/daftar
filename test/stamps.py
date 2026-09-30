@@ -259,7 +259,7 @@ parties:
   sam: {{ who: {{ bean: sam }}, accepted: 2026-09-10 }}
   ali: {{ who: {{ bean: ali }}, accepted: 2026-09-10, provenance: {{ src: asserted-by-human, by: "ali", as_of: {party} }} }}
 over:
-  - {{ what: "a camera the two of them use" }}
+  camera: {{ what: "a camera the two of them use" }}
 words: {{ form: spoken, agreed: 2026-09-10 }}
 ---
 Sam and Ali share a camera.
