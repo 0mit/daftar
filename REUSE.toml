@@ -7,7 +7,8 @@ SPDX-PackageDownloadLocation = "https://github.com/0mit/daftar"
 [[annotations]]
 path = ["*.md", "NOTICE", "seed/*.md", "seed/LANGUAGE", "seed/PUBLIC-ALLOW", "seed/RELEASE-SIGNERS",
         "seed/knowledge/SOURCES.md", "seed/knowledge/technology.tsv", "seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv",
-        "seed/knowledge/crosswalk-dwc.tsv",
+        "seed/knowledge/crosswalk-dwc.tsv", "seed/knowledge/signals.tsv", "seed/knowledge/technology-daftar.tsv",
+        "seed/names/*.tsv",
         "site/*.html", "site/*.yaml", "site/assets/**", "site/RELEASE", ".github/ISSUE_TEMPLATE/**",
         ".github/pull_request_template.md",
         ".claude/skills/daftar/SKILL.md", "assets/*/README.md"]
