@@ -4006,3 +4006,21 @@ ZOOM IS A DIVISION (31.0). Nine of fourteen drawings of the estate the view was 
 understand lens's eighteen elements, because nothing let a part open a drawing of its own. `opens` does (the C4
 model's levels, technical drawing's callouts), and the lenses' limits became errors the day it did: a lens holds its
 limit by opening a part, never by crowding it.
+
+## knowledge_schemes[signals]
+
+WHAT IS MEASURED HAS A PUBLISHED NAME (31.0). Every live value the view was first drawn with was a text of one monitor's
+query language: the form named the technology, and the meaning had no name of its own, so a second technology would have
+meant rewriting every binding. A binding now names its `signal` as OpenTelemetry's semantic conventions publish it, and
+each source adapter asks it in its own language (the Prometheus one by OpenTelemetry's own rule for Prometheus names).
+The names are read at the publisher and checked, never recalled; the meanings are daftar's words. A raw query stays, as
+the escape, where no signal says the thing.
+
+## knowledge_schemes[technology-daftar]
+
+WHAT DAFTAR SPEAKS, IN ITS PLACE IN KNOWLEDGE (31.0). The operator: "we also add the technologies we speak as daftar's
+adaptations plans in their place in knowledge in the seed after passing requirements". A technology is `spoken` only
+where its adapter is a file of the release and a suite of the release proves it; `planned` otherwise — a position held,
+naming nothing. No row is privileged: a monitor's language is one source among siblings, the offline file one surface
+among others.
+

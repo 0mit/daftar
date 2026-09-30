@@ -599,6 +599,25 @@ _g, _rc = gate()
 check("a page's place in `uri` is written as RFC 3986 writes it, or refused", _rc != 0 and "grain page" in _g, _g[-600:])
 put("beans/grain-page.md", PAGE_T)
 
+# A SIGNAL, BY ITS PUBLISHED NAME: the binding says what it measures, and the source adapter asks it in its own language
+_sig = PAGE_T.replace('query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]', 'signal: system.filesystem.utilization', 1)
+put("beans/grain-page.md", _sig)
+out, rc = dmview("check")
+_g, _ = gate()
+_rep, _ = dmview("report", "--out", os.path.join(T, "signal.html"))
+_html = open(os.path.join(T, "signal.html"), encoding="utf-8").read() if os.path.isfile(os.path.join(T, "signal.html")) else ""
+check("a binding that names a signal and no query passes the gate and the asset, and Prometheus is asked it by "
+      "OpenTelemetry's name for it: avg(system_filesystem_utilization_ratio{…})",
+      rc == 0 and " 0 error(s)" in _g and "avg(system_filesystem_utilization_ratio{" in _html, (out[-400:], _g[-300:]))
+put("beans/grain-page.md", PAGE_T.replace('query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]', 'signal: silo.fullness', 1))
+_g, _rc = gate()
+check("...a signal no one published is refused by the gate", _rc != 0 and "silo.fullness" in _g, _g[-500:])
+put("beans/grain-page.md", PAGE_T.replace(', query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]', '', 1))
+out, rc = dmview("check")
+check("...and a value with neither a query nor a signal is refused by the asset: nothing could ask it", rc != 0
+      and "silo-full-in" in out, out[-600:])
+put("beans/grain-page.md", PAGE_T)
+
 # PIPES ALONE ARE WIRING: what a drawing draws may be joined by pipes and run no process of its own.
 put("beans/grain-page.md", PAGE_T.replace("    processes: { bean: silo-controller, field: processes }\n", "", 1))
 out, rc = dmview("check")

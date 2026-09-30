@@ -1,0 +1,12 @@
+signal	instrument	unit	stability	meaning
+http.server.request.duration	histogram	s	stable	how long a server took to answer each request
+http.server.active_requests	updowncounter	{request}	development	how many requests a server is answering now
+http.server.request.body.size	histogram	By	development	how large the bodies of the requests a server received were
+http.server.response.body.size	histogram	By	development	how large the bodies of the answers a server sent were
+http.client.request.duration	histogram	s	stable	how long each request a client made took to be answered
+system.cpu.utilization	gauge	1	development	the share of a processor's time spent working
+system.memory.utilization	gauge	1	development	the share of memory in use
+system.filesystem.utilization	gauge	1	development	the share of a filesystem's bytes in use
+system.filesystem.usage	updowncounter	By	development	the bytes of a filesystem, by state: used, free, reserved
+system.network.io	counter	By	development	the bytes a machine has sent and received
+system.uptime	gauge	s	development	how long a machine has been running

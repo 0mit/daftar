@@ -29,9 +29,21 @@ or derived from recorded evidence, and each file says which.
 
 ## technology.tsv — established technologies and their official documentation
 
-- **Curated by daftar.** Every `docs` URL is the project's OWN documentation (checked 2026-09-19), never a
+- **Curated by daftar.** Every `docs` URL is the project's OWN documentation (checked 2026-09-19; the thirteen rows of the
+  view's stack — django to opentelemetry — checked 2026-09-30, each answering), never a
   third party's. `isced_f_2013` and `isco_08` name the fields a technology draws on and the occupations that
   run it — a judgement, open to correction by pull request like any row. CC BY 4.0, with daftar's law.
+
+## signals.tsv — what a running technology reports about itself
+
+- **The names read at the OpenTelemetry semantic conventions** (opentelemetry.io/docs/specs/semconv, HTTP and system
+  metrics, read 2026-09-30): each signal's name, instrument, unit and stability as published there. The meanings are
+  daftar's own words; no file of the conventions is copied. CC BY 4.0, with daftar's law.
+
+## technology-daftar.tsv — what daftar does with a technology
+
+- **daftar's own.** A row says a technology is `spoken` only where its adapter is a file of the release and the suite it
+  names passes; `planned` otherwise, a position held for it. CC BY 4.0, with daftar's law.
 
 ## crosswalk-isco-08-isced-f-2013.tsv — which fields an occupation draws on
 

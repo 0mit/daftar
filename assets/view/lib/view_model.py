@@ -531,7 +531,10 @@ def computing(b):
     technology the binding gives a query for."""
     if b.get("live") == "live-state":
         return reached(b.get("probe"))
-    return next((m for m in monitors() if m["adapter"] and m["technology"] in (b.get("query") or {})), None)
+    m = next((m for m in monitors() if m["adapter"] and m["technology"] in (b.get("query") or {})), None)
+    if m is None and b.get("signal"):     # a published signal: the first monitor whose adapter asks signals in its language
+        m = next((m for m in monitors() if m["adapter"] and hasattr(m["adapter"], "signal_query")), None)
+    return m
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -594,7 +597,9 @@ def _binding(key, bk, b, by):
     r = {"id": bk, "el": el, "live": b.get("live"), "name": b.get("label") or by[el]["label"], "short": b.get("short", ""),
          "unit": b.get("unit") or "", "q": q, "f": f, "warn": count(b.get("warn")), "crit": count(b.get("crit")),
          "item_names": b.get("item_names") if isinstance(b.get("item_names"), dict) else {},
-         "query": queries, "items_by": items_by, "probe": b.get("being") or by[el]["bean"]}
+         "query": queries, "items_by": items_by, "probe": b.get("being") or by[el]["bean"],
+         "signal": next((dict(s) for s in registry("signals") if isinstance(s, dict) and s.get("signal") == b.get("signal")), None)
+         if b.get("signal") else None}
     if r["live"] == "live-state" and not r["probe"]:
         return None, ["%s: %s is a live-state on %r, which depicts no being — give the binding `being`" % (key, bk, el)]
     m = computing(r)

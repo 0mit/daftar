@@ -76,3 +76,16 @@ ethernet	Ethernet (IEEE 802.3)	protocol	IEEE 802	https://www.ieee802.org/3/	http
 dot1q	VLAN bridging (IEEE 802.1Q)	protocol	IEEE 802	https://1.ieee802.org/	https://www.ieee802.org/	0612;0714	2523;3513
 stp	Spanning Tree protocols (IEEE 802.1D / 802.1Q)	protocol	IEEE 802	https://1.ieee802.org/	https://www.ieee802.org/	0612;0714	2523;3513
 lldp	Link Layer Discovery Protocol (IEEE 802.1AB)	protocol	IEEE 802	https://1.ieee802.org/	https://www.ieee802.org/	0612;0714	2523;3513
+django	Django	software	Django Software Foundation	https://docs.djangoproject.com/en/stable/	https://www.djangoproject.com/	0613	2512;2513;2514
+gunicorn	Gunicorn	software	the Gunicorn authors	https://gunicorn.org/configure/	https://gunicorn.org/	0612;0613	2512;2522
+html	HTML (the Living Standard)	format	WHATWG	https://html.spec.whatwg.org/	https://whatwg.org/	0613	2513;3514
+css	Cascading Style Sheets (CSS)	format	W3C	https://www.w3.org/TR/css/	https://www.w3.org/Style/CSS/	0613	2513;3514
+svg	Scalable Vector Graphics (SVG)	format	W3C	https://www.w3.org/TR/SVG2/	https://www.w3.org/Graphics/SVG/	0613	2513;3514
+ecmascript	ECMAScript (JavaScript)	format	Ecma International (TC39)	https://tc39.es/ecma262/	https://ecma-international.org/	0613	2512;2513;2514
+tls	Transport Layer Security (TLS)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc8446	https://www.ietf.org/	0612	2522;2523;2529
+acme	Automatic Certificate Management Environment (ACME)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc8555	https://www.ietf.org/	0612	2522;2523;2529
+mei	Music Encoding Initiative (MEI)	format	the Music Encoding Initiative	https://music-encoding.org/guidelines/v5/content/	https://music-encoding.org/	0215;0613	2652;2513
+verovio	Verovio	software	RISM Digital Center	https://book.verovio.org/	https://www.verovio.org/	0215;0613	2652;2513
+web-app-manifest	Web Application Manifest	format	W3C	https://www.w3.org/TR/appmanifest/	https://www.w3.org/	0613	2513;3514
+service-workers	Service Workers	protocol	W3C	https://www.w3.org/TR/service-workers/	https://www.w3.org/	0613	2513;2514
+opentelemetry	OpenTelemetry	software	the OpenTelemetry authors (CNCF)	https://opentelemetry.io/docs/specs/semconv/	https://opentelemetry.io/	0612;0613	2522;2512

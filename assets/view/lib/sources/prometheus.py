@@ -53,10 +53,40 @@ def selector(scope=None):
     return 'org=~"(%s)"' % "|".join(alts) if alts else 'org="-"'
 
 
+_UNIT_SUFFIX = {"s": "seconds", "By": "bytes", "1": "ratio"}     # OpenTelemetry's unit, as a Prometheus name ends
+
+
+def signal_name(sig):
+    """The name a signal is kept under in Prometheus, by OpenTelemetry's rule for it: dots become underscores, the unit
+    becomes a suffix (an annotation in braces, `{request}`, is no unit and adds none; `1` is `ratio`, and on a gauge
+    only), and a counter ends `_total`."""
+    base = re.sub(r"[^a-zA-Z0-9_]", "_", str(sig.get("signal")))
+    unit, inst = str(sig.get("unit") or ""), sig.get("instrument")
+    suffix = _UNIT_SUFFIX.get(unit) if not unit.startswith("{") else None
+    if suffix == "ratio" and inst != "gauge":
+        suffix = None
+    if suffix and not base.endswith("_" + suffix):
+        base += "_" + suffix
+    return base + ("_total" if inst == "counter" else "")
+
+
+def signal_query(sig, sel):
+    """A signal asked in PromQL, as its instrument is read now: a gauge averaged, an up-down counter summed, a counter's
+    rate, and a histogram's mean over five minutes — the scope `sel` in every selector."""
+    n, inst = signal_name(sig), sig.get("instrument")
+    if inst == "histogram":
+        return "sum(rate(%s_sum{%s}[5m])) / sum(rate(%s_count{%s}[5m]))" % (n, sel, n, sel)
+    if inst == "counter":
+        return "sum(rate(%s{%s}[5m]))" % (n, sel)
+    return "%s(%s{%s})" % ("avg" if inst == "gauge" else "sum", n, sel)
+
+
 def query(b, sel=None):
     if b.get("live") == "live-state":
         return 'min(probe_success{name="%s", %s})' % (b.get("probe"), PROBES)
     says = (b.get("query") or {}).get(TECHNOLOGY)
+    if says is None and isinstance(b.get("signal"), dict):
+        return signal_query(b["signal"], sel or selector())      # the published name, asked in this language
     return str(says).replace("$F", sel or selector()) if says is not None else None
 
 
@@ -69,8 +99,8 @@ def check_binding(b):
     out = []
     if b.get("live") != "live-state":
         says = (b.get("query") or {}).get(TECHNOLOGY)
-        if not isinstance(says, str) or not says.strip():
-            out.append("its %s query is not a text of PromQL" % TECHNOLOGY)
+        if (not isinstance(says, str) or not says.strip()) and not isinstance(b.get("signal"), dict):
+            out.append("its %s query is not a text of PromQL, and it names no signal to ask in it" % TECHNOLOGY)
         if b.get("live") == "live-series" and not isinstance((b.get("items_by") or {}).get(TECHNOLOGY), str):
             out.append("a live-series read by %s names the label that tells its items apart (`items_by`)" % TECHNOLOGY)
     return out

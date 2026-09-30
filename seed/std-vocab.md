@@ -2371,6 +2371,8 @@ registry_files:
   - { registry: isced-f-2013, file: seed/knowledge/isced-f-2013.tsv, key: code }
   - { registry: isco-08,      file: seed/knowledge/isco-08.tsv,      key: code }
   - { registry: technology,   file: seed/knowledge/technology.tsv,   key: code }
+  - { registry: signals,      file: seed/knowledge/signals.tsv,      key: signal }
+  - { registry: technology-daftar, file: seed/knowledge/technology-daftar.tsv, key: code }
   - { registry: crosswalk-isco-08-isced-f-2013, file: seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv, key: isco_08 }
   - { registry: currencies,   file: seed/knowledge/currencies.tsv,   key: code }
   - { registry: time-zones,  file: seed/knowledge/time-zones.tsv,  key: zone }
@@ -2428,13 +2430,32 @@ knowledge_schemes:
     neighbours: none
     sources: seed/knowledge/SOURCES.md
   - scheme: technology
-    classifies: established technologies (software, protocols, operating systems), each with its OFFICIAL documentation
+    classifies: established technologies (software, protocols, formats, operating systems), each with its OFFICIAL documentation
     holding: shipped
     licence: CC-BY-4.0
     publisher: daftar (curated; every row names the project's own documentation, never a third party's)
     url: "seed/knowledge/technology.tsv"
     levels: [ { level: technology } ]
     within: [isced-f-2013]
+    neighbours: none
+    sources: seed/knowledge/SOURCES.md
+  - scheme: signals
+    classifies: what a running technology reports about itself — a signal, as OpenTelemetry's semantic conventions name it, with its instrument and unit
+    holding: shipped
+    licence: CC-BY-4.0
+    publisher: daftar (the names read at the OpenTelemetry semantic conventions; the meanings in daftar's own words)
+    url: "seed/knowledge/signals.tsv"
+    levels: [ { level: signal } ]
+    neighbours: none
+    sources: seed/knowledge/SOURCES.md
+  - scheme: technology-daftar
+    classifies: what daftar does with a technology — reads it (a source), draws on it (a surface), or is carried by it (a carrier) — and whether it speaks it yet, and by which adapter and which suite
+    holding: shipped
+    licence: CC-BY-4.0
+    publisher: daftar
+    url: "seed/knowledge/technology-daftar.tsv"
+    levels: [ { level: technology } ]
+    within: [technology]
     neighbours: none
     sources: seed/knowledge/SOURCES.md
   - scheme: placement
@@ -2894,6 +2915,7 @@ profiles:
           warn:    { in: { type: count }, meaning: "in its unit, the value from which it warns" }
           crit:    { in: { type: count }, meaning: "in its unit, the value from which it is critical" }
           item_names: { in: { prose: named }, meaning: "live-series: the page's name for an item, under the item" }
+          signal:    { in: { registry: signals, take: signal }, meaning: "what it measures, by the name the signal is published under: each source adapter asks it in its own language, so a `query` is written only where none can" }
           query:
             meaning: "how each technology computes it, in that technology's own language, one entry per technology; its adapter refuses what it cannot read"
             in:
@@ -2904,8 +2926,8 @@ profiles:
               keyed_by: technology
           note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
         cells:
-          - { when: { live: live-value },  requires: [query], why: "a number is computed by a monitor" }
-          - { when: { live: live-series }, requires: [query], why: "a series is computed by a monitor" }
+          - { when: { live: live-value },  requires: [[query, signal]], why: "a number is computed by a monitor: asked in its language, or named by its published signal" }
+          - { when: { live: live-series }, requires: [[query, signal]], why: "a series is computed by a monitor: asked in its language, or named by its published signal" }
       merge: { cardinality: multi, order: by-key }
 
 terms:

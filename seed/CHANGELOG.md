@@ -281,6 +281,10 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
     of its own, and the lenses' limits are errors; the facts propose an operate shape (`view_archetypes` `frame`,
     `reads`). The kit records the fact an element stands for (`of`) and draws a part no fact states as `implied`;
     `view_engrave` lays a drawing out from a being's parts and pipes.
+  - **Knowledge of the view's stack**: thirteen technologies join the catalogue (a `format` category among them), each
+    checked at its publisher; `signals`, the names OpenTelemetry's semantic conventions publish, which a binding's
+    `signal` names and a source adapter asks in its own language; `technology-daftar`, what daftar speaks, spoken only
+    where its adapter and its suite are the release's.
   - **The 31.0 step** translates each `empsychon` bean by its genos and each `physis` or `logos` crown to `agape`, and
     writes GARDEN.md's `zone` from `--zone` (or `DAFTAR_ZONE`); a local genos still `empsychon`, or a body with no level,
     is a person's to decide.

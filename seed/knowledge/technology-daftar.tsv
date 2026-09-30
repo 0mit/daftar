@@ -1,0 +1,12 @@
+code	role	does	adapter	status	passed
+prometheus	source	reads a monitor's live values and their history, each asked in PromQL	assets/view/lib/sources/prometheus.py	spoken	test/view.py
+http	source	reads one JSON document at JSON Pointers: a device's own interface, a runner's status file	assets/view/lib/sources/http.py	spoken	test/viewcap.py
+opentelemetry	source	names what a binding measures (its signal), which a source adapter asks in its own language	assets/view/lib/sources/prometheus.py	spoken	test/view.py
+html	surface	the offline page: one file holding every drawing at its four lenses	assets/view/lib/view_report.py	spoken	test/view.py
+python	surface	the served page: signs viewers in, asks the ledger what each may see, runs what the host enables	assets/view/lib/view_serve.py	spoken	test/viewcap.py
+svg	surface	every drawing, engraved from its facts or placed by hand	assets/view/lib/view_kit.py	spoken	test/view.py
+ecmascript	surface	the one runtime that mounts a drawing at a lens, in every surface	assets/view/lib/view_runtime.js	spoken	test/view.py
+grafana	surface	a monitor's pages: the drawings deployed with its bundle	assets/view/lib/sources/prometheus.py	spoken	test/view.py
+django	surface	a framework's own pages mounting the payload beside its own	-	planned	-
+nginx	carrier	fronts a served page: its name, its certificate and its port	-	planned	-
+tls	carrier	protects a served page on the wire	-	planned	-
