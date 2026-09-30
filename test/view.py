@@ -694,6 +694,62 @@ check("...and a detail opened from a part that is no boundary is refused", rc !=
 put("bin/drawings.py", DRAWINGS_T)
 put("beans/grain-page.md", PAGE_T)
 
+# CLOSED REGIONS: the flows between two closed regions are one line a pair, and a flow leaving one leaves from its edge
+put("bin/drawings.py", DRAWINGS_T.replace('         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),',
+    '         boundary(10, 40, 210, 90, "The yard", eid="yard"),\n'
+    '         boundary(590, 40, 200, 180, "The controls", eid="controls"),\n'
+    '         boundary(595, 150, 190, 64, "The radio", eid="radio"),\n'
+    '         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),\n'
+    '         flow(200, 100, 600, 100, "reports"), flow(600, 190, 200, 120, "answers"),', 1)
+    .replace("from view_kit import ", "from view_kit import boundary, ", 1))
+put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    opens: [ { element: yard }, { element: controls }, { element: radio } ]\n", 1))
+out, rc = dmview("check")
+_cl = run(sys.executable, "-c", """
+import json, os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'assets', 'view', 'lib')); sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))
+import view_model as vm
+vm.init(os.getcwd())
+v = next(v for v in vm.views() if v['key'] == 'silo')
+print('CLOSED ' + json.dumps({'links': v['links'], 'details': v['details']}))
+""", cwd=G)
+try:
+    _cj2 = json.loads(next(l for l in _cl.stdout.splitlines() if l.startswith("CLOSED "))[len("CLOSED "):])
+except Exception:
+    _cj2 = {"links": [], "details": []}
+_L = {tuple(sorted((l["from"], l["to"]))): l for l in _cj2["links"]}
+_yc = _L.get(("controls", "yard")) or {}
+check("closed regions: the flows between two are ONE line, arrowed each way its flows go, saying how many it carries",
+      rc == 0 and sorted(_yc.get("flows") or []) == ["answers", "reports"] and _yc.get("both") is True, (out[-400:], _cj2, _cl.stderr[-300:]))
+_yg = next((l for l in _cj2["links"] if l["from"] == "yard" and l["to"] != "controls"), {})
+check("...a flow leaving a closed region leaves from its edge, to the part it reaches, and keeps its words",
+      _yg.get("flows") == ["unload"] and _yg.get("label") == "unload" and _yg.get("both") is False, _cj2["links"])
+check("...a region inside a closed region is carried by it: no line reaches the inner one while the outer is closed",
+      not any("radio" in (l["from"], l["to"]) for l in _cj2["links"])
+      and "radio" in next((d["inside"] for d in _cj2["details"] if d["el"] == "controls"), []), _cj2)
+check("...and a line is inside a region only when both its ends are: one leaving it is no part of its detail",
+      not any(f in d["inside"] for d in _cj2["details"] for f in ("reports", "answers", "unload")), _cj2["details"])
+put("bin/drawings.py", DRAWINGS_T)
+put("beans/grain-page.md", PAGE_T)
+
+# WHERE IT IS SHOWN: a URI is measured from no being; the one serving it says so in its own `endpoints`
+put("beans/grain-page.md", PAGE_T.replace('  - { system: uri, at: "https://grain.example.org/page/", openness: here }\n',
+    '  - { system: uri, at: "https://grain.example.org/page/", openness: here }\n'
+    '  - { system: uri, at: "https://192.0.2.40/page/", openness: here }\n', 1))
+out, rc = dmview("check")
+_ws = run(sys.executable, "-c", """
+import os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'assets', 'view', 'lib')); sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))
+import view_model as vm
+vm.init(os.getcwd())
+print('WHERE ' + vm.where_shown()[0])
+""", cwd=G)
+check("a page served at an address is answered by the being whose endpoints say so — on a public page the address "
+      "drawn by its system alone", ">uri<" in _ws.stdout and "192.0.2.40" not in _ws.stdout and ">silo-controller<" in _ws.stdout,
+      (_ws.stdout[-400:], _ws.stderr[-400:]))
+check("...and one served where no being here says it answers is named, and not guessed",
+      rc == 0 and "grain.example.org" in out and "no being here says it answers there" in out, out[-600:])
+put("beans/grain-page.md", PAGE_T)
+
 # THE SHEET: a title block of facts, clouds around what the last commit changed, and the garden's own palette
 _sh = run(sys.executable, "-c", """
 import json, os, sys
@@ -1441,6 +1497,28 @@ check("engrave: a part only called stands in its caller's column, in the lane ab
 check("engrave: the work's path runs left to right, and a retired part is drawn disabled",
       _e1["truck"]["box"][0] < _e1["intake"]["box"][0] < _e1["dryer"]["box"][0] < _e1["bin"]["box"][0]
       and _e1["old-fan"]["mods"] == ["disabled"], {k: _e1[k]["box"] for k in ("truck", "intake", "dryer", "bin")})
+check("engrave: a column is as wide as its longest name — a name is never cut",
+      _e1["moisture-probe"]["box"][2] >= 24 + 6.8 * len("moisture probe") - 1 and _e1["dryer"]["box"][2] == _e1["moisture-probe"]["box"][2]
+      and _e1["intake"]["box"][2] == _ve.W_NODE, {k: _e1[k]["box"] for k in ("intake", "dryer", "moisture-probe")})
+def _chain():                                     # a line that skips a column runs clear of the part standing in its way
+    def fn():
+        svg, _r = _ve.engrave([{"p": "page", "r": "a"}, {"p": "the served page at a long address", "r": "b"},
+                               {"p": "server", "r": "b"}, {"p": "machine", "r": "b"}, {"p": "a kept copy", "r": "c"}],
+                              [{"from": "page", "to": "the served page at a long address", "r": "b"},
+                               {"from": "page", "to": "a kept copy", "r": "c"},
+                               {"from": "the served page at a long address", "to": "server", "r": "b"},
+                               {"from": "server", "to": "machine", "r": "b"}, {"from": "a kept copy", "to": "machine", "r": "c"}],
+                              key="p", rail="r", of_bean="x", parts_field="f", pipes_field="f")
+        return ("c", svg, "", "")
+    _t, svg, _c, _cl, els = _vk.compose(fn)
+    return svg, {e["id"]: e for e in els}
+_svc, _ec = _chain()
+_kid = next(k for k, e in _ec.items() if (e.get("of") or {}).get("key") == "a kept copy→machine")
+_pts = re.search(r'data-el="%s"[^>]*>\s*<polyline points="([^"]+)"' % re.escape(_kid), _svc)
+_turn = float(_pts.group(1).split()[1].split(",")[0]) if _pts else -1
+_sv = _ec["server"]["box"]
+check("engrave: a line that skips a column turns beside its target, clear of the part standing in its way",
+      _sv[0] + _sv[2] < _turn < _ec["machine"]["box"][0], (_turn, _sv, _ec["machine"]["box"], _kid))
 _s3, _e3, _r3 = _eng(group=lambda p: p["user"])
 check("engrave: a division draws the wholes — the silo's three parts one element that holds them, and an implied "
       "listener named after a part joins its whole",

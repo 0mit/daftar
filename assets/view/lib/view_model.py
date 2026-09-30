@@ -22,7 +22,7 @@ Usage (through assets/view/bin/dmview.py):
   dmview elements <view>         a drawing's elements: id, pattern, being
   dmview import <file.json>      an author-mode selection written into the page, through dmsafe, and journalled
 """
-import importlib.util, ipaddress, json, os, re, subprocess, sys
+import importlib.util, ipaddress, json, os, re, subprocess, sys, urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -582,10 +582,29 @@ def surface(code):
     return mod
 
 
+_PORTS = {"http": "80", "https": "443"}
+
+
+def answering(uri):
+    """The being that answers at a URI: the one whose `endpoints` state its address and port. A URI is measured from no
+    being, so it names none; the being serving it says so itself. None where no being here says it."""
+    try:
+        u = urllib.parse.urlsplit(str(uri))
+        port = str(u.port or _PORTS.get(u.scheme, ""))
+    except ValueError:
+        return None
+    for b in bean_ids():
+        for e in fm(b).get("endpoints") or []:
+            if isinstance(e, dict) and str(e.get("at")) == u.hostname and str(e.get("port", "")) == port:
+                return b
+    return None
+
+
 def where_shown():
     """(svg, places) — the page's own chain to the eye, engraved from its facts: each place it states it is shown at
-    (`located_at`), the being that holds it there (`host`) and where that being runs (`lives_in`). On a public page a
-    place whose position is an address is drawn by its system alone."""
+    (`located_at`), the being that holds it there — the `host` of a path, the being whose `endpoints` answer at a URI —
+    and where that being runs (`lives_in`). On a public page a place whose position is an address is drawn by its
+    system alone."""
     import view_engrave
     title = str(page().get("title") or PAGE)
     parts, pipes, seen, places = [{"proc": title, "rail": "the page", "role": "this page"}], [], {title}, []
@@ -598,17 +617,18 @@ def where_shown():
         if not isinstance(e, dict):
             continue
         at = str(e.get("at") or "")
+        hb = e["host"].get("bean") if isinstance(e.get("host"), dict) else answering(at) if e.get("system") == "uri" else None
         if not private() and _ADDRESS.search(at):
             at = ""
         where = ("%s %s" % (e.get("system"), at)).strip()
         rail = "shown at: %s" % e.get("system")
         part(where, rail, "open %s" % e.get("openness", "") if e.get("openness") else "")
         pipes.append({"from": title, "to": where, "channel": "shown at", "rail": rail})
-        hb = e["host"].get("bean") if isinstance(e.get("host"), dict) else None
         places.append({"system": e.get("system"), "at": at, "host": hb, "openness": e.get("openness")})
         if hb and fm(hb):
             part(hb, rail, "%s · %s" % (fm(hb).get("genos", ""), fm(hb).get("nature", "")))
-            pipes.append({"from": where, "to": hb, "channel": "held by", "rail": rail})
+            pipes.append({"from": where, "to": hb, "channel": "answered by" if e.get("system") == "uri" else "held by",
+                          "rail": rail})
             lb = (fm(hb).get("lives_in") or {}).get("bean") if isinstance(fm(hb).get("lives_in"), dict) else None
             if lb and fm(lb):
                 part(lb, rail, "%s · %s" % (fm(lb).get("genos", ""), fm(lb).get("nature", "")))
@@ -1109,10 +1129,61 @@ def details(v, els):
         if b["pattern"] != "boundary" or not b.get("box"):
             continue
         bx, by_, bw, bh = b["box"]
-        inside = [e["id"] for e in els if e["id"] != b["id"] and e.get("box")
-                  and bx <= e["box"][0] + e["box"][2] / 2 <= bx + bw and by_ <= e["box"][1] + e["box"][3] / 2 <= by_ + bh]
+
+        def within(e):
+            if e.get("ends"):                             # a line is inside only when both its ends are
+                return all(bx <= p[0] <= bx + bw and by_ <= p[1] <= by_ + bh for p in e["ends"])
+            x, y, w, h = e["box"]
+            if e["pattern"] in ("boundary", "band"):      # a region is inside another only when wholly contained
+                return bx <= x and x + w <= bx + bw and by_ <= y and y + h <= by_ + bh
+            return bx <= x + w / 2 <= bx + bw and by_ <= y + h / 2 <= by_ + bh
+        inside = [e["id"] for e in els if e["id"] != b["id"] and (e.get("box") or e.get("ends")) and within(e)]
         out.append({"el": b["id"], "label": b["label"], "box": b["box"], "inside": inside})
     return out
+
+
+def closed_links(dets, els):
+    """While details are closed, the flows between two regions are carried as ONE line a pair — as a model's higher zoom
+    aggregates the relationships of what it closes. ({flow ids hidden}, [{from, to, flows}]): a flow whose ends both
+    lie in closed regions is hidden, and each pair of distinct regions its ends lie in is one link."""
+    def region(p):
+        hit = [d for d in dets if d["box"][0] <= p[0] <= d["box"][0] + d["box"][2] and d["box"][1] <= p[1] <= d["box"][1] + d["box"][3]]
+        return min(hit, key=lambda d: d["box"][2] * d["box"][3])["el"] if hit else None   # the innermost holds it
+    top = {d["el"] for d in dets} - {i for d in dets for i in d["inside"]}
+    lift = {}
+    for d in dets:                                   # a region inside a closed region is carried by the outermost
+        lift[d["el"]] = d["el"]
+    for d in dets:
+        for d2 in dets:
+            if d2["el"] in d["inside"]:
+                lift[d2["el"]] = d["el"] if d["el"] in top else lift.get(d["el"], d["el"])
+    shown = [e for e in els if e.get("box") and e["pattern"] not in ("flow", "signal", "band", "boundary", "label")]
+
+    def part(p):                                     # the drawn part an end touches, outside every closed region
+        hit = [e for e in shown if e["box"][0] - 3 <= p[0] <= e["box"][0] + e["box"][2] + 3
+               and e["box"][1] - 3 <= p[1] <= e["box"][1] + e["box"][3] + 3]
+        return min(hit, key=lambda e: e["box"][2] * e["box"][3])["id"] if hit else None
+    hidden, pairs = set(), {}
+    for e in els:
+        if e["pattern"] not in ("flow", "signal") or not e.get("ends"):
+            continue
+        a, b = region(e["ends"][0]), region(e["ends"][1])
+        if a is None and b is None:
+            continue
+        a = lift.get(a, a) if a else part(e["ends"][0])   # a flow leaving a closed region leaves from its edge
+        b = lift.get(b, b) if b else part(e["ends"][1])
+        if a is None or b is None:
+            continue
+        hidden.add(e["id"])
+        if a != b:                                    # one line a pair, arrowed each way its flows go
+            k = tuple(sorted((a, b)))
+            pairs.setdefault(k, {"flows": [], "ways": set(), "labels": []})
+            pairs[k]["flows"].append(e["id"])
+            pairs[k]["labels"].append(e.get("label") or "")
+            pairs[k]["ways"].add("to" if (a, b) == k else "from")
+    return hidden, [{"from": b if v["ways"] == {"from"} else a, "to": a if v["ways"] == {"from"} else b, "flows": v["flows"],
+                     "both": len(v["ways"]) == 2, "label": v["labels"][0] if len(v["flows"]) == 1 else ""}
+                    for (a, b), v in sorted(pairs.items())]
 
 
 def views(figs=None):
@@ -1155,6 +1226,7 @@ def views(figs=None):
                     "patternMeaning": {p: kit.PATTERNS.get(p, "") for p in pats},
                     "opens": [{"el": o.get("element"), "view": o.get("view")} for o in (v.get("opens") or []) if isinstance(o, dict) and o.get("view")],
                     "details": details(v, els),
+                    "links": closed_links(details(v, els), els)[1],
                     "frame": v.get("frame"), "proposed": proposed_archetype(v),
                     "sheet": dict(_sheet, n=_keys.index(k) + 1, of=len(_keys)),
                     "changed": [e["id"] for e in els if e.get("bean") in _changed
@@ -1224,16 +1296,20 @@ def check(figs=None):
                     errs.append("%s: story stage %d says %d words, and the %s lens holds %s a stage"
                                  % (k, i + 1, n, story_lens["id"], mx["words_per_stage"]))
         _dt = details(v, els)
-        _hidden = {i for d in _dt for i in d["inside"]}
-        _shown = [e for e in els if e["id"] not in _hidden]
+        _gone, _links = closed_links(_dt, els)
+        _hidden = {i for d in _dt for i in d["inside"]} | _gone
+        _shown = [e for e in els if e["id"] not in _hidden] + _links
         if (und.get("max") or {}).get("elements") is not None and len(_shown) > int(und["max"]["elements"]):
             errs.append("%s: the drawing has %d elements%s, and the %s lens holds %s — open a part as a drawing of its own, "
                         "or a boundary as a detail (`views.opens`), rather than crowd it"
                         % (k, len(_shown), " outside its details" if _dt else "", und["id"], und["max"]["elements"]))
         for d in _dt:
-            if (und.get("max") or {}).get("elements") is not None and len(d["inside"]) > int(und["max"]["elements"]):
+            # a detail counts what stands in it outside the details it holds itself: details nest, as regions do
+            _nested = {i for d2 in _dt if d2["el"] in d["inside"] for i in d2["inside"]}
+            _n = len(set(d["inside"]) - _nested)
+            if (und.get("max") or {}).get("elements") is not None and _n > int(und["max"]["elements"]):
                 errs.append("%s: the detail %r holds %d elements, and the %s lens holds %s — a boundary inside it may open "
-                            "a detail of its own" % (k, d["el"], len(d["inside"]), und["id"], und["max"]["elements"]))
+                            "a detail of its own" % (k, d["el"], _n, und["id"], und["max"]["elements"]))
         for e in els:
             if e.get("unfit_address"):
                 warns.append("%s: %s's address %s fits nowhere in its box (%s wide): it is on the part's card, and a wider "
@@ -1291,9 +1367,14 @@ def check(figs=None):
                 errs.append("%s: element %r depicts %r, which is no bean of the garden" % (k, el["id"], el["bean"]))
     errs += palette()[1]
     # THE PAGE STATES WHERE IT IS SHOWN: a URI where it is served, a path where a copy is kept — its own `located_at`
-    if not [e for e in (fm(PAGE).get("located_at") or []) if isinstance(e, dict)]:
+    shown = [e for e in (fm(PAGE).get("located_at") or []) if isinstance(e, dict)]
+    if not shown:
         errs.append("%s: the page states nowhere it is shown — its `located_at`: a `uri` where it is served, a path where a "
-                    "copy of it is kept (`unix-filesystem`), each with the `host` that holds it" % PAGE)
+                    "copy of it is kept (`unix-filesystem`) with the `host` that holds it" % PAGE)
+    for e in shown:
+        if e.get("system") == "uri" and e.get("at") and not answering(e["at"]):
+            warns.append("%s: the page is served at %s, and no being here says it answers there — the server's own "
+                         "`endpoints`, with that address and port" % (PAGE, e["at"]))
     for m in monitors():
         if not fm(m["bean"]):
             continue                                 # the gate refuses a monitor the garden does not hold

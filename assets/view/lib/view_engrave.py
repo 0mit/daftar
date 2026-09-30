@@ -192,10 +192,13 @@ def engrave(parts, pipes, *, key, rail, of_bean, parts_field, pipes_field, sub=N
             lane_y[(b, ln)] = y
             y += rows.get((b, ln), 0) * (H_NODE + ROW_GAP)
         y += BAND_GAP
-    width = X0 * 2 + ncols * W_NODE + (ncols - 1) * COL_GAP
+    col_w = [W_NODE] * ncols                    # a column is as wide as its longest name: a name is never cut
+    for n, (_b, c, _l, _i) in pos.items():
+        col_w[c] = max(col_w[c], int(24 + 6.8 * len(n) + 0.999))    # bold 13px, ~6.8 a character, and the bar's inset
+    col_x = [X0 + sum(col_w[:c]) + c * COL_GAP for c in range(ncols)]
+    width = X0 * 2 + sum(col_w) + (ncols - 1) * COL_GAP
     height = y
-    box = {n: (X0 + c * (W_NODE + COL_GAP), lane_y[(b, ln)] + i * (H_NODE + ROW_GAP), W_NODE, H_NODE)
-           for n, (b, c, ln, i) in pos.items()}
+    box = {n: (col_x[c], lane_y[(b, ln)] + i * (H_NODE + ROW_GAP), col_w[c], H_NODE) for n, (b, c, ln, i) in pos.items()}
     body = [band(X0 - 8, band_y[b], width - 2 * X0 + 16, b, eid="rail-" + slug(b)) for b in band_order]
     if regions and not group:                      # each whole, a region around its parts in each band
         whole = {}
@@ -208,7 +211,8 @@ def engrave(parts, pipes, *, key, rail, of_bean, parts_field, pipes_field, sub=N
                 continue
             xs = [box[n][0] for n in ns]; ys = [box[n][1] for n in ns]
             x0, y0 = min(xs) - 8, min(ys) - 20
-            body.insert(len(band_order), boundary(x0, y0, max(xs) + W_NODE + 8 - x0, max(ys) + H_NODE + 8 - y0, g,
+            x1 = max(box[n][0] + box[n][2] for n in ns)
+            body.insert(len(band_order), boundary(x0, y0, x1 + 8 - x0, max(ys) + H_NODE + 8 - y0, g,
                                                   eid="region-%s-%s" % (slug(g), slug(b))))
     lanes = {}
     for a, b, es in edges:
@@ -222,8 +226,15 @@ def engrave(parts, pipes, *, key, rail, of_bean, parts_field, pipes_field, sub=N
         label = " · ".join(dict.fromkeys(str(e.get("channel")) for e in es))
         of = {"bean": of_bean, "field": pipes_field, "key": "%s→%s" % (a, b)}
         if xb > xa:                                   # forward: out of the right side, into the left
-            k = lanes.get((xa, "f"), 0); lanes[(xa, "f")] = k + 1
-            mx = xa + wa + 12 + (k % 5) * 7
+            def clear(y, x0, x1):                     # no other part stands on this line between the two
+                return not any(bx < x1 and bx + bw > x0 and by <= y <= by + bh
+                               for m, (bx, by, bw, bh) in box.items() if m not in (a, b))
+            if clear(yb + hb / 2, xa + wa, xb) or not clear(ya + ha / 2, xa + wa, xb):
+                k = lanes.get((xa, "f"), 0); lanes[(xa, "f")] = k + 1
+                mx = xa + wa + 12 + (k % 5) * 7       # turn at once, and run along the target's row
+            else:                                     # a part stands on the target's row: run along the source's
+                k = lanes.get((xb, "i"), 0); lanes[(xb, "i")] = k + 1
+                mx = xb - 12 - (k % 5) * 7
             pts = [(xa + wa, ya + ha / 2), (mx, ya + ha / 2), (mx, yb + hb / 2), (xb, yb + hb / 2)]
         elif xb == xa:                                # the same column: a call straight up or down
             k = lanes.get((xa, "v"), 0); lanes[(xa, "v")] = k + 1

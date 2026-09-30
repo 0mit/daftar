@@ -32,12 +32,18 @@ writes to. Each entry `draws` a mapping (a procedure) or a bean the garden holds
   either with a `rail` (the direction work moves), a `note`, and `state: idle` where it exists and carries nothing.
 
 **Where the page is shown is the page's own fact**: its `located_at` — a `uri` where it is served, a path where a copy
-is kept, each with the `host` that holds it — and `dmview check` refuses a page that states none. A drawing may say its
+is kept with the `host` that holds it — and `dmview check` refuses a page that states none. A URI is measured from no
+being, so it names none: the being serving it is the one whose own `endpoints` answer at its address and port, and the
+check names a URI no being here says it answers. A drawing may say its
 **frame** (`views.frame`): the aspect it is laid out along — place, time, a routine, a walk, a line — so what stands where
 in it is read from the facts. A drawn part may **open** a drawing of its own (`views.opens`), and a boundary may open as a
 **detail** of its drawing — the region it draws at a larger scale, as a technical drawing's detail view is, the rest of
-the drawing hidden until the reader goes back. The whole counts only what stands outside its details: the lens holds its
-limit by opening, never by crowding, and the limits are errors. The facts **propose** an operate shape
+the drawing hidden until the reader goes back, and drawn at most 1.6 times the whole's scale. A region inside an opened
+detail is closed within it; a line is inside a region only when both its ends are. While closed, the flows between two
+regions are **one line a pair**, edge to edge and square to the sheet, arrowed each way they go and saying how many they
+carry; a flow leaving a closed region leaves from its edge, with its words. The whole counts only what stands outside
+its details, each such line one element: the lens holds its limit by opening, never by crowding, and the limits are
+errors. The facts **propose** an operate shape
 (`view_archetypes` `frame` and `reads`); a page that draws another is told so.
 
 A drawing is read at four **lenses**, the law's `view_lenses`: orient (a story), understand (the drawing itself),
@@ -84,7 +90,9 @@ sits on a fact and a renamed label breaks nothing.
 being states and the pipes between them. A part stands in the band its fact names and in the column of its step along
 the pipes that carry the work; a part only called (a check, a lookup, a scan) stands beside its caller; a division
 (`group`) draws the wholes the parts belong to, and `regions` draws them around their parts. What no fact states is
-drawn IMPLIED and listed, never guessed: the drawing shows the gap in the facts. The same facts give the same bytes. The meaning of each pattern, for the legend, is the kit's own
+drawn IMPLIED and listed, never guessed: the drawing shows the gap in the facts. A column is as wide as its longest
+name, and a line that skips a column turns beside its target where a part stands on its row. The same facts give the
+same bytes. The meaning of each pattern, for the legend, is the kit's own
 (`view_kit.PATTERNS`).
 
 ## The operate shapes, and what each reads

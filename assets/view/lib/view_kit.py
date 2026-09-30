@@ -44,7 +44,7 @@ NATURE_OF = None        # set by the model: the nature of the being a node depic
 ADDRESSES = False       # set by the model: True on a private page (`view.visibility: private`), whose parts show their address
 
 
-def _rec(patterns, label="", box=None, bean=None, eid=None, of=None):
+def _rec(patterns, label="", box=None, bean=None, eid=None, of=None, ends=None):
     """Record one element; returns its id (or '' when not recording). `of` is the fact it stands for — a bean, or one
     entry of a bean's list, `{bean, field, key}` — and then the element's id is the fact's key, not its label's slug."""
     if _REC is None:
@@ -56,7 +56,8 @@ def _rec(patterns, label="", box=None, bean=None, eid=None, of=None):
     while any(e["id"] == eid for e in _REC):
         eid, n = "%s-%d" % (base, n), n + 1
     _REC.append({"id": eid, "pattern": patterns[0], "mods": patterns[1:], "label": re.sub(r"<[^>]+>", "", str(label)),
-                 "box": [round(v, 1) for v in box] if box else None, "bean": bean, "of": of})
+                 "box": [round(v, 1) for v in box] if box else None, "bean": bean, "of": of,
+                 "ends": [[round(p[0], 1), round(p[1], 1)] for p in ends] if ends else None})
     return eid
 
 
@@ -187,7 +188,7 @@ def flow(x1, y1, x2, y2, label="", cls="", lx=None, ly=None, eid=None, of=None):
     mx = lx if lx is not None else (x1 + x2) / 2
     my = ly if ly is not None else (y1 + y2) / 2
     pats = _EDGE_PAT[cls]; pat = pats[0]
-    eid = _rec(pats, label, (min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1)), None, eid, of)
+    eid = _rec(pats, label, (min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1)), None, eid, of, ((x1, y1), (x2, y2)))
     t = f'<text x="{mx}" y="{my}" text-anchor="middle" class="flab {cls}">{esc(label)}</text>' if label else ""
     return (_g(eid, pat, "edgeg") + f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" class="edge {cls}" '
             f'marker-end="url(#ah-{cls or "d"})"/>{t}</g>')
@@ -197,7 +198,7 @@ def elbow(pts, label="", cls="", lx=None, ly=None, eid=None, of=None):
     """An orthogonal flow through a list of (x, y) points, the arrow at the end."""
     xs, ys = [p[0] for p in pts], [p[1] for p in pts]
     pats = _EDGE_PAT[cls]; pat = pats[0]
-    eid = _rec(pats, label, (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)), None, eid, of)
+    eid = _rec(pats, label, (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)), None, eid, of, (pts[0], pts[-1]))
     d = " ".join(f"{x},{y}" for x, y in pts)
     t = f'<text x="{lx}" y="{ly}" text-anchor="middle" class="flab {cls}">{esc(label)}</text>' if (label and lx is not None) else ""
     return (_g(eid, pat, "edgeg") + f'<polyline points="{d}" class="edge {cls}" fill="none" '
@@ -354,7 +355,8 @@ SCHEMA_CSS = """
 .vw .revcloud{fill:none;stroke:var(--accent);stroke-width:1.4;stroke-dasharray:1 5;stroke-linecap:round}
 .vw .revmark{fill:var(--accent);font:700 12px system-ui}
 .vw .vw-closed{fill:var(--muted);font:600 12px system-ui;letter-spacing:.02em}
-.vw .vw-detail{margin:0 0 8px;font-size:12.5px;color:var(--muted)}.vw .vw-detail a{color:var(--accent)}
+.vw .vw-open-hint{font:400 11px system-ui;letter-spacing:0}
+.vw .vw-detail-of{margin:0 0 8px;font-size:12.5px;color:var(--muted)}.vw .vw-detail-of a{color:var(--accent)}
 /* zoom: a part that opens a drawing of its own carries a callout mark on its corner */
 .vw .el.opens .nbox,.vw .el.opens .bnd{stroke-width:1.6}.vw .el.opens:hover .nbox{stroke:var(--accent)}
 /* an element a lens hides */

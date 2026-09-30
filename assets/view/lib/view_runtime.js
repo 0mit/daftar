@@ -124,16 +124,15 @@ function schematic(root,view,lv,state){
  // DETAILS: a boundary that opens as a detail is the region at a larger scale, as a drawing's detail view is. The whole
  // shows each such region closed, with how many parts it holds; opened, the drawing is cropped to it, the rest hidden.
  const det=(view.details||[]).find(d=>d.el===(root.dataset.detail||''));
- if(det){const [x,y,w,hh]=det.box,m=14;svg.setAttribute('viewBox',(x-m)+' '+(y-m)+' '+(w+2*m)+' '+(hh+2*m));
+ if(det){const [x,y,w,hh]=det.box,m=14,W0=((svg.getAttribute('viewBox')||'').split(/[ ,]+/).map(Number)[2])||(w+2*m);
+  /* a detail is drawn at most 1.6 times the whole's scale: larger, and a reader scrolls to see what it was opened for */
+  const vw=Math.max(w+2*m,W0/1.6);svg.setAttribute('viewBox',(x+w/2-vw/2)+' '+(y-m)+' '+vw+' '+(hh+2*m));
   const keep=new Set(det.inside.concat([det.el]));svg.querySelectorAll('.el').forEach(g=>{if(!keep.has(g.dataset.el))g.style.display='none';});
-  root.insertAdjacentHTML('afterbegin','<div class="vw-detail">detail of <b>'+h(det.label)+'</b> · <a href="#" class="vw-back">back to the whole</a></div>');
+  closeDetails(root,svg,view,state,(view.details||[]).filter(d=>det.inside.includes(d.el)));
+  root.insertAdjacentHTML('afterbegin','<div class="vw-detail-of">detail of <b>'+h(det.label)+'</b> · <a href="#" class="vw-back">back to the whole</a></div>');
   root.querySelector('.vw-back').addEventListener('click',ev=>{ev.preventDefault();delete root.dataset.detail;mount(root,view,state);});}
- else (view.details||[]).forEach(d=>{const g=svg.querySelector('.el[data-el="'+d.el+'"]');if(!g)return;
-  const inside=new Set(d.inside);svg.querySelectorAll('.el').forEach(x=>{if(inside.has(x.dataset.el))x.style.display='none';});
-  const [x,y,w,hh]=d.box,NS='http://www.w3.org/2000/svg',t=document.createElementNS(NS,'text');
-  t.setAttribute('x',x+w/2);t.setAttribute('y',y+hh/2+4);t.setAttribute('text-anchor','middle');t.setAttribute('class','vw-closed');
-  t.textContent=d.inside.length+' parts — open the detail';g.appendChild(t);g.classList.add('opens');g.style.cursor='zoom-in';
-  g.addEventListener('click',()=>{root.dataset.detail=d.el;mount(root,view,state);});});
+ else{const inner=new Set((view.details||[]).flatMap(d=>d.inside));closeDetails(root,svg,view,state,(view.details||[]).filter(d=>!inner.has(d.el)));
+  links(svg,view);}
  // ZOOM: an element that opens a drawing of its own takes the reader there — a lens holds its limit by opening, not crowding
  (view.opens||[]).forEach(o=>{const g=svg.querySelector('.el[data-el="'+o.el+'"]');if(!g)return;
   g.classList.add('opens');g.setAttribute('data-opens',o.view);
@@ -444,6 +443,37 @@ function titleBlock(view,lv){const s=view.sheet;if(!s)return '';
  return '<div class="vw-tblock" role="contentinfo">'+c('page',s.page)+c('drawing',view.title&&view.title.replace(/<[^>]+>/g,'')||view.key)+
   c('lens',lv.name||lv.id)+c('sheet',s.n+' of '+s.of)+c('garden',s.garden+(s.release?' · '+s.release:''))+
   c('drawn from',(s.commit||'')+(s.day?' · '+s.day:''))+c('stated by',s.by)+c('shown at',s.shown)+'</div>';}
+/* A DETAIL CLOSED: its region shows how many parts it holds, and opens on a click; the parts inside are hidden */
+function closeDetails(root,svg,view,state,ds){ds.forEach(d=>{const g=svg.querySelector('.el[data-el="'+d.el+'"]');if(!g)return;
+  const inside=new Set(d.inside);svg.querySelectorAll('.el').forEach(x=>{if(inside.has(x.dataset.el))x.style.display='none';});
+  const [x,y,w,hh]=d.box,NS='http://www.w3.org/2000/svg',t=document.createElementNS(NS,'text');
+  t.setAttribute('x',x+w/2);t.setAttribute('y',y+hh/2+4);t.setAttribute('text-anchor','middle');t.setAttribute('class','vw-closed');
+  const kinds=new Map((view.elements||[]).map(e=>[e.id,e.pattern])),n=d.inside.filter(i=>!['flow','signal','band','boundary','label'].includes(kinds.get(i))).length;
+  t.textContent=n+(n===1?' part':' parts');const u=t.cloneNode();u.setAttribute('y',y+hh/2+18);u.setAttribute('class','vw-closed vw-open-hint');
+  u.textContent='open the detail';g.appendChild(t);g.appendChild(u);g.classList.add('opens');g.style.cursor='zoom-in';
+  g.addEventListener('click',ev=>{ev.stopPropagation();root.dataset.detail=d.el;mount(root,view,state);});});}
+/* THE LINKS OF CLOSED REGIONS: the flows between two closed regions are one line a pair, saying how many it carries */
+function links(svg,view){const L=view.links||[];if(!L.length)return;const box={};(view.elements||[]).forEach(e=>{if(e.box)box[e.id]=e.box;});
+ (view.details||[]).forEach(d=>box[d.el]=d.box);
+ const NS='http://www.w3.org/2000/svg',gone=new Set(L.flatMap(l=>l.flows)),used={};
+ svg.querySelectorAll('.el').forEach(g=>{if(gone.has(g.dataset.el))g.style.display='none';});
+ const inner=new Set((view.details||[]).flatMap(d=>d.inside)),closed=(view.details||[]).filter(d=>!inner.has(d.el)).map(d=>d.box),FR=[0.5,0.3,0.7,0.2,0.8,0.4,0.6];
+ /* a place along the shared side: clear of a crossed region's own words, and of a line already there */
+ const slot=(k,lo,hi,v,a,b)=>{const taken=used[k]=used[k]||[];const at=f=>lo+(hi-lo)*f;
+  const f=FR.find(f=>!taken.includes(f)&&!closed.some(c=>c!==a&&c!==b&&(v?Math.abs(at(f)-(c[0]+c[2]/2))<64&&Math.min(a[1],b[1])<c[1]+c[3]/2&&c[1]+c[3]/2<Math.max(a[1]+a[3],b[1]+b[3])
+   :Math.abs(at(f)-(c[1]+c[3]/2))<22&&Math.min(a[0],b[0])<c[0]+c[2]/2&&c[0]+c[2]/2<Math.max(a[0]+a[2],b[0]+b[2]))))??FR.find(f=>!taken.includes(f))??0.5;
+  taken.push(f);return at(f);};
+ /* edge to edge, square to the sheet: across the gap two boxes share a side over, else one bend */
+ const route=(a,b)=>{const [ax,ay,aw,ah]=a,[bx,by,bw,bh]=b,lo=Math.max(ax,bx),hi=Math.min(ax+aw,bx+bw),vlo=Math.max(ay,by),vhi=Math.min(ay+ah,by+bh);
+  if(hi-lo>8){const x=slot('x'+lo+'.'+hi,lo,hi,1,a,b);return by>=ay+ah?[[x,ay+ah],[x,by]]:[[x,ay],[x,by+bh]];}
+  if(vhi-vlo>8){const y=slot('y'+vlo+'.'+vhi,vlo,vhi,0,a,b);return bx>=ax+aw?[[ax+aw,y],[bx,y]]:[[ax,y],[bx+bw,y]];}
+  const sx=bx>=ax+aw?ax+aw:ax,cy=ay+ah/2,cx=bx+bw/2;return [[sx,cy],[cx,cy],[cx,by>ay?by:by+bh]];};
+ L.forEach(l=>{const a=box[l.from],b=box[l.to];if(!a||!b)return;const pts=route(a,b),ln=document.createElementNS(NS,'polyline');
+  ln.setAttribute('points',pts.map(p=>p.join(',')).join(' '));ln.setAttribute('fill','none');
+  ln.setAttribute('class','edge vw-link');ln.setAttribute('marker-end','url(#ah-d)');if(l.both)ln.setAttribute('marker-start','url(#ah-d)');svg.appendChild(ln);
+  if(l.flows.length>1||l.label){const m=pts.length>2?pts[1]:[(pts[0][0]+pts[1][0])/2,(pts[0][1]+pts[1][1])/2],t=document.createElementNS(NS,'text');
+   const flat=pts[0][1]===pts[pts.length-1][1];t.setAttribute('x',m[0]+(flat?0:5));t.setAttribute('y',m[1]+(flat?-5:4));
+   t.setAttribute('text-anchor',flat?'middle':'start');t.setAttribute('class','flab');t.textContent=l.flows.length>1?l.flows.length+' flows':l.label;svg.appendChild(t);}});}
 /* REVISION CLOUDS: a part whose record the last commit changed is drawn inside a cloud, as a revised drawing is */
 function clouds(svg,view){const ids=view.changed||[];if(!ids.length)return;const by={};(view.elements||[]).forEach(e=>by[e.id]=e);
  const NS='http://www.w3.org/2000/svg';ids.forEach(id=>{const e=by[id];if(!e||!e.box)return;const [x,y,w,hh]=e.box,p=7;
