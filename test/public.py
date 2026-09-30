@@ -28,7 +28,7 @@ T = tempfile.mkdtemp(prefix="dmpub-")
 G = os.path.join(T, "g")
 run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
 write(os.path.join(G, "beans", "someone.md"),
-    '---\nbean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
+    '---\nbean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: soma\n'
     'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { legal: { crown: agape } }\n'
     'responsibility: { legal: { self: true } }\n---\nA person.\n')
@@ -94,7 +94,7 @@ write(os.path.join(G, "beans", "kettle-share.md"),
     'nature: lekton\n'
     'identity: { status: confirmed, anchors: [ { key: identifier, value: "kettle-2026-17", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { legal: { crown: logos } }\n---\nAn agreement.\n')
+    'owned_by: { legal: { crown: agape } }\n---\nAn agreement.\n')
 commit("where that is being taken up, see [[design-lantern-stack]] `open:`\n", "neutral")
 r = dmpublic()
 check("a DESIGN's id in a public file is refused — the kind of leak the hand-kept list of kinds let through",

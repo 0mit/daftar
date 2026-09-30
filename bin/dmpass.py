@@ -353,7 +353,7 @@ def tracked(root=ROOT):
 
 
 # ============================== WHERE A VALUE COMES FROM (24.0; the Leviathan's Body 2; sources by nature) ==============================
-# Every position has ONE origin, `{act, nature?, by?}`: the one its record states, or else its domain's (its record in
+# Every position has ONE origin, `{act, nature?, alive?, by?}`: the one its record states, or else its domain's (its record in
 # `schema_language.attr_domains`, or its value type's row). Asked here and of no copy — the save's `now`, the forms'
 # said days, the gate's clock checks and the merge's rank of sources read it, and no tool keeps a list of names. A
 # position the law does not declare (a key of an open map, `details`) has none, and nothing here guesses one.
@@ -406,12 +406,14 @@ class Origins:
         return list(r['by']) if isinstance(r, dict) and isinstance(r.get('by'), dict) else []
 
     def invalid(self, o):
-        """Why `o` is not an origin — `{act, nature?, by?}` against `acts` and `natures` — or None."""
+        """Why `o` is not an origin — `{act, nature?, alive?, by?}` against `acts` and `natures` — or None."""
         if not isinstance(o, dict):
-            return f"{o!r} is not `{{act, nature?, by?}}`"
-        extra = sorted(set(o) - {'act', 'nature', 'by'})
+            return f"{o!r} is not `{{act, nature?, alive?, by?}}`"
+        extra = sorted(set(o) - {'act', 'nature', 'alive', 'by'})
         if extra:
-            return f"{o!r} holds {extra}: an origin holds `act`, `nature` and `by` only"
+            return f"{o!r} holds {extra}: an origin holds `act`, `nature`, `alive` and `by` only"
+        if 'alive' in o and o['alive'] is not True:
+            return f"alive {o['alive']!r}: an origin from a being in its living phase says `alive: true`, and otherwise says nothing"
         if o.get('act') not in self.act_names:
             return f"act {o.get('act')!r} is not a row of `acts` {self.act_names}"
         ns = _natures_of(o)
@@ -457,10 +459,12 @@ class Origins:
 
     def rank(self, source):
         """A map of value to origin (`values_source`) as the values' order, lightest first: by the row of `acts`
-        first, then by the row of `natures` — or None where two values would rank the same, or one is no origin."""
+        first, then by life — from a being in its living phase, which can be asked, above what cannot be — then by the
+        row of `natures`; or None where two values would rank the same, or one is no origin."""
         if not isinstance(source, dict) or any(self.invalid(o) for o in source.values()):
             return None
-        key = {v: (self.act_names.index(o['act']), min((self.natures.index(n) for n in _natures_of(o)), default=-1))
+        key = {v: (self.act_names.index(o['act']), 1 if o.get('alive') else 0,
+                   min((self.natures.index(n) for n in _natures_of(o)), default=-1))
                for v, o in source.items()}
         if len(set(key.values())) != len(key):
             return None

@@ -251,6 +251,55 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **31.0** (2026-09-30, human-ratified rule-change) — **the root: the dot, the frame, the order of bodies, life, and
+  the crown as the life chain.** From the operator's questions of the view's design: whether `empsychon` had been
+  mistaken for a sibling of `soma` and `lekton`, and "we define dot, point, نقطه as undivisable being …". MAJOR: a
+  nature is retired and every garden is translated.
+  - **The natures are two.** `soma`, a being that takes room in space; `lekton`, a being placed in an order, a register
+    or a habitat. `empsychon` is retired: a person is soma, an organism; an instance and a virtual machine are lekton.
+    `natures` keeps each register's anchor family, and no longer routes a crown.
+  - **`complexity`**, the order of bodies: twenty levels in four lines (matter, the living, material, the made), each
+    naming what it `stands_on`. A genos of the nature soma names its `level` (a host a `device`, a person an
+    `organism`); a part never stands above its whole.
+  - **Life is each genos's.** Every row of `gene` states `alive_while`: while what it lives, and how that is known —
+    measured, derived, said or always. `status` is the lifecycle it lives in.
+  - **The crown is the life chain.** `crown` keeps `theos` and `agape`; `physis` and `logos` are retired, and
+    `{ crown: agape }` is the one form. `creator` is the life chain's edge, with `via`, acyclic.
+  - **An origin may say `alive: true`**: the provenance guard ranks by act, then by life, then by nature, so a person's
+    word stays above a document's.
+  - **A genos may refine its nature's anchor family** (`identity_policy.refined_by`): a person, a body, is established
+    by logical anchors only.
+  - **The frame.** `place` and `time` name each other; `dimensions` marks the frame's two; every place or time system
+    states its `complement` (`stated`, `bearer`, `system`); `compound` joins space and time; GARDEN.md states its
+    `zone`, where the chain ends.
+  - **`division_form` and `divisions`**: a whole, its parts and their wholeness, in one form; the law's five divisions
+    name the rule that judges each, and a garden's own is judged by the gate.
+  - **The names layer** (`name_form`, `seed/names/<language>.tsv`): the law's words named in its readers' languages,
+    siblings, for publication; never read for meaning. Its first seventy items — the root, the frame, divisions, the
+    relations, the acts, the layers, the lenses and the garden — are named by hand in nine languages (English, Persian,
+    Turkish, Ancient Greek, German, French, Italian, Latin, Arabic) with their roots, every name `proposed`; the gate
+    holds the files to the form and the languages to one another.
+  - **The view, from fact to eye** (the view design, ratified with it): a page states where it is shown (`located_at`,
+    in the new `uri` place system, beside which `unix-filesystem`'s `<host>:<path>` never opens its path with `//`, a
+    URI's authority); a drawing may state its `frame`, an aspect that is a line; a part may `open` a drawing
+    of its own, or a boundary a detail of its drawing (the region at a larger scale; closed, the flows between two
+    regions are one line a pair), and the lenses' limits are errors, counted outside the details; the being serving a
+    URI is found by its own `endpoints`; the facts propose an operate shape (`view_archetypes` `frame`,
+    `reads`). The kit records the fact an element stands for (`of`) and draws a part no fact states as `implied`;
+    `view_engrave` lays a drawing out from a being's parts and pipes.
+  - **Knowledge of the view's stack**: thirteen technologies join the catalogue (a `format` category among them), each
+    checked at its publisher; `signals`, the names OpenTelemetry's semantic conventions publish, which a binding's
+    `signal` names and a source adapter asks in its own language; `technology-daftar`, what daftar speaks, spoken only
+    where its adapter and its suite are the release's.
+  - **Surfaces, as adapters**: `assets/view/lib/surfaces/` — html (the one file), python (the served page), django (a
+    fragment a framework renders) — each passing one conformance suite before `technology-daftar` says it is spoken; the
+    page's own chain to the eye engraved on its reference tab.
+  - **The sheet**: every drawing a sheet with a title block made of the ledger's facts, pens by what they draw, revision
+    clouds around what the last commit changed; `view.palette`, the garden's own colours in day, night and print.
+  - **The 31.0 step** translates each `empsychon` bean by its genos and each `physis` or `logos` crown to `agape`, and
+    writes GARDEN.md's `zone` from `--zone` (or `DAFTAR_ZONE`); a local genos still `empsychon`, or a body with no level,
+    is a person's to decide.
+
 - **30.0** (2026-09-30, human-ratified rule-change) — **what a clause is for: an agreement's `over` keyed, and a clause's
   `over` naming the part it is for.** From queue-44: two purchases, one repaid in six instalments and one in four, which
   is which not said; seven runs of eight kept the counts in prose, and the one that kept them as data named owners it

@@ -84,7 +84,7 @@ identity:
   anchors:
     - {{ key: identifier, value: "contract:{id}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 parties:
 {parties}words: {{ form: spoken, agreed: 2026-09-01 }}
@@ -521,7 +521,7 @@ check("the cookbook's examples hold a contract with clauses and one with a trans
       and re.search(r'(?m)^clauses:$', _ck) and re.search(r'(?m)^transactions:$', _ck), sorted(map(str, _gene)))
 _ev = [_text for _path, _text in _examples if re.search(r'(?m)^genos: event$', _text)]
 check("...its happening is owned by none of those present — the crown — and answered for by its host, as the law says",
-      _ev and all('owned_by: { legal: { crown: logos } }' in _e and re.search(r'(?m)^responsibility: .*holder', _e)
+      _ev and all('owned_by: { legal: { crown: agape } }' in _e and re.search(r'(?m)^responsibility: .*holder', _e)
                   for _e in _ev), _ev[:1])
 check("...and the cookbook begins with the gardener, as germinate's closing message tells a stranger it does",
       re.search(r'^## (.*)$', _ck, re.M).group(1).lower().startswith('the gardener'))
@@ -676,7 +676,7 @@ check(f"the pins are interpolated from the vocabulary itself (@{_ver}), not type
 
 # ---- NEGATIVE: a bean without its journal entry -------------------------------------------------------
 bean_path = os.path.join(G, 'beans', 'ada.md')
-open(bean_path, 'w', encoding='utf-8').write(BEAN.format(nature='empsychon'))
+open(bean_path, 'w', encoding='utf-8').write(BEAN.format(nature='soma'))
 consent('consent-ada', ('keeper', 'ada'))
 run('git', 'add', 'beans/ada.md', cwd=G)
 rc, out = gate(G)
@@ -702,11 +702,11 @@ def mutate(text):
     run('git', 'reset', '-q', cwd=G)
     return rc, out
 
-rc, out = mutate(BEAN.format(nature='empsychon').replace('genos: person', 'genos: wizard'))
+rc, out = mutate(BEAN.format(nature='soma').replace('genos: person', 'genos: wizard'))
 check("an UNDECLARED genos is refused — the gene registry travelled with the seed",
       rc != 0 and "genos 'wizard' is not declared in the vocabulary" in out, out.strip()[-300:])
 
-rc, out = mutate(BEAN.format(nature='soma'))
+rc, out = mutate(BEAN.format(nature='lekton'))
 check("a nature contradicting its genos is refused — the D1 axis travelled too",
       rc != 0 and 'contradicts genos' in out, out.strip()[-300:])
 
@@ -714,7 +714,7 @@ check("a nature contradicting its genos is refused — the D1 axis travelled too
 rc, out = mutate(BEAN.format(nature='living').replace('genos: person', 'kind: person').replace('crown: agape', 'crown: love'))
 check("a bean still in 21.0's words — `kind`, `living`, `love` — is refused, each naming its Greek word, never read",
       rc != 0 and "missing 'genos'" in out and "'kind' is one the law retired on a bean" in out and 'retired: `genos`' in out
-      and 'retired: `empsychon`' in out, out.strip()[-600:])
+      and 'retired: `empsychon`' in out and '`soma` for a person' in out, out.strip()[-600:])
 
 # ---- THE HOOK JUDGES WHAT IS COMMITTED: the index, never the working tree (v0.34.1) ---------------------------------
 # It read the working tree while git committed the index, so a bean staged broken, refused, and fixed without being
@@ -806,11 +806,11 @@ def gate_on(*a, cwd=None):
 
 
 open(os.path.join(G, 'beans', 'ali.md'), 'w', encoding='utf-8').write(
-    BEAN.format(nature='empsychon').replace('ada', 'ali').replace('Ada', 'Ali').replace('consent-ali', 'consent-friends')
+    BEAN.format(nature='soma').replace('ada', 'ali').replace('Ada', 'Ali').replace('consent-ali', 'consent-friends')
     .replace('responsibility:', 'refs: { friend: { bean: ada, rel: friend } }\nresponsibility:', 1))
 consent('consent-friends', ('keeper', 'ali', 'sam'))
 open(os.path.join(G, 'beans', 'sam.md'), 'w', encoding='utf-8').write(
-    BEAN.format(nature='empsychon').replace('ada', 'sam').replace('Ada', 'Sam').replace('consent-sam', 'consent-friends')
+    BEAN.format(nature='soma').replace('ada', 'sam').replace('Ada', 'Sam').replace('consent-sam', 'consent-friends')
     .replace('status: active', 'status: pending'))
 rc, out, err = gate_on('beans/ali.md')
 check("`dmcheck.py beans/ali.md` judges ali: her link to ada resolves against the whole garden, sam's error is counted "

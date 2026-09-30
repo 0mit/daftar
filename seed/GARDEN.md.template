@@ -3,6 +3,7 @@ garden: @@GARDEN@@
 extends: std-vocab@@@VERSION@@
 daftar_release: "@@RELEASE@@"  # the daftar release this garden runs; bin/dmupgrade.py moves it
 gardener:                      # who keeps this garden: the id of their bean, a person or an organisation
+zone: @@ZONE@@                   # the civil time zone this garden reckons its days in: the place half of every day it writes without saying where
 ---
 # @@GARDEN@@
 

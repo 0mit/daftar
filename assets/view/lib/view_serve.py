@@ -703,9 +703,9 @@ def make_handler(F):
                 if not ans[0]:
                     return self._send(403, "refused: %s" % view_report.esc(ans[1]), "text/plain; charset=utf-8")
                 p = F.scoped_payload(user)
-                p["live"] = {"user": user, "csrf": F.csrf(tok), "history": F.cfg.get("history", ""), "poll": 30,
-                             "actions": F.may(user, act=True)[0], "head": (F.head or "")[:10]}
-                return self._send(200, view_report.build_html(p))
+                live = {"user": user, "csrf": F.csrf(tok), "history": F.cfg.get("history", ""), "poll": 30,
+                        "actions": F.may(user, act=True)[0], "head": (F.head or "")[:10]}
+                return self._send(200, vm.surface("python").render(p, live=live))   # this host's surface
             if u.path == "/api/values":
                 key = urllib.parse.parse_qs(u.query).get("m", [""])[0]
                 vals = F.values(user, key)

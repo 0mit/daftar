@@ -93,7 +93,7 @@ check("the nearest row decides: a peer's value taken is granted, the same copied
 check("an origin is nearer than a layer: a closed list's word read on a guide is the law's (law-owned), a guide's "
       "amount an example's (examples-are-not-facts)",
       F.decide('guide', (dmpass.ESTATE, {'act': 'said', 'by': 'law'}), 'edit').rows == ('law-owned',)
-      and F.decide('guide', (dmpass.ESTATE, {'act': 'said', 'nature': ['lekton', 'empsychon']}), 'edit').rows
+      and F.decide('guide', (dmpass.ESTATE, {'act': 'said', 'nature': ['lekton', 'soma']}), 'edit').rows
       == ('examples-are-not-facts',))
 _tie = dict(LAW, flows=list(LAW['flows']) + [{'flow': 'words-doubted', 'from': 'words', 'to': {'act': 'said'},
                                                'method': 'take-down', 'grant': 'refused', 'why': "a second word"}])
@@ -337,7 +337,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:lease", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: keeper, as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   bea: { who: { bean: bea }, accepted: 2026-04-20 }

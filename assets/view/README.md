@@ -31,6 +31,21 @@ writes to. Each entry `draws` a mapping (a procedure) or a bean the garden holds
   own record) — a process a row of `{proc, user, role, config}`, a pipe a row of `{from, to, channel, at, config}`,
   either with a `rail` (the direction work moves), a `note`, and `state: idle` where it exists and carries nothing.
 
+**Where the page is shown is the page's own fact**: its `located_at` — a `uri` where it is served, a path where a copy
+is kept with the `host` that holds it — and `dmview check` refuses a page that states none. A URI is measured from no
+being, so it names none: the being serving it is the one whose own `endpoints` answer at its address and port, and the
+check names a URI no being here says it answers. A drawing may say its
+**frame** (`views.frame`): the aspect it is laid out along — place, time, a routine, a walk, a line — so what stands where
+in it is read from the facts. A drawn part may **open** a drawing of its own (`views.opens`), and a boundary may open as a
+**detail** of its drawing — the region it draws at a larger scale, as a technical drawing's detail view is, the rest of
+the drawing hidden until the reader goes back, and drawn at most 1.6 times the whole's scale. A region inside an opened
+detail is closed within it; a line is inside a region only when both its ends are. While closed, the flows between two
+regions are **one line a pair**, edge to edge and square to the sheet, arrowed each way they go and saying how many they
+carry; a flow leaving a closed region leaves from its edge, with its words. The whole counts only what stands outside
+its details, each such line one element: the lens holds its limit by opening, never by crowding, and the limits are
+errors. The facts **propose** an operate shape
+(`view_archetypes` `frame` and `reads`); a page that draws another is told so.
+
 A drawing is read at four **lenses**, the law's `view_lenses`: orient (a story), understand (the drawing itself),
 operate (the shape's vital sign), inspect (a card of each part's own facts, the wiring, the steps). `view.fields` says,
 per genos, which of a being's own facts its card shows, from which lens on; `view.reference` lists the parts a reader
@@ -67,7 +82,17 @@ Every kit call records what it drew: its pattern, its id (the slug of its label,
 `eid=` to choose one), its box and the being it depicts (`bean=`). A binding and an action address an element by that
 id; `dmview elements <view>` lists them. A node's bar is coloured by the nature of the being it depicts, or by `cls`:
 `ext` (outside the garden's hands), `accent` (the one point the drawing turns on), `off` (wired, not running).
-`templates/drawings.py` is a module to start from. The meaning of each pattern, for the legend, is the kit's own
+`templates/drawings.py` is a module to start from. A kit call may take `of=` — the fact the element stands for, a
+bean or one entry of a bean's list (`{bean, field, key}`) — and then the element's id is the fact's key, so a binding
+sits on a fact and a renamed label breaks nothing.
+
+**Engraved, not drawn.** `view_engrave.engrave(parts, pipes, …)` lays a drawing out from the facts it draws: the parts a
+being states and the pipes between them. A part stands in the band its fact names and in the column of its step along
+the pipes that carry the work; a part only called (a check, a lookup, a scan) stands beside its caller; a division
+(`group`) draws the wholes the parts belong to, and `regions` draws them around their parts. What no fact states is
+drawn IMPLIED and listed, never guessed: the drawing shows the gap in the facts. A column is as wide as its longest
+name, and a line that skips a column turns beside its target where a part stands on its row. The same facts give the
+same bytes. The meaning of each pattern, for the legend, is the kit's own
 (`view_kit.PATTERNS`).
 
 ## The operate shapes, and what each reads
@@ -112,6 +137,26 @@ computes a shown number: its path), `check_binding(binding)` and `check_monitor(
 `selector(scope)` (a viewer's scope in its own language), `values(url, binds, selector)` and
 `history(url, binds, selector, hours, step, now)` (what the served page shows), `alerts(settings, beings, binds)`,
 and, where it deploys anything, `bundle(monitor, views, out)`.
+
+## The sheet
+
+Every drawing is a **sheet**, as a technical drawing is. Its **title block** is made of facts the ledger holds — the page,
+the drawing, the lens it is read at, the garden and its release, the commit it is drawn from and its day, who stated the
+page, where it is shown, and which sheet of how many — so nothing in it is typed for the page. Its pens are by what they
+draw: a part's contour, a flow, a boundary's thin line. A part whose record the last commit changed is drawn inside a
+**revision cloud**. The colours are the garden's own (`view.palette`, `file:<path>`: `{ modes: { day, night, print:
+{ <token>: <hex colour> } } }`), and the grammar is every garden's.
+
+## Surfaces, and what every one must do
+
+Where a page meets a reader is a **surface**, named — as a source adapter is — by the code of the technology catalogue it
+speaks: `surfaces/html.py`, the page as one file, offline (`dmview report`); `surfaces/python.py`, the page served by
+daftar's own host (`dmview serve`); `surfaces/django.py`, one drawing as a fragment a framework's own view renders
+beside its pages. Each says whether it works offline (`OFFLINE`) and renders what it is given — the page already scoped
+to its viewer. The requirements a surface passes before daftar says it speaks it (`seed/knowledge/technology-daftar.tsv`)
+are one suite, in `test/view.py`: every drawn element carried by the id of the fact it stands for, no address added
+beyond what the scoped page held, and its row in the catalogue naming it. The reference tab shows the page's own chain to
+the eye, engraved from its record: where it is shown, what holds it there, and what that runs on.
 
 ## Commands
 

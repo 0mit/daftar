@@ -340,5 +340,34 @@ for _p in ASSETED:
 check("6. every term and registry of a profile with an asset has its reason in seed/RATIONALE.md, keyed by its path, "
       "naming the law's constructs it is built from", not _bad6 and not dmwhy.orphans(), _bad6 + dmwhy.orphans())
 
+# 8. WHAT DAFTAR SPEAKS (31.0): a technology is spoken only where its adapter is a file of this release and the suite it
+# names is one of this release's; planned otherwise, naming neither; and every code is a row of the technology catalogue.
+def _tsv(rel):
+    with open(os.path.join(ROOT, *rel.split("/")), encoding="utf-8") as fh:
+        rows = [ln.rstrip("\n").split("\t") for ln in fh if ln.strip()]
+    return [dict(zip(rows[0], r)) for r in rows[1:]]
+_tech = {r["code"] for r in _tsv("seed/knowledge/technology.tsv")}
+_bad7 = []
+for r in _tsv("seed/knowledge/technology-daftar.tsv"):
+    if r.get("code") not in _tech:
+        _bad7.append(f"{r.get('code')}: no row of the technology catalogue")
+    if r.get("role") not in ("source", "surface", "carrier"):
+        _bad7.append(f"{r.get('code')}: role {r.get('role')!r} is not source, surface or carrier")
+    if r.get("status") == "spoken":
+        if not os.path.isfile(os.path.join(ROOT, *str(r.get("adapter")).split("/"))):
+            _bad7.append(f"{r.get('code')}: spoken, and its adapter {r.get('adapter')} is no file of the release")
+        if not os.path.isfile(os.path.join(ROOT, *str(r.get("passed")).split("/"))):
+            _bad7.append(f"{r.get('code')}: spoken, and the suite it names, {r.get('passed')}, is none of the release's")
+    elif r.get("status") == "planned":
+        if r.get("adapter") != "-" or r.get("passed") != "-":
+            _bad7.append(f"{r.get('code')}: planned, and it names an adapter or a suite")
+    else:
+        _bad7.append(f"{r.get('code')}: status {r.get('status')!r} is neither spoken nor planned")
+for r in _tsv("seed/knowledge/signals.tsv"):
+    if r.get("instrument") not in ("histogram", "counter", "updowncounter", "gauge") or not r.get("unit"):
+        _bad7.append(f"signal {r.get('signal')}: instrument {r.get('instrument')!r} and unit {r.get('unit')!r}")
+check("8. a technology daftar says it speaks has its adapter and its suite in the release, one it plans names neither, "
+      "every one is a row of the catalogue, and every signal has an instrument and a unit", not _bad7, _bad7)
+
 print("\nassets: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

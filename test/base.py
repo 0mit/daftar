@@ -92,7 +92,7 @@ check("a bean with a `selections` entry (select, then count) passes, and so does
 
 # -- selections ----------------------------------------------------------------------------------------------------
 out = gate(inputs="    inputs:\n      - { name: asker, origin: telepathy }\n")
-check("an input of origin `telepathy` is refused by name", "telepathy" in out and "is not `{act, nature?, by?}`" in out, out[-900:])
+check("an input of origin `telepathy` is refused by name", "telepathy" in out and "is not `{act, nature?, alive?, by?}`" in out, out[-900:])
 out = gate(inputs="    inputs:\n      - { name: asker, origin: { act: dreamt } }\n")
 check("...an input whose act is no row of `acts` is refused, the rows named",
       "act 'dreamt' is not a row of `acts`" in out, out[-900:])

@@ -82,10 +82,12 @@ sessions, and time:
 ## Any thing, and the rules for it, as data
 
 The example is a machine because machines are where this began. The notebook is not about machines. A thing
-is first a **nature**, one of three, named in Greek — `soma`, a body; `lekton`, what exists by being said and
-agreed; `empsychon`, what lives, while it lives — and then a **genos**, its kind, that refines it: a host is soma;
-a domain, a product, a codebase, a design, an agreement between people, a document, a dinner where something was
-agreed are lekton; a person, or a running instance of a program, is empsychon. Money is measured, like a length:
+is first a **nature**, one of two, named in Greek — `soma`, a body, which takes room in space; `lekton`, what exists
+by being said and agreed, placed in an order — and then a **genos**, its kind, that refines it: a host and a person
+are soma, each standing at its level among bodies (a device, an organism); a domain, a product, a codebase, a design,
+an agreement between people, a document, a dinner where something was agreed, a running instance of a program are
+lekton. Life is no nature: a thing lives while its genos says it does — a machine while it is powered, an agreement
+while it holds, a person while they live — and a life comes from a life, a chain the ledger walks. Money is measured, like a length:
 an amount in the currency it was paid in, exact and never rounded, and what one person owes another is read from
 what was paid and what was agreed — never written down beside them, where it could drift. The rules for what a
 thing may say attach to its nature and every genos beneath inherits them, so a new genos arrives with a coherent
@@ -213,9 +215,9 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 | **gate** | `bin/dmcheck.py`, run as a pre-commit hook: a commit that breaks a rule is refused |
 | **journal** | `log/journal.md`: every change, who made it and why. The gate refuses an unrecorded change |
 | **anchor** | a fact that identifies an object (a serial, a domain name), so two gardens recognise the same thing |
-| **nature / genos** | what sort of being it is: `soma`, a body; `lekton`, what exists by being said and agreed; or `empsychon`, what lives, while it lives — refined by a genos, its kind, such as `host`. The words are Greek, and `MODEL.md` gives each |
+| **nature / genos** | what sort of being it is: `soma`, a body, taking room in space, or `lekton`, what exists by being said and agreed — refined by a genos, its kind, such as `host`, which for a body names its level among bodies. The words are Greek, and `MODEL.md` gives each |
 | **facet** | an aspect of ownership, e.g. `legal` or `technical`; each has exactly one owner, and one entry saying who answers for it |
-| **crown** | where every ownership chain ends: at `theos`, which no bean names, through a branch for each nature — `physis` for soma, `logos` for lekton, `agape`, love that does not possess, for empsychon. A person writes `owned_by: { legal: { crown: agape } }` |
+| **crown** | where every ownership chain ends: in the life chain — who gave a thing its life, walked to `agape`, love that does not possess, and to `theos`, which no bean names. A person is owned by no one: `owned_by: { legal: { crown: agape } }` |
 | **profile** | an opt-in group of rules in a field's own words, e.g. `domain` or `accounting`; it adds terms, and adds to the core's terms without rewriting them, so a garden may take every profile at once |
 | **position** | where something is on a line — a day in a calendar, a moment, a path on a machine, the second of a series — in the one form its system declares |
 | **coding** | a code written with the scheme it is a code of, `<scheme>:<code>`: an occupation, a technology, an account |

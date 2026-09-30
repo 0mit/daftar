@@ -126,7 +126,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:deal", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-28 }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: { system: ordinal-number, at: "ordinal:2", unit: day } }
@@ -143,10 +143,10 @@ os.remove(os.path.join(G, "beans", "deal.md"))
 for why, old, new, want in (
         ("a moment of `timing` is in time", "located_at: [ { system: iso-3166, openness: unknown } ]",
          "located_at: [ { system: iso-3166, openness: unknown } ]\ntiming:\n  start: { system: iso-3166, at: IR, unit: day }",
-         "timing[start].system 'iso-3166' is not a declared anchor_systems where dimension is ['time', 'any']"),
+         "timing[start].system 'iso-3166' is not a declared anchor_systems where dimension is time or any"),
         ("a location is a place", "located_at: [ { system: iso-3166, openness: unknown } ]",
          'located_at: [ { system: gregorian-civil, openness: here, at: "2026-09-28" } ]',
-         "located_at[0].system 'gregorian-civil' is not a declared anchor_systems where dimension is ['place']")):
+         "located_at[0].system 'gregorian-civil' is not a declared anchor_systems where dimension is place")):
     out = gate(old, new)
     check("a system chooser takes the dimension its meaning names: " + why, want in out, out[-900:])
 

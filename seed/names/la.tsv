@@ -1,0 +1,71 @@
+item	name	roots	status	by
+registry:natures	naturae	natura (nasci, to be born); quid (something: the Stoics' highest genus in Seneca's 58th letter, divided into corporalia and incorporalia)	proposed	agent (claude opus-5.5), by hand
+natures:soma	corpus	corpus (a body; also a whole of writings); corporalia (Seneca: bodies, which are); quod tribus dimensionibus extenditur (what is extended in three dimensions)	proposed	agent (claude opus-5.5), by hand
+natures:lekton	dicibile	dicere (to say); dicibile (Augustine, De dialectica 5: what the mind grasps in a word, before it is spoken); legere (to gather, to read — λέγω's kin)	proposed	agent (claude opus-5.5), by hand
+term:nature	natura	nasci (to be born)	proposed	agent (claude opus-5.5), by hand
+term:genos	genus	gignere (to beget): a kind as a birth-line	proposed	agent (claude opus-5.5), by hand
+registry:gene	genera	genus (a birth-line)	proposed	agent (claude opus-5.5), by hand
+registry:complexity	ordo corporum	ordo (a row, a rank); gradus (a step); scala naturae (the ladder of nature)	proposed	agent (claude opus-5.5), by hand
+complexity:elementary-particle	particula elementaris	particula (a little part); elementum (a first principle); minimum (Bruno: the least, without parts) — New Latin	proposed	agent (claude opus-5.5), by hand
+complexity:hadron	hadronium	ἁδρός (stout) — New Latin	proposed	agent (claude opus-5.5), by hand
+complexity:nucleus	nucleus	nux (a nut): the kernel	proposed	agent (claude opus-5.5), by hand
+complexity:atom	atomus	ἄτομος (uncut); primordia rerum, corpora prima, semina rerum (Lucretius: the first beginnings, the first bodies, the seeds of things)	proposed	agent (claude opus-5.5), by hand
+complexity:molecule	molecula	moles (a mass, a heap)	proposed	agent (claude opus-5.5), by hand
+complexity:cell	cellula	cella (a small room, a store-chamber)	proposed	agent (claude opus-5.5), by hand
+complexity:tissue	textus	texere (to weave); tela (a web)	proposed	agent (claude opus-5.5), by hand
+complexity:organ	organum	ὄργανον (a tool); membrum (a member)	proposed	agent (claude opus-5.5), by hand
+complexity:organ-system	systema organorum	σύστημα; apparatus (made ready)	proposed	agent (claude opus-5.5), by hand
+complexity:organism	corpus animatum	anima (breath, soul): a body with a soul — Aquinas's rendering of Aristotle's σῶμα ἔμψυχον	proposed	agent (claude opus-5.5), by hand
+complexity:population	populus	pŏpulus (a people) — pōpulus, the poplar, is another word; grex (a herd, a flock)	proposed	agent (claude opus-5.5), by hand
+complexity:community	communitas	communis (shared); munus (a duty, a gift)	proposed	agent (claude opus-5.5), by hand
+complexity:ecosystem	oecosystema	οἶκος (a household); domus (a house) — New Latin	proposed	agent (claude opus-5.5), by hand
+complexity:biosphere	biosphaera	βίος + σφαῖρα — New Latin	proposed	agent (claude opus-5.5), by hand
+complexity:material	materia	materia (timber: the hard part of a tree; from mater)	proposed	agent (claude opus-5.5), by hand
+complexity:rock	saxum	saxum (a rock, a boulder); lapis (a stone)	proposed	agent (claude opus-5.5), by hand
+complexity:celestial-body	corpus caeleste	caelum (the sky) + corpus	proposed	agent (claude opus-5.5), by hand
+complexity:component	componens	componere (to put together)	proposed	agent (claude opus-5.5), by hand
+complexity:device	machina	μηχανή (a contrivance); instrumentum (what is built in)	proposed	agent (claude opus-5.5), by hand
+complexity:installation	fabrica	faber (a craftsman): a workshop, a structure; struere (to pile up, to build)	proposed	agent (claude opus-5.5), by hand
+registry:crown	corona	corona (a wreath, a garland)	proposed	agent (claude opus-5.5), by hand
+crown:theos	Unus	unus (one); Deus (from *deywós, the shining one of the sky — not kin to θεός, though alike)	proposed	agent (claude opus-5.5), by hand
+crown:agape	caritas	carus (dear, precious); caritas non quaerit quae sua sunt (1 Cor 13:5)	proposed	agent (claude opus-5.5), by hand
+term:creator	auctor	augere (to make grow): the one through whom a thing grows; creator (creare, kin to crescere)	proposed	agent (claude opus-5.5), by hand
+term:status	status	stare (to stand)	proposed	agent (claude opus-5.5), by hand
+registry:dimensions	dimensiones	dimetiri (to measure out)	proposed	agent (claude opus-5.5), by hand
+dimensions:time	tempus	tempus (a section, a season — perhaps from the root of τέμνω, to cut, as templum is a section of sky marked out)	proposed	agent (claude opus-5.5), by hand
+dimensions:length	longitudo	longus (long)	proposed	agent (claude opus-5.5), by hand
+aspects:time	quando	quando (the category of when, in Boethius's Latin Categories)	proposed	agent (claude opus-5.5), by hand
+aspects:place	ubi	ubi (the category of where); locus (a place)	proposed	agent (claude opus-5.5), by hand
+registry:complements	complementa	complere (to fill up)	proposed	agent (claude opus-5.5), by hand
+complements:stated	enuntiatum	enuntiare (to speak out); enuntiatio (Cicero's rendering of the Stoic ἀξίωμα, a statement)	proposed	agent (claude opus-5.5), by hand
+complements:bearer	lator	ferre, latum (to bear); subiectum (what is thrown under and bears)	proposed	agent (claude opus-5.5), by hand
+complements:system	systema	σύστημα	proposed	agent (claude opus-5.5), by hand
+section:division_form	divisio	dividere (to part); punctum (a prick: the dot)	proposed	agent (claude opus-5.5), by hand
+registry:divisions	divisiones	dividere	proposed	agent (claude opus-5.5), by hand
+term:part_of	pars	pars (a part); totum (the whole)	proposed	agent (claude opus-5.5), by hand
+term:lives_in	habitat in	habitare (to keep having — the frequentative of habere): a habitat is where a being keeps itself	proposed	agent (claude opus-5.5), by hand
+term:located_at	situs in	situs (a position: the Latin name of Aristotle's category κεῖσθαι); locus (a place)	proposed	agent (claude opus-5.5), by hand
+term:owned_by	dominus	domus (a house): the master of the house; proprietas (what is one's own)	proposed	agent (claude opus-5.5), by hand
+term:responsibility	sponsor	spondere (to pledge solemnly); respondere (to answer, to pledge in return)	proposed	agent (claude opus-5.5), by hand
+registry:acts	acta	agere (to do)	proposed	agent (claude opus-5.5), by hand
+acts:made	factum	facere (to make); verum et factum convertuntur (Vico: the true and the made are one)	proposed	agent (claude opus-5.5), by hand
+acts:derived	derivatum	derivare (to draw off a stream: rivus)	proposed	agent (claude opus-5.5), by hand
+acts:read	lectum	legere (to gather, to pick out, to read)	proposed	agent (claude opus-5.5), by hand
+acts:said	dictum	dicere (to say); dictum (Abelard: what a proposition says)	proposed	agent (claude opus-5.5), by hand
+section:provenance_record	origo	oriri (to rise); fons (a spring)	proposed	agent (claude opus-5.5), by hand
+registry:layers	strata	sternere (to spread out)	proposed	agent (claude opus-5.5), by hand
+layers:manifesto	professio	profiteri (to declare openly)	proposed	agent (claude opus-5.5), by hand
+layers:law	lex	lex (perhaps from legere, what is read out); ius (what is right)	proposed	agent (claude opus-5.5), by hand
+layers:reasoning	ratio	reri (to reckon); ratio legis (the reason of the law)	proposed	agent (claude opus-5.5), by hand
+layers:journal	diarium	dies (a day); ephemeris (a day-book)	proposed	agent (claude opus-5.5), by hand
+layers:history	historia	ἱστορία; annales (the year's record)	proposed	agent (claude opus-5.5), by hand
+layers:queue	pendentia	pendere (to hang): what still hangs undecided	proposed	agent (claude opus-5.5), by hand
+layers:names	nomina	nomen (a name)	proposed	agent (claude opus-5.5), by hand
+term:view	aspectus	aspicere (to look at)	proposed	agent (claude opus-5.5), by hand
+registry:view_lenses	lentes	lens, lentis (a lentil)	proposed	agent (claude opus-5.5), by hand
+view_lenses:orient	oriens	oriri (to rise)	proposed	agent (claude opus-5.5), by hand
+view_lenses:understand	intellegere	inter + legere (to choose between, to read between): understanding reads between the parts	proposed	agent (claude opus-5.5), by hand
+view_lenses:operate	opera	opus (work); operari (to work)	proposed	agent (claude opus-5.5), by hand
+view_lenses:inspect	inspectio	inspicere (to look into); examen (the tongue of a balance)	proposed	agent (claude opus-5.5), by hand
+section:manifest	hortus	hortus (an enclosed garden — kin to cohors, an enclosure); paradisus	proposed	agent (claude opus-5.5), by hand
+section:name_form	nomen	nomen (a name)	proposed	agent (claude opus-5.5), by hand

@@ -47,7 +47,7 @@ identity:
 provenance: {{ src: asserted-by-human, by: "sam", as_of: 2026-09-28 }}
 """
 open(os.path.join(BEANS, "dinner-at-sams.md"), "w").write(HEAD.format(bean="dinner-at-sams", genos="event", nature="lekton") + """\
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
   start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }
@@ -56,7 +56,7 @@ refs:
 ---
 A dinner.
 """)
-open(os.path.join(BEANS, "ali.md"), "w").write(HEAD.format(bean="ali", genos="person", nature="empsychon") + """\
+open(os.path.join(BEANS, "ali.md"), "w").write(HEAD.format(bean="ali", genos="person", nature="soma") + """\
 consent: { bean: phone-loan }
 owned_by: { legal: { crown: agape } }
 responsibility: { legal: { self: true } }
@@ -65,7 +65,7 @@ Ali.
 """)
 ALI = '{ system: event-anchored, at: "after:dinner-at-sams", unit: day, note: "on the call; its day was not said" }'
 LOAN = HEAD.format(bean="phone-loan", genos="contract", nature="lekton") + """\
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, role: lender, accepted: { system: gregorian-civil, at: 2026-09-14, unit: day, by: "sam", where: { system: iso-3166, at: IR, zone: Asia/Tehran } } }
@@ -334,6 +334,7 @@ def systems(rows):
     return r.stdout + r.stderr
 ROW = """    - system: shire-reckoning
       dimension: time
+      complement: [stated, bearer]
       calendar: shire
       reckoning: tabulated
       day_begins: sunset

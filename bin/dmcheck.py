@@ -2700,6 +2700,14 @@ def check_identity_capsule():
         # confirmed being is of its nature's family — matter for a body (soma), a logical id for the rest. The
         # class the term's policy declares wins over the class the bean wrote.
         fam = (pol or {}).get('establishing_anchor_family')
+        # A GENOS MAY REFINE ITS NATURE'S FAMILY (31.0, `identity_policy.refined_by`): a person is a body, and is
+        # recognised only by what registers and they themselves say — never by matter the ledger would hold.
+        _rb = IDP.get('refined_by') if isinstance(IDP.get('refined_by'), dict) else None
+        if _rb:
+            _grow = next((r for r in (registry(_rb.get('registry')) or []) + (registry('local_' + str(_rb.get('registry'))) or [])
+                          if isinstance(r, dict) and r.get(_rb.get('keyed_by')) == fm.get(_rb.get('keyed_by'))), None)
+            if isinstance(_grow, dict) and _grow.get(_rb.get('take')):
+                fam = _grow[_rb['take']]
         if (IDP.get('establishing_family') == 'enforced' and fam
                 and ident.get('status') == IDP.get('applies_at_identity_status')):
             for _k, _c in est_classes:
@@ -3037,9 +3045,13 @@ def ectl_entry_in_registry(e):
         if str(val) not in [str(a) for a in allowed]:
             if len(allowed) > 40:
                 allowed = allowed[:12] + ['… %d more' % (len(allowed) - 12)]
-            _narrow = (' where ' + ', '.join(f"{k} is {v}" for k, v in rule['where'].items())) if rule.get('where') else ''
+            def _is(v):
+                vs = v if isinstance(v, list) else [v]
+                return ' or '.join('absent' if x is None else str(x) for x in vs)
+            _narrow = (' where ' + ', '.join(f"{k} is {_is(v)}" for k, v in rule['where'].items())) if rule.get('where') else ''
             errors.append(f"{e.base}: {e.ref}.{attr} '{val}' is not a declared {rname}{_narrow} "
-                          f"— known: {sorted(v for v in allowed if v)}" + _rule(f"{e.term}.schema.attrs.{attr}.in", e.term))
+                          f"— known: {sorted(v for v in allowed if v)}" + retired_hint(rname, val) + retired_hint(attr, val)
+                          + _rule(f"{e.term}.schema.attrs.{attr}.in", e.term))
 
 
 def ectl_entry_pattern_from_registry(e):
@@ -3286,7 +3298,7 @@ def ectl_entry_recurrences(c):
 
 
 def ectl_entry_origins(c):
-    """`in: origin` — where a value comes from, `{act, nature?, by?}`, judged against `acts` and `natures`."""
+    """`in: origin` — where a value comes from, `{act, nature?, alive?, by?}`, judged against `acts` and `natures`."""
     for attr, _ in _facet(c.form, 'origin_of', c.scope):
         v = c.entry.get(attr)
         if v is not None and ORIGINS.invalid(v):
@@ -6937,12 +6949,246 @@ def _termination_hint(term, bean):
         return ''
     one_of = form_of(term)['one_of']
     if 'crown' in one_of:
-        branch = next((r.get('crown') for r in (registry('natures') or [])
-                       if isinstance(r, dict) and r.get('nature') == fm.get('nature')), None)
+        # THE CROWN IS THE LIFE CHAIN: its one branch a bean names is the row that is not the root
+        branch = next((r.get('branch') for r in (registry('crown') or []) if isinstance(r, dict) and not r.get('root')), None)
         return f". A genos:{fm.get('genos')} bean states its own: {term}: {{ legal: {{ crown: {branch} }} }}" if branch else ''
     if 'self' in one_of:
         return f". A genos:{fm.get('genos')} bean answers for itself: {term}: {{ legal: {{ self: true }} }}"
     return ''
+
+
+def check_divisions():
+    """THE DOT, DIVIDED (31.0, `division_form`): every division the law or the garden declares is in the form's shape —
+    its wholeness a row of `aggregates` and `equal`, `at_most` or `at_least`, whether it covers and whether its parts
+    are disjoint said — and names the law's item whose rule judges it, or `division`: then the gate judges it itself,
+    exactly. A garden's own division sums, counts or bounds the quantities its parts state against the one the whole
+    states, the parts found through the relation that names the whole."""
+    aggs = {str(r.get('aggregate')) for r in (registry('aggregates') or []) if isinstance(r, dict)}
+    for r in registry('divisions') or []:
+        if not isinstance(r, dict):
+            continue
+        name = r.get('division')
+        w = r.get('wholeness') if isinstance(r.get('wholeness'), dict) else {}
+        bad = []
+        if str(w.get('aggregate')) not in aggs:
+            bad.append(f"its wholeness's aggregate {w.get('aggregate')!r} is no row of `aggregates`")
+        if w.get('is') not in ('equal', 'at_most', 'at_least'):
+            bad.append(f"its wholeness says {w.get('is')!r}, not `equal`, `at_most` or `at_least`")
+        for k in ('covers', 'disjoint'):
+            if not isinstance(r.get(k), bool):
+                bad.append(f"`{k}` is true or false")
+        cb = str(r.get('checked_by'))
+        known = (cb == 'division' or (cb.startswith('terms[') and cb.endswith(']') and cb[6:-1] in TERMS)
+                 or (cb.startswith('registry:') and isinstance(registry(cb[9:]), list) and registry(cb[9:]))
+                 or (cb.startswith('section:') and isinstance(std_fm.get(cb[8:]) or vocab_fm.get(cb[8:]), dict)))
+        if not known:
+            bad.append(f"`checked_by: {cb}` names no rule of the law — `terms[<term>]`, `registry:<name>`, `section:<name>`, "
+                       f"or `division` for the gate's own judgement")
+        for b in bad:
+            errors.append(f"division '{name}': {b}" + _rule('division_form', 'division_form'))
+        if bad or cb != 'division':
+            continue
+        wh = r.get('whole') if isinstance(r.get('whole'), dict) else {}
+        pa = r.get('parts') if isinstance(r.get('parts'), dict) else {}
+        if not (wh.get('term') and pa.get('via') and pa.get('term')):
+            errors.append(f"division '{name}': a division the gate judges names its whole `{{ term, attr }}` and its parts "
+                          f"`{{ via, term, attr }}`" + _rule('division_form', 'division_form'))
+            continue
+
+        def qty(fm, spec):
+            v = fm.get(spec.get('term'))
+            if spec.get('attr') and isinstance(v, dict):
+                v = v.get(spec['attr'])
+            return v if isinstance(v, dict) and count_ok(v.get('count')) and v.get('unit') else None
+        for (_ib, whole), (fm, _b) in sorted(docs.items()):
+            if not _ib:
+                continue
+            q = qty(fm, wh)
+            if q is None:
+                continue
+            wu = str(q['unit']); wf = (UNITS.get(wu) or {}).get('factor'); wq = (UNITS.get(wu) or {}).get('quantity')
+            vals = []
+            for (_ib2, part), (pfm, _b2) in sorted(docs.items()):
+                rel = pfm.get(pa['via']) if _ib2 else None
+                if not (isinstance(rel, dict) and rel.get('bean') == whole):
+                    continue
+                pq = qty(pfm, pa)
+                if pq is None:
+                    continue
+                pf = (UNITS.get(str(pq['unit'])) or {}).get('factor')
+                if (UNITS.get(str(pq['unit'])) or {}).get('quantity') != wq or not isinstance(pf, list) or not isinstance(wf, list):
+                    errors.append(f"{part}: {pa['term']} is in {pq['unit']}, which does not measure what {whole}'s "
+                                  f"{wh['term']} does ({wu}) — division '{name}'" + _rule('division_form', 'division_form'))
+                    continue
+                vals.append(Fraction(str(pq['count'])) * Fraction(*[int(x) for x in pf]) / Fraction(*[int(x) for x in wf]))
+            agg = w['aggregate']
+            got = (sum(vals, Fraction(0)) if agg == 'sum' else Fraction(len(vals)) if agg == 'count' else
+                   max(vals) if agg == 'max' and vals else min(vals) if agg == 'min' and vals else None)
+            if got is None:
+                continue
+            whole_v = Fraction(str(q['count']))
+            ok = got == whole_v if w['is'] == 'equal' else got <= whole_v if w['is'] == 'at_most' else got >= whole_v
+            if not ok:
+                errors.append(f"{whole}: division '{name}' — the {agg} of its parts is {dmseq.show(got)} {wu}, and its "
+                              f"{wh['term']} is {q['count']} {wu}: the parts must be {w['is'].replace('_', ' ')} it"
+                              + _rule('division_form', 'division_form'))
+
+
+def check_names():
+    """THE NAMES LAYER (31.0, `name_form`): each file of `seed/names/` is one of the form's languages, headed with its
+    columns, and each row names an item the law has — a term, a registry, a section, or a registry's row — once, in the
+    file's language, proposed or confirmed, by someone. The languages are siblings: every file names the items every
+    other names, so no reader's language is a lesser copy of another's."""
+    form = std_fm.get('name_form') if isinstance(std_fm.get('name_form'), dict) else {}
+    langs = re.findall(r'\b[a-z]{2,3}\b', str(form.get('languages', '')).partition(':')[2])
+    folder = os.path.join(ROOT, 'seed', 'names')
+    if not form or not os.path.isdir(folder):
+        return
+    head = ['item', 'name', 'roots', 'status', 'by']
+    law_terms = {str(x.get('term')) for x in std_fm.get('terms') or [] if isinstance(x, dict)}
+    for prof in (std_fm.get('profiles') or {}).values() if isinstance(std_fm.get('profiles'), dict) else []:
+        law_terms |= {str(x.get('term')) for x in (prof or {}).get('terms') or [] if isinstance(x, dict)}
+
+    def resolves(item):                  # an item of the whole law, whichever profiles this garden extends
+        kind, _, key = item.partition(':')
+        if not key:
+            return False
+        if kind == 'term':
+            return key in law_terms or key in TERMS
+        if kind == 'registry':
+            return isinstance(registry(key), list) and bool(registry(key))
+        if kind == 'section':
+            return isinstance(std_fm.get(key), (dict, list))
+        rows = registry(kind) if isinstance(std_fm.get(kind), list) else None
+        return any(isinstance(r, dict) and r and str(next(iter(r.values()))) == key for r in rows or [])
+    named = {}
+    for fn in sorted(os.listdir(folder)):
+        path, lang = os.path.join(folder, fn), fn[:-4] if fn.endswith('.tsv') else fn
+        where = f"seed/names/{fn}"
+        if not fn.endswith('.tsv') or lang not in langs:
+            errors.append(f"{where}: a names file is `<language>.tsv`, one of the form's languages ({' · '.join(langs)})"
+                          + _rule('name_form', 'name_form'))
+            continue
+        lines = open(path, encoding='utf-8').read().split('\n')
+        if lines[:1] != ['\t'.join(head)]:
+            errors.append(f"{where}: its first line is the form's columns, `{chr(9).join(head)}` with tabs"
+                          + _rule('name_form', 'name_form'))
+            continue
+        items = named.setdefault(lang, [])
+        for n, line in enumerate(lines[1:], 2):
+            if not line.strip():
+                continue
+            cells = line.split('\t')
+            row = dict(zip(head, cells))
+            bad = []
+            if len(cells) != len(head):
+                bad.append(f"it has {len(cells)} columns, and a row has {len(head)}")
+            elif not resolves(row['item']):
+                bad.append(f"`{row['item']}` is no item of the law — `term:<term>`, `registry:<name>`, `section:<name>` "
+                           f"or `<registry>:<row>`")
+            elif row['item'] in items:
+                bad.append(f"`{row['item']}` is named twice")
+            else:
+                if not row['name'].strip():
+                    bad.append("it gives no name")
+                if row['status'] not in ('proposed', 'confirmed'):
+                    bad.append(f"its status {row['status']!r} is `proposed` or `confirmed`")
+                if not row['by'].strip():
+                    bad.append("it says nobody wrote it")
+            for b in bad:
+                errors.append(f"{where}:{n}: {b}" + _rule('name_form', 'name_form'))
+            if len(cells) == len(head):
+                items.append(row['item'])
+    every = set().union(*named.values()) if named else set()
+    for lang in sorted(named):
+        missing = [i for i in sorted(every) if i not in named[lang]]
+        if missing:
+            errors.append(f"seed/names/{lang}.tsv names {len(named[lang])} items, and its siblings name {len(missing)} "
+                          f"more: {', '.join(missing[:6])}{' …' if len(missing) > 6 else ''} — the languages are siblings, "
+                          f"each naming what the others name" + _rule('name_form', 'name_form'))
+
+
+def check_frame():
+    """THE FRAME (31.0): place and time, each only with the other. Every system of dimension place or time states its
+    `complement` — how a position in it finds its other half: stated in the entry, the bearer's, or carried by the
+    system itself — each a row of `complements`, and none may say nothing. The chain ends at the garden's own `zone`
+    (GARDEN.md), which the manifest requires, so every position's other half resolves."""
+    rows = {str(r.get('complement')) for r in (registry('complements') or []) if isinstance(r, dict) and r.get('complement')}
+    if not rows:
+        return
+    pair = {str(r.get('aspect')): r.get('pair') for r in (registry('aspects') or []) if isinstance(r, dict)}
+    if pair.get('place') != 'time' or pair.get('time') != 'place':
+        errors.append("law aspects: `place` and `time` name each other (`pair`) — the frame is the two together, "
+                      "neither prior" + _rule('complements', 'complements'))
+    for r in registry('anchor_systems') or []:
+        if not isinstance(r, dict) or r.get('dimension') not in ('place', 'time'):
+            continue
+        c = r.get('complement')
+        c = c if isinstance(c, list) else ([c] if c else [])
+        bad = [x for x in c if str(x) not in rows]
+        if not c or bad:
+            errors.append(f"anchor system '{r.get('system')}' ({r.get('dimension')}): "
+                          + (f"its complement {bad} is no row of `complements`" if bad else
+                             "states no `complement` — how a position in it finds its other half in the "
+                             + ('time' if r.get('dimension') == 'place' else 'place') + " it stands with")
+                          + f": one or more of {', '.join(sorted(rows))}" + _rule('complements', 'complements'))
+
+
+def check_complexity():
+    """THE ORDER OF BODIES (31.0, `complexity`): a level stands on levels the law declares, and on none of them through
+    itself; a genos of the nature soma names the level it stands at, and a genos of any other nature names none — a
+    sayable being is placed in an order, not among bodies. And a part never stands above its whole: through `part_of`,
+    every body's level is its whole's, or one its whole stands on — "every being made sits on the previous less complex
+    structure". Complexity is what stands on what, and nothing else: no rate, no count."""
+    levels = {str(r.get('level')): [str(s) for s in (r.get('stands_on') or [])]
+              for r in (registry('complexity') or []) if isinstance(r, dict) and r.get('level')}
+    if not levels:
+        return
+    for lv, under in levels.items():
+        for s in under:
+            if s not in levels:
+                errors.append(f"law complexity: '{lv}' stands on '{s}', which is no level the law declares"
+                              + _rule('complexity', 'complexity'))
+
+    def below(lv, seen=()):
+        out = set()
+        for s in levels.get(lv, []):
+            if s in seen:
+                continue
+            out.add(s)
+            out |= below(s, seen + (lv,))
+        return out
+    for lv in levels:
+        if lv in below(lv):
+            errors.append(f"law complexity: '{lv}' stands on itself through the levels beneath it — the order of bodies is "
+                          f"partial, and never a circle" + _rule('complexity', 'complexity'))
+    for g, row in GENE.items():
+        if not isinstance(row, dict):
+            continue
+        where = 'VOCAB local_gene' if any(isinstance(r, dict) and r.get('genos') == g for r in (registry('local_gene') or [])) \
+            else 'law gene'
+        if row.get('of_nature') == 'soma' and str(row.get('level')) not in levels:
+            errors.append(f"{where} '{g}': a body names the level it stands at among bodies — `level`, one of "
+                          f"{', '.join(levels)}" + _rule('complexity', 'complexity'))
+        _aw = row.get('alive_while')
+        if _aw is not None and (not isinstance(_aw, dict) or _aw.get('known') not in ('measured', 'derived', 'said', 'always')
+                                or set(_aw) - {'known', 'by'}):
+            errors.append(f"{where} '{g}': `alive_while` says while what a being of it lives, and how that is known — "
+                          f"`{{ known: measured | derived | said | always, by: <prose> }}` — not {_aw!r}"
+                          + _rule('gene', 'alive_while'))
+        if row.get('of_nature') != 'soma' and row.get('level') is not None:
+            errors.append(f"{where} '{g}': `level: {row.get('level')}` on a genos of the nature {row.get('of_nature')} — "
+                          f"only a body stands among bodies; a sayable being is placed in an order"
+                          + _rule('complexity', 'complexity'))
+    for bid, fm in ALL_FM.items():
+        whole = ((fm or {}).get('part_of') or {}).get('bean') if isinstance((fm or {}).get('part_of'), dict) else None
+        if not whole or whole not in ALL_FM:
+            continue
+        lp = (GENE.get((fm or {}).get('genos')) or {}).get('level')
+        lw = (GENE.get((ALL_FM[whole] or {}).get('genos')) or {}).get('level')
+        if lp and lw and str(lp) != str(lw) and str(lp) not in below(str(lw)):
+            errors.append(f"{bid}: part_of {whole}, and a part never stands above its whole — '{lp}' is not '{lw}' and "
+                          f"not a level '{lw}' stands on" + _rule('complexity', 'complexity'))
 
 
 def check_chain_termination():
@@ -7132,6 +7378,14 @@ PLIES = (
      "PHASE 3 (warn): needs TARGETS_OF built, and widens it to every declared edge"),
     (check_chain_termination,
      "a chain that stops is neither a cycle nor a termination (an error since 2026-09-17: the hook refused it already)"),
+    (check_divisions,
+     "31.0: the dot, divided — every division in the form's shape, naming the rule that judges it, a garden's own judged here"),
+    (check_names,
+     "31.0: the names layer — each language's file in the form, every row an item of the law, the languages siblings"),
+    (check_frame,
+     "31.0: the frame — place and time each name the other, and every place or time system says how its positions find theirs"),
+    (check_complexity,
+     "31.0: the order of bodies — each level on declared levels, a body's genos at a level, a part never above its whole"),
     (check_relation_occupancy,
      "PHASE 3 (warn): the reverse gate's rule applied to the relations the GARDEN declares"),
 ) + BASE_PLIES + SEQ_PLIES + VIEW_PLIES + QTY_PLIES + PRIV_PLIES + OBS_PLIES + PLACE_PLIES + RECKON_PLIES + \

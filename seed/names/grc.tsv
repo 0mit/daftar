@@ -1,0 +1,71 @@
+item	name	roots	status	by
+registry:natures	αἱ φύσεις	φύσις (from φύω, to grow, to be born); τί (something: the Stoics' highest genus, divided into σώματα, bodies, and ἀσώματα, incorporeals — the λεκτόν among them)	proposed	agent (claude opus-5.5), by hand
+natures:soma	σῶμα	σῶμα (in Homer the corpse, later every body; for the Stoics what alone exists, acting or acted upon); τὸ τριχῇ διαστατόν (extended three ways: length, breadth, depth — Diogenes Laertius 7.135)	proposed	agent (claude opus-5.5), by hand
+natures:lekton	λεκτόν	λέγω (first to gather, to pick out, to lay in order, and so to count and to say — the verb of λόγος); the Stoics' incorporeal that subsists (ὑφίσταται) and does not exist as a body does: what a sentence says	proposed	agent (claude opus-5.5), by hand
+term:nature	φύσις	φύω (to grow, to be born)	proposed	agent (claude opus-5.5), by hand
+term:genos	γένος	γίγνομαι (to come to be, to be born): a kind is a line of what comes to be alike; Aristotle's γένος (genus) above εἶδος (species)	proposed	agent (claude opus-5.5), by hand
+registry:gene	τὰ γένη	γένος (a kind), γίγνομαι (to come to be)	proposed	agent (claude opus-5.5), by hand
+registry:complexity	ἡ τάξις τῶν σωμάτων	τάξις (an arrangement, a rank in battle, from τάσσω, to array); Aristotle, History of Animals 588b: nature passes little by little from the lifeless to the living	proposed	agent (claude opus-5.5), by hand
+complexity:elementary-particle	στοιχειῶδες σωμάτιον	στοιχεῖον (a member of a row; a letter; Plato's and Aristotle's element); σωμάτιον (a little body); τὰ ἐλάχιστα (Epicurus: the least parts, themselves without parts) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
+complexity:hadron	ἁδρόνιον	ἁδρός (thick, strong, full-grown) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
+complexity:nucleus	πυρήν	πυρήν (the stone of a fruit; Modern Greek's nucleus)	proposed	agent (claude opus-5.5), by hand
+complexity:atom	ἄτομον	ἀ- (not) + τέμνω (to cut): the uncut; Leucippus and Democritus: ἄτομα καὶ κενόν, atoms and void	proposed	agent (claude opus-5.5), by hand
+complexity:molecule	μόριον	μόριον (a part, a portion — Aristotle's word for the parts of animals; Modern Greek's molecule); μοῖρα (a share)	proposed	agent (claude opus-5.5), by hand
+complexity:cell	κύτταρον	κύτταρος (the cell of a honeycomb, in Aristotle); κύτος (a hollow, a vessel)	proposed	agent (claude opus-5.5), by hand
+complexity:tissue	ἱστός	ἱστός (the web on a loom; the mast, what stands upright — hence histology); ὑφή (a weave)	proposed	agent (claude opus-5.5), by hand
+complexity:organ	ὄργανον	ἔργον (work); Aristotle, De Anima II.1: the soul is the first actuality of a natural body that has organs (σώματος φυσικοῦ ὀργανικοῦ)	proposed	agent (claude opus-5.5), by hand
+complexity:organ-system	σύστημα ὀργάνων	σύστημα (a whole standing together, from συνίστημι); ὄργανον	proposed	agent (claude opus-5.5), by hand
+complexity:organism	σῶμα ἔμψυχον	ψυχή (breath, life); ἔμψυχος (ensouled, alive); Aristotle: the living body is σῶμα φυσικὸν ὀργανικόν, a natural body with organs	proposed	agent (claude opus-5.5), by hand
+complexity:population	πληθυσμός	πλῆθος (a multitude, a throng); ἀγέλη (a herd: Aristotle's gregarious animals, ἀγελαῖα) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
+complexity:community	κοινωνία	κοινός (common); Aristotle's κοινωνία: every partnership of the living, the city among them	proposed	agent (claude opus-5.5), by hand
+complexity:ecosystem	οἰκοσύστημα	οἶκος (a house, a household); σύστημα — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
+complexity:biosphere	βιόσφαιρα	βίος (a lived life — beside ζωή, life as such); σφαῖρα — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
+complexity:material	ὕλη	ὕλη (wood, timber, a forest — Aristotle's matter): the same image as materia	proposed	agent (claude opus-5.5), by hand
+complexity:rock	πέτρα	πέτρα (a rock, a cliff); λίθος (a stone)	proposed	agent (claude opus-5.5), by hand
+complexity:celestial-body	οὐράνιον σῶμα	οὐρανός (the sky, heaven); Aristotle's heavenly bodies, of the fifth body, αἰθήρ	proposed	agent (claude opus-5.5), by hand
+complexity:component	ἐξάρτημα	ἐξαρτάω (to hang from, to fit on); ἐξαρτίζω (to fit out, as a ship is); μέρος (a part)	proposed	agent (claude opus-5.5), by hand
+complexity:device	μηχανή	μηχανή (a contrivance, a means, from μῆχος, a remedy, a way); ὄργανον (a tool)	proposed	agent (claude opus-5.5), by hand
+complexity:installation	κατασκευή	κατασκευάζω (to equip fully, to build, to furnish): a construction, an establishment	proposed	agent (claude opus-5.5), by hand
+registry:crown	στέφανος	στέφω (to encircle, to wreathe)	proposed	agent (claude opus-5.5), by hand
+crown:theos	θεός	θεός; τὸ ἕν (the One: Plotinus, Enneads VI.9 — the source of all, and itself none of the things it is the source of)	proposed	agent (claude opus-5.5), by hand
+crown:agape	ἀγάπη	ἀγαπάω (to welcome, to cherish, to be content with); beside ἔρως (desire) and φιλία (friendship); 1 Corinthians 13:5: οὐ ζητεῖ τὰ ἑαυτῆς, it seeks not its own	proposed	agent (claude opus-5.5), by hand
+term:creator	ποιητής	ποιέω (to make — the maker, and the poet); δημιουργός (a worker for the people: Plato's maker of the cosmos); ζωοποιός (life-making)	proposed	agent (claude opus-5.5), by hand
+term:status	κατάστασις	καθίστημι (to set down, to establish); στάσις (a standing)	proposed	agent (claude opus-5.5), by hand
+registry:dimensions	διαστάσεις	διΐστημι (to set apart); the Stoics' body is τριχῇ διαστατόν, extended three ways	proposed	agent (claude opus-5.5), by hand
+dimensions:time	χρόνος	χρόνος (a span of time); for the Stoics one of the four incorporeals, with τόπος (place), κενόν (void) and λεκτόν	proposed	agent (claude opus-5.5), by hand
+dimensions:length	μῆκος	μῆκος (length; also height, greatness); διάστημα (an interval)	proposed	agent (claude opus-5.5), by hand
+aspects:time	πότε	πότε (when: one of Aristotle's ten categories, Categories 1b26)	proposed	agent (claude opus-5.5), by hand
+aspects:place	ποῦ	ποῦ (where: the category); τόπος (place: for the Stoics an incorporeal, what a body occupies)	proposed	agent (claude opus-5.5), by hand
+registry:complements	τὰ συμπληρώματα	συμπληρόω (to fill up together); πλήρης (full)	proposed	agent (claude opus-5.5), by hand
+complements:stated	ῥητόν	ῥητός (stated, said expressly — and in mathematics, rational, what has a stated ratio)	proposed	agent (claude opus-5.5), by hand
+complements:bearer	ὁ φέρων	φέρω (to bear); ὑποκείμενον (what lies under and bears)	proposed	agent (claude opus-5.5), by hand
+complements:system	σύστημα	συνίστημι (to set together)	proposed	agent (claude opus-5.5), by hand
+section:division_form	διαίρεσις	διαιρέω (to take apart); Plato, Phaedrus 265e: to cut where the natural joints are (κατ' ἄρθρα ᾗ πέφυκεν); στιγμή (a point, a prick)	proposed	agent (claude opus-5.5), by hand
+registry:divisions	αἱ διαιρέσεις	διαιρέω (to take apart)	proposed	agent (claude opus-5.5), by hand
+term:part_of	μέρος	μέρος (a part, a share, from μείρομαι, to receive one's portion); ὅλον (the whole)	proposed	agent (claude opus-5.5), by hand
+term:lives_in	οἰκεῖ ἐν	οἰκέω (to dwell); οἶκος (a house)	proposed	agent (claude opus-5.5), by hand
+term:located_at	κεῖται ἐν	κεῖμαι (to lie: Aristotle's category κεῖσθαι, position); τόπος (a place); θέσις (a placing)	proposed	agent (claude opus-5.5), by hand
+term:owned_by	ὁ κεκτημένος	κτάομαι (to acquire): the possessor; κτῆμα (a possession)	proposed	agent (claude opus-5.5), by hand
+term:responsibility	ὑπεύθυνος	εὐθύνη (the account an Athenian official gave at the end of office): liable to give account	proposed	agent (claude opus-5.5), by hand
+registry:acts	πράξεις	πράσσω (to do, to pass through)	proposed	agent (claude opus-5.5), by hand
+acts:made	ποιηθέν	ποιέω (to make — the root of poetry)	proposed	agent (claude opus-5.5), by hand
+acts:derived	παράγωγον	παράγω (to lead aside, to bring forth); the grammarians' παράγωγος (a word formed from another)	proposed	agent (claude opus-5.5), by hand
+acts:read	ἀναγνωσθέν	ἀναγιγνώσκω (to know again, to recognise: to read)	proposed	agent (claude opus-5.5), by hand
+acts:said	λεχθέν	λέγω (to say — the verb of λεκτόν); ῥῆμα (a thing said)	proposed	agent (claude opus-5.5), by hand
+section:provenance_record	προέλευσις	προέρχομαι (to come forth); μαρτυρία (a testimony)	proposed	agent (claude opus-5.5), by hand
+registry:layers	στρώματα	στρώννυμι (to spread): a layer spread upon another	proposed	agent (claude opus-5.5), by hand
+layers:manifesto	ἐπαγγελία	ἀγγέλλω (to announce): a public declaration — and a promise	proposed	agent (claude opus-5.5), by hand
+layers:law	νόμος	νέμω (to distribute, to allot: a law is an allotment); θεσμός (what is laid down, from τίθημι)	proposed	agent (claude opus-5.5), by hand
+layers:reasoning	αἰτιολογία	αἰτία (a cause, a charge) + λόγος (an account): the giving of causes	proposed	agent (claude opus-5.5), by hand
+layers:journal	ἐφημερίδες	ἐφ' ἡμέρᾳ (upon the day): the day-journals, as Alexander's court kept; διφθέρα (a prepared hide: the writing stuff that gave daftar its name)	proposed	agent (claude opus-5.5), by hand
+layers:history	ἱστορία	ἵστωρ (one who knows by having seen: a witness, a judge)	proposed	agent (claude opus-5.5), by hand
+layers:queue	τὰ ἐκκρεμῆ	ἐκκρεμής (hanging from, in suspense): what still hangs undecided	proposed	agent (claude opus-5.5), by hand
+layers:names	ὀνόματα	ὄνομα (a name); Plato's Cratylus: whether names are by nature (φύσει) or by convention (θέσει) — here by convention, for a reader	proposed	agent (claude opus-5.5), by hand
+term:view	ὄψις	ὄψομαι (I shall see): a sight, an appearance; θέα (a spectacle)	proposed	agent (claude opus-5.5), by hand
+registry:view_lenses	φακοί	φακός (a lentil — and the lens)	proposed	agent (claude opus-5.5), by hand
+view_lenses:orient	ἀνατολή	ἀνατέλλω (to rise, as the sun): the rising, the east	proposed	agent (claude opus-5.5), by hand
+view_lenses:understand	σύνεσις	συνίημι (to send together, to bring together: to see how parts go together)	proposed	agent (claude opus-5.5), by hand
+view_lenses:operate	ἐνέργεια	ἐν + ἔργον (at work): Aristotle's being-at-work — what is at work now	proposed	agent (claude opus-5.5), by hand
+view_lenses:inspect	ἐξέτασις	ἐξετάζω (to examine closely, to test — Apology 38a: ὁ ἀνεξέταστος βίος, the unexamined life)	proposed	agent (claude opus-5.5), by hand
+section:manifest	κῆπος	κῆπος (a garden: Epicurus's school); παράδεισος (from Persian pairi-daēza: Xenophon's word for the Persian king's walled parks)	proposed	agent (claude opus-5.5), by hand
+section:name_form	ὄνομα	ὄνομα (a name)	proposed	agent (claude opus-5.5), by hand

@@ -147,7 +147,7 @@ title: "bake-2026"
 status: active
 summary: "the baker's terms"
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:bake-2026", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
@@ -164,7 +164,7 @@ genos: person
 title: "baker"
 status: active
 summary: "the baker"
-nature: empsychon
+nature: soma
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:baker", class: logical, establishing: true }}, {{ key: {ANCHOR}, value: "{BAKER_FPR}", class: logical, establishing: {ESTABLISHING} }} ] }}

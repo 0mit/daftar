@@ -126,7 +126,7 @@ genos: person
 title: "{pid}"
 status: active
 summary: "{what}"
-nature: empsychon
+nature: soma
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{pid}", class: logical, establishing: true }} ] }}
@@ -152,7 +152,7 @@ if not C.ok:
     sys.exit(1)
 BOSUN, GUEST = "p-b05a0001", "p-9e570001"
 C.vocab("""local_gene:
-  - { genos: boat, of_nature: soma, meaning: "a boat the club keeps, invented" }
+  - { genos: boat, of_nature: soma, level: device, meaning: "a boat the club keeps, invented" }
 registry_additions:
   knowledge_schemes:
     - scheme: boat-checks
@@ -183,13 +183,13 @@ for _o, _at, _boat in (("outing-0927", "2026-09-27 10:00+03:00", "boat-heron"), 
                                  "Booked by a member, whose number is 555-0100.", ("identifier", "event:" + _o, "logical"),
                                  extra=f"timing:\n  start: {{ system: gregorian-civil, at: \"{_at}\", unit: minute }}\n"
                                        f"refs:\n  boat: {{ bean: {_boat}, rel: sails }}\n",
-                                 own="owned_by: { legal: { crown: logos } }\n"))
+                                 own="owned_by: { legal: { crown: agape } }\n"))
 C.put("beans/clubhouse-pi.md", bean("clubhouse-pi", "host", "soma", "The clubhouse computer", "A small computer in the clubhouse.",
                                     ("serial", "SN-PI-77", "hardware"), extra="provides_habitat: linux-baremetal\nlocated_at:\n  - { system: ipv4, openness: here, at: 192.0.2.10, observed: now }\n"))
 C.put("beans/hygro-firmware.md", bean("hygro-firmware", "product", "lekton", "The hygrometer's firmware",
                                       "The software a hygrometer runs, recorded so its copy has a type.", ("identifier", "product:hygro-firmware", "logical"),
                                       own="owned_by: { legal: { external: \"its makers\" } }\n"))
-C.put("beans/boathouse-hygrometer.md", bean("boathouse-hygrometer", "instance", "empsychon", "The boathouse hygrometer",
+C.put("beans/boathouse-hygrometer.md", bean("boathouse-hygrometer", "instance", "lekton", "The boathouse hygrometer",
                                             "Reads the air in the boathouse and serves it as one JSON document.",
                                             ("identifier", "instance:boathouse-hygrometer", "logical"),
                                             extra="instance_of: { bean: hygro-firmware }\nlives_in: { bean: clubhouse-pi }\n"
@@ -213,6 +213,8 @@ responsibility: {{ legal: {{ holder: {{ bean: rosa }} }} }}
 selections:
   outings: {{ what: "every outing booked", steps: [ {{ id: o, op: select, genos: event }} ] }}
   heron-outings: {{ what: "the outings on the heron", steps: [ {{ id: o, op: select, genos: event, where: [ {{ path: refs.boat.bean, is: boat-heron }} ] }} ] }}
+located_at:
+  - {{ system: uri, at: "http://club.example.org/page/", openness: here }}
 view:
   drawings: file:bin/drawings.py
   opens_on: boat-club
@@ -654,7 +656,7 @@ R.put("beans/suite-py.md", "---\nbean: suite-py\ngenos: product\ntitle: \"The su
       "provenance: { src: asserted-by-human, by: keeper, as_of: now }\nowned_by: { legal: { owner: { bean: keeper } } }\n"
       "responsibility: { legal: { holder: { bean: keeper } } }\n---\nThe runner's script.\n")
 R.put("beans/suite-status.md", "---\nbean: suite-status\ngenos: instance\ntitle: \"The run's status\"\nstatus: active\n"
-      "summary: \"The status document of the run in progress, served where the runner writes it.\"\nnature: empsychon\n"
+      "summary: \"The status document of the run in progress, served where the runner writes it.\"\nnature: lekton\n"
       "identity:\n  status: confirmed\n  anchors:\n    - { key: identifier, value: \"instance:suite-status\", class: logical, establishing: true }\n"
       "provenance: { src: observed, by: keeper, as_of: now }\nowned_by: { legal: { owner: { bean: keeper } } }\n"
       "responsibility: { legal: { holder: { bean: keeper } } }\ninstance_of: { bean: suite-py }\nlives_in: { bean: runner }\n"
@@ -677,6 +679,8 @@ identity:
 provenance: { src: asserted-by-human, by: keeper, as_of: now }
 owned_by: { legal: { owner: { bean: keeper } } }
 responsibility: { legal: { holder: { bean: keeper } } }
+located_at:
+  - { system: uri, at: "http://results.example.org/", openness: here }
 view:
   drawings: file:bin/drawings.py
   reference:

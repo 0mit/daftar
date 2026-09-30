@@ -5,6 +5,23 @@ and recorded in a journal. What daftar holds to is `MANIFESTO.md` (manifesto: co
 law beneath it. Why each rule exists is in `seed/RATIONALE.md`, keyed by the rule's own path; the
 design steps before that are in `HISTORY.md` in the daftar repository.
 
+## The root
+Five axioms, beneath everything else here; their reasons are in `seed/RATIONALE.md`, under `division_form`,
+`complements`, `complexity`, `terms[status]` and `crown`.
+- **The dot.** A position is a dot: without parts in its own system. What is divided keeps its system — a finer system
+  is a level of the coarser, or declared beside it — and its wholeness: how the parts make the whole is declared and
+  held (`division_form`).
+- **The frame.** Place and time are one frame, neither prior: a position in one stands with its other half in the
+  other, stated or inherited, and a system says how its positions find theirs (`complement`).
+- **The order of bodies.** A body stands at a level of `complexity`, and a level stands on the levels it is built from
+  and on nothing else: complexity is that relation, a partial order, and no rate enters it. A part never stands above
+  its whole.
+- **Life.** A being lives while its genos says it does (`alive_while`): a machine while it is powered, an agreement
+  while it holds, a person while they live. Life is no nature.
+- **The life chain.** A living being lives through a living being's act (`creator`), and the chain walks to the life
+  no garden holds: `agape`, love that does not possess, whose root is `theos`, THE ONE, which no bean names. The
+  chain is no bean's. The crown is this chain.
+
 ## Beans and gardens
 - A **bean** is one managed thing — a machine, a domain, a program, a person, a contract — as one file,
   `beans/<id>.md`. The YAML front matter holds the facts; the Markdown body is for people. A **mapping**
@@ -44,8 +61,9 @@ Every bean has an `identity:` block of **anchors** — facts that say which obje
 recognise the same thing whatever its file is called.
 - Each anchor says `establishing: true` (it identifies the object) or `false` (it only corroborates).
   Only establishing anchors decide that two beans are one object.
-- What establishes follows the nature: matter (`serial`, `mac`) for a body, a being of the nature `soma`; a logical
-  id (`fqdn`, a product or service id) for one that is `lekton` or `empsychon`. Network anchors (`ip`, `hostname`)
+- What establishes follows the nature, and a genos may refine it: matter (`serial`, `mac`) for a body, a being of the
+  nature `soma`; a logical id (`fqdn`, a product or service id) for one that is `lekton`. A person is a body, and is
+  recognised only by what registers and they themselves say — never by matter. Network anchors (`ip`, `hostname`)
   corroborate. Every anchor's key is a term of the vocabulary, and where that term declares a policy, it overrules
   the bean.
 - An anchor an organisation issues (an employee number) identifies only with its `issuer`.
@@ -55,19 +73,19 @@ recognise the same thing whatever its file is called.
   ignoring case and spaces.
 
 ## Type: nature, then genos
-Every bean has a `nature`, one of three:
-- `soma` (σῶμα, a body) — a being with extension in space: a machine, hardware, a site;
-- `lekton` (λεκτόν, the sayable) — a being that exists by being said and agreed: code, a product, an organisation,
-  a domain, a design, a contract;
-- `empsychon` (ἔμψυχον, the ensouled) — a being that strives to persist as itself, while it is alive: a person, a
-  running instance.
+Every bean has a `nature`, one of two:
+- `soma` (σῶμα, a body) — a being that takes room in space: a machine, a site, a person;
+- `lekton` (λεκτόν, the sayable) — a being placed in an order, a register or a habitat, and never taking room in
+  space: code, a product, an organisation, a domain, a design, a contract, a running instance, a virtual machine;
 
-and a `genos` (γένος, kind) that refines it, a row of the law's registry `gene` (γένη, the kinds): `host` is
-soma; `domain`, `product`, `codebase`, `contract`, `document`, `event` and `garden` are lekton; `person`, `instance`
-and `virtual-host` are empsychon — a virtual machine has no matter and lapses at teardown. The gate refuses a nature
-that contradicts the genos. Rules about what sort of being something is — such as identity anchors — attach to the
-nature, so every genos under it inherits them. A mapping records no being: it has no nature and no genos, and its
-`kind` says what sort of procedure or relationship it records.
+and a `genos` (γένος, kind) that refines it, a row of the law's registry `gene` (γένη, the kinds): `host` and
+`person` are soma; `domain`, `product`, `codebase`, `contract`, `document`, `event`, `garden`, `instance` and
+`virtual-host` are lekton. A genos of the nature soma names its `level` in `complexity` — a host a `device`, a person an
+`organism` — and every genos says while what it lives (`alive_while`) and how that is known: measured, derived from the
+ledger, said, or always. The gate refuses a nature that contradicts the genos. Rules about what sort of being something
+is — such as identity anchors — attach to the nature, so every genos under it inherits them, unless the genos refines
+them. A mapping records no being: it has no nature and no genos, and its `kind` says what sort of procedure or
+relationship it records.
 
 ## Ownership and responsibility
 Two arcs, over the same **facets** — the rows of the law's `facets` registry, and any a garden adds. A facet may
@@ -86,13 +104,13 @@ The forms an entry can take:
 - `{ via: { bean: … } }` — inherits the parent's owners, e.g. an instance through the product it runs.
 - `{ contract: { bean: … } }` — one facet owned together, through a `contract` bean: the agreement between its
   owners, whose clauses say how they decide.
-- `{ crown: <branch> }` — where every chain ends. The crown's root is `theos` (θεός, god), which no bean names; a
-  chain reaches it through the branch its nature routes to: `physis` (φύσις, nature) for soma, `logos` (λόγος, word)
-  for lekton, `agape` (ἀγάπη, love that does not possess) for empsychon, and only while the being lives. The gate
-  checks the branch. A **person** is pinned to it — owned by no bean, `owned_by: { legal: { crown: agape } }` — and
+- `{ crown: agape }` — owned by no bean, and held by its life chain. The crown IS the life chain: who gave the being
+  its life (`creator`), walked to the life no garden holds, ends at `agape` (ἀγάπη, love that does not possess), whose
+  root is `theos` (θεός, THE ONE), which no bean names. A **person** is pinned to it — owned by no bean,
+  `owned_by: { legal: { crown: agape } }`, and only while they live — and
   answers for themselves: `responsibility: { legal: { self: true } }`.
   An **agreement** between parties may choose it: owned by none of its parties, `owned_by: { legal: { crown:
-  logos } }`, and answered for by them, each for the clauses it is bound by: `responsibility: { legal: { parties:
+  agape } }` — held by the life its parties gave it by accepting it — and answered for by them, each for the clauses it is bound by: `responsibility: { legal: { parties:
   true } }`. A **happening** between people (an `event`) may choose it too: owned by none of those who took part,
   and answered for by whoever hosted it, as its holder. The crown owns and never answers; the parties answer and
   never own. The crown is written only by a bean of these three gene, and `parties` only by an agreement.

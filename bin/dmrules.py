@@ -299,7 +299,7 @@ if '--terms' in want:
                                                      else f"registry '{r.get('registry')}'")
                        + (' where ' + ', '.join(f"{k} is {v}" for k, v in r['where'].items()) if r.get('where') else ''))
         for a_, _r in dmform.facet(F, 'origin_of'):
-            det.append(f"{_w}.{a_} is an origin {{act, nature?, by?}} — of `acts` and `natures`")
+            det.append(f"{_w}.{a_} is an origin {{act, nature?, alive?, by?}} — of `acts` and `natures`")
         for a_, _r in dmform.facet(F, 'stamped'):
             det.append(f"{_w}.{a_} is STAMPED: written `now`, and the save writes the moment of its journal heading")
         for a_, r in dmform.facet(F, 'default_from'):
@@ -453,7 +453,7 @@ if _ORIG.judged('journal', 'heading'):
     print("  a heading is STAMPED: written from the clock by the journal tool and registered in the clone; a heading a "
           "commit adds that the tool did not write is refused")
 
-head("WHERE A VALUE COMES FROM — `{act, nature?, by?}`, lightest act first, then nature by `natures`")
+head("WHERE A VALUE COMES FROM — `{act, nature?, alive?, by?}`, lightest act first, then life, then nature by `natures`")
 for _a in _ORIG.acts:
     print(f"  {str(_a.get('act')):8} {_a.get('meaning')}")
     for _b, _bm in ((_a.get('by') or {}).items() if isinstance(_a.get('by'), dict) else []):

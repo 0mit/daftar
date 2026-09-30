@@ -85,7 +85,7 @@ genos: person
 title: "Sam — keeps this garden"
 status: active
 summary: "The gardener: the person who keeps this garden, and owns and answers for the machines recorded here."
-nature: empsychon
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -101,13 +101,13 @@ Three of its words are the law's, in Greek, each with its siblings:
 
 - `genos` (γένος, kind) — the sort of being a bean records, here a `person`: a row of the law's `gene` (γένη, the
   kinds). It refines the bean's `nature`.
-- `empsychon` (ἔμψυχον, the ensouled) — a nature: a person, or a running instance, while alive. The other two are
-  `soma` (σῶμα, a body — a machine, a site) and `lekton` (λεκτόν, the sayable — what exists by being said and agreed:
-  code, a domain, a contract).
-- `agape` (ἀγάπη, love that does not possess) — the crown's branch for what is empsychon. The crown is where every
-  chain of ownership ends: its root is `theos` (θεός, god), which no bean names, and its other branches are `physis`
-  (φύσις, nature) for soma and `logos` (λόγος, word) for lekton. No being holds a person; only agape does, and only
-  while they live.
+- `soma` (σῶμα, a body) — a nature: a being that takes room in space, standing at its level among bodies — a person
+  is an organism, a machine a device. The other is `lekton` (λεκτόν, the sayable — what exists by being said and
+  agreed, placed in an order: code, a domain, a contract, a running instance). Life is no nature: each genos says
+  while what it lives.
+- `agape` (ἀγάπη, love that does not possess) — the crown, which is the life chain: who gave a being its life, walked
+  to the life no garden holds, ends here, and its root is `theos` (θεός, THE ONE), which no bean names. A being owned
+  by no one is held so. No being holds a person; only agape does, and only while they live.
 
 A machine is owned by someone and answered for by someone — here the same person, on both facets. It is `soma`,
 and its identity is a HARDWARE anchor (a serial or a MAC), because a hostname moves between machines:

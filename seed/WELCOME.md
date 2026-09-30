@@ -65,9 +65,9 @@ The office printer. Sam read the serial off the label on the back.
 ```
 
 - `bean:` equals the file name, in kebab-case. `genos` (Greek for kind) says what sort of being it is — here a
-  `host` — and `nature`, which must fit the genos, is one of three, also in the law's Greek: `soma` (a body: a
-  machine, a site), `lekton` (the sayable: what exists by being said and agreed — code, a domain, a contract) or
-  `empsychon` (the ensouled: a person, or a running instance, while alive).
+  `host` — and `nature`, which must fit the genos, is one of two, also in the law's Greek: `soma` (a body, taking
+  room in space: a machine, a site, a person) or `lekton` (the sayable: what exists by being said and agreed, placed
+  in an order — code, a domain, a contract, a running instance).
 - An **anchor** says which object this is. A machine is anchored on hardware (a serial, a MAC); a domain on its
   name; a person on an id they choose, never their name. An anchor has ONE spelling: a MAC in lowercase with
   colons (`5c:a6:e6:1b:22:90`, whatever the label prints), a domain name in lowercase. **Choosing anchors is a

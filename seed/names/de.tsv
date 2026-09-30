@@ -1,0 +1,71 @@
+item	name	roots	status	by
+registry:natures	die Naturen	Natur (natura); Seinsweise (a mode of being); Wesen (from wesan, to be, to dwell)	proposed	agent (claude opus-5.5), by hand
+natures:soma	Körper	Körper (Latin corpus); Leib (Old High German lîb, life: the lived body) — a stone is Körper and has no Leib, and the law's body is the first	proposed	agent (claude opus-5.5), by hand
+natures:lekton	das Sagbare	sagen (to say); lesen (to gather, to read — as a vintage is a Lese: Heidegger's λέγειν as legen and lesen, laying together)	proposed	agent (claude opus-5.5), by hand
+term:nature	Natur	natura; Seinsweise (a mode of being)	proposed	agent (claude opus-5.5), by hand
+term:genos	Gattung	gatten (to join, to match: what is joined as alike); Art (a kind)	proposed	agent (claude opus-5.5), by hand
+registry:gene	die Gattungen	Gattung (what is joined as alike)	proposed	agent (claude opus-5.5), by hand
+registry:complexity	die Ordnung der Körper	Ordnung (order); Schichtenbau (Nicolai Hartmann: the strata of the real world, each higher one resting on the lower, carried by it and free above it)	proposed	agent (claude opus-5.5), by hand
+complexity:elementary-particle	Elementarteilchen	Element (elementum); Teilchen (a little part, from Teil)	proposed	agent (claude opus-5.5), by hand
+complexity:hadron	Hadron	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
+complexity:nucleus	Atomkern	Kern (a kernel, a grain)	proposed	agent (claude opus-5.5), by hand
+complexity:atom	Atom	ἄτομος (uncut); das Unteilbare (the indivisible)	proposed	agent (claude opus-5.5), by hand
+complexity:molecule	Molekül	moles (a mass)	proposed	agent (claude opus-5.5), by hand
+complexity:cell	Zelle	cella (a small room)	proposed	agent (claude opus-5.5), by hand
+complexity:tissue	Gewebe	weben (to weave)	proposed	agent (claude opus-5.5), by hand
+complexity:organ	Organ	ὄργανον; Werkzeug (a tool)	proposed	agent (claude opus-5.5), by hand
+complexity:organ-system	Organsystem	σύστημα; Organ	proposed	agent (claude opus-5.5), by hand
+complexity:organism	Lebewesen	Leben (life) + Wesen (a being); Organismus	proposed	agent (claude opus-5.5), by hand
+complexity:population	Population	populus; Bestand (a stand of trees, what stands together)	proposed	agent (claude opus-5.5), by hand
+complexity:community	Lebensgemeinschaft	Leben + Gemeinschaft (gemein, common); Biozönose (βίος + κοινός, Möbius 1877)	proposed	agent (claude opus-5.5), by hand
+complexity:ecosystem	Ökosystem	οἶκος; Haushalt der Natur (nature's household: Haeckel's Oekologie, 1866)	proposed	agent (claude opus-5.5), by hand
+complexity:biosphere	Biosphäre	βίος + σφαῖρα	proposed	agent (claude opus-5.5), by hand
+complexity:material	Stoff	Stoff (stuff); Materie (materia); Werkstoff (a material made to be worked)	proposed	agent (claude opus-5.5), by hand
+complexity:rock	Gestein	Stein (a stone): Gestein, stone in mass	proposed	agent (claude opus-5.5), by hand
+complexity:celestial-body	Himmelskörper	Himmel (the sky) + Körper	proposed	agent (claude opus-5.5), by hand
+complexity:component	Bauteil	bauen (to build) + Teil (a part)	proposed	agent (claude opus-5.5), by hand
+complexity:device	Gerät	Old High German girâti (provision, equipment — kin to Rat, what is provided)	proposed	agent (claude opus-5.5), by hand
+complexity:installation	Anlage	anlegen (to lay out, to lay on)	proposed	agent (claude opus-5.5), by hand
+registry:crown	die Krone	corona (a wreath)	proposed	agent (claude opus-5.5), by hand
+crown:theos	der Eine	eins (one); Gott; das Eine (Plotinus's One)	proposed	agent (claude opus-5.5), by hand
+crown:agape	Liebe	Liebe; Agape; sie sucht nicht das Ihre (1 Kor 13:5)	proposed	agent (claude opus-5.5), by hand
+term:creator	Urheber	ur- (origin) + heben (to raise): the one who first raised it; Schöpfer (the Creator) is THE ONE's	proposed	agent (claude opus-5.5), by hand
+term:status	Stand	stehen (to stand)	proposed	agent (claude opus-5.5), by hand
+registry:dimensions	Dimensionen	dimetiri; Ausdehnung (extension)	proposed	agent (claude opus-5.5), by hand
+dimensions:time	Zeit	Zeit (from a root meaning to divide: a portion — kin to tide)	proposed	agent (claude opus-5.5), by hand
+dimensions:length	Länge	lang (long)	proposed	agent (claude opus-5.5), by hand
+aspects:time	Wann	wann (when); das Wann (the category)	proposed	agent (claude opus-5.5), by hand
+aspects:place	Wo	wo (where); Ort (a place)	proposed	agent (claude opus-5.5), by hand
+registry:complements	Ergänzungen	ganz (whole): what makes whole	proposed	agent (claude opus-5.5), by hand
+complements:stated	angegeben	angeben (to give out, to state)	proposed	agent (claude opus-5.5), by hand
+complements:bearer	Träger	tragen (to carry)	proposed	agent (claude opus-5.5), by hand
+complements:system	System	σύστημα	proposed	agent (claude opus-5.5), by hand
+section:division_form	Teilung	teilen (to divide); Punkt (a point)	proposed	agent (claude opus-5.5), by hand
+registry:divisions	Teilungen	teilen	proposed	agent (claude opus-5.5), by hand
+term:part_of	Teil von	Teil (a part); das Ganze (the whole)	proposed	agent (claude opus-5.5), by hand
+term:lives_in	lebt in	leben (to live); wohnen (to dwell)	proposed	agent (claude opus-5.5), by hand
+term:located_at	befindet sich	sich befinden (to find oneself); Lage (where a thing lies)	proposed	agent (claude opus-5.5), by hand
+term:owned_by	Eigentümer	eigen (own)	proposed	agent (claude opus-5.5), by hand
+term:responsibility	Verantwortlicher	Antwort (an answer): the one who answers	proposed	agent (claude opus-5.5), by hand
+registry:acts	Handlungen	Hand (the hand): what is handled, done	proposed	agent (claude opus-5.5), by hand
+acts:made	gemacht	machen (to make)	proposed	agent (claude opus-5.5), by hand
+acts:derived	abgeleitet	ableiten (to lead off, as a channel from a stream)	proposed	agent (claude opus-5.5), by hand
+acts:read	abgelesen	ablesen (to read off, as a dial is read); lesen (to gather — as a vintage is a Lese)	proposed	agent (claude opus-5.5), by hand
+acts:said	gesagt	sagen (to say)	proposed	agent (claude opus-5.5), by hand
+section:provenance_record	Herkunft	her (hither) + kommen (to come); Provenienz	proposed	agent (claude opus-5.5), by hand
+registry:layers	Schichten	schichten (to stack in order); Hartmann's strata of being	proposed	agent (claude opus-5.5), by hand
+layers:manifesto	Manifest	manifestus	proposed	agent (claude opus-5.5), by hand
+layers:law	Gesetz	setzen (to set): what is set down	proposed	agent (claude opus-5.5), by hand
+layers:reasoning	Begründung	Grund (the ground): laying the ground, as a Gesetzesbegründung	proposed	agent (claude opus-5.5), by hand
+layers:journal	Journal	jour (a day); Tagebuch (a day-book)	proposed	agent (claude opus-5.5), by hand
+layers:history	Geschichte	geschehen (to happen): what has happened	proposed	agent (claude opus-5.5), by hand
+layers:queue	Warteschlange	warten (to wait, to watch over); anhängig (pending: hanging on)	proposed	agent (claude opus-5.5), by hand
+layers:names	Namen	Name; Wörterbuch (a book of words)	proposed	agent (claude opus-5.5), by hand
+term:view	Ansicht	sehen (to see); Ansicht (a view in a technical drawing)	proposed	agent (claude opus-5.5), by hand
+registry:view_lenses	Linsen	Linse (a lentil, and a lens)	proposed	agent (claude opus-5.5), by hand
+view_lenses:orient	Orientierung	Orient (the rising)	proposed	agent (claude opus-5.5), by hand
+view_lenses:understand	Verstehen	verstehen (to stand before, to grasp); Dilthey's Verstehen	proposed	agent (claude opus-5.5), by hand
+view_lenses:operate	Betrieb	treiben (to drive): a plant in Betrieb is running	proposed	agent (claude opus-5.5), by hand
+view_lenses:inspect	Prüfung	prüfen (probare, to test)	proposed	agent (claude opus-5.5), by hand
+section:manifest	Garten	Garten (an enclosure; kin to yard); Paradies	proposed	agent (claude opus-5.5), by hand
+section:name_form	Name	Name	proposed	agent (claude opus-5.5), by hand

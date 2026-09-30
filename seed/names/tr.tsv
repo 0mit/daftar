@@ -1,0 +1,71 @@
+item	name	roots	status	by
+registry:natures	doğalar	doğa (from doğmak, to be born — as Latin natura from nasci); öz (the core, the essence)	proposed	agent (claude opus-5.5), by hand
+natures:soma	cisim	cisim (Arabic jism: a body extended three ways); beden (a living body, Persian badan); gövde (the trunk)	proposed	agent (claude opus-5.5), by hand
+natures:lekton	söylenebilen	söylemek (to say); anlam (meaning); itibarî (Ottoman: what is by being posited, as an office or a contract is)	proposed	agent (claude opus-5.5), by hand
+term:nature	doğa	doğmak (to be born)	proposed	agent (claude opus-5.5), by hand
+term:genos	tür	tür (a kind, a species); cins (Arabic jins, genus)	proposed	agent (claude opus-5.5), by hand
+registry:gene	türler	tür (a kind)	proposed	agent (claude opus-5.5), by hand
+registry:complexity	cisimlerin düzeni	düzen (order, from düzmek, to arrange); karmaşıklık (complexity); mertebe (Arabic: a rank one stands on)	proposed	agent (claude opus-5.5), by hand
+complexity:elementary-particle	temel parçacık	temel (a foundation, from Greek θεμέλιον); parçacık (a little piece); nokta (the dot)	proposed	agent (claude opus-5.5), by hand
+complexity:hadron	hadron	ἁδρός (stout); kuark (quark)	proposed	agent (claude opus-5.5), by hand
+complexity:nucleus	çekirdek	çekirdek (the seed of a fruit, the kernel)	proposed	agent (claude opus-5.5), by hand
+complexity:atom	atom	ἄτομος (uncut); cüz-i lâyetecezzâ (Ottoman: the part that is not divided)	proposed	agent (claude opus-5.5), by hand
+complexity:molecule	molekül	moles (a mass)	proposed	agent (claude opus-5.5), by hand
+complexity:cell	hücre	hücre (Arabic ḥujra: a small room, a chamber — as cella is)	proposed	agent (claude opus-5.5), by hand
+complexity:tissue	doku	dokumak (to weave)	proposed	agent (claude opus-5.5), by hand
+complexity:organ	organ	ὄργανον (a tool); uzuv (Arabic ʿuḍw: a limb)	proposed	agent (claude opus-5.5), by hand
+complexity:organ-system	organ sistemi	σύστημα (what stands together); dizge (a line strung together, from dizmek)	proposed	agent (claude opus-5.5), by hand
+complexity:organism	canlı	can (Persian jān: life, soul); organizma	proposed	agent (claude opus-5.5), by hand
+complexity:population	popülasyon	populus (a people); nüfus (Arabic nufūs: souls, as they are counted)	proposed	agent (claude opus-5.5), by hand
+complexity:community	topluluk	toplamak (to gather); biyolojik topluluk	proposed	agent (claude opus-5.5), by hand
+complexity:ecosystem	ekosistem	οἶκος (a household) + σύστημα	proposed	agent (claude opus-5.5), by hand
+complexity:biosphere	biyosfer	βίος + σφαῖρα; küre (a sphere)	proposed	agent (claude opus-5.5), by hand
+complexity:material	madde	Arabic mādda (stuff, matter); malzeme (supplies)	proposed	agent (claude opus-5.5), by hand
+complexity:rock	kaya	kaya (a rock, a cliff); taş (a stone)	proposed	agent (claude opus-5.5), by hand
+complexity:celestial-body	gök cismi	gök (the sky); cisim (a body)	proposed	agent (claude opus-5.5), by hand
+complexity:component	bileşen	bileşmek (to combine); parça (a piece)	proposed	agent (claude opus-5.5), by hand
+complexity:device	aygıt	aygıt (an apparatus); cihaz (Arabic jihāz: equipment)	proposed	agent (claude opus-5.5), by hand
+complexity:installation	tesis	Arabic taʾsīs (a founding); kurulum (a setting up, from kurmak)	proposed	agent (claude opus-5.5), by hand
+registry:crown	taç	Persian tāj (a crown)	proposed	agent (claude opus-5.5), by hand
+crown:theos	Bir Olan	bir (one); Tanrı (Old Turkic täŋri: heaven, God)	proposed	agent (claude opus-5.5), by hand
+crown:agape	sevgi	sevmek (to love); muhabbet (Arabic maḥabba); şefkat (tender care)	proposed	agent (claude opus-5.5), by hand
+term:creator	var eden	var (existent) + etmek (to make); Yaradan (the Creator) is THE ONE's, not a bean's	proposed	agent (claude opus-5.5), by hand
+term:status	durum	durmak (to stand, to stop) — as status from stare	proposed	agent (claude opus-5.5), by hand
+registry:dimensions	boyutlar	boy (length, stature) + -ut	proposed	agent (claude opus-5.5), by hand
+dimensions:time	zaman	Persian zamān; süre (a duration, from sürmek, to last)	proposed	agent (claude opus-5.5), by hand
+dimensions:length	uzunluk	uzun (long)	proposed	agent (claude opus-5.5), by hand
+aspects:time	ne zaman	zaman (time); metâ (Ottoman: the category of when)	proposed	agent (claude opus-5.5), by hand
+aspects:place	nerede	nere (where); yer (a place); eyn (Ottoman: the category of where)	proposed	agent (claude opus-5.5), by hand
+registry:complements	tümleyenler	tüm (whole) + -leyen (what makes): what makes whole	proposed	agent (claude opus-5.5), by hand
+complements:stated	belirtilmiş	belirtmek (to make evident, from belli, clear)	proposed	agent (claude opus-5.5), by hand
+complements:bearer	taşıyan	taşımak (to carry)	proposed	agent (claude opus-5.5), by hand
+complements:system	dizge	dizmek (to string, to line up); sistem	proposed	agent (claude opus-5.5), by hand
+section:division_form	bölüm	bölmek (to divide); nokta (the dot)	proposed	agent (claude opus-5.5), by hand
+registry:divisions	bölümler	bölmek (to divide)	proposed	agent (claude opus-5.5), by hand
+term:part_of	parçası	parça (a piece); bütün (the whole)	proposed	agent (claude opus-5.5), by hand
+term:lives_in	yaşadığı yer	yaşamak (to live); yurt (a dwelling, a homeland)	proposed	agent (claude opus-5.5), by hand
+term:located_at	bulunduğu yer	bulunmak (to be found); konum (a position, from konmak, to alight, to settle)	proposed	agent (claude opus-5.5), by hand
+term:owned_by	sahibi	sahip (Arabic ṣāḥib: a companion, an owner); mülk (a property)	proposed	agent (claude opus-5.5), by hand
+term:responsibility	sorumlu	sormak (to ask): the one who is asked — as mas'ūl	proposed	agent (claude opus-5.5), by hand
+registry:acts	edimler	etmek (to do); edim (an act)	proposed	agent (claude opus-5.5), by hand
+acts:made	yapılmış	yapmak (to make, to build)	proposed	agent (claude opus-5.5), by hand
+acts:derived	türetilmiş	türemek (to spring from, to come into being)	proposed	agent (claude opus-5.5), by hand
+acts:read	okunmuş	okumak (to read — and to recite, to call)	proposed	agent (claude opus-5.5), by hand
+acts:said	söylenmiş	söylemek (to say); söz (a word — and a pledge)	proposed	agent (claude opus-5.5), by hand
+section:provenance_record	köken	kök (a root); isnat (Ottoman: attribution, a chain of transmission)	proposed	agent (claude opus-5.5), by hand
+registry:layers	katmanlar	kat (a fold, a storey)	proposed	agent (claude opus-5.5), by hand
+layers:manifesto	bildirge	bildirmek (to make known)	proposed	agent (claude opus-5.5), by hand
+layers:law	yasa	yasa (the Turkic and Mongol yasaq: the law of the steppe); kanun (κανών)	proposed	agent (claude opus-5.5), by hand
+layers:reasoning	gerekçe	gerek (a need, a necessity): the reasoning of a law, as kanun gerekçesi	proposed	agent (claude opus-5.5), by hand
+layers:journal	günlük	gün (a day); defter (a book of record, from διφθέρα); ruzname (Ottoman: the daybook)	proposed	agent (claude opus-5.5), by hand
+layers:history	tarih	Arabic taʾrīkh (a dating)	proposed	agent (claude opus-5.5), by hand
+layers:queue	kuyruk	kuyruk (a tail — as cauda); sıra (a row, a turn)	proposed	agent (claude opus-5.5), by hand
+layers:names	adlar	ad (a name); sözlük (a book of words)	proposed	agent (claude opus-5.5), by hand
+term:view	görünüş	görmek (to see); görünüş (a view in a technical drawing, as ön görünüş, the front view)	proposed	agent (claude opus-5.5), by hand
+registry:view_lenses	mercekler	mercimek (a lentil): mercek, the lens, is named for it	proposed	agent (claude opus-5.5), by hand
+view_lenses:orient	yön bulma	yön (a direction); doğu (the east, where the sun is born: doğmak)	proposed	agent (claude opus-5.5), by hand
+view_lenses:understand	anlama	anlamak (to understand)	proposed	agent (claude opus-5.5), by hand
+view_lenses:operate	işletme	işlemek (to work, to run: iş, work)	proposed	agent (claude opus-5.5), by hand
+view_lenses:inspect	inceleme	ince (fine, thin): looking at the fine grain	proposed	agent (claude opus-5.5), by hand
+section:manifest	bahçe	Persian bāghche (a little garden)	proposed	agent (claude opus-5.5), by hand
+section:name_form	ad	ad (a name)	proposed	agent (claude opus-5.5), by hand

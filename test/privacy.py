@@ -70,7 +70,7 @@ genos: person
 title: "{title or bid}"
 status: active
 summary: "a person"
-nature: empsychon
+nature: soma
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{bid}", class: logical, establishing: true }}{anchors} ] }}
@@ -89,7 +89,7 @@ title: "{bid}"
 status: active
 summary: "an agreement"
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:{bid}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}

@@ -9,7 +9,8 @@ daftar's terms:
   modified version is marked, in reasonable ways, as different from daftar; and no right is granted in the name
   daftar;
 - **its law and guides** (`seed/std-vocab.md`, the other `seed/*.md`, `MANIFESTO.md`, `MODEL.md`, `CHECKLIST.md`,
-  `MERGE.md`, `AGENTS.md`, `.claude/skills/daftar/SKILL.md`): CC BY 4.0 (`seed/LICENSE-CC-BY-4.0.txt`), by Omid
+  `MERGE.md`, `AGENTS.md`, `.claude/skills/daftar/SKILL.md`, and the law's names in its readers' languages,
+  `seed/names/`): CC BY 4.0 (`seed/LICENSE-CC-BY-4.0.txt`), by Omid
   (0mit) and daftar's contributors;
 - **the seeds of the garden's own files** (`seed/*.template`, `seed/FORMS.md`, `.gitignore`, `.gitattributes`, an
   asset's `assets/<profile>/templates/`): CC0 1.0 (`seed/LICENSE-CC0-1.0.txt`) — what grows from them is the gardener's and owes nothing;

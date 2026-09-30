@@ -95,12 +95,13 @@ def placed(*entries):
 
 # ---------------------------------------------------------------- the garden's own systems (N24, the local stage)
 VOCAB_EXTRA = """local_gene:
-  - { genos: material, of_nature: soma, meaning: "a thing of matter in the field — a mark, a stone, a core, invented" }
-  - { genos: organism, of_nature: empsychon, meaning: "a living thing, invented" }
+  - { genos: material, of_nature: soma, level: material, meaning: "a thing of matter in the field — a mark, a stone, a core, invented" }
+  - { genos: organism, of_nature: soma, level: organism, establishing_anchor_family: [logical], meaning: "a living thing, invented" }
 registry_additions:
   anchor_systems:
     - system: parish
       dimension: place
+      complement: [stated, bearer]
       resolves_through: geographic
       levels: [ { level: district }, { level: parish } ]
       neighbours: counted
@@ -114,6 +115,7 @@ registry_additions:
       why: "a parish says roughly where, never what"
     - system: quarry-stage
       dimension: time
+      complement: [system]
       levels: [ { level: stage } ]
       neighbours: counted
       restrictions: { lines: 1, order: partial }
@@ -158,7 +160,7 @@ write("beans/stone-d.md", bean("stone-d", "material", "soma", "a boulder, taped 
                                placed('system: relative, openness: elsewhere, at: "marker-a+3.2,-1.5", mobility: fixed')))
 write("beans/stone-e.md", bean("stone-e", "material", "soma", "a boulder with a receiver's coordinate only, invented",
                                placed('system: geographic, openness: elsewhere, at: "EPSG:4326;10.1004,20.2003@2026.4", mobility: fixed')))
-write("beans/sapling.md", bean("sapling", "organism", "empsychon", "a rowan sapling, transplanted in March, invented",
+write("beans/sapling.md", bean("sapling", "organism", "soma", "a rowan sapling, transplanted in March, invented",
                                placed('system: relative, openness: elsewhere, at: "marker-a+40,0", mobility: fixed, during: { of: time, from: "2025-10-01", to: "2026-03-01" }',
                                       'system: relative, openness: elsewhere, at: "marker-a+1,1", mobility: fixed, during: { of: time, from: "2026-03-01" }'),
                                status="provisional"))
@@ -329,7 +331,7 @@ check("ORIGIN a garden's own date read off the world states `origin: {act: read,
       ok(out), out[-1500:])
 for name, attr, want in (
         ("...an origin its domain already gives is refused: one is stated only where the domain's is wrong",
-         "in: { type: position }, origin: { act: said, nature: [lekton, empsychon] }", "which its domain already gives"),
+         "in: { type: position }, origin: { act: said, nature: [lekton, soma] }", "which its domain already gives"),
         ("...an origin whose act is no row of `acts` is refused", "in: { type: position }, origin: { act: guessed }",
          "is not a row of `acts`"),
         ("...an origin whose nature is no row of `natures` is refused", "in: { type: position }, origin: { act: said, nature: pneuma }",

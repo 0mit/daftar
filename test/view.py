@@ -172,7 +172,7 @@ genos: instance
 title: "The yard-monitor"
 status: active
 summary: "The co-operative's running monitor: it probes the controllers and keeps their readings."
-nature: empsychon
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -216,6 +216,8 @@ identity:
 provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
 owned_by: { legal: { owner: { bean: grain-coop } } }
 responsibility: { legal: { holder: { bean: tessa } } }
+located_at:
+  - { system: uri, at: "https://grain.example.org/page/", openness: here }
 view:
   drawings: file:bin/drawings.py
   opens_on: grain-coop
@@ -557,6 +559,17 @@ ASSET_REFUSED = [
     ("a value no monitor of the page can compute", "beans/grain-page.md",
      'query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]',
      'query: [ { technology: zabbix, says: "silo.days" } ]', ("silo-full-in", "zabbix")),
+    ("a page that states nowhere it is shown", "beans/grain-page.md",
+     'located_at:\n  - { system: uri, at: "https://grain.example.org/page/", openness: here }\n', "",
+     ("states nowhere it is shown", "uri")),
+    ("a zoom from an element the drawing does not have", "beans/grain-page.md", "  silo:\n",
+     "  silo:\n    opens: [ { element: auger, view: drying } ]\n", ("opens", "auger", "does not have")),
+    ("a zoom into the drawing it is in", "beans/grain-page.md", "  silo:\n",
+     "  silo:\n    opens: [ { element: silo, view: silo } ]\n", ("opens the drawing it is in",)),
+    ("a story stage in more words than its lens holds a stage", "beans/grain-page.md",
+     '      - { label: "Send loads elsewhere", doer: "the yard crew" }\n',
+     '      - { label: "Send loads elsewhere, to the co-operative across the valley and the river", doer: "the yard crew" }\n',
+     ("words", "orient")),
 ]
 for _name, _rel, _old, _new, _words in ASSET_REFUSED:
     _orig = get(_rel)
@@ -567,6 +580,209 @@ for _name, _rel, _old, _new, _words in ASSET_REFUSED:
     out, rc = dmview("check")
     check(f"dmview REFUSES by name: {_name}", rc == 2 and all(w in out for w in _words), out[-900:])
     put(_rel, _orig)
+
+# ZOOM AND FRAME, AS THE GATE AND THE ASSET READ THEM
+put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    frame: place\n    opens: [ { element: silo, view: drying } ]\n", 1))
+out, rc = dmview("check")
+_g, _ = gate()
+_rep, _ = dmview("report", "--out", os.path.join(T, "zoom.html"))
+_html = open(os.path.join(T, "zoom.html"), encoding="utf-8").read() if os.path.isfile(os.path.join(T, "zoom.html")) else ""
+check("a drawing laid out along place, whose silo opens the drying run, passes the gate and the asset, and the page "
+      "carries the zoom", rc == 0 and " 0 error(s)" in _g and '"opens": [{"el": "silo", "view": "drying"}]' in _html,
+      (out[-400:], _g[-400:], _rep[-300:]))
+put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    frame: necessity\n", 1))
+_g, _rc = gate()
+check("...and a frame that is no line — `necessity`, a modal opposition — is refused by the gate", _rc != 0
+      and "necessity" in _g and "frame" in _g, _g[-600:])
+put("beans/grain-page.md", PAGE_T.replace('at: "https://grain.example.org/page/"', 'at: "grain page"', 1))
+_g, _rc = gate()
+check("a page's place in `uri` is written as RFC 3986 writes it, or refused", _rc != 0 and "grain page" in _g, _g[-600:])
+put("beans/grain-page.md", PAGE_T)
+
+# A SIGNAL, BY ITS PUBLISHED NAME: the binding says what it measures, and the source adapter asks it in its own language
+_sig = PAGE_T.replace('query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]', 'signal: system.filesystem.utilization', 1)
+put("beans/grain-page.md", _sig)
+out, rc = dmview("check")
+_g, _ = gate()
+_rep, _ = dmview("report", "--out", os.path.join(T, "signal.html"))
+_html = open(os.path.join(T, "signal.html"), encoding="utf-8").read() if os.path.isfile(os.path.join(T, "signal.html")) else ""
+check("a binding that names a signal and no query passes the gate and the asset, and Prometheus is asked it by "
+      "OpenTelemetry's name for it: avg(system_filesystem_utilization_ratio{…})",
+      rc == 0 and " 0 error(s)" in _g and "avg(system_filesystem_utilization_ratio{" in _html, (out[-400:], _g[-300:]))
+put("beans/grain-page.md", PAGE_T.replace('query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]', 'signal: silo.fullness', 1))
+_g, _rc = gate()
+check("...a signal no one published is refused by the gate", _rc != 0 and "silo.fullness" in _g, _g[-500:])
+put("beans/grain-page.md", PAGE_T.replace(', query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]', '', 1))
+out, rc = dmview("check")
+check("...and a value with neither a query nor a signal is refused by the asset: nothing could ask it", rc != 0
+      and "silo-full-in" in out, out[-600:])
+put("beans/grain-page.md", PAGE_T)
+
+import json
+# THE SURFACES, AND WHAT EVERY ONE OF THEM MUST DO (the requirements a technology passes before daftar says it speaks it)
+_conf = run(sys.executable, "-c", """
+import json, os, re, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'assets', 'view', 'lib')); sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))
+import view_model as vm, view_report
+vm.init(os.getcwd())
+p = view_report.payload()
+ADDR = re.compile(r'(?<![\\w.])(?:\\d{1,3}\\.){3}\\d{1,3}(?![\\w.])')
+out = {'where': p.get('where') or {}}
+for code in vm.surfaces_here():
+    s = vm.surface(code)
+    docs = {k: s.render(p, key=k) for k in p['order']} if code == 'django' else {'*': s.render(p)}
+    def has(doc, i):
+        return ('data-el="%s"' % i) in doc or ('data-el=\\\\"%s\\\\"' % i) in doc
+    missing = sorted({e['id'] for k, v in p['views'].items() for e in v['elements']
+                      if not has(docs['*'] if code != 'django' else docs[k], e['id'])})
+    given = set(ADDR.findall(json.dumps(p)))
+    out[code] = {'technology': getattr(s, 'TECHNOLOGY', None), 'offline': getattr(s, 'OFFLINE', None), 'missing': missing,
+                 'addresses': sorted(set(ADDR.findall(''.join(docs.values()))) - given)}
+print('CONFORMANCE ' + json.dumps(out))
+""", cwd=G)
+try:
+    _cj = json.loads(next(l for l in _conf.stdout.splitlines() if l.startswith('CONFORMANCE '))[len('CONFORMANCE '):])
+except Exception:
+    _cj = {}
+_rows = {}
+with open(os.path.join(ROOT, "seed", "knowledge", "technology-daftar.tsv"), encoding="utf-8") as _fh:
+    _hdr = None
+    for _ln in _fh:
+        _c = _ln.rstrip("\n").split("\t")
+        if _hdr is None:
+            _hdr = _c
+        else:
+            _rows[_c[0]] = dict(zip(_hdr, _c))
+_surf = sorted(k for k in _cj if k != "where")
+check("every surface of the asset — %s — names the technology it speaks and says whether it works offline"
+      % ", ".join(_surf), len(_surf) >= 3 and all(isinstance(_cj[k]["offline"], bool) and _cj[k]["technology"] == k for k in _surf),
+      (_conf.stdout[-600:], _conf.stderr[-600:]))
+check("...each carries every drawn element by the fact's id it stands for", all(not _cj[k]["missing"] for k in _surf),
+      {k: _cj[k]["missing"][:5] for k in _surf})
+check("...and none adds an address the scoped page it was given did not hold", all(not _cj[k]["addresses"] for k in _surf),
+      {k: _cj[k]["addresses"] for k in _surf})
+check("...and daftar says it speaks each only where the catalogue's row names this surface as its adapter",
+      all((_rows.get(k) or {}).get("status") == "spoken" and (_rows.get(k) or {}).get("adapter") == f"assets/view/lib/surfaces/{k}.py"
+          for k in _surf), {k: _rows.get(k) for k in _surf})
+check("the page's own chain to the eye is engraved from its record: where it is shown",
+      "grain.example.org" in str((_cj.get("where") or {}).get("svg", "")), str(_cj.get("where"))[:400])
+
+# A DETAIL: a boundary opens as the region it draws, at a larger scale — the whole counts only what stands outside it
+put("bin/drawings.py", DRAWINGS_T.replace('         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),',
+    '         boundary(590, 40, 200, 180, "The controls", eid="controls"),\n         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),', 1)
+    .replace("from view_kit import ", "from view_kit import boundary, ", 1))
+put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    opens: [ { element: controls } ]\n", 1))
+out, rc = dmview("check")
+_dt = run(sys.executable, "-c", """
+import json, os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'assets', 'view', 'lib')); sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))
+import view_model as vm
+vm.init(os.getcwd())
+print('DETAILS ' + json.dumps({v['key']: v['details'] for v in vm.views()}))
+""", cwd=G)
+try:
+    _dj = json.loads(next(l for l in _dt.stdout.splitlines() if l.startswith("DETAILS "))[len("DETAILS "):])
+except Exception:
+    _dj = {}
+_d = (_dj.get("silo") or [{}])[0]
+check("a boundary opens as a detail of its drawing: the region it draws, holding the parts inside it",
+      rc == 0 and _d.get("el") == "controls" and {"silo-controller", "field-radio"} <= set(_d.get("inside") or []),
+      (out[-400:], _dt.stdout[-300:], _dt.stderr[-300:]))
+put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    opens: [ { element: trailer } ]\n", 1))
+out, rc = dmview("check")
+check("...and a detail opened from a part that is no boundary is refused", rc != 0 and "a detail is the region a boundary draws" in out, out[-500:])
+put("bin/drawings.py", DRAWINGS_T)
+put("beans/grain-page.md", PAGE_T)
+
+# CLOSED REGIONS: the flows between two closed regions are one line a pair, and a flow leaving one leaves from its edge
+put("bin/drawings.py", DRAWINGS_T.replace('         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),',
+    '         boundary(10, 40, 210, 90, "The yard", eid="yard"),\n'
+    '         boundary(590, 40, 200, 180, "The controls", eid="controls"),\n'
+    '         boundary(595, 150, 190, 64, "The radio", eid="radio"),\n'
+    '         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),\n'
+    '         flow(200, 100, 600, 100, "reports"), flow(600, 190, 200, 120, "answers"),', 1)
+    .replace("from view_kit import ", "from view_kit import boundary, ", 1))
+put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    opens: [ { element: yard }, { element: controls }, { element: radio } ]\n", 1))
+out, rc = dmview("check")
+_cl = run(sys.executable, "-c", """
+import json, os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'assets', 'view', 'lib')); sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))
+import view_model as vm
+vm.init(os.getcwd())
+v = next(v for v in vm.views() if v['key'] == 'silo')
+print('CLOSED ' + json.dumps({'links': v['links'], 'details': v['details']}))
+""", cwd=G)
+try:
+    _cj2 = json.loads(next(l for l in _cl.stdout.splitlines() if l.startswith("CLOSED "))[len("CLOSED "):])
+except Exception:
+    _cj2 = {"links": [], "details": []}
+_L = {tuple(sorted((l["from"], l["to"]))): l for l in _cj2["links"]}
+_yc = _L.get(("controls", "yard")) or {}
+check("closed regions: the flows between two are ONE line, arrowed each way its flows go, saying how many it carries",
+      rc == 0 and sorted(_yc.get("flows") or []) == ["answers", "reports"] and _yc.get("both") is True, (out[-400:], _cj2, _cl.stderr[-300:]))
+_yg = next((l for l in _cj2["links"] if l["from"] == "yard" and l["to"] != "controls"), {})
+check("...a flow leaving a closed region leaves from its edge, to the part it reaches, and keeps its words",
+      _yg.get("flows") == ["unload"] and _yg.get("label") == "unload" and _yg.get("both") is False, _cj2["links"])
+check("...a region inside a closed region is carried by it: no line reaches the inner one while the outer is closed",
+      not any("radio" in (l["from"], l["to"]) for l in _cj2["links"])
+      and "radio" in next((d["inside"] for d in _cj2["details"] if d["el"] == "controls"), []), _cj2)
+check("...and a line is inside a region only when both its ends are: one leaving it is no part of its detail",
+      not any(f in d["inside"] for d in _cj2["details"] for f in ("reports", "answers", "unload")), _cj2["details"])
+put("bin/drawings.py", DRAWINGS_T)
+put("beans/grain-page.md", PAGE_T)
+
+# WHERE IT IS SHOWN: a URI is measured from no being; the one serving it says so in its own `endpoints`
+put("beans/grain-page.md", PAGE_T.replace('  - { system: uri, at: "https://grain.example.org/page/", openness: here }\n',
+    '  - { system: uri, at: "https://grain.example.org/page/", openness: here }\n'
+    '  - { system: uri, at: "https://192.0.2.40/page/", openness: here }\n', 1))
+out, rc = dmview("check")
+_ws = run(sys.executable, "-c", """
+import os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'assets', 'view', 'lib')); sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))
+import view_model as vm
+vm.init(os.getcwd())
+print('WHERE ' + vm.where_shown()[0])
+""", cwd=G)
+check("a page served at an address is answered by the being whose endpoints say so — on a public page the address "
+      "drawn by its system alone", ">uri<" in _ws.stdout and "192.0.2.40" not in _ws.stdout and ">silo-controller<" in _ws.stdout,
+      (_ws.stdout[-400:], _ws.stderr[-400:]))
+check("...and one served where no being here says it answers is named, and not guessed",
+      rc == 0 and "grain.example.org" in out and "no being here says it answers there" in out, out[-600:])
+put("beans/grain-page.md", PAGE_T)
+
+# THE SHEET: a title block of facts, clouds around what the last commit changed, and the garden's own palette
+_sh = run(sys.executable, "-c", """
+import json, os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'assets', 'view', 'lib')); sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))
+import view_model as vm
+vm.init(os.getcwd())
+vs = vm.views()
+print('SHEET ' + json.dumps([{'key': v['key'], 'sheet': v['sheet'], 'changed': v['changed'], 'ids': [e['id'] for e in v['elements']]} for v in vs]))
+""", cwd=G)
+try:
+    _sj = json.loads(next(l for l in _sh.stdout.splitlines() if l.startswith("SHEET "))[len("SHEET "):])
+except Exception:
+    _sj = []
+check("every sheet's title block is made of facts the ledger holds: the page, the garden, the commit it is drawn from, "
+      "and which sheet of how many", len(_sj) >= 2 and all(re.fullmatch(r"[0-9a-f]{12}", s["sheet"]["commit"])
+      and s["sheet"]["of"] == len(_sj) and s["sheet"]["garden"] and s["sheet"]["shown"] for s in _sj)
+      and [s["sheet"]["n"] for s in _sj] == list(range(1, len(_sj) + 1)), (_sh.stdout[-500:], _sh.stderr[-500:]))
+check("...and a revision cloud is drawn only around a part the drawing draws", all(set(s["changed"]) <= set(s["ids"]) for s in _sj),
+      [(s["key"], s["changed"]) for s in _sj])
+put("drawings/palette.yaml", "modes:\n  night: { bg: \"#101418\", accent: \"#c9d38c\" }\n  day: { bg: \"#f4efe2\", accent: \"#5a6a26\" }\n"
+    "  print: { bg: \"#ffffff\", fg: \"#000000\" }\n")
+put("beans/grain-page.md", PAGE_T.replace("  drawings: file:bin/drawings.py\n", "  drawings: file:bin/drawings.py\n  palette: file:drawings/palette.yaml\n", 1))
+out, rc = dmview("check")
+_rep, _ = dmview("report", "--out", os.path.join(T, "palette.html"))
+_html = open(os.path.join(T, "palette.html"), encoding="utf-8").read() if os.path.isfile(os.path.join(T, "palette.html")) else ""
+check("a garden's own palette — its day, its night and paper — is drawn with: the grammar the asset's, the colours the garden's",
+      rc == 0 and ".vw.light{--bg:#f4efe2;--accent:#5a6a26}" in _html and "@media print{.vw,.vw.light{--bg:#ffffff;--fg:#000000}}" in _html,
+      (out[-400:], _rep[-300:]))
+put("drawings/palette.yaml", "modes:\n  night: { accent: olive }\n  dusk: { bg: \"#000\" }\n")
+out, rc = dmview("check")
+check("...and a palette with a colour that is none, or a mode the sheet has not, is refused by name", rc != 0
+      and "olive" in out and "dusk" in out, out[-600:])
+put("beans/grain-page.md", PAGE_T)
 
 # PIPES ALONE ARE WIRING: what a drawing draws may be joined by pipes and run no process of its own.
 put("beans/grain-page.md", PAGE_T.replace("    processes: { bean: silo-controller, field: processes }\n", "", 1))
@@ -828,7 +1044,7 @@ put("beans/zabbix.md", "---\nbean: zabbix\ngenos: product\ntitle: \"Zabbix\"\nst
     "provenance: { src: asserted-by-human, by: \"tessa (gardener)\", as_of: now }\nowned_by: { legal: { external: \"its authors\" } }\n"
     "responsibility: { legal: { holder: { bean: tessa } } }\n---\nA second monitor's software.\n")
 put("beans/radio-monitor.md", "---\nbean: radio-monitor\ngenos: instance\ntitle: \"The radio monitor\"\nstatus: active\n"
-    "summary: \"Reads the field radio's signal.\"\nnature: empsychon\nidentity:\n  status: confirmed\n  anchors:\n"
+    "summary: \"Reads the field radio's signal.\"\nnature: lekton\nidentity:\n  status: confirmed\n  anchors:\n"
     "    - { key: identifier, value: \"instance:radio-monitor\", class: logical, establishing: true }\n"
     "provenance: { src: observed, by: \"tessa (gardener)\", as_of: now }\nowned_by: { legal: { owner: { bean: tessa } } }\n"
     "responsibility: { legal: { holder: { bean: tessa } } }\ninstance_of: { bean: zabbix }\nlives_in: { bean: silo-controller }\n"
@@ -900,7 +1116,7 @@ genos: person
 title: "{_p}"
 status: active
 summary: "a viewer of the co-operative's page"
-nature: empsychon
+nature: soma
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{_p}", class: logical, establishing: true }} ] }}
@@ -1234,6 +1450,80 @@ _rk = run(sys.executable, os.path.join(_g4, "assets", "view", "bin", "dmview.py"
 check(f"the cookbook's page of drawings ({len(_ex)} beans), with the asset's template as its drawing module, passes the gate "
       "and the asset, and draws", len(_ex) == 2 and _gk.returncode == 0 and _vk.returncode == 0 and _rk.returncode == 0,
       (_gk.stdout[-300:], _vk.stdout + _vk.stderr, _rk.stdout + _rk.stderr))
+
+# --- the engraver: a drawing laid out from the facts it draws — the silo's drying run as parts and pipes, invented
+sys.path.insert(0, os.path.join(ROOT, "assets", "view", "lib"))
+import view_kit as _vk, view_engrave as _ve
+_parts = [
+    {"proc": "intake", "rail": "the run", "role": "takes the grain in", "user": "silo"},
+    {"proc": "dryer", "rail": "the run", "role": "dries it to 14 %", "user": "silo"},
+    {"proc": "moisture probe", "rail": "the run", "role": "reads the grain's moisture", "user": "probe"},
+    {"proc": "bin", "rail": "the run", "role": "holds the dried grain", "user": "silo"},
+    {"proc": "scheduler", "rail": "control", "role": "starts the dryer at night", "user": "coop"},
+    {"proc": "old fan", "rail": "the run", "role": "retired", "user": "silo", "state": "retired"}]
+_pipes = [
+    {"from": "truck", "to": "intake", "channel": "grain", "rail": "the run"},
+    {"from": "intake", "to": "dryer", "channel": "grain", "rail": "the run"},
+    {"from": "dryer", "to": "moisture probe", "channel": "reading", "rail": "the run"},
+    {"from": "dryer", "to": "bin", "channel": "grain", "rail": "the run"},
+    {"from": "bin", "to": "log", "channel": "file", "rail": "the run"},
+    {"from": "scheduler", "to": "dryer", "channel": "start", "rail": "control"},
+    {"from": "old fan", "to": "dryer", "channel": "air", "rail": "the run", "state": "retired"},
+    {"from": "intake :2", "to": "dryer", "channel": "grain", "rail": "the run"},
+    {"from": "dryer", "to": "cooler", "channel": "grain", "rail": "the run"}]
+_kw = dict(key="proc", rail="rail", of_bean="silo", parts_field="processes", pipes_field="pipes", sub="role",
+           carries=lambda e: e.get("channel") == "grain")
+def _eng(**kw):
+    out = {}
+    def fn():
+        svg, out["rep"] = _ve.engrave(_parts, _pipes, aria="the drying run", **_kw, **kw)
+        return ("run", svg, "", "")
+    _t, svg, _c, _cl, els = _vk.compose(fn)
+    return svg, {e["id"]: e for e in els}, out["rep"]
+_s1, _e1, _r1 = _eng()
+_s2, _e2, _r2 = _eng()
+check("engrave: the same facts give the same drawing, byte for byte", _s1 == _s2 and _e1 == _e2)
+check("engrave: a part's element is its fact — its id the fact's key, and `of` names the bean, the field and the key",
+      _e1.get("dryer", {}).get("of") == {"bean": "silo", "field": "processes", "key": "dryer"}
+      and _e1.get("moisture-probe", {}).get("of", {}).get("key") == "moisture probe", sorted(_e1)[:12])
+check("engrave: an end no part states is drawn and listed, never guessed or dropped — outside where nothing feeds it, a "
+      "store where it is given only files",
+      _r1["implied"] == ["truck", "log", "intake :2", "cooler"] and _e1["truck"]["mods"] == ["external"]
+      and _e1["intake-2"]["mods"] == ["external"] and _e1["log"]["pattern"] == "store"
+      and _e1["cooler"]["mods"] == ["implied"], (_r1, _e1.get("truck"), _e1.get("log"), _e1.get("cooler")))
+check("engrave: a part only called stands in its caller's column, in the lane above the work's path",
+      _e1["moisture-probe"]["box"][0] == _e1["dryer"]["box"][0] and _e1["moisture-probe"]["box"][1] < _e1["dryer"]["box"][1],
+      (_e1["moisture-probe"]["box"], _e1["dryer"]["box"]))
+check("engrave: the work's path runs left to right, and a retired part is drawn disabled",
+      _e1["truck"]["box"][0] < _e1["intake"]["box"][0] < _e1["dryer"]["box"][0] < _e1["bin"]["box"][0]
+      and _e1["old-fan"]["mods"] == ["disabled"], {k: _e1[k]["box"] for k in ("truck", "intake", "dryer", "bin")})
+check("engrave: a column is as wide as its longest name — a name is never cut",
+      _e1["moisture-probe"]["box"][2] >= 24 + 6.8 * len("moisture probe") - 1 and _e1["dryer"]["box"][2] == _e1["moisture-probe"]["box"][2]
+      and _e1["intake"]["box"][2] == _ve.W_NODE, {k: _e1[k]["box"] for k in ("intake", "dryer", "moisture-probe")})
+def _chain():                                     # a line that skips a column runs clear of the part standing in its way
+    def fn():
+        svg, _r = _ve.engrave([{"p": "page", "r": "a"}, {"p": "the served page at a long address", "r": "b"},
+                               {"p": "server", "r": "b"}, {"p": "machine", "r": "b"}, {"p": "a kept copy", "r": "c"}],
+                              [{"from": "page", "to": "the served page at a long address", "r": "b"},
+                               {"from": "page", "to": "a kept copy", "r": "c"},
+                               {"from": "the served page at a long address", "to": "server", "r": "b"},
+                               {"from": "server", "to": "machine", "r": "b"}, {"from": "a kept copy", "to": "machine", "r": "c"}],
+                              key="p", rail="r", of_bean="x", parts_field="f", pipes_field="f")
+        return ("c", svg, "", "")
+    _t, svg, _c, _cl, els = _vk.compose(fn)
+    return svg, {e["id"]: e for e in els}
+_svc, _ec = _chain()
+_kid = next(k for k, e in _ec.items() if (e.get("of") or {}).get("key") == "a kept copy→machine")
+_pts = re.search(r'data-el="%s"[^>]*>\s*<polyline points="([^"]+)"' % re.escape(_kid), _svc)
+_turn = float(_pts.group(1).split()[1].split(",")[0]) if _pts else -1
+_sv = _ec["server"]["box"]
+check("engrave: a line that skips a column turns beside its target, clear of the part standing in its way",
+      _sv[0] + _sv[2] < _turn < _ec["machine"]["box"][0], (_turn, _sv, _ec["machine"]["box"], _kid))
+_s3, _e3, _r3 = _eng(group=lambda p: p["user"])
+check("engrave: a division draws the wholes — the silo's three parts one element that holds them, and an implied "
+      "listener named after a part joins its whole",
+      _e3.get("silo", {}).get("of", {}).get("holds") == ["intake", "dryer", "bin", "old fan", "intake :2"]
+      and "intake-2" not in _e3, (_e3.get("silo"), sorted(_e3)))
 
 check("NOTHING above ended in a traceback: every case is a refusal or a pass", not TRACES, TRACES[:2])
 shutil.rmtree(T, ignore_errors=True)

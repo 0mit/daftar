@@ -36,7 +36,7 @@ genos: person
 title: "Sam — keeps this garden"
 status: active
 summary: "The gardener: the person who keeps this garden, and owns and answers for the machines recorded here."
-nature: empsychon
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -64,8 +64,8 @@ Pick the most specific relation that is true; `refs` is the open fallback.
 | a running thing sits on a machine | `lives_in: { bean: … }` | the machine must say what habitat it offers (`provides_habitat`) |
 | a running thing is a copy of some software | `instance_of: { bean: … }` | required on `genos: instance`, together with `lives_in` |
 | it cannot work without another thing | `depends_on: { <name>: { bean: … } }` | must stay acyclic |
-| people agreed on something | a `contract` bean: `parties`, `words`, `clauses`, `transactions` | may be owned by none of its parties: `crown: logos`, answered for by `parties: true` |
-| who took part in a happening | `refs` on the `event`, `rel: host`, `present`, `invited`, `paid` | owned by none of them: `crown: logos`, answered for by its host |
+| people agreed on something | a `contract` bean: `parties`, `words`, `clauses`, `transactions` | may be owned by none of its parties: `crown: agape`, answered for by `parties: true` |
+| who took part in a happening | `refs` on the `event`, `rel: host`, `present`, `invited`, `paid` | owned by none of them: `crown: agape`, answered for by its host |
 | anything else — "serves", "is DNS for", "backs up" | `refs: { <slot>: { bean: …, rel: <kebab-verb> } }` | `rel` is free text, so a new relation needs no rule change |
 
 Anchors say what an object IS, so two gardens recognise the same thing. A machine is best anchored on
@@ -127,7 +127,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:example-org-registration", class: logical, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 over:
   example-org: { thing: { bean: example-org } }
@@ -212,7 +212,7 @@ genos: instance
 title: "website — nginx on the NAS, serving example.org"
 status: active
 summary: "The web server instance on the NAS that answers for example.org."
-nature: empsychon
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -230,7 +230,8 @@ The website.
 
 ## A rented VPS
 
-A virtual machine has no matter of its own: it is a `virtual-host`, of the nature empsychon, and lapses at teardown.
+A virtual machine has no matter of its own: it is a `virtual-host`, of the nature lekton — placed by its habitat, taking
+no room in space — and it lives while it runs.
 It is identified by its name or by the id its provider assigns — never by a serial, which is the hypervisor's. The
 provider owns it and Sam answers for what runs on it.
 
@@ -242,7 +243,7 @@ genos: virtual-host
 title: "vps-a — a rented virtual server"
 status: active
 summary: "A VPS rented from a hosting provider."
-nature: empsychon
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -317,7 +318,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:ali-consent", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: 2026-09-01 }
@@ -339,7 +340,7 @@ genos: person
 title: "Ali"
 status: active
 summary: "Ali, who keeps a garden of her own; Sam shares costs with her."
-nature: empsychon
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -362,7 +363,8 @@ first and know the other gardener only by a name your own garden gave them, they
 
 A dinner, a meeting, a call in which something was agreed is an `event`. When is `timing`, at the resolution
 actually known; who took part is `refs`, each naming what they were. A happening between people is owned by none
-of them: it ends at the crown, `logos`, as an agreement may, and whoever hosted it answers for it.
+of them: it ends at the crown, `agape` — the life chain: held by the lives of those who made it happen — as an
+agreement may, and whoever hosted it answers for it.
 
 <!-- example: beans/dinner-at-sams.md -->
 ```markdown
@@ -378,7 +380,7 @@ identity:
   anchors:
     - { key: identifier, value: "event:dinner-at-sams-2026-09-12", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
   start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }
@@ -396,8 +398,8 @@ cost and Ali one. That is an agreement, so it is a `contract` bean, and what mov
 an amount, the `day` it moved where that is known, who paid how much of it (a single payer who states no amount
 paid the whole), and who bears it in whole-number shares — each party once in each list, in any order.
 
-- **An agreement between people may be owned by none of them.** Then it ends at the crown (`logos`, the branch for
-  what is lekton, said and agreed), and its parties answer for it, each for what binds it:
+- **An agreement between people may be owned by none of them.** Then it ends at the crown (`agape`, the life chain:
+  held by the life its parties gave it by accepting it), and its parties answer for it, each for what binds it:
   `responsibility: { legal: { parties: true } }`.
   One a person wrote and offers may instead be owned by its author.
 - **An offer is not an acceptance.** A party with `accepted` said yes on that day; a party without it has no
@@ -433,7 +435,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:shared-camera", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: 2026-09-10 }
@@ -480,7 +482,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:washer-loan", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, role: lender, accepted: 2026-09-12 }
@@ -697,7 +699,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:bike-repair", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   owner: { who: { bean: sam } }
@@ -893,7 +895,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:agency-noor", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   author: { who: { bean: sam }, role: author, accepted: 2026-06-02 }
@@ -959,7 +961,7 @@ genos: person
 title: "Noor — Sam's literary agent"
 status: active
 summary: "A literary agent; she places Sam's novel."
-nature: empsychon
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -1033,7 +1035,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:salt-road-heron", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   author: { who: { bean: sam }, role: author, accepted: 2026-10-20 }
@@ -1062,7 +1064,7 @@ genos: person
 title: "p-7d2e41c9"
 status: active
 summary: "a person"
-nature: empsychon
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -1170,7 +1172,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:lale-employment", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   employer: { who: { bean: tile-workshop }, role: employer, accepted: 2026-03-01 }
@@ -1204,7 +1206,7 @@ genos: person
 title: "Lale — a tiler at the workshop"
 status: active
 summary: "A tiler; she lays floors and teaches the evening class."
-nature: empsychon
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -1240,7 +1242,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:job-kitchen-floor", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   workshop: { who: { bean: tile-workshop }, role: contractor, accepted: 2026-09-15 }
@@ -1267,7 +1269,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:job-bathroom-wall", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   workshop: { who: { bean: tile-workshop }, role: contractor }
@@ -1298,7 +1300,7 @@ identity:
   anchors:
     - { key: identifier, value: "event:kiln-firing-2026-11", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
   start: { system: gregorian-civil, at: "2026-11-20 09:00+01:00", unit: hour }
@@ -1322,7 +1324,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:evening-class", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   workshop: { who: { bean: tile-workshop }, role: school, accepted: 2026-09-20 }
@@ -1363,11 +1365,12 @@ thing the standard has, so the garden adds one (`local_gene`).
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
 local_gene:
-  - { genos: hive, of_nature: empsychon, meaning: "a colony of bees, and the box it lives in" }
+  - { genos: hive, of_nature: soma, level: population, meaning: "a colony of bees, and the box it lives in" }
 registry_additions:
   anchor_systems:
     - system: apiary-site
       dimension: place
+      complement: [stated, bearer]
       resolves_through: geographic
       levels: [ { level: valley }, { level: site } ]
       neighbours: counted
@@ -1462,7 +1465,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:bee-coop", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, role: member, accepted: 2026-04-10 }
@@ -1495,7 +1498,7 @@ genos: person
 title: "Derya — a beekeeper in the co-op"
 status: active
 summary: "A beekeeper; she keeps hives in the west valley."
-nature: empsychon
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -1522,7 +1525,7 @@ genos: hive
 title: "hive-orchard-1 — Sam's first hive, in the orchard"
 status: active
 summary: "A colony Sam keeps at the orchard site."
-nature: empsychon
+nature: soma
 identity:
   status: provisional
   anchors:
@@ -1576,7 +1579,7 @@ candle is a body of matter, which the standard has no kind for; the garden adds 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
 local_gene:
-  - { genos: material, of_nature: soma, meaning: "a body of matter kept and used: a candle" }
+  - { genos: material, of_nature: soma, level: material, meaning: "a body of matter kept and used: a candle" }
 ```
 
 Each hour's heights are a **series** on the candle's own bean, one row per hour. The ruler reads to a fifth of a
@@ -1671,7 +1674,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:candle-supply", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   maker: { who: { bean: sam }, role: maker, accepted: 2026-10-28 }
@@ -1852,6 +1855,8 @@ identity:
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: sam } } }
 responsibility: { legal: { holder: { bean: sam } } }
+located_at:
+  - { system: uri, at: "https://bakery.example.org/drawings/", openness: here }
 view:
   drawings: file:drawings/bakery.py
   reference:

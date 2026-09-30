@@ -700,7 +700,7 @@ class Reckoner:
         for d in decls or []:
             if not isinstance(d, dict):
                 continue
-            # WHERE AN INPUT COMES FROM (`origin`, `{act, nature?, by?}`): the reader's clock, another garden, or else
+            # WHERE AN INPUT COMES FROM (`origin`, `{act, nature?, alive?, by?}`): the reader's clock, another garden, or else
             # the asker's word — recorded on its line as said, and by what nature where the law says.
             n, o = d.get('name'), d.get('origin') if isinstance(d.get('origin'), dict) else {}
             if o.get('act') == 'read' and o.get('by') == dmpass.READER:

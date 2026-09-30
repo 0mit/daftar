@@ -47,7 +47,7 @@ genos: person
 title: "Sam — keeps this garden"
 status: active
 summary: "The gardener: the person who keeps this garden, and owns and answers for the machines recorded here."
-nature: empsychon
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -97,7 +97,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:ali-consent", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted — where they accepted and nobody said the day: `{ system: event-anchored, at: "after:<what it followed>", unit: day }`, placed by what it followed; empty records no acceptance, and so no consent (F2)
@@ -115,7 +115,7 @@ genos: person
 title: "Ali"
 status: active
 summary: "Ali, who keeps a garden of her own; Sam shares costs with her."
-nature: empsychon
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -146,7 +146,7 @@ identity:
   anchors:
     - { key: identifier, value: "event:dinner-at-sams", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
   start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }   # at: the example's
@@ -175,7 +175,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:shared-camera", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
@@ -215,7 +215,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:washer-loan", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, role: lender, accepted: }   # accepted: the day this party accepted, or unsaid, `event-anchored`; empty records no acceptance, and so no consent (F2)
@@ -296,7 +296,7 @@ identity:
   anchors:
     - { key: identifier, value: "event:call-with-ali", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
   start: { system: event-anchored, at: "after:dinner-at-sams", unit: day, note: "after the dinner at Sam's; its day was not said" }
@@ -336,7 +336,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:phone-loan", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, role: lender, accepted: { system: event-anchored, at: "after:dinner-at-sams", unit: day } }

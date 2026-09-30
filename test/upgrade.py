@@ -684,7 +684,7 @@ put21('VOCAB.md', get21('VOCAB.md')
                '    context_keys: [widget_part]\n    schema: { shape: scalar, required_on_kinds: [widget] }   # a widget names it\n', 1)
       .replace('local_gene: []', 'local_kinds:\n  # a genos this estate needs, as 21.0 spelled it\n'
                '  - { kind: widget, of_nature: "metaphysical", meaning: "a made thing, described and agreed" }', 1))
-put21('beans/sam.md', in21(get21('beans/sam.md')).replace(
+put21('beans/sam.md', in21(get21('beans/sam.md')).replace('nature: physical', 'nature: living', 1).replace(
     'owned_by: { legal: { crown: love } }', 'owned_by: { legal: { crown: love } }   # the crown: love owns the living, while alive', 1))
 put21('beans/laptop.md', in21(_ex['beans/laptop.md']) + '\nIts kind: host, of nature physical — prose, the garden\'s own words.\n')
 put21('beans/w1.md', '---\nbean: w1\nkind: widget\ntitle: "a widget"\nstatus: active\nsummary: "a made thing"\n'
@@ -725,8 +725,8 @@ _b = {b: get21(f'beans/{b}.md') for b in ('sam', 'laptop', 'w1')}
 check("every bean's `kind:` is its `genos:`, and no bean says `kind:` any more",
       all(re.search(r'(?m)^genos: ', t) and not re.search(r'(?m)^kind:', t) for t in _b.values())
       and re.search(r'(?m)^genos: widget$', _b['w1']), _b)
-check("...its nature is soma, lekton or empsychon — a quoted value keeps its quotes",
-      re.search(r'(?m)^nature: soma$', _b['laptop']) and re.search(r'(?m)^nature: empsychon$', _b['sam'])
+check("...its nature is soma or lekton — a person `living` crosses to `empsychon` and on to `soma` — a quoted value keeps its quotes",
+      re.search(r'(?m)^nature: soma$', _b['laptop']) and re.search(r'(?m)^nature: soma$', _b['sam'])
       and re.search(r'(?m)^nature: "lekton"$', _b['w1']), _b)
 check("...a person's crown is agape, and the comment on that line — the garden's own words — is left as it was written",
       'owned_by: { legal: { crown: agape } }   # the crown: love owns the living, while alive' in _b['sam'], _b['sam'])
@@ -745,7 +745,8 @@ _tl = next((l for l in _j.splitlines() if l.startswith('- translated:')), '')
 _bl = next((l for l in _j.splitlines() if l.startswith('- beans:')), '')
 check("the journal's `translated:` line says what was renamed, how often and where, and `beans:` names each bean",
       'std-vocab 22.0' in _tl and '`kind` -> `genos` ×3' in _tl and 'nature physical -> soma ×1' in _tl
-      and 'crown love -> agape ×1' in _tl and '`local_kinds` -> `local_gene`' in _tl and '`required_on_kinds` -> `required_on_gene`' in _tl
+      and 'crown love -> agape ×1' in _tl and 'nature living -> empsychon ×1' in _tl and '`empsychon` -> `soma` ×1' in _tl
+      and '`local_kinds` -> `local_gene`' in _tl and '`required_on_kinds` -> `required_on_gene`' in _tl
       and all(f'[[{b}]]' in _bl for b in ('sam', 'laptop', 'w1')) and 'wind-up' not in _bl, _j[-1200:])
 check("...and the console says it too", 'translated: std-vocab 22.0' in r.stdout, r.stdout[-600:])
 check("the garden's own code that says a retired word, and a template shaped like a bean, are NAMED for a person and left "
@@ -1311,8 +1312,9 @@ check("each prose `when` is written `{ said: … }`: a quoted one keeps its own 
       _rw == _roof.replace(_WHEN_PLAIN, '    when: { said: "the roof is on, and the scaffold is down" }\n', 1)
       .replace(_WHEN_QUOTED, "    when: { said: 'the gutters are hung' }   # as Ali put it\n", 1)
       .replace(_WHEN_FOLDED, '    when:\n      said: >\n        the first frost\n        after the roof\n', 1)
-      .replace('{ key: contract_id,', '{ key: identifier,', 1), _rw[-700:])
-_id26 = lambda t: re.sub(r'key: (person_id|emp_id|contract_id),', 'key: identifier,', t)   # the 26.0 step, crossed too
+      .replace('{ key: contract_id,', '{ key: identifier,', 1).replace('crown: logos', 'crown: agape'), _rw[-700:])
+_id26 = lambda t: re.sub(r'key: (person_id|emp_id|contract_id),', 'key: identifier,', t).replace(   # 26.0, crossed too
+    'nature: empsychon', 'nature: soma').replace('crown: logos', 'crown: agape')                   # ...and 31.0
 check("...and the person and their anchor, which only a person can put right, are left as they were — but for the "
       "anchor key 26.0 made one word",
       get24('beans/ali.md') == _id26(_ali) and get24('beans/bo.md') == _id26(_bo))

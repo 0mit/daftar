@@ -157,6 +157,24 @@ def archetypes():
     return {r.get("archetype"): r for r in registry("view_archetypes")}
 
 
+def proposed_archetype(v):
+    """The operate shape the facts propose (`view_archetypes`: `frame` and `reads`): the first whose frame the drawing
+    is laid out along, else the first whose terms the drawn being holds; the health chain where none does. The page may
+    draw another; `dmview check` says when it does."""
+    kk, target, folder = draws_of(v)
+    f = fm(target, folder) if kk else {}
+    rows = [r for r in registry("view_archetypes") if isinstance(r, dict)]
+    for r in rows:
+        if v.get("frame") and v.get("frame") in (r.get("frame") or []):
+            return r.get("archetype")
+    if kk == "bean" and any(e.get("monitor") == target for _i, e in entries("view_monitors")):
+        return "scoreboard"             # what is drawn is the watching itself: a monitor of this very page
+    for r in rows:
+        if any(f.get(x) for x in (r.get("reads") or [])):
+            return r.get("archetype")
+    return "health-chain"
+
+
 def unit(u):
     """(quantity, [numerator, denominator]) of a unit the law, or the garden's additions, declare; (None, None) else."""
     row = law().UNITS.get(u) if u else None
@@ -402,6 +420,85 @@ def drawings_path():
     return path if os.path.commonpath([top, os.path.realpath(path)]) == top else None
 
 
+PALETTE_TOKENS = ("bg", "panel", "line", "fg", "muted", "accent", "host", "svc", "ext", "store", "off", "nfill", "gauge",
+                  "up", "down", "nd", "warn")
+_COLOUR = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+
+
+def palette():
+    """(palette, problems): the garden's palette — {mode: {token: colour}} for the modes day, night and print — read
+    from the file the page names (`view.palette`, `file:<path>` inside the garden), each colour a hex colour and each
+    token one the kit draws with; {} where the page names none."""
+    d = page_view().get("palette")
+    if d is None:
+        return {}, []
+    rel = d[5:] if isinstance(d, str) and d.startswith("file:") else ""
+    if not rel or rel.startswith("/") or "\\" in rel or any(x in ("", ".", "..") for x in rel.split("/")):
+        return {}, ["the page's palette is `file:<path>`, a path inside the garden with no `..` — not %r" % d]
+    path = os.path.join(ROOT, *rel.split("/"))
+    if not os.path.isfile(path):
+        return {}, ["the page's palette %s is no file of the garden" % d]
+    data = dmparse.loads(open(path, encoding="utf-8").read())
+    modes = (data or {}).get("modes") if isinstance(data, dict) else None
+    out, probs = {}, []
+    for m, toks in (modes or {}).items() if isinstance(modes, dict) else []:
+        if m not in ("day", "night", "print"):
+            probs.append("palette: mode %r is not day, night or print" % m)
+            continue
+        for k, v in (toks or {}).items() if isinstance(toks, dict) else []:
+            if k not in PALETTE_TOKENS or not _COLOUR.match(str(v)):
+                probs.append("palette: %s.%s = %r — a token the kit draws with (%s), and a hex colour" % (m, k, v, ", ".join(PALETTE_TOKENS)))
+            else:
+                out.setdefault(m, {})[k] = str(v)
+    return out, probs
+
+
+def palette_css():
+    """The garden's palette as the kit's own custom properties: night the ground, day where the reader's device is light,
+    print on paper."""
+    p, _ = palette()
+    block = lambda d: ";".join("--%s:%s" % (k, v) for k, v in d.items())
+    css = []
+    if p.get("night"):
+        css.append(".vw{%s}" % block(p["night"]))
+    if p.get("day"):
+        css.append(".vw.light{%s}" % block(p["day"]))
+    if p.get("print"):
+        css.append("@media print{.vw,.vw.light{%s}}" % block(p["print"]))
+    return "".join(css)
+
+
+def sheet():
+    """The facts a sheet's title block is made of, all held already: the page, the garden and its release, the commit it
+    is drawn from and its day, who stated the page, and where it is shown first."""
+    def git(*a):
+        try:
+            return subprocess.run(["git", "-C", ROOT] + list(a), capture_output=True, text=True, encoding="utf-8",
+                                  timeout=20).stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            return ""
+    places = [e for e in (fm(PAGE).get("located_at") or []) if isinstance(e, dict)]
+    first = places[0] if places else {}
+    shown = str(first.get("at") or first.get("system") or "")
+    if shown and not private() and _ADDRESS.search(shown):
+        shown = str(first.get("system") or "")
+    prov = fm(PAGE).get("provenance") if isinstance(fm(PAGE).get("provenance"), dict) else {}
+    return {"page": str(page().get("title") or PAGE), "garden": garden_name(),
+            "release": str(fm_path(os.path.join(ROOT, "GARDEN.md")).get("daftar_release") or ""),
+            "commit": git("rev-parse", "--short=12", "HEAD"), "day": git("log", "-1", "--format=%cs"),
+            "by": str(prov.get("by") or ""), "shown": shown}
+
+
+def changed_beans():
+    """The beans and mappings the last commit changed: what a sheet's revision clouds are drawn around."""
+    try:
+        r = subprocess.run(["git", "-C", ROOT, "diff", "--name-only", "HEAD~1", "HEAD", "--", "beans", "mappings"],
+                           capture_output=True, text=True, encoding="utf-8", timeout=20)
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    return {os.path.splitext(os.path.basename(f))[0] for f in r.stdout.split() if f.endswith(".md")} if r.returncode == 0 else set()
+
+
 def garden():
     """The garden's own drawing module, loaded from the file the page names; the kit's names are importable from it."""
     global _GARDEN
@@ -464,6 +561,91 @@ def adapter(code):
     return mod
 
 
+SURFACES = os.path.join(HERE, "surfaces")
+_SURFACES = {}
+
+
+def surface(code):
+    """The surface for a technology: `surfaces/<code>.py` beside this file, or None — named, as a source adapter is, by
+    the code of the technology catalogue it speaks: static HTML, daftar's own server, a framework's pages."""
+    if code in _SURFACES:
+        return _SURFACES[code]
+    path = os.path.join(SURFACES, "%s.py" % code) if isinstance(code, str) and re.fullmatch(r"[a-z0-9][a-z0-9-]*", code) else None
+    mod = None
+    if path and os.path.isfile(path):
+        if SURFACES not in sys.path:
+            sys.path.insert(0, SURFACES)
+        spec = importlib.util.spec_from_file_location("view_surface_" + code.replace("-", "_"), path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+    _SURFACES[code] = mod
+    return mod
+
+
+_PORTS = {"http": "80", "https": "443"}
+_URI = re.compile(r"^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?")    # RFC 3986, Appendix B
+_AUTHORITY = re.compile(r"^(?:[^@]*@)?(\[[^\]]+\]|[^:]*)(?::(\d*))?$")
+
+
+def answering(uri):
+    """The being that answers at a URI: the one whose `endpoints` state its address and port. A URI is measured from no
+    being, so it names none; the being serving it says so itself. None where no being here says it."""
+    m = _URI.match(str(uri))
+    a = _AUTHORITY.match(m.group(4) or "") if m and m.group(4) else None
+    if not a:
+        return None
+    host, port = a.group(1).strip("[]").lower(), a.group(2) or _PORTS.get((m.group(2) or "").lower(), "")
+    for b in bean_ids():
+        for e in fm(b).get("endpoints") or []:
+            if isinstance(e, dict) and str(e.get("at")).lower() == host and str(e.get("port", "")) == port:
+                return b
+    return None
+
+
+def where_shown():
+    """(svg, places) — the page's own chain to the eye, engraved from its facts: each place it states it is shown at
+    (`located_at`), the being that holds it there — the `host` of a path, the being whose `endpoints` answer at a URI —
+    and where that being runs (`lives_in`). On a public page a place whose position is an address is drawn by its
+    system alone."""
+    import view_engrave
+    title = str(page().get("title") or PAGE)
+    parts, pipes, seen, places = [{"proc": title, "rail": "the page", "role": "this page"}], [], {title}, []
+
+    def part(name, rail, role):
+        if name not in seen:
+            seen.add(name)
+            parts.append({"proc": name, "rail": rail, "role": role})
+    for e in fm(PAGE).get("located_at") or []:
+        if not isinstance(e, dict):
+            continue
+        at = str(e.get("at") or "")
+        hb = e["host"].get("bean") if isinstance(e.get("host"), dict) else answering(at) if e.get("system") == "uri" else None
+        if not private() and _ADDRESS.search(at):
+            at = ""
+        where = ("%s %s" % (e.get("system"), at)).strip()
+        rail = "shown at: %s" % e.get("system")
+        part(where, rail, "open %s" % e.get("openness", "") if e.get("openness") else "")
+        pipes.append({"from": title, "to": where, "channel": "shown at", "rail": rail})
+        places.append({"system": e.get("system"), "at": at, "host": hb, "openness": e.get("openness")})
+        if hb and fm(hb):
+            part(hb, rail, "%s · %s" % (fm(hb).get("genos", ""), fm(hb).get("nature", "")))
+            pipes.append({"from": where, "to": hb, "channel": "answered by" if e.get("system") == "uri" else "held by",
+                          "rail": rail})
+            lb = (fm(hb).get("lives_in") or {}).get("bean") if isinstance(fm(hb).get("lives_in"), dict) else None
+            if lb and fm(lb):
+                part(lb, rail, "%s · %s" % (fm(lb).get("genos", ""), fm(lb).get("nature", "")))
+                pipes.append({"from": hb, "to": lb, "channel": "runs on", "rail": rail})
+    if len(parts) < 2:
+        return "", places
+    svg, _rep = view_engrave.engrave(parts, pipes, key="proc", rail="rail", of_bean=PAGE, parts_field="located_at",
+                                     pipes_field="located_at", sub="role", aria="where this page is shown")
+    return svg, places
+
+
+def surfaces_here():
+    return sorted(n[:-3] for n in os.listdir(SURFACES) if n.endswith(".py")) if os.path.isdir(SURFACES) else []
+
+
 def adapters_here():
     return sorted(n[:-3] for n in os.listdir(SOURCES) if n.endswith(".py")) if os.path.isdir(SOURCES) else []
 
@@ -515,7 +697,10 @@ def computing(b):
     technology the binding gives a query for."""
     if b.get("live") == "live-state":
         return reached(b.get("probe"))
-    return next((m for m in monitors() if m["adapter"] and m["technology"] in (b.get("query") or {})), None)
+    m = next((m for m in monitors() if m["adapter"] and m["technology"] in (b.get("query") or {})), None)
+    if m is None and b.get("signal"):     # a published signal: the first monitor whose adapter asks signals in its language
+        m = next((m for m in monitors() if m["adapter"] and hasattr(m["adapter"], "signal_query")), None)
+    return m
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -578,7 +763,9 @@ def _binding(key, bk, b, by):
     r = {"id": bk, "el": el, "live": b.get("live"), "name": b.get("label") or by[el]["label"], "short": b.get("short", ""),
          "unit": b.get("unit") or "", "q": q, "f": f, "warn": count(b.get("warn")), "crit": count(b.get("crit")),
          "item_names": b.get("item_names") if isinstance(b.get("item_names"), dict) else {},
-         "query": queries, "items_by": items_by, "probe": b.get("being") or by[el]["bean"]}
+         "query": queries, "items_by": items_by, "probe": b.get("being") or by[el]["bean"],
+         "signal": next((dict(s) for s in registry("signals") if isinstance(s, dict) and s.get("signal") == b.get("signal")), None)
+         if b.get("signal") else None}
     if r["live"] == "live-state" and not r["probe"]:
         return None, ["%s: %s is a live-state on %r, which depicts no being — give the binding `being`" % (key, bk, el)]
     m = computing(r)
@@ -932,6 +1119,75 @@ def alert_names(beans, binds):
     return out
 
 
+def details(v, els):
+    """The DETAILS a drawing opens: each boundary an `opens` entry without a `view` names, with its box and the drawn
+    elements that stand inside it — the region, at a larger scale, as a technical drawing's detail view is."""
+    by = {e["id"]: e for e in els}
+    out = []
+    for o in v.get("opens") or []:
+        if not isinstance(o, dict) or o.get("view") or o.get("element") not in by:
+            continue
+        b = by[o["element"]]
+        if b["pattern"] != "boundary" or not b.get("box"):
+            continue
+        bx, by_, bw, bh = b["box"]
+
+        def within(e):
+            if e.get("ends"):                             # a line is inside only when both its ends are
+                return all(bx <= p[0] <= bx + bw and by_ <= p[1] <= by_ + bh for p in e["ends"])
+            x, y, w, h = e["box"]
+            if e["pattern"] in ("boundary", "band"):      # a region is inside another only when wholly contained
+                return bx <= x and x + w <= bx + bw and by_ <= y and y + h <= by_ + bh
+            return bx <= x + w / 2 <= bx + bw and by_ <= y + h / 2 <= by_ + bh
+        inside = [e["id"] for e in els if e["id"] != b["id"] and (e.get("box") or e.get("ends")) and within(e)]
+        out.append({"el": b["id"], "label": b["label"], "box": b["box"], "inside": inside})
+    return out
+
+
+def closed_links(dets, els):
+    """While details are closed, the flows between two regions are carried as ONE line a pair — as a model's higher zoom
+    aggregates the relationships of what it closes. ({flow ids hidden}, [{from, to, flows}]): a flow whose ends both
+    lie in closed regions is hidden, and each pair of distinct regions its ends lie in is one link."""
+    def region(p):
+        hit = [d for d in dets if d["box"][0] <= p[0] <= d["box"][0] + d["box"][2] and d["box"][1] <= p[1] <= d["box"][1] + d["box"][3]]
+        return min(hit, key=lambda d: d["box"][2] * d["box"][3])["el"] if hit else None   # the innermost holds it
+    top = {d["el"] for d in dets} - {i for d in dets for i in d["inside"]}
+    lift = {}
+    for d in dets:                                   # a region inside a closed region is carried by the outermost
+        lift[d["el"]] = d["el"]
+    for d in dets:
+        for d2 in dets:
+            if d2["el"] in d["inside"]:
+                lift[d2["el"]] = d["el"] if d["el"] in top else lift.get(d["el"], d["el"])
+    shown = [e for e in els if e.get("box") and e["pattern"] not in ("flow", "signal", "band", "boundary", "label")]
+
+    def part(p):                                     # the drawn part an end touches, outside every closed region
+        hit = [e for e in shown if e["box"][0] - 3 <= p[0] <= e["box"][0] + e["box"][2] + 3
+               and e["box"][1] - 3 <= p[1] <= e["box"][1] + e["box"][3] + 3]
+        return min(hit, key=lambda e: e["box"][2] * e["box"][3])["id"] if hit else None
+    hidden, pairs = set(), {}
+    for e in els:
+        if e["pattern"] not in ("flow", "signal") or not e.get("ends"):
+            continue
+        a, b = region(e["ends"][0]), region(e["ends"][1])
+        if a is None and b is None:
+            continue
+        a = lift.get(a, a) if a else part(e["ends"][0])   # a flow leaving a closed region leaves from its edge
+        b = lift.get(b, b) if b else part(e["ends"][1])
+        if a is None or b is None:
+            continue
+        hidden.add(e["id"])
+        if a != b:                                    # one line a pair, arrowed each way its flows go
+            k = tuple(sorted((a, b)))
+            pairs.setdefault(k, {"flows": [], "ways": set(), "labels": []})
+            pairs[k]["flows"].append(e["id"])
+            pairs[k]["labels"].append(e.get("label") or "")
+            pairs[k]["ways"].add("to" if (a, b) == k else "from")
+    return hidden, [{"from": b if v["ways"] == {"from"} else a, "to": a if v["ways"] == {"from"} else b, "flows": v["flows"],
+                     "both": len(v["ways"]) == 2, "label": v["labels"][0] if len(v["flows"]) == 1 else ""}
+                    for (a, b), v in sorted(pairs.items())]
+
+
 def views(figs=None):
     """One view per drawing, in the page's order: what every renderer mounts."""
     figs = figs or compose_all()
@@ -939,6 +1195,8 @@ def views(figs=None):
     live = live_meanings()
     every = page_bindings(figs)
     out = []
+    _sheet, _changed = sheet(), changed_beans()
+    _keys = [k for k, _v in views_raw() if k in figs]
     for k, v in views_raw():
         if k not in figs:
             continue
@@ -968,6 +1226,13 @@ def views(figs=None):
                     "questions": {q.get("lens"): q.get("ask") for q in (v.get("questions") or []) if isinstance(q, dict)},
                     "operate": operate(k, v), "wiring": w, "window": {"hours": hours, "step": step},
                     "patternMeaning": {p: kit.PATTERNS.get(p, "") for p in pats},
+                    "opens": [{"el": o.get("element"), "view": o.get("view")} for o in (v.get("opens") or []) if isinstance(o, dict) and o.get("view")],
+                    "details": details(v, els),
+                    "links": closed_links(details(v, els), els)[1],
+                    "frame": v.get("frame"), "proposed": proposed_archetype(v),
+                    "sheet": dict(_sheet, n=_keys.index(k) + 1, of=len(_keys)),
+                    "changed": [e["id"] for e in els if e.get("bean") in _changed
+                                or (isinstance(e.get("of"), dict) and e["of"].get("bean") in _changed)],
                     "alerts": alert_names([p["bean"] for p in parts], binds)})
     return out
 
@@ -1030,10 +1295,23 @@ def check(figs=None):
             for i, s in enumerate(st):
                 n = len(("%s %s" % (s.get("label", ""), s.get("doer", ""))).split())
                 if n > int(mx["words_per_stage"]):
-                    warns.append("%s: story stage %d says %d words, and the %s lens holds %s a stage"
+                    errs.append("%s: story stage %d says %d words, and the %s lens holds %s a stage"
                                  % (k, i + 1, n, story_lens["id"], mx["words_per_stage"]))
-        if (und.get("max") or {}).get("elements") is not None and len(els) > int(und["max"]["elements"]):
-            warns.append("%s: the drawing has %d elements, and the %s lens holds %s" % (k, len(els), und["id"], und["max"]["elements"]))
+        _dt = details(v, els)
+        _gone, _links = closed_links(_dt, els)
+        _hidden = {i for d in _dt for i in d["inside"]} | _gone
+        _shown = [e for e in els if e["id"] not in _hidden] + _links
+        if (und.get("max") or {}).get("elements") is not None and len(_shown) > int(und["max"]["elements"]):
+            errs.append("%s: the drawing has %d elements%s, and the %s lens holds %s — open a part as a drawing of its own, "
+                        "or a boundary as a detail (`views.opens`), rather than crowd it"
+                        % (k, len(_shown), " outside its details" if _dt else "", und["id"], und["max"]["elements"]))
+        for d in _dt:
+            # a detail counts what stands in it outside the details it holds itself: details nest, as regions do
+            _nested = {i for d2 in _dt if d2["el"] in d["inside"] for i in d2["inside"]}
+            _n = len(set(d["inside"]) - _nested)
+            if (und.get("max") or {}).get("elements") is not None and _n > int(und["max"]["elements"]):
+                errs.append("%s: the detail %r holds %d elements, and the %s lens holds %s — a boundary inside it may open "
+                            "a detail of its own" % (k, d["el"], _n, und["id"], und["max"]["elements"]))
         for e in els:
             if e.get("unfit_address"):
                 warns.append("%s: %s's address %s fits nowhere in its box (%s wide): it is on the part's card, and a wider "
@@ -1065,13 +1343,40 @@ def check(figs=None):
         tiles = health_tiles(els, binds)
         if v.get("archetype") == "health-chain" and (op_lens.get("max") or {}).get("tiles") is not None \
                 and len(tiles) > int(op_lens["max"]["tiles"]):
-            warns.append("%s: %d tiles, and the %s lens holds %s" % (k, len(tiles), op_lens["id"], op_lens["max"]["tiles"]))
+            errs.append("%s: %d tiles, and the %s lens holds %s" % (k, len(tiles), op_lens["id"], op_lens["max"]["tiles"]))
         parts = anatomy_parts(els, v)
         if (ins.get("max") or {}).get("cards") is not None and len(parts) > int(ins["max"]["cards"]):
-            warns.append("%s: %d cards, and the %s lens holds %s" % (k, len(parts), ins["id"], ins["max"]["cards"]))
+            errs.append("%s: %d cards, and the %s lens holds %s" % (k, len(parts), ins["id"], ins["max"]["cards"]))
+        # ZOOM: an element that opens a drawing of its own is one the drawing draws, and the drawing it opens is the page's
+        by_id = {e["id"]: e for e in els}
+        for o in v.get("opens") or []:
+            if not isinstance(o, dict):
+                continue
+            if not o.get("view") and o.get("element") in by_id and by_id[o["element"]]["pattern"] != "boundary":
+                errs.append("%s: %r opens as a detail, and a detail is the region a boundary draws — %r is a %s"
+                            % (k, o["element"], o["element"], by_id[o["element"]]["pattern"]))
+            if o.get("element") not in by_id:
+                errs.append("%s: opens %r from element %r, which the drawing does not have" % (k, o.get("view"), o.get("element")))
+            elif by_id[o["element"]]["pattern"] in ("flow", "signal"):
+                errs.append("%s: opens %r from %r, a flow — a drawing opens from a part it depicts" % (k, o.get("view"), o["element"]))
+            if o.get("view") == k:
+                errs.append("%s: element %r opens the drawing it is in" % (k, o.get("element")))
+        _prop = proposed_archetype(v)
+        if v.get("archetype") and _prop not in ("health-chain", v.get("archetype")):
+            warns.append("%s: the facts propose the %s shape, and the page draws %s" % (k, _prop, v.get("archetype")))
         for el in els:
             if el["bean"] and not fm(el["bean"]):
                 errs.append("%s: element %r depicts %r, which is no bean of the garden" % (k, el["id"], el["bean"]))
+    errs += palette()[1]
+    # THE PAGE STATES WHERE IT IS SHOWN: a URI where it is served, a path where a copy is kept — its own `located_at`
+    shown = [e for e in (fm(PAGE).get("located_at") or []) if isinstance(e, dict)]
+    if not shown:
+        errs.append("%s: the page states nowhere it is shown — its `located_at`: a `uri` where it is served, a path where a "
+                    "copy of it is kept (`unix-filesystem`) with the `host` that holds it" % PAGE)
+    for e in shown:
+        if e.get("system") == "uri" and e.get("at") and not answering(e["at"]):
+            warns.append("%s: the page is served at %s, and no being here says it answers there — the server's own "
+                         "`endpoints`, with that address and port" % (PAGE, e["at"]))
     for m in monitors():
         if not fm(m["bean"]):
             continue                                 # the gate refuses a monitor the garden does not hold
