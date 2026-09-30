@@ -183,7 +183,7 @@ beans:
       sam: { who: { bean: sam }, accepted: 2026-09-12 }
       ali: { who: { bean: ali }, accepted: { system: event-anchored, at: "after:dinner-at-sams", unit: day } }
     over:
-      - { what: "a storage unit the two of them rent" }
+      storage-unit: { what: "a storage unit the two of them rent" }
     words: { form: spoken, at: { bean: dinner-at-sams }, agreed: 2026-09-12 }
     transactions:
       september:
