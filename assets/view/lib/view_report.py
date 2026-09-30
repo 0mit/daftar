@@ -83,6 +83,7 @@ def payload():
         "order": [key for key, _v in vm.views_raw() if key in views],
         "reference": ref,
         "where": dict(zip(("svg", "places"), vm.where_shown())),
+        "palette_css": vm.palette_css(),
         "addresses": {r["being"]: vm.addresses(r["being"]) for r in ref if vm.fm(r["being"])},
         "beans": catalog(),
         "author": {"views": {key: {a: v.get(a) for a in vm.EDITABLE if v.get(a) is not None} for key, v in vm.views_raw()},
@@ -354,7 +355,7 @@ def build_html(p):
             '<div class="seg" id="lens"></div><button class="btn" id="authbtn">Author</button></div><div id="livebar" class="kd"></div></header>'
             '<main><div id="view"></div><section id="author"></section></main>'
             '<script type="application/json" id="viewdata">%s</script><script>%s</script><script>%s</script></body></html>'
-            % (title, PAGE_CSS, kit.SCHEMA_CSS, title, esc(p["page"]["id"]), esc(p.get("garden", "")), esc(p.get("release", "")),
+            % (title, PAGE_CSS, kit.SCHEMA_CSS + p.get("palette_css", ""), title, esc(p["page"]["id"]), esc(p.get("garden", "")), esc(p.get("release", "")),
                stamp, data, kit.RUNTIME_JS, SCRIPT))
 
 

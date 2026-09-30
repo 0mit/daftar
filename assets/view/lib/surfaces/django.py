@@ -32,4 +32,4 @@ def render(payload, key=None, level=None, **_):
     data = json.dumps({"view": view, "level": level}, ensure_ascii=False).replace("</", "<\\/")
     return ('<div class="vw" id="%s"></div><style>%s</style><script>%s</script>'
             '<script>(function(){var d=%s;window.viewMount(document.getElementById("%s"),d.view,{level:d.level});})();</script>'
-            % (uid, kit.SCHEMA_CSS, kit.RUNTIME_JS, data, uid))
+            % (uid, kit.SCHEMA_CSS + payload.get("palette_css", ""), kit.RUNTIME_JS, data, uid))

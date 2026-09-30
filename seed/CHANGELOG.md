@@ -288,6 +288,8 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   - **Surfaces, as adapters**: `assets/view/lib/surfaces/` — html (the one file), python (the served page), django (a
     fragment a framework renders) — each passing one conformance suite before `technology-daftar` says it is spoken; the
     page's own chain to the eye engraved on its reference tab.
+  - **The sheet**: every drawing a sheet with a title block made of the ledger's facts, pens by what they draw, revision
+    clouds around what the last commit changed; `view.palette`, the garden's own colours in day, night and print.
   - **The 31.0 step** translates each `empsychon` bean by its genos and each `physis` or `logos` crown to `agape`, and
     writes GARDEN.md's `zone` from `--zone` (or `DAFTAR_ZONE`); a local genos still `empsychon`, or a body with no level,
     is a person's to decide.

@@ -120,6 +120,7 @@ function schematic(root,view,lv,state){
   inspectable(g,'el:'+e.id,()=>'<b>'+h(e.label)+'</b><div class="ins-sub">'+h((view.patternMeaning||{})[e.pattern]||e.pattern)+'</div>'+(f?'<div class="ins-row"><span>ledger</span>'+partCard(f)+'</div>':''));});
  (view.actions||[]).forEach(a=>{const g=svg.querySelector('.el[data-el="'+a.el+'"]');if(!g)return;
   g.setAttribute('data-click','action');if(state.onAction){g.style.cursor='pointer';g.addEventListener('click',()=>state.onAction(a));}});
+ clouds(svg,view);
  // ZOOM: an element that opens a drawing of its own takes the reader there — a lens holds its limit by opening, not crowding
  (view.opens||[]).forEach(o=>{const g=svg.querySelector('.el[data-el="'+o.el+'"]');if(!g)return;
   g.classList.add('opens');g.setAttribute('data-opens',o.view);
@@ -422,9 +423,24 @@ const ARCH={table:table,race:race,funnel:funnel,reservoir:reservoir,lanes:lanes,
 function operate(root,view,lv,state){const op=view.operate;if(op&&ARCH[op.archetype])return ARCH[op.archetype](root,view,lv,state,op);chain(root,view,lv,state);
  if(op&&(op.correlate||[]).length){const d=document.createElement('div');d.innerHTML=opFoot(view,{correlate:op.correlate,notes:op.notes,blind:op.blind},state);root.appendChild(d);wireCorr(root,view,state);}}
 const FORMS={story:story,schematic:schematic,'health-chain':operate,anatomy:anatomy};
+/* THE SHEET: every drawing is a sheet, and its title block is made of facts the ledger holds — the page, the drawing,
+   the lens it is read at (its scale), the garden and its release, the commit it is drawn from and its day, who stated
+   it, where it is shown, and which sheet of how many. Nothing in it is typed for the page. */
+function titleBlock(view,lv){const s=view.sheet;if(!s)return '';
+ const c=(k,v)=>'<div class="tb-c"><span class="tb-k">'+h(k)+'</span><span class="tb-v">'+h(v||'—')+'</span></div>';
+ return '<div class="vw-tblock" role="contentinfo">'+c('page',s.page)+c('drawing',view.title&&view.title.replace(/<[^>]+>/g,'')||view.key)+
+  c('lens',lv.name||lv.id)+c('sheet',s.n+' of '+s.of)+c('garden',s.garden+(s.release?' · '+s.release:''))+
+  c('drawn from',(s.commit||'')+(s.day?' · '+s.day:''))+c('stated by',s.by)+c('shown at',s.shown)+'</div>';}
+/* REVISION CLOUDS: a part whose record the last commit changed is drawn inside a cloud, as a revised drawing is */
+function clouds(svg,view){const ids=view.changed||[];if(!ids.length)return;const by={};(view.elements||[]).forEach(e=>by[e.id]=e);
+ const NS='http://www.w3.org/2000/svg';ids.forEach(id=>{const e=by[id];if(!e||!e.box)return;const [x,y,w,hh]=e.box,p=7;
+  const r=document.createElementNS(NS,'rect');r.setAttribute('x',x-p);r.setAttribute('y',y-p);r.setAttribute('width',w+2*p);
+  r.setAttribute('height',hh+2*p);r.setAttribute('rx',14);r.setAttribute('class','revcloud');
+  const t=document.createElementNS(NS,'text');t.setAttribute('x',x+w+p-2);t.setAttribute('y',y-p+10);t.setAttribute('class','revmark');
+  t.textContent='Δ';svg.appendChild(r);svg.appendChild(t);});}
 function mount(root,view,state){state=state||{};const lvs=view.levels||[];
  const lv=lvs.find(l=>l.id===state.level)||lvs.find(l=>+l.depth===+state.level)||lvs[0]||{form:'schematic',name:'',question:''};
  root.classList.add('vw');root.dataset.form=lv.form;
- (FORMS[lv.form]||schematic)(root,view,lv,state);reattach(root);}
+ (FORMS[lv.form]||schematic)(root,view,lv,state);root.insertAdjacentHTML('beforeend',titleBlock(view,lv));reattach(root);}
 W.viewMount=mount;W.viewInspector={show:insShow,hide:insHide};
 })();

@@ -340,6 +340,19 @@ SCHEMA_CSS = """
 .vw .ribbon-t{fill:var(--accent);font:600 12px ui-monospace,monospace}
 .vw .actbtn .abox{fill:var(--accent);stroke:var(--accent)}.vw .actbtn .atext{fill:#1a1206;font:700 13px system-ui}
 .vw .actbtn .ahint{fill:#1a1206;opacity:.6;font:9px ui-monospace,monospace;text-transform:uppercase}.vw .actbtn{cursor:pointer}
+/* the sheet: a title block of facts, in hairlines; pens by what they draw — a part's contour, a flow, a boundary's
+   thin line (ISO 128's thick, medium and thin) — and a revision cloud around what the last commit changed */
+.vw .vw-tblock{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:12px 0 0;border:1px solid var(--line);
+ border-radius:4px;font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace}
+.vw .tb-c{padding:6px 9px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.vw .tb-c:nth-child(4n){border-right:0}.vw .tb-c:nth-last-child(-n+4){border-bottom:0}
+.vw .tb-k{display:block;color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
+.vw .tb-v{display:block;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:640px){.vw .vw-tblock{grid-template-columns:repeat(2,minmax(0,1fr))}.vw .tb-c:nth-child(4n){border-right:1px solid var(--line)}
+ .vw .tb-c:nth-child(2n){border-right:0}.vw .tb-c:nth-last-child(-n+4){border-bottom:1px solid var(--line)}.vw .tb-c:nth-last-child(-n+2){border-bottom:0}}
+.vw .nbox{stroke-width:1.2}.vw .edge{stroke-width:1.4}.vw .bnd{stroke-width:.7}
+.vw .revcloud{fill:none;stroke:var(--accent);stroke-width:1.4;stroke-dasharray:1 5;stroke-linecap:round}
+.vw .revmark{fill:var(--accent);font:700 12px system-ui}
 /* zoom: a part that opens a drawing of its own carries a callout mark on its corner */
 .vw .el.opens .nbox,.vw .el.opens .bnd{stroke-width:1.6}.vw .el.opens:hover .nbox{stroke:var(--accent)}
 /* an element a lens hides */

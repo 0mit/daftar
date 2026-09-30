@@ -2752,6 +2752,7 @@ profiles:
         shape: mapping
         attrs:
           drawings:  { required: true, in: { pointer: bean_field_pointer }, meaning: "`file:<path>` of the garden's own drawing module: the garden's code, never the law's" }
+          palette:   { in: { pointer: bean_field_pointer }, meaning: "`file:<path>` of the garden's own palette: the colours its sheets are drawn in, in each mode — day, night, print — as tokens (`{ modes: { <mode>: { <token>: <colour> } } }`). The grammar is the asset's and every garden's; the palette is the garden's. Absent, the asset's own" }
           opens_on:  { in: { bean_id: { gene: [org] } }, meaning: "the organisation the page opens on; absent, every organisation the reader may see" }
           visibility: { in: [public, private], meaning: "who reads the page. public (absent): anyone it is published to — no drawing shows an address, and a being's addresses are on its card, for a viewer who may see them | private: only the viewers its host signs in — at the understand lens each part shows its own address in its box, the one `reference` chooses from the being's own record, sent only to a viewer who may see that being; and a drawing's own text may show addresses, which every viewer of that drawing sees" }
           glossary:  { in: { prose: named }, meaning: "what a word on the page means, under the word" }

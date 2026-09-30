@@ -4024,3 +4024,13 @@ where its adapter is a file of the release and a suite of the release proves it;
 naming nothing. No row is privileged: a monitor's language is one source among siblings, the offline file one surface
 among others.
 
+## profiles.view.terms[view].schema.attrs.palette
+
+ONE GRAMMAR, A PALETTE EACH (31.0). The view design found two drawings of facts in two unrelated languages: a school's
+site set as architectural sheets (plaster, ink, one accent, hairlines, a title block) and an estate's page of drawings.
+The operator: "we try our best to keep the beauty of the minimal and structured also well organized inclusive in the core
+parts to be able to implement it on the ui surface's too". So the grammar — the sheet, its title block of facts, its pens,
+its revision clouds — is the asset's and every garden's, and the colours are a garden's own, in the modes a sheet is read
+in: day, night and paper. The palette is a file of the garden, as the drawing module is, and names only tokens the kit
+draws with, each a hex colour.
+

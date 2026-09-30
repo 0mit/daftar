@@ -667,6 +667,40 @@ check("...and daftar says it speaks each only where the catalogue's row names th
 check("the page's own chain to the eye is engraved from its record: where it is shown",
       "grain.example.org" in str((_cj.get("where") or {}).get("svg", "")), str(_cj.get("where"))[:400])
 
+# THE SHEET: a title block of facts, clouds around what the last commit changed, and the garden's own palette
+_sh = run(sys.executable, "-c", """
+import json, os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'assets', 'view', 'lib')); sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))
+import view_model as vm
+vm.init(os.getcwd())
+vs = vm.views()
+print('SHEET ' + json.dumps([{'key': v['key'], 'sheet': v['sheet'], 'changed': v['changed'], 'ids': [e['id'] for e in v['elements']]} for v in vs]))
+""", cwd=G)
+try:
+    _sj = json.loads(next(l for l in _sh.stdout.splitlines() if l.startswith("SHEET "))[len("SHEET "):])
+except Exception:
+    _sj = []
+check("every sheet's title block is made of facts the ledger holds: the page, the garden, the commit it is drawn from, "
+      "and which sheet of how many", len(_sj) >= 2 and all(re.fullmatch(r"[0-9a-f]{12}", s["sheet"]["commit"])
+      and s["sheet"]["of"] == len(_sj) and s["sheet"]["garden"] and s["sheet"]["shown"] for s in _sj)
+      and [s["sheet"]["n"] for s in _sj] == list(range(1, len(_sj) + 1)), (_sh.stdout[-500:], _sh.stderr[-500:]))
+check("...and a revision cloud is drawn only around a part the drawing draws", all(set(s["changed"]) <= set(s["ids"]) for s in _sj),
+      [(s["key"], s["changed"]) for s in _sj])
+put("drawings/palette.yaml", "modes:\n  night: { bg: \"#101418\", accent: \"#c9d38c\" }\n  day: { bg: \"#f4efe2\", accent: \"#5a6a26\" }\n"
+    "  print: { bg: \"#ffffff\", fg: \"#000000\" }\n")
+put("beans/grain-page.md", PAGE_T.replace("  drawings: file:bin/drawings.py\n", "  drawings: file:bin/drawings.py\n  palette: file:drawings/palette.yaml\n", 1))
+out, rc = dmview("check")
+_rep, _ = dmview("report", "--out", os.path.join(T, "palette.html"))
+_html = open(os.path.join(T, "palette.html"), encoding="utf-8").read() if os.path.isfile(os.path.join(T, "palette.html")) else ""
+check("a garden's own palette — its day, its night and paper — is drawn with: the grammar the asset's, the colours the garden's",
+      rc == 0 and ".vw.light{--bg:#f4efe2;--accent:#5a6a26}" in _html and "@media print{.vw,.vw.light{--bg:#ffffff;--fg:#000000}}" in _html,
+      (out[-400:], _rep[-300:]))
+put("drawings/palette.yaml", "modes:\n  night: { accent: olive }\n  dusk: { bg: \"#000\" }\n")
+out, rc = dmview("check")
+check("...and a palette with a colour that is none, or a mode the sheet has not, is refused by name", rc != 0
+      and "olive" in out and "dusk" in out, out[-600:])
+put("beans/grain-page.md", PAGE_T)
+
 # PIPES ALONE ARE WIRING: what a drawing draws may be joined by pipes and run no process of its own.
 put("beans/grain-page.md", PAGE_T.replace("    processes: { bean: silo-controller, field: processes }\n", "", 1))
 out, rc = dmview("check")

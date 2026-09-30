@@ -418,6 +418,85 @@ def drawings_path():
     return path if os.path.commonpath([top, os.path.realpath(path)]) == top else None
 
 
+PALETTE_TOKENS = ("bg", "panel", "line", "fg", "muted", "accent", "host", "svc", "ext", "store", "off", "nfill", "gauge",
+                  "up", "down", "nd", "warn")
+_COLOUR = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+
+
+def palette():
+    """(palette, problems): the garden's palette — {mode: {token: colour}} for the modes day, night and print — read
+    from the file the page names (`view.palette`, `file:<path>` inside the garden), each colour a hex colour and each
+    token one the kit draws with; {} where the page names none."""
+    d = page_view().get("palette")
+    if d is None:
+        return {}, []
+    rel = d[5:] if isinstance(d, str) and d.startswith("file:") else ""
+    if not rel or rel.startswith("/") or "\\" in rel or any(x in ("", ".", "..") for x in rel.split("/")):
+        return {}, ["the page's palette is `file:<path>`, a path inside the garden with no `..` — not %r" % d]
+    path = os.path.join(ROOT, *rel.split("/"))
+    if not os.path.isfile(path):
+        return {}, ["the page's palette %s is no file of the garden" % d]
+    data = dmparse.loads(open(path, encoding="utf-8").read())
+    modes = (data or {}).get("modes") if isinstance(data, dict) else None
+    out, probs = {}, []
+    for m, toks in (modes or {}).items() if isinstance(modes, dict) else []:
+        if m not in ("day", "night", "print"):
+            probs.append("palette: mode %r is not day, night or print" % m)
+            continue
+        for k, v in (toks or {}).items() if isinstance(toks, dict) else []:
+            if k not in PALETTE_TOKENS or not _COLOUR.match(str(v)):
+                probs.append("palette: %s.%s = %r — a token the kit draws with (%s), and a hex colour" % (m, k, v, ", ".join(PALETTE_TOKENS)))
+            else:
+                out.setdefault(m, {})[k] = str(v)
+    return out, probs
+
+
+def palette_css():
+    """The garden's palette as the kit's own custom properties: night the ground, day where the reader's device is light,
+    print on paper."""
+    p, _ = palette()
+    block = lambda d: ";".join("--%s:%s" % (k, v) for k, v in d.items())
+    css = []
+    if p.get("night"):
+        css.append(".vw{%s}" % block(p["night"]))
+    if p.get("day"):
+        css.append(".vw.light{%s}" % block(p["day"]))
+    if p.get("print"):
+        css.append("@media print{.vw,.vw.light{%s}}" % block(p["print"]))
+    return "".join(css)
+
+
+def sheet():
+    """The facts a sheet's title block is made of, all held already: the page, the garden and its release, the commit it
+    is drawn from and its day, who stated the page, and where it is shown first."""
+    def git(*a):
+        try:
+            return subprocess.run(["git", "-C", ROOT] + list(a), capture_output=True, text=True, encoding="utf-8",
+                                  timeout=20).stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            return ""
+    places = [e for e in (fm(PAGE).get("located_at") or []) if isinstance(e, dict)]
+    first = places[0] if places else {}
+    shown = str(first.get("at") or first.get("system") or "")
+    if shown and not private() and _ADDRESS.search(shown):
+        shown = str(first.get("system") or "")
+    prov = fm(PAGE).get("provenance") if isinstance(fm(PAGE).get("provenance"), dict) else {}
+    return {"page": str(page().get("title") or PAGE), "garden": garden_name(),
+            "release": str(fm_path(os.path.join(ROOT, "GARDEN.md")).get("daftar_release") or ""),
+            "commit": git("rev-parse", "--short=12", "HEAD"), "day": git("log", "-1", "--format=%cs"),
+            "by": str(prov.get("by") or ""), "shown": shown}
+
+
+def changed_beans():
+    """The beans and mappings the last commit changed: what a sheet's revision clouds are drawn around."""
+    try:
+        r = subprocess.run(["git", "-C", ROOT, "diff", "--name-only", "HEAD~1", "HEAD", "--", "beans", "mappings"],
+                           capture_output=True, text=True, encoding="utf-8", timeout=20)
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    return {os.path.splitext(os.path.basename(f))[0] for f in r.stdout.split() if f.endswith(".md")} if r.returncode == 0 else set()
+
+
 def garden():
     """The garden's own drawing module, loaded from the file the page names; the kit's names are importable from it."""
     global _GARDEN
@@ -1023,6 +1102,8 @@ def views(figs=None):
     live = live_meanings()
     every = page_bindings(figs)
     out = []
+    _sheet, _changed = sheet(), changed_beans()
+    _keys = [k for k, _v in views_raw() if k in figs]
     for k, v in views_raw():
         if k not in figs:
             continue
@@ -1054,6 +1135,9 @@ def views(figs=None):
                     "patternMeaning": {p: kit.PATTERNS.get(p, "") for p in pats},
                     "opens": [{"el": o.get("element"), "view": o.get("view")} for o in (v.get("opens") or []) if isinstance(o, dict)],
                     "frame": v.get("frame"), "proposed": proposed_archetype(v),
+                    "sheet": dict(_sheet, n=_keys.index(k) + 1, of=len(_keys)),
+                    "changed": [e["id"] for e in els if e.get("bean") in _changed
+                                or (isinstance(e.get("of"), dict) and e["of"].get("bean") in _changed)],
                     "alerts": alert_names([p["bean"] for p in parts], binds)})
     return out
 
@@ -1173,6 +1257,7 @@ def check(figs=None):
         for el in els:
             if el["bean"] and not fm(el["bean"]):
                 errs.append("%s: element %r depicts %r, which is no bean of the garden" % (k, el["id"], el["bean"]))
+    errs += palette()[1]
     # THE PAGE STATES WHERE IT IS SHOWN: a URI where it is served, a path where a copy is kept — its own `located_at`
     if not [e for e in (fm(PAGE).get("located_at") or []) if isinstance(e, dict)]:
         errs.append("%s: the page states nowhere it is shown — its `located_at`: a `uri` where it is served, a path where a "

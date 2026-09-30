@@ -128,6 +128,15 @@ computes a shown number: its path), `check_binding(binding)` and `check_monitor(
 `history(url, binds, selector, hours, step, now)` (what the served page shows), `alerts(settings, beings, binds)`,
 and, where it deploys anything, `bundle(monitor, views, out)`.
 
+## The sheet
+
+Every drawing is a **sheet**, as a technical drawing is. Its **title block** is made of facts the ledger holds — the page,
+the drawing, the lens it is read at, the garden and its release, the commit it is drawn from and its day, who stated the
+page, where it is shown, and which sheet of how many — so nothing in it is typed for the page. Its pens are by what they
+draw: a part's contour, a flow, a boundary's thin line. A part whose record the last commit changed is drawn inside a
+**revision cloud**. The colours are the garden's own (`view.palette`, `file:<path>`: `{ modes: { day, night, print:
+{ <token>: <hex colour> } } }`), and the grammar is every garden's.
+
 ## Surfaces, and what every one must do
 
 Where a page meets a reader is a **surface**, named — as a source adapter is — by the code of the technology catalogue it
