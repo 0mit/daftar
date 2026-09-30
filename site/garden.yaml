@@ -99,7 +99,7 @@ beans:
       anchors:
         - { key: identifier, value: "event:dinner-at-sams", class: logical, establishing: true }
     provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { legal: { crown: logos } }
+    owned_by: { legal: { crown: agape } }
     responsibility: { legal: { holder: { bean: sam } } }
     timing:
       start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }
@@ -115,7 +115,7 @@ beans:
     title: "Ali"
     status: active
     summary: "Ali, who keeps a garden of her own; Sam shares costs with her."
-    nature: empsychon
+    nature: soma
     identity:
       status: confirmed
       anchors:
@@ -139,7 +139,7 @@ beans:
       anchors:
         - { key: identifier, value: "contract:ali-consent", class: logical, establishing: true }
     provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { legal: { crown: logos } }
+    owned_by: { legal: { crown: agape } }
     responsibility: { legal: { parties: true } }
     parties:
       sam: { who: { bean: sam }, accepted: }
@@ -177,7 +177,7 @@ beans:
       anchors:
         - { key: identifier, value: "contract:storage-rent", class: logical, establishing: true }
     provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { legal: { crown: logos } }
+    owned_by: { legal: { crown: agape } }
     responsibility: { legal: { parties: true } }
     parties:
       sam: { who: { bean: sam }, accepted: 2026-09-12 }
