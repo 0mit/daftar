@@ -22,8 +22,8 @@ beans:
       anchors:
         - { key: serial, value: "4XK9-2217", class: hardware, establishing: true }
     provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }
-    owned_by: { legal: { owner: { bean: sam } } }
-    responsibility: { legal: { holder: { bean: sam } } }
+    owned_by: { owner: { bean: sam } }
+    
     knowledge:
       - { code: "technology:samba", rel: uses }
       - { code: "isced-f-2013:0612", rel: draws_on, topic: "network file sharing" }
@@ -42,8 +42,8 @@ beans:
       anchors:
         - { key: serial, value: "RK-42-0031", class: hardware, establishing: true }
     provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }
-    owned_by: { legal: { owner: { bean: sam } } }
-    responsibility: { legal: { holder: { bean: sam } } }
+    owned_by: { owner: { bean: sam } }
+    
     capacity:
       - { count: 42, unit: item, placement: location }
     ---
@@ -61,8 +61,8 @@ beans:
       anchors:
         - { key: serial, value: "SRV-WEB-1", class: hardware, establishing: true }
     provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }
-    owned_by: { legal: { owner: { bean: sam } } }
-    responsibility: { legal: { holder: { bean: sam } } }
+    owned_by: { owner: { bean: sam } }
+    
     located_at:
       - { system: local-frame, openness: here, at: "rack-a#u17", takes: [ { count: 2, unit: item } ] }
     ---
@@ -80,8 +80,8 @@ beans:
       anchors:
         - { key: serial, value: "SRV-WEB-2", class: hardware, establishing: true }
     provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }
-    owned_by: { legal: { owner: { bean: sam } } }
-    responsibility: { legal: { holder: { bean: sam } } }
+    owned_by: { owner: { bean: sam } }
+    
     located_at:
       - { system: local-frame, openness: here, at: "rack-a#u19", takes: [ { count: 2, unit: item } ] }
     ---
@@ -99,7 +99,7 @@ beans:
       anchors:
         - { key: identifier, value: "event:dinner-at-sams", class: logical, establishing: true }
     provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { legal: { crown: agape } }
+    owned_by: { crown: true }
     responsibility: { legal: { holder: { bean: sam } } }
     timing:
       start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }
@@ -122,7 +122,7 @@ beans:
         - { key: identifier, value: "123456789abc/person:ali", class: logical, establishing: true }
     provenance: { src: asserted-by-human, by: "sam", as_of: now }
     consent: { bean: ali-consent }
-    owned_by: { legal: { crown: agape } }
+    owned_by: { crown: true }
     responsibility: { legal: { self: true } }
     ---
     Ali keeps a garden of her own.
@@ -139,7 +139,7 @@ beans:
       anchors:
         - { key: identifier, value: "contract:ali-consent", class: logical, establishing: true }
     provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { legal: { crown: agape } }
+    owned_by: { crown: true }
     responsibility: { legal: { parties: true } }
     parties:
       sam: { who: { bean: sam }, accepted: }
@@ -160,8 +160,8 @@ beans:
       anchors:
         - { key: garden_id, value: "123456789abc", class: logical, establishing: true }
     provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { legal: { owner: { bean: ali } } }
-    responsibility: { legal: { holder: { bean: ali } } }
+    owned_by: { owner: { bean: ali } }
+    
     ---
     Ali's garden.
   storage-rent: |
@@ -177,7 +177,7 @@ beans:
       anchors:
         - { key: identifier, value: "contract:storage-rent", class: logical, establishing: true }
     provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { legal: { crown: agape } }
+    owned_by: { crown: true }
     responsibility: { legal: { parties: true } }
     parties:
       sam: { who: { bean: sam }, accepted: 2026-09-12 }
@@ -211,8 +211,8 @@ beans:
       anchors:
         - { key: serial, value: "CNT-0007", class: hardware, establishing: true }
     provenance: { src: observed, by: "agent for sam", as_of: now }
-    owned_by: { legal: { owner: { bean: sam } } }
-    responsibility: { legal: { holder: { bean: sam } } }
+    owned_by: { owner: { bean: sam } }
+    
     series:
       by-grid:
         grid: { of: ordinal, in: ordinal-number, from: "ordinal:1", every: { count: 1 } }
@@ -237,8 +237,8 @@ beans:
       anchors:
         - { key: identifier, value: "service:home-page", class: logical, establishing: true }
     provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { legal: { owner: { bean: sam } } }
-    responsibility: { legal: { holder: { bean: sam } } }
+    owned_by: { owner: { bean: sam } }
+    
     view:
       drawings: file:assets/view/templates/drawings.py
       fields:

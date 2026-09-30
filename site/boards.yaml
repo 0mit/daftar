@@ -112,26 +112,28 @@ mechanisms:
     short: "What & whose"
     name: "What it is, and whose"
     glyph: "◈"
-    items: [section:natures, section:complexity, section:gene, section:crown, term:creator, term:owned_by, term:responsibility]
+    items: [section:natures, section:complexity, section:gene, section:crown, term:via, term:owned_by, term:responsibility]
     staples: { who: "its kind says which identities it may take", money: "an agreement may be owned by neither party", gate: "every ownership chain must end" }
     person: >
-      A thing is first a nature — soma, a body, standing at its level among bodies; lekton, what exists by being
-      said — then its kind, which says while what it lives. Each thing has exactly one owner and one who answers for
-      it, per facet, and every chain ends: at a person, at someone outside the notebook, or at the crown, which is the
-      life chain, where nobody owns.
+      A thing is first a nature — soma, a body, standing at its step among bodies; lekton, what exists by being
+      said, standing on reason — then its kind, which says while what it lives. Each thing has exactly one owner; who
+      answers for it is a fact of its own — the owner before the law unless someone else is named, and whoever runs it
+      or pays for it where someone does. Every chain ends: at a person, at someone outside the notebook, or at the
+      crown, the one, where nobody owns. And each thing came to be through someone — a via — named or not.
     gardener: >
-      Say what a thing is and who it belongs to; the agent picks its kind and writes who answers for it. A domain is
-      held, not owned; a person owns themselves; an agreement between two may be owned by neither.
+      Say what a thing is and who it belongs to; the agent picks its kind, and writes who answers for it where that is
+      not simply its owner. A domain is held, not owned; a person is owned by no one; an agreement between two may be
+      owned by neither.
     agent_note: "The kind refines the nature; the rules for what a thing may say attach to its nature and every kind inherits them."
     scene:
       show: [ { bean: hallway-nas, keys: [genos, nature, owned_by, responsibility] } ]
-      break: { bean: hallway-nas, replace: ["owned_by: { legal: { owner: { bean: sam } } }", "owned_by: { legal: { } }"] }
+      break: { bean: hallway-nas, replace: ["owned_by: { owner: { bean: sam } }", "owned_by: { note: \"bought second-hand\" }"] }
       refused: "needs one of"
     fa:
       name: "چیست، و از آنِ کیست"
       short: "چیستی و مالکیت"
-      person: "هر چیز نخست یک سرشت است (سوما، جسم، که در مرتبه‌ی خود میان اجسام می‌ایستد؛ لکتون، آنچه با گفته شدن هست) و سپس گونه‌اش، که می‌گوید در چه حالی زنده است. هر چیز، در هر وجه، دقیقاً یک مالک دارد و یک پاسخگو، و هر زنجیره‌ای پایان می‌یابد: به یک شخص، به کسی بیرون از دفتر، یا به تاج، که همان زنجیره‌ی زندگی است، جایی که هیچ‌کس مالک نیست."
-      gardener: "بگویید یک چیز چیست و از آنِ کیست؛ عامل گونه‌اش را برمی‌گزیند و می‌نویسد چه کسی پاسخگوی آن است. دامنه در اختیار است، نه در مالکیت؛ هر شخص مالک خویش است؛ توافقی میان دو نفر ممکن است از آنِ هیچ‌کدام نباشد."
+      person: "هر چیز نخست یک سرشت است (سوما، جسم، که در مرتبه‌ی خود میان اجسام می‌ایستد؛ لکتون، آنچه با گفته شدن هست و بر نطق می‌ایستد) و سپس گونه‌اش، که می‌گوید در چه حالی زنده است. هر چیز دقیقاً یک مالک دارد؛ اینکه چه کسی پاسخگوی آن است خود واقعیتی جداست — در برابر قانون مالکش، مگر کسی دیگر نام برده شود، و هر که آن را می‌گرداند یا هزینه‌اش را می‌پردازد، هر جا کسی چنین کند. هر زنجیره‌ای پایان می‌یابد: به یک شخص، به کسی بیرون از دفتر، یا به تاج، آن یکتا، جایی که هیچ‌کس مالک نیست. و هر چیز به‌واسطه‌ی کسی پدید آمده است، نام‌برده یا نه."
+      gardener: "بگویید یک چیز چیست و از آنِ کیست؛ عامل گونه‌اش را برمی‌گزیند و هر جا پاسخگو کسی جز مالک باشد، آن را می‌نویسد. دامنه در اختیار است، نه در مالکیت؛ هیچ‌کس مالک یک شخص نیست؛ توافقی میان دو نفر ممکن است از آنِ هیچ‌کدام نباشد."
       agent_note: "گونه، سرشت را دقیق‌تر می‌کند؛ قاعده‌های آنچه یک چیز می‌تواند بگوید به سرشتش بسته‌اند و هر گونه آن‌ها را به ارث می‌برد."
       staples: { who: "گونه‌اش می‌گوید چه هویت‌هایی می‌تواند بپذیرد", money: "توافق ممکن است از آنِ هیچ‌یک از دو طرف نباشد", gate: "هر زنجیره‌ی مالکیت باید پایان یابد" }
   - id: when
