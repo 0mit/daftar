@@ -67,7 +67,15 @@ Every kit call records what it drew: its pattern, its id (the slug of its label,
 `eid=` to choose one), its box and the being it depicts (`bean=`). A binding and an action address an element by that
 id; `dmview elements <view>` lists them. A node's bar is coloured by the nature of the being it depicts, or by `cls`:
 `ext` (outside the garden's hands), `accent` (the one point the drawing turns on), `off` (wired, not running).
-`templates/drawings.py` is a module to start from. The meaning of each pattern, for the legend, is the kit's own
+`templates/drawings.py` is a module to start from. A kit call may take `of=` — the fact the element stands for, a
+bean or one entry of a bean's list (`{bean, field, key}`) — and then the element's id is the fact's key, so a binding
+sits on a fact and a renamed label breaks nothing.
+
+**Engraved, not drawn.** `view_engrave.engrave(parts, pipes, …)` lays a drawing out from the facts it draws: the parts a
+being states and the pipes between them. A part stands in the band its fact names and in the column of its step along
+the pipes that carry the work; a part only called (a check, a lookup, a scan) stands beside its caller; a division
+(`group`) draws the wholes the parts belong to, and `regions` draws them around their parts. What no fact states is
+drawn IMPLIED and listed, never guessed: the drawing shows the gap in the facts. The same facts give the same bytes. The meaning of each pattern, for the legend, is the kit's own
 (`view_kit.PATTERNS`).
 
 ## The operate shapes, and what each reads

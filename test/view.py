@@ -1235,6 +1235,58 @@ check(f"the cookbook's page of drawings ({len(_ex)} beans), with the asset's tem
       "and the asset, and draws", len(_ex) == 2 and _gk.returncode == 0 and _vk.returncode == 0 and _rk.returncode == 0,
       (_gk.stdout[-300:], _vk.stdout + _vk.stderr, _rk.stdout + _rk.stderr))
 
+# --- the engraver: a drawing laid out from the facts it draws — the silo's drying run as parts and pipes, invented
+sys.path.insert(0, os.path.join(ROOT, "assets", "view", "lib"))
+import view_kit as _vk, view_engrave as _ve
+_parts = [
+    {"proc": "intake", "rail": "the run", "role": "takes the grain in", "user": "silo"},
+    {"proc": "dryer", "rail": "the run", "role": "dries it to 14 %", "user": "silo"},
+    {"proc": "moisture probe", "rail": "the run", "role": "reads the grain's moisture", "user": "probe"},
+    {"proc": "bin", "rail": "the run", "role": "holds the dried grain", "user": "silo"},
+    {"proc": "scheduler", "rail": "control", "role": "starts the dryer at night", "user": "coop"},
+    {"proc": "old fan", "rail": "the run", "role": "retired", "user": "silo", "state": "retired"}]
+_pipes = [
+    {"from": "truck", "to": "intake", "channel": "grain", "rail": "the run"},
+    {"from": "intake", "to": "dryer", "channel": "grain", "rail": "the run"},
+    {"from": "dryer", "to": "moisture probe", "channel": "reading", "rail": "the run"},
+    {"from": "dryer", "to": "bin", "channel": "grain", "rail": "the run"},
+    {"from": "bin", "to": "log", "channel": "file", "rail": "the run"},
+    {"from": "scheduler", "to": "dryer", "channel": "start", "rail": "control"},
+    {"from": "old fan", "to": "dryer", "channel": "air", "rail": "the run", "state": "retired"},
+    {"from": "intake :2", "to": "dryer", "channel": "grain", "rail": "the run"},
+    {"from": "dryer", "to": "cooler", "channel": "grain", "rail": "the run"}]
+_kw = dict(key="proc", rail="rail", of_bean="silo", parts_field="processes", pipes_field="pipes", sub="role",
+           carries=lambda e: e.get("channel") == "grain")
+def _eng(**kw):
+    out = {}
+    def fn():
+        svg, out["rep"] = _ve.engrave(_parts, _pipes, aria="the drying run", **_kw, **kw)
+        return ("run", svg, "", "")
+    _t, svg, _c, _cl, els = _vk.compose(fn)
+    return svg, {e["id"]: e for e in els}, out["rep"]
+_s1, _e1, _r1 = _eng()
+_s2, _e2, _r2 = _eng()
+check("engrave: the same facts give the same drawing, byte for byte", _s1 == _s2 and _e1 == _e2)
+check("engrave: a part's element is its fact — its id the fact's key, and `of` names the bean, the field and the key",
+      _e1.get("dryer", {}).get("of") == {"bean": "silo", "field": "processes", "key": "dryer"}
+      and _e1.get("moisture-probe", {}).get("of", {}).get("key") == "moisture probe", sorted(_e1)[:12])
+check("engrave: an end no part states is drawn and listed, never guessed or dropped — outside where nothing feeds it, a "
+      "store where it is given only files",
+      _r1["implied"] == ["truck", "log", "intake :2", "cooler"] and _e1["truck"]["mods"] == ["external"]
+      and _e1["intake-2"]["mods"] == ["external"] and _e1["log"]["pattern"] == "store"
+      and _e1["cooler"]["mods"] == ["implied"], (_r1, _e1.get("truck"), _e1.get("log"), _e1.get("cooler")))
+check("engrave: a part only called stands in its caller's column, in the lane above the work's path",
+      _e1["moisture-probe"]["box"][0] == _e1["dryer"]["box"][0] and _e1["moisture-probe"]["box"][1] < _e1["dryer"]["box"][1],
+      (_e1["moisture-probe"]["box"], _e1["dryer"]["box"]))
+check("engrave: the work's path runs left to right, and a retired part is drawn disabled",
+      _e1["truck"]["box"][0] < _e1["intake"]["box"][0] < _e1["dryer"]["box"][0] < _e1["bin"]["box"][0]
+      and _e1["old-fan"]["mods"] == ["disabled"], {k: _e1[k]["box"] for k in ("truck", "intake", "dryer", "bin")})
+_s3, _e3, _r3 = _eng(group=lambda p: p["user"])
+check("engrave: a division draws the wholes — the silo's three parts one element that holds them, and an implied "
+      "listener named after a part joins its whole",
+      _e3.get("silo", {}).get("of", {}).get("holds") == ["intake", "dryer", "bin", "old fan", "intake :2"]
+      and "intake-2" not in _e3, (_e3.get("silo"), sorted(_e3)))
+
 check("NOTHING above ended in a traceback: every case is a refusal or a pass", not TRACES, TRACES[:2])
 shutil.rmtree(T, ignore_errors=True)
 print("\nview: %d failed" % len(FAILS))

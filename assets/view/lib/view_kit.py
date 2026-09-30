@@ -38,22 +38,25 @@ def slug(s):
 # within the drawing; an unlabelled flow is flow-<n>. Bindings and actions address elements by these ids.
 # ---------------------------------------------------------------------------------------------------------------------
 _REC = None
-_NODE_MOD = {"ext": "external", "accent": "accent", "off": "disabled"}
+_NODE_MOD = {"ext": "external", "accent": "accent", "off": "disabled", "implied": "implied"}
 _EDGE_PAT = {"": ["flow"], "sig": ["signal"], "accent": ["flow", "accent"], "off": ["flow", "disabled"]}   # accent/disabled MODIFY a flow
 NATURE_OF = None        # set by the model: the nature of the being a node depicts, which colours its bar
 ADDRESSES = False       # set by the model: True on a private page (`view.visibility: private`), whose parts show their address
 
 
-def _rec(patterns, label="", box=None, bean=None, eid=None):
-    """Record one element; returns its id (or '' when not recording)."""
+def _rec(patterns, label="", box=None, bean=None, eid=None, of=None):
+    """Record one element; returns its id (or '' when not recording). `of` is the fact it stands for — a bean, or one
+    entry of a bean's list, `{bean, field, key}` — and then the element's id is the fact's key, not its label's slug."""
     if _REC is None:
         return ""
+    if of and not eid:
+        eid = slug(of.get("key") or of.get("bean") or "") if isinstance(of, dict) else slug(of)
     base = eid or (slug(label) if label else "%s-%d" % (patterns[0], sum(1 for e in _REC if e["pattern"] == patterns[0]) + 1))
     eid, n = base, 2
     while any(e["id"] == eid for e in _REC):
         eid, n = "%s-%d" % (base, n), n + 1
     _REC.append({"id": eid, "pattern": patterns[0], "mods": patterns[1:], "label": re.sub(r"<[^>]+>", "", str(label)),
-                 "box": [round(v, 1) for v in box] if box else None, "bean": bean})
+                 "box": [round(v, 1) for v in box] if box else None, "bean": bean, "of": of})
     return eid
 
 
@@ -119,7 +122,7 @@ def _term_title(*texts):
     return ''
 
 
-def node(x, y, w, h, title, sub="", ipv="", cls=None, bean=None, eid=None):
+def node(x, y, w, h, title, sub="", ipv="", cls=None, bean=None, eid=None, of=None):
     """A part: a box with a bar coloured by what it is, its name and a one-line role. `cls` is `ext` (outside the
     garden's hands), `accent` (the point the drawing turns on) or `off` (wired, not running); otherwise the bar takes
     the nature of the being it depicts. `ipv` is the part's address: on a public page it is never drawn. On a private one
@@ -128,7 +131,7 @@ def node(x, y, w, h, title, sub="", ipv="", cls=None, bean=None, eid=None):
     being. One that fits nowhere is left out and recorded on the element, and `dmview check` names it: the card has it,
     and a wider box would draw it."""
     kind = cls or ((NATURE_OF(bean) if NATURE_OF and bean else None) or "lekton")
-    eid = _rec(["node"] + ([_NODE_MOD[kind]] if kind in _NODE_MOD else []), title, (x, y, w, h), bean, eid)
+    eid = _rec(["node"] + ([_NODE_MOD[kind]] if kind in _NODE_MOD else []), title, (x, y, w, h), bean, eid, of)
     p = [_g(eid, "node", kind, bean), _term_title(title, sub),
          f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="7" class="nbox"/>',
          f'<rect x="{x}" y="{y}" width="5" height="{h}" rx="2.5" class="nbar"/>',
@@ -157,9 +160,9 @@ def note(x, y, text, cls=""):
     return f'<text x="{x}" y="{y}" class="nsub {cls}" data-sub="1">{esc(text)}</text>'
 
 
-def store(x, y, w, h, title, sub="", bean=None, eid=None):
+def store(x, y, w, h, title, sub="", bean=None, eid=None, of=None):
     """A store of data or of anything else, drawn as a cylinder."""
-    eid = _rec(["store"], title, (x, y, w, h), bean, eid)
+    eid = _rec(["store"], title, (x, y, w, h), bean, eid, of)
     ry = 7
     d = (f'M{x},{y+ry} A{w/2},{ry} 0 0 1 {x+w},{y+ry} L{x+w},{y+h-ry} A{w/2},{ry} 0 0 1 {x},{y+h-ry} Z')
     top = f'M{x},{y+ry} A{w/2},{ry} 0 0 0 {x+w},{y+ry}'
@@ -179,22 +182,22 @@ def gate(cx, cy, label, w=104, h=40, eid=None):
             f'<text x="{cx}" y="{cy+4}" text-anchor="middle" class="glabel">{esc(label)}</text></g>')
 
 
-def flow(x1, y1, x2, y2, label="", cls="", lx=None, ly=None, eid=None):
+def flow(x1, y1, x2, y2, label="", cls="", lx=None, ly=None, eid=None, of=None):
     """A straight flow with an arrowhead and a label at the midpoint."""
     mx = lx if lx is not None else (x1 + x2) / 2
     my = ly if ly is not None else (y1 + y2) / 2
     pats = _EDGE_PAT[cls]; pat = pats[0]
-    eid = _rec(pats, label, (min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1)), None, eid)
+    eid = _rec(pats, label, (min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1)), None, eid, of)
     t = f'<text x="{mx}" y="{my}" text-anchor="middle" class="flab {cls}">{esc(label)}</text>' if label else ""
     return (_g(eid, pat, "edgeg") + f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" class="edge {cls}" '
             f'marker-end="url(#ah-{cls or "d"})"/>{t}</g>')
 
 
-def elbow(pts, label="", cls="", lx=None, ly=None, eid=None):
+def elbow(pts, label="", cls="", lx=None, ly=None, eid=None, of=None):
     """An orthogonal flow through a list of (x, y) points, the arrow at the end."""
     xs, ys = [p[0] for p in pts], [p[1] for p in pts]
     pats = _EDGE_PAT[cls]; pat = pats[0]
-    eid = _rec(pats, label, (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)), None, eid)
+    eid = _rec(pats, label, (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)), None, eid, of)
     d = " ".join(f"{x},{y}" for x, y in pts)
     t = f'<text x="{lx}" y="{ly}" text-anchor="middle" class="flab {cls}">{esc(label)}</text>' if (label and lx is not None) else ""
     return (_g(eid, pat, "edgeg") + f'<polyline points="{d}" class="edge {cls}" fill="none" '
@@ -272,6 +275,7 @@ PATTERNS = {
     "signal": "a trigger, a poll or a control path rather than what moves itself: a dashed arrow",
     "accent": "THE point the drawing turns on — one per drawing, in the accent colour",
     "disabled": "wired but not running: greyed and dashed",
+    "implied": "named by a flow and stated nowhere as a part: the facts' own gap, drawn so it is seen, never guessed into a part",
     "tag": "a short fact pinned beside the part it qualifies",
     "warning": "a pinned fact that is a gap, a risk or a manual step: an accent-outlined tag",
     "band": "a heading that groups the parts under it",
@@ -317,6 +321,7 @@ SCHEMA_CSS = """
 .vw .node.lekton .nbar{fill:var(--store)}.vw .node.accent .nbar{fill:var(--accent)}
 .vw .node.accent .nbox{stroke:var(--accent);stroke-width:1.6}.vw .node.off .nbox{stroke-dasharray:4 3;opacity:.6}
 .vw .node.off .nbar{fill:var(--off)}.vw .node.ext .nbox{stroke-dasharray:5 3}
+.vw .node.implied .nbox{stroke-dasharray:1.5 3}.vw .node.implied .nbar{fill:none;stroke:var(--muted);stroke-dasharray:1.5 2}
 .vw .ntitle{fill:var(--fg);font:700 13px system-ui}.vw .nip{fill:var(--muted);font:600 11px ui-monospace,monospace}
 .vw .nsub{fill:var(--muted);font:12px system-ui}
 .vw .cyl{fill:var(--nfill);stroke:var(--store);stroke-width:1.2}.vw .cyltop{fill:none;stroke:var(--store);stroke-width:1.2}
