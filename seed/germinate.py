@@ -132,7 +132,7 @@ def gardener_gene(law):
 
 def gardener_form(law, genos):
     """What the law says a gardener of this genos is written with: its nature, its anchor term and class, and whether
-    the genos is pinned to the crown (and to which branch). Read from the law, so no genos is named here."""
+    the genos is pinned to the crown (the life chain's branch). Read from the law, so no genos is named here."""
     row = next((k for k in law.get('gene') or [] if isinstance(k, dict) and k.get('genos') == genos), None)
     if row is None:
         return None
@@ -143,7 +143,8 @@ def gardener_form(law, genos):
     if term is None or (isinstance(row.get('identifier_forms'), list) and 'minted' not in row['identifier_forms']):
         return None
     forms = row.get('ownership_form')
-    crown = next((n.get('crown') for n in law.get('natures') or [] if isinstance(n, dict) and n.get('nature') == nature),
+    # THE CROWN IS THE LIFE CHAIN (31.0): the one branch a bean may name is the crown row that is not the root
+    crown = next((c.get('branch') for c in law.get('crown') or [] if isinstance(c, dict) and not c.get('root')),
                  None) if forms == 'crown' or forms == ['crown'] else None
     return {'nature': nature, 'key': term['term'], 'class': term['anchor'].get('class', 'logical'), 'crown': crown}
 
@@ -155,7 +156,7 @@ def gardener_bean(gid, name, when, garden_id=None, genos='person', form=None):
     known — so the gardener can be named in another garden from the first proposal on, and no other garden's
     `<genos>:<id>` is them."""
     import json
-    form = form or {'nature': 'empsychon', 'key': 'identifier', 'class': 'logical', 'crown': 'agape'}
+    form = form or {'nature': 'soma', 'key': 'identifier', 'class': 'logical', 'crown': 'agape'}
     pid = f"{garden_id}/{genos}:{gid}" if garden_id else f"{genos}:{gid}"
     owner = (f"crown: {form['crown']}" if form['crown']
              else 'external: "its members, as its own rules say: outside this garden"')
@@ -179,6 +180,39 @@ provenance: {{ src: asserted-by-human, by: "{gid} (gardener)", as_of: {when} }}
 """
 
 
+ZONE = None     # the civil time zone the garden reckons its days in, set by main (31.0: GARDEN.md `zone`)
+
+
+def host_zone():
+    """The IANA zone this machine keeps its clock in — READ, never guessed: $TZ where it names a zone, /etc/timezone, or
+    the zone /etc/localtime links to. None where none can be read (a machine that keeps no IANA name, as Windows)."""
+    tz = os.environ.get('TZ', '').lstrip(':')
+    if '/' in tz and not tz.startswith('/'):
+        return tz
+    try:
+        v = open('/etc/timezone', encoding='utf-8').read().strip()
+        if v:
+            return v
+    except OSError:
+        pass
+    try:
+        p = os.path.realpath('/etc/localtime')
+        if 'zoneinfo/' in p:
+            return p.split('zoneinfo/', 1)[1]
+    except OSError:
+        pass
+    return None
+
+
+def known_zones(root):
+    """The zones the law's `time-zones` registry holds (seed/knowledge/time-zones.tsv, its first column)."""
+    try:
+        with open(os.path.join(root, 'seed', 'knowledge', 'time-zones.tsv'), encoding='utf-8') as fh:
+            return {ln.split('\t', 1)[0].strip() for i, ln in enumerate(fh) if i and ln.strip()}
+    except OSError:
+        return set()
+
+
 def main(argv):
     gid = gname = name = None
     ggenos = 'person'
@@ -189,6 +223,12 @@ def main(argv):
             die("--profile takes the name of a profile the law offers: e.g. --profile knowledge")
         if p not in profiles:
             profiles.append(p)
+    global ZONE
+    if '--zone' in argv:
+        i = argv.index('--zone'); ZONE = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
+        if not ZONE:
+            die("--zone takes the civil time zone the garden reckons its days in, as the IANA database names it: "
+                "e.g. --zone Europe/Istanbul")
     if '--name' in argv:
         i = argv.index('--name'); name = argv[i + 1] if i + 1 < len(argv) else ''; argv = argv[:i] + argv[i + 2:]
         if not name:
@@ -217,6 +257,14 @@ def main(argv):
     target = os.path.abspath(target)
     seed = os.path.dirname(os.path.abspath(__file__))
     root = os.path.dirname(seed)
+    # THE GARDEN'S ZONE (31.0): the place half of every day it writes without saying where. Read from this machine's
+    # clock where --zone does not say it, and held to the law's `time-zones`; never guessed.
+    ZONE = ZONE or host_zone()
+    _zones = known_zones(root)
+    if not ZONE or (_zones and ZONE not in _zones):
+        die((f"--zone {ZONE!r} is not a zone of the law's `time-zones`" if ZONE else
+             "this machine keeps no zone name germinate can read") +
+            " — say where the garden reckons its days: --zone <IANA zone>, e.g. --zone Europe/Istanbul")
     try:
         import yaml  # noqa: F401
     except ImportError:
@@ -316,7 +364,7 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, la
             if dn == '__pycache__':
                 shutil.rmtree(os.path.join(dp, dn)); dns.remove(dn)
 
-    subst = {'@@VERSION@@': ver, '@@GARDEN@@': garden, '@@RELEASE@@': release}
+    subst = {'@@VERSION@@': ver, '@@GARDEN@@': garden, '@@RELEASE@@': release, '@@ZONE@@': ZONE}
     def fill(src, dst):
         text = open(src, encoding='utf-8').read()
         for k, v in subst.items():

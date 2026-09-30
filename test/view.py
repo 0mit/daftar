@@ -172,7 +172,7 @@ genos: instance
 title: "The yard-monitor"
 status: active
 summary: "The co-operative's running monitor: it probes the controllers and keeps their readings."
-nature: empsychon
+nature: lekton
 identity:
   status: confirmed
   anchors:
@@ -828,7 +828,7 @@ put("beans/zabbix.md", "---\nbean: zabbix\ngenos: product\ntitle: \"Zabbix\"\nst
     "provenance: { src: asserted-by-human, by: \"tessa (gardener)\", as_of: now }\nowned_by: { legal: { external: \"its authors\" } }\n"
     "responsibility: { legal: { holder: { bean: tessa } } }\n---\nA second monitor's software.\n")
 put("beans/radio-monitor.md", "---\nbean: radio-monitor\ngenos: instance\ntitle: \"The radio monitor\"\nstatus: active\n"
-    "summary: \"Reads the field radio's signal.\"\nnature: empsychon\nidentity:\n  status: confirmed\n  anchors:\n"
+    "summary: \"Reads the field radio's signal.\"\nnature: lekton\nidentity:\n  status: confirmed\n  anchors:\n"
     "    - { key: identifier, value: \"instance:radio-monitor\", class: logical, establishing: true }\n"
     "provenance: { src: observed, by: \"tessa (gardener)\", as_of: now }\nowned_by: { legal: { owner: { bean: tessa } } }\n"
     "responsibility: { legal: { holder: { bean: tessa } } }\ninstance_of: { bean: zabbix }\nlives_in: { bean: silo-controller }\n"
@@ -900,7 +900,7 @@ genos: person
 title: "{_p}"
 status: active
 summary: "a viewer of the co-operative's page"
-nature: empsychon
+nature: soma
 owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ self: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{_p}", class: logical, establishing: true }} ] }}

@@ -1,34 +1,34 @@
 ---
-version: "30.0"
+version: "31.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
   attrs:                "{<attr>: {required?, in, meaning}} — THE ATTRIBUTES: one record each, saying what the attribute is a position IN, whether it is required, and what it means — once, for the gate and the reader both. They describe each ENTRY of a list, an open map or a faceted mapping, and otherwise the mapping itself. An entry holds only the attributes declared here. See `attr_domains` for what `in:` may say."
   default_from:         "{registry, keyed_by, take} — inside an attribute's record: when the entry is SILENT, the attribute's value is READ from a registry row, the row selected by another attribute of the same entry. The registry stays the one owner of the usual value (a protocol's transport), and an entry states the attribute only when it differs. Like an aspect's default, a value that came from here never counts as OCCUPYING a position."
-  origin:               "{act, nature?, by?} — inside an attribute's record: WHERE A VALUE IN THIS POSITION COMES FROM, sorted by nature. `act` is a row of `acts`: made here, derived from what was given, read off the world or a clock, or said; `nature` is the nature of what it comes from, a row of `natures` or a list of them, and absent it may be any; `by` is one of the names the act's row lists, and absent the act is the recorder's own. Stated only where the one its domain gives (the domain's record in `attr_domains`, or the `origin` of its value type's row) is wrong, so every position has one origin and no tool keeps a list of names. A position read by the save (`by: save`) is written `now`, and the save writes in its place the reading of the journal heading it writes: the day at a date, the moment at a moment. A position its recorder reads (`act: read` and no `by`) may be written `now` too, and a reading typed there stands. A domain whose positions are its own (`entries`) or another's (`any`: the value of the field it tracks) takes no origin of its own, written `inner`"
+  origin:               "{act, nature?, alive?, by?} — inside an attribute's record: WHERE A VALUE IN THIS POSITION COMES FROM, sorted by act, by life and by nature. `act` is a row of `acts`: made here, derived from what was given, read off the world or a clock, or said; `nature` is the nature of what it comes from, a row of `natures` or a list of them, and absent it may be any; `alive: true` says it comes from a being in its living phase, which can be ASKED — a person — and ranks it above the same act from what cannot be; `by` is one of the names the act's row lists, and absent the act is the recorder's own. Stated only where the one its domain gives (the domain's record in `attr_domains`, or the `origin` of its value type's row) is wrong, so every position has one origin and no tool keeps a list of names. A position read by the save (`by: save`) is written `now`, and the save writes in its place the reading of the journal heading it writes: the day at a date, the moment at a moment. A position its recorder reads (`act: read` and no `by`) may be written `now` too, and a reading typed there stands. A domain whose positions are its own (`entries`) or another's (`any`: the value of the field it tracks) takes no origin of its own, written `inner`"
   empty:                "<prose> — inside an attribute's record: what an EMPTY or absent value of the position RECORDS, where another rule reads it as more than a value nobody gave — an empty `accepted` records no acceptance, and so no consent (F2). Stated once, here in the law, and read by the gate's refusal and by the forms a writer copies (bin/dmforms.py), which show it on every line that empties the position instead of 'empty unless said': there a copy left empty says something false whenever the act is known and only its day is not"
   cells:                "[{when, verdict|requires|expects, why}] — COMBINATIONS of what an entry holds. `verdict: incoherent` is an ERROR (the positions cannot both hold, so one is mis-stated); `verdict: in_breach` a WARNING (all can hold, and the state needs action). `requires: [...]` is an error when the entry sits in the cell and lacks those attributes — an item that is itself a list names alternatives, one of which is enough (`[[at, external]]`); `expects: [...]` the same as a warning. `when` maps an attribute to the value it holds, or to `{starts_with: …}`; an aspect attribute is read at its EFFECTIVE position, stated or defaulted."
   attr_domains:
     values:      { form: "in: [a, b, c] — one of a closed list written here", origin: { act: said, nature: lekton, by: law } }
     registry:    { form: "in: { registry: <name>, take: <field> } — a row of a registry, so the registry OWNS the enum and no term restates it. `where: { <field>: <value> | [<values>] }` narrows it to the rows that say so — a PLACE system, a TRANSPORT-layer protocol — so one registry serves attributes that may name only some of its rows. `registry_from: <attr>` instead of `registry`: the registry is NAMED by another attribute of the same entry", origin: { act: said, nature: lekton, by: law } }
     aspect:      { form: "in: { aspect: <name>, default: <position> } — a position on an opposition; the default applies when the entry is silent, and a default never counts as occupying the position", origin: { act: said, nature: lekton, by: law } }
-    type:        { form: "in: { type: <value type>, unit?: <unit> } — a row of `value_types`: its pattern, and for a time type its system and unit. `unit` beside a position type holds the attribute to that unit or a finer one — `minute` for a moment — and is the unit the save writes for `now`", origin: { act: said, nature: [lekton, empsychon] } }
-    form_of:     { form: "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form", origin: { act: said, nature: [lekton, empsychon] } }
-    system:      { form: "in: { system: <anchor system> } — a position in ONE named system, in that system's one form. `form_of` asks a sibling WHICH system; this names it, for an attribute that is only ever in one", origin: { act: said, nature: [lekton, empsychon] } }
+    type:        { form: "in: { type: <value type>, unit?: <unit> } — a row of `value_types`: its pattern, and for a time type its system and unit. `unit` beside a position type holds the attribute to that unit or a finer one — `minute` for a moment — and is the unit the save writes for `now`", origin: { act: said, nature: [lekton, soma] } }
+    form_of:     { form: "in: { form_of: <registry>, keyed_by: <attr>, take: pattern } — a position in the system a SIBLING attribute names, written in that system's ONE form. A row declaring `pattern: none` has deliberately no canonical form", origin: { act: said, nature: [lekton, soma] } }
+    system:      { form: "in: { system: <anchor system> } — a position in ONE named system, in that system's one form. `form_of` asks a sibling WHICH system; this names it, for an attribute that is only ever in one", origin: { act: said, nature: [lekton, soma] } }
     key_of:      { form: "in: { key_of: <term> } — a key of that term's mapping ON THIS BEAN, or `<bean>:<key>` on another: a PART of a being, resolved by the gate. Not an edge — the being is reached by the refs the bean already states", origin: { act: said, nature: lekton, by: law } }
     entries:     { form: "in: { entries: { <attr>: {required?, in, meaning} } } — entries INSIDE an entry: a list of them, or one mapping. Each is judged as an entry, by the attributes written here and by every rule an entry answers to. A ref inside one is resolved and draws no edge. `keyed_by: <attr>` beside `entries` says the list holds ONE entry per value of that attribute, and that the order of its entries carries nothing: two entries for one value are refused, and a merge compares the list in that attribute's order `one_of: [<attr>, ...]` beside `entries`: each entry inside carries at least one of these; `at_most_one_of: [[<attr>, ...], ...]`: and at most one of each group. `keyed_by` may name several attributes, `[<a>, <b>]`: one entry per combination of their values.", origin: inner }
     bean_id:     { form: "in: bean_id — the bare id of a bean the garden holds: resolved by the gate, and not an edge (an edge is a `ref`). `in: { bean_id: { gene: [<genos>, ...] } }` holds it to a bean of one of those gene", origin: { act: said, nature: lekton, by: law } }
     any:         { form: "in: any — DELIBERATELY any value, because its type is another attribute's business (a record's `value` is whatever the tracked field holds). A decision, where `untyped` is a debt", origin: inner }
     pattern:     { form: "in: { pattern: '<regex>' } — a form the TERM owns. With `soft: true` and a `why` it WARNS instead of refusing: the form a value SHOULD take while a corpus is migrated onto it", origin: { act: made } }
-    quantity:    { form: "in: { quantity: <name> } — a MEASURED VALUE, written { count, unit }: a speed, an acceleration, an area, a data rate, an amount of money. The unit must measure the quantity named; `count` is a whole number or a decimal written as a string, in the form `value_types[count]` declares, so that no float reaches a canonical form and every reader holds it exactly. A quantity whose row takes its units from a registry (`units_from`) holds a count with at most the row's `digits` decimal places. `in: { quantity: any }` takes any. A quantity may carry how well it is known inside it — `u` or `accuracy` (`uncertainty_form`) — and holds nothing else beside `count` and `unit`.", origin: { act: said, nature: [lekton, empsychon] } }
-    extent:      { form: "in: extent — a bounded region of an aspect's domain (`extent_form`)", origin: { act: said, nature: [lekton, empsychon] } }
-    recurrence:  { form: "in: recurrence — a repetition over a sequence: every Nth neighbour, every N units, or the same place in each cell of a level (`recurrence_form`)", origin: { act: said, nature: [lekton, empsychon] } }
+    quantity:    { form: "in: { quantity: <name> } — a MEASURED VALUE, written { count, unit }: a speed, an acceleration, an area, a data rate, an amount of money. The unit must measure the quantity named; `count` is a whole number or a decimal written as a string, in the form `value_types[count]` declares, so that no float reaches a canonical form and every reader holds it exactly. A quantity whose row takes its units from a registry (`units_from`) holds a count with at most the row's `digits` decimal places. `in: { quantity: any }` takes any. A quantity may carry how well it is known inside it — `u` or `accuracy` (`uncertainty_form`) — and holds nothing else beside `count` and `unit`.", origin: { act: said, nature: [lekton, soma] } }
+    extent:      { form: "in: extent — a bounded region of an aspect's domain (`extent_form`)", origin: { act: said, nature: [lekton, soma] } }
+    recurrence:  { form: "in: recurrence — a repetition over a sequence: every Nth neighbour, every N units, or the same place in each cell of a level (`recurrence_form`)", origin: { act: said, nature: [lekton, soma] } }
     ref:         { form: "in: ref — a {bean|mapping: <id>[, field: <key>]} ref; the gate RESOLVES it (dangling = error)", origin: { act: said, nature: lekton, by: law } }
     origin:      { form: "in: origin — where a value comes from, `{act, nature?, by?}` (`schema_language.origin`): a row of `acts`, a row of `natures` or a list of them, and one of the names the act's row lists", origin: { act: said, nature: lekton, by: law } }
     pointer:     { form: "in: { pointer: bean_field_pointer } — '<section>.<key>' on this bean, {bean, field} on another, or 'file:<path>'", origin: { act: said, nature: lekton, by: law } }
     id:          { form: "in: id — the id of a bean or mapping: a key of the ref FORM itself, on a term whose value `is_ref`", origin: { act: said, nature: lekton, by: law } }
     prose:       { form: "in: prose — a reason, a description, a remark. DELIBERATELY not a position: `why`, `what`, `note`. The reason IS the fact, and a schema for it would launder an opinion into a field. `in: { prose: named }` — one text, or several under the names of what each says: a map of named sayings, each one text", origin: { act: made } }
-    untyped:     { form: "in: untyped — a position whose domain nobody has declared yet. A standing debt, written down so that an oversight and a decision stop looking alike", origin: { act: said, nature: [lekton, empsychon] } }
+    untyped:     { form: "in: untyped — a position whose domain nobody has declared yet. A standing debt, written down so that an oversight and a decision stop looking alike", origin: { act: said, nature: [lekton, soma] } }
   is_ref:               "true — the value (or each entry) IS ITSELF a {bean|mapping: <id>[, field: <key>]} ref, which the gate resolves"
   path:                 "<dotted path> — the term governs a NESTED field rather than a top-level key named after it (`identity.status`, `identity.anchors[].class`, `provenance.src`)."
   alt_form:             "{key, ref_fields} — an ALTERNATIVE whole-value form: a mapping carrying `key` takes this form INSTEAD of the faceted one, and the per-key rules stand down for it (the inherited `owned_by: {via: …}`)."
@@ -73,16 +73,13 @@ term_form:
 crown:
   - branch: theos
     root: true
-    meaning: "θεός — the one substance: every chain terminates here. NOT nameable on a bean: a being reaches theos only through its branch."
-  - branch: physis
-    meaning: "φύσις — the terminus for beings of the nature soma, bodies with extension in space"
-  - branch: logos
-    meaning: "λόγος — the terminus for beings of the nature lekton, what exists by being said and agreed"
+    meaning: "θεός — THE ONE: the root every chain ends in — every life, and the ownership that ends in a life. NOT nameable on a bean: a being reaches theos only through agape."
   - branch: agape
-    meaning: "ἀγάπη, love that does not possess — the terminus for beings of the nature empsychon, while alive; life-bounded, lapses at death or teardown. This branch is what makes a person UNOWNABLE BY ANOTHER BEING: no bean may hold a person, only agape, and only while they live. That is a protection, not a formality — the gate enforces it via person.ownership_form."
+    meaning: "ἀγάπη, love that does not possess — the root of every life, and THE CROWN IS THE LIFE CHAIN: a being owned by no bean is held by its life chain (`creator`, walked to the life no garden holds), which ends here and is THE ONE's. A person is always held so: no bean may hold a person, only agape, and only while they live (the person's `alive_while`). That is a protection, not a formality — the gate enforces it via person.ownership_form."
 identity_policy:
   keyed_by: nature
   registry: natures
+  refined_by: { registry: gene, keyed_by: genos, take: establishing_anchor_family }
   applies_at_identity_status: confirmed
   anchor_key: term
   establishing_family: enforced
@@ -104,6 +101,7 @@ manifest:
     gardener:       { in: { bean_id: { gene: [person, org] } }, meaning: "the person — or organisation — who keeps the garden: a bean of the garden. Required once the garden holds a bean. The gardener ratifies here what an agent may not decide, and nothing outside the garden writes in it" }
     test:           { in: prose, meaning: "present when the garden is a rehearsal or a test, saying what it rehearses. Its beans are not facts about the world, and a proposal from it says so" }
     origin:         { in: prose, meaning: "where the garden began, for a reader" }
+    zone:           { required: true, in: { registry: time-zones, take: zone }, meaning: "the civil time zone the garden reckons its days in: the place half of every day and moment it writes without saying where — the end of the frame's chain (`complements.bearer`)" }
     policy:         { in: { prose: named }, meaning: "standing rules the gardener sets for work in the garden, in prose: one text, or each rule under a name of its own" }
 # == WHAT THE LAW RETIRED, so a refusal can say where it went ==
 retired:
@@ -134,10 +132,13 @@ retired:
   - { name: entry_form_from_kind_attr, at: schema, instead: "`entry_form_from_genos_attr`" }
   - { name: physical,      at: nature,   instead: "`soma`, σῶμα: a body with extension in space" }
   - { name: metaphysical,  at: nature,   instead: "`lekton`, λεκτόν: what exists by being said and agreed" }
-  - { name: living,        at: nature,   instead: "`empsychon`, ἔμψυχον: the ensouled, while alive" }
+  - { name: living,        at: nature,   instead: "`empsychon`, ἔμψυχον: the ensouled — itself retired: `soma` for a person, `lekton` for an instance or a virtual machine, and life each genos's `alive_while`" }
+  - { name: empsychon,     at: nature,   instead: "`soma` for a person, `lekton` for an instance or a virtual machine: life is no nature, it is each genos's `alive_while`, and the crown is the life chain" }
   - { name: god,           at: crown,    instead: "`theos`, θεός: the root, still nameable on no bean" }
-  - { name: nature,        at: crown,    instead: "`physis`, φύσις: the branch for a being of the nature soma" }
-  - { name: love,          at: crown,    instead: "`agape`, ἀγάπη: the branch for a being of the nature empsychon" }
+  - { name: nature,        at: crown,    instead: "`physis`, φύσις — itself retired: `agape`, for the crown is the life chain, and every chain ends there" }
+  - { name: physis,        at: crown,    instead: "`agape`: the crown is the life chain, and every chain ends there — no branch is chosen by nature" }
+  - { name: logos,         at: crown,    instead: "`agape`: the crown is the life chain, and every chain ends there — an agreement owned by none of its parties is held by the life its parties gave it" }
+  - { name: love,          at: crown,    instead: "`agape`, ἀγάπη: the root of every life, and the crown, which is the life chain" }
   - { name: person_id, at: term, instead: "`identifier`: the one term for an identity a being is given, its value written as it was" }
   - { name: contract_id, at: term, instead: "`identifier`: the one term for an identity a being is given, its value written as it was" }
   - { name: event_id, at: term, instead: "`identifier`: the one term for an identity a being is given, its value written as it was" }
@@ -197,20 +198,35 @@ provenance_record:
   meaning: "who said a fact and how they know — on a bean, an anchor or an entry. `from` names the records the fact was TAKEN or COMPUTED from — a map of name to record, or a list of records, each {src, by, as_of, at?} with `at` pointing at the input (`<section>.<key>`, {bean, field}, or `file:`); a generated fact weighs as the weakest of them. `garden` is the `garden_id` of the garden the record was made in, where that is not this one: stamped once, when a proposal carries the fact across, and never changed. `via` is the PATH after it: the gardens the record passed through, in order, each appended by the garden that passed it on and never rewritten; only the last must be a garden met, and a path holding the reader's own id is a loop, refused. `as_of` is the day the record was written down, and it is STAMPED (`as_of: stamped`): the day of a journal heading the same commit adds — read from the clock, as the heading is, and never typed. It is written `now`, and the save writes the day in its place. A record is matched by what it is (src, by, as_of), not where it sits, so one moved is not added; a record carrying ANOTHER garden's `garden` keeps the stamp that garden gave it; the merge engine's own record says `merged`."
 natures:
   - nature: soma
-    meaning: "σῶμα, a body — a being with extension in space: machines, hardware, sites"
-    crown: physis
+    meaning: "σῶμα, a body — a being that takes room in space: a machine, a site, a person. Where it stands among bodies is its genos's `level` in `complexity`"
     establishing_anchor_family: [hardware]
     min_establishing_anchors: 1
   - nature: lekton
-    meaning: "λεκτόν, the sayable — a being that exists by being said and agreed, constituted by meaning or agreement: code, products, orgs, domains, designs, contracts"
-    crown: logos
+    meaning: "λεκτόν, the sayable — a being placed in an order, a register or a habitat, and never taking room in space: code, a product, an organisation, a domain, a design, a contract, a running instance, a virtual machine"
     establishing_anchor_family: [logical]
     min_establishing_anchors: 1
-  - nature: empsychon
-    meaning: "ἔμψυχον, the ensouled — a being that strives to persist as itself: persons, and running instances while alive"
-    crown: agape
-    establishing_anchor_family: [logical]
-    min_establishing_anchors: 1
+# == COMPLEXITY: the order of bodies ==
+complexity:
+  - { level: elementary-particle, line: matter,   stands_on: [],                             meaning: "the dot of matter: what has no part known today. Found divisible, it is divided as every dot is (`division_form`), and keeps its system" }
+  - { level: hadron,              line: matter,   stands_on: [elementary-particle],         meaning: "particles bound of quarks: a proton, a neutron" }
+  - { level: nucleus,             line: matter,   stands_on: [hadron],                      meaning: "hadrons bound into the core of an atom" }
+  - { level: atom,                line: matter,   stands_on: [nucleus, elementary-particle], meaning: "a nucleus with its electrons — hydrogen the first" }
+  - { level: molecule,            line: matter,   stands_on: [atom],                        meaning: "atoms bound: water, a protein" }
+  - { level: cell,                line: living,   stands_on: [molecule],                    meaning: "the least that lives of itself: it takes in, grows and divides" }
+  - { level: tissue,              line: living,   stands_on: [cell],                        meaning: "cells of one kind working as one" }
+  - { level: organ,               line: living,   stands_on: [tissue],                      meaning: "tissues working as one part of a body: a leaf, a heart" }
+  - { level: organ-system,        line: living,   stands_on: [organ],                       meaning: "organs working as one: a plant's roots, an animal's blood" }
+  - { level: organism,            line: living,   stands_on: [cell, tissue, organ-system],  meaning: "a living body that is one being: a microbe on its one cell, a tree, an animal, a person" }
+  - { level: population,          line: living,   stands_on: [organism],                    meaning: "organisms of one kind living together: a herd, a stand of trees" }
+  - { level: community,           line: living,   stands_on: [population],                  meaning: "populations of many kinds living together" }
+  - { level: ecosystem,           line: living,   stands_on: [community, material],         meaning: "a community with the matter it lives on and in" }
+  - { level: biosphere,           line: living,   stands_on: [ecosystem],                   meaning: "every ecosystem of a body together" }
+  - { level: material,            line: material, stands_on: [molecule],                    meaning: "matter in bulk, of one kind or a mixture: a mineral, a metal, glass, water" }
+  - { level: rock,                line: material, stands_on: [material],                    meaning: "materials aggregated by nature" }
+  - { level: celestial-body,      line: material, stands_on: [rock, material],              meaning: "a body of the sky, as the `bodies` rows are: a planet, a moon" }
+  - { level: component,           line: made,     stands_on: [material],                    meaning: "a made part: a chip, a board, a platter, a cable" }
+  - { level: device,              line: made,     stands_on: [component],                   meaning: "components assembled to work as one: a machine, a router, a drive, a camera, a sensor. What it does beyond keeping its form is lent by its makers and keepers, through its life chain" }
+  - { level: installation,        line: made,     stands_on: [device, material],            meaning: "devices and structure assembled at a place: a rack, a room of machines, a building" }
 # == ACTS: how a value came to be where it is ==
 acts:
   - { act: made,    meaning: "made here, by the writer or a tool, from nothing given: prose, a name minted. It may hold a value found in nothing given" }
@@ -239,7 +255,7 @@ reference_system_kinds:
   - { kind: projected,     meaning: "a plane: the body's curved surface flattened by a named projection, in metres" }
   - { kind: vertical,      meaning: "a height or depth alone, against a named surface" }
   - { kind: engineering,   meaning: "a local frame fixed to a structure or a vehicle, moving with it" }
-  - { kind: compound,      meaning: "a horizontal system and a vertical one together" }
+  - { kind: compound,      meaning: "systems together: a horizontal and a vertical one, or a spatial and a temporal one — the frame's two halves in one (ISO 19111:2019)" }
 reference_frames:
   - { frame: static,  meaning: "fixed to a tectonic plate (or to a body with none): ground keeps its coordinates" }
   - { frame: dynamic, meaning: "fixed to the whole body: ground drifts in it, and a coordinate needs its epoch" }
@@ -281,6 +297,7 @@ system_registries:
 anchor_systems:
   - system: unix-filesystem
     dimension: place
+    complement: [stated, bearer]
     levels: open
     neighbours: none
     datum: host
@@ -291,6 +308,7 @@ anchor_systems:
     why: "a path is reassignable and a tree can be checked out anywhere, so it CORROBORATES a location and never fixes it — the same rule that keeps `hostname` and `ip` corroborating-only"
   - system: git-remote
     dimension: place
+    complement: [stated, bearer]
     neighbours: none
     datum: host
     meaning: "a REPOSITORY as a client names it to fetch from: `<host>:<path>` as ssh writes it (`host-a:git/ledger.git`, `me@host-a:/srv/git/ledger.git`), or a URL (`https://example.org/ledger.git`). The host is part of the position, as a path's is: one path on two hosts is two repositories"
@@ -300,6 +318,7 @@ anchor_systems:
     why: "a repository is mirrored and moved between hosts: where it is fetched from corroborates which code it holds, and the code's own identity is its `git_remote`"
   - system: git-object-graph
     dimension: place
+    complement: [stated, bearer]
     neighbours: counted
     datum: host
     meaning: "a position in a repository's object graph — REACHABLE-FROM, not CHECKED-OUT-AT. This is the system `staleness_key: git-head:<sha>` was reaching for and missing: it compared against whatever tree the reader happened to have checked out, which is a fact about the reader and not about the analysis."
@@ -309,6 +328,7 @@ anchor_systems:
     why: "an object id is content-addressed — it names the same object in every clone that has it, and no two clones can disagree about what it contains"
   - system: guix-store
     dimension: place
+    complement: [stated, bearer]
     neighbours: none
     meaning: "an item in a GNU Guix store: a build output named by a hash of EVERYTHING that went into building it. With git-object-graph, the second place system here in which a position says what it holds — for a BUILT thing, where git's is for a written one."
     pattern: '^/gnu/store/[0-9a-df-np-sv-z]{32}-[A-Za-z0-9+._?=-]+(/.*)?$'
@@ -318,6 +338,7 @@ anchor_systems:
     why: "the hash is computed from the inputs, so the same position names the same build on every machine that has it"
   - system: physical
     dimension: place
+    complement: [stated, bearer]
     meaning: "where a PHYSICAL COPY is: a printed listing on a shelf, a disk in a drawer, a machine in a room. Declared because a codebase is not always a tree on a host — this ledger's own first rule is that it must survive being printed on paper and rescanned, and a printed copy has an address like anything else."
     pattern: none
     establishes: false
@@ -325,6 +346,7 @@ anchor_systems:
   # == A CALENDAR IS NOT TIME ==
   - system: gregorian-civil
     dimension: time
+    complement: [stated, bearer]
     calendar: gregory
     reckoning: arithmetic
     day_begins: midnight
@@ -341,6 +363,7 @@ anchor_systems:
     why: "a wall-clock reading without its geographic frame is ambiguous. The estate's own case: a cutoff computed on a +03 host was applied to UTC logs, and the watch reported zero hits while a campaign was running."
   - system: iso-week
     dimension: time
+    complement: [stated, bearer]
     calendar: iso8601
     reckoning: arithmetic
     day_begins: midnight
@@ -358,6 +381,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: julian-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: julian
     reckoning: arithmetic
     day_begins: midnight
@@ -375,6 +399,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: persian-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: persian
     reckoning: arithmetic
     day_begins: midnight
@@ -392,6 +417,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: hebrew-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: hebrew
     reckoning: arithmetic
     day_begins: sunset
@@ -409,6 +435,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: islamic-civil-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: islamic-civil
     reckoning: arithmetic
     day_begins: sunset
@@ -426,6 +453,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: islamic-tbla-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: islamic-tbla
     reckoning: arithmetic
     day_begins: sunset
@@ -443,6 +471,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: islamic-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: islamic
     reckoning: observational
     day_begins: sunset
@@ -460,6 +489,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: islamic-rgsa-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: islamic-rgsa
     reckoning: observational
     day_begins: sunset
@@ -477,6 +507,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: islamic-umalqura-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: islamic-umalqura
     reckoning: tabulated
     day_begins: sunset
@@ -494,6 +525,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: coptic-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: coptic
     reckoning: arithmetic
     day_begins: midnight
@@ -511,6 +543,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: ethiopic-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: ethiopic
     reckoning: arithmetic
     day_begins: midnight
@@ -528,6 +561,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: ethiopic-amete-alem-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: ethioaa
     reckoning: arithmetic
     day_begins: midnight
@@ -545,6 +579,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: indian-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: indian
     reckoning: arithmetic
     day_begins: midnight
@@ -562,6 +597,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: buddhist-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: buddhist
     reckoning: arithmetic
     day_begins: midnight
@@ -579,6 +615,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: roc-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: roc
     reckoning: arithmetic
     day_begins: midnight
@@ -596,6 +633,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: japanese-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: japanese
     reckoning: arithmetic
     day_begins: midnight
@@ -613,6 +651,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: chinese-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: chinese
     reckoning: astronomical
     day_begins: midnight
@@ -630,6 +669,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: dangi-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: dangi
     reckoning: astronomical
     day_begins: midnight
@@ -647,6 +687,7 @@ anchor_systems:
     why: "a calendar reading corroborates when something happened and never fixes which being did it — as for gregorian-civil"
   - system: julian-day
     dimension: time
+    complement: [system]
     calendar: julian-day
     reckoning: arithmetic
     day_begins: noon
@@ -664,6 +705,7 @@ anchor_systems:
     why: "a day corroborates when something happened and never fixes which being did it"
   - system: mayan-long-count
     dimension: time
+    complement: [stated, bearer]
     calendar: mayan-long-count
     reckoning: arithmetic
     day_begins: midnight
@@ -681,6 +723,7 @@ anchor_systems:
     why: "as for julian-day"
   - system: bahai-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: bahai
     reckoning: astronomical
     day_begins: sunset
@@ -698,6 +741,7 @@ anchor_systems:
     why: "as for gregorian-civil"
   - system: french-republican-calendar
     dimension: time
+    complement: [stated, bearer]
     calendar: french-republican
     reckoning: astronomical
     day_begins: midnight
@@ -715,6 +759,7 @@ anchor_systems:
     why: "as for gregorian-civil"
   - system: unix-epoch
     dimension: time
+    complement: [system]
     levels: [ { level: millisecond, unit: millisecond } ]
     datum: { system: gregorian-civil, at: "1970-01-01 00:00Z", direction: after }
     neighbours: metered
@@ -760,6 +805,7 @@ anchor_systems:
     why: "as for kelvin-scale"
   - system: geographic
     dimension: place
+    complement: [stated, bearer]
     neighbours: metered
     restrictions: { lines: 3, metered: length }
     meaning: "a position BY COORDINATES, in a named coordinate reference system, on the body that system is fixed to. THE ROOT OF PLACE: every other place system resolves through this one. Named here also because CIVIL TIME RESOLVES THROUGH IT — an offset is a geographic fact wearing a time costume."
@@ -790,6 +836,7 @@ anchor_systems:
     why: "an ordinal number says which of a line's positions, never which being"
   - system: network-segment
     dimension: place
+    complement: [stated, bearer]
     resolves_through: geographic
     levels: [ { level: network }, { level: segment } ]
     neighbours: counted
@@ -800,6 +847,7 @@ anchor_systems:
     why: "a being moves between segments — a laptop joins the guest network and then the staff one — so a segment corroborates where it is and never fixes which being it is"
   - system: windows-filesystem
     dimension: place
+    complement: [stated, bearer]
     levels: open
     neighbours: none
     datum: host
@@ -811,6 +859,7 @@ anchor_systems:
   # == ADDRESSES AND PORTS ARE PLACES ==
   - system: ipv4
     dimension: place
+    complement: [stated, bearer]
     levels: { by: prefix-length, from: 0, to: 32 }
     neighbours: counted
     restrictions: { lines: 1, ends: bounded }
@@ -821,6 +870,7 @@ anchor_systems:
     why: "reassignable by DHCP, NAT, failover and plain reuse — it corroborates which being answers and never fixes which being it IS. The same rule the `ip` anchor has always carried, now stated where the position is."
   - system: ipv6
     dimension: place
+    complement: [stated, bearer]
     levels: { by: prefix-length, from: 0, to: 128 }
     neighbours: counted
     restrictions: { lines: 1, ends: bounded }
@@ -831,6 +881,7 @@ anchor_systems:
     why: "everything ipv4's reason says, and one more: v6 addresses are also AUTOCONFIGURED, so a being may answer at an address nobody assigned and nobody recorded."
   - system: tcp-port
     dimension: place
+    complement: [stated, bearer]
     transport: tcp
     within: [ipv4, ipv6]
     neighbours: counted
@@ -842,6 +893,7 @@ anchor_systems:
     why: "a port is reassigned by editing one line of configuration — it corroborates which listener answers and never fixes which being it is"
   - system: udp-port
     dimension: place
+    complement: [stated, bearer]
     transport: udp
     within: [ipv4, ipv6]
     neighbours: counted
@@ -853,6 +905,7 @@ anchor_systems:
     why: "as for tcp-port"
   - system: iso-3166
     dimension: place
+    complement: [stated, bearer]
     resolves_through: geographic
     levels: [ { level: country }, { level: subdivision } ]
     neighbours: counted
@@ -863,6 +916,7 @@ anchor_systems:
     why: "a published code names the same territory in every garden; it survives a renaming, which a name does not"
   - system: osm
     dimension: place
+    complement: [stated, bearer]
     resolves_through: geographic
     neighbours: none
     meaning: "an OpenStreetMap element. An IDENTIFIER in somebody else's database: convenient, stable across a renaming, and NOT what a place is anchored to."
@@ -874,6 +928,7 @@ anchor_systems:
   # == MORE WAYS OF SAYING WHERE BY IDENTIFIER ==
   - system: street-address
     dimension: place
+    complement: [stated, bearer]
     within: [iso-3166]
     resolves_through: geographic
     neighbours: none
@@ -883,6 +938,7 @@ anchor_systems:
     why: "an address names a DELIVERY POINT that is renumbered, renamed and shared — and one building has many"
   - system: local-frame
     dimension: place
+    complement: [stated, bearer]
     datum: host
     resolves_through: geographic
     neighbours: counted
@@ -894,6 +950,7 @@ anchor_systems:
     why: "rooms are renumbered and racks re-filled; and the frame itself may be moved"
   - system: along
     dimension: place
+    complement: [stated, bearer]
     resolves_through: local-frame
     neighbours: metered
     restrictions: { lines: 1, metered: length }
@@ -905,6 +962,7 @@ anchor_systems:
     why: "a distance along a being says where on it, never which being"
   - system: geohash
     dimension: place
+    complement: [stated, bearer]
     resolves_through: geographic
     levels: { by: prefix-length, from: 1, to: 12 }
     neighbours: counted
@@ -916,6 +974,7 @@ anchor_systems:
     why: "a cell says roughly where and never what"
   - system: plus-code
     dimension: place
+    complement: [stated, bearer]
     resolves_through: geographic
     levels: { by: prefix-length, from: 2, to: 15 }
     neighbours: counted
@@ -927,6 +986,7 @@ anchor_systems:
     why: "as for geohash"
   - system: postal-code
     dimension: place
+    complement: [stated, bearer]
     resolves_through: geographic
     within: [iso-3166]
     levels: { by: prefix-length, from: 1, to: 12 }
@@ -938,6 +998,7 @@ anchor_systems:
     why: "codes are re-drawn by the postal operator that issues them, and one code covers many places"
   - system: relative
     dimension: place
+    complement: [stated, bearer]
     resolves_through: geographic
     neighbours: metered
     restrictions: { lines: 3, metered: length }
@@ -951,6 +1012,7 @@ anchor_systems:
   # == DEEP TIME: beyond every calendar's reach ==
   - system: bp-1950
     dimension: time
+    complement: [system]
     neighbours: metered
     restrictions: { lines: 1, metered: time }
     datum: { system: gregorian-civil, at: "1950-01-01", direction: before }
@@ -963,6 +1025,7 @@ anchor_systems:
     why: "an age says when, never what"
   - system: b2k
     dimension: time
+    complement: [system]
     same_ground_as: [bp-1950]
     crosswalk: computed
     neighbours: metered
@@ -977,6 +1040,7 @@ anchor_systems:
     why: "as for bp-1950"
   - system: ics-chronostrat
     dimension: time
+    complement: [system]
     levels: [ { level: super-eon }, { level: eon }, { level: era }, { level: period }, { level: sub-period }, { level: epoch }, { level: age } ]
     neighbours: counted
     restrictions: { lines: 1, order: partial }
@@ -1054,9 +1118,10 @@ registry_forms:
   natures:
     nature: required
     meaning: required
-    crown: required
     establishing_anchor_family: required
     min_establishing_anchors: required
+  complexity: { level: required, line: required, stands_on: required, meaning: required }
+  divisions: { division: required, whole: required, parts: required, system: optional, covers: required, disjoint: required, wholeness: required, checked_by: required }
   acts: { act: required, meaning: required, by: optional }
   bodies: { body: required, mean_radius_m: required, authority: required, meaning: required }
   reference_system_kinds: { kind: required, meaning: required }
@@ -1094,6 +1159,7 @@ registry_forms:
     transport: optional
     within: optional
     unit_symbols: optional
+    complement: optional
     cells_in: optional
     boundaries_in: optional
     overlay: optional
@@ -1114,7 +1180,8 @@ registry_forms:
     plane: optional
     family: optional
     scope: optional
-  dimensions: { dimension: required, meaning: required }
+  dimensions: { dimension: required, meaning: required, frame: optional }
+  complements: { complement: required, meaning: required }
   quantities:
     quantity: required
     of: required
@@ -1210,6 +1277,7 @@ registry_forms:
     ends: optional
     domain: optional
     term_key: optional
+    pair: optional
   registry_files: { registry: required, file: required, key: required, format: optional }
   facets:
     facet: required
@@ -1243,6 +1311,9 @@ registry_forms:
     identifier_forms: optional
     responsibility_form: optional
     takes_time_of: optional
+    level: optional
+    establishing_anchor_family: optional
+    alive_while: optional
 
 # == NET PROTOCOLS: the one owner of what a being may SPEAK ==
 net_protocols:
@@ -1367,9 +1438,14 @@ net_protocols:
     meaning: "PPP over Ethernet: a WAN dial that runs directly on ethernet frames, with no IP transport or port of its own. Like wireguard it MANUFACTURES a link, which is what lets a tunnel name it in `carried_by`."
 
 # == UNITS: the resolution a position is actually held to ==
+# == THE FRAME: place and time ==
+complements:
+  - { complement: stated, meaning: "the entry states its other half: a place position's time in its `during` or `observed`, a time position's place in its `where` or `zone`" }
+  - { complement: bearer, meaning: "else it is the bearer's: a place position is as of the statement that holds it (its provenance `as_of`); a time position is where the being that bears it is (its `located_at` zone), else where the garden reckons its days (GARDEN.md `zone`)" }
+  - { complement: system, meaning: "the system carries its other half itself: a count on a time scale kept on one body's prime meridian, deep time fixed by a point in a rock, an age counted back from one year" }
 dimensions:
-  - { dimension: time,        meaning: "how long" }
-  - { dimension: length,      meaning: "how far" }
+  - { dimension: time,        frame: time,  meaning: "how long — with length, the frame the universe is divided in: neither prior, each only with the other" }
+  - { dimension: length,      frame: place, meaning: "how far — with time, the frame the universe is divided in: neither prior, each only with the other" }
   - { dimension: mass,        meaning: "how much matter" }
   - { dimension: information, meaning: "how much can be stored or carried" }
   - { dimension: money,       meaning: "how much value, in a currency" }
@@ -1616,6 +1692,33 @@ figures:
     extent_why: "a sequence with an order has a domain, and a bounded region of it is an extent (a duration on time)"
     holds: possible
     holds_why: "a position of a sequence may HOLD what was found there — a flow at a moment, a porosity over a stretch of a core, a step a case has reached: a sequence whose positions hold is a series"
+# == NAMES ==
+name_form:
+  meaning: "A row of a names file (`seed/names/<language>.tsv`, tab-separated, one file a language): an item of the law named in that language for publication, with the words and roots of the language that bear on how the law uses it. The law's own word is the code; a name is how a reader of that language meets it. Written by hand, one language beside another, each a sibling."
+  item:     "the law's item, as the catalogue names it: `term:<term>`, `registry:<name>`, `section:<name>`, `<registry>:<row>` (`natures:soma`, `complexity:organism`)"
+  name:     "the name in the file's language, in its own script"
+  roots:    "optional: the language's words and roots that bear on the item's use in the law, and what each says — `ψυχή (breath, life)`"
+  status:   "proposed | confirmed: proposed until a reader whose language it is confirms it"
+  by:       "who wrote or confirmed it: a name, or an agent's make"
+  languages: "the files' names, ISO 639: en · fa · tr · grc · de · fr · it · la · ar"
+# == DIVISIONS ==
+division_form:
+  meaning: "A position is a dot: without parts in its own system. What is DIVIDED keeps its system — a finer system is a level of the coarser, or one declared beside it — and its WHOLENESS: how the parts make the whole is declared, and the gate judges it. Every rule the law has on a whole and its parts is one of these, named in `divisions` with the rule that judges it; a garden's own division is judged by the gate itself (`checked_by: division`)."
+  division:  "its name, kebab"
+  whole:     "what is divided — for a garden's own division `{ term, attr }`: the quantity a being states in one of its terms"
+  parts:     "what divides it — for a garden's own division `{ via, term, attr }`: the beings that name the whole through the relation `via` (`part_of`, `lives_in`), each with the quantity it states in its own term"
+  system:    "optional: the system, and the level, the division is made in"
+  covers:    "true | false: whether the parts together are the whole, leaving nothing of it"
+  disjoint:  "true | false: whether no two parts share anything of it"
+  wholeness: "{ aggregate, is } — how the parts make the whole: a row of `aggregates` over the parts' quantities, and how it stands to the whole's: `equal`, `at_most` or `at_least`. Exact: summed as fractions, in the unit of the whole"
+  checked_by: "the law's item whose rule judges it — `terms[<term>]`, `registry:<name>` or `section:<name>` — or `division` for the gate's own judgement"
+divisions:
+  - { division: capacity, whole: "a being's `capacity`", parts: "the placements that take from it: `lives_in` and `located_at` with `takes`", covers: false, disjoint: true, wholeness: { aggregate: sum, is: at_most }, checked_by: "terms[capacity]" }
+  - { division: ownership, whole: "a being's ownership", parts: "its facets, each with one owner and one entry that answers for it, every facet reaching legal", covers: true, disjoint: true, wholeness: { aggregate: count, is: equal }, checked_by: "terms[owned_by]" }
+  - { division: shares, whole: "what a transaction moved", parts: "the shares its parties paid and bear", covers: true, disjoint: true, wholeness: { aggregate: sum, is: equal }, checked_by: "terms[transactions]" }
+  - { division: cells, whole: "a cell of a system's coarser level", parts: "the cells of its finer level", covers: true, disjoint: true, wholeness: { aggregate: count, is: at_least }, checked_by: "registry:anchor_systems" }
+  - { division: bodies, whole: "a body", parts: "the bodies `part_of` it", covers: false, disjoint: true, wholeness: { aggregate: max, is: at_most }, checked_by: "registry:complexity" }
+  - { division: series, whole: "a series' `whole`", parts: "the values its rows hold", covers: true, disjoint: true, wholeness: { aggregate: sum, is: equal }, checked_by: "terms[series]" }
 # == EXTENT ==
 extent_form:
   in:      "optional: the positioning SYSTEM the region is stated in. A system may be metered where its aspect is not (`geographic` in metres), and then the region may carry a measure."
@@ -1929,6 +2032,10 @@ layers:
     files: true
     holds: [log/pending.md]
     meaning: "what waits for a person: proposed, parked and settled in place, and edited as it moves"
+  - layer: names
+    files: true
+    holds: ["seed/names/*.tsv"]
+    meaning: "the law's words named in the languages of the people who read it: one file a language, the languages siblings — English's display names one set among them. For publication, on pages and in drawings; the gate reads no meaning from them, and a name never changes what the law says (`name_form`)"
   - layer: guide
     files: true
     holds: [README.md, AGENTS.md, seed/README.md, seed/WELCOME.md, seed/COOKBOOK.md, seed/FORMS.md, "seed/*.template",
@@ -2199,6 +2306,7 @@ aspects:
     acyclic: true
     ends: open
     domain: { systems: time }
+    pair: place
   - aspect: place
     meaning: "where: a position among the places a being can be, whether a coordinate, a site or a path in a tree"
     figure: sequence
@@ -2208,6 +2316,7 @@ aspects:
     acyclic: true
     ends: bounded
     domain: { systems: place }
+    pair: time
   - aspect: walk
     meaning: "a relation a reader can walk from being to being without coming back: ownership, habitat, part-of, dependency"
     figure: sequence
@@ -2838,7 +2947,7 @@ terms:
     merge: { cardinality: multi, order: by-bean }
   # == CORE GRAMMAR ENUMS ==
   - term: status
-    meaning: "the lifecycle state of a bean"
+    meaning: "where the being stands on its genos's lifecycle: planned, then active, then deprecated, then closed; draft for a record not yet whole. It LIVES while its status is active or deprecated, as its genos's `alive_while` says and says how it is known"
     context_keys: ["status"]
     schema:
       path: status
@@ -2868,7 +2977,7 @@ terms:
       inferred:           { act: derived, nature: lekton }
       observed:           { act: read,    nature: soma }
       stated-in-document: { act: said,    nature: lekton }
-      asserted-by-human:  { act: said,    nature: empsychon }
+      asserted-by-human:  { act: said,    nature: soma, alive: true }
     values_meaning:
       asserted-by-human: "a person said so, and answers for it. The top, because a person can be ASKED, and because the fact may be one only a person can know (who owns this, what was agreed). The guard protects this place and no other."
       stated-in-document: "a document states it — a contract, a letter, a register, a page — and the document is named in `from`. Words someone wrote and answers for, but the document cannot be asked: above what was read off the world, below a person who can be."
@@ -2915,7 +3024,7 @@ terms:
         note: { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-key }
   - term: nature
-    meaning: "the ontological category of a being; routes it to the correct branch of the ownership crown"
+    meaning: "the register a being is in: `soma`, taking room in space, or `lekton`, placed in an order. Its genos refines it, and it decides what establishes its identity"
     context_keys: ["nature"]
     schema:
       shape: scalar
@@ -2932,13 +3041,12 @@ terms:
       alt_form: { key: via, ref_fields: [via] }
       key_form: "values_from:registry:facets[].facet"
       entry_one_of: [owner, contract, external, crown]
-      entry_must_match:
-        - { attr: crown, registry: natures, keyed_by: nature, take: crown }
       entry_form_from_genos_attr: ownership_form
       dag: true
       attrs:
         owner:     { in: ref }
         contract:  { in: ref }
+        crown:     { in: { registry: crown, take: branch, where: { root: [null] } }, meaning: "owned by no bean: held by its life chain, which ends at agape — the crown is the life chain" }
         since:     { in: { type: position }, meaning: "optional: ABSOLUTE date this owner came to hold the facet" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: multi, order: by-facet }
@@ -3011,13 +3119,15 @@ terms:
         bean:  { required: true, in: id }
     merge: { cardinality: single, order: none }
   - term: creator
-    meaning: "the being that made this being"
+    meaning: "THE LIFE CHAIN'S EDGE: the living being through whose act this being lives — made, started, planted, signed, ratified, born of — and, where another acted for it, `via` that other: a timer a person set, a unit a person enabled. A being whose life-giver the garden does not hold names none: its chain ends at the crown, agape. The chain is walkable and acyclic, and it is no bean's: it is THE ONE's (`crown`)"
     context_keys: ["creator"]
     schema:
       shape: mapping
       is_ref: true
+      dag: true
       attrs:
         bean:  { required: true, in: id }
+        via:   { in: ref, meaning: "the being that acted for the life-giver" }
     merge: { cardinality: single, order: none }
   - term: ip
     meaning: "an Internet Protocol address identifying a network interface/endpoint"
@@ -3168,7 +3278,7 @@ terms:
       - { case: "YAML-coerced ref target (bean: no→False)", decision: "non-string target = error; quote the id", why: "coerced targets silently skipped", acked: 2026-07-31 }
   # == THE BEAN-GRAMMAR AND FACT-SECTION KEYS ==
   - term: genos
-    meaning: "which genos of being this bean records; a refinement of its nature, from the `gene` registry"
+    meaning: "which genos of being this bean records; a refinement of its nature, from the `gene` registry — for a body, at its `level` in `complexity`; and its life, `alive_while`"
     context_keys: [genos]
     enforced_by: core
     merge: { cardinality: single, order: none }
@@ -3836,65 +3946,84 @@ terms:
 gene:
   - genos: codebase
     of_nature: lekton
+    alive_while: { known: said, by: "while it is kept and worked on" }
     meaning: "a source-code tree managed as one object (a repo / Odoo addon / plugin project)."
   - genos: product
     of_nature: lekton
+    alive_while: { known: said, by: "while it is made and supported" }
     meaning: "an umbrella bean tying a product's codebases + business context together; not itself code. A THIRD-PARTY product is recorded here for one reason only: so its per-host deployments have a TYPE to be instances of. That rationale belongs to this genos and is stated once — a product bean should describe the product, not re-explain why it exists. A product is a LOGICAL code unit — its mapping to storage (git repos) is many-to-many (sub-git or multi-git); git_remote is a source anchor, NOT product identity."
   # == being-gene for the ownership / type-token / habitat model ==
   - genos: org
     of_nature: lekton
+    alive_while: { known: said, by: "while it is constituted and acts" }
     meaning: "an organization / juridical person (company) that owns beings."
   - genos: person
-    of_nature: empsychon
+    of_nature: soma
+    level: organism
+    establishing_anchor_family: [logical]
+    alive_while: { known: said, by: "while they live — said, and never probed" }
     ownership_form: crown
     identifier_forms: [minted, issued]
     meaning: "a human being who can own/steward other beings."
   - genos: instance
-    of_nature: empsychon
+    of_nature: lekton
+    alive_while: { known: measured, by: "while it runs: a monitor that reaches it answers, and where none does, as said" }
     meaning: "a running token — a deployment of a code product in a habitat, carrying the runtime facts. Distinct being from its code product; `instance_of` and `lives_in` are required on it."
   - genos: host
     of_nature: soma
+    level: device
+    alive_while: { known: measured, by: "while it is powered and answers" }
     meaning: >
       A MACHINE THE ESTATE RUNS ON — matter of its own: bare metal, general-purpose or appliance. A virtual
       machine is a `virtual-host`; a router is a host in the `router` role. What a genos answers is the one
       question: this being is a machine.
   - genos: virtual-host
-    of_nature: empsychon
+    of_nature: lekton
+    alive_while: { known: measured, by: "while it runs on its hypervisor and answers" }
     meaning: >
       A VIRTUAL MACHINE — a running machine-instance on a hypervisor, rented from a provider or run on a host of
       the estate's own. It has no matter: what identifies it is the provider's instance id or its name, never a
-      serial, and it lapses at teardown. That is the nature empsychon, as `instance`'s is. TENANCY is not what it is:
+      serial: it is placed by its habitat and takes no room in space, so it is lekton, as an `instance` is. TENANCY is not what it is:
       a rented VM is owned `external` (the provider) and answered for here; a VM on the estate's own hypervisor
       is owned through it. Its habitat, where that is a bean, is `lives_in`.
   - genos: domain
     of_nature: lekton
+    alive_while: { known: derived, by: "while its registration holds: before the day it lapses" }
     meaning: "a DNS domain — a name held by agreement with a registry, not a thing in space."
   - genos: service
     of_nature: lekton
+    alive_while: { known: measured, by: "while it is served: its endpoints answer" }
     meaning: "a named capability the estate provides or consumes (mail pipeline, monitoring), above any one host."
   - genos: program
     of_nature: lekton
+    alive_while: { known: said, by: "while its work goes on" }
     meaning: "a bounded body of work with an aim (a hardening programme), tracked as one object."
   - genos: design
     of_nature: lekton
+    alive_while: { known: said, by: "while it stands as the reasoning in force" }
     meaning: "a durable design/decision document — the recorded reasoning behind a change."
   - genos: session
     of_nature: lekton
+    alive_while: { known: derived, by: "while it runs: between its start and its stop in `timing`" }
     identifier_forms: [minted]
     meaning: "a bounded stretch of work with a start, any number of sync points, and a stop. Declared because sessions already exist in practice — handed off in prose, their times nowhere in data — and because they are what makes `timing` earn a resolution: a session is the one object whose position must be held finer than a day."
   - genos: contract
     of_nature: lekton
+    alive_while: { known: derived, by: "while it holds: accepted by its parties, and inside its `during`" }
     ownership_form: [crown]
     responsibility_form: [parties]
     meaning: "an agreement between parties: who it binds (`parties`), its words (`words`), what it asks (`clauses`) and what has moved under it (`transactions`). An agreement between parties may be owned by none of them — it ends at the crown — and then its parties answer for it; one a person authored may be owned by its author. Co-owning one facet of one being is one use of it."
   - genos: garden
     of_nature: lekton
+    alive_while: { known: said, by: "while it is kept" }
     meaning: "ANOTHER daftar garden this one deals with: a git repository of beans kept by its gardener, identified by `garden_id`, owned by its gardener and answered for by them. A garden's own identity is read from its git and its gardener is named in its GARDEN.md — never in a bean of its own."
   - genos: document
     of_nature: lekton
+    alive_while: { known: always, by: "while it is kept" }
     meaning: "words or figures fixed in a form that can be kept and handed on: a statement, a letter, a scanned sheet, a conversation kept as a transcript. Identified by its home's reference (`identifier`) or by its content (`content_hash`); where its copies are is `located_at`. What must not be kept whole — a card number — stays out of it, and a redacted copy of its lines is a `capture` on it."
   - genos: event
     of_nature: lekton
+    alive_while: { known: derived, by: "while it happens: inside its `timing`" }
     ownership_form: [crown]
     takes_time_of: [present, host]
     meaning: "a happening between people at a time: a meeting, a dinner, a party, a conversation in which something was agreed. When is `timing`; who took part is `refs`, each naming what they were in `rel` — present, invited, host, paid, or any other part a person played. A happening between people is owned by none of them — it may end at the crown — and whoever hosted it answers for it."

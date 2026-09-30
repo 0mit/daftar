@@ -317,7 +317,7 @@ SCHEMA_CSS = """
 .vw .vw-cap{margin:12px 0 0;font-size:13.5px;line-height:1.6;max-width:95ch}.vw .vw-cap b{font-weight:700}
 .vw .k-accent{color:var(--accent)}.vw .k-off{color:var(--off)}
 .vw .nbox{fill:var(--nfill);stroke:var(--line);stroke-width:1}
-.vw .node.soma .nbar{fill:var(--host)}.vw .node.empsychon .nbar{fill:var(--svc)}.vw .node.ext .nbar{fill:var(--ext)}
+.vw .node.soma .nbar{fill:var(--host)}.vw .node.ext .nbar{fill:var(--ext)}
 .vw .node.lekton .nbar{fill:var(--store)}.vw .node.accent .nbar{fill:var(--accent)}
 .vw .node.accent .nbox{stroke:var(--accent);stroke-width:1.6}.vw .node.off .nbox{stroke-dasharray:4 3;opacity:.6}
 .vw .node.off .nbar{fill:var(--off)}.vw .node.ext .nbox{stroke-dasharray:5 3}
@@ -354,7 +354,7 @@ SCHEMA_CSS = """
 /* legend */
 .vw .vw-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:12px;align-items:center}
 .vw .vw-legend span{display:flex;align-items:center;gap:5px}.vw .sw{width:12px;height:12px;border-radius:3px;display:inline-block}
-.vw .sw.soma{background:var(--host)}.vw .sw.empsychon{background:var(--svc)}.vw .sw.ext{background:var(--ext)}
+.vw .sw.soma{background:var(--host)}.vw .sw.ext{background:var(--ext)}
 .vw .sw.store{background:var(--store)}.vw .sw.accent{background:var(--accent)}.vw .sw.off{background:var(--off)}
 .vw .sw.pat{border:1px solid var(--muted)}.vw .sw.up{background:var(--up)}.vw .sw.down{background:var(--down)}
 .vw .vw-legend svg{vertical-align:middle}

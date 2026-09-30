@@ -76,7 +76,7 @@ def flat(node, path=""):
 
 
 VOCAB_EXTRA = """local_gene:
-  - { genos: organism, of_nature: empsychon, meaning: "a living thing, invented" }
+  - { genos: organism, of_nature: soma, level: organism, establishing_anchor_family: [logical], meaning: "a living thing, invented" }
 registry_additions:
   knowledge_schemes:
     - scheme: vital-codes
@@ -181,7 +181,7 @@ check("...and Darwin Core's uncertainty is an accuracy of kind bound, in metres;
 OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
 for bid, text in re.findall(r"# beans/([a-z-]+)\.md\n(.*?)(?=\n# beans/|\Z)", out, re.S):
     write(f"beans/{bid}.md", f"---\nbean: {bid}\ngenos: organism\ntitle: \"{bid}\"\nstatus: active\n"
-          f"summary: \"a rowan on an invented island\"\nnature: empsychon\n{OWN}"
+          f"summary: \"a rowan on an invented island\"\nnature: soma\n{OWN}"
           f"identity: {{ status: provisional, anchors: [ {{ key: serial, value: \"{bid.upper()}-1\", class: hardware, "
           f"establishing: true }} ] }}\nprovenance: {{ src: observed, by: keeper, as_of: now }}\n{text.rstrip()}\n"
           f"---\n{bid}, invented.\n")

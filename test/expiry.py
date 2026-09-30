@@ -39,7 +39,7 @@ def stale(*args):
 OWN = ('owned_by: { legal: { owner: { bean: keeper } } }\n'
        'responsibility: { legal: { holder: { bean: keeper } } }\n')
 open(os.path.join(G, "beans", "keeper.md"), "w").write(
-    '---\nbean: keeper\ngenos: person\ntitle: "the keeper"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
+    '---\nbean: keeper\ngenos: person\ntitle: "the keeper"\nstatus: active\nsummary: "p"\nnature: soma\n'
     'identity: { status: confirmed, anchors: [ { key: identifier, value: "person:keeper", class: logical, '
     'establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
@@ -80,7 +80,7 @@ vocab(RENTAL)
 def host(rental_block, bean="vps"):
     open(os.path.join(G, "beans", f"{bean}.md"), "w").write(
         f'---\nbean: {bean}\ngenos: virtual-host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
-        'nature: empsychon\n'
+        'nature: lekton\n'
         'identity: { status: confirmed, anchors: [ { key: fqdn, value: "' + bean + '.example.org", '
         'class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN + rental_block +
@@ -153,7 +153,7 @@ check("the standard carries many dates and declares few expiries — the reason 
 def period(block, bean="vps2"):
     open(os.path.join(G, "beans", f"{bean}.md"), "w").write(
         f'---\nbean: {bean}\ngenos: virtual-host\ntitle: "a rented machine"\nstatus: active\nsummary: "s"\n'
-        'nature: empsychon\n'
+        'nature: lekton\n'
         'identity: { status: confirmed, anchors: [ { key: fqdn, value: "' + bean + '.example.org", '
         'class: logical, establishing: true } ] }\n'
         'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n' + OWN +
@@ -219,7 +219,7 @@ open(v, "w", encoding="utf-8").write(_v)
 # An agreement's clauses are an open map, and the law's `clauses` term declares its expiry per entry: `due`, repeating
 # by `every`, silenced by `state: met | waived | broken`, with a notice of seven days. Nothing here names the term.
 open(os.path.join(G, "beans", "ali.md"), "w").write(
-    '---\nbean: ali\ngenos: person\ntitle: "ali"\nstatus: active\nsummary: "p"\nnature: empsychon\n'
+    '---\nbean: ali\ngenos: person\ntitle: "ali"\nstatus: active\nsummary: "p"\nnature: soma\n'
     'identity: { status: confirmed, anchors: [ { key: identifier, value: "person:ali", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
     'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n---\nA person.\n')
@@ -240,7 +240,7 @@ title: "an agreement"
 status: active
 summary: "what ali owes the keeper"
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:deal", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
@@ -355,7 +355,7 @@ title: "an agreement with places no calendar has"
 status: active
 summary: "clauses the gate accepts and the walk must end on"
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:odd", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
@@ -406,7 +406,7 @@ title: "an agreement whose days are not all days"
 status: active
 summary: "clauses a reader must end on, and say it could not read"
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:beyond", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
@@ -514,7 +514,7 @@ title: "an agreement two records disagree about"
 status: active
 summary: "two clauses in a merge conflict"
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:merged", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: t, as_of: 2026-01-01 }}
@@ -546,7 +546,7 @@ os.remove(os.path.join(G, "beans", "merged.md"))
 def contract(bid, clauses):
     open(os.path.join(G, "beans", bid + ".md"), "w", encoding="utf-8", newline="\n").write(
         f'---\nbean: {bid}\ngenos: contract\ntitle: "{bid}"\nstatus: active\nsummary: "an agreement"\nnature: lekton\n'
-        'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
+        'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { parties: true } }\n'
         f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:{bid}", class: logical, establishing: true }} ] }}\n'
         'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
         'parties:\n  keeper: { who: { bean: keeper } }\n  ali: { who: { bean: ali }, accepted: 2026-01-01 }\nwords: { form: spoken }\n'

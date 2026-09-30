@@ -73,7 +73,7 @@ OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal
 
 
 def person(id):
-    return (f"---\nbean: {id}\ngenos: person\ntitle: \"{id}\"\nstatus: active\nsummary: \"{id}, invented\"\nnature: empsychon\n"
+    return (f"---\nbean: {id}\ngenos: person\ntitle: \"{id}\"\nstatus: active\nsummary: \"{id}, invented\"\nnature: soma\n"
             f"{PERSON_OWN}consent: {{ bean: survey }}\n"
             f"identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: \"person:{id}\", class: logical, "
             f"establishing: true }} ] }}\nprovenance: {{ src: asserted-by-human, by: keeper, as_of: now }}\n---\n{id}, invented.\n")
@@ -88,7 +88,7 @@ def stone(id, obs=""):
 
 # ---------------------------------------------------------------- the garden's own scheme, held as an extract (O-3)
 VOCAB_EXTRA = """local_gene:
-  - { genos: stone, of_nature: soma, meaning: "a standing stone in a field, invented" }
+  - { genos: stone, of_nature: soma, level: rock, meaning: "a standing stone in a field, invented" }
 registry_additions:
   knowledge_schemes:
     - scheme: lichen-forms
@@ -138,7 +138,7 @@ title: "the lichen survey"
 status: active
 summary: "an invented agreement: two surveyors read the stones' lichen, and the keeper keeps the record"
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:survey", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}

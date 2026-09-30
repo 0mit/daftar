@@ -2346,6 +2346,150 @@ class Step27(Step26):
                 [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
 
 
+STEP_31 = (31, 0)
+GENE_NATURE_31 = {}     # genos -> its nature in the release's law and the garden's local gene, filled when the step plans
+CROWN_31 = ('physis', 'logos', 'nature')
+
+
+def bean_rule_31(path, role, name, parent):
+    """A bean in 31.0's words: `nature: empsychon` becomes the nature its genos has now — `soma` for a person, `lekton`
+    for an instance or a virtual machine: life is no nature, each genos's `alive_while` — and a crown branch chosen by
+    nature, `physis` or `logos`, becomes `agape`: the crown is the life chain, and every chain ends there."""
+    if role == 'value' and path == ('nature',) and name == 'empsychon' and isinstance(parent, dict):
+        return GENE_NATURE_31.get(str(parent.get('genos')))
+    if role == 'value' and len(path) == 3 and path[0] == 'owned_by' and path[2] == 'crown' and name in CROWN_31:
+        return 'agape'
+    return None
+
+
+def vocab_rule_31(path, role, name, parent):
+    """A garden's VOCAB.md in 31.0's words: nothing is renamed. A genos of its own still `of_nature: empsychon`, or a body
+    of its own with no `level`, is a person's to decide (`Step31.plan`)."""
+    return None
+
+
+class Step31(Step27):
+    """The translation into std-vocab 31.0, the root: `empsychon` retired into `soma` or `lekton` by each bean's genos, and
+    the crown made the life chain. Planned, and refused where a person must decide, before any file is touched."""
+
+    def left(self):
+        # the genos -> nature table is the release's: read before anything asks what is left to translate
+        if not GENE_NATURE_31:
+            GENE_NATURE_31.update({str(r['genos']): str(r['of_nature']) for r in (std_fm(self.rel).get('gene') or [])
+                                   if isinstance(r, dict) and r.get('genos') and r.get('of_nature') != 'empsychon'})
+        return Step27.left(self)
+
+    def _rule(self, path):
+        return vocab_rule_31 if os.path.basename(path) == 'VOCAB.md' else bean_rule_31
+
+    def plan(self):
+        law = std_fm(self.rel)
+        retired = {(str(r.get('at')), str(r.get('name'))): str(r.get('instead') or '')
+                   for r in (law.get('retired') or []) if isinstance(r, dict)}
+        wrong = [f"{a} `{n}`" for a, n, w in (('nature', 'empsychon', '`soma`'), ('crown', 'physis', '`agape`'),
+                                               ('crown', 'logos', '`agape`')) if not retired.get((a, n), '').startswith(w)]
+        if wrong:
+            refuse(f"{self.tag}'s law does not retire, as this tool's 31.0 step translates them, {', '.join(wrong)}. The "
+                   f"step and the law disagree; neither is guessed at.")
+        GENE_NATURE_31.clear()
+        GENE_NATURE_31.update({str(r['genos']): str(r['of_nature']) for r in (law.get('gene') or [])
+                               if isinstance(r, dict) and r.get('genos') and r.get('of_nature') != 'empsychon'})
+        _v = os.path.join(ROOT, 'VOCAB.md')
+        levels = {str(r.get('level')) for r in (law.get('complexity') or []) if isinstance(r, dict)}
+        if os.path.isfile(_v):
+            for _r in (_parse(read_text(_v)[0])[0] or {}).get('local_gene') or []:
+                if not isinstance(_r, dict) or not _r.get('genos'):
+                    continue
+                if _r.get('of_nature') == 'empsychon':
+                    self.problems.append(
+                        f"VOCAB.md: local_gene '{_r['genos']}' is of the nature `empsychon`, which 31.0 retired — write "
+                        f"`of_nature: soma` and its `level` (one of `complexity`) if it takes room in space, or `of_nature: "
+                        f"lekton` if it is placed in an order; its life is its `alive_while`")
+                elif _r.get('of_nature') == 'soma' and str(_r.get('level')) not in levels:
+                    self.problems.append(
+                        f"VOCAB.md: local_gene '{_r['genos']}' is a body with no `level` — say where it stands among bodies: "
+                        f"one of {', '.join(sorted(levels))}")
+                else:
+                    GENE_NATURE_31[str(_r['genos'])] = str(_r.get('of_nature'))
+        # THE GARDEN'S ZONE (31.0): the end of the frame's chain, required by the manifest. Written from --zone, held to the
+        # law's `time-zones`; never guessed — this machine's zone is shown, not written.
+        if self.zone_missing():
+            _zones = set()
+            try:
+                with open(os.path.join(self.rel, 'seed', 'knowledge', 'time-zones.tsv'), encoding='utf-8') as fh:
+                    _zones = {ln.split('\t', 1)[0].strip() for i, ln in enumerate(fh) if i and ln.strip()}
+            except OSError:
+                pass
+            if getattr(self, 'zone', None) and (not _zones or self.zone in _zones):
+                self.write_zone = self.zone
+            else:
+                try:
+                    _here = os.path.realpath('/etc/localtime').split('zoneinfo/', 1)[1]
+                except (OSError, IndexError):
+                    _here = None
+                self.problems.append(
+                    ("--zone " + repr(self.zone) + " is no zone of the law's `time-zones`; " if getattr(self, 'zone', None) else "")
+                    + "GARDEN.md: say the civil time zone this garden reckons its days in — run again with --zone <IANA zone>, "
+                      "or with DAFTAR_ZONE=<IANA zone> set where this garden's own tool is older than the flag"
+                    + (f" (this machine reckons in {_here})" if _here else ""))
+        for path in self.docs():
+            if os.path.basename(path) == 'VOCAB.md' or not os.path.isfile(path):
+                continue
+            fm = _parse(read_text(path)[0])[0] or {}
+            if fm.get('nature') == 'empsychon' and str(fm.get('genos')) not in GENE_NATURE_31:
+                self.problems.append(f"{os.path.relpath(path, ROOT)}: `nature: empsychon` on a bean of genos "
+                                     f"'{fm.get('genos')}', whose nature in 31.0 is not known here — write it by hand")
+        for path in self.docs():
+            self.one(path, dry=True)
+        if self.problems and not self.keep:
+            refuse(f"crossing into std-vocab 31.0, {len(self.problems)} thing(s) are a person's to do, not a "
+                   f"translation's:\n" + '\n'.join('  - ' + p for p in self.problems) +
+                   "\nDo them and commit, then run this again — or pass --keep-on-failure to apply the rest and "
+                   "leave these, named, for the person.")
+
+    def zone_missing(self):
+        """True while GARDEN.md states no `zone`."""
+        _g = os.path.join(ROOT, 'GARDEN.md')
+        return os.path.isfile(_g) and not (_parse(read_text(_g)[0])[0] or {}).get('zone')
+
+    def apply(self, vocab_only=False):
+        out = Step27.apply(self, vocab_only)
+        if not vocab_only and getattr(self, 'write_zone', None) and self.zone_missing():
+            _g = os.path.join(ROOT, 'GARDEN.md')
+            text, form = read_text(_g)
+            fm, body = _parse(text)
+            lo, hi = _fm_region(text)
+            head = text[lo:hi]
+            line = (f"zone: {self.write_zone}                   # the civil time zone this garden reckons its days in: the "
+                    f"place half of every day it writes without saying where")
+            anchor = next((k for k in ('gardener', 'daftar_release', 'extends') if re.search(rf'(?m)^{k}[ \t]*:', head)), None)
+            if anchor:
+                head = re.sub(rf'(?m)^{anchor}[ \t]*:.*$', lambda m: m.group(0) + '\n' + line, head, count=1)
+                new = text[:lo] + head + text[hi:]
+                nfm, nbody = _parse(new)
+                if nfm == dict(fm, zone=self.write_zone) and nbody == body:
+                    write_text(_g, new, form)
+                    self.facts.setdefault('GARDEN.md', []).append(('zone', None, self.write_zone))
+            out = self.report()
+        return out
+
+    def report(self):
+        from collections import Counter
+        parts = []
+        beans = sorted(r for r in self.facts if r.startswith('beans/'))
+        if beans:
+            tally = Counter(f"`{o}` -> `{n}`" for r in beans for _w, o, n in self.facts[r])
+            parts.append(f"{len(beans)} bean(s): " + ', '.join(f"{k} ×{c}" for k, c in sorted(tally.items()))
+                         + " — " + ', '.join(f"[[{os.path.basename(r)[:-3]}]]" for r in beans))
+        if 'GARDEN.md' in self.facts:
+            parts.append("GARDEN.md: the garden reckons its days in " + str(self.facts['GARDEN.md'][-1][2]))
+        if self.problems:
+            parts.append("LEFT FOR A PERSON: " + '; '.join(self.problems))
+        return ('std-vocab 31.0, the root: life is no nature, and the crown is the life chain — '
+                + '; '.join(parts or ['nothing to translate']),
+                [f"[[{os.path.basename(r)[:-3]}]]" for r in beans])
+
+
 STEP_29 = (29, 0)
 CODING_ATTRS_29 = ('property', 'of', 'code', 'method', 'is')       # an attribute whose value IS one code with its scheme
 KNOWLEDGE_ANCHORS_29 = {'isced_f_2013': 'isced-f-2013', 'isco_08': 'isco-08', 'technology': 'technology'}
@@ -3055,6 +3199,8 @@ def main():
     ap.add_argument('--allow-downgrade', action='store_true', help='adopt a tag older than the one GARDEN.md records')
     ap.add_argument('--garden', help='the garden to upgrade (default: the one this tool lives in)')
     ap.add_argument('--keep-on-failure', action='store_true', help='leave the files in place when the gate fails, to repair by hand')
+    ap.add_argument('--zone', help='crossing into std-vocab 31.0: the civil time zone this garden reckons its days in, as the '
+                                   'IANA database names it (e.g. Europe/Istanbul) — written as GARDEN.md `zone`')
     ap.add_argument('--gardener', help='crossing into std-vocab 21.0: the id of the person or org bean who keeps this garden '
                                        '(or DAFTAR_GARDENER in the environment)')
     ap.add_argument('--gardener-name', help='with --gardener, plants a new bean with this name '
@@ -3121,6 +3267,8 @@ def main():
                 args += ['--gardener-name', a.gardener_name]
             if a.gardener_genos:
                 args += ['--gardener-genos', a.gardener_genos]
+            if getattr(a, 'zone', None) and "'--zone'" in open(tool, encoding='utf-8').read():
+                args += ['--zone', a.zone]
             for _p in a.extend:
                 args += ['--extend', _p]
             for _p in a.retract:
@@ -3188,6 +3336,14 @@ def main():
             if vtuple(before) < STEP_30 or _s30.left():
                 step30 = _s30
                 step30.plan()
+        # ...and one whose beans still say `empsychon`, or end a chain at a crown chosen by nature.
+        step31 = None
+        if STEP_31 <= vtuple(vocab_version(rel)):
+            _s31 = Step31(rel, a.tag, a.keep_on_failure)
+            _s31.zone = getattr(a, 'zone', None) or os.environ.get('DAFTAR_ZONE')   # an older tool hands over without the flag
+            if vtuple(before) < STEP_31 or _s31.left() or _s31.zone_missing():
+                step31 = _s31
+                step31.plan()
         # WHAT THE GARDEN RECEIVES, AND WHAT IT HELD, read by the one reader (bin/dmpass.py): `want` is what a garden
         # extending its profiles receives from the release; `have` is every file of the garden its own release keeps, so
         # a file it no longer receives — a retired tool, the asset of a profile it left — leaves, and a file of its own
@@ -3204,7 +3360,7 @@ def main():
         # fails) once left release files copied, both pins moved, beans half translated and no journal entry.
         try:
             return apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22, step23,
-                                 profiles, step24, step26, step27, step29, step30)
+                                 profiles, step24, step26, step27, step29, step30, step31)
         except BaseException as e:
             put_back(added + (step21.created if step21 else []))
             print(f"NOT {verb.upper()}: the upgrade stopped midway"
@@ -3273,7 +3429,7 @@ def dropped_line(dropped):
 
 
 def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None,
-                  profiles=None, step24=None, step26=None, step27=None, step29=None, step30=None):
+                  profiles=None, step24=None, step26=None, step27=None, step29=None, step30=None, step31=None):
     """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
     caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
     changed = []
@@ -3390,6 +3546,10 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         _t, _b = step30.apply()
         translated.append(_t); steps.append(_t)
         beans += [b for b in _b if b not in beans]
+    if step31:
+        _t, _b = step31.apply()
+        translated.append(_t); steps.append(_t)
+        beans += [b for b in _b if b not in beans]
 
     _vp = os.path.join(ROOT, 'VOCAB.md')
     if os.path.isfile(_vp):
@@ -3425,7 +3585,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     if not (changed or added or removed or repinned or beans):
         # NOTHING MOVED IS NOT NOTHING TO DO. With --keep-on-failure a step that could translate nothing still names what
         # it left for a person, and the gate still refuses the garden for it: saying "nothing to do" hid both.
-        left = [p for s in (step22, step23, step24, step26, step27, step29, step30) if s for p in s.problems]
+        left = [p for s in (step22, step23, step24, step26, step27, step29, step30, step31) if s for p in s.problems]
         if left:
             print(f"NOTHING TRANSLATED: this garden runs {a.tag} ({sha[:12]}) already, and {len(left)} thing(s) are a "
                   f"person's to do, not a translation's:\n" + '\n'.join('  - ' + p for p in left) +
@@ -3436,7 +3596,7 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     # ONLY WORDS MOVED: the garden runs this release already, and what changed is the translation of what came in since it
     # crossed. The law did not move and nothing is a person's to decide — the translation is the one the garden adopted
     # when it crossed — so the entry asks nothing, and says RULE-CHANGE only where VOCAB.md itself was translated.
-    ran = [s for s in (step22, step23, step24, step26, step27, step29, step30) if s]
+    ran = [s for s in (step22, step23, step24, step26, step27, step29, step30, step31) if s]
     words_only = bool(ran and all(s.leftover for s in ran) and not (added or removed or repinned)
                       and all(c.endswith(('(translated)', '(re-keyed)')) for c in changed))
     since = ' and '.join(w for s, w in ((step22, "into std-vocab 22.0 still in 21.0's words"),
@@ -3447,7 +3607,9 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
                                         (step27, "into std-vocab 27.0 with a day still typed `iso_date`"),
                                         (step29, "into std-vocab 29.0 with a code apart from its scheme, or a word it "
                                                  "folded"),
-                                        (step30, "into std-vocab 30.0 with what an agreement is over still a list"))
+                                        (step30, "into std-vocab 30.0 with what an agreement is over still a list"),
+                                        (step31, "into std-vocab 31.0 with a being still `empsychon`, or a crown "
+                                                 "chosen by nature"))
                         if s)
     if words_only:
         verb = 'translated'

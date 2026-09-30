@@ -213,7 +213,7 @@ steps:
 The burning of wax, invented.
 """
 VOCAB_EXTRA = """local_gene:
-  - { genos: material, of_nature: soma, meaning: "a body of matter kept and used: a candle" }
+  - { genos: material, of_nature: soma, level: material, meaning: "a body of matter kept and used: a candle" }
 local_terms:
 """ + LIGHTINGS_TERM + WICK
 _v = open(os.path.join(G, "VOCAB.md"), encoding="utf-8").read()

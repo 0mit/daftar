@@ -112,7 +112,7 @@ def person(bid, title, anchor, by, body, extra='', more_anchors=''):
     ident = (f"  status: confirmed\n  anchors:\n    - {{ key: identifier, value: \"{anchor}\", class: logical, "
              f"establishing: true }}\n{more_anchors}") if anchor else "  status: provisional\n  anchors: []\n"
     return (f"---\nbean: {bid}\ngenos: person\ntitle: \"{title}\"\nstatus: active\nsummary: \"{title}.\"\n"
-            f"nature: empsychon\nowned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
+            f"nature: soma\nowned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n"
             f"identity:\n{ident}provenance: {{ src: asserted-by-human, by: \"{by}\", as_of: now }}\n{extra}"
             f"---\n{body}\n")
 
@@ -123,7 +123,7 @@ def neighbours(gid, keeper, people):
     ps = ''.join(f"  {p}: {{ who: {{ bean: {p} }}, accepted: 2026-09-20 }}\n" for p in (keeper,) + tuple(people))
     return (f"---\nbean: neighbours\ngenos: contract\ntitle: \"Neighbours kept here by name\"\nstatus: active\n"
             f"summary: \"The neighbours agreed to be kept in this garden by name.\"\nnature: lekton\n"
-            f"owned_by: {{ legal: {{ crown: logos }} }}\nresponsibility: {{ legal: {{ parties: true }} }}\n"
+            f"owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ parties: true }} }}\n"
             f"identity:\n  status: confirmed\n  anchors:\n"
             f"    - {{ key: identifier, value: \"{gid}/contract:neighbours\", class: logical, establishing: true }}\n"
             f"provenance: {{ src: asserted-by-human, by: \"{keeper} (gardener)\", as_of: now }}\n"
@@ -269,7 +269,7 @@ title: "A shared cost of 900 XTS, borne two to one by ada and ben"
 status: active
 summary: "Ada paid all of it; ada bears two parts and ben one. What each owes is read from the transaction, never written."
 nature: lekton
-owned_by: { legal: { crown: logos } }
+owned_by: { legal: { crown: agape } }
 responsibility: { legal: { parties: true } }
 identity:
   status: confirmed
@@ -351,7 +351,7 @@ title: "House costs of 300 XTS, shared equally by ben and cai"
 status: active
 summary: "Ben paid; ben and cai bear it equally. What each owes is read, never written."
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -858,7 +858,7 @@ title: "Cai lends ada a ladder until the first of October"
 status: active
 summary: "A ladder lent across the road, to be returned."
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -1122,7 +1122,7 @@ def consent_of(gid, pid, who):
     """A neighbour's consent to be kept by name, as the garden that holds it records it — stamped as `make` stamps it —
     carried with them: their word crosses with their name (24.0, F2), or they do not cross by name."""
     return (f"---\nbean: {pid}-consent\ngenos: contract\ntitle: \"{pid} agrees to be kept by name\"\nstatus: active\n"
-            f"summary: \"{pid}'s consent.\"\nnature: lekton\nowned_by: {{ legal: {{ crown: logos }} }}\n"
+            f"summary: \"{pid}'s consent.\"\nnature: lekton\nowned_by: {{ legal: {{ crown: agape }} }}\n"
             f"responsibility: {{ legal: {{ parties: true }} }}\nidentity:\n  status: confirmed\n  anchors:\n"
             f"    - {{ key: identifier, value: \"{gid}/contract:{pid}-consent\", class: logical, establishing: true }}\n"
             f"provenance: {{ src: asserted-by-human, by: \"{who}\", as_of: 2026-09-23, garden: \"{gid}\" }}\n"
@@ -1255,7 +1255,7 @@ title: "A new deal"
 status: active
 summary: "A new deal."
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -1333,7 +1333,7 @@ check("FIRST CONTACT with a crafted stub: no bean is printed from it — its cla
       and 'x_injected' not in ''.join(texts.values()) and set(fm_of_text(texts['garden-d'])) == {
           'bean', 'genos', 'title', 'status', 'summary', 'nature', 'owned_by', 'responsibility', 'identity', 'provenance'},
       r.out)
-_ok = dict(_inj, nature='empsychon', title='Cai "of the gate": the keeper')
+_ok = dict(_inj, nature='soma', title='Cai "of the gate": the keeper')
 _ok['identity'] = {'status': 'confirmed', 'anchors': [{'key': 'identifier', 'value': 'dddddddddddd/person:cai',
                                                        'class': 'logical', 'establishing': True}]}
 r = read_in(A, 'first-contact.md', craft(_de, {'a-note': _dnote}, {'cai': _ok}))
@@ -1369,7 +1369,7 @@ check("another garden's proposal that happens to carry a name garden-b took from
       'taken in already' not in r.out and r.returncode == 0 and 'verdict: CLEAN' in r.stdout, r.out)
 
 # ---- an UNRESOLVED stub: its fix is the bean to write, identity and all
-_ben_stub = f"bean: ben\ngenos: person\ntitle: Ben\nnature: empsychon\nidentity:\n  anchors:\n  - {{key: identifier, value: " \
+_ben_stub = f"bean: ben\ngenos: person\ntitle: Ben\nnature: soma\nidentity:\n  anchors:\n  - {{key: identifier, value: " \
        f"'{BID}/person:ben', class: logical, establishing: true}}\n"
 r = read_in(C, 'unresolved.md', chat('chat-20260923-1301', {'ben-rota': f"""---
 bean: ben-rota
@@ -1378,7 +1378,7 @@ title: "A rota with ben"
 status: active
 summary: "A rota."
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -1497,7 +1497,7 @@ title: "A pot ada and ben share"
 status: active
 summary: "What each of them put in."
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed
@@ -1694,7 +1694,7 @@ title: "Ali's household supplies ada"
 status: active
 summary: "Ali's household supplies ada."
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity:
   status: confirmed

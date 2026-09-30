@@ -77,12 +77,12 @@ def bean(id, genos, nature, akey, rest, own, title=None, g=None):
 
 
 PERSON_OWN = "owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n"
-CROWN = "owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n"
+CROWN = "owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { parties: true } }\n"
 ORG_OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
 
 
 def person(id, consent):
-    return bean(id, "person", "empsychon", "identifier", f"consent: {{ bean: {consent} }}\n", PERSON_OWN)
+    return bean(id, "person", "soma", "identifier", f"consent: {{ bean: {consent} }}\n", PERSON_OWN)
 
 
 def contract(id, rest):
@@ -374,7 +374,7 @@ clauses:
   share: { what: "the share of the candle", by: hana, amount: { count: 50, unit: percent } }
 """, CROWN), g=H)
 # h's own record of g's gardener: a person kept by name because the garden they keep is met here (F2)
-write("beans/keeper.md", bean("keeper", "person", "empsychon", "identifier", "", PERSON_OWN), g=H)
+write("beans/keeper.md", bean("keeper", "person", "soma", "identifier", "", PERSON_OWN), g=H)
 write("beans/g-garden.md", garden_bean("g-garden", gid, "keeper"), g=H)
 rc, out = save("the candle, and the garden g", ["candle", "g-garden", "keeper"], g=H, who="hana (test)")
 check("garden h holds a candle and records garden g", rc == 0, out[-600:])
@@ -395,7 +395,7 @@ provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
 ---
 A laptop.
 """)
-write("beans/hana.md", bean("hana", "person", "empsychon", "identifier", "", PERSON_OWN))
+write("beans/hana.md", bean("hana", "person", "soma", "identifier", "", PERSON_OWN))
 write("beans/h-garden.md", garden_bean("h-garden", hid, "hana", at="root:hgarden"))
 rc, out = save("garden h recorded here", ["h-garden", "hana", "this-host"])
 check("garden g records garden h, located on this host", rc == 0, out[-600:])

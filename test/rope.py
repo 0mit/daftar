@@ -137,7 +137,8 @@ write("example-org", '---\nbean: example-org\ngenos: domain\ntitle: "example.org
 # the crossing as bin/dmupgrade.py makes it: 29.0's step, then 30.0's on what it left (what an agreement is over, keyed)
 STEP = ("import os, sys\nsys.path.insert(0, os.path.join(os.getcwd(), 'bin'))\nimport dmupgrade\n"
         "s = dmupgrade.Step29(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n"
-        "s = dmupgrade.Step30(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n")
+        "s = dmupgrade.Step30(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n"
+        "s = dmupgrade.Step31(sys.argv[1], 'v-next', False)\ns.zone = 'Europe/Istanbul'\ns.plan()\nprint(s.apply()[0])\n")
 r = run(sys.executable, "-c", STEP, ROOT, cwd=G)
 out = gate()
 check("a garden in 28's words crosses into 29.0 by the step's own translation, with 0 errors", r.returncode == 0 and " 0 error(s)" in out,
@@ -187,7 +188,7 @@ open(os.path.join(G, "VOCAB.md"), "w").write(_voc.replace("extends_profiles: [co
 def event(name, start, end, rel="present"):
     return (f'---\nbean: {name}\ngenos: event\ntitle: "{name}"\nstatus: active\nsummary: "a dinner"\nnature: lekton\n'
             f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "event:{name}", class: logical, establishing: true }} ] }}\n'
-            + PROV + 'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+            + PROV + 'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
             f'timing:\n  start: {{ system: gregorian-civil, at: "{start}", unit: minute }}\n'
             f'  end: {{ system: gregorian-civil, at: "{end}", unit: minute }}\n'
             f'refs:\n  guest: {{ bean: sam, rel: {rel} }}\n---\nA dinner.\n')
@@ -210,7 +211,7 @@ write("mx-2", host("mx-2", EP + "part_of: { bean: mx-1 }\n"))
 check("...unless one is part of the other", " 0 error(s)" in gate(), "")
 write("mx-2", host("mx-2", EP.replace("system: ipv4, at: \"192.0.2.10\"", "system: event-anchored, at: \"after:dinner-a\"")))
 out = gate()
-check("an endpoint is a place: a system of any dimension is refused where it answers", "where dimension is ['place']" in out, out[-900:])
+check("an endpoint is a place: a system of any dimension is refused where it answers", "where dimension is place" in out, out[-900:])
 os.remove(os.path.join(G, "beans", "mx-2.md"))
 SESSION = ('---\nbean: session-one\ngenos: session\ntitle: "a session"\nstatus: active\nsummary: "work"\nnature: lekton\n'
            'identity: { status: confirmed, anchors: [ { key: identifier, value: "session:session-one", class: logical, establishing: true } ] }\n'
@@ -248,7 +249,7 @@ check("the rules a garden prints show the line", re.search(r"^  lives_in .*place
 DEAL = ('---\nbean: gear-deal\ngenos: contract\ntitle: "gear-deal"\nstatus: active\nsummary: "two purchases, repaid in six '
         'and in four"\nnature: lekton\n'
         'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:gear-deal", class: logical, establishing: true } ] }\n'
-        + PROV + 'owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n'
+        + PROV + 'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { parties: true } }\n'
         'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\nwords: { form: spoken }\n'
         '%s'
         'clauses:\n  six: { what: "one of them in six", by: sam, %severy: { of: time, in: gregorian-civil, each: month, times: 6 } }\n'
@@ -256,7 +257,8 @@ DEAL = ('---\nbean: gear-deal\ngenos: contract\ntitle: "gear-deal"\nstatus: acti
 write("gear-deal", DEAL % ('over:\n  - { thing: { bean: example-org } }   # the name, bought with them\n'
                            '  - { what: "a watch" }\n  - { what: "some wheel gear" }\n  - { what: "a watch" }\n', ''))
 STEP30 = ("import os, sys\nsys.path.insert(0, os.path.join(os.getcwd(), 'bin'))\nimport dmupgrade\n"
-          "s = dmupgrade.Step30(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n")
+          "s = dmupgrade.Step30(sys.argv[1], 'v-next', False)\ns.plan()\nprint(s.apply()[0])\n"
+          "s = dmupgrade.Step31(sys.argv[1], 'v-next', False)\ns.zone = 'Europe/Istanbul'\ns.plan()\nprint(s.apply()[0])\n")
 r = run(sys.executable, "-c", STEP30, ROOT, cwd=G)
 D_ = fm("gear-deal")
 check("30.0: an agreement's `over` crosses from a list into a map, each entry under the id of the being it names, or "

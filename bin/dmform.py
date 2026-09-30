@@ -73,7 +73,7 @@ DOMAINS = {
     'extent':      "in: extent                                     a bounded region of an aspect's domain (`extent_form`)",
     'recurrence':  "in: recurrence                                 a repetition over a sequence: every Nth neighbour, every N units, or the same place in each cell of a level (`recurrence_form`)",
     'ref':         "in: ref                                        a {bean|mapping[, field]} ref, resolved by the gate",
-    'origin':      "in: origin                                     where a value comes from, `{act, nature?, by?}`: a row of `acts`, a row of `natures` or a list of them, and one of the names the act's row lists",
+    'origin':      "in: origin                                     where a value comes from, `{act, nature?, alive?, by?}`: a row of `acts`, a row of `natures` or a list of them, and one of the names the act's row lists",
     'pointer':     "in: { pointer: bean_field_pointer }            '<section>.<key>' on this bean, {bean, field} on another, or 'file:<path>'",
     'id':          "in: id                                         the id of a bean or mapping — a key of the ref FORM itself, which the gate resolves",
     'prose':       "in: prose | { prose: named }                   a reason, a description, a remark: deliberately not a position. `why`, `what`, `note`; `named`: one text, or texts under names",

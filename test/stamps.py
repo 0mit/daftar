@@ -120,7 +120,7 @@ genos: person
 title: "{title}"
 status: active
 summary: "{summary}"
-nature: empsychon
+nature: soma
 identity:
   status: confirmed
   anchors:
@@ -150,7 +150,7 @@ title: "consent-{id}"
 status: active
 summary: "{id} agrees to be kept in this garden by name"
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:consent-{id}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: sam, as_of: {as_of} }}
@@ -253,7 +253,7 @@ identity:
   anchors:
     - {{ key: identifier, value: "contract:shared-camera", class: logical, establishing: true, provenance: {{ src: asserted-by-human, by: "ali", as_of: {anchor} }} }}
 provenance: {{ src: asserted-by-human, by: "sam", as_of: now }}
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 parties:
   sam: {{ who: {{ bean: sam }}, accepted: 2026-09-10 }}

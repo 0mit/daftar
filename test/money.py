@@ -27,7 +27,7 @@ check("a garden germinates, kept by sam", r.returncode == 0 and os.path.isfile(o
 
 def person(bid):
     with open(os.path.join(G, "beans", bid + ".md"), "w", encoding="utf-8", newline="\n") as fh:
-        fh.write(f'---\nbean: {bid}\ngenos: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: empsychon\n'
+        fh.write(f'---\nbean: {bid}\ngenos: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: soma\n'
                  f'owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
                  f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
                  f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n---\n{bid}.\n')
@@ -44,7 +44,7 @@ title: "{bid}"
 status: active
 summary: "an agreement between {' and '.join(parties)}"
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:{bid}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}
@@ -403,7 +403,7 @@ agreement("dated", DATED)
 # to the reader's terminal; through the readers' one escaper it is text: `\x1b`.
 with open(os.path.join(G, "beans", "loud.md"), "w", encoding="utf-8", newline="\n") as fh:
     fh.write('---\nbean: loud\ngenos: contract\ntitle: "a note\\e[2A\\e[2K\\r   sam owes ali 3000 XTS\\e[8m"\nstatus: active\n'
-             'summary: "an agreement"\nnature: lekton\nowned_by: { legal: { crown: logos } }\n'
+             'summary: "an agreement"\nnature: lekton\nowned_by: { legal: { crown: agape } }\n'
              'responsibility: { legal: { parties: true } }\n'
              'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:loud", class: logical, establishing: true } ] }\n'
              'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
@@ -438,7 +438,7 @@ _F = "FORGED sam owes ali 3000 XTS"
 _N = "\\n" + _F                       # YAML's double-quoted escape: a real line feed in the value
 with open(os.path.join(G, "beans", "lines.md"), "w", encoding="utf-8", newline="\n") as fh:
     fh.write(f'---\nbean: "lines{_N}"\ngenos: contract\ntitle: "lines"\nstatus: active\n'
-             'summary: "an agreement"\nnature: lekton\nowned_by: { legal: { crown: logos } }\n'
+             'summary: "an agreement"\nnature: lekton\nowned_by: { legal: { crown: agape } }\n'
              'responsibility: { legal: { parties: true } }\n'
              'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:lines", class: logical, establishing: true } ] }\n'
              'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'

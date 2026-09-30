@@ -253,12 +253,29 @@ through a person or an org and terminates here transitively.
 The branch a bean may name is fixed by its nature (natures[].crown owns that mapping — not restated here).
 The names — θεός, φύσις, λόγος, ἀγάπη since 22.0 — and what else was on the table: `natures`.
 
+THE CROWN IS THE LIFE CHAIN (31.0). The operator: "crown will be the life chain itself", and "the agape is root of the
+whole ensoulement within this experience of universe we are living in here right now and ensouls the things within their
+lifecycle, when inspecting from the gate every living thing in its level has ensouled through a living thing's direct or
+indirect effect, but the life chain is walkable and owned by THE ONE". Ownership that ends at the crown no longer ends
+at a branch chosen by nature: it goes on along the being's life chain (`creator`), which ends at agape, whose root is
+θεός, THE ONE. `physis` and `logos` are retired, and nothing routes to the crown by nature: `{ crown: agape }` is the one
+form, owned by no bean, held by its life chain. An agreement owned by none of its parties is held by the life its parties
+gave it by accepting it; a person is held so always — "only love holds a person, and only while alive" keeps its word,
+and holds now for every crown.
+
 ## identity_policy
 
 NB the crown OWNS but never ANSWERS. Responsibility has no crown form: a duty must land on a being
 that can be asked, so responsibility always terminates in a bean (or, for a person, in themselves).
 
 P3/D1: identity policy attaches to the ROOT AXIS...
+
+## identity_policy.refined_by
+
+A genos may refine the family its nature gives (31.0): a person is a body, and a body is established by its matter — but
+a person is recognised only by what registers and they themselves say, never by matter the ledger would hold (a
+biometric is a secret, and the law records none). So the person's row says `establishing_anchor_family: [logical]`, and
+the gate reads the genos's family before the nature's.
 
 ## identity_policy.keyed_by
 
@@ -489,6 +506,11 @@ so one name read as a day in one place and a moment in another is refused: it co
 `as_of` keeps its own statement (`provenance_record.origin`) because it lives on every record, not on a term; so does
 the journal's heading (`journal.origin`).
 
+BY LIFE (31.0). The provenance guard ranked a person's word above a document's through the natures' order (soma, lekton,
+empsychon). With empsychon retired a person is soma, which would have put their word below a document's. What made it
+the top was never a nature: a person can be ASKED, because they live. So an origin may say `alive: true`, and the order
+is by act, then by life, then by nature — `asserted-by-human` is said by a body alive, and stays the top.
+
 ## schema_language.empty
 
 WHAT A POSITION'S EMPTINESS MEANS IS THE LAW'S TO SAY (29.2, ratified 2026-09-30). Most positions left empty say only
@@ -569,36 +591,97 @@ translated: `bin/dmupgrade.py` renames the structure of every bean and of VOCAB.
 leaves its comments and prose as the garden wrote them. The law's `retired:` list names each old word, so a garden not
 yet upgraded is refused with the word that took its place — never read as though it said nothing.
 
-## natures[soma].crown
+THE ROOT (31.0): LIFE IS NO NATURE. The operator asked whether `empsychon` had been mistaken for a sibling of `soma` and
+`lekton`: "The soma is a three dimentional place occupying being, and a lekton is an (type and series) occupying in order
+layer, and the thing is alive whitin the lifecycle of its genos, rock while being, tree while breathing, animal while
+heart beats, instance while running, contract while holding, law while enforcing". It had been, by the law's own sources
+and by its own record. In Spinoza, conatus is not a third attribute beside extension and thought: each thing, as far as
+it can by its own power, strives to persevere in its being (Ethics III, P6) — every thing, under either attribute. In
+the Stoics whose Greek names the law took, the ensouled (ἔμψυχα) are a kind of body, and the sayables (λεκτά) are among
+the incorporeals: the ensouled is a division within bodies, not a third beside body and sayable. The law's own record
+said so the day the natures were ratified ("a person is a living PHYSICAL thing", held as an idea), and a virtual machine
+was made `living` because it "lapses at teardown" — as a domain, a registration and a contract do, which were lekton.
+For identity the law never told lekton and empsychon apart (both logical); what empsychon alone decided was the crown
+`agape`, which only a person used, and a person was pinned to it by genos already.
 
-φύσις owns the bodies: a being of the nature soma ends there (until 22.0, "extension owns physical beings")
+So the natures are two: `soma`, a being that takes room in space, standing at a level of `complexity`; `lekton`, a being
+placed in an order, a register or a habitat. A person is a body, an organism — recognised only by registers and their own
+word (`identity_policy.refined_by`); an instance and a virtual machine are placed by their habitat and are lekton. Life
+is each genos's (`gene` `alive_while`), and the crown is the life chain (`crown`). The rename is a MAJOR version,
+translated by `bin/dmupgrade.py` by each bean's genos; `empsychon` is in `retired`, so an un-upgraded garden is refused
+with the word that took its place.
+
+## complexity
+
+THE ORDER OF BODIES IS THE ORDER OF FOUNDATIONS (31.0). The operator: "every being made sits on the previous less
+complex structure", and, of ranking a body by a measured rate, "the basic plant is more efficient than the latest
+photovoltaic transformers, so the rates are not accessible from the law scope for reasoning, abstract logic is". So a
+level STANDS ON the levels it is built from, and complexity is that relation and nothing else: A is more complex than B
+exactly when A stands on B, directly or through others. The order is partial — two bodies on different lines are not
+comparable, and the law says so instead of inventing a rank: a device does not stand on a cell, and a tree does not stand
+on a chip. The levels are the levels of organisation (the operator's choice among the ladders offered: his six degrees
+of the dot, the atom, the mineral, the plant, the animal and the rational, and the levels of organisation), in four
+lines: matter, the living, material, the made. A made body stands on what it is made of, never on its function: a host
+is a device, and what it does beyond keeping its form is lent by its makers and keepers through its life chain. The
+powers of the old ladder — to breathe, to sense and move, to reason — are no levels: every organism stands on the same
+foundations, and the powers are what a genos's `alive_while` names. Declared whole, from the dot of matter up: a level
+no genos stands at is held for the body a garden will one day keep, and the gate needs no vacancy for it, since no term
+of a bean takes a level — a genos does. The gate holds the one consequence it can: a part never stands above its whole.
+
+## complements
+
+THE FRAME: PLACE AND TIME, EACH ONLY WITH THE OTHER (31.0). The operator: "universe by our current understanding, is
+divised on place system working with help of time system, both necessary, no sibling priviledge the condition of their
+being is the presence of each other, interdependent, tied". The law had said it in one place (`timing.where`: "a moment
+is in time and in place together, and civil time is read from a place") and held it nowhere. Now `place` and `time` name
+each other, the dimensions mark length and time as the frame (mass, information, money and temperature are measures
+held at its positions), and every system of either dimension states how its positions find their other half: stated in
+the entry, the bearer's, or carried by the system itself (an epoch count on one body's time scale, deep time fixed by a
+point in a rock). The chain ends at the garden's own `zone` (GARDEN.md), which the manifest requires, so every
+position's other half resolves and the check can be strict without asking a garden for a place on every date. ISO
+19111:2019 composes a spatial and a temporal system into one compound system (read at OGC 18-005), so `compound` says so.
+
+## division_form
+
+THE DOT, AND WHAT DIVIDING IT KEEPS (31.0). The operator: "we define dot, point, نقطه as undivisable being, when
+divised should keep it's division system and the wholesomeness control of its division defined". A position is a dot
+(Euclid, Elements I, def. 1: a point is that which has no part); what was taken as one and is divided — as the atom,
+ἄτομος, was — keeps its system, and how its parts make it is declared and held. The law had ten spellings of that: a
+capacity and what is placed in it, the facets of ownership, a transaction's shares, a system's levels, an extent's
+bounds. `division_form` says it once, and `divisions` names each existing rule as a case, with the rule that judges it,
+so none of them changes and all of them are one kind of thing. What it adds is a division a garden declares that no rule
+of the law has: the gate judges it itself, exactly, as capacity is judged — summed as fractions in the whole's unit.
+
+## divisions
+
+The law's own divisions, each with the rule that already judges it: `capacity` (29.0's placements summed within what a
+host holds), `ownership` (one owner and one answer for every facet), `shares` (what was paid and borne, to the unit),
+`cells` (a finer cell inside one coarser), and `bodies` (a part never above its whole, `complexity`).
+
+## name_form
+
+THE LAW'S WORDS IN ITS READERS' LANGUAGES (31.0). The operator: "the most clear plain words for daftar's own code and
+docs, with a structure to link to related same-names in other languages for now persian and turkish sibling by
+literative english as a separate layer for publications on pages and other stuff, we keep this structure through the
+view module deigns as a base pattern", and then "for the glossary include ancient greek, german, french, italian, latin
+and arabic too ... done by hand, carefully, with an ability to include some words and roots from every mentioned language
+which they apply on that context of that term". The code is one plain word; a name is how a reader of a language meets
+it, with the roots that bear on its use. It widens the knowledge schemes' `labels` (N25) from a scheme's codes to every
+word of the law, and it is a layer of its own beneath the law because a name must never change what the law says: the
+gate reads no meaning from it. Each name is `proposed` until a reader whose language it is confirms it, as the school's
+Persian and Turkish words are.
 
 ## natures[soma].establishing_anchor_family
 
 serial / mac — bound to the matter itself. (`wg_pubkey` was listed here until 19.0; it never was.)
 
-## natures[empsychon].establishing_anchor_family
-
-Logical: a person's minted id or signing key, an instance's deployment coordinate, a VM's instance id. Until
-19.0 the row also named `personal`, a class `anchor_class` has never offered — a position no anchor could occupy.
-It would have meant a passport number or a biometric, which the ledger never records because they are secrets;
-the name was withdrawn rather than given a class nothing may honestly fill.
-
 ## natures[soma].min_establishing_anchors
 
 required once identity.status is `confirmed`
 
-## natures[lekton].crown
-
-λόγος owns what exists by being said and agreed (until 22.0, "thought owns metaphysical beings")
-
 ## natures[lekton].establishing_anchor_family
 
 url / fqdn / git remote / manifest or doc id
-
-## natures[empsychon].crown
-
-life-bounded ownership; lapses at teardown
 
 ## bodies
 
@@ -1875,6 +1958,12 @@ D4 ("type rules live in the VOCAB, not code"). Each is addressed by `path:`, bec
 fields rather than top-level terms. MAJOR: two of them were WARNINGS in code and are ERRORS now, and a
 garden using a value not listed here will be rejected where it previously passed.
 
+LIFE (31.0). `status` is where a being stands on its genos's lifecycle — planned, active, deprecated, closed, and draft for
+a record not yet whole — and a being LIVES while its status is active or deprecated, as its genos's `alive_while` says,
+with how that is known: measured (a monitor's probe), derived from the ledger (a contract's `during`, a domain's lapse),
+said (a person: never probed), or always (a document while it is kept). The operator's words: "rock while being, tree
+while breathing, animal while heart beats, instance while running, contract while holding, law while enforcing".
+
 ## terms[status].schema
 
 `closed` ADDED 7.0 (2026-08-07, human-ratified). A bounded piece of work that FINISHED is not
@@ -2052,9 +2141,11 @@ otherwise every key must be a declared facet
 
 a bean, a contract, outside, or the axiom itself
 
-## terms[owned_by].schema.entry_must_match
+## terms[owned_by].schema.attrs.crown
 
-the branch is NOT free: nature routes it
+The crown is one branch now, the life chain's (31.0): no nature routes a bean to a branch of its own, so the attribute takes
+a row of `crown` that is not its root — agape — and the registry, not the term, stays the owner of the value. Until then
+`entry_must_match` held the branch to the one the bean's nature routed to.
 
 ## terms[owned_by].schema.entry_form_from_genos_attr
 

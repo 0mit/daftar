@@ -857,6 +857,11 @@ def genos_problem(k):
     if not _is_text(k.get('genos')):
         return f"names its genos as text (`genos: <name>`), not {type(k.get('genos')).__name__}"
     for a, v in k.items():
+        if a == 'alive_while' and isinstance(v, dict):
+            # a genos's life: `{known, by}`, each said as text — the gate reads which of the law's four ways it is
+            if not (set(v) <= {'known', 'by'} and all(_is_text(x) for x in v.values())):
+                return "`alive_while` is a mapping {known, by}, each said as text"
+            continue
         if isinstance(v, dict) or (isinstance(v, list) and not all(_is_text(x) for x in v)):
             return f"`{a}` is a word or a list of words"
     return None

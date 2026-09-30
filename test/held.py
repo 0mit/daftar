@@ -96,7 +96,7 @@ title: "service-2026"
 status: active
 summary: "the service agreement the client accepted"
 nature: lekton
-owned_by: {{ legal: {{ crown: logos }} }}
+owned_by: {{ legal: {{ crown: agape }} }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:service-2026", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}

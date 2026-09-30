@@ -118,7 +118,7 @@ HEATER = bean("heater-rig", "host", "soma", "heater-rig — a water heater on th
 """ + table(*HEATER_ROWS) + """    excluded:
       - { at: 3, channel: flow, by: keeper, why: "air in the flow sensor after the tank was refilled" }
 """, "A water heater kept on a bench for trials; nothing here is anyone's health or home.")
-MOTH = bean("moth-7", "organism", "empsychon", "moth-7 — a tagged moth", "An invented moth carrying a light tag for one night.",
+MOTH = bean("moth-7", "organism", "soma", "moth-7 — a tagged moth", "An invented moth carrying a light tag for one night.",
             "organism_id", "organism:moth-7", "logical", """series:
   night-1:
     span: { of: time, from: "2026-06-12 21:00+02:00" }
@@ -129,11 +129,11 @@ MOTH = bean("moth-7", "organism", "empsychon", "moth-7 — a tagged moth", "An i
     rows: |
 """ + table(("at", "fix", "perch"), ("0", "46.5021,11.3402", "lime-3#crown"), ("45", "46.5023,11.3405", "lime-3#crown"),
             ("130", "46.5030,11.3411", "lavender-bed#north-row"), ("610", "?", "_")), "A moth, tagged for one night.")
-LIME = bean("lime-3", "organism", "empsychon", "lime-3 — a lime tree", "An invented lime tree at the edge of the plot.",
+LIME = bean("lime-3", "organism", "soma", "lime-3 — a lime tree", "An invented lime tree at the edge of the plot.",
             "organism_id", "organism:lime-3", "logical", "", "A lime tree.")
-LAVENDER = bean("lavender-bed", "organism", "empsychon", "lavender-bed — a bed of lavender", "An invented lavender bed.",
+LAVENDER = bean("lavender-bed", "organism", "soma", "lavender-bed — a bed of lavender", "An invented lavender bed.",
                 "organism_id", "organism:lavender-bed", "logical", "", "A bed of lavender.")
-BIRCH = bean("birch-2", "organism", "empsychon", "birch-2 — a birch with a dendrometer",
+BIRCH = bean("birch-2", "organism", "soma", "birch-2 — a birch with a dendrometer",
              "An invented birch whose stem radius is logged hourly.", "organism_id", "organism:birch-2", "logical", """lines:
   radius: { zero: "the pith, at breast height", toward: "out to the bark, facing north" }
 series:
@@ -207,7 +207,7 @@ The agency's walk.
 
 
 def person(id, name):
-    return bean(id, "person", "empsychon", f"{id} — {name}", f"{name}, invented.", "identifier", f"person:{id}", "logical", "",
+    return bean(id, "person", "soma", f"{id} — {name}", f"{name}, invented.", "identifier", f"person:{id}", "logical", "",
                 f"{name}, invented.", own="owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n"
                 ).replace("owned_by:", "consent: { bean: harbour-tale }\nowned_by:", 1)   # kept by name on their word (F2)
 
@@ -225,7 +225,7 @@ courses:
 selections:
   translation-rights: { what: "whether the house asks for translation rights", steps: [ { id: asked, op: select, genos: contract } ] }
   rights-papers: { what: "the papers that show which translation rights are free", steps: [ { id: papers, op: select, genos: document } ] }
-""", "The placing of a manuscript.", own="owned_by: { legal: { crown: logos } }\nresponsibility: { legal: { parties: true } }\n")
+""", "The placing of a manuscript.", own="owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { parties: true } }\n")
 CHECKLIST = """---
 mapping: manuscript-parts
 kind: checklist
@@ -271,8 +271,8 @@ adds.append("""  anchor_systems:
     - { scheme: tree-inputs, classifies: "what a tree takes in and gives out, as this garden names it", publisher: "this garden", url: "lists/tree-inputs.tsv", levels: [ { level: input } ], neighbours: none, sources: "lists/tree-inputs.tsv" }
 """)
 VOCAB_EXTRA = """local_gene:
-  - { genos: organism, of_nature: empsychon, meaning: "a living thing that is not a person: a tree, a moth" }
-  - { genos: material, of_nature: soma, meaning: "a body of matter taken and kept: a core, a sample" }
+  - { genos: organism, of_nature: soma, level: organism, establishing_anchor_family: [logical], meaning: "a living thing that is not a person: a tree, a moth" }
+  - { genos: material, of_nature: soma, level: material, meaning: "a body of matter taken and kept: a core, a sample" }
 local_terms:
   - term: organism_id
     meaning: "the logical identity of an organism: a name the garden mints once (`organism:<name>`)"
