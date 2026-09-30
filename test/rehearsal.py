@@ -95,7 +95,7 @@ write("VOCAB.md", h + "\n" + VOCAB_EXTRA + sep + rest)
 write("extracts/vital-signs.tsv", "code\tparent\tname\nsystolic\t\tthe pressure at the heart's beat\n"
       "diastolic\t\tthe pressure between beats\nupper-arm\t\tthe upper arm\ncuff\t\tan automatic cuff\n")
 
-OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
+OWN = "owned_by: { owner: { bean: keeper } }\n"
 write("beans/this-host.md", f"""---
 bean: this-host
 genos: host

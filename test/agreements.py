@@ -76,9 +76,9 @@ def bean(id, genos, nature, akey, rest, own, title=None, g=None):
             f"{rest}---\n{id}, invented.\n")
 
 
-PERSON_OWN = "owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n"
-CROWN = "owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { parties: true } }\n"
-ORG_OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
+PERSON_OWN = "owned_by: { crown: true }\nresponsibility: { legal: { self: true } }\n"
+CROWN = "owned_by: { crown: true }\nresponsibility: { legal: { parties: true } }\n"
+ORG_OWN = "owned_by: { owner: { bean: keeper } }\n"
 
 
 def person(id, consent):
@@ -360,8 +360,8 @@ hid = run("git", "rev-list", "--max-parents=0", "HEAD", cwd=H).stdout.split()[0]
 def garden_bean(bid, gidv, owner, at=None):
     loc = f"located_at: [ {{ system: unix-filesystem, openness: here, at: \"{at}\" }} ]\n" if at else ""
     return (f"---\nbean: {bid}\ngenos: garden\ntitle: \"{bid}\"\nstatus: active\nsummary: \"another garden, kept by {owner}\"\n"
-            f"nature: lekton\nowned_by: {{ legal: {{ owner: {{ bean: {owner} }} }} }}\n"
-            f"responsibility: {{ legal: {{ holder: {{ bean: {owner} }} }} }}\n"
+            f"nature: lekton\nowned_by: {{ owner: {{ bean: {owner} }} }}\n"
+            f""
             f"identity: {{ status: confirmed, anchors: [ {{ key: garden_id, value: \"{gidv}\", class: logical, establishing: true }} ] }}\n"
             f"provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}\n{loc}---\nA garden.\n")
 

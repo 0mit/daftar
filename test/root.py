@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""The root (std-vocab 31.0): the dot and its divisions, the frame of place and time, the order of bodies, life, and the
-crown as the life chain.
+"""The root (std-vocab 31.0, and the base, 32.0): the dot and its divisions, the frame of place and time, the ladder from
+the frame to the crown, life, the life chain as vias ending at the Creator, and ownership without facets.
 
 Grows a garden, then: the gardener is a body (soma) held by the crown, agape; a nature the law retired and a crown chosen
 by nature are refused naming what took their place; a body's genos names its level, a sayable one names none, and a
@@ -50,8 +50,8 @@ def ok(out):
 
 
 SAM, VOCAB, GARDEN = get("beans/sam.md"), get("VOCAB.md"), get("GARDEN.md")
-check("the gardener is a body held by no bean — `nature: soma`, `crown: agape` — and the garden says where it reckons its "
-      "days", "nature: soma" in SAM and "crown: agape" in SAM and "zone: Europe/Istanbul" in GARDEN, (SAM[:600], GARDEN[:400]))
+check("the gardener is a body held by no bean — `nature: soma`, `crown: true` — and the garden says where it reckons its "
+      "days", "nature: soma" in SAM and "crown: true" in SAM and "zone: Europe/Istanbul" in GARDEN, (SAM[:600], GARDEN[:400]))
 check("...and it passes the gate", ok(gate()), gate()[-600:])
 
 # --- natures and the crown
@@ -59,13 +59,13 @@ put("beans/sam.md", SAM.replace("nature: soma", "nature: empsychon"))
 out = gate()
 check("a bean still `empsychon` is refused, naming what took its place", "empsychon" in out and "retired: `soma` for a person" in out,
       out[-700:])
-put("beans/sam.md", SAM.replace("crown: agape", "crown: logos"))
+put("beans/sam.md", SAM.replace("crown: true", "crown: agape"))
 out = gate()
-check("a crown chosen by nature is refused: the crown is the life chain, one branch", "logos" in out and not ok(out)
-      and "retired: `agape`" in out, out[-700:])
-put("beans/sam.md", SAM.replace("crown: agape", "crown: theos"))
+check("a crown named as a value is refused: the crown is one, `theone`, and a being it holds says only `crown: true`",
+      "agape" in out and not ok(out), out[-700:])
+put("beans/sam.md", SAM.replace("crown: true", "crown: theone"))
 out = gate()
-check("...and its root, THE ONE, is named by no bean", "theos" in out and not ok(out), out[-700:])
+check("...and THE ONE is named by no bean", "theone" in out and not ok(out), out[-700:])
 put("beans/sam.md", SAM)
 
 
@@ -83,8 +83,7 @@ identity:
   anchors:
     - {{ key: identifier, value: "{a}", class: logical, establishing: false }}
 provenance: {{ src: asserted-by-human, by: "sam", as_of: 2026-09-30 }}
-owned_by: {{ legal: {{ owner: {{ bean: sam }} }} }}
-responsibility: {{ legal: {{ holder: {{ bean: sam }} }} }}
+owned_by: {{ owner: {{ bean: sam }} }}
 {extra}---
 {bid}, invented.
 """
@@ -106,7 +105,7 @@ put("beans/host-1.md", bean("host-1", "host", "soma", "part_of: { bean: rack-1 }
 for text, want, name in (
         ("{ genos: gizmo, of_nature: soma, meaning: \"invented\" }", "a body names the level it stands at",
          "a body's genos with no level is refused"),
-        ("{ genos: gizmo, of_nature: soma, level: galaxy, meaning: \"invented\" }", "a body names the level it stands at",
+        ("{ genos: gizmo, of_nature: soma, level: universe-entire, meaning: \"invented\" }", "a body names the level it stands at",
          "...and one at a level the law does not have"),
         ("{ genos: notion, of_nature: lekton, level: cell, meaning: \"invented\" }", "only a body stands among bodies",
          "a sayable genos with a level is refused"),
@@ -174,6 +173,134 @@ check("a division naming no rule of the law is refused", "names no rule of the l
 put("VOCAB.md", _v.replace("aggregate: sum", "aggregate: guess"))
 out = gate()
 check("...and one whose wholeness is no aggregate", "no row of `aggregates`" in out, out[-700:])
+
+# --- 32.0: the ladder, its rules, the life chain, and ownership without facets
+put("VOCAB.md", VOCAB)
+for b in ("rack-1", "host-1", "host-2"):
+    if os.path.exists(os.path.join(G, "beans", b + ".md")):
+        os.remove(os.path.join(G, "beans", b + ".md"))
+LOCAL = """local_gene:
+  - { genos: tree, of_nature: soma, level: organism, alive_while: { known: said, by: "while it grows" }, meaning: "a tree, invented" }
+  - { genos: herd, of_nature: soma, level: population, alive_while: { known: said, by: "while it keeps together" }, meaning: "a herd, invented" }
+  - { genos: machine, of_nature: soma, level: device, alive_while: { known: said, by: "while it runs" }, meaning: "a machine, invented" }
+"""
+V32 = VOCAB.replace("local_gene: []\n", LOCAL)
+put("VOCAB.md", V32)
+out = gate()
+check("32.0: a garden's own bodies at the ladder's levels pass", ok(out), out[-700:])
+put("VOCAB.md", V32.replace("level: device, alive_while", "level: logos, alive_while"))
+out = gate()
+check("a body at `logos` is refused: no body stands there, a person's body is an organism",
+      "a body names the level it stands at among bodies" in out and not ok(out), out[-700:])
+put("VOCAB.md", V32.replace("level: device, alive_while", "level: device, rung: organism, alive_while"))
+out = gate()
+check("...and a `rung` names only a step that holds no body", "names a step that holds no body" in out, out[-700:])
+put("VOCAB.md", V32)
+put("beans/herd-1.md", bean("herd-1", "herd", "soma"))
+put("beans/tree-1.md", bean("tree-1", "tree", "soma", "part_of: { bean: herd-1 }\n"))
+out = gate()
+check("a living part of a population passes: the part is what its whole is made of", ok(out), out[-700:])
+os.remove(os.path.join(G, "beans", "herd-1.md"))
+put("beans/tree-1.md", bean("tree-1", "tree", "soma"))
+
+# weight: every body has it, a sayable being none of its own
+LOAD = """local_terms:
+  - term: load
+    meaning: "the mass a being bears, invented"
+    context_keys: [load]
+    schema:
+      shape: mapping
+      attrs:
+        mass: { required: true, in: { quantity: mass }, meaning: "how much" }
+"""
+V32L = V32.replace("local_terms: []\n", LOAD)
+put("VOCAB.md", V32L)
+put("beans/doc-1.md", bean("doc-1", "design", "lekton", "load: { mass: { count: 2, unit: kilogram } }\n"))
+out = gate()
+check("weight: a sayable being's own mass is refused — the rule holds for bodies, from space∞time",
+      "has no mass of its own" in out and "weight" in out, out[-700:])
+put("VOCAB.md", V32L.replace('in: { quantity: mass }, meaning: "how much"', 'in: { quantity: mass }, of_bodies: true, meaning: "how much each of its units weighs"'))
+out = gate()
+check("...and allowed where the attribute says it measures the bodies the being stands for (`of_bodies`)", ok(out), out[-700:])
+os.remove(os.path.join(G, "beans", "doc-1.md"))
+put("VOCAB.md", V32)
+
+# the life chain: vias, ending at the Creator
+put("beans/m-1.md", bean("m-1", "machine", "soma"))
+put("beans/doc-2.md", bean("doc-2", "design", "lekton", "via: [{ bean: sam }]\n"))
+out = gate()
+check("a said thing that came through a person passes", ok(out), out[-700:])
+put("beans/doc-2.md", bean("doc-2", "design", "lekton", "via: [{ bean: m-1 }]\n"))
+out = gate()
+check("...one through a machine whose own chain stops there is refused: a said thing comes through hands",
+      "stops at m-1" in out and "hands" in out, out[-700:])
+put("beans/m-1.md", bean("m-1", "machine", "soma", "via: [{ bean: sam }]\n"))
+out = gate()
+check("...and passes once the machine's own via goes on to the person it acted for", ok(out), out[-700:])
+put("beans/m-1.md", bean("m-1", "machine", "soma", 'via: [{ someone: person, outside: "HPE" }]\n'))
+out = gate()
+check("an unknown maker is someone, reached through what is known: a person at HPE", ok(out), out[-700:])
+put("beans/m-1.md", bean("m-1", "machine", "soma", "via: [{ someone: person }]\n"))
+out = gate()
+check("...and someone reached through nothing is refused, as no fact at all", "reached through nothing" in out, out[-700:])
+put("beans/m-1.md", bean("m-1", "machine", "soma"))
+put("beans/doc-2.md", bean("doc-2", "design", "lekton", "via: [{ bean: sam }]\n"))
+put("beans/tree-1.md", bean("tree-1", "tree", "soma", "via: [{ bean: m-1 }]\n"))
+out = gate()
+check("a living being through a machine is refused: life comes through the living", "a living being" in out
+      and "tree-1" in out, out[-700:])
+put("beans/tree-1.md", bean("tree-1", "tree", "soma", "via: [{ bean: sam }]\n"))
+out = gate()
+check("...and one planted by a person passes", ok(out), out[-700:])
+put("beans/doc-2.md", bean("doc-2", "design", "lekton", "via: [{ bean: nobody-here }]\n"))
+out = gate()
+check("a via naming no bean of the garden is refused, naming the form for someone not held here",
+      "nobody-here" in out and "someone" in out, out[-700:])
+put("beans/doc-2.md", bean("doc-2", "design", "lekton", "creator: { bean: sam }\n"))
+out = gate()
+check("the retired `creator` is refused, naming `via`", "creator" in out and "via" in out and not ok(out), out[-700:])
+os.remove(os.path.join(G, "beans", "doc-2.md"))
+
+# ownership has no facets; answering is care
+D = bean("doc-3", "design", "lekton")
+put("beans/doc-3.md", D.replace("owned_by: { owner: { bean: sam } }", "owned_by: { legal: { owner: { bean: sam } } }"))
+out = gate()
+check("ownership in a facet is refused, naming the one-owner form", "legal" in out and "`owner`" in out and not ok(out), out[-700:])
+put("beans/doc-3.md", D.replace("owned_by: { owner: { bean: sam } }", "owned_by: { owner: { bean: sam }, crown: true }"))
+out = gate()
+check("...and two owners at once", not ok(out), out[-700:])
+put("beans/doc-3.md", D + "")
+put("beans/doc-3.md", D.replace("owned_by: { owner: { bean: sam } }\n",
+                                "owned_by: { owner: { bean: sam } }\nresponsibility: { legal: { holder: { bean: sam } } }\n"))
+out = gate()
+check("a legal answerer who is the owner is a placeholder, and refused", "is a placeholder" in out, out[-700:])
+put("beans/doc-3.md", D.replace("owned_by: { owner: { bean: sam } }\n", 'owned_by: { external: "a publisher" }\n'))
+out = gate()
+check("a being owned outside this ledger with nobody here answering is refused", "nobody here answers" in out, out[-700:])
+put("beans/doc-3.md", D.replace("owned_by: { owner: { bean: sam } }\n",
+                                'owned_by: { external: "a publisher" }\nresponsibility: { legal: { holder: { bean: sam } } }\n'))
+out = gate()
+check("...and passes once someone here answers for it", ok(out), out[-700:])
+put("beans/doc-3.md", D.replace("owned_by: { owner: { bean: sam } }\n",
+                                "owned_by: { owner: { bean: sam } }\nresponsibility: { technical: { holder: { bean: sam } } }\n"))
+out = gate()
+check("a technical answerer on a record nobody runs is refused: the facet applies only where something runs or is kept",
+      "applies only to" in out, out[-700:])
+put("beans/doc-3.md", D)
+put("beans/m-1.md", bean("m-1", "machine", "soma", "responsibility: { technical: { holder: { bean: sam } } }\n"))
+out = gate()
+check("...and on a machine it passes", ok(out), out[-700:])
+put("beans/doc-3.md", D.replace("owned_by: { owner: { bean: sam } }\n",
+                                "owned_by: { owner: { bean: sam } }\nacquired: { from: { bean: sam }, as: given }\n"))
+out = gate()
+check("the acquisition says from whom a being came to us", ok(out), out[-700:])
+put("beans/doc-3.md", D.replace("owned_by: { owner: { bean: sam } }\n",
+                                "owned_by: { owner: { bean: sam } }\nacquired: { as: given }\n"))
+out = gate()
+check("...and one from no one is refused", "acquired" in out and not ok(out), out[-700:])
+for b in ("doc-3", "m-1", "tree-1"):
+    os.remove(os.path.join(G, "beans", b + ".md"))
+put("VOCAB.md", VOCAB)
 
 # --- the names layer: each language a sibling, every row an item of the law
 put("VOCAB.md", _v)

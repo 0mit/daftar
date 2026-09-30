@@ -71,7 +71,7 @@ title: "{title or bid}"
 status: active
 summary: "a person"
 nature: soma
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ self: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{bid}", class: logical, establishing: true }}{anchors} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
@@ -89,7 +89,7 @@ title: "{bid}"
 status: active
 summary: "an agreement"
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:{bid}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}
@@ -101,7 +101,7 @@ An agreement.
 """)
 
 
-OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
+OWN = "owned_by: { owner: { bean: keeper } }\n"
 
 # ============================================================ F2: another person, by name, only on their consent
 person("wren-ash")

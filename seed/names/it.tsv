@@ -5,7 +5,20 @@ natures:lekton	il dicibile	dire (dicere); l'esprimibile (the expressible)	propos
 term:nature	natura	natura	proposed	agent (claude opus-5.5), by hand
 term:genos	genere	genus (gignere, to beget)	proposed	agent (claude opus-5.5), by hand
 registry:gene	i generi	genus	proposed	agent (claude opus-5.5), by hand
+registry:lines	le linee	linea (a linen thread)	proposed	agent (claude opus-5.5), by hand
+lines:frame	quadro	quadrus (square): quadro di riferimento, a frame of reference	proposed	agent (claude opus-5.5), by hand
+lines:matter	materia	materia (timber)	proposed	agent (claude opus-5.5), by hand
+lines:gravitation	gravitazione	gravis (heavy)	proposed	agent (claude opus-5.5), by hand
+lines:living	il vivente	vivere (to live)	proposed	agent (claude opus-5.5), by hand
+lines:logos	ragione	ratio (a reckoning, a proportion)	proposed	agent (claude opus-5.5), by hand
+lines:made	i manufatti	manu factum (made by hand)	proposed	agent (claude opus-5.5), by hand
+registry:conditions	condizioni	condicio (a stipulation)	proposed	agent (claude opus-5.5), by hand
+conditions:balance	giusta misura	mensura (measure); temperamento (the right mixing)	proposed	agent (claude opus-5.5), by hand
+conditions:proportion	proporzione	pro portione (by each one's share)	proposed	agent (claude opus-5.5), by hand
+registry:foundation_rules	regole di fondamento	fundamentum (fundus, the bottom)	proposed	agent (claude opus-5.5), by hand
+foundation_rules:weight	peso	pensum (what is weighed out)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	l'ordine dei corpi	ordine (ordo); scala naturae (the ladder of nature)	proposed	agent (claude opus-5.5), by hand
+complexity:space-time	spazio∞tempo	spatium (a stretch); tempus	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	particella elementare	particella (a little part); elemento	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	adrone	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	nucleo	nucleus (a kernel)	proposed	agent (claude opus-5.5), by hand
@@ -20,16 +33,20 @@ complexity:population	popolazione	populus (a people)	proposed	agent (claude opus
 complexity:community	comunità	communis; biocenosi	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	ecosistema	οἶκος + σύστημα	proposed	agent (claude opus-5.5), by hand
 complexity:biosphere	biosfera	βίος + σφαῖρα	proposed	agent (claude opus-5.5), by hand
+complexity:logos	ragione	ratio (a reckoning, a proportion)	proposed	agent (claude opus-5.5), by hand
 complexity:material	materiale	materia (timber)	proposed	agent (claude opus-5.5), by hand
 complexity:rock	roccia	rocca	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	corpo celeste	caelum + corpus	proposed	agent (claude opus-5.5), by hand
+complexity:planetary-system	sistema planetario	πλανήτης (a wanderer)	proposed	agent (claude opus-5.5), by hand
+complexity:galaxy	galassia	γάλα (milk); la Via Lattea	proposed	agent (claude opus-5.5), by hand
 complexity:component	componente	componere	proposed	agent (claude opus-5.5), by hand
 complexity:device	dispositivo	disponere (to set in order)	proposed	agent (claude opus-5.5), by hand
 complexity:installation	impianto	impiantare (to plant in)	proposed	agent (claude opus-5.5), by hand
 registry:crown	la corona	corona	proposed	agent (claude opus-5.5), by hand
-crown:theos	l'Uno	uno (unus); Dio	proposed	agent (claude opus-5.5), by hand
-crown:agape	carità	caritas (carus, dear); amore (Paradiso XXXIII 145: l'amor che move il sole e l'altre stelle)	proposed	agent (claude opus-5.5), by hand
-term:creator	autore	auctor (augere, to make grow)	proposed	agent (claude opus-5.5), by hand
+crown:theone	l'Essere necessario	necessario (necesse); Avicenna's necesse esse	proposed	agent (claude opus-5.5), by hand
+crown:love	carità	caritas (carus, dear); amore (Paradiso XXXIII 145: l'amor che move il sole e l'altre stelle)	proposed	agent (claude opus-5.5), by hand
+crown:wisdom	sapienza	sapientia (sapere: to taste, to know)	proposed	agent (claude opus-5.5), by hand
+term:via	tramite	trames (a crossway, a path): by way of	proposed	agent (claude opus-5.5), by hand
 term:status	stato	status (stare)	proposed	agent (claude opus-5.5), by hand
 registry:dimensions	dimensioni	dimetiri	proposed	agent (claude opus-5.5), by hand
 dimensions:time	tempo	tempus	proposed	agent (claude opus-5.5), by hand
@@ -47,6 +64,12 @@ term:lives_in	vive in	abitare (habitare)	proposed	agent (claude opus-5.5), by ha
 term:located_at	situato	situs	proposed	agent (claude opus-5.5), by hand
 term:owned_by	proprietario	proprius	proposed	agent (claude opus-5.5), by hand
 term:responsibility	responsabile	respondere	proposed	agent (claude opus-5.5), by hand
+term:acquired	acquisizione	acquirere (ad + quaerere, to seek)	proposed	agent (claude opus-5.5), by hand
+registry:facets	i modi della cura	cura (care: Heidegger's Sorge, in Italian)	proposed	agent (claude opus-5.5), by hand
+facets:legal	giuridico	ius (right)	proposed	agent (claude opus-5.5), by hand
+facets:technical	tecnico	τέχνη (craft)	proposed	agent (claude opus-5.5), by hand
+facets:experience	esperienza	experiri (to try)	proposed	agent (claude opus-5.5), by hand
+facets:financial	finanziario	finis (an end)	proposed	agent (claude opus-5.5), by hand
 registry:acts	atti	agere	proposed	agent (claude opus-5.5), by hand
 acts:made	fatto	facere	proposed	agent (claude opus-5.5), by hand
 acts:derived	derivato	derivare	proposed	agent (claude opus-5.5), by hand

@@ -71,8 +71,7 @@ title: "the choir's book"
 status: active
 summary: "an invented choir's book of its members and its rehearsals"
 nature: lekton
-owned_by: { legal: { owner: { bean: keeper } } }
-responsibility: { legal: { holder: { bean: keeper } } }
+owned_by: { owner: { bean: keeper } }
 identity: { status: provisional, anchors: [] }
 provenance: { src: asserted-by-human, by: keeper, as_of: 2026-09-25 }
 selections:

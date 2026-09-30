@@ -64,7 +64,7 @@ identity:
     - {{ key: identifier, value: "person:ada", class: logical, establishing: true, observed: now }}
 provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
 nature: {nature}
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ self: true }} }}
 consent: {{ bean: consent-ada }}
 ---
@@ -84,7 +84,7 @@ identity:
   anchors:
     - {{ key: identifier, value: "contract:{id}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "test/germinate.py", as_of: now }}
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 parties:
 {parties}words: {{ form: spoken, agreed: 2026-09-01 }}
@@ -521,7 +521,7 @@ check("the cookbook's examples hold a contract with clauses and one with a trans
       and re.search(r'(?m)^clauses:$', _ck) and re.search(r'(?m)^transactions:$', _ck), sorted(map(str, _gene)))
 _ev = [_text for _path, _text in _examples if re.search(r'(?m)^genos: event$', _text)]
 check("...its happening is owned by none of those present — the crown — and answered for by its host, as the law says",
-      _ev and all('owned_by: { legal: { crown: agape } }' in _e and re.search(r'(?m)^responsibility: .*holder', _e)
+      _ev and all('owned_by: { crown: true }' in _e and re.search(r'(?m)^responsibility: .*holder', _e)
                   for _e in _ev), _ev[:1])
 check("...and the cookbook begins with the gardener, as germinate's closing message tells a stranger it does",
       re.search(r'^## (.*)$', _ck, re.M).group(1).lower().startswith('the gardener'))
@@ -792,7 +792,7 @@ journal('- action: a desk for [[ada]].')
 run('git', 'add', '-A', cwd=G)
 rc8, o8 = commit('-m', 'verbose', env=dict(os.environ, DAFTAR_VERBOSE='1'))
 check("...and `DAFTAR_VERBOSE=1 git commit` lists every check the fast suite passed",
-      rc8 == 0 and 'PASS every bean carries BOTH ownership arcs' in o8, o8[-400:])
+      rc8 == 0 and 'PASS every ownership chain that is owed terminates at the crown or outside' in o8, o8[-400:])
 rc, out = gate(G)
 check("the gate run by hand on a clean garden prints its verdict alone, on one line",
       rc == 0 and len([l for l in out.splitlines() if l.strip()]) == 1 and ' 0 error(s)' in out, out)

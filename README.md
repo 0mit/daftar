@@ -91,10 +91,12 @@ while it holds, a person while they live — and a life comes from a life, a cha
 an amount in the currency it was paid in, exact and never rounded, and what one person owes another is read from
 what was paid and what was agreed — never written down beside them, where it could drift. The rules for what a
 thing may say attach to its nature and every genos beneath inherits them, so a new genos arrives with a coherent
-identity policy for free. The same is true of ownership: every thing has exactly one owner, and exactly one entry
-saying who answers for it, per facet — legal, technical, financial — and every chain ends at a person, at someone
-outside the notebook, or at the crown. An agreement between two people may be owned by neither of them, and then
-both answer for it.
+identity policy for free. The same is true of ownership: every thing has exactly one owner, and every chain ends at
+a person, at someone outside the notebook, or at the crown. Who answers for a thing is its own fact, facet by facet —
+before the law its owner, unless someone else is named; who runs it, who designs how people meet it, who pays — written
+only where someone does. An agreement between two people may be owned by neither of them, and then both answer for it.
+And every thing came to be through someone — a person, the hands at a maker, the one it was born of — which is said as
+a `via` where it is known, never demanded where it is not.
 
 The vocabulary that says all this is a document, versioned, read by the gate on every commit; the gate itself
 names no term. A garden adds what it needs — its own terms, its own values, its own profiles — and a local
@@ -216,8 +218,9 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 | **journal** | `log/journal.md`: every change, who made it and why. The gate refuses an unrecorded change |
 | **anchor** | a fact that identifies an object (a serial, a domain name), so two gardens recognise the same thing |
 | **nature / genos** | what sort of being it is: `soma`, a body, taking room in space, or `lekton`, what exists by being said and agreed — refined by a genos, its kind, such as `host`, which for a body names its level among bodies. The words are Greek, and `MODEL.md` gives each |
-| **facet** | an aspect of ownership, e.g. `legal` or `technical`; each has exactly one owner, and one entry saying who answers for it |
-| **crown** | where every ownership chain ends: in the life chain — who gave a thing its life, walked to `agape`, love that does not possess, and to `theos`, which no bean names. A person is owned by no one: `owned_by: { legal: { crown: agape } }` |
+| **facet** | a way of answering for a thing, e.g. `legal` or `technical`: who answers for it before the law, who runs it. Ownership has none: a thing has one owner |
+| **via** | who a thing came to be through: a person, the one it was born of, or someone reached through a maker. Every such chain ends at the crown |
+| **crown** | where every chain ends: `theone`, the Necessary Existent, whom no bean names, with two faces, love and wisdom. A person is owned by no one: `owned_by: { crown: true }` |
 | **profile** | an opt-in group of rules in a field's own words, e.g. `domain` or `accounting`; it adds terms, and adds to the core's terms without rewriting them, so a garden may take every profile at once |
 | **position** | where something is on a line — a day in a calendar, a moment, a path on a machine, the second of a series — in the one form its system declares |
 | **coding** | a code written with the scheme it is a code of, `<scheme>:<code>`: an occupation, a technology, an account |

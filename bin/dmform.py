@@ -20,7 +20,7 @@ THE FORM
     alt        the alternative whole-value form {key, refs}
     one_of     the forms an entry may take
     matches    values fixed by a registry row another field selects
-    mirror     another term this one must agree with: the same facets (parity_with), or the mirrored edge
+    mirror     another term this one must agree with: the mirrored edge
     unknown    attributes whose `in:` names no domain the language offers — the gate refuses them
 """
 
@@ -142,8 +142,9 @@ def domain_kind(d):
 
 
 def scope_of(sch):
-    """What a term's `attrs` describe: each ENTRY (a list, an open map, a faceted mapping) or the value ITSELF."""
-    if sch.get('shape') in ENTRY_SHAPES or sch.get('key_form') or sch.get('entry_one_of'):
+    """What a term's `attrs` describe: each ENTRY (a list, an open map, a faceted mapping) or the value ITSELF — a mapping
+    with no key form is one entry, and its `entry_one_of` is said of it (32.0: `owned_by`, `acquired`)."""
+    if sch.get('shape') in ENTRY_SHAPES or sch.get('key_form'):
         return 'entry'
     return 'self'
 
@@ -161,7 +162,7 @@ def attribute_form(term_def, sch):
             'matches': {'entry': list(sch.get('entry_must_match') or []),
                         'form_from_genos': sch.get('entry_form_from_genos_attr'),
                         'equal_genos_attr': sch.get('must_equal_genos_attr')},
-            'mirror': {'parity_with': sch.get('facet_parity_with'), 'inverse_of': sch.get('inverse_of')},
+            'mirror': {'inverse_of': sch.get('inverse_of')},
             'unknown': []}
 
     def put(facet, name, rule):

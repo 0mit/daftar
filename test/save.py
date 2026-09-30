@@ -76,8 +76,7 @@ identity:
   anchors:
     - {{ key: identifier, value: "program:{id}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "sam", as_of: now }}
-owned_by: {{ legal: {{ owner: {{ bean: sam }} }} }}
-responsibility: {{ legal: {{ holder: {{ bean: sam }} }} }}
+owned_by: {{ owner: {{ bean: sam }} }}
 ---
 A program.
 """

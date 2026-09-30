@@ -65,7 +65,7 @@ summary: "probe"
 nature: soma
 identity: { status: confirmed, anchors: [ { key: identifier, value: "person:ali", class: logical, establishing: true } ] }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-28 }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 consent: { bean: server-rent }
 ---
@@ -80,7 +80,7 @@ summary: "the server's rent, shared out"
 nature: lekton
 identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:server-rent", class: logical, establishing: true } ] }
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-28 }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: 2026-09-01 }

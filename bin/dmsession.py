@@ -185,8 +185,7 @@ identity:
   anchors:
     - {{ key: identifier, value: "session:{slug}", class: logical, establishing: true, observed: now }}
 provenance: {{ src: observed, by: "agent (fill in), opened by bin/dmsession.py", as_of: now }}
-owned_by: {{ legal: {{owner: {{bean: {owner}}}}}, technical: {{owner: {{bean: {owner}}}}} }}
-responsibility: {{ legal: {{holder: {{bean: {owner}}}}}, technical: {{holder: {{bean: {owner}}}}} }}
+owned_by: {{ owner: {{ bean: {owner} }} }}
 workspace:
   host: {{ bean: {host} }}
   system: {'windows-filesystem' if os.name == 'nt' else 'unix-filesystem'}

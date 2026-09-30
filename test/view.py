@@ -59,8 +59,7 @@ identity:
   anchors:
     - { key: identifier, value: "org:grain-coop", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
-owned_by: { legal: { owner: { bean: tessa } } }
-responsibility: { legal: { holder: { bean: tessa } } }
+owned_by: { owner: { bean: tessa } }
 ''',
     "hill-farm": '''bean: hill-farm
 genos: org
@@ -73,8 +72,7 @@ identity:
   anchors:
     - { key: identifier, value: "org:hill-farm", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
-owned_by: { legal: { owner: { bean: tessa } } }
-responsibility: { legal: { holder: { bean: tessa } } }
+owned_by: { owner: { bean: tessa } }
 ''',
     "silo-controller": '''bean: silo-controller
 genos: host
@@ -87,7 +85,7 @@ identity:
   anchors:
     - { key: serial, value: "SN-SILO-0417", class: hardware, establishing: true }
 provenance: { src: observed, by: "tessa (gardener)", as_of: now }
-owned_by: { legal: { owner: { bean: grain-coop } } }
+owned_by: { owner: { bean: grain-coop } }
 responsibility: { legal: { holder: { bean: tessa } } }
 provides_habitat: linux-baremetal
 located_at:
@@ -114,7 +112,7 @@ identity:
   anchors:
     - { key: serial, value: "SN-DRY-0981", class: hardware, establishing: true }
 provenance: { src: observed, by: "tessa (gardener)", as_of: now }
-owned_by: { legal: { owner: { bean: grain-coop } } }
+owned_by: { owner: { bean: grain-coop } }
 responsibility: { legal: { holder: { bean: tessa } } }
 located_at:
   - { system: ipv4, openness: here, at: 192.0.2.41, observed: now }
@@ -132,8 +130,7 @@ identity:
   anchors:
     - { key: serial, value: "SN-RADIO-2210", class: hardware, establishing: true }
 provenance: { src: observed, by: "tessa (gardener)", as_of: now }
-owned_by: { legal: { owner: { bean: tessa } } }
-responsibility: { legal: { holder: { bean: tessa } } }
+owned_by: { owner: { bean: tessa } }
 located_at:
   - { system: ipv4, openness: here, at: 192.0.2.60, observed: now }
 ''',
@@ -148,7 +145,7 @@ identity:
   anchors:
     - { key: serial, value: "SN-PUMP-3302", class: hardware, establishing: true }
 provenance: { src: observed, by: "tessa (gardener)", as_of: now }
-owned_by: { legal: { owner: { bean: hill-farm } } }
+owned_by: { owner: { bean: hill-farm } }
 responsibility: { legal: { holder: { bean: tessa } } }
 located_at:
   - { system: ipv4, openness: here, at: 192.0.2.70, observed: now }
@@ -164,7 +161,7 @@ identity:
   anchors:
     - { key: identifier, value: technology:prometheus, class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
-owned_by: { legal: { external: "the Prometheus authors" } }
+owned_by: { external: "the Prometheus authors" }
 responsibility: { legal: { holder: { bean: tessa } } }
 ''',
     "yard-monitor": '''bean: yard-monitor
@@ -178,8 +175,8 @@ identity:
   anchors:
     - { key: identifier, value: "instance:yard-monitor", class: logical, establishing: true }
 provenance: { src: observed, by: "tessa (gardener)", as_of: now }
-owned_by: { via: { bean: silo-controller } }
-responsibility: { via: { bean: silo-controller } }
+owned_by: { from: { bean: silo-controller } }
+responsibility: { from: { bean: silo-controller } }
 instance_of: { bean: prometheus }
 lives_in: { bean: silo-controller }
 roles: [ { role: monitoring } ]
@@ -214,7 +211,7 @@ identity:
   anchors:
     - { key: identifier, value: "service:grain-page", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
-owned_by: { legal: { owner: { bean: grain-coop } } }
+owned_by: { owner: { bean: grain-coop } }
 responsibility: { legal: { holder: { bean: tessa } } }
 located_at:
   - { system: uri, at: "https://grain.example.org/page/", openness: here }
@@ -1041,13 +1038,13 @@ def alerts(settings, beans, binds):
 put("assets/view/lib/sources/zabbix.py", SIBLING)
 put("beans/zabbix.md", "---\nbean: zabbix\ngenos: product\ntitle: \"Zabbix\"\nstatus: active\nsummary: \"A second monitoring system.\"\n"
     "nature: lekton\nidentity:\n  status: confirmed\n  anchors:\n    - { key: identifier, value: technology:zabbix, class: logical, establishing: true }\n"
-    "provenance: { src: asserted-by-human, by: \"tessa (gardener)\", as_of: now }\nowned_by: { legal: { external: \"its authors\" } }\n"
+    "provenance: { src: asserted-by-human, by: \"tessa (gardener)\", as_of: now }\nowned_by: { external: \"its authors\" }\n"
     "responsibility: { legal: { holder: { bean: tessa } } }\n---\nA second monitor's software.\n")
 put("beans/radio-monitor.md", "---\nbean: radio-monitor\ngenos: instance\ntitle: \"The radio monitor\"\nstatus: active\n"
     "summary: \"Reads the field radio's signal.\"\nnature: lekton\nidentity:\n  status: confirmed\n  anchors:\n"
     "    - { key: identifier, value: \"instance:radio-monitor\", class: logical, establishing: true }\n"
-    "provenance: { src: observed, by: \"tessa (gardener)\", as_of: now }\nowned_by: { legal: { owner: { bean: tessa } } }\n"
-    "responsibility: { legal: { holder: { bean: tessa } } }\ninstance_of: { bean: zabbix }\nlives_in: { bean: silo-controller }\n"
+    "provenance: { src: observed, by: \"tessa (gardener)\", as_of: now }\nowned_by: { owner: { bean: tessa } }\n"
+    "instance_of: { bean: zabbix }\nlives_in: { bean: silo-controller }\n"
     "knowledge:\n  - { code: technology:zabbix, rel: uses }\nreaches:\n  radio-agent: { protocol: icmp, to: { bean: field-radio } }\n"
     "---\nThe radio monitor.\n")
 put("beans/grain-page.md", PAGE_T.replace("  - { monitor: yard-monitor, settings: { bean: yard-monitor, field: monitoring } }\n",
@@ -1117,7 +1114,7 @@ title: "{_p}"
 status: active
 summary: "a viewer of the co-operative's page"
 nature: soma
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ self: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{_p}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: "tessa (gardener)", as_of: now }}

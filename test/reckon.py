@@ -66,7 +66,7 @@ def reckon(*a):
 
 # ============================================================================ the fixtures, invented
 T_ = "\t"
-OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
+OWN = "owned_by: { owner: { bean: keeper } }\n"
 
 
 def candle(id, heights, u="0.2"):

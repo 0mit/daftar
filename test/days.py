@@ -47,7 +47,7 @@ identity:
 provenance: {{ src: asserted-by-human, by: "sam", as_of: 2026-09-28 }}
 """
 open(os.path.join(BEANS, "dinner-at-sams.md"), "w").write(HEAD.format(bean="dinner-at-sams", genos="event", nature="lekton") + """\
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
   start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }
@@ -58,14 +58,14 @@ A dinner.
 """)
 open(os.path.join(BEANS, "ali.md"), "w").write(HEAD.format(bean="ali", genos="person", nature="soma") + """\
 consent: { bean: phone-loan }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 ---
 Ali.
 """)
 ALI = '{ system: event-anchored, at: "after:dinner-at-sams", unit: day, note: "on the call; its day was not said" }'
 LOAN = HEAD.format(bean="phone-loan", genos="contract", nature="lekton") + """\
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, role: lender, accepted: { system: gregorian-civil, at: 2026-09-14, unit: day, by: "sam", where: { system: iso-3166, at: IR, zone: Asia/Tehran } } }
@@ -207,7 +207,7 @@ open(v, "w").write(_voc.replace("local_terms: []", """local_terms:
     merge: { cardinality: single, order: none }""", 1))
 open(os.path.join(BEANS, "box.md"), "w").write(HEAD.format(bean="box", genos="host", nature="soma").replace(
     'value: "host:box", class: logical', 'value: "SN-1", class: hardware').replace("key: identifier", "key: serial") + """\
-owned_by: { legal: { external: "a hosting company" } }
+owned_by: { external: "a hosting company" }
 responsibility: { legal: { external: "a hosting company" } }
 rental: { provider: "a hosting company", renews: 2027-01-15 }
 ---

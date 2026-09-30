@@ -24,7 +24,7 @@ set `gardener: sam` in `GARDEN.md` — a change to the manifest, so its journal 
 (`seed/README.md` shows the whole first commit). The gate asks for a gardener as soon as the garden holds a bean,
 and its last line names them.
 
-A person is owned by no one — the crown, `agape` — and answers for themselves. This one was written by hand, so its
+A person is owned by no one — `crown: true`, the chain ending at the crown — and answers for themselves. This one was written by hand, so its
 name is bare, `person:sam`: it names Sam in this garden only, and is qualified before it crosses to another
 (*Another person's garden*, below):
 
@@ -42,7 +42,7 @@ identity:
   anchors:
     - { key: identifier, value: "person:sam", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 ---
 Sam keeps this ledger.
@@ -59,13 +59,16 @@ Pick the most specific relation that is true; `refs` is the open fallback.
 
 | you want to say | write | notes |
 |---|---|---|
-| who owns it, and who answers for it | `owned_by` + `responsibility` | always both, facet by facet: `legal`, `technical` and the other rows of the law's `facets` registry |
-| something outside this ledger owns it | `owned_by: { legal: { external: "…" } }` | a rented VPS, third-party software, a registered domain |
+| whose it is | `owned_by` | one owner — a bean, a contract, someone outside, or `crown: true` — and no facets |
+| who answers for it | `responsibility` | facet by facet (`legal`, `technical` and the other rows of the law's `facets`), written only where it is not simply the owner |
+| who it came to be through | `via` | a person, the one it was born of, or `someone` reached through a maker — never demanded |
+| who it came to us from | `acquired` | the vendor or giver, how (bought, rented, given, lent, inherited), the day |
+| something outside this ledger owns it | `owned_by: { external: "…" }` | a rented VPS, third-party software, a registered domain |
 | a running thing sits on a machine | `lives_in: { bean: … }` | the machine must say what habitat it offers (`provides_habitat`) |
 | a running thing is a copy of some software | `instance_of: { bean: … }` | required on `genos: instance`, together with `lives_in` |
 | it cannot work without another thing | `depends_on: { <name>: { bean: … } }` | must stay acyclic |
-| people agreed on something | a `contract` bean: `parties`, `words`, `clauses`, `transactions` | may be owned by none of its parties: `crown: agape`, answered for by `parties: true` |
-| who took part in a happening | `refs` on the `event`, `rel: host`, `present`, `invited`, `paid` | owned by none of them: `crown: agape`, answered for by its host |
+| people agreed on something | a `contract` bean: `parties`, `words`, `clauses`, `transactions` | may be owned by none of its parties: `crown: true`, answered for by `parties: true` |
+| who took part in a happening | `refs` on the `event`, `rel: host`, `present`, `invited`, `paid` | owned by none of them: `crown: true`, answered for by its host |
 | anything else — "serves", "is DNS for", "backs up" | `refs: { <slot>: { bean: …, rel: <kebab-verb> } }` | `rel` is free text, so a new relation needs no rule change |
 
 Anchors say what an object IS, so two gardens recognise the same thing. A machine is best anchored on
@@ -107,7 +110,7 @@ identity:
   anchors:
     - { key: fqdn, value: "example.org", class: logical, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { external: "the .org registry, under a registration agreement" } }
+owned_by: { external: "the .org registry, under a registration agreement" }
 responsibility: { legal: { holder: { bean: sam } } }
 ---
 Sam's domain.
@@ -127,7 +130,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:example-org-registration", class: logical, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 over:
   example-org: { thing: { bean: example-org } }
@@ -169,8 +172,8 @@ identity:
     - { key: serial, value: "NAS-0042", class: hardware, establishing: true }
     - { key: hostname, value: "nas", class: network, establishing: false }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } }, technical: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } }, technical: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
+responsibility: { technical: { holder: { bean: sam } } }
 provides_habitat: linux-baremetal
 roles:
   - { role: file-server }
@@ -198,7 +201,7 @@ identity:
   anchors:
     - { key: identifier, value: "product:nginx", class: logical, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { external: "the nginx project" } }
+owned_by: { external: "the nginx project" }
 responsibility: { legal: { holder: { bean: sam } } }
 ---
 The web server software.
@@ -220,8 +223,7 @@ identity:
 provenance: { src: observed, by: "sam", as_of: now }
 instance_of: { bean: nginx }
 lives_in: { bean: nas }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 refs:
   domain: { bean: example-org, rel: serves }
 ---
@@ -249,7 +251,7 @@ identity:
   anchors:
     - { key: fqdn, value: "vps-a.example.org", class: logical, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { external: "the hosting provider, which owns and operates the machine" } }
+owned_by: { external: "the hosting provider, which owns and operates the machine" }
 responsibility: { legal: { holder: { bean: sam } } }
 provides_habitat: linux-vm
 ---
@@ -289,8 +291,7 @@ identity:
   anchors:
     - { key: garden_id, value: "123456789abc", class: logical, establishing: true }   # replace with what `dmpropose id` printed in Ali's garden
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: ali } } }
-responsibility: { legal: { holder: { bean: ali } } }
+owned_by: { owner: { bean: ali } }
 ---
 Ali's garden. Its id is what `python3 bin/dmpropose.py id` printed there.
 ```
@@ -318,7 +319,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:ali-consent", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: 2026-09-01 }
@@ -347,7 +348,7 @@ identity:
     - { key: identifier, value: "123456789abc/person:ali", class: logical, establishing: true }   # her garden's id, as above
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 consent: { bean: ali-consent }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 ---
 Ali keeps garden-ali. Her name here is the one her own garden gave her.
@@ -363,8 +364,7 @@ first and know the other gardener only by a name your own garden gave them, they
 
 A dinner, a meeting, a call in which something was agreed is an `event`. When is `timing`, at the resolution
 actually known; who took part is `refs`, each naming what they were. A happening between people is owned by none
-of them: it ends at the crown, `agape` — the life chain: held by the lives of those who made it happen — as an
-agreement may, and whoever hosted it answers for it.
+of them: it ends at the crown (`crown: true`) — as an agreement may — and whoever hosted it answers for it.
 
 <!-- example: beans/dinner-at-sams.md -->
 ```markdown
@@ -380,7 +380,7 @@ identity:
   anchors:
     - { key: identifier, value: "event:dinner-at-sams-2026-09-12", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
   start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }
@@ -398,8 +398,8 @@ cost and Ali one. That is an agreement, so it is a `contract` bean, and what mov
 an amount, the `day` it moved where that is known, who paid how much of it (a single payer who states no amount
 paid the whole), and who bears it in whole-number shares — each party once in each list, in any order.
 
-- **An agreement between people may be owned by none of them.** Then it ends at the crown (`agape`, the life chain:
-  held by the life its parties gave it by accepting it), and its parties answer for it, each for what binds it:
+- **An agreement between people may be owned by none of them.** Then it ends at the crown (`crown: true`), and its
+  parties answer for it, each for what binds it:
   `responsibility: { legal: { parties: true } }`.
   One a person wrote and offers may instead be owned by its author.
 - **An offer is not an acceptance.** A party with `accepted` said yes on that day; a party without it has no
@@ -435,7 +435,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:shared-camera", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, accepted: 2026-09-10 }
@@ -482,7 +482,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:washer-loan", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, role: lender, accepted: 2026-09-12 }
@@ -556,7 +556,7 @@ identity:
   anchors:
     - { key: content_hash, value: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", class: logical, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { external: "the bank that issued the card, which wrote the statement" } }
+owned_by: { external: "the bank that issued the card, which wrote the statement" }
 responsibility: { legal: { holder: { bean: sam } } }
 located_at:
   - { system: unix-filesystem, openness: here, at: "laptop:/home/user/documents/card-statement-2026-09.pdf", observed: now }
@@ -625,8 +625,7 @@ identity:
   anchors:
     - { key: serial, value: "RG-0042", class: hardware, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 series:
   september:
     grid: { of: time, in: gregorian-civil, every: { count: 1, unit: hour }, from: "2026-09-14 06:00+02:00" }
@@ -699,7 +698,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:bike-repair", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   owner: { who: { bean: sam } }
@@ -895,7 +894,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:agency-noor", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   author: { who: { bean: sam }, role: author, accepted: 2026-06-02 }
@@ -968,7 +967,7 @@ identity:
     - { key: identifier, value: "person:noor", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 consent: { bean: agency-noor }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 ---
 Noor, of a small literary agency.
@@ -994,7 +993,7 @@ identity:
   anchors:
     - { key: identifier, value: "org:heron-books", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { external: "its shareholders" } }
+owned_by: { external: "its shareholders" }
 responsibility: { legal: { self: true } }
 ---
 A publisher.
@@ -1014,8 +1013,7 @@ identity:
   anchors:
     - { key: identifier, value: "document:salt-road-signed", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 located_at: [ { system: unix-filesystem, openness: unknown } ]
 ---
 Eleven pages, signed by both.
@@ -1035,7 +1033,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:salt-road-heron", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   author: { who: { bean: sam }, role: author, accepted: 2026-10-20 }
@@ -1070,7 +1068,7 @@ identity:
   anchors:
     - { key: identifier, value: "person:p-7d2e41c9", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 ---
 A person.
@@ -1090,8 +1088,7 @@ identity:
   anchors:
     - { key: identifier, value: "document:heron-report", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 about: [ { who: p-7d2e41c9 } ]
 located_at: [ { system: unix-filesystem, openness: unknown } ]
 ---
@@ -1147,8 +1144,7 @@ identity:
     - { key: identifier, value: "org:tile-workshop", class: logical, establishing: true }
     - { key: phone, value: "+15555550123", class: logical, establishing: false }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 ---
 Sam's workshop.
 ```
@@ -1172,7 +1168,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:lale-employment", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   employer: { who: { bean: tile-workshop }, role: employer, accepted: 2026-03-01 }
@@ -1215,7 +1211,7 @@ identity:
     - { key: phone, value: "+15555550147", class: logical, establishing: false }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 consent: { bean: lale-employment }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 grants:
   workshop-rings: { act: read, positions: [ { path: phone } ], audience: { who: tile-workshop }, why: "the workshop rings her when a job moves" }
@@ -1242,7 +1238,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:job-kitchen-floor", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   workshop: { who: { bean: tile-workshop }, role: contractor, accepted: 2026-09-15 }
@@ -1269,7 +1265,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:job-bathroom-wall", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   workshop: { who: { bean: tile-workshop }, role: contractor }
@@ -1300,7 +1296,7 @@ identity:
   anchors:
     - { key: identifier, value: "event:kiln-firing-2026-11", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { holder: { bean: sam } } }
 timing:
   start: { system: gregorian-civil, at: "2026-11-20 09:00+01:00", unit: hour }
@@ -1324,7 +1320,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:evening-class", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   workshop: { who: { bean: tile-workshop }, role: school, accepted: 2026-09-20 }
@@ -1465,7 +1461,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:bee-coop", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   sam: { who: { bean: sam }, role: member, accepted: 2026-04-10 }
@@ -1505,7 +1501,7 @@ identity:
     - { key: identifier, value: "person:derya", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 consent: { bean: bee-coop }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { self: true } }
 ---
 Derya, of the co-op.
@@ -1531,8 +1527,7 @@ identity:
   anchors:
     - { key: serial, value: "HIVE-S1", class: hardware, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 located_at:
   - { system: apiary-site, openness: elsewhere, at: "apiary:EAST-2" }
 observations:
@@ -1599,8 +1594,7 @@ identity:
   anchors:
     - { key: serial, value: "CANDLE-BW-01", class: hardware, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 series:
   burn:
     grid: { of: time, in: gregorian-civil, every: { count: 1, unit: hour }, from: "2026-11-01 18:00+01:00" }
@@ -1633,8 +1627,7 @@ identity:
   anchors:
     - { key: serial, value: "CANDLE-PF-01", class: hardware, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 series:
   burn:
     grid: { of: time, in: gregorian-civil, every: { count: 1, unit: hour }, from: "2026-11-01 18:00+01:00" }
@@ -1674,7 +1667,7 @@ identity:
   anchors:
     - { key: identifier, value: "contract:candle-supply", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { crown: agape } }
+owned_by: { crown: true }
 responsibility: { legal: { parties: true } }
 parties:
   maker: { who: { bean: sam }, role: maker, accepted: 2026-10-28 }
@@ -1830,8 +1823,7 @@ identity:
   anchors:
     - { key: serial, value: "SN-OVEN-0042", class: hardware, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 ---
 The first oven.
 ```
@@ -1853,8 +1845,7 @@ identity:
   anchors:
     - { key: identifier, value: "service:bakery-page", class: logical, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 located_at:
   - { system: uri, at: "https://bakery.example.org/drawings/", openness: here }
 view:
@@ -1980,8 +1971,7 @@ identity:
   anchors:
     - { key: serial, value: "RACK-0001", class: hardware, establishing: true }
 provenance: { src: observed, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
 capacity:
   - { count: 42, unit: item, placement: location, note: "its slots" }
 ---

@@ -91,38 +91,24 @@ _OB_SCHEMA = (next((t for t in (sv.get('terms') or []) if t.get('term') == 'owne
 # form counted as an ending and this check passed while checking less. A derivation that can come back empty
 # without anyone noticing is the defect, so it asserts.
 _OB_FORM = dmform.attribute_form(None, _OB_SCHEMA)
-_REFS = set(dmform.ref_attrs(_OB_FORM, 'entry'))
+_REFS = set(dmform.ref_attrs(_OB_FORM, _OB_FORM['scope']))
 _ENDS = set(_OB_FORM['one_of']) - _REFS
-_ALT = {'key': (_OB_FORM['alt'] or {}).get('key')}
 check("the ownership term still says which forms CONTINUE a chain and which END it — neither set is empty",
       bool(_REFS) and bool(_ENDS), f"refs={sorted(_REFS)} ends={sorted(_ENDS)}")
-half = [b for b, fm in BEANS.items() if (fm.get('owned_by') is None) != (fm.get('responsibility') is None)]
-check("every bean carries BOTH ownership arcs", not half, ', '.join(half[:5]))
-# The ARC's partner and the inherited form's key are the term's own declarations (`facet_parity_with`,
-# `alt_form.key`), read here rather than spelled again — the gate stopped keeping its own copy of the second
-# one in 8.x for the same reason.
-_PARTNER = _OB_SCHEMA.get('facet_parity_with') or 'responsibility'
-shape = lambda n: _ALT.get('key') if (_ALT.get('key') and _ALT['key'] in n) else frozenset(n)
-mismatch = [b for b, fm in BEANS.items() if fm.get('owned_by')
-            and shape(fm['owned_by']) != shape(fm.get(_PARTNER) or {})]
-check("the two arcs agree on facets everywhere", not mismatch, ', '.join(mismatch[:5]))
-
+# OWNERSHIP HAS NO FACETS (32.0): `owned_by` is one entry — whose a being is — and the facets are ways of answering for
+# it, in `responsibility`, which the gate judges (who answers, and where a facet applies). No second arc to pair here.
 
 
 def terminus(b, seen=()):
     if b in seen or b not in BEANS:
         return 'CYCLE'
     ob = BEANS[b].get('owned_by') or {}
-    _altkey = _ALT.get('key')
-    if _altkey and _altkey in ob:
-        return terminus(ob[_altkey]['bean'], seen + (b,))
-    for spec in ob.values():
-        for k in _ENDS:
-            if k in spec:
-                return k
-        for k in _REFS:
-            if k in spec:
-                return terminus(spec[k]['bean'], seen + (b,))
+    for k in _ENDS:
+        if k in ob:
+            return k
+    for k in _REFS:
+        if isinstance(ob.get(k), dict):
+            return terminus(ob[k].get('bean'), seen + (b,))
     return 'DANGLING'
 # WHICH gene owe an owner at all is DERIVED from the term, never listed here. A `genos: person` carries no
 # `owned_by` and is not dangling: the crown owns the ensouled while alive, and the term does not require the

@@ -58,8 +58,8 @@ identity:
   anchors:
     - { key: serial, value: "PRN-7781", class: hardware, establishing: true }
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
-owned_by: { legal: { owner: { bean: sam } }, technical: { owner: { bean: sam } } }
-responsibility: { legal: { holder: { bean: sam } }, technical: { holder: { bean: sam } } }
+owned_by: { owner: { bean: sam } }
+responsibility: { technical: { holder: { bean: sam } } }
 ---
 The office printer. Sam read the serial off the label on the back.
 ```
@@ -72,8 +72,9 @@ The office printer. Sam read the serial off the label on the back.
   name; a person on an id they choose, never their name. An anchor has ONE spelling: a MAC in lowercase with
   colons (`5c:a6:e6:1b:22:90`, whatever the label prints), a domain name in lowercase. **Choosing anchors is a
   person's decision** — propose, and say that you are proposing.
-- Every ownership facet (`legal`, `technical`) has exactly one owner, and exactly one entry saying who answers for
-  it — here a holder.
+- A being has one owner (`owned_by`), and no facets of ownership. Who answers for it is written only where it is not
+  simply its owner — someone who runs it (`responsibility: { technical: … }`), or someone here answering for a thing
+  owned outside.
 - A fact that fits no field you know goes under `details:` intact. Do not bend it into a field that nearly fits,
   and do not invent a top-level key: the gate refuses one.
 - `as_of` is `now`: the day of writing is the clock's, and the tool that commits the bean writes that day in its

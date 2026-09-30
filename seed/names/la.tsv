@@ -5,7 +5,20 @@ natures:lekton	dicibile	dicere (to say); dicibile (Augustine, De dialectica 5: w
 term:nature	natura	nasci (to be born)	proposed	agent (claude opus-5.5), by hand
 term:genos	genus	gignere (to beget): a kind as a birth-line	proposed	agent (claude opus-5.5), by hand
 registry:gene	genera	genus (a birth-line)	proposed	agent (claude opus-5.5), by hand
+registry:lines	lineae	linea (a linen thread, a line)	proposed	agent (claude opus-5.5), by hand
+lines:frame	compages	compingere (to join together): a framework	proposed	agent (claude opus-5.5), by hand
+lines:matter	materia	materia (timber: the hard wood of a tree, from mater)	proposed	agent (claude opus-5.5), by hand
+lines:gravitation	gravitas	gravis (heavy): weight — and in Rome also dignity	proposed	agent (claude opus-5.5), by hand
+lines:living	viventia	vivere (to live): the living	proposed	agent (claude opus-5.5), by hand
+lines:logos	ratio	reri (to reckon); ratio as reason and as proportion — the two senses the ladder parts; oratio (speech)	proposed	agent (claude opus-5.5), by hand
+lines:made	artificialia	ars (craft) + facere (to make)	proposed	agent (claude opus-5.5), by hand
+registry:conditions	condiciones	condicio (a stipulation, a state: con + dicere); conditio sine qua non (that without which not)	proposed	agent (claude opus-5.5), by hand
+conditions:balance	temperamentum	temperare (to mix in due measure): the physicians' good blend, Galen's εὐκρασία in Latin	proposed	agent (claude opus-5.5), by hand
+conditions:proportion	proportio	pro portione; Cicero's rendering of ἀναλογία	proposed	agent (claude opus-5.5), by hand
+registry:foundation_rules	leges fundamenti	fundamentum (fundus, the bottom)	proposed	agent (claude opus-5.5), by hand
+foundation_rules:weight	pondus	pendere (to hang, to weigh)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	ordo corporum	ordo (a row, a rank); gradus (a step); scala naturae (the ladder of nature)	proposed	agent (claude opus-5.5), by hand
+complexity:space-time	spatium∞tempus	spatium (a stretch, an interval); tempus (a section of time)	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	particula elementaris	particula (a little part); elementum (a first principle); minimum (Bruno: the least, without parts) — New Latin	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadronium	ἁδρός (stout) — New Latin	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	nucleus	nux (a nut): the kernel	proposed	agent (claude opus-5.5), by hand
@@ -20,16 +33,20 @@ complexity:population	populus	pŏpulus (a people) — pōpulus, the poplar, is a
 complexity:community	communitas	communis (shared); munus (a duty, a gift)	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	oecosystema	οἶκος (a household); domus (a house) — New Latin	proposed	agent (claude opus-5.5), by hand
 complexity:biosphere	biosphaera	βίος + σφαῖρα — New Latin	proposed	agent (claude opus-5.5), by hand
-complexity:material	materia	materia (timber: the hard part of a tree; from mater)	proposed	agent (claude opus-5.5), by hand
+complexity:logos	ratio	reri (to reckon); ratio as reason and as proportion — the two senses the ladder parts; oratio (speech)	proposed	agent (claude opus-5.5), by hand
+complexity:material	materiale	materia (timber): the material — scholastic Latin	proposed	agent (claude opus-5.5), by hand
 complexity:rock	saxum	saxum (a rock, a boulder); lapis (a stone)	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	corpus caeleste	caelum (the sky) + corpus	proposed	agent (claude opus-5.5), by hand
+complexity:planetary-system	systema planetarium	planeta (a wanderer) — New Latin	proposed	agent (claude opus-5.5), by hand
+complexity:galaxy	galaxias	via lactea (the milky way)	proposed	agent (claude opus-5.5), by hand
 complexity:component	componens	componere (to put together)	proposed	agent (claude opus-5.5), by hand
 complexity:device	machina	μηχανή (a contrivance); instrumentum (what is built in)	proposed	agent (claude opus-5.5), by hand
 complexity:installation	fabrica	faber (a craftsman): a workshop, a structure; struere (to pile up, to build)	proposed	agent (claude opus-5.5), by hand
 registry:crown	corona	corona (a wreath, a garland)	proposed	agent (claude opus-5.5), by hand
-crown:theos	Unus	unus (one); Deus (from *deywós, the shining one of the sky — not kin to θεός, though alike)	proposed	agent (claude opus-5.5), by hand
-crown:agape	caritas	carus (dear, precious); caritas non quaerit quae sua sunt (1 Cor 13:5)	proposed	agent (claude opus-5.5), by hand
-term:creator	auctor	augere (to make grow): the one through whom a thing grows; creator (creare, kin to crescere)	proposed	agent (claude opus-5.5), by hand
+crown:theone	necesse esse	necesse (what cannot give way: ne + cedere) + esse (to be) — the Latin Avicenna's name, necesse esse per se, which Aquinas took up	proposed	agent (claude opus-5.5), by hand
+crown:love	caritas	carus (dear, precious); caritas non quaerit quae sua sunt (1 Cor 13:5)	proposed	agent (claude opus-5.5), by hand
+crown:wisdom	sapientia	sapere (to taste, to discern, to know): wisdom as knowing the savour of things	proposed	agent (claude opus-5.5), by hand
+term:via	per quem	per (through); per quem (the one through whom), beside ex quo (the one from whom): the via and the source	proposed	agent (claude opus-5.5), by hand
 term:status	status	stare (to stand)	proposed	agent (claude opus-5.5), by hand
 registry:dimensions	dimensiones	dimetiri (to measure out)	proposed	agent (claude opus-5.5), by hand
 dimensions:time	tempus	tempus (a section, a season — perhaps from the root of τέμνω, to cut, as templum is a section of sky marked out)	proposed	agent (claude opus-5.5), by hand
@@ -47,6 +64,12 @@ term:lives_in	habitat in	habitare (to keep having — the frequentative of haber
 term:located_at	situs in	situs (a position: the Latin name of Aristotle's category κεῖσθαι); locus (a place)	proposed	agent (claude opus-5.5), by hand
 term:owned_by	dominus	domus (a house): the master of the house; proprietas (what is one's own)	proposed	agent (claude opus-5.5), by hand
 term:responsibility	sponsor	spondere (to pledge solemnly); respondere (to answer, to pledge in return)	proposed	agent (claude opus-5.5), by hand
+term:acquired	acquisitio	acquirere (to seek in addition); emptio (a purchase)	proposed	agent (claude opus-5.5), by hand
+registry:facets	modi curae	cura (care): Hyginus's fable of Cura, who shaped the human from clay, quoted in Being and Time §42	proposed	agent (claude opus-5.5), by hand
+facets:legal	iure	ius (right): by right	proposed	agent (claude opus-5.5), by hand
+facets:technical	technicum	τέχνη (craft) — New Latin; ars	proposed	agent (claude opus-5.5), by hand
+facets:experience	experientia	experiri (to try, to go through)	proposed	agent (claude opus-5.5), by hand
+facets:financial	pecuniarium	pecunia (money, from pecus, cattle)	proposed	agent (claude opus-5.5), by hand
 registry:acts	acta	agere (to do)	proposed	agent (claude opus-5.5), by hand
 acts:made	factum	facere (to make); verum et factum convertuntur (Vico: the true and the made are one)	proposed	agent (claude opus-5.5), by hand
 acts:derived	derivatum	derivare (to draw off a stream: rivus)	proposed	agent (claude opus-5.5), by hand

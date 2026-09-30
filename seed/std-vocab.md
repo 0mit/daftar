@@ -1,11 +1,12 @@
 ---
-version: "31.0"
+version: "32.0"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
   attrs:                "{<attr>: {required?, in, meaning}} — THE ATTRIBUTES: one record each, saying what the attribute is a position IN, whether it is required, and what it means — once, for the gate and the reader both. They describe each ENTRY of a list, an open map or a faceted mapping, and otherwise the mapping itself. An entry holds only the attributes declared here. See `attr_domains` for what `in:` may say."
   default_from:         "{registry, keyed_by, take} — inside an attribute's record: when the entry is SILENT, the attribute's value is READ from a registry row, the row selected by another attribute of the same entry. The registry stays the one owner of the usual value (a protocol's transport), and an entry states the attribute only when it differs. Like an aspect's default, a value that came from here never counts as OCCUPYING a position."
   origin:               "{act, nature?, alive?, by?} — inside an attribute's record: WHERE A VALUE IN THIS POSITION COMES FROM, sorted by act, by life and by nature. `act` is a row of `acts`: made here, derived from what was given, read off the world or a clock, or said; `nature` is the nature of what it comes from, a row of `natures` or a list of them, and absent it may be any; `alive: true` says it comes from a being in its living phase, which can be ASKED — a person — and ranks it above the same act from what cannot be; `by` is one of the names the act's row lists, and absent the act is the recorder's own. Stated only where the one its domain gives (the domain's record in `attr_domains`, or the `origin` of its value type's row) is wrong, so every position has one origin and no tool keeps a list of names. A position read by the save (`by: save`) is written `now`, and the save writes in its place the reading of the journal heading it writes: the day at a date, the moment at a moment. A position its recorder reads (`act: read` and no `by`) may be written `now` too, and a reading typed there stands. A domain whose positions are its own (`entries`) or another's (`any`: the value of the field it tracks) takes no origin of its own, written `inner`"
+  of_bodies:            "true — inside an attribute's record whose value is a measure `foundation_rules` keeps for bodies (a mass): the value is of the bodies the being stands for, not the being's own, so a sayable being may state it — a product's weight is each of its units'"
   empty:                "<prose> — inside an attribute's record: what an EMPTY or absent value of the position RECORDS, where another rule reads it as more than a value nobody gave — an empty `accepted` records no acceptance, and so no consent (F2). Stated once, here in the law, and read by the gate's refusal and by the forms a writer copies (bin/dmforms.py), which show it on every line that empties the position instead of 'empty unless said': there a copy left empty says something false whenever the act is known and only its day is not"
   cells:                "[{when, verdict|requires|expects, why}] — COMBINATIONS of what an entry holds. `verdict: incoherent` is an ERROR (the positions cannot both hold, so one is mis-stated); `verdict: in_breach` a WARNING (all can hold, and the state needs action). `requires: [...]` is an error when the entry sits in the cell and lacks those attributes — an item that is itself a list names alternatives, one of which is enough (`[[at, external]]`); `expects: [...]` the same as a warning. `when` maps an attribute to the value it holds, or to `{starts_with: …}`; an aspect attribute is read at its EFFECTIVE position, stated or defaulted."
   attr_domains:
@@ -60,7 +61,6 @@ schema_language:
   canonical_note:       "<prose> — with value_pattern or value_form: the human statement of the canonical form, printed in the refusal and by bin/dmrules.py. Prose for a reader; the gate checks the pattern, never this."
   enforced_by:          "core | none — an explicit statement for a term with NO schema: either CORE already enforces it, or there is genuinely nothing to check and this says why"
   poles:                "one axis (a contradictory PAIR), or a LIST of axes — a figure may be 1-dimensional, 2, 3 or more, and the gate derives the count rather than assuming it"
-  facet_parity_with:    "<term> — this term and that one must carry the SAME facet keys (two arcs of one loop); one present without the other is a loose end"
   values_add:           "[<value>...] — GARDEN overlay only: APPEND values to a Tier-0 term's enum instead of replacing it, so the garden accounts only for what it added"
   compare_form:         "upper-trim — with governs_anchor: the anchor is compared in this form for uniqueness (whitespace removed, uppercased), and a stored value not already in it warns"
   value_in_registry:    "{registry, take} — with governs_anchor: the anchor value must be a ROW of that registry (a code of a published classification, 9.1)"
@@ -71,11 +71,15 @@ term_form:
 # == NATURES: the root axiom layer ==
 # == THE CROWN ==
 crown:
-  - branch: theos
+  - crown: theone
     root: true
-    meaning: "θεός — THE ONE: the root every chain ends in — every life, and the ownership that ends in a life. NOT nameable on a bean: a being reaches theos only through agape."
-  - branch: agape
-    meaning: "ἀγάπη, love that does not possess — the root of every life, and THE CROWN IS THE LIFE CHAIN: a being owned by no bean is held by its life chain (`creator`, walked to the life no garden holds), which ends here and is THE ONE's. A person is always held so: no bean may hold a person, only agape, and only while they live (the person's `alive_while`). That is a protection, not a formality — the gate enforces it via person.ownership_form."
+    meaning: "THE ONE, the Necessary Existent: the end of every chain — every via of the life chain, and every ownership that ends in no bean. It is named on no bean as a value: a being it holds says only that its chain ends there (`owned_by: { crown: true }`). It is the dot seen from the other side: indivisible because it holds everything undivided, as the dot is because it holds nothing. Its two faces are one, seen from two sides."
+  - crown: love
+    face_of: theone
+    meaning: "ἀγάπη, love that does not possess: the face by which every life is given. No bean holds a person: a person is held by it, and only while they live (the person's `alive_while`) — a protection, not a formality, which the gate enforces through person.ownership_form"
+  - crown: wisdom
+    face_of: theone
+    meaning: "σοφία, wisdom: the face by which what is, is known — the knower and the known at once, as love is the lover and the beloved"
 identity_policy:
   keyed_by: nature
   registry: natures
@@ -134,11 +138,19 @@ retired:
   - { name: metaphysical,  at: nature,   instead: "`lekton`, λεκτόν: what exists by being said and agreed" }
   - { name: living,        at: nature,   instead: "`empsychon`, ἔμψυχον: the ensouled — itself retired: `soma` for a person, `lekton` for an instance or a virtual machine, and life each genos's `alive_while`" }
   - { name: empsychon,     at: nature,   instead: "`soma` for a person, `lekton` for an instance or a virtual machine: life is no nature, it is each genos's `alive_while`, and the crown is the life chain" }
-  - { name: god,           at: crown,    instead: "`theos`, θεός: the root, still nameable on no bean" }
-  - { name: nature,        at: crown,    instead: "`physis`, φύσις — itself retired: `agape`, for the crown is the life chain, and every chain ends there" }
-  - { name: physis,        at: crown,    instead: "`agape`: the crown is the life chain, and every chain ends there — no branch is chosen by nature" }
-  - { name: logos,         at: crown,    instead: "`agape`: the crown is the life chain, and every chain ends there — an agreement owned by none of its parties is held by the life its parties gave it" }
-  - { name: love,          at: crown,    instead: "`agape`, ἀγάπη: the root of every life, and the crown, which is the life chain" }
+  - { name: god,           at: crown,    instead: "`theos`, θεός — itself retired: `crown: true`, for the crown is one, `theone`, and no bean names it" }
+  - { name: nature,        at: crown,    instead: "`physis`, φύσις — itself retired: `crown: true`, for the crown is one, `theone`, and every chain ends there" }
+  - { name: physis,        at: crown,    instead: "`agape` — itself retired: `crown: true`, for the crown is one, `theone`, and no branch is chosen by nature" }
+  - { name: logos,         at: crown,    instead: "`agape` — itself retired: `crown: true`, for the crown is one, `theone`; an agreement owned by none of its parties is held so" }
+  - { name: love,          at: crown,    instead: "`agape` — itself retired: `crown: true`; love is a face of the crown, `theone`, and no bean names it" }
+  - { name: theos,         at: crown,    instead: "`crown: true`: the crown is one, `theone`, the Necessary Existent, and no bean names it" }
+  - { name: agape,         at: crown,    instead: "`crown: true`: the crown is one, `theone`, and a being it holds says only that its chain ends there; love is one of its two faces" }
+  - { name: legal,         at: attr,     instead: "`owner`: ownership has no facets — `owned_by` says whose a being is (`owner`, `contract`, `external`, `crown: true`, `from`), and the facets are the ways of answering for it, in `responsibility`" }
+  - { name: technical,     at: attr,     instead: "`owner`: ownership has no facets — who runs and maintains a being ANSWERS for it: `responsibility: { technical: { holder: … } }`" }
+  - { name: experience,    at: attr,     instead: "`owner`: ownership has no facets — who designs how people meet a being ANSWERS for it: `responsibility: { experience: { holder: … } }`" }
+  - { name: financial,     at: attr,     instead: "`owner`: ownership has no facets — who pays for a being ANSWERS for it: `responsibility: { financial: { holder: … } }`" }
+  - { name: via,           at: attr,     instead: "`from`: owned (or answered for) as its parent is — `via` names the life chain now, a bean's own top-level `via`" }
+  - { name: creator,       at: bean,     instead: "`via`: the life chain is the beings through whom this one came to be, and it ends at `theone`, the Creator, whom no bean names" }
   - { name: person_id, at: term, instead: "`identifier`: the one term for an identity a being is given, its value written as it was" }
   - { name: contract_id, at: term, instead: "`identifier`: the one term for an identity a being is given, its value written as it was" }
   - { name: event_id, at: term, instead: "`identifier`: the one term for an identity a being is given, its value written as it was" }
@@ -166,10 +178,12 @@ retired:
 senses:
   - { name: at,            sense: "a position — on a line, in a system or in a file — written in the form its place takes" }
   - { name: by,            sense: "who or what does it or did it: a person, a party, an instrument, a tool" }
+  - { name: crown,         sense: "the crown: the one end of every chain, `theone` and its faces, and a being's statement that its own chain ends there" }
   - { name: from,          sense: "where something starts: the position, system or field it is read or counted from" }
   - { name: holds,         sense: "what it holds — its contents, or the one place they are kept" }
   - { name: host,          sense: "the being a thing runs on, is kept on or was read at — the being a position's frame belongs to" }
   - { name: placement,     sense: "how a thing is placed in, at or among another: a row on its line, a being in or at its host" }
+  - { name: under,         sense: "the agreement, or the clause of it, a thing was made under or came under" }
   - { name: id,            sense: "the name that identifies one of its kind once among its siblings: a bean's, a mapping's, a step's, an item's" }
   - { name: is,            sense: "what it is, as a classification: a scheme's process, a level of sensitivity" }
   - { name: kind,          sense: "which kind it is, from the list its place gives" }
@@ -198,35 +212,53 @@ provenance_record:
   meaning: "who said a fact and how they know — on a bean, an anchor or an entry. `from` names the records the fact was TAKEN or COMPUTED from — a map of name to record, or a list of records, each {src, by, as_of, at?} with `at` pointing at the input (`<section>.<key>`, {bean, field}, or `file:`); a generated fact weighs as the weakest of them. `garden` is the `garden_id` of the garden the record was made in, where that is not this one: stamped once, when a proposal carries the fact across, and never changed. `via` is the PATH after it: the gardens the record passed through, in order, each appended by the garden that passed it on and never rewritten; only the last must be a garden met, and a path holding the reader's own id is a loop, refused. `as_of` is the day the record was written down, and it is STAMPED (`as_of: stamped`): the day of a journal heading the same commit adds — read from the clock, as the heading is, and never typed. It is written `now`, and the save writes the day in its place. A record is matched by what it is (src, by, as_of), not where it sits, so one moved is not added; a record carrying ANOTHER garden's `garden` keeps the stamp that garden gave it; the merge engine's own record says `merged`."
 natures:
   - nature: soma
-    meaning: "σῶμα, a body — a being that takes room in space: a machine, a site, a person. Where it stands among bodies is its genos's `level` in `complexity`"
+    meaning: "σῶμα, a body — a being that takes room in space: a machine, a site, a person. Where it stands among bodies is its genos's `level` in `complexity`, and every body stands on space∞time"
     establishing_anchor_family: [hardware]
     min_establishing_anchors: 1
   - nature: lekton
-    meaning: "λεκτόν, the sayable — a being placed in an order, a register or a habitat, and never taking room in space: code, a product, an organisation, a domain, a design, a contract, a running instance, a virtual machine"
+    meaning: "λεκτόν, the sayable — a being placed in an order, a register or a habitat, and never taking room in space: code, a product, an organisation, a domain, a design, a contract, a running instance, a virtual machine. It stands on `logos`: what is said is possible only where there is one who says, and its vias reach hands"
     establishing_anchor_family: [logical]
     min_establishing_anchors: 1
-# == COMPLEXITY: the order of bodies ==
+    stands_on: logos
+    given_by: logos
+# == THE LADDER: what stands on what, from the dot to the crown ==
+lines:
+  - { line: frame,       meaning: "space∞time: one structure with two faces, place and time, neither without the other. A position in it is a dot" }
+  - { line: matter,      meaning: "the body's dot, and what it binds into: particles, atoms, molecules, matter in bulk. Every body has weight here (`foundation_rules`)" }
+  - { line: gravitation, meaning: "matter organised by gravitation: where direction begins, and the larger holds the smaller in its path" }
+  - { line: living,      given_by: living, meaning: "the living: possible on a world in balance, and given along the life chain — a living being's vias are living" }
+  - { line: logos,       meaning: "λόγος: the gathering in which beings can be said, possible on living organisation. Not a line of bodies: a person's body stays an organism, and the sayable stands here" }
+  - { line: made,        given_by: logos, meaning: "made bodies: made of matter and made on purpose — a made body's vias reach hands, a being that stands at `logos`" }
+conditions:
+  - { condition: balance,    meaning: "matter held in balance, اعتدال, the mean: a steady state within the bounds a life keeps — its warmth, its water, its cycles — and never equilibrium, which is a world at rest and dead" }
+  - { condition: proportion, meaning: "a living organisation's own proportions in balance: the ratio on which reason is possible" }
+foundation_rules:
+  - { rule: weight, at: space-time, holds_for: soma, dimension: mass, meaning: "every body has weight: gravity is the geometry of space∞time, and every body falls alike. Mass is a measure of a body, so a sayable being's own mass is refused; a sayable being may state the mass of the bodies it stands for, on an attribute that says so (`of_bodies: true`)" }
 complexity:
-  - { level: elementary-particle, line: matter,   stands_on: [],                             meaning: "the dot of matter: what has no part known today. Found divisible, it is divided as every dot is (`division_form`), and keeps its system" }
-  - { level: hadron,              line: matter,   stands_on: [elementary-particle],         meaning: "particles bound of quarks: a proton, a neutron" }
-  - { level: nucleus,             line: matter,   stands_on: [hadron],                      meaning: "hadrons bound into the core of an atom" }
-  - { level: atom,                line: matter,   stands_on: [nucleus, elementary-particle], meaning: "a nucleus with its electrons — hydrogen the first" }
-  - { level: molecule,            line: matter,   stands_on: [atom],                        meaning: "atoms bound: water, a protein" }
-  - { level: cell,                line: living,   stands_on: [molecule],                    meaning: "the least that lives of itself: it takes in, grows and divides" }
-  - { level: tissue,              line: living,   stands_on: [cell],                        meaning: "cells of one kind working as one" }
-  - { level: organ,               line: living,   stands_on: [tissue],                      meaning: "tissues working as one part of a body: a leaf, a heart" }
-  - { level: organ-system,        line: living,   stands_on: [organ],                       meaning: "organs working as one: a plant's roots, an animal's blood" }
-  - { level: organism,            line: living,   stands_on: [cell, tissue, organ-system],  meaning: "a living body that is one being: a microbe on its one cell, a tree, an animal, a person" }
-  - { level: population,          line: living,   stands_on: [organism],                    meaning: "organisms of one kind living together: a herd, a stand of trees" }
-  - { level: community,           line: living,   stands_on: [population],                  meaning: "populations of many kinds living together" }
-  - { level: ecosystem,           line: living,   stands_on: [community, material],         meaning: "a community with the matter it lives on and in" }
-  - { level: biosphere,           line: living,   stands_on: [ecosystem],                   meaning: "every ecosystem of a body together" }
-  - { level: material,            line: material, stands_on: [molecule],                    meaning: "matter in bulk, of one kind or a mixture: a mineral, a metal, glass, water" }
-  - { level: rock,                line: material, stands_on: [material],                    meaning: "materials aggregated by nature" }
-  - { level: celestial-body,      line: material, stands_on: [rock, material],              meaning: "a body of the sky, as the `bodies` rows are: a planet, a moon" }
-  - { level: component,           line: made,     stands_on: [material],                    meaning: "a made part: a chip, a board, a platter, a cable" }
-  - { level: device,              line: made,     stands_on: [component],                   meaning: "components assembled to work as one: a machine, a router, a drive, a camera, a sensor. What it does beyond keeping its form is lent by its makers and keepers, through its life chain" }
-  - { level: installation,        line: made,     stands_on: [device, material],            meaning: "devices and structure assembled at a place: a rack, a room of machines, a building" }
+  - { level: space-time,          line: frame,       bodies: false, stands_on: [], meaning: "the frame: one structure, seen as place and as time, which every body stands on" }
+  - { level: elementary-particle, line: matter,      stands_on: [{ level: space-time, as: possible-on }], meaning: "the body's dot: what has no part known today. Found divisible, it is divided as every dot is (`division_form`), and keeps its system" }
+  - { level: hadron,              line: matter,      stands_on: [{ level: elementary-particle, as: made-of }], meaning: "particles bound of quarks: a proton, a neutron" }
+  - { level: nucleus,             line: matter,      stands_on: [{ level: hadron, as: made-of }], meaning: "hadrons bound into the core of an atom" }
+  - { level: atom,                line: matter,      stands_on: [{ level: nucleus, as: made-of }, { level: elementary-particle, as: made-of }], meaning: "a nucleus with its electrons — hydrogen the first" }
+  - { level: molecule,            line: matter,      stands_on: [{ level: atom, as: made-of }], meaning: "atoms bound: water, a protein" }
+  - { level: material,            line: matter,      stands_on: [{ level: molecule, as: made-of }], meaning: "matter in bulk, of one kind or a mixture: a mineral, a metal, glass, water" }
+  - { level: rock,                line: gravitation, stands_on: [{ level: material, as: made-of }], meaning: "materials aggregated by nature, pressed together under their own weight" }
+  - { level: celestial-body,      line: gravitation, stands_on: [{ level: rock, as: made-of }, { level: material, as: made-of }], meaning: "a body of the sky, gathered by its own gravitation, as the `bodies` rows are: a planet, a moon, a star" }
+  - { level: planetary-system,    line: gravitation, stands_on: [{ level: celestial-body, as: made-of }], meaning: "bodies held in paths about the largest among them: a star and its planets, a planet and its moons" }
+  - { level: galaxy,              line: gravitation, stands_on: [{ level: planetary-system, as: made-of }, { level: celestial-body, as: made-of }, { level: material, as: made-of }], meaning: "stars, their systems and the matter between them, held together by gravitation" }
+  - { level: cell,                line: living,      stands_on: [{ level: molecule, as: made-of }, { level: celestial-body, as: possible-on, while: balance }], meaning: "the least that lives of itself: it takes in, grows and divides — made of molecules, and possible on a world in balance" }
+  - { level: tissue,              line: living,      stands_on: [{ level: cell, as: made-of }], meaning: "cells of one kind working as one" }
+  - { level: organ,               line: living,      stands_on: [{ level: tissue, as: made-of }], meaning: "tissues serving one capacity of a body: a leaf, a heart — it is the capacity that has organs" }
+  - { level: organ-system,        line: living,      stands_on: [{ level: organ, as: made-of }], meaning: "organs working as one: a plant's roots, an animal's blood" }
+  - { level: organism,            line: living,      stands_on: [{ level: cell, as: made-of }, { level: tissue, as: made-of }, { level: organ-system, as: made-of }], meaning: "a living body that is one being: a microbe on its one cell, a tree, an animal, a person" }
+  - { level: population,          line: living,      stands_on: [{ level: organism, as: made-of }], meaning: "organisms of one kind living together: a herd, a stand of trees" }
+  - { level: community,           line: living,      stands_on: [{ level: population, as: made-of }], meaning: "populations of many kinds living together" }
+  - { level: ecosystem,           line: living,      stands_on: [{ level: community, as: made-of }, { level: material, as: made-of }], meaning: "a community with the matter it lives on and in" }
+  - { level: biosphere,           line: living,      stands_on: [{ level: ecosystem, as: made-of }], meaning: "every ecosystem of a body together" }
+  - { level: logos,               line: logos,       bodies: false, stands_on: [{ level: organism, as: possible-on, while: proportion }], meaning: "λόγος, reason: the gathering in which beings can be said, possible on living organisation while its proportion holds. No body stands here: a person's body is an organism, and a person, a kind that `rung: logos` names, speaks. The sayable stands on it" }
+  - { level: component,           line: made,        stands_on: [{ level: material, as: made-of }, { level: logos, as: possible-on }], meaning: "a made part: a chip, a board, a platter, a cable" }
+  - { level: device,              line: made,        stands_on: [{ level: component, as: made-of }], meaning: "components assembled to work as one: a machine, a router, a drive, a camera, a sensor. What it does beyond keeping its form is lent by the hands it came through, its vias" }
+  - { level: installation,        line: made,        stands_on: [{ level: device, as: made-of }, { level: material, as: made-of }], meaning: "devices and structure assembled at a place: a rack, a room of machines, a building" }
 # == ACTS: how a value came to be where it is ==
 acts:
   - { act: made,    meaning: "made here, by the writer or a tool, from nothing given: prose, a name minted. It may hold a value found in nothing given" }
@@ -1122,7 +1154,7 @@ planes:
 
 # == THE FORM OF EACH REGISTRY: its columns, which every row holds and which it may, and where a column's values come from ==
 registry_forms:
-  crown: { branch: required, root: optional, meaning: required }
+  crown: { crown: required, root: optional, face_of: optional, meaning: required }
   retired: { name: required, at: required, instead: required }
   senses: { name: required, sense: required }
   natures:
@@ -1130,7 +1162,12 @@ registry_forms:
     meaning: required
     establishing_anchor_family: required
     min_establishing_anchors: required
-  complexity: { level: required, line: required, stands_on: required, meaning: required }
+    stands_on: optional
+    given_by: optional
+  lines: { line: required, given_by: optional, meaning: required }
+  conditions: { condition: required, meaning: required }
+  foundation_rules: { rule: required, at: required, holds_for: required, dimension: required, meaning: required }
+  complexity: { level: required, line: { required: true, in: { registry: lines, take: line } }, bodies: optional, stands_on: required, meaning: required }
   divisions: { division: required, whole: required, parts: required, system: optional, covers: required, disjoint: required, wholeness: required, checked_by: required }
   acts: { act: required, meaning: required, by: optional }
   bodies: { body: required, mean_radius_m: required, authority: required, meaning: required }
@@ -1190,7 +1227,7 @@ registry_forms:
     plane: optional
     family: optional
     scope: optional
-  dimensions: { dimension: required, meaning: required, frame: optional }
+  dimensions: { dimension: required, meaning: required, face: optional }
   complements: { complement: required, meaning: required }
   quantities:
     quantity: required
@@ -1293,6 +1330,8 @@ registry_forms:
     facet: required
     depends_on: { required: true, in: { registry: facets, take: facet }, acyclic: true, rooted: true, why: "a facet depends only on facets the law declares, never on itself through others, and every facet but one reaches that one: the walk they form is the lattice ownership is faceted by, and `legal` is its root" }
     meaning: required
+    answered_by_owner: optional
+    applies_to: optional
   knowledge_schemes:
     scheme: required
     classifies: required
@@ -1322,6 +1361,7 @@ registry_forms:
     responsibility_form: optional
     takes_time_of: optional
     level: optional
+    rung: optional
     establishing_anchor_family: optional
     alive_while: optional
 
@@ -1454,8 +1494,8 @@ complements:
   - { complement: bearer, meaning: "else it is the bearer's: a place position is as of the statement that holds it (its provenance `as_of`); a time position is where the being that bears it is (its `located_at` zone), else where the garden reckons its days (GARDEN.md `zone`)" }
   - { complement: system, meaning: "the system carries its other half itself: a count on a time scale kept on one body's prime meridian, deep time fixed by a point in a rock, an age counted back from one year" }
 dimensions:
-  - { dimension: time,        frame: time,  meaning: "how long — with length, the frame the universe is divided in: neither prior, each only with the other" }
-  - { dimension: length,      frame: place, meaning: "how far — with time, the frame the universe is divided in: neither prior, each only with the other" }
+  - { dimension: time,        face: time,  meaning: "how long — with length, the two faces of the one frame, space∞time (`complexity` space-time): neither without the other" }
+  - { dimension: length,      face: place, meaning: "how far — with time, the two faces of the one frame, space∞time (`complexity` space-time): neither without the other" }
   - { dimension: mass,        meaning: "how much matter" }
   - { dimension: information, meaning: "how much can be stored or carried" }
   - { dimension: money,       meaning: "how much value, in a currency" }
@@ -1573,11 +1613,11 @@ vacancies:
   - at: "owned_by.entry_one_of"
     position: contract
     reason: prediction
-    why: "Co-ownership of a single facet: a facet two parties genuinely share is owned by a `contract` bean — its `parties`, the `words` they agreed in, and a clause saying how they decide when they differ. An agreement ABOUT a being (a stake, a facilitation) is not ownership of it and needs no such facet. Expected with the first facet two parties share."
+    why: "Co-ownership: a being two parties genuinely share is owned by a `contract` bean — its `parties`, the `words` they agreed in, and a clause saying how they decide when they differ. An agreement ABOUT a being (a stake, a facilitation) is not ownership of it. Expected with the first being two parties own together."
   - at: "responsibility.entry_one_of"
     position: contract
     reason: prediction
-    why: "A duty two parties hold jointly, under an agreement. The mirror of the vacancy above: a facet answered for jointly arrives with a facet owned jointly, since responsibility pairs with ownership facet by facet."
+    why: "A duty two parties hold jointly, under an agreement: a facet of care answered for together, as a being owned together is owned through a contract."
   - at: "responsibility.entry_one_of"
     position: external
     reason: prediction
@@ -1724,7 +1764,7 @@ division_form:
   checked_by: "the law's item whose rule judges it — `terms[<term>]`, `registry:<name>` or `section:<name>` — or `division` for the gate's own judgement"
 divisions:
   - { division: capacity, whole: "a being's `capacity`", parts: "the placements that take from it: `lives_in` and `located_at` with `takes`", covers: false, disjoint: true, wholeness: { aggregate: sum, is: at_most }, checked_by: "terms[capacity]" }
-  - { division: ownership, whole: "a being's ownership", parts: "its facets, each with one owner and one entry that answers for it, every facet reaching legal", covers: true, disjoint: true, wholeness: { aggregate: count, is: equal }, checked_by: "terms[owned_by]" }
+  - { division: answering, whole: "who answers for a being", parts: "its facets of care, each with at most one entry, every facet reaching legal, and legal its owner's unless another is stated", covers: false, disjoint: true, wholeness: { aggregate: count, is: at_most }, checked_by: "terms[responsibility]" }
   - { division: shares, whole: "what a transaction moved", parts: "the shares its parties paid and bear", covers: true, disjoint: true, wholeness: { aggregate: sum, is: equal }, checked_by: "terms[transactions]" }
   - { division: cells, whole: "a cell of a system's coarser level", parts: "the cells of its finer level", covers: true, disjoint: true, wholeness: { aggregate: count, is: at_least }, checked_by: "registry:anchor_systems" }
   - { division: bodies, whole: "a body", parts: "the bodies `part_of` it", covers: false, disjoint: true, wholeness: { aggregate: max, is: at_most }, checked_by: "registry:complexity" }
@@ -2385,9 +2425,9 @@ registry_files:
   - { registry: coefficients, file: seed/knowledge/coefficients.yaml, key: coefficient, format: yaml }
 # == FACETS: the aspects of ownership, one owner and one holder each ==
 facets:
-  - { facet: legal,      depends_on: [],      meaning: "who owns it in law, and answers for it there. Every other facet reaches it through `depends_on`" }
-  - { facet: technical,  depends_on: [legal], meaning: "who runs and maintains it" }
-  - { facet: experience, depends_on: [legal], meaning: "who designs how people meet it — its words, flows and look — and whose judgment of that decides" }
+  - { facet: legal,      depends_on: [],      answered_by_owner: true, meaning: "who answers for it before the law: its owner, unless the owner is outside this ledger or no bean — then someone here answers, a person for themselves, an agreement's parties for it — or a holder or a contract takes it over. Every other facet reaches it through `depends_on`" }
+  - { facet: technical,  depends_on: [legal], applies_to: { natures: [soma], gene: [instance, service, product, program, codebase, virtual-host, domain, garden] }, meaning: "who runs and maintains it: care for its working. Only a being that runs or is kept has one — a body, a running thing, code, a domain kept registered; a record, an agreement or a person has none" }
+  - { facet: experience, depends_on: [legal], meaning: "who answers for how people meet it — its words, flows and look — and whose judgment of that decides" }
   - { facet: financial,  depends_on: [legal], meaning: "who pays for it and is paid by it" }
 knowledge_scheme_form:
   holding:      "shipped | extract | at-authority — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); or held at the publisher and looked up there, checked here only by `code_pattern`"
@@ -3073,33 +3113,33 @@ terms:
       must_equal_genos_attr: of_nature
     merge: { cardinality: single, order: none }
   - term: owned_by
-    meaning: "who owns a being, per facet; introduced (explicit) at a node and inherited down the tree"
+    meaning: "WHOSE a being is: one owner — a bean (`owner`), a contract that holds it for its parties together, someone outside this ledger (`external`), or no bean (`crown: true`: its chain ends at the crown, `theone`, which no bean names) — or, `from` a parent, owned as the parent is. Ownership has no facets: to own is to have, and the ways of caring for a being — in law, in running it, in how people meet it, in paying for it — are who ANSWERS FOR it (`responsibility`)"
     context_keys: ["owned_by"]
     schema:
       shape: mapping
       required: true
-      alt_form: { key: via, ref_fields: [via] }
-      key_form: "values_from:registry:facets[].facet"
-      entry_one_of: [owner, contract, external, crown]
+      entry_one_of: [owner, contract, external, crown, from]
+      at_most_one_of: [[owner, contract, external, crown, from]]
       entry_form_from_genos_attr: ownership_form
       dag: true
       attrs:
-        owner:     { in: ref }
-        contract:  { in: ref }
-        crown:     { in: { registry: crown, take: branch, where: { root: [null] } }, meaning: "owned by no bean: held by its life chain, which ends at agape — the crown is the life chain" }
-        since:     { in: { type: position }, meaning: "optional: ABSOLUTE date this owner came to hold the facet" }
+        owner:     { in: ref, meaning: "the bean it is owned by" }
+        contract:  { in: ref, meaning: "a `contract` bean through which its parties own it together" }
+        external:  { in: prose, meaning: "owned outside this ledger: who, as the world knows them — a rented server's provider, software's authors, a domain's registry. Someone here still answers for it" }
+        crown:     { in: [true], meaning: "owned by no bean: its chain ends at the crown, `theone` — a person always, an agreement or a happening between people by choice" }
+        from:      { in: ref, meaning: "owned as its parent is: an instance through the product it runs, a part through its whole" }
+        since:     { in: { type: position }, meaning: "optional: ABSOLUTE date this owner came to hold it" }
         note:      { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
-    merge: { cardinality: multi, order: by-facet }
+    merge: { cardinality: single, order: none }
   - term: responsibility
-    meaning: "who ANSWERS FOR this being, per facet — the arc that makes an ownership claim actionable"
+    meaning: "who ANSWERS FOR this being, and how: one entry per facet of care, rows of `facets` — before the law, in running it, in how people meet it, in paying for it. Before the law its owner answers unless another is stated: `legal` is written only where the owner cannot answer — someone outside, no bean (a person answers for themselves, an agreement's parties for it) — or where a holder or a contract takes it over, and a legal entry that repeats the owner is refused as a placeholder. Every other facet is written where someone answers for it, and only on a being the facet applies to"
     context_keys: ["responsibility"]
     schema:
       shape: mapping
-      alt_form: { key: via, ref_fields: [via] }
+      alt_form: { key: from, ref_fields: [from] }
       key_form: "values_from:registry:facets[].facet"
       entry_one_of: [holder, contract, external, self, parties]
       entry_form_from_genos_attr: responsibility_form
-      facet_parity_with: owned_by
       dag: true
       attrs:
         holder:    { in: ref }
@@ -3158,16 +3198,33 @@ terms:
       attrs:
         bean:  { required: true, in: id }
     merge: { cardinality: single, order: none }
-  - term: creator
-    meaning: "THE LIFE CHAIN'S EDGE: the living being through whose act this being lives — made, started, planted, signed, ratified, born of — and, where another acted for it, `via` that other: a timer a person set, a unit a person enabled. A being whose life-giver the garden does not hold names none: its chain ends at the crown, agape. The chain is walkable and acyclic, and it is no bean's: it is THE ONE's (`crown`)"
-    context_keys: ["creator"]
+  - term: via
+    meaning: "THE LIFE CHAIN: the beings through whom this one came to be — born of, planted by, made by, said by, started by — each a real cause that depends for its being on the Creator, `theone`, where every chain ends and whom no bean names. A via is a bean, or SOMEONE: a being of a kind, unknown by name and reached through one that is known (`through`, or `outside` where that one is not held here) — the hands at a maker, the person behind an account — which is a fact, and never an invented name. The giver stands where the gift needs it: a living being's vias are living; a made body's and a sayable being's reach hands, a being whose kind stands at `logos`, through any tool that acted for them, whose own `via` goes on. Never demanded: a being that states none is held at the Creator all the same"
+    context_keys: ["via"]
+    schema:
+      shape: list_of_entries
+      entry_one_of: [bean, someone]
+      attrs:
+        bean:     { in: id, meaning: "a bean, through whom this being came to be" }
+        someone:  { in: { registry: gene, take: genos }, meaning: "the kind of a being unknown by name: `person` for hands nobody named" }
+        through:  { in: id, meaning: "with `someone`: the being held here that the unknown one is reached through — the maker they work for, the account they hold" }
+        outside:  { in: prose, meaning: "with `someone`, where what they are reached through is not held here: its name as the world knows it — `HPE`" }
+        when:     { in: { type: position }, meaning: "optional: when it came to be through them" }
+        note:     { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
+    merge: { cardinality: multi, order: "by-bean?+someone?+through?+outside?" }
+  - term: acquired
+    meaning: "FROM WHOM a being came to us, and how: the vendor or the giver, the day, and the agreement it came under. How a being came to us is neither how it came to be (its `via`) nor whose it is (`owned_by`): the seller of a server is not the hands that made it, and not its owner"
+    context_keys: ["acquired"]
     schema:
       shape: mapping
-      is_ref: true
-      dag: true
+      entry_one_of: [from, outside]
       attrs:
-        bean:  { required: true, in: id }
-        via:   { in: ref, meaning: "the being that acted for the life-giver" }
+        from:     { in: ref, meaning: "the being it came from, held here: a vendor, a person who gave or lent it" }
+        outside:  { in: prose, meaning: "who it came from, not held here, as the world knows them" }
+        as:       { in: [bought, rented, given, lent, inherited], meaning: "how it came: bought, rented, given, lent or inherited" }
+        on:       { in: { type: position }, meaning: "optional: the day it came" }
+        under:    { in: ref, meaning: "optional: the agreement it came under, a `contract` bean" }
+        note:     { in: prose, meaning: "optional prose. THE place for it: an entry holds only declared attributes, so a remark is written here and never as a new key" }
     merge: { cardinality: single, order: none }
   - term: ip
     meaning: "an Internet Protocol address identifying a network interface/endpoint"
@@ -4000,6 +4057,7 @@ gene:
   - genos: person
     of_nature: soma
     level: organism
+    rung: logos
     establishing_anchor_family: [logical]
     alive_while: { known: said, by: "while they live — said, and never probed" }
     ownership_form: crown

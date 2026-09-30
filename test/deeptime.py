@@ -80,7 +80,7 @@ def refused(name, rel, old, new, *want):
     restore()
 
 
-OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
+OWN = "owned_by: { owner: { bean: keeper } }\n"
 
 
 def bean(id, genos, nature, summary, rest, akey="serial", acls="hardware", status="confirmed"):

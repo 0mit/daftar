@@ -5,7 +5,20 @@ natures:lekton	the sayable	λεκτόν (the law's word); say (Old English secga
 term:nature	nature	natura (from nasci, to be born); which of the two natures a being is in	proposed	agent (claude opus-5.5), by hand
 term:genos	kind	γένος (the law's word); kind (Old English cynd: birth, lineage — kin): a line of beings that come to be alike	proposed	agent (claude opus-5.5), by hand
 registry:gene	the kinds	γένη (the plural of γένος: the law's registry of kinds)	proposed	agent (claude opus-5.5), by hand
+registry:lines	the lines	line (linea: a linen thread): the ladder's strands, each a way beings stand on one another	proposed	agent (claude opus-5.5), by hand
+lines:frame	frame	frame (Old English framian: to be of use, to make ready — a structure that holds): space∞time, what every body stands on	proposed	agent (claude opus-5.5), by hand
+lines:matter	matter	materia (timber, stuff): the body's dot and what it binds into	proposed	agent (claude opus-5.5), by hand
+lines:gravitation	gravitation	gravis (heavy): matter organised by its weight — where direction begins, and the larger holds the smaller in its path	proposed	agent (claude opus-5.5), by hand
+lines:living	the living	life (Old English līf): possible on a world in balance, and given along the life chain	proposed	agent (claude opus-5.5), by hand
+lines:logos	reason	λόγος (the law's word, from λέγω: to gather, to lay in order, to say); reason (ratio: a reckoning, and a proportion — the two senses the ladder parts); the line on which the sayable stands	proposed	agent (claude opus-5.5), by hand
+lines:made	the made	make (Old English macian: to fit together): made on purpose, through hands	proposed	agent (claude opus-5.5), by hand
+registry:conditions	conditions	condicio (a stipulation: con + dicere, to say together): what a step stands on while it holds	proposed	agent (claude opus-5.5), by hand
+conditions:balance	balance	bilanx (having two scales: bi + lanx, a dish): the mean — a steady state within the bounds a life keeps, never equilibrium, which is rest	proposed	agent (claude opus-5.5), by hand
+conditions:proportion	proportion	pro portione (according to each part's share): ratio in its second sense, on which reason is possible	proposed	agent (claude opus-5.5), by hand
+registry:foundation_rules	rules of foundation	found (fundare: to lay the bottom, fundus): what holds for everything standing on a step	proposed	agent (claude opus-5.5), by hand
+foundation_rules:weight	weight	weight (Old English wiht, from wegan, to carry — kin to weigh and way): every body has weight, standing on space∞time; a sayable being has none of its own	proposed	agent (claude opus-5.5), by hand
 registry:complexity	the order of bodies	order (Latin ordo: a row of threads in a loom, a rank); complexity (com-plectere, to braid together): each level braided of the one it stands on	proposed	agent (claude opus-5.5), by hand
+complexity:space-time	space∞time	space (spatium: a stretch) and time (a span): one structure with two faces; Minkowski, 1908: space by itself and time by itself fade into shadows, and only a union of the two keeps a reality of its own	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	elementary particle	element (Latin elementum: a first principle; a letter of the alphabet); particle (particula: a little part); the dot of matter: what has no part known today	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadron	ἁδρός (thick, stout, full-grown): particles bound of quarks, named so in 1962	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	nucleus	nucleus (Latin: a kernel, from nux, a nut): the core of an atom	proposed	agent (claude opus-5.5), by hand
@@ -13,23 +26,27 @@ complexity:atom	atom	ἄτομος (uncut, indivisible) — the name kept when t
 complexity:molecule	molecule	molecula (New Latin: a little mass, from moles, a mass, a heap)	proposed	agent (claude opus-5.5), by hand
 complexity:cell	cell	cella (Latin: a small room, a store-chamber) — Hooke, 1665, saw cork's little rooms	proposed	agent (claude opus-5.5), by hand
 complexity:tissue	tissue	tissu (Old French: woven, from texere, to weave): cells of one kind woven as one	proposed	agent (claude opus-5.5), by hand
-complexity:organ	organ	ὄργανον (a tool, an instrument, from ἔργον, work): a part as the whole's tool	proposed	agent (claude opus-5.5), by hand
+complexity:organ	organ	ὄργανον (a tool, from ἔργον, work) — yet it is the capacity that has organs, not the organ capacities (Heidegger, 1929/30): a part serving a capacity of the whole	proposed	agent (claude opus-5.5), by hand
 complexity:organ-system	organ system	organ (ὄργανον, a tool); system (σύστημα: what stands together)	proposed	agent (claude opus-5.5), by hand
 complexity:organism	organism	ὄργανον via French organisme: a whole of organs that is one being — a microbe, a tree, an animal, a person	proposed	agent (claude opus-5.5), by hand
 complexity:population	population	populus (a people): organisms of one kind living together — a herd, a stand of trees	proposed	agent (claude opus-5.5), by hand
 complexity:community	community	communis (shared: com + munus, a duty or gift held in common): populations of many kinds living together	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	ecosystem	οἶκος (a house, a household) + σύστημα: a community with the matter it lives on and in (Tansley, 1935)	proposed	agent (claude opus-5.5), by hand
 complexity:biosphere	biosphere	βίος (a life, a way of living) + σφαῖρα (a ball): every ecosystem of a body together (Suess, 1875; Vernadsky, 1926)	proposed	agent (claude opus-5.5), by hand
+complexity:logos	reason	λόγος (the law's word, from λέγω: to gather, to lay in order, to say); reason (ratio: a reckoning, and a proportion — the two senses the ladder parts); possible on living organisation while its proportion holds — no body stands here	proposed	agent (claude opus-5.5), by hand
 complexity:material	material	materia (timber, the hard wood of a tree, from mater, mother: the trunk that bears the shoots): matter in bulk	proposed	agent (claude opus-5.5), by hand
 complexity:rock	rock	rocca (Medieval Latin): materials aggregated by nature	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	celestial body	caelum (the sky): a body of the sky — a planet, a moon	proposed	agent (claude opus-5.5), by hand
+complexity:planetary-system	planetary system	πλανήτης (a wanderer): bodies held in paths about the largest among them	proposed	agent (claude opus-5.5), by hand
+complexity:galaxy	galaxy	γάλα (milk): ὁ γαλαξίας κύκλος, the milky circle	proposed	agent (claude opus-5.5), by hand
 complexity:component	component	componere (to put together): a made part — a chip, a board, a cable	proposed	agent (claude opus-5.5), by hand
 complexity:device	device	devis (Old French: a design, a division, from dividere) — what it does beyond keeping its form is lent it by its makers and keepers	proposed	agent (claude opus-5.5), by hand
 complexity:installation	installation	installare (Medieval Latin: to seat in a stall): devices and structure assembled at a place — a rack, a room of machines, a building	proposed	agent (claude opus-5.5), by hand
-registry:crown	the crown	corona (a wreath, from κορώνη, anything curved): where every chain of holding ends — the life chain itself	proposed	agent (claude opus-5.5), by hand
-crown:theos	THE ONE	θεός (the law's word); one (Old English ān); the One (τὸ ἕν) of Plotinus — the root every chain ends in, named on no bean	proposed	agent (claude opus-5.5), by hand
-crown:agape	love	ἀγάπη (the law's word): love that does not possess — the root of every life; a person is held by it, and by no bean	proposed	agent (claude opus-5.5), by hand
-term:creator	creator	creare (to bring forth; kin to crescere, to grow): the living being through whose act this one lives — made, started, planted, signed, born of; the life chain's edge	proposed	agent (claude opus-5.5), by hand
+registry:crown	the crown	corona (a wreath, from κορώνη, anything curved): where every chain ends — one, `theone`, with two faces, love and wisdom	proposed	agent (claude opus-5.5), by hand
+crown:theone	the Necessary Existent	THE ONE (the law's code, `theone`); necessary (necesse: ne + cedere, what cannot give way — what cannot not be); Ibn Sina's واجب الوجود, the one whose being is by itself: the end of every chain, named on no bean	proposed	agent (claude opus-5.5), by hand
+crown:love	love	ἀγάπη: love that does not possess — the face of the crown by which every life is given; a person is held by it, and by no bean	proposed	agent (claude opus-5.5), by hand
+crown:wisdom	wisdom	wise (Old English wīs, from a root meaning to see, to know — kin to wit and vision); σοφία: the face by which what is, is known	proposed	agent (claude opus-5.5), by hand
+term:via	via	via (Latin: by the way of): through whom this came to be — born of, made by, said by; every chain ends at the Creator, whom no bean names	proposed	agent (claude opus-5.5), by hand
 term:status	status	status (Latin: a standing, from stare, to stand): where a being stands on its kind's lifecycle	proposed	agent (claude opus-5.5), by hand
 registry:dimensions	dimensions	dimension (dimetiri, to measure out): time and length the frame, mass, information, money, temperature	proposed	agent (claude opus-5.5), by hand
 dimensions:time	time	time (Old English tīma: a span — from a root that means to divide, as tide): with length, the frame the universe is divided in, neither prior	proposed	agent (claude opus-5.5), by hand
@@ -45,8 +62,14 @@ registry:divisions	divisions	dividere (to part): each whole, its parts and their
 term:part_of	part of	pars (a part); whole (Old English hāl: sound, entire — kin to heal and holy): a being is part of at most one whole	proposed	agent (claude opus-5.5), by hand
 term:lives_in	lives in	live (Old English libban: to live, to remain): the habitat a being lives in or on	proposed	agent (claude opus-5.5), by hand
 term:located_at	located at	locus (a place): where a being is, a position in each system it is found in	proposed	agent (claude opus-5.5), by hand
-term:owned_by	owner	own (Old English āgan: to have, to possess): who owns a being, facet by facet	proposed	agent (claude opus-5.5), by hand
+term:owned_by	owner	own (Old English āgan: to have, to possess): whose a being is — one owner, and no facets; the ways of caring for it are who answers for it	proposed	agent (claude opus-5.5), by hand
 term:responsibility	answers for	respondere (to promise in return: re + spondere, to pledge): who answers for a being, facet by facet	proposed	agent (claude opus-5.5), by hand
+term:acquired	acquired from	acquire (acquirere: ad + quaerere, to seek): from whom a being came to us — not how it came to be, and not whose it is	proposed	agent (claude opus-5.5), by hand
+registry:facets	facets of care	facet (facette: a little face); care (Old English caru: concern — Heidegger's Sorge): the ways of answering for a being, never of owning it	proposed	agent (claude opus-5.5), by hand
+facets:legal	legal	lex (law): who answers for a being before the law — its owner, unless the owner is outside or no bean	proposed	agent (claude opus-5.5), by hand
+facets:technical	technical	τέχνη (craft): who runs and maintains a being — care for its working; only a being that runs or is kept has one	proposed	agent (claude opus-5.5), by hand
+facets:experience	experience	experiri (to try, to go through): who answers for how people meet a being	proposed	agent (claude opus-5.5), by hand
+facets:financial	financial	finis (an end: a settlement that ends a debt): who pays for a being and is paid by it	proposed	agent (claude opus-5.5), by hand
 registry:acts	acts	actum (a thing done, from agere, to drive, to do): how a value came to be where it is	proposed	agent (claude opus-5.5), by hand
 acts:made	made	make (Old English macian: to fit together): made here, from nothing given	proposed	agent (claude opus-5.5), by hand
 acts:derived	derived	derivare (to lead water off a stream: de + rivus): it holds nothing its source did not	proposed	agent (claude opus-5.5), by hand

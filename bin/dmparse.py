@@ -692,7 +692,7 @@ VOCAB_BLOCKS = (('local_terms', list), ('local_gene', list), ('vacancies', list)
                 ('registry_files', list), ('registry_forms', dict), ('registry_additions', dict),
                 ('identity_policy', dict))
 _NAME_KEYS = ('shape', 'key_form', 'path', 'values_from', 'must_equal_genos_attr', 'entry_form_from_genos_attr',
-              'facet_parity_with', 'required_on_targets_of', 'governs_anchor', 'value_form', 'value_pattern',
+              'required_on_targets_of', 'governs_anchor', 'value_form', 'value_pattern',
               'canonical_note', 'compare_form', 'on_sequence')
 _LIST_KEYS = ('cells', 'values', 'values_add', 'entry_one_of', 'entry_must_match')
 _MAP_KEYS = ('attrs', 'alt_form', 'expiry', 'value_in_registry')

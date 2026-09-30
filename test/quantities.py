@@ -118,7 +118,7 @@ summary: "probe"
 nature: soma
 identity: {{ status: confirmed, anchors: [ {{ key: serial, value: "SN-QTY-1", class: hardware, establishing: true }} ] }}
 provenance: {{ src: observed, by: probe, as_of: 2026-09-20 }}
-owned_by: {{ legal: {{ external: "someone" }} }}
+owned_by: {{ external: someone }}
 responsibility: {{ legal: {{ external: "someone" }} }}
 motion: {motion}
 ---

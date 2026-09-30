@@ -167,9 +167,9 @@ def head(s):
 print(f"{_product()} rules — {loc.get('extends')} + garden '{loc.get('vocab')}'"
       f"{(' + every profile the law offers, as if extended: ' if EVERY else ' + profiles ') + ', '.join(prof_names) if prof_names else ''}")
 
-head("AXIS — nature routes every bean to the crown")
+head("AXIS — the natures, and the crown every chain ends at")
 for n in reg('natures'):
-    print(f"  {str(n.get('nature')):14} → crown '{n.get('crown')}'   anchors {n.get('establishing_anchor_family')}"
+    print(f"  {str(n.get('nature')):14} → stands on {n.get('stands_on') or 'space-time'}   anchors {n.get('establishing_anchor_family')}"
           f"   min establishing when confirmed: {n.get('min_establishing_anchors')}")
 idp = _m(loc.get('identity_policy') or std.get('identity_policy'))
 print(f"  identity: an anchor's key {'must be a term that declares anchor:' if idp.get('anchor_key') == 'term' else 'is free text'}"
@@ -182,7 +182,7 @@ if _mint:
           f"everywhere, and the prefix is this garden's id or a `garden` bean's. Any other value was assigned outside every "
           f"garden: it identifies wherever it is written and is never qualified")
 cr = reg('crown')
-print(f"  crown: {' , '.join(str(c.get('branch')) + (' (root, never nameable)' if c.get('root') else '') for c in cr)}")
+print(f"  crown: {' , '.join(str(c.get('crown')) + (' (the one, named on no bean)' if c.get('root') else f" (a face of {c.get('face_of')})" if c.get('face_of') else '') for c in cr)}")
 gene = [k for k in _seq(std.get('gene')) + list(loc.get('local_gene') or []) if isinstance(k, dict)]
 print(f"  gene: " + ' , '.join(f"{k.get('genos')}→{k.get('of_nature')}"
                                + ('*' if k.get('ownership_form') else '') for k in gene))
@@ -358,7 +358,6 @@ if '--terms' in want:
         if F['cells']:                   det.append(f"{len(F['cells'])} cell(s): combinations an entry may not, or should not, hold")
         if F['one_of']:                  det.append(f"each entry has one of {F['one_of']}")
         if s.get('key_form'):            det.append(f"keys: {s['key_form']}")
-        if F['mirror']['parity_with']:   det.append(f"same facets as '{F['mirror']['parity_with']}'")
         if F['mirror']['inverse_of']:    det.append(f"inverse of '{F['mirror']['inverse_of']}' — held consistent")
         if F['matches']['equal_genos_attr']: det.append(f"must equal genos.{F['matches']['equal_genos_attr']}")
         if s.get('required_on_targets_of'): det.append(f"required on targets of '{s['required_on_targets_of']}'")

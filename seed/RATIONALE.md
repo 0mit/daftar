@@ -263,6 +263,16 @@ form, owned by no bean, held by its life chain. An agreement owned by none of it
 gave it by accepting it; a person is held so always — "only love holds a person, and only while alive" keeps its word,
 and holds now for every crown.
 
+THE CROWN IS ONE (32.0). The operator: "Creator is theone", and, of the ladder's top, "pair with the crown named واجب
+الوجود". The crown is one row, `theone` — the Necessary Existent, named on no bean — with two faces, love and wisdom: the
+pair the ladder is bounded by at its top, as space∞time bounds it at its base. Ibn Sina's Necessary Existent is at once
+intellect, knower and known, and lover and beloved of itself, so the two faces are one seen from two sides. His proof is
+the gate's own rule: every being here is possible in itself and necessary only through another, the chain of "through
+another" cannot run without end, and it ends at the one necessary by itself — "every chain must end", enforced. A being
+held by the crown no longer names it as a value: it says `crown: true`, that its chain ends there. That also answers
+Heidegger's objection to onto-theology, thinking Being as the highest being: the crown is no rung a being occupies, no
+bean names it, and it is the dot seen from the other side — indivisible, no thing among things.
+
 ## identity_policy
 
 NB the crown OWNS but never ANSWERS. Responsibility has no crown form: a duty must land on a being
@@ -628,13 +638,50 @@ foundations, and the powers are what a genos's `alive_while` names. Declared who
 no genos stands at is held for the body a garden will one day keep, and the gate needs no vacancy for it, since no term
 of a bean takes a level — a genos does. The gate holds the one consequence it can: a part never stands above its whole.
 
+
+THE LADDER (32.0). The operator: "we keep the dot as indivisible and define the the structure of the space∞time … lets
+take it as the base for the atom or dot of the soma body جسم an organization of its atoms make matter ماده, also by nature
+the gravity but in the gerenal form of it meaning وزن applies to it as an upstream rule … the next level will be gravity
+in general (گرانش) which is the organization of the orders (جهت) where bigger and smaller start to mean, and the balance of
+the matter on top of that is which bios حیات is possible and standed on … ratio is standing on the organization of
+matter, on the balanceness of the ratio itself and on the level of the organization of the life, there is wisdom or love
+standing which is also the other pin point of the dot from the other side". One definition makes it an order: B stands on
+A when B is possible only where A is, and A is possible without B. It hides two relations the law keeps apart —
+`made-of`, the lower in the higher (a cell of molecules), and `possible-on`, the lower as condition (life on a world in
+balance; a cell is not made of a planet): Hartmann's Überformung and Überbauung — and a third, weight, which is not a step
+but a rule that holds for everything standing on the frame (`foundation_rules`). Balance is a condition on an edge, never
+a being (`conditions`), and it is dynamic balance, the mean (اعتدال), not equilibrium, which is a world at rest and dead.
+Life also needs a soul, which is given along the life chain (`via`), not carried as a nature. λόγος is a step but not a
+level of bodies: a person's body stays an organism (Heidegger: the human is not an animal with reason added on top), and
+the gate's own rule agrees — at a level above `organism` a person could not be part of a population or the biosphere.
+The sayable stands on λόγος: λεκτόν and λόγος are one verb, λέγω.
+
+## lines
+
+The ladder's strands (32.0): the frame, matter, gravitation, the living, λόγος, the made. A line says what the gift needs
+of its giver (`given_by`) where the ladder decides it: a living being comes through the living, a made one through hands.
+
+## conditions
+
+What a step stands on WHILE it holds (32.0): balance (اعتدال) for life, the proportion of a living organisation for
+reason. Named in a registry so an edge's condition is a row and never prose.
+
+## foundation_rules
+
+What holds for everything standing on a step (32.0; Hartmann's law of recurrence, and his law of strength: a higher
+step cannot break a lower one's rule — a person still falls). Weight, from space∞time: general relativity says gravity
+is the geometry of spacetime and every body falls alike, so weight holds for every body without exception and a sayable
+being has none of its own. A sayable being may still state the weight of the bodies it stands for (`of_bodies`): a
+product's weight is each unit's.
+
 ## complements
 
 THE FRAME: PLACE AND TIME, EACH ONLY WITH THE OTHER (31.0). The operator: "universe by our current understanding, is
 divised on place system working with help of time system, both necessary, no sibling priviledge the condition of their
 being is the presence of each other, interdependent, tied". The law had said it in one place (`timing.where`: "a moment
 is in time and in place together, and civil time is read from a place") and held it nowhere. Now `place` and `time` name
-each other, the dimensions mark length and time as the frame (mass, information, money and temperature are measures
+each other, the dimensions mark length and time as the two faces of one frame, space∞time — "the same thing looked
+through from different perspective with the necessity of the pair" (32.0) — (mass, information, money and temperature are measures
 held at its positions), and every system of either dimension states how its positions find their other half: stated in
 the entry, the bearer's, or carried by the system itself (an epoch count on one body's time scale, deep time fixed by a
 point in a rock). The chain ends at the garden's own `zone` (GARDEN.md), which the manifest requires, so every
@@ -655,8 +702,13 @@ of the law has: the gate judges it itself, exactly, as capacity is judged — su
 ## divisions
 
 The law's own divisions, each with the rule that already judges it: `capacity` (29.0's placements summed within what a
-host holds), `ownership` (one owner and one answer for every facet), `shares` (what was paid and borne, to the unit),
+host holds), `answering` (at most one entry for each facet of care, legal its owner's unless stated), `shares` (what was paid and borne, to the unit),
 `cells` (a finer cell inside one coarser), and `bodies` (a part never above its whole, `complexity`).
+
+## schema_language.of_bodies
+
+A sayable being has no weight of its own (`foundation_rules`), and yet a product's record states its units' weight. The
+attribute says which it measures, so the rule refuses the one and allows the other, and the gate never guesses.
 
 ## name_form
 
@@ -2137,31 +2189,26 @@ and it must agree with the genos that refines it
 
 ## terms[owned_by].meaning
 
-Faceted ownership. ONE owner per facet (the 'one and only one owner' law, held per facet).
-Co-ownership of a SINGLE facet is never a raw fact -> a `contract` bean: its `parties`, its `words`, and the clause
-that settles a disagreement between the owners.
+ONE OWNER, NO FACETS (32.0). Measured in the garden the facets were written in: of 162 beans stating ownership
+directly, the technical answerer repeated the technical owner in 67 of 67, the technical owner repeated the legal one in
+47 of 67, and the legal answerer repeated the legal owner in 113 of 162 — placeholders the pairing of the two arcs forced.
+Where a facet said something real it was always answering (an organisation owns the machines and a person runs
+them; another person answers for a design), never owning. So ownership says only whose a being is, and co-ownership stays a `contract` bean: its
+`parties`, its `words`, and the clause that settles a disagreement between the owners. Operator: "make sure the legal
+technical and the responsible aren't fake place holders reconsider them if needed".
 
 ## terms[owned_by].schema
 
 GATE (P2): enforced generically from here, not from code
 
-## terms[owned_by].schema.alt_form
-
-the INHERITED form: a single `via` ref, no facets
-
-## terms[owned_by].schema.key_form
-
-otherwise every key must be a declared facet
-
 ## terms[owned_by].schema.entry_one_of
 
-a bean, a contract, outside, or the axiom itself
+a bean, a contract, outside, the parent's, or the crown
 
 ## terms[owned_by].schema.attrs.crown
 
-The crown is one branch now, the life chain's (31.0): no nature routes a bean to a branch of its own, so the attribute takes
-a row of `crown` that is not its root — agape — and the registry, not the term, stays the owner of the value. Until then
-`entry_must_match` held the branch to the one the bean's nature routed to.
+The crown is one (32.0): a being it holds says `crown: true`, that its chain ends there, and names no row of the
+registry — the crown, `theone`, is named on no bean.
 
 ## terms[owned_by].schema.entry_form_from_genos_attr
 
@@ -2176,6 +2223,12 @@ ownership must stay acyclic
 `external` and `crown` resolve to no bean by design
 
 ## terms[responsibility].meaning
+
+ANSWERING IS CARE, FACET BY FACET (32.0). The facets are ways of answering for a being — before the law, in running it,
+in how people meet it, in paying for it — never of owning it. Before the law its owner answers unless another is stated,
+so a legal entry is written only where the owner cannot answer (outside, or no bean) or where another takes it over, and
+one that repeats the owner is refused as a placeholder; a facet stands only on a being it applies to. In Heidegger's
+terms, owning is having, and answering is care, Sorge, in its modes.
 
 P7 (2026-08-02, human-ratified). THE CLOSING ARC. Operator: "the ownership is trapped in the same
 paradox isn't it? ... ownership is only meaningful where the responsibility covers on the opposite
@@ -2192,15 +2245,11 @@ inherited, exactly as ownership inherits
 
 ## terms[responsibility].schema.key_form
 
-the SAME facet lattice — the two arcs pair per facet
+the facets of care: each key a row of `facets`
 
 ## terms[responsibility].schema.entry_one_of
 
 NB no `crown`: the crown owns but never answers
-
-## terms[responsibility].schema.facet_parity_with
-
-the loop must CLOSE: same facets on both arcs
 
 ## facets
 
@@ -2213,6 +2262,11 @@ at Tier-0, so in a garden grown from the seed ANY facet key passed: the lattice 
 overlay, stated five times over. As a registry it is stated once, read by `owned_by` and `responsibility` through
 `key_form`, and a garden adds a facet the way it adds any row. `experience` and `financial` are in the standard because a
 stranger's garden expects them: who designs how people meet a thing, and who pays for it.
+
+WAYS OF ANSWERING, NOT OF OWNING (32.0). Every facet but `legal` was always a way of answering — "who runs and maintains
+it", "who designs how people meet it", "who pays for it" — and ownership was only ever legal. So the facets belong to
+`responsibility` alone: `legal` is answered by the owner unless another is stated (`answered_by_owner`), and a facet
+may say which beings it applies to (`applies_to`): nobody runs a record.
 
 ## terms[instance_of].schema
 
@@ -2255,11 +2309,22 @@ is actually the target of a lives_in edge. A habitat can no longer be untyped.
 
 values: GARDEN-LOCAL. Habitat TYPING is universal; `odoo-instance` and `odoo.sh-subscription` are not (P6/B2).
 
-## terms[creator].meaning
+## terms[via].meaning
 
-DISTINCT from owned_by.legal.owner even though creation CONFERS legal ownership (VOCAB facets.legal):
-they coincide across this estate today, but a transfer would separate them and the creation fact must
-survive it. Recording both is therefore not a duplicate authoritative fact.
+THE LIFE CHAIN IS VIAS (32.0). The operator: "Creator is theone and we can follow the creation around us which is it's via
+us, mother give birth to child like a plant regenerates and hp servers are created via the hands of hp engineers whom
+maybe unknown by name but addressable through hp and spacetime and theone so vias can be not absolute defined, like a
+github repo with unknown account but definitely by hands of someone". A via is a real cause that depends for its being on
+the Creator (Ibn Sina's preparing causes, Aquinas's secondary causes), not an occasion at which nothing happens — or
+nothing would answer for anything. By nature (a mother, a plant regrowing) or by making (a server, a repository), as
+Aristotle, Physics II.1, parts them. An unknown via is an existential fact — someone, reached through what is known —
+never an invented name. Never demanded (Heidegger, The Principle of Reason: the rose is without why).
+
+## terms[acquired].meaning
+
+How a being came to us is a fourth question, beside how it came to be, whose it is and who answers for it: the seller of
+a server is not the hands that made it and not its owner. Kept apart, the four answer Heidegger's Gestell, in which
+making, having, answering and selling collapse into availability on order.
 
 ## terms[ip].schema.value_form
 
@@ -3765,11 +3830,11 @@ met twice more in a single term. The note is long for that reason.
 **Its forms, written out.**
 
 ```
-owned_by: { <facet>: { owner: {bean: <person|org>} }, ... }   # introduce facet-owners here
-owned_by: { via: {bean: <parent>} }                           # inherit parent's facet-owners
-owned_by: { <facet>: { contract: {bean: <contract>} } }       # a SINGLE facet co-owned -> a contract resolves it
-owned_by: { <facet>: { external: '<who>' } }                  # owned OUTSIDE this garden (third-party software, a vendor); names the owner in prose because they are not a managed object here
-owned_by: { <facet>: { crown: <branch> } }                     # ownership TERMINATES at the axiom; the branch must be the one this bean's nature routes to. A person is pinned to it; an agreement between parties, or a happening between people, may choose it — owned by none of them
+owned_by: { owner: { bean: <person|org> } }       # whose it is
+owned_by: { from: { bean: <parent> } }            # owned as its parent is
+owned_by: { contract: { bean: <contract> } }      # owned together -> a contract resolves it
+owned_by: { external: "<who>" }                   # owned OUTSIDE this garden (third-party software, a registry); someone here answers
+owned_by: { crown: true }                         # owned by no bean: its chain ends at the crown. A person is pinned to it; an agreement between parties, or a happening between people, may choose it
 ```
 
 ## terms[responsibility]
@@ -3777,16 +3842,18 @@ owned_by: { <facet>: { crown: <branch> } }                     # ownership TERMI
 **Its forms, written out.**
 
 ```
-responsibility: { <facet>: { holder: {bean: <person|org>} } }
-responsibility: { via: {bean: <parent>} }
-responsibility: { <facet>: { contract: {bean: <contract>} } }   # shared duty -> a contract, as with co-ownership
-responsibility: { <facet>: { external: '<who>' } }              # answered for outside this garden
-responsibility: { <facet>: { self: true } }                      # a being answers for ITSELF (persons). Reflexive, so it is deliberately NOT an edge — a self-edge would be a cycle, and autonomy is not a dependency.
-responsibility: { <facet>: { parties: true } }                   # an agreement is answered for by the parties it binds, each for its own clauses. Reflexive like `self`: the parties are named in `parties`, so this draws no edge. Reserved to the gene that name it (an agreement).
+responsibility: { technical: { holder: {bean: <person|org>} } }   # who runs and maintains it
+responsibility: { legal: { holder: {bean: <person|org>} } }       # only where the owner cannot answer, or another takes it over
+responsibility: { from: {bean: <parent>} }
+responsibility: { <facet>: { contract: {bean: <contract>} } }     # a shared duty -> a contract
+responsibility: { <facet>: { external: '<who>' } }                # answered for outside this garden
+responsibility: { legal: { self: true } }                         # a person answers for THEMSELF. Reflexive, so no edge.
+responsibility: { legal: { parties: true } }                      # an agreement is answered for by the parties it binds. Reserved to the gene that name it.
 ```
 
-**Its rules, in words.** - `parity`: every facet with an OWNER must have a HOLDER and vice versa. An ownership claim nothing answers for is a loose end; a duty nobody owns is orphaned.
-- Not the same as ownership: they are opposite arcs, not synonyms. A rented VPS is owned by the provider and answered for by whoever runs it; that is the normal case, not an exception.
+**Its rules, in words.** Before the law the owner answers unless another is stated, and a legal entry that repeats the
+owner is refused. A facet is written only on a being it applies to (`facets[].applies_to`). Not the same as ownership: a
+rented server is owned by its provider and answered for by whoever runs it — the normal case, not an exception.
 
 ## terms[instance_of]
 

@@ -64,7 +64,7 @@ def gate():
     return r.stdout + r.stderr
 
 
-OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
+OWN = "owned_by: { owner: { bean: keeper } }\n"
 write("beans/this-host.md", f"""---
 bean: this-host
 genos: host
@@ -96,7 +96,7 @@ title: "service-2026"
 status: active
 summary: "the service agreement the client accepted"
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:service-2026", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}

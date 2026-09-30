@@ -68,8 +68,8 @@ def tool(*a):
     return r.returncode, r.stdout + r.stderr
 
 
-PERSON_OWN = "owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { self: true } }\n"
-OWN = "owned_by: { legal: { owner: { bean: keeper } } }\nresponsibility: { legal: { holder: { bean: keeper } } }\n"
+PERSON_OWN = "owned_by: { crown: true }\nresponsibility: { legal: { self: true } }\n"
+OWN = "owned_by: { owner: { bean: keeper } }\n"
 
 
 def person(id):
@@ -138,7 +138,7 @@ title: "the lichen survey"
 status: active
 summary: "an invented agreement: two surveyors read the stones' lichen, and the keeper keeps the record"
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:survey", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: keeper, as_of: now }}

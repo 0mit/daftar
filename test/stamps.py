@@ -126,7 +126,7 @@ identity:
   anchors:
     - {{ key: identifier, value: "{pid}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "{by}", as_of: {as_of}{extra} }}
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ self: true }} }}
 ---
 {title}.
@@ -150,7 +150,7 @@ title: "consent-{id}"
 status: active
 summary: "{id} agrees to be kept in this garden by name"
 nature: lekton
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "contract:consent-{id}", class: logical, establishing: true }} ] }}
 provenance: {{ src: asserted-by-human, by: sam, as_of: {as_of} }}
@@ -231,8 +231,7 @@ identity:
   anchors:
     - {{ key: garden_id, value: "{ALI_GARDEN}", class: logical, establishing: true }}
 provenance: {{ src: asserted-by-human, by: "sam", as_of: now }}
-owned_by: {{ legal: {{ owner: {{ bean: ali }} }} }}
-responsibility: {{ legal: {{ holder: {{ bean: ali }} }} }}
+owned_by: {{ owner: {{ bean: ali }} }}
 ---
 Ali's garden.
 """)
@@ -253,7 +252,7 @@ identity:
   anchors:
     - {{ key: identifier, value: "contract:shared-camera", class: logical, establishing: true, provenance: {{ src: asserted-by-human, by: "ali", as_of: {anchor} }} }}
 provenance: {{ src: asserted-by-human, by: "sam", as_of: now }}
-owned_by: {{ legal: {{ crown: agape }} }}
+owned_by: {{ crown: true }}
 responsibility: {{ legal: {{ parties: true }} }}
 parties:
   sam: {{ who: {{ bean: sam }}, accepted: 2026-09-10 }}
@@ -387,8 +386,8 @@ identity:
   status: confirmed
   anchors:
 {anchors}provenance: {{ src: asserted-by-human, by: "sam", as_of: {old} }}
-owned_by: {{ legal: {{ owner: {{ bean: sam }} }}, technical: {{ owner: {{ bean: sam }} }} }}
-responsibility: {{ legal: {{ holder: {{ bean: sam }} }}, technical: {{ holder: {{ bean: sam }} }} }}
+owned_by: {{ owner: {{ bean: sam }} }}
+responsibility: {{ technical: {{ holder: {{ bean: sam }} }} }}
 ---
 Sam's NAS.
 """

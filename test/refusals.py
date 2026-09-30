@@ -86,21 +86,21 @@ def person(bid, extra=""):
     # Written `as_of: now`, as a writer writes it (23.0; `provenance_record`'s `as_of`, read `by: save`): ali is committed below,
     # and bin/dmjournal.py writes the day of the entry in its place. A typed day would be refused at the commit.
     return (f'---\nbean: {bid}\ngenos: person\ntitle: "{bid}"\nstatus: active\nsummary: "a person"\nnature: soma\n'
-            f'owned_by: {{ legal: {{ crown: agape }} }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
+            f'owned_by: {{ crown: true }}\nresponsibility: {{ legal: {{ self: true }} }}\n'
             f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{bid}", class: logical, establishing: true }} ] }}\n'
             f'provenance: {{ src: asserted-by-human, by: sam, as_of: now }}\n{extra}---\n{bid}.\n')
 
 
 def thing(bid, anchor, extra=""):
     return (f'---\nbean: {bid}\ngenos: program\ntitle: "{bid}"\nstatus: active\nsummary: "a program"\nnature: lekton\n'
-            f'owned_by: {{ legal: {{ owner: {{ bean: sam }} }} }}\nresponsibility: {{ legal: {{ holder: {{ bean: sam }} }} }}\n'
+            f'owned_by: {{ owner: {{ bean: sam }} }}\n'
             f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "{anchor}", class: logical, establishing: true }} ] }}\n'
             f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\nA program.\n')
 
 
 def deal(extra, parties="  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n  ali: { who: { bean: ali }, accepted: 2026-09-01 }\n"):
     put("beans/deal.md", '---\nbean: deal\ngenos: contract\ntitle: "a deal"\nstatus: active\nsummary: "a deal"\nnature: lekton\n'
-        'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { parties: true } }\n'
+        'owned_by: { crown: true }\nresponsibility: { legal: { parties: true } }\n'
         'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:deal", class: logical, establishing: true } ] }\n'
         'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
         f'parties:\n{parties}words: {{ form: spoken, agreed: 2026-09-01 }}\n{extra}---\nA deal.\n')
@@ -117,7 +117,7 @@ ok = lambda out: " 0 error(s)" in out
 # 29.2 refuses a new person without it in `--all` as the save does
 KEPT = ('---\nbean: kept-by-name\ngenos: contract\ntitle: "kept by name"\nstatus: active\n'
         'summary: "ali agrees to be kept in this garden by name"\nnature: lekton\n'
-        'owned_by: { legal: { crown: agape } }\nresponsibility: { legal: { parties: true } }\n'
+        'owned_by: { crown: true }\nresponsibility: { legal: { parties: true } }\n'
         'identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:kept-by-name", class: logical, establishing: true } ] }\n'
         'provenance: { src: asserted-by-human, by: sam, as_of: now }\n'
         'parties:\n  sam: { who: { bean: sam }, accepted: 2026-09-01 }\n  ali: { who: { bean: ali }, accepted: 2026-09-01 }\n'
@@ -205,7 +205,7 @@ put("beans/ali.md", person("ali"))
 
 def garden_bean(gid, extra=""):
     return (f'---\nbean: garden-b\ngenos: garden\ntitle: "the garden ben keeps"\nstatus: active\nsummary: "another garden"\n'
-            f'nature: lekton\nowned_by: {{ legal: {{ owner: {{ bean: ben }} }} }}\nresponsibility: {{ legal: {{ holder: {{ bean: ben }} }} }}\n'
+            f'nature: lekton\nowned_by: {{ owner: {{ bean: ben }} }}\n'
             f'identity: {{ status: confirmed, anchors: [ {{ key: garden_id, value: "{gid}", class: logical, establishing: true }} ] }}\n'
             f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\nben\'s garden.\n')
 
@@ -353,10 +353,10 @@ out = deal("transactions:\n  t: { what: \"a thing\", amount: { count: 900, unit:
 check("a key YAML reads as a boolean beside a party that is missing is refused, not crashed on",
       "is no key of `parties`" in out and "key parties.True is not text" in out and "Traceback" not in out, out[-600:])
 put("beans/deal.md", open(os.path.join(G, "beans", "deal.md"), encoding="utf-8").read()
-    .replace("owned_by: { legal: { crown: agape } }", "owned_by: { legal: { crown: agape }, 1: { crown: agape } }"))
+    .replace("responsibility: { legal: { parties: true } }", "responsibility: { 1: { parties: true } }"))
 out = gate()
 check("a facet key YAML reads as a number is refused as a key, not crashed on in sorting the facets",
-      "key owned_by.1 is not text" in out and "Traceback" not in out, out[-600:])
+      "key responsibility.1 is not text" in out and "Traceback" not in out, out[-600:])
 drop("beans/deal.md")
 put("beans/ali.md", person("ali", 'details: { 2026: "moved to the new flat" }\n'))
 out = gate()
@@ -443,7 +443,7 @@ check("a party naming no bean says what to write: the bean first, or in the same
       out[-500:])
 drop("beans/deal.md")
 put("beans/statement.md", '---\nbean: statement\ngenos: document\ntitle: "a statement"\nstatus: active\nsummary: "a statement"\n'
-    'nature: lekton\nowned_by: { legal: { owner: { bean: sam } } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+    'nature: lekton\nowned_by: { owner: { bean: sam } }\n'
     'identity: { status: confirmed, anchors: [ { key: identifier, value: "document:statement", class: logical, establishing: true } ] }\n'
     'provenance: { src: asserted-by-human, by: sam, as_of: 2026-09-01 }\n'
     'located_at: [ { system: windows-filesystem, openness: here, at: "laptop:C:/Users/ali/statement.pdf" } ]\n---\nA statement.\n')
@@ -632,7 +632,7 @@ for vocab_text, extra, want in (
               want in out.replace("\n      — ", " — ") and "Traceback" not in out, out[-600:])
 for bean_text, want in (
         (person("ali").replace("nature: soma", "nature: living"), "nature 'living' not in ['lekton', 'soma']"),
-        (person("ali").replace("crown: agape", "crown: love"), "owned_by[legal].crown 'love' is not a declared crown"),
+        (person("ali").replace("crown: true", "crown: love"), "owned_by.crown 'love' not in [true]"),
         (person("ali").replace("genos: person", "kind: person"), "top-level key 'kind' is one the law retired on a bean")):
     put("beans/ali.md", bean_text)
     out = gate().replace("\n      — ", " — ")
@@ -754,7 +754,7 @@ def written(f, head, stop=("; when nobody said it", " (why:", " (rule ")):
 
 def event(bid, extra):
     put(f"beans/{bid}.md", f'---\nbean: {bid}\ngenos: event\ntitle: "{bid}"\nstatus: active\nsummary: "an event"\n'
-        'nature: lekton\nowned_by: { legal: { crown: agape } }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
+        'nature: lekton\nowned_by: { crown: true }\nresponsibility: { legal: { holder: { bean: sam } } }\n'
         f'identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "event:{bid}", class: logical, establishing: true }} ] }}\n'
         f'provenance: {{ src: asserted-by-human, by: sam, as_of: 2026-09-01 }}\n{extra}---\nAn event.\n')
     out = gate()
@@ -843,12 +843,12 @@ put("beans/deal.md", open(os.path.join(G, "beans", "deal.md"), encoding="utf-8")
     .replace("words: { form: spoken,", "words: { form: shouted,", 1))
 f = finding(gate(), "words.form 'shouted'")
 check("...so a value the law does not list for an attribute says to write one of those, and names its rule and the "
-      "command that says why, sending nowhere", "not in ['written', 'spoken', 'unstated']" in f and "write one of those"
+      "command that says why, sending nowhere", "not in [written, spoken, unstated]" in f and "write one of those"
       in f and f"(rule words.schema.attrs.form.in; why: {_py} bin/dmwhy.py words)" in f and not SENDS.search(f), f)
-put("beans/ben.md", person("ben").replace("{ crown: agape }", "{ owner: { bean: sam } }"))
+put("beans/ben.md", person("ben").replace("{ crown: true }", "{ owner: { bean: sam } }"))
 f = finding(gate(), "must use the 'crown' form")
 check("...and a person owned by another is refused with the line a person states, and the command that says why",
-      "owned_by: { legal: { crown: agape } }" in f and f"why: {_py} bin/dmwhy.py ownership_form" in f
+      "owned_by: { crown: true }" in f and f"why: {_py} bin/dmwhy.py ownership_form" in f
       and not SENDS.search(f), f)
 drop("beans/ben.md"); drop("beans/deal.md")
 _moved = [g for g in ("seed/FORMS.md", "seed/COOKBOOK.md", "seed/README.md") if os.path.isfile(os.path.join(G, g))]
