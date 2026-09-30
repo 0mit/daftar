@@ -340,6 +340,8 @@ SCHEMA_CSS = """
 .vw .ribbon-t{fill:var(--accent);font:600 12px ui-monospace,monospace}
 .vw .actbtn .abox{fill:var(--accent);stroke:var(--accent)}.vw .actbtn .atext{fill:#1a1206;font:700 13px system-ui}
 .vw .actbtn .ahint{fill:#1a1206;opacity:.6;font:9px ui-monospace,monospace;text-transform:uppercase}.vw .actbtn{cursor:pointer}
+/* zoom: a part that opens a drawing of its own carries a callout mark on its corner */
+.vw .el.opens .nbox,.vw .el.opens .bnd{stroke-width:1.6}.vw .el.opens:hover .nbox{stroke:var(--accent)}
 /* an element a lens hides */
 .vw .vw-hide{display:none}
 /* live: the element itself changes, in the drawing's own stroke and font */

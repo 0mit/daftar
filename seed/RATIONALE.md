@@ -1612,6 +1612,10 @@ The `race` row reads the steps of the procedure a view `draws` — its `steps`, 
 place of a table of phases, which would restate them. `health-chain` is the fallback, named so that falling back is a
 choice written down.
 
+WHAT THE FACTS PROPOSE (31.0). An archetype's `when` was prose a person read. Its `frame` and `reads` say it as data —
+a funnel for a drawing laid out along a routine, a reservoir for a being that states a capacity, lanes for one that
+reaches along parallel paths — so the asset proposes the shape and the page may choose another, told when it does.
+
 ## terms[observations]
 
 A READING IS KEPT AS IT WAS MADE, AND WHAT FOLLOWS FROM READINGS IS READ (24.0, step 5). The shape is ISO 19156's: a
@@ -3980,3 +3984,25 @@ A CODE IDENTIFIES WHAT IT CLASSIFIES (29.0). The profile's codes were three anch
 that `value_in_registry` had a term to sit on. `identifier` (26.0) kept apart only keys with a value system of their own;
 a coding names its system in its value, so a being that IS an occupation, a field or a technology is identified by the
 code its scheme's publisher assigned — `identifier: isco-08:2522` — an identity given outside every garden.
+
+## anchor_systems[uri]
+
+A PAGE IS SOMEWHERE (31.0). The view design found that a page of drawings did not know where it was shown: its place
+was prose on the instance that served it, and the law had no system for a web address. A URI is a place the way a path
+is: a position in a tree an authority serves (RFC 3986), resolving through the name system to an address and a port.
+It establishes nothing — a page moves, a name is given to another — and its other half is stated or the bearer's, as
+every place's is.
+
+## profiles.view.terms[views].schema.attrs.frame
+
+THE FRAME A DRAWING IS LAID OUT ALONG (31.0). The operator asked for "the same elements in the different contexts
+(what where How) mechanically". A drawing's frame is one of the law's aspects that is a line — place, time, a routine,
+a walk, the ordinal line — and it says what stands where in it: laid out along place, a part is at its position; along
+a routine, at its step. The engraver (`view_engrave`) reads it; a drawing placed by hand says none.
+
+## profiles.view.terms[views].schema.attrs.opens
+
+ZOOM IS A DIVISION (31.0). Nine of fourteen drawings of the estate the view was first drawn for held more than the
+understand lens's eighteen elements, because nothing let a part open a drawing of its own. `opens` does (the C4
+model's levels, technical drawing's callouts), and the lenses' limits became errors the day it did: a lens holds its
+limit by opening a part, never by crowding it.

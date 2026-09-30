@@ -119,7 +119,11 @@ function schematic(root,view,lv,state){
   const f=(view.facts||{})[e.bean];
   inspectable(g,'el:'+e.id,()=>'<b>'+h(e.label)+'</b><div class="ins-sub">'+h((view.patternMeaning||{})[e.pattern]||e.pattern)+'</div>'+(f?'<div class="ins-row"><span>ledger</span>'+partCard(f)+'</div>':''));});
  (view.actions||[]).forEach(a=>{const g=svg.querySelector('.el[data-el="'+a.el+'"]');if(!g)return;
-  g.setAttribute('data-click','action');if(state.onAction){g.style.cursor='pointer';g.addEventListener('click',()=>state.onAction(a));}});}
+  g.setAttribute('data-click','action');if(state.onAction){g.style.cursor='pointer';g.addEventListener('click',()=>state.onAction(a));}});
+ // ZOOM: an element that opens a drawing of its own takes the reader there — a lens holds its limit by opening, not crowding
+ (view.opens||[]).forEach(o=>{const g=svg.querySelector('.el[data-el="'+o.el+'"]');if(!g)return;
+  g.classList.add('opens');g.setAttribute('data-opens',o.view);
+  if(state.onOpen){g.style.cursor='zoom-in';g.addEventListener('click',()=>state.onOpen(o.view));}});}
 
 /* ---------------- operate · the health chain, the fallback ---------------- */
 function spark(pts,w,hh){if(!pts||pts.length<2)return '';const ys=pts.map(p=>+p[1]),mn=Math.min(...ys),mx=Math.max(...ys),r=(mx-mn)||1;

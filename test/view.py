@@ -216,6 +216,8 @@ identity:
 provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
 owned_by: { legal: { owner: { bean: grain-coop } } }
 responsibility: { legal: { holder: { bean: tessa } } }
+located_at:
+  - { system: uri, at: "https://grain.example.org/page/", openness: here }
 view:
   drawings: file:bin/drawings.py
   opens_on: grain-coop
@@ -557,6 +559,17 @@ ASSET_REFUSED = [
     ("a value no monitor of the page can compute", "beans/grain-page.md",
      'query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]',
      'query: [ { technology: zabbix, says: "silo.days" } ]', ("silo-full-in", "zabbix")),
+    ("a page that states nowhere it is shown", "beans/grain-page.md",
+     'located_at:\n  - { system: uri, at: "https://grain.example.org/page/", openness: here }\n', "",
+     ("states nowhere it is shown", "uri")),
+    ("a zoom from an element the drawing does not have", "beans/grain-page.md", "  silo:\n",
+     "  silo:\n    opens: [ { element: auger, view: drying } ]\n", ("opens", "auger", "does not have")),
+    ("a zoom into the drawing it is in", "beans/grain-page.md", "  silo:\n",
+     "  silo:\n    opens: [ { element: silo, view: silo } ]\n", ("opens the drawing it is in",)),
+    ("a story stage in more words than its lens holds a stage", "beans/grain-page.md",
+     '      - { label: "Send loads elsewhere", doer: "the yard crew" }\n',
+     '      - { label: "Send loads elsewhere, to the co-operative across the valley and the river", doer: "the yard crew" }\n',
+     ("words", "orient")),
 ]
 for _name, _rel, _old, _new, _words in ASSET_REFUSED:
     _orig = get(_rel)
@@ -567,6 +580,24 @@ for _name, _rel, _old, _new, _words in ASSET_REFUSED:
     out, rc = dmview("check")
     check(f"dmview REFUSES by name: {_name}", rc == 2 and all(w in out for w in _words), out[-900:])
     put(_rel, _orig)
+
+# ZOOM AND FRAME, AS THE GATE AND THE ASSET READ THEM
+put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    frame: place\n    opens: [ { element: silo, view: drying } ]\n", 1))
+out, rc = dmview("check")
+_g, _ = gate()
+_rep, _ = dmview("report", "--out", os.path.join(T, "zoom.html"))
+_html = open(os.path.join(T, "zoom.html"), encoding="utf-8").read() if os.path.isfile(os.path.join(T, "zoom.html")) else ""
+check("a drawing laid out along place, whose silo opens the drying run, passes the gate and the asset, and the page "
+      "carries the zoom", rc == 0 and " 0 error(s)" in _g and '"opens": [{"el": "silo", "view": "drying"}]' in _html,
+      (out[-400:], _g[-400:], _rep[-300:]))
+put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    frame: necessity\n", 1))
+_g, _rc = gate()
+check("...and a frame that is no line — `necessity`, a modal opposition — is refused by the gate", _rc != 0
+      and "necessity" in _g and "frame" in _g, _g[-600:])
+put("beans/grain-page.md", PAGE_T.replace('at: "https://grain.example.org/page/"', 'at: "grain page"', 1))
+_g, _rc = gate()
+check("a page's place in `uri` is written as RFC 3986 writes it, or refused", _rc != 0 and "grain page" in _g, _g[-600:])
+put("beans/grain-page.md", PAGE_T)
 
 # PIPES ALONE ARE WIRING: what a drawing draws may be joined by pipes and run no process of its own.
 put("beans/grain-page.md", PAGE_T.replace("    processes: { bean: silo-controller, field: processes }\n", "", 1))

@@ -1855,6 +1855,8 @@ identity:
 provenance: { src: asserted-by-human, by: "sam", as_of: now }
 owned_by: { legal: { owner: { bean: sam } } }
 responsibility: { legal: { holder: { bean: sam } } }
+located_at:
+  - { system: uri, at: "https://bakery.example.org/drawings/", openness: here }
 view:
   drawings: file:drawings/bakery.py
   reference:

@@ -213,6 +213,8 @@ responsibility: {{ legal: {{ holder: {{ bean: rosa }} }} }}
 selections:
   outings: {{ what: "every outing booked", steps: [ {{ id: o, op: select, genos: event }} ] }}
   heron-outings: {{ what: "the outings on the heron", steps: [ {{ id: o, op: select, genos: event, where: [ {{ path: refs.boat.bean, is: boat-heron }} ] }} ] }}
+located_at:
+  - {{ system: uri, at: "http://club.example.org/page/", openness: here }}
 view:
   drawings: file:bin/drawings.py
   opens_on: boat-club
@@ -677,6 +679,8 @@ identity:
 provenance: { src: asserted-by-human, by: keeper, as_of: now }
 owned_by: { legal: { owner: { bean: keeper } } }
 responsibility: { legal: { holder: { bean: keeper } } }
+located_at:
+  - { system: uri, at: "http://results.example.org/", openness: here }
 view:
   drawings: file:bin/drawings.py
   reference:

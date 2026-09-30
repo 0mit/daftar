@@ -233,7 +233,8 @@ function renderRef(){
       tr.style.display = ok ? '' : 'none'; if (ok) n++; }); $('#f-count').textContent = n+' / '+trs.length+' shown'; }
   ['#f-org','#f-genos'].forEach(s => $(s).onchange = apply); $('#f-q').oninput = apply; apply();
 }
-function state(){ return {level, live: !!LIVE, values: VALS[tab] || {}, history: HIST[tab] || {}, onAction: LIVE ? doAction : null, historyUrl: LIVE && LIVE.history}; }
+function state(){ return {level, live: !!LIVE, values: VALS[tab] || {}, history: HIST[tab] || {}, onAction: LIVE ? doAction : null, historyUrl: LIVE && LIVE.history,
+  onOpen: k => { if ((P.order || []).includes(k)) { tab = k; render(); } }}; }
 function mountView(){ const root = document.querySelector('#view > div'); if (!root || tab === 'ref') return; window.viewMount(root, viewFor(tab), state()); }
 function render(){
   renderTabs(); renderLenses(); if (LIVE) renderLive();

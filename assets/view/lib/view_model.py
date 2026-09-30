@@ -157,6 +157,22 @@ def archetypes():
     return {r.get("archetype"): r for r in registry("view_archetypes")}
 
 
+def proposed_archetype(v):
+    """The operate shape the facts propose (`view_archetypes`: `frame` and `reads`): the first whose frame the drawing
+    is laid out along, else the first whose terms the drawn being holds; the health chain where none does. The page may
+    draw another; `dmview check` says when it does."""
+    kk, target, folder = draws_of(v)
+    f = fm(target, folder) if kk else {}
+    rows = [r for r in registry("view_archetypes") if isinstance(r, dict)]
+    for r in rows:
+        if v.get("frame") and v.get("frame") in (r.get("frame") or []):
+            return r.get("archetype")
+    for r in rows:
+        if any(f.get(x) for x in (r.get("reads") or [])):
+            return r.get("archetype")
+    return "health-chain"
+
+
 def unit(u):
     """(quantity, [numerator, denominator]) of a unit the law, or the garden's additions, declare; (None, None) else."""
     row = law().UNITS.get(u) if u else None
@@ -968,6 +984,8 @@ def views(figs=None):
                     "questions": {q.get("lens"): q.get("ask") for q in (v.get("questions") or []) if isinstance(q, dict)},
                     "operate": operate(k, v), "wiring": w, "window": {"hours": hours, "step": step},
                     "patternMeaning": {p: kit.PATTERNS.get(p, "") for p in pats},
+                    "opens": [{"el": o.get("element"), "view": o.get("view")} for o in (v.get("opens") or []) if isinstance(o, dict)],
+                    "frame": v.get("frame"), "proposed": proposed_archetype(v),
                     "alerts": alert_names([p["bean"] for p in parts], binds)})
     return out
 
@@ -1030,10 +1048,11 @@ def check(figs=None):
             for i, s in enumerate(st):
                 n = len(("%s %s" % (s.get("label", ""), s.get("doer", ""))).split())
                 if n > int(mx["words_per_stage"]):
-                    warns.append("%s: story stage %d says %d words, and the %s lens holds %s a stage"
+                    errs.append("%s: story stage %d says %d words, and the %s lens holds %s a stage"
                                  % (k, i + 1, n, story_lens["id"], mx["words_per_stage"]))
         if (und.get("max") or {}).get("elements") is not None and len(els) > int(und["max"]["elements"]):
-            warns.append("%s: the drawing has %d elements, and the %s lens holds %s" % (k, len(els), und["id"], und["max"]["elements"]))
+            errs.append("%s: the drawing has %d elements, and the %s lens holds %s — open a part as a drawing of its own "
+                        "(`views.opens`) rather than crowd it" % (k, len(els), und["id"], und["max"]["elements"]))
         for e in els:
             if e.get("unfit_address"):
                 warns.append("%s: %s's address %s fits nowhere in its box (%s wide): it is on the part's card, and a wider "
@@ -1065,13 +1084,31 @@ def check(figs=None):
         tiles = health_tiles(els, binds)
         if v.get("archetype") == "health-chain" and (op_lens.get("max") or {}).get("tiles") is not None \
                 and len(tiles) > int(op_lens["max"]["tiles"]):
-            warns.append("%s: %d tiles, and the %s lens holds %s" % (k, len(tiles), op_lens["id"], op_lens["max"]["tiles"]))
+            errs.append("%s: %d tiles, and the %s lens holds %s" % (k, len(tiles), op_lens["id"], op_lens["max"]["tiles"]))
         parts = anatomy_parts(els, v)
         if (ins.get("max") or {}).get("cards") is not None and len(parts) > int(ins["max"]["cards"]):
-            warns.append("%s: %d cards, and the %s lens holds %s" % (k, len(parts), ins["id"], ins["max"]["cards"]))
+            errs.append("%s: %d cards, and the %s lens holds %s" % (k, len(parts), ins["id"], ins["max"]["cards"]))
+        # ZOOM: an element that opens a drawing of its own is one the drawing draws, and the drawing it opens is the page's
+        by_id = {e["id"]: e for e in els}
+        for o in v.get("opens") or []:
+            if not isinstance(o, dict):
+                continue
+            if o.get("element") not in by_id:
+                errs.append("%s: opens %r from element %r, which the drawing does not have" % (k, o.get("view"), o.get("element")))
+            elif by_id[o["element"]]["pattern"] in ("flow", "signal"):
+                errs.append("%s: opens %r from %r, a flow — a drawing opens from a part it depicts" % (k, o.get("view"), o["element"]))
+            if o.get("view") == k:
+                errs.append("%s: element %r opens the drawing it is in" % (k, o.get("element")))
+        _prop = proposed_archetype(v)
+        if v.get("archetype") and _prop not in ("health-chain", v.get("archetype")):
+            warns.append("%s: the facts propose the %s shape, and the page draws %s" % (k, _prop, v.get("archetype")))
         for el in els:
             if el["bean"] and not fm(el["bean"]):
                 errs.append("%s: element %r depicts %r, which is no bean of the garden" % (k, el["id"], el["bean"]))
+    # THE PAGE STATES WHERE IT IS SHOWN: a URI where it is served, a path where a copy is kept — its own `located_at`
+    if not [e for e in (fm(PAGE).get("located_at") or []) if isinstance(e, dict)]:
+        errs.append("%s: the page states nowhere it is shown — its `located_at`: a `uri` where it is served, a path where a "
+                    "copy of it is kept (`unix-filesystem`), each with the `host` that holds it" % PAGE)
     for m in monitors():
         if not fm(m["bean"]):
             continue                                 # the gate refuses a monitor the garden does not hold
