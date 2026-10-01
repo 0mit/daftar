@@ -25,6 +25,8 @@ rows it added to the standards' tables). Each term goes the way verbs.yaml's `re
   instance_of, os → run              depends_on, consumes, reaches → need                knowledge → use, classify
   risks      → fail                  capabilities → can, on the two squares              roles → do
   produces   → produce (an artifact: a being, a position, or the words that say it)
+  a unit     → its UCUM code (core/law/units.yaml), the law's English name attached there; a garden's own unit a row of
+               VOCAB.md's `units`, its code composed from the law's (`gigabyte-per-day` is `GBy/d`)
   parties, over, words → agree       clauses → can, on the permission square            transactions → pay, bear
   endpoints  → serve                 timing start/stop → be, as presence                 workspace.opened_at → open
 
@@ -668,7 +670,9 @@ def translate_bean(path, rel, ctx):
         if len(payers) != 1 or payers[0] not in party_bean:
             continue
         sid = b.new_id(k)
-        roles = {'by': party_bean[payers[0]], 'of': {'count': e['amount'].get('count'), 'unit': e['amount'].get('unit')}}
+        u = e['amount'].get('unit')
+        code = u if u in ctx.std.currencies else (ucum_of(str(u), ctx.law) or u)     # a currency's code, or UCUM's
+        roles = {'by': party_bean[payers[0]], 'of': {'count': e['amount'].get('count'), 'unit': code}}
         if a_position(e.get('day'), ctx):
             roles['at'] = e['day']
         if isinstance(e.get('what'), str):
@@ -676,7 +680,7 @@ def translate_bean(path, rel, ctx):
         j = b.add('pay', roles, sid)
         b.take(('transactions', k, 'paid_by', 0, 'party'), b.role(j, 'by'), roles['by'])
         b.take(('transactions', k, 'amount', 'count'), b.role(j, 'of', 'count'))
-        b.take(('transactions', k, 'amount', 'unit'), b.role(j, 'of', 'unit'))
+        b.take(('transactions', k, 'amount', 'unit'), b.role(j, 'of', 'unit'), code)
         for r, o in (('at', 'day'), ('note', 'what')):
             if r in roles:
                 b.take(('transactions', k, o), b.role(j, r))
@@ -882,6 +886,30 @@ class Context:
         self.namespaces[ns] = self.namespaces.get(ns, True) and once
 
 
+def ucum_of(name, law):
+    """The UCUM code of a unit the law names, or of one named `<a>-per-<b>` from two it names (`gigabyte-per-day` is
+    `GBy/d`); None where neither."""
+    for code, row in law.units.items():
+        if row.get('name') == name and row.get('ucum') != 'false':
+            return code
+    parts = name.split('-per-')
+    for i in range(1, len(parts)):
+        a, b = ucum_of('-per-'.join(parts[:i]), law), ucum_of('-per-'.join(parts[i:]), law)
+        if a and b:
+            return f"{a}/{b}" if not any(c in b for c in './') else f"{a}/({b})"
+    return None
+
+
+def unit_row(name, quantity, law):
+    """A garden's own unit (today's `registry_additions.units`) as a row of the core's units: its UCUM code composed from
+    the law's rows where its name is made of theirs, else its name kept as its code, saying why."""
+    code = ucum_of(name, law)
+    if code:
+        return {'unit': code, 'name': name, 'quantity': quantity}
+    return {'unit': name, 'name': name, 'quantity': quantity, 'ucum': 'false',
+            'why': "its name is made of no units the law writes in UCUM: give its UCUM code"}
+
+
 def garden(src, dst):
     """Copy the garden at `src` to `dst` with its beans in statements; returns (counts, problems)."""
     from core import read, standards
@@ -907,10 +935,13 @@ def garden(src, dst):
     tables = {}
     if adds.get('net_protocols'):
         tables['protocols'] = [str(r['protocol']) for r in adds['net_protocols'] if isinstance(r, dict) and r.get('protocol')]
-    if adds.get('units'):
-        tables['units'] = [str(r['unit']) for r in adds['units'] if isinstance(r, dict) and r.get('unit')]
     if tables:
         rows['tables'] = tables
+    base = Law.load(std=std)
+    units = [unit_row(str(r['unit']), str(r.get('quantity')), base) for r in adds.get('units') or []
+             if isinstance(r, dict) and r.get('unit')]
+    if units:
+        rows['units'] = units
     law = Law.load(('VOCAB.md', rows), std=std)
     ctx = Context(src, law, std)
     for k in tables.get('protocols', []):

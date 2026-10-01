@@ -1,0 +1,63 @@
+# The units a quantity is written in: each a UCUM code (the one form a bean writes), with the law's English name
+# attached as its text, and the quantity it measures (std-vocab 32.0's `units`). Ratified 2026-10-01: "keep UCUM ...
+# with the english complete names as texts attached to them". Every unit of the law has one row here, which the law's
+# proof checks; the codes are UCUM's (https://ucum.org/ucum), and where UCUM writes none the row says so and why.
+# Currencies are ISO 4217's codes, read from seed/knowledge/currencies.tsv with their names, and are not rows here.
+units:
+  - { unit: "1",           name: one,                        quantity: ratio }
+  - { unit: "%",           name: percent,                    quantity: ratio }
+  - { unit: "[ppth]",      name: per-mille,                  quantity: ratio }
+  - { unit: "10*-4",       name: basis-point,                quantity: ratio }
+  - { unit: ms,            name: millisecond,                quantity: duration }
+  - { unit: s,             name: second,                     quantity: duration }
+  - { unit: min,           name: minute,                     quantity: duration }
+  - { unit: h,             name: hour,                       quantity: duration }
+  - { unit: d,             name: day,                        quantity: duration }
+  - { unit: mm,            name: millimetre,                 quantity: length }
+  - { unit: m,             name: metre,                      quantity: length }
+  - { unit: km,            name: kilometre,                  quantity: length }
+  - { unit: m2,            name: square-metre,               quantity: area }
+  - { unit: har,           name: hectare,                    quantity: area }
+  - { unit: km2,           name: square-kilometre,           quantity: area }
+  - { unit: m3,            name: cubic-metre,                quantity: volume }
+  - { unit: L,             name: litre,                      quantity: volume }
+  - { unit: m/s,           name: metre-per-second,           quantity: speed }
+  - { unit: km/h,          name: kilometre-per-hour,         quantity: speed }
+  - { unit: m/s2,          name: metre-per-second-squared,   quantity: acceleration }
+  - { unit: Hz,            name: hertz,                      quantity: frequency }
+  - { unit: kg,            name: kilogram,                   quantity: mass }
+  - { unit: g,             name: gram,                       quantity: mass }
+  - { unit: bit,           name: bit,                        quantity: information }
+  - { unit: By,            name: byte,                       quantity: information }
+  - { unit: kBy,           name: kilobyte,                   quantity: information }
+  - { unit: MBy,           name: megabyte,                   quantity: information }
+  - { unit: GBy,           name: gigabyte,                   quantity: information }
+  - { unit: TBy,           name: terabyte,                   quantity: information }
+  - { unit: GiBy,          name: gibibyte,                   quantity: information }
+  - { unit: By/s,          name: byte-per-second,            quantity: data-rate }
+  - { unit: bit/s,         name: bit-per-second,             quantity: data-rate }
+  - { unit: Mbit/s,        name: megabit-per-second,         quantity: data-rate }
+  - { unit: dB,            name: decibel,                    quantity: level }
+  - { unit: decibel-per-metre,     name: decibel-per-metre,     quantity: attenuation, ucum: "false",
+      why: "UCUM §22: a unit on a special scale, as the bel is, takes part in no product or quotient, so UCUM writes no attenuation; the law's name is the code" }
+  - { unit: decibel-per-kilometre, name: decibel-per-kilometre, quantity: attenuation, ucum: "false",
+      why: "UCUM §22: a unit on a special scale, as the bel is, takes part in no product or quotient, so UCUM writes no attenuation; the law's name is the code" }
+  - { unit: cm,            name: centimetre,                 quantity: length }
+  - { unit: mL,            name: millilitre,                 quantity: volume }
+  - { unit: kg/m3,         name: kilogram-per-cubic-metre,   quantity: density }
+  - { unit: g/cm3,         name: gram-per-cubic-centimetre,  quantity: density }
+  - { unit: Pa,            name: pascal,                     quantity: pressure }
+  - { unit: kPa,           name: kilopascal,                 quantity: pressure }
+  - { unit: "mm[Hg]",      name: millimetre-of-mercury,      quantity: pressure }
+  - { unit: m3/s,          name: cubic-metre-per-second,     quantity: volume-flow }
+  - { unit: L/min,         name: litre-per-minute,           quantity: volume-flow }
+  - { unit: deg,           name: degree,                     quantity: plane-angle }
+  - { unit: "''",          name: arcsecond,                  quantity: plane-angle }
+  - { unit: K,             name: kelvin,                     quantity: temperature-difference }
+  - { unit: a_j,           name: julian-year,                quantity: duration }
+  - { unit: 31556925445.ms, name: annus,                     quantity: duration }      # UCUM's a_t (365.24219 d) is not the IUPAC-IUGS annus
+  - { unit: 31556925445.s,  name: kilo-annus,                quantity: duration }
+  - { unit: 31556925445.ks, name: mega-annus,                quantity: duration }
+  - { unit: 31556925445.Ms, name: giga-annus,                quantity: duration }
+  - { unit: mm/a_j,        name: millimetre-per-julian-year, quantity: speed }
+  - { unit: "{item}",      name: item,                       quantity: number }
