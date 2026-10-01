@@ -488,3 +488,7 @@ date	suite	seconds	passed	failed
 2026-09-30	test/view.py	67.0	168	0
 2026-09-30	test/viewcap.py	32.5	48	0
 2026-09-30	test/zones.py	9.8	20	0
+2026-10-01	test/core.py	1.7	137	0
+2026-10-01	test/core_rehearse.py	36.8	7	0
+2026-10-01	test/core_save.py	6.1	13	0
+2026-10-01	test/core_translate.py	0.9	21	0
