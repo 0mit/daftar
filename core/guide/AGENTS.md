@@ -47,7 +47,7 @@ and what to write when nobody said. Write from it. When the gate refuses, its me
 Read these when a question needs them, and only the part it needs:
 
 1. `core/law/` — the law itself: the core's face (`core.yaml`: the seven roles, the grammar, the order, the face's
-   verbs, the eighteen rules), the other verbs' rows (`verbs.yaml`), the kinds, the levels, the layers and the standing
+   verbs, the nineteen rules), the other verbs' rows (`verbs.yaml`), the kinds, the levels, the layers and the standing
    of files, the units, the namespaces and the standards' tables; and the garden's own rows in `VOCAB.md`. `python3
    core/check.py --law` proves them one law.
 2. `MODEL.md` — the data model and the **Contract of Parts**: what you may enact and what a person must ratify. A name

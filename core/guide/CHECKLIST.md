@@ -17,8 +17,9 @@ judges the working tree, and `python3 core/check.py --staged` what a commit woul
 `<rule>  <where>: <what>`; it names what to write in its place.
 
 ## Part A — what the gate checks (a commit is refused on any failure)
-Eighteen rules, each strict: a breach is an error. The first thirteen are the core's own; the last five, and parts of
-`form`, `order`, `names` and `ratify`, are what today's gate held, taken over by the core.
+Nineteen rules, each strict: a breach is an error. The first thirteen are the core's own; the next five, and parts of
+`form`, `order`, `names` and `ratify`, are what today's gate held, taken over by the core; the last, `line`, judges the
+forms of a line (v1 part 6).
 
 - [ ] **form** — A bean's front matter is its header (`bean`, `kind`, `title`, `summary`, `tags`, `details`) and its
       `statements`, nothing else; `bean` is the file's name, and `kind` a kind of the law. A statement is one verb of
@@ -80,6 +81,15 @@ Eighteen rules, each strict: a breach is an error. The first thirteen are the co
       takes for a line break and no template's `(fill in`. A part under `series/`, once written, stays as it is. A
       commit that takes a header key or a statement out of a bean names it in its entry — the key, the statement's
       id, or its verb — empties none it keeps, and leaves every bean it writes a body: a bean reads on paper.
+- [ ] **line** — What holds a line holds its form (core/law/lines.yaml). A series (`record`, named by its `id`) is read
+      by its channels: each row one cell a channel, each cell in its channel's form, nothing in it the form does not
+      hold. A walk's steps (`step`, each named) lead on (`to`) only to steps of the walk, and none leads on from a final
+      step or a pause. A course is the being placed on a walk (`be` as order); each `move` goes `through` it, its `at`
+      the moment and one step of that walk (`<walk>#<step>`), by a way on or saying `why`, never after a final step and
+      never back in time, citing (`as`) only a reason the step lists. A reading (`reckon`, named) is steps of the closed
+      list, each taking what its row takes and naming only what came before it, its paths starting at the header or a
+      verb, its comparisons written by their signs. A `pin` holds its moment and a commit this garden has,
+      `<garden>@<object id>`, and rests on readings.
 
 **The commit's own rules**, which only a commit can show:
 - [ ] Every bean the commit changes is named in the journal entry it adds (`[[<bean>]]`), and that entry's heading is
@@ -149,7 +159,7 @@ None of this catches an edit that is well formed and simply wrong. That is Part 
       the source again. A tree marked `DO NOT WALK` is read through its summary.
 - [ ] **Carry the constraints.** What is `forbidden`, `obligatory`, `impossible` or failing holds for what stands on
       it: a being inherits from the machine it is at, what it needs, what it is part of, and who owns it.
-- [ ] `python3 bin/dmstale.py` lists caches that have aged and agreements that fall due or lapse within their notice.
+- [ ] `python3 bin/daftar.py stale` lists caches that have aged and agreements that fall due or lapse within their notice.
 - [ ] **A reading is read, never written back.** A total, a balance, whether a clause is in force is asked again each
       time, never copied into a bean, where it would drift from what it was read from.
 

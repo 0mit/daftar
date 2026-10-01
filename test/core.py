@@ -67,8 +67,8 @@ except frame.Refused as e:
     check("a day with no zone to be reckoned in is refused: its place half is the bearer's", 'names none' in str(e), e)
 
 # ------------------------------------------------------------------------------------------------ the law
-check("the law is whole: the face's 21 verbs, the 35 rows and the 22 levels, 0 problems",
-      not LAW0.problems() and len(LAW0.verbs) == 56 and len(LAW0.levels) == 29, LAW0.problems())
+check("the law is whole: the face's 21 verbs, the 39 rows and the 22 levels, 0 problems",
+      not LAW0.problems() and len(LAW0.verbs) == 60 and len(LAW0.levels) == 29, LAW0.problems())
 CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
 LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "
@@ -178,6 +178,8 @@ def filler(verb, role, spec):
         x = 'now' if verb in LAW.knowing else '2026-10-01'
     elif shape == 'quantity':
         x = {'count': '1', 'unit': 'XTS'}
+    elif shape == 'form':
+        x = {}
     elif shape == 'row':
         t = spec.get('table')
         x = STANDARD.get(t) or (LAW.table(t) or [None])[0]
@@ -192,7 +194,8 @@ def made(verb, roles):
 
 def verdict(verb, roles):
     return [f for f in judge(garden(CONTEXT + [bean('t', 'document', made(verb, roles))], base=False))
-            if f[0] != 'vacancy']            # a garden's rows are judged in a whole garden, not in this fragment
+            if f[0] not in ('vacancy', 'line')]   # a garden's rows are judged in a whole garden, and a line's form in a
+    #                                               whole line (a walk, a course: test/core_read.py), not in this fragment
 
 
 for verb, v in LAW.verbs.items():
@@ -221,7 +224,8 @@ for verb, v in LAW.verbs.items():
     if 'form' not in {r for r, _w, _m in verdict(verb, dict(full, colour='blue'))}:
         problems.append(('a role it does not take', 'colour'))
     for k in full:
-        rules = {r for r, _w, _m in verdict(verb, dict(full, **{k: {'nonsense': 'x'}}))}
+        odd = 'nonsense' if 'form' in shapes_of(specs[k]) else {'nonsense': 'x'}    # a form is a mapping: no text
+        rules = {r for r, _w, _m in verdict(verb, dict(full, **{k: odd}))}
         if not rules & {'valency', 'frame'}:
             problems.append(('no shape in', k, rules))
     alone = "refused only by `necessity` with its required role alone" if verb == 'necessary' else \

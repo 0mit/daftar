@@ -1,4 +1,4 @@
-"""engine — the core's eighteen rules, applied to a garden written in statements (core spec §12).
+"""engine — the core's nineteen rules, applied to a garden written in statements (core spec §12).
 
 A bean keeps its header (`bean`, `kind`, `title`, `summary`, `tags`, `details`), a list of `statements` and its body.
 A statement is one verb and its roles: `- pay: { id: paid, by: ada, of: { count: "10.00", unit: XTS }, at: 2026-09-20 }`.
@@ -197,6 +197,8 @@ class Judge:
             return self.L.has(spec.get('table'), x)
         if shape == 'text':
             return '' if isinstance(x, str) else f"text is written as a string, not a {type(x).__name__}"
+        if shape == 'form':                  # its attributes are rule `line`'s to judge (core/lines.py)
+            return '' if isinstance(x, dict) else f"a value in the form {spec.get('form')} is a mapping of its attributes"
         return f"no shape {shape!r}"
 
     def _being(self, x, spec, b):
@@ -975,7 +977,17 @@ class Judge:
         self.harm()
         self.room()
         self.vacancy()
+        self.line()
         return self.out
+
+    # ------------------------------------------------------------------------------------------------ line
+    def line(self):
+        """Rule `line`: a series, a walk, a course, a reading and a pin hold their forms (core/lines.py)."""
+        from core import lines
+        for b in self.G.beans.values():
+            if not b.unread:
+                for where, msg in lines.problems(self, b):
+                    self.err('line', where, msg)
 
 
 def judge(law, garden):
