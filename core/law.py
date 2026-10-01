@@ -11,6 +11,7 @@ lines, levels, conditions, the crown), the face's verbs and the thirteen rules. 
   flow_sources  [ name, … ]                                            the flow law's sources beside the layers
   standing      { layer, holds: [pattern, …], meaning? }               which files sit in which layer
   verbs         rows in the form of verbs.yaml                         a garden's own verbs
+  units         { unit, name, quantity, ucum?, why? }                  a unit in UCUM, its English name attached
   tables        { <table>: [row, …] }                                  rows added to a verbs' table or a standard's
 
 A row may not take a name the face or another row has: the law is one, and a second row of one name is two laws.
@@ -26,8 +27,9 @@ from core import read, standards  # noqa: E402
 LAW_DIR = os.path.join(HERE, 'law')
 GENERATED = ('levels.yaml', 'layers.yaml', 'kinds.yaml')   # rows generated from today's law: the bodies' levels, the
                                                            # layers and standing, and the kinds
+ROW_FILES = GENERATED + ('units.yaml',)                    # and the units in UCUM, each with the law's English name
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
-            'standing': 'layer', 'verbs': 'verb', 'tables': None}
+            'standing': 'layer', 'verbs': 'verb', 'tables': None, 'units': 'unit'}
 ROW_FIELDS = {
     'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning'},
     'levels': {'level', 'line', 'stands', 'meaning', 'frame_of'},
@@ -35,6 +37,7 @@ ROW_FIELDS = {
     'flows': {'flow', 'from', 'to', 'through', 'grant', 'why'},
     'standing': {'layer', 'holds', 'meaning'},
     'verbs': {'verb', 'meaning', 'roles', 'qualifiers', 'required', 'choice', 'default', 'replaces', 'home', 'figure'},
+    'units': {'unit', 'name', 'quantity', 'ucum', 'why'},
 }
 SPEC_KEYS = {'shape', 'table', 'nature', 'rung', 'many', 'keyed'}
 FACE_TABLES = ('ways', 'modes', 'acquisitions', 'placements', 'complements')
@@ -73,7 +76,7 @@ class Law:
         self.foundations = list(F.get('foundations') or [])
         self.figures = list(F.get('figures') or [])
         self.rules = [r['rule'] for r in F.get('rules') or []]
-        self.levels, self.kinds, self.namespaces, self.verbs = {}, {}, {}, {}
+        self.levels, self.kinds, self.namespaces, self.verbs, self.units = {}, {}, {}, {}, {}
         self.flows, self.flow_sources, self.standing = [], [], []
         self.tables = {t: listed(F.get(t)) for t in FACE_TABLES}
         self.tables['layers'] = listed(F.get('layers'))
@@ -110,7 +113,7 @@ class Law:
         """The law of the release at `root` (this one, if none is named), extended by each (where, rows) given: a garden's
         VOCAB.md front matter."""
         d = os.path.join(root, 'core', 'law') if root else LAW_DIR
-        rows = tuple((f"core/law/{n}", read.data(os.path.join(d, n))) for n in GENERATED)
+        rows = tuple((f"core/law/{n}", read.data(os.path.join(d, n))) for n in ROW_FILES)
         return cls(read.data(os.path.join(d, 'core.yaml')), read.data(os.path.join(d, 'verbs.yaml')),
                    rows + tuple(extensions), std or (standards.here(root) if root else None))
 
@@ -136,7 +139,10 @@ class Law:
                 continue
             if key == 'tables':
                 for t, vals in (val or {}).items() if isinstance(val, dict) else []:
-                    if t in FACE_TABLES or t == 'layers':
+                    if t == 'units':
+                        self.found.append(('law', f"{where} tables.units", "a unit is a row of `units`, `{ unit, name, "
+                                                                           "quantity }`: its UCUM code and its name"))
+                    elif t in FACE_TABLES or t == 'layers':
                         self.found.append(('law', f"{where} tables.{t}", f"`{t}` is a table of the face: a row added "
                                                                          f"to it is a change to the core"))
                     elif t in self.standard_tables:
@@ -169,7 +175,7 @@ class Law:
                     self.standing.append(row)
                 else:
                     self._put({'kinds': self.kinds, 'levels': self.levels, 'namespaces': self.namespaces,
-                               'verbs': self.verbs}[key], row[name_key], row, at)
+                               'verbs': self.verbs, 'units': self.units}[key], row[name_key], row, at)
 
     # ------------------------------------------------------------------------------------------------ tables
     def table(self, name):
@@ -194,7 +200,12 @@ class Law:
             if name == 'protocols':
                 return '' if value in self.std.protocols else f"{value!r} is no protocol of `net_protocols` (IANA)"
             if name == 'units':
-                return '' if value in self.std.units else f"{value!r} is no unit of the law (SI) and no currency of ISO 4217"
+                if value in self.units or value in self.std.currencies:
+                    return ''
+                named = next((u for u, r in self.units.items() if r.get('name') == value), None)
+                if named:
+                    return f"{value!r} is the English name of `{named}`: a unit is written in UCUM, its name the law's"
+                return f"{value!r} is no unit of the law in UCUM (core/law/units.yaml) and no currency of ISO 4217"
             if name == 'knowledge':
                 return self.std.code(value)
             if name == 'properties':
@@ -314,6 +325,23 @@ class Law:
             for h in listed(s.get('holds')):
                 if not isinstance(h, str) or not h:
                     bad(f"standing {i}", f"{h!r}: a pattern of a path")
+        names = {}
+        for u, row in self.units.items():
+            names.setdefault(row.get('name'), []).append(u)
+            if row.get('quantity') not in self.std.quantities:
+                bad(f"unit {u}", f"its quantity {row.get('quantity')!r} is no quantity of the law")
+            if row.get('ucum') not in (None, 'false') or (row.get('ucum') == 'false' and not row.get('why')):
+                bad(f"unit {u}", "a code UCUM does not write says so, `ucum: false`, and why")
+        for n, us in names.items():
+            if len(us) > 1:
+                bad('units', f"the name {n!r} is attached to {', '.join(us)}: one name, one unit")
+        # INCLUSIVE: every unit of today's law has its row, by its English name, measuring what the law says it measures
+        for n, q in self.std.units.items():
+            rows = [self.units[u] for u in names.get(n, [])]
+            if not rows:
+                bad('units', f"the law's unit {n!r} has no row: give it its UCUM code (or say why UCUM writes none)")
+            elif rows[0].get('quantity') != q:
+                bad('units', f"{n!r} measures {q} in the law, and its row says {rows[0].get('quantity')}")
         seen = {}
         for w, who in self.replaces:
             seen.setdefault(w, []).append(who)

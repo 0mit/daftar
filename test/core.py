@@ -73,14 +73,26 @@ CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
 LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "
       f"flows)", not LAW.problems(), LAW.problems())
+units = LAW0.units
+check(f"units are UCUM's, the law's English name attached: every one of the law's {len(LAW0.std.units)} units has its row "
+      f"(kg is kilogram, GiBy gibibyte, {{item}} item), and the two attenuations UCUM cannot write (§22) say why",
+      len(units) == len(LAW0.std.units) == 55 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
+      and units['{item}']['name'] == 'item' and [u for u, r in units.items() if r.get('ucum') == 'false']
+      == ['decibel-per-metre', 'decibel-per-kilometre'], len(units))
+check("...a unit written by its English name is refused, naming its code; a currency is ISO 4217's",
+      "English name of `kg`" in LAW0.has('units', 'kilogram') and not LAW0.has('units', 'XTS')
+      and LAW0.has('units', 'dB/m'), LAW0.has('units', 'kilogram'))
 bad_law = Law.load(('VOCAB.md', {'kinds': [{'kind': 'poem', 'nature': 'sayable', 'line': 'made', 'level': 'device'},
                                             {'kind': 'stone', 'nature': 'body', 'line': 'said', 'level': 'discourse'}],
                                  'verbs': [{'verb': 'pay', 'roles': {}}],
-                                 'tables': {'modes': ['grudging']}}))
+                                 'tables': {'modes': ['grudging'], 'units': ['furlong']},
+                                 'units': [{'unit': 'fur', 'name': 'furlong', 'quantity': 'distance'}]}))
 probs = bad_law.problems()
-check("the law refuses a sayable placed on the made and a body on the said, a verb of a name taken, and a row added "
-      "to the face's table", sum('a kind' in m for _r, _w, m in probs) == 2 and any('declared already' in m for _r, _w, m in probs)
-      and any('a table of the face' in m for _r, _w, m in probs), probs)
+check("the law refuses a sayable placed on the made and a body on the said, a verb of a name taken, a row added to the "
+      "face's table, a unit added as a bare name, and a unit of a quantity the law has not",
+      sum('a kind' in m for _r, _w, m in probs) == 2 and any('declared already' in m for _r, _w, m in probs)
+      and any('a table of the face' in m for _r, _w, m in probs) and any('a row of `units`' in m for _r, _w, m in probs)
+      and any("'distance' is no quantity" in m for _r, _w, m in probs), probs)
 
 
 # ------------------------------------------------------------------------------------------------ a garden
@@ -126,7 +138,7 @@ check("a zone the time zone database does not name is refused", any(w == 'GARDEN
 # through hands, `stand` at another being); a statement filler names `s1`, in the same bean.
 POOL = {'by': ['box', 'firm', 'pat'], 'of': ['firm', 'box', 'pat'], 'through': ['pat', 'firm', 'box'],
         'to': ['firm', 'pat', 'box'], 'from': ['firm', 'pat', 'box'], 'at': ['firm', 'box', 'pat'], 'as': ['firm']}
-STANDARD = {'protocols': 'smb', 'knowledge': 'isco-08:2511', 'properties': 'length', 'units': 'kilogram'}
+STANDARD = {'protocols': 'smb', 'knowledge': 'isco-08:2511', 'properties': 'length', 'units': 'kg'}
 OVERRIDE = {('pass', 'from'): 'world', ('pass', 'to'): 'journal', ('pass', 'through'): 'read'}
 CONTEXT = [bean('pat', 'person', [{'say': {'by': 'pat', 'at': 'now'}}]),
            bean('firm', 'org', [{'say': {'by': 'pat', 'at': 'now'}}]),

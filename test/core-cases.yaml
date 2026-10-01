@@ -1,7 +1,7 @@
 # Cases for test/core.py: a small garden written in the core's statements, which must pass; cases that must pass beside
 # it; and cases each of which must be refused by the rule it names. Invented beings; nothing here is a fact. The garden
 # began as the refinery's examples (2026-10-01), with two corrections the engine makes: a port is written with its
-# system (`tcp-port:445`: a bare `445` is a TCP port, a UDP port and a geohash), and a unit is the law's (`kilogram`).
+# system (`tcp-port:445`: a bare `445` is a TCP port, a UDP port and a geohash), and a unit is UCUM's, its English name attached by the law (`kg`, kilogram).
 
 zone: Asia/Tehran                  # GARDEN.md's: the bearer's zone, where a day finds its place half
 
@@ -63,7 +63,7 @@ garden:
       - own:     { by: sam, of: self }
       - answer:  { by: sam, of: self, as: keeping }
       - acquire: { of: self, from: shop, as: bought, at: 2025-03-01 }
-      - measure: { of: self, as: mass, value: { count: "4.2", unit: kilogram }, at: 2025-03-01 }
+      - measure: { of: self, as: mass, value: { count: "4.2", unit: kg }, at: 2025-03-01 }
       - do:      { by: self, as: file-server }
       - serve:   { by: self, at: ["192.0.2.10", "tcp-port:445"], through: smb, to: [sam, ben] }
       - need:    { id: needs-rack, by: self, of: [home-rack] }
@@ -146,6 +146,8 @@ bad:
   - { rule: valency,     bean: x3d, kind: document, statements: [ { say: { by: sam, at: now } }, { own: { by: sam, from: ada, of: nas } } ] }
   - { rule: valency,     bean: x3e, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1.5e3", unit: XTS } } } ] }
   - { rule: valency,     bean: x3f, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1", unit: dollars } } } ] }
+  - { rule: valency,     bean: x3f2, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1", unit: kilogram } } } ] }
+  - { rule: valency,     bean: x3f3, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1", unit: dB/m } } } ] }
   - { rule: valency,     bean: x3g, kind: document, statements: [ { say: { by: sam, at: now } }, { meet: { by: nas, of: elsewhere } } ] }
   - { rule: valency,     bean: x3h, kind: document, statements: [ { say: { by: sam, at: now } }, { serve: { by: nas, at: ["192.0.2.10"], through: carrier-pigeon } } ] }
   - { rule: knowing,     bean: x4, kind: document, statements: [ { pay: { by: ada, of: { count: "1", unit: XTS } } } ] }
@@ -162,7 +164,7 @@ bad:
   - { rule: squares,     bean: x11, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { forbidden: { of: r, through: pot } } ] }
   - { rule: squares,     bean: x11b, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { omissible: { of: r, through: pot } } ] }
   - { rule: squares,     bean: x11c, kind: document, statements: [ { say: { by: sam, at: now } }, { necessary: { of: "nas#needs-rack", through: home-rack } }, { contingent: { of: "nas#needs-rack", through: home-rack } } ] }
-  - { rule: weight,      bean: x12, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: mass, value: { count: "2", unit: kilogram } } } ] }
+  - { rule: weight,      bean: x12, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: mass, value: { count: "2", unit: kg } } } ] }
   - { rule: frame,       bean: x13, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1", unit: XTS }, at: "next tuesday" } } ] }
   - { rule: frame,       bean: x13b, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "445" } } ] }
   - { rule: frame,       bean: x13c, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "persian:1404-12-30" } } ] }
