@@ -1,5 +1,5 @@
 ---
-version: "32.0"
+version: "32.1"
 # == THE SCHEMA LANGUAGE ==
 schema_language:
   shape:                "scalar | mapping | list_of_entries | open_map_of_entries — the term's on-bean form"
@@ -2062,7 +2062,7 @@ layers:
     files: true
     beneath: reasoning
     holds: [seed/std-vocab.md, VOCAB.md, GARDEN.md, MODEL.md, CHECKLIST.md, MERGE.md, seed/LANGUAGE, seed/RELEASE-SIGNERS,
-            seed/PUBLIC-ALLOW, "seed/knowledge/*", seed/LICENSE.md, "seed/LICENSE-*"]
+            seed/PUBLIC-ALLOW, "seed/knowledge/*", seed/LICENSE.md, "seed/LICENSE-*", "core/law/*.yaml"]
     meaning: "what is in force, in the present tense, applied alone: the vocabulary, a garden's own terms and its manifest, the model, the way a write is made, the merge, what a release ships and the keys it is signed with, the published classifications, and the terms the release's files are under"
   - layer: reasoning
     files: true
@@ -2097,7 +2097,8 @@ layers:
     meaning: "a garden's facts about what it keeps, each saying who said it and how they know, and the rows of its series and of the schemes it holds as extracts"
   - layer: gate
     files: true
-    holds: ["bin/*", "test/*", "seed/germinate.*", .gitattributes, .gitignore, "assets/*/bin/*", "assets/*/lib/*"]
+    holds: ["bin/*", "test/*", "seed/germinate.*", .gitattributes, .gitignore, "assets/*/bin/*", "assets/*/lib/*", "core/*.py",
+            "core/hooks/*"]
     meaning: "the law applied: the gate, the tools that read the law, an asset's code, the tests that hold them, and the repository's own settings"
   - layer: words
     files: true
