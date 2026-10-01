@@ -525,7 +525,11 @@ def comments(head):
         root = _yaml.compose(head, Loader=LOADER)
     except _yaml.YAMLError:
         return []
-    spans, block = [], set()
+    # EACH ITEM'S PARENT IS KEPT AS IT IS WALKED, never read back off its path: an item of a list is named by its first
+    # value, and a value may end in `.` or hold a bracket — `x[a sentence.]` — so a path cut at its last `.` or `[`
+    # came back unchanged, and the climb from the finest item to its top-level key never ended (found 2026-10-01 on a
+    # bean whose list item was a sentence)
+    spans, block, parent = [], set(), {}
 
     def walk(node, path):
         if isinstance(node, _yaml.ScalarNode):
@@ -536,6 +540,7 @@ def comments(head):
             for k, v in node.value:
                 p = f"{path}.{k.value}" if path else str(k.value)
                 spans.append((k.start_mark.line, v.end_mark.line, p))
+                parent.setdefault(p, path)
                 walk(v, p)
         elif isinstance(node, _yaml.SequenceNode):
             for item in node.value:
@@ -543,6 +548,7 @@ def comments(head):
                               if isinstance(v, _yaml.ScalarNode)), item.value if isinstance(item, _yaml.ScalarNode) else '')
                 p = f"{path}[{ident}]"
                 spans.append((item.start_mark.line, item.end_mark.line, p))
+                parent.setdefault(p, path)
                 walk(item, p)
     if root is not None:
         walk(root, '')
@@ -557,9 +563,9 @@ def comments(head):
         start = max(s[0] for s in here)
         best = min((s for s in here if s[0] == start), key=lambda s: len(s[2]))[2]    # the line's own item
         out, p = [], best
-        while p:
+        while p and p not in out:
             out.append(p)
-            p = re.sub(r'(\.[^.\[\]]+|\[[^\]]*\])$', '', p) if re.search(r'[.\[]', p) else ''
+            p = parent.get(p, '')
         return out
     found = []
     for i, l in enumerate(lines):
