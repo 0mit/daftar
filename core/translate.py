@@ -293,6 +293,19 @@ def position(system, at, ctx):
     return None
 
 
+def a_position(text, ctx):
+    """`text` where it reads as a position, in whichever system reads it; None for an empty value (nobody said) or one
+    no system reads, which then stays in details as written."""
+    from core import frame
+    if not isinstance(text, str) or not text:
+        return None
+    try:
+        frame.read(text, ctx.systems, ctx.zone)
+        return text
+    except frame.Refused:
+        return None
+
+
 def by_of(text, ctx):
     """(being, note) for a provenance's `by` prose: the bean it opens with, else unknown; the prose as the note, unless it
     is exactly the bean's id."""
@@ -502,7 +515,7 @@ def translate_bean(path, rel, ctx):
     for k, e in (old.get('risks') or {}).items() if isinstance(old.get('risks'), dict) else []:
         if isinstance(e, dict) and isinstance(e.get('what'), str):
             roles = {'by': 'self', 'as': e['what']}
-            if isinstance(e.get('found'), str) and position('gregorian-civil', e['found'], ctx) == e['found']:
+            if a_position(e.get('found'), ctx):
                 roles['at'] = e['found']
             if isinstance(e.get('note'), str):
                 roles['note'] = e['note']
@@ -600,7 +613,7 @@ def translate_bean(path, rel, ctx):
             roles['through'] = words['form']
         if isinstance(e.get('role'), str):
             roles['as'] = e['role']
-        if isinstance(e.get('accepted'), str) and position('gregorian-civil', e['accepted'], ctx):
+        if a_position(e.get('accepted'), ctx):
             roles['at'] = e['accepted']
         if not who and isinstance(e.get('external'), str):
             roles['note'] = e['external']
@@ -653,7 +666,7 @@ def translate_bean(path, rel, ctx):
             continue
         sid = b.new_id(k)
         roles = {'by': party_bean[payers[0]], 'of': {'count': e['amount'].get('count'), 'unit': e['amount'].get('unit')}}
-        if isinstance(e.get('day'), str):
+        if a_position(e.get('day'), ctx):
             roles['at'] = e['day']
         if isinstance(e.get('what'), str):
             roles['note'] = e['what']

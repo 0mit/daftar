@@ -46,6 +46,9 @@ jobs:
         run: python3 test/core_save.py
       - name: "core_translate: a garden of today's beans written in statements, into a copy — every value placed, the engine passing"
         run: python3 test/core_translate.py
+      - name: "core_rehearse: the guides' own example garden, grown through today's gate, translated and judged by the core"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/core_rehearse.py
       - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/save.py
