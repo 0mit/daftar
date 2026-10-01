@@ -23,9 +23,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 from core import read, standards  # noqa: E402
 
-FACE = os.path.join(HERE, 'law', 'core.yaml')
-ROWS = os.path.join(HERE, 'law', 'verbs.yaml')
-LEVELS = os.path.join(HERE, 'law', 'levels.yaml')     # the bodies' levels, generated from the knowledge tree
+LAW_DIR = os.path.join(HERE, 'law')
+GENERATED = ('levels.yaml', 'layers.yaml')     # rows generated from today's law: the bodies' levels; the layers and standing
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
             'standing': 'layer', 'verbs': 'verb', 'tables': None}
 ROW_FIELDS = {
@@ -106,9 +105,13 @@ class Law:
                 self.incompatible |= {(a, b), (b, a)}
 
     @classmethod
-    def load(cls, *extensions, std=None):
-        """The release's law, extended by each (where, rows) given: a garden's VOCAB.md front matter."""
-        return cls(read.data(FACE), read.data(ROWS), (('core/law/levels.yaml', read.data(LEVELS)),) + tuple(extensions), std)
+    def load(cls, *extensions, std=None, root=None):
+        """The law of the release at `root` (this one, if none is named), extended by each (where, rows) given: a garden's
+        VOCAB.md front matter."""
+        d = os.path.join(root, 'core', 'law') if root else LAW_DIR
+        rows = tuple((f"core/law/{n}", read.data(os.path.join(d, n))) for n in GENERATED)
+        return cls(read.data(os.path.join(d, 'core.yaml')), read.data(os.path.join(d, 'verbs.yaml')),
+                   rows + tuple(extensions), std or (standards.here(root) if root else None))
 
     def _put(self, table, name, row, where):
         if name in table:
@@ -124,7 +127,11 @@ class Law:
             if key not in ROW_KEYS:
                 continue
             if key == 'flow_sources':
-                self.flow_sources += listed(val)
+                for s in listed(val):
+                    if s in self.flow_sources or s in self.tables['layers']:
+                        self.found.append(('law', f"{where} flow_sources", f"`{s}` is a layer or a source already"))
+                    else:
+                        self.flow_sources.append(s)
                 continue
             if key == 'tables':
                 for t, vals in (val or {}).items() if isinstance(val, dict) else []:
@@ -301,7 +308,7 @@ class Law:
             if f.get('grant') not in ('granted', 'refused'):
                 bad(f"flow {f.get('flow', i)}", "its grant is `granted` or `refused`")
         for i, s in enumerate(self.standing):
-            if s.get('layer') not in self.tables['layers']:
+            if s.get('layer') not in layers:
                 bad(f"standing {i}", f"{s.get('layer')!r} is no layer")
             for h in listed(s.get('holds')):
                 if not isinstance(h, str) or not h:

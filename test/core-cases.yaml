@@ -22,14 +22,10 @@ vocab:                             # the garden's own rows, as its VOCAB.md woul
     - { namespace: garden-a, once: true }
     - { namespace: dns,      once: true, meaning: "the domain name system: a standard, not a bean" }
     - { namespace: nickname }
-  flow_sources: [world, words, clock, guide]
   flows:
     - { flow: observed,  from: world, to: journal, through: read, grant: granted }
     - { flow: said,      from: words, to: journal, through: say,  grant: granted }
     - { flow: no-guide,  from: guide, to: law,     through: make, grant: refused }
-  standing:
-    - { layer: law,     holds: [VOCAB.md, GARDEN.md] }
-    - { layer: journal, holds: ["log/*"] }
 
 garden:
   ada:
@@ -178,6 +174,7 @@ bad:
   - { rule: frame,       bean: x13c, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "persian:1404-12-30" } } ] }
   - { rule: frame,       bean: x13d, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "2027-01-01/2026-01-01" } } ] }
   - { rule: frame,       bean: x13e, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "2026-10-01T24:30+03:30" } } ] }
+  - { rule: frame,       bean: x13f, kind: document, statements: [ { say: { by: sam, at: now } }, { route: { by: nas, to: now } } ] }
   - { rule: names,       bean: x14, kind: host,     statements: [ { say: { by: sam, at: now } }, { name: { by: hpe, of: self, as: "SN-0042" } } ] }
   - { rule: layers,      bean: x15, kind: document, statements: [ { say: { id: s, by: sam, at: now } }, { pass: { of: [s], from: guide, to: law, through: make } } ] }
   - { rule: layers,      bean: x15b, kind: document, statements: [ { read: { id: s, by: sam, at: now } }, { pass: { of: [s], from: world, to: law, through: read } } ] }

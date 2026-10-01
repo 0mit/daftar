@@ -30,6 +30,7 @@ class Standards:
         path = os.path.join(root, 'seed', 'std-vocab.md')
         with open(path, encoding='utf-8') as fh:
             law = dmparse.loads(dmparse.split_front_matter(fh.read())[0]) or {}
+        self.old = law                      # today's law as its own reader reads it: the profiles it offers, its rows
         self.systems = {str(r['system']): r for r in law.get('anchor_systems') or [] if isinstance(r, dict) and r.get('system')}
         self.protocols = {str(r['protocol']) for r in law.get('net_protocols') or [] if isinstance(r, dict) and r.get('protocol')}
         self.quantities = {str(q['quantity']) for q in law.get('quantities') or [] if isinstance(q, dict) and q.get('quantity')}

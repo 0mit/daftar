@@ -275,6 +275,9 @@ class Judge:
         return 'takes ' + ', '.join(f"{k}{'' if k in req else '?'}" for k in (v.get('roles') or {}))
 
     def fill(self, where, k, spec, value, required, b):
+        if 'now' in (value if isinstance(value, list) else [value]) and k != 'at':
+            self.err('frame', where, f"`{k}: now` — `now` is the moment of the save, which the save writes at `at` alone")
+            return
         if value == 'unknown':
             if not required:
                 self.err('valency', where, f"`{k}: unknown` — `unknown` fills a required role nobody said; leave this "
