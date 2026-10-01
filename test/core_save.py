@@ -51,6 +51,9 @@ def text(rel):
         return fh.read()
 
 
+BEN_AGREES = {'agree': {'by': 'ben', 'of': 'to be kept in this garden by name', 'through': 'spoken'}}   # his word (consent)
+
+
 def bean(bid, kind, statements):
     write(f"beans/{bid}.md", {'bean': bid, 'kind': kind, 'title': bid, 'statements': statements})
 
@@ -89,7 +92,10 @@ try:
     shutil.copytree(os.path.join(ROOT, 'seed', 'knowledge'), os.path.join(G, 'seed', 'knowledge'))
     CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
     write('GARDEN.md', {'garden': 'core-save', 'extends': 'std-vocab@32.0', 'gardener': 'sam', 'zone': 'Asia/Tehran'}, '')
-    write('VOCAB.md', dict({'vocab': 'core-save', 'extends': 'std-vocab@32.0'}, **CASES['vocab']), '')
+    vocab = {k: [dict(r, vacant=r.get('vacant') or "the cases' row, beside this suite's own garden")
+                 if k in ('kinds', 'levels', 'namespaces', 'verbs', 'units') and isinstance(r, dict) else r
+                 for r in v] if isinstance(v, list) else v for k, v in CASES['vocab'].items()}
+    write('VOCAB.md', dict({'vocab': 'core-save', 'extends': 'std-vocab@32.0'}, **vocab), '')
     os.makedirs(os.path.join(G, 'log'))
     with open(os.path.join(G, 'log', 'journal.md'), 'w', encoding='utf-8') as fh:
         fh.write('# Journal\n')
@@ -110,11 +116,11 @@ try:
           r.returncode == 0 and at == moment, (r.returncode, at, moment, r.stdout + r.stderr))
 
     # A MOMENT TYPED IS REFUSED, AND SAVED ONCE IT IS `now`
-    bean('ben', 'person', [{'say': {'by': 'ben', 'at': '2026-10-01 10:00+03:30'}}, {'own': {'by': 'theone', 'of': 'self'}}])
+    bean('ben', 'person', [{'say': {'by': 'ben', 'at': '2026-10-01 10:00+03:30'}}, {'own': {'by': 'theone', 'of': 'self'}}, BEN_AGREES])
     r = save('sam', "ben's record", '- action: wrote [[ben]]')
     check("a knowing act's moment typed by hand is refused: the moment is the save's",
           r.returncode == 1 and 'knowing' in r.out and 'is no moment' in r.out, r.stdout + r.stderr)
-    bean('ben', 'person', [{'say': {'by': 'ben', 'at': 'now'}}, {'own': {'by': 'theone', 'of': 'self'}}])
+    bean('ben', 'person', [{'say': {'by': 'ben', 'at': 'now'}}, {'own': {'by': 'theone', 'of': 'self'}}, BEN_AGREES])
     r = run(PY, 'bin/dmsave.py', '--again')
     at = (head_bean('ben').get('statements') or [{}])[0].get('say', {}).get('at')
     check("...and once it says `now`, --again saves it at the waiting entry's moment",
@@ -150,7 +156,7 @@ try:
     with open(os.path.join(G, 'VOCAB.md'), encoding='utf-8') as fh:
         v = fh.read()
     with open(os.path.join(G, 'VOCAB.md'), 'w', encoding='utf-8') as fh:
-        fh.write(v.replace('kinds:\n', 'kinds:\n- {kind: boat, nature: body, line: made, level: device}\n', 1))
+        fh.write(v.replace('kinds:\n', 'kinds:\n- {kind: boat, nature: body, line: made, level: device, vacant: "no boat is recorded yet"}\n', 1))
     r = save('sam', 'a boat is a kind', '- action: the kind boat, for the garden')
     check("a change to the law with no RULE-CHANGE said is refused by `ratify`",
           r.returncode == 1 and 'ratify' in r.out, r.stdout + r.stderr)
@@ -174,11 +180,87 @@ try:
           r.returncode != 0 and 'not written by the clock' in r.stdout + r.stderr, r.stdout + r.stderr)
     reset()
 
+    # WHAT TODAY'S GATE HELD AT THE COMMIT, NOW THE CORE'S (v1): `kept`, `harm`, `consent`, and `form` on disk. Each case
+    # is written, journalled by the clock (bin/dmjournal.py), staged, and judged as the commit would be; then undone.
+    def staged_case(files, entry, setup=None):
+        if setup:
+            for rel, text in setup.items():
+                os.makedirs(os.path.dirname(os.path.join(G, rel)) or G, exist_ok=True)
+                with open(os.path.join(G, rel), 'w', encoding='utf-8', newline='') as fh:
+                    fh.write(text)
+            git('add', '-A')
+            git('commit', '-q', '--no-verify', '-m', 'the case, before it')
+        for rel, text in files.items():
+            os.makedirs(os.path.dirname(os.path.join(G, rel)) or G, exist_ok=True)
+            if text is None:
+                os.remove(os.path.join(G, rel))
+                continue
+            with open(os.path.join(G, rel), 'w', encoding='utf-8', newline='') as fh:
+                fh.write(text)
+        run(PY, 'bin/dmjournal.py', 'sam', 'a case', '--body', entry)
+        git('add', '-A')
+        r = run(PY, 'core/check.py', '--staged')
+        reset()
+        if setup:
+            git('reset', '-q', '--hard', 'HEAD~1')
+        return r.stdout + r.stderr
+
+    def doc(bid, kind, statements, body='\nWords.\n', title=None):
+        return '---\n' + yaml.safe_dump({'bean': bid, 'kind': kind, 'title': title or bid, 'statements': statements},
+                                        allow_unicode=True, sort_keys=False, width=200) + '---\n' + body
+
+    say = {'say': {'by': 'sam', 'at': 'now'}}
+    out = staged_case({'notes.txt': 'kept here\n-----BEGIN ' + 'OPENSSH PRIVATE KEY-----\nb3BlbnNzaA==\n'}, '- action: a note')
+    check("harm: a private-key block in any file a commit stages is refused, the whole file read",
+          'harm' in out and 'private-key block' in out, out)
+    out = staged_case({'beans/k1.md': doc('k1', 'document', [say], body='')}, '- action: [[k1]]')
+    check("kept: a bean with no body is refused — a bean reads on paper", 'kept' in out and 'no body' in out, out)
+    out = staged_case({'beans/k2.md': doc('k2', 'document', [say, {'do': {'by': 'sam', 'as': 'workstation'}}])},
+                      '- action: [[k2]] tidied', setup={'beans/k2.md': doc('k2', 'document', [
+                          {'say': {'by': 'sam', 'at': '2026-10-01 10:00+03:30'}},
+                          {'do': {'id': 'job', 'by': 'sam', 'as': 'workstation'}},
+                          {'do': {'by': 'sam', 'as': 'web'}}])})
+    check("kept: a statement taken out of a bean, its id named nowhere in the entry, is refused",
+          "the statement `job` is taken out" in out, out)
+    j = open(os.path.join(G, 'log', 'journal.md'), encoding='utf-8').read()
+    out = staged_case({'log/journal.md': j.replace('# Journal', '# The Journal', 1)}, '- action: the title')
+    check("kept: a line the journal held, rewritten, is refused: a journal is appended", 'kept' in out and
+          'never rewritten' in out, out)
+    out = staged_case({'log/journal.md': j + '- action: a line\x0bwith a vertical tab\n- detail: (fill in what was done)\n'},
+                      '- action: written by hand above, not by the clock')
+    check("kept: a line the commit adds to the journal holding a character some reader takes for a line break, or a "
+          "template's `(fill in`, is refused", 'some readers take' in out and '(fill in' in out, out)
+    out = staged_case({'series/rain/sept/0001.tsv': 'rain\n1\n'}, '- action: the part again',
+                      setup={'series/rain/sept/0001.tsv': 'rain\n0\n'})
+    check("kept: a series' part, once written, is refused changed", "series' part" in out, out)
+    out = staged_case({'beans/h1.md': doc('h1', 'document', [say, {'measure': {
+        'id': 'w', 'held': 'root:vault/0123456789abcdef0123456789abcdef'}}])}, '- action: [[h1]]')
+    check("harm: a statement sealed in a commit whose entry has no `- held: <bean> <id> added` line is refused",
+          '- held: h1 w added' in out, out)
+    vt = open(os.path.join(G, 'VOCAB.md'), encoding='utf-8').read().replace(
+        '\n---', '\nregistry_additions:\n  knowledge_schemes:\n  - { scheme: ailments, classifies: "what ails a person", '
+        'holding: extract, sensitive: special-category, publisher: sam, url: "extracts/ailments.tsv", levels: [ { level: '
+        'ailment } ], neighbours: none, sources: extracts/ailments.tsv }\nregistry_files:\n- { registry: ailments, file: '
+        'extracts/ailments.tsv, key: code }\n---', 1)
+    out = staged_case({'VOCAB.md': vt, 'extracts/ailments.tsv': 'code\tparent\tname\nasthma\t\tasthma\n',
+                       'beans/h2.md': doc('h2', 'document', [say, {'classify': {'of': 'ben', 'as': 'ailments:asthma'}}])},
+                      '- action: RULE-CHANGE, a scheme of the garden; [[h2]]')
+    check("harm: a code of a scheme the garden marks special-category, written unsealed, is refused",
+          'special-category' in out and 'harm' in out, out)
+    out = staged_case({'beans/e1.md': doc('e1', 'event', [say, {'be': {'by': 'self', 'at': '2099-06-01 18:00+03:30/2099-06-01 22:00+03:30'}},
+                                                           {'be': {'by': 'self', 'at': '192.0.2.40', 'as': 'location'}},
+                                                           {'attend': {'by': 'ben', 'of': 'self'}}])}, '- action: [[e1]]')
+    check("consent: a commit placing a person who is not the gardener somewhere in the future, in git, is refused",
+          'consent' in out and 'in the future' in out, out)
+    out = staged_case({'beans/t1.md': doc('t1', 'document', [say], title='a \x1b[2Jtitle')}, '- action: [[t1]]')
+    check("form: text holding a control character is refused, the character named and never echoed",
+          'U+001B' in out and '\x1b' not in out, out)
+
     # THE INDEX IS JUDGED, NOT THE WORKING TREE
-    bean('ben', 'person', [{'say': {'by': 'ben', 'at': 'now'}}, {'own': {'by': 'theone', 'of': 'self'}},
+    bean('ben', 'person', [{'say': {'by': 'ben', 'at': 'now'}}, {'own': {'by': 'theone', 'of': 'self'}}, BEN_AGREES,
                            {'pay': {'by': 'ghost', 'of': '1'}}])
     git('add', 'beans/ben.md')
-    bean('ben', 'person', [{'say': {'by': 'ben', 'at': 'now'}}, {'own': {'by': 'theone', 'of': 'self'}}])
+    bean('ben', 'person', [{'say': {'by': 'ben', 'at': 'now'}}, {'own': {'by': 'theone', 'of': 'self'}}, BEN_AGREES])
     r = run(PY, 'core/check.py', '--staged')
     check("core/check.py --staged judges what is staged, not what the working tree holds",
           r.returncode == 1 and "'ghost' is no bean" in r.stdout, r.stdout)

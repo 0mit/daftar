@@ -1,0 +1,16 @@
+# The namespaces the standards give names in, ratified 2026-10-01 beside core.yaml (the spec's §8 and §13): who gives a
+# name, and whether it gives it once. A name given once names one being, and that is what establishes an identity (the
+# rule `names`). A maker's serials, an employer's numbers, a registry's own ids are a garden's rows, in its VOCAB.md
+# under `namespaces`, named for whoever gives them; a garden declares none of these again.
+namespaces:
+  - { namespace: dns,        once: "true", meaning: "the Domain Name System (RFC 1034, RFC 1123): a fully qualified domain name, written without its final dot" }
+  - { namespace: mail,       once: "false", meaning: "the mail system: an address as RFC 5322 writes it (its addr-spec). A mailbox may be shared, so it names and does not establish" }
+  - { namespace: e164,       once: "false", meaning: "a telephone number as ITU-T E.164 numbers it, written `+` and its digits. A line may be shared, so it names and does not establish" }
+  - { namespace: ieee-eui48, once: "true", meaning: "a MAC address the IEEE registry's blocks give (EUI-48), six bytes in hexadecimal, `aa:bb:cc:dd:ee:ff`" }
+  - { namespace: uuid,       once: "true", meaning: "a universally unique identifier (RFC 9562), in its hyphenated hexadecimal form" }
+  - { namespace: sha-256,    once: "true", meaning: "the SHA-256 digest of a content (FIPS 180-4), in lowercase hexadecimal: it names that content" }
+  - { namespace: openpgp,    once: "true", meaning: "an OpenPGP key's fingerprint (RFC 9580), in hexadecimal" }
+  - { namespace: ssh,        once: "true", meaning: "an SSH public key's fingerprint as OpenSSH prints it, `SHA256:` and its base64" }
+  - { namespace: wireguard,  once: "true", meaning: "a WireGuard public key (Curve25519), in base64" }
+  - { namespace: garden-id,  once: "true", meaning: "a garden's id: the first twelve hexadecimal digits of the root of its first-parent history, read from git" }
+  - { namespace: garden,     once: "true", meaning: "a name a garden gave, qualified so that it crosses: `<garden_id>/<kind>:<name>`. In its own garden a being's name is its bean, and needs no statement" }

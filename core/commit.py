@@ -17,8 +17,16 @@ commits, and is judged here:
   ratify   A change to a file of the law (one the law's standing places in `law` or `manifesto`, the core's own law
            files, or one a release keeps by seed/LANGUAGE) is a RULE-CHANGE, ratified by a person, and the entry says
            so.
+  harm     No private-key block in any file the commit stages, the whole file read; and a statement the commit seals or
+           unseals is said in its entry, one line, `- held: <bean> <id> added` or `erased`.
+  consent  A bean the commit writes places no person who is not the gardener somewhere in the future: a happening it
+           holds wholly after the commit's moment, attended by such a person, keeps its location sealed.
+  kept     The journal is appended, never rewritten, and a line the commit adds to it holds no character a reader takes
+           for a line break and no template's `(fill in`; a part under series/ is written once; a header key or a
+           statement the commit takes out of a bean is named in its entry, none it keeps is emptied, and every bean it
+           writes keeps a body. (These were today's gate's, bin/dmcheck.py; v1 took them over, 2026-10-01.)
 
-    findings(root, law, staged=None) -> [(rule, where, message)]"""
+    findings(root, law, staged=None, garden=None) -> [(rule, where, message)]"""
 import collections
 import json
 import os
@@ -121,7 +129,7 @@ def ruled(path, law, kept):
                for s in law.standing)
 
 
-def findings(root, law, changes=None):
+def findings(root, law, changes=None, garden=None):
     out = []
     changes = staged(root) if changes is None else changes
     if not changes:
@@ -180,10 +188,126 @@ def findings(root, law, changes=None):
                 out.append(('knowing', where, "added or changed by this commit, and known by no act it adds: whoever "
                                               "wrote it says, reads, makes or derives it now — a knowing act at `now` "
                                               "whose `of` names it, or one with no `of`, which covers the rest"))
+    out += guarded(root, law, changes, entry, added, moments, garden, adopting)
     kept = kept_by_release(root, law)
     rc = [p for _s, p in changes if ruled(p, law, kept)]
     if rc and not RULE_CHANGE.search(entry):
         out.append(('ratify', ', '.join(rc[:4]) + (' …' if len(rc) > 4 else ''),
                     "a change to the law is a RULE-CHANGE, which a person ratifies: the journal entry this commit adds "
                     "says RULE-CHANGE, and who ratified it"))
+    return out
+
+
+PEM = re.compile('-----BEGIN ' + r'[A-Z0-9 ]*PRIVATE KEY-----')    # in two parts, so that this file never matches it
+LINE_BREAKS = '\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029'               # what some readers take for the end of a line
+SERIES = 'series/'
+
+
+def _front(root, ref, path):
+    """(front matter, body) of the document at `ref:path`, or (None, None) where there is none or it does not read."""
+    text = git(root, 'show', f"{ref}:{path}")
+    if text is None:
+        return None, None
+    import dmparse
+    head, body = dmparse.split_front_matter(text)
+    try:
+        fm = read.loads(head or '') or {}
+    except read.Unread:
+        return None, None
+    return (fm if isinstance(fm, dict) else None), body
+
+
+def _named(word, entry):
+    return re.search(r'(?<![\w-])' + re.escape(str(word)) + r'(?![\w-])', entry) is not None
+
+
+def guarded(root, law, changes, entry, added, moments, garden=None, adopting=False):
+    """The commit's halves of `harm`, `consent` and `kept`. The adoption writes every bean anew in statements, and the
+    translator's count is its proof that nothing was lost: what it takes out of a bean it need not name."""
+    out = []
+    for status, path in changes:                              # HARM: no private key, in any file, the whole of it
+        if status != 'D':
+            text = git(root, 'show', f":{path}")
+            if text and PEM.search(text):
+                out.append(('harm', path, "a private-key block is staged. Take it out and keep it in your vault, and "
+                                          "ROTATE it: a key that reached a commit, even one never pushed, may already "
+                                          "be copied. Journal the rotation, never the key"))
+    merging = git(root, 'rev-parse', '-q', '--verify', 'MERGE_HEAD') is not None
+    for status, path in changes:                              # KEPT: the journal grows; a series' part stays
+        if path == JOURNAL and status == 'M' and not merging:
+            was, now = git(root, 'show', f"HEAD:{path}") or '', git(root, 'show', f":{path}") or ''
+            if not (now.startswith(was) or (not was.endswith('\n') and now.startswith(was + '\n'))):
+                line = next((n for n, (a, b) in enumerate(zip(was.split('\n'), now.split('\n')), 1) if a != b), 0)
+                out.append(('kept', f"{path}:{line}", "a line the journal held is changed or taken out: a journal is "
+                                                      "appended and never rewritten — restore it, and append what "
+                                                      "corrects it as an entry of its own"))
+        if path.startswith(SERIES) and status in ('M', 'D'):
+            out.append(('kept', path, "a series' part this garden holds is changed or taken out: a part is written once, "
+                                      "and what is new is a part of its own"))
+    for ln in added:
+        odd = sorted({repr(c) for c in ln.rstrip('\r') if c in LINE_BREAKS})
+        if odd:
+            out.append(('kept', JOURNAL, f"an added line holds {', '.join(odd)}, which some readers take for the end of "
+                                         f"a line: a journal line ends only at a newline"))
+        if '(fill in' in ln:
+            out.append(('kept', JOURNAL, "the entry still holds a template's `(fill in`: say what was done"))
+    g = (garden.gardener if garden is not None else None)
+    when = None
+    for m in moments:
+        try:
+            when = frame.read(frame.one_form(m), law.std.systems, None).moment
+        except frame.Refused:
+            pass
+    for status, path in changes:
+        if status == 'D' or not (path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)) and path.endswith('.md')):
+            continue
+        bid = os.path.basename(path)[:-3]
+        now, body = _front(root, '', path)
+        if now is None:
+            continue                                          # the engine says why it does not read
+        was = _front(root, 'HEAD', path)[0] if status == 'M' else None
+        st_now = [(i, v, r) for i, v, r in statements_of(root, '', path)]
+        st_was = [(i, v, r) for i, v, r in statements_of(root, 'HEAD', path)] if was is not None else []
+        if not (body or '').strip():                          # KEPT: a bean reads on paper
+            out.append(('kept', path, "the bean has no body: a bean reads on paper — write what it is, in prose, below "
+                                      "its front matter"))
+        if was is not None and not adopting:
+            for k in sorted(set(was) - set(now)):             # KEPT: what is taken out is said
+                if not _named(k, entry):
+                    out.append(('kept', path, f"`{k}` is taken out of the bean, and the entry does not say so: name it"))
+            for k in sorted(set(was) & set(now)):
+                if was[k] not in (None, '', [], {}) and now[k] in (None, '', [], {}):
+                    out.append(('kept', path, f"`{k}` is emptied and kept: take it out and say so, or keep what it held"))
+            ids_was = {r.get('id') for _i, _v, r in st_was if isinstance(r.get('id'), str)}
+            ids_now = {r.get('id') for _i, _v, r in st_now if isinstance(r.get('id'), str)}
+            for sid in sorted(ids_was - ids_now):
+                if not _named(sid, entry):
+                    out.append(('kept', path, f"the statement `{sid}` is taken out, and the entry does not say so: name "
+                                              f"it"))
+            count = lambda sts, v: sum(1 for _i, x, r in sts if x == v and not isinstance(r.get('id'), str))
+            for v in sorted({x for _i, x, _r in st_was}):
+                if count(st_now, v) < count(st_was, v) and not _named(v, entry):
+                    out.append(('kept', path, f"a `{v}` statement is taken out, and the entry does not say so: name "
+                                              f"the verb, or the statement's id"))
+        sealed = lambda sts: {r.get('id') for _i, _v, r in sts if 'held' in r and isinstance(r.get('id'), str)}
+        for sid, how in [(x, 'added') for x in sorted(sealed(st_now) - sealed(st_was))] + \
+                        [(x, 'erased') for x in sorted(sealed(st_was) - sealed(st_now))]:
+            if f"- held: {bid} {sid} {how}" not in [ln.strip() for ln in added]:   # HARM: sealing is journalled
+                out.append(('harm', path, f"`{sid}` is {'sealed' if how == 'added' else 'unsealed or erased'} in this "
+                                          f"commit, and the entry does not say so: add the line `- held: {bid} {sid} "
+                                          f"{how}`"))
+        if garden is None or when is None or bid not in garden.beans:
+            continue
+        b = garden.beans[bid]                                 # CONSENT: no future whereabouts of another person
+        judge = engine.Judge(law, garden)
+        times = [judge._span(x) for _i, v, r in b.items if v == 'be' and 'held' not in r for x in listed(r.get('at'))]
+        times = [t for t in times if t]
+        others = [x for _i, v, r in b.items if v in ('attend', 'concern') and 'held' not in r
+                  for x in judge._beans_in(r.get('by') if v == 'attend' else r.get('of'), b)
+                  if x != g and judge._is_person(x)]
+        placed = [r for _i, v, r in b.items if v == 'be' and 'held' not in r and r.get('as') == 'location']
+        if times and all(lo > when for lo, _hi in times) and others and placed:
+            out.append(('consent', path, f"places {', '.join(sorted(set(others)))} somewhere in the future, in git: a "
+                                         f"future whereabouts of a person who is not the gardener is held off git "
+                                         f"whatever they agreed to — seal its location (bin/dmheld.py put)"))
     return out

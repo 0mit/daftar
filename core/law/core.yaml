@@ -29,6 +29,7 @@ beside_roles:                              # the only keys a statement carries b
   - { key: while, meaning: "the condition matcher: the statement holds while what it names matches — a condition, or another statement" }
   - { key: why,   meaning: "the reason, in prose" }
   - { key: note,  meaning: "a remark, in prose" }
+  - { key: held,  meaning: "the statement is sealed: what it said is kept off git, in a store a host resolves, and this is its pointer, `root:<root>/<32 hexadecimal digits>`. A sealed statement keeps its verb and carries only `held`, `id`, `while`, `why` and `note`" }
 words:                                     # grammar words the engine knows by name
   - { word: required, meaning: "a role its verb cannot go without" }
   - { word: choice,   meaning: "one of a row set; or at least one, or at most one, of several roles" }
@@ -159,16 +160,21 @@ placements:   [place, order, presence, habitat, location]
 # ---------------------------------------------------------------------------------------------------------------- the gate
 # Every rule the engine applies. Strict: each is an error.
 rules:
-  - { rule: form,       says: "a statement is one verb of the verb row, with roles from the seven, the qualifiers its row declares, and id, while, why, note; nothing else" }
+  - { rule: form,       says: "a statement is one verb of the verb row, with roles from the seven, the qualifiers its row declares, and id, while, why, note (and held, sealed); nothing else. Text holds no control character but a tab, and a line feed only in a block scalar. Once the garden holds a bean, GARDEN.md names its gardener, a person or an organisation it holds a bean for" }
   - { rule: valency,    says: "each required role is filled, each filler has the shape and nature its role takes, and no role is filled that the verb does not take" }
   - { rule: knowing,    says: "every statement of a bean is the `of` of a knowing act in it; a knowing act's `at` is `now` until the save writes the moment, and a moment typed there is refused" }
   - { rule: placeholder, says: "a statement the engine derives (a verb's default) is never written: written, it is refused" }
-  - { rule: order,      says: "nothing stands on itself through others; a part never stands above what its whole is made of" }
+  - { rule: order,      says: "nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or needs itself through others; a part never stands above what its whole is made of" }
   - { rule: life,       says: "a living being comes through the living; a made or said being comes through hands, a being at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded" }
   - { rule: necessity,  says: "a `necessary` statement names what it is necessary through — except of the crown, necessary by itself (thesis 12)" }
   - { rule: squares,    says: "two positions that cannot both stand — contraries or contradictories — on one statement through one source are refused; subcontraries may both stand" }
   - { rule: weight,     says: "a mass is a body's: a statement giving a sayable a mass of its own is refused" }
   - { rule: frame,      says: "a position is in a declared system, in its one form, and finds its other half by its complement" }
-  - { rule: names,      says: "a name its namespace gives once names one being" }
+  - { rule: names,      says: "a name its namespace gives once names one being. A garden's id is twelve hexadecimal digits, and never this garden's own: a `garden` bean is another garden. A name a garden gave, qualified to cross, is `<garden_id>/<kind>:<name>`, by this garden or one a `garden` bean here is named by; an identifier someone else assigned is never qualified" }
   - { rule: layers,     says: "a file stands in one layer; a `pass` from a layer to a layer through a method stands only where a row of the flow table grants it" }
-  - { rule: ratify,     says: "a change to the core, to a verb's row, a kind, a namespace or a flow is a RULE-CHANGE: a person ratifies it" }
+  - { rule: ratify,     says: "a change to the core, to a verb's row, a kind, a namespace or a flow is a RULE-CHANGE: a person ratifies it. A grant to ratify is the gardener's own act: on the gardener's bean, said by the gardener" }
+  - { rule: consent,    says: "another person is kept here by name only on their own word: a person who is not the gardener, and not written under an opaque id (`p-<8 hexadecimal digits>`, its title the id), agrees to an agreement this garden holds, or owns a `garden` bean here, the garden they keep, met here. A commit places no such person somewhere in the future, in git: a happening wholly ahead of the commit that one attends and that is at a location seals that location" }
+  - { rule: harm,       says: "what harm can come of is kept out of git: a private-key block is refused in any file a commit stages; a code of a scheme marked special-category is written only sealed; a sealed statement holds a pointer and nothing of what it said, has an id, and is held `while` a statement holds where its bean concerns a person who is not the gardener; a commit that seals or unseals one says so in its entry, `- held: <bean> <id> added` or `erased`; and a sensitivity rated below the one its bean derives is a person's own word, said by a person" }
+  - { rule: room,       says: "two bodies are not in one room at once: two at one position as a location, neither part of nor at the other (a sayable takes no room); two listening at one port on one address; and one being attending two happenings whose times, to the moment, overlap. What a garden declares exclusive (VOCAB.md `exclusive`) holds one being once over any extent: a statement declined holds nothing" }
+  - { rule: vacancy,    says: "every row a garden adds to the law — a kind, a level, a verb, a namespace, a unit, a row of a table — is used by a statement or a bean, or says why it is vacant (`vacant:`)" }
+  - { rule: kept,       says: "what is kept is not damaged: the journal is appended to, never rewritten, and a line a commit adds to it holds no character a reader takes for a line break, and no template's `(fill in`; a series' part, once written, stays as it is; a commit that takes a header key or a statement out of a bean names it in its entry (the key, the statement's id, or its verb), empties none it keeps, and leaves every bean it writes a body" }

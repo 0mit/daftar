@@ -80,6 +80,15 @@ check(f"units are UCUM's, the law's English name attached: every one of the law'
       len(units) == len(OLD_UNITS) == 55 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
       and units['{item}']['name'] == 'item' and [u for u, r in units.items() if r.get('ucum') == 'false']
       == ['decibel-per-metre', 'decibel-per-kilometre'], len(units))
+ns = LAW0.namespaces
+again = Law.load(('VOCAB.md', {'namespaces': [{'namespace': 'dns', 'once': 'true'}]})).problems()
+check(f"the standards' namespaces are the core's ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id and the names a "
+      f"garden gives…), each giving once but a mailbox and a line, which may be shared, and a garden that declares one "
+      f"again is refused",
+      {'dns', 'mail', 'e164', 'ieee-eui48', 'uuid', 'sha-256', 'openpgp', 'ssh', 'wireguard', 'garden-id', 'garden'} == set(ns)
+      and sorted(n for n, r in ns.items() if r.get('once') != 'true') == ['e164', 'mail']
+      and any('`dns` is declared already' in m for _r, _w, m in again),
+      (sorted(ns), again))
 check("...a unit written by its English name is refused, naming its code; a currency is ISO 4217's",
       "English name of `kg`" in LAW0.has('units', 'kilogram') and not LAW0.has('units', 'XTS')
       and LAW0.has('units', 'dB/m'), LAW0.has('units', 'kilogram'))
@@ -107,7 +116,8 @@ def garden(extra=(), base=True, zone=ZONE):
     beans = {bid: bean(bid, b['kind'], b['statements']) for bid, b in CASES['garden'].items()} if base else {}
     for b in extra:
         beans[b.id] = b
-    return engine.Garden(beans, zone, files=['VOCAB.md', 'GARDEN.md', 'log/journal.md'])
+    return engine.Garden(beans, zone, files=['VOCAB.md', 'GARDEN.md', 'log/journal.md'],
+                         manifest={'gardener': 'sam' if base else 'pat'})
 
 
 def judge(g, law=LAW):
@@ -119,14 +129,22 @@ found = judge(G0)
 n = sum(len(b.statements) for b in G0.beans.values())
 check(f"the example garden ({len(G0.beans)} beans, {n} statements) passes", not found, found)
 for c in CASES['good']:
-    found = judge(garden([bean(c['bean'], c['kind'], c['statements'])]))
+    found = judge(garden([bean(c['bean'], c['kind'], c['statements'], c.get('header'))]))
     check(f"passes: {c['name']}", not found, found)
 for c in CASES['bad']:
     found = judge(garden([bean(c['bean'], c['kind'], c['statements'], c.get('header'))]))
     hit = next((f"{w}: {m}" for rule, w, m in found if rule == c['rule']), None)
     check(f"rule {c['rule']}: {c['bean']} is refused — {hit}", hit is not None, found)
 tested = {c['rule'] for c in CASES['bad']}
-check("every rule but `ratify` has a case refused", tested == set(LAW.rules) - {'ratify'}, set(LAW.rules) - tested)
+check("every rule but `kept` (the commit's alone: test/core_save.py) and `vacancy` (VOCAB.md's) has a case refused",
+      tested == set(LAW.rules) - {'kept', 'vacancy'}, set(LAW.rules) - tested)
+unused = Law.load(('VOCAB.md', dict(CASES['vocab'], kinds=CASES['vocab']['kinds'] + [{'kind': 'kiln', 'nature': 'body'}])))
+found = judge(G0, unused)
+check("rule vacancy: a row a garden adds that nothing uses is refused, and one that says why it is vacant passes",
+      [(r, m.split('`')[1]) for r, _w, m in found] == [('vacancy', 'kiln')], found)
+found = judge(engine.Garden(dict(G0.beans), ZONE, manifest={'gardener': 'nobody'}))
+check("rule form: GARDEN.md names a gardener the garden holds a bean for", any(r == 'form' and w == 'GARDEN.md'
+                                                                              for r, w, _m in found), found)
 found = judge(garden([bean('z1', 'document', [{'say': {'by': 'sam', 'at': 'now'}}, {'mark': {'by': 'sam', 'at': '2026-10-01'}}])],
                      zone=None))
 check("a garden that names no zone leaves a day nowhere, and the day is refused", any(r == 'frame' for r, _w, _m in found), found)
@@ -173,7 +191,8 @@ def made(verb, roles):
 
 
 def verdict(verb, roles):
-    return judge(garden(CONTEXT + [bean('t', 'document', made(verb, roles))], base=False))
+    return [f for f in judge(garden(CONTEXT + [bean('t', 'document', made(verb, roles))], base=False))
+            if f[0] != 'vacancy']            # a garden's rows are judged in a whole garden, not in this fragment
 
 
 for verb, v in LAW.verbs.items():

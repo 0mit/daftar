@@ -131,6 +131,23 @@ via:
   - { bean: sam }
 ---
 """,
+    'site': """---
+bean: site
+genos: domain
+title: "site.example"
+status: active
+summary: "a domain the registry owns, sam answering for it"
+nature: lekton
+identity:
+  status: confirmed
+  anchors:
+    - { key: fqdn, value: "site.example", class: logical, establishing: true }
+    - { key: content_hash, value: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", class: logical, establishing: true }
+provenance: { src: observed, by: "sam", as_of: 2026-09-20 }
+owned_by: { external: "the registry of .example" }
+responsibility: { legal: { holder: { bean: sam } } }
+---
+""",
     'loan': """---
 bean: loan
 genos: contract
@@ -144,6 +161,7 @@ owned_by: { crown: true }
 parties:
   sam: { who: { bean: sam }, role: lender, accepted: 2026-09-20 }
   ana: { external: "ana, a neighbour", role: borrower, accepted: 2026-09-20 }
+  guarantor: { external: "a friend of ana", role: guarantor }
 words: { form: spoken, note: "agreed at the door" }
 over:
   cash: { what: "ten in cash" }
@@ -199,7 +217,7 @@ steps:
 JOURNAL = """# Journal
 
 ## 2026-09-20 10:00+03:30 · sam · the garden's first beans
-- action: wrote [[sam]], [[box]], [[web]], [[webapp]], [[loan]], [[session-a]] and the mapping restore.
+- action: wrote [[sam]], [[box]], [[web]], [[webapp]], [[site]], [[loan]], [[session-a]] and the mapping restore.
 
 ## 2026-09-21 12:00+03:30 · sam · a note
 - action: wrote [[note-b]].
@@ -222,7 +240,10 @@ try:
     with open(os.path.join(G, 'VOCAB.md'), 'w', encoding='utf-8') as fh:
         fh.write("---\nvocab: core-translate\nextends: std-vocab@32.0\nregistry_additions:\n  units:\n"
                  "    - { unit: gigabyte-per-day, quantity: data-rate, factor: [312500, 27] }\n"
-                 "    - { unit: rack-unit, quantity: length, factor: [889, 20000] }\n---\n")
+                 "    - { unit: rack-unit, quantity: length, factor: [889, 20000] }\n"
+                 "vacancies:\n"
+                 "  - { at: 'registry:units', position: gigabyte-per-day, reason: prediction, why: 'the rate of a backup, to come' }\n"
+                 "  - { at: 'registry:units', position: rack-unit, reason: prediction, why: 'a rack, to come' }\n---\n")
     shutil.copy(os.path.join(ROOT, 'seed', 'std-vocab.md'), os.path.join(G, 'seed', 'std-vocab.md'))
     shutil.copytree(os.path.join(ROOT, 'seed', 'knowledge'), os.path.join(G, 'seed', 'knowledge'))
     before = {p: open(os.path.join(G, p), encoding='utf-8').read() for p in
@@ -232,7 +253,7 @@ try:
                        encoding='utf-8')
     last = r.stdout.strip().split('\n')[-1]
     check("the garden is translated into a copy with nothing lost: every value placed and found there, every comment kept",
-          r.returncode == 0 and '— 0 problem(s)' in last and '8 beans' in last, r.stdout + r.stderr)
+          r.returncode == 0 and '— 0 problem(s)' in last and '9 beans' in last, r.stdout + r.stderr)
     n = int(last.split('; ')[1].split(' values')[0])
     placed = int(last.split('values, ')[1].split(' placed')[0])
     check(f"...the count: {n} values before, {placed} placed", n == placed and n > 150, last)
@@ -298,13 +319,25 @@ try:
           mfm.get('bean') == 'restore' and mfm.get('kind') == 'procedure' and mp[0][0] == 'say'
           and mfm.get('details', {}).get('steps') == ['mount the copy', 'rsync it back']
           and ('produce', {'id': 'produces', 'by': 'self', 'of': ['box, serving its shares again']}) in mp, mp)
+    site = [next(iter(x.items())) for x in read.document(os.path.join(C, 'beans', 'site.md'))[0]['statements']]
+    web = [next(iter(x.items())) for x in read.document(os.path.join(C, 'beans', 'web.md'))[0]['statements']]
+    loan = [next(iter(x.items())) for x in read.document(os.path.join(C, 'beans', 'loan.md'))[0]['statements']]
+    check("the guides' forms: an fqdn that establishes is a name `dns` gives, a content hash the bare digest `sha-256` "
+          "gives; a name the garden minted for the bean itself is the bean, and no statement; an owner outside the "
+          "ledger is someone nobody named here; and a party with no acceptance on record is no `agree`",
+          ('name', {'id': 'fqdn', 'by': 'dns', 'of': 'self', 'as': 'site.example'}) in site
+          and any(v == 'name' and r.get('by') == 'sha-256' and r.get('as', '').startswith('9f86') for v, r in site)
+          and not any(v == 'name' for v, r in web)
+          and any(v == 'own' and r.get('by') == {'someone': 'org'} for v, r in site)
+          and sum(1 for v, _r in loan if v == 'agree') == 2, (site, web, loan))
     v2 = read.document(os.path.join(C, 'VOCAB.md'))[0]
     check("VOCAB.md gains the garden's rows: the mapping's kind, and the namespaces its names are given in",
           {'kind': 'procedure', 'nature': 'sayable'} in v2.get('kinds', [])
           and {'namespace': 'anchor-serial', 'once': 'true'} in v2.get('namespaces', []), v2)
     check("...and its own units: in UCUM where their names are made of the law's (gigabyte-per-day is GBy/d), else the "
-          "name kept as the code, saying why",
-          {'unit': 'GBy/d', 'name': 'gigabyte-per-day', 'quantity': 'data-rate'} in v2.get('units', [])
+          "name kept as the code, saying why; a unit the garden said is vacant stays so, with its reason",
+          {'unit': 'GBy/d', 'name': 'gigabyte-per-day', 'quantity': 'data-rate',
+           'vacant': 'prediction: the rate of a backup, to come'} in v2.get('units', [])
           and any(u.get('unit') == 'rack-unit' and u.get('ucum') == 'false' and u.get('why') for u in v2.get('units', [])),
           v2.get('units'))
 
