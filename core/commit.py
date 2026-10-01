@@ -9,6 +9,10 @@ commits, and is judged here:
            left is a write not saved, and a moment typed there is refused, since only the clock supplies it. A
            statement the commit adds or changes is known by an act of this commit, because whoever wrote it now said it
            now: an old act's moment is older than the statement.
+           THE ADOPTION, ONCE (ratified 2026-10-01): the commit that brings the core into a garden (it adds
+           core/law/core.yaml) and says RULE-CHANGE, which a person ratifies, carries the garden's acts translated with
+           the moments history recorded; the gate grants it those moments — a heading of the journal as committed, or
+           a commit's own moment — and no other commit.
   ratify   A change to a file of the law (one the law's standing places in `law` or `manifesto`, the core's own law
            files, or one a release keeps by seed/LANGUAGE) is a RULE-CHANGE, ratified by a person, and the entry says
            so.
@@ -25,12 +29,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
-from core import engine, read  # noqa: E402
+from core import engine, frame, read  # noqa: E402
 from core.law import listed  # noqa: E402
 import dmjournal  # noqa: E402 — the register of the headings the clock wrote
 import dmpass     # noqa: E402 — the one reader of seed/LANGUAGE, and the one matcher of a path
 
 JOURNAL = 'log/journal.md'
+ADOPTS = 'core/law/core.yaml'      # the file whose adding is a garden's adoption of the core
 RULED = ('law', 'manifesto')
 # RULE-CHANGE said, and not denied: "not a RULE-CHANGE" says the opposite (as bin/dmcheck.py reads it)
 RULE_CHANGE = re.compile(r'(?<!(?i:not a ))(?<!(?i:not an ))(?<!(?i:not ))(?<!(?i:no ))(?<!(?i:non-))\bRULE-CHANGE\b')
@@ -73,6 +78,14 @@ def statements_of(root, ref, path):
     return out
 
 
+def history(root):
+    """The moments history holds: every heading of the journal as last committed, in the one form, and every commit's
+    own moment (git's clock reading, `%cI`)."""
+    j = git(root, 'show', f"HEAD:{JOURNAL}") or ''
+    out = {frame.one_form(ln[3:].split(' · ', 1)[0].strip()) for ln in j.split('\n') if ln.startswith('## ')}
+    return out | set((git(root, 'log', '--format=%cI', 'HEAD') or '').split())
+
+
 def canon(verb, roles):
     return json.dumps({verb: roles}, sort_keys=True, ensure_ascii=False)
 
@@ -109,6 +122,8 @@ def findings(root, law, changes=None):
             out.append(('knowing', JOURNAL, f"the heading {h[:60]!r} was not written by the clock in this clone: a heading "
                                             f"is written by `bin/dmsave.py` (or bin/dmjournal.py), never typed"))
     said = ' or '.join(sorted(moments)) or 'none: this commit adds no entry'
+    adopting = any(s == 'A' and p == ADOPTS for s, p in changes) and bool(RULE_CHANGE.search(entry))
+    past = history(root) if adopting else set()
     for status, path in changes:
         if not (path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)) and path.endswith('.md')):
             continue
@@ -139,9 +154,11 @@ def findings(root, law, changes=None):
                                               "commit with bin/dmsave.py, its entry naming the bean"))
                 continue
             if verb in law.knowing:
-                if at not in moments:
+                if at not in moments and not (adopting and at in past):
                     out.append(('knowing', where, f"`at: {at}` is no moment this commit's entry was written at ({said}): "
-                                                  f"the moment of a knowing act is the save's — write `now`"))
+                                                  f"the moment of a knowing act is the save's — write `now`. Only the "
+                                                  f"commit that adopts the core, a RULE-CHANGE, carries history's "
+                                                  f"moments" + (", and history holds no such moment" if adopting else "")))
                 continue
             sid = r.get('id') if isinstance(r.get('id'), str) else None
             if not any('of' not in rr or (sid is not None and sid in listed(rr.get('of'))) for rr in acts):

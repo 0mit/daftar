@@ -15,13 +15,16 @@ statements, and VOCAB.md gains the rows the beans need (the garden's own kinds, 
 rows it added to the standards' tables). Each term goes the way verbs.yaml's `replaces` map sends it:
 
   provenance → a knowing act: observed → read, asserted-by-human → say, inferred and generated-by-tool → derive,
-               stated-in-document → say; its `by` the bean the text names, else `unknown` with the text as its note; its
+               stated-in-document → say; its `by` the bean the text names; an agent's, the session bean whose start
+               and stop hold the act's moment, its reading then `derive` (ratified 2026-10-01); else `unknown` with the
+               text as its note; its
                `at` the moment the clock wrote that day: the heading of the journal entry that names the bean, else the
                commit that first wrote the day. A party's own provenance is an act of its own.
   identity   → name (by the anchor's key as a namespace)        owned_by → own          responsibility → answer
   via        → come                  located_at, lives_in → be                           part_of → part
   instance_of, os → run              depends_on, consumes, reaches → need                knowledge → use, classify
   risks      → fail                  capabilities → can, on the two squares              roles → do
+  produces   → produce (an artifact: a being, a position, or the words that say it)
   parties, over, words → agree       clauses → can, on the permission square            transactions → pay, bear
   endpoints  → serve                 timing start/stop → be, as presence                 workspace.opened_at → open
 
@@ -48,6 +51,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 import dmparse  # noqa: E402 — today's reader of today's law, and the one splitter of a front matter
+from core import frame  # noqa: E402
 
 LAW = os.path.join(ROOT, 'seed', 'std-vocab.md')
 FACE_LEVELS = {'space-time', 'logos'}       # the face's own: the frame of bodies, and reason
@@ -59,6 +63,7 @@ MODES = {'legal': 'law', 'technical': 'keeping', 'experience': 'meeting', 'finan
 PERMISSION = {'required': 'obligatory', 'omissible': 'omissible', 'permitted': 'permitted', 'forbidden': 'forbidden'}
 FEASIBILITY = {'possible': 'possible', 'impossible': 'impossible', 'contingent': 'contingent'}
 DOCUMENTS = ('beans', 'mappings')
+AGENT = re.compile(r'\bagent\b', re.I)     # a provenance's `by` that names an agent, in the prose it is written in
 
 
 def old_law(path=LAW):
@@ -160,13 +165,6 @@ def slug(s):
     return s if s and re.match(r'^[a-z0-9]', s) else 'x-' + s
 
 
-def one_form(moment):
-    """A heading's moment in the one form a moment is written in: the early headings wrote `2026-08-07 22:18 +0300`,
-    and the clock's reading is `2026-08-07 22:18+03:00`."""
-    m = re.match(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2})?) ?([+-])(\d{2}):?(\d{2})$', moment)
-    return f"{m.group(1)}{m.group(2)}{m.group(3)}:{m.group(4)}" if m else moment
-
-
 class Journal:
     """The moments the clock wrote: each journal heading's moment and the text of its entry."""
 
@@ -192,7 +190,7 @@ class Journal:
         named = re.compile(r'(?<![\w-])' + re.escape(bid) + r'(?![\w-])')
         hits = [m for m, t in self.entries if m.startswith(day + ' ') and named.search(t)]
         if hits:
-            return one_form(hits[-1]), 'journal'
+            return frame.one_form(hits[-1]), 'journal'
         for how in (['-S', day], ['--diff-filter=A']):     # the commit that wrote the day, else the one that made the file
             r = subprocess.run(['git', '-C', self.root, 'log', '--follow', '--format=%cI', *how, '--', path],
                                capture_output=True, text=True)
@@ -282,7 +280,6 @@ def being(ref, ctx):
 def position(system, at, ctx):
     """A position written short for a long one ({system, at}): bare where exactly that system reads it, else tagged;
     None where neither reads as that system."""
-    from core import frame
     for text in (str(at), f"{system}:{at}"):
         try:
             p = frame.read(text, ctx.systems, ctx.zone)
@@ -296,7 +293,6 @@ def position(system, at, ctx):
 def a_position(text, ctx):
     """`text` where it reads as a position, in whichever system reads it; None for an empty value (nobody said) or one
     no system reads, which then stays in details as written."""
-    from core import frame
     if not isinstance(text, str) or not text:
         return None
     try:
@@ -324,10 +320,17 @@ def knowing(b, prov, base, of=None):
     if act is None:
         return None
     who, note = by_of(prov.get('by', ''), b.ctx)
+    moment, how = b.ctx.journal.moment(b.id, b.path, prov.get('as_of'))
+    if who == 'unknown' and AGENT.search(str(prov.get('by', ''))) and moment:
+        # AN AGENT'S ACT IS ITS SESSION'S (ratified 2026-10-01): the session bean whose start and stop hold the act's
+        # moment, and only one; an agent's reading is `derive`, since `read` takes a body
+        session = b.ctx.session_at(moment)
+        if session:
+            who = session
+            act = 'derive' if act == 'read' else act
     roles = {'by': who}
     if of:
         roles['of'] = of
-    moment, how = b.ctx.journal.moment(b.id, b.path, prov.get('as_of'))
     if act == 'derive':
         roles['from'] = 'unknown'
     roles['at'] = moment if moment else 'unknown'
@@ -696,7 +699,6 @@ def translate_bean(path, rel, ctx):
         z = position(ends[1]['system'], ends[1]['at'], ctx) if isinstance(ends[1], dict) and ends[1].get('at') else None
         whole = f"{a}/{z}" if a and z else a
         if whole and z:
-            from core import frame
             try:
                 frame.read(whole, ctx.systems, ctx.zone)
             except frame.Refused:
@@ -707,9 +709,11 @@ def translate_bean(path, rel, ctx):
                 if v:
                     b.take(('timing', x, 'at'), b.role(j, 'at'), whole)
                     b.take(('timing', x, 'system'), b.role(j, 'at'), whole)
+    if isinstance(old.get('produces'), str) and old['produces']:
+        j = b.add('produce', {'by': 'self', 'of': [old['produces']]}, b.new_id('produces'))
+        b.take(('produces',), b.role(j, 'of', 0))
     ws = old.get('workspace') if isinstance(old.get('workspace'), dict) else {}
     if isinstance(ws.get('opened_at'), str):
-        from core import frame
         try:
             frame.read(ws['opened_at'], ctx.systems, ctx.zone)
             j = b.add('open', {'of': 'self', 'at': ws['opened_at']}, b.new_id('opened'))
@@ -844,6 +848,34 @@ class Context:
         self.jobs = set(law.table('jobs') or [])
         self.forms = set(law.table('forms') or [])
         self.namespaces = {}
+        self.sessions = []                   # (start ms, stop ms, bean) of each session with both ends known
+        from core import read
+        p = os.path.join(root, 'beans')
+        for f in sorted(os.listdir(p)) if os.path.isdir(p) else []:
+            try:
+                fm = read.document(os.path.join(p, f))[0] if f.endswith('.md') else {}
+            except read.Unread:
+                continue
+            t = fm.get('timing') if fm.get('genos') == 'session' and isinstance(fm.get('timing'), dict) else {}
+            ends = []
+            for x in ('start', 'stop'):
+                e = t.get(x) if isinstance(t.get(x), dict) else {}
+                pos = position(e.get('system'), e.get('at'), self) if e.get('system') and e.get('at') else None
+                try:
+                    ends.append(frame.read(pos, self.systems, self.zone).moment if pos else None)
+                except frame.Refused:
+                    ends.append(None)
+            if len(ends) == 2 and None not in ends:
+                self.sessions.append((ends[0], ends[1], f[:-3]))
+
+    def session_at(self, moment):
+        """The one session whose start and stop hold `moment`, or None (none, or more than one)."""
+        try:
+            ms = frame.read(moment, self.systems, self.zone).moment
+        except frame.Refused:
+            return None
+        hits = [s for a, z, s in self.sessions if ms is not None and a <= ms <= z]
+        return hits[0] if len(hits) == 1 else None
 
     def namespace(self, ns, anchor):
         once = anchor.get('establishing') == 'true'

@@ -264,6 +264,16 @@ verbs:
     required: [by, at]
     replaces: [fixes]
     home: core
+  - verb: produce
+    meaning: "to bring an artifact into being: a file, a build, a report; a being, a position, or the words that say it"
+    roles:
+      by:      { shape: being }
+      of:      { shape: [being, position, text], many: true }
+      through: { shape: being }
+      at:      { shape: position }
+    required: [by, of]
+    replaces: [produces, produced_by]
+    home: core
   - verb: draw
     meaning: "a page draws a being, or a mapping"
     roles: { by: { shape: being }, of: { shape: being, many: true } }
@@ -276,7 +286,7 @@ face_replaces:
   say:     []
   read:    [capture, readable_from, taken_at]
   derive:  [authority]
-  make:    [produces, produced_by]
+  make:    []                       # produces and produced_by went to the row `produce` (ratified 2026-10-01): an artifact is no statement
   be:      [located_at, lives_in, provides_habitat]
   stand:   [stands_on]
   part:    [part_of]

@@ -33,6 +33,13 @@ TAG = re.compile(r'^([a-z][a-z0-9-]*):(.+)$', re.S)
 OFFSET = re.compile(r'(Z|[+-]\d{2}:\d{2})$')
 
 
+def one_form(moment):
+    """A journal heading's moment in the one form a moment is written in. The early headings wrote
+    `2026-08-07 22:18 +0300`; the clock's reading is `2026-08-07 22:18+03:00`. Anything else comes back as it was."""
+    m = re.match(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2})?) ?([+-])(\d{2}):?(\d{2})$', str(moment))
+    return f"{m.group(1)}{m.group(2)}{m.group(3)}:{m.group(4)}" if m else moment
+
+
 class Refused(ValueError):
     """A string that is no position: the message says why, and what to write."""
 
