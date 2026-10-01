@@ -24,6 +24,7 @@ from core.law import listed, shapes_of, TRUE  # noqa: E402
 import dmpass  # noqa: E402 — the one matcher of a path against a layer's pattern
 
 HEADER = ('bean', 'kind', 'title', 'summary', 'tags', 'details', 'statements')
+DOCUMENTS = ('beans', 'mappings')          # where a garden keeps its beans (dmpass.DOCUMENTS)
 ID = re.compile(r'^[a-z0-9][a-z0-9_-]*$', re.ASCII)
 
 
@@ -53,10 +54,10 @@ class Garden:
 
     @classmethod
     def read(cls, root):
-        """A garden from its tree: `beans/**/*.md`, GARDEN.md's `zone`, and the files git tracks (or the tree's)."""
+        """A garden from its tree: `beans/**/*.md` and `mappings/**/*.md`, GARDEN.md's `zone`, and the files git tracks
+        (or the tree's)."""
         beans = {}
-        bdir = os.path.join(root, 'beans')
-        for dirpath, _dirs, names in os.walk(bdir):
+        for dirpath, _dirs, names in [w for d in DOCUMENTS for w in os.walk(os.path.join(root, d))]:
             for n in sorted(names):
                 if not n.endswith('.md'):
                     continue
@@ -268,7 +269,7 @@ class Judge:
             self.err('valency', where, f"one of {', '.join(listed(ch))}, and only one")
         for k, spec in list(roles.items()) + list(quals.items()):
             if k in r:
-                self.fill(where, k, spec, r[k], k in required, b)
+                self.fill(where, k, spec, r[k], k in required or k in listed(ch), b)     # a choice is required too
 
     def _valency(self, v):
         req = listed(v.get('required'))

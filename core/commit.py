@@ -25,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
-from core import read  # noqa: E402
+from core import engine, read  # noqa: E402
 from core.law import listed  # noqa: E402
 import dmjournal  # noqa: E402 — the register of the headings the clock wrote
 import dmpass     # noqa: E402 — the one reader of seed/LANGUAGE, and the one matcher of a path
@@ -110,7 +110,7 @@ def findings(root, law, changes=None):
                                             f"is written by `bin/dmsave.py` (or bin/dmjournal.py), never typed"))
     said = ' or '.join(sorted(moments)) or 'none: this commit adds no entry'
     for status, path in changes:
-        if not (path.startswith('beans/') and path.endswith('.md')):
+        if not (path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)) and path.endswith('.md')):
             continue
         bid = os.path.basename(path)[:-3]
         if not re.search(r'(?<![\w-])' + re.escape(bid) + r'(?![\w-])', entry):

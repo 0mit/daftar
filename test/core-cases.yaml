@@ -6,15 +6,9 @@
 zone: Asia/Tehran                  # GARDEN.md's: the bearer's zone, where a day finds its place half
 
 vocab:                             # the garden's own rows, as its VOCAB.md would hold them
-  kinds:
-    - { kind: person,    nature: body,    line: living, level: organism, rung: reason }
+  kinds:                           # beside the law's own (person, org, contract, document, garden, host, …)
     - { kind: cell,      nature: body,    line: living, level: cell }
-    - { kind: org,       nature: sayable }
-    - { kind: contract,  nature: sayable, line: said,   level: discourse }
-    - { kind: document,  nature: sayable, line: said,   level: discourse }
     - { kind: clause,    nature: sayable, line: said,   level: statement }
-    - { kind: garden,    nature: sayable, line: said,   level: corpus }
-    - { kind: host,      nature: body,    line: made,   level: device }
     - { kind: part,      nature: body,    line: made,   level: component }
     - { kind: rack,      nature: body,    line: made,   level: installation }
   namespaces:

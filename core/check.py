@@ -23,16 +23,18 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-from core import commit, engine, read  # noqa: E402
+from core import commit, engine, read, standards  # noqa: E402
 from core.law import Law       # noqa: E402
 
 
 def garden_law(root, release=None):
     """The law of the release at `release` (this one, if none), extended by the rows of the garden at `root` (its
-    VOCAB.md, where it has one)."""
+    VOCAB.md, where it has one). The standards are the garden's where it carries the law (seed/std-vocab.md): a scheme of
+    codes it holds as its own is read there, as dmknowledge reads it."""
     p = os.path.join(root, 'VOCAB.md')
     ext = (('VOCAB.md', read.document(p)[0]),) if os.path.exists(p) else ()
-    return Law.load(*ext, root=release)
+    std = standards.here(root) if os.path.isfile(os.path.join(root, 'seed', 'std-vocab.md')) else None
+    return Law.load(*ext, root=release, std=std)
 
 
 def report(found, line):
