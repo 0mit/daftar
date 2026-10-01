@@ -94,7 +94,7 @@ check("a module loaded by its path is an import: the view's model loads each ada
 check("an import is looked for where the importer put sys.path: site/board.py puts bin/ there and imports "
       "bin/dmparse.py", has("imports", "site/board.py", "bin/dmparse.py"))
 _hook = open(os.path.join(ROOT, "bin", "hooks", "pre-commit"), encoding="utf-8").read()
-check("a hook runs what its lines run: the pre-commit hook runs the gate", has("runs", "bin/hooks/pre-commit", "bin/dmcheck.py"))
+check("a hook runs what its lines run: the pre-commit hook runs the gate", has("runs", "bin/hooks/pre-commit", "bin/check.py"))
 check("...and not what it only tells a person to run, nor what a comment names",
       "bin/install.py" in _hook and not has("runs", "bin/hooks/pre-commit", "bin/install.py"))
 check("a run through a function of the suite's own is read: test/save.py runs bin/dmsave.py",

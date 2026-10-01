@@ -187,7 +187,8 @@ is the model, and `CHECKLIST.md` says how a write is made. `COOKBOOK.md` goes on
 | `RATIONALE.md` | why each rule of `std-vocab.md` is as it is, keyed by the rule's path |
 
 Germination also copies **`.gitattributes`** from the clone. It is part of the language rather than of any
-estate: it is what dispatches bean merges to `bin/dmmerge.py` and gives `log/journal.md` a union merge.
+estate: it is what dispatches bean merges to `bin/merge.py` (`bin/dmmerge.py`, for a bean in today's words) and
+gives `log/journal.md` a union merge.
 A garden without it text-merges its beans line by line and conflicts on its own append-only log.
 
 **There is no copy of `bin/` here.** `germinate.py` copies the toolchain from the clone at germination

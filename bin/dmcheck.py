@@ -316,6 +316,15 @@ def _staged(args):
 
 
 if __name__ == '__main__':
+    # A GARDEN THAT RUNS THE CORE (GARDEN.md `extends: core@…`) is the core's gate's: this gate is today's, and hands it to
+    # bin/check.py, so that its own command judges such a garden by the law it runs (v1 part 3). The index's pin with
+    # --staged, so the commit that adopts the core is the core's to judge.
+    try:
+        import check as _check
+    except ImportError:                     # a copy that holds no bin/check.py runs no core: today's gate judges it
+        _check = None
+    if _check and _check.runs_core(_check.pin(_check.toplevel(), '') if '--staged' in sys.argv[1:] else _check.pin(ROOT)):
+        sys.exit(_check.main(sys.argv[1:]))
     # before the law is read: a refused argument costs nothing, and --staged judges the law the INDEX holds, not this one
     ARGS = _arguments(sys.argv[1:])
     if ARGS['staged']:

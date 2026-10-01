@@ -650,11 +650,15 @@ check("the release's hook and installer are committed executable (mode 100755)",
 # paths and a LAN address — and, with no .gitignore, 15 .pyc files in the first commit.
 _tracked = run('git', 'ls-files', cwd=G).stdout.split()
 _bin = [f for f in _tracked if f.startswith('bin/')]
-check("only daftar's own tools travel under bin/ — every bin/dm*.py, the one entry, the hooks and the installer, "
-      "nothing else",
-      _bin and all(re.match(r'^bin/(dm[a-z]*\.py|daftar\.py|install\.(sh|py)|hooks/[^/]+)$', f) for f in _bin)
-      and 'bin/dmcheck.py' in _bin and 'bin/dmsafe.py' in _bin and 'bin/install.py' in _bin,
-      [f for f in _bin if not re.match(r'^bin/(dm[a-z]*\.py|install\.(sh|py)|hooks/[^/]+)$', f)][:10])
+# a tool ported to the core's statements (v1) is named by its verb, one line of seed/LANGUAGE each
+_ported = [ln.strip() for ln in open(os.path.join(ROOT, 'seed', 'LANGUAGE'), encoding='utf-8')
+           if re.match(r'^bin/[a-z]+\.py$', ln.strip()) and ln.strip() not in ('bin/daftar.py', 'bin/install.py')]
+_ours = re.compile(r'^bin/(dm[a-z]*\.py|daftar\.py|install\.(sh|py)|hooks/[^/]+)$')
+check("only daftar's own tools travel under bin/ — every bin/dm*.py, each tool ported by its verb (seed/LANGUAGE names "
+      "it), the one entry, the hooks and the installer, nothing else",
+      _bin and all(_ours.match(f) or f in _ported for f in _bin) and set(_ported) <= set(_bin)
+      and 'bin/dmcheck.py' in _bin and 'bin/dmsafe.py' in _bin and 'bin/install.py' in _bin and 'bin/check.py' in _ported,
+      [f for f in _bin if not (_ours.match(f) or f in _ported)][:10])
 check("no bytecode is committed, and `.gitignore` travelled to keep it that way",
       not any('__pycache__' in f or f.endswith('.pyc') for f in _tracked) and '.gitignore' in _tracked,
       [f for f in _tracked if f.endswith('.pyc')][:5])
@@ -663,8 +667,9 @@ check("`.gitattributes` travels — beans dispatch to the semantic merge, the jo
       'daftar' in run('git', 'check-attr', 'merge', '--', 'beans/x.md', cwd=G).stdout
       and 'union' in run('git', 'check-attr', 'merge', '--', 'log/journal.md', cwd=G).stdout,
       run('git', 'check-attr', 'merge', '--', 'beans/x.md', 'log/journal.md', cwd=G).stdout.strip())
-check("...and the driver it names is actually configured in the new garden",
-      'dmmerge' in run('git', 'config', '--get', 'merge.daftar.driver', cwd=G).stdout)
+check("...and the driver it names is actually configured in the new garden (bin/merge.py, which hands a bean in "
+      "today's words to bin/dmmerge.py)",
+      'bin/merge.py' in run('git', 'config', '--get', 'merge.daftar.driver', cwd=G).stdout)
 
 # the pin is DERIVED from the vocabulary, never typed: the one that was typed sat two majors stale
 import re

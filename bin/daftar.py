@@ -6,7 +6,8 @@
     python3 bin/daftar.py help <verb>        # the tool's own help
 
 (`python` on Windows.) The verbs and the family each belongs to are the law's (`verbs`, `tool_families`), so this file
-names no tool: a verb is the tool `bin/dm<verb>.py`, or `bin/<verb>.py` where the tool has no `dm`. What a tool does is
+names no tool: a verb is the tool `bin/<verb>.py`, named by its verb with no `dm` once it is ported to the core's
+statements (v1), else `bin/dm<verb>.py`, today's. What a tool does is
 the first line of its own help, read from the tool, never restated. A tool runs under the same Python that runs this,
 so the one command works alike wherever Python does — on Windows, where `python3` may be missing or be a store alias.
 Every tool also runs by its own path, as it always has.
@@ -29,8 +30,8 @@ def law():
 
 
 def tool_of(verb):
-    """The file a verb runs: `bin/dm<verb>.py`, else `bin/<verb>.py` — None where neither is here."""
-    for name in (f"dm{verb}.py", f"{verb}.py"):
+    """The file a verb runs: `bin/<verb>.py`, the tool ported, else `bin/dm<verb>.py` — None where neither is here."""
+    for name in (f"{verb}.py", f"dm{verb}.py"):
         p = os.path.join(HERE, name)
         if os.path.isfile(p):
             return p
@@ -83,7 +84,8 @@ def main(argv):
         return 2
     p = tool_of(verb)
     if p is None:
-        print(f"daftar: the verb `{verb}` runs bin/dm{verb}.py, which this garden does not hold", file=sys.stderr)
+        print(f"daftar: the verb `{verb}` runs bin/{verb}.py or bin/dm{verb}.py, and this garden holds neither",
+              file=sys.stderr)
         return 2
     return subprocess.run([sys.executable, p, *rest]).returncode
 

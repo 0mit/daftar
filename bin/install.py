@@ -3,6 +3,10 @@
 
     python3 bin/install.py            # from anywhere inside the clone
 
+The gate (pre-commit, and pre-merge-commit for a merge git commits itself) runs bin/check.py, and the driver
+bin/merge.py; each takes the law the garden runs — the core's for a garden of statements, today's for one in today's
+words — so one install serves both (v1 part 3).
+
 Hooks and merge-driver config live in .git/, which is NOT cloned, so every fresh clone runs this once.
 There is exactly ONE installer, and this is it; `bin/install.sh` only hands over to it. The versioned
 hooks in bin/hooks/ are the source of truth and this script only copies them — copied, never generated,
@@ -128,8 +132,8 @@ def install(repo=None, quiet=False):
         # THE GATE IS FOR A GARDEN. This repository can also BE the language itself (the daftar repo, or a
         # clone of it), which has no GARDEN.md and no beans: there the gate has nothing to judge and dies on
         # the missing vocabulary, taking the commit with it. The pre-push leak check belongs in BOTH.
-        if name == 'pre-commit' and not os.path.isfile(os.path.join(repo, 'GARDEN.md')):
-            say(f"skipped {os.path.relpath(hooks_dst, repo)}/pre-commit — no GARDEN.md here, so this repo is the language, not a garden")
+        if name in ('pre-commit', 'pre-merge-commit') and not os.path.isfile(os.path.join(repo, 'GARDEN.md')):
+            say(f"skipped {os.path.relpath(hooks_dst, repo)}/{name} — no GARDEN.md here, so this repo is the language, not a garden")
             continue
         copy_lf(src, dst)
         os.chmod(dst, os.stat(dst).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
@@ -144,10 +148,12 @@ def install(repo=None, quiet=False):
     #    attribute names a driver that is not configured — it silently text-merges instead. The attribute
     #    and this config must therefore always change together. The interpreter is named by its full path,
     #    because `python3` is not a name every machine has, and not every name on a PATH is a Python.
-    driver = os.path.join(repo, 'bin', 'dmmerge.py')
-    git('config', 'merge.daftar.name', 'daftar semantic merge (dmmerge)', cwd=repo)
-    git('config', 'merge.daftar.driver', f'"{py or sys.executable}" "{driver}" --file %O %A %B', cwd=repo)
-    say("configured merge driver 'daftar' -> bin/dmmerge.py")
+    #    bin/merge.py merges a bean in statements by the statement merge (core/merge.py), and one in today's words
+    #    by bin/dmmerge.py, as before; %P is the path, which it names when it refuses.
+    driver = os.path.join(repo, 'bin', 'merge.py')
+    git('config', 'merge.daftar.name', 'daftar merge (bin/merge.py: the statement merge, or dmmerge)', cwd=repo)
+    git('config', 'merge.daftar.driver', f'"{py or sys.executable}" "{driver}" --file %O %A %B %P', cwd=repo)
+    say("configured merge driver 'daftar' -> bin/merge.py")
     if refusal:
         # The hooks are installed all the same: a hook that refuses with this message is the gate still
         # standing; no hook at all would let every commit through unjudged.

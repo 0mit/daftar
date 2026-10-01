@@ -80,10 +80,13 @@ def refuse(msg):
 
 def waiting():
     """The journal's headings that its last commit does not hold: entries written and not yet committed, oldest first.
-    Counted, not merely compared, so one heading written twice is seen twice."""
-    head = git('show', 'HEAD:./log/journal.md')
-    held = collections.Counter(l.rstrip() for l in head.stdout.split('\n') if l.startswith('## ')) \
-        if head.returncode == 0 else collections.Counter()
+    Counted, not merely compared, so one heading written twice is seen twice. In a merge, what the other side committed
+    is held too (MERGE_HEAD): its entries came with it, and are not this save's."""
+    held = collections.Counter()
+    for ref in ('HEAD', 'MERGE_HEAD'):
+        head = git('show', f'{ref}:./log/journal.md')
+        if head.returncode == 0:
+            held |= collections.Counter(l.rstrip() for l in head.stdout.split('\n') if l.startswith('## '))
     out = []
     for l in open(dmjournal.JOURNAL, encoding='utf-8').read().split('\n'):
         if l.startswith('## '):
