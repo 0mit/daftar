@@ -8,7 +8,9 @@ bin/dmjournal.py and judged by today's gate, as test/germinate.py does; then see
 what nobody said. So every bean here is one today's law accepts. It translates the garden into a copy
 (core/translate.py) and checks that every value of every bean is placed and found where it was put, that the core's
 engine passes the copy, and that the forms the guides teach — a person, a host, money between two people, an agreement
-paid in instalments, an event, another person's garden — each became statements.
+paid in instalments, an event, another person's garden — each became statements. Last, it adopts the core in place:
+the translated beans and core/ come into the garden in one commit through bin/dmsave.py and the core's gate, refused
+until its entry says RULE-CHANGE, then granted the moments history recorded — that once, and not the commit after.
 """
 import os, re, shutil, subprocess, sys, tempfile
 
@@ -163,6 +165,49 @@ try:
           and any('agree' in v for v in contracts) and any({'pay', 'bear'} <= set(v) for v in contracts)
           and all('be' in verbs(b) or 'agree' in verbs(b) for b in kinds.get('event', [])[:1]),
           {k: {b: verbs(b) for b in v[:3]} for k, v in kinds.items()})
+
+    # THE ADOPTION, IN PLACE (ratified 2026-10-01: a ratified exception): the translated beans and the core come into
+    # the garden in one commit, through today's save and the core's gate. Refused unless it says RULE-CHANGE; with it,
+    # the gate grants the acts the moments history recorded — that once, and never to the commit after it.
+    for d in ('beans', 'mappings'):
+        if os.path.isdir(os.path.join(C, d)):
+            for f in os.listdir(os.path.join(C, d)):
+                shutil.copy(os.path.join(C, d, f), os.path.join(G, d, f))
+    shutil.copy(os.path.join(C, 'VOCAB.md'), os.path.join(G, 'VOCAB.md'))
+    shutil.copytree(os.path.join(ROOT, 'core'), os.path.join(G, 'core'), ignore=shutil.ignore_patterns('__pycache__'))
+    run('git', 'config', 'user.name', 't', cwd=G)
+    run('git', 'config', 'user.email', 't@x', cwd=G)
+    # THE MINUTE TURNS FIRST. A heading's moment is the clock's to the minute, so two saves in one minute share one; the
+    # garden was grown within the last minute, and history's moments must be told from the adoption's own.
+    import datetime, time
+    last = [ln for ln in open(os.path.join(G, 'log', 'journal.md'), encoding='utf-8').read().split('\n') if ln.startswith('## ')][-1]
+    for _i in range(70):
+        if datetime.datetime.now().astimezone().isoformat(timespec='minutes').replace('T', ' ')[:16] != last[3:19]:
+            break
+        time.sleep(1)
+    r = run(PY, 'core/install.py', cwd=G)
+    check("the garden takes the core's gate (core/install.py)", r.returncode == 0, r.stdout + r.stderr)
+    named = ', '.join(f"[[{f[:-3]}]]" for d in ('beans', 'mappings') if os.path.isdir(os.path.join(G, d))
+                      for f in sorted(os.listdir(os.path.join(G, d))) if f.endswith('.md'))
+    r = run(PY, 'bin/dmsave.py', 'sam', 'the core adopted', '--body', f"- action: the beans written in statements: {named}",
+            cwd=G)
+    out = r.stdout + r.stderr
+    check("adopting the core with no RULE-CHANGE said is refused: by `ratify`, and the acts' moments are not granted",
+          r.returncode == 1 and 'ratify' in out and 'Only the commit that adopts the core' in out, out[-1500:])
+    run(PY, 'bin/dmjournal.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',
+        '- action: RULE-CHANGE, the core adopted in place; ratified by sam', cwd=G)
+    r = run(PY, 'bin/dmsave.py', '--again', cwd=G)
+    out = r.stdout + r.stderr
+    check("...and saved once an entry says RULE-CHANGE: the gate grants the adoption the moments history recorded",
+          r.returncode == 0 and '— 0 error(s)' in out, out[-1500:])
+    acts = [next(iter(s.values())).get('at') for s in read.document(os.path.join(G, 'beans', 'laptop.md'))[0]['statements']
+            if next(iter(s)) in ('say', 'read', 'derive', 'make')]
+    write('beans/late.md', "---\nbean: late\nkind: document\ntitle: late\nstatements:\n  - say: { by: sam, at: '%s' }\n---"
+          % acts[0])
+    r = run(PY, 'bin/dmsave.py', 'sam', 'a late note', '--body', '- action: wrote [[late]]', cwd=G)
+    out = r.stdout + r.stderr
+    check(f"...that once: the next commit giving an act a moment history holds ({acts[0]}) is refused",
+          r.returncode == 1 and 'Only the commit that adopts the core' in out, out[-1500:])
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

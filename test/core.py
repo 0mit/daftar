@@ -67,8 +67,8 @@ except frame.Refused as e:
     check("a day with no zone to be reckoned in is refused: its place half is the bearer's", 'names none' in str(e), e)
 
 # ------------------------------------------------------------------------------------------------ the law
-check("the law is whole: the face, the 34 rows and the 22 levels, 0 problems",
-      not LAW0.problems() and len(LAW0.verbs) == 55 and len(LAW0.levels) == 29, LAW0.problems())
+check("the law is whole: the face's 21 verbs, the 35 rows and the 22 levels, 0 problems",
+      not LAW0.problems() and len(LAW0.verbs) == 56 and len(LAW0.levels) == 29, LAW0.problems())
 CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
 LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "

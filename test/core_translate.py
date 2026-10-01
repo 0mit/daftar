@@ -169,6 +169,18 @@ timing:
 workspace: { host: box, system: unix-filesystem, at: "box:/srv/work", branch: main, opened_at: "2026-09-20 09:00+03:30" }
 ---
 """,
+    'note-b': """---
+bean: note-b
+genos: document
+title: "a note"
+status: active
+summary: "read the day after, in no session"
+nature: lekton
+identity: { status: confirmed, anchors: [ { key: identifier, value: "document:note-b", class: logical, establishing: true } ] }
+provenance: { src: observed, by: "agent:a-model/core-test, reading the share", as_of: 2026-09-21 }
+owned_by: { owner: { bean: sam } }
+---
+""",
 }
 MAPPING = """---
 mapping: restore
@@ -177,6 +189,7 @@ title: "restore box"
 summary: "bring box back from its copy"
 provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-20 }
 trigger: "the data volume is lost"
+produces: "box, serving its shares again"
 tool: "rsync"
 steps:
   - "mount the copy"
@@ -187,6 +200,9 @@ JOURNAL = """# Journal
 
 ## 2026-09-20 10:00+03:30 · sam · the garden's first beans
 - action: wrote [[sam]], [[box]], [[web]], [[webapp]], [[loan]], [[session-a]] and the mapping restore.
+
+## 2026-09-21 12:00+03:30 · sam · a note
+- action: wrote [[note-b]].
 """
 
 T = tempfile.mkdtemp(prefix='dmcoretr-')
@@ -214,7 +230,7 @@ try:
                        encoding='utf-8')
     last = r.stdout.strip().split('\n')[-1]
     check("the garden is translated into a copy with nothing lost: every value placed and found there, every comment kept",
-          r.returncode == 0 and '— 0 problem(s)' in last and '7 beans' in last, r.stdout + r.stderr)
+          r.returncode == 0 and '— 0 problem(s)' in last and '8 beans' in last, r.stdout + r.stderr)
     n = int(last.split('; ')[1].split(' values')[0])
     placed = int(last.split('values, ')[1].split(' placed')[0])
     check(f"...the count: {n} values before, {placed} placed", n == placed and n > 150, last)
@@ -234,9 +250,14 @@ try:
     fm, box = st('box')
     verbs = [v for v, _r in box]
     has = lambda v, **kw: any(vv == v and all(r.get(k) == x for k, x in kw.items()) for vv, r in box)  # noqa: E731
-    check("provenance → a knowing act: observed is `read`, at the moment of the entry naming the bean, the agent's prose its note",
-          box[0][0] == 'read' and box[0][1].get('at') == '2026-09-20 10:00+03:30' and box[0][1].get('by') == 'unknown'
-          and 'agent:a-model' in box[0][1].get('note', ''), box[0])
+    check("provenance → a knowing act at the moment of the entry naming the bean; an agent's is its session's, the one "
+          "whose start and stop hold that moment, and its reading is `derive`; the agent's prose its note",
+          box[0][0] == 'derive' and box[0][1].get('at') == '2026-09-20 10:00+03:30' and box[0][1].get('by') == 'session-a'
+          and box[0][1].get('from') == 'unknown' and 'agent:a-model' in box[0][1].get('note', ''), box[0])
+    _fm, nb = st('note-b')
+    check("...an agent's act no session holds is `read` by `unknown`, its prose the note",
+          nb[0][0] == 'read' and nb[0][1].get('by') == 'unknown' and nb[0][1].get('at') == '2026-09-21 12:00+03:30'
+          and 'reading the share' in nb[0][1].get('note', ''), nb[0])
     check("identity → name, by the anchor's key as a namespace", has('name', by='anchor-serial', of='self', **{'as': 'SN-0042'}), box)
     check("owned_by → own; responsibility → answer, before the law the owner's derived and not written",
           has('own', by='sam', of='self') and has('answer', by='sam', **{'as': 'keeping'}) and not has('answer', **{'as': 'law'}), box)
@@ -271,9 +292,10 @@ try:
           any(v == 'be' and r.get('at') == '2026-09-20 09:00+03:30/2026-09-20 11:30+03:30' and r.get('as') == 'presence'
               for v, r in ses) and any(v == 'open' for v, r in ses), ses)
     mfm, mp = st('restore', 'mappings')
-    check("a mapping is a bean of its kind, its steps and trigger kept in details",
+    check("a mapping is a bean of its kind, its steps and trigger kept in details; what it produces is `produce`",
           mfm.get('bean') == 'restore' and mfm.get('kind') == 'procedure' and mp[0][0] == 'say'
-          and mfm.get('details', {}).get('steps') == ['mount the copy', 'rsync it back'], mfm)
+          and mfm.get('details', {}).get('steps') == ['mount the copy', 'rsync it back']
+          and ('produce', {'id': 'produces', 'by': 'self', 'of': ['box, serving its shares again']}) in mp, mp)
     v2 = read.document(os.path.join(C, 'VOCAB.md'))[0]
     check("VOCAB.md gains the garden's rows: the mapping's kind, and the namespaces its names are given in",
           {'kind': 'procedure', 'nature': 'sayable'} in v2.get('kinds', [])

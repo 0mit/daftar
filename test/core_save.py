@@ -120,6 +120,14 @@ try:
     check("...and once it says `now`, --again saves it at the waiting entry's moment",
           r.returncode == 0 and at == last_heading()[3:].split(' · ', 1)[0], (r.returncode, at, r.stdout + r.stderr))
 
+    # A MOMENT HISTORY HOLDS IS STILL NOT THIS COMMIT'S: only the adoption carries history's moments
+    past = git('log', '-1', '--format=%cI', 'HEAD').stdout.strip()      # a commit's own moment, which history holds
+    bean('cy', 'person', [{'say': {'by': 'cy', 'at': past}}, {'own': {'by': 'theone', 'of': 'self'}}])
+    r = save('sam', "cy's record", '- action: wrote [[cy]]')
+    check(f"a knowing act given a moment history holds (the last commit's, {past}) is refused outside the adoption",
+          r.returncode == 1 and 'Only the commit that adopts the core' in r.out, r.out)
+    reset()
+
     # A BEAN NO ENTRY NAMES
     bean('ada', 'person', [{'say': {'by': 'ada', 'at': 'now'}}, {'own': {'by': 'theone', 'of': 'self'}}])
     r = save('sam', 'a record', '- action: wrote a record')
