@@ -1,0 +1,297 @@
+# The other verbs' rows, ratified 2026-10-01 beside core.yaml. The face's 21 verbs are in core.yaml; these are the rows
+# that stand on it, in the same form: the roles each takes, what fills them, which are required, the qualifiers it
+# allows, its default where it has one. `replaces` names what of today's law (v0.48.0) each row takes over, so the
+# translator has its map; `home` is core, or the profile it belongs to.
+
+tables:                                   # the small tables these rows name; a standard's tables are read from it
+  forms:         [written, spoken, unstated]          # how an agreement's words were given
+  grants:        [read, write, enact, ratify]         # what a grant opens
+  classes:       [A, B, C, D, E, F, G, H, I, J, K]    # the Contract of Parts' classes of decision
+  sensitivities: [none, personal, special-category]
+  jobs:          [router, mail-primary, mail-backup, file-server, dns-resolver, dns-authoritative, monitoring, web, app-host, vpn-gateway, ledger-hub, workstation]
+  methods:       [edit, remove, stamp, append, record, capture, merge, forward, adopt, publish, render, show, send]   # how a pass is made, beside the verbs that are methods too: derive, make, take, serve, hold
+standard_tables: [protocols, knowledge, properties, units]   # read from their standards (IANA, our knowledge tree, ISO 19156, SI and UCUM)
+
+verbs:
+  # ---------------------------------------------------------------- agreements, money, permission
+  - verb: agree
+    meaning: "to be bound by an agreement: each party agrees, as its part in it, on the day it said yes"
+    roles:
+      by:      { shape: being, many: true }
+      of:      { shape: [being, text], many: true }
+      through: { shape: [being, row], table: forms }
+      as:      { shape: text }
+      at:      { shape: position }
+    required: [by]
+    replaces: [parties, over, words, consent]
+    home: core
+  - verb: decline
+    meaning: "to refuse an agreement offered: a party that said no"
+    roles: { by: { shape: being }, of: { shape: statement }, at: { shape: position } }
+    required: [by, of]
+    replaces: []
+    home: core
+  - verb: pay
+    meaning: "to give an amount: who paid, how much, to whom, under what"
+    roles:
+      by:      { shape: being, nature: [body, sayable], rung: reason }
+      of:      { shape: quantity }
+      to:      { shape: being }
+      through: { shape: [statement, being] }
+      at:      { shape: position }
+    required: [by, of]
+    replaces: [paid_by, transactions]
+    home: core
+  - verb: bear
+    meaning: "to bear a cost, in a share: whoever bears what was paid"
+    roles: { by: { shape: being }, of: { shape: statement } }
+    qualifiers: { share: { shape: quantity } }
+    required: [by, of]
+    default:                              # the one who paid bears it, alone: the `by` of the statement it bears
+      says: "whoever paid bears it, alone"
+      fill: { by: { the: of, take: by } }
+      alone: true
+    replaces: [borne_by]
+    home: core
+  - verb: grant
+    meaning: "to open to someone an act on what a garden holds: closed by default, so nobody but the gardener may do what no grant opens"
+    roles:
+      by:      { shape: being }
+      to:      { shape: being, many: true }
+      of:      { shape: [being, statement], many: true }
+      as:      { shape: row, table: grants }
+      through: { shape: text }
+      at:      { shape: position }
+    qualifiers: { class: { shape: row, table: classes } }
+    required: [by, to, as]
+    replaces: [grants]
+    home: core
+  - verb: can
+    meaning: "to be able to do something, taken as a position on the permission square: may, or must"
+    roles: { by: { shape: being }, of: { shape: text } }
+    required: [by, of]
+    replaces: [capabilities]
+    home: core
+  - verb: represent
+    meaning: "to act for another, who is bound by what is done: an employee, a lawyer, a parent"
+    roles: { by: { shape: being }, of: { shape: being }, as: { shape: text } }
+    required: [by, of]
+    replaces: [acting_for]
+    home: core
+
+  # ---------------------------------------------------------------- what a being needs, does and holds
+  - verb: need
+    meaning: "to require something to function: how badly is a position on the necessity square"
+    roles:
+      by:      { shape: being }
+      of:      { shape: [being, statement], many: true }
+      through: { shape: row, table: protocols }
+    required: [by, of]
+    replaces: [depends_on, consumes, reaches, needed_when, items]
+    home: core
+  - verb: meet
+    meaning: "to meet a need"
+    roles: { by: { shape: [being, statement] }, of: { shape: statement } }
+    required: [by, of]
+    replaces: [met_by]
+    home: core
+  - verb: use
+    meaning: "to use a being, an allowance, or a technology or field of the knowledge tree"
+    roles: { by: { shape: being }, of: { shape: [being, statement, row], table: knowledge } }
+    required: [by, of]
+    replaces: [used_by, draws_on]
+    home: core
+  - verb: do
+    meaning: "to do a job"
+    roles: { by: { shape: being }, as: { shape: row, table: jobs } }
+    required: [by, as]
+    replaces: [roles]
+    home: core
+  - verb: hold
+    meaning: "to hold a quantity, or a being: what a being can hold, and what it holds"
+    roles: { by: { shape: being }, of: { shape: [quantity, being], many: true } }
+    required: [by, of]
+    replaces: [capacity]
+    home: core
+  - verb: run
+    meaning: "to run code: a machine runs an operating system, a program, an instance"
+    roles: { by: { shape: being }, of: { shape: being } }
+    required: [by, of]
+    replaces: [instance_of, os]
+    home: core
+  - verb: open
+    meaning: "to open something: a session, an account"
+    roles: { by: { shape: being }, of: { shape: being }, at: { shape: position } }
+    required: [of, at]
+    replaces: [opened_at]
+    home: core
+  - verb: move
+    meaning: "to move a being along a walk: the step it reached, at what moment, who moved it"
+    roles:
+      by:      { shape: being }
+      of:      { shape: being }
+      through: { shape: being }
+      at:      { shape: position, many: true }
+    required: [of, at]
+    replaces: [moves, moves_along]
+    home: core
+  - verb: attend
+    meaning: "to be present at an event, which takes the hours of those present"
+    roles: { by: { shape: being }, of: { shape: being }, at: { shape: position } }
+    required: [by, of]
+    replaces: [takes_time_of]
+    home: core
+
+  # ---------------------------------------------------------------- knowing about a being
+  - verb: measure
+    meaning: "to read a property of a being: its value, at a moment, through an instrument (ISO 19156)"
+    roles:
+      by:      { shape: being }
+      of:      { shape: being }
+      as:      { shape: row, table: properties }
+      through: { shape: being }
+      at:      { shape: position }
+    qualifiers: { value: { shape: quantity } }
+    required: [of, as]
+    replaces: [observations]
+    home: core
+  - verb: classify
+    meaning: "to class a being by a code of a scheme of the knowledge tree"
+    roles: { by: { shape: being }, of: { shape: being }, as: { shape: row, table: knowledge }, through: { shape: being } }
+    required: [of, as]
+    replaces: [classified_as, knowledge]
+    home: knowledge
+  - verb: concern
+    meaning: "to be about a person: whom a record is personal to"
+    roles: { by: { shape: being }, of: { shape: being, many: true } }
+    required: [of]
+    replaces: [about]
+    home: core
+  - verb: rate
+    meaning: "to say how much harm a being can do a person if it leaves the garden, above what the engine derives"
+    roles: { by: { shape: being, nature: [body], rung: reason }, of: { shape: being }, as: { shape: row, table: sensitivities } }
+    required: [by, of, as]
+    replaces: [sensitivity]
+    home: core
+
+  # ---------------------------------------------------------------- failure and its remedy, disagreement
+  - verb: fail
+    meaning: "a way a being can fail, or is failing: a statement on the necessity square, possible or happening"
+    roles: { by: { shape: being }, as: { shape: text }, through: { shape: [being, statement, text] }, at: { shape: position } }
+    required: [by, as]
+    replaces: [risks]
+    home: core
+  - verb: repair
+    meaning: "to remedy a failure, where the fix lives"
+    roles: { by: { shape: being }, of: { shape: statement }, at: { shape: being } }
+    required: [of]
+    replaces: [owned_with]
+    home: core
+  - verb: rule
+    meaning: "a person's ruling on a disagreement: the statements disputed, and the one chosen"
+    roles: { by: { shape: being, nature: [body], rung: reason }, of: { shape: statement, many: true }, as: { shape: statement }, at: { shape: position } }
+    required: [by, of]
+    replaces: [hearings]
+    home: core
+
+  # ---------------------------------------------------------------- between gardens
+  - verb: propose
+    meaning: "to offer beans to another garden, under an agreement between their gardeners"
+    roles: { by: { shape: being }, of: { shape: being, many: true }, to: { shape: being }, through: { shape: statement }, at: { shape: position } }
+    required: [by, of, to]
+    replaces: []
+    home: core
+  - verb: take
+    meaning: "to take a proposal in, whole, from the garden that made it"
+    roles: { by: { shape: being }, of: { shape: being }, from: { shape: being }, at: { shape: position } }
+    required: [by, of, from]
+    replaces: []
+    home: core
+
+  # ---------------------------------------------------------------- the network profile
+  - verb: serve
+    meaning: "to listen at an address and a port, through a protocol, to those who may reach it"
+    roles:
+      by:      { shape: being }
+      at:      { shape: position, many: true }
+      through: { shape: row, table: protocols }
+      to:      { shape: being, many: true }
+    required: [by, at, through]
+    replaces: [endpoints, admitted_from, provides_ip]
+    home: network
+  - verb: carry
+    meaning: "to carry what rides on it: a link carries a tunnel, a disk a volume"
+    roles: { by: { shape: being }, of: { shape: [being, statement], many: true }, through: { shape: row, table: protocols } }
+    required: [by, of]
+    replaces: [carried_by, links, via_link]
+    home: network
+  - verb: route
+    meaning: "to send traffic on: from where, to which next hop"
+    roles: { by: { shape: being }, of: { shape: text }, from: { shape: [position, being] }, to: { shape: [position, being] } }
+    required: [by, to]
+    replaces: [treatments]
+    home: network
+  - verb: translate
+    meaning: "to rewrite an address as traffic crosses: from one, to another"
+    roles: { by: { shape: being }, from: { shape: position }, to: { shape: position } }
+    required: [by, from, to]
+    replaces: []
+    home: network
+  - verb: filter
+    meaning: "to let traffic cross or stop it: a position on the permission square of the pass it would make"
+    roles: { by: { shape: being }, of: { shape: text }, from: { shape: [position, being] }, to: { shape: [position, being] } }
+    required: [by, of]
+    replaces: []
+    home: network
+
+  # ---------------------------------------------------------------- the other profiles
+  - verb: book
+    meaning: "to book an amount to an account of the garden's analytic scheme, in a share"
+    roles: { by: { shape: being }, of: { shape: statement }, to: { shape: [being, text] } }
+    qualifiers: { share: { shape: quantity } }
+    required: [of, to]
+    replaces: [analytic_distribution]
+    home: accounting
+  - verb: renew
+    meaning: "to renew a registration: on the permission square, whether the registrar renews unasked"
+    roles: { by: { shape: being }, of: { shape: being }, at: { shape: position } }
+    required: [of]
+    replaces: [auto_renew]
+    home: domain
+  - verb: mark
+    meaning: "to fix a boundary of a system's cells by a mark at a position"
+    roles: { by: { shape: being }, of: { shape: text }, at: { shape: position } }
+    required: [by, at]
+    replaces: [fixes]
+    home: core
+  - verb: draw
+    meaning: "a page draws a being, or a mapping"
+    roles: { by: { shape: being }, of: { shape: being, many: true } }
+    required: [by, of]
+    replaces: [view, views]
+    home: view
+
+# what the face's verbs and the roles replace, so that the refinery's every verb and role is accounted for here once
+face_replaces:
+  say:     []
+  read:    [capture, readable_from, taken_at]
+  derive:  [authority]
+  make:    [produces, produced_by]
+  be:      [located_at, lives_in, provides_habitat]
+  stand:   [stands_on]
+  part:    [part_of]
+  name:    [identifier]
+  come:    [via, given_by]
+  own:     [owned_by]
+  answer:  [responsibility, answered_by, answered_by_owner, applies_to]
+  acquire: [acquired]
+  pass:    [flow_form]
+dropped: [refs]                          # replaced by no verb: every relation is a statement, and a new one a new verb
+roles_replace:                           # a word that is only a role of whatever verb its statement has
+  by:      [owned_by_them]
+  at:      [as_of]
+  from:    [from_where]
+  to:      [to_where]
+  through: [resolves_through, tool]
+  as:      [by_role]
+  of:      []

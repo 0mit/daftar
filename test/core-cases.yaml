@@ -1,0 +1,183 @@
+# Cases for test/core.py: a small garden written in the core's statements, which must pass; cases that must pass beside
+# it; and cases each of which must be refused by the rule it names. Invented beings; nothing here is a fact. The garden
+# began as the refinery's examples (2026-10-01), with two corrections the engine makes: a port is written with its
+# system (`tcp-port:445`: a bare `445` is a TCP port, a UDP port and a geohash), and a unit is the law's (`kilogram`).
+
+zone: Asia/Tehran                  # GARDEN.md's: the bearer's zone, where a day finds its place half
+
+vocab:                             # the garden's own rows, as its VOCAB.md would hold them
+  kinds:
+    - { kind: person,    nature: body,    line: living, level: organism, rung: reason }
+    - { kind: cell,      nature: body,    line: living, level: cell }
+    - { kind: org,       nature: sayable }
+    - { kind: contract,  nature: sayable, line: said,   level: discourse }
+    - { kind: document,  nature: sayable, line: said,   level: discourse }
+    - { kind: clause,    nature: sayable, line: said,   level: statement }
+    - { kind: garden,    nature: sayable, line: said,   level: corpus }
+    - { kind: host,      nature: body,    line: made,   level: device }
+    - { kind: part,      nature: body,    line: made,   level: component }
+    - { kind: rack,      nature: body,    line: made,   level: installation }
+  namespaces:
+    - { namespace: hpe,      once: true }
+    - { namespace: garden-a, once: true }
+    - { namespace: dns,      once: true, meaning: "the domain name system: a standard, not a bean" }
+    - { namespace: nickname }
+  flow_sources: [world, words, clock, guide]
+  flows:
+    - { flow: observed,  from: world, to: journal, through: read, grant: granted }
+    - { flow: said,      from: words, to: journal, through: say,  grant: granted }
+    - { flow: no-guide,  from: guide, to: law,     through: make, grant: refused }
+  standing:
+    - { layer: law,     holds: [VOCAB.md, GARDEN.md] }
+    - { layer: journal, holds: ["log/*"] }
+
+garden:
+  ada:
+    kind: person
+    statements:
+      - say:  { by: ada, at: now }
+      - name: { by: garden-a, of: self, as: "person:ada" }
+      - own:  { by: theone, of: self }
+      - come: { by: self, through: [ { someone: person } ] }
+      - classify: { of: self, as: "isco-08:2511" }
+  ben:
+    kind: person
+    statements:
+      - say:  { by: ben, at: now }
+      - own:  { by: theone, of: self }
+  sam:
+    kind: person
+    statements:
+      - say:  { by: sam, at: now }
+      - own:  { by: theone, of: self }
+  hpe:  { kind: org,  statements: [ { say: { by: sam, at: now } }, { name: { by: garden-a, of: self, as: "org:hpe" } } ] }
+  shop: { kind: org,  statements: [ { say: { by: sam, at: now } }, { name: { by: dns, of: self, as: "shop.example" } } ] }
+  garden-a:
+    kind: garden
+    statements:
+      - say:   { by: sam, at: now }
+      - grant: { by: sam, to: [ben], of: [pot], as: read }
+      - grant: { by: sam, to: [ada], of: [ladder], as: ratify, class: G }
+  home-rack:
+    kind: rack
+    statements:
+      - say:  { by: sam, at: now }
+      - come: { by: self, through: [ { someone: person, at: shop } ] }
+  nas:
+    kind: host
+    statements:
+      - say:     { by: sam, at: now }
+      - be:      { by: self, at: home-rack, as: place }
+      - name:    { by: hpe, of: self, as: "SN-0042" }
+      - come:    { by: self, through: [ { someone: person, at: hpe } ] }
+      - own:     { by: sam, of: self }
+      - answer:  { by: sam, of: self, as: keeping }
+      - acquire: { of: self, from: shop, as: bought, at: 2025-03-01 }
+      - measure: { of: self, as: mass, value: { count: "4.2", unit: kilogram }, at: 2025-03-01 }
+      - do:      { by: self, as: file-server }
+      - serve:   { by: self, at: ["192.0.2.10", "tcp-port:445"], through: smb, to: [sam, ben] }
+      - need:    { id: needs-rack, by: self, of: [home-rack] }
+      - necessary: { of: needs-rack, through: home-rack }
+  disk:
+    kind: part
+    statements:
+      - say:  { by: sam, at: now }
+      - part: { by: self, of: nas }
+      - come: { by: self, through: [nas-maker] }
+  nas-maker:
+    kind: host
+    statements:
+      - say:  { by: sam, at: now }
+      - come: { by: self, through: [ { someone: person, at: hpe } ] }
+  pot:
+    kind: contract
+    statements:
+      - say:        { by: ada, of: [agreed, paid, ada-bears, ben-bears, rent, owed, may], at: now }
+      - agree:      { id: agreed, by: [ada, ben], of: self, through: spoken, at: 2026-09-23 }
+      - pay:        { id: paid, by: ada, of: { count: "10.00", unit: XTS }, at: 2026-09-20 }
+      - bear:       { id: ada-bears, by: ada, of: paid, share: 1 }
+      - bear:       { id: ben-bears, by: ben, of: paid, share: 1 }
+      - pay:        { id: rent, by: ben, to: ada, of: { count: "5.00", unit: XTS }, at: 2026-10-01/2027-09-30 }
+      - obligatory: { id: owed, of: rent, through: agreed }
+      - permitted:  { id: may, of: rent, through: agreed }
+  clause-3:
+    kind: clause
+    statements:
+      - say: { by: ada, at: now }
+      - be:  { by: self, at: [pot, "ordinal:3"], as: order }
+  ladder:
+    kind: document
+    statements:
+      - say:   { by: sam, at: "2026-10-01 10:26+03:30" }
+      - stand: { by: molecule, at: atom, as: made-of }
+      - stand: { by: reason, at: organism, as: possible-on, while: proportion }
+      - necessary: { of: theone }
+      - possible:  { of: nas, through: shop }
+      - possible:  { of: pot#rent, through: shop }
+      - contingent: { of: pot#rent, through: shop }
+  journal-pass:
+    kind: document
+    statements:
+      - read: { id: r1, by: sam, from: nas, at: now }
+      - pass: { of: [r1], from: world, to: journal, through: read }
+  persian-lease:
+    kind: contract
+    statements:
+      - say: { by: ada, at: now, note: "an extent in the Persian calendar: its end takes its start's tag" }
+      - pay: { by: ben, to: ada, of: { count: "1", unit: XTS }, at: "persian:1405-07-09/1406-07-08" }
+      - pay: { by: ben, to: ada, of: { count: "1", unit: XTS }, at: "2026-10-01 10:00+03:30/2026-10-01 12:00+03:30" }
+
+# beans that must pass when added to the garden above (each alone)
+good:
+  - { name: "a required role nobody said is `unknown`", bean: y1, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: unknown, of: { count: "1", unit: XTS } } } ] }
+  - { name: "the payer who bears beside another bearer says more than the default", bean: y2, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: p, by: ada, of: { count: "2", unit: XTS } } }, { bear: { by: ada, of: p } }, { bear: { by: ben, of: p } } ] }
+  - { name: "a namespace that does not give once may name two beings alike", bean: y3, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: nickname, of: self, as: "box" } }, { name: { by: nickname, of: nas, as: "box" } } ] }
+  - { name: "subcontraries may both stand", bean: y4, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { permitted: { of: r, through: pot } }, { omissible: { of: r, through: pot } } ] }
+  - { name: "a contrary through another source stands beside", bean: y5, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { forbidden: { of: r, through: garden-a } } ] }
+  - { name: "a knowing act with `of` covers what it names, and another act the rest", bean: y6, kind: document, statements: [ { say: { by: sam, of: [a], at: now } }, { read: { by: ben, at: now } }, { do: { id: a, by: nas, as: web } }, { do: { by: nas, as: router } } ] }
+  - { name: "a part at its whole's own level", bean: y7, kind: host, statements: [ { say: { by: sam, at: now } }, { part: { by: self, of: nas } } ] }
+  - { name: "a document may say", bean: y8, kind: document, statements: [ { say: { by: pot, at: now } } ] }
+  - { name: "a statement of another bean is `<bean>#<id>`", bean: y9, kind: document, statements: [ { say: { by: sam, at: now } }, { meet: { by: nas, of: "nas#needs-rack" } } ] }
+
+# one or more cases per rule: each bean is added to the garden above (replacing one of the same name), and must be
+# refused by the rule it names
+bad:
+  - { rule: form,        bean: x1, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1", unit: XTS }, on: nas } } ] }
+  - { rule: form,        bean: x1b, kind: document, statements: [ { say: { by: sam, at: now } }, { weigh: { of: nas } } ] }
+  - { rule: form,        bean: x1c, kind: document, statements: [ { say: { by: sam, at: now }, pay: { by: ada, of: "1" } } ] }
+  - { rule: form,        bean: x1d, kind: document, statements: [ { say: { by: sam, at: now } }, { do: { id: a, by: nas, as: web } }, { do: { id: a, by: nas, as: router } } ] }
+  - { rule: form,        bean: x1e, kind: document, statements: [ { say: { by: sam, at: now } }, { do: { by: nas, as: web, while: sunshine } } ] }
+  - { rule: form,        bean: x1f, kind: spaceship, statements: [ { say: { by: sam, at: now } } ] }
+  - { rule: form,        bean: x1g, kind: document, header: { status: active }, statements: [ { say: { by: sam, at: now } } ] }
+  - { rule: valency,     bean: x2, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { of: { count: "1", unit: XTS } } } ] }
+  - { rule: valency,     bean: x3, kind: document, statements: [ { say: { by: nas, at: now } } ] }
+  - { rule: valency,     bean: x3b, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: [ada, ben], of: "1" } } ] }
+  - { rule: valency,     bean: x3c, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: "1", to: unknown } } ] }
+  - { rule: valency,     bean: x3d, kind: document, statements: [ { say: { by: sam, at: now } }, { own: { by: sam, from: ada, of: nas } } ] }
+  - { rule: valency,     bean: x3e, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1.5e3", unit: XTS } } } ] }
+  - { rule: valency,     bean: x3f, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1", unit: dollars } } } ] }
+  - { rule: valency,     bean: x3g, kind: document, statements: [ { say: { by: sam, at: now } }, { meet: { by: nas, of: elsewhere } } ] }
+  - { rule: valency,     bean: x3h, kind: document, statements: [ { say: { by: sam, at: now } }, { serve: { by: nas, at: ["192.0.2.10"], through: carrier-pigeon } } ] }
+  - { rule: knowing,     bean: x4, kind: document, statements: [ { pay: { by: ada, of: { count: "1", unit: XTS } } } ] }
+  - { rule: knowing,     bean: x5, kind: document, statements: [ { say: { by: sam, at: 2026-10-01 } } ] }
+  - { rule: knowing,     bean: x5b, kind: document, statements: [ { say: { by: sam, of: [a], at: now } }, { do: { id: a, by: nas, as: web } }, { do: { by: nas, as: router } } ] }
+  - { rule: placeholder, bean: x6, kind: host,     statements: [ { say: { by: sam, at: now } }, { own: { by: sam, of: self } }, { answer: { by: sam, of: self, as: law } } ] }
+  - { rule: placeholder, bean: x6b, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: p, by: ada, of: { count: "2", unit: XTS } } }, { bear: { by: ada, of: p, share: 1 } } ] }
+  - { rule: order,       bean: x7, kind: document, statements: [ { say: { by: sam, at: now } }, { stand: { by: atom, at: organism, as: made-of } } ] }
+  - { rule: order,       bean: x7b, kind: rack,    statements: [ { say: { by: sam, at: now } }, { part: { by: self, of: nas } } ] }
+  - { rule: life,        bean: x8, kind: person,   statements: [ { say: { by: x8, at: now } }, { come: { by: self, through: [nas] } } ] }
+  - { rule: life,        bean: x9, kind: host,     statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [pot] } } ] }
+  - { rule: life,        bean: x9b, kind: host,    statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [x9b] } } ] }
+  - { rule: necessity,   bean: x10, kind: document, statements: [ { say: { by: sam, at: now } }, { necessary: { of: ada } } ] }
+  - { rule: squares,     bean: x11, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { forbidden: { of: r, through: pot } } ] }
+  - { rule: squares,     bean: x11b, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { omissible: { of: r, through: pot } } ] }
+  - { rule: squares,     bean: x11c, kind: document, statements: [ { say: { by: sam, at: now } }, { necessary: { of: "nas#needs-rack", through: home-rack } }, { contingent: { of: "nas#needs-rack", through: home-rack } } ] }
+  - { rule: weight,      bean: x12, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: mass, value: { count: "2", unit: kilogram } } } ] }
+  - { rule: frame,       bean: x13, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1", unit: XTS }, at: "next tuesday" } } ] }
+  - { rule: frame,       bean: x13b, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "445" } } ] }
+  - { rule: frame,       bean: x13c, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "persian:1404-12-30" } } ] }
+  - { rule: frame,       bean: x13d, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "2027-01-01/2026-01-01" } } ] }
+  - { rule: frame,       bean: x13e, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "2026-10-01T24:30+03:30" } } ] }
+  - { rule: names,       bean: x14, kind: host,     statements: [ { say: { by: sam, at: now } }, { name: { by: hpe, of: self, as: "SN-0042" } } ] }
+  - { rule: layers,      bean: x15, kind: document, statements: [ { say: { id: s, by: sam, at: now } }, { pass: { of: [s], from: guide, to: law, through: make } } ] }
+  - { rule: layers,      bean: x15b, kind: document, statements: [ { read: { id: s, by: sam, at: now } }, { pass: { of: [s], from: world, to: law, through: read } } ] }
