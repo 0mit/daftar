@@ -15,7 +15,7 @@ import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-from core import engine, frame, read  # noqa: E402
+from core import engine, frame, read, translate  # noqa: E402
 from core.law import Law, listed, shapes_of  # noqa: E402
 
 FAILS = []
@@ -74,9 +74,10 @@ LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "
       f"flows)", not LAW.problems(), LAW.problems())
 units = LAW0.units
-check(f"units are UCUM's, the law's English name attached: every one of the law's {len(LAW0.std.units)} units has its row "
+OLD_UNITS = translate.law_as_strings().get('units') or []      # today's law's units, by their English names
+check(f"units are UCUM's, the law's English name attached: every one of the law's {len(OLD_UNITS)} units has its row "
       f"(kg is kilogram, GiBy gibibyte, {{item}} item), and the two attenuations UCUM cannot write (§22) say why",
-      len(units) == len(LAW0.std.units) == 55 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
+      len(units) == len(OLD_UNITS) == 55 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
       and units['{item}']['name'] == 'item' and [u for u, r in units.items() if r.get('ucum') == 'false']
       == ['decibel-per-metre', 'decibel-per-kilometre'], len(units))
 check("...a unit written by its English name is refused, naming its code; a currency is ISO 4217's",
