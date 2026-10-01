@@ -20,7 +20,8 @@ commits, and is judged here:
            at that entry's moment; and an act a parent held with no `of`, given one by the merge, is known as it was.
   ratify   A change to a file of the law (one the law's standing places in `law` or `manifesto`, the core's own law
            files, or one a release keeps by seed/LANGUAGE) is a RULE-CHANGE, ratified by a person, and the entry says
-           so.
+           so. A garden's first commit, its germination, has no HEAD and is exempt: it brings the law, decided by nobody
+           here yet (v1 part 4, as today's gate held).
   harm     No private-key block in any file the commit stages, the whole file read; and a statement the commit seals or
            unseals is said in its entry, one line, `- held: <bean> <id> added` or `erased`.
   consent  A bean the commit writes places no person who is not the gardener somewhere in the future: a happening it
@@ -232,7 +233,10 @@ def findings(root, law, changes=None, garden=None):
     out += guarded(root, law, changes, entry, added, moments, garden, adopting, merge=bool(others))
     kept = kept_by_release(root, law)
     rc = [p for _s, p in changes if ruled(p, law, kept)]
-    if rc and not RULE_CHANGE.search(entry):
+    # A GARDEN'S FIRST COMMIT, its germination, has no HEAD: it brings the law, and nothing in it was decided by anyone
+    # yet (as today's gate held). Its identity is that commit, so it carries no entry to say RULE-CHANGE in.
+    germinating = git(root, 'rev-parse', '-q', '--verify', 'HEAD') is None
+    if rc and not germinating and not RULE_CHANGE.search(entry):
         out.append(('ratify', ', '.join(rc[:4]) + (' …' if len(rc) > 4 else ''),
                     "a change to the law is a RULE-CHANGE, which a person ratifies: the journal entry this commit adds "
                     "says RULE-CHANGE, and who ratified it"))

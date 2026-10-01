@@ -368,7 +368,7 @@ try:
     check("...and the driver hands a bean in today's words to bin/dmmerge.py, today's merge", 'dmmerge' in r.out, r.out[-400:])
 
     # THE ADOPTION, JUDGED BY THE CORE
-    write('GARDEN.md', re.sub(r'(?m)^extends: std-vocab@\S*', 'extends: core@1', text('GARDEN.md'), count=1)
+    write('GARDEN.md', re.sub(r'(?m)^extends: std-vocab@\S*', 'extends: core@' + str(read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version']), text('GARDEN.md'), count=1)
           .replace('\ngardener:', '\ngardener: sam', 1))
     write('beans/sam.md', SAM)
     write('beans/pot.md', POT)

@@ -57,6 +57,9 @@ jobs:
       - name: "core_merge: the statement merge, every rule of MERGE.md, and a garden's gate and merge driver taken by the law it runs, merged for real"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_merge.py
+      - name: "core_adopt: a garden in today's words adopts a release of the core in place, in one commit its gate grants history's moments; a garden grown from one starts in it"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/core_adopt.py
       - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/save.py

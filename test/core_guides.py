@@ -136,7 +136,7 @@ try:
     run('git', 'config', 'user.email', 'sam@example.invalid', cwd=G)
     gp = os.path.join(G, 'GARDEN.md')
     gt = open(gp, encoding='utf-8').read()
-    open(gp, 'w', encoding='utf-8', newline='\n').write(re.sub(r'(?m)^extends: std-vocab@[^ \n]*', 'extends: core@1', gt, count=1))
+    open(gp, 'w', encoding='utf-8', newline='\n').write(re.sub(r'(?m)^extends: std-vocab@[^ \n]*', 'extends: core@' + str(read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version']), gt, count=1))
     r = run(PY, 'core/install.py', cwd=G)
     check("the garden takes the core's gate (core/install.py)", r.returncode == 0, r.stdout + r.stderr)
     r = run(PY, 'bin/dmsave.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',

@@ -48,6 +48,11 @@ WHAT FITS NO VERB GOES TO `details`, WHOLE: a term no verb takes keeps its whole
 left of an entry a verb took stays there under the term and the statement's id. The front matter's comments go to
 `details.comments`, each with the item it sat on.
 
+THE COPY IS A GARDEN OF THE CORE: its GARDEN.md pins `core@<version>`, the law's own, and its VOCAB.md holds no pin (the
+law a garden runs is GARDEN.md's alone); both are read back and must hold what they held but the pin. The translator
+reads the words of std-vocab 32 (`READS`), and refuses a garden that runs older ones. bin/dmupgrade.py adopts the core
+in place from this copy (v1 part 4).
+
 THE COUNT IS THE PROOF. Every leaf of the old front matter — every value, as written — is given exactly one place: a
 statement's role, the header, `details`, or a derivation the law makes (a bean's `nature` is its kind's; before the law,
 the owner answers). The written file is read back and each place is checked to hold its value; the comments are counted
@@ -71,6 +76,7 @@ import dmparse  # noqa: E402 — today's reader of today's law, and the one spli
 from core import frame  # noqa: E402
 
 LAW = os.path.join(ROOT, 'seed', 'std-vocab.md')
+READS = 32                                  # the major version of today's law whose words a garden is translated from
 FACE_LEVELS = {'space-time', 'logos'}       # the face's own: the frame of bodies, and reason
 RENAMED = {'logos': 'reason'}               # the law's Greek word, where the core uses the role's
 NATURES = {'soma': 'body', 'lekton': 'sayable'}
@@ -1129,8 +1135,13 @@ def garden(src, dst):
     from core.law import Law
     if os.path.exists(dst):
         raise SystemExit(f"translate: {dst} exists — a translation is written into a new copy")
-    shutil.copytree(src, dst, ignore=shutil.ignore_patterns('.git', '__pycache__'))
     std = standards.here(src) if standards.carried(src) else standards.here()
+    runs = str((std.old or {}).get('version') or '')
+    if not re.match(rf'{READS}\.', runs):
+        raise SystemExit(f"translate: the garden runs std-vocab {runs or '(none read)'}, and this translator reads the words "
+                         f"of std-vocab {READS}: bring it to the last release of today's language first (bin/dmupgrade.py), "
+                         f"then translate it")
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns('.git', '__pycache__'))
     vocab = read.document(os.path.join(src, 'VOCAB.md'))[0] if os.path.exists(os.path.join(src, 'VOCAB.md')) else {}
     oldv = dmparse.loads(dmparse.split_front_matter(open(os.path.join(src, 'VOCAB.md'), encoding='utf-8').read())[0]) \
         if vocab else {}
@@ -1189,15 +1200,60 @@ def garden(src, dst):
             for r in rows.get(key) or []:
                 if any(str(r.get(n)) == str(v['position']) for n in names):
                     r['vacant'] = f"{v.get('reason')}: {v.get('why')}" if v.get('why') else str(v.get('reason'))
-    # THE GARDEN'S ROWS go into its VOCAB.md beside today's keys, which the core's law passes by
+    # THE GARDEN'S ROWS go into its VOCAB.md beside today's keys, which the core's law passes by; its pin leaves it, for
+    # the law a garden runs is GARDEN.md's alone (v1 part 4)
     vp = os.path.join(dst, 'VOCAB.md')
-    vtext = open(vp, encoding='utf-8').read()
+    vtext = open(vp, encoding='utf-8').read() if os.path.isfile(vp) else '---\n---\n'
     vhead, vbody = dmparse.split_front_matter(vtext)
-    add = yaml.safe_dump({k: v for k, v in rows.items() if v}, allow_unicode=True, sort_keys=False, width=120)
+    vhead = PIN_LINE.sub('', vhead or '', count=1)
+    keep = {k: v for k, v in rows.items() if v}
+    add = yaml.safe_dump(keep, allow_unicode=True, sort_keys=False, width=120) if keep else ''
     with open(vp, 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write('---\n' + vhead.rstrip('\n') + '\n# == THE CORE\'S ROWS: written by core/translate.py ==\n' + add + '---'
-                 + vbody)
+        fh.write('---\n' + (vhead.strip('\n') + '\n' if vhead.strip() else '')
+                 + ('# == THE CORE\'S ROWS: written by core/translate.py ==\n' + add if add else '') + '---' + vbody)
+    # GARDEN.md PINS THE CORE: the copy is a garden of statements, judged by the core's gate (core@<version>)
+    gp = os.path.join(dst, 'GARDEN.md')
+    if os.path.isfile(gp):
+        gtext = open(gp, encoding='utf-8').read()
+        gnew = PIN.sub(lambda m: m.group(1) + 'core@' + base.version, gtext, count=1)
+        with open(gp, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(gnew)
+    problems += proved_law(src, dst, keep, base.version)
+    counts['pin'] = 'core@' + base.version
     return counts, problems
+
+
+PIN = re.compile(r'(?m)^(extends:[ \t]*)std-vocab@[^\s#]*')
+PIN_LINE = re.compile(r'(?m)^extends:[ \t]*std-vocab@[^\n]*(\n|$)')
+
+
+def proved_law(src, dst, rows, version):
+    """The manifest and VOCAB.md, read back: each holds what it held, but the pin, which moved from both to GARDEN.md's
+    `core@<version>`, and the core's rows VOCAB.md gained. [] when so, else what differs."""
+    out = []
+
+    def fm(root, name):
+        p = os.path.join(root, name)
+        if not os.path.isfile(p):
+            return None
+        return dmparse.loads(dmparse.split_front_matter(open(p, encoding='utf-8').read())[0] or '') or {}
+    for name, gained, pin in (('GARDEN.md', {}, 'core@' + version), ('VOCAB.md', rows, None)):
+        was, now = fm(src, name), fm(dst, name)
+        if was is None:
+            continue
+        if not isinstance(was, dict) or not isinstance(now, dict):
+            out.append(f"{name}: its front matter is no mapping")
+            continue
+        if pin is not None and now.get('extends') != pin:
+            out.append(f"{name}: `extends: {now.get('extends')}`, where the copy pins {pin}")
+        rest_was = {k: v for k, v in was.items() if k != 'extends'}
+        rest_now = {k: v for k, v in now.items() if k != 'extends' and k not in gained}
+        if pin is None and 'extends' in now:
+            out.append(f"{name}: still pins `{now['extends']}`: the law a garden runs is GARDEN.md's alone")
+        if rest_was != rest_now or any(now.get(k) != v for k, v in gained.items()):
+            diff = sorted(set(rest_was) ^ set(rest_now) | {k for k in rest_was if rest_now.get(k) != rest_was[k]})
+            out.append(f"{name}: read back, it differs from what it held at {', '.join(map(str, diff)) or 'the rows'}")
+    return out
 
 
 def main(argv):
@@ -1226,7 +1282,8 @@ def main(argv):
         print(f"translate: {counts['beans']} beans, {counts['statements']} statements; {counts['leaves']} values, "
               f"{placed} placed (" + ', '.join(f"{v} {k}" for k, v in sorted(counts.items()) if k.startswith('to '))
               + f"); {counts['comment lines']} comment lines kept; {counts['acts at the moment their bean was made']} acts "
-              f"at the moment their bean was made, their day in details — {len(problems)} problem(s)")
+              f"at the moment their bean was made, their day in details; GARDEN.md pins {counts['pin']} — "
+              f"{len(problems)} problem(s)")
         return 1 if problems else 0
     print(__doc__.strip().split('\n\n')[0])
     return 2

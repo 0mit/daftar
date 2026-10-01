@@ -183,7 +183,7 @@ def main():
               all(os.path.isfile(os.path.join(G, 'core', f)) for f in ('check.py', 'translate.py', 'law/core.yaml', 'hooks/pre-commit')))
         gp = os.path.join(G, 'GARDEN.md')                  # ADOPTING is moving the garden's pin from std-vocab to the core
         gt = open(gp, encoding='utf-8').read()
-        open(gp, 'w', encoding='utf-8', newline='\n').write(re.sub(r'(?m)^extends: std-vocab@[^ \n]*', 'extends: core@1', gt, count=1))
+        open(gp, 'w', encoding='utf-8', newline='\n').write(re.sub(r'(?m)^extends: std-vocab@[^ \n]*', 'extends: core@' + str(read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version']), gt, count=1))
         run('git', 'config', 'user.name', 't', cwd=G)
         run('git', 'config', 'user.email', 't@x', cwd=G)
         # THE MINUTE TURNS FIRST. A heading's moment is the clock's to the minute, so two saves in one minute share one; the

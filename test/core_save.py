@@ -91,11 +91,12 @@ try:
         shutil.copy(os.path.join(ROOT, 'seed', f), os.path.join(G, 'seed', f))
     shutil.copytree(os.path.join(ROOT, 'seed', 'knowledge'), os.path.join(G, 'seed', 'knowledge'))
     CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
-    write('GARDEN.md', {'garden': 'core-save', 'extends': 'std-vocab@32.0', 'gardener': 'sam', 'zone': 'Asia/Tehran'}, '')
+    write('GARDEN.md', {'garden': 'core-save', 'extends': 'core@' + str(read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version']), 'gardener': 'sam',
+                         'zone': 'Asia/Tehran'}, '')
     vocab = {k: [dict(r, vacant=r.get('vacant') or "the cases' row, beside this suite's own garden")
                  if k in ('kinds', 'levels', 'namespaces', 'verbs', 'units') and isinstance(r, dict) else r
                  for r in v] if isinstance(v, list) else v for k, v in CASES['vocab'].items()}
-    write('VOCAB.md', dict({'vocab': 'core-save', 'extends': 'std-vocab@32.0'}, **vocab), '')
+    write('VOCAB.md', dict({'vocab': 'core-save'}, **vocab), '')
     os.makedirs(os.path.join(G, 'log'))
     with open(os.path.join(G, 'log', 'journal.md'), 'w', encoding='utf-8') as fh:
         fh.write('# Journal\n')

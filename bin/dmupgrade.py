@@ -108,6 +108,20 @@ one reader of the map.
   garden kept of its own; its journal entry is written as the 22.0 step's is. Where all it finds is a person's to do,
   it names that and exits non-zero, --keep-on-failure or not: nothing translated is not nothing to do.
 
+ADOPTING THE CORE (v1). A release gives a garden the law its seed/GARDEN.md.template pins, and a garden runs the law
+its GARDEN.md pins. A garden in today's words (`std-vocab@…`) ADOPTS a release that gives the core (`core@<version>`):
+once, in place, in one commit. It is planned first and touches nothing until it can be done whole — a profile moved in
+the same run is refused, every bean must be committed, the garden must pass its own gate, and the RELEASE'S translator
+(core/translate.py) must write the whole garden in the core's statements into a copy beside it, every value of every
+bean given exactly one place and found there when the file is read back; it reads the words of the last std-vocab, and
+refuses a garden in older ones, which first upgrades to the last release of today's language. Then the release's files
+come in, the beans, VOCAB.md (the core's rows added, its pin gone) and GARDEN.md (pinning the core, the release
+recorded) are the translation's, the hooks are installed again, a RULE-CHANGE entry is written — quoting the count and
+naming every bean, with who ratified it and why left for a person — and the core's gate runs: a garden it refuses is
+put back whole, today's hooks with it. The commit that follows is the one the core's gate grants the moments history
+recorded, that once (core/commit.py). A garden that runs the core already is not moved back to today's words, and is
+moved to a later release of the core by the upgrade part 5 of v1 ports.
+
 OPTING INTO A PROFILE IS ONE ACT OF THIS TOOL. `--extend <profile>` (or `--retract <profile>`), each as often as
 needed, with the release GARDEN.md records — or with a newer one, in the same run as the crossing: the profile is
 written in, or taken out of, VOCAB.md's `extends_profiles` (the edit PROVED as every other: the front matter parses to
@@ -3514,6 +3528,20 @@ def main():
         if unknown:
             ap.error(f"unrecognized arguments: {' '.join(unknown)}")
 
+        # THE LAW EACH SIDE RUNS (v1): a release gives a garden the law its GARDEN.md.template pins, and a garden runs the
+        # law its GARDEN.md pins. A garden in today's words ADOPTS a release of the core, once and in place.
+        gives, runs = law_of_release(rel), law_of_garden(ROOT)
+        if gives == 'core' and runs == 'std-vocab':
+            return adopt(a, rel, sha, source, current)
+        if runs == 'core' and gives == 'core' and current == a.tag:
+            print(f"nothing to do: this garden runs the core ({pin_of_garden(ROOT)}) of {a.tag} already.")
+            return 0
+        if runs == 'core':
+            refuse(f"this garden runs the core ({pin_of_garden(ROOT)}), and {a.tag} gives "
+                   + ("the core too: a garden of statements moves to a later release of the core by the upgrade part 5 "
+                      "of v1 ports, which this release does not carry yet" if gives == 'core' else
+                      "today's words: a garden of statements does not go back to them") + '.')
+
         if vocab_version(rel) in ('None', ''):
             sys.exit(f"REFUSING: {a.tag} carries no readable `version:` in seed/std-vocab.md — nothing to pin to.")
         before = vocab_version(ROOT)
@@ -3672,11 +3700,9 @@ def dropped_line(dropped):
                                                  for f, ks in sorted(dropped.items()))] if dropped else []
 
 
-def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None,
-                  profiles=None, step24=None, step26=None, step27=None, step29=None, step30=None, step31=None,
-                  step32=None):
-    """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
-    caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
+def receive(rel, want, have, added):
+    """Step 3: every file the garden receives from the release copied in, and every file it held that the release no
+    longer gives taken out; (changed, removed). `added` is the caller's list, filled as files arrive."""
     changed = []
     for f in sorted(want):
         src, dst = os.path.join(rel, f), os.path.join(ROOT, f)
@@ -3697,6 +3723,15 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
         while os.path.realpath(d) != os.path.realpath(ROOT) and os.path.isdir(d) and not os.listdir(d):
             os.rmdir(d)
             d = os.path.dirname(d)
+    return changed, removed
+
+
+def apply_release(a, rel, sha, source, current, before, verb, want, have, added, step21, step22=None, step23=None,
+                  profiles=None, step24=None, step26=None, step27=None, step29=None, step30=None, step31=None,
+                  step32=None):
+    """Steps 3 to 8: the files, the pins, the translations, the installer, the journal and the gate. `added` is the
+    caller's list, filled as files arrive, so that whatever stops this midway is put back whole."""
+    changed, removed = receive(rel, want, have, added)
 
     after = vocab_version(ROOT)
     repinned = []
@@ -3947,6 +3982,155 @@ def apply_release(a, rel, sha, source, current, before, verb, want, have, added,
     print("\nNOT COMMITTED. Read `git diff`" + (", then\n" if words_only else ", complete the journal entry's two `fill in` fields, then\n") +
           "  git add -A\n"
           "  git commit\n"
+          "To abandon it instead:\n"
+          "  git checkout -- ." + (f"\n  git clean -f -- {' '.join(_arg(f) for f in added)}" if added else ""))
+    return 0 if gate.returncode == 0 else 1
+
+
+# ==== THE ADOPTION OF THE CORE (v1 part 4) =========================================================================
+# A release of the core gives a garden the core's statements in place of today's words. The garden is translated by the
+# release's own translator (core/translate.py), into a copy beside it and then in place, in the one commit that adopts
+# the core: a RULE-CHANGE a person ratifies, which the core's gate grants the moments history recorded, that once
+# (core/commit.py, `knowing`; ratified 2026-10-01). Nothing is a person's to decide but the adoption itself, so nothing
+# is asked: every value of every bean is given exactly one place, the written file read back finds it there, and the
+# count is the proof, quoted in the entry.
+MANIFEST_PIN = re.compile(r'^(extends:[ \t]*)(\S+)', re.M)
+
+
+def law_of_release(root):
+    """'core' where a garden grown from the release at `root` runs the core — its seed/GARDEN.md.template pins `core@` —
+    else 'std-vocab': the release says which law it gives a garden in the one place it gives it."""
+    try:
+        with open(os.path.join(root, 'seed', 'GARDEN.md.template'), encoding='utf-8') as fh:
+            text = fh.read()
+    except OSError:
+        return 'std-vocab'
+    return 'core' if re.search(r'(?m)^extends:[ \t]*core@', text) else 'std-vocab'
+
+
+def pin_of_garden(root):
+    """GARDEN.md's `extends`, as written, or ''."""
+    try:
+        with open(os.path.join(root, 'GARDEN.md'), encoding='utf-8') as fh:
+            m = MANIFEST_PIN.search(dmparse.split_front_matter(fh.read())[0] or '')
+    except OSError:
+        return ''
+    return m.group(2) if m else ''
+
+
+def law_of_garden(root):
+    return 'core' if pin_of_garden(root).startswith('core@') else 'std-vocab'
+
+
+def adopt(a, rel, sha, source, current):
+    """A garden in today's words adopts the core of the release at `rel`: planned first, touching nothing — its own gate
+    passes, no bean is untracked, and the release's translator writes it whole into a copy with every value placed —
+    then the release's files received, the translation brought in, the hooks installed, the entry written and the core's
+    gate run; anything that fails puts every file back. It does not commit."""
+    if a.extend or a.retract:
+        refuse("a profile is extended or retracted in a run of its own, not in the one that adopts the core.")
+    before = vocab_version(ROOT)
+    # PLANNED FIRST: EVERY BEAN IS COMMITTED — an untracked one would be translated and adopted with nobody having saved it
+    loose = dmgarden.untracked(ROOT)
+    if loose:
+        refuse(f"{len(loose)} bean(s) are not committed: {', '.join(loose[:8])}{' …' if len(loose) > 8 else ''}. Save them "
+               f"(bin/dmsave.py) or move them out, then adopt.")
+    # ...AND THE GARDEN PASSES ITS OWN GATE, under the law it runs: the translator's map reads a garden that does
+    own = os.path.join(ROOT, 'bin', 'dmcheck.py')
+    if os.path.isfile(own):
+        g = run(sys.executable, own, '--all', check=False)
+        if g.returncode != 0:
+            errs = [ln for ln in g.stdout.splitlines() if ln.startswith('ERROR')]
+            refuse(f"this garden does not pass its own gate (std-vocab {before}), and a translation reads a garden that "
+                   f"does:\n" + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') +
+                   "\nFix what these name and commit, then adopt.")
+    tmp = tempfile.mkdtemp(prefix='dmadopt-')
+    try:
+        copy = os.path.join(tmp, 'garden')
+        tr = run(sys.executable, os.path.join(rel, 'core', 'translate.py'), 'garden', ROOT, copy, check=False)
+        said = (tr.stdout + tr.stderr).strip().splitlines()
+        count = next((ln for ln in reversed(said) if ln.startswith('translate:')), '')
+        if tr.returncode != 0 or not count:
+            refuse(f"{a.tag}'s translator cannot write this garden in the core's statements:\n"
+                   + '\n'.join('  ' + ln for ln in said[-14:]))
+        return adopt_apply(a, rel, sha, source, current, before, copy, count)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def adopt_apply(a, rel, sha, source, current, before, copy, count):
+    """The release's files, the translation, the pin, the hooks, the entry and the core's gate — or everything back."""
+    profiles = garden_profiles()
+    want = shipped(rel, profiles)
+    have = shipped(ROOT) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
+    added = []
+    try:
+        changed, removed = receive(rel, want, have, added)
+        # THE TRANSLATION, IN PLACE: each bean and mapping as the translator wrote it, VOCAB.md with the core's rows and
+        # without a pin, and GARDEN.md pinning the core — the release recorded as every upgrade records it
+        beans = []
+        for new in dmgarden.paths(copy):
+            rel_ = os.path.relpath(new, copy)
+            old = os.path.join(ROOT, rel_)
+            if not os.path.isfile(old):
+                sys.exit(f"REFUSING: the translation holds {rel_}, which the garden does not")
+            if open(new, 'rb').read() != open(old, 'rb').read():
+                shutil.copyfile(new, old)
+                beans.append(os.path.basename(new)[:-3])
+        law = []
+        for f in ('VOCAB.md', 'GARDEN.md'):
+            if os.path.isfile(os.path.join(copy, f)):
+                shutil.copyfile(os.path.join(copy, f), os.path.join(ROOT, f))
+                law.append(f)
+        gpath = os.path.join(ROOT, 'GARDEN.md')
+        gtext, gform = read_text(gpath)
+        pin = pin_of_garden(ROOT)
+        if not pin.startswith('core@'):
+            sys.exit(f"REFUSING: the translation left GARDEN.md pinning {pin or 'nothing'}, not the core")
+        gline = f'daftar_release: "{a.tag}"  # the daftar release this garden runs; bin/dmupgrade.py moves it'
+        gtext = RELEASE.sub(gline, gtext, count=1) if RELEASE.search(gtext) else \
+            re.sub(r'^extends:.*$', lambda m: m.group(0) + '\n' + gline, gtext, count=1, flags=re.M)
+        write_text(gpath, gtext, gform)
+        install()
+        sys.path.insert(0, os.path.join(ROOT, 'bin')); import dmjournal          # the release's own tool, just applied
+        _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
+        lines = ['\n' + dmjournal.stamp(_who, f"RULE-CHANGE: language adopted: the core ({pin}), daftar {a.tag}", ROOT),
+                 "- ratified_by: (fill in who ratified — the gardener's word, given here)",
+                 f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; std-vocab {before} -> "
+                 f"{pin}; release {current or 'unrecorded'} -> {a.tag}. The garden adopts the core: its beans written in "
+                 f"the core's statements by the release's translator, in place and in this one commit, which the core's "
+                 f"gate grants the moments history recorded, this once (core/commit.py, `knowing`).",
+                 f"- count: {count[len('translate: '):]}",
+                 f"- changed: {', '.join(changed + law) or 'none'}",
+                 f"- added: {', '.join(added) or 'none'}",
+                 f"- removed: {', '.join(removed) or 'none'}",
+                 "- why: (fill in — what adopting the core brings this garden)",
+                 f"- beans: {', '.join(beans) or 'none'}"]
+        jpath = os.path.join(ROOT, 'log', 'journal.md')
+        with open(jpath, 'a', encoding='utf-8', newline=read_text(jpath)[1].nl) as j:
+            j.write('\n'.join(lines) + '\n')
+        gate = run(sys.executable, os.path.join(ROOT, 'bin', 'check.py'), check=False)
+    except BaseException as e:
+        put_back(added)
+        print("NOT ADOPTED: the adoption stopped midway" + ('' if isinstance(e, SystemExit) else
+              f" ({type(e).__name__}{': ' + str(e) if str(e) else ''})") + ", so every file was put back as it was.",
+              file=sys.stderr, flush=True)
+        raise
+    last = (gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1]
+    if gate.returncode != 0 and not a.keep_on_failure:
+        put_back(added)
+        errs = [ln for ln in gate.stdout.splitlines() if ln.strip() and not ln.startswith('core check')]
+        print(f"NOT ADOPTED: in the core's statements this garden fails the core's gate, so every file was put back as "
+              f"it was.\n" + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') + f"\n{last}\n"
+              "Fix what these name in today's words (or pass --keep-on-failure to look at the translation in place), "
+              "then run this again.")
+        return 1
+    print(f"adopted the core at {a.tag} ({sha[:12]}): std-vocab {before} -> {pin}; {len(beans)} bean(s) in statements, "
+          f"{len(changed) + len(law)} changed, {len(added)} added, {len(removed)} removed.\n{count}\n{last}")
+    print("\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n"
+          "  git add -A\n"
+          "  git commit\n"
+          "The commit is judged by the core's gate, which grants it the moments history recorded, this once.\n"
           "To abandon it instead:\n"
           "  git checkout -- ." + (f"\n  git clean -f -- {' '.join(_arg(f) for f in added)}" if added else ""))
     return 0 if gate.returncode == 0 else 1

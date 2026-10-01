@@ -29,8 +29,9 @@ it. The words the gate knows are the core, `core/law/core.yaml`, and every other
 - The **header** is `bean` (the file's name), `kind`, `title`, `summary`, `tags`, and `details`: what fits no verb yet,
   kept whole until a verb is proposed for it. Nothing else stands beside `statements`.
 - A **garden** is a git repository of beans: one ledger. `GARDEN.md` names it, names its gardener, pins the law it
-  runs (`extends: core@<version>`), records the release (`daftar_release`) and the zone its days are reckoned in
-  (`zone`). A garden is known by its id, read from git and never written as its own: the first twelve hexadecimal
+  runs (`extends: core@<version>`, the law's own version), records the release (`daftar_release`) and the zone its days
+  are reckoned in (`zone`); it may say what it rehearses (`test`), where it began (`origin`) and the gardener's standing
+  rules (`policy`), and holds no other key (`core/law/core.yaml`, `manifest`). A garden is known by its id, read from git and never written as its own: the first twelve hexadecimal
   digits of the root of its first-parent history, a name of the namespace `garden-id`.
 - A garden is kept by its **gardener**, a person or an organisation it holds a bean for. The gardener ratifies; an
   agent tends the garden, and proposes what is not its to decide (manifesto: parts). A garden is written by its own
@@ -326,7 +327,9 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   lists them: the core's thirteen, and five that today's gate held — `consent`, `harm`, `room`, `vacancy`, `kept`.
 - **The commit's own rules**: every bean a commit changes is named by the journal entry it adds; a statement it adds is
   known by an act it adds, at that entry's moment; a change to the law says RULE-CHANGE. Only the commit that adopts
-  the core in a garden, a RULE-CHANGE, carries the moments its history recorded. **What is kept is not damaged**: the
+  the core in a garden, a RULE-CHANGE, carries the moments its history recorded: `bin/dmupgrade.py <a release of the
+  core>` translates the garden in place and writes its entry with the translator's count, and a person fills in who
+  ratified it and why, and commits. A garden grown from a release of the core is in it from its first commit. **What is kept is not damaged**: the
   journal is appended to and never rewritten, a series' part is written once, and a commit names in its entry each
   header key or statement it takes out of a bean, empties none it keeps, and leaves every bean a body.
 - These rules confirm that the words are there and well formed, not that they are true; honesty is still the writer's
