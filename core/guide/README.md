@@ -33,9 +33,9 @@ hands over to it.)
 Then:
 
 1. write `beans/<id>.md`, where `bean: <id>` equals the file's name;
-2. save it: `python3 bin/dmsave.py "<who>" "<what you did>" --body "- action: …"` writes the journal entry (its
+2. save it: `python3 bin/save.py "<who>" "<what you did>" --body "- action: …"` writes the journal entry (its
    heading read from the clock), writes the moment in place of each `at: now`, stages everything and commits. When the
-   gate refuses, fix what it names and run `python3 bin/dmsave.py --again`.
+   gate refuses, fix what it names and run `python3 bin/save.py --again`.
 
 ## Your first beans
 
@@ -129,7 +129,7 @@ reading the clock.
 
 <!-- example: log/journal.md -->
 ```sh
-python3 bin/dmsave.py "sam" "the first beans" --body "- action: added [[sam]], [[laptop]] and [[lenovo]]; RULE-CHANGE: GARDEN.md names sam as the gardener, and VOCAB.md adds the namespace of Lenovo's serials.
+python3 bin/save.py "sam" "the first beans" --body "- action: added [[sam]], [[laptop]] and [[lenovo]]; RULE-CHANGE: GARDEN.md names sam as the gardener, and VOCAB.md adds the namespace of Lenovo's serials.
 - detail: the serial is off the underside of the machine.
 - why: starting the ledger with the person who keeps it, so nothing dangles."
 ```

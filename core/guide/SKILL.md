@@ -75,17 +75,17 @@ Read these when a question needs them, and only the part it needs:
 
 ## Working
 
-**Before touching a file:** `python3 bin/dmcursor.py <bean-or-path>`. It resolves a path back to the being that owns it,
-and reports what must be attended to, including what it inherits from what it is at, needs, or is part of.
+**Before touching a file:** `python3 bin/cursor.py <bean-or-path>`. It resolves a path back to the being that owns it,
+and reports what must be attended to, including what it inherits from what it is at, needs, is part of, or is owned by.
 
 **Before editing front matter:** measure first. One statement is one line: count the places an edit will touch, then
-state the number you expect; there is no default. `bin/dmsafe.py` does this by key (`count`, then an edit with
+state the number you expect; there is no default. `bin/safe.py` does this by key (`count`, then an edit with
 `expect=N`). Text surgery that changes more places than intended is the commonest way a bean is damaged.
 
 **Every write:** edit the one bean the fact is about, and save it with its journal entry in one command: `python3
-bin/dmsave.py "<who>" "<what changed>" --body "- action: …"`. It writes the entry (its heading read from the clock),
+bin/save.py "<who>" "<what changed>" --body "- action: …"`. It writes the entry (its heading read from the clock),
 writes that moment in place of each `at: now`, stages everything and commits; the gate judges what is committed, and
-refuses a bean whose change the entry does not name. After a refusal, fix what it names and run `python3 bin/dmsave.py
+refuses a bean whose change the entry does not name. After a refusal, fix what it names and run `python3 bin/save.py
 --again`. A change to the law must say RULE-CHANGE distinctly.
 
 **When you meet a case the law does not cleanly cover:** stop, show the person the nearest verb with its siblings, and

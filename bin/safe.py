@@ -1,0 +1,784 @@
+#!/usr/bin/env python3
+"""safe — edit a front-matter document without silently destroying it.
+
+WHY THIS EXISTS. Beans, VOCAB.md and std-vocab.md are STRUCTURED documents edited with TEXT surgery,
+because their comments and layout carry meaning that a YAML round-trip would flatten. Text surgery is
+blind to structure, and in one session it drew blood five times:
+
+  1. an insert placed between a key and its indented block  -> invalid YAML, 9 documents broken at once
+  2. a stop-pattern that ran too far                        -> VALID yaml, four blocks silently lost
+  3. cuts ordered against anchors already removed           -> the script raised (self-caught)
+  4. open(f,'w').write(open(f).read())                      -> the file truncated before the read
+  5. a blind replace matching at the wrong indent depth     -> invalid YAML across a whole vocabulary
+
+Every one was caught eventually by the gate or the tests, and NONE reached history — but "eventually"
+means after other edits had piled on top, and after the damage had to be diagnosed rather than merely
+seen. This closes the window: an edit that breaks a document, empties it, or loses content you did not
+say you were removing is ROLLED BACK at write time, with the loss named.
+
+The check that matters most is the second one. A broken document announces itself; a document that still
+parses while quietly missing four blocks does not. So dmsafe compares LEAF PATHS before and after, and
+any path that disappears must be declared in `allow_remove`. Removing is fine — removing by accident
+is not, and the difference is whether you said so.
+
+Library — PREFER the structure-aware operations; they make the incident shapes unexpressible rather
+than merely caught, because they address a document by KEY instead of by offset, pattern or indent:
+    dmsafe.insert_after(path, 'owned_by', block)      # lands after the WHOLE block, never inside it
+    dmsafe.replace_block(path, 'located_at', block)
+    dmsafe.remove_block(path, 'tags')                 # the removal is declared by calling this
+Fall back to the general form only when no operation fits:
+    dmsafe.edit(path, lambda text: text.replace(...), allow_remove=['owns.stale_key'])
+
+A BEAN IN STATEMENTS (v1 part 5) is addressed by its statements, each one line: a statement is named by its verb, by
+its id, or by both — `pay`, `#rent`, `pay#rent` — and the leaf paths that guard every edit key a statement the same
+way, `statements.pay#rent.of.count` (one with no id by its verb and its place among that verb's, `say@0`), so a
+statement moved, or another added before it, loses nothing, and one taken out is lost by name. The operations:
+    safe.add_statements(path, block)                       # after the last statement: the block one or more `- verb: …`
+    safe.replace_statements(path, 'pay#rent', block, expect=1)
+    safe.remove_statements(path, '#rent', expect=1)       # its id or verb is what the save's entry names (rule `kept`)
+A statement keeps the comment lines above it: they go out with it, and stay where it is replaced.
+
+CLI — the same operations for a person at a shell; a block is read from a file with --block (in every shell):
+    python3 bin/safe.py count <path> <dotted>                         # measure first: how many places
+    python3 bin/safe.py count <path> <verb>|#<id>|<verb>#<id>          # ...in a bean in statements: how many statements
+    python3 bin/safe.py add     <path>              --block block.yaml # statements, after the last
+    python3 bin/safe.py replace <path> <statement> --expect N --block block.yaml
+    python3 bin/safe.py remove  <path> <statement> --expect N
+    python3 bin/dmsafe.py insert-after  <path> <key>   --block block.yaml
+    python3 bin/dmsafe.py replace-block <path> <key>   --block block.yaml
+    python3 bin/dmsafe.py remove-block  <path> <key>
+    python3 bin/dmsafe.py set-nested    <path> <dotted> --expect N   --block block.yaml
+    python3 bin/dmsafe.py flow-set      <path> <dotted> <value> --expect N
+    python3 bin/dmsafe.py verify [path ...]                           # parse-check (default: the whole garden)
+(`python` on Windows.) Without --block the block comes on standard input — `< block.yaml` in a Unix shell; PowerShell
+has no `<`, and Windows PowerShell 5.1 pipes text in the old code page, so there it is --block.
+Each write prints what it removed and what it added, as leaf paths; a refused edit says why and changes nothing.
+
+UTF-8 ON EVERY PLATFORM. A block — from --block or from standard input — is read as BYTES and decoded as UTF-8 (a
+byte-order mark dropped; UTF-16 with its mark, which Windows PowerShell 5.1's `>` and Out-File write, read as UTF-16),
+and anything else is refused before the bean is touched, never guessed at in the machine's code page: read in the
+code page, a Persian block went into the bean as mojibake, and the edit, the exit status and the gate all said nothing.
+UTF-16 without its mark (a NUL after every letter) is refused by name, as bin/dmjournal.py refuses it; CRLF is read
+as LF, since a bean is written with LF on every platform.
+"""
+import codecs, collections, os, re, stat, sys, tempfile
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dmparse
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
+try:
+    import yaml
+except ImportError:
+    print("ERROR: PyYAML required"); sys.exit(2)
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+_MUST_STATE = object()   # a sentinel, so a missing `expect` teaches instead of raising a TypeError
+
+
+class UnsafeEdit(Exception):
+    """Raised when an edit would break a document or lose undeclared content. Nothing is written."""
+
+
+def write_atomic(path, text, mode=0o644):
+    """`text` (str, written as UTF-8 with LF, or bytes) written WHOLE beside `path`, flushed to the disk, and swapped in
+    with os.replace: a crash, a kill or a full disk leaves the file as it was, never a half-written one. The file keeps
+    its mode where it exists; a new one is given `mode` (a record held off git passes 0o600: its owner's alone)."""
+    d = os.path.dirname(os.path.abspath(path))
+    fd, tmp = tempfile.mkstemp(prefix='.' + os.path.basename(path) + '.', suffix='.tmp', dir=d)
+    try:
+        with os.fdopen(fd, 'wb') as fh:
+            fh.write(text if isinstance(text, bytes) else text.encode('utf-8'))
+            fh.flush()
+            os.fsync(fh.fileno())
+        try:
+            os.chmod(tmp, stat.S_IMODE(os.stat(path).st_mode) if os.path.exists(path) else mode)
+        except OSError:
+            pass
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def parse(text):
+    """(front-matter, body) or raise. A document that does not parse is not a document."""
+    head, body = dmparse.split_front_matter(text)
+    if head is None:
+        raise UnsafeEdit("no front-matter fences — the document is empty or its fences were destroyed")
+    fm = dmparse.loads(head)
+    if not isinstance(fm, dict):
+        raise UnsafeEdit(f"front-matter is not a mapping (got {type(fm).__name__})")
+    return fm, body
+
+
+def leaf_paths(node, prefix=''):
+    """Every path to a leaf. Comparing these is what catches a document that still parses but has
+    quietly lost content — the failure mode a syntax check cannot see. A bean's `statements` are keyed by
+    statement (`statement_keys`), not by their place in the list."""
+    out = set()
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if not prefix and k == 'statements' and isinstance(v, list):
+                for key, st in zip(statement_keys(v), v):
+                    roles = next(iter(st.values())) if _is_statement(st) else st
+                    out |= leaf_paths(roles, f"statements.{key}") or {f"statements.{key}"}
+                continue
+            out |= leaf_paths(v, f"{prefix}.{k}" if prefix else str(k))
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            out |= leaf_paths(v, f"{prefix}[{i}]")
+    else:
+        out.add(prefix)
+    return out
+
+
+def _is_statement(x):
+    return isinstance(x, dict) and len(x) == 1 and isinstance(next(iter(x.values())), dict)
+
+
+def statement_keys(statements):
+    """The key of each statement of a bean: `<verb>#<id>`, or `<verb>@<n>` for the n-th of its verb that has no id; an
+    item that is no statement keeps its place, `@<i>`."""
+    out, nth = [], {}
+    for i, st in enumerate(statements):
+        if not _is_statement(st):
+            out.append(f"@{i}")
+            continue
+        (verb, roles), = st.items()
+        if roles.get('id') is not None:
+            out.append(f"{verb}#{roles['id']}")
+        else:
+            out.append(f"{verb}@{nth.get(verb, 0)}")
+            nth[verb] = nth.get(verb, 0) + 1
+    return out
+
+
+# ---- STRUCTURE-AWARE OPERATIONS -----------------------------------------------------------------
+# `edit()` above CATCHES a bad edit. These PREVENT the five shapes that caused every incident, because
+# they address a document by KEY rather than by offset, pattern or indent depth:
+#   an insert lands after a key's WHOLE BLOCK, never between the key and its children (incident 1)
+#   a span is computed from the structure, so it cannot run too far (incident 2)
+#   operations are named, so they cannot be ordered against a landmark already removed (incident 3)
+#   dmsafe owns the write, so a truncating open() is not reachable (incident 4)
+#   nothing matches on leading whitespace, so indent depth cannot be confused (incident 5)
+
+def top_level_span(text, key):
+    """(start, end) of a top-level `key:` INCLUDING its indented block, within the front matter.
+
+    The end is the crucial part and the part I got wrong: a key's block runs to the next line that
+    starts a new top-level key OR a column-0 comment introducing one — not to the next blank line, and
+    not to the first line that merely looks like a boundary."""
+    fences = [i for i, l in enumerate(text.splitlines(keepends=True)) if l.rstrip('\r\n') == '---']
+    lines = text.splitlines(keepends=True)
+    if len(fences) < 2:
+        raise UnsafeEdit("cannot locate front-matter fences")
+    lo, hi = fences[0] + 1, fences[1]
+    found = [i for i in range(lo, hi) if re.match(rf'^{re.escape(key)}:', lines[i])]
+    if not found:
+        raise UnsafeEdit(f"no top-level key '{key}' in the front matter")
+    if len(found) > 1:
+        raise UnsafeEdit(f"top-level key '{key}' appears {len(found)} times (lines "
+                         f"{[i + 1 for i in found]}) — refusing to guess which you meant")
+    start = found[0]
+    end = hi
+    for i in range(start + 1, hi):
+        if re.match(r'^[A-Za-z_][\w-]*:', lines[i]) or lines[i].startswith('#'):
+            end = i
+            break
+    while end > start + 1 and not lines[end - 1].strip():
+        end -= 1                                   # do not swallow the blank line before the next key
+    return sum(len(l) for l in lines[:start]), sum(len(l) for l in lines[:end])
+
+
+def nested_spans(text, dotted):
+    """Every (start, end) span for a NESTED key addressed by PATH — `a.b`, or `a[].b` to reach into each
+    item of a list. Ancestry is what anchors the match, NOT an indentation string.
+
+    Incident 5 was a nested edit: a replace meant for ONE `poles:` matched FOUR, because the pattern was
+    anchored to leading whitespace rather than to a parent. Addressing by path removes that class, and
+    RETURNING ALL SPANS lets the caller say how many it expected — which is the actual safeguard, since
+    the bug was not the depth but matching more places than intended and nothing saying so."""
+    lines = text.splitlines(keepends=True)
+    fences = [i for i, l in enumerate(lines) if l.rstrip('\r\n') == '---']
+    if len(fences) < 2:
+        raise UnsafeEdit("cannot locate front-matter fences")
+
+    def indent_of(i):
+        return len(lines[i]) - len(lines[i].lstrip(' '))
+
+    def block_end(i, ind):
+        j = i + 1
+        while j < fences[1] and (not lines[j].strip() or indent_of(j) > ind):
+            j += 1
+        while j > i + 1 and not lines[j - 1].strip():
+            j -= 1
+        return j
+
+    def descend(lo, hi, ind, segs):
+        seg, rest = segs[0], segs[1:]
+        listy = seg.endswith('[]')
+        name = seg[:-2] if listy else seg
+        out = []
+        i = lo
+        while i < hi:
+            if lines[i].strip() and indent_of(i) == ind and re.match(rf'^ {{{ind}}}{re.escape(name)}:', lines[i]):
+                end = block_end(i, ind)
+                if not rest and not listy:
+                    out.append((i, end))
+                elif listy:
+                    # list items sit one level in, each `- ` starting an item whose keys align after it
+                    j = i + 1
+                    while j < end:
+                        if re.match(rf'^ *- ', lines[j]):
+                            item_ind = indent_of(j) + 2
+                            k = block_end(j, indent_of(j))
+                            if rest:
+                                out += descend(j, k, item_ind, rest) if not re.match(
+                                    rf'^ *- .*{re.escape(rest[0])}:', lines[j]) else _inline(j, rest)
+                            else:
+                                out.append((j, k))
+                            j = k
+                        else:
+                            j += 1
+                else:
+                    out += descend(i + 1, end, ind + 2, rest)
+                i = end
+            else:
+                i += 1
+        return out
+
+    def _inline(j, rest):
+        raise UnsafeEdit(
+            f"'{dotted}' is inside a FLOW mapping on line {j + 1} — a line-addressed operation cannot "
+            f"reach into `{{a: 1, b: 2}}`. Edit that line as a whole, or convert it to block form.")
+
+    spans = descend(fences[0] + 1, fences[1], 0, dotted.split('.'))
+    return [(sum(len(l) for l in lines[:a]), sum(len(l) for l in lines[:b])) for a, b in spans]
+
+
+def _require_expect(expect, dotted):
+    if expect is _MUST_STATE:
+        raise UnsafeEdit(
+            f"state expect=N for '{dotted}'. The COUNT is the safeguard, not the addressing: across six "
+            f"incidents the cause was never where an edit landed but that it landed in more places than "
+            f"intended. Measure first — dmsafe.count(path, '{dotted}') — then say the number.")
+    if not isinstance(expect, int) or expect < 1:
+        raise UnsafeEdit(f"expect must be a positive integer, got {expect!r}")
+
+
+def count(path, dotted):
+    """How many locations `dotted` addresses, so you can MEASURE before you act. Returns (n, kind)."""
+    text = open(path, encoding='utf-8').read()
+    try:
+        n = len(nested_spans(text, dotted))
+        if n:
+            return n, 'block'
+    except UnsafeEdit:
+        pass
+    try:
+        n = len(flow_spans(text, dotted))
+        return (n, 'flow') if n else (0, 'none')
+    except UnsafeEdit:
+        return 0, 'none'
+
+
+def _closes(text, i, q):
+    """Whether text[i], the quote character `q`, closes the quoted scalar it stands in: in double quotes only after an
+    EVEN run of backslashes (`"C:\\"` ends a Windows path), in single quotes always — a single-quoted scalar has no
+    backslash escape, and `''` reopens at once. The one rule both flow scanners read."""
+    if q != '"':
+        return True
+    n = 0
+    while i - 1 - n >= 0 and text[i - 1 - n] == '\\':
+        n += 1
+    return n % 2 == 0
+
+
+def _flow_pairs(text, lo, hi):
+    """[(key, key_span, value_span)] for a flow mapping `{...}` spanning text[lo:hi].
+
+    Scans with quote and nesting awareness rather than splitting on commas, because a value may itself
+    contain a comma, a brace or a quoted comma — all three occur in this garden's anchors."""
+    inner_lo, inner_hi = lo + 1, hi - 1
+    parts, depth, q, seg = [], 0, None, inner_lo
+    i = inner_lo
+    while i < inner_hi:
+        c = text[i]
+        if q:
+            if c == q and _closes(text, i, q):
+                q = None
+        elif c in '"\'':
+            q = c
+        elif c in '{[':
+            depth += 1
+        elif c in '}]':
+            depth -= 1
+        elif c == ',' and depth == 0:
+            parts.append((seg, i)); seg = i + 1
+        i += 1
+    parts.append((seg, inner_hi))
+    out = []
+    for a, b in parts:
+        chunk = text[a:b]
+        m = re.match(r'^(\s*)([\w.-]+)(\s*:\s*)', chunk)
+        if not m:
+            continue
+        ks = a + len(m.group(1))
+        vs = a + m.end()
+        ve = b
+        while ve > vs and text[ve - 1] in ' \t':
+            ve -= 1                       # the value ends at its last byte, not at the space before `}`
+        out.append((m.group(2), (ks, ks + len(m.group(2))), (vs, ve)))
+    return out
+
+
+def flow_spans(text, dotted):
+    """Locate a key INSIDE one-line flow mappings, addressed as `a.b[].k` or `a.b[sel=val].k`.
+
+    Line-addressed operations cannot reach into `{ a: 1, b: 2 }`, and most anchors in this garden are
+    exactly that. This reaches them by scanning the flow mapping itself, and returns the VALUE span of
+    each match so an edit replaces only the value and leaves every other byte — quoting, spacing,
+    key order, trailing comment — untouched."""
+    segs = dotted.split('.')
+    leaf = segs[-1]
+    container = '.'.join(segs[:-1])
+    sel = None
+    m = re.match(r'^(.*)\[([\w.-]+)=([^\]]+)\]$', container)
+    if m:
+        container, sel = m.group(1) + '[]', (m.group(2), m.group(3))
+    lines = text.splitlines(keepends=True)
+    offs, acc = [], 0
+    for l in lines:
+        offs.append(acc); acc += len(l)
+    hits = []
+    for a, b in nested_spans(text, container) if not container.endswith('[]') else _item_lines(text, container):
+        chunk = text[a:b]
+        for lm in re.finditer(r'\{', chunk):
+            start = a + lm.start()
+            depth, j, q = 0, start, None
+            while j < b:
+                c = text[j]
+                if q:
+                    if c == q and _closes(text, j, q):
+                        q = None
+                elif c in '"\'':
+                    q = c
+                elif c == '{':
+                    depth += 1
+                elif c == '}':
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j += 1
+            pairs = _flow_pairs(text, start, j + 1)
+            if sel:
+                got = dict((k, text[v[0]:v[1]].strip().strip('"\'')) for k, _ks, v in pairs)
+                if got.get(sel[0]) != sel[1]:
+                    break
+            for k, _ks, vspan in pairs:
+                if k == leaf:
+                    hits.append(vspan)
+            break
+    return hits
+
+
+def _item_lines(text, container):
+    """Spans of each `- ` item under a container path ending in `[]`."""
+    base = container[:-2]
+    lines = text.splitlines(keepends=True)
+    out = []
+    for a, b in nested_spans(text, base):
+        seg = text[a:b]
+        off = a
+        for ln in seg.splitlines(keepends=True):
+            if re.match(r'^\s*- ', ln):
+                out.append((off, off + len(ln)))
+            off += len(ln)
+    return out
+
+
+def flow_set(path, dotted, value, expect=_MUST_STATE, **kw):
+    """Set a key's value inside flow mappings, replacing ONLY the value bytes."""
+    _require_expect(expect, dotted)
+
+    def t(text):
+        spans = flow_spans(text, dotted)
+        if len(spans) != expect:
+            raise UnsafeEdit(f"'{dotted}' matched {len(spans)} flow location(s), expected {expect}")
+        out, prev = [], 0
+        for s_, e_ in spans:
+            out.append(text[prev:s_]); out.append(str(value)); prev = e_
+        out.append(text[prev:])
+        return ''.join(out)
+    return edit(path, t, **kw)
+
+
+def flow_insert(path, dotted, key, value, after=None, expect=_MUST_STATE, **kw):
+    """Add a key to flow mappings, optionally right AFTER a named key — the P4 anchor migration's shape."""
+    _require_expect(expect, f"{dotted}.{after or key}")
+
+    def t(text):
+        anchor_key = after or key
+        spans = flow_spans(text, f"{dotted}.{anchor_key}")
+        if len(spans) != expect:
+            raise UnsafeEdit(f"'{dotted}.{anchor_key}' matched {len(spans)} flow location(s), "
+                             f"expected {expect}")
+        out, prev = [], 0
+        for s_, e_ in spans:
+            out.append(text[prev:e_]); out.append(f", {key}: {value}"); prev = e_
+        out.append(text[prev:])
+        return ''.join(out)
+    return edit(path, t, **kw)
+
+
+def set_nested(path, dotted, block, expect=_MUST_STATE, **kw):
+    """Replace every span of a nested key — refusing unless EXACTLY `expect` locations match. Stating the
+    count is the safeguard: incident 5 intended one location and silently changed four."""
+    _require_expect(expect, dotted)
+
+    def t(text):
+        spans = nested_spans(text, dotted)
+        if len(spans) != expect:
+            raise UnsafeEdit(f"'{dotted}' matched {len(spans)} location(s), expected {expect} — "
+                             f"say which you mean before changing any of them")
+        out, prev = [], 0
+        for s_, e_ in spans:
+            out.append(text[prev:s_]); out.append(block if block.endswith('\n') else block + '\n')
+            prev = e_
+        out.append(text[prev:])
+        return ''.join(out)
+    return edit(path, t, **kw)
+
+
+def insert_after(path, key, block, **kw):
+    """Insert `block` after the COMPLETE block of a top-level key. This is incident 1 made unexpressible."""
+    def t(text):
+        _s, e = top_level_span(text, key)
+        return text[:e] + (block if block.endswith('\n') else block + '\n') + text[e:]
+    return edit(path, t, **kw)
+
+
+def replace_block(path, key, block, **kw):
+    """Replace a top-level key's whole block. The span comes from the structure, not from a stop-pattern."""
+    def t(text):
+        s_, e = top_level_span(text, key)
+        return text[:s_] + (block if block.endswith('\n') else block + '\n') + text[e:]
+    return edit(path, t, **kw)
+
+
+def remove_block(path, key, **kw):
+    """Remove a top-level key and its block. The removal is declared by CALLING this, not by a flag."""
+    def t(text):
+        s_, e = top_level_span(text, key)
+        return text[:s_] + text[e:]
+    kw.setdefault('allow_remove', ())
+    kw['allow_remove'] = tuple(kw['allow_remove']) + (key,)
+    return edit(path, t, **kw)
+
+
+# ---- A BEAN IN STATEMENTS (v1 part 5) -----------------------------------------------------------
+# A statement is one item of `statements`, found by the statement merge's own reader (core/merge.py `Side`), which keeps
+# each item's lines: what stands above it (comments), and the statement from its dash. Nothing here matches on indent.
+
+def _side(text, what):
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from core import merge
+    try:
+        side = merge.Side(text.replace('\r\n', '\n'), what)
+    except merge.Refused as e:
+        raise UnsafeEdit(f"{what} is not a bean in statements: {e}")
+    return side
+
+
+def _selects(sel):
+    """`pay`, `#rent` or `pay#rent` as (verb, id), either None."""
+    verb, _h, sid = sel.partition('#')
+    if not re.fullmatch(r'[a-z][a-z0-9-]*', verb or 'x') or (_h and not sid) or not (verb or sid):
+        raise UnsafeEdit(f"'{sel}' names no statement: a statement is named by its verb, `#<id>`, or `<verb>#<id>`")
+    return verb or None, sid or None
+
+
+def statements_matching(text, sel, what='the bean'):
+    """[(index, item)] of the statements `sel` names, and the bean's reader."""
+    verb, sid = _selects(sel)
+    side = _side(text, what)
+    return [(i, it) for i, it in enumerate(side.items)
+            if (verb is None or it.verb == verb) and (sid is None or str(it.roles.get('id')) == sid)], side
+
+
+def count_statements(path, sel):
+    """How many statements `sel` names in a bean of statements: measure, then state the number."""
+    return len(statements_matching(open(path, encoding='utf-8').read(), sel, path)[0])
+
+
+def _block_statements(block, indent):
+    """A block of one or more statements, read and set at `indent`: each `- verb: {…}`, refused if it is not."""
+    lines = [ln for ln in block.replace('\r\n', '\n').rstrip('\n').split('\n')]
+    cut = min((len(ln) - len(ln.lstrip(' ')) for ln in lines if ln.strip()), default=0)
+    lines = [ln[cut:] for ln in lines]
+    try:
+        items = dmparse.loads('\n'.join(lines))
+    except Exception as e:
+        raise UnsafeEdit(f"the block is not YAML: {' '.join(str(e).split())[:200]}")
+    if not (isinstance(items, list) and items and all(_is_statement(x) for x in items)):
+        raise UnsafeEdit("the block is not statements: write each as one item, `- <verb>: { <role>: … }`")
+    return ''.join((' ' * indent + ln if ln else ln) + '\n' for ln in lines)
+
+
+def _lines_edit(path, change, allow_remove=()):
+    """Edit a bean of statements by its lines: `change(lines, side)` returns the new lines."""
+    def t(text):
+        side = _side(text, path)
+        lines = text.replace('\r\n', '\n').split('\n')
+        return '\n'.join(change(lines, side))
+    return edit(path, t, allow_remove=allow_remove)
+
+
+def add_statements(path, block):
+    """Add statements after the last one. A bean with none, or with `statements: []`, gets its list."""
+    def change(lines, side):
+        if side.spans:
+            ind = side.items[-1].indent
+            at = side.spans[-1][2]
+            while at > side.spans[-1][1] + 1 and not lines[at - 1].strip():
+                at -= 1                              # after the statement, before the blank lines that follow it
+            return lines[:at] + _block_statements(block, ind).rstrip('\n').split('\n') + lines[at:]
+        if side.items:
+            raise UnsafeEdit("its statements are written in flow, `statements: [ … ]`: write them one to a line first")
+        new = ['statements:'] + _block_statements(block, 2).rstrip('\n').split('\n')
+        fence = next(i for i in range(1, len(lines)) if lines[i].rstrip() == '---')
+        at = next((i for i in range(1, fence) if re.match(r'^(statements|details):', lines[i])), fence)
+        drop = 1 if lines[at].startswith('statements:') else 0       # `statements: []` gives way to the list
+        return lines[:at] + new + lines[at + drop:]
+    return _lines_edit(path, change)
+
+
+def _matched(lines, side, sel, expect, what):
+    _require_expect(expect, sel)
+    text = '\n'.join(lines)
+    hits, _s = statements_matching(text, sel, what)
+    if len(hits) != expect:
+        raise UnsafeEdit(f"'{sel}' names {len(hits)} statement(s), expected {expect} — say which you mean before changing "
+                         f"any of them")
+    if side.spans is None:
+        raise UnsafeEdit("its statements are written in flow, `statements: [ … ]`: write them one to a line first")
+    return hits
+
+
+def replace_statements(path, sel, block, expect=_MUST_STATE, allow_remove=()):
+    """Put `block` in place of the statements `sel` names — exactly `expect` of them; the comments above each stay."""
+    def change(lines, side):
+        hits = _matched(lines, side, sel, expect, path)
+        out, prev = [], 0
+        for n, (i, it) in enumerate(hits):
+            _s, dash, e = side.spans[i]
+            while e > dash + 1 and not lines[e - 1].strip():
+                e -= 1
+            out += lines[prev:dash]
+            if n == 0:
+                out += _block_statements(block, it.indent).rstrip('\n').split('\n')
+            prev = e
+        return out + lines[prev:]
+    return _lines_edit(path, change, allow_remove)
+
+
+def remove_statements(path, sel, expect=_MUST_STATE):
+    """Take out the statements `sel` names — exactly `expect` of them — with the comment lines above each. The removal
+    is declared by calling this; the save's entry names each by its id or its verb (the rule `kept`)."""
+    text = open(path, encoding='utf-8').read()
+    side = _side(text, path)
+    hits = _matched(text.replace('\r\n', '\n').split('\n'), side, sel, expect, path)
+    # WHAT IS LOST BY NAME: a statement with an id by its key; those with none of a verb are keyed by their place among
+    # that verb's, so taking out k of them loses that verb's last k places
+    keys = statement_keys([it.value for it in side.items])
+    gone = {i for i, _ in hits}
+    left = collections.Counter(it.verb for n, it in enumerate(side.items) if n not in gone)
+    allow, seen = [], collections.Counter()
+    for i, it in hits:
+        if '#' in keys[i]:
+            allow.append(f"statements.{keys[i]}")
+        else:
+            allow.append(f"statements.{it.verb}@{left[it.verb] + seen[it.verb]}")
+            seen[it.verb] += 1
+
+    def change(lines, side_):
+        out, prev = [], 0
+        for i in sorted(gone):
+            s_, _d, e = side_.spans[i]
+            out += lines[prev:s_]
+            prev = e
+        return out + lines[prev:]
+    return _lines_edit(path, change, allow)
+
+
+def edit(path, transform, allow_remove=(), allow_empty_body=False):
+    """Apply `transform` to the file's text, keeping the write ONLY if the result is a document that
+    parses and has lost nothing undeclared. Returns (removed, added) leaf paths on success."""
+    original = open(path, encoding='utf-8').read()
+    try:
+        before_fm, _ = parse(original)
+    except UnsafeEdit as e:
+        raise UnsafeEdit(f"{path}: REFUSING to edit — it is already broken: {e}")
+
+    new_text = transform(original)
+    if new_text == original:
+        raise UnsafeEdit(f"{path}: the edit changed nothing — a pattern that matched nothing is a bug, "
+                         f"not a no-op (this is how a 'fixed' file silently stays unfixed)")
+
+    # JUDGED BEFORE IT IS WRITTEN, THEN WRITTEN WHOLE. The new text was written first, parsed, and the old written back
+    # on a refusal — so a crash or a kill between the two left a broken or a lossy bean, the one outcome this guards.
+    try:
+        after_fm, after_body = parse(new_text)
+        if not allow_empty_body and not after_body.strip():
+            raise UnsafeEdit("the human body was emptied (Rule 6: a bean reads on paper)")
+        before, after = leaf_paths(before_fm), leaf_paths(after_fm)
+        lost = {p for p in before - after
+                if not any(p == a or p.startswith(a + '.') or p.startswith(a + '[')
+                           for a in allow_remove)}
+        if lost:
+            raise UnsafeEdit(
+                f"the edit would LOSE {len(lost)} leaf path(s) you did not declare: "
+                f"{sorted(lost)[:6]}{' …' if len(lost) > 6 else ''} — pass them in allow_remove if the "
+                f"removal is intended")
+    except Exception as e:
+        raise UnsafeEdit(f"{path}: REFUSED, nothing written — {e}") from None
+    write_atomic(path, new_text.replace('\r\n', '\n'))                       # LF on every platform: a bean is one text
+    return sorted(before - after), sorted(after - before)
+
+
+def verify(paths):
+    """Parse-check documents. Returns a list of (path, problem)."""
+    bad = []
+    for p in paths:
+        try:
+            parse(open(p, encoding='utf-8').read())
+        except Exception as e:
+            bad.append((p, str(e)))
+    return bad
+
+
+def decode_block(raw, where):
+    """A block's bytes as text, decoded as bin/dmjournal.py decodes a body: UTF-8 (its byte-order mark dropped), or
+    UTF-16 where its mark says so. Anything else is refused — a guess in the machine's code page writes mojibake into
+    the bean, and nothing downstream can tell."""
+    if raw.startswith(codecs.BOM_UTF8):
+        raw = raw[len(codecs.BOM_UTF8):]
+    elif raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        try:
+            return raw.decode('utf-16')
+        except UnicodeDecodeError as e:
+            raise UnsafeEdit(f"{where} begins as UTF-16 and is not ({e.reason}) — nothing written")
+    if b'\x00' in raw:
+        raise UnsafeEdit(f"{where} holds NUL — it looks like UTF-16 without its byte-order mark, a NUL after every "
+                         f"letter; nothing written. Save the block as UTF-8 and pass it with --block <file>")
+    try:
+        text = raw.decode('utf-8')
+    except UnicodeDecodeError as e:
+        raise UnsafeEdit(f"{where} is not UTF-8 (byte {e.start}: {raw[e.start:e.start + 1]!r}) — nothing written. "
+                         f"Save the block as UTF-8 and pass it with --block <file>")
+    return text
+
+
+def _names_statements(path, target):
+    """True where `target` names statements of a bean in statements, not a key: its first word is no header key."""
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from core.engine import HEADER
+    try:
+        fm, _b = parse(open(path, encoding='utf-8').read())
+    except (OSError, UnsafeEdit):
+        return False
+    return 'statements' in fm and all(k in HEADER for k in fm) and target.split('.')[0] not in HEADER
+
+
+def _cli(argv):
+    """The operations at a shell. Returns an exit status."""
+    if not argv:
+        return None                       # no arguments: parse-check the garden, as it always did
+    if argv[0] in ('-h', '--help'):
+        print(__doc__); return 0
+    op, rest = argv[0], argv[1:]
+    expect = _MUST_STATE
+    if '--expect' in rest:
+        i = rest.index('--expect')
+        if i + 1 >= len(rest) or not re.fullmatch(r'[0-9]+', rest[i + 1]):
+            print("dmsafe: --expect takes the number of places you measured with `count`"); return 2
+        expect = int(rest[i + 1]); del rest[i:i + 2]
+    block_file = None
+    if '--block' in rest:
+        i = rest.index('--block')
+        if i + 1 >= len(rest):
+            print("dmsafe: --block takes the file that holds the block"); return 2
+        block_file = rest[i + 1]; del rest[i:i + 2]
+    def _block():
+        # AS BYTES, decoded here: standard input in text mode is decoded in the machine's code page (cp1252 on a
+        # Windows machine without UTF-8 mode), and a UTF-8 block became mojibake in the bean with exit 0.
+        if block_file is not None:
+            try:
+                with open(block_file, 'rb') as fh:
+                    raw = fh.read()
+            except OSError as e:
+                raise UnsafeEdit(f"--block {block_file}: {e.strerror or e}")
+            where = f"--block {block_file}"
+        else:
+            stream = getattr(sys.stdin, 'buffer', None)
+            if stream is None:
+                raise UnsafeEdit("there is no standard input to read the block from — pass it with --block <file>")
+            raw, where = stream.read(), "standard input"
+        b = decode_block(raw, where).replace('\r\n', '\n').replace('\r', '\n')    # a bean is LF on every platform
+        if not b.strip():
+            raise UnsafeEdit(f"the block comes from {where}, and it is empty")
+        return b
+    def _report(result):
+        removed, added = result
+        print(f"dmsafe: removed {removed or 'nothing'}; added {added or 'nothing'}")
+        return 0
+    try:
+        if op == 'count' and len(rest) == 2 and _names_statements(rest[0], rest[1]):
+            print(f"{count_statements(rest[0], rest[1])} statement"); return 0
+        if op == 'count' and len(rest) == 2:
+            n, kind = count(rest[0], rest[1]); print(f"{n} {kind}"); return 0
+        if op == 'add' and len(rest) == 1:
+            return _report(add_statements(rest[0], _block()))
+        if op == 'replace' and len(rest) == 2:
+            return _report(replace_statements(rest[0], rest[1], _block(), expect=expect))
+        if op == 'remove' and len(rest) == 2:
+            r = remove_statements(rest[0], rest[1], expect=expect)
+            _v, _i = _selects(rest[1])
+            print(f"safe: the save's entry names what was taken out — `{_i or _v}` (the rule `kept`)")
+            return _report(r)
+        if op == 'insert-after' and len(rest) == 2:
+            return _report(insert_after(rest[0], rest[1], _block()))
+        if op == 'replace-block' and len(rest) == 2:
+            return _report(replace_block(rest[0], rest[1], _block()))
+        if op == 'remove-block' and len(rest) == 2:
+            return _report(remove_block(rest[0], rest[1]))
+        if op == 'set-nested' and len(rest) == 2:
+            return _report(set_nested(rest[0], rest[1], _block(), expect=expect))
+        if op == 'flow-set' and len(rest) == 3:
+            return _report(flow_set(rest[0], rest[1], rest[2], expect=expect))
+    except UnsafeEdit as e:
+        print(f"dmsafe: REFUSED — {e}"); return 1
+    if op not in ('verify', '--verify'):
+        print(f"dmsafe: unknown operation or wrong arguments: {' '.join(argv)}\n"); print(__doc__); return 2
+    return None
+
+
+if __name__ == '__main__':
+    _rc = _cli(sys.argv[1:])
+    if _rc is not None:
+        sys.exit(_rc)
+    args = [a for a in sys.argv[1:] if not a.startswith('--') and a != 'verify']
+    targets = args or (dmgarden.paths(ROOT) +
+                       [os.path.join(ROOT, f) for f in ('VOCAB.md', 'GARDEN.md')] +
+                       [os.path.join(ROOT, 'seed', 'std-vocab.md')])
+    targets = [t for t in targets if os.path.exists(t)]
+    problems = verify(targets)
+    for p, why in problems:
+        print(f"BROKEN  {os.path.relpath(p, ROOT)}: {why}")
+    print(f"\ndmsafe: {len(targets) - len(problems)}/{len(targets)} documents parse")
+    sys.exit(1 if problems else 0)

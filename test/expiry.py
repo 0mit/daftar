@@ -616,6 +616,11 @@ contract("a-lease", ''.join(f"  h{i}: {{ what: 'rent', by: ali, to: keeper, due:
 contract("own-rent", f"  rent: {{ what: 'rent', by: ali, to: keeper, due: {(NEXT_SOON - datetime.timedelta(days=62)).isoformat() if NEXT_SOON.day <= 28 else IN3}, "
                      f"every: {{ of: time, in: gregorian-civil, each: month }} }}\n" if NEXT_SOON.day <= 28 else
          f"  rent: {{ what: 'rent', by: ali, to: keeper, due: {IN3} }}\n")
+# THE OCCURRENCE DUE NEXT IS THE CALENDAR'S: the first of the month on or after today, counted from 0001-02-01 (it was
+# written as 24309, which held on 2026-10-01 alone)
+_d = __import__('datetime').date.today()
+_nxt = (_d.year, _d.month) if _d.day == 1 else ((_d.year, _d.month + 1) if _d.month < 12 else (_d.year + 1, 1))
+_nth = (_nxt[0] - 1) * 12 + _nxt[1] - 1
 _t0 = _time.time()
 _r = run(sys.executable, os.path.join(G, "bin", "dmstale.py"), cwd=G)
 _took = round(_time.time() - _t0, 1)
@@ -640,13 +645,9 @@ _r = run(sys.executable, os.path.join(G, "bin", "dmstale.py"), cwd=G)
 _took = round(_time.time() - _t0, 1)
 out = _r.stdout
 line = lambda key, bean="counted": next((l for l in out.splitlines() if f"{bean}.clauses[{key}]" in l), "")
-# the next occurrence is counted from today: 0001-02-01 is the first, and the next falls on the first of a month on or
-# after today (on 2026-10-01 it was the 24309th — a number written here once, which held for a month and then failed)
-_nxt = today if today.day == 1 else (today.replace(day=1) + datetime.timedelta(days=32)).replace(day=1)
-_occ = (_nxt.year - 1) * 12 + _nxt.month - 1
 check(f"clauses that must be counted from the first century spend the run's budget, and the one past it is a NOTE — "
       f"'this run's budget is spent' — while the rest of the report still prints, and the run exits 1 ({_took} s)",
-      f"occurrence {_occ} of 100000" in line("t0") and line("t6").startswith("NOTE")
+      f"occurrence {_nth} of 100000" in line("t0") and line("t6").startswith("NOTE")
       and "this run's budget is spent" in line("t6") and line("zz-soon").startswith("EXPIRING") and _r.returncode == 1
       and _took < 90, [line(k) for k in ("t0", "t5", "t6", "zz-soon")])
 os.remove(os.path.join(G, "beans", "counted.md"))

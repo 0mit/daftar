@@ -109,12 +109,12 @@ print(f"      (the next release's ceiling is {len(hits)}; `python3 bin/dmreview.
 two = [f for f, t in TEXT.items() if not f.startswith(dmreview.MANIFESTO_EXEMPT + MIRROR)
        and re.search(r"\bMANIFEST\.md\b|\bthe manifesto\b[^.\n]*\bGARDEN\.md\b|\bGARDEN\.md\b[^.\n]*\bmanifesto\b", t)]
 check("GARDEN.md is the law's `manifest`, MANIFESTO.md is the manifesto, and neither is called the other", not two, two)
-readers = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "dm*.py"))
+readers = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*.py"))
                  if "MANIFESTO" in open(f, encoding="utf-8").read())
 check("no verdict reads the manifesto: the law carries it, and only the readers of keys open it",
       set(readers) <= {"dmwhy.py", "dmreview.py"}, readers)
 _NET = re.compile(r"^\s*(?:import|from)\s+(?:urllib|http|socket|requests|ftplib|smtplib)\b", re.M)
-net = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "dm*.py"))
+net = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*.py"))
              if _NET.search(open(f, encoding="utf-8").read()))
 TOOL_NET = {   # each with why: never-sells is "never … anywhere its gardener did not send it"
     "dmupgrade.py": "it fetches a release, from where the gardener's pin says",

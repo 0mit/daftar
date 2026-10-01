@@ -60,7 +60,7 @@ merge: they meet by proposal (`MODEL.md`, Between gardens).
 - `log/journal.md` and `log/pending.md` merge by git's own union (`merge=union`): both sides' entries are kept, none
   rewritten.
 - **The gate covers what a merge makes**: the merged bean passes `core/check.py` like any other commit, and the merge
-  is committed with the journal entry that names what it merged: `git merge --no-commit`, then `bin/dmsave.py`. A
+  is committed with the journal entry that names what it merged: `git merge --no-commit`, then `bin/save.py`. A
   merge git commits itself runs the gate too (the `pre-merge-commit` hook): where it merged a bean both sides changed,
   it is refused until an entry of its own names that bean.
   What the other side committed comes as it was committed, judged then: its entries, a bean only it changed, the
