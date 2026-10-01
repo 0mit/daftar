@@ -311,8 +311,8 @@ Dinner at Sam's.
 
 Sam and Ali bought a camera together. Each party `agree`s; the agreement is owned by the crown, and each party answers
 for it. A payment is the whole that moved, `by` who paid it; `bear` divides it, each party's `share` in whole parts.
-Whoever paid bears it alone unless a `bear` says otherwise. A balance is read, never written: `python3 bin/dmledger.py
-shared-camera` reads what each owes.
+Whoever paid bears it alone unless a `bear` says otherwise. A balance is read, never written: `python3 bin/daftar.py
+ledger shared-camera` reads what each owes.
 
 <!-- example: beans/shared-camera.md -->
 ```markdown
@@ -414,10 +414,12 @@ quotes YAML reads a backslash as the start of an escape.
 
 Sam's balcony has a rain gauge that logs, each hour, how much rain fell in the hour after the reading and how full its
 battery is. What varies along a line — a reading at each moment, a porosity at each depth down a core — is a **series**.
-Its core form is a line of positions whose values are read along it (ISO 19156); until part 6 of v1 builds it, a series
-is kept whole in `details`, as today's tools read it: where its positions are (a `grid` by a rule, or listed), where a
-row sits over its position (`placement`), what each column holds (`holds`: a quantity and its unit, its `u`), and the
-rows as one table, one TAB between two cells, a value nobody read written as a gap token (`-`).
+It is a line of positions whose values are read along it (ISO 19156), and the verb is `record`: by whom or through what,
+of what, and the `series` itself, a value in the form core/law/lines.yaml gives — where its positions are (a `grid` by
+a rule, or listed), where a row sits over its position (`placement`), what each column holds (`holds`: a quantity and
+its unit, UCUM's, its `u`), and the rows as one table, one TAB between two cells, a value nobody read written as a gap
+token (`-`). The statement's `id` names the series, and a series too long to sit in its bean keeps its rows in the parts
+`series/<bean>/<id>/<part>.tsv`, each written once.
 
 <!-- example: beans/rain-gauge.md -->
 ```markdown
@@ -430,27 +432,28 @@ statements:
   - read: { by: sam, at: now }
   - name: { by: unknown, of: self, as: RG-0042, note: "the serial on its label; its maker is not recorded" }
   - own:  { by: sam, of: self }
-details:
-  series:
-    september:
-      grid: { of: time, in: gregorian-civil, every: { count: "1", unit: hour }, from: "2026-09-14 06:00+02:00" }
-      unit: hour
-      placement: following
-      holds:
-        - { name: rain, quantity: length, unit: millimetre, stands_for: sum, u: { count: "0.2", unit: millimetre } }
-        - { name: battery, quantity: ratio, unit: percent, stands_for: point, between: linear }
-      rows: |
-        rain	battery
-        0	84
-        1.4	84
-        3.2	83
-        -	-
-        0.6	81
+  - record:
+      id: september
+      of: self
+      series:
+        grid: { of: time, in: gregorian-civil, every: { count: "1", unit: h }, from: "2026-09-14 06:00+02:00" }
+        unit: h
+        placement: following
+        holds:
+          - { name: rain, quantity: length, unit: mm, stands_for: sum, u: { count: "0.2", unit: mm } }
+          - { name: battery, quantity: ratio, unit: "%", stands_for: point, between: linear }
+        rows: |
+          rain	battery
+          0	84
+          1.4	84
+          3.2	83
+          -	-
+          0.6	81
 ---
 The balcony's rain gauge. Its fourth hour was not read: the logger was off while its battery was changed.
 ```
 
-Today `python3 bin/dmseq.py show rain-gauge september` prints each row at its moment, and `python3 bin/dmseq.py at
+`python3 bin/daftar.py seq show rain-gauge september` prints each row at its moment, and `python3 bin/daftar.py seq at
 rain-gauge september "2026-09-14 07:30+02:00"` reads what each column holds there: the battery on the line between its
 two readings, and the rain as what it is — the sum over the hour that began at 07:00. Nothing read is stored.
 
@@ -458,9 +461,10 @@ two readings, and the rain as what it is — the sum over the hour that began at
 
 Ali mends bicycles, and Sam brought her his. A repair goes through the same steps each time — handed over, looked at,
 mended, collected — and a **walk** says so once, in a mapping of the garden's own kind `procedure`. A walk is a line,
-its steps its positions; until part 6 of v1 gives that line its form, the steps are kept whole in `details`: each with
-who acts at it, how long it usually takes, and whether it is a way out (`exit`), a pause the case comes back from
-(`resumes`), or an end nothing follows (`final`). What a case asks for — the papers a form needs — is a set, not a
+its steps its positions: each step a statement, `step`, named by its `id` — what is done at it (`as`), who acts there
+(`by`, the part a party takes in the case, as its `agree` says it), the steps it leads on to (`to`), and in its `walk`
+how long it usually takes, whether it is a way out (`exit`), a pause the case comes back from (`resumes`) or an end
+nothing follows (`final`), the reasons a move into it may cite, and the words of a way on (`ways`), where it has any. What a case asks for — the papers a form needs — is a set, not a
 walk: a mapping of the kind `checklist` (*A literary agent*, below). A row the garden adds to the law is added with the
 first bean that uses it: the gate refuses one nothing uses, unless it says why it is vacant.
 
@@ -478,23 +482,22 @@ kind: procedure
 title: "walk-bike-repair — how a bicycle repair goes"
 summary: "How a bicycle repair goes, each time: handed over, looked at, mended, collected."
 statements:
-  - say: { by: sam, at: now }
-details:
-  steps:
-    - { id: handed-over, do: "the owner brings the bicycle", by: owner, next: [ { to: looked-at } ] }
-    - { id: looked-at, do: "what is wrong is found", by: repairer, usually: { of: time, measure: { count: "2", unit: day } }, next: [ { to: mended } ] }
-    - { id: waiting-for-part, do: "a part is ordered, and the repair waits for it", resumes: "true", reasons: [part-ordered] }
-    - { id: mended, do: "it is mended and ridden round the block", by: repairer, next: [ { to: collected } ] }
-    - { id: collected, do: "the owner takes it home", by: owner, final: "true" }
-    - { id: given-up, do: "the repair is abandoned", exit: "true", reasons: [not-worth-it, owner-changed-mind] }
+  - say:  { by: sam, at: now }
+  - step: { id: handed-over, as: "the owner brings the bicycle", by: owner, to: [looked-at] }
+  - step: { id: looked-at, as: "what is wrong is found", by: repairer, to: [mended], walk: { usually: { of: time, measure: { count: "2", unit: d } } } }
+  - step: { id: waiting-for-part, as: "a part is ordered, and the repair waits for it", walk: { resumes: "true", reasons: [part-ordered] } }
+  - step: { id: mended, as: "it is mended and ridden round the block", by: repairer, to: [collected] }
+  - step: { id: collected, as: "the owner takes it home", by: owner, walk: { final: "true" } }
+  - step: { id: given-up, as: "the repair is abandoned", walk: { exit: "true", reasons: [not-worth-it, owner-changed-mind] } }
 ---
 The steps of a bicycle repair.
 ```
 
-Where one repair stands is read from its **moves**: the step reached, who moved it, a reason from that step's list, and
-the moment. The verb is `move`; its `at` is the step reached and the moment, and a step becomes a position only when the
-walk's line has its form (part 6 of v1). Until then the moves too are kept in `details`, each `at: now`, which the save
-writes as the moment of its entry.
+A case is on the walk as a **course**: the being placed on the walk's line, `be` as order, its `id` naming the course.
+Where one repair stands is read from its **moves**: each `move` goes `through` the course, its `at` holding the moment
+(`now`, which the save writes as the moment of its entry) and the step reached, `<walk>#<step>`; who moved it is its
+`by`, and a reason from that step's list its `as`. A move the walk does not offer says why, and nothing follows a final
+step: rule `line` refuses either.
 
 <!-- example: beans/bike-repair.md -->
 ```markdown
@@ -510,18 +513,15 @@ statements:
   - answer: { by: ali, of: self, as: law }
   - agree:  { by: sam, of: "Sam's bicycle", through: spoken, as: owner }
   - agree:  { by: ali, of: "Sam's bicycle", through: spoken, as: repairer }
-details:
-  courses:
-    repair: { walk: walk-bike-repair }
-  moves:
-    - { course: repair, step: handed-over, by: sam }
-    - { course: repair, step: looked-at, by: ali, why: "the rear hub grinds" }
-    - { course: repair, step: waiting-for-part, by: ali, reason: part-ordered }
+  - be:     { id: repair, by: self, at: walk-bike-repair, as: order }
+  - move:   { by: sam, of: self, through: repair, at: [now, "walk-bike-repair#handed-over"] }
+  - move:   { by: ali, of: self, through: repair, at: [now, "walk-bike-repair#looked-at"], why: "the rear hub grinds" }
+  - move:   { by: ali, of: self, through: repair, at: [now, "walk-bike-repair#waiting-for-part"], as: part-ordered }
 ---
 Ali mends Sam's bicycle; the parts are Sam's to pay for.
 ```
 
-Today `python3 bin/dmseq.py course bike-repair` reads where it stands. Where a case stands is read from its moves, and
+`python3 bin/daftar.py seq course bike-repair` reads where it stands. Where a case stands is read from its moves, and
 never written down: a stored stage is a second copy, and it drifts.
 
 ## Proposing to another garden
@@ -590,8 +590,9 @@ garden for it: a clone is the same garden, with the same id, and what it propose
 Sam has written a novel, *The Salt Road*, and an agent, Noor, places it with publishers: at home with Heron Books, and
 its translation with a house abroad. Noor is paid a share of each advance the book earns — one rate at home, another
 abroad — and gives her share back of any advance that is returned. Each placing goes through the same steps, a walk;
-what a house asks to see is a checklist, a kind the garden adds with it. Both are mappings, their steps and items kept
-in `details` until part 6 of v1.
+what a house asks to see is a checklist, a kind the garden adds with it. Both are mappings: the walk's steps are `step`
+statements, as the bicycle's were; the checklist is a set and no line, and its items are kept in `details`, where the
+core keeps what it has no form for.
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
@@ -607,17 +608,15 @@ kind: procedure
 title: "walk-placing — how a manuscript is placed"
 summary: "How a manuscript is placed with a publisher: sent, read, offered, signed — or declined, or set aside."
 statements:
-  - say: { by: sam, at: now }
-details:
-  steps:
-    - { id: submitted, do: "the agent sends the manuscript to the house", by: agent, next: [ { to: read } ] }
-    - { id: read, do: "an editor reads it", by: publisher, usually: { of: time, in: gregorian-civil, level: month, count: "2" }, next: [ { to: offered, when: "the house wants it" }, { to: declined, when: "it does not" } ] }
-    - { id: offered, do: "the house offers terms", by: publisher, next: [ { to: contracted } ] }
-    - { id: contracted, do: "author and house sign", by: author, next: [ { to: published, when: "it goes to print" }, { to: cancelled, when: "the contract is ended" } ] }
-    - { id: published, do: "the book is out", by: publisher, final: "true" }
-    - { id: cancelled, do: "the contract is ended and the advance given back", by: author, final: "true", reasons: [house-closed, author-withdrew] }
-    - { id: declined, do: "the house says no", final: "true", reasons: [list-full, not-for-us] }
-    - { id: on-hold, do: "the placing waits", resumes: "true", reasons: [author-revising, house-reorganising] }
+  - say:  { by: sam, at: now }
+  - step: { id: submitted, as: "the agent sends the manuscript to the house", by: agent, to: [read] }
+  - step: { id: read, as: "an editor reads it", by: publisher, to: [offered, declined], walk: { usually: { of: time, in: gregorian-civil, level: month, count: "2" }, ways: [ { to: offered, when: "the house wants it" }, { to: declined, when: "it does not" } ] } }
+  - step: { id: offered, as: "the house offers terms", by: publisher, to: [contracted] }
+  - step: { id: contracted, as: "author and house sign", by: author, to: [published, cancelled], walk: { ways: [ { to: published, when: "it goes to print" }, { to: cancelled, when: "the contract is ended" } ] } }
+  - step: { id: published, as: "the book is out", by: publisher, walk: { final: "true" } }
+  - step: { id: cancelled, as: "the contract is ended and the advance given back", by: author, walk: { final: "true", reasons: [house-closed, author-withdrew] } }
+  - step: { id: declined, as: "the house says no", walk: { final: "true", reasons: [list-full, not-for-us] } }
+  - step: { id: on-hold, as: "the placing waits", walk: { resumes: "true", reasons: [author-revising, house-reorganising] } }
 ---
 The steps of placing a manuscript.
 ```
@@ -644,9 +643,12 @@ A submission pack.
 
 Noor is written by name on her own word: the agency agreement she agreed to, over a call. Her commission is a clause
 that occurs **each** time a placing reaches `contracted`, a share **of** that placing's own advance; a refund is its own
-clause; a payment names what it **settles**. Those are readings of the garden — which placings were signed, what each
-advance was — and are kept in `details` until part 6 of v1 gives readings their form; the clauses themselves are
-statements. The agency's assistant signs for Noor while she travels: a being that `represent`s another.
+clause; a payment names what it **settles**. Which placings were signed is a **reading** of the garden, a `reckon`
+statement named by its `id`: its steps select the contracts whose course on the walk has reached `contracted` — the
+condition `reached`, its step named as a statement, `walk-placing#contracted` — and a path reads statements by verb and
+role, `be.id`, `pay.at`. A comparison is written by its sign (`=`, `∈`, `≥`, `≤`, `≠`, `<`, `>`, `∃`, `∄`). The clauses
+themselves are statements; what each occurs for and what it is a share of (`each`, `of`, `settles`) are kept in
+`details` until part 7 of v1 gives relative dues their form. The agency's assistant signs for Noor while she travels: a being that `represent`s another.
 
 <!-- example: beans/agency-noor.md -->
 ```markdown
@@ -669,25 +671,26 @@ statements:
   - pay:        { id: refund-home, by: noor, to: sam, of: { count: "15", unit: "%" } }
   - obligatory: { id: refund, of: refund-home, through: self, note: "the agent gives back her fifteen parts of each advance at home that was returned" }
   - pay:        { id: first-payout, by: sam, to: noor, of: { count: "300.00", unit: XTS }, at: 2026-11-04, note: "Sam paid Noor her share of Heron's advance" }
+  - reckon:     { id: placed-home, reading: { what: "each placing at home that was signed", steps: [ { id: p, op: select, kind: contract, where: [ { path: be.id, "=": home }, { path: move, reached: "walk-placing#contracted" } ] } ] } }
+  - reckon:     { id: placed-abroad, reading: { what: "each translation placing that was signed", steps: [ { id: p, op: select, kind: contract, where: [ { path: be.id, "=": abroad }, { path: move, reached: "walk-placing#contracted" } ] } ] } }
+  - reckon:     { id: returned-home, reading: { what: "each placing at home whose advance was given back", steps: [ { id: p, op: select, kind: contract, where: [ { path: be.id, "=": home }, { path: move, reached: "walk-placing#cancelled" } ] } ] } }
+  - reckon:     { id: translation-asked, reading: { what: "whether a house abroad is reading it", steps: [ { id: p, op: select, kind: contract, where: [ { path: be.id, "=": abroad } ] } ] } }
+  - reckon:     { id: rights-papers, reading: { what: "the papers that show which translation rights are free", steps: [ { id: d, op: select, kind: document } ] } }
+  - reckon:
+      id: by-month
+      reading:
+        what: "the agency's payments, month by month, as months fall where Sam lives"
+        zone: Europe/Berlin
+        steps:
+          - { id: this, op: select, kind: contract, where: [ { path: bean, "=": agency-noor } ] }
+          - { id: paid, op: select, of: this, entries: pay }
+          - { id: months, op: group, of: paid, path: at, level: month, system: gregorian-civil }
+          - { id: per-month, op: count, of: months }
 details:
   commission: { each: placed-home, of: clauses.advance.amount }
   commission-abroad: { each: placed-abroad, of: clauses.advance.amount }
   refund: { each: returned-home, of: clauses.advance.amount }
   first-payout: { settles: [ { clause: commission, occurrence: salt-road-heron, amount: { count: "300.00", unit: XTS } } ] }
-  selections:
-    placed-home: { what: "each placing at home that was signed", steps: [ { id: p, op: select, genos: contract, where: [ { path: courses.home, reached: contracted } ] } ] }
-    placed-abroad: { what: "each translation placing that was signed", steps: [ { id: p, op: select, genos: contract, where: [ { path: courses.abroad, reached: contracted } ] } ] }
-    returned-home: { what: "each placing at home whose advance was given back", steps: [ { id: p, op: select, genos: contract, where: [ { path: courses.home, reached: cancelled } ] } ] }
-    translation-asked: { what: "whether a house abroad is reading it", steps: [ { id: p, op: select, genos: contract, where: [ { path: courses.abroad, exists: "true" } ] } ] }
-    rights-papers: { what: "the papers that show which translation rights are free", steps: [ { id: d, op: select, genos: document } ] }
-    by-month:
-      what: "the agency's payments, month by month, as months fall where Sam lives"
-      zone: Europe/Berlin
-      steps:
-        - { id: this, op: select, genos: contract, where: [ { path: bean, is: agency-noor } ] }
-        - { id: paid, op: select, of: this, entries: "transactions.*" }
-        - { id: months, op: group, of: paid, path: day, level: month, system: gregorian-civil }
-        - { id: per-month, op: count, of: months }
 ---
 Noor has represented The Salt Road since June.
 ```
@@ -760,16 +763,14 @@ statements:
   - pay:        { id: advance-paid, by: heron-books, to: sam, of: { count: "2000.00", unit: XTS } }
   - obligatory: { id: advance, of: advance-paid, through: self, note: "Heron pays the author an advance on signing" }
   - permitted:  { id: offer, of: signed, through: heron-books, note: "Heron holds its offer open" }
+  - be:         { id: home, by: self, at: walk-placing, as: order }
+  - move:       { by: noor, of: self, through: home, at: [now, "walk-placing#submitted"] }
+  - move:       { by: heron-books, of: self, through: home, at: [now, "walk-placing#read"] }
+  - move:       { by: heron-books, of: self, through: home, at: [now, "walk-placing#offered"] }
+  - move:       { by: sam, of: self, through: home, at: [now, "walk-placing#contracted"] }
 details:
   offer: { during: 2026-10-01/2026-10-21, state: met }
   advance: { state: met }
-  courses:
-    home: { walk: walk-placing }
-  moves:
-    - { course: home, step: submitted, by: noor }
-    - { course: home, step: read, by: heron-books }
-    - { course: home, step: offered, by: heron-books }
-    - { course: home, step: contracted, by: sam }
 ---
 Signed in October.
 ```
@@ -805,9 +806,10 @@ statements:
 Two pages; the editor asks for a shorter middle.
 ```
 
-Today `python3 bin/dmledger.py agency-noor` reads each occurrence: Heron's placing, owed 300 XTS (15 percent of 2000
-XTS), settled 300 XTS by `first-payout`, nothing outstanding; `refund` occurs for nothing yet. `python3 bin/dmreckon.py
-agency-noor:by-month` reads the month's report, each time it is asked and never stored.
+`python3 bin/daftar.py ledger agency-noor` reads what each `pay` gave and the clause each stands under; what each
+clause occurs for — Heron's placing, owed 300 XTS, settled by `first-payout` — is read once part 7 of v1 gives an
+occurrence its form, and until then it is named as kept in `details`. `python3 bin/daftar.py
+reckon agency-noor#by-month` reads the month's report, each time it is asked and never stored.
 
 ## A tile workshop: staff, their leave, a tiler booked on one job at a time
 
@@ -855,8 +857,9 @@ Sam's workshop.
 
 Her employment is an agreement, and her consent to be written here by name. Her leave is an **allowance**: twenty days
 in each year, which she `hold`s; each span she takes is a statement of the garden's own verb. How much of it is used
-within a year is a reading, kept in `details` until part 6 of v1: nothing stores a balance to drift from the spans it
-was counted from.
+within a year is read from the spans she took, which a reading selects — `reckon`, the statements of the verb `leave`
+— and the window counted in `details` until part 7 of v1 gives an allowance its form: nothing stores a balance to drift
+from the spans it was counted from.
 
 <!-- example: beans/lale-employment.md -->
 ```markdown
@@ -876,10 +879,9 @@ statements:
   - obligatory: { id: leave, of: allowance, through: self, note: "the workshop gives Lale twenty days' leave in each year" }
   - leave:      { id: summer, by: lale, through: employed, at: 2026-07-06/2026-07-17 }
   - leave:      { id: late-august, by: lale, through: employed, at: 2026-08-24/2026-08-28, note: "her sister's wedding" }
+  - reckon:     { id: leave-taken, reading: { what: "the spans of leave Lale has taken", steps: [ { id: this, op: select, kind: contract, where: [ { path: bean, "=": lale-employment } ] }, { id: l, op: select, of: this, entries: leave } ] } }
 details:
   leave: { within: { of: time, in: gregorian-civil, level: year, count: "1" }, used_by: leave-taken }
-  selections:
-    leave-taken: { what: "the spans of leave Lale has taken", steps: [ { id: l, op: select, entries: "leave.*" } ] }
 ---
 Lale started in March.
 ```
@@ -951,7 +953,7 @@ Asked for the same week; declined.
 The evening class repeats, two evenings each week, two hours each, with a **closure** on a holiday; the materials fee
 binds every pupil, however many there are; the kiln fee is in force only once a firing is booked. A recurrence, a
 closure, a fee on every party of a role, and a clause in force while a reading holds have no form in the core yet (part
-7 of v1, and part 6 for the reading): each is kept in `details` under its clause. A pupil who withdrew stays on record,
+7 of v1): each is kept in `details` under its clause, and the reading it names is a `reckon` statement. A pupil who withdrew stays on record,
 with her `decline`. Pupils nobody named here are `someone`.
 
 <!-- example: beans/kiln-firing-nov.md -->
@@ -995,18 +997,18 @@ statements:
   - obligatory: { id: materials, of: clay, through: self, note: "each pupil pays for clay and glaze" }
   - pay:        { id: firing, by: { someone: person }, to: tile-workshop, of: { count: "12", unit: XTS } }
   - obligatory: { id: kiln-fee, of: firing, through: self, note: "each pupil pays for the firing, once one is booked" }
+  - reckon:     { id: firing-booked, reading: { what: "a firing of the class's tiles is booked", steps: [ { id: f, op: select, kind: event, where: [ { path: bean, "=": kiln-firing-nov } ] } ] } }
 details:
   lesson: { every: { of: time, in: iso-week, each: week, at: ["2", "4"], lasts: { of: time, measure: { count: "2", unit: hour } }, closures: [ "2026-W44-4" ] } }
   materials: { by_role: pupil }
   kiln-fee: { by_role: pupil, when: { selection: firing-booked } }
-  selections:
-    firing-booked: { what: "a firing of the class's tiles is booked", steps: [ { id: f, op: select, genos: event, where: [ { path: bean, is: kiln-firing-nov } ] } ] }
 ---
 Ten weeks, from October.
 ```
 
-Today `python3 bin/dmledger.py lale-employment` reads how much of her twenty days she has used within the year, and
-`python3 bin/dmledger.py evening-class` gives the next lesson, past the closure.
+How much of her twenty days she has used within the year, and when the next lesson falls past the closure, are read
+once part 7 of v1 gives an allowance and a recurrence their forms; `python3 bin/daftar.py reckon
+lale-employment#leave-taken` reads the spans she took.
 
 ## A beekeepers' co-op: its sites, its own codes, a reading disputed
 
@@ -1126,13 +1128,12 @@ statements:
   - forbidden:  { id: no-colonies-abroad, of: colonies-abroad, through: self, why: "a colony moved across the border can carry a mite the valley does not have" }
   - pay:        { id: extractor, by: { someone: person, at: self }, of: { count: "25", unit: XTS }, at: 2026-07-01 }
   - obligatory: { id: extractor-fee, of: extractor, through: self, note: "each member pays for the extractor's season" }
+  - reckon:     { id: members, reading: { what: "the co-op's members: who agreed to it as a member", steps: [ { id: this, op: select, kind: contract, where: [ { path: bean, "=": bee-coop } ] }, { id: m, op: select, of: this, entries: agree, where: [ { path: as, "=": member } ] } ] } }
+  - reckon:     { id: hives, reading: { what: "every hive the co-op's members keep", steps: [ { id: h, op: select, kind: hive } ] } }
+  - reckon:     { id: hive-count, reading: { what: "how many hives there are", steps: [ { id: h, op: select, kind: hive }, { id: n, op: count, of: h } ] } }
 details:
   no-colonies-abroad: { code: "isced-f-2013:0811", within: { system: iso-3166, at: ZZ } }
   extractor-fee: { by_role: member, state: met }
-  selections:
-    members: { what: "the co-op's members", steps: [ { id: m, op: select, genos: person, where: [ { path: consent.bean, is: bee-coop } ] } ] }
-    hives: { what: "every hive the co-op's members keep", steps: [ { id: h, op: select, genos: hive } ] }
-    hive-count: { what: "how many hives there are", steps: [ { id: h, op: select, genos: hive }, { id: n, op: count, of: h } ] }
 ---
 Two members, for now.
 ```
@@ -1187,8 +1188,8 @@ details:
 A strong colony.
 ```
 
-Today `python3 bin/dmwhere.py apiary:EAST-2` reads the site within its valley, by the name the overlay gives it, with
-its source, and `python3 bin/dmreckon.py bee-coop:hive-count` counts the hives. Whether Derya may read a hive's
+`python3 bin/daftar.py where apiary:EAST-2` reads the site within its valley, by the name the overlay gives it, with
+its source, and `python3 bin/daftar.py reckon bee-coop#hive-count` counts the hives. Whether Derya may read a hive's
 inspections, or its site, is asked of the grants (`python3 bin/dmpass.py may`). A grant that lets someone else decide
 what only the gardener may — a grant to ratify — is the gardener's alone to give, on the gardener's own bean.
 
@@ -1218,21 +1219,22 @@ statements:
   - name: { by: sam, of: self, as: CANDLE-BW-01 }
   - own:  { by: sam, of: self }
   - come: { by: self, through: [sam] }
-details:
-  series:
-    burn:
-      grid: { of: time, in: gregorian-civil, every: { count: "1", unit: hour }, from: "2026-11-01 18:00+01:00" }
-      unit: hour
-      holds:
-        - { name: height, quantity: length, unit: millimetre, stands_for: point, between: linear, u: { count: "0.2", unit: millimetre } }
-      rows: |
-        height
-        200
-        191
-        182
-        173
-        164
-        155
+  - record:
+      id: burn
+      of: self
+      series:
+        grid: { of: time, in: gregorian-civil, every: { count: "1", unit: h }, from: "2026-11-01 18:00+01:00" }
+        unit: h
+        holds:
+          - { name: height, quantity: length, unit: mm, stands_for: point, between: linear, u: { count: "0.2", unit: mm } }
+        rows: |
+          height
+          200
+          191
+          182
+          173
+          164
+          155
 ---
 Poured in October.
 ```
@@ -1249,21 +1251,22 @@ statements:
   - name:    { by: sam, of: self, as: CANDLE-PF-01 }
   - own:     { by: sam, of: self }
   - acquire: { of: self, from: { someone: org }, as: bought, note: "bought at the shop" }
-details:
-  series:
-    burn:
-      grid: { of: time, in: gregorian-civil, every: { count: "1", unit: hour }, from: "2026-11-01 18:00+01:00" }
-      unit: hour
-      holds:
-        - { name: height, quantity: length, unit: millimetre, stands_for: point, between: linear, u: { count: "0.2", unit: millimetre } }
-      rows: |
-        height
-        200
-        190
-        180
-        170
-        160
-        150
+  - record:
+      id: burn
+      of: self
+      series:
+        grid: { of: time, in: gregorian-civil, every: { count: "1", unit: h }, from: "2026-11-01 18:00+01:00" }
+        unit: h
+        holds:
+          - { name: height, quantity: length, unit: mm, stands_for: point, between: linear, u: { count: "0.2", unit: mm } }
+        rows: |
+          height
+          200
+          190
+          180
+          170
+          160
+          150
 ---
 Bought at the shop.
 ```
@@ -1272,7 +1275,8 @@ What share of each candle burnt away is a **reading**, step by step: its first h
 and that divided by where it began. The two shares compared say whether the beeswax burnt down no faster; compared
 within a band, whether the two burnt down alike within a hundredth. Where the uncertainty is too wide to decide, the
 answer is NOT KNOWN — never rounded to either. The shop's order is a clause in force while the first reading holds:
-because the candles say so, not because anyone set it. Readings are kept in `details` until part 6 of v1.
+because the candles say so, not because anyone set it. Each reading is a `reckon` statement, its series named as the
+statement that records it, `candle-beeswax#burn`; the clause's condition is kept in `details` until part 7 of v1.
 
 <!-- example: beans/candle-supply.md -->
 ```markdown
@@ -1289,46 +1293,51 @@ statements:
   - agree:      { by: { someone: org }, of: self, through: spoken, as: buyer, at: 2026-10-28, note: "a candle shop in town" }
   - pay:        { id: forty, by: sam, to: { someone: org }, of: { count: "40", unit: "{item}" }, note: "forty beeswax candles, to the shop" }
   - obligatory: { id: first-order, of: forty, through: self, note: "the shop orders forty beeswax candles" }
+  - reckon:
+      id: worn-beeswax
+      reading:
+        what: "the share of the beeswax candle burnt away"
+        steps:
+          - { id: first, op: window, series: "candle-beeswax#burn", by: first }
+          - { id: last, op: window, series: "candle-beeswax#burn", by: last }
+          - { id: gone, op: difference, of: first, with: last }
+          - { id: worn, op: divide, of: gone, with: first }
+  - reckon:
+      id: burns-no-faster
+      reading:
+        what: "whether the beeswax burnt down no faster than the paraffin"
+        steps:
+          - { id: bw-first, op: window, series: "candle-beeswax#burn", by: first }
+          - { id: bw-last, op: window, series: "candle-beeswax#burn", by: last }
+          - { id: bw-gone, op: difference, of: bw-first, with: bw-last }
+          - { id: bw, op: divide, of: bw-gone, with: bw-first }
+          - { id: pf-first, op: window, series: "candle-paraffin#burn", by: first }
+          - { id: pf-last, op: window, series: "candle-paraffin#burn", by: last }
+          - { id: pf-gone, op: difference, of: pf-first, with: pf-last }
+          - { id: pf, op: divide, of: pf-gone, with: pf-first }
+          - { id: slower, op: compare, of: bw, with: pf, is: at-most }
+  - reckon:
+      id: alike
+      reading:
+        what: "whether the two burnt down alike, within a hundredth"
+        steps:
+          - { id: bw-first, op: window, series: "candle-beeswax#burn", by: first }
+          - { id: bw-last, op: window, series: "candle-beeswax#burn", by: last }
+          - { id: bw-gone, op: difference, of: bw-first, with: bw-last }
+          - { id: bw, op: divide, of: bw-gone, with: bw-first }
+          - { id: pf-first, op: window, series: "candle-paraffin#burn", by: first }
+          - { id: pf-last, op: window, series: "candle-paraffin#burn", by: last }
+          - { id: pf-gone, op: difference, of: pf-first, with: pf-last }
+          - { id: pf, op: divide, of: pf-gone, with: pf-first }
+          - { id: same, op: compare, of: bw, with: pf, is: equal, band: { count: "0.01", unit: "1" } }
 details:
   first-order: { when: { selection: burns-no-faster } }
-  selections:
-    worn-beeswax:
-      what: "the share of the beeswax candle burnt away"
-      steps:
-        - { id: first, op: window, series: "candle-beeswax:series.burn", by: first }
-        - { id: last, op: window, series: "candle-beeswax:series.burn", by: last }
-        - { id: gone, op: difference, of: first, with: last }
-        - { id: worn, op: divide, of: gone, with: first }
-    burns-no-faster:
-      what: "whether the beeswax burnt down no faster than the paraffin"
-      steps:
-        - { id: bw-first, op: window, series: "candle-beeswax:series.burn", by: first }
-        - { id: bw-last, op: window, series: "candle-beeswax:series.burn", by: last }
-        - { id: bw-gone, op: difference, of: bw-first, with: bw-last }
-        - { id: bw, op: divide, of: bw-gone, with: bw-first }
-        - { id: pf-first, op: window, series: "candle-paraffin:series.burn", by: first }
-        - { id: pf-last, op: window, series: "candle-paraffin:series.burn", by: last }
-        - { id: pf-gone, op: difference, of: pf-first, with: pf-last }
-        - { id: pf, op: divide, of: pf-gone, with: pf-first }
-        - { id: slower, op: compare, of: bw, with: pf, is: at-most }
-    alike:
-      what: "whether the two burnt down alike, within a hundredth"
-      steps:
-        - { id: bw-first, op: window, series: "candle-beeswax:series.burn", by: first }
-        - { id: bw-last, op: window, series: "candle-beeswax:series.burn", by: last }
-        - { id: bw-gone, op: difference, of: bw-first, with: bw-last }
-        - { id: bw, op: divide, of: bw-gone, with: bw-first }
-        - { id: pf-first, op: window, series: "candle-paraffin:series.burn", by: first }
-        - { id: pf-last, op: window, series: "candle-paraffin:series.burn", by: last }
-        - { id: pf-gone, op: difference, of: pf-first, with: pf-last }
-        - { id: pf, op: divide, of: pf-gone, with: pf-first }
-        - { id: same, op: compare, of: bw, with: pf, is: equal, band: { count: "0.01", unit: one } }
 ---
 Agreed at the shop, the trial to decide.
 ```
 
-Today `python3 bin/dmreckon.py candle-supply:worn-beeswax` reads 0.225, with its uncertainty and every step it took;
-`candle-supply:burns-no-faster` is true, and `candle-supply:alike` is false — two and a half hundredths apart. Nothing is
+`python3 bin/daftar.py reckon candle-supply#worn-beeswax` reads 0.225, with its uncertainty and every step it took;
+`candle-supply#burns-no-faster` is true, and `candle-supply#alike` is false — two and a half hundredths apart. Nothing is
 written back: change a height and the next reading says so.
 
 ## What harm can come of: sealed before it is committed
@@ -1548,7 +1557,7 @@ shares of whole parts:
   - book: { of: september, to: "analytic:engineering", share: "1" }
 ```
 
-What an account holds is read, never stored: today `apportion`, a step of a reading (`python3 bin/dmreckon.py`).
+What an account holds is read, never stored: `apportion`, a step of a reading (`python3 bin/daftar.py reckon`).
 
 | an ERP's analytic accounting | daftar |
 |---|---|

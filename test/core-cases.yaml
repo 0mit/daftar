@@ -140,6 +140,8 @@ good:
 # one or more cases per rule: each bean is added to the garden above (replacing one of the same name), and must be
 # refused by the rule it names
 bad:
+  - { rule: line,        bean: x40, kind: document, statements: [ { say: { by: sam, at: now } }, { do: { id: s1, by: nas, as: web } }, { step: { id: a, as: "asked", to: [s1] } } ] }
+  - { rule: line,        bean: x41, kind: document, statements: [ { say: { by: sam, at: now } }, { reckon: { id: r, reading: { what: "x", steps: [ { id: s, op: guess } ] } } } ] }
   - { rule: form,        bean: x1, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1", unit: XTS }, on: nas } } ] }
   - { rule: form,        bean: x1b, kind: document, statements: [ { say: { by: sam, at: now } }, { weigh: { of: nas } } ] }
   - { rule: form,        bean: x1c, kind: document, statements: [ { say: { by: sam, at: now }, pay: { by: ada, of: "1" } } ] }

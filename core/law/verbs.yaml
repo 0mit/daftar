@@ -126,14 +126,25 @@ verbs:
     replaces: [opened_at]
     home: core
   - verb: move
-    meaning: "to move a being along a walk: the step it reached, at what moment, who moved it"
+    meaning: "to move a being along a walk: through its course (a `be` of it, as order, on the walk), the step it reached and the moment, who moved it, and the reason the step lists"
     roles:
       by:      { shape: being }
       of:      { shape: being }
-      through: { shape: being }
-      at:      { shape: position, many: true }
-    required: [of, at]
-    replaces: [moves, moves_along]
+      through: { shape: statement }
+      at:      { shape: [position, statement], many: true }
+      as:      { shape: text }
+    required: [of, through, at]
+    replaces: [moves, moves_along, courses]
+    home: core
+  - verb: step
+    meaning: "to be a step of a walk, the line a case moves along: what is done at it, who acts there, and the steps it leads on to"
+    roles:
+      by:      { shape: [being, text] }
+      as:      { shape: text }
+      to:      { shape: statement, many: true }
+    qualifiers: { walk: { shape: form, form: step } }
+    required: [as]
+    replaces: [steps]
     home: core
   - verb: attend
     meaning: "to be present at an event, which takes the hours of those present"
@@ -154,6 +165,36 @@ verbs:
     qualifiers: { value: { shape: quantity } }
     required: [of, as]
     replaces: [observations]
+    home: core
+  - verb: record
+    meaning: "to record what a line held at each position: a series (ISO 19156, a coverage) — its positions by rule or listed, what each holds, its rows"
+    roles:
+      by:      { shape: being }
+      of:      { shape: being }
+      through: { shape: being }
+    qualifiers: { series: { shape: form, form: series } }
+    required: [of, series]
+    replaces: [series]
+    home: core
+  - verb: reckon
+    meaning: "to declare a reading of the garden: what it selects and what it computes from it, read each time it is asked and never stored"
+    roles:
+      by:      { shape: being }
+      of:      { shape: [being, statement], many: true }
+    qualifiers: { reading: { shape: form, form: reading } }
+    required: [reading]
+    replaces: [selections]
+    home: core
+  - verb: pin
+    meaning: "to fix what rests on a reading: the moment it was read at and the commit of the garden it was read in"
+    roles:
+      by:      { shape: being }
+      of:      { shape: statement, many: true }
+      from:    { shape: statement, many: true }
+      through: { shape: being }
+      at:      { shape: position, many: true }
+    required: [of, at]
+    replaces: [pin, pin_form]
     home: core
   - verb: classify
     meaning: "to class a being by a code of a scheme of the knowledge tree"

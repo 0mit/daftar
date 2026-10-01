@@ -63,6 +63,9 @@ jobs:
       - name: "core_write: the write tools in a garden of the core — save, safe, journal, session, cursor, digest, reform, install, and the upgrade from one release of the core to another"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_write.py
+      - name: "core_read: the read tools in a garden of the core — garden, where, stale, pos, seq, reckon, ledger — and the forms of a line: a series, a walk, a course and its moves, a reading and a pin"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/core_read.py
       - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/save.py

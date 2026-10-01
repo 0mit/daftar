@@ -61,6 +61,7 @@ parts, changes).
    python3 test/core_merge.py
    python3 test/core_adopt.py
    python3 test/core_write.py
+   python3 test/core_read.py
    python3 test/save.py
    python3 test/sequence.py
    python3 test/stamps.py

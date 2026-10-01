@@ -238,6 +238,19 @@ def _now_at(names):
                       re.M) if names else None
 
 
+def _now_in_list(names):
+    """The pattern of a flow list at one of these attributes — `at: [now, "<walk>#<step>"]`, a move's moment and the
+    step it reached; a pin's moment and its commit — whose items the save reads for a bare `now`, or None."""
+    return re.compile(r'(?<![\w-])((?:%s):[ \t]*\[)([^\]\n]*)(\])' % '|'.join(map(re.escape, sorted(names))), re.M) \
+        if names else None
+
+
+def _stamp_items(m, when):
+    items = m.group(2).split(',')
+    return m.group(1) + ','.join(re.sub(r'^([ \t]*)(["\']?)now\2([ \t]*)$', lambda x: x.group(1) + '"' + when + '"' + x.group(3), i)
+                                 for i in items) + m.group(3)
+
+
 def stamp_now(h, text=None, root=None):
     """Write the day of heading `h` in place of every `now` in a stamp position of the front matter of each document
     under beans/ or mappings/ that the working tree changes — and, given the entry's `text`, that the entry names (the
@@ -251,6 +264,7 @@ def stamp_now(h, text=None, root=None):
     when = h[3:].split(' · ', 1)[0].strip()
     clocked = clocked_in(root)
     daily, moment = _now_at(clocked['day']), _now_at(clocked['moment'])
+    listed = _now_in_list(clocked['moment']) if clocked['moment'] == {'at'} else None   # the core's `at` alone
     out = subprocess.run(['git', '-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'], capture_output=True)
     done = []
     for rec in out.stdout.decode('utf-8', 'replace').split('\0'):
@@ -263,7 +277,9 @@ def stamp_now(h, text=None, root=None):
             continue
         try:
             fm, _ = dmparse.split_front_matter(open(f, encoding='utf-8').read())
-            if fm is None or not ((daily and daily.search(fm)) or (moment and moment.search(fm))):
+            if fm is None or not ((daily and daily.search(fm)) or (moment and moment.search(fm))
+                                  or (listed and any(re.search(r'(?:^|,)[ \t]*(["\']?)now\1[ \t]*(?:,|$)', m.group(2))
+                                                     for m in listed.finditer(fm)))):
                 continue
 
             def fix(t):
@@ -272,6 +288,8 @@ def stamp_now(h, text=None, root=None):
                 new = daily.sub(lambda m: m.group(1) + day, front) if daily else front
                 if moment:
                     new = moment.sub(lambda m: m.group(1) + '"' + when + '"', new)
+                if listed:
+                    new = listed.sub(lambda m: _stamp_items(m, when), new)
                 return t[:at] + new + t[at + len(front):]
             safe.edit(f, fix)
             done.append(p)

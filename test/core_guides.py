@@ -63,6 +63,16 @@ DIFFERS = {
     ('salt-road-heron', 'written'): "the words are the document salt-road-signed, the agreement's `through`",
     ('phone-loan', 'spoken'): "the words were spoken on the call: the agreement is `through` call-with-ali",
     ('laptop', 'Lenovo'): "the maker is a bean, `lenovo`, the namespace of its serials and where the hands were",
+    ('lale-employment', 'leave.*'): "a reading reads a verb's statements, `entries: leave`, not the entries of a term",
+    ('agency-noor', 'courses.home'): "a course is a `be` as order: the reading asks for `be.id` home and a `move` that "
+                                     "reached `walk-placing#contracted`",
+    ('agency-noor', 'courses.abroad'): "as for `courses.home`, `be.id` abroad",
+    ('agency-noor', 'transactions.*'): "the payments are the bean's `pay` statements, `entries: pay`",
+    ('agency-noor', 'day'): "a payment's day is the `at` of its `pay`",
+    ('bee-coop', 'consent.bean'): "a member is who `agree`s to the co-op as a member: the co-op's `agree` statements",
+    ('candle-supply', 'candle-beeswax:series.burn'): "a series is named as the statement that records it, "
+                                                    "`candle-beeswax#burn`",
+    ('candle-supply', 'candle-paraffin:series.burn'): "as for the beeswax candle's, `candle-paraffin#burn`",
 }
 
 

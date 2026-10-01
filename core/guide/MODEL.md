@@ -194,7 +194,7 @@ Four things are asked of every being, each its own statement, never one:
   `through` what it was paid under) and `bear` (`by` each who bears it, `of` the payment, `share` their part). Whoever
   paid bears it alone unless a `bear` says otherwise.
 - **A balance is read, never written.** What one party owes another is computed from the payments and the clauses
-  (today `python3 bin/dmledger.py`), exactly, in fractions; a stored balance is a second copy, and it drifts. Who takes
+  (`python3 bin/daftar.py ledger`, from each `pay` and `bear`), exactly, in fractions; a stored balance is a second copy, and it drifts. Who takes
   a remainder is a clause, never arithmetic.
 - **A party may act for another** (`represent`): what it does binds that one.
 
@@ -252,8 +252,12 @@ A name is a statement: the namespace gives it.
   technology, a field. Every code is checked against its scheme; an invented code is refused. The schemes are kept
   whole in `seed/knowledge/`, each under its own licence, and read by today's `python3 bin/dmknowledge.py`.
 - **Readings** — how many, whether any, which first, how much — are asked of the garden each time and never written
-  back as statements (today `python3 bin/dmreckon.py`). Their declarations, a series of values along a line, and a
-  walk's steps are kept in `details` until their forms are built (parts 6 and 7 of v1).
+  back as statements (`python3 bin/daftar.py reckon`). A reading is declared by `reckon`, its steps in its `reading`;
+  what rests on one is fixed by `pin`, the moment it was read at and the commit, `<garden>@<object id>`.
+- **Lines.** What a line held at each position is a series, `record`; a walk is a mapping's `step` statements, a case
+  on it a `be` as order, and where it stands is read from its `move`s (`python3 bin/daftar.py seq`). Each line's own
+  structure is a value in a form of core/law/lines.yaml, and rule `line` judges it. A recurrence, a due relative to
+  another, an uncertainty and an allowance are kept in `details` until part 7 of v1.
 
 ## Layers, standing and the law
 - **The layers**: manifesto, law, reasoning, journal, history, queue, names; beside them the sources the flow law adds
@@ -323,7 +327,7 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   (manifesto: hidden). People record decisions and approvals; agents record what they ran, why, and what happened. A heading is
   written by the clock (`bin/journal.py`, which `bin/save.py` calls), never typed.
 - **The gate** is `core/check.py`, run at every commit by the pre-commit hook `bin/hooks/pre-commit` on the staged
-  files. Its eighteen rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
+  files. Its nineteen rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
   lists them: the core's thirteen, and five that today's gate held — `consent`, `harm`, `room`, `vacancy`, `kept`.
 - **The commit's own rules**: every bean a commit changes is named by the journal entry it adds; a statement it adds is
   known by an act it adds, at that entry's moment; a change to the law says RULE-CHANGE. Only the commit that adopts

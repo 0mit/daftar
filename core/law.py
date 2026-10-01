@@ -1,7 +1,7 @@
 """law — the face and the rows, loaded as one law and proved consistent with itself.
 
 The face is `core/law/core.yaml`: the seven roles, the shapes, the grammar's words, the two figures, the order (natures,
-lines, levels, conditions, the crown), the face's verbs and the eighteen rules. The verbs beyond the face are rows,
+lines, levels, conditions, the crown), the face's verbs and the nineteen rules. The verbs beyond the face are rows,
 `core/law/verbs.yaml`. A garden adds rows of its own in its VOCAB.md, under these keys only:
 
   kinds         { kind, nature, line?, level?, rung?, meaning? }       what a bean records
@@ -48,8 +48,9 @@ ROW_FIELDS = {
     'units': {'unit', 'name', 'quantity', 'ucum', 'why', 'vacant'},
     'exclusive': {'verb', 'why'},
 }
+LINES = 'lines.yaml'                                       # the forms of a line and a reading's grammar (v1 part 6)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
-SPEC_KEYS = {'shape', 'table', 'nature', 'rung', 'many', 'keyed'}
+SPEC_KEYS = {'shape', 'table', 'nature', 'rung', 'many', 'keyed', 'form'}
 FACE_TABLES = ('ways', 'modes', 'acquisitions', 'placements', 'complements')
 TRUE = 'true'
 MANIFEST_FORMS = ('pin', 'bean', 'zone', 'text', 'texts')   # the manifest's forms the engine knows by name; a pattern's
@@ -91,6 +92,8 @@ class Law:
         self.version = str(F.get('version') or '')         # what a garden that runs this law pins: `core@<version>`
         self.manifest = {m['key']: m for m in F.get('manifest') or []}            # GARDEN.md's keys, each in its form
         self.manifest_forms = {f['form']: f for f in F.get('manifest_forms') or []}
+        self.line_law = {}                                  # core/law/lines.yaml: the forms of a line, a reading's grammar
+        self.forms = {}                                     # the forms a `form` role names, by name
         self.levels, self.kinds, self.namespaces, self.verbs, self.units = {}, {}, {}, {}, {}
         self.flows, self.flow_sources, self.standing, self.exclusive = [], [], [], []
         self.garden_rows = []                               # (key, name, row) of each row a garden added (rule vacancy)
@@ -130,8 +133,12 @@ class Law:
         VOCAB.md front matter."""
         d = os.path.join(root, 'core', 'law') if root else LAW_DIR
         rows = tuple((f"core/law/{n}", read.data(os.path.join(d, n))) for n in ROW_FILES)
-        return cls(read.data(os.path.join(d, 'core.yaml')), read.data(os.path.join(d, 'verbs.yaml')),
-                   rows + tuple(extensions), std or (standards.here(root) if root else None))
+        law = cls(read.data(os.path.join(d, 'core.yaml')), read.data(os.path.join(d, 'verbs.yaml')),
+                  rows + tuple(extensions), std or (standards.here(root) if root else None))
+        lines = os.path.join(d, LINES) if os.path.isfile(os.path.join(d, LINES)) else os.path.join(LAW_DIR, LINES)
+        law.line_law = read.data(lines)
+        law.forms = dict(law.line_law.get('forms') or {})
+        return law
 
     def _put(self, table, name, row, where):
         if name in table:
@@ -271,7 +278,7 @@ class Law:
         if len(self.roles) != 7:
             bad('core.yaml roles', f"the core has seven roles, and this law {len(self.roles)}")
         known_rules = ['form', 'valency', 'knowing', 'placeholder', 'order', 'life', 'necessity', 'squares', 'weight',
-                       'frame', 'names', 'layers', 'ratify', 'consent', 'harm', 'room', 'vacancy', 'kept']
+                       'frame', 'names', 'layers', 'ratify', 'consent', 'harm', 'room', 'vacancy', 'kept', 'line']
         for x in self.exclusive:
             if x.get('verb') not in self.verbs:
                 bad('exclusive', f"`{x.get('verb')}` is no verb of the law: what is exclusive is a verb's `at`")
@@ -405,6 +412,9 @@ class Law:
             for s in shapes_of(spec):
                 if s not in self.shapes:
                     bad(where, f"`{r}`: no shape {s!r}")
+            if 'form' in shapes_of(spec) and self.forms and spec.get('form') not in self.forms:
+                bad(where, f"`{r}`: a form names one of the forms of a line ({', '.join(sorted(self.forms))}), not "
+                           f"{spec.get('form')!r}")
             if 'row' in shapes_of(spec):
                 t = spec.get('table')
                 if not t:
@@ -420,7 +430,7 @@ class Law:
                 if spec.get(flag) not in (None, TRUE):
                     bad(where, f"`{r}`: `{flag}` is written `true`, or not at all")
         for r in listed(v.get('required')):
-            if r not in roles:
+            if r not in roles and r not in quals:
                 bad(where, f"requires `{r}`, which it does not take")
         ch = v.get('choice')
         if ch is not None:
