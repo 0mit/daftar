@@ -2,8 +2,9 @@
 
 The face is data, `core/law/core.yaml`, and the verbs beyond it are rows, `core/law/verbs.yaml`; the engine hardcodes
 only what its thirteen rules name. Everything else comes in through an interface: positions, quantities, protocols and
-codes from the standards the release carries (`core/standards.py`), and a garden's own kinds, levels, namespaces and
-flows as rows in its VOCAB.md.
+codes from the standards the release carries in core/law/ (systems, places, protocols, quantities and units,
+registries; read by `core/standards.py`), and a garden's own kinds, levels, namespaces and flows as rows in its VOCAB.md.
+Until v1 retires std-vocab, the rows it has are generated from it (`python3 core/translate.py law`), never typed.
 
     python3 core/check.py <garden>       # judge a garden written in statements
     python3 core/check.py --staged       # the index, and the commit's own rules: the pre-commit gate

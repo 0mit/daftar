@@ -29,11 +29,11 @@ from core.law import Law       # noqa: E402
 
 def garden_law(root, release=None):
     """The law of the release at `release` (this one, if none), extended by the rows of the garden at `root` (its
-    VOCAB.md, where it has one). The standards are the garden's where it carries the law (seed/std-vocab.md): a scheme of
+    VOCAB.md, where it has one). The standards are the garden's where it carries a law (`standards.carried`): a scheme of
     codes it holds as its own is read there, as dmknowledge reads it."""
     p = os.path.join(root, 'VOCAB.md')
     ext = (('VOCAB.md', read.document(p)[0]),) if os.path.exists(p) else ()
-    std = standards.here(root) if os.path.isfile(os.path.join(root, 'seed', 'std-vocab.md')) else None
+    std = standards.here(root) if standards.carried(root) else None
     return Law.load(*ext, root=release, std=std)
 
 

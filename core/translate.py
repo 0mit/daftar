@@ -4,11 +4,15 @@
     python3 core/translate.py levels > core/law/levels.yaml    # the bodies' levels, from the law's `complexity`
     python3 core/translate.py layers > core/law/layers.yaml    # the flow law's sources and the files' standing
     python3 core/translate.py kinds  > core/law/kinds.yaml     # the kinds, from the law's `gene`
+    python3 core/translate.py systems > core/law/systems.yaml  # a standard's rows (systems, places, protocols,
+                                                               # quantities, registries), from the law's tables of it
+    python3 core/translate.py law                              # every generated file of core/law/ written again
     python3 core/translate.py garden <garden> <copy>           # a copy of the garden, its beans in statements, counted
 
-THE LAW'S ROWS are generated from the law that has them, never typed. The detailed levels are rows of our knowledge tree
-(Q3): `complexity` names `logos` where the core says `reason`, and `stands_on` where it says `stands`; the frame and λόγος
-are the face's own. The kinds are `gene`: soma is a body, lekton the sayable, and `rung: logos` is `rung: reason`.
+THE LAW'S ROWS are generated from the law that has them, never typed, until std-vocab is retired (v1) and they become
+the source; test/core_standards.py holds each file equal to what the law generates. The detailed levels are rows of our
+knowledge tree (Q3): `complexity` names `logos` where the core says `reason`, and `stands_on` where it says `stands`; the
+frame and λόγος are the face's own. The kinds are `gene`: soma is a body, lekton the sayable, and `rung: logos` is `rung: reason`.
 
 A GARDEN IS TRANSLATED INTO A COPY, never in place: every file is copied, the beans and mappings are rewritten in
 statements, and VOCAB.md gains the rows the beans need (the garden's own kinds, the namespaces its names are given in, the
@@ -45,6 +49,7 @@ import re
 import shutil
 import subprocess
 import sys
+import textwrap
 
 import yaml
 
@@ -74,10 +79,12 @@ def old_law(path=LAW):
 
 
 def _q(s):
-    """A scalar as YAML writes it plainly where it can, quoted where it must be."""
+    """A scalar as YAML writes it plainly where it can, quoted where it must be: in JSON's escapes, which YAML's double
+    quotes read, so a backslash, a quote or a line break comes back as written."""
     s = str(s)
-    plain = s and all(c.isalnum() or c in '-_' for c in s) and s.lower() not in ('true', 'false', 'null', 'yes', 'no', 'on', 'off')
-    return s if plain else '"' + s.replace('\\', '\\\\').replace('"', '\\"') + '"'
+    plain = s and s[0].isalnum() and all(c.isalnum() or c in '-_' for c in s) \
+        and s.lower() not in ('true', 'false', 'null', 'yes', 'no', 'on', 'off')
+    return s if plain else json.dumps(s, ensure_ascii=False)
 
 
 # ================================================================================================ the law's rows
@@ -135,6 +142,124 @@ def kinds(law):
         row = kind_row(g)
         out.append("  - { " + ', '.join(f"{k}: {_q(v)}" for k, v in row.items()) + " }")
     return '\n'.join(out) + '\n'
+
+
+# THE STANDARDS' ROWS (v1, part 1): every table the core reads from an outside standard, generated from the law that has
+# them, so there is one source until std-vocab is retired and these files become it. Each file holds its tables in the
+# standard's own columns, and each table's form from `registry_forms`: which columns every row holds, which it may, and
+# where a column's values come from. Two tables take the core's names; a value in a word the core renamed is written in
+# the core's (the natures, the knowing acts, λόγος); prose is kept as written. Each entry: (what the file holds, its
+# tables as (the core's name, the law's)).
+STANDARDS = {
+    'systems': (
+        "The systems of position: calendars, scales, coordinates, filesystems and addresses, each with the one form "
+        "its positions are written in (ISO 8601, CLDR, EPSG, POSIX and Windows path grammars, RFC 3986, the IANA ports…), "
+        "the shape their columns take, and the operating systems and storage formats that name a filesystem's grammar.",
+        (('systems', 'anchor_systems'), ('system_shape', 'system_shape'), ('operating_systems', 'operating_systems'),
+         ('storage_formats', 'storage_formats'))),
+    'places': (
+        "The frame of places: the bodies (IAU, IUGG) and the reference systems fixed to them (EPSG, ISO 19111), with "
+        "their kinds and frames.",
+        (('bodies', 'bodies'), ('reference_system_kinds', 'reference_system_kinds'),
+         ('reference_frames', 'reference_frames'), ('reference_systems', 'reference_systems'))),
+    'protocols': (
+        "The protocols, by the IANA protocol and service registries' names: the layer each is at, what it rides on, "
+        "its transport and its default ports.",
+        (('protocols', 'net_protocols'),)),
+    'quantities': (
+        "The quantities (ISO 80000, SI): the dimensions, what each quantity is of and on which scale, and the kinds of "
+        "accuracy a maker states (GUM). Their units are core/law/units.yaml's, in UCUM; currencies are ISO 4217's.",
+        (('dimensions', 'dimensions'), ('quantities', 'quantities'), ('accuracy_kinds', 'accuracy_kinds'))),
+    'registries': (
+        "Where a standard's own table is kept (seed/knowledge/), and the schemes of our knowledge tree: ISCED-F 2013, "
+        "ISCO-08, the technologies, the geologic chart and the rest, with what each column of a scheme says.",
+        (('registry_files', 'registry_files'), ('knowledge_schemes', 'knowledge_schemes'),
+         ('knowledge_scheme_form', 'knowledge_scheme_form'))),
+}
+TABLE_NAMES = {old: new for _what, tables in STANDARDS.values() for new, old in tables if new != old}
+VALUE_WORDS = {'nature': NATURES, 'act': {'derived': 'derive', 'said': 'say', 'read': 'read', 'made': 'make'},
+               'level': RENAMED, 'rung': RENAMED}
+WIDTH = 120
+
+
+def in_core_words(x, key=None):
+    """`x` (read as strings) with each value in a word the core renamed written in the core's, and a form's `registry`
+    named by the core's name of its table."""
+    if isinstance(x, dict):
+        return {k: in_core_words(v, k) for k, v in x.items()}
+    if isinstance(x, list):
+        return [in_core_words(v, key) for v in x]
+    words = TABLE_NAMES if key == 'registry' else VALUE_WORDS.get(key, {})
+    return words.get(x, x)
+
+
+def _flow(x):
+    if isinstance(x, dict):
+        return '{ ' + ', '.join(f"{_q(k)}: {_flow(v)}" for k, v in x.items()) + ' }' if x else '{}'
+    if isinstance(x, list):
+        return '[' + ', '.join(_flow(v) for v in x) + ']'
+    return _q(x)
+
+
+def _block(key, x, ind):
+    """The lines of `key: x` at the indent `ind`: one line where it fits, else each part on its own."""
+    one = f"{ind}{_q(key)}: {_flow(x)}"
+    if not isinstance(x, (dict, list)) or not x or len(one) <= WIDTH:
+        return [one]
+    out = [f"{ind}{_q(key)}:"]
+    for k, v in x.items() if isinstance(x, dict) else ():
+        out += _block(k, v, ind + '  ')
+    for v in x if isinstance(x, list) else ():
+        out += _item(v, ind + '  ')
+    return out
+
+
+def _item(v, ind):
+    one = f"{ind}- {_flow(v)}"
+    if not isinstance(v, dict) or not v or len(one) <= WIDTH:
+        return [one]
+    out = []
+    for k, w in v.items():
+        out += _block(k, w, ind + '  ')
+    out[0] = f"{ind}- {out[0][len(ind) + 2:]}"
+    return out
+
+
+def standard(law, name):
+    """The text of core/law/<name>.yaml: the tables of STANDARDS[name] and their forms, from the law read as strings."""
+    what, tables = STANDARDS[name]
+    said = (f"GENERATED by `python3 core/translate.py {name}` from std-vocab {law.get('version')}'s "
+            + ', '.join(f"`{old}`" for _new, old in tables) + "; a change is made there, or by a RULE-CHANGE that "
+            "moves these rows, never by hand here.")
+    out = ["# " + line for para in (what, said) for line in textwrap.wrap(para, WIDTH - 2)]
+    forms = law.get('registry_forms') or {}
+    for new, old in tables:
+        out += _block(new, in_core_words(law.get(old)), '')
+    held = {new: in_core_words(forms[old]) for new, old in tables if old in forms}
+    out += _block('forms', held, '') if held else []
+    return '\n'.join(out) + '\n'
+
+
+def law_as_strings(path=LAW):
+    """Today's law read as the core reads a document: every scalar a string, as written."""
+    from core import read
+    with open(path, encoding='utf-8') as fh:
+        return read.loads(dmparse.split_front_matter(fh.read())[0] or '', path) or {}
+
+
+def generated(name):
+    """The text the law generates for core/law/<name>.yaml."""
+    if name == 'levels':
+        return levels(old_law())
+    if name == 'kinds':
+        return kinds(old_law())
+    if name == 'layers':
+        from core import read
+        return layers(old_law(), read.data(os.path.join(HERE, 'law', 'core.yaml')).get('layers') or [])
+    return standard(law_as_strings(), name)
+
+
+GENERATED = ('levels', 'kinds', 'layers') + tuple(STANDARDS)
 
 
 # ================================================================================================ a garden's beans
@@ -847,8 +972,7 @@ class Context:
             self.zone = None
         self.kinds = dict(law.kinds)
         self.protocols = set(std.protocols)
-        self.transport = {str(r['protocol']): str(r.get('transport') or 'tcp') for r in std.old.get('net_protocols') or []
-                          if isinstance(r, dict) and r.get('protocol')}
+        self.transport = {p: str(r.get('transport') or 'tcp') for p, r in std.protocols.items()}
         self.jobs = set(law.table('jobs') or [])
         self.forms = set(law.table('forms') or [])
         self.namespaces = {}
@@ -917,7 +1041,7 @@ def garden(src, dst):
     if os.path.exists(dst):
         raise SystemExit(f"translate: {dst} exists — a translation is written into a new copy")
     shutil.copytree(src, dst, ignore=shutil.ignore_patterns('.git', '__pycache__'))
-    std = standards.here(src) if os.path.isfile(os.path.join(src, 'seed', 'std-vocab.md')) else standards.here()
+    std = standards.here(src) if standards.carried(src) else standards.here()
     vocab = read.document(os.path.join(src, 'VOCAB.md'))[0] if os.path.exists(os.path.join(src, 'VOCAB.md')) else {}
     oldv = dmparse.loads(dmparse.split_front_matter(open(os.path.join(src, 'VOCAB.md'), encoding='utf-8').read())[0]) \
         if vocab else {}
@@ -979,15 +1103,22 @@ def garden(src, dst):
 
 
 def main(argv):
-    if argv[:1] == ['levels']:
-        sys.stdout.write(levels(old_law()))
+    if len(argv) == 1 and argv[0] in GENERATED:
+        sys.stdout.write(generated(argv[0]))
         return 0
-    if argv[:1] == ['kinds']:
-        sys.stdout.write(kinds(old_law()))
-        return 0
-    if argv[:1] == ['layers']:
-        from core import read
-        sys.stdout.write(layers(old_law(), read.data(os.path.join(HERE, 'law', 'core.yaml')).get('layers') or []))
+    if argv == ['law']:
+        for name in GENERATED:
+            path = os.path.join(HERE, 'law', name + '.yaml')
+            text = generated(name)
+            try:
+                with open(path, encoding='utf-8') as fh:
+                    same = fh.read() == text
+            except OSError:
+                same = False
+            if not same:
+                with open(path, 'w', encoding='utf-8', newline='\n') as fh:
+                    fh.write(text)
+            print(f"core/law/{name}.yaml: {'as generated' if same else 'written'}")
         return 0
     if argv[:1] == ['garden'] and len(argv) == 3:
         counts, problems = garden(os.path.abspath(argv[1]), os.path.abspath(argv[2]))

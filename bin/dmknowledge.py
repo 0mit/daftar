@@ -51,9 +51,11 @@ def _words(text):
 
 
 class Knowledge:
-    def __init__(self, root):
+    def __init__(self, root, law=None):
+        """`law`: the law's `registry_files` and `knowledge_schemes` where a caller has read them already (the core
+        reads them from core/law/registries.yaml); else they are read from the garden's seed/std-vocab.md."""
         self.root = root
-        law = _fm(os.path.join(root, "seed", "std-vocab.md"))
+        law = _fm(os.path.join(root, "seed", "std-vocab.md")) if law is None else law
         garden = _fm(os.path.join(root, "VOCAB.md"))
         adds = garden.get("registry_additions") or {}
         self.decl = {r["registry"]: r for r in list(law.get("registry_files") or []) + list(garden.get("registry_files") or [])

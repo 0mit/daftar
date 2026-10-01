@@ -26,7 +26,8 @@ from core import read, standards  # noqa: E402
 
 LAW_DIR = os.path.join(HERE, 'law')
 GENERATED = ('levels.yaml', 'layers.yaml', 'kinds.yaml')   # rows generated from today's law: the bodies' levels, the
-                                                           # layers and standing, and the kinds
+                                                           # layers and standing, and the kinds (the standards' tables,
+                                                           # generated too, are read by core/standards.py)
 ROW_FILES = GENERATED + ('units.yaml',)                    # and the units in UCUM, each with the law's English name
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
             'standing': 'layer', 'verbs': 'verb', 'tables': None, 'units': 'unit'}
@@ -335,13 +336,6 @@ class Law:
         for n, us in names.items():
             if len(us) > 1:
                 bad('units', f"the name {n!r} is attached to {', '.join(us)}: one name, one unit")
-        # INCLUSIVE: every unit of today's law has its row, by its English name, measuring what the law says it measures
-        for n, q in self.std.units.items():
-            rows = [self.units[u] for u in names.get(n, [])]
-            if not rows:
-                bad('units', f"the law's unit {n!r} has no row: give it its UCUM code (or say why UCUM writes none)")
-            elif rows[0].get('quantity') != q:
-                bad('units', f"{n!r} measures {q} in the law, and its row says {rows[0].get('quantity')}")
         seen = {}
         for w, who in self.replaces:
             seen.setdefault(w, []).append(who)
