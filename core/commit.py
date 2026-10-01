@@ -9,10 +9,11 @@ commits, and is judged here:
            left is a write not saved, and a moment typed there is refused, since only the clock supplies it. A
            statement the commit adds or changes is known by an act of this commit, because whoever wrote it now said it
            now: an old act's moment is older than the statement.
-           THE ADOPTION, ONCE (ratified 2026-10-01): the commit that brings the core into a garden (it adds
-           core/law/core.yaml) and says RULE-CHANGE, which a person ratifies, carries the garden's acts translated with
-           the moments history recorded; the gate grants it those moments — a heading of the journal as committed, or
-           a commit's own moment — and no other commit.
+           THE ADOPTION, ONCE (ratified 2026-10-01): the commit that makes the core a garden's language — it moves
+           GARDEN.md's `extends` from a std-vocab pin to the core's (`core@<version>`) — and says RULE-CHANGE, which a
+           person ratifies, carries the garden's acts translated with the moments history recorded; the gate grants it
+           those moments (a heading of the journal as committed, or a commit's own moment), and no other commit. A
+           garden receives core/ itself from v0.49.0 on, beside today's gate, so receiving it adopts nothing.
   ratify   A change to a file of the law (one the law's standing places in `law` or `manifesto`, the core's own law
            files, or one a release keeps by seed/LANGUAGE) is a RULE-CHANGE, ratified by a person, and the entry says
            so.
@@ -35,7 +36,7 @@ import dmjournal  # noqa: E402 — the register of the headings the clock wrote
 import dmpass     # noqa: E402 — the one reader of seed/LANGUAGE, and the one matcher of a path
 
 JOURNAL = 'log/journal.md'
-ADOPTS = 'core/law/core.yaml'      # the file whose adding is a garden's adoption of the core
+MANIFEST = 'GARDEN.md'             # its `extends` names the law a garden runs: moved to the core, the garden adopts it
 RULED = ('law', 'manifesto')
 # RULE-CHANGE said, and not denied: "not a RULE-CHANGE" says the opposite (as bin/dmcheck.py reads it)
 RULE_CHANGE = re.compile(r'(?<!(?i:not a ))(?<!(?i:not an ))(?<!(?i:not ))(?<!(?i:no ))(?<!(?i:non-))\bRULE-CHANGE\b')
@@ -76,6 +77,19 @@ def statements_of(root, ref, path):
             (verb, roles), = s.items()
             out.append((i, verb, roles))
     return out
+
+
+def pin(root, ref):
+    """GARDEN.md's `extends` at `ref` (`HEAD`, or '' for the index), or ''."""
+    text = git(root, 'show', f"{ref}:{MANIFEST}")
+    if text is None:
+        return ''
+    import dmparse
+    try:
+        fm = read.loads(dmparse.split_front_matter(text)[0] or '') or {}
+    except read.Unread:
+        return ''
+    return str(fm.get('extends') or '') if isinstance(fm, dict) else ''
 
 
 def history(root):
@@ -122,7 +136,8 @@ def findings(root, law, changes=None):
             out.append(('knowing', JOURNAL, f"the heading {h[:60]!r} was not written by the clock in this clone: a heading "
                                             f"is written by `bin/dmsave.py` (or bin/dmjournal.py), never typed"))
     said = ' or '.join(sorted(moments)) or 'none: this commit adds no entry'
-    adopting = any(s == 'A' and p == ADOPTS for s, p in changes) and bool(RULE_CHANGE.search(entry))
+    adopting = any(p == MANIFEST for _s, p in changes) and bool(RULE_CHANGE.search(entry)) \
+        and pin(root, 'HEAD').startswith('std-vocab@') and pin(root, '').startswith('core@')
     past = history(root) if adopting else set()
     for status, path in changes:
         if not (path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)) and path.endswith('.md')):

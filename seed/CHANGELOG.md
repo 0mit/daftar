@@ -251,6 +251,15 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **the core 1, shipped in v0.49.0 beside 32.0** (2026-10-01, human-ratified rule-changes) — **the engine of the statement
+  arrives in every garden, and judges none yet.** `core/` holds the minimal core's law as data — the face (seven roles,
+  the shapes, the two figures, the order with its two frames and the line of the said, the crown, thirteen rules), the
+  35 verb rows, the kinds, the levels and layers generated from 32.0, and the units in UCUM with the law's English names
+  attached — and its engine: `core/check.py` judges a garden written in statements, `core/translate.py` writes a copy of a
+  32.0 garden in statements with the count of every value as its proof, `core/commit.py` holds the commit's rules (the
+  knowing act at the save's moment, RULE-CHANGE ratified, the adoption granted history's moments once). Built and
+  ratified as daftar PRs #81–#88. 32.0 stays the law and today's gate the gate: a garden rehearses the switch on a copy,
+  and v1.0.0 makes the core the language.
 - **32.0** (2026-09-30, human-ratified rule-change) — **the base: the ladder from the frame to the crown, the life chain
   as vias, and ownership without facets.** From the operator's reading of the names ("a better form for base
   categorization … we need to make sure to inspect this as logical as possible"), inspected against Hartmann, Ibn Sina and

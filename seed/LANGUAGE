@@ -31,6 +31,12 @@ MERGE.md
 # The skill a coding agent auto-loads: a mirror pointing into the garden, carrying no rule of its own.
 AGENTS.md
 .claude/skills/daftar/SKILL.md
+# THE CORE (v0.49.0): the engine of the statement, its law and its hook, beside today's gate. A garden receives it so it
+# can rehearse the switch on a copy (`python3 core/translate.py garden . <copy>`, then `python3 core/check.py <copy>`);
+# today's gate stays the gate until a garden adopts v1.0.0. Named file by file kind, as bin/ is: nothing else under core/.
+core/*.py
+core/law/*.yaml
+core/hooks/*
 # The pre-commit hook runs it, so a garden without it cannot commit. The other tests assert things about the
 # release's own fixtures and stay in the release.
 test/fast.py

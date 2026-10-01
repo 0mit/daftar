@@ -9,8 +9,9 @@ what nobody said. So every bean here is one today's law accepts. It translates t
 (core/translate.py) and checks that every value of every bean is placed and found where it was put, that the core's
 engine passes the copy, and that the forms the guides teach — a person, a host, money between two people, an agreement
 paid in instalments, an event, another person's garden — each became statements. Last, it adopts the core in place:
-the translated beans and core/ come into the garden in one commit through bin/dmsave.py and the core's gate, refused
-until its entry says RULE-CHANGE, then granted the moments history recorded — that once, and not the commit after.
+the garden has had core/ since it germinated; the translated beans come into it, and GARDEN.md's pin moves from
+std-vocab to the core, in one commit through bin/dmsave.py and the core's gate, refused until its entry says
+RULE-CHANGE, then granted the moments history recorded — that once, and not the commit after.
 """
 import os, re, shutil, subprocess, sys, tempfile
 
@@ -174,7 +175,11 @@ try:
             for f in os.listdir(os.path.join(C, d)):
                 shutil.copy(os.path.join(C, d, f), os.path.join(G, d, f))
     shutil.copy(os.path.join(C, 'VOCAB.md'), os.path.join(G, 'VOCAB.md'))
-    shutil.copytree(os.path.join(ROOT, 'core'), os.path.join(G, 'core'), ignore=shutil.ignore_patterns('__pycache__'))
+    check("the garden received core/ when it germinated (seed/LANGUAGE ships it beside today's gate, from v0.49.0)",
+          all(os.path.isfile(os.path.join(G, 'core', f)) for f in ('check.py', 'translate.py', 'law/core.yaml', 'hooks/pre-commit')))
+    gp = os.path.join(G, 'GARDEN.md')                  # ADOPTING is moving the garden's pin from std-vocab to the core
+    gt = open(gp, encoding='utf-8').read()
+    open(gp, 'w', encoding='utf-8', newline='\n').write(re.sub(r'(?m)^extends: std-vocab@[^ \n]*', 'extends: core@1', gt, count=1))
     run('git', 'config', 'user.name', 't', cwd=G)
     run('git', 'config', 'user.email', 't@x', cwd=G)
     # THE MINUTE TURNS FIRST. A heading's moment is the clock's to the minute, so two saves in one minute share one; the
