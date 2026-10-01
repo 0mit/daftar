@@ -431,6 +431,7 @@ class Bean2:
         self.details = {}
         self.placed = {}                 # old leaf path -> (where, expected text)
         self.notes = []                  # what the translation could not do: a problem
+        self.readings = []               # the `reckon` statements, whose paths the garden's second pass rewrites
         self.carried = []                # what it did another way, losing nothing: for the report
 
     # -- placing
@@ -1009,14 +1010,14 @@ def _unit_text(v, ctx):
 
 def _place_form(b, base, x, j, role, sub=(), rename=None, units=True, paths=False):
     """Each leaf of the old subtree `x` (at old path `base`) placed in statement `j`'s `role` at the same path below
-    `sub`, a key renamed by `rename`, a unit by its UCUM code. Returns the new subtree as written."""
-    rename = rename or {}
+    `sub`, a key renamed by `rename(key, old path)`, a unit by its UCUM code. Returns the new subtree as written."""
+    rename = rename or (lambda k, _p: k)
 
     def walk(v, old_path, new_path):
         if isinstance(v, dict):
             out = {}
             for k, w in v.items():
-                nk = rename.get(k, k)
+                nk = rename(k, old_path)
                 out[nk] = walk(w, old_path + (k,), new_path + (nk,))
             if not v:
                 b.take(old_path, b.role(j, role, *new_path), '{}')
@@ -1142,10 +1143,146 @@ def _lines_of(b, old, ctx):
         j = b.add('reckon', {}, sid)
         form = {kk: v for kk, v in e.items() if kk != 'note'}
         b.statements[j][1]['reading'] = _place_form(b, ('selections', k), form, j, 'reading',
-                                                    rename=dict({'genos': 'kind'}, **SIGNS), paths=True)
+                                                    rename=_reading_key, paths=True)
+        b.readings.append(j)
         if isinstance(e.get('note'), str):
             b.statements[j][1]['note'] = e['note']
             b.take(('selections', k, 'note'), b.role(j, 'note'))
+
+
+def _reading_key(k, old_path):
+    """A key of a reading in the core's words: `genos` a step's `kind`; a comparator of a condition (an item of a step's
+    `where`) by the core's sign — and nowhere else, so `compare`'s own `is` stays its word."""
+    if k == 'genos':
+        return 'kind'
+    return SIGNS.get(k, k) if len(old_path) >= 2 and old_path[-2] == 'where' else k
+
+
+# A READING'S PATHS ARE REWRITTEN WHERE THEIR VALUES WENT (v1 part 6). A reading in today's words reads terms; in the core
+# those values are statements or are kept whole in `details`. So the garden is translated first, and each path is then
+# written as the beans it reads were: a term kept whole is read in `details`; a term written as statements of one verb is
+# that verb, its attributes the roles they became; a course is the `be` named by it (`be[id=<course>]`), the step it
+# reaches the walk's statement (`<walk>#<step>`); a series is the statement that records it (`<bean>#<id>`). Only what
+# the beans show is mapped: a path whose values went two ways is kept as written, and the gate names it.
+def reading_map(beans):
+    """{term: ('details',) or ('verb', verb, {attr: role})}, and {course: walk}, from where each bean's leaves went."""
+    where_to, attrs, walks, steps = {}, {}, {}, {}
+    for b in beans:
+        for s in b.old.get('steps') or [] if isinstance(b.old.get('steps'), list) else []:
+            if isinstance(s, dict) and isinstance(s.get('id'), str):
+                steps.setdefault(s['id'], set()).add(b.id)
+        for c, e in (b.old.get('courses') or {}).items() if isinstance(b.old.get('courses'), dict) else []:
+            ref = e.get('walk') if isinstance(e, dict) else None
+            if isinstance(ref, dict) and isinstance(ref.get('mapping') or ref.get('bean'), str):
+                walks.setdefault(c, set()).add(ref.get('mapping') or ref.get('bean'))
+        for p, (where, _v) in b.placed.items():
+            term = p[0]
+            if where[0] == 'details' and len(where) > 1 and where[1] == term:
+                where_to.setdefault(term, collections.Counter())['details'] += 1
+            elif where[0] == 'statement' and len(where) > 2:
+                verb = b.statements[where[1]][0]
+                where_to.setdefault(term, collections.Counter())[verb] += 1
+                if len(p) > 2 and isinstance(p[2], str):
+                    attrs.setdefault((term, verb), {}).setdefault(p[2], set()).add(where[2])
+    out = {}
+    for term, seen in where_to.items():
+        if set(seen) == {'details'}:
+            out[term] = ('details',)
+        elif 'details' not in seen or seen.most_common(1)[0][0] != 'details':
+            verb = seen.most_common(1)[0][0]
+            out[term] = ('verb', verb, {a: next(iter(r)) for a, r in attrs.get((term, verb), {}).items() if len(r) == 1})
+    walks = {c: next(iter(w)) for c, w in walks.items() if len(w) == 1}
+    return out, (walks, {s: next(iter(w)) for s, w in steps.items() if len(w) == 1})
+
+
+def _read_path(path, member, rmap):
+    """A path of today's words as the core reads it, over a bean (`member` None) or over the statements a step selected
+    from a term (`member` the term); None where the beans do not say."""
+    head, sep, rest = path.partition('.')
+    if member is not None:
+        m = rmap.get(member)
+        if m and m[0] == 'verb':
+            return m[2].get(head, head) + sep + rest if head in m[2] else path
+        return path
+    if head in ('kind', 'bean', 'title', 'summary', 'tags', 'details'):
+        return path
+    m = rmap.get(head)
+    if m is None:
+        return None
+    if m[0] == 'details':
+        return 'details.' + path
+    sub, sep2, deeper = rest.partition('.')
+    if sub in ('*', '') or not rest:
+        return m[1] + ('.' + deeper if deeper else '')
+    return m[1] + '.' + m[2].get(sub, sub) + (sep2 + deeper if deeper else '')
+
+
+def rewrite_readings(b, rmap, walks_steps):
+    """Each `reckon` of bean `b` with its paths in the core's (`reading_map`), its placements following; True where any
+    changed."""
+    walks, step_walk = walks_steps
+    changed = False
+    inv = {}
+    for p, (where, _v) in b.placed.items():
+        inv[where] = p
+
+    def put(where, new):
+        nonlocal changed
+        p = inv.get(where)
+        if p is not None and b.placed[p][1] != new:
+            b.placed[p] = (where, new)
+            changed = True
+    for j in b.readings:
+        reading = b.statements[j][1].get('reading') or {}
+        member = {}
+        for n, s in enumerate(reading.get('steps') or []):
+            if not isinstance(s, dict):
+                continue
+            w = ('statement', j, 'reading', 'steps', n)
+            ent = s.get('entries')
+            here = member.get(s.get('of'))
+            if isinstance(ent, str):
+                term = ent.split('.', 1)[0]
+                m = rmap.get(term)
+                new = (m[1] if m[0] == 'verb' else 'details.' + ent) if m else ent
+                if new != ent:
+                    s['entries'] = new
+                    put(w + ('entries',), new)
+                here = term
+            if isinstance(s.get('id'), str):
+                member[s['id']] = here
+            for k in ('series', 'with'):
+                v = s.get(k)
+                hit = re.match(r'^([a-z0-9][a-z0-9_-]*):series\.([a-z0-9][a-z0-9_-]*)$', v) if isinstance(v, str) else None
+                if hit:
+                    s[k] = f"{hit.group(1)}#{hit.group(2)}"
+                    put(w + (k,), s[k])
+            for k in ('path', 'amount', 'over'):
+                if isinstance(s.get(k), str):
+                    new = _read_path(s[k], here, rmap)
+                    if new and new != s[k]:
+                        s[k] = new
+                        put(w + (k,), new)
+            for i, c in enumerate(s.get('where') or [] if isinstance(s.get('where'), list) else []):
+                if not isinstance(c, dict) or not isinstance(c.get('path'), str):
+                    continue
+                course = re.match(r'^courses\.([a-z0-9][a-z0-9_-]*)$', c['path'])
+                if course and here is None:
+                    c['path'] = f"be[id={course.group(1)}]"
+                    put(w + ('where', i, 'path'), c['path'])
+                    for comp in ('reached', 'at_step'):
+                        # the walk of the course, or — where no bean holds that course yet — the one walk that has a
+                        # step of that name
+                        walk = walks.get(course.group(1)) or step_walk.get(c.get(comp))
+                        if isinstance(c.get(comp), str) and '#' not in c[comp] and walk:
+                            c[comp] = f"{walk}#{c[comp]}"
+                            put(w + ('where', i, comp), c[comp])
+                    continue
+                new = _read_path(c['path'], here, rmap)
+                if new and new != c['path']:
+                    c['path'] = new
+                    put(w + ('where', i, 'path'), new)
+    return changed
 
 
 def pin_of(b, base, sid, ctx):
@@ -1418,24 +1555,29 @@ def garden(src, dst):
         ctx.protocols.add(k)
     counts = collections.Counter()
     problems = []
+    done = []
     for d in DOCUMENTS:
         p = os.path.join(src, d)
         for f in sorted(os.listdir(p)) if os.path.isdir(p) else []:
-            if not f.endswith('.md'):
-                continue
-            text, b = translate_bean(os.path.join(p, f), f"{d}/{f}", ctx)
-            with open(os.path.join(dst, d, f), 'w', encoding='utf-8', newline='\n') as fh:
-                fh.write(text)
-            problems += verify(b, text)
-            counts['beans'] += 1
-            counts['statements'] += len(b.statements)
-            counts['leaves'] += len(leaves(b.old))
-            for where, _v in b.placed.values():
-                counts['to ' + where[0]] += 1
-            counts['comment lines'] += b.n_comments
-            for n in b.notes:
-                problems.append(f"{b.id}: {n}")
-            counts['acts at the moment their bean was made'] += len(b.carried)
+            if f.endswith('.md'):
+                done.append((d, f) + translate_bean(os.path.join(p, f), f"{d}/{f}", ctx))
+    rmap, walks = reading_map([b for _d, _f, _t, b in done])
+    for i, (d, f, text, b) in enumerate(done):
+        if b.readings and rewrite_readings(b, rmap, walks):
+            done[i] = (d, f, render(b), b)
+    for d, f, text, b in done:
+        with open(os.path.join(dst, d, f), 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(text)
+        problems += verify(b, text)
+        counts['beans'] += 1
+        counts['statements'] += len(b.statements)
+        counts['leaves'] += len(leaves(b.old))
+        for where, _v in b.placed.values():
+            counts['to ' + where[0]] += 1
+        counts['comment lines'] += b.n_comments
+        for n in b.notes:
+            problems.append(f"{b.id}: {n}")
+        counts['acts at the moment their bean was made'] += len(b.carried)
     rows['namespaces'] = [{'namespace': ns, 'once': 'true' if once else 'false'} for ns, once in sorted(ctx.namespaces.items())]
     # A ROW THE GARDEN SAID IS VACANT stays so: today's `vacancies` entry (its position, reason and why) is the row's
     # `vacant`, which the core's rule `vacancy` reads

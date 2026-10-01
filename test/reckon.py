@@ -455,13 +455,13 @@ def floats_in(text):
     return found
 
 
-src = open(os.path.join(ROOT, "bin", "dmreckon.py"), encoding="utf-8").read()
+src = open(os.path.join(ROOT, "bin", "reckon.py"), encoding="utf-8").read()     # the tool bin/dmreckon.py runs
 _f = floats_in(src)
-check("bin/dmreckon.py holds no float literal, no float, and no eval or exec: every count exact, no string evaluated", not _f, _f)
+check("bin/reckon.py holds no float literal, no float, and no eval or exec: every count exact, no string evaluated", not _f, _f)
 ops = re.findall(r"(?m)^  - \{ op: ([a-z-]+),|^  - op: ([a-z-]+)$", open(os.path.join(ROOT, "seed", "std-vocab.md"), encoding="utf-8").read())
 ops = {a or b for a, b in ops}
 missing = [o for o in ops if f"def op_{o.replace('-', '_')}(" not in src]
-check("every operation of the law has its one reader in bin/dmreckon.py, and none more", len(ops) > 40 and not missing
+check("every operation of the law has its one reader in bin/reckon.py, and none more", len(ops) > 40 and not missing
       and len(re.findall(r"(?m)^    def op_", src)) == len(ops), (len(ops), missing))
 
 # ---- what a reading does not say quietly: a comparison of two kinds, uncertainties taken as independent, a month of

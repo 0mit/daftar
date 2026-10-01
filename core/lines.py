@@ -374,6 +374,10 @@ def reading_problems(where, reading, law, verbs=None):
                 if k in dmreckon_words():
                     out.append((f"{where}.reading.steps[{s.get('id')}]",
                                 f"`{k}` is written by its sign in the core: `{WORD_SIGN[k]}`"))
+            for k in ('reached', 'at_step'):
+                if k in c and not (isinstance(c[k], str) and re.match(r'^[a-z0-9][a-z0-9_-]*#[a-z0-9][a-z0-9_-]*$', c[k])):
+                    out.append((f"{where}.reading.steps[{s.get('id')}]",
+                                f"`{k}` names the step as a statement of its walk, `<walk>#<step>` — not {c[k]!r}"))
             if isinstance(c.get('path'), str) and c['path'] != 'move':
                 out += path_problems(f"{where}.reading.steps[{s.get('id')}]", c['path'], top or verbs)
         for k in ('path', 'amount', 'over'):

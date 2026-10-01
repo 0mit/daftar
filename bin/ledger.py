@@ -868,7 +868,7 @@ def core_agreement(b, G, units):
             ag['left_out'].append((f"transaction {esc(key)}", bad))
             continue
         total = sum(shares.values())
-        tx['borne'] = {p: W * s / total for p, s in shares.items()} if shares else dict(tx['paid'])
+        tx['borne'] = {p: Fraction(W * s, total) for p, s in shares.items()} if shares else dict(tx['paid'])
         cur = tx['unit']
         for (d, c), x in owed(tx).items():
             ag['owed'].setdefault(cur, {})[(d, c)] = ag['owed'].setdefault(cur, {}).get((d, c), Fraction(0)) + x

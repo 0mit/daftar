@@ -876,7 +876,7 @@ class Reckoner:
 
     def cond(self, m, path, comp, operand):
         if comp in ('reached', 'at_step') and isinstance(operand, str) and '#' in operand:
-            return self._core_course(m, comp, operand)         # a step named as a statement: a garden of the core
+            return self._core_course(m, comp, operand, path)   # a step named as a statement: a garden of the core
         found = walk(self.g, m.node, path, at=m.bean)
         vals = [x for x, _ in found]
         if comp in NEGATED:
@@ -929,13 +929,15 @@ class Reckoner:
                 return None
         return None
 
-    def _core_course(self, m, comp, ref):
+    def _core_course(self, m, comp, ref, path=''):
         """reached / at_step in a garden of the core: each course of the member's bean on the walk `ref` names
-        (`<walk>#<step>`), read from its moves."""
+        (`<walk>#<step>`) — the one the path names, `be[id=<course>]`, where it names one — read from its moves."""
         wid, step = ref.split('#', 1)
+        only = re.match(r'^be\[id=([a-z0-9][a-z0-9_-]*)\]$', path or '')
         fm = self.g.bean(m.bean)
         return any(self._course(m, f"{m.bean}:courses.{k}", comp, step)
-                   for k, c in (fm.get('courses') or {}).items() if c.get('walk') == wid)
+                   for k, c in (fm.get('courses') or {}).items()
+                   if c.get('walk') == wid and (not only or k == only.group(1)))
 
     def _course(self, m, where, comp, step):
         """reached / at_step on the course at `where` (`<bean>:courses.<key>`): read from the bean's moves and its walk."""

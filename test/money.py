@@ -586,8 +586,8 @@ def floats_in(text, strict):
     return found
 check("the scan finds what it looks for (a scan that finds nothing proves nothing)",
       len(floats_in("x = 0.5\ny = float('1')\nz = a / b\nw = round(z)\n", True)) == 4)
-led = floats_in(open(os.path.join(ROOT, "bin", "dmledger.py"), encoding="utf-8").read(), True)
-check("bin/dmledger.py holds no float literal, no float, no division operator and no rounding", not led, led)
+led = floats_in(open(os.path.join(ROOT, "bin", "ledger.py"), encoding="utf-8").read(), True)
+check("bin/ledger.py (the tool bin/dmledger.py runs) holds no float literal, no float, no division operator and no rounding", not led, led)
 uni = floats_in(open(os.path.join(ROOT, "bin", "dmunits.py"), encoding="utf-8").read(), False)
 check("bin/dmunits.py holds no float literal and calls no float()", not uni, uni)
 # EVERY OTHER PLACE A COUNT IS READ OR COMPARED: the gate's quantity check and its sums, the merge's canonical form (where two
@@ -601,9 +601,9 @@ def functions(rel, wanted):
             if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and wanted(n.name)}
 _scanned = {**functions("bin/dmcheck.py", lambda n: n in ("check_quantity", "ectl_sums")),
             **functions("bin/dmmerge.py", lambda n: n == "norm" or "canon" in n),
-            **functions("bin/dmstale.py", lambda n: n == "_after_first")}
+            **functions("bin/stale.py", lambda n: n == "_after_first")}
 check("the scan finds each function it names", all(k in _scanned for k in ("bin/dmcheck.py:check_quantity", "bin/dmcheck.py:ectl_sums",
-      "bin/dmmerge.py:norm", "bin/dmmerge.py:canonical", "bin/dmstale.py:_after_first")), sorted(_scanned))
+      "bin/dmmerge.py:norm", "bin/dmmerge.py:canonical", "bin/stale.py:_after_first")), sorted(_scanned))
 _found = {k: floats_in(v, True) for k, v in _scanned.items()}
 check("...and none of them holds a float literal, a float, a division operator or any rounding: " + ", ".join(sorted(_scanned)),
       not any(_found.values()), {k: v for k, v in _found.items() if v})
