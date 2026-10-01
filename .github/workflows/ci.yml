@@ -42,6 +42,8 @@ jobs:
         run: python3 test/root.py
       - name: "core: the minimal core's engine — the law proved whole, every verb's row, and each of its rules' refusals"
         run: python3 test/core.py
+      - name: "core_save: today's save commits a garden of statements, the core's gate at the commit — the moment the save's, the law ratified"
+        run: python3 test/core_save.py
       - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/save.py

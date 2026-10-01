@@ -1,0 +1,12 @@
+#!/bin/sh
+# The core's pre-commit gate, for a garden written in the core's statements: install with  python3 core/install.py
+# It judges the STAGED files, not the working tree (`core/check.py --staged` copies the index out and judges the copy),
+# and then the commit's own rules: each changed bean named by the journal entry the commit adds, the statements it adds
+# known at that entry's moment, and a change to the law said to be a RULE-CHANGE. Today's gardens keep bin/hooks/,
+# which bin/install.py installs; this hook replaces it only in a clone whose garden has adopted the core.
+root=$(git rev-parse --show-toplevel)
+_here=$(dirname "$0")
+[ -f "$_here/python.sh" ] || { echo "core hook: $_here/python.sh is missing — run: python3 core/install.py" >&2; exit 1; }
+. "$_here/python.sh"
+daftar_choose_python || exit 1
+daftar_py "$root/core/check.py" --staged || exit 1
