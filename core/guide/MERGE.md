@@ -51,13 +51,21 @@ merge: they meet by proposal (`MODEL.md`, Between gardens).
 
 ## 5. Where it runs
 - `.gitattributes` sends `beans/*.md` and `mappings/*.md` to the `daftar` merge driver, so `git merge` merges a bean by
-  its statements and never by its lines. The driver refuses, leaving the file as ours, where the result would lose a
-  statement, an act or the body, and where the law the three sides run is not one (`extends`). The core's driver is
-  built in part 3 of v1; until then `bin/dmmerge.py` is the driver, for today's beans.
+  its statements and never by its lines. The driver is `bin/merge.py`, which `bin/install.py` configures, and the merge
+  is `core/merge.py`. It refuses, leaving the file as ours, where the result would lose a statement, an act or the
+  body, and where the three sides are not written in one law. git hands the driver three blobs and not three commits,
+  so a side's law is read from the bean: one in statements is the core's, one in today's words is today's (a branch
+  from before the garden adopted the core), and a bean that says neither is merged by the garden's `extends`. Until
+  v1.0.0 a bean in today's words goes to `bin/dmmerge.py`.
 - `log/journal.md` and `log/pending.md` merge by git's own union (`merge=union`): both sides' entries are kept, none
   rewritten.
 - **The gate covers what a merge makes**: the merged bean passes `core/check.py` like any other commit, and the merge
-  is committed with the journal entry that names what it merged.
+  is committed with the journal entry that names what it merged: `git merge --no-commit`, then `bin/dmsave.py`. A
+  merge git commits itself runs the gate too (the `pre-merge-commit` hook): where it merged a bean both sides changed,
+  it is refused until an entry of its own names that bean.
+  What the other side committed comes as it was committed, judged then: its entries, a bean only it changed, the
+  statements it added and the acts that know them. A statement neither side holds is known by an act of the merge's
+  own entry; an act the merge gave its `of` is known as it was.
 - **Journals never merge across gardens.** What one garden took in from another is written in the receiving garden's
   journal, by the entry that takes it in.
 

@@ -12,8 +12,9 @@ captures/** -text
 # attribute is missing any more than when it names a driver that is not configured: it silently
 # text-merges, and a text merge only shows itself the first time two sessions actually disagree.
 #
-# Semantic merge — git dispatches bean/mapping merges to dmmerge (never text-merge). The driver is
-# configured by bin/install.sh (`merge.daftar.driver`); THE ATTRIBUTE AND THAT CONFIG MUST ALWAYS CHANGE
+# Semantic merge — git dispatches bean/mapping merges to bin/merge.py (never text-merge): the statement merge
+# (core/merge.py, core/guide/MERGE.md) for a bean in statements, bin/dmmerge.py for one in today's words. The driver is
+# configured by bin/install.py (`merge.daftar.driver`); THE ATTRIBUTE AND THAT CONFIG MUST ALWAYS CHANGE
 # TOGETHER, in EITHER direction. Both halves absent is safe; either half alone is a silent text-merge
 # wearing the appearance of a semantic one.
 beans/*.md     merge=daftar

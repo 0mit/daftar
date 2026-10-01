@@ -1,10 +1,12 @@
 #!/bin/sh
 # daftar pre-commit gate. VERSIONED here because .git/hooks is not cloned — install with
 #   python3 bin/install.py        (or: sh bin/install.sh, which hands over to it)
-# The gate reads the STAGED blobs, not the working tree, so what is checked is what is committed: `dmcheck.py
-# --staged` copies the index into a temporary directory and runs the gate and test/fast.py found there — the staged
-# law, beans, manifest and journal, and the staged gate itself. A fix left unstaged is not in the commit, and a refusal
-# names each file the working tree holds otherwise.
+# THE GATE OF THE LAW THE GARDEN RUNS (v1 part 3): `bin/check.py --staged` reads the pin the INDEX holds (GARDEN.md's
+# `extends`) and runs the core's gate (`core/check.py --staged`) for a garden of statements (`core@…`), today's
+# (`bin/dmcheck.py --staged`) for a garden in today's words (`std-vocab@…`). Either reads the STAGED blobs, not the
+# working tree, so what is checked is what is committed: the index is copied into a temporary directory and judged
+# there, with the law it stages. A fix left unstaged is not in the commit, and a refusal names each file the working
+# tree holds otherwise.
 # A failing write cannot be committed by any model or session; that is what makes the gate law rather
 # than advice. To override in a genuine emergency: git commit --no-verify, and say so in the journal.
 # ON A CLEAN COMMIT THIS PRINTS TWO LINES, the gate's verdict and the fast suite's count, because whatever a hook
@@ -20,7 +22,7 @@ daftar_choose_python || exit 1
 # The GATE (the law) and the FAST corpus suite, both over the index. Both are sub-second-to-2s;
 # a release's slower corpus tests are deliberately NOT here — a hook that slow invites --no-verify, which
 # is the failure mode a hook must avoid, and it let a failing test through on 2026-08-02.
-daftar_py "$root/bin/dmcheck.py" --staged || exit 1
+daftar_py "$root/bin/check.py" --staged || exit 1
 # MATERIAL SEALED HERE IS HERE (24.0, N30): every pointer the commit adds resolves in a store on this host. The gate
 # never reads a store — it judges alike on every copy and in CI — so the hook, which runs on the host, asks dmheld.
 # Silent when nothing is added or all of it resolves.

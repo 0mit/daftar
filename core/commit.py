@@ -14,6 +14,10 @@ commits, and is judged here:
            person ratifies, carries the garden's acts translated with the moments history recorded; the gate grants it
            those moments (a heading of the journal as committed, or a commit's own moment), and no other commit. A
            garden receives core/ itself from v0.49.0 on, beside today's gate, so receiving it adopts nothing.
+           A MERGE (core/guide/MERGE.md §5, v1 part 3) brings the other side's entries, beans and acts, each judged when
+           it was committed. What the merge commit adds of its own is judged: its own entry is the clock's, and names
+           each bean the merge made (one that is neither parent's); a statement neither parent holds is known by an act
+           at that entry's moment; and an act a parent held with no `of`, given one by the merge, is known as it was.
   ratify   A change to a file of the law (one the law's standing places in `law` or `manifesto`, the core's own law
            files, or one a release keeps by seed/LANGUAGE) is a RULE-CHANGE, ratified by a person, and the entry says
            so.
@@ -129,14 +133,36 @@ def ruled(path, law, kept):
                for s in law.standing)
 
 
+def merging(root):
+    """The other parents of the commit being made, [] where it has one: MERGE_HEAD's, for a merge committed by `git
+    commit` (after a conflict, or `git merge --no-commit`); else the GITHEAD_<sha> git sets for the pre-merge-commit hook
+    of a merge it commits itself, which runs before MERGE_HEAD is written."""
+    p = (git(root, 'rev-parse', '--git-path', 'MERGE_HEAD') or '').strip()
+    p = p if not p or os.path.isabs(p) else os.path.join(root, p)
+    if p and os.path.isfile(p):
+        with open(p, encoding='utf-8') as fh:
+            return [ln.strip() for ln in fh if ln.strip()]
+    env = [k[8:] for k in os.environ if k.startswith('GITHEAD_') and re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', k[8:])]
+    return sorted(h for h in env if git(root, 'cat-file', '-e', h + '^{commit}') is not None)
+
+
 def findings(root, law, changes=None, garden=None):
     out = []
     changes = staged(root) if changes is None else changes
     if not changes:
         return out
     added = added_lines(root, JOURNAL) if any(p == JOURNAL for _s, p in changes) else []
-    heads = [ln.rstrip() for ln in added if ln.startswith('## ')]
+    # A MERGE (core/guide/MERGE.md §5) brings what the other side committed, judged when it was committed: its entries,
+    # its beans, its statements and the acts that knew them. What the merge commit adds of its own is what neither parent
+    # holds: its own entry, which is the clock's and names each bean the merge made, and what that bean holds new.
+    others = merging(root)
+    brought = set()
+    for h in others:
+        brought |= set((git(root, 'show', f"{h}:{JOURNAL}") or '').split('\n'))
+    own = [ln for ln in added if ln not in brought]
+    heads = [ln.rstrip() for ln in own if ln.startswith('## ')]
     entry = '\n'.join(added)
+    named_by = '\n'.join(own)
     moments = {h[3:].split(' · ', 1)[0].strip() for h in heads}
     stamped = dmjournal.registered(root)
     for h in heads:
@@ -151,19 +177,34 @@ def findings(root, law, changes=None, garden=None):
         if not (path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)) and path.endswith('.md')):
             continue
         bid = os.path.basename(path)[:-3]
-        if not re.search(r'(?<![\w-])' + re.escape(bid) + r'(?![\w-])', entry):
-            out.append(('knowing', path, f"changed by this commit, and named by no journal entry it adds: save it with "
-                                         f"bin/dmsave.py, its entry naming `{bid}`"))
+        blob = (git(root, 'rev-parse', '-q', '--verify', f":{path}") or '').strip()
+        if others and any((git(root, 'rev-parse', '-q', '--verify', f"{h}:{path}") or '').strip() == blob for h in others):
+            continue                                        # the other side's bean, as it committed it
+        if not re.search(r'(?<![\w-])' + re.escape(bid) + r'(?![\w-])', named_by):
+            out.append(('knowing', path, (f"merged by this commit, and named by no entry of its own: the merge is "
+                                          f"committed with the entry that names what it merged (MERGE.md §5) — "
+                                          f"`git merge --no-commit`, then bin/dmsave.py, its entry naming `{bid}`")
+                        if others else (f"changed by this commit, and named by no journal entry it adds: save it with "
+                                        f"bin/dmsave.py, its entry naming `{bid}`")))
         if status == 'D':
             continue
         new = statements_of(root, '', path)
         old = collections.Counter(canon(v, r) for _i, v, r in statements_of(root, 'HEAD', path)) if status != 'A' \
             else collections.Counter()
+        given = set()                                       # a parent's knowing act with no `of`, which a merge gives one
+        for h in others:
+            theirs = statements_of(root, h, path)
+            old |= collections.Counter(canon(v, r) for _i, v, r in theirs)
+        if others:
+            given = {canon(v, r) for _i, v, r in statements_of(root, 'HEAD', path) + [x for h in others for x in
+                     statements_of(root, h, path)] if v in law.knowing and 'of' not in r}
         fresh = []                                          # the statements this commit adds or changes
         for i, verb, r in new:
             c = canon(verb, r)
             if old[c]:
                 old[c] -= 1
+            elif verb in law.knowing and 'of' in r and canon(verb, {k: x for k, x in r.items() if k != 'of'}) in given:
+                continue                                    # the merge wrote its `of` (MERGE.md §3): known as it was
             else:
                 fresh.append((i, verb, r))
         # THE ACTS OF THIS COMMIT are the knowing acts it adds. Not every act whose moment is this entry's: two saves in
@@ -188,7 +229,7 @@ def findings(root, law, changes=None, garden=None):
                 out.append(('knowing', where, "added or changed by this commit, and known by no act it adds: whoever "
                                               "wrote it says, reads, makes or derives it now — a knowing act at `now` "
                                               "whose `of` names it, or one with no `of`, which covers the rest"))
-    out += guarded(root, law, changes, entry, added, moments, garden, adopting)
+    out += guarded(root, law, changes, entry, added, moments, garden, adopting, merge=bool(others))
     kept = kept_by_release(root, law)
     rc = [p for _s, p in changes if ruled(p, law, kept)]
     if rc and not RULE_CHANGE.search(entry):
@@ -221,7 +262,7 @@ def _named(word, entry):
     return re.search(r'(?<![\w-])' + re.escape(str(word)) + r'(?![\w-])', entry) is not None
 
 
-def guarded(root, law, changes, entry, added, moments, garden=None, adopting=False):
+def guarded(root, law, changes, entry, added, moments, garden=None, adopting=False, merge=False):
     """The commit's halves of `harm`, `consent` and `kept`. The adoption writes every bean anew in statements, and the
     translator's count is its proof that nothing was lost: what it takes out of a bean it need not name."""
     out = []
@@ -232,9 +273,8 @@ def guarded(root, law, changes, entry, added, moments, garden=None, adopting=Fal
                 out.append(('harm', path, "a private-key block is staged. Take it out and keep it in your vault, and "
                                           "ROTATE it: a key that reached a commit, even one never pushed, may already "
                                           "be copied. Journal the rotation, never the key"))
-    merging = git(root, 'rev-parse', '-q', '--verify', 'MERGE_HEAD') is not None
     for status, path in changes:                              # KEPT: the journal grows; a series' part stays
-        if path == JOURNAL and status == 'M' and not merging:
+        if path == JOURNAL and status == 'M' and not merge:
             was, now = git(root, 'show', f"HEAD:{path}") or '', git(root, 'show', f":{path}") or ''
             if not (now.startswith(was) or (not was.endswith('\n') and now.startswith(was + '\n'))):
                 line = next((n for n, (a, b) in enumerate(zip(was.split('\n'), now.split('\n')), 1) if a != b), 0)

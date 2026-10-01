@@ -6,6 +6,10 @@
 # The tools: every `bin/dm*.py`, the one installer and the hooks — and NOTHING ELSE under bin/. Copying the
 # whole of bin/ once shipped one estate's private tools, host names and a LAN address into a new garden.
 bin/dm*.py
+# A tool ported to the core's statements (v1) takes its verb's name with no `dm`, and is named here line by line, as it
+# is ported: a pattern over bin/ would carry a garden's own tools too.
+bin/check.py
+bin/merge.py
 # The one entry to them all, `daftar <verb>`: its verbs and their families are the law's (`verbs`, `tool_families`).
 bin/daftar.py
 bin/install.sh
