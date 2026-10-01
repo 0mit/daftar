@@ -24,7 +24,8 @@ sys.path.insert(0, os.path.dirname(HERE))
 from core import read, standards  # noqa: E402
 
 LAW_DIR = os.path.join(HERE, 'law')
-GENERATED = ('levels.yaml', 'layers.yaml')     # rows generated from today's law: the bodies' levels; the layers and standing
+GENERATED = ('levels.yaml', 'layers.yaml', 'kinds.yaml')   # rows generated from today's law: the bodies' levels, the
+                                                           # layers and standing, and the kinds
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
             'standing': 'layer', 'verbs': 'verb', 'tables': None}
 ROW_FIELDS = {
