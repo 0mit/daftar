@@ -257,5 +257,21 @@ check("a name found only in the law's `retired:` list is gone to `dmwhy --stale`
       _st == {"terms[new_key]": ["old_key"]}, _st)
 shutil.rmtree(_T, ignore_errors=True)
 
+# A COMMENT BESIDE AN ITEM NAMED BY A SENTENCE IS READ, AND THE READING ENDS. An item of a list is named by its first
+# value, and a value that ends in `.` or holds a lone bracket once stopped the climb from the item to its key: the
+# reader never returned (2026-10-01). Each path now climbs by the parent it was walked from, run in a child with a limit.
+_fm = ('steps:\n  # the first step\n  - "mount the copy."\n  - "a [bracket"   # beside a lone bracket\n'
+       'risks:\n  - { what: "it fails.]", note: x }   # on a risk\nkey:\n  sub: x   # on sub\n')
+try:
+    _r = subprocess.run([sys.executable, '-c', 'import sys; sys.path.insert(0, sys.argv[1]); import dmparse; '
+                         'print([c[3] for c in dmparse.comments(sys.stdin.read())])', os.path.join(ROOT, 'bin')],
+                        input=_fm, capture_output=True, text=True, encoding='utf-8', timeout=20)
+    _got = (_r.returncode, _r.stdout.strip(), _r.stderr)
+except subprocess.TimeoutExpired:
+    _got = (None, '', 'the reader did not end within 20 s')
+check("a comment beside an item named by a sentence, or holding a lone bracket, is read, and the reading ends",
+      _got[0] == 0 and _got[1] == str([['steps[mount the copy.]', 'steps'], ['steps[a [bracket]', 'steps'],
+                                        ['risks[it fails.]]', 'risks'], ['key.sub', 'key']]), _got)
+
 print("\nrationale: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)
