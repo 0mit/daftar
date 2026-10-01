@@ -1,7 +1,7 @@
 """core — daftar's minimal core: the engine of the statement, beside today's gate (step 3 of the refinery, 2026-10-01).
 
 The face is data, `core/law/core.yaml`, and the verbs beyond it are rows, `core/law/verbs.yaml`; the engine hardcodes
-only what its thirteen rules name. Everything else comes in through an interface: positions, quantities, protocols and
+only what its eighteen rules name. Everything else comes in through an interface: positions, quantities, protocols and
 codes from the standards the release carries in core/law/ (systems, places, protocols, quantities and units,
 registries; read by `core/standards.py`), and a garden's own kinds, levels, namespaces and flows as rows in its VOCAB.md.
 Until v1 retires std-vocab, the rows it has are generated from it (`python3 core/translate.py law`), never typed.

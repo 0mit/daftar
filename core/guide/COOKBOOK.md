@@ -461,13 +461,13 @@ mended, collected — and a **walk** says so once, in a mapping of the garden's 
 its steps its positions; until part 6 of v1 gives that line its form, the steps are kept whole in `details`: each with
 who acts at it, how long it usually takes, and whether it is a way out (`exit`), a pause the case comes back from
 (`resumes`), or an end nothing follows (`final`). What a case asks for — the papers a form needs — is a set, not a
-walk: a mapping of the kind `checklist`.
+walk: a mapping of the kind `checklist` (*A literary agent*, below). A row the garden adds to the law is added with the
+first bean that uses it: the gate refuses one nothing uses, unless it says why it is vacant.
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
 kinds:
   - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }
-  - { kind: checklist, nature: sayable, meaning: "what a case asks for: a set of items, not a walk" }
 ```
 
 <!-- example: mappings/walk-bike-repair.md -->
@@ -590,7 +590,14 @@ garden for it: a clone is the same garden, with the same id, and what it propose
 Sam has written a novel, *The Salt Road*, and an agent, Noor, places it with publishers: at home with Heron Books, and
 its translation with a house abroad. Noor is paid a share of each advance the book earns — one rate at home, another
 abroad — and gives her share back of any advance that is returned. Each placing goes through the same steps, a walk;
-what a house asks to see is a checklist. Both are mappings, their steps and items kept in `details` until part 6 of v1.
+what a house asks to see is a checklist, a kind the garden adds with it. Both are mappings, their steps and items kept
+in `details` until part 6 of v1.
+
+<!-- example-front-matter: VOCAB.md -->
+```yaml
+kinds:
+  - { kind: checklist, nature: sayable, meaning: "what a case asks for: a set of items, not a walk" }
+```
 
 <!-- example: mappings/walk-placing.md -->
 ```markdown
@@ -808,9 +815,9 @@ Sam also runs a small tile workshop. Lale works there as a tiler; she has twenty
 to lay floors in customers' houses, and teaches an evening class twice a week. Taking leave and teaching are acts the
 core has no verb for, so the garden says its own law in `VOCAB.md`: two **verb rows**, in the form of
 `core/law/verbs.yaml`, each with the roles it takes and which it requires — a RULE-CHANGE, as every row of the law is.
-Lale's staff number is the workshop's to give, once, so the workshop is a namespace of the garden's too. The rule that
-one tiler is never booked on two jobs over the same days has no form in the core yet (part 7 of v1): it is the garden's
-word, kept in the recipe until then.
+Lale's staff number is the workshop's to give, once, so the workshop is a namespace of the garden's too. And the rule
+that one tiler is never on two jobs over the same days is the garden's own: `attend` is **exclusive** here, so the gate
+refuses one being attending twice over overlapping days, across every bean — what was declined holds nothing.
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
@@ -825,6 +832,8 @@ verbs:
     required: [by, of]
 namespaces:
   - { namespace: tile-workshop, once: "true", meaning: "the staff numbers the tile workshop gives" }
+exclusive:
+  - { verb: attend, why: "one tiler is never on two jobs over the same days" }
 ```
 
 The workshop is an organisation; its phone is written as the world dials it, `+` and the country code first (E.164).
@@ -897,7 +906,8 @@ Lale, a tiler.
 ```
 
 Each job is its own agreement with the customer, whom nobody named. Lale `attend`s it for the days she is on it. A job
-she was offered and turned down stays on record: the days she was asked for, and her `decline`.
+she was offered and turned down stays on record: the days she was asked for, and her `decline`. Take the `decline` off
+the bathroom job and the gate refuses it: Lale, attending twice over overlapping days.
 
 <!-- example: beans/job-kitchen-floor.md -->
 ```markdown
@@ -1323,10 +1333,23 @@ written back: change a height and the next reading says so.
 
 ## What harm can come of: sealed before it is committed
 
-A value that could harm a person if it left the garden — a code of a scheme marked sensitive, a reading of a body — is
-SEALED before the commit that would carry it. Today `python3 bin/dmheld.py put <bean> <term> <key>` moves it into a
-store this host keeps off git, leaves a pointer in its place, and prints the one journal line the save carries (`- held:
-<bean> <key> added`); the core's form for a sealed statement comes with part 8 of v1. So the order is: write, seal, save.
+A value that could harm a person if it left the garden — a code of a scheme the garden marks special-category, a
+reading of a body — is SEALED before the commit that would carry it, and the gate refuses it unsealed. A sealed
+statement keeps its verb and its id, and holds in place of its roles a pointer to a store this host keeps off git —
+`held: "root:<root>/<32 hexadecimal digits>"` — and the word it is held on, `while` a statement holds: here Lale's own
+`agree` to her employment. Nothing else goes beside it: a note that said what is sealed would say it in git. Today
+`python3 bin/dmheld.py put <bean> <term> <key>` moves what it said to the store, mints the pointer, and prints the one
+journal line the save carries, `- held: <bean> <id> added`; the gate refuses a seal the entry does not say. So the
+order is: write, seal, save.
+
+<!-- example-statements: beans/lale.md -->
+```yaml
+  - measure: { id: back, held: "root:personal/7f3c9a1e0b2d4c6e8a9f1b3d5c7e9a0b", while: "lale-employment#employed", why: "special-category, held on her employment" }
+  - say:     { by: sam, of: [back], at: now }
+```
+
+A statement added to a bean already saved comes with the act that knows it, as here: the act the bean already holds
+knew only what was there when it was made.
 
 A value committed before it was sealed is in the history of every clone, every bundle and every hub the garden was
 pushed to, and a seal made now takes none of it back. Taking it out rewrites the history, which is the gardener's

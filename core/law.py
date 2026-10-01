@@ -1,7 +1,7 @@
 """law — the face and the rows, loaded as one law and proved consistent with itself.
 
 The face is `core/law/core.yaml`: the seven roles, the shapes, the grammar's words, the two figures, the order (natures,
-lines, levels, conditions, the crown), the face's verbs and the thirteen rules. The verbs beyond the face are rows,
+lines, levels, conditions, the crown), the face's verbs and the eighteen rules. The verbs beyond the face are rows,
 `core/law/verbs.yaml`. A garden adds rows of its own in its VOCAB.md, under these keys only:
 
   kinds         { kind, nature, line?, level?, rung?, meaning? }       what a bean records
@@ -14,6 +14,9 @@ lines, levels, conditions, the crown), the face's verbs and the thirteen rules. 
   verbs         rows in the form of verbs.yaml                         a garden's own verbs
   units         { unit, name, quantity, ucum?, why? }                  a unit in UCUM, its English name attached
   tables        { <table>: [row, …] }                                  rows added to a verbs' table or a standard's
+  exclusive     { verb, why? }                                         a verb whose `at` holds one being once (rule room)
+
+A garden's kind, level, namespace, verb or unit may say `vacant: <why>`: a row no bean uses yet (rule vacancy).
 
 A row may not take a name the face or another row has: the law is one, and a second row of one name is two laws.
 Every value is a string (core/read.py): a flag is the string `true`. A key of VOCAB.md that is none of these is today's
@@ -32,16 +35,19 @@ GENERATED = ('levels.yaml', 'layers.yaml', 'kinds.yaml')   # rows generated from
 ROW_FILES = GENERATED + ('units.yaml', 'namespaces.yaml')  # and the units in UCUM, each with the law's English name,
                                                            # and the namespaces the standards give names in
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
-            'standing': 'layer', 'verbs': 'verb', 'tables': None, 'units': 'unit'}
+            'standing': 'layer', 'verbs': 'verb', 'tables': None, 'units': 'unit', 'exclusive': 'verb'}
 ROW_FIELDS = {
-    'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning'},
-    'levels': {'level', 'line', 'stands', 'meaning', 'frame_of'},
-    'namespaces': {'namespace', 'once', 'meaning'},
+    'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning', 'vacant'},
+    'levels': {'level', 'line', 'stands', 'meaning', 'frame_of', 'vacant'},
+    'namespaces': {'namespace', 'once', 'meaning', 'vacant'},
     'flows': {'flow', 'from', 'to', 'through', 'grant', 'why'},
     'standing': {'layer', 'holds', 'meaning'},
-    'verbs': {'verb', 'meaning', 'roles', 'qualifiers', 'required', 'choice', 'default', 'replaces', 'home', 'figure'},
-    'units': {'unit', 'name', 'quantity', 'ucum', 'why'},
+    'verbs': {'verb', 'meaning', 'roles', 'qualifiers', 'required', 'choice', 'default', 'replaces', 'home', 'figure',
+              'vacant'},
+    'units': {'unit', 'name', 'quantity', 'ucum', 'why', 'vacant'},
+    'exclusive': {'verb', 'why'},
 }
+GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
 SPEC_KEYS = {'shape', 'table', 'nature', 'rung', 'many', 'keyed'}
 FACE_TABLES = ('ways', 'modes', 'acquisitions', 'placements', 'complements')
 TRUE = 'true'
@@ -80,7 +86,8 @@ class Law:
         self.figures = list(F.get('figures') or [])
         self.rules = [r['rule'] for r in F.get('rules') or []]
         self.levels, self.kinds, self.namespaces, self.verbs, self.units = {}, {}, {}, {}, {}
-        self.flows, self.flow_sources, self.standing = [], [], []
+        self.flows, self.flow_sources, self.standing, self.exclusive = [], [], [], []
+        self.garden_rows = []                               # (key, name, row) of each row a garden added (rule vacancy)
         self.tables = {t: listed(F.get(t)) for t in FACE_TABLES}
         self.tables['layers'] = listed(F.get('layers'))
         self.standard_tables = set(listed(rows.get('standard_tables')))
@@ -152,6 +159,8 @@ class Law:
                         self.added.setdefault(t, []).extend(listed(vals))
                     elif t in self.tables:
                         self.tables[t] = self.tables[t] + listed(vals)
+                    if where == GARDEN and (t in self.standard_tables or t in self.tables):
+                        self.garden_rows += [('tables', f"{t}:{v}", {}) for v in listed(vals)]
                     else:
                         self.found.append(('law', f"{where} tables.{t}", f"`{t}` is no table of the law: a garden adds "
                                                                          f"rows to a table the verbs name"))
@@ -172,10 +181,14 @@ class Law:
                 if name_key and not row.get(name_key):
                     self.found.append(('law', at, f"a row of `{key}` names itself in `{name_key}`"))
                     continue
+                if where == GARDEN and key in ('kinds', 'levels', 'namespaces', 'verbs', 'units'):
+                    self.garden_rows.append((key, row[name_key], row))
                 if key == 'flows':
                     self.flows.append(row)
                 elif key == 'standing':
                     self.standing.append(row)
+                elif key == 'exclusive':
+                    self.exclusive.append(row)
                 else:
                     self._put({'kinds': self.kinds, 'levels': self.levels, 'namespaces': self.namespaces,
                                'verbs': self.verbs, 'units': self.units}[key], row[name_key], row, at)
@@ -252,7 +265,10 @@ class Law:
         if len(self.roles) != 7:
             bad('core.yaml roles', f"the core has seven roles, and this law {len(self.roles)}")
         known_rules = ['form', 'valency', 'knowing', 'placeholder', 'order', 'life', 'necessity', 'squares', 'weight',
-                       'frame', 'names', 'layers', 'ratify']
+                       'frame', 'names', 'layers', 'ratify', 'consent', 'harm', 'room', 'vacancy', 'kept']
+        for x in self.exclusive:
+            if x.get('verb') not in self.verbs:
+                bad('exclusive', f"`{x.get('verb')}` is no verb of the law: what is exclusive is a verb's `at`")
         if self.rules != known_rules:
             bad('core.yaml rules', f"the engine applies {', '.join(known_rules)}; the law lists {', '.join(self.rules)}")
         for name, v in self.verbs.items():

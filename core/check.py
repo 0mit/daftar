@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""check — judge a garden written in the core's statements, by the core's thirteen rules.
+"""check — judge a garden written in the core's statements, by the core's eighteen rules.
 
     python3 core/check.py [<garden>]      # every bean of the garden at <garden> (here, if none is named)
     python3 core/check.py --staged        # what a commit would hold: the INDEX, and the commit's own rules
@@ -59,7 +59,7 @@ def staged(root):
         except read.Unread as e:
             return report([('form', 'VOCAB.md', str(e))], "core check --staged")
         garden = engine.Garden.read(snap)
-        found = engine.judge(law, garden) + commit.findings(root, law)
+        found = engine.judge(law, garden) + commit.findings(root, law, garden=garden)
         n = sum(len(b.statements) for b in garden.beans.values())
         return report(found, f"core check --staged: {len(garden.beans)} beans, {n} statements")
     finally:

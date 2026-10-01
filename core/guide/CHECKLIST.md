@@ -13,16 +13,19 @@ The hook judges the **staged** files, not the working tree: what it checks is wh
 staged before the commit is tried again. `python3 bin/dmsave.py` journals, stages and commits in one command, and after
 a refusal and the fix, `python3 bin/dmsave.py --again` stages and commits again. By hand, `python3 core/check.py`
 judges the working tree, and `python3 core/check.py --staged` what a commit would hold. Each finding is printed as
-`<rule>  <where>: <what>`, and says what to write instead.
+`<rule>  <where>: <what>`; it names what to write in its place.
 
 ## Part A — what the gate checks (a commit is refused on any failure)
-Thirteen rules, each strict: a breach is an error.
+Eighteen rules, each strict: a breach is an error. The first thirteen are the core's own; the last five, and parts of
+`form`, `order`, `names` and `ratify`, are what today's gate held, taken over by the core.
 
 - [ ] **form** — A bean's front matter is its header (`bean`, `kind`, `title`, `summary`, `tags`, `details`) and its
       `statements`, nothing else; `bean` is the file's name, and `kind` a kind of the law. A statement is one verb of
       the law, written `- <verb>: { <role>: <filler>, … }`, with roles from the seven, the qualifiers its verb's row
-      declares, and `id`, `while`, `why`, `note`; nothing else. An `id` is one word, used once in its bean. A
-      `while` names a condition or a statement. Everything is read as a string.
+      declares, and `id`, `while`, `why`, `note` (and `held`, sealed); nothing else. An `id` is one word, used once in
+      its bean. A `while` names a condition or a statement. Everything is read as a string, and text holds no control
+      character but a tab — a line feed only in a block scalar (`|`, `>`). Once the garden holds a bean, `GARDEN.md`
+      names its gardener, a person or an organisation it holds a bean for.
 - [ ] **valency** — Each role its verb requires is filled, `unknown` where nobody said; no role is filled that the verb
       does not take; each filler has the shape its role takes — a being of the garden (or `self`, the crown,
       `{ someone: <kind>, at: … }`), a statement's id, a position, a quantity `{ count, unit }`, a row of the table its
@@ -33,7 +36,8 @@ Thirteen rules, each strict: a breach is an error.
       moment typed there is refused.
 - [ ] **placeholder** — A statement the law derives is never written: an `answer` `as: law` by the owner, a `bear` by
       whoever paid, alone.
-- [ ] **order** — Nothing stands on itself through others, and a part never stands above what its whole is made of.
+- [ ] **order** — Nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or
+      needs itself through others; a part never stands above what its whole is made of.
 - [ ] **life** — A living being comes through the living; a made or said one through hands (a being at reason) or a
       tool whose own coming goes on; no chain of `come` returns to where it began.
 - [ ] **necessity** — A `necessary` statement names what it is necessary `through`, except of the crown.
@@ -44,10 +48,36 @@ Thirteen rules, each strict: a breach is an error.
       by its complement: a day reckoned in the garden's `zone`. A day its calendar does not have (`2026-02-30`), a
       spelling two systems read (`445`), and a spelling no system reads (`next tuesday`) are refused. `now` is written
       at `at` alone.
-- [ ] **names** — A name its namespace gives once names one being: two beans given one such name are refused.
+- [ ] **names** — A name its namespace gives once names one being: two beans given one such name are refused. A
+      garden's id (`garden-id`) is twelve hexadecimal digits, and never this garden's own. A name qualified to cross
+      (`garden`) is `<garden_id>/<kind>:<name>`, by this garden or one a `garden` bean here is named by; an identifier
+      someone else assigned is never qualified.
 - [ ] **layers** — A file stands in one layer, and a `pass` stands only where a row of the flow table grants it.
 - [ ] **ratify** — A change to the law (`core/law/`, `VOCAB.md`, `GARDEN.md`, a file the release keeps or one in the
-      `law` or `manifesto` layer) has a journal entry that says RULE-CHANGE, for the person who ratifies it.
+      `law` or `manifesto` layer) has a journal entry that says RULE-CHANGE, for the person who ratifies it. A `grant`
+      `as: ratify` is the gardener's own act: on the gardener's bean, `by` the gardener, said by the gardener.
+- [ ] **consent** — A person who is not the gardener, and not written under an opaque id (`p-<8 hexadecimal digits>`,
+      its title the id), is kept by name only on their own word: an `agree` of theirs, not declined, to an agreement
+      this garden holds, or the garden they keep, met here (a `garden` bean they `own`). And a commit places no such
+      person somewhere in the future: a happening wholly after the commit's moment, attended by one, keeps its location
+      sealed.
+- [ ] **harm** — A private-key block is refused in any file a commit stages. A code of a scheme the garden marks
+      special-category is written only sealed. A sealed statement keeps its verb and carries only `held` (its pointer,
+      `root:<root>/<32 hexadecimal digits>`), `id`, `while`, `why` and `note`, and where its bean concerns a person who
+      is not the gardener it is held `while` a statement — their word — holds. A commit that seals or unseals one says
+      so in its entry, one line, `- held: <bean> <id> added` or `erased`. A sensitivity rated below the one its bean
+      derives is a person's own word: the `rate` is said by a person, never derived.
+- [ ] **room** — Two bodies are not in one room at once: two `be … as: location` at one position, neither part of nor
+      at the other — a sayable takes no room; two `serve` at one port on one address; one being attending two happenings whose times, to the
+      moment, overlap. A verb the garden declares exclusive (`VOCAB.md`, `exclusive`) holds one being once over any
+      extent of its `at`; what was declined holds nothing.
+- [ ] **vacancy** — Every row the garden adds to the law — a kind, a level, a verb, a namespace, a unit, a row of a
+      table — is used by a statement or a bean (`details` too), or says why it is vacant (`vacant: <why>`). Add a row
+      with the first bean that uses it.
+- [ ] **kept** — The journal is appended to, never rewritten, and a line a commit adds to it holds no character a reader
+      takes for a line break and no template's `(fill in`. A part under `series/`, once written, stays as it is. A
+      commit that takes a header key or a statement out of a bean names it in its entry — the key, the statement's
+      id, or its verb — empties none it keeps, and leaves every bean it writes a body: a bean reads on paper.
 
 **The commit's own rules**, which only a commit can show:
 - [ ] Every bean the commit changes is named in the journal entry it adds (`[[<bean>]]`), and that entry's heading is
@@ -55,7 +85,10 @@ Thirteen rules, each strict: a breach is an error.
 - [ ] A knowing act the commit adds carries that heading's moment, which the save writes in place of its `now`.
 - [ ] A statement the commit adds or changes is known by an act the commit adds: whoever wrote it now, said it now. An
       old act's moment is older than the statement.
-- [ ] Only the commit that adopts the core, saying RULE-CHANGE, carries the moments its history recorded.
+- [ ] Only the commit that adopts the core, saying RULE-CHANGE, carries the moments its history recorded; it need not
+      name what it takes out of a bean, since the translator's count proves nothing was lost.
+- [ ] A bean saved twice in one minute would get the moment its act held already: `bin/dmsave.py` waits for the next
+      minute, and says so.
 
 These checks confirm that the words are there and well formed, not that they are true. What the gate cannot read it
 refuses, saying what and where: a traceback from the gate is a defect of the gate, never its verdict (manifesto:
@@ -88,13 +121,16 @@ Beans and the law are edited as text, because their comments and layout carry me
 Text edits are blind to structure.
 - [ ] **One statement is one line**, a flow mapping: `- pay: { id: paid, by: ada, of: { count: "10.00", unit: XTS } }`.
       Adding a statement is adding a line; changing one is changing that line. Give a statement an `id` whenever
-      another statement or bean will take it.
+      another statement or bean will take it. A statement whose prose runs to several lines is the one exception: it is
+      a block mapping, its prose a block scalar (`note: |`), since a line feed is text only there.
 - [ ] **Measure before you change.** Count the places an edit will touch, state the number you expect, and refuse an
       edit that touches more or fewer. Today `bin/dmsafe.py` does this for a document addressed by key (`count`, then
       `set_nested` or `flow_set` with `expect=N`).
 - [ ] Never write a document with a plain `open(path, 'w')`: it truncates the file before anything reads it.
-- [ ] **A sealed entry** is written by `python3 bin/dmheld.py`, never by hand: it moves what harm can come of to a
-      store a host holds off git, and leaves a pointer.
+- [ ] **A sealed statement** keeps its verb and its id, and holds a pointer in place of its roles: `- measure: { id:
+      weight, held: "root:personal/<32 hexadecimal digits>", while: "<bean>#<their agree>" }`. What it said goes to a
+      store a host holds off git — today `python3 bin/dmheld.py`, which mints the pointer — and the entry says `- held:
+      <bean> <id> added`.
 - [ ] **A grant** is written on the bean whose decision it is — the gardener's, a person's own for their own record, an
       agreement's for what it shares. Nobody but the gardener may do what no grant opens. A grant to ratify is the
       gardener's alone.

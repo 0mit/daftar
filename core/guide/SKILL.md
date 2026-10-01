@@ -12,8 +12,8 @@ description: >
 A **garden** is a git repository of **beans**: one file per being, every fact in it one **statement** — a verb and its
 roles — and every bean saying who knows its statements and how: someone said them, read them, made them, or derived
 them. The words a statement may use are the law, data in `core/law/`, and a **gate** (`core/check.py`, a pre-commit
-hook) refuses a commit that breaks it. People and agents of any make write here in one language, and every change is
-journalled in the commit that makes it.
+hook) refuses a commit that breaks it. People and agents, whatever made them, share this one language (manifesto:
+ledger), and each change is recorded in its own commit's journal entry (manifesto: hidden).
 
 This file carries no rules. It is a reading order, because a door that carries rules becomes a second copy of them that
 can disagree with the first. Everything below is found in the repository you are in.
@@ -32,8 +32,8 @@ Run these, and show their last lines to the person you work for:
     python3 bin/dmpropose.py id
 
 (`python` on Windows, here and in every command below.) The first is the gate over the whole garden; the second names
-the garden, its id, and its **gardener**: the person or organisation who keeps it, and who ratifies here what an agent
-may not decide (`MODEL.md`, the Contract of Parts).
+the garden, its id, and its **gardener**: the person or organisation who keeps it, and who ratifies here the decisions
+an agent may only propose (manifesto: parts; `MODEL.md`, the Contract of Parts).
 
 - **They ran, and you can `git commit`.** You are a WRITER: you read, write, journal and commit, within the Contract of
   Parts. What you write is known by your session: open one (`CHECKLIST.md` Part E), and your acts are `by` its bean.
@@ -56,7 +56,7 @@ and what to write when nobody said. Write from it. When the gate refuses, its me
 Read these when a question needs them, and only the part it needs:
 
 1. `core/law/` — the law itself: the core's face (`core.yaml`: the seven roles, the grammar, the order, the face's
-   verbs, the thirteen rules), the other verbs' rows (`verbs.yaml`), the kinds, the levels, the layers and the standing
+   verbs, the eighteen rules), the other verbs' rows (`verbs.yaml`), the kinds, the levels, the layers and the standing
    of files, the units, the namespaces and the standards' tables; and the garden's own rows in `VOCAB.md`. `python3
    core/check.py --law` proves them one law.
 2. `MODEL.md` — the data model and the **Contract of Parts**: what you may enact and what a person must ratify. A name
@@ -99,7 +99,8 @@ neighbourhood, a person ratifies, and the garden adopts it by moving its pin.
 
 ## Leaving
 
-Another agent will come after you — perhaps of another make, with none of your context, unable to ask you anything.
+Another agent comes after you — maybe made by another company, knowing nothing of this session, with no way to ask you
+(manifesto: after).
 Leave the journal entry that says what you did and why, your own mistakes recorded where they will be found, and
 anything unfinished parked in `log/pending.md` or a handover. `CHECKLIST.md` Part E says how agents here treat one
 another.

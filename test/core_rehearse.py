@@ -211,7 +211,7 @@ def main():
               r.returncode == 0 and '— 0 error(s)' in out, out[-1500:])
         acts = [next(iter(s.values())).get('at') for s in read.document(os.path.join(G, 'beans', 'laptop.md'))[0]['statements']
                 if next(iter(s)) in ('say', 'read', 'derive', 'make')]
-        write(G, 'beans/late.md', "---\nbean: late\nkind: document\ntitle: late\nstatements:\n  - say: { by: sam, at: '%s' }\n---"
+        write(G, 'beans/late.md', "---\nbean: late\nkind: document\ntitle: late\nstatements:\n  - say: { by: sam, at: '%s' }\n---\nA late note."
               % acts[0])
         r = run(PY, 'bin/dmsave.py', 'sam', 'a late note', '--body', '- action: wrote [[late]]', cwd=G)
         out = r.stdout + r.stderr

@@ -14,7 +14,7 @@ example wrote is found in the guide's bean (or the bean it names is linked to it
 translation gave it is one the guide's bean uses — but for the differences listed below, each with its reason. A
 difference listed and no longer met is reported too, so the list stays true.
 """
-import datetime, os, re, shlex, shutil, subprocess, sys, tempfile, time
+import os, re, shlex, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -40,8 +40,6 @@ FORM_WORDS = {'true', 'false', 'now', '', 'self', 'legal', 'technical', 'experie
               'bean', 'crown', 'parties', 'outside'}
 # WHERE THE GUIDE SAYS IT OTHERWISE, ON PURPOSE: (bean, value or verb) -> why.
 DIFFERS = {
-    ('*', 'name'): "today's minted `identifier` (`person:sam`) is the bean itself in the core: a being's name in its own "
-                   "garden is its bean, and needs no statement (core/law/namespaces.yaml, `garden`)",
     ('*', 'can'): "the translator writes a clause as `can`; the guide writes it as the core does, `obligatory` (or another "
                   "position of the permission square) of the statement it asks, through the agreement",
     ('dinner-at-sams', 'host'): "today's `refs` named the host by `rel: host`; the core says it with `answer` as law and "
@@ -126,13 +124,8 @@ check(f"every tool and law file core/guide/ names exists ({len(named)} named)", 
 T = tempfile.mkdtemp(prefix='dmcoreguides-')
 G, TODAY, COPY = os.path.join(T, 'guides'), os.path.join(T, 'today'), os.path.join(T, 'copy')
 written = {}                                 # path -> the text last written there, as the page shows it
-minute = {}                                  # path -> the minute it was last saved in
 added = set()                                # (path, text) of the statements a page added to a bean
-waited = []                                  # the seconds each save waited for the minute to turn
-
-
-def clock():
-    return datetime.datetime.now().astimezone().strftime('%Y-%m-%d %H:%M')
+waited = []                                  # the saves that waited for the minute to turn (bin/dmsave.py)
 
 
 try:
@@ -194,28 +187,33 @@ try:
         new = [b for b in new if b[1] != 'log/journal.md']
         if not new:
             return None
+        before = {p: verbs(os.path.join(G, p)) for _m, p, _t in new if p.startswith(('beans/', 'mappings/'))}
+        sealed_before = {p: [r.get('id') for s in head(os.path.join(G, p)).get('statements') or [] if isinstance(s, dict)
+                             for r in s.values() if isinstance(r, dict) and 'held' in r] for p in before}
         try:
             for b in new:
                 apply(*b)
         except OSError as e:                          # a block a page writes into a bean that is not there
             return (False, str(e))
+        out = []                                      # what a change takes out, said as its writer says it (rule kept)
+        for p, was in before.items():
+            now = verbs(os.path.join(G, p))
+            out += [f"`{v}` taken out of [[{os.path.basename(p)[:-3]}]]" for v in sorted(set(was))
+                    if was.count(v) > now.count(v)]
+        held = []                                     # and what it seals, as bin/dmheld.py prints it (rule harm)
+        for p in before:
+            sealed = [r.get('id') for s in head(os.path.join(G, p)).get('statements') or [] if isinstance(s, dict)
+                      for r in s.values() if isinstance(r, dict) and 'held' in r]
+            held += [f"- held: {os.path.basename(p)[:-3]} {i} added" for i in sealed if i not in sealed_before.get(p, ())]
         named = sorted({os.path.basename(p)[:-3] for _m, p, _t in new if p.startswith(('beans/', 'mappings/'))})
         law = any(p in ('VOCAB.md', 'GARDEN.md') for _m, p, _t in new)
-        body = '- action: ' + ('RULE-CHANGE: ' if law else '') + (', '.join(f"[[{b}]]" for b in named) or 'the law')
-        # THE MINUTE TURNS FIRST where this changes a bean saved in this minute: a heading's moment is the clock's to
-        # the minute, and an act written again at the moment it held already is no act this commit adds
-        beans_here = [p for _m, p, _t in new if p.startswith(('beans/', 'mappings/'))]
-        if any(minute.get(p) == clock() for p in beans_here):
-            waited.append(60 - datetime.datetime.now().second)
-            for _i in range(70):
-                if all(minute.get(p) != clock() for p in beans_here):
-                    break
-                time.sleep(1)
+        body = '- action: ' + ('RULE-CHANGE: ' if law else '') + (', '.join(f"[[{b}]]" for b in named) or 'the law') \
+            + ''.join(f"; {x}" for x in out) + ''.join(f"\n{x}" for x in held)
         before = run('git', 'rev-parse', 'HEAD', cwd=G).stdout
         r = run(PY, 'bin/dmsave.py', 'sam', what[:60], '--body', body, cwd=G)
         moved = run('git', 'rev-parse', 'HEAD', cwd=G).stdout != before
-        for _m, p, _t in new:
-            minute[p] = clock()
+        if 'was saved in this minute already' in r.stderr:
+            waited.append(what)
         return (r.returncode == 0 and moved, (r.stdout + r.stderr)[-1500:])
 
     # README.MD: THE FIRST BEANS, SAVED BY THE COMMAND THE PAGE SHOWS
@@ -254,6 +252,8 @@ try:
         check(f"core/guide/{page}: each section's examples commit through the core's gate ({done}), and the "
               f"statements it shows for a bean pass beside it ({judged_n})", not failed and done >= 1, failed)
 
+    check(f"the save waits for the minute to turn where it would save one bean twice in it, and the commit is made "
+          f"({len(waited)}: {'; '.join(waited)[:200]})", len(waited) >= 1, waited)
     r = run(PY, 'core/check.py', cwd=G)
     beans = [f for d in ('beans', 'mappings') if os.path.isdir(os.path.join(G, d)) for f in os.listdir(os.path.join(G, d))]
     check(f"the garden of the guides' {len(beans)} beans passes the core's gate whole", r.returncode == 0
@@ -310,5 +310,5 @@ try:
 finally:
     shutil.rmtree(T, ignore_errors=True)
 
-print(f"\ncore_guides: {len(FAILS)} failed (the minute turned {len(waited)} times, {sum(waited)}s)")
+print(f"\ncore_guides: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)

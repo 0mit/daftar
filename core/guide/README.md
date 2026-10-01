@@ -43,7 +43,8 @@ The gardener, the machine they use, its maker, and the journal entry that record
 accepts them. **These blocks are not illustrations:** a suite writes each one into a freshly grown garden and commits
 it through the gate, so if the law moves and they stop passing, the suite fails rather than this page quietly lying.
 
-The first person is the **gardener**: the one who keeps this garden, and ratifies in it what an agent may not decide.
+The first person is the **gardener**: the one who keeps this garden, and ratifies there the decisions an agent may only
+propose (manifesto: parts).
 Every fact is a statement — a verb and its roles — and the first statement of every bean says who knows the rest:
 here, Sam says it. A person is owned by the crown, `theone`, whom no bean names: nobody holds a person. A person
 answers for themselves before the law.

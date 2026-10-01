@@ -7,7 +7,7 @@ zone: Asia/Tehran                  # GARDEN.md's: the bearer's zone, where a day
 
 vocab:                             # the garden's own rows, as its VOCAB.md would hold them
   kinds:                           # beside the law's own (person, org, contract, document, garden, host, …)
-    - { kind: cell,      nature: body,    line: living, level: cell }
+    - { kind: cell,      nature: body,    line: living, level: cell, vacant: "the cases use it, not the garden" }
     - { kind: clause,    nature: sayable, line: said,   level: statement }
     - { kind: part,      nature: body,    line: made,   level: component }
     - { kind: rack,      nature: body,    line: made,   level: installation }
@@ -15,11 +15,13 @@ vocab:                             # the garden's own rows, as its VOCAB.md woul
     - { namespace: hpe,      once: true }
     - { namespace: garden-a, once: true }
     # dns is the core's own (core/law/namespaces.yaml): a standard, not a bean, and declared once
-    - { namespace: nickname }
+    - { namespace: nickname, vacant: "a case beside the garden uses it" }
   flows:
     - { flow: observed,  from: world, to: journal, through: read, grant: granted }
     - { flow: said,      from: words, to: journal, through: say,  grant: granted }
     - { flow: no-guide,  from: guide, to: law,     through: make, grant: refused }
+  exclusive:
+    - { verb: attend, why: "one being, once: what the cases below book" }
 
 garden:
   ada:
@@ -40,6 +42,7 @@ garden:
     statements:
       - say:  { by: sam, at: now }
       - own:  { by: theone, of: self }
+      - grant: { by: self, to: [ada], of: [ladder], as: ratify, class: G }
   hpe:  { kind: org,  statements: [ { say: { by: sam, at: now } }, { name: { by: garden-a, of: self, as: "org:hpe" } } ] }
   shop: { kind: org,  statements: [ { say: { by: sam, at: now } }, { name: { by: dns, of: self, as: "shop.example" } } ] }
   garden-a:
@@ -47,7 +50,6 @@ garden:
     statements:
       - say:   { by: sam, at: now }
       - grant: { by: sam, to: [ben], of: [pot], as: read }
-      - grant: { by: sam, to: [ada], of: [ladder], as: ratify, class: G }
   home-rack:
     kind: rack
     statements:
@@ -122,6 +124,11 @@ good:
   - { name: "a required role nobody said is `unknown`", bean: y1, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: unknown, of: { count: "1", unit: XTS } } } ] }
   - { name: "the payer who bears beside another bearer says more than the default", bean: y2, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: p, by: ada, of: { count: "2", unit: XTS } } }, { bear: { by: ada, of: p } }, { bear: { by: ben, of: p } } ] }
   - { name: "a name nobody has said yet is `unknown`, and two of them in a namespace that gives once name nobody", bean: y10, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: hpe, of: self, as: unknown } }, { name: { by: hpe, of: nas, as: unknown } } ] }
+  - { name: "a person written under an opaque id needs no word of theirs", bean: p-0a1b2c3d, kind: person, statements: [ { say: { by: sam, at: now } }, { own: { by: theone, of: self } } ], header: { title: p-0a1b2c3d } }
+  - { name: "a sealed statement: its verb, an id, a pointer, and the word it is held on", bean: y11, kind: document, statements: [ { say: { by: sam, at: now } }, { concern: { of: [ben] } }, { measure: { id: weight, held: "root:vault/0123456789abcdef0123456789abcdef", while: "pot#agreed" } } ] }
+  - { name: "one being at one place twice, as two of its parts", bean: y12, kind: rack, statements: [ { say: { by: sam, at: now } }, { be: { by: self, at: "home-rack#u3", as: location } }, { part: { by: self, of: home-rack } } ] }
+  - { name: "an exclusive booking declined holds nothing", bean: y13, kind: contract, statements: [ { say: { by: sam, at: now } }, { attend: { by: ada, of: pot, at: 2026-11-02/2026-11-06 } }, { attend: { id: asked, by: ada, of: pot, at: 2026-11-04/2026-11-05 } }, { decline: { by: ada, of: asked } } ] }
+  - { name: "a garden met here, and the name it gave, qualified", bean: y14, kind: garden, statements: [ { say: { by: sam, at: now } }, { name: { by: garden-id, of: self, as: "0a1b2c3d4e5f" } }, { own: { by: ben, of: self } }, { name: { by: garden, of: ben, as: "0a1b2c3d4e5f/person:ben" } } ] }
   - { name: "a namespace that does not give once may name two beings alike", bean: y3, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: nickname, of: self, as: "box" } }, { name: { by: nickname, of: nas, as: "box" } } ] }
   - { name: "subcontraries may both stand", bean: y4, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { permitted: { of: r, through: pot } }, { omissible: { of: r, through: pot } } ] }
   - { name: "a contrary through another source stands beside", bean: y5, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { forbidden: { of: r, through: garden-a } } ] }
@@ -175,3 +182,14 @@ bad:
   - { rule: names,       bean: x14, kind: host,     statements: [ { say: { by: sam, at: now } }, { name: { by: hpe, of: self, as: "SN-0042" } } ] }
   - { rule: layers,      bean: x15, kind: document, statements: [ { say: { id: s, by: sam, at: now } }, { pass: { of: [s], from: guide, to: law, through: make } } ] }
   - { rule: layers,      bean: x15b, kind: document, statements: [ { read: { id: s, by: sam, at: now } }, { pass: { of: [s], from: world, to: law, through: read } } ] }
+  - { rule: consent,     bean: x20, kind: person,   statements: [ { say: { by: sam, at: now } }, { own: { by: theone, of: self } } ] }
+  - { rule: harm,        bean: x21, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { id: h, held: "root:vault/0123456789abcdef0123456789abcdef", by: ada } } ] }
+  - { rule: harm,        bean: x22, kind: document, statements: [ { read: { by: nas, at: now } }, { rate: { by: sam, of: ben, as: none } } ] }
+  - { rule: harm,        bean: x23, kind: document, statements: [ { say: { by: sam, at: now } }, { concern: { of: [ben] } }, { measure: { id: w, held: "root:vault/0123456789abcdef0123456789abcdef" } } ] }
+  - { rule: room,        bean: x24, kind: host,     statements: [ { say: { by: sam, at: now } }, { be: { by: self, at: "home-rack#u7", as: location } }, { be: { by: nas, at: "home-rack#u7", as: location } } ] }
+  - { rule: room,        bean: x25, kind: document, statements: [ { say: { by: sam, at: now } }, { attend: { by: ben, of: pot, at: 2026-11-02/2026-11-06 } }, { attend: { by: ben, of: ladder, at: 2026-11-05/2026-11-09 } } ] }
+  - { rule: room,        bean: x26, kind: document, statements: [ { say: { by: sam, at: now } }, { serve: { by: nas, at: ["192.0.2.10", "tcp-port:80"], through: http } }, { serve: { by: shop, at: ["192.0.2.10", "tcp-port:80"], through: http } } ] }
+  - { rule: order,       bean: x27, kind: host,     statements: [ { say: { by: sam, at: now } }, { own: { by: shop, of: self } }, { own: { by: self, of: shop } } ] }
+  - { rule: names,       bean: x28, kind: garden,   statements: [ { say: { by: sam, at: now } }, { name: { by: garden-id, of: self, as: "garden-b" } } ] }
+  - { rule: names,       bean: x29, kind: person,   statements: [ { say: { by: x29, at: now } }, { name: { by: garden, of: self, as: "fedcba987654/person:x29" } } ] }
+  - { rule: ratify,      bean: x30, kind: document, statements: [ { say: { by: sam, at: now } }, { grant: { by: sam, to: [ben], of: [pot], as: ratify, class: G } } ] }

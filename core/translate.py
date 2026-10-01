@@ -24,15 +24,25 @@ rows it added to the standards' tables). Each term goes the way verbs.yaml's `re
                text as its note; its
                `at` the moment the clock wrote that day: the heading of the journal entry that names the bean, else the
                commit that first wrote the day. A party's own provenance is an act of its own.
-  identity   → name (by the anchor's key as a namespace)        owned_by → own          responsibility → answer
+  identity   → name: by the standard's namespace where the anchor establishes (fqdn → dns, mac → ieee-eui48, email →
+               mail, phone → e164, garden_id → garden-id, content_hash → sha-256 and its bare digest, the key
+               fingerprints → openpgp, ssh, wireguard); a qualified minted name → garden; an issuer's → a namespace
+               named for the issuer; any other → the anchor's key as the garden's namespace (`anchor-<key>`); a name the
+               garden minted for the bean itself → the bean, no statement (core/law/namespaces.yaml, 2026-10-01)
+  owned_by   → own; an owner outside the ledger → `{ someone: org }`, its words the note   responsibility → answer
   via        → come                  located_at, lives_in → be                           part_of → part
   instance_of, os → run              depends_on, consumes, reaches → need                knowledge → use, classify
   risks      → fail                  capabilities → can, on the two squares              roles → do
   produces   → produce (an artifact: a being, a position, or the words that say it)
   a unit     → its UCUM code (core/law/units.yaml), the law's English name attached there; a garden's own unit a row of
                VOCAB.md's `units`, its code composed from the law's (`gigabyte-per-day` is `GBy/d`)
-  parties, over, words → agree       clauses → can, on the permission square            transactions → pay, bear
+  parties, over, words → agree, a party's yes only: one with no acceptance on record is a party kept in `details`
+  clauses → can, on the permission square            transactions → pay, bear
+  vacancies  → the `vacant` of the garden's row the position names (the rule `vacancy`)
   endpoints  → serve                 timing start/stop → be, as presence                 workspace.opened_at → open
+
+PROSE OF SEVERAL LINES IS A BLOCK SCALAR (`|`), and a statement holding it a block mapping: a line feed is text only
+there (the rule `form`).
 
 WHAT FITS NO VERB GOES TO `details`, WHOLE: a term no verb takes keeps its whole subtree there, under its name; what is
 left of an entry a verb took stays there under the term and the statement's id. The front matter's comments go to
@@ -481,6 +491,16 @@ def anchors_namespace(key):
     return f"anchor-{slug(key)}"
 
 
+# THE STANDARDS' NAMESPACES ARE THE CORE'S (core/law/namespaces.yaml, ratified 2026-10-01): an anchor that establishes
+# is a name its standard gives — the guides' form — and one that only corroborates keeps a row of the garden's own,
+# which gives no name once, so that two beans sharing it are no clash. `mail` and `e164` give no name once anyway.
+CORE_NAMESPACES = {'fqdn': 'dns', 'mac': 'ieee-eui48', 'email': 'mail', 'phone': 'e164', 'garden_id': 'garden-id',
+                   'content_hash': 'sha-256', 'openpgp_fingerprint': 'openpgp', 'ssh_key_fingerprint': 'ssh',
+                   'wg_pubkey': 'wireguard'}
+SHARED = ('mail', 'e164')
+QUALIFIED_NAME = re.compile(r'^[0-9a-f]{12}/[a-z][a-z0-9-]*:.+$')
+
+
 def translate_bean(path, rel, ctx):
     """(text, Bean2) of the bean at `path` written in statements."""
     with open(path, encoding='utf-8') as fh:
@@ -520,15 +540,36 @@ def translate_bean(path, rel, ctx):
     # -- the knowing act of the whole bean
     blanket = knowing(b, old.get('provenance'), ('provenance',)) if 'provenance' in old else None
 
-    # -- identity: each anchor a name
+    # -- identity: each anchor a name — by the namespace that gives it (core/law/namespaces.yaml, an issuer's, or the
+    # garden's own row); a name this garden minted for the bean itself is the bean, and no statement
     for i, a in enumerate((old.get('identity') or {}).get('anchors') or []):
         if isinstance(a, dict) and isinstance(a.get('key'), str) and isinstance(a.get('value'), str):
-            ns = anchors_namespace(a['key'])
-            ctx.namespace(ns, a)
-            sid = b.new_id(f"{a['key']}")
-            j = b.add('name', {'by': ns, 'of': 'self', 'as': a['value']}, sid)
+            key, val, est = a['key'], a['value'], a.get('establishing') == 'true'
+            if key == 'identifier' and val == f"{old.get('genos')}:{bid}":
+                b.take(('identity', 'anchors', i, 'key'), ('derived', 'the bean is its own name in its garden'))
+                b.take(('identity', 'anchors', i, 'value'), ('derived', 'the bean is its own name in its garden'))
+                b.leftover(('identity', 'anchors', i), ('identity', 'anchors', b.new_id(key)))
+                continue
+            issuer = being(a.get('issuer'), ctx) if isinstance(a.get('issuer'), dict) else None
+            text = val
+            if key == 'identifier' and QUALIFIED_NAME.match(val):
+                ns = 'garden'
+            elif key == 'identifier' and issuer:
+                ns = issuer                          # an issuer's numbers: a namespace of the garden's, named for it
+                ctx.namespace(ns, a)
+            elif key in CORE_NAMESPACES and (est or CORE_NAMESPACES[key] in SHARED):
+                ns = CORE_NAMESPACES[key]
+                if key == 'content_hash' and val.startswith('sha256:'):
+                    text = val[len('sha256:'):]       # the namespace says sha-256: the name is the digest
+            else:
+                ns = anchors_namespace(key)
+                ctx.namespace(ns, a)
+            sid = b.new_id(f"{key}")
+            j = b.add('name', {'by': ns, 'of': 'self', 'as': text}, sid)
             b.take(('identity', 'anchors', i, 'key'), b.role(j, 'by'), ns)
-            b.take(('identity', 'anchors', i, 'value'), b.role(j, 'as'))
+            b.take(('identity', 'anchors', i, 'value'), b.role(j, 'as'), text)
+            if issuer:
+                b.take(('identity', 'anchors', i, 'issuer', 'bean'), b.role(j, 'by'), ns)
             b.leftover(('identity', 'anchors', i), ('identity', 'anchors', sid))
 
     # -- the four questions
@@ -543,8 +584,8 @@ def translate_bean(path, rel, ctx):
             owner = roles['by'] = 'theone'
             takes.append((('owned_by', 'crown'), ('by',), 'theone'))
         elif isinstance(ob.get('external'), str):
-            roles['by'] = 'unknown'
-            roles['note'] = ob['external']
+            roles['by'] = {'someone': 'org'}  # an owner outside the ledger, named in prose and by no bean here: someone
+            roles['note'] = ob['external']    # nobody named here, of the kind that owns from outside (seed/COOKBOOK.md)
             takes.append((('owned_by', 'external'), ('note',)))
         elif being(ob.get('from'), ctx):
             roles['from'] = being(ob['from'], ctx)
@@ -736,6 +777,10 @@ def translate_bean(path, rel, ctx):
         if not isinstance(e, dict):
             continue
         who = being(e.get('who'), ctx)
+        party_bean[k] = who or 'unknown'
+        if e.get('accepted') in (None, '', {}, []):
+            continue                # AN OFFER IS NOT AN ACCEPTANCE: an `agree` is a party's yes, and a party with no
+                                    # acceptance on record — offered, or declined — stays a party, kept in `details`
         roles = {'by': who or 'unknown'}
         if things:
             roles['of'] = list(things)
@@ -749,7 +794,6 @@ def translate_bean(path, rel, ctx):
             roles['note'] = e['external']
         sid = b.new_id(f"agreed-{k}")
         j = b.add('agree', roles, sid)
-        party_bean[k] = who or 'unknown'
         if first_agree is None:
             first_agree = sid
             for p, n in over_takes:
@@ -906,17 +950,62 @@ def comments(head):
     return out
 
 
+_BLOCK = re.compile(r'^(\s*)((?:- )*(?:[^\s:#][^:#]*: )?(?:- )*)XBLOCK(\d+)X$')
+
+
+def _blocked(x, dump):
+    """`dump` of `x` with each string of several lines written as a block scalar (`|`), its chomping as the string ends:
+    a line feed is text only there (the rule `form`), and PyYAML will not write a block that holds a tab."""
+    blocks = []
+
+    def mark(v):
+        if isinstance(v, dict):
+            return {k: mark(w) for k, w in v.items()}
+        if isinstance(v, list):
+            return [mark(w) for w in v]
+        if isinstance(v, str) and '\n' in v and not v.startswith((' ', '\n')):
+            blocks.append(v)
+            return f"XBLOCK{len(blocks) - 1}X"
+        return v
+    out = []
+    for line in dump(mark(x)).split('\n'):
+        m = _BLOCK.match(line)
+        if not m:
+            out.append(line)
+            continue
+        indent, prefix, n = m.group(1), m.group(2), int(m.group(3))
+        v = blocks[n]
+        body = v[:-1] if v.endswith('\n') else v
+        chomp = '' if v.endswith('\n') and not v.endswith('\n\n') else ('-' if not v.endswith('\n') else '+')
+        if chomp == '+':
+            body = v.rstrip('\n')
+        out.append(f"{indent}{prefix}|{chomp}")
+        pad = indent + ' ' * (len(prefix) - len(prefix.lstrip('- ')) + 2 if prefix.strip() else 2)
+        out += [(pad + ln) if ln else '' for ln in body.split('\n')]
+        if chomp == '+':
+            out += [''] * (len(v) - len(v.rstrip('\n')) - 1)
+    return '\n'.join(out)
+
+
+def block(x):
+    return yaml.safe_dump(x, allow_unicode=True, sort_keys=False, width=120)
+
+
 def render(b):
-    """The text of a bean in statements: its header, its statements one to a line, its details, and its body."""
+    """The text of a bean in statements: its header, its statements one to a line (prose of several lines in a block),
+    its details, and its body."""
     def flow(x):
         return yaml.safe_dump(x, default_flow_style=True, width=10 ** 9, allow_unicode=True, sort_keys=False).strip()
-    out = ['---', yaml.safe_dump(b.header, allow_unicode=True, sort_keys=False, width=120).rstrip()]
+    out = ['---', _blocked(b.header, block).rstrip()]
     if b.statements:
         out.append('statements:')
         for verb, roles in b.statements:
-            out.append(f"  - {verb}: {flow(roles)}")
+            if any('\n' in v for _k, v in leaves(roles, ())):   # prose of several lines: a block mapping, a block scalar
+                out += ['  ' + ln for ln in _blocked([{verb: roles}], block).rstrip().split('\n')]
+            else:
+                out.append(f"  - {verb}: {flow(roles)}")
     if b.details:
-        out.append(yaml.safe_dump({'details': b.details}, allow_unicode=True, sort_keys=False, width=120).rstrip())
+        out.append(_blocked({'details': b.details}, block).rstrip())
     return '\n'.join(out) + '\n---' + (b.body if b.body.startswith('\n') else '\n' + b.body)
 
 
@@ -1091,6 +1180,15 @@ def garden(src, dst):
                 problems.append(f"{b.id}: {n}")
             counts['acts at the moment their bean was made'] += len(b.carried)
     rows['namespaces'] = [{'namespace': ns, 'once': 'true' if once else 'false'} for ns, once in sorted(ctx.namespaces.items())]
+    # A ROW THE GARDEN SAID IS VACANT stays so: today's `vacancies` entry (its position, reason and why) is the row's
+    # `vacant`, which the core's rule `vacancy` reads
+    for v in oldv.get('vacancies') or []:
+        if not isinstance(v, dict) or v.get('position') is None:
+            continue
+        for key, names in (('units', ('unit', 'name')), ('kinds', ('kind',)), ('namespaces', ('namespace',))):
+            for r in rows.get(key) or []:
+                if any(str(r.get(n)) == str(v['position']) for n in names):
+                    r['vacant'] = f"{v.get('reason')}: {v.get('why')}" if v.get('why') else str(v.get('reason'))
     # THE GARDEN'S ROWS go into its VOCAB.md beside today's keys, which the core's law passes by
     vp = os.path.join(dst, 'VOCAB.md')
     vtext = open(vp, encoding='utf-8').read()

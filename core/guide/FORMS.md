@@ -31,8 +31,9 @@ What agents got wrong most often in measured runs — each a value nobody said, 
 - **A currency is named by its code, looked up, not guessed** (*A currency*, at the end). When no row or more than one
   fits, ask — or leave the payment out and say in its bean's body what is missing.
 - **Everyone named is a person bean**, also someone only spoken about. One who is not the gardener is kept by name only
-  on their own word: their `agree` to being kept here by name. Without it, they are an opaque id, their name held off
-  git (`python3 bin/dmheld.py person`). A meeting in which something was agreed is itself an event.
+  on their own word: their `agree` to an agreement this garden holds — a consent to be kept here by name is one — or
+  the garden they keep, met here. Without it, they are an opaque id, their name held off git (`python3 bin/dmheld.py
+  person`), and the gate refuses them by name. A meeting in which something was agreed is itself an event.
 - **How something was paid is written only as said** — a card, cash, a transfer, and whose — in the payment's
   `through`.
 - **An agent's own act is its session's.** What you were told is said by whoever told you: `say: { by: sam, at: now }`.
@@ -327,4 +328,20 @@ Ali's garden. Its id is still to be read out there.
 ```
 
 Until that id is known, the name her garden gave her cannot be written either: her bean is her name here until the id
-arrives and her garden's name for her is added — a name that establishes an identity, which the gardener ratifies.
+arrives and her garden's name for her is added — a name that establishes an identity, which the gardener ratifies. The
+gate refuses a name qualified by a garden this one does not know:
+
+<!-- unsaid: beans/ali.md, for name -->
+```markdown
+---
+bean: ali
+kind: person
+title: "Ali"
+summary: "Ali, who keeps a garden of her own; Sam shares costs with her."
+statements:
+  - say:    { by: sam, at: now }
+  - own:    { by: theone, of: self }
+  - answer: { by: self, of: self, as: law }
+---
+Ali keeps garden-ali. The name her garden gave her is written here once its id is known.
+```

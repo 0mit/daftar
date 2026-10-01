@@ -32,8 +32,9 @@ it. The words the gate knows are the core, `core/law/core.yaml`, and every other
   runs (`extends: core@<version>`), records the release (`daftar_release`) and the zone its days are reckoned in
   (`zone`). A garden is known by its id, read from git and never written as its own: the first twelve hexadecimal
   digits of the root of its first-parent history, a name of the namespace `garden-id`.
-- A garden is kept by its **gardener**, a person or an organisation it holds a bean for. The gardener ratifies what an
-  agent may not decide; an agent tends the garden. Nothing outside a garden writes in it.
+- A garden is kept by its **gardener**, a person or an organisation it holds a bean for. The gardener ratifies; an
+  agent tends the garden, and proposes what is not its to decide (manifesto: parts). A garden is written by its own
+  writers alone (manifesto: gardener).
 - The **seed** (`seed/`) is the kit a garden is grown from.
 
 ## The statement
@@ -59,7 +60,8 @@ Every fact is one statement: a **verb** and its **roles**.
 - A role takes one filler, a list where its verb's row says `many`, or a map where it says `keyed`.
 - Beside its roles a statement carries the qualifiers its verb's row declares (`share` on `bear`), and four keys:
   `id` (its name in the bean, one word), `while` (it holds while a condition or another statement matches), `why` and
-  `note` (prose). Nothing else.
+  `note` (prose). Nothing else — but a **sealed** statement, which keeps its verb and its id and carries `held`, a
+  pointer, in place of its roles (*Who may see*, below).
 - `unknown` fills a required role nobody has said. A role that is not required is left out instead.
 - `now` is the moment of the save, written at `at` alone; the save writes the moment in its place.
 - Every key and value is read as a string, as YAML 1.2's core schema reads it: `on` is a word, not `true`, and
@@ -213,6 +215,11 @@ Four things are asked of every being, each its own statement, never one:
   and names no day.
 - **What a being can hold** is `hold`: `hold: { by: nas, of: { count: "2", unit: TBy } }`, read beside what is placed
   in it.
+- **Two bodies are not in one room at once.** Two `be … as: location` at one position — a rack's slot, an address —
+  are refused unless one is part of, or at, the other (a sayable takes no room); so are two listeners at one port on one address; and a being
+  attending two happenings whose times, to the moment, overlap. A garden may declare a verb **exclusive** in its
+  `VOCAB.md` (`exclusive: [ { verb: attend, why: … } ]`): then one being holds it once over any extent of its `at`,
+  across every bean, and what was declined holds nothing.
 
 ## Names: what establishes an identity
 A name is a statement: the namespace gives it.
@@ -229,8 +236,10 @@ A name is a statement: the namespace gives it.
   establishes an identity: the gate refuses one name given once to two beings.
 - In its own garden a being's name is its bean. A name that is to cross to another garden is qualified by the garden
   that gave it, `name: { by: garden, of: self, as: "<garden_id>/person:sam" }`, and a garden that takes it in keeps it
-  byte for byte. An identifier someone else assigned — a package's name, a registry number — is that registry's name,
-  and nobody's to qualify.
+  byte for byte: its id is this garden's, or one a `garden` bean here is named by. An identifier someone else assigned
+  — a package's name, a registry number — is that registry's name, and nobody's to qualify.
+- A garden's id (`garden-id`) is twelve hexadecimal digits, and never this garden's own: a `garden` bean records
+  another garden.
 - Choosing or settling a name that establishes an identity is the gardener's (class F).
 
 ## What a being is, measured, coded and used
@@ -258,13 +267,14 @@ A name is a statement: the namespace gives it.
   tables in `seed/knowledge/`, and every file a release keeps (`seed/LANGUAGE`). A change to any of them is a
   RULE-CHANGE, which a person ratifies.
 - **`VOCAB.md`** is the garden's own rows, under these keys only: `kinds`, `levels`, `namespaces`, `flows`,
-  `flow_sources`, `standing`, `verbs`, `units`, and `tables` (rows added to a table the verbs name). A row never takes
-  a name the law has: one name, one row.
+  `flow_sources`, `standing`, `verbs`, `units`, `tables` (rows added to a table the verbs name) and `exclusive`. A row
+  never takes a name the law has: one name, one row. **Every row the garden adds is used** by a statement or a bean, or
+  says why it is vacant (`vacant: <why>`), the manifesto's `whole`: a row is added with the first bean that uses it.
 - **Profiles** — network, domain, accounting, view, knowledge, code — stand on the core: their verbs are rows of
   `core/law/verbs.yaml` marked with their `home`, and their words their own. A profile may bring an **asset**,
   `assets/<profile>/`, which opens no concept of its own.
 - A garden's row that proves general is **promoted** to the standard by a pull request to the daftar repository
-  (manifesto: learn-once). A mechanism may be declared whole, ahead of its occupants, when it is universal.
+  (manifesto: learn-once). A mechanism that is universal may come complete before anything occupies it (manifesto: whole).
 
 ## Ground rules
 1. **One statement, one place** (manifesto: once). A fact is stated in the bean of the being it is about; elsewhere it
@@ -281,7 +291,9 @@ A name is a statement: the namespace gives it.
 6. **Reads correctly cold** (manifesto: cold). Spelled-out words, explicit units, absolute positions.
 7. **No secret in the ledger** (manifesto: never-secret). Nothing a garden holds carries a secret — a password, a key,
    a token, a card number, a government number. Where a secret is needed, the ledger says where it is kept, never what
-   it is. Rotating one that reached the ledger is the gardener's, journalled without its value.
+   it is. Rotating one that reached the ledger is the gardener's, journalled without its value. A private key has a
+   form a gate can know, and the gate refuses it in any file a commit stages; every other secret is the writer's to
+   keep out.
 
 ## The Contract of Parts: who decides
 This table is the one statement of who may decide what (manifesto: parts).
@@ -294,7 +306,7 @@ This table is the one statement of who may decide what (manifesto: parts).
 | **D** | state or change what a **person said** (`say` by a person) | **a person only**; an agent may propose |
 | **E** | change a **safety-critical** statement: a sensitivity (`rate`), a `forbidden`, a failure in progress | **a person ratifies** |
 | **F** | choose or settle a **name that establishes an identity**, or take one in from another garden | **a person ratifies**: it governs every future merge |
-| **G** | change **the law** — the core, a verb's row, a kind, a namespace, a flow, VOCAB.md, GARDEN.md — or the **manifesto** | **a person ratifies**, journalled as a RULE-CHANGE |
+| **G** | change **the law** — the core, a verb's row, a kind, a namespace, a flow, VOCAB.md, GARDEN.md; or a clause of MANIFESTO.md | **a person ratifies**, journalled as a RULE-CHANGE |
 | **H** | a dated exception to a rule | the core's rules take none; the letter is kept so the others keep theirs |
 | **I** | an **automatic merge** with no conflict | an agent alone |
 | **J** | settle a **merge conflict or an uncertain identity** | **a person ratifies** |
@@ -306,15 +318,17 @@ delegated by default. When the class is unclear, an agent proposes and a person 
 it may not decide parks it in `log/pending.md` as `status: proposed`, does everything safe around it, and carries on.
 
 ## The journal and the gate
-- **Every change is journalled** in `log/journal.md`, in the commit that makes it: who, what and why (manifesto:
-  hidden). People record decisions and approvals; agents record what they ran, why, and what happened. A heading is
+- **Each change carries its journal entry**, in `log/journal.md` and in the same commit: who, what and why
+  (manifesto: hidden). People record decisions and approvals; agents record what they ran, why, and what happened. A heading is
   written by the clock (`bin/dmjournal.py`, which `bin/dmsave.py` calls), never typed.
 - **The gate** is `core/check.py`, run at every commit by the pre-commit hook `core/hooks/pre-commit` on the staged
-  files. Its thirteen rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
-  lists them.
+  files. Its eighteen rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
+  lists them: the core's thirteen, and five that today's gate held — `consent`, `harm`, `room`, `vacancy`, `kept`.
 - **The commit's own rules**: every bean a commit changes is named by the journal entry it adds; a statement it adds is
   known by an act it adds, at that entry's moment; a change to the law says RULE-CHANGE. Only the commit that adopts
-  the core in a garden, a RULE-CHANGE, carries the moments its history recorded.
+  the core in a garden, a RULE-CHANGE, carries the moments its history recorded. **What is kept is not damaged**: the
+  journal is appended to and never rewritten, a series' part is written once, and a commit names in its entry each
+  header key or statement it takes out of a bean, empties none it keeps, and leaves every bean a body.
 - These rules confirm that the words are there and well formed, not that they are true; honesty is still the writer's
   (manifesto: checked).
 - Each person and each agent session commits under its own git identity, so the log's "who" is real.
@@ -325,16 +339,21 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   release names (`seed/RELEASE-SIGNERS`), or the commit a person names or confirms (`bin/dmupgrade.py`).
 
 ## Who may see, and what is held off git
-- **Sensitivity is derived, never stored**: a code of a scheme marked sensitive makes a bean special-category; a bean
-  that `concern`s a person who is not the gardener, or such a person's own bean, makes it personal. A person may raise
-  it with `rate`; only a person's own word lowers it (class E).
-- **Another person is kept by name only on their own word**: an `agree` of theirs, of being kept here by name, or, for
-  the gardener of a garden this one has met, the meeting itself. Otherwise they are an opaque id (`p-<8 hex>`), their
-  name and the ways to reach them held off git; their future whereabouts are held off git whatever they agreed to.
-- **What harm can come of, git does not keep.** Special-category material is sealed before the commit that would carry
-  it: what it said is kept in a store a host resolves, and git keeps a pointer. No seal takes back a value already in
-  the history. Sealing is today's `python3 bin/dmheld.py`; the core's form for a sealed statement comes with part 8 of
-  v1, and until then its pointer is kept in `details`.
+- **Sensitivity is derived, never stored**: a code of a scheme the garden marks special-category makes a bean
+  special-category; a bean that `concern`s a person who is not the gardener, or such a person's own bean, makes it
+  personal. A person may raise it with `rate`; only a person's own word lowers it — a `rate` said by a person, never
+  derived (class E).
+- **Another person is kept by name only on their own word**: an `agree` of theirs, not declined, to an agreement this
+  garden holds — a consent to be kept here by name is one — or, for the gardener of a garden this one has met, the
+  meeting itself: the `garden` bean they `own`. Otherwise they are an opaque id (`p-<8 hex>`, its title the id), their
+  name and the ways to reach them held off git. Their future whereabouts are held off git whatever they agreed to: a
+  happening wholly ahead, attended by such a person, keeps its location sealed.
+- **What harm can come of, git does not keep.** Special-category material is **sealed** before the commit that would
+  carry it: the statement keeps its verb and its id, and in place of its roles holds `held`, a pointer to a store a
+  host resolves (`root:<root>/<32 hexadecimal digits>`), and, where the bean concerns a person who is not the gardener,
+  the word it is held on, `while: <their agree>`. The entry that seals or unseals one says so, `- held: <bean> <id>
+  added` or `erased`. No seal takes back a value already in the history. Today `python3 bin/dmheld.py` mints the
+  pointer and keeps the store; part 8 of v1 ports it to statements.
 - **Who may do what is closed by default.** The gardener may; anyone else may what a `grant` opens — `as` read, write,
   enact or ratify, `of` the beans or statements it covers, `to` whom — held by the gardener, by the person a record is
   of or concerns, or by an agreement over its own bean. Today `python3 bin/dmpass.py may` reads them.
