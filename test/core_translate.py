@@ -220,7 +220,9 @@ try:
     with open(os.path.join(G, 'GARDEN.md'), 'w', encoding='utf-8') as fh:
         fh.write("---\ngarden: core-translate\nextends: std-vocab@32.0\ngardener: sam\nzone: Asia/Tehran\n---\n")
     with open(os.path.join(G, 'VOCAB.md'), 'w', encoding='utf-8') as fh:
-        fh.write("---\nvocab: core-translate\nextends: std-vocab@32.0\n---\n")
+        fh.write("---\nvocab: core-translate\nextends: std-vocab@32.0\nregistry_additions:\n  units:\n"
+                 "    - { unit: gigabyte-per-day, quantity: data-rate, factor: [312500, 27] }\n"
+                 "    - { unit: rack-unit, quantity: length, factor: [889, 20000] }\n---\n")
     shutil.copy(os.path.join(ROOT, 'seed', 'std-vocab.md'), os.path.join(G, 'seed', 'std-vocab.md'))
     shutil.copytree(os.path.join(ROOT, 'seed', 'knowledge'), os.path.join(G, 'seed', 'knowledge'))
     before = {p: open(os.path.join(G, p), encoding='utf-8').read() for p in
@@ -300,6 +302,11 @@ try:
     check("VOCAB.md gains the garden's rows: the mapping's kind, and the namespaces its names are given in",
           {'kind': 'procedure', 'nature': 'sayable'} in v2.get('kinds', [])
           and {'namespace': 'anchor-serial', 'once': 'true'} in v2.get('namespaces', []), v2)
+    check("...and its own units: in UCUM where their names are made of the law's (gigabyte-per-day is GBy/d), else the "
+          "name kept as the code, saying why",
+          {'unit': 'GBy/d', 'name': 'gigabyte-per-day', 'quantity': 'data-rate'} in v2.get('units', [])
+          and any(u.get('unit') == 'rack-unit' and u.get('ucum') == 'false' and u.get('why') for u in v2.get('units', [])),
+          v2.get('units'))
 
     # A VALUE TAKEN OUT IS SEEN: the proof reads the written bean back
     text, b = translate.translate_bean(os.path.join(G, 'beans', 'box.md'), 'beans/box.md',
