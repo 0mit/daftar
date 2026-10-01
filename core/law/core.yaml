@@ -1,0 +1,174 @@
+# daftar's core: the face, ratified 2026-10-01 (step 2 of the refinery; the spec is the garden's daftar-core-spec.md).
+# The words the engine hardcodes, each named by hand in the nine languages. Everything else stands on these and comes
+# in as rows (verbs, kinds, levels, namespaces, flows) or from an outside standard. core/engine.py reads this file and
+# applies its rules; `python3 core/check.py --law` proves it consistent with itself and with the rows beside it.
+
+# ---------------------------------------------------------------------------------------------------------------- roles
+# The seven roles a statement fills. Six are Pāṇini's kārakas (Aṣṭādhyāyī 1.4.23–55); the seventh is Aristotle's ᾗ.
+roles:
+  - { role: by,      source: "kartṛ — 1.4.54 svatantraḥ kartā",                  meaning: "the independent one: who does it, or the subject of a verb that takes no object" }
+  - { role: of,      source: "karman — 1.4.49 kartur īpsitatamaṃ karma",          meaning: "what the act reaches, or what it is about" }
+  - { role: through, source: "karaṇa — 1.4.42 sādhakatamaṃ karaṇam",             meaning: "the means: a tool, a document, words, a link, a course, an agreement, a cause" }
+  - { role: to,      source: "sampradāna — 1.4.32 karmaṇā yam abhipraiti sa sampradānam", meaning: "for whom, or towards what" }
+  - { role: from,    source: "apādāna — 1.4.24 dhruvam apāye 'pādānam",          meaning: "the fixed point it departs from: a source, a giver, a parent" }
+  - { role: at,      source: "adhikaraṇa — 1.4.45 ādhāro 'dhikaraṇam",            meaning: "the locus, the ground: a position in a frame — where and when, for a body; which, in the taxis, for a sayable — or the being a thing stands on, runs on or is kept at" }
+  - { role: as,      source: "ᾗ (qua) — Aristotle, Metaphysics Γ 1003a21",        meaning: "in what capacity, or as what: the name a namer gives, the job a being does, the way a thing stands" }
+
+# ---------------------------------------------------------------------------------------------------------------- grammar
+# What a filler can be, and the few words a statement may carry beside its roles.
+shapes:
+  - { shape: being,    meaning: "a bean, `self` (the being this bean records), or `someone` of a kind, reached `at` a being or a named place" }
+  - { shape: statement, meaning: "a statement, by its `id`, in this bean or another (`<bean>#<id>`)" }
+  - { shape: position, meaning: "a dot in a system of positions, in that system's one form; an extent is two, as ISO 8601 writes an interval" }
+  - { shape: quantity, meaning: "{ count, unit }: plain decimal digits, and a unit of SI / UCUM or a currency of ISO 4217; a bare number is a count of the unit one (a share)" }
+  - { shape: row,      meaning: "a row of a table the core keeps, or a standard's" }
+  - { shape: text,     meaning: "prose, its language a BCP 47 tag where it is not the garden's" }
+cardinality: [one, many, keyed]            # many is ordered only where it is a line; keyed: a map whose keys are names
+beside_roles:                              # the only keys a statement carries besides its verb's roles and qualifiers
+  - { key: id,    meaning: "the statement's name in its bean, so other statements can take it as a filler" }
+  - { key: while, meaning: "the condition matcher: the statement holds while what it names matches — a condition, or another statement" }
+  - { key: why,   meaning: "the reason, in prose" }
+  - { key: note,  meaning: "a remark, in prose" }
+words:                                     # grammar words the engine knows by name
+  - { word: required, meaning: "a role its verb cannot go without" }
+  - { word: choice,   meaning: "one of a row set; or at least one, or at most one, of several roles" }
+  - { word: unknown,  meaning: "nobody said: the filler of a required role not yet known" }
+  - { word: now,      meaning: "the moment of the save, written by the engine in place of the word" }
+  - { word: self,     meaning: "the being this bean records" }
+  - { word: someone,  meaning: "a being of a kind, unknown by name, reached through what is known" }
+knowing: [say, read, derive, make]         # the acts a statement is known by: each takes statements as its `of`
+provenance:                                # today's `src`, derived and never written: an act, by a being of a nature
+  - { src: asserted-by-human,  act: say,    nature: body, rung: reason }
+  - { src: stated-in-document, act: say,    nature: sayable }
+  - { src: observed,           act: read,   nature: body }
+  - { src: generated-by-tool,  act: derive, nature: body }
+  - { src: inferred,           act: derive, nature: sayable }
+comparators: ["=", "≠", "<", "≤", ">", "≥", "∈", "∃", "∄"]   # named by their Unicode signs
+
+# ---------------------------------------------------------------------------------------------------------------- figures
+# A figure is a square of opposition. Its four positions are operators: each takes a statement as `of`.
+figures:
+  - figure: necessity                      # Ibn Sina's modalities: wājib, mumkin, mumtaniʿ
+    positions: { necessary: impossible, possible: contingent }       # contraries above, subcontraries below
+    contradictory: { necessary: contingent, impossible: possible }
+  - figure: permission                     # deontic: what a clause, a law or a grant asks
+    positions: { obligatory: forbidden, permitted: omissible }
+    contradictory: { obligatory: omissible, forbidden: permitted }
+
+# ---------------------------------------------------------------------------------------------------------------- the order
+natures:
+  - { nature: body,     law: soma,   frame: space-time, meaning: "takes room in its frame, space∞time" }
+  - { nature: sayable,  law: lekton, frame: taxis,      meaning: "takes a place in its frame, the taxis: an order; stands on reason" }
+lines:                                     # the ladder's lines; a line is any ordered run of positions. `holds` is the nature
+  - { line: frame,       holds: [] }       # of the beings a line's levels hold: none, for the frames and for reason
+  - { line: matter,      holds: [body] }
+  - { line: gravitation, holds: [body] }
+  - { line: living,      holds: [body], given: true }     # life comes through the living
+  - { line: reason,      holds: [], law: logos }
+  - { line: made,        holds: [body] }
+  - { line: said,        holds: [sayable] }  # what is said, in the order it takes a place in
+conditions:
+  - { condition: balance,    meaning: "the mean, a steady state, never equilibrium: what life is possible on" }
+  - { condition: proportion, meaning: "what reason is possible on, in a living organisation" }
+foundations:
+  - { foundation: weight, holds_for: body, property: mass, meaning: "every body has weight; a sayable has none of its own" }
+levels:                                    # the face's own steps; the bodies' other 22 are rows of our knowledge tree
+  # THE TWO FRAMES: where a being takes its place, one for each nature, neither prior (thesis 10)
+  - { level: space-time, line: frame, frame_of: body,    stands: [], meaning: "the frame of bodies: one structure, seen as place and as time; a body takes room in it" }
+  - { level: taxis,      line: frame, frame_of: sayable, stands: [ { at: reason, as: possible-on } ], meaning: "the frame of sayables: the order a sayable takes its place in. Its positions are the ordinal line's — which: the first clause, article 12, a name in its namespace — no time and no place" }
+  - { level: reason,     line: reason, stands: [ { at: organism, as: possible-on, while: proportion } ] }
+  # THE SAID: the sayable beings, each made of the one below, all taking their place in the taxis
+  - { level: name,      line: said, stands: [ { at: taxis, as: possible-on } ],   meaning: "a word that picks a being out: the least sayable (ὄνομα)" }
+  - { level: statement, line: said, stands: [ { at: name, as: made-of } ],        meaning: "a complete sayable, true or false (the Stoics' ἀξίωμα): the core's unit" }
+  - { level: discourse, line: said, stands: [ { at: statement, as: made-of } ],   meaning: "statements gathered into one: a document, a contract, a design, a work" }
+  - { level: corpus,    line: said, stands: [ { at: discourse, as: made-of } ],   meaning: "discourses gathered into one order: a law, a language, a garden" }
+ways: [made-of, possible-on]               # the two ways of standing, the `as` of `stand`
+crown:
+  - { crown: theone, law: "the Necessary Existent (wājib al-wujūd)", faces: [love, wisdom] }
+complements: [stated, bearer, system]      # how a position finds its other half
+layers: [manifesto, law, reasoning, journal, history, queue, names]   # the law's layers; the flow law adds its sources
+
+# ---------------------------------------------------------------------------------------------------------------- verbs
+# The face's verbs, with their valency: which roles each takes, what fills them, and which are required. Every other
+# verb is a row of the same form, proposed and ratified as the law is: verbs.yaml holds the 34 written so far.
+verbs:
+  # knowing: how a statement came to be in the ledger. Each takes statements as `of`; with no `of`, it covers every
+  # statement of its bean that no other knowing act covers.
+  - verb: say
+    roles: { by: { shape: being, nature: [body, sayable], rung: reason }, of: { shape: statement, many: true }, through: { shape: text }, to: { shape: being }, at: { shape: position } }
+    required: [by, at]
+  - verb: read
+    roles: { by: { shape: being, nature: [body] }, of: { shape: statement, many: true }, from: { shape: being }, through: { shape: text }, at: { shape: position } }
+    required: [by, at]
+  - verb: derive
+    roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: statement, many: true }, through: { shape: being }, at: { shape: position } }
+    required: [by, from, at]
+  - verb: make
+    roles: { by: { shape: being }, of: { shape: statement, many: true }, at: { shape: position } }
+    required: [by, at]
+  # the order
+  - verb: be
+    roles: { by: { shape: being }, at: { shape: [position, being], many: true }, as: { shape: row, table: placements } }
+    required: [by, at]
+  - verb: stand
+    roles: { by: { shape: [being, row], table: levels }, at: { shape: [being, row], table: levels }, as: { shape: row, table: ways } }
+    required: [by, at, as]
+  - verb: part
+    roles: { by: { shape: being }, of: { shape: being } }
+    required: [by, of]
+  - verb: name
+    roles: { by: { shape: [being, row], table: namespaces }, of: { shape: being }, as: { shape: text } }
+    required: [by, of, as]
+  # the four questions (thesis 14)
+  - verb: come                               # via: through whom a being came to be
+    roles: { by: { shape: being }, through: { shape: being, many: true } }
+    required: [by]
+  - verb: own                                # whose it is
+    roles: { by: { shape: being }, of: { shape: being }, through: { shape: statement }, from: { shape: being } }
+    required: [of]
+    choice: { one_of: [by, from] }          # an owner, or the parent it is owned through
+  - verb: answer                             # who answers for it, and in which mode
+    roles: { by: { shape: being }, of: { shape: being }, as: { shape: row, table: modes } }
+    required: [of, as]
+    default:                                 # before the law, the owner answers: the `by` of `own` of the same being
+      says: "the `by` of `own`, where `as` is law"
+      when: { as: law }
+      fill: { by: { verb: own, match: { of: of }, take: by } }
+  - verb: acquire                            # from whom it came to us
+    roles: { by: { shape: being }, of: { shape: being }, from: { shape: being }, through: { shape: statement }, as: { shape: row, table: acquisitions }, at: { shape: position } }
+    required: [of, from]
+  # layers
+  - verb: pass
+    roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: row, table: layers }, to: { shape: row, table: layers }, through: { shape: row, table: verbs }, at: { shape: position } }
+    required: [of, from, to, through]
+  # the figures' positions: each takes a statement, and `through` what makes it so
+  - { verb: necessary,  figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
+  - { verb: contingent, figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
+  - { verb: possible,   figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
+  - { verb: impossible, figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
+  - { verb: obligatory, figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, required: [of, through] }
+  - { verb: omissible,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, required: [of, through] }
+  - { verb: permitted,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, required: [of, through] }
+  - { verb: forbidden,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, required: [of, through] }
+
+# the small tables the face verbs name
+modes:        [law, keeping, meeting, paying]          # the four modes of answering: before the law, in keeping it, in how others meet it, in paying for it
+acquisitions: [bought, rented, given, lent, inherited]
+placements:   [place, order, presence, habitat, location]
+
+# ---------------------------------------------------------------------------------------------------------------- the gate
+# Every rule the engine applies. Strict: each is an error.
+rules:
+  - { rule: form,       says: "a statement is one verb of the verb row, with roles from the seven, the qualifiers its row declares, and id, while, why, note; nothing else" }
+  - { rule: valency,    says: "each required role is filled, each filler has the shape and nature its role takes, and no role is filled that the verb does not take" }
+  - { rule: knowing,    says: "every statement of a bean is the `of` of a knowing act in it; a knowing act's `at` is `now` until the save writes the moment, and a moment typed there is refused" }
+  - { rule: placeholder, says: "a statement the engine derives (a verb's default) is never written: written, it is refused" }
+  - { rule: order,      says: "nothing stands on itself through others; a part never stands above what its whole is made of" }
+  - { rule: life,       says: "a living being comes through the living; a made or said being comes through hands, a being at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded" }
+  - { rule: necessity,  says: "a `necessary` statement names what it is necessary through — except of the crown, necessary by itself (thesis 12)" }
+  - { rule: squares,    says: "two positions that cannot both stand — contraries or contradictories — on one statement through one source are refused; subcontraries may both stand" }
+  - { rule: weight,     says: "a mass is a body's: a statement giving a sayable a mass of its own is refused" }
+  - { rule: frame,      says: "a position is in a declared system, in its one form, and finds its other half by its complement" }
+  - { rule: names,      says: "a name its namespace gives once names one being" }
+  - { rule: layers,     says: "a file stands in one layer; a `pass` from a layer to a layer through a method stands only where a row of the flow table grants it" }
+  - { rule: ratify,     says: "a change to the core, to a verb's row, a kind, a namespace or a flow is a RULE-CHANGE: a person ratifies it" }
