@@ -6,7 +6,8 @@ lines, levels, conditions, the crown), the face's verbs and the thirteen rules. 
 
   kinds         { kind, nature, line?, level?, rung?, meaning? }       what a bean records
   levels        { level, line, stands: [{ at, as, while? }], meaning? } the detailed steps of the lines (our knowledge tree)
-  namespaces    { namespace, once?, meaning? }                         who gives names, and whether once
+  namespaces    { namespace, once?, meaning? }                         who gives names, and whether once (beside the
+                                                                       standards' own, core/law/namespaces.yaml)
   flows         { flow?, from, to, through, grant, why? }              the flow table: which passes stand
   flow_sources  [ name, … ]                                            the flow law's sources beside the layers
   standing      { layer, holds: [pattern, …], meaning? }               which files sit in which layer
@@ -28,7 +29,8 @@ LAW_DIR = os.path.join(HERE, 'law')
 GENERATED = ('levels.yaml', 'layers.yaml', 'kinds.yaml')   # rows generated from today's law: the bodies' levels, the
                                                            # layers and standing, and the kinds (the standards' tables,
                                                            # generated too, are read by core/standards.py)
-ROW_FILES = GENERATED + ('units.yaml',)                    # and the units in UCUM, each with the law's English name
+ROW_FILES = GENERATED + ('units.yaml', 'namespaces.yaml')  # and the units in UCUM, each with the law's English name,
+                                                           # and the namespaces the standards give names in
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
             'standing': 'layer', 'verbs': 'verb', 'tables': None, 'units': 'unit'}
 ROW_FIELDS = {

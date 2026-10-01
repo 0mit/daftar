@@ -14,7 +14,7 @@ vocab:                             # the garden's own rows, as its VOCAB.md woul
   namespaces:
     - { namespace: hpe,      once: true }
     - { namespace: garden-a, once: true }
-    - { namespace: dns,      once: true, meaning: "the domain name system: a standard, not a bean" }
+    # dns is the core's own (core/law/namespaces.yaml): a standard, not a bean, and declared once
     - { namespace: nickname }
   flows:
     - { flow: observed,  from: world, to: journal, through: read, grant: granted }
@@ -121,6 +121,7 @@ garden:
 good:
   - { name: "a required role nobody said is `unknown`", bean: y1, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: unknown, of: { count: "1", unit: XTS } } } ] }
   - { name: "the payer who bears beside another bearer says more than the default", bean: y2, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: p, by: ada, of: { count: "2", unit: XTS } } }, { bear: { by: ada, of: p } }, { bear: { by: ben, of: p } } ] }
+  - { name: "a name nobody has said yet is `unknown`, and two of them in a namespace that gives once name nobody", bean: y10, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: hpe, of: self, as: unknown } }, { name: { by: hpe, of: nas, as: unknown } } ] }
   - { name: "a namespace that does not give once may name two beings alike", bean: y3, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: nickname, of: self, as: "box" } }, { name: { by: nickname, of: nas, as: "box" } } ] }
   - { name: "subcontraries may both stand", bean: y4, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { permitted: { of: r, through: pot } }, { omissible: { of: r, through: pot } } ] }
   - { name: "a contrary through another source stands beside", bean: y5, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { forbidden: { of: r, through: garden-a } } ] }

@@ -80,6 +80,15 @@ check(f"units are UCUM's, the law's English name attached: every one of the law'
       len(units) == len(OLD_UNITS) == 55 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
       and units['{item}']['name'] == 'item' and [u for u, r in units.items() if r.get('ucum') == 'false']
       == ['decibel-per-metre', 'decibel-per-kilometre'], len(units))
+ns = LAW0.namespaces
+again = Law.load(('VOCAB.md', {'namespaces': [{'namespace': 'dns', 'once': 'true'}]})).problems()
+check(f"the standards' namespaces are the core's ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id and the names a "
+      f"garden gives…), each giving once but a mailbox and a line, which may be shared, and a garden that declares one "
+      f"again is refused",
+      {'dns', 'mail', 'e164', 'ieee-eui48', 'uuid', 'sha-256', 'openpgp', 'ssh', 'wireguard', 'garden-id', 'garden'} == set(ns)
+      and sorted(n for n, r in ns.items() if r.get('once') != 'true') == ['e164', 'mail']
+      and any('`dns` is declared already' in m for _r, _w, m in again),
+      (sorted(ns), again))
 check("...a unit written by its English name is refused, naming its code; a currency is ISO 4217's",
       "English name of `kg`" in LAW0.has('units', 'kilogram') and not LAW0.has('units', 'XTS')
       and LAW0.has('units', 'dB/m'), LAW0.has('units', 'kilogram'))

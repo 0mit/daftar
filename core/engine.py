@@ -491,7 +491,8 @@ class Judge:
         given = {}
         for b in self.G.beans.values():
             for i, verb, r in b.items:
-                if verb == 'name' and isinstance(r.get('by'), str) and (self.L.namespaces.get(r['by']) or {}).get('once') == TRUE:
+                if verb == 'name' and isinstance(r.get('by'), str) and r.get('as') != 'unknown' \
+                        and (self.L.namespaces.get(r['by']) or {}).get('once') == TRUE:     # a name nobody said names nobody
                     given.setdefault((r['by'], r.get('as')), []).append((self.norm(r.get('of'), b), f"{b.id}[{i}] name"))
         for (ns, nm), hits in given.items():
             beings = sorted({str(h[0]) for h in hits})

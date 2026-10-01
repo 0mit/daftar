@@ -57,6 +57,7 @@ parts, changes).
    python3 test/core_translate.py
    python3 test/core_standards.py
    python3 test/core_rehearse.py
+   python3 test/core_guides.py
    python3 test/save.py
    python3 test/sequence.py
    python3 test/stamps.py

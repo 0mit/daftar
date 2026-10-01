@@ -51,6 +51,9 @@ jobs:
       - name: "core_rehearse: the guides' own example garden, grown through today's gate, translated and judged by the core"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_rehearse.py
+      - name: "core_guides: the guides written in statements (core/guide/), each example committed through the core's gate and held to what today's guides say"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/core_guides.py
       - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/save.py
