@@ -59,6 +59,10 @@ def staged(root):
         except read.Unread as e:
             return report([('form', 'VOCAB.md', str(e))], "core check --staged")
         garden = engine.Garden.read(snap)
+        try:                       # THE GARDEN'S ID is its clone's: the copy of the index has no history to read it from
+            garden.gid = engine.dmparse.garden_id(root)
+        except Exception:
+            garden.gid = None
         found = engine.judge(law, garden) + commit.findings(root, law, garden=garden)
         n = sum(len(b.statements) for b in garden.beans.values())
         return report(found, f"core check --staged: {len(garden.beans)} beans, {n} statements")

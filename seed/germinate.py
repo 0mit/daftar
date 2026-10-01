@@ -32,6 +32,12 @@ with `--gardener-genos org` an organisation: a genos the law's `manifest.gardene
 so the garden begins as someone's and the gardener is its first bean. Without it the closing message says that this
 is the first thing to write — the gate asks for it as soon as the garden holds a bean.
 
+A RELEASE OF THE CORE GROWS A GARDEN OF THE CORE (v1). The law a garden is given is the one seed/GARDEN.md.template
+pins: `core@<version>` grows a garden judged by the core's gate from its first commit, its manifest held to the core's
+form (core/law/core.yaml `manifest`), and its gardener planted in statements and saved by bin/dmsave.py, which writes
+the moment the clock read. Until the release that makes the core the language, the core's templates wait in
+core/guide/, and a garden is grown in today's words.
+
 Python, not shell, because a garden is grown on Windows too. `seed/germinate.sh` remains and hands over here.
 """
 import os
@@ -60,10 +66,28 @@ def shown(path):
     return "'" + s.replace("'", "''") + "'" if os.name == 'nt' else shlex.quote(s)
 
 
+CORE = None         # the core's face (core/law/core.yaml) where this release gives a garden the core; set by main
+LAW_NAME = 'std-vocab'
+
+
+def gives_core(seed):
+    """True where a garden grown from this release runs the core: its seed/GARDEN.md.template pins `core@`."""
+    try:
+        with open(os.path.join(seed, 'GARDEN.md.template'), encoding='utf-8') as fh:
+            return re.search(r'(?m)^extends:[ \t]*core@', fh.read()) is not None
+    except OSError:
+        return False
+
+
 def manifest_form(law, attr):
     """(pattern, refusal) that the law's `manifest.attrs.<attr>` holds a value to — its `in: { type: <value type> }`
     read through `value_types`, or its own `in: { pattern }` — or None where the law gives that attribute no form.
-    Read from the law, so the form is never written here (bin/dmupgrade.py asks the same of a garden it upgrades)."""
+    Read from the law, so the form is never written here (bin/dmupgrade.py asks the same of a garden it upgrades).
+    A release of the core gives the form in core/law/core.yaml: the manifest's row, and its form's pattern."""
+    if CORE is not None:
+        row = next((m for m in CORE.get('manifest') or [] if m.get('key') == attr), None)
+        form = next((f for f in CORE.get('manifest_forms') or [] if row and f.get('form') == row.get('form')), None)
+        return (form['pattern'], form.get('says') or '') if form else None
     rec = ((law.get('manifest') or {}).get('attrs') or {}).get(attr) if isinstance(law.get('manifest'), dict) else None
     dom = rec.get('in') if isinstance(rec, dict) else None
     if not isinstance(dom, dict):
@@ -118,6 +142,9 @@ def language_files(root, seed, law, profiles=()):
 
 def gardener_gene(law):
     """The gene the law's `manifest.gardener` admits, wherever its `in:` lists them; None where it lists none."""
+    if CORE is not None:
+        from core.engine import GARDENER_KINDS
+        return list(GARDENER_KINDS)
     def walk(node):
         if isinstance(node, dict):
             if isinstance(node.get('gene'), list):
@@ -133,6 +160,8 @@ def gardener_gene(law):
 def gardener_form(law, genos):
     """What the law says a gardener of this genos is written with: its nature, its anchor term and class, and whether
     the genos is pinned to the crown (the life chain's branch). Read from the law, so no genos is named here."""
+    if CORE is not None:
+        return {'core': True}           # the core's gardener is written in statements (core_gardener)
     row = next((k for k in law.get('gene') or [] if isinstance(k, dict) and k.get('genos') == genos), None)
     if row is None:
         return None
@@ -176,6 +205,28 @@ identity:
 provenance: {{ src: asserted-by-human, by: "{gid} (gardener)", as_of: {when} }}
 ---
 {name} keeps this garden.
+"""
+
+
+def core_gardener(gid, called, kind='person'):
+    """The gardener's bean in the core's statements, as core/guide/README.md writes Sam's: the gardener says it, now; a
+    person is owned by the crown, `theone`, whom no bean names, and an organisation by its members, outside this garden;
+    each answers for itself before the law."""
+    import json
+    owner = ('{ by: theone, of: self }' if kind == 'person' else
+             '{ by: { someone: person }, of: self, note: "its members, as its own rules say: outside this garden" }')
+    who = 'person who keeps' if kind == 'person' else 'organisation that keeps'
+    return f"""---
+bean: {gid}
+kind: {kind}
+title: {json.dumps(called, ensure_ascii=False)}
+summary: "The gardener: the {who} this garden."
+statements:
+  - say:    {{ by: {gid}, at: now }}
+  - own:    {owner}
+  - answer: {{ by: self, of: self, as: law }}
+---
+{called} keeps this garden.
 """
 
 
@@ -270,8 +321,20 @@ def main(argv):
         die("PyYAML is required (pip install PyYAML)")
     sys.path.insert(0, os.path.join(root, 'bin'))
     import dmparse
-    law = dmparse.loads(dmparse.read(os.path.join(seed, 'std-vocab.md'))[0])     # the gate's own loader
-    ver = str(law['version'])
+    _sv = os.path.join(seed, 'std-vocab.md')
+    law = dmparse.loads(dmparse.read(_sv)[0]) if os.path.isfile(_sv) else {}     # the gate's own loader
+    global CORE, LAW_NAME
+    if gives_core(seed):
+        # A RELEASE OF THE CORE: the law's version and the manifest's form are the core's
+        sys.path.insert(0, root)
+        from core import read as core_read
+        CORE, LAW_NAME = core_read.data(os.path.join(root, 'core', 'law', 'core.yaml')), 'core'
+        ver = str(CORE.get('version') or '')
+        if profiles:
+            die(f"--profile {', '.join(profiles)}: a garden of the core takes a profile up once part 11 of v1 reads the "
+                f"profiles from the core. Nothing was created.")
+    else:
+        ver = str(law.get('version') or '')
     if not ver:
         die("could not read the vocabulary version", 1)
     # THE NAME IS JUDGED BEFORE ANYTHING IS CREATED. The gate judges the manifest as itself, so a name out of the law's
@@ -293,7 +356,7 @@ def main(argv):
     _offered = dmpass.offered(law)
     _unknown = [p for p in profiles if p not in _offered]
     if _unknown:
-        die(f"--profile {', '.join(_unknown)}: the law at std-vocab@{ver} offers {', '.join(_offered) or 'no profile'}. "
+        die(f"--profile {', '.join(_unknown)}: the law at {LAW_NAME}@{ver} offers {', '.join(_offered) or 'no profile'}. "
             f"Nothing was created.")
     gform = None
     if gid:
@@ -372,7 +435,7 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, la
             fh.write(text)
     for f in ('VOCAB', 'GARDEN'):
         fill(os.path.join(seed, f + '.md.template'), os.path.join(target, f + '.md'))
-    if profiles:
+    if profiles and CORE is None:
         # THE PROFILES A GARDEN EXTENDS ARE ITS VOCAB.md's: one line, above its own terms, in the order given
         vp = os.path.join(target, 'VOCAB.md')
         vt = open(vp, encoding='utf-8').read()
@@ -397,8 +460,28 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, la
     # gardens would be taken for one. A seed drawn at random makes it this garden's — assigned by no one.
     import uuid
     run('git', '-C', target, '-c', 'user.name=germinate', '-c', 'user.email=germinate@localhost',
-        'commit', '-q', '-m', f"germinate: {garden} — the language, at std-vocab@{ver}. No beans.\n\nseed {uuid.uuid4().hex}")
-    if gid:
+        'commit', '-q', '-m', f"germinate: {garden} — the language, at {LAW_NAME}@{ver}. No beans.\n\nseed {uuid.uuid4().hex}")
+    if gid and CORE is not None:
+        # THE GARDENER, IN STATEMENTS, SAVED AS EVERY WRITE IS: bin/dmsave.py writes the entry, the moment of its `now`,
+        # and commits through the core's gate
+        with open(os.path.join(target, 'beans', gid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(core_gardener(gid, gname or gid, ggenos))
+        gpath = os.path.join(target, 'GARDEN.md')
+        gtext = open(gpath, encoding='utf-8').read()
+        gtext = re.sub(r'(?m)^gardener:[^\n]*$', f'gardener: {gid}                      # who keeps this garden: its first bean', gtext, count=1)
+        with open(gpath, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(gtext)
+        env = dict(os.environ, GIT_AUTHOR_NAME='germinate', GIT_AUTHOR_EMAIL='germinate@localhost',
+                   GIT_COMMITTER_NAME='germinate', GIT_COMMITTER_EMAIL='germinate@localhost')
+        r = subprocess.run([sys.executable, os.path.join(target, 'bin', 'dmsave.py'), 'germinate',
+                            f'the gardener: [[{gid}]]', '--body',
+                            f"- action: planted [[{gid}]], the {'person who keeps' if ggenos == 'person' else 'organisation that keeps'} "
+                            f"this garden, and named them in GARDEN.md `gardener:` — a RULE-CHANGE, as every change to the "
+                            f"manifest is."], cwd=target, env=env, capture_output=True, text=True, encoding='utf-8',
+                           errors='replace')
+        if r.returncode != 0:
+            die(f"the gardener's bean was refused by the garden's gate:\n{r.stdout}{r.stderr}", 1)
+    elif gid:
         today = 'now'            # the entry below stamps it: one reading of the clock for the heading and the bean (23.0)
         with open(os.path.join(target, 'beans', gid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
             _root = run('git', '-C', target, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD', check=False).stdout.split()
@@ -450,7 +533,7 @@ def finish(target, root, ver, release, gid, ggenos, grown_in):
     # stalled; told to read one short page of forms, it read that and finished. The law is read when a question needs
     # it, and AGENTS.md says where it is. The save is ONE command, bin/dmsave.py: journal, stage and commit were three.
     print(f"""
-germinated: {shown(target)}  (std-vocab@{ver}, daftar {release})
+germinated: {shown(target)}  ({LAW_NAME}@{ver}, daftar {release})
 
 {opening}
 

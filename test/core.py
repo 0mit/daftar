@@ -239,7 +239,7 @@ try:
     def write(rel, head, body=''):
         with open(os.path.join(TMP, rel), 'w', encoding='utf-8') as fh:
             fh.write('---\n' + yaml.safe_dump(head, allow_unicode=True, sort_keys=False) + '---\n' + body)
-    write('GARDEN.md', {'garden': 'core-test', 'gardener': 'sam', 'zone': ZONE})
+    write('GARDEN.md', {'garden': 'core-test', 'extends': 'core@' + LAW.version, 'gardener': 'sam', 'zone': ZONE})
     write('VOCAB.md', dict({'vocab': 'core-test'}, **CASES['vocab']))
     with open(os.path.join(TMP, 'log', 'journal.md'), 'w', encoding='utf-8') as fh:
         fh.write('# journal\n')

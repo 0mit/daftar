@@ -22,6 +22,7 @@ A row may not take a name the face or another row has: the law is one, and a sec
 Every value is a string (core/read.py): a flag is the string `true`. A key of VOCAB.md that is none of these is today's
 law's (std-vocab 32.0), which today's gate reads; this law passes it by."""
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -51,6 +52,8 @@ GARDEN = 'VOCAB.md'                                        # where a garden's ow
 SPEC_KEYS = {'shape', 'table', 'nature', 'rung', 'many', 'keyed'}
 FACE_TABLES = ('ways', 'modes', 'acquisitions', 'placements', 'complements')
 TRUE = 'true'
+MANIFEST_FORMS = ('pin', 'bean', 'zone', 'text', 'texts')   # the manifest's forms the engine knows by name; a pattern's
+                                                            # are core.yaml's `manifest_forms`
 
 
 def listed(x):
@@ -85,6 +88,9 @@ class Law:
         self.foundations = list(F.get('foundations') or [])
         self.figures = list(F.get('figures') or [])
         self.rules = [r['rule'] for r in F.get('rules') or []]
+        self.version = str(F.get('version') or '')         # what a garden that runs this law pins: `core@<version>`
+        self.manifest = {m['key']: m for m in F.get('manifest') or []}            # GARDEN.md's keys, each in its form
+        self.manifest_forms = {f['form']: f for f in F.get('manifest_forms') or []}
         self.levels, self.kinds, self.namespaces, self.verbs, self.units = {}, {}, {}, {}, {}
         self.flows, self.flow_sources, self.standing, self.exclusive = [], [], [], []
         self.garden_rows = []                               # (key, name, row) of each row a garden added (rule vacancy)
@@ -269,6 +275,18 @@ class Law:
         for x in self.exclusive:
             if x.get('verb') not in self.verbs:
                 bad('exclusive', f"`{x.get('verb')}` is no verb of the law: what is exclusive is a verb's `at`")
+        if not re.fullmatch(r'[0-9]+\.[0-9]+', self.version):
+            bad('core.yaml version', f"`{self.version}`: the law's version is `<major>.<minor>`, which a garden pins")
+        for k, m in self.manifest.items():
+            if m.get('form') not in MANIFEST_FORMS + tuple(self.manifest_forms):
+                bad(f"core.yaml manifest {k}", f"`{m.get('form')}` is no form of the manifest's")
+        for f, m in self.manifest_forms.items():
+            try:
+                re.compile(m.get('pattern') or '')
+            except re.error as e:
+                bad(f"core.yaml manifest_forms {f}", f"its pattern does not compile: {e}")
+        if not {'garden', 'extends', 'gardener', 'zone'} <= set(self.manifest):
+            bad('core.yaml manifest', "GARDEN.md names its garden, the law it runs, its gardener and its zone")
         if self.rules != known_rules:
             bad('core.yaml rules', f"the engine applies {', '.join(known_rules)}; the law lists {', '.join(self.rules)}")
         for name, v in self.verbs.items():

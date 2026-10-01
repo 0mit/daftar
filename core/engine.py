@@ -70,6 +70,7 @@ class Garden:
     def __init__(self, beans, zone=None, files=(), root=None, manifest=None, gid=None):
         self.beans, self.zone, self.files, self.root = beans, zone, list(files), root
         self.manifest = manifest or {}
+        self.has_manifest, self.manifest_unread = False, None   # a GARDEN.md read from a tree (Garden.read) is judged
         self.gardener = self.manifest.get('gardener') if isinstance(self.manifest.get('gardener'), str) else None
         self.gid = gid                     # this garden's own id, read from git (None outside one)
 
@@ -91,16 +92,21 @@ class Garden:
                     beans[bid] = Bean(bid, p, head, raw=raw, body=body)
                 except read.Unread as e:
                     beans[bid] = Bean(bid, p, unread=str(e))
-        manifest = {}
-        try:
-            manifest = read.document(os.path.join(root, 'GARDEN.md'))[0]
-        except read.Unread:
-            pass
+        manifest, unread = {}, None
+        if os.path.isfile(os.path.join(root, 'GARDEN.md')):
+            try:
+                manifest = read.document(os.path.join(root, 'GARDEN.md'))[0]
+            except read.Unread as e:
+                unread = str(e)
+            if not isinstance(manifest, dict):
+                manifest, unread = {}, "its front matter is no mapping of the manifest's keys"
         try:
             gid = dmparse.garden_id(root)
         except Exception:
             gid = None
-        return cls(beans, manifest.get('zone'), _files(root), root, manifest, gid)
+        g = cls(beans, manifest.get('zone'), _files(root), root, manifest, gid)
+        g.has_manifest, g.manifest_unread = os.path.isfile(os.path.join(root, 'GARDEN.md')), unread
+        return g
 
 
 def _files(root):
@@ -236,9 +242,16 @@ class Judge:
             return
         extra = [k for k in b.header if k not in HEADER]
         if extra:
+            # TODAY'S WORD SAYS WHERE IT WENT (std-vocab's `retired`, v1 part 4): the verb whose row `replaces` it
+            went = {w: v for w, v in self.L.replaces if w in extra}
+            said = {'face': "the verb `{}` of the face", 'role': "the role `{}`"}
             self.err('form', b.id, f"{', '.join(extra)}: a bean keeps its header ({', '.join(HEADER[:-1])}) and its "
                                    f"statements, nothing else — a fact is a statement, and what fits no verb yet is "
-                                   f"kept whole in `details`")
+                                   f"kept whole in `details`" + ('' if not went else '. In today\'s words: ' + '; '.join(
+                                       f"`{w}` is " + ('dropped' if v == 'dropped' else
+                                                       said[v.split()[0]].format(v.split()[1]) if ' ' in v else
+                                                       f"the verb `{v}`")
+                                       for w, v in sorted(went.items())) + " (core/law/verbs.yaml `replaces`)"))
         if b.header.get('bean') != b.id:
             self.err('form', b.id, f"`bean: {b.header.get('bean')}` — a bean names itself as its file does, `{b.id}`")
         if b.kind not in self.L.kinds:
@@ -666,6 +679,7 @@ class Judge:
             for path, ch, _style, is_key in found:
                 self.err('form', b.id, f"{'the key ' if is_key else ''}{path} holds U+{ord(ch):04X}: text holds no "
                                        f"control character but a tab, and a line feed only in a block scalar (`|`, `>`)")
+        self.manifest()
         if not (self.G.beans and self.G.manifest):
             return
         g = self.G.manifest.get('gardener')
@@ -675,6 +689,39 @@ class Judge:
         elif not (isinstance(g, str) and g in self.G.beans and self.G.beans[g].kind in GARDENER_KINDS):
             self.err('form', 'GARDEN.md', f"`gardener: {g}` — the gardener is a person or an organisation this garden "
                                           f"holds a bean for")
+
+    def manifest(self):
+        """GARDEN.md holds the manifest's keys alone, each in its form (core.yaml `manifest`), and pins this law."""
+        if self.G.manifest_unread:
+            self.err('form', 'GARDEN.md', f"does not read ({self.G.manifest_unread}): the manifest says which garden this "
+                                          f"is, whose, and which law it runs")
+            return
+        if not self.G.has_manifest:
+            return
+        M, forms = self.L.manifest, self.L.manifest_forms
+        for k, v in self.G.manifest.items():
+            row = M.get(k)
+            if row is None:
+                self.err('form', 'GARDEN.md', f"`{k}` is no key of the manifest, whose keys are {', '.join(M)} — a "
+                                              f"standing note for readers belongs in its body")
+                continue
+            form = row.get('form')
+            if form in forms:
+                if not (isinstance(v, str) and re.fullmatch(forms[form]['pattern'], v)):
+                    self.err('form', 'GARDEN.md', f"`{k}: {v}` — {forms[form].get('says')}")
+            elif form == 'pin':
+                want = f"core@{self.L.version}"
+                if v != want:
+                    self.err('form', 'GARDEN.md', f"`{k}: {v}` — a garden of statements runs this law, `{want}`: the pin "
+                                                  f"moves with the law, a RULE-CHANGE (bin/dmupgrade.py moves it)")
+            elif form == 'text' and not isinstance(v, str):
+                self.err('form', 'GARDEN.md', f"`{k}` is text")
+            elif form == 'texts' and not (isinstance(v, str) or (isinstance(v, dict) and v and all(
+                    isinstance(x, str) for x in v.values()))):
+                self.err('form', 'GARDEN.md', f"`{k}` is text, or texts each under a name of its own")
+        for k, row in M.items():
+            if row.get('required') == 'true' and k not in self.G.manifest:
+                self.err('form', 'GARDEN.md', f"`{k}:` is missing — the manifest requires it: {row.get('meaning')}")
 
     def cycles(self):
         """Nothing owns itself, is part of itself, is at itself or needs itself through others."""

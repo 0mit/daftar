@@ -24,8 +24,9 @@ Eighteen rules, each strict: a breach is an error. The first thirteen are the co
       the law, written `- <verb>: { <role>: <filler>, … }`, with roles from the seven, the qualifiers its verb's row
       declares, and `id`, `while`, `why`, `note` (and `held`, sealed); nothing else. An `id` is one word, used once in
       its bean. A `while` names a condition or a statement. Everything is read as a string, and text holds no control
-      character but a tab — a line feed only in a block scalar (`|`, `>`). Once the garden holds a bean, `GARDEN.md`
-      names its gardener, a person or an organisation it holds a bean for.
+      character but a tab — a line feed only in a block scalar (`|`, `>`). `GARDEN.md` holds the manifest's keys alone
+      (`core/law/core.yaml`, `manifest`), each in its form, and pins the law's own version, `core@<version>`; once the
+      garden holds a bean, it names its gardener, a person or an organisation it holds a bean for.
 - [ ] **valency** — Each role its verb requires is filled, `unknown` where nobody said; no role is filled that the verb
       does not take; each filler has the shape its role takes — a being of the garden (or `self`, the crown,
       `{ someone: <kind>, at: … }`), a statement's id, a position, a quantity `{ count, unit }`, a row of the table its

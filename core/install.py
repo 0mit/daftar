@@ -5,7 +5,7 @@
 
 (`python` on Windows.) It runs bin/install.py's install first: the hooks it versions, the Python they run, recorded per
 clone. Then it puts core/hooks/pre-commit in the place of that pre-commit, so a commit here meets the core's gate
-(`core/check.py --staged`) whatever GARDEN.md pins: for rehearsing the core on a copy that still pins std-vocab. A
+(`core/check.py --staged`) whatever GARDEN.md pins — which the core's gate then holds to the core's own (v1 part 4). A
 garden needs only bin/install.py, whose hooks take the gate of the law its pin names (v1 part 3)."""
 import os
 import stat
