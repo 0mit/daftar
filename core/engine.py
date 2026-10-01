@@ -44,6 +44,9 @@ LEVELS = ('none', 'personal', 'special-category')                  # sensitivity
 GARDENER_KINDS = ('person', 'org')                                  # who may keep a garden (today's `manifest`)
 TEXT = dict(holds_no='Cc', but=('\t',), lines_in='block')          # text holds no control character (`value_types`)
 PORTS = ('tcp-port', 'udp-port')                                    # the systems whose positions are ports (IANA)
+ORDERED = (('own', ('of',), ('by', 'from'), 'owns'), ('part', ('by',), ('of',), 'is part of'),   # the chains the order
+           ('be', ('by',), ('at',), 'is at'), ('need', ('by',), ('of',), 'needs'))    # holds acyclic: low → high
+CLOCKED = 'at'                     # the one role `now` may fill: the save writes its moment there (core.yaml's word `now`)
 
 
 class Bean:
@@ -319,8 +322,9 @@ class Judge:
         return 'takes ' + ', '.join(f"{k}{'' if k in req else '?'}" for k in (v.get('roles') or {}))
 
     def fill(self, where, k, spec, value, required, b):
-        if 'now' in (value if isinstance(value, list) else [value]) and k != 'at':
-            self.err('frame', where, f"`{k}: now` — `now` is the moment of the save, which the save writes at `at` alone")
+        if 'now' in (value if isinstance(value, list) else [value]) and k != CLOCKED:
+            self.err('frame', where, f"`{k}: now` — `now` is the moment of the save, which the save writes at "
+                                     f"`{CLOCKED}` alone")
             return
         if value == 'unknown':
             if not required:
@@ -725,8 +729,7 @@ class Judge:
 
     def cycles(self):
         """Nothing owns itself, is part of itself, is at itself or needs itself through others."""
-        for verb, low, high, says in (('own', ('of',), ('by', 'from'), 'owns'), ('part', ('by',), ('of',), 'is part of'),
-                                      ('be', ('by',), ('at',), 'is at'), ('need', ('by',), ('of',), 'needs')):
+        for verb, low, high, says in ORDERED:
             graph, first = {}, {}
             for b in self.G.beans.values():
                 for i, v, r in b.items:

@@ -116,6 +116,7 @@ class Side:
 
     def __init__(self, text, what):
         self.what, self.keys, self.order, self.items = what, {}, [], []
+        self.spans = None                # (from, dash, to) per statement, the lines of the text: set when written in a block
         self.st_head, self.body, self.lead, self.indent, self.empty = None, '', '', None, not text.strip()
         if self.empty:
             return
@@ -189,10 +190,12 @@ class Side:
             starts.append((s, dash))
             prev = dash
         self.st_head = '\n'.join(lines[lo:starts[0][0]]) + '\n'
+        self.spans = []
         for n, (s, dash) in enumerate(starts):
             e = starts[n + 1][0] if n + 1 < len(starts) else hi
             ind = len(lines[dash]) - len(lines[dash].lstrip(' '))
             self.items.append(Item(values[n], '\n'.join(lines[s:e]), ind))
+            self.spans.append((s, dash, e))       # what stands above it from `s`, the statement itself from its dash
         inds = {it.indent for it in self.items}
         self.indent = inds.pop() if len(inds) == 1 else None
 

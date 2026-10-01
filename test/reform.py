@@ -214,7 +214,7 @@ _shipped = [f.replace("/", os.sep) for f in dmpass.kept(
     [f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
     dmpass.language(open(os.path.join(ROOT, "seed", "LANGUAGE"), encoding="utf-8").read()), dmpass.offered(_law))
     if f.endswith(".py")]
-_KNOWS_THE_OLD_SPELLING = {os.path.join("bin", "dmreform.py")}      # the translator, and only the translator
+_KNOWS_THE_OLD_SPELLING = {os.path.join("bin", "reform.py")}        # the translator, and only the translator (v1: its verb)
 _RETIRED = set(dmreform.OLD_SCHEMA_KEYS) | {"entry_attrs"}
 _gate_src = open(os.path.join(ROOT, "bin", "dmcheck.py"), encoding="utf-8").read().split("\n")
 _lo = next(i for i, l in enumerate(_gate_src, 1) if l.startswith("RETIRED_CONSTRUCTS = ("))

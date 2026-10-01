@@ -321,8 +321,8 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
 ## The journal and the gate
 - **Each change carries its journal entry**, in `log/journal.md` and in the same commit: who, what and why
   (manifesto: hidden). People record decisions and approvals; agents record what they ran, why, and what happened. A heading is
-  written by the clock (`bin/dmjournal.py`, which `bin/dmsave.py` calls), never typed.
-- **The gate** is `core/check.py`, run at every commit by the pre-commit hook `core/hooks/pre-commit` on the staged
+  written by the clock (`bin/journal.py`, which `bin/save.py` calls), never typed.
+- **The gate** is `core/check.py`, run at every commit by the pre-commit hook `bin/hooks/pre-commit` on the staged
   files. Its eighteen rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
   lists them: the core's thirteen, and five that today's gate held — `consent`, `harm`, `room`, `vacancy`, `kept`.
 - **The commit's own rules**: every bean a commit changes is named by the journal entry it adds; a statement it adds is

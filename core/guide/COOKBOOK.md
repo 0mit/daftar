@@ -12,7 +12,7 @@ and rents a VPS — and shares costs with a friend, Ali, who keeps a garden of h
 Every fact is a statement: a verb and its roles, one line, `- <verb>: { <role>: <filler>, … }`. Each bean's first
 statement says who knows the rest — Sam `say`s what Sam was told or decided, Sam `read`s what Sam looked at — and its
 `at` is `now`: the save writes the moment of its journal entry in its place, the clock's and never typed. Each recipe's
-beans are saved with their entry in one command, `python3 bin/dmsave.py "<who>" "<what changed>" --body "- action:
+beans are saved with their entry in one command, `python3 bin/save.py "<who>" "<what changed>" --body "- action:
 …"` (`README.md` shows it). Every command here is written `python3`; on Windows it is `python`.
 
 ## How to say that one thing relates to another

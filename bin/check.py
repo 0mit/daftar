@@ -24,8 +24,12 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
-from core import read  # noqa: E402
 import dmparse  # noqa: E402
+try:
+    from core import read  # noqa: E402 — every value read as written (core spec §2)
+    _loads, _unread = read.loads, read.Unread
+except ImportError:        # a tree that carries no core/ runs today's law alone, and its pin is read all the same
+    _loads, _unread = dmparse.loads, Exception
 
 CORE_ONLY = ('--law',)
 
@@ -45,8 +49,8 @@ def pin(root, ref=None):
             return ''
         text = r.stdout.decode('utf-8', 'replace')
     try:
-        fm = read.loads(dmparse.split_front_matter(text)[0] or '') or {}
-    except read.Unread:
+        fm = _loads(dmparse.split_front_matter(text)[0] or '') or {}
+    except _unread:
         return ''
     return str(fm.get('extends') or '') if isinstance(fm, dict) else ''
 

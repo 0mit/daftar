@@ -119,8 +119,18 @@ come in, the beans, VOCAB.md (the core's rows added, its pin gone) and GARDEN.md
 recorded) are the translation's, the hooks are installed again, a RULE-CHANGE entry is written — quoting the count and
 naming every bean, with who ratified it and why left for a person — and the core's gate runs: a garden it refuses is
 put back whole, today's hooks with it. The commit that follows is the one the core's gate grants the moments history
-recorded, that once (core/commit.py). A garden that runs the core already is not moved back to today's words, and is
-moved to a later release of the core by the upgrade part 5 of v1 ports.
+recorded, that once (core/commit.py). A garden that runs the core already is not moved back to today's words.
+
+MOVING TO A LATER RELEASE OF THE CORE (v1 part 5). A garden that runs the core moves to another release of the core in
+place, planned first as the adoption is: a profile moved in the same run is refused (a profile in a garden of the core is
+v1's part 11), the working tree must be clean, and the garden must pass its own gate. The core's version is the release's
+(its core/law/core.yaml `version`): a release whose core is older than the one the garden pins is refused unless
+--allow-downgrade says so. Then the release's files come in, GARDEN.md pins the release's core (`core@<version>`) and
+records the release, the hooks are installed again, and a RULE-CHANGE entry is written — the versions, what changed, and
+who ratified it and why left for a person — and the release's gate judges the garden under the release's law: a garden
+it refuses is put back whole. A core whose words change carries the step that rewrites a garden's statements into them,
+here, beside this one, when it comes; none has yet. It does not commit: the person reads the diff, fills the entry, and
+commits, and the core's gate judges that commit as any other.
 
 OPTING INTO A PROFILE IS ONE ACT OF THIS TOOL. `--extend <profile>` (or `--retract <profile>`), each as often as
 needed, with the release GARDEN.md records — or with a newer one, in the same run as the crossing: the profile is
@@ -3536,11 +3546,11 @@ def main():
         if runs == 'core' and gives == 'core' and current == a.tag:
             print(f"nothing to do: this garden runs the core ({pin_of_garden(ROOT)}) of {a.tag} already.")
             return 0
+        if runs == 'core' and gives == 'core':
+            return move(a, rel, sha, source, current)
         if runs == 'core':
-            refuse(f"this garden runs the core ({pin_of_garden(ROOT)}), and {a.tag} gives "
-                   + ("the core too: a garden of statements moves to a later release of the core by the upgrade part 5 "
-                      "of v1 ports, which this release does not carry yet" if gives == 'core' else
-                      "today's words: a garden of statements does not go back to them") + '.')
+            refuse(f"this garden runs the core ({pin_of_garden(ROOT)}), and {a.tag} gives today's words: a garden of "
+                   f"statements does not go back to them.")
 
         if vocab_version(rel) in ('None', ''):
             sys.exit(f"REFUSING: {a.tag} carries no readable `version:` in seed/std-vocab.md — nothing to pin to.")
@@ -4131,6 +4141,92 @@ def adopt_apply(a, rel, sha, source, current, before, copy, count):
           "  git add -A\n"
           "  git commit\n"
           "The commit is judged by the core's gate, which grants it the moments history recorded, this once.\n"
+          "To abandon it instead:\n"
+          "  git checkout -- ." + (f"\n  git clean -f -- {' '.join(_arg(f) for f in added)}" if added else ""))
+    return 0 if gate.returncode == 0 else 1
+
+
+def core_version(root):
+    """The version of the core a tree carries — its core/law/core.yaml `version` — or ''."""
+    try:
+        with open(os.path.join(root, 'core', 'law', 'core.yaml'), encoding='utf-8') as fh:
+            m = re.search(r'(?m)^version:[ \t]*["\']?([0-9][0-9.]*)', fh.read())
+    except OSError:
+        return ''
+    return m.group(1) if m else ''
+
+
+def move(a, rel, sha, source, current):
+    """A garden of the core moves to another release of the core, in place: planned first, touching nothing; then the
+    release's files, the pin and the release recorded, the hooks, the entry and the release's gate — or everything back.
+    It does not commit."""
+    if a.extend or a.retract:
+        refuse("a garden of the core extends no profile yet: its profiles come with v1's part 11.")
+    pin = pin_of_garden(ROOT)
+    have, gives = pin.split('@', 1)[1], core_version(rel)
+    if not gives:
+        refuse(f"{a.tag} carries no readable core version (core/law/core.yaml `version`) — nothing to pin to.")
+    if vtuple(gives) < vtuple(have) and not a.allow_downgrade:
+        refuse(f"{a.tag} gives the core {gives}, older than the core {have} this garden runs; pass --allow-downgrade "
+               f"to go back to it.")
+    dirty = run('git', 'status', '--porcelain', check=False).stdout.strip()
+    if dirty:
+        refuse("the working tree is not clean: commit or put aside what it holds, so a refusal can put every file back:\n"
+               + dirty[:600])
+    g = run(sys.executable, os.path.join(ROOT, 'bin', 'check.py'), '--all', check=False)
+    if g.returncode != 0:
+        errs = [ln for ln in g.stdout.splitlines() if ln.strip() and not ln.startswith('core check')]
+        refuse(f"this garden does not pass its own gate ({pin}):\n" + '\n'.join(errs[:12]) +
+               ('\n…' if len(errs) > 12 else '') + "\nFix what these name and commit, then move.")
+    profiles = garden_profiles()
+    want = shipped(rel, profiles)
+    held = shipped(ROOT) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
+    added = []
+    try:
+        changed, removed = receive(rel, want, held, added)
+        gpath = os.path.join(ROOT, 'GARDEN.md')
+        gtext, gform = read_text(gpath)
+        new_pin = f"core@{gives}"
+        gtext = MANIFEST_PIN.sub(lambda m: m.group(1) + new_pin, gtext, count=1)
+        gline = f'daftar_release: "{a.tag}"  # the daftar release this garden runs; bin/dmupgrade.py moves it'
+        gtext = RELEASE.sub(gline, gtext, count=1) if RELEASE.search(gtext) else \
+            re.sub(r'^extends:.*$', lambda m: m.group(0) + '\n' + gline, gtext, count=1, flags=re.M)
+        write_text(gpath, gtext, gform)
+        install()
+        sys.path.insert(0, os.path.join(ROOT, 'bin')); import journal as _journal   # the release's own tool, just applied
+        _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
+        lines = ['\n' + _journal.stamp(_who, f"RULE-CHANGE: language upgraded to daftar {a.tag}, the core {have} -> {gives}",
+                                       ROOT),
+                 "- ratified_by: (fill in who ratified — the gardener's word, given here)",
+                 f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; the core {pin} -> "
+                 f"{new_pin}; release {current or 'unrecorded'} -> {a.tag}. The beans are as they were: no step rewrites "
+                 f"them between these versions of the core.",
+                 f"- changed: {', '.join(changed + ['GARDEN.md']) or 'none'}",
+                 f"- added: {', '.join(added) or 'none'}",
+                 f"- removed: {', '.join(removed) or 'none'}",
+                 "- why: (fill in — what this release brings the garden)"]
+        jpath = os.path.join(ROOT, 'log', 'journal.md')
+        with open(jpath, 'a', encoding='utf-8', newline=read_text(jpath)[1].nl) as j:
+            j.write('\n'.join(lines) + '\n')
+        gate = run(sys.executable, os.path.join(ROOT, 'bin', 'check.py'), check=False)
+    except BaseException as e:
+        put_back(added)
+        print("NOT UPGRADED: the move stopped midway" + ('' if isinstance(e, SystemExit) else
+              f" ({type(e).__name__}{': ' + str(e) if str(e) else ''})") + ", so every file was put back as it was.",
+              file=sys.stderr, flush=True)
+        raise
+    last = (gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1]
+    if gate.returncode != 0 and not a.keep_on_failure:
+        put_back(added)
+        errs = [ln for ln in gate.stdout.splitlines() if ln.strip() and not ln.startswith('core check')]
+        print(f"NOT UPGRADED: under {a.tag}'s law this garden fails the gate, so every file was put back as it was.\n"
+              + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') + f"\n{last}")
+        return 1
+    print(f"upgraded to {a.tag} ({sha[:12]}): the core {have} -> {gives}; {len(changed) + 1} changed, {len(added)} added, "
+          f"{len(removed)} removed.\n{last}")
+    print("\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n"
+          "  git add -A\n"
+          "  git commit\n"
           "To abandon it instead:\n"
           "  git checkout -- ." + (f"\n  git clean -f -- {' '.join(_arg(f) for f in added)}" if added else ""))
     return 0 if gate.returncode == 0 else 1

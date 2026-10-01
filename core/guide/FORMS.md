@@ -12,11 +12,11 @@ writes the moment in its place. Beans that name each other are committed togethe
 entry in one command, which writes the entry (its heading read from the clock), stages everything and commits:
 
 ```sh
-python3 bin/dmsave.py "<who>" "<what you did>" --body "- action: added [[<id>]]."
+python3 bin/save.py "<who>" "<what you did>" --body "- action: added [[<id>]]."
 ```
 
 `log/journal.md` is never edited by hand. When the gate refuses, its message says what to write: fix it, then run
-`python3 bin/dmsave.py --again`. For a question this page does not answer, `AGENTS.md` says where the law is. Every
+`python3 bin/save.py --again`. For a question this page does not answer, `AGENTS.md` says where the law is. Every
 command here is written `python3`; on Windows it is `python`.
 
 ## Common misreadings

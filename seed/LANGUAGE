@@ -10,6 +10,13 @@ bin/dm*.py
 # is ported: a pattern over bin/ would carry a garden's own tools too.
 bin/check.py
 bin/merge.py
+bin/save.py
+bin/safe.py
+bin/journal.py
+bin/session.py
+bin/cursor.py
+bin/digest.py
+bin/reform.py
 # The one entry to them all, `daftar <verb>`: its verbs and their families are the law's (`verbs`, `tool_families`).
 bin/daftar.py
 bin/install.sh
