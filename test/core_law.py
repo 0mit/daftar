@@ -306,10 +306,15 @@ try:
           r.returncode == 0 and 'core/law/ core@' in r.out and re.search(r'(?m)^  rules\s+20', r.out)
           and 'table:forms written' in r.out and 'every rule of the core is strict' in r.out, r.out[-1500:])
 
+    r = run(PY, 'bin/review.py', '--places')
+    check("review --places: the fixed beings read from `be` as location", r.returncode == 0 and r.out.startswith('PLACES'),
+          r.out)
+
     # ---- facets
     r = run(PY, 'bin/facets.py')
-    check("facets: a garden of the core declares no merge facet; the statement merge keeps a set",
-          r.returncode == 0 and 'declares no merge facet' in r.out and 'as a set' in r.out, r.out)
+    check("facets: a garden of the core declares no merge facet; the statement merge keeps a set — by either name",
+          r.returncode == 0 and 'declares no merge facet' in r.out and 'as a set' in r.out
+          and run(PY, 'bin/dmfacets.py').out == r.out, r.out)
 except Exception as e:
     import traceback
     traceback.print_exc()

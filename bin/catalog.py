@@ -963,7 +963,9 @@ class Catalogue:
     def _walks(self):
         out = []
         for f, p in self.py.items():
-            if p.walks and self.parts[f]['kind'] in ('tool', 'module', 'hook') and f not in ('bin/dmgarden.py',):
+            # the garden models: today's, by both its names, and the core's (core/engine.py `Garden.read`, v1 part 9)
+            if p.walks and self.parts[f]['kind'] in ('tool', 'module', 'hook') \
+                    and f not in ('bin/dmgarden.py', 'bin/garden.py', 'core/engine.py'):
                 out.append({'part': f, 'walks': len(p.walks), 'lines': sorted(line for line, _col in p.walks),
                             'reads_through_dmgarden': ('imports', f, 'bin/dmgarden.py', '') in self.edges})
         return sorted(out, key=lambda x: (-x['walks'], x['part']))

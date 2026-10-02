@@ -487,7 +487,7 @@ MANIFESTO_MUST_CARRY = {
 # The manifesto itself; the release's history, whose job is to say what was; and the two readers that must hold the
 # words to compare them. The reasoning, keyed to the clauses, is known by what it says of itself (`rationale_for:`), not
 # by name; the journal and the history a tree keeps, by the layer the map places them in (`WAS`).
-MANIFESTO_EXEMPT = (MANIFESTO_FILE, 'HISTORY.md', 'test/manifesto.py', 'bin/dmreview.py')
+MANIFESTO_EXEMPT = (MANIFESTO_FILE, 'HISTORY.md', 'test/manifesto.py', 'bin/review.py')
 _REASONING = re.compile(r'---\s*\nrationale_for:')
 # A WORDING A CLAUSE RETIRED, and the files that keep it as law: the law's `retired:` table, for prose.
 MANIFESTO_RETIRED = (
@@ -1293,8 +1293,8 @@ def places_report():
     coordinate and no position FROM another fixed being is named, with the fixed beings nearest it. A coordinate from
     a receiver is good to metres; an offset taped from a mark beside it is good to centimetres, and survives the
     receiver. Whether this being needs one is the reader's judgment — a policy printed, never a rule."""
-    import dmgeo, dmpass
-    beans = dmpass.beans_here(ROOT)
+    import dmgeo
+    beans = dmgeo._beans(ROOT)           # by the pin: in a garden of the core, its `be` as location in today's shape
     fixed = {}
     for b, fm in sorted(beans.items()):
         now = dmgeo._current(fm.get('located_at'))

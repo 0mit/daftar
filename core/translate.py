@@ -92,6 +92,12 @@ DOCUMENTS = ('beans', 'mappings')
 AGENT = re.compile(r'\bagent\b', re.I)     # a provenance's `by` that names an agent, in the prose it is written in
 
 
+def _names(root, space):
+    """The file names of a garden's documents in `space` (beans, mappings), as the one garden model lists them."""
+    import dmgarden
+    return [os.path.basename(p) for p in dmgarden.paths(root, space)]
+
+
 def old_law(path=LAW):
     with open(path, encoding='utf-8') as fh:
         return dmparse.loads(dmparse.split_front_matter(fh.read())[0]) or {}
@@ -836,7 +842,7 @@ def garden_bean(ctx, gid):
     if getattr(ctx, '_gardens', None) is None:
         ctx._gardens = {}
         d = os.path.join(ctx.root, 'beans') if getattr(ctx, 'root', None) else None
-        for f in sorted(os.listdir(d)) if d and os.path.isdir(d) else []:
+        for f in _names(ctx.root, 'beans') if d else []:
             try:
                 fm = dmparse.loads(dmparse.read(os.path.join(d, f))[0] or '') if f.endswith('.md') else None
             except Exception:
@@ -1752,7 +1758,7 @@ class Context:
         self.beans = set()
         for d in DOCUMENTS:
             if os.path.isdir(os.path.join(root, d)):
-                self.beans |= {f[:-3] for f in os.listdir(os.path.join(root, d)) if f.endswith('.md')}
+                self.beans |= {f[:-3] for f in _names(root, d)}
         self.journal = Journal(root)
         self.systems = law.systems           # the standards', and the garden's own (VOCAB.md `systems`, v1 part 7)
         try:
@@ -1770,7 +1776,7 @@ class Context:
         self.sessions = []                   # (start ms, stop ms, bean) of each session with both ends known
         from core import read
         p = os.path.join(root, 'beans')
-        for f in sorted(os.listdir(p)) if os.path.isdir(p) else []:
+        for f in _names(root, 'beans'):
             try:
                 fm = read.document(os.path.join(p, f))[0] if f.endswith('.md') else {}
             except read.Unread:
@@ -1845,7 +1851,7 @@ def garden(src, dst):
     mkinds = set()
     for d in DOCUMENTS:
         p = os.path.join(src, d)
-        for f in sorted(os.listdir(p)) if os.path.isdir(p) else []:
+        for f in _names(src, d):
             if f.endswith('.md'):
                 fm = read.document(os.path.join(p, f))[0]
                 if 'mapping' in fm and 'genos' not in fm and isinstance(fm.get('kind'), str):
@@ -1878,7 +1884,7 @@ def garden(src, dst):
     done = []
     for d in DOCUMENTS:
         p = os.path.join(src, d)
-        for f in sorted(os.listdir(p)) if os.path.isdir(p) else []:
+        for f in _names(src, d):
             if f.endswith('.md'):
                 done.append((d, f) + translate_bean(os.path.join(p, f), f"{d}/{f}", ctx))
     rmap, walks = reading_map([b for _d, _f, _t, b in done])

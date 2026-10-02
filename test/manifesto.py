@@ -112,7 +112,7 @@ check("GARDEN.md is the law's `manifest`, MANIFESTO.md is the manifesto, and nei
 readers = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*.py"))
                  if "MANIFESTO" in open(f, encoding="utf-8").read())
 check("no verdict reads the manifesto: the law carries it, and only the readers of keys open it",
-      set(readers) <= {"dmwhy.py", "dmreview.py"}, readers)
+      set(readers) <= {"why.py", "review.py"}, readers)
 _NET = re.compile(r"^\s*(?:import|from)\s+(?:urllib|http|socket|requests|ftplib|smtplib)\b", re.M)
 net = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*.py"))
              if _NET.search(open(f, encoding="utf-8").read()))
