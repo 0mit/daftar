@@ -4,21 +4,23 @@ drawings in statements, judged by the core's gate, drawn by its asset and writte
 today's words draw.
 
 Builds what it needs, as test/core_write.py does: a release of the core made from this tree (v1.0.0, its
-seed/GARDEN.md.template pinning `core@`), and a release in today's words (this tree as it ships). Then:
+seed/GARDEN.md.template pinning `core@`), and the release in today's words (v0.49.0, this repository's tag). Then:
 
-  the law        core/law/profiles.yaml is what std-vocab generates: each profile with the verbs whose home it is, each of
-                 today's terms and overlays of it named where it went, its vacancies at their places; the law holds
+  the law        core/law/profiles.yaml against today's law as v0.49.0 had it: each profile with the verbs whose home it
+                 is, each of today's terms and overlays of it named where it went, its vacancies at their places; the law
+                 holds
   germinate      a garden of the core grows taking the view profile (VOCAB.md `profiles`), its asset with it; a profile
                  the law does not offer is refused, and nothing is made
   the gate       the cookbook's page in statements is saved through the core's gate; rule `profile` refuses a verb of a
                  profile the garden does not take, an attribute a profile adds, a drawing its page does not name, a
                  drawing its page names that is not there, and a value a drawing names that it does not hold
-  the asset      view.py check agrees, elements and report draw, view.py is the same tool; import writes only the
+  the asset      view.py check agrees, elements and report draw, view.py the asset's one tool; import writes only the
                  `draw` a selection changes, through bin/safe.py, journalled and read back, and its commit passes the gate;
                  a second import has nothing to write; render --keep keeps a document bean of statements
   upgrade        --extend takes a profile up (VOCAB.md `profiles`, its entry a RULE-CHANGE); --retract of the profile the
                  page draws by is refused by the gate, every file put back
-  translation    today's cookbook page, grown through today's gate and translated, is drawn the same: check says the same,
+  translation    today's cookbook page, grown through today's gate and translated, the release's files received as an
+                 adoption receives them, is drawn the same by the release's tool as by today's: check says the same,
                  and the report's drawings — their stages, values, elements and cards — its order, reference, lenses
                  and units are today's, but for the law's own words (a card's fact is the verb that says it now)
 
@@ -216,8 +218,8 @@ try:
     # ---- THE ASSET on statements
     r = view('check')
     check("asset: view.py check — the page and its drawings agree", r.returncode == 0 and 'agree' in r.out, r.out[-800:])
-    r2 = run(PY, 'assets/view/bin/view.py', 'check')
-    check("asset: view.py, today's name, is the same tool", r2.returncode == 0 and r2.out == r.out, r2.out[-400:])
+    check("asset: view.py is the asset's one tool: today's name, dmview.py, went with the aliases (v1 part 13)",
+          not os.path.exists(os.path.join(G, 'assets', 'view', 'bin', 'dmview.py')))
     r = view('elements', 'orders')
     check("asset: a drawing's elements, the oven among them depicting its bean", r.returncode == 0
           and re.search(r'oven\s+node\s+oven-a', r.out), r.out[-600:])
@@ -271,6 +273,16 @@ try:
     t = run(PY, 'core/translate.py', 'garden', O, C, cwd=ROOT)
     check("translation: today's cookbook page, saved through today's gate, translates with every value placed",
           r.returncode == 0 and s.returncode == 0 and t.returncode == 0 and '0 problem(s)' in t.out, (s.out[-400:], t.out[-800:]))
+    # THE RELEASE'S FILES OVER THE COPY, as the adoption receives them: its tools by their verbs, today's gone — so today's
+    # tool reads today's garden, and the release's the translation
+    for f in run('git', 'ls-files', cwd=REL).out.split('\n'):
+        if f and os.path.isfile(os.path.join(REL, f)):
+            os.makedirs(os.path.dirname(os.path.join(C, f)), exist_ok=True)
+            shutil.copy2(os.path.join(REL, f), os.path.join(C, f))
+    for d in ('bin', os.path.join('assets', 'view', 'bin')):
+        for f in os.listdir(os.path.join(C, d)):
+            if re.match(r'dm[a-z]+\.py$', f) and f != 'dmupgrade.py' and not os.path.exists(os.path.join(REL, d, f)):
+                os.remove(os.path.join(C, d, f))
     for c in (['git', 'init', '-q'], ['git', 'add', '-A'], ['git', 'commit', '-qm', 'translated', '--no-verify']):
         run(*c, cwd=C)
     tp = read.document(os.path.join(C, 'beans', 'bakery-page.md'))[0]
@@ -280,8 +292,9 @@ try:
           [d.get('id') for d in draws] == ['orders', 'page'] and draws[1].get('of') == ['orders']
           and not {'view', 'views', 'view_bindings', 'view_monitors'} & set(tp.get('details') or {}), draws)
     a, b = view('check', root=O), view('check', root=C)
-    check("translation: check says of the translated page what it says of today's", a.returncode == 0
-          and a.out == b.out, (a.out[-400:], b.out[-400:]))
+    check("translation: check says of the translated page what it says of today's — but for the tool's own name, today's "
+          "`dmview:` the verb's `view:`", a.returncode == 0
+          and re.sub(r'(?m)^dmview:', 'view:', a.out) == b.out, (a.out[-400:], b.out[-400:]))
     pa, pb = payload(O), payload(C)
 
     def unworded(x):

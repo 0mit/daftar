@@ -2,7 +2,7 @@
 """The core's save: today's bin/save.py commits a garden written in statements, with the core's gate at the commit.
 
 Grows a garden of the core's beans (bin/, core/ and the standards copied from this release), installs the core's
-pre-commit gate (core/install.py), and saves through bin/save.py, which journals, stamps, stages and commits in one
+pre-commit gate (bin/install.py), and saves through bin/save.py, which journals, stamps, stages and commits in one
 call. Checks that a knowing act's `at: now` is written as the moment of the heading the save wrote; that a moment typed
 there is refused, and saved once it is `now`; that a bean the entry does not name is refused; that a statement added
 under an old act is refused until an act of this commit knows it; that a change to the law is refused until an entry
@@ -96,15 +96,15 @@ try:
     vocab = {k: [dict(r, vacant=r.get('vacant') or "the cases' row, beside this suite's own garden")
                  if k in ('kinds', 'levels', 'namespaces', 'verbs', 'units') and isinstance(r, dict) else r
                  for r in v] if isinstance(v, list) else v for k, v in CASES['vocab'].items()}
-    write('VOCAB.md', dict({'vocab': 'core-save'}, **vocab), '')
+    write('VOCAB.md', vocab, '')
     os.makedirs(os.path.join(G, 'log'))
     with open(os.path.join(G, 'log', 'journal.md'), 'w', encoding='utf-8') as fh:
         fh.write('# Journal\n')
     git('add', '-A')
     git('commit', '-q', '--no-verify', '-m', 'the garden, before its first bean')
-    r = run(PY, 'core/install.py')
-    check("core/install.py installs the core's gate as this clone's pre-commit",
-          r.returncode == 0 and 'core/check.py --staged' in open(os.path.join(G, '.git', 'hooks', 'pre-commit')).read(),
+    r = run(PY, 'bin/install.py')
+    check("bin/install.py installs the core's gate as this clone's pre-commit",
+          r.returncode == 0 and 'bin/check.py" --staged' in open(os.path.join(G, '.git', 'hooks', 'pre-commit')).read(),
           r.stdout + r.stderr)
 
     # A FIRST BEAN: `at: now` becomes the moment of the heading the save wrote

@@ -65,15 +65,15 @@ check(f"the one reader gives, for the lines that name no profile, exactly the fi
 # A PROFILE'S LINE, read both ways, on a tree built for the purpose: the asset of a profile the garden extends arrives;
 # leaving the profile takes it away (what the release keeps, less what the garden now receives); a garden's own file
 # beside the assets is never the release's; a profile the law does not offer brings nothing.
-_lines = ["bin/dm*.py", "assets/%s/*" % dmpass.PLACE]
-_tree = ["bin/dmtool.py", "assets/alpha/bin/tool.py", "assets/alpha/lib/deep/part.py", "assets/beta/README.md",
+_lines = ["bin/tool.py", "assets/%s/*" % dmpass.PLACE]
+_tree = ["bin/tool.py", "assets/alpha/bin/tool.py", "assets/alpha/lib/deep/part.py", "assets/beta/README.md",
          "assets/logo.png", "assets/gamma/x.py"]
 _offer = ["alpha", "beta"]
 _in = dmpass.received(_tree, _lines, ["alpha"], _offer)
 _out = dmpass.received(_tree, _lines, [], _offer)
 _have = dmpass.kept(_tree + ["assets/logo.png"], _lines, _offer)
 check("a garden extending a profile receives its asset, `*` crossing `/`, and no other profile's",
-      _in == ["assets/alpha/bin/tool.py", "assets/alpha/lib/deep/part.py", "bin/dmtool.py"], _in)
+      _in == ["assets/alpha/bin/tool.py", "assets/alpha/lib/deep/part.py", "bin/tool.py"], _in)
 check("...and leaving it, the asset is what the release keeps and the garden no longer receives: it is taken away",
       sorted(set(_have) - set(_out)) == ["assets/alpha/bin/tool.py", "assets/alpha/lib/deep/part.py",
                                          "assets/beta/README.md"], sorted(set(_have) - set(_out)))
@@ -81,7 +81,7 @@ check("...a garden's own assets/logo.png, and the directory of a profile the law
       "assets/logo.png" not in _have and "assets/gamma/x.py" not in _have
       and "assets/gamma/x.py" not in dmpass.received(_tree, _lines, ["gamma"], _offer), _have)
 check("...and the keeper of the layer map reads the same line: a file of a profile's asset is kept by the release",
-      dmpass.expand(_lines, _offer) == ["bin/dm*.py", "assets/alpha/*", "assets/beta/*"], dmpass.expand(_lines, _offer))
+      dmpass.expand(_lines, _offer) == ["bin/tool.py", "assets/alpha/*", "assets/beta/*"], dmpass.expand(_lines, _offer))
 
 # EVERY READER ASKS IT. A file of the release that opens seed/LANGUAGE hands the text to pass.language; none splits it,
 # and none globs its lines, on its own.

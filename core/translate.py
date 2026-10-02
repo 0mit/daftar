@@ -43,7 +43,9 @@ left of an entry a verb took stays there under the term and the statement's id. 
 `details.comments`, each with the item it sat on.
 
 THE COPY IS A GARDEN OF THE CORE: its GARDEN.md pins `core@<version>`, the law's own, and its VOCAB.md holds no pin (the
-law a garden runs is GARDEN.md's alone); both are read back and must hold what they held but the pin. The translator
+law a garden runs is GARDEN.md's alone). VOCAB.md's front matter is the core's rows alone; today's front matter is kept
+whole in its body, read by no rule (v1 part 13b). Both are read back: GARDEN.md must hold what it held but the pin, and
+VOCAB.md's body today's front matter as it was. The translator
 reads the words of std-vocab 32 (`READS`), and refuses a garden that runs older ones. bin/dmupgrade.py adopts the core
 in place from this copy (v1 part 4).
 
@@ -1955,18 +1957,20 @@ def garden(src, dst):
             for r in rows.get(key) or []:
                 if any(str(r.get(n)) == str(v['position']) for n in names):
                     r['vacant'] = f"{v.get('reason')}: {v.get('why')}" if v.get('why') else str(v.get('reason'))
-    # THE GARDEN'S ROWS go into its VOCAB.md beside today's keys, which the core's law passes by; its pin leaves it, for
-    # the law a garden runs is GARDEN.md's alone (v1 part 4)
+    # THE GARDEN'S ROWS are its VOCAB.md's front matter, and nothing else (v1 part 13: a garden's VOCAB.md says nothing
+    # the law does not read); its pin leaves it, for the law a garden runs is GARDEN.md's alone (v1 part 4). TODAY'S
+    # FRONT MATTER IS KEPT WHOLE in the body, below the gardener's prose, as it stood: read by no rule, and read back
+    # here (proved_law), so a key with no row in the core — a local term, a sense, a vacancy of a position the core has
+    # no row for — is not lost (v1 part 13b)
     vp = os.path.join(dst, 'VOCAB.md')
     vtext = open(vp, encoding='utf-8').read() if os.path.isfile(vp) else '---\n---\n'
     vhead, vbody = dmparse.split_front_matter(vtext)
-    vhead = PIN_LINE.sub('', vhead or '', count=1)
-    vhead = PROFILES_LINE.sub('', vhead, count=1) if 'profiles' in rows else vhead
     keep = {k: v for k, v in rows.items() if v}
     add = yaml.safe_dump(keep, allow_unicode=True, sort_keys=False, width=120) if keep else ''
+    kept = (KEPT + '```yaml\n' + vhead.strip('\n') + '\n```\n') if (vhead or '').strip() else ''
     with open(vp, 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write('---\n' + (vhead.strip('\n') + '\n' if vhead.strip() else '')
-                 + ('# == THE CORE\'S ROWS: written by core/translate.py ==\n' + add if add else '') + '---' + vbody)
+        fh.write('---\n' + ('# == THE CORE\'S ROWS: written by core/translate.py ==\n' + add if add else '') + '---'
+                 + (vbody.rstrip('\n') + '\n' if vbody.strip() else '\n') + kept)
     # GARDEN.md PINS THE CORE: the copy is a garden of statements, judged by the core's gate (core@<version>)
     gp = os.path.join(dst, 'GARDEN.md')
     if os.path.isfile(gp):
@@ -1980,13 +1984,22 @@ def garden(src, dst):
 
 
 PIN = re.compile(r'(?m)^(extends:[ \t]*)std-vocab@[^\s#]*')
-PIN_LINE = re.compile(r'(?m)^extends:[ \t]*std-vocab@[^\n]*(\n|$)')
-PROFILES_LINE = re.compile(r'(?m)^extends_profiles:[^\n]*(\n|$)')
+KEPT_MARK = "<!-- today's words: VOCAB.md's front matter before the core, read by no rule -->"
+KEPT = ("\n## In today's words, as adopted\n\nThis file's front matter as it stood in today's words (std-vocab 32) when the "
+        "garden adopted the core, kept whole by core/translate.py and read by no rule: the rows above are what the core "
+        "reads of it.\n\n" + KEPT_MARK + "\n")
+KEPT_BLOCK = re.compile(re.escape(KEPT_MARK) + r'\n```yaml\n(.*?)\n```', re.S)
+
+
+def kept_words(text):
+    """Today's front matter as VOCAB.md's body keeps it after the adoption (parsed), or None where it keeps none."""
+    m = KEPT_BLOCK.search(text or '')
+    return (dmparse.loads(m.group(1)) or {}) if m else None
 
 
 def proved_law(src, dst, rows, version):
-    """The manifest and VOCAB.md, read back: each holds what it held, but the pin, which moved from both to GARDEN.md's
-    `core@<version>`, and the core's rows VOCAB.md gained. [] when so, else what differs."""
+    """The manifest and VOCAB.md, read back: GARDEN.md holds what it held but the pin, now `core@<version>`; VOCAB.md's
+    front matter holds the core's rows alone, and its body today's front matter whole. [] when so, else what differs."""
     out = []
 
     def fm(root, name):
@@ -2001,16 +2014,20 @@ def proved_law(src, dst, rows, version):
         if not isinstance(was, dict) or not isinstance(now, dict):
             out.append(f"{name}: its front matter is no mapping")
             continue
-        if pin is not None and now.get('extends') != pin:
+        if pin is None:                       # VOCAB.md: the core's rows alone, and today's front matter kept whole
+            if now != gained:
+                out.append(f"{name}: its front matter holds {', '.join(sorted(set(now) - set(gained))) or 'other rows'} "
+                           f"beside the core's rows")
+            if kept_words(open(os.path.join(dst, name), encoding='utf-8').read()) != was:
+                out.append(f"{name}: today's front matter, read back from its body, differs from what it held")
+            continue
+        if now.get('extends') != pin:
             out.append(f"{name}: `extends: {now.get('extends')}`, where the copy pins {pin}")
-        rest_was = {k: v for k, v in was.items() if k != 'extends' and not (k == 'extends_profiles' and 'profiles' in gained
-                                                                          and v == gained['profiles'])}
-        rest_now = {k: v for k, v in now.items() if k != 'extends' and k not in gained}
-        if pin is None and 'extends' in now:
-            out.append(f"{name}: still pins `{now['extends']}`: the law a garden runs is GARDEN.md's alone")
-        if rest_was != rest_now or any(now.get(k) != v for k, v in gained.items()):
+        rest_was = {k: v for k, v in was.items() if k != 'extends'}
+        rest_now = {k: v for k, v in now.items() if k != 'extends'}
+        if rest_was != rest_now:
             diff = sorted(set(rest_was) ^ set(rest_now) | {k for k in rest_was if rest_now.get(k) != rest_was[k]})
-            out.append(f"{name}: read back, it differs from what it held at {', '.join(map(str, diff)) or 'the rows'}")
+            out.append(f"{name}: read back, it differs from what it held at {', '.join(map(str, diff))}")
     return out
 
 

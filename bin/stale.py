@@ -177,6 +177,15 @@ def expiry_terms():
     return out
 
 
+def _unit(units, name):
+    """A unit of the law: by its UCUM code, the key the core's table holds it under (`d`), or by its English name (`day`),
+    which a garden's writers use too (v1 part 13b)."""
+    u = units.get(str(name))
+    if u:
+        return u
+    return next((r for r in units.values() if isinstance(r, dict) and str(r.get('name')) == str(name)), None)
+
+
 def _law(name):
     """A table of the law the garden runs (`TERMS`, `SYSTEMS`, `UNITS`), or {} where there is no garden."""
     if not os.path.isfile(os.path.join(ROOT, 'GARDEN.md')):
@@ -382,8 +391,8 @@ def _after_first(first, rec, systems, units, skipped=None, near=None, times=None
     _spend = _spender()          # this repetition's own allowance, and the run's
     every, each = rec.get('every'), rec.get('each')
     if isinstance(every, dict):
-        unit = units.get(str(every.get('unit'))) if every.get('unit') is not None else None
-        day = units.get('day')
+        unit = _unit(units, every.get('unit')) if every.get('unit') is not None else None
+        day = _unit(units, 'd')
         if every.get('unit') is None:
             raise Unreckoned("`every: {count}` strides by neighbours, and which position is a day's neighbour is the "
                              "system's to say — stride by a measure (`every: {count, unit: day}`) or by a cell (`each:`)")
@@ -715,7 +724,7 @@ def relative_day(rel, fm, at=None, systems=None, units=None):
     if isinstance(ext.get('measure'), dict):
         m = ext['measure']
         units = units if units is not None else _law('UNITS')
-        u, d = units.get(str(m.get('unit'))) or {}, units.get('day') or {}
+        u, d = _unit(units, m.get('unit')) or {}, _unit(units, 'd') or {}
         c = dmunits.exact(m.get('count'))
         if c is None or not isinstance(u.get('factor'), (list, tuple)) or not isinstance(d.get('factor'), (list, tuple)):
             raise Unreckoned(f"an offset of {extent_words(ext)} is not one this tool measures in days")

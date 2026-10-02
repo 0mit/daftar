@@ -18,7 +18,7 @@ SPDX-License-Identifier = "CC-BY-4.0"
 
 # THE CODE — AGPL-3.0-or-later with the garden exception, and the additional terms in LICENSE
 [[annotations]]
-path = ["bin/**", "core/*.py", "core/hooks/**", "test/**", "seed/germinate.py", "seed/germinate.sh", "site/board.py", "site/assets/*.js",
+path = ["bin/**", "core/*.py", "test/**", "seed/germinate.py", "seed/germinate.sh", "site/board.py", "site/assets/*.js",
         ".github/workflows/**", "assets/*/bin/**", "assets/*/lib/**"]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"

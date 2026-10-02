@@ -9,13 +9,12 @@ Builds what it needs, as test/core_read.py does: a release of the core made from
 from it, keeping two hives at sites of its own apiary system and a lease paid each month, a rack that holds two slots and
 a machine in one of them.
 
-law: core/law/measures.yaml is what std-vocab generates, each unit's factor std-vocab's, the law whole with its twenty
-rules. gate: the garden saved through the core's gate; each form's breach refused by rule `measured`, by name. units: a
+law: a clause's form says how it runs out (`expiry`), and the law holds together with its rules. gate: the garden saved through the core's gate; each form's breach refused by rule `measured`, by name. units: a
 conversion by UCUM code and by the English name, exactly. cal: a day in another calendar. geo: a distance on the body the
 core's places name. knowledge: a code of the garden's own scheme, and a bean's codes from its statements. stale and
 ledger: a clause's recurrence and notice read from its form. where: a position in the garden's own system. crosswalk: a
 FHIR observation carried to a `measure` and back. translate: today's clause, placement and own rows written in these
-forms, every value placed.
+forms, every value placed — the old garden grown from the release in today's words (v0.49.0).
 
 Run: python3 test/core_measure.py   (0 = green; about a minute)
 """
@@ -303,7 +302,8 @@ try:
 
     # ---- TRANSLATE: today's clause, placement and own rows written in these forms, every value placed
     OLD = os.path.join(T, 'old')
-    r = run(PY, os.path.join(ROOT, 'seed', 'germinate.py'), OLD, '--gardener', 'sam', cwd=ROOT)
+    TODAY = grow.today(os.path.join(T, 'today'))            # a garden in today's words grows from v0.49.0
+    r = run(PY, os.path.join(TODAY, 'seed', 'germinate.py'), OLD, '--gardener', 'sam', cwd=T)
     old_vocab = text('VOCAB.md', OLD)
     head_, sep, rest = old_vocab.partition('\n---\n')
     head_ = '\n'.join(ln for ln in head_.split('\n') if not ln.startswith(('registry_additions:', 'registry_files:')))

@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""The guides in statements (core/guide/), proved through the core's gate and held to what today's guides say.
+"""The guides in statements, where the release places them (v1 part 13: seed/README.md, COOKBOOK.md, FORMS.md and
+WELCOME.md; AGENTS.md, MODEL.md, CHECKLIST.md and MERGE.md at the root; the skill), proved through the core's gate and
+held to what the guides of the last release in today's words (v0.49.0) said.
 
-Grows a garden from the seed (seed/germinate.sh) and adopts the core while it is empty: GARDEN.md's pin moves to the
-core in one RULE-CHANGE, and core/install.py makes the core's gate the pre-commit hook. Then it commits every example of
-core/guide/ in the order a reader meets them — README.md's first beans, its VOCAB.md row and the gardener's line, saved
+Grows a garden from the seed (seed/germinate.sh), which starts in the core: GARDEN.md pins it from the first commit and
+the core's gate is the pre-commit hook. Then it commits every example of the guides in the order a reader meets them — README.md's first beans, its VOCAB.md row and the gardener's line, saved
 by the very command README.md shows; each recipe of COOKBOOK.md and WELCOME.md with its VOCAB.md rows; FORMS.md's forms
-and its forms for what nobody said — each through bin/save.py and the core's gate (core/check.py --staged), and checks
+and its forms for what nobody said — each through bin/save.py and the core's gate (bin/check.py --staged), and checks
 each commit is made. A bean a page shows again as another page showed it is not committed twice.
 
-Then it holds each example to what today's guide said of the same bean. Today's examples are grown through today's gate
-and translated into statements, as test/core_rehearse.py does; for every bean both gardens hold, each value today's
+Then it holds each example to what today's guide said of the same bean. Today's examples are grown from v0.49.0 through
+its gate and translated into statements, as test/core_rehearse.py does; for every bean both gardens hold, each value today's
 example wrote is found in the guide's bean (or the bean it names is linked to it by a statement), and each verb the
 translation gave it is one the guide's bean uses — but for the differences listed below, each with its reason. A
 difference listed and no longer met is reported too, so the list stays true.
@@ -23,7 +24,10 @@ import core_rehearse  # noqa: E402 — today's examples grown through today's ga
 
 FAILS = []
 PY = sys.executable
-GUIDE = os.path.join(ROOT, 'core', 'guide')
+# WHERE EACH GUIDE IS PLACED in the release (seed/LANGUAGE ships them; core/guide/ held them until part 13)
+PLACE = {'README.md': 'seed', 'COOKBOOK.md': 'seed', 'FORMS.md': 'seed', 'WELCOME.md': 'seed', 'GARDEN.md.template': 'seed',
+         'VOCAB.md.template': 'seed', 'AGENTS.md': '', 'MODEL.md': '', 'CHECKLIST.md': '', 'MERGE.md': '',
+         'SKILL.md': '.claude/skills/daftar'}
 BLOCK = re.compile(r'<!-- (example|unsaid|example-front-matter|example-statements|example-check): ([^ ,>]+)[^>]*-->\n```[a-z]*\n(.*?)\n```',
                    re.S)
 KNOWING = ('say', 'read', 'derive', 'make')
@@ -74,6 +78,8 @@ DIFFERS = {
     ('candle-supply', 'candle-beeswax:series.burn'): "a series is named as the statement that records it, "
                                                     "`candle-beeswax#burn`",
     ('candle-supply', 'candle-paraffin:series.burn'): "as for the beeswax candle's, `candle-paraffin#burn`",
+    ('garden-ali', "its id: what `python3 bin/dmpropose.py id` prints in Ali's garden"):
+        "the tool is named by its verb (v1 part 13): `python3 bin/propose.py id`",
 }
 
 
@@ -87,8 +93,13 @@ def run(*a, cwd=None):
     return subprocess.run(list(a), capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=cwd)
 
 
+def placed(name):
+    """A guide's path in the release."""
+    return os.path.join(PLACE[name], name).replace(os.sep, '/')
+
+
 def guide(name):
-    with open(os.path.join(GUIDE, name), encoding='utf-8') as fh:
+    with open(os.path.join(ROOT, placed(name)), encoding='utf-8') as fh:
         return fh.read()
 
 
@@ -126,11 +137,11 @@ check("AGENTS.md and SKILL.md are one text: the skill is its front matter and th
 top = "\n".join(guide('WELCOME.md').splitlines()[:12])
 check("seed/WELCOME.md says in its first lines that its reader cannot run the gate, and that what it reads is data",
       "cannot run the gate" in top and "cannot write to the ledger" in top and "data" in top, top[:300])
-named = sorted({n for f in os.listdir(GUIDE) for n in re.findall(
+named = sorted({n for f in PLACE for n in re.findall(
     r"(?<![A-Za-z0-9_/.-])((?:bin|core|test|assets/[a-z]+/bin|assets/[a-z]+/templates)/[A-Za-z0-9_./-]+\.(?:py|sh|yaml))",
     guide(f))})
 gone = [n for n in named if not os.path.isfile(os.path.join(ROOT, n))]
-check(f"every tool and law file core/guide/ names exists ({len(named)} named)", not gone, gone)
+check(f"every tool and law file the guides name exists ({len(named)} named)", not gone, gone)
 
 T = tempfile.mkdtemp(prefix='dmcoreguides-')
 G, TODAY, COPY = os.path.join(T, 'guides'), os.path.join(T, 'today'), os.path.join(T, 'copy')
@@ -140,20 +151,24 @@ waited = []                                  # the saves that waited for the min
 
 
 try:
-    # A GARDEN, GROWN AND ADOPTING THE CORE WHILE IT IS EMPTY
+    # A GARDEN, GROWN IN THE CORE
     r = run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), G, cwd=ROOT)
-    check("a garden germinates", r.returncode == 0, r.stdout + r.stderr)
+    pin = 'core@' + str(read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version'])
+    check(f"a garden germinates, pinning {pin} from its first commit",
+          r.returncode == 0 and re.search(rf'(?m)^extends: {re.escape(pin)}', open(os.path.join(G, 'GARDEN.md'),
+                                                                                   encoding='utf-8').read()),
+          r.stdout + r.stderr)
     run('git', 'config', 'user.name', 'sam', cwd=G)
     run('git', 'config', 'user.email', 'sam@example.invalid', cwd=G)
-    gp = os.path.join(G, 'GARDEN.md')
-    gt = open(gp, encoding='utf-8').read()
-    open(gp, 'w', encoding='utf-8', newline='\n').write(re.sub(r'(?m)^extends: std-vocab@[^ \n]*', 'extends: core@' + str(read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version']), gt, count=1))
-    r = run(PY, 'core/install.py', cwd=G)
-    check("the garden takes the core's gate (core/install.py)", r.returncode == 0, r.stdout + r.stderr)
-    r = run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',
-            '- action: RULE-CHANGE, GARDEN.md extends the core while the garden is empty; ratified by sam', cwd=G)
-    check("the empty garden adopts the core: GARDEN.md's pin moves, in one RULE-CHANGE through the core's gate",
-          r.returncode == 0, r.stdout + r.stderr)
+    # THE GATE ALONE IS ITS HOOK. The garden's hook also asks that a pointer a commit adds resolve in a store on this
+    # host (bin/held.py, held by test/core_between.py); the guides' garden is no host's, and the pointer COOKBOOK.md
+    # shows is the page's, so here the commit is judged by the core's gate and by nothing a host keeps.
+    hooks = os.path.join(T, 'gate-hooks')
+    os.makedirs(hooks)
+    with open(os.path.join(hooks, 'pre-commit'), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(f'#!/bin/sh\nexec {shlex.quote(PY)} "$(git rev-parse --show-toplevel)/bin/check.py" --staged\n')
+    os.chmod(os.path.join(hooks, 'pre-commit'), 0o755)
+    run('git', 'config', 'core.hooksPath', hooks, cwd=G)
 
     def apply(marker, path, text):
         """One block of a page, written into the garden as the page means it."""
@@ -240,8 +255,8 @@ try:
 
     # EACH RECIPE, IN THE ORDER OF THE PAGES, ONE COMMIT EACH
     for page in ('COOKBOOK.md', 'WELCOME.md', 'FORMS.md'):
-        if not os.path.isfile(os.path.join(GUIDE, page)):
-            check(f"core/guide/{page} is written", False, 'missing')
+        if not os.path.isfile(os.path.join(ROOT, placed(page))):
+            check(f"{placed(page)} is written", False, 'missing')
             continue
         done, failed, judged_n = 0, [], 0
         for i, blocks in enumerate(sections(page)):
@@ -260,7 +275,7 @@ try:
                 failed.append((title, got[1]))
                 run('git', 'reset', '-q', '--hard', cwd=G)
                 run('git', 'clean', '-qfd', cwd=G)
-        check(f"core/guide/{page}: each section's examples commit through the core's gate ({done}), and the "
+        check(f"{placed(page)}: each section's examples commit through the core's gate ({done}), and the "
               f"statements it shows for a bean pass beside it ({judged_n})", not failed and done >= 1, failed)
 
     check(f"the save waits for the minute to turn where it would save one bean twice in it, and the commit is made "
@@ -273,7 +288,7 @@ try:
     # WHAT TODAY'S GUIDES SAID OF THE SAME BEANS
     core_rehearse.grow_today(TODAY, check=lambda n, c, d='': None if c else check(f"today's examples: {n}", c, d))
     r = run(PY, os.path.join(ROOT, 'core', 'translate.py'), 'garden', TODAY, COPY)
-    check("today's examples are grown and translated, as test/core_rehearse.py does", r.returncode == 0, r.stdout[-800:])
+    check("today's examples are grown from v0.49.0 and translated, as test/core_rehearse.py does", r.returncode == 0, r.stdout[-800:])
     lost, unused, stale_seen = {}, {}, set()
     for d in ('beans', 'mappings'):
         for f in sorted(os.listdir(os.path.join(G, d))) if os.path.isdir(os.path.join(G, d)) else []:

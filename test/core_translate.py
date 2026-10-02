@@ -17,6 +17,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from core import read, standards, translate  # noqa: E402
 from core.law import Law  # noqa: E402
+sys.path.append(os.path.join(ROOT, 'test'))
+import grow  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -348,7 +350,7 @@ try:
     with open(os.path.join(G, 'extracts', 'analytic.tsv'), 'w', encoding='utf-8') as fh:
         fh.write("code\tlevel\tparent\tname\nprojects\tplan\t\tProjects\norchard\taccount\tprojects\tThe orchard\n"
                  "workshop\taccount\tprojects\tThe workshop\n")
-    shutil.copy(os.path.join(ROOT, 'seed', 'std-vocab.md'), os.path.join(G, 'seed', 'std-vocab.md'))
+    grow.today_file('seed/std-vocab.md', os.path.join(G, 'seed', 'std-vocab.md'))   # today's law, the garden's own copy
     shutil.copytree(os.path.join(ROOT, 'seed', 'knowledge'), os.path.join(G, 'seed', 'knowledge'))
     before = {p: open(os.path.join(G, p), encoding='utf-8').read() for p in
               [f"beans/{b}.md" for b in BEANS] + ['mappings/restore.md', 'VOCAB.md']}
@@ -498,6 +500,13 @@ try:
            'vacant': 'prediction: the rate of a backup, to come'} in v2.get('units', [])
           and any(u.get('unit') == 'rack-unit' and u.get('ucum') == 'false' and u.get('why') for u in v2.get('units', [])),
           v2.get('units'))
+    vt = open(os.path.join(C, 'VOCAB.md'), encoding='utf-8').read()
+    old_v = translate.dmparse.loads(translate.dmparse.split_front_matter(open(os.path.join(G, 'VOCAB.md'),
+                                                                               encoding='utf-8').read())[0])
+    check("...its front matter the core's rows alone, today's keys none of them; today's front matter kept whole in its "
+          "body, read by no rule (v1 part 13b)",
+          set(v2) <= {'kinds', 'namespaces', 'units', 'profiles', 'schemes', 'files', 'systems', 'tables'}
+          and translate.kept_words(vt) == old_v and 'registry_additions' in old_v, sorted(v2))
 
     # A VALUE TAKEN OUT IS SEEN: the proof reads the written bean back
     text, b = translate.translate_bean(os.path.join(G, 'beans', 'box.md'), 'beans/box.md',

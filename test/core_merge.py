@@ -7,13 +7,13 @@ three ways, a disagreement side by side, an id naming one statement, knowing kep
 every merge the suite makes: one result whichever side is ours (byte for byte), lossless, idempotent, and no moment of
 its own. The driver's refusal leaves ours as it was.
 
-Part two grows a garden (seed/germinate.sh), which takes the hooks and the merge driver from bin/install.py. While it
-pins std-vocab, its gate is today's; once it pins the core — the adoption judged by the core — `daftar check`,
-bin/check.py and the hooks run the core's gate. Then two branches change one bean and git merges them for real: the
+Part two grows a garden (seed/germinate.sh), which takes the hooks and the merge driver from bin/install.py and pins
+the core from its first commit: `daftar check`, bin/check.py and the hooks run the core's gate, and a pin to std-vocab is
+refused, naming the door a garden in today's words adopts through. Then two branches change one bean and git merges them for real: the
 driver merges the statements, a merge git commits itself is refused until an entry of its own names the bean it merged,
 and `git merge --no-commit` with bin/save.py commits it through the core's gate; a bean only the other side changed
-comes through as it was committed; a true conflict leaves ours for a person, who settles it; sides written in two laws
-are refused; and a bean one side removed and the other changed is git's own conflict.
+comes through as it was committed; a true conflict leaves ours for a person, who settles it; a side in today's words is
+refused; and a bean one side removed and the other changed is git's own conflict.
 
 Run: python3 test/core_merge.py   (0 = green; about a minute, since a save waits for the minute to turn once)
 """
@@ -350,13 +350,16 @@ try:
     check("`.gitattributes` sends beans and mappings to the driver `daftar`, and the journal and the queue to git's union",
           attrs.count('merge: daftar') == 2 and attrs.count('merge: union') == 2, attrs)
 
-    # WHILE IT PINS STD-VOCAB, THE GATE IS TODAY'S
+    # THE GATE IS THE CORE'S FROM THE FIRST COMMIT, AND A PIN TO TODAY'S WORDS IS REFUSED
     r = run(PY, 'bin/daftar.py', 'check')
-    check("while the garden pins std-vocab, `daftar check` is today's gate (bin/check.py)",
-          r.returncode == 0 and 'core check' not in r.out and 'docs, 0 error(s)' in r.out.strip().split('\n')[-1], r.out[-400:])
-    r = run(PY, 'bin/check.py', '--merge-commit')
-    check("...and a merge git commits itself is judged by nothing, as today's gate never judged one",
-          r.returncode == 0 and not r.out.strip(), r.out)
+    check("the garden pins the core from its first commit: `daftar check` is the core's gate",
+          r.returncode == 0 and 'core check: g: 0 beans' in r.out, r.out[-400:])
+    g0 = text('GARDEN.md')
+    write('GARDEN.md', re.sub(r'(?m)^extends: core@\S*', 'extends: std-vocab@32.1', g0, count=1))
+    r = run(PY, 'bin/check.py', '--all')
+    check("...and a garden pinning std-vocab is refused by bin/check.py, which names the door it adopts the core through",
+          r.returncode != 0 and 'std-vocab@32.1' in r.out and 'bin/dmupgrade.py' in r.out, r.out[-600:])
+    write('GARDEN.md', g0)
     tw = os.path.join(T, 'today')
     os.makedirs(tw)
     for n, t in (('O', "---\nbean: box\ngenos: device\ntitle: Box\n---\nA box.\n"),
@@ -364,17 +367,20 @@ try:
                  ('B', "---\nbean: box\ngenos: device\ntitle: Box\n---\nA box, theirs.\n")):
         with open(os.path.join(tw, n), 'w', encoding='utf-8') as fh:
             fh.write(t)
+    was = open(os.path.join(tw, 'A'), encoding='utf-8').read()
     r = run(PY, 'bin/merge.py', '--file', *(os.path.join(tw, n) for n in 'OAB'), 'beans/box.md')
-    check("...and the driver hands a bean in today's words to bin/merge.py, today's merge", 'merge' in r.out, r.out[-400:])
+    check("...and the driver refuses a bean in today's words, ours left as it was",
+          r.returncode != 0 and "written in today's words" in r.out and open(os.path.join(tw, 'A'), encoding='utf-8').read() == was,
+          r.out[-400:])
 
-    # THE ADOPTION, JUDGED BY THE CORE
+    # THE GARDENER NAMED, A RULE-CHANGE JUDGED BY THE CORE
     write('GARDEN.md', re.sub(r'(?m)^extends: std-vocab@\S*', 'extends: core@' + str(read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version']), text('GARDEN.md'), count=1)
           .replace('\ngardener:', '\ngardener: sam', 1))
     write('beans/sam.md', SAM)
     write('beans/pot.md', POT)
     r = run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',
             '- action: RULE-CHANGE, GARDEN.md extends the core, sam keeps the garden: [[sam]] and [[pot]]; ratified by sam')
-    check("the commit that moves the pin to the core is judged by the core's gate, through the same hook",
+    check("the commit that names the gardener is judged by the core's gate, through the same hook",
           r.returncode == 0 and 'core check --staged: 2 beans, 5 statements — 0 error(s)' in r.out, r.out[-800:])
     r = run(PY, 'bin/daftar.py', 'check')
     r2 = run(PY, 'bin/check.py', '--all')
@@ -456,8 +462,8 @@ try:
         write('beans/pot.md', text('beans/pot.md').replace('kept"', 'kept by sam"'))
         return commit('ours: by sam', '- action: [[pot]] kept by sam')
     t, o, m = branch_and_merge('today', theirs, ours)
-    check("sides written in two laws — statements, and today's words — are refused, ours left as it was",
-          m.returncode != 0 and 'written in two laws' in m.out and 'kept by sam' in text('beans/pot.md'), m.out[-600:])
+    check("a side in today's words — a branch from before the garden adopted the core — is refused, ours left as it was",
+          m.returncode != 0 and "written in today's words" in m.out and 'kept by sam' in text('beans/pot.md'), m.out[-600:])
     run('git', 'merge', '--abort')
 
     # REMOVED ON ONE SIDE, CHANGED ON THE OTHER

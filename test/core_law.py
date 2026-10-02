@@ -252,7 +252,7 @@ try:
     check("catalog: one part, with the rule that names it", r.returncode == 0 and 'verb:take — verb' in r.out
           and '[THE RULES] knowing:' in r.out, r.out[:900])
     import catalog
-    rc = catalog.CoreCatalogue(ROOT)
+    rc = catalog.Catalogue(ROOT)
     check("catalog: the core's guides (a release's core/guide/) state the verbs their examples write",
           ('states', 'seed/FORMS.md', 'verb:say', '') in rc.edges and ('states', 'seed/FORMS.md', 'verb:agree', '')
           in rc.edges)

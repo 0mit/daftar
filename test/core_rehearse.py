@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
-"""The core's rehearsal on the release's own examples: the beans the guides show, grown into a garden today's gate
-accepts, then translated into statements — nothing lost, and the core's engine passing.
+"""The core's rehearsal on the last release in today's words: the beans its guides show, grown into a garden its gate
+accepts, translated into statements — nothing lost, the core's engine passing — and the core adopted by that garden's
+own door.
 
-Grows a garden (seed/germinate.sh) and commits seed/README.md's first beans and the gardener's line, then each recipe of
+Makes the release in today's words (test/grow.py `today()`: v0.49.0, std-vocab 32) and grows a garden from it
+(seed/germinate.sh); commits its seed/README.md's first beans and the gardener's line, then each recipe of its
 seed/COOKBOOK.md and seed/WELCOME.md in the order of the pages with its VOCAB.md fragment, journalled through
-bin/journal.py and judged by today's gate, as test/germinate.py does; then seed/FORMS.md's forms and its forms for
-what nobody said. So every bean here is one today's law accepts. It translates the garden into a copy
+bin/dmjournal.py and judged by its gate; then its seed/FORMS.md's forms and its forms for what nobody said. So every
+bean here is one today's law accepts. It translates the garden into a copy with this tree's translator
 (core/translate.py) and checks that every value of every bean is placed and found where it was put, that the core's
-engine passes the copy, and that the forms the guides teach — a person, a host, money between two people, an agreement
-paid in instalments, an event, another person's garden — each became statements. Last, it adopts the core in place:
-the garden has had core/ since it germinated; the translated beans come into it, and GARDEN.md's pin moves from
-std-vocab to the core, in one commit through bin/save.py and the core's gate, refused until its entry says
-RULE-CHANGE, then granted the moments history recorded — that once, and not the commit after.
+engine passes the copy, and that the forms the guides taught — a person, a host, money between two people, an agreement
+paid in instalments, an event, another person's garden — each became statements. Last, it adopts the core in place, as
+a garden in today's words will: a release of the core made from this tree is tagged v1.0.0 on top of v0.49.0, and the
+garden's own bin/dmupgrade.py hands over to it — the count holding, the core's gate passing, nothing committed; the
+commit refused until a person has filled the entry, then granted the moments history recorded — that once, and not
+the commit after.
 """
 import os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+sys.path.append(os.path.join(ROOT, 'test'))
 from core import read  # noqa: E402
+import grow  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -36,13 +41,13 @@ def run(*a, cwd=None):
     return subprocess.run(list(a), capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=cwd)
 
 
-def page(name):
-    with open(os.path.join(ROOT, 'seed', name), encoding='utf-8') as fh:
+def page(rel, name):
+    with open(os.path.join(rel, 'seed', name), encoding='utf-8') as fh:
         return fh.read()
 
 
 def commit(G, name, body):
-    run(PY, os.path.join(G, 'bin', 'journal.py'), 'human (test)', name[:60], '--body', body, cwd=G)
+    run(PY, os.path.join(G, 'bin', 'dmjournal.py'), 'human (test)', name[:60], '--body', body, cwd=G)
     run('git', 'add', '-A', cwd=G)
     return run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', name, cwd=G)
 
@@ -71,12 +76,14 @@ def fragment(G, frag):
         fh.write(v)
 
 
-def grow_today(G, check=check):
-    """Today's guides' examples, grown into the garden G and committed through today's gate, one recipe at a time."""
-    r = run('sh', os.path.join(ROOT, 'seed', 'germinate.sh'), G, cwd=ROOT)
-    check("a garden germinates", r.returncode == 0, r.stdout + r.stderr)
+def grow_today(G, check=check, rel=None):
+    """Today's guides' examples — the release in today's words `rel`'s (made beside G when none is given) — grown into
+    the garden G and committed through its gate, one recipe at a time. Returns the release."""
+    rel = rel or grow.today(os.path.join(os.path.dirname(G), 'today-release'))
+    r = run('sh', os.path.join(rel, 'seed', 'germinate.sh'), G, cwd=rel)
+    check("a garden germinates from the release in today's words (v0.49.0)", r.returncode == 0, r.stdout + r.stderr)
     # THE FIRST BEANS AND THE GARDENER'S LINE, as seed/README.md teaches them
-    rm = page('README.md')
+    rm = page(rel, 'README.md')
     first = [(p, t) for p, t in EX.findall(rm) if p in ('beans/sam.md', 'beans/laptop.md')]
     for p, t in first:
         write(G, p, t)
@@ -93,7 +100,7 @@ def grow_today(G, check=check):
     # EACH RECIPE, in the order of the page, as test/germinate.py commits them
     done, failed = 0, None
     for doc in ('COOKBOOK.md', 'WELCOME.md'):
-        for sec in page(doc).split('\n## '):
+        for sec in page(rel, doc).split('\n## '):
             beans, frags = EX.findall(sec), FRAG.findall(sec)
             changed = [p for p, x in beans if not os.path.isfile(os.path.join(G, p))
                        or STAMPED.sub(r'\1now', open(os.path.join(G, p), encoding='utf-8').read()) != x + '\n']
@@ -120,7 +127,7 @@ def grow_today(G, check=check):
     check(f"seed/COOKBOOK.md's and seed/WELCOME.md's recipes commit through today's gate, one at a time ({done})",
           failed is None and done >= 10, failed)
     # SEED/FORMS.MD: its forms, and its forms for what nobody said
-    fp = page('FORMS.md')
+    fp = page(rel, 'FORMS.md')
     forms = [(p, t) for p, t in EX.findall(fp)
              if not os.path.isfile(os.path.join(G, p))
              or STAMPED.sub(r'\1now', open(os.path.join(G, p), encoding='utf-8').read()) != t + '\n']
@@ -135,14 +142,15 @@ def grow_today(G, check=check):
                + ', and [[ali]] named here.')
     check(f"seed/FORMS.md's forms ({len(forms)} not shown before) and its {len(unsaid)} forms for what nobody said commit "
           f"through today's gate", c.returncode == 0 and len(unsaid) >= 3, (c.stdout + c.stderr)[-600:])
+    return rel
 
 
 
 def main():
     T = tempfile.mkdtemp(prefix='dmcorereh-')
-    G, C = os.path.join(T, 'examples'), os.path.join(T, 'copy')
+    G, C, REL = os.path.join(T, 'examples'), os.path.join(T, 'copy'), os.path.join(T, 'release')
     try:
-        grow_today(G)
+        grow_today(G, rel=grow.today(REL))
         # THE TRANSLATION
         n_beans = len([f for d in ('beans', 'mappings') if os.path.isdir(os.path.join(G, d))
                        for f in os.listdir(os.path.join(G, d)) if f.endswith('.md')])
@@ -155,8 +163,8 @@ def main():
         r = run(PY, os.path.join(ROOT, 'core', 'check.py'), C)
         check("the core's engine passes the translated garden", r.returncode == 0 and '— 0 error(s)' in r.stdout, r.stdout[-2000:])
 
-        def verbs(bid):
-            p = os.path.join(C, 'beans', bid + '.md')
+        def verbs(bid, root=C):
+            p = os.path.join(root, 'beans', bid + '.md')
             if not os.path.isfile(p):
                 return []
             return [next(iter(s)) for s in read.document(p)[0].get('statements') or []]
@@ -171,19 +179,11 @@ def main():
               and all('be' in verbs(b) or 'agree' in verbs(b) for b in kinds.get('event', [])[:1]),
               {k: {b: verbs(b) for b in v[:3]} for k, v in kinds.items()})
 
-        # THE ADOPTION, IN PLACE (ratified 2026-10-01: a ratified exception): the translated beans and the core come into
-        # the garden in one commit, through today's save and the core's gate. Refused unless it says RULE-CHANGE; with it,
-        # the gate grants the acts the moments history recorded — that once, and never to the commit after it.
-        for d in ('beans', 'mappings'):
-            if os.path.isdir(os.path.join(C, d)):
-                for f in os.listdir(os.path.join(C, d)):
-                    shutil.copy(os.path.join(C, d, f), os.path.join(G, d, f))
-        shutil.copy(os.path.join(C, 'VOCAB.md'), os.path.join(G, 'VOCAB.md'))
-        check("the garden received core/ when it germinated (seed/LANGUAGE ships it beside today's gate, from v0.49.0)",
-              all(os.path.isfile(os.path.join(G, 'core', f)) for f in ('check.py', 'translate.py', 'law/core.yaml', 'hooks/pre-commit')))
-        gp = os.path.join(G, 'GARDEN.md')                  # ADOPTING is moving the garden's pin from std-vocab to the core
-        gt = open(gp, encoding='utf-8').read()
-        open(gp, 'w', encoding='utf-8', newline='\n').write(re.sub(r'(?m)^extends: std-vocab@[^ \n]*', 'extends: core@' + str(read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version']), gt, count=1))
+        # THE ADOPTION, IN PLACE (ratified 2026-10-01: a ratified exception), BY THE GARDEN'S OWN DOOR: a release of the
+        # core made from this tree, tagged v1.0.0 on top of the release in today's words, and the garden's own
+        # bin/dmupgrade.py (v0.49.0's) handing over to the release's. One commit; refused until a person has filled the
+        # entry; then the gate grants the acts the moments history recorded — that once, never to the commit after it.
+        grow.release(REL)
         run('git', 'config', 'user.name', 't', cwd=G)
         run('git', 'config', 'user.email', 't@x', cwd=G)
         # THE MINUTE TURNS FIRST. A heading's moment is the clock's to the minute, so two saves in one minute share one; the
@@ -194,20 +194,37 @@ def main():
             if datetime.datetime.now().astimezone().isoformat(timespec='minutes').replace('T', ' ')[:16] != last[3:19]:
                 break
             time.sleep(1)
-        r = run(PY, 'core/install.py', cwd=G)
-        check("the garden takes the core's gate (core/install.py)", r.returncode == 0, r.stdout + r.stderr)
-        named = ', '.join(f"[[{f[:-3]}]]" for d in ('beans', 'mappings') if os.path.isdir(os.path.join(G, d))
-                          for f in sorted(os.listdir(os.path.join(G, d))) if f.endswith('.md'))
-        r = run(PY, 'bin/save.py', 'sam', 'the core adopted', '--body', f"- action: the beans written in statements: {named}",
-                cwd=G)
+        head = run('git', 'rev-parse', 'HEAD', cwd=G).stdout.strip()
+        r = run(PY, 'bin/dmupgrade.py', 'v1.0.0', '--from', REL, cwd=G)
         out = r.stdout + r.stderr
-        check("adopting the core with no RULE-CHANGE said is refused: by `ratify`, and the acts' moments are not granted",
-              r.returncode == 1 and 'ratify' in out and 'Only the commit that adopts the core' in out, out[-1500:])
-        run(PY, 'bin/journal.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',
-            '- action: RULE-CHANGE, the core adopted in place; ratified by sam', cwd=G)
-        r = run(PY, 'bin/save.py', '--again', cwd=G)
+        m = re.search(r'(\d+) values, (\d+) placed', out)
+        check(f"the garden's own bin/dmupgrade.py hands over to v1.0.0's, which adopts the core: {n_beans} beans, the count "
+              f"holding ({m.group(1) if m else '?'} values), the core's gate passing, nothing committed",
+              r.returncode == 0 and 'handing over to v1.0.0' in out and 'adopted the core at v1.0.0' in out
+              and m and m.group(1) == m.group(2) and re.search(rf'core check: examples: {n_beans} beans, \d+ statements — 0 '
+                                                                 r'error\(s\)', out)
+              and run('git', 'rev-parse', 'HEAD', cwd=G).stdout.strip() == head, out[-2000:])
+        check("...the beans the translator wrote, its tools the release's (bin/save.py, no bin/dmsave.py), its pin the core's",
+              all(open(os.path.join(G, 'beans', f), encoding='utf-8').read() == open(os.path.join(C, 'beans', f),
+                                                                                     encoding='utf-8').read()
+                  for f in os.listdir(os.path.join(C, 'beans')))
+              and os.path.isfile(os.path.join(G, 'bin', 'save.py')) and not os.path.exists(os.path.join(G, 'bin', 'dmsave.py'))
+              and re.search(r'(?m)^extends: core@', open(os.path.join(G, 'GARDEN.md'), encoding='utf-8').read()),
+              sorted(os.listdir(os.path.join(G, 'bin'))))
+        run('git', 'add', '-A', cwd=G)
+        r = run('git', 'commit', '-qm', 'the core adopted', cwd=G)
         out = r.stdout + r.stderr
-        check("...and saved once an entry says RULE-CHANGE: the gate grants the adoption the moments history recorded",
+        check("the adoption's commit is refused while its entry holds the `fill in`s a person answers", r.returncode != 0
+              and '(fill in' in out and run('git', 'rev-parse', 'HEAD', cwd=G).stdout.strip() == head, out[-1500:])
+        jp = os.path.join(G, 'log', 'journal.md')
+        j = open(jp, encoding='utf-8').read()
+        j = re.sub(r"- ratified_by: \(fill in[^\n]*", '- ratified_by: sam, here', j)
+        j = re.sub(r"- why: \(fill in[^\n]*", '- why: the core is the language', j)
+        open(jp, 'w', encoding='utf-8', newline='\n').write(j)
+        run('git', 'add', '-A', cwd=G)
+        r = run('git', 'commit', '-qm', 'RULE-CHANGE: the core adopted', cwd=G)
+        out = r.stdout + r.stderr
+        check("...and passes the core's gate once a person has filled them: the acts granted the moments history recorded",
               r.returncode == 0 and '— 0 error(s)' in out, out[-1500:])
         acts = [next(iter(s.values())).get('at') for s in read.document(os.path.join(G, 'beans', 'laptop.md'))[0]['statements']
                 if next(iter(s)) in ('say', 'read', 'derive', 'make')]

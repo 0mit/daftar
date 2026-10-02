@@ -11,4 +11,4 @@ standing:
   - { layer: names, holds: ["seed/names/*.tsv"] }
   - { layer: guide, holds: ["README.md", "AGENTS.md", "seed/README.md", "seed/WELCOME.md", "seed/COOKBOOK.md", "seed/FORMS.md", "seed/*.template", "assets/*/README.md", "assets/*/templates/*"] }
   - { layer: estate, holds: ["beans/*", "mappings/*", "series/*", "extracts/*"] }
-  - { layer: gate, holds: ["bin/*", "test/*", "seed/germinate.*", ".gitattributes", ".gitignore", "assets/*/bin/*", "assets/*/lib/*", "core/*.py", "core/hooks/*"] }
+  - { layer: gate, holds: ["bin/*", "test/*", "seed/germinate.*", ".gitattributes", ".gitignore", "assets/*/bin/*", "assets/*/lib/*", "core/*.py"] }

@@ -69,12 +69,11 @@ MERGE.md
 # The skill a coding agent auto-loads: a mirror pointing into the garden, carrying no rule of its own.
 AGENTS.md
 .claude/skills/daftar/SKILL.md
-# THE CORE (v0.49.0): the engine of the statement, its law and its hook, beside today's gate. A garden receives it so it
-# can rehearse the switch on a copy (`python3 core/translate.py garden . <copy>`, then `python3 core/check.py <copy>`);
-# today's gate stays the gate until a garden adopts v1.0.0. Named file by file kind, as bin/ is: nothing else under core/.
+# THE CORE: the engine of the statement and its law — the gate every garden runs, which bin/check.py and the hooks hand
+# it — and the translator a garden in today's words adopts it through. Named file by file kind, as bin/ is: nothing else
+# under core/.
 core/*.py
 core/law/*.yaml
-core/hooks/*
 # AN ASSET: the directory named for a profile the law offers. `<profile>` stands for each profile this garden's
 # VOCAB.md extends, and for no other: opting into the profile is what brings its asset, and leaving it takes it away.
 assets/<profile>/*

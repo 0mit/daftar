@@ -39,7 +39,7 @@ the items of CHECKLIST.md that name it, and the checks of the suites whose names
 
 THE FINDINGS are candidates for a person to judge, never verdicts: a law item that nothing references; a tool that no
 suite imports, runs or names; one domain taken under different attribute names whose meanings share their words; a
-sibling whose shape differs from the rest of its group (the terms of one tier or profile, the rows of one registry); a
+sibling whose shape differs from the rest of its group (the verbs, the rows of one table); a
 name the law gives several items; a file that lists the beans itself — a call that reads a directory of beans, one
 finding a call — instead of reading them through the one garden model, bin/garden.py.
 
@@ -48,10 +48,10 @@ garden's own files are the garden's, and no part of the language.
 
 It writes nothing, and opens no network path.
 
-IN A GARDEN OF THE CORE (v1 part 9) the law's items are the core's — each rule, verb, table, section, form and layer of
-core/law/ and the garden's rows — and `uses`, `states` and `explains` are read in its words: a verb uses the table a
-role takes and the form a qualifier holds, a document states the verb at the head of a statement line, and a reason
-explains the item it came from (bin/why.py). The profiles are today's words until v1 part 11.
+THE LAW'S ITEMS are the core's (v1 part 9; its one law since part 13b) — each rule, verb, table, section, form, layer
+and profile of core/law/ and the garden's rows — and `uses`, `states` and `explains` are read in its words: a verb uses
+the table a role takes and the form a qualifier holds, a document states the verb at the head of a statement line, and
+a reason explains the item it came from (bin/why.py).
 """
 import ast, html, json, os, re, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -63,19 +63,27 @@ import why as dmwhy            # the one reader of the reasons
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LAW, CHECKLIST, RULES = 'core/law/core.yaml', 'CHECKLIST.md', 'bin/rules.py'
-LAW_KINDS = ('term', 'registry', 'section', 'profile', 'layer')
+# THE LAW'S ITEMS (v1 part 9; the catalogue's one law since part 13b). The law is core/law/ and the rows the garden adds (VOCAB.md), read through core/law.py `Law`
+# as the gate reads it. Its items: each RULE, each VERB (the face's, the rows', the garden's), each TABLE (a list of a
+# file of core/law/, or of verbs.yaml's `tables`), each SECTION (a mapping of one: a reading's selection form, an
+# extent's form), each FORM (what a qualifier of the shape `form` holds) and each LAYER. The relations are the files' as
+# before; a verb USES the table a role takes its rows from and the form a qualifier holds, a form the table an attribute
+# takes from; a document STATES a verb written at the head of a statement line of an example block; a reason EXPLAINS
+# the item whose origin it is keyed by (bin/why.py `core_from`). Each PROFILE (core/law/profiles.yaml, v1 part 11) is an
+# item too, holding the verbs whose home it is, its tables and its forms, and named taken or not by the garden.
+LAW_KINDS = ('rule', 'verb', 'table', 'section', 'form', 'layer', 'profile')
 RELATIONS = ('imports', 'runs', 'mentions', 'names', 'explains', 'holds', 'uses', 'covers', 'states', 'ships')
 
 # A FILE'S KIND is this catalogue's word for what the file is, read from its path; where it SITS is the law's `layers`.
 # The first pattern that matches names it, `*` crossing `/` as the layer map matches.
-KINDS = ((LAW, 'law'), ('core/law/*', 'law'), ('core/hooks/*', 'hook'), ('core/guide/*.template', 'template'),
+KINDS = ((LAW, 'law'), ('core/law/*', 'law'),
          ('core/*.py', 'module'), ('bin/hooks/*', 'hook'), ('bin/*.py', 'tool'), ('bin/*.sh', 'tool'), ('seed/germinate.*', 'tool'),
          ('assets/*/bin/*', 'tool'), ('assets/*/lib/*', 'module'), ('assets/*/templates/*', 'template'),
          ('test/*.py', 'suite'), ('test/*', 'fixture'), ('seed/knowledge/*.md', 'document'),
          ('seed/knowledge/*', 'knowledge table'),
          ('seed/*.template', 'template'), ('seed/LICENSE*', 'licence'), ('LICENSE*', 'licence'),
          ('site/*.html', 'page'), ('site/*.py', 'tool'), ('site/*', 'site asset'),
-         ('.github/workflows/*', 'workflow'), ('.github/*', 'form'), ('*.md', 'document'), ('*', 'other'))
+         ('.github/workflows/*', 'workflow'), ('.github/*', 'issue form'), ('*.md', 'document'), ('*', 'other'))
 # What a document, a page or a suite may name a file by: its path, with one of these endings.
 _PATHY = re.compile(r"(?<![\w$/.-])((?:[\w-]+/)*[\w.-]+\.(?:py|sh|md|tsv|yaml|yml|json|html|toml|txt|js|template))\b")
 _TOKEN = re.compile(r"[\w.-]+(?:/[\w.-]+)*\.(?:py|sh)\b")      # what a command line runs
@@ -395,12 +403,6 @@ class Catalogue:
         self._checklists()
         self.findings = self._findings()
 
-    def _load_law(self):
-        text = _read(self.root, LAW)
-        law = dmparse.loads(dmparse.split_front_matter(text)[0]) if text else None
-        if not isinstance(law, dict):
-            raise ValueError(f"{LAW} is not there or its front matter does not read: there is no catalogue without the law")
-        self.law, self.version = law, str(law.get('version'))
 
     def _release(self):
         """The release this tree is. In a garden, the one its GARDEN.md says it adopted (`daftar_release`, which germination
@@ -423,55 +425,6 @@ class Catalogue:
         if a in self.parts and b in self.parts and a != b:
             self.edges.add((rel, a, b, via or ''))
 
-    # -------------------------------------------------------------- the law's items
-    def _law_parts(self):
-        law = self.law
-        self.terms = {}
-        for t in law.get('terms') or []:
-            if isinstance(t, dict) and isinstance(t.get('term'), str):
-                self.terms.setdefault(t['term'], (t, 'tier0'))
-        self.profiles = {str(p): r for p, r in (law.get('profiles') or {}).items() if isinstance(r, dict)}
-        for p, r in self.profiles.items():
-            for t in r.get('terms') or []:
-                if isinstance(t, dict) and isinstance(t.get('term'), str):
-                    self.terms.setdefault(t['term'], (t, 'profile:' + p))
-        for name, (t, tier) in self.terms.items():
-            s = t.get('schema') if isinstance(t.get('schema'), dict) else {}
-            self.part('term:' + name, 'term', name, tier=tier, meaning=t.get('meaning'), shape=s.get('shape'),
-                      keys=sorted(str(k) for k in t), attributes={}, merge=t.get('merge'),
-                      context_keys=t.get('context_keys'))
-        self.registries = sorted(k for k, v in law.items() if isinstance(v, list) and k != 'terms')
-        self.sections = sorted(k for k, v in law.items() if isinstance(v, dict) and k != 'profiles')
-        for k in self.registries:
-            rows = law[k]
-            dicts = [r for r in rows if isinstance(r, dict)]
-            key = next(iter(dicts[0]), None) if dicts else None
-            fields = {}
-            for r in dicts:
-                for f in r:
-                    fields[str(f)] = fields.get(str(f), 0) + 1
-            self.part('registry:' + k, 'registry', k, rows=len(rows), key=key,
-                      row_names=[str(r.get(key)) for r in dicts if key in r] if dicts else [str(x) for x in rows],
-                      fields=fields)
-        for k in self.sections:
-            self.part('section:' + k, 'section', k, keys=[str(x) for x in law[k]])
-        for p, r in self.profiles.items():
-            self.part('profile:' + p, 'profile', p, meaning=r.get('meaning'),
-                      terms=[str(t.get('term')) for t in r.get('terms') or [] if isinstance(t, dict)],
-                      # what the profile ADDS to a core term (28.1): `<term>.<attribute>`, each
-                      overlays=[f"{o['term']}.{a}" for _pn, o in dmparse.profile_overlays(law, [p])
-                                for a in ((o.get('schema') or {}).get('attrs') or {})],
-                      vacancies=len(r.get('vacancies') or []), asset=f'assets/{p}/')
-        for r in self.map.rows:
-            self.part('layer:' + r['layer'], 'layer', r['layer'], files=r.get('files', True), beneath=r.get('beneath'),
-                      holds=r.get('holds') or [], meaning=r.get('meaning'))
-        # the names a file may mention: a term's, a registry's, a section's
-        # the names a file may mention, each with every item the law gives it: a text naming `roles` names the term and
-        # the registry alike, and nothing in it says which
-        self.names = {}
-        for pid in ['term:' + n for n in self.terms] + ['registry:' + k for k in self.registries] \
-                + ['section:' + k for k in self.sections]:
-            self.names.setdefault(pid.split(':', 1)[1], []).append(pid)
 
     # -------------------------------------------------------------- the files
     def _file_parts(self):
@@ -522,7 +475,7 @@ class Catalogue:
                 for n in law_names_in(text, self.names, self.profiles):
                     for pid in self.names.get(n, [n]):
                         self.edge('mentions', f, pid)
-            if self.parts[f]['kind'] in ('document', 'page', 'form', 'workflow', 'template', 'other') \
+            if self.parts[f]['kind'] in ('document', 'page', 'issue form', 'workflow', 'template', 'other') \
                     and not f.endswith('.py'):
                 self._names(f, text)
 
@@ -645,51 +598,6 @@ class Catalogue:
                 if self.parts[h]['kind'] == 'tool':
                     self.edge('names', f, h)
 
-    def _document(self, f, text):
-        """The terms a document or a page states: written as a key at the head of a line of an example block."""
-        blocks = [m.group(2) for m in re.finditer(r'(?ms)^(`{3,})[^\n]*\n(.*?)^\1[ \t]*$', text)] if f.endswith('.md') \
-            else [html.unescape(re.sub(r'<[^>]+>', '', m.group(1))) for m in re.finditer(r'(?s)<pre[^>]*>(.*?)</pre>', text)]
-        for b in blocks:
-            for k in re.findall(r'(?m)^([a-z][a-z0-9_]*):(?:\s|$)', b):
-                if k in self.terms:
-                    self.edge('states', f, 'term:' + k)
-
-    # -------------------------------------------------------------- what a term's attributes take their values in
-    def _uses(self):
-        terms = [t for t, _tier in self.terms.values()]
-        self.sense = dmform.sense_uses(terms, self.law)
-        for name, uses in self.sense.items():
-            for domain, where, facet, rule in uses:
-                term, _, inner = where.partition('.')
-                path = (inner + '.' if inner else '') + name
-                if 'term:' + term not in self.parts:
-                    continue
-                label = self._label(domain, facet, rule, self._record(term, path))
-                self.parts['term:' + term]['contents']['attributes'][path] = label
-                tgt, detail = self._target(facet, rule)
-                self.edge('uses', 'term:' + term, tgt, path + (' in ' + detail if detail else ''))
-                # a value type that names the registry its values are drawn from (29.0: a coding's schemes) is a use of
-                # that registry too, through the type
-                _vt = next((r for r in (self.law.get('value_types') or []) if isinstance(r, dict)
-                            and facet == 'type' and r.get('type') == str(rule)), None)
-                if _vt and _vt.get('scheme_from'):
-                    self.edge('uses', 'term:' + term, 'registry:' + str(_vt['scheme_from']), path + ' through ' + str(rule))
-        for name, (t, _tier) in self.terms.items():
-            s = t.get('schema') if isinstance(t.get('schema'), dict) else {}
-            for k in ('values_from', 'key_form'):
-                v = s.get(k)
-                if isinstance(v, str):
-                    v = v[len('values_from:'):] if v.startswith('values_from:') else v
-                    m = re.match(r'registry:([a-z_0-9]+)', v)
-                    self.edge('uses', 'term:' + name, 'registry:' + m.group(1) if m else 'term:' + v, k)
-            v = s.get('value_in_registry')
-            if isinstance(v, dict):
-                self.edge('uses', 'term:' + name, 'registry:' + str(v.get('registry')), 'value_in_registry')
-        # a registry whose column takes its values from another's rows uses that registry (26.0, `registry_forms`)
-        for link in dmparse.registry_links(self.law):
-            a, b = 'registry:' + str(link['from']), 'registry:' + str(link['to'])
-            if a in self.parts and b in self.parts:
-                self.edge('uses', a, b, str(link['field']))
 
     def _record(self, term, path):
         t = self.terms[term][0]
@@ -702,110 +610,12 @@ class Catalogue:
             attrs = d.get('entries') if isinstance(d, dict) else None
         return rec
 
-    @staticmethod
-    def _label(domain, facet, rule, rec):
-        """An attribute's domain in words a reader can follow: the gate's sense of it (bin/form.py), with the aspect
-        or the closed list named, and a registry or a system another attribute names said so."""
-        if facet == 'aspect':
-            return 'aspect:' + str(rule.get('aspect'))
-        if facet == 'values':
-            return 'values:' + '|'.join(str(v) for v in rule)
-        if facet == 'registry' and isinstance(rule, dict) and rule.get('registry_from'):
-            return 'registry named by ' + str(rule['registry_from'])
-        if facet == 'system_from' and isinstance(rule, dict):
-            return f"a position in the system named by {rule.get('keyed_by')}"
-        if facet is None:
-            return dmform.domain_kind(rec.get('in') if isinstance(rec, dict) else None) or 'unknown'
-        return str(domain)
-
-    @staticmethod
-    def _target(facet, rule):
-        if facet == 'aspect':
-            return 'registry:aspects', str(rule.get('aspect'))
-        if facet == 'type':
-            return 'registry:value_types', str(rule)
-        if facet == 'registry' and isinstance(rule, dict) and rule.get('registry'):
-            return 'registry:' + str(rule['registry']), None
-        if facet == 'system_from' and isinstance(rule, dict):
-            return 'registry:' + str(rule.get('registry')), None
-        if facet == 'system':
-            return 'registry:anchor_systems', str(rule)
-        if facet == 'key_of':
-            return 'term:' + str(rule), None
-        if facet == 'quantity':
-            return 'registry:quantities', str(rule)
-        if facet in ('extent', 'recurrence'):
-            return f'section:{facet}_form', None
-        if facet == 'origin_of':
-            return 'registry:acts', None
-        if facet == 'bean_id' and isinstance(rule, dict) and rule.get('gene'):
-            return 'registry:gene', ','.join(str(g) for g in rule['gene'])
-        return None, None
-
-    # -------------------------------------------------------------- the reasons
-    def _explains(self):
-        why = dmwhy.WHY and os.path.relpath(dmwhy.WHY, ROOT).replace(os.sep, '/')
-        if self.root != ROOT or not why or why not in self.parts:
-            return
-        for key in dmwhy.rationale():
-            if key.startswith('doc:'):
-                self.edge('explains', why, key[4:].split('#', 1)[0], key)
-                continue
-            segs = dmwhy._SEG.findall(key)          # the reasons' own grammar of a path, read where it is kept
-            head = segs[0][0] if segs and segs[0][0] else None
-            nxt = segs[1] if len(segs) > 1 else ('', '')
-            if head == 'terms' and nxt[1]:
-                tgt = 'term:' + nxt[1]
-            elif head == 'profiles' and nxt[0]:
-                t = next((i for n, i in segs[2:4] if i), None)
-                tgt = 'term:' + t if t and len(segs) > 3 and segs[2][0] == 'terms' else 'profile:' + nxt[0]
-            elif head == 'layers' and nxt[1] and 'layer:' + nxt[1] in self.parts:
-                tgt = 'layer:' + nxt[1]
-            else:
-                tgt = ('registry:' if head in self.registries else 'section:') + head \
-                    if head in self.registries or head in self.sections else None
-            if tgt:
-                self.edge('explains', why, tgt, key)
 
     # -------------------------------------------------------------- what each part is held to
     def _checklists(self):
         self._rule_lines()
         self._checklist_items()
 
-    def _rule_lines(self):
-        # the rules, as bin/rules.py prints them for every profile the law offers
-        r = subprocess.run([sys.executable, os.path.join(self.root, *RULES.split('/')), '--terms', '--core', '--every-profile'],
-                           capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=self.root)
-        lines, sections, title = r.stdout.split('\n'), [], None
-        for i, ln in enumerate(lines):
-            if i + 1 < len(lines) and lines[i + 1].startswith('─') and ln.strip():
-                title = ln.strip()
-                sections.append((title, []))
-            elif title and ln.strip() and not ln.startswith('─'):
-                sections[-1][1].append(ln.rstrip())
-        for title, body in sections:
-            if title.startswith('TERMS'):
-                cur = None
-                for ln in body:
-                    m = re.match(r'^  (\S+)\s+\[[^\]]*\]\s*(.*)$', ln)
-                    if m:
-                        cur = 'term:' + m.group(1) if 'term:' + m.group(1) in self.parts else None
-                        if cur:
-                            self._rule(cur, title, m.group(2))
-                    elif cur and ln.startswith('    '):
-                        self._rule(cur, title, ln.strip().lstrip('· '))
-                continue
-            if title.startswith('CORE'):
-                for ln in body:
-                    self._rule('bin/check.py', title, ln.strip().lstrip('· '))
-                continue
-            if title.startswith('NOT READ'):
-                continue
-            head = title.split(' — ')[0].lower()
-            whole = [pid for pid in self._law_ids() if _named_in(self.parts[pid]['name'], head)]
-            for ln in body:
-                for pid in set(whole) | {pid for n in law_names_in(ln, self.names) for pid in self.names[n]}:
-                    self._rule(pid, title, ln.strip().lstrip('· '))
 
     def _checklist_items(self):
         # the items of CHECKLIST.md
@@ -834,8 +644,6 @@ class Catalogue:
                 for pid in self._named(name, f):
                     self.parts[pid]['checklists']['checks'].append({'suite': f, 'line': line, 'check': name})
 
-    def _law_ids(self):
-        return [p for p, v in self.parts.items() if v['kind'] in self.LAW_KINDS and v['kind'] not in ('profile', 'layer')]
 
     def _rule(self, pid, section, line):
         if pid in self.parts and line:
@@ -863,7 +671,7 @@ class Catalogue:
         # tools, so they name every item by construction) are not counted
         quiet = {LAW} | {f for f in self.files if self.parts[f]['contents'].get('layer') in ('journal', 'history')
                          or self.parts[f]['kind'] == 'law'}
-        counted = {'tool', 'module', 'hook', 'suite', 'document', 'template', 'workflow', 'form'}
+        counted = {'tool', 'module', 'hook', 'suite', 'document', 'template', 'workflow', 'issue form'}
         unreferenced = []
         for pid, v in sorted(self.parts.items()):
             if v['kind'] not in self.LAW_KINDS or v['kind'] == 'layer':
@@ -930,18 +738,6 @@ class Catalogue:
                                     'at': sorted({w for w, _ in names[a]} | {w for w, _ in names[b]})})
         return sorted(out, key=lambda x: (-x['similarity'], x['domain'], x['names']))
 
-    def _odd_siblings(self):
-        """A sibling whose shape differs from the rest of its group: a key few of its siblings hold, or one it lacks
-        that most of them hold. The terms of one tier or profile, and the rows of one registry, are each a group."""
-        groups = {}
-        for name, (t, tier) in self.terms.items():
-            groups.setdefault(('terms of ' + tier), {})['term:' + name] = {str(k) for k in t}
-        for k in self.registries:
-            rows = [r for r in self.law[k] if isinstance(r, dict)]
-            key = next(iter(rows[0]), None) if rows else None
-            for i, r in enumerate(rows):
-                groups.setdefault('rows of registry:' + k, {})[f"registry:{k}[{r.get(key, i)}]"] = {str(x) for x in r}
-        return self._odd(groups)
 
     @staticmethod
     def _odd(groups):
@@ -964,9 +760,9 @@ class Catalogue:
     def _walks(self):
         out = []
         for f, p in self.py.items():
-            # the garden models: today's, by both its names, and the core's (core/engine.py `Garden.read`, v1 part 9)
+            # the garden models: bin/garden.py, and the core's (core/engine.py `Garden.read`, v1 part 9)
             if p.walks and self.parts[f]['kind'] in ('tool', 'module', 'hook') \
-                    and f not in ('bin/garden.py', 'bin/garden.py', 'core/engine.py'):
+                    and f not in ('bin/garden.py', 'core/engine.py'):
                 out.append({'part': f, 'walks': len(p.walks), 'lines': sorted(line for line, _col in p.walks),
                             'reads_through_dmgarden': ('imports', f, 'bin/garden.py', '') in self.edges})
         return sorted(out, key=lambda x: (-x['walks'], x['part']))
@@ -980,22 +776,6 @@ class Catalogue:
                               for r, a, b, v in sorted(self.edges)],
                 'unplaced': sorted(self.unplaced),
                 'findings': self.findings}
-
-
-# ============================================================================ a garden of the core (v1 part 9)
-# The law of a garden of the core is core/law/ and the rows the garden adds (VOCAB.md), read through core/law.py `Law`
-# as the gate reads it. Its items: each RULE, each VERB (the face's, the rows', the garden's), each TABLE (a list of a
-# file of core/law/, or of verbs.yaml's `tables`), each SECTION (a mapping of one: a reading's selection form, an
-# extent's form), each FORM (what a qualifier of the shape `form` holds) and each LAYER. The relations are the files' as
-# before; a verb USES the table a role takes its rows from and the form a qualifier holds, a form the table an attribute
-# takes from; a document STATES a verb written at the head of a statement line of an example block; a reason EXPLAINS
-# the item whose origin it is keyed by (bin/why.py `core_from`). Each PROFILE (core/law/profiles.yaml, v1 part 11) is an
-# item too, holding the verbs whose home it is, its tables and its forms, and named taken or not by the garden.
-CORE_LAW_KINDS = ('rule', 'verb', 'table', 'section', 'form', 'layer', 'profile')
-
-
-class CoreCatalogue(Catalogue):
-    LAW_KINDS = CORE_LAW_KINDS
 
     def _load_law(self):
         sys.path.insert(0, ROOT)
@@ -1053,7 +833,7 @@ class CoreCatalogue(Catalogue):
                       holds=r.get('holds') or [], meaning=r.get('meaning'))
         self.names = {}
         for pid, v in self.parts.items():
-            if v['kind'] in CORE_LAW_KINDS and v['kind'] != 'layer':
+            if v['kind'] in LAW_KINDS and v['kind'] != 'layer':
                 self.names.setdefault(v['name'], []).append(pid)
 
     def _table(self, k, where, rows):
@@ -1172,8 +952,7 @@ def report(cat):
     for v in cat.parts.values():
         kinds[v['kind']] = kinds.get(v['kind'], 0) + 1
     files = len(cat.files)
-    print(f"the catalogue of daftar {d['catalogue']['release']} ({'' if cat.version.startswith('core@') else 'std-vocab '}"
-          f"{cat.version}), "
+    print(f"the catalogue of daftar {d['catalogue']['release']} ({cat.version}), "
           f"{'this garden’s copy of the language' if cat.garden else 'the release'}: {files} files, "
           f"{len(cat.parts) - files} law items, {len(cat.edges)} relations")
     chain = []
@@ -1194,29 +973,11 @@ def report(cat):
             rels = [f"{r} {n}" for r, n in sorted(out.get(f, {}).items()) if r != 'holds'] + \
                    [f"{_BY[r]} {n}" for r, n in sorted(into.get(f, {}).items()) if r not in ('holds', 'ships')]
             print(f"  {f:{width}} {cat.parts[f]['kind']:15} {size:>11}   {' · '.join(rels)}")
-    if isinstance(cat, CoreCatalogue):
-        print(f"\nthe law's items — {cat.version}")
-        for kind in CORE_LAW_KINDS:
-            names = sorted(v['name'] for v in cat.parts.values() if v['kind'] == kind)
-            print(f"  {kind}s ({len(names)}): {', '.join(names)}")
-    else:
-        _today_items(cat)
+    print(f"\nthe law's items — {cat.version}")
+    for kind in LAW_KINDS:
+        names = sorted(v['name'] for v in cat.parts.values() if v['kind'] == kind)
+        print(f"  {kind}s ({len(names)}): {', '.join(names)}")
     _findings_summary(d['findings'])
-
-
-def _today_items(cat):
-    print(f"\nthe law's items — std-vocab {cat.version}")
-    tiers = {}
-    for name, (_t, tier) in sorted(cat.terms.items()):
-        tiers.setdefault(tier, []).append(name)
-    for tier in sorted(tiers, key=lambda t: (t != 'tier0', t)):
-        print(f"  terms, {tier} ({len(tiers[tier])}): {', '.join(tiers[tier])}")
-    print(f"  registries ({len(cat.registries)}): "
-          + ', '.join(f"{k} {cat.parts['registry:' + k]['contents']['rows']}" for k in cat.registries))
-    print(f"  sections ({len(cat.sections)}): {', '.join(cat.sections)}")
-    print(f"  profiles ({len(cat.profiles)}): "
-          + ', '.join(f"{p} ({len(cat.parts['profile:' + p]['contents']['terms'])} terms)" for p in cat.profiles))
-    print(f"  layers ({len(cat.map.rows)}): {', '.join(r['layer'] for r in cat.map.rows)}")
 
 
 def _findings_summary(f):
@@ -1323,9 +1084,8 @@ def show_part(cat, pid):
 
 
 def catalogue(root=ROOT):
-    """The catalogue of the tree at `root`, by the law its garden runs: the core's where GARDEN.md pins it."""
-    import check                                   # the one reader of a garden's pin (bin/check.py)
-    return CoreCatalogue(root)
+    """The catalogue of the tree at `root`, by the law it runs: the core's."""
+    return Catalogue(root)
 
 
 def main(argv):

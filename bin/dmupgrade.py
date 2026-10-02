@@ -255,10 +255,9 @@ def set_profiles(text, profiles, key='extends_profiles'):
     except dmsafe.UnsafeEdit:
         if not profiles:
             return text
-        new = re.sub(r'(?m)^(local_terms:)', lambda m: line + m.group(1), text, count=1)
-        if new == text:
-            head, sep, rest = text.partition('\n---\n')
-            new = head + '\n' + line.rstrip('\n') + sep + rest
+        head, sep, rest = text.partition('\n---\n')     # in the front matter alone: a garden of the core keeps today's
+        above = re.sub(r'(?m)^(local_terms:)', lambda m: line + m.group(1), head, count=1)   # in its body (v1 part 13b)
+        new = above + sep + rest if above != head else head + '\n' + line.rstrip('\n') + sep + rest
     new_fm, new_body = _parse(new)
     want = copy.deepcopy(old_fm) if isinstance(old_fm, dict) else {}
     if profiles:
@@ -501,9 +500,23 @@ def plan_profiles(rel, tag, extend, retract):
     return out
 
 
-def put_back(added):
+def hooks():
+    """{name: (bytes, mode)} of the hooks this clone has installed (git's samples aside)."""
+    d = os.path.join(ROOT, run('git', 'rev-parse', '--git-path', 'hooks').stdout.strip())
+    out = {}
+    for h in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+        p = os.path.join(d, h)
+        if os.path.isfile(p) and not h.endswith('.sample'):
+            with open(p, 'rb') as fh:
+                out[h] = (fh.read(), os.stat(p).st_mode)
+    return out
+
+
+def put_back(added, was=None):
     """Every file as it was: the tree was clean when the upgrade began, so git holds each one, and what the upgrade
-    added is removed. Then the garden's own hooks and merge driver again, from the release it still runs."""
+    added is removed. Then the garden's own hooks and merge driver again, from the release it still runs — and the
+    hooks exactly as they were (`was`, read before anything was touched): a garden's own installer does not take out a
+    hook the release's put in (v0.49.0's knows no pre-merge-commit)."""
     run('git', 'checkout', '--', '.', check=False)
     for f in added:
         for p in (os.path.join(ROOT, f), os.path.join(ROOT, f) + '.tmp'):
@@ -512,6 +525,15 @@ def put_back(added):
             except OSError:
                 pass
     install()
+    if was is None:
+        return
+    d = os.path.join(ROOT, run('git', 'rev-parse', '--git-path', 'hooks').stdout.strip())
+    for h in set(hooks()) - set(was):
+        os.remove(os.path.join(d, h))
+    for h, (data, mode) in was.items():
+        with open(os.path.join(d, h), 'wb') as fh:
+            fh.write(data)
+        os.chmod(os.path.join(d, h), mode)
 
 
 def receive(rel, want, have, added):
@@ -617,6 +639,7 @@ def adopt_apply(a, rel, sha, source, current, before, copy, count):
     want = shipped(rel, profiles)
     have = shipped(ROOT) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
     added = []
+    was_hooks = hooks()
     try:
         changed, removed = receive(rel, want, have, added)
         # THE TRANSLATION, IN PLACE: each bean and mapping as the translator wrote it, VOCAB.md with the core's rows and
@@ -645,9 +668,9 @@ def adopt_apply(a, rel, sha, source, current, before, copy, count):
             re.sub(r'^extends:.*$', lambda m: m.group(0) + '\n' + gline, gtext, count=1, flags=re.M)
         write_text(gpath, gtext, gform)
         install()
-        sys.path.insert(0, os.path.join(ROOT, 'bin')); import dmjournal          # the release's own tool, just applied
+        sys.path.insert(0, os.path.join(ROOT, 'bin')); import journal as _journal   # the release's own tool, just applied
         _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
-        lines = ['\n' + dmjournal.stamp(_who, f"RULE-CHANGE: language adopted: the core ({pin}), daftar {a.tag}", ROOT),
+        lines = ['\n' + _journal.stamp(_who, f"RULE-CHANGE: language adopted: the core ({pin}), daftar {a.tag}", ROOT),
                  "- ratified_by: (fill in who ratified — the gardener's word, given here)",
                  f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; std-vocab {before} -> "
                  f"{pin}; release {current or 'unrecorded'} -> {a.tag}. The garden adopts the core: its beans written in "
@@ -664,14 +687,14 @@ def adopt_apply(a, rel, sha, source, current, before, copy, count):
             j.write('\n'.join(lines) + '\n')
         gate = run(sys.executable, os.path.join(ROOT, 'bin', 'check.py'), check=False)
     except BaseException as e:
-        put_back(added)
+        put_back(added, was_hooks)
         print("NOT ADOPTED: the adoption stopped midway" + ('' if isinstance(e, SystemExit) else
               f" ({type(e).__name__}{': ' + str(e) if str(e) else ''})") + ", so every file was put back as it was.",
               file=sys.stderr, flush=True)
         raise
     last = (gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1]
     if gate.returncode != 0 and not a.keep_on_failure:
-        put_back(added)
+        put_back(added, was_hooks)
         errs = [ln for ln in gate.stdout.splitlines() if ln.strip() and not ln.startswith('core check')]
         print(f"NOT ADOPTED: in the core's statements this garden fails the core's gate, so every file was put back as "
               f"it was.\n" + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') + f"\n{last}\n"
@@ -726,6 +749,7 @@ def move(a, rel, sha, source, current):
     want = shipped(rel, profiles)
     held = shipped(ROOT) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
     added = []
+    was_hooks = hooks()
     try:
         changed, removed = receive(rel, want, held, added)
         if profiles != before:
@@ -762,14 +786,14 @@ def move(a, rel, sha, source, current):
             j.write('\n'.join(lines) + '\n')
         gate = run(sys.executable, os.path.join(ROOT, 'bin', 'check.py'), check=False)
     except BaseException as e:
-        put_back(added)
+        put_back(added, was_hooks)
         print("NOT UPGRADED: the move stopped midway" + ('' if isinstance(e, SystemExit) else
               f" ({type(e).__name__}{': ' + str(e) if str(e) else ''})") + ", so every file was put back as it was.",
               file=sys.stderr, flush=True)
         raise
     last = (gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1]
     if gate.returncode != 0 and not a.keep_on_failure:
-        put_back(added)
+        put_back(added, was_hooks)
         errs = [ln for ln in gate.stdout.splitlines() if ln.strip() and not ln.startswith('core check')]
         print(f"NOT UPGRADED: under {a.tag}'s law this garden fails the gate, so every file was put back as it was.\n"
               + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') + f"\n{last}")

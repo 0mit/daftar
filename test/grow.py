@@ -9,6 +9,7 @@ last release in them: `today()` makes it from this repository's tag v0.49.0, who
     import grow
     rel = grow.release(os.path.join(T, 'release'))            # tagged v1.0.0
     old = grow.today(os.path.join(T, 'today'))                # v0.49.0, today's words: a garden that adopts grows here
+    grow.release(old)                                         # ...and v1.0.0 on top of it, the release it adopts
     r = grow.garden(rel, os.path.join(T, 'g'), 'sam', '--profile', 'view')
     r.returncode, r.out                                       # germinate's, its output and its errors together
 """
@@ -57,12 +58,22 @@ def files():
 
 
 def release(dst, tag='v1.0.0'):
-    """A release of the core at `dst`: this tree's shipped files, committed and tagged."""
-    os.makedirs(dst)
+    """A release of the core at `dst`: this tree's shipped files, committed and tagged. Where `dst` is already a release
+    (`today()`'s), they are committed on top of it, every file it tracked taken out first: one repository holding both
+    releases, as daftar's own does, from which a garden in today's words adopts the core by its own bin/dmupgrade.py."""
+    onto = os.path.isdir(os.path.join(dst, '.git'))
+    if onto:
+        r = run('git', 'rm', '-rqf', '.', cwd=dst)
+        if r.returncode:
+            raise RuntimeError(f"git rm in the release: {r.out}")
+    else:
+        os.makedirs(dst)
     for f in files():
         os.makedirs(os.path.join(dst, os.path.dirname(f)), exist_ok=True)
         shutil.copy2(os.path.join(ROOT, f), os.path.join(dst, f))
-    for a in (('init', '-q'), ('add', '-A'), ('commit', '-qm', 'the core'), ('tag', tag)):
+    for a in ((() if onto else ('init', '-q')), ('add', '-A'), ('commit', '-qm', 'the core'), ('tag', tag)):
+        if not a:
+            continue
         r = run('git', *a, cwd=dst)
         if r.returncode:
             raise RuntimeError(f"git {a[0]} in the release: {r.out}")
@@ -87,6 +98,19 @@ def today(dst, tag=TODAY):
         r = run('git', *a, cwd=dst)
         if r.returncode:
             raise RuntimeError(f"git {a[0]} in the release in today's words: {r.out}")
+    return dst
+
+
+def today_file(path, dst=None, tag=TODAY):
+    """A file of the release in today's words, read from this repository's tag: its text, or written to `dst`."""
+    r = subprocess.run(['git', '-C', ROOT, 'show', f'{tag}:{path}'], capture_output=True)
+    if r.returncode:
+        raise RuntimeError(f"git show {tag}:{path}: {r.stderr.decode('utf-8', 'replace').strip()}")
+    if dst is None:
+        return r.stdout.decode('utf-8')
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    with open(dst, 'wb') as fh:
+        fh.write(r.stdout)
     return dst
 
 

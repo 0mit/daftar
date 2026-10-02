@@ -3,7 +3,7 @@
 The files a daftar release puts in this garden — exactly those `seed/LANGUAGE` lists — are daftar's, and keep
 daftar's terms:
 
-- **its code** (`bin/`, `core/*.py` and `core/hooks/`, `seed/germinate.*`, an asset's `assets/<profile>/bin/` and `lib/`): the GNU
+- **its code** (`bin/`, `core/*.py`, `seed/germinate.*`, an asset's `assets/<profile>/bin/` and `lib/`): the GNU
   AGPL 3.0 or later (`seed/LICENSE-AGPL-3.0-or-later.txt`), with the garden exception
   (`seed/LICENSE-LicenseRef-daftar-garden-exception.txt`) and these additional terms (section 7, (c) and (e)): a
   modified version is marked, in reasonable ways, as different from daftar; and no right is granted in the name

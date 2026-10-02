@@ -10,7 +10,7 @@ garden's own rows — kinds, levels, namespaces, flows, the layers' standing, ve
 (core/law.py says which keys). Each finding is an error, printed as `<rule>  <where>: <what>`; the last line counts
 them, and the exit status is 1 when there is one.
 
-`--staged` is the commit's gate, run by core/hooks/pre-commit (`python3 core/install.py` installs it): every staged file
+`--staged` is the commit's gate, run by bin/hooks/pre-commit through bin/check.py (bin/install.py installs it): every staged file
 is copied out of the index into a temporary directory and judged there, with the law the commit stages, so what is
 judged is what is committed; then the commit's own rules (core/commit.py): each changed bean named by the entry the
 commit adds, its new statements known at that entry's moment, and a change to the law said to be a RULE-CHANGE. This

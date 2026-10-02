@@ -6,6 +6,10 @@
 # (`<suite>: <words of the check>`), `gone` with the law it was a promise of, or `left` — not held yet, saying why. What
 # is gone or left is for the operator's veto (the journal entry "v1 part 12 built"). Part 12b (2026-10-02) closed every
 # `left`: each is held now, or gone by the operator's choice (`pay` takes any quantity) — the entry "v1 part 12b built".
+# Part 13b (2026-10-02, the release) moved every `waiting`: the suites part 12 met that waited are ported, or retired
+# with their promises (test/fast.py, with today's hook); the suites of the core that waited reach today's words no more,
+# but those whose subject is a garden in today's words, which read them from the last release that had them (v0.49.0,
+# this repository's tag, through test/grow.py) — `today` names each, and why. None waits: the entry "v1 part 13b built".
 
 met: [test/agreements.py, test/assets.py, test/base.py, test/calendars.py, test/catalogue.py, test/converge.py, test/cost.py,
       test/crosswalk.py, test/days.py, test/deeptime.py, test/docs.py, test/expiry.py, test/fast.py, test/figures.py,
@@ -17,7 +21,7 @@ met: [test/agreements.py, test/assets.py, test/base.py, test/calendars.py, test/
       test/stamps.py, test/uncertainty.py, test/upgrade.py, test/view.py, test/viewcap.py, test/zones.py]
 
 # shipped and run, but not by the workflow: a measurement, and the corpus test today's hook runs in a garden
-not_listed: [test/cost.py, test/fast.py]
+not_listed: [test/cost.py]
 
 ported:
   - { suite: test/refusals.py,  how: "the core's gate refuses each malformed input by name, never a traceback; --staged too" }
@@ -31,6 +35,10 @@ ported:
   - { suite: test/assets.py,    how: "the one reader of seed/LANGUAGE; every asset a profile of core/law/profiles.yaml; a page saved" }
   - { suite: test/layers.py,    how: "core/law/layers.yaml over the release's files; a garden's standing rows; rule `layers`" }
   - { suite: test/cost.py,      how: "the core's gate timed over a `record` series held in a part" }
+  - { suite: test/docs.py,      how: "the prose is the guides in their places (v1 part 13), and the retired words a guide must not write are core/law/terms.yaml's" }
+  - { suite: test/manifesto.py, how: "a clause's words read from the law's own files (core/law/), cited by structure" }
+  - { suite: test/rationale.py, how: "seed/RATIONALE.md keyed by the core's paths (`core/law/<file>: <path>`), each reason carried whole" }
+  - { suite: test/catalogue.py, how: "the catalogue of the release read from core/law/, its garden one of the core" }
   - suite: test/view.py
     how: "the view asset over a page of `draw` statements: its check, elements, refusals, zoom, details, regions, sheet, palette, report, import, bundle, a second adapter, the served page closed by default, a private page, the engraver"
     held:          # v1 part 12b
@@ -38,27 +46,43 @@ ported:
       - "test/viewcap.py: V-1 a grant over a reading opening part of each bean it holds"
       - "test/core_view.py: germinate: a profile the core does not offer is refused"
 
-waiting:
-  - { suite: test/docs.py, part: 13, why: "its prose is today's guides (README, MODEL, FORMS…), and the retired words it looks for are bin/dmcheck.py's and std-vocab's: part 13 puts core/guide/ in their place, and the words a guide must not write become core/law/terms.yaml's" }
-  - { suite: test/manifesto.py, part: 13, why: "it reads the law's text (seed/std-vocab.md) for a clause's words: the release's law is today's until part 13 moves it into core/law/" }
-  - { suite: test/rationale.py, part: 13, why: "seed/RATIONALE.md is keyed by today's law's paths: re-keyed by the core's when part 13 deletes std-vocab (part 9 left it there)" }
-  - { suite: test/catalogue.py, part: 13, why: "its garden is ported (a garden of the core); the catalogue of the release itself reads the release's law, today's until part 13" }
-  - { suite: test/fast.py, part: 13, why: "today's hook runs it in a garden in today's words; a garden of the core runs core/check.py, and part 13 deletes today's hook with today's gate" }
-  - { suite: test/core_standards.py, part: 13, why: "it holds core/law/ equal to what std-vocab generates: part 13 makes the generated files the source" }
-  - { suite: test/core_translate.py, part: 13, why: "it translates a garden in today's words: after part 13 one is grown from a release that still has them (v0.49.0)" }
-  - { suite: test/core_rehearse.py, part: 13, why: "it commits today's guides through today's gate, then translates them: part 13 replaces today's guides" }
-  - { suite: test/core_guides.py, part: 13, why: "its last checks compare the core's guides with today's examples, translated" }
-  - { suite: test/core_adopt.py, part: 13, why: "the adoption: a garden in today's words adopting the core needs a release in today's words" }
-  - { suite: test/core_merge.py, part: 13, why: "it holds the pin's dispatch to today's gate and merge, which part 13 deletes" }
-  - { suite: test/core_between.py, part: 13, why: "its law checks hold core/law/flows.yaml equal to what std-vocab generates" }
-  - { suite: test/core_law.py, part: 13, why: "its law checks hold core/law/ equal to what std-vocab generates" }
-  - { suite: test/core_measure.py, part: 13, why: "its law checks hold core/law/measures.yaml equal to what std-vocab generates" }
-  - { suite: test/core_read.py, part: 13, why: "its law checks hold core/law/lines.yaml equal to what std-vocab generates" }
-  - { suite: test/core_view.py, part: 13, why: "its law checks hold core/law/profiles.yaml and terms.yaml equal to what std-vocab generates" }
-  - { suite: test/core_write.py, part: 13, why: "its release is built by reading the profiles std-vocab offers (test/grow.py reads the core's)" }
-  - { suite: test/core_gate.py, part: 13, why: "its release is built by reading the profiles std-vocab offers (test/grow.py reads the core's)" }
+# THE SUITES THAT READ TODAY'S WORDS (part 13b): each takes them from the last release that had them, v0.49.0 (`from:
+# v0.49.0`, through test/grow.py's `today()` or `today_file()`), or holds that the release carries none (`from: gone`).
+today:
+  - { suite: test/core_adopt.py,     from: v0.49.0, why: "a garden grown from v0.49.0 and saved through its bin/dmsave.py adopts the core through its own bin/dmupgrade.py; the translator refuses std-vocab 31" }
+  - { suite: test/core_rehearse.py,  from: v0.49.0, why: "v0.49.0's guides' examples grown through its gate, translated, and adopted by the garden's own door" }
+  - { suite: test/core_guides.py,    from: v0.49.0, why: "the guides held to what v0.49.0's guides said of the same beans, translated" }
+  - { suite: test/core_translate.py, from: v0.49.0, why: "the translator reads a garden's own seed/std-vocab.md: v0.49.0's" }
+  - { suite: test/core_measure.py,   from: v0.49.0, why: "today's clause, placement and own rows, in a garden grown from v0.49.0, translated" }
+  - { suite: test/core_view.py,      from: v0.49.0, why: "the profiles accounted against today's law as v0.49.0 had it; today's cookbook page drawn by its dmview and, translated, by view" }
+  - { suite: test/core_standards.py, from: gone,    why: "it holds that the release carries no today's law: seed/std-vocab.md is gone" }
+  - { suite: test/core_ported.py,    from: v0.49.0, why: "it holds where each check of today's gate went, read from v0.49.0's bin/dmcheck.py" }
 
 retired:
+  - suite: test/fast.py
+    promises:       # v1 part 13b: today's hook ran it over a garden in today's words; a garden of the core runs the core's gate
+      - promise: "the hook judges the garden on every commit, fast enough that nobody passes --no-verify"
+        held: ["test/core_merge.py: bin/install.py installs the gate at pre-commit and pre-merge-commit", "test/core_save.py: the garden as saved passes the core's check"]
+      - promise: "every document parses, is named after its id, and keeps its body"
+        held: ["test/core.py: core/check.py judges the garden on disk: 0 errors, exit 0", "test/core.py: ...and refuses a bad bean, and one with a key written twice, by name, exit 1"]
+      - promise: "the vocabulary loads and both pins match"
+        held: ["test/core_adopt.py: VOCAB.md holds no pin", "test/core_adopt.py: the core holds GARDEN.md to the manifest"]
+      - promise: "every term states a rule, a core-enforcement, or an explicit none"
+        held: ["test/core_law.py: law: the law holds together with its tools and vacancies", "test/core.py: every rule but `kept`"]
+      - promise: "every ownership chain that is owed terminates at the crown or outside — none dangles or loops"
+        held: ["test/core-cases.yaml: rule: order", "test/core-cases.yaml: rule: life"]
+      - promise: "no key name is pinned to a date or a version"
+        gone: "a bean's keys are the core's header and its verbs' roles, a garden adds none (rule form): there is no key a garden names"
+      - promise: "no bean restates its own code_path and git_remote as prose"
+        gone: "with today's `code_paths` and `git_remote`: a codebase's tree is a `be` at a position of the filesystem, and its remote a name"
+      - promise: "every cache entry carries a checkable staleness key"
+        gone: "with today's `analysis_cache`, which the translator keeps whole in `details`, read by no rule"
+      - promise: "every anchor states whether it establishes identity"
+        gone: "a namespace says once whether the names it gives name one being (`once`), never each name (rule names)"
+      - promise: "no document states the product version — it is a git tag"
+        gone: "with today's `law_carrier` documents: the release a garden runs is GARDEN.md's `daftar_release`, which the upgrade writes"
+      - promise: "every declared law_carrier names the path the gate reads, and states which documents are law"
+        gone: "with today's `law_carrier`: the law a garden runs is its pin, and which documents are law its `standing` rows (rule layers)"
   - suite: test/agreements.py
     promises:
       - promise: "a clause's form: a due relative to another position, a window, its permission's words, a repetition with closures"
@@ -128,7 +152,7 @@ retired:
   - suite: test/germinate.py
     promises:
       - promise: "a stranger grows a garden from a release, and its gate refuses as well as passes"
-        held: ["test/core_adopt.py: a garden grown from v1.0.0 pins", "test/core_adopt.py: ...and a bean in today's words is refused by its hook", "test/core_guides.py: the garden takes the core's gate (core/install.py)"]
+        held: ["test/core_adopt.py: a garden grown from v1.0.0 pins", "test/core_adopt.py: ...and a bean in today's words is refused by its hook", "test/core_guides.py: a garden germinates, pinning"]
       - promise: "a bean staged without its journal entry is refused; the save commits both"
         held: ["test/core_save.py: a bean the entry does not name is refused", "test/save.py: a save whose entry names one of two beans is refused"]
       - promise: "a germinated garden merges its beans by the merge driver and its journal by union"
@@ -340,3 +364,100 @@ retired:
         held: ["test/core.py: a zone the time zone database does not name is refused", "test/core.py: a day with no zone to be reckoned in is refused"]
       - promise: "an offset READ from the zone for a moment, never stored"
         gone: "a moment of the core is written with its offset, in its one form; a day finds its place by the garden's zone"
+
+# WHERE EACH CHECK OF TODAY'S GATE WENT (v1 part 13b): v0.49.0's bin/dmcheck.py, its 91 `check_*`, each held by a rule of
+# the core (`rule`, core/law/core.yaml `rules`), by the law's own proof (`law`: `check --law`, core/law.py), by a tool
+# beside the gate (`tool`, a path of the release) — each saying how — or `gone`, saying why. Held to v0.49.0's gate and to
+# the core's rules by test/core_ported.py.
+gate:
+  - { check: schema_language,          rule: form,      how: "a statement is one verb of the verb row with the roles and qualifiers its row declares: the verbs' rows are the schema" }
+  - { check: term_records,             law: "every table of rows holds its form's columns and no other (`forms`, `columns`)" }
+  - { check: local_additions,          rule: vacancy,   how: "a garden adds rows, never overlays a term; each row it adds is used or says why it is vacant" }
+  - { check: merge_identity,           gone: "today's merge identities (`order: by-<field>`) went with bin/dmmerge.py: the statement merge keys a statement by its verb and its id (MERGE.md)" }
+  - { check: law_extents,              law: "a clause's `expiry` and its notice are the clause form's (core/law/measures.yaml), held to it" }
+  - { check: profiles_compose,         law: "each verb's home is the core or one profile the law offers, and a profile is taken once" }
+  - { check: value_types,              law: "the value types are lines.yaml's `types`, held to their form" }
+  - { check: value_type,               rule: valency,   how: "each filler has the shape and nature its role takes" }
+  - { check: coding,                   rule: valency,   how: "a code is a row of its scheme (the core's case: a code no row of its scheme has)" }
+  - { check: long_position,            rule: frame,     how: "a position is in a declared system, in its one form" }
+  - { check: day_exists,               rule: frame,     how: "a day is a position of its calendar, which finds its other half by the garden's zone" }
+  - { check: quantity,                 rule: measured,  how: "a quantity is a count in a unit of the law, UCUM's, in its form" }
+  - { check: uncertainty,              rule: measured,  how: "a quantity's uncertainty is one of `u` and `accuracy`, in its form" }
+  - { check: extent,                   rule: measured,  how: "a region lies on a line that has regions, bounded at an end or by its length" }
+  - { check: recurrence,               rule: measured,  how: "a repetition strides by one rule, in its system" }
+  - { check: sequence_figure,          rule: line,      how: "what holds a line holds its form: a series read by its channels, a walk's ways" }
+  - { check: system_structure,         law: "a system's row in its form, its own example in the form its pattern gives" }
+  - { check: registry_forms,           law: "every table of rows declares its columns and every row keeps them (`columns`, part 13)" }
+  - { check: verbs,                    law: "the tools by their verbs, each in a family the law names (core/law/tools.yaml)" }
+  - { check: registry_links,           law: "a row naming another table's row names one that exists: a unit's quantity, a kind's level and nature" }
+  - { check: retired_terms,            rule: form,      how: "a header key in today's words is refused, naming the verb that took it over" }
+  - { check: retired_vocab,            law: "a garden's VOCAB.md says nothing the law does not read: a key in today's words is refused (part 13)" }
+  - { check: retired_owners,           gone: "today's five enum-owner terms, overlaid by a garden; a garden of the core adds rows, never overlays a term" }
+  - { check: units,                    law: "a unit's quantity is the law's, its code UCUM's or saying why not, one name one unit, its factor two whole numbers" }
+  - { check: aspect_sanity,            law: "the aspects are the face's figures and lines, each figure's four positions its four operators" }
+  - { check: extends_pin,              rule: form,      how: "GARDEN.md pins this law's version, and VOCAB.md pins nothing" }
+  - { check: provenance_record,        rule: knowing,   how: "every statement is the `of` of a knowing act in its bean, `by` a being, `at` a moment" }
+  - { check: undeclared_keys,          rule: form,      how: "a bean holds the core's header keys and its statements, nothing else" }
+  - { check: duplicate_keys,           tool: core/read.py, how: "the core's reader refuses a key written twice before YAML can keep only the last" }
+  - { check: text,                     rule: form,      how: "text holds no control character but a tab, and a line feed only in a block scalar" }
+  - { check: gardens,                  rule: names,     how: "a garden's id is twelve hexadecimal digits and never this garden's own; a `garden` bean is another garden" }
+  - { check: id_space_collision,       rule: names,     how: "a name its namespace gives once names one being; a bean's id is its file's name, one space" }
+  - { check: identity_capsule,         rule: names,     how: "today's identity capsule is the names a namespace gives (`name`), each in its namespace's form" }
+  - { check: establishing_anchor_dedup, rule: names,    how: "a name its namespace gives once names one being" }
+  - { check: reference_accuracy,       law: "a reference system's accuracy is a length, in the systems' form" }
+  - { check: sealed,                   rule: harm,      how: "a sealed statement holds a pointer and nothing of what it said, has an id, and is held `while` a statement holds" }
+  - { check: sensitivity,              tool: bin/pass.py, how: "a bean's sensitivity derived from its statements, read by `may` and the guard" }
+  - { check: grants,                   rule: ratify,    how: "a grant to ratify is the gardener's own act, on the gardener's bean" }
+  - { check: persons,                  rule: consent,   how: "another person is kept here by name only on their own word" }
+  - { check: held_journalled,          rule: harm,      how: "a commit that seals or unseals a statement says so in its entry" }
+  - { check: observations,             rule: valency,   how: "a reading is a `measure` with what it is of, its result in its form; a verdict a `respond`" }
+  - { check: hearings,                 rule: squares,   how: "a `rule` on statements is given once every speaker of them has responded" }
+  - { check: scheme_rows,              law: "a scheme says how its codes are held, its row in the form `schemes`" }
+  - { check: relative_positions,       rule: measured,  how: "a due relative to a position, in the clause form, from a being the garden holds" }
+  - { check: position_cells,           rule: frame,     how: "a position in a system whose cells are a table's rows names one of them" }
+  - { check: place_law,                law: "a place or time system's cells and units resolve (core/law/places.yaml, systems.yaml)" }
+  - { check: fixes,                    rule: measured,  how: "a boundary marked in a being is said at both ends, the system's table listing it marked" }
+  - { check: root_hosts,               gone: "a host's roots are kept in `details`, read by bin/where.py and bin/held.py, and judged by no rule" }
+  - { check: placement_law,            law: "what a placement takes of its host is the placement form's (`takes`)" }
+  - { check: position_hosts,           rule: measured,  how: "a placement names the host it is measured from, in the placement form" }
+  - { check: capacity,                 rule: measured,  how: "what is placed takes from where it is placed, within what that host holds" }
+  - { check: ports_taken,              rule: room,      how: "two listening at one port on one address" }
+  - { check: time_taken,               rule: room,      how: "one being attending two happenings whose times overlap" }
+  - { check: reckon_law,               law: "the law's own readings are in the grammar every reading is in (core/law/lines.yaml)" }
+  - { check: pins,                     rule: line,      how: "a pin names a commit and a moment in the pin form" }
+  - { check: agreements,               rule: measured,  how: "a clause's occurrences, relative dues and settlements in the clause and settlement forms" }
+  - { check: exclusive,                rule: room,      how: "what a garden declares exclusive holds one being once over any extent" }
+  - { check: viewcap,                  rule: profile,   how: "what a page asks is in its form: a scheduled action, a binding, a monitor" }
+  - { check: flows,                    law: "the flow law reads: every row names known layers and methods and a grant, one cell one row; a garden's row grants a named party" }
+  - { check: garden_law_prose,         gone: "VOCAB.md's front matter is the core's rows alone, written by the translator or by hand; the story is its body's, and a comment is read by no rule" }
+  - { check: senses,                   gone: "one sense per name went with today's terms: the core's words are its rows, each named once (`replaces` one way, a unit one name); a garden's senses are kept in its VOCAB.md's body" }
+  - { check: words_placed,             rule: layers,    how: "a file stands in one layer; only a person makes material their words" }
+  - { check: pointers,                 rule: layers,    how: "a pass into a layer stands only where the flow table grants it" }
+  - { check: journal_appended,         rule: kept,      how: "the journal is appended to, never rewritten" }
+  - { check: pass_logs,                tool: bin/launch.py, how: "a session's pass log in the core's form, traced by the save and claimed at the gate" }
+  - { check: entry,                    rule: valency,   how: "each statement's required roles are filled, each filler in its shape" }
+  - { check: terms,                    rule: form,      how: "every document against the law: each statement a verb of the row" }
+  - { check: series_parts,             rule: kept,      how: "a series' part, once written, stays as it is" }
+  - { check: origins,                  rule: knowing,   how: "where a value comes from is the knowing act that holds it" }
+  - { check: layers,                   rule: layers,    how: "a file stands in one layer" }
+  - { check: answers_for,              rule: valency,   how: "`answer` with the facet it answers in, its filler a being" }
+  - { check: vias,                     rule: life,      how: "a being comes through the living, through hands or reason; every chain ends at the crown" }
+  - { check: inverse_relations,        gone: "a relation is one statement, read from either end: there is no inverse to keep" }
+  - { check: vacancy_reasons_declared, law: "a vacancy's reason is one of the law's, at a place the law has (core/law/vacancies.yaml)" }
+  - { check: reverse_gate,             rule: vacancy,   how: "every row offered is used by a statement or says why it is vacant" }
+  - { check: link_integrity,           rule: valency,   how: "a filler that names a being names one the garden holds, of the nature its role takes" }
+  - { check: acyclic,                  rule: order,     how: "nothing stands on itself through others" }
+  - { check: duplicate_authoritative_ip, rule: names,   how: "an address its namespace gives once names one being" }
+  - { check: single_owner_of_a_fact,   gone: "a fact is a statement of one bean, said once; today's warning of one value in two beans has no core rule (the core has no warnings)" }
+  - { check: staged_state,             tool: bin/check.py, how: "`--staged` reads the index into a scratch tree and judges what is committed" }
+  - { check: unclean_merge,            tool: bin/merge.py, how: "a true conflict is refused and left as ours for a person, never written as markers" }
+  - { check: acyclic_per_relation,     rule: order,     how: "nothing owns itself, is part of itself, is at itself or needs itself through others" }
+  - { check: inverse_completeness,     gone: "a relation is one statement: there is no inverse to complete" }
+  - { check: target_obligation_widened, rule: valency,  how: "each required role is filled, whatever the bean it names" }
+  - { check: divisions,                law: "the divisions in the dot's form (core.yaml)" }
+  - { check: names,                    gone: "seed/names is keyed by today's law's items and read by no rule of the core; its re-keying is left (spec §16 item 20)" }
+  - { check: foundation_rules,         law: "what holds for everything standing on a step: the levels' conditions, proved with the ladder" }
+  - { check: frame,                    rule: frame,     how: "a position finds its other half by its complement" }
+  - { check: complexity,               law: "a level stands on levels that exist, by a way, never on itself: the ladder is never a circle" }
+  - { check: chain_termination,        rule: life,      how: "every chain ends at the crown, and none is demanded" }
+  - { check: relation_occupancy,       rule: vacancy,   how: "a row nothing uses says why it is vacant" }

@@ -53,10 +53,9 @@ merge: they meet by proposal (`MODEL.md`, Between gardens).
 - `.gitattributes` sends `beans/*.md` and `mappings/*.md` to the `daftar` merge driver, so `git merge` merges a bean by
   its statements and never by its lines. The driver is `bin/merge.py`, which `bin/install.py` configures, and the merge
   is `core/merge.py`. It refuses, leaving the file as ours, where the result would lose a statement, an act or the
-  body, and where the three sides are not written in one law. git hands the driver three blobs and not three commits,
-  so a side's law is read from the bean: one in statements is the core's, one in today's words is today's (a branch
-  from before the garden adopted the core), and a bean that says neither is merged by the garden's `extends`. Until
-  v1.0.0 a bean in today's words goes to `bin/merge.py`.
+  body, and where a side is not written in statements. git hands the driver three blobs and not three commits, so a
+  side's words are read from the bean: one in today's words (a branch from before the garden adopted the core) is
+  merged once it is written in statements (`bin/reform.py`).
 - `log/journal.md` and `log/pending.md` merge by git's own union (`merge=union`): both sides' entries are kept, none
   rewritten.
 - **The gate covers what a merge makes**: the merged bean passes `core/check.py` like any other commit, and the merge

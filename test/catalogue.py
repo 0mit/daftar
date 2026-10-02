@@ -168,7 +168,7 @@ gm = dmpass.Map.here(G)
 kept = [f for f in gm.files if gm.keeper_of(f) == "release"]
 check("in a garden it maps the garden's copy of the language: every file the release keeps",
       gd["catalogue"].get("of") == "garden" and kept and all(f in gp for f in kept), [f for f in kept if f not in gp][:5])
-own = [f for f in gp if gp[f]["kind"] not in dmcatalog.CORE_LAW_KINDS and f not in kept]
+own = [f for f in gp if gp[f]["kind"] not in dmcatalog.LAW_KINDS and f not in kept]
 check("...and nothing of the garden's own: no bean, no journal, no manifest",
       not own and os.path.isfile(os.path.join(G, "beans", "sam.md")), own[:5])
 _core_law = yaml.safe_load(open(os.path.join(ROOT, "core", "law", "core.yaml"), encoding="utf-8"))
