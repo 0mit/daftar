@@ -3,8 +3,8 @@
 
 LAW says what is in force (core/law/); RATIONALE says why; the RECORD says what happened. This holds the separation:
 every reason names something the law still says, by the item's key (`core/law/<file>: <path>`) or a prose law
-document's section, the reasons written of today's law were carried whole to where what they explain went (v1 part 13),
-and the narrative that still sits INSIDE the law's data (`meaning:` / `why:` strings that tell a story) may shrink and
+document's section, the reasons written of today's law were carried line by line (v1 part 13), each paragraph under the
+item it was written of, and the narrative that still sits INSIDE the law's data (`meaning:` / `why:` strings that tell a story) may shrink and
 may not grow.
 """
 import glob, os, re, subprocess, sys
@@ -27,8 +27,10 @@ check("no reason is blank", not [k for k, v in why.items() if not v.strip()], [k
 check("every reason is keyed by an item of the core's law (`core/law/<file>: <path>`) or a prose law document's section",
       not [k for k in why if not (dmwhy.CORE_KEY.match(k) or k.startswith("doc:"))],
       [k for k in why if not (dmwhy.CORE_KEY.match(k) or k.startswith("doc:"))][:5])
-# NOTHING LOST WHEN THE LAW MOVED (v1 part 13): each reason v0.49.0 kept, keyed by today's law, is here, word for word,
-# under the key of where what it explains went, and says the path it was written of.
+# NOTHING LOST WHEN THE LAW MOVED (v1 part 13): every line of each reason v0.49.0 kept, keyed by today's law, is here,
+# word for word. Line by line, because a reason carried whole can sit under the wrong item: 24.0 moved each comment of
+# the law to the key below it, so a section's banner opened the reason of the first item it introduced (`== NATURES ==`
+# under `crown`), and a paragraph moves to the item it speaks of without a word of it changing.
 _old = subprocess.run(["git", "-C", ROOT, "show", "v0.49.0:seed/RATIONALE.md"], capture_output=True, text=True,
                       encoding="utf-8").stdout
 _old_why = {}
@@ -39,10 +41,120 @@ for _ln in _old.split("\n"):
     elif _key is not None:
         _old_why[_key].append(_ln)
 _now = open(os.path.join(ROOT, "seed", "RATIONALE.md"), encoding="utf-8").read()
-_lost = [k for k, v in _old_why.items() if "\n".join(v).strip() not in _now]
-_unsaid = [k for k in _old_why if not k.startswith("doc:") and f"(std-vocab 32: `{k}`)" not in _now]
-check(f"each of the {len(_old_why)} reasons v0.49.0 kept is here word for word, and each written of today's law says the "
-      f"path it was written of", len(_old_why) > 400 and not _lost and not _unsaid, (_lost[:3], _unsaid[:3]))
+_has, _need = {}, {}
+for _ln in _now.split("\n"):
+    _has[_ln] = _has.get(_ln, 0) + 1
+for _v in _old_why.values():
+    for _ln in _v:
+        if _ln.strip():
+            _need[_ln] = _need.get(_ln, 0) + 1
+_lost = [_ln[:80] for _ln, _n in _need.items() if _has.get(_ln, 0) < _n]
+check(f"every line of the {len(_old_why)} reasons v0.49.0 kept is here, word for word", len(_old_why) > 400 and not _lost,
+      _lost[:3])
+
+# EACH PARAGRAPH UNDER THE ITEM IT WAS WRITTEN OF (the site's finding, 2026-10-02: `crown` opened with nature's
+# paragraph, `flows` with sealing's). A carried paragraph sits under the path of today's law it was written of,
+# `(std-vocab 32: `<path>`)`, and that path leads to the key it sits under: by the law's own word for where today's item
+# went — a verb or a form that `replaces` it, a face verb's `face_replaces`, a term's `went` — or to the core's item of
+# its name. TABLES names today's tables the core keeps under another name, or whose name it gives another sense
+# (`roles` were the jobs a being does; the core's are the seven roles), and those of which no item is left, with the
+# item their reasons stand beside; MOVED, the constructs whose reasons went to one item of their own.
+TABLES = {
+    "schema_language": "core.yaml: shapes", "value_types": "lines.yaml: types", "comparators": "lines.yaml: comparisons",
+    "gap_tokens": "lines.yaml: gaps", "anchor_systems": "systems.yaml: systems", "registry_forms": "systems.yaml: forms",
+    "aspects": "measures.yaml: lines", "net_protocols": "protocols.yaml: protocols", "gene": "kinds.yaml: kinds",
+    "complexity": "levels.yaml: levels", "facets": "core.yaml: modes", "foundation_rules": "core.yaml: foundations",
+    "acts": "core.yaml: knowing", "provenance_record": "core.yaml: knowing", "lines": "core.yaml: lines",
+    "identity_policy": "namespaces.yaml: namespaces", "senses": "core.yaml: roles", "roles": "verbs.yaml: verbs[do]",
+    "term_form": "core.yaml: verbs", "verbs": "tools.yaml: tools", "tool_families": "tools.yaml: families",
+    "journal": "core.yaml: layers[journal]", "name_form": "core.yaml: layers[names]",
+    "layers": ["core.yaml: layers", "layers.yaml: standing", "layers.yaml: flow_sources"],
+    "held_form": "core.yaml: beside_roles[held]", "pass_form": "core.yaml: verbs[pass]", "flow_form": "flows.yaml: columns",
+    "pass_metadata": "flows.yaml: metadata", "placement": "core.yaml: placements", "retired": "terms.yaml: terms",
+    "vacancy_reasons": "vacancies.yaml: reasons", "view_lenses": "profiles.yaml: lenses",
+    "view_archetypes": "profiles.yaml: archetypes", "division_form": "core.yaml: shapes[position]",
+    "divisions": "core.yaml: shapes[position]", "leaf_orders": "core.yaml: cardinality"}
+MOVED = {
+    "schema_language.exclusive": "core.yaml: rules[room]", "schema_language.of_bodies": "core.yaml: rules[weight]",
+    "schema_language.at_most_one_of": "core.yaml: words[choice]", "schema_language.series": "lines.yaml: forms.series",
+    "schema_language.moves_along": "verbs.yaml: verbs[move]", "schema_language.origin": "core.yaml: knowing",
+    "schema_language.expiry": "measures.yaml: forms.clause", "figures[sequence]": "lines.yaml: forms.series",
+    "terms[lives_in]": "core.yaml: placements[habitat]", "terms[provides_habitat]": "core.yaml: placements[habitat]",
+    "terms[located_at].meaning": "core.yaml: placements[location]", "units[annus]": "units.yaml: units[31556925445.ms]"}
+_keys = dmwhy.core_keys()
+_face = DATA["core/law/verbs.yaml"].get("face_replaces") or {}
+_went = {r["term"]: r.get("went", "") for r in DATA["core/law/terms.yaml"].get("terms") or [] if isinstance(r, dict)}
+
+
+def _item(key):
+    try:
+        dmwhy.resolve({}, key)
+        return True
+    except KeyError:
+        return False
+
+
+def _successors(path):
+    """The keys of the core's law that today's item at `path` went to."""
+    for pre in sorted(MOVED, key=len, reverse=True):
+        if path == pre or path.startswith((pre + ".", pre + "[")):
+            return {"core/law/" + MOVED[pre]}
+    top, row = re.match(r"([a-z_]+)(?:\[([^\]]+)\])?", path).groups()
+    name, out = (row if top == "terms" else top), set()
+    for k, node in _keys.items():
+        rep = node.get("replaces") if isinstance(node, dict) else None
+        if name in (rep if isinstance(rep, list) else [rep]):
+            out.add(k)
+    out |= {f"core/law/core.yaml: verbs[{v}]" for v, words in _face.items() if name in (words or [])}
+    if top == "terms":
+        out.add(f"core/law/terms.yaml: terms[{row}]")
+        for v in re.findall(r"the verb `([a-z]+)`", _went.get(row, "")):
+            out |= {k for k in (f"core/law/core.yaml: verbs[{v}]", f"core/law/verbs.yaml: verbs[{v}]") if k in _keys}
+        return out
+    bases = TABLES.get(top) or [k[len("core/law/"):] for k in _keys if k.split(": ", 1)[1] == top]
+    for b in [bases] if isinstance(bases, str) else bases:
+        out |= {"core/law/" + b} | ({f"core/law/{b}[{row}]"} if row else set())
+    return out
+
+
+_declared = [x for v in list(TABLES.values()) + list(MOVED.values()) for x in ([v] if isinstance(v, str) else v)]
+check("each item TABLES and MOVED name is an item of the core's law",
+      not [x for x in _declared if not _item("core/law/" + x)], [x for x in _declared if not _item("core/law/" + x)][:5])
+_sv32 = dmparse.loads(dmparse.split_front_matter(subprocess.run(
+    ["git", "-C", ROOT, "show", "v0.49.0:seed/std-vocab.md"], capture_output=True, text=True,
+    encoding="utf-8").stdout)[0] or "") or {}
+_marked, _astray, _unknown, _key, _at = set(), [], [], None, None
+for _ln in _now.split("\n"):
+    if _ln.startswith("## "):
+        _key, _at = _ln[3:].strip(), None
+        continue
+    _m = re.match(r"^\(std-vocab 32: `([^`]+)`\)$", _ln)
+    if _m:
+        _at = _m.group(1)
+        try:
+            dmwhy.resolve(_sv32, _at)
+        except KeyError:
+            _unknown.append(_at)
+        _s = _successors(_at)
+        if _key not in _s and not any(_key.startswith(x + ".") for x in _s):
+            _astray.append(f"{_key} ← {_at} (went to {', '.join(sorted(_s)) or 'nothing the law names'})")
+    elif _at and _ln.strip():
+        _marked.add(_ln)
+_unmarked = [_ln[:80] for k, v in _old_why.items() if not k.startswith("doc:") for _ln in v
+             if _ln.strip() and _ln not in _marked]
+check("each line carried from today's law sits under the path it was written of, a path std-vocab 32 had",
+      len(_sv32) > 50 and not _unmarked and not _unknown, (_unmarked[:3], _unknown[:3]))
+check("...and each of those paths leads to the key it sits under, by where the law says today's item went",
+      not _astray, _astray[:4])
+check("...so a paragraph filed under an item it was not written of is refused (`natures` under `crown`)",
+      "core/law/core.yaml: crown" not in _successors("natures") and "core/law/core.yaml: natures" in _successors("natures")
+      and "core/law/core.yaml: roles" not in _successors("roles"), sorted(_successors("natures")))
+# EVERY RULE SAYS WHY. A reader refused by a rule is owed its reason: each of the core's rules has one of its own, in the
+# core's words, above any reason carried beside it from today's law.
+_rules = [r["rule"] for r in DATA["core/law/core.yaml"].get("rules") or []]
+_why_not = [r for r in _rules if not re.match(r"[A-Z]", why.get(f"core/law/core.yaml: rules[{r}]", ""))]
+check(f"each of the core's {len(_rules)} rules has its reason, under `core/law/core.yaml: rules[<rule>]`",
+      len(_rules) >= 21 and not _why_not, _why_not)
 
 # A RATCHET, NOT A VERDICT. Stories also sit inside the law's DATA — a `meaning:` or a `why:` that says when a thing was
 # found and by whom. Moving each is an edit to a sentence, so it is done by hand; the count may only go DOWN.
@@ -212,7 +324,8 @@ readers = [os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*.p
 check("only the reader of reasons opens the reasoning: no verdict can depend on it", readers == ["why.py"], readers)
 # SIDEWAYS: a reason that speaks of a law name the law no longer has is no longer a reason; it is an account of what
 # used to be, which is a journal's business. A ratchet, because sorting them is editorial work.
-STALE_REASONS = 32         # the reasons written of today's law speak of its names (v1 part 13)
+STALE_REASONS = 34         # the reasons written of today's law speak of its names (v1 part 13); 34 since each
+                           # paragraph went under the item it was written of: the same 54 names, in more keys
 st = dmwhy.stale()
 check(f"reasons that have become journal have not grown (now {len(st)}, ceiling {STALE_REASONS})", len(st) <= STALE_REASONS, list(st.items())[:3])
 print(f"      (the ceiling can come down to {len(st)})")

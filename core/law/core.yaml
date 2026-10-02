@@ -101,15 +101,18 @@ verbs:
   # knowing: how a statement came to be in the ledger. Each takes statements as `of`; with no `of`, it covers every
   # statement of its bean that no other knowing act covers.
   - verb: say
+    meaning: "to give one's word for the statements its `of` names: a person, a body at reason, said them, or a document, a sayable, states them — `through` the words, `to` whom"
     roles: { by: { shape: being, nature: [body, sayable], rung: reason }, of: { shape: statement, many: true }, through: { shape: text }, to: { shape: being }, at: { shape: [position, being], many: true } }
     required: [by, at]
   - verb: read
     roles: { by: { shape: being, nature: [body] }, of: { shape: statement, many: true }, from: { shape: being }, through: { shape: text }, at: { shape: [position, being], many: true } }
     required: [by, at]
   - verb: derive
+    meaning: "to come to the statements its `of` names from others, its `from`: a tool, a body, derived them, or a rule, a sayable, did. An agent's reading of what it was given is `derive`, by the session it ran in, since `read` takes a body"
     roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: statement, many: true }, through: { shape: being }, at: { shape: [position, being], many: true } }
     required: [by, from, at]
   - verb: make
+    meaning: "to make the statements its `of` names: they are in the ledger because their maker made them, neither said, read nor derived — as a session's bean is made by itself at its opening, `at: now`"
     roles: { by: { shape: being }, of: { shape: statement, many: true }, at: { shape: [position, being], many: true } }
     required: [by, at]
   # the order
@@ -124,6 +127,7 @@ verbs:
     roles: { by: { shape: being }, of: { shape: being } }
     required: [by, of]
   - verb: name
+    meaning: "to give a being a name: a namespace (`by`, a being or a row of `namespaces`) names a being (`of`) as a text (`as`). A name its namespace gives once names one being, and establishes its identity"
     roles: { by: { shape: [being, row], table: namespaces }, of: { shape: being }, as: { shape: text } }
     required: [by, of, as]
   # the four questions (thesis 14)
@@ -146,6 +150,7 @@ verbs:
     required: [of, from]
   # layers
   - verb: pass
+    meaning: "to carry statements (`of`) from one layer to another (`from`, `to`) through a method (`through`), as the knowing act what it carries is known by there (`as`). It stands only where the flow table grants it"
     roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: row, table: layers }, to: { shape: row, table: layers }, through: { shape: row, table: verbs }, as: { shape: row, table: knowing }, at: { shape: position } }
     required: [of, from, to, through]
   # the figures' positions: each takes a statement, and `through` what makes it so

@@ -17,9 +17,9 @@ Much of what follows arrived verbatim from comments that once sat inside the law
 and history — a date, who found what. Sorting that is editorial work that can now be done here, where it cannot change
 what the gate reads.
 
-## core/law/core.yaml: shapes
+## core/law/core.yaml: version
 
-(std-vocab 32: `schema_language`)
+(std-vocab 32: `version`)
 
 TIER-0 UNIVERSAL STANDARD VOCABULARY — portable, estate-agnostic classification carried BY THE SKILL.
 Gardens pin a version via `extends: std-vocab@<version>` (VOCAB.md / GARDEN.md) — the `version:` key two
@@ -28,6 +28,11 @@ Changes are governed by the PROMOTION PROTOCOL (SKILL.md): human-ratified rule-c
 additive term = MINOR bump; changed handling/merge/anchor rule = MAJOR (can retroactively re-classify).
 Each term declares: meaning · context_keys · anchor{class,establishing} · merge{cardinality,order,authority}
 · canonical (normalizer) · escape · exceptions(dated case-law).
+
+## core/law/core.yaml: shapes
+
+(std-vocab 32: `schema_language`)
+
 == THE SCHEMA LANGUAGE (added 2026-08-02, P2 / plan D4, human-ratified rule-change) ==
 INVARIANT SERVED: "type rules live in the VOCAB, not in code." bin/dmcheck.py is now a fixed CORE
 (front-matter shape, id==filename, kebab, provenance, anchors + establishing dedup, ip dedup, DAG,
@@ -65,7 +70,6 @@ Declared at 9.0.
 WHAT `in:` MAY SAY. Every attribute is a position in EXACTLY ONE domain,
 so `in:` is one thing, and it is never absent.
 
-
 A DOMAIN GIVES THE ORIGIN, so almost nothing states one. A closed list, a registry and an aspect are the law's; a
 reference is the garden's (`by: law`); a date, a quantity, a position in a system, an extent and a recurrence are
 said, the strictest reading — a day read from the clock or the world is the exception, and its position says so
@@ -91,27 +95,6 @@ may be a constant quantity where the parts are shares of something no attribute 
 parts by the ancestor, at a level of their scheme, of the code each names: each group is a whole on its own, and a
 group stated partly one way and partly another is refused, since it cannot be judged a whole at all.
 
-(std-vocab 32: `schema_language.expiry`)
-
-PER ENTRY, REPEATING, AND SILENT ONCE MET. `expiry` was written for a term with one date — a registration runs
-out. The first obligations recorded were many to one term, each with its own day, some repeating: six instalments
-are one clause that falls due six times. So on a list or an open map the attribute is each entry's; `repeats` names
-the entry's own recurrence, and the reader is warned before the NEXT occurrence rather than the first; and `unless`
-names the states in which an entry no longer lapses — a debt already met, waived or broken is not coming due. The
-tool that reads it stays outside the gate for the reason the construct has always given: an answer that changes
-with the calendar would make the gate fail on a day for no committed reason.
-
-`notice` is an extent because a notice period is a region of time. It was a bare integer of days for one release
-(until 11.2) — a fifth way of saying a duration in a vocabulary that had just declared the first. And
-`expiry` is declared by the term rather than derived from an attribute's type because, measured when it was written,
-ten terms carried an iso_date and nine of them were `observed` or `as_of`: the day a fact was read, not the day it
-runs out.
-
-`relative`, `lapses`, `stance` and `condition` (24.0) each NAME an attribute of the term, as `attr` and `repeats` do, and
-the gate refuses one that names none: a position stated relative to another, a permission that lapses rather than falls
-due, the words chosen by the entry's effective stance, and a condition in place of a day. They are declared here and
-read by the parts that build them.
-
 (std-vocab 32: `schema_language.required_on_gene`)
 
 THE AXIS IS READ FROM THE REGISTRY (22.0). A `required_on_<registry>` or `only_on_<registry>` key names a registry, and
@@ -127,14 +110,6 @@ it may, so a term that is a fact about one genos of being — that another garde
 where nothing reads it. The alternative was the gate naming the term and the genos in its code, which is the one thing
 the interpreter does not do.
 
-(std-vocab 32: `schema_language.at_most_one_of`)
-
-A CONTRADICTION IS REFUSED WHERE IT IS WRITTEN (24.0). `entry_one_of` could say that an entry states at least one of a
-group, and nothing could say that it states at most one: a clause could carry a stated `due` beside a `falls_due` that
-computes one, and a value a `u` beside an `accuracy`, and every reader then chose between them in its own way. A group of
-which at most one may be held says it once, in the law, and names both when two are written. Beside `entry_one_of` on
-the same group it says exactly one.
-
 (std-vocab 32: `schema_language.keyed_by`)
 
 ONE ENTRY PER KEY, ON THE TERM ITSELF (24.0). `keyed_by` inside `in: entries` held a nested list to one entry per value
@@ -142,44 +117,6 @@ since 21.0. Several mechanisms of 24.0 needed the same of a term's own entries, 
 one observer's one verdict on one entry — so the construct is stated beside `shape` too, and takes a list: one entry per
 combination of values. An entry holding none of the attributes is not counted, because a key it does not have cannot be
 repeated; a merge sorts a compound-keyed list by the tuple of its values.
-
-(std-vocab 32: `schema_language.exclusive`)
-
-DECLARED, AND ON NO TERM (24.0). Some extents cannot overlap for one being in one role — one person booked twice for the
-same days, one room lent twice — and the check is across every bean of the garden, not inside one. The construct is in
-the language so that a garden which needs it writes it in its own VOCAB.md, as a RULE-CHANGE; the law puts it on no term,
-because nothing the standard holds is exclusive for every garden.
-
-(std-vocab 32: `schema_language.series`)
-
-ONE CONTROLLER FOR WHAT ONLY THE WHOLE ENTRY SAYS. Each attribute of a series is judged by the rule its domain already
-has — the recurrence, the extent, each channel's registry and type. What none of them can say alone — that the unit
-measures the line, that the stride is whole, that the header names the channels, that each cell is one its channel
-holds, that a monotone channel never goes back, that an exclusion names a row — is read by the one reader of a series,
-which the gate asks, as it asks the one reader of the layer map.
-
-(std-vocab 32: `schema_language.origin`)
-
-EVERY POSITION SAYS WHERE ITS VALUE COMES FROM (24.0, the Leviathan's Body 2, ratified 2026-09-25). A tool that
-must know whether a day was someone's word or the clock's kept its own list of names — `as_of` and `observed` in the
-forms, in the save, twice in the gate, and once more in the bench's tracer — and five lists of one fact drift. The
-position says it instead, once — `origin: {act, nature?, by?}` — and every reader asks bin/dmpass.py. It is stated only where
-the domain's default is wrong, and the gate refuses one stated equal to its default, so the statements that exist are
-exactly the exceptions a reader should notice.
-
-It began as `stamped: true` (the release of 2026-09-25, F8, with a platform case's finding that a typed move's moment is
-invented): a move records the moment it was made, and a typed moment is exactly where invented days came from, since a
-writer types the nearest time in view. `by: save` is that facet with its siblings: the save writes `now` away — the
-day of its heading at a date, the heading's whole moment at a moment, read from the position's type — and the gate holds
-a value a commit adds to the reading of a heading the same commit adds. The save finds a `now` by the attribute's name,
-so one name read as a day in one place and a moment in another is refused: it could not tell which to write. The day of
-`as_of` keeps its own statement (`provenance_record.origin`) because it lives on every record, not on a term; so does
-the journal's heading (`journal.origin`).
-
-BY LIFE (31.0). The provenance guard ranked a person's word above a document's through the natures' order (soma, lekton,
-empsychon). With empsychon retired a person is soma, which would have put their word below a document's. What made it
-the top was never a nature: a person can be ASKED, because they live. So an origin may say `alive: true`, and the order
-is by act, then by life, then by nature — `asserted-by-human` is said by a body alive, and stays the top.
 
 (std-vocab 32: `schema_language.empty`)
 
@@ -189,21 +126,6 @@ that nobody gave a value — a transaction's day, a clause's due. A few are READ
 a refusal (the gate) must say which, or it teaches the wrong emptiness — and it was one tool's comment, 'empty unless
 said', written for every position alike. The law states it in the position's record, once, and both tools read it
 there; a position that states nothing keeps the ordinary meaning.
-
-(std-vocab 32: `schema_language.of_bodies`)
-
-A sayable being has no weight of its own (`foundation_rules`), and yet a product's record states its units' weight. The
-attribute says which it measures, so the rule refuses the one and allows the other, and the gate never guesses.
-
-(std-vocab 32: `schema_language.moves_along`)
-
-WHERE A CASE STANDS IS READ, NOT STORED (N10, F8; the client-work and platform cases). A stage written on a case is a
-second copy of its last move, and it drifts. A course is a series along time whose value at each move is a step of a
-named walk: the moves are the facts — the step reached, who moved it, a reason from the step's own list, why in words,
-and the moment, stamped. The gate holds one course's moves to its walk: a move follows a `next`, reaches a way out or a
-pause, returns from a pause to where it was, and nothing follows a final step; a move the walk does not offer passes
-only with its `why`, and warns, because the world does not always follow a procedure and the record must say so
-rather than refuse it. The moves merge by course, moment and step, so a step visited twice never collides with itself; a move is stamped to the minute, so two moves of one course to one step in one minute would be one move written twice, and the gate says so before a merge must refuse it.
 
 (std-vocab 32: `schema_language.attr_domains.entries`)
 
@@ -246,6 +168,38 @@ moment a tool stamps is always `unix-epoch`) had no way to say so and stayed `un
 A part of a being — a link, a volume, a capture — is named by its key, not by a ref: it is not a managed object and
 joins no graph. Until 18.0 such a name was `untyped`, so a tunnel could ride a link that did not exist. The gate
 resolves it and draws no edge.
+
+## core/law/core.yaml: shapes[position]
+
+(std-vocab 32: `division_form`)
+
+No item of the core's law is this reason's own, nor the next's (`divisions`): the core keeps no division form, and
+they stand here, under the dot they were written to divide.
+
+THE DOT, AND WHAT DIVIDING IT KEEPS (31.0). The operator: "we define dot, point, نقطه as undivisable being, when
+divised should keep it's division system and the wholesomeness control of its division defined". A position is a dot
+(Euclid, Elements I, def. 1: a point is that which has no part); what was taken as one and is divided — as the atom,
+ἄτομος, was — keeps its system, and how its parts make it is declared and held. The law had ten spellings of that: a
+capacity and what is placed in it, the facets of ownership, a transaction's shares, a system's levels, an extent's
+bounds. `division_form` says it once, and `divisions` names each existing rule as a case, with the rule that judges it,
+so none of them changes and all of them are one kind of thing. What it adds is a division a garden declares that no rule
+of the law has: the gate judges it itself, exactly, as capacity is judged — summed as fractions in the whole's unit.
+
+(std-vocab 32: `divisions`)
+
+The law's own divisions, each with the rule that already judges it: `capacity` (29.0's placements summed within what a
+host holds), `answering` (at most one entry for each facet of care, legal its owner's unless stated), `shares` (what was paid and borne, to the unit),
+`cells` (a finer cell inside one coarser), and `bodies` (a part never above its whole, `complexity`).
+
+## core/law/core.yaml: words[choice]
+
+(std-vocab 32: `schema_language.at_most_one_of`)
+
+A CONTRADICTION IS REFUSED WHERE IT IS WRITTEN (24.0). `entry_one_of` could say that an entry states at least one of a
+group, and nothing could say that it states at most one: a clause could carry a stated `due` beside a `falls_due` that
+computes one, and a value a `u` beside an `accuracy`, and every reader then chose between them in its own way. A group of
+which at most one may be held says it once, in the law, and names both when two are written. Beside `entry_one_of` on
+the same group it says exactly one.
 
 ## core/law/measures.yaml: forms.extent.attrs.level
 
@@ -404,12 +358,6 @@ wrapper. It is read each time and never stored, so it cannot go stale.
 
 (std-vocab 32: `crown`)
 
-== NATURES: the root axiom layer (added 2026-08-02, P3 / plan D1, human-ratified rule-change) ==
-`nature` is the ROOT of the type system and `genos` (until 22.0, `kind`) is a REFINEMENT of it, not a parallel
-taxonomy. Every bean carries a nature; every genos declares the `of_nature` it refines; the gate holds the
-two equal. Policy that used to be stated per genos (anchor family, minimum anchors) attaches HERE, so a
-new genos inherits a coherent identity policy for free and may override only if it truly differs.
-The crown itself is a MODEL axiom (MODEL.md Ownership), never instantiated as beans.
 == THE CROWN (added 2026-08-02, P7b, human-ratified) ==
 MODEL §Ownership states the axiom in prose; this makes it NAMEABLE in data without instantiating it as
 beans. These are the TERMINI every ownership chain resolves to. A bean names its branch directly only
@@ -441,9 +389,6 @@ bean names it, and it is the dot seen from the other side — indivisible, no th
 ## core/law/namespaces.yaml: namespaces
 
 (std-vocab 32: `identity_policy`)
-
-NB the crown OWNS but never ANSWERS. Responsibility has no crown form: a duty must land on a being
-that can be asked, so responsibility always terminates in a bean (or, for a person, in themselves).
 
 P3/D1: identity policy attaches to the ROOT AXIS...
 
@@ -544,31 +489,6 @@ mints (eleven more terms, and a stranger choosing between two words for one iden
 whose meanings admit an outside assigner (then a garden could not name an organisation that has no registry number —
 most of the people and groups a household deals with).
 
-(std-vocab 32: `name_form`)
-
-THE LAW'S WORDS IN ITS READERS' LANGUAGES (31.0). The operator: "the most clear plain words for daftar's own code and
-docs, with a structure to link to related same-names in other languages for now persian and turkish sibling by
-literative english as a separate layer for publications on pages and other stuff, we keep this structure through the
-view module deigns as a base pattern", and then "for the glossary include ancient greek, german, french, italian, latin
-and arabic too ... done by hand, carefully, with an ability to include some words and roots from every mentioned language
-which they apply on that context of that term". The code is one plain word; a name is how a reader of a language meets
-it, with the roots that bear on its use. It widens the knowledge schemes' `labels` (N25) from a scheme's codes to every
-word of the law, and it is a layer of its own beneath the law because a name must never change what the law says: the
-gate reads no meaning from it. Each name is `proposed` until a reader whose language it is confirms it, as the school's
-Persian and Turkish words are.
-
-The gate reads the files' FORM and nothing else: each is one of the form's languages, every row names an
-item of the whole law, whichever profiles a garden extends, once, and the languages are siblings — every file names what
-the others name, so no reader's language is a lesser copy of another's. A name is each language's own word for the
-item AS THE LAW USES IT, never a transliteration of the code: body is جسم, cisim, Körper — what takes room in three
-dimensions, as Ibn Sina and the Stoics defined it — and not تن or Leib, the lived body a stone lacks. Where a language's
-nearest word is one the law reserves or retired, another is chosen and the reserved one named in the roots, so a reader
-sees why: طبیعت names physis, not the natures; آفریدگار, Yaradan, Schöpfer and الخالق name THE ONE, and a bean's
-`creator` is پدیدآورنده, var eden, Urheber, المحدث. A word coined in an ancient language for a modern thing says so.
-The roots are chosen for what they show about the item's use here, and they show what the languages share: λεκτόν is
-from λέγω, first to gather and lay in order, as a lekton is placed in an order; tissue is woven in all nine; a lens is
-a lentil in all nine; the order of bodies is Pascal's first order, Hartmann's strata and Ibn Miskawayh's ranks.
-
 (std-vocab 32: `identity_policy.issued`)
 
 AN EMPLOYEE NUMBER BELONGS TO ITS EMPLOYER. Two employers who each issued 0042 issued two identities, and a garden that
@@ -618,6 +538,212 @@ A GARDENER'S STANDING RULES ARE WORDS. Declared as `any`, the key took a number 
 and its meaning said prose. A gardener writes one rule, or several each under a name of its own — how work on a live
 system is done, who decides what — so the key takes exactly that: one text, or texts under names. The schema language
 says it once, as `in: { prose: named }`, beside `in: prose`.
+
+## core/law/core.yaml: rules[form]
+
+A STATEMENT IS A VERB AND ITS ROLES, AND NOTHING ELSE (the core spec §2; ratified with the core's engine, daftar
+#81–#84, 2026-10-01). Every fact is one statement, so what a statement may carry is closed: its verb's roles, the
+qualifiers its verb's row declares, the four keys beside them, and `held` for one kept off git. What a term had grown
+without that closure — keys no tool read, "prose riding on the law" — is under `core/law/core.yaml: verbs`. What today's
+gate held and the thirteen rules did not came over in v1 part 2 (§16 item 8, daftar #92): a text holds no control
+character (`core/law/lines.yaml: types[text]`), and GARDEN.md holds its keys, each in its form, and names its gardener
+once it holds a bean (`core/law/core.yaml: manifest`). A grant's cover names the parts it opens of each bean; a grant
+the core cannot say as narrowly is kept whole in `details`, where it opens nothing: closed by default, never wider (§16
+item 19, daftar #103).
+
+## core/law/core.yaml: rules[valency]
+
+A VERB SAYS WHAT IT TAKES (the core spec §4; ratified with the core's engine, daftar #81–#84, 2026-10-01). A verb is a
+row with its valency — the roles it takes, what fills each, which are required. The rule holds a statement to its verb's
+row, and so the gate names no verb: every verb but the face's is a row, proposed and ratified as the law is (§4), as the
+schema language held that type rules live in the law and not in code (`core/law/core.yaml: shapes`). Today's checks of
+today's terms' shapes are this rule and `form` (§16 item 8).
+
+## core/law/core.yaml: rules[knowing]
+
+EVERY STATEMENT IS KNOWN BY AN ACT (the core spec §3; ratified with the core's engine, daftar #81–#84, 2026-10-01). A
+statement is in the ledger because someone said it, read it, made it or derived it, and the act names who; today's `src`
+was already defined as an act and a nature, so it is derived and never written (`core/law/core.yaml: provenance`). Every
+statement is covered by an act. The act's moment is the save's — `now`, which the save writes — and a moment typed there
+is refused, since a typed moment is where invented days came from (`core/law/core.yaml: knowing`, `core/law/core.yaml:
+layers[journal]`). A statement a commit adds is known by an act the same commit adds, and only the commit that adopts
+the core, a RULE-CHANGE a person ratifies, carries the moments history recorded (§16 items 3 and 4, ratified 2026-10-01,
+daftar #85). An act known in another garden holds that garden's bean beside its moment there, and the commit that brings
+it takes it (§16 item 14, daftar #98).
+
+## core/law/core.yaml: rules[placeholder]
+
+WHAT THE LAW DERIVES IS NOT WRITTEN (the core spec §4; ratified with the core's engine, daftar #81–#84, 2026-10-01). A
+verb's row may give a default — before the law, the owner answers — and the engine derives the statement it gives;
+written, the same statement would say again what the law already says. Today's law refused it in its own words: a legal
+entry that repeats the owner (`core/law/core.yaml: verbs[answer]`).
+
+## core/law/core.yaml: rules[order]
+
+NOTHING STANDS ON ITSELF (the core spec §5; ratified with the core's engine, daftar #81–#84, 2026-10-01). The order has
+one relation, `stand`, made-of or possible-on, and a being that stood on itself through others would be its own
+foundation. A part never stands above what its whole is made of: the order of bodies is the order of foundations
+(`core/law/levels.yaml: levels`). Today's gate held ownership, habitat and needs acyclic (`core/law/core.yaml:
+verbs[own]`, `core/law/core.yaml: placements[habitat]`), and v1 part 2 brought that into this rule: nothing owns itself,
+is part of itself, is at itself or needs itself through others (§16 item 8, daftar #92).
+
+## core/law/core.yaml: rules[life]
+
+EVERY CHAIN ENDS (the core spec §5; ratified with the core's engine, daftar #81–#84, 2026-10-01). `come` is the verb of
+via, the chain through which a being came to be (§14 choice 1: "all ten okay", 2026-10-01). A living being comes through
+the living; a made or said being comes through hands — a being at reason — or through a tool whose own coming goes on;
+and every chain ends at the crown. None is demanded: a being with no `come` is not refused. Why the chain is the life
+chain, and why it ends at one: `core/law/core.yaml: verbs[come]` and `core/law/core.yaml: crown`.
+
+## core/law/core.yaml: rules[necessity]
+
+WHAT IS NECESSARY IS NECESSARY THROUGH SOMETHING (the core spec §5, thesis 12; ratified with the core's engine, daftar
+#81–#84, 2026-10-01). The necessity square is Ibn Sina's — wājib, mumkin, mumtaniʿ — and every being here is possible in
+itself and necessary only through another, so a `necessary` statement names what it is necessary through. The one
+exception is the crown, necessary by itself: `necessary: { of: theone }` is the one statement that needs none. His proof
+that the chain ends there is under `core/law/core.yaml: crown`.
+
+## core/law/core.yaml: rules[squares]
+
+THE SQUARE IS THE LAW OF DISAGREEMENT (the core spec §9; ratified with the core's engine, daftar #81–#84, 2026-10-01;
+the squares as operators over statements, §14 choice 3). Contraries cannot both stand, nor contradictories, on one
+statement through one source; subcontraries can. So the gate refuses what cannot hold together and leaves what can, and
+two knowers' statements about one thing stand side by side until a person settles them with a `rule` (§3; §14 choice 9).
+One observer gives one verdict on one statement, and a ruling waits until every speaker of what it rules on has
+responded (§16 item 19, daftar #103): a disagreement is heard before it is ruled on (`core/law/verbs.yaml:
+verbs[rule]`).
+
+## core/law/core.yaml: rules[weight]
+
+A SAYABLE HAS NO WEIGHT OF ITS OWN (the core spec §5; ratified with the core's engine, daftar #81–#84, 2026-10-01).
+Weight is a foundation: it holds at a step and at every step above it, so every body has weight, and a sayable, which
+takes a place in an order and no room, has none of its own (`core/law/core.yaml: foundations`). A record may still state
+the weight of the bodies it is about; what is refused is a mass given to the sayable itself, as below.
+
+(std-vocab 32: `schema_language.of_bodies`)
+
+A sayable being has no weight of its own (`foundation_rules`), and yet a product's record states its units' weight. The
+attribute says which it measures, so the rule refuses the one and allows the other, and the gate never guesses.
+
+## core/law/core.yaml: rules[frame]
+
+A POSITION IS NEVER BARE (the core spec §7; ratified with the core's engine, daftar #81–#84, 2026-10-01). A being takes
+its place in a frame — space∞time for a body, the taxis for a sayable — and a position is a dot in a system: a calendar,
+a reference system, a filesystem, an address space, each with its one form. A position stated as though one system were
+time or place itself, or in a second spelling, is how one analysis read fresh on one host and stale on another the same
+minute (`core/law/systems.yaml: systems`). A position finds its other half by its complement — stated, the bearer's, or
+the system's — since place and time are each only with the other (`core/law/core.yaml: complements`).
+
+## core/law/core.yaml: rules[names]
+
+A NAME GIVEN ONCE NAMES ONE BEING (the core spec §8; ratified with the core's engine, daftar #81–#84, 2026-10-01; a name
+is a statement, §14 choice 6). A namespace — a garden, a maker, DNS, the mail system — gives a name, and its row says
+whether it gives it once; a name given once establishes an identity, so two beings it names are refused. The standards'
+namespaces are the core's, and a mailbox and a telephone line, which may be shared, name without establishing (§16 item
+6, 2026-10-01: "Ship them in core/law"). A garden's id is the root of its history, read from git, and a name a garden
+gave crosses qualified by it (§16 item 8, daftar #92); why a name carries its birthplace is under
+`core/law/namespaces.yaml: namespaces`. A name is in the one form its namespace gives (§16 item 18, daftar #102).
+
+## core/law/core.yaml: rules[layers]
+
+EVERY PASS HAS A ROW, OR IT IS REFUSED (the core spec §10; ratified with the core's engine, daftar #81–#84, 2026-10-01).
+A file stands in one layer, and the layer map decides what may flow where (`core/law/layers.yaml: standing`); a garden's
+material comes from places of unequal standing, so a pass stands only where the flow table grants it
+(`core/law/flows.yaml: flows`). Of the rows that hold a pass the nearest decides — one naming the act what it carries is
+known by nearer — and of two as near, a refusal; `ratified` is granted only to the party a garden's own row names (§16
+item 14, daftar #98). A session's pass log only grows, and a commit that stages one claims the session, because a claim
+needs something to be checked against (`core/law/terms.yaml: terms[pass_log]`; §16 item 16, daftar #100).
+
+## core/law/core.yaml: rules[ratify]
+
+A PERSON RATIFIES THE LAW (the core spec §4: every verb but the face's is a row, "proposed and ratified as the law is";
+ratified with the core's engine, daftar #81–#84, 2026-10-01). A change to the core, to a verb's row, a kind, a namespace
+or a flow is a change to the law, so it is a RULE-CHANGE, said distinctly in its entry, and a person ratifies it
+(MODEL.md, the Contract of Parts). A grant to ratify is the gardener's own act — on the gardener's bean, said by the
+gardener — as today's gate held (§16 item 8, daftar #92).
+
+## core/law/core.yaml: rules[consent]
+
+ANOTHER PERSON IS NOT THE GARDENER'S TO PUBLISH (taken over from today's gate in v1 part 2, §16 item 8, 2026-10-01: "do
+the pending items including consent and other old gate checks", daftar #92). A garden's git is copied whole to every
+clone, so a person who is not the gardener is kept by name only on their own word — an `agree` of theirs to an agreement
+held here, or the garden they keep, met here — or under an opaque id, and no commit places them somewhere in the future,
+in git. Why, and why taking a proposal is not accepting it: `core/law/verbs.yaml: verbs[agree]`. A `decline` is the word
+of the one the statement it declines names, and one who `represent`s another acts for someone else (§16 item 19, daftar
+#103).
+
+## core/law/core.yaml: rules[harm]
+
+WHAT HARM CAN COME OF IS KEPT OUT OF GIT (taken over from today's gate in v1 part 2, §16 item 8, 2026-10-01: "do the
+pending items including consent and other old gate checks", daftar #92). Git keeps only what may travel
+(`core/law/core.yaml: beside_roles[held]`): a private-key block is refused in any file a commit stages; special-category
+material is written only sealed, its sensitivity following the code and not the field it sits in
+(`core/law/registries.yaml: knowledge_scheme_form`); a sealed statement keeps its verb and its id and holds a pointer,
+and a commit that seals one says so. Harm is read from what a bean holds, so a sensitivity below the one its bean
+derives is a person's own word (`core/law/verbs.yaml: verbs[rate]`).
+
+## core/law/core.yaml: rules[room]
+
+TWO BODIES ARE NOT IN ONE ROOM AT ONCE (taken over from today's gate in v1 part 2, §16 item 8, 2026-10-01: "do the
+pending items including consent and other old gate checks", daftar #92). A body takes room in its frame and a sayable
+takes none (the core spec §5), so a location, a port on an address and a person's hours are each held by one at a time:
+a placement that takes room excludes others (`core/law/core.yaml: placements`), a port on an address is one listener's
+at a time (`core/law/profiles.yaml: profiles`), and a happening takes the hours of those present (`core/law/kinds.yaml:
+kinds[event]`). What else cannot overlap is the garden's to declare, as below.
+
+(std-vocab 32: `schema_language.exclusive`)
+
+DECLARED, AND ON NO TERM (24.0). Some extents cannot overlap for one being in one role — one person booked twice for the
+same days, one room lent twice — and the check is across every bean of the garden, not inside one. The construct is in
+the language so that a garden which needs it writes it in its own VOCAB.md, as a RULE-CHANGE; the law puts it on no term,
+because nothing the standard holds is exclusive for every garden.
+
+## core/law/core.yaml: rules[vacancy]
+
+WHOEVER DECLARES A POSITION ACCOUNTS FOR IT (taken over from today's gate in v1 part 2, §16 item 8, 2026-10-01: "do the
+pending items including consent and other old gate checks", daftar #92). A row a garden adds to the law is used by a
+statement or a bean, or says why it is vacant, because an unstated absence and a deliberate one must not look alike
+(`core/law/systems.yaml: systems`). The duty falls on whoever declares the row, so the law's own vacancies bind no
+garden that adopts it, and a garden answers for its own (`core/law/vacancies.yaml: vacancies`); the reasons a vacancy
+may give are `core/law/vacancies.yaml: reasons`.
+
+## core/law/core.yaml: rules[kept]
+
+WHAT IS KEPT IS NOT DAMAGED (taken over from today's gate in v1 part 2, §16 item 8, 2026-10-01: "do the pending items
+including consent and other old gate checks", daftar #92). The journal is appended and never rewritten — the queue,
+which is edited in place, stands apart for that reason (`core/law/core.yaml: layers`) — and only what a commit adds to
+it is judged, so its history keeps the forms it was written in (`core/law/core.yaml: layers[journal]`). A series' part,
+once written, stays as it is: its rows are the garden's own facts, too many for a bean (`core/law/layers.yaml:
+standing[estate]`). What a commit takes out of a bean is named in its entry, nothing it keeps is emptied, and every bean
+keeps a body.
+
+## core/law/core.yaml: rules[line]
+
+WHAT HOLDS A LINE HOLDS ITS FORM (the core spec §16 item 12, v1 part 6, merged by the operator as daftar #96,
+2026-10-02). A line is any ordered run of positions — time, a walk, a being's own lines (the core spec §5; the operator:
+"you can use line a general", 2026-10-01) — and a series, a walk with its courses and moves, a reading and a pin each
+have a form the seven roles alone do not say. One rule judges them, through the one reader of each: a series by its
+channels (`core/law/lines.yaml: forms.series`), a course by its walk, where a case stands read and not stored
+(`core/law/verbs.yaml: verbs[move]`), a reading by the closed list of operations (`core/law/lines.yaml:
+selection_form`), a pin by a commit the garden has (`core/law/verbs.yaml: verbs[pin]`).
+
+## core/law/core.yaml: rules[measured]
+
+WHAT IS MEASURED IS IN ITS FORM (the core spec §16 items 13 and 19, v1 parts 7 and 12b, merged by the operator as daftar
+#97 and #103, 2026-10-02). How well a quantity is known, a region, a repetition, a clause's terms and what a placement
+takes are measures the seven roles do not say, each a form of core/law/measures.yaml, and one rule holds them. Why each
+is as it is: `core/law/measures.yaml: uncertainty_form`, `extent_form`, `recurrence_form` and `forms.clause`; what a
+placement takes, and never more room than its host holds, `core/law/core.yaml: placements`; a weighing's judgments,
+`core/law/verbs.yaml: verbs[weigh]`; a mark said at both ends, `core/law/verbs.yaml: verbs[mark]`.
+
+## core/law/core.yaml: rules[profile]
+
+A PROFILE ADDS, AND NEVER REWRITES (the core spec §16 items 17 and 19, v1 parts 11 and 12b, merged by the operator as
+daftar #101 and #103, 2026-10-02). A profile's words are general to a kind of garden rather than to all, so a garden
+takes one by name (VOCAB.md `profiles`) and what it gives — a verb whose home it is, an attribute it adds to a form of
+the core — is used only there: a garden that manages no code inherits no code words (`core/law/profiles.yaml:
+profiles`). What its forms hold is judged as the core's are: a page draws each drawing of its bean once and all of them,
+its values are named once, and what a drawing names is there.
 
 ## core/law/terms.yaml: terms
 
@@ -672,25 +798,6 @@ was one sense under two names, the names were made one: a pass says `from` and `
 counts `characters`, and nothing counts lines; a datum's `direction` is before or after, as an order's is ascending or
 descending; a table of a view reads a `series`, which is what it points at; and a fixing position's `origin` is an
 origin, in the form every position's origin takes.
-
-(std-vocab 32: `roles`)
-
-== ROLES: what a being DOES, as against what it IS (added 7.0) ==
-THE FIX FOR AN AMBIGUITY THIS VOCABULARY SHIPPED WITH. `router` was a GENOS until 7.0, and the proof it
-was wrong is an asymmetry the corpus already carried: a mail server recorded five roles as free-text data
-(`primary-mail, file-server, monitoring, webmail, erp-host`) while a router's single role was a genos.
-Both are machines. What makes one a router is that it forwards traffic — which since 6.0 IS data, in
-`treatments`. A genos answers what a being IS; a role answers what it DOES, and a being does several
-things at once. Encoding one of the things it does as the thing it is made the genos un-askable for every
-machine that does two.
-
-(std-vocab 32: `term_form`)
-
-ONE SHAPE FOR A TERM (26.0). A term had grown keys that no tool read — a note on its keys, the release left out of a
-value, a form written out, a directive to an agent — each named for the occasion. They were prose riding on the law: a
-reader could not tell a rule from a remark, and nothing kept the next one from arriving under a new name. The record
-is now declared, and the gate holds every term to it, the law's, a profile's and a garden's alike. What a writer needs
-to apply a term is its `meaning`; why it is so is reasoning, here, under the term's path.
 
 ## core/law/core.yaml: knowing
 
@@ -747,35 +854,6 @@ nothing its inputs did not, a reading can be read again, and what is said can be
 natures in their own order. That is the provenance rank as it always stood, and it places a value it never had a place
 for: a document's word, above what was read off the world and below a person who can be asked.
 
-(std-vocab 32: `journal`)
-
-== THE JOURNAL (10.0, T3): where the record of what was done is, and how an entry is headed ==
-The journal is the garden's time record, and it had no rule for time. One real garden, measured on
-2026-09-19: 663 entries, 276 headed with a date only, 387 with a time in `+0300` or `+0330` while the calendar
-system's one form is `+03:00`; and one entry headed 23:59 that was committed at 23:32, a precision written
-rather than read. A heading is now a position in a declared calendar's own form (gregorian-civil's until 18.0), held to
-at least the MINUTE, with its offset, because an entry is ordered against every other and a reading with no offset
-cannot be.
-Only headings ADDED by a commit are checked: the journal is never rewritten, so its history keeps the forms
-it was written in, and those stay what they were.
-
-(std-vocab 32: `journal.checks`)
-
-entries a commit adds; never the history
-
-(std-vocab 32: `journal.origin`)
-
-STAMPED, NOT TYPED (20.0; since sources-by-nature, the heading read `by: save`). 10.0 made a heading a position in time and the gate checks its form; the truth of
-the moment it never could. The evening this was written, the same writer typed the time before reading the
-clock twice in five hours — 20:06 for 19:52, 22:31 for 22:09 — and both headings were of perfect form. The
-gate cannot tell a measured moment from a remembered one by looking at it. What it can tell is whether the
-clock-reading tool wrote it: `bin/dmjournal.py` records every heading it writes in the clone's own git
-directory, and the gate refuses a heading a commit adds that is not there. The register is never versioned
-and proves only what a pre-commit hook can honestly prove — that this clone's tool stamped it — which is
-enough, because the failure it answers is a hand typing. `dmupgrade` writes its entry through the same tool,
-with git's author as the who and the ratifier as a body line to fill in: a fill-in inside the heading would
-have changed the heading after it was stamped.
-
 (std-vocab 32: `provenance_record.attrs`)
 
 BETWEEN GARDENS IS A ROUTING DOMAIN, AND A NAME CARRIES ITS PATH (24.0, ratified 2026-09-26). A garden is an autonomous
@@ -786,12 +864,28 @@ after its origin is a loop and is refused, as a path-vector protocol drops a rou
 not travel this way: what a third garden said is still not a garden's to pass on; only the name, and a person's
 `consent` with their name, as a community travels with a route.
 
-(std-vocab 32: `journal.system`)
+(std-vocab 32: `schema_language.origin`)
 
-The journal kept its own copy of one calendar's form, as a pattern beside the system that already owned it: a second
-spelling of a rule, and one that made a journal in any other calendar unwritable. A heading's moment is a position in
-a calendar, so it is judged by that calendar's own form; the journal adds only what a JOURNAL needs — the minute, and
-the offset. `any` is the default because a language has no calendar of its own; a garden that wants one names it.
+EVERY POSITION SAYS WHERE ITS VALUE COMES FROM (24.0, the Leviathan's Body 2, ratified 2026-09-25). A tool that
+must know whether a day was someone's word or the clock's kept its own list of names — `as_of` and `observed` in the
+forms, in the save, twice in the gate, and once more in the bench's tracer — and five lists of one fact drift. The
+position says it instead, once — `origin: {act, nature?, by?}` — and every reader asks bin/dmpass.py. It is stated only where
+the domain's default is wrong, and the gate refuses one stated equal to its default, so the statements that exist are
+exactly the exceptions a reader should notice.
+
+It began as `stamped: true` (the release of 2026-09-25, F8, with a platform case's finding that a typed move's moment is
+invented): a move records the moment it was made, and a typed moment is exactly where invented days came from, since a
+writer types the nearest time in view. `by: save` is that facet with its siblings: the save writes `now` away — the
+day of its heading at a date, the heading's whole moment at a moment, read from the position's type — and the gate holds
+a value a commit adds to the reading of a heading the same commit adds. The save finds a `now` by the attribute's name,
+so one name read as a day in one place and a moment in another is refused: it could not tell which to write. The day of
+`as_of` keeps its own statement (`provenance_record.origin`) because it lives on every record, not on a term; so does
+the journal's heading (`journal.origin`).
+
+BY LIFE (31.0). The provenance guard ranked a person's word above a document's through the natures' order (soma, lekton,
+empsychon). With empsychon retired a person is soma, which would have put their word below a document's. What made it
+the top was never a nature: a person can be ASKED, because they live. So an origin may say `alive: true`, and the order
+is by act, then by life, then by nature — `asserted-by-human` is said by a body alive, and stays the top.
 
 ## core/law/core.yaml: natures
 
@@ -862,6 +956,13 @@ is each genos's (`gene` `alive_while`), and the crown is the life chain (`crown`
 translated by `bin/dmupgrade.py` by each bean's genos; `empsychon` is in `retired`, so an un-upgraded garden is refused
 with the word that took its place.
 
+== NATURES: the root axiom layer (added 2026-08-02, P3 / plan D1, human-ratified rule-change) ==
+`nature` is the ROOT of the type system and `genos` (until 22.0, `kind`) is a REFINEMENT of it, not a parallel
+taxonomy. Every bean carries a nature; every genos declares the `of_nature` it refines; the gate holds the
+two equal. Policy that used to be stated per genos (anchor family, minimum anchors) attaches HERE, so a
+new genos inherits a coherent identity policy for free and may override only if it truly differs.
+The crown itself is a MODEL axiom (MODEL.md Ownership), never instantiated as beans.
+
 (std-vocab 32: `natures[soma].establishing_anchor_family`)
 
 serial / mac — bound to the matter itself. (`wg_pubkey` was listed here until 19.0; it never was.)
@@ -892,7 +993,6 @@ powers of the old ladder — to breathe, to sense and move, to reason — are no
 foundations, and the powers are what a genos's `alive_while` names. Declared whole, from the dot of matter up: a level
 no genos stands at is held for the body a garden will one day keep, and the gate needs no vacancy for it, since no term
 of a bean takes a level — a genos does. The gate holds the one consequence it can: a part never stands above its whole.
-
 
 THE LADDER (32.0). The operator: "we keep the dot as indivisible and define the the structure of the space∞time … lets
 take it as the base for the atom or dot of the soma body جسم an organization of its atoms make matter ماده, also by nature
@@ -951,28 +1051,37 @@ point in a rock). The chain ends at the garden's own `zone` (GARDEN.md), which t
 position's other half resolves and the check can be strict without asking a garden for a place on every date. ISO
 19111:2019 composes a spatial and a temporal system into one compound system (read at OGC 18-005), so `compound` says so.
 
-## core/law/core.yaml: words
-
-(std-vocab 32: `division_form`)
-
-THE DOT, AND WHAT DIVIDING IT KEEPS (31.0). The operator: "we define dot, point, نقطه as undivisable being, when
-divised should keep it's division system and the wholesomeness control of its division defined". A position is a dot
-(Euclid, Elements I, def. 1: a point is that which has no part); what was taken as one and is divided — as the atom,
-ἄτομος, was — keeps its system, and how its parts make it is declared and held. The law had ten spellings of that: a
-capacity and what is placed in it, the facets of ownership, a transaction's shares, a system's levels, an extent's
-bounds. `division_form` says it once, and `divisions` names each existing rule as a case, with the rule that judges it,
-so none of them changes and all of them are one kind of thing. What it adds is a division a garden declares that no rule
-of the law has: the gate judges it itself, exactly, as capacity is judged — summed as fractions in the whole's unit.
-
-(std-vocab 32: `divisions`)
-
-The law's own divisions, each with the rule that already judges it: `capacity` (29.0's placements summed within what a
-host holds), `answering` (at most one entry for each facet of care, legal its owner's unless stated), `shares` (what was paid and borne, to the unit),
-`cells` (a finer cell inside one coarser), and `bodies` (a part never above its whole, `complexity`).
-
 ## core/law/places.yaml: bodies
 
 (std-vocab 32: `bodies`)
+
+== WHERE, BY COORDINATES: bodies and coordinate reference systems ==
+ISO 19111 and ISO 19112 divide spatial referencing in two, and this law follows them. BY COORDINATES: numbers in a
+COORDINATE REFERENCE SYSTEM — a datum fixed to a BODY, axes, units. BY IDENTIFIER: a name somebody maintains — a
+street address, a postal code, an administrative code, a map database's element id, a grid cell's code. The first is
+THE ROOT: every identifier RESOLVES THROUGH a coordinate position and none of them IS one. A map database is
+somebody else's truth (ground rule 3) — useful, re-drawn without notice, and never what a place is anchored to.
+"THE THIRD FLOOR" is neither: it is a position in a frame that TRAVELS WITH ITS BUILDING (an engineering frame), and
+confusing it with a fixed coordinate is how a room acquires a latitude.
+
+A BODY IS PART OF THE POSITION. A latitude is a latitude ON something. `bodies` is open: the Moon and Mars are here
+because reference systems for them are published (the IAU's), and the machinery is the same on any of them.
+
+## core/law/places.yaml: reference_system_kinds
+
+(std-vocab 32: `reference_system_kinds`)
+
+THE REGISTRY IS A SAMPLE, NOT THE LIST. There are several thousand published reference systems, and ANY
+`<authority>:<code>` is a legal position: the authorities' own registries (EPSG for the Earth, IAU_2015 for other
+bodies) are the owners of that enum, and copying them here would be a stale second copy within the year. The rows
+below are the ones whose SHAPE this law states, so a tool can read them, and one of each `kind` ISO 19111 names.
+`frame` is the distinction that matters most and is met least: a STATIC frame is fixed to a tectonic plate, so a
+point on the ground keeps its coordinates; a DYNAMIC frame is fixed to the whole Earth, so the ground DRIFTS in it
+by centimetres a year, and a coordinate is complete only with the EPOCH it was measured at (`@2026.72`).
+
+## core/law/systems.yaml: systems
+
+(std-vocab 32: `anchor_systems`)
 
 == ANCHOR SYSTEMS: the systems a POSITION may be stated in (added 5.1, human-ratified rule-change) ==
 A POSITION IS NEVER BARE. `iso_date` hardcodes ONE anchor system — the Gregorian calendar — as though it
@@ -991,6 +1100,13 @@ canonical form says so with `pattern: none` and a reason — the same explicit-a
 already applies to terms, because an unstated pattern and a deliberately absent one must not look alike.
 THE REGISTRY IS OPEN. A new system is a VOCABULARY edit and never a code edit: the gate reads `pattern`
 generically through `entry_pattern_from_registry` and names no system, exactly as it names no term.
+
+## core/law/systems.yaml: system_shape
+
+(std-vocab 32: `system_shape`)
+
+THE WORDS A SYSTEM'S SHAPE MAY USE, declared so the gate carries no copy of them.
+
 == A SYSTEM KNOWS ITS OWN SHAPE ==
 The `place` aspect has always confessed that it cannot describe its systems: "lines: open … metered: none — the
 aspect claims no measure it cannot give every system". The operator said where the answer lives on 2026-08-05:
@@ -1027,35 +1143,6 @@ THE GATE CHECKS THE SHAPE, not its use: that what a row names exists, that `with
 loop, that a metric level names a real unit, that a restriction is one the figure offers and does not widen the
 aspect's. The consumers are extents and recurrences, which ask the SYSTEM what it permits as they ask the aspect
 today. `system_registries` names the registries whose rows are systems, so the gate names none.
-== WHERE, BY COORDINATES: bodies and coordinate reference systems ==
-ISO 19111 and ISO 19112 divide spatial referencing in two, and this law follows them. BY COORDINATES: numbers in a
-COORDINATE REFERENCE SYSTEM — a datum fixed to a BODY, axes, units. BY IDENTIFIER: a name somebody maintains — a
-street address, a postal code, an administrative code, a map database's element id, a grid cell's code. The first is
-THE ROOT: every identifier RESOLVES THROUGH a coordinate position and none of them IS one. A map database is
-somebody else's truth (ground rule 3) — useful, re-drawn without notice, and never what a place is anchored to.
-"THE THIRD FLOOR" is neither: it is a position in a frame that TRAVELS WITH ITS BUILDING (an engineering frame), and
-confusing it with a fixed coordinate is how a room acquires a latitude.
-
-A BODY IS PART OF THE POSITION. A latitude is a latitude ON something. `bodies` is open: the Moon and Mars are here
-because reference systems for them are published (the IAU's), and the machinery is the same on any of them.
-
-## core/law/places.yaml: reference_system_kinds
-
-(std-vocab 32: `reference_system_kinds`)
-
-THE REGISTRY IS A SAMPLE, NOT THE LIST. There are several thousand published reference systems, and ANY
-`<authority>:<code>` is a legal position: the authorities' own registries (EPSG for the Earth, IAU_2015 for other
-bodies) are the owners of that enum, and copying them here would be a stale second copy within the year. The rows
-below are the ones whose SHAPE this law states, so a tool can read them, and one of each `kind` ISO 19111 names.
-`frame` is the distinction that matters most and is met least: a STATIC frame is fixed to a tectonic plate, so a
-point on the ground keeps its coordinates; a DYNAMIC frame is fixed to the whole Earth, so the ground DRIFTS in it
-by centimetres a year, and a coordinate is complete only with the EPOCH it was measured at (`@2026.72`).
-
-## core/law/systems.yaml: system_shape
-
-(std-vocab 32: `system_shape`)
-
-THE WORDS A SYSTEM'S SHAPE MAY USE, declared so the gate carries no copy of them.
 
 (std-vocab 32: `system_shape.sources`)
 
@@ -1484,11 +1571,6 @@ the same database at the moment asked, so the file never has to change when a go
 
 (std-vocab 32: `vacancy_reasons`)
 
-== VACANCIES (Tier-0). P6/B2: whoever DECLARES a position accounts for it, so the duty to explain
-these is discharged HERE — an adopting garden must never inherit an obligation to justify a position it
-never asked for. The gate applies ANTI-ROT only to garden-local vacancies: a garden that OCCUPIES one of
-these is a prediction coming true, and it cannot edit Tier-0 to withdraw the vacancy, so treating that
-as an error would be an unfixable failure.
 The reasons a vacancy may give, declared rather than known by the gate. A reason is a CATEGORY OF
 ABSENCE — why nothing occupies a position the law makes available — and that is a statement about the
 world, which the vocabulary owns and the interpreter must not carry a copy of. Adding a reason is a
@@ -1503,6 +1585,10 @@ warned: one garden's occupant withdraws nothing declared for every garden.
 ## core/law/core.yaml: cardinality
 
 (std-vocab 32: `leaf_orders`)
+
+No item of the core's law is this reason's own, nor its rows' below: the core keeps no leaf orders, and the merge
+keeps a bean's statements as a set (MERGE.md). They stand here, beside how many fillers a role takes, where v1 part 13
+placed them.
 
 == LEAF SUBSUMPTION ORDERS (declared 2026-08-03, Phase 6) ==
 `merge_field` absorbs a general value into a more precise one where the two are ORDERED: 192.168.0.0/24
@@ -1548,6 +1634,14 @@ calendars it is asked only when both begin their day at the same moment: where a
 clock time falls in depends on the place and the season, and an order computed by arithmetic would be an invention.
 
 ## core/law/vacancies.yaml: vacancies
+
+(std-vocab 32: `vacancies`)
+
+== VACANCIES (Tier-0). P6/B2: whoever DECLARES a position accounts for it, so the duty to explain
+these is discharged HERE — an adopting garden must never inherit an obligation to justify a position it
+never asked for. The gate applies ANTI-ROT only to garden-local vacancies: a garden that OCCUPIES one of
+these is a prediction coming true, and it cannot edit Tier-0 to withdraw the vacancy, so treating that
+as an error would be an unfixable failure.
 
 (std-vocab 32: `vacancies[owned_by.entry_one_of]`)
 
@@ -1601,19 +1695,6 @@ stated which segment it was attached to.
 
 (std-vocab 32: `vacancies[registry:anchor_systems]`)
 
-== ASPECTS (added 2026-08-02, std-vocab@2.1) ==
-DIMENSION-AGNOSTIC. An aspect declares its own axes and the gate does not care how many: `poles` is one
-contradictory PAIR, or a LIST of pairs. A figure may be 1-dimensional (a plain binary), 2 (a square),
-3 (a cube), or more — what is required is that every declared axis runs between genuine opposites, so a
-position is addressable along it. The count is DERIVED from the declaration, never assumed, because
-assuming a count is exactly how a square silently mis-models a cube. Likewise a term's `cells`
-are N-ary: they constrain ONE aspect or SEVERAL, and the machinery is the same either way.
-An ASPECT is a CLOSED figure of positions — the operator's requirement that a classification have no
-loose ends. A line has undefined extremes and forces partial membership; a closed figure does not, so
-polarity lives in OPPOSED POSITIONS rather than at the ends of a scale. Each position names its
-COMPLEMENT, which is what lets a being be addressed by opposition as well as by identity ("the light is
-not where darkness is"). The gate enforces the sanity rules — closure, orientation, complement mutuality
-— and names no aspect, so a new aspect is data, never a code change.
 == POSITION SYSTEMS AND RESOLUTIONS NOT YET TAKEN (declared 5.1, 2026-08-07) ==
 Declared here rather than left silent because the whole argument for naming an anchor system is that
 an UNSTATED domain is what makes a negative result read as strong. A registry that quietly carried
@@ -1655,16 +1736,6 @@ NAMED FOR WHAT IT IS, NOT FOR ITS DIMENSION. Aristotle's square of opposition is
 case, a plain binary its one-axis case (`confidentiality`) and a cube its three-axis case. Calling the
 figure "square" would fix a count the gate is required to derive: "when doing the squares make sure
 cubes don't bite" (the operator, 2026-08-02).
-
-(std-vocab 32: `figures[sequence].holds`)
-
-A POSITION MAY HOLD WHAT WAS FOUND THERE (D47, "develop the sequence machinery to fit the need"). A perfusion chart, a
-moth's night, a dendrometer's record, a core's strata and a case's stages are one shape: a line, positions on it, and at
-each what was read. The operator ruled out a separate series form, so the sequence figure gains the capability beside
-the one it had — `extent: possible`, a region of the line — and nothing is restated: a series' positions are the
-recurrence's occurrences or an extent's offsets, both forms the law already owns. An opposition's positions are stances
-a being takes; there is nothing further at one to hold, so it says `holds: impossible`, and the reason is printed where
-a series is refused for lying on one.
 
 ## core/law/measures.yaml: extent_form
 
@@ -1756,6 +1827,24 @@ something false. The six tokens are the reasons a value is absent that the desig
 unreadable, beyond an instrument's limit (with the limit, or the channel's own), nothing there to read (a core not
 recovered, a ring never formed), and withheld from this copy, which a partial export of a held series needs. Nothing is
 absorbed at a merge: a gap against a value is a disagreement a person sees, never the value winning.
+
+## core/law/measures.yaml: lines
+
+(std-vocab 32: `aspects`)
+
+== ASPECTS (added 2026-08-02, std-vocab@2.1) ==
+DIMENSION-AGNOSTIC. An aspect declares its own axes and the gate does not care how many: `poles` is one
+contradictory PAIR, or a LIST of pairs. A figure may be 1-dimensional (a plain binary), 2 (a square),
+3 (a cube), or more — what is required is that every declared axis runs between genuine opposites, so a
+position is addressable along it. The count is DERIVED from the declaration, never assumed, because
+assuming a count is exactly how a square silently mis-models a cube. Likewise a term's `cells`
+are N-ary: they constrain ONE aspect or SEVERAL, and the machinery is the same either way.
+An ASPECT is a CLOSED figure of positions — the operator's requirement that a classification have no
+loose ends. A line has undefined extremes and forces partial membership; a closed figure does not, so
+polarity lives in OPPOSED POSITIONS rather than at the ends of a scale. Each position names its
+COMPLEMENT, which is what lets a being be addressed by opposition as well as by identity ("the light is
+not where darkness is"). The gate enforces the sanity rules — closure, orientation, complement mutuality
+— and names no aspect, so a new aspect is data, never a code change.
 
 ## core/law/measures.yaml: lines[necessity]
 
@@ -1919,20 +2008,6 @@ gate can refuse a branch that points nowhere, a step nothing reaches, and a rout
 
 its positions are the routine's own steps
 
-## core/law/registries.yaml: registry_files
-
-(std-vocab 32: `registry_files`)
-
-== PROFILES (added 2026-08-02, std-vocab@2.0 / P6 E4) ==
-Terms that are general to a KIND of garden rather than to all gardens. A garden opts in with
-`extends_profiles: [<name>]`; one that manages no code should not inherit code terms, and without
-profiles the only options were to force them on everyone or to leave them local forever.
-== KNOWLEDGE: published classifications as UNIVERSAL ANCHORS (9.1, the `knowledge` profile) ==
-A garden that records what a thing IS in the world's own terms — which field of knowledge a skill draws on,
-which occupation a role is, which technology a program is — should use codes every other garden uses too, so
-two gardens that never met agree that "ISCO-08 2522" and "Samba" are the same objects. The classifications
-are DATA the law points at, kept whole (every level) in seed/knowledge/, not restated in this prose.
-
 ## core/law/registries.yaml: registry_files[currencies]
 
 (std-vocab 32: `registry_files[currencies]`)
@@ -2063,6 +2138,13 @@ that an attribution is printed with them. The attribution is kept verbatim besid
 that prints a label prints it.
 
 ## core/law/profiles.yaml: profiles
+
+(std-vocab 32: `profiles`)
+
+== PROFILES (added 2026-08-02, std-vocab@2.0 / P6 E4) ==
+Terms that are general to a KIND of garden rather than to all gardens. A garden opts in with
+`extends_profiles: [<name>]`; one that manages no code should not inherit code terms, and without
+profiles the only options were to force them on everyone or to leave them local forever.
 
 (std-vocab 32: `profiles.accounting`)
 
@@ -2296,6 +2378,12 @@ that `value_in_registry` had a term to sit on. `identifier` (26.0) kept apart on
 a coding names its system in its value, so a being that IS an occupation, a field or a technology is identified by the
 code its scheme's publisher assigned — `identifier: isco-08:2522` — an identity given outside every garden.
 
+== KNOWLEDGE: published classifications as UNIVERSAL ANCHORS (9.1, the `knowledge` profile) ==
+A garden that records what a thing IS in the world's own terms — which field of knowledge a skill draws on,
+which occupation a role is, which technology a program is — should use codes every other garden uses too, so
+two gardens that never met agree that "ISCO-08 2522" and "Samba" are the same objects. The classifications
+are DATA the law points at, kept whole (every level) in seed/knowledge/, not restated in this prose.
+
 (std-vocab 32: `profiles.view.terms[views].schema.attrs.frame`)
 
 THE FRAME A DRAWING IS LAID OUT ALONG (31.0). The operator asked for "the same elements in the different contexts
@@ -2367,11 +2455,6 @@ the one term 2.0 deferred for INSTABILITY rather than scope.
 
 an input is needed unless an edge says otherwise
 
-(std-vocab 32: `terms[depends_on]`)
-
-LOCAL gene (`local_gene`): object types this garden manages that std-vocab doesn't schematize. Each gets a small
-schema (MODEL Rule 6). A genos that proves general is promoted alongside its terms.
-
 (std-vocab 32: `terms[depends_on].schema.is_ref`)
 
 the sibling of `consumes`: depends_on needs
@@ -2413,6 +2496,16 @@ term that governs the key declares the class, and the bean writes the flag that 
 three pseudo-anchors that carried it (`id`, `ref`, `shell-log`): under `anchor_key: term` a term with an
 `anchor:` block is an anchor key, and those three were never anchors. `shell-log` itself, a v0.2 note on how an
 agent logs shell work, was retired: the `journal` registry says it now.
+
+## core/law/core.yaml: verbs
+
+(std-vocab 32: `term_form`)
+
+ONE SHAPE FOR A TERM (26.0). A term had grown keys that no tool read — a note on its keys, the release left out of a
+value, a form written out, a directive to an agent — each named for the occasion. They were prose riding on the law: a
+reader could not tell a rule from a remark, and nothing kept the next one from arriving under a new name. The record
+is now declared, and the gate holds every term to it, the law's, a profile's and a garden's alike. What a writer needs
+to apply a term is its `meaning`; why it is so is reasoning, here, under the term's path.
 
 ## core/law/core.yaml: verbs[own]
 
@@ -2528,13 +2621,13 @@ of the reading, and it placed the value the written one had no room for: `stated
 
 EACH PLACE IN THE RANK, EARNED. The rank orders HOW A FACT IS KNOWN:
 
-## core/law/terms.yaml: terms[analysis_cache]
-
-(std-vocab 32: `terms[analysis_cache]`)
-
 `borrows` IS WHAT THE MERGE READS; `values_meaning` is for the reader. The LABEL is never rewritten — a
 merged value still says a tool produced it, which Phase 7 (2026-08-03) showed is exactly what must not be
 lost or gained by passing through a tool. Only the weighing borrows.
+
+## core/law/terms.yaml: terms[analysis_cache]
+
+(std-vocab 32: `terms[analysis_cache]`)
 
 restated for the human reader; the gate reads schema.key_form
 
@@ -2696,6 +2789,9 @@ the facets of care: each key a row of `facets`
 
 NB no `crown`: the crown owns but never answers
 
+NB the crown OWNS but never ANSWERS. Responsibility has no crown form: a duty must land on a being
+that can be asked, so responsibility always terminates in a bean (or, for a person, in themselves).
+
 (std-vocab 32: `terms[responsibility]`)
 
 **Its forms, written out.**
@@ -2762,7 +2858,29 @@ instance_of: {bean: <product|codebase>}
 
 **Why the release is not part of the value.** The RELEASE (15.0, 9.7) is deliberately NOT part of this value. A version moves on every upgrade while the OS does not, and putting both in one scalar would make the enum unclosable — a new point release would be a rule-change. The release belongs in `owns.os_release`, beside the date it was read.
 
-## core/law/core.yaml: verbs[be]
+## core/law/core.yaml: placements
+
+(std-vocab 32: `placement`)
+
+THE LINE FROM PLACE TO LOCATION (29.0). Every tradition that has thought about being "in" something orders its ways from
+the most general to the most bodily, and separates a placement that takes room from one that takes nothing. Aristotle
+lists the senses of "in" (Physics IV.3) and calls "as in a vessel, and generally in a place" the most proper, while
+"in a subject" — knowledge in the soul — is in something not as a part and takes no room (Categories 1a24). The
+scholastics order the modes of being in a place: circumscriptive, a body measured by its place and excluding others;
+definitive, here and not elsewhere, taking none; repletive, filling all and contained by none (Peter Lombard, Sent. I
+d.37; Aquinas, ST I q.52). Kalām says it in two words: a body fills its ḥayyiz (taḥayyuz), and two cannot share one; an
+accident inheres in its maḥall (ḥulūl) and fills none. Persian keeps the pair in jā and makān, Hebrew in māqôm and
+miqqum, German in Ort and Platz. The law's own natures are the Stoics', for whom only a body occupies and a lekton
+subsists without place. So the line is data: `place`, the ancestor every placement walks up to, and its modes in
+order — order, presence, habitat, location — each saying what it `takes` from where it places a being: none, a share,
+or room. The extracted concept is the economists' subtractability (Samuelson 1954; the Ostroms 1977): whether one
+placement leaves less for the next. A share can be promised past what a host holds, as a hypervisor overcommits its
+memory, and is warned; room cannot, as two bodies are never in one place, and is refused. Time asks the same question —
+RFC 5545's TRANSP says whether an event takes an attendee's time — and the line carries it (29.1) as place's sibling,
+the rung `time`: Aristotle's categories set *pou* (where) beside *pote* (when), and Arabic grammar's vessel, ẓarf, is
+of place and of time alike. A happening takes the hours of those present at it, and nobody spends one hour twice.
+
+## core/law/core.yaml: placements[habitat]
 
 (std-vocab 32: `terms[lives_in].meaning`)
 
@@ -2808,6 +2926,17 @@ lives_in: {bean: <habitat>}   # follow the chain for the full stack
 (std-vocab 32: `terms[lives_in].schema.attrs.takes`)
 
 A HABITAT TAKES A SHARE (29.0): memory, cores, disk, drawn from what the host holds and summable against its capacity.
+
+## core/law/core.yaml: placements[location]
+
+(std-vocab 32: `terms[located_at].meaning`)
+
+THE BEING'S LOCATIONS. The meaningful object is the being — a codebase — and it may be found as a
+tree on a host, as reachable objects in a repository, or as a PRINTED COPY on a shelf. None of those
+is privileged and a being may be at several at once. `openness` is the field that carries what cost
+this estate a session: a position that is NOT KNOWN is recorded as unknown rather than omitted,
+because an omitted location reads as "there is none" and that is how an exhaustive search over the
+wrong domain produced output identical to a real one.
 
 ## core/law/core.yaml: verbs[come]
 
@@ -3178,6 +3307,27 @@ THE WORDS FOLLOW THE STANCE (24.0, N5). "Falls due, and from that day the party 
 which is never owed: it opens, and it lapses. The words are chosen by the clause's position on the permission square,
 so a reader is warned of a permission's window closing in a permission's words.
 
+(std-vocab 32: `schema_language.expiry`)
+
+PER ENTRY, REPEATING, AND SILENT ONCE MET. `expiry` was written for a term with one date — a registration runs
+out. The first obligations recorded were many to one term, each with its own day, some repeating: six instalments
+are one clause that falls due six times. So on a list or an open map the attribute is each entry's; `repeats` names
+the entry's own recurrence, and the reader is warned before the NEXT occurrence rather than the first; and `unless`
+names the states in which an entry no longer lapses — a debt already met, waived or broken is not coming due. The
+tool that reads it stays outside the gate for the reason the construct has always given: an answer that changes
+with the calendar would make the gate fail on a day for no committed reason.
+
+`notice` is an extent because a notice period is a region of time. It was a bare integer of days for one release
+(until 11.2) — a fifth way of saying a duration in a vocabulary that had just declared the first. And
+`expiry` is declared by the term rather than derived from an attribute's type because, measured when it was written,
+ten terms carried an iso_date and nine of them were `observed` or `as_of`: the day a fact was read, not the day it
+runs out.
+
+`relative`, `lapses`, `stance` and `condition` (24.0) each NAME an attribute of the term, as `attr` and `repeats` do, and
+the gate refuses one that names none: a position stated relative to another, a permission that lapses rather than falls
+due, the words chosen by the entry's effective stance, and a condition in place of a day. They are declared here and
+read by the parts that build them.
+
 ## core/law/measures.yaml: forms.clause.attrs.over
 
 (std-vocab 32: `terms[clauses].schema.attrs.over`)
@@ -3299,16 +3449,17 @@ so two gardens' moves of one case unite by their key at a merge instead of one c
 A MOVE IS KEPT, NEVER REWRITTEN. Each is who moved the case, to which step, when and why; where the case went next is the
 next move, so the list is the case's history and its present is read from its end. The moment is stamped by the save.
 
+(std-vocab 32: `schema_language.moves_along`)
+
+WHERE A CASE STANDS IS READ, NOT STORED (N10, F8; the client-work and platform cases). A stage written on a case is a
+second copy of its last move, and it drifts. A course is a series along time whose value at each move is a step of a
+named walk: the moves are the facts — the step reached, who moved it, a reason from the step's own list, why in words,
+and the moment, stamped. The gate holds one course's moves to its walk: a move follows a `next`, reaches a way out or a
+pause, returns from a pause to where it was, and nothing follows a final step; a move the walk does not offer passes
+only with its `why`, and warns, because the world does not always follow a procedure and the record must say so
+rather than refuse it. The moves merge by course, moment and step, so a step visited twice never collides with itself; a move is stamped to the minute, so two moves of one course to one step in one minute would be one move written twice, and the gate says so before a merge must refuse it.
+
 ## core/law/measures.yaml: forms.placement
-
-(std-vocab 32: `terms[located_at].meaning`)
-
-THE BEING'S LOCATIONS. The meaningful object is the being — a codebase — and it may be found as a
-tree on a host, as reachable objects in a repository, or as a PRINTED COPY on a shelf. None of those
-is privileged and a being may be at several at once. `openness` is the field that carries what cost
-this estate a session: a position that is NOT KNOWN is recorded as unknown rather than omitted,
-because an omitted location reads as "there is none" and that is how an exhaustive search over the
-wrong domain produced output identical to a real one.
 
 (std-vocab 32: `terms[located_at]`)
 
@@ -3404,6 +3555,26 @@ PLACE IS READ AT A TIME (24.0, step 7). Rootedness is a position over a window, 
 dropped the time would say where a tree stands today about a survey taken before it was moved. Motion is read only
 between fixed marks.
 
+## core/law/lines.yaml: forms.series
+
+(std-vocab 32: `schema_language.series`)
+
+ONE CONTROLLER FOR WHAT ONLY THE WHOLE ENTRY SAYS. Each attribute of a series is judged by the rule its domain already
+has — the recurrence, the extent, each channel's registry and type. What none of them can say alone — that the unit
+measures the line, that the stride is whole, that the header names the channels, that each cell is one its channel
+holds, that a monotone channel never goes back, that an exclusion names a row — is read by the one reader of a series,
+which the gate asks, as it asks the one reader of the layer map.
+
+(std-vocab 32: `figures[sequence].holds`)
+
+A POSITION MAY HOLD WHAT WAS FOUND THERE (D47, "develop the sequence machinery to fit the need"). A perfusion chart, a
+moth's night, a dendrometer's record, a core's strata and a case's stages are one shape: a line, positions on it, and at
+each what was read. The operator ruled out a separate series form, so the sequence figure gains the capability beside
+the one it had — `extent: possible`, a region of the line — and nothing is restated: a series' positions are the
+recurrence's occurrences or an extent's offsets, both forms the law already owns. An opposition's positions are stances
+a being takes; there is nothing further at one to hold, so it says `holds: impossible`, and the reason is printed where
+a series is refused for lying on one.
+
 ## core/law/lines.yaml: forms.series.attrs.whole
 
 (std-vocab 32: `terms[series].schema.attrs.whole`)
@@ -3493,6 +3664,17 @@ and until 7.0 the estate expressed the first as free text in `owns.roles` and th
 Making this a term is what let the genos `router` be retired without losing the requirement that a
 router document its treatments — `required_on_roles` reaches a list where a requirement keyed on the
 being's type (`required_on_gene`, since 22.0) could only ever reach a scalar.
+
+(std-vocab 32: `roles`)
+
+== ROLES: what a being DOES, as against what it IS (added 7.0) ==
+THE FIX FOR AN AMBIGUITY THIS VOCABULARY SHIPPED WITH. `router` was a GENOS until 7.0, and the proof it
+was wrong is an asymmetry the corpus already carried: a mail server recorded five roles as free-text data
+(`primary-mail, file-server, monitoring, webmail, erp-host`) while a router's single role was a genos.
+Both are machines. What makes one a router is that it forwards traffic — which since 6.0 IS data, in
+`treatments`. A genos answers what a being IS; a role answers what it DOES, and a being does several
+things at once. Encoding one of the things it does as the thing it is made the genos un-askable for every
+machine that does two.
 
 ## core/law/terms.yaml: terms[volumes]
 
@@ -3657,6 +3839,13 @@ capability grid could express; `unproven` is the one it could not and the one a 
 (std-vocab 32: `terms[risks]`)
 
 **Why a risk is not a capability.** A `capabilities` entry at `forbidden` + `possible` IS a latent risk, and the two are deliberately NOT merged: a capability records the STANCE a being takes, a risk records a FAILURE MODE, and the same prohibition can hold on beings with no risk attached. Where one produces the other, the risk entry says so in `evidence` and cites the capability by name. The alternative — deriving risks from capabilities in the gate — was rejected because a derived finding cannot carry a `consequence` that anybody wrote, and the consequence is the part worth having.
+
+## core/law/kinds.yaml: kinds
+
+(std-vocab 32: `gene`)
+
+LOCAL gene (`local_gene`): object types this garden manages that std-vocab doesn't schematize. Each gets a small
+schema (MODEL Rule 6). A genos that proves general is promoted alongside its terms.
 
 ## core/law/kinds.yaml: kinds[org]
 
@@ -4122,12 +4311,6 @@ statement that makes a reader trust the wrong thing. The section says what is wr
 
 (std-vocab 32: `layers`)
 
-THE LAYER MAP IS LAW DATA (23.1). Which file is law, which is reasoning, which is journal, was stated in five places
-that disagreed: a garden's own list, the gate's derivation of the law documents from it, the tool that reads the
-reasons, the README, and the door for agents. A map that decides what may flow where has to be one statement a tool
-can read, or every guard built on it guards a different map. So the law places what every garden has, by the same
-patterns a release uses to say what it ships, and a garden places the rest.
-
 FIVE OF THEM ARE A CHAIN, AND THE REST STAND BESIDE IT. The manifesto, the law, the reasoning, the journal and the
 record are daftar's own words, each standing on the one beneath, and `beneath` says so as a link the gate resolves
 and holds acyclic. The estate is not one of them: a bean is a fact about the world, not daftar speaking. Nor is the
@@ -4137,25 +4320,98 @@ THE QUEUE IS NOT THE JOURNAL. The list of what waits for a person is edited in p
 one real garden, eighty lines of it removed over thirty-four commits. A journal is appended and never rewritten.
 One file cannot be both, so it stands in a place of its own.
 
-PLACES THAT ARE NO FILE are declared with the rest, ahead of their occupants: what a person asked, the world outside,
-the clock, a model's own output, a request, a remote party, a public repository, another garden. A flow is judged
-from one place to another, and a flow law with no name for where material came from could only guess.
-
 THE KEEPER IS ANOTHER AXIS. Whether a file came from a release is read from the release's own list of what it ships.
 A tool is law in the sense that a change to it is a RULE-CHANGE, and it sits in the gate, not the law, in the sense
 of what it is for. Two questions, two statements. The duty to journal a change distinctly follows both: what a
 release keeps, and what sits in the law or the manifesto, a garden's own law included; and an entry that moves a
 file into or out of those carries it too, or a file could leave the law in the commit that changed it.
 
+## core/law/core.yaml: layers[journal]
+
+(std-vocab 32: `journal`)
+
+== THE JOURNAL (10.0, T3): where the record of what was done is, and how an entry is headed ==
+The journal is the garden's time record, and it had no rule for time. One real garden, measured on
+2026-09-19: 663 entries, 276 headed with a date only, 387 with a time in `+0300` or `+0330` while the calendar
+system's one form is `+03:00`; and one entry headed 23:59 that was committed at 23:32, a precision written
+rather than read. A heading is now a position in a declared calendar's own form (gregorian-civil's until 18.0), held to
+at least the MINUTE, with its offset, because an entry is ordered against every other and a reading with no offset
+cannot be.
+Only headings ADDED by a commit are checked: the journal is never rewritten, so its history keeps the forms
+it was written in, and those stay what they were.
+
+(std-vocab 32: `journal.checks`)
+
+entries a commit adds; never the history
+
+(std-vocab 32: `journal.origin`)
+
+STAMPED, NOT TYPED (20.0; since sources-by-nature, the heading read `by: save`). 10.0 made a heading a position in time and the gate checks its form; the truth of
+the moment it never could. The evening this was written, the same writer typed the time before reading the
+clock twice in five hours — 20:06 for 19:52, 22:31 for 22:09 — and both headings were of perfect form. The
+gate cannot tell a measured moment from a remembered one by looking at it. What it can tell is whether the
+clock-reading tool wrote it: `bin/dmjournal.py` records every heading it writes in the clone's own git
+directory, and the gate refuses a heading a commit adds that is not there. The register is never versioned
+and proves only what a pre-commit hook can honestly prove — that this clone's tool stamped it — which is
+enough, because the failure it answers is a hand typing. `dmupgrade` writes its entry through the same tool,
+with git's author as the who and the ratifier as a body line to fill in: a fill-in inside the heading would
+have changed the heading after it was stamped.
+
+(std-vocab 32: `journal.system`)
+
+The journal kept its own copy of one calendar's form, as a pattern beside the system that already owned it: a second
+spelling of a rule, and one that made a journal in any other calendar unwritable. A heading's moment is a position in
+a calendar, so it is judged by that calendar's own form; the journal adds only what a JOURNAL needs — the minute, and
+the offset. `any` is the default because a language has no calendar of its own; a garden that wants one names it.
+
+## core/law/core.yaml: layers[names]
+
+(std-vocab 32: `name_form`)
+
+THE LAW'S WORDS IN ITS READERS' LANGUAGES (31.0). The operator: "the most clear plain words for daftar's own code and
+docs, with a structure to link to related same-names in other languages for now persian and turkish sibling by
+literative english as a separate layer for publications on pages and other stuff, we keep this structure through the
+view module deigns as a base pattern", and then "for the glossary include ancient greek, german, french, italian, latin
+and arabic too ... done by hand, carefully, with an ability to include some words and roots from every mentioned language
+which they apply on that context of that term". The code is one plain word; a name is how a reader of a language meets
+it, with the roots that bear on its use. It widens the knowledge schemes' `labels` (N25) from a scheme's codes to every
+word of the law, and it is a layer of its own beneath the law because a name must never change what the law says: the
+gate reads no meaning from it. Each name is `proposed` until a reader whose language it is confirms it, as the school's
+Persian and Turkish words are.
+
+The gate reads the files' FORM and nothing else: each is one of the form's languages, every row names an
+item of the whole law, whichever profiles a garden extends, once, and the languages are siblings — every file names what
+the others name, so no reader's language is a lesser copy of another's. A name is each language's own word for the
+item AS THE LAW USES IT, never a transliteration of the code: body is جسم, cisim, Körper — what takes room in three
+dimensions, as Ibn Sina and the Stoics defined it — and not تن or Leib, the lived body a stone lacks. Where a language's
+nearest word is one the law reserves or retired, another is chosen and the reserved one named in the roots, so a reader
+sees why: طبیعت names physis, not the natures; آفریدگار, Yaradan, Schöpfer and الخالق name THE ONE, and a bean's
+`creator` is پدیدآورنده, var eden, Urheber, المحدث. A word coined in an ancient language for a modern thing says so.
+The roots are chosen for what they show about the item's use here, and they show what the languages share: λεκτόν is
+from λέγω, first to gather and lay in order, as a lekton is placed in an order; tissue is woven in all nine; a lens is
+a lentil in all nine; the order of bodies is Pascal's first order, Hartmann's strata and Ibn Miskawayh's ranks.
+
+## core/law/layers.yaml: standing
+
+(std-vocab 32: `layers`)
+
+THE LAYER MAP IS LAW DATA (23.1). Which file is law, which is reasoning, which is journal, was stated in five places
+that disagreed: a garden's own list, the gate's derivation of the law documents from it, the tool that reads the
+reasons, the README, and the door for agents. A map that decides what may flow where has to be one statement a tool
+can read, or every guard built on it guards a different map. So the law places what every garden has, by the same
+patterns a release uses to say what it ships, and a garden places the rest.
+
 NO HARNESS IS NAMED. A path that one agent's harness reads from is a privilege written into universal law; the
 mirror of the door for agents that a release ships is left out of the map, counted where the map is shown.
+
+## core/law/layers.yaml: standing[estate]
 
 (std-vocab 32: `layers[estate].holds`)
 
 A SERIES' PARTS ARE ESTATE (F12). They are a garden's own facts, in rows too many for a bean, and they belong to the bean
 whose series they are: a staged part is journalled as a change to that bean.
 
-## core/law/core.yaml: layers[law]
+## core/law/layers.yaml: standing[law]
 
 (std-vocab 32: `layers[law].holds`)
 
@@ -4167,6 +4423,14 @@ decided by the release it trusts now, and a key changes only in a release its pr
 code runs is in force, applied alone, and a change to it is a RULE-CHANGE: it is law, beside what a release ships.
 Not taken: the keys fetched with the release (the release would vouch for itself); a key named in the tool's code (a
 change of key would be a change of code, and the tool is the thing being checked).
+
+## core/law/layers.yaml: flow_sources
+
+(std-vocab 32: `layers`)
+
+PLACES THAT ARE NO FILE are declared with the rest, ahead of their occupants: what a person asked, the world outside,
+the clock, a model's own output, a request, a remote party, a public repository, another garden. A flow is judged
+from one place to another, and a flow law with no name for where material came from could only guess.
 
 ## core/law/verbs.yaml: verbs[rate]
 
@@ -4209,7 +4473,7 @@ An agreement speaks for the people who accepted it, and for nothing they did not
 them owns or is the record of. Beyond that its grant opens nothing, and the gate warns rather than refuses, because a
 selection grows with the garden and a bean somebody else adds must not stop their commit.
 
-## core/law/flows.yaml: flows
+## core/law/core.yaml: beside_roles[held]
 
 (std-vocab 32: `held_form`)
 
@@ -4219,18 +4483,22 @@ number to anyone who can count to fifteen digits. The gate never reads a store �
 and fails on another is a gate people turn off — so a store is checked where it is, by the save. A sealed entry is
 journalled in one line that says only that it was sealed.
 
-(std-vocab 32: `flows`)
-
-EVERY PASS HAS A ROW, OR IT IS REFUSED. A garden's material comes from places of unequal standing — a person's words, a
-tool's output, the law, another garden — and a value placed in the estate carries where it came from. A list of what
-is forbidden is never finished, so the rows say what is allowed, source by destination by method, and each says why.
-Where two rows hold, the nearer decides, because the particular case is the one someone thought about.
+## core/law/core.yaml: verbs[pass]
 
 (std-vocab 32: `pass_form`)
 
 A PASS IS RECORDED BY WHERE, NOT WHAT. The record of a pass names its source, its destination and its method, and
 never holds the material, since a log of what passed that held the material would be a second copy of it, and
 the one least guarded. What a pass carries is found where it landed, and the log only says that it went there.
+
+## core/law/flows.yaml: flows
+
+(std-vocab 32: `flows`)
+
+EVERY PASS HAS A ROW, OR IT IS REFUSED. A garden's material comes from places of unequal standing — a person's words, a
+tool's output, the law, another garden — and a value placed in the estate carries where it came from. A list of what
+is forbidden is never finished, so the rows say what is allowed, source by destination by method, and each says why.
+Where two rows hold, the nearer decides, because the particular case is the one someone thought about.
 
 ## core/law/terms.yaml: terms[standing]
 
@@ -4406,7 +4674,7 @@ law, judge, write, read the garden, measure, deal with another garden, run the l
 command a document, a hook or a garden's habit names still runs, and a move would have doubled each file as a shim on
 systems without links. The entry groups them instead.
 
-## core/law/verbs.yaml: verbs
+## core/law/tools.yaml: tools
 
 (std-vocab 32: `verbs`)
 
@@ -4414,28 +4682,6 @@ ONE ENTRY (26.0). `bin/daftar.py <verb>` runs a tool under the Python that runs 
 wherever Python does — on Windows too, where `python3` may be missing or a store alias. The verb is the tool's name
 without `dm`, so the row states the family and nothing a file name already says; what the tool does is the first line
 of its own help, read from it, never restated.
-
-## core/law/measures.yaml: takes
-
-(std-vocab 32: `placement`)
-
-THE LINE FROM PLACE TO LOCATION (29.0). Every tradition that has thought about being "in" something orders its ways from
-the most general to the most bodily, and separates a placement that takes room from one that takes nothing. Aristotle
-lists the senses of "in" (Physics IV.3) and calls "as in a vessel, and generally in a place" the most proper, while
-"in a subject" — knowledge in the soul — is in something not as a part and takes no room (Categories 1a24). The
-scholastics order the modes of being in a place: circumscriptive, a body measured by its place and excluding others;
-definitive, here and not elsewhere, taking none; repletive, filling all and contained by none (Peter Lombard, Sent. I
-d.37; Aquinas, ST I q.52). Kalām says it in two words: a body fills its ḥayyiz (taḥayyuz), and two cannot share one; an
-accident inheres in its maḥall (ḥulūl) and fills none. Persian keeps the pair in jā and makān, Hebrew in māqôm and
-miqqum, German in Ort and Platz. The law's own natures are the Stoics', for whom only a body occupies and a lekton
-subsists without place. So the line is data: `place`, the ancestor every placement walks up to, and its modes in
-order — order, presence, habitat, location — each saying what it `takes` from where it places a being: none, a share,
-or room. The extracted concept is the economists' subtractability (Samuelson 1954; the Ostroms 1977): whether one
-placement leaves less for the next. A share can be promised past what a host holds, as a hypervisor overcommits its
-memory, and is warned; room cannot, as two bodies are never in one place, and is refused. Time asks the same question —
-RFC 5545's TRANSP says whether an event takes an attendee's time — and the line carries it (29.1) as place's sibling,
-the rung `time`: Aristotle's categories set *pou* (where) beside *pote* (when), and Arabic grammar's vessel, ẓarf, is
-of place and of time alike. A happening takes the hours of those present at it, and nobody spends one hour twice.
 
 ## core/law/lines.yaml: types[coding]
 
