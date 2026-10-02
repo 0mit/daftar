@@ -1776,6 +1776,18 @@ def payment_form(b, base, e, j, clause_sid):
             r['settles'].append(got)
             rest = {a: v for a, v in x.items() if a != 'clause'}
             got.update(_place_form(b, base + ('settles', n), rest, j, 'settles', (n,)))
+    ad = e.get('analytic_distribution')             # BOOKED TO THE GARDEN'S ACCOUNTS (the accounting profile): each
+    if isinstance(ad, list) and ad and isinstance(r.get('id'), str) and all(        # entry a `book` of the payment
+            isinstance(x, dict) and isinstance(x.get('code'), str) and ('share' in x) != ('amount' in x) for x in ad):
+        for n, x in enumerate(ad):
+            jb = b.add('book', {'of': r['id'], 'to': x['code']}, b.new_id(f"{r['id']}-booked-{n + 1}"))
+            b.take(base + ('analytic_distribution', n, 'code'), b.role(jb, 'to'))
+            if 'share' in x:
+                b.statements[jb][1]['share'] = str(x['share'])
+                b.take(base + ('analytic_distribution', n, 'share'), b.role(jb, 'share'), str(x['share']))
+            else:
+                b.statements[jb][1]['share'] = _place_form(b, base + ('analytic_distribution', n, 'amount'), x['amount'],
+                                                           jb, 'share')
 
 
 def _reading_ref(b, key):

@@ -233,6 +233,7 @@ words: { form: spoken }
 clauses:
   fee: { what: "each member pays a fee for each book", by_role: member, permission: required, each: books }
 transactions:
+  repairs: { what: "the shelves mended", amount: { count: "100.00", unit: TRY }, day: 2026-09-23, paid_by: [ { party: sam } ], analytic_distribution: [ { code: "analytic:orchard", share: 60 }, { code: "analytic:workshop", share: 40 } ] }
   paid: { what: "the first fee", amount: { count: "10.00", unit: USD }, charged: { count: "9.25", unit: EUR }, day: 2026-09-22, paid_by: [ { party: cem } ], settles: [ { clause: fee, occurrence: box, amount: { count: "10.00", unit: USD } } ] }
 selections:
   books: { what: "the books", steps: [ { id: b, op: select, genos: document } ] }
@@ -331,13 +332,22 @@ try:
     with open(os.path.join(G, 'GARDEN.md'), 'w', encoding='utf-8') as fh:
         fh.write("---\ngarden: core-translate\nextends: std-vocab@32.0\ngardener: sam\nzone: Asia/Tehran\n---\n")
     with open(os.path.join(G, 'VOCAB.md'), 'w', encoding='utf-8') as fh:
-        fh.write("---\nvocab: core-translate\nextends: std-vocab@32.0\nextends_profiles: [knowledge, network]\n"
-                 "registry_additions:\n  units:\n"
+        fh.write("---\nvocab: core-translate\nextends: std-vocab@32.0\nextends_profiles: [knowledge, network, accounting]\n"
+                 "registry_files:\n  - { registry: analytic, file: extracts/analytic.tsv, key: code }\n"
+                 "registry_additions:\n  knowledge_schemes:\n"
+                 "    - { scheme: analytic, classifies: \"where the club's money goes\", holding: extract, licence: CC0-1.0, "
+                 "publisher: the club, url: \"https://example.org/analytic\", levels: [ { level: plan }, { level: account } ], "
+                 "neighbours: none, sources: extracts/analytic.tsv }\n"
+                 "  units:\n"
                  "    - { unit: gigabyte-per-day, quantity: data-rate, factor: [312500, 27] }\n"
                  "    - { unit: rack-unit, quantity: length, factor: [889, 20000] }\n"
                  "vacancies:\n"
                  "  - { at: 'registry:units', position: gigabyte-per-day, reason: prediction, why: 'the rate of a backup, to come' }\n"
                  "  - { at: 'registry:units', position: rack-unit, reason: prediction, why: 'a rack, to come' }\n---\n")
+    os.makedirs(os.path.join(G, 'extracts'))
+    with open(os.path.join(G, 'extracts', 'analytic.tsv'), 'w', encoding='utf-8') as fh:
+        fh.write("code\tlevel\tparent\tname\nprojects\tplan\t\tProjects\norchard\taccount\tprojects\tThe orchard\n"
+                 "workshop\taccount\tprojects\tThe workshop\n")
     shutil.copy(os.path.join(ROOT, 'seed', 'std-vocab.md'), os.path.join(G, 'seed', 'std-vocab.md'))
     shutil.copytree(os.path.join(ROOT, 'seed', 'knowledge'), os.path.join(G, 'seed', 'knowledge'))
     before = {p: open(os.path.join(G, p), encoding='utf-8').read() for p in
@@ -421,6 +431,9 @@ try:
           and one(club, 'grant', id='no-sites', to=['cem'], cover={'parts': ['be.location']})
           and one(club, 'forbidden', of='no-sites') and not one(club, 'grant', id='wide')
           and 'wide' in (_fm.get('details') or {}).get('grants', {}), club)
+    check("analytic_distribution → book: each account the payment is booked to, in a share (the accounting profile)",
+          one(club, 'book', of='repairs', to='analytic:orchard', share='60')
+          and one(club, 'book', of='repairs', to='analytic:workshop', share='40'), club)
     check("weighings → weigh, by the judge, to what it orders, its criteria and judgments its form",
           one(club, 'weigh', id='picks', by='sam', to='improvements') and
           len(one(club, 'weigh')[0]['weighing'].get('pairwise') or []) == 3, club)

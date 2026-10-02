@@ -330,12 +330,12 @@ rc, out, err = save('sam', 'added noor', '--body', '- action: added [[noor]].')
 check("a bean saved with `at: now` is committed with the moment of its journal entry, the one clock reading of the "
       "save — never the word `now`, and never a moment the writer typed",
       rc == 0 and f'at: "{moment_of_last_entry()}"' in blob('noor') and 'at: now' not in blob('noor'), (rc, err, blob('noor')))
-now_bean('omar', '  - need: { by: self, of: [nobody-here] }\n')
+now_bean('omar', '  - run: { by: self, of: nobody-here }\n')
 rc, out, err = save('sam', 'added omar', '--body', '- action: added [[omar]].')
 _f = os.path.join(G, 'beans', 'omar.md')
 _t = open(_f, encoding='utf-8').read()          # read, THEN open for writing: opening truncates (dmsafe's incident 4)
 open(_f, 'w', encoding='utf-8', newline='\n').write(
-    re.sub(r'at: "[^"]*"', 'at: now', _t.replace('  - need: { by: self, of: [nobody-here] }\n', '')))
+    re.sub(r'at: "[^"]*"', 'at: now', _t.replace('  - run: { by: self, of: nobody-here }\n', '')))
 rc2, out2, err2 = save('--again')
 check("...and on `--again`, a `now` written again while fixing the refusal takes the moment of the entry waiting",
       rc != 0 and rc2 == 0 and f'at: "{moment_of_last_entry()}"' in blob('omar'), (rc, rc2, err2, blob('omar')))

@@ -229,8 +229,8 @@ def domain_why(J, b, M, where, v, dom):
     if 'quantity' in dom:
         why = measures.quantity_why(L, v, None if dom['quantity'] == 'any' else dom['quantity'])
         return [(where, why)] if why else []
-    if dom.get('type') == 'count' and not (isinstance(v, str) and v.isdigit() and (v == '0' or not v.startswith('0'))):
-        return [(where, f"{v!r} is not a count: plain decimal digits, with no leading zero")]
+    if dom.get('type') == 'count' and measures.exact(v if isinstance(v, str) else '') is None:
+        return [(where, measures.count_why(v))]          # the one count reader: plain decimal digits, read exactly
     if isinstance(dom.get('being'), dict) and isinstance(v, str):
         kinds = _listed(dom['being'].get('kind'))
         if J._being(v, {}, b):
