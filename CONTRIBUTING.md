@@ -44,14 +44,8 @@ parts, changes).
    ```sh
    python3 bin/dmsafe.py
    python3 test/assets.py
-   python3 test/germinate.py
    python3 test/refusals.py
    python3 test/journal.py
-   python3 test/days.py
-   python3 test/ordinal.py
-   python3 test/profiles.py
-   python3 test/rope.py
-   python3 test/root.py
    python3 test/core.py
    python3 test/core_save.py
    python3 test/core_translate.py
@@ -67,46 +61,19 @@ parts, changes).
    python3 test/core_law.py
    python3 test/core_gate.py
    python3 test/core_view.py
+   python3 test/core_ported.py
+   python3 test/core_exact.py
    python3 test/save.py
-   python3 test/sequence.py
-   python3 test/stamps.py
    python3 test/converge.py
-   python3 test/upgrade.py
-   python3 test/knowledge.py
-   python3 test/figures.py
-   python3 test/place.py
-   python3 test/expiry.py
-   python3 test/reform.py
-   python3 test/positions.py
-   python3 test/shape.py
    python3 test/calendars.py
    python3 test/rationale.py
-   python3 test/recurrence.py
-   python3 test/quantities.py
-   python3 test/money.py
-   python3 test/peering.py
    python3 test/site.py
    python3 test/public.py
    python3 test/docs.py
    python3 test/manifesto.py
    python3 test/layers.py
-   python3 test/base.py
    python3 test/view.py
    python3 test/viewcap.py
-   python3 test/senses.py
-   python3 test/uncertainty.py
-   python3 test/zones.py
-   python3 test/reckon.py
-   python3 test/privacy.py
-   python3 test/held.py
-   python3 test/passes.py
-   python3 test/launch.py
-   python3 test/hub.py
-   python3 test/agreements.py
-   python3 test/observations.py
-   python3 test/crosswalk.py
-   python3 test/rehearsal.py
-   python3 test/deeptime.py
    python3 test/catalogue.py
    python3 test/garden.py
    reuse lint

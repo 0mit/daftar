@@ -1,0 +1,335 @@
+# Where each of today's suites went in v1 (part 12, 2026-10-02): held to the tree by test/core_ported.py.
+#
+# Part 12 met 52 suites that committed today's words through today's gate, grew a garden in them, or read today's law.
+# Each is ported in place to a garden of the core (`ported`), still waiting for the part that moves the law it reads
+# (`waiting`), or retired (`retired`): replaced by suites of the core, each promise `held` by checks the tree has
+# (`<suite>: <words of the check>`), `gone` with the law it was a promise of, or `left` — not held yet, saying why. What
+# is gone or left is for the operator's veto (the journal entry "v1 part 12 built").
+
+met: [test/agreements.py, test/assets.py, test/base.py, test/calendars.py, test/catalogue.py, test/converge.py, test/cost.py,
+      test/crosswalk.py, test/days.py, test/deeptime.py, test/docs.py, test/expiry.py, test/fast.py, test/figures.py,
+      test/garden.py, test/germinate.py, test/held.py, test/hub.py, test/journal.py, test/knowledge.py, test/launch.py,
+      test/layers.py, test/manifesto.py, test/money.py, test/observations.py, test/ordinal.py, test/passes.py,
+      test/peering.py, test/place.py, test/positions.py, test/privacy.py, test/profiles.py, test/public.py,
+      test/quantities.py, test/rationale.py, test/reckon.py, test/recurrence.py, test/reform.py, test/refusals.py,
+      test/rehearsal.py, test/root.py, test/rope.py, test/save.py, test/senses.py, test/sequence.py, test/shape.py,
+      test/stamps.py, test/uncertainty.py, test/upgrade.py, test/view.py, test/viewcap.py, test/zones.py]
+
+# shipped and run, but not by the workflow: a measurement, and the corpus test today's hook runs in a garden
+not_listed: [test/cost.py, test/fast.py]
+
+ported:
+  - { suite: test/refusals.py,  how: "the core's gate refuses each malformed input by name, never a traceback; --staged too" }
+  - { suite: test/converge.py,  how: "three clones diverge, are bundled, and pull back through the statement merge" }
+  - { suite: test/viewcap.py,   how: "the view asset's page, report, render, feed and host on statements, asked of `grant` statements" }
+  - { suite: test/garden.py,    how: "the garden model in a garden of the core; every tool a verb of core/law/tools.yaml" }
+  - { suite: test/journal.py,   how: "the journal tool unchanged; safe's block written into a bean of statements" }
+  - { suite: test/public.py,    how: "the guard over a garden of the core: its ids, the text of its `name`s, its addresses" }
+  - { suite: test/save.py,      how: "the save in a garden of the core: `at: now` stamped with the entry's moment" }
+  - { suite: test/calendars.py, how: "the tools held to core/law/systems.yaml and places.yaml; positions judged by the core's gate" }
+  - { suite: test/assets.py,    how: "the one reader of seed/LANGUAGE; every asset a profile of core/law/profiles.yaml; a page saved" }
+  - { suite: test/layers.py,    how: "core/law/layers.yaml over the release's files; a garden's standing rows; rule `layers`" }
+  - { suite: test/cost.py,      how: "the core's gate timed over a `record` series held in a part" }
+
+waiting:
+  - { suite: test/docs.py, part: 13, why: "its prose is today's guides (README, MODEL, FORMS…), and the retired words it looks for are bin/dmcheck.py's and std-vocab's: part 13 puts core/guide/ in their place, and the words a guide must not write become core/law/terms.yaml's" }
+  - { suite: test/manifesto.py, part: 13, why: "it reads the law's text (seed/std-vocab.md) for a clause's words: the release's law is today's until part 13 moves it into core/law/" }
+  - { suite: test/rationale.py, part: 13, why: "seed/RATIONALE.md is keyed by today's law's paths: re-keyed by the core's when part 13 deletes std-vocab (part 9 left it there)" }
+  - { suite: test/catalogue.py, part: 13, why: "its garden is ported (a garden of the core); the catalogue of the release itself reads the release's law, today's until part 13" }
+  - { suite: test/fast.py, part: 13, why: "today's hook runs it in a garden in today's words; a garden of the core runs core/check.py, and part 13 deletes today's hook with today's gate" }
+  - { suite: test/core_standards.py, part: 13, why: "it holds core/law/ equal to what std-vocab generates: part 13 makes the generated files the source" }
+  - { suite: test/core_translate.py, part: 13, why: "it translates a garden in today's words: after part 13 one is grown from a release that still has them (v0.49.0)" }
+  - { suite: test/core_rehearse.py, part: 13, why: "it commits today's guides through today's gate, then translates them: part 13 replaces today's guides" }
+  - { suite: test/core_guides.py, part: 13, why: "its last checks compare the core's guides with today's examples, translated" }
+  - { suite: test/core_adopt.py, part: 13, why: "the adoption: a garden in today's words adopting the core needs a release in today's words" }
+  - { suite: test/core_merge.py, part: 13, why: "it holds the pin's dispatch to today's gate and merge, which part 13 deletes" }
+  - { suite: test/core_between.py, part: 13, why: "its law checks hold core/law/flows.yaml equal to what std-vocab generates" }
+  - { suite: test/core_law.py, part: 13, why: "its law checks hold core/law/ equal to what std-vocab generates" }
+  - { suite: test/core_measure.py, part: 13, why: "its law checks hold core/law/measures.yaml equal to what std-vocab generates" }
+  - { suite: test/core_read.py, part: 13, why: "its law checks hold core/law/lines.yaml equal to what std-vocab generates" }
+  - { suite: test/core_view.py, part: 13, why: "its law checks hold core/law/profiles.yaml and terms.yaml equal to what std-vocab generates" }
+  - { suite: test/core_write.py, part: 13, why: "its release is built by reading the profiles std-vocab offers (test/grow.py reads the core's)" }
+  - { suite: test/core_gate.py, part: 13, why: "its release is built by reading the profiles std-vocab offers (test/grow.py reads the core's)" }
+
+retired:
+  - suite: test/agreements.py
+    promises:
+      - promise: "a clause's form: a due relative to another position, a window, its permission's words, a repetition with closures"
+        held: ["test/core_measure.py: gate: a clause's recurrence and notice", "test/core_measure.py: is refused by rule"]
+      - promise: "the ledger reads a clause's dues and amounts, and the stale reader warns before each"
+        held: ["test/core_measure.py: ledger: a clause's recurrence, notice and amount", "test/core_measure.py: stale: a clause that repeats is warned"]
+      - promise: "one being held twice over one time is refused where a garden says a verb is exclusive"
+        held: ["test/core-cases.yaml: an exclusive booking declined holds nothing", "test/core-cases.yaml: rule: room"]
+      - promise: "a value read across gardens only at a commit the other garden published and granted"
+        held: ["test/core_between.py: across: a value of the other garden, read at a commit it publishes", "test/core_between.py: across: refused where the other garden grants nothing"]
+      - promise: "a clause that occurs for each member of a reading, settled occurrence by occurrence (`each`, `settles`)"
+        left: "no form in the core yet: `settles` and occurrences stay in `details` (v1 part 7 left them there)"
+      - promise: "a party acting for another, one that declined, every party of a role"
+        left: "the translator writes who agreed as `agree`; acting for another and declining stay in `details`, judged by no rule"
+      - promise: "a read across at a commit the other garden never published is refused"
+        left: "bin/across.py keeps today's check, not yet run in a garden of the core"
+  - suite: test/base.py
+    promises:
+      - promise: "a local term's schema language: at_most_one_of, a compound keyed_by, nested entries' one_of, an extent in cells"
+        gone: "a garden of the core declares no terms: it adds rows (kinds, verbs, namespaces, systems…), and a statement's form is its verb's row"
+      - promise: "a day its calendar does not have, and a moment with no offset, are refused"
+        held: ["test/core.py: the frame refuses", "test/refusals.py: 2026-02-30 is refused"]
+      - promise: "a reading is written as steps of the law's operations, and the one path reader reads a path"
+        held: ["test/core_read.py: gate: a series, a walk, a course with its moves, a reading and a pin are saved", "test/core_read.py: reckon: a path over statements"]
+  - suite: test/crosswalk.py
+    promises:
+      - promise: "FHIR observations carried into beans and back by the law's tables, field for field"
+        held: ["test/core_measure.py: crosswalk: a FHIR observation is carried to a `measure`", "test/core_measure.py: crosswalk: a `measure` is carried back"]
+      - promise: "Darwin Core occurrences carried the same way"
+        left: "bin/crosswalk.py keeps the table; no Darwin Core record is carried in a garden of the core yet"
+  - suite: test/days.py
+    promises:
+      - promise: "a day and a moment are one value type, a position, in its one form; a day its calendar lacks is refused"
+        held: ["test/core.py: the frame reads", "test/core.py: the frame refuses", "test/calendars.py: is a day — NO CALENDAR IS THE ONE A DAY MUST BE IN"]
+      - promise: "a moment is in time and place together: a day finds its place by the garden's zone"
+        held: ["test/core.py: a day with no zone to be reckoned in is refused"]
+      - promise: "an acceptance nobody dated is an acceptance, and counts as consent"
+        held: ["test/core-cases.yaml: an acceptance nobody dated is an acceptance"]
+      - promise: "a day written LONG, as an entry of `timing`, placed by what it followed"
+        gone: "a position is written once, in its one form, at `at`; a day nobody said is `unknown` (spec §4)"
+      - promise: "the retired `iso_date` is refused with where it went"
+        held: ["test/refusals.py: a bean in today's words is refused, naming what replaces them"]
+  - suite: test/deeptime.py
+    promises:
+      - promise: "a being set in place for a window, and a position read at a time"
+        held: ["test/core_measure.py: translate: a placement is `be` as location"]
+      - promise: "a garden's own tabulated places, with an overlay"
+        held: ["test/core_measure.py: where: a position in the garden's own system"]
+      - promise: "deep time as an offset from a datum; the ICS chart's units as cells, and their golden spikes"
+        left: "core/law/systems.yaml holds bp-1950, b2k and ics-chronostrat; no position in them is judged in a garden of the core yet"
+      - promise: "a boundary marked in a being, held at both ends; a stance on a code within a place"
+        left: "kept in `details` by the translator; no form in the core yet"
+  - suite: test/expiry.py
+    promises:
+      - promise: "what runs out is read from the law, and the stale reader warns before it"
+        held: ["test/core_measure.py: stale: a clause that repeats is warned", "test/core_read.py: stale: a cache `details` keeps"]
+      - promise: "a garden's own term declares which of its dates runs out"
+        gone: "a garden of the core declares no terms: what runs out is a clause's due or recurrence (core/law/measures.yaml)"
+  - suite: test/figures.py
+    promises:
+      - promise: "the square of opposition: contraries through one source refused, subcontraries stand"
+        held: ["test/core-cases.yaml: rule: squares", "test/core-cases.yaml: subcontraries may both stand"]
+      - promise: "a sequence's restrictions and a walk's acyclicity read from the law"
+        held: ["test/core_read.py: gate: rule `line` refuses"]
+      - promise: "a figure the gate has no check for is refused"
+        gone: "the core's figures are its own (core/law/core.yaml `figures`); a garden adds none"
+  - suite: test/germinate.py
+    promises:
+      - promise: "a stranger grows a garden from a release, and its gate refuses as well as passes"
+        held: ["test/core_adopt.py: a garden grown from v1.0.0 pins", "test/core_adopt.py: ...and a bean in today's words is refused by its hook", "test/core_guides.py: the garden takes the core's gate (core/install.py)"]
+      - promise: "a bean staged without its journal entry is refused; the save commits both"
+        held: ["test/core_save.py: a bean the entry does not name is refused", "test/save.py: a save whose entry names one of two beans is refused"]
+      - promise: "a germinated garden merges its beans by the merge driver and its journal by union"
+        held: ["test/converge.py: its beans go to the statement merge and its journal to git's union", "test/core_merge.py: `.gitattributes` sends beans and mappings to the driver"]
+      - promise: "a name or a profile out of form is refused before anything is made"
+        held: ["test/core_view.py: germinate: a profile the core does not offer is refused", "test/refusals.py: a garden name that is not kebab-case is refused"]
+      - promise: "the guides' examples commit through the gate of a fresh garden"
+        held: ["test/core_guides.py: each section's examples commit through the core's gate"]
+  - suite: test/held.py
+    promises:
+      - promise: "material kept off git, pointed at by an opaque pointer, sealed and journalled in one line, checked where the store is"
+        held: ["test/core_between.py: held: put seals a statement by its id", "test/core_between.py: held: its record is off git", "test/core_between.py: held: a pointer the commit adds that holds nothing on this host is refused"]
+      - promise: "a person minted opaque, their scanned letter sealed on the agreement they accepted"
+        held: ["test/core_between.py: held: a person minted opaque", "test/core_save.py: harm: a statement sealed in a commit whose entry has no"]
+      - promise: "an erasure per subject"
+        left: "bin/held.py's erase is not yet run in a garden of the core"
+  - suite: test/hub.py
+    promises:
+      - promise: "a hub judges every push: each commit signed by a key a writer's bean names, within its grants, the gate at the tip"
+        held: ["test/core_gate.py: hub: the gardener's signed commit is accepted", "test/core_gate.py: hub: an unsigned commit is refused", "test/core_gate.py: hub: a commit signed by a key no bean names is refused", "test/core_gate.py: hub: once a `grant` of the gardener's opens it"]
+      - promise: "the hub runs only code the gardener let in: the gate, a release's file, .gitattributes, a Python file"
+        held: ["test/core_gate.py: hub: a writer granted `write` on a bean is refused a change to"]
+      - promise: "OpenPGP keys where ssh-keygen cannot check; a root commit refused by a hub that holds the garden"
+        left: "bin/hub.py keeps both; not yet run in a garden of the core"
+  - suite: test/knowledge.py
+    promises:
+      - promise: "real codes of a published classification pass, invented ones are refused, and the tool resolves them"
+        held: ["test/core_measure.py: knowledge: a bean's codes are its statements", "test/core-cases.yaml: a code no row of its scheme has"]
+  - suite: test/launch.py
+    promises:
+      - promise: "daftar's own loop: an unlisted party refused before a request is sent, each piece a render pass, a save claimed"
+        held: ["test/core_gate.py: launch: a party no row of the garden grants is refused", "test/core_gate.py: launch: a granted party, the loop runs to its end", "test/core_gate.py: launch: every pass is in the core's form"]
+      - promise: "the save's trace: where it refuses, and where it only hopes"
+        held: ["test/core_gate.py: the save traced each said value", "test/core_gate.py: the claim: a pass the flow law refuses"]
+      - promise: "`record --keep`; the hooks for another maker's loop"
+        held: ["test/core_gate.py: record --keep: a run's output captured", "test/core_gate.py: hook: a commit by hand is refused"]
+      - promise: "a re-read, a file in no layer and a write outside refused; POST by content; a hook that fails closed"
+        left: "bin/launch.py and bin/hook.py keep these; not yet run in a garden of the core"
+  - suite: test/money.py
+    promises:
+      - promise: "an amount is a count, exact: never a float, never a number YAML 1.1 reads otherwise, at most forty digits a side"
+        held: ["test/refusals.py: is refused by name, never read as a number nobody wrote", "test/refusals.py: a count of forty-one digits is refused", "test/core_exact.py: holds no float literal, no float, no true division"]
+      - promise: "an amount in no more decimal places than its currency; a code no currency has refused"
+        held: ["test/core-cases.yaml: more decimal places than the currency has", "test/refusals.py: a currency written by its name is refused"]
+      - promise: "what is owed is read from what moved, exactly, never stored: shares, fractions, repayments, three parties, the net between two"
+        held: ["test/core_read.py: ledger: what each paid less what each bears", "test/core_read.py: --between nets"]
+      - promise: "two currencies meet only at a rate someone observed, exactly"
+        held: ["test/core_exact.py: refuses 100 XTS to EUR without a rate", "test/core_exact.py: thirty digits times a rate of thirty places"]
+      - promise: "a transaction dated differently in two gardens merges as a disagreement"
+        held: ["test/core_merge.py: a disagreement stands side by side"]
+      - promise: "the parts of a whole add up to it exactly"
+        gone: "`bear` holds a share, never an amount: a whole and its parts cannot disagree (spec §11)"
+      - promise: "a historic currency passes with a warning"
+        gone: "the core has no warnings: a breach is an error (spec §12); ISO 4217's historic codes are its codes"
+      - promise: "a unit of another quantity is not an amount (a metre)"
+        left: "`pay`'s `of` takes any quantity (core/law/core.yaml): whether a payment is money only is a change to a verb's row — proposed to the operator in the journal entry"
+      - promise: "priced in one currency and charged in another, the implied rate exact"
+        left: "today's `charged` is kept in `details`; the ledger reads no rate in a garden of the core"
+  - suite: test/observations.py
+    promises:
+      - promise: "a scheme a garden holds as its own extract, with labels and relations"
+        held: ["test/core_measure.py: knowledge: a code of the garden's own scheme"]
+      - promise: "what was found of a being, coded in a scheme, at a moment, by whom"
+        held: ["test/core_measure.py: crosswalk: a FHIR observation is carried to a `measure`"]
+      - promise: "a verdict answering another entry once per observer; a hearing ruled on once every speaker is heard"
+        left: "today's `observations` are kept in `details` by the translator (v1 part 7); no form in the core yet"
+  - suite: test/ordinal.py
+    promises:
+      - promise: "an ordinal position is a position; a series on a counted line"
+        held: ["test/core.py: the frame reads", "test/core_read.py: gate: rule `line` refuses"]
+      - promise: "a series' whole read exactly (by sum, product, count), and refused when wrong"
+        left: "not yet a case in a garden of the core"
+  - suite: test/passes.py
+    promises:
+      - promise: "the flow law: each row granted and refused as the table says, the nearest row deciding"
+        held: ["test/core_between.py: law: the nearest row decides", "test/core_between.py: gate: a pass the flow table grants", "test/core_between.py: gate: an agent's own output passed into the estate as said is refused"]
+      - promise: "each row's guard, and what the gate judges by it at every commit"
+        held: ["test/core_between.py: pass: --flows reads the core's flow law", "test/core_gate.py: the claim: a log that does not extend its copy at HEAD is refused", "test/core_save.py: kept: a line the journal held, rewritten, is refused"]
+  - suite: test/peering.py
+    promises:
+      - promise: "gardens meet only by proposal, read and taken by the receiving garden, ratified by its gardener's save"
+        held: ["test/core_between.py: propose: make lays one proposal", "test/core_between.py: propose: take writes the beans", "test/core_between.py: propose: the gardener's save is the ratification"]
+      - promise: "a thing two gardens share is one being, fused; a proposal is taken once; first contact settled"
+        held: ["test/core_between.py: propose: a second proposal FUSES", "test/core_between.py: propose: a proposal is taken once", "test/core_between.py: propose: a garden refuses a proposal not made for it"]
+      - promise: "a name a garden gives is bare until qualified by its id"
+        held: ["test/core-cases.yaml: rule: names", "test/core-cases.yaml: a garden met here, and the name it gave, qualified"]
+      - promise: "a third garden, two on one machine; what a third garden said not passed on; names used as file names only in the form of one"
+        left: "bin/propose.py keeps these guards; not yet run across three gardens of the core — the file-name guard is a safety one, for the next part to hold"
+  - suite: test/place.py
+    promises:
+      - promise: "a position names its host; a network segment is a place"
+        held: ["test/core_read.py: where: a `root:` location of the core", "test/core.py: the frame reads"]
+      - promise: "a bare path warned while a corpus migrates; the old staleness key refused"
+        gone: "the core has no warnings, and a path is a position in its system (`unix-filesystem:`, `root:`)"
+      - promise: "the merge absorbs a tree into a subtree of it under one host"
+        gone: "the statement merge keeps both statements side by side (daftar-v1-plan.md, the fourth fork)"
+  - suite: test/positions.py
+    promises:
+      - promise: "an address and a port are positions in their systems; tcp and udp separate port spaces"
+        held: ["test/core.py: the frame reads", "test/core-cases.yaml: rule: room"]
+      - promise: "a socket path as an endpoint; the transport read from the protocol's row"
+        left: "the network profile's endpoint attributes stay in `details` (v1 part 11)"
+  - suite: test/privacy.py
+    promises:
+      - promise: "another person kept by name only on their consent, or under an opaque id"
+        held: ["test/core-cases.yaml: rule: consent", "test/core-cases.yaml: a person written under an opaque id"]
+      - promise: "a future whereabouts of a person not the gardener refused in git"
+        held: ["test/core_save.py: consent: a commit placing a person who is not the gardener somewhere in the future"]
+      - promise: "a grant the one answer to who may do what, closed by default; a forbidden grant a ceiling; a grant to ratify the gardener's own"
+        held: ["test/core_between.py: pass: may — the gardener may", "test/core_between.py: pass: may — a grant the permission square forbids opens nothing", "test/core-cases.yaml: rule: ratify", "test/viewcap.py: a grant whose `at` ends today opens its bean today"]
+      - promise: "a sensitivity lowered only on a person's word"
+        held: ["test/core-cases.yaml: rule: harm"]
+      - promise: "two employers issuing 0042 are two identities; a phone in E.164"
+        held: ["test/core-cases.yaml: two issuers each give 0042", "test/core-cases.yaml: not a name e164 gives"]
+      - promise: "a grant over a reading, of PART of a bean (today's `over` and `positions`)"
+        left: "no form in the core: the translator keeps today's grants in `details`, where nothing reads them, so a viewer they opened is refused (closed by default) — a form to design, proposed to the operator"
+  - suite: test/profiles.py
+    promises:
+      - promise: "the law's profiles compose, and what a profile gives is refused where the garden does not take it"
+        held: ["test/core_view.py: profiles are today's, each with the verbs whose home it is", "test/core_view.py: gate: rule profile refuses", "test/core-cases.yaml: rule: profile"]
+      - promise: "analytic accounting: a distribution judged plan by plan, read exactly and in cents by the largest remainders"
+        left: "core/law/lines.yaml carries the reading's operation; not yet a case in a garden of the core"
+  - suite: test/quantities.py
+    promises:
+      - promise: "a quantity is a product of powers of base dimensions, converted exactly within its quantity"
+        held: ["test/core_measure.py: units: 90 km/h is 25 m/s exactly", "test/core_measure.py: units: an hour is no mass", "test/core.py: units are UCUM's"]
+  - suite: test/reckon.py
+    promises:
+      - promise: "a reading of the law's operations read each time, never stored; a series read through it; pinned to a commit"
+        held: ["test/core_read.py: reckon: a `reckon` statement read by its name", "test/core_read.py: reckon: read at a pinned commit", "test/core_read.py: seq: a series of the core read between rows"]
+      - promise: "a comparator in today's words refused, naming the core's sign"
+        held: ["test/core_read.py: reckon: a comparator in today's words is refused"]
+      - promise: "an allowance counted within a window; a weighing whose weights are read"
+        left: "kept in `details` by the translator; no form in the core yet"
+  - suite: test/recurrence.py
+    promises:
+      - promise: "a repetition strides by neighbours, by measure, or by the cells of a level, read from the system's shape"
+        held: ["test/core_measure.py: gate: a clause's recurrence and notice", "test/core_measure.py: is refused by rule"]
+  - suite: test/reform.py
+    promises:
+      - promise: "a bean in today's spelling written in the law's, keeping every comment, refusing rather than guessing"
+        held: ["test/core_write.py: reform: the bean is written in statements in place", "test/core_write.py: reform: a name in a namespace the garden's law has no row for is refused"]
+      - promise: "the one-record-per-attribute spelling of a term, and its overlay merged per attribute"
+        gone: "a garden of the core declares no terms"
+  - suite: test/rehearsal.py
+    promises:
+      - promise: "readings of a special-category scheme sealed off git, read only on the host that holds them"
+        held: ["test/core_save.py: harm: a code of a scheme the garden marks special-category, written unsealed, is refused", "test/core_between.py: held: a reading made here reads the sealed statement back"]
+      - promise: "an erasure leaves every pointer `Erased`; a store in cleartext readable from a remote party is warned"
+        left: "bin/held.py keeps both; not yet run in a garden of the core (and the core has no warnings)"
+  - suite: test/root.py
+    promises:
+      - promise: "life, the order of bodies and the crown: a part never above its whole, every chain ending at the crown"
+        held: ["test/core-cases.yaml: rule: life", "test/core-cases.yaml: rule: order", "test/core-cases.yaml: rule: necessity", "test/core-cases.yaml: rule: weight"]
+      - promise: "a sayable on the made and a body on the said are refused"
+        held: ["test/core.py: the law refuses a sayable placed on the made"]
+      - promise: "a nature the law retired, and a crown chosen by nature, refused naming what took their place"
+        held: ["test/refusals.py: a bean in today's words is refused, naming what replaces them"]
+      - promise: "every system says how its positions find their other half"
+        held: ["test/core.py: a day with no zone to be reckoned in is refused"]
+  - suite: test/rope.py
+    promises:
+      - promise: "two beings never take the same room at once, unless one is part of the other; room past a capacity refused"
+        held: ["test/core-cases.yaml: rule: room", "test/core-cases.yaml: one being at one place twice, as two of its parts", "test/core-cases.yaml: rule: measured"]
+      - promise: "what a placement takes, and a location's host the one its position names"
+        held: ["test/core_measure.py: translate: a placement is `be` as location"]
+      - promise: "shares past a capacity warned, overcommitted"
+        gone: "the core has no warnings: shares past a host pass (v1 part 7)"
+  - suite: test/senses.py
+    promises:
+      - promise: "one sense per name over the terms in force; VOCAB.md `senses`"
+        gone: "a garden of the core declares no terms: a row it adds takes a name the law has not, or is refused (test/core.py)"
+        # held by test/core.py's "the law refuses ... a verb of a name taken"
+  - suite: test/sequence.py
+    promises:
+      - promise: "a series, a walk with its ways and pauses, a course and its moves, each in its form"
+        held: ["test/core_read.py: gate: a series, a walk, a course with its moves, a reading and a pin are saved", "test/core_read.py: gate: rule `line` refuses", "test/core_read.py: seq: where the course stands is read from its moves"]
+      - promise: "a series' part written once"
+        held: ["test/core_save.py: kept: a series' part, once written, is refused changed"]
+      - promise: "the items of a checklist"
+        left: "today's `items` are kept in `details`; no form in the core yet"
+  - suite: test/shape.py
+    promises:
+      - promise: "a system knows its own shape: levels, nesting, neighbours, restrictions"
+        held: ["test/core_standards.py: standards' tables", "test/calendars.py: a system's own example is held to its own pattern"]
+  - suite: test/stamps.py
+    promises:
+      - promise: "the moment of writing is the clock's: `now` stamped with the entry's moment, a typed one refused"
+        held: ["test/core_save.py: a knowing act's moment typed by hand is refused", "test/core_save.py: ...and once it says `now`, --again saves it", "test/save.py: a bean saved with `at: now` is committed with the moment of its journal entry"]
+  - suite: test/uncertainty.py
+    promises:
+      - promise: "how well a value is known (`u`, `accuracy`), inside a quantity and beside a position"
+        held: ["test/core_measure.py: a reading's uncertainty"]
+      - promise: "a measured value merged by its value, however it was written"
+        gone: "the statement merge compares statements as written, spacing and quoting aside (test/core_merge.py)"
+  - suite: test/upgrade.py
+    promises:
+      - promise: "a garden adopts a release, and nothing else moves; a refused one is put back"
+        held: ["test/core_write.py: upgrade: a release of the same core brings its files", "test/core_write.py: upgrade: a release whose core refuses the garden puts every file back", "test/core_adopt.py: a release whose core refuses the translation puts every file back"]
+      - promise: "the law's version moves with an entry a person ratifies"
+        held: ["test/core_write.py: upgrade: a release whose core is later moves the pin", "test/core_adopt.py: nothing is committed; the entry says RULE-CHANGE"]
+      - promise: "an older release is refused"
+        held: ["test/core_write.py: upgrade: a release whose core is older than the garden's is refused"]
+      - promise: "the steps between releases of today's law (std-vocab's numbered steps)"
+        gone: "after v1.0.0 a garden of the core moves between releases of the core, and a garden in today's words adopts once (test/core_adopt.py)"
+  - suite: test/zones.py
+    promises:
+      - promise: "a zone is a row of the IANA database; none guessed"
+        held: ["test/core.py: a zone the time zone database does not name is refused", "test/core.py: a day with no zone to be reckoned in is refused"]
+      - promise: "an offset READ from the zone for a moment, never stored"
+        gone: "a moment of the core is written with its offset, in its one form; a day finds its place by the garden's zone"

@@ -259,11 +259,10 @@ law, J a merge conflict or uncertain identity) are defined there.
 
 ## 11. Determinism
 **Merge-determinism is the hard guarantee**, delivered by the join (§5), the canonical form (§6), the absence of
-clock values, and the deterministic id (§4.4.7, §4.6). The release suites hold it: `test/converge.py` grows gardens
-from the seed, lets them diverge, and pulls them back into one — refinements subsume, sets union, a disagreement
-keeps both values and marks the bean, every journal entry survives the union, and the result passes its gate.
-`test/peering.py` holds them between gardens kept by different people: the same canonical beans and candidates in
-every order of three gardens, a bare name fused only within its garden, and the refusals of §16.
+clock values, and the deterministic id (§4.4.7, §4.6). The release suites held it until v1 (part 12),
+where the statement merge of the core took its place (core/guide/MERGE.md): `test/converge.py` now grows gardens of
+the core, lets them diverge, and pulls them back into one through it, and `test/core_between.py` holds gardens kept
+by different people meeting by proposal; what each of today's promises became is test/ported.yaml's.
 
 ## 12. (nothing in force)
 The number is kept so the sections after it keep theirs.

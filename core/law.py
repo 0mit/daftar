@@ -494,6 +494,14 @@ class Law:
 
         def bad(where, msg):
             out.append(('law', where, msg))
+        for name, row in (self.systems or {}).items():         # a system's own example is in its own form (16.0)
+            pat, ex = row.get('pattern'), row.get('example') if isinstance(row, dict) else None
+            if isinstance(pat, str) and isinstance(ex, str):
+                try:
+                    if not re.match(pat, ex, re.ASCII) or re.match(pat, ex, re.ASCII).end() != len(ex):
+                        bad(f"systems {name}", f"its own `example` {ex!r} is not in the form its `pattern` gives")
+                except re.error:
+                    pass                                        # a pattern that does not compile is refused where it is read
         if len(self.roles) != 7:
             bad('core.yaml roles', f"the core has seven roles, and this law {len(self.roles)}")
         known_rules = ['form', 'valency', 'knowing', 'placeholder', 'order', 'life', 'necessity', 'squares', 'weight',

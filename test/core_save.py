@@ -87,7 +87,7 @@ try:
     shutil.copytree(os.path.join(ROOT, 'bin'), os.path.join(G, 'bin'), ignore=ignore)
     shutil.copytree(os.path.join(ROOT, 'core'), os.path.join(G, 'core'), ignore=ignore)
     os.makedirs(os.path.join(G, 'seed'))
-    for f in ('std-vocab.md', 'LANGUAGE'):
+    for f in ('LANGUAGE',):
         shutil.copy(os.path.join(ROOT, 'seed', f), os.path.join(G, 'seed', f))
     shutil.copytree(os.path.join(ROOT, 'seed', 'knowledge'), os.path.join(G, 'seed', 'knowledge'))
     CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))

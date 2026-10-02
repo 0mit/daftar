@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Calendars and coordinates (std-vocab 16.0).
+"""Calendars and coordinates (std-vocab 16.0; v1 part 12: the core's law, and a garden of the core).
 
 A calendar is one partition of the line of days; every calendar here meets the others at THE DAY, and `bin/dmcal.py`
 converts through it for every calendar that reckons by rule, refusing the ones that do not. A position by coordinates
-names its reference system and its body. The law's registry and the two tools are held to each other.
+names its reference system and its body. The core's law (core/law/systems.yaml, places.yaml) and the two tools are held
+to each other, and a garden of the core (test/grow.py) is judged by the core's gate.
 """
 import datetime, os, re, sys, subprocess, tempfile, shutil
 import yaml
@@ -18,7 +19,9 @@ def check(name, cond, detail=""):
     if not cond:
         FAILS.append(name)
 
-sv = yaml.safe_load(re.match(r'^---\n(.*?)\n---', open(os.path.join(ROOT, "seed", "std-vocab.md")).read(), re.S).group(1))
+_sys = yaml.safe_load(open(os.path.join(ROOT, "core", "law", "systems.yaml"), encoding="utf-8"))
+_pla = yaml.safe_load(open(os.path.join(ROOT, "core", "law", "places.yaml"), encoding="utf-8"))
+sv = {"anchor_systems": _sys["systems"], "bodies": _pla["bodies"], "reference_systems": _pla["reference_systems"]}
 cals = [r for r in sv["anchor_systems"] if r.get("calendar")]
 
 # ---------------------------------------------------------------- the list is CLDR's, and the law and the tool agree
@@ -183,7 +186,8 @@ check("...and its help names the interpreter as it is named where it runs: `pyth
       "    python bin/dmcal.py 2026-09-20" in _buf.getvalue() and "python3 bin/" not in _buf.getvalue(), _buf.getvalue()[:300])
 
 # ---------------------------------------------------------------- where, by coordinates
-check("the tool's bodies are the law's, to the metre, read from it", {b["body"]: b["mean_radius_m"] for b in sv["bodies"]} == dmgeo.bodies())
+check("the tool's bodies are the law's, to the metre, read from it",
+      {b["body"]: float(b["mean_radius_m"]) for b in sv["bodies"]} == {k: float(v) for k, v in dmgeo.bodies().items()})
 check("the tool's reference systems are the law's rows, read from it and never copied",
       set(dmgeo.systems()) == {r["crs"] for r in sv["reference_systems"]} and not hasattr(dmgeo, "SYSTEMS") and not hasattr(dmgeo, "BODIES"))
 check("a vertical position takes one coordinate", dmgeo.parse("EPSG:5773;-12.5")["axes"] == ("H",))
@@ -211,84 +215,63 @@ root = {r["system"]: r for r in sv["anchor_systems"]}
 ident = ["iso-3166", "osm", "postal-code", "street-address", "local-frame", "geohash", "plus-code", "network-segment"]
 check("every way of saying where BY IDENTIFIER resolves through coordinates, and none of them establishes but a published code",
       all(root[s].get("resolves_through") == "geographic" for s in ident)
-      and [s for s in ident if root[s].get("establishes")] == ["iso-3166"], [(s, root[s].get("establishes")) for s in ident])
+      and [s for s in ident if str(root[s].get("establishes")) == "true"] == ["iso-3166"], [(s, root[s].get("establishes")) for s in ident])
 
 # ---------------------------------------------------------------- the gate: one set of digits, and an example in its own form
-def run(*a, cwd=None):
-    return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
-T = tempfile.mkdtemp(prefix="dmcal-"); G = os.path.join(T, "g")
-r = run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
-STD = os.path.join(G, "seed", "std-vocab.md"); ORIG = open(STD).read()
+sys.path.insert(0, os.path.join(ROOT, "test"))
+import grow  # noqa: E402
+T = tempfile.mkdtemp(prefix="dmcal-")
+G = os.path.join(T, "g")
+_g = grow.garden(grow.release(os.path.join(T, "release")), G, "keeper")
+check("(setup) a garden of the core grows (test/grow.py)", _g.returncode == 0, _g.out[-400:])
+
+
 def gate():
-    r = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G); return r.stdout + r.stderr
-def bean(as_of):
-    open(os.path.join(G, "beans", "box.md"), "w").write(f"""---
+    r = grow.run(sys.executable, os.path.join(G, "core", "check.py"), ".", cwd=G)
+    return r.stdout + r.stderr
+
+
+def bean(at, when=None):
+    open(os.path.join(G, "beans", "box.md"), "w", encoding="utf-8").write(f"""---
 bean: box
-genos: host
+kind: host
 title: "a machine"
-status: active
-summary: "probe"
-nature: soma
-identity: {{ status: confirmed, anchors: [ {{ key: serial, value: "SN-CAL-1", class: hardware, establishing: true }} ] }}
-provenance: {{ src: observed, by: probe, as_of: 2026-09-20 }}
-owned_by: {{ external: someone }}
-responsibility: {{ legal: {{ external: "someone" }} }}
-located_at:
-  - {{ system: geographic, at: "{as_of}", openness: here, observed: 2026-09-20 }}
----
+statements:
+  - say: {{ by: keeper, at: "2026-09-20 10:00+03:30" }}
+  - own: {{ by: keeper, of: self }}
+  - be: {{ by: self, at: "{at}", as: location }}
+""" + ("" if when is None else f"""  - acquire: {{ of: self, from: keeper, as: bought, at: {when} }}
+""") + """---
 
 probe.
 """)
     return gate()
-check("a position by coordinates that names its reference system passes", "0 error" in bean("EPSG:4326;35.6892,51.3890@2026.72"), bean("EPSG:4326;35.6892,51.3890@2026.72")[-600:])
+
+
+check("a position by coordinates that names its reference system passes",
+      "0 error" in bean("EPSG:4326;35.6892,51.3890"), bean("EPSG:4326;35.6892,51.3890")[-600:])
 out = bean("35.6892,51.3890")
-check("...and a bare latitude and longitude is refused by the gate", "is not in the one canonical form 'geographic' declares" in out, out[-600:])
+check("...and a bare latitude and longitude is refused by the gate", "in no system's form" in out, out[-600:])
 out = bean("EPSG:4326;۳۵.۶۸۹۲,۵۱.۳۸۹۰")
-check("ONE FORM MEANS ONE SET OF DIGITS: Persian digits are not a second spelling of a position", "is not in the one canonical form" in out, out[-600:])
-# a fact is dated in the calendar it was KNOWN in: every dated attribute of the standard takes any calendar's day
-def dated(observed):
-    open(os.path.join(G, "beans", "box.md"), "w").write(f"""---
-bean: box
-genos: host
-title: "a machine"
-status: active
-summary: "probe"
-nature: soma
-identity: {{ status: confirmed, anchors: [ {{ key: serial, value: "SN-CAL-1", class: hardware, establishing: true }} ] }}
-provenance: {{ src: observed, by: probe, as_of: 2026-09-20 }}
-owned_by: {{ external: someone }}
-responsibility: {{ legal: {{ external: "someone" }} }}
-located_at:
-  - {{ system: geographic, at: "EPSG:4326;35.6892,51.3890", openness: here, observed: {observed} }}
----
-
-probe.
-""")
-    return gate()
-for d in ("2026-09-20", '"persian:1405-06-29"', '"hebrew:5787-01-09"', "2026-W38-7", '"islamic:1448-04-08"'):
-    check(f"`observed: {d}` is a date — NO CALENDAR IS THE ONE A DATE MUST BE IN", "0 error" in dated(d), dated(d)[-400:])
-for d, why in (('"1405-06-29 12:00"', "a clock reading with no offset"), ('"29 Shahrivar 1405"', "prose"), ("1758369600000", "a system with no day level"),
-               ('"persian:۱۴۰۵-۰۶-۲۹"', "another script's digits")):
-    check(f"`observed: {d}` is refused ({why})", "must be a POSITION in time" in dated(d), dated(d)[-400:])
-
-assert ORIG.count('    example: "2026-W38-7"\n') == 1
-open(STD, "w").write(ORIG.replace('    example: "2026-W38-7"\n', '    example: "2026-38-7"\n'))
-check("a system's own example is held to its own pattern", "its own `example` '2026-38-7' is not in the form" in gate(), gate()[-500:])
-open(STD, "w").write(ORIG)
+check("ONE FORM MEANS ONE SET OF DIGITS: Persian digits are not a second spelling of a position",
+      "in no system's form" in out, out[-600:])
+# a fact is dated in the calendar it was KNOWN in: a day in any calendar is a position the core reads
+for d in ('"2026-09-20"', '"persian:1405-06-29"', '"hebrew:5787-01-09"', '"2026-W38-7"', '"islamic:1448-04-08"'):
+    out = bean("EPSG:4326;35.6892,51.3890", when=d)
+    check(f"`at: {d}` is a day — NO CALENDAR IS THE ONE A DAY MUST BE IN", "0 error" in out, out[-400:])
+for d, why in (('"29 Shahrivar 1405"', "prose"), ('"persian:۱۴۰۵-۰۶-۲۹"', "another script's digits"),
+               ('"2026-09-20T25:00+03:30"', "a clock reading no day has")):
+    out = bean("EPSG:4326;35.6892,51.3890", when=d)
+    check(f"`at: {d}` is refused ({why})", "acquire" in out and "0 error" not in out
+          and ("one form" in out or "names no clock reading" in out), out[-400:])
+sys.path.insert(0, ROOT)
+from core.law import Law  # noqa: E402
+_probs = Law.load(("VOCAB.md", {"systems": [{"system": "week-of-the-shed", "dimension": "time", "pattern": "^[0-9]{4}-W[0-9]{2}$",
+                                             "example": "2026-38"}]})).problems()
+check("a system's own example is held to its own pattern: the core's law refuses one that is not",
+      any("its own `example` '2026-38'" in m for _r, _w, m in _probs), _probs)
+check("...and every system of the core's law holds its own example", not Law.load().problems(), Law.load().problems())
 shutil.rmtree(T, ignore_errors=True)
-
-# ---------------------------------------------------------------- 18.0: an instant is contained in ANY calendar
-import dmmerge as _M
-_p, _h = dmcal.convert("2026-09-19", "persian"), dmcal.convert("2026-09-19", "hebrew")
-_cases = [("2026-09-19", "2026-09-19 22:50+03:00", True), (_p, "2026-09-19 22:50+03:00", True),
-          (_p, _p + " 22:50+03:30", True), ("2026-09-19", _p + " 22:50", True), (_h, _h + " 22:50", True),
-          ("2026-09-19 23:00+00:00", "2026-09-20 02:00:10+03:00", True), ("2026-W38-6", "2026-09-19 10:00", True),
-          ("2026-09-20", "2026-09-19 22:50", False), ("2026-09-19", "2026-09-19", False)]
-_bad = [(a, b) for a, b, w in _cases if bool(_M._instant_contains(a, b)) != w]
-check("a day CONTAINS a finer reading of it, in whatever calendar either is written — they meet at the day", not _bad, _bad)
-check("...but a day that begins at SUNSET does not contain another calendar's clock time by arithmetic: unordered",
-      not _M._instant_contains(_h, "2026-09-19 22:50+03:00"))
-check("the order follows what a value IS: a reading in any calendar is an instant", _M.leaf_order("whenever", _p + " 22:50") == "instant")
 
 print("\ncalendars: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

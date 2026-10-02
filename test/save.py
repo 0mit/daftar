@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""save — one call saves a change: its journal entry, everything staged, and the commit the gate judges.
+"""save — one call saves a change: its journal entry, everything staged, and the commit the gate judges (v1 part 12:
+in a garden of the core, grown by test/grow.py, judged by the core's gate).
 
 An agent saved a bean in three calls — `bin/dmjournal.py`, `git add -A`, `git commit` — and a refused one in two more,
 and each call's words stay in its context for the rest of its session. `bin/dmsave.py` is the one call, held here in a
@@ -25,7 +26,7 @@ freshly grown garden to what its first lines say:
 Run: python3 test/save.py   (0 = green).  ~10s.
 """
 import datetime
-import ast, os, shutil, stat, subprocess, sys, tempfile
+import ast, re, os, shutil, stat, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 results = []
@@ -52,10 +53,10 @@ def git(*a):
                           env=ENV)
 
 
-_g = subprocess.run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), G, '--gardener', 'sam',
-                     '--gardener-name', 'Sam'], capture_output=True, text=True, encoding='utf-8', errors='replace',
-                    env=ENV)
-check("(setup) a garden is grown, with its gardener", _g.returncode == 0, (_g.stdout + _g.stderr)[-500:])
+sys.path.insert(0, os.path.join(ROOT, 'test'))
+import grow  # noqa: E402
+_g = grow.garden(grow.release(os.path.join(TMP, 'release')), G, 'sam', '--gardener-name', 'Sam')
+check("(setup) a garden of the core is grown (test/grow.py), with its gardener", _g.returncode == 0, _g.out[-500:])
 git('config', 'user.name', 'agent (test)')
 git('config', 'user.email', 'agent@localhost')
 TOOL = os.path.join(G, 'bin', 'dmsave.py')
@@ -66,25 +67,22 @@ _py = 'python' if os.name == 'nt' else 'python3'
 # gardener is kept by name only on their consent (24.0, F2) — which is test/privacy.py's to show, not this suite's.
 PERSON = """---
 bean: {id}
-genos: program
+kind: {kind}
 title: "{title}"
-status: {status}
 summary: "A program the gardener keeps."
-nature: lekton
-identity:
-  status: confirmed
-  anchors:
-    - {{ key: identifier, value: "program:{id}", class: logical, establishing: true }}
-provenance: {{ src: asserted-by-human, by: "sam", as_of: now }}
-owned_by: {{ owner: {{ bean: sam }} }}
+statements:
+  - say: {{ by: sam, at: now }}
+  - own: {{ by: sam, of: self }}
 ---
 A program.
 """
 
 
 def bean(bid, status='active', title=None):
+    """A program the gardener keeps; `status` other than `active` writes it of a kind the law has not, which the gate
+    refuses (today's suite wrote a status the law does not list)."""
     with open(os.path.join(G, 'beans', bid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write(PERSON.format(id=bid, status=status, title=title or bid.capitalize()))
+        fh.write(PERSON.format(id=bid, kind='product' if status == 'active' else status, title=title or bid.capitalize()))
 
 
 def save(*a, stdin=b'', env=None):
@@ -147,8 +145,8 @@ check("...the entry appended as given, under ONE heading the clock wrote and the
       _added.decode('utf-8').endswith('\n- action: added [[ali]], a friend of the gardener.\n') and len(_h) == 1
       and _h[0].endswith(' · sam · added ali') and (_h[0] + '\n').encode('utf-8') in stamps(), _added[-300:])
 _lines = [l for l in (out + err).splitlines() if l.strip()]
-check("...and it prints three lines: the gate's verdict, the fast suite's count, and the commit it saved",
-      len(_lines) == 3 and any('0 error(s)' in l for l in _lines) and any(l.startswith('fast: ') for l in _lines)
+check("...and it prints two lines: the core's gate's verdict, and the commit it saved (today's fast suite is today's gate's)",
+      len(_lines) == 2 and any('0 error(s)' in l for l in _lines)
       and out.strip() == f"saved {git('rev-parse', '--short', 'HEAD').stdout.strip()}: added ali", _lines)
 
 # ---- - a refused save leaves everything where it stands --------------------------------------------------------------
@@ -156,7 +154,7 @@ bean('friend-b', status='bogus')
 _s = state()
 rc, out, err = save('sam', 'added friend-b', '--body', '- action: added [[friend-b]].')
 check("a bean the gate refuses: exit 1, nothing committed, and the gate's reason printed",
-      rc == 1 and head() == _s[2] and "status 'bogus' not in" in err, (rc, out, err[-600:]))
+      rc == 1 and head() == _s[2] and "`kind: bogus` is no kind of the law" in err, (rc, out, err[-600:]))
 check("...the entry is written ONCE, and the bean and the journal stay staged, for the fix",
       len(headings(journal()[len(_s[0]):], ' · sam · added friend-b')) == 1
       and {'beans/friend-b.md', 'log/journal.md'} <= set(git('diff', '--cached', '--name-only').stdout.split()),
@@ -177,7 +175,7 @@ check("after the fix, `--again` saves (exit 0): one commit, its message the entr
       rc == 0 and git('rev-parse', 'HEAD~1').stdout.strip() == _s[2]
       and git('log', '-1', '--format=%B').stdout.strip() == 'added friend-b', (rc, out, err))
 check("...holding the FIX, never the refused copy, and the entry once, with nothing left unstaged",
-      'status: active' in git('show', 'HEAD:beans/friend-b.md').stdout
+      'kind: product' in git('show', 'HEAD:beans/friend-b.md').stdout
       and len(headings(git('show', 'HEAD:log/journal.md').stdout.encode('utf-8'), ' · sam · added friend-b')) == 1
       and not git('status', '--porcelain').stdout.strip(), git('show', 'HEAD:beans/friend-b.md').stdout[:300])
 _s = state()
@@ -194,7 +192,7 @@ rc, out, err = save('sam', 'added friend-e', '--body', '- action: added [[friend
 check("after the fix, the same call again saves (exit 0), the entry committed once, the fix and not the refused copy",
       rc == 0 and git('log', '-1', '--format=%B').stdout.strip() == 'added friend-e'
       and len(headings(git('show', 'HEAD:log/journal.md').stdout.encode('utf-8'), ' · sam · added friend-e')) == 1
-      and 'status: active' in git('show', 'HEAD:beans/friend-e.md').stdout, (rc, out, err[-400:]))
+      and 'kind: product' in git('show', 'HEAD:beans/friend-e.md').stdout, (rc, out, err[-400:]))
 bean('friend-g', status='bogus')
 rc, out, err = save('sam', 'added friend-g', '--body', '- action: added [[friend-g]].')
 bean('friend-g')
@@ -219,7 +217,7 @@ bean('friend-d')
 _s = state()
 rc, out, err = save('sam', 'added friend-c', '--body', '- action: added [[friend-c]].')
 check("a save whose entry names one of two beans is refused, the gate asking for an entry that names the other",
-      rc == 1 and head() == _s[2] and 'beans/friend-d.md: staged, but the staged journal entry never names it' in err,
+      rc == 1 and head() == _s[2] and 'beans/friend-d.md: changed by this commit, and named by no journal entry it adds' in err,
       (rc, err[-600:]))
 subprocess.run([sys.executable, os.path.join(G, 'bin', 'dmjournal.py'), 'sam', 'added friend-d', '--body',
                 '- action: added [[friend-d]].'], capture_output=True, cwd=G, env=ENV)
@@ -310,54 +308,51 @@ rc, out, err = save('sam', 'added friend-f', '--body', '- action: added [[friend
 check("...and with each put right, the same bean saves", rc == 0 and not git('status', '--porcelain').stdout.strip(),
       (rc, out, err))
 
-# ---- + the day of writing is the clock's: `as_of: now` becomes the day of the entry (v0.34.1) --------------------------
+# ---- + the moment of writing is the clock's: `at: now` becomes the moment of the entry (the core's save) -----------------
 def now_bean(bid, extra=''):
     bean(bid)
     f = os.path.join(G, 'beans', bid + '.md')
-    t = open(f, encoding='utf-8').read()          # PERSON writes `as_of: now` already: the save stamps it (23.0)
-    open(f, 'w', encoding='utf-8', newline='\n').write(t.replace('\n---\n', '\n' + extra + '---\n', 1) if extra else t)
+    t = open(f, encoding='utf-8').read()          # PERSON writes `at: now` already: the save stamps it
+    open(f, 'w', encoding='utf-8', newline='\n').write(t.replace('\n---\nA program', '\n' + extra + '---\nA program', 1)
+                                                      if extra else t)
 
 
 def blob(bid):
     return git('show', f'HEAD:beans/{bid}.md').stdout
 
 
-def day_of_last_entry():
-    return [l for l in journal().decode('utf-8').split('\n') if l.startswith('## ')][-1][3:13]
+def moment_of_last_entry():
+    return [l for l in journal().decode('utf-8').split('\n') if l.startswith('## ')][-1][3:].split(' · ', 1)[0]
 
 
 now_bean('noor')
 rc, out, err = save('sam', 'added noor', '--body', '- action: added [[noor]].')
-check("a bean saved with `as_of: now` is committed with the day of its journal entry, the one clock reading of the "
-      "save — never the word `now`, and never a day the writer typed",
-      rc == 0 and f'as_of: {day_of_last_entry()}' in blob('noor') and 'as_of: now' not in blob('noor'), (rc, err, blob('noor')))
-now_bean('omar', 'refs: { friend: { bean: nobody-here, rel: friend-of } }\n')
+check("a bean saved with `at: now` is committed with the moment of its journal entry, the one clock reading of the "
+      "save — never the word `now`, and never a moment the writer typed",
+      rc == 0 and f'at: "{moment_of_last_entry()}"' in blob('noor') and 'at: now' not in blob('noor'), (rc, err, blob('noor')))
+now_bean('omar', '  - need: { by: self, of: [nobody-here] }\n')
 rc, out, err = save('sam', 'added omar', '--body', '- action: added [[omar]].')
 _f = os.path.join(G, 'beans', 'omar.md')
 _t = open(_f, encoding='utf-8').read()          # read, THEN open for writing: opening truncates (dmsafe's incident 4)
 open(_f, 'w', encoding='utf-8', newline='\n').write(
-    _t.replace('refs: { friend: { bean: nobody-here, rel: friend-of } }\n', '').replace(f'as_of: {day_of_last_entry()}', 'as_of: now'))
+    re.sub(r'at: "[^"]*"', 'at: now', _t.replace('  - need: { by: self, of: [nobody-here] }\n', '')))
 rc2, out2, err2 = save('--again')
-check("...and on `--again`, a `now` written again while fixing the refusal takes the day of the entry waiting",
-      rc != 0 and rc2 == 0 and f'as_of: {day_of_last_entry()}' in blob('omar'), (rc, rc2, err2, blob('omar')))
-# A DAY THE WRITER TYPED IS NEVER REWRITTEN BY THE TOOL — judged by the gate instead (23.0): today's passes as written,
-# being the entry's day; another is refused, and stays as the writer typed it. Neither check names a calendar date, so
-# the suite passes on any day it runs (it once named one, and failed the next morning).
-_today = datetime.date.today().isoformat()
-def typed_bean(bid, day):
+check("...and on `--again`, a `now` written again while fixing the refusal takes the moment of the entry waiting",
+      rc != 0 and rc2 == 0 and f'at: "{moment_of_last_entry()}"' in blob('omar'), (rc, rc2, err2, blob('omar')))
+# A MOMENT THE WRITER TYPED IS NEVER REWRITTEN BY THE TOOL — judged by the gate instead: refused, and left as typed.
+def typed_bean(bid, at):
     bean(bid)
     f = os.path.join(G, 'beans', bid + '.md')
     t = open(f, encoding='utf-8').read()          # read, THEN open for writing: opening truncates
-    open(f, 'w', encoding='utf-8', newline='\n').write(t.replace('as_of: now', f'as_of: {day}'))
-typed_bean('pari', _today)
-rc, out, err = save('sam', 'added pari', '--body', '- action: added [[pari]].')
-check("...and a day the writer typed is left as typed: today's, the entry's own day, passes as written",
-      rc == 0 and f'as_of: {_today}' in blob('pari'), (rc, err[-400:], blob('pari')))
-typed_bean('pia', '2001-01-02')
+    open(f, 'w', encoding='utf-8', newline='\n').write(t.replace('at: now', f'at: "{at}"'))
+typed_bean('pia', '2001-01-02 10:00+03:00')
 rc, out, err = save('sam', 'added pia', '--body', '- action: added [[pia]].')
-check("...and another typed day is refused by the gate, and the tool leaves it as the writer typed it",
-      rc != 0 and 'stamped, not typed' in err
-      and 'as_of: 2001-01-02' in open(os.path.join(G, 'beans', 'pia.md'), encoding='utf-8').read(), (rc, err[-400:]))
+check("a moment the writer typed is refused by the gate, and the tool leaves it as the writer typed it",
+      rc != 0 and 'at: "2001-01-02 10:00+03:00"' in open(os.path.join(G, 'beans', 'pia.md'), encoding='utf-8').read(),
+      (rc, err[-400:]))
+os.remove(os.path.join(G, 'beans', 'pia.md'))
+git('reset', '-q')
+git('checkout', '--', 'log/journal.md')
 
 # ---- + one save at a time: a save waits for the clone's lock, and past its bound is refused (24.0, N34) ----------------
 _lp = os.path.join(G, git('rev-parse', '--git-dir').stdout.strip(), 'daftar-save.lock')
@@ -379,11 +374,11 @@ _lf.close()                                       # the other save ends: its loc
 os.remove(os.path.join(G, 'beans', 'quinn.md'))
 
 # ---- - it never passes --no-verify -----------------------------------------------------------------------------------
-_src = ast.parse(open(os.path.join(ROOT, 'bin', 'dmsave.py'), encoding='utf-8').read())
+_src = ast.parse(open(os.path.join(ROOT, 'bin', 'save.py'), encoding='utf-8').read())
 _doc = _src.body[0].value.value                      # the docstring may say it never does; the code may not do it
 _strs = [n.value for n in ast.walk(_src)
          if isinstance(n, ast.Constant) and isinstance(n.value, str) and n.value != _doc]
-check("bin/dmsave.py never passes --no-verify, nor its short form: no string it holds is either",
+check("bin/save.py (bin/dmsave.py its alias) never passes --no-verify, nor its short form: no string it holds is either",
       not any(s in ('--no-verify', '-n') or 'no-verify' in s for s in _strs), [s for s in _strs if 'verify' in s])
 
 shutil.rmtree(TMP, ignore_errors=True)
