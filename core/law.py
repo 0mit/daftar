@@ -70,6 +70,7 @@ ROW_FIELDS = {
     'exclusive': {'verb', 'why'},
 }
 LINES = 'lines.yaml'                                       # the forms of a line and a reading's grammar (v1 part 6)
+TOOLS, VACANCIES = 'tools.yaml', 'vacancies.yaml'          # the tools by their verbs; what nothing takes up yet (part 9)
 MEASURES = 'measures.yaml'                                 # the forms of a measure: a region, a repetition, a clause's
                                                            # terms and a placement's, how well a value is known (part 7)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
@@ -123,6 +124,8 @@ class Law:
         self.garden_flows = []                              # the rows of `flows` a garden added (VOCAB.md)
         self.methods, self.pass_metadata, self.flows_dropped = {}, {}, {}   # core/law/flows.yaml beside its rows
         self.garden_rows = []                               # (key, name, row) of each row a garden added (rule vacancy)
+        self.families, self.tools = {}, {}                  # core/law/tools.yaml (v1 part 9)
+        self.vacancy_reasons, self.vacancies, self.vacancies_dropped = [], [], []   # core/law/vacancies.yaml
         self.own = {}                                       # a garden's own systems, schemes and files (part 7)
         self.tables = {t: listed(F.get(t)) for t in FACE_TABLES}
         self.tables['layers'] = listed(F.get('layers'))
@@ -167,7 +170,67 @@ class Law:
         measures = os.path.join(d, MEASURES) if os.path.isfile(os.path.join(d, MEASURES)) else os.path.join(LAW_DIR, MEASURES)
         law.measure_law = read.data(measures)
         law.forms = dict(law.line_law.get('forms') or {}, **(law.measure_law.get('forms') or {}))
+        for name, put in ((TOOLS, law._tools), (VACANCIES, law._vacancies)):     # the law tools' law (v1 part 9)
+            put(read.data(os.path.join(d, name) if os.path.isfile(os.path.join(d, name)) else os.path.join(LAW_DIR, name)))
         return law
+
+    def _tools(self, data):
+        self.families = {str(f['family']): f for f in listed(data.get('families')) if isinstance(f, dict)}
+        self.tools = {str(t['tool']): t for t in listed(data.get('tools')) if isinstance(t, dict)}
+
+    def _vacancies(self, data):
+        self.vacancy_reasons = [str(r) for r in listed(data.get('reasons'))]
+        self.vacancies = [v for v in listed(data.get('vacancies')) if isinstance(v, dict)]
+        self.vacancies_dropped = [v for v in listed(data.get('dropped')) if isinstance(v, dict)]
+
+    def form_attr(self, form, path):
+        """The record of an attribute of a form (`walk.exit`: an attribute of what `walk` holds), or None."""
+        rec = {'in': self.forms.get(form)} if form in self.forms else None
+        for seg in [s for s in path.split('.') if s]:
+            dom = (rec or {}).get('in')
+            attrs = (dom.get('attrs') or dom.get('entries')) if isinstance(dom, dict) else None
+            rec = attrs.get(seg) if isinstance(attrs, dict) else None
+            if not isinstance(rec, dict):                  # an attribute nested a level down, under any attribute
+                found = [self.form_attr(form, f"{a}.{seg}") for a in (attrs or {}) if isinstance(attrs, dict)] \
+                    if path.count('.') == 0 and attrs else []
+                found = [f for f in found if f]
+                return found[0] if len(found) == 1 else None
+        return rec
+
+    def vacancy_place(self, at, position):
+        """'' when the law has the place a vacancy is at and the position is one there, else why not. What `details`
+        keeps under today's term is today's law's to judge."""
+        kind, _, rest = str(at).partition(':')
+        if kind == 'details':
+            return ''
+        if kind == 'figure':
+            f = next((f for f in self.figures if f.get('figure') == rest), None)
+            if f is None:
+                return f"`{rest}` is no figure of the law: one of {', '.join(x.get('figure') for x in self.figures)}"
+            pos = [p for kv in (f.get('positions') or {}).items() for p in kv]
+            return '' if position in pos else f"{position!r} is no position of the figure {rest}: one of {', '.join(pos)}"
+        if kind == 'table':
+            rows = self.std.tables.get(rest) if self.std and rest in self.std.tables else None
+            if rest == 'systems':
+                return '' if position in self.systems else f"{position!r} is no system of the law"
+            if rows is not None:
+                names = [str(r[next(iter(r))]) for r in rows if isinstance(r, dict) and r]
+                return '' if position in names else f"{position!r} is not a row of `{rest}`"
+            return self.has(rest, position)
+        if kind == 'form':
+            form, _, path = rest.partition('.')
+            if form not in self.forms:
+                return f"`{form}` is no form of the law: one of {', '.join(sorted(self.forms))}"
+            if not path:
+                one = listed(self.forms[form].get('one_of'))
+                return '' if position in one else f"{position!r} is none of the form {form}'s: {', '.join(one)}"
+            rec = self.form_attr(form, path)
+            if rec is None:
+                return f"`{path}` is no attribute of the form {form}"
+            dom = rec.get('in')
+            return '' if isinstance(dom, list) and position in dom else \
+                f"{position!r} is not a value of {form}.{path}: {dom!r}"
+        return f"{at!r} is at no place the law has: `table:`, `figure:`, `form:` or `details:`"
 
     def _put(self, table, name, row, where):
         if name in table:
@@ -501,6 +564,15 @@ class Law:
         for t, vals in self.tables.items():
             if len(set(map(str, vals))) != len(vals):
                 bad(f"table {t}", "a row is written twice")
+        for t, row in self.tools.items():                  # the tools, each in a family (v1 part 9)
+            if row.get('family') not in self.families:
+                bad(f"tool {t}", f"its family {row.get('family')!r} is none of {', '.join(self.families)}")
+        for i, v in enumerate(self.vacancies):             # a vacancy is at a place the law has, for a reason it gives
+            if v.get('reason') not in self.vacancy_reasons:
+                bad(f"vacancy {i}", f"its reason {v.get('reason')!r} is none of {', '.join(self.vacancy_reasons)}")
+            why = self.vacancy_place(v.get('at'), str(v.get('position')))
+            if why:
+                bad(f"vacancy {i} ({v.get('at')} {v.get('position')})", why)
         return out
 
     def _verb_problems(self, name, v, bad):

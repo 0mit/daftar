@@ -194,7 +194,7 @@ check("the law points at no layer beneath it: it can be applied alone", not up, 
 # THE GATE READS LAW AND NOTHING ELSE. If a verdict ever depended on the reasoning, the reasoning would be law without
 # being ratified as law.
 readers = [os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*.py")) if "RATIONALE" in open(f, encoding="utf-8").read()]
-check("only the reader of reasons opens the reasoning: no verdict can depend on it", readers == ["dmwhy.py"], readers)
+check("only the reader of reasons opens the reasoning: no verdict can depend on it", readers == ["why.py"], readers)
 # SIDEWAYS: a reason that speaks of a law name the law no longer has is no longer a reason; it is an account of what
 # used to be, which is a journal's business. A ratchet, because sorting them is editorial work.
 STALE_REASONS = 7

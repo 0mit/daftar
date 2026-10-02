@@ -1,0 +1,1348 @@
+#!/usr/bin/env python3
+"""review — gather the evidence a Part B judgment needs. It does NOT judge.
+
+Part A is what a machine checks. Part B is what only a person can. But "unenforceable" is not the same
+as "unsupportable": a gate cannot tell whether provenance is HONEST or whether prose reads correctly
+cold — and it can still put in front of you every place where that question arises, so the judging is
+quick and complete instead of a hunt.
+
+Everything printed here is a QUESTION, not a violation. Most of it will be fine, and that is expected:
+these are the places where being wrong would be invisible to the gate, not places that are wrong.
+
+IT ALWAYS EXITS 0, deliberately. A judgment aid that can fail a build becomes a rule, and a rule that
+encodes a judgment nobody made is worse than no rule — it launders an opinion into an enforcement.
+If a signal here ever earns enforcement, it belongs in the gate with evidence, and it leaves this file.
+
+THE LAW'S OWN PRECONDITIONS (`--law`). The same stance, turned on the law, for whoever merges a change to it.
+That one law is clearer, more general or more beautiful than another is a judgment, and a judgment is its
+judge's: the person who ratifies. No count can make it — every proxy here that became a target drifted from
+what it measured. What can be counted are the preconditions the record rules on, and those are printed as
+evidence: SIZE, with no direction (a mechanism may make the law larger and better, and the cheapest way to
+lower a count is to fold a structured fact into prose); CLOSURE (what the law offers that nothing takes up);
+SECOND STATEMENTS (an enumeration the law owns, restated in a prose document, and whether the copy differs; a clause
+of the manifesto stated again outside it);
+STORY IN THE LAW (when, who or where, told inside the law's data); STATED, NOT CHECKED (`enforced_by: none`);
+and ONE ESTATE IN THE STANDARD (a standard vacancy whose reason is one garden's expectation). With
+`--against <ref>` each line says how it moved since that ref. It reads seed/std-vocab.md (and, in a garden, its
+VOCAB.md overlay) and the tools, as the working tree holds them and as git holds them at the ref, and which prose is
+read for a second statement — not the record of what was, nor an agent's notes — from the law's layer map through
+bin/dmpass.py. It names the law's structure and not its terms — with one exception, `prediction`, the vacancy reason
+that is a garden's own expectation, which the law does not yet mark in a column a tool could read (see
+`_ONE_GARDENS_REASON`).
+
+Usage: python3 bin/review.py [--all]     (--all lists every occurrence rather than a sample)
+       python3 bin/review.py --law [--against <git-ref>]     (also --against=<git-ref>)
+       python3 bin/review.py --places                         (fixed beings stated from no other fixed being)
+
+IN A GARDEN OF THE CORE (v1 part 9) the same questions are asked of statements — the texts a fact is written in, a name
+a person said in a bean no other act of a person knows, the verbs nobody says — and `--law` counts core/law/: its size,
+the tables and forms nothing takes, the vacancies (core/law/vacancies.yaml) a statement here takes, restatements, story.
+"""
+import difflib, errno, os, re, subprocess, sys, textwrap
+from collections import Counter
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dmparse, dmpass
+import dmgarden  # noqa: E402 — the one garden model: where its documents are
+
+# What this review shows, for a person to judge: it refuses nothing (`bin/dmpass.py --flows` counts it as evidence).
+EVIDENCE = {
+    'law-restated': {'checks': "a second statement of a list the law owns, counted against the list it restates",
+                     'proof': 'test/rationale.py', 'label': "dmreview counts a restatement once, against the list it restates best"},
+}
+try:
+    import yaml
+except ImportError:
+    print("ERROR: PyYAML required"); sys.exit(2)
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ALL = '--all' in sys.argv
+FACTUAL = ('owns', 'attributes', 'details')
+
+# ============================== THE LAW'S PRECONDITIONS (--law) ==============================
+LAW_FILE, OVERLAY_FILE, GATE_FILE = 'seed/std-vocab.md', 'VOCAB.md', 'bin/dmcheck.py'
+
+# STORY IN THE LAW: a string the law holds that says when something happened, who did it, or where — the journal's
+# business, sitting one layer too high. The one definition: test/rationale.py holds the law to it as a ratchet, and
+# `--law` lists what it finds, so the count the suite enforces is the count the ratifier reads. A release is named the
+# way the law's own story names one: after a preposition or a verb of change (`at 2.0`, `declared 11.3`, `9.0
+# removed`), or alone in parentheses (`(13.0)`, `(9.2: …`) — never bare, because `15.0` in an example of an operating
+# system's release is a value, not a moment.
+STORY = re.compile(r"\b20\d\d-\d\d-\d\d\b|\bfirst draft\b|\bthe operator\b|\bthis estate\b|\bthis garden\b"
+                   r"|\bwithin the hour\b"
+                   r"|\b(?:at|in|since|until|declared|added|narrowed|introduced|retired|removed|renamed)\s+\d+\.\d+\b"
+                   r"|\(\d+\.\d+(?:\)|[:;])|\b\d+\.\d+\s+(?:added|narrowed|introduced|retired|removed|renamed)\b", re.I)
+_DATE = re.compile(r'20\d\d-\d\d-\d\d')
+_TICKS = re.compile(r'`[^`]*`')
+# The keys whose value IS a value rather than something told to a reader: an `example` of one, a `pattern` that checks
+# one (`value_pattern` too), and a term's `forms` — the ways a value is written. A story regex run over a value finds
+# the value's own digits. Every other string the law holds is read, whatever its key: a list of the keys that TELL
+# missed the `rules`, `handling` and schema-language descriptions that told story all the same. `at` (24.0) is where the
+# law writes a POSITION — a datum's `1950-01-01` or `2000-01-01`, a vacancy's `registry:units` — so a date there is the
+# datum itself, which the regex would read as the day something happened.
+_VALUE_KEYS = ('example', 'pattern', 'forms', 'at')
+
+
+def is_value_key(key):
+    k = str(key)
+    return k in _VALUE_KEYS or k.endswith('_pattern')
+
+
+_NAME = re.compile(r'[\w:./+-]{1,64}')     # a name, not a sentence: a row's `why` is unique too, and no label
+
+
+def _labels(seq):
+    """How a path names each item of a list, the way `bin/dmwhy.py` resolves one — so a reason keyed by the printed
+    path attaches to THIS item. dmwhy takes the first item holding any scalar field equal to the label, so the label is
+    one of the item's own scalar values that no EARLIER sibling carries in any field: preferably one no other sibling
+    carries at all (it then survives a row added anywhere), else the first that no earlier one does. A name, unlike a
+    position, survives a row added above it, so a path read at two refs names the same item. An item with no such
+    value is named by position and marked `#` (`[#2]`): dmwhy cannot resolve that, and a reason cannot be keyed to it
+    until the item has a name."""
+    scalars = [[str(v) for v in item.values() if not isinstance(v, (dict, list))] if isinstance(item, dict) else []
+               for item in seq]
+    seen = Counter(v for own in scalars for v in set(own))
+    out, earlier = [], set()
+    for i, item in enumerate(seq):
+        names = [str(v) for v in item.values() if isinstance(v, (str, int)) and not isinstance(v, bool)
+                 and _NAME.fullmatch(str(v))] if isinstance(item, dict) else []
+        mine = set(scalars[i])
+        alone = [v for v in names if seen[v] == 1 and v in mine]
+        first = [v for v in names if v not in earlier]
+        out.append(f'[{(alone or first)[0]}]' if alone or first else f'[#{i}]')
+        earlier.update(scalars[i])
+    return out
+
+
+def _strings(node, path):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if not is_value_key(k):
+                yield from _strings(v, f'{path}.{k}' if path else str(k))
+    elif isinstance(node, list):
+        for label, v in zip(_labels(node), node):
+            yield from _strings(v, path + label)
+    elif isinstance(node, str):
+        yield path, node
+
+
+def story_in(law):
+    """[(path, phrase, text)] for every string the law holds that says when, who or where.
+
+    Read from the PARSED law, and every string of it but a value's (`is_value_key`). A line grep sees only the first
+    line of a folded `>` block: it counted fourteen while forty-five sat in the law. A date inside backticks is read as
+    an example of a value — a `2026-01-01` in a pattern's explanation — and is not counted: a LIMIT of the proxy, since
+    a story date written in backticks passes too, and `--law` says so beside the count."""
+    out = []
+    for q, s in _strings(law if isinstance(law, (dict, list)) else {}, ''):
+        ticks = [m.span() for m in _TICKS.finditer(s)]
+        hits = [m.group(0) for m in STORY.finditer(s)
+                if not (_DATE.fullmatch(m.group(0)) and any(a < m.start() < b for a, b in ticks))]
+        if hits:
+            out.append((q, hits[0], ' '.join(s.split())))
+    return out
+
+
+def _git(*args):
+    try:
+        r = subprocess.run(['git', '-C', ROOT] + list(args), capture_output=True, timeout=30)
+    except Exception:
+        return None
+    return r.stdout.decode('utf-8', 'replace') if r.returncode == 0 else None
+
+
+def _cat(blobs):
+    """{blob id: text} for many blobs, read through one `git cat-file --batch`; {} where git cannot give them."""
+    if not blobs:
+        return {}
+    try:
+        r = subprocess.run(['git', '-C', ROOT, 'cat-file', '--batch'], input=''.join(b + '\n' for b in blobs).encode(),
+                           capture_output=True, timeout=60)
+    except Exception:
+        return {}
+    if r.returncode != 0:
+        return {}
+    out, at, got = r.stdout, 0, {}
+    try:
+        while at < len(out):
+            nl = out.index(b'\n', at)
+            head, at = out[at:nl].split(), nl + 1
+            if len(head) == 3 and head[2].isdigit():            # `<id> blob <size>`, then the bytes; `<id> missing`
+                n = int(head[2])
+                got[head[0].decode('ascii', 'replace')] = out[at:at + n].decode('utf-8', 'replace')
+                at += n + 1
+    except ValueError:
+        pass
+    return got
+
+
+class Tree:
+    """The repository as the working tree holds it (ref None), or as git holds it at a ref. Paths are written with
+    `/`, as git spells them, on every platform, and listed with `-z`, so a name git would quote is the name itself.
+
+    AT A REF, A FEW GIT CALLS, NOT ONE PER FILE. The listing is read once, with each file's blob id, and the files a
+    reader needs are read together through one `git cat-file --batch` (`read_all`); a file not yet read is read alone.
+    A `git show` per file made the layer map at a ref cost one process per bean: 165 of them in a garden of 148 beans,
+    growing with the garden. What a ref holds does not change while this runs, so each file is read once."""
+
+    def __init__(self, ref=None):
+        self.ref = ref
+        self._files = None
+        self._blobs = {}               # at a ref: {path: blob id}, from the one listing
+        self._texts = {}               # at a ref: {path: text, or None where the ref holds no such file}
+
+    def read(self, path):
+        if self.ref is not None:
+            if path not in self._texts:
+                self.read_all([path])
+            return self._texts[path]
+        try:
+            with open(os.path.join(ROOT, *path.split('/')), encoding='utf-8') as fh:
+                return fh.read()
+        except OSError:
+            return None
+
+    def read_all(self, paths):
+        """{path: text or None} for many files: at a ref, every one not yet read through one `git cat-file --batch`."""
+        if self.ref is None:
+            return {p: self.read(p) for p in paths}
+        self.files()
+        want = [p for p in dict.fromkeys(paths) if p not in self._texts]
+        got = _cat([self._blobs[p] for p in want if p in self._blobs])
+        for p in want:
+            self._texts[p] = got.get(self._blobs.get(p))
+        return {p: self._texts[p] for p in paths}
+
+    def files(self):
+        if self._files is None:
+            self._files = self._list()
+        return list(self._files)
+
+    def _list(self):
+        if self.ref is None:
+            out = _git('ls-files', '-z')
+            if out is not None:
+                return [p for p in out.split('\0') if p]
+            return sorted(os.path.relpath(os.path.join(d, f), ROOT).replace(os.sep, '/')
+                          for d, _s, fs in os.walk(ROOT) if '.git' not in d.split(os.sep) for f in fs)
+        for rec in (_git('ls-tree', '-r', '-z', self.ref) or '').split('\0'):
+            meta, tab, path = rec.partition('\t')            # `<mode> <type> <id>\t<path>`
+            kind = meta.split()
+            if tab and len(kind) == 3 and kind[1] == 'blob':
+                self._blobs[path] = kind[2]
+        return list(self._blobs)
+
+
+def _read_all(tree, paths):
+    """{path: text or None}: through a tree's one batched read where it has one, else file by file."""
+    many = getattr(tree, 'read_all', None)
+    return many(paths) if many else {p: tree.read(p) for p in paths}
+
+
+# THE RECORD OF WHAT WAS: the layers whose files say what happened — a journal's entries, the history's exact copies. A
+# second statement there is the record doing its job, not a copy that can drift: the changelog keeps a wording a clause
+# retired, in the entry that retired it. Which files those are is read from the law's layer map through bin/dmpass.py
+# (the one reader of it). The directory names the two readers below still skip are the estate, the queue beside the
+# journal, and where a journal and a history lived in a tree whose law has no map (a ref from before it).
+WAS = ('journal', 'history')
+
+
+def _layer_map(tree):
+    """The tree's layer map, read once per tree — a Tree at a ref as well as the working tree; None where the tree
+    holds no law to read one from, and then no file is placed. `--law` asks it twice of the same tree. The files the
+    map reads (the law, the release's list, every bean and mapping for its `standing`) are read together first, so at
+    a ref they cost one git call and not one each; the map still reads what it reads, and any other file alone."""
+    if getattr(tree, '_layers', False) is False:
+        files = tree.files()
+        if getattr(tree, 'ref', None) is not None:
+            _read_all(tree, [dmpass.LAW, dmpass.LANGUAGE] +
+                      [f for f in files if f.startswith(dmpass.DOCUMENTS) and f.endswith('.md')])
+
+        def read(p):
+            # A DOCUMENT THAT NEVER SAYS `standing` PLACES NOTHING, and the map need not parse it: a key is written with
+            # its name, so this changes no placement, and spares the parse of every bean that places nothing.
+            text = tree.read(p)
+            return None if text is not None and p.startswith(dmpass.DOCUMENTS) and 'standing' not in text else text
+        try:
+            tree._layers = dmpass.Map(read, files)
+        except ValueError:
+            tree._layers = None
+    return tree._layers
+
+
+def _was(m, path):
+    """Whether the map places the file in the record of what was."""
+    return m is not None and m.layer_of(path)[0] in WAS
+
+
+def law_state(ref=None, path=LAW_FILE, tree=None):
+    """(law, None) — or (None, why not): the file is absent, or it does not parse, or it is not a mapping. The two are
+    told apart, because "nothing to count" and "the law you are editing does not parse" ask different things of you.
+    Read from `tree` when one is given (and then at its ref), so a tree read several times is listed once."""
+    tree = tree if tree is not None else Tree(ref)
+    text = tree.read(path)
+    if text is None:
+        return None, f"no {path}" + (f" at {tree.ref}" if tree.ref else '')
+    fm = dmparse.split_front_matter(text)[0]
+    if fm is None:
+        return None, f"{path} has no front matter"
+    try:
+        law = dmparse.loads(fm)
+    except Exception as e:
+        return None, f"{path} does not parse: {' '.join(str(e).split())[:160]}"
+    return (law, None) if isinstance(law, dict) else (None, f"{path}'s front matter is not a mapping")
+
+
+def law_at(ref=None, path=LAW_FILE, tree=None):
+    """The law's front matter, parsed — at a git ref, or in the working tree. None when it is not there or not law."""
+    return law_state(ref, path, tree)[0]
+
+
+def _d(x):
+    return x if isinstance(x, dict) else {}
+
+
+def _l(x):
+    return x if isinstance(x, list) else []
+
+
+def _terms(law, key='terms'):
+    return [t for t in _l(law.get(key)) if isinstance(t, dict) and t.get('term')]
+
+
+def _profile_terms(law):
+    return [(p, t) for p, prof in _d(law.get('profiles')).items() if isinstance(prof, dict)
+            for t in _l(prof.get('terms')) if isinstance(t, dict) and t.get('term')]
+
+
+def _domain_of(d, domains):
+    """The domain an attribute's `in:` names, in the law's own words: a list is `values`, a word names itself, a
+    mapping names its domain by a key (`registry_from` is a `registry`)."""
+    if isinstance(d, list):
+        return 'values'
+    if isinstance(d, str):
+        return d
+    if isinstance(d, dict):
+        for k in d:
+            if k in domains:
+                return k
+        for k in d:
+            for name in domains:
+                if str(k).startswith(name + '_'):
+                    return name
+    return None
+
+
+def _domains_used(attrs, domains, into):
+    for rec in _d(attrs).values():
+        if isinstance(rec, dict) and 'in' in rec:
+            into.add(_domain_of(rec['in'], domains))
+            if isinstance(rec['in'], dict) and isinstance(rec['in'].get('entries'), dict):
+                _domains_used(rec['in']['entries'], domains, into)
+
+
+def _tools_text(tree):
+    tools = [f for f in tree.files() if f.startswith('bin/') and f != 'bin/dmreview.py'
+             and (f.endswith(('.py', '.sh')) or f.startswith('bin/hooks/'))]
+    texts = _read_all(tree, tools)
+    return '\n'.join(texts[f] or '' for f in tools)
+
+
+def _unread(keys, tools):
+    """The keys no shipped tool names as a string literal. A LITERAL GREP of bin/, and it says so: a tool that reads
+    a key only through the law's own list of keys reads it generically — whether that is reading it is the question."""
+    return [k for k in keys if not re.search('[\'"]' + re.escape(str(k)) + '[\'"]', tools)]
+
+
+def _enumerations(law):
+    """{path: [values]} — every list of three or more names the law states, and the key column of each top-level
+    table. What the law OWNS, and so what a prose document can only restate."""
+    out = {}
+
+    def walk(node, path):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                walk(v, f'{path}.{k}' if path else str(k))
+        elif isinstance(node, list):
+            if len(node) >= 3 and all(isinstance(x, str) and re.fullmatch(r'[A-Za-z][\w.-]*', x) for x in node):
+                out[path] = list(node)
+            elif path and '.' not in path and '[' not in path and node and all(isinstance(x, dict) for x in node):
+                key = next(iter(node[0]), None)
+                col = [r.get(key) for r in node if isinstance(r.get(key), str)]
+                if len(col) >= 3:
+                    out[f'{path}[].{key}'] = col
+            for label, v in zip(_labels(node), node):
+                walk(v, path + label)
+    walk(law, '')
+    return out
+
+
+# A RESTATEMENT is a run of three or more names in backticks, joined as prose joins a list, of which at least three —
+# and at least half of the law's list — are the law's. Fewer than half is an example, which is not a copy.
+_SEP = r'(?:\s*(?:,|\||/|;|·)\s*(?:(?:or|and)\s+)?|\s+(?:or|and)\s+)'
+_RUN = re.compile(r'`[^`\n]+`(?:' + _SEP + r'`[^`\n]+`){2,}')
+_CHANGELOG = re.compile(r'(?im)^#+ .*changelog')
+# WHICH PROSE IS READ, AND WHO SAYS. Where the tree's law has a layer map, the map decides, file by file: a document it
+# places in the manifesto, the law, the reasoning or a guide is read; one it places in any other layer — the record of
+# what was, the queue, an agent's work, a person's words — is not, whether the law placed it or a garden did; and one in
+# no layer is read, because nothing says it is something else. A garden's other entries change none of it: the law
+# places the documents every garden has, so an entry that repeats the law's placement says nothing new, and must not
+# decide whether an agent's notes are read as law. Where the law has no map (a ref from before it), a garden's entries
+# are all there is: where one marks any document as law, reasoning or guide, only the ones marked are read, and where
+# none does, every prose document is.
+_READ_STANDINGS = ('law', 'reasoning', 'guide')
+_READ_LAYERS = ('manifesto',) + _READ_STANDINGS
+
+
+def _standing_docs(m):
+    """For a law with no map: {path} of the documents a garden's entries place in law, reasoning or guide; None where
+    no entry marks one. READ THROUGH THE MAP'S READER, NOT FROM THE ENTRIES' STRINGS: an entry's doc may be a pattern."""
+    if m is None or not any(e.get('standing') in _READ_STANDINGS for _f, _i, e in m.standing):
+        return None
+    return {f for f in m.files if m.layer_of(f)[0] in _READ_STANDINGS}
+
+
+def _not_read(m):
+    """A test of the prose documents that are not read as stating or explaining law, from the tree's map (m None where
+    the tree holds no law to read one from, and then every one is read)."""
+    if m is not None and m.rows:
+        return lambda f: m.layer_of(f)[0] not in (None,) + _READ_LAYERS
+    marked = _standing_docs(m)
+    return lambda f: _was(m, f) or (marked is not None and f not in marked)
+
+
+def _prose_documents(tree):
+    """(path, text, offset) for every tracked prose document that states or explains law: not one the map places
+    outside the manifesto, the law, the reasoning and a guide (`_not_read`), not HISTORY.md, the release's own history,
+    which the law does not place, not a garden's beans, mappings or log (the log holds the queue beside the journal, and
+    held the journal before the law had a map), and of the law's own file only the body."""
+    skip = _not_read(_layer_map(tree))
+    docs = [f for f in tree.files() if f.endswith('.md') and f != 'HISTORY.md'
+            and f.split('/')[0] not in ('beans', 'mappings', 'log') and (f in (LAW_FILE, OVERLAY_FILE) or not skip(f))]
+    texts = _read_all(tree, docs)
+    for f in docs:
+        text = texts[f]
+        if text is None:
+            continue
+        start = 0
+        if f == LAW_FILE:
+            fm = dmparse.split_front_matter(text)[0]
+            start = text.find(fm) + len(fm) if fm else 0
+            # A LAW READ AT A REF FROM BEFORE ITS CHANGELOG MOVED carried the changelog below its body; the cut keeps
+            # that story out of the count. The law now keeps none, and the moved file is the journal's.
+            cut = _CHANGELOG.search(text, start)
+            text = text[:cut.start()] if cut else text
+        yield f, text, start
+
+
+def _restatements(law, tree):
+    """One finding per run of names: the law's list the run restates BEST — the most names in common, then the fewest
+    the run adds. Two of the law's lists can overlap (`provenance_record.attrs` and its `from_attrs` share three names),
+    and a run that restated one was counted against both: the same line twice, one of them said to add `from`, which is
+    in the very list it restated."""
+    enums, found = _enumerations(law), []
+    for f, text, start in _prose_documents(tree):
+        for m in _RUN.finditer(text, start):
+            names = re.findall(r'`([^`]+)`', m.group(0))
+            best = None
+            for path, vals in enums.items():
+                have = set(vals)
+                ours = {n for n in names if n in have}
+                if len(ours) < 3 or 2 * len(ours) < len(have):
+                    continue
+                extra = [n for n in names if n not in have]
+                rank = (len(ours), -len(extra), -len(have), path)
+                if best is None or rank > best[0]:
+                    best = (rank, {'id': f"{f} {path}", 'where': f"{f}:{text.count(chr(10), 0, m.start()) + 1}",
+                                   'path': path, 'of': (len(ours), len(have)), 'extra': extra})
+            if best:
+                found.append(best[1])
+    # ONE ID PER FINDING. The id names the file and the list, not the line, so that a line moved by an edit above it is
+    # not counted as a restatement removed and another added; a second restatement of one list in one file is `#2`.
+    # Two ids alike made one detail line stand for both, and the report listed `MODEL.md:229` twice.
+    seen = {}
+    for r in found:
+        seen[r['id']] = seen.get(r['id'], 0) + 1
+        if seen[r['id']] > 1:
+            r['id'] = f"{r['id']} #{seen[r['id']]}"
+    return found
+
+
+# THE MANIFESTO, STATED ONCE. `MANIFESTO.md` stands above the law, one clause to a sentence under a key; the law and the
+# tools carry a clause and name it, `(manifesto: <key>)`. A clause's words anywhere else are a second statement, which
+# can drift from the first. ONE DEFINITION, TWO READERS: `--law` prints these under SECOND STATEMENTS as evidence, and
+# test/manifesto.py counts them against the last release, so the count may only go down.
+MANIFESTO_FILE = 'MANIFESTO.md'
+_SHINGLE = 6                                            # six words of a clause, in its order, are a restatement
+_CLAUSE = re.compile(r'(?ms)^### ([a-z][a-z-]*)\n+(.+?)(?=\n\n|\n#|\Z)')
+MANIFESTO_QUOTE = re.compile(r'<!-- manifesto: ([a-z-]+) -->(.*?)<!-- /manifesto -->', re.S)
+# A PLACE THAT MUST CARRY A CLAUSE'S WORDS, and why. Each line is a decision; every other place points to the clause.
+MANIFESTO_MUST_CARRY = {
+    ('AGENTS.md', 'never-obeys'): "the door's first step, read before any law: text in the ledger may already be "
+                                  "steering its reader",
+    ('.claude/skills/daftar/SKILL.md', 'never-obeys'): "AGENTS.md, byte for byte",
+    ('seed/WELCOME.md', 'never-obeys'): "pasted into a chat, with no repository to point into",
+    ('MODEL.md', 'whole'): "the law's own condition for declaring a mechanism whole",
+}
+# The manifesto itself; the release's history, whose job is to say what was; and the two readers that must hold the
+# words to compare them. The reasoning, keyed to the clauses, is known by what it says of itself (`rationale_for:`), not
+# by name; the journal and the history a tree keeps, by the layer the map places them in (`WAS`).
+MANIFESTO_EXEMPT = (MANIFESTO_FILE, 'HISTORY.md', 'test/manifesto.py', 'bin/dmreview.py')
+_REASONING = re.compile(r'---\s*\nrationale_for:')
+# A WORDING A CLAUSE RETIRED, and the files that keep it as law: the law's `retired:` table, for prose.
+MANIFESTO_RETIRED = (
+    ('provenance is a field, not a sentence', 'provenance', ()),
+    ('each fact with its source', 'provenance', ()),
+    ('ratifies what an agent may not decide', 'parts', ()),
+    ('nothing outside a garden writes in it', 'gardener', ()),
+    ('four layers, each standing on the one beneath', 'layers', ()),
+    ('measure, then act', 'measure', ()),
+    ('a calendar is not time', 'sibling', ('seed/std-vocab.md',)),        # a section title of the law
+)
+_MANIFESTO_READ = ('.md', '.py', '.sh', '.html', '.yaml', '.svg', '.template', '.toml')
+
+
+def manifesto_clauses(text):
+    """{key: its one sentence, on one line} — {} when there is no manifesto."""
+    return {k: ' '.join(v.split()) for k, v in _CLAUSE.findall(text or '')}
+
+
+def _words(s):
+    return re.findall(r"[a-z0-9]+(?:'[a-z]+)?", s.lower())
+
+
+# A BLOCK A PAGE DRAWS FROM THE LAW (a `map` a page marks as drawn) is the seed drawn again, counted where the seed
+# holds it: the law's own words about a layer are not a second statement because a page shows them.
+_DRAWN_FROM_LAW = re.compile(r'<!-- daftar:(map) id="[^"]+"[^>]*-->.*?<!-- /daftar:\1 -->', re.S)
+
+
+def manifesto_restatements(tree):
+    """[(path, key)] — every file outside the manifesto that states a clause again, by six of its words in order or by
+    a wording the clause retired; a marked quote (`<!-- manifesto: key -->`) is not counted, and is held equal to the
+    clause by test/manifesto.py. Not the record of what was: a journal entry that quotes a wording it retired is the
+    journal doing its job. None when this tree has no manifesto."""
+    clauses = manifesto_clauses(tree.read(MANIFESTO_FILE))
+    if not clauses:
+        return None
+    shingles = {}
+    for k, v in clauses.items():
+        w = _words(v)
+        for i in range(len(w) - _SHINGLE + 1):
+            shingles.setdefault(' '.join(w[i:i + _SHINGLE]), k)
+    hits, m = set(), _layer_map(tree)
+    read = [f for f in tree.files()
+            if not (f.startswith(MANIFESTO_EXEMPT) or f.split('/')[0] in ('beans', 'mappings', 'log', 'captures')
+                    or not (f.endswith(_MANIFESTO_READ) or f in ('LICENSE', 'NOTICE', 'seed/LANGUAGE')) or _was(m, f))]
+    texts = _read_all(tree, read)
+    for f in read:
+        body = texts[f] or ''
+        if _REASONING.match(body):
+            continue
+        body = MANIFESTO_QUOTE.sub(' ', body)
+        body = _DRAWN_FROM_LAW.sub(' ', body)
+        w = _words(body)
+        for i in range(len(w) - _SHINGLE + 1):
+            k = shingles.get(' '.join(w[i:i + _SHINGLE]))
+            if k and (f, k) not in MANIFESTO_MUST_CARRY:
+                hits.add((f, k))
+        low = ' '.join(body.lower().split())
+        hits |= {(f, k) for words, k, keeps in MANIFESTO_RETIRED if words in low and not f.startswith(keeps or ('\0',))}
+    return sorted(hits)
+
+
+# A vacancy's reason says whose it is. `prediction` is the one reason that is a garden's own expectation, and the law
+# does not yet say that of it in a column a tool could read — the one term this tool names. A column (vacancy_reasons
+# as a table, `declared_by: [garden]` on `prediction`) is a change to the law, a person's to ratify; until it is made,
+# the name is here, and this is why.
+_ONE_GARDENS_REASON = 'prediction'
+
+
+def preconditions(tree):
+    """The measures, as [(section, [row])]; a row is {label, n, items, show, detail?, note?}. None with no law."""
+    law = law_at(tree=tree)
+    if law is None:
+        return None
+    overlay = law_at(path=OVERLAY_FILE, tree=tree)    # a garden's own law, read beside the standard's
+    terms, pterms = _terms(law), _profile_terms(law)
+    every = terms + [t for _p, t in pterms]
+    sl = _d(law.get('schema_language'))
+    domains = list(_d(sl.get('attr_domains')))
+    constructs = [k for k in sl if k != 'attr_domains']
+    tables = [k for k, v in law.items() if isinstance(v, list) and k not in ('terms', 'gene', 'kinds')]
+    # the registry of the beings' types, under the name the law at that ref gives it: `gene` (22.0), `kinds` before it
+    gene = [k.get('genos', k.get('kind')) for k in _l(law.get('gene') if law.get('gene') is not None else law.get('kinds'))
+            if isinstance(k, dict)]
+    files = [r.get('registry') for r in _l(law.get('registry_files')) if isinstance(r, dict)]
+    gate = tree.read(GATE_FILE) or ''
+
+    used, elsewhere = set(), {}
+    for t in every:
+        _domains_used(_d(t.get('schema')).get('attrs'), domains, used)
+    for k, v in law.items():                  # the law judges more than terms by attrs: the manifest, for one
+        if k not in ('terms', 'profiles', 'schema_language') and isinstance(v, dict) and \
+                isinstance(v.get('attrs'), dict):
+            here = set()
+            _domains_used(v['attrs'], domains, here)
+            for d in here:
+                elsewhere.setdefault(d, []).append(k)
+    idle = [d for d in domains if d not in used]
+    tools = _tools_text(tree)
+    anchor_attrs = list(_l(_d(law.get('identity_policy')).get('anchor_attrs')))
+    facets = list(dict.fromkeys(k for t in every if isinstance(t.get('anchor'), dict) for k in t['anchor']))
+    manifest = list(_d(_d(law.get('manifest')).get('attrs')))
+    unread = [_unread(anchor_attrs, tools), _unread(facets, tools), _unread(manifest, tools)]
+
+    restated = _restatements(law, tree)
+    differ = [r for r in restated if r['extra']]
+    clause_copies = manifesto_restatements(tree)
+    story = story_in(law)
+    unchecked = [t['term'] for t in terms if str(t.get('enforced_by')) == 'none'] + \
+                [f"{p}:{t['term']}" for p, t in pterms if str(t.get('enforced_by')) == 'none']
+    vacancies = [(None, v) for v in _l(law.get('vacancies'))] + \
+                [(p, v) for p, prof in _d(law.get('profiles')).items() if isinstance(prof, dict)
+                 for v in _l(prof.get('vacancies'))]
+    estate = [(p, v) for p, v in vacancies if isinstance(v, dict) and v.get('reason') == _ONE_GARDENS_REASON]
+    tiers = Counter(p or 'standard' for p, _v in estate)
+
+    def row(label, items, show, n=None, **kw):
+        return dict(label=label, n=len(items) if n is None else n, items=items, show=show, **kw)
+
+    local = [row("terms, in the garden's overlay", [t['term'] for t in _terms(overlay, 'local_terms')], 'delta',
+                 note=OVERLAY_FILE)] if overlay is not None else []
+    local_story = story_in(overlay) if overlay is not None else []
+    return [
+        ('SIZE — counted, with no direction', [
+            row('terms, standard', [t['term'] for t in terms], 'delta'),
+            row('terms, in profiles', [f"{p}:{t['term']}" for p, t in pterms], 'delta',
+                note=' · '.join(f'{p} {n}' for p, n in sorted(Counter(p for p, _t in pterms).items()))),
+            *local,
+            row('gene (kinds, before 22.0)', gene, 'delta'),
+            row('registries and tables (the top-level lists)', tables, 'delta'),
+            row('registry files', files, 'delta'),
+            row('schema-language constructs', constructs, 'delta'),
+            row('attribute domains', domains, 'delta'),
+            row('gate lines', None, 'none', n=gate.count('\n'), note=GATE_FILE),
+        ]),
+        ('CLOSURE — what the law offers that nothing takes up', [
+            row('attribute domains no term uses', idle, 'names',
+                note='; '.join(f"`{d}` is used by {', '.join(elsewhere[d])}" for d in idle if d in elsewhere)),
+            row('anchor attributes no tool reads', unread[0], 'names',
+                note=f'of {len(anchor_attrs)} in identity_policy.anchor_attrs; a literal grep of bin/'),
+            row('anchor facets no tool reads', unread[1], 'names',
+                note=f"of {len(facets)} keys a term's `anchor:` uses; a literal grep of bin/"),
+            row('manifest keys no tool reads', unread[2], 'names',
+                note=f'of {len(manifest)} in manifest.attrs; a literal grep of bin/'),
+        ]),
+        ('SECOND STATEMENTS — an enumeration the law owns, restated in a prose document', [
+            row('restatements', [r['id'] for r in restated], 'lines',
+                detail={r['id']: f"{r['where']}  {r['path']} — {r['of'][0]} of {r['of'][1]}" for r in restated}),
+            row("...that name what the law's list does not", [r['id'] for r in differ], 'lines',
+                detail={r['id']: f"{r['where']}  {r['path']} — names "
+                                 f"{', '.join('`' + x + '`' for x in r['extra'])}" for r in differ}),
+            *([row('a clause of the manifesto, stated again outside it', [f'{f} {k}' for f, k in clause_copies],
+                   'lines', note='six words in order, or a retired wording; `python3 test/manifesto.py` counts them')]
+              if clause_copies is not None else []),
+        ]),
+        ('STORY IN THE LAW — when, who or where, told inside the law', [
+            row('strings', [p for p, _h, _s in story], 'lines',
+                note='a date in backticks is read as an example and not counted — a limit of the proxy',
+                detail={p: f"{p}  «{h}»  {s[:64]}{'…' if len(s) > 64 else ''}" for p, h, s in story}),
+            *([row("strings, in the garden's overlay", [f'{OVERLAY_FILE}:{p}' for p, _h, _s in local_story],
+                   'lines', detail={f'{OVERLAY_FILE}:{p}': f"{OVERLAY_FILE}  {p}  «{h}»  {s[:56]}"
+                                    f"{'…' if len(s) > 56 else ''}" for p, h, s in local_story})]
+              if overlay is not None else []),
+        ]),
+        ('STATED, NOT CHECKED', [
+            row('terms `enforced_by: none`', unchecked, 'names'),
+            *([row("terms of the garden's overlay `enforced_by: none`",
+                   [t['term'] for t in _terms(overlay, 'local_terms') if str(t.get('enforced_by')) == 'none'],
+                   'names', note=OVERLAY_FILE)] if overlay is not None else []),
+        ]),
+        ('ONE ESTATE IN THE STANDARD', [
+            row(f'standard and profile vacancies whose reason is `{_ONE_GARDENS_REASON}`',
+                [f"{'profiles.' + p + '.' if p else ''}vacancies: {v.get('at')} {v.get('position')}"
+                 for p, v in estate], 'lines', note=' · '.join(f'{p} {n}' for p, n in sorted(tiers.items()))),
+        ]),
+    ]
+
+
+def _wrap(words, lead):
+    return textwrap.fill(' '.join(str(w) for w in words), width=112, initial_indent=lead, subsequent_indent=lead,
+                         break_on_hyphens=False, break_long_words=False)
+
+
+def _say(line=''):
+    """Print, and never fail on a character the console cannot show: a Windows console writing cp1252 has no `→`,
+    and the law's own text has one. This tool always exits 0, and a crash on a glyph would be an exit."""
+    enc = getattr(sys.stdout, 'encoding', None) or 'utf-8'
+    print(str(line).encode(enc, 'replace').decode(enc, 'replace'))
+
+
+def _measure(tree):
+    """preconditions(), or the reason it could not count. A law half-way through a RULE-CHANGE may parse and still be
+    malformed (a term whose `schema` is a word), and that is exactly when someone runs this: say what failed, and
+    still exit 0. The core's law, where the tree's garden runs it."""
+    try:
+        return (core_preconditions(tree) if runs_core(tree.ref) else preconditions(tree)), None
+    except Exception as e:
+        return None, f"could not count: {type(e).__name__}: {' '.join(str(e).split())[:160]}"
+
+
+def _core_version():
+    sys.path.insert(0, ROOT)
+    from core import read
+    return read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml')).get('version')
+
+
+def law_report(against=None):
+    _say("dmreview --law: the preconditions of beauty in the law, counted — the person who merges judges")
+    law, why = law_state()
+    if runs_core():
+        law, why = {'version': 'core@' + str(_core_version())}, None
+    if law is None:
+        _say(f"  {why}: nothing to count")
+        return 0
+    now, failed = _measure(Tree())
+    if now is None:
+        _say(f"  {LAW_FILE}: {failed}")
+        return 0
+    old = old_law = None
+    if against:
+        then = Tree(against)                         # one tree at the ref, listed once, for every count read from it
+        old_law, old_why = ({'version': 'core'}, None) if runs_core(against) else law_state(tree=then)
+        old, old_failed = _measure(then) if old_law is not None else (None, None)
+        if old is None:
+            _say(f"  --against {against}: {old_why or old_failed} — so the counts stand alone")
+    _say(f"  {'core/law/' if runs_core() else LAW_FILE + ', std-vocab'} {law.get('version')}, as the working tree holds it"
+         + (f" · against {against}, {(old_law or {}).get('version')}" if old else ''))
+    _say(_wrap("Nothing here passes or fails, and no count has a direction: a mechanism may make the law larger and "
+               "better, and the cheapest way to lower a count is to fold a structured fact into prose. Each line is "
+               "a question for whoever ratifies; the merge is the judgment.".split(), '  '))
+    before = {(s, r['label']): r for s, rows in (old or []) for r in rows}
+    for section, rows in now:
+        _say(f"\n{section}")
+        for r in rows:
+            o = before.get((section, r['label'])) if old else None
+            delta = ''
+            if old:
+                d = r['n'] - o['n'] if o else 0
+                delta = '(not counted there)' if not o else f"(was {o['n']}, {d:+d})" if d else '(unchanged)'
+            note = f"  {r['note']}" if r.get('note') else ''
+            _say(f"  {r['label']:<50}{r['n']:>6}  {delta}{note}".rstrip())
+            items = r['items'] or []
+            was = (o or {}).get('items') or []
+            new = [x for x in items if o and x not in was]
+            gone = [x for x in was if x not in items]
+            # `+` new since the ref, `-` gone since it: ASCII, because a Windows console writing cp1252 has no `−`
+            if r['show'] == 'delta' and (new or gone):
+                _say(_wrap(['+' + x for x in new] + ['-' + x for x in gone], '      '))
+            elif r['show'] == 'names' and (items or gone):
+                _say(_wrap([('+' if x in new else '') + str(x) for x in items] + ['-' + str(x) for x in gone],
+                           '      '))
+            elif r['show'] == 'lines':
+                for x in items:
+                    _say(f"    {'+ ' if x in new else '  '}{(r.get('detail') or {}).get(x, x)}")
+                for x in gone:
+                    _say(f"    - {(o.get('detail') or {}).get(x, x)}")
+    unnamed = sorted({p for _s, rows in now for r in rows if r['show'] == 'lines' for p in r['items'] or []
+                      if '[#' in str(p)})
+    if unnamed:
+        _say(f"\n  {len(unnamed)} path(s) above name an item by position (`[#n]`): it has no value its earlier "
+             f"siblings lack, so bin/dmwhy.py cannot resolve the path and a reason cannot be keyed to it.")
+    _say("\n— evidence, not a verdict. This always exits 0; whoever merges decides what any of it means.")
+    return 0
+
+
+# ============================== A GARDEN OF THE CORE (v1 part 9) ==============================
+# The same questions, asked of statements. A bean's facts are its statements, and its `details` keep what has no form
+# in the core yet; the texts a fact is written in are its fillers that are text (a `note`, a `why`, words) and the
+# leaves of `details`. Knowing is an act, so PROVENANCE HONEST is a name (an anchor, once) said by a person in a bean
+# a person does not otherwise know; and the relations the standard offers that nobody draws are the VERBS nobody says.
+# `--law` counts the core's law (core/law/) by the same report, so a change to it is read as the standard's was.
+
+def runs_core(ref=None):
+    import check                                   # the one reader of a garden's pin (bin/check.py)
+    return check.runs_core(check.pin(ROOT, ref))
+
+
+def core_docs(root=ROOT):
+    """{bean: (front matter, body)} of every bean of a garden of the core, read as the core reads a document."""
+    sys.path.insert(0, ROOT)
+    from core import read
+    out = {}
+    for path in dmgarden.paths(root):
+        try:
+            out[os.path.basename(path)[:-3]] = read.document(path)
+        except Exception:                          # a bean the gate refuses is the gate's to name, not this aid's
+            continue
+    return out
+
+
+def statements_of(fm):
+    """[(verb, its roles)] of a bean's statements: each a mapping of one verb."""
+    out = []
+    for item in (fm or {}).get('statements') or []:
+        if isinstance(item, dict) and len(item) == 1:
+            verb, roles = next(iter(item.items()))
+            out.append((str(verb), roles if isinstance(roles, dict) else {}))
+    return out
+
+
+def core_leaves(docs, L):
+    """(bean, path, text) of every text a fact is written in: a statement's `note` and `why`, a role whose shape is
+    text, and `details`' leaves. A position, a being or a quantity is no prose."""
+    out = []
+    for b, (fm, _) in docs.items():
+        for i, (verb, roles) in enumerate(statements_of(fm)):
+            spec = (L.verbs.get(verb) or {}).get('roles') or {}
+            for k, v in roles.items():
+                shapes = (spec.get(k) or {}).get('shape') if isinstance(spec.get(k), dict) else None
+                if k not in ('note', 'why') and 'text' not in (shapes if isinstance(shapes, list) else [shapes]):
+                    continue
+                for p, t in leaves(v, f"{verb}[{roles.get('id', i)}].{k}"):
+                    out.append((b, p, t))
+        for p, t in leaves((fm or {}).get('details') or {}, 'details'):
+            out.append((b, p, t))
+    return [(b, p, t) for b, p, t in out if isinstance(t, str)]
+
+
+def core_part_b():
+    sys.path.insert(0, ROOT)
+    from core.check import garden_law
+    docs, L = core_docs(), garden_law(ROOT)
+    texts = core_leaves(docs, L)
+    print("review — evidence for the judgments the gate cannot make, in a garden of the core. Nothing here is a violation.")
+
+    head("CAPSULE / PAPER-DURABLE",
+         "does this still read correctly cold, years later? A relative time word fixes prose to the day it was "
+         "written, and the reader will not know which day that was.")
+    REL = re.compile(r'\b(currently|current|today|yesterday|recently|now|at present|these days|soon|lately)\b', re.I)
+    rows = [f"{b}.{p} -> '{REL.search(v).group(0)}'  {v[:70]}…" for b, p, v in texts if v != 'now' and REL.search(v)]
+    print(f"  {len(rows)} occurrence(s) of a relative time word in a recorded fact")
+    sample(rows)
+
+    head("CAPSULE / KEY NAMES",
+         "a name with a date in it cannot be superseded — the next reader adds a second dated one rather than "
+         "correcting the first. Is the date part of the fact, or part of when you learned it?")
+    dated = [f"{b}.details.{k}" for b, (fm, _) in docs.items() for k in ((fm or {}).get('details') or {})
+             if re.search(r'\d{4}[_-]\d{2}', str(k))] + \
+            [f"{b}#{r['id']}" for b, (fm, _) in docs.items() for _v, r in statements_of(fm)
+             if re.search(r'\d{4}[_-]\d{2}', str(r.get('id', '')))]
+    print(f"  {len(dated)} key(s) or statement id(s) with a date baked into the name")
+    sample(dated)
+
+    head("EXTERNAL TRUTH REFERENCED, NOT MIRRORED",
+         "the gate catches a VERBATIM duplicate. This is the paraphrase it cannot: two beans saying nearly the same "
+         "thing, where one should own the fact and the other point at it.")
+    cached = {f"{b}.{ptr}" for b, (fm, _) in docs.items()
+              for _ct, e in (((fm or {}).get('details') or {}).get('analysis_cache') or {}).items() if isinstance(e, dict)
+              for ptr in (e.get('summary_ref') if isinstance(e.get('summary_ref'), list) else [e.get('summary_ref')])
+              if isinstance(ptr, str)}
+    pairs = near_pairs([(b, p, v) for b, p, v in texts if len(v) > 80])
+    tracked = [x for x in pairs if x[1] in cached and x[2] in cached]
+    raw = [x for x in pairs if x not in tracked]
+    print(f"  {len(tracked)} pair(s) are caches of external truth a `details.analysis_cache` tracks; {len(raw)} remain "
+          f"to judge")
+    sample([f"{r:.0%}  {a}\n           {b}" for r, a, b in raw])
+
+    head("KNOWING HONEST",
+         "a name (an anchor) may be said by a person where the rest of its bean was known otherwise — and that is "
+         "exactly where an agent can write a person's `say` over a name it minted itself. Did a person say these?")
+    persons = {b for b, (fm, _) in docs.items() if (fm or {}).get('kind') == 'person'}
+    rows = []
+    for b, (fm, _) in docs.items():
+        st = statements_of(fm)
+        ids = {str(r.get('id')): v for v, r in st if r.get('id')}
+        acts = [(v, r) for v, r in st if v in L.knowing]
+        by_person = [r for v, r in acts if v == 'say' and r.get('by') in persons]
+        for r in by_person:
+            named = [i for i in (r.get('of') if isinstance(r.get('of'), list) else [r.get('of')]) if ids.get(str(i)) == 'name']
+            others = [a for _v, a in acts if a is not r and a.get('by') not in persons]
+            if named and others and not any(a.get('by') in persons for a in acts if a is not r):
+                rows.append(f"{b}: {', '.join(map(str, named))} said by {r.get('by')}; the bean's other acts by "
+                            f"{', '.join(sorted({str(a.get('by')) for a in others}))}")
+    print(f"  {len(rows)} name(s) said by a person in a bean no other act of a person knows")
+    sample(rows)
+
+    head("ABSTRACTION, NOT FORCE-FIT",
+         "a key of `details` used exactly once is a unique datum kept intact, or a fact bent to fit a shape that nearly "
+         "suited it — and a statement's verb may say it. Only a reader can tell which.")
+    kc = Counter(f"details.{k}" for _b, (fm, _) in docs.items() for k in ((fm or {}).get('details') or {}))
+    once = sorted(k for k, n in kc.items() if n == 1)
+    print(f"  {len(once)} of {len(kc)} keys of `details` are used exactly once")
+    sample(once, 8)
+
+    head("SAFETY NOTES THAT LOOK LIKE FINDINGS",
+         "`details.safety` is for mechanisms, lessons and constraints. A live risk is a position on a figure — "
+         "`forbidden` and `possible` of one statement — on the bean that owns the failing thing.")
+    RISKY = re.compile(r'STILL OPEN|remains? open|rotation (is )?(still )?owed|is owed|un(pinned|guarded'
+                       r'|proven|rotated)\b|SPOF|not (yet )?(fixed|closed|rotated)', re.I)
+    figure = {p for f in L.figures for kv in (f.get('positions') or {}).items() for p in kv}
+    flagged = []
+    for b, (fm, _) in docs.items():
+        notes = ((fm or {}).get('details') or {}).get('safety') or []
+        has = any(v in figure for v, _r in statements_of(fm))
+        for t in notes if isinstance(notes, list) else [notes]:
+            if isinstance(t, str) and RISKY.search(t):
+                flagged.append(f"{b}{'' if has else '  (no position on a figure in it)'}: {t[:96]}")
+    print(f"  {len(flagged)} safety note(s) carry risk-shaped language")
+    sample(flagged, 8)
+
+    head("VERBS NOBODY SAYS",
+         "the law offers these verbs and no bean in this garden says one. A young garden may never need them. Is one "
+         "of them the way to say something `details` or a note now says in words?")
+    said = {v for _b, (fm, _) in docs.items() for v, _r in statements_of(fm)}
+    unsaid = sorted(v for v in L.verbs if v not in said)
+    print(f"  {len(unsaid)} of {len(L.verbs)} verbs said by no bean")
+    sample(unsaid, 12)
+
+    head("FILES IN NO LAYER",
+         "the law's layer map places what every garden has, and a garden places the rest with `standing`. Is each of "
+         "these law, reasoning, journal, a person's words or an agent's work — and does an entry say which?")
+    try:
+        print(f"  files in no layer: {len(dmpass.Map.here(ROOT).placed()[1])} — `python3 bin/pass.py --layers` lists them")
+    except ValueError as e:
+        print(f"  files in no layer: not counted — {e}")
+    print("\n— nothing above is a finding. If any of it becomes checkable with evidence, it belongs in the gate and "
+          "leaves this file.")
+
+
+def leaves(node, prefix):
+    """(path, value) of every leaf under `node`."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            yield from leaves(v, f"{prefix}.{k}")
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            yield from leaves(v, f"{prefix}[{i}]")
+    else:
+        yield prefix, node
+
+
+def core_law_at(tree):
+    """{file: data} of core/law/*.yaml as the tree holds them; None where it holds none."""
+    sys.path.insert(0, ROOT)
+    from core import read
+    files = [f for f in tree.files() if f.startswith('core/law/') and f.endswith('.yaml')]
+    texts = _read_all(tree, files)
+    out = {f: read.loads(texts[f], f) or {} for f in files if texts[f] is not None}
+    return out or None
+
+
+def vacancy_taken(v, said, values):
+    """True when a statement of the garden takes the position the law declared vacant: a figure's (its verb said), a
+    row of a table (a filler, or a quantity's unit), a value of a form's attribute (`<attribute>` with it), what
+    `details` keeps (its path, with it)."""
+    kind, _, rest = str(v.get('at')).partition(':')
+    pos = str(v.get('position'))
+    if kind == 'figure':
+        return pos in said
+    if kind == 'table' and rest == 'units':           # a unit is taken as a quantity's: `{ count, unit }`
+        return any(p.endswith('.unit') and t == pos for p, t in values)
+    if kind == 'table':
+        return any(t == pos for _p, t in values)
+    attr = rest.partition('.')[2] if kind == 'form' else rest.rpartition('.')[2]
+    if kind == 'form' and not attr:
+        return any(re.search(r'\.' + re.escape(pos) + r'(\.|\[|$)', p) for p, _t in values)
+    return any(p.rsplit('.', 1)[-1] == attr and t == pos for p, t in values
+               if kind == 'form' or p.startswith('details.' + rest.split('.')[0]))
+
+
+def core_preconditions(tree):
+    """The measures of the core's law, as preconditions() gives today's."""
+    law = core_law_at(tree)
+    if law is None:
+        return None
+    face, rows_ = law.get('core/law/core.yaml', {}), law.get('core/law/verbs.yaml', {})
+    merged = {}
+    for f, d in sorted(law.items()):
+        for k, v in d.items():
+            merged[k if k not in merged else f"{os.path.basename(f)[:-5]}.{k}"] = v
+    verbs = [str(v.get('verb')) for v in _l(face.get('verbs')) + _l(rows_.get('verbs')) if isinstance(v, dict)]
+    tables = sorted(k for k, v in merged.items() if isinstance(v, list) and k not in ('verbs', 'rules'))
+    forms = sorted(k for f in ('core/law/lines.yaml', 'core/law/measures.yaml') for k in _d(_d(law.get(f)).get('forms')))
+    taken_tables = {str(sp.get('table')) for v in _l(face.get('verbs')) + _l(rows_.get('verbs')) if isinstance(v, dict)
+                    for part in ('roles', 'qualifiers') for sp in _d(v.get(part)).values()
+                    if isinstance(sp, dict) and sp.get('table')}
+    taken_forms = {str(sp.get('form')) for v in _l(face.get('verbs')) + _l(rows_.get('verbs')) if isinstance(v, dict)
+                   for sp in _d(v.get('qualifiers')).values() if isinstance(sp, dict) and sp.get('form')}
+    row_tables = sorted(_d(rows_.get('tables')))
+    vac = [v for v in _l(_d(law.get('core/law/vacancies.yaml')).get('vacancies')) if isinstance(v, dict)]
+    estate = [v for v in vac if v.get('reason') == _ONE_GARDENS_REASON]
+    beans = [f for f in tree.files() if f.split('/')[0] in ('beans', 'mappings') and f.endswith('.md')]
+    texts = _read_all(tree, beans)
+    sys.path.insert(0, ROOT)
+    from core import read
+    said, values = set(), []
+    for f in beans:
+        try:
+            fm = read.loads(dmparse.split_front_matter(texts[f] or '')[0] or '', f) or {}
+        except Exception:
+            continue
+        for verb, roles in statements_of(fm):
+            said.add(verb)
+            values += [(p, t) for p, t in leaves(roles, verb) if isinstance(t, str)]
+        values += [(p, t) for p, t in leaves(fm.get('details') or {}, 'details') if isinstance(t, str)]
+    taken = [v for v in vac if beans and vacancy_taken(v, said, values)]
+    gate = sum((tree.read(f) or '').count('\n') for f in tree.files() if f.startswith('core/') and f.endswith('.py'))
+
+    def row(label, items, show, n=None, **kw):
+        return dict(label=label, n=len(items) if n is None else n, items=items, show=show, **kw)
+    restated = _restatements(merged, tree)
+    story = story_in(merged)
+    return [
+        ('SIZE — counted, with no direction', [
+            row('rules', [str(r.get('rule')) for r in _l(face.get('rules')) if isinstance(r, dict)], 'delta'),
+            row('verbs, the face and the rows', verbs, 'delta'),
+            row('kinds', [str(k.get('kind')) for k in _l(_d(law.get('core/law/kinds.yaml')).get('kinds'))
+                          if isinstance(k, dict)], 'delta'),
+            row('tables (the top-level lists of core/law/)', tables, 'delta'),
+            row('forms', forms, 'delta'),
+            row('law files', sorted(law), 'delta'),
+            row('engine lines', None, 'none', n=gate, note='core/*.py'),
+        ]),
+        ('CLOSURE — what the law offers that nothing takes up', [
+            row("tables of the verbs' rows no role or qualifier takes", [t for t in row_tables if t not in taken_tables],
+                'names', note='verbs.yaml `tables`'),
+            row('forms no qualifier holds', [f for f in forms if f not in taken_forms], 'names'),
+            *([row('verbs no bean says', [v for v in verbs if v not in said], 'names', note='this garden'),
+               row('vacancies a statement here takes', [f"{v.get('at')} {v.get('position')}" for v in taken], 'lines',
+                   note='core/law/vacancies.yaml: a vacancy taken is a question, never a refusal')] if beans else []),
+        ]),
+        ('SECOND STATEMENTS — an enumeration the law owns, restated in a prose document', [
+            row('restatements', [r['id'] for r in restated], 'lines',
+                detail={r['id']: f"{r['where']}  {r['path']} — {r['of'][0]} of {r['of'][1]}" for r in restated}),
+            row("...that name what the law's list does not", [r['id'] for r in restated if r['extra']], 'lines',
+                detail={r['id']: f"{r['where']}  {r['path']} — names {', '.join('`' + x + '`' for x in r['extra'])}"
+                        for r in restated if r['extra']}),
+        ]),
+        ('STORY IN THE LAW — when, who or where, told inside the law', [
+            row('strings', [p for p, _h, _s in story], 'lines',
+                note='a date in backticks is read as an example and not counted — a limit of the proxy',
+                detail={p: f"{p}  «{h}»  {s[:64]}{'…' if len(s) > 64 else ''}" for p, h, s in story}),
+        ]),
+        ('STATED, NOT CHECKED', [
+            row('rules that are not strict', [], 'names', note='every rule of the core is strict: a breach is an error'),
+        ]),
+        ('ONE ESTATE IN THE STANDARD', [
+            row(f'vacancies whose reason is `{_ONE_GARDENS_REASON}`',
+                [f"vacancies: {v.get('at')} {v.get('position')}" for v in estate], 'lines'),
+        ]),
+    ]
+
+
+# ============================== PART B: THE EVIDENCE OVER A GARDEN'S BEANS ==============================
+def load_docs():
+    docs = {}
+    for f in dmgarden.paths(ROOT):
+        h, body = dmparse.read(f)
+        if h is None:
+            continue
+        try:
+            fm = dmparse.loads(h) or {}
+        except Exception:
+            continue
+        i = fm.get('bean') or fm.get('mapping')
+        if i:
+            docs[i] = (fm, body)
+    return docs
+
+
+DOCS = {}
+
+
+def leaves(node, prefix=''):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            yield from leaves(v, f"{prefix}.{k}" if prefix else str(k))
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            yield from leaves(v, f"{prefix}[{i}]")
+    elif isinstance(node, str):
+        yield prefix, node
+
+
+def factual():
+    for b, (fm, _) in DOCS.items():
+        for p, v in leaves(fm):
+            if p.split('.')[0] in FACTUAL:
+                yield b, p, v
+
+
+def head(item, question):
+    print(f"\n\033[1m{item}\033[0m" if sys.stdout.isatty() else f"\n{item}")
+    print(f"  ? {question}")
+
+
+def sample(rows, n=6):
+    for r in (rows if ALL else rows[:n]):
+        print(f"    {r}")
+    if not ALL and len(rows) > n:
+        print(f"    … {len(rows) - n} more (--all)")
+
+
+def near_pairs(vals):
+    """[(ratio, a, b)] of the values of two beans that read nearly alike: `vals` is [(bean, path, text)]."""
+    pairs = []
+    _LO = 0.72
+    # NEAR-DUPLICATE DETECTION, PAIRWISE — and difflib.ratio() is O(n*m) in the STRING LENGTHS, not in the
+    # number of values. On 2026-08-07 this stopped terminating: the pair count grows as the square of the
+    # corpus while each comparison grows as the product of two prose lengths, and a release that added a
+    # lot of long prose pushed it past any useful runtime. It was NOT introduced by that release — the
+    # committed version hangs on the same corpus — it was made reachable by it.
+    #
+    # THE FILTERS BELOW CHANGE NOTHING THAT IS REPORTED. Both are EXACT upper bounds on ratio():
+    #   - 2*min(len)/(len_a+len_b) is the best ratio two strings of those lengths could possibly reach,
+    #     since ratio() = 2*M/T and M cannot exceed the shorter string;
+    #   - quick_ratio() is documented as an upper bound, computed on the multiset of characters, O(n).
+    # A pair whose upper bound cannot reach the threshold cannot be a finding, so skipping it is not a
+    # heuristic and loses no pair. Verified by comparing the full output against the unfiltered
+    # implementation on a subset the slow one can still finish.
+    #
+    # seq2 is held fixed in the outer loop because SequenceMatcher caches the b2j index for its SECOND
+    # sequence; varying seq1 inside reuses that work instead of rebuilding it for every pair.
+    #
+    # `autojunk` is left at its DEFAULT. An earlier attempt here passed autojunk=False, which is not a
+    # speed knob: it changes which elements ratio() treats as junk and therefore changes the ratio itself,
+    # so it would have silently altered which pairs are reported. A performance fix that moves a finding
+    # is not a performance fix.
+    _sm = difflib.SequenceMatcher(None)
+    _ctr = [Counter(v) for _b, _p, v in vals]      # the character multiset, computed ONCE per value rather
+                                                   # than rebuilt inside every pair, which is what
+                                                   # SequenceMatcher.quick_ratio() has to do after set_seq1
+    for j in range(len(vals)):
+        _sm.set_seq2(vals[j][2])
+        _lj, _cj = len(vals[j][2]), _ctr[j]
+        for i in range(j):
+            if vals[i][0] == vals[j][0]:
+                continue
+            _li = len(vals[i][2])
+            if 2.0 * min(_li, _lj) / (_li + _lj) <= _LO:      # exact length bound — cannot reach threshold
+                continue
+            if 2.0 * sum((_ctr[i] & _cj).values()) / (_li + _lj) <= _LO:   # quick_ratio's bound, cached
+                continue
+            _sm.set_seq1(vals[i][2])
+            r = _sm.ratio()
+            if _LO < r < 1.0:
+                pairs.append((r, f"{vals[i][0]}.{vals[i][1]}", f"{vals[j][0]}.{vals[j][1]}"))
+    pairs.sort(reverse=True)
+    return pairs
+
+
+def part_b():
+    """The Part B evidence over this garden's beans: every signal a question, none a violation."""
+    global DOCS
+    DOCS = load_docs()
+    print("dmreview — evidence for the judgments the gate cannot make. Nothing here is a violation.")
+
+    # ---- Rule 6: paper-durable ----------------------------------------------------------------------
+    head("CAPSULE / PAPER-DURABLE",
+         "does this still read correctly cold, years later? A relative time word fixes prose to the day "
+         "it was written, and the reader will not know which day that was.")
+    REL = re.compile(r'\b(currently|current|today|yesterday|recently|now|at present|these days|soon|lately)\b', re.I)
+    rows = [f"{b}.{p} -> '{REL.search(v).group(0)}'  {v[:70]}…" for b, p, v in factual() if REL.search(v)]
+    print(f"  {len(rows)} occurrence(s) of a relative time word in a recorded fact")
+    sample(rows)
+
+    # ---- Rule 6: a key that carries a date ------------------------------------------------------------
+    head("CAPSULE / KEY NAMES",
+         "a key with a date in its NAME cannot be superseded — the next reader adds a second dated key "
+         "rather than correcting the first. Is the date part of the fact, or part of when you learned it?")
+    dated = [f"{b}.{sect}.{k}" for b, (fm, _) in DOCS.items() for sect in ('details', 'attributes', 'owns')
+             for k in (fm.get(sect) or {}) if re.search(r'\d{4}[_-]\d{2}', str(k))]
+    print(f"  {len(dated)} key(s) with a date baked into the name")
+    sample(dated)
+
+    # ---- external truth referenced, not mirrored -------------------------------------------------------
+    head("EXTERNAL TRUTH REFERENCED, NOT MIRRORED",
+         "the gate catches a VERBATIM duplicate. This is the paraphrase it cannot: two beans saying nearly "
+         "the same thing, where one should own the fact and the other point at it. Structural similarity "
+         "(sibling addons sharing a manifest shape) is fine — restated CONTENT is not.")
+    # A transcription of external truth that is POINTED AT by a staleness-keyed cache entry is a CACHE,
+    # not a mirror: it knows when it goes stale, and bin/dmstale.py checks. That is the legitimate form the
+    # Part B item asks for, so those are marked rather than raised — an aid that keeps surfacing a settled
+    # case teaches the reader to skim past the ones that matter.
+    # THE FORM IS THE TERM'S, READ FROM IT. This test was a literal tuple of prefixes until 2026-09-20 —
+    # `('git-head:', 'digest:')` — and std-vocab 11.0 replaced both with `<repo>@<sha>` without anyone
+    # coming back here. Every tracked cache then failed the test, so this aid reported 0 CACHES and asked
+    # the reader to judge 38 pairs it had already settled: the exact harm the note above warns about,
+    # produced by the aid itself. `manual:` keys count too — an entry a person re-checks by hand is
+    # tracked, just not machine-checkable, which is a different question and dmstale's to answer.
+    import dmcheck as _law
+    _STALENESS = dict(_law.dmform.facet(_law.form_of('analysis_cache'), 'pattern', 'entry')
+                      ).get('staleness_key') or r'(?!)'   # no pattern in the law -> nothing matches, and
+                                                           # the law's absence shows rather than passing
+    cached = set()
+    for _b, (_fm, _) in DOCS.items():
+        for _ct, _e in (_fm.get('analysis_cache') or {}).items():
+            if not re.match(_STALENESS, str(_e.get('staleness_key', ''))):
+                continue
+            _r = _e.get('summary_ref') or []
+            for _ptr in (_r if isinstance(_r, list) else [_r]):
+                if isinstance(_ptr, str) and '.' in _ptr:
+                    cached.add(f"{_b}.{_ptr}")
+
+    vals = [(b, p, v) for b, p, v in factual() if len(v) > 80]
+    pairs = near_pairs(vals)
+    tracked = [p for p in pairs if p[1] in cached and p[2] in cached]
+    raw = [p for p in pairs if p not in tracked]
+    bykey = Counter(p[1].split('.', 1)[1] for p in raw)
+    print(f"  {len(tracked)} pair(s) are staleness-keyed CACHES of external truth — tracked, not mirrored, "
+          f"and dmstale verifies them. Not a question.")
+    print(f"  {len(raw)} pair(s) remain to judge"
+          + (f"; most concentrated in: " + ", ".join(f"{k} ({n})" for k, n in bykey.most_common(3))
+             if raw else ""))
+    sample([f"{r:.0%}  {a}\n           {b}" for r, a, b in raw])
+
+    # ---- provenance honest -----------------------------------------------------------------------------
+    head("PROVENANCE HONEST",
+         "an anchor may carry its own provenance where its source differs from its bean's — the model supports it, "
+         "and the gate deliberately does NOT judge it (a rule to do so was tested and rejected). But it is "
+         "also exactly where an agent can write `asserted-by-human` on a value it minted itself. Did a "
+         "person actually assert these?")
+    rows = [f"{b}: anchor {a['key']} provenance={a['provenance']}  (bean provenance src={src}, by={by[:44]})"
+            for b, (fm, _) in DOCS.items()
+            for src, by in [((fm.get('provenance') or {}).get('src'), str((fm.get('provenance') or {}).get('by', '')))]
+            for a in ((fm.get('identity') or {}).get('anchors') or [])
+            if isinstance(a.get('provenance'), dict) and a['provenance'].get('src') == 'asserted-by-human' and src != 'asserted-by-human']
+    print(f"  {len(rows)} anchor(s) asserted by a person on a bean a person did not assert")
+    sample(rows)
+
+    # ---- abstraction, not force-fit ---------------------------------------------------------------------
+    head("ABSTRACTION, NOT FORCE-FIT",
+         "a key used exactly once is either a genuinely unique datum kept intact — which is correct — or a "
+         "fact bent to fit a shape that nearly suited it. Only a reader can tell which.")
+    kc = Counter(f"{sect}.{k}" for _b, (fm, _) in DOCS.items() for sect in ('attributes', 'details')
+                 for k in (fm.get(sect) or {}))
+    once = sorted(k for k, n in kc.items() if n == 1)
+    print(f"  {len(once)} of {len(kc)} keys in attributes/details are used exactly once")
+    sample(once, 8)
+
+    # ---- the safety/risk split (added 2026-08-08, human-ratified reservation) ------------------------
+    head("SAFETY NOTES THAT LOOK LIKE FINDINGS",
+         "`details.safety` is RESERVED for mechanisms, lessons and constraints — how a thing works and what "
+         "breaks it. A live defect belongs in `risks`, on the bean that owns the failing thing. Only a reader "
+         "can tell which a sentence is, so these are the ones worth re-reading, not the ones that are wrong.")
+    # WHY THIS SIGNAL EXISTS. On 2026-08-08 a consolidation swept every STRUCTURED risk carrier and missed
+    # four live risks sitting in prose — the worst on a bean that already carried `risks` after the sweep.
+    # The words below are the ones those four actually used; this is a regex over English and it will both
+    # over- and under-fire, which is exactly why it prints questions and never fails a build.
+    RISKY = re.compile(r'STILL OPEN|remains? open|rotation (is )?(still )?owed|is owed|un(pinned|guarded'
+                       r'|proven|rotated)\b|SPOF|not (yet )?(fixed|closed|rotated)', re.I)
+    flagged = []
+    for _b, (fm, _) in DOCS.items():
+        notes = (fm.get('details') or {}).get('safety') or []
+        if isinstance(notes, str):
+            notes = [notes]
+        has_risks = 'risks' in fm
+        for s in notes:
+            if isinstance(s, str) and RISKY.search(s):
+                flagged.append(f"{_b}{'' if has_risks else '  (no `risks` term at all)'}: {s[:96]}")
+    print(f"  {len(flagged)} safety note(s) carry risk-shaped language")
+    sample(flagged, 8)
+    if not flagged:
+        print("    none — which is a claim about this REGEX, not about the prose. A finding worded in words "
+              "it does not match is still sitting there.")
+
+    # ---- Tier-0 relations this garden has not drawn (moved here from the gate, 2026-09-17) ------------------
+    head("TIER-0 RELATIONS NOBODY DRAWS",
+         "the standard offers these edges and no bean in this garden uses one. A young or small garden may never "
+         "need them, which is why the gate no longer warns. Is one of them the right way to say something a "
+         "bean currently says in prose?")
+    _gate = _law                         # already imported above, for the staleness form
+    _gate.build_docs()
+    _drawn = set(_gate.drawn_edges())
+    _undrawn = sorted(t for t, s in _gate.SCHEMAS.items()
+                      if (lambda _f: _gate.dmform.ref_attrs(_f, 'self') or _gate.dmform.ref_attrs(_f, 'entry'))(
+                          _gate.dmform.attribute_form(None, s)) and t in _gate.TIER0_TERMS and t not in _drawn)
+    print(f"  {len(_undrawn)} Tier-0 relation(s) drawn by no bean")
+    sample(_undrawn, 12)
+
+    # ---- files in no layer ---------------------------------------------------------------------------------
+    # COUNTED HERE AND NEVER BY THE GATE. The law cannot name every file a garden keeps, and a file nobody has placed
+    # has broken nothing; it is only the one place a flow cannot be judged from. So the count is evidence, and the
+    # files themselves are the map's to list, from its one reader.
+    head("FILES IN NO LAYER",
+         "the law's layer map places what every garden has, and a garden places the rest with `standing`. Is each "
+         "of these law, reasoning, journal, a person's words or an agent's work — and does an entry say which?")
+    try:
+        _unplaced = dmpass.Map.here(ROOT).placed()[1]
+        print(f"  files in no layer: {len(_unplaced)} — `python3 bin/dmpass.py --layers` lists them")
+    except ValueError as e:
+        print(f"  files in no layer: not counted — {e}")
+
+    print("\n— nothing above is a finding. If any of it becomes checkable with evidence, it belongs in the "
+          "gate and leaves this file.")
+
+
+def _against(argv):
+    """The ref `--against` names, spelled `--against REF` or `--against=REF`; (None, a complaint) when it names none —
+    an option silently ignored reads as "nothing moved", which is a claim."""
+    for i, a in enumerate(argv):
+        if a == '--against':
+            ref = argv[i + 1] if i + 1 < len(argv) and not argv[i + 1].startswith('--') else None
+            return ref, (None if ref else "--against needs a git ref (a tag, a branch, a commit): the counts stand alone")
+        if a.startswith('--against='):
+            ref = a.split('=', 1)[1]
+            return ref or None, (None if ref else "--against= names no ref: the counts stand alone")
+    return None, None
+
+
+def places_report():
+    """AT LEAST THE NEAREST BEING (24.0, step 7, D23): every being set in place (`mobility: fixed`) that holds a
+    coordinate and no position FROM another fixed being is named, with the fixed beings nearest it. A coordinate from
+    a receiver is good to metres; an offset taped from a mark beside it is good to centimetres, and survives the
+    receiver. Whether this being needs one is the reader's judgment — a policy printed, never a rule."""
+    import dmgeo, dmpass
+    beans = dmpass.beans_here(ROOT)
+    fixed = {}
+    for b, fm in sorted(beans.items()):
+        now = dmgeo._current(fm.get('located_at'))
+        if any(e.get('mobility') == 'fixed' for e in now):
+            fixed[b] = now
+    named = 0
+    for b, now in fixed.items():
+        rel = [e for e in now if e.get('system') == 'relative' and dmgeo.RELATIVE.match(str(e['at']))
+               and dmgeo.RELATIVE.match(str(e['at'])).group(1) in fixed]
+        geo = [e for e in now if e.get('system') == 'geographic']
+        if geo and not rel:
+            named += 1
+            try:
+                near = dmgeo.nearest(str(geo[0]['at']), root=ROOT, k=3, beans=beans)
+            except ValueError as e:
+                near, why = [], str(e)
+            _say(f"PLACES  {b}: set at {geo[0]['at']}, and stated from no other fixed being — nearest: "
+                 + (', '.join(f"{n} ≈ {m:.0f} m" for n, m in near) or 'none in its system'))
+    _say(f"PLACES  {named} of {len(fixed)} fixed being(s) hold a coordinate and no position from another fixed being")
+
+
+def main(argv):
+    try:
+        if '--places' in argv:
+            places_report()
+        elif '--law' in argv:
+            ref, complaint = _against(argv)
+            if complaint:
+                _say(f"dmreview: {complaint}")
+            law_report(ref)
+        elif runs_core():
+            core_part_b()
+        else:
+            part_b()
+        sys.stdout.flush()               # a pipe's buffer is written HERE, where a reader that left can be caught
+        return 0
+    except OSError as e:
+        # Piped into `head`, the reader leaves first. That is not a failure of this tool, which always exits 0: point
+        # stdout at nothing so the interpreter's own flush at exit has nowhere to fail. Windows says a closed pipe as
+        # EINVAL rather than EPIPE; any other error is a real one, and is raised.
+        if not isinstance(e, BrokenPipeError) and e.errno != errno.EINVAL:
+            raise
+        try:
+            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        except (OSError, ValueError):
+            pass
+        return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
