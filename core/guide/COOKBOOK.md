@@ -229,7 +229,7 @@ The rented server.
 ## Another person, and the garden she keeps
 
 Ali keeps a garden of her own. Recording another garden, and its gardener, is the gardener's decision (class F), made in
-one commit. The garden is named by its id, which Ali read out from it (`python3 bin/dmpropose.py id` prints it there);
+one commit. The garden is named by its id, which Ali read out from it (`python3 bin/propose.py id` prints it there);
 Ali is named as her own garden names her. She agreed to be kept here by name: her yes is her `agree`, and Sam, who
 reports it, knows it.
 
@@ -245,7 +245,7 @@ statements:
   - name: { by: garden-id, of: self, as: "123456789abc" }
   - own:  { by: ali, of: self }
 ---
-Ali's garden. Its id is what `python3 bin/dmpropose.py id` printed there.
+Ali's garden. Its id is what `python3 bin/propose.py id` printed there.
 ```
 
 <!-- example: beans/ali-consent.md -->
@@ -531,8 +531,8 @@ someone else assigned — a package's name, a registry number — is that regist
 never qualified.
 
 ```sh
-python3 bin/dmpropose.py mint shared-camera     # prints the qualified name and how to write it
-python3 bin/dmpropose.py mint sam               # the gardener, whom every agreement names
+python3 bin/propose.py mint shared-camera     # prints the qualified name and how to write it
+python3 bin/propose.py mint sam               # the gardener, whom every agreement names
 ```
 
 It writes nothing: choosing a name that establishes an identity is the gardener's (class F), so the gardener writes it
@@ -541,7 +541,7 @@ and saves it with its journal entry.
 **Propose.** A proposal is made under an agreement both gardeners `agree` to — here `shared-camera`:
 
 ```sh
-python3 bin/dmpropose.py make --to garden-ali --under shared-camera shared-camera
+python3 bin/propose.py make --to garden-ali --under shared-camera shared-camera
 ```
 
 It writes one file, `PROPOSAL-<this garden>-<YYYYMMDD-HHMM>.md`, beside this garden and never inside any garden. It
@@ -554,8 +554,8 @@ travel, with the things they name. A stub is a bean the other garden may not hol
 **Read, then take.** In Ali's garden:
 
 ```sh
-python3 bin/dmpropose.py read ../PROPOSAL-<garden>-<when>.md    # writes nothing
-python3 bin/dmpropose.py take ../PROPOSAL-<garden>-<when>.md    # writes in the working tree; commits nothing
+python3 bin/propose.py read ../PROPOSAL-<garden>-<when>.md    # writes nothing
+python3 bin/propose.py take ../PROPOSAL-<garden>-<when>.md    # writes in the working tree; commits nothing
 ```
 
 The first `read` is first contact from the receiving side: Ali's garden holds no `garden` bean for Sam's, so `read`
@@ -704,7 +704,7 @@ Noor, of a small literary agency.
 
 Each placing is its own agreement, with the advance the house pays. Heron's offer held for three weeks: a clause holds
 only within its window, an extent. The editor who read the book at Heron has given no consent to be kept here by name,
-so she is written under an **opaque id** — today `python3 bin/dmheld.py person` mints it, and holds her name off git —
+so she is written under an **opaque id** — `python3 bin/held.py person` mints it, and holds her name off git —
 and what `concern`s her names her by that id alone. Heron is owned by its shareholders, whom nobody named.
 
 <!-- example: beans/heron-books.md -->
@@ -1173,7 +1173,7 @@ A strong colony.
 
 `python3 bin/daftar.py where apiary:EAST-2` reads the site within its valley, by the name the overlay gives it, with
 its source, and `python3 bin/daftar.py reckon bee-coop#hive-count` counts the hives. Whether Derya may read a hive's
-inspections, or its site, is asked of the grants (`python3 bin/dmpass.py may`). A grant that lets someone else decide
+inspections, or its site, is asked of the grants (`python3 bin/pass.py`, `may`). A grant that lets someone else decide
 what only the gardener may — a grant to ratify — is the gardener's alone to give, on the gardener's own bean.
 
 ## Two candles burnt side by side: a reading that brings an order into force
@@ -1328,10 +1328,11 @@ A value that could harm a person if it left the garden — a code of a scheme th
 reading of a body — is SEALED before the commit that would carry it, and the gate refuses it unsealed. A sealed
 statement keeps its verb and its id, and holds in place of its roles a pointer to a store this host keeps off git —
 `held: "root:<root>/<32 hexadecimal digits>"` — and the word it is held on, `while` a statement holds: here Lale's own
-`agree` to her employment. Nothing else goes beside it: a note that said what is sealed would say it in git. Today
-`python3 bin/dmheld.py put <bean> <term> <key>` moves what it said to the store, mints the pointer, and prints the one
-journal line the save carries, `- held: <bean> <id> added`; the gate refuses a seal the entry does not say. So the
-order is: write, seal, save.
+`agree` to her employment. Nothing else goes beside it: a note that said what is sealed would say it in git.
+`python3 bin/held.py put <bean> <id> --basis <bean>#<their agree> [--until <day>]` moves what it said to the store,
+with the day it is to be erased by, mints the pointer, and prints the one journal line the save carries, `- held:
+<bean> <id> added`; the gate refuses a seal the entry does not say, and the hook a pointer the store here does not
+hold. So the order is: write, seal, save.
 
 <!-- example-statements: beans/lale.md -->
 ```yaml

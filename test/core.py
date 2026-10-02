@@ -67,8 +67,8 @@ except frame.Refused as e:
     check("a day with no zone to be reckoned in is refused: its place half is the bearer's", 'names none' in str(e), e)
 
 # ------------------------------------------------------------------------------------------------ the law
-check("the law is whole: the face's 21 verbs, the 39 rows and the 22 levels, 0 problems",
-      not LAW0.problems() and len(LAW0.verbs) == 60 and len(LAW0.levels) == 29, LAW0.problems())
+check("the law is whole: the face's 21 verbs, the 40 rows and the 22 levels, 0 problems",
+      not LAW0.problems() and len(LAW0.verbs) == 61 and len(LAW0.levels) == 29, LAW0.problems())
 CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
 LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "
@@ -158,7 +158,7 @@ check("a zone the time zone database does not name is refused", any(w == 'GARDEN
 POOL = {'by': ['box', 'firm', 'pat'], 'of': ['firm', 'box', 'pat'], 'through': ['pat', 'firm', 'box'],
         'to': ['firm', 'pat', 'box'], 'from': ['firm', 'pat', 'box'], 'at': ['firm', 'box', 'pat'], 'as': ['firm']}
 STANDARD = {'protocols': 'smb', 'knowledge': 'isco-08:2511', 'properties': 'length', 'units': 'kg'}
-OVERRIDE = {('pass', 'from'): 'world', ('pass', 'to'): 'journal', ('pass', 'through'): 'read'}
+OVERRIDE = {('pass', 'from'): 'world', ('pass', 'to'): 'history', ('pass', 'through'): 'capture'}
 CONTEXT = [bean('pat', 'person', [{'say': {'by': 'pat', 'at': 'now'}}]),
            bean('firm', 'org', [{'say': {'by': 'pat', 'at': 'now'}}]),
            bean('box', 'host', [{'say': {'by': 'pat', 'at': 'now'}}])]

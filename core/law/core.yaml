@@ -101,16 +101,16 @@ verbs:
   # knowing: how a statement came to be in the ledger. Each takes statements as `of`; with no `of`, it covers every
   # statement of its bean that no other knowing act covers.
   - verb: say
-    roles: { by: { shape: being, nature: [body, sayable], rung: reason }, of: { shape: statement, many: true }, through: { shape: text }, to: { shape: being }, at: { shape: position } }
+    roles: { by: { shape: being, nature: [body, sayable], rung: reason }, of: { shape: statement, many: true }, through: { shape: text }, to: { shape: being }, at: { shape: [position, being], many: true } }
     required: [by, at]
   - verb: read
-    roles: { by: { shape: being, nature: [body] }, of: { shape: statement, many: true }, from: { shape: being }, through: { shape: text }, at: { shape: position } }
+    roles: { by: { shape: being, nature: [body] }, of: { shape: statement, many: true }, from: { shape: being }, through: { shape: text }, at: { shape: [position, being], many: true } }
     required: [by, at]
   - verb: derive
-    roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: statement, many: true }, through: { shape: being }, at: { shape: position } }
+    roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: statement, many: true }, through: { shape: being }, at: { shape: [position, being], many: true } }
     required: [by, from, at]
   - verb: make
-    roles: { by: { shape: being }, of: { shape: statement, many: true }, at: { shape: position } }
+    roles: { by: { shape: being }, of: { shape: statement, many: true }, at: { shape: [position, being], many: true } }
     required: [by, at]
   # the order
   - verb: be
@@ -146,7 +146,7 @@ verbs:
     required: [of, from]
   # layers
   - verb: pass
-    roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: row, table: layers }, to: { shape: row, table: layers }, through: { shape: row, table: verbs }, at: { shape: position } }
+    roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: row, table: layers }, to: { shape: row, table: layers }, through: { shape: row, table: verbs }, as: { shape: row, table: knowing }, at: { shape: position } }
     required: [of, from, to, through]
   # the figures' positions: each takes a statement, and `through` what makes it so
   - { verb: necessary,  figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
@@ -187,7 +187,7 @@ manifest_forms:
 rules:
   - { rule: form,       says: "a statement is one verb of the verb row, with roles from the seven, the qualifiers its row declares, and id, while, why, note (and held, sealed); nothing else. Text holds no control character but a tab, and a line feed only in a block scalar. GARDEN.md holds the manifest's keys alone, each in its form, and pins this law's version; once the garden holds a bean, it names its gardener, a person or an organisation it holds a bean for" }
   - { rule: valency,    says: "each required role is filled, each filler has the shape and nature its role takes, and no role is filled that the verb does not take" }
-  - { rule: knowing,    says: "every statement of a bean is the `of` of a knowing act in it; a knowing act's `at` is `now` until the save writes the moment, and a moment typed there is refused" }
+  - { rule: knowing,    says: "every statement of a bean is the `of` of a knowing act in it; a knowing act's `at` is `now` until the save writes the moment, and a moment typed there is refused — but where the act was known in another garden: its `at` then holds that garden's bean beside the moment it was known at there, and the commit that brings it takes it from that garden (`take`)" }
   - { rule: placeholder, says: "a statement the engine derives (a verb's default) is never written: written, it is refused" }
   - { rule: order,      says: "nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or needs itself through others; a part never stands above what its whole is made of" }
   - { rule: life,       says: "a living being comes through the living; a made or said being comes through hands, a being at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded" }
@@ -196,7 +196,7 @@ rules:
   - { rule: weight,     says: "a mass is a body's: a statement giving a sayable a mass of its own is refused" }
   - { rule: frame,      says: "a position is in a declared system, in its one form, and finds its other half by its complement" }
   - { rule: names,      says: "a name its namespace gives once names one being. A garden's id is twelve hexadecimal digits, and never this garden's own: a `garden` bean is another garden. A name a garden gave, qualified to cross, is `<garden_id>/<kind>:<name>`, by this garden or one a `garden` bean here is named by; an identifier someone else assigned is never qualified" }
-  - { rule: layers,     says: "a file stands in one layer; a `pass` from a layer to a layer through a method stands only where a row of the flow table grants it" }
+  - { rule: layers,     says: "a file stands in one layer; a `pass` from a layer to a layer through a method stands only where the flow table grants it: of the rows that hold it the nearest decide — one that names the act what it carries is known by there (`as`) is nearer than one that names only layers — and of two as near, a refusal; `ratified` is granted only to the party a garden's own row names, with the basis it grants on (core/law/flows.yaml)" }
   - { rule: ratify,     says: "a change to the core, to a verb's row, a kind, a namespace or a flow is a RULE-CHANGE: a person ratifies it. A grant to ratify is the gardener's own act: on the gardener's bean, said by the gardener" }
   - { rule: consent,    says: "another person is kept here by name only on their own word: a person who is not the gardener, and not written under an opaque id (`p-<8 hexadecimal digits>`, its title the id), agrees to an agreement this garden holds, or owns a `garden` bean here, the garden they keep, met here. A commit places no such person somewhere in the future, in git: a happening wholly ahead of the commit that one attends and that is at a location seals that location" }
   - { rule: harm,       says: "what harm can come of is kept out of git: a private-key block is refused in any file a commit stages; a code of a scheme marked special-category is written only sealed; a sealed statement holds a pointer and nothing of what it said, has an id, and is held `while` a statement holds where its bean concerns a person who is not the gardener; a commit that seals or unseals one says so in its entry, `- held: <bean> <id> added` or `erased`; and a sensitivity rated below the one its bean derives is a person's own word, said by a person" }

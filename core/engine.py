@@ -361,16 +361,30 @@ class Judge:
                 covered |= {x for x in listed(r['of']) if isinstance(x, str)}
             else:
                 blanket = True
-            at = r.get('at')
-            if at != 'now':
+            at, where = r.get('at'), f"{b.id}[{i}] {verb}"
+            # KNOWN IN ANOTHER GARDEN (v1 part 8): the act's `at` holds that garden's bean beside its moment there
+            gardens = [x for x in listed(at) if isinstance(x, str) and x in self.G.beans]
+            for x in gardens:
+                if self.G.beans[x].kind != 'garden':
+                    self.err('knowing', where, f"`at` holds {x}, which is no `garden` bean: an act's `at` is its moment, "
+                                               f"and the garden it was known in where that is another")
+            moments = [x for x in listed(at) if x not in gardens]
+            if len(moments) != 1 or len(gardens) > 1:
+                self.err('knowing', where, f"`at: {at}` — a knowing act's `at` is one moment, and beside it the garden "
+                                           f"it was known in, where that is another")
+                continue
+            if moments[0] != 'now':
                 try:
-                    p = frame.read(at, self.systems, self.G.zone)
+                    p = frame.read(moments[0], self.systems, self.G.zone)
                     ok = p.moment is not None and p.stated and p.end is None
                 except frame.Refused:
                     ok = False
                 if not ok:
-                    self.err('knowing', f"{b.id}[{i}] {verb}", f"`at: {at}` — the moment of a knowing act is the save's: "
-                                                              f"write `now`, and the save writes the moment in its place")
+                    self.err('knowing', where, f"`at: {at}` — the moment of a knowing act is the save's: write `now`, "
+                                               f"and the save writes the moment in its place")
+            elif gardens:
+                self.err('knowing', where, f"`at: {at}` — an act known in another garden carries the moment it was known "
+                                           f"at there, and is never `now` here")
         if blanket:
             return
         for i, verb, r in b.items:
@@ -546,15 +560,15 @@ class Judge:
     def layers(self):
         for b in self.G.beans.values():
             for i, verb, r in b.items:
-                if verb != 'pass':
+                if verb != 'pass' or 'held' in r:
                     continue
-                m = (r.get('from'), r.get('to'), r.get('through'))
-                rows = [f for f in self.L.flows if m[0] in listed(f.get('from')) and m[1] in listed(f.get('to'))
-                        and m[2] in listed(f.get('through'))]
-                if not rows or any(f.get('grant') != 'granted' for f in rows):
-                    self.err('layers', f"{b.id}[{i}] pass", f"no row of the flow table grants {m[0]} → {m[1]} through "
-                                                            f"{m[2]}" + (f" ({', '.join(str(f.get('flow', '')) for f in rows)} refuses it)"
-                                                                         if rows else ''))
+                m = (r.get('from'), r.get('to'), r.get('through'), r.get('as'))
+                ok, grant, rows = self.L.decide(*m)
+                if not ok:
+                    self.err('layers', f"{b.id}[{i}] pass", f"{m[0]} → {m[1]} through {m[2]}"
+                                                            + (f" as {m[3]}" if m[3] else '')
+                                                            + (f": {', '.join(rows)} {'refuses' if grant != 'ratified' else 'asks a party a garden row grants, and none does for'} it"
+                                                               if rows else ": no row of the flow table holds it, so it is refused"))
         if self.L.standing:
             for p in self.G.files:
                 hold = sorted({s['layer'] for s in self.L.standing for h in listed(s.get('holds')) if dmpass.matches(h, p)})

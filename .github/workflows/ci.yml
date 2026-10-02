@@ -69,6 +69,9 @@ jobs:
       - name: "core_measure: the measure tools in a garden of the core — cal, geo, units, knowledge, crosswalk — and the forms of a measure: a clause's terms, a placement's, a quantity's uncertainty, a garden's own systems and schemes"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_measure.py
+      - name: "core_between: between gardens in the core — propose, across, pass, held — and the flow law, the held store's form and its check on the host, and the mark of a garden that rehearses"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/core_between.py
       - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/save.py
