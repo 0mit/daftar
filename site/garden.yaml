@@ -1,9 +1,13 @@
-# The garden the boards are proved in. site/board.py grows a garden from this checkout (seed/germinate.py, with the
-# profiles below), writes these beans, saves them with the command below — the gate must pass them, or the page is not
-# built — and then breaks each board's form once, as the board's `scene` says: the refusal a board shows is the line
-# the gate printed. Nothing here is anyone's garden; the names are the forms' own (seed/FORMS.md).
+# The garden the boards are proved in. site/board.py grows a garden from the release site/RELEASE names
+# (seed/germinate.py, with the profiles below), copies into it the files below from its own copy of the language,
+# writes these beans, saves them with the command below — the gate must pass them, or the page is not built — and then
+# breaks each board's form once, as the board's `scene` says: the refusal a board shows is the line the gate printed.
+# Nothing here is anyone's garden; the names are the forms' own (seed/FORMS.md), and the MAC address is one RFC 7042
+# keeps for documentation.
 gardener: { id: sam, name: "Sam" }
 profiles: [view, knowledge]
+files:
+  drawings/home.py: assets/view/templates/drawings.py
 save:
   who: "agent for sam"
   what: "the NAS, the rack and its servers, a dinner, a shared rent, a counter and a page"
@@ -12,236 +16,177 @@ beans:
   hallway-nas: |
     ---
     bean: hallway-nas
-    genos: host
+    kind: host
     title: "hallway-nas — the file server in the hallway cupboard"
-    status: active
     summary: "The NAS in the hallway cupboard that keeps the family's photos."
-    nature: soma
-    identity:
-      status: confirmed
-      anchors:
-        - { key: serial, value: "4XK9-2217", class: hardware, establishing: true }
-    provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }
-    owned_by: { owner: { bean: sam } }
-    
-    knowledge:
-      - { code: "technology:samba", rel: uses }
-      - { code: "isced-f-2013:0612", rel: draws_on, topic: "network file sharing" }
+    statements:
+      - read:   { by: sam, at: now }
+      - name:   { by: ieee-eui48, of: self, as: "00:00:5e:00:53:01", note: "the MAC address on its label" }
+      - own:    { by: sam, of: self }
+      - answer: { by: sam, of: self, as: keeping }
+      - use:    { by: self, of: "technology:samba" }
+      - use:    { by: self, of: "isced-f-2013:0612", note: "network file sharing" }
     ---
     The NAS in the hallway.
   rack-a: |
     ---
     bean: rack-a
-    genos: host
+    kind: host
     title: "rack-a — the rack in the office's server room"
-    status: active
     summary: "A 42-unit rack in the server room."
-    nature: soma
-    identity:
-      status: confirmed
-      anchors:
-        - { key: serial, value: "RK-42-0031", class: hardware, establishing: true }
-    provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }
-    owned_by: { owner: { bean: sam } }
-    
-    capacity:
-      - { count: 42, unit: item, placement: location }
+    statements:
+      - read: { by: sam, at: now }
+      - own:  { by: sam, of: self }
+      - hold: { by: self, of: { count: "42", unit: "{item}" }, note: "its slots" }
     ---
     The rack.
   web-1: |
     ---
     bean: web-1
-    genos: host
+    kind: host
     title: "web-1 — a web server in rack-a"
-    status: active
     summary: "A two-unit web server."
-    nature: soma
-    identity:
-      status: confirmed
-      anchors:
-        - { key: serial, value: "SRV-WEB-1", class: hardware, establishing: true }
-    provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }
-    owned_by: { owner: { bean: sam } }
-    
-    located_at:
-      - { system: local-frame, openness: here, at: "rack-a#u17", takes: [ { count: 2, unit: item } ] }
+    statements:
+      - read: { by: sam, at: now }
+      - own:  { by: sam, of: self }
+      - be:   { by: self, at: [rack-a, "rack-a#u17"], as: location, placed: { takes: [ { count: "2", unit: "{item}" } ] } }
     ---
     A web server.
   web-2: |
     ---
     bean: web-2
-    genos: host
+    kind: host
     title: "web-2 — a web server in rack-a"
-    status: active
     summary: "A two-unit web server."
-    nature: soma
-    identity:
-      status: confirmed
-      anchors:
-        - { key: serial, value: "SRV-WEB-2", class: hardware, establishing: true }
-    provenance: { src: asserted-by-human, by: "sam (gardener)", as_of: now }
-    owned_by: { owner: { bean: sam } }
-    
-    located_at:
-      - { system: local-frame, openness: here, at: "rack-a#u19", takes: [ { count: 2, unit: item } ] }
+    statements:
+      - read: { by: sam, at: now }
+      - own:  { by: sam, of: self }
+      - be:   { by: self, at: [rack-a, "rack-a#u19"], as: location, placed: { takes: [ { count: "2", unit: "{item}" } ] } }
     ---
     A web server.
   dinner-at-sams: |
     ---
     bean: dinner-at-sams
-    genos: event
+    kind: event
     title: "dinner-at-sams — dinner at Sam's"
-    status: active
     summary: "Ali came to dinner at Sam's; they agreed to share the rent of a storage unit."
-    nature: lekton
-    identity:
-      status: confirmed
-      anchors:
-        - { key: identifier, value: "event:dinner-at-sams", class: logical, establishing: true }
-    provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { crown: true }
-    responsibility: { legal: { holder: { bean: sam } } }
-    timing:
-      start: { system: gregorian-civil, at: "2026-09-12 19:30+03:00", unit: minute }
-    refs:
-      host:  { bean: sam, rel: host }
-      guest: { bean: ali, rel: present }
+    statements:
+      - say:    { by: sam, at: now }
+      - be:     { by: self, at: "2026-09-12 19:30+03:00" }
+      - own:    { by: theone, of: self }
+      - answer: { by: sam, of: self, as: law }
+      - attend: { by: sam, of: self }
+      - attend: { by: ali, of: self }
     ---
     Dinner at Sam's.
   ali: |
     ---
     bean: ali
-    genos: person
+    kind: person
     title: "Ali"
-    status: active
     summary: "Ali, who keeps a garden of her own; Sam shares costs with her."
-    nature: soma
-    identity:
-      status: confirmed
-      anchors:
-        - { key: identifier, value: "123456789abc/person:ali", class: logical, establishing: true }
-    provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    consent: { bean: ali-consent }
-    owned_by: { crown: true }
-    responsibility: { legal: { self: true } }
+    statements:
+      - say:    { by: sam, at: now }
+      - name:   { by: garden, of: self, as: "123456789abc/person:ali" }
+      - own:    { by: theone, of: self }
+      - answer: { by: self, of: self, as: law }
     ---
-    Ali keeps a garden of her own.
+    Ali keeps garden-ali.
   ali-consent: |
     ---
     bean: ali-consent
-    genos: contract
+    kind: contract
     title: "Ali's consent"
-    status: active
     summary: "Ali agreed to be kept here by name."
-    nature: lekton
-    identity:
-      status: confirmed
-      anchors:
-        - { key: identifier, value: "contract:ali-consent", class: logical, establishing: true }
-    provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { crown: true }
-    responsibility: { legal: { parties: true } }
-    parties:
-      sam: { who: { bean: sam }, accepted: }
-      ali: { who: { bean: ali }, accepted: }
-    words: { form: spoken, agreed: }
+    statements:
+      - say:     { by: sam, at: now }
+      - own:     { by: theone, of: self }
+      - answer:  { by: sam, of: self, as: law }
+      - answer:  { by: ali, of: self, as: law }
+      - agree:   { id: consent, by: [sam, ali], of: "Ali is kept in Sam's garden by name", through: spoken }
+      - concern: { of: [ali] }
     ---
     Agreed on the phone.
   garden-ali: |
     ---
     bean: garden-ali
-    genos: garden
+    kind: garden
     title: "garden-ali — the garden Ali keeps"
-    status: active
     summary: "Ali's own daftar garden."
-    nature: lekton
-    identity:
-      status: confirmed
-      anchors:
-        - { key: garden_id, value: "123456789abc", class: logical, establishing: true }
-    provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { owner: { bean: ali } }
-    
+    statements:
+      - say:  { by: sam, at: now }
+      - name: { by: garden-id, of: self, as: "123456789abc" }
+      - own:  { by: ali, of: self }
     ---
     Ali's garden.
   storage-rent: |
     ---
     bean: storage-rent
-    genos: contract
+    kind: contract
     title: "storage-rent — Sam and Ali share a storage unit"
-    status: active
-    summary: "Sam and Ali rent a storage unit together and split its rent."
-    nature: lekton
-    identity:
-      status: confirmed
-      anchors:
-        - { key: identifier, value: "contract:storage-rent", class: logical, establishing: true }
-    provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { crown: true }
-    responsibility: { legal: { parties: true } }
-    parties:
-      sam: { who: { bean: sam }, accepted: 2026-09-12 }
-      ali: { who: { bean: ali }, accepted: { system: event-anchored, at: "after:dinner-at-sams", unit: day } }
-    over:
-      storage-unit: { what: "a storage unit the two of them rent" }
-    words: { form: spoken, at: { bean: dinner-at-sams }, agreed: 2026-09-12 }
-    transactions:
-      september:
-        what: "September's rent"
-        amount: { count: "100.00", unit: XTS }
-        day: 2026-09-15
-        paid_by:
-          - { party: sam, amount: { count: "60.00", unit: XTS } }
-          - { party: ali, amount: { count: "40.00", unit: XTS } }
-        borne_by:
-          - { party: sam, share: 1 }
-          - { party: ali, share: 1 }
+    summary: "Sam and Ali rent a storage unit together and split its rent; Sam paid September's."
+    statements:
+      - say:    { by: sam, at: now }
+      - own:    { by: theone, of: self }
+      - answer: { by: sam, of: self, as: law }
+      - answer: { by: ali, of: self, as: law }
+      - agree:  { id: agreed, by: [sam, ali], of: "a storage unit the two of them rent", through: dinner-at-sams }
+      - pay:    { id: september, by: sam, of: { count: "100.00", unit: XTS }, through: agreed, at: "2026-09-15", note: "September's rent" }
+      - bear:   { by: sam, of: september, share: "1" }
+      - bear:   { by: ali, of: september, share: "1" }
     ---
     Agreed over dinner.
   front-door: |
     ---
     bean: front-door
-    genos: host
+    kind: host
     title: "front-door — the counter on the front door"
-    status: active
     summary: "A counter on the front door: how many came in, hour by hour."
-    nature: soma
-    identity:
-      status: confirmed
-      anchors:
-        - { key: serial, value: "CNT-0007", class: hardware, establishing: true }
-    provenance: { src: observed, by: "agent for sam", as_of: now }
-    owned_by: { owner: { bean: sam } }
-    
-    series:
-      by-grid:
-        grid: { of: ordinal, in: ordinal-number, from: "ordinal:1", every: { count: 1 } }
-        holds: [ { name: value, quantity: number, unit: item, stands_for: point } ]
-        rows: |
-          value
-          3
-          1
-        whole: { value: { count: 4, unit: item }, of: value, by: sum }
+    statements:
+      - read: { by: sam, at: now }
+      - own:  { by: sam, of: self }
+      - record:
+          id: saturday
+          of: self
+          series:
+            grid: { of: time, in: gregorian-civil, every: { count: "1", unit: h }, from: "2026-09-12 09:00+03:00" }
+            unit: h
+            placement: following
+            holds:
+              - { name: came-in, quantity: number, unit: "{person}", stands_for: sum }
+            rows: |
+              came-in
+              3
+              1
+              4
+            whole: { value: { count: "8", unit: "{person}" }, of: came-in, by: sum }
     ---
     The counter.
   home-page: |
     ---
     bean: home-page
-    genos: service
+    kind: service
     title: "home-page — a page of what Sam keeps"
-    status: active
     summary: "One page of drawings of the home's machines."
-    nature: lekton
-    identity:
-      status: confirmed
-      anchors:
-        - { key: identifier, value: "service:home-page", class: logical, establishing: true }
-    provenance: { src: asserted-by-human, by: "sam", as_of: now }
-    owned_by: { owner: { bean: sam } }
-    
-    view:
-      drawings: file:assets/view/templates/drawings.py
-      fields:
-        - { genos: host, term: summary, shown_from: understand }
+    statements:
+      - say:  { by: sam, at: now }
+      - own:  { by: sam, of: self }
+      - draw:
+          id: photos
+          by: self
+          of: [hallway-nas]
+          drawing:
+            purpose: "The family's photos are kept on the NAS."
+            outcome: "Every photo taken at home is on hallway-nas by night."
+            stages:
+              - { label: "Take the photo", doer: "whoever has a phone" }
+              - { label: "Copy it over", doer: "hallway-nas", beings: [ { being: hallway-nas } ] }
+              - { label: "Look at it", doer: "the family" }
+            questions:
+              - { lens: orient, ask: "Where do the photos go?" }
+              - { lens: operate, ask: "Is the NAS keeping them?" }
+            archetype: health-chain
+            blind: [ { what: "how full its disks are", why: "no monitor reads them yet" } ]
+      - draw: { id: page, by: self, of: [photos], page: { drawings: "file:drawings/home.py", reference: [ { being: hallway-nas, what: "keeps the photos" } ] } }
     ---
     A page.

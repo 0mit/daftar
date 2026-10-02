@@ -161,7 +161,8 @@ site/board.py` writes it from the release that `site/RELEASE` names, cloned at t
 that release (the law's meanings, their reasons, the catalogue's rules, checks and relations), so it cannot drift from
 it. An agent's board is proved: the builder grows a garden from the release, writes the beans of `site/garden.yaml`,
 and saves them with the command the gate board shows, and the gate must pass them. It then breaks each board's form
-once, as its `scene` in `site/boards.yaml` says, and shows the refusal the gate printed. The words each lens reads are
+once, as its `scene` in `site/boards.yaml` says, and shows the refusal the gate printed: the rule that refused it,
+and its line. The words each lens reads are
 written in `site/boards.yaml`, in each of the page's languages (English, and Persian, read right to left), with the
 page's own words under `ui`; the law's words, the forms and what the gate prints stay as the release states them. The
 page's template, style and script are `site/board.html` and `site/assets/`. A
