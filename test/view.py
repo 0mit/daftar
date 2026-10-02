@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
-"""The `view` profile and its asset: a page of drawings, checked as law, drawn by `assets/view`, and closed by default.
+"""The `view` profile and its asset in a garden of the core (v1 part 12: today's suite, ported): a page of drawings,
+judged by the core's gate, drawn by `assets/view`, and closed by default.
 
-A garden is grown here and opted into the profile; its page, its beings and its procedure are invented — a grain
-co-operative's silo and its drying run — and every one of them passes the gate. Then:
+A garden of the core is grown here (test/grow.py) taking the profile; its page, its beings and its procedure are
+invented — a grain co-operative's silo and its drying run — written in statements, each drawing a `draw` of the page's
+bean, and every one of them passes the core's gate. Then:
 
-  part 1, the law  the page's records pass with 0 errors and 0 warnings; each write the law refuses is refused by name
-                   (a unit the law has not got, a shape without what it answers with, a value no binding gives, a
-                   binding on no drawing, an address restated on the page, a stored list of patterns, a length written
-                   as a bare number, a stride on a walk with no meter, a repetition written as a length, a technology
-                   outside the catalogue, a threshold in seconds, a page opening on a machine, a monitor the garden does
-                   not hold, a pointer to a field nobody states, and a garden that does not extend the profile — whose
-                   refusal names the profile and the one act that opts in); the one the gate cannot refuse — a view
-                   written on a being — passes it, and is the asset's to refuse
+  part 1, the law  the page passes with 0 errors; each write the core refuses is refused by name (a value no drawing of
+                   the page holds, a drawing the page does not name, a garden that does not take the profile — the rule
+                   `profile` naming it, a page's visibility other than public or private); what today's gate refused of
+                   a page's form that the core does not judge yet — a value's unit, a technology outside the catalogue,
+                   a threshold's quantity, a deadline's and a repetition's form, a frame that is no line, a signal
+                   nobody published — is test/ported.yaml's
+  part 2, the asset  the asset's own checks, its report, its import, its bundle and its served page, over the page as
+                   statements (view_core.py reads each being for it)
 """
 import os, re, shutil, subprocess, sys, tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "test"))
+import grow  # noqa: E402
 FAILS, TRACES = [], []
 
 
@@ -29,283 +33,211 @@ def run(*a, cwd=None, env=None):
                           env=dict(os.environ, **(env or {})))
 
 
-def said(out, kind, *words):
-    """The findings of one kind (ERROR, WARN) that name every one of the words: a refusal is read by what it names. A
-    finding is its first line and the indented lines that go on from it (the gate sets the reason beneath)."""
-    found = []
-    for l in out.splitlines():
-        if l.startswith(kind):
-            found.append(l)
-        elif found and found[-1] is not None and l[:1].isspace() and l.strip():
-            found[-1] += "\n" + l
-        else:
-            found.append(None)
-    return [f for f in found if f is not None and all(w in f for w in words)]
+def said(out, rule, *words):
+    """The core's findings that name every one of the words — `<rule>  <where>: <what>`, one a line, every one an
+    error; `rule` None for any rule: a refusal is read by what it names."""
+    return [ln for ln in out.splitlines() if (rule is None or ln.split(" ", 1)[0] == rule) and all(w in ln for w in words)
+            and not ln.startswith("core check")]
 
 
 T = tempfile.mkdtemp(prefix="dmview-")
 G = os.path.join(T, "garden-grain")
 
-# ------------------------------------------------------------------ the garden, and what it keeps (all invented)
 BEANS = {
     "grain-coop": '''bean: grain-coop
-genos: org
-title: "The grain co-operative"
-status: active
-summary: "The co-operative that stores and dries its members' grain."
-nature: lekton
-identity:
-  status: confirmed
-  anchors:
-    - { key: identifier, value: "org:grain-coop", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
-owned_by: { owner: { bean: tessa } }
+kind: org
+title: The grain co-operative
+summary: The co-operative that stores and dries its members' grain.
+statements:
+  - say: {by: tessa, at: now, note: tessa (gardener)}
+  - own: {id: own, of: self, by: tessa}
 ''',
     "hill-farm": '''bean: hill-farm
-genos: org
-title: "The hill farm"
-status: active
-summary: "A member farm that keeps a pump of its own."
-nature: lekton
-identity:
-  status: confirmed
-  anchors:
-    - { key: identifier, value: "org:hill-farm", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
-owned_by: { owner: { bean: tessa } }
+kind: org
+title: The hill farm
+summary: A member farm that keeps a pump of its own.
+statements:
+  - say: {by: tessa, at: now, note: tessa (gardener)}
+  - own: {id: own, of: self, by: tessa}
 ''',
     "silo-controller": '''bean: silo-controller
-genos: host
-title: "The silo controller"
-status: active
-summary: "The machine that reads the silo's fill and runs its fans."
-nature: soma
-identity:
-  status: confirmed
-  anchors:
-    - { key: serial, value: "SN-SILO-0417", class: hardware, establishing: true }
-provenance: { src: observed, by: "tessa (gardener)", as_of: now }
-owned_by: { owner: { bean: grain-coop } }
-responsibility: { legal: { holder: { bean: tessa } } }
-provides_habitat: linux-baremetal
-located_at:
-  - { system: ipv4, openness: here, at: 192.0.2.40, observed: now }
-endpoints:
-  - { protocol: http, system: ipv4, at: 192.0.2.40, port: "80", exposure: lan, observed: now }
-  - { protocol: http, system: ipv4, at: 192.0.2.40, port: "443", confidentiality: encrypted, exposure: lan, observed: now }
+kind: host
+title: The silo controller
+summary: The machine that reads the silo's fill and runs its fans.
+statements:
+  - read: {by: tessa, at: now, note: tessa (gardener)}
+  - name: {id: serial, by: anchor-serial, of: self, as: SN-SILO-0417}
+  - own: {id: own, of: self, by: grain-coop}
+  - answer: {id: answer-law, by: tessa, of: self, as: law}
+  - be: {id: at-1, by: self, at: 192.0.2.40, as: location, placed: {openness: here, observed: '2026-10-02'}}
+  - serve: {id: serves-http, by: self, at: [192.0.2.40, 'tcp-port:80'], through: http}
+  - serve: {id: serves-http-2, by: self, at: [192.0.2.40, 'tcp-port:443'], through: http}
 details:
+  endpoints:
+    serves-http:
+      exposure: lan
+      observed: '2026-10-02'
+    serves-http-2:
+      confidentiality: encrypted
+      exposure: lan
+      observed: '2026-10-02'
+  provides_habitat: linux-baremetal
   processes:
-    - { proc: "fan-driver", user: "silo", role: "switches the fans", config: "fans.conf", rail: air }
-    - { proc: "fill-reader", user: "silo", role: "reads the level sensor", config: "sensor.conf", rail: fill }
+  - proc: fan-driver
+    user: silo
+    role: switches the fans
+    config: fans.conf
+    rail: air
+  - proc: fill-reader
+    user: silo
+    role: reads the level sensor
+    config: sensor.conf
+    rail: fill
   pipes:
-    - { from: "level sensor", to: "fill-reader", channel: serial, at: "/dev/ttyS1", config: "sensor 9600 baud", rail: fill }
-    - { from: "fill-reader", to: "exporter", channel: file, at: "/run/silo/fill", config: "every 30 seconds", rail: fill }
+  - from: level sensor
+    to: fill-reader
+    channel: serial
+    at: /dev/ttyS1
+    config: sensor 9600 baud
+    rail: fill
+  - from: fill-reader
+    to: exporter
+    channel: file
+    at: /run/silo/fill
+    config: every 30 seconds
+    rail: fill
 ''',
     "dryer-controller": '''bean: dryer-controller
-genos: host
-title: "The dryer controller"
-status: active
-summary: "The machine that runs the grain dryer's burner and its batches."
-nature: soma
-identity:
-  status: confirmed
-  anchors:
-    - { key: serial, value: "SN-DRY-0981", class: hardware, establishing: true }
-provenance: { src: observed, by: "tessa (gardener)", as_of: now }
-owned_by: { owner: { bean: grain-coop } }
-responsibility: { legal: { holder: { bean: tessa } } }
-located_at:
-  - { system: ipv4, openness: here, at: 192.0.2.41, observed: now }
-endpoints:
-  - { protocol: ssh, system: ipv4, at: 192.0.2.41, port: "22", exposure: lan, observed: now }
+kind: host
+title: The dryer controller
+summary: The machine that runs the grain dryer's burner and its batches.
+statements:
+  - read: {by: tessa, at: now, note: tessa (gardener)}
+  - name: {id: serial, by: anchor-serial, of: self, as: SN-DRY-0981}
+  - own: {id: own, of: self, by: grain-coop}
+  - answer: {id: answer-law, by: tessa, of: self, as: law}
+  - be: {id: at-1, by: self, at: 192.0.2.41, as: location, placed: {openness: here, observed: '2026-10-02'}}
+  - serve: {id: serves-ssh, by: self, at: [192.0.2.41, 'tcp-port:22'], through: ssh}
+details:
+  endpoints:
+    serves-ssh:
+      exposure: lan
+      observed: '2026-10-02'
 ''',
     "field-radio": '''bean: field-radio
-genos: host
-title: "The field radio"
-status: active
-summary: "Tessa's own radio link from the silo to the barn."
-nature: soma
-identity:
-  status: confirmed
-  anchors:
-    - { key: serial, value: "SN-RADIO-2210", class: hardware, establishing: true }
-provenance: { src: observed, by: "tessa (gardener)", as_of: now }
-owned_by: { owner: { bean: tessa } }
-located_at:
-  - { system: ipv4, openness: here, at: 192.0.2.60, observed: now }
+kind: host
+title: The field radio
+summary: Tessa's own radio link from the silo to the barn.
+statements:
+  - read: {by: tessa, at: now, note: tessa (gardener)}
+  - name: {id: serial, by: anchor-serial, of: self, as: SN-RADIO-2210}
+  - own: {id: own, of: self, by: tessa}
+  - be: {id: at-1, by: self, at: 192.0.2.60, as: location, placed: {openness: here, observed: '2026-10-02'}}
 ''',
     "hill-pump": '''bean: hill-pump
-genos: host
-title: "The hill farm's pump"
-status: active
-summary: "The hill farm's own irrigation pump controller."
-nature: soma
-identity:
-  status: confirmed
-  anchors:
-    - { key: serial, value: "SN-PUMP-3302", class: hardware, establishing: true }
-provenance: { src: observed, by: "tessa (gardener)", as_of: now }
-owned_by: { owner: { bean: hill-farm } }
-responsibility: { legal: { holder: { bean: tessa } } }
-located_at:
-  - { system: ipv4, openness: here, at: 192.0.2.70, observed: now }
+kind: host
+title: The hill farm's pump
+summary: The hill farm's own irrigation pump controller.
+statements:
+  - read: {by: tessa, at: now, note: tessa (gardener)}
+  - name: {id: serial, by: anchor-serial, of: self, as: SN-PUMP-3302}
+  - own: {id: own, of: self, by: hill-farm}
+  - answer: {id: answer-law, by: tessa, of: self, as: law}
+  - be: {id: at-1, by: self, at: 192.0.2.70, as: location, placed: {openness: here, observed: '2026-10-02'}}
 ''',
     "prometheus": '''bean: prometheus
-genos: product
-title: "Prometheus"
-status: active
-summary: "The monitoring system the co-operative runs, recorded so its copy has a type to be an instance of."
-nature: lekton
-identity:
-  status: confirmed
-  anchors:
-    - { key: identifier, value: technology:prometheus, class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
-owned_by: { external: "the Prometheus authors" }
-responsibility: { legal: { holder: { bean: tessa } } }
+kind: product
+title: Prometheus
+summary: The monitoring system the co-operative runs, recorded so its copy has a type to be an instance of.
+statements:
+  - say: {by: tessa, at: now, note: tessa (gardener)}
+  - name: {id: identifier, by: anchor-identifier, of: self, as: 'technology:prometheus'}
+  - own: {id: own, of: self, by: {someone: org}, note: the Prometheus authors}
+  - answer: {id: answer-law, by: tessa, of: self, as: law}
 ''',
     "yard-monitor": '''bean: yard-monitor
-genos: instance
-title: "The yard-monitor"
-status: active
-summary: "The co-operative's running monitor: it probes the controllers and keeps their readings."
-nature: lekton
-identity:
-  status: confirmed
-  anchors:
-    - { key: identifier, value: "instance:yard-monitor", class: logical, establishing: true }
-provenance: { src: observed, by: "tessa (gardener)", as_of: now }
-owned_by: { from: { bean: silo-controller } }
-responsibility: { from: { bean: silo-controller } }
-instance_of: { bean: prometheus }
-lives_in: { bean: silo-controller }
-roles: [ { role: monitoring } ]
-knowledge:
-  - { code: technology:prometheus, rel: uses }
-located_at:
-  - { system: unix-filesystem, openness: here, at: "silo-controller:/srv/yard-monitor", observed: now }
-reaches:
-  silo-web: { protocol: http, to: { bean: silo-controller } }
-  dryer-shell: { protocol: ssh, to: { bean: dryer-controller } }
-  radio-ping: { protocol: icmp, to: { bean: field-radio } }
-  pump-ping: { protocol: icmp, to: { bean: hill-pump } }
-  pump-snmp: { protocol: snmp, to: { bean: hill-pump } }
+kind: instance
+title: The yard-monitor
+summary: 'The co-operative''s running monitor: it probes the controllers and keeps their readings.'
+statements:
+  - read: {by: tessa, at: now, note: tessa (gardener)}
+  - own: {id: own, of: self, from: silo-controller}
+  - be: {id: at-1, by: self, at: 'silo-controller:/srv/yard-monitor', as: location, placed: {openness: here, observed: '2026-10-02'}}
+  - be: {id: lives-in, by: self, at: silo-controller, as: habitat}
+  - run: {id: instance-of, by: self, of: prometheus}
+  - need: {id: reaches-silo-web, by: self, of: [silo-controller], through: http}
+  - need: {id: reaches-dryer-shell, by: self, of: [dryer-controller], through: ssh}
+  - need: {id: reaches-radio-ping, by: self, of: [field-radio], through: icmp}
+  - need: {id: reaches-pump-ping, by: self, of: [hill-pump], through: icmp}
+  - need: {id: reaches-pump-snmp, by: self, of: [hill-pump], through: snmp}
+  - use: {id: uses-technology-prometheus, by: self, of: 'technology:prometheus'}
+  - do: {id: does-monitoring, by: self, as: monitoring}
 details:
+  responsibility:
+    from:
+      bean: silo-controller
   monitoring:
     alerts:
-      - { name: SiloNearlyFull, expr: "silo_fill_ratio > 0.9", for: 15m, severity: warning, summary: "the silo is over nine tenths full" }
-    alerting: { email_to: "keeper@example.org", email_from: "yard-monitor@example.org", smarthost: "host.docker.internal:25" }
-    snmp: { env_file: snmp.env, auths: { yard: { community_env: SNMP_YARD_COMMUNITY, version: 2 } }, modules: { hill-pump: [ { modules: [if_mib], auth: yard }, { modules: [ip_mib], auth: yard, org: grain-coop } ] } }
+    - name: SiloNearlyFull
+      expr: silo_fill_ratio > 0.9
+      for: 15m
+      severity: warning
+      summary: the silo is over nine tenths full
+    alerting:
+      email_to: keeper@example.org
+      email_from: yard-monitor@example.org
+      smarthost: host.docker.internal:25
+    snmp:
+      env_file: snmp.env
+      auths:
+        yard:
+          community_env: SNMP_YARD_COMMUNITY
+          version: '2'
+      modules:
+        hill-pump:
+        - modules:
+          - if_mib
+          auth: yard
+        - modules:
+          - ip_mib
+          auth: yard
+          org: grain-coop
     filesystems:
-      - { being: silo-controller, user: reader, path: /data }
-    grafana_plugins: ["marcusolsson-dynamictext-panel@6.3.0"]
+    - being: silo-controller
+      user: reader
+      path: /data
+    grafana_plugins:
+    - marcusolsson-dynamictext-panel@6.3.0
 ''',
     "grain-page": '''bean: grain-page
-genos: service
-title: "The silo and the dryer, drawn"
-status: active
-summary: "The co-operative's page of drawings: the silo filling, and the night's drying run."
-nature: lekton
-identity:
-  status: confirmed
-  anchors:
-    - { key: identifier, value: "service:grain-page", class: logical, establishing: true }
-provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
-owned_by: { owner: { bean: grain-coop } }
-responsibility: { legal: { holder: { bean: tessa } } }
-located_at:
-  - { system: uri, at: "https://grain.example.org/page/", openness: here }
-view:
-  drawings: file:bin/drawings.py
-  opens_on: grain-coop
-  glossary: { dryer: "the machine that takes the water out of the harvest before it is stored" }
-  reference:
-    - { being: silo-controller, system: ipv4, what: "reads the fill and runs the fans" }
-    - { being: dryer-controller, system: ipv4, what: "runs the dryer's batches" }
-    - { being: field-radio, system: ipv4, what: "carries the readings to the barn" }
-    - { being: hill-pump, system: ipv4, what: "the hill farm's pump" }
-  fields:
-    - { genos: host, term: summary, shown_from: understand }
-    - { genos: host, term: located_at, shown_from: inspect }
-view_monitors:
-  - { monitor: yard-monitor, settings: { bean: yard-monitor, field: monitoring } }
-views:
-  silo:
-    draws: { bean: silo-controller }
-    purpose: "Keeps room in the silo for the rest of the harvest."
-    outcome: "The silo never fills before the last load is in."
-    stages:
-      - { label: "Read the fill", doer: "the level sensor, every half minute", beings: [ { being: silo-controller } ], uses: [ { technology: prometheus } ] }
-      - { label: "Warn before full", doer: "the yard-monitor" }
-      - { label: "Send loads elsewhere", doer: "the yard crew" }
-    questions:
-      - { lens: orient, ask: "What keeps the silo from overflowing?" }
-      - { lens: operate, ask: "Is there room for tomorrow's loads?" }
-    processes: { bean: silo-controller, field: processes }
-    pipes: { bean: silo-controller, field: pipes }
-    actions:
-      - { element: start-fans, tool: start-fans, confirm: "Start the silo fans now?" }
-      - { element: radio-reset, tool: radio-reset, confirm: "Reset the field radio?", acts_on: field-radio }
-      - { element: pump-stop, tool: pump-stop, confirm: "Stop the hill pump?", acts_on: hill-pump }
-    archetype: reservoir
-    blind: [ { what: "the grain's moisture inside the silo", why: "no probe reaches inside" } ]
-    notes: [ { note: "at nine tenths full, send the next loads to the hill farm" } ]
-    fill: silo-fill
-    thresholds:
-      - { fullness: { count: 90, unit: percent }, label: "divert the next loads" }
-      - { fullness: { count: 98, unit: percent }, label: "stop filling" }
-    forecast: silo-full-in
-    parts: [ { bind: silo-up }, { bind: grain-temperature } ]
-    correlate:
-      - traces: [ { bind: silo-fill }, { bind: grain-temperature } ]
-        span: { of: time, measure: { count: 12, unit: hour } }
-        every: { of: time, every: { count: 5, unit: minute } }
-  drying:
-    draws: { mapping: drying-run }
-    purpose: "Dries each night's harvest before the morning's loads arrive."
-    outcome: "The batch is unloaded before six in the morning."
-    stages:
-      - { label: "Load the dryer", doer: "the yard crew" }
-      - { label: "Heat and cool", doer: "the dryer controller", beings: [ { being: dryer-controller } ] }
-      - { label: "Unload to the silo", doer: "the auger" }
-    questions: [ { lens: operate, ask: "Will the batch be out before six?" } ]
-    archetype: race
-    blind: [ { what: "the burner's fuel", why: "the tank has no gauge" } ]
-    step_at: drying-step
-    elapsed: drying-elapsed
-    eta: drying-left
-    deadline: { of: time, measure: { count: 7, unit: hour } }
-    checkpoints: [ { after: { of: time, measure: { count: 3, unit: hour } }, label: "heating should be done" } ]
-    numbers: [ { bind: drying-batches } ]
-    correlate:
-      - traces: [ { bind: grain-temperature } ]
-        band: drying-step
-        relate: { across: grain-temperature, measure: drying-left, bins: 4, at_step: 2, keep: positive }
-view_bindings:
-  silo-fill: { view: silo, element: silo, live: live-value, label: "silo fill", unit: percent, warn: 80, crit: 90, query: [ { technology: prometheus, says: "silo_fill_ratio{$F} * 100" } ] }
-  silo-full-in: { view: silo, element: silo, live: live-value, label: "until full", unit: day, query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ] }
-  silo-up: { view: silo, element: silo-controller, live: live-state }
-  radio-up: { view: silo, element: field-radio, live: live-state }
-  pump-up: { view: silo, element: hill-pump, live: live-state }
-  grain-temperature: { view: silo, element: silo, live: live-value, label: "grain temperature (°C)", warn: 30, crit: 38, query: [ { technology: prometheus, says: "silo_grain_celsius{$F}" } ] }
-  drying-step: { view: drying, element: dryer, live: live-value, label: "step", query: [ { technology: prometheus, says: "dryer_step{$F}" } ] }
-  drying-elapsed: { view: drying, element: dryer, live: live-value, label: "running for", unit: second, query: [ { technology: prometheus, says: "dryer_elapsed_seconds{$F}" } ] }
-  drying-left: { view: drying, element: dryer, live: live-value, label: "still needs", unit: second, query: [ { technology: prometheus, says: "dryer_remaining_seconds{$F}" } ] }
-  drying-batches: { view: drying, element: dryer, live: live-series, label: "batches tonight", query: [ { technology: prometheus, says: "dryer_batches{$F}", items_by: bay } ], item_names: { a: "the east bay", b: "the west bay" } }
+kind: service
+title: The silo and the dryer, drawn
+summary: 'The co-operative''s page of drawings: the silo filling, and the night''s drying run.'
+statements:
+  - say: {by: tessa, at: now, note: tessa (gardener)}
+  - own: {id: own, of: self, by: grain-coop}
+  - answer: {id: answer-law, by: tessa, of: self, as: law}
+  - be: {id: at-1, by: self, at: 'uri:https://grain.example.org/page/', as: location, placed: {openness: here}}
+  - draw: {id: silo, by: self, of: [silo-controller], drawing: {purpose: Keeps room in the silo for the rest of the harvest., outcome: The silo never fills before the last load is in., stages: [{label: Read the fill, doer: 'the level sensor, every half minute', beings: [{being: silo-controller}], uses: [{technology: prometheus}]}, {label: Warn before full, doer: the yard-monitor}, {label: Send loads elsewhere, doer: the yard crew}], questions: [{lens: orient, ask: 'What keeps the silo from overflowing?'}, {lens: operate, ask: 'Is there room for tomorrow''s loads?'}], processes: {bean: silo-controller, field: processes}, pipes: {bean: silo-controller, field: pipes}, actions: [{element: start-fans, tool: start-fans, confirm: 'Start the silo fans now?'}, {element: radio-reset, tool: radio-reset, confirm: 'Reset the field radio?', acts_on: field-radio}, {element: pump-stop, tool: pump-stop, confirm: 'Stop the hill pump?', acts_on: hill-pump}], archetype: reservoir, blind: [{what: the grain's moisture inside the silo, why: no probe reaches inside}], notes: [{note: 'at nine tenths full, send the next loads to the hill farm'}], fill: silo-fill, thresholds: [{fullness: {count: '90', unit: '%'}, label: divert the next loads}, {fullness: {count: '98', unit: '%'}, label: stop filling}], forecast: silo-full-in, parts: [{bind: silo-up}, {bind: grain-temperature}], correlate: [{traces: [{bind: silo-fill}, {bind: grain-temperature}], span: {of: time, measure: {count: '12', unit: h}}, every: {of: time, every: {count: '5', unit: min}}}], values: {silo-fill: {element: silo, live: live-value, label: silo fill, unit: '%', warn: '80', crit: '90', query: [{technology: prometheus, says: 'silo_fill_ratio{$F} * 100'}]}, silo-full-in: {element: silo, live: live-value, label: until full, unit: d, query: [{technology: prometheus, says: 'silo_days_to_full{$F}'}]}, silo-up: {element: silo-controller, live: live-state}, radio-up: {element: field-radio, live: live-state}, pump-up: {element: hill-pump, live: live-state}, grain-temperature: {element: silo, live: live-value, label: grain temperature (°C), warn: '30', crit: '38', query: [{technology: prometheus, says: 'silo_grain_celsius{$F}'}]}}}}
+  - draw: {id: drying, by: self, of: [drying-run], drawing: {purpose: Dries each night's harvest before the morning's loads arrive., outcome: The batch is unloaded before six in the morning., stages: [{label: Load the dryer, doer: the yard crew}, {label: Heat and cool, doer: the dryer controller, beings: [{being: dryer-controller}]}, {label: Unload to the silo, doer: the auger}], questions: [{lens: operate, ask: 'Will the batch be out before six?'}], archetype: race, blind: [{what: the burner's fuel, why: the tank has no gauge}], step_at: drying-step, elapsed: drying-elapsed, eta: drying-left, deadline: {of: time, measure: {count: '7', unit: h}}, checkpoints: [{after: {of: time, measure: {count: '3', unit: h}}, label: heating should be done}], numbers: [{bind: drying-batches}], correlate: [{traces: [{bind: grain-temperature}], band: drying-step, relate: {across: grain-temperature, measure: drying-left, bins: '4', at_step: '2', keep: positive}}], values: {drying-step: {element: dryer, live: live-value, label: step, query: [{technology: prometheus, says: 'dryer_step{$F}'}]}, drying-elapsed: {element: dryer, live: live-value, label: running for, unit: s, query: [{technology: prometheus, says: 'dryer_elapsed_seconds{$F}'}]}, drying-left: {element: dryer, live: live-value, label: still needs, unit: s, query: [{technology: prometheus, says: 'dryer_remaining_seconds{$F}'}]}, drying-batches: {element: dryer, live: live-series, label: batches tonight, query: [{technology: prometheus, says: 'dryer_batches{$F}', items_by: bay}], item_names: {a: the east bay, b: the west bay}}}}}
+  - draw: {id: page, by: self, of: [silo, drying], page: {drawings: 'file:bin/drawings.py', opens_on: grain-coop, glossary: {dryer: the machine that takes the water out of the harvest before it is stored}, reference: [{being: silo-controller, system: ipv4, what: reads the fill and runs the fans}, {being: dryer-controller, system: ipv4, what: runs the dryer's batches}, {being: field-radio, system: ipv4, what: carries the readings to the barn}, {being: hill-pump, system: ipv4, what: the hill farm's pump}], fields: [{kind: host, fact: summary, shown_from: understand}, {kind: host, fact: be.location, shown_from: inspect}], monitors: [{monitor: yard-monitor, settings: {bean: yard-monitor, field: monitoring}}]}}
 ''',
 }
 MAPPINGS = {
-    "drying-run": '''mapping: drying-run
+    "drying-run": '''bean: drying-run
 kind: procedure
-summary: "How a night's harvest is dried: loaded, heated, cooled and unloaded to the silo before the morning."
-provenance: { src: asserted-by-human, by: "tessa (gardener)", as_of: now }
-steps:
-  - "the yard crew loads the dryer from the evening's trailers"
-  - "the dryer-controller heats the batch until the grain reads dry"
-  - "the dryer-controller cools the batch with outside air"
-  - "the auger unloads the batch into the silo, where the silo-controller reads the fill"
+summary: 'How a night''s harvest is dried: loaded, heated, cooled and unloaded to the silo before the morning.'
+statements:
+  - say: {by: tessa, at: now, note: tessa (gardener)}
+details:
+  steps:
+  - the yard crew loads the dryer from the evening's trailers
+  - the dryer-controller heats the batch until the grain reads dry
+  - the dryer-controller cools the batch with outside air
+  - the auger unloads the batch into the silo, where the silo-controller reads the fill
 ''',
 }
+
 # THE GARDEN'S OWN DRAWINGS: code of the garden, named by the page and never part of the law. It draws with the asset's
 # kit, so every element it draws is recorded — its pattern, its id, the being it depicts.
 DRAWINGS = '''"""The co-operative's own drawings for its page (the garden's code, named by the page's `view.drawings`)."""
@@ -356,10 +288,10 @@ def get(rel):
 
 
 def gate():
-    r = run(sys.executable, os.path.join(G, "bin", "dmcheck.py"), "--all", cwd=G)
+    r = run(sys.executable, os.path.join(G, "core", "check.py"), ".", cwd=G)
     out = r.stdout + r.stderr
     if "Traceback" in out:
-        TRACES.append(out[-600:])
+        TRACES.append(out[-800:])
     return out, r.returncode
 
 
@@ -367,46 +299,46 @@ def last(out):
     return (out.strip().splitlines() or [""])[-1]
 
 
-# A RELEASE, made of this tree as seed/LANGUAGE ships it — what the release keeps, every profile's asset among it — and
-# tagged, so the garden grown from it records a release its upgrade can be run at (`--extend`, `--retract`).
-sys.path.insert(0, os.path.join(ROOT, "bin"))
-import dmparse, dmpass
-REL = os.path.join(T, "release")
-TAG = "v9.9.9"
-_law0 = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, "seed", "std-vocab.md"), encoding="utf-8").read())[0])
-for _f in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
-                      dmpass.language(open(os.path.join(ROOT, "seed", "LANGUAGE"), encoding="utf-8").read()),
-                      dmpass.offered(_law0)):
-    os.makedirs(os.path.join(REL, os.path.dirname(_f)), exist_ok=True)
-    shutil.copy2(os.path.join(ROOT, _f), os.path.join(REL, _f))
-_env = {"GIT_AUTHOR_NAME": "r", "GIT_AUTHOR_EMAIL": "r@example.org", "GIT_COMMITTER_NAME": "r", "GIT_COMMITTER_EMAIL": "r@example.org"}
-for _c in (["git", "init", "-q"], ["git", "add", "-A"], ["git", "commit", "-qm", "a release"], ["git", "tag", TAG]):
-    run(*_c, cwd=REL, env=_env)
+def in_drawing(page, did, add):
+    """The page with `add`, a fragment of a flow mapping, written first in the form of its drawing `did`."""
+    head = f"  - draw: {{id: {did}, "
+    i = page.index(head)
+    j = page.index("drawing: {", i) + len("drawing: {")
+    return page[:j] + add + ", " + page[j:]
 
-# THE GARDEN IS GROWN WITH THE PROFILES IT EXTENDS: `--profile` writes them in VOCAB.md, and the asset arrives with them.
-r = run(sys.executable, os.path.join(REL, "seed", "germinate.py"), G, "--gardener", "tessa",
-        "--profile", "network", "--profile", "knowledge", "--profile", "view", cwd=T)
-check("a garden germinates with --profile network, knowledge and view, kept by tessa: VOCAB.md extends the three, "
-      "and assets/view/ arrived with the language",
+
+# A RELEASE OF THE CORE, made of this tree as seed/LANGUAGE ships it — every profile's asset among it — and tagged, so
+# the garden grown from it records a release its upgrade can be run at (`--extend`, `--retract`).
+REL = grow.release(os.path.join(T, "release"))
+TAG = "v1.0.0"
+
+# THE GARDEN IS GROWN WITH THE PROFILES IT TAKES: `--profile` writes them in VOCAB.md, and the asset arrives with them.
+r = grow.garden(REL, G, "tessa", "--profile", "network", "--profile", "knowledge", "--profile", "view")
+check("a garden of the core germinates with --profile network, knowledge and view, kept by tessa: VOCAB.md takes the "
+      "three, and assets/view/ arrived with the language",
       r.returncode == 0 and os.path.isfile(os.path.join(G, "beans", "tessa.md"))
-      and "extends_profiles: [network, knowledge, view]" in open(os.path.join(G, "VOCAB.md"), encoding="utf-8").read()
-      and os.path.isfile(os.path.join(G, "assets", "view", "bin", "dmview.py")), r.stdout + r.stderr)
+      and "profiles: [network, knowledge, view]" in open(os.path.join(G, "VOCAB.md"), encoding="utf-8").read()
+      and os.path.isfile(os.path.join(G, "assets", "view", "bin", "view.py")), r.out)
 if r.returncode != 0:
     shutil.rmtree(T, ignore_errors=True)
     print("\nview: %d failed" % len(FAILS))
     sys.exit(1)
 run("git", "config", "user.name", "tessa", cwd=G)
 run("git", "config", "user.email", "tessa@example.org", cwd=G)
+_v = get("VOCAB.md")
+put("VOCAB.md", _v.replace("namespaces: []\n", "kinds:\n  - { kind: procedure, nature: sayable }\nnamespaces:\n"
+                           "  - { namespace: anchor-identifier, once: 'true' }\n  - { namespace: anchor-serial, once: 'true' }\n", 1))
 for _id, _t in BEANS.items():
     put(f"beans/{_id}.md", "---\n" + _t + "---\n" + _id + ", as the co-operative records it.\n")
 for _id, _t in MAPPINGS.items():
     put(f"mappings/{_id}.md", "---\n" + _t + "---\nThe drying run.\n")
 put("bin/drawings.py", DRAWINGS)
-r = run(sys.executable, os.path.join(G, "bin", "dmsave.py"), "tessa", "the co-operative's page of drawings",
+r = run(sys.executable, os.path.join(G, "bin", "save.py"), "tessa", "the co-operative's page of drawings",
         "--body", "- action: " + ", ".join(f"[[{b}]]" for b in list(BEANS) + list(MAPPINGS)) +
-        " recorded, and bin/drawings.py, the drawings.", cwd=G)
-check("the page, its beings and its procedure are saved through the gate, with 0 errors and 0 warnings",
-      r.returncode == 0 and " 0 error(s), 0 warning(s)" in (r.stdout + r.stderr), (r.stdout + r.stderr)[-1500:])
+        " recorded, and bin/drawings.py, the drawings. RULE-CHANGE: VOCAB.md holds the procedure and the namespaces "
+        "the serials and identifiers are given in.", cwd=G)
+check("the page, its beings and its procedure are saved through the core's gate, with 0 errors",
+      r.returncode == 0 and "— 0 error(s)" in (r.stdout + r.stderr), (r.stdout + r.stderr)[-1500:])
 SAVED = {rel: get(rel) for rel in ["beans/grain-page.md", "beans/yard-monitor.md", "beans/silo-controller.md", "VOCAB.md"]}
 
 
@@ -416,54 +348,16 @@ def restore():
 
 # ------------------------------------------------------------------ part 1: the law
 out, rc = gate()
-check("the whole garden passes: 0 errors, 0 warnings — a second, a day and a percent occupied, no prediction warned of",
-      rc == 0 and last(out).endswith("0 error(s), 0 warning(s)") and "prediction came true" not in out, out[-800:])
+check("the whole garden passes the core's gate: 0 errors", rc == 0 and last(out).endswith("— 0 error(s)"), out[-800:])
 
 PAGE = SAVED["beans/grain-page.md"]
 REFUSED = [
-    ("a unit the law has not got (celsius)", "beans/grain-page.md",
-     'label: "grain temperature (°C)", warn', 'label: "grain temperature", unit: celsius, warn',
-     ("grain-page", "celsius", "units")),
-    ("a reservoir with no thresholds", "beans/grain-page.md",
-     "    thresholds:\n      - { fullness: { count: 90, unit: percent }, label: \"divert the next loads\" }\n"
-     "      - { fullness: { count: 98, unit: percent }, label: \"stop filling\" }\n", "",
-     ("grain-page", "reservoir", "thresholds")),
-    ("a fill no binding gives", "beans/grain-page.md", "fill: silo-fill", "fill: silo-level",
-     ("grain-page", "silo-level", "view_bindings")),
-    ("a binding on a drawing the page has not got", "beans/grain-page.md", "silo-fill: { view: silo,",
-     "silo-fill: { view: barn,", ("grain-page", "barn", "views")),
-    ("an address restated on the page", "beans/grain-page.md", "{ being: silo-controller, system: ipv4, what",
-     "{ being: silo-controller, system: ipv4, at: 192.0.2.40, what", ("grain-page", "view.reference", "`at`")),
-    ("a stored list of patterns", "beans/grain-page.md", "unit: percent, warn: 80",
-     "unit: percent, live_patterns: [live-value], warn: 80", ("grain-page", "live_patterns")),
-    ("a deadline written as a bare quantity", "beans/grain-page.md",
-     "deadline: { of: time, measure: { count: 7, unit: hour } }", "deadline: { count: 7, unit: hour }",
-     ("grain-page", "deadline")),
-    ("a stride on a walk with no meter (routine)", "beans/grain-page.md",
-     "every: { of: time, every: { count: 5, unit: minute } }", "every: { of: routine, every: { count: 5, unit: minute } }",
-     ("grain-page", "routine", "metered")),
-    ("a repetition written as a length", "beans/grain-page.md",
-     "every: { of: time, every: { count: 5, unit: minute } }", "every: { count: 5, unit: minute }",
-     ("grain-page", "every")),
-    ("a race with no step", "beans/grain-page.md", "    step_at: drying-step\n", "",
-     ("grain-page", "race", "step_at")),
-    ("a query in a technology outside the catalogue", "beans/grain-page.md",
-     'technology: prometheus, says: "silo_fill_ratio', 'technology: silo-watch, says: "silo_fill_ratio',
-     ("grain-page", "silo-watch", "technology")),
-    ("a threshold in seconds", "beans/grain-page.md", "{ fullness: { count: 90, unit: percent }",
-     "{ fullness: { count: 90, unit: second }", ("grain-page", "second", "ratio")),
-    ("a page opening on a machine", "beans/grain-page.md", "opens_on: grain-coop", "opens_on: silo-controller",
-     ("grain-page", "silo-controller", "org")),
-    ("a monitor the garden does not hold", "beans/grain-page.md", "- { monitor: yard-monitor,", "- { monitor: barn-yard-monitor,",
-     ("grain-page", "barn-yard-monitor")),
-    ("an inspect pointer to a field the being does not state", "beans/grain-page.md",
-     "pipes: { bean: silo-controller, field: pipes }", "pipes: { bean: silo-controller, field: ducts }",
-     ("grain-page", "ducts")),
-    ("a monitor's settings pointing at a field it does not state", "beans/grain-page.md",
-     "settings: { bean: yard-monitor, field: monitoring }", "settings: { bean: yard-monitor, field: alarms }",
-     ("grain-page", "alarms")),
-    ("a garden that does not extend view", "VOCAB.md", "[network, knowledge, view]", "[network, knowledge]",
-     ("grain-page", "view", "--extend view")),
+    ("a fill no value of the page gives", "beans/grain-page.md", "fill: silo-fill,", "fill: silo-level,",
+     ("grain-page", "silo-level", "no value of this page")),
+    ("a drawing the page does not name", "beans/grain-page.md", "  - draw: {id: page, by: self, of: [silo, drying],",
+     "  - draw: {id: page, by: self, of: [silo],", ("grain-page", "drying", "does not name")),
+    ("a garden that does not take view", "VOCAB.md", "profiles: [network, knowledge, view]", "profiles: [network, knowledge]",
+     ("grain-page", "view")),
 ]
 for _name, _rel, _old, _new, _words in REFUSED:
     _orig = get(_rel)
@@ -472,13 +366,12 @@ for _name, _rel, _old, _new, _words in REFUSED:
         continue
     put(_rel, _orig.replace(_old, _new, 1))
     out, rc = gate()
-    check(f"REFUSED by name: {_name}", rc == 1 and bool(said(out, "ERROR", *_words)),
-          said(out, "ERROR") or out[-700:])
+    check(f"REFUSED by name: {_name}", rc == 1 and bool(said(out, None, *_words)), said(out, None) or out[-700:])
     put(_rel, _orig)
 
 # THE ONE THE GATE CANNOT REFUSE. The schema language has no "only on the bean that carries another term": a `views`
 # entry written on a being passes the gate, and the asset refuses it, as test/assets.py finds it for every profile.
-DMVIEW = os.path.join(G, "assets", "view", "bin", "dmview.py")
+DMVIEW = os.path.join(G, "assets", "view", "bin", "view.py")
 
 
 def dmview(*a, garden=None):
@@ -490,15 +383,12 @@ def dmview(*a, garden=None):
 
 
 _ctl = get("beans/silo-controller.md")
-put("beans/silo-controller.md", _ctl.replace("details:\n", "views:\n  stray:\n    draws: { bean: silo-controller }\n"
-                                             "    purpose: p\n    outcome: o\n    stages: [ { label: a, doer: b } ]\n"
-                                             "    questions: [ { lens: orient, ask: q } ]\n    archetype: health-chain\n"
-                                             "    blind: [ { what: w } ]\ndetails:\n", 1))
+put("beans/silo-controller.md", _ctl.replace("statements:\n", "statements:\n  - draw: {id: stray, by: self, of: [silo-controller], "
+                                             "drawing: {purpose: p, outcome: o, stages: [{label: a, doer: b}], questions: "
+                                             "[{lens: orient, ask: q}], archetype: health-chain, blind: [{what: w}]}}\n", 1))
 out, rc = gate()
-_vout, _vrc = dmview("check")
-check("a view written on a being passes the gate — the schema language cannot say where a term sits — and the asset "
-      "refuses it, naming the being and the page", rc == 0 and _vrc == 2 and "silo-controller carries `views`" in _vout
-      and "grain-page" in _vout, out[-400:] + " | " + _vout[-600:])
+check("a drawing written on a being that is no page is refused by the core's gate (rule `profile`): a drawing is a page's",
+      rc == 1 and bool(said(out, "profile", "silo-controller", "a drawing is a page's")), out[-600:])
 put("beans/silo-controller.md", _ctl)
 
 # ------------------------------------------------------------------ part 2: the asset
@@ -510,7 +400,7 @@ out, rc = dmview("check")
 check("dmview check: the page and its drawings agree", rc == 0 and "the page and its drawings agree" in out, out[-800:])
 _page = get("beans/grain-page.md")
 for _bad in ("file:../drawings.py", "file:/tmp/drawings.py", "file:bin/../../drawings.py", "file:beans/grain-page.md"):
-    put("beans/grain-page.md", _page.replace("drawings: file:bin/drawings.py", f"drawings: {_bad}", 1))
+    put("beans/grain-page.md", _page.replace("drawings: 'file:bin/drawings.py'", f"drawings: '{_bad}'", 1))
     out, rc = dmview("check")
     check(f"the drawing module is code the host runs: `view.drawings: {_bad}`, outside the garden or no Python file, is "
           f"refused, and nothing of it runs", rc != 0 and "inside the garden" in out, out[-600:])
@@ -520,52 +410,51 @@ check("dmview elements: ids are the slugs of labels, and each records the being 
       rc == 0 and re.search(r"(?m)^silo\s+store\s+silo-controller", out) and re.search(r"(?m)^start-fans\s+action", out), out)
 
 DRAWINGS_T = get("bin/drawings.py")
+SILO_FORM = "  - draw: {id: silo, by: self, of: [silo-controller], drawing: {"
 MAPPING_T = get("mappings/drying-run.md")
 YARD_T = get("beans/yard-monitor.md")
 PAGE_T = get("beans/grain-page.md")
 ASSET_REFUSED = [
     ("a binding on an element the drawing does not have", "beans/grain-page.md",
-     "silo-up: { view: silo, element: silo-controller,", "silo-up: { view: silo, element: auger,", ("silo-up", "auger")),
+     "silo-up: {element: silo-controller,", "silo-up: {element: auger,", ("silo-up", "auger")),
     ("an action on an element that is not a button", "beans/grain-page.md",
-     "- { element: start-fans, tool: start-fans,", "- { element: silo-controller, tool: start-fans,",
+     "{element: start-fans, tool: start-fans,", "{element: silo-controller, tool: start-fans,",
      ("start-fans", "not an action element")),
-    ("`processes` without `pipes`", "beans/grain-page.md", "    pipes: { bean: silo-controller, field: pipes }\n", "",
+    ("`processes` without `pipes`", "beans/grain-page.md", ", pipes: {bean: silo-controller, field: pipes}", "",
      ("processes", "pair")),
-    ("a race that draws a being, not a procedure", "beans/grain-page.md", "draws: { mapping: drying-run }",
-     "draws: { bean: dryer-controller }", ("race", "procedure")),
+    ("a race that draws a being, not a procedure", "beans/grain-page.md", "draw: {id: drying, by: self, of: [drying-run],",
+     "draw: {id: drying, by: self, of: [dryer-controller],", ("race", "procedure")),
     ("a race whose procedure branches", "mappings/drying-run.md",
-     'steps:\n  - "the yard crew loads the dryer from the evening\'s trailers"\n  - "the dryer-controller heats the batch until the grain reads dry"\n',
-     "steps:\n  - { id: load, do: \"load\", next: [ { to: heat, when: \"dry\" }, { to: cool, when: \"wet\" } ] }\n"
-     "  - { id: heat, do: \"heat\", next: [ { to: cool } ] }\n", ("branches", "load")),
+     "  steps:\n  - the yard crew loads the dryer from the evening's trailers\n  - the dryer-controller heats the batch until the grain reads dry\n",
+     "  steps:\n  - { id: load, do: load, next: [ { to: heat, when: dry }, { to: cool, when: wet } ] }\n"
+     "  - { id: heat, do: heat, next: [ { to: cool } ] }\n", ("branches", "load")),
     ("a drawing that shows an address", "bin/drawings.py", '"Silo controller", "reads the fill"',
      '"Silo controller", "reads 192.0.2.40"', ("shows 192.0.2.40", "no address")),
     ("a drawing the page does not list", "bin/drawings.py", 'COMPOSERS = {"silo": silo, "drying": drying}',
      'COMPOSERS = {"silo": silo, "drying": drying, "barn": drying}', ("barn", "does not list")),
     ("a drawing the module does not draw", "bin/drawings.py", 'COMPOSERS = {"silo": silo, "drying": drying}',
      'COMPOSERS = {"silo": silo}', ("drying", "no drawing")),
-    ("a story longer than its lens holds", "beans/grain-page.md",
-     '      - { label: "Send loads elsewhere", doer: "the yard crew" }\n',
-     '      - { label: "Send loads elsewhere", doer: "the yard crew" }\n' * 4, ("stages", "orient")),
-    ("a fact on a card that is no term of the law", "beans/grain-page.md", "{ genos: host, term: summary,",
-     "{ genos: host, term: summery,", ("summery", "no term")),
+    ("a story longer than its lens holds", "beans/grain-page.md", "{label: Send loads elsewhere, doer: the yard crew}",
+     ", ".join(["{label: Send loads elsewhere, doer: the yard crew}"] * 4), ("stages", "orient")),
+    ("a fact on a card that is no fact a bean states", "beans/grain-page.md", "{kind: host, fact: summary,",
+     "{kind: host, fact: summery,", ("summery",)),
     ("a monitor whose technology no adapter here reads", "beans/yard-monitor.md",
-     "  - { code: technology:prometheus, rel: uses }", "  - { code: technology:zabbix, rel: uses }",
-     ("yard-monitor", "zabbix", "no adapter")),
+     "of: 'technology:prometheus'}", "of: 'technology:zabbix'}", ("yard-monitor", "zabbix", "no adapter")),
     ("a live-state on a being no monitor reaches", "beans/yard-monitor.md",
-     "  radio-ping: { protocol: icmp, to: { bean: field-radio } }\n", "", ("radio-up", "field-radio", "reaches")),
+     "  - need: {id: reaches-radio-ping, by: self, of: [field-radio], through: icmp}\n", "", ("radio-up", "field-radio", "reaches")),
     ("a value no monitor of the page can compute", "beans/grain-page.md",
-     'query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]',
-     'query: [ { technology: zabbix, says: "silo.days" } ]', ("silo-full-in", "zabbix")),
+     "query: [{technology: prometheus, says: 'silo_days_to_full{$F}'}]", "query: [{technology: zabbix, says: silo.days}]",
+     ("silo-full-in", "zabbix")),
     ("a page that states nowhere it is shown", "beans/grain-page.md",
-     'located_at:\n  - { system: uri, at: "https://grain.example.org/page/", openness: here }\n', "",
+     "  - be: {id: at-1, by: self, at: 'uri:https://grain.example.org/page/', as: location, placed: {openness: here}}\n", "",
      ("states nowhere it is shown", "uri")),
-    ("a zoom from an element the drawing does not have", "beans/grain-page.md", "  silo:\n",
-     "  silo:\n    opens: [ { element: auger, view: drying } ]\n", ("opens", "auger", "does not have")),
-    ("a zoom into the drawing it is in", "beans/grain-page.md", "  silo:\n",
-     "  silo:\n    opens: [ { element: silo, view: silo } ]\n", ("opens the drawing it is in",)),
+    ("a zoom from an element the drawing does not have", "beans/grain-page.md", SILO_FORM,
+     SILO_FORM + "opens: [{element: auger, view: drying}], ", ("opens", "auger", "does not have")),
+    ("a zoom into the drawing it is in", "beans/grain-page.md", SILO_FORM,
+     SILO_FORM + "opens: [{element: silo, view: silo}], ", ("opens the drawing it is in",)),
     ("a story stage in more words than its lens holds a stage", "beans/grain-page.md",
-     '      - { label: "Send loads elsewhere", doer: "the yard crew" }\n',
-     '      - { label: "Send loads elsewhere, to the co-operative across the valley and the river", doer: "the yard crew" }\n',
+     "{label: Send loads elsewhere, doer: the yard crew}",
+     "{label: 'Send loads elsewhere, to the co-operative across the valley and the river', doer: the yard crew}",
      ("words", "orient")),
 ]
 for _name, _rel, _old, _new, _words in ASSET_REFUSED:
@@ -579,7 +468,7 @@ for _name, _rel, _old, _new, _words in ASSET_REFUSED:
     put(_rel, _orig)
 
 # ZOOM AND FRAME, AS THE GATE AND THE ASSET READ THEM
-put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    frame: place\n    opens: [ { element: silo, view: drying } ]\n", 1))
+put("beans/grain-page.md", in_drawing(PAGE_T, "silo", "frame: place, opens: [{element: silo, view: drying}]"))
 out, rc = dmview("check")
 _g, _ = gate()
 _rep, _ = dmview("report", "--out", os.path.join(T, "zoom.html"))
@@ -587,17 +476,13 @@ _html = open(os.path.join(T, "zoom.html"), encoding="utf-8").read() if os.path.i
 check("a drawing laid out along place, whose silo opens the drying run, passes the gate and the asset, and the page "
       "carries the zoom", rc == 0 and " 0 error(s)" in _g and '"opens": [{"el": "silo", "view": "drying"}]' in _html,
       (out[-400:], _g[-400:], _rep[-300:]))
-put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    frame: necessity\n", 1))
-_g, _rc = gate()
-check("...and a frame that is no line — `necessity`, a modal opposition — is refused by the gate", _rc != 0
-      and "necessity" in _g and "frame" in _g, _g[-600:])
-put("beans/grain-page.md", PAGE_T.replace('at: "https://grain.example.org/page/"', 'at: "grain page"', 1))
+put("beans/grain-page.md", PAGE_T.replace("at: 'uri:https://grain.example.org/page/'", "at: 'uri:grain page'", 1))
 _g, _rc = gate()
 check("a page's place in `uri` is written as RFC 3986 writes it, or refused", _rc != 0 and "grain page" in _g, _g[-600:])
 put("beans/grain-page.md", PAGE_T)
 
 # A SIGNAL, BY ITS PUBLISHED NAME: the binding says what it measures, and the source adapter asks it in its own language
-_sig = PAGE_T.replace('query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]', 'signal: system.filesystem.utilization', 1)
+_sig = PAGE_T.replace("query: [{technology: prometheus, says: 'silo_days_to_full{$F}'}]", "signal: system.filesystem.utilization", 1)
 put("beans/grain-page.md", _sig)
 out, rc = dmview("check")
 _g, _ = gate()
@@ -606,10 +491,7 @@ _html = open(os.path.join(T, "signal.html"), encoding="utf-8").read() if os.path
 check("a binding that names a signal and no query passes the gate and the asset, and Prometheus is asked it by "
       "OpenTelemetry's name for it: avg(system_filesystem_utilization_ratio{…})",
       rc == 0 and " 0 error(s)" in _g and "avg(system_filesystem_utilization_ratio{" in _html, (out[-400:], _g[-300:]))
-put("beans/grain-page.md", PAGE_T.replace('query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]', 'signal: silo.fullness', 1))
-_g, _rc = gate()
-check("...a signal no one published is refused by the gate", _rc != 0 and "silo.fullness" in _g, _g[-500:])
-put("beans/grain-page.md", PAGE_T.replace(', query: [ { technology: prometheus, says: "silo_days_to_full{$F}" } ]', '', 1))
+put("beans/grain-page.md", PAGE_T.replace(", query: [{technology: prometheus, says: 'silo_days_to_full{$F}'}]", "", 1))
 out, rc = dmview("check")
 check("...and a value with neither a query nor a signal is refused by the asset: nothing could ask it", rc != 0
       and "silo-full-in" in out, out[-600:])
@@ -668,7 +550,7 @@ check("the page's own chain to the eye is engraved from its record: where it is 
 put("bin/drawings.py", DRAWINGS_T.replace('         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),',
     '         boundary(590, 40, 200, 180, "The controls", eid="controls"),\n         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),', 1)
     .replace("from view_kit import ", "from view_kit import boundary, ", 1))
-put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    opens: [ { element: controls } ]\n", 1))
+put("beans/grain-page.md", in_drawing(PAGE_T, "silo", "opens: [{element: controls}]"))
 out, rc = dmview("check")
 _dt = run(sys.executable, "-c", """
 import json, os, sys
@@ -685,7 +567,7 @@ _d = (_dj.get("silo") or [{}])[0]
 check("a boundary opens as a detail of its drawing: the region it draws, holding the parts inside it",
       rc == 0 and _d.get("el") == "controls" and {"silo-controller", "field-radio"} <= set(_d.get("inside") or []),
       (out[-400:], _dt.stdout[-300:], _dt.stderr[-300:]))
-put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    opens: [ { element: trailer } ]\n", 1))
+put("beans/grain-page.md", in_drawing(PAGE_T, "silo", "opens: [{element: trailer}]"))
 out, rc = dmview("check")
 check("...and a detail opened from a part that is no boundary is refused", rc != 0 and "a detail is the region a boundary draws" in out, out[-500:])
 put("bin/drawings.py", DRAWINGS_T)
@@ -699,7 +581,7 @@ put("bin/drawings.py", DRAWINGS_T.replace('         node(20, 60, 180, 48, "Trail
     '         node(20, 60, 180, 48, "Trailer", "brings a load", cls="ext"),\n'
     '         flow(200, 100, 600, 100, "reports"), flow(600, 190, 200, 120, "answers"),', 1)
     .replace("from view_kit import ", "from view_kit import boundary, ", 1))
-put("beans/grain-page.md", PAGE_T.replace("  silo:\n", "  silo:\n    opens: [ { element: yard }, { element: controls }, { element: radio } ]\n", 1))
+put("beans/grain-page.md", in_drawing(PAGE_T, "silo", "opens: [{element: yard}, {element: controls}, {element: radio}]"))
 out, rc = dmview("check")
 _cl = run(sys.executable, "-c", """
 import json, os, sys
@@ -729,9 +611,9 @@ put("bin/drawings.py", DRAWINGS_T)
 put("beans/grain-page.md", PAGE_T)
 
 # WHERE IT IS SHOWN: a URI is measured from no being; the one serving it says so in its own `endpoints`
-put("beans/grain-page.md", PAGE_T.replace('  - { system: uri, at: "https://grain.example.org/page/", openness: here }\n',
-    '  - { system: uri, at: "https://grain.example.org/page/", openness: here }\n'
-    '  - { system: uri, at: "https://192.0.2.40/page/", openness: here }\n', 1))
+put("beans/grain-page.md", PAGE_T.replace("  - be: {id: at-1, by: self, at: 'uri:https://grain.example.org/page/', as: location, placed: {openness: here}}\n",
+    "  - be: {id: at-1, by: self, at: 'uri:https://grain.example.org/page/', as: location, placed: {openness: here}}\n"
+    "  - be: {id: at-2, by: self, at: 'uri:https://192.0.2.40/page/', as: location, placed: {openness: here}}\n", 1))
 out, rc = dmview("check")
 _ws = run(sys.executable, "-c", """
 import os, sys
@@ -768,7 +650,7 @@ check("...and a revision cloud is drawn only around a part the drawing draws", a
       [(s["key"], s["changed"]) for s in _sj])
 put("drawings/palette.yaml", "modes:\n  night: { bg: \"#101418\", accent: \"#c9d38c\" }\n  day: { bg: \"#f4efe2\", accent: \"#5a6a26\" }\n"
     "  print: { bg: \"#ffffff\", fg: \"#000000\" }\n")
-put("beans/grain-page.md", PAGE_T.replace("  drawings: file:bin/drawings.py\n", "  drawings: file:bin/drawings.py\n  palette: file:drawings/palette.yaml\n", 1))
+put("beans/grain-page.md", PAGE_T.replace("drawings: 'file:bin/drawings.py'", "drawings: 'file:bin/drawings.py', palette: 'file:drawings/palette.yaml'", 1))
 out, rc = dmview("check")
 _rep, _ = dmview("report", "--out", os.path.join(T, "palette.html"))
 _html = open(os.path.join(T, "palette.html"), encoding="utf-8").read() if os.path.isfile(os.path.join(T, "palette.html")) else ""
@@ -782,13 +664,13 @@ check("...and a palette with a colour that is none, or a mode the sheet has not,
 put("beans/grain-page.md", PAGE_T)
 
 # PIPES ALONE ARE WIRING: what a drawing draws may be joined by pipes and run no process of its own.
-put("beans/grain-page.md", PAGE_T.replace("    processes: { bean: silo-controller, field: processes }\n", "", 1))
+put("beans/grain-page.md", PAGE_T.replace("processes: {bean: silo-controller, field: processes}, ", "", 1))
 out, rc = dmview("check")
 check("dmview passes `pipes` without `processes`: pipes alone are wiring enough", rc == 0 and "processes" not in out, out[-700:])
 put("beans/grain-page.md", PAGE_T)
 
 # A REACH IT CANNOT PROBE IS SAID, NEVER DROPPED: a being with no endpoint of the protocol and no address to probe.
-put("beans/yard-monitor.md", YARD_T.replace("  pump-snmp:", "  coop-web: { protocol: http, to: { bean: grain-coop } }\n  pump-snmp:", 1))
+put("beans/yard-monitor.md", YARD_T.replace("  - need: {id: reaches-pump-snmp,", "  - need: {id: reaches-coop-web, by: self, of: [grain-coop], through: http}\n  - need: {id: reaches-pump-snmp,", 1))
 out, rc = dmview("check")
 check("dmview WARNS, and passes: a reach the adapter cannot probe (grain-coop over http: no endpoint, no address)",
       rc == 0 and "warn: monitor yard-monitor: reaches grain-coop over http, and does not probe it" in out, out[-700:])
@@ -915,6 +797,7 @@ SEL = {"order": ["silo", "drying"], "views": P["author"]["views"], "bindings": P
 _sp = os.path.join(T, "sel.json")
 json.dump(SEL, open(_sp, "w", encoding="utf-8"))
 _j0 = get("log/journal.md")
+_h_imp = run("git", "rev-parse", "HEAD", cwd=G).stdout.strip()     # an import commits: each probe is undone to here
 out, rc = dmview("import", _sp)
 check("import: a selection that says what the page says writes nothing, and journals nothing",
       rc == 0 and "nothing to write" in out and get("beans/grain-page.md") == PAGE_T and get("log/journal.md") == _j0, out[-500:])
@@ -929,25 +812,24 @@ out, rc = dmview("import", _sp, "--who", "tessa")
 _pg = get("beans/grain-page.md")
 _ga = gate()
 check("import: a new order, a relabelled drawing, a YAML word as a label and a new binding are written through dmsafe, "
-      "read back as intended, journalled naming the page, and pass the gate", rc == 0 and _pg.index("  drying:") < _pg.index("  silo:")
-      and 'label: "yes"' in _pg and "silo-load:" in _pg and "[[grain-page]]" in get("log/journal.md")[len(_j0):]
+      "read back as intended, journalled naming the page, and pass the gate", rc == 0 and "of: [drying, silo]" in _pg
+      and ("label: 'yes'" in _pg or 'label: "yes"' in _pg) and "silo-load:" in _pg and "[[grain-page]]" in get("log/journal.md")[len(_j0):]
       and _ga[1] == 0 and dmview("check")[1] == 0, out[-600:] + _ga[0][-400:])
-restore()
-run("git", "clean", "-qfd", "--", "log", cwd=G)
+run("git", "reset", "-q", "--hard", _h_imp, cwd=G)
 SEL3 = json.loads(json.dumps(SEL))
 SEL3["views"]["silo"]["actions"] = []
 json.dump(SEL3, open(_sp, "w", encoding="utf-8"))
 out, rc = dmview("import", _sp, "--who", "tessa")
 check("import: an emptied list of actions is written as none, and the page still checks",
       rc == 0 and "start-fans" not in get("beans/grain-page.md") and dmview("check")[1] == 0, out[-500:])
-restore()
+run("git", "reset", "-q", "--hard", _h_imp, cwd=G)
 SEL4 = json.loads(json.dumps(SEL))
 SEL4["views"]["barn"] = {"label": "The barn"}
 json.dump(SEL4, open(_sp, "w", encoding="utf-8"))
 out, rc = dmview("import", _sp)
 check("import: a selection naming a drawing the page does not have is refused, and nothing is written",
       rc != 0 and "barn" in out and get("beans/grain-page.md") == PAGE_T, out[-400:])
-restore()
+run("git", "reset", "-q", "--hard", _h_imp, cwd=G)
 
 # --- the bundle, written by the monitor's adapter
 out, rc = dmview("bundle")
@@ -1036,24 +918,22 @@ def alerts(settings, beans, binds):
     return []
 """
 put("assets/view/lib/sources/zabbix.py", SIBLING)
-put("beans/zabbix.md", "---\nbean: zabbix\ngenos: product\ntitle: \"Zabbix\"\nstatus: active\nsummary: \"A second monitoring system.\"\n"
-    "nature: lekton\nidentity:\n  status: confirmed\n  anchors:\n    - { key: identifier, value: technology:zabbix, class: logical, establishing: true }\n"
-    "provenance: { src: asserted-by-human, by: \"tessa (gardener)\", as_of: now }\nowned_by: { external: \"its authors\" }\n"
-    "responsibility: { legal: { holder: { bean: tessa } } }\n---\nA second monitor's software.\n")
-put("beans/radio-monitor.md", "---\nbean: radio-monitor\ngenos: instance\ntitle: \"The radio monitor\"\nstatus: active\n"
-    "summary: \"Reads the field radio's signal.\"\nnature: lekton\nidentity:\n  status: confirmed\n  anchors:\n"
-    "    - { key: identifier, value: \"instance:radio-monitor\", class: logical, establishing: true }\n"
-    "provenance: { src: observed, by: \"tessa (gardener)\", as_of: now }\nowned_by: { owner: { bean: tessa } }\n"
-    "instance_of: { bean: zabbix }\nlives_in: { bean: silo-controller }\n"
-    "knowledge:\n  - { code: technology:zabbix, rel: uses }\nreaches:\n  radio-agent: { protocol: icmp, to: { bean: field-radio } }\n"
+put("beans/zabbix.md", "---\nbean: zabbix\nkind: product\ntitle: \"Zabbix\"\nsummary: \"A second monitoring system.\"\n"
+    "statements:\n  - say: {by: tessa, at: now}\n  - name: {by: anchor-identifier, of: self, as: 'technology:zabbix'}\n"
+    "  - own: {by: {someone: org}, of: self, note: its authors}\n  - answer: {by: tessa, of: self, as: law}\n"
+    "---\nA second monitor's software.\n")
+put("beans/radio-monitor.md", "---\nbean: radio-monitor\nkind: instance\ntitle: \"The radio monitor\"\n"
+    "summary: \"Reads the field radio's signal.\"\nstatements:\n  - read: {by: tessa, at: now}\n  - own: {by: tessa, of: self}\n"
+    "  - be: {by: self, at: silo-controller, as: habitat}\n  - run: {by: self, of: zabbix}\n"
+    "  - use: {by: self, of: 'technology:zabbix'}\n  - need: {id: reaches-radio-agent, by: self, of: [field-radio], through: icmp}\n"
     "---\nThe radio monitor.\n")
-put("beans/grain-page.md", PAGE_T.replace("  - { monitor: yard-monitor, settings: { bean: yard-monitor, field: monitoring } }\n",
-                                          "  - { monitor: yard-monitor, settings: { bean: yard-monitor, field: monitoring } }\n"
-                                          "  - { monitor: radio-monitor }\n", 1)
-    .replace("  radio-up: { view: silo, element: field-radio, live: live-state }\n",
-             "  radio-up: { view: silo, element: field-radio, live: live-state }\n"
-             "  radio-signal: { view: silo, element: field-radio, live: live-value, label: \"radio signal\", query: [ { technology: zabbix, says: \"radio.signal\" } ] }\n"
-             "  both-read: { view: silo, element: silo, live: live-value, label: \"read twice\", query: [ { technology: zabbix, says: \"silo.load\" }, { technology: prometheus, says: \"silo_load{$F}\" } ] }\n", 1))
+put("beans/grain-page.md", PAGE_T.replace("statements:\n", "statements:\n  - say: {by: tessa, of: [silo, page], at: now}\n", 1)
+    .replace("monitors: [{monitor: yard-monitor, settings: {bean: yard-monitor, field: monitoring}}]",
+                                          "monitors: [{monitor: yard-monitor, settings: {bean: yard-monitor, field: monitoring}}, {monitor: radio-monitor}]", 1)
+    .replace("radio-up: {element: field-radio, live: live-state}, ",
+             "radio-up: {element: field-radio, live: live-state}, "
+             "radio-signal: {element: field-radio, live: live-value, label: radio signal, query: [{technology: zabbix, says: radio.signal}]}, "
+             "both-read: {element: silo, live: live-value, label: read twice, query: [{technology: zabbix, says: silo.load}, {technology: prometheus, says: 'silo_load{$F}'}]}, ", 1))
 _ga = gate()
 out, rc = dmview("check")
 _r2 = os.path.join(T, "r2.html")
@@ -1097,7 +977,7 @@ def free_port():
     s = socket.socket(); s.bind(("127.0.0.1", 0)); p = s.getsockname()[1]; s.close(); return p
 
 
-_sv = run(sys.executable, os.path.join(G, "bin", "dmsave.py"), "tessa", "RULE-CHANGE: a second monitor, and its adapter",
+_sv = run(sys.executable, os.path.join(G, "bin", "save.py"), "tessa", "RULE-CHANGE: a second monitor, and its adapter",
           "--body", "- action: [[zabbix]], [[radio-monitor]] and [[grain-page]]: the radio read by a second technology; "
           "RULE-CHANGE: assets/view/lib/sources/zabbix.py added, a probe of a sibling adapter.", cwd=G)
 check("...and the garden saves it, a RULE-CHANGE: an adapter added beside the release's is a change to the release's files",
@@ -1109,31 +989,24 @@ VIEWERS = {"alice": "p-a11ce000", "carol": "p-ca401000", "dave": "p-da4e0000"}
 for _p in VIEWERS.values():
     put(f"beans/{_p}.md", f"""---
 bean: {_p}
-genos: person
+kind: person
 title: "{_p}"
-status: active
 summary: "a viewer of the co-operative's page"
-nature: soma
-owned_by: {{ crown: true }}
-responsibility: {{ legal: {{ self: true }} }}
-identity: {{ status: confirmed, anchors: [ {{ key: identifier, value: "person:{_p}", class: logical, establishing: true }} ] }}
-provenance: {{ src: asserted-by-human, by: "tessa (gardener)", as_of: now }}
+statements:
+  - say: {{ by: tessa, at: now }}
+  - own: {{ by: theone, of: self }}
 ---
 A viewer.
 """)
+# A GRANT OF THE CORE NAMES WHAT IT OPENS: every being the co-operative keeps, to each viewer, to read and to run its
+# tools (`enact`) — today's grant over a reading has no form in the core yet (test/ported.yaml)
+_every = sorted(f[:-3] for d in ("beans", "mappings") for f in os.listdir(os.path.join(G, d)) if f.endswith(".md"))
 _t = get("beans/tessa.md")
-put("beans/tessa.md", _t.replace("\n---\n", """
-selections:
-  everything: { what: "every being the co-operative keeps", steps: [ { id: all, op: select } ] }
-  viewers: { what: "the page's viewers", steps: [ { id: people, op: select, genos: person } ] }
-grants:
-  viewers-read: { act: read, over: everything, audience: { selection: viewers }, why: "the page is the co-operative's to read" }
-  viewers-fans: { act: "act:start-fans", over: everything, audience: { selection: viewers }, why: "a viewer may start the fans" }
-  viewers-radio: { act: "act:radio-reset", over: everything, audience: { selection: viewers }, why: "a viewer may reset the radio" }
-  viewers-pump: { act: "act:pump-stop", over: everything, audience: { selection: viewers }, why: "a viewer may stop the pump" }
----
-""", 1))
-_sv = run(sys.executable, os.path.join(G, "bin", "dmsave.py"), "tessa", "the page's viewers, and what they are granted",
+put("beans/tessa.md", _t.replace("\n---\n", "\n  - say: { by: tessa, of: [viewers-read, viewers-act], at: now }\n"
+                                 "  - grant: { id: viewers-read, by: tessa, to: [%s], of: [%s], as: read, why: \"the page is the co-operative's to read\" }\n"
+                                 "  - grant: { id: viewers-act, by: tessa, to: [%s], of: [%s], as: enact, why: \"a viewer may start the fans, reset the radio and stop the pump\" }\n"
+                                 "---\n" % (", ".join(VIEWERS.values()), ", ".join(_every), ", ".join(VIEWERS.values()), ", ".join(_every)), 1))
+_sv = run(sys.executable, os.path.join(G, "bin", "save.py"), "tessa", "the page's viewers, and what they are granted",
           "--body", "- action: " + ", ".join(f"[[{_p}]]" for _p in VIEWERS.values()) + " recorded; [[tessa]] grants them "
           "the co-operative's beings to read, and its three tools.", cwd=G)
 check("the viewers and the gardener's grants to them are saved through the gate", _sv.returncode == 0,
@@ -1317,7 +1190,7 @@ try:
     _rel0 = urllib.request.urlopen(BASE + "/healthz", timeout=3).headers.get("X-View-Release")
     _gm = get("GARDEN.md")
     put("GARDEN.md", _gm.replace('daftar_release: "%s"' % TAG, 'daftar_release: "v9.9.10"', 1))
-    _rs = run(sys.executable, os.path.join(G, "bin", "dmsave.py"), "tessa", "RULE-CHANGE: the release recorded moves",
+    _rs = run(sys.executable, os.path.join(G, "bin", "save.py"), "tessa", "RULE-CHANGE: the release recorded moves",
               "--body", "- action: RULE-CHANGE: GARDEN.md records v9.9.10, a probe of the server's reload.", cwd=G)
     _rel1 = None
     for _ in range(40):
@@ -1341,11 +1214,11 @@ restore()
 # among them: each part shows its own address beside it, sent only to a viewer who may see that being, and a drawing's
 # own text may carry one.
 _page, _draw = get("beans/grain-page.md"), get("bin/drawings.py")
-put("beans/grain-page.md", _page.replace("  opens_on: grain-coop\n", "  opens_on: grain-coop\n  visibility: secret\n", 1))
+put("beans/grain-page.md", _page.replace("opens_on: grain-coop, ", "opens_on: grain-coop, visibility: secret, ", 1))
 out, rc = gate()
-check("the law: a page's visibility is public or private, and nothing else", rc != 0 and said(out, "ERROR", "visibility", "secret"),
+check("the law: a page's visibility is public or private, and nothing else", rc != 0 and said(out, None, "visibility", "secret"),
       out[-600:])
-put("beans/grain-page.md", _page.replace("  opens_on: grain-coop\n", "  opens_on: grain-coop\n  visibility: private\n", 1))
+put("beans/grain-page.md", _page.replace("opens_on: grain-coop, ", "opens_on: grain-coop, visibility: private, ", 1))
 _d2 = (_draw.replace("from view_kit import", "from view_model import ip\nfrom view_kit import", 1)
        .replace('node(600, 60, 170, 48, "Silo controller", "reads the fill", bean="silo-controller")',
                 'node(600, 60, 170, 52, "Silo controller", "reads 192.0.2.99", ip("silo-controller"), bean="silo-controller")', 1)
@@ -1386,67 +1259,8 @@ check("the host sends a part's address only to a viewer who may see that being: 
       and 'data-addr-of="hill-pump">%s<' % _a("hill-pump") in _sv("root") and "192.0.2.99" in _sv("alice") + _sv("root"),
       _sv("alice")[:400])
 restore()
-run("git", "tag", "v9.9.10", cwd=REL, env=_env)             # the release the garden now records, as a tag of the release
-
-
-def recorded(g):
-    return re.search(r'(?m)^daftar_release: "([^"]+)"', open(os.path.join(g, "GARDEN.md"), encoding="utf-8").read()).group(1)
-
-# --- the opt-in act: leaving the profile takes the asset away, and a page that still draws is refused its leaving
-out = run(sys.executable, os.path.join(G, "bin", "dmupgrade.py"), recorded(G), "--from", REL, "--retract", "view", cwd=G)
-check("dmupgrade --retract view, while the page still carries `view`, is put back whole: the gate refuses the garden",
-      out.returncode != 0 and "NOT" in out.stdout and os.path.isfile(DMVIEW) and "view]" in get("VOCAB.md"),
-      (out.stdout + out.stderr)[-700:])
-_G2 = os.path.join(T, "garden-plain")
-run(sys.executable, os.path.join(REL, "seed", "germinate.py"), _G2, "--gardener", "sam", cwd=T)
-run("git", "config", "user.name", "sam", cwd=_G2)
-run("git", "config", "user.email", "sam@example.org", cwd=_G2)
-_e = run(sys.executable, os.path.join(_G2, "bin", "dmupgrade.py"), recorded(_G2), "--from", REL, "--extend", "network",
-         "--extend", "knowledge", "--extend", "view", cwd=_G2)
-_jt = open(os.path.join(_G2, "log", "journal.md"), encoding="utf-8").read()
-check("dmupgrade --extend: VOCAB.md extends the profiles, the asset arrives, the entry says RULE-CHANGE and names the "
-      "profiles, and the gate passes — nothing committed", _e.returncode == 0 and os.path.isfile(os.path.join(_G2, "assets", "view", "bin", "dmview.py"))
-      and "extends_profiles: [network, knowledge, view]" in open(os.path.join(_G2, "VOCAB.md"), encoding="utf-8").read()
-      and "RULE-CHANGE: profiles +network +knowledge +view" in _jt and run("git", "rev-list", "--count", "HEAD", cwd=_G2).stdout.strip() == "2",
-      (_e.stdout + _e.stderr)[-700:])
-_jt = _jt.replace("(fill in who ratified — the gardener's word, given here)", "sam, here").replace(
-    "(fill in — what the garden takes the profile up, or leaves it, for)", "to draw what it keeps")
-open(os.path.join(_G2, "log", "journal.md"), "w", encoding="utf-8").write(_jt)
-run("git", "add", "-A", cwd=_G2)
-_c = run("git", "commit", "-qm", "the profiles extended", cwd=_G2)
-_x = run(sys.executable, os.path.join(_G2, "bin", "dmupgrade.py"), recorded(_G2), "--from", REL, "--extend", "drawing", cwd=_G2)
-check("dmupgrade --extend of a profile the law does not offer is refused, touching nothing", _x.returncode != 0
-      and "does not offer drawing" in (_x.stdout + _x.stderr), (_x.stdout + _x.stderr)[-400:])
-_r = run(sys.executable, os.path.join(_G2, "bin", "dmupgrade.py"), recorded(_G2), "--from", REL, "--retract", "view", cwd=_G2)
-check("dmupgrade --retract: VOCAB.md no longer extends it, and the asset is taken away, its folders with it",
-      _c.returncode == 0 and _r.returncode == 0 and not os.path.exists(os.path.join(_G2, "assets"))
-      and "extends_profiles: [network, knowledge]" in open(os.path.join(_G2, "VOCAB.md"), encoding="utf-8").read(),
-      (_c.stdout + _c.stderr + _r.stdout + _r.stderr)[-700:])
-_g3 = os.path.join(T, "garden-none")
-_x = run(sys.executable, os.path.join(REL, "seed", "germinate.py"), _g3, "--profile", "drawing", cwd=T)
-check("germinate --profile of a profile the law does not offer is refused before anything is created",
-      _x.returncode != 0 and "drawing" in _x.stderr and not os.path.exists(_g3), _x.stderr[-300:])
-_d = run(sys.executable, os.path.join(_G2, "assets", "view", "bin", "dmview.py"), "check", cwd=_G2) if os.path.isfile(
-    os.path.join(_G2, "assets", "view", "bin", "dmview.py")) else run(sys.executable, os.path.join(G, "assets", "view", "bin", "dmview.py"), "check", "--garden", _G2, cwd=_G2)
-check("dmview in a garden that does not extend view refuses, with the one act that opts in",
-      _d.returncode == 2 and "--extend view" in _d.stderr, _d.stderr[-400:])
-
-# --- the cookbook's recipe, as the page shows it, in a garden that extends the profile
-_ck = open(os.path.join(ROOT, "seed", "COOKBOOK.md"), encoding="utf-8").read()
-_ex = re.findall(r"<!-- view-example: ((?:beans|mappings)/[a-z0-9-]+\.md) -->\n```markdown\n(.*?)\n```", _ck, re.S)
-_g4 = os.path.join(T, "garden-bakery")
-run(sys.executable, os.path.join(REL, "seed", "germinate.py"), _g4, "--gardener", "sam", "--profile", "view", cwd=T)
-for _p, _x in _ex:
-    os.makedirs(os.path.dirname(os.path.join(_g4, _p)), exist_ok=True)
-    open(os.path.join(_g4, _p), "w", encoding="utf-8").write(_x.replace("as_of: now", "as_of: 2026-01-02") + "\n")
-os.makedirs(os.path.join(_g4, "drawings"), exist_ok=True)
-shutil.copy2(os.path.join(_g4, "assets", "view", "templates", "drawings.py"), os.path.join(_g4, "drawings", "bakery.py"))
-_gk = run(sys.executable, os.path.join(_g4, "bin", "dmcheck.py"), "--all", cwd=_g4)
-_vk = run(sys.executable, os.path.join(_g4, "assets", "view", "bin", "dmview.py"), "check", cwd=_g4)
-_rk = run(sys.executable, os.path.join(_g4, "assets", "view", "bin", "dmview.py"), "report", "--out", os.path.join(T, "bakery.html"), cwd=_g4)
-check(f"the cookbook's page of drawings ({len(_ex)} beans), with the asset's template as its drawing module, passes the gate "
-      "and the asset, and draws", len(_ex) == 2 and _gk.returncode == 0 and _vk.returncode == 0 and _rk.returncode == 0,
-      (_gk.stdout[-300:], _vk.stdout + _vk.stderr, _rk.stdout + _rk.stderr))
+# THE OPT-IN ACT (upgrade --extend and --retract, germinate --profile) AND THE COOKBOOK'S PAGE are test/core_view.py's
+# in a garden of the core.
 
 # --- the engraver: a drawing laid out from the facts it draws — the silo's drying run as parts and pipes, invented
 sys.path.insert(0, os.path.join(ROOT, "assets", "view", "lib"))

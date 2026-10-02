@@ -30,6 +30,12 @@ ported:
   - { suite: test/assets.py,    how: "the one reader of seed/LANGUAGE; every asset a profile of core/law/profiles.yaml; a page saved" }
   - { suite: test/layers.py,    how: "core/law/layers.yaml over the release's files; a garden's standing rows; rule `layers`" }
   - { suite: test/cost.py,      how: "the core's gate timed over a `record` series held in a part" }
+  - suite: test/view.py
+    how: "the view asset over a page of `draw` statements: its check, elements, refusals, zoom, details, regions, sheet, palette, report, import, bundle, a second adapter, the served page closed by default, a private page, the engraver"
+    left:
+      - "rule `profile` judges a drawing's attributes by their shape, and leaves a domain a tool reads to the tool (core/lines.py `attrs_problems`): a value's unit, a technology outside the catalogue, a threshold's quantity, a deadline's and a repetition's form, a frame that is no line, a signal nobody published — each refused by today's gate, none yet by the core's"
+      - "the viewers' grants are written bean by bean: a grant over a reading has no form in the core (as test/privacy.py's promise, below)"
+      - "the opt-in act (upgrade --extend and --retract, germinate --profile) and the cookbook's page are test/core_view.py's"
 
 waiting:
   - { suite: test/docs.py, part: 13, why: "its prose is today's guides (README, MODEL, FORMS…), and the retired words it looks for are bin/dmcheck.py's and std-vocab's: part 13 puts core/guide/ in their place, and the words a guide must not write become core/law/terms.yaml's" }

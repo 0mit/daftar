@@ -122,6 +122,8 @@ class Garden:
         import garden as gm
         from core import check
         self.gm = gm
+        gm._CORE.pop(self.root, None)            # a garden read now is read as it stands now, not as an earlier read
+        gm._CACHE.clear()                        # in this process found it (a host re-reads it at each new head)
         self.G = gm.core_garden(self.root)
         self.L = check.garden_law(self.root)
         self.law = Law(self.L, self.root)

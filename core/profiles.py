@@ -145,9 +145,14 @@ def problems(J, b):
                 out.append((f"{where}.values.{k}", f"`{k}` names a value of the drawing `{seen[k]}` already: a value is "
                                                    f"named once on its page"))
             seen.setdefault(k, did)
+    # A DRAWING NAMES A VALUE OF ITS PAGE: its own, or one another drawing of the page holds, which a shape reads beside
+    # its own (a race's band read against the grain's temperature) — a value being named once on its page (v1 part 12)
+    for did, (i, r) in drawings.items():
+        where = f"{b.id}: statements[{i}] draw.drawing"
+        vals = r['drawing'].get('values') if isinstance(r['drawing'].get('values'), dict) else {}
         for path, kind, n in _named(r['drawing'], (L.forms.get('drawing') or {}).get('attrs') or {}, where):
-            if kind == 'values' and n not in vals:
-                out.append((path, f"{n!r} is no value of this drawing ({', '.join(vals) or 'it has none'})"))
+            if kind == 'values' and n not in vals and n not in seen:
+                out.append((path, f"{n!r} is no value of this page ({', '.join(seen) or 'it has none'})"))
             elif kind == 'drawings' and n not in drawings:
                 out.append((path, f"{n!r} is no drawing of this page ({', '.join(map(str, drawings))})"))
             elif kind == 'readings' and n not in readings:

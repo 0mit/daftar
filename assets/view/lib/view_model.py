@@ -1475,8 +1475,30 @@ def yaml_view(v):
     return "\n".join(out) + "\n"
 
 
+def _first_difference(a, b, at=""):
+    """Where two plain values first differ, and how: what was read back, and what was meant."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        for k in sorted(set(a) | set(b), key=str):
+            if a.get(k) != b.get(k):
+                return _first_difference(a.get(k), b.get(k), f"{at}.{k}" if at else str(k))
+    if isinstance(a, list) and isinstance(b, list) and len(a) == len(b):
+        for i, (x, y) in enumerate(zip(a, b)):
+            if x != y:
+                return _first_difference(x, y, f"{at}[{i}]")
+    return f"{at or 'the whole'}: read {a!r}, meant {b!r}"
+
+
 def _plain_data(x):
     return json.loads(json.dumps(x, default=str))
+
+
+def _as_text(x):
+    """Plain data with every number written as its text, as a garden of the core reads every value (spec §14, 10)."""
+    if isinstance(x, dict):
+        return {k: _as_text(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_as_text(v) for v in x]
+    return str(x) if isinstance(x, (int, float)) and not isinstance(x, bool) else x
 
 
 EDITABLE = ("label", "purpose", "outcome", "stages", "questions", "actions")
@@ -1600,10 +1622,12 @@ def _import_statements(path, who, bean, before, order, new_view, new_views, new_
     _FM.clear()
     got = page()
     for key, data in (("view", new_view), ("views", new_views), ("view_bindings", new_binds)):
-        if _plain_data(got.get(key) or {}) != _plain_data(data or {}):
+        a, b = _as_text(_plain_data(got.get(key) or {})), _as_text(_plain_data(data or {}))   # the core reads every
+        if a != b:                                                                           # value as its text
             open(bean, "w", encoding="utf-8", newline="\n").write(before)     # the file as it was, byte for byte
             CORE.reload()
-            raise SystemExit("dmview: `%s` did not read back as the selection intended — restored, nothing written" % key)
+            raise SystemExit("dmview: `%s` did not read back as the selection intended (%s) — restored, nothing written"
+                             % (key, _first_difference(a, b)))
     e, _w = check()
     if e:
         print("dmview: WARNING — the written page does not pass check:\n  - " + "\n  - ".join(e), file=sys.stderr)
