@@ -1,7 +1,7 @@
 """law — the face and the rows, loaded as one law and proved consistent with itself.
 
 The face is `core/law/core.yaml`: the seven roles, the shapes, the grammar's words, the two figures, the order (natures,
-lines, levels, conditions, the crown), the face's verbs and the twenty rules. The verbs beyond the face are rows,
+lines, levels, conditions, the crown), the face's verbs and the twenty-one rules. The verbs beyond the face are rows,
 `core/law/verbs.yaml`. A garden adds rows of its own in its VOCAB.md, under these keys only:
 
   kinds         { kind, nature, line?, level?, rung?, meaning? }       what a bean records
@@ -71,6 +71,7 @@ ROW_FIELDS = {
 }
 LINES = 'lines.yaml'                                       # the forms of a line and a reading's grammar (v1 part 6)
 TOOLS, VACANCIES = 'tools.yaml', 'vacancies.yaml'          # the tools by their verbs; what nothing takes up yet (part 9)
+PROFILES = 'profiles.yaml'                                 # what a garden takes up beside the core (v1 part 11)
 MEASURES = 'measures.yaml'                                 # the forms of a measure: a region, a repetition, a clause's
                                                            # terms and a placement's, how well a value is known (part 7)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
@@ -127,6 +128,9 @@ class Law:
         self.families, self.tools = {}, {}                  # core/law/tools.yaml (v1 part 9)
         self.vacancy_reasons, self.vacancies, self.vacancies_dropped = [], [], []   # core/law/vacancies.yaml
         self.own = {}                                       # a garden's own systems, schemes and files (part 7)
+        self.profiles, self.profile_tables = {}, {}         # core/law/profiles.yaml: each profile, its tables' rows
+        self.added_by = {}                                  # (form, attribute) -> the profile that adds it to the form
+        self.taken, self.taken_where = [], None             # the profiles a garden takes (VOCAB.md `profiles`)
         self.tables = {t: listed(F.get(t)) for t in FACE_TABLES}
         self.tables['layers'] = listed(F.get('layers'))
         self.standard_tables = set(listed(rows.get('standard_tables')))
@@ -170,7 +174,7 @@ class Law:
         measures = os.path.join(d, MEASURES) if os.path.isfile(os.path.join(d, MEASURES)) else os.path.join(LAW_DIR, MEASURES)
         law.measure_law = read.data(measures)
         law.forms = dict(law.line_law.get('forms') or {}, **(law.measure_law.get('forms') or {}))
-        for name, put in ((TOOLS, law._tools), (VACANCIES, law._vacancies)):     # the law tools' law (v1 part 9)
+        for name, put in ((TOOLS, law._tools), (VACANCIES, law._vacancies), (PROFILES, law._profiles)):
             put(read.data(os.path.join(d, name) if os.path.isfile(os.path.join(d, name)) else os.path.join(LAW_DIR, name)))
         return law
 
@@ -183,12 +187,43 @@ class Law:
         self.vacancies = [v for v in listed(data.get('vacancies')) if isinstance(v, dict)]
         self.vacancies_dropped = [v for v in listed(data.get('dropped')) if isinstance(v, dict)]
 
+    def _profiles(self, data):
+        """The profiles (v1 part 11): each by its name; its tables' rows, their names a table the verbs may name; the
+        forms it brings; the attributes it adds to a form of the core, which the form holds for every garden and rule
+        `profile` grants only where the garden takes the profile; its vacancies beside the law's own."""
+        self.profiles = {str(p['profile']): p for p in listed(data.get('profiles')) if isinstance(p, dict)}
+        keys = {'lenses': 'lens', 'archetypes': 'archetype', 'planes': 'plane'}
+        for t, key in keys.items():
+            rows = [r for r in listed(data.get(t)) if isinstance(r, dict)]
+            self.profile_tables[t] = rows
+            self.tables[t] = [str(r.get(key)) for r in rows]
+        for name, f in (data.get('forms') or {}).items():
+            if isinstance(f, dict) and 'attrs' in f:
+                self.forms[name] = f
+        for name, p in self.profiles.items():
+            for form, add in (p.get('adds') or {}).items():
+                base = self.forms.get(form)
+                if not isinstance(base, dict) or not isinstance(add, dict):
+                    self.found.append(('law', f"core/law/profiles.yaml {name}", f"adds to `{form}`, no form of the core"))
+                    continue
+                self.forms[form] = dict(base, attrs=dict(base.get('attrs') or {}, **(add.get('attrs') or {})),
+                                        cells=listed(base.get('cells')) + listed(add.get('cells')))
+                for a in add.get('attrs') or {}:
+                    self.added_by[(form, a)] = name
+            self.vacancies += [dict(v, profile=name) for v in listed(p.get('vacancies')) if isinstance(v, dict)]
+            self.vacancies_dropped += [dict(v, profile=name) for v in listed(p.get('dropped')) if isinstance(v, dict)]
+
+    def home(self, verb):
+        """The profile a verb is the profile's own, or None for the core's."""
+        h = (self.verbs.get(verb) or {}).get('home')
+        return h if h in self.profiles else None
+
     def form_attr(self, form, path):
         """The record of an attribute of a form (`walk.exit`: an attribute of what `walk` holds), or None."""
         rec = {'in': self.forms.get(form)} if form in self.forms else None
         for seg in [s for s in path.split('.') if s]:
             dom = (rec or {}).get('in')
-            attrs = (dom.get('attrs') or dom.get('entries')) if isinstance(dom, dict) else None
+            attrs = (dom.get('attrs') or dom.get('entries') or dom.get('map_of')) if isinstance(dom, dict) else None
             rec = attrs.get(seg) if isinstance(attrs, dict) else None
             if not isinstance(rec, dict):                  # an attribute nested a level down, under any attribute
                 found = [self.form_attr(form, f"{a}.{seg}") for a in (attrs or {}) if isinstance(attrs, dict)] \
@@ -251,6 +286,14 @@ class Law:
                                                                           'dropped': 'flow'}[key]))] = row
                 if key == 'methods':
                     self.tables['methods'] = list(self.methods)
+                continue
+            if key == 'profiles' and where == GARDEN:     # THE PROFILES A GARDEN TAKES (v1 part 11): names, judged
+                self.taken_where = where                  # against the profiles the law offers once it is loaded
+                if not isinstance(val, list) or not all(isinstance(x, str) for x in val):
+                    self.found.append(('law', f"{where} profiles", "`profiles` is a list of the profiles the garden "
+                                                                   "takes, each by its name"))
+                    continue
+                self.taken = list(val)
                 continue
             if key not in ROW_KEYS:
                 continue
@@ -435,7 +478,8 @@ class Law:
         if len(self.roles) != 7:
             bad('core.yaml roles', f"the core has seven roles, and this law {len(self.roles)}")
         known_rules = ['form', 'valency', 'knowing', 'placeholder', 'order', 'life', 'necessity', 'squares', 'weight',
-                       'frame', 'names', 'layers', 'ratify', 'consent', 'harm', 'room', 'vacancy', 'kept', 'line', 'measured']
+                       'frame', 'names', 'layers', 'ratify', 'consent', 'harm', 'room', 'vacancy', 'kept', 'line', 'measured',
+                       'profile']
         for x in self.exclusive:
             if x.get('verb') not in self.verbs:
                 bad('exclusive', f"`{x.get('verb')}` is no verb of the law: what is exclusive is a verb's `at`")
@@ -455,6 +499,15 @@ class Law:
             bad('core.yaml rules', f"the engine applies {', '.join(known_rules)}; the law lists {', '.join(self.rules)}")
         for name, v in self.verbs.items():
             self._verb_problems(name, v, bad)
+            if self.profiles and v.get('home') not in (None, 'core') and v.get('home') not in self.profiles:
+                bad(f"verb {name}", f"its home `{v.get('home')}` is the core or a profile of the law "
+                                    f"({', '.join(self.profiles)})")
+        for p in self.taken:
+            if p not in self.profiles:
+                bad(f"{self.taken_where} profiles", f"`{p}` is no profile the law offers: one of "
+                                                    f"{', '.join(self.profiles)}")
+        if len(set(self.taken)) != len(self.taken):
+            bad(f"{self.taken_where} profiles", "a profile is taken once")
         for f in self.figures:
             names = set((f.get('positions') or {}).keys()) | set((f.get('positions') or {}).values())
             ops = {n for n, v in self.verbs.items() if v.get('figure') == f.get('figure')}
@@ -619,8 +672,9 @@ class Law:
                 bad(where, f"requires `{r}`, which it does not take")
         ch = v.get('choice')
         if ch is not None:
-            if not isinstance(ch, dict) or set(ch) != {'one_of'} or any(r not in roles for r in listed(ch['one_of'])):
-                bad(where, "a choice is `{ one_of: [roles it takes] }`")
+            if not isinstance(ch, dict) or set(ch) != {'one_of'} or any(r not in roles and r not in quals
+                                                                       for r in listed(ch['one_of'])):
+                bad(where, "a choice is `{ one_of: [roles or qualifiers it takes] }`")
         d = v.get('default')
         if d is not None:
             if not isinstance(d, dict) or not isinstance(d.get('fill'), dict) or set(d) - {'says', 'when', 'fill', 'alone'}:

@@ -7,7 +7,7 @@ grown from it, ada's and ben's, which meet: each records the other as a `garden`
 gardener, and both agree to a pact.
 
 law: core/law/flows.yaml is what std-vocab generates, each of today's rows a row of the core or dropped with why; the
-law whole with its twenty rules; the nearest row decides, a refusal among equals, `ratified` only for the party a
+law whole with its rules; the nearest row decides, a refusal among equals, `ratified` only for the party a
 garden's row grants, and a garden's row never unguards. gate: a `pass` the table grants is saved, one it refuses is
 refused by rule `layers`. pass: the layer map and the flow law of a garden of the core, and `may` read from `grant`
 statements. held: a statement sealed by its id, its record off git with the day it is to be erased, the hook's check on
@@ -143,8 +143,8 @@ try:
           'take-down' not in L0.methods and {'forward', 'adopt', 'stamp'} <= set(L0.methods)
           and L0.decide('words', 'estate', 'say', 'say')[0] and 'forward' in L0.table('verbs'), sorted(L0.methods))
     r = run(PY, 'core/check.py', '--law', cwd=ROOT)
-    check("law: the core's law holds together — the flow law, `rehearse`, the acts' `at`, twenty rules",
-          r.returncode == 0 and '20 rules — 0 error(s)' in r.out, r.out[-400:])
+    check("law: the core's law holds together — the flow law, `rehearse`, the acts' `at`, its rules",
+          r.returncode == 0 and '21 rules — 0 error(s)' in r.out, r.out[-400:])
     cases = [
         (("words", "estate", "say", "say"), True, "a person's words taken down: words-to-said"),
         (("self", "estate", "edit", "say"), False, "an agent's own output as a said value: model-output-is-no-word"),

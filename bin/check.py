@@ -8,7 +8,7 @@
     python3 bin/check.py <beans...> | -v  # a garden in today's words: what bin/dmcheck.py takes
 
 (`python` on Windows; `python3 bin/daftar.py check` runs this too.) The law a garden runs is GARDEN.md's `extends`. A
-garden that runs the core (`core@<version>`) is judged by the core's gate, core/check.py: its twenty rules over the
+garden that runs the core (`core@<version>`) is judged by the core's gate, core/check.py: its twenty-one rules over the
 statements, and at a commit the commit's own. A garden that runs today's language (`std-vocab@<version>`) is judged by
 today's gate, bin/dmcheck.py, as it always was. With --staged and --merge-commit the pin is the index's, so the commit
 that adopts the core is judged by the core.

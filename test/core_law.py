@@ -9,7 +9,7 @@ of the garden's own said vacant.
 law: tools.yaml and vacancies.yaml are what std-vocab generates; every one of today's vacancies is placed in the core or
 dropped with why; the law holds together, and refuses a vacancy at a place it lacks and a tool of no family; every entry
 of std-vocab's `registry_forms` is carried by core/law/ or named where it went. launcher: `daftar` lists the core's
-families and tools. rules: the twenty rules and the face, the verbs with their roles, the forms, the garden's own rows.
+families and tools. rules: the twenty-one rules and the face, the verbs with their roles, the forms, the garden's own rows.
 why: a verb with the reasons of the term it replaces, a form's attribute with its vacancies, a name nothing has refused.
 form: a verb's valency and a form's attributes; a term's in today's language. forms: both pairs of guides derived by
 their laws, and the core's four rules on a statement line. catalog: the core's law items and their relations, a reason
@@ -130,10 +130,9 @@ PLACED = {
     # replaced by the core's grammar, retired, or dropped
     'value_types': 'the shapes', 'gap_tokens': 'the shapes', 'retired': 'a refusal (part 4)',
     'leaf_orders': 'retires with bin/dmmerge.py (part 13)', 'system_registries': 'core/law.py ROW_KEYS (part 9)',
-    # the profiles' (part 11)
-    'planes': 'part 11', 'view_lenses': 'part 11', 'view_archetypes': 'part 11',
 }
-CORE_NAMES = {'verbs': 'tools', 'tool_families': 'families'}
+CORE_NAMES = {'verbs': 'tools', 'tool_families': 'families', 'view_lenses': 'lenses',   # the profiles' tables carry their
+              'view_archetypes': 'archetypes'}                                          # forms in profiles.yaml (part 11)
 
 try:
     # ---- THE LAW: generated, placed, and holding together
@@ -209,8 +208,8 @@ try:
 
     # ---- rules
     r = run(PY, 'bin/rules.py')
-    check("rules: the twenty rules, each in its words, and the face they judge by",
-          r.returncode == 0 and f'core@{VERSION}' in r.out and 'THE RULES — 20' in r.out
+    check("rules: the twenty-one rules, each in its words, and the face they judge by",
+          r.returncode == 0 and f'core@{VERSION}' in r.out and 'THE RULES — 21' in r.out
           and re.search(r'(?m)^  vacancy\s+every row a garden adds', r.out) and 'THE FIGURES' in r.out, r.out[:800])
     check("rules: each verb's roles, `*` where required — `pay` by* and of* — and the forms' attributes by bin/form.py",
           re.search(r'(?m)^  pay\b', r.out) and '      by*: being (nature body|sayable, rung reason)' in r.out
@@ -294,7 +293,7 @@ try:
           in rc.edges)
     r = run(PY, 'bin/catalog.py')
     check("catalog: the report names the core's law and its findings", r.returncode == 0
-          and f'(core@{VERSION})' in r.out and 'rules (20)' in r.out and 'findings' in r.out, r.out[-900:])
+          and f'(core@{VERSION})' in r.out and 'rules (21)' in r.out and 'findings' in r.out, r.out[-900:])
 
     # ---- review
     r = run(PY, 'bin/review.py')
@@ -303,7 +302,7 @@ try:
           and 'KNOWING HONEST' in r.out, r.out[-900:])
     r = run(PY, 'bin/review.py', '--law')
     check("review --law: the core's law counted, and the vacancy a statement here takes named",
-          r.returncode == 0 and 'core/law/ core@' in r.out and re.search(r'(?m)^  rules\s+20', r.out)
+          r.returncode == 0 and 'core/law/ core@' in r.out and re.search(r'(?m)^  rules\s+21', r.out)
           and 'table:forms written' in r.out and 'every rule of the core is strict' in r.out, r.out[-1500:])
 
     r = run(PY, 'bin/review.py', '--places')

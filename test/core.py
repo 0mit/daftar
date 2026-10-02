@@ -194,7 +194,7 @@ def made(verb, roles):
 
 def verdict(verb, roles):
     return [f for f in judge(garden(CONTEXT + [bean('t', 'document', made(verb, roles))], base=False))
-            if f[0] not in ('vacancy', 'line')]   # a garden's rows are judged in a whole garden, and a line's form in a
+            if f[0] not in ('vacancy', 'line', 'profile')]   # a garden's rows are judged in a whole garden, and a line's form in a
     #                                               whole line (a walk, a course: test/core_read.py), not in this fragment
 
 

@@ -58,6 +58,15 @@ invented day would pass the gate and then be reported as sound. Whether the regi
 setting the registry does not show, and may be left out. How far ahead a warning comes is the clause's `notice`, in its
 form (`clause`): ninety days before a name lapses, read by `python3 bin/daftar.py stale`.
 
+A domain is the `domain` profile's, so the garden takes the profile first, by its name in `VOCAB.md` — a line of the
+law, which a person ratifies (RULE-CHANGE):
+
+<!-- example-front-matter: VOCAB.md -->
+```yaml
+profiles:
+  - domain
+```
+
 <!-- example: beans/org-registry.md -->
 ```markdown
 ---
@@ -153,6 +162,15 @@ The NAS.
 
 The software is a `product` owned by its authors; the running copy is an `instance` that `run`s it, `be`s on the NAS as
 its habitat, and is Sam's. It `use`s the domain it serves.
+
+What the program is, a technology of the knowledge tree, is said by `classify`, the `knowledge` profile's verb, so the
+garden takes that profile too:
+
+<!-- example-front-matter: VOCAB.md -->
+```yaml
+profiles:
+  - knowledge
+```
 
 <!-- example: beans/nginx-project.md -->
 ```markdown
@@ -1430,10 +1448,21 @@ enforces it the moment it is committed, with no code anywhere. A row that proves
 
 A page draws what the garden keeps — a procedure, a machine — at four lenses: a story for a newcomer, the drawing itself,
 its vital sign for whoever is on call, and a card of each part's own facts. It is the `view` profile, whose verb is
-`draw`, and its asset, `assets/view/`. Today opting in is `python3 bin/dmupgrade.py <the release GARDEN.md records>
---extend view`, a RULE-CHANGE that brings the asset. The drawings are the garden's own code: copy
-`assets/view/templates/drawings.py` to `drawings/bakery.py` and draw with the kit it imports. What a page says of each
-drawing is kept in `details` until part 11 of v1 ports the asset. A machine the page draws, and the page:
+`draw`, and its asset, `assets/view/`. The garden takes the profile by its name in `VOCAB.md` — in a garden that runs,
+`python3 bin/dmupgrade.py <the release GARDEN.md records> --extend view`, a RULE-CHANGE that brings the asset:
+
+<!-- example-front-matter: VOCAB.md -->
+```yaml
+profiles:
+  - view
+```
+
+The drawings are the garden's own code: copy `assets/view/templates/drawings.py` to `drawings/bakery.py` and draw with
+the kit it imports. Each drawing is a `draw` of what it draws, its `id` the key the drawing module draws it by, holding
+the form `drawing` (core/law/profiles.yaml): its story, the question each lens asks, its operate shape, what the page
+cannot see, where a person may act, and the live values that sit on it (`values`). The page is a `draw` of its
+drawings, in the order it shows them, holding the form `page`: its drawing module, the parts a reader looks up, and the
+facts a card shows. A machine the page draws, and the page:
 
 <!-- example: beans/oven-a.md -->
 ```markdown
@@ -1461,36 +1490,16 @@ statements:
   - say:  { by: sam, at: now }
   - own:  { by: sam, of: self }
   - be:   { by: self, at: "uri:https://bakery.example.org/drawings/", as: location }
-  - draw: { by: self, of: [oven-a] }
-details:
-  view:
-    drawings: file:drawings/bakery.py
-    reference:
-      - { being: oven-a, what: "bakes the orders" }
-  views:
-    orders:
-      draws: oven-a
-      purpose: "Every order in stock is baked the same morning."
-      outcome: "The morning's orders leave the oven by nine."
-      stages:
-        - { label: "Check the stock", doer: "whoever takes the order" }
-        - { label: "Bake", doer: "oven-a", beings: [ { being: oven-a } ] }
-        - { label: "Hand it over", doer: "the counter" }
-      questions:
-        - { lens: orient, ask: "How does an order become bread?" }
-        - { lens: operate, ask: "Is the oven baking?" }
-      actions:
-        - { element: preheat, tool: preheat, confirm: "Preheat oven-a now?" }
-      archetype: health-chain
-      blind:
-        - { what: "the oven's temperature", why: "no monitor reads it yet" }
+  - draw: { id: orders, by: self, of: [oven-a], drawing: { purpose: "Every order in stock is baked the same morning.", outcome: "The morning's orders leave the oven by nine.", stages: [ { label: "Check the stock", doer: "whoever takes the order" }, { label: "Bake", doer: "oven-a", beings: [ { being: oven-a } ] }, { label: "Hand it over", doer: "the counter" } ], questions: [ { lens: orient, ask: "How does an order become bread?" }, { lens: operate, ask: "Is the oven baking?" } ], actions: [ { element: preheat, tool: preheat, confirm: "Preheat oven-a now?" } ], archetype: health-chain, blind: [ { what: "the oven's temperature", why: "no monitor reads it yet" } ] } }
+  - draw: { id: page, by: self, of: [orders], page: { drawings: "file:drawings/bakery.py", reference: [ { being: oven-a, what: "bakes the orders" } ] } }
 ---
 The bakery's page of drawings.
 ```
 
-Today `python3 assets/view/bin/dmview.py check`, and `python3 assets/view/bin/dmview.py report --out map/bakery.html`
-for the page itself. A button (`actions`) asks the host for a tool by name; only the host's own configuration makes a
-tool run anything.
+Then `python3 assets/view/bin/view.py check`, and `python3 assets/view/bin/view.py report --out map/bakery.html` for
+the page itself; an author's choices made on that page are written back by `view.py import`, each `draw` it changes
+replaced through `bin/safe.py`. A button (`actions`) asks the host for a tool by name; only the host's own configuration
+makes a tool run anything.
 
 ## Say what a thing is, in the world's shared terms (`knowledge` profile)
 
@@ -1530,6 +1539,14 @@ files:
 `extracts/analytic.tsv` holds `code`, `level`, `parent` and `name`, one account a row; a new account is a new row, saved
 with its journal entry like any other write. Then a payment is `book`ed where it belongs, each plan on its own, in
 shares of whole parts:
+
+The `book` statement is the `accounting` profile's, which the garden takes by its name:
+
+<!-- example-front-matter: VOCAB.md -->
+```yaml
+profiles:
+  - accounting
+```
 
 <!-- example-check: beans/vps-a.md -->
 ```yaml

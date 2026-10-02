@@ -80,6 +80,7 @@ T = tempfile.mkdtemp(prefix='core-measure-')
 REL, G = os.path.join(T, 'release'), os.path.join(T, 'garden')
 
 VOCAB = """---
+profiles: [knowledge]
 kinds:
   - { kind: hive, nature: body, level: population, meaning: "a colony of bees, and the box it lives in" }
 systems:
@@ -209,7 +210,7 @@ try:
                   for v in ('cal', 'geo', 'units', 'knowledge', 'crosswalk')), r.out[-800:])
     run(PY, 'bin/install.py')
 
-    # ---- THE LAW: measures.yaml generated from std-vocab; each unit's factor std-vocab's; twenty rules
+    # ---- THE LAW: measures.yaml generated from std-vocab; each unit's factor std-vocab's; the law's rules
     gen = run(PY, 'core/translate.py', 'measures', cwd=ROOT)
     check("law: core/law/measures.yaml is what std-vocab generates (its lines, extent, recurrence, uncertainty, forms)",
           gen.returncode == 0 and gen.out == text('core/law/measures.yaml', ROOT), gen.out[:300])
@@ -219,7 +220,7 @@ try:
     check(f"law: each of the core's {len(rows)} units in UCUM carries std-vocab's factor, exactly", not differ, differ)
     r = run(PY, 'core/check.py', '--law')
     check("law: the core's law holds together — the forms of a measure and rule `measured`",
-          r.returncode == 0 and '20 rules — 0 error(s)' in r.out, r.out[-400:])
+          r.returncode == 0 and '21 rules — 0 error(s)' in r.out, r.out[-400:])
 
     # ---- THE GATE: the forms saved through the core's gate
     write('VOCAB.md', VOCAB)

@@ -289,12 +289,16 @@ A name is a statement: the namespace gives it.
   RULE-CHANGE, which a person ratifies.
 - **`VOCAB.md`** is the garden's own rows, under these keys only: `kinds`, `levels`, `namespaces`, `flows`,
   `flow_sources`, `standing`, `verbs`, `units`, `tables` (rows added to a table the verbs name), `exclusive`, and a
-  system of positions, a scheme of codes and the files they name of its own (`systems`, `schemes`, `files`). A row
+  system of positions, a scheme of codes and the files they name of its own (`systems`, `schemes`, `files`) — and the
+  profiles it takes, by their names (`profiles`). A row
   never takes a name the law has: one name, one row. **Every row the garden adds is used** by a statement or a bean, or
   says why it is vacant (`vacant: <why>`), the manifesto's `whole`: a row is added with the first bean that uses it.
-- **Profiles** — network, domain, accounting, view, knowledge, code — stand on the core: their verbs are rows of
-  `core/law/verbs.yaml` marked with their `home`, and their words their own. A profile may bring an **asset**,
-  `assets/<profile>/`, which opens no concept of its own.
+- **Profiles** — network, domain, accounting, view, knowledge, code — stand on the core (`core/law/profiles.yaml`):
+  their verbs are rows of `core/law/verbs.yaml` marked with their `home`, their tables, forms and words their own, and
+  what one adds to a form of the core (the code profile's attributes of a placement) is named. A garden **takes** a
+  profile by its name in `VOCAB.md`'s `profiles`, a RULE-CHANGE, and uses none of a profile it does not take (rule
+  `profile`). A profile may bring an **asset**, `assets/<profile>/`, which a garden receives while it takes the profile
+  and which opens no concept of its own: the `view` profile's draws a page whose drawings are its `draw` statements.
 - A garden's row that proves general is **promoted** to the standard by a pull request to the daftar repository
   (manifesto: learn-once). A mechanism that is universal may come complete before anything occupies it (manifesto: whole).
 
@@ -344,7 +348,7 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   (manifesto: hidden). People record decisions and approvals; agents record what they ran, why, and what happened. A heading is
   written by the clock (`bin/journal.py`, which `bin/save.py` calls), never typed.
 - **The gate** is `core/check.py`, run at every commit by the pre-commit hook `bin/hooks/pre-commit` on the staged
-  files. Its twenty rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
+  files. Its twenty-one rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
   lists them: the core's thirteen, and five that today's gate held — `consent`, `harm`, `room`, `vacancy`, `kept`.
 - **The commit's own rules**: every bean a commit changes is named by the journal entry it adds; a statement it adds is
   known by an act it adds, at that entry's moment; a change to the law says RULE-CHANGE. Only the commit that adopts

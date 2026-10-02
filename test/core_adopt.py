@@ -237,10 +237,11 @@ try:
     owns = [next(iter(s.values())) for s in acme.get('statements') or [] if next(iter(s)) == 'own']
     check("...an organisation that keeps one is owned by its members, outside the garden",
           r.returncode == 0 and acme.get('kind') == 'org' and owns and owns[0].get('by') == {'someone': 'person'}, r.out[-800:])
-    r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), os.path.join(T, 'p'), '--profile', 'knowledge', cwd=T)
+    r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), os.path.join(T, 'p'), '--profile', 'drawing', cwd=T)
     r2 = run(PY, os.path.join(REL, 'seed', 'germinate.py'), os.path.join(T, 'Bad_Name'), cwd=T)
-    check("...a profile at birth waits for part 11, and a name out of the core's form is refused; nothing is made",
-          r.returncode != 0 and 'part 11' in r.out and r2.returncode != 0 and 'kebab-case' in r2.out
+    check("...a profile the core does not offer (core/law/profiles.yaml, part 11), and a name out of the core's form, "
+          "are refused; nothing is made",
+          r.returncode != 0 and 'knowledge' in r.out and r2.returncode != 0 and 'kebab-case' in r2.out
           and not os.path.exists(os.path.join(T, 'p')) and not os.path.exists(os.path.join(T, 'Bad_Name')), r.out + r2.out)
 
     # ---- THE LAW'S VERSION AND THE MANIFEST'S FORMS, proved with the law

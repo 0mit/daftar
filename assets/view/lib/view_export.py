@@ -96,6 +96,21 @@ def document_bean(bid, title, digest, path, keeper, member):
                member, path.replace('"', "'"), title.replace('"', "'"), member))
 
 
+def document_bean_core(bid, title, digest, path, keeper, member):
+    """The same, in a garden of the core (v1 part 11): derived from the member by its keeper, named by its content in
+    the namespace `sha-256`, owned by its keeper, and where its copy is."""
+    q = lambda x: str(x).replace('"', "'")
+    return ("---\nbean: %s\nkind: document\ntitle: \"%s\"\nsummary: \"%s\"\nstatements:\n"
+            "  - derive: { by: %s, from: %s, at: now, note: \"rendered by the page's template (view render)\" }\n"
+            "  - name: { by: sha-256, of: self, as: \"%s\" }\n"
+            "  - own: { by: %s, of: self }\n"
+            "  - be: { by: self, at: \"unix-filesystem:%s\", as: location }\n"
+            "---\n%s, rendered from [[%s]] by the page's template and kept by its content.\n"
+            % (bid, q(title), q("A document rendered from %s's record." % member), keeper, member,
+               digest[len("sha256:"):] if digest.startswith("sha256:") else digest, keeper, q(path),
+               q(title), member))
+
+
 # ---------------------------------------------------------------------------------------------------------------------
 # a calendar of a reading's members (N40)
 # ---------------------------------------------------------------------------------------------------------------------

@@ -56,7 +56,7 @@ and what to write when nobody said. Write from it. When the gate refuses, its me
 Read these when a question needs them, and only the part it needs:
 
 1. `core/law/` — the law itself: the core's face (`core.yaml`: the seven roles, the grammar, the order, the face's
-   verbs, the twenty rules), the other verbs' rows (`verbs.yaml`), the kinds, the levels, the layers and the standing
+   verbs, the twenty-one rules), the other verbs' rows (`verbs.yaml`), the kinds, the levels, the layers and the standing
    of files, the units, the namespaces and the standards' tables; and the garden's own rows in `VOCAB.md`. `python3
    core/check.py --law` proves them one law.
 2. `MODEL.md` — the data model and the **Contract of Parts**: what you may enact and what a person must ratify. A name
@@ -71,7 +71,7 @@ Read these when a question needs them, and only the part it needs:
    value or a kind of fact the law does not have yet.
 6. `python3 bin/rules.py` — every rule in force and every verb, read from the law; `python3 bin/why.py <name>` — one
    item of the law and why it is as it is; `python3 bin/catalog.py --part <name>` — how it relates to the rest.
-7. `assets/<profile>/README.md`, **if the garden uses a profile that has an asset** — what the asset does with that
+7. `assets/<profile>/README.md`, **if the garden takes a profile that has an asset** (`VOCAB.md` `profiles`) — what the asset does with that
    profile's statements, and the commands it runs.
 
 ## Working

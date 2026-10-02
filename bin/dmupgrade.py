@@ -327,20 +327,20 @@ def shipped(root, extends=None):
     file its release KEEPS (a line naming a profile's asset read for every profile its law offers); with a list of
     profiles, what a garden extending them RECEIVES. Paths are `/`-separated, as git and seed/LANGUAGE write them."""
     lines = patterns(root)
-    offers = dmpass.offered(std_fm(root))
+    offers = dmpass.offered_in(tree_reader(root))
     files = [f for f in dmpass.tracked(root) if os.path.isfile(os.path.join(root, *f.split('/')))]
     return set(dmpass.kept(files, lines, offers) if extends is None else dmpass.received(files, lines, extends, offers))
 
 
-def set_profiles(text, profiles):
-    """VOCAB.md's text with `extends_profiles` set to `profiles`, in order: the key's whole block written again as one
-    line where there is one, else a line written above `local_terms` (or before the closing fence); with none left, the
-    key taken out. Proved before it is written: the front matter parses to exactly the old one with that one key changed,
-    and the body is untouched — or the edit is refused."""
+def set_profiles(text, profiles, key='extends_profiles'):
+    """VOCAB.md's text with `extends_profiles` (a garden of the core: `profiles`) set to `profiles`, in order: the key's
+    whole block written again as one line where there is one, else a line written above `local_terms` (or before the
+    closing fence); with none left, the key taken out. Proved before it is written: the front matter parses to exactly
+    the old one with that one key changed, and the body is untouched — or the edit is refused."""
     old_fm, body = _parse(text)
-    line = f"extends_profiles: [{', '.join(profiles)}]\n"
+    line = f"{key}: [{', '.join(profiles)}]\n"
     try:
-        s, e = dmsafe.top_level_span(text, 'extends_profiles')
+        s, e = dmsafe.top_level_span(text, key)
         new = text[:s] + (line if profiles else '') + text[e:]
     except dmsafe.UnsafeEdit:
         if not profiles:
@@ -352,11 +352,11 @@ def set_profiles(text, profiles):
     new_fm, new_body = _parse(new)
     want = copy.deepcopy(old_fm) if isinstance(old_fm, dict) else {}
     if profiles:
-        want['extends_profiles'] = list(profiles)
+        want[key] = list(profiles)
     else:
-        want.pop('extends_profiles', None)
+        want.pop(key, None)
     if new_fm != want or new_body != body:
-        refuse("VOCAB.md's `extends_profiles` could not be written without changing something else — write it by hand: "
+        refuse(f"VOCAB.md's `{key}` could not be written without changing something else — write it by hand: "
                f"`{line.strip()}`, journal it as a RULE-CHANGE, commit, and run this again.")
     return new
 
@@ -373,6 +373,17 @@ def recorded_release():
     path = os.path.join(ROOT, 'GARDEN.md')
     fm = dmparse.loads(dmparse.read(path)[0] or '') or {} if os.path.isfile(path) else {}
     return str(fm['daftar_release']) if isinstance(fm, dict) and fm.get('daftar_release') else None
+
+
+def tree_reader(root):
+    """A reader of the files of the tree at `root`: a path's text, or None."""
+    def read(p):
+        try:
+            with open(os.path.join(root, *p.split('/')), encoding='utf-8') as fh:
+                return fh.read()
+        except (OSError, UnicodeDecodeError):
+            return None
+    return read
 
 
 def std_fm(root):
@@ -3543,7 +3554,7 @@ def main():
         gives, runs = law_of_release(rel), law_of_garden(ROOT)
         if gives == 'core' and runs == 'std-vocab':
             return adopt(a, rel, sha, source, current)
-        if runs == 'core' and gives == 'core' and current == a.tag:
+        if runs == 'core' and gives == 'core' and current == a.tag and not (a.extend or a.retract):
             print(f"nothing to do: this garden runs the core ({pin_of_garden(ROOT)}) of {a.tag} already.")
             return 0
         if runs == 'core' and gives == 'core':
@@ -3659,7 +3670,7 @@ def plan_profiles(rel, tag, extend, retract):
     both extended and retracted is a contradiction, refused too."""
     if not (extend or retract):
         return garden_profiles()
-    offers = dmpass.offered(std_fm(rel))
+    offers = dmpass.offered_in(tree_reader(rel))
     both = sorted(set(extend) & set(retract))
     if both:
         refuse(f"{', '.join(both)} is both extended and retracted in one run: say which.")
@@ -4160,8 +4171,6 @@ def move(a, rel, sha, source, current):
     """A garden of the core moves to another release of the core, in place: planned first, touching nothing; then the
     release's files, the pin and the release recorded, the hooks, the entry and the release's gate — or everything back.
     It does not commit."""
-    if a.extend or a.retract:
-        refuse("a garden of the core extends no profile yet: its profiles come with v1's part 11.")
     pin = pin_of_garden(ROOT)
     have, gives = pin.split('@', 1)[1], core_version(rel)
     if not gives:
@@ -4178,12 +4187,20 @@ def move(a, rel, sha, source, current):
         errs = [ln for ln in g.stdout.splitlines() if ln.strip() and not ln.startswith('core check')]
         refuse(f"this garden does not pass its own gate ({pin}):\n" + '\n'.join(errs[:12]) +
                ('\n…' if len(errs) > 12 else '') + "\nFix what these name and commit, then move.")
-    profiles = garden_profiles()
+    # THE PROFILES IT TAKES (v1 part 11): VOCAB.md `profiles`, one taken up (`--extend`) or put down (`--retract`) in
+    # the same act, which brings the profile's asset or takes it away; a line of the law, so the entry is a RULE-CHANGE
+    before = garden_profiles()
+    profiles = plan_profiles(rel, a.tag, a.extend, a.retract)
     want = shipped(rel, profiles)
     held = shipped(ROOT) if os.path.isfile(os.path.join(ROOT, 'seed', 'LANGUAGE')) else set()
     added = []
     try:
         changed, removed = receive(rel, want, held, added)
+        if profiles != before:
+            vpath = os.path.join(ROOT, 'VOCAB.md')
+            vtext, vform = read_text(vpath)
+            write_text(vpath, set_profiles(vtext, profiles, key='profiles'), vform)
+            changed = changed + ['VOCAB.md']
         gpath = os.path.join(ROOT, 'GARDEN.md')
         gtext, gform = read_text(gpath)
         new_pin = f"core@{gives}"
@@ -4195,12 +4212,15 @@ def move(a, rel, sha, source, current):
         install()
         sys.path.insert(0, os.path.join(ROOT, 'bin')); import journal as _journal   # the release's own tool, just applied
         _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
-        lines = ['\n' + _journal.stamp(_who, f"RULE-CHANGE: language upgraded to daftar {a.tag}, the core {have} -> {gives}",
-                                       ROOT),
+        title = f"RULE-CHANGE: language upgraded to daftar {a.tag}, the core {have} -> {gives}" if current != a.tag else \
+            f"RULE-CHANGE: the profiles this garden takes, {', '.join(before) or 'none'} -> {', '.join(profiles) or 'none'}"
+        lines = ['\n' + _journal.stamp(_who, title, ROOT),
                  "- ratified_by: (fill in who ratified — the gardener's word, given here)",
                  f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; the core {pin} -> "
                  f"{new_pin}; release {current or 'unrecorded'} -> {a.tag}. The beans are as they were: no step rewrites "
-                 f"them between these versions of the core.",
+                 f"them between these versions of the core."
+                 + (f" The profiles it takes: {', '.join(before) or 'none'} -> {', '.join(profiles) or 'none'}"
+                    f" (VOCAB.md `profiles`)." if profiles != before else ''),
                  f"- changed: {', '.join(changed + ['GARDEN.md']) or 'none'}",
                  f"- added: {', '.join(added) or 'none'}",
                  f"- removed: {', '.join(removed) or 'none'}",

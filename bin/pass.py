@@ -99,14 +99,29 @@ def language(text):
 
 
 def offered(law):
-    """The profiles a law offers: the names under its `profiles`."""
+    """The profiles a law offers: the names under its `profiles` — today's law's, a mapping by name, or the core's
+    (core/law/profiles.yaml, v1 part 11), a list of rows each naming its `profile`."""
     p = law.get('profiles') if isinstance(law, dict) else None
+    if isinstance(p, list):
+        return sorted(str(r['profile']) for r in p if isinstance(r, dict) and r.get('profile'))
     return sorted(str(k) for k in p) if isinstance(p, dict) else []
 
 
+def offered_in(read):
+    """The profiles the release a tree carries offers, `read` reading its files: the core's (core/law/profiles.yaml)
+    where it carries the core's, else today's law's (seed/std-vocab.md)."""
+    core = read('core/law/profiles.yaml')
+    if core:
+        import yaml
+        return offered(yaml.load(core, Loader=yaml.BaseLoader) or {})
+    return offered(_front(read(LAW)) or {})
+
+
 def extended(vocab):
-    """The profiles a garden's VOCAB.md extends (`extends_profiles`), as it states them."""
-    p = vocab.get('extends_profiles') if isinstance(vocab, dict) else None
+    """The profiles a garden's VOCAB.md takes, as it states them: the core's `profiles` (v1 part 11), else today's
+    `extends_profiles`."""
+    p = vocab.get('profiles') if isinstance(vocab, dict) and isinstance(vocab.get('profiles'), list) else \
+        vocab.get('extends_profiles') if isinstance(vocab, dict) else None
     return [str(x) for x in p] if isinstance(p, list) else []
 
 
@@ -161,7 +176,7 @@ class Map:
     def __init__(self, read, files, standing=None):
         self.files = sorted(set(files))
         # IN A GARDEN OF THE CORE (v1 part 8) the map is core/law/layers.yaml's, and the garden places the rest by its
-        # VOCAB.md `standing` rows; the profiles a release offers are still std-vocab's while a release ships it (part 11)
+        # VOCAB.md `standing` rows, and the profiles a release offers are core/law/profiles.yaml's (part 11)
         self.core = pins_core(_front(read('GARDEN.md')))
         if self.core:
             self._core(read, standing)
@@ -199,7 +214,7 @@ class Map:
                       if x not in named]
         self.layers = {r['layer']: r for r in self.rows}
         self.journal_path = 'log/journal.md'
-        self.language = expand(language(read(LANGUAGE)), offered(_front(read(LAW)) or {}))
+        self.language = expand(language(read(LANGUAGE)), offered_in(read))
         vocab = _front(read('VOCAB.md')) or {}
         self.standing = list(standing) if standing is not None else [
             ('VOCAB.md', i, {'doc': 'file:' + str(h), 'standing': r['layer']})

@@ -278,6 +278,15 @@ def attrs_problems(where, x, form, depth=0):
             out.append((w, "is prose, written as text"))
         elif isinstance(dom, dict) and dom.get('type') == 'kebab' and not (isinstance(v, str) and KEBAB.match(v)):
             out.append((w, f"{v!r} is not a kebab word"))
+        elif isinstance(dom, dict) and isinstance(dom.get('map_of'), dict):   # named entries (v1 part 11): a value
+            if not isinstance(v, dict):                                        # of a drawing, under its name
+                out.append((w, "is a mapping of names to entries"))
+            else:
+                for key, e in v.items():
+                    if dom.get('key_form') == 'kebab' and not KEBAB.match(str(key)):
+                        out.append((f"{w}.{key}", f"{key!r} is not a kebab word"))
+                    out += attrs_problems(f"{w}.{key}", e, {'attrs': dom['map_of'], 'cells': dom.get('cells')},
+                                          depth + 1)
         elif isinstance(dom, dict) and isinstance(dom.get('entries'), dict):
             items = v if isinstance(v, list) else [v]
             seen = set()
@@ -293,6 +302,14 @@ def attrs_problems(where, x, form, depth=0):
     one = _listed(form.get('one_of'))
     if one and depth == 0 and sum(1 for k in one if k in x) != 1:
         out.append((where, f"holds one of {', '.join(one)}, and only one"))
+    for c in _listed(form.get('cells')):       # what one attribute's value asks of the others (`requires`; a list in
+        when = c.get('when') if isinstance(c, dict) else None                  # it, one of them): today's `cells`
+        if isinstance(when, dict) and all(str(x.get(k)) in [str(w) for w in _listed(want)] for k, want in when.items()):
+            for need in _listed(c.get('requires')):
+                if not any(n in x for n in _listed(need)):
+                    out.append((where, f"{', '.join(f'{k}: {x.get(k)}' for k in when)} requires "
+                                       f"{' or '.join(f'`{n}`' for n in _listed(need))}"
+                                       + (f": {c['why']}" if c.get('why') else '')))
     return out
 
 
