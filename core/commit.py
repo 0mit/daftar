@@ -124,11 +124,12 @@ def canon(verb, roles):
 
 
 def kept_by_release(root, law):
-    """The patterns of the files a release keeps: seed/LANGUAGE as staged, a profile's line read for every profile."""
+    """The patterns of the files a release keeps: seed/LANGUAGE as staged, a profile's line read for every profile the
+    law offers (core/law/profiles.yaml, v1 part 11)."""
     text = git(root, 'show', ':seed/LANGUAGE')
     if text is None:
         return []
-    return dmpass.expand(dmpass.language(text), dmpass.offered(law.std.old))
+    return dmpass.expand(dmpass.language(text), sorted(law.profiles))
 
 
 def ruled(path, law, kept):

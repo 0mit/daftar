@@ -988,8 +988,9 @@ class Catalogue:
 # extent's form), each FORM (what a qualifier of the shape `form` holds) and each LAYER. The relations are the files' as
 # before; a verb USES the table a role takes its rows from and the form a qualifier holds, a form the table an attribute
 # takes from; a document STATES a verb written at the head of a statement line of an example block; a reason EXPLAINS
-# the item whose origin it is keyed by (bin/why.py `core_from`). The profiles are today's words until v1 part 11.
-CORE_LAW_KINDS = ('rule', 'verb', 'table', 'section', 'form', 'layer')
+# the item whose origin it is keyed by (bin/why.py `core_from`). Each PROFILE (core/law/profiles.yaml, v1 part 11) is an
+# item too, holding the verbs whose home it is, its tables and its forms, and named taken or not by the garden.
+CORE_LAW_KINDS = ('rule', 'verb', 'table', 'section', 'form', 'layer', 'profile')
 
 
 class CoreCatalogue(Catalogue):
@@ -1025,7 +1026,7 @@ class CoreCatalogue(Catalogue):
                 continue
             for k, val in read.data(os.path.join(d, name)).items():
                 if name == 'core.yaml' and k in ('verbs', 'rules') or k == 'forms' and isinstance(val, dict) \
-                        and name in ('lines.yaml', 'measures.yaml'):
+                        and name in ('lines.yaml', 'measures.yaml', 'profiles.yaml'):
                     continue
                 if k == 'tables' and name == 'verbs.yaml':
                     for t, rows in val.items():
@@ -1040,6 +1041,13 @@ class CoreCatalogue(Catalogue):
             self.part('form:' + f, 'form', f, meaning=form.get('meaning'), replaces=form.get('replaces'),
                       one_of=[str(x) for x in form.get('one_of') or []],
                       attributes={a: dmform.label((rec or {}).get('in')) for a, rec in attrs.items()})
+        for p, row in L.profiles.items():          # what a garden takes up beside the core, and whether this one does
+            verbs = [v for v in L.verbs if L.home(v) == p]
+            self.part('profile:' + p, 'profile', p, meaning=row.get('meaning'), taken=p in L.taken, verbs=verbs,
+                      tables=[str(t) for t in row.get('tables') or []], forms=[str(f) for f in row.get('forms') or []],
+                      adds={str(f): sorted((a.get('attrs') or {})) for f, a in (row.get('adds') or {}).items()},
+                      asset=row.get('asset'), terms=verbs + [str(f) for f in row.get('forms') or []])
+            self.profiles[p] = row
         for r in self.map.rows:
             self.part('layer:' + r['layer'], 'layer', r['layer'], files=r.get('files', True), beneath=r.get('beneath'),
                       holds=r.get('holds') or [], meaning=r.get('meaning'))

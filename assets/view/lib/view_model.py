@@ -33,6 +33,7 @@ TERMS = ("view", "view_monitors", "views", "view_bindings")
 ROOT = ""               # the garden this run serves: bound by init()
 PAGE = None             # the page this run draws: the bean carrying `view`, chosen by init()
 dmparse = None          # the garden's own parser: bound by init()
+CORE = None             # a garden of the core, read through view_core (v1 part 11): bound by init(); None in today's words
 STEP_NONE = "not running"
 
 
@@ -48,9 +49,9 @@ _FM = {}
 
 def init(root, page=None):
     """Bind this run to a garden, and to its page. Returns the problems that stop it — none means it can draw."""
-    global ROOT, dmparse, PAGE, _LAW, _K, _GARDEN
+    global ROOT, dmparse, PAGE, _LAW, _K, _GARDEN, CORE
     ROOT = os.path.abspath(root)
-    _FM.clear(); _LAW = None; _K = None; _GARDEN = None; PAGE = None
+    _FM.clear(); _LAW = None; _K = None; _GARDEN = None; PAGE = None; CORE = None
     b = os.path.join(ROOT, "bin")
     if b not in sys.path:
         sys.path.insert(0, b)
@@ -59,12 +60,19 @@ def init(root, page=None):
     except ImportError:
         return ["%s is not a daftar garden: it has no bin/dmparse.py" % ROOT]
     dmparse = _p
-    vocab = fm_path(os.path.join(ROOT, "VOCAB.md"))
-    if PROFILE not in (vocab.get("extends_profiles") or []):
+    import view_core
+    if view_core.runs_core(ROOT):            # A GARDEN OF THE CORE (v1 part 11): its statements, read once, here
+        CORE = view_core.Garden(ROOT)
+        taken = CORE.taken()
+    else:
+        taken = fm_path(os.path.join(ROOT, "VOCAB.md")).get("extends_profiles") or []
+    if PROFILE not in taken:
         rel = fm_path(os.path.join(ROOT, "GARDEN.md")).get("daftar_release") or "<the release>"
-        return ["this garden does not extend the `%s` profile, which this asset draws: extending it is a RULE-CHANGE, "
-                "the gardener's to ratify — python3 bin/dmupgrade.py %s --extend %s" % (PROFILE, rel, PROFILE)]
-    pages = [p for p in bean_ids() if PROFILE in fm(p)]
+        return ["this garden does not %s the `%s` profile, which this asset draws: %s is a RULE-CHANGE, "
+                "the gardener's to ratify — python3 bin/dmupgrade.py %s --extend %s"
+                % ("take" if CORE else "extend", PROFILE, "taking it (VOCAB.md `profiles`)" if CORE else "extending it",
+                   rel, PROFILE)]
+    pages = CORE.pages() if CORE else [p for p in bean_ids() if PROFILE in fm(p)]
     if page:
         if page not in pages:
             return ["%s carries no `%s`: the pages here are %s" % (page, PROFILE, ", ".join(pages) or "none")]
@@ -88,6 +96,8 @@ def fm_path(path):
 def fm(bid, folder="beans"):
     """A bean's (or a mapping's) front matter; {} when it does not exist. Read once a run."""
     k = (folder, bid)
+    if k not in _FM and CORE is not None:
+        _FM[k] = CORE.today(bid, folder)
     if k not in _FM:
         _FM[k] = fm_path(os.path.join(ROOT, folder, "%s.md" % bid)) if isinstance(bid, str) and bid else {}
     return _FM[k]
@@ -132,6 +142,8 @@ _LAW = None
 def law():
     """The garden's gate, imported: the units, terms and registries in force, a garden's additions among them."""
     global _LAW
+    if _LAW is None and CORE is not None:
+        _LAW = CORE.law                      # core/law/, read for the asset (view_core.Law)
     if _LAW is None:
         import dmcheck
         _LAW = dmcheck
@@ -1280,7 +1292,8 @@ def check(figs=None):
         errs.append("the drawing module draws %r, which the page does not list in `views`" % k)
     story_lens, und, op_lens, ins = lens_of_form("story"), lens_of_form("schematic"), lens_of_form("health-chain"), lens_of_form("anatomy")
     every = page_bindings(figs)
-    known_terms = set(law().TERMS)
+    known_terms = set(law().TERMS) if CORE is None else \
+        set(CORE.L.verbs) | {k for b in bean_ids() for k in fm(b)} | {k for m in bean_ids("mappings") for k in fm(m, "mappings")}
     for k, v in views_raw():
         if k not in figs:
             errs.append("%s: listed in `views`, and the drawing module has no drawing for it" % k); continue
@@ -1395,7 +1408,9 @@ def check(figs=None):
             warns.append("reference: %s states no position in %s, so the page shows no address for it" % (b, r["system"]))
     for _i, f in entries_of_view("fields"):
         if f.get("term") and f["term"] not in known_terms:
-            errs.append("view.fields: %r is no term the law declares" % f["term"])
+            errs.append(("view.fields: %r is no term the law declares" if CORE is None else
+                         "page.fields: %r is no fact a being here holds — a verb of the law, a key of the header, or a key "
+                         "`details` keeps") % f["term"])
     return errs, warns
 
 
@@ -1513,6 +1528,8 @@ def import_selection(path, who=None):
         raise SystemExit("dmview: selection refused — nothing written:\n  - " + "\n  - ".join(problems))
     bean = os.path.join(ROOT, "beans", "%s.md" % PAGE)
     before = open(bean, encoding="utf-8").read()
+    if CORE is not None:
+        return _import_statements(path, who, bean, before, order, new_view, new_views, new_binds)
     changed = []
     for key, data, text in (("view", new_view, yaml_view(new_view)), ("views", new_views, yaml_views(new_views)),
                             ("view_bindings", new_binds, yaml_bindings(new_binds))):
@@ -1541,6 +1558,65 @@ def import_selection(path, who=None):
     if r.returncode != 0:
         raise SystemExit("dmview: written, and the journal refused the entry: %s" % (r.stdout + r.stderr).strip())
     return r.stdout.strip() or what
+
+
+def _import_statements(path, who, bean, before, order, new_view, new_views, new_binds):
+    """In a garden of the core: the page's `draw` statements written again from the selection, each one that changed
+    replaced by its id through bin/safe.py (which names every leaf it takes out), known by a `say` of the author's that
+    names them (rule knowing: what a commit adds is known by an act it adds), read back as the selection intended, and
+    saved through bin/save.py — the journal entry, the stamp of the act's moment, and the core's gate, in one."""
+    import yaml
+    import safe
+    import view_core
+    mons = page().get("view_monitors")
+    want = view_core.page_statements(new_view, new_views, new_binds, mons, CORE.L, CORE.space)
+    from core import profiles
+    b = CORE.G.beans[PAGE]
+    have = {r.get("id"): r for _i, v, r in b.items if v == "draw" and isinstance(r, dict)}
+    pid = (profiles.page_of(b) or ("page",))[0]
+    changed = []
+    for sid, roles in want:
+        sid = pid if sid == "page" else sid
+        roles = dict(roles, id=sid)
+        line = "  - draw: " + yaml.safe_dump(roles, default_flow_style=True, sort_keys=False, allow_unicode=True,
+                                             width=10 ** 9).strip() + "\n"
+        old = have.get(sid)
+        if old is not None and _plain_data(old) == _plain_data(yaml.safe_load(line[4:])["draw"]):
+            continue
+        gone = sorted("statements.draw#%s.%s" % (sid, p) for p in safe.leaf_paths(_plain_data(old or {})))
+        if old is None:
+            safe.add_statements(bean, line)
+        else:
+            safe.replace_statements(bean, "draw#%s" % sid, line, expect=1, allow_remove=gone)
+        changed.append(sid)
+    if not changed:
+        return "nothing to write: the selection says what the page already says"
+    import dmpass
+    who = who or subprocess.run(["git", "config", "user.name"], capture_output=True, text=True, encoding="utf-8", cwd=ROOT).stdout.strip() or "dmview"
+    author = who if who in CORE.G.beans else dmpass.gardener_of(ROOT)
+    safe.add_statements(bean, "  - say: { by: %s, of: [%s], at: now, note: \"written from an author-mode selection (view "
+                              "import)\" }\n" % (author, ", ".join(changed)))
+    CORE.reload()
+    _FM.clear()
+    got = page()
+    for key, data in (("view", new_view), ("views", new_views), ("view_bindings", new_binds)):
+        if _plain_data(got.get(key) or {}) != _plain_data(data or {}):
+            open(bean, "w", encoding="utf-8", newline="\n").write(before)     # the file as it was, byte for byte
+            CORE.reload()
+            raise SystemExit("dmview: `%s` did not read back as the selection intended — restored, nothing written" % key)
+    e, _w = check()
+    if e:
+        print("dmview: WARNING — the written page does not pass check:\n  - " + "\n  - ".join(e), file=sys.stderr)
+    what = "the page [[%s]] written from an author-mode selection" % PAGE
+    body = ("- action: `view import %s` wrote %s of [[%s]] through bin/safe.py, read back as intended, known by a `say` of "
+            "[[%s]]'s.\n- order: %s" % (os.path.basename(path), ", ".join("`draw#%s`" % c for c in changed), PAGE, author,
+                                       " → ".join(order)))
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "save.py"), who, what, "--body", body],
+                       capture_output=True, text=True, encoding="utf-8", cwd=ROOT)
+    if r.returncode != 0:
+        raise SystemExit("dmview: written, and the save was refused — the page and its entry stand staged, for the fix "
+                         "and `bin/save.py --again`:\n%s" % (r.stdout + r.stderr).strip())
+    return what + " — saved"
 
 
 def elements(key):

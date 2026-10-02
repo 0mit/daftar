@@ -17,9 +17,9 @@ judges the working tree, and `python3 core/check.py --staged` what a commit woul
 `<rule>  <where>: <what>`; it names what to write in its place.
 
 ## Part A — what the gate checks (a commit is refused on any failure)
-Twenty rules, each strict: a breach is an error. The first thirteen are the core's own; the next five, and parts of
+Twenty-one rules, each strict: a breach is an error. The first thirteen are the core's own; the next five, and parts of
 `form`, `order`, `names` and `ratify`, are what today's gate held, taken over by the core; `line` judges the forms of a
-line (v1 part 6), and `measured` the forms of a measure (v1 part 7).
+line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` what a profile gives (v1 part 11).
 
 - [ ] **form** — A bean's front matter is its header (`bean`, `kind`, `title`, `summary`, `tags`, `details`) and its
       `statements`, nothing else; `bean` is the file's name, and `kind` a kind of the law. A statement is one verb of
@@ -105,6 +105,13 @@ line (v1 part 6), and `measured` the forms of a measure (v1 part 7).
       occurs for (`each`), what uses it (`used_by`) and what brings it into force (`when`) are readings of the garden.
       What a placement takes of its host (`be`'s `placed.takes`) is a quantity, of a placement that takes something;
       and what is placed as room in a host never takes more than it holds (`hold`).
+- [ ] **profile** — What a profile gives (core/law/profiles.yaml) is used only where the garden takes the profile, by
+      its name in `VOCAB.md`'s `profiles`: a verb whose `home` it is (`serve`, `classify`, `draw`…), and an attribute it
+      adds to a form of the core (the code profile's `role` and `scan_policy` on a placement). A page (the `view`
+      profile) is the bean whose `draw` holds the form `page`, naming its drawings in the order it shows them — each
+      once, and every one; each drawing is a `draw` of what it draws holding the form `drawing`, its live values among it
+      (`values`), each named once on its page; what a drawing names is there — a value of its own, a drawing of its page,
+      a reading of its bean.
 
 **The commit's own rules**, which only a commit can show:
 - [ ] Every bean the commit changes is named in the journal entry it adds (`[[<bean>]]`), and that entry's heading is

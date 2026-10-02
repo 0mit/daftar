@@ -330,9 +330,7 @@ def main(argv):
         from core import read as core_read
         CORE, LAW_NAME = core_read.data(os.path.join(root, 'core', 'law', 'core.yaml')), 'core'
         ver = str(CORE.get('version') or '')
-        if profiles:
-            die(f"--profile {', '.join(profiles)}: a garden of the core takes a profile up once part 11 of v1 reads the "
-                f"profiles from the core. Nothing was created.")
+        law = dict(law, profiles=core_read.data(os.path.join(root, 'core', 'law', 'profiles.yaml')).get('profiles') or [])
     else:
         ver = str(law.get('version') or '')
     if not ver:
@@ -435,11 +433,16 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, la
             fh.write(text)
     for f in ('VOCAB', 'GARDEN'):
         fill(os.path.join(seed, f + '.md.template'), os.path.join(target, f + '.md'))
-    if profiles and CORE is None:
-        # THE PROFILES A GARDEN EXTENDS ARE ITS VOCAB.md's: one line, above its own terms, in the order given
+    if profiles:
+        # THE PROFILES A GARDEN EXTENDS ARE ITS VOCAB.md's: one line, above its own terms, in the order given — in a
+        # garden of the core `profiles`, the first line of its rows (v1 part 11)
         vp = os.path.join(target, 'VOCAB.md')
         vt = open(vp, encoding='utf-8').read()
-        vt = re.sub(r'(?m)^(local_terms:)', lambda m: f"extends_profiles: [{', '.join(profiles)}]\n" + m.group(1), vt, count=1)
+        if CORE is None:
+            vt = re.sub(r'(?m)^(local_terms:)', lambda m: f"extends_profiles: [{', '.join(profiles)}]\n" + m.group(1), vt,
+                        count=1)
+        else:
+            vt = re.sub(r'\A---\n', lambda m: f"---\nprofiles: [{', '.join(profiles)}]\n", vt, count=1)
         with open(vp, 'w', encoding='utf-8', newline='\n') as fh:
             fh.write(vt)
     fill(os.path.join(seed, 'journal.md.template'), os.path.join(target, 'log', 'journal.md'))

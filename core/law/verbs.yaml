@@ -327,10 +327,12 @@ verbs:
     replaces: [produces, produced_by]
     home: core
   - verb: draw
-    meaning: "a page draws a being, or a mapping"
-    roles: { by: { shape: being }, of: { shape: being, many: true } }
+    meaning: "a page draws: each drawing is a `draw` of the being or the mapping it draws, holding its form (`drawing`, the live values that sit on it among it), and the page a `draw` of its drawings, in the order it shows them, holding the page's own (`page`)"
+    roles: { by: { shape: being }, of: { shape: [being, statement], many: true } }
+    qualifiers: { page: { shape: form, form: page }, drawing: { shape: form, form: drawing } }
+    choice: { one_of: [page, drawing] }
     required: [by, of]
-    replaces: [view, views]
+    replaces: [view, views, view_bindings, view_monitors]
     home: view
 
 # what the face's verbs and the roles replace, so that the refinery's every verb and role is accounted for here once

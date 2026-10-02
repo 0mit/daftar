@@ -65,8 +65,8 @@ class Standards:
 
     @property
     def old(self):
-        """Today's law as its own reader reads it, for what has not moved into core/law/ yet: the profiles a release
-        offers (core/commit.py reads seed/LANGUAGE's profile lines by them). The garden's, else this release's."""
+        """Today's law as its own reader reads it, for what has not moved into core/law/ yet (part 13). The garden's,
+        else this release's."""
         if self._old is None:
             path = os.path.join(self.root, 'seed', 'std-vocab.md')
             path = path if os.path.isfile(path) else os.path.join(ROOT, 'seed', 'std-vocab.md')

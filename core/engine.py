@@ -1,4 +1,4 @@
-"""engine — the core's twenty rules, applied to a garden written in statements (core spec §12).
+"""engine — the core's twenty-one rules, applied to a garden written in statements (core spec §12).
 
 A bean keeps its header (`bean`, `kind`, `title`, `summary`, `tags`, `details`), a list of `statements` and its body.
 A statement is one verb and its roles: `- pay: { id: paid, by: ada, of: { count: "10.00", unit: XTS }, at: 2026-09-20 }`.
@@ -197,7 +197,7 @@ class Judge:
             return self.L.has(spec.get('table'), x)
         if shape == 'text':
             return '' if isinstance(x, str) else f"text is written as a string, not a {type(x).__name__}"
-        if shape == 'form':                  # its attributes are rule `line`'s to judge (core/lines.py)
+        if shape == 'form':                  # its attributes are its rule's to judge: `line`, `measured`, `profile`
             return '' if isinstance(x, dict) else f"a value in the form {spec.get('form')} is a mapping of its attributes"
         return f"no shape {shape!r}"
 
@@ -988,7 +988,18 @@ class Judge:
         self.vacancy()
         self.line()
         self.measured()
+        self.profile()
         return self.out
+
+    # ------------------------------------------------------------------------------------------------ profile
+    def profile(self):
+        """Rule `profile`: what a profile gives is used only where the garden takes it, and its forms hold their form
+        (core/profiles.py, v1 part 11)."""
+        from core import profiles
+        for b in self.G.beans.values():
+            if not b.unread:
+                for where, msg in profiles.problems(self, b):
+                    self.err('profile', where, msg)
 
     # ------------------------------------------------------------------------------------------------ measured
     def measured(self):

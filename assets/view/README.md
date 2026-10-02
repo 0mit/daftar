@@ -8,7 +8,18 @@ garden that leaves the profile has it taken away:
 
 Extending a profile is a RULE-CHANGE, the gardener's to ratify: the upgrade writes `extends_profiles` in VOCAB.md,
 brings the asset, journals it and runs the gate, and commits nothing. The asset's files are the release's; an edit to
-one is a RULE-CHANGE, as an edit to any tool the release ships is.
+one is a RULE-CHANGE, as an edit to any tool the release ships is. Its tool is `assets/view/bin/view.py`;
+`dmview.py`, today's name, stays beside it until part 13 of v1.
+
+**In a garden of the core** (v1 part 11) the profile is taken by its name in VOCAB.md's `profiles`, and the page is
+written in statements (core/law/profiles.yaml): each drawing is a `draw` of what it draws, its `id` the key the drawing
+module draws it by, holding the form `drawing` — today's entry of `views`, with the live values that sit on it under
+`values` (today's `view_bindings`, each without its `view`) — and the page is a `draw` of its drawings in the order it
+shows them, holding the form `page` (today's `view`, its `monitors` today's `view_monitors`, a card's `fields` naming
+the `kind` and the `fact` — a verb, a key of the header, or what `details` keeps). The core's gate judges them (rule
+`profile`); the asset reads them, and every being, through `lib/view_core.py`, and draws the page today's words drew.
+`import` replaces each `draw` a selection changes through bin/safe.py, adds the author's `say` of it, and saves it
+through bin/save.py. The cookbook's recipe (core/guide/COOKBOOK.md, "A page of drawings") is the smallest page.
 
 ## What it draws
 

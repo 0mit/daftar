@@ -589,6 +589,185 @@ def vacancies(law):
     return '\n'.join(out) + '\n'
 
 
+# THE PROFILES (v1 part 11): what a garden takes up beside the core — its verbs (verbs.yaml `home`), its tables, the forms
+# it brings, the attributes it adds to a form of the core, its asset, and its vacancies at their places in the core —
+# and where each of today's terms and overlays of it went. The view profile's four terms are two forms: a page (today's
+# `view`, its monitors folded in) and a drawing (an entry of today's `views`, the live values that sit on it folded in:
+# every value names the one drawing it sits on, so it is that drawing's). Today's words a form says in the core's: a key
+# of `view_bindings` is a key of the drawing's `values`, of `views` a drawing's id, of `selections` a reading's id, a
+# genos a kind, a `bean_id` a being, a term a card shows a fact (a verb, a key of the header, or what `details` keeps).
+PROFILE_TABLES = {'lenses': ('view', 'view_lenses', 'lens'), 'archetypes': ('view', 'view_archetypes', 'archetype'),
+                  'planes': ('network', 'planes', 'plane')}
+PROFILE_FORMS = {'page': ('view', 'view', 'view_monitors', 'monitors'),
+                 'drawing': ('view', 'views', 'view_bindings', 'values')}
+PROFILE_OVERLAYS = {'code': {'located_at': 'placement'}}       # today's overlay of a term, and the core's form it extends
+PROFILE_WENT = {
+    'accounting': {'transactions.analytic_distribution': "the verb `book` (an amount's statement booked to an account, "
+                                                         "in a share)",
+                   'clauses.analytic_distribution': "the verb `book` (what a clause asks booked to an account)"},
+    'code': {'located_at': "the form `placement` (`be`'s `placed`), which the profile gives `role`, `scan_policy`, "
+                           "`stack` and `entrypoint`",
+             'git_remote': "the verb `name`, in a namespace of the garden's own (`anchor-git_remote`)"},
+    'network': {'endpoints': "the verb `serve`", 'links': "the verb `carry`", 'reaches': "the verb `need`",
+                'treatments': "the verbs `route`, `translate` and `filter`"},
+    'domain': {'clauses.auto_renew': "the verb `renew`, a position on the permission square of a renewal"},
+    'knowledge': {'knowledge': "the verbs `classify` (`classified_as`) and `use` (`uses`, `draws_on`)"},
+    'view': {'view': "the form `page`, held by the page's own `draw`", 'view_monitors': "the form `page`, its `monitors`",
+             'views': "the form `drawing`, held by a `draw` of each drawing", 'view_bindings':
+             "the form `drawing`, its `values`: each value sits on one drawing"}}
+PROFILE_DROPPED = {
+    'clauses.auto_renew': "the core's `renew` says whether a registrar renews unasked by a position on the permission "
+                          "square of the renewal — `permitted`, `forbidden`, or no position where it is not known — so "
+                          "the three values are the square's, and none is kept vacant",
+}
+READS_AS = {'view_monitors': 'page.monitors', 'reaches': 'need.through'}   # what a verb says more narrowly than its row
+PROFILE_WORDS = {'view_bindings': 'values', 'views': 'drawings', 'selections': 'readings', 'view_lenses': 'lenses',
+                 'view_archetypes': 'archetypes', 'aspects': 'lines'}
+
+
+def _profile_words(x):
+    """A profile's form in the core's words: a key of today's terms named by what holds it now, a genos a kind, a
+    `bean_id` a being, a registry by the core's name of its table."""
+    if isinstance(x, dict):
+        out = {}
+        for k, v in x.items():
+            if k in ('key_of', 'registry') and isinstance(v, str):
+                out[k] = PROFILE_WORDS.get(v, TABLE_NAMES.get(v, v) if k == 'registry' else v)
+                if out[k] == 'gene':
+                    out[k] = 'kinds'
+            elif k == 'take' and v == 'genos':
+                out[k] = 'kind'
+            elif k == 'bean_id':
+                out['being'] = _profile_words(v)
+            elif k in ('gene', 'genos'):
+                out['kind'] = _profile_words(v)
+            else:
+                out[k] = _profile_words(v)
+        return out
+    if isinstance(x, list):
+        return [_profile_words(v) for v in x]
+    if x == 'bean_id':
+        return 'being'
+    return re.sub(r'\bgenos\b', 'kind', x) if isinstance(x, str) else x
+
+
+def _profile_form(term, folded, fold_key):
+    """A form of the view profile: today's term `term`'s attributes, less what the statement says (`draws` is `of`, a
+    remark its `note`), with the term `folded` held under `fold_key` — a list of entries (the page's monitors) or a map
+    of named entries (a drawing's values, each less the drawing it sat on)."""
+    schema = dict(term.get('schema') or {})
+    attrs = {k: v for k, v in (schema.get('attrs') or {}).items() if k not in ('draws', 'note')}
+    if 'fields' in attrs:                          # a card shows a FACT: today's term is a verb, a header key, a detail
+        f = attrs['fields']
+        ent = dict(f['in']['entries'])
+        ent.pop('term', None)
+        ent = {'genos': ent.pop('genos'), 'fact': {
+            'required': 'true', 'in': {'pattern': '^[a-z][a-z0-9_.-]*$'},
+            'meaning': "the fact a card shows: a verb of the law (the being's statements of it), a key of the header "
+                       "(`title`, `summary`, `tags`), or a key `details` keeps"}, **ent}
+        attrs['fields'] = {'meaning': "which of a being's own facts a card shows, for a being of which kind, from which "
+                                      "lens on", 'in': {'entries': ent}}
+    fschema = folded.get('schema') or {}
+    fattrs = {k: v for k, v in (fschema.get('attrs') or {}).items() if k != 'view'}
+    if fold_key == 'monitors':
+        attrs[fold_key] = {'meaning': folded.get('meaning'), 'in': {'entries': fattrs, 'keyed_by': 'monitor'}}
+    else:
+        attrs[fold_key] = {'meaning': folded.get('meaning') + ". Each is named once on its page, and sits on the "
+                                                              "drawing that holds it",
+                           'in': {'map_of': fattrs, 'key_form': 'kebab', 'cells': fschema.get('cells') or []}}
+    row = {'meaning': term.get('meaning'), 'replaces': [term['term'], folded['term']], 'attrs': attrs}
+    if schema.get('cells'):
+        row['cells'] = schema['cells']
+    return _profile_words(row)
+
+
+def profiles(law):
+    """The text of core/law/profiles.yaml: each profile the law offers with what it gives — its verbs by their home, its
+    tables, its forms, the attributes it adds to a form of the core, its asset — where each of today's terms and overlays
+    of it went, its vacancies at their places in the core; the profiles' tables; the forms `page` and `drawing`."""
+    from core import read
+    what = ("The profiles (v1 part 11): what a garden takes up beside the core, each by its name in its VOCAB.md "
+            "(`profiles: [<name>, …]`, a RULE-CHANGE). A profile gives the verbs whose row names it as their `home` "
+            "(core/law/verbs.yaml), its tables, the forms its verbs hold, the attributes it adds to a form of the core "
+            "(`adds`), and its asset (`assets/<profile>/`, which a garden receives while it takes the profile). A "
+            "garden that does not take a profile uses none of it: rule `profile`. Each of today's terms and overlays "
+            "of a profile is named where it went (`went`), and each of its vacancies is at its place in the core.")
+    said = (f"GENERATED by `python3 core/translate.py profiles` from std-vocab {law.get('version')}'s `profiles`, "
+            "`view_lenses`, `view_archetypes` and `planes`; a change is made there, or by a RULE-CHANGE that moves these "
+            "rows, never by hand here.")
+    out = ["# " + line for para in (what, said) for line in textwrap.wrap(para, WIDTH - 2)]
+    verbs = read.data(os.path.join(HERE, 'law', 'verbs.yaml')).get('verbs') or []
+    units = {str(u.get('name')): str(u.get('unit'))
+             for u in read.data(os.path.join(HERE, 'law', 'units.yaml')).get('units') or []}
+    rows = []
+    for name, p in (law.get('profiles') or {}).items():
+        row = {'profile': name, 'meaning': ' '.join(str(p.get('meaning') or '').split())}
+        homed = [v['verb'] for v in verbs if v.get('home') == name]
+        if homed:
+            row['verbs'] = homed
+        tables = [t for t, (prof, _old, _k) in PROFILE_TABLES.items() if prof == name]
+        if tables:
+            row['tables'] = tables
+        forms = [f for f, (prof, *_r) in PROFILE_FORMS.items() if prof == name]
+        if forms:
+            row['forms'] = forms
+        adds = {}
+        for o in p.get('overlays') or []:
+            form = (PROFILE_OVERLAYS.get(name) or {}).get(o.get('term'))
+            if form:                               # its attributes, and what one asks of another (`cells`)
+                sch = o.get('schema') or {}
+                adds[form] = _profile_words({k: sch[k] for k in ('attrs', 'cells') if sch.get(k)})
+        if adds:
+            row['adds'] = adds
+        if os.path.isdir(os.path.join(ROOT, 'assets', name)):
+            row['asset'] = f"assets/{name}"
+        row['went'] = PROFILE_WENT[name]
+        missing = {t.get('term') for t in p.get('terms') or []} | {
+            o.get('term') if (PROFILE_OVERLAYS.get(name) or {}).get(o.get('term')) else f"{o.get('term')}.{a}"
+            for o in p.get('overlays') or [] for a in ((o.get('schema') or {}).get('attrs') or {})}
+        if missing - set(row['went']):
+            raise SystemExit(f"translate profiles: {name}'s {', '.join(sorted(missing - set(row['went'])))} went nowhere "
+                             f"(core/translate.py PROFILE_WENT): a person says where it goes")
+        vac, dropped = [], []
+        for v in p.get('vacancies') or []:
+            at, pos = str(v.get('at')), str(v.get('position'))
+            if at in PROFILE_DROPPED:
+                dropped.append({'at': at, 'position': pos, 'why': PROFILE_DROPPED[at]})
+                continue
+            at2 = {'registry:view_archetypes': 'table:archetypes', 'view_bindings.live': 'form:drawing.values.live',
+                   'located_at.role': 'form:placement.role'}.get(at)
+            if at2 is None:
+                at2, pos = vacancy_at(at, pos, units)
+            vac.append({'at': at2, 'position': pos, 'reason': v.get('reason'), 'why': ' '.join(str(v.get('why')).split())})
+        if vac:
+            row['vacancies'] = vac
+        if dropped:
+            row['dropped'] = dropped
+        rows.append(row)
+    out += _block('profiles', rows, '')
+    vrows = read.data(os.path.join(HERE, 'law', 'verbs.yaml'))
+    went = dict({w: v['verb'] for v in verbs for w in v.get('replaces') or []},
+                **{w: k for k, ws in (vrows.get('face_replaces') or {}).items() for w in ws or []})
+    for t, (_prof, old, _k) in PROFILE_TABLES.items():
+        table = []
+        for r in law.get(old) or []:
+            r = dict(r)
+            if t == 'archetypes' and r.get('reads'):   # today's terms the facts propose it by, as the statements that
+                r['reads'] = [READS_AS.get(x) or went.get(x, x) for x in r['reads']]   # say them: a verb, or a verb
+                #                                                              with a role filled (`<verb>.<role>`)
+            table.append(r)
+        out += _block(t, table, '')
+    terms = {t.get('term'): t for p in (law.get('profiles') or {}).values() for t in p.get('terms') or []}
+    forms = {f: _profile_form(terms[t], terms[folded], key) for f, (_prof, t, folded, key) in PROFILE_FORMS.items()}
+    reg = law.get('registry_forms') or {}
+    forms.update({t: reg[old] for t, (_p, old, _k) in PROFILE_TABLES.items() if old in reg})
+    forms['profiles'] = {'profile': 'required', 'meaning': 'required', 'verbs': 'optional', 'tables': 'optional',
+                         'forms': 'optional', 'adds': 'optional', 'asset': 'optional', 'went': 'required',
+                         'vacancies': 'optional', 'dropped': 'optional'}
+    out += _block('forms', forms, '')
+    return '\n'.join(out) + '\n'
+
+
 def generated(name):
     """The text the law generates for core/law/<name>.yaml."""
     if name == 'levels':
@@ -608,10 +787,13 @@ def generated(name):
         return tools(law_as_strings())
     if name == 'vacancies':
         return vacancies(law_as_strings())
+    if name == 'profiles':
+        return profiles(law_as_strings())
     return standard(law_as_strings(), name)
 
 
-GENERATED = ('levels', 'kinds', 'layers') + tuple(STANDARDS) + ('lines', 'measures', 'flows', 'tools', 'vacancies')
+GENERATED = ('levels', 'kinds', 'layers') + tuple(STANDARDS) + ('lines', 'measures', 'flows', 'tools', 'vacancies',
+                                                                 'profiles')
 
 
 # ================================================================================================ a garden's beans
@@ -1298,6 +1480,8 @@ def translate_bean(path, rel, ctx):
 
     # -- lines: a series, a walk, a course and its moves, a reading (v1 part 6, core/lines.py)
     lines_of(b, old, ctx)
+    # -- a page of drawings (v1 part 11, core/profiles.py)
+    views_of(b, old, ctx)
 
     # -- the rest, whole
     for k in old:
@@ -1351,6 +1535,95 @@ def _place_form(b, base, x, j, role, sub=(), rename=None, units=True, paths=Fals
         b.take(old_path, b.role(j, role, *new_path), text)
         return text
     return walk(x, base, tuple(sub))
+
+
+# THE VIEW PROFILE (v1 part 11): today's page — `view`, `views`, `view_bindings`, `view_monitors` — is the page's own
+# `draw` of its drawings, in the order `views` listed them (its form `page`, today's `view` with the monitors folded in),
+# and a `draw` of each drawing by its key (its form `drawing`, an entry of `views` with the values that sit on it folded
+# in under `values`). A card's term is the fact that says it now: the verb that replaced it, a key of the header, or
+# what `details` keeps under its name.
+HEADER_FACTS = ('title', 'summary', 'tags')
+
+
+NARROW_FACTS = {'lives_in': 'be.habitat', 'located_at': 'be.location'}    # a verb, narrowed by its `as`
+
+
+def fact_of(term, law):
+    if term in HEADER_FACTS:
+        return term
+    if term in NARROW_FACTS:
+        return NARROW_FACTS[term]
+    went = dict(law.replaces).get(term)
+    if isinstance(went, str) and went.startswith('face '):
+        return went[5:]
+    return went if isinstance(went, str) and went in law.verbs else term
+
+
+def views_of(b, old, ctx):
+    view = old.get('view') if isinstance(old.get('view'), dict) else None
+    views = old.get('views') if isinstance(old.get('views'), dict) else {}
+    if view is None or not isinstance(view.get('drawings'), str):
+        return
+    binds = old.get('view_bindings') if isinstance(old.get('view_bindings'), dict) else {}
+    pattrs = (ctx.law.forms.get('page') or {}).get('attrs') or {}
+    dattrs = (ctx.law.forms.get('drawing') or {}).get('attrs') or {}
+    order = []
+    for key, v in views.items():
+        ref = v.get('draws') if isinstance(v, dict) else None
+        kind_ref = next((k for k in ('mapping', 'bean') if isinstance(ref, dict) and set(ref) == {k}), None)
+        target = ref[kind_ref] if kind_ref else ref if isinstance(ref, str) else None
+        if not isinstance(target, str) or slug(key) != key or key in b.ids:
+            continue
+        sid = b.new_id(key)
+        roles = {'by': 'self', 'of': [target]}
+        if isinstance(v.get('note'), str):
+            roles['note'] = v['note']
+        j = b.add('draw', roles, sid)
+        b.take(('views', key, 'draws') + ((kind_ref,) if kind_ref else ()), b.role(j, 'of', 0), target)
+        if 'note' in roles:
+            b.take(('views', key, 'note'), b.role(j, 'note'))
+        form = {a: _place_form(b, ('views', key, a), v[a], j, 'drawing', (a,)) for a in v
+                if a in dattrs and a not in ('draws', 'note', 'values')}
+        values = {}
+        for bk, e in binds.items():
+            if isinstance(e, dict) and e.get('view') == key:
+                b.take(('view_bindings', bk, 'view'), b.role(j, 'id'), sid)
+                values[bk] = {a: _place_form(b, ('view_bindings', bk, a), e[a], j, 'drawing', ('values', bk, a))
+                              for a in e if a != 'view'}
+        if values:
+            form['values'] = values
+        b.statements[j][1]['drawing'] = form
+        order.append(sid)
+        b.leftover(('views', key), ('views', key))
+    roles = {'by': 'self', 'of': order}
+    if isinstance(view.get('note'), str):
+        roles['note'] = view['note']
+    j = b.add('draw', roles, b.new_id('page'))
+    if 'note' in roles:
+        b.take(('view', 'note'), b.role(j, 'note'))
+    page = {}
+    for a in view:
+        if a == 'fields' and isinstance(view[a], list):
+            rows = []
+            for i, e in enumerate(view[a]):
+                if not isinstance(e, dict):
+                    continue
+                row = {}
+                for k, nk in (('genos', 'kind'), ('term', 'fact'), ('shown_from', 'shown_from')):
+                    if k in e:
+                        row[nk] = fact_of(e[k], ctx.law) if k == 'term' else e[k]
+                        b.take(('view', a, i, k), b.role(j, 'page', a, len(rows), nk), row[nk])
+                rows.append(row)
+            page[a] = rows
+        elif a in pattrs and a != 'note':
+            page[a] = _place_form(b, ('view', a), view[a], j, 'page', (a,))
+    mons = old.get('view_monitors') if isinstance(old.get('view_monitors'), list) else []
+    if mons:
+        page['monitors'] = [_place_form(b, ('view_monitors', i), e, j, 'page', ('monitors', i)) for i, e in enumerate(mons)]
+    b.statements[j][1]['page'] = page
+    for term in ('view', 'views', 'view_bindings', 'view_monitors'):
+        if term in old:
+            b.leftover((term,), (term,))
 
 
 def lines_of(b, old, ctx):
@@ -1736,6 +2009,7 @@ def verify(b, text):
             got = '{}' if got == {} else '[]' if got == [] else got
         elif where[0] == 'statement':
             got = at_path(sts[where[1]], where[2:]) if where[1] < len(sts) else KeyError
+            got = '{}' if got == {} else '[]' if got == [] else got      # an empty list in a form, as in details
         elif where[0] == 'verb':
             got = verbs[where[1]]
         elif where[0] == 'derived':
@@ -1863,6 +2137,9 @@ def garden(src, dst):
         tables['protocols'] = [str(r['protocol']) for r in adds['net_protocols'] if isinstance(r, dict) and r.get('protocol')]
     if tables:
         rows['tables'] = tables
+    # THE PROFILES IT TAKES (v1 part 11): today's `extends_profiles`, by the core's name of the key
+    if isinstance(oldv.get('extends_profiles'), list) and oldv['extends_profiles']:
+        rows['profiles'] = [str(p) for p in oldv['extends_profiles']]
     # A GARDEN'S OWN SYSTEMS, SCHEMES AND FILES (v1 part 7): today's `registry_additions.anchor_systems` and
     # `.knowledge_schemes`, and its `registry_files`, are rows of the core's `systems`, `schemes` and `files`, as written
     sadds = vocab.get('registry_additions') if isinstance(vocab.get('registry_additions'), dict) else {}
@@ -1871,8 +2148,9 @@ def garden(src, dst):
         if isinstance(old_rows, list) and old_rows:
             rows[key] = [r for r in old_rows if isinstance(r, dict)]
     base = Law.load(std=std)
-    units = [unit_row(str(r['unit']), str(r.get('quantity')), base) for r in adds.get('units') or []
-             if isinstance(r, dict) and r.get('unit')]
+    units = [dict(unit_row(str(r['unit']), str(r.get('quantity')), base),       # its factor, where it said one (part 11:
+                  **({'factor': r['factor']} if isinstance(r.get('factor'), list) else {}))   # a value in it is converted)
+             for r in adds.get('units') or [] if isinstance(r, dict) and r.get('unit')]
     if units:
         rows['units'] = units
     law = Law.load(('VOCAB.md', rows), std=std)
@@ -1920,6 +2198,7 @@ def garden(src, dst):
     vtext = open(vp, encoding='utf-8').read() if os.path.isfile(vp) else '---\n---\n'
     vhead, vbody = dmparse.split_front_matter(vtext)
     vhead = PIN_LINE.sub('', vhead or '', count=1)
+    vhead = PROFILES_LINE.sub('', vhead, count=1) if 'profiles' in rows else vhead
     keep = {k: v for k, v in rows.items() if v}
     add = yaml.safe_dump(keep, allow_unicode=True, sort_keys=False, width=120) if keep else ''
     with open(vp, 'w', encoding='utf-8', newline='\n') as fh:
@@ -1939,6 +2218,7 @@ def garden(src, dst):
 
 PIN = re.compile(r'(?m)^(extends:[ \t]*)std-vocab@[^\s#]*')
 PIN_LINE = re.compile(r'(?m)^extends:[ \t]*std-vocab@[^\n]*(\n|$)')
+PROFILES_LINE = re.compile(r'(?m)^extends_profiles:[^\n]*(\n|$)')
 
 
 def proved_law(src, dst, rows, version):
@@ -1960,7 +2240,8 @@ def proved_law(src, dst, rows, version):
             continue
         if pin is not None and now.get('extends') != pin:
             out.append(f"{name}: `extends: {now.get('extends')}`, where the copy pins {pin}")
-        rest_was = {k: v for k, v in was.items() if k != 'extends'}
+        rest_was = {k: v for k, v in was.items() if k != 'extends' and not (k == 'extends_profiles' and 'profiles' in gained
+                                                                          and v == gained['profiles'])}
         rest_now = {k: v for k, v in now.items() if k != 'extends' and k not in gained}
         if pin is None and 'extends' in now:
             out.append(f"{name}: still pins `{now['extends']}`: the law a garden runs is GARDEN.md's alone")

@@ -12,7 +12,7 @@ Usage: python3 bin/rules.py [--terms] [--core] [--every-profile]     (no --terms
 them: what opting into a profile would bring, and the whole law for a reader of the release (bin/dmcatalog.py).
 
 IN A GARDEN OF THE CORE (v1 part 9; GARDEN.md pins `core@…`) it lists the core's law, read through core/law.py as the
-core's gate (bin/check.py) reads it: `--core` the twenty rules and the face — the statement, the order, the figures, the
+core's gate (bin/check.py) reads it: `--core` the twenty-one rules and the face — the statement, the order, the figures, the
 tables, the layers and the flow law; `--terms` the verbs with their roles and qualifiers, the kinds, the namespaces, the
 forms (their attributes read by bin/form.py) and the rows the garden adds, each used or vacant.
 """
@@ -69,7 +69,7 @@ def _front(path):
 
 
 # ---- a garden of the core (v1 part 9) -------------------------------------------------------------------------------
-# The rules of the core are its law's: the twenty rules and the face they judge by (core/law/core.yaml), the verbs' rows
+# The rules of the core are its law's: the twenty-one rules and the face they judge by (core/law/core.yaml), the verbs' rows
 # (verbs.yaml) with their roles and qualifiers, the kinds, levels, namespaces, units, layers and the flow law, the forms
 # of a line and of a measure, and the rows the garden adds (VOCAB.md) — each read through core/law.py `Law`, the gate's
 # one reader of it, so that what is listed is what the gate holds. `--core` is the rules and the face; `--terms` the
@@ -110,9 +110,8 @@ def core_rules(argv):
     L = garden_law(ROOT)
     want = set(a for a in argv if a in ('--terms', '--core')) or {'--terms', '--core'}
     g = (_front(os.path.join(ROOT, 'GARDEN.md'))[0] if os.path.isfile(os.path.join(ROOT, 'GARDEN.md')) else None) or {}
-    _say(f"{_product()} rules — core@{L.version} + garden '{g.get('garden')}'"
-         + (" — a profile's rows are today's words until v1 part 11, and none is listed here"
-            if '--every-profile' in argv else ''))
+    _say(f"{_product()} rules — core@{L.version} + garden '{g.get('garden')}', taking "
+         + (', '.join(L.taken) or 'no profile') + (" — every profile listed" if '--every-profile' in argv else ''))
     if '--core' in want:
         _title(f"THE RULES — {len(L.rules)}, each strict: a breach is an error, and there are no warnings")
         for r in L.face.get('rules') or []:
@@ -170,7 +169,16 @@ def core_rules(argv):
                  f"{' · ' + str(r.get('level')) if r.get('level') else ''}")
         _title(f"THE NAMESPACES — {len(L.namespaces)}: who gives a name, and whether once (rule names)")
         _say('  ' + ', '.join(f"{n}{' (once)' if r.get('once') == 'true' else ''}" for n, r in L.namespaces.items()))
-        _title(f"THE FORMS — {len(L.forms)}: what a qualifier of the shape `form` holds (rules line and measured)")
+        _title(f"THE PROFILES — {len(L.profiles)}: what a garden takes up beside the core (VOCAB.md `profiles`, rule "
+               f"profile); this one takes {', '.join(L.taken) or 'none'}")
+        for p, row in L.profiles.items():
+            if p in L.taken or '--every-profile' in argv:
+                verbs = [v for v in L.verbs if L.home(v) == p]
+                _say(f"  {p:10} {'taken' if p in L.taken else 'not taken'} — verbs: {', '.join(verbs) or 'none'}"
+                     + ''.join(f"; {k}: {', '.join(map(str, row[k]))}" for k in ('tables', 'forms') if row.get(k))
+                     + ''.join(f"; adds to {f}: {', '.join(a.get('attrs') or {})}" for f, a in (row.get('adds') or {}).items())
+                     + (f"; asset {row['asset']}" if row.get('asset') else ''))
+        _title(f"THE FORMS — {len(L.forms)}: what a qualifier of the shape `form` holds (rules line, measured, profile)")
         for f, form in L.forms.items():
             _say(f"  {f}")
             for line in _attrs(form):

@@ -22,6 +22,7 @@ vocab:                             # the garden's own rows, as its VOCAB.md woul
     - { flow: no-guide,  from: guide, to: law,     through: make, grant: refused }
   exclusive:
     - { verb: attend, why: "one being, once: what the cases below book" }
+  profiles: [code, network, domain, knowledge, view]   # each but accounting, whose verb a case below is refused
 
 garden:
   ada:
@@ -192,6 +193,9 @@ bad:
   - { rule: harm,        bean: x23, kind: document, statements: [ { say: { by: sam, at: now } }, { concern: { of: [ben] } }, { measure: { id: w, held: "root:vault/0123456789abcdef0123456789abcdef" } } ] }
   - { rule: room,        bean: x24, kind: host,     statements: [ { say: { by: sam, at: now } }, { be: { by: self, at: "home-rack#u7", as: location } }, { be: { by: nas, at: "home-rack#u7", as: location } } ] }
   - { rule: room,        bean: x25, kind: document, statements: [ { say: { by: sam, at: now } }, { attend: { by: ben, of: pot, at: 2026-11-02/2026-11-06 } }, { attend: { by: ben, of: ladder, at: 2026-11-05/2026-11-09 } } ] }
+  - { rule: profile,     bean: x60, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: rent, by: sam, of: { count: "100", unit: EUR } } }, { book: { of: rent, to: "orchard" } } ] }
+  - { rule: profile,     bean: x61, kind: service,  statements: [ { say: { by: sam, at: now } }, { draw: { id: page, by: self, of: [orders], page: { drawings: "file:drawings/shop.py" } } } ] }
+  - { rule: profile,     bean: x62, kind: service,  statements: [ { say: { by: sam, at: now } }, { draw: { id: page, by: self, of: [orders], page: { drawings: "file:drawings/shop.py" } } }, { draw: { id: orders, by: self, of: [nas], drawing: { purpose: "p", outcome: "o", stages: [ { label: "s", doer: "d" } ], questions: [ { lens: orient, ask: "a?" } ], archetype: reservoir, blind: [ { what: "w" } ], fill: nas-full, thresholds: [ { fullness: { count: "85", unit: "%" }, label: "full" } ] } } } ] }
   - { rule: measured,    bean: x50, kind: contract, statements: [ { say: { by: sam, at: now } }, { can: { id: rent, by: sam, of: "pay the rent", clause: { every: { of: time, in: gregorian-civil } } } } ] }
   - { rule: measured,    bean: x51, kind: contract, statements: [ { say: { by: sam, at: now } }, { can: { id: rent, by: sam, of: "pay the rent", clause: { due: 2026-10-01, notice: { count: "7", unit: kg }, falls_due: [ { from: "over.home", after: { of: time, measure: { count: "3", unit: d } } } ] } } } ] }
   - { rule: measured,    bean: x52, kind: host,     statements: [ { say: { by: sam, at: now } }, { hold: { by: self, of: [ { count: "2", unit: "{item}" } ] } }, { be: { by: nas, at: [x52, "x52#u1"], as: location, placed: { takes: [ { count: "3", unit: "{item}" } ] } } } ] }
