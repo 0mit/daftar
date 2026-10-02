@@ -133,8 +133,9 @@ for c in CASES['good']:
     check(f"passes: {c['name']}", not found, found)
 for c in CASES['bad']:
     found = judge(garden([bean(c['bean'], c['kind'], c['statements'], c.get('header'))]))
-    hit = next((f"{w}: {m}" for rule, w, m in found if rule == c['rule']), None)
-    check(f"rule {c['rule']}: {c['bean']} is refused — {hit}", hit is not None, found)
+    hit = next((f"{w}: {m}" for rule, w, m in found if rule == c['rule'] and str(c.get('says', '')) in m), None)
+    check(f"rule {c['rule']}: {c['bean']} is refused" + (f" ({c['name']})" if c.get('name') else '') + f" — {hit}",
+          hit is not None, found)
 tested = {c['rule'] for c in CASES['bad']}
 check("every rule but `kept` (the commit's alone: test/core_save.py) and `vacancy` (VOCAB.md's) has a case refused",
       tested == set(LAW.rules) - {'kept', 'vacancy'}, set(LAW.rules) - tested)

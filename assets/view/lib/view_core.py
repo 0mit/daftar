@@ -122,6 +122,8 @@ class Garden:
         import garden as gm
         from core import check
         self.gm = gm
+        gm._CORE.pop(self.root, None)            # a garden read now is read as it stands now, not as an earlier read
+        gm._CACHE.clear()                        # in this process found it (a host re-reads it at each new head)
         self.G = gm.core_garden(self.root)
         self.L = check.garden_law(self.root)
         self.law = Law(self.L, self.root)
@@ -163,6 +165,7 @@ class Garden:
         if kind.get('nature'):
             v['nature'] = NATURES.get(kind['nature'], kind['nature'])
         details = b.header.get('details') if isinstance(b.header.get('details'), dict) else {}
+        v.setdefault('details', details)         # a path of the core (`details.refs.boat.bean`) reads as a reading's does
         live = [(verb, r) for _i, verb, r in b.items if isinstance(r, dict) and 'held' not in r]
         facts = {}                               # each verb it says, under its own name, and narrowed by its `as`
         for verb, r in live:                     # (`be.habitat`): the facts a card shows, each what it says of it

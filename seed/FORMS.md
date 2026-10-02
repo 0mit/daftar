@@ -2,7 +2,7 @@
 
 Read this page before writing in a garden. It holds six recipes of `COOKBOOK.md`, derived by
 `bin/dmforms.py` (the cookbook tells each), after the misreadings agents make most, before the forms for **what
-nobody said**. Every bean here passes the gate as written (`test/germinate.py`, `test/docs.py`). Shapes it does not
+nobody said**. Every bean here passes the gate as written (`test/core_rehearse.py`, `test/docs.py`). Shapes it does not
 hold are in the cookbook's worked chapters.
 
 Write what you were told, in these shapes, and copy no value from here: `sam`, `ali`, `XTS`, `123456789abc` and the

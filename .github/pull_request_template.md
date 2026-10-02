@@ -19,7 +19,7 @@
 
 ## Checked
 - [ ] `python3 bin/dmsafe.py`
-- [ ] `python3 test/germinate.py`
+- [ ] `python3 test/refusals.py`
 - [ ] `python3 test/converge.py`
-- [ ] `python3 test/upgrade.py`
+- [ ] `python3 test/core_adopt.py`
 - [ ] the change was used by real beans in a garden before it was proposed here

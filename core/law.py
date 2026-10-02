@@ -53,7 +53,7 @@ ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flow
 ROW_FIELDS = {
     'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning', 'vacant'},
     'levels': {'level', 'line', 'stands', 'meaning', 'frame_of', 'vacant'},
-    'namespaces': {'namespace', 'once', 'meaning', 'vacant'},
+    'namespaces': {'namespace', 'once', 'pattern', 'meaning', 'vacant'},
     'flows': {'flow', 'from', 'to', 'through', 'as', 'grant', 'keeper', 'party', 'basis', 'why'},
     'standing': {'layer', 'holds', 'meaning'},
     'verbs': {'verb', 'meaning', 'roles', 'qualifiers', 'required', 'choice', 'default', 'replaces', 'home', 'figure',
@@ -352,10 +352,29 @@ class Law:
                     if key == 'systems' and str(row['system']) in self.std_systems():
                         self.found.append(('law', at, f"`{row['system']}` is a system of the standards already: a "
                                                       f"garden's own system takes a name of its own"))
+                    if key == 'systems' and not self._compiles(row.get('pattern'), at):
+                        continue                              # a position is never matched against a broken pattern
                     self.own.setdefault(key, []).append(row)
                 else:
+                    if key == 'namespaces' and not self._compiles(row.get('pattern'), at):
+                        continue                          # a name is never matched against a broken pattern
                     self._put({'kinds': self.kinds, 'levels': self.levels, 'namespaces': self.namespaces,
                                'verbs': self.verbs, 'units': self.units}[key], row[name_key], row, at)
+
+    def _compiles(self, pattern, at):
+        """Whether a row's `pattern` (a garden's own system's, a namespace's) is one text that compiles; a refusal is
+        recorded where it is not."""
+        if pattern is None:
+            return True
+        try:
+            if not isinstance(pattern, str):
+                raise re.error(f"it is a {type(pattern).__name__}, not one text")
+            re.compile(pattern)
+            return True
+        except re.error as e:
+            self.found.append(('law', at, f"`pattern` does not compile as a regular expression ({e}): the row is "
+                                          f"left out, and nothing is read by it"))
+            return False
 
     # ------------------------------------------------------------------------------------------------ the flow law
     def decide(self, frm, to, through, as_=None, keeper=None, party=None):
@@ -475,6 +494,14 @@ class Law:
 
         def bad(where, msg):
             out.append(('law', where, msg))
+        for name, row in (self.systems or {}).items():         # a system's own example is in its own form (16.0)
+            pat, ex = row.get('pattern'), row.get('example') if isinstance(row, dict) else None
+            if isinstance(pat, str) and isinstance(ex, str):
+                try:
+                    if not re.match(pat, ex, re.ASCII) or re.match(pat, ex, re.ASCII).end() != len(ex):
+                        bad(f"systems {name}", f"its own `example` {ex!r} is not in the form its `pattern` gives")
+                except re.error:
+                    pass                                        # a pattern that does not compile is refused where it is read
         if len(self.roles) != 7:
             bad('core.yaml roles', f"the core has seven roles, and this law {len(self.roles)}")
         known_rules = ['form', 'valency', 'knowing', 'placeholder', 'order', 'life', 'necessity', 'squares', 'weight',

@@ -1,7 +1,7 @@
 # Cookbook — the common things, written the way the gate accepts them
 
 Every block marked `<!-- example: … -->` below is **committed into a freshly grown garden by
-`test/germinate.py`**, after the laptop from `seed/README.md`, one recipe at a time and in the order of this page —
+`test/core_rehearse.py`**, after the laptop from `seed/README.md`, one recipe at a time and in the order of this page —
 so the page can be followed from the top, each recipe needing only what came before it. If the law moves and one
 stops passing, that test fails — so these are not illustrations that can quietly go stale.
 

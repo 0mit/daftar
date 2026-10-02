@@ -1,549 +1,200 @@
 #!/usr/bin/env python3
-"""converge — several gardens diverge, are packaged, and one remote garden pulls them all back.
+"""converge — several clones of a garden of the core diverge offline, are packaged, and one remote pulls them all back
+(v1 part 12: today's suite, ported to the core and its statement merge).
 
-WHY THIS EXISTS. Every other suite tests one garden. This is the only one that exercises what the whole
-MERGE design is FOR: independent sessions recording the same estate, offline, converging later. Run as a
-one-off rehearsal it found four real defects in an afternoon, every one invisible to the other suites:
+WHY THIS EXISTS. Every other suite tests one garden, or one merge of two branches (test/core_merge.py). This is the one
+that exercises what the merge is FOR: independent sessions recording the same estate, offline, converging later. As
+today's version of it found, a defect here is invisible elsewhere: a merge driver configured in no clone, a journal
+that conflicts on its own appends, a bean that only one side wrote lost on the way back.
 
-  * `seed/germinate.sh` never copied `.gitattributes`, so EVERY germinated garden text-merged its beans
-    and conflicted on its own append-only journal. The driver was configured in each and invoked in none.
-    Git warns neither when an attribute names a missing driver nor when a configured driver is named by
-    nothing, so this was silent in both directions.
-  * The driver emitted YAML block sequences at the SAME column as their key — legal YAML that defeats
-    every indentation-based span finder, so the next edit landed inside the block and the file stopped
-    parsing.
-  * When a member had to be appended, the anchor member was re-emitted from OUR value rather than the
-    merged one, quietly undoing a merge that had just happened.
-  * A position where theirs differs but the MERGED RESULT equals ours was still written, handing dmsafe a
-    block identical to the text it replaced.
+Nothing is mocked: a garden of the core grown from a release made of this tree, real clones, real `git bundle`, real
+`git merge` through the statement merge (bin/merge.py, git's driver `daftar`) and the core's gate at every commit.
 
-Nothing here is mocked: real germination, real clones, real `git bundle`, real `git merge` through the
-driver `.gitattributes` names. Roughly 15 seconds.
+  + an origin garden keeps a relay (a host bean, a comment above one of its statements); three clones of it each record
+    something of the relay, committed through their own gate: site-a one mass, site-b another (a disagreement), and a
+    role; site-c a role and a bean of its own
+  + each is packaged as one self-verifying bundle, and a remote clone of the origin pulls the three back: no git-level
+    conflict anywhere, the statement merge doing the work, each merge committed through the core's gate with an entry
+    of its own
+  + the relay holds the union of what every garden said; the two masses both stand, side by side, each known by its
+    garden's act; the bean only site-c wrote arrives whole; the statement nobody edited is untouched, its comment with
+    it; every garden's journal entry survives, the journal merged by union
+  + the converged garden passes the core's gate whole — and a second remote that pulls the three back in the other
+    order holds the same statements
+
+What today's suite held of its semantic merge — a refinement that subsumes, a rank of provenance, readings of a day that
+nest, one serial spelt two ways — the statement merge does not do: a bean's statements are a set, and a disagreement is
+two statements side by side (daftar-v1-plan.md, the fourth fork; test/ported.yaml says where each promise went).
 
 Run: python3 test/converge.py   (0 = green)
 """
-import json, os, re, shutil, subprocess, sys, tempfile
+import os
+import re
+import shutil
+import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(ROOT, 'bin'))
-import dmparse
-import yaml
+sys.path.insert(0, os.path.join(ROOT, 'test'))
+import grow  # noqa: E402
 
-results = []
-
-
-def check(name, ok, detail=''):
-    results.append(ok)
-    print(("PASS " if ok else "*** FAIL *** ") + name + (f"  [{detail}]" if detail and not ok else ''))
+PY = sys.executable
+FAILS = []
 
 
-def git(*a, cwd):
-    return subprocess.run(('git',) + a, capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=cwd)
+def check(name, cond, detail=""):
+    print(("PASS  " if cond else "FAIL  ") + name + ("" if cond else "  — " + str(detail)[:1200]))
+    if not cond:
+        FAILS.append(name)
 
 
-def commit(cwd, who, msg):
-    subprocess.run([sys.executable, os.path.join(cwd, 'bin', 'dmjournal.py'), 'agent', who,
-                    '--body', f"- action: {msg}\n- refs: beans/relay.md"], cwd=cwd, check=True, capture_output=True)
-    git('add', '-A', cwd=cwd)
-    return git('-c', 'user.name=' + who, '-c', f'user.email={who}@g', 'commit', '-q', '-m', msg, cwd=cwd)
+def text(g, rel):
+    with open(os.path.join(g, rel), encoding='utf-8') as fh:
+        return fh.read()
 
 
-def edit(cwd, fn):
-    p = os.path.join(cwd, 'beans', 'relay.md')
-    text = open(p, encoding='utf-8').read()          # READ then write; 'w' truncates at call time
-    open(p, 'w', encoding='utf-8').write(fn(text))
+def write(g, rel, t):
+    os.makedirs(os.path.dirname(os.path.join(g, rel)), exist_ok=True)
+    with open(os.path.join(g, rel), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(t)
+
+
+def commit(g, what, body):
+    """A save without the wait for the minute: the clock's heading written by bin/journal.py, its moment in place of each
+    `at: now`, and one commit, through the hook (the core's gate)."""
+    grow.run(PY, 'bin/journal.py', 'sam', what, '--body', body, cwd=g)
+    m = [ln for ln in text(g, 'log/journal.md').split('\n') if ln.startswith('## ')][-1][3:].split(' · ', 1)[0]
+    for f in os.listdir(os.path.join(g, 'beans')):
+        t = text(g, f'beans/{f}')
+        if 'at: now' in t:
+            write(g, f'beans/{f}', t.replace('at: now', f'at: "{m}"'))
+    grow.run('git', 'add', '-A', cwd=g)
+    return grow.run('git', 'commit', '-q', '-m', what, cwd=g)
+
+
+def add(g, rel, *lines):
+    """Statements put at the end of a bean's list, one to a line."""
+    t = text(g, rel)
+    head, sep, body = t.partition('\n---\n')
+    write(g, rel, head + ''.join(f'\n  - {ln}' for ln in lines) + sep + body)
+
+
+def statements(g, rel):
+    return sorted(ln.strip() for ln in text(g, rel).split('\n---\n', 1)[0].split('\n') if ln.startswith('  - '))
 
 
 RELAY = """---
 bean: relay
-genos: host
-title: "relay — the shared mail relay every garden observes"
-status: active
-summary: "A relay recorded in the origin garden, so gardens cloned from it observe the same object independently and their records must converge on one being rather than three."
-identity:
-  status: confirmed
-  anchors:
-    - {{ key: serial, value: "SN-RELAY-001", class: hardware, establishing: true, observed: 2026-08-02 }}
-provenance: {{ src: observed, by: "agent/origin", as_of: now }}
-nature: soma
-owned_by: {{ external: "the relay's operator, outside every garden that observes it" }}
-responsibility: {{ legal: {{ external: "the relay's operator" }} }}
-owns:
-  os: "AlmaLinux 9"
-  roles: [relay]
-  contact: "noc@example.org"          # NOBODY edits this — it and its comment must survive untouched
+kind: host
+title: "relay — the mail relay"
+summary: "A relay recorded in the origin garden, so its clones observe one being and converge on it."
+statements:
+  - say:  { by: sam, at: now }
+  # the owner: nobody edits this line, and its comment travels with it
+  - own:  { by: sam, of: self }
+  - name: { by: dns, of: self, as: relay.example.org }
 ---
-The shared relay.
+The relay.
 """
 
-TMP = tempfile.mkdtemp(prefix='dmconv-')
-ORIGIN = os.path.join(TMP, 'origin')
+T = tempfile.mkdtemp(prefix='converge-')
+SITES = ('site-a', 'site-b', 'site-c')
+try:
+    REL = grow.release(os.path.join(T, 'release'))
+    ORIGIN = os.path.join(T, 'origin')
+    r = grow.garden(REL, ORIGIN, 'sam', '--name', 'relay-garden')
+    check(f"an origin garden of the core grows from this tree (core@{grow.VERSION})", r.returncode == 0, r.out[-600:])
+    attrs = text(ORIGIN, '.gitattributes')
+    check("...its beans go to the statement merge and its journal to git's union",
+          re.search(r'(?m)^beans/\*\*?\S* +merge=daftar', attrs) and re.search(r'(?m)^log/journal\.md +merge=union', attrs),
+          attrs)
+    write(ORIGIN, 'beans/relay.md', RELAY)
+    r = commit(ORIGIN, 'the relay', '- action: wrote [[relay]]')
+    check("the origin's relay is committed through its gate", r.returncode == 0, r.out[-600:])
+    BASE = grow.run('git', 'rev-parse', 'HEAD', cwd=ORIGIN).stdout.strip()
 
-r = subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), ORIGIN, '--gardener', 'keeper'],
-                   capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=ROOT)
-check("an origin garden germinates from the seed", r.returncode == 0, (r.stdout + r.stderr)[-300:])
-check("...and it dispatches bean merges to the semantic driver, journal merges to union",
-      'daftar' in git('check-attr', 'merge', '--', 'beans/x.md', cwd=ORIGIN).stdout
-      and 'union' in git('check-attr', 'merge', '--', 'log/journal.md', cwd=ORIGIN).stdout,
-      "`.gitattributes` did not travel — every garden would text-merge its beans")
+    # ---- DIVERGE: three clones, each records the relay as it sees it, offline, through its own gate
+    said = {
+        'site-a': ('read: { by: sam, of: [mass-a], at: now }',
+                   'measure: { id: mass-a, of: self, as: mass, value: { count: "4.2", unit: kg }, at: 2026-09-01 }'),
+        'site-b': ('read: { by: sam, of: [mass-b, smtp], at: now }',
+                   'measure: { id: mass-b, of: self, as: mass, value: { count: "4.3", unit: kg }, at: 2026-09-01 }',
+                   'do: { id: smtp, by: self, as: mail-primary }'),
+        'site-c': ('read: { by: sam, of: [dns], at: now }', 'do: { id: dns, by: self, as: dns-resolver }'),
+    }
+    ok = []
+    for s in SITES:
+        g = os.path.join(T, s)
+        grow.run('git', 'clone', '-q', ORIGIN, g, cwd=T)
+        grow.run(PY, 'bin/install.py', cwd=g)               # hooks and git's driver are a clone's own, never cloned
+        add(g, 'beans/relay.md', *said[s])
+        if s == 'site-c':
+            write(g, 'beans/rack-c.md', '---\nbean: rack-c\nkind: host\ntitle: "rack-c — site-c\'s rack"\nstatements:\n'
+                                        '  - say: { by: sam, at: now }\n  - own: { by: sam, of: self }\n---\nThe rack.\n')
+        r = commit(g, f'{s}: the relay as seen there',
+                   f'- action: {s} recorded [[relay]]' + (' and [[rack-c]]' if s == 'site-c' else ''))
+        ok.append((s, r.returncode, r.out[-300:]))
+    check("each clone's record is committed through its own gate", all(rc == 0 for _s, rc, _o in ok), ok)
 
-# THE DAY OF WRITING IS STAMPED (23.0). RELAY says `as_of: now` and is journalled by the tool after it is written, so
-# the entry's day replaces `now`. A refused commit here once surfaced only as a missing file in a clone, three steps on;
-# it is named where it happens.
-open(os.path.join(ORIGIN, 'beans', 'relay.md'), 'w', encoding='utf-8').write(RELAY.format())
-_c = commit(ORIGIN, 'origin', 'recorded the relay every garden observes')
-check("the origin's first bean is committed through its gate, `as_of: now` stamped with the day of its entry",
-      _c.returncode == 0 and 'as_of: now' not in open(os.path.join(ORIGIN, 'beans', 'relay.md'), encoding='utf-8').read(),
-      (_c.stdout + _c.stderr)[-300:])
-BASE = git('rev-parse', 'HEAD', cwd=ORIGIN).stdout.strip()
+    # ---- PACKAGE: one bundle per clone, git's own offline transport
+    PKG = os.path.join(T, 'pkg')
+    os.makedirs(PKG)
+    for s in SITES:
+        grow.run('git', 'bundle', 'create', '-q', os.path.join(PKG, s + '.bundle'), f'{BASE}..HEAD', cwd=os.path.join(T, s))
+    check("the package is one self-verifying bundle per clone",
+          all(grow.run('git', 'bundle', 'verify', os.path.join(PKG, s + '.bundle'), cwd=ORIGIN).returncode == 0
+              for s in SITES), os.listdir(PKG))
 
-GARDENS = ('site-a', 'site-b', 'site-c')
-for g in GARDENS:
-    git('clone', '-q', ORIGIN, os.path.join(TMP, g), cwd=TMP)
-    subprocess.run(['sh', 'bin/install.sh'], capture_output=True, cwd=os.path.join(TMP, g))
+    # ---- PULL BACK: a remote clone of the origin takes all three
+    def pull_back(name, order):
+        rem = os.path.join(T, name)
+        grow.run('git', 'clone', '-q', ORIGIN, rem, cwd=T)
+        grow.run(PY, 'bin/install.py', cwd=rem)
+        out = []
+        for s in order:
+            grow.run('git', 'fetch', '-q', os.path.join(PKG, s + '.bundle'), f'HEAD:refs/heads/from-{s}', cwd=rem)
+            m = grow.run('git', 'merge', '--no-commit', '--no-ff', f'from-{s}', cwd=rem)
+            c = commit(rem, f'merged {s}', f'- action: merged {s}: [[relay]]' + (' and [[rack-c]]' if s == 'site-c' else ''))
+            out.append((s, m.returncode, m.out, c.returncode, c.out))
+        return rem, out
 
-# Three independent migrations. NO VERSION MOVES — the pin stays put, which is also what keeps them
-# mergeable at all: a merge across two Tier-0 versions is refused by design.
-edit(os.path.join(TMP, 'site-a'), lambda t: t.replace('  os: "AlmaLinux 9"', '  os: "AlmaLinux 9.4"')
-     .replace('roles: [relay]', 'roles: [relay, submission]'))
-_migrated = {'site-a': commit(os.path.join(TMP, 'site-a'), 'site-a', 'refined os to 9.4 and added the submission role')}
+    REMOTE, merges = pull_back('remote', SITES)
+    check("every clone pulls back cleanly: no git-level conflict anywhere",
+          all(mrc == 0 and 'CONFLICT' not in mo for _s, mrc, mo, _c, _co in merges), merges)
+    check("...the statement merge, not git's text merge, did the work", any('merge: relay' in mo for _s, _m, mo, _c, _co in merges),
+          [mo for _s, _m, mo, _c, _co in merges])
+    check("...and each merge is committed through the core's gate, with an entry of its own and two parents",
+          all(crc == 0 for _s, _m, _mo, crc, _co in merges)
+          and len(grow.run('git', 'log', '-1', '--format=%P', cwd=REMOTE).stdout.split()) == 2,
+          [(s, co[-300:]) for s, _m, _mo, crc, co in merges if crc])
+    relay = text(REMOTE, 'beans/relay.md')
+    check("the relay holds the union of what every garden said: both masses, both roles",
+          all(f'id: {i}' in relay for i in ('mass-a', 'mass-b', 'smtp', 'dns')), relay)
+    check("...the two masses a disagreement, side by side: both values stand, each known by its garden's act",
+          '"4.2"' in relay and '"4.3"' in relay and 'of: [mass-a]' in relay and 'of: [mass-b, smtp]' in relay, relay)
+    check("a bean only one garden wrote arrives whole",
+          os.path.isfile(os.path.join(REMOTE, 'beans/rack-c.md'))
+          and text(REMOTE, 'beans/rack-c.md') == text(os.path.join(T, 'site-c'), 'beans/rack-c.md'))
+    check("a statement nobody edited is untouched, its comment with it",
+          '  # the owner: nobody edits this line, and its comment travels with it\n  - own:  { by: sam, of: self }' in relay
+          or '  # the owner: nobody edits this line, and its comment travels with it\n  - own: { by: sam, of: self }' in relay,
+          relay)
+    journal = text(REMOTE, 'log/journal.md')
+    check("every garden's journal entry survives: the journal merges by union, losing none",
+          all(f'{s}: the relay as seen there' in journal for s in SITES)
+          and all(f'merged {s}' in journal for s in SITES), journal[-1500:])
+    r = grow.run(PY, 'core/check.py', '.', cwd=REMOTE)
+    check("the converged garden passes the core's gate whole", r.returncode == 0 and '0 error(s)' in r.out, r.out[-800:])
+    REMOTE2, merges2 = pull_back('remote-2', tuple(reversed(SITES)))
+    check("...and a second remote that pulls the three back in the other order holds the same statements",
+          all(crc == 0 for _s, _m, _mo, crc, _co in merges2)
+          and statements(REMOTE2, 'beans/relay.md') == statements(REMOTE, 'beans/relay.md'),
+          (statements(REMOTE2, 'beans/relay.md'), merges2[-1][4][-300:]))
+except Exception as e:  # noqa: BLE001 — a crash of the suite is a failure of it, said once
+    import traceback
+    check(f"the suite ran to its end ({type(e).__name__}: {e})", False, traceback.format_exc()[-900:])
+finally:
+    shutil.rmtree(T, ignore_errors=True)
 
-edit(os.path.join(TMP, 'site-b'),
-     lambda t: t.replace('roles: [relay]', 'roles: [relay, dkim-signing]\n  site: "Site B DC"'))
-_migrated['site-b'] = commit(os.path.join(TMP, 'site-b'), 'site-b', 'added dkim-signing and site Site B DC')
-
-edit(os.path.join(TMP, 'site-c'), lambda t: t.replace('roles: [relay]', 'roles: [relay]\n  site: "Site C DC"')
-     .replace('nature: soma', 'nature: soma\ncapabilities:\n  open-relay: { permission: forbidden,'
-                                  ' feasibility: possible, why: "must never accept third-party mail" }'))
-_migrated['site-c'] = commit(os.path.join(TMP, 'site-c'), 'site-c', 'recorded site Site C DC and forbade open-relay')
-# A migration that edits a fact and leaves the relay's stamp as it was adds no stamp, so it is not re-judged (23.0).
-check("each garden's migration is committed through its own gate — an untouched stamp is never judged again",
-      all(r.returncode == 0 for r in _migrated.values()),
-      '; '.join(f"{g}: {(r.stdout + r.stderr).strip()[-150:]}" for g, r in _migrated.items() if r.returncode))
-
-gates = {g: subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True,
-                           encoding='utf-8', errors='replace', cwd=os.path.join(TMP, g)) for g in GARDENS}
-check("each garden passes its OWN gate after its own migration",
-      all(r.returncode == 0 for r in gates.values()),
-      '; '.join(f"{g}: {r.stdout.strip()[-90:]}" for g, r in gates.items() if r.returncode))
-
-# ---- PACKAGE: a git bundle per garden. Git's own offline transport — one file, no server. -------------
-PKG = os.path.join(TMP, 'package')
-os.makedirs(PKG)
-for g in GARDENS:
-    git('bundle', 'create', '-q', os.path.join(PKG, g + '.bundle'), f'{BASE}..HEAD', cwd=os.path.join(TMP, g))
-_v = yaml.safe_load(dmparse.read(os.path.join(ORIGIN, 'VOCAB.md'))[0])
-check("the package is one self-verifying bundle per garden",
-      all(os.path.exists(os.path.join(PKG, g + '.bundle')) for g in GARDENS)
-      and all('is okay' in git('bundle', 'verify', os.path.join(PKG, g + '.bundle'), cwd=ORIGIN).stdout
-              or git('bundle', 'verify', os.path.join(PKG, g + '.bundle'), cwd=ORIGIN).returncode == 0
-              for g in GARDENS))
-
-# ---- PULL BACK: one last remote garden takes all three ------------------------------------------------
-REMOTE = os.path.join(TMP, 'remote')
-git('clone', '-q', ORIGIN, REMOTE, cwd=TMP)
-subprocess.run(['sh', 'bin/install.sh'], capture_output=True, cwd=REMOTE)
-drove = []
-for g in GARDENS:
-    git('fetch', '-q', os.path.join(PKG, g + '.bundle'), f'HEAD:refs/heads/from-{g}', cwd=REMOTE)
-    m = git('-c', 'user.name=remote', '-c', 'user.email=r@r', 'merge', f'from-{g}',
-            '-m', f'pull back {g}', cwd=REMOTE)
-    drove.append((g, m.returncode, m.stdout + m.stderr))
-
-check("every garden PULLS BACK cleanly — no git-level conflict anywhere",
-      all(rc == 0 for _g, rc, _o in drove),
-      '; '.join(f"{g}: {o.strip()[:150]}" for g, rc, o in drove if rc))
-check("...and the semantic driver, not git's text merge, did the work",
-      sum('dmmerge:' in o for _g, _rc, o in drove) >= 2,
-      '; '.join(o.strip()[:120] for _g, _rc, o in drove))
-
-head, _body = dmparse.read(os.path.join(REMOTE, 'beans', 'relay.md'))
-fm = yaml.safe_load(head)
-owns = fm['owns']
-check("a REFINEMENT subsumes: origin's 'AlmaLinux 9' and site-a's '9.4' resolve to 9.4, not a conflict",
-      owns['os'] == 'AlmaLinux 9.4', str(owns['os']))
-check("a SET unions across all three gardens",
-      sorted(owns['roles']) == ['dkim-signing', 'relay', 'submission'], str(owns['roles']))
-check("a genuine DISAGREEMENT keeps both values rather than picking one",
-      isinstance(owns.get('site'), dict) and sorted(owns['site']['conflict']) == ['Site B DC', 'Site C DC'],
-      str(owns.get('site')))
-check("...and the bean is marked unclean, naming the path a human must settle",
-      # `status` is deliberately NOT the marker (Phase 5, D22): it is a `single` merged term, so the
-      # driver writing its own flag there collided with the algebra on one key. It must survive the merge
-      # carrying what the gardens actually said.
-      fm.get('merge_open') is True and fm['merge_conflicts'] == ['owns.site']
-      and fm.get('status') != 'at-risk',
-      f"status={fm.get('status')} conflicts={fm.get('merge_conflicts')}")
-check("a top-level key only ONE garden had arrives whole",
-      list((fm.get('capabilities') or {})) == ['open-relay'], str(list(fm.get('capabilities') or {})))
-check("a fact NOBODY edited is untouched, comment and all",
-      owns['contact'] == 'noc@example.org' and 'NOBODY edits this' in head)
-
-jr = open(os.path.join(REMOTE, 'log', 'journal.md'), encoding='utf-8').read()
-check("every garden's journal entry survives — the log merges by union, losing none",
-      all(g in jr for g in GARDENS) and 'origin' in jr)
-
-g = subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True,
-                   encoding='utf-8', errors='replace', cwd=REMOTE)
-check("the converged garden passes its gate", g.returncode == 0, g.stdout.strip()[-200:])
-check("...and the gate WARNS about the unresolved conflict rather than staying silent (MERGE.md §10)",
-      'left UNCLEAN by a semantic merge' in g.stdout, g.stdout.strip()[-200:])
-
-# ---------------------------------------------------------------- one serial, two spellings (v0.5.1)
-# std-vocab 9.0 made the GATE compare serials case- and space-insensitively; v0.5.0 left the MERGE comparing them
-# exactly, so two gardens recording one machine as `SN-0042` and `sn-0042 ` still produced two objects.
-import dmmerge as M
-def _host(garden, bid, serial):
-    return [{'garden': garden, 'id': bid, 'fm': {
-        'bean': bid, 'genos': 'host', 'nature': 'soma', 'title': bid, 'status': 'active', 'summary': bid,
-        'identity': {'status': 'confirmed', 'anchors': [{'key': 'serial', 'value': serial, 'class': 'hardware',
-                                                         'establishing': True}]},
-        'provenance': {'src': 'observed', 'by': garden, 'as_of': '2026-09-17'}}}]
-_seeds = M.merge_gardens([_host('g1', 'box', 'SN-0042'), _host('g2', 'server', 'sn-0042 ')])
-_anchors = [a for sd in _seeds.values() for a in sd['identity']['anchors']]
-check("two gardens spelling one serial differently merge into ONE object",
-      len(_seeds) == 1, sorted(_seeds))
-check("...its anchor is stored once, in the compare form, with no disagreement recorded",
-      [a['value'] for a in _anchors] == ['SN-0042']
-      and not any(sd['identity'].get('anchor_conflicts') for sd in _seeds.values()), str(_anchors))
-_one = os.path.join(TMP, 'two-spellings')
-subprocess.run(['sh', os.path.join(ROOT, 'seed', 'germinate.sh'), _one, '--gardener', 'keeper'], capture_output=True, cwd=ROOT)
-open(os.path.join(_one, 'beans', 'box.md'), 'w').write(
-    '---\nbean: box\ngenos: host\ntitle: "box"\nstatus: active\nsummary: "a box"\nnature: soma\n'
-    'identity:\n  status: confirmed\n  anchors:\n'
-    '    - { key: serial, value: "SN-0042", class: hardware, establishing: true }\n'
-    '    - { key: serial, value: "sn-0042", class: hardware, establishing: true }\n'
-    'provenance: { src: observed, by: "test", as_of: 2026-09-17 }\n'
-    'owned_by: { external: someone }\nresponsibility: { legal: { external: "someone" } }\n---\nA box.\n')
-_g = subprocess.run([sys.executable, 'bin/dmcheck.py'], capture_output=True, text=True,
-                    encoding='utf-8', errors='replace', cwd=_one).stdout
-check("one bean carrying both spellings is not reported as a duplicate of ITSELF (the lowercase one still warns)",
-      'same object in one garden' not in _g and "is compared as 'SN-0042'" in _g, _g.strip()[-300:])
-
-# ---------------------------------------------------------------- positions in time (std-vocab 9.3, T2)
-# The `time` aspect's order is PARTIAL: a reading is absorbed by a finer one it contains, and every other
-# pair stays a disagreement. The order follows the VALUE (a position in gregorian-civil's one form), so it
-# holds under any key name.
-def _timed(garden, owns):
-    g = _host(garden, 'clock', 'SN-CLOCK-1')
-    g[0]['fm']['owns'] = owns
-    return g
-
-def _merged_owns(a, b):
-    sd = list(M.merge_gardens([_timed('g1', a), _timed('g2', b)]).values())[0]
-    return sd['facts']['owns']['members']
-
-_o = _merged_owns({'checked': '2026-09-19'}, {'checked': '2026-09-19 22:50+03:00'})
-check("T2: a day reading is absorbed by a finer reading inside it, under any key name",
-      _o['checked'].get('value') == '2026-09-19 22:50+03:00', json.dumps(_o['checked']))
-check("...and the coarser reading is kept in provenance, not dropped",
-      [x['value'] for x in _o['checked'].get('subsumed') or []] == ['2026-09-19'], json.dumps(_o['checked']))
-_o = _merged_owns({'seen': '2026-09-19'}, {'seen': '2026-09-20 00:10+03:00'})
-check("T2: readings that do not nest stay a disagreement for a person",
-      'conflict' in json.dumps(_o['seen']), json.dumps(_o['seen']))
-_o = _merged_owns({'seen': '2026-09-19 22:00Z'}, {'seen': '2026-09-20 01:00:15+03:00'})
-check("T2: containment is judged in the coarser reading's own offset (22:00Z contains 01:00:15+03:00)",
-      'conflict' not in json.dumps(_o['seen']) and '01:00:15' in json.dumps(_o['seen']), json.dumps(_o['seen']))
-_o = _merged_owns({'seen': '2026-09-19 22:00Z'}, {'seen': '2026-09-19 22:00:15'})
-check("T2: a reading with an offset does not contain one that states none — unordered, not guessed",
-      'conflict' in json.dumps(_o['seen']), json.dumps(_o['seen']))
-_o = _merged_owns({'seen': '2026-09-19 22:00Z'}, {'seen': '2026-09-19 22:00:30Z'})
-check("T2: parts are compared, not characters — 22:00Z contains 22:00:30Z though neither string starts the other",
-      _o['seen'].get('value') == '2026-09-19 22:00:30Z', json.dumps(_o['seen']))
-
-# ---------------------------------------------------------------- an anchor's PROVENANCE is ranked (20.0)
-# `anchor_authority` declared `scanned<operator-asserted<external` and was a second vocabulary for the one
-# question `provenance_src` answers. Since 20.0 an anchor carries its own `provenance` where its source differs
-# from its bean's, and two records of one anchor that differ only in that are resolved by the `provenance_src`
-# rank — the vocabulary deciding rather than arrival order.
-def _anchored(garden, prov):
-    anc = {'key': 'serial', 'value': 'SN-A1', 'class': 'hardware', 'establishing': True}
-    if prov:
-        anc['provenance'] = prov
-    return [{'garden': garden, 'id': 'box', 'fm': {
-        'bean': 'box', 'genos': 'host', 'nature': 'soma', 'title': 'b', 'status': 'active', 'summary': 'b',
-        'identity': {'status': 'confirmed', 'anchors': [anc]},
-        'provenance': {'src': 'observed', 'by': garden, 'as_of': '2026-09-17'}}}]
-_asserted = {'src': 'asserted-by-human', 'by': 'sam (operator)', 'as_of': '2026-09-17'}
-_sd = list(M.merge_gardens([_anchored('g1', None), _anchored('g2', _asserted)]).values())[0]
-_anc = _sd['identity']['anchors'][0]
-check("an anchor's own PROVENANCE survives the merge — a scanned value and an asserted one are not the same fact",
-      _anc.get('provenance') == _asserted and '_src' not in _anc, json.dumps(_anc))
-check("...and the `provenance_src` rank decides between them, rather than arrival order",
-      not _sd['identity'].get('anchor_conflicts'), json.dumps(_sd['identity']))
-_sd = list(M.merge_gardens([_anchored('g2', _asserted), _anchored('g1', None)]).values())[0]
-check("...in either order, because a rank is not arrival order",
-      _sd['identity']['anchors'][0].get('provenance') == _asserted, json.dumps(_sd['identity']['anchors']))
-check("a term may now declare any order the merge can APPLY — `instant` on a term is no longer a silent no-op",
-      M.leaf_order.__doc__ and 'instant' in M.ORDERS and 'containment' in M.ORDERS, str(M.ORDERS))
-
-# ---------------------------------------------------------------- the src rank is DECLARED (std-vocab 11.3)
-# MODEL.md and MERGE.md state the guard; the order that implements it was four numbers in bin/dmmerge.py.
-# `provenance_src` declares it now. These pin that the merge READS the declaration, and that reading it
-# moved nothing.
-def _said(garden, src, owns):
-    g = _host(garden, 'witness', 'SN-WIT-1')
-    g[0]['fm']['owns'] = owns
-    g[0]['fm']['provenance'] = {'src': src, 'by': garden, 'as_of': '2026-09-20'}
-    return g
-def _owns(a, b):
-    return list(M.merge_gardens([a, b]).values())[0]['facts']['owns']['members']
-# SINCE sources-by-nature (2026-09-26) THE RANK IS DERIVED, not listed: each src says what act and nature it is
-# (`values_source`), and the order is act first, then nature — the constant's four in their old order, with a
-# document's word (`stated-in-document`, said by a lekton) between what was read and what a person said.
-check("the src rank comes from the vocabulary, derived from each src's act and nature, the old four in their order",
-      M.ranked_order('provenance_src') == ['generated-by-tool', 'inferred', 'observed', 'stated-in-document',
-                                           'asserted-by-human'], str(M.ranked_order('provenance_src')))
-_o = _owns(_said('g1', 'observed', {'site': 'IST'}), _said('g2', 'stated-in-document', {'site': 'IST'}))
-check("...so what a document says outranks what was observed, and a person's word outranks a document's",
-      _o['site'].get('src') == 'stated-in-document'
-      and _owns(_said('g1', 'asserted-by-human', {'site': 'IST'}),
-                _said('g2', 'stated-in-document', {'site': 'IST'}))['site'].get('src') == 'asserted-by-human',
-      json.dumps(_o['site']))
-check("...and no copy of it is left in the merge", not hasattr(M, 'SRC_RANK'))
-for _pair in ((('g1', 'asserted-by-human', {'os': 'AlmaLinux 9'}), ('g2', 'inferred', {'os': 'AlmaLinux 9.8'})),
-              (('g2', 'inferred', {'os': 'AlmaLinux 9.8'}), ('g1', 'asserted-by-human', {'os': 'AlmaLinux 9'}))):
-    _o = _owns(_said(*_pair[0]), _said(*_pair[1]))
-    check("THE GUARD: a more precise INFERRED value does not swallow an ASSERTED-BY-HUMAN one (%s first)" % _pair[0][1],
-          'AlmaLinux 9' in [c.get('value') for c in (_o['os'].get('conflict') or [_o['os']])]
-          and _o['os'].get('value') != 'AlmaLinux 9.8', json.dumps(_o['os']))
-_o = _owns(_said('g1', 'observed', {'os': 'AlmaLinux 9'}), _said('g2', 'inferred', {'os': 'AlmaLinux 9.8'}))
-check("...while below the top of the rank a refinement still subsumes, as it always did",
-      _o['os'].get('value') == 'AlmaLinux 9.8', json.dumps(_o['os']))
-_o = _owns(_said('g1', 'inferred', {'site': 'IST'}), _said('g2', 'asserted-by-human', {'site': 'IST'}))
-check("a value two gardens agree on keeps the HIGHEST src the rank declares",
-      _o['site'].get('src') == 'asserted-by-human', json.dumps(_o['site']))
-
-# ---------------------------------------------------------------- generated-by-tool BORROWS its standing (12.0)
-# A tool knows nothing of its own, so a generated fact weighs as the weakest src it names in `provenance.from`,
-# and at the bottom of the rank when it names none. The label is never rewritten.
-def _generated(garden, owns, frm=None):
-    g = _said(garden, 'generated-by-tool', owns)
-    if frm is not None:
-        g[0]['fm']['provenance']['from'] = frm
-    return g
-_o = _owns(_generated('g1', {'site': 'IST'}), _said('g2', 'inferred', {'site': 'IST'}))
-check("12.0: a generated fact that names no basis sits at the bottom — an inference outweighs it",
-      _o['site'].get('src') == 'inferred', json.dumps(_o['site']))
-_o = _owns(_generated('g1', {'site': 'IST'}, {'a': {'src': 'observed'}}), _said('g2', 'inferred', {'site': 'IST'}))
-check("12.0: ...and one computed from OBSERVED facts outweighs the inference, keeping its own label",
-      _o['site'].get('src') == 'generated-by-tool' and '_as' not in json.dumps(_o), json.dumps(_o['site']))
-_o = _owns(_generated('g1', {'site': 'IST'}, {'a': {'src': 'observed'}, 'b': {'src': 'inferred'}}),
-           _said('g2', 'observed', {'site': 'IST'}))
-check("12.0: a chain is as strong as its weakest link — observed+inferred inputs weigh as inferred",
-      _o['site'].get('src') == 'observed', json.dumps(_o['site']))
-_o = _owns(_generated('g1', {'os': 'AlmaLinux 9.8'}, {'a': {'src': 'asserted-by-human'}}),
-           _said('g2', 'asserted-by-human', {'os': 'AlmaLinux 9'}))
-check("12.0: borrowing never launders UPWARD past the guard's own protection of a stated assertion",
-      'AlmaLinux 9' in json.dumps(_o['os']), json.dumps(_o['os']))
-
-# ---------------------------------------------------------------- one value, one form (std-vocab 21.0: G3, G4)
-# What the law says is the same value is compared as one: a quantity's count in its shortest exact decimal, and a list of
-# entries the law keys by one attribute (`keyed_by`) in that attribute's order. Read from the law's schema — the merge
-# names no term — and never written back over what a bean says.
-def _deal(garden, count, borne):
-    return [{'garden': garden, 'id': 'deal', 'fm': {
-        'bean': 'deal', 'genos': 'contract', 'nature': 'lekton', 'title': 'a deal', 'status': 'active',
-        'identity': {'status': 'confirmed', 'anchors': [{'key': 'identifier', 'value': 'abcdefabcdef/contract:deal',
-                                                         'class': 'logical', 'establishing': True}]},
-        'provenance': {'src': 'asserted-by-human', 'by': garden, 'as_of': '2026-09-23'},
-        'transactions': {'t1': {'what': 'x', 'amount': {'count': count, 'unit': 'XTS'},
-                                'paid_by': [{'party': 'sam', 'amount': {'count': count, 'unit': 'XTS'}}],
-                                'borne_by': borne}}}}]
-_sa = [{'party': 'sam', 'share': 1}, {'party': 'ali', 'share': 2}]
-_s = M.merge_gardens([_deal('g1', 900, _sa), _deal('g2', '900.00', list(reversed(_sa)))])
-_c = M.canonical(_s)
-check("G4: `900` and `\"900.00\"` are ONE amount, and G3: bearers keyed by party, listed in another order, ONE list — "
-      "no disagreement", len(_s) == 1 and 'conflict' not in _c, _c[:600])
-check("...the seed holds the count in its shortest exact decimal, the bearers in their key's order",
-      '"count":"900"' in _c and _c.index('"party":"ali"') < _c.index('"party":"sam","share":1'), _c[:600])
-check("...so a fingerprint does not depend on how an amount is spelt (`12.50`, `12.5`) or its bearers ordered",
-      M.fingerprint(M.merge_gardens([_deal('g1', '12.50', _sa)]))[0]
-      == M.fingerprint(M.merge_gardens([_deal('g1', '12.5', list(reversed(_sa)))]))[0])
-check("...while a count that is not read exactly is compared as it was written — a canonical form never guesses",
-      M.canon_value('transactions', {'t': {'amount': {'count': '1e3', 'unit': 'XTS'}}})['t']['amount']['count'] == '1e3'
-      and M.canon_value('transactions', {'t': {'amount': {'count': 1.5, 'unit': 'XTS'}}})['t']['amount']['count'] == 1.5)
-check("...and the law says which: `keyed_by` on the entries, a quantity by its domain — no term is named in the merge",
-      "'transactions'" not in open(M.__file__, encoding='utf-8').read()
-      and "'paid_by'" not in open(M.__file__, encoding='utf-8').read())
-_d = os.path.join(TMP, 'spelt')
-os.makedirs(_d)
-_p = os.path.join(_d, 'deal.md')
-_bean = ('---\nbean: deal\ngenos: contract\ntitle: "a deal"\nstatus: active\nsummary: "a deal"\n'
-         'transactions:\n  t1: { what: x, amount: { count: "900.00", unit: XTS }, borne_by: [ { party: sam, share: 1 }, '
-         '{ party: ali, share: 2 } ] }   # as the statement shows it\n---\nA deal.\n')
-open(_p, 'w', encoding='utf-8', newline='\n').write(_bean)
-_fa = dmparse.loads(dmparse.read(_p)[0])
-_fb = dict(_fa, transactions={'t1': {'what': 'x', 'amount': {'count': 900, 'unit': 'XTS'},
-                                     'borne_by': [{'party': 'ali', 'share': 2}, {'party': 'sam', 'share': 1}]},
-                              't2': {'what': 'y', 'amount': {'count': '12.50', 'unit': 'XTS'}}})
-_seed = M.merge_component([{'garden': 'ours', 'id': 'deal', 'fm': _fa}, {'garden': 'theirs', 'id': 'deal', 'fm': _fb}])
-_res = M.merge_in_place(_p, _fa, _fb, '', _seed)
-_after = dmparse.loads(dmparse.read(_p)[0])
-check("the driver writes what each side wrote: ours kept `\"900.00\"` with its bearers' order, and their new entry "
-      "arrives as `\"12.50\"` — never respelt in the canonical form",
-      _res[2] == [] and _after['transactions']['t1']['amount']['count'] == '900.00'
-      and _after['transactions']['t1']['borne_by'][0]['party'] == 'sam'
-      and _after['transactions']['t2']['amount']['count'] == '12.50', open(_p, encoding='utf-8').read())
-
-# ---------------------------------------------------------------- ANOTHER GARDEN'S LAW, entry by entry
-# A VOCAB.md is text a person or an agent edited, and another garden's is text this garden never wrote. Each shape below
-# once ended the merge in a traceback, or was passed over in silence; each is now named — which garden, where, and what
-# it should be — and the merge stops before it touches a bean, as it stops for two pins.
-_SHAPES = {
-    'local_terms: 5': "`local_terms` is int, not a list of entries",
-    'local_gene: 7': "`local_gene` is int, not a list of entries",
-    'local_terms: [ { term: [x] } ]': "local_terms[0].term should be text",
-    'local_terms: [ { term: { a: b } } ]': "local_terms[0].term should be text",
-    'local_gene: [ { genos: [x] } ]': "local_gene[0].genos should be text",
-    'local_terms: [ { term: x, schema: 5 } ]': "local_terms[0].schema should be a mapping",
-    'local_terms: [ { term: x, schema: { attrs: 5 } } ]': "local_terms[0].schema.attrs should be a mapping",
-    'local_terms: [ { term: x, merge: 5 } ]': "local_terms[0].merge should be a mapping",
-    'local_terms: [ { term: x, context_keys: 5 } ]': "local_terms[0].context_keys should be a list of text",
-    'local_terms: [ 5 ]': "local_terms[0] is int, not an entry",
-    'local_gene: [ x ]': "local_gene[0] is str, not an entry",
-    'registry_additions: { facets: [ 5 ] }': "registry_additions.facets should be a list of rows",
-}
-
-
-def _with_vocab(src, dst, line):
-    shutil.copytree(src, dst, ignore=shutil.ignore_patterns('.git'))
-    v = open(os.path.join(dst, 'VOCAB.md'), encoding='utf-8').read()
-    key = line.split(':')[0]
-    v = re.sub(rf'(?m)^{key}:.*$', line, v, count=1) if re.search(rf'(?m)^{key}:', v) else v.replace('---\n', f'---\n{line}\n', 1)
-    open(os.path.join(dst, 'VOCAB.md'), 'w', encoding='utf-8', newline='\n').write(v)
-    return dst
-
-
-_bad = []
-for _n, (_line, _said) in enumerate(_SHAPES.items()):
-    _other = _with_vocab(_one, os.path.join(TMP, f'law-{_n}'), _line)
-    _r = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '.', _other], capture_output=True,
-                        text=True, encoding='utf-8', errors='replace', cwd=_one)
-    if not (_r.returncode == 1 and 'Traceback' not in _r.stderr and "MERGE REFUSED — a garden's law cannot be read" in _r.stderr
-            and f"law-{_n}: VOCAB.md {_said}" in _r.stderr):
-        _bad.append((_line, _r.returncode, _r.stderr[-400:]))
-check(f"another garden's VOCAB.md in {len(_SHAPES)} shapes the merge cannot read as law — a block that is not a list, an "
-      "entry that is not a mapping, a name that is not text, a schema, attrs or merge that is not a mapping, context_keys "
-      "that are not a list of text, a registry row that is not a mapping — each is NAMED, garden and place, and the merge "
-      "stops before any bean: never a traceback, never passed in silence", not _bad, _bad)
-_own = _with_vocab(_one, os.path.join(TMP, 'law-own'), 'local_terms: [ { term: x, merge: 5 } ]')
-_r = subprocess.run([sys.executable, os.path.join(_own, 'bin', 'dmmerge.py'), '.', _one], capture_output=True, text=True,
-                    encoding='utf-8', errors='replace', cwd=_own)
-_d = subprocess.run([sys.executable, os.path.join(_own, 'bin', 'dmmerge.py'), '--file', *(
-    [os.path.join(_own, 'beans', 'box.md')] * 3)], capture_output=True, text=True,
-                    encoding='utf-8', errors='replace', cwd=_own)
-check("...and this garden's OWN law the same, where the merge reads its terms by it: named, never a traceback at import "
-      "— in the report and in the git merge driver alike, which leaves the file untouched",
-      _r.returncode == 1 and "this garden's own law" in _r.stderr and 'local_terms[0].merge should be a mapping' in _r.stderr
-      and _d.returncode == 1 and 'Traceback' not in _r.stderr + _d.stderr and 'cannot read as law' in _d.stderr,
-      _r.stderr[-400:] + _d.stderr[-400:])
-_ok = subprocess.run([sys.executable, os.path.join(_one, 'bin', 'dmmerge.py'), '.', _with_vocab(_one, os.path.join(TMP, 'law-ok'), 'local_terms: []')],
-                     capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=_one)
-check("...while a law it can read merges as before", 'cannot be read' not in _ok.stderr and 'Traceback' not in _ok.stderr
-      and 'fingerprint:' in _ok.stdout, _ok.stderr[-400:])
-
-# ---------------------------------------------------------------- a member no term describes: its shape read from all
-def _box(garden, val):
-    return [{'garden': garden, 'id': 'box', 'fm': {'bean': 'box', 'genos': 'host', 'nature': 'soma', 'title': 'box',
-             'status': 'active', 'summary': 'box', 'owns': {'mixed': val},
-             'identity': {'status': 'confirmed', 'anchors': [{'key': 'serial', 'value': 'SN-MIX', 'class': 'hardware',
-                                                              'establishing': True}]}}}]
-_orders = []
-for _a, _b in ((['x', 'y'], 'z'), ({'k': 1}, 'z'), ({'k': 1}, ['x'])):
-    _one = M.merge_component(_box('ga', _a) + _box('gb', _b))['facts']['owns']
-    _two = M.merge_component(_box('gb', _b) + _box('ga', _a))['facts']['owns']
-    _orders.append((json.dumps(_one, sort_keys=True, default=str) == json.dumps(_two, sort_keys=True, default=str), _one))
-check("a member no term describes merges alike whichever garden comes first: a list against a scalar is one set, a "
-      "mapping against either is one value, both kept",
-      all(o for o, _v in _orders) and "'z'" in str(_orders[0][1]) and "'x'" in str(_orders[0][1]), _orders)
-
-# ---------------------------------------------------------------- a version refines only at a component's boundary
-_v = [(a, b, M.subsumes(a, b, 'version')) for a, b in (('AlmaLinux 9', 'AlmaLinux 9.4'), ('v1', 'v1.0'), ('12', '12-rc1'),
-                                                        ('9', '90'), ('1.2', '1.23'), ('v1', 'v10'), ('9.4', '9'))]
-check("the `version` order: a release is refined by one that goes on at a component's boundary, and never by one that "
-      "only starts with its text — `9` and `90` are two releases, a disagreement",
-      [x[2] for x in _v] == [True, True, True, False, False, False, False], _v)
-
-# ---------------------------------------------------------------- three ways: the base git hands the driver (%O)
-# Two branches of ONE garden share a base, and the driver reads it: what one side changed and the other left as the
-# base had it is that side's change, and stands — a removal among them, which must not come back from the side that
-# never touched it. Only a position both sides changed, differently, is a disagreement for a person.
-TW = os.path.join(TMP, 'three-ways')
-r = subprocess.run([sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), TW, '--gardener', 'keeper'],
-                   capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=ROOT)
-for _k, _v in (('user.name', 'tw'), ('user.email', 'tw@g'), ('commit.gpgsign', 'false')):
-    git('config', _k, _v, cwd=TW)
-HOST = """---
-bean: gate-host
-genos: host
-title: "gate-host"
-status: active
-summary: "a host two branches of one garden both keep"
-identity:
-  status: confirmed
-  anchors:
-    - { key: serial, value: "SN-TW-1", class: hardware, establishing: true }
-provenance: { src: observed, by: "keeper", as_of: now }
-nature: soma
-owned_by: { owner: { bean: keeper } }
-roles:
-  - { role: web }
-os: linux
----
-The gate host.
-"""
-
-
-def tw_write(text):
-    open(os.path.join(TW, 'beans', 'gate-host.md'), 'w', encoding='utf-8').write(text)
-
-
-def tw_read():
-    return open(os.path.join(TW, 'beans', 'gate-host.md'), encoding='utf-8').read()
-
-
-def tw_save(what):
-    return subprocess.run([sys.executable, 'bin/dmsave.py', 'tw (test)', what, '--body', f'- action: [[gate-host]] {what}'],
-                          capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=TW)
-
-
-def tw_branches(theirs, ours, name):
-    """From the saved base: `theirs` on a branch, `ours` on the trunk, then the branch merged in. (rc, output, bean)"""
-    base = git('rev-parse', 'HEAD', cwd=TW).stdout.strip()
-    git('checkout', '-q', '-b', name, cwd=TW)
-    tw_write(theirs(tw_read())); a = tw_save('theirs: ' + name.replace('-', ' '))
-    git('checkout', '-q', '-', cwd=TW)
-    tw_write(ours(tw_read())); b = tw_save('ours: ' + name)
-    m = git('merge', '--no-edit', name, cwd=TW)
-    out = a.stdout + a.stderr + b.stdout + b.stderr + m.stdout + m.stderr
-    bean = yaml.safe_load(dmparse.split_front_matter(tw_read())[0])
-    return m.returncode == 0 and a.returncode == 0 and b.returncode == 0, out, bean, base
-
-
-tw_write(HOST)
-_b = tw_save('the gate host')
-check("(setup) a garden keeps a host on its trunk", r.returncode == 0 and _b.returncode == 0, (_b.stdout + _b.stderr)[-400:])
-ok, out, fm, _base = tw_branches(lambda t: t.replace('status: active', 'status: deprecated').replace('roles:\n  - { role: web }\n', ''),
-                                 lambda t: t.replace('The gate host.', 'The gate host, as the trunk keeps it.'),
-                                 'retire-and-drop-roles')
-check("a value only theirs changed is theirs, and a key only theirs removed stays removed — no conflict, and the "
-      "trunk's own edit of the body kept, with nothing appended",
-      ok and fm['status'] == 'deprecated' and 'roles' not in fm and not fm.get('merge_open')
-      and tw_read().count('The gate host') == 1 and 'as the trunk keeps it' in tw_read(), out[-900:])
-ok, out, fm, _base = tw_branches(lambda t: t.replace('os: linux', 'os: freebsd'),
-                                 lambda t: t.replace('os: linux', 'os: debian'), 'both-os')
-check("...a value BOTH changed, differently, is a disagreement for a person, both values kept",
-      ok and isinstance(fm.get('os'), dict) and sorted(fm['os'].get('conflict') or []) == ['debian', 'freebsd']
-      and fm.get('merge_open') is True and fm.get('merge_conflicts') == ['os'], out[-900:])
-git('reset', '-q', '--hard', _base, cwd=TW)
-ok, out, fm, _base = tw_branches(
-    lambda t: t.replace('establishing: true }\n', 'establishing: true }\n    - { key: mac, value: "02:00:5e:10:00:01", '
-                                                   'class: hardware, establishing: false }\n', 1),
-    lambda t: t.replace('The gate host', 'The gate host, its anchors kept', 1), 'anchor')
-check("...an identity anchor only theirs added arrives — the driver used to keep ours' identity whole, and drop it",
-      ok and any(a.get('key') == 'mac' for a in fm['identity']['anchors']), out[-900:])
-
-shutil.rmtree(TMP, ignore_errors=True)
-print(f"\nconverge: {sum(results)}/{len(results)} checks passed")
-sys.exit(0 if all(results) else 1)
+print(f"\nconverge: {len(FAILS)} failed" + (": " + ", ".join(FAILS) if FAILS else ""))
+sys.exit(1 if FAILS else 0)

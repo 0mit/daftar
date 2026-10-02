@@ -32,6 +32,8 @@ from fractions import Fraction
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 from core import frame  # noqa: E402
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'bin'))
+import dmunits  # noqa: E402 — a count, read exactly: the one reader
 
 WHOLE = re.compile(r'^[0-9]+$')
 
@@ -61,10 +63,25 @@ def factor(L, unit):
 
 
 def exact(text):
-    """A count as an exact Fraction, or None: plain decimal digits, as the standards read one."""
-    if not isinstance(text, str) or not re.match(r'^-?[0-9]+(\.[0-9]+)?$', text):
+    """A count as an exact Fraction, or None: plain decimal digits as the one reader of a count reads them
+    (bin/units.py `exact`) — no leading zero, which YAML 1.1's readers take for octal, and at most 40 digits a side."""
+    if not isinstance(text, str):
         return None
-    return Fraction(text)
+    try:
+        return dmunits.exact(text)
+    except ValueError:
+        return None
+
+
+def count_why(text):
+    """Why `text` is not a count in its form, said to the writer."""
+    if isinstance(text, str) and re.fullmatch(r'-?0[0-9]+(\.[0-9]+)?', text):
+        return f"its count {text!r} begins with a zero, which a YAML 1.1 reader takes for octal: write it without"
+    try:
+        dmunits.exact(text if isinstance(text, str) else '')
+    except ValueError as e:
+        return f"its count: {e}"
+    return f"its count {text!r} is not plain decimal digits, read exactly"
 
 
 def power(L, unit, dimension):
@@ -89,10 +106,14 @@ def quantity_why(L, x, want=None):
         return "a quantity is `{ count, unit }`, with how well it is known inside it — one of `u` and `accuracy` — or a " \
                "bare number (a count of the unit one)"
     if exact(x['count']) is None:
-        return f"its count {x['count']!r} is not plain decimal digits, read exactly"
+        return count_why(x['count'])
     why = L.has('units', x['unit'])
     if why:
         return why
+    places = (getattr(L.std, 'currency_digits', None) or {}).get(x['unit'])
+    if places is not None and len((x['count'].split('.') + [''])[1]) > places:
+        return f"{x['count']} {x['unit']} is written with more decimal places than {x['unit']} has ({places}, ISO 4217's " \
+               f"minor unit): an amount is a count of what can be paid"
     q = (unit_row(L, x['unit']) or {}).get('quantity')
     if want not in (None, 'any') and q != want:
         return f"its unit {x['unit']} measures {q}, and a {want} is asked here"
@@ -439,7 +460,7 @@ def capacity(J):
                         total += exact(q['count']) * f / cf
                         who.append(f"{where} ({q['count']} {q['unit']})")
                 if total > exact(cap['count']):
-                    shown = str(total.numerator) if total.denominator == 1 else f"{float(total):g}"
+                    shown = str(total.numerator) if total.denominator == 1 else f"{total.numerator}/{total.denominator}"
                     out.append((f"{host}[{i}] hold", f"it holds {cap['count']} {cap['unit']}, and what is placed in it "
                                                      f"as room takes {shown} {cap['unit']} — {'; '.join(who)}: room is "
                                                      f"taken once, and two beings do not take the same room at once"))

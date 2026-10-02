@@ -55,7 +55,8 @@ class Bean:
     def __init__(self, bid, path=None, header=None, unread=None, raw=None, body=None):
         self.id, self.path, self.unread, self.raw, self.body = bid, path, unread, raw, body
         self.header = header or {}
-        self.kind = self.header.get('kind')
+        k = self.header.get('kind')
+        self.kind = k if isinstance(k, str) else None         # a kind is one word: any other is refused, by its form
         st = self.header.get('statements')
         self.statements = st if isinstance(st, list) else []
         self.items = []                                       # (index, verb, roles) for the well-formed ones
@@ -255,7 +256,9 @@ class Judge:
         if b.header.get('bean') != b.id:
             self.err('form', b.id, f"`bean: {b.header.get('bean')}` — a bean names itself as its file does, `{b.id}`")
         if b.kind not in self.L.kinds:
-            self.err('form', b.id, f"`kind: {b.kind}` is no kind of the law")
+            k = b.header.get('kind')
+            self.err('form', b.id, f"`kind: {k}` is no kind of the law" if k is None or isinstance(k, str) else
+                     f"`kind` is one word, a kind of the law, not a {type(k).__name__}")
         for k in ('title', 'summary'):
             if k in b.header and not isinstance(b.header[k], str):
                 self.err('form', b.id, f"`{k}` is text")
@@ -549,6 +552,12 @@ class Judge:
         given = {}
         for b in self.G.beans.values():
             for i, verb, r in b.items:
+                pat = (self.L.namespaces.get(r.get('by')) or {}).get('pattern') if verb == 'name' and \
+                    isinstance(r.get('by'), str) and 'held' not in r and r.get('as') != 'unknown' else None
+                if pat and r.get('by') not in ('garden-id', 'garden') and not (isinstance(r.get('as'), str)
+                                                                              and re.fullmatch(pat, r['as'])):
+                    self.err('names', f"{b.id}[{i}] name", f"{r.get('as')!r} is not a name {r['by']} gives: its form is "
+                                                          f"`{pat}` — {self.L.namespaces[r['by']].get('meaning', '')}")
                 if verb == 'name' and isinstance(r.get('by'), str) and r.get('as') != 'unknown' \
                         and (self.L.namespaces.get(r['by']) or {}).get('once') == TRUE:     # a name nobody said names nobody
                     given.setdefault((r['by'], r.get('as')), []).append((self.norm(r.get('of'), b), f"{b.id}[{i}] name"))

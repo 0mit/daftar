@@ -196,10 +196,11 @@ def render(rest):
         for m, path, text in done:
             digest = view_export.sha256(text)
             bid = "doc-%s-%s" % (m.split("-")[0][:24], digest[7:15])
+            args = (bid, "%s, rendered" % (vm.fm(m).get("title") or m), digest,
+                    "%s:%s" % (_host(), os.path.abspath(path)), _gardener(), m)
             open(os.path.join(vm.ROOT, "beans", bid + ".md"), "w", encoding="utf-8", newline="\n").write(
-                (view_export.document_bean_core if vm.CORE is not None else view_export.document_bean)(
-                    bid, "%s, rendered" % (vm.fm(m).get("title") or m), digest,
-                                          "%s:%s" % (_host(), os.path.abspath(path)), _gardener(), m))
+                view_export.document_bean_core(*args, "%s#%s" % (vm.PAGE, rest[0])) if vm.CORE is not None
+                else view_export.document_bean(*args))
             kept.append("[[%s]] from [[%s]]" % (bid, m))
         r = subprocess.run([sys.executable, os.path.join(vm.ROOT, "bin", "dmsave.py"), who,
                             "%d document(s) rendered from drawing %s and kept" % (len(done), rest[0]), "--body",

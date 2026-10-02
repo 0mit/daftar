@@ -1,15 +1,24 @@
 #!/usr/bin/env python3
-"""dmpublic: a public repository carries the LANGUAGE, never a garden.
+"""public: a public repository carries the LANGUAGE, never a garden (v1 part 12: in a garden of the core).
 
-Grows a garden, builds a throwaway repository beside it, and checks that a file, a commit message and a
-pull-request body are each refused when they name one of the garden's beans or mappings, of any kind, or the value
-of any of its identity anchors, whatever its key — and that a word the published classifications carry, or one
-PUBLIC-ALLOW records, is not refused, and one it records for a named file is public in that file only.
+Grows a garden of the core (test/grow.py), builds a throwaway repository beside it, and checks that a file, a commit
+message and a pull-request body are each refused when they name one of the garden's beans, of any kind, or the text of
+any of its `name` statements, whatever the namespace — and that a word the published classifications carry, or one
+PUBLIC-ALLOW records, is not refused, and one it records for a named file is public in that file only. (A mapping is a
+bean of its kind in the core, and a name a garden minted for a bean is its bean's id: test/ported.yaml.)
 """
 import os, sys, subprocess, tempfile, shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "test"))
+import grow  # noqa: E402
 FAILS = []
+
+
+def bean(bid, kind, title, *statements, extra=""):
+    """A bean of the core: its kind, its title, what it says, known by one act."""
+    return (f'---\nbean: {bid}\nkind: {kind}\ntitle: "{title}"\nstatements:\n  - say: {{ by: keeper, at: "2026-01-01" }}\n'
+            + "".join(f"  - {x}\n" for x in statements) + extra + f"---\n{title}.\n")
 
 def write(path, text):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -26,19 +35,13 @@ def run(*a, cwd=None):
 
 T = tempfile.mkdtemp(prefix="dmpub-")
 G = os.path.join(T, "g")
-run("sh", os.path.join(ROOT, "seed", "germinate.sh"), G, "--gardener", "keeper", cwd=ROOT)
-write(os.path.join(G, "beans", "someone.md"),
-    '---\nbean: someone\ngenos: person\ntitle: "a person"\nstatus: active\nsummary: "p"\nnature: soma\n'
-    'identity: { status: confirmed, anchors: [ { key: email, value: "a@example.org", class: logical, establishing: true } ] }\n'
-    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\nowned_by: { crown: true }\n'
-    'responsibility: { legal: { self: true } }\n---\nA person.\n')
-write(os.path.join(G, "beans", "quietbox.md"),
-    '---\nbean: quietbox\ngenos: host\ntitle: "a machine"\nstatus: active\nsummary: "h"\nnature: soma\n'
-    'identity: { status: confirmed, anchors: [ { key: serial, value: "SN-Q1", class: hardware, establishing: true },'
-    ' { key: hostname, value: "quietbox.example.org", class: network, establishing: false } ] }\n'
-    'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { owner: { bean: someone } }\n'
-    '---\nA machine.\n')
+_g = grow.garden(grow.release(os.path.join(T, "release")), G, "keeper")
+assert _g.returncode == 0, _g.out
+write(os.path.join(G, "beans", "someone.md"), bean("someone", "person", "a person", "own: { by: theone, of: self }",
+                                                   'name: { by: mail, of: self, as: "a@example.org" }'))
+write(os.path.join(G, "beans", "quietbox.md"), bean("quietbox", "host", "a machine", "own: { by: someone, of: self }",
+                                                    'name: { by: makers, of: self, as: "SN-Q1" }',
+                                                    "name: { by: dns, of: self, as: quietbox.example.org }"))
 
 R = os.path.join(T, "repo")
 os.makedirs(R)
@@ -71,12 +74,7 @@ write(body, "This was measured on one host and confirmed on another.\n")
 r = dmpublic("--no-files", "--text", body)
 check("...and passes once the names are gone", r.returncode == 0, r.stdout + r.stderr)
 
-write(os.path.join(G, "beans", "samba-here.md"),
-    '---\nbean: samba\ngenos: product\ntitle: "the file server software"\nstatus: active\nsummary: "s"\nnature: lekton\n'
-    'identity: { status: confirmed, anchors: [ { key: identifier, value: "product:samba", class: logical, establishing: true } ] }\n'
-    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { owner: { bean: someone } }\n'
-    '---\nSamba.\n')
+write(os.path.join(G, "beans", "samba.md"), bean("samba", "product", "the file server software", "own: { by: someone, of: self }"))
 commit("the vocabulary documents samba, which is public knowledge\n", "neutral")
 r = dmpublic()
 check("a word the published classifications carry is NOT a leak — a garden cannot make `samba` unsayable",
@@ -85,16 +83,10 @@ check("a word the published classifications carry is NOT a leak — a garden can
 # EVERY ID, NOT THE IDS OF CHOSEN KINDS. The guard once derived its words from a hand list of the kinds that are
 # "beings", and a design's id sat in the public law because `design` was not on the list. A design, an agreement, a
 # session: what a garden names is the garden's, whatever its kind.
-write(os.path.join(G, "beans", "design-lantern-stack.md"),
-    '---\nbean: design-lantern-stack\ngenos: design\ntitle: "how the lanterns are wired"\nstatus: active\nsummary: "d"\n'
-    'nature: lekton\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { owner: { bean: someone } }\n---\nA design.\n')
-write(os.path.join(G, "beans", "kettle-share.md"),
-    '---\nbean: kettle-share\ngenos: contract\ntitle: "a kettle bought together"\nstatus: active\nsummary: "c"\n'
-    'nature: lekton\n'
-    'identity: { status: confirmed, anchors: [ { key: identifier, value: "kettle-2026-17", class: logical, establishing: true } ] }\n'
-    'provenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { crown: true }\n---\nAn agreement.\n')
+write(os.path.join(G, "beans", "design-lantern-stack.md"), bean("design-lantern-stack", "design", "how the lanterns are wired",
+                                                                "own: { by: someone, of: self }"))
+write(os.path.join(G, "beans", "kettle-share.md"), bean("kettle-share", "contract", "a kettle bought together",
+                                                        'name: { by: kettles, of: self, as: "kettle-2026-17" }'))
 commit("where that is being taken up, see [[design-lantern-stack]] `open:`\n", "neutral")
 r = dmpublic()
 check("a DESIGN's id in a public file is refused — the kind of leak the hand-kept list of kinds let through",
@@ -103,19 +95,8 @@ commit("the split follows the terms of kettle-share\n", "neutral")
 r = dmpublic()
 check("...and so is a CONTRACT's: an agreement between two people is theirs, not the language's",
       r.returncode == 1 and "kettle-share" in r.stdout, r.stdout)
-write(os.path.join(G, "mappings", "lantern-circuits.md"), "---\nmapping: lantern-circuits\n---\nA mapping.\n")
-commit("the table in lantern-circuits lists them\n", "neutral")
-r = dmpublic()
-check("...and so is a MAPPING's id", r.returncode == 1 and "lantern-circuits" in r.stdout, r.stdout)
-# A mapping's id is its `mapping:` field, and a file may be named otherwise: the field is what is guarded.
-write(os.path.join(G, "mappings", "wiring.md"), "---\nmapping: porch-feeds\n---\nA mapping.\n")
-commit("the table in porch-feeds lists them\n", "neutral")
-r = dmpublic()
-check("...by its `mapping:` id, when the file is named otherwise", r.returncode == 1 and "porch-feeds" in r.stdout, r.stdout)
-write(os.path.join(G, "beans", "daftar.md"),
-    '---\nbean: daftar\ngenos: product\ntitle: "the ledger this garden is kept in"\nstatus: active\nsummary: "p"\n'
-    'nature: lekton\nprovenance: { src: asserted-by-human, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { owner: { bean: someone } }\n---\nd.\n')
+write(os.path.join(G, "beans", "daftar.md"), bean("daftar", "product", "the ledger this garden is kept in",
+                                                  "own: { by: someone, of: self }"))
 commit("daftar is a ledger kept in git\n", "neutral")
 r = dmpublic()
 check("...while a word seed/PUBLIC-ALLOW records as public is not refused, though a garden also names a bean by it",
@@ -126,28 +107,19 @@ check("...while a word seed/PUBLIC-ALLOW records as public is not refused, thoug
 # garden identifies a being by: a person's email, an agreement's id, a serial, the gardener's own qualified name.
 commit("write to a@example.org for a copy\n", "neutral")
 r = dmpublic()
-check("an EMAIL anchor's value in a public file is refused — a person is identified by it",
+check("an EMAIL a `name` gives in a public file is refused — a person is reached by it",
       r.returncode == 1 and "a@example.org" in r.stdout and "doc.md" in r.stdout, r.stdout)
 commit("the agreement is filed as kettle-2026-17\n", "neutral")
 r = dmpublic()
-check("...and so is an agreement's IDENTIFIER — its own name for itself",
+check("...and so is an agreement's IDENTIFIER, a name a garden's own namespace gives",
       r.returncode == 1 and "kettle-2026-17" in r.stdout, r.stdout)
 commit("a serial like SN-Q1 is printed on the case\n", "neutral")
 r = dmpublic()
-check("...and a SERIAL's, an anchor key no list named", r.returncode == 1 and "sn-q1" in r.stdout, r.stdout)
-_pid = next(l.split('value: "')[1].split('"')[0] for l in open(os.path.join(G, "beans", "keeper.md"), encoding="utf-8")
-            if "key: identifier" in l)
+check("...and a SERIAL's, a namespace no list named", r.returncode == 1 and "sn-q1" in r.stdout, r.stdout)
 _gid = run("git", "-C", G, "rev-list", "--first-parent", "--max-parents=0", "HEAD").stdout.split()[-1][:12]
-commit("the gardener is %s\n" % _pid, "neutral")
-r = dmpublic()
-check("...and the gardener's qualified PERSON_ID", r.returncode == 1 and _pid.lower() in r.stdout, r.stdout)
 commit("this came from garden %s\n" % _gid, "neutral")
 r = dmpublic()
 check("...and the garden's OWN id, read from git as the gate reads it", r.returncode == 1 and _gid in r.stdout, r.stdout)
-commit("the catalogue knows product:samba as it knows samba\n", "neutral")
-r = dmpublic()
-check("...while an anchor value made only of public words (`product:samba`) is not refused", r.returncode == 0,
-      r.stdout + r.stderr)
 
 # A CONSENT FOR ONE PAGE IS NOT A CONSENT FOR EVERY FILE. A PUBLIC-ALLOW line may name the files a word is public
 # in; anywhere else — another file, a commit message, a pull-request body — the word is guarded as before. Read from
@@ -180,21 +152,16 @@ check("...while PUBLIC-ALLOW itself may say the word: the line that records the 
 # WHAT ELSE A GARDEN SAYS OF ITSELF: a three-letter name, an address anywhere in a front matter, an email that is no
 # anchor, a title of three words; a file whose path holds a space; and the published tables public only in themselves.
 run("git", "-C", R, "rm", "-q", "notes/about.md", "seed/PUBLIC-ALLOW")      # the scoped consent above was the copy's
-write(os.path.join(G, "beans", "nas.md"),
-    '---\nbean: nas\ngenos: host\ntitle: "the cellar storage box"\nstatus: active\nsummary: "h"\nnature: soma\n'
-    'identity: { status: confirmed, anchors: [ { key: serial, value: "SN-N1", class: hardware, establishing: true } ] }\n'
-    'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { owner: { bean: someone } }\n'
-    'owns: { lan_ip: "10.20.30.40", doc_ip: "203.0.113.77", contact: "ops-desk@cellar-net.io", manual: "help@example.org" }\n'
-    '---\nStorage.\n')
-write(os.path.join(G, "beans", "bakers.md"),
-    '---\nbean: bakers\ngenos: host\ntitle: "m"\nstatus: active\nsummary: "h"\nnature: soma\n'
-    'identity: { status: confirmed, anchors: [ { key: serial, value: "SN-M1", class: hardware, establishing: true } ] }\n'
-    'provenance: { src: observed, by: t, as_of: 2026-01-01 }\n'
-    'owned_by: { owner: { bean: someone } }\n---\nM.\n')
+write(os.path.join(G, "beans", "nas.md"), bean("nas", "host", "the cellar storage box", "own: { by: someone, of: self }",
+                                               'name: { by: makers, of: self, as: "SN-N1" }',
+                                               "be: { by: self, at: 10.20.30.40, as: location }",
+                                               "be: { by: self, at: 203.0.113.77, as: location }",
+                                               extra='details:\n  contact: "ops-desk@cellar-net.io"\n  manual: "help@example.org"\n'))
+write(os.path.join(G, "beans", "bakers.md"), bean("bakers", "host", "m", "own: { by: someone, of: self }",
+                                                  'name: { by: makers, of: self, as: "SN-M1" }'))
 for _text, _word, _why in (("the nas in the cellar\n", "nas", "a name of three letters"),
-                           ("it answers at 10.20.30.40\n", "10.20.30.40", "an address that is no anchor"),
-                           ("write to ops-desk@cellar-net.io\n", "ops-desk@cellar-net.io", "an email that is no anchor"),
+                           ("it answers at 10.20.30.40\n", "10.20.30.40", "an address a `be` names"),
+                           ("write to ops-desk@cellar-net.io\n", "ops-desk@cellar-net.io", "an email `details` keeps"),
                            ("see the cellar storage box\n", "the cellar storage box", "a title of three words"),
                            ("the bakers restart it\n", "bakers", "a host a garden calls by a word of the occupations' table")):
     commit(_text, "neutral")

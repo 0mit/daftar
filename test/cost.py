@@ -4,12 +4,13 @@ moves (N34: the changed-part gate is judged, and not built, until this is read).
 
     python3 test/cost.py [--rows 10000,100000,350000] [--repeat 3] [--no-record]
 
-A garden is grown from this tree as a release, and one invented bench rig added to it; the gate (`bin/dmcheck.py --all`)
-is timed on the garden without a series, then with the rig's grid series of N rows × 2 channels written as one part
-(`series/<bean>/<key>/<part>.tsv`, SEQ's form), each with libyaml's loader and with the pure-Python one (dmparse falls
-back to it where PyYAML has no libyaml; a `sitecustomize` hides libyaml from the child). The best of `--repeat` runs is
-kept. Each is appended to test/timings.tsv as `date	cost:<loader>:<rows>	seconds	1|0	0|1` (the gate passed, or not),
-and the cost per 10,000 rows printed: (with − without) / N × 10,000.
+A garden of the core is grown from this tree as a release (test/grow.py, v1 part 12), and one invented bench rig added
+to it; the core's gate (`core/check.py`) is timed on the garden without a series, then with the rig's `record` of a grid
+series of N rows × 2 channels written as one part (`series/<bean>/<id>/<part>.tsv`, core/lines.py's form), each
+with libyaml's loader and with the pure-Python one (dmparse falls back to it where PyYAML has no libyaml; a
+`sitecustomize` hides libyaml from the child). The best of `--repeat` runs is kept. Each is appended to
+test/timings.tsv as `date	cost:<loader>:<rows>	seconds	1|0	0|1` (the gate passed, or not), and the cost
+per 10,000 rows printed: (with − without) / N × 10,000.
 """
 import datetime, os, re, shutil, subprocess, sys, tempfile, time
 
@@ -17,7 +18,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TSV = os.path.join(ROOT, "test", "timings.tsv")
 PY = sys.executable
 sys.path.insert(0, os.path.join(ROOT, "bin"))
-import dmparse, dmpass
+import dmparse  # noqa: F401 — on the path for the loader probe below
 
 
 def run(*a, cwd=None, env=None):
@@ -34,30 +35,21 @@ def main(argv):
     record = "--no-record" not in argv
     T = tempfile.mkdtemp(prefix="dmcost-")
     try:
-        rel = os.path.join(T, "release")
-        law = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, "seed", "std-vocab.md"), encoding="utf-8").read())[0])
-        for f in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
-                             dmpass.language(open(os.path.join(ROOT, "seed", "LANGUAGE"), encoding="utf-8").read()),
-                             dmpass.offered(law)):
-            os.makedirs(os.path.join(rel, os.path.dirname(f)), exist_ok=True)
-            shutil.copy2(os.path.join(ROOT, f), os.path.join(rel, f))
-        env = {"GIT_AUTHOR_NAME": "r", "GIT_AUTHOR_EMAIL": "r@example.org", "GIT_COMMITTER_NAME": "r", "GIT_COMMITTER_EMAIL": "r@example.org"}
-        for c in (["git", "init", "-q"], ["git", "add", "-A"], ["git", "commit", "-qm", "a release"], ["git", "tag", "v9.9.9"]):
-            run(*c, cwd=rel, env=env)
+        sys.path.insert(0, os.path.join(ROOT, "test"))
+        import grow                       # a garden of the core, grown from a release made of this tree (v1 part 12)
         g = os.path.join(T, "g")
-        r = run(PY, os.path.join(rel, "seed", "germinate.py"), g, "--gardener", "keeper", cwd=T)
+        r = grow.garden(grow.release(os.path.join(T, "release")), g, "keeper")
         if r.returncode:
-            print(r.stdout + r.stderr)
+            print(r.out)
             return 1
-        rig = ("---\nbean: bench-rig\ngenos: host\ntitle: \"bench-rig — an invented rig\"\nstatus: active\n"
-               "summary: \"An invented bench rig whose flow and outlet temperature are logged each minute.\"\nnature: soma\n"
-               "identity:\n  status: confirmed\n  anchors:\n    - { key: serial, value: \"RIG-0001\", class: hardware, establishing: true }\n"
-               "provenance: { src: observed, by: keeper, as_of: 2026-09-26 }\nowned_by: { owner: { bean: keeper } }\n"
-               ""
-               "series:\n  log:\n    grid: { of: time, in: gregorian-civil, every: { count: 1, unit: minute }, from: \"2026-01-01 00:00+00:00\" }\n"
-               "    unit: minute\n    holds:\n"
-               "      - { name: flow, quantity: volume-flow, unit: litre-per-minute, stands_for: point }\n"
-               "      - { name: outlet, quantity: ratio, unit: percent, stands_for: point }\n"
+        rig = ("---\nbean: bench-rig\nkind: host\ntitle: \"bench-rig — an invented rig\"\n"
+               "summary: \"An invented bench rig whose flow and outlet temperature are logged each minute.\"\n"
+               "statements:\n  - read: { by: keeper, at: \"2026-09-26 10:00+00:00\" }\n  - own: { by: keeper, of: self }\n"
+               "  - record:\n      id: log\n      of: self\n      series:\n"
+               "        grid: { of: time, in: gregorian-civil, every: { count: \"1\", unit: min }, from: \"2026-01-01 00:00+00:00\" }\n"
+               "        unit: min\n        holds:\n"
+               "          - { name: flow, quantity: volume-flow, unit: l/min, stands_for: point }\n"
+               "          - { name: outlet, quantity: ratio, unit: \"%%\", stands_for: point }\n"
                "%s---\nAn invented rig.\n")
         part = os.path.join(g, "series", "bench-rig", "log", "0.tsv")
         shim = os.path.join(T, "pure")
@@ -73,7 +65,7 @@ def main(argv):
             best, ok = None, False
             for _ in range(repeat):
                 t0 = time.perf_counter()
-                r = run(PY, os.path.join(g, "bin", "dmcheck.py"), "--all", cwd=g, env=env)
+                r = run(PY, os.path.join(g, "core", "check.py"), ".", cwd=g, env=env)
                 s = time.perf_counter() - t0
                 best = s if best is None else min(best, s)
                 ok = r.returncode == 0 and re.search(r" 0 error\(s\)", r.stdout + r.stderr) is not None
@@ -83,7 +75,7 @@ def main(argv):
 
         lines, day = [], datetime.date.today().isoformat()
         for name, env in loaders.items():
-            open(os.path.join(g, "beans", "bench-rig.md"), "w").write(rig % "    rows: |\n      flow\toutlet\n      0\t10\n")
+            open(os.path.join(g, "beans", "bench-rig.md"), "w").write(rig % "        rows: |\n          flow\toutlet\n          0\t10\n")
             if os.path.exists(part):
                 os.remove(part)
             base, ok = gate(env)

@@ -203,9 +203,9 @@ try:
         'blind: [ { what: "w" } ] } }\n  - draw: { id: page,'), 'loaves', 'does not name')
     refused("a drawing its page names that is not there", 'beans/bakery-page.md',
             PAGE.replace('of: [orders], page:', 'of: [orders, loaves], page:'), "'loaves' is no drawing")
-    refused("a value its drawing names and does not hold", 'beans/bakery-page.md',
+    refused("a value its drawing names and its page does not hold", 'beans/bakery-page.md',
             PAGE.replace('archetype: health-chain,', 'archetype: health-chain, parts: [ { bind: oven-heat } ],'),
-            "'oven-heat' is no value of this drawing")
+            "'oven-heat' is no value of this page")
 
     # ---- THE ASSET on statements
     r = view('check')

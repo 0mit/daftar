@@ -1616,12 +1616,13 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
     fm = beans.get(bean) or {}
     sts = statements(fm)
     subjects = ({bean} if fm.get('kind') == 'person' else set()) | \
-               {x for _i, v, r in sts if v == 'concern' for x in _list(r.get('of'))}
-    owners = {r.get('by') for _i, v, r in sts if v == 'own' and r.get('of') in (None, 'self', bean)}
+               {x for _i, v, r in sts if v == 'concern' for x in _list(r.get('of')) if isinstance(x, str)}
+    owners = {r.get('by') for _i, v, r in sts if v == 'own' and r.get('of') in (None, 'self', bean)
+              and isinstance(r.get('by'), str)}               # an owner nobody names (`{ someone: org }`) decides nothing
     read, forbid, permit = [], [], []
     for holder, hfm in sorted(beans.items()):
         hs = statements(hfm)
-        agreed = {x for _i, v, r in hs if v == 'agree' for x in _list(r.get('by'))}
+        agreed = {x for _i, v, r in hs if v == 'agree' for x in _list(r.get('by')) if isinstance(x, str)}
         decides = holder == gardener or holder in subjects or (
             hfm.get('kind') == 'contract' and (holder == bean or bool(agreed & (owners | subjects))))
         if not decides:

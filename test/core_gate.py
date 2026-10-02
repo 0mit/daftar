@@ -412,6 +412,19 @@ flows:
         r2 = push(W)
         check("hub: a name that establishes an identity, settled by a writer, needs `ratify:F` — refused",
               r2.returncode != 0 and 'ratify:F' in r2.out, r.out[-300:] + r2.out)
+        # THE HUB RUNS ONLY CODE THE GARDENER LET IN: a writer granted `write` on a bean changes no file that can make a
+        # machine run something — the gate, a file a release keeps, `.gitattributes`, a Python file wherever it is
+        for path, text in (('bin/check.py', None), ('.gitattributes', None), ('notes/helper.py', 'print("hi")\n')):
+            run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
+            p = os.path.join(W, *path.split('/'))
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(p, 'a' if text is None else 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write('\n# a writer\'s line\n' if text is None else text)
+            run('git', 'add', '-A', cwd=W)
+            c = run('git', 'commit', '-q', '--no-verify', '-m', f'changed {path}', cwd=W)
+            r2 = push(W)
+            check(f"hub: a writer granted `write` on a bean is refused a change to {path}, which needs `ratify:G`",
+                  c.returncode == 0 and r2.returncode != 0 and 'ratify:G' in r2.out and path in r2.out, c.out + r2.out)
         run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
         run('git', 'config', 'commit.gpgsign', 'false', cwd=W)
         writer_edit('unsigned', '- say: { by: sam, at: now, note: "entered on the view host" }\n')

@@ -96,17 +96,18 @@ def document_bean(bid, title, digest, path, keeper, member):
                member, path.replace('"', "'"), title.replace('"', "'"), member))
 
 
-def document_bean_core(bid, title, digest, path, keeper, member):
-    """The same, in a garden of the core (v1 part 11): derived from the member by its keeper, named by its content in
-    the namespace `sha-256`, owned by its keeper, and where its copy is."""
+def document_bean_core(bid, title, digest, path, keeper, member, source):
+    """The same, in a garden of the core (v1 part 11; v1 part 12): derived by its keeper from the drawing whose template
+    rendered it (`source`, `<page>#<drawing>`), through the member's record, named by its content in the namespace
+    `sha-256`, owned by its keeper, and where its copy is."""
     q = lambda x: str(x).replace('"', "'")
     return ("---\nbean: %s\nkind: document\ntitle: \"%s\"\nsummary: \"%s\"\nstatements:\n"
-            "  - derive: { by: %s, from: %s, at: now, note: \"rendered by the page's template (view render)\" }\n"
+            "  - derive: { by: %s, from: [\"%s\"], through: %s, at: now, note: \"rendered by the page's template (view render)\" }\n"
             "  - name: { by: sha-256, of: self, as: \"%s\" }\n"
             "  - own: { by: %s, of: self }\n"
             "  - be: { by: self, at: \"unix-filesystem:%s\", as: location }\n"
             "---\n%s, rendered from [[%s]] by the page's template and kept by its content.\n"
-            % (bid, q(title), q("A document rendered from %s's record." % member), keeper, member,
+            % (bid, q(title), q("A document rendered from %s's record." % member), keeper, source, member,
                digest[len("sha256:"):] if digest.startswith("sha256:") else digest, keeper, q(path),
                q(title), member))
 
@@ -151,6 +152,20 @@ def _duration(secs):
     return "P" + ("%dD" % d if d else "") + ("T" + t if t else ("" if d else "T0S"))
 
 
+def _presences(f):
+    """[(name, at)] — where a member of a garden of the core is present (`be` as presence, v1 part 6): each moment, or
+    an extent's start; named `present`, and `present-<n>` after the first."""
+    rows = f.get("be.presence")
+    rows = rows if isinstance(rows, list) else [rows] if rows is not None else []
+    out = []
+    for n, r in enumerate(rows):
+        at = r.get("at") if isinstance(r, dict) else r
+        at = at[0] if isinstance(at, list) and at else at
+        if isinstance(at, str):
+            out.append(("present" if not n else "present-%d" % n, at.split("/", 1)[0]))
+    return out
+
+
 def feed_events(key):
     """[(member, moment-name, at, title, notice seconds or None)] — each member of each `feed` reading of the drawing, one
     per `timing` entry it holds in the civil calendar."""
@@ -165,6 +180,9 @@ def feed_events(key):
             for name, t in sorted((f.get("timing") or {}).items()):
                 if isinstance(t, dict) and t.get("system") == "gregorian-civil" and _ics_time(t.get("at")):
                     out.append((m, name, t.get("at"), f.get("title") or m, notice))
+            for name, at in _presences(f) if vm.CORE is not None else ():     # a garden of the core: `be` as presence
+                if _ics_time(at):
+                    out.append((m, name, at, f.get("title") or m, notice))
             for name, c in sorted((f.get("clauses") or {}).items()):         # a clause's `due` (its first, where it repeats)
                 if isinstance(c, dict) and c.get("state") not in ("met", "waived") and _ics_time(_civil(c.get("due"))):
                     out.append((m, name, _civil(c["due"]), "%s: %s" % (f.get("title") or m, c.get("what") or name), notice))

@@ -16,7 +16,7 @@ Two artifacts do two different jobs and neither can do both:
 | is | the germination kit — the **language** | this garden's bean **for** the product |
 | contains | the law, templates, and the germination script | only underivable ratified facts and gate-resolved pointers |
 | copied into a new garden | yes, wholly | **never** |
-| checked by | `test/germinate.py`, positively **and** negatively, in a real git repo | `bin/dmcheck.py` on every commit |
+| checked by | `test/core_rehearse.py`, through the gate, in a real git repo | `bin/dmcheck.py` on every commit |
 | carries an owner | no | yes — both arcs |
 
 A seed *bean* cannot be what you copy: `owned_by` and `responsibility` are required on every bean,
@@ -66,7 +66,7 @@ refuses, says what to run after the fix.
 ## Your first beans
 
 The gardener, the machine they run, and the journal entry that records both — exactly as a new garden accepts
-them. **These blocks are not illustrations:** `test/germinate.py` writes each one into a freshly grown
+them. **These blocks are not illustrations:** `test/core_rehearse.py` writes each one into a freshly grown
 garden and commits, so if the law moves and they stop passing, the test fails rather than this page
 quietly lying. The journal entry is checked the same way, because the first commit is refused far more
 often for the entry than for the bean.

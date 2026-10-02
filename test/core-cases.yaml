@@ -140,6 +140,9 @@ good:
 
 # one or more cases per rule: each bean is added to the garden above (replacing one of the same name), and must be
 # refused by the rule it names
+  - { name: "two issuers each give 0042: two names in two namespaces, never one being (today's N17)", bean: y15, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: hpe, of: self, as: "0042" } }, { name: { by: garden-a, of: nas, as: "0042" } } ] }
+  - { name: "a name in its namespace's form: a telephone line in E.164, a MAC address, an amount in its currency's places", bean: y16, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: e164, of: self, as: "+982112345678" } }, { name: { by: ieee-eui48, of: self, as: "aa:bb:cc:dd:ee:ff" } }, { pay: { by: sam, of: { count: "100", unit: JPY } } }, { pay: { by: sam, of: { count: "1.25", unit: USD } } } ] }
+  - { name: "an acceptance nobody dated is an acceptance, and counts as consent (today's days.py)", bean: y17, kind: person, statements: [ { say: { by: sam, at: now } }, { own: { by: theone, of: self } }, { agree: { by: [y17], of: pot } } ] }
 bad:
   - { rule: line,        bean: x40, kind: document, statements: [ { say: { by: sam, at: now } }, { do: { id: s1, by: nas, as: web } }, { step: { id: a, as: "asked", to: [s1] } } ] }
   - { rule: line,        bean: x41, kind: document, statements: [ { say: { by: sam, at: now } }, { reckon: { id: r, reading: { what: "x", steps: [ { id: s, op: guess } ] } } } ] }
@@ -205,3 +208,9 @@ bad:
   - { rule: names,       bean: x28, kind: garden,   statements: [ { say: { by: sam, at: now } }, { name: { by: garden-id, of: self, as: "garden-b" } } ] }
   - { rule: names,       bean: x29, kind: person,   statements: [ { say: { by: x29, at: now } }, { name: { by: garden, of: self, as: "fedcba987654/person:x29" } } ] }
   - { rule: ratify,      bean: x30, kind: document, statements: [ { say: { by: sam, at: now } }, { grant: { by: sam, to: [ben], of: [pot], as: ratify, class: G } } ] }
+  - { rule: names,       bean: x50, kind: host,     name: "a telephone number not in E.164 (today's N18)", says: "not a name e164 gives", statements: [ { say: { by: sam, at: now } }, { name: { by: e164, of: self, as: "0912 345 6789" } } ] }
+  - { rule: names,       bean: x51, kind: host,     name: "a domain name out of its form", says: "not a name dns gives", statements: [ { say: { by: sam, at: now } }, { name: { by: dns, of: self, as: "Not.A_Domain" } } ] }
+  - { rule: names,       bean: x52, kind: host,     name: "a MAC address out of its form", says: "not a name ieee-eui48 gives", statements: [ { say: { by: sam, at: now } }, { name: { by: ieee-eui48, of: self, as: "AA-BB-CC-DD-EE-FF" } } ] }
+  - { rule: valency,     bean: x53, kind: document, name: "more decimal places than the currency has", says: "more decimal places", statements: [ { say: { by: sam, at: now } }, { pay: { by: sam, of: { count: "1.001", unit: USD } } } ] }
+  - { rule: valency,     bean: x54, kind: document, name: "a fraction of a currency of no decimal places", says: "more decimal places than JPY has (0", statements: [ { say: { by: sam, at: now } }, { pay: { by: sam, of: { count: "1.5", unit: JPY } } } ] }
+  - { rule: valency,     bean: x55, kind: person,   name: "a code no row of its scheme has (today's knowledge.py)", says: "isco-08", statements: [ { say: { by: x55, at: now } }, { own: { by: theone, of: self } }, { classify: { of: self, as: "isco-08:0000" } } ] }

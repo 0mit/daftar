@@ -15,11 +15,13 @@ bin/dmcatalog.py reads the release's own sources each time it runs. This holds i
   the same bytes  two runs give byte-identical JSON; the parts and the relations are sorted, and each list of findings
                   by its own key; a name the law gives two items is one finding, and a mention of it counts for both
   one part        `--part` shows a term and a tool, and refuses a name no part has
-  a garden        in a garden it maps the garden's copy of the language — the files the release keeps, and the whole law
+  a garden        in a garden of the core (v1 part 12) it maps the garden's copy of the language — the files the release
+                  keeps, and the whole law it runs, the core's
                   — and nothing of the garden's own
 
 Every name is neutral (sam), and the garden is grown in a temporary directory.
 """
+import yaml
 import contextlib, io, json, os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -157,29 +159,35 @@ with contextlib.redirect_stdout(_out):
 check("the report groups the files under their layers, then the law's items, then the findings",
       "\ngate — " in _out.getvalue() and "\nthe law's items" in _out.getvalue() and "\nfindings — " in _out.getvalue())
 
-# ---------------------------------------------------------------- in a garden: its copy of the language
+# ---------------------------------------------------------------- in a garden of the core: its copy of the language
+sys.path.insert(0, os.path.join(ROOT, "test"))
+import grow  # noqa: E402
 T = tempfile.mkdtemp(prefix="dmcat-")
 G = os.path.join(T, "g")
-r = run(sys.executable, os.path.join(ROOT, "seed", "germinate.py"), G, "--gardener", "sam", cwd=T)
-check("a garden germinates, and receives the catalogue", r.returncode == 0 and os.path.isfile(os.path.join(G, "bin", "dmcatalog.py")),
-      r.stdout[-300:] + r.stderr[-300:])
-r = run(sys.executable, os.path.join(G, "bin", "dmcatalog.py"), "--json", cwd=G)
+r = grow.garden(grow.release(os.path.join(T, "release")), G, "sam")
+check(f"a garden of the core (core@{grow.VERSION}, test/grow.py) germinates, and receives the catalogue",
+      r.returncode == 0 and os.path.isfile(os.path.join(G, "bin", "catalog.py")), r.out[-300:])
+r = run(sys.executable, os.path.join(G, "bin", "catalog.py"), "--json", cwd=G)
 gd = json.loads(r.stdout) if r.returncode == 0 else {"catalogue": {}, "parts": {}}
 gp = gd["parts"]
 gm = dmpass.Map.here(G)
 kept = [f for f in gm.files if gm.keeper_of(f) == "release"]
 check("in a garden it maps the garden's copy of the language: every file the release keeps",
       gd["catalogue"].get("of") == "garden" and kept and all(f in gp for f in kept), [f for f in kept if f not in gp][:5])
-own = [f for f in gp if gp[f]["kind"] not in dmcatalog.LAW_KINDS and f not in kept]
+own = [f for f in gp if gp[f]["kind"] not in dmcatalog.CORE_LAW_KINDS and f not in kept]
 check("...and nothing of the garden's own: no bean, no journal, no manifest",
       not own and os.path.isfile(os.path.join(G, "beans", "sam.md")), own[:5])
-check("...and the whole law", all("term:" + n in gp for n in names), [n for n in names if "term:" + n not in gp][:5])
+_core_law = yaml.safe_load(open(os.path.join(ROOT, "core", "law", "core.yaml"), encoding="utf-8"))
+_rules = [str(x["rule"]) for x in _core_law.get("rules") or []]
+check("...and the whole law it runs, the core's: every rule of the core a part, and the catalogue says which law",
+      gd["catalogue"].get("law") == f"core@{grow.VERSION}" and _rules and all("rule:" + n in gp for n in _rules),
+      [n for n in _rules if "rule:" + n not in gp][:5])
 _gm = dmparse.loads(dmparse.split_front_matter(open(os.path.join(G, "GARDEN.md"), encoding="utf-8").read())[0]) or {}
 check("...and the release it names is the one the garden adopted, as its GARDEN.md says and the gate prints, never "
       "what the garden's own history describes", _gm.get("daftar_release")
       and gd["catalogue"].get("release") == str(_gm["daftar_release"]), (gd["catalogue"].get("release"), _gm.get("daftar_release")))
-r = run(sys.executable, os.path.join(G, "bin", "dmrules.py"), cwd=G)
-check("...and bin/dmrules.py names the same release", r.stdout.startswith("daftar %s rules" % _gm.get("daftar_release")),
+r = run(sys.executable, os.path.join(G, "bin", "rules.py"), cwd=G)
+check("...and bin/rules.py names the same release", r.stdout.startswith("daftar %s rules" % _gm.get("daftar_release")),
       r.stdout[:160])
 shutil.rmtree(T, ignore_errors=True)
 
