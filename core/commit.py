@@ -4,8 +4,8 @@ The engine judges a bean's statements wherever they stand. What a change says of
 commits, and is judged here:
 
   knowing  Every bean the commit changes is named by the journal entry it adds, and the entry's heading is one the clock
-           wrote (bin/dmjournal.py registers each heading it writes). A knowing act the commit adds carries that
-           heading's moment, which the save (bin/dmsave.py, through dmjournal) writes in place of its `now`: a `now`
+           wrote (bin/journal.py registers each heading it writes). A knowing act the commit adds carries that
+           heading's moment, which the save (bin/save.py, through journal) writes in place of its `now`: a `now`
            left is a write not saved, and a moment typed there is refused, since only the clock supplies it. A
            statement the commit adds or changes is known by an act of this commit, because whoever wrote it now said it
            now: an old act's moment is older than the statement.
@@ -14,7 +14,7 @@ commits, and is judged here:
            person ratifies, carries the garden's acts translated with the moments history recorded; the gate grants it
            those moments (a heading of the journal as committed, or a commit's own moment), and no other commit. A
            garden receives core/ itself from v0.49.0 on, beside today's gate, so receiving it adopts nothing.
-           A MERGE (core/guide/MERGE.md §5, v1 part 3) brings the other side's entries, beans and acts, each judged when
+           A MERGE (MERGE.md §5, v1 part 3) brings the other side's entries, beans and acts, each judged when
            it was committed. What the merge commit adds of its own is judged: its own entry is the clock's, and names
            each bean the merge made (one that is neither parent's); a statement neither parent holds is known by an act
            at that entry's moment; and an act a parent held with no `of`, given one by the merge, is known as it was.
@@ -29,7 +29,7 @@ commits, and is judged here:
   kept     The journal is appended, never rewritten, and a line the commit adds to it holds no character a reader takes
            for a line break and no template's `(fill in`; a part under series/ is written once; a header key or a
            statement the commit takes out of a bean is named in its entry, none it keeps is emptied, and every bean it
-           writes keeps a body. (These were today's gate's, bin/dmcheck.py; v1 took them over, 2026-10-01.)
+           writes keeps a body. (These were today's gate's, bin/check.py; v1 took them over, 2026-10-01.)
   layers   A SESSION'S PASS LOG (v1 part 10): a file under captures/passes/ is the log a session bean names in its
            `details` (`pass_log: { <name>: { holds: "file:<path>" } }`), and only grows. A commit that stages one claims
            that session, and owes: each pass the log gains is a pass in the core's form, `{from, to, through, as?,
@@ -51,13 +51,14 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import engine, frame, read  # noqa: E402
 from core.law import listed  # noqa: E402
-import dmjournal  # noqa: E402 — the register of the headings the clock wrote
-import dmpass     # noqa: E402 — the one reader of seed/LANGUAGE, and the one matcher of a path
+import journal as dmjournal  # noqa: E402 — the register of the headings the clock wrote
+import importlib
+dmpass = importlib.import_module('pass')     # noqa: E402 — the one reader of seed/LANGUAGE, and the one matcher of a path
 
 JOURNAL = 'log/journal.md'
 MANIFEST = 'GARDEN.md'             # its `extends` names the law a garden runs: moved to the core, the garden adopts it
 RULED = ('law', 'manifesto')
-# RULE-CHANGE said, and not denied: "not a RULE-CHANGE" says the opposite (as bin/dmcheck.py reads it)
+# RULE-CHANGE said, and not denied: "not a RULE-CHANGE" says the opposite (as bin/check.py reads it)
 RULE_CHANGE = re.compile(r'(?<!(?i:not a ))(?<!(?i:not an ))(?<!(?i:not ))(?<!(?i:no ))(?<!(?i:non-))\bRULE-CHANGE\b')
 
 
@@ -84,7 +85,7 @@ def statements_of(root, ref, path):
     text = git(root, 'show', f"{ref}:{path}")
     if text is None:
         return []
-    import dmparse
+    import parse as dmparse
     head, _body = dmparse.split_front_matter(text)
     try:
         fm = read.loads(head or '') or {}
@@ -103,7 +104,7 @@ def pin(root, ref):
     text = git(root, 'show', f"{ref}:{MANIFEST}")
     if text is None:
         return ''
-    import dmparse
+    import parse as dmparse
     try:
         fm = read.loads(dmparse.split_front_matter(text)[0] or '') or {}
     except read.Unread:
@@ -160,7 +161,7 @@ def findings(root, law, changes=None, garden=None):
     if not changes:
         return out
     added = added_lines(root, JOURNAL) if any(p == JOURNAL for _s, p in changes) else []
-    # A MERGE (core/guide/MERGE.md §5) brings what the other side committed, judged when it was committed: its entries,
+    # A MERGE (MERGE.md §5) brings what the other side committed, judged when it was committed: its entries,
     # its beans, its statements and the acts that knew them. What the merge commit adds of its own is what neither parent
     # holds: its own entry, which is the clock's and names each bean the merge made, and what that bean holds new.
     others = merging(root)
@@ -176,7 +177,7 @@ def findings(root, law, changes=None, garden=None):
     for h in heads:
         if h not in stamped:
             out.append(('knowing', JOURNAL, f"the heading {h[:60]!r} was not written by the clock in this clone: a heading "
-                                            f"is written by `bin/dmsave.py` (or bin/dmjournal.py), never typed"))
+                                            f"is written by `bin/save.py` (or bin/journal.py), never typed"))
     said = ' or '.join(sorted(moments)) or 'none: this commit adds no entry'
     adopting = any(p == MANIFEST for _s, p in changes) and bool(RULE_CHANGE.search(entry)) \
         and pin(root, 'HEAD').startswith('std-vocab@') and pin(root, '').startswith('core@')
@@ -191,9 +192,9 @@ def findings(root, law, changes=None, garden=None):
         if not re.search(r'(?<![\w-])' + re.escape(bid) + r'(?![\w-])', named_by):
             out.append(('knowing', path, (f"merged by this commit, and named by no entry of its own: the merge is "
                                           f"committed with the entry that names what it merged (MERGE.md §5) — "
-                                          f"`git merge --no-commit`, then bin/dmsave.py, its entry naming `{bid}`")
+                                          f"`git merge --no-commit`, then bin/save.py, its entry naming `{bid}`")
                         if others else (f"changed by this commit, and named by no journal entry it adds: save it with "
-                                        f"bin/dmsave.py, its entry naming `{bid}`")))
+                                        f"bin/save.py, its entry naming `{bid}`")))
         if status == 'D':
             continue
         new = statements_of(root, '', path)
@@ -229,7 +230,7 @@ def findings(root, law, changes=None, garden=None):
             at = r.get('at')
             if at == 'now' or (isinstance(at, list) and 'now' in at):
                 out.append(('knowing', where, "`at: now` is still `now`: the save writes the moment in its place — "
-                                              "commit with bin/dmsave.py, its entry naming the bean"))
+                                              "commit with bin/save.py, its entry naming the bean"))
                 continue
             if verb in law.knowing:
                 # KNOWN IN ANOTHER GARDEN (v1 part 8): its moment is that garden's, and this commit takes it from there
@@ -278,7 +279,7 @@ def _front(root, ref, path):
     text = git(root, 'show', f"{ref}:{path}")
     if text is None:
         return None, None
-    import dmparse
+    import parse as dmparse
     head, body = dmparse.split_front_matter(text)
     try:
         fm = read.loads(head or '') or {}
@@ -378,7 +379,7 @@ def guarded(root, law, changes, entry, added, moments, garden=None, adopting=Fal
         if times and all(lo > when for lo, _hi in times) and others and placed:
             out.append(('consent', path, f"places {', '.join(sorted(set(others)))} somewhere in the future, in git: a "
                                          f"future whereabouts of a person who is not the gardener is held off git "
-                                         f"whatever they agreed to — seal its location (bin/dmheld.py put)"))
+                                         f"whatever they agreed to — seal its location (bin/held.py put)"))
     return out
 
 

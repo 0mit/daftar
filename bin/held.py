@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""dmheld — what a garden keeps OFF git: the held layer (24.0; N30, F2, F13, S6).
+"""held — what a garden keeps OFF git: the held layer (24.0; N30, F2, F13, S6).
 
-    python3 bin/dmheld.py put <bean> <term> <key|index> [--root <name>] [--basis <bean>] [--until <date>]
+    python3 bin/held.py put <bean> <term> <key|index> [--root <name>] [--basis <bean>] [--until <date>]
     python3 bin/held.py put <bean> <statement id> [--root <name>] [--basis <statement>] [--until <date>]  # the core
-    python3 bin/dmheld.py person [--root <name>] [--basis <bean>] <field>=<value> ...   # name=…, phone=…, email=…
-    python3 bin/dmheld.py resolve <pointer> [--host <bean>]
-    python3 bin/dmheld.py erase <person>
-    python3 bin/dmheld.py check
-    python3 bin/dmheld.py due [--days N]
-    python3 bin/dmheld.py new --staged        # the pointers the index adds that do not resolve here; the hook runs it
+    python3 bin/held.py person [--root <name>] [--basis <bean>] <field>=<value> ...   # name=…, phone=…, email=…
+    python3 bin/held.py resolve <pointer> [--host <bean>]
+    python3 bin/held.py erase <person>
+    python3 bin/held.py check
+    python3 bin/held.py due [--days N]
+    python3 bin/held.py new --staged        # the pointers the index adds that do not resolve here; the hook runs it
 
 A SEALED ENTRY is `{held: root:<name>/<32 hex>, basis?, until?}` in place of an entry's attributes (`held_form`). What
 it held is a file `<store>/<32 hex>.yaml` holding `{bean, term, key, entry, about}`, where `<store>` is what THIS host's
@@ -38,17 +38,18 @@ statement says nothing of what it held. A person minted opaque is a bean of stat
 that say what they `keep`, which `details` keeps (bin/garden.py `terms`).
 
 `put` and `erase` print the one journal line F13 asks for (`- held: <bean> <key> added|erased`): give it to
-bin/dmsave.py's `--body`, and say no more of what was held.
+bin/save.py's `--body`, and say no more of what was held.
 """
 import os, re, secrets, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse   # noqa: E402 — the one reader of a front matter
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
-import dmpass    # noqa: E402 — sensitivity, and the gardener
-import dmwhere   # noqa: E402 — this host, and what a root means on it
+import parse as dmparse   # noqa: E402 — the one reader of a front matter
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
+import importlib
+dmpass = importlib.import_module('pass')    # noqa: E402 — sensitivity, and the gardener
+import where as dmwhere   # noqa: E402 — this host, and what a root means on it
 import yaml      # noqa: E402
 
-# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/pass.py --flows` computes the guard).
 GUARDS = {
     'sealed': {'checks': "every pointer a commit adds resolves in a store this host holds",
                'proof': 'test/held.py', 'label': "...and so does a plain `git commit` of the same"},
@@ -119,7 +120,7 @@ def resolve(pointer, *, root=ROOT, host=None, beans=None):
 
 def unsealed(fm, *, root=ROOT, beans=None):
     """A copy of a front matter with each sealed entry THIS HOST holds read back under its own key, for a reading made
-    here (bin/dmreckon.py): what a reading reads it never writes back, so the material stays off git. An entry held
+    here (bin/reckon.py): what a reading reads it never writes back, so the material stays off git. An entry held
     elsewhere, or erased, stays its pointer, and a reading of it finds nothing: not known, never an error."""
     out = None
     for t, label, e in list(_pointers(fm)):
@@ -146,8 +147,8 @@ def unsealed(fm, *, root=ROOT, beans=None):
 
 
 def _write(path, key, record):
-    """One record of a store, written whole and swapped in (bin/dmsafe.py `write_atomic`), its owner's alone to read."""
-    import dmsafe
+    """One record of a store, written whole and swapped in (bin/safe.py `write_atomic`), its owner's alone to read."""
+    import safe as dmsafe
     os.makedirs(path, exist_ok=True)
     dmsafe.write_atomic(os.path.join(path, key + '.yaml'),
                         yaml.safe_dump(record, allow_unicode=True, sort_keys=False), mode=0o600)
@@ -239,7 +240,7 @@ def put(bean, term, key, *, root=ROOT, host=None, store=None, basis=None, until=
     else:
         label = f"{term}[{sealed['held']}]"
         node = [sealed if i == int(key) else v for i, v in enumerate(node)]
-    import dmsafe
+    import safe as dmsafe
     dmsafe.write_atomic(path_, _replace_term(text, term, node))
     return sealed['held'], f"- held: {bean} {term}.{label} added" if isinstance(fm.get(term), dict) else \
         f"- held: {bean} {term} added"
@@ -249,7 +250,7 @@ def put(bean, term, key, *, root=ROOT, host=None, store=None, basis=None, until=
 def put_core(bean, sid, *, root=ROOT, host=None, store=None, basis=None, until=None):
     """Seal the statement `sid` of `bean`: its roles go to a store here, with the day it is to be erased by, and the bean
     keeps its verb, its id, `held` and `while` (`basis`, the word it is held on). Returns (pointer, the journal line)."""
-    import dmsafe
+    import safe as dmsafe
     path_, text = _read_bean(root, bean)
     fm = dmparse.loads(dmparse.split_front_matter(text)[0])
     hits = [(v, r) for _i, v, r in dmpass.statements(fm) if r.get('id') == sid]
@@ -279,7 +280,7 @@ def put_core(bean, sid, *, root=ROOT, host=None, store=None, basis=None, until=N
 
 def person_core(fields, *, root=ROOT, host=None, store=None, basis=None):
     """An opaque person `p-<8 hex>` in statements: the bean says nothing of them; `fields` are held off git."""
-    import dmsafe
+    import safe as dmsafe
     while True:
         pid = 'p-' + secrets.token_hex(4)
         if not os.path.exists(os.path.join(root, 'beans', pid + '.md')):
@@ -300,7 +301,7 @@ def person_core(fields, *, root=ROOT, host=None, store=None, basis=None):
 def types_law(root):
     """The law as sensitivity reads it: the registries, and the gardener."""
     import types
-    import dmseq
+    import seq as dmseq
     law = dmseq.Law.of_garden()          # the gate's reading of the law, a garden's additions included
     return types.SimpleNamespace(registry=law.registry, gardener=dmpass.gardener_of(root))
 
@@ -316,7 +317,7 @@ def person(fields, *, root=ROOT, host=None, store=None, basis=None):
     hexkey = secrets.token_hex(16)
     _write(path, hexkey, {'bean': pid, 'term': 'person', 'key': 'contact', 'entry': dict(fields), 'about': [pid]})
     g = dmpass.gardener_of(root) or 'keeper'
-    import dmsafe
+    import safe as dmsafe
     dmsafe.write_atomic(os.path.join(root, 'beans', pid + '.md'),
                         f"---\nbean: {pid}\ngenos: person\ntitle: \"{pid}\"\nstatus: active\n"
                         f"summary: \"a person whose name and contacts are held off git\"\nnature: soma\n"
@@ -397,7 +398,7 @@ def check(*, root=ROOT, host=None, beans=None):
                 out.append(('warn', f"{bid}: {t}[{label}] — its record here may be read by others than its owner "
                                     f"(mode {oct(_mode & 0o777)}): chmod 600 it; a store is plain text, kept by its files"))
     for bid, t, label, days in due(root=root, beans=beans, days=0):
-        out.append(('warn', f"{bid}: {t}[{label}] was to be erased {-days} day(s) ago — bin/dmheld.py erase"))
+        out.append(('warn', f"{bid}: {t}[{label}] was to be erased {-days} day(s) ago — bin/held.py erase"))
     # A STORE IN CLEARTEXT, READABLE FROM ANOTHER PARTY (today's gate warned of it; the core's gate has no warnings, so
     # the tool that keeps the store says it, where the store is — v1 part 12b)
     for name, (path, row) in sorted(stores(root, host, beans).items()):
@@ -411,8 +412,8 @@ def check(*, root=ROOT, host=None, beans=None):
 def due(*, root=ROOT, beans=None, days=30):
     """[(bean, term, label, days left)] of sealed entries whose `until` falls within `days`."""
     import time
-    import dmcal
-    # today in dmcal's count of days, as `until` is read: the count since 1970 (about 20,700 against about 739,000) put
+    import cal as dmcal
+    # today in cal's count of days, as `until` is read: the count since 1970 (about 20,700 against about 739,000) put
     # every `until` two thousand years off, and no sealed entry was ever due
     today = dmcal.to_day(time.strftime('%Y-%m-%d', time.gmtime(time.time())))
     out = []
@@ -505,7 +506,7 @@ def main(argv):
             print(f"sealed as {ptr}\njournal line (give it to bin/save.py's entry, and say no more of it):\n  {line}")
         elif cmd == 'put' and len(argv) == 3:
             ptr, line = put(*argv, store=store, basis=basis, until=until, host=host)
-            print(f"sealed as {ptr}\njournal line (give it to bin/dmsave.py --body, and say no more of it):\n  {line}")
+            print(f"sealed as {ptr}\njournal line (give it to bin/save.py --body, and say no more of it):\n  {line}")
         elif cmd == 'person':
             fields = dict(a.split('=', 1) for a in argv if '=' in a)
             pid = (person_core if dmpass.runs_core(ROOT) else person)(fields, store=store, basis=basis, host=host)
@@ -526,7 +527,7 @@ def main(argv):
             bad = unresolved_new(staged=True)
             if bad:
                 print("NOT COMMITTED: a pointer this commit adds holds nothing here:\n  " + "\n  ".join(bad)
-                      + "\nseal it with bin/dmheld.py put, on the host whose store holds it", file=sys.stderr)
+                      + "\nseal it with bin/held.py put, on the host whose store holds it", file=sys.stderr)
                 return 1
         elif cmd == 'due':
             for b, t, l, d in due(days=int(_opt(argv, '--days', '30'))):
@@ -535,7 +536,7 @@ def main(argv):
             print(__doc__)
             return 2
     except (NotHere, Erased, KeyError, ValueError) as x:
-        print(f"dmheld: {x}", file=sys.stderr)
+        print(f"held: {x}", file=sys.stderr)
         return 1
     return 0
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""dmgeo — a position BY COORDINATES, on a named body, in a named reference system.
+"""geo — a position BY COORDINATES, on a named body, in a named reference system.
 
-    python3 bin/dmgeo.py "EPSG:4326;35.6892,51.3890"                  # read it: body, kind, axes, its cells
-    python3 bin/dmgeo.py "EPSG:4326;35.6892,51.3890" "EPSG:4326;41.0082,28.9784"    # and how far apart
-    python3 bin/dmgeo.py "IAU_2015:49900;-4.5895,137.4417"            # the same machinery, on Mars
-    python3 bin/dmgeo.py "EPSG:4326+5773;10.1,20.2,-3.5"              # a compound position: horizontal + vertical
-    python3 bin/dmgeo.py "marker-a+3.2,-1.5"                           # a position from another being, resolved
-    python3 bin/dmgeo.py --nearest "EPSG:4326;10.1,20.2"              # the fixed beings nearest a place
+    python3 bin/geo.py "EPSG:4326;35.6892,51.3890"                  # read it: body, kind, axes, its cells
+    python3 bin/geo.py "EPSG:4326;35.6892,51.3890" "EPSG:4326;41.0082,28.9784"    # and how far apart
+    python3 bin/geo.py "IAU_2015:49900;-4.5895,137.4417"            # the same machinery, on Mars
+    python3 bin/geo.py "EPSG:4326+5773;10.1,20.2,-3.5"              # a compound position: horizontal + vertical
+    python3 bin/geo.py "marker-a+3.2,-1.5"                           # a position from another being, resolved
+    python3 bin/geo.py --nearest "EPSG:4326;10.1,20.2"              # the fixed beings nearest a place
 
 In a garden of the core (v1 part 7) the bodies and the reference systems are core/law/places.yaml's, and a being's
 position is its `be` as location, its host and what it holds there (`placed`) read through bin/garden.py `terms`.
@@ -31,13 +31,13 @@ it, and measures a great-circle distance ON THE BODY THE SYSTEM NAMES. It does N
 needs the published transformation parameters (the PROJ project carries them), and an approximate transformation
 presented as a position is the defect this whole design exists to refuse.
 
-Pure: standard library only. It imports dmparse, which is too, for the one thing every tool shares: its output is
+Pure: standard library only. It imports parse, which is too, for the one thing every tool shares: its output is
 UTF-8 on every platform, so a position named in any script prints intact through a pipe on Windows.
 """
 import functools, math, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr
+import parse as dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -56,17 +56,10 @@ def _rows(root):
     """(bodies, reference_systems) as the law in `root` declares them. In a garden, the law is what the gate loaded —
     the standard and the garden's own additions; in the standard's own repository, the standard alone. No copy is held
     here: a tool that kept its own list of systems and radii was a second law, held equal to the first by a test."""
-    if runs_core(root):                     # a garden of the core (v1 part 7): the places the release carries
-        sys.path.insert(0, root)
-        from core import standards
-        t = standards.here(root).tables
-        return list(t.get('bodies') or []), list(t.get('reference_systems') or [])
-    if os.path.exists(os.path.join(root, 'VOCAB.md')):
-        import dmcheck
-        return list(dmcheck.registry('bodies') or []), list(dmcheck.registry('reference_systems') or [])
-    with open(os.path.join(root, 'seed', 'std-vocab.md'), encoding='utf-8') as fh:
-        fm = dmparse.loads(dmparse.split_front_matter(fh.read())[0])
-    return list(fm.get('bodies') or []), list(fm.get('reference_systems') or [])
+    sys.path.insert(0, root)                # the places the release carries (core/law/places.yaml)
+    from core import standards
+    t = standards.here(root).tables
+    return list(t.get('bodies') or []), list(t.get('reference_systems') or [])
 
 
 def bodies(root=ROOT):
@@ -164,10 +157,11 @@ def _beans(root):
     """{bean: front matter} — in a garden of the core, each bean as the terms its statements and `details` give
     (bin/garden.py `terms`): its locations, each with its host and its form (`placed`, v1 part 7)."""
     if runs_core(root):
-        import dmgarden
+        import garden as dmgarden
         G = dmgarden.core_garden(root)
         return {bid: dmgarden.terms(b, G.beans) for bid, b in G.beans.items() if not b.unread}
-    import dmpass
+    import importlib
+    dmpass = importlib.import_module('pass')
     return dmpass.beans_here(root)
 
 
@@ -291,7 +285,7 @@ def main(argv):
             print(f"  to {argv[1]}: {distance(argv[0], argv[1]) / 1000:.3f} km on {p['body']}")
         return 0
     except ValueError as e:
-        print(f"dmgeo: {e}"); return 1
+        print(f"geo: {e}"); return 1
 
 
 if __name__ == '__main__':

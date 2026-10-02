@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""dmcal — positions in any calendar, converted THROUGH THE DAY.
+"""cal — positions in any calendar, converted THROUGH THE DAY.
 
-    python3 bin/dmcal.py 2026-09-20                      # a position, read in every calendar that reckons by rule
-    python3 bin/dmcal.py persian:1405-06-29 hebrew       # one position, in one other calendar
-    python3 bin/dmcal.py --day 739880                    # a day number, in every calendar
-    python3 bin/dmcal.py --offset Pacific/Auckland 2026-04-04T13:30Z    # a zone's civil offset at a moment, read
+    python3 bin/cal.py 2026-09-20                      # a position, read in every calendar that reckons by rule
+    python3 bin/cal.py persian:1405-06-29 hebrew       # one position, in one other calendar
+    python3 bin/cal.py --day 739880                    # a day number, in every calendar
+    python3 bin/cal.py --offset Pacific/Auckland 2026-04-04T13:30Z    # a zone's civil offset at a moment, read
 
 A CALENDAR IS NOT TIME. It is one PARTITION of the line of days into named cells — years, months — and the law
 declares each as a positioning system with its own levels (`seed/std-vocab.md`, `anchor_systems`, dimension
@@ -32,7 +32,7 @@ database, through the standard library's `zoneinfo`, what offset a zone kept at 
 copy it raises NoZoneData naming the fix, and guesses none.
 
 Pure: it writes nothing and imports nothing outside the standard library, and reads nothing but the zone database for
-an offset — except, run as a command, the module that makes its output UTF-8 on every platform (bin/dmparse.py).
+an offset — except, run as a command, the module that makes its output UTF-8 on every platform (bin/parse.py).
 """
 import datetime, math, os, re, sys
 
@@ -605,26 +605,26 @@ EVERY = ['gregory', 'iso8601', 'julian', 'persian', 'islamic-civil', 'islamic-tb
 
 
 def main(argv):
-    # RUN AS A COMMAND IT SPEAKS UTF-8 ON EVERY PLATFORM, as every tool here does: bin/dmparse.py sets the streams once, on
+    # RUN AS A COMMAND IT SPEAKS UTF-8 ON EVERY PLATFORM, as every tool here does: bin/parse.py sets the streams once, on
     # import. A pipe on Windows is otherwise written in the ANSI code page, which has no Hebrew, no Persian and no `—`.
     # Imported here and not above, so that a reader importing this module still imports nothing but the standard library.
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    import dmparse  # noqa: F401
+    import parse as dmparse  # noqa: F401
     if not argv or argv[0] in ('-h', '--help'):
         # the interpreter as it is named where this runs: `python3` may be the Microsoft Store's alias on Windows
         print(__doc__.replace('python3 bin/', ('python' if os.name == 'nt' else 'python3') + ' bin/')); return 0
     if argv[0] == '--offset':
         # `--offset <zone> <moment>`: the civil offset read for that moment, never stored
         if len(argv) != 3:
-            print("dmcal: --offset takes a zone and a moment, e.g. --offset Pacific/Auckland 2026-04-05T13:30Z"); return 2
+            print("cal: --offset takes a zone and a moment, e.g. --offset Pacific/Auckland 2026-04-05T13:30Z"); return 2
         try:
             m = offset(argv[1], argv[2])
         except (NoZoneData, ValueError) as e:
-            print(f"dmcal: {e}"); return 1
+            print(f"cal: {e}"); return 1
         print(f"{argv[1]} at {argv[2]}: {'+' if m >= 0 else '-'}{abs(m) // 60:02d}:{abs(m) % 60:02d}")
         return 0
     if argv[0] == '--day' and (len(argv) < 2 or not re.fullmatch(r'-?[0-9]+', argv[1], re.ASCII)):
-        print("dmcal: --day takes a day number, e.g. --day 739880"); return 2
+        print("cal: --day takes a day number, e.g. --day 739880"); return 2
     try:
         n = int(argv[1]) if argv[0] == '--day' else to_day(argv[0])
         wanted = argv[2:] if argv[0] == '--day' else argv[1:]
@@ -639,7 +639,7 @@ def main(argv):
                 print(f"  {cal:16} — not reckoned by rule: {why}")
         return 0
     except (NotByRule, ValueError) as e:
-        print(f"dmcal: {e}"); return 1
+        print(f"cal: {e}"); return 1
 
 
 if __name__ == '__main__':

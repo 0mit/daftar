@@ -39,79 +39,23 @@ for d in PROSE:
     text[d] = open(p, encoding="utf-8").read() if os.path.isfile(p) else ""
 
 sys.path.insert(0, os.path.join(ROOT, "bin"))
-src = open(os.path.join(ROOT, "bin", "dmcheck.py"), encoding="utf-8").read()
-retired = eval(re.search(r"^RETIRED_CONSTRUCTS = (\(.*?\))\n", src, re.S | re.M).group(1))
-assert len(retired) >= 10, "the retired-construct list was not found"            # an empty list would pass everything
-import dmreform
-owners = list(dmreform.RETIRED_OWNERS)
-assert owners, "the retired-owner list was not found"
-
-for d, t in text.items():
-    hit = [w for w in retired if re.search(r"(?<![A-Za-z_])%s(?![A-Za-z_])" % re.escape(w), t)]
-    check(f"{d} names no construct the schema language has retired", not hit, hit)
-    # an owner term's name is often an ordinary word (`unit`, `role`); what is retired is the TERM, so look for the
-    # two ways a document addresses a term: its positions (`unit.values`) and its declaration (`term: unit`).
-    hit = [w for w in owners if re.search(r"(?<![A-Za-z_])%s\.values|term:\s*%s\b" % (w, w), t)]
-    check(f"{d} addresses no owner term that a registry replaced", not hit, hit)
-
-# A KEY THE LAW RETIRED IS NOT WRITTEN AS A KEY (21.0). The law lists what it took back (`retired:`), and the gate refuses
-# each with where it went; a document that still writes one — `scope: global` in an example anchor, `attributes:` as
-# the bag for a stray fact, a manifest's `seeds_from:` — teaches the refusal. A name at the head of a line, inside a
-# flow mapping, or opening an inline code span is a key; the same word in a sentence is only a word.
-import dmparse, yaml
-_law = yaml.safe_load(dmparse.split_front_matter(open(os.path.join(ROOT, "seed", "std-vocab.md"), encoding="utf-8").read())[0])
-_retired = {str(r["name"]): r.get("at") for r in (_law.get("retired") or []) if isinstance(r, dict)
-            and r.get("at") in ("bean", "anchor", "manifest")}
-assert len(_retired) >= 8, "the law's list of retired keys was not found"
-# A NAME RETIRED IN ONE PLACE MAY BE LIVE IN ANOTHER: `created` left the manifest (a registration's day is `timing` now);
-# `authority` left the anchor and is still a term. Such a name is looked for only where it was retired — at the head
-# of a GARDEN.md block's line, inside an anchor's mapping, at the head of a bean's line — and any other is looked for
-# wherever a key is written.
-_live = set()
-def _collect(node):
-    if isinstance(node, dict):
-        for k, v in node.items():
-            if k in ("attrs", "entries") and isinstance(v, (dict, list)):     # an entry's attributes, nested ones too
-                _live.update(str(x) for x in v if isinstance(x, (str, int)))
-            if k in ("term", "kind", "genos") and isinstance(v, str):
-                _live.add(v)
-            _collect(v)
-    elif isinstance(node, list):
-        for x in node:
-            _collect(x)
-_collect({k: v for k, v in _law.items() if k != "retired"})
-_live.update(str(k) for k in _law)
-assert "authority" in _live and "scope" not in _live, "the law's live names were not read"
+sys.path.insert(0, ROOT)
+# A BEAN IS WRITTEN IN THE CORE'S WORDS (v1 part 13). A bean a document shows holds the core's header — `bean` (or
+# `mapping`), `kind`, `title`, `summary`, `tags`, `details`, `statements` — and nothing else at its head: one of today's
+# terms there (each went somewhere in the core: core/law/terms.yaml) teaches a refusal.
+from core.engine import HEADER  # noqa: E402
+from core import read as _read  # noqa: E402
+_today = {str(r["term"]) for r in _read.data(os.path.join(ROOT, "core", "law", "terms.yaml"))["terms"]}
+assert len(_today) >= 50, "today's terms were not read"
 _FENCE = re.compile(r"(?ms)^(`{3,})[^\n]*\n(.*?)^\1[ \t]*$")
-def _manifest_blocks(t):
-    """The fenced blocks of a document that are a GARDEN.md: marked as one, or pinning the standard as it does."""
-    out = []
-    for m in _FENCE.finditer(t):
-        lead = t[:m.start()].rstrip("\n").rsplit("\n", 1)[-1]          # the line just above the fence
-        if "GARDEN.md" in lead or "extends: std-vocab@" in m.group(2):
-            out.append(m.group(2))
-    return out
-def _written(w, at, t):
-    e = re.escape(w)
-    if w not in _live:
-        return re.search(r"(?m)^%s:|[{,]\s*%s:|`%s:" % (e, e, e), t)
-    if at == "anchor":
-        return re.search(r"(?m)^.*\bkey:.*\bvalue:.*[{,]\s*%s:|^.*[{,]\s*%s:.*\bkey:.*\bvalue:" % (e, e), t)
-    if at == "manifest":
-        return any(re.search(r"(?m)^%s:" % e, b) for b in _manifest_blocks(t))
-    # A NAME RETIRED ON A BEAN IS LIVE ON A MAPPING (`kind`): a mapping's own example is not a bean's
-    return re.search(r"(?m)^%s:" % e, _FENCE.sub(lambda m: '' if re.search(r"(?m)^mapping:", m.group(2)) else m.group(0), t))
 for d, t in text.items():
-    hit = sorted(w for w, at in _retired.items() if _written(w, at, t))
-    check(f"{d} writes no key the law retired", not hit, hit)
-_probe = "```yaml\nregistration: { created: 2020-01-15 }\n```\n<!-- example-front-matter: GARDEN.md -->\n```yaml\ngardener: sam\n```\n"
-_live.add("created")    # as it was while a registration kept its day (until 29.0): the reading of a live name's context is checked
-check("...and a name the law retired in one place is not taken for a key where it is still live",
-      not _written("created", "manifest", _probe) and _written("created", "manifest", _probe.replace("gardener: sam", "created: x"))
-      and not _written("authority", "anchor", "authority: { source: x }\n")
-      and _written("authority", "anchor", "  - { key: fqdn, value: x, authority: scanned }\n"),
-      "the context of a retired name that is live elsewhere is not read")
-_live.discard("created")
+    hit = set()
+    for m in _FENCE.finditer(t):
+        fm = re.match(r"---\n(.*?)\n---", m.group(2), re.S)
+        if fm and re.search(r"(?m)^(bean|mapping):", fm.group(1)):
+            hit |= {k for k in re.findall(r"(?m)^([a-z_]+):", fm.group(1)) if k not in HEADER}
+    check(f"{d}'s beans hold the core's header and statements, and no key of today's", not hit, sorted(hit))
+check("...and a word of today's is known by its place in core/law/terms.yaml", {"owned_by", "status", "nature"} <= _today)
 
 for d, t in text.items():
     named = sorted(set(re.findall(r"(?<![A-Za-z0-9_/.-])((?:bin|test)/[A-Za-z0-9_./-]+\.(?:py|sh))", t)))
@@ -144,27 +88,22 @@ _ck, _fo = _sections(text["seed/COOKBOOK.md"]), _sections(text["seed/FORMS.md"])
 _recipes = [h for h in _fo if h in _ck]
 # THE FORMS CARRY NO FACT (v0.34.1): each block is the cookbook's as the law derives it — a day someone said shown empty
 # with the law's meaning beside it, `as_of: now`, no day inside an anchor — so the check is the derivation, not a copy.
-_derived = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmforms.py"), "--check"], capture_output=True, text=True, encoding="utf-8", errors="replace")
-check("seed/FORMS.md holds the shapes of six recipes of seed/COOKBOOK.md, every example block exactly as bin/dmforms.py "
-      "derives it from the cookbook's by the law", len(_recipes) == 6 and _derived.returncode == 0
-      and _recipes[0] == "The gardener, first", f"recipes {_recipes}; {_derived.stderr.strip()}")
+_derived = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "forms.py"), "--check"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+check("seed/FORMS.md holds the gardener's own form and the shapes of five recipes of seed/COOKBOOK.md, every example "
+      "block exactly as bin/forms.py derives it from the cookbook's by the core's law", len(_recipes) == 5
+      and _derived.returncode == 0 and list(_fo)[1] == "The gardener, first", f"recipes {_recipes}; {_derived.stderr.strip()}")
 _days = [l.strip() for l in text["seed/FORMS.md"].split("\n")
-         if re.search(r"\b\d{4}-\d{2}-\d{2}\b", l) and not l.lstrip().startswith("start:")]
-check("...and no calendar day in them but a said time an event cannot be without (its `timing`): a day in a form is "
-      "the day a writer copies", not _days, _days)
+         if re.search(r"\b\d{4}-\d{2}-\d{2}\b", l) and "the example's — write the moment someone said" not in l]
+check("...and no calendar day in them but a moment a role requires, which keeps the example's and says so: a day in a "
+      "form is the day a writer copies", not _days, _days)
 check("...and nothing else but the misreadings, first, and the forms for what nobody said",
-      set(_fo) - set(_recipes) == {"What nobody said", "Common misreadings"} and list(_fo)[0] == "Common misreadings",
+      set(_fo) - set(_recipes) == {"What nobody said", "Common misreadings", "The gardener, first"}
+      and list(_fo)[0] == "Common misreadings",
       sorted(set(_fo) - set(_recipes)))
-_acc = [l for l in text["seed/FORMS.md"].split("\n") if "# accepted:" in l]
-check("...and every `accepted:` it leaves empty says what empty records, never 'empty unless said' (29.2, rule 6): an "
-      "empty acceptance is no consent, and a writer copied one where the yes was known and only its day was not",
-      len(_acc) >= 6 and all("empty records no acceptance, and so no consent (F2)" in l and "empty unless said" not in l
-                             for l in _acc), _acc)
-# 27.0 raised the ceiling by 600 for the form of a yes nobody dated (the long form once, the loan's two acceptances): the
-# local-model bench lost seven facts of eight to that case, and the page had stood 3 characters under 16,000. 29.2 raised
-# it by 400 for what an empty `accepted` records, on every line that empties it; the page had stood 23 under 16,600.
-# 30.0 raised it by 700 for what a count is for: the phone loan's two purchases, one repaid in six instalments and one
-# in four, which is which not said (queue-44: seven runs of eight kept such counts only in prose).
+_kept = [l for l in text["seed/FORMS.md"].split("\n") if "the example's — write the moment someone said" in l]
+check("...and every moment a form keeps because its verb requires it says it is the example's, and the one to write is "
+      "the moment someone said; no line says 'empty unless said' (the core has no empty value)",
+      _kept and "empty unless said" not in text["seed/FORMS.md"], _kept)
 check("...and it stays short: under 17,700 characters", len(text["seed/FORMS.md"]) < 17700, len(text["seed/FORMS.md"]))
 _ord = [h for h in _ck if h in _recipes]
 check("...in the cookbook's own order, so they can be followed from the top", _recipes == _ord, (_recipes, _ord))
@@ -172,11 +111,11 @@ _top = "\n".join(text["seed/FORMS.md"].split("\n## ", 1)[0].splitlines())
 # ONE COMMAND SAVES (v0.34.1): the entry, `git add -A` and the commit were three calls, and a refused one needed two more.
 check("...and its opening says how a bean is saved — one command, and `--again` after a refusal — and that the law is "
       "read only for what it does not answer",
-      'python3 bin/dmsave.py "<who>" "<what you did>" --body "' in _top and "python3 bin/dmsave.py --again" in _top
+      'python3 bin/save.py "<who>" "<what you did>" --body "' in _top and "python3 bin/save.py --again" in _top
       and "AGENTS.md" in _top and len(_top) < 2000, _top[:400])
 check("AGENTS.md saves a write in one command, and says what to run after a refusal",
-      'python3 bin/dmsave.py "<who>" "<what changed>" --body "' in text["AGENTS.md"]
-      and "python3 bin/dmsave.py --again" in text["AGENTS.md"], "")
+      'python3 bin/save.py "<who>" "<what changed>" --body "' in " ".join(text["AGENTS.md"].split())
+      and "python3 bin/save.py --again" in " ".join(text["AGENTS.md"].split()), "")
 check("AGENTS.md puts the forms first for writing, and the law after them, on demand",
       0 <= text["AGENTS.md"].find("seed/FORMS.md") < text["AGENTS.md"].find("## On demand")
       < text["AGENTS.md"].find("`MODEL.md`", text["AGENTS.md"].find("## On demand")), "")
@@ -184,9 +123,10 @@ check("AGENTS.md puts the forms first for writing, and the law after them, on de
 # THE PROFILES MODEL.md NAMES ARE THE LAW'S. MODEL.md lists them for a reader who has not opened the law; a list kept by
 # hand is a second statement, so it is held equal to what the law offers — a profile added to the law and not named
 # here, or one named here the law no longer offers, fails by name.
-_offered = sorted(str(k) for k in (_law.get("profiles") or {}))
-_listed = re.search(r"Opt-in \*\*profiles\*\* add groups of rules for\s+gardens that need them \(([^)]*)\)", text["MODEL.md"])
-_named = sorted(re.findall(r"`([a-z][a-z0-9-]*)`", _listed.group(1))) if _listed else None
+_offered = sorted(_read.data(os.path.join(ROOT, "core", "law", "profiles.yaml")) and
+                  [str(p["profile"]) for p in _read.data(os.path.join(ROOT, "core", "law", "profiles.yaml"))["profiles"]])
+_listed = re.search(r"\*\*Profiles\*\* — ([a-z, ]+) — stand on the core", text["MODEL.md"])
+_named = sorted(w.strip() for w in _listed.group(1).split(",")) if _listed else None
 check("MODEL.md names exactly the profiles the law offers", _named == _offered and len(_offered) >= 5,
       f"MODEL.md: {_named}; the law: {_offered}")
 

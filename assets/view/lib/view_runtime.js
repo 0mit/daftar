@@ -424,7 +424,7 @@ function wireCorr(root,view,state){const op=view.operate;((op&&op.correlate)||[]
  sv.addEventListener('mousemove',show);sv.addEventListener('mouseleave',()=>{cur.setAttribute('x1',-9);cur.setAttribute('x2',-9);rd.innerHTML='';});});}
 
 /* table: the members of a reading, or the rows of a series, one line each with a column per path — the report, and the
-   offline file of it (`dmview table` writes the same lines as CSV). Drawn with the page: nothing in it is live. */
+   offline file of it (`view table` writes the same lines as CSV). Drawn with the page: nothing in it is live. */
 function table(root,view,lv,state,op){const t=op.table||{columns:[],rows:[]};
  let o=head(view,lv)+'<div class="op-table"><table><thead><tr>'+t.columns.map(c=>'<th>'+h(c)+'</th>').join('')+'</tr></thead><tbody>'+
   (t.rows.length?t.rows.map(r=>'<tr>'+r.cells.map(c=>'<td>'+h(c)+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+Math.max(1,t.columns.length)+'" class="bl">nothing to list</td></tr>')+

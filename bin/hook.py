@@ -5,7 +5,7 @@
     python3 bin/hook.py uninstall claude-code
     python3 bin/hook.py prompt|pre|post|end      # what the harness calls, its event on standard input
 
-(`python` on Windows; `bin/dmhook.py`, today's name, runs this too until v1's part 13, and a hook installed by either
+(`python` on Windows; `bin/hook.py`, today's name, runs this too until v1's part 13, and a hook installed by either
 name is the other's to remove.) Where daftar does not run the loop (`bin/launch.py` does), the harness that does may call a
 hook before and after each tool. What a hook can see is the harness's to give, so these guards are ADVISORY: a harness
 that skips its hooks skips them, and the gate at the commit is what holds. Where they run, they FAIL CLOSED — a hook that
@@ -35,8 +35,9 @@ import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse  # noqa: E402,F401 — its import sets UTF-8 on stdout and stderr
-import dmpass  # noqa: E402 — bin/pass.py (`pass` is a keyword of Python)
+import parse as dmparse  # noqa: E402,F401 — its import sets UTF-8 on stdout and stderr
+import importlib
+dmpass = importlib.import_module('pass')  # noqa: E402 — bin/pass.py (`pass` is a keyword of Python)
 import launch  # noqa: E402
 
 PY = 'python' if os.name == 'nt' else 'python3'
@@ -60,7 +61,7 @@ NO_VERIFY = re.compile(r'\bgit\b[^|;&\n]*\s--no-v(?:e(?:r(?:i(?:fy?)?)?)?)?\b'
 
 
 def unquoted(cmd):
-    """The command with every quoted argument emptied: what a message says is not what runs (`dmsave.py "w" --body
+    """The command with every quoted argument emptied: what a message says is not what runs (`save.py "w" --body
     "…git commit…"` commits nothing by hand), and a word that only mentions the save is not the save."""
     return re.sub(r"'[^']*'|\"(?:[^\"\\]|\\.)*\"", '""', cmd)
 
@@ -71,7 +72,7 @@ def _q(path):
 
 
 def deny(why):
-    print(dmparse.said(f"dmhook: refused — {why}"), file=sys.stderr)
+    print(dmparse.said(f"hook: refused — {why}"), file=sys.stderr)
     sys.exit(2)
 
 
@@ -179,7 +180,7 @@ def on_pre(ev, root):
                      f"to place it")
             s = session(ev, root)
             if any(e.get('from') == {'file': rel} for e in s.index()):
-                print(json.dumps({'systemMessage': f"dmhook: {rel} was read before in this session"}))
+                print(json.dumps({'systemMessage': f"hook: {rel} was read before in this session"}))
 
 
 def on_post(ev, root):
@@ -197,7 +198,7 @@ def on_post(ev, root):
     hits = dmpass.post_hits(text, denied_index(s, root))
     if hits:
         s.post({'tool': tool, 'hits': hits})
-        say = (f"dmhook POST: this output holds lines of {', '.join(f'{p} ({n})' for p, n in sorted(hits.items()))} — "
+        say = (f"hook POST: this output holds lines of {', '.join(f'{p} ({n})' for p, n in sorted(hits.items()))} — "
                f"files a request may not carry. Do not carry them into the garden or on; recorded.")
         print(json.dumps({'hookSpecificOutput': {'hookEventName': 'PostToolUse', 'additionalContext': say}}))
 
@@ -205,7 +206,7 @@ def on_post(ev, root):
 def install(root, harness, on=True):
     h = HARNESSES.get(harness)
     if h is None:
-        sys.exit(f"dmhook: no harness `{harness}` — {', '.join(HARNESSES)}")
+        sys.exit(f"hook: no harness `{harness}` — {', '.join(HARNESSES)}")
     p = os.path.join(root, *h['settings'].split('/'))
     try:
         with open(p, encoding='utf-8') as fh:
@@ -213,7 +214,7 @@ def install(root, harness, on=True):
     except FileNotFoundError:
         cfg = {}
     except ValueError:
-        sys.exit(f"dmhook: {h['settings']} is not JSON; nothing changed")
+        sys.exit(f"hook: {h['settings']} is not JSON; nothing changed")
     me = os.path.abspath(__file__)
     hooks = cfg.setdefault('hooks', {})
     for event, (verb, matcher) in h['events'].items():
@@ -245,7 +246,7 @@ def install(root, harness, on=True):
         os.makedirs(os.path.dirname(ex), exist_ok=True)
         with open(ex, 'a', encoding='utf-8') as fh:
             fh.write('/' + h['settings'] + '\n')
-    print(f"dmhook: {'installed in' if on else 'removed from'} {h['settings']} (this clone's own, kept off git)")
+    print(f"hook: {'installed in' if on else 'removed from'} {h['settings']} (this clone's own, kept off git)")
     return 0
 
 
@@ -253,11 +254,11 @@ def main(argv):
     if argv[:1] in (['install'], ['uninstall']):
         root = launch.git(os.getcwd(), 'rev-parse', '--show-toplevel').stdout.strip()
         if not root:
-            sys.exit("dmhook: not inside a garden's git working copy")
+            sys.exit("hook: not inside a garden's git working copy")
         return install(root, argv[1] if len(argv) > 1 else 'claude-code', argv[0] == 'install')
     verbs = {'prompt': on_prompt, 'pre': on_pre, 'post': on_post, 'end': None}
     if argv[:1] == [] or argv[0] not in verbs:
-        sys.exit(f"dmhook: install|uninstall <harness>, or {'|'.join(verbs)} with the event on standard input")
+        sys.exit(f"hook: install|uninstall <harness>, or {'|'.join(verbs)} with the event on standard input")
     try:
         ev = json.loads(sys.stdin.read() or '{}')
         if not isinstance(ev, dict):

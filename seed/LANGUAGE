@@ -1,13 +1,12 @@
 # WHAT A GARDEN RECEIVES FROM A RELEASE — one pattern per line, relative to the release root.
 # Read by seed/germinate.sh (a new garden) and bin/dmupgrade.py (an existing one), so the two can never
-# disagree about what the language is. Patterns, not a file list: a hand-kept list once missed `dmsafe`,
-# which `dmcheck` imports without saying so, and a pattern carries a new tool without anyone remembering to.
+# disagree about what the language is.
 #
-# The tools: every `bin/dm*.py`, the one installer and the hooks — and NOTHING ELSE under bin/. Copying the
-# whole of bin/ once shipped one estate's private tools, host names and a LAN address into a new garden.
-bin/dm*.py
-# A tool ported to the core's statements (v1) takes its verb's name with no `dm`, and is named here line by line, as it
-# is ported: a pattern over bin/ would carry a garden's own tools too.
+# The tools, each by its verb, the one installer and the hooks — and NOTHING ELSE under bin/. Copying the whole of bin/
+# once shipped one estate's private tools, host names and a LAN address into a new garden, so each tool is named here
+# line by line: a pattern over bin/ would carry a garden's own tools too. bin/dmupgrade.py keeps its name: it is the
+# door a garden in today's words hands over through, to the release's own (v1 part 13).
+bin/dmupgrade.py
 bin/check.py
 bin/merge.py
 bin/save.py
@@ -70,15 +69,11 @@ MERGE.md
 # The skill a coding agent auto-loads: a mirror pointing into the garden, carrying no rule of its own.
 AGENTS.md
 .claude/skills/daftar/SKILL.md
-# THE CORE (v0.49.0): the engine of the statement, its law and its hook, beside today's gate. A garden receives it so it
-# can rehearse the switch on a copy (`python3 core/translate.py garden . <copy>`, then `python3 core/check.py <copy>`);
-# today's gate stays the gate until a garden adopts v1.0.0. Named file by file kind, as bin/ is: nothing else under core/.
+# THE CORE: the engine of the statement and its law — the gate every garden runs, which bin/check.py and the hooks hand
+# it — and the translator a garden in today's words adopts it through. Named file by file kind, as bin/ is: nothing else
+# under core/.
 core/*.py
 core/law/*.yaml
-core/hooks/*
-# The pre-commit hook runs it, so a garden without it cannot commit. The other tests assert things about the
-# release's own fixtures and stay in the release.
-test/fast.py
 # AN ASSET: the directory named for a profile the law offers. `<profile>` stands for each profile this garden's
 # VOCAB.md extends, and for no other: opting into the profile is what brings its asset, and leaving it takes it away.
 assets/<profile>/*

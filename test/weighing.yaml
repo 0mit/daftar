@@ -1,5 +1,5 @@
 # The working loop's weighing of the release's suites (D41): the maintainer's judgments, pair by pair, in the form of a
-# `weighings` entry. `python3 bin/dmreckon.py order tests <items.tsv>` reads the weights with each suite's failures and
+# `weighings` entry. `python3 bin/reckon.py order tests <items.tsv>` reads the weights with each suite's failures and
 # measured seconds (test/timings.tsv, when it is measured). It orders the loop only; every suite still runs at a release,
 # and no gate judges this file.
 for: tests

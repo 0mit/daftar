@@ -74,10 +74,9 @@ LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "
       f"flows)", not LAW.problems(), LAW.problems())
 units = LAW0.units
-OLD_UNITS = translate.law_as_strings().get('units') or []      # today's law's units, by their English names
-check(f"units are UCUM's, the law's English name attached: every one of the law's {len(OLD_UNITS)} units has its row "
+check(f"units are UCUM's, the law's English name attached: each of the law's {len(units)} units is a row "
       f"(kg is kilogram, GiBy gibibyte, {{item}} item), and the two attenuations UCUM cannot write (§22) say why",
-      len(units) == len(OLD_UNITS) == 55 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
+      len(units) == 55 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
       and units['{item}']['name'] == 'item' and [u for u, r in units.items() if r.get('ucum') == 'false']
       == ['decibel-per-metre', 'decibel-per-kilometre'], len(units))
 ns = LAW0.namespaces
@@ -250,7 +249,7 @@ try:
         with open(os.path.join(TMP, rel), 'w', encoding='utf-8') as fh:
             fh.write('---\n' + yaml.safe_dump(head, allow_unicode=True, sort_keys=False) + '---\n' + body)
     write('GARDEN.md', {'garden': 'core-test', 'extends': 'core@' + LAW.version, 'gardener': 'sam', 'zone': ZONE})
-    write('VOCAB.md', dict({'vocab': 'core-test'}, **CASES['vocab']))
+    write('VOCAB.md', CASES['vocab'])
     with open(os.path.join(TMP, 'log', 'journal.md'), 'w', encoding='utf-8') as fh:
         fh.write('# journal\n')
     for bid, b in CASES['garden'].items():

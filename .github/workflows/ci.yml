@@ -19,7 +19,7 @@ jobs:
       - run: pip install PyYAML reuse
       - run: git config --global user.name ci && git config --global user.email ci@localhost
       - name: every document parses
-        run: python3 bin/dmsafe.py
+        run: python3 bin/safe.py
       - name: "assets: one reader of what a release ships; an asset is a profile's, and opens no concept of its own"
         run: python3 test/assets.py
       - name: "refusals: what the gate refuses, and that it refuses rather than crashes"
@@ -29,22 +29,22 @@ jobs:
         run: python3 test/journal.py
       - name: "core: the minimal core's engine — the law proved whole, every verb's row, and each of its rules' refusals"
         run: python3 test/core.py
-      - name: "core_save: today's save commits a garden of statements, the core's gate at the commit — the moment the save's, the law ratified"
+      - name: "core_save: the save commits a garden of statements, the core's gate at the commit — the moment the save's, the law ratified"
         run: python3 test/core_save.py
-      - name: "core_translate: a garden of today's beans written in statements, into a copy — every value placed, the engine passing"
+      - name: "core_translate: a garden of today's beans (v0.49.0's law) written in statements, into a copy — every value placed, VOCAB.md the core's rows, the engine passing"
         run: python3 test/core_translate.py
-      - name: "core_standards: the core's law as generated — each file what today's law generates, every table read back whole, the standards read from core/law/ alone"
+      - name: "core_standards: the core's law its own source — no file generated, every table of rows held to its form, the standards read from core/law/ alone"
         run: python3 test/core_standards.py
-      - name: "core_rehearse: the guides' own example garden, grown through today's gate, translated and judged by the core"
+      - name: "core_rehearse: v0.49.0's guides' example garden, grown through its gate, translated, judged by the core, and adopting v1.0.0 through its own bin/dmupgrade.py"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_rehearse.py
-      - name: "core_guides: the guides written in statements (core/guide/), each example committed through the core's gate and held to what today's guides say"
+      - name: "core_guides: the guides in their places, each example committed through the core's gate and held to what v0.49.0's guides said"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_guides.py
-      - name: "core_merge: the statement merge, every rule of MERGE.md, and a garden's gate and merge driver taken by the law it runs, merged for real"
+      - name: "core_merge: the statement merge, every rule of MERGE.md, and a garden's gate and merge driver, merged for real; a side in today's words refused"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_merge.py
-      - name: "core_adopt: a garden in today's words adopts a release of the core in place, in one commit its gate grants history's moments; a garden grown from one starts in it"
+      - name: "core_adopt: a garden grown from v0.49.0 adopts a release of the core through its own bin/dmupgrade.py, in place, in one commit its gate grants history's moments; a garden grown from one starts in it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_adopt.py
       - name: "core_write: the write tools in a garden of the core — save, safe, journal, session, cursor, digest, reform, install, and the upgrade from one release of the core to another"
@@ -71,7 +71,7 @@ jobs:
       - name: "core_gaps: what v1 part 12b closed, read by the tools in a garden of the core — a payment charged and settled, a weighing, a series' whole, an allowance, bookings judged plan by plan, Darwin Core carried"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_gaps.py
-      - name: "core_ported: where each of today's suites went in v1 — retired, ported or waiting — held to the tree"
+      - name: "core_ported: where each of today's suites and each check of today's gate went in v1 — none waiting — and today's words read only from v0.49.0, held to the tree"
         run: python3 test/core_ported.py
       - name: "core_exact: a count is exact everywhere it is read — rates between currencies, and no float in the code"
         run: python3 test/core_exact.py
@@ -88,7 +88,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/rationale.py
       - name: "the preconditions of beauty in the law, counted against the last release — evidence for whoever merges"
-        run: python3 bin/dmreview.py --law --against "$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*')"
+        run: python3 bin/review.py --law --against "$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*')"
       - name: "site: the page parses, loads nothing from outside, and every form and refusal is what the release prints"
         run: python3 test/site.py
       - name: "public: a repository carries the language, never a garden"

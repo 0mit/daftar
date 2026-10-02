@@ -1,17 +1,17 @@
-# Words a garden may also use that are nonetheless PUBLIC, so `bin/dmpublic.py` does not refuse them.
+# Words a garden may also use that are nonetheless PUBLIC, so `bin/public.py` does not refuse them.
 # One per line, with the reason. Everything the published classifications name (seed/knowledge/*.tsv) is
 # already public and needs no entry here: this file is for the rest, and each line is a decision.
 # `<word> <path> ...` makes the word public IN THOSE FILES only (paths as git spells them): a consent given for
 # one page is not a consent for every file, commit message and pull request.
 daftar      # the project itself
 0mit        # the account this repository is published under
-daftar-sessions  # this tool's OWN directory name (bin/dmsession.py); a garden that records a root of
+daftar-sessions  # this tool's OWN directory name (bin/session.py); a garden that records a root of
                  # that name took the name FROM the tool, so refusing it here would be the tail wagging
                  # the dog — and renaming it, as was tried first, orphans every existing worktree.
 omid README.md LICENSE NOTICE REUSE.toml CHARTER.md seed/LICENSE.md  # the steward, named where the terms need a name: README by his word, 2026-09-22 ("the persian part is by me"); the licence files by his word, 2026-09-25 ("I do"), with his registered name and his address
 omid@0mit.com CHARTER.md  # the steward's address, where a claim about what he publishes reaches him — by his word, 2026-09-25
 0mit.com      CHARTER.md  # the domain whose published contacts also reach him, while he holds it — by his word, 2026-09-25
-held             # the law's own word: a layer (std-vocab `layers`), the key of a sealed entry, and bin/dmheld.py's
+held             # the law's own word: a layer (std-vocab `layers`), the key of a sealed entry, and bin/held.py's
                  # name. A garden that names its store root after the layer took the name FROM the law, as
                  # `daftar-sessions` above was taken from a tool.
 smb              # a row of the law's own `net_protocols` registry: a garden that names a bean after the protocol

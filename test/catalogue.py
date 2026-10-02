@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """The catalogue: every part of the language, how the parts relate, and what each is held to — generated, never kept.
 
-bin/dmcatalog.py reads the release's own sources each time it runs. This holds it to what it says:
+bin/catalog.py reads the release's own sources each time it runs. This holds it to what it says:
 
   every file      every file the tree would commit is a part, in the layer the law's map places it in, or named among
-                  the files in no layer, which are the ones bin/dmpass.py names
-  the law         every term of the law and of its profiles is a part, and carries the rules bin/dmrules.py prints for
-                  it; every registry, section, profile and layer is a part; no part claims an item the law lacks
+                  the files in no layer, which are the ones bin/pass.py names
+  the law         every verb, rule, form and profile of the core's law is a part, and a verb carries the rules
+                  bin/rules.py prints for it; no part claims an item the law lacks
   every relation  both ends of every relation are parts, and every relation is of a kind the tool names
   read, not said  one known relation of each kind is found where it is written — an import, a module loaded by its path,
                   a directory put on sys.path, a hook's run and not what it only says to run, a run through a helper
@@ -14,7 +14,7 @@ bin/dmcatalog.py reads the release's own sources each time it runs. This holds i
                   example block, an asset
   the same bytes  two runs give byte-identical JSON; the parts and the relations are sorted, and each list of findings
                   by its own key; a name the law gives two items is one finding, and a mention of it counts for both
-  one part        `--part` shows a term and a tool, and refuses a name no part has
+  one part        `--part` shows a verb and a tool, and refuses a name no part has
   a garden        in a garden of the core (v1 part 12) it maps the garden's copy of the language — the files the release
                   keeps, and the whole law it runs, the core's
                   — and nothing of the garden's own
@@ -26,7 +26,10 @@ import contextlib, io, json, os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "bin"))
-import dmparse, dmpass, dmcatalog
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')
+import catalog as dmcatalog
 FAILS = []
 
 
@@ -40,7 +43,7 @@ def run(*a, cwd=None):
     return subprocess.run(list(a), capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=cwd)
 
 
-TOOL = os.path.join(ROOT, "bin", "dmcatalog.py")
+TOOL = os.path.join(ROOT, "bin", "catalog.py")
 r1, r2 = run(sys.executable, TOOL, "--json", cwd=ROOT), run(sys.executable, TOOL, "--json", cwd=ROOT)
 check("the catalogue is written as JSON (exit 0)", r1.returncode == 0 and r1.stdout.startswith("{"), r1.stderr[-600:])
 check("two runs give byte-identical JSON", r1.stdout == r2.stdout and len(r1.stdout) > 10000, len(r1.stdout))
@@ -54,28 +57,26 @@ check(f"every file the tree would commit is a part ({len(M.files)})", M.files an
 wrong = [f for f in M.files if f in parts and parts[f]["contents"].get("layer") != M.layer_of(f)[0]]
 check("...each in the layer the law's map places it in", not wrong, wrong[:10])
 _by, _none = M.placed()
-check("...and the files in no layer are named, and are the ones bin/dmpass.py names",
+check("...and the files in no layer are named, and are the ones bin/pass.py names",
       sorted(d["unplaced"]) == sorted(_none) and all(parts[f]["contents"].get("layer") is None for f in d["unplaced"]),
       sorted(set(d["unplaced"]) ^ set(_none))[:10])
 held = [f for f in M.files if f in parts and parts[f]["contents"].get("layer") is None and f not in d["unplaced"]]
 check("...so every file is placed in a layer, or named as in none", not held, held[:10])
 
 # ---------------------------------------------------------------- the law, whole
-law = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, "seed", "std-vocab.md"), encoding="utf-8").read())[0])
-names = [t["term"] for t in law["terms"]] + [t["term"] for p in law["profiles"].values() for t in p.get("terms") or []]
-absent = [n for n in names if "term:" + n not in parts]
-check(f"every term of the law and of its profiles is a part ({len(names)})", names and not absent, absent)
-extra = sorted(p[5:] for p in parts if p.startswith("term:") and p[5:] not in names)
-check("...and no term is a part the law does not have", not extra, extra)
-norules = [n for n in names if "term:" + n in parts and not parts["term:" + n]["checklists"]["rules"]]
-check("...and each carries the rules bin/dmrules.py prints for it, a profile's terms included", not norules, norules)
-items = (["registry:" + k for k, v in law.items() if isinstance(v, list) and k != "terms"]
-         + ["section:" + k for k, v in law.items() if isinstance(v, dict) and k != "profiles"]
-         + ["profile:" + p for p in law["profiles"]] + ["layer:" + r["layer"] for r in law["layers"]])
-check(f"every registry, section, profile and layer of the law is a part ({len(items)})",
-      all(i in parts for i in items), [i for i in items if i not in parts])
-claimed = [p for p, v in parts.items() if v["kind"] in dmcatalog.LAW_KINDS and v["kind"] != "term" and p not in items]
+sys.path.insert(0, ROOT)
+from core.law import Law  # noqa: E402
+L = Law.load()
+items = (["verb:" + v for v in L.verbs] + ["rule:" + r["rule"] for r in L.face.get("rules") or []]
+         + ["form:" + f for f in L.forms] + ["profile:" + p for p in L.profiles])
+absent = [i for i in items if i not in parts]
+check(f"every verb, rule, form and profile of the core's law is a part ({len(items)})", items and not absent, absent)
+norules = [i for i in items if i.startswith("rule:") and not parts[i]["checklists"]["rules"]]
+check("...and each rule carries its own words, as bin/rules.py prints them", not norules, norules)
+claimed = [p for p in parts if p.split(":")[0] in ("verb", "rule", "form", "profile") and p not in items]
 check("...and no part claims an item the law does not have", not claimed, claimed)
+check("...and the catalogue says the law is the core's", d.get("catalogue", {}).get("law", "").startswith("core@"),
+      d.get("catalogue"))
 
 # ---------------------------------------------------------------- every relation
 dangling = [r for r in rels if r["from"] not in parts or r["to"] not in parts]
@@ -89,35 +90,35 @@ def has(rel, a, b):
     return any(r["rel"] == rel and r["from"] == a and r["to"] == b for r in rels)
 
 
-check("an import is read: the gate imports the one loader", has("imports", "bin/dmcheck.py", "bin/dmparse.py"))
+check("an import is read: the gate imports the one loader", has("imports", "bin/check.py", "bin/parse.py"))
 check("a module loaded by its path is an import: the view's model loads each adapter beside it",
       has("imports", "assets/view/lib/view_model.py", "assets/view/lib/sources/http.py")
       and has("imports", "assets/view/lib/view_model.py", "assets/view/lib/sources/prometheus.py"))
-check("an import is looked for where the importer put sys.path: site/board.py puts bin/ there and imports "
-      "bin/dmparse.py", has("imports", "site/board.py", "bin/dmparse.py"))
+check("an import is looked for where the importer put sys.path: core/standards.py puts bin/ there and imports "
+      "bin/parse.py", has("imports", "core/standards.py", "bin/parse.py"))
 _hook = open(os.path.join(ROOT, "bin", "hooks", "pre-commit"), encoding="utf-8").read()
 check("a hook runs what its lines run: the pre-commit hook runs the gate", has("runs", "bin/hooks/pre-commit", "bin/check.py"))
 check("...and not what it only tells a person to run, nor what a comment names",
       "bin/install.py" in _hook and not has("runs", "bin/hooks/pre-commit", "bin/install.py"))
-check("a run through a function of the suite's own is read: test/save.py runs bin/dmsave.py",
-      has("runs", "test/save.py", "bin/dmsave.py"))
+check("a run through a function of the suite's own is read: test/save.py runs bin/save.py",
+      has("runs", "test/save.py", "bin/save.py"))
 _rules = open(os.path.join(ROOT, "bin", "rules.py"), encoding="utf-8").read()
 check("a help text that names a tool runs nothing: bin/rules.py names the gate and does not run it",
-      "bin/dmcheck.py" in _rules and not has("runs", "bin/rules.py", "bin/dmcheck.py"))
+      "bin/check.py" in _rules and not has("runs", "bin/rules.py", "bin/check.py"))
 _ci = re.findall(r"python3 (test/[a-z_]+\.py)", open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8").read())
 check("the release's workflow runs each suite it lists", _ci and all(has("runs", ".github/workflows/ci.yml", t) for t in _ci),
       [t for t in _ci if not has("runs", ".github/workflows/ci.yml", t)])
-check("a reason explains the law item its path names", has("explains", "seed/RATIONALE.md", "term:capabilities"))
-check("a layer holds its files, this tool among the gate's", has("holds", "layer:gate", "bin/dmcatalog.py"))
-check("a term uses what its attributes take their values in: an aspect's rows, a registry",
-      has("uses", "term:capabilities", "registry:aspects") and has("uses", "term:capabilities", "registry:knowledge_schemes"))
+check("a reason explains the law item its key names", has("explains", "seed/RATIONALE.md", "verb:own")
+      and has("explains", "seed/RATIONALE.md", "form:clause"))
+check("a layer holds its files, this tool among the gate's", has("holds", "layer:gate", "bin/catalog.py"))
+check("a verb uses the form a qualifier holds: a payment's settlement", has("uses", "verb:pay", "form:settlement"))
 check("a suite covers the tool it runs, and this suite covers the catalogue",
-      has("covers", "test/save.py", "bin/dmsave.py") and has("covers", "test/catalogue.py", "bin/dmcatalog.py"))
-check("a document states the terms it writes as keys in an example: the forms show `owned_by`",
-      has("states", "seed/FORMS.md", "term:owned_by") and "\nowned_by:" in open(os.path.join(ROOT, "seed", "FORMS.md"), encoding="utf-8").read())
-check("a file mentions the law items it names whole in backticks or quotes: MODEL.md, the `manifest` and `consent`",
-      has("mentions", "MODEL.md", "section:manifest") and has("mentions", "MODEL.md", "term:consent"))
-check("a profile ships its asset", has("ships", "profile:view", "assets/view/bin/dmview.py"))
+      has("covers", "test/save.py", "bin/save.py") and has("covers", "test/catalogue.py", "bin/catalog.py"))
+check("a document states the verbs its examples write at the head of a statement line: the forms show `agree`",
+      has("states", "seed/FORMS.md", "verb:agree") and "- agree:" in open(os.path.join(ROOT, "seed", "FORMS.md"), encoding="utf-8").read())
+check("a file mentions the law items it names whole in backticks or quotes: MODEL.md, `agree` and `consent`",
+      has("mentions", "MODEL.md", "verb:agree") and has("mentions", "MODEL.md", "rule:consent"))
+check("a profile ships its asset", has("ships", "profile:view", "assets/view/bin/view.py"))
 
 # ---------------------------------------------------------------- sorted, so a diff between two maps is the change
 check("the parts are sorted, and the relations", list(parts) == sorted(parts)
@@ -131,19 +132,12 @@ check("the findings are the six the tool names", set(F) == set(ORDER), sorted(F)
 check("...and each list is sorted by its own key", not [k for k, key in ORDER.items() if F.get(k) != sorted(F.get(k, []), key=key)],
       [k for k, key in ORDER.items() if F.get(k) != sorted(F.get(k, []), key=key)])
 check("...and a tool a suite runs is not found untested: the catalogue is not",
-      "bin/dmcatalog.py" not in [x["part"] for x in F.get("untested_tools", [])])
-_twice = sorted(n for n in set(names) & {k for k, v in law.items() if isinstance(v, list)})
-check("...and a name the law gives a term and a registry is found as one, and a mention of it counts for both",
-      all(any(x["name"] == n and x["parts"] == ["registry:" + n, "term:" + n] for x in F.get("one_name_many_items", []))
-          for n in _twice)
-      and all(p not in [x["part"] for x in F.get("unreferenced", [])] for n in _twice for p in ("registry:" + n, "term:" + n)),
-      _twice)
+      "bin/catalog.py" not in [x["part"] for x in F.get("untested_tools", [])])
 
 # ---------------------------------------------------------------- what a person reads
-cat = dmcatalog.Catalogue()
-for _args, _want in ((["--part", "capabilities"], ("term:capabilities — term", "permission: aspect:permission",
-                                                     "rules (bin/dmrules.py)", "explained by")),
-                     (["--part", "dmsave"], ("bin/dmsave.py — tool, in the gate layer", "run by", "suite checks that name it"))):
+cat = dmcatalog.catalogue()
+for _args, _want in ((["--part", "own"], ("verb:own — verb", "rules (bin/rules.py)", "explained by")),
+                     (["--part", "save"], ("bin/save.py — tool, in the gate layer", "run by", "suite checks that name it"))):
     _out = io.StringIO()
     with contextlib.redirect_stdout(_out):
         for _pid in dmcatalog.find(cat, _args[1]):
@@ -174,7 +168,7 @@ gm = dmpass.Map.here(G)
 kept = [f for f in gm.files if gm.keeper_of(f) == "release"]
 check("in a garden it maps the garden's copy of the language: every file the release keeps",
       gd["catalogue"].get("of") == "garden" and kept and all(f in gp for f in kept), [f for f in kept if f not in gp][:5])
-own = [f for f in gp if gp[f]["kind"] not in dmcatalog.CORE_LAW_KINDS and f not in kept]
+own = [f for f in gp if gp[f]["kind"] not in dmcatalog.LAW_KINDS and f not in kept]
 check("...and nothing of the garden's own: no bean, no journal, no manifest",
       not own and os.path.isfile(os.path.join(G, "beans", "sam.md")), own[:5])
 _core_law = yaml.safe_load(open(os.path.join(ROOT, "core", "law", "core.yaml"), encoding="utf-8"))

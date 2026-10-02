@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
-"""check — the gate: judges a garden by the law it runs, and refuses what breaks it.
+"""check — the gate: judges a garden by the core's law, and refuses what breaks it.
 
     python3 bin/check.py [--all]          # the whole garden, as the working tree holds it
     python3 bin/check.py --staged         # what a commit would hold: the index (the pre-commit hook runs this)
     python3 bin/check.py --merge-commit   # a merge git commits itself (the pre-merge-commit hook runs this)
-    python3 bin/check.py --law            # a garden of statements: the core's law alone, proved one law
-    python3 bin/check.py <beans...> | -v  # a garden in today's words: what bin/dmcheck.py takes
+    python3 bin/check.py --law            # the core's law alone, proved one law (a release's own tree too)
 
-(`python` on Windows; `python3 bin/daftar.py check` runs this too.) The law a garden runs is GARDEN.md's `extends`. A
-garden that runs the core (`core@<version>`) is judged by the core's gate, core/check.py: its twenty-one rules over the
-statements, and at a commit the commit's own. A garden that runs today's language (`std-vocab@<version>`) is judged by
-today's gate, bin/dmcheck.py, as it always was. With --staged and --merge-commit the pin is the index's, so the commit
-that adopts the core is judged by the core.
+(`python` on Windows; `python3 bin/daftar.py check` runs this too.) The law a garden runs is GARDEN.md's `extends`,
+`core@<version>`, and the gate is the core's, core/check.py: its rules over the statements, and at a commit the commit's
+own. With --staged and --merge-commit the pin is the index's, so the commit that adopts the core is judged by the core.
+A merge git commits itself runs the pre-merge-commit hook and not the pre-commit one, and is judged there too, since the
+gate covers what a merge makes (MERGE.md §5).
 
-A merge git commits itself runs the pre-merge-commit hook and not the pre-commit one. A garden of statements is judged
-there too, since the gate covers what a merge makes (core/guide/MERGE.md §5); today's gate never judged such a merge,
-and in a garden in today's words --merge-commit still judges nothing. bin/dmcheck.py stays whole until v1.0.0: it is
-today's path."""
+A garden in today's words (`std-vocab@<version>`) is not judged here: it runs its own copy of today's gate until it
+adopts the core (`bin/dmupgrade.py <a release of the core>`, v1 part 13)."""
 import os
 import subprocess
 import sys
@@ -24,7 +21,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
-import dmparse  # noqa: E402
+import parse as dmparse  # noqa: E402
 try:
     from core import read  # noqa: E402 — every value read as written (core spec §2)
     _loads, _unread = read.loads, read.Unread
@@ -56,7 +53,10 @@ def pin(root, ref=None):
 
 
 def runs_core(p):
-    return p.startswith('core@')
+    """True but for a garden in today's words (`std-vocab@…`): a garden of the core, and a release's own tree, which pins
+    nothing and carries the core's law (v1 part 13). No tool of this release reads today's words: such a garden adopts
+    the core first (bin/dmupgrade.py), and its own copy of today's tools runs until it has."""
+    return not p.startswith('std-vocab@')
 
 
 def toplevel():
@@ -70,23 +70,24 @@ def main(argv):
         print(__doc__.strip())
         return 0
     staged = '--staged' in argv or '--merge-commit' in argv
-    core = runs_core(pin(toplevel(), '') if staged else pin(ROOT))
-    if '--merge-commit' in argv:
-        if not core:
-            return 0                     # today's gate never judged a merge git commits itself
-        argv = ['--staged']
-    if core:
-        rest = [a for a in argv if a != '--all']
-        if [a for a in rest if a not in ('--staged',) + CORE_ONLY] or len(rest) > 1:
-            print(f"check: the core's gate judges a whole garden (`--all`, or nothing), the index (`--staged`) or the "
-                  f"law (`--law`), and not {' '.join(rest)}: this garden runs the core ({pin(ROOT)})", file=sys.stderr)
-            return 2
-        return subprocess.run([sys.executable, os.path.join(ROOT, 'core', 'check.py')] + (rest or [ROOT])).returncode
-    if [a for a in argv if a in CORE_ONLY]:
-        print(f"check: {' '.join(a for a in argv if a in CORE_ONLY)} is the core's, and this garden runs "
-              f"{pin(ROOT) or 'no pin'}: `python3 core/check.py --law` proves the core's law in any garden", file=sys.stderr)
+    p = pin(toplevel(), '') if staged else pin(ROOT)
+    if not runs_core(p):
+        print(f"check: this garden runs today's words ({p}), and this release's gate judges the core's statements: adopt "
+              f"the core first (`python3 bin/dmupgrade.py <a release of the core>`); until then its own gate judges it",
+              file=sys.stderr)
         return 2
-    return subprocess.run([sys.executable, os.path.join(HERE, 'dmcheck.py'), *argv]).returncode
+    if '--merge-commit' in argv:
+        argv = ['--staged']
+    rest = [a for a in argv if a != '--all']
+    if [a for a in rest if a not in ('--staged',) + CORE_ONLY] or len(rest) > 1:
+        print(f"check: the core's gate judges a whole garden (`--all`, or nothing), the index (`--staged`) or the law "
+              f"(`--law`), and not {' '.join(rest)}", file=sys.stderr)
+        return 2
+    if not p and rest != ['--law']:
+        print("check: no GARDEN.md here pins a law: the gate judges a garden (`--law` proves this release's law)",
+              file=sys.stderr)
+        return 2
+    return subprocess.run([sys.executable, os.path.join(ROOT, 'core', 'check.py')] + (rest or [ROOT])).returncode
 
 
 if __name__ == '__main__':

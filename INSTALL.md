@@ -73,7 +73,7 @@ the two names agree. A person who commits by hand sets their own identity the sa
 
 ```sh
 cat AGENTS.md
-python3 bin/dmcheck.py --all
+python3 bin/check.py --all
 ```
 
 `AGENTS.md` is a reading order: `seed/FORMS.md` before writing — what an agent writes most, the way the gate
@@ -98,36 +98,11 @@ python3 bin/dmupgrade.py <tag>
 
 It fetches the release, applies it, translates what the law re-spelled, writes the journal entry, runs the gate,
 and commits nothing: read `git diff`, fill in the entry's two `fill in` fields, commit. If anything stops it
-midway, or the garden fails the new gate, every file is put back as it was. Crossing into std-vocab 22.0 changes
-every bean and asks nothing: `kind:` becomes `genos:`, and a nature and a crown branch take their Greek names
-(`MODEL.md` says what each means).
-
-Because that crossing changes every bean, bring in what the garden's other copies hold first — merge every branch,
-and every clone's commits — so that it translates everything at once. A branch or a clone still at 21.0 afterwards is
-merged INTO the garden that crossed, never the other way round. There the merge driver reads each side of a bean in
-22.0's words, so the bean keeps one `genos` and one nature; but the crossing changed that bean too, so each key the
-branch changed on it comes back as a disagreement for a person to settle (`merge_open`), as whenever two sides change
-one bean. A bean only that branch added arrives as it was written; the gate names the command that translates it,
-which is the same one, run again with the release `GARDEN.md` records. The garden's OWN code is never translated: a
-tool, a test or a template of its own that reads a bean's `kind` must be taught `genos` and the Greek natures before
-the crossing is relied on — the upgrade names the files of the garden's own that say a retired word.
-
-Moving a garden into std-vocab 21.0 also asks who keeps it. Name the gardener in the environment — the one form
-every garden's own tool passes on, whatever release it runs (a tool older than the `--gardener` flag rejects the
-flag, then hands over to the release's tool, which reads the environment):
-
-```sh
-DAFTAR_GARDENER=sam python3 bin/dmupgrade.py <tag>                               # sam: an existing person or org bean
-DAFTAR_GARDENER=sam DAFTAR_GARDENER_NAME="Sam" python3 bin/dmupgrade.py <tag>    # plants a new person bean for them
-```
-
-`DAFTAR_GARDENER_GENOS=org` beside them plants an organisation instead, as `germinate --gardener-genos org` does. A
-garden already at 21.0 or later takes the same as flags: `--gardener sam`, with `--gardener-name "Sam"` to plant and
-`--gardener-genos org` for an organisation. (`DAFTAR_GARDENER_KIND` and `--gardener-kind`, their names before 22.0,
-are still read.) Whatever is missing, the refusal prints the line that fixes it, in the form
-this garden's tool accepts. A garden whose name is not in the form 21.0 gives a garden's name (kebab-case) is refused
-before anything is touched, with the `garden:` line to write in `GARDEN.md` and the RULE-CHANGE entry that goes with
-it.
+midway, or the garden fails the new gate, every file is put back as it was. A garden in today's words (one whose `GARDEN.md` pins `std-vocab@…`) ADOPTS the core with
+its own `bin/dmupgrade.py`, which hands over to the release's: in place and in one commit, every bean written in the
+core's statements and the count of every value quoted in the journal entry, which says RULE-CHANGE and leaves who
+ratified it for a person to fill in. It reads the words of std-vocab 32 (the release v0.49.0): a garden older than
+that runs `bin/dmupgrade.py v0.49.0` first.
 
 ## On Windows
 
@@ -142,7 +117,7 @@ python seed\germinate.py $HOME\garden-sam --gardener sam --gardener-name "Sam"
 cd $HOME\garden-sam
 git config user.name  "agent (<model>, <session>)"
 git config user.email "<the address the person chose>"
-python bin\dmcheck.py --all
+python bin\check.py --all
 ```
 
 **Which Python.** On Windows `python` and `python3` may not be Python at all: they can be the Microsoft Store's
@@ -159,7 +134,7 @@ The gate runs as a git hook; Git for Windows runs hooks with the shell it ships.
 works they say, for each, why. To choose one yourself: `git config daftar.python C:/path/to/python.exe`.
 
 **UTF-8.** Every bean is UTF-8, and the tools read and write it correctly whatever the machine's language —
-their output through a pipe, a journal entry's body on standard input, and `bin/dmsafe.py`'s block included.
+their output through a pipe, a journal entry's body on standard input, and `bin/safe.py`'s block included.
 Windows PowerShell 5.1 does not: it reads a UTF-8 file without a BOM in the old code page, so a Persian bean —
 or any bean with a character outside ASCII — read with `type` or `Get-Content` arrives garbled, and a bean
 written with `>` or `Out-File` is saved as UTF-16, which the gate cannot read. Read with
@@ -173,13 +148,13 @@ message here uses instead, so that what is printed runs as printed:
 
 - `&&` joins two commands only from PowerShell 7. Run `git add -A`, then `git commit`: two commands.
 - `<` does not redirect standard input in any PowerShell. A journal entry's body goes in as an argument:
-  `python bin\dmjournal.py "<who>" "<what>" --body "- action: …"`. A line break typed inside the quotes is kept;
+  `python bin\journal.py "<who>" "<what>" --body "- action: …"`. A line break typed inside the quotes is kept;
   so is `` `n `` inside double quotes. Windows PowerShell 5.1 drops a double quote *inside* an argument — write the
-  body without one there (PowerShell 7.3 and later pass it intact). A block for `bin/dmsafe.py` goes in as a file:
-  `python bin\dmsafe.py insert-after beans\sam.md responsibility --block block.yaml`.
+  body without one there (PowerShell 7.3 and later pass it intact). A block for `bin/safe.py` goes in as a file:
+  `python bin\safe.py insert-after beans\sam.md responsibility --block block.yaml`.
 - `>` and `Out-File` write UTF-16, which the gate does not read (above): a bean is saved as UTF-8. Only
-  `bin/dmjournal.py`'s body and `bin/dmsafe.py`'s block may be UTF-16, with its mark; without the mark each is
-  refused (read as UTF-8 it is a NUL after every letter), and `bin/dmjournal.py` refuses every control character but
+  `bin/journal.py`'s body and `bin/safe.py`'s block may be UTF-16, with its mark; without the mark each is
+  refused (read as UTF-8 it is a NUL after every letter), and `bin/journal.py` refuses every control character but
   a tab.
 
 An upgrade that names the gardener through the environment clears it again at the end, because a PowerShell
@@ -211,9 +186,9 @@ grows a garden and commits them one recipe at a time, in the order of the page. 
 time, read from the clock — so a tool writes it, never a hand; you give it the body:
 
 ```sh
-python3 bin/dmjournal.py "your-name" "what you did" --body "- action: added [[laptop]]."
+python3 bin/journal.py "your-name" "what you did" --body "- action: added [[laptop]]."
 ```
 
 When the gate refuses something, its message names the rule and, for the common mistakes, the line to write;
-`python3 bin/dmwhy.py <name>` says why that rule is as it is. `MODEL.md` explains the model, `CHECKLIST.md` how a
-write is made, and `python3 bin/dmrules.py` prints every rule in force.
+`python3 bin/why.py <name>` says why that rule is as it is. `MODEL.md` explains the model, `CHECKLIST.md` how a
+write is made, and `python3 bin/rules.py` prints every rule in force.

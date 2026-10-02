@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """view — draw a garden's page: its drawings at four lenses, with live values beside them and actions a host may run.
-(`dmview.py`, today's name of this tool, stays beside it until part 13 of v1.)
+(`view.py`, today's name of this tool, stays beside it until part 13 of v1.)
 
     python3 assets/view/bin/view.py check                        the page against the law and its drawings
     python3 assets/view/bin/view.py elements <view>              a drawing's elements: id, pattern, being
@@ -31,9 +31,9 @@ form `drawing`, the live values that sit on it among it (core/law/profiles.yaml)
 `profile`). The asset reads them, and every being, through lib/view_core.py; `import` writes each `draw` the selection
 changes through bin/safe.py and journals through bin/journal.py; a kept render is a document bean of statements.
 
-Nothing it writes enters the ledger but through `import`, which writes the page's own terms through bin/dmsafe.py and
-journals through bin/dmjournal.py, and `render --keep`, which adds each rendered document's `document` bean and saves it
-through bin/dmsave.py; `report` (with a CSV beside it of each table), `render`, `ics` and `bundle` write where they are
+Nothing it writes enters the ledger but through `import`, which writes the page's own terms through bin/safe.py and
+journals through bin/journal.py, and `render --keep`, which adds each rendered document's `document` bean and saves it
+through bin/save.py; `report` (with a CSV beside it of each table), `render`, `ics` and `bundle` write where they are
 asked to, never inside the garden unasked. `ics` is a pass out of the garden, the flow law's `served` (a calendar
 that leaves it for a subscriber): the host's configuration names who asks and where its audit log is, and the export is
 refused where the law grants that viewer no `read` of what an event carries (a member's title and its timing, or its
@@ -48,7 +48,7 @@ import view_model as vm
 
 
 def die(msg, code=2):
-    print("dmview: " + msg, file=sys.stderr)
+    print("view: " + msg, file=sys.stderr)
     sys.exit(code)
 
 
@@ -82,7 +82,7 @@ def main():
             print("  warn: " + w)
         for e in errs:
             print("  - " + e)
-        print("dmview: %s" % ("the page and its drawings agree" if not errs else "%d disagreement(s)" % len(errs)))
+        print("view: %s" % ("the page and its drawings agree" if not errs else "%d disagreement(s)" % len(errs)))
         return 2 if errs else 0
     if cmd == "elements":
         if not rest:
@@ -98,7 +98,7 @@ def main():
         who = option(rest, "--who")
         if not rest:
             die("import needs a selection file (the author mode's view-selection.json)")
-        print("dmview: " + vm.import_selection(rest[0], who=who))
+        print("view: " + vm.import_selection(rest[0], who=who))
         return 0
     if cmd == "report":
         import view_report
@@ -120,7 +120,7 @@ def main():
         if not hasattr(m["adapter"], "bundle"):
             die("the %s adapter writes no bundle" % m["technology"])
         n, counts, pages = m["adapter"].bundle(m, vm.views(), out)
-        print("dmview bundle: %s (%s): %d probe targets, %d drawing pages and an index -> %s  %s"
+        print("view bundle: %s (%s): %d probe targets, %d drawing pages and an index -> %s  %s"
               % (m["bean"], m["technology"], n, pages, out, counts))
         return 0
     if cmd in ("serve", "serve-init"):
@@ -139,7 +139,7 @@ def main():
         if bean and not vm.fm(bean):
             die("serve-init: the garden holds no bean %r to name as this viewer" % bean)
         pw = view_serve.serve_init(cfg, user, orgs, "--no-actions" not in rest, "--shared" in rest, bean)
-        print("dmview: %s is ready; the new password is in %s (0600) — it is not printed." % (cfg, pw))
+        print("view: %s is ready; the new password is in %s (0600) — it is not printed." % (cfg, pw))
         return 0
     if cmd == "render":
         return render(rest)
@@ -155,9 +155,9 @@ def main():
         rows = view_serve.Host(cfg).run_scheduled(at)
         for key, el, code, obj in rows:
             print("  %s.%s: %s %s" % (key, el, code, obj.get("mode") or obj.get("error")))
-        print("dmview run-scheduled: %s — %d action(s) due" % (at, len(rows)))
+        print("view run-scheduled: %s — %d action(s) due" % (at, len(rows)))
         return 0 if all(c == 200 for _k, _e, c, _o in rows) else 1
-    die("unknown command %r — see `dmview --help`" % cmd)
+    die("unknown command %r — see `view --help`" % cmd)
 
 
 def render(rest):
@@ -202,13 +202,13 @@ def render(rest):
                 view_export.document_bean_core(*args, "%s#%s" % (vm.PAGE, rest[0])) if vm.CORE is not None
                 else view_export.document_bean(*args))
             kept.append("[[%s]] from [[%s]]" % (bid, m))
-        r = subprocess.run([sys.executable, os.path.join(vm.ROOT, "bin", "dmsave.py"), who,
+        r = subprocess.run([sys.executable, os.path.join(vm.ROOT, "bin", "save.py"), who,
                             "%d document(s) rendered from drawing %s and kept" % (len(done), rest[0]), "--body",
-                            "- action: rendered by `dmview render %s --keep`, each kept by its content_hash: %s" % (rest[0], "; ".join(kept))],
+                            "- action: rendered by `view render %s --keep`, each kept by its content_hash: %s" % (rest[0], "; ".join(kept))],
                            cwd=vm.ROOT)
         if r.returncode != 0:
-            die("the save was refused (above): the document beans stand as written, for the fix and `dmsave.py --again`", r.returncode)
-    print("dmview render: %d document(s)%s" % (len(done), ", kept" if keep else ""))
+            die("the save was refused (above): the document beans stand as written, for the fix and `save.py --again`", r.returncode)
+    print("view render: %d document(s)%s" % (len(done), ", kept" if keep else ""))
     return 0
 
 
@@ -220,7 +220,8 @@ def _host():
 
 def _gardener():
     sys.path.insert(0, os.path.join(vm.ROOT, "bin"))
-    import dmpass
+    import importlib
+    dmpass = importlib.import_module('pass')
     return dmpass.gardener_of(vm.ROOT)
 
 
@@ -250,7 +251,7 @@ def ics(rest):
         die("refused: the law grants %s no read of %s — nothing written, the refusal audited" % (user, ", ".join(refused)))
     open(out, "w", encoding="utf-8", newline="").write(view_export.ics_text(evs, vm.fm_path(os.path.join(vm.ROOT, "GARDEN.md")).get("garden_id") or vm.garden_name()))
     host.audit(dict(entry, granted=True, events=len(evs), out=os.path.abspath(out)))
-    print("dmview ics: %d event(s) of drawing %s -> %s (audited as a pass)" % (len(evs), key, out))
+    print("view ics: %d event(s) of drawing %s -> %s (audited as a pass)" % (len(evs), key, out))
     return 0
 
 

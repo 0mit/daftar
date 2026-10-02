@@ -10,7 +10,8 @@ must carry them; and the count of the rest may only go DOWN, release by release.
 import glob, os, re, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "bin"))
-import dmparse, dmreview
+import parse as dmparse
+import review as dmreview
 FAILS = []
 
 
@@ -26,7 +27,7 @@ check("the manifesto has its five groups, in order", re.findall(r"(?m)^## (.+)$"
       re.findall(r"(?m)^## (.+)$", text))
 
 # ONE KEY, ONE SENTENCE. `### <key>` and one sentence beneath it: the key is what everything beneath cites, and what
-# `dmwhy doc:MANIFESTO.md#<key>` resolves by the heading it already matches.
+# `why doc:MANIFESTO.md#<key>` resolves by the heading it already matches.
 CLAUSES = dmreview.manifesto_clauses(text)
 check("every clause has a key of its own, and no key is used twice",
       len(CLAUSES) == len(re.findall(r"(?m)^### ", text)) >= 30, sorted(CLAUSES))
@@ -40,7 +41,7 @@ def _sentences(s):
 many = [k for k, v in CLAUSES.items() if _sentences(v) != 1 or not v.endswith(".")]
 check("each clause is one sentence", not many, many)
 
-# PRESENT TENSE, NO STORY: the one definition test/rationale.py and `dmreview --law` read.
+# PRESENT TENSE, NO STORY: the one definition test/rationale.py and `review --law` read.
 told = dmreview.story_in({"clauses": [{"clause": k, "meaning": v} for k, v in CLAUSES.items()]})
 check("the manifesto tells no story: no date, no release, no finding", not told, told)
 
@@ -72,7 +73,7 @@ OPERATIVE = ("MODEL.md", "CHECKLIST.md", "MERGE.md", "CONTRIBUTING.md", "CHARTER
 STATED = {   # a clause no gate or step can apply, and why
     "serve":  "the stance every clause beneath carries, and none alone",
     "ground": "a stance toward states and registries; nothing in a garden can apply it",
-    "safety": "carried in part by consent and dmpublic; where a person stands on the line is theirs to say, not a gate's",
+    "safety": "carried in part by consent and public; where a person stands on the line is theirs to say, not a gate's",
     "lawful": "the law in force is outside every garden",
     "light":  "a way of working, not a rule",
 }
@@ -87,7 +88,7 @@ bad = [(f, k) for f, t in TEXT.items() for k, q in dmreview.MANIFESTO_QUOTE.find
        if " ".join(re.sub(r"<[^>]+>|[*>_]", " ", q).split()) != CLAUSES.get(k)]
 check("a marked quote of a clause is the clause, word for word", not bad, bad)
 # What a page draws from the seed is counted where the seed holds it, so the drawing is not a second statement of its own:
-# the map's blocks are left out by bin/dmreview.py itself, and the terminology page a release before the one page drew
+# the map's blocks are left out by bin/review.py itself, and the terminology page a release before the one page drew
 # is named here, so the ceiling read at that release counts it the same way.
 MIRROR = ('site/terminology.html',)
 here = dmreview.Tree()
@@ -103,7 +104,7 @@ else:
     ceiling, since = RESTATED_AT_START, "no release carries the manifesto yet: the constant"
 check(f"second statements of the manifesto have not grown (now {len(hits)}, ceiling {ceiling} — {since})",
       len(hits) <= ceiling, [f"{f} {k}" for f, k in hits][:12])
-print(f"      (the next release's ceiling is {len(hits)}; `python3 bin/dmreview.py --law` lists every one)")
+print(f"      (the next release's ceiling is {len(hits)}; `python3 bin/review.py --law` lists every one)")
 
 # ------------------------------------------------------------------ one word, one sense; no verdict reads it
 two = [f for f, t in TEXT.items() if not f.startswith(dmreview.MANIFESTO_EXEMPT + MIRROR)
@@ -136,15 +137,16 @@ asset_net = sorted({os.path.relpath(f, ROOT).replace(os.sep, "/") for pat in ("a
                     for f in glob.glob(os.path.join(ROOT, pat), recursive=True) if _NET_ANY.search(open(f, encoding="utf-8").read())})
 check("an asset opens a network path only in the modules declared to, each with why (manifesto: never-sells)",
       asset_net == sorted(ASSET_NET), f"found {asset_net}; declared {sorted(ASSET_NET)}")
-import dmpass                            # the one reader of seed/LANGUAGE
+import importlib
+dmpass = importlib.import_module('pass')                            # the one reader of seed/LANGUAGE
 lang = dmpass.language(open(os.path.join(ROOT, "seed", "LANGUAGE"), encoding="utf-8").read())
 check("every garden receives the manifesto, so every cite resolves where it is read", "MANIFESTO.md" in lang, lang)
-# THE LAW NAMES A CLAUSE ONLY BY STRUCTURE. The vocabulary's front matter carries no `(manifesto: …)` in its prose: a
-# meaning that cites a clause is a second statement waiting to happen. When the law points up, it will be by a
-# declared attribute, not by a sentence.
-prose_up = [l.strip()[:90] for l in dmparse.split_front_matter(TEXT["seed/std-vocab.md"])[0].split("\n")
+# THE LAW NAMES A CLAUSE ONLY BY STRUCTURE. The law's files carry no `(manifesto: …)` in their prose: a meaning that
+# cites a clause is a second statement waiting to happen. When the law points up, it will be by a declared attribute,
+# not by a sentence.
+prose_up = [f"{f}: {l.strip()[:80]}" for f in TEXT if f.startswith("core/law/") for l in TEXT[f].split("\n")
             if CITE.search(l)]
-check("the vocabulary names no clause in its prose", not prose_up, prose_up)
+check("the law names no clause in its prose", not prose_up, prose_up)
 
 print("\nmanifesto: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

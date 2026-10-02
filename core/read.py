@@ -3,8 +3,8 @@
 YAML 1.1 reads the key `on:` as the boolean true and `2026-10-01` as a date object, and a reader that resolves types
 makes a value the writer did not write. So the core reads with PyYAML's BaseLoader: every scalar is a str, every
 mapping a dict and every sequence a list, and what a value means is the engine's to say by the role it fills. No new
-dependency. The fences are dmparse's (line-anchored, the one splitter), and a key written twice is refused before the
-parse can drop the first (dmparse.duplicate_keys)."""
+dependency. The fences are parse's (line-anchored, the one splitter), and a key written twice is refused before the
+parse can drop the first (parse.duplicate_keys)."""
 import os
 import sys
 
@@ -13,7 +13,7 @@ import yaml
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
-import dmparse  # noqa: E402 — the one splitter of a front matter, and the one finder of a key written twice
+import parse as dmparse  # noqa: E402 — the one splitter of a front matter, and the one finder of a key written twice
 
 
 class Unread(ValueError):

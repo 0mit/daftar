@@ -17,17 +17,17 @@ seen. This closes the window: an edit that breaks a document, empties it, or los
 say you were removing is ROLLED BACK at write time, with the loss named.
 
 The check that matters most is the second one. A broken document announces itself; a document that still
-parses while quietly missing four blocks does not. So dmsafe compares LEAF PATHS before and after, and
+parses while quietly missing four blocks does not. So safe compares LEAF PATHS before and after, and
 any path that disappears must be declared in `allow_remove`. Removing is fine — removing by accident
 is not, and the difference is whether you said so.
 
 Library — PREFER the structure-aware operations; they make the incident shapes unexpressible rather
 than merely caught, because they address a document by KEY instead of by offset, pattern or indent:
-    dmsafe.insert_after(path, 'owned_by', block)      # lands after the WHOLE block, never inside it
-    dmsafe.replace_block(path, 'located_at', block)
-    dmsafe.remove_block(path, 'tags')                 # the removal is declared by calling this
+    safe.insert_after(path, 'owned_by', block)      # lands after the WHOLE block, never inside it
+    safe.replace_block(path, 'located_at', block)
+    safe.remove_block(path, 'tags')                 # the removal is declared by calling this
 Fall back to the general form only when no operation fits:
-    dmsafe.edit(path, lambda text: text.replace(...), allow_remove=['owns.stale_key'])
+    safe.edit(path, lambda text: text.replace(...), allow_remove=['owns.stale_key'])
 
 A BEAN IN STATEMENTS (v1 part 5) is addressed by its statements, each one line: a statement is named by its verb, by
 its id, or by both — `pay`, `#rent`, `pay#rent` — and the leaf paths that guard every edit key a statement the same
@@ -44,12 +44,12 @@ CLI — the same operations for a person at a shell; a block is read from a file
     python3 bin/safe.py add     <path>              --block block.yaml # statements, after the last
     python3 bin/safe.py replace <path> <statement> --expect N --block block.yaml
     python3 bin/safe.py remove  <path> <statement> --expect N
-    python3 bin/dmsafe.py insert-after  <path> <key>   --block block.yaml
-    python3 bin/dmsafe.py replace-block <path> <key>   --block block.yaml
-    python3 bin/dmsafe.py remove-block  <path> <key>
-    python3 bin/dmsafe.py set-nested    <path> <dotted> --expect N   --block block.yaml
-    python3 bin/dmsafe.py flow-set      <path> <dotted> <value> --expect N
-    python3 bin/dmsafe.py verify [path ...]                           # parse-check (default: the whole garden)
+    python3 bin/safe.py insert-after  <path> <key>   --block block.yaml
+    python3 bin/safe.py replace-block <path> <key>   --block block.yaml
+    python3 bin/safe.py remove-block  <path> <key>
+    python3 bin/safe.py set-nested    <path> <dotted> --expect N   --block block.yaml
+    python3 bin/safe.py flow-set      <path> <dotted> <value> --expect N
+    python3 bin/safe.py verify [path ...]                           # parse-check (default: the whole garden)
 (`python` on Windows.) Without --block the block comes on standard input — `< block.yaml` in a Unix shell; PowerShell
 has no `<`, and Windows PowerShell 5.1 pipes text in the old code page, so there it is --block.
 Each write prints what it removed and what it added, as leaf paths; a refused edit says why and changes nothing.
@@ -58,14 +58,14 @@ UTF-8 ON EVERY PLATFORM. A block — from --block or from standard input — is 
 byte-order mark dropped; UTF-16 with its mark, which Windows PowerShell 5.1's `>` and Out-File write, read as UTF-16),
 and anything else is refused before the bean is touched, never guessed at in the machine's code page: read in the
 code page, a Persian block went into the bean as mojibake, and the edit, the exit status and the gate all said nothing.
-UTF-16 without its mark (a NUL after every letter) is refused by name, as bin/dmjournal.py refuses it; CRLF is read
+UTF-16 without its mark (a NUL after every letter) is refused by name, as bin/journal.py refuses it; CRLF is read
 as LF, since a bean is written with LF on every platform.
 """
 import codecs, collections, os, re, stat, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
+import parse as dmparse
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
 try:
     import yaml
 except ImportError:
@@ -164,7 +164,7 @@ def statement_keys(statements):
 #   an insert lands after a key's WHOLE BLOCK, never between the key and its children (incident 1)
 #   a span is computed from the structure, so it cannot run too far (incident 2)
 #   operations are named, so they cannot be ordered against a landmark already removed (incident 3)
-#   dmsafe owns the write, so a truncating open() is not reachable (incident 4)
+#   safe owns the write, so a truncating open() is not reachable (incident 4)
 #   nothing matches on leading whitespace, so indent depth cannot be confused (incident 5)
 
 def top_level_span(text, key):
@@ -266,7 +266,7 @@ def _require_expect(expect, dotted):
         raise UnsafeEdit(
             f"state expect=N for '{dotted}'. The COUNT is the safeguard, not the addressing: across six "
             f"incidents the cause was never where an edit landed but that it landed in more places than "
-            f"intended. Measure first — dmsafe.count(path, '{dotted}') — then say the number.")
+            f"intended. Measure first — safe.count(path, '{dotted}') — then say the number.")
     if not isinstance(expect, int) or expect < 1:
         raise UnsafeEdit(f"expect must be a positive integer, got {expect!r}")
 
@@ -663,7 +663,7 @@ def verify(paths):
 
 
 def decode_block(raw, where):
-    """A block's bytes as text, decoded as bin/dmjournal.py decodes a body: UTF-8 (its byte-order mark dropped), or
+    """A block's bytes as text, decoded as bin/journal.py decodes a body: UTF-8 (its byte-order mark dropped), or
     UTF-16 where its mark says so. Anything else is refused — a guess in the machine's code page writes mojibake into
     the bean, and nothing downstream can tell."""
     if raw.startswith(codecs.BOM_UTF8):
@@ -706,13 +706,13 @@ def _cli(argv):
     if '--expect' in rest:
         i = rest.index('--expect')
         if i + 1 >= len(rest) or not re.fullmatch(r'[0-9]+', rest[i + 1]):
-            print("dmsafe: --expect takes the number of places you measured with `count`"); return 2
+            print("safe: --expect takes the number of places you measured with `count`"); return 2
         expect = int(rest[i + 1]); del rest[i:i + 2]
     block_file = None
     if '--block' in rest:
         i = rest.index('--block')
         if i + 1 >= len(rest):
-            print("dmsafe: --block takes the file that holds the block"); return 2
+            print("safe: --block takes the file that holds the block"); return 2
         block_file = rest[i + 1]; del rest[i:i + 2]
     def _block():
         # AS BYTES, decoded here: standard input in text mode is decoded in the machine's code page (cp1252 on a
@@ -735,7 +735,7 @@ def _cli(argv):
         return b
     def _report(result):
         removed, added = result
-        print(f"dmsafe: removed {removed or 'nothing'}; added {added or 'nothing'}")
+        print(f"safe: removed {removed or 'nothing'}; added {added or 'nothing'}")
         return 0
     try:
         if op == 'count' and len(rest) == 2 and _names_statements(rest[0], rest[1]):
@@ -762,9 +762,9 @@ def _cli(argv):
         if op == 'flow-set' and len(rest) == 3:
             return _report(flow_set(rest[0], rest[1], rest[2], expect=expect))
     except UnsafeEdit as e:
-        print(f"dmsafe: REFUSED — {e}"); return 1
+        print(f"safe: REFUSED — {e}"); return 1
     if op not in ('verify', '--verify'):
-        print(f"dmsafe: unknown operation or wrong arguments: {' '.join(argv)}\n"); print(__doc__); return 2
+        print(f"safe: unknown operation or wrong arguments: {' '.join(argv)}\n"); print(__doc__); return 2
     return None
 
 
@@ -773,9 +773,7 @@ if __name__ == '__main__':
     if _rc is not None:
         sys.exit(_rc)
     args = [a for a in sys.argv[1:] if not a.startswith('--') and a != 'verify']
-    targets = args or (dmgarden.paths(ROOT) +
-                       [os.path.join(ROOT, f) for f in ('VOCAB.md', 'GARDEN.md')] +
-                       [os.path.join(ROOT, 'seed', 'std-vocab.md')])
+    targets = args or (dmgarden.paths(ROOT) + [os.path.join(ROOT, f) for f in ('VOCAB.md', 'GARDEN.md')])
     targets = [t for t in targets if os.path.exists(t)]
     problems = verify(targets)
     for p, why in problems:

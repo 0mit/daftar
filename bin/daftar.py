@@ -6,9 +6,8 @@
     python3 bin/daftar.py help <verb>        # the tool's own help
 
 (`python` on Windows.) The verbs and the family each belongs to are the law's — the core's `tools` and `families`
-(core/law/tools.yaml) in a garden that runs the core, today's `verbs` and `tool_families` in one that does not — so this
-file names no tool: a verb is the tool `bin/<verb>.py`, named by its verb with no `dm` once it is ported to the core's
-statements (v1), else `bin/dm<verb>.py`, today's. What a tool does is
+(core/law/tools.yaml) — so this file names no tool: a verb is the tool `bin/<verb>.py`, named by its verb (the one
+exception is `upgrade`, whose tool keeps the name `bin/dmupgrade.py`: the door). What a tool does is
 the first line of its own help, read from the tool, never restated. A tool runs under the same Python that runs this,
 so the one command works alike wherever Python does — on Windows, where `python3` may be missing or be a store alias.
 Every tool also runs by its own path, as it always has.
@@ -18,30 +17,21 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
-import dmparse  # noqa: E402 — the one reader of the law's front matter
-
 ROOT = os.path.dirname(HERE)
-LAW = os.path.join(ROOT, 'seed', 'std-vocab.md')
 
 
 def law():
-    """The families and the tools, each a row `{family, meaning}` / `{verb, family}`: the core's (core/law/tools.yaml)
-    in a garden that runs the core, today's (`tool_families`, `verbs`) in one that runs today's language."""
-    import check                                   # the one reader of a garden's pin (bin/check.py)
-    if check.runs_core(check.pin(ROOT)):
-        sys.path.insert(0, ROOT)
-        from core import read
-        p = os.path.join(ROOT, 'core', 'law', 'tools.yaml')
-        d = read.data(p if os.path.isfile(p) else os.path.join(os.path.dirname(HERE), 'core', 'law', 'tools.yaml'))
-        return {'tool_families': d.get('families') or [],
-                'verbs': [{'verb': t.get('tool'), 'family': t.get('family')} for t in d.get('tools') or []]}
-    head, _ = dmparse.read(LAW)
-    return dmparse.loads(head) or {}
+    """The families and the tools, each a row `{family, meaning}` / `{verb, family}`: the core's (core/law/tools.yaml)."""
+    sys.path.insert(0, ROOT)
+    from core import read
+    d = read.data(os.path.join(ROOT, 'core', 'law', 'tools.yaml'))
+    return {'tool_families': d.get('families') or [],
+            'verbs': [{'verb': t.get('tool'), 'family': t.get('family')} for t in d.get('tools') or []]}
 
 
 def tool_of(verb):
-    """The file a verb runs: `bin/<verb>.py`, the tool ported, else `bin/dm<verb>.py` — None where neither is here."""
+    """The file a verb runs: `bin/<verb>.py` — or, for `upgrade`, `bin/dmupgrade.py`, the door a garden in today's words
+    hands over through, which keeps that name (v1 part 13) — None where neither is here."""
     for name in (f"{verb}.py", f"dm{verb}.py"):
         p = os.path.join(HERE, name)
         if os.path.isfile(p):
@@ -95,7 +85,7 @@ def main(argv):
         return 2
     p = tool_of(verb)
     if p is None:
-        print(f"daftar: the verb `{verb}` runs bin/{verb}.py or bin/dm{verb}.py, and this garden holds neither",
+        print(f"daftar: the verb `{verb}` runs bin/{verb}.py, and this garden does not hold it",
               file=sys.stderr)
         return 2
     return subprocess.run([sys.executable, p, *rest]).returncode

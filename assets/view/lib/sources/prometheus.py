@@ -8,7 +8,7 @@ it, `$F` stands for the viewer's scope, which the served page fills in — the p
 live-state is whether a being answers the probes its monitor runs against it. What the monitor watches is its own
 `reaches` and each target's own `endpoints`: a reach over a protocol probes every endpoint of that protocol the target
 states, or, where it states none, the address the page's reference chooses for it on the protocol's default ports; a
-reach that has neither is not probed, and `dmview check` says so.
+reach that has neither is not probed, and `view check` says so.
 
 WHAT ONLY THIS TECHNOLOGY NEEDS — its alert rules and where their mail goes, the credentials an SNMP read names, a
 filesystem read over the monitor's own ssh access, the Grafana plugins its pages need — sits in the monitor's own record
@@ -24,7 +24,7 @@ term of the law carries it:
 A secret is only ever an environment variable's NAME here; its value lives in the host's own file, never in the
 bundle, the page or the ledger.
 
-THE BUNDLE (`dmview bundle --out DIR`): a Prometheus + Grafana deployment written from the ledger — the probe targets,
+THE BUNDLE (`view bundle --out DIR`): a Prometheus + Grafana deployment written from the ledger — the probe targets,
 each labelled with its being, its genos and the organisation it belongs to where one can be derived; one Grafana page
 per drawing, the drawing itself mounted by the same runtime; the alert rules. It opens no network path; `values` and
 `history` do, to the monitor's own address, which the host's configuration gives.
@@ -250,7 +250,7 @@ def check_monitor(m):
 # ---------------------------------------------------------------------------------------------------------------------
 # the bundle
 # ---------------------------------------------------------------------------------------------------------------------
-PROM_YML = """# WRITTEN by `dmview bundle` from the garden's ledger — do not edit it here; write it again.
+PROM_YML = """# WRITTEN by `view bundle` from the garden's ledger — do not edit it here; write it again.
 global:
   scrape_interval: 30s
   scrape_timeout: 10s
@@ -284,7 +284,7 @@ modules:
   http_2xx:    {prober: http,  timeout: 8s, http: {valid_status_codes: [200,301,302,401,403], fail_if_not_ssl: false, tls_config: {insecure_skip_verify: true}, preferred_ip_protocol: ip4}}
 """
 
-COMPOSE = """# WRITTEN by `dmview bundle` — deploy: docker compose up -d ; take down: docker compose down
+COMPOSE = """# WRITTEN by `view bundle` — deploy: docker compose up -d ; take down: docker compose down
 name: %(project)s
 services:
   prometheus:
@@ -347,9 +347,9 @@ services:
   grafanadata: {}
 """
 
-README = """# Prometheus and Grafana, written by dmview from the garden's ledger
+README = """# Prometheus and Grafana, written by view from the garden's ledger
 
-WRITTEN by `dmview bundle`. Write it again after the ledger changes; it overwrites every file it wrote here. Change the
+WRITTEN by `view bundle`. Write it again after the ledger changes; it overwrites every file it wrote here. Change the
 SOURCE — the page, the monitor's record and its settings, or the garden's drawings — never these files. `.env` (the
 Grafana sign-in) belongs to this host and is never written here.
 
@@ -493,7 +493,7 @@ def drawing_dashboard(view, default_org, folder):
     return {"title": "%s — %s" % (kit.esc(view["title"]).replace("&amp;", "&"), folder), "uid": view["uid"], "schemaVersion": 39,
             "version": 1, "refresh": "30s", "time": {"from": "now-6h", "to": "now"}, "editable": False,
             "tags": ["view", "view-drawing", view["key"]], "links": _links(), "templating": _templating(default_org),
-            "description": "The drawing of %s, written by dmview from the garden's ledger; do not edit it here." % view["source"],
+            "description": "The drawing of %s, written by view from the garden's ledger; do not edit it here." % view["source"],
             "panels": panels}
 
 
@@ -538,7 +538,7 @@ def index_dashboard(views, default_org, folder):
 
 
 REMOTE_FS = r"""#!/bin/sh
-# WRITTEN by `dmview bundle` from the ledger — a filesystem's size and free space, read with `df` over the ssh access
+# WRITTEN by `view bundle` from the ledger — a filesystem's size and free space, read with `df` over the ssh access
 # this host already has; nothing runs on the being but `df`. Run it from the stack user's crontab, every few minutes:
 #   */5 * * * * {dir}/textfile/remote_fs.sh
 OUT={dir}/textfile-out
@@ -597,7 +597,7 @@ def snmp_parts(m):
     if not reached or not auths:
         return "", None, ""
     lines = ["#!/bin/sh",
-             "# WRITTEN by `dmview bundle` — writes snmp_exporter's auth file from the host's env file (%s), then runs it."
+             "# WRITTEN by `view bundle` — writes snmp_exporter's auth file from the host's env file (%s), then runs it."
              % sn.get("env_file", "snmp.env"), "set -e", "umask 077"]
     for _name, a in auths.items():
         lines.append('[ -n "${%s}" ] || { echo "snmp: %s is not set in the env file" >&2; exit 1; }' % (a["community_env"], a["community_env"]))
@@ -633,11 +633,11 @@ def alert_parts(m):
     al, rules = st.get("alerting") or {}, st.get("alerts") or []
     if not rules or not al.get("email_to"):
         return "", None, None, ""
-    r = "# WRITTEN by `dmview bundle` from the monitor's alert rules — change them in its record, never here\ngroups:\n  - name: view\n    rules:\n"
+    r = "# WRITTEN by `view bundle` from the monitor's alert rules — change them in its record, never here\ngroups:\n  - name: view\n    rules:\n"
     for a in rules:
         r += ("      - alert: %s\n        expr: %s\n        for: %s\n        labels: {severity: %s}\n        annotations: {summary: %s}\n"
               % (a["name"], json.dumps(a["expr"]), a.get("for", "10m"), a.get("severity", "warning"), json.dumps(a.get("summary", a["name"]))))
-    am = """# WRITTEN by `dmview bundle`
+    am = """# WRITTEN by `view bundle`
 global:
   smtp_smarthost: '%(smarthost)s'
   smtp_from: '%(from)s'

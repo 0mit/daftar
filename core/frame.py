@@ -12,7 +12,7 @@ port, a UDP port and a geohash) is refused as ambiguous, and one that none reads
 AN EXTENT is two positions of one system, written as ISO 8601 writes an interval (`2026-10-01/2027-09-30`,
 `persian:1405-07-09/1406-07-08`): the end takes the start's tag when it carries none, and the start is not after it.
 
-A DAY IS CHECKED, NOT ONLY ITS SPELLING. A position in a calendar is read by dmcal, which refuses a day its calendar
+A DAY IS CHECKED, NOT ONLY ITS SPELLING. A position in a calendar is read by cal, which refuses a day its calendar
 does not have (`persian:1404-12-30`) and a moment whose clock does not exist; a calendar that is not reckoned by rule
 (the sighting of the moon) is read by its form alone.
 
@@ -26,8 +26,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'bin'))
-import dmcal    # noqa: E402 — positions in any calendar, through the day
-import dmparse  # noqa: E402 — the one judge of a system's form
+import cal as dmcal    # noqa: E402 — positions in any calendar, through the day
+import parse as dmparse  # noqa: E402 — the one judge of a system's form
 
 TAG = re.compile(r'^([a-z][a-z0-9-]*):(.+)$', re.S)
 OFFSET = re.compile(r'(Z|[+-]\d{2}:\d{2})$')
@@ -89,7 +89,7 @@ def _time(value):
     try:
         dmcal.calendar_of(date)
     except ValueError:
-        return None, None, True     # a line of time no calendar of dmcal reckons (bp-1950, the chronostratigraphy)
+        return None, None, True     # a line of time no calendar of cal reckons (bp-1950, the chronostratigraphy)
     try:
         day = dmcal.to_day(date)
     except dmcal.NotByRule:

@@ -4,8 +4,8 @@ and units the law declares, and the checks that keep the page and its drawings h
 
 WHERE IT READS. The page is the one bean that carries `view` (the profile's head term); its `views`, `view_bindings`
 and `view_monitors` sit on the same bean. A being is read as it states itself: its `genos`, its owner, its
-`located_at`, its `endpoints`, its `knowledge`. The law is read through the garden's own tools — `bin/dmparse.py`
-for a document, `bin/dmcheck.py` for the units and terms in force, `bin/dmknowledge.py` for the technologies — so the
+`located_at`, its `endpoints`, its `knowledge`. The law is read through the garden's own tools — `bin/parse.py`
+for a document, `bin/check.py` for the units and terms in force, `bin/knowledge.py` for the technologies — so the
 asset carries no copy of the language and cannot disagree with it.
 
 WHAT IT DERIVES, AND NEVER STORES. The patterns a drawing uses and its element ids are read from the drawing each
@@ -17,10 +17,10 @@ being owned `via` another, that other's; a bean of genos `org` is its own. Where
 a person, a being owned outside the garden, at the crown or through an agreement — the being has no organisation, and
 a viewer scoped to organisations sees it only through a grant the host's configuration states (view_serve.Host.may).
 
-Usage (through assets/view/bin/dmview.py):
-  dmview check                   the page against the law and the drawings; writes nothing
-  dmview elements <view>         a drawing's elements: id, pattern, being
-  dmview import <file.json>      an author-mode selection written into the page, through dmsafe, and journalled
+Usage (through assets/view/bin/view.py):
+  view check                   the page against the law and the drawings; writes nothing
+  view elements <view>         a drawing's elements: id, pattern, being
+  view import <file.json>      an author-mode selection written into the page, through safe, and journalled
 """
 import importlib.util, ipaddress, json, os, re, subprocess, sys
 
@@ -56,9 +56,9 @@ def init(root, page=None):
     if b not in sys.path:
         sys.path.insert(0, b)
     try:
-        import dmparse as _p
+        import parse as _p
     except ImportError:
-        return ["%s is not a daftar garden: it has no bin/dmparse.py" % ROOT]
+        return ["%s is not a daftar garden: it has no bin/parse.py" % ROOT]
     dmparse = _p
     import view_core
     if view_core.runs_core(ROOT):            # A GARDEN OF THE CORE (v1 part 11): its statements, read once, here
@@ -144,9 +144,6 @@ def law():
     global _LAW
     if _LAW is None and CORE is not None:
         _LAW = CORE.law                      # core/law/, read for the asset (view_core.Law)
-    if _LAW is None:
-        import dmcheck
-        _LAW = dmcheck
     return _LAW
 
 
@@ -172,7 +169,7 @@ def archetypes():
 def proposed_archetype(v):
     """The operate shape the facts propose (`view_archetypes`: `frame` and `reads`): the first whose frame the drawing
     is laid out along, else the first whose terms the drawn being holds; the health chain where none does. The page may
-    draw another; `dmview check` says when it does."""
+    draw another; `view check` says when it does."""
     kk, target, folder = draws_of(v)
     f = fm(target, folder) if kk else {}
     rows = [r for r in registry("view_archetypes") if isinstance(r, dict)]
@@ -258,7 +255,8 @@ def org_of(b, _seen=None):
     parent = ob.get("from") if isinstance(ob.get("from"), dict) else ob.get("via") if isinstance(ob.get("via"), dict) else None
     if parent:
         return org_of(parent.get("bean"), seen)
-    import dmpass
+    import importlib
+    dmpass = importlib.import_module('pass')
     ob_bean = dmpass.owner_of(f)
     return ob_bean if isinstance(ob_bean, str) and fm(ob_bean).get("genos") == "org" else None
 
@@ -336,11 +334,11 @@ _K = None
 
 
 def knowledge():
-    """The garden's own dmknowledge, or None where it cannot be read."""
+    """The garden's own knowledge, or None where it cannot be read."""
     global _K
     if _K is None:
         try:
-            import dmknowledge
+            import knowledge as dmknowledge
             _K = dmknowledge.Knowledge(ROOT)
             _K.rows("technology")
         except Exception:
@@ -812,8 +810,8 @@ def actions(key, v, elements):
 
 
 def members(sel):
-    """The members of one of the page's readings (`selections`), by the one grammar (bin/dmreckon.py)."""
-    import dmreckon
+    """The members of one of the page's readings (`selections`), by the one grammar (bin/reckon.py)."""
+    import reckon as dmreckon
     return dmreckon.select("%s:%s" % (PAGE, sel), root=ROOT)
 
 
@@ -848,14 +846,14 @@ def table(v):
            # the top-level terms the columns read: a line is sent where the viewer may see these parts of its being
            "reads": sorted({re.split(r"[.\[]", str(c.get("path")))[0] for c in cols if c.get("path") not in (None, "at", "position")})}
     if v.get("selection"):
-        import dmreckon
+        import reckon as dmreckon
         for m in members(v["selection"]):
             out["rows"].append({"bean": m, "cells": [_cell(dmreckon.path_values(fm(m), c["path"], root=ROOT)) for c in cols]})
         return out
     p = v.get("series")
     bean, key = (p.get("bean"), p.get("field")) if isinstance(p, dict) else (PAGE, str(p).partition(".")[2])
     out["reads"] = ["series"]
-    import dmseq
+    import seq as dmseq
     for r in dmseq.rows(ROOT, bean, key):
         pos = r.get("position")
         at = "%s – %s" % pos if isinstance(pos, tuple) else pos
@@ -1415,7 +1413,7 @@ def check(figs=None):
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-# import — an author-mode selection written into the page, through dmsafe, and journalled
+# import — an author-mode selection written into the page, through safe, and journalled
 # ---------------------------------------------------------------------------------------------------------------------
 _PLAIN = re.compile(r"^[A-Za-z_][A-Za-z0-9_./-]*$")
 _YAML_WORDS = {"true", "false", "yes", "no", "on", "off", "null", "none", "~", "y", "n"}
@@ -1509,7 +1507,7 @@ def import_selection(path, who=None):
     was nothing to write. Only the page's own terms are written; a drawing, its archetype and what the shape reads stay
     as the page states them — the selection edits the story, the questions, the actions, the bindings, the reference
     and which facts a card shows."""
-    import dmsafe
+    import safe as dmsafe
     sel = json.load(open(path, encoding="utf-8"))
     cur = dict(views_raw())
     figs = compose_all()
@@ -1547,7 +1545,7 @@ def import_selection(path, who=None):
         if not fm((r or {}).get("being")):
             problems.append("reference: %r is no bean of the garden" % (r or {}).get("being"))
     if problems:
-        raise SystemExit("dmview: selection refused — nothing written:\n  - " + "\n  - ".join(problems))
+        raise SystemExit("view: selection refused — nothing written:\n  - " + "\n  - ".join(problems))
     bean = os.path.join(ROOT, "beans", "%s.md" % PAGE)
     before = open(bean, encoding="utf-8").read()
     if CORE is not None:
@@ -1565,20 +1563,20 @@ def import_selection(path, who=None):
     for key, data in (("view", new_view), ("views", new_views), ("view_bindings", new_binds)):
         if key in changed and _plain_data(got.get(key)) != _plain_data(data):
             open(bean, "w", encoding="utf-8", newline="\n").write(before)     # the file as it was, byte for byte
-            raise SystemExit("dmview: `%s` did not read back as the selection intended — restored, nothing written" % key)
+            raise SystemExit("view: `%s` did not read back as the selection intended — restored, nothing written" % key)
     if not changed:
         return "nothing to write: the selection says what the page already says"
     e, _w = check()
     if e:
-        print("dmview: WARNING — the written page does not pass check:\n  - " + "\n  - ".join(e), file=sys.stderr)
-    who = who or subprocess.run(["git", "config", "user.name"], capture_output=True, text=True, encoding="utf-8", cwd=ROOT).stdout.strip() or "dmview"
+        print("view: WARNING — the written page does not pass check:\n  - " + "\n  - ".join(e), file=sys.stderr)
+    who = who or subprocess.run(["git", "config", "user.name"], capture_output=True, text=True, encoding="utf-8", cwd=ROOT).stdout.strip() or "view"
     what = "the page [[%s]] written from an author-mode selection" % PAGE
-    body = ("- action: `dmview import %s` wrote %s of [[%s]] through dmsafe, read back as intended.\n"
+    body = ("- action: `view import %s` wrote %s of [[%s]] through safe, read back as intended.\n"
             "- order: %s" % (os.path.basename(path), ", ".join("`%s`" % c for c in changed), PAGE, " → ".join(order)))
-    r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmjournal.py"), who, what, "--body", body],
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "journal.py"), who, what, "--body", body],
                        capture_output=True, text=True, encoding="utf-8", cwd=ROOT)
     if r.returncode != 0:
-        raise SystemExit("dmview: written, and the journal refused the entry: %s" % (r.stdout + r.stderr).strip())
+        raise SystemExit("view: written, and the journal refused the entry: %s" % (r.stdout + r.stderr).strip())
     return r.stdout.strip() or what
 
 
@@ -1613,8 +1611,9 @@ def _import_statements(path, who, bean, before, order, new_view, new_views, new_
         changed.append(sid)
     if not changed:
         return "nothing to write: the selection says what the page already says"
-    import dmpass
-    who = who or subprocess.run(["git", "config", "user.name"], capture_output=True, text=True, encoding="utf-8", cwd=ROOT).stdout.strip() or "dmview"
+    import importlib
+    dmpass = importlib.import_module('pass')
+    who = who or subprocess.run(["git", "config", "user.name"], capture_output=True, text=True, encoding="utf-8", cwd=ROOT).stdout.strip() or "view"
     author = who if who in CORE.G.beans else dmpass.gardener_of(ROOT)
     safe.add_statements(bean, "  - say: { by: %s, of: [%s], at: now, note: \"written from an author-mode selection (view "
                               "import)\" }\n" % (author, ", ".join(changed)))
@@ -1626,11 +1625,11 @@ def _import_statements(path, who, bean, before, order, new_view, new_views, new_
         if a != b:                                                                           # value as its text
             open(bean, "w", encoding="utf-8", newline="\n").write(before)     # the file as it was, byte for byte
             CORE.reload()
-            raise SystemExit("dmview: `%s` did not read back as the selection intended (%s) — restored, nothing written"
+            raise SystemExit("view: `%s` did not read back as the selection intended (%s) — restored, nothing written"
                              % (key, _first_difference(a, b)))
     e, _w = check()
     if e:
-        print("dmview: WARNING — the written page does not pass check:\n  - " + "\n  - ".join(e), file=sys.stderr)
+        print("view: WARNING — the written page does not pass check:\n  - " + "\n  - ".join(e), file=sys.stderr)
     what = "the page [[%s]] written from an author-mode selection" % PAGE
     body = ("- action: `view import %s` wrote %s of [[%s]] through bin/safe.py, read back as intended, known by a `say` of "
             "[[%s]]'s.\n- order: %s" % (os.path.basename(path), ", ".join("`draw#%s`" % c for c in changed), PAGE, author,
@@ -1638,7 +1637,7 @@ def _import_statements(path, who, bean, before, order, new_view, new_views, new_
     r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "save.py"), who, what, "--body", body],
                        capture_output=True, text=True, encoding="utf-8", cwd=ROOT)
     if r.returncode != 0:
-        raise SystemExit("dmview: written, and the save was refused — the page and its entry stand staged, for the fix "
+        raise SystemExit("view: written, and the save was refused — the page and its entry stand staged, for the fix "
                          "and `bin/save.py --again`:\n%s" % (r.stdout + r.stderr).strip())
     return what + " — saved"
 

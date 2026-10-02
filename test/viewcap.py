@@ -290,7 +290,8 @@ check("V-1 ...an outing nobody granted the bosun is closed to him: closed by def
       not _H.may("bosun", "outing-0927")[0], _H.may("bosun", "outing-0927"))
 # A GRANT OVER A READING, OF PART OF EACH BEAN (v1 part 12b): the gardener opens the outings' titles to the bosun, and no
 # more — a served page keeps its viewers' partial access; `may` is the one answer the host asks
-import dmpass as _dp  # noqa: E402
+import importlib
+_dp = importlib.import_module('pass')  # noqa: E402
 _bb = {k: dict(v) for k, v in _H.beans.items()}
 _bb["rosa"] = dict(_bb["rosa"], statements=list(_bb["rosa"].get("statements") or []) + [
     {"grant": {"id": "bosun-titles", "by": "self", "to": [BOSUN], "of": ["club-page#booked"], "as": "read",
@@ -333,7 +334,8 @@ check("V-1 a press by a viewer the law grants nothing is refused — the page is
       (_code, _obj))
 
 # V-1 a grant's extent: open over its `at`, and not the day after
-import dmpass  # noqa: E402 — the garden's
+import importlib
+dmpass = importlib.import_module('pass')  # noqa: E402 — the garden's
 _today = time.strftime("%Y-%m-%d")
 _after = time.strftime("%Y-%m-%d", time.localtime(time.time() + 2 * 86400))
 _beans = dmpass.beans_here(G)

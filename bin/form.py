@@ -3,8 +3,8 @@
 
 A term's schema says, for each attribute, ONE thing: what the attribute is a position IN (`attrs.<name>.in`),
 whether it is required, and what it means. This module reads that spelling and hands every tool the same
-record — the gate, `dmrules`, `dmcursor`, `dmpos`, `dmreview`, `dmparse`. It is the ONLY file that knows how
-the law spells an attribute; `bin/dmreform.py` is the only one that knows how it USED to (std-vocab <= 12.0).
+record — the gate, `rules`, `cursor`, `pos`, `review`, `parse`. It is the ONLY file that knows how
+the law spells an attribute; `bin/reform.py` is the only one that knows how it USED to (std-vocab <= 12.0).
 
 It is PURE: it reads a term's definition and returns data. It loads nothing and names no term.
 
@@ -25,7 +25,7 @@ THE FORM
 
 THE CORE (v1 part 9): its forms (core/law/lines.yaml and measures.yaml) are spelt as a term's attributes are, so this
 reads them too (`core_form`), with a verb's valency (`valency`) and a domain in words (`label`). Run as a command,
-`python3 bin/form.py <name>` prints a verb's or a form's in a garden of the core, a term's in one of today's.
+`python3 bin/form.py <name>` prints a verb's or a form's.
 """
 
 VALUE_KEYS = (('values', 'values'), ('values_from', 'values_from'), ('consistent_with', 'values_consistent_with'),
@@ -198,7 +198,7 @@ def attribute_form(term_def, sch):
         if rec.get('origin') is not None:
             put('origin', name, rec['origin'])  # where a value here comes from, where its domain's is wrong (`origin`)
             if isinstance(rec['origin'], dict) and rec['origin'].get('act') == 'read' and rec['origin'].get('by') == 'save':
-                put('stamped', name, True)      # read from the clock by the save, never typed (dmpass.SAVE)
+                put('stamped', name, True)      # read from the clock by the save, never typed (pass.SAVE)
         if rec.get('meaning') is not None:
             put('meaning', name, rec['meaning'])
     for name in form['one_of']:
@@ -423,51 +423,37 @@ def label(d):
 
 
 def main(argv):
-    """`form <name>`: the form of a verb or of a qualifier's form in a garden of the core, of a term in one of today's.
+    """`form <name>`: the form of a verb or of a qualifier's form, by the core's law.
     Run as a command it reads the law; imported, this module loads nothing."""
     import os
     import sys
     if not argv or argv[0] in ('-h', '--help'):
-        print("usage: python3 bin/form.py <name>   — a verb's valency or a form's attributes in a garden of the core;\n"
-              "                                      a term's attributes in a garden of today's language")
+        print("usage: python3 bin/form.py <name>   — a verb's valency or a form's attributes, in the core's law")
         return 0
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     want = argv[0]
-    import check                                   # the one reader of a garden's pin (bin/check.py)
-    if check.runs_core(check.pin(root)):
-        sys.path.insert(0, root)
-        from core.check import garden_law
-        L = garden_law(root)
-        if want in L.verbs:
-            print(f"{want} — a verb; its roles and qualifiers (`*` required):")
-            for n, r in valency(L.verbs[want]).items():
-                held = ', '.join(f"{k} {'|'.join(map(str, v)) if isinstance(v, list) else v}"
-                                 for k, v in r.items() if k in ('nature', 'rung', 'table', 'form'))
-                print(f"  {n}{'*' if r['required'] else ''}{' (qualifier)' if r['qualifier'] else ''}: "
-                      f"{'|'.join(map(str, r['shape']))}{' (' + held + ')' if held else ''}{' …many' if r['many'] else ''}")
-            return 0
-        if want in L.forms:
-            f = core_form(L.forms[want])
-            print(f"{want} — a form; its attributes (`*` required):")
-            for n, rec in (L.forms[want].get('attrs') or {}).items():
-                print(f"  {n}{'*' if n in f['order'].get(('self', 'required'), []) else ''}: "
-                      f"{label((rec or {}).get('in'))}")
-            if f['one_of']:
-                print(f"  one of: {', '.join(f['one_of'])}")
-            return 0
-        print(f"form: `{want}` is no verb and no form of the core's law — `python3 bin/rules.py --terms` lists them")
-        return 1
-    import dmparse
-    law = dmparse.loads(dmparse.read(os.path.join(root, 'seed', 'std-vocab.md'))[0]) or {}
-    t = next((t for t in law.get('terms') or [] if isinstance(t, dict) and t.get('term') == want), None)
-    if t is None:
-        print(f"form: `{want}` is no term of the law — `python3 bin/rules.py --terms` lists them")
-        return 1
-    f = attribute_form(t, t.get('schema'))
-    print(f"{want} — a term; its attributes, each of its {f['scope']} (`*` required):")
-    for n, rec in (((t.get('schema') or {}).get('attrs')) or {}).items():
-        print(f"  {n}{'*' if (rec or {}).get('required') is True else ''}: {label((rec or {}).get('in'))}")
-    return 0
+    sys.path.insert(0, root)
+    from core.check import garden_law
+    L = garden_law(root)
+    if want in L.verbs:
+        print(f"{want} — a verb; its roles and qualifiers (`*` required):")
+        for n, r in valency(L.verbs[want]).items():
+            held = ', '.join(f"{k} {'|'.join(map(str, v)) if isinstance(v, list) else v}"
+                             for k, v in r.items() if k in ('nature', 'rung', 'table', 'form'))
+            print(f"  {n}{'*' if r['required'] else ''}{' (qualifier)' if r['qualifier'] else ''}: "
+                  f"{'|'.join(map(str, r['shape']))}{' (' + held + ')' if held else ''}{' …many' if r['many'] else ''}")
+        return 0
+    if want in L.forms:
+        f = core_form(L.forms[want])
+        print(f"{want} — a form; its attributes (`*` required):")
+        for n, rec in (L.forms[want].get('attrs') or {}).items():
+            print(f"  {n}{'*' if n in f['order'].get(('self', 'required'), []) else ''}: "
+                  f"{label((rec or {}).get('in'))}")
+        if f['one_of']:
+            print(f"  one of: {', '.join(f['one_of'])}")
+        return 0
+    print(f"form: `{want}` is no verb and no form of the core's law — `python3 bin/rules.py --terms` lists them")
+    return 1
 
 
 if __name__ == '__main__':

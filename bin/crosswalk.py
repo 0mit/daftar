@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""dmcrosswalk — another standard's records carried into beans and back, by a table of the law (24.0, step 11).
+"""crosswalk — another standard's records carried into beans and back, by a table of the law (24.0, step 11).
 
-    python3 bin/dmcrosswalk.py to fhir <observations.json>      # FHIR R5 Observations -> `observations` entries
-    python3 bin/dmcrosswalk.py to dwc <occurrences.csv>          # Darwin Core occurrences -> `located_at` entries
-    python3 bin/dmcrosswalk.py back fhir <bean> [<key> ...]      # a bean's entries -> FHIR R5 Observations
-    python3 bin/dmcrosswalk.py back dwc <bean> [<bean> ...]      # beans' positions -> Darwin Core occurrences
+    python3 bin/crosswalk.py to fhir <observations.json>      # FHIR R5 Observations -> `observations` entries
+    python3 bin/crosswalk.py to dwc <occurrences.csv>          # Darwin Core occurrences -> `located_at` entries
+    python3 bin/crosswalk.py back fhir <bean> [<key> ...]      # a bean's entries -> FHIR R5 Observations
+    python3 bin/crosswalk.py back dwc <bean> [<bean> ...]      # beans' positions -> Darwin Core occurrences
 
 THE TABLE IS THE WHOLE CROSSWALK. Each is a registry of the law (`registry_files`, `crosswalk-<name>`), its rows
 {<name>, daftar, note}. This tool reads them and knows no standard's field by name. A row is one of:
@@ -29,7 +29,7 @@ from decimal import Decimal
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse
+import parse as dmparse
 import yaml
 
 
@@ -43,15 +43,10 @@ def runs_core():
 
 
 def _law():
-    if runs_core():                         # the core's registries (v1 part 7), with the garden's own schemes beside
-        import dmknowledge
-        k = dmknowledge.Knowledge(ROOT)
-        return list(k.decl.values()), list(k.schemes.values())
-    fm = dmparse.loads(dmparse.split_front_matter(open(os.path.join(ROOT, 'seed', 'std-vocab.md'), encoding='utf-8').read())[0])
-    if os.path.exists(os.path.join(ROOT, 'VOCAB.md')):
-        import dmcheck
-        return fm.get('registry_files') or [], dmcheck.registry('knowledge_schemes') or []
-    return fm.get('registry_files') or [], fm.get('knowledge_schemes') or []
+    """(the registry files, the schemes): the core's registries, with the garden's own schemes beside."""
+    import knowledge as dmknowledge
+    k = dmknowledge.Knowledge(ROOT)
+    return list(k.decl.values()), list(k.schemes.values())
 
 
 class Table:
@@ -62,7 +57,7 @@ class Table:
         row = next((r for r in files if isinstance(r, dict) and str(r.get('registry', '')).startswith('crosswalk-')
                     and r.get('key') == name), None)
         if row is None:
-            raise SystemExit(f"dmcrosswalk: the law declares no crosswalk keyed by '{name}'")
+            raise SystemExit(f"crosswalk: the law declares no crosswalk keyed by '{name}'")
         header, rows = dmparse.table_read(open(os.path.join(ROOT, row['file']), encoding='utf-8').read())
         self.name, self.prefix = name, None
         self.paths, self.consts, self.values, self.forms, self.given = [], [], {}, {}, {}
@@ -434,7 +429,7 @@ def core_entries(bean, want=()):
     `be` as location one of `located_at` (bin/garden.py `terms`)."""
     sys.path.insert(0, ROOT)
     from core import measures, engine
-    import dmgarden
+    import garden as dmgarden
     G = engine.Garden.read(ROOT)
     b = G.beans[bean]
     names = measures.unit_names(ROOT)

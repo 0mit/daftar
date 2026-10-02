@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dmstale — report what has gone, or is going, out of date.
+"""stale — report what has gone, or is going, out of date.
 
 The VOCAB says an analysis_cache entry stands in for re-running its analysis ONLY while its
 staleness_key still matches the live source at covers_paths. This is the tool that answers that
@@ -26,7 +26,7 @@ date is each ENTRY's, and each is warned about by itself. An entry that repeats 
 about before its NEXT occurrence, walked through the day in the calendar it is counted in; one the law's
 `expiry.unless` names — a debt already met — is silent. A repetition that cannot be walked by arithmetic (a
 calendar that is not reckoned by rule, a place in the cell written in prose) is skipped with a NOTE, never guessed;
-so is a date that is not a day of its calendar, and one beyond the days bin/dmcal.py reckons. Nothing one entry
+so is a date that is not a day of its calendar, and one beyond the days bin/cal.py reckons. Nothing one entry
 holds ends the report: every other warning is still printed. A stride of days is reckoned, not walked; a walk through
 cells counts so far and then goes on from the cell before today's; and what one run walks cell by cell is bounded,
 past which a clause is a NOTE. A day is shown in the calendar it was written in, or the repetition counted in.
@@ -34,18 +34,18 @@ past which a clause is a NOTE. A day is shown in the calendar it was written in,
 Every value a bean holds is printed through one escaper (`esc`): what a bean says reaches the terminal as text.
 
 Exit: 0 = nothing stale or expiring, 1 = something needs action, 2 = setup problem.
-Usage: python3 bin/dmstale.py [--quiet] [--days N]   (--quiet prints only what needs attention)
+Usage: python3 bin/stale.py [--quiet] [--days N]   (--quiet prints only what needs attention)
 """
 import datetime
 import os, re, subprocess, sys
 from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
-import dmcal
-import dmform
-import dmunits
+import parse as dmparse
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
+import cal as dmcal
+import form as dmform
+import units as dmunits
 try:
     import yaml
 except ImportError:
@@ -124,11 +124,11 @@ def resolve_here(p):
     through this host's own `roots` map, and `<host>:<path>`, which resolves here only when the host it
     names IS this machine. Treating the second as a plain path was reporting a tree as absent while the
     reader stood in it. Both are offsets from a datum a host defines (`datum: host`, 24.0), and
-    `dmwhere.on_host` is the one resolver of them: this reader carries no copy of either form.
+    `where.on_host` is the one resolver of them: this reader carries no copy of either form.
     """
     if not isinstance(p, str):
         return p
-    import dmwhere
+    import where as dmwhere
     try:
         if dmwhere.on_host(p, {})[1]:
             return p   # an object in a repository is no path: read as written, as it always was
@@ -141,7 +141,8 @@ def resolve_here(p):
         return None
 
 
-DAYS_PER = {'day': 1, 'minute': 1 / 1440, 'second': 1 / 86400, 'millisecond': 1 / 86_400_000}
+DAYS_PER = {'day': 1, 'minute': 1 / 1440, 'second': 1 / 86400, 'millisecond': 1 / 86_400_000,
+            'd': 1, 'min': 1 / 1440, 's': 1 / 86400, 'ms': 1 / 86_400_000}       # and by their UCUM codes
 
 
 def notice_days(notice, default=90):
@@ -166,44 +167,49 @@ def expiry_terms():
 
     The LAW is asked, including a garden's own `local_terms` — which is the whole point: a garden that
     invents a term with a date that runs out gets the same warning Tier-0's `registration` gets, without
-    a release. dmcheck already loads and merges the vocabulary exactly as the gate sees it, so this asks
-    it rather than re-reading std-vocab and drifting from what is actually in force.
+    a release. The law the garden runs is asked (bin/garden.py `law_tables`), never a copy of it here.
     """
-    try:
-        import dmcheck as _law
-    except Exception:
-        return {}                      # no garden, no terms: report caches and say nothing about dates
     out = {}
-    for name, term in (getattr(_law, 'TERMS', {}) or {}).items():
+    for name, term in (_law('TERMS') or {}).items():
         decl = ((term or {}).get('schema') or {}).get('expiry')
         if isinstance(decl, dict) and decl.get('attr'):
             out[name] = decl
     return out
 
 
+def _unit(units, name):
+    """A unit of the law: by its UCUM code, the key the core's table holds it under (`d`), or by its English name (`day`),
+    which a garden's writers use too (v1 part 13b)."""
+    u = units.get(str(name))
+    if u:
+        return u
+    return next((r for r in units.values() if isinstance(r, dict) and str(r.get('name')) == str(name)), None)
+
+
 def _law(name):
-    """A table of the law as the gate loaded it (`TERMS`, `SYSTEMS`, `UNITS`), or {} where there is no garden."""
+    """A table of the law the garden runs (`TERMS`, `SYSTEMS`, `UNITS`), or {} where there is no garden."""
+    if not os.path.isfile(os.path.join(ROOT, 'GARDEN.md')):
+        return {}
     try:
-        import dmcheck as _l
+        return dmgarden.law_tables(ROOT).get(name) or {}
     except Exception:
         return {}
-    return getattr(_l, name, {}) or {}
 
 
 # ---------------------------------------------------------------------------------------------------
 # WHEN A REPETITION FALLS DUE AGAIN (21.0). `expiry.repeats` names an attribute `in: recurrence`, and the
 # position falls due again at each occurrence after the first. The occurrences are walked THROUGH THE DAY,
-# in the calendar the recurrence is counted in, as bin/dmcal.py converts: "the 15th of each month" is a
+# in the calendar the recurrence is counted in, as bin/cal.py converts: "the 15th of each month" is a
 # different day in a Persian month and a Gregorian one, and neither is privileged. What cannot be walked by
 # arithmetic raises `Unreckoned` with the reason, and the reader is told rather than given a guess.
-# bin/dmledger.py asks the same function for a clause's next occurrence, so the two can never disagree.
+# bin/ledger.py asks the same function for a clause's next occurrence, so the two can never disagree.
 #
 # A CELL IS READ FROM THE SYSTEM'S OWN FORM, NOT FROM A LIST OF CALENDARS. The law gives each system its levels
 # (`anchor_systems[].levels`), finest last, and its one written form: `2026-09-20` is year, month, day; `2026-W38-7`
 # year, week, day; `japanese:reiwa-8-09-20` era, year, month, day. So `each: month` is the level one above the day,
 # its cell is every day whose form agrees up to the month, and the place in the cell is the form's last field. No
 # calendar is named here and none is walked by a rule of its own: a week is walkable where the system has a week,
-# Japanese months are the months its form writes, and a calendar dmcal learns tomorrow is walked the same way.
+# Japanese months are the months its form writes, and a calendar cal learns tomorrow is walked the same way.
 # ---------------------------------------------------------------------------------------------------
 class Unreckoned(Exception):
     pass
@@ -278,7 +284,7 @@ def _split(form, k):
 
 class _Cells:
     """The cells of one level of one system, walked through the day: where the cell holding a day begins and ends,
-    and which day of it is at a place. Every answer is read from the system's own written form, via bin/dmcal.py."""
+    and which day of it is at a place. Every answer is read from the system's own written form, via bin/cal.py."""
 
     def __init__(self, row):
         self.row, self.cal, self._memo = row, row.get('calendar'), {}
@@ -385,8 +391,8 @@ def _after_first(first, rec, systems, units, skipped=None, near=None, times=None
     _spend = _spender()          # this repetition's own allowance, and the run's
     every, each = rec.get('every'), rec.get('each')
     if isinstance(every, dict):
-        unit = units.get(str(every.get('unit'))) if every.get('unit') is not None else None
-        day = units.get('day')
+        unit = _unit(units, every.get('unit')) if every.get('unit') is not None else None
+        day = _unit(units, 'd')
         if every.get('unit') is None:
             raise Unreckoned("`every: {count}` strides by neighbours, and which position is a day's neighbour is the "
                              "system's to say — stride by a measure (`every: {count, unit: day}`) or by a cell (`each:`)")
@@ -544,7 +550,7 @@ def _closed(n, closed, skipped):
 
 
 def _writable(n):
-    """`n`, when it is a day bin/dmcal.py reckons — so every reader can write it; else Unreckoned. A stride of three
+    """`n`, when it is a day bin/cal.py reckons — so every reader can write it; else Unreckoned. A stride of three
     million days lands past the year 9999, and a day nobody can write was a traceback in every reader, which cost the
     garden every other warning too."""
     try:
@@ -645,7 +651,7 @@ def rel_words(rel):
 
 
 def conflicted(v):
-    """The sides of a disagreement bin/dmmerge.py captured and nobody has resolved (`{conflict: [a, b]}`), or None."""
+    """The sides of a disagreement bin/merge.py captured and nobody has resolved (`{conflict: [a, b]}`), or None."""
     return v['conflict'] if isinstance(v, dict) and isinstance(v.get('conflict'), list) else None
 
 
@@ -677,7 +683,7 @@ def condition_holds(fm, entry, decl):
     c = entry.get(a) if a and isinstance(entry, dict) else None
     if not isinstance(c, dict) or not c.get('selection'):
         return True if c is None else None
-    import dmreckon
+    import reckon as dmreckon
     ref = c['selection'] if ':' in str(c['selection']) else f"{fm.get('bean')}:{c['selection']}"
     try:
         return dmreckon.holds(ref, root=ROOT)
@@ -697,7 +703,7 @@ def relative_day(rel, fm, at=None, systems=None, units=None):
             raise Unreckoned("it falls due relative to its occurrence, and no moment is read for this one")
         v = at
     else:
-        import dmreckon
+        import reckon as dmreckon
         try:
             found = dmreckon.walk(dmreckon.Garden(ROOT), fm, str(src), at=fm.get('bean'))
         except dmreckon.Refused as e:
@@ -718,7 +724,7 @@ def relative_day(rel, fm, at=None, systems=None, units=None):
     if isinstance(ext.get('measure'), dict):
         m = ext['measure']
         units = units if units is not None else _law('UNITS')
-        u, d = units.get(str(m.get('unit'))) or {}, units.get('day') or {}
+        u, d = _unit(units, m.get('unit')) or {}, _unit(units, 'd') or {}
         c = dmunits.exact(m.get('count'))
         if c is None or not isinstance(u.get('factor'), (list, tuple)) or not isinstance(d.get('factor'), (list, tuple)):
             raise Unreckoned(f"an offset of {extent_words(ext)} is not one this tool measures in days")
@@ -801,7 +807,7 @@ def due_entries(fm, term, decl, today=None, notes=None):
         if not e.get(attr) and isinstance(relv, dict):
             occ = [(None, None)]
             if relv.get('from') == '@occurrence':
-                import dmreckon
+                import reckon as dmreckon
                 try:
                     occ = dmreckon.occurrences(fm.get('bean'), label[1:-1], root=ROOT)
                 except dmreckon.Refused as w:
@@ -834,7 +840,7 @@ def due_entries(fm, term, decl, today=None, notes=None):
             continue
         except ValueError as why:
             # A DAY THAT CANNOT BE READ IS SAID, NEVER DROPPED: `2026-02-30` read as nothing at all was a clause that
-            # silently stopped falling due, while bin/dmledger.py named it. The gate refuses such a day; the working
+            # silently stopped falling due, while bin/ledger.py named it. The gate refuses such a day; the working
             # tree, where this reads, may still hold one.
             out.append((label, e, None, None, f"{attr} {day_words(e[attr])} is not a day this can read: {why}", None))
             continue
@@ -865,7 +871,7 @@ def due_entries(fm, term, decl, today=None, notes=None):
 # instruction to the reader's terminal: `\e[2A\e[2K` climbs back over the line above and writes a debt the other way
 # round, `\e[8m` conceals every line after it, `\r` writes over the start of its own line. The gate refuses them in a
 # bean; a working tree, or a garden older than that refusal, may still hold them — so every value a reader here shows
-# passes through ONE escaper, the one bin/dmpropose.py prints a proposal with: each such character as its escape.
+# passes through ONE escaper, the one bin/propose.py prints a proposal with: each such character as its escape.
 _CTRL = re.compile('[\x00-\x1f\x7f-\x9f\u2028\u2029]')
 
 
@@ -920,9 +926,9 @@ def brief(v, width=60, quote=False):
 
 def day_of(v):
     """The day number of a position a bean wrote — text, or a date YAML read, or either written long as one entry of
-    `timing` (27.0), read by its `at` — or ValueError saying it is none; dmcal.Unplaced, a ValueError, for one placed only
+    `timing` (27.0), read by its `at` — or ValueError saying it is none; cal.Unplaced, a ValueError, for one placed only
     by its neighbours. A list, any other map, a boolean or nothing is no date, and is said to be one in the reader's
-    words, never handed to dmcal as Python spells it (`['a', 'b']`, `True`)."""
+    words, never handed to cal as Python spells it (`['a', 'b']`, `True`)."""
     if isinstance(v, dict) and 'at' in v:
         v = dmcal.written(v)
     if isinstance(v, datetime.datetime):
@@ -1120,10 +1126,10 @@ def _verdict(entry):
 
 
 # ---------------------------------------------------------------------------------------------------
-# THE REPORT LIVES UNDER `if __name__ == '__main__'`, for the reason bin/dmcheck.py states for itself:
+# THE REPORT LIVES UNDER `if __name__ == '__main__'`, for the reason bin/check.py states for itself:
 # importing this file must not run it or kill the process. It is not tidiness. `verdict()` above is the
 # ONE implementation of FRESH / STALE / NOT-HERE / UNKNOWN, and until this guard existed no other tool
-# could reach it — so bin/dmcursor.py grew a second, weaker copy that knew only the `git-head:<sha>`
+# could reach it — so bin/cursor.py grew a second, weaker copy that knew only the `git-head:<sha>`
 # spelling std-vocab 11.0 replaced, and answered `UNKNOWN — unverifiable here` for every analysis in a
 # migrated garden. One datum, two tools, two verdicts. A shared answer needs a shared implementation,
 # and a script that exits on import cannot be one.
@@ -1168,7 +1174,7 @@ def report():
     HORIZON_SET = '--days' in sys.argv
     _d = sys.argv[sys.argv.index('--days') + 1] if HORIZON_SET and sys.argv.index('--days') + 1 < len(sys.argv) else '90'
     if not (_d.isascii() and _d.isdigit()):
-        _out("dmstale: --days takes a whole number of days, e.g. --days 30"); sys.exit(2)
+        _out("stale: --days takes a whole number of days, e.g. --days 30"); sys.exit(2)
     HORIZON = int(_d)
     counts = {'FRESH': 0, 'STALE': 0, 'UNKNOWN': 0, 'NOT-HERE': 0}
     rows = []

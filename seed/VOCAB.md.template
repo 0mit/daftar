@@ -1,12 +1,11 @@
 ---
-vocab: @@GARDEN@@
-extends: std-vocab@@@VERSION@@
-local_terms: []
-local_gene: []
+namespaces: []
 ---
-# @@GARDEN@@ — local vocabulary
+# @@GARDEN@@ — the garden's own rows
 
-Extends Tier-0 at the version pinned above — the one place it is stated. Read `seed/std-vocab.md` for
-the standard terms; add here only what is specific to this estate or not yet proven universal.
-`local_terms` holds the terms specific to this estate: one that proves general is PROMOTED to Tier-0.
-`local_gene` holds a genos this estate needs and no other does: every other genos is Tier-0.
+The rows this garden adds to the law, under the keys MODEL.md names: `kinds`, `levels`, `namespaces`, `flows`,
+`flow_sources`, `standing`, `verbs`, `units`, `tables` (rows added to a table the verbs name), `exclusive`, a
+system of positions, a scheme of codes and the files they name of its own (`systems`, `schemes`, `files`), and the
+profiles it takes by their names (`profiles: [<name>, …]`, core/law/profiles.yaml). A row never takes a name the law has, and every row is used by a bean or says why it is vacant (`vacant: <why>`): add it
+with the first bean that uses it. This file is law, so its entry says RULE-CHANGE. A row that proves general is
+proposed to the standard.

@@ -251,6 +251,18 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 1.0** (2026-10-02, daftar v1.0.0, human-ratified rule-change) — **the core becomes the language, and
+  std-vocab is retired.** Every fact is a statement — a verb and its roles (`by`, `of`, `through`, `to`, `from`, `at`,
+  `as`) — known by an act that says who said, read, made or derived it; the law is `core/law/`, its own source, and
+  this file, std-vocab's journal, closes with it. Built in thirteen parts, each a pull request (#91–#103 and this
+  release's): the standards' tables out of std-vocab; the guides written in statements; the gate and the statement
+  merge by the law a garden runs; the adoption (`bin/dmupgrade.py v1.0.0` translates a garden of std-vocab 32 in place,
+  every value placed and counted, in one RULE-CHANGE granted history's moments once); every tool on statements, named by
+  its verb; the forms of lines, measures, flows, profiles and the gaps; the suites, each retired promise held, gone with
+  why, or ported. The law has twenty-one rules, each strict; today's gate's 91 checks are accounted for in
+  `test/ported.yaml` (56 to a rule, 21 to the law's own proof, 5 to a tool, 9 gone with why). The decisions are the
+  garden's spec, `daftar-core-spec.md` §1–§16, with each part's choices for the operator's veto in its journal.
+
 - **32.1** (2026-10-01, human-ratified rule-change) — **the core arrives in every garden, beside the gate, and judges
   none yet.** The layer map places it: `core/law/*.yaml` in `law`, and `core/*.py` and `core/hooks/*` in `gate`.
   seed/LANGUAGE ships them, so a garden receives the core with v0.49.0 and an edit to it is a RULE-CHANGE. `core/`

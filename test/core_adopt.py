@@ -2,9 +2,11 @@
 """The adoption of the core (v1 part 4): a garden in today's words adopts a release of the core through
 bin/dmupgrade.py, in place and in one commit; a garden grown from a release of the core starts in it.
 
-Builds what it needs, as test/upgrade.py does: a RELEASE made from this tree (v0.1.0, today's words) and the same
-language with the core's templates in seed/ (v1.0.0, a release of the core: its seed/GARDEN.md.template pins `core@`),
-and a GARDEN grown from v0.1.0 with a gardener and a laptop, saved through today's gate.
+Builds what it needs (test/grow.py): a RELEASE repository holding the last release in today's words (v0.49.0, this
+repository's tag, whole) and on top of it a release of the core made from this tree (v1.0.0: its
+seed/GARDEN.md.template pins `core@`), as daftar's own repository holds both; and a GARDEN grown from v0.49.0 with a
+gardener and a laptop, saved through its own gate (bin/dmsave.py). The garden's own bin/dmupgrade.py hands over to the
+release's, the door a garden in today's words adopts the core through.
 
 The adoption is planned before anything is touched: a profile moved in the same run, a bean not committed, and a garden
 that fails its own gate are refused, the tree as it was; a translator refuses a garden in words it does not read. A
@@ -25,9 +27,9 @@ import os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read  # noqa: E402
-import dmparse, dmpass  # noqa: E402
+sys.path.append(os.path.join(ROOT, 'test'))
+import grow  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -92,36 +94,27 @@ The laptop.
 """
 
 try:
-    # ---- THE RELEASES: v0.1.0, this tree's language in today's words; v1.0.0, the same with the core's templates
-    law = dmparse.loads(dmparse.split_front_matter(text('seed/std-vocab.md', ROOT))[0])
-    os.makedirs(REL)
-    for f in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
-                         dmpass.language(text('seed/LANGUAGE', ROOT)), dmpass.offered(law)):
-        os.makedirs(os.path.join(REL, os.path.dirname(f)), exist_ok=True)
-        shutil.copy2(os.path.join(ROOT, f), os.path.join(REL, f))
+    # ---- THE RELEASES: v0.49.0, the last in today's words; v1.0.0, a release of the core made from this tree
+    grow.today(REL)
+    grow.release(REL)
 
     def tag(t, msg):
         run('git', 'add', '-A', cwd=REL)
         run('git', 'commit', '-qm', msg, cwd=REL)
         run('git', 'tag', t, cwd=REL)
-    run('git', 'init', '-q', cwd=REL)
-    tag('v0.1.0', "today's words")
-    for f in ('GARDEN.md.template', 'VOCAB.md.template'):
-        shutil.copy2(os.path.join(ROOT, 'core', 'guide', f), os.path.join(REL, 'seed', f))
-    tag('v1.0.0', 'the core')
     # ...and a release whose core forgot the manifest's `origin`: a translation it refuses
     write('core/law/core.yaml', re.sub(r'(?m)^  - \{ key: origin,[^\n]*\n', '', text('core/law/core.yaml', REL)), REL)
     tag('v1.0.1', 'a core that forgot origin')
-    run('git', 'checkout', '-q', 'v0.1.0', cwd=REL)
+    run('git', 'checkout', '-q', grow.TODAY, cwd=REL)
 
-    # ---- THE GARDEN, grown from v0.1.0, with its gardener and a laptop
+    # ---- THE GARDEN, grown from v0.49.0, with its gardener and a laptop
     r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), G, '--gardener', 'sam', '--gardener-name', 'Sam', cwd=T)
-    check("a garden grows from v0.1.0 in today's words", r.returncode == 0 and 'std-vocab@' in text('GARDEN.md'), r.out[-600:])
+    check("a garden grows from v0.49.0 in today's words", r.returncode == 0 and 'std-vocab@' in text('GARDEN.md'), r.out[-600:])
     write('beans/laptop.md', LAPTOP)
     write('GARDEN.md', text('GARDEN.md').replace('\nzone:', '\norigin: "a test of the adoption"\nzone:', 1))
     r = run(PY, 'bin/dmsave.py', 'sam', 'RULE-CHANGE: the laptop', '--body',
             '- action: added [[laptop]]; RULE-CHANGE: GARDEN.md says where the garden began')
-    check("...and saves a laptop through today's gate", r.returncode == 0, r.out[-800:])
+    check("...and saves a laptop through its own gate (bin/dmsave.py)", r.returncode == 0, r.out[-800:])
     head = run('git', 'rev-parse', 'HEAD').out.strip()
     run('git', 'checkout', '-q', 'v1.0.0', cwd=REL)
 
@@ -171,9 +164,13 @@ try:
           and '0 problem(s)' in r.out and re.search(r'core check: garden: 2 beans, \d+ statements — 0 error\(s\)', r.out),
           r.out[-1200:])
     g, v = text('GARDEN.md'), text('VOCAB.md')
-    check(f"GARDEN.md pins the core's version ({PIN}) and records the release; VOCAB.md holds no pin",
+    vfm = read.document(os.path.join(G, 'VOCAB.md'))[0]
+    check(f"GARDEN.md pins the core's version ({PIN}) and records the release; VOCAB.md holds no pin, nor any key in "
+          "today's words: its front matter is the core's rows, today's kept in its body",
           re.search(rf'(?m)^extends: {re.escape(PIN)}\s*$', g) and 'daftar_release: "v1.0.0"' in g
-          and not re.search(r'(?m)^extends:', v), g[:300] + v[:300])
+          and not {'extends', 'vocab', 'local_terms', 'local_gene', 'extends_profiles'} & set(vfm)
+          and "## In today's words, as adopted" in v and 'extends: std-vocab@' in v.split("## In today's words", 1)[1],
+          g[:300] + v[:600])
     sam, laptop = (read.document(os.path.join(G, 'beans', b + '.md'))[0] for b in ('sam', 'laptop'))
     verbs = [next(iter(s)) for s in laptop.get('statements') or []]
     check("the beans are in statements: the laptop read, named, owned and answered for",
@@ -226,7 +223,7 @@ try:
           ada.get('kind') == 'person' and say.get('by') == 'ada' and say.get('at') not in (None, 'now')
           and log[0] == 'the gardener: [[ada]]' and '(fill in' not in text('log/journal.md', N), (ada, log))
     write('beans/box.md', LAPTOP.replace('bean: laptop', 'bean: box'), N)
-    r = run(PY, 'bin/dmsave.py', 'ada', 'a box', '--body', '- action: added [[box]]', cwd=N)
+    r = run(PY, 'bin/save.py', 'ada', 'a box', '--body', '- action: added [[box]]', cwd=N)
     check("...and a bean in today's words is refused by its hook, the core's gate naming the verb that took a word over",
           r.returncode != 0 and 'core check --staged' in r.out and '`owned_by` is the verb `own` of the face' in r.out,
           r.out[-1200:])

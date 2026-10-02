@@ -1,10 +1,9 @@
 #!/bin/sh
 # daftar pre-merge-commit gate. A merge git commits itself (`git merge`, with no conflict) runs this hook and NOT
 # pre-commit, so without it such a merge would reach the history unjudged. Install with  python3 bin/install.py
-# In a garden of statements (GARDEN.md `extends: core@…`) it runs the core's gate over the index, as pre-commit does:
+# It runs the core's gate over the index, as pre-commit does:
 # the gate covers what a merge makes, and the merge is committed with the journal entry that names what it merged
-# (core/guide/MERGE.md §5) — `git merge --no-commit`, then bin/dmsave.py. In a garden in today's words it judges
-# nothing, as today's gate never judged such a merge (bin/check.py --merge-commit says so).
+# (MERGE.md §5) — `git merge --no-commit`, then bin/save.py.
 root=$(git rev-parse --show-toplevel)
 _here=$(dirname "$0")
 [ -f "$_here/python.sh" ] || { echo "daftar hook: $_here/python.sh is missing — run: python3 bin/install.py" >&2; exit 1; }

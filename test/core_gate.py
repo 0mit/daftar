@@ -24,7 +24,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read  # noqa: E402
-import dmparse, dmpass, dmsafe  # noqa: E402
+import grow  # noqa: E402 — a release of the core, and the release in today's words
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')
+import safe as dmsafe  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -120,21 +124,12 @@ TASK = ("Take the shop lease down: the shop on the corner, let from the first of
 
 try:
     # ---- THE RELEASE: v1.0.0 of the core, and the shop's garden grown from it
-    law = dmparse.loads(dmparse.split_front_matter(text('seed/std-vocab.md', ROOT))[0])
-    os.makedirs(REL)
-    for f in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
-                         dmpass.language(text('seed/LANGUAGE', ROOT)), dmpass.offered(law)):
-        os.makedirs(os.path.join(REL, os.path.dirname(f)), exist_ok=True)
-        shutil.copy2(os.path.join(ROOT, f), os.path.join(REL, f))
-    for f in ('GARDEN.md.template', 'VOCAB.md.template'):
-        shutil.copy2(os.path.join(ROOT, 'core', 'guide', f), os.path.join(REL, 'seed', f))
-    for c in (('git', 'init', '-q'), ('git', 'add', '-A'), ('git', 'commit', '-qm', 'the core'), ('git', 'tag', 'v1.0.0')):
-        run(*c, cwd=REL)
+    grow.release(REL)
     r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), G, '--gardener', 'sam', '--gardener-name', 'Sam', cwd=T)
     TOOLS = ('parse', 'public', 'hook', 'hub', 'launch')
     check(f"a garden grows from v1.0.0 in the core (core@{VERSION}), the gate's others and the launcher in it",
           r.returncode == 0 and f'core@{VERSION}' in text('GARDEN.md')
-          and all(os.path.isfile(os.path.join(G, 'bin', f"{v}.py")) and os.path.isfile(os.path.join(G, 'bin', f"dm{v}.py"))
+          and all(os.path.isfile(os.path.join(G, 'bin', f"{v}.py")) and not os.path.exists(os.path.join(G, 'bin', f"dm{v}.py"))
                   for v in TOOLS), r.out[-800:])
     run(PY, 'bin/install.py')
     write('beans/bea.md', BEAN % ('bea', 'org', 'Corner Lets of Mill Lane', 'The company that lets the shop.', '', '',
@@ -162,8 +157,8 @@ try:
     check("parse: a key written twice is refused, by line (`daftar parse`)", r.returncode == 1
           and '`kind` is written twice' in r.out, r.out)
     os.remove(os.path.join(G, 'scratch', 'twice.md'))
-    r = run(PY, '-c', "import sys; sys.path.insert(0, 'bin'); import dmparse, parse; print(dmparse is parse)")
-    check("parse: bin/dmparse.py, today's name every tool imports, is the module `parse`", r.out.strip() == 'True', r.out)
+    r = run(PY, '-c', "import sys; sys.path.insert(0, 'bin'); import parse, parse; print(parse is parse)")
+    check("parse: bin/parse.py, today's name every tool imports, is the module `parse`", r.out.strip() == 'True', r.out)
 
     # ---- PUBLIC: what a garden of the core says of itself is guarded
     sys.path.insert(0, os.path.join(G, 'bin'))
@@ -182,8 +177,8 @@ try:
     r = run(PY, 'bin/public.py', '--garden', G, '--repo', repo)
     check("public: a repository that names nothing of the garden passes", r.returncode == 0, r.out)
     write('README.md', "Measured on shop-laptop.example.org, of course.\n", repo)
-    r = run(PY, 'bin/dmpublic.py', '--garden', G, '--repo', repo)
-    check("public: one that names a machine by the name its `name` gives is refused (bin/dmpublic.py, the alias)",
+    r = run(PY, 'bin/public.py', '--garden', G, '--repo', repo)
+    check("public: one that names a machine by the name its `name` gives is refused (bin/public.py, the alias)",
           r.returncode == 1 and 'shop-laptop.example.org' in r.out, r.out)
 
     # ---- HOOK: the guards in another maker's loop know a garden of the core
@@ -207,7 +202,7 @@ try:
     write('scratch/plan.txt', "The rent we would never say aloud: nine hundred a month, Mill Lane side.\n")
     r = hookrun('pre', {'tool_name': 'Read', 'tool_input': {'file_path': os.path.join(G, 'scratch', 'plan.txt')}})
     check("hook: a read of a file in no layer is refused (R4)", r.returncode == 2 and 'no layer' in r.out, r.out)
-    r1 = run(PY, 'bin/dmhook.py', 'install', 'claude-code')
+    r1 = run(PY, 'bin/hook.py', 'install', 'claude-code')
     r2 = run(PY, 'bin/hook.py', 'uninstall', 'claude-code')
     check("hook: installed by today's name and removed by the verb's", r1.returncode == 0 and r2.returncode == 0
           and 'hooks' not in json.loads(text('.claude/settings.local.json')), r1.out + r2.out)
@@ -332,11 +327,11 @@ flows:
     check("the save: a said value found only in a guide is refused (examples-are-not-facts), nothing written",
           r.returncode == 2 and 'examples-are-not-facts' in r.out and '2026-03-02' not in text('log/journal.md'), r.out)
     restore()
-    r = run(PY, 'bin/dmlaunch.py', 'record', '--keep', 'meter-read', '--', PY, '-c', "print('the meter read 4211')",
+    r = run(PY, 'bin/launch.py', 'record', '--keep', 'meter-read', '--', PY, '-c', "print('the meter read 4211')",
             env=KEY)
     cap = [p for p in passes() if p['through'] == 'capture']
     check("record --keep: a run's output captured, its `capture` pass logged from the world in the core's form "
-          "(bin/dmlaunch.py, the alias)", r.returncode == 0 and cap and cap[-1]['from'] == {'layer': 'world'}
+          "(bin/launch.py, the alias)", r.returncode == 0 and cap and cap[-1]['from'] == {'layer': 'world'}
           and len(cap[-1]['metadata']['oid']) == 40, r.out)
     restore()
     S.end()                                        # no session current: what follows is written by hand, for the gate

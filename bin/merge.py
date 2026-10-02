@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
-"""merge — a bean merged by the law it is written in: the statement merge, or today's semantic merge (MERGE.md).
+"""merge — a bean merged by the statement merge (MERGE.md).
 
     python3 bin/merge.py --file <base> <ours> <theirs> [<path>]   # git's merge driver (%O %A %B %P): ours, in place
-    python3 bin/merge.py <arguments>                               # by hand: core/merge.py's, or bin/dmmerge.py's
+    python3 bin/merge.py <arguments>                               # by hand: core/merge.py's
 
 (`python` on Windows; `python3 bin/daftar.py merge` runs this too.) `.gitattributes` sends `beans/*.md` and
 `mappings/*.md` to the driver `daftar`, which bin/install.py configures to run this. git hands a driver three blobs of
-one file and not three commits, so the law each side runs is read from the bean itself. Written in statements (its
-header the core's: bean, kind, title, summary, tags, details, statements), it is the core's, and the statement merge
-takes it (core/merge.py, core/guide/MERGE.md). Written in today's words, it is std-vocab's, and bin/dmmerge.py takes it
-as it always has. Where the sides are not in one law — a branch made before its garden adopted the core, merged after —
-the driver refuses, ours is left as it was, and git leaves the bean for a person. A bean that says neither (a header
-and no statement) is merged by the garden's own law, GARDEN.md's `extends` at HEAD. bin/dmmerge.py stays whole until
-v1.0.0: it is today's path."""
+one file and not three commits, so what each side is written in is read from the bean itself: in statements (its header
+the core's: bean, kind, title, summary, tags, details, statements), the statement merge takes it (core/merge.py). A side
+written in today's words — a branch made before its garden adopted the core, merged after — is refused, ours is left
+as it was, and git leaves the bean for a person: it is merged once it is written in statements (bin/reform.py)."""
 import os
 import subprocess
 import sys
@@ -22,8 +19,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 from core import read  # noqa: E402
 from core.engine import HEADER  # noqa: E402
-import check  # noqa: E402 — the one reader of a garden's pin
-import dmparse  # noqa: E402
+import parse as dmparse  # noqa: E402
 
 
 def written_in(path):
@@ -45,18 +41,13 @@ def main(argv):
     if argv[:1] in (['-h'], ['--help']):
         print(__doc__.strip())
         return 0
-    if argv[:1] == ['--file'] and len(argv) >= 4:
-        forms = {written_in(p) for p in argv[1:4]} - {None}
-        if len(forms) > 1:
-            what = argv[4] if len(argv) > 4 else os.path.basename(argv[2])
-            print(f"merge: refusing to merge {what} — its sides are written in two laws, one in statements and one in "
-                  f"today's words: a branch from before the garden adopted the core is merged after it is written in "
-                  f"statements (core/translate.py). Ours is left as it was.", file=sys.stderr)
-            return 1
-        core = forms == {'core'} or (not forms and check.runs_core(check.pin(check.toplevel(), 'HEAD')))
-    else:
-        core = check.runs_core(check.pin(ROOT))
-    tool = os.path.join(ROOT, 'core', 'merge.py') if core else os.path.join(HERE, 'dmmerge.py')
+    if argv[:1] == ['--file'] and len(argv) >= 4 and 'today' in {written_in(p) for p in argv[1:4]}:
+        what = argv[4] if len(argv) > 4 else os.path.basename(argv[2])
+        print(f"merge: refusing to merge {what} — a side is written in today's words: a branch from before the garden "
+              f"adopted the core is merged after it is written in statements (`python3 bin/reform.py <bean>`). Ours is "
+              f"left as it was.", file=sys.stderr)
+        return 1
+    tool = os.path.join(ROOT, 'core', 'merge.py')
     return subprocess.run([sys.executable, tool, *argv]).returncode
 
 

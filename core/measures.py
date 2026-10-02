@@ -33,7 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 from core import frame  # noqa: E402
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'bin'))
-import dmunits  # noqa: E402 — a count, read exactly: the one reader
+import units as dmunits  # noqa: E402 — a count, read exactly: the one reader
 
 WHOLE = re.compile(r'^[0-9]+$')
 
@@ -612,7 +612,7 @@ def weighing_problems(J, where, r):
     out = lines.attrs_problems(f"{where}.weighing", r['weighing'], J.L.forms.get('weighing') or {})
     if out:
         return out
-    import dmreckon
+    import reckon as dmreckon
     return [(f"{where}.weighing", what.split(': ', 1)[-1]) for level, what in dmreckon.check_weighing('', r['weighing'])
             if level == 'error']
 
@@ -625,6 +625,20 @@ def weighing_problems(J, where, r):
 _NAMES = {}
 FIGURE_PERMISSION = {'obligatory': 'required', 'omissible': 'omissible', 'permitted': 'permitted',
                      'forbidden': 'forbidden'}
+
+
+def clause_term(L):
+    """A clause as the readers of its days take it (bin/stale.py, bin/ledger.py): the core's form `clause`
+    (core/law/measures.yaml), its attributes and how it runs out (`expiry`), typed as they read it and with each stance
+    in the word the view gives a clause's `permission` (FIGURE_PERMISSION)."""
+    from core.lines import typed
+    f = (getattr(L, 'forms', None) or {}).get('clause') or {}
+    exp = typed(f.get('expiry') or {})
+    for k in ('why', 'lapses_why'):
+        if isinstance(exp.get(k), dict):
+            exp[k] = {FIGURE_PERMISSION.get(p, p): w for p, w in exp[k].items()}
+    return {'term': 'clauses', 'schema': {'shape': 'open_map_of_entries', 'key_form': 'kebab',
+                                          'attrs': typed(f.get('attrs') or {}), 'expiry': exp}}
 
 
 def unit_names(root):

@@ -20,7 +20,7 @@ checked here:
   7. the issue forms parse as GitHub reads them, open with the warning against pasting from a garden, require the
      situation (or the change, the question, what was expected) and the neutral-names checkbox; blank issues are off;
   8. no file under site/ or .github/ISSUE_TEMPLATE/ names the estate of the garden `$DAFTAR_GARDEN` or
-     `git config daftar.garden` names. It calls bin/dmpublic.py's own functions rather than `--text`, which cannot see
+     `git config daftar.garden` names. It calls bin/public.py's own functions rather than `--text`, which cannot see
      a word seed/PUBLIC-ALLOW makes public in one file only. CI has no garden, and this says so;
   9. `site/RELEASE` names a tag of this repository.
 Whether the page is clear, and true where no tool speaks, is still a reader's work.
@@ -351,7 +351,7 @@ def leak_guard():
               "it has no beans/, so no estate names can be derived from it")
         return
     sys.path.insert(0, os.path.join(ROOT, "bin"))
-    import dmpublic
+    import public as dmpublic
     pub = dmpublic.public_words(garden)
     words = dmpublic.estate_words(garden, pub) - pub
     r = run("git", "-C", ROOT, "ls-files", "-z", "-co", "--exclude-standard", "--", "site", ".github/ISSUE_TEMPLATE")

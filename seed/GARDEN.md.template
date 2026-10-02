@@ -1,22 +1,22 @@
 ---
 garden: @@GARDEN@@
-extends: std-vocab@@@VERSION@@
+extends: core@@@VERSION@@
 daftar_release: "@@RELEASE@@"  # the daftar release this garden runs; bin/dmupgrade.py moves it
 gardener:                      # who keeps this garden: the id of their bean, a person or an organisation
 zone: @@ZONE@@                   # the civil time zone this garden reckons its days in: the place half of every day it writes without saying where
 ---
 # @@GARDEN@@
 
-This garden's manifest. It tells a cold agent which garden it is in, whose it is, and which vocabulary
-governs it.
+This garden's manifest. It tells a cold agent which garden it is in, whose it is, and which law governs it: the
+core, at the version `extends` pins.
 
 A garden is kept by its gardener — a person or an organisation. Write their bean, then name it above in
 `gardener:`; the gate asks for it as soon as the garden holds a bean, so it comes first. An agent tends the
-garden; the gardener keeps it, and ratifies here what an agent may not decide. (For an organisation, a person
-who answers for it ratifies.)
+garden, and what is not an agent's to decide is the gardener's (manifesto: parts); for an organisation, a person
+who answers for it gives that word.
 
 A garden grown to rehearse or to test says so, in a line of its own above: `test: "<what it rehearses>"`.
 A rehearsal is grown as a garden of its own, never cloned from a real one: a clone is the same garden.
 
-A garden's identity is the commit it germinated from. Git holds it, so it is written nowhere here:
-`python3 bin/dmpropose.py id` prints it, and the gate's last line shows it once the first commit is made.
+A garden's identity is the root of its history. Git holds it, so it is written nowhere here:
+`python3 bin/propose.py id` prints it.

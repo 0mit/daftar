@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""dmledger — what the parties to an agreement owe one another, READ from what moved and never written.
+"""ledger — what the parties to an agreement owe one another, READ from what moved and never written.
 
-    python3 bin/dmledger.py                                      # every agreement in this garden
-    python3 bin/dmledger.py <contract-bean> [<contract-bean> ...] # these agreements
-    python3 bin/dmledger.py --between <party-bean> <party-bean>  # two parties, netted across the agreements they share
+    python3 bin/ledger.py                                      # every agreement in this garden
+    python3 bin/ledger.py <contract-bean> [<contract-bean> ...] # these agreements
+    python3 bin/ledger.py --between <party-bean> <party-bean>  # two parties, netted across the agreements they share
 
 WHAT IS OWED IS NEVER STORED (std-vocab 21.0, `transactions`, and the retired `balance`). "ali owes sam 300" is
 derivable from "900 paid by sam, borne two to one", and a bean that stored both kept a second copy that would drift the
@@ -16,18 +16,18 @@ paid how much of it, who bears it in what shares — and this tool reads the res
              netted: "ali owes sam 300 XTS". With --between, netted again across every agreement the two share.
   CLAUSES    each clause still in force — not met, waived or broken, as the law's `expiry.unless` says — with when it
              falls due, when it falls due NEXT if it repeats (walked through the day in its own calendar, by the same
-             function bin/dmstale.py warns with), the condition that brings it into force, and what is not yet known.
+             function bin/stale.py warns with), the condition that brings it into force, and what is not yet known.
              A clause whose condition is a reading that does not hold is listed apart, NOT YET in force. A permission
              is printed as one, and never as owed.
   OCCURRENCES  a clause that occurs `each` time a selection holds a member (24.0, N3): every occurrence, the amount owed
              for it (`amount`, or `amount` as a share of the value at `of`, exactly), what transactions `settles` paid
-             of it, what is outstanding, and when it fell due (`falls_due`, walked by bin/dmstale.py). An occurrence
+             of it, what is outstanding, and when it fell due (`falls_due`, walked by bin/stale.py). An occurrence
              never leaves: a refund is its own clause, occurring for each refund.
   ALLOWANCES a clause with `within` and `used_by`: how much of its amount the entries its reading holds have used in
-             the window ending today (bin/dmreckon.py, `used-within`).
+             the window ending today (bin/reckon.py, `used-within`).
 
 EVERY FIGURE IS EXACT. A count is a whole number or a decimal written as a string, no longer than a count may be
-(bin/dmunits.py, `DIGITS`), and it is read as a `fractions.Fraction`; every sum, share, balance and rate is one. This file holds no float, calls no rounding and has no
+(bin/units.py, `DIGITS`), and it is read as a `fractions.Fraction`; every sum, share, balance and rate is one. This file holds no float, calls no rounding and has no
 division operator — a quotient is `Fraction(n, d)` — and test/money.py reads its source to hold it to that. A share
 that does not come out even in the currency's decimal places is printed as the fraction it is, `200/3 XTS`, and said to
 be so: who takes the remainder is a clause the parties agree, never a rounding a tool chooses for them.
@@ -42,7 +42,7 @@ in a NOTE, so a total is never smaller than it looks without the reader being to
 under --between too, where the net is then called PARTIAL, and an agreement whose party waits for a person to say who
 it is is named as one that may be between the two.
 
-WHAT A BEAN SAYS IS SHOWN, NEVER OBEYED. Every title, `what`, key and value is printed through bin/dmstale.py's one
+WHAT A BEAN SAYS IS SHOWN, NEVER OBEYED. Every title, `what`, key and value is printed through bin/stale.py's one
 escaper: a character that controls a terminal (an ESC sequence, a carriage return, a line separator) as its escape.
 
 The law is read, not named: the transactions are every term whose schema declares `sums`, its whole and its parts come
@@ -54,28 +54,28 @@ import datetime, os, re, sys
 from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmcal
-import dmparse
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
-import dmform
-import dmunits
-import dmstale
+import cal as dmcal
+import parse as dmparse
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
+import form as dmform
+import units as dmunits
+import stale as dmstale
 try:
-    import yaml  # noqa: F401  (dmparse needs it; say so plainly rather than fail inside it)
+    import yaml  # noqa: F401  (parse needs it; say so plainly rather than fail inside it)
 except ImportError:
     print("ERROR: PyYAML required"); sys.exit(2)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PY = 'python' if os.name == 'nt' else 'python3'       # the interpreter as it is named where this runs
 # WHAT A BEAN SAYS IS SHOWN, NEVER OBEYED: a title, a transaction's `what`, a key — each is printed through
-# bin/dmstale.py's one escaper, and every line through its guard, so a character that controls a terminal (an ESC
+# bin/stale.py's one escaper, and every line through its guard, so a character that controls a terminal (an ESC
 # sequence that climbs a line and rewrites a debt, or conceals every line after it) is printed as its escape — and a
 # line feed too, which in a key or a name printed a line of the bean's own making.
 esc = dmstale.esc
 
 
 def emit(line=''):
-    """ONE line, through the guard: every control character in it escaped, a line feed among them (dmstale.say)."""
+    """ONE line, through the guard: every control character in it escaped, a line feed among them (stale.say)."""
     print(dmstale.say(line))
 
 # WHO BEARS A TRANSACTION, AND IN WHAT SHARES. The law's `sums` rule says which attribute is the whole and which the
@@ -93,13 +93,14 @@ class NotAGarden(Exception):
 
 
 def law():
-    """The law as the gate loaded it: every term of both tiers, every unit (a currency among them, with its digits),
-    every positioning system. Asked of bin/dmcheck.py, the way bin/dmstale.py asks it, so this reads what is in force.
-    Only a garden has a law in force: without its VOCAB.md there is nothing here to read."""
-    if not os.path.exists(os.path.join(ROOT, 'VOCAB.md')):
-        raise NotAGarden(f"not in a garden (no VOCAB.md at {ROOT}) — run the copy of this tool in a garden's bin/")
-    import dmcheck
-    return dmcheck.TERMS, dmcheck.UNITS, dmcheck.SYSTEMS
+    """The law the garden runs, as the readers of a clause take it: a clause's form and how it runs out, every unit (a
+    currency among them, with its digits), every positioning system (bin/garden.py `law_tables`, the way bin/stale.py
+    asks it). Only a garden has a law in force: without its GARDEN.md there is nothing here to read."""
+    if not os.path.exists(os.path.join(ROOT, 'GARDEN.md')):
+        raise NotAGarden(f"not in a garden (no GARDEN.md at {ROOT}) — run the copy of this tool in a garden's bin/")
+    import garden as dmgarden
+    t = dmgarden.law_tables(ROOT)
+    return t['TERMS'], t['UNITS'], t['SYSTEMS']
 
 
 def _in(rec):
@@ -170,7 +171,7 @@ def count_of(q):
 
 def read_count(q):
     """(the count exactly, or None; why it is not read, or ''). A count longer than a count may be is refused by
-    bin/dmunits.py with the reason, and the reason is kept for the NOTE — never a traceback that ends the reading."""
+    bin/units.py with the reason, and the reason is kept for the NOTE — never a traceback that ends the reading."""
     try:
         return (dmunits.exact(q.get('count')) if isinstance(q, dict) else None), ''
     except ValueError as e:
@@ -179,7 +180,7 @@ def read_count(q):
 
 def read_share(s, pattern):
     """A bearer's share as a whole number of parts, or None: what the law's pattern for a share admits (the gate's own
-    reading), a positive whole number, and no longer than a count may be (bin/dmunits.py's DIGITS). `yes` is not a
+    reading), a positive whole number, and no longer than a count may be (bin/units.py's DIGITS). `yes` is not a
     share, nor is `1.5`, nor five thousand digits — each of those once ended the reading in a traceback, or was read as
     something nobody wrote."""
     if isinstance(s, bool) or not isinstance(s, (int, str)):
@@ -606,7 +607,7 @@ def settlements(fm, clause):
 def occurrence_lines(key, e, decl, units, systems, today, fm, stance):
     """Each occurrence of an `each` clause: when it entered, what is owed for it, what was settled, what is outstanding,
     and when it fell due — each figure exact, each one not read said to be."""
-    import dmreckon
+    import reckon as dmreckon
     try:
         occ = dmreckon.occurrences(fm.get('bean'), key, root=ROOT)
     except dmreckon.Refused as why:
@@ -672,9 +673,9 @@ def occurrence_lines(key, e, decl, units, systems, today, fm, stance):
 
 
 def allowance_lines(key, e, sch, units, fm, today):
-    """`used X of <amount> within <window> ending <day>` (N9): read by bin/dmreckon.py over the entries `used_by`
+    """`used X of <amount> within <window> ending <day>` (N9): read by bin/reckon.py over the entries `used_by`
     holds, from the attribute their term declares an extent or a day — named by the law, never guessed."""
-    import dmreckon
+    import reckon as dmreckon
     try:
         g = dmreckon.Garden(ROOT)
         sel = (fm.get('selections') or {}).get(e['used_by']) if ':' not in str(e['used_by']) else None
@@ -699,7 +700,7 @@ def allowance_lines(key, e, sch, units, fm, today):
 
 def due_words(attr, v, rec, systems, today):
     """(text, notes) — when a clause falls due and, for one that repeats, when it falls due NEXT, walked by
-    bin/dmstale.py; the notes name each cell the walk skipped on the way to it (a month without the day named)."""
+    bin/stale.py; the notes name each cell the walk skipped on the way to it (a month without the day named)."""
     shown = dmstale.day_words(v)
     try:
         first = dmstale.day_of(v)
@@ -948,9 +949,9 @@ def core_main(argv, between):
     units = core_units()
     for b in argv + (between or []):
         if b not in G.beans:
-            emit(f"dmledger: no bean '{b}' here"); return 2
+            emit(f"ledger: no bean '{b}' here"); return 2
         if G.beans[b].unread:
-            emit(f"dmledger: the bean '{b}' is here and cannot be read: {G.beans[b].unread}"); return 2
+            emit(f"ledger: the bean '{b}' is here and cannot be read: {G.beans[b].unread}"); return 2
     unread = {k: b.unread for k, b in G.beans.items() if b.unread}
     for stem, why in sorted(unread.items()):
         emit(f"NOTE {stem} is not read — {why}; whatever it records is missing from every total below")
@@ -961,7 +962,7 @@ def core_main(argv, between):
             ag.pop('clauses', None)
         return print_between(between, ags, units, unread)
     if not ags:
-        emit("dmledger: no bean here records what was paid (`pay`)")
+        emit("ledger: no bean here records what was paid (`pay`)")
     for ag in ags:
         core_print(ag, units)
     return 0
@@ -988,13 +989,13 @@ def main(argv):
         between = argv[i + 1:i + 3]
         argv = argv[:i] + argv[i + 3:]
         if len(between) != 2 or between[0] == between[1]:
-            emit("dmledger: --between takes two party beans, e.g. --between sam ali"); return 2
+            emit("ledger: --between takes two party beans, e.g. --between sam ali"); return 2
     if runs_core():
         return core_main(argv, between)
     try:
         terms, units, systems = law()
     except NotAGarden as e:
-        emit(f"dmledger: {e}"); return 2
+        emit(f"ledger: {e}"); return 2
     mterms = money_terms(terms)
     pterms = sorted({r['parties'] for _t, r in mterms if r['parties']})
     prefs = party_refs(terms, pterms)
@@ -1002,9 +1003,9 @@ def main(argv):
     beans, unread = load_beans()
     for b in argv + (between or []):
         if b in unread:
-            emit(f"dmledger: the bean '{b}' is here and cannot be read: {unread[b]}"); return 2
+            emit(f"ledger: the bean '{b}' is here and cannot be read: {unread[b]}"); return 2
         if b not in beans:
-            emit(f"dmledger: no bean '{b}' in {os.path.join(ROOT, 'beans')}"); return 2
+            emit(f"ledger: no bean '{b}' in {os.path.join(ROOT, 'beans')}"); return 2
     today = datetime.date.today().toordinal()
     held = [t for t, _r in mterms] + [t for t, _s in cterms]
     for stem, why in sorted(unread.items()):
@@ -1014,7 +1015,7 @@ def main(argv):
     if between:
         return print_between(between, ags, units, unread)
     if not ags:
-        emit("dmledger: no agreement here records what moved or what is owed (" + ', '.join(held) + ")")
+        emit("ledger: no agreement here records what moved or what is owed (" + ', '.join(held) + ")")
     for ag in ags:
         print_agreement(ag, units, systems, today)
     return 0
@@ -1035,7 +1036,7 @@ def print_between(pair, ags, units, unread=()):
     for ag in ags:
         ka = [k for k, bean in ag['parties'].items() if bean == a]
         kb = [k for k, bean in ag['parties'].items() if bean == b]
-        look = f"`{PY} bin/dmledger.py {esc(ag['bean'])}` shows it"
+        look = f"`{PY} bin/ledger.py {esc(ag['bean'])}` shows it"
         if not ka or not kb:
             named = set(ag['parties'].values()) | ag['maybe']
             if ag['maybe'] and {a, b} <= named:

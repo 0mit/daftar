@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """save — save one change in one call: its journal entry, everything staged, and the commit the gate judges.
 
-    python3 bin/dmsave.py "<who>" "<one line: what changed>" --body "- action: …"    # works in every shell
-    python3 bin/dmsave.py "<who>" "<what>" --body "- action: …" "- detail: …"      # one quoted line each, as well
-    python3 bin/dmsave.py "<who>" "<one line: what changed>" < entry.md               # the body on standard input
-    python3 bin/dmsave.py --again     # after a refused save is fixed: commit the entry already written
+    python3 bin/save.py "<who>" "<one line: what changed>" --body "- action: …"    # works in every shell
+    python3 bin/save.py "<who>" "<what>" --body "- action: …" "- detail: …"      # one quoted line each, as well
+    python3 bin/save.py "<who>" "<one line: what changed>" < entry.md               # the body on standard input
+    python3 bin/save.py --again     # after a refused save is fixed: commit the entry already written
 
 (`python` on Windows. PowerShell has no `<`: pass the body with `--body`.) It does what took three calls —
-`bin/dmjournal.py`, `git add -A`, `git commit` — in one: the entry is appended by dmjournal's own code, its heading read
+`bin/journal.py`, `git add -A`, `git commit` — in one: the entry is appended by journal's own code, its heading read
 from the clock and registered, never typed; everything in the garden is staged with `git add -A`; and the commit's
 message is <what>. The pre-commit hook judges the index, so the gate judges exactly what is committed. This never
 passes --no-verify. Exit 0 = saved; 1 = the commit was refused, the entry written and the files staged; 2 = refused
 before anything was written.
 
 A REFUSED SAVE IS LEFT AS IT STANDS. The gate's messages are printed, and the journal entry and the staged files stay as
-they are, for the fix. After the fix, `dmsave.py --again` stages everything again and commits the entry already
+they are, for the fix. After the fix, `save.py --again` stages everything again and commits the entry already
 written, under the <what> of its heading. THE SAME CALL AGAIN DOES THE SAME: an agent that runs its save a second time
 is finishing it, so when the entry waiting has this call's <who> and <what>, it is committed and never written a second
 time (measured: a small model re-ran the full call after every refusal, and a refusal of that looped it). A call with
 another entry while one waits writes its own and commits both. When the gate asks for another entry (one that names a
-bean), `bin/dmjournal.py` writes it, and `--again` commits both. An entry written with `bin/dmjournal.py` alone, a
+bean), `bin/journal.py` writes it, and `--again` commits both. An entry written with `bin/journal.py` alone, a
 decision with no file changed, is committed the same way.
 
 REFUSED BEFORE ANYTHING IS WRITTEN, because each would leave an entry no commit can carry: nothing in the garden differs
@@ -47,7 +47,7 @@ for the next minute where this one's moment is taken (below). The SAVE trace rea
 (core/law/flows.yaml, v1 part 8): a said value is a role of a statement a `say` knows, at `<verb>#<id>.<role>`, and its
 pass is logged in the core's form, `{from, to, through, as, metadata}` (bin/launch.py, v1 part 10).
 
-It reaches a garden by `seed/LANGUAGE`, which names it (`bin/save.py`, the verb's tool) and its old name, `bin/dmsave.py`,
+It reaches a garden by `seed/LANGUAGE`, which names it (`bin/save.py`, the verb's tool) and its old name, `bin/save.py`,
 which runs it until v1's part 13; nothing installs it. It is called "save" because that is the whole act — journal, stage, commit — where "commit" names its last
 step.
 """
@@ -62,14 +62,14 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
+import parse as dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
 import journal  # noqa: E402 — the entry is written by the journal tool's own code, and nowhere else
 
 ROOT = journal.ROOT
 TRACED = []                 # (log, pass) the SAVE guard found, written in commit()
 PY = 'python' if os.name == 'nt' else 'python3'
-AGAIN = f"{PY} bin/dmsave.py --again"
+AGAIN = f"{PY} bin/save.py --again"
 
 
 def git(*args):
@@ -80,7 +80,7 @@ def git(*args):
 def refuse(msg):
     """Refused before anything was written: exit 2, saying so."""
     msg = msg if 'nothing written' in msg.lower() else msg + ' — nothing written'
-    print(dmparse.said(f"dmsave: {msg}"), file=sys.stderr)
+    print(dmparse.said(f"save: {msg}"), file=sys.stderr)
     sys.exit(2)
 
 
@@ -132,7 +132,7 @@ def ready(again, body=''):
     pending = waiting()
     if again and not pending:
         refuse(f"--again commits a journal entry already written, and every entry in the journal is committed. "
-               f"Nothing written. Save a change with: {PY} bin/dmsave.py \"<who>\" \"<what>\" --body \"- action: …\"")
+               f"Nothing written. Save a change with: {PY} bin/save.py \"<who>\" \"<what>\" --body \"- action: …\"")
     if not again and not git('status', '--porcelain').stdout.strip():
         # A SAVE CALLED BEFORE THE WRITE: measured, a small model took the save for the act of recording and ran it with
         # the bean unwritten. Its own entry names the bean, so the refusal says which file is missing.
@@ -169,7 +169,8 @@ def trace_said():
     TRACED for commit(). Nothing is done where no session is current in this copy."""
     try:
         import launch
-        import dmpass
+        import importlib
+        dmpass = importlib.import_module('pass')
     except ImportError:
         return
     s = launch.Session.current(ROOT)
@@ -222,7 +223,7 @@ def trace_said():
                "\nA said value is a person's word: take it from their words, or point at where it is kept; nothing "
                "written")
     for h in hoped:
-        print(dmparse.said(f"dmsave: HOPED — {h}: found nowhere the session read, as written; its pass is logged from "
+        print(dmparse.said(f"save: HOPED — {h}: found nowhere the session read, as written; its pass is logged from "
                            f"instructions with `quoted: 0` (the words may say it another way)"), file=sys.stderr)
 
 
@@ -259,7 +260,7 @@ def commit(message, again):
     """Stage everything and commit, the hook judging the index. 0 when saved; 1, with the way on, when not."""
     def not_saved(why):
         # SHORT, because it stays in the reader's context: the entry is theirs already, so it is not shown again.
-        print(dmparse.said(f"dmsave: NOT SAVED — {why}. The journal entry is written and the files are staged; leave "
+        print(dmparse.said(f"save: NOT SAVED — {why}. The journal entry is written and the files are staged; leave "
                            f"both, fix what it names, then run:\n  {AGAIN}"), file=sys.stderr)
         return 1
     # EVERY BEAN ANY WAITING ENTRY NAMES is stamped with the day of the last one — the commit carries them all, and the
@@ -338,8 +339,8 @@ def main(argv):
         del rest[i:j]
     flags = [a for a in rest if a.startswith('--')]
     if flags or len(rest) != 2:
-        refuse((f"{flags[0]!r} is no option of dmsave. " if flags else "") + f"It takes \"<who>\" \"<what>\" and the "
-               f"body — {PY} bin/dmsave.py \"<who>\" \"<what>\" --body \"- action: …\" — or --again alone")
+        refuse((f"{flags[0]!r} is no option of save. " if flags else "") + f"It takes \"<who>\" \"<what>\" and the "
+               f"body — {PY} bin/save.py \"<who>\" \"<what>\" --body \"- action: …\" — or --again alone")
     who, what = rest
     if body is None:
         stream = getattr(sys.stdin, 'buffer', None)
@@ -347,23 +348,23 @@ def main(argv):
             refuse("there is no standard input to read the body from — pass it with --body")
         # A TERMINAL IS NOT A BODY: reading one waits, with no prompt, for a person who may not be there.
         if sys.stdin.isatty():
-            refuse(f"no body, and nothing written. Pass it with --body: {PY} bin/dmsave.py \"{who}\" \"{what}\" --body "
+            refuse(f"no body, and nothing written. Pass it with --body: {PY} bin/save.py \"{who}\" \"{what}\" --body "
                    f"\"- action: …\"")
         try:
             body = journal.decode_body(stream.read())
         except SystemExit as e:
-            refuse(str(e.code).replace('dmjournal: ', '', 1))
+            refuse(str(e.code).replace('journal: ', '', 1))
     pending = ready(again=False, body=body)
     if pending and who_of(pending[-1]).strip() == who.strip() and what_of(pending[-1]).strip() == what.strip():
         # THE SAME CALL AGAIN: its entry is written already — finish that save, and write the entry no second time
-        print(dmparse.said(f"dmsave: this entry is written already, and waiting — committing it, as --again does"),
+        print(dmparse.said(f"save: this entry is written already, and waiting — committing it, as --again does"),
               file=sys.stderr)
         return commit('; '.join(what_of(h) for h in pending), again=True)
     the_minute_turns()
     try:
         journal.append(who, what, body)
     except SystemExit as e:                       # the journal tool refused the entry, and wrote nothing
-        refuse(str(e.code).replace('dmjournal: ', '', 1))
+        refuse(str(e.code).replace('journal: ', '', 1))
     return commit('; '.join([what_of(h) for h in pending] + [what.strip()]), again=False)
 
 
@@ -385,7 +386,7 @@ def the_minute_turns():
     both = sorted(p for p in mine if p.startswith(('beans/', 'mappings/')) and now() in out('show', f'HEAD:{p}'))
     if not both:
         return
-    print(dmparse.said(f"dmsave: {', '.join(both[:3])}{' …' if len(both) > 3 else ''} was saved in this minute already; "
+    print(dmparse.said(f"save: {', '.join(both[:3])}{' …' if len(both) > 3 else ''} was saved in this minute already; "
                        f"waiting for the next, since a knowing act's moment is the minute's"), file=sys.stderr)
     minute = now()
     while now() == minute:

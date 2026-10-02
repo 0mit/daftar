@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""dmpass — where every file sits: the law's layer map, read once, for every tool that asks.
+"""pass — where every file sits: the law's layer map, read once, for every tool that asks.
 
-    python3 bin/dmpass.py --layers            # each layer with the files it holds, and the files in none
-    python3 bin/dmpass.py --layers --json     # the same, for a tool
-    python3 bin/dmpass.py <path> ...          # the layer and the keeper of each path
-    python3 bin/dmpass.py --flows [--json]    # each row of the flow law, and how far it is guarded
+    python3 bin/pass.py --layers            # each layer with the files it holds, and the files in none
+    python3 bin/pass.py --layers --json     # the same, for a tool
+    python3 bin/pass.py <path> ...          # the layer and the keeper of each path
+    python3 bin/pass.py --flows [--json]    # each row of the flow law, and how far it is guarded
 
 THE MAP IS LAW (manifesto: layers). The law's `layers` place what every garden has, and a garden places the rest with
 `standing`, a list on any of its beans. A pattern is matched as a release's `seed/LANGUAGE` is matched — `*` crosses `/`
@@ -44,9 +44,9 @@ network path and writes nothing.
 """
 import fnmatch, json, os, posixpath, re, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
-import dmform   # the one reader of how the law spells an attribute
+import parse as dmparse
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
+import form as dmform   # the one reader of how the law spells an attribute
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LAW = 'seed/std-vocab.md'
@@ -108,13 +108,12 @@ def offered(law):
 
 
 def offered_in(read):
-    """The profiles the release a tree carries offers, `read` reading its files: the core's (core/law/profiles.yaml)
-    where it carries the core's, else today's law's (seed/std-vocab.md)."""
+    """The profiles the release a tree carries offers, `read` reading its files: the core's (core/law/profiles.yaml)."""
     core = read('core/law/profiles.yaml')
     if core:
         import yaml
         return offered(yaml.load(core, Loader=yaml.BaseLoader) or {})
-    return offered(_front(read(LAW)) or {})
+    return []
 
 
 def extended(vocab):
@@ -177,27 +176,8 @@ class Map:
         self.files = sorted(set(files))
         # IN A GARDEN OF THE CORE (v1 part 8) the map is core/law/layers.yaml's, and the garden places the rest by its
         # VOCAB.md `standing` rows, and the profiles a release offers are core/law/profiles.yaml's (part 11)
-        self.core = pins_core(_front(read('GARDEN.md')))
-        if self.core:
-            self._core(read, standing)
-            return
-        law = _front(read(LAW))
-        if law is None:
-            raise ValueError(f"{LAW} is not there or does not parse: there is no map without the law")
-        self.version = str(law.get('version'))
-        self.rows = [r for r in (law.get('layers') or []) if isinstance(r, dict) and isinstance(r.get('layer'), str)]
-        self.layers = {r['layer']: r for r in self.rows}
-        self.journal_path = law['journal'].get('path') if isinstance(law.get('journal'), dict) else None
-        self.language = expand(language(read(LANGUAGE)), offered(law))       # what the release keeps
-        if standing is not None:
-            self.standing = [(f, i, e) for f, i, e in standing if _one(e)]
-        else:
-            self.standing = []
-            for f in self.files:
-                if f.startswith(DOCUMENTS) and f.endswith('.md'):
-                    for i, e in enumerate((_front(read(f)) or {}).get('standing') or []):
-                        if _one(e):
-                            self.standing.append((f, i, e))
+        self.core = True                  # the map is the core's law's (core/law/layers.yaml) and the garden's rows
+        self._core(read, standing)
 
     def _core(self, read, standing):
         import yaml
@@ -649,18 +629,6 @@ class Origins:
         return out
 
 
-def origins(root=ROOT):
-    """The Origins of the law at its one path and of this garden's VOCAB.md. An unreadable law gives no rows, and every
-    reader then finds no position that reads the clock — the gate names the law."""
-    def fm(p):
-        try:
-            with open(os.path.join(root, *p.split('/')), encoding='utf-8') as fh:
-                return _front(fh.read())
-        except (OSError, UnicodeDecodeError):
-            return None
-    return Origins(fm(LAW), fm('VOCAB.md'))
-
-
 # ============================== WHICH PASSES ARE GRANTED (24.0; the Leviathan's Body 3, the flow law) ==============================
 # A pass is material moving from a SOURCE to a DESTINATION by a METHOD. The law's `flows` are closed rows of the three:
 # a pass no row holds is refused, the nearest row that holds decides, and of two as near a refusal. A garden's own rows
@@ -946,12 +914,8 @@ class Flows:
 
 
 def flows(root=ROOT):
-    """The Flows of the law at its one path and of this garden's VOCAB.md — in a garden of the core, its flow law
-    (CoreFlows)."""
-    if runs_core(root):
-        return CoreFlows(core_law(root))
-    o = origins(root)
-    return Flows(o.law, _read_front(root, 'VOCAB.md'))
+    """The flow law the garden at `root` runs: the core's (CoreFlows), with the garden's own rows."""
+    return CoreFlows(core_law(root))
 
 
 # ------------------------------ how far each row is guarded: COMPUTED, never typed ------------------------------
@@ -1167,7 +1131,7 @@ def _covers(granted, asked):
 
 
 def _day(x):
-    import dmcal
+    import cal as dmcal
     s = str(x).strip()
     try:
         return dmcal.moment(s).ms // dmcal.DAY_MS
@@ -1181,8 +1145,8 @@ def _during(d, at):
         return True
     import time
     try:
-        # TODAY IN THE SAME COUNT AS THE BOUNDS: dmcal's day number. It was the count of days since 1970, and a bound's is
-        # dmcal's (about 739,000 now against about 20,700), so a grant with a `to` never ended and one with a `from`
+        # TODAY IN THE SAME COUNT AS THE BOUNDS: cal's day number. It was the count of days since 1970, and a bound's is
+        # cal's (about 739,000 now against about 20,700), so a grant with a `to` never ended and one with a `from`
         # never began, wherever no `at` was given — the view host, the hub, the gate.
         now = _day(at) if at else _day(time.strftime('%Y-%m-%d', time.gmtime(time.time())))
         lo = _day(d['from']) if d.get('from') is not None else None
@@ -1193,7 +1157,7 @@ def _during(d, at):
 
 
 def _select(holder, key, root):
-    import dmreckon
+    import reckon as dmreckon
     ref = key if ':' in str(key) else f"{holder}:{key}"
     try:
         return set(dmreckon.select(ref, root=root))
@@ -1305,7 +1269,7 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
 
 # ============================== LEG 2 (24.0): what the save traces, and what POST looks for ==============================
 # The launcher (bin/launch.py) and the hook (bin/hook.py) keep a session's material, per clone and off git; the save
-# (bin/dmsave.py) traces each said value it is about to commit back through it. The judging is here, and reads only
+# (bin/save.py) traces each said value it is about to commit back through it. The judging is here, and reads only
 # what it is handed: it opens no store and writes nothing.
 RELAYS = ('self',)          # material that only carries: the model's own output. A session's own beans are named per call
 PERSON = ('words', 'instructions')
@@ -1462,8 +1426,10 @@ CORE_GRANTS = {'read': 'read', 'write': 'write'}        # today's act -> the cor
 
 
 def pins_core(manifest):
+    """True but for a garden in today's words (`std-vocab@…`), which this release's tools do not read: a garden of the
+    core, and a release's own tree, which pins nothing (bin/check.py `runs_core`)."""
     e = manifest.get('extends') if isinstance(manifest, dict) else None
-    return isinstance(e, str) and e.startswith('core@')
+    return not (isinstance(e, str) and e.startswith('std-vocab@'))
 
 
 def runs_core(root=ROOT):
@@ -1700,7 +1666,7 @@ def main(argv):
     try:
         m = Map.here()
     except ValueError as e:
-        print(f"dmpass: {e}", file=sys.stderr)
+        print(f"pass: {e}", file=sys.stderr)
         return 2
     try:
         chain, broken = m.chain(), None

@@ -3,7 +3,7 @@
 
     python3 bin/parse.py <file> ...    # each document's front matter as its garden's law reads it, as JSON
 
-(`python` on Windows; `python3 bin/daftar.py parse` runs this too, and `bin/dmparse.py`, today's name, until v1's part
+(`python` on Windows; `python3 bin/daftar.py parse` runs this too, and `bin/parse.py`, today's name, until v1's part
 13 — every tool imports it by that name.)
 
 Why this file exists: every tool used to split a document with `text.split('---', 2)`, which cuts on
@@ -13,7 +13,7 @@ Here the fences are LINE-ANCHORED: a fence is a whole line that is exactly `---`
 and a CR are tolerated). Front-matter is what lies between fence #1 (which must open the document) and
 fence #2. Everything after fence #2 is body, verbatim.
 
-One owner of a fact: dmcheck.py and dmmerge.py both import this — the parsing rule lives here only.
+One owner of a fact: check.py and merge.py both import this — the parsing rule lives here only.
 
 TWO READERS OF A FRONT MATTER, BY THE PIN (v1 part 10). A garden that runs the core (GARDEN.md `extends: core@…`) reads
 every value as the text it is written in (core/read.py: YAML's BaseLoader, so `on:` is no boolean and a day no date —
@@ -42,7 +42,7 @@ for _s in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmform
+import form as dmform
 
 FENCE = re.compile(r'^---[ \t]*\r?$', re.M)
 BOM = '﻿'
@@ -243,8 +243,8 @@ def compare_anchor(terms, key, value):
 def garden_id(root):
     """A GARDEN'S IDENTITY (std-vocab 21.0, `garden_id`): the first twelve hex digits of the root of its first-parent
     history — the commit it germinated from — or None outside a git repository and in a shallow clone, which cannot
-    see its root. HERE, because the gate (`dmcheck.own_garden_id`), the merge (which garden a bare minted name belongs
-    to) and the proposals between gardens (`dmpropose`) must read one identity the same way, and dmcheck cannot be
+    see its root. HERE, because the gate (`check.own_garden_id`), the merge (which garden a bare minted name belongs
+    to) and the proposals between gardens (`propose`) must read one identity the same way, and check cannot be
     imported outside a garden."""
     import subprocess
     try:
@@ -365,7 +365,7 @@ def control_characters(text, category='Cc', but=('\t',), lines_in='block'):
 # documents (verified by comparing both loaders' output document by document, with the comparison
 # itself first shown able to detect a difference).
 #
-# It lives HERE because dmparse is already "the one front-matter splitter — everything uses it,
+# It lives HERE because parse is already "the one front-matter splitter — everything uses it,
 # nothing reimplements it". A second copy of the loader choice in each tool is a second copy of a
 # decision, and this repo has paid for that shape before.
 #
@@ -493,7 +493,7 @@ def loads(text):
 # ---- A COMMENT IN A FRONT MATTER, AND WHAT IT SITS ON (24.0: the law carries no story) ----------------------------------
 # A `#` begins a comment where it is outside quotes, at a line's start or after a blank, and outside a block scalar
 # (`|`, `>`), whose lines are the value's text. What a comment sits on is the item on its line, or, for a comment on a
-# line of its own, the item on the next line that holds one; named as bin/dmwhy.py keys a reason: `a.b[x].c`, a list's
+# line of its own, the item on the next line that holds one; named as bin/why.py keys a reason: `a.b[x].c`, a list's
 # item by the first scalar it holds. One reader, so the gate and the upgrade find the same comments.
 TITLE = re.compile(r'^\s*# == [^=]+ ==\s*$')
 
@@ -592,7 +592,7 @@ def comments(head):
 # ---- A TABLE: ROWS OF CELLS, READ AND WRITTEN HERE AND NOWHERE ELSE (std-vocab `value_types[rows]`) ------------------
 # A series holds its rows as a table — a header line, then one line per row, the cells separated by one tab — inline in
 # a bean as a block scalar (`rows: |`), or in a file of its own. ONE READER AND ONE WRITER, both here (D46): the gate,
-# bin/dmseq.py, the merge and the proposals read a table only through `table_read`, and whatever re-emits a bean writes
+# bin/seq.py, the merge and the proposals read a table only through `table_read`, and whatever re-emits a bean writes
 # one only through `table_dumper`. PyYAML will not write a tab inside a block scalar, even asked to: it double-quotes the
 # string, and a merged chart became one escaped line — the same value, and a page nobody can read. So the dumper chooses
 # the block itself for a value that IS a table, and writes it back byte for byte.
@@ -600,7 +600,7 @@ def comments(head):
 # THE FORM IS FIXED SO THAT NOTHING CHANGES IT: every line ends in a line feed alone; no line is empty; no cell is empty
 # and none begins or ends in a space — a value nobody read is written as a gap token, never left blank — so no line
 # ends in whitespace, and an editor that trims trailing whitespace changes nothing. What a cell MEANS (a count, a
-# position, a code, a gap) is the channel's, read by bin/dmseq.py against the law; this reads only the form.
+# position, a code, a gap) is the channel's, read by bin/seq.py against the law; this reads only the form.
 class TableError(ValueError):
     """A table not in its one form, refused by name: the line and what is wrong with it."""
 
@@ -705,7 +705,7 @@ def table_dumper(base):
 # its own shape or not at all: an entry of another shape is refused by name and left unread. A list where a name belongs
 # ended the gate in a traceback, `local_terms: [5]` passed as though it said something, and a pattern that does not
 # compile ended the run at the first value matched against it. ONE definition, read by the gate (which refuses what this
-# leaves out) and by dmrules (which lists no rule of it), so the two never disagree about what a garden's vocabulary says.
+# leaves out) and by rules (which lists no rule of it), so the two never disagree about what a garden's vocabulary says.
 VOCAB_BLOCKS = (('local_terms', list), ('local_gene', list), ('vacancies', list), ('extends_profiles', list),
                 ('registry_files', list), ('registry_forms', dict), ('registry_additions', dict),
                 ('identity_policy', dict))

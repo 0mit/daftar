@@ -7,9 +7,10 @@ seed/GARDEN.md.template pinning `core@`), and later releases of it — one with 
 a later version (v1.1.0), one whose core refuses the garden (v1.2.0), one whose core is older (v1.3.0) — and a GARDEN
 grown from v1.0.0, with its gardener, a laptop and a codebase, saved through the core's gate.
 
-install: the clone's hooks take the law by the pin, and the statement merge is git's driver. save and journal: `at: now`
+install: the clone's hooks take the law by the pin, and the statement merge is git's driver; from a CRLF checkout every
+hook is installed with LF, and the next save goes through it. save and journal: `at: now`
 is written as the heading's moment, in a statement and in `details`, and today's `as_of: now` is not (the core has no
-such word); `bin/dmsave.py` and `daftar save` are the same tool. safe: statements counted, added, replaced and removed by
+such word); `bin/save.py` and `daftar save` are the same tool. safe: statements counted, added, replaced and removed by
 verb and id, each refused where the count is not the one stated; an edit that loses a statement unsaid is refused; one
 taken out is named by the entry, or the gate refuses it. session: opened in statements, its first save stamped, closed
 with its presence written and merged back through the save, the core's gate passing at every commit. cursor: a file
@@ -26,7 +27,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read  # noqa: E402
-import dmparse, dmpass  # noqa: E402
+import grow  # noqa: E402 — a release of the core, and the release in today's words
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -148,14 +152,7 @@ The printer.
 
 try:
     # ---- THE RELEASES: v1.0.0, a release of the core made from this tree, and four after it
-    law = dmparse.loads(dmparse.split_front_matter(text('seed/std-vocab.md', ROOT))[0])
-    os.makedirs(REL)
-    for f in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
-                         dmpass.language(text('seed/LANGUAGE', ROOT)), dmpass.offered(law)):
-        os.makedirs(os.path.join(REL, os.path.dirname(f)), exist_ok=True)
-        shutil.copy2(os.path.join(ROOT, f), os.path.join(REL, f))
-    for f in ('GARDEN.md.template', 'VOCAB.md.template'):
-        shutil.copy2(os.path.join(ROOT, 'core', 'guide', f), os.path.join(REL, 'seed', f))
+    grow.release(REL)                                       # v1.0.0, tagged
 
     def tag(t, msg):
         run('git', 'add', '-A', cwd=REL)
@@ -167,8 +164,6 @@ try:
         write('core/law/core.yaml', y, REL)
         k = text('core/law/kinds.yaml', ROOT)
         write('core/law/kinds.yaml', re.sub(rf'(?m)^  - {{ kind: {drop},[^\n]*\n', '', k) if drop else k, REL)
-    run('git', 'init', '-q', cwd=REL)
-    tag('v1.0.0', 'the core')
     write('seed/README.md', text('seed/README.md', REL) + '\nA line v1.0.1 adds.\n', REL)
     tag('v1.0.1', 'a file changed')
     core_yaml(f"{VERSION.split('.')[0]}.{int(VERSION.split('.')[1]) + 1}")
@@ -191,6 +186,27 @@ try:
           r.returncode == 0 and 'bin/check.py' in hook and 'bin/check.py' in text('.git/hooks/pre-merge-commit')
           and 'bin/merge.py' in run('git', 'config', '--get', 'merge.daftar.driver').out, r.out + hook[-300:])
 
+    # ---- A CRLF CHECKOUT (Git for Windows' default) installs hooks that run: every hook, pre-merge-commit among them
+    shf = ['bin/hooks/' + h for h in sorted(os.listdir(os.path.join(G, 'bin', 'hooks')))] + ['bin/install.sh',
+                                                                                             'seed/germinate.sh']
+    for f in shf:
+        os.remove(os.path.join(G, f))
+    run('git', '-c', 'core.autocrlf=true', 'checkout', '--', *shf)
+    cr = [f for f in shf if b'\r' in open(os.path.join(G, f), 'rb').read()]
+    check("install: `.gitattributes` keeps the shell LF in a checkout that turns text to CRLF (core.autocrlf=true)",
+          not cr, cr)
+    for f in shf:                       # ...and a checkout made before that line, or with it overridden
+        with open(os.path.join(G, f), 'rb') as fh:
+            b = fh.read()
+        with open(os.path.join(G, f), 'wb') as fh:
+            fh.write(b.replace(b'\n', b'\r\n'))
+    r = run(PY, 'bin/install.py')
+    names = [os.path.basename(f) for f in shf if f.startswith('bin/hooks/')]
+    cr = [n for n in names if b'\r' in open(os.path.join(G, '.git', 'hooks', n), 'rb').read()]
+    check(f"install: bin/install.py installs every hook with LF from a CRLF checkout ({', '.join(names)})",
+          r.returncode == 0 and 'pre-merge-commit' in names and not cr, (cr, r.out[-400:]))
+    run('git', 'checkout', '--', *shf)
+
     # ---- SAVE AND JOURNAL: the moment at `at`, in a statement and in details; today's `as_of: now` is not the core's
     write('beans/laptop.md', LAPTOP)
     write('beans/app.md', APP % os.path.join(T, 'src', 'app'))
@@ -203,8 +219,8 @@ try:
     check("journal: in a garden of the core, today's `as_of: now` is not stamped — the core's `now` fills `at` alone",
           app['details']['provenance']['as_of'] == 'now', app['details'])
     write('beans/laptop.md', text('beans/laptop.md').replace('The laptop.', 'The laptop, on the desk.'))
-    r = run(PY, 'bin/dmsave.py', 'sam', 'the laptop on the desk', '--body', '- action: [[laptop]] is on the desk')
-    check("save: today's name, bin/dmsave.py, runs the same tool", r.returncode == 0 and clean(), r.out[-600:])
+    r = run(PY, 'bin/daftar.py', 'save', 'sam', 'the laptop on the desk', '--body', '- action: [[laptop]] is on the desk')
+    check("save: `daftar save` runs the same tool as bin/save.py", r.returncode == 0 and clean(), r.out[-600:])
     write('beans/laptop.md', text('beans/laptop.md').replace('on the desk.', 'on the desk, by the window.'))
     r = run(PY, 'bin/daftar.py', 'save', 'sam', 'the laptop by the window', '--body', '- action: [[laptop]] by the window')
     check("save: `daftar save` runs it too", r.returncode == 0 and clean(), r.out[-600:])

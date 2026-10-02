@@ -25,7 +25,7 @@ from fractions import Fraction
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
-import dmunits  # noqa: E402
+import units as dmunits  # noqa: E402
 
 FAILS = []
 

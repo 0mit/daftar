@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""The core's save: today's bin/dmsave.py commits a garden written in statements, with the core's gate at the commit.
+"""The core's save: today's bin/save.py commits a garden written in statements, with the core's gate at the commit.
 
 Grows a garden of the core's beans (bin/, core/ and the standards copied from this release), installs the core's
-pre-commit gate (core/install.py), and saves through bin/dmsave.py, which journals, stamps, stages and commits in one
+pre-commit gate (bin/install.py), and saves through bin/save.py, which journals, stamps, stages and commits in one
 call. Checks that a knowing act's `at: now` is written as the moment of the heading the save wrote; that a moment typed
 there is refused, and saved once it is `now`; that a bean the entry does not name is refused; that a statement added
 under an old act is refused until an act of this commit knows it; that a change to the law is refused until an entry
@@ -59,7 +59,7 @@ def bean(bid, kind, statements):
 
 
 def save(who, what, body):
-    r = run(PY, 'bin/dmsave.py', who, what, '--body', body)
+    r = run(PY, 'bin/save.py', who, what, '--body', body)
     r.out = r.stdout + r.stderr          # git hands a hook's output to stderr
     return r
 
@@ -96,15 +96,15 @@ try:
     vocab = {k: [dict(r, vacant=r.get('vacant') or "the cases' row, beside this suite's own garden")
                  if k in ('kinds', 'levels', 'namespaces', 'verbs', 'units') and isinstance(r, dict) else r
                  for r in v] if isinstance(v, list) else v for k, v in CASES['vocab'].items()}
-    write('VOCAB.md', dict({'vocab': 'core-save'}, **vocab), '')
+    write('VOCAB.md', vocab, '')
     os.makedirs(os.path.join(G, 'log'))
     with open(os.path.join(G, 'log', 'journal.md'), 'w', encoding='utf-8') as fh:
         fh.write('# Journal\n')
     git('add', '-A')
     git('commit', '-q', '--no-verify', '-m', 'the garden, before its first bean')
-    r = run(PY, 'core/install.py')
-    check("core/install.py installs the core's gate as this clone's pre-commit",
-          r.returncode == 0 and 'core/check.py --staged' in open(os.path.join(G, '.git', 'hooks', 'pre-commit')).read(),
+    r = run(PY, 'bin/install.py')
+    check("bin/install.py installs the core's gate as this clone's pre-commit",
+          r.returncode == 0 and 'bin/check.py" --staged' in open(os.path.join(G, '.git', 'hooks', 'pre-commit')).read(),
           r.stdout + r.stderr)
 
     # A FIRST BEAN: `at: now` becomes the moment of the heading the save wrote
@@ -122,7 +122,7 @@ try:
     check("a knowing act's moment typed by hand is refused: the moment is the save's",
           r.returncode == 1 and 'knowing' in r.out and 'is no moment' in r.out, r.stdout + r.stderr)
     bean('ben', 'person', [{'say': {'by': 'ben', 'at': 'now'}}, {'own': {'by': 'theone', 'of': 'self'}}, BEN_AGREES])
-    r = run(PY, 'bin/dmsave.py', '--again')
+    r = run(PY, 'bin/save.py', '--again')
     at = (head_bean('ben').get('statements') or [{}])[0].get('say', {}).get('at')
     check("...and once it says `now`, --again saves it at the waiting entry's moment",
           r.returncode == 0 and at == last_heading()[3:].split(' · ', 1)[0], (r.returncode, at, r.stdout + r.stderr))
@@ -150,7 +150,7 @@ try:
           r.returncode == 1 and 'known by no act it adds' in r.out, r.stdout + r.stderr)
     bean('sam', 'person', [{'say': {'by': 'sam', 'at': moment}}, {'own': {'by': 'theone', 'of': 'self'}},
                            {'say': {'by': 'sam', 'of': ['job'], 'at': 'now'}}, {'do': {'id': 'job', 'by': 'self', 'as': 'workstation'}}])
-    r = run(PY, 'bin/dmsave.py', '--again')
+    r = run(PY, 'bin/save.py', '--again')
     check("...and saved once an act of this commit knows it", r.returncode == 0, r.stdout + r.stderr)
 
     # THE LAW: a RULE-CHANGE
@@ -161,8 +161,8 @@ try:
     r = save('sam', 'a boat is a kind', '- action: the kind boat, for the garden')
     check("a change to the law with no RULE-CHANGE said is refused by `ratify`",
           r.returncode == 1 and 'ratify' in r.out, r.stdout + r.stderr)
-    r = run(PY, 'bin/dmjournal.py', 'sam', 'RULE-CHANGE ratified', '--body', '- action: RULE-CHANGE, the kind boat; ratified by sam')
-    r = run(PY, 'bin/dmsave.py', '--again')
+    r = run(PY, 'bin/journal.py', 'sam', 'RULE-CHANGE ratified', '--body', '- action: RULE-CHANGE, the kind boat; ratified by sam')
+    r = run(PY, 'bin/save.py', '--again')
     check("...and saved once an entry says RULE-CHANGE", r.returncode == 0, r.stdout + r.stderr)
 
     # THE ENGINE'S OWN REFUSALS STOP THE COMMIT
@@ -182,7 +182,7 @@ try:
     reset()
 
     # WHAT TODAY'S GATE HELD AT THE COMMIT, NOW THE CORE'S (v1): `kept`, `harm`, `consent`, and `form` on disk. Each case
-    # is written, journalled by the clock (bin/dmjournal.py), staged, and judged as the commit would be; then undone.
+    # is written, journalled by the clock (bin/journal.py), staged, and judged as the commit would be; then undone.
     def staged_case(files, entry, setup=None):
         if setup:
             for rel, text in setup.items():
@@ -198,7 +198,7 @@ try:
                 continue
             with open(os.path.join(G, rel), 'w', encoding='utf-8', newline='') as fh:
                 fh.write(text)
-        run(PY, 'bin/dmjournal.py', 'sam', 'a case', '--body', entry)
+        run(PY, 'bin/journal.py', 'sam', 'a case', '--body', entry)
         git('add', '-A')
         r = run(PY, 'core/check.py', '--staged')
         reset()

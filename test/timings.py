@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The suites' timings (SCALE, 24.0: machinery step 0): run each suite CI runs, and append one line per suite to
-test/timings.tsv — `date	suite	seconds	passed	failed` — which `python3 bin/dmreckon.py order tests` reads beside
+test/timings.tsv — `date	suite	seconds	passed	failed` — which `python3 bin/reckon.py order tests` reads beside
 test/weighing.yaml to order the working loop (D41).
 
     python3 test/timings.py [test/x.py ...] [-j N] [--status FILE] [--no-record]

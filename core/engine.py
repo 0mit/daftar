@@ -27,20 +27,21 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import frame, read  # noqa: E402
-import dmcal  # noqa: E402 — a day's length, to reckon a day's span beside a moment's
+import cal as dmcal  # noqa: E402 — a day's length, to reckon a day's span beside a moment's
 from core.law import listed, shapes_of, TRUE  # noqa: E402
-import dmpass  # noqa: E402 — the one matcher of a path against a layer's pattern
-import dmparse  # noqa: E402 — the one splitter of a front matter, the one reader of a garden's id, the control characters
+import importlib
+dmpass = importlib.import_module('pass')  # noqa: E402 — the one matcher of a path against a layer's pattern
+import parse as dmparse  # noqa: E402 — the one splitter of a front matter, the one reader of a garden's id, the control characters
 
 HEADER = ('bean', 'kind', 'title', 'summary', 'tags', 'details', 'statements')
-DOCUMENTS = ('beans', 'mappings')          # where a garden keeps its beans (dmpass.DOCUMENTS)
+DOCUMENTS = ('beans', 'mappings')          # where a garden keeps its beans (pass.DOCUMENTS)
 ID = re.compile(r'^[a-z0-9][a-z0-9_-]*$', re.ASCII)
-HELD = re.compile(r'^root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32}$')        # a sealed statement's pointer (dmheld mints it)
+HELD = re.compile(r'^root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32}$')        # a sealed statement's pointer (held mints it)
 SEALED = {'held', 'id', 'while', 'why', 'note'}                    # all a sealed statement carries
-OPAQUE = re.compile(r'^p-[0-9a-f]{8}$')                             # a person written by an opaque id (dmheld person)
+OPAQUE = re.compile(r'^p-[0-9a-f]{8}$')                             # a person written by an opaque id (held person)
 GARDEN_ID = re.compile(r'^[0-9a-f]{12}$')
 QUALIFIED = re.compile(r'^([0-9a-f]{12})/([a-z][a-z0-9-]*):([a-z0-9][a-z0-9._-]*)$')
-LEVELS = ('none', 'personal', 'special-category')                  # sensitivity, lowest first (dmpass.LEVELS)
+LEVELS = ('none', 'personal', 'special-category')                  # sensitivity, lowest first (pass.LEVELS)
 GARDENER_KINDS = ('person', 'org')                                  # who may keep a garden (today's `manifest`)
 TEXT = dict(holds_no='Cc', but=('\t',), lines_in='block')          # text holds no control character (`value_types`)
 PORTS = ('tcp-port', 'udp-port')                                    # the systems whose positions are ports (IANA)
@@ -743,7 +744,7 @@ class Judge:
             yield x.split(':', 1)[0]
 
     def _marked(self):
-        """The schemes marked special-category: the garden's own, as it declares them (dmknowledge reads them)."""
+        """The schemes marked special-category: the garden's own, as it declares them (knowledge reads them)."""
         try:
             return {k for k, r in self.L.std.knowledge.schemes.items()
                     if isinstance(r, dict) and r.get('sensitive') == 'special-category'}
@@ -770,7 +771,7 @@ class Judge:
             self.err('harm', where, f"is sealed, and holds {', '.join(extra)} beside it: a sealed statement keeps its verb "
                                     f"and carries only held, id, while, why and note — what it said is in the held store")
         if not (isinstance(r.get('held'), str) and HELD.match(r['held'])):
-            self.err('harm', where, "`held` is `root:<root>/<32 lowercase hexadecimal digits>`, a key bin/dmheld.py "
+            self.err('harm', where, "`held` is `root:<root>/<32 lowercase hexadecimal digits>`, a key bin/held.py "
                                     "mints, which says nothing of what it holds")
         if not isinstance(r.get('id'), str):
             self.err('harm', where, "a sealed statement has an id, which the journal names when it is sealed or erased")
@@ -864,7 +865,7 @@ class Judge:
                     continue
                 if not (isinstance(a, str) and GARDEN_ID.match(a)):
                     self.err('names', f"{b.id}[{i}] name", f"{a!r}: a garden's id is the first twelve hexadecimal digits "
-                                                          f"of the root of its history, as `python3 bin/dmpropose.py id` "
+                                                          f"of the root of its history, as `python3 bin/propose.py id` "
                                                           f"prints it")
                 elif a == self.G.gid:
                     self.err('names', f"{b.id}[{i}] name", f"{a} is this garden's own id: a `garden` bean records another "
@@ -921,7 +922,7 @@ class Judge:
             self.err('consent', bid, "names a person who is not the gardener, and no word of theirs is recorded: an "
                                      "`agree` of theirs to an agreement this garden holds, or the garden they keep, met "
                                      "here (a `garden` bean they `own`) — or write them under an opaque id, as `python3 "
-                                     "bin/dmheld.py person` mints one, their name held off git")
+                                     "bin/held.py person` mints one, their name held off git")
         self.declining_and_acting_for()
 
     def declining_and_acting_for(self):
