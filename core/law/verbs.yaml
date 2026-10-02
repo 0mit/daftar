@@ -10,7 +10,6 @@ tables:                                   # the small tables these rows name; a 
   sensitivities: [none, personal, special-category]
   presences:     [present, absent]                     # what a reading found: present, or looked for and not found
   jobs:          [router, mail-primary, mail-backup, file-server, dns-resolver, dns-authoritative, monitoring, web, app-host, vpn-gateway, ledger-hub, workstation]
-  methods:       [edit, remove, stamp, append, record, capture, merge, forward, adopt, publish, render, show, send]   # how a pass is made, beside the verbs that are methods too: derive, make, take, serve, hold
 standard_tables: [protocols, knowledge, properties, units]   # read from their standards (IANA, our knowledge tree, ISO 19156, SI and UCUM)
 
 verbs:
@@ -249,10 +248,16 @@ verbs:
     replaces: []
     home: core
   - verb: take
-    meaning: "to take a proposal in, whole, from the garden that made it"
-    roles: { by: { shape: being }, of: { shape: being }, from: { shape: being }, at: { shape: position } }
+    meaning: "to take a proposal in, whole, from the garden that made it: what it carried is known there, and taken here by the gardener's commit, `through` the proposal (its fingerprint)"
+    roles: { by: { shape: being }, of: { shape: being }, from: { shape: being }, through: { shape: text }, at: { shape: position } }
     required: [by, of, from]
     replaces: []
+    home: core
+  - verb: rehearse
+    meaning: "to be a rehearsal or a test, saying what it rehearses: a garden that rehearses holds no facts about the world, and what is taken from it is a rehearsal's. A garden says it of itself in GARDEN.md (`test`); this one says it of another garden, on that garden's bean"
+    roles: { by: { shape: being }, of: { shape: text }, at: { shape: position } }
+    required: [by, of]
+    replaces: [test]
     home: core
 
   # ---------------------------------------------------------------- the network profile

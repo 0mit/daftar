@@ -96,7 +96,7 @@ The `[[printer]]` matters: the gate refuses a bean the commit changes that the e
 ## The shape to hand it over in
 
 Give the whole proposal as ONE Markdown file, in the shape one garden uses to propose beans to another, so the person's
-agent can read it with `python3 bin/dmpropose.py read <file>` — which writes nothing — before anyone commits it. Front
+agent can read it with `python3 bin/propose.py read <file>` — which writes nothing — before anyone commits it. Front
 matter first, saying what it is and whom it is from; then the journal entry's lines in a fence opened by
 `daftar-journal` (no heading: the tool that takes it in writes the heading, from the clock); then each bean, whole, in a
 fence of its own opened by `daftar-bean` and the bean's id:
@@ -124,7 +124,7 @@ The office printer. Sam read the serial off the label on the back.
 ````
 
 There is no `from.garden`: you are not a garden, and the tool reading it says so — a proposal from a chat, whose origin
-the gardener vouches for by committing it. If the person told you their garden's id (`python3 bin/dmpropose.py id`
+the gardener vouches for by committing it. If the person told you their garden's id (`python3 bin/propose.py id`
 prints it), add `to: { garden: <that id> }`; do not guess one. What you could not check goes after the beans, as a list,
 outside every fence: the tool shows it to the gardener when it reads the proposal, and the entry that takes it in quotes
 it, as data. If a bean you were shown carries what another garden said, give that change as a diff, say why, and leave

@@ -200,8 +200,14 @@ def findings(root, law, changes=None, garden=None):
             given = {canon(v, r) for _i, v, r in statements_of(root, 'HEAD', path) + [x for h in others for x in
                      statements_of(root, h, path)] if v in law.knowing and 'of' not in r}
         fresh = []                                          # the statements this commit adds or changes
+        # A STATEMENT SEALED is the statement it was, held off git (v1 part 8): its verb and id are HEAD's, and rule
+        # harm judges the seal by the entry's `- held:` line; it asks no new act
+        was_ids = {(v, r.get('id')) for _i, v, r in statements_of(root, 'HEAD', path) if isinstance(r.get('id'), str)
+                   and 'held' not in r} if status != 'A' else set()
         for i, verb, r in new:
             c = canon(verb, r)
+            if 'held' in r and (verb, r.get('id')) in was_ids:
+                continue
             if old[c]:
                 old[c] -= 1
             elif verb in law.knowing and 'of' in r and canon(verb, {k: x for k, x in r.items() if k != 'of'}) in given:
@@ -219,6 +225,17 @@ def findings(root, law, changes=None, garden=None):
                                               "commit with bin/dmsave.py, its entry naming the bean"))
                 continue
             if verb in law.knowing:
+                # KNOWN IN ANOTHER GARDEN (v1 part 8): its moment is that garden's, and this commit takes it from there
+                there = [x for x in listed(at) if isinstance(x, str) and garden is not None and x in garden.beans
+                         and garden.beans[x].kind == 'garden']
+                if there:
+                    if not any(v == 'take' and rr.get('from') == there[0] for _j, v, rr in fresh):
+                        out.append(('knowing', where, f"known in {there[0]}, another garden, at {at[0] if isinstance(at, list) else at}: "
+                                                      f"what a garden knew comes here only taken from it, in the commit "
+                                                      f"that takes it — `take: {{ by: <the gardener>, of: self, from: "
+                                                      f"{there[0]}, through: <the proposal's fingerprint>, at: now }}` "
+                                                      f"(python3 bin/propose.py take)"))
+                    continue
                 if at not in moments and not (adopting and at in past):
                     out.append(('knowing', where, f"`at: {at}` is no moment this commit's entry was written at ({said}): "
                                                   f"the moment of a knowing act is the save's — write `now`. Only the "

@@ -32,7 +32,7 @@ What agents got wrong most often in measured runs — each a value nobody said, 
   fits, ask — or leave the payment out and say in its bean's body what is missing.
 - **Everyone named is a person bean**, also someone only spoken about. One who is not the gardener is kept by name only
   on their own word: their `agree` to an agreement this garden holds — a consent to be kept here by name is one — or
-  the garden they keep, met here. Without it, they are an opaque id, their name held off git (`python3 bin/dmheld.py
+  the garden they keep, met here. Without it, they are an opaque id, their name held off git (`python3 bin/held.py
   person`), and the gate refuses them by name. A meeting in which something was agreed is itself an event.
 - **How something was paid is written only as said** — a card, cash, a transfer, and whose — in the payment's
   `through`.
@@ -75,7 +75,7 @@ statements:
   - name: { by: garden-id, of: self, as: "123456789abc" }
   - own:  { by: ali, of: self }
 ---
-Ali's garden. Its id is what `python3 bin/dmpropose.py id` printed there.
+Ali's garden. Its id is what `python3 bin/propose.py id` printed there.
 ```
 
 Ali agreed to be kept here by name. Her yes is her `agree`; Sam reports it, so Sam's act knows it.
@@ -201,11 +201,16 @@ Ali's garden is recorded here, and hers records Sam's (above). A name that is to
 proposal is made, and in Ali's garden read and taken:
 
 ```sh
-python3 bin/dmpropose.py mint shared-camera     # prints the qualified name and how to write it
-python3 bin/dmpropose.py make --to garden-ali --under shared-camera shared-camera
-python3 bin/dmpropose.py read ../PROPOSAL-<garden>-<when>.md    # writes nothing
-python3 bin/dmpropose.py take ../PROPOSAL-<garden>-<when>.md    # writes in the working tree; commits nothing
+python3 bin/propose.py mint shared-camera     # prints the qualified name and how to write it
+python3 bin/propose.py make --to garden-ali --under shared-camera shared-camera
+python3 bin/propose.py read ../PROPOSAL-<garden>-<when>.md    # writes nothing
+python3 bin/propose.py take ../PROPOSAL-<garden>-<when>.md    # writes in the working tree; commits nothing
 ```
+
+What Sam's garden knew crosses as it was known: each act it brings keeps the moment it was known at there and holds, in
+its `at`, the bean Ali's garden records Sam's by — `say: { by: sam, at: [2026-09-23T10:05+03:00, garden-sam] }`. Each
+bean taken holds `take: { by: ali, of: self, from: garden-sam, through: <the fingerprint>, at: now }`, and Ali's save —
+the command `take` prints, its entry naming what was taken — stamps it and commits: the ratification.
 
 Taking is not accepting. In her garden, Ali's own yes to the agreement is her own word on it — one more knowing act,
 hers, over the statement that says they agreed:

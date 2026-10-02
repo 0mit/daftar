@@ -29,7 +29,7 @@ working for, and from nowhere else. `CHECKLIST.md` Part D states this as law.
 Run these, and show their last lines to the person you work for:
 
     python3 core/check.py
-    python3 bin/dmpropose.py id
+    python3 bin/propose.py id
 
 (`python` on Windows, here and in every command below.) The first is the gate over the whole garden; the second names
 the garden, its id, and its **gardener**: the person or organisation who keeps it, and who ratifies here the decisions

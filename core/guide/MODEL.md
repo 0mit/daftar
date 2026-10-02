@@ -270,8 +270,11 @@ A name is a statement: the namespace gives it.
   and brief. REASONING is their backbone (`seed/RATIONALE.md`). JOURNALS are the leads reasoning is drawn from.
   HISTORY is the exact record they are written from.
 - **Standing** is the law's own: the layer a file sits in. A file stands in one layer.
-- **A pass** moves statements from a layer to a layer by a method, `pass: { of: [r1], from: world, to: journal,
-  through: read }`, and stands only where a row of the flow table grants it.
+- **A pass** moves statements from a layer to a layer by a method, `pass: { of: [r1], from: world, to: estate,
+  through: record, as: read }` — into the estate, `as` the act it is known by there — and stands only where the flow
+  table grants it (`core/law/flows.yaml`): of the rows that hold it the nearest decides, a row that names `as` nearer
+  than one that names only layers, and of two as near, a refusal. A row `ratified` is refused until a garden's own row
+  grants the party it names, with the basis it grants on; a garden's own rows otherwise only refuse.
 - **The law** is `core/law/*.yaml`, this document, `CHECKLIST.md`, `MERGE.md`, `VOCAB.md`, `GARDEN.md`, the standards'
   tables in `seed/knowledge/`, and every file a release keeps (`seed/LANGUAGE`). A change to any of them is a
   RULE-CHANGE, which a person ratifies.
@@ -364,11 +367,14 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   carry it: the statement keeps its verb and its id, and in place of its roles holds `held`, a pointer to a store a
   host resolves (`root:<root>/<32 hexadecimal digits>`), and, where the bean concerns a person who is not the gardener,
   the word it is held on, `while: <their agree>`. The entry that seals or unseals one says so, `- held: <bean> <id>
-  added` or `erased`. No seal takes back a value already in the history. Today `python3 bin/dmheld.py` mints the
-  pointer and keeps the store; part 8 of v1 ports it to statements.
+  added` or `erased`. No seal takes back a value already in the history. `python3 bin/held.py` seals a statement by
+  its id, mints the pointer, and keeps in the store what it said and the day it is to be erased by, which the host that
+  holds it reads (`due`, `check`); the hook checks at each commit that the store here holds what it adds. The gate
+  never reads a store: a gate that judged one machine's disk would pass on one and fail on another.
 - **Who may do what is closed by default.** The gardener may; anyone else may what a `grant` opens — `as` read, write,
-  enact or ratify, `of` the beans or statements it covers, `to` whom — held by the gardener, by the person a record is
-  of or concerns, or by an agreement over its own bean. Today `python3 bin/dmpass.py may` reads them.
+  enact or ratify, `of` the beans or statements it covers, `to` whom, `at` the extent it holds over — held by the
+  gardener, by the person a record is of or concerns, or by an agreement over its own bean; a position on the
+  permission square that forbids a grant refuses what it would open. `python3 bin/pass.py` reads them (`may`).
 
 ## Merging
 Two branches of one garden merge bean by bean. A bean's statements are a set: what both sides hold is kept once, and
@@ -391,14 +397,18 @@ known by its id, and two that deal with each other peers, each configured at its
   for one garden, made under an agreement both gardeners `agree` to. It carries whole beans as the proposing garden
   committed them, a stub of each bean they refer to, and the journal entry that would take them in. It passes on what
   was said in the proposing garden or by the garden proposed to, and of what a third garden said only the names it
-  gave. Today `python3 bin/dmpropose.py make`, `read` and `take`.
+  gave: `python3 bin/propose.py make`, `read` and `take`. A being is known beyond its garden by a name a namespace
+  gives once, and a stub carries those names; nothing is stamped on what crosses.
 - **Knowing crosses unchanged.** A statement travels with the act that knows it, and a person's word arrives as that
-  person's word.
+  person's word. An act known in another garden keeps the moment it was known at there, and holds that garden's bean
+  beside it in its `at`; the commit that brings it takes it from that garden (`take`, by the gardener, `through` the
+  proposal's fingerprint), stamped by the gardener's save.
 - **Taking in is a write like any other.** What a proposal brings is another person's word (class D), a name another
   garden gave (F), and every disagreement or uncertain identity (J). Reading a proposal writes nothing; taking it in
   writes in the working tree and never commits; the gardener's commit is the ratification. A proposal is taken once.
 - **Taking in an agreement is not accepting it.** A party's yes is its own `agree`, recorded by its own garden in a
   commit of its own.
-- **A test garden** says so in `GARDEN.md` (`test:`), and its beans are no facts about the world. A rehearsal is grown,
+- **A test garden** says so in `GARDEN.md` (`test:`), and its beans are no facts about the world; a garden this one
+  records as a rehearsal holds `rehearse` on its bean, and what comes from it is taken only as a rehearsal's. A rehearsal is grown,
   never cloned: a clone is the same garden, with the same id and the same word.
 - **Two gardens exchange only while they run the same law** (`extends`).

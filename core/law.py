@@ -8,7 +8,9 @@ lines, levels, conditions, the crown), the face's verbs and the twenty rules. Th
   levels        { level, line, stands: [{ at, as, while? }], meaning? } the detailed steps of the lines (our knowledge tree)
   namespaces    { namespace, once?, meaning? }                         who gives names, and whether once (beside the
                                                                        standards' own, core/law/namespaces.yaml)
-  flows         { flow?, from, to, through, grant, why? }              the flow table: which passes stand
+  flows         { flow?, from, to, through, as?, grant, why?,          the flow table: which passes stand. A garden's
+                  party?, basis? }                                     row refuses, or grants the party it names where
+                                                                       the core's row of its name is `ratified` (part 8)
   flow_sources  [ name, … ]                                            the flow law's sources beside the layers
   standing      { layer, holds: [pattern, …], meaning? }               which files sit in which layer
   verbs         rows in the form of verbs.yaml                         a garden's own verbs
@@ -39,8 +41,12 @@ LAW_DIR = os.path.join(HERE, 'law')
 GENERATED = ('levels.yaml', 'layers.yaml', 'kinds.yaml')   # rows generated from today's law: the bodies' levels, the
                                                            # layers and standing, and the kinds (the standards' tables,
                                                            # generated too, are read by core/standards.py)
-ROW_FILES = GENERATED + ('units.yaml', 'namespaces.yaml')  # and the units in UCUM, each with the law's English name,
-                                                           # and the namespaces the standards give names in
+ROW_FILES = GENERATED + ('units.yaml', 'namespaces.yaml', 'flows.yaml')  # and the units in UCUM, each with the law's
+                                                           # English name, the namespaces the standards give names in,
+                                                           # and the flow law: its methods and rows (v1 part 8)
+FLOW_LAW = ('methods', 'metadata', 'dropped')              # what core/law/flows.yaml holds beside its rows, and a
+                                                           # garden's VOCAB.md does not
+GRANTS = ('granted', 'refused', 'ratified')
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
             'standing': 'layer', 'verbs': 'verb', 'tables': None, 'units': 'unit', 'exclusive': 'verb',
             'systems': 'system', 'schemes': 'scheme', 'files': 'registry'}
@@ -48,7 +54,7 @@ ROW_FIELDS = {
     'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning', 'vacant'},
     'levels': {'level', 'line', 'stands', 'meaning', 'frame_of', 'vacant'},
     'namespaces': {'namespace', 'once', 'meaning', 'vacant'},
-    'flows': {'flow', 'from', 'to', 'through', 'grant', 'why'},
+    'flows': {'flow', 'from', 'to', 'through', 'as', 'grant', 'keeper', 'party', 'basis', 'why'},
     'standing': {'layer', 'holds', 'meaning'},
     'verbs': {'verb', 'meaning', 'roles', 'qualifiers', 'required', 'choice', 'default', 'replaces', 'home', 'figure',
               'vacant'},
@@ -68,7 +74,7 @@ MEASURES = 'measures.yaml'                                 # the forms of a meas
                                                            # terms and a placement's, how well a value is known (part 7)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
 SPEC_KEYS = {'shape', 'table', 'nature', 'rung', 'many', 'keyed', 'form'}
-FACE_TABLES = ('ways', 'modes', 'acquisitions', 'placements', 'complements')
+FACE_TABLES = ('ways', 'modes', 'acquisitions', 'placements', 'complements', 'knowing')
 TRUE = 'true'
 MANIFEST_FORMS = ('pin', 'bean', 'zone', 'text', 'texts')   # the manifest's forms the engine knows by name; a pattern's
                                                             # are core.yaml's `manifest_forms`
@@ -114,6 +120,8 @@ class Law:
         self.forms = {}                                     # the forms a `form` role names, by name
         self.levels, self.kinds, self.namespaces, self.verbs, self.units = {}, {}, {}, {}, {}
         self.flows, self.flow_sources, self.standing, self.exclusive = [], [], [], []
+        self.garden_flows = []                              # the rows of `flows` a garden added (VOCAB.md)
+        self.methods, self.pass_metadata, self.flows_dropped = {}, {}, {}   # core/law/flows.yaml beside its rows
         self.garden_rows = []                               # (key, name, row) of each row a garden added (rule vacancy)
         self.own = {}                                       # a garden's own systems, schemes and files (part 7)
         self.tables = {t: listed(F.get(t)) for t in FACE_TABLES}
@@ -172,6 +180,15 @@ class Law:
     def extend(self, ext, where):
         """Add a garden's rows to this law: the keys of ROW_KEYS only, each row in its form."""
         for key, val in ext.items():
+            if key in FLOW_LAW and where != GARDEN:
+                for row in listed(val):
+                    if isinstance(row, dict):
+                        {'methods': self.methods, 'metadata': self.pass_metadata,
+                         'dropped': self.flows_dropped}[key][str(row.get({'methods': 'method', 'metadata': 'key',
+                                                                          'dropped': 'flow'}[key]))] = row
+                if key == 'methods':
+                    self.tables['methods'] = list(self.methods)
+                continue
             if key not in ROW_KEYS:
                 continue
             if key == 'flow_sources':
@@ -219,6 +236,8 @@ class Law:
                     self.garden_rows.append((key, row[name_key], row))
                 if key == 'flows':
                     self.flows.append(row)
+                    if where == GARDEN:
+                        self.garden_flows.append(row)
                 elif key == 'standing':
                     self.standing.append(row)
                 elif key == 'exclusive':
@@ -231,6 +250,41 @@ class Law:
                 else:
                     self._put({'kinds': self.kinds, 'levels': self.levels, 'namespaces': self.namespaces,
                                'verbs': self.verbs, 'units': self.units}[key], row[name_key], row, at)
+
+    # ------------------------------------------------------------------------------------------------ the flow law
+    def decide(self, frm, to, through, as_=None, keeper=None, party=None):
+        """Whether a pass `from` a layer `to` a layer `through` a method or a verb, carrying statements known there by the
+        act `as_`, stands: (granted, grant, rows). A row holds it where its `from`, `to` and `through` hold the pass's, its
+        `keeper`, where it names one, is the file's, and its `as`, where it names one, the pass's act — and is then nearer
+        than a row that names only layers. Of the core's rows that hold it the nearest decide, and of two as near a
+        refusal; `ratified` is granted only to the party a garden's own row of that name grants; a garden's own row that
+        holds it and refuses it refuses it. `closed` where no row of the core holds it (core/law/flows.yaml)."""
+        def near(r):
+            if not (frm in listed(r.get('from')) and to in listed(r.get('to')) and through in listed(r.get('through'))
+                    and (r.get('keeper') is None or r.get('keeper') == keeper)):
+                return 0
+            if r.get('as') is None:
+                return 1
+            return 2 if as_ in listed(r.get('as')) else 0
+        mine = [r for r in self.garden_flows if near(r)]
+        core = [(near(r), r) for r in self.flows if not any(r is g for g in self.garden_flows)]
+        core = [(n, r) for n, r in core if n]
+        refused = [str(r.get('flow', '')) for r in mine if r.get('grant') == 'refused']
+        if not core:
+            return False, 'closed', refused
+        top = max(n for n, _ in core)
+        rows = [r for n, r in core if n == top]
+        said = {r.get('grant') for r in rows}
+        grant = 'refused' if 'refused' in said or not said <= set(GRANTS) else 'ratified' if 'ratified' in said \
+            else 'granted'
+        names = [str(r.get('flow', '')) for r in rows]
+        if refused:
+            return False, grant, names + refused
+        if grant == 'ratified':
+            ok = [str(r.get('flow', '')) for r in mine if r.get('grant') == 'granted' and party is not None
+                  and r.get('party') == party and str(r.get('flow', '')) in names]
+            return bool(ok), grant, names + ok
+        return grant == 'granted', grant, names
 
     # ------------------------------------------------------------------------------------------------ tables
     def std_systems(self):
@@ -401,8 +455,27 @@ class Law:
             for x in listed(f.get('through')):
                 if x not in self.table('verbs'):
                     bad(f"flow {f.get('flow', i)}", f"through {x!r}: not a verb or a method")
-            if f.get('grant') not in ('granted', 'refused'):
-                bad(f"flow {f.get('flow', i)}", "its grant is `granted` or `refused`")
+            name = f"flow {f.get('flow', i)}"
+            if f.get('grant') not in GRANTS:
+                bad(name, "its grant is `granted`, `refused` or `ratified`")
+            for x in listed(f.get('as')):
+                if x not in self.knowing:
+                    bad(name, f"as {x!r}: what a pass carries into a layer is known there by a knowing act "
+                              f"({', '.join(self.knowing)})")
+            if f.get('keeper') not in (None, 'release'):
+                bad(name, "`keeper` is `release`: the row holds only for a file the release keeps")
+            if not any(f is g for g in self.garden_flows):
+                if 'party' in f or 'basis' in f:
+                    bad(name, "a row of the core grants no party: a garden grants one, by a row of its own")
+                continue
+            if f.get('grant') == 'refused':
+                continue
+            ratified = [r for r in self.flows if r.get('flow') == f.get('flow') and r.get('grant') == 'ratified'
+                        and not any(r is g for g in self.garden_flows)]
+            if f.get('grant') != 'granted' or not ratified or not f.get('party') or not f.get('basis'):
+                bad(name, "a garden's own row refuses, or grants the party it names (`party`, with the `basis` it "
+                          "grants on) a pass the core's row of the same name says is `ratified`: a garden never "
+                          "unguards the core")
         for i, s in enumerate(self.standing):
             if s.get('layer') not in layers:
                 bad(f"standing {i}", f"{s.get('layer')!r} is no layer")

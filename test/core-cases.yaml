@@ -17,8 +17,8 @@ vocab:                             # the garden's own rows, as its VOCAB.md woul
     # dns is the core's own (core/law/namespaces.yaml): a standard, not a bean, and declared once
     - { namespace: nickname, vacant: "a case beside the garden uses it" }
   flows:
-    - { flow: observed,  from: world, to: journal, through: read, grant: granted }
-    - { flow: said,      from: words, to: journal, through: say,  grant: granted }
+    - { flow: no-world-journal, from: world, to: journal, through: capture, grant: refused }
+    - { flow: sent-out,  from: request, to: remote, through: send, grant: granted, party: shop, basis: pot }
     - { flow: no-guide,  from: guide, to: law,     through: make, grant: refused }
   exclusive:
     - { verb: attend, why: "one being, once: what the cases below book" }
@@ -111,7 +111,7 @@ garden:
     kind: document
     statements:
       - read: { id: r1, by: sam, from: nas, at: now }
-      - pass: { of: [r1], from: world, to: journal, through: read }
+      - pass: { of: [r1], from: world, to: estate, through: record, as: read }
   persian-lease:
     kind: contract
     statements:
@@ -184,6 +184,8 @@ bad:
   - { rule: names,       bean: x14, kind: host,     statements: [ { say: { by: sam, at: now } }, { name: { by: hpe, of: self, as: "SN-0042" } } ] }
   - { rule: layers,      bean: x15, kind: document, statements: [ { say: { id: s, by: sam, at: now } }, { pass: { of: [s], from: guide, to: law, through: make } } ] }
   - { rule: layers,      bean: x15b, kind: document, statements: [ { read: { id: s, by: sam, at: now } }, { pass: { of: [s], from: world, to: law, through: read } } ] }
+  - { rule: layers,      bean: x15c, kind: document, statements: [ { say: { id: s, by: sam, at: now } }, { pass: { of: [s], from: self, to: estate, through: edit, as: say } } ] }
+  - { rule: layers,      bean: x15d, kind: document, statements: [ { say: { id: s, by: sam, at: now } }, { pass: { of: [s], from: request, to: remote, through: send } } ] }
   - { rule: consent,     bean: x20, kind: person,   statements: [ { say: { by: sam, at: now } }, { own: { by: theone, of: self } } ] }
   - { rule: harm,        bean: x21, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { id: h, held: "root:vault/0123456789abcdef0123456789abcdef", by: ada } } ] }
   - { rule: harm,        bean: x22, kind: document, statements: [ { read: { by: nas, at: now } }, { rate: { by: sam, of: ben, as: none } } ] }
