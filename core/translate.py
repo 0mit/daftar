@@ -1668,7 +1668,12 @@ def views_of(b, old, ctx):
         ref = v.get('draws') if isinstance(v, dict) else None
         kind_ref = next((k for k in ('mapping', 'bean') if isinstance(ref, dict) and set(ref) == {k}), None)
         target = ref[kind_ref] if kind_ref else ref if isinstance(ref, str) else None
-        if not isinstance(target, str) or slug(key) != key or key in b.ids:
+        if isinstance(target, str) and slug(key) == key and key in b.ids:
+            b.notes.append(f"views.{key}: the drawing `{key}` and another of this bean's statements (a reading of "
+                           f"`selections`, likely) share one name, and a bean names a statement once: rename one of "
+                           f"them before the garden adopts the core, or the page would lose the drawing")
+            continue
+        if not isinstance(target, str) or slug(key) != key:
             continue
         sid = b.new_id(key)
         roles = {'by': 'self', 'of': [target]}
@@ -1902,6 +1907,9 @@ def _read_path(path, member, rmap):
     sub, sep2, deeper = rest.partition('.')
     if sub in ('*', '') or not rest:
         return m[1] + ('.' + deeper if deeper else '')
+    head2, sep3, deepest = deeper.partition('.')
+    if sub not in m[2] and head2 in m[2]:        # an entry's own attribute (`timing.start.at`): the role it went to
+        return m[1] + '.' + m[2][head2] + (sep3 + deepest if deepest else '')
     return m[1] + '.' + m[2].get(sub, sub) + (sep2 + deeper if deeper else '')
 
 
@@ -1970,6 +1978,28 @@ def rewrite_readings(b, rmap, walks_steps):
                 if new and new != c['path']:
                     c['path'] = new
                     put(w + ('where', i, 'path'), new)
+    return changed
+
+
+def rewrite_drawings(b, rmap):
+    """Each `draw` of bean `b` whose drawing's columns read a path of today's words, with the path the core reads
+    (`_read_path`, as a reading's), its placement following; True where any changed. A template's `{{ path }}` is a
+    file of the garden's, which the translation does not write: it is named in the page's own words by whoever keeps it."""
+    inv = {where: p for p, (where, _v) in b.placed.items()}
+    changed = False
+    for j, (verb, roles) in enumerate(b.statements):
+        cols = (roles.get('drawing') or {}).get('columns') if verb == 'draw' and isinstance(roles.get('drawing'), dict) \
+            else None
+        for i, c in enumerate(cols if isinstance(cols, list) else []):
+            if not (isinstance(c, dict) and isinstance(c.get('path'), str)):
+                continue
+            new = _read_path(c['path'], None, rmap)
+            if new and new != c['path']:
+                c['path'] = new
+                p = inv.get(('statement', j, 'drawing', 'columns', i, 'path'))
+                if p is not None:
+                    b.placed[p] = (b.placed[p][0], new)
+                changed = True
     return changed
 
 
@@ -2263,7 +2293,7 @@ def garden(src, dst):
                 done.append((d, f) + translate_bean(os.path.join(p, f), f"{d}/{f}", ctx))
     rmap, walks = reading_map([b for _d, _f, _t, b in done])
     for i, (d, f, text, b) in enumerate(done):
-        if b.readings and rewrite_readings(b, rmap, walks):
+        if bool(b.readings and rewrite_readings(b, rmap, walks)) | rewrite_drawings(b, rmap):
             done[i] = (d, f, render(b), b)
     for d, f, text, b in done:
         with open(os.path.join(dst, d, f), 'w', encoding='utf-8', newline='\n') as fh:

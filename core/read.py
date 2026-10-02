@@ -42,10 +42,13 @@ def _said(e):
 def document(path):
     """(front matter, body) of a fenced document: the front matter read by `loads`, the body as written."""
     try:
-        with open(path, encoding='utf-8') as fh:
-            text = fh.read()
-    except (OSError, UnicodeDecodeError) as e:
-        raise Unread(f"{path} cannot be read as UTF-8 text: {e}") from None
+        with open(path, 'rb') as fh:
+            raw = fh.read()
+        text = raw.decode('utf-8').replace('\r\n', '\n').replace('\r', '\n')
+    except OSError as e:
+        raise Unread(f"{path} cannot be read: {e}") from None
+    except UnicodeDecodeError as e:                      # said by what the file looks like, and how to save it
+        raise Unread(f"{path} is {dmparse.NotUTF8(path, raw, e)}") from None
     head, body = dmparse.split_front_matter(text)
     if head is None:
         raise Unread(f"{path} has no front matter: a document opens with a line `---`, and closes its front matter "

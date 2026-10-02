@@ -163,6 +163,7 @@ class Garden:
         if kind.get('nature'):
             v['nature'] = NATURES.get(kind['nature'], kind['nature'])
         details = b.header.get('details') if isinstance(b.header.get('details'), dict) else {}
+        v.setdefault('details', details)         # a path of the core (`details.refs.boat.bean`) reads as a reading's does
         live = [(verb, r) for _i, verb, r in b.items if isinstance(r, dict) and 'held' not in r]
         facts = {}                               # each verb it says, under its own name, and narrowed by its `as`
         for verb, r in live:                     # (`be.habitat`): the facts a card shows, each what it says of it

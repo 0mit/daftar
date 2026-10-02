@@ -188,7 +188,8 @@ refused("--body with nothing after it is a usage error", ['sam', 'x', '--body'],
 # machine's code page: on a cp1252 machine a Persian block went into the bean as mojibake, exit 0, and the gate took it.
 os.makedirs(os.path.join(G, 'beans'))
 BEAN = os.path.join(G, 'beans', 'sam.md')
-SAM = '---\nbean: sam\ngenos: person\ntitle: "Sam"\nresponsibility: { legal: { self: true } }\n---\nSam keeps a garden.\n'
+SAM = ('---\nbean: sam\nkind: person\ntitle: "Sam"\nstatements:\n  - say: { by: sam, at: now }\n'
+       '  - own: { by: theone, of: self }\n---\nSam keeps a garden.\n')
 NOTE = 'برای سام — ok'
 BLOCK = f'details:\n  note: "{NOTE}"\n'
 sys.path.insert(0, os.path.join(G, 'bin'))
@@ -202,7 +203,7 @@ def safe(*args, stdin=None, block=None):
         with open(os.path.join(TMP, 'block.yaml'), 'wb') as fh:
             fh.write(block)
         args += ('--block', os.path.join(TMP, 'block.yaml'))
-    r = subprocess.run([sys.executable, os.path.join(G, 'bin', 'dmsafe.py'), 'insert-after', BEAN, 'responsibility']
+    r = subprocess.run([sys.executable, os.path.join(G, 'bin', 'dmsafe.py'), 'insert-after', BEAN, 'title']
                        + list(args), input=stdin, capture_output=True, env=ENV, cwd=G)
     fm = dmparse.loads(dmparse.read(BEAN)[0]) or {}
     return r, (fm.get('details') or {}).get('note'), open(BEAN, 'rb').read()

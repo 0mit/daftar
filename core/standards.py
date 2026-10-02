@@ -47,7 +47,7 @@ class Standards:
         self.quantities = self._keyed('quantities', 'quantity')
         # the currencies of ISO 4217 by their codes, each with its name: the units of the quantity whose units are a
         # registry's rows (`units_from`)
-        self.currencies = {}
+        self.currencies, self.currency_digits = {}, {}
         files = {r.get('registry'): r.get('file') for r in self.tables.get('registry_files') or [] if isinstance(r, dict)}
         for q in self.quantities.values():
             uf = q.get('units_from') if isinstance(q.get('units_from'), dict) else None
@@ -55,6 +55,8 @@ class Standards:
                 for row in self._tsv(files[uf['registry']]):
                     if row.get(uf.get('take')):
                         self.currencies.setdefault(row[uf['take']], row.get('name', ''))
+                        if (row.get('digits') or '').isdigit():      # the places it is written in (ISO 4217's minor unit)
+                            self.currency_digits.setdefault(row[uf['take']], int(row['digits']))
         self.zones = {r['zone'] for r in self._tsv(files.get('time-zones') or 'seed/knowledge/time-zones.tsv') if r.get('zone')}
         self.knowledge = dmknowledge.Knowledge(root, law={k: self.tables.get(k) or [] for k in ('registry_files',
                                                                                               'knowledge_schemes')})

@@ -43,10 +43,12 @@ class NotGranted(Exception):
 
 
 def _fm(path):
+    """A document's front matter as a mapping: {} where it is absent or does not read as one — the gate says why."""
     try:
-        return dmparse.loads(dmparse.read(path)[0]) or {}
-    except OSError:
+        fm = dmparse.loads(dmparse.read(path)[0]) or {}
+    except Exception:                      # noqa: BLE001 — unread, not a value: the gate names the file and why
         return {}
+    return fm if isinstance(fm, dict) else {}
 
 
 def _words(text):

@@ -107,7 +107,13 @@ def _attrs(spec, ind='      '):
 def core_rules(argv):
     sys.path.insert(0, ROOT)
     from core.check import garden_law
-    L = garden_law(ROOT)
+    from core.law import Law
+    from core.read import Unread
+    try:
+        L = garden_law(ROOT)
+    except Unread as e:                    # VOCAB.md does not read: the law's rules are listed, and why without its rows
+        _say(f"VOCAB.md does not read, so its rows are left out — {' '.join(str(e).split())}")
+        L = Law.load()
     want = set(a for a in argv if a in ('--terms', '--core')) or {'--terms', '--core'}
     g = (_front(os.path.join(ROOT, 'GARDEN.md'))[0] if os.path.isfile(os.path.join(ROOT, 'GARDEN.md')) else None) or {}
     _say(f"{_product()} rules — core@{L.version} + garden '{g.get('garden')}', taking "

@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 """The one garden model, bin/dmgarden.py, and the one entry, bin/daftar.py.
 
-In a garden grown from this checkout:
+In a garden of the core grown from this checkout (test/grow.py, v1 part 12):
   1. `paths` lists what a glob of `beans/*.md` and `mappings/*.md` lists, in the same order — a hidden file, a file of
      another kind and a directory left out — and a space asked alone gives that space alone;
   2. `listed` gives what git holds: the index, and a commit, each `<space>/<id>.md`, a document in a subdirectory left
      out; `untracked` the new documents git does not track, and not what it ignores;
   3. `document` parses once, reads a document again when it changes, and gives a document that does not parse with its
      reason, never a traceback;
-  4. every tool of bin/ has a verb in the law's `verbs`, each verb a family, and `daftar <verb>` runs the verb's tool;
+  4. every tool of bin/ has a verb in the core's `tools` (core/law/tools.yaml), each verb a family, and `daftar <verb>` runs the verb's tool;
   5. no tool of this checkout lists the beans itself: the catalogue finds no file that walks them outside the model.
 """
 import glob, json, os, shutil, subprocess, sys, tempfile, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
+sys.path.insert(0, os.path.join(ROOT, 'test'))
 import dmgarden  # noqa: E402
+import grow  # noqa: E402
 FAILS = []
 
 
@@ -30,11 +32,13 @@ def run(*a, cwd=None):
 
 
 T = tempfile.mkdtemp(prefix='garden-model-')
+TR = tempfile.mkdtemp(prefix='garden-release-')
+REL = grow.release(os.path.join(TR, 'release'))
 try:
     G = os.path.join(T, 'g')
-    r = run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), G, '--gardener', 'sam')
-    check("(setup) a garden grows from this checkout", r.returncode == 0 and os.path.isdir(os.path.join(G, 'beans')),
-          r.stdout + r.stderr)
+    r = grow.garden(REL, G, 'sam')
+    check("(setup) a garden of the core grows from a release made of this checkout",
+          r.returncode == 0 and os.path.isdir(os.path.join(G, 'beans')), r.out)
     for rel, text in (('beans/b-two.md', '---\nbean: b-two\n---\n'), ('beans/a-one.md', '---\nbean: a-one\n---\n'),
                       ('mappings/m-one.md', '---\nmapping: m-one\n---\n'), ('beans/.hidden.md', 'x'),
                       ('beans/notes.txt', 'x'), ('beans/sub/deep.md', '---\nbean: deep\n---\n')):
@@ -89,15 +93,14 @@ finally:
     shutil.rmtree(T, ignore_errors=True)
 
 # ---- 4. the one entry: every tool has a verb, and a verb runs its tool
-sys.path.insert(0, os.path.join(ROOT, 'bin'))
-import dmparse  # noqa: E402
-law = dmparse.loads(dmparse.read(os.path.join(ROOT, 'seed', 'std-vocab.md'))[0])
-verbs = {v['verb']: v['family'] for v in law.get('verbs') or []}
+from core import read as core_read  # noqa: E402
+law = core_read.data(os.path.join(ROOT, 'core', 'law', 'tools.yaml'))      # the core's tools, keyed `tool` (v1 part 9)
+verbs = {v['tool']: v['family'] for v in law.get('tools') or []}
 tools = sorted(os.path.basename(p) for p in glob.glob(os.path.join(ROOT, 'bin', 'dm*.py'))) + ['install.py']
 lost = [t for t in tools if (t[2:-3] if t.startswith('dm') else t[:-3]) not in verbs]
-check(f"every tool of bin/ has a verb in the law's `verbs` ({len(tools)})", not lost, lost)
-fams = {f['family'] for f in law.get('tool_families') or []}
-check("...and every verb a family the law declares", all(f in fams for f in verbs.values()),
+check(f"every tool of bin/ has a verb in the core's `tools` ({len(tools)})", not lost, lost)
+fams = {f['family'] for f in law.get('families') or []}
+check("...and every verb a family the core declares", all(f in fams for f in verbs.values()),
       {v: f for v, f in verbs.items() if f not in fams})
 r = run(sys.executable, os.path.join(ROOT, 'bin', 'daftar.py'))
 check("`daftar` lists every verb under its family, with what its tool says it does",
@@ -107,12 +110,14 @@ check("a word that is no verb is refused with the nearest", r.returncode == 2 an
 T2 = tempfile.mkdtemp(prefix='garden-entry-')
 try:
     G2 = os.path.join(T2, 'g')
-    run(sys.executable, os.path.join(ROOT, 'seed', 'germinate.py'), G2, '--gardener', 'sam')
+    grow.garden(REL, G2, 'sam')
     r = run(sys.executable, os.path.join(G2, 'bin', 'daftar.py'), 'check', '--all', cwd=G2)
-    check("`daftar check --all`, in a grown garden, is the gate's own run", r.returncode == 0 and '0 error(s)' in r.stdout,
-          r.stdout[-400:] + r.stderr[-400:])
+    c = run(sys.executable, os.path.join(G2, 'core', 'check.py'), G2, cwd=G2)
+    check("`daftar check --all`, in a grown garden of the core, is the core's gate's own run",
+          r.returncode == 0 and c.returncode == 0 and r.stdout == c.stdout, r.stdout[-400:] + r.stderr[-400:] + c.stdout[-200:])
 finally:
     shutil.rmtree(T2, ignore_errors=True)
+    shutil.rmtree(TR, ignore_errors=True)
 
 # ---- 5. every tool reads through the model
 r = run(sys.executable, os.path.join(ROOT, 'bin', 'dmcatalog.py'), '--json', cwd=ROOT)
