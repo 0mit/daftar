@@ -120,10 +120,7 @@ def _successors(path):
 _declared = [x for v in list(TABLES.values()) + list(MOVED.values()) for x in ([v] if isinstance(v, str) else v)]
 check("each item TABLES and MOVED name is an item of the core's law",
       not [x for x in _declared if not _item("core/law/" + x)], [x for x in _declared if not _item("core/law/" + x)][:5])
-_sv32 = dmparse.loads(dmparse.split_front_matter(subprocess.run(
-    ["git", "-C", ROOT, "show", "v0.49.0:seed/std-vocab.md"], capture_output=True, text=True,
-    encoding="utf-8").stdout)[0] or "") or {}
-_marked, _astray, _unknown, _key, _at = set(), [], [], None, None
+_marked, _astray, _key, _at = set(), [], None, None
 for _ln in _now.split("\n"):
     if _ln.startswith("## "):
         _key, _at = _ln[3:].strip(), None
@@ -131,10 +128,6 @@ for _ln in _now.split("\n"):
     _m = re.match(r"^\(std-vocab 32: `([^`]+)`\)$", _ln)
     if _m:
         _at = _m.group(1)
-        try:
-            dmwhy.resolve(_sv32, _at)
-        except KeyError:
-            _unknown.append(_at)
         _s = _successors(_at)
         if _key not in _s and not any(_key.startswith(x + ".") for x in _s):
             _astray.append(f"{_key} ← {_at} (went to {', '.join(sorted(_s)) or 'nothing the law names'})")
@@ -142,9 +135,10 @@ for _ln in _now.split("\n"):
         _marked.add(_ln)
 _unmarked = [_ln[:80] for k, v in _old_why.items() if not k.startswith("doc:") for _ln in v
              if _ln.strip() and _ln not in _marked]
-check("each line carried from today's law sits under the path it was written of, a path std-vocab 32 had",
-      len(_sv32) > 50 and not _unmarked and not _unknown, (_unmarked[:3], _unknown[:3]))
-check("...and each of those paths leads to the key it sits under, by where the law says today's item went",
+check("each line carried from today's law sits under the path of today's law it was written of", not _unmarked,
+      _unmarked[:3])
+check("...and each of those paths leads to the key it sits under, by where the law says today's item went (a path that "
+      "leads nowhere is refused with it)",
       not _astray, _astray[:4])
 check("...so a paragraph filed under an item it was not written of is refused (`natures` under `crown`)",
       "core/law/core.yaml: crown" not in _successors("natures") and "core/law/core.yaml: natures" in _successors("natures")
