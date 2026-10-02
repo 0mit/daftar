@@ -1,8 +1,11 @@
 # The boards of the one page: what each lens is told of each mechanism. The keeper's board is read from the release
-# itself (the law's meanings, their reasons, the catalogue's rules, relations and checks); these are the words a person
-# writes. `items` are the law's own parts the mechanism is made of, as the catalogue names them. An agent's form and
-# its refusal are proved, never written: `scene` names the beans of site/garden.yaml the form is shown from and how to
-# break it once, and the refusal shown is what the gate printed — it must contain `refused`, or the page is not built.
+# itself (the core's law, its reasons, the catalogue's rules, relations and checks); these are the words a person
+# writes. `items` are the law's own parts the mechanism is made of, as the catalogue names them (`rule:`, `verb:`,
+# `table:`, `section:`, `form:`, `layer:`, `profile:`). An agent's form and its refusal are proved, never written:
+# `scene` names the beans of site/garden.yaml the form is shown from (their header `keys` and the statements of their
+# `verbs`) and how to break it once (`replace`, `drop` a statement, a `copy_of` another bean, `staged` for what a commit
+# would hold), and the refusal shown is the line the gate printed — by the rule `rule` names, containing `refused`, or
+# the page is not built.
 lenses:
   - { id: person, label: "What is it?", who: "someone curious",
       fa: { label: "این چیست؟", who: "کسی کنجکاو" } }
@@ -21,7 +24,7 @@ ui:
   en:
     tagline: "A notebook you keep with your AI agents about the things you work on together. Every fact says who said it, every change is journalled, and a gate refuses what breaks the rules."
     boards: "{l} lenses × {m} mechanisms · {b} boards"
-    counts: "{terms} terms · {registries} registries · {relations} relations · {reasons} reasons"
+    counts: "{rules} rules · {verbs} verbs · {tables} tables · {relations} relations · {reasons} reasons"
     lang_group: "language"
     lens_axis: "lens"
     lens_group: "who is looking"
@@ -39,8 +42,8 @@ ui:
     gardener_note: "You talk and the agent writes. What an agent may not decide, it asks you, and it carries on with the rest."
     form_label: "the form, as the gate passed it"
     refusal_label: "written wrong, the gate printed"
-    proved_note: "Both were proved when this page was built: the form in a garden grown from the release, where the gate passed it, and the refusal by breaking it once. Save with the first command below; after a refusal, fix what it names and run the second."
-    keeper_note: "Each part of the law this mechanism is made of, as the release states it: what it means, why it is so, the rules the gate derives from it, and the suites that check it."
+    proved_note: "Both were proved when this page was built: the form in a garden grown from the release, where the gate passed it, and the refusal by breaking it once — it opens with the rule that refused it. Save with the first command below; after a refusal, fix what it names and run the second."
+    keeper_note: "Each part of the law this mechanism is made of, as the release states it: what it means, the roles a verb takes (* where required), why it is so, the rules that name it, and the suites that check it."
     item_rules: "{n} rules"
     item_checks: "{n} checks"
     item_relations: "{n} relations"
@@ -53,7 +56,7 @@ ui:
   fa:
     tagline: "دفتری که شما و عامل‌های هوش مصنوعی‌تان درباره‌ی چیزهایی که با هم رویشان کار می‌کنید نگه می‌دارید. هر گزاره می‌گوید چه کسی آن را گفته، هر تغییر در روزنامه ثبت می‌شود، و دروازه‌ای هر آنچه قاعده‌ها را بشکند پس می‌زند."
     boards: "{l} نگاه × {m} سازوکار، {b} تابلو"
-    counts: "{terms} اصطلاح، {registries} فهرست، {relations} رابطه، {reasons} دلیل"
+    counts: "{rules} قاعده، {verbs} فعل، {tables} جدول، {relations} رابطه، {reasons} دلیل"
     lang_group: "زبان"
     lens_axis: "نگاه"
     lens_group: "چه کسی نگاه می‌کند"
@@ -71,8 +74,8 @@ ui:
     gardener_note: "شما حرف می‌زنید و عامل می‌نویسد. آنچه عامل نمی‌تواند درباره‌اش تصمیم بگیرد، از شما می‌پرسد و باقی کار را ادامه می‌دهد."
     form_label: "شکل نوشتن، همان‌گونه که دروازه پذیرفت"
     refusal_label: "وقتی نادرست نوشته شد، دروازه این را چاپ کرد"
-    proved_note: "هر دو هنگام ساختن این صفحه اثبات شدند: شکل نوشتن در باغی که از همین نسخه رویید و دروازه آن را پذیرفت، و پاسخِ رد با یک بار شکستنِ آن. شکل‌ها و واژه‌های دروازه خروجیِ خودِ نسخه‌اند و به انگلیسی می‌مانند. با فرمان نخستِ زیر ذخیره کنید؛ پس از رد، آنچه را نام می‌برد درست کنید و فرمان دوم را اجرا کنید."
-    keeper_note: "هر بخش از قانون که این سازوکار از آن ساخته شده، همان‌گونه که نسخه بیانش می‌کند: معنایش، دلیلش، قاعده‌هایی که دروازه از آن بیرون می‌کشد، و آزمون‌هایی که بررسی‌اش می‌کنند. واژه‌های قانون به زبان خودشان، انگلیسی، آمده‌اند."
+    proved_note: "هر دو هنگام ساختن این صفحه اثبات شدند: شکل نوشتن در باغی که از همین نسخه رویید و دروازه آن را پذیرفت، و پاسخِ رد با یک بار شکستنِ آن؛ پاسخِ رد با نامِ قاعده‌ای آغاز می‌شود که آن را رد کرد. شکل‌ها و واژه‌های دروازه خروجیِ خودِ نسخه‌اند و به انگلیسی می‌مانند. با فرمان نخستِ زیر ذخیره کنید؛ پس از رد، آنچه را نام می‌برد درست کنید و فرمان دوم را اجرا کنید."
+    keeper_note: "هر بخش از قانون که این سازوکار از آن ساخته شده، همان‌گونه که نسخه بیانش می‌کند: معنایش، نقش‌هایی که یک فعل می‌گیرد (* آنجا که لازم است)، دلیلش، قاعده‌هایی که نامش را می‌برند، و آزمون‌هایی که بررسی‌اش می‌کنند. واژه‌های قانون به زبان خودشان، انگلیسی، آمده‌اند."
     item_rules: "{n} قاعده"
     item_checks: "{n} بررسی"
     item_relations: "{n} رابطه"
@@ -87,60 +90,63 @@ mechanisms:
     short: "Who said it"
     name: "Who said it"
     glyph: "✎"
-    items: [term:provenance_src, term:identity_status, term:identifier, section:identity_policy, section:provenance_record]
-    staples: { what: "an identity is given to a kind of being", between: "a fact keeps who said it as it crosses", gate: "a fact with no source does not pass" }
+    items: [table:knowing, verb:say, verb:read, verb:derive, verb:make, rule:knowing, verb:name, rule:names, table:namespaces]
+    staples: { what: "a name given once picks out one being", between: "a fact keeps who said it as it crosses", gate: "a fact with no source does not pass" }
     person: >
-      Every fact in the notebook says who said it and how they know — you, or an agent; told, measured or guessed. A
-      thing is recognised by what identifies it (a serial, a domain name, a code someone published), never by the name
-      of its file, so two notebooks that never met can find the same thing.
+      Every fact in the notebook says who knows it and how — you, or an agent; said, read off the thing itself, worked
+      out from other facts, or made here. A thing is recognised by a name that is given once — a MAC address, a domain
+      name, a key's fingerprint — never by the name of its file, so two notebooks that never met can find the same thing.
     gardener: >
-      You say what is true; the agent writes it with you as its source. What an agent later measures is written beside
-      what you said, never over it — only you change your own word. You ratify what identifies a thing.
-    agent_note: "An agent alone records what it observed or inferred; an identity anchor is a person's to ratify."
+      You say what is true; the agent writes it with you as the one who said it. What an agent later reads or works out
+      is written beside what you said, never over it — only you change your own word. You ratify a name that establishes
+      what a thing is.
+    agent_note: "Every statement is the `of` of a knowing act in its bean: what you were told is `say`, by whoever told you; what you found out is `derive`, by your session. Its `at` is `now`, and the save writes the moment."
     scene:
-      show: [ { bean: hallway-nas, keys: [identity, provenance] } ]
-      break: { bean: hallway-nas-2, copy_of: hallway-nas }
-      refused: "establishing anchor serial"
+      show: [ { bean: hallway-nas, verbs: [read, name] } ]
+      break: { bean: hallway-nas, drop: ["- read:"] }
+      rule: knowing
+      refused: "known by no act"
     fa:
       name: "چه کسی گفت"
       short: "چه کسی گفت"
-      person: "هر گزاره در این دفتر می‌گوید چه کسی آن را گفته و از کجا می‌داند: شما یا یک عامل؛ شنیده، سنجیده یا حدس‌زده. هر چیز را با آنچه هویتش را نشان می‌دهد می‌شناسند (یک شماره‌ی سریال، یک نام دامنه، کدی که کسی منتشر کرده)، نه با نام پرونده‌اش؛ پس دو دفتری که هرگز همدیگر را ندیده‌اند می‌توانند یک چیز واحد را پیدا کنند."
-      gardener: "شما می‌گویید چه چیزی درست است؛ عامل آن را می‌نویسد و شما را منبعش می‌گذارد. آنچه عامل بعدها می‌سنجد کنار گفته‌ی شما نوشته می‌شود، هرگز روی آن؛ تنها خودتان حرف خودتان را تغییر می‌دهید. آنچه هویت یک چیز را نشان می‌دهد، شما تأیید می‌کنید."
-      agent_note: "عامل به‌تنهایی فقط آنچه را دیده یا استنباط کرده ثبت می‌کند؛ تأیید لنگر هویت با یک انسان است."
-      staples: { what: "هویت به گونه‌ای از موجود داده می‌شود", between: "گزاره هنگام گذر، گوینده‌اش را با خود نگه می‌دارد", gate: "گزاره‌ی بی‌منبع از دروازه نمی‌گذرد" }
+      person: "هر گزاره در این دفتر می‌گوید چه کسی آن را می‌داند و از کجا: شما یا یک عامل؛ گفته‌شده، از خودِ آن چیز خوانده‌شده، از گزاره‌های دیگر به دست آمده، یا همین‌جا ساخته‌شده. هر چیز را با نامی می‌شناسند که تنها یک بار داده می‌شود (نشانی MAC، نام دامنه، اثر انگشت یک کلید)، نه با نام پرونده‌اش؛ پس دو دفتری که هرگز همدیگر را ندیده‌اند می‌توانند یک چیز واحد را پیدا کنند."
+      gardener: "شما می‌گویید چه چیزی درست است؛ عامل آن را می‌نویسد و شما را گوینده‌اش می‌گذارد. آنچه عامل بعدها می‌خواند یا به دست می‌آورد کنار گفته‌ی شما نوشته می‌شود، هرگز روی آن؛ تنها خودتان حرف خودتان را تغییر می‌دهید. نامی که هویت یک چیز را برقرار می‌کند، شما تأیید می‌کنید."
+      agent_note: "هر گزاره `of`ِ یک کنشِ دانستن در پرونده‌ی خودش است: آنچه به شما گفته‌اند `say` است، از زبانِ کسی که گفت؛ آنچه خودتان یافته‌اید `derive` است، از سوی نشستِ شما. `at`ِ آن `now` است و ذخیره، لحظه را جایش می‌نویسد."
+      staples: { what: "نامی که یک بار داده می‌شود، یک موجود را نشان می‌دهد", between: "گزاره هنگام گذر، گوینده‌اش را با خود نگه می‌دارد", gate: "گزاره‌ی بی‌منبع از دروازه نمی‌گذرد" }
   - id: what
     short: "What & whose"
     name: "What it is, and whose"
     glyph: "◈"
-    items: [section:natures, section:complexity, section:gene, section:crown, term:via, term:owned_by, term:responsibility]
-    staples: { who: "its kind says which identities it may take", money: "an agreement may be owned by neither party", gate: "every ownership chain must end" }
+    items: [table:natures, table:kinds, verb:own, verb:answer, table:modes, verb:come, table:crown, rule:order]
+    staples: { who: "a being is picked out by a name given once", money: "an agreement may be owned by neither party", gate: "nothing owns itself, through others or not" }
     person: >
-      A thing is first a nature — soma, a body, standing at its step among bodies; lekton, what exists by being
-      said, standing on reason — then its kind, which says while what it lives. Each thing has exactly one owner; who
-      answers for it is a fact of its own — the owner before the law unless someone else is named, and whoever runs it
-      or pays for it where someone does. Every chain ends: at a person, at someone outside the notebook, or at the
-      crown, the one, where nobody owns. And each thing came to be through someone — a via — named or not.
+      A thing is first a nature — a body, which takes room in space and time; or a sayable, which exists by being said
+      and takes its place in an order — then its kind. Each thing has one owner; who answers for it is a fact of its
+      own, in one of four ways: before the law, in keeping it, in how others meet it, in paying for it — the owner before
+      the law unless someone else is named. Every chain ends: at a person, or at the crown, the one, where nobody owns.
+      And each thing came to be through someone, named or not.
     gardener: >
       Say what a thing is and who it belongs to; the agent picks its kind, and writes who answers for it where that is
       not simply its owner. A domain is held, not owned; a person is owned by no one; an agreement between two may be
       owned by neither.
-    agent_note: "The kind refines the nature; the rules for what a thing may say attach to its nature and every kind inherits them."
+    agent_note: "A kind is a row of the law that names its nature; what a body may say — a mass, a room — a sayable may not, and the gate holds every kind to its nature. A person, an event and an agreement are owned by `theone`, the crown."
     scene:
-      show: [ { bean: hallway-nas, keys: [genos, nature, owned_by, responsibility] } ]
-      break: { bean: hallway-nas, replace: ["owned_by: { owner: { bean: sam } }", "owned_by: { note: \"bought second-hand\" }"] }
-      refused: "needs one of"
+      show: [ { bean: hallway-nas, keys: [kind], verbs: [own, answer] } ]
+      break: { bean: hallway-nas, replace: ["own:    { by: sam", "own:    { by: self"] }
+      rule: order
+      refused: "nothing owns itself"
     fa:
       name: "چیست، و از آنِ کیست"
       short: "چیستی و مالکیت"
-      person: "هر چیز نخست یک سرشت است (سوما، جسم، که در مرتبه‌ی خود میان اجسام می‌ایستد؛ لکتون، آنچه با گفته شدن هست و بر نطق می‌ایستد) و سپس گونه‌اش، که می‌گوید در چه حالی زنده است. هر چیز دقیقاً یک مالک دارد؛ اینکه چه کسی پاسخگوی آن است خود واقعیتی جداست — در برابر قانون مالکش، مگر کسی دیگر نام برده شود، و هر که آن را می‌گرداند یا هزینه‌اش را می‌پردازد، هر جا کسی چنین کند. هر زنجیره‌ای پایان می‌یابد: به یک شخص، به کسی بیرون از دفتر، یا به تاج، آن یکتا، جایی که هیچ‌کس مالک نیست. و هر چیز به‌واسطه‌ی کسی پدید آمده است، نام‌برده یا نه."
+      person: "هر چیز نخست یک سرشت است (جسم، که در مکان و زمان جا می‌گیرد؛ یا گفتنی، که با گفته شدن هست و در یک نظم جای می‌گیرد) و سپس گونه‌اش. هر چیز یک مالک دارد؛ اینکه چه کسی پاسخگوی آن است خود واقعیتی جداست، به یکی از چهار گونه: در برابر قانون، در نگه‌داشتنش، در اینکه دیگران چگونه با آن روبه‌رو می‌شوند، در پرداختِ هزینه‌اش؛ در برابر قانون مالکش، مگر کسی دیگر نام برده شود. هر زنجیره‌ای پایان می‌یابد: به یک شخص، یا به تاج، آن یکتا، جایی که هیچ‌کس مالک نیست. و هر چیز به‌واسطه‌ی کسی پدید آمده است، نام‌برده یا نه."
       gardener: "بگویید یک چیز چیست و از آنِ کیست؛ عامل گونه‌اش را برمی‌گزیند و هر جا پاسخگو کسی جز مالک باشد، آن را می‌نویسد. دامنه در اختیار است، نه در مالکیت؛ هیچ‌کس مالک یک شخص نیست؛ توافقی میان دو نفر ممکن است از آنِ هیچ‌کدام نباشد."
-      agent_note: "گونه، سرشت را دقیق‌تر می‌کند؛ قاعده‌های آنچه یک چیز می‌تواند بگوید به سرشتش بسته‌اند و هر گونه آن‌ها را به ارث می‌برد."
-      staples: { who: "گونه‌اش می‌گوید چه هویت‌هایی می‌تواند بپذیرد", money: "توافق ممکن است از آنِ هیچ‌یک از دو طرف نباشد", gate: "هر زنجیره‌ی مالکیت باید پایان یابد" }
+      agent_note: "گونه ردیفی از قانون است که سرشتش را نام می‌برد؛ آنچه یک جسم می‌تواند بگوید (جرم، جا) یک گفتنی نمی‌تواند، و دروازه هر گونه را به سرشتش پایبند نگه می‌دارد. شخص، رویداد و توافق از آنِ `theone`، تاج، هستند."
+      staples: { who: "هر موجود با نامی شناخته می‌شود که یک بار داده می‌شود", money: "توافق ممکن است از آنِ هیچ‌یک از دو طرف نباشد", gate: "هیچ چیز مالکِ خودش نیست، نه مستقیم و نه از راه دیگران" }
   - id: when
     short: "When"
     name: "When"
     glyph: "◷"
-    items: [value_types, term:timing, section:anchor_systems, section:aspects]
+    items: [verb:be, rule:frame, table:systems, form:extent, form:recurrence]
     staples: { where: "a moment is in time and in place together", line: "a series lies along a line of time", money: "a clause falls due on a day" }
     person: >
       A day or a moment is a position, in any calendar — Gregorian, Persian, Hebrew and more — at the precision it was
@@ -149,23 +155,24 @@ mechanisms:
     gardener: >
       Say the day as you know it, in your own calendar; say "after the dinner" if that is all you know. Nothing is
       invented to fill a gap: what nobody said stays unsaid, and the notebook says so.
-    agent_note: "A day may be written short (2026-09-20) or long, as one entry of timing, to say its system, its unit, or what it followed."
+    agent_note: "A moment is the `at` of its statement, in its system's one form: a day (`2026-09-20`), a moment with its offset, or `after:<bean>` when only what it followed is known."
     scene:
-      show: [ { bean: dinner-at-sams, keys: [timing] }, { bean: storage-rent, keys: [parties] } ]
+      show: [ { bean: dinner-at-sams, verbs: [be, attend] }, { bean: storage-rent, verbs: [pay] } ]
       break: { bean: dinner-at-sams, replace: ["2026-09-12 19:30", "2026-02-30 19:30"] }
-      refused: "is no day of gregorian-civil"
+      rule: valency
+      refused: "is not a day of the Gregorian calendar"
     fa:
       name: "کِی"
       short: "کِی"
       person: "یک روز یا یک لحظه، جایگاهی است در هر گاه‌شماری (میلادی، خورشیدی، عبری و بیشتر) با همان دقتی که گفته شده. جایی که کسی روز را نگفته، بر پایه‌ی آنچه پیش از آن رخ داده جای می‌گیرد. زمان ژرف هم، و ترتیب‌هایی که به هیچ زمانی بسته نیستند: نخستین، دومین."
       gardener: "روز را همان‌گونه که می‌دانید بگویید، با گاه‌شمار خودتان؛ اگر تنها همین را می‌دانید، بگویید «بعد از شام». هیچ چیز برای پر کردن جای خالی ساخته نمی‌شود: آنچه کسی نگفته ناگفته می‌ماند، و دفتر همین را می‌گوید."
-      agent_note: "روز را می‌توان کوتاه نوشت (`2026-09-20`) یا بلند، به‌صورت یک مدخل `timing`، تا گاه‌شمار، یکا یا آنچه پیش از آن آمده گفته شود."
+      agent_note: "لحظه `at`ِ گزاره‌ی خودش است، در تنها شکلِ دستگاهش: یک روز (`2026-09-20`)، لحظه‌ای با اختلافِ ساعتش، یا `after:<bean>` وقتی تنها می‌دانیم پس از چه آمده."
       staples: { where: "هر لحظه هم در زمان است و هم در جا", line: "سری در امتداد خطِ زمان می‌نشیند", money: "هر بند در روزی سررسید می‌شود" }
   - id: where
     short: "Where"
     name: "Where, and what it takes"
     glyph: "⌖"
-    items: [section:placement, term:capacity, term:located_at, term:lives_in, term:workspace]
+    items: [table:placements, verb:hold, form:placement, rule:room]
     staples: { when: "a meeting takes the hours of those present", what: "a host is a body with room to give", pages: "a page draws where things are" }
     person: >
       Things are in, at or among other things — a code in its list, a record in a register, a program on a machine, a
@@ -173,24 +180,26 @@ mechanisms:
       share; some take room no other thing can take at once.
     gardener: >
       Say where a thing is and, if it matters, how much room it takes and how much its host can hold. The notebook
-      warns when shares are promised past a host, and refuses two things in one place at once.
-    agent_note: "A location in a being's own frame names that being; stated alone (host), the place is known and the position not."
+      refuses more room than a host holds, and two things in one place at once; a share may be promised past it, as a
+      hypervisor overcommits its memory.
+    agent_note: "`be` places a being, and `as` says how: place, order, presence, habitat or location. A position in a being's own frame names that being too (`at: [rack-a, \"rack-a#u17\"]`); what the placement takes is in `placed`."
     scene:
-      show: [ { bean: rack-a, keys: [capacity] }, { bean: web-1, keys: [located_at] } ]
+      show: [ { bean: rack-a, verbs: [hold] }, { bean: web-1, verbs: [be] } ]
       break: { bean: web-2, replace: ["rack-a#u19", "rack-a#u17"] }
-      refused: "do not take the same room"
+      rule: room
+      refused: "not in one room at once"
     fa:
       name: "کجا، و چه جایی می‌گیرد"
       short: "کجا"
       person: "چیزها در، بر یا میان چیزهای دیگرند: کدی در فهرستش، سابقه‌ای در دفتر ثبت، برنامه‌ای روی ماشین، جلسه‌ای در ساعت‌های کسی، سروری در رکش. برخی جای‌گیری‌ها چیزی از جایی که در آن‌اند نمی‌گیرند؛ برخی سهمی می‌گیرند؛ و برخی جایی می‌گیرند که هیچ چیز دیگری هم‌زمان نمی‌تواند بگیرد."
-      gardener: "بگویید یک چیز کجاست و، اگر مهم است، چقدر جا می‌گیرد و میزبانش چقدر ظرفیت دارد. دفتر وقتی سهم‌هایی بیش از توان میزبان وعده داده شود هشدار می‌دهد، و دو چیز را هم‌زمان در یک جا نمی‌پذیرد."
-      agent_note: "مکانی در چارچوبِ خودِ یک موجود، نامِ آن موجود را می‌برد؛ اگر تنها میزبان گفته شود (`host`)، جا معلوم است و جایگاه نه."
+      gardener: "بگویید یک چیز کجاست و، اگر مهم است، چقدر جا می‌گیرد و میزبانش چقدر ظرفیت دارد. دفتر جایی بیش از آنچه میزبان دارد را نمی‌پذیرد، و دو چیز را هم‌زمان در یک جا هم نمی‌پذیرد؛ سهم را می‌توان بیش از توانِ میزبان وعده داد، همان‌گونه که ناظرِ ماشین‌های مجازی حافظه‌اش را بیش از اندازه واگذار می‌کند."
+      agent_note: "`be` یک موجود را جای می‌دهد و `as` می‌گوید چگونه: place، order، presence، habitat یا location. جایگاهی در چارچوبِ خودِ یک موجود، نامِ آن موجود را هم می‌برد (`at: [rack-a, \"rack-a#u17\"]`)؛ آنچه این جای‌گیری می‌گیرد در `placed` می‌آید."
       staples: { when: "جلسه ساعت‌های حاضران را می‌گیرد", what: "میزبان تنی است که جا برای دادن دارد", pages: "صفحه نشان می‌دهد چیزها کجایند" }
   - id: codes
     short: "Codes"
     name: "Codes"
     glyph: "#"
-    items: [value_types, section:knowledge_schemes, term:observations, section:registry_files]
+    items: [verb:use, verb:classify, table:knowledge_schemes, table:registry_files, profile:knowledge]
     staples: { who: "a code a publisher gave identifies what it classifies", money: "an account is a code in the garden's own plan", line: "a reading is coded in a scheme" }
     person: >
       An occupation, a field of knowledge, a technology, an account in your own chart: each is a code of a scheme,
@@ -198,23 +207,24 @@ mechanisms:
     gardener: >
       Keep your own classifications as a scheme of your own; a new code is one new row, journalled like any change.
       Published schemes — occupations, fields, technologies — come with the release.
-    agent_note: "One form everywhere a code is written: <scheme>:<code>, checked against the scheme it names."
+    agent_note: "One form everywhere a code is written: `<scheme>:<code>`, checked against the scheme it names. `use` says what a being rests on, `classify` what it is."
     scene:
-      show: [ { bean: hallway-nas, keys: [knowledge] } ]
+      show: [ { bean: hallway-nas, verbs: [use] } ]
       break: { bean: hallway-nas, replace: ["isced-f-2013:0612", "isced-f-2013:0699"] }
-      refused: "is not a code of"
+      rule: valency
+      refused: "is no code of isced-f-2013"
     fa:
       name: "کدها"
       short: "کدها"
       person: "یک پیشه، یک رشته‌ی دانش، یک فناوری، حسابی در سرفصل حساب‌های خودتان: هر کدام کدی از یک رده‌بندی است و همراه با رده‌بندی‌اش نوشته می‌شود، تا دو دفتر از آن یک معنا را بفهمند."
       gardener: "دسته‌بندی‌های خودتان را به‌صورت رده‌بندی‌ای از آنِ خودتان نگه دارید؛ کد تازه یک ردیف تازه است که مانند هر تغییر دیگری در روزنامه ثبت می‌شود. رده‌بندی‌های منتشرشده (پیشه‌ها، رشته‌ها، فناوری‌ها) همراه نسخه می‌آیند."
-      agent_note: "هر جا کدی نوشته شود یک شکل دارد: `<scheme>:<code>`، که در برابر رده‌بندی‌ای که نام می‌برد سنجیده می‌شود."
+      agent_note: "هر جا کدی نوشته شود یک شکل دارد: `<scheme>:<code>`، که در برابر رده‌بندی‌ای که نام می‌برد سنجیده می‌شود. `use` می‌گوید یک موجود بر چه تکیه دارد، و `classify` که چیست."
       staples: { who: "کدی که ناشری داده، آنچه را رده‌بندی می‌کند می‌شناساند", money: "حساب کدی است در طرح حساب‌های خودِ باغ", line: "هر خوانش در یک رده‌بندی کد می‌خورد" }
   - id: money
     short: "Money"
     name: "Money and agreements"
     glyph: "⇄"
-    items: [term:parties, term:clauses, term:transactions, term:words, profile:accounting]
+    items: [verb:agree, verb:pay, verb:bear, form:clause, form:settlement, profile:accounting]
     staples: { when: "what falls due, and when it lapses", codes: "where each amount belongs", between: "the other party keeps a notebook too" }
     person: >
       An agreement says who is bound and what each owes; a payment says who paid and who bears it. What one person owes
@@ -222,23 +232,24 @@ mechanisms:
     gardener: >
       Tell the agent what was agreed and what was paid, in the currency it was paid in. Your notebook reads the balance;
       it tells you ninety days before a name you hold lapses.
-    agent_note: "Amounts are exact, in the currency's own places, and what each party paid adds up to the whole amount."
+    agent_note: "Amounts are exact, in the currency's own places. A payment's amount is the whole that moved, and `bear` shares divide it; what each one owes is read, never written."
     scene:
-      show: [ { bean: storage-rent, keys: [transactions] } ]
-      break: { bean: storage-rent, replace: ["count: \"40.00\"", "count: \"30.00\""] }
-      refused: "adds up to"
+      show: [ { bean: storage-rent, verbs: [agree, pay, bear] } ]
+      break: { bean: storage-rent, replace: ["\"100.00\"", "\"100.005\""] }
+      rule: valency
+      refused: "more decimal places than"
     fa:
       name: "پول و توافق‌ها"
       short: "پول"
       person: "توافق می‌گوید چه کسی متعهد است و هر کس چه بدهکار است؛ پرداخت می‌گوید چه کسی پرداخت و هزینه بر دوش کیست. بدهی یک نفر به دیگری از آنچه پرداخت و توافق شده خوانده می‌شود، و هرگز جداگانه کنارش نوشته نمی‌شود، جایی که بتواند از آن فاصله بگیرد."
       gardener: "به عامل بگویید چه توافق شد و چه پرداخت شد، به همان ارزی که پرداخت شد. دفترتان مانده را می‌خواند؛ و نود روز پیش از آنکه نامی که در اختیار دارید منقضی شود، به شما خبر می‌دهد."
-      agent_note: "مبلغ‌ها دقیق‌اند، با رقم‌های اعشاری خودِ آن ارز، و آنچه هر طرف پرداخته دقیقاً با کل مبلغ جمع می‌شود."
+      agent_note: "مبلغ‌ها دقیق‌اند، با رقم‌های اعشاری خودِ آن ارز. مبلغِ پرداخت کلِ چیزی است که جابه‌جا شد، و سهم‌های `bear` آن را بخش می‌کنند؛ بدهی هر کس خوانده می‌شود، هرگز نوشته نمی‌شود."
       staples: { when: "چه سررسید می‌شود، و کی منقضی می‌شود", codes: "هر مبلغ به کجا تعلق دارد", between: "طرف دیگر هم دفتری دارد" }
   - id: line
     short: "Along a line"
     name: "Along a line"
     glyph: "∿"
-    items: [term:series, section:aggregates, section:operations, term:selections]
+    items: [verb:record, form:series, rule:line, verb:reckon, form:reading, table:aggregates]
     staples: { when: "a line of time, or a line of order", codes: "what a channel holds is coded", money: "a total is read, not stored" }
     person: >
       What a gauge held at each moment, what was found of a thing when it was read: series and readings. What follows
@@ -246,23 +257,24 @@ mechanisms:
     gardener: >
       Ask the notebook a question — how much, how many, which first — and it answers with the lines it read and how.
       Nothing it computes is written back as a fact.
-    agent_note: "A series' whole is checked exactly; a gap in a node leaves a whole nobody can check, and that is said."
+    agent_note: "A series is `record`ed: its positions by a rule, what each column holds, its rows as one table. Its whole is checked exactly against them; a row with a gap leaves a whole nobody can check, and that is said."
     scene:
-      show: [ { bean: front-door, keys: [series] } ]
-      break: { bean: front-door, replace: ["whole: { value: { count: 4", "whole: { value: { count: 5"] }
+      show: [ { bean: front-door, verbs: [record] } ]
+      break: { bean: front-door, replace: ["count: \"8\"", "count: \"9\""] }
+      rule: line
       refused: "the sum of"
     fa:
       name: "در امتداد یک خط"
       short: "در امتداد خط"
       person: "آنچه یک سنجه در هر لحظه نشان داد، آنچه از یک چیز هنگام خواندنش یافته شد: سری‌ها و خوانش‌ها. آنچه از آن‌ها برمی‌آید (یک جمع، یک روند، یک سهم) هر بار که پرسیده شود از نو محاسبه می‌شود، پس هرگز از آنچه ثبت شده دور نمی‌افتد."
       gardener: "از دفتر بپرسید (چقدر، چند تا، کدام اول) و پاسخ می‌دهد، همراه با سطرهایی که خوانده و اینکه چگونه خوانده. هیچ چیزی که محاسبه می‌کند به‌عنوان گزاره بازنویسی نمی‌شود."
-      agent_note: "کلِ یک سری دقیقاً بررسی می‌شود؛ جای خالی در یک گره، کلی باقی می‌گذارد که هیچ‌کس نمی‌تواند بررسی‌اش کند، و این گفته می‌شود."
+      agent_note: "سری با `record` ثبت می‌شود: جایگاه‌هایش با یک قاعده، آنچه هر ستون نگه می‌دارد، و سطرهایش در یک جدول. کلِ آن دقیقاً در برابر سطرها بررسی می‌شود؛ سطری با جای خالی، کلی باقی می‌گذارد که هیچ‌کس نمی‌تواند بررسی‌اش کند، و این گفته می‌شود."
       staples: { when: "خطی از زمان، یا خطی از ترتیب", codes: "آنچه یک کانال نگه می‌دارد کد دارد", money: "جمع خوانده می‌شود، نه نگه‌داری" }
   - id: between
     short: "Between gardens"
     name: "Between gardens"
     glyph: "⇋"
-    items: [term:consent, term:shared_identifiers, term:merge_open, section:planes]
+    items: [rule:consent, verb:propose, verb:take, table:flows, rule:layers]
     staples: { who: "a fact keeps its source as it crosses", money: "a shared cost crosses as a proposal", gate: "the other side's gate takes it in" }
     person: >
       Two notebooks meet as two networks do: each its own, neither reaching inside the other. What passes is only ever
@@ -270,47 +282,50 @@ mechanisms:
     gardener: >
       Agree with the other person what you share; your agent writes the proposal. Nothing is sent for you, and nothing
       the other side proposes enters your notebook until you commit it.
-    agent_note: "A person who is not the gardener is kept by name only with their consent on record."
+    agent_note: "A person who is not the gardener is kept by name only on their own word: their `agree` to an agreement this garden holds, or the garden they keep, met here."
     scene:
-      show: [ { bean: ali, keys: [consent] }, { bean: ali-consent, keys: [parties, words] } ]
-      break: { bean: bea, copy_of: ali, staged: true, replace: [ ["consent: { bean: ali-consent }\n", ""], ["123456789abc/person:ali", "person:bea"], ["title: \"Ali\"", "title: \"Bea\""] ] }
-      refused: "no consent of theirs"
+      show: [ { bean: ali, verbs: [name] }, { bean: ali-consent, verbs: [agree, concern] } ]
+      break: { bean: bea, copy_of: ali, replace: ["title: \"Ali\"", "title: \"Bea\""], drop: ["- name:"] }
+      rule: consent
+      refused: "no word of theirs is recorded"
     fa:
       name: "میان باغ‌ها"
       short: "میان باغ‌ها"
       person: "دو دفتر همان‌گونه به هم می‌رسند که دو شبکه: هر کدام از آنِ خود، و هیچ‌یک به درون دیگری دست نمی‌برد. آنچه می‌گذرد همیشه فقط یک پیشنهاد است: پرونده‌ای که کنار گذاشته می‌شود و باغبانِ دیگر به دست خودش آن را می‌پذیرد."
       gardener: "با آن شخص دیگر بر سر آنچه به اشتراک می‌گذارید توافق کنید؛ عاملتان پیشنهاد را می‌نویسد. هیچ چیز از طرف شما فرستاده نمی‌شود، و هیچ پیشنهادی از سوی دیگر وارد دفترتان نمی‌شود تا خودتان آن را ثبت کنید."
-      agent_note: "شخصی که باغبان نیست تنها با رضایتِ ثبت‌شده‌اش با نام نگه داشته می‌شود."
+      agent_note: "شخصی که باغبان نیست تنها به گفته‌ی خودش با نام نگه داشته می‌شود: `agree`ِ او به توافقی که این باغ نگه می‌دارد، یا باغی که خودش نگه می‌دارد و این‌جا ثبت شده."
       staples: { who: "گزاره هنگام گذر منبعش را نگه می‌دارد", money: "هزینه‌ی مشترک به‌صورت پیشنهاد می‌گذرد", gate: "دروازه‌ی سوی دیگر آن را می‌پذیرد" }
   - id: gate
     short: "Gate & journal"
     name: "The gate and the journal"
     glyph: "⛨"
-    items: [section:schema_language, section:layers, section:retired, section:senses]
+    items: [rule:form, rule:valency, rule:kept, rule:ratify, table:layers, verb:pass]
     staples: { who: "no fact without its source", what: "the rules attach to natures", between: "each garden's gate is its own" }
     person: >
-      The rules are data, versioned, read by a gate on every commit; the gate itself names no term. Every change is
-      journalled in the commit that makes it. A change to the rules is itself a journalled change a person ratifies.
+      The law is data, versioned: the roles a statement fills, the verbs and their rows, and the rules a gate applies on
+      every commit. Every change is journalled in the commit that makes it. A change to the law is itself a journalled
+      change a person ratifies.
     gardener: >
       You ratify what an agent may not decide: identities, safety, and every change to the rules. A new release reaches
       your notebook only when you adopt it — translated, proved, and journalled.
-    agent_note: "One command journals, stages and commits; the gate judges what is committed, and its refusal says the fix."
+    agent_note: "One command journals, stages and commits; the gate judges what is committed, and its refusal names the rule and the fix."
     scene:
       show: [ { save: true } ]
       break: { bean: hallway-nas, replace: ["the family's photos", "the family's photos and films"], staged: true }
-      refused: "log/journal.md not updated"
+      rule: knowing
+      refused: "named by no journal entry"
     fa:
       name: "دروازه و دفتر روزنامه"
       short: "دروازه و روزنامه"
-      person: "قاعده‌ها داده‌اند، نسخه‌دار، و دروازه آن‌ها را در هر ثبت می‌خواند؛ خودِ دروازه هیچ اصطلاحی را نام نمی‌برد. هر تغییر در همان ثبتی که آن را می‌سازد در روزنامه نوشته می‌شود. تغییرِ قاعده‌ها خود تغییری است که در روزنامه می‌آید و انسانی آن را تأیید می‌کند."
+      person: "قانون داده است، نسخه‌دار: نقش‌هایی که یک گزاره پر می‌کند، فعل‌ها و ردیف‌هایشان، و قاعده‌هایی که دروازه در هر ثبت به کار می‌بندد. هر تغییر در همان ثبتی که آن را می‌سازد در روزنامه نوشته می‌شود. تغییرِ قانون خود تغییری است که در روزنامه می‌آید و انسانی آن را تأیید می‌کند."
       gardener: "آنچه عامل نمی‌تواند درباره‌اش تصمیم بگیرد، شما تأیید می‌کنید: هویت‌ها، ایمنی، و هر تغییر در قاعده‌ها. نسخه‌ی تازه تنها وقتی به دفترتان می‌رسد که آن را بپذیرید: ترجمه‌شده، اثبات‌شده، و ثبت‌شده در روزنامه."
-      agent_note: "یک فرمان، روزنامه را می‌نویسد، آماده می‌کند و ثبت می‌کند؛ دروازه درباره‌ی آنچه ثبت می‌شود داوری می‌کند، و پاسخِ ردش راه اصلاح را می‌گوید."
+      agent_note: "یک فرمان، روزنامه را می‌نویسد، آماده می‌کند و ثبت می‌کند؛ دروازه درباره‌ی آنچه ثبت می‌شود داوری می‌کند، و پاسخِ ردش قاعده و راه اصلاح را نام می‌برد."
       staples: { who: "هیچ گزاره‌ای بی‌منبع نیست", what: "قاعده‌ها به سرشت‌ها بسته‌اند", between: "دروازه‌ی هر باغ از آنِ خودِ آن است" }
   - id: pages
     short: "Pages"
     name: "Pages"
     glyph: "▦"
-    items: [section:view_lenses, section:view_archetypes]
+    items: [profile:view, verb:draw, form:page, form:drawing, table:lenses, table:archetypes]
     staples: { where: "a page draws where things are and how they relate", line: "live values beside the drawing", gate: "a page is checked against the law" }
     person: >
       A notebook can be read as pages: its parts, how work flows between them, and the live values beside each — drawn
@@ -318,15 +333,16 @@ mechanisms:
     gardener: >
       Ask for a page of what you care about. It is drawn by one module your notebook keeps, reused from page to page,
       and checked against the law like everything else.
-    agent_note: "Every screen is a view page; write each drawing once, reuse it; the garden is the only store."
+    agent_note: "A page is `draw` statements: one for each drawing, and the page's own naming them in order. Write each drawing once and reuse it; the garden is the only store."
     scene:
-      show: [ { bean: home-page, keys: [view] } ]
-      break: { bean: home-page, replace: ["shown_from: understand", "shown_from: glance"] }
-      refused: "is not a declared view_lenses"
+      show: [ { bean: home-page, verbs: [draw] } ]
+      break: { bean: home-page, replace: ["lens: operate", "lens: glance"] }
+      rule: profile
+      refused: "is not a row of `lenses`"
     fa:
       name: "صفحه‌ها"
       short: "صفحه‌ها"
       person: "دفتر را می‌توان به‌صورت صفحه خواند: بخش‌هایش، اینکه کار چگونه میانشان جریان دارد، و مقدارهای زنده کنار هر یک؛ همه برگرفته از خودِ دفتر، و هرگز نگه‌داری‌شده در جای دیگر."
       gardener: "صفحه‌ای درباره‌ی آنچه برایتان مهم است بخواهید. آن را یک ماژول می‌کشد که دفترتان نگه می‌دارد، از صفحه‌ای به صفحه‌ی دیگر دوباره به کار می‌رود، و مانند هر چیز دیگری در برابر قانون سنجیده می‌شود."
-      agent_note: "هر صفحه‌نمایش یک صفحه‌ی `view` است؛ هر نگاره را یک بار بنویسید و دوباره به کار ببرید؛ باغ تنها انبار است."
+      agent_note: "صفحه از گزاره‌های `draw` ساخته می‌شود: یکی برای هر نگاره، و یکی از آنِ خودِ صفحه که نگاره‌ها را به ترتیب نام می‌برد. هر نگاره را یک بار بنویسید و دوباره به کار ببرید؛ باغ تنها انبار است."
       staples: { where: "صفحه نشان می‌دهد چیزها کجایند و چگونه به هم مربوط‌اند", line: "مقدارهای زنده کنار نگاره", gate: "صفحه در برابر قانون سنجیده می‌شود" }

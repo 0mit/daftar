@@ -193,12 +193,12 @@ def every_crossing(p):
         return
     L, M = data.get("lenses") or [], data.get("mechanisms") or []
     ids = {m.get("id") for m in M}
-    lacking = [f"{m.get('id')}.{k}" for m in M for k in ("name", "glyph", "person", "gardener", "agent_note", "form", "error")
+    lacking = [f"{m.get('id')}.{k}" for m in M for k in ("name", "glyph", "person", "gardener", "agent_note", "form", "rule", "error")
                if not str(m.get(k) or "").strip()]
     lacking += [f"{m.get('id')}: no part of the law" for m in M if not m.get("keeper")]
     lacking += [f"lens {l.get('id')}" for l in L if not (l.get("label") and l.get("who"))]
     check(f"the data holds a board for every crossing ({len(L)} lenses × {len(M)} mechanisms), each with its words, "
-          f"its proved form and refusal, and the parts of the law it is made of",
+          f"its proved form and refusal (the rule that refused it, and its line), and the parts of the law it is made of",
           len(L) >= 2 and len(M) >= 2 and len(ids) == len(M) and not lacking, lacking)
     stray = [f"{m['id']} → {t}" for m in M for t in (m.get("staples") or {}) if t not in ids or t == m["id"]]
     stray += [f"rope {r.get('a')}–{r.get('b')}" for r in data.get("ropes") or [] if not {r.get("a"), r.get("b")} <= ids]

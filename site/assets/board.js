@@ -3,7 +3,7 @@
 // shown as it states them, left to right, in every language.
 const DATA = JSON.parse(document.getElementById('data').textContent);
 (function(){
-const L = DATA.lenses, M = DATA.mechanisms, ROPES = DATA.ropes || [];
+const L = DATA.lenses, M = DATA.mechanisms, ROPES = DATA.ropes || [], CMD = DATA.commands || {};
 const LANGS = (DATA.languages || []).length ? DATA.languages : [{ id: 'en', label: 'English', dir: 'ltr' }];
 const FIRST = LANGS[0].id;
 let li = 0, mi = 0, lang = FIRST;
@@ -75,15 +75,15 @@ function board(l, m, i) {
   if (l.id === 'gardener') body = `<p class="prose">${fmt(tr(m, 'gardener'))}</p><p class="note">${H('gardener_note')}</p>`;
   if (l.id === 'agent') body = `<p class="note">${fmt(tr(m, 'agent_note'))}</p>
     <div><p class="label">${H('form_label')}</p><pre dir="ltr" lang="${FIRST}">${esc(m.form)}</pre></div>
-    <div><p class="label">${H('refusal_label')}</p><div class="refusal" dir="ltr" lang="${FIRST}"><b>ERROR</b>${fmt(m.error)}${m.fix ? `<span class="fix">— ${fmt(m.fix)}</span>` : ''}</div></div>
+    <div><p class="label">${H('refusal_label')}</p><div class="refusal" dir="ltr" lang="${FIRST}"><b>${esc(m.rule)}</b>${fmt(m.error)}</div></div>
     <p class="note">${H('proved_note')}</p>
-    <pre class="cmd" dir="ltr" lang="${FIRST}">python3 bin/dmsave.py "&lt;who&gt;" "&lt;what changed&gt;" --body "- action: …"
-python3 bin/dmsave.py --again</pre>`;
+    <pre class="cmd" dir="ltr" lang="${FIRST}">${esc(CMD.save)}
+${esc(CMD.again)}</pre>`;
   if (l.id === 'keeper') body = `<p class="note">${H('keeper_note')}</p>
     <div class="items" dir="ltr" lang="${FIRST}">${k.map(x => `<div class="item"><div class="top"><code>${esc(x.name)}</code><span class="k">${esc(x.kind)}</span>
       <span class="n"><span>${H('item_rules', { n: x.nrules }, FIRST)}</span><span>${H('item_checks', { n: x.checks }, FIRST)}</span><span>${H('item_relations', { n: x.relations }, FIRST)}</span></span></div>
-      ${x.meaning ? `<p>${fmt(x.meaning)}</p>` : ''}${x.reason ? `<p class="why">${fmt(x.reason)}</p>` : ''}
-      ${x.rules.length ? `<ul>${x.rules.map(r => `<li>${esc(r)}</li>`).join('')}${x.nrules > x.rules.length ? `<li>${H('more_rules', { n: x.nrules - x.rules.length, cmd: 'python3 bin/dmrules.py' }, FIRST)}</li>` : ''}</ul>` : ''}
+      ${x.valency ? `<p><code>${esc(x.valency)}</code></p>` : ''}${x.meaning ? `<p>${fmt(x.meaning)}</p>` : ''}${x.reason ? `<p class="why">${fmt(x.reason)}</p>` : ''}
+      ${x.rules.length ? `<ul>${x.rules.map(r => `<li>${esc(r)}</li>`).join('')}${x.nrules > x.rules.length ? `<li>${H('more_rules', { n: x.nrules - x.rules.length, cmd: CMD.rules }, FIRST)}</li>` : ''}</ul>` : ''}
       ${x.suites.length ? `<p class="note small">${H('checked_in', { suites: x.suites.map(s => `<code>${esc(s)}</code>`).join(', ') }, FIRST)}</p>` : ''}</div>`).join('')}</div>
     <div><p class="label">${H('rope_label')}</p><div class="ropes">${rs.map(r =>
       `<button class="rope" data-m="${r.j}" data-c="${r.j}"><span class="who">${esc(G(M[r.j]))} ${esc(tr(M[r.j], 'short') || tr(M[r.j], 'name'))}</span>
@@ -119,7 +119,7 @@ function setLang(x, quiet) {
   document.querySelectorAll('[data-t]').forEach(e => { e.textContent = U(e.dataset.t); });
   document.querySelectorAll('[data-ta]').forEach(e => { e.setAttribute('aria-label', U(e.dataset.ta)); });
   const c = DATA.counts;
-  $('#counts').textContent = T('counts', { terms: num(c.terms), registries: num(c.registries), relations: num(c.relations), reasons: num(c.reasons) });
+  $('#counts').textContent = T('counts', { rules: num(c.rules), verbs: num(c.verbs), tables: num(c.tables), relations: num(c.relations), reasons: num(c.reasons) });
   $('#boards').textContent = T('boards', { l: num(L.length), m: num(M.length), b: num(L.length * M.length) });
   lensButtons.forEach((b, i) => { b.innerHTML = `<b>${esc(tr(L[i], 'label'))}</b><span>${esc(tr(L[i], 'who'))}</span>`; });
   labels.forEach((t, i) => { t.textContent = tr(M[i], 'short') || tr(M[i], 'name'); });
