@@ -80,6 +80,7 @@ T = tempfile.mkdtemp(prefix='core-measure-')
 REL, G = os.path.join(T, 'release'), os.path.join(T, 'garden')
 
 VOCAB = """---
+profiles: [knowledge]
 kinds:
   - { kind: hive, nature: body, level: population, meaning: "a colony of bees, and the box it lives in" }
 systems:

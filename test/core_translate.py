@@ -238,7 +238,8 @@ try:
     with open(os.path.join(G, 'GARDEN.md'), 'w', encoding='utf-8') as fh:
         fh.write("---\ngarden: core-translate\nextends: std-vocab@32.0\ngardener: sam\nzone: Asia/Tehran\n---\n")
     with open(os.path.join(G, 'VOCAB.md'), 'w', encoding='utf-8') as fh:
-        fh.write("---\nvocab: core-translate\nextends: std-vocab@32.0\nregistry_additions:\n  units:\n"
+        fh.write("---\nvocab: core-translate\nextends: std-vocab@32.0\nextends_profiles: [knowledge, network]\n"
+                 "registry_additions:\n  units:\n"
                  "    - { unit: gigabyte-per-day, quantity: data-rate, factor: [312500, 27] }\n"
                  "    - { unit: rack-unit, quantity: length, factor: [889, 20000] }\n"
                  "vacancies:\n"
@@ -336,8 +337,9 @@ try:
           {'kind': 'procedure', 'nature': 'sayable'} in v2.get('kinds', [])
           and {'namespace': 'anchor-serial', 'once': 'true'} in v2.get('namespaces', []), v2)
     check("...and its own units: in UCUM where their names are made of the law's (gigabyte-per-day is GBy/d), else the "
-          "name kept as the code, saying why; a unit the garden said is vacant stays so, with its reason",
-          {'unit': 'GBy/d', 'name': 'gigabyte-per-day', 'quantity': 'data-rate',
+          "name kept as the code, saying why, each with the factor it said; a unit the garden said is vacant stays so, "
+          "with its reason",
+          {'unit': 'GBy/d', 'name': 'gigabyte-per-day', 'quantity': 'data-rate', 'factor': ['312500', '27'],
            'vacant': 'prediction: the rate of a backup, to come'} in v2.get('units', [])
           and any(u.get('unit') == 'rack-unit' and u.get('ucum') == 'false' and u.get('why') for u in v2.get('units', [])),
           v2.get('units'))

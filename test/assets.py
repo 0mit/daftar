@@ -208,6 +208,8 @@ _words = (dmpublic.estate_words(_G, dmpublic.public_words(_G)) | {w for w in _fi
          - dmpublic.public_words(_G)
 _leak = [(f, w) for f in _AFILES for w in dmpublic.hits(read(f), _words)]
 _retired = [(f, n) for f in _AFILES if f.endswith(dmupgrade.Step22.CODE_EXT)
+            and not f.endswith("_core.py")     # an asset's reader of the core (v1 part 11) writes the core's words, and
+            # `kind` is the core's name of today's genos (core/law/kinds.yaml), not the word 22.0 retired
             for n, line in enumerate(read(f).split("\n"), 1) if dmupgrade.Step22.CODE_WORD.search(line)]
 check(f"7. an asset's {len(_AFILES)} files name no harness directory and sit in no hidden one, name nothing a garden "
       f"holds ({len(_words)} words: the grown garden's and the fixtures'), and write no retired word as a key",

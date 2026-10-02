@@ -113,6 +113,11 @@ try:
     gen = run(PY, 'core/translate.py', 'profiles', cwd=ROOT)
     check("law: core/law/profiles.yaml is what std-vocab generates", gen.returncode == 0
           and gen.out == text('core/law/profiles.yaml', ROOT), gen.out[:300])
+    gen = run(PY, 'core/translate.py', 'terms', cwd=ROOT)
+    tw = read.data(os.path.join(ROOT, 'core', 'law', 'terms.yaml')).get('terms') or []
+    check(f"law: core/law/terms.yaml is what std-vocab generates, and names where each of today's {len(LAW['terms'])} "
+          f"terms went", gen.returncode == 0 and gen.out == text('core/law/terms.yaml', ROOT)
+          and [t['term'] for t in tw] == [t['term'] for t in LAW['terms']] and all(t.get('went') for t in tw), gen.out[:300])
     L = Law.load()
     P = read.data(os.path.join(ROOT, 'core', 'law', 'profiles.yaml'))
     homed = {p: sorted(v for v in L.verbs if L.home(v) == p) for p in L.profiles}

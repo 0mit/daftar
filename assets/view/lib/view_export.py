@@ -106,7 +106,8 @@ def document_bean_core(bid, title, digest, path, keeper, member):
             "  - own: { by: %s, of: self }\n"
             "  - be: { by: self, at: \"unix-filesystem:%s\", as: location }\n"
             "---\n%s, rendered from [[%s]] by the page's template and kept by its content.\n"
-            % (bid, q(title), q("A document rendered from %s's record." % member), keeper, member, digest, keeper, q(path),
+            % (bid, q(title), q("A document rendered from %s's record." % member), keeper, member,
+               digest[len("sha256:"):] if digest.startswith("sha256:") else digest, keeper, q(path),
                q(title), member))
 
 
