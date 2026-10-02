@@ -184,9 +184,10 @@ Four things are asked of every being, each its own statement, never one:
   what it followed is written so, `at: "after:<bean>"`. One party's report of another's yes is the reporter's word,
   and the knowing act that covers it says so.
 - **A clause is a statement on the permission square**, `through` the agreement: `obligatory: { of: rent, through:
-  agreed }`, where `rent` is the `pay` it asks for. Each clause asks one statement; what the core cannot yet write of
-  a clause — how it repeats, when it falls due relative to another position, what brings it into force — is kept in
-  `details` under the clause's id until its form is built (part 7 of v1).
+  agreed }`, where `rent` is the `pay` it asks for. Each clause asks one statement; what it holds beside — the day it
+  falls due, how it repeats, when it falls due relative to another position, how long before a reader is told, its
+  window, an allowance, what it occurs for, what brings it into force — is its form, `clause` (core/law/measures.yaml),
+  on the position on the square (or on a `can`, a clause in its words alone), judged by rule `measured`.
 - **Money is a quantity.** An amount is `{ count, unit }`: the unit a currency of ISO 4217, the count plain decimal
   digits with no more places than the currency uses. A count or a share is what was written, never converted. No
   factor joins two currencies: a rate is a `measure` someone made, at a moment, from a source.
@@ -256,8 +257,11 @@ A name is a statement: the namespace gives it.
   what rests on one is fixed by `pin`, the moment it was read at and the commit, `<garden>@<object id>`.
 - **Lines.** What a line held at each position is a series, `record`; a walk is a mapping's `step` statements, a case
   on it a `be` as order, and where it stands is read from its `move`s (`python3 bin/daftar.py seq`). Each line's own
-  structure is a value in a form of core/law/lines.yaml, and rule `line` judges it. A recurrence, a due relative to
-  another, an uncertainty and an allowance are kept in `details` until part 7 of v1.
+  structure is a value in a form of core/law/lines.yaml, and rule `line` judges it. A region of a line (`extent`) and a
+  repetition along one (`recurrence`) are forms of core/law/measures.yaml; how well a value is known is inside it (`u`,
+  or `accuracy` with its kind); and what a placement holds there — what it takes of its host, how well its position is
+  known, its window — is `be`'s form `placed`. Rule `measured` judges them, and sums what is placed as room in a host
+  against what it `hold`s.
 
 ## Layers, standing and the law
 - **The layers**: manifesto, law, reasoning, journal, history, queue, names; beside them the sources the flow law adds
@@ -272,7 +276,8 @@ A name is a statement: the namespace gives it.
   tables in `seed/knowledge/`, and every file a release keeps (`seed/LANGUAGE`). A change to any of them is a
   RULE-CHANGE, which a person ratifies.
 - **`VOCAB.md`** is the garden's own rows, under these keys only: `kinds`, `levels`, `namespaces`, `flows`,
-  `flow_sources`, `standing`, `verbs`, `units`, `tables` (rows added to a table the verbs name) and `exclusive`. A row
+  `flow_sources`, `standing`, `verbs`, `units`, `tables` (rows added to a table the verbs name), `exclusive`, and a
+  system of positions, a scheme of codes and the files they name of its own (`systems`, `schemes`, `files`). A row
   never takes a name the law has: one name, one row. **Every row the garden adds is used** by a statement or a bean, or
   says why it is vacant (`vacant: <why>`), the manifesto's `whole`: a row is added with the first bean that uses it.
 - **Profiles** — network, domain, accounting, view, knowledge, code — stand on the core: their verbs are rows of
@@ -327,7 +332,7 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   (manifesto: hidden). People record decisions and approvals; agents record what they ran, why, and what happened. A heading is
   written by the clock (`bin/journal.py`, which `bin/save.py` calls), never typed.
 - **The gate** is `core/check.py`, run at every commit by the pre-commit hook `bin/hooks/pre-commit` on the staged
-  files. Its nineteen rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
+  files. Its twenty rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
   lists them: the core's thirteen, and five that today's gate held — `consent`, `harm`, `room`, `vacancy`, `kept`.
 - **The commit's own rules**: every bean a commit changes is named by the journal entry it adds; a statement it adds is
   known by an act it adds, at that entry's moment; a change to the law says RULE-CHANGE. Only the commit that adopts

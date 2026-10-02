@@ -3,61 +3,64 @@
 # with the english complete names as texts attached to them". Every unit of the law has one row here, which the law's
 # proof checks; the codes are UCUM's (https://ucum.org/ucum), and where UCUM writes none the row says so and why.
 # Currencies are ISO 4217's codes, read from seed/knowledge/currencies.tsv with their names, and are not rows here.
+# Each unit's `factor` (v1 part 7) is two whole numbers, its size in its quantity's coherent unit as a fraction, so a
+# conversion is exact arithmetic and never a rounded float (bin/units.py); they are std-vocab 32.0's factors, carried
+# over unit by unit, which test/core_measure.py holds equal until part 13 retires std-vocab.
 units:
-  - { unit: "1",           name: one,                        quantity: ratio }
-  - { unit: "%",           name: percent,                    quantity: ratio }
-  - { unit: "[ppth]",      name: per-mille,                  quantity: ratio }
-  - { unit: "10*-4",       name: basis-point,                quantity: ratio }
-  - { unit: ms,            name: millisecond,                quantity: duration }
-  - { unit: s,             name: second,                     quantity: duration }
-  - { unit: min,           name: minute,                     quantity: duration }
-  - { unit: h,             name: hour,                       quantity: duration }
-  - { unit: d,             name: day,                        quantity: duration }
-  - { unit: mm,            name: millimetre,                 quantity: length }
-  - { unit: m,             name: metre,                      quantity: length }
-  - { unit: km,            name: kilometre,                  quantity: length }
-  - { unit: m2,            name: square-metre,               quantity: area }
-  - { unit: har,           name: hectare,                    quantity: area }
-  - { unit: km2,           name: square-kilometre,           quantity: area }
-  - { unit: m3,            name: cubic-metre,                quantity: volume }
-  - { unit: L,             name: litre,                      quantity: volume }
-  - { unit: m/s,           name: metre-per-second,           quantity: speed }
-  - { unit: km/h,          name: kilometre-per-hour,         quantity: speed }
-  - { unit: m/s2,          name: metre-per-second-squared,   quantity: acceleration }
-  - { unit: Hz,            name: hertz,                      quantity: frequency }
-  - { unit: kg,            name: kilogram,                   quantity: mass }
-  - { unit: g,             name: gram,                       quantity: mass }
-  - { unit: bit,           name: bit,                        quantity: information }
-  - { unit: By,            name: byte,                       quantity: information }
-  - { unit: kBy,           name: kilobyte,                   quantity: information }
-  - { unit: MBy,           name: megabyte,                   quantity: information }
-  - { unit: GBy,           name: gigabyte,                   quantity: information }
-  - { unit: TBy,           name: terabyte,                   quantity: information }
-  - { unit: GiBy,          name: gibibyte,                   quantity: information }
-  - { unit: By/s,          name: byte-per-second,            quantity: data-rate }
-  - { unit: bit/s,         name: bit-per-second,             quantity: data-rate }
-  - { unit: Mbit/s,        name: megabit-per-second,         quantity: data-rate }
-  - { unit: dB,            name: decibel,                    quantity: level }
-  - { unit: decibel-per-metre,     name: decibel-per-metre,     quantity: attenuation, ucum: "false",
+  - { unit: "1",           name: one,                        quantity: ratio, factor: ["1", "1"] }
+  - { unit: "%",           name: percent,                    quantity: ratio, factor: ["1", "100"] }
+  - { unit: "[ppth]",      name: per-mille,                  quantity: ratio, factor: ["1", "1000"] }
+  - { unit: "10*-4",       name: basis-point,                quantity: ratio, factor: ["1", "10000"] }
+  - { unit: ms,            name: millisecond,                quantity: duration, factor: ["1", "1000"] }
+  - { unit: s,             name: second,                     quantity: duration, factor: ["1", "1"] }
+  - { unit: min,           name: minute,                     quantity: duration, factor: ["60", "1"] }
+  - { unit: h,             name: hour,                       quantity: duration, factor: ["3600", "1"] }
+  - { unit: d,             name: day,                        quantity: duration, factor: ["86400", "1"] }
+  - { unit: mm,            name: millimetre,                 quantity: length, factor: ["1", "1000"] }
+  - { unit: m,             name: metre,                      quantity: length, factor: ["1", "1"] }
+  - { unit: km,            name: kilometre,                  quantity: length, factor: ["1000", "1"] }
+  - { unit: m2,            name: square-metre,               quantity: area, factor: ["1", "1"] }
+  - { unit: har,           name: hectare,                    quantity: area, factor: ["10000", "1"] }
+  - { unit: km2,           name: square-kilometre,           quantity: area, factor: ["1000000", "1"] }
+  - { unit: m3,            name: cubic-metre,                quantity: volume, factor: ["1", "1"] }
+  - { unit: L,             name: litre,                      quantity: volume, factor: ["1", "1000"] }
+  - { unit: m/s,           name: metre-per-second,           quantity: speed, factor: ["1", "1"] }
+  - { unit: km/h,          name: kilometre-per-hour,         quantity: speed, factor: ["5", "18"] }
+  - { unit: m/s2,          name: metre-per-second-squared,   quantity: acceleration, factor: ["1", "1"] }
+  - { unit: Hz,            name: hertz,                      quantity: frequency, factor: ["1", "1"] }
+  - { unit: kg,            name: kilogram,                   quantity: mass, factor: ["1", "1"] }
+  - { unit: g,             name: gram,                       quantity: mass, factor: ["1", "1000"] }
+  - { unit: bit,           name: bit,                        quantity: information, factor: ["1", "8"] }
+  - { unit: By,            name: byte,                       quantity: information, factor: ["1", "1"] }
+  - { unit: kBy,           name: kilobyte,                   quantity: information, factor: ["1000", "1"] }
+  - { unit: MBy,           name: megabyte,                   quantity: information, factor: ["1000000", "1"] }
+  - { unit: GBy,           name: gigabyte,                   quantity: information, factor: ["1000000000", "1"] }
+  - { unit: TBy,           name: terabyte,                   quantity: information, factor: ["1000000000000", "1"] }
+  - { unit: GiBy,          name: gibibyte,                   quantity: information, factor: ["1073741824", "1"] }
+  - { unit: By/s,          name: byte-per-second,            quantity: data-rate, factor: ["1", "1"] }
+  - { unit: bit/s,         name: bit-per-second,             quantity: data-rate, factor: ["1", "8"] }
+  - { unit: Mbit/s,        name: megabit-per-second,         quantity: data-rate, factor: ["125000", "1"] }
+  - { unit: dB,            name: decibel,                    quantity: level, factor: ["1", "1"] }
+  - { unit: decibel-per-metre,     name: decibel-per-metre,     quantity: attenuation, factor: ["1", "1"], ucum: "false",
       why: "UCUM §22: a unit on a special scale, as the bel is, takes part in no product or quotient, so UCUM writes no attenuation; the law's name is the code" }
-  - { unit: decibel-per-kilometre, name: decibel-per-kilometre, quantity: attenuation, ucum: "false",
+  - { unit: decibel-per-kilometre, name: decibel-per-kilometre, quantity: attenuation, factor: ["1", "1000"], ucum: "false",
       why: "UCUM §22: a unit on a special scale, as the bel is, takes part in no product or quotient, so UCUM writes no attenuation; the law's name is the code" }
-  - { unit: cm,            name: centimetre,                 quantity: length }
-  - { unit: mL,            name: millilitre,                 quantity: volume }
-  - { unit: kg/m3,         name: kilogram-per-cubic-metre,   quantity: density }
-  - { unit: g/cm3,         name: gram-per-cubic-centimetre,  quantity: density }
-  - { unit: Pa,            name: pascal,                     quantity: pressure }
-  - { unit: kPa,           name: kilopascal,                 quantity: pressure }
-  - { unit: "mm[Hg]",      name: millimetre-of-mercury,      quantity: pressure }
-  - { unit: m3/s,          name: cubic-metre-per-second,     quantity: volume-flow }
-  - { unit: L/min,         name: litre-per-minute,           quantity: volume-flow }
-  - { unit: deg,           name: degree,                     quantity: plane-angle }
-  - { unit: "''",          name: arcsecond,                  quantity: plane-angle }
-  - { unit: K,             name: kelvin,                     quantity: temperature-difference }
-  - { unit: a_j,           name: julian-year,                quantity: duration }
-  - { unit: 31556925445.ms, name: annus,                     quantity: duration }      # UCUM's a_t (365.24219 d) is not the IUPAC-IUGS annus
-  - { unit: 31556925445.s,  name: kilo-annus,                quantity: duration }
-  - { unit: 31556925445.ks, name: mega-annus,                quantity: duration }
-  - { unit: 31556925445.Ms, name: giga-annus,                quantity: duration }
-  - { unit: mm/a_j,        name: millimetre-per-julian-year, quantity: speed }
-  - { unit: "{item}",      name: item,                       quantity: number }
+  - { unit: cm,            name: centimetre,                 quantity: length, factor: ["1", "100"] }
+  - { unit: mL,            name: millilitre,                 quantity: volume, factor: ["1", "1000000"] }
+  - { unit: kg/m3,         name: kilogram-per-cubic-metre,   quantity: density, factor: ["1", "1"] }
+  - { unit: g/cm3,         name: gram-per-cubic-centimetre,  quantity: density, factor: ["1000", "1"] }
+  - { unit: Pa,            name: pascal,                     quantity: pressure, factor: ["1", "1"] }
+  - { unit: kPa,           name: kilopascal,                 quantity: pressure, factor: ["1000", "1"] }
+  - { unit: "mm[Hg]",      name: millimetre-of-mercury,      quantity: pressure, factor: ["26664477483", "200000000"] }
+  - { unit: m3/s,          name: cubic-metre-per-second,     quantity: volume-flow, factor: ["1", "1"] }
+  - { unit: L/min,         name: litre-per-minute,           quantity: volume-flow, factor: ["1", "60000"] }
+  - { unit: deg,           name: degree,                     quantity: plane-angle, factor: ["1", "1"] }
+  - { unit: "''",          name: arcsecond,                  quantity: plane-angle, factor: ["1", "3600"] }
+  - { unit: K,             name: kelvin,                     quantity: temperature-difference, factor: ["1", "1"] }
+  - { unit: a_j,           name: julian-year,                quantity: duration, factor: ["31557600", "1"] }
+  - { unit: 31556925445.ms, name: annus,                     quantity: duration, factor: ["6311385089", "200"] }      # UCUM's a_t (365.24219 d) is not the IUPAC-IUGS annus
+  - { unit: 31556925445.s,  name: kilo-annus,                quantity: duration, factor: ["31556925445", "1"] }
+  - { unit: 31556925445.ks, name: mega-annus,                quantity: duration, factor: ["31556925445000", "1"] }
+  - { unit: 31556925445.Ms, name: giga-annus,                quantity: duration, factor: ["31556925445000000", "1"] }
+  - { unit: mm/a_j,        name: millimetre-per-julian-year, quantity: speed, factor: ["1", "31557600000"] }
+  - { unit: "{item}",      name: item,                       quantity: number, factor: ["1", "1"] }

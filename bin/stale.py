@@ -1134,7 +1134,8 @@ def _fronts():
     """Each bean's front matter as this report reads it: in a garden of the core, the terms its `details` keeps (a cache,
     an expiry) with its header (bin/garden.py `terms`, the one view of them)."""
     if dmgarden.runs_core(ROOT):
-        return [dmgarden.terms(b) for _bid, b in sorted(dmgarden.core_garden(ROOT).beans.items())
+        G = dmgarden.core_garden(ROOT)
+        return [dmgarden.terms(b, G.beans) for _bid, b in sorted(G.beans.items())
                 if not b.unread and os.path.basename(os.path.dirname(b.path)) == 'beans']
     out = []
     for f in dmgarden.paths(ROOT, 'beans'):

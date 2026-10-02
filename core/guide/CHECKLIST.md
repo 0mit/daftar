@@ -17,9 +17,9 @@ judges the working tree, and `python3 core/check.py --staged` what a commit woul
 `<rule>  <where>: <what>`; it names what to write in its place.
 
 ## Part A — what the gate checks (a commit is refused on any failure)
-Nineteen rules, each strict: a breach is an error. The first thirteen are the core's own; the next five, and parts of
-`form`, `order`, `names` and `ratify`, are what today's gate held, taken over by the core; the last, `line`, judges the
-forms of a line (v1 part 6).
+Twenty rules, each strict: a breach is an error. The first thirteen are the core's own; the next five, and parts of
+`form`, `order`, `names` and `ratify`, are what today's gate held, taken over by the core; `line` judges the forms of a
+line (v1 part 6), and `measured` the forms of a measure (v1 part 7).
 
 - [ ] **form** — A bean's front matter is its header (`bean`, `kind`, `title`, `summary`, `tags`, `details`) and its
       `statements`, nothing else; `bean` is the file's name, and `kind` a kind of the law. A statement is one verb of
@@ -90,6 +90,17 @@ forms of a line (v1 part 6).
       list, each taking what its row takes and naming only what came before it, its paths starting at the header or a
       verb, its comparisons written by their signs. A `pin` holds its moment and a commit this garden has,
       `<garden>@<object id>`, and rests on readings.
+- [ ] **measured** — What is measured is in its form (core/law/measures.yaml). A quantity says how well it is known
+      inside it, by one of `u` (a positive count, in a unit of its own quantity or of ratio) and `accuracy` (as its
+      maker stated it, with a kind of `accuracy_kinds`). A region (`extent`) lies on a line that has regions, bounded
+      at an end or by its length — a `measure` in the unit the line meters, or `level` and `count`, cells of a level of
+      the system named — never both. A repetition (`recurrence`) strides by one rule: `every` N neighbours or units, or
+      `each` cell of a level of the system named; where it starts and ends, and its closures, are positions of that
+      system, days its calendar has. A clause (`can`'s `clause`) falls due on its `at`, or relative to a path
+      (`falls_due`, by `after` or `before`) — not both; an allowance's `amount` is counted `within` a window; what it
+      occurs for (`each`), what uses it (`used_by`) and what brings it into force (`when`) are readings of the garden.
+      What a placement takes of its host (`be`'s `placed.takes`) is a quantity, of a placement that takes something;
+      and what is placed as room in a host never takes more than it holds (`hold`).
 
 **The commit's own rules**, which only a commit can show:
 - [ ] Every bean the commit changes is named in the journal entry it adds (`[[<bean>]]`), and that entry's heading is

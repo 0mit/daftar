@@ -167,9 +167,9 @@ Sam uses the camera more, so Sam bears two parts of its cost and Ali one.
 ## An agreement paid in instalments
 
 Sam lent Ali the price of a washing machine, to be repaid in six monthly instalments, with interest on one paid late.
-Each clause is a statement on the permission square, `obligatory` of the payment it asks, `through` the agreement. How
-a clause repeats, and what brings it into force, have no form in the core yet (part 7 of v1): they are kept in
-`details`, under the clause's id.
+Each clause is a statement on the permission square, `obligatory` of the payment it asks, `through` the agreement. What
+it holds beside its words — when it falls due, how it repeats, what brings it into force — is its form, `clause`
+(core/law/measures.yaml), and rule `measured` judges it.
 
 <!-- example: beans/washer-loan.md -->
 ```markdown
@@ -186,14 +186,11 @@ statements:
   - agree:      { by: sam, of: "the price of Ali's washing machine", through: dinner-at-sams, as: lender }
   - agree:      { by: ali, of: "the price of Ali's washing machine", through: dinner-at-sams, as: borrower }
   - pay:        { id: instalment, by: ali, to: sam, of: { count: "20.00", unit: XTS } }
-  - obligatory: { id: instalments, of: instalment, through: self, note: "Ali repays 20 XTS on the first day of each month, six times" }
+  - obligatory: { id: instalments, of: instalment, through: self, note: "Ali repays 20 XTS on the first day of each month, six times", clause: { every: { of: time, in: gregorian-civil, each: month, at: "1", times: "6" } } }
   - pay:        { id: interest, by: ali, to: sam, of: { count: "1", unit: "%" } }
-  - obligatory: { id: late-interest, of: interest, through: self, note: "an instalment paid after its day carries one percent of itself for each month it is late" }
+  - obligatory: { id: late-interest, of: interest, through: self, note: "an instalment paid after its day carries one percent of itself for each month it is late", clause: { when: { said: "an instalment is paid late" } } }
   - pay:        { id: the-loan, by: sam, of: { count: "120.00", unit: XTS }, note: "Sam paid the shop for Ali's washing machine" }
   - bear:       { by: ali, of: the-loan, share: "1" }
-details:
-  instalments: { every: { of: time, in: gregorian-civil, each: month, times: "6" } }
-  late-interest: { when: { said: "an instalment is paid late" } }
 ---
 Agreed in words spoken over dinner; nothing was written down.
 ```

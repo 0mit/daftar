@@ -24,10 +24,10 @@ shapes:
   - { shape: being,    meaning: "a bean, `self` (the being this bean records), or `someone` of a kind, reached `at` a being or a named place" }
   - { shape: statement, meaning: "a statement, by its `id`, in this bean or another (`<bean>#<id>`)" }
   - { shape: position, meaning: "a dot in a system of positions, in that system's one form; an extent is two, as ISO 8601 writes an interval" }
-  - { shape: quantity, meaning: "{ count, unit }: plain decimal digits, and a unit of SI / UCUM or a currency of ISO 4217; a bare number is a count of the unit one (a share)" }
+  - { shape: quantity, meaning: "{ count, unit }: plain decimal digits, and a unit of SI / UCUM or a currency of ISO 4217; a bare number is a count of the unit one (a share). How well it is known is inside it: `u`, its standard uncertainty, or `accuracy`, as its maker stated it with its kind — at most one (core/law/measures.yaml `uncertainty_form`)" }
   - { shape: row,      meaning: "a row of a table the core keeps, or a standard's" }
   - { shape: text,     meaning: "prose, its language a BCP 47 tag where it is not the garden's" }
-  - { shape: form,     meaning: "a value in one of the forms of a line (core/law/lines.yaml `forms`): what a series holds along its line, how a walk goes at a step, the steps of a reading — the structure a line has and the seven roles do not say. A role's spec names its form; rule `line` judges it" }
+  - { shape: form,     meaning: "a value in one of the forms of a line (core/law/lines.yaml `forms`): what a series holds along its line, how a walk goes at a step, the steps of a reading — the structure a line has and the seven roles do not say; or of a measure (core/law/measures.yaml `forms`): what a clause holds beside its words, what a placement holds beside its position. A role's spec names its form; rule `line` judges a line's, rule `measured` a measure's" }
 cardinality: [one, many, keyed]            # many is ordered only where it is a line; keyed: a map whose keys are names
 beside_roles:                              # the only keys a statement carries besides its verb's roles and qualifiers
   - { key: id,    meaning: "the statement's name in its bean, so other statements can take it as a filler" }
@@ -115,6 +115,7 @@ verbs:
   # the order
   - verb: be
     roles: { by: { shape: being }, at: { shape: [position, being], many: true }, as: { shape: row, table: placements } }
+    qualifiers: { placed: { shape: form, form: placement } }   # what it holds there: what it takes, how well its position is known, its window (part 7)
     required: [by, at]
   - verb: stand
     roles: { by: { shape: [being, row], table: levels }, at: { shape: [being, row], table: levels }, as: { shape: row, table: ways } }
@@ -152,10 +153,10 @@ verbs:
   - { verb: contingent, figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
   - { verb: possible,   figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
   - { verb: impossible, figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
-  - { verb: obligatory, figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, required: [of, through] }
-  - { verb: omissible,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, required: [of, through] }
-  - { verb: permitted,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, required: [of, through] }
-  - { verb: forbidden,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, required: [of, through] }
+  - { verb: obligatory, figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
+  - { verb: omissible,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
+  - { verb: permitted,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
+  - { verb: forbidden,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
 
 # the small tables the face verbs name
 modes:        [law, keeping, meeting, paying]          # the four modes of answering: before the law, in keeping it, in how others meet it, in paying for it
@@ -203,3 +204,4 @@ rules:
   - { rule: vacancy,    says: "every row a garden adds to the law — a kind, a level, a verb, a namespace, a unit, a row of a table — is used by a statement or a bean, or says why it is vacant (`vacant:`)" }
   - { rule: kept,       says: "what is kept is not damaged: the journal is appended to, never rewritten, and a line a commit adds to it holds no character a reader takes for a line break, and no template's `(fill in`; a series' part, once written, stays as it is; a commit that takes a header key or a statement out of a bean names it in its entry (the key, the statement's id, or its verb), empties none it keeps, and leaves every bean it writes a body" }
   - { rule: line,       says: "what holds a line holds its form: a series' rows are read by its channels, and nothing else is in it; a walk's ways on lead to steps of the walk, and none leads on from a final step or a pause; a course is a being placed on a walk (`be` as order), and each move reaches a step of that walk at a moment, by a way on or saying why, never after a final step and never back in time, citing only a reason the step lists; a reading's steps are each one operation of the closed list, taking what its row takes and naming only what came before it, its paths read over statements; a pin names a commit this garden has, at a moment not still to come" }
+  - { rule: measured,   says: "what is measured is in its form: a quantity's uncertainty is one of `u` (a positive count in a unit of its own quantity, or of ratio) and `accuracy` (with a kind of the table); a region lies on a line that has regions, bounded at an end or by its length — a length in the unit its line meters, or cells of a level of the system named, never both; a repetition strides by one rule, every N neighbours or units or each cell of a level of the system named, where it starts and ends and its closures positions of that system, a day its calendar has; a clause (a `can`, or a position on the permission square) holds its form — it falls due on a day or relative to a path, by after or before, never both; an allowance's window and amount together; what it occurs for, and what brings it into force, a reading of its bean; and what a placement takes, each a quantity, never more room than its host holds" }

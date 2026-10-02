@@ -8,7 +8,7 @@ from it, holding a rain gauge that records a series, a walk of a bicycle repair,
 walk, its moves, what was paid and who bears it, a clause, a reading and a pin), and a laptop that holds a root and a
 codebase under it.
 
-law: core/law/lines.yaml is what std-vocab generates, and the law holds together with its nineteen rules. gate: the
+law: core/law/lines.yaml is what std-vocab generates, and the law holds together with its twenty rules. gate: the
 garden saved through the core's gate; each form's breach refused by rule `line`, by name. seq: the series read between
 its rows, the course where it stands. reckon: a reading by its name, an ad-hoc one over `pay.of`, a comparator in today's
 words refused, a reading at a pinned commit. ledger: positions and debts from `pay` and `bear`, exactly, and the net
@@ -245,13 +245,13 @@ try:
                   for v in ('garden', 'where', 'stale', 'pos', 'seq', 'reckon', 'ledger')), r.out[-800:])
     run(PY, 'bin/install.py')
 
-    # ---- THE LAW: lines.yaml generated from std-vocab; nineteen rules
+    # ---- THE LAW: lines.yaml generated from std-vocab; twenty rules
     gen = run(PY, 'core/translate.py', 'lines', cwd=ROOT)
     check("law: core/law/lines.yaml is what std-vocab generates (its operations, comparisons, forms)",
           gen.returncode == 0 and gen.out == text('core/law/lines.yaml', ROOT), gen.out[:300])
     r = run(PY, 'core/check.py', '--law')
     check("law: the core's law holds together — its new verbs (record, step, reckon, pin, move) and rule `line`",
-          r.returncode == 0 and '19 rules — 0 error(s)' in r.out, r.out[-400:])
+          r.returncode == 0 and '20 rules — 0 error(s)' in r.out, r.out[-400:])
 
     # ---- THE GATE: the five forms saved through the core's gate
     write('VOCAB.md', VOCAB)

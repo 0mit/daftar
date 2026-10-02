@@ -21,8 +21,9 @@ THE ONE VIEW. The tools that read a line — bin/dmseq.py, bin/dmreckon.py — r
 it, so this module gives each line as that entry (`series_of`, `steps_of`, `courses_of`, `moves_of`, `readings_of`),
 and `view` gives a whole bean so: its header, its statements by verb, and its lines. One code reads both laws' lines,
 and this is the only place the view is built. `law_view` is the law a line is read by — the reading's grammar from
-lines.yaml, the units by their UCUM codes; until part 7 carries a unit's factor and part 13 the rest, the factors and
-the other tables are today's, read through the gate's registry (the bridge)."""
+lines.yaml, the units by their UCUM codes with their factors (core/law/units.yaml, part 7), compatibility and the forms of
+a mechanism and a coefficient (measures.yaml); until part 13 the other tables are today's, read through the gate's
+registry (the bridge)."""
 import os
 import re
 import subprocess
@@ -158,13 +159,16 @@ def worded(entry):
 
 def view(b, G):
     """A bean as the read tools read it: its header, each verb's statements (their roles, as `<verb>: [...]`), and its
-    lines in the shape today's terms held them — `series`, `steps`, `courses`, `moves`, `selections`."""
+    lines in the shape today's terms held them — `series`, `steps`, `courses`, `moves`, `selections` — with its clauses
+    (`clauses`, core/measures.py, part 7)."""
     v = {k: b.header[k] for k in ('kind', 'title', 'summary', 'tags', 'details') if k in b.header}
     v['bean'] = b.id
     for _i, verb, r in b.items:
         v.setdefault(verb, []).append(r)
+    from core import measures
     for key, got in (('series', series_of(b)), ('steps', steps_of(b)), ('courses', courses_of(b, G)),
-                     ('moves', [m for _i, m in moves_of(b)]), ('selections', readings_of(b))):
+                     ('moves', [m for _i, m in moves_of(b)]), ('selections', readings_of(b)),
+                     ('clauses', measures.clauses_of(b, G.root or ROOT))):
         if got:
             v[key] = got
     return v
@@ -203,10 +207,17 @@ def _today(root):
     return law, registry
 
 
+def _typed_compat(c):
+    """compatibility as the reader takes it: its multiple a whole number."""
+    if isinstance(c, dict) and isinstance(c.get('multiple'), str) and c['multiple'].isdigit():
+        return dict(c, multiple=int(c['multiple']))
+    return c
+
+
 def law_view(L, root=None):
     """A dmseq.Law for a garden of the core: the reading's grammar from lines.yaml (its comparisons as the reader's
-    `comparators`), the kinds as the core's, the units by their UCUM codes; their factors, the quantities and the other
-    tables today's (`_today`), until parts 7 and 13 carry them."""
+    `comparators`), the kinds as the core's, the units by their UCUM codes and their factors (part 7), compatibility and
+    the forms of a mechanism and a coefficient; the quantities and the other tables today's (`_today`), until part 13."""
     if id(L) in _VIEWS:
         return _VIEWS[id(L)]
     import dmseq
@@ -218,11 +229,18 @@ def law_view(L, root=None):
     units = {}
     for code, row in L.units.items():
         old = by_name.get(row.get('name')) or {}
-        units[code] = dict(old, unit=code, name=row.get('name'), quantity=row.get('quantity') or old.get('quantity'))
+        f = row.get('factor')                       # the core's own factor (part 7): two whole numbers, exactly
+        f = [int(f[0]), int(f[1])] if isinstance(f, list) and len(f) == 2 and all(str(x).isdigit() for x in f) \
+            else old.get('factor')
+        units[code] = dict(old, unit=code, name=row.get('name'), quantity=row.get('quantity') or old.get('quantity'),
+                           factor=f)
     ll = L.line_law or {}
     own = {'operations': ll.get('operations'), 'comparators': ll.get('comparisons'), 'aggregates': ll.get('aggregates'),
            'ordering_keys': ll.get('ordering_keys'), 'selection_form': ll.get('selection_form'),
            'pin_form': ll.get('pin_form'), 'units': list(units.values()),
+           'compatibility': _typed_compat((getattr(L, 'measure_law', None) or {}).get('compatibility')),
+           'mechanism_form': (getattr(L, 'measure_law', None) or {}).get('mechanism_form'),
+           'coefficient_form': (getattr(L, 'measure_law', None) or {}).get('coefficient_form'),
            'kinds': [dict(r, kind=k) for k, r in L.kinds.items()]}
 
     def registry(name):

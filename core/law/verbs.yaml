@@ -8,6 +8,7 @@ tables:                                   # the small tables these rows name; a 
   grants:        [read, write, enact, ratify]         # what a grant opens
   classes:       [A, B, C, D, E, F, G, H, I, J, K]    # the Contract of Parts' classes of decision
   sensitivities: [none, personal, special-category]
+  presences:     [present, absent]                     # what a reading found: present, or looked for and not found
   jobs:          [router, mail-primary, mail-backup, file-server, dns-resolver, dns-authoritative, monitoring, web, app-host, vpn-gateway, ledger-hub, workstation]
   methods:       [edit, remove, stamp, append, record, capture, merge, forward, adopt, publish, render, show, send]   # how a pass is made, beside the verbs that are methods too: derive, make, take, serve, hold
 standard_tables: [protocols, knowledge, properties, units]   # read from their standards (IANA, our knowledge tree, ISO 19156, SI and UCUM)
@@ -67,8 +68,9 @@ verbs:
     replaces: [grants]
     home: core
   - verb: can
-    meaning: "to be able to do something, taken as a position on the permission square: may, or must"
-    roles: { by: { shape: being }, of: { shape: text } }
+    meaning: "to be able to do something, taken as a position on the permission square: may, or must. A clause of an agreement in its words is one: whom it is owed to, and what it holds beside its words — the day it falls due, how it repeats, when it falls due relative to another position, how long before a reader is told, its window, an allowance, what it occurs for, what brings it into force (`clause`, core/law/measures.yaml), as a position on the square holds them of the statement it asks. A stance on a field is `as` its code (and every code beneath it), and holds `at` a place, within it (v1 part 7)"
+    roles: { by: { shape: being }, of: { shape: text }, to: { shape: being }, as: { shape: row, table: knowledge }, at: { shape: position } }
+    qualifiers: { clause: { shape: form, form: clause } }
     required: [by, of]
     replaces: [capabilities]
     home: core
@@ -162,7 +164,11 @@ verbs:
       as:      { shape: row, table: properties }
       through: { shape: being }
       at:      { shape: position }
-    qualifiers: { value: { shape: quantity } }
+    qualifiers:                           # its value with how well it is known inside it; how it was read; a result that is a code, or a presence
+      value:    { shape: quantity }
+      method:   { shape: row, table: knowledge }
+      result:   { shape: row, table: knowledge }
+      presence: { shape: row, table: presences }
     required: [of, as]
     replaces: [observations]
     home: core

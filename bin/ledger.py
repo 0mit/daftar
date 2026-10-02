@@ -816,8 +816,9 @@ def core_units():
 def core_agreement(b, G, units):
     """One bean of the core read as an agreement: what each `pay` gave and who `bear`s it, in the shape print_agreement
     prints — positions and debts per currency, every figure exact; a statement not read is a NOTE. Its clauses are its
-    `can` statements and the figure each stands under; a due, a recurrence and an occurrence are kept in `details` until
-    part 7 gives them their forms, and are named, not read."""
+    `can` statements and the figure each stands under, each read as today's clause is (`clause_lines`): when it falls
+    due and next falls due, how it repeats, its notice, its window, an allowance, what it occurs for and what brings it
+    into force — its form, `clause` (core/measures.py, v1 part 7)."""
     ag = {'bean': b.id, 'title': b.header.get('title'), 'parties': {}, 'fm': {}, 'notes': [], 'txs': [],
           'position': {}, 'owed': {}, 'clauses': [], 'pending': [], 'disputed': [], 'left_out': [], 'maybe': set()}
     for _i, v, r in b.items:
@@ -881,24 +882,44 @@ def core_agreement(b, G, units):
     for _i, v, r in b.items:
         if v in ('obligatory', 'permitted', 'forbidden', 'omissible') and isinstance(r.get('of'), str):
             figs.setdefault(r['of'], []).append(v)
+    from core import measures
+    views = measures.clauses_of(b, ROOT)
     for _i, v, r in b.items:
         if v == 'can' and 'held' not in r:
-            ag['clauses'].append((r.get('id'), r, figs.get(r.get('id'), [])))
-    kept = sorted(k for k in (b.header.get('details') or {}) if k in ('clauses', 'transactions', 'obligations'))
+            ag['clauses'].append((r.get('id'), r, figs.get(r.get('id'), []), views.get(r.get('id'))))
+    for key, e in views.items():                  # a position on the square of a statement that is no `can`
+        if not any(c[0] == key for c in ag['clauses']):
+            ag['clauses'].append((key, {'by': e.get('by'), 'of': e.get('what')},
+                                  [{'required': 'obligatory'}.get(e.get('permission'), e.get('permission'))], e))
+    kept = sorted(k for k in (b.header.get('details') or {}) if k in ('transactions', 'obligations'))
     if kept:
-        ag['notes'].append(f"`details` keeps {', '.join(kept)} — what the core has no form for yet (a due, a recurrence, "
-                           f"an occurrence: part 7 of v1), named here and not read")
+        ag['notes'].append(f"`details` keeps {', '.join(kept)} — what no statement says (a payment with no payer the "
+                           f"garden holds), named here and not read")
     return ag
+
+
+FORM_SAYS = ('due', 'to', 'every', 'notice', 'falls_due', 'during', 'within', 'amount', 'used_by', 'each', 'of', 'when',
+             'state', 'by_role', 'over')        # what a clause's view holds beside its words: read as today's clause
 
 
 def core_print(ag, units):
     clauses = ag.pop('clauses')
     print_agreement(dict(ag, clauses=[]), units, {}, None)
     if clauses:
+        try:
+            terms, tunits, systems = law()          # today's reading of a clause (`clause_lines`), over its view
+            sch = dict(((terms.get('clauses') or {}).get('schema')) or {})
+        except Exception:
+            sch, tunits, systems = None, units, {}
+        today = datetime.date.today().toordinal()
         emit(f"   clauses ({len(clauses)}) — each `can`, and the figure it stands under:")
-        for cid, r, figs in clauses:
+        for cid, r, figs, e in clauses:
             emit(f"    {esc(cid or 'can')}  {', '.join(figs) or 'no figure'}: {esc(r.get('by'))} — "
                  f"\"{esc(r.get('of'))}\"" + (f"  ({esc(r.get('note'))})" if r.get('note') else ''))
+            if sch and e and any(k in e for k in FORM_SAYS):
+                for l in clause_lines('clauses', cid, e, sch, tunits, systems, today, {}):
+                    if not l.startswith(f"    {esc(cid)}"):
+                        emit(l)
         emit()
 
 

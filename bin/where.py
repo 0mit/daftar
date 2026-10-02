@@ -97,7 +97,8 @@ def load():
     """
     out = {}
     if dmgarden.runs_core(ROOT):
-        return {bid: dmgarden.terms(b) for bid, b in sorted(dmgarden.core_garden(ROOT).beans.items()) if not b.unread}
+        G = dmgarden.core_garden(ROOT)
+        return {bid: dmgarden.terms(b, G.beans) for bid, b in sorted(G.beans.items()) if not b.unread}
     for space, key in (('beans', 'bean'), ('mappings', 'mapping')):
         for f in dmgarden.paths(ROOT, space):
             fm, _ = dmparse.read(f)
@@ -269,8 +270,9 @@ class Law:
         law = dmknowledge._fm(os.path.join(root, 'seed', 'std-vocab.md'))
         garden = dmknowledge._fm(os.path.join(root, 'VOCAB.md'))
         adds = garden.get('registry_additions') or {}
+        # a garden's own systems: today's `registry_additions.anchor_systems`, or the core's rows `systems` (v1 part 7)
         self.systems = {r['system']: r for r in list(law.get('anchor_systems') or []) + list(adds.get('anchor_systems') or [])
-                        if isinstance(r, dict) and r.get('system')}
+                        + list(garden.get('systems') or []) if isinstance(r, dict) and r.get('system')}
         self.units = {u['unit']: u for u in list(law.get('units') or []) + list(adds.get('units') or [])
                       if isinstance(u, dict) and u.get('unit')}
         self._k = None

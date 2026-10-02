@@ -296,9 +296,10 @@ try:
           d.get('refs', {}).get('rack', {}).get('rel') == 'kept-by' and d.get('open') == ['label the second disk']
           and d.get('owns') == {'shares': 'projects and archive'} and d.get('status') == 'active'
           and d.get('note') == 'a box under the stairs' and len(d.get('comments') or []) == 2, d)
-    check("...and what is left of an entry a verb took stays under its statement's id",
+    check("...and what is left of an entry a verb took stays under its statement's id; what a placement holds there is "
+          "its form, `placed` (v1 part 7)",
           d.get('risks', {}).get('disk-full', {}).get('severity') == 'medium'
-          and d.get('located_at', {}).get('at-1', {}).get('openness') == 'elsewhere', d)
+          and any(v == 'be' and (r.get('placed') or {}).get('openness') == 'elsewhere' for v, r in box), (d, box))
     _fm, web = st('web')
     wv = {v for v, _r in web}
     check("inferred → derive, its source unknown; lives_in → be as habitat; instance_of → run; depends_on, consumes, reaches → need",
