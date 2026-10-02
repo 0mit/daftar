@@ -75,7 +75,8 @@ def reason_of(pid):
     carried from an older law holds a paragraph for each key it was written under there, each opening with that key,
     `(std-vocab 32: `terms[owned_by].meaning`)`. The item's own old key is the one its reason opens with, to its first
     `.` (`terms[owned_by]`): that key's meaning paragraph is read, else that key's own — never the paragraph of one of
-    its attributes, which says why that attribute is so, nor one of another old item folded in beside it."""
+    its attributes, which says why that attribute is so, nor one of another old item folded in beside it. A reason
+    written in the core's words above the carried ones (a rule's) is the item's own, and is read first."""
     kind, name = pid.split(':', 1)
     path = {'verb': f'verbs[{name}]', 'form': f'forms.{name}', 'rule': f'rules[{name}]'}.get(kind, name)
     paras = []
@@ -84,8 +85,10 @@ def reason_of(pid):
             continue
         text = REASONS.get(k) or ''
         cuts = list(OLD_KEY.finditer(text))
-        paras += [(c.group(1), text[c.end():cuts[i + 1].start() if i + 1 < len(cuts) else len(text)])
-                  for i, c in enumerate(cuts)] or [(path, text)]
+        head = text[:cuts[0].start()].strip() if cuts else ''
+        paras += ([(path, head)] if head else []) + [
+            (c.group(1), text[c.end():cuts[i + 1].start() if i + 1 < len(cuts) else len(text)])
+            for i, c in enumerate(cuts)] or [(path, text)]
     root = paras[0][0].split('.', 1)[0] if paras else ''
     for _old, text in sorted(paras, key=lambda p: (not p[0].endswith('meaning'), len(p[0]))):
         if _old not in (root, root + '.meaning'):
