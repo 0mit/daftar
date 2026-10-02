@@ -99,9 +99,9 @@ check("...and not what it only tells a person to run, nor what a comment names",
       "bin/install.py" in _hook and not has("runs", "bin/hooks/pre-commit", "bin/install.py"))
 check("a run through a function of the suite's own is read: test/save.py runs bin/dmsave.py",
       has("runs", "test/save.py", "bin/dmsave.py"))
-_rules = open(os.path.join(ROOT, "bin", "dmrules.py"), encoding="utf-8").read()
-check("a help text that names a tool runs nothing: bin/dmrules.py names the gate and does not run it",
-      "bin/dmcheck.py" in _rules and not has("runs", "bin/dmrules.py", "bin/dmcheck.py"))
+_rules = open(os.path.join(ROOT, "bin", "rules.py"), encoding="utf-8").read()
+check("a help text that names a tool runs nothing: bin/rules.py names the gate and does not run it",
+      "bin/dmcheck.py" in _rules and not has("runs", "bin/rules.py", "bin/dmcheck.py"))
 _ci = re.findall(r"python3 (test/[a-z_]+\.py)", open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8").read())
 check("the release's workflow runs each suite it lists", _ci and all(has("runs", ".github/workflows/ci.yml", t) for t in _ci),
       [t for t in _ci if not has("runs", ".github/workflows/ci.yml", t)])

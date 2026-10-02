@@ -5,8 +5,9 @@
     python3 bin/daftar.py <verb> [args ...]  # run that tool with those arguments: `daftar check --all`
     python3 bin/daftar.py help <verb>        # the tool's own help
 
-(`python` on Windows.) The verbs and the family each belongs to are the law's (`verbs`, `tool_families`), so this file
-names no tool: a verb is the tool `bin/<verb>.py`, named by its verb with no `dm` once it is ported to the core's
+(`python` on Windows.) The verbs and the family each belongs to are the law's — the core's `tools` and `families`
+(core/law/tools.yaml) in a garden that runs the core, today's `verbs` and `tool_families` in one that does not — so this
+file names no tool: a verb is the tool `bin/<verb>.py`, named by its verb with no `dm` once it is ported to the core's
 statements (v1), else `bin/dm<verb>.py`, today's. What a tool does is
 the first line of its own help, read from the tool, never restated. A tool runs under the same Python that runs this,
 so the one command works alike wherever Python does — on Windows, where `python3` may be missing or be a store alias.
@@ -25,6 +26,16 @@ LAW = os.path.join(ROOT, 'seed', 'std-vocab.md')
 
 
 def law():
+    """The families and the tools, each a row `{family, meaning}` / `{verb, family}`: the core's (core/law/tools.yaml)
+    in a garden that runs the core, today's (`tool_families`, `verbs`) in one that runs today's language."""
+    import check                                   # the one reader of a garden's pin (bin/check.py)
+    if check.runs_core(check.pin(ROOT)):
+        sys.path.insert(0, ROOT)
+        from core import read
+        p = os.path.join(ROOT, 'core', 'law', 'tools.yaml')
+        d = read.data(p if os.path.isfile(p) else os.path.join(os.path.dirname(HERE), 'core', 'law', 'tools.yaml'))
+        return {'tool_families': d.get('families') or [],
+                'verbs': [{'verb': t.get('tool'), 'family': t.get('family')} for t in d.get('tools') or []]}
     head, _ = dmparse.read(LAW)
     return dmparse.loads(head) or {}
 

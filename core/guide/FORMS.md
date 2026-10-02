@@ -131,7 +131,7 @@ title: "dinner-at-sams — dinner at Sam's, where the washing-machine loan was a
 summary: "Ali came to dinner at Sam's; they agreed the loan for her washing machine."
 statements:
   - say:    { by: sam, at: now }
-  - be:     { by: self, at: "2026-09-12 19:30+03:00" }
+  - be:     { by: self, at: "2026-09-12 19:30+03:00" }   # at: the example's — write the moment someone said
   - own:    { by: theone, of: self }
   - answer: { by: sam, of: self, as: law }
   - attend: { by: sam, of: self }
@@ -197,12 +197,22 @@ Agreed in words spoken over dinner; nothing was written down.
 
 ## Proposing to another garden
 
-Ali's garden is recorded here, and hers records Sam's (above). A name that is to cross is qualified first; then the
-proposal is made, and in Ali's garden read and taken:
+Ali's garden is recorded here, and hers records Sam's (above). A name that is to cross is qualified first:
 
 ```sh
 python3 bin/propose.py mint shared-camera     # prints the qualified name and how to write it
+python3 bin/propose.py mint sam               # the gardener, whom every agreement names
+```
+
+then the proposal is made, under an agreement both gardeners `agree` to:
+
+```sh
 python3 bin/propose.py make --to garden-ali --under shared-camera shared-camera
+```
+
+and in Ali's garden read and taken:
+
+```sh
 python3 bin/propose.py read ../PROPOSAL-<garden>-<when>.md    # writes nothing
 python3 bin/propose.py take ../PROPOSAL-<garden>-<when>.md    # writes in the working tree; commits nothing
 ```

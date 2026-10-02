@@ -69,7 +69,8 @@ Read these when a question needs them, and only the part it needs:
 5. `seed/COOKBOOK.md` — the rest of the common things, in an order that can be followed: machines, a domain and the
    agreement it is held under, a document, a series, a course, accounts, where a thing is and what it takes there, and a
    value or a kind of fact the law does not have yet.
-6. `python3 bin/dmwhy.py <name>` — why a rule is as it is, from `seed/RATIONALE.md`.
+6. `python3 bin/rules.py` — every rule in force and every verb, read from the law; `python3 bin/why.py <name>` — one
+   item of the law and why it is as it is; `python3 bin/catalog.py --part <name>` — how it relates to the rest.
 7. `assets/<profile>/README.md`, **if the garden uses a profile that has an asset** — what the asset does with that
    profile's statements, and the commands it runs.
 

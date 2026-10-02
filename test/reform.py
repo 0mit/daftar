@@ -229,7 +229,7 @@ for f in sorted(set(_shipped) - _KNOWS_THE_OLD_SPELLING):
             # ONE LEFTOVER, NAMED RATHER THAN HIDDEN: `alt_form: { key, ref_fields }` kept its sub-key's old name at
             # 13.0, because `alt_form` itself was not rewritten. It is a sub-key of a living construct, not a
             # retired one; renaming it is a spelling change of its own.
-            if f == os.path.join("bin", "dmform.py") and tok.string.strip("'\"") == "ref_fields" and "alt.get(" in tok.line:
+            if f == os.path.join("bin", "form.py") and tok.string.strip("'\"") == "ref_fields" and "alt.get(" in tok.line:
                 continue
             _hits.append(f"{f}:{tok.start[0]} {tok.string}")
 check("no shipped program reads a retired construct — only the translator knows the old spelling",

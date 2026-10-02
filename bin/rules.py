@@ -1,0 +1,672 @@
+#!/usr/bin/env python3
+"""rules — print the rules this garden currently enforces.
+
+DERIVED, never written by hand: everything below is read out of the vocabulary that bin/dmcheck.py
+enforces, so this listing cannot drift from the law. If a rule appears here it is checked; if it is
+checked it appears here. The only hand-written section is CORE, which is the bean grammar that is not
+a per-term rule and so still lives in code.
+
+Usage: python3 bin/rules.py [--terms] [--core] [--every-profile]     (no --terms or --core = both)
+
+`--every-profile` lists the rules of every profile the law offers, as a garden that extended them all would be held to
+them: what opting into a profile would bring, and the whole law for a reader of the release (bin/dmcatalog.py).
+
+IN A GARDEN OF THE CORE (v1 part 9; GARDEN.md pins `core@…`) it lists the core's law, read through core/law.py as the
+core's gate (bin/check.py) reads it: `--core` the twenty rules and the face — the statement, the order, the figures, the
+tables, the layers and the flow law; `--terms` the verbs with their roles and qualifiers, the kinds, the namespaces, the
+forms (their attributes read by bin/form.py) and the rows the garden adds, each used or vacant.
+"""
+import os, sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dmparse
+import dmform          # a term's law keyed by attribute — the one reader of the schema constructs
+import dmpass          # where a value comes from: acts, a domain's origin, a rank by source
+try:
+    import yaml
+except ImportError:
+    print("ERROR: PyYAML required"); sys.exit(2)
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STD = os.path.join(ROOT, 'seed', 'std-vocab.md')
+if not os.path.exists(STD):
+    sys.exit(f"std-vocab not found at {STD} — the law has ONE path and there is no fallback")
+
+def _product():
+    """`daftar v<tag>` — DERIVED from git, because the version lives in an annotated tag and nowhere else.
+    Every version this repo ever typed into prose rotted (four titles reading v1.0 over v2 bodies, two
+    stale pins); the two that stayed correct were derived. A tag has no second copy to disagree with.
+
+    IN A GARDEN, the release its GARDEN.md says it adopted (`daftar_release`, written by germination and
+    bin/dmupgrade.py), as the gate reads it: a garden's history carries no daftar tag, and describing it
+    named the garden's own commits."""
+    _g = _front(os.path.join(ROOT, 'GARDEN.md'))[0] if os.path.isfile(os.path.join(ROOT, 'GARDEN.md')) else None
+    if isinstance(_g, dict) and _g.get('daftar_release'):
+        return f"daftar {_g['daftar_release']}"
+    try:
+        import subprocess as _sp
+        v = _sp.run(['git', '-C', ROOT, 'describe', '--tags', '--always', '--dirty'],
+                    capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=5).stdout.strip()
+        return f"daftar {v}" if v else "daftar (untagged)"
+    except Exception:
+        return "daftar (untagged)"
+
+def _front(path):
+    """A document's front matter, read as the gate reads it: (mapping or None, why it does not read)."""
+    try:
+        head_ = dmparse.read(path)[0]
+    except dmparse.NotUTF8 as e:
+        return None, str(e)
+    except OSError as e:
+        return None, f"cannot be read ({e.strerror})"
+    if head_ is None:
+        return None, "no --- fences"
+    try:
+        fm = dmparse.loads(head_)
+    except Exception as e:
+        return None, dmparse.escaped(str(e).splitlines()[0] if str(e) else type(e).__name__)
+    return (fm if isinstance(fm, dict) else None), (None if isinstance(fm, dict) or fm is None else "not a mapping")
+
+
+# ---- a garden of the core (v1 part 9) -------------------------------------------------------------------------------
+# The rules of the core are its law's: the twenty rules and the face they judge by (core/law/core.yaml), the verbs' rows
+# (verbs.yaml) with their roles and qualifiers, the kinds, levels, namespaces, units, layers and the flow law, the forms
+# of a line and of a measure, and the rows the garden adds (VOCAB.md) — each read through core/law.py `Law`, the gate's
+# one reader of it, so that what is listed is what the gate holds. `--core` is the rules and the face; `--terms` the
+# verbs, the kinds, the forms and the garden's own rows (a statement's verb is what a term was).
+
+def _say(*a):
+    print(*(dmparse.said(x) for x in a))           # spelt out, as every line here is: a garden's words reach it
+
+
+def _title(s):
+    print(f"\n\033[1m{dmparse.said(s)}\033[0m" if sys.stdout.isatty() else f"\n{dmparse.said(s)}")
+    print('─' * len(s))
+
+
+def _spec(spec):
+    """A role's or a qualifier's filler in words: its shapes, and the nature, rung, table or form it is held to."""
+    if not isinstance(spec, dict):
+        return str(spec)
+    out = '|'.join(str(s) for s in (spec.get('shape') if isinstance(spec.get('shape'), list) else [spec.get('shape')]))
+    held = [f"{k} {'|'.join(map(str, v)) if isinstance(v, list) else v}" for k in ('nature', 'rung', 'table', 'form')
+            for v in [spec.get(k)] if v]
+    return out + (f" ({', '.join(held)})" if held else '') + (' …many' if spec.get('many') == 'true' else '')
+
+
+def _attrs(spec, ind='      '):
+    """The lines of a form's attributes: `*` where required, and its domain in words — read by bin/form.py, the one
+    reader of how an attribute is spelt."""
+    f = dmform.core_form(spec)
+    req = set(f['order'].get(('self', 'required'), []))
+    out = [f"{ind}{k}{'*' if k in req else ''}: {dmform.label((rec or {}).get('in'))}"
+           for k, rec in ((spec or {}).get('attrs') or {}).items()]
+    return out + ([f"{ind}one of: {', '.join(f['one_of'])}"] if f['one_of'] else [])
+
+
+def core_rules(argv):
+    sys.path.insert(0, ROOT)
+    from core.check import garden_law
+    L = garden_law(ROOT)
+    want = set(a for a in argv if a in ('--terms', '--core')) or {'--terms', '--core'}
+    g = (_front(os.path.join(ROOT, 'GARDEN.md'))[0] if os.path.isfile(os.path.join(ROOT, 'GARDEN.md')) else None) or {}
+    _say(f"{_product()} rules — core@{L.version} + garden '{g.get('garden')}'"
+         + (" — a profile's rows are today's words until v1 part 11, and none is listed here"
+            if '--every-profile' in argv else ''))
+    if '--core' in want:
+        _title(f"THE RULES — {len(L.rules)}, each strict: a breach is an error, and there are no warnings")
+        for r in L.face.get('rules') or []:
+            _say(f"  {str(r.get('rule')):12} {r.get('says')}")
+        _title("THE STATEMENT — one verb, its roles from the seven, each filler of a shape")
+        for r in L.face.get('roles') or []:
+            _say(f"  {str(r.get('role')):8} {r.get('meaning')}")
+        _say("  shapes: " + ' · '.join(str(s.get('shape')) for s in L.face.get('shapes') or []))
+        _say("  beside the roles: " + ', '.join(sorted(L.beside)) + "; the words of a row: " + ', '.join(sorted(L.words)))
+        _say("  the knowing acts: " + ', '.join(L.knowing) + " — every statement is the `of` of one in its bean")
+        _title("THE ORDER — the natures, the lines and levels, the conditions, and the crown every chain ends at")
+        for n in L.natures.values():
+            _say(f"  nature {str(n.get('nature')):8} {n.get('meaning')}")
+        for ln in L.lines.values():
+            _say(f"  line {str(ln.get('line')):10} holds {', '.join(map(str, ln.get('holds') or [])) or '—'}")
+        _say(f"  levels: {len(L.levels)} — `python3 bin/why.py <level>` says one")
+        _say("  conditions: " + ', '.join(sorted(L.conditions)))
+        for f in L.foundations:
+            _say(f"  foundation {f.get('foundation')}: {f.get('meaning')}")
+        for c in L.crown.values():
+            _say(f"  crown: {c.get('crown')} — {c.get('law')}")
+        _title("THE FIGURES — a position on a statement: contraries refused through one source, subcontraries both stand")
+        for f in L.figures:
+            _say(f"  {str(f.get('figure')):11} contraries "
+                 + ' / '.join(f'{a}|{b}' for a, b in (f.get('positions') or {}).items()) + " · contradictories "
+                 + ' / '.join(f'{a}|{b}' for a, b in (f.get('contradictory') or {}).items()))
+        _title("THE TABLES — a role whose shape is `row` takes one of their rows")
+        for t, rows in sorted(L.tables.items()):
+            rows = [str(r) for r in rows]
+            _say(f"  {t:13} {', '.join(rows[:16])}{' …' if len(rows) > 16 else ''}")
+        _say("  the standards' (core/law/): " + ', '.join(sorted(L.standard_tables)) + f"; {len(L.units)} units, in UCUM")
+        _title("LAYERS AND THE FLOW LAW — which passes between layers stand (rule layers)")
+        _say("  layers: " + ', '.join(map(str, L.table('layers'))))
+        for s in L.standing:
+            _say(f"  {str(s.get('layer')):12} holds {', '.join(map(str, s.get('holds') or []))}")
+        for f in L.flows:
+            _say(f"  {str(f.get('grant')):9} {f.get('flow') or ''}: {f.get('from')} → {f.get('to')} through "
+                 f"{f.get('through')}{' as ' + str(f['as']) if f.get('as') else ''}")
+    if '--terms' in want:
+        _title(f"THE VERBS — {len(L.verbs)}: each one's roles (`*` required), and the qualifiers its row declares")
+        for name, v in L.verbs.items():
+            req = set(map(str, v.get('required') or []))
+            _say(f"  {name:10} {str(v.get('meaning') or '')[:150]}")
+            for role, spec in (v.get('roles') or {}).items():
+                _say(f"      {role}{'*' if role in req else ''}: {_spec(spec)}")
+            for q, spec in (v.get('qualifiers') or {}).items():
+                _say(f"      {q}{'*' if q in req else ''} (qualifier): {_spec(spec)}")
+            if v.get('choice'):
+                _say(f"      one of: {v.get('choice')}")
+            if v.get('replaces'):
+                _say(f"      replaces today's: {', '.join(map(str, v['replaces']))}")
+        _title(f"THE KINDS — {len(L.kinds)}: what a bean records, each of a nature")
+        for k, r in L.kinds.items():
+            _say(f"  {k:22} {r.get('nature')}{' · ' + str(r.get('line')) if r.get('line') else ''}"
+                 f"{' · ' + str(r.get('level')) if r.get('level') else ''}")
+        _title(f"THE NAMESPACES — {len(L.namespaces)}: who gives a name, and whether once (rule names)")
+        _say('  ' + ', '.join(f"{n}{' (once)' if r.get('once') == 'true' else ''}" for n, r in L.namespaces.items()))
+        _title(f"THE FORMS — {len(L.forms)}: what a qualifier of the shape `form` holds (rules line and measured)")
+        for f, form in L.forms.items():
+            _say(f"  {f}")
+            for line in _attrs(form):
+                _say(line)
+        _title("THE GARDEN'S OWN ROWS — VOCAB.md, each used or said vacant (rule vacancy)")
+        own = list(L.garden_rows) + [(k, r.get(next(iter(r))), r) for k, rs in L.own.items() for r in rs if r] \
+            + [('flows', f.get('flow'), f) for f in L.garden_flows]
+        for k, n, r in own:
+            _say(f"  {k:10} {n}{'   vacant: ' + str(r.get('vacant')) if isinstance(r, dict) and r.get('vacant') else ''}")
+        if not own:
+            _say("  none: this garden adds no row to the law")
+    if L.found:
+        _title("NOT READ — what the law met in this garden's rows, and refuses")
+        for _rule, where, msg in L.found:
+            _say(f"  {where}: {msg}")
+    return 0
+
+
+if __name__ == '__main__':
+    import check as _check                        # the one reader of a garden's pin (bin/check.py)
+    if _check.runs_core(_check.pin(ROOT)):
+        sys.exit(core_rules(sys.argv[1:]))
+
+std, _why = _front(STD)
+if std is None:
+    # THE LAW HAS ONE PATH: a law that does not read has no rules to list, and listing none would say there are none
+    sys.exit(f"seed/std-vocab.md: its front matter does not read ({_why or 'empty'}) — the law has one path and no "
+             f"fallback, so no rule is listed until it reads")
+# The garden's own vocabulary, read as the gate reads it (bin/dmparse.py `vocab_read`): a VOCAB.md that does not read is
+# read as nothing, and an entry that is not in its shape is left out — so no rule is listed that the gate does not
+# enforce, and what it refuses is listed, at the end, as refused.
+loc, _why = _front(os.path.join(ROOT, 'VOCAB.md'))
+NOT_READ = []
+if loc is None:
+    if _why:
+        NOT_READ.append(f"VOCAB.md: its front matter does not read ({_why}) — this garden's own vocabulary is a mapping "
+                        f"of what it adds to the law; the rules below are the law's alone")
+    loc = {}
+NOT_READ += dmparse.vocab_read(loc)
+EVERY = '--every-profile' in sys.argv[1:]
+prof_names = list(std.get('profiles') or {}) if EVERY else (loc.get('extends_profiles') or [])
+prof_terms = [t for p in prof_names for t in ((std.get('profiles') or {}).get(p, {}).get('terms') or [])]
+# A PROFILE'S VACANCIES ARE PART OF THE LAW IN FORCE and were never listed here. dmcheck has always read
+# them — they join the tier0 bucket — so the GATE was right and only this REPORT was silent, which is the
+# worse half to be wrong in: this is the file an agent reads to learn the rules. Three `code` vacancies had
+# been invisible since profiles were introduced; `network` added two more and that is what exposed it.
+prof_vacs = [v for p in prof_names for v in ((std.get('profiles') or {}).get(p, {}).get('vacancies') or [])]
+
+TERMS, TIER = {}, {}
+
+
+def _take(pairs):
+    for t, tier in pairs:
+        n = t.get('term') if isinstance(t, dict) else None
+        if not isinstance(n, str) or not n:
+            continue                     # an entry the gate refuses by name is no rule in force
+        if n in TERMS:                   # a garden overlay merges onto its Tier-0 base, as the gate merges it
+            TERMS[n] = dmparse.overlay_term(TERMS[n], t); TIER[n] = TIER[n] + '+overlay'
+        else:
+            TERMS[n] = t; TIER[n] = tier
+
+
+_take([(t, 'tier0') for t in (std.get('terms') or [])] + [(t, f'profile:{",".join(prof_names)}') for t in prof_terms])
+# what a profile ADDS to a core term (28.1), merged as the gate merges it, before the garden's own overlays
+for _pn, _o in dmparse.profile_overlays(std, prof_names):
+    if _o['term'] in TERMS:
+        TERMS[_o['term']] = dmparse.extend_term(TERMS[_o['term']], _o); TIER[_o['term']] += f'+profile:{_pn}'
+_take([(t, 'garden') for t in (loc.get('local_terms') or [])])
+_RESTATED = {}
+
+
+def reg(k):
+    """A registry as the gate reads it: the garden's restatement (its rows in their shape) or the law's, and the rows
+    the garden adds that the base does not already hold."""
+    if k not in _RESTATED:
+        _RESTATED[k], _why = dmparse.restated_rows(loc, k)
+        NOT_READ.extend(_why)
+    base = _RESTATED[k] if _RESTATED[k] is not None else [r for r in (std.get(k) or []) if isinstance(r, dict)]
+    base = [r for r in base if isinstance(r, dict) and r]
+    _add = [r for r in ((loc.get('registry_additions') or {}).get(k) or [])
+            if not any(b.get(next(iter(r))) == r[next(iter(r))] for b in base)]
+    return list(base) + _add
+
+
+def _m(x):
+    """A field a registry row holds as a mapping, or none: a row the gate refuses for its shape is listed as far as it
+    reads, never a traceback."""
+    return x if isinstance(x, dict) else {}
+
+
+def _seq(x):
+    return x if isinstance(x, list) else []
+want = set(a for a in sys.argv[1:] if a.startswith('--')) - {'--every-profile'} or {'--terms', '--core'}
+
+
+def quantity_rule(qname):
+    """What a count of this quantity is held to: its units, from the law or from a registry with their places."""
+    if qname == 'any':
+        return "any quantity the law declares"
+    q = next((x for x in reg('quantities') if isinstance(x, dict) and x.get('quantity') == qname), None)
+    if not q:
+        return f"'{qname}' is NO quantity the law declares"
+    uf = q.get('units_from') if isinstance(q.get('units_from'), dict) else None
+    if uf:
+        return (f"a unit is a `{uf.get('take')}` of the `{uf.get('registry')}` registry, with at most its `{uf.get('digits')}` "
+                f"decimal places; no factor joins two (crosswalk: {q.get('crosswalk')})")
+    units = [u.get('unit') for u in reg('units') if u.get('quantity') == qname]
+    return f"units {units}, each an exact ratio to the others"
+
+
+# EVERY LINE IS PRINTED SPELT OUT: a name or a meaning a garden wrote reaches this listing, and a control character in it
+# would drive the terminal of the person reading the rules (bin/dmparse.py `said`; the gate refuses such a character).
+_print = print
+
+
+def print(*a, **k):
+    _print(*(dmparse.said(x) for x in a), **k)
+
+
+def head(s):
+    _print(f"\n\033[1m{dmparse.said(s)}\033[0m" if sys.stdout.isatty() else f"\n{dmparse.said(s)}")
+    print('─' * len(s))
+
+
+print(f"{_product()} rules — {loc.get('extends')} + garden '{loc.get('vocab')}'"
+      f"{(' + every profile the law offers, as if extended: ' if EVERY else ' + profiles ') + ', '.join(prof_names) if prof_names else ''}")
+
+head("AXIS — the natures, and the crown every chain ends at")
+for n in reg('natures'):
+    print(f"  {str(n.get('nature')):14} → stands on {n.get('stands_on') or 'space-time'}   anchors {n.get('establishing_anchor_family')}"
+          f"   min establishing when confirmed: {n.get('min_establishing_anchors')}")
+idp = _m(loc.get('identity_policy') or std.get('identity_policy'))
+print(f"  identity: an anchor's key {'must be a term that declares anchor:' if idp.get('anchor_key') == 'term' else 'is free text'}"
+      f" · the family above is {'ENFORCED — an establishing anchor of a confirmed bean is of it' if idp.get('establishing_family') == 'enforced' else 'guidance; only the count is checked'}")
+_mint = _m(idp.get('minted'))
+if _mint:
+    print(f"  minted: a term whose anchor says `minted: true` admits names a garden gives — a value in the form "
+          f"{_mint.get('form')} whose genos is a row of `{_mint.get('form_genos')}` (the garden's local_{_mint.get('form_genos')} too). "
+          f"BARE it identifies within its garden only; QUALIFIED by a {_mint.get('qualified_by')} ({_mint.get('pattern')}) "
+          f"everywhere, and the prefix is this garden's id or a `garden` bean's. Any other value was assigned outside every "
+          f"garden: it identifies wherever it is written and is never qualified")
+cr = reg('crown')
+print(f"  crown: {' , '.join(str(c.get('crown')) + (' (the one, named on no bean)' if c.get('root') else f" (a face of {c.get('face_of')})" if c.get('face_of') else '') for c in cr)}")
+gene = [k for k in _seq(std.get('gene')) + list(loc.get('local_gene') or []) if isinstance(k, dict)]
+print(f"  gene: " + ' , '.join(f"{k.get('genos')}→{k.get('of_nature')}"
+                               + ('*' if k.get('ownership_form') else '') for k in gene))
+_pinned = next((k['ownership_form'] for k in gene if k.get('ownership_form')), None)
+if _pinned:
+    print(f"         (* pinned to the '{_pinned}' ownership form, which also RESERVES it)")
+
+head("ASPECTS — oppositions are closed figures (a position names its mutual complement); sequences are walked")
+WALK_KEYS = {a['term_key']: a for a in reg('aspects') if isinstance(a.get('term_key'), str)}
+for a in reg('aspects'):
+    if a.get('figure') == 'sequence':
+        on = [n for n, t in TERMS.items() for k in WALK_KEYS
+              if WALK_KEYS[k] is a and (t.get('schema') or {}).get(k) is True]
+        print(f"  {str(a.get('aspect')):12} sequence   lines {a.get('lines')} · metered {a.get('metered')} · order "
+              f"{a.get('order')} · acyclic {a.get('acyclic')} · ends {a.get('ends')} · domain "
+              f"{_m(a.get('domain')).get('systems')}")
+        if on:
+            print(f"               walked by: " + ', '.join(on))
+        continue
+    pos = [p for p in _seq(a.get('positions')) if isinstance(p, dict)]
+    _raw = _seq(a.get('poles'))
+    _axes = _raw if (_raw and isinstance(_raw[0], list)) else ([_raw] if _raw else [])
+    print(f"  {str(a.get('aspect')):12} {a.get('figure')}   {len(_axes)}-axis   "
+          + ' , '.join(f"{ax[0]} ↔ {ax[1]}" for ax in _axes if isinstance(ax, list) and len(ax) == 2))
+    seen = set()
+    for p in pos:
+        pair = tuple(sorted((str(p.get('position')), str(p.get('complement')))))
+        if pair in seen:
+            continue
+        seen.add(pair)
+        print(f"               {p.get('position')} ↔ {p.get('complement')}")
+    print(f"               used by: " + ', '.join(
+        n for n, t in TERMS.items()
+        for x in dmform.aspects_of(t.get('schema'))
+        if x.get('aspect') == a.get('aspect')))
+
+if '--terms' in want:
+    head("TERMS — every rule below is enforced by the generic interpreter")
+    for n in sorted(TERMS):
+        t = TERMS[n]; s = t.get('schema') or {}
+        if not s:
+            # A term with no `schema:` carries no bean-shape rule — but if it declares an `anchor:`
+            # policy, CORE still enforces that, and saying "not enforced" would be false.
+            eb = t.get('enforced_by')
+            _anc = t.get('anchor') or {}
+            if _anc.get('minted'):
+                _forms = {str(k.get('genos')): k['identifier_forms'] for k in _seq(std.get('gene')) + list(loc.get('local_gene') or [])
+                          if isinstance(k, dict) and isinstance(k.get('identifier_forms'), list)}
+                print(f"  {n:20} [{TIER[n]}]  anchor term, MINTED — CORE enforces establishing={_anc.get('establishing', 'the bean’s to say')}; "
+                      f"a qualified value is `<garden_id>/<genos>:<name>`, by a garden this garden knows (see AXIS: minted); "
+                      f"a minted name carries the bean's own genos"
+                      + ("; ISSUED where it carries `issuer: {bean: <org>}`" if _anc.get('issued') == 'optional' else '')
+                      + (("; the forms a genos admits: " + ', '.join(f"{g} {'|'.join(map(str, f))}" for g, f in sorted(_forms.items())))
+                         if _forms else ''))
+                continue
+            if eb == 'core':
+                print(f"  {n:20} [{TIER[n]}]  no schema — enforced by CORE (see the CORE section)")
+                continue
+            if eb == 'none':
+                print(f"  {n:20} [{TIER[n]}]  no rule to check — declared explicitly, not an oversight")
+                continue
+            a = t.get('anchor') or {}
+            if 'establishing' in a:
+                print(f"  {n:20} [{TIER[n]}]  no schema — but CORE enforces its anchor policy: "
+                      f"establishing={a['establishing']}"
+                      f"{' (class ' + a['class'] + ')' if a.get('class') else ''}")
+            else:
+                print(f"  {n:20} [{TIER[n]}]  documentation only — no rule attached")
+            continue
+        F = dmform.attribute_form(TERMS.get(n), s)
+        V = F['value']
+        bits = []
+        if V.get('governs_anchor'): bits.append("anchor format")
+        if s.get('shape'):   bits.append(s['shape'])
+        elif V.get('values') and not s.get('path'): bits.append("enum only (not carried on beans)")
+        if s.get('path'):    bits.append(f"at {s['path']}")
+        if s.get('required') is True: bits.append("REQUIRED on every bean")
+        for k, v in s.items():
+            if k.startswith('required_on_'):
+                bits.append(f"required on {k[len('required_on_'):]} {v}")
+            if k.startswith('only_on_'):
+                bits.append(f"carried ONLY on {k[len('only_on_'):]} {v}")
+        for _k, _a in WALK_KEYS.items():
+            if s.get(_k) is True:
+                bits.append(f"on the '{_a['aspect']}' sequence" + (" · must stay ACYCLIC" if _a.get('acyclic') else ""))
+        if s.get('on_sequence'):
+            bits.append(f"a WALK on the '{s['on_sequence']}' sequence — each step judged by the attributes below")
+        _pl = (TERMS.get(n) or {}).get('placement')
+        if _pl:
+            _rg = next((r for r in (std.get('placement') or []) if isinstance(r, dict) and r.get('code') == _pl), {})
+            bits.append(f"placement {_pl}, under place: takes " + {'none': "nothing from its host", 'share': "a share of what its host "
+                        "holds", 'room': "room its host holds"}.get(str(_rg.get('takes')), str(_rg.get('takes'))))
+        if s.get('series') is True:
+            bits.append("each entry a SERIES — its rows read against its channels")
+        if s.get('moves_along'):
+            bits.append(f"each entry a MOVE along the course its `{s['moves_along']}` names — held to that course's walk")
+        print(f"  {n:20} [{TIER[n]}]  {' · '.join(bits)}")
+        det = []
+        _req_self = [a_ for a_, _ in dmform.facet(F, 'required', 'self')]
+        _req_entry = [a_ for a_, _ in dmform.facet(F, 'required', 'entry')]
+        if V.get('values'):              det.append(f"values {V['values']}")
+        if V.get('values_from'):         det.append(f"values from term '{V['values_from']}'")
+        if _req_self:                    det.append(f"{'each step ' if s.get('on_sequence') else ''}needs {_req_self}")
+        if _req_entry:                   det.append(f"each entry needs {_req_entry}")
+        for a_, v in dmform.facet(F, 'values', 'entry'):
+            det.append(f"entry.{a_} ∈ {v}")
+        # 13.0: every attribute says what it is a position IN, so the listing can say it for ALL of them. Until
+        # then this printed the enums, the types and the aspects and was silent about registries, forms and refs.
+        _w = 'entry' if F['scope'] == 'entry' else 'step' if s.get('on_sequence') else 'value'
+        for a_, v in dmform.facet(F, 'type'):
+            det.append(f"{_w}.{a_} is {v}")
+        for a_, r in dmform.facet(F, 'registry'):
+            det.append(f"{_w}.{a_} is a row of " + (f"the registry its `{r['registry_from']}` names" if r.get('registry_from')
+                                                     else f"registry '{r.get('registry')}'")
+                       + (' where ' + ', '.join(f"{k} is {v}" for k, v in r['where'].items()) if r.get('where') else ''))
+        for a_, _r in dmform.facet(F, 'origin_of'):
+            det.append(f"{_w}.{a_} is an origin {{act, nature?, alive?, by?}} — of `acts` and `natures`")
+        for a_, _r in dmform.facet(F, 'stamped'):
+            det.append(f"{_w}.{a_} is STAMPED: written `now`, and the save writes the moment of its journal heading")
+        for a_, r in dmform.facet(F, 'default_from'):
+            det.append(f"{_w}.{a_}, when the entry is silent, is read from {r.get('registry')}.{r.get('take')} "
+                       f"(the row its `{r.get('keyed_by')}` names)")
+        for a_, r in dmform.facet(F, 'system_from'):
+            det.append(f"{_w}.{a_} is written in the one form its `{r.get('keyed_by')}` declares ({r.get('registry')})")
+        for a_, r in dmform.facet(F, 'pattern'):
+            det.append(f"{_w}.{a_} matches {r}")
+        for a_, r in dmform.facet(F, 'soft'):
+            det.append(f"{_w}.{a_} SHOULD match {r.get('pattern')} (a warning)")
+        for a_, _r in dmform.facet(F, 'ref'):
+            det.append(f"{_w}.{a_} is a ref — resolved")
+        for a_, _r in dmform.facet(F, 'pointer'):
+            det.append(f"{_w}.{a_} is a pointer — resolved")
+        for a_, _r in dmform.facet(F, 'extent'):
+            det.append(f"{_w}.{a_} is an extent")
+        for a_, _r in dmform.facet(F, 'recurrence'):
+            det.append(f"{_w}.{a_} is a recurrence")
+        for a_, q in dmform.facet(F, 'quantity'):
+            det.append(f"{_w}.{a_} is a measured value {{count, unit}} of {q}: " + quantity_rule(q))
+        for a_, r in dmform.facet(F, 'key_of'):
+            det.append(f"{_w}.{a_} is a key of `{r}` on this bean, or `<bean>:<key>` on another — resolved")
+        for a_, r in dmform.facet(F, 'bean_id'):
+            det.append(f"{_w}.{a_} is the id of a bean this garden holds"
+                       + (f", of genos {' or '.join(map(str, r['gene']))}" if isinstance(r, dict) and r.get('gene') else ''))
+        _keyed = dict(dmform.facet(F, 'keyed_by'))
+        for a_, r in dmform.facet(F, 'entries'):
+            det.append(f"{_w}.{a_} holds entries, each judged by {sorted(map(str, r))}"
+                       + (f"; ONE per `{' + '.join(_keyed[a_]) if isinstance(_keyed[a_], list) else _keyed[a_]}`, in no order"
+                          if a_ in _keyed else ''))
+        for a_, r in dmform.facet(F, 'nested_one_of'):
+            det.append(f"{_w}.{a_}: each entry inside carries at least one of {r}")
+        for a_, r in dmform.facet(F, 'nested_at_most'):
+            det.append(f"{_w}.{a_}: each entry inside carries at most one of each of {r}")
+        for _g in (F.get('at_most') or []):
+            det.append(f"at most one of {_g}: two are a contradiction")
+        if F.get('keyed_by'):
+            det.append(f"ONE entry per {' + '.join(F['keyed_by'])} on one bean")
+        if F.get('exclusive'):
+            det.append(f"exclusive: the `{F['exclusive'].get('extent')}` of its entries for one `{F['exclusive'].get('being')}`"
+                       + (f", in one `{F['exclusive']['role']}`" if F['exclusive'].get('role') else '') + ", across the garden, do not overlap")
+        for _sr in (s.get('sums') if isinstance(s.get('sums'), list) else [s.get('sums')]):
+            if not isinstance(_sr, dict):
+                continue
+            _wh = _sr.get('whole')
+            _whs = (f"{_wh.get('count')} {_wh.get('unit')}" if isinstance(_wh, dict) else
+                    ' or '.join(_wh) if isinstance(_wh, list) else _wh)
+            det.append(f"sums: each entry's {_sr.get('parts')} add up EXACTLY to {'its ' if not isinstance(_wh, dict) else ''}"
+                       f"{_whs}{' (the first it states)' if isinstance(_wh, list) else ''}, in the whole's unit"
+                       + (f" — per {(_sr.get('per') or {}).get('level')}, each group whole" if isinstance(_sr.get('per'), dict) else ''))
+        _typed = {'values', 'registry', 'aspect', 'type', 'system_from', 'pattern', 'soft', 'extent', 'ref', 'pointer'}
+        _raw = (s.get('attrs') or {})
+        _untyped = [a_ for a_, r in _raw.items() if isinstance(r, dict) and r.get('in') == 'untyped']
+        if _untyped:                     det.append(f"UNTYPED — no domain declared yet: {_untyped}")
+        if F['cells']:                   det.append(f"{len(F['cells'])} cell(s): combinations an entry may not, or should not, hold")
+        if F['one_of']:                  det.append(f"each entry has one of {F['one_of']}")
+        if s.get('key_form'):            det.append(f"keys: {s['key_form']}")
+        if F['mirror']['inverse_of']:    det.append(f"inverse of '{F['mirror']['inverse_of']}' — held consistent")
+        if F['matches']['equal_genos_attr']: det.append(f"must equal genos.{F['matches']['equal_genos_attr']}")
+        if s.get('required_on_targets_of'): det.append(f"required on targets of '{s['required_on_targets_of']}'")
+        if V.get('governs_anchor'):
+            det.append(f"anchor '{V['governs_anchor']}' must be in canonical form: "
+                       f"{V.get('canonical_note') or V.get('form')}")
+        if F['matches']['form_from_genos']: det.append(f"form pinned by genos.{F['matches']['form_from_genos']}")
+        for _an, x in dmform.facet(F, 'aspect', 'entry'):
+            det.append(f"entry.{_an} is a position on aspect '{x['aspect']}'"
+                       f" (default {x.get('default')})")
+        for d in det:
+            print(f"      · {d}")
+
+head("QUANTITIES — a measured value is { count, unit }, and the unit measures the quantity")
+_vt = {r.get('type'): r for r in reg('value_types') if isinstance(r.get('type'), str)}
+print(f"  count: {_m(_vt.get('count')).get('pattern', 'NO value_types[count] — the gate refuses every count')} "
+      f"— never a float; a decimal is written as a string")
+for q in reg('quantities'):
+    if isinstance(q, dict) and q.get('quantity'):
+        print(f"  {q['quantity']:14} {quantity_rule(q['quantity'])}")
+
+head("THE SCHEMA LANGUAGE AND THE VALUE TYPES — every construct a term may state, and every type a value may be")
+print("  constructs: " + ', '.join(k for k in (std.get('schema_language') or {}) if k != 'attr_domains'))
+for _t, _r in _vt.items():
+    _how = (f"one of {_r['either']}" if isinstance(_r.get('either'), list) else
+            f"a position in any system of {_r.get('dimension')}, held to the {_r.get('unit')}" + (
+                ", with its clock and offset" if _r.get('clock') == 'required' else
+                " or finer — a clock reading with its offset; an attribute holds it finer with `unit`"
+                if _r.get('clock') == 'offset' else '') if _r.get('any_system') else
+            f"pattern {_r['pattern']}" if _r.get('pattern') else 'read by its own reader')
+    if _r.get('long_form'):
+        _how += f" — or written long, as one entry of `{_r['long_form']}` at that unit"
+    print(f"  {_t:15} {_how}")
+
+head("TABLES — a series' rows: one header, one line a row, a tab between two cells, never an empty cell")
+_rw = _m(_vt.get('rows'))
+if _rw:
+    print(f"  a table of more than {_rw.get('inline_most')} rows warns: its rows belong in the parts "
+          f"series/<bean>/<key>/<part>.tsv, each added whole and never rewritten")
+for g in reg('gap_tokens'):
+    if isinstance(g, dict) and g.get('token') is not None:
+        print(f"  {str(g.get('token')):3} {str(g.get('gap')):11} {g.get('meaning')}"
+              + (f" — takes a {g['takes']} after it" if g.get('takes') else ''))
+
+head("TEXT AND DAYS — what every key and string is, and which positions are days")
+_tx = _m(_vt.get('text'))
+if _tx.get('holds_no'):
+    print(f"  text: every key and string value of a bean, a mapping, GARDEN.md and VOCAB.md holds no character of Unicode "
+          f"category {_tx['holds_no']} but {', '.join(repr(c) for c in _seq(_tx.get('but'))) or 'none'}, and a line feed "
+          f"only in a {_tx.get('lines_in')} scalar (`|` or `>`) — the character is named, never echoed")
+else:
+    print("  text: NO value_types[text] — the gate reports the missing row")
+_ex = _seq(_m(_m(_vt.get('position')).get('exists')).get('reckoning'))
+_rows = [r for r in reg('anchor_systems') if r.get('calendar')]
+print(f"  a day: a position held to a day — a date, where a repetition starts and ends, a bound in time — is a day its "
+      f"calendar has. In a calendar reckoned {' or '.join(map(str, _ex)) or '(none named)'} the day it names, written back, "
+      f"is the position written, and a year the reckoning cannot reach is refused; judged: "
+      f"{', '.join(str(r.get('system')) for r in _rows if r.get('reckoning') in _ex) or 'none'}")
+_not = [f"{r.get('system')} ({r.get('reckoning')})" for r in _rows if r.get('reckoning') not in _ex]
+if _not:
+    print(f"         not judged by arithmetic, as their reckoning says: {', '.join(_not)}")
+
+head("MANIFEST — GARDEN.md, judged as itself")
+_mf = std.get('manifest') or {}
+for a_, r in (_mf.get('attrs') or {}).items():
+    r = r if isinstance(r, dict) else {}
+    print(f"  {a_:15} {'REQUIRED · ' if r.get('required') else ''}in: {r.get('in')}")
+print("  any other key is refused; a retired one says where it went (below). Once the garden holds a bean it names its "
+      "gardener")
+
+head("RETIRED — names the law took back, and where each went")
+for r in std.get('retired') or []:
+    if isinstance(r, dict):
+        print(f"  {str(r.get('name')):24} (on {r.get('at')}) → {r.get('instead')}")
+
+head("PROVENANCE RECORD — on a bean, an anchor or an entry")
+_pr = std.get('provenance_record') or {}
+print(f"  a record carries only {_pr.get('attrs')}; each record in `from` only {_pr.get('from_attrs')}, with a `src`")
+print("  `garden` names another garden this one knows (a `garden` bean's garden_id); a record made here carries none (warned)")
+_ORIG = dmpass.Origins(std)
+if _ORIG.judged('provenance_record', 'as_of'):
+    print("  `as_of` is STAMPED: a record a commit adds carries the day of a journal heading the same commit adds — written "
+          "`now`, the save writes that day in its place; typed, left `now`, or left out, it is refused. A record from "
+          "another garden keeps its garden's day; the merge's own record says `merged`; a record moved is not added")
+
+head("JOURNAL — every change is an entry, under a heading")
+_jr = std.get('journal') or {}
+print(f"  {_jr.get('path')}: each entry under {_jr.get('heading_form')}")
+print(f"  <when> in {'any declared calendar' if _jr.get('system') in (None, 'any') else _jr.get('system')}, to the "
+      f"{_jr.get('unit_at_least')} at least; only headings a commit adds are judged ({_jr.get('checks')})")
+if _ORIG.judged('journal', 'heading'):
+    print("  a heading is STAMPED: written from the clock by the journal tool and registered in the clone; a heading a "
+          "commit adds that the tool did not write is refused")
+
+head("WHERE A VALUE COMES FROM — `{act, nature?, alive?, by?}`, lightest act first, then life, then nature by `natures`")
+for _a in _ORIG.acts:
+    print(f"  {str(_a.get('act')):8} {_a.get('meaning')}")
+    for _b, _bm in ((_a.get('by') or {}).items() if isinstance(_a.get('by'), dict) else []):
+        print(f"    by: {_b:7} {_bm}")
+def _said_as(o):
+    if not isinstance(o, dict):
+        return str(o)
+    _n = o.get('nature')
+    return ' '.join([str(o.get('act'))] + (['·'.join(_n) if isinstance(_n, list) else str(_n)] if _n else [])
+                    + ([f"by {o['by']}"] if o.get('by') else []))
+_by_origin = {}
+for _d, _r in _ORIG.domains.items():
+    _by_origin.setdefault(_said_as(_r.get('origin') if isinstance(_r, dict) else None), []).append(_d)
+print("  each domain gives its positions one, unless a position states its own:")
+for _o, _ds in _by_origin.items():
+    print(f"    {_o:28} {', '.join(_ds)}")
+for _t in reg('terms'):
+    if isinstance(_t, dict) and ((_t.get('merge') or {}).get('order') == 'source'):
+        print(f"  {_t.get('term')} ranked by source, lightest first: "
+              + ' < '.join(_ORIG.rank(_t.get('values_source')) or ['NO RANK — the gate refuses it']))
+
+head("REVERSE GATE — the rules must be passed by the objects")
+print("  every position a term declares — a closed list on an entry's attribute or on a mapping's own, an aspect, a "
+      "registry's rows, an entry form — must be OCCUPIED by a bean, or declared vacant with a reason")
+print(f"  reasons: {' | '.join(std.get('vacancy_reasons') or ['NONE DECLARED — the gate refuses'])}"
+      f" ; a vacancy also needs a `why`")
+print("  a garden accounts only for positions IT declared — Tier-0 accounts for its own")
+print("  a local vacancy that becomes occupied is an ERROR; a Tier-0 one WARNS")
+for tier, vs in (('tier0', (std.get('vacancies') or []) + prof_vacs),
+                 ('garden', loc.get('vacancies') or [])):
+    for v in vs:
+        print(f"    [{tier}] {v.get('at')} = '{v.get('position')}'  ({v.get('reason')})")
+
+if '--core' in want:
+    head("CORE — bean grammar; the only rules not in the vocabulary")
+    for line in ["front-matter parses; id == filename; ids kebab-case and unique per space",
+                 "every top-level key is declared by a term (its name, or the head of a literal context_key)",
+                 "no key is written twice in one mapping, at any depth — in beans, mappings and the law",
+                 "required keys present; a bean keeps a human body (Rule 6, paper-durable)",
+                 "provenance present; identity capsule present",
+                 "anchors need key + value + establishing; a term's declared anchor policy OVERRULES the bean",
+                 "establishing anchors dedup — the same anchor on two beans is one object, not two",
+                 "every ref resolves; a named field must exist in the target",
+                 "acyclicity across all dag-declared relations",
+                 "no duplicate authoritative IP (vocab-driven from the std-vocab `ip` term)",
+                 "a staged bean change requires a journal entry — provenance duty",
+                 "a staged change to the vocabulary or the law must say RULE-CHANGE distinctly: VOCAB.md, GARDEN.md, the "
+                 "law's own file, a file the release ships (seed/LANGUAGE), and a file the layer map places in `law` or "
+                 "`manifesto` — by the law's rows or a garden's `standing`, a pattern included, a deletion too",
+                 "no staged file holds a private-key block: a secret is never in the ledger (MODEL.md, Ground rule 7)",
+                 "a staged top-level key REMOVAL must be declared (allow_remove), never silent",
+                 "a staged document must not lose its human body",
+                 "std-vocab must be found at its one path — there is no fallback",
+                 "a garden's `extends:` pin must equal the installed vocabulary version",
+                 "a `file:` pointer must resolve to a file that exists in this garden",
+                 "the layer map is the law's: VOCAB.md restates no `layers`, and adds no row to it under "
+                 "registry_additions",
+                 "the law's `layers` are read whole or not at all: a layer is named by one row, `holds` is a list of "
+                 "paths or patterns each in the one form a path is written in, only a layer of files holds one, every "
+                 "`beneath` names a row, and where rows stand on others one layer is on top and the links do not loop",
+                 "no file of the garden is held by two rows of the law's `layers` — a file sits in one layer",
+                 "the journal the law names (`journal.path`) is held by the law's `journal` row; a `journal.path` in "
+                 "VOCAB.md is read by no tool, and WARNS where it differs from the law's",
+                 "a `standing` entry never places a file the law's `layers` place elsewhere, and no two entries place "
+                 "one file in two layers; a file in no layer is shown by bin/dmpass.py, never refused",
+                 "a `standing` doc is a path in its one form — relative, names separated by `/` and never a backslash, "
+                 "no empty, `.` or `..` segment, no trailing `/` (a directory is `dir/*`) — and one with no `*`, `?` or "
+                 "`[` names a file the garden holds; a doc that copies a file's name holding `[`, `*` or `?` must match "
+                 "that file (`[[]` for a `[`)",
+                 "a `local_terms` entry named for a term the standard has WARNS for each key it states again, since the "
+                 "garden's copy replaces the standard's there (what it adds — an attribute or a field of one the "
+                 "standard leaves unsaid, a cell — merges); for a term whose values are the law's layers it is an ERROR",
+                 "a bean, a mapping, GARDEN.md and VOCAB.md are UTF-8 — any other encoding is refused by name",
+                 "every entry of VOCAB.md is in its own shape: a term's or a genos's name is text, a schema, its attrs and "
+                 "a merge are mappings, context_keys a list of text, a cell says one verdict (incoherent | in_breach), "
+                 "requirement or expectation, a vacancy's reason and why are text, and every pattern it writes is a "
+                 "regular expression; one of another shape is refused and left unread (listed under NOT READ)",
+                 "a conflict record stands the rules down only as the merge driver captured it: `merge_open: true`, its "
+                 "path in `merge_conflicts`, `{conflict: [...]}` alone with two or more different values — any other "
+                 "is refused at its path"]:
+        print(f"  · {line}")
+
+if NOT_READ:
+    head("NOT READ — what the gate refuses in this garden's VOCAB.md, and so enforces no rule of")
+    for line in NOT_READ:
+        print(f"  · {line}")
