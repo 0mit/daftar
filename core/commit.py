@@ -30,6 +30,12 @@ commits, and is judged here:
            for a line break and no template's `(fill in`; a part under series/ is written once; a header key or a
            statement the commit takes out of a bean is named in its entry, none it keeps is emptied, and every bean it
            writes keeps a body. (These were today's gate's, bin/dmcheck.py; v1 took them over, 2026-10-01.)
+  layers   A SESSION'S PASS LOG (v1 part 10): a file under captures/passes/ is the log a session bean names in its
+           `details` (`pass_log: { <name>: { holds: "file:<path>" } }`), and only grows. A commit that stages one claims
+           that session, and owes: each pass the log gains is a pass in the core's form, `{from, to, through, as?,
+           metadata}`, that the flow table grants (Law.decide); each said value the commit adds — a role of a statement a
+           `say` knows, `<verb>#<id>.<role>` — has a granted pass into it; and a `say` by a person it adds has a pass
+           from `words` or `instructions` into its bean. A commit that claims nothing owes none of it.
 
     findings(root, law, staged=None, garden=None) -> [(rule, where, message)]"""
 import collections
@@ -248,6 +254,7 @@ def findings(root, law, changes=None, garden=None):
                                               "wrote it says, reads, makes or derives it now — a knowing act at `now` "
                                               "whose `of` names it, or one with no `of`, which covers the rest"))
     out += guarded(root, law, changes, entry, added, moments, garden, adopting, merge=bool(others))
+    out += claimed(root, law, changes, garden)
     kept = kept_by_release(root, law)
     rc = [p for _s, p in changes if ruled(p, law, kept)]
     # A GARDEN'S FIRST COMMIT, its germination, has no HEAD: it brings the law, and nothing in it was decided by anyone
@@ -371,4 +378,150 @@ def guarded(root, law, changes, entry, added, moments, garden=None, adopting=Fal
             out.append(('consent', path, f"places {', '.join(sorted(set(others)))} somewhere in the future, in git: a "
                                          f"future whereabouts of a person who is not the gardener is held off git "
                                          f"whatever they agreed to — seal its location (bin/dmheld.py put)"))
+    return out
+
+
+# ------------------------------------------------------------------------------------------ a session's pass log (v1 10)
+PASSES = 'captures/passes/'
+PASS_KEYS = ('from', 'to', 'through', 'metadata')            # and `as`, where a pass into the estate names its act
+OID = re.compile(r'(?:[0-9a-f]{40}|[0-9a-f]{64})')
+WORD = re.compile(r'[a-z][a-z0-9-]*')
+
+
+def _logs_named(root, garden):
+    """{path: session bean} of every log a session bean names in its `details.pass_log`, in the index."""
+    beans = garden.beans.values() if garden is not None else []
+    out = {}
+    for b in beans:
+        details = b.header.get('details') if isinstance(b.header.get('details'), dict) else {}
+        log = details.get('pass_log') if isinstance(details.get('pass_log'), dict) else {}
+        for e in log.values():
+            h = e.get('holds') if isinstance(e, dict) else None
+            if isinstance(h, str) and h.startswith('file:'):
+                out[h[5:]] = b.id
+    return out
+
+
+def _endpoint(e, layer_of, files_held):
+    """The layer a pass's `from` or `to` names — `{file}` by the map, `{bean, at?}` the estate, `{garden}` another
+    garden, `{layer}` one that holds no files — or a str beginning `!`: why it is none."""
+    if not isinstance(e, dict) or not e:
+        return f"!{e!r} is none of a pass's ends: {{file}}, {{bean, at?}}, {{garden}} or {{layer}}"
+    keys = set(e)
+    if keys == {'file'} and isinstance(e['file'], str):
+        return layer_of(e['file']) or f"!the file {e['file']!r} stands in no layer, and a pass from it cannot be judged"
+    if 'bean' in keys and keys <= {'bean', 'at'} and isinstance(e['bean'], str):
+        return 'estate'
+    if keys == {'garden'} and isinstance(e['garden'], str):
+        return 'other-garden'
+    if keys == {'layer'} and isinstance(e['layer'], str):
+        return e['layer'] if e['layer'] not in files_held else \
+            f"!{e['layer']} holds files: a pass from it names the file, a bean or a garden"
+    return f"!{e!r} is none of a pass's ends: {{file}}, {{bean, at?}}, {{garden}} or {{layer}}"
+
+
+def _metadata_problems(md, law, garden):
+    out = []
+    for k, v in md.items():
+        kind = (law.pass_metadata.get(k) or {}).get('in')
+        ok = (kind == 'count' and isinstance(v, int) and not isinstance(v, bool) and v >= 0
+              or kind == 'oid' and isinstance(v, str) and OID.fullmatch(v)
+              or kind == 'form' and isinstance(v, str) and WORD.fullmatch(v)
+              or kind == 'bean' and isinstance(v, str) and (garden is None or v in garden.beans))
+        if kind is None:
+            out.append(f"metadata `{k}` is no key a logged pass carries (core/law/flows.yaml `metadata`): counts, "
+                       f"locators and object ids, never the material")
+        elif not ok:
+            out.append(f"metadata `{k}`: {v!r} is not a{'n' if kind == 'oid' else ''} {kind}")
+    return out
+
+
+def claimed(root, law, changes, garden=None):
+    """LAYERS at a commit: a session's pass log only grows, and a commit that stages one owes what the claim owes."""
+    out = []
+    logs = [(s, p) for s, p in changes if p.startswith(PASSES)]
+    if not logs:
+        return out
+    named = _logs_named(root, garden)
+    m = dmpass.Map.here(root)
+    layer_of = lambda p: m.layer_of(p)[0]                                             # noqa: E731
+    files_held = {s.get('layer') for s in law.standing if isinstance(s, dict)}     # a layer some file stands in
+    methods = set(law.methods) | set(law.knowing) | {'take', 'serve', 'hold'}
+    granted = []                                              # (source's layer, its `to`)
+    for status, p in logs:
+        if p not in named:
+            out.append(('layers', p, "a pass log no session bean names: a log is a session's, and says whose — its bean "
+                                     "names it in `details`, `pass_log: { requests: { holds: \"file:" + p + "\" } }`"))
+            continue
+        was, now = git(root, 'show', f"HEAD:{p}") or '', git(root, 'show', f":{p}") or ''
+        if status == 'D' or not now.startswith(was):
+            out.append(('layers', p, f"the log does not extend its copy at HEAD — a session's pass log only grows: "
+                                     f"restore it (`git checkout HEAD -- {p}`) and append"))
+            continue
+        n0 = was.count('\n')
+        for i, line in enumerate(now[len(was):].split('\n')):
+            if not line.strip():
+                continue
+            at = f"{p}:{n0 + i + 1}"
+            try:
+                ps = json.loads(line)
+            except ValueError:
+                out.append(('layers', at, "not one JSON object: a log holds one pass to a line"))
+                continue
+            if not isinstance(ps, dict) or not set(PASS_KEYS) <= set(ps) <= set(PASS_KEYS) | {'as'}:
+                out.append(('layers', at, f"a pass is `{{from, to, through, as?, metadata}}` and nothing else"
+                                          + (f"; this one holds {sorted(ps)}" if isinstance(ps, dict) else '')
+                                          + (" — today's `method` is the core's `through`" if isinstance(ps, dict)
+                                             and 'method' in ps else '')))
+                continue
+            bad = [] if ps['through'] in methods else [f"`through: {ps['through']}` is no method of the flow law and "
+                                                        f"no knowing verb"]
+            if 'as' in ps and ps['as'] not in law.knowing:
+                bad.append(f"`as: {ps['as']}` is no knowing act")
+            md = ps['metadata'] if isinstance(ps['metadata'], dict) else None
+            bad += ["`metadata` is not a map"] if md is None else _metadata_problems(md, law, garden)
+            src, dst = (_endpoint(ps[k], layer_of, files_held) for k in ('from', 'to'))
+            bad += [f"{k}: {e[1:]}" for k, e in (('from', src), ('to', dst)) if e.startswith('!')]
+            if bad:
+                out.append(('layers', at, "not a pass — " + '; '.join(bad)))
+                continue
+            keeper = 'release' if 'file' in ps['from'] and m.keeper_of(ps['from']['file']) == 'release' else None
+            ok, grant, rows = law.decide(src, dst, ps['through'], ps.get('as'), keeper, md.get('party'))
+            if not ok:
+                why = next((r.get('why') for r in law.flows if r.get('flow') in rows), None)
+                out.append(('layers', at, f"{src} → {dst} through {ps['through']}"
+                                          + (f" as {ps['as']}" if 'as' in ps else '')
+                                          + (f": {', '.join(rows)} {'refuses' if grant != 'ratified' else 'asks a party a garden row grants, and none does for'} it"
+                                             if rows else ": no row of the flow table holds it, so it is refused")
+                                          + (f" — {why}" if why else '')))
+                continue
+            granted.append((src, ps['to']))
+    if not any(p in named for _s, p in logs):
+        return out
+    into = {(str(d.get('bean')), str(d.get('at'))) for _s, d in granted if 'at' in d}
+    from_person = {str(d.get('bean')) for s, d in granted if s in ('words', 'instructions') and 'bean' in d}
+    flows = dmpass.CoreFlows(law)
+    ids = set(garden.beans) if garden is not None else set()
+    person = lambda x: garden is not None and x in garden.beans and \
+        (law.kinds.get(garden.beans[x].kind) or {}).get('rung') == 'reason'                # noqa: E731
+    for status, path in changes:                              # what the claim owes, of every bean the commit stages
+        if status == 'D' or not (path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)) and path.endswith('.md')):
+            continue
+        bid = os.path.basename(path)[:-3]
+        new = _front(root, '', path)[0] or {}
+        old = (_front(root, 'HEAD', path)[0] or {}) if status != 'A' else {}
+        for vat, v in sorted(flows.said_values(new, ids) - flows.said_values(old, ids)):
+            if (bid, vat) not in into:
+                out.append(('layers', path, f"{vat} = {v[:60]} is a said value this claimed commit adds, and no granted "
+                                            f"pass in its log has it for destination — a said value is someone's words: "
+                                            f"log the pass {{from, to: {{bean: {bid}, at: {vat}}}, through: say, as: say, "
+                                            f"metadata}} (the save traces it, bin/save.py)"))
+        says = lambda fm: collections.Counter(canon(v, r) for v, r in                                  # noqa: E731
+                                              ((next(iter(x)), next(iter(x.values()))) for x in fm.get('statements') or []
+                                               if isinstance(x, dict) and len(x) == 1) if v == 'say' and isinstance(r, dict)
+                                              and person(r.get('by')))
+        if +(says(new) - says(old)) and bid not in from_person:
+            out.append(('layers', path, f"a `say` by a person this claimed commit adds has no pass from `words` or "
+                                        f"`instructions` into {bid} — a person's word is shown by the pass that "
+                                        f"carried it"))
     return out

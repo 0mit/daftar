@@ -28,7 +28,7 @@ and all); no pre-commit gate is installed in this clone (the commit would not be
 it); no git identity is set (git would guess an author from the machine, and the log's "who" would be nobody's).
 
 SAVE (24.0, Leg 2): IN A SESSION'S COPY, EACH SAID VALUE THE SAVE WOULD ADD IS TRACED FIRST, before anything is
-written. The session's material (what `bin/dmlaunch.py` or `bin/dmhook.py` kept, per clone and off git) is searched for
+written. The session's material (what `bin/launch.py` or `bin/hook.py` kept, per clone and off git) is searched for
 the value as written, through every relay — the model's own output, and the session's own beans, only carry it — to
 where it came from: a person's words or instructions, a take-down; a run's capture, a record; a file whose layer the
 flow law keeps from a said value, found by a distinctive needle, REFUSED (exit 2), naming the row; found nowhere, HOPED —
@@ -43,8 +43,9 @@ that dies releases it.
 
 IN A GARDEN OF THE CORE (v1 part 5) the save is the same act: the entry, the moment written at each `at: now`
 (bin/journal.py, by the law the garden runs), everything staged, the core's gate at the commit, and a save that waits
-for the next minute where this one's moment is taken (below). The SAVE trace reads the flow law, which the core writes
-in its own words in v1's part 8; until then a save in a garden of the core traces nothing, and says so once.
+for the next minute where this one's moment is taken (below). The SAVE trace reads the core's flow law
+(core/law/flows.yaml, v1 part 8): a said value is a role of a statement a `say` knows, at `<verb>#<id>.<role>`, and its
+pass is logged in the core's form, `{from, to, through, as, metadata}` (bin/launch.py, v1 part 10).
 
 It reaches a garden by `seed/LANGUAGE`, which names it (`bin/save.py`, the verb's tool) and its old name, `bin/dmsave.py`,
 which runs it until v1's part 13; nothing installs it. It is called "save" because that is the whole act — journal, stage, commit — where "commit" names its last
@@ -167,19 +168,21 @@ def trace_said():
     A value found only where the flow law refuses it is refused here, before a word is written; the rest are kept in
     TRACED for commit(). Nothing is done where no session is current in this copy."""
     try:
-        import dmlaunch
+        import launch
         import dmpass
     except ImportError:
         return
-    s = dmlaunch.Session.current(ROOT)
+    s = launch.Session.current(ROOT)
     if s is None:
         return
     import check                                # the one reader of a garden's pin (bin/check.py)
-    if check.runs_core(check.pin(ROOT)):
-        print(dmparse.said("dmsave: a session is current, and its said values are not traced: the flow law is today's "
-                           "words until v1's part 8 writes it in the core's (SAVE)"), file=sys.stderr)
-        return
+    core = check.runs_core(check.pin(ROOT))
     fl = dmpass.flows(ROOT)
+    if core:                                    # a garden of the core: what is a being here is no said value (v1 part 10)
+        ids = set(dmgarden.ids(ROOT, 'beans'))
+        said_values = lambda fm: fl.said_values(fm, ids)            # noqa: E731
+    else:
+        said_values = fl.said_values
     mats = s.materials()
     base = s.state.get('base')
     own = set(git('diff', '--name-only', f'{base}..HEAD', '--', 'beans').stdout.split()) if base else set()
@@ -199,7 +202,7 @@ def trace_said():
             continue
         bid = posixpath.basename(p)[:-3]
         new, old = front(os.path.join(ROOT, p)), front(None, git('show', f'HEAD:{p}').stdout)
-        for at, v in sorted(fl.said_values(new) - fl.said_values(old)):
+        for at, v in sorted(said_values(new) - said_values(old)):
             t = dmpass.trace(fl, json.loads(v), fl.origin_at(at), mats, skip=own | {p, bid}, titles=title)
             dest = {'bean': bid, 'at': at}
             if t.verdict == 'refused':
@@ -212,8 +215,8 @@ def trace_said():
                 md['form'] = 'written'
             if t.verdict == 'nowhere':
                 hoped.append(f"{p} {at} = {v[:60]}")
-            TRACED.append((s.state.get('log'), {'from': t.source, 'to': dest, 'method': t.method,
-                                                'metadata': md}))
+            TRACED.append((s.state.get('log'), launch.core_pass(t.source, dest, t.method, md, act='say') if core else
+                           {'from': t.source, 'to': dest, 'method': t.method, 'metadata': md}))
     if refused:
         refuse("a said value came from where the flow law refuses it (SAVE):\n  " + '\n  '.join(refused) +
                "\nA said value is a person's word: take it from their words, or point at where it is kept; nothing "
@@ -228,7 +231,7 @@ def front(path, text=None):
         if text is None:
             with open(path, encoding='utf-8') as fh:
                 text = fh.read()
-        d = dmparse.loads(dmparse.split_front_matter(text or '')[0] or '')
+        d = (dmparse.core_loads(ROOT) or dmparse.loads)(dmparse.split_front_matter(text or '')[0] or '')
     except Exception:
         return {}
     return d if isinstance(d, dict) else {}

@@ -118,7 +118,7 @@ net = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*
              if _NET.search(open(f, encoding="utf-8").read()))
 TOOL_NET = {   # each with why: never-sells is "never … anywhere its gardener did not send it"
     "dmupgrade.py": "it fetches a release, from where the gardener's pin says",
-    "dmlaunch.py": "it sends a request only to a party the gardener's own VOCAB.md row grants by name, on a basis",
+    "launch.py": "it sends a request only to a party the gardener's own VOCAB.md row grants by name, on a basis",
 }
 check("a tool opens a network path only where it is declared to, each with why (manifesto: never-sells)",
       set(net) <= set(TOOL_NET), f"found {net}; declared {sorted(TOOL_NET)}")

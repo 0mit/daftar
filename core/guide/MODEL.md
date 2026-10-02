@@ -275,6 +275,15 @@ A name is a statement: the namespace gives it.
   table grants it (`core/law/flows.yaml`): of the rows that hold it the nearest decides, a row that names `as` nearer
   than one that names only layers, and of two as near, a refusal. A row `ratified` is refused until a garden's own row
   grants the party it names, with the basis it grants on; a garden's own rows otherwise only refuse.
+- **A session's pass log** (`captures/passes/<slug>.jsonl`, which the session's bean names in `details`, `pass_log: {
+  requests: { holds: "file:<path>" } }`) holds what its launcher (`bin/launch.py`) and its save logged, one pass to a
+  line, in the pass's valency with where it came from and went: `{"from": {"layer": "words"}, "to": {"bean": "lease",
+  "at": "agree#a1.at"}, "through": "say", "as": "say", "metadata": {"quoted": 1}}` — a file `{file}`, a value `{bean,
+  at}` at its statement's path, another garden `{garden}`, a layer that holds no files `{layer}`; `metadata` only the
+  counts and ids `core/law/flows.yaml` names, never the material. A commit that stages the log claims the session:
+  the log only grows, each pass it gains is granted, every said value the commit adds — a role of a statement a `say`
+  knows — has a granted pass into it (the save traces each one), and a `say` by a person it adds has a pass from
+  `words` or `instructions` into its bean.
 - **The law** is `core/law/*.yaml`, this document, `CHECKLIST.md`, `MERGE.md`, `VOCAB.md`, `GARDEN.md`, the standards'
   tables in `seed/knowledge/`, and every file a release keeps (`seed/LANGUAGE`). A change to any of them is a
   RULE-CHANGE, which a person ratifies.
@@ -347,7 +356,7 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
 - These rules confirm that the words are there and well formed, not that they are true; honesty is still the writer's
   (manifesto: checked).
 - Each person and each agent session commits under its own git identity, so the log's "who" is real.
-- A garden with more than one writer has a hub that judges every push again (today `bin/dmhub.py`): each commit signed
+- A garden with more than one writer has a hub that judges every push again (`bin/hub.py`): each commit signed
   by a key a writer's bean names (`name: { by: ssh, … }` or `openpgp`), what it changes within that writer's grants,
   and the whole garden by the gate.
 - A release a garden upgrades to is authenticated before any of it runs: a signed tag against the keys the garden's own
