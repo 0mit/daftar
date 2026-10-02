@@ -152,10 +152,13 @@ def _split_position(text):
         return None, text
 
 
-def terms(b):
+def terms(b, beans=()):
     """A bean of the core as the terms `details` keeps under today's names — with its header (`bean` or `mapping`,
     `kind`, `title`, `summary`), each `be` as location as an entry of `located_at` (what `details.located_at` keeps of
-    it beside), and each name a namespace of a machine gives as an anchor (`identity.anchors`)."""
+    it beside, its host — a being of `beans` in its `at` — and its form, `placed`), each clause (`can`) as an entry of
+    `clauses` (core/measures.py), and each name a namespace of a machine gives as an anchor (`identity.anchors`)."""
+    sys.path.insert(0, os.path.dirname(HERE))
+    from core import measures
     details = b.header.get('details') if isinstance(b.header.get('details'), dict) else {}
     v = {k: x for k, x in details.items() if k != 'located_at'}
     space = os.path.basename(os.path.dirname(b.path)) if b.path else 'beans'
@@ -172,9 +175,9 @@ def terms(b):
             continue
         if verb == 'be' and r.get('as') == 'location':
             for at in (r.get('at') if isinstance(r.get('at'), list) else [r.get('at')]):
-                if isinstance(at, str) and '#' not in at:
+                if isinstance(at, str) and '#' not in at and at not in beans:
                     system, pos = _split_position(at)
-                    e = dict(kept.get(r.get('id')) or {}, at=pos, system=system)
+                    e = dict(kept.get(r.get('id')) or {}, at=pos, system=system, **measures.placed_of(r, ROOT, beans))
                     if 'note' in r:
                         e['note'] = r['note']
                     located.append(e)
@@ -182,6 +185,9 @@ def terms(b):
             anchors.append({'key': HOSTNAME[r['by']], 'value': r['as']})
     if located:
         v['located_at'] = located
+    clauses = measures.clauses_of(b, ROOT)
+    if clauses:
+        v['clauses'] = clauses
     v['identity'] = {'anchors': anchors}           # the names the core gives: what `details` kept of today's identity
     return v                                       # is read from `details` itself, never as a host's anchors
 

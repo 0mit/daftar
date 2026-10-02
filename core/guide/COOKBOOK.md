@@ -55,8 +55,8 @@ registrar until a day on which it lapses unless it is renewed. `renew` is the do
 before the agreement is written, from RDAP or WHOIS: the day the registration began is the registrant's `agree`, and the
 day it lapses is when its renewal falls due. Neither takes `unknown`, for a fact that is always there to be read: an
 invented day would pass the gate and then be reported as sound. Whether the registrar renews unasked is an account
-setting the registry does not show, and may be left out. How far ahead a warning comes (`notice`) has no form in the
-core yet (part 7 of v1): it is kept in `details`.
+setting the registry does not show, and may be left out. How far ahead a warning comes is the clause's `notice`, in its
+form (`clause`): ninety days before a name lapses, read by `python3 bin/daftar.py stale`.
 
 <!-- example: beans/org-registry.md -->
 ```markdown
@@ -115,11 +115,9 @@ statements:
   - agree:      { id: registered, by: sam, of: example-org, through: written, as: registrant, at: 2020-01-15 }
   - agree:      { by: example-registrar, of: example-org, through: written, as: registrar, note: "the registrar's registration agreement" }
   - renew:      { id: renewal, by: sam, of: example-org, at: 2027-01-15 }
-  - obligatory: { id: renew-or-lapse, of: renewal, through: self, note: "renew the registration, or the name lapses with its DNS and its mail" }
+  - obligatory: { id: renew-or-lapse, of: renewal, through: self, note: "renew the registration, or the name lapses with its DNS and its mail", clause: { due: 2027-01-15, notice: { count: "90", unit: d } } }
   - renew:      { id: auto-renewal, by: example-registrar, of: example-org, at: 2027-01-15 }
   - permitted:  { of: auto-renewal, through: self, note: "auto-renew is enabled in the registrar's account" }
-details:
-  renew-or-lapse: { notice: { count: "90", unit: d } }
 ---
 Read from WHOIS for example.org.
 ```
@@ -338,9 +336,9 @@ Sam uses the camera more, so Sam bears two parts of its cost and Ali one.
 
 Sam lent Ali the price of a washing machine, to be repaid in six monthly instalments, with interest on one paid late.
 Each party agrees `as` its part, `through` the dinner where the words were spoken. Each clause is a statement on the
-permission square — `obligatory` of the payment it asks, `through` the agreement — its words in its `note`. How a
-clause repeats, and what brings it into force, have no form in the core yet (part 7 of v1): they are kept in `details`,
-under the clause's id.
+permission square — `obligatory` of the payment it asks, `through` the agreement — its words in its `note`. What it
+holds beside them — how it repeats, what brings it into force — is its form, `clause` (core/law/measures.yaml): a
+repetition `each` month of a calendar, `times` six; a condition in words, `when`.
 
 <!-- example: beans/washer-loan.md -->
 ```markdown
@@ -357,14 +355,11 @@ statements:
   - agree:      { by: sam, of: "the price of Ali's washing machine", through: dinner-at-sams, as: lender }
   - agree:      { by: ali, of: "the price of Ali's washing machine", through: dinner-at-sams, as: borrower }
   - pay:        { id: instalment, by: ali, to: sam, of: { count: "20.00", unit: XTS } }
-  - obligatory: { id: instalments, of: instalment, through: self, note: "Ali repays 20 XTS on the first day of each month, six times" }
+  - obligatory: { id: instalments, of: instalment, through: self, note: "Ali repays 20 XTS on the first day of each month, six times", clause: { every: { of: time, in: gregorian-civil, each: month, at: "1", times: "6" } } }
   - pay:        { id: interest, by: ali, to: sam, of: { count: "1", unit: "%" } }
-  - obligatory: { id: late-interest, of: interest, through: self, note: "an instalment paid after its day carries one percent of itself for each month it is late" }
+  - obligatory: { id: late-interest, of: interest, through: self, note: "an instalment paid after its day carries one percent of itself for each month it is late", clause: { when: { said: "an instalment is paid late" } } }
   - pay:        { id: the-loan, by: sam, of: { count: "120.00", unit: XTS }, note: "Sam paid the shop for Ali's washing machine" }
   - bear:       { by: ali, of: the-loan, share: "1" }
-details:
-  instalments: { every: { of: time, in: gregorian-civil, each: month, times: "6" } }
-  late-interest: { when: { said: "an instalment is paid late" } }
 ---
 Agreed in words spoken over dinner; nothing was written down.
 ```
@@ -647,8 +642,8 @@ clause; a payment names what it **settles**. Which placings were signed is a **r
 statement named by its `id`: its steps select the contracts whose course on the walk has reached `contracted` — the
 condition `reached`, its step named as a statement, `walk-placing#contracted` — and a path reads statements by verb and
 role, `be.id`, `pay.at`. A comparison is written by its sign (`=`, `∈`, `≥`, `≤`, `≠`, `<`, `>`, `∃`, `∄`). The clauses
-themselves are statements; what each occurs for and what it is a share of (`each`, `of`, `settles`) are kept in
-`details` until part 7 of v1 gives relative dues their form. The agency's assistant signs for Noor while she travels: a being that `represent`s another.
+themselves are statements; what each occurs for and what it is a share of (`each`, `of`) are their form, `clause`;
+what a payment settles (`settles`) is the payment's, kept in its `details`. The agency's assistant signs for Noor while she travels: a being that `represent`s another.
 
 <!-- example: beans/agency-noor.md -->
 ```markdown
@@ -665,11 +660,11 @@ statements:
   - agree:      { id: agreed, by: [sam, noor], of: "the novel The Salt Road, at home and in translation", through: spoken, at: 2026-06-02 }
   - represent:  { by: { someone: person }, of: noor, as: agent, note: "the agency's assistant" }
   - pay:        { id: commission-home, by: sam, to: noor, of: { count: "15", unit: "%" } }
-  - obligatory: { id: commission, of: commission-home, through: self, note: "the author pays the agent fifteen parts in a hundred of each advance at home" }
+  - obligatory: { id: commission, of: commission-home, through: self, note: "the author pays the agent fifteen parts in a hundred of each advance at home", clause: { each: placed-home, of: clauses.advance.amount } }
   - pay:        { id: commission-away, by: sam, to: noor, of: { count: "20", unit: "%" } }
-  - obligatory: { id: commission-abroad, of: commission-away, through: self, note: "the author pays the agent twenty parts in a hundred of each advance abroad" }
+  - obligatory: { id: commission-abroad, of: commission-away, through: self, note: "the author pays the agent twenty parts in a hundred of each advance abroad", clause: { each: placed-abroad, of: clauses.advance.amount } }
   - pay:        { id: refund-home, by: noor, to: sam, of: { count: "15", unit: "%" } }
-  - obligatory: { id: refund, of: refund-home, through: self, note: "the agent gives back her fifteen parts of each advance at home that was returned" }
+  - obligatory: { id: refund, of: refund-home, through: self, note: "the agent gives back her fifteen parts of each advance at home that was returned", clause: { each: returned-home, of: clauses.advance.amount } }
   - pay:        { id: first-payout, by: sam, to: noor, of: { count: "300.00", unit: XTS }, at: 2026-11-04, note: "Sam paid Noor her share of Heron's advance" }
   - reckon:     { id: placed-home, reading: { what: "each placing at home that was signed", steps: [ { id: p, op: select, kind: contract, where: [ { path: be.id, "=": home }, { path: move, reached: "walk-placing#contracted" } ] } ] } }
   - reckon:     { id: placed-abroad, reading: { what: "each translation placing that was signed", steps: [ { id: p, op: select, kind: contract, where: [ { path: be.id, "=": abroad }, { path: move, reached: "walk-placing#contracted" } ] } ] } }
@@ -687,9 +682,6 @@ statements:
           - { id: months, op: group, of: paid, path: at, level: month, system: gregorian-civil }
           - { id: per-month, op: count, of: months }
 details:
-  commission: { each: placed-home, of: clauses.advance.amount }
-  commission-abroad: { each: placed-abroad, of: clauses.advance.amount }
-  refund: { each: returned-home, of: clauses.advance.amount }
   first-payout: { settles: [ { clause: commission, occurrence: salt-road-heron, amount: { count: "300.00", unit: XTS } } ] }
 ---
 Noor has represented The Salt Road since June.
@@ -807,8 +799,8 @@ Two pages; the editor asks for a shorter middle.
 ```
 
 `python3 bin/daftar.py ledger agency-noor` reads what each `pay` gave and the clause each stands under; what each
-clause occurs for — Heron's placing, owed 300 XTS, settled by `first-payout` — is read once part 7 of v1 gives an
-occurrence its form, and until then it is named as kept in `details`. `python3 bin/daftar.py
+clause occurs for (its form's `each`, a reading of the garden) is read with it, and what a payment settles stays in the
+payment's `details`. `python3 bin/daftar.py
 reckon agency-noor#by-month` reads the month's report, each time it is asked and never stored.
 
 ## A tile workshop: staff, their leave, a tiler booked on one job at a time
@@ -858,8 +850,8 @@ Sam's workshop.
 Her employment is an agreement, and her consent to be written here by name. Her leave is an **allowance**: twenty days
 in each year, which she `hold`s; each span she takes is a statement of the garden's own verb. How much of it is used
 within a year is read from the spans she took, which a reading selects — `reckon`, the statements of the verb `leave`
-— and the window counted in `details` until part 7 of v1 gives an allowance its form: nothing stores a balance to drift
-from the spans it was counted from.
+— the window it is counted in, and what uses it, are the clause's form (`within`, `used_by`): nothing stores a balance to
+drift from the spans it was counted from.
 
 <!-- example: beans/lale-employment.md -->
 ```markdown
@@ -876,12 +868,10 @@ statements:
   - agree:      { by: tile-workshop, of: self, through: spoken, as: employer, at: 2026-03-01 }
   - agree:      { id: employed, by: lale, of: self, through: spoken, as: employee, at: 2026-03-01 }
   - hold:       { id: allowance, by: lale, of: { count: "20", unit: d } }
-  - obligatory: { id: leave, of: allowance, through: self, note: "the workshop gives Lale twenty days' leave in each year" }
+  - obligatory: { id: leave, of: allowance, through: self, note: "the workshop gives Lale twenty days' leave in each year", clause: { within: { of: time, in: gregorian-civil, level: year, count: "1" }, used_by: leave-taken } }
   - leave:      { id: summer, by: lale, through: employed, at: 2026-07-06/2026-07-17 }
   - leave:      { id: late-august, by: lale, through: employed, at: 2026-08-24/2026-08-28, note: "her sister's wedding" }
   - reckon:     { id: leave-taken, reading: { what: "the spans of leave Lale has taken", steps: [ { id: this, op: select, kind: contract, where: [ { path: bean, "=": lale-employment } ] }, { id: l, op: select, of: this, entries: leave } ] } }
-details:
-  leave: { within: { of: time, in: gregorian-civil, level: year, count: "1" }, used_by: leave-taken }
 ---
 Lale started in March.
 ```
@@ -992,22 +982,18 @@ statements:
   - agree:      { by: { someone: person }, of: self, through: spoken, as: pupil, at: 2026-09-23, note: "a pupil from the library's notice" }
   - decline:    { by: { someone: person }, of: taught, at: 2026-09-24, note: "a pupil who moved away" }
   - teach:      { id: lessons, by: lale, of: self, at: "2026-10-06T18:00+02:00" }
-  - obligatory: { id: lesson, of: lessons, through: self, note: "Lale teaches the class" }
+  - obligatory: { id: lesson, of: lessons, through: self, note: "Lale teaches the class", clause: { every: { of: time, in: iso-week, each: week, at: ["2", "4"], lasts: { of: time, measure: { count: "2", unit: h } }, closures: [ "2026-W44-4" ] } } }
   - pay:        { id: clay, by: { someone: person }, to: tile-workshop, of: { count: "30", unit: XTS }, at: 2026-10-06 }
-  - obligatory: { id: materials, of: clay, through: self, note: "each pupil pays for clay and glaze" }
+  - obligatory: { id: materials, of: clay, through: self, note: "each pupil pays for clay and glaze", clause: { by_role: pupil } }
   - pay:        { id: firing, by: { someone: person }, to: tile-workshop, of: { count: "12", unit: XTS } }
-  - obligatory: { id: kiln-fee, of: firing, through: self, note: "each pupil pays for the firing, once one is booked" }
+  - obligatory: { id: kiln-fee, of: firing, through: self, note: "each pupil pays for the firing, once one is booked", clause: { by_role: pupil, when: { selection: firing-booked } } }
   - reckon:     { id: firing-booked, reading: { what: "a firing of the class's tiles is booked", steps: [ { id: f, op: select, kind: event, where: [ { path: bean, "=": kiln-firing-nov } ] } ] } }
-details:
-  lesson: { every: { of: time, in: iso-week, each: week, at: ["2", "4"], lasts: { of: time, measure: { count: "2", unit: hour } }, closures: [ "2026-W44-4" ] } }
-  materials: { by_role: pupil }
-  kiln-fee: { by_role: pupil, when: { selection: firing-booked } }
 ---
 Ten weeks, from October.
 ```
 
 How much of her twenty days she has used within the year, and when the next lesson falls past the closure, are read
-once part 7 of v1 gives an allowance and a recurrence their forms; `python3 bin/daftar.py reckon
+from the clauses' forms (`python3 bin/daftar.py ledger lale-employment`, `stale`); `python3 bin/daftar.py reckon
 lale-employment#leave-taken` reads the spans she took.
 
 ## A beekeepers' co-op: its sites, its own codes, a reading disputed
@@ -1015,44 +1001,44 @@ lale-employment#leave-taken` reads the spans she took.
 Sam keeps two hives in a co-op. Hives are no kind the law has, so the garden adds one: a colony is a body, at the
 level of a population. The co-op inspects hives by its own list of what is read at a hive — a **scheme** of codes held
 as the garden's own extract, with its names in another language and how its codes relate. And it tabulates its own
-apiary sites, a **place system** of the garden's own. A garden's own scheme and system are declared as today's
-`VOCAB.md` declares them (`registry_additions`, `registry_files`) until part 7 of v1 gives them the core's form; the
-core reads the scheme's codes already, and a position in the garden's own system waits for part 7 in `details`.
+apiary sites, a **place system** of the garden's own. Its `VOCAB.md` declares each as a row of the core's: a system of
+positions (`systems`, in the form core/law/systems.yaml writes the standards' in), a scheme of codes (`schemes`, as
+core/law/registries.yaml writes `knowledge_schemes`), and where the rows each names are kept (`files`). A position in
+the garden's own system is a `be` as location as any other, and a code of its scheme fills a role as any other's.
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
 kinds:
   - { kind: hive, nature: body, level: population, meaning: "a colony of bees, and the box it lives in" }
-registry_additions:
-  anchor_systems:
-    - system: apiary-site
-      dimension: place
-      complement: [stated, bearer]
-      resolves_through: geographic
-      levels: [ { level: valley }, { level: site } ]
-      neighbours: counted
-      cells_in: { registry: apiary-sites, take: code }
-      overlay: { registry: apiary-site-changes }
-      meaning: "the co-op's apiary sites, as its register tabulates them"
-      pattern: '^apiary:[A-Z]+(-[0-9]+)?$'
-      form_note: "`apiary:<code>` — `apiary:EAST-1`"
-      example: "apiary:EAST-1"
-      establishes: false
-      why: "a site says roughly where, never which hive"
-  knowledge_schemes:
-    - scheme: hive-checks
-      classifies: what a beekeeper reads of a hive at an inspection, and how
-      holding: extract
-      licence: CC0-1.0
-      release: "the co-op's own, 2026"
-      relations: hive-checks-relations
-      labels: [ { language: fr, registry: hive-checks-fr, attribution: "traduction de la coopérative" } ]
-      publisher: the co-op
-      url: "extracts/hive-checks.tsv"
-      levels: [ { level: check } ]
-      neighbours: none
-      sources: extracts/hive-checks.tsv
-registry_files:
+systems:
+  - system: apiary-site
+    dimension: place
+    complement: [stated, bearer]
+    resolves_through: geographic
+    levels: [ { level: valley }, { level: site } ]
+    neighbours: counted
+    cells_in: { registry: apiary-sites, take: code }
+    overlay: { registry: apiary-site-changes }
+    meaning: "the co-op's apiary sites, as its register tabulates them"
+    pattern: '^apiary:[A-Z]+(-[0-9]+)?$'
+    form_note: "`apiary:<code>` — `apiary:EAST-1`"
+    example: "apiary:EAST-1"
+    establishes: false
+    why: "a site says roughly where, never which hive"
+schemes:
+  - scheme: hive-checks
+    classifies: what a beekeeper reads of a hive at an inspection, and how
+    holding: extract
+    licence: CC0-1.0
+    release: "the co-op's own, 2026"
+    relations: hive-checks-relations
+    labels: [ { language: fr, registry: hive-checks-fr, attribution: "traduction de la coopérative" } ]
+    publisher: the co-op
+    url: "extracts/hive-checks.tsv"
+    levels: [ { level: check } ]
+    neighbours: none
+    sources: extracts/hive-checks.tsv
+files:
   - { registry: apiary-sites, file: extracts/apiary-sites.tsv, key: code }
   - { registry: apiary-site-changes, file: extracts/apiary-site-changes.tsv, key: code }
   - { registry: hive-checks, file: extracts/hive-checks.tsv, key: code }
@@ -1105,8 +1091,9 @@ queen-seen	reine vue
 The co-op is an agreement among its members, and the consent of each to be written here by name. What members may
 read of one another's hives is the agreement's to **grant**: each member reads every hive's inspections, and nobody
 reads where a hive stands — a grant made `forbidden` is a ceiling, because hives are stolen. The co-op also takes a
-**stance on a field, within a place**: no member moves a colony across the border, a capability made `forbidden`; the
-field it concerns and the country it holds in are kept in `details` until part 7 of v1.
+**stance on a field, within a place**: no member moves a colony across the border, a capability made `forbidden` — the
+field it concerns its `as`, a code of a published scheme (and every code beneath it), and the country it holds in its
+`at`.
 
 <!-- example: beans/bee-coop.md -->
 ```markdown
@@ -1124,16 +1111,13 @@ statements:
   - grant:      { id: members-read-checks, by: self, to: [sam, derya], of: [hive-orchard-1], as: read, why: "members compare their mite counts" }
   - grant:      { id: sites-open, by: self, to: [sam, derya], of: [hive-orchard-1], as: read, note: "where a hive stands" }
   - forbidden:  { id: sites-closed, of: sites-open, through: self, why: "a hive's site is its keeper's own: hives are stolen" }
-  - can:        { id: colonies-abroad, by: self, of: "move a colony across the border" }
+  - can:        { id: colonies-abroad, by: self, of: "move a colony across the border", as: "isced-f-2013:0811", at: "iso-3166:ZZ" }
   - forbidden:  { id: no-colonies-abroad, of: colonies-abroad, through: self, why: "a colony moved across the border can carry a mite the valley does not have" }
   - pay:        { id: extractor, by: { someone: person, at: self }, of: { count: "25", unit: XTS }, at: 2026-07-01 }
-  - obligatory: { id: extractor-fee, of: extractor, through: self, note: "each member pays for the extractor's season" }
+  - obligatory: { id: extractor-fee, of: extractor, through: self, note: "each member pays for the extractor's season", clause: { by_role: member, state: met } }
   - reckon:     { id: members, reading: { what: "the co-op's members: who agreed to it as a member", steps: [ { id: this, op: select, kind: contract, where: [ { path: bean, "=": bee-coop } ] }, { id: m, op: select, of: this, entries: agree, where: [ { path: as, "=": member } ] } ] } }
   - reckon:     { id: hives, reading: { what: "every hive the co-op's members keep", steps: [ { id: h, op: select, kind: hive } ] } }
   - reckon:     { id: hive-count, reading: { what: "how many hives there are", steps: [ { id: h, op: select, kind: hive }, { id: n, op: count, of: h } ] } }
-details:
-  no-colonies-abroad: { code: "isced-f-2013:0811", within: { system: iso-3166, at: ZZ } }
-  extractor-fee: { by_role: member, state: met }
 ---
 Two members, for now.
 ```
@@ -1154,8 +1138,9 @@ Derya, of the co-op.
 ```
 
 A hive is where its readings live. Each reading is a `measure`: what was read, in the co-op's scheme, `of` the hive, its
-value, when and by whom. The count's uncertainty, how it was read, and a result that is no quantity (the queen seen)
-are kept in `details` until part 7 of v1. A colony has no name of its own — the number painted on its box is the box's,
+value, when and by whom. How well the count is known is inside it (`u`, its standard uncertainty), how it was read is
+its `method`, and a result that is no quantity — the queen seen — its `presence`. Where the hive stands is a `be` at a
+site of the co-op's own system, how far that reaches in its form (`placed`). A colony has no name of its own — the number painted on its box is the box's,
 given by Sam — so it is named by no namespace that gives once. Derya, looking at the same board the next day, **disputes**
 Sam's count: her reading stands beside his, and neither edits the other. Brought to the co-op, a person **rules** on the
 two; what each side said at the hearing is kept in `details` until it has a verb.
@@ -1171,14 +1156,12 @@ statements:
   - say:     { by: sam, at: now }
   - name:    { by: sam, of: self, as: HIVE-S1, note: "the number painted on its box" }
   - own:     { by: sam, of: self }
-  - measure: { id: mites-june, by: sam, of: self, as: "hive-checks:varroa-drop", value: { count: "14", unit: "{item}" }, at: 2026-06-12 }
-  - measure: { id: queen-june, by: sam, of: self, as: "hive-checks:queen-seen", at: 2026-06-12 }
+  - be:      { id: site, by: self, at: "apiary:EAST-2", as: location, placed: { openness: elsewhere } }
+  - measure: { id: mites-june, by: sam, of: self, as: "hive-checks:varroa-drop", value: { count: "14", unit: "{item}", u: { count: "3", unit: "{item}" } }, method: "hive-checks:sticky-board", at: 2026-06-12 }
+  - measure: { id: queen-june, by: sam, of: self, as: "hive-checks:queen-seen", presence: present, at: 2026-06-12 }
   - measure: { id: second-count, by: derya, of: self, as: "hive-checks:varroa-drop", note: "disputes mites-june: the board had been in two days, not one" }
   - rule:    { by: sam, of: [mites-june, second-count], at: 2026-06-20, note: "count again, the board cleared by both of us" }
 details:
-  located_at: [ { system: apiary-site, openness: elsewhere, at: "apiary:EAST-2" } ]
-  mites-june: { u: { count: "3", unit: item }, method: "hive-checks:sticky-board" }
-  queen-june: { presence: present }
   hearings:
     mites-june:
       heard:
@@ -1276,7 +1259,8 @@ and that divided by where it began. The two shares compared say whether the bees
 within a band, whether the two burnt down alike within a hundredth. Where the uncertainty is too wide to decide, the
 answer is NOT KNOWN — never rounded to either. The shop's order is a clause in force while the first reading holds:
 because the candles say so, not because anyone set it. Each reading is a `reckon` statement, its series named as the
-statement that records it, `candle-beeswax#burn`; the clause's condition is kept in `details` until part 7 of v1.
+statement that records it, `candle-beeswax#burn`; the clause's condition is its form's `when`, the reading that brings
+it into force.
 
 <!-- example: beans/candle-supply.md -->
 ```markdown
@@ -1292,7 +1276,7 @@ statements:
   - agree:      { by: sam, of: self, through: spoken, as: maker, at: 2026-10-28 }
   - agree:      { by: { someone: org }, of: self, through: spoken, as: buyer, at: 2026-10-28, note: "a candle shop in town" }
   - pay:        { id: forty, by: sam, to: { someone: org }, of: { count: "40", unit: "{item}" }, note: "forty beeswax candles, to the shop" }
-  - obligatory: { id: first-order, of: forty, through: self, note: "the shop orders forty beeswax candles" }
+  - obligatory: { id: first-order, of: forty, through: self, note: "the shop orders forty beeswax candles", clause: { when: { selection: burns-no-faster } } }
   - reckon:
       id: worn-beeswax
       reading:
@@ -1330,8 +1314,6 @@ statements:
           - { id: pf-gone, op: difference, of: pf-first, with: pf-last }
           - { id: pf, op: divide, of: pf-gone, with: pf-first }
           - { id: same, op: compare, of: bw, with: pf, is: equal, band: { count: "0.01", unit: "1" } }
-details:
-  first-order: { when: { selection: burns-no-faster } }
 ---
 Agreed at the shop, the trial to decide.
 ```
@@ -1532,16 +1514,15 @@ technology, its official documentation.
 ## Where each amount belongs: analytic accounting (`accounting` profile)
 
 Keep your plans and their accounts as a scheme of your own, in `VOCAB.md` and a file beside it — a plan is a code at the
-first level, an account one beneath it. Until part 7 of v1 a garden's own scheme is declared as today's `VOCAB.md`
-declares it:
+first level, an account one beneath it. A garden's own scheme is a row of the core's `schemes`, and its file a row of
+`files`:
 
 ```yaml
-registry_additions:
-  knowledge_schemes:
-    - { scheme: analytic, classifies: "where this garden's amounts belong", holding: extract, publisher: the gardener,
-        url: "file:extracts/analytic.tsv", levels: [ { level: plan }, { level: account } ], neighbours: none,
-        sources: extracts/analytic.tsv }
-registry_files:
+schemes:
+  - { scheme: analytic, classifies: "where this garden's amounts belong", holding: extract, publisher: the gardener,
+      url: "file:extracts/analytic.tsv", levels: [ { level: plan }, { level: account } ], neighbours: none,
+      sources: extracts/analytic.tsv }
+files:
   - { registry: analytic, file: extracts/analytic.tsv, key: code }
 ```
 
@@ -1572,8 +1553,10 @@ What an account holds is read, never stored: `apportion`, a step of a reading (`
 A being is placed in, at or among another, by `be`, and `as` says how, from the most general to the most bodily:
 **place**, the ancestor of them all; a code's **order** among others; a record's **presence** in a register; a
 process's **habitat** in its machine; a **location**, a position in a place system. What a being can hold is `hold`: a
-rack's slots, a disk's bytes. What a placement takes of it — a share, or room no other takes at once — has no form in the
-core yet (part 7 of v1), and a placement that takes room is kept with its `details`.
+rack's slots, a disk's bytes. What a placement takes of it — a share, or room no other takes at once — is in its form,
+`placed: { takes: [ … ] }`, each a quantity in a unit of what the host holds; the gate sums what is placed as room in a
+host, exactly, and refuses more than it holds. A share may be promised past it, as a hypervisor overcommits its
+memory.
 
 <!-- example: beans/rack-a.md -->
 ```markdown
@@ -1595,5 +1578,5 @@ A machine in it is at its slot: the rack is the being, and the slot a position o
 
 <!-- example-check: beans/nas.md -->
 ```yaml
-  - be:     { by: self, at: [rack-a, "rack-a#u17"], as: location }
+  - be:     { by: self, at: [rack-a, "rack-a#u17"], as: location, placed: { takes: [ { count: "2", unit: "{item}" } ] } }
 ```

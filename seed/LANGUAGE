@@ -24,6 +24,11 @@ bin/pos.py
 bin/seq.py
 bin/reckon.py
 bin/ledger.py
+bin/cal.py
+bin/geo.py
+bin/units.py
+bin/knowledge.py
+bin/crosswalk.py
 # The one entry to them all, `daftar <verb>`: its verbs and their families are the law's (`verbs`, `tool_families`).
 bin/daftar.py
 bin/install.sh

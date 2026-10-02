@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""check — judge a garden written in the core's statements, by the core's nineteen rules.
+"""check — judge a garden written in the core's statements, by the core's twenty rules.
 
     python3 core/check.py [<garden>]      # every bean of the garden at <garden> (here, if none is named)
     python3 core/check.py --staged        # what a commit would hold: the INDEX, and the commit's own rules

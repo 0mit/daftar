@@ -1,4 +1,4 @@
-"""engine — the core's nineteen rules, applied to a garden written in statements (core spec §12).
+"""engine — the core's twenty rules, applied to a garden written in statements (core spec §12).
 
 A bean keeps its header (`bean`, `kind`, `title`, `summary`, `tags`, `details`), a list of `statements` and its body.
 A statement is one verb and its roles: `- pay: { id: paid, by: ada, of: { count: "10.00", unit: XTS }, at: 2026-09-20 }`.
@@ -128,7 +128,7 @@ class Judge:
     def __init__(self, law, garden):
         self.L, self.G = law, garden
         self.out = []
-        self.systems = law.std.systems
+        self.systems = law.systems               # the standards', and the garden's own (part 7)
 
     def err(self, rule, where, msg):
         self.out.append((rule, where, msg))
@@ -231,14 +231,9 @@ class Judge:
         return ''
 
     def _quantity(self, x):
-        if isinstance(x, str):
-            return '' if self.L.std.count(x) is not None else \
-                f"{x!r}: a bare number is a count of the unit one, in plain decimal digits"
-        if not isinstance(x, dict) or set(x) != {'count', 'unit'}:
-            return "a quantity is `{ count, unit }`, or a bare number (a count of the unit one)"
-        if self.L.std.count(x['count']) is None:
-            return f"its count {x['count']!r} is not plain decimal digits, read exactly"
-        return self.L.has('units', x['unit'])
+        """A quantity, with how well it is known inside it (core/measures.py, part 7)."""
+        from core import measures
+        return measures.quantity_why(self.L, x)
 
     # ------------------------------------------------------------------------------------------------ one bean
     def bean(self, b):
@@ -978,7 +973,20 @@ class Judge:
         self.room()
         self.vacancy()
         self.line()
+        self.measured()
         return self.out
+
+    # ------------------------------------------------------------------------------------------------ measured
+    def measured(self):
+        """Rule `measured`: a clause's form, a placement's, and what is placed as room in a host against what it holds
+        (core/measures.py)."""
+        from core import measures
+        for b in self.G.beans.values():
+            if not b.unread:
+                for where, msg in measures.problems(self, b):
+                    self.err('measured', where, msg)
+        for where, msg in measures.capacity(self):
+            self.err('measured', where, msg)
 
     # ------------------------------------------------------------------------------------------------ line
     def line(self):
