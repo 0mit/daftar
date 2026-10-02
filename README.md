@@ -1,5 +1,25 @@
 # daftar
 
+> **This is the `v0` branch: daftar as it stood before the cleanup of v1, kept whole for the gardens that have not
+> crossed yet.** Releases come from `master`, not from here.
+>
+> It keeps the way from the language before the core, std-vocab (v0.x), into the core (v1): the translator
+> (`core/translate.py`), the adoption in `bin/dmupgrade.py`, `bin/reform.py`, which writes a bean of std-vocab in
+> statements, and the suites that rehearse them. It also keeps `HISTORY.md` and std-vocab's changelog, and every
+> tag before it stays where it is. A release of the core that does not carry the translator refuses a garden whose
+> `GARDEN.md` pins `std-vocab@…`, and names the bridge below.
+>
+> **A garden in std-vocab crosses in three steps.** Each one is its own run of the garden's own door, its own
+> RULE-CHANGE and its own commit:
+>
+> ```sh
+> python3 bin/dmupgrade.py v0.49.0          # only a garden older than v0.49.0 (std-vocab 32)
+> python3 bin/dmupgrade.py v1.0.2           # adopts the core: every bean in statements, every value counted
+> python3 bin/dmupgrade.py <a later tag>    # then any later release, from master
+> ```
+>
+> The bridge is a signed tag on this branch. A fix to the kit is made here and tagged here.
+
 *Daftar* (دفتر) is the Persian word for a notebook. This one is kept by you and your AI agents, about the
 things you work on together, and you can read it without them.
 
