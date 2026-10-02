@@ -75,6 +75,9 @@ jobs:
       - name: "core_law: the law tools in a garden of the core — rules, why, form, forms, catalog, review, facets — and the law they read: the tools by their verbs, and what nothing takes up yet"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_law.py
+      - name: "core_gate: the gate's others and the launcher in a garden of the core — parse, public, hook, hub, launch — and a session's pass log in the core's form, traced by the save and claimed at the gate"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/core_gate.py
       - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/save.py

@@ -39,9 +39,9 @@ went (`{file}`, `{bean, at}`, `{garden}` or `{layer}`; a value's `at` is its sta
 `through` the method or the verb it was made through (today's `take-down` is `say`), `as` the knowing act a pass into
 the estate carries what it carries in as, and the counts of `metadata`. The session's bean names its log in `details`
 (`pass_log: { requests: { holds: "file:captures/passes/<slug>.jsonl" } }`), as it keeps its working copy there, and
-the party is granted by the garden's own row in the core's words:
+the party is granted by the garden's own row in the core's words, which bears the name of the core's row it grants:
     flows:
-      - { flow: <name>, from: request, to: remote, through: send, grant: granted, party: <bean>, basis: "<why>" }
+      - { flow: sent-out, from: request, to: remote, through: send, grant: granted, party: <bean>, basis: "<why>" }
 A commit that stages the log claims the session, and the core's gate holds the claim (rule `layers`, core/commit.py).
 """
 import argparse
@@ -325,10 +325,12 @@ def granted_party(root, fl, party):
         fail(f"daftar.party `{party}` is no bean here — the party a request goes to is named by its bean")
     d = fl.decide('request', 'remote', 'send', party=party)
     if not d.granted:
-        how = 'through' if dmpass.runs_core(root) else 'method'
+        core = dmpass.runs_core(root)              # the core's: the garden's row bears the name of the row it grants
+        flow = (d.rows[0] if d.rows else 'sent-out') if core else f'send-to-{party}'
         fail(f"a request to `{party}` is not granted ({', '.join(d.rows) or 'closed'}: {d.grant}) — nothing sent. The "
-             f"gardener grants a party in VOCAB.md, by name and on a basis:\n  flows:\n    - {{ flow: send-to-{party}, "
-             f"from: request, to: remote, {how}: send, grant: granted, party: {party}, basis: \"<why>\" }}")
+             f"gardener grants a party in VOCAB.md, by name and on a basis:\n  flows:\n    - {{ flow: {flow}, "
+             f"from: request, to: remote, {'through' if core else 'method'}: send, grant: granted, party: {party}, "
+             f"basis: \"<why>\" }}")
 
 
 # ------------------------------ the two wires ------------------------------

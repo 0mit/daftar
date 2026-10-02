@@ -23,9 +23,9 @@ cannot read its event, or breaks, refuses (exit 2) rather than let a tool throug
 A harness's names for its events and tools are that harness's, so its table is here, in this tool, and written into a
 clone's own settings — never into the law.
 
-A garden is either law's (v1 part 10): it is a garden where GARDEN.md names the law it runs and its gate is here
-(`bin/check.py`, or today's `bin/dmcheck.py`), and what a refusal names is that garden's own tools — the save, and a
-proposal (`bin/propose.py`) — read through the layer map and the flow law it runs (bin/pass.py).
+A garden is either law's (v1 part 10): its gate is here (`bin/check.py`, or today's `bin/dmcheck.py`) and its own law
+(GARDEN.md, or today's VOCAB.md); a refusal names the tools of the law it runs — in a garden of the core the save
+`bin/save.py` and a proposal `bin/propose.py` — and the layer map and the flow law are that law's (bin/pass.py).
 """
 import json
 import os
@@ -85,14 +85,16 @@ def top_of(path):
 
 
 def is_garden(top):
-    """A garden of either law: GARDEN.md names the law it runs, and its gate is here."""
-    return bool(top) and os.path.exists(os.path.join(top, 'GARDEN.md')) and any(
-        os.path.exists(os.path.join(top, 'bin', g)) for g in ('check.py', 'dmcheck.py'))
+    """A garden of either law: its gate is here (`bin/check.py`, or today's `bin/dmcheck.py`), and so is its own law
+    (GARDEN.md, or today's VOCAB.md)."""
+    return bool(top) and any(os.path.exists(os.path.join(top, 'bin', g)) for g in ('check.py', 'dmcheck.py')) and any(
+        os.path.exists(os.path.join(top, f)) for f in ('GARDEN.md', 'VOCAB.md'))
 
 
-def tool(root, verb):
-    """How the garden at `root` runs a verb's tool: `bin/<verb>.py` where it is ported, else today's `bin/dm<verb>.py`."""
-    return f"bin/{verb}.py" if os.path.exists(os.path.join(root, 'bin', f'{verb}.py')) else f"bin/dm{verb}.py"
+def tool_of(root, verb):
+    """The tool a refusal names, by the law the garden at `root` runs: the verb's own in a garden of the core
+    (`bin/<verb>.py`), today's name in one in today's words (`bin/dm<verb>.py`, until v1's part 13)."""
+    return f"bin/{verb}.py" if dmpass.runs_core(root) else f"bin/dm{verb}.py"
 
 
 def session(ev, root):
@@ -156,18 +158,18 @@ def on_pre(ev, root):
         cmd = unquoted(str(a.get('command') or ''))
         if NO_VERIFY.search(cmd):
             deny(f"--no-verify (or -n, or a hooks path of its own) steps past the gate; a garden's commit is judged by "
-                 f"it — save through {tool(root, 'save')}")
+                 f"it — save through {tool_of(root, 'save')}")
         # the save commits from inside its own process, so no command line the model runs is ever its commit: a
         # `git commit` in one is by hand, whatever else the line mentions
         if COMMIT.search(cmd):
-            deny(f"a commit here is made by the save, which journals and is traced: {PY} {tool(root, 'save')} \"<who>\" "
+            deny(f"a commit here is made by the save, which journals and is traced: {PY} {tool_of(root, 'save')} \"<who>\" "
                  f"\"<what>\" --body \"- action: …\"")
     elif tool in H['writes']:
         path = a.get('file_path') or a.get('notebook_path') or ''
         top = top_of(path) if path else None
         if top and top != root and is_garden(top):
             deny(f"{path} is in another garden ({top}); it is not yours to write — what you would give it is a proposal "
-                 f"(CHECKLIST.md Part F: {tool(root, 'propose')})")
+                 f"(CHECKLIST.md Part F: {tool_of(root, 'propose')})")
     elif tool == H['read']:
         rel = rel_in(root, str(a.get('file_path') or ''))
         if rel and not rel.startswith('.git/') and os.path.isfile(os.path.join(root, rel)):
