@@ -68,6 +68,9 @@ jobs:
       - name: "core_view: the profiles a garden of the core takes, and the view asset on statements — a page of drawings judged by rule profile, drawn, written back by its author mode, and drawn as today's words drew it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_view.py
+      - name: "core_gaps: what v1 part 12b closed, read by the tools in a garden of the core — a payment charged and settled, a weighing, a series' whole, an allowance, bookings judged plan by plan, Darwin Core carried"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/core_gaps.py
       - name: "core_ported: where each of today's suites went in v1 — retired, ported or waiting — held to the tree"
         run: python3 test/core_ported.py
       - name: "core_exact: a count is exact everywhere it is read — rates between currencies, and no float in the code"

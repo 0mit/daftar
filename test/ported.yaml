@@ -4,7 +4,8 @@
 # Each is ported in place to a garden of the core (`ported`), still waiting for the part that moves the law it reads
 # (`waiting`), or retired (`retired`): replaced by suites of the core, each promise `held` by checks the tree has
 # (`<suite>: <words of the check>`), `gone` with the law it was a promise of, or `left` — not held yet, saying why. What
-# is gone or left is for the operator's veto (the journal entry "v1 part 12 built").
+# is gone or left is for the operator's veto (the journal entry "v1 part 12 built"). Part 12b (2026-10-02) closed every
+# `left`: each is held now, or gone by the operator's choice (`pay` takes any quantity) — the entry "v1 part 12b built".
 
 met: [test/agreements.py, test/assets.py, test/base.py, test/calendars.py, test/catalogue.py, test/converge.py, test/cost.py,
       test/crosswalk.py, test/days.py, test/deeptime.py, test/docs.py, test/expiry.py, test/fast.py, test/figures.py,
@@ -32,10 +33,10 @@ ported:
   - { suite: test/cost.py,      how: "the core's gate timed over a `record` series held in a part" }
   - suite: test/view.py
     how: "the view asset over a page of `draw` statements: its check, elements, refusals, zoom, details, regions, sheet, palette, report, import, bundle, a second adapter, the served page closed by default, a private page, the engraver"
-    left:
-      - "rule `profile` judges a drawing's attributes by their shape, and leaves a domain a tool reads to the tool (core/lines.py `attrs_problems`): a value's unit, a technology outside the catalogue, a threshold's quantity, a deadline's and a repetition's form, a frame that is no line, a signal nobody published — each refused by today's gate, none yet by the core's"
-      - "the viewers' grants are written bean by bean: a grant over a reading has no form in the core (as test/privacy.py's promise, below)"
-      - "the opt-in act (upgrade --extend and --retract, germinate --profile) and the cookbook's page are test/core_view.py's"
+    held:          # v1 part 12b
+      - "test/core_view.py: gate: rule profile refuses a drawing's attributes outside their domains"
+      - "test/viewcap.py: V-1 a grant over a reading opening part of each bean it holds"
+      - "test/core_view.py: germinate: a profile the core does not offer is refused"
 
 waiting:
   - { suite: test/docs.py, part: 13, why: "its prose is today's guides (README, MODEL, FORMS…), and the retired words it looks for are bin/dmcheck.py's and std-vocab's: part 13 puts core/guide/ in their place, and the words a guide must not write become core/law/terms.yaml's" }
@@ -69,11 +70,11 @@ retired:
       - promise: "a value read across gardens only at a commit the other garden published and granted"
         held: ["test/core_between.py: across: a value of the other garden, read at a commit it publishes", "test/core_between.py: across: refused where the other garden grants nothing"]
       - promise: "a clause that occurs for each member of a reading, settled occurrence by occurrence (`each`, `settles`)"
-        left: "no form in the core yet: `settles` and occurrences stay in `details` (v1 part 7 left them there)"
+        held: ["test/core_gaps.py: ledger: a clause that occurs for each member of a reading is read occurrence by occurrence", "test/core-cases.yaml: a payment charged in another currency, settling one occurrence of a clause", "test/core_translate.py: charged → the payment's `charged`; settles → its `settles`"]
       - promise: "a party acting for another, one that declined, every party of a role"
-        left: "the translator writes who agreed as `agree`; acting for another and declining stay in `details`, judged by no rule"
+        held: ["test/core-cases.yaml: one acts for a party of the agreement, and one it was offered to declines", "test/core-cases.yaml: rule: consent", "test/core_translate.py: acting_for → represent; declined → its `agree` offered and its `decline`", "test/core_gaps.py: ledger: one who acts for a party is said", "test/core-cases.yaml: rule: measured"]
       - promise: "a read across at a commit the other garden never published is refused"
-        left: "bin/across.py keeps today's check, not yet run in a garden of the core"
+        held: ["test/core_between.py: across: a read at a commit the other garden never published is refused"]
   - suite: test/base.py
     promises:
       - promise: "a local term's schema language: at_most_one_of, a compound keyed_by, nested entries' one_of, an extent in cells"
@@ -87,7 +88,7 @@ retired:
       - promise: "FHIR observations carried into beans and back by the law's tables, field for field"
         held: ["test/core_measure.py: crosswalk: a FHIR observation is carried to a `measure`", "test/core_measure.py: crosswalk: a `measure` is carried back"]
       - promise: "Darwin Core occurrences carried the same way"
-        left: "bin/crosswalk.py keeps the table; no Darwin Core record is carried in a garden of the core yet"
+        held: ["test/core_gaps.py: crosswalk: Darwin Core occurrences carried to the core's `be` statements", "test/core_gaps.py: crosswalk: the round trip"]
   - suite: test/days.py
     promises:
       - promise: "a day and a moment are one value type, a position, in its one form; a day its calendar lacks is refused"
@@ -107,9 +108,9 @@ retired:
       - promise: "a garden's own tabulated places, with an overlay"
         held: ["test/core_measure.py: where: a position in the garden's own system"]
       - promise: "deep time as an offset from a datum; the ICS chart's units as cells, and their golden spikes"
-        left: "core/law/systems.yaml holds bp-1950, b2k and ics-chronostrat; no position in them is judged in a garden of the core yet"
+        held: ["test/core-cases.yaml: deep time: an age before 1950 and before 2000, a cell of the ICS chart", "test/core-cases.yaml: rule: valency"]
       - promise: "a boundary marked in a being, held at both ends; a stance on a code within a place"
-        left: "kept in `details` by the translator; no form in the core yet"
+        held: ["test/core-cases.yaml: the golden spike a being marks", "test/core-cases.yaml: a stance on a code, within a place", "test/core_translate.py: fixes → mark", "test/core-cases.yaml: rule: measured"]
   - suite: test/expiry.py
     promises:
       - promise: "what runs out is read from the law, and the stale reader warns before it"
@@ -143,7 +144,7 @@ retired:
       - promise: "a person minted opaque, their scanned letter sealed on the agreement they accepted"
         held: ["test/core_between.py: held: a person minted opaque", "test/core_save.py: harm: a statement sealed in a commit whose entry has no"]
       - promise: "an erasure per subject"
-        left: "bin/held.py's erase is not yet run in a garden of the core"
+        held: ["test/core_between.py: held: an erasure per subject"]
   - suite: test/hub.py
     promises:
       - promise: "a hub judges every push: each commit signed by a key a writer's bean names, within its grants, the gate at the tip"
@@ -151,7 +152,7 @@ retired:
       - promise: "the hub runs only code the gardener let in: the gate, a release's file, .gitattributes, a Python file"
         held: ["test/core_gate.py: hub: a writer granted `write` on a bean is refused a change to"]
       - promise: "OpenPGP keys where ssh-keygen cannot check; a root commit refused by a hub that holds the garden"
-        left: "bin/hub.py keeps both; not yet run in a garden of the core"
+        held: ["test/core_gate.py: hub: a signed commit with no parent", "test/core_gate.py: hub: an OpenPGP key a bean names"]
   - suite: test/knowledge.py
     promises:
       - promise: "real codes of a published classification pass, invented ones are refused, and the tool resolves them"
@@ -165,7 +166,7 @@ retired:
       - promise: "`record --keep`; the hooks for another maker's loop"
         held: ["test/core_gate.py: record --keep: a run's output captured", "test/core_gate.py: hook: a commit by hand is refused"]
       - promise: "a re-read, a file in no layer and a write outside refused; POST by content; a hook that fails closed"
-        left: "bin/launch.py and bin/hook.py keep these; not yet run in a garden of the core"
+        held: ["test/core_gate.py: launch: a file read again, unchanged, is refused", "test/core_gate.py: launch: a file in no layer is refused (R4)", "test/core_gate.py: launch: a write outside the session's copy, or into the gate, is refused", "test/core_gate.py: POST by content", "test/core_gate.py: hook: a hook that cannot read its event fails closed"]
   - suite: test/money.py
     promises:
       - promise: "an amount is a count, exact: never a float, never a number YAML 1.1 reads otherwise, at most forty digits a side"
@@ -183,9 +184,9 @@ retired:
       - promise: "a historic currency passes with a warning"
         gone: "the core has no warnings: a breach is an error (spec §12); ISO 4217's historic codes are its codes"
       - promise: "a unit of another quantity is not an amount (a metre)"
-        left: "`pay`'s `of` takes any quantity (core/law/core.yaml): whether a payment is money only is a change to a verb's row — proposed to the operator in the journal entry"
+        gone: "the operator's choice (2026-10-02): `pay` takes any quantity — a share in a hundred, hours as well as money; what is owed is read per unit, and two units meet only at a rate someone observed (spec §16 item 19)"
       - promise: "priced in one currency and charged in another, the implied rate exact"
-        left: "today's `charged` is kept in `details`; the ledger reads no rate in a garden of the core"
+        held: ["test/core_gaps.py: ledger: a payment priced in one currency and charged in another shows the rate it implies", "test/core-cases.yaml: rule: measured"]
   - suite: test/observations.py
     promises:
       - promise: "a scheme a garden holds as its own extract, with labels and relations"
@@ -193,13 +194,13 @@ retired:
       - promise: "what was found of a being, coded in a scheme, at a moment, by whom"
         held: ["test/core_measure.py: crosswalk: a FHIR observation is carried to a `measure`"]
       - promise: "a verdict answering another entry once per observer; a hearing ruled on once every speaker is heard"
-        left: "today's `observations` are kept in `details` by the translator (v1 part 7); no form in the core yet"
+        held: ["test/core-cases.yaml: verdicts, one for each observer, and a ruling once every speaker is heard", "test/core-cases.yaml: rule: squares", "test/core_translate.py: observations → measure; one answering another → respond"]
   - suite: test/ordinal.py
     promises:
       - promise: "an ordinal position is a position; a series on a counted line"
         held: ["test/core.py: the frame reads", "test/core_read.py: gate: rule `line` refuses"]
       - promise: "a series' whole read exactly (by sum, product, count), and refused when wrong"
-        left: "not yet a case in a garden of the core"
+        held: ["test/core_gaps.py: series: a whole that is not what its rows add up to"]
   - suite: test/passes.py
     promises:
       - promise: "the flow law: each row granted and refused as the table says, the nearest row deciding"
@@ -215,7 +216,7 @@ retired:
       - promise: "a name a garden gives is bare until qualified by its id"
         held: ["test/core-cases.yaml: rule: names", "test/core-cases.yaml: a garden met here, and the name it gave, qualified"]
       - promise: "a third garden, two on one machine; what a third garden said not passed on; names used as file names only in the form of one"
-        left: "bin/propose.py keeps these guards; not yet run across three gardens of the core — the file-name guard is a safety one, for the next part to hold"
+        held: ["test/core_between.py: propose: a third garden on the same machine meets ben's", "test/core_between.py: propose: what a third garden said is not passed on", "test/core_between.py: propose: a name a proposal carries is used as a file name only in the form of one"]
   - suite: test/place.py
     promises:
       - promise: "a position names its host; a network segment is a place"
@@ -229,7 +230,7 @@ retired:
       - promise: "an address and a port are positions in their systems; tcp and udp separate port spaces"
         held: ["test/core.py: the frame reads", "test/core-cases.yaml: rule: room"]
       - promise: "a socket path as an endpoint; the transport read from the protocol's row"
-        left: "the network profile's endpoint attributes stay in `details` (v1 part 11)"
+        held: ["test/core_translate.py: endpoints → serve and its channel", "test/core-cases.yaml: a listening surface and a link as channels", "test/core-cases.yaml: rule: profile"]
   - suite: test/privacy.py
     promises:
       - promise: "another person kept by name only on their consent, or under an opaque id"
@@ -243,13 +244,13 @@ retired:
       - promise: "two employers issuing 0042 are two identities; a phone in E.164"
         held: ["test/core-cases.yaml: two issuers each give 0042", "test/core-cases.yaml: not a name e164 gives"]
       - promise: "a grant over a reading, of PART of a bean (today's `over` and `positions`)"
-        left: "no form in the core: the translator keeps today's grants in `details`, where nothing reads them, so a viewer they opened is refused (closed by default) — a form to design, proposed to the operator"
+        held: ["test/viewcap.py: V-1 a grant over a reading opening part of each bean it holds", "test/core-cases.yaml: a grant over a reading, to every member of another", "test/core_translate.py: grants → grant: over a reading its `of`", "test/core-cases.yaml: rule: form"]
   - suite: test/profiles.py
     promises:
       - promise: "the law's profiles compose, and what a profile gives is refused where the garden does not take it"
         held: ["test/core_view.py: profiles are today's, each with the verbs whose home it is", "test/core_view.py: gate: rule profile refuses", "test/core-cases.yaml: rule: profile"]
       - promise: "analytic accounting: a distribution judged plan by plan, read exactly and in cents by the largest remainders"
-        left: "core/law/lines.yaml carries the reading's operation; not yet a case in a garden of the core"
+        held: ["test/core_gaps.py: accounting: apportion reads each account's part exactly", "test/core_gaps.py: accounting: bookings in amounts are judged plan by plan", "test/core_gaps.py: ...and written in the currency's cents"]
   - suite: test/quantities.py
     promises:
       - promise: "a quantity is a product of powers of base dimensions, converted exactly within its quantity"
@@ -261,7 +262,7 @@ retired:
       - promise: "a comparator in today's words refused, naming the core's sign"
         held: ["test/core_read.py: reckon: a comparator in today's words is refused"]
       - promise: "an allowance counted within a window; a weighing whose weights are read"
-        left: "kept in `details` by the translator; no form in the core yet"
+        held: ["test/core_gaps.py: allowance: the thirteen visits within the thirty days", "test/core_gaps.py: weigh: a weighing of the core's", "test/core-cases.yaml: a weighing, every pair judged once and consistent", "test/core_translate.py: weighings → weigh"]
   - suite: test/recurrence.py
     promises:
       - promise: "a repetition strides by neighbours, by measure, or by the cells of a level, read from the system's shape"
@@ -277,7 +278,7 @@ retired:
       - promise: "readings of a special-category scheme sealed off git, read only on the host that holds them"
         held: ["test/core_save.py: harm: a code of a scheme the garden marks special-category, written unsealed, is refused", "test/core_between.py: held: a reading made here reads the sealed statement back"]
       - promise: "an erasure leaves every pointer `Erased`; a store in cleartext readable from a remote party is warned"
-        left: "bin/held.py keeps both; not yet run in a garden of the core (and the core has no warnings)"
+        held: ["test/core_between.py: held: an erasure per subject", "test/core_between.py: held: a store that keeps special-category material in cleartext"]
   - suite: test/root.py
     promises:
       - promise: "life, the order of bodies and the crown: a part never above its whole, every chain ending at the crown"
@@ -308,7 +309,7 @@ retired:
       - promise: "a series' part written once"
         held: ["test/core_save.py: kept: a series' part, once written, is refused changed"]
       - promise: "the items of a checklist"
-        left: "today's `items` are kept in `details`; no form in the core yet"
+        held: ["test/core-cases.yaml: a checklist: what it asks for", "test/core_translate.py: items → need"]
   - suite: test/shape.py
     promises:
       - promise: "a system knows its own shape: levels, nesting, neighbours, restrictions"

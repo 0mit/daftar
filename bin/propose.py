@@ -210,6 +210,11 @@ def id_ok(s):
                 rows = (dmparse.loads(dmparse.read(p)[0] or '') or {}).get('value_types')
                 pat = next((r.get('pattern') for r in (rows or []) if isinstance(r, dict) and r.get('type') == 'kebab'),
                            None)
+        if pat is None:                  # A GARDEN OF THE CORE (v1 part 12b): the core's kebab form, its manifest's `name`
+            core = os.path.join(ROOT, 'core', 'law', 'core.yaml')        # — never no form at all, which let any name by
+            if os.path.exists(core):
+                rows = (dmparse.loads(open(core, encoding='utf-8').read()) or {}).get('manifest_forms')
+                pat = next((r.get('pattern') for r in (rows or []) if isinstance(r, dict) and r.get('form') == 'name'), None)
         _KEBAB.append(re.compile(str(pat), re.ASCII) if pat else None)
     s = str(s)
     return bool(s) and not _CTRL.search(s) and (_KEBAB[0] is None or bool(_KEBAB[0].match(s)))
@@ -2842,6 +2847,23 @@ def core_analyse(path, as_test=False):
     dmpass, law = _core()
     env, beans, stubs, _journal, body, _prose = load_proposal(path)
     refusals, lines, write = [], [], {}
+    # NAMES FIRST (v1 part 12b, as today's read holds them): every name a proposal carries becomes a file name, a key
+    # or a journal heading here, so each is held to its form before anything else is read — an absolute path, a `..` or
+    # a line break is refused, and nothing more of the proposal is read
+    bad = []
+    for i in list(beans) + list(stubs):
+        try:
+            ok = id_ok(i) and bool(bean_path(i))            # the path is the second guard, whatever the form says
+        except ValueError:
+            ok = False
+        if not ok:
+            bad.append(i)
+    if bad:
+        refusals.append((f"it names {', '.join(repr(i) for i in bad)} as beans — a bean's name is kebab-case (the core's "
+                         f"`name` form), and a name that is not is never used as a file name here",
+                         "ask the sending garden to make it again"))
+        return {'env': env, 'refusals': refusals, 'lines': lines, 'write': {}, 'sender': None,
+                'fp': env.get('fingerprint') if isinstance(env, dict) else None}
     for why in envelope_shape(env):
         refusals.append((f"the envelope: {why}", None))
     fp = env.get('fingerprint')

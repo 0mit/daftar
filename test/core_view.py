@@ -207,6 +207,21 @@ try:
             PAGE.replace('archetype: health-chain,', 'archetype: health-chain, parts: [ { bind: oven-heat } ],'),
             "'oven-heat' is no value of this page")
 
+    # A DRAWING'S ATTRIBUTES, EACH IN ITS DOMAIN (v1 part 12b): rule profile judges what part 11 left to the tool
+    bad_values = ('archetype: health-chain, values: { heat: { element: oven, live: live-value, unit: furlong-per-fortnight, '
+                  'signal: oven.made.up, query: { technology: nonsuch, says: "q" } } }, thresholds: [ { label: full, fullness: '
+                  '{ count: "2", unit: kg } } ], '
+                  'frame: sideways, deadline: { of: nowhere }, actions: [ { element: oven, tool: remind, every: { of: time, '
+                  'every: { count: "1", unit: d }, each: week } } ],')
+    refused("a drawing's attributes outside their domains: a unit the law has not, a signal nobody published, a technology "
+            "outside the catalogue, a threshold's quantity, a frame that is no line, a deadline and a repetition out of "
+            "their forms", 'beans/bakery-page.md', PAGE.replace(
+        'of: [orders], page:', 'of: [orders, loaves], page:').replace(
+        '  - draw: { id: page,', '  - draw: { id: loaves, by: self, of: [oven-a], drawing: { purpose: "p", outcome: "o", '
+        'stages: [ { label: "s", doer: "d" } ], questions: [ { lens: orient, ask: "a?" } ], blind: [ { what: "w" } ], '
+        + bad_values + ' } }\n  - draw: { id: page,'),
+            'furlong-per-fortnight', 'oven.made.up', 'nonsuch', 'fullness', 'sideways', 'deadline', 'every')
+
     # ---- THE ASSET on statements
     r = view('check')
     check("asset: view.py check — the page and its drawings agree", r.returncode == 0 and 'agree' in r.out, r.out[-800:])

@@ -37,6 +37,7 @@ sys.path.insert(0, os.path.join(ROOT, 'bin'))
 KEBAB = re.compile(r'^[a-z0-9]+(-[a-z0-9]+)*$')
 FLAGS = ('exit', 'resumes', 'final', 'digits', 'back', 'convention')   # what a form writes `true`, a tool reads True
 HEADER_PATHS = ('kind', 'bean', 'title', 'summary', 'tags', 'details')   # a reading's path starts here, or at a verb
+DERIVED_KEYS = ('book',)          # what the view reads beside a statement, never written: a payment's bookings (part 12b)
 SIGNS = {'=': 'is', '∈': 'in', '≥': 'at_least', '≤': 'at_most', '∃': 'exists', '∄': 'absent'}    # the core's sign
 NEW_SIGNS = ('≠', '<', '>')                                            # signs the core reads that today's words lack
 GRAPH = re.compile(r'^([a-z0-9][a-z0-9._-]*)@([0-9a-f]{7,40})$')     # a position of git-object-graph: <repo>@<commit>
@@ -157,6 +158,26 @@ def worded(entry):
     return out
 
 
+def payments_of(b):
+    """{id: a payment in today's shape} — its amount, what it came to in another currency, what it settles, its day —
+    so the ledger reads a clause's occurrences and what each payment settled of them (v1 part 12b)."""
+    out = {}
+    for _i, r in _live(b, 'pay'):
+        if isinstance(r.get('id'), str) and isinstance(r.get('of'), dict):
+            out[r['id']] = {k: v for k, v in (('amount', r['of']), ('charged', r.get('charged')), ('day', r.get('at')),
+                                              ('settles', r.get('settles')), ('what', r.get('note'))) if v is not None}
+    return out
+
+
+def weighings_of(b):
+    """{id: a weighing in today's shape} — what it orders, its judge, its criteria and judgments (v1 part 12b)."""
+    out = {}
+    for _i, r in _live(b, 'weigh'):
+        if isinstance(r.get('id'), str) and isinstance(r.get('weighing'), dict):
+            out[r['id']] = dict(r['weighing'], **{'for': r.get('to'), 'judge': r.get('by')})
+    return out
+
+
 def view(b, G):
     """A bean as the read tools read it: its header, each verb's statements (their roles, as `<verb>: [...]`), and its
     lines in the shape today's terms held them — `series`, `steps`, `courses`, `moves`, `selections` — with its clauses
@@ -165,10 +186,26 @@ def view(b, G):
     v['bean'] = b.id
     for _i, verb, r in b.items:
         v.setdefault(verb, []).append(r)
+    # A PAYMENT'S BOOKINGS, read beside it (v1 part 12b): each `book` of a `pay`, as an account and its share or amount,
+    # so a reading apportions what was paid over the accounts it was booked to — derived here, never written
+    books = {}
+    for _i, r in _live(b, 'book'):
+        if isinstance(r.get('of'), str):
+            books.setdefault(r['of'].split('#')[-1], []).append(r)
+    if books and v.get('pay'):
+        def booked(x, unit):
+            s = x.get('share')
+            if isinstance(s, dict) and str(s.get('unit')) == unit and unit != '1':
+                return {'code': x.get('to'), 'amount': s}
+            return {'code': x.get('to'), 'share': str(s.get('count') if isinstance(s, dict) else (s if s is not None else '1'))}
+        v['pay'] = [dict(r, book=[booked(x, str((r.get('of') or {}).get('unit'))) for x in books[r['id']]])
+                    if isinstance(r.get('id'), str) and r['id'] in books and isinstance(r.get('of'), dict) else r
+                    for r in v['pay']]
     from core import measures
     for key, got in (('series', series_of(b)), ('steps', steps_of(b)), ('courses', courses_of(b, G)),
                      ('moves', [m for _i, m in moves_of(b)]), ('selections', readings_of(b)),
-                     ('clauses', measures.clauses_of(b, G.root or ROOT))):
+                     ('clauses', measures.clauses_of(b, G.root or ROOT)), ('transactions', payments_of(b)),
+                     ('weighings', weighings_of(b))):
         if got:
             v[key] = got
     return v
@@ -235,7 +272,17 @@ def law_view(L, root=None):
         units[code] = dict(old, unit=code, name=row.get('name'), quantity=row.get('quantity') or old.get('quantity'),
                            factor=f)
     ll = L.line_law or {}
-    own = {'operations': ll.get('operations'), 'comparators': ll.get('comparisons'), 'aggregates': ll.get('aggregates'),
+    def flagged(ops):                               # a flag the core writes `true` the reader takes as True (FLAGS):
+        out = []                                    # its closed list in the reader's words too (part 12b: `digits`)
+        for op in ops or []:
+            if isinstance(op, dict) and isinstance(op.get('takes'), dict):
+                op = dict(op, takes={k: (dict(s, **{'in': [x == 'true' for x in s['in']]})
+                                         if isinstance(s, dict) and k in FLAGS and s.get('in') in (['true', 'false'],
+                                                                                                    ['true'])
+                                         else s) for k, s in op['takes'].items()})
+            out.append(op)
+        return out
+    own = {'operations': flagged(ll.get('operations')), 'comparators': ll.get('comparisons'), 'aggregates': ll.get('aggregates'),
            'ordering_keys': ll.get('ordering_keys'), 'selection_form': ll.get('selection_form'),
            'pin_form': ll.get('pin_form'), 'units': list(units.values()),
            'compatibility': _typed_compat((getattr(L, 'measure_law', None) or {}).get('compatibility')),
@@ -244,7 +291,21 @@ def law_view(L, root=None):
            'kinds': [dict(r, kind=k) for k, r in L.kinds.items()]}
 
     def registry(name):
-        return own[name] if own.get(name) is not None else registry_today(name)
+        if own.get(name) is not None:
+            return own[name]
+        try:
+            got = registry_today(name)
+        except Exception:
+            got = None
+        mine = getattr(L, 'own', None) or {}        # A GARDEN'S OWN SCHEMES AND FILES (VOCAB.md, part 7), read beside
+        if name == 'knowledge_schemes':             # today's: an analytic scheme's levels and its codes (part 12b)
+            return list(got or []) + [r for r in mine.get('schemes') or [] if isinstance(r, dict)]
+        if not got and any(isinstance(r, dict) and r.get('registry') == name for r in mine.get('files') or []):
+            try:
+                return L.std.knowledge.rows(name)
+            except Exception:
+                return got
+        return got
     law = dmseq.Law(units, keyed(today.get('quantities'), 'quantity'), keyed(today.get('anchor_systems'), 'system'),
                     keyed(today.get('aspects'), 'aspect'), keyed(today.get('figures'), 'figure'), registry)
     _VIEWS[id(L)] = law
@@ -393,7 +454,7 @@ def reading_problems(where, reading, law, verbs=None):
     out = []
     verbs = verbs or {}
     keys = {'id', 'while', 'why', 'note', 'held', 'by', 'of', 'through', 'to', 'from', 'at', 'as'} | {
-        q for v in verbs.values() if isinstance(v, dict) for q in (v.get('qualifiers') or {})}
+        q for v in verbs.values() if isinstance(v, dict) for q in (v.get('qualifiers') or {})} | set(DERIVED_KEYS)
     reads = {}                                         # step id -> 'statement' where its members are statements
     for s in reading.get('steps') or [] if isinstance(reading.get('steps'), list) else []:
         if not isinstance(s, dict):

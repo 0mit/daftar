@@ -398,6 +398,13 @@ def check(*, root=ROOT, host=None, beans=None):
                                     f"(mode {oct(_mode & 0o777)}): chmod 600 it; a store is plain text, kept by its files"))
     for bid, t, label, days in due(root=root, beans=beans, days=0):
         out.append(('warn', f"{bid}: {t}[{label}] was to be erased {-days} day(s) ago — bin/dmheld.py erase"))
+    # A STORE IN CLEARTEXT, READABLE FROM ANOTHER PARTY (today's gate warned of it; the core's gate has no warnings, so
+    # the tool that keeps the store says it, where the store is — v1 part 12b)
+    for name, (path, row) in sorted(stores(root, host, beans).items()):
+        far = row.get('readable_from')
+        if row.get('keeps') == 'special-category' and far not in (None, 'this-host') and not row.get('encrypted'):
+            out.append(('warn', f"root:{name} keeps special-category material in cleartext and is readable from {far}: "
+                                f"a store is plain text, kept by its files — keep it on this host, or encrypted"))
     return out
 
 

@@ -288,6 +288,19 @@ check("V-1 the host's ceiling opens everything (`*`) to each viewer, and the gar
       (_H.may("bosun"), _H.may("bosun", "boat-heron"), _H.may("guest")))
 check("V-1 ...an outing nobody granted the bosun is closed to him: closed by default",
       not _H.may("bosun", "outing-0927")[0], _H.may("bosun", "outing-0927"))
+# A GRANT OVER A READING, OF PART OF EACH BEAN (v1 part 12b): the gardener opens the outings' titles to the bosun, and no
+# more — a served page keeps its viewers' partial access; `may` is the one answer the host asks
+import dmpass as _dp  # noqa: E402
+_bb = {k: dict(v) for k, v in _H.beans.items()}
+_bb["rosa"] = dict(_bb["rosa"], statements=list(_bb["rosa"].get("statements") or []) + [
+    {"grant": {"id": "bosun-titles", "by": "self", "to": [BOSUN], "of": ["club-page#booked"], "as": "read",
+               "cover": {"parts": ["title"]}}}])
+_t = _dp.may(BOSUN, "read", "outing-0927", positions=["title"], root=G, beans=_bb, gardener="rosa")
+_w = _dp.may(BOSUN, "read", "outing-0927", root=G, beans=_bb, gardener="rosa")
+_x = _dp.may(BOSUN, "read", "outing-0927", positions=["be.at"], root=G, beans=_bb, gardener="rosa")
+check("V-1 a grant over a reading opening part of each bean it holds (`of: [club-page#booked]`, `cover: { parts: "
+      "[title] }`): the bosun may read an outing's title, and neither the whole outing nor its moment",
+      _t.granted and not _w.granted and not _x.granted, (_t, _w, _x))
 _P = _H.scoped_payload("bosun")
 check("V-1 the page the bosun is sent carries the boats and not the outings, nor the member's number",
       "boat-heron" in _P["beans"] and "outing-0927" not in _P["beans"] and "555-0100" not in json.dumps(_P),

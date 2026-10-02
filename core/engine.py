@@ -534,6 +534,95 @@ class Judge:
                     if (a, c) in self.L.incompatible and a < c:
                         self.err('squares', wa, f"{a} and {c} of {of} through {through} cannot both stand ({wc})")
 
+    def responses(self):
+        """Rule `squares`, on a disagreement (v1 part 12b: today's `answers` and `hearings`): one observer gives one
+        verdict on one statement; a `rule` on statements is given once every speaker of them has responded."""
+        seen, heard = {}, {}
+        for b in self.G.beans.values():
+            for i, verb, r in b.items:
+                if verb != 'respond' or 'held' in r:
+                    continue
+                for s in listed(r.get('of')):
+                    hit = self.statement(s, b)
+                    if not hit:
+                        continue
+                    key = (hit[0].id, hit[1])
+                    for x in self._beans_in(r.get('by'), b):
+                        heard.setdefault(key, set()).add(x)
+                        if r.get('as') is None:
+                            continue
+                        if (x, key) in seen:
+                            self.err('squares', f"{b.id}[{i}] respond", f"{x} gives a second verdict on `{s}` ({seen[(x, key)]} "
+                                                                         f"gave one): one observer, one verdict on one "
+                                                                         f"statement — withdraw one, or say it in words "
+                                                                         f"(`through`, with no `as`)")
+                        seen.setdefault((x, key), f"{b.id}[{i}]")
+        for b in self.G.beans.values():
+            for i, verb, r in b.items:
+                if verb != 'rule' or 'held' in r:
+                    continue
+                for s in listed(r.get('of')):
+                    hit = self.statement(s, b)
+                    if not hit:
+                        continue
+                    hb, hi, hv, hr = hit
+                    speakers = self._beans_in(hr.get('by'), hb) if hv in ('measure', 'respond') else []   # an observer
+                    speakers = speakers or [x for v, rr in self._acts_of(hb, hi, hr) for x in self._beans_in(rr.get('by'), hb)]
+                    missing = sorted(set(speakers) - heard.get((hb.id, hi), set()))
+                    if missing:
+                        self.err('squares', f"{b.id}[{i}] rule", f"rules on `{s}` before {', '.join(missing)} responded: "
+                                                                 f"a ruling is given once every speaker of what it rules "
+                                                                 f"on is heard — a `respond` of theirs to it")
+
+    def covers(self):
+        """Rule `form`, on a grant (v1 part 12b: today's `positions`, `over`, `audience.selection`, `reason`): what it
+        is `to` is a being or a reading, and its `cover` names parts a bean has."""
+        from core import lines
+        form = self.L.forms.get('cover') or {}
+        for b in self.G.beans.values():
+            for i, verb, r in b.items:
+                if verb != 'grant' or 'held' in r:
+                    continue
+                where = f"{b.id}[{i}] grant"
+                for x in listed(r.get('to')):
+                    hit = self.statement(x, b) if isinstance(x, str) and x not in self.G.beans and x != 'self' else None
+                    if hit and hit[2] != 'reckon':
+                        self.err('form', f"{where}.to", f"`{x}` is a `{hit[2]}`: a grant is to a being, or to every member "
+                                                        f"of a reading (a `reckon` statement)")
+                c = r.get('cover')
+                if c is None:
+                    continue
+                for w, msg in lines.attrs_problems(f"{where}.cover", c, form):
+                    self.err('form', w, msg)
+                if not isinstance(c, dict):
+                    continue
+                if not c.get('parts') and not c.get('reason'):
+                    self.err('form', f"{where}.cover", "says nothing: name the `parts` it opens, or that each use states "
+                                                       "a `reason` — absent, a grant opens the whole of what it covers")
+                for p in listed(c.get('parts')):
+                    why = self.part_why(p)
+                    if why:
+                        self.err('form', f"{where}.cover.parts", why)
+
+    def part_why(self, p):
+        """'' when `p` names a part of a bean — a key of the header, `body`, a verb's statements, or a verb's statements
+        narrowed by their `as` — else why not."""
+        if not isinstance(p, str):
+            return f"a part is named by a word, not a {type(p).__name__}"
+        head, _, rest = p.partition('.')
+        if head in HEADER[:-1] or head == 'body':
+            return '' if not rest or head == 'details' else f"`{p}`: `{head}` has no parts but its own (`details.<key>` has)"
+        v = self.L.verbs.get(head)
+        if v is None:
+            return f"`{p}` is no part of a bean: a key of its header ({', '.join(HEADER[:-1])}), `body`, a verb's " \
+                   f"statements (`measure`), or a verb's narrowed by their `as` (`be.location`)"
+        if not rest:
+            return ''
+        as_ = (v.get('roles') or {}).get('as') or {}
+        return '' if as_.get('table') and not self.L.has(as_['table'], rest) else \
+            f"`{p}`: `{rest}` is no `as` of `{head}`" + (f" ({self.L.has(as_['table'], rest)})" if as_.get('table') else
+                                                     f" — `{head}` takes no `as` from a table, so it is named whole")
+
     def weight(self):
         for f in self.L.foundations:
             prop, holds = f.get('property'), f.get('holds_for')
@@ -833,6 +922,37 @@ class Judge:
                                      "`agree` of theirs to an agreement this garden holds, or the garden they keep, met "
                                      "here (a `garden` bean they `own`) — or write them under an opaque id, as `python3 "
                                      "bin/dmheld.py person` mints one, their name held off git")
+        self.declining_and_acting_for()
+
+    def declining_and_acting_for(self):
+        """A `decline` is the own no of the one a statement offered names (an `agree`, a booking); one who `represent`s another acts for someone
+        else, and in an agreement for a party of it (v1 part 12b: today's `declined` and `acting_for`)."""
+        for b in self.G.beans.values():
+            parties = {x for _i, v, r in b.items if v == 'agree' and 'held' not in r for x in self._beans_in(r.get('by'), b)}
+            for i, verb, r in b.items:
+                if 'held' in r:
+                    continue
+                where = f"{b.id}[{i}] {verb}"
+                if verb == 'decline':
+                    hit = self.statement(r.get('of'), b) if isinstance(r.get('of'), str) else None
+                    if hit is None:
+                        continue                                    # what names no statement is valency's to refuse
+                    offered = set(self._beans_in(hit[3].get('by'), hit[0]))
+                    stray = [x for x in self._beans_in(r.get('by'), b) if x not in offered]
+                    if stray:
+                        self.err('consent', where, f"{', '.join(stray)} declines what was offered to "
+                                                   f"{', '.join(sorted(offered)) or 'nobody named'}: a decline is the "
+                                                   f"word of the one the statement it declines names (its `by`: the "
+                                                   f"party of an `agree`, the one a booking would hold), of nobody else")
+                elif verb == 'represent':
+                    by, of = self._beans_in(r.get('by'), b), self._beans_in(r.get('of'), b)
+                    if set(by) & set(of):
+                        self.err('consent', where, f"{', '.join(sorted(set(by) & set(of)))} represents itself: one who "
+                                                   f"acts for another binds someone else, never only itself")
+                    elif b.kind == 'contract' and parties and any(x not in parties for x in of):
+                        self.err('consent', where, f"acts for {', '.join(x for x in of if x not in parties)}, no party "
+                                                   f"to this agreement ({', '.join(sorted(parties))}): in an agreement, "
+                                                   f"one acts for a party of it, whom an `agree` names")
 
     def harm(self):
         """Special-category material only sealed; a sensitivity lowered only on a person's own word."""
@@ -984,6 +1104,8 @@ class Judge:
         self.order()
         self.life()
         self.necessity_and_squares()
+        self.responses()
+        self.covers()
         self.weight()
         self.names()
         self.layers()
@@ -1020,6 +1142,8 @@ class Judge:
                 for where, msg in measures.problems(self, b):
                     self.err('measured', where, msg)
         for where, msg in measures.capacity(self):
+            self.err('measured', where, msg)
+        for where, msg in measures.marks_held(self):
             self.err('measured', where, msg)
 
     # ------------------------------------------------------------------------------------------------ line

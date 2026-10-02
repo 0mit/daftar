@@ -604,8 +604,9 @@ Sam has written a novel, *The Salt Road*, and an agent, Noor, places it with pub
 its translation with a house abroad. Noor is paid a share of each advance the book earns — one rate at home, another
 abroad — and gives her share back of any advance that is returned. Each placing goes through the same steps, a walk;
 what a house asks to see is a checklist, a kind the garden adds with it. Both are mappings: the walk's steps are `step`
-statements, as the bicycle's were; the checklist is a set and no line, and its items are kept in `details`, where the
-core keeps what it has no form for.
+statements, as the bicycle's were; the checklist is a set and no line: each item is a `need` of it — what is asked for,
+in words, and `from` whom — needed `while` a reading holds where it is not always, met by what `meet`s it, and the
+items of which any one will do share an `as`.
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
@@ -642,14 +643,13 @@ kind: checklist
 title: "submission-pack — what a publisher asks to see"
 summary: "What a publisher asks to see with a manuscript."
 statements:
-  - say: { by: sam, at: now }
-details:
-  items:
-    - { id: synopsis, do: "a one-page synopsis", by: author }
-    - { id: sample, do: "the first three chapters", by: author, one_of: text }
-    - { id: whole, do: "the whole manuscript", by: author, one_of: text }
-    - { id: letter, do: "a letter introducing the book", by: agent }
-    - { id: rights-list, do: "which translation rights are free", by: agent, needed_when: "agency-noor:translation-asked", met_by: "agency-noor:rights-papers" }
+  - say:  { by: sam, at: now }
+  - need: { id: synopsis, by: self, of: "a one-page synopsis", from: author }
+  - need: { id: sample, by: self, of: "the first three chapters", from: author, as: text }
+  - need: { id: whole, by: self, of: "the whole manuscript", from: author, as: text }
+  - need: { id: letter, by: self, of: "a letter introducing the book", from: agent }
+  - need: { id: rights-list, by: self, of: "which translation rights are free", from: agent, while: "agency-noor#translation-asked" }
+  - meet: { id: meets-rights-list, by: "agency-noor#rights-papers", of: rights-list }
 ---
 A submission pack.
 ```
@@ -661,7 +661,7 @@ statement named by its `id`: its steps select the contracts whose course on the 
 condition `reached`, its step named as a statement, `walk-placing#contracted` — and a path reads statements by verb and
 role, `be.id`, `pay.at`. A comparison is written by its sign (`=`, `∈`, `≥`, `≤`, `≠`, `<`, `>`, `∃`, `∄`). The clauses
 themselves are statements; what each occurs for and what it is a share of (`each`, `of`) are their form, `clause`;
-what a payment settles (`settles`) is the payment's, kept in its `details`. The agency's assistant signs for Noor while she travels: a being that `represent`s another.
+what a payment settles (`settles`) is the payment's own: each occurrence of each clause, and how much of it. The agency's assistant signs for Noor while she travels: a being that `represent`s another.
 
 <!-- example: beans/agency-noor.md -->
 ```markdown
@@ -683,7 +683,7 @@ statements:
   - obligatory: { id: commission-abroad, of: commission-away, through: self, note: "the author pays the agent twenty parts in a hundred of each advance abroad", clause: { each: placed-abroad, of: clauses.advance.amount } }
   - pay:        { id: refund-home, by: noor, to: sam, of: { count: "15", unit: "%" } }
   - obligatory: { id: refund, of: refund-home, through: self, note: "the agent gives back her fifteen parts of each advance at home that was returned", clause: { each: returned-home, of: clauses.advance.amount } }
-  - pay:        { id: first-payout, by: sam, to: noor, of: { count: "300.00", unit: XTS }, at: 2026-11-04, note: "Sam paid Noor her share of Heron's advance" }
+  - pay:        { id: first-payout, by: sam, to: noor, of: { count: "300.00", unit: XTS }, at: 2026-11-04, note: "Sam paid Noor her share of Heron's advance", settles: [ { clause: commission, occurrence: salt-road-heron, amount: { count: "300.00", unit: XTS } } ] }
   - reckon:     { id: placed-home, reading: { what: "each placing at home that was signed", steps: [ { id: p, op: select, kind: contract, where: [ { path: be.id, "=": home }, { path: move, reached: "walk-placing#contracted" } ] } ] } }
   - reckon:     { id: placed-abroad, reading: { what: "each translation placing that was signed", steps: [ { id: p, op: select, kind: contract, where: [ { path: be.id, "=": abroad }, { path: move, reached: "walk-placing#contracted" } ] } ] } }
   - reckon:     { id: returned-home, reading: { what: "each placing at home whose advance was given back", steps: [ { id: p, op: select, kind: contract, where: [ { path: be.id, "=": home }, { path: move, reached: "walk-placing#cancelled" } ] } ] } }
@@ -699,8 +699,6 @@ statements:
           - { id: paid, op: select, of: this, entries: pay }
           - { id: months, op: group, of: paid, path: at, level: month, system: gregorian-civil }
           - { id: per-month, op: count, of: months }
-details:
-  first-payout: { settles: [ { clause: commission, occurrence: salt-road-heron, amount: { count: "300.00", unit: XTS } } ] }
 ---
 Noor has represented The Salt Road since June.
 ```
@@ -817,8 +815,8 @@ Two pages; the editor asks for a shorter middle.
 ```
 
 `python3 bin/daftar.py ledger agency-noor` reads what each `pay` gave and the clause each stands under; what each
-clause occurs for (its form's `each`, a reading of the garden) is read with it, and what a payment settles stays in the
-payment's `details`. `python3 bin/daftar.py
+clause occurs for (its form's `each`, a reading of the garden) is read with it, occurrence by occurrence, with what each
+payment `settles` of it and what is still owed. `python3 bin/daftar.py
 reckon agency-noor#by-month` reads the month's report, each time it is asked and never stored.
 
 ## A tile workshop: staff, their leave, a tiler booked on one job at a time
@@ -960,8 +958,8 @@ Asked for the same week; declined.
 
 The evening class repeats, two evenings each week, two hours each, with a **closure** on a holiday; the materials fee
 binds every pupil, however many there are; the kiln fee is in force only once a firing is booked. A recurrence, a
-closure, a fee on every party of a role, and a clause in force while a reading holds have no form in the core yet (part
-7 of v1): each is kept in `details` under its clause, and the reading it names is a `reckon` statement. A pupil who withdrew stays on record,
+closure, a fee on every party of a role, and a clause in force while a reading holds are the clause's form, `clause`;
+the reading it names is a `reckon` statement, and the role it binds is one some party agreed `as`. A pupil who withdrew stays on record,
 with her `decline`. Pupils nobody named here are `someone`.
 
 <!-- example: beans/kiln-firing-nov.md -->
@@ -1108,7 +1106,9 @@ queen-seen	reine vue
 
 The co-op is an agreement among its members, and the consent of each to be written here by name. What members may
 read of one another's hives is the agreement's to **grant**: each member reads every hive's inspections, and nobody
-reads where a hive stands — a grant made `forbidden` is a ceiling, because hives are stolen. The co-op also takes a
+reads where a hive stands — a grant made `forbidden` is a ceiling, because hives are stolen. A grant is over a reading
+(`of: [hives]`, every hive it holds, read each time) and to every member of another (`to: [members]`), and opens the
+parts of each its `cover` names: the hives' readings (`measure`), and where each stands (`be.location`). The co-op also takes a
 **stance on a field, within a place**: no member moves a colony across the border, a capability made `forbidden` — the
 field it concerns its `as`, a code of a published scheme (and every code beneath it), and the country it holds in its
 `at`.
@@ -1126,9 +1126,9 @@ statements:
   - answer:     { by: sam, of: self, as: law }
   - answer:     { by: derya, of: self, as: law }
   - agree:      { by: [sam, derya], of: self, through: spoken, as: member, at: 2026-04-10 }
-  - grant:      { id: members-read-checks, by: self, to: [sam, derya], of: [hive-orchard-1], as: read, why: "members compare their mite counts" }
-  - grant:      { id: sites-open, by: self, to: [sam, derya], of: [hive-orchard-1], as: read, note: "where a hive stands" }
-  - forbidden:  { id: sites-closed, of: sites-open, through: self, why: "a hive's site is its keeper's own: hives are stolen" }
+  - grant:      { id: members-read-checks, by: self, to: [members], of: [hives], as: read, cover: { parts: [measure] }, why: "members compare their mite counts" }
+  - grant:      { id: sites-closed, by: self, to: [members], of: [hives], as: read, cover: { parts: [be.location] }, why: "a hive's site is its keeper's own: hives are stolen" }
+  - forbidden:  { of: sites-closed, through: self }
   - can:        { id: colonies-abroad, by: self, of: "move a colony across the border", as: "isced-f-2013:0811", at: "iso-3166:ZZ" }
   - forbidden:  { id: no-colonies-abroad, of: colonies-abroad, through: self, why: "a colony moved across the border can carry a mite the valley does not have" }
   - pay:        { id: extractor, by: { someone: person, at: self }, of: { count: "25", unit: XTS }, at: 2026-07-01 }
@@ -1160,8 +1160,9 @@ value, when and by whom. How well the count is known is inside it (`u`, its stan
 its `method`, and a result that is no quantity — the queen seen — its `presence`. Where the hive stands is a `be` at a
 site of the co-op's own system, how far that reaches in its form (`placed`). A colony has no name of its own — the number painted on its box is the box's,
 given by Sam — so it is named by no namespace that gives once. Derya, looking at the same board the next day, **disputes**
-Sam's count: her reading stands beside his, and neither edits the other. Brought to the co-op, a person **rules** on the
-two; what each side said at the hearing is kept in `details` until it has a verb.
+Sam's count — a verdict, her `respond` to it, one for each observer — and neither edits the other. Brought to the co-op,
+each side is heard in their own words, a `respond` with no verdict, and a person **rules** on the two: once every speaker
+of what is ruled on has responded, and not before.
 
 <!-- example: beans/hive-orchard-1.md -->
 ```markdown
@@ -1177,14 +1178,10 @@ statements:
   - be:      { id: site, by: self, at: "apiary:EAST-2", as: location, placed: { openness: elsewhere } }
   - measure: { id: mites-june, by: sam, of: self, as: "hive-checks:varroa-drop", value: { count: "14", unit: "{item}", u: { count: "3", unit: "{item}" } }, method: "hive-checks:sticky-board", at: 2026-06-12 }
   - measure: { id: queen-june, by: sam, of: self, as: "hive-checks:queen-seen", presence: present, at: 2026-06-12 }
-  - measure: { id: second-count, by: derya, of: self, as: "hive-checks:varroa-drop", note: "disputes mites-june: the board had been in two days, not one" }
+  - respond: { id: second-count, by: derya, of: [mites-june], as: disputes, note: "the board had been in two days, not one" }
+  - respond: { by: sam, of: [mites-june, second-count], through: "I cleared the board the day before", at: 2026-06-20 }
+  - respond: { by: derya, of: [mites-june, second-count], through: "the date on the board says otherwise", at: 2026-06-20 }
   - rule:    { by: sam, of: [mites-june, second-count], at: 2026-06-20, note: "count again, the board cleared by both of us" }
-details:
-  hearings:
-    mites-june:
-      heard:
-        - { speaker: sam, said: "I cleared the board the day before", at: 2026-06-20 }
-        - { speaker: derya, said: "the date on the board says otherwise", at: 2026-06-20 }
 ---
 A strong colony.
 ```

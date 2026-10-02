@@ -199,7 +199,98 @@ provenance: { src: observed, by: "agent:a-model/core-test, reading the share", a
 owned_by: { owner: { bean: sam } }
 ---
 """,
+    # WHAT PART 12b CARRIES: an agent, a party that declined, a payment charged in another currency settling one
+    # occurrence of a clause, grants over readings and of part of a bean, a weighing; a host's channels, links, a reach,
+    # treatments, a reading disputed and heard, a boundary it marks; a member who agreed (v1 part 12b)
+    'cem': """---
+bean: cem
+genos: person
+title: "Cem"
+status: active
+summary: "a member of the club"
+nature: soma
+identity: { status: confirmed, anchors: [ { key: identifier, value: "person:cem", class: logical, establishing: true } ] }
+provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-20 }
+owned_by: { crown: true }
+---
+""",
+    'club': """---
+bean: club
+genos: contract
+title: "a club"
+status: active
+summary: "a reading club"
+nature: lekton
+identity: { status: confirmed, anchors: [ { key: identifier, value: "contract:club", class: logical, establishing: true } ] }
+provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-20 }
+owned_by: { crown: true }
+parties:
+  sam: { who: { bean: sam }, role: host, accepted: 2026-09-20 }
+  cem: { who: { bean: cem }, role: member, accepted: 2026-09-20 }
+  aide: { external: "cem's aide", role: member, acting_for: cem, accepted: 2026-09-20 }
+  dora: { external: "a neighbour", role: member, declined: 2026-09-21 }
+words: { form: spoken }
+clauses:
+  fee: { what: "each member pays a fee for each book", by_role: member, permission: required, each: books }
+transactions:
+  repairs: { what: "the shelves mended", amount: { count: "100.00", unit: TRY }, day: 2026-09-23, paid_by: [ { party: sam } ], analytic_distribution: [ { code: "analytic:orchard", share: 60 }, { code: "analytic:workshop", share: 40 } ] }
+  paid: { what: "the first fee", amount: { count: "10.00", unit: USD }, charged: { count: "9.25", unit: EUR }, day: 2026-09-22, paid_by: [ { party: cem } ], settles: [ { clause: fee, occurrence: box, amount: { count: "10.00", unit: USD } } ] }
+selections:
+  books: { what: "the books", steps: [ { id: b, op: select, genos: document } ] }
+  members: { what: "the members", steps: [ { id: m, op: select, genos: person } ] }
+grants:
+  members-read: { act: read, over: books, positions: [ { path: title }, { path: observations } ], audience: { selection: members }, reason: asked, why: "members read the books' titles and readings" }
+  no-sites: { act: read, over: books, positions: [ { path: located_at } ], audience: { who: cem }, permission: forbidden, why: "where a book is kept is the club's" }
+  wide: { act: read, over: books, positions: [ { path: identity.anchors } ], audience: { who: cem }, why: "a part the core has no word for: kept whole, opening nothing" }
+weighings:
+  picks: { for: improvements, judge: sam, criteria: [ { name: short, what: "read in a month" }, { name: new, what: "new to the club" }, { name: cheap, what: "costs little" } ], pairwise: [ { a: short, b: new, judged: "2" }, { a: short, b: cheap, judged: "4" }, { a: new, b: cheap, judged: "2" } ] }
+---
+""",
+    'edge': """---
+bean: edge
+genos: host
+title: "edge"
+status: active
+summary: "the club's router"
+nature: soma
+identity: { status: confirmed, anchors: [ { key: serial, value: "EDGE-1", class: hardware, establishing: true } ] }
+provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-20 }
+owned_by: { owner: { bean: sam } }
+endpoints:
+  - { protocol: smtp, system: ipv4, at: 192.0.2.30, port: "25", exposure: link, confidentiality: cleartext, permission: required, plane: data, observed: 2026-09-20, via_link: wg0 }
+  - { protocol: ssh, system: unix-filesystem, at: "edge:/run/ssh.sock", exposure: loopback, confidentiality: encrypted }
+links:
+  wan: { protocol: pppoe, confidentiality: cleartext, observed: 2026-09-20 }
+  wg0: { protocol: wireguard, peer: { bean: box, field: lan_ip }, carried_by: wan, confidentiality: encrypted, observed: 2026-09-20 }
+reaches:
+  dns: { protocol: dns, to: { bean: box }, necessity: necessary, via_link: wg0 }
+treatments:
+  - { kind: nat, what: "port 25 to box", to: { bean: box, field: lan_ip }, permission: required, why: "mail stops arriving", observed: 2026-09-20 }
+  - { kind: mangle, what: "mark mail going out", why: "the sender's name fails" }
+  - { kind: route, what: "default via the wan", why: "nothing leaves" }
+observations:
+  weight: { property: mass, value: { count: "1.2", unit: kilogram }, at: 2026-09-22, by: sam }
+  second: { answers: "edge:observations.weight", answer: disputes, by: cem, at: 2026-09-23 }
+hearings:
+  weight: { over: [ { path: "edge:observations.weight" }, { path: "edge:observations.second" } ], heard: [ { speaker: sam, said: "I weighed it", at: 2026-09-24 }, { speaker: cem, said: "the scale was off", at: 2026-09-24 } ], ruling: { by: sam, what: "weigh it again", at: 2026-09-24 } }
+fixes:
+  meghalayan: { system: ics-chronostrat, boundary: Meghalayan, level: "EPSG:4326;25.262222,91.715" }
+---
+""",
 }
+INTAKE = """---
+mapping: intake
+kind: checklist
+title: "intake"
+summary: "what a member brings"
+provenance: { src: asserted-by-human, by: "sam", as_of: 2026-09-20 }
+items:
+  - { id: card, do: "a library card", by: member }
+  - { id: id-a, do: "a passport", by: member, one_of: identity }
+  - { id: id-b, do: "an identity card", by: member, one_of: identity }
+  - { id: fee-paid, do: "the first fee", by: member, needed_when: "club:members", met_by: "club:books" }
+---
+"""
 MAPPING = """---
 mapping: restore
 kind: procedure
@@ -218,6 +309,7 @@ JOURNAL = """# Journal
 
 ## 2026-09-20 10:00+03:30 · sam · the garden's first beans
 - action: wrote [[sam]], [[box]], [[web]], [[webapp]], [[site]], [[loan]], [[session-a]] and the mapping restore.
+- action: wrote [[cem]], [[club]], [[edge]] and the mapping intake (v1 part 12b).
 
 ## 2026-09-21 12:00+03:30 · sam · a note
 - action: wrote [[note-b]].
@@ -233,18 +325,29 @@ try:
             fh.write(text)
     with open(os.path.join(G, 'mappings', 'restore.md'), 'w', encoding='utf-8') as fh:
         fh.write(MAPPING)
+    with open(os.path.join(G, 'mappings', 'intake.md'), 'w', encoding='utf-8') as fh:
+        fh.write(INTAKE)
     with open(os.path.join(G, 'log', 'journal.md'), 'w', encoding='utf-8') as fh:
         fh.write(JOURNAL)
     with open(os.path.join(G, 'GARDEN.md'), 'w', encoding='utf-8') as fh:
         fh.write("---\ngarden: core-translate\nextends: std-vocab@32.0\ngardener: sam\nzone: Asia/Tehran\n---\n")
     with open(os.path.join(G, 'VOCAB.md'), 'w', encoding='utf-8') as fh:
-        fh.write("---\nvocab: core-translate\nextends: std-vocab@32.0\nextends_profiles: [knowledge, network]\n"
-                 "registry_additions:\n  units:\n"
+        fh.write("---\nvocab: core-translate\nextends: std-vocab@32.0\nextends_profiles: [knowledge, network, accounting]\n"
+                 "registry_files:\n  - { registry: analytic, file: extracts/analytic.tsv, key: code }\n"
+                 "registry_additions:\n  knowledge_schemes:\n"
+                 "    - { scheme: analytic, classifies: \"where the club's money goes\", holding: extract, licence: CC0-1.0, "
+                 "publisher: the club, url: \"https://example.org/analytic\", levels: [ { level: plan }, { level: account } ], "
+                 "neighbours: none, sources: extracts/analytic.tsv }\n"
+                 "  units:\n"
                  "    - { unit: gigabyte-per-day, quantity: data-rate, factor: [312500, 27] }\n"
                  "    - { unit: rack-unit, quantity: length, factor: [889, 20000] }\n"
                  "vacancies:\n"
                  "  - { at: 'registry:units', position: gigabyte-per-day, reason: prediction, why: 'the rate of a backup, to come' }\n"
                  "  - { at: 'registry:units', position: rack-unit, reason: prediction, why: 'a rack, to come' }\n---\n")
+    os.makedirs(os.path.join(G, 'extracts'))
+    with open(os.path.join(G, 'extracts', 'analytic.tsv'), 'w', encoding='utf-8') as fh:
+        fh.write("code\tlevel\tparent\tname\nprojects\tplan\t\tProjects\norchard\taccount\tprojects\tThe orchard\n"
+                 "workshop\taccount\tprojects\tThe workshop\n")
     shutil.copy(os.path.join(ROOT, 'seed', 'std-vocab.md'), os.path.join(G, 'seed', 'std-vocab.md'))
     shutil.copytree(os.path.join(ROOT, 'seed', 'knowledge'), os.path.join(G, 'seed', 'knowledge'))
     before = {p: open(os.path.join(G, p), encoding='utf-8').read() for p in
@@ -254,7 +357,7 @@ try:
                        encoding='utf-8')
     last = r.stdout.strip().split('\n')[-1]
     check("the garden is translated into a copy with nothing lost: every value placed and found there, every comment kept",
-          r.returncode == 0 and '— 0 problem(s)' in last and '9 beans' in last, r.stdout + r.stderr)
+          r.returncode == 0 and '— 0 problem(s)' in last and '13 beans' in last, r.stdout + r.stderr)
     n = int(last.split('; ')[1].split(' values')[0])
     placed = int(last.split('values, ')[1].split(' placed')[0])
     check(f"...the count: {n} values before, {placed} placed", n == placed and n > 150, last)
@@ -312,6 +415,58 @@ try:
           lv.count('agree') == 2 and 'obligatory' in lv and 'pay' in lv and 'bear' in lv
           and any(v == 'agree' and r.get('by') == 'unknown' and r.get('note') == 'ana, a neighbour' for v, r in loan)
           and any(v == 'pay' and r.get('of') == {'count': '10', 'unit': 'XTS'} for v, r in loan), loan)
+    # WHAT PART 12b CARRIES
+    _fm, club = st('club')
+    one = lambda xs, v, **kw: [r for vv, r in xs if vv == v and all(r.get(k) == x for k, x in kw.items())]  # noqa: E731
+    check("acting_for → represent; declined → its `agree` offered and its `decline`, the day said (v1 part 12b)",
+          one(club, 'represent', by='unknown', of='cem') and one(club, 'decline', by='unknown', at='2026-09-21')
+          and one(club, 'decline')[0].get('of') in [r.get('id') for r in one(club, 'agree', by='unknown')], club)
+    check("charged → the payment's `charged`; settles → its `settles`, each occurrence of a clause by its id",
+          one(club, 'pay', id='paid', charged={'count': '9.25', 'unit': 'EUR'},
+              settles=[{'clause': 'fee', 'occurrence': 'box', 'amount': {'count': '10.00', 'unit': 'USD'}}]), club)
+    check("grants → grant: over a reading its `of`, to the members of one its `to`, the parts it opens and the reason it "
+          "asks its `cover`; one forbidden a ceiling; one whose part the core has no word for kept whole in details",
+          one(club, 'grant', id='members-read', to=['members'], of=['books'], cover={'parts': ['title', 'measure'],
+                                                                                    'reason': 'asked'})
+          and one(club, 'grant', id='no-sites', to=['cem'], cover={'parts': ['be.location']})
+          and one(club, 'forbidden', of='no-sites') and not one(club, 'grant', id='wide')
+          and 'wide' in (_fm.get('details') or {}).get('grants', {}), club)
+    check("analytic_distribution → book: each account the payment is booked to, in a share (the accounting profile)",
+          one(club, 'book', of='repairs', to='analytic:orchard', share='60')
+          and one(club, 'book', of='repairs', to='analytic:workshop', share='40'), club)
+    check("weighings → weigh, by the judge, to what it orders, its criteria and judgments its form",
+          one(club, 'weigh', id='picks', by='sam', to='improvements') and
+          len(one(club, 'weigh')[0]['weighing'].get('pairwise') or []) == 3, club)
+    _fm, edge = st('edge')
+    smtp = one(edge, 'serve', through='smtp')
+    check("endpoints → serve and its channel (exposure, confidentiality, plane, the day checked); a permission its "
+          "position on the square; a socket path a position with no port",
+          smtp and smtp[0].get('channel') == {'exposure': 'link', 'confidentiality': 'cleartext', 'plane': 'data',
+                                              'observed': '2026-09-20'}
+          and one(edge, 'obligatory', of=smtp[0].get('id'), through='unknown')
+          and one(edge, 'serve', through='ssh', at=['edge:/run/ssh.sock']), edge)
+    check("links → carry, through the protocol, to the other end; what rides a link is its `of` (carried_by, via_link)",
+          one(edge, 'carry', id='wan', through='pppoe', of=['wg0']) and
+          one(edge, 'carry', id='wg0', through='wireguard', to='box') and
+          set(one(edge, 'carry', id='wg0')[0].get('of') or []) == {smtp[0].get('id') if smtp else None, 'reaches-dns'},
+          edge)
+    check("reaches → need and how badly, a position on the necessity square; treatments → translate, route as a mark, "
+          "route", one(edge, 'necessary', of='reaches-dns', through='self')
+          and one(edge, 'translate', to='box', **{'from': 'unknown'}) and one(edge, 'route', **{'as': 'mangle'})
+          and one(edge, 'route', of='default via the wan', to='unknown'), edge)
+    check("observations → measure; one answering another → respond, its verdict; a hearing → respond in each side's "
+          "words, and the ruling a rule; fixes → mark",
+          one(edge, 'measure', id='weight', by='sam', value={'count': '1.2', 'unit': 'kg'})
+          and one(edge, 'respond', id='second', by='cem', of=['weight'], **{'as': 'disputes'})
+          and len(one(edge, 'respond', of=['weight', 'second'])) == 2
+          and one(edge, 'rule', by='sam', of=['weight', 'second'], note='weigh it again')
+          and one(edge, 'mark', of='ics:Meghalayan'), edge)
+    _fm, intake = st('intake', 'mappings')
+    check("items → need, from whom, alternatives sharing an `as`, needed while a reading holds; met_by → meet",
+          one(intake, 'need', id='card', of='a library card', **{'from': 'member'})
+          and len(one(intake, 'need', **{'as': 'identity'})) == 2
+          and one(intake, 'need', id='fee-paid', **{'while': 'club#members'})
+          and one(intake, 'meet', by='club#books', of='fee-paid'), intake)
     _fm, ses = st('session-a')
     check("timing start and stop → be, present over the extent; workspace.opened_at → open",
           any(v == 'be' and r.get('at') == '2026-09-20 09:00+03:30/2026-09-20 11:30+03:30' and r.get('as') == 'presence'

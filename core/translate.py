@@ -789,7 +789,6 @@ TERM_WENT = {
     'pass_log': "`details` (`pass_log`): the session's log of passes, in the form `{from, to, through, as?, metadata}` "
                 "(v1 part 10)",
     'analysis_cache': "`details`, kept whole (spec §16 item 7)",
-    'weighings': "`details`, kept whole",
     'open': "`details`, kept whole: the questions a bean leaves open",
     'merge_open': "`details`, kept whole: what a merge left for a person (the statement merge keeps both sides instead)",
     'merge_conflicts': "`details`, kept whole: what a merge found in conflict",
@@ -970,6 +969,9 @@ class Bean2:
         self.notes = []                  # what the translation could not do: a problem
         self.readings = []               # the `reckon` statements, whose paths the garden's second pass rewrites
         self.carried = []                # what it did another way, losing nothing: for the report
+        self.links = {}                  # a link's key (today's `links`) -> the index of its `carry` (v1 part 12b)
+        self.vias = []                   # (link key, rider's id, old path): what rides a link, its `of` (part 12b)
+        self.reserved = set()            # old paths a later pass places (a link's riders): no leftover takes them
 
     # -- placing
     def take(self, path, where, text=None):
@@ -1000,11 +1002,13 @@ class Bean2:
     def leftover(self, base, dest):
         """What is left under old `base` goes to details at `dest`: a subtree no verb took, whole and in its own shape;
         of one a verb took part of, each part that is left, under the same keys (a list's index read as a key)."""
+        if base in self.reserved:
+            return
         sub = at_path(self.old, base)
         mine = leaves(sub, base)
-        if all(p in self.placed for p, _v in mine):
+        if all(p in self.placed or p in self.reserved for p, _v in mine):
             return
-        if dest and not any(p in self.placed for p, _v in mine):
+        if dest and not any(p in self.placed or p in self.reserved for p, _v in mine):
             self._put(dest, sub)
             for p, _v in mine:
                 self.take(p, ('details',) + dest + p[len(base):])
@@ -1330,7 +1334,16 @@ def translate_bean(path, rel, ctx):
             j = b.add('need', {'by': 'self', 'of': [to], 'through': e['protocol']}, b.new_id(f"reaches-{k}"))
             b.take(('reaches', k, 'to') + (('bean',) if isinstance(e.get('to'), dict) else ()), b.role(j, 'of', 0))
             b.take(('reaches', k, 'protocol'), b.role(j, 'through'))
-            b.leftover(('reaches', k), ('reaches', b.statements[j][1]['id']))
+            sid = b.statements[j][1]['id']
+            nec = FEASIBILITY.get(e.get('necessity')) or ('necessary' if e.get('necessity') == 'necessary' else None)
+            if nec:                                       # HOW BADLY: a position on the necessity square (v1 part 12b)
+                jn = b.add(nec, dict({'of': sid}, **({'through': 'self'} if nec == 'necessary' else {})))
+                b.take(('reaches', k, 'necessity'), ('verb', jn), nec)
+            if _link_ok(b, e.get('via_link')):
+                b.vias.append((e['via_link'], sid, ('reaches', k, 'via_link')))
+                b.reserved.add(('reaches', k, 'via_link'))
+            b.leftover(('reaches', k), ('reaches', sid))
+    treatments_of(b, old, ctx)
     for i, e in enumerate(old.get('knowledge') or []) if isinstance(old.get('knowledge'), list) else []:
         if isinstance(e, dict) and isinstance(e.get('code'), str) and e.get('rel') in ('uses', 'draws_on', 'classified_as'):
             if e['rel'] == 'classified_as':
@@ -1414,7 +1427,7 @@ def translate_bean(path, rel, ctx):
             continue
         at = [ip]
         if isinstance(e.get('port'), str):
-            transport = ctx.transport.get(e['protocol'], 'tcp')
+            transport = e['transport'] if e.get('transport') in ('tcp', 'udp') else ctx.transport.get(e['protocol'], 'tcp')
             port = position(f"{transport}-port", e['port'], ctx)
             if not port:
                 continue
@@ -1426,7 +1439,11 @@ def translate_bean(path, rel, ctx):
         if len(at) > 1:
             b.take(('endpoints', i, 'port'), b.role(j, 'at', 1), at[1])
         b.take(('endpoints', i, 'protocol'), b.role(j, 'through'))
+        if 'transport' in e and len(at) > 1:              # the port space it is in: the protocol row's, or as it said
+            b.take(('endpoints', i, 'transport'), b.role(j, 'at', 1), at[1])
+        channel_of(b, ('endpoints', i), e, j, sid)
         b.leftover(('endpoints', i), ('endpoints', sid))
+    links_of(b, old, ctx)
 
     # -- agreements
     parties = old.get('parties') if isinstance(old.get('parties'), dict) else {}
@@ -1441,16 +1458,18 @@ def translate_bean(path, rel, ctx):
         elif isinstance(e, dict) and isinstance(e.get('what'), str):
             over_takes.append((('over', k, 'what'), len(things)))
             things.append(e['what'])
-    party_bean = {}
+    party_bean = {k: being(e.get('who'), ctx) or 'unknown' for k, e in parties.items() if isinstance(e, dict)}
     first_agree = None
     for k, e in parties.items():
         if not isinstance(e, dict):
             continue
         who = being(e.get('who'), ctx)
-        party_bean[k] = who or 'unknown'
-        if e.get('accepted') in (None, '', {}, []):
+        declined = a_position(e.get('declined'), ctx)
+        if e.get('accepted') in (None, '', {}, []) and not declined:
             continue                # AN OFFER IS NOT AN ACCEPTANCE: an `agree` is a party's yes, and a party with no
-                                    # acceptance on record — offered, or declined — stays a party, kept in `details`
+                                    # acceptance on record — offered, and not yet answered — stays a party, in `details`.
+                                    # One that DECLINED is an `agree` offered and its `decline` (v1 part 12b): what was
+                                    # declined holds nothing, and gives no consent
         roles = {'by': who or 'unknown'}
         if things:
             roles['of'] = list(things)
@@ -1458,7 +1477,7 @@ def translate_bean(path, rel, ctx):
             roles['through'] = words['form']
         if isinstance(e.get('role'), str):
             roles['as'] = e['role']
-        if a_position(e.get('accepted'), ctx):
+        if e.get('accepted') not in (None, '', {}, []) and a_position(e.get('accepted'), ctx):
             roles['at'] = e['accepted']
         if not who and isinstance(e.get('external'), str):
             roles['note'] = e['external']
@@ -1479,10 +1498,19 @@ def translate_bean(path, rel, ctx):
                 b.take(('parties', k, o), b.role(j, r))
         if isinstance(e.get('provenance'), dict):
             knowing(b, e['provenance'], ('parties', k, 'provenance'), of=[sid])
+        if declined:
+            jd = b.add('decline', {'by': who or 'unknown', 'of': sid, 'at': e['declined']}, b.new_id(f"declined-{k}"))
+            b.take(('parties', k, 'declined'), b.role(jd, 'at'))
+        if e.get('acting_for') in party_bean and e['acting_for'] != k:
+            # ONE WHO ACTS FOR ANOTHER (v1 part 12b): what it does binds the party it acts for
+            jr = b.add('represent', {'by': who or 'unknown', 'of': party_bean[e['acting_for']]},
+                       b.new_id(f"for-{e['acting_for']}"))
+            b.take(('parties', k, 'acting_for'), b.role(jr, 'of'), party_bean[e['acting_for']])
         b.leftover(('parties', k), ('parties', sid))
     for term in ('parties', 'over', 'words'):
         if term in old:
             b.leftover((term,), (term,))
+    clause_sid = {}
     for k, e in (old.get('clauses') or {}).items() if isinstance(old.get('clauses'), dict) else []:
         if not (isinstance(e, dict) and isinstance(e.get('what'), str) and first_agree):
             continue
@@ -1494,6 +1522,7 @@ def translate_bean(path, rel, ctx):
         if isinstance(e.get('note'), str):
             roles['note'] = e['note']
         j = b.add('can', roles, sid)
+        clause_sid[k] = sid
         b.take(('clauses', k, 'what'), b.role(j, 'of'))
         if 'by' in e and e['by'] in party_bean:
             b.take(('clauses', k, 'by'), b.role(j, 'by'), who)
@@ -1525,7 +1554,12 @@ def translate_bean(path, rel, ctx):
             roles['at'] = e['day']
         if isinstance(e.get('what'), str):
             roles['note'] = e['what']
+        if e.get('under') in clause_sid:                 # the clause it was made under (v1 part 12b)
+            roles['through'] = clause_sid[e['under']]
+        elif being(e.get('through'), ctx):                # else the card, account or agreement it moved through
+            roles['through'] = being(e['through'], ctx)
         j = b.add('pay', roles, sid)
+        payment_form(b, ('transactions', k), e, j, clause_sid)
         b.take(('transactions', k, 'paid_by', 0, 'party'), b.role(j, 'by'), roles['by'])
         b.take(('transactions', k, 'amount', 'count'), b.role(j, 'of', 'count'))
         b.take(('transactions', k, 'amount', 'unit'), b.role(j, 'of', 'unit'), code)
@@ -1578,6 +1612,19 @@ def translate_bean(path, rel, ctx):
     lines_of(b, old, ctx)
     # -- a page of drawings (v1 part 11, core/profiles.py)
     views_of(b, old, ctx)
+    # -- who may do what, what was found and answered, what a checklist asks, a weighing, a boundary marked (v1 part 12b)
+    acts_of(b, old, ctx)
+    vias_of(b)
+    acts = [r for v, r in b.statements if v in KNOWING]
+    if any(v not in KNOWING for v, _r in b.statements) and not any('of' not in r for r in acts):
+        covered = {x for r in acts for x in (r['of'] if isinstance(r.get('of'), list) else [r.get('of')])}
+        if any(r.get('id') not in covered for v, r in b.statements if v not in KNOWING):
+            # NOBODY RECORDED WHO SAID IT (v1 part 12b): a bean with statements and no provenance is said by `unknown`,
+            # at the moment its file was made — never by someone guessed
+            moment, how = ctx.journal.moment(b.id, b.path, None)
+            b.add('say', {'by': 'unknown', 'at': moment or 'unknown',
+                          'note': "nobody recorded who said it: today's bean had no provenance"})
+            b.carried.append(f"a `say` by unknown at {moment or 'unknown'}: the bean recorded no provenance")
 
     # -- the rest, whole
     for k in old:
@@ -1603,6 +1650,384 @@ def translate_bean(path, rel, ctx):
 # in the statement's `form` qualifier, so the count holds; a unit written by its UCUM code, as every quantity of the core
 # is; today's `genos` a reading's `kind`, and a comparator the core has a sign for written by its sign. What is not in
 # the form — a step list of prose, a course whose walk is not a bean, a series whose id is taken — stays in `details`.
+# WHAT PART 12b CARRIES (2026-10-02): today's facts the core had no form for until then, each written as a statement of
+# its verb, every leaf placed so the count holds. What the core cannot say as narrowly as today's did is kept whole in
+# `details` rather than said more widely: a grant whose part has no word in the core opens nothing there (closed by default).
+def channel_of(b, base, e, j, sid):
+    """A listening surface's or a link's channel (the network profile's form): where it is bound, what it protects, what
+    it is for, who may reach it, the day it was checked; whether it may exist, a position on the permission square of its
+    statement; the link it rides, that link's `of`."""
+    attrs = (b.ctx.law.forms.get('channel') or {}).get('attrs') or {}
+    ch = {a: e[a] for a in attrs if isinstance(e.get(a), str)}
+    if ch:
+        b.statements[j][1]['channel'] = ch
+        for a in ch:
+            b.take(base + (a,), b.role(j, 'channel', a))
+    perm = PERMISSION.get(e.get('permission'))
+    if perm:
+        jp = b.add(perm, {'of': sid, 'through': 'unknown'})
+        b.take(base + ('permission',), ('verb', jp), perm)
+    if _link_ok(b, e.get('via_link')):
+        b.vias.append((e['via_link'], sid, base + ('via_link',)))
+        b.reserved.add(base + ('via_link',))
+
+
+def _link_ok(b, k):
+    """Whether `k` names a link of this bean that links_of writes as a `carry`."""
+    e = (b.old.get('links') or {}).get(k) if isinstance(b.old.get('links'), dict) and isinstance(k, str) else None
+    return isinstance(e, dict) and e.get('protocol') in b.ctx.protocols and slug(k) == k
+
+
+def links_of(b, old, ctx):
+    """Each link a being terminates (today's `links`): a `carry` by it, through the protocol that makes it, to the other
+    end; what rides on it is its `of` (`carried_by`, `via_link`), written once every link is."""
+    links = old.get('links') if isinstance(old.get('links'), dict) else {}
+    for k, e in links.items():
+        if not _link_ok(b, k):
+            continue
+        roles = {'by': 'self', 'through': e['protocol']}
+        peer = _end(e.get('peer'), ctx)
+        if peer:
+            roles['to'] = peer
+        sid = b.new_id(k)
+        j = b.add('carry', roles, sid)
+        b.links[k] = j
+        b.take(('links', k, 'protocol'), b.role(j, 'through'))
+        if peer:
+            b.take(('links', k, 'peer', 'bean'), b.role(j, 'to'))
+        channel_of(b, ('links', k), {a: v for a, v in e.items() if a != 'via_link'}, j, sid)
+    for k, e in links.items():
+        if k in b.links and _link_ok(b, e.get('carried_by')):
+            b.vias.append((e['carried_by'], b.statements[b.links[k]][1]['id'], ('links', k, 'carried_by')))
+            b.reserved.add(('links', k, 'carried_by'))
+    for k in links:
+        if k in b.links:
+            b.leftover(('links', k), ('links', b.statements[b.links[k]][1]['id']))
+
+
+def vias_of(b):
+    """What rides a link of this bean is that link's `of`; a link of another bean is kept in `details`."""
+    for key, rider, path in b.vias:
+        j = b.links.get(key)
+        if j is None:
+            continue
+        of = b.statements[j][1].setdefault('of', [])
+        b.take(path, b.role(j, 'of', len(of)), rider)
+        of.append(rider)
+
+
+def _end(ref, ctx):
+    """The being a `{bean, field?}` ref of today's names — the bean; the field it named stays in `details`."""
+    return being({'bean': ref['bean']}, ctx) if isinstance(ref, dict) and isinstance(ref.get('bean'), str) else None
+
+
+TREATMENT_VERBS = {'route': 'route', 'mangle': 'route', 'queue': 'route', 'nat': 'translate', 'acl': 'filter'}
+
+
+def treatments_of(b, old, ctx):
+    """What a forwarding device does to traffic (today's `treatments`): a route — or a mark or a queue that steers it, its
+    `as` — an address translated, or a filter; what breaks without it its `why`; its plane and the day it was read off
+    the device its channel; whether it may be there, a position on the permission square."""
+    for n, e in enumerate(old.get('treatments') or []) if isinstance(old.get('treatments'), list) else []:
+        verb = TREATMENT_VERBS.get(e.get('kind')) if isinstance(e, dict) else None
+        if not verb or not isinstance(e.get('what'), str):
+            continue
+        to = _end(e.get('to'), ctx)
+        roles = {'by': 'self', 'of': e['what']}
+        if verb in ('route', 'translate') or to:
+            roles['to'] = to or 'unknown'
+        if verb == 'translate':
+            roles['from'] = 'unknown'
+        if verb == 'route' and e['kind'] != 'route':
+            roles['as'] = e['kind']
+        if isinstance(e.get('why'), str):
+            roles['why'] = e['why']
+        sid = b.new_id(f"{e['kind']}-{n + 1}")
+        j = b.add(verb, roles, sid)
+        b.take(('treatments', n, 'kind'), b.role(j, 'as') if 'as' in roles else ('verb', j), roles.get('as', verb))
+        b.take(('treatments', n, 'what'), b.role(j, 'of'))
+        if to:
+            b.take(('treatments', n, 'to', 'bean'), b.role(j, 'to'))
+        if 'why' in roles:
+            b.take(('treatments', n, 'why'), b.role(j, 'why'))
+        channel_of(b, ('treatments', n), {a: v for a, v in e.items() if a in ('plane', 'observed', 'permission')}, j, sid)
+        b.leftover(('treatments', n), ('treatments', sid))
+
+
+def payment_form(b, base, e, j, clause_sid):
+    """What a payment holds beside its roles: the clause it was made under (or what it moved through), what it came to in
+    another currency (`charged`), and which occurrences of which clauses it settles (`settles`)."""
+    r = b.statements[j][1]
+    if e.get('under') in clause_sid and r.get('through') == clause_sid[e['under']]:
+        b.take(base + ('under',), b.role(j, 'through'), r['through'])
+    elif 'through' in r:
+        b.take(base + ('through', 'bean'), b.role(j, 'through'))
+    ch = e.get('charged')
+    if isinstance(ch, dict) and set(ch) <= {'count', 'unit'} and 'count' in ch and 'unit' in ch:
+        r['charged'] = {'count': ch['count'], 'unit': _unit_text(ch['unit'], b.ctx)}
+        b.take(base + ('charged', 'count'), b.role(j, 'charged', 'count'))
+        b.take(base + ('charged', 'unit'), b.role(j, 'charged', 'unit'), r['charged']['unit'])
+    st = e.get('settles')
+    if isinstance(st, list) and st and all(isinstance(x, dict) and x.get('clause') in clause_sid for x in st):
+        r['settles'] = []
+        for n, x in enumerate(st):
+            got = {'clause': clause_sid[x['clause']]}
+            b.take(base + ('settles', n, 'clause'), b.role(j, 'settles', n, 'clause'), got['clause'])
+            r['settles'].append(got)
+            rest = {a: v for a, v in x.items() if a != 'clause'}
+            got.update(_place_form(b, base + ('settles', n), rest, j, 'settles', (n,)))
+    ad = e.get('analytic_distribution')             # BOOKED TO THE GARDEN'S ACCOUNTS (the accounting profile): each
+    if isinstance(ad, list) and ad and isinstance(r.get('id'), str) and all(        # entry a `book` of the payment
+            isinstance(x, dict) and isinstance(x.get('code'), str) and ('share' in x) != ('amount' in x) for x in ad):
+        for n, x in enumerate(ad):
+            jb = b.add('book', {'of': r['id'], 'to': x['code']}, b.new_id(f"{r['id']}-booked-{n + 1}"))
+            b.take(base + ('analytic_distribution', n, 'code'), b.role(jb, 'to'))
+            if 'share' in x:
+                b.statements[jb][1]['share'] = str(x['share'])
+                b.take(base + ('analytic_distribution', n, 'share'), b.role(jb, 'share'), str(x['share']))
+            else:
+                b.statements[jb][1]['share'] = _place_form(b, base + ('analytic_distribution', n, 'amount'), x['amount'],
+                                                           jb, 'share')
+
+
+def _reading_ref(b, key):
+    """The `reckon` a selection key of today's names: `<key>` on this bean, `<bean>#<key>` on another — or None."""
+    if not isinstance(key, str):
+        return None
+    if ':' in key:
+        bean_, k2 = key.split(':', 1)
+        return f"{bean_}#{k2}" if bean_ in b.ctx.beans and slug(k2) == k2 else None
+    return key if any(v == 'reckon' and r.get('id') == key for v, r in b.statements) else None
+
+
+PART_WORDS = {'title': 'title', 'summary': 'summary', 'tags': 'tags', 'body': 'body', 'details': 'details',
+              'located_at': 'be.location', 'lives_in': 'be.habitat', 'provides_habitat': 'be.habitat'}
+
+
+def part_of(path, law):
+    """The core's word for a part of a bean a grant of today's named (`positions[].path`), or None where it has none."""
+    if not isinstance(path, str):
+        return None
+    term = path[:-2] if path.endswith('.*') else path
+    if term in PART_WORDS:
+        return PART_WORDS[term]
+    if '.' in term:
+        return None                     # one entry of a term: the core names a statement, never a part of one, here
+    went = dict(law.replaces).get(term)
+    if isinstance(went, str) and went != 'dropped' and not went.startswith('role '):
+        return went.split(' ', 1)[1] if went.startswith('face ') else went
+    return None
+
+
+def acts_of(b, old, ctx):
+    """Grants, observations and their verdicts, hearings, a checklist's items, weighings and boundaries marked."""
+    bid = b.id
+    # WHO MAY DO WHAT: a `grant`, over a reading, to a being or every member of one, its parts and its reason its cover
+    for k, e in (old.get('grants') or {}).items() if isinstance(old.get('grants'), dict) else []:
+        if not isinstance(e, dict) or not isinstance(e.get('act'), str) or slug(k) != k or k in b.ids:
+            continue
+        act = e['act']
+        as_ = act if act in ('read', 'write') else 'enact' if act.startswith('act:') else \
+            'ratify' if act.startswith('ratify:') else None
+        aud = e.get('audience') if isinstance(e.get('audience'), dict) else {}
+        to = being({'bean': aud['who']}, ctx) if isinstance(aud.get('who'), str) else _reading_ref(b, aud.get('selection'))
+        over = _reading_ref(b, e.get('over')) if 'over' in e else None
+        poss = [x.get('path') if isinstance(x, dict) else None for x in e.get('positions') or []]
+        parts = [part_of(x, ctx.law) for x in poss]
+        d = e.get('during') if isinstance(e.get('during'), dict) else None
+        span = f"{d.get('from')}/{d.get('to')}" if d and set(d) <= {'from', 'to'} and d.get('from') and d.get('to') else None
+        if as_ is None or not to or ('over' in e and not over) or None in parts or ('during' in e and not span) or \
+                e.get('permission') not in (None, 'permitted', 'forbidden'):
+            b.carried.append(f"grants.{k}: kept whole in `details`, where it opens nothing — the core cannot say it as "
+                             f"narrowly as it was said")
+            continue
+        roles = {'by': 'self', 'to': [to], 'as': as_}
+        if over:
+            roles['of'] = [over]
+        if as_ == 'enact':
+            roles['through'] = act.split(':', 1)[1]
+        if as_ == 'ratify':
+            roles['class'] = act.split(':', 1)[1]
+        if span:
+            roles['at'] = span
+        cover = dict({'parts': parts} if parts else {}, **({'reason': 'asked'} if e.get('reason') == 'asked' else {}))
+        if cover:
+            roles['cover'] = cover
+        for o in ('why', 'note'):
+            if isinstance(e.get(o), str):
+                roles[o] = e[o]
+        sid = b.new_id(k)
+        j = b.add('grant', roles, sid)
+        b.take(('grants', k, 'act'), b.role(j, {'enact': 'through', 'ratify': 'class'}.get(as_, 'as')),
+               {'enact': roles.get('through'), 'ratify': roles.get('class')}.get(as_, as_))
+        b.take(('grants', k, 'audience', 'who' if isinstance(aud.get('who'), str) else 'selection'), b.role(j, 'to', 0), to)
+        if over:
+            b.take(('grants', k, 'over'), b.role(j, 'of', 0), over)
+        for n, p in enumerate(parts):
+            b.take(('grants', k, 'positions', n, 'path'), b.role(j, 'cover', 'parts', n), p)
+        if span:
+            b.take(('grants', k, 'during', 'from'), b.role(j, 'at'), span)
+            b.take(('grants', k, 'during', 'to'), b.role(j, 'at'), span)
+        if 'reason' in cover:
+            b.take(('grants', k, 'reason'), b.role(j, 'cover', 'reason'))
+        for o in ('why', 'note'):
+            if o in roles:
+                b.take(('grants', k, o), b.role(j, o))
+        if e.get('permission') == 'forbidden':          # a ceiling: what it would open, nothing opens
+            jp = b.add('forbidden', {'of': sid, 'through': 'self'})
+            b.take(('grants', k, 'permission'), ('verb', jp), 'forbidden')
+        elif e.get('permission') == 'permitted':
+            b.take(('grants', k, 'permission'), ('derived', 'a grant opens what it covers: `permitted` is its own word'))
+        b.leftover(('grants', k), ('grants', sid))
+    # WHAT WAS FOUND OF IT: each reading a `measure`; one that answers another a `respond`, its verdict
+    obs = old.get('observations') if isinstance(old.get('observations'), dict) else {}
+    for k, e in obs.items():
+        if not isinstance(e, dict) or slug(k) != k or k in b.ids:
+            continue
+        who = being({'bean': e['by']}, ctx) if isinstance(e.get('by'), str) else None
+        if isinstance(e.get('answers'), str):
+            m = re.match(r'^([a-z0-9][a-z0-9-]*):observations\.([a-z0-9][a-z0-9-]*)$', e['answers'])
+            if not (m and e.get('answer') in ('confirms', 'disputes', 'abstains')):
+                continue
+            target = m.group(2) if m.group(1) == bid else f"{m.group(1)}#{m.group(2)}"
+            roles = {'by': who or 'unknown', 'of': [target], 'as': e['answer']}
+            if a_position(e.get('at'), ctx):
+                roles['at'] = e['at']
+            if isinstance(e.get('note'), str):
+                roles['note'] = e['note']
+            j = b.add('respond', roles, b.new_id(k))
+            b.take(('observations', k, 'answers'), b.role(j, 'of', 0), target)
+            for o, r in (('answer', 'as'), ('at', 'at'), ('note', 'note'), ('by', 'by')):
+                if r in roles and o in e:
+                    b.take(('observations', k, o), b.role(j, r), roles[r])
+            b.leftover(('observations', k), ('observations', k))
+            continue
+        if not isinstance(e.get('property'), str):
+            continue
+        roles = {'of': 'self', 'as': e['property']}
+        if who:
+            roles['by'] = who
+        d = e.get('during') if isinstance(e.get('during'), dict) else None
+        if a_position(e.get('at'), ctx):
+            roles['at'] = e['at']
+        elif d and set(d) <= {'from', 'to'} and d.get('from') and d.get('to'):
+            roles['at'] = f"{d['from']}/{d['to']}"
+        for o, r in (('presence', 'presence'), ('method', 'method'), ('code', 'result'), ('note', 'note')):
+            if isinstance(e.get(o), str):
+                roles[r] = e[o]
+        j = b.add('measure', roles, b.new_id(k))
+        if isinstance(e.get('value'), dict):
+            b.statements[j][1]['value'] = _place_form(b, ('observations', k, 'value'), e['value'], j, 'value')
+        b.take(('observations', k, 'property'), b.role(j, 'as'))
+        if who:
+            b.take(('observations', k, 'by'), b.role(j, 'by'), who)
+        if 'at' in roles:
+            for path in (('at',),) if 'at' in e else (('during', 'from'), ('during', 'to')):
+                b.take(('observations', k) + path, b.role(j, 'at'), roles['at'])
+        for o, r in (('presence', 'presence'), ('method', 'method'), ('code', 'result'), ('note', 'note')):
+            if r in roles and o in e:
+                b.take(('observations', k, o), b.role(j, r))
+        pin_of(b, ('observations', k, 'pin'), k, ctx)
+        b.leftover(('observations', k), ('observations', k))
+    # A HEARING: each side's own words a `respond`, the ruling a `rule` on what disagrees
+    for k, e in (old.get('hearings') or {}).items() if isinstance(old.get('hearings'), dict) else []:
+        if not isinstance(e, dict):
+            continue
+        targets = []
+        for x in e.get('over') or []:
+            m = re.match(r'^([a-z0-9][a-z0-9-]*):observations\.([a-z0-9][a-z0-9-]*)$', str((x or {}).get('path')))
+            targets.append((m.group(2) if m.group(1) == bid else f"{m.group(1)}#{m.group(2)}") if m else None)
+        if not targets or None in targets:
+            continue
+        for n, h in enumerate(e.get('heard') or []):
+            who = being({'bean': h.get('speaker')}, ctx) if isinstance(h, dict) else None
+            if not (who and isinstance(h.get('said'), str)):
+                continue
+            roles = {'by': who, 'of': list(targets), 'through': h['said']}
+            if a_position(h.get('at'), ctx):
+                roles['at'] = h['at']
+            jh = b.add('respond', roles, b.new_id(f"{k}-heard-{n + 1}"))
+            b.take(('hearings', k, 'heard', n, 'speaker'), b.role(jh, 'by'), who)
+            b.take(('hearings', k, 'heard', n, 'said'), b.role(jh, 'through'))
+            if 'at' in roles:
+                b.take(('hearings', k, 'heard', n, 'at'), b.role(jh, 'at'))
+        ru = e.get('ruling') if isinstance(e.get('ruling'), dict) else None
+        who = being({'bean': ru.get('by')}, ctx) if ru else None
+        if ru and who and isinstance(ru.get('what'), str):
+            roles = {'by': who, 'of': list(targets), 'note': ru['what']}
+            if a_position(ru.get('at'), ctx):
+                roles['at'] = ru['at']
+            jr = b.add('rule', roles, b.new_id(k))
+            b.take(('hearings', k, 'ruling', 'by'), b.role(jr, 'by'), who)
+            b.take(('hearings', k, 'ruling', 'what'), b.role(jr, 'note'))
+            if 'at' in roles:
+                b.take(('hearings', k, 'ruling', 'at'), b.role(jr, 'at'))
+            for n, tg in enumerate(targets):
+                b.take(('hearings', k, 'over', n, 'path'), b.role(jr, 'of', n), tg)
+        b.leftover(('hearings', k), ('hearings', k))
+    # WHAT A CHECKLIST ASKS: each item a `need` — in words, from whom, while a reading holds, alternatives sharing an
+    # `as` — and what meets it a `meet`
+    for n, e in enumerate(old.get('items') or []) if isinstance(old.get('items'), list) else []:
+        if not (isinstance(e, dict) and isinstance(e.get('id'), str) and isinstance(e.get('do'), str)) or \
+                slug(e['id']) != e['id'] or e['id'] in b.ids:
+            continue
+        when = _reading_ref(b, e.get('needed_when')) if 'needed_when' in e else None
+        met = _reading_ref(b, e.get('met_by')) if 'met_by' in e else None
+        if ('needed_when' in e and not when) or ('met_by' in e and not met):
+            continue
+        roles = {'by': 'self', 'of': e['do']}
+        if isinstance(e.get('by'), str):
+            roles['from'] = being({'bean': e['by']}, ctx) or e['by']
+        if isinstance(e.get('one_of'), str):
+            roles['as'] = e['one_of']
+        if when:
+            roles['while'] = when
+        if isinstance(e.get('note'), str):
+            roles['note'] = e['note']
+        sid = b.new_id(e['id'])
+        j = b.add('need', roles, sid)
+        b.take(('items', n, 'id'), ('statement', j, 'id'), sid)
+        b.take(('items', n, 'do'), b.role(j, 'of'))
+        for o, r in (('by', 'from'), ('one_of', 'as'), ('needed_when', 'while'), ('note', 'note')):
+            if r in roles and o in e:
+                b.take(('items', n, o), b.role(j, r), roles[r])
+        if met:
+            jm = b.add('meet', {'by': met, 'of': sid}, b.new_id(f"meets-{sid}"))
+            b.take(('items', n, 'met_by'), b.role(jm, 'by'), met)
+        b.leftover(('items', n), ('items', sid))
+    # A WEIGHING: the judge's `weigh`, what it orders its `to`, the criteria and the judgments its form
+    for k, e in (old.get('weighings') or {}).items() if isinstance(old.get('weighings'), dict) else []:
+        judge = being({'bean': e.get('judge')}, ctx) if isinstance(e, dict) and isinstance(e.get('judge'), str) else None
+        if not (judge and isinstance(e.get('for'), str)) or slug(k) != k or k in b.ids:
+            continue
+        roles = {'by': judge, 'to': e['for']}
+        if isinstance(e.get('note'), str):
+            roles['note'] = e['note']
+        j = b.add('weigh', roles, b.new_id(k))
+        b.take(('weighings', k, 'judge'), b.role(j, 'by'), judge)
+        b.take(('weighings', k, 'for'), b.role(j, 'to'))
+        if 'note' in roles:
+            b.take(('weighings', k, 'note'), b.role(j, 'note'))
+        form = {a: e[a] for a in ('criteria', 'pairwise', 'why_inconsistent') if a in e}
+        b.statements[j][1]['weighing'] = _place_form(b, ('weighings', k), form, j, 'weighing')
+        b.leftover(('weighings', k), ('weighings', k))
+    # A BOUNDARY MARKED IN IT: a `mark` of the cell whose base it fixes, at its place along this being
+    for k, e in (old.get('fixes') or {}).items() if isinstance(old.get('fixes'), dict) else []:
+        row = ctx.systems.get(e.get('system')) if isinstance(e, dict) else None
+        ex = str((row or {}).get('example') or '')
+        cell = f"{ex.split(':', 1)[0]}:{e.get('boundary')}" if ':' in ex and isinstance(e.get('boundary'), str) else None
+        try:
+            frame.read(cell, ctx.systems, ctx.zone)
+            frame.read(e.get('level'), ctx.systems, ctx.zone)
+        except (frame.Refused, TypeError):
+            continue
+        j = b.add('mark', {'by': 'self', 'of': cell, 'at': e['level']}, b.new_id(k))
+        b.take(('fixes', k, 'system'), b.role(j, 'of'), cell)
+        b.take(('fixes', k, 'boundary'), b.role(j, 'of'), cell)
+        b.take(('fixes', k, 'level'), b.role(j, 'at'))
+        b.leftover(('fixes', k), ('fixes', k))
+
+
 def _unit_text(v, ctx):
     return v if not isinstance(v, str) or v in ctx.std.currencies else (ucum_of(v, ctx.law) or v)
 

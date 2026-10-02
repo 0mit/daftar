@@ -2166,8 +2166,8 @@ def main(argv):
             i += 1
     t0 = time.monotonic_ns()
     try:
-        if args[:1] == ['weigh'] and len(args) == 2 and ':' in args[1]:
-            weigh(*args[1].split(':', 1))
+        if args[:1] == ['weigh'] and len(args) == 2 and (':' in args[1] or '#' in args[1]):
+            weigh(*re.split(r'[:#]', args[1], 1))             # `<bean>#<id>` names a `weigh` in a garden of the core
             return 0
         if args[:1] == ['order'] and len(args) == 3:
             order(args[1], args[2])
@@ -2179,6 +2179,8 @@ def main(argv):
             entry = dmparse.loads(open(adhoc, encoding='utf-8').read())
             if dmseq.runs_core(ROOT) and isinstance(entry, dict):
                 from core import lines                    # the core's signs, in the words the reader applies
+                from core import read as core_read        # read as the core reads: every value a string (part 12b:
+                entry = core_read.loads(open(adhoc, encoding='utf-8').read(), adhoc) or entry   # `digits: true`)
                 bad = lines.reading_problems(adhoc, entry, law(), dmseq.core(ROOT)[0].verbs)
                 if bad:
                     for w, msg in bad:
